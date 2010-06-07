@@ -1,0 +1,115 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+		<title>Entrada 1.0.0 Readme</title>
+		<link href="templates/default/css/common.css" rel="stylesheet" type="text/css" media="all" />
+		<link href="css/common.css" rel="stylesheet" type="text/css" media="all" />
+		<link href="templates/default/images/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+	</head>
+	<body>
+		<div style="width: 600px; margin: 50px;">
+		Entrada Readme File<br />
+		Version:	1.0.0<br />
+		Website:	http://entrada-project.org/<br />
+		Author:		Andrew Dos-Santos<br />
+		Tab Stop:	4 spaces<br />
+		<hr />
+		<ol>
+		<li>
+			Unpack Entrada 1.0.0 with any upzip / untar program to your servers web-root. 
+			The extracted directory will be named "entrada-1.0.0." or something
+			to that effect; it would be a good idea to rename this extracted directory
+			to "entrada" or whatever you would like your installation to be called.<br /><br />
+		</li>
+		<li>
+			The following file and folder needs to be writable by the user that your web-server
+			and / or PHP runs as. This can generally be done through your FTP client
+			such as Filezilla, Transmit, CuteFTP, and setting the permissions to 777.<br /><br />
+			
+			/entrada/www-root/core/config/config.inc.php<br />
+			/entrada/www-root/core/storage<br /><br />
+		
+			Unix / Linux Web-Servers:
+			Please chmod the storage directory to 777 using either your FTP client
+			or by command line by entering "chmod 777 storage".<br /><br />
+		
+			Windows Web-Servers:
+			On most Windows servers directories are already writable
+			by the user in which your web-server runs; however, if they are not then
+			you should be able to set this information by right clicking on the
+			storage directory and allowing everyone to read / write data to it.<br /><br />
+		</li>
+		<li>
+			While the Entrada setup program will create the database tables that
+			Entrada needs to run, it will not create the actual databases for you, 
+			therefore you will need to create 3 new databases ('entrada', 'entrada_auth' and 'entrada_clerkship') 
+			and a user ('entrada') which has access to these databases.<br /><br />
+		</li>
+		<li>
+			Create an .htaccess file in the Entrada root directory and copy and paste the following code into that file.<br />
+<pre>&lt;IfModule mod_rewrite.c&gt;
+	RewriteEngine On
+	RewriteBase /yourwebroot/entrada
+
+	RewriteCond %{REQUEST_FILENAME} -f [OR]
+	RewriteCond %{REQUEST_FILENAME} -l [OR]
+	RewriteCond %{REQUEST_FILENAME} -d
+	RewriteRule ^.* - [L,QSA]
+
+# Default Entrada Rules
+	RewriteRule ^admin/(.*)$ admin.php/$1 [L,QSA]
+
+	RewriteRule ^community$ index.php/communities [L,QSA]
+	RewriteRule ^community/feeds(.*)$ community/serve-feeds.php$1 [L,QSA]
+	RewriteRule ^community/(.*)$ community/index.php/$1 [L,QSA]
+	
+	RewriteRule ^images/dynamic/(.*)$ serve-images.php/$1 [L,QSA]
+	RewriteRule ^notices/(.*)$ serve-notices.php?g=$1 [L,QSA]
+	RewriteRule ^rss$ serve-rss.php [L,QSA]
+	RewriteRule ^rss/(.*)$ serve-rss.php/$1 [L,QSA]
+	RewriteRule ^podcasts/(.*)$ serve-podcasts.php?request=$1 [L,QSA]
+	RewriteRule ^calendars/(.*)$ api/calendar.api.php?request=$1 [L,QSA]
+	
+	RewriteRule ^(.*)$ index.php/$1 [L,QSA]
+&lt;/IfModule&gt;</pre>
+		</li>
+		<li>
+			Within the entrada/core/config there is a file named config.inc.php, open it a replace the text that is there
+			with the following code while replacing the "your..." with the appropriate values:<br />
+<pre>&lt;?php
+return array (
+	'entrada_url' => 'http://yourdomain.ca/entrada',
+	'entrada_relative' => '/entrada',
+	'entrada_absolute' => '/yourdirectorystructure/entrada',
+	'entrada_storage' => '/yourdirectorystructure/entrada/core/storage',
+	'database' =>
+	array (
+		'host' => 'localhost',
+		'username' => 'entrada',
+		'password' => 'yourpassword',
+		'entrada_database' => 'entrada',
+		'auth_database' => 'entrada_auth',
+		'clerkship_database' => 'entrada_clerkship',
+	),
+	'admin' =>
+	array (
+		'firstname' => 'youradmin',
+		'lastname' => 'youradmin',
+		'email' => 'youradmin@youremailserver.com',
+	),
+);</pre>
+		</li>
+		<li>
+			Point your web browser to the Entrada setup program located in
+			the Entrada program directory and follow the on-screen instructions.<br /><br />
+		
+			Example: http://www.yourdomain.ca/entrada/setup/index.php<br /><br />
+		</li>
+		<li>
+			After the installation has been completed, make sure you delete the
+			setup directory from the Entrada directory root.
+		</li>
+	</div>
+	</body>
+</html>

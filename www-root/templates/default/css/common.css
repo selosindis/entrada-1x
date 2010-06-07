@@ -1,0 +1,13 @@
+div.entrada-header {
+height:104px;
+background:url(../images/header-bg1.jpg) no-repeat left top;
+}
+
+.tail-top {
+background:url(../images/tail-top.gif) left top repeat-x #FFF;
+margin-bottom:10px;
+}
+
+.tail-bottom {
+background:url(../images/tail-bottom.gif) left bottom repeat-x;
+}

@@ -1,0 +1,15 @@
+The clerk [%CLERK_FULLNAME%] has not met the logging requirements for their current rotation [%ROTATION_TITLE%] after the allotted time.
+
+This clerk's profile can be found here: 
+%PROFILE_URL%
+
+An overview of their progress in this rotation can be found here:
+%ROTATION_OVERVIEW_URL%
+
+And a list of their logbook entries by rotation can be found here:
+%ENTRY_MANAGEMENT_URL%
+
+Regards,
+
+The %APPLICATION_NAME% team,
+%ENTRADA_URL%

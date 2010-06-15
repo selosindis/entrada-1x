@@ -42,11 +42,7 @@ if(!defined("PARENT_INCLUDED")) {
 } else {
 	define("IN_GRADEBOOK",	true);
 	
-//	$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery.min.js\"></script>\n";
 	$JQUERY[] = "<script type=\"text/javascript\" src=\"http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.js\"></script>\n";
-	$JQUERY[] = "<script type=\"text/javascript\" src=\"https://getfirebug.com/firebug-lite.js\"></script>\n";
-//	$JQUERY[] = "<link href=\"".ENTRADA_URL."/css/jquery/jquery-ui.css\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />\n";
-	
 	$JQUERY[] = "<link href=\"".ENTRADA_URL."/css/jquery/flexigrid.css\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />";
 	$JQUERY[] = "<script language=\"javascript\" type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/flexigrid.js\"></script>\n";
 	$JQUERY[] = "<script language=\"javascript\" type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery.editable.js\"></script>\n";

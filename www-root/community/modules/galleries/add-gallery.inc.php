@@ -11,7 +11,6 @@
  * @author Developer: James Ellis <james.ellis@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  * 
- * @version $Id: add-gallery.inc.php 1092 2010-04-04 17:19:49Z simpson $
 */
 
 if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_GALLERIES"))) {

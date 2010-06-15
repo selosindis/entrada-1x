@@ -10,7 +10,6 @@
  * @author Developer: Ilya Sorokin <isorokin@ucalgary.ca>
  * @copyright Copyright 2008 University of Calgary. All Rights Reserved.
  *
- * @version $Id$
 */
 
 class Entrada_Setup

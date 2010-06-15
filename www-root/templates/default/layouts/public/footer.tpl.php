@@ -9,7 +9,6 @@
  * @author Developer: Doug Hall <hall@ucalgary.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
- * @version $Id: footer.tpl.php  2009-05-11 10:21:49Z hall $
 */
 ?>
 			</div>

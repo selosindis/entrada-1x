@@ -9,7 +9,6 @@
  * @author Developer: James Ellis <james.ellis@queensu.ca>
  * @copyright Copyright 2009 Queen's University. All Rights Reserved.
  *
- * @version $Id: admin.php 381 2009-03-18 13:08:33Z simpson $
 */
 ?>
 <script type="text/javascript">

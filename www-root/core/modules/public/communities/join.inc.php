@@ -22,8 +22,7 @@
  * @author Developer: Matt Simpson <matt.simpson@queensu.ca>
  * @copyright Copyright 2008 Queen's University. All Rights Reserved.
  *
- * @version $Id: join.inc.php 1186 2010-05-05 17:18:31Z jellis $
- */
+*/
 
 if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 	exit;

@@ -22,7 +22,6 @@
  * @author Developer: Andrew Dos-Santos <ad29@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  * 
- * @version $Id: file-annualreport.php 1 2010-04-05 15:20:37Z ad29 $
 */
 
 @set_include_path(implode(PATH_SEPARATOR, array(

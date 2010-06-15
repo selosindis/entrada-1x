@@ -39,7 +39,6 @@ include_once 'class.icalalarm.inc.php';
 * @copyright Michael Wimmer
 * @link http://www.flaimo.com/
 * @package iCalendar
-* @version 1.032
 */
 class iCalToDo extends iCalBase {
 

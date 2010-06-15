@@ -20,8 +20,7 @@
  * @author Developer: James Ellis <james.ellis@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
- * @version $Id: index.inc.php 1202 2010-06-10 19:19:49Z hbrundage $
- */
+*/
 
 if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 	exit;

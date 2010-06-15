@@ -9,7 +9,6 @@
  * @author Developer: James Ellis <james.ellis@queensu.ca>
  * @copyright Copyright 2009 Queen's University. All Rights Reserved.
  *
- * @version $Id: index.php 600 2009-08-12 15:19:17Z simpson $
 */
 
 @set_include_path(implode(PATH_SEPARATOR, array(

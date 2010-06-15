@@ -23,8 +23,7 @@
  * @author Developer: Matt Simpson <matt.simpson@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
- * @version $Id: $
- */
+*/
 
 if (!defined("PARENT_INCLUDED")) {
 	exit;

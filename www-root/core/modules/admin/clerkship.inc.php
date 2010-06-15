@@ -22,7 +22,6 @@
  * @author Developer: James Ellis <james.ellis@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
- * @version $Id: admin.php 1162 2010-05-01 13:28:30Z simpson $
 */
 
 if (!defined("PARENT_INCLUDED")) {

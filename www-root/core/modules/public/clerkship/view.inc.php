@@ -20,7 +20,6 @@
  * @author Developer: James Ellis <james.ellis@queensu.ca>
  * @copyright Copyright 2009 Queen's University. All Rights Reserved.
  *
- * @version $Id: details.inc.php 621 2009-08-17 20:42:04Z hbrundage $
 */
 
 if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {

@@ -57,6 +57,29 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 		new_sidebar_item("Delegated Permissions", $sidebar_html, "delegated-permissions", "open");
 	}
 
+	
+	$clerkship_core_completed = ClerkshipRotations::getCoreCompleted($user);
+	$clerkship_core_pending = ClerkshipRotations::getCorePending($user);
+	$clerkship_elective_completed = ClerkshipRotations::getElectiveCompleted($user);
+	
+	$clinical_evaluation_comments = ClinicalPerformanceEvaluations::get($user);
+	
+	$critical_enquiry = CriticalEnquiry::get($user);
+	$student_run_electives = StudentRunElectives::get($user);
+	$internal_awards = InternalAwardReceipts::get($user);
+	$external_awards = ExternalAwardReceipts::get($user);
+	$studentships = Studentships::get($user);
+	
+	$contributions = Contributions::get($user);
+	
+	$leaves_of_absence = LeavesOfAbsence::get($user);
+	$formal_remediations = FormalRemediations::get($user);
+	$disciplinary_actions = DisciplinaryActions::get($user);
+	
+	$community_health_and_epidemiology = CommunityHealthAndEpidemiology::get($user);
+	$research_citations = ResearchCitations::get($user);
+		
+	
 	display_status_messages();
 ?>
 <h1>Medical School Performance Report</h1> 

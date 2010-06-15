@@ -1,0 +1,6 @@
+.project
+.nbproj
+.tmproj
+.DS_Store
+.htaccess
+www-root/core/storage/**/*

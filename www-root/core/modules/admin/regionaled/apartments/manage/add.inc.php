@@ -22,8 +22,7 @@
  * @author Developer: Matt Simpson <matt.simpson@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
- * @version $Id: add.inc.php 1169 2010-05-01 14:18:49Z simpson $
-*/
+ */
 
 if (!defined("IN_MANAGE")) {
 	exit;
@@ -47,7 +46,13 @@ if (!defined("IN_MANAGE")) {
 			$PROCESSED["proxy_id"] = 0;
 			$PROCESSED["occupant_title"] = "";
 			$PROCESSED["occupant_type"] = "";
-			$PROCESSED["confirmed"] = 0;
+
+			if (isset($_POST["require_confirmation"]) && ((int) $_POST["require_confirmation"] == 1)) {
+				$PROCESSED["confirmed"] = 0;
+			} else {
+				$PROCESSED["confirmed"] = 1;
+			}
+			
 			$PROCESSED["cost_recovery"] = 0;
 			$PROCESSED["notes"] = "";
 
@@ -86,6 +91,8 @@ if (!defined("IN_MANAGE")) {
 					if (isset($_POST["cost_recovery"]) && ($_POST["cost_recovery"] == "1")) {
 						$PROCESSED["cost_recovery"] = 1;
 					}
+
+					$PROCESSED["confirmed"] = 1;
 				break;
 				default :
 					$ERROR++;
@@ -114,6 +121,10 @@ if (!defined("IN_MANAGE")) {
 			}
 
 			if (!$ERROR) {
+				$PROCESSED["updated_last"] = time();
+				$PROCESSED["updated_by"] = $_SESSION["details"]["id"];
+				$PROCESSED["aschedule_status"] = "published";
+
 				/**
 				 * Check to ensure the availability still exists.
 				 */
@@ -130,10 +141,10 @@ if (!defined("IN_MANAGE")) {
 									ON b.`event_id` = a.`event_id`
 									WHERE a.`event_id`=".$db->qstr($PROCESSED["event_id"])."
 									AND b.`etype_id`=".$db->qstr($PROCESSED["proxy_id"]);
-						$result = $db->GetRow($query);
-						if ($result) {
-							if ($result["region_id"] == $APARTMENT_INFO["region_id"]) {
-								if ($result["requires_apartment"] == 0) {
+						$event_info = $db->GetRow($query);
+						if ($event_info) {
+							if ($event_info["region_id"] == $APARTMENT_INFO["region_id"]) {
+								if ($event_info["requires_apartment"] == 0) {
 									$ERROR++;
 									$ERRORSTR[] = "The learner has either specified they do not require accommodation for the selected event, or there are no accommodations available in the region this event takes place in.";
 								}
@@ -171,12 +182,28 @@ if (!defined("IN_MANAGE")) {
 								application_log("error", "Unable to set requires_apartment to 0 for event_id [".$PROCESSED["event_id"]."] after an apartment had been assigned. Database said: ".$db->ErrorMsg());
 							}
 						}
-
+						
 						/**
 						 * Send notification to the learner that they are required to confirm their apartment status.
 						 */
-						if ((int) $PROCESSED["proxy_id"]) {
-							regionaled_apartment_notification($aschedule_id);
+						if ($PROCESSED["proxy_id"] && !$PROCESSED["confirmed"]) {
+							$recipient = array (
+								"email" => get_account_data("email", $PROCESSED["proxy_id"]),
+								"firstname" => get_account_data("firstname", $PROCESSED["proxy_id"]),
+								"lastname" => get_account_data("lastname", $PROCESSED["proxy_id"])
+							);
+
+							$message_variables = array (
+								"to_firstname" => $recipient["firstname"],
+								"to_lastname" => $recipient["lastname"],
+								"from_firstname" => $_SESSION["details"]["firstname"],
+								"from_lastname" => $_SESSION["details"]["lastname"],
+								"region" => $APARTMENT_INFO["region_name"],
+								"confirmation_url" => ENTRADA_URL."/regionaled/view?id=".$aschedule_id,
+								"application_name" => APPLICATION_NAME
+							);
+
+							regionaled_apartment_notification("confirmation", $recipient, $message_variables);
 						}
 					}
 
@@ -285,6 +312,15 @@ if (!defined("IN_MANAGE")) {
 								<span class="content-small">(<strong>Example:</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?>)</span>
 							</td>
 						</tr>
+						<tr>
+							<td colspan="3">&nbsp;</td>
+						</tr>
+						<tr>
+							<td><input type="checkbox" id="require_confirmation" name="require_confirmation" value="1"<?php echo ((!isset($PROCESSED["confirmed"]) || !$PROCESSED["confirmed"]) ? " checked=\"checked\"" : ""); ?> /></td>
+							<td colspan="2">
+								<label for="require_confirmation" class="form-nrequired">Send an e-mail requiring this occupant to confirm these accommodations.</label>
+							</td>
+						</tr>
 					</tbody>
 					<tbody id="occupant_select_title" style="display: none">
 						<tr>
@@ -330,7 +366,10 @@ if (!defined("IN_MANAGE")) {
 				</table>
 			</form>
 			<script type="text/javascript" defer="defer">
-			var currentStep = 1;
+			Event.observe(window, 'load', function() {
+				updateOccupantOptions(false);
+			});
+
 			var autoCompleter = new Ajax.Autocompleter('occupant_name', 'occupant_name_auto_complete', '<?php echo ENTRADA_RELATIVE; ?>/api/personnel.api.php?type=' + $F('occupant_type'), {
 				frequency: 0.2,
 				minChars: 2,
@@ -342,11 +381,15 @@ if (!defined("IN_MANAGE")) {
 				}
 			});
 
+			$('occupant_name').observe('change', checkOccupant);
+			$('occupant_type').observe('change', updateOccupantOptions, true);
+			$('proceed-button').observe('click', checkAvailability);
+
 			function checkOccupant() {
 				if ($('occupant_name') && $('occupant_ref') && $('proxy_id')) {
 					if ($F('occupant_name') != $F('occupant_ref')) {
 						$('proxy_id').setValue('');
-						
+
 						fetchEvents();
 					}
 				}
@@ -358,7 +401,7 @@ if (!defined("IN_MANAGE")) {
 				if (start_date && $('inhabiting_start_date')) {
 					$('inhabiting_start_date').setValue(start_date);
 				}
-				
+
 				if (finish_date && $('inhabiting_finish_date')) {
 					$('inhabiting_finish_date').setValue(finish_date);
 				}
@@ -427,7 +470,7 @@ if (!defined("IN_MANAGE")) {
 				$('availability_details').update('&nbsp;');
 
 				var eventId = 0;
-				
+
 				$('addOccupantForm').getInputs('radio', 'event_id').each(function(input) {
 					if (input.checked) {
 						eventId = input.value;
@@ -456,13 +499,8 @@ if (!defined("IN_MANAGE")) {
 					}
 				});
 			}
-
-			$('occupant_name').observe('change', checkOccupant);
-			$('occupant_type').observe('change', updateOccupantOptions, true);
-			$('proceed-button').observe('click', checkAvailability);
 			</script>
 			<?php
-			$ONLOAD[] = "updateOccupantOptions(false)";
 		break;
 	}
 }

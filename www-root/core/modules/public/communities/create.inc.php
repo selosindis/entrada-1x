@@ -22,7 +22,7 @@
  * @author Developer: Matt Simpson <matt.simpson@queensu.ca>
  * @copyright Copyright 2008 Queen's University. All Rights Reserved.
  *
- * @version $Id: create.inc.php 1170 2010-05-01 14:35:01Z simpson $
+ * @version $Id: create.inc.php 1189 2010-05-10 14:12:56Z ad29 $
  */
 
 if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
@@ -90,7 +90,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 			}
 		} else {
 			$ERROR++;
-			$ERRORSTR[] = "The category that you have select no longer exists in the system. Please choose a new category.";
+			$ERRORSTR[] = "The category that you have selected no longer exists in the system. Please choose a new category.";
 		}
 	} else {
 		$NOTICE++;
@@ -160,7 +160,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 				}
 			} else {
 				$ERROR++;
-				$ERRORSTR[] = "The category that you have select no longer exists in the system. Please choose a new category.";
+				$ERRORSTR[] = "The category that you have selected no longer exists in the system. Please choose a new category.";
 			}
 
 

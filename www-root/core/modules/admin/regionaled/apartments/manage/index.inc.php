@@ -22,8 +22,7 @@
  * @author Developer: Matt Simpson <matt.simpson@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
- * @version $Id: index.inc.php 1169 2010-05-01 14:18:49Z simpson $
-*/
+ */
 
 if (!defined("IN_MANAGE")) {
 	exit;
@@ -79,7 +78,7 @@ if (!defined("IN_MANAGE")) {
 			$event["event_id"] = ($result["event_id"] ? $result["event_id"] : uniqid());
 			$event["event_title"] = (($result["fullname"]) ? (($result["gender"]) ? ($result["gender"] == 1 ? "F: " : "M: ") : "").$result["fullname"] : $result["occupant_title"]);
 			$event["event_desc"] = $result["event_title"];
-			$event["event_link"] = ENTRADA_URL."/admin/regionaled/apartments/manage/schedule?id=2&sid=".$result["aschedule_id"];
+			$event["event_link"] = ENTRADA_URL."/admin/regionaled/apartments/manage/schedule?id=".$APARTMENT_ID."&sid=".$result["aschedule_id"];
 			$event["event_misc"] = array("fullname" => $result["fullname"], "gender" => $result["gender"]);
 
 			$calendar->newEvent($event);
@@ -91,6 +90,15 @@ if (!defined("IN_MANAGE")) {
 			echo display_notice("This apartment expired on <strong>".date(DEFAULT_DATE_FORMAT, $APARTMENT_INFO["available_finish"])."</strong> and is no longer available for future occupants. It remains in the system in an <strong>expired state</strong> so that historical records can be retained.");
 		}
 	}
+
+	$sidebar_html  = "<ul class=\"menu\">\n";
+	$sidebar_html .= "	<li class=\"undergrad\">Undergraduate Learner</li>\n";
+	$sidebar_html .= "	<li class=\"postgrad\">Postgraduate Learner</li>\n";
+	$sidebar_html .= "	<li class=\"other\">Other Occupancy</li>\n";
+	$sidebar_html .= "</ul>\n";
+
+	new_sidebar_item("Occupant Type Legend", $sidebar_html, "occupant-type-legend", "open");
+
 	?>
 	<script type="text/javascript">
 	function setDateValue(field, date) {

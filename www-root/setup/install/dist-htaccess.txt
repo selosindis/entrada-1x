@@ -1,3 +1,5 @@
+RedirectMatch 404 /\\.svn(/|$)
+
 <IfModule mod_rewrite.c>
 	RewriteEngine On
 	RewriteBase ENTRADA_RELATIVE

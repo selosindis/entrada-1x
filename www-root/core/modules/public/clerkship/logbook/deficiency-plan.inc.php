@@ -450,7 +450,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 							<?php
 							if (!isset($PROCESSED["clerk_accepted"]) || !$PROCESSED["clerk_accepted"]) {
 								?>
-								<td><label for="clerk_accepted" class="form-required">Confirm completion of defficiency plan</label></td>
+								<td><label for="clerk_accepted" class="form-required">Confirm completion of deficiency plan</label></td>
 								<td><span class="content-small">Select this once your plan to attain all deficient objectives and tasks is complete; an administrator will be asked to review your plan. This confirmation cannot be reversed once given, please thoroughly review this plan before selecting this option.</span></td>
 								<?php
 							} else {
@@ -469,7 +469,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 							</tr>
 							<tr>
 								<td><input type="checkbox" id="administrator_accepted" name="administrator_accepted"<?php echo (isset($PROCESSED["administrator_accepted"]) && $PROCESSED["administrator_accepted"] ? " checked=\"checked\"" : ""); ?> /></td>
-								<td><label for="administrator_accepted" class="form-required">Confirm completion of defficiency plan</label></td>
+								<td><label for="administrator_accepted" class="form-required">Confirm completion of deficiency plan</label></td>
 								<td><span class="content-small">Select this once the clerk's deficiency plan meets all required criteria to attain deficeincies from this rotation. Otherwise, please write a message to the clerk in the comment box below and the clerk's confirmation will be reversed until they review your comments and amend the plan.</span></td>
 							</tr>	
 							<tr>
@@ -629,7 +629,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 							</tr>
 							<tr>
 								<td><input type="checkbox" id="administrator_accepted" name="administrator_accepted" checked="checked" disabled="disabled" /></td>
-								<td><label for="administrator_accepted" class="form-nrequired">Confirm completion of defficiency plan</label></td>
+								<td><label for="administrator_accepted" class="form-nrequired">Confirm completion of deficiency plan</label></td>
 								<td><span class="content-small">This deficiency plan has been confirmed by the <?php echo get_account_data("firstlast", $PROCESSED["administrator_id"]) ?>.</span></td>
 							</tr>	
 							<tr>

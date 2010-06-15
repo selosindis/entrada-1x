@@ -20,7 +20,7 @@
  * @author Developer: James Ellis <james.ellis@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
- * @version $Id: index.inc.php 1169 2010-05-01 14:18:49Z simpson $
+ * @version $Id: index.inc.php 1202 2010-06-10 19:19:49Z hbrundage $
  */
 
 if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
@@ -219,15 +219,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							$all = true;
 							if($results) {
 								foreach($results as $result) {
-							if($ENTRADA_ACL->amIAllowed(new CourseResource(null, $result['organisation_id']), 'read')) {
-										echo "<option value=\"".(int) $result["organisation_id"]."\"".(isset($organisation_id) && $organisation_id == $result['organisation_id'] ? " selected=\"selected\"" : "").">".html_encode($result["organisation_title"])."</option>\n";
+							if($ENTRADA_ACL->amIAllowed(new CourseResource(null, $result["organisation_id"]), "read")) {
+										echo "<option value=\"".(int) $result["organisation_id"]."\"".(isset($organisation_id) && $organisation_id == $result["organisation_id"] ? " selected=\"selected\"" : "").">".html_encode($result["organisation_title"])."</option>\n";
 									} else {
 										$all = false;
 									}
 								}
 							}
 							if($all) {
-								echo '<option value="all" '.(isset($organisation_id) && $organisation_id == 'all' ? 'selected="selected"' : '').">All organisations</option>";
+								echo "<option value=\"all\" ".(isset($organisation_id) && $organisation_id == "all" ? "selected=\"selected\"" : "").">All organisations</option>";
 							}
 							?>
 					</select>
@@ -256,8 +256,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							echo "<img src=\"".ENTRADA_URL."/images/record-next-off.gif\" width=\"11\" height=\"11\" alt=\"\" title=\"\" style=\"vertical-align: middle\" />";
 						}
 						echo "</span>\n";
+						echo "</form>\n";
 					}
-					echo "</form>\n";
 					echo "</div>\n";
 					?>
 		</td>
@@ -269,7 +269,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 	 */
 	$limit_parameter = (int) (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"] * $PAGE_CURRENT) - $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]);
 	
-	if ($ENTRADA_ACL->amIAllowed('course', 'update', false)) {
+	if ($ENTRADA_ACL->amIAllowed("course", "update", false)) {
 		$query	= "	SELECT `courses`.`course_id`,  `courses`.`organisation_id`, `courses`.`course_name`, `courses`.`course_code`, `courses`.`course_url`, `courses`.`notifications`, `curriculum_lu_types`.`curriculum_type_name`, CONCAT_WS(', ', `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname`) AS `fullname`
 					FROM `courses`
 					LEFT JOIN `curriculum_lu_types`
@@ -281,7 +281,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					LEFT JOIN `".AUTH_DATABASE."`.`user_data`
 					ON `".AUTH_DATABASE."`.`user_data`.`id` = `course_contacts`.`proxy_id`
 					WHERE `courses`.`course_active` = '1'
-					".(isset($organisation_where) ? ' AND `courses`.'.$organisation_where : '')."
+					".(isset($organisation_where) ? " AND `courses`.".$organisation_where : "")."
 					ORDER BY %s LIMIT %s, %s";
 	} else {
 		$query	= "	SELECT `courses`.`course_id`, `courses`.`organisation_id`, `courses`.`course_name`, `courses`.`course_code`, `courses`.`course_url`, `courses`.`notifications`, `curriculum_lu_types`.`curriculum_type_name`, CONCAT_WS(', ', `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname`) AS `fullname`
@@ -323,7 +323,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			<col class="title" />
 			<col class="teacher" />
 			<col class="notices" />
-			<col class="attachment" />
+			<col class="grades" />
 		</colgroup>
 		<thead>
 			<tr>
@@ -332,7 +332,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				<td class="title<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "name") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("name", "Course Name"); ?></td>
 				<td class="teacher<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "director") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("director", "Course Director"); ?></td>
 				<td class="notices<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "notices") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("notices", "Notices"); ?></td>
-				<td class="attachment">&nbsp;</td>
+				<td class="grades">&nbsp;</td>
 			</tr>
 		</thead>
 		<?php if ($ENTRADA_ACL->amIAllowed('course', 'delete', false)) : ?>
@@ -370,7 +370,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			echo "	<td class=\"title".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Course Name: ".html_encode($result["course_name"])."\">" : "").html_encode($result["course_name"].(($result["course_code"]) ? ": ".$result["course_code"] : "")).(($url) ? "</a>" : "")."</td>\n";
 			echo "	<td class=\"teacher".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Course Director: ".html_encode($result["fullname"])."\">" : "").html_encode($result["fullname"]).(($url) ? "</a>" : "")."</td>\n";
 			echo "	<td class=\"notices\">".(((int) $result["notifications"]) ? "Yes" : "<strong>No</strong>")."</td>\n";
-			echo "	<td class=\"attachment\">".(($url) ? "<a href=\"".ENTRADA_URL."/admin/".$MODULE."?section=content&amp;id=".$result["course_id"]."\"><img src=\"".ENTRADA_URL."/images/event-contents.gif\" width=\"16\" height=\"16\" alt=\"Manage Course Content\" title=\"Manage Course Content\" border=\"0\" /></a>" : "<img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"16\" height=\"16\" alt=\"\" title=\"\" />")."</td>\n";
+			echo "	<td class=\"grades\">".(($url) ? "<a href=\"".ENTRADA_URL."/admin/".$MODULE."?section=content&amp;id=".$result["course_id"]."\"><img src=\"".ENTRADA_URL."/images/event-contents.gif\" width=\"16\" height=\"16\" alt=\"Manage Course Content\" title=\"Manage Course Content\" border=\"0\" /></a>" : "<img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"16\" height=\"16\" alt=\"\" title=\"\" />");
+			if ($ENTRADA_ACL->amIAllowed(new GradebookResource($result["course_id"], $result["organisation_id"]), "read")) {
+				echo "&nbsp;<a href=\"".ENTRADA_URL."/admin/gradebook?section=edit&amp;id=".$result["course_id"]."\"><img src=\"".ENTRADA_URL."/images/book_go.png\" width=\"16\" height=\"16\" alt=\"View Gradebook\" title=\"View Gradebook\" border=\"0\" /></a>";				
+			}
+			echo "	</td>\n";
 			echo "</tr>\n";
 		}
 		?>

@@ -675,7 +675,7 @@
 										{
 										this.className = 'sorted';
 										}
-									 $(tdDiv).css({textAlign:pth.align,width: $('div:first',pth)[0].style.width});
+									 $(tdDiv).css({textAlign:pth.align,width: $($('div:first',pth)[0]).css('width')});
 									 
 									 if (pth.hidden) $(this).css('display','none');
 									 
@@ -962,7 +962,7 @@
 							}
 							
 							
-						 $(thdiv).css({textAlign:this.align, width: this.width + 'px'});
+						 $(thdiv).css({textAlign:this.align, width: $(this).css('width') + 'px'});
 						 thdiv.innerHTML = this.innerHTML;
 						 
 						$(this).empty().append(thdiv).removeAttr('width')

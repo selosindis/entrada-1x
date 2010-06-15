@@ -28,8 +28,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 } elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	header("Location: ".ENTRADA_URL);
 	exit;
-} elseif (!$ENTRADA_ACL->amIAllowed('clerkshipschedules', 'read')) {
-	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/".$MODULE."\\'', 15000)";
+} elseif (!$ENTRADA_ACL->amIAllowed("clerkshipschedules", "read")) {
+	$ONLOAD[] = "setTimeout('window.location=\\'".ENTRADA_URL."/admin/".$MODULE."\\'', 15000)";
 
 	$ERROR++;
 	$ERRORSTR[]	= "You do not have the permissions required to use this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
@@ -41,118 +41,119 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 	$BREADCRUMB[]	= array("url" => ENTRADA_URL."/clerkship/electives?".replace_query(array("section" => "view")), "title" => "Viewing Electives");
 	if (isset($_GET["ids"]) && $PROXY_ID	= clean_input($_GET["ids"], "int")) {
 		
-		$student_name	= get_account_data("firstlast", $PROXY_ID);
+		$student_name = get_account_data("firstlast", $PROXY_ID);
 		
-		/**
-		 * Process local page actions.
-		 */
-		$query		= "	SELECT a.*, c.*
-						FROM `".CLERKSHIP_DATABASE."`.`events` AS a
-						LEFT JOIN `".CLERKSHIP_DATABASE."`.`event_contacts` AS b
-						ON b.`event_id` = a.`event_id`
-						LEFT JOIN `".CLERKSHIP_DATABASE."`.`regions` AS c
-						ON c.`region_id` = a.`region_id`
-						WHERE b.`econtact_type` = 'student'
-						AND b.`etype_id` = ".$db->qstr($PROXY_ID)."
-						ORDER BY a.`event_start` ASC";
-		$results	= $db->GetAll($query);
-		if($results) {
+		$query = "	SELECT a.*, c.`region_name`, d.`aschedule_id`, d.`apartment_id`, e.`rotation_title`
+					FROM `".CLERKSHIP_DATABASE."`.`events` AS a
+					LEFT JOIN `".CLERKSHIP_DATABASE."`.`event_contacts` AS b
+					ON b.`event_id` = a.`event_id`
+					LEFT JOIN `".CLERKSHIP_DATABASE."`.`regions` AS c
+					ON c.`region_id` = a.`region_id`
+					LEFT JOIN `".CLERKSHIP_DATABASE."`.`apartment_schedule` AS d
+					ON d.`event_id` = a.`event_id`
+					AND d.`proxy_id` = ".$db->qstr($PROXY_ID)."
+					AND d.`aschedule_status` = 'published'
+					LEFT JOIN `".CLERKSHIP_DATABASE."`.`global_lu_rotations` AS e
+					ON e.`rotation_id` = a.`rotation_id`
+					WHERE b.`econtact_type` = 'student'
+					AND b.`etype_id` = ".$db->qstr($PROXY_ID)."
+					ORDER BY a.`event_start` ASC";
+		$results = $db->GetAll($query);
+		if ($results) {
 			?>
 			<h1><?php echo $student_name.(substr($student_name, -1) != "s" ? "'s" : "'");?> Clerkship Schedule</h1>
-			<table class="tableList" cellspacing="0" summary="List of Clerkship Schedule">
-			<colgroup>
-				<col class="modified" />
-				<col class="type" />
-				<col class="date" />
-				<col class="date" />
-				<col class="region" />
-				<col class="title" />
-			</colgroup>
-			<thead>
-				<tr>
-					<td class="modified">&nbsp;</td>
-					<td class="type">Event Type</td>
-					<td class="date-smallest">Start Date</td>
-					<td class="date-smallest">Finish Date</td>
-					<td class="region">Region</td>
-					<td class="title">Category Title</td>
-				</tr>
-			</thead>
-			<tbody>
-			<?php
-			foreach ($results as $result) {
-				if ((time() >= $result["event_start"]) && (time() <= $result["event_finish"])) {
-					$bgcolour	= "#E7ECF4";
-					$is_here	= true;
-				} else {
-					$bgcolour	= "#FFFFFF";
-					$is_here	= false;
-				}
-
-				if ((bool) $result["manage_apartments"]) {
-					$apartment_id			= clerkship_apartment_status($result["event_id"], $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]);
-					$apartment_available	= (($apartment_id) ? true : false);
-				} else {
-					$apartment_available	= false;
-				}
-
-				if (!isset($result["region_name"]) || $result["region_name"] == "") {
-					$result_region = clerkship_get_elective_location($result["event_id"]);
-					$result["region_name"] = $result_region["region_name"];
-					$result["city"]		   = $result_region["city"];
-				} else {
-					$result["city"] = "";
-				}
-				
-				$event_title = clean_input($result["event_title"], array("htmlbrackets", "trim"));
-				
-				$cssclass 	= "";
-				$skip		= false;
-
-				if ($result["event_type"] == "elective") {
-					switch ($result["event_status"]) {
-						case "approval":
-							$elective_word = "Pending";
-							$cssclass 	= " class=\"in_draft\"";
-							$skip		= false;
-						break;
-						case "published":
-							$elective_word = "Approved";
-							$cssclass 	= " class=\"published\"";
-							$skip		= false;
-						break;
-						case "trash":
-							$elective_word = "Rejected";
-							$cssclass 	= " class=\"rejected\"";
-							$skip		= true;
-						break;
-						default:
-							$elective_word = "";
-							$cssclass = "";
-						break;
+			<table class="tableList" cellspacing="0" summary="List of Clerkship Rotations">
+				<colgroup>
+					<col class="modified" />
+					<col class="type" />
+					<col class="title" />
+					<col class="region" />
+					<col class="date-smallest" />
+					<col class="date-smallest" />
+				</colgroup>
+				<thead>
+					<tr>
+						<td class="modified">&nbsp;</td>
+						<td class="type">Event Type</td>
+						<td class="title">Rotation Name</td>
+						<td class="region">Region</td>
+						<td class="date-smallest">Start Date</td>
+						<td class="date-smallest">Finish Date</td>
+					</tr>
+				</thead>
+				<tbody>
+				<?php
+				foreach ($results as $result) {
+					if ((time() >= $result["event_start"]) && (time() <= $result["event_finish"])) {
+						$bgcolour = "#E7ECF4";
+						$is_here = true;
+					} else {
+						$bgcolour = "#FFFFFF";
+						$is_here = false;
 					}
-					
-					$elective	= true;					
-				} else {
-					$elective	= false;
-					$skip		= false;
-				}
 
-				if (!$skip) {
-					echo "<tr".(($is_here) && $cssclass != " class=\"in_draft\"" ? " class=\"current\"" : $cssclass).">\n";
-					echo "	<td class=\"modified\"><img src=\"".ENTRADA_URL."/images/".(($apartment_available) ? "housing-icon-small.gif" : "pixel.gif")."\" width=\"16\" height=\"16\" alt=\"".(($apartment_available) ? "Detailed apartment information available." : "")."\" title=\"".(($apartment_available) ? "Detailed apartment information available." : "")."\" style=\"border: 0px\" />".(($apartment_available) ? "</a>" : "")."</td>\n";
-					echo "	<td class=\"type\">".(($elective) ? "Elective".(($elective_word != "") ? " (".$elective_word.")" : "") : "Core Rotation")."</td>\n";
-					echo "	<td class=\"date-smallest\">".date("D M d/y", $result["event_start"])."</td>\n";
-					echo "	<td class=\"date-smallest\">".date("D M d/y", $result["event_finish"])."</td>\n";
-					echo "	<td class=\"region\">".html_encode((($result["city"] == "") ? limit_chars(($result["region_name"]), 30) : $result["city"]))."</td>\n";
-					echo "	<td class=\"title\">";
-					echo "		<span title=\"".$event_title."\">".limit_chars(html_decode($event_title), 55)."</span>";
-					echo "	</td>\n";
-					echo "</tr>\n";
+					if ((int) $result["aschedule_id"]) {
+						$apartment_available = true;
+					} else {
+						$apartment_available = false;
+					}
+
+					if (!isset($result["region_name"]) || $result["region_name"] == "") {
+						$result_region = clerkship_get_elective_location($result["event_id"]);
+						$result["region_name"] = $result_region["region_name"];
+						$result["city"] = $result_region["city"];
+					} else {
+						$result["city"] = "";
+					}
+
+					$cssclass = "";
+					$skip = false;
+
+					if ($result["event_type"] == "elective") {
+						switch ($result["event_status"]) {
+							case "approval":
+								$elective_word = "Pending";
+								$cssclass = " class=\"in_draft\"";
+								$click_url = ENTRADA_URL."/clerkship/electives?section=edit&id=".$result["event_id"];
+								$skip = false;
+							break;
+							case "published":
+								$elective_word = "Approved";
+								$cssclass = " class=\"published\"";
+								$click_url = ENTRADA_URL."/clerkship/electives?section=view&id=".$result["event_id"];
+								$skip = false;
+							break;
+							case "trash":
+								$elective_word = "Rejected";
+								$cssclass = " class=\"rejected\"";
+								$click_url = ENTRADA_URL."/clerkship/electives?section=edit&id=".$result["event_id"];
+								$skip = true;
+							break;
+							default:
+								$elective_word = "";
+								$cssclass = "";
+							break;
+						}
+
+						$elective = true;
+					} else {
+						$elective = false;
+						$skip = false;
+					}
+
+					if (!$skip) {
+						echo "<tr".(($is_here) && $cssclass != " class=\"in_draft\"" ? " class=\"current\"" : $cssclass).">\n";
+						echo "	<td class=\"modified\"><img src=\"".ENTRADA_URL."/images/".(($apartment_available) ? "housing-icon-small.gif" : "pixel.gif")."\" width=\"16\" height=\"16\" alt=\"\" title=\"\" style=\"border: 0px\" /></td>\n";
+						echo "	<td class=\"type\">".(($elective) ? "Elective".(($elective_word != "") ? " (".$elective_word.")" : "") : "Core Rotation")."</td>\n";
+						echo "	<td class=\"title\">".html_encode($result["rotation_title"])."</td>\n";
+						echo "	<td class=\"region\">".html_encode((($result["city"] == "") ? limit_chars(($result["region_name"]), 30) : $result["city"]))."</td>\n";
+						echo "	<td class=\"date-smallest\">".date("D M d/y", $result["event_start"])."</td>\n";
+						echo "	<td class=\"date-smallest\">".date("D M d/y", $result["event_finish"])."</td>\n";
+						echo "</tr>\n";
+					}
 				}
-			}
-			?>
-			</tbody>
+				?>
+				</tbody>
 			</table>
 			<?php
 		} else {

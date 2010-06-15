@@ -22,7 +22,7 @@
  * @author Developer: Matt Simpson <matt.simpson@queensu.ca>
  * @copyright Copyright 2008 Queen's University. All Rights Reserved.
  *
- * @version $Id: join.inc.php 1170 2010-05-01 14:35:01Z simpson $
+ * @version $Id: join.inc.php 1186 2010-05-05 17:18:31Z jellis $
  */
 
 if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
@@ -162,7 +162,8 @@ if($COMMUNITY_ID) {
 															FROM `community_members` AS a
 															LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
 															ON a.`proxy_id` = b.`id`
-															WHERE a.`community_id` = ".$db->qstr($COMMUNITY_ID));
+															WHERE a.`community_id` = ".$db->qstr($COMMUNITY_ID)."
+															AND a.`member_acl` = '1'");
 				if ($display_admin_list && $community_administrators) {
 					echo "<div style=\"margin-left: 30px;\">If you have any questions, please contact one of the community administrators:\n";
 					echo "\t<ul class=\"menu\" style=\"margin: 10px 0px 0px 20px;\">\n";

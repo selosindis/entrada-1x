@@ -134,16 +134,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 					}
 		
 					if ((bool) $result["manage_apartments"]) {
-						$apartment_id			= clerkship_apartment_status($result["event_id"], $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]);
-						$apartment_available	= (($apartment_id) ? true : false);
+						$aschedule_id = regionaled_apartment_check($result["event_id"], $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]);
+						$apartment_available = (($aschedule_id) ? true : false);
 					} else {
-						$apartment_available	= false;
+						$apartment_available = false;
 					}
 		
 					if ($apartment_available) {
-						$click_url	= ENTRADA_URL."/clerkship?section=details&id=".$result["event_id"];
+						$click_url = ENTRADA_URL."/clerkship?section=details&id=".$result["event_id"];
 					} else {
-						$click_url	= "";
+						$click_url = "";
 					}
 		
 					if (!isset($result["region_name"]) || $result["region_name"] == "") {

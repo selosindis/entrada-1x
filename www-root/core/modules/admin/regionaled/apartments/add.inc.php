@@ -22,8 +22,7 @@
  * @author Developer: Matt Simpson <matt.simpson@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
- * @version $Id: add.inc.php 1169 2010-05-01 14:18:49Z simpson $
-*/
+ */
 
 if (!defined("IN_APARTMENTS")) {
 	exit;
@@ -216,14 +215,29 @@ if (!defined("IN_APARTMENTS")) {
 				$ERRORSTR[]	= "You must provide the telephone number of the apartment's superintendent.";
 			}
 
-			if (isset($_POST["super_email"]) && ($tmp_input = clean_input($_POST["super_email"], array("trim", "notags")) && valid_address($tmp_input))) {
+			if (isset($_POST["super_email"]) && ($tmp_input = clean_input($_POST["super_email"], array("trim", "notags"))) && valid_address($tmp_input)) {
 				$PROCESSED["super_email"] = $tmp_input;
 			} else {
 				$ERROR++;
 				$ERRORSTR[]	= "You must provide a valid e-mail address for the apartment's superintendent.";
 			}
 
-			validate_calendar("available", true, false, false);
+			/**
+			 * Required field "release_date" / Available Start (validated through validate_calendar function).
+			 * Non-required field "release_until" / Available Finish (validated through validate_calendar function).
+			 */
+			$available_date = validate_calendar("available", true, false, false);
+			if ((isset($available_date["start"])) && ((int) $available_date["start"])) {
+				$PROCESSED["available_start"] = (int) $available_date["start"];
+			} else {
+				$PROCESSED["available_start"] = 0;
+			}
+
+			if ((isset($available_date["finish"])) && ((int) $available_date["finish"])) {
+				$PROCESSED["available_finish"] = (int) $available_date["finish"];
+			} else {
+				$PROCESSED["available_finish"] = 0;
+			}
 
 			if (!$ERROR) {
 				$PROCESSED["updated_last"] = time();

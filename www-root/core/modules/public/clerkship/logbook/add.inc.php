@@ -241,27 +241,28 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 		break;
 		case 1 :
 		default :
-			$HEAD[] 		= "<link href=\"".ENTRADA_URL."/javascript/calendar/css/xc2_default.css\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />";
-			$HEAD[] 		= "<script language=\"javascript\" type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/calendar/config/xc2_default.js\"></script>\n";
-			$HEAD[] 		= "<script language=\"javascript\" type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/calendar/script/xc2_inpage.js\"></script>\n";
-			require_once(ENTRADA_ABSOLUTE."/javascript/logbook.js.php");			
+			$HEAD[] = "<link href=\"".ENTRADA_URL."/javascript/calendar/css/xc2_default.css\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />";
+			$HEAD[] = "<script language=\"javascript\" type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/calendar/config/xc2_default.js\"></script>\n";
+			$HEAD[] = "<script language=\"javascript\" type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/calendar/script/xc2_inpage.js\"></script>\n";
+
+			require_once(ENTRADA_ABSOLUTE."/javascript/logbook.js.php");
+
 			if ($ERROR && (!isset($_POST["allow_save"]) || $_POST["allow_save"])) {
 				echo display_error();
 			}
 			?>
-			<div id="hoverbox" style="display: none;">
-				<span class="content-small">
-					This reflection should be a short entry explaining your experiences with the patient. 
-					It should be no more than approximately 100 words, and you may use initials to refer to the patient, 
-					but no complete data such as their name or record number.
-					<br/><br/>
-					For example: 
-					<br/><br/>
-					I spent the evening following Ms. J's labour and participated in her delivery. I was able to do 
-					a cervical exam and now feel much more confident in my ability to do this task.  I found that 
-					reviewing my Phase II E notes about normal delivery was very useful to reinforce this experience 
+			<div id="hoverbox" class="display-generic" style="display: none;">
+				This reflection should be a short entry explaining your experiences with the patient.
+				It should be no more than approximately 100 words, and you may use initials to refer to the patient,
+				but no complete data such as their name or record number.
+				<br/><br/>
+				For Example:
+				<div style="padding: 0 20px 10px 20px">
+					I spent the evening following Ms. J's labour and participated in her delivery. I was able to do
+					a cervical exam and now feel much more confident in my ability to do this task.  I found that
+					reviewing my Phase II E notes about normal delivery was very useful to reinforce this experience
 					and have also read the relevant chapter in the recommended text again following this L+D shift.
-				</span>
+				</div>
 			</div>
 			<form id="addEncounterForm" action="<?php echo ENTRADA_URL; ?>/clerkship/logbook?<?php echo replace_query(array("step" => 2)); ?>" method="post">
 			<input type="hidden" value="1" name="allow_save" id="allow_save" />
@@ -838,9 +839,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 					<td colspan="3">&nbsp;</td>
 				</tr>
 				<tr>
-					<td></td>
-					<td style="vertical-align: top"><label for="reflection" class="form-required">Reflection on learning experience </label><a id="tooltip" href="#hoverbox"><img style="border: none;" src="<?php echo ENTRADA_URL; ?>/images/btn_help.gif"/></a></td>
-					<td>
+					<td>&nbsp;</td>
+					<td colspan="2"><label for="reflection" class="form-required">Reflection On Learning Experience</label> <a id="tooltip" href="#hoverbox"><img src="<?php echo ENTRADA_URL; ?>/images/btn_help.gif" alt="Help" style="border: 0; vertical-align: middle;" /></a></td>
+				</tr>
+				<tr>
+					<td>&nbsp;</td>
+					<td colspan="2">
 						<textarea id="reflection" name="reflection" class="expandable"  maxlength="300" style="width: 95%"><?php echo ((isset($PROCESSED["reflection"])) ? html_encode($PROCESSED["reflection"]) : ""); ?></textarea>
 					</td>
 				</tr>
@@ -848,9 +852,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 					<td colspan="3">&nbsp;</td>
 				</tr>
 				<tr>
-					<td></td>
-					<td style="vertical-align: top"><label for="comments" class="form-nrequired">Additional Comments </label></td>
-					<td>
+					<td>&nbsp;</td>
+					<td colspan="2"><label for="comments" class="form-nrequired">Additional Comments</label></td>
+				</tr>
+				<tr>
+					<td>&nbsp;</td>
+					<td colspan="2">
 						<textarea id="comments" name="comments" class="expandable"  maxlength="300" style="width: 95%"><?php echo ((isset($PROCESSED["comments"])) ? html_encode($PROCESSED["comments"]) : ""); ?></textarea>
 					</td>
 				</tr>				

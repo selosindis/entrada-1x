@@ -124,6 +124,7 @@ background-color:#FFC;
 color:#666;
 -moz-border-radius:5px;
 -webkit-border-radius:5px;
+border-radius: 5px;
 border:1px #FC0 solid;
 padding:5px;
 }
@@ -197,6 +198,32 @@ background:transparent url(../images/list-notice.gif) no-repeat 0 2px;
 background:transparent url(../images/list-error.gif) no-repeat 0 2px;
 }
 
+div.container {
+position: relative;
+}
+
+div.container > div {
+position: absolute;
+width: 50%;
+text-align: left;
+}
+
+div.container > div.right {
+text-align: right;
+}
+
+div.container > div.left {
+text-align: left;
+}
+
+div.container > div.col-left {
+left: 0;
+}
+
+div.container > div.col-right {
+right: 0;
+}
+
 .navi-heading {
 font-family:'Lucida Grande', Geneva, Verdana, Arial, Helvetica, sans-serif;
 font-size:15px;
@@ -257,7 +284,7 @@ form.inplaceeditor-form a {
 margin-left:10px;
 }
 
-button,form.inplaceeditor-form input[type=submit],input[type=button],input[type=submit],input.button-add,input.button-remove,input.button-red,input.button {
+a.button,button,form.inplaceeditor-form input[type=submit],input[type=button],input[type=submit],input.button-add,input.button-remove,input.button-red,input.button {
 color:#000;
 font-family:'Lucida Grande', Geneva, Verdana, Arial, Helvetica, sans-serif;
 font-size:12px;
@@ -265,6 +292,21 @@ width:115px;
 height:22px;
 border:none;
 background:#EEE url(../images/btn_bg.gif);
+vertical-align: middle;
+}
+
+a.button {
+display: block;
+text-align: center;
+}
+a.button:hover {
+text-decoration: none;
+color:#000;
+}
+
+a.button > div {
+line-height: 100%;
+padding-top: 5px;
 }
 
 input[type=checkbox],input[type=radio] {
@@ -305,6 +347,7 @@ background-color:#EEE;
 color:#000;
 font-family:Verdana, Arial, Helvetica, sans-serif;
 font-size:12px;
+vertical-align: middle;
 }
 
 .select-box {
@@ -323,10 +366,12 @@ text-decoration:blink;
 }
 
 .form-required {
+vertical-align: middle;
 color:#A30000;
 }
 
 .form-nrequired {
+vertical-align: middle;
 color:#2F3032;
 }
 
@@ -814,6 +859,18 @@ ul.menu li.community {
 background:transparent url(../images/list-community.gif) no-repeat;
 }
 
+ul.menu li.undergrad {
+background:transparent url(../images/legend-undergrad.gif) no-repeat;
+}
+
+ul.menu li.postgrad {
+background:transparent url(../images/legend-postgrad.gif) no-repeat;
+}
+
+ul.menu li.other {
+background:transparent url(../images/legend-other.gif) no-repeat;
+}
+
 ul.menu li.correct,ul.menu li.checkmark {
 background:transparent url(../images/checkbox-checkmark.gif) no-repeat;
 }
@@ -881,6 +938,40 @@ border-bottom:none;
 -moz-border-radius:10px 10px 0 0;
 -webkit-border-radius:10px 10px 0 0;
 padding:3px;
+}
+
+div.userProfile {
+width:100%;
+border:1px solid #999;
+-moz-border-radius: 0 0 5px 5px;
+-webkit-border-radius: 0 0 5px 5px;
+border-radius: 0 0 5px 5px;
+padding:0;
+margin-bottom: 15px;
+}
+
+div.userProfile div.head {
+height:20px;
+text-align: left;
+border-bottom:1px solid #999;
+color:#333;
+font-size:11px;
+font-weight:700;
+background:#EBEBEB url(../images/list-header.gif);
+padding:0;
+}
+
+div.userProfile div.head div {
+padding:2px 2px 2px 5px;
+}
+
+div.userProfile div.body {
+padding: 5px;
+}
+
+table.tableList {
+width:100%;
+border-collapse:collapse;
 }
 
 table.tableList thead tr td {
@@ -958,6 +1049,10 @@ table.tableList tbody tr.individual {
 background-color:#E7ECF4;
 }
 
+table.tableList thead tr td, table.tableList tbody tr td {
+padding: 0px 2px 0px 3px;
+}
+
 table.tableList tr td.modified {
 width:20px;
 text-align:center;
@@ -985,7 +1080,7 @@ width:140px;
 border-left:none;
 }
 
-table.tableList tr td.date-smallest {
+table.tableList tr td.date-smallest, table.tableList tr td.gradebook {
 width:100px;
 border-left:none;
 }
@@ -994,7 +1089,10 @@ table.tableList tr td.notices,table.tableList tr td.accesses,table.tableList tr 
 width:50px;
 border-left:none;
 }
-
+table.tableList tr td.grades {
+	width: 40px;
+	border-left: none;
+}
 table.tableList tr td.report-hours {
 overflow:hidden;
 width:90px;
@@ -1015,7 +1113,7 @@ border-left:none;
 }
 
 table.tableList tr td.region,table.tableList tr td.responses {
-width:75px;
+width:90px;
 border-left:none;
 }
 
@@ -1171,6 +1269,14 @@ margin:0 0 15px;
 padding:3px;
 }
 
+.section, .subsection {
+	clear: both;
+	padding: 10px 0 10px 10px;
+	margin:10px 0 10px 10px;
+}
+
+
+
 div.section-holder {
 padding-left:25px;
 margin-bottom:25px;
@@ -1258,6 +1364,73 @@ white-space:nowrap;
 padding:2px;
 }
 
+ul.rss-list {
+	float: left;
+	width: 50%;
+	padding:0;
+	margin:0;
+	list-style-type:none;
+	height: auto;
+	margin-bottom: -2000px; 
+	padding-bottom: 2000px;
+	min-height: 10px;
+}
+ul.rss-list li {
+	padding:0;
+	margin:0;
+	list-style-type: none;
+}
+ul.rss-list li img {
+	margin: 0 auto;
+}
+ul.rss-list.first li {
+	margin-right: 10px;
+}
+div.rss-add {
+	padding-top:10px;
+	clear:both;
+	text-align: right;	
+}
+#rss-add-details, #rss-edit-details {
+	text-align: left;
+}
+#rss-save-results {
+	margin: 2px 0px 2px 10px;
+	width: 20px;
+	height: 20px;
+	overflow: hidden;
+}
+#dashboard-syndicated-content {
+	overflow: hidden;	
+}
+#dashboard-syndicated-content.editing .feeds.rss {
+	color: #000;
+}
+#dashboard-syndicated-content.editing ul.rss-list li {
+	padding: 0px 5px 5px 5px;
+	margin: 5px;
+	border: 1px #AAA dashed;
+	cursor: move;
+}
+
+#dashboard-syndicated-content.editing ul.rss-list li .rss-title a {
+	width: 340px;
+}
+
+a.rss-remove-link {
+	background: transparent url(../images/action-delete.gif) no-repeat center left;
+	margin: 10px 0 0 10px;
+	padding-left: 20px;
+	font-weight: bold;
+	display: none;
+}
+
+#dashboard-syndicated-content.editing a.rss-remove-link {
+	display: block;
+}
+
+div.rss-add a.feeds {
+}
 .rsslist {
 width:100%;
 display:block;
@@ -1511,6 +1684,29 @@ background:transparent url(../images/btn_add.gif) no-repeat center left;
 padding:0 14px 0 16px;
 }
 
+.page-action-cancel li {
+display:inline;
+background:transparent url(../images/btn_cancel.gif) no-repeat center left;
+padding:0 14px 0 16px;
+}
+
+.page-action-cancel li a {
+color:#000;
+font-weight:normal;
+}
+
+.page-action-edit li {
+display:inline;
+background:transparent url(../images/btn-edit.gif) no-repeat center left;
+padding:0 14px 0 16px;
+}
+
+.page-action-edit li a {
+color:#333;
+padding-left:5px;
+font-weight:bold;
+}
+
 .page-action li a {
 color:#693;
 font-weight:700;
@@ -1689,6 +1885,15 @@ vertical-align:middle;
 background-color:#000;
 }
 
+.modal {  
+background-color:#FFF;
+padding:20px;
+border:1px solid #333;
+-moz-border-radius:10px;
+-webkit-border-radius:10px;
+border-radius:10px;
+}
+
 .modal-confirmation {
 position:relative;
 width:450px;
@@ -1696,6 +1901,7 @@ height:225px;
 background-color:#FFF;
 -moz-border-radius:10px;
 -webkit-border-radius:10px;
+border-radius:10px;
 padding:20px;
 }
 
@@ -1726,6 +1932,18 @@ border-top:2px #CCC solid;
 background-color:#FFF;
 -moz-border-radius:0 0 10px 10px;
 -webkit-border-radius:0 0 10px 10px;
+}
+
+.modal-confirmation div.footer button.left {
+position:absolute;
+top: 8px;
+left: 10px;
+}
+
+.modal-confirmation div.footer button.right {
+position:absolute;
+top: 8px;
+right: 10px;
 }
 
 .tooltip {
@@ -2314,7 +2532,9 @@ color:#A7A7A7;
 text-decoration:none;
 padding:2px 10px 2px 16px;
 }
-
+a.feeds:hover {
+text-decoration: underline;
+}
 a.feeds.rss {
 background:transparent url(../images/rss-enabled.gif) no-repeat center left;
 }
@@ -2390,4 +2610,55 @@ div.course-spacer {
 }
 a.objective-expand {
 	cursor: pointer;
+}
+
+table.mspr_table {
+	width:100%;	
+}
+
+table.studentships td.title {
+	text-align:left;
+}
+
+table.studentships td.year, table.studentships td.controls {
+	text-align:right;
+}
+
+table.manage_awards tr.disabled td {
+	color:#999999;
+}
+	
+table.manage_awards td.title {
+	vertical-align: top;
+}
+
+table.manage_awards td.award_terms {
+	white-space:normal;
+}
+
+table.manage_awards tr.disabled td.award_terms {
+	white-space:nowrap;
+}
+
+table.manage_awards tbody tr td {
+	padding-top: 7px !important;
+	padding-bottom: 7px !important;
+}
+
+.mspr_form {
+	width: 100%;
+}
+
+table.mspr_table tbody tr td {
+	white-space:normal;
+	vertical-align:top;
+	padding-top: 5px;
+}
+
+table.mspr_table tr.unapproved {
+	background-color:#F0F0F0;
+}
+
+table.mspr_table tr.unapproved td{
+	color:#999999;
 }

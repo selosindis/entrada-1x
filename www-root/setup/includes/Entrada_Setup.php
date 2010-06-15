@@ -12,12 +12,13 @@
  *
  * @version $Id$
 */
+
 class Entrada_Setup
 {	
-	public static $SQL_DUMP_ENTRADA = "install/sql/entrada.sql";
-	public static $SQL_DUMP_AUTH = "install/sql/entrada_auth.sql";
-	public static $SQL_DUMP_CLERKSHIP = "install/sql/entrada_clerkship.sql";
-	public static $HTACCESS_FILE = "/setup/install/dist-htaccess.txt";
+	public $sql_dump_entrada 	= "install/sql/entrada.sql";
+	public $sql_dump_auth 	    = "install/sql/entrada_auth.sql";
+	public $sql_dump_clerkship 	= "install/sql/entrada_clerkship.sql";
+	public $htaccess_file 	    = "/setup/install/dist-htaccess.txt";
 	
 	public $entrada_url;
 	public $entrada_relative;
@@ -102,18 +103,20 @@ class Entrada_Setup
 	}
 		
 	public function writeHTAccess() {
-		try {
-			$htaccess_text = @file_get_contents($this->entrada_absolute.self::$HTACCESS_FILE);
+		try {			
+
+			$htaccess_text = @file_get_contents($this->entrada_absolute . $this->htaccess_file);
 			$htaccess_text = str_replace("ENTRADA_RELATIVE", $this->entrada_relative, $htaccess_text);
-	
+		
 			if (!@file_put_contents($this->entrada_absolute."/.htaccess", $htaccess_text)) {
 				return false;
 			}
-
+			
 			if (!@file_exists($this->entrada_absolute."/.htaccess")) {
 				return false;
 			}
 		} catch (Exception $e) {
+			echo $e->getMessage();
 			return false;
 		}
 		
@@ -148,6 +151,7 @@ class Entrada_Setup
 		}
 		catch(Zend_Config_Exception $e)
 		{
+			
 			return false;
 		}
 		
@@ -194,10 +198,11 @@ CONFIGTEXT;
 
 	public function loadDumpData()
 	{
+		
 		$db_dump_files = array(
-			$this->entrada_database => self::$SQL_DUMP_ENTRADA,
-			$this->auth_database => self::$SQL_DUMP_AUTH,
-			$this->clerkship_database => self::$SQL_DUMP_CLERKSHIP
+			$this->entrada_database => $this->sql_dump_entrada,
+			$this->auth_database => $this->sql_dump_auth,
+			$this->clerkship_database => $this->sql_dump_clerkship
 		);
 		try
 		{
@@ -227,12 +232,10 @@ CONFIGTEXT;
 	 * @return array
 	 */
 	public function parseDatabaseDump($dump_file)
-	{
-		$handle = @fopen($dump_file, "r");
-		
+	{		
+		$dump_file = $dump_file;
 		$sql_dump = array();
 		$query = "";
-
 		if ($handle = @fopen($dump_file, "r")) do {
 			$sql_line = fgets($handle);
 			if ((trim($sql_line) != "") && (strpos($sql_line, "--") === false)) {
@@ -244,7 +247,39 @@ CONFIGTEXT;
 				}
 			}
 		} while (!@feof($handle));
-		
 		return $sql_dump;
+	}
+	
+	/**
+	 * Removes all data and tables from the three databases
+	 * @return boolean Success of truncation
+	 */
+	public function truncateDatabases() {
+		$dbs = array($this->entrada_database, $this->auth_database, $this->clerkship_database);
+		try
+		{
+			foreach($dbs as $database_name)
+			{
+				$db = NewADOConnection(DATABASE_TYPE);
+				$db->Connect($this->database_host, $this->database_username, $this->database_password, $database_name);
+				$rs = $db->GetAll("SHOW TABLES;");
+				foreach($rs as $row) {
+					$db->Execute("DROP TABLE `".$row[0]."`");
+				}
+			}
+		}
+		catch(Exception $e)
+		{
+			return false;
+		}
+		return true;
+	}
+	
+	/**
+	 * Removes all data and tables from the three databases and loads the class specified dumps back in
+	 * @return boolean Success of reset
+	 */
+	public function resetDatabases() {
+		return $this->truncateDatabases() && $this->loadDumpData();
 	}
 }

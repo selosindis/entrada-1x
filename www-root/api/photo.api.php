@@ -7,7 +7,7 @@
  * @version 3.0
  * @copyright Copyright 2006 Queen's University, MEdTech Unit
  * 
- * $Id: photo.api.php 1103 2010-04-05 15:20:37Z simpson $
+ * $Id: photo.api.php 1200 2010-06-10 19:07:17Z simpson $
 */
 
 @set_include_path(implode(PATH_SEPARATOR, array(
@@ -57,7 +57,7 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 			application_log("error", "An unrecognized photo type [".$PHOTO_TYPE."] was requested in photo.api.php.");
 		break;
 	}
-	
+
 	/**
 	 * If there is a succesfully photo record, and either
 	 * 	If the user is in an administration group, or
@@ -66,7 +66,6 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 	 * 		If the photo_type is uploaded, and the proxy_id has their privacy set to "Basic Information"
 	 */
 	if (($photo_record) && ($ENTRADA_ACL->amIAllowed(new PhotoResource($PROXY_ID, $photo_record["privacy_level"], $PHOTO_TYPE), "read"))) {
-
 		$display_file = false;
 	
 		if ((@file_exists(STORAGE_USER_PHOTOS."/".$PROXY_ID.$photo_suffix)) && (@is_readable(STORAGE_USER_PHOTOS."/".$PROXY_ID.$photo_suffix))) {

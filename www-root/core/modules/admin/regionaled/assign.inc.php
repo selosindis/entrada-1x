@@ -22,8 +22,7 @@
  * @author Developer: Matt Simpson <matt.simpson@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
- * @version $Id: assign.inc.php 1169 2010-05-01 14:18:49Z simpson $
-*/
+ */
 
 if (!defined("IN_REGIONALED")) {
 	exit;
@@ -50,7 +49,7 @@ if (!defined("IN_REGIONALED")) {
 	}
 
 	if ($event_id) {
-		$query = "	SELECT *
+		$query = "	SELECT a.*, b.`etype_id` AS `proxy_id`, d.`region_name`, e.`number`, e.`prefix`, e.`firstname`, e.`lastname`, e.`email`, e.`gender`, e.`privacy_level`, f.`group`, f.`role`, IF(f.`group` = 'student', 'Clerk', 'Resident') AS `learner_type`
 					FROM `".CLERKSHIP_DATABASE."`.`events` AS a
 					LEFT JOIN `".CLERKSHIP_DATABASE."`.`event_contacts` AS b
 					ON b.`event_id` = a.`event_id`
@@ -60,6 +59,9 @@ if (!defined("IN_REGIONALED")) {
 					ON d.`region_id` = a.`region_id`
 					LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS e
 					ON e.`id` = b.`etype_id`
+					LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS f
+					ON f.`user_id` = e.`id`
+					AND f.`app_id` = ".$db->qstr(AUTH_APP_ID)."
 					WHERE a.`event_id` = ".$db->qstr($event_id);
 		$event_info = $db->GetRow($query);
 		if ($event_info) {
@@ -79,18 +81,85 @@ if (!defined("IN_REGIONALED")) {
 			}
 
 			switch ($STEP) {
-				case 3 :
-					
-				break;
 				case 2 :
-					$query = "	SELECT *
-								FROM `".CLERKSHIP_DATABASE."`.`apartments`
-								WHERE `apartment_id` = ".$db->qstr($apartment_id);
-					$apartment_info = $db->GetRow($query);
-					if ($apartment_info) {
-						if($apartment_info["region_id"] != $event_info["region_id"]) {
+					if (isset($_POST["require_confirmation"]) && ((int) $_POST["require_confirmation"] == 1)) {
+						$PROCESSED["confirmed"] = 0;
+					} else {
+						$PROCESSED["confirmed"] = 1;
+					}
+
+					if (isset($_POST["apartment_id"]) && ($tmp_input = clean_input($_POST["apartment_id"], "int"))) {
+						$PROCESSED["apartment_id"] = $tmp_input;
+
+						$query = "	SELECT *
+									FROM `".CLERKSHIP_DATABASE."`.`apartments`
+									WHERE `apartment_id` = ".$db->qstr($PROCESSED["apartment_id"]);
+						$apartment_info = $db->GetRow($query);
+						if ($apartment_info) {
+							if ($apartment_info["region_id"] == $event_info["region_id"]) {
+								$availability = regionaled_apartment_availability($PROCESSED["apartment_id"], $event_info["event_start"], $event_info["event_finish"]);
+								if ($availability["openings"] <= 0) {
+									$ERROR++;
+									$ERRORSTR[]	= "The selected apartment has no availability between <strong>".date("Y-m-d", $event_info["event_start"])."</strong> and <strong>".date("Y-m-d", $event_info["event_finish"])."</strong>.";
+								}
+							} else {
+								$ERROR++;
+								$ERRORSTR[]	= "The selected apartment is not in the same region as the event the learner is scheduled for.";
+							}
+						}
+					} else {
+						$ERROR++;
+						$ERRORSTR[] = "Please select the apartment that you would like ".html_encode($event_info["firstname"]." ".$event_info["lastname"])." to be assigned to.";
+					}
+
+					if (!$ERROR) {
+						$PROCESSED["event_id"] = $event_info["event_id"];
+						$PROCESSED["proxy_id"] = $event_info["proxy_id"];
+						$PROCESSED["occupant_type"] = (($event_info["group"] == "student") ? "undergrad" : (($event_info["group"] == "resident") ? "postgrad" : "other"));
+
+						$PROCESSED["cost_recovery"] = 0;
+						$PROCESSED["inhabiting_start"] = $event_info["event_start"];
+						$PROCESSED["inhabiting_finish"] = $event_info["event_finish"];
+						$PROCESSED["updated_last"] = time();
+						$PROCESSED["updated_by"] = $_SESSION["details"]["id"];
+						$PROCESSED["aschedule_status"] = "published";
+
+						if ($db->AutoExecute(CLERKSHIP_DATABASE.".apartment_schedule", $PROCESSED, "INSERT") && ($aschedule_id = $db->Insert_Id())) {
+							if (!$db->AutoExecute(CLERKSHIP_DATABASE.".events", array("requires_apartment" => 0), "UPDATE", "event_id=".$db->qstr($event_info["event_id"]))) {
+								$NOTICE++;
+								$NOTICESSTR[] = "We were unable to remove this learners entry from the Regional Education dashboard.";
+
+								application_log("error", "Unable to set requires_apartment to 0 for event_id [".$PROCESSED["event_id"]."] after an apartment had been assigned. Database said: ".$db->ErrorMsg());
+							}
+
+							/**
+							 * Send notification to the learner that they are required to confirm their apartment status.
+							 */
+							if ($PROCESSED["proxy_id"] && !$PROCESSED["confirmed"]) {
+								$recipient = array (
+									"email" => $event_info["email"],
+									"firstname" => $event_info["firstname"],
+									"lastname" => $event_info["lastname"]
+								);
+
+								$message_variables = array (
+									"to_firstname" => $recipient["firstname"],
+									"to_lastname" => $recipient["lastname"],
+									"from_firstname" => $_SESSION["details"]["firstname"],
+									"from_lastname" => $_SESSION["details"]["lastname"],
+									"region" => $event_info["region_name"],
+									"confirmation_url" => ENTRADA_URL."/regionaled/view?id=".$aschedule_id,
+									"application_name" => APPLICATION_NAME
+								);
+
+								regionaled_apartment_notification("confirmation", $recipient, $message_variables);
+							}
+
+						} else {
 							$ERROR++;
-							$ERRORSTR[]	= "The selected apartment is not in the same region as the event the learner is scheduled for.";
+							$ERRORSTR[] = "Unable to schedule this occupant into this apartment at this time. The system administrator has been informed of the error, please try again later.";
+
+							application_log("error", "Unable to schedule an occupant into apartment_id [".$APARTMENT_ID."]. Database said: ".$db->ErrorMsg());
 						}
 					}
 
@@ -104,17 +173,14 @@ if (!defined("IN_REGIONALED")) {
 			}
 
 			// Page Dipslay
-			switch($STEP) {
-				case 3 :
+			switch ($STEP) {
+				case 2 :
 					$ONLOAD[] = "setTimeout('window.location=\'".ENTRADA_URL."/admin/regionaled\'', 5000)";
 
 					$SUCCESS++;
 					$SUCCESSSTR[] = "You have successfully assigned <strong>".html_encode($event_info["firstname"]." ".$event_info["lastname"])."</strong> to <strong>".html_encode($apartment_info["apartment_title"])."</strong> during the <strong>".html_encode($event_info["event_title"])."</strong> rotation.<br /><br />You will be automatically redirected back to the Regional Education dashboard in 5 seconds, or <a href=\"".ENTRADA_URL."/admin/regionaled\">click here</a> if you do not wish to wait.";
 
 					echo display_success();
-				break;
-				case 2 :
-					
 				break;
 				default :
 					if($ERROR) {
@@ -127,13 +193,99 @@ if (!defined("IN_REGIONALED")) {
 						 */
 						$available_apartments = regionaled_apartment_availability($apartment_ids, $event_info["event_start"], $event_info["event_finish"]);
 						if (is_array($available_apartments) && ($available_apartments["openings"] > 0)) {
+							?>
+							<div class="userProfile">
+								<div class="head">
+									<div>Learner Profile</div>
+								</div>
+								<div class="body">
+									<table style="width: 100%" cellspacing="0" cellpadding="0" border="0">
+										<tr>
+											<td style="width: 110px; vertical-align: top; padding-left: 10px">
+												<div style="position: relative">
+													<?php
+													$query = "SELECT `photo_active` FROM `".AUTH_DATABASE."`.`user_photos` WHERE `photo_type` = 1 AND `proxy_id` = ".$db->qstr($event_info["proxy_id"]);
+													$uploaded_file_active = $db->GetOne($query);
+
+													echo "<div id=\"img-holder-".$event_info["proxy_id"]."\" class=\"img-holder\">\n";
+
+													$offical_file_active = false;
+													$uploaded_file_active = false;
+
+													/**
+													 * If the photo file actually exists
+													 */
+													if (@file_exists(STORAGE_USER_PHOTOS."/".$event_info["proxy_id"]."-official")) {
+														$offical_file_active = true;
+													}
+
+													/**
+													 * If the photo file actually exists, and
+													 * If the uploaded file is active in the user_photos table, and
+													 * If the proxy_id has their privacy set to "Basic Information" or higher.
+													 */
+													if ((@file_exists(STORAGE_USER_PHOTOS."/".$event_info["proxy_id"]."-upload")) && ($db->GetOne("SELECT `photo_active` FROM `".AUTH_DATABASE."`.`user_photos` WHERE `photo_type` = '1' AND `photo_active` = '1' AND `proxy_id` = ".$db->qstr($event_info["proxy_id"]))) && ((int) $event_info["privacy_level"] >= 2)) {
+														$uploaded_file_active = true;
+													}
+
+													if ($offical_file_active) {
+														echo "	<img id=\"official_photo_".$event_info["proxy_id"]."\" class=\"official\" src=\"".webservice_url("photo", array($event_info["proxy_id"], "official"))."\" width=\"72\" height=\"100\" alt=\"".html_encode($event_info["prefix"]." ".$event_info["firstname"]." ".$event_info["lastname"])."\" title=\"".html_encode($event_info["prefix"]." ".$event_info["firstname"]." ".$event_info["lastname"])."\" />\n";
+													}
+
+													if ($uploaded_file_active) {
+														echo "	<img id=\"uploaded_photo_".$event_info["proxy_id"]."\" class=\"uploaded\" src=\"".webservice_url("photo", array($event_info["proxy_id"], "upload"))."\" width=\"72\" height=\"100\" alt=\"".html_encode($event_info["prefix"]." ".$event_info["firstname"]." ".$event_info["lastname"])."\" title=\"".html_encode($event_info["prefix"]." ".$event_info["firstname"]." ".$event_info["lastname"])."\" />\n";
+													}
+
+													if (($offical_file_active) || ($uploaded_file_active)) {
+														echo "	<a id=\"zoomin_photo_".$event_info["proxy_id"]."\" class=\"zoomin\" onclick=\"growPic($('official_photo_".$event_info["proxy_id"]."'), $('uploaded_photo_".$event_info["proxy_id"]."'), $('official_link_".$event_info["proxy_id"]."'), $('uploaded_link_".$event_info["proxy_id"]."'), $('zoomout_photo_".$event_info["proxy_id"]."'));\">+</a>";
+														echo "	<a id=\"zoomout_photo_".$event_info["proxy_id"]."\" class=\"zoomout\" onclick=\"shrinkPic($('official_photo_".$event_info["proxy_id"]."'), $('uploaded_photo_".$event_info["proxy_id"]."'), $('official_link_".$event_info["proxy_id"]."'), $('uploaded_link_".$event_info["proxy_id"]."'), $('zoomout_photo_".$event_info["proxy_id"]."'));\"></a>";
+													} else {
+														echo "	<img src=\"".ENTRADA_URL."/images/headshot-male.gif\" width=\"72\" height=\"100\" alt=\"No Photo Available\" title=\"No Photo Available\" />\n";
+													}
+
+													if (($offical_file_active) && ($uploaded_file_active)) {
+														echo "	<a id=\"official_link_".$event_info["proxy_id"]."\" class=\"img-selector one\" onclick=\"showOfficial($('official_photo_".$event_info["proxy_id"]."'), $('official_link_".$event_info["proxy_id"]."'), $('uploaded_link_".$event_info["proxy_id"]."'));\" href=\"javascript: void(0);\">1</a>";
+														echo "	<a id=\"uploaded_link_".$event_info["proxy_id"]."\" class=\"img-selector two\" onclick=\"hideOfficial($('official_photo_".$event_info["proxy_id"]."'), $('official_link_".$event_info["proxy_id"]."'), $('uploaded_link_".$event_info["proxy_id"]."'));\" href=\"javascript: void(0);\">2</a>";
+													}
+													echo "</div>\n";
+													?>
+												</div>
+											</td>
+											<td style="width: 100%; vertical-align: top; padding-left: 5px">
+												<table width="100%" cellspacing="0" cellpadding="1" border="0">
+													<tr>
+														<td style="width: 20%">Full Name:</td>
+														<td style="width: 80%"><?php echo html_encode($event_info["prefix"]." ".$event_info["firstname"]." ".$event_info["lastname"]); ?></td>
+													</tr>
+													<tr>
+														<td>Gender:</td>
+														<td><?php echo display_gender($event_info["gender"]); ?></td>
+													</tr>
+													<tr>
+														<td>Student Type:</td>
+														<td><?php echo html_encode($event_info["learner_type"]); ?></td>
+													</tr>
+													<tr>
+														<td>Student Number:</td>
+														<td><?php echo html_encode($event_info["number"]); ?></td>
+													</tr>
+													<tr>
+														<td>E-Mail Address:</td>
+														<td><a href="mailto:<?php echo html_encode($event_info["email"]); ?>"><?php echo html_encode($event_info["email"]); ?></a></td>
+													</tr>
+												</table>
+											</td>
+										</tr>
+									</table>
+								</div>
+							</div>
+							<?php
 							$total_apartments = count($available_apartments["apartments"]);
 							echo "<div class=\"display-generic\">\n";
-							echo "	There ".($available_apartments["openings"] != 1 ? "are" : "is")." currently <strong>".$available_apartments["openings"]." room".($available_apartments["openings"] != 1 ? "s" : "")."</strong> available in <strong>".$total_apartments." apartment".($total_apartments != 1 ? "s" : "")."</strong> in <strong>".get_region_name($event_info["region_id"])."</strong> from <strong>".date("Y-m-d", $event_info["event_start"])."</strong> to <strong>".date("Y-m-d", $event_info["event_finish"])."</strong>. Please select which accommodation you would like this learner to be assigned to.";
+							echo "	There ".($available_apartments["openings"] != 1 ? "are" : "is")." currently <strong>".$available_apartments["openings"]." room".($available_apartments["openings"] != 1 ? "s" : "")."</strong> available in <strong>".$total_apartments." apartment".($total_apartments != 1 ? "s" : "")."</strong> in <strong>".html_encode($event_info["region_name"])."</strong> from <strong>".date("Y-m-d", $event_info["event_start"])."</strong> to <strong>".date("Y-m-d", $event_info["event_finish"])."</strong>. Please select which accommodation you would like ".html_encode($event_info["firstname"]." ".$event_info["lastname"])." to be assigned to.";
 							echo "</div>";
-
 							?>
-							<form action="<?php echo ENTRADA_URL; ?>/admin/regionaled?section=assign" method="post">
+							<form action="<?php echo ENTRADA_URL; ?>/admin/regionaled?section=assign&id=<?php echo $event_id; ?>" method="post">
 								<input type="hidden" name="step" value="2" />
 								<table class="tableList" cellspacing="0" cellpadding="1" border="0" summary="List of Available Accommodations">
 									<colgroup>
@@ -141,26 +293,53 @@ if (!defined("IN_REGIONALED")) {
 										<col class="title" />
 										<col class="title" />
 									</colgroup>
+									<tfoot>
+										<tr>
+											<td colspan="3">&nbsp;</td>
+										</tr>
+										<tr>
+											<td><input type="checkbox" id="require_confirmation" name="require_confirmation" value="1"<?php echo ((!isset($PROCESSED["confirmed"]) || !$PROCESSED["confirmed"]) ? " checked=\"checked\"" : ""); ?> /></td>
+											<td colspan="2">
+												<label for="require_confirmation" class="form-nrequired">Send an e-mail requiring <strong><?php echo html_encode($event_info["firstname"]); ?></strong> to confirm these accommodations.</label>
+											</td>
+										</tr>
+										<tr>
+											<td colspan="3" style="padding-top: 15px; text-align: right">
+												<input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/regionaled'" />
+												<input type="submit" class="button" value="Proceed" />
+											</td>
+										</tr>
+									</tfoot>
 									<tbody>
 									<?php
 									foreach ($available_apartments["apartments"] as $apartment) {
 										?>
 										<tr>
-											<td class="modified" style="vertical-align: top"><input type="radio" id="" name="apartment_id" value="" /></td>
-											<td class="title" style="vertical-align: top"><?php echo html_encode($apartment["details"]["apartment_title"]); ?></td>
+											<td class="modified" style="vertical-align: top"><input type="radio" id="apartment_id_<?php echo $apartment["details"]["apartment_id"]; ?>" name="apartment_id" value="<?php echo $apartment["details"]["apartment_id"]; ?>" /></td>
+											<td class="title" style="vertical-align: top">
+												<label for="apartment_id_<?php echo $apartment["details"]["apartment_id"]; ?>" style="font-weight: 700"><?php echo html_encode($apartment["details"]["apartment_title"]); ?></label>
+												<div class="content-small">
+													<?php
+													echo (($apartment["details"]["apartment_number"] != "") ? html_encode($apartment["details"]["apartment_number"])."-" : "").html_encode($apartment["details"]["apartment_address"]);
+													echo html_encode($apartment["details"]["region_name"]).($apartment["details"]["province"] ? ", ".html_encode($apartment["details"]["province"]) : "")."<br />";
+													echo html_encode($apartment["details"]["apartment_postcode"]).", ".html_encode($apartment["details"]["country"])."<br /><br />";
+													?>
+													Max Concurrent Occupants: <?php echo $apartment["details"]["max_occupants"]; ?>
+												</div>
+											</td>
 											<td class="title" style="vertical-align: top">
 												<?php
 												if ($apartment["occupants"] && count($apartment["occupants"])) {
 													echo "<ul class=\"menu\">\n";
 													foreach ($apartment["occupants"] as $result) {
-														echo "<li class=\"community\">\n";
-														echo	(($result["fullname"]) ? (($result["gender"]) ? ($result["gender"] == 1 ? "F: " : "M: ") : "").$result["fullname"] : $result["occupant_title"]);
-														echo "	<div class=\"content-small\">Dates: ".date(DEFAULT_DATE_FORMAT, $result["inhabiting_start"])." until ".date(DEFAULT_DATE_FORMAT, $result["inhabiting_finish"])."</div>";
+														echo "<li class=\"".(($result["group"] == "student") ? "undergrad" : "postgrad")."\">\n";
+														echo	(($result["fullname"]) ? (($result["gender"]) ? ($result["gender"] == 1 ? "F: " : "M: ") : "")."<a href=\"".ENTRADA_URL."/people?profile=".html_encode($result["username"])."\" target=\"_blank\">".$result["fullname"]."</a>" : $result["occupant_title"]);
+														echo "	<div class=\"content-small\">".date(DEFAULT_DATE_FORMAT, $result["inhabiting_start"])." until ".date(DEFAULT_DATE_FORMAT, $result["inhabiting_finish"])."</div>";
 														echo "</li>";
 													}
 													echo "</ul>\n";
 												} else {
-													echo "No other occupants.";
+													echo "No other occupants in this accommodation during their stay.";
 												}
 												?>
 											</td>
@@ -172,15 +351,23 @@ if (!defined("IN_REGIONALED")) {
 								</table>
 							</form>
 							<?php
+
+							$sidebar_html  = "<ul class=\"menu\">\n";
+							$sidebar_html .= "	<li class=\"undergrad\">Undergraduate Learner</li>\n";
+							$sidebar_html .= "	<li class=\"postgrad\">Postgraduate Learner</li>\n";
+							$sidebar_html .= "	<li class=\"other\">Other Occupancy</li>\n";
+							$sidebar_html .= "</ul>\n";
+
+							new_sidebar_item("Occupant Type Legend", $sidebar_html, "occupant-type-legend", "open");
 						} else {
 							$NOTICE++;
-							$NOTICESTR[] = "Unfortunately there are <strong>no available apartments</strong> in <strong>".get_region_name($event_info["region_id"])."</strong> at this time.";
+							$NOTICESTR[] = "Unfortunately there are <strong>no available apartments</strong> in <strong>".html_encode($event_info["region_name"])."</strong> at this time.";
 
 							echo display_notice();
 						}
 					} else {
 						$NOTICE++;
-						$NOTICESTR[] = "Unfortunately there are <strong>no active apartments</strong> in <strong>".get_region_name($event_info["region_id"])."</strong> at this time.";
+						$NOTICESTR[] = "Unfortunately there are <strong>no active apartments</strong> in <strong>".html_encode($event_info["region_name"])."</strong> at this time.";
 
 						echo display_notice();
 					}

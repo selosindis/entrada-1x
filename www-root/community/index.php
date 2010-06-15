@@ -11,7 +11,7 @@
  * @author Developer: James Ellis <james.ellis@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  * 
- * $Id: index.php 1103 2010-04-05 15:20:37Z simpson $
+ * $Id: index.php 1191 2010-05-13 17:11:26Z hbrundage $
 */
 
 @set_include_path(implode(PATH_SEPARATOR, array(
@@ -276,7 +276,7 @@ if ($COMMUNITY_URL) {
 				 * This is a protected community and user is not currently authenticated.
 				 * Send the user to the login page, and provide the url variable so they return here when finished.
 				 */
-				header("Location: ".str_replace("http://", "https://", strtolower(ENTRADA_URL)."/?url=".rawurlencode($PROCEED_TO)));
+				header("Location: ".ENTRADA_URL."/?url=".rawurlencode($PROCEED_TO));
 				exit;
 			} else {
 				
@@ -417,7 +417,7 @@ if ($COMMUNITY_URL) {
 							exit;
 						}
 						if ($ALLOW_MEMBERSHIP) {
-							new_sidebar_item("Join Community", "Join this community to access more community features.<div style=\"margin-top: 10px; text-align: center\"><a href=\"".str_replace("http://", "https://", ENTRADA_URL."/communities?section=join&community=".$community_details["community_id"])."\" style=\"font-weight: bold\">Click here to join</a></div>", "join-page-box", "open");
+							new_sidebar_item("Join Community", "Join this community to access more community features.<div style=\"margin-top: 10px; text-align: center\"><a href=\"".ENTRADA_URL."/communities?section=join&community=".$community_details["community_id"]."\" style=\"font-weight: bold\">Click here to join</a></div>", "join-page-box", "open");
 						}
 					}
 					$COMMUNITY_LOAD = true;
@@ -480,7 +480,7 @@ if ($COMMUNITY_URL) {
 					 * Show a login back if the user is not logged in.
 					 */
 					if (!$LOGGED_IN) {
-						new_sidebar_item("Community Login", "Log in using your ".APPLICATION_NAME." account to access more community features.<div style=\"margin-top: 10px; text-align: center\"><a href=\"".str_replace("http://", "https://", strtolower(ENTRADA_URL)."/?url=".rawurlencode($PROCEED_TO))."\" style=\"font-weight: bold\">Click here to login</a></a>", "login-page-box", "open");
+						new_sidebar_item("Community Login", "Log in using your ".APPLICATION_NAME." account to access more community features.<div style=\"margin-top: 10px; text-align: center\"><a href=\"".ENTRADA_URL."/?url=".rawurlencode($PROCEED_TO)."\" style=\"font-weight: bold\">Click here to login</a></a>", "login-page-box", "open");
 					}
 
 					/**

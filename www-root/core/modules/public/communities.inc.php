@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with Entrada.  If not, see <http://www.gnu.org/licenses/>.
  *
- * $Id: communities.inc.php 1171 2010-05-01 14:39:27Z ad29 $
+ * $Id: communities.inc.php 1213 2010-06-14 16:38:40Z jellis $
 */
 
 if (!defined("PARENT_INCLUDED")) {
@@ -25,6 +25,11 @@ if (!defined("PARENT_INCLUDED")) {
 	exit;
 }
 
+if(!defined("COMMUNITY_ORGANISATION_WHERE_SQL")) {
+	if(isset($COMMUNITY_ORGANISATIONS) && is_array($COMMUNITY_ORGANISATIONS) && count($COMMUNITY_ORGANISATIONS)) {
+		define("COMMUNITY_ORGANISATION_WHERE_SQL", $db->qstr(AUTH_APP_ID));
+	}
+}
 define("IN_COMMUNITIES", true);
 
 $BREADCRUMB[] = array("url" => ENTRADA_URL."/".$MODULE, "title" => $translate->_("breadcrumb_communities_title"));

@@ -23,7 +23,7 @@
  * @author Developer: Matt Simpson <matt.simpson@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  * 
- * @version $Id: dbconnection.inc.php 1169 2010-05-01 14:18:49Z simpson $
+ * @version $Id: dbconnection.inc.php 1183 2010-05-05 13:51:59Z hbrundage $
 */
 
 $ADODB_QUOTE_FIELDNAMES = true;	// Whether or not you want ADOdb to backtick field names in AutoExecute, GetInsertSQL and GetUpdateSQL.
@@ -37,7 +37,7 @@ if (defined("DEFAULT_CHARSET") && isset($ENTRADA_CHARSETS) && is_array($ENTRADA_
 	$db->Execute("SET NAMES ".$db->qstr($ENTRADA_CHARSETS[DEFAULT_CHARSET]["mysql_names"])." COLLATE ".$db->qstr($ENTRADA_CHARSETS[DEFAULT_CHARSET]["mysql_collate"]));
 }
 
-$db->debug = (((isset($DEVELOPER_IPS) && is_array($DEVELOPER_IPS) && in_array($_SERVER["REMOTE_ADDR"], $DEVELOPER_IPS)) && (isset($_GET["debug"]))) ? true : false);
+$db->debug = (((isset($DEVELOPER_IPS) && is_array($DEVELOPER_IPS) && isset($_SERVER["REMOTE_ADDR"]) && in_array($_SERVER["REMOTE_ADDR"], $DEVELOPER_IPS)) && (isset($_GET["debug"]))) ? true : false);
 
 @ini_set("session.name", SESSION_NAME);
 @ini_set("session.gc_maxlifetime", SESSION_EXPIRES);

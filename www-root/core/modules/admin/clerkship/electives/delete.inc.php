@@ -262,20 +262,23 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 						if($db->Execute($query)) {
 							$query = "DELETE FROM `".CLERKSHIP_DATABASE."`.`electives` WHERE `event_id`=".$db->qstr($EVENT_ID);
 							if($db->Execute($query)) {
-								if (!$db->Execute("DELETE FROM `".CLERKSHIP_DATABASE."`.`apartment_schedule` WHERE `event_id` = ".$db->qstr($EVENT_ID))) {
-									application_log("error", "There was an issue while trying to remove the apartment schedule information for event [".$EVENT_ID."]. Database said: ".$db->ErrorMsg());
+								$query = "DELETE FROM `".CLERKSHIP_DATABASE."`.`event_contacts` WHERE `event_id`=".$db->qstr($EVENT_ID);
+								if($db->Execute($query)) {
+									if (!$db->Execute("DELETE FROM `".CLERKSHIP_DATABASE."`.`apartment_schedule` WHERE `event_id` = ".$db->qstr($EVENT_ID))) {
+										application_log("error", "There was an issue while trying to remove the apartment schedule information for event [".$EVENT_ID."]. Database said: ".$db->ErrorMsg());
+									}
+									$url = ENTRADA_URL."/admin/clerkship/";
+									
+									$msg	= " You will now be redirected to the clerkship index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+									
+									$SUCCESS++;
+									$SUCCESSSTR[]  	= "You have successfully removed <strong>".html_encode($PROCESSED["geo_location"])."</strong> core rotation from the system.<br /><br />".$msg;
+									$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
+									
+									application_log("success", "Core rotation [".$EVENT["event_title"]."] removed from the system.");
+									
+									echo display_success();
 								}
-								$url = ENTRADA_URL."/admin/clerkship/";
-								
-								$msg	= " You will now be redirected to the clerkship index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-								
-								$SUCCESS++;
-								$SUCCESSSTR[]  	= "You have successfully removed <strong>".html_encode($PROCESSED["geo_location"])."</strong> core rotation from the system.<br /><br />".$msg;
-								$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
-								
-								application_log("success", "Core rotation [".$EVENT["event_title"]."] removed from the system.");
-								
-								echo display_success();
 							}
 						}
 						break;

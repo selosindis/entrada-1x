@@ -23,7 +23,7 @@
  * @author Developer: Matt Simpson <matt.simpson@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  * 
- * @version $Id: people.inc.php 1171 2010-05-01 14:39:27Z ad29 $
+ * @version $Id: people.inc.php 1200 2010-06-10 19:07:17Z simpson $
 */
 if (!defined("PARENT_INCLUDED")) {
 	exit;
@@ -48,8 +48,6 @@ if (!defined("PARENT_INCLUDED")) {
 	$PAGE_META["keywords"]		= "";
 
 	$is_administrator = $ENTRADA_ACL->amIallowed('user', 'update');
-	
-	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/people.js\"></script>";
 	
 	$BREADCRUMB[]	= array("url" => ENTRADA_URL."/people", "title" => "People Search");
 	
@@ -786,7 +784,22 @@ if (!defined("PARENT_INCLUDED")) {
 				echo "		</td>\n";
 				echo "		<td style=\"font-size: 12px; color: #003366; vertical-align: top\">";
 				echo "			<div style=\"font-weight: bold; font-size: 13px;\">".html_encode((($result["prefix"]) ? $result["prefix"]." " : "").$result["firstname"]." ".$result["lastname"])."</div>";
-				echo "			<div class=\"content-small\" style=\"margin-bottom: 15px\">".ucwords($result["group"])." > ".($result["group"] == "student" ? "Class of " : "").ucwords($result["role"])."</div>\n";
+				if($departmentResults = get_user_departments($result["id"])) {
+					echo "			<div class=\"content-small\" style=\"margin-bottom: 15px\">";
+					$deptCtr = 0;
+					foreach($departmentResults as $key => $departmentValue) {
+						if ($deptCtr == 0) {
+							$deptCtr++;
+							echo ucwords($departmentValue["department_title"]);
+						} else {
+							$deptCtr++;
+							echo "<br />".ucwords($departmentValue["department_title"]);
+						}
+					}
+					echo "</div>";
+				} else {
+					echo "			<div class=\"content-small\" style=\"margin-bottom: 15px\">".ucwords($result["group"])." > ".($result["group"] == "student" ? "Class of " : "").ucwords($result["role"])."</div>\n";
+				}
 				if ($result["privacy_level"] > 1 || $is_administrator) {
 					echo "			<a href=\"mailto:".html_encode($result["email"])."\" style=\"font-size: 10px;\">".html_encode($result["email"])."</a><br />\n";
 					

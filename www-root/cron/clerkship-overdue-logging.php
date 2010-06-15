@@ -92,7 +92,7 @@ if ($results) {
 							$mail->clearFrom();
 							$mail->clearSubject();
 							$mail->setFrom($AGENT_CONTACTS["agent-notifications"]["email"], APPLICATION_NAME.' Clerkship System');
-							$mail->setSubject("Clerkship Logbook Defficiency Notification");
+							$mail->setSubject("Clerkship Logbook Deficiency Notification");
 							$NOTIFICATION_MESSAGE		 	 = array();
 											
 							$query	 		= "	SELECT CONCAT_WS(' ', `firstname`, `lastname`) as `fullname`, `email`, `id`
@@ -140,7 +140,7 @@ if ($results) {
 														ENTRADA_URL
 													);
 									
-									$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".DEFAULT_TEMPLATE."/email/clerkship-defficiency-admin-notification.txt");
+									$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".DEFAULT_TEMPLATE."/email/clerkship-deficiency-admin-notification.txt");
 									$mail->setBodyText(clean_input(str_replace($search, $replace, $NOTIFICATION_MESSAGE["textbody"]), array("postclean")));
 									
 									if ($rotation["pcoord_id"]) {
@@ -204,7 +204,7 @@ if ($results) {
 								$last_notified = $db->GetOne($query);
 								
 								if ($last_notified <= (strtotime("-2 weeks"))) {
-									$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".DEFAULT_TEMPLATE."/email/clerkship-defficiency-clerk-notification.txt");
+									$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".DEFAULT_TEMPLATE."/email/clerkship-deficiency-clerk-notification.txt");
 									
 									$search	= array(
 														"%ROTATION_TITLE%",

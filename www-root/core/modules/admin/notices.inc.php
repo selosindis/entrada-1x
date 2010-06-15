@@ -23,12 +23,13 @@
  * @author Developer: Matt Simpson <matt.simpson@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
- * @version $Id: notices.inc.php 1169 2010-05-01 14:18:49Z simpson $
+ * @version $Id: notices.inc.php 1202 2010-06-10 19:19:49Z hbrundage $
  */
 
 if(!defined("PARENT_INCLUDED")) {
 	exit;
 } elseif((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
+	echo "Header";
 	header("Location: ".ENTRADA_URL);
 	exit;
 } elseif(!$ENTRADA_ACL->amIAllowed("notice", "update", false)) {

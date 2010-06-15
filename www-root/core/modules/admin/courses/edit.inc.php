@@ -20,7 +20,7 @@
  * @author Developer: James Ellis <james.ellis@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
- * @version $Id: edit.inc.php 1169 2010-05-01 14:18:49Z simpson $
+ * @version $Id: edit.inc.php 1202 2010-06-10 19:19:49Z hbrundage $
  */
 
 if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
@@ -47,8 +47,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "edit", "id" => $COURSE_ID, "step" => false)), "title" => "Editing Course");
 
 			echo "<div class=\"no-printing\">\n";
-			echo "	<div style=\"float: right; text-align: right\">\n";
-			echo "		<a href=\"".ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "content", "id" => $COURSE_ID, "step" => false))."\"><img src=\"".ENTRADA_URL."/images/event-contents.gif\" width=\"16\" height=\"16\" alt=\"Manage course content\" title=\"Manage course content\" border=\"0\" style=\"vertical-align: middle\" /></a> <a href=\"".ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "content", "id" => $COURSE_ID, "step" => false))."\" style=\"font-size: 10px; margin-right: 8px\">Manage course content</a>\n";
+			echo "	<div style=\"float: right;\">\n";
+			echo "		<a href=\"".ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "content", "id" => $COURSE_ID, "step" => false))."\"><img src=\"".ENTRADA_URL."/images/event-contents.gif\" width=\"16\" height=\"16\" alt=\"Manage course content\" title=\"Manage course content\" border=\"0\" style=\"vertical-align: middle\" /></a> <a href=\"".ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "content", "id" => $COURSE_ID, "step" => false))."\" style=\"font-size: 10px; margin-right: 8px;\">Manage course content</a>\n";
+			if ($ENTRADA_ACL->amIAllowed(new GradebookResource($result["course_id"], $result["organisation_id"]), "read")) {
+				echo "<a href=\"".ENTRADA_URL."/admin/gradebook?section=edit&amp;id=".$COURSE_ID."\" style=\"font-size: 10px;\"><img src=\"".ENTRADA_URL."/images/book_go.png\" width=\"16\" height=\"16\" alt=\"Manage course content\" title=\"Manage course content\" border=\"0\" style=\"vertical-align: middle\" />&nbsp;Manage course gradebook</a>";				
+			}
 			echo "	</div>\n";
 			echo "</div>\n";
 
@@ -980,19 +983,19 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			}
 		} else {
 			$ERROR++;
-			$ERRORSTR[] = "In order to edit a event you must provide a valid event identifier. The provided ID does not exist in this system.";
+			$ERRORSTR[] = "In order to edit a course you must provide a valid course identifier. The provided ID does not exist in this system.";
 
 			echo display_error();
 
-			application_log("notice", "Failed to provide a valid event identifer when attempting to edit a event.");
+			application_log("notice", "Failed to provide a valid course identifer when attempting to edit a course.");
 		}
 	} else {
 		$ERROR++;
-		$ERRORSTR[] = "In order to edit a event you must provide the courses identifier.";
+		$ERRORSTR[] = "In order to edit a course you must provide the courses identifier.";
 
 		echo display_error();
 
-		application_log("notice", "Failed to provide event identifer when attempting to edit a event.");
+		application_log("notice", "Failed to provide course identifer when attempting to edit a course.");
 	}
 }
 ?>

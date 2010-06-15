@@ -22,7 +22,7 @@
  * @author Developer: Matt Simpson <matt.simpson@queensu.ca>
  * @copyright Copyright 2009 Queen's University. All Rights Reserved.
  *
- * @version $Id: index.inc.php 1171 2010-05-01 14:39:27Z ad29 $
+ * @version $Id: index.inc.php 1215 2010-06-14 20:25:20Z simpson $
 */
 
 if((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
@@ -30,8 +30,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 } elseif((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	header("Location: ".ENTRADA_URL);
 	exit;
-} elseif (!$ENTRADA_ACL->amIAllowed('clerkship', 'read')) {
-	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/".$MODULE."\\'', 15000)";
+} elseif (!$ENTRADA_ACL->amIAllowed("clerkship", "read")) {
+	$ONLOAD[] = "setTimeout('window.location=\\'".ENTRADA_URL."/".$MODULE."\\'', 15000)";
 
 	$ERROR++;
 	$ERRORSTR[]	= "You do not have the permissions required to use this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";

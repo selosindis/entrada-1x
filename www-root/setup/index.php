@@ -99,6 +99,7 @@ if (isset($_POST["database_username"]) && ($database_username = clean_input($_PO
 	$ERROR++;
 	$ERRORSTR[] = "The username to connect to the Entrada databases must be entered before continuing.";
 }
+
 if (isset($_POST["database_password"]) && ($database_password = $_POST["database_password"])) {
 	$PROCESSED["database_password"] = $database_password;
 } elseif ($STEP >= 4) {
@@ -213,6 +214,7 @@ if ($STEP == 5) {
 		$display_config = false;
 	}
 }
+
 if ($STEP == 6) {
 	if (isset($PROCESSED["entrada_absolute"])) {
 		if (@file_exists($PROCESSED["entrada_absolute"]."/.htaccess")) {

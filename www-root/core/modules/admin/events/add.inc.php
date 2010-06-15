@@ -22,7 +22,7 @@
  * @author Developer: Matt Simpson <matt.simpson@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
- * @version $Id: add.inc.php 1169 2010-05-01 14:18:49Z simpson $
+ * @version $Id: add.inc.php 1181 2010-05-04 19:27:22Z jellis $
  */
 
 if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
@@ -759,42 +759,6 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						<td colspan="2" style="padding-bottom: 15px">
 							<label for="event_audience_type_grad_year" class="radio-group-title">Entire Class Event</label>
 							<div class="content-small">This event is intended for an entire class.</div>
-						</td>
-					</tr>
-					<tr class="event_audience grad_year_audience">
-						<td></td>
-						<td><label for="associated_grad_years" class="form-required">Graduating Year</label></td>
-						<td>
-							<?php
-							$years = array();
-							for($year = (date("Y", time()) + 4); $year >= (date("Y", time()) - 1); $year--) {
-								$checked = '';
-								foreach($PROCESSED["associated_grad_years"] as $checked_year) {
-									if($checked_year == $year) {
-										$checked = 'checked';
-									}
-								}
-								$years[] = array('text' => $year, 'value' => $year, 'checked' => $checked);
-							}
-							echo lp_multiple_select_inline('associated_grad_years', $years, array('width' => '50%', 'height' => 'auto', 'filterbar' => false));
-
-							?>
-							<input class="multi-picklist" id="associated_grad_years" name="associated_grad_years" style="display: none;">
-							<script type="text/javascript">
-								multiselect = new Control.SelectMultiple('associated_grad_years','associated_grad_years_options',{
-									labelSeparator: '; ',
-									checkboxSelector: 'table.select_multiple_table tr td.select_multiple_checkbox input[type=checkbox]',
-									nameSelector: 'table.select_multiple_table tr td.select_multiple_name label',
-									overflowLength: 70,
-									afterCheck: function(element) {
-										var tr = $(element.parentNode.parentNode);
-										tr.removeClassName('selected');
-										if(element.checked) {
-											tr.addClassName('selected');
-										}
-									}
-								});
-							</script>
 						</td>
 					</tr>
 					<tr class="event_audience grad_year_audience">

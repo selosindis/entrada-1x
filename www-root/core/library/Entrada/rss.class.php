@@ -6,6 +6,8 @@ class rssFeed extends lastRSS {
 		$this->cache_dir	= RSS_CACHE_DIRECTORY;
 		$this->cache_time	= RSS_CACHE_TIMEOUT;
 		$this->CDATA		= "content";
+		$this->stripHTML 	= true;
+		
 	}
 	
 	function fetch($feed_url, $items_limit = 5) {

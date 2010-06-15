@@ -216,20 +216,20 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 		if (isset($_GET["type"])) {
 			switch ($_GET["type"]) {
 				case "approval":
-					$where		= " AND a.`event_status` = 'approval' ";
-					$noticemsg	= "You do not have any electives pending approval.";
+					$where = " AND a.`event_status` = 'approval' ";
+					$noticemsg = "You do not have any electives pending approval.";
 				break;
 				case "published":
-					$where		= " AND a.`event_status` = 'published' ";
-					$noticemsg	= "You do not have any electives approved in the system.";
+					$where = " AND a.`event_status` = 'published' ";
+					$noticemsg = "You do not have any electives approved in the system.";
 				break;
 				case "rejected":
-					$where		= " AND a.`event_status` = 'trash' ";
-					$noticemsg	= "You do not have any electives rejected in the system.";
+					$where = " AND a.`event_status` = 'trash' ";
+					$noticemsg = "You do not have any electives rejected in the system.";
 				break;
 				default:
-					$where		= "";
-					$noticemsg	= "You do not have any electives in the system.";
+					$where = "";
+					$noticemsg = "You do not have any electives in the system.";
 				break;
 			}
 		} else {
@@ -237,18 +237,18 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 			$noticemsg	= "You do not have any electives in the system.";
 		}
 	
-		$query		= "	SELECT a.*, c.*
-						FROM `".CLERKSHIP_DATABASE."`.`events` AS a
-						LEFT JOIN `".CLERKSHIP_DATABASE."`.`event_contacts` AS b
-						ON b.`event_id` = a.`event_id`
-						LEFT JOIN `".CLERKSHIP_DATABASE."`.`regions` AS c
-						ON c.`region_id` = a.`region_id`
-						WHERE b.`econtact_type` = 'student'
-						AND b.`etype_id` = ".$db->qstr($_SESSION["details"]["id"])."
-						AND a.`event_type` = 'elective'
-						".$where."
-						ORDER BY a.`event_start` ASC";
-		$results	= $db->GetAll($query);
+		$query = "	SELECT a.*, c.*
+					FROM `".CLERKSHIP_DATABASE."`.`events` AS a
+					LEFT JOIN `".CLERKSHIP_DATABASE."`.`event_contacts` AS b
+					ON b.`event_id` = a.`event_id`
+					LEFT JOIN `".CLERKSHIP_DATABASE."`.`regions` AS c
+					ON c.`region_id` = a.`region_id`
+					WHERE b.`econtact_type` = 'student'
+					AND b.`etype_id` = ".$db->qstr($_SESSION["details"]["id"])."
+					AND a.`event_type` = 'elective'
+					".$where."
+					ORDER BY a.`event_start` ASC";
+		$results = $db->GetAll($query);
 		if ($results) {
 			?>
 			<div style="float: right; padding-top: 2px">
@@ -291,16 +291,16 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 				}
 	
 				if((bool) $result["manage_apartments"]) {
-					$apartment_id			= clerkship_apartment_status($result["event_id"], $_SESSION["details"]["id"]);
-					$apartment_available	= (($apartment_id) ? true : false);
+					$aschedule_id = regionaled_apartment_check($result["event_id"], $_SESSION["details"]["id"]);
+					$apartment_available = (($aschedule_id) ? true : false);
 				} else {
-					$apartment_available	= false;
+					$apartment_available = false;
 				}
 	
 				if(!isset($result["region_name"]) || $result["region_name"] == "") {
 					$result_region = clerkship_get_elective_location($result["event_id"]);
 					$result["region_name"] = $result_region["region_name"];
-					$result["city"]		   = $result_region["city"];
+					$result["city"] = $result_region["city"];
 				} else {
 					$result["city"] = "";
 				}
@@ -312,22 +312,22 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 						case "approval":
 							$elective_word = "Pending";
 							$cssclass = " class=\"in_draft\"";
-							$click_url	= ENTRADA_URL."/clerkship/electives?section=edit&id=".$result["event_id"];
+							$click_url = ENTRADA_URL."/clerkship/electives?section=edit&id=".$result["event_id"];
 						break;
 						case "published":
 							$elective_word = "Approved";
 							$cssclass = " class=\"published\"";
-							$click_url	= ENTRADA_URL."/clerkship/electives?section=view&id=".$result["event_id"];
+							$click_url = ENTRADA_URL."/clerkship/electives?section=view&id=".$result["event_id"];
 						break;
 						case "trash":
 							$elective_word = "Rejected";
 							$cssclass = " class=\"rejected\"";
-							$click_url	= ENTRADA_URL."/clerkship/electives?section=edit&id=".$result["event_id"];
+							$click_url = ENTRADA_URL."/clerkship/electives?section=edit&id=".$result["event_id"];
 						break;
 						default:
 							$elective_word = "";
 							$cssclass = "";
-							$click_url	= ENTRADA_URL."/clerkship/electives?section=edit&id=".$result["event_id"];
+							$click_url = ENTRADA_URL."/clerkship/electives?section=edit&id=".$result["event_id"];
 						break;
 					}
 				}

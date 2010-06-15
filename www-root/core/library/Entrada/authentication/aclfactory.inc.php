@@ -22,38 +22,23 @@ class RoleRegistry extends Zend_Acl_Role_Registry {
 /**
  * Extended Zend_Acl to support passing of role and resource objects instead of their interfaces. See links.
  *
- * @link http://www.aviblock.com/blog/2009/03/19/acl-in-zend-framework%5C/, http://zendframework.com/issues/browse/ZF-1721
  * @author Organisation: Queen's University
  * @author Unit: School of Medicine
  * @author Developer: Harry Brundage <hbrundage@qmed.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  */
 class Zend_Acl_Plus extends Zend_Acl {
-/**
- * Storage for the resource being queried, to enable easy access by assertions
- * @var Zend_Acl_Resource_Interface
- */
-	public $last_query;
+	/**
+	 * Storage for the resource being queried, to enable easy access by assertions
+	 * @var Zend_Acl_Resource_Interface
+	 */
+	public $_entrada_last_query;
 
 	/**
 	 * Storage for the querying role to enable easy access by assertions
 	 * @var Zend_Acl_Resource_Interface
 	 */
-	public $last_query_role;
-	
-	public function get($resource) {
-		if ($resource instanceof Zend_Acl_Resource_Interface) {
-			return $resource;
-		}
-		return parent::get($resource);
-	}
-
-	protected function _getRoleRegistry() {
-		if (null === $this->_roleRegistry) {
-			$this->_roleRegistry = new RoleRegistry();
-		}
-		return $this->_roleRegistry;
-	}
+	public $_entrada_last_query_role;
 }
 
 /**
@@ -71,7 +56,7 @@ class ACL_Factory {
  */
 	var $acl;
 
-	var $crud = array('create', 'read', 'update', 'delete');
+	var $crud = array("create", "read", "update", "delete");
 
 	/**
 	 * Sets up this instance of ACL_Factory
@@ -89,135 +74,140 @@ class ACL_Factory {
 	function create_acl($rrpermissions) {
 		foreach($rrpermissions as $perm) {
 		//Check for specific group:role combination permissions
-			if(isset($perm['entity_type']) && $perm['entity_type'] == 'group:role') {
-			//Group:Role
-				if(!isset($perm['entity_value'])) {
-					application_log("error", "Permission [".$perm['permission_id']."] cannot have a null entity value. Please fix this in the database.");
+			
+			if(isset($perm["entity_type"]) && $perm["entity_type"] == "group:role") {
+				//Group:Role
+				if(!isset($perm["entity_value"])) {
+					application_log("error", "Permission [".$perm["permission_id"]."] cannot have a null entity value. Please fix this in the database.");
 					continue;
 				}
 
-				$entity_vals = explode(':', $perm['entity_value']);
+				$entity_vals = explode(":", $perm["entity_value"]);
 
 				if(!isset($entity_vals[1])) {
-					application_log("error", "Permission [".$perm['permission_id']."] needs to have both a group AND a role seperated by a colon. Please fix this in the database.");
+					application_log("error", "Permission [".$perm["permission_id"]."] needs to have both a group AND a role seperated by a colon. Please fix this in the database.");
 					continue;
 				}
 
-				$perm['entity_type'] = 'role';
-				$perm['entity_value'] = $entity_vals[1];
-			} else if(isset($perm['entity_type']) && $perm['entity_type'] == 'organisation:group') {
-				//Organisation:group
-					if(!isset($perm['entity_value'])) {
-						application_log("error", "Permission [".$perm['permission_id']."] cannot have a null entity value. Please fix this in the database.");
+				$perm["entity_type"] = "role";
+				$perm["entity_value"] = $entity_vals[1];
+			
+			} else if(isset($perm["entity_type"]) && $perm["entity_type"] == "organisation:group") {
+					
+					//Organisation:group
+					if(!isset($perm["entity_value"])) {
+						application_log("error", "Permission [".$perm["permission_id"]."] cannot have a null entity value. Please fix this in the database.");
 						continue;
 					}
 
-					$entity_vals = explode(':', $perm['entity_value']);
+					$entity_vals = explode(":", $perm["entity_value"]);
 
 					if(!isset($entity_vals[1])) {
-						application_log("error", "Permission [".$perm['permission_id']."] needs to have both an organisation AND a group seperated by a colon. Please fix this in the database.");
+						application_log("error", "Permission [".$perm["permission_id"]."] needs to have both an organisation AND a group seperated by a colon. Please fix this in the database.");
 						continue;
 					}
 
-					$perm['entity_type'] = 'group';
-					$perm['entity_value'] = $entity_vals[1];
-				} else if(isset($perm['entity_type']) && $perm['entity_type'] == 'organisation:group:role') {
+					$perm["entity_type"] = "group";
+					$perm["entity_value"] = $entity_vals[1];
+				} else if(isset($perm["entity_type"]) && $perm["entity_type"] == "organisation:group:role") {
+					
 					//Organisation:group:role
-						if(!isset($perm['entity_value'])) {
-							application_log("error", "Permission [".$perm['permission_id']."] cannot have a null entity value. Please fix this in the database.");
+						if(!isset($perm["entity_value"])) {
+							application_log("error", "Permission [".$perm["permission_id"]."] cannot have a null entity value. Please fix this in the database.");
 							continue;
 						}
 
-						$entity_vals = explode(':', $perm['entity_value']);
+						$entity_vals = explode(":", $perm["entity_value"]);
 
 						if(!isset($entity_vals[1]) || !isset($entity_vals[2])) {
-							application_log("error", "Permission [".$perm['permission_id']."] needs to have both a group, role AND organisation seperated by a colon. Please fix this in the database.");
+							application_log("error", "Permission [".$perm["permission_id"]."] needs to have both a group, role AND organisation seperated by a colon. Please fix this in the database.");
 							continue;
 						}
 
-						$perm['entity_type'] = 'role';
-						$perm['entity_value'] = $entity_vals[2];
+						$perm["entity_type"] = "role";
+						$perm["entity_value"] = $entity_vals[2];
 					}
 
 			$isset = ''.
-				(isset($perm['resource_type'])	? 1 : 0).
-				(isset($perm['resource_value'])	? 1 : 0).
-				(isset($perm['entity_type'])	? 1 : 0).
-				(isset($perm['entity_value'])	? 1 : 0);
+				(isset($perm["resource_type"])	? 1 : 0).
+				(isset($perm["resource_value"])	? 1 : 0).
+				(isset($perm["entity_type"])	? 1 : 0).
+				(isset($perm["entity_value"])	? 1 : 0);
 			$add = true;
 			switch ($isset) {
 				case '1011':
 				//Allow this specific entity to access this type of resource by giving the parent most entity access to the generic resource type.
 				//This will cover both the generics tree and the nested generics resource tree.
-					$entity = $perm['entity_type'].$perm['entity_value'];
-					$resource = $perm['resource_type'];
+					$entity = $perm["entity_type"].$perm["entity_value"];
+					$resource = $perm["resource_type"];
 					break;
 				case '1000':
 				//Allow any entity to access this type of resource by giving the parent most entity access to the generic resource type
 				//This will cover both the generics and the nested generics resource tree.
-					$entity = 'organisation';
-					$resource = $perm['resource_type'];
+					$entity = "organisation";
+					$resource = $perm["resource_type"];
 					break;
 				case '1111':
 				//Allow a specific entitiy to access a specific resource type. Whambamjam.
-					$entity = $perm['entity_type'].$perm['entity_value'];
-					$resource = $perm['resource_type'].$perm['resource_value'];
+					$entity = $perm["entity_type"].$perm["entity_value"];
+					$resource = $perm["resource_type"].$perm["resource_value"];
 					break;
 				case '1100':
 				//Allow any entity to access this specific resource by giving the parent most entity access, so all it's children will inherit.
-					$entity = 'organisation';
-					$resource = $perm['resource_type'].$perm['resource_value'];
+					$entity = "organisation";
+					$resource = $perm["resource_type"].$perm["resource_value"];
 					break;
 				case '0011':
 				//Allow a specific entity to access any resource by giving the entity access to the parent most resource (mom)
-					$entity = $perm['entity_type'].$perm['entity_value'];
-					$resource = 'mom';
+					$entity = $perm["entity_type"].$perm["entity_value"];
+					$resource = "mom";
 					break;
 				default:
-					application_log("error", "Permission[".$perm['permission_id']."] pertains to a non permitted series of designators. Please fix this in the database.");
+					application_log("error", "Permission[".$perm["permission_id"]."] pertains to a non permitted series of designators. Please fix this in the database.");
 					$add = false;
 					break;
 			}
 
 			if($add) {
 				if(!$this->acl->has($resource)) {
-				//Error! The tree builder should have added all the resources needed. Weird man.
+					//Error! The tree builder should have added all the resources needed. Weird man.
 				}
-				if(isset($perm['assertion'])) {
-					$assertions = explode('&', $perm['assertion']);
+				
+				if(isset($perm["assertion"])) {
+					$assertions = explode('&', $perm["assertion"]);
+					
 					if(isset($assertions[1])) {
 						$asserter = new MultipleAssertion($assertions);
 					} else {
-						$assertion_name = $perm['assertion'].'Assertion';
-						$asserter      = new $assertion_name();
+						$assertion_name = $perm["assertion"]."Assertion";
+						$asserter      	= new $assertion_name();
 					}
 				} else {
-					$asserter      = null;
+					$asserter = null;
 				}
 
 				$permissions_to_be_granted	= array();
 				$permissions_to_be_denyed	= array();
 
 				foreach($this->crud as $individual_perm) {
+					//Only set a rule if the permission is 1 or 0, disregard null values.
 					if($perm[$individual_perm] == '1') {
 						$permissions_to_be_granted[] = $individual_perm;
 					} else if ($perm[$individual_perm] == '0') {
-							$permissions_to_be_denyed[] = $individual_perm;
-						}
-				//Only set a rule if the permission is 1 or 0, disregard null values.
+						$permissions_to_be_denyed[] = $individual_perm;
+					}
 				}
 
 				if(count($permissions_to_be_granted) > 0) {
 					$this->acl->allow($entity, $resource, $permissions_to_be_granted, $asserter);
+					//echo "Granting $entity ".$permissions_to_be_granted[0].$permissions_to_be_granted[1].$permissions_to_be_granted[2].$permissions_to_be_granted[3]." on $resource with ".get_class($asserter).". \n";
 				}
 
 				if(count($permissions_to_be_denyed) > 0) {
 					$this->acl->deny($entity, $resource, $permissions_to_be_denyed, $asserter);
 				}
 			}
-
 		}
-
 	}
 
 	/**
@@ -232,18 +222,18 @@ class ACL_Factory {
 	function isAllowed($user, $resource, $action) {
 		//Store role for use by assertions
 		if($user instanceof Zend_Acl_Role_Interface) {
-			$this->acl->last_query_role = $user;
+			$this->acl->_entrada_last_query_role = $user;
 		} else {
-			$this->acl->last_query_role = new Zend_Acl_Role($user);
+			$this->acl->_entrada_last_query_role = new Zend_Acl_Role($user);
 		}
 
 		//Grab resource ID and store resource for use by assertions
 		if($resource instanceof Zend_Acl_Resource_Interface) {
 			$resource_id				= $resource->getResourceId();
-			$this->acl->last_query		= $resource;
+			$this->acl->_entrada_last_query		= $resource;
 		} else {
 			$resource_id = $resource;
-			$this->acl->last_query		= new Zend_Acl_Resource($resource);
+			$this->acl->_entrada_last_query		= new Zend_Acl_Resource($resource);
 		}
 		
 		$resourcetype = preg_replace('/[0-9]+/', '', $resource_id);
@@ -251,14 +241,12 @@ class ACL_Factory {
 		if($this->acl->has($resource)) {
 			return $this->acl->isAllowed($user, $resource, $action);
 		} else if($this->acl->has($resourcetype)) {
-
-				if($resource instanceof Zend_Acl_Resource_Interface) {
-					$resourcetype = $resource;
-					$resourcetype->specific = false;
-				}
-				return $this->acl->isAllowed($user, $resourcetype, $action);
+			if($resource instanceof Zend_Acl_Resource_Interface) {
+				$resourcetype = $resource;
+				$resourcetype->specific = false;
 			}
-
+			return $this->acl->isAllowed($user, $resourcetype, $action);
+		}
 		return false;
 	}
 

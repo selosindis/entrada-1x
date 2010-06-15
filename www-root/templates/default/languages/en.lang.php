@@ -10,7 +10,7 @@
  * @author Developer: Matt Simpson <matt.simpson@queensu.ca>
  * @copyright Copyright 2008 University of Calgary. All Rights Reserved.
  * 
- * @version $Id: en.lang.php 1043 2010-02-12 21:19:55Z simpson $
+ * @version $Id: en.lang.php 1191 2010-05-13 17:11:26Z hbrundage $
 */
     
 return array (
@@ -27,28 +27,28 @@ return array (
 	 */
     "public_dashboard_feeds" => array (
 		"global" => array (
-			array ("title" => "Entrada Announcement Feed", "url" => "http://www.entrada-project.org/news/feed"),
-			array ("title" => "Zend DevZone", "url" => "http://devzone.zend.com/tag/Zend_Framework_Management/format/rss2.0"),
-			array ("title" => "Insider Medicine", "url" => "http://insidermedicine.ca/xml/Patient/insidermedicine_English.xml"),
-			array ("title" => "Google News Top Stories", "url" => "http://news.google.com/news?pz=1&cf=all&ned=ca&hl=en&topic=h&num=3&output=rss")
+			array ("title" => "Entrada Announcement Feed", "url" => "http://www.entrada-project.org/news/feed", "removable" => false),
+			array ("title" => "Zend DevZone", "url" => "http://devzone.zend.com/tag/Zend_Framework_Management/format/rss2.0", "removable" => false),
+			array ("title" => "Insider Medicine", "url" => "http://insidermedicine.ca/xml/Patient/insidermedicine_English.xml", "removable" => false),
+			array ("title" => "Google News Top Stories", "url" => "http://news.google.com/news?pz=1&cf=all&ned=ca&hl=en&topic=h&num=3&output=rss", "removable" => false)
 		),
 		"medtech" => array (
-			// array ("title" => "Admin Feed Example", "url" => "http://www.yourschool.ca/admin.rss")
+			// array ("title" => "Admin Feed Example", "url" => "http://www.yourschool.ca/admin.rss", "removable" => false)
 		),
 		"student" => array (
-			// array ("title" => "Student Feed Example", "url" => "http://www.yourschool.ca/student.rss")
+			// array ("title" => "Student Feed Example", "url" => "http://www.yourschool.ca/student.rss", "removable" => false)
 		),
 		"alumni" => array (
-			// array ("title" => "Student Feed Example", "url" => "http://www.yourschool.ca/student.rss")
+			// array ("title" => "Student Feed Example", "url" => "http://www.yourschool.ca/student.rss", "removable" => false)
 		),
 		"faculty" => array (
-			// array ("title" => "Faculty Feed Example", "url" => "http://www.yourschool.ca/faculty.rss")
+			// array ("title" => "Faculty Feed Example", "url" => "http://www.yourschool.ca/faculty.rss", "removable" => false)
 		),
 		"resident" => array (
-			// array ("title" => "Resident Feed Example", "url" => "http://www.yourschool.ca/resident.rss")
+			// array ("title" => "Resident Feed Example", "url" => "http://www.yourschool.ca/resident.rss", "removable" => false)
 		),
 		"staff" => array (
-			// array ("title" => "Staff Feed Example", "url" => "http://www.yourschool.ca/staff.rss")
+			// array ("title" => "Staff Feed Example", "url" => "http://www.yourschool.ca/staff.rss", "removable" => false)
 		)
 	),
     "public_dashboard_links" => array (

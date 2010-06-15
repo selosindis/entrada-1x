@@ -23,7 +23,7 @@
  * @author Developer: Matt Simpson <matt.simpson@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  * 
- * @version $Id: content.inc.php 1169 2010-05-01 14:18:49Z simpson $
+ * @version $Id: content.inc.php 1190 2010-05-11 18:23:51Z jellis $
 */
 
 if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
@@ -124,9 +124,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				$clinical_presentations_list	= array();
 				$clinical_presentations			= array();
 
-				$query		= "	SELECT * FROM `global_lu_objectives` 
-								WHERE `objective_active` = '1'";
-				$results	= $db->GetAll($query);
+				$results	= fetch_mcc_objectives();
 				if ($results) {
 					foreach ($results as $result) {
 						$clinical_presentations_list[$result["objective_id"]] = $result["objective_name"];
@@ -158,7 +156,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				/**
 				 * Fetch the Curriculum Objective details.
 				 */
-				$curriculum_objectives_list = courses_fetch_objectives(array($event_info["course_id"]), 1, false, false, $EVENT_ID);
+				$curriculum_objectives_list = courses_fetch_objectives(array($event_info["course_id"]), 1, false, false, $EVENT_ID, true);
 				$curriculum_objectives		= array();
 
 				if (isset($_POST["checked_objectives"]) && ($checked_objectives = $_POST["checked_objectives"]) && (is_array($checked_objectives))) {
@@ -345,7 +343,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 									/**
 									 * Changes have been made so update the $curriculum_objectives_list variable.
 									 */
-									$curriculum_objectives_list = courses_fetch_objectives(array($event_info["course_id"]), 1, false, false, $EVENT_ID);
+									$curriculum_objectives_list = courses_fetch_objectives(array($event_info["course_id"]), 1, false, false, $EVENT_ID, true);
 								}
 							}
 

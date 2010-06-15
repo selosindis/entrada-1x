@@ -23,7 +23,6 @@
  * @author Developer: Matt Simpson <matt.simpson@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
- * @version $Id: manage.inc.php 1169 2010-05-01 14:18:49Z simpson $
  */
 
 if (!defined("IN_APARTMENTS")) {
@@ -107,7 +106,7 @@ if (!defined("IN_APARTMENTS")) {
 				$results = $db->GetAll($query);
 				if ($results) {
 					foreach ($results as $result) {
-						$sidebar_html .= "	<li class=\"community\">".html_encode($result["fullname"])."</li>\n";
+						$sidebar_html .= "<li class=\"".$result["occupant_type"]."\">".html_encode(limit_chars((($result["occupant_type"] == "other") ? $result["occupant_title"] : $result["fullname"]), 23))."</li>\n";
 					}
 				} else {
 					$sidebar_html .= "<li class=\"status-offline\">Not currently occupied</li>";
@@ -128,17 +127,18 @@ if (!defined("IN_APARTMENTS")) {
 				$query = "SELECT * FROM `".CLERKSHIP_DATABASE."`.`apartments` WHERE `region_id` = ".$db->qstr($APARTMENT_INFO["region_id"]);
 				$apartments = $db->GetAll($query);
 				if ($apartments) {
-					echo "<div style=\"float: right\">\n";
-					echo "	<form id=\"changeApartment\">\n";
-					echo "		<label for=\"change_apartment_id\" class=\"form-nrequired\">Other Apartments</label>\n";
-					echo "		<select id=\"change_apartment_id\" style=\"width: 250px\" onchange=\"window.location = '".ENTRADA_URL."/admin/regionaled/apartments/manage?".replace_query(array("id" => false))."&id=' + \$F('change_apartment_id')\">\n";
+					echo "<div class=\"container\">\n";
+					echo "	<div class=\"col-right right\">\n";
+					echo "		<form id=\"changeApartment\">\n";
+					echo "			<label for=\"change_apartment_id\" class=\"form-nrequired\">Other Apartments</label>\n";
+					echo "			<select id=\"change_apartment_id\" style=\"width: 250px;\" onchange=\"window.location = '".ENTRADA_URL."/admin/regionaled/apartments/manage?".replace_query(array("id" => false))."&id=' + \$F('change_apartment_id')\">\n";
 					foreach ($apartments as $apartment) {
-						echo "		<option value=\"".(int) $apartment["apartment_id"]."\"".(($apartment["apartment_id"] == $APARTMENT_INFO["apartment_id"]) ? " selected=\"selected\"" : "").">".html_encode($apartment["apartment_title"])."</option>\n";
+						echo "			<option value=\"".(int) $apartment["apartment_id"]."\"".(($apartment["apartment_id"] == $APARTMENT_INFO["apartment_id"]) ? " selected=\"selected\"" : "").">".html_encode($apartment["apartment_title"])."</option>\n";
 					}
-					echo "		</select>\n";
-					echo "	</form>\n";
+					echo "			</select>\n";
+					echo "		</form>\n";
+					echo "	</div>\n";
 					echo "</div>\n";
-					echo "<div class=\"clear\"></div>\n";
 				}
 
 				echo "<h1 style=\"margin-bottom: 0px\">".($APARTMENT_EXPIRED ? "Expired: " : "").html_encode($APARTMENT_INFO["apartment_title"])."</h1>\n";

@@ -39,9 +39,9 @@ if (!defined("IN_CLERKSHIP")) {
 
 	application_log("error", "Group [".$GROUP."] and role [".$ROLE."] do not have access to this module [".$MODULE."]");
 } else {
-	$USER_ID = (isset($_GET["id"]) && (int)$_GET["id"] ? $_GET["id"] : 0);
+	$USER_ID = (isset($_GET["id"]) && (int) $_GET["id"] ? $_GET["id"] : 0);
 	
-	$BREADCRUMB[] = array("url" => ENTRADA_URL."/clerkship/logbook".($USER_ID ? "?id=".$USER_ID : ""), "title" => "Manage Logbook");
+	$BREADCRUMB[] = array("url" => ENTRADA_URL."/clerkship/logbook".($USER_ID ? "?id=".$USER_ID : ""), "title" => "Logbook");
 
 	if (($router) && ($router->initRoute())) {
 		$module_file = $router->getRoute();
@@ -49,7 +49,7 @@ if (!defined("IN_CLERKSHIP")) {
 			require_once($module_file);
 		}
 	} else {
-		$url = ENTRADA_URL."/admin/".$MODULE;
+		$url = ENTRADA_URL."/".$MODULE;
 		application_log("error", "The Entrada_Router failed to load a request. The user was redirected to [".$url."].");
 
 		header("Location: ".$url);

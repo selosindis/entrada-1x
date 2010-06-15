@@ -24,11 +24,11 @@
  * @author Developer: James Ellis <james.ellis@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
- * @version $Id: dashboard.inc.php 1171 2010-05-01 14:39:27Z ad29 $
+ * @version $Id: dashboard.inc.php 1215 2010-06-14 20:25:20Z simpson $
  */
 
-if(!defined("PARENT_INCLUDED")) exit;
-if(!$ENTRADA_ACL->amIAllowed('dashboard', 'read')) {
+if (!defined("PARENT_INCLUDED")) exit;
+if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 
 	$ERROR++;
 	$ERRORSTR[]	= "Your account does not have the permissions required to use this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
@@ -37,16 +37,15 @@ if(!$ENTRADA_ACL->amIAllowed('dashboard', 'read')) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
-	require_once("Entrada/rss.class.php");
 
-	$rss_reader				= new rssFeed();
 	$DISPLAY_DURATION		= array();
 	$notice_where_clause	= "";
 	$poll_where_clause		= "";
-
-	$PREFERENCES			= preferences_load($MODULE);
+	$PREFERENCES			= preferences_load("dashboard");
 
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/tabpane/tabpane.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/rssreader.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+
 	$HEAD[] = "<link href=\"".ENTRADA_RELATIVE."/css/tabpane.css?release=".html_encode(APPLICATION_VERSION)."\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />";
 
 	$HEAD[] = "<link href=\"".ENTRADA_RELATIVE."/javascript/calendar/css/xc2_default.css\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />";
@@ -67,7 +66,6 @@ if(!$ENTRADA_ACL->amIAllowed('dashboard', 'read')) {
 	 */
 	$dashboard_feeds = dashboard_fetch_feeds();
 	$dashboard_links = dashboard_fetch_links();
-
 	/**
 	 * Display current weather conditions in the sidebar.
 	 */
@@ -90,10 +88,10 @@ if(!$ENTRADA_ACL->amIAllowed('dashboard', 'read')) {
 					ORDER BY b.`community_title` ASC
 					LIMIT 0, 11";
 	$results	= $db->GetAll($query);
-	if($results) {
+	if ($results) {
 		$sidebar_html  = "<ul class=\"menu\">\n";
-		foreach($results as $key => $result) {
-			if($key < 10) {
+		foreach ($results as $key => $result) {
+			if ($key < 10) {
 				$sidebar_html .= "<li class=\"community\"><a href=\"".ENTRADA_URL."/community".$result["community_url"]."\">".html_encode($result["community_title"])."</a></li>\n";
 			} else {
 				$sidebar_html .= "<li><a href=\"".ENTRADA_URL."/communities\">more ...</a></li>\n";
@@ -110,11 +108,11 @@ if(!$ENTRADA_ACL->amIAllowed('dashboard', 'read')) {
 		new_sidebar_item("Podcasts in iTunes", $sidebar_html, "podcast-bar", "open");
 	}
 
-	switch($ACTION) {
+	switch ($ACTION) {
 		case "read" :
-			if((isset($_POST["mark_read"])) && (@is_array($_POST["mark_read"]))) {
-				foreach($_POST["mark_read"] as $notice_id) {
-					if($notice_id = (int) $notice_id) {
+			if ((isset($_POST["mark_read"])) && (@is_array($_POST["mark_read"]))) {
+				foreach ($_POST["mark_read"] as $notice_id) {
+					if ($notice_id = (int) $notice_id) {
 						add_statistic("notices", "read", "notice_id", $notice_id);
 					}
 				}
@@ -126,65 +124,66 @@ if(!$ENTRADA_ACL->amIAllowed('dashboard', 'read')) {
 			break;
 	}
 
-	switch($_SESSION["details"]["group"]) {
+	switch ($_SESSION["details"]["group"]) {
 		case "alumni" :
-			$rss_feed_name			= "alumni";
-			$notice_where_clause	= "(a.`target` = 'all' OR a.`target` = 'alumni' OR a.`target` = ".$db->qstr("proxy_id:".((int) $_SESSION["details"]["id"])).")";
-			$poll_where_clause		= "(a.`poll_target` = 'all' OR a.`poll_target` = 'alumni')";;
-			break;
+			$rss_feed_name = "alumni";
+			$notice_where_clause = "(a.`target` = 'all' OR a.`target` = 'alumni' OR a.`target` = ".$db->qstr("proxy_id:".((int) $_SESSION["details"]["id"])).")";
+			$poll_where_clause = "(a.`poll_target` = 'all' OR a.`poll_target` = 'alumni')";;
+		break;
 		case "faculty" :
-			$rss_feed_name			= "faculty";
-			$notice_where_clause	= "(a.`target` = 'all' OR a.`target` = 'faculty' OR a.`target` = ".$db->qstr("proxy_id:".((int) $_SESSION["details"]["id"])).")";
-			$poll_where_clause		= "(a.`poll_target` = 'all' OR a.`poll_target` = 'faculty')";;
-			break;
+			$rss_feed_name = "faculty";
+			$notice_where_clause = "(a.`target` = 'all' OR a.`target` = 'faculty' OR a.`target` = ".$db->qstr("proxy_id:".((int) $_SESSION["details"]["id"])).")";
+			$poll_where_clause = "(a.`poll_target` = 'all' OR a.`poll_target` = 'faculty')";;
+		break;
 		case "medtech" :
-			$rss_feed_name			= "medtech";
-			$notice_where_clause	= "(a.`target` NOT LIKE 'proxy_id:%' OR a.`target` = ".$db->qstr("proxy_id:".((int) $_SESSION["details"]["id"])).")";
-			$poll_where_clause		= "(a.`poll_target` = 'all' OR a.`poll_target` = 'staff')";;
-			break;
+			$rss_feed_name = "medtech";
+			$notice_where_clause = "(a.`target` NOT LIKE 'proxy_id:%' OR a.`target` = ".$db->qstr("proxy_id:".((int) $_SESSION["details"]["id"])).")";
+			$poll_where_clause = "(a.`poll_target` = 'all' OR a.`poll_target` = 'staff')";;
+		break;
 		case "resident" :
-			$rss_feed_name			= "resident";
-			$notice_where_clause	= "(a.`target` = 'all' OR a.`target` = 'resident' OR a.`target` = ".$db->qstr("proxy_id:".((int) $_SESSION["details"]["id"])).")";
-			$poll_where_clause		= "(a.`poll_target` = 'all' OR a.`poll_target` = 'resident')";;
-			break;
+			$rss_feed_name = "resident";
+			$notice_where_clause = "(a.`target` = 'all' OR a.`target` = 'resident' OR a.`target` = ".$db->qstr("proxy_id:".((int) $_SESSION["details"]["id"])).")";
+			$poll_where_clause = "(a.`poll_target` = 'all' OR a.`poll_target` = 'resident')";;
+		break;
 		case "staff" :
-			$rss_feed_name			= "staff";
-			$notice_where_clause	= "(a.`target` = 'all' OR a.`target` = 'staff' OR a.`target` = ".$db->qstr("proxy_id:".((int) $_SESSION["details"]["id"])).")";
-			$poll_where_clause		= "(a.`poll_target` = 'all' OR a.`poll_target` = 'staff')";;
-			break;
+			$rss_feed_name = "staff";
+			$notice_where_clause = "(a.`target` = 'all' OR a.`target` = 'staff' OR a.`target` = ".$db->qstr("proxy_id:".((int) $_SESSION["details"]["id"])).")";
+			$poll_where_clause = "(a.`poll_target` = 'all' OR a.`poll_target` = 'staff')";;
+		break;
 		case "student" :
 		default :
-			$rss_feed_name			= (((int) $_SESSION["details"]["grad_year"]) ? (int) $_SESSION["details"]["grad_year"] : "student");
-			$notice_where_clause	= "(".(((int) $_SESSION["details"]["grad_year"]) ? "a.`target`='".(int) $_SESSION["details"]["grad_year"]."' OR " : "")."a.`target` = 'all' OR a.`target` = 'students' OR a.`target` = ".$db->qstr("proxy_id:".((int) $_SESSION["details"]["id"])).")";
-			$poll_where_clause		= "(".(((int) $_SESSION["details"]["grad_year"]) ? "a.`poll_target`='".(int) $_SESSION["details"]["grad_year"]."' OR " : "")."a.`poll_target` = 'all' OR a.`poll_target` = 'students')";
-			break;
+			$rss_feed_name = (((int) $_SESSION["details"]["grad_year"]) ? (int) $_SESSION["details"]["grad_year"] : "student");
+			$notice_where_clause = "(".(((int) $_SESSION["details"]["grad_year"]) ? "a.`target`='".(int) $_SESSION["details"]["grad_year"]."' OR " : "")."a.`target` = 'all' OR a.`target` = 'students' OR a.`target` = ".$db->qstr("proxy_id:".((int) $_SESSION["details"]["id"])).")";
+			$poll_where_clause = "(".(((int) $_SESSION["details"]["grad_year"]) ? "a.`poll_target`='".(int) $_SESSION["details"]["grad_year"]."' OR " : "")."a.`poll_target` = 'all' OR a.`poll_target` = 'students')";
+		break;
 	}
-	$notice_where_clause .= 'AND (a.`organisation_id` IS NULL OR a.`organisation_id` = '.$_SESSION["details"]["organisation_id"].')';
-	if(!isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"][$MODULE]["poll_id"])) {
-	$query	= "	SELECT a.`poll_id`
-			FROM `poll_questions` AS a
-			LEFT JOIN `poll_results` AS b
-			ON b.`poll_id` = a.`poll_id`
-			AND b.`proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
-			WHERE b.`result_id` IS NULL
-			AND (`poll_from` = '0' OR `poll_from` <= '".time()."')
-			AND (`poll_until` = '0' OR `poll_until` >= '".time()."')
-			".(($poll_where_clause) ? "AND ".$poll_where_clause : "")."
-			ORDER BY RAND() LIMIT 1";
+	$notice_where_clause .= "AND (a.`organisation_id` IS NULL OR a.`organisation_id` = ".$_SESSION["details"]["organisation_id"].")";
+
+	if (!isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"][$MODULE]["poll_id"])) {
+		$query = "	SELECT a.`poll_id`
+					FROM `poll_questions` AS a
+					LEFT JOIN `poll_results` AS b
+					ON b.`poll_id` = a.`poll_id`
+					AND b.`proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
+					WHERE b.`result_id` IS NULL
+					AND (`poll_from` = '0' OR `poll_from` <= '".time()."')
+					AND (`poll_until` = '0' OR `poll_until` >= '".time()."')
+					".(($poll_where_clause) ? "AND ".$poll_where_clause : "")."
+					ORDER BY RAND() LIMIT 1";
 		$result	= $db->GetRow($query);
-		if($result) {
+		if ($result) {
 			$_SESSION[APPLICATION_IDENTIFIER]["tmp"][$MODULE]["poll_id"] = $result["poll_id"];
 		} else {
-		$query	= "	SELECT a.`poll_id`
-				FROM `poll_questions` AS a
-				LEFT JOIN `poll_results` AS b
-				ON b.`poll_id` = a.`poll_id`
-				WHERE b.`result_id` IS NOT NULL
-				AND (`poll_from` = '0' OR `poll_from` <= '".time()."')
-				AND (`poll_until` = '0' OR `poll_until` >= '".time()."')
-				ORDER BY RAND() LIMIT 1";
+			$query = "	SELECT a.`poll_id`
+						FROM `poll_questions` AS a
+						LEFT JOIN `poll_results` AS b
+						ON b.`poll_id` = a.`poll_id`
+						WHERE b.`result_id` IS NOT NULL
+						AND (`poll_from` = '0' OR `poll_from` <= '".time()."')
+						AND (`poll_until` = '0' OR `poll_until` >= '".time()."')
+						ORDER BY RAND() LIMIT 1";
 			$result	= $db->GetRow($query);
-			if($result) {
+			if ($result) {
 				$_SESSION[APPLICATION_IDENTIFIER]["tmp"][$MODULE]["poll_id"] = $result["poll_id"];
 			} else {
 				$_SESSION[APPLICATION_IDENTIFIER]["tmp"][$MODULE]["poll_id"] = 0;
@@ -192,38 +191,38 @@ if(!$ENTRADA_ACL->amIAllowed('dashboard', 'read')) {
 		}
 	}
 
-	if($_SESSION[APPLICATION_IDENTIFIER]["tmp"][$MODULE]["poll_id"]) {
+	if ($_SESSION[APPLICATION_IDENTIFIER]["tmp"][$MODULE]["poll_id"]) {
 		$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/poll-js.php\"></script>\n";
 
 		new_sidebar_item("Quick Polls", poll_display($_SESSION[APPLICATION_IDENTIFIER]["tmp"][$MODULE]["poll_id"]), "quick-poll", "open");
 	}
 
-	if((defined("ENABLE_NOTICES")) && (ENABLE_NOTICES)) {
+	if ((defined("ENABLE_NOTICES")) && (ENABLE_NOTICES)) {
 		$notices_to_display = array();
-		$query		= "	SELECT a.*, b.`statistic_id`, MAX(b.`timestamp`) AS `last_read`
-						FROM `notices` AS a
-						LEFT JOIN `statistics` AS b
-						ON b.`module` = 'notices'
-						AND b.`proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
-						AND b.`action` = 'read'
-						AND b.`action_field` = 'notice_id'
-						AND b.`action_value` = a.`notice_id`
-						WHERE ".(($notice_where_clause) ? $notice_where_clause." AND" : "")."
-						(a.`display_from`='0' OR a.`display_from` <= '".time()."')
-						AND (a.`display_until`='0' OR a.`display_until` >= '".time()."')
-						GROUP BY a.`notice_id`
-						ORDER BY a.`updated_date` DESC, a.`display_until` ASC";
-		$results	= $db->GetAll($query);
-		if($results) {
-			foreach($results as $result) {
-				if((!$result["statistic_id"]) || ($result["last_read"] <= $result["updated_date"])) {
+		$query = "	SELECT a.*, b.`statistic_id`, MAX(b.`timestamp`) AS `last_read`
+					FROM `notices` AS a
+					LEFT JOIN `statistics` AS b
+					ON b.`module` = 'notices'
+					AND b.`proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
+					AND b.`action` = 'read'
+					AND b.`action_field` = 'notice_id'
+					AND b.`action_value` = a.`notice_id`
+					WHERE ".(($notice_where_clause) ? $notice_where_clause." AND" : "")."
+					(a.`display_from`='0' OR a.`display_from` <= '".time()."')
+					AND (a.`display_until`='0' OR a.`display_until` >= '".time()."')
+					GROUP BY a.`notice_id`
+					ORDER BY a.`updated_date` DESC, a.`display_until` ASC";
+		$results = $db->GetAll($query);
+		if ($results) {
+			foreach ($results as $result) {
+				if ((!$result["statistic_id"]) || ($result["last_read"] <= $result["updated_date"])) {
 					$notices_to_display[] = $result;
 				}
 			}
 			unset($results);
 		}
 
-		if(($notices_to_display) && ($total_notices = @count($notices_to_display))) {
+		if (($notices_to_display) && ($total_notices = @count($notices_to_display))) {
 			?>
 			<div class="display-notice" style="color: #333333; max-height: 200px; overflow: auto">
 				<div style="float: right"><a href="<?php echo ENTRADA_URL; ?>/rss/<?php echo $_SESSION["details"]["username"]; ?>.rss" target="_blank" style="color: #666666; font-size: 10px; text-decoration: none">RSS feed available</a> <a href="<?php echo ENTRADA_URL; ?>/notices/<?php echo $rss_feed_name; ?>" target="_blank"><img src="<?php echo ENTRADA_URL; ?>/images/rss-enabled.gif" width="11" height="11" alt="RSS Icon" title="Notices are RSS enabled" border="0" /></a></div>
@@ -243,7 +242,7 @@ if(!$ENTRADA_ACL->amIAllowed('dashboard', 'read')) {
 						</tfoot>
 						<tbody>
 							<?php
-							foreach($notices_to_display as $result) {
+							foreach ($notices_to_display as $result) {
 								echo "<tr>\n";
 								echo "	<td style=\"vertical-align: top; white-space: nowrap; font-size: 12px\">\n";
 								echo "		<input type=\"checkbox\" name=\"mark_read[]\" id=\"notice_msg_".(int) $result["notice_id"]."\" value=\"".(int) $result["notice_id"]."\" style=\"vertical-align: middle\" /> ";
@@ -261,7 +260,7 @@ if(!$ENTRADA_ACL->amIAllowed('dashboard', 'read')) {
 		}
 	}
 
-	switch($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]) {
+	switch ($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]) {
 		case "medtech" :
 		case "student" :
 			$BREADCRUMB[] = array("url" => ENTRADA_URL, "title" => "Student Dashboard");
@@ -281,18 +280,24 @@ if(!$ENTRADA_ACL->amIAllowed('dashboard', 'read')) {
 
 			$display_schedule_tabs	= false;
 
-			if($ENTRADA_ACL->amIAllowed('clerkship', 'read')) {
-				$query				= "	SELECT *
-										FROM `".CLERKSHIP_DATABASE."`.`events` AS a
-										LEFT JOIN `".CLERKSHIP_DATABASE."`.`event_contacts` AS b
-										ON b.`event_id` = a.`event_id`
-										LEFT JOIN `".CLERKSHIP_DATABASE."`.`regions` AS c
-										ON c.`region_id` = a.`region_id`
-										WHERE a.`event_finish` >= ".$db->qstr(strtotime("00:00:00", time()))."
-										AND (a.`event_status` = 'published' OR a.`event_status` = 'approval')
-										AND b.`econtact_type` = 'student'
-										AND b.`etype_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
-										ORDER BY a.`event_start` ASC";
+			if ($ENTRADA_ACL->amIAllowed("clerkship", "read")) {
+				$query = "	SELECT a.*, c.`region_name`, d.`aschedule_id`, d.`apartment_id`, e.`rotation_title`
+							FROM `".CLERKSHIP_DATABASE."`.`events` AS a
+							LEFT JOIN `".CLERKSHIP_DATABASE."`.`event_contacts` AS b
+							ON b.`event_id` = a.`event_id`
+							LEFT JOIN `".CLERKSHIP_DATABASE."`.`regions` AS c
+							ON c.`region_id` = a.`region_id`
+							LEFT JOIN `".CLERKSHIP_DATABASE."`.`apartment_schedule` AS d
+							ON d.`event_id` = a.`event_id`
+							AND d.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+							AND d.`aschedule_status` = 'published'
+							LEFT JOIN `".CLERKSHIP_DATABASE."`.`global_lu_rotations` AS e
+							ON e.`rotation_id` = a.`rotation_id`
+							WHERE a.`event_finish` >= ".$db->qstr(strtotime("00:00:00"))."
+							AND (a.`event_status` = 'published' OR a.`event_status` = 'approval')
+							AND b.`econtact_type` = 'student'
+							AND b.`etype_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+							ORDER BY a.`event_start` ASC";
 				$clerkship_schedule	= $db->GetAll($query);
 				if ($clerkship_schedule) {
 					$display_schedule_tabs = true;
@@ -310,7 +315,7 @@ if(!$ENTRADA_ACL->amIAllowed('dashboard', 'read')) {
 							<div class="display-notice">
 								<strong>Notice:</strong> Keeping the Undergrad office informed of clerkship schedule changes is very important. This information is used to ensure you can graduate; therefore, if you see any inconsistencies, please let us know immediately: <a href="javascript:sendClerkship('<?php echo ENTRADA_URL; ?>/agent-clerkship.php')">click here</a>.
 							</div>
-							<h2>Upcoming Clerkship Schedule</h2>
+							<h2>Remaining Clerkship Rotations</h2>
 							<div style="float: right; margin-bottom: 5px">
 								<div id="module-content">
 									<ul class="page-action">
@@ -325,7 +330,7 @@ if(!$ENTRADA_ACL->amIAllowed('dashboard', 'read')) {
 										FROM `".CLERKSHIP_DATABASE."`.`events`
 										WHERE `event_id` = ".$db->qstr($clerkship_schedule[0]["event_id"]);
 							$ROTATION_ID = $db->GetOne($query); 
-								?>
+							?>
 							<div style="float: right; margin-bottom: 5px">
 								<div id="module-content">
 									<ul class="page-action">
@@ -337,106 +342,99 @@ if(!$ENTRADA_ACL->amIAllowed('dashboard', 'read')) {
 							</div>
 							<div style="clear: both"></div>
 							<table class="tableList" cellspacing="0" summary="List of Remaining Clerkship Rotations">
-							<colgroup>
-								<col class="modified" />
-								<col class="type" />
-								<col class="date" />
-								<col class="date" />
-								<col class="region" />
-								<col class="title" />
-							</colgroup>
-							<thead>
-								<tr>
-									<td class="modified">&nbsp;</td>
-									<td class="type">Event Type</td>
-									<td class="date-smallest">Start Date</td>
-									<td class="date-smallest">Finish Date</td>
-									<td class="region">Region</td>
-									<td class="title">Category Title</td>
-								</tr>
-							</thead>
-							<tbody>
-							<?php
-							foreach ($clerkship_schedule as $result) {
-								if ((time() >= $result["event_start"]) && (time() <= $result["event_finish"])) {
-									$bgcolour	= "#E7ECF4";
-									$is_here	= true;
-								} else {
-									$bgcolour	= "#FFFFFF";
-									$is_here	= false;
-								}
-
-								if ((bool) $result["manage_apartments"]) {
-									$apartment_id			= clerkship_apartment_status($result["event_id"], $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]);
-									$apartment_available	= (($apartment_id) ? true : false);
-								} else {
-									$apartment_available	= false;
-								}
-
-								if ($apartment_available) {
-									$click_url	= ENTRADA_URL."/clerkship?section=details&id=".$result["event_id"];
-								} else {
-									$click_url	= "";
-								}
-
-								if (!isset($result["region_name"]) || $result["region_name"] == "") {
-									$result_region = clerkship_get_elective_location($result["event_id"]);
-									$result["region_name"] = $result_region["region_name"];
-									$result["city"]		   = $result_region["city"];
-								} else {
-									$result["city"] = "";
-								}
-
-								$event_title = clean_input($result["event_title"], array("htmlbrackets", "trim"));
-
-								$cssclass 	= "";
-								$skip		= false;
-
-								if ($result["event_type"] == "elective") {
-									switch ($result["event_status"]) {
-										case "approval":
-											$elective_word = "Pending";
-											$cssclass 	= " class=\"in_draft\"";
-											$click_url 	= ENTRADA_URL."/clerkship/electives?section=edit&id=".$result["event_id"];
-											$skip		= false;
-										break;
-										case "published":
-											$elective_word = "Approved";
-											$cssclass 	= " class=\"published\"";
-											$click_url 	= ENTRADA_URL."/clerkship/electives?section=view&id=".$result["event_id"];
-											$skip		= false;
-										break;
-										case "trash":
-											$elective_word = "Rejected";
-											$cssclass 	= " class=\"rejected\"";
-											$click_url 	= ENTRADA_URL."/clerkship/electives?section=edit&id=".$result["event_id"];
-											$skip		= true;
-										break;
-										default:
-											$elective_word = "";
-											$cssclass = "";
-										break;
+								<colgroup>
+									<col class="modified" />
+									<col class="type" />
+									<col class="title" />
+									<col class="region" />
+									<col class="date-smallest" />
+									<col class="date-smallest" />
+								</colgroup>
+								<thead>
+									<tr>
+										<td class="modified">&nbsp;</td>
+										<td class="type">Event Type</td>
+										<td class="title">Rotation Name</td>
+										<td class="region">Region</td>
+										<td class="date-smallest">Start Date</td>
+										<td class="date-smallest">Finish Date</td>
+									</tr>
+								</thead>
+								<tbody>
+								<?php
+								foreach ($clerkship_schedule as $result) {
+									if ((time() >= $result["event_start"]) && (time() <= $result["event_finish"])) {
+										$bgcolour = "#E7ECF4";
+										$is_here = true;
+									} else {
+										$bgcolour = "#FFFFFF";
+										$is_here = false;
 									}
 
-									$elective	= true;
-								} else {
-									$elective	= false;
-									$skip		= false;
-								}
+									if ((int) $result["aschedule_id"]) {
+										$apartment_available = true;
+										$click_url = ENTRADA_URL."/regionaled/view?id=".$result["aschedule_id"];
+									} else {
+										$apartment_available = false;
+										$click_url = "";
+									}
 
-								if (!$skip) {
-									echo "<tr".(($is_here) && $cssclass != " class=\"in_draft\"" ? " class=\"current\"" : $cssclass).">\n";
-									echo "	<td class=\"modified\">".(($apartment_available) ? "<a href=\"".$click_url."\" style=\"font-size: 11px\">" : "")."<img src=\"".ENTRADA_URL."/images/".(($apartment_available) ? "housing-icon-small.gif" : "pixel.gif")."\" width=\"16\" height=\"16\" alt=\"".(($apartment_available) ? "Detailed apartment information available." : "")."\" title=\"".(($apartment_available) ? "Detailed apartment information available." : "")."\" style=\"border: 0px\" />".(($apartment_available) ? "</a>" : "")."</td>\n";
-									echo "	<td class=\"type\">".(($apartment_available || $elective) ? "<a href=\"".$click_url."\" style=\"font-size: 11px\">" : "").(($elective) ? "Elective".(($elective_word != "") ? " (".$elective_word.")" : "") : "Core Rotation").(($apartment_available || $elective) ? "</a>" : "")."</td>\n";
-									echo "	<td class=\"date-smallest\">".(($apartment_available) ? "<a href=\"".$click_url."\" style=\"font-size: 11px\">" : "").date("D M d/y", $result["event_start"]).(($apartment_available) ? "</a>" : "")."</td>\n";
-									echo "	<td class=\"date-smallest\">".(($apartment_available) ? "<a href=\"".$click_url."\" style=\"font-size: 11px\">" : "").date("D M d/y", $result["event_finish"]).(($apartment_available) ? "</a>" : "")."</td>\n";
-									echo "	<td class=\"region\">".(($apartment_available || $elective) ? "<a href=\"".$click_url."\" style=\"font-size: 11px\">" : "").html_encode((($result["city"] == "") ? limit_chars(($result["region_name"]), 30) : $result["city"])).(($apartment_available || $elective) ? "</a>" : "")."</td>\n";
-									echo "	<td class=\"title\">".(($apartment_available) ? "<a href=\"".$click_url."\" style=\"font-size: 11px\">" : "")."<span title=\"".$event_title."\">".limit_chars(html_decode($event_title), 55)."</span>".(($apartment_available) ? "</a>" : "")."</td>\n";
-									echo "</tr>\n";
+									if (!isset($result["region_name"]) || $result["region_name"] == "") {
+										$result_region = clerkship_get_elective_location($result["event_id"]);
+										$result["region_name"] = $result_region["region_name"];
+										$result["city"] = $result_region["city"];
+									} else {
+										$result["city"] = "";
+									}
+
+									$cssclass = "";
+									$skip = false;
+
+									if ($result["event_type"] == "elective") {
+										switch ($result["event_status"]) {
+											case "approval":
+												$elective_word = "Pending";
+												$cssclass = " class=\"in_draft\"";
+												$click_url = ENTRADA_URL."/clerkship/electives?section=edit&id=".$result["event_id"];
+												$skip = false;
+											break;
+											case "published":
+												$elective_word = "Approved";
+												$cssclass = " class=\"published\"";
+												$click_url = ENTRADA_URL."/clerkship/electives?section=view&id=".$result["event_id"];
+												$skip = false;
+											break;
+											case "trash":
+												$elective_word = "Rejected";
+												$cssclass = " class=\"rejected\"";
+												$click_url = ENTRADA_URL."/clerkship/electives?section=edit&id=".$result["event_id"];
+												$skip = true;
+											break;
+											default:
+												$elective_word = "";
+												$cssclass = "";
+											break;
+										}
+
+										$elective = true;
+									} else {
+										$elective = false;
+										$skip = false;
+									}
+
+									if (!$skip) {
+										echo "<tr".(($is_here) && $cssclass != " class=\"in_draft\"" ? " class=\"current\"" : $cssclass).">\n";
+										echo "	<td class=\"modified\">".(($apartment_available) ? "<a href=\"".$click_url."\">" : "")."<img src=\"".ENTRADA_URL."/images/".(($apartment_available) ? "housing-icon-small.gif" : "pixel.gif")."\" width=\"16\" height=\"16\" alt=\"".(($apartment_available) ? "Detailed apartment information available." : "")."\" title=\"".(($apartment_available) ? "Detailed apartment information available." : "")."\" style=\"border: 0px\" />".(($apartment_available) ? "</a>" : "")."</td>\n";
+										echo "	<td class=\"type\">".(($apartment_available || $elective) ? "<a href=\"".$click_url."\" style=\"font-size: 11px\">" : "").(($elective) ? "Elective".(($elective_word != "") ? " (".$elective_word.")" : "") : "Core Rotation").(($apartment_available || $elective) ? "</a>" : "")."</td>\n";
+										echo "	<td class=\"title\">".(($apartment_available) ? "<a href=\"".$click_url."\" style=\"font-size: 11px\">" : "").html_encode($result["rotation_title"]).(($apartment_available) ? "</a>" : "")."</td>\n";
+										echo "	<td class=\"region\">".(($apartment_available || $elective) ? "<a href=\"".$click_url."\" style=\"font-size: 11px\">" : "").html_encode((($result["city"] == "") ? limit_chars(($result["region_name"]), 30) : $result["city"])).(($apartment_available || $elective) ? "</a>" : "")."</td>\n";
+										echo "	<td class=\"date-smallest\">".(($apartment_available) ? "<a href=\"".$click_url."\" style=\"font-size: 11px\">" : "").date("D M d/y", $result["event_start"]).(($apartment_available) ? "</a>" : "")."</td>\n";
+										echo "	<td class=\"date-smallest\">".(($apartment_available) ? "<a href=\"".$click_url."\" style=\"font-size: 11px\">" : "").date("D M d/y", $result["event_finish"]).(($apartment_available) ? "</a>" : "")."</td>\n";
+										echo "</tr>\n";
+									}
 								}
-							}
-							?>
-							</tbody>
+								?>
+								</tbody>
 							</table>
 							<div style="margin-top: 15px; text-align: right">
 								<a href="<?php echo ENTRADA_URL; ?>/clerkship" style="font-size: 11px">Click here to view your full schedule.</a>
@@ -586,11 +584,9 @@ if(!$ENTRADA_ACL->amIAllowed('dashboard', 'read')) {
 			echo "<input type=\"hidden\" id=\"dstamp\" name=\"dstamp\" value=\"".html_encode($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dstamp"])."\" />\n";
 			echo "</form>\n";
 
-			$sidebar_html  = "<div style=\"margin: 2px 0px 10px 3px; font-size: 10px\">\n";
-			$sidebar_html .= "	<div><img src=\"".ENTRADA_URL."/images/legend-class-event.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" style=\"vertical-align: middle\" /> entire class event</div>\n";
-			$sidebar_html .= "	<div><img src=\"".ENTRADA_URL."/images/legend-individual.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" style=\"vertical-align: middle\" /> individual learning event</div>\n";
-			$sidebar_html .= "	<div><img src=\"".ENTRADA_URL."/images/legend-updated.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" style=\"vertical-align: middle\" /> recently updated event</div>\n";
-			$sidebar_html .= "</div>\n";
+			$sidebar_html  = "<div><img src=\"".ENTRADA_URL."/images/legend-class-event.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" style=\"vertical-align: middle\" /> entire class event</div>\n";
+			$sidebar_html .= "<div><img src=\"".ENTRADA_URL."/images/legend-individual.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" style=\"vertical-align: middle\" /> individual learning event</div>\n";
+			$sidebar_html .= "<div><img src=\"".ENTRADA_URL."/images/legend-updated.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" style=\"vertical-align: middle\" /> recently updated event</div>\n";
 
 			new_sidebar_item("Learning Event Legend", $sidebar_html, "event-legend", "open");
 		break;
@@ -602,19 +598,19 @@ if(!$ENTRADA_ACL->amIAllowed('dashboard', 'read')) {
 			 * Update requested timestamp to display.
 			 * Valid: Unix timestamp
 			 */
-			if((isset($_GET["dlength"])) && ($dlength = (int)	trim($_GET["dlength"])) && ($dlength >= 1) && ($dlength <= 4)) {
+			if ((isset($_GET["dlength"])) && ($dlength = (int)	trim($_GET["dlength"])) && ($dlength >= 1) && ($dlength <= 4)) {
 				$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["dlength"] = $dlength;
 
 				$_SERVER["QUERY_STRING"] = replace_query(array("dlength" => false));
 			} else {
-				if(!isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["dlength"])) {
+				if (!isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["dlength"])) {
 					$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["dlength"] = 2; // Defaults to this term.
 				}
 			}
 
-			switch($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["dlength"]) {
+			switch ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["dlength"]) {
 				case 1 :	// Last Term
-					if(date("n", time()) <= 6) {
+					if (date("n", time()) <= 6) {
 						$DISPLAY_DURATION["start"]	= mktime(0, 0, 0, 7, 1, (date("Y", time()) - 1));
 						$DISPLAY_DURATION["end"]	= mktime(0, 0, 0, 12, 31, (date("Y", time()) - 1));
 					} else {
@@ -627,7 +623,7 @@ if(!$ENTRADA_ACL->amIAllowed('dashboard', 'read')) {
 					$DISPLAY_DURATION["end"]		= mktime(0, 0, 0, date("n", time()), date("t", time()), date("Y", time()));
 					break;
 				case 4 :	// Next Term
-					if(date("n", time()) <= 6) {
+					if (date("n", time()) <= 6) {
 						$DISPLAY_DURATION["start"]	= mktime(0, 0, 0, 7, 1, date("Y", time()));
 						$DISPLAY_DURATION["end"]	= mktime(0, 0, 0, 12, 31, date("Y", time()));
 					} else {
@@ -637,7 +633,7 @@ if(!$ENTRADA_ACL->amIAllowed('dashboard', 'read')) {
 					break;
 				case 2 :	// This Term
 				default :
-					if(date("n", time()) <= 6) {
+					if (date("n", time()) <= 6) {
 						$DISPLAY_DURATION["start"]	= mktime(0, 0, 0, 1, 1, date("Y", time()));
 						$DISPLAY_DURATION["end"]	= mktime(0, 0, 0, 6, 30, date("Y", time()));
 					} else {
@@ -685,7 +681,7 @@ if(!$ENTRADA_ACL->amIAllowed('dashboard', 'read')) {
 				</tr>
 			</table>
 			<?php
-			if($results) {
+			if ($results) {
 				?>
 				<div id="list-of-learning-events" style="max-height: 300px; overflow: auto">
 					<div style="background-color: #FAFAFA; padding: 3px; border: 1px #9D9D9D solid; border-bottom: none">
@@ -711,12 +707,12 @@ if(!$ENTRADA_ACL->amIAllowed('dashboard', 'read')) {
 						</thead>
 						<tbody>
 							<?php
-							foreach($results as $result) {
-								if(((!$result["release_date"]) || ($result["release_date"] <= time())) && ((!$result["release_until"]) || ($result["release_until"] >= time()))) {
+							foreach ($results as $result) {
+								if (((!$result["release_date"]) || ($result["release_date"] <= time())) && ((!$result["release_until"]) || ($result["release_until"] >= time()))) {
 									$attachments	= attachment_check($result["event_id"]);
 									$url			= ENTRADA_URL."/admin/events?section=content&id=".$result["event_id"];
 
-									if(((int) $result["last_visited"]) && ((int) $result["last_visited"] < (int) $result["updated_date"])) {
+									if (((int) $result["last_visited"]) && ((int) $result["last_visited"] < (int) $result["updated_date"])) {
 										$is_modified = true;
 										$modified++;
 									} else {
@@ -742,7 +738,7 @@ if(!$ENTRADA_ACL->amIAllowed('dashboard', 'read')) {
 				<div style="padding: 10px; background-color: #FAFAFA; border: 1px #9D9D9D solid">
 					There is no record of any teaching events in the system for
 					<?php
-					switch($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["dlength"]) {
+					switch ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["dlength"]) {
 						case 1 :
 							echo "<strong>last term</strong>.";
 							break;
@@ -775,9 +771,9 @@ if(!$ENTRADA_ACL->amIAllowed('dashboard', 'read')) {
 	 */
 	if ((is_array($dashboard_links)) && (count($dashboard_links))) {
 		$sidebar_html  = "<ul class=\"menu\">";
-		foreach($dashboard_links as $link) {
+		foreach ($dashboard_links as $link) {
 			if ((trim($link["title"])) && (trim($link["url"]))) {
-				$sidebar_html .= "<li class=\"link\"><a href=\"".html_encode($link["url"])."\" title=\"".(($link["description"]) ? html_encode($link["description"]) : html_encode($link["title"]))."\"".(($link["target"]) ? " target=\"".html_encode($link["target"])."\"" : "").">".html_encode($link["title"])."</a></li>\n";
+				$sidebar_html .= "<li class=\"link\"><a href=\"".html_encode($link["url"])."\" title=\"".(isset($link["description"]) && ($link["description"]) ? html_encode($link["description"]) : html_encode($link["title"]))."\"".(($link["target"]) ? " target=\"".html_encode($link["target"])."\"" : "").">".html_encode($link["title"])."</a></li>\n";
 			}
 		}
 		$sidebar_html .= "</ul>";
@@ -790,62 +786,98 @@ if(!$ENTRADA_ACL->amIAllowed('dashboard', 'read')) {
 	 */
 	preferences_update($MODULE, $PREFERENCES);
 	?>
+	<div class="rss-add">
+		<a id="add-rss-feeds-link" href="#edit-rss-feeds" class="feeds rss">Add new RSS Feed</a><a id="edit-rss-feeds-link" href="#edit-rss-feeds" class="feeds rss">Edit and Arrange RSS Feeds</a>
+		<div id="rss-edit-details" style="display: none;">
+			<p>Drag the RSS feeds below to reorder them. You can also <a href="#edit-rss-feeds" id="rss-feed-reset" />Reset to Default RSS Feeds</a><span id="rss-save-results">&nbsp;</span></p>
+		</div>
+		<div id="rss-add-details">
+			<form id="rss-add-form">
+				<table style="width: 450px;" cellspacing="0" cellpadding="2" border="0" summary="Editing Dashboard RSS Feeds">
+					<colgroup>
+						<col style="width: 3%" />
+						<col style="width: 30%" />
+						<col style="width: 67%" />
+					</colgroup>
+					<tr>						
+						<td colspan="3">
+							<h2>New RSS Feed</h2>
+						</td>
+					</tr>
+					<tr>
+						<td></td>
+						<td><label for="rss-add-title" class="form-required">RSS Feed Title</label></td>
+						<td><input id="rss-add-title" style="width: 50%"></td>
+					</tr>
+					<tr>
+						<td></td>
+						<td><label id="rss-add-url-label" for="rss-add-url" class="form-required">RSS Feed URL</label></td>
+						<td><input id="rss-add-url" style="width: 98%"></td>
+					</tr>
+					<tr>
+						<td colspan="3">
+						<table style="width: 100%" cellspacing="0" cellpadding="0" border="0">
+							<tr>
+								<td style="width: 25%; text-align: left">
+									<input type="button" class="button" value="Cancel" id="add-rss-feeds-close-link"/>
+								</td>
+								<td style="width: 75%; text-align: right; vertical-align: middle">
+									<input type="submit" id="rss-add-button" value="Add">
+								</td>
+							</tr>
+						</table>
+					</tr>
+				</table>
+			</form>
+		</div>
+	</div>
+	<script type="text/javascript">
+		var CROSS_DOMAIN_PROXY_URL = "<?php echo ENTRADA_URL."/serve-remote-feed.php"; ?>";
+		var SPINNER_URL = "<?php echo ENTRADA_URL."/images/loading.gif" ?>";
+		var DASHBOARD_API_URL = "<?php echo ENTRADA_URL."/api/dashboard.api.php"; ?>";
+		var SUCCESS_IMAGE_URL = "<?php echo ENTRADA_URL."/images/question-correct.gif"; ?>";
+		var ERROR_IMAGE_URL = "<?php echo ENTRADA_URL."/images/question-correct.gif"; ?>";
+	</script>
 	<div id="dashboard-syndicated-content" style="width: 750px">
-		<table style="width: 100%" cellspacing="0" cellpadding="0" border="0" summary="Syndicated Content">
-			<colgroup>
-				<col style="width: 50%" />
-				<col style="width: 50%" />
-			</colgroup>
-			<tbody>
-				<tr>
-					<td style="vertical-align: top; padding: 10px; width: 50%">
-						<?php
-						/**
-						 * Add the dashboard links to the Helpful Links sidebar item.
-						 */
-						if ((is_array($dashboard_feeds)) && (count($dashboard_feeds))) {
-							foreach($dashboard_feeds as $key => $feed) {
-								if(!($key % 2) && ($feed["url"])) {
-									$results = $rss_reader->fetch($feed["url"]);
-									if(($results) && (is_array($results["items"])) && ($items = count($results["items"]))) {
-										echo "<h2 class=\"rss-title\"><a href=\"".(($results["link"]) ? html_encode($results["link"]) : "#")."\" title=\"".(($results["title"]) ? html_encode($results["title"]) : "")."\" target=\"_blank\">".html_encode($feed["title"])."</a></h2>";
-										for($i = 0; $i < 5; $i++) {
-											if(($results["items"][$i]["link"] != "") && ($results["items"][$i]["title"] != "")) {
-												echo "<div class=\"rss-item-title\"><a href=\"".html_encode($results["items"][$i]["link"])."\" title=\"".html_encode($results["items"][$i]["title"])."\" target=\"_blank\">".html_encode($results["items"][$i]["title"])."</a></div>\n";
-											} else {
-												echo "<div class=\"rss-no-item\">&nbsp;</div>\n";
-											}
-										}
-									}
-								}
-							}
-						}
-						?>
-					</td>
-					<td style="vertical-align: top; padding: 10px; width: 50%">
-						<?php
-						if ((is_array($dashboard_feeds)) && (count($dashboard_feeds))) {
-							foreach($dashboard_feeds as $key => $feed) {
-								if(($key % 2) && ($feed["url"])) {
-									$results = $rss_reader->fetch($feed["url"]);
-									if(($results) && (is_array($results["items"])) && ($items = count($results["items"]))) {
-										echo "<h2 class=\"rss-title\"><a href=\"".(($results["link"]) ? html_encode($results["link"]) : "#")."\" title=\"".(($results["title"]) ? html_encode($results["title"]) : "")."\" target=\"_blank\">".html_encode($feed["title"])."</a></h2>";
-										for($i = 0; $i < 5; $i++) {
-											if(($results["items"][$i]["link"] != "") && ($results["items"][$i]["title"] != "")) {
-												echo "<div class=\"rss-item-title\"><a href=\"".html_encode($results["items"][$i]["link"])."\" title=\"".html_encode($results["items"][$i]["title"])."\" target=\"_blank\">".html_encode($results["items"][$i]["title"])."</a></div>\n";
-											} else {
-												echo "<div class=\"rss-no-item\">&nbsp;</div>\n";
-											}
-										}
-									}
-								}
-							}
-						}
-						?>
-					</td>
-				</tr>
-			</tbody>
-		</table>
+		<ul id="rss-list-1" class="rss-list first">
+			
+			<?php
+			if ((is_array($dashboard_feeds)) && (count($dashboard_feeds))) {
+				$list_2 = false;
+				if (!isset($_SESSION[APPLICATION_IDENTIFIER]["dashboard"]["feed_break"]) || $_SESSION[APPLICATION_IDENTIFIER]["dashboard"]["feed_break"] < 0) {
+					$break = count($dashboard_feeds)/2;
+				} else {
+					$break = $_SESSION[APPLICATION_IDENTIFIER]["dashboard"]["feed_break"];
+				}
+
+				for ($i = 0; $i < count($dashboard_feeds); $i++) {
+					
+					if ($i >= $break && !$list_2) {
+						$list_2 = true;
+						echo "</ul>
+						<ul id=\"rss-list-2\" class=\"rss-list\">\n";
+					}
+					
+					$feed = $dashboard_feeds[$i];
+					echo "<li> \n";
+					echo "<h2 class=\"rss-title\"><a href=\"".$feed["url"]."\" title=\"".$feed["title"]."\" target=\"_blank\">".$feed["title"]."</a></h2>\n";
+					echo "<div class=\"rss-content\" data-feedurl=\"".$feed["url"]."\"></div>\n";
+
+					if (isset($feed["removable"]) && $feed["removable"] == true) {
+						echo "<a href=\"#\" class=\"rss-remove-link\">Remove This Feed</a>\n";
+					}
+
+					echo "</li>\n";
+				}
+				if (!$list_2) {
+					$list_2 = true;
+					echo "</ul>
+					<ul id=\"rss-list-2\" class=\"rss-list\">\n";
+				}
+			}
+			?>
+		</ul>
+		<div class="clear"></div>
 	</div>
 	<?php
 }

@@ -720,35 +720,21 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 				</tr>
 				<tr>
 					<td></td>
-					<td style="vertical-align: top"><label for="objective" class="form-required">Planned Experience</label></td>
+					<td style="vertical-align: top">
+						<label for="objective" class="form-required">Planned Experience</label>
+						<div class="content-small" style="margin-top: 5px">
+							<strong>Tip:</strong> Provide a narrative of your educational objectives (what you hope to achieve) for this elective.
+						</div>
+					</td>
 					<td>
 						<textarea id="objective" name="objective" class="expandable" style="width: 95%; height: 60px" cols="50" rows="5" maxlength="300"><?php echo ((isset($PROCESSED["objective"])) ? html_encode($PROCESSED["objective"]) : ""); ?></textarea>
-						<div id="planned_note" class="content-small" style="display: block">
-							<strong><br>Note:</strong> Please provide a narrative of your educational objectives (what you hope to achieve while on the elective).
-						</div>
+						
 					</td>
 				</tr>
 				<tr>
 					<td colspan="3" style="padding-top: 15px">
-						<h2>Site Details</h2>
+						<h2>Location Details</h2>
 					</td>
-				</tr>
-				<tr>
-					<td></td>
-					<td><label for="preceptor_first_name" class="form-nrequired">Preceptor First Name</label></td>
-					<td>
-					<input type="text" id="preceptor_first_name" name="preceptor_first_name" value="<?php echo html_encode($PROCESSED["preceptor_first_name"]); ?>" maxlength="50" style="width: 250px" />
-					</td>
-				</tr>
-				<tr>
-					<td></td>
-					<td><label for="preceptor_last_name" class="form-required">Preceptor Last Name</label></td>
-					<td>
-					<input type="text" id="preceptor_last_name" name="preceptor_last_name" value="<?php echo html_encode($PROCESSED["preceptor_last_name"]); ?>" maxlength="50" style="width: 250px" />
-					</td>
-				</tr>
-				<tr>
-					<td colspan="3">&nbsp;</td>
 				</tr>
 				<tr>
 					<td></td>
@@ -807,25 +793,41 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 					</td>
 				</tr>
 				<tr>
-					<td colspan="3">&nbsp;</td>
+					<td colspan="3" style="padding-top: 15px">
+						<h2>Preceptor Details</h2>
+					</td>
 				</tr>
 				<tr>
 					<td></td>
-					<td><label for="phone" class="form-nrequired">Phone</label></td>
+					<td><label for="preceptor_first_name" class="form-nrequired">Firstname</label></td>
+					<td>
+					<input type="text" id="preceptor_first_name" name="preceptor_first_name" value="<?php echo html_encode($PROCESSED["preceptor_first_name"]); ?>" maxlength="50" style="width: 250px" />
+					</td>
+				</tr>
+				<tr>
+					<td></td>
+					<td><label for="preceptor_last_name" class="form-required">Lastname</label></td>
+					<td>
+					<input type="text" id="preceptor_last_name" name="preceptor_last_name" value="<?php echo html_encode($PROCESSED["preceptor_last_name"]); ?>" maxlength="50" style="width: 250px" />
+					</td>
+				</tr>
+				<tr>
+					<td></td>
+					<td><label for="phone" class="form-nrequired">Telephone Number</label></td>
 					<td>
 					<input type="text" id="phone" name="phone" value="<?php echo html_encode($PROCESSED["phone"]); ?>" maxlength="25" style="width: 250px"" />
 					</td>
 				</tr>
 				<tr>
 					<td></td>
-					<td><label for="fax" class="form-nrequired">Fax</label></td>
+					<td><label for="fax" class="form-nrequired">Fax Number</label></td>
 					<td>
 					<input type="text" id="fax" name="fax" value="<?php echo html_encode($PROCESSED["fax"]); ?>" maxlength="25" style="width: 250px"" />
 					</td>
 				</tr>
 				<tr>
 					<td></td>
-					<td><label for="email" class="form-required">Email</label></td>
+					<td><label for="email" class="form-required">E-Mail Address</label></td>
 					<td>
 					<input type="text" id="email" name="email" value="<?php echo html_encode($PROCESSED["email"]); ?>" maxlength="150" style="width: 250px"" />
 					</td>
@@ -834,7 +836,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 					<td></td>
 					<td colspan="2">
 						<div id="disclosure" name="disclosure" class="content-small" style="padding-top: 15px">
-							<strong>DISCLOSURE:</strong> By clicking the Submit button below, I hereby certify that there is no conflict of interest which may result in the submission of a biased evaluation ( i.e. family member, close personal friend, etc.). I also confirm that this elective has already been approved by my preceptor.
+							<strong>Disclosure:</strong> By clicking the submit button below I hereby certify that there is no conflict of interest that may result in the submission of a biased evaluation (i.e. family member, close personal friend, etc.). I also confirm that this elective has already been approved by the preceptor listed above.
 						</div>
 					</td>
 				</tr>

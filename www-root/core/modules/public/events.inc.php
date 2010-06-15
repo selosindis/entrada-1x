@@ -22,7 +22,7 @@
  * @author Developer: Matt Simpson <matt.simpson@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
- * @version $Id: events.inc.php 1171 2010-05-01 14:39:27Z ad29 $
+ * @version $Id: events.inc.php 1181 2010-05-04 19:27:22Z jellis $
  */
 
 if (!defined("PARENT_INCLUDED")) {
@@ -1080,7 +1080,7 @@ if (!defined("PARENT_INCLUDED")) {
 				</thead>
 				<tbody>
 					<?php
-					$rid = $limit_parameter;
+					$rid = 0;
 					$count_modified = 0;
 					$count_grad_year = 0;
 					$count_group = 0;

@@ -9,7 +9,7 @@
  * @author Developer: James Ellis <james.ellis@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  * 
- * @version $Id: add.inc.php 1092 2010-04-04 17:19:49Z simpson $
+ * @version $Id: add.inc.php 1213 2010-06-14 16:38:40Z jellis $
 */
 
 if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_EVENTS"))) {
@@ -147,8 +147,11 @@ switch ($STEP) {
 		}
 		if ($SUCCESS) {
 			echo display_success();
-			if (COMMUNITY_NOTIFICATIONS_ACTIVE && isset($_POST["notify_members"]) && $_POST["notify_members"]) {
+			if (COMMUNITY_NOTIFICATIONS_ACTIVE && (isset($_POST["notify_members"]) && $_POST["notify_members"]) && (!$PAGE_OPTIONS["moderate_posts"] || $COMMUNITY_ADMIN)) {
 				community_notify($COMMUNITY_ID, $EVENT_ID, "event", COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?id=".$EVENT_ID, $COMMUNITY_ID, $PROCESSED["release_date"]);
+			}
+			if (COMMUNITY_NOTIFICATIONS_ACTIVE && ($PAGE_OPTIONS["moderate_posts"] && !$COMMUNITY_ADMIN)) {
+				community_notify($COMMUNITY_ID, $EVENT_ID, "event-moderation", COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?id=".$EVENT_ID, $COMMUNITY_ID, $PROCESSED["release_date"]);
 			}
 		}
 	break;

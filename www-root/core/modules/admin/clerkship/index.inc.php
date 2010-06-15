@@ -51,103 +51,101 @@ if (!defined("IN_CLERKSHIP")) {
 		<?php
 	}
 	
-	$query	= "SELECT * 
-	FROM `".CLERKSHIP_DATABASE."`.`events` 
-	WHERE `event_type`= \"elective\" 
-	AND `event_status` = \"approval\" 
-	ORDER BY `event_start` ASC";
-	
-	$results	= $db->GetAll($query);
-		
+	$query = "	SELECT *
+				FROM `".CLERKSHIP_DATABASE."`.`events`
+				WHERE `event_type`= 'elective'
+				AND `event_status` = 'approval'
+				ORDER BY `event_start` ASC";
+	$results = $db->GetAll($query);
 	if ($results) {
 		if ($ERROR) {
 			echo display_error();
 		}
+
 		if (!isset($_POST["action"]) || $_POST["action"] != "results") {
 			?>
-				<div class="tab-page">
+			<div class="tab-page">
 				<h2 class="tab">Electives Pending</h2>
-					<div class="content-heading">Electives Pending</div>
-					<br />		
-					<table class="tableList" cellspacing="0" summary="List of Clerkship Rotations">
-					<colgroup>
-						<col class="modified" />
-						<col class="date" />
-						<col class="date" />
-						<col class="region" />
-						<col class="title" />
-					</colgroup>				
-					<thead>
-						<tr>
-							<td class="modified">&nbsp;</td>
-							<td class="date">Student</td>
-							<td class="date">Start Date</td>
-							<td class="region">Region</td>
-							<td class="title">Category Title</td>
-						</tr>
-					</thead>
-					<tbody>
-					<?php
-					foreach ($results as $result) {
-						if ((time() >= $result["event_start"]) && (time() <= $result["event_finish"])) {
-							$bgcolour	= "#E7ECF4";
-							$is_here	= true;
-						} else {
-							$bgcolour	= "#FFFFFF";
-							$is_here	= false;
-						}
-						
-						$click_url	= ENTRADA_URL."/admin/clerkship/electives?section=edit&id=".$result["event_id"];
-						
-						if (!isset($result["region_name"]) || $result["region_name"] == "") {
-							$result_region = clerkship_get_elective_location($result["event_id"]);
-							$result["region_name"] = $result_region["region_name"];
-							$result["city"]		   = $result_region["city"];
-						} else {
-							$result["city"] = "";
-						}
-						
-						$cssclass = "";
-						
-						if ($result["event_type"] == "elective") {
-							switch ($result["event_status"]) {
-								case "approval":
-									$cssclass = " class=\"in_draft\"";
-									break;
-								case "published":
-									$cssclass = " class=\"published\"";
-									break;
-								case "rejected":
-									$cssclass = " class=\"rejected\"";
-									break;
-								default:
-									$cssclass = "";
-							}
-						}
-		
-						$getStudentsQuery	= "SELECT `etype_id`
-						FROM ".CLERKSHIP_DATABASE.".`event_contacts`
-						WHERE `event_id` = ".$db->qstr($result["event_id"]);
-						
-						$getStudentsResults = $db->GetAll($getStudentsQuery);
-						foreach ($getStudentsResults as $student) {
-							
-							$name	= get_account_data("firstlast", $student["etype_id"]);
-							
-							echo "<tr".(($is_here) ? " class=\"current\"" : $cssclass).">\n";
-							echo "	<td class=\"modified\">&nbsp</td>\n";
-							echo "	<td class=\"date\"><a href=\"".$click_url."\" style=\"font-size: 11px\">".$name."</a></td>\n";
-							echo "	<td class=\"date\"><a href=\"".$click_url."\" style=\"font-size: 11px\">".date(DEFAULT_DATE_FORMAT, $result["event_start"])."</a></td>\n";
-							echo "	<td class=\"region\"><a href=\"".$click_url."\" style=\"font-size: 11px\">".($result["city"] == "" ? html_encode(limit_chars(($result["region_name"]), 30)) : $result["city"])."</a></td>\n";
-							echo "	<td class=\"title\"><a href=\"".$click_url."\" style=\"font-size: 11px\">".limit_chars(html_decode($result["event_title"]), 55, true, false)."</a></td>\n";
-							echo "</tr>\n";
+				<div class="content-heading">Electives Pending</div>
+				<br />
+				<table class="tableList" cellspacing="0" summary="List of Clerkship Rotations">
+				<colgroup>
+					<col class="modified" />
+					<col class="date" />
+					<col class="date" />
+					<col class="region" />
+					<col class="title" />
+				</colgroup>
+				<thead>
+					<tr>
+						<td class="modified">&nbsp;</td>
+						<td class="date">Student</td>
+						<td class="date">Start Date</td>
+						<td class="region">Region</td>
+						<td class="title">Category Title</td>
+					</tr>
+				</thead>
+				<tbody>
+				<?php
+				foreach ($results as $result) {
+					if ((time() >= $result["event_start"]) && (time() <= $result["event_finish"])) {
+						$bgcolour	= "#E7ECF4";
+						$is_here	= true;
+					} else {
+						$bgcolour	= "#FFFFFF";
+						$is_here	= false;
+					}
+
+					$click_url	= ENTRADA_URL."/admin/clerkship/electives?section=edit&id=".$result["event_id"];
+
+					if (!isset($result["region_name"]) || $result["region_name"] == "") {
+						$result_region = clerkship_get_elective_location($result["event_id"]);
+						$result["region_name"] = $result_region["region_name"];
+						$result["city"]		   = $result_region["city"];
+					} else {
+						$result["city"] = "";
+					}
+
+					$cssclass = "";
+
+					if ($result["event_type"] == "elective") {
+						switch ($result["event_status"]) {
+							case "approval":
+								$cssclass = " class=\"in_draft\"";
+								break;
+							case "published":
+								$cssclass = " class=\"published\"";
+								break;
+							case "rejected":
+								$cssclass = " class=\"rejected\"";
+								break;
+							default:
+								$cssclass = "";
 						}
 					}
-					?>
-					</tbody>
-					</table>
-					<br /><br />
-				</div>
+
+					$getStudentsQuery	= "SELECT `etype_id`
+					FROM ".CLERKSHIP_DATABASE.".`event_contacts`
+					WHERE `event_id` = ".$db->qstr($result["event_id"]);
+
+					$getStudentsResults = $db->GetAll($getStudentsQuery);
+					foreach ($getStudentsResults as $student) {
+
+						$name	= get_account_data("firstlast", $student["etype_id"]);
+
+						echo "<tr".(($is_here) ? " class=\"current\"" : $cssclass).">\n";
+						echo "	<td class=\"modified\">&nbsp</td>\n";
+						echo "	<td class=\"date\"><a href=\"".$click_url."\" style=\"font-size: 11px\">".$name."</a></td>\n";
+						echo "	<td class=\"date\"><a href=\"".$click_url."\" style=\"font-size: 11px\">".date(DEFAULT_DATE_FORMAT, $result["event_start"])."</a></td>\n";
+						echo "	<td class=\"region\"><a href=\"".$click_url."\" style=\"font-size: 11px\">".($result["city"] == "" ? html_encode(limit_chars(($result["region_name"]), 30)) : $result["city"])."</a></td>\n";
+						echo "	<td class=\"title\"><a href=\"".$click_url."\" style=\"font-size: 11px\">".limit_chars(html_decode($result["event_title"]), 55, true, false)."</a></td>\n";
+						echo "</tr>\n";
+					}
+				}
+				?>
+				</tbody>
+				</table>
+			</div>
 			<?php
 		}
 	}

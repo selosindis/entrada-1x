@@ -23,15 +23,8 @@
  * @author Developer: James Ellis <james.ellis@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
- * @version $Id: functions.inc.php 1169 2010-05-01 14:18:49Z simpson $
+ * @version $Id: functions.inc.php 1215 2010-06-14 20:25:20Z simpson $
  */
-
-/**
- * In PHP 5.1+ set the default timezone to use.
- */
-if((function_exists("date_default_timezone_set")) && (defined("DEFAULT_TIMEZONE"))) {
-	@date_default_timezone_set(DEFAULT_TIMEZONE);
-}
 
 /**
  * Returns username and password based matching employee / student number returned by CAS.
@@ -360,7 +353,7 @@ function load_system_navigator() {
 		$output .= "					<td>\n";
 		$output .= "						<h3>My Profile</h3>\n";
 		$uploaded_file_active = $db->GetOne("SELECT `photo_active` FROM `".AUTH_DATABASE."`.`user_photos` WHERE `photo_type` = 1 AND `proxy_id` = ".$db->qstr($_SESSION["details"]["id"]));
-		$output .= "						<img src=\"".webservice_url("photo", array($_SESSION["details"]["id"], (isset($uploaded_file_active) && $uploaded_file_active ? "upload" : (!file_exists(STORAGE_USER_PHOTOS."/".$result["id"]."-official") && file_exists(STORAGE_USER_PHOTOS."/".$result["id"]."-upload") ? "upload" : "official"))))."\" width=\"72\" height=\"100\" alt=\"".html_encode($_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"])."\" title=\"".html_encode($_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"])."\" style=\"margin-top: 8px; background-color: #FFFFFF; border: 1px #EEEEEE solid\" />\n";
+		$output .= "						<img src=\"".webservice_url("photo", array($_SESSION["details"]["id"], (isset($uploaded_file_active) && $uploaded_file_active ? "upload" : (!file_exists(STORAGE_USER_PHOTOS."/".$_SESSION["details"]["id"]."-official") && file_exists(STORAGE_USER_PHOTOS."/".$_SESSION["details"]["id"]."-upload") ? "upload" : "official"))))."\" width=\"72\" height=\"100\" alt=\"".html_encode($_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"])."\" title=\"".html_encode($_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"])."\" style=\"margin-top: 8px; background-color: #FFFFFF; border: 1px #EEEEEE solid\" />\n";
 		$output .= "						<ul>\n";
 		$output .= "							<li>".html_encode($_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"])."</li>\n";
 		$output .= "							<li><a href=\"mailto:".html_encode($_SESSION["details"]["email"])."\">".html_encode($_SESSION["details"]["email"])."</a></li>\n";
@@ -580,7 +573,12 @@ function new_sidebar_item($title = "", $html = "", $id = "", $state = "open", $p
 
 	$state	= (($state == "open") ? $state : "close");
 	$id		= (($id == "") ? "sidebar-".$weight : $id);
-
+/* //If moving to layout without tables
+	$output = "<div class=\"sidebar\" id=\"".html_encode($id)."\">";
+	$output .= "<span class=\"sidebar-head\">".html_encode($title)."</span>\n";
+	$output .= "<div class=\"sidebar-body\">".$html."</div>\n";
+	$output .= "</div><br />\n";*/
+	
 	$output  = "<table class=\"sidebar\" id=\"".html_encode($id)."\" cellspacing=\"0\" summary=\"".html_encode($title)."\">\n";
 	$output .= "<thead>\n";
 	$output .= "	<tr>\n";
@@ -672,6 +670,18 @@ function webservice_url($service = "", $options = array()) {
 		case "province" :
 			return ENTRADA_URL."/api/province.api.php";
 		break;
+		case "mspr-admin" :
+			return ENTRADA_URL."/admin/users/manage/students?section=api-mspr";
+		break;
+		case "mspr-profile" :
+			return ENTRADA_URL."/profile?section=api-mspr";
+		break;
+		case "awards" :
+			return ENTRADA_URL."/admin/awards?section=api-awards";
+		break;
+		case "personnel" :
+			return ENTRADA_URL."/api/personnel.api.php";
+		break;
 		default :
 			return "";
 		break;
@@ -715,33 +725,33 @@ function get_account_data($type = "", $id = 0) {
 		switch(strtolower($type)) {
 			case "firstname" :
 				$query = "SELECT `firstname` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id`=".$db->qstr($id);
-				break;
+			break;
 			case "lastname" :
 				$query = "SELECT `lastname` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id`=".$db->qstr($id);
-				break;
+			break;
 			case "fullname" :
 			case "lastfirst" :
 				$query = "SELECT CONCAT_WS(', ', `lastname`, `firstname`) AS `fullname` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id`=".$db->qstr($id);
-				break;
+			break;
 			case "wholename" :
 			case "firstlast" :
 				$query = "SELECT CONCAT_WS(' ', `firstname`, `lastname`) AS `firstlast` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id`=".$db->qstr($id);
-				break;
+			break;
 			case "email" :
 				$query = "SELECT `email` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id`=".$db->qstr($id);
-				break;
+			break;
 			case "username" :
 				$query = "SELECT `username` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id`=".$db->qstr($id);
-				break;
+			break;
 			case "role" :
 				$query = "SELECT `role` FROM `".AUTH_DATABASE."`.`user_access` WHERE `user_id`=".$db->qstr($id)." AND `app_id`=".$db->qstr(AUTH_APP_ID);
-				break;
+			break;
 			case "group" :
 				$query = "SELECT `group` FROM `".AUTH_DATABASE."`.`user_access` WHERE `user_id`=".$db->qstr($id)." AND `app_id`=".$db->qstr(AUTH_APP_ID);
-				break;
+			break;
 			default :
 				return "";
-				break;
+			break;
 		}
 
 		$result = ((USE_CACHE) ? $db->CacheGetRow(LONG_CACHE_TIMEOUT, $query) : $db->GetRow($query));
@@ -938,17 +948,21 @@ function community_public_order_link($field_id, $field_name, $url) {
  * @param string $field_name
  * @return string
  */
-function admin_order_link($field_id, $field_name) {
+function admin_order_link($field_id, $field_name, $submodule = null) {
 	global $MODULE;
-
+	if(isset($submodule)) {
+		$module_url = $MODULE . "/" . $submodule;
+	} else {
+		$module_url = $MODULE;
+	}
 	if(strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) == strtolower($field_id)) {
 		if(strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) == "desc") {
-			return "<a href=\"".ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("so" => "asc"))."\" title=\"Order by ".$field_name.", Sort Ascending\">".$field_name."</a>";
+			return "<a href=\"".ENTRADA_URL."/admin/".$module_url."?".replace_query(array("so" => "asc"))."\" title=\"Order by ".$field_name.", Sort Ascending\">".$field_name."</a>";
 		} else {
-			return "<a href=\"".ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("so" => "desc"))."\" title=\"Order by ".$field_name.", Sort Decending\">".$field_name."</a>";
+			return "<a href=\"".ENTRADA_URL."/admin/".$module_url."?".replace_query(array("so" => "desc"))."\" title=\"Order by ".$field_name.", Sort Decending\">".$field_name."</a>";
 		}
 	} else {
-		return "<a href=\"".ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("sb" => $field_id))."\" title=\"Order by ".$field_name."\">".$field_name."</a>";
+		return "<a href=\"".ENTRADA_URL."/admin/".$module_url."?".replace_query(array("sb" => $field_id))."\" title=\"Order by ".$field_name."\">".$field_name."</a>";
 	}
 }
 
@@ -1244,6 +1258,41 @@ function fetch_organisation_title($organisation_id = 0) {
 
 	return false;
 }
+
+function fetch_objective_title($objective_id = 0) {
+	global $db;
+	if($objective_id = (int) $objective_id) {
+		$query	= "SELECT `objective_name` FROM `global_lu_objectives` WHERE `objective_id` = ".$db->qstr($objective_id);
+		$result	= $db->GetRow($query);
+		if ($result) {
+			return $result["objective_name"];
+		}
+	}
+
+	return false;
+}
+
+function fetch_mcc_objectives($parent_id = 0, $objectives = array()) {
+	global $db;
+	if ($parent_id) {
+		$where = " WHERE `objective_parent` = ".$db->qstr($parent_id);
+	} else {
+		$where = " WHERE `objective_name` LIKE 'MCC Objectives'";
+	}
+	$query = "SELECT * FROM `global_lu_objectives`".$where;
+	$results = $db->GetAll($query);
+	if ($results) {
+		foreach ($results as $result) {
+			if ($parent_id) {
+				$objectives[] = $result;
+			}
+			$objectives = fetch_mcc_objectives($result["objective_id"], $objectives);
+		}
+	}
+
+	return $objectives;
+}
+
 /**
  * This function provides the unix timestamps of the start and end of the requested date type.
  *
@@ -2042,6 +2091,42 @@ function display_error($error_messages = array()) {
 }
 
 /**
+ * Simple function to return the gender.
+ *
+ * @param int $gender
+ * @param string $format
+ *
+ * @return string
+ *
+ */
+function display_gender($gender, $format = "default") {
+	switch ($gender) {
+		case 2 :
+			if ($format == "short") {
+				return "M";
+			} else {
+				return "Male";
+			}
+		break;
+		case 1 :
+			if ($format == "short") {
+				return "F";
+			} else {
+				return "Female";
+			}
+		break;
+		default :
+		case 0 :
+			if ($format == "short") {
+				return "U";
+			} else {
+				return "Unknown";
+			}
+		break;
+	}
+}
+
+/**
  * Returns a more human readable friendly filesize.
  *
  * @param int $bytes
@@ -2334,16 +2419,21 @@ function last_updated($type = "event", $event_id = 0) {
  * @global <type> $translate
  * @return <type> array
  */
-function dashboard_fetch_feeds() {
+function dashboard_fetch_feeds($default = false) {
 	global $translate;
 
-	$feeds = $translate->_("public_dashboard_feeds");
-	$group = $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"];
-
-	if (is_array($feeds[$group])) {
-		return array_merge($feeds["global"], $feeds[$group]);
+	if (!$default && isset($_SESSION[APPLICATION_IDENTIFIER]["dashboard"]["feeds"]) && is_array($_SESSION[APPLICATION_IDENTIFIER]["dashboard"]["feeds"])) {
+		return $_SESSION[APPLICATION_IDENTIFIER]["dashboard"]["feeds"];
 	} else {
-		return $feeds["global"];
+		$feeds = $translate->_("public_dashboard_feeds");
+		$group = $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"];
+
+		if (is_array($feeds[$group])) {
+			$feeds = array_merge($feeds["global"], $feeds[$group]);
+		} else {
+			$feeds = $feeds["global"];
+		}
+		return $feeds;
 	}
 }
 
@@ -4828,74 +4918,6 @@ function communities_set_children_urls($parent_id, $parent_url) {
  */
 
 /**
- * Returns the apartment ID of a proxy_id if there is one set.
- *
- * @param int $event_id
- * @param int $proxy_id
- * @return int
- */
-function clerkship_apartment_status($event_id = 0, $proxy_id = 0) {
-	global $db;
-
-	if(($event_id = (int) $event_id) && ($proxy_id = (int) $proxy_id)) {
-		$query	= "SELECT `apartment_id` FROM `".CLERKSHIP_DATABASE."`.`apartment_schedule` WHERE `event_id` = ".$db->qstr($event_id)." AND `econtact_id` = ".$db->qstr($proxy_id);
-		$result	= $db->GetRow($query);
-		if($result) {
-			return (int) trim($result["apartment_id"]);
-		}
-	}
-
-	return 0;
-}
-
-/**
- * This function will fetch all occupants of an apartment during the specified
- * time period (which are two unix timestamps).
- *
- * @param int $apartment_id
- * @param Unix Timestamp $event_start
- * @param Unit Timestamp $event_finish
- * @return array
- */
-function clerkship_apartment_occupants($apartment_id = 0, $event_start = 0, $event_finish = 0) {
-	global $db;
-
-	$occupants = array();
-
-	if(($apartment_id = (int) $apartment_id) && ($event_start = (int) $event_start) && ($event_finish = (int) $event_finish)) {
-		$query		= "	SELECT a.*, b.`id` AS `proxy_id`, b.`username`, b.`number`, b.`firstname`, b.`lastname`, b.`email`
-						FROM `".CLERKSHIP_DATABASE."`.`apartment_schedule` AS a
-						LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
-						ON b.`id` = a.`econtact_id`
-						WHERE a.`apartment_id` = ".$db->qstr($apartment_id)."
-						AND ((".$db->qstr($event_start)." BETWEEN a.`inhabiting_start` AND a.`inhabiting_finish`)
-							OR (".$db->qstr($event_finish)." BETWEEN a.`inhabiting_start` AND a.`inhabiting_finish`)
-							OR (a.`inhabiting_start` BETWEEN ".$db->qstr($event_start)." AND ".$db->qstr($event_finish).")
-							OR (a.`inhabiting_finish` BETWEEN ".$db->qstr($event_start)." AND ".$db->qstr($event_finish)."))
-						ORDER BY a.`inhabiting_start` ASC, a.`inhabiting_finish` ASC";
-		$results	= $db->GetAll($query);
-		if ($results) {
-			foreach ($results as $key => $result) {
-				$occupants[$key]["is_empty"]			= false;
-				$occupants[$key]["event_id"]			= $result["event_id"];
-				$occupants[$key]["inhabiting_start"]	= $result["inhabiting_start"];
-				$occupants[$key]["inhabiting_finish"]	= $result["inhabiting_finish"];
-				$occupants[$key]["proxy_id"]			= $result["proxy_id"];
-				$occupants[$key]["username"]			= $result["username"];
-				$occupants[$key]["firstname"]			= $result["firstname"];
-				$occupants[$key]["lastname"]			= $result["lastname"];
-				$occupants[$key]["email"]				= $result["email"];
-				$occupants[$key]["gender"]				= @file_get_contents(webservice_url("gender", array("number" => $result["number"])));
-				$occupants[$key]["notes"]				= "";
-				$occupants[$key]["asid"]				= $result["aschedule_id"];
-			}
-		}
-	}
-
-	return $occupants;
-}
-
-/**
  * This function generates a formatted category title based on the hierarchical
  * child / parent / grandparent relationship of the categories table.
  *
@@ -5721,12 +5743,13 @@ function process_user_photo($original_file, $photo_id = 0) {
 	if(!$photo_id = (int) $photo_id) {
 		return false;
 	}
-	$new_file		= STORAGE_USER_PHOTOS."/".$_SESSION["details"]["id"]."-upload";
-	$img_quality	= 85;
+	
+	$new_file = STORAGE_USER_PHOTOS."/".$_SESSION["details"]["id"]."-upload";
+	$img_quality = 85;
 
 	if($original_file_details = @getimagesize($original_file)) {
-		$original_file_width	= $original_file_details[0];
-		$original_file_height	= $original_file_details[1];
+		$original_file_width = $original_file_details[0];
+		$original_file_height = $original_file_details[1];
 
 		/**
 		 * Check if the original_file needs to be resized or not.
@@ -5775,20 +5798,20 @@ function process_user_photo($original_file, $photo_id = 0) {
 								if(!@imagejpeg($new_img_resource, $new_file, $img_quality)) {
 									return false;
 								}
-								break;
+							break;
 							case "image/png":
 								if(!@imagepng($new_img_resource, $new_file)) {
 									return false;
 								}
-								break;
+							break;
 							case "image/gif":
 								if(!@imagegif($new_img_resource, $new_file)) {
 									return false;
 								}
-								break;
+							break;
 							default :
 								return false;
-								break;
+							break;
 						}
 
 						@chmod($new_file, 0644);
@@ -5880,20 +5903,20 @@ function process_user_photo($original_file, $photo_id = 0) {
 							if(!@imagejpeg($new_img_resource, $new_file."-thumbnail", $img_quality)) {
 								return false;
 							}
-							break;
+						break;
 						case "image/png":
 							if(!@imagepng($new_img_resource, $new_file."-thumbnail")) {
 								return false;
 							}
-							break;
+						break;
 						case "image/gif":
 							if(!@imagegif($new_img_resource, $new_file."-thumbnail")) {
 								return false;
 							}
-							break;
+						break;
 						default :
 							return false;
-							break;
+						break;
 					}
 
 					@chmod($new_file."-thumbnail", 0644);
@@ -5903,7 +5926,7 @@ function process_user_photo($original_file, $photo_id = 0) {
 					 */
 					@imagedestroy($original_img_resource);
 					@imagedestroy($new_img_resource);
-
+					
 					return true;
 				}
 			} else {
@@ -7245,11 +7268,11 @@ function clerkship_deficiency_notifications($clerk_id, $rotation_id, $administra
 	if (defined("CLERKSHIP_EMAIL_NOTIFICATIONS") && CLERKSHIP_EMAIL_NOTIFICATIONS) {
 		$mail = new Zend_Mail();
 		$mail->addHeader("X-Originating-IP", $_SERVER["REMOTE_ADDR"]);
-		$mail->addHeader("X-Section", "Clerkship Notify System",true);
+		$mail->addHeader("X-Section", "Clerkship Notify System", true);
 		$mail->clearFrom();
 		$mail->clearSubject();
-		$mail->setFrom($AGENT_CONTACTS["agent-notifications"]["email"], APPLICATION_NAME.' Clerkship System');
-		$mail->setSubject("Clerkship Logbook Defficiency Notification");
+		$mail->setFrom($AGENT_CONTACTS["agent-notifications"]["email"], APPLICATION_NAME." Clerkship System");
+		$mail->setSubject("Clerkship Logbook Deficiency Notification");
 		$NOTIFICATION_MESSAGE	= array();
 						
 		$query	 				= "	SELECT CONCAT_WS(' ', `firstname`, `lastname`) as `fullname`, `email`, `id`
@@ -7428,13 +7451,13 @@ function courses_fetch_objectives($course_ids, $parent_id = 1, $objectives = fal
 				$objectives["objectives"][$result["objective_id"]]["children_primary"] = 0;
 				$objectives["objectives"][$result["objective_id"]]["children_secondary"] = 0;
 				$objectives["objectives"][$result["objective_id"]]["name"] = $result["objective_name"];
-				$objectives["objectives"][$result["objective_id"]]["description"] = $result["objective_description"];
+				$objectives["objectives"][$result["objective_id"]]["description"] = (isset($objectives["objectives"][$result["objective_id"]]["objective_details"]) && $objectives["objectives"][$result["objective_id"]]["objective_details"] ? $objectives["objectives"][$result["objective_id"]]["objective_details"] : $result["objective_description"]);
 				$objectives["objectives"][$result["objective_id"]]["parent"] = 1;
 				$objectives["objectives"][$result["objective_id"]]["parent_ids"] = array();
 			} else {
 				$objectives["objectives"][$result["objective_id"]]["objective_children"] = 0;
 				$objectives["objectives"][$result["objective_id"]]["name"] = $result["objective_name"];
-				$objectives["objectives"][$result["objective_id"]]["description"] = $result["objective_description"];
+				$objectives["objectives"][$result["objective_id"]]["description"] = (isset($objectives["objectives"][$result["objective_id"]]["objective_details"]) && $objectives["objectives"][$result["objective_id"]]["objective_details"] ? $objectives["objectives"][$result["objective_id"]]["objective_details"] : $result["objective_description"]);
 				$objectives["objectives"][$result["objective_id"]]["parent"] = $parent_id;
 				$objectives["objectives"][$result["objective_id"]]["parent_ids"] = $objectives["objectives"][$parent_id]["parent_ids"];
 				$objectives["objectives"][$result["objective_id"]]["parent_ids"][] = $parent_id;
@@ -7658,6 +7681,7 @@ function events_output_filter_controls($module_type = "") {
 					<option value="phase">Phase / Term Filters</option>
 					<option value="eventtype">Event Type Filters</option>
 					<option value="organisation">Organisation Filters</option>
+					<option value="clinical_presentation">Clinical Presentation Filters</option>
 				</select>
 				<?php
 				$query = "SELECT `organisation_id`,`organisation_title` FROM `".AUTH_DATABASE."`.`organisations` ORDER BY `organisation_title` ASC";
@@ -7797,6 +7821,20 @@ function events_output_filter_controls($module_type = "") {
 				}
 
 				echo lp_multiple_select_popup('phase', $phases, array('title'=>'Select Phases / Terms:', 'submit_text'=>'Apply', 'cancel'=>true, 'submit'=>true));
+				
+				$clinical_presentations = fetch_mcc_objectives();
+				foreach ($clinical_presentations as &$clinical_presentation) {
+					$clinical_presentation["value"] = "objective_".$clinical_presentation["objective_id"];
+					$clinical_presentation["text"] = $clinical_presentation["objective_name"];
+					$clinical_presentation["checked"] = "";
+					if (isset($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["clinical_presentations"]) && is_array($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["clinical_presentations"])) {						
+						if (in_array($clinical_presentation["value"], $_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["clinical_presentations"])) {
+							$clinical_presentation["checked"] = "checked=\"checked\"";
+						}
+					}
+				}
+
+				echo lp_multiple_select_popup('clinical_presentation', $clinical_presentations, array('title'=>'Select Clinical Presentations:', 'submit_text'=>'Apply', 'cancel'=>true, 'submit'=>true));
 				?>
 				</form>
 				<script type="text/javascript">
@@ -7893,6 +7931,9 @@ function events_output_filter_controls($module_type = "") {
 									break;
 									case "organisation":
 										echo fetch_organisation_title($filter_value);
+									break;
+									case "objective":
+										echo fetch_objective_title($filter_value);
 									break;
 									default :
 										echo strtoupper($filter_value);
@@ -8050,7 +8091,7 @@ function events_process_filters($action = "", $module_type = "") {
 					$filter_key = $pieces[0];
 					$filter_value = $pieces[1];
 					if ($filter_value && $filter_key) {
-						//T his is an actual filter, cool dude. Erase everything else since we only got one and add this one if its not a student looking at another student
+						//This is an actual filter, cool dude. Erase everything else since we only got one and add this one if its not a student looking at another student
 						if (($filter_key != "student") || ($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"] != "student") || ($filter_value == $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])) {
 							unset($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"][$filter_key]);
 							$_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"][$filter_key][] = $filter_value;
@@ -8214,6 +8255,7 @@ function events_fetch_filtered_events() {
 		$where_phase = array();
 		$where_type = array();
 		$where_organisation = array();
+		$where_clinical_presentation = array();
 		$join_event_contacts = array();
 		$contact_sql = "";
 
@@ -8231,6 +8273,9 @@ function events_fetch_filtered_events() {
 							ON `".AUTH_DATABASE."`.`user_data`.`id` = `primary_teacher`.`proxy_id`
 							LEFT JOIN `courses`
 							ON `courses`.`course_id` = `events`.`course_id`
+							LEFT JOIN `event_objectives`
+							ON `event_objectives`.`event_id` = `events`.`event_id`
+							AND `event_objectives`.`objective_type` = 'course'
 							WHERE `courses`.`course_active` = '1'";
 
 		$query_events = "	SELECT `events`.`event_id`,
@@ -8258,6 +8303,9 @@ function events_fetch_filtered_events() {
 							ON `".AUTH_DATABASE."`.`user_data`.`id` = `primary_teacher`.`proxy_id`
 							LEFT JOIN `courses`
 							ON  (`courses`.`course_id` = `events`.`course_id`)
+							LEFT JOIN `event_objectives`
+							ON `event_objectives`.`event_id` = `events`.`event_id`
+							AND `event_objectives`.`objective_type` = 'course'
 							LEFT JOIN `statistics`
 							ON `statistics`.`module` = ".$db->qstr("events")."
 							AND `statistics`.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
@@ -8315,6 +8363,9 @@ function events_fetch_filtered_events() {
 						case "organisation" :
 							$where_organisation[] = "(`courses`.`organisation_id` = ".$db->qstr((int) $filter_value).")";
 						break;
+						case "objective" :
+							$where_clinical_presentation[] = "(`event_objectives`.`objective_id` = ".$db->qstr((int) $filter_value).")";
+						break;
 						default :
 							continue;
 						break;
@@ -8343,6 +8394,9 @@ function events_fetch_filtered_events() {
 		}
 		if (isset($where_organisation) && count($where_organisation)) {
 			$tmp_query[] = implode(" OR ", $where_organisation);
+		}
+		if (isset($where_clinical_presentation) && count($where_clinical_presentation)) {
+			$tmp_query[] = implode(" OR ", $where_clinical_presentation);
 		}
 
 		if (isset($tmp_query) && count($tmp_query)) {
@@ -8521,6 +8575,84 @@ function event_objectives_in_list($objectives, $parent_id, $edit_text = false, $
 	return $output;
 }
 
+/**
+ * Returns the apartment schedule ID of the accommodation if there
+ * is one for the provided event and proxy ID.
+ *
+ * @param int $event_id
+ * @param int $proxy_id
+ * @return int
+ */
+function regionaled_apartment_check($event_id = 0, $proxy_id = 0) {
+	global $db;
+
+	if (($event_id = (int) $event_id) && ($proxy_id = (int) $proxy_id)) {
+		$query = "SELECT `aschedule_id` FROM `".CLERKSHIP_DATABASE."`.`apartment_schedule` WHERE `event_id` = ".$db->qstr($event_id)." AND `proxy_id` = ".$db->qstr($proxy_id);
+		$aschedule_id = $db->GetOne($query);
+		if ($aschedule_id) {
+			return (int) $aschedule_id;
+		}
+	}
+
+	return 0;
+}
+
+function regionaled_apartment_notification($type, $to = array(), $keywords = array()) {
+	global $ERROR, $NOTICE, $SUCCESS, $ERRORSTR, $NOTICESTR, $SUCCESSSTR, $AGENT_CONTACTS;
+
+	if (!is_array($to) || !isset($to["email"]) || !valid_address($to["email"]) || !isset($to["firstname"]) || !isset($to["lastname"])) {
+		application_log("error", "Attempting to send a regionaled_apartment_notification() how the recipient information was not complete.");
+		
+		return false;
+	}
+	
+	if (!in_array($type, array("delete", "confirmation", "rejected"))) {
+		application_log("error", "Encountered an unrecognized notification type [".$type."] when attempting to send a regionaled_apartment_notification().");
+
+		return false;
+	}
+
+	$xml_file = TEMPLATE_ABSOLUTE."/email/regionaled-learner-accommodation-".$type.".xml";
+	$xml = @simplexml_load_file($xml_file);
+	if ($xml && isset($xml->lang->{DEFAULT_LANGUAGE})) {
+		$subject = trim($xml->lang->{DEFAULT_LANGUAGE}->subject);
+		$message = trim($xml->lang->{DEFAULT_LANGUAGE}->body);
+
+		foreach ($keywords as $keyword => $value) {
+			$subject = str_ireplace("%".strtoupper($keyword)."%", $value, $subject);
+			$message = str_ireplace("%".strtoupper($keyword)."%", $value, $message);
+		}
+
+		/**
+		 * Notify the learner they have been removed from this apartment.
+		 */
+		$mail = new Zend_Mail();
+		$mail->addHeader("X-Originating-IP", $_SERVER["REMOTE_ADDR"]);
+		$mail->addHeader("X-Section", "Regional Education Module", true);
+		$mail->clearFrom();
+		$mail->clearSubject();
+		$mail->setFrom($AGENT_CONTACTS["agent-regionaled"]["email"], APPLICATION_NAME." Regional Education System");
+		$mail->setSubject($subject);
+		$mail->setBodyText(clean_input($message, "emailcontent"));
+
+		$mail->clearRecipients();
+		$mail->addTo($to["email"], $to["firstname"]." ".$to["lastname"]);
+
+		if ($mail->send()) {
+			return true;
+		} else {
+			$NOTICE++;
+			$NOTICESTR[] = "We were unable to e-mail an e-mail notification <strong>".$to["email"]."</strong>.<br /><br />A system administrator was notified of this issue, but you may wish to contact this learner manually and let them know their accommodation has ben removed.";
+
+			application_log("error", "Unable to send accommodation notification to [".$to["email"]."] / type [".$type."]. Zend_Mail said: ".$mail->ErrorInfo);
+		}
+	} else {
+		application_log("error", "Unable to load the XML file [".$xml_file."] or the XML file did not contain the language requested [".DEFAULT_LANGUAGE."], when attempting to send a regional education notification.");
+	}
+
+	return false;
+}
+
 function regionaled_apartment_availability($apartment_ids = array(), $event_start = 0, $event_finish = 0) {
 	global $db;
 
@@ -8538,11 +8670,15 @@ function regionaled_apartment_availability($apartment_ids = array(), $event_star
 
 	if (count($apartment_ids) && ($event_start = (int) $event_start) && ($event_finish = (int) $event_finish)) {
 
-		$query = "	SELECT *
-					FROM `".CLERKSHIP_DATABASE."`.`apartments`
-					WHERE `apartment_id` IN (".implode(", ", $apartment_ids).")
-					AND (`available_start` = '0' OR `available_start` <= ".$db->qstr(time()).")
-					AND (`available_finish` = '0' OR `available_finish` > ".$db->qstr(time()).")";
+		$query = "	SELECT a.*, b.`country`, c.`province`
+					FROM `".CLERKSHIP_DATABASE."`.`apartments` AS a
+					LEFT JOIN `global_lu_countries` AS b
+					ON b.`countries_id` = a.`countries_id`
+					LEFT JOIN `global_lu_provinces` AS c
+					ON c.`province_id` = a.`province_id`
+					WHERE a.`apartment_id` IN (".implode(", ", $apartment_ids).")
+					AND (a.`available_start` = '0' OR a.`available_start` <= ".$db->qstr(time()).")
+					AND (a.`available_finish` = '0' OR a.`available_finish` > ".$db->qstr(time()).")";
 		$apartments = $db->GetAll($query);
 		if ($apartments) {
 			foreach ($apartments as $apartment) {
@@ -8594,19 +8730,19 @@ function regionaled_apartment_occupants($apartment_id = 0, $event_start = 0, $ev
 	global $db;
 
 	if (($apartment_id = (int) $apartment_id) && ($event_start = (int) $event_start) && ($event_finish = (int) $event_finish)) {
-		$query = "	SELECT a.*, CONCAT_WS(', ', c.`lastname`, c.`firstname`) AS `fullname`, c.`gender`, c.`notes`
+		$query = "	SELECT a.*, b.`username`, CONCAT(b.`firstname`, ' ', b.`lastname`) AS `fullname`, b.`gender`, b.`notes`, c.`group`
 					FROM `".CLERKSHIP_DATABASE."`.`apartment_schedule` AS a
-					LEFT JOIN `".CLERKSHIP_DATABASE."`.`events` AS b
-					ON b.`event_id` = a.`event_id`
-					LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS c
-					ON c.`id` = a.`proxy_id`
+					LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
+					ON b.`id` = a.`proxy_id`
+					LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS c
+					ON c.`user_id` = b.`id`
+					AND c.`app_id` = ".$db->qstr(AUTH_APP_ID)."
 					WHERE a.`apartment_id` = ".$db->qstr($apartment_id)."
-					AND (
-					".$db->qstr($event_start)." BETWEEN a.`inhabiting_start` AND a.`inhabiting_finish` OR
+					AND (".$db->qstr($event_start)." BETWEEN a.`inhabiting_start` AND a.`inhabiting_finish` OR
 					".$db->qstr($event_finish)." BETWEEN a.`inhabiting_start` AND a.`inhabiting_finish` OR
 					a.`inhabiting_start` BETWEEN ".$db->qstr($event_start)." AND ".$db->qstr($event_finish)." OR
-					a.`inhabiting_finish` BETWEEN ".$db->qstr($event_start)." AND ".$db->qstr($event_finish)."
-					)";
+					a.`inhabiting_finish` BETWEEN ".$db->qstr($event_start)." AND ".$db->qstr($event_finish).")
+					ORDER BY a.`inhabiting_start` ASC";
 		$results = $db->GetAll($query);
 		if ($results) {
 			return $results;
@@ -8614,10 +8750,6 @@ function regionaled_apartment_occupants($apartment_id = 0, $event_start = 0, $ev
 	}
 	
 	return false;
-}
-
-function regionaled_apartment_notification($aschedule_id = 0) {
-	return true;
 }
 
 function course_objectives_multiple_select_options_checked($id, $checkboxes, $options) {
@@ -8829,7 +8961,7 @@ function notify_regional_education($action, $event_id) {
 	
 				switch($action) {
 					case "deleted" : 
-						$message  = "Attention ".$AGENT_CONTACTS["agent-apartment"]["name"].",\n\n";
+						$message  = "Attention ".$AGENT_CONTACTS["agent-regionaled"]["name"].",\n\n";
 						$message .= $_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]." has removed an event from ".$whole_name."'s ";
 						$message .= "clerkship schedule, to which you had previously assigned housing. Due to the removal of this event from the system, ";
 						$message .= "the housing associated with it has also been removed.\n\n";
@@ -8852,7 +8984,7 @@ function notify_regional_education($action, $event_id) {
 						$message .= "Deleted By:\t".$_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]." (".$_SESSION["details"]["id"].")\n";
 					break;
 					case "change-critical" :
-						$message  = "Attention ".$AGENT_CONTACTS["agent-apartment"]["name"].",\n\n";
+						$message  = "Attention ".$AGENT_CONTACTS["agent-regionaled"]["name"].",\n\n";
 						$message .= $_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]." has updated an event in ".$whole_name."'s ";
 						$message .= "clerkship schedule, to which you had previously assigned housing. This update involves a change to the region or the ";
 						$message .= "dates that the event took place in. Due to this critical change taking place, the housing for this event for this ";
@@ -8889,7 +9021,7 @@ function notify_regional_education($action, $event_id) {
 					case "change-non-critical" :
 					case "updated" :
 					default :
-						$message  = "Attention ".$AGENT_CONTACTS["agent-apartment"]["name"].",\n\n";
+						$message  = "Attention ".$AGENT_CONTACTS["agent-regionaled"]["name"].",\n\n";
 						$message .= $_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]." has updated an event in ".$whole_name."'s ";
 						$message .= "clerkship schedule, to which you had previously assigned housing.\n\n";
 						$message .= "Important:\n";
@@ -8929,7 +9061,7 @@ function notify_regional_education($action, $event_id) {
 				$mail->setSubject("MEdTech Clerkship System - ".ucwords($action)." Event");
 				$mail->setBodyText($message);
 				$mail->clearRecipients();
-				$mail->addTo($AGENT_CONTACTS["agent-apartment"]["email"], $AGENT_CONTACTS["agent-apartment"]["name"]);
+				$mail->addTo($AGENT_CONTACTS["agent-regionaled"]["email"], $AGENT_CONTACTS["agent-regionaled"]["name"]);
 				$sent = true;
 				try {
 					$mail->send();
@@ -8948,6 +9080,8 @@ function notify_regional_education($action, $event_id) {
 				// No need to notify Regional Education because the event is already over, just return true.
 				return true;
 			}
+		} else {
+			return true;
 		}
 	} else {
 		system_log_data("error", "The notify_regional_education() function returned false with no results from the database query. Database said: ".$db->ErrorMsg());
@@ -9782,4 +9916,200 @@ function objectives_intable($identifier = 0, $indent = 0, $excluded_objectives =
 	}
 	
 	return $output;
+}
+
+
+/**
+ * Produces an option tag with the values filled in
+ * @param unknown_type $value
+ * @param unknown_type $label
+ * @param unknown_type $selected
+ * @return String Returns an html string for an option tag.
+ */
+function build_option($value, $label, $selected = false) {
+	return "<option value='".$value."'". ($selected ? "selected='selected'" : "") .">".$label."</option>\n";
+}
+
+
+
+/**
+ * routine to display standard status messages, Error, Notice, and Success
+ */
+function display_status_messages() {
+	global $ERROR,$SUCCESS,$NOTICE;
+	echo "<div class=\"status_messages\">";
+	if ($ERROR) {
+		fade_element("out", "display-error-box");
+		echo display_error();
+	}
+
+	if ($SUCCESS) {
+		fade_element("out", "display-success-box");
+		echo display_success();
+	}
+
+	if ($NOTICE) {
+		fade_element("out", "display-notice-box");
+		echo display_notice();
+	}
+	echo "</div>";
+}
+
+function display_mspr_details_table($data) {
+	ob_start();
+	?>
+
+	<table class="tableList mspr_table" cellspacing="0">
+		<colgroup>
+			<col width="100%"></col>
+		</colgroup>
+			<tbody>
+			
+	<?php 
+	if ($data) {
+		foreach($data as $datum) {
+			?>
+			<tr>
+				<td >
+					<?php echo clean_input($datum->getDetails(), array("notags", "specialchars")) ?>	
+				</td>
+			</tr>
+			<?php 
+			
+		}
+	} else {
+		?>
+			<tr>
+				<td >
+					None	
+				</td>
+			</tr>
+		<?php
+	}
+	?>
+	</table>
+	<?php
+	return ob_get_clean();
+}
+
+function require_mspr_models() {
+	require_once("Models/InternalAwardReceipts.class.php");
+	require_once("Models/ExternalAwardReceipts.class.php");
+	
+	require_once("Models/Studentships.class.php");
+	
+	require_once("Models/User.class.php");
+	
+	require_once("Models/ClinicalPerformanceEvaluations.class.php");
+	
+	require_once("Models/Contributions.class.php");
+	
+	require_once("Models/DisciplinaryActions.class.php");
+	require_once("Models/LeavesOfAbsence.class.php");
+	require_once("Models/FormalRemediations.class.php");
+
+	require_once("Models/ClerkshipRotations.class.php");
+	
+	require_once("Models/StudentRunElectives.class.php");
+	require_once("Models/CriticalEnquiry.class.php");
+	require_once("Models/CommunityHealthAndEpidemiology.class.php");
+	require_once("Models/ResearchCitations.class.php");
+}
+
+function getMonthName($month_num) {
+	static $months;
+	
+	//initialization of static if not done
+	if (!$months) {
+		$months=array();
+		for($month_num = 1; $month_num <= 12; $month_num++) {
+			$time = mktime(null, null,null,$month_num);
+			$month_name= date("F", $time); 
+			$months[$month_num] = $month_name;
+		}
+	}
+	//the -1 and +1 are to ensure the month num is from 1 to 12, not 0 to 11.
+	$month_num = (($month_num - 1) % 12) + 1;
+	
+	return $months[$month_num];
+}
+
+function formatDateRange($start_date, $end_date) {
+	//assigned here for easy refactoring should a date class be used in future
+	//note: days are currently ignored
+	
+	$ds = $start_date["d"];
+	$ms = $start_date["m"];
+	$ys = $start_date["y"];
+	
+	$de = $end_date['d'];
+	$me = $end_date['m'];
+	$ye = $end_date['y'];
+
+	//first determine if the range should be 
+	//year - year, or month year - month year
+	//month month year or just year
+	if ($ye && $ye != $ys) {
+		if ($ms && $me){
+			//full case
+			$start = getMonthName($ms) . " " . $ys;
+			$end = getMonthName($me) .   " " . $ye;
+			$period = $start . " - " . $end;
+		} elseif ($ms) {
+			//no end month, but year end... assume same end month
+			$month_name = getMonthName($ms);
+			$start = $month_name . " " . $ys;
+			$end = $month_name .   " " . $ye;
+			$period = $start . " - " . $end;
+		} elseif ($me) {
+			//end month exists but no month start? assume same month
+			$month_name = getMonthName($me);
+			$start = $month_name . " " . $ys;
+			$end = $month_name .   " " . $ye;
+			$period = $start . " - " . $end;
+		} else {
+			//year range without months at all...
+			$period = $ys . " - " . $ye;
+		}
+		
+	} else {
+		//there is either no end year, or the end year is the same as the start year (equivalent)
+		if ($ms && $me){
+			//full case of months
+			$start = getMonthName($ms);
+			$end = getMonthName($me) .   " " . $ys;
+			$period = $start . " - " . $end;
+		} elseif ($ms) {
+			//no end month, assume singe month/year
+			$month_name = getMonthName($ms);
+			$start = $month_name . " " . $ys;
+			$period = $start ;
+		} elseif ($me) {
+			//end month exists but no month start? assume same month
+			$month_name = getMonthName($me);
+			$start = $month_name . " " . $ys;
+			$period = $start;
+		} else {
+			//single year entry
+			$period = $ys;
+		}
+	}
+	return $period;
+}
+
+/**
+ * This function gets all of the departments a user is in
+ * @param string $uer_id
+ * @return array $results
+ */
+function get_user_departments($user_id) {
+	global $db;
+	
+	$query = "SELECT `department_title` FROM `".AUTH_DATABASE."`.`user_departments`, `".AUTH_DATABASE."`.`departments` 
+	WHERE `user_id`=".$db->qstr($user_id)."
+	AND `dep_id` = `department_id`";
+	
+	$results = $db->GetAll($query);
+	
+	return $results;
 }

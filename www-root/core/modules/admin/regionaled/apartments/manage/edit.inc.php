@@ -22,8 +22,7 @@
  * @author Developer: Matt Simpson <matt.simpson@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
- * @version $Id: edit.inc.php 1169 2010-05-01 14:18:49Z simpson $
-*/
+ */
 
 if (!defined("IN_MANAGE")) {
 	exit;
@@ -223,7 +222,22 @@ if (!defined("IN_MANAGE")) {
 				$ERRORSTR[]	= "You must provide a valid e-mail address for the apartment's superintendent.";
 			}
 
-			validate_calendar("available", true, false, false);
+			/**
+			 * Required field "release_date" / Available Start (validated through validate_calendar function).
+			 * Non-required field "release_until" / Available Finish (validated through validate_calendar function).
+			 */
+			$available_date = validate_calendar("available", true, false, false);
+			if ((isset($available_date["start"])) && ((int) $available_date["start"])) {
+				$PROCESSED["available_start"] = (int) $available_date["start"];
+			} else {
+				$PROCESSED["available_start"] = 0;
+			}
+
+			if ((isset($available_date["finish"])) && ((int) $available_date["finish"])) {
+				$PROCESSED["available_finish"] = (int) $available_date["finish"];
+			} else {
+				$PROCESSED["available_finish"] = 0;
+			}
 
 			if (!$ERROR) {
 				$PROCESSED["updated_last"] = time();

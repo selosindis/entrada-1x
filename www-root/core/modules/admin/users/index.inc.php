@@ -22,7 +22,7 @@
  * @author Developer: Matt Simpson <matt.simpson@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
- * @version $Id: index.inc.php 1169 2010-05-01 14:18:49Z simpson $
+ * @version $Id: index.inc.php 1187 2010-05-06 13:44:57Z finglanj $
 */
 
 if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
@@ -615,7 +615,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 				<?php
 				foreach ($results as $result) {
 					$can_login	= true;
-					$url		= ENTRADA_URL."/admin/users?section=edit&amp;id=".$result["id"];
+					$url		= ENTRADA_URL."/admin/users/manage?id=".$result["id"];
 					$add_url		= ENTRADA_URL."/admin/users?section=add&amp;id=".$result["id"];
 
 					if ($result["account_active"] == "false") {

@@ -12,9 +12,15 @@
  * @version $Id$
 */
 
+
 $config = new Zend_Config(require "config.inc.php");
 
-define("DEFAULT_TIMEZONE", "America/Toronto");									// The default timezone based on PHP's supported timezones http://ca3.php.net/manual/en/timezones.america.php
+/**
+ * The default timezone based on PHP's supported timezones:
+ * http://php.net/manual/en/timezones.php
+ */
+define("DEFAULT_TIMEZONE", "America/Toronto");
+
 date_default_timezone_set(DEFAULT_TIMEZONE);
 
 /**
@@ -224,6 +230,7 @@ define("MAX_UPLOAD_FILESIZE", 52428800);										// Maximum allowable filesize 
 
 define("COMMUNITY_STORAGE_GALLERIES", $config->entrada_storage . "/community-galleries");	// Full directory path where the community gallery images are stored without trailing slash.
 define("COMMUNITY_STORAGE_DOCUMENTS", $config->entrada_storage . "/community-shares");		// Full directory path where the community document shares are stored without trailing slash.
+$COMMUNITY_ORGANISATIONS = array();															// Array of integer organisation IDs or specifying which organisations are eligble for registration in communities, circumventing APP_ID restrictions. An empty array means all organisations are eligible.
 
 define("ANNUALREPORT_STORAGE", $config->entrada_storage."/annualreports");		// Full directory path where the annual reports are stored without trailing slash.
 
@@ -265,7 +272,7 @@ $AGENT_CONTACTS["agent-feedback"] = array("name" => "System Administrator", "ema
 $AGENT_CONTACTS["agent-notifications"] = array("name" => "Undergraduate Education", "email" => $config->admin->email);
 $AGENT_CONTACTS["agent-clerkship"] = array("name" => "Clerkship Administrator", "email" => $config->admin->email, "director_ids" => array(0));
 $AGENT_CONTACTS["agent-clerkship-international"] = array("name" => "International Clerkship Administrator", "email" => $config->admin->email);
-$AGENT_CONTACTS["agent-apartment"] = array("name" => "Apartment Administrator", "email" => $config->admin->email);
+$AGENT_CONTACTS["agent-regionaled"] = array("name" => "Apartment Administrator", "email" => $config->admin->email);
 
 /**
  * A list of reserved names of community pages (in lower case). If a new community page matches
@@ -421,6 +428,7 @@ $MODULES = array();
 $MODULES["notices"] = array("title" => "Manage Notices", "resource" => "notice", "permission" => "update");
 $MODULES["polls"] = array("title" => "Manage Polls", "resource" => "poll", "permission" => "update");
 $MODULES["courses"] = array("title" => "Manage Courses", "resource"=> "coursecontent", "permission" => "update");
+$MODULES["gradebook"] = array("title" => "Manage Gradebook", "resource" => "gradebook", "permission" => "read");
 $MODULES["events"] = array("title" => "Manage Events", "resource" => "eventcontent", "permission" => "update");
 $MODULES["quizzes"] = array("title" => "Manage Quizzes", "resource" => "quiz", "permission" => "update");
 $MODULES["clerkship"] = array("title" => "Manage Clerkship", "resource" => "clerkship", "permission" => "update");

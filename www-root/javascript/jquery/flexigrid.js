@@ -675,6 +675,8 @@
 										{
 										this.className = 'sorted';
 										}
+									console.log($('div:first',pth)[0]);
+									console.log($($('div:first',pth)[0]).css('width'));
 									 $(tdDiv).css({textAlign:pth.align,width: $($('div:first',pth)[0]).css('width')});
 									 
 									 if (pth.hidden) $(this).css('display','none');
@@ -961,8 +963,8 @@
 								$(this).attr('axis','col' + ci++);
 							}
 							
-							
-						 $(thdiv).css({textAlign:this.align, width: $(this).css('width') + 'px'});
+						
+						 $(thdiv).css({textAlign:this.align, width: $(this).css('width')});
 						 thdiv.innerHTML = this.innerHTML;
 						 
 						$(this).empty().append(thdiv).removeAttr('width')

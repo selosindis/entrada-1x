@@ -6,3 +6,5 @@
 www-root/core/storage/**/*
 www-root/calendars/*
 www-root/syllabi/*
+*.buildpath
+*.eclipse.*.prefs

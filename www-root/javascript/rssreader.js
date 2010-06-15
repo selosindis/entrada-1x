@@ -10,9 +10,9 @@ var RSSFeed = Class.create({
 		this.channel_title = channel.getElementsByTagName('title')[0].firstChild.nodeValue;
 		// retrieve the items
 		var items = channel.getElementsByTagName('item');
-		if(items.length == 0) {
+		if(items.length === 0) {
 			//No items inside the channel, search the entire document
-			var items = xml.getElementsByTagName('item');
+			items = xml.getElementsByTagName('item');
 		}
 		for (var i = 0; i < items.length; i++) {
 	        // retrieve title, link, desc from the item
@@ -22,18 +22,18 @@ var RSSFeed = Class.create({
 			
 			this.items.push({title: title, link: link, description:description});
 		}
-	},
+	}
 });
 
-var RSSReader = Class.create();
+var RSSReader = Class.create({});
 Object.extend(RSSReader, {
 	// Uses the cross domain proxy to retrieve the feed xml and then creates an RSSFeed object from it,
 	// and passes that to a callback.
 	getFeed: function(url, callback, error_callback) {
-		if(Object.isUndefined(CROSS_DOMAIN_PROXY_URL)) return false;
+		if(Object.isUndefined(CROSS_DOMAIN_PROXY_URL)) { return false; }
 		
 		var request_url = CROSS_DOMAIN_PROXY_URL + "?" + Object.toQueryString({url: url});
-		new Ajax.Request(request_url, {
+		var ajax = new Ajax.Request(request_url, {
 			method: 'get',
 			onSuccess: function(response) {
 				// Below is the client side javascript parsing. If the cross domain proxy returns XML, this should be used. 
@@ -91,9 +91,8 @@ Object.extend(EntradaRSS, {
 		$(element).update('');
 		for(var i = 0; i < count; i++) {
 			var item = feed.items[i];
-			$(element).insert({
-				bottom: new Element('div', {class: "rss-item-title"}).update(new Element('a', {href: item.link, title: item.title, target: "_blank"}).update(item.title))
-			});
+			var new_element = new Element('div', {'class': "rss-item-title"}).update(new Element('a', {href: item.link, title: item.title, target: "_blank"}).update(item.title));
+			$(element).insert({bottom: new_element});
 		}
 	},
 	feedErrorHTML: function(element, response) {
@@ -120,7 +119,8 @@ Object.extend(EntradaRSS, {
 				EntradaRSS.saveRSSFeeds.defer();
 				return true;
 			}
-		}		
+		};
+				
 		this.feedLists.each(function(list, index) {
 			Sortable.create(list, options);
 		});
@@ -130,7 +130,7 @@ Object.extend(EntradaRSS, {
 		this.createSortables();
 	},
 	saveRSSFeeds: function(e) {
-		var feeds = []
+		var feeds = [];
 		EntradaRSS.feedLists.each(function(list, index) {
 			feeds = feeds.concat(Sortable.sequence(list));
 		});
@@ -145,7 +145,7 @@ Object.extend(EntradaRSS, {
 		});
 		params["break"] = col2_start;
 		params = Object.toQueryString(params).gsub('title', 'title[]').gsub('url', 'url[]');
-		new Ajax.Request(DASHBOARD_API_URL+"?action=save", {
+		var ajax = new Ajax.Request(DASHBOARD_API_URL+"?action=save", {
 			parameters: params, 
 			onCreate: function() {
 				$("rss-save-results").setStyle({display: "inline", opacity: 1}).update(new Element('img', {src: SPINNER_URL, width: 16, height: 16}));
@@ -159,7 +159,7 @@ Object.extend(EntradaRSS, {
 		});
 	},
 	resetRSSFeeds: function(e) {
-		new Ajax.Request(DASHBOARD_API_URL+"?action=reset", {
+		var ajax = new Ajax.Request(DASHBOARD_API_URL+"?action=reset", {
 			onCreate: function() {
 				$("rss-save-results").update(new Element('img', {src: SPINNER_URL, width: 16, height: 16})).show();
 			},
@@ -172,7 +172,7 @@ Object.extend(EntradaRSS, {
 			}
 		});
 	}
-})
+});
 
 document.observe("dom:loaded", function() {
 	var RSS_EDITING = false;
@@ -207,7 +207,7 @@ document.observe("dom:loaded", function() {
 		Event.stop(e);
 		var url = $F('rss-add-url');
 		var title = $F('rss-add-title');
-		if(url.match(/https?:\/\/([-\w\.]+)+(:\d+)?(\/([\w\/_\.]*(\?\S+)?)?)?/i)) {
+		if(url.match(/https?:\/\/([\-\w\.]+)+(:\d+)?(\/([\w\/_\.]*(\?\S+)?)?)?/i)) {
 			$('rss-add-url').value = '';
 			$('rss-add-url-label').removeClassName('error');
 			$('rss-add-title').value = '';
@@ -216,10 +216,10 @@ document.observe("dom:loaded", function() {
 			$('rss-list-1').insert({
 				bottom: li
 			});
-			var div = new Element('div', {class: "rss-content"}).writeAttribute('data-feedurl', url);
+			var div = new Element('div', {'class': "rss-content"}).writeAttribute('data-feedurl', url);
 			
 			li.update(
-				new Element('h2', {class: "rss-title"}).update(
+				new Element('h2', {'class': "rss-title"}).update(
 					new Element('a', {href: "#", title: "", target: "_blank"}).update(title)
 					)
 				).insert({
@@ -227,14 +227,14 @@ document.observe("dom:loaded", function() {
 				});
 			
 			div.insert({
-				after: new Element('a', {class: "rss-remove-link", href: "#"}).observe('click', EntradaRSS.removeRSSFeed).update("Remove this Feed")
-			})
+				after: new Element('a', {'class': "rss-remove-link", href: "#"}).observe('click', EntradaRSS.removeRSSFeed).update("Remove this Feed")
+			});
 			
 			div.readRSS({
 				spinner: true,
 				onComplete: function(element, feed) {
 					EntradaRSS.feedToHTML(element, feed);
-					EntradaRSS.saveRSSFeeds;
+					EntradaRSS.saveRSSFeeds();
 					if(RSS_EDITING) {
 						EntradaRSS.resetSortables();
 					}
@@ -250,7 +250,7 @@ document.observe("dom:loaded", function() {
 		
 	function editRSSFeed(e) {
 		$('rss-edit-details').toggle();
-		$('dashboard-syndicated-content').toggleClassName('editing')
+		$('dashboard-syndicated-content').toggleClassName('editing');
 		
 		if(RSS_EDITING) {
 			//destroy sortables
@@ -272,4 +272,4 @@ document.observe("dom:loaded", function() {
 	$('add-rss-feeds-close-link').observe('click',  CancelAddRSSFeed);
 	$('rss-feed-reset').observe('click', EntradaRSS.resetRSSFeeds);
 	
-})
+});

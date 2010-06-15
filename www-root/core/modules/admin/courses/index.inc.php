@@ -372,7 +372,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			echo "	<td class=\"notices\">".(((int) $result["notifications"]) ? "Yes" : "<strong>No</strong>")."</td>\n";
 			echo "	<td class=\"grades\">".(($url) ? "<a href=\"".ENTRADA_URL."/admin/".$MODULE."?section=content&amp;id=".$result["course_id"]."\"><img src=\"".ENTRADA_URL."/images/event-contents.gif\" width=\"16\" height=\"16\" alt=\"Manage Course Content\" title=\"Manage Course Content\" border=\"0\" /></a>" : "<img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"16\" height=\"16\" alt=\"\" title=\"\" />");
 			if ($ENTRADA_ACL->amIAllowed(new GradebookResource($result["course_id"], $result["organisation_id"]), "read")) {
-				echo "&nbsp;<a href=\"".ENTRADA_URL."/admin/gradebook?section=edit&amp;id=".$result["course_id"]."\"><img src=\"".ENTRADA_URL."/images/book_go.png\" width=\"16\" height=\"16\" alt=\"View Gradebook\" title=\"View Gradebook\" border=\"0\" /></a>";				
+				echo "&nbsp;<a href=\"".ENTRADA_URL."/admin/gradebook?section=view&amp;id=".$result["course_id"]."\"><img src=\"".ENTRADA_URL."/images/book_go.png\" width=\"16\" height=\"16\" alt=\"View Gradebook\" title=\"View Gradebook\" border=\"0\" /></a>";				
 			}
 			echo "	</td>\n";
 			echo "</tr>\n";

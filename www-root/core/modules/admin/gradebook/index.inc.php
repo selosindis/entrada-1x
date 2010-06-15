@@ -330,7 +330,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 			if ($ENTRADA_ACL->amIAllowed(new GradebookResource($result["course_id"], $result["organisation_id"]), "update")) {
 				$allowed_ids	= array($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]);
 				$administrator	= true;
-				$url			= ENTRADA_URL."/admin/gradebook/?section=edit&amp;id=".$result["course_id"];
+				$url			= ENTRADA_URL."/admin/gradebook/?section=view&amp;id=".$result["course_id"];
 			}
 			
 			echo "<tr id=\"course-".$result["course_id"]."\" class=\"course".((!$url) ? " np" : "")."\">\n";

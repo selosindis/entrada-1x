@@ -7387,18 +7387,18 @@ function clerkship_deficiency_notifications($clerk_id, $rotation_id, $administra
 	}
 }
 
-function courses_subnavigation($course_id) {
+function courses_subnavigation($course_details) {
 	global $ENTRADA_ACL;
 	echo "<div class=\"no-printing\">\n";
 	echo "	<div style=\"float: right\">\n";
 	if($ENTRADA_ACL->amIAllowed(new CourseResource($course_details["course_id"], $course_details["organisation_id"]), "read")) {
-		echo "<a href=\"".ENTRADA_URL."/admin/courses?".replace_query(array("section" => "edit", "id" => $course_id, "step" => false))."\"><img src=\"".ENTRADA_URL."/images/event-details.gif\" width=\"16\" height=\"16\" alt=\"Edit course details\" title=\"Edit course details\" border=\"0\" style=\"vertical-align: middle; margin-bottom: 2px;\" /></a> <a href=\"".ENTRADA_URL."/admin/courses?".replace_query(array("section" => "edit", "id" => $course_id, "step" => false))."\" style=\"font-size: 10px; margin-right: 8px\">Edit course details</a>\n";
+		echo "<a href=\"".ENTRADA_URL."/admin/courses?".replace_query(array("section" => "edit", "id" => $course_details["course_id"], "step" => false))."\"><img src=\"".ENTRADA_URL."/images/event-details.gif\" width=\"16\" height=\"16\" alt=\"Edit course details\" title=\"Edit course details\" border=\"0\" style=\"vertical-align: middle; margin-bottom: 2px;\" /></a> <a href=\"".ENTRADA_URL."/admin/courses?".replace_query(array("section" => "edit", "id" => $course_details["course_id"], "step" => false))."\" style=\"font-size: 10px; margin-right: 8px\">Edit course details</a>\n";
 	}
 	if($ENTRADA_ACL->amIAllowed(new CourseContentResource($course_details["course_id"], $course_details["organisation_id"]), "read")) {
-		echo "<a href=\"".ENTRADA_URL."/admin/courses?".replace_query(array("section" => "content", "id" => $course_id, "step" => false))."\"><img src=\"".ENTRADA_URL."/images/event-contents.gif\" width=\"16\" height=\"16\" alt=\"Manage course content\" title=\"Manage course content\" border=\"0\" style=\"vertical-align: middle; margin-bottom: 2px;\" /></a> <a href=\"".ENTRADA_URL."/admin/courses?".replace_query(array("section" => "content", "id" => $course_id, "step" => false))."\" style=\"font-size: 10px; margin-right: 8px;\">Manage course content</a>\n";
+		echo "<a href=\"".ENTRADA_URL."/admin/courses?".replace_query(array("section" => "content", "id" => $course_details["course_id"], "step" => false))."\"><img src=\"".ENTRADA_URL."/images/event-contents.gif\" width=\"16\" height=\"16\" alt=\"Manage course content\" title=\"Manage course content\" border=\"0\" style=\"vertical-align: middle; margin-bottom: 2px;\" /></a> <a href=\"".ENTRADA_URL."/admin/courses?".replace_query(array("section" => "content", "id" => $course_details["course_id"], "step" => false))."\" style=\"font-size: 10px; margin-right: 8px;\">Manage course content</a>\n";
 	}
 	if($ENTRADA_ACL->amIAllowed(new GradebookResource($course_details["course_id"], $course_details["organisation_id"]), "read")) {
-		echo "<a href=\"".ENTRADA_URL."/admin/gradebook?section=view&amp;id=".$course_id."\" style=\"font-size: 10px;\"><img src=\"".ENTRADA_URL."/images/book_go.png\" width=\"16\" height=\"16\" alt=\"Manage course content\" title=\"Manage course content\" border=\"0\" style=\"vertical-align: middle\" />&nbsp;Manage course gradebook</a>";				
+		echo "<a href=\"".ENTRADA_URL."/admin/gradebook?section=view&amp;id=".$course_details["course_id"]."\" style=\"font-size: 10px;\"><img src=\"".ENTRADA_URL."/images/book_go.png\" width=\"16\" height=\"16\" alt=\"Manage course content\" title=\"Manage course content\" border=\"0\" style=\"vertical-align: middle\" />&nbsp;Manage course gradebook</a>";				
 	}
 	echo "	</div>\n";
 	echo "</div>\n";

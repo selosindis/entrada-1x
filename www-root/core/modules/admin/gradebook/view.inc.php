@@ -45,6 +45,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							AND `course_active` = '1'";
 		$course_details	= $db->GetRow($query);
 		if ($course_details && $ENTRADA_ACL->amIAllowed(new GradebookResource($course_details["course_id"], $course_details["organisation_id"]), "read")) {
+			$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/gradebook?".replace_query(array("section" => "view", "id" => $COURSE_ID, "step" => false)), "title" => "Assessments");
 			
 			/**
 			 * Update requested column to sort by.
@@ -157,24 +158,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 			}
 			
 			$limit_parameter = (int) (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"] * $page_current) - $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]);
-			
-			
-			courses_subnavigation($COURSE_ID);
+						
+			courses_subnavigation($course_details);
 			
 			$curriculum_path = curriculum_hierarchy($COURSE_ID);
 			if ((is_array($curriculum_path)) && (count($curriculum_path))) {
 				echo "<h1>" . implode(": ", $curriculum_path) . " Gradebook </h1>";
-			}
-			
-			if ($ENTRADA_ACL->amIAllowed("assessment", "create", false)) {
-				?>
-				<div style="float: right">
-					<ul class="page-action">
-						<li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE . "/assessments/?" . replace_query(array("section" => "add", "step" => false)); ?>" class="strong-green">Add New Assessment</a></li>
-					</ul>
-				</div>
-				<div style="clear: both"><br/></div>
-				<?php
 			}
 			// Fetch all associated assessments
 			$query = "	SELECT `assessments`.`assessment_id`,`assessments`.`grad_year`,`assessments`.`name`,`assessments`.`type`, `assessment_marking_schemes`.`name` as 'marking_scheme_name'

@@ -41,7 +41,7 @@ if(!defined("PARENT_INCLUDED")) {
 } else {
 	define("IN_ASSESSMENTS",	true);
 
-	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/gradebook/assessments?".replace_query(array("section" => "index", "id" => $COURSE_ID, "step" => false)), "title" => "Assessments");
+	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/gradebook?".replace_query(array("section" => "view", "id" => $COURSE_ID, "step" => false)), "title" => "Assessments");
 
 	if (($router) && ($router->initRoute())) {
 		$PREFERENCES = preferences_load($MODULE);

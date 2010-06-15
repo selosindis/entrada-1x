@@ -160,7 +160,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 										break;
 									case "index" :
 									default :
-										$url = ENTRADA_URL."/admin/gradebook/assessments?".replace_query(array("step" => false, "section" => "index", "assessment_id" => false));
+										$url = ENTRADA_URL."/admin/gradebook?".replace_query(array("step" => false, "section" => "view", "id" => $assessment_details["course_id"], "assessment_id" => false));
 										$msg = "You will now be redirected to the <strong>assessment index</strong> page for ". $course_details["course_name"] . "; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 										break;
 								}

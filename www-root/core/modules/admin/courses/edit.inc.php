@@ -46,14 +46,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 		if ($course_details && $ENTRADA_ACL->amIAllowed(new CourseResource($course_details['course_id'], $course_details['organisation_id']), 'update')) {
 			$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "edit", "id" => $COURSE_ID, "step" => false)), "title" => "Editing Course");
 
-			echo "<div class=\"no-printing\">\n";
-			echo "	<div style=\"float: right;\">\n";
-			echo "		<a href=\"".ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "content", "id" => $COURSE_ID, "step" => false))."\"><img src=\"".ENTRADA_URL."/images/event-contents.gif\" width=\"16\" height=\"16\" alt=\"Manage course content\" title=\"Manage course content\" border=\"0\" style=\"vertical-align: middle\" /></a> <a href=\"".ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "content", "id" => $COURSE_ID, "step" => false))."\" style=\"font-size: 10px; margin-right: 8px;\">Manage course content</a>\n";
-			if ($ENTRADA_ACL->amIAllowed(new GradebookResource($result["course_id"], $result["organisation_id"]), "read")) {
-				echo "<a href=\"".ENTRADA_URL."/admin/gradebook?section=edit&amp;id=".$COURSE_ID."\" style=\"font-size: 10px;\"><img src=\"".ENTRADA_URL."/images/book_go.png\" width=\"16\" height=\"16\" alt=\"Manage course content\" title=\"Manage course content\" border=\"0\" style=\"vertical-align: middle\" />&nbsp;Manage course gradebook</a>";				
-			}
-			echo "	</div>\n";
-			echo "</div>\n";
+			courses_subnavigation($course_details);
 
 			echo "<h1>Editing Course</h1>\n";
 

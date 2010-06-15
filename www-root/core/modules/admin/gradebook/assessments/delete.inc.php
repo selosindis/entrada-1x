@@ -103,13 +103,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						$ONLOAD[]	= "setTimeout('window.location=\\'".$INDEX_URL."\\'', 5000)";
 
 						if($total_removed = $db->Affected_Rows()) {
+							$query = "DELETE FROM `assessment_grades` WHERE `assessment_id` IN (".implode(", ", $ASSESSMENT_IDS).")";
+							if($db->Execute($query)) {
+								application_log("success", "Successfully removed assessment ids: ".implode(", ", $ASSESSMENT_IDS));
+							} else {
+								application_log("error", "Successfully removed assessment ids: ".implode(", ", $ASSESSMENT_IDS), "but was unable to remove the grades pertaining to them.");
+							}
+							
 							$SUCCESS++;
 							$SUCCESSSTR[]  = "You have successfully removed ".$total_removed." assessment".(($total_removed != 1) ? "s" : "")." from the system.<br /><br />You will be automatically redirected to the event index in 5 seconds, or you can <strong><a href=\"".$INDEX_URL."\">click here</a></strong> to go there now.";
 
 							echo display_success();
-
-							application_log("success", "Successfully removed assessment ids: ".implode(", ", $ASSESSMENT_IDS));
-						} else {
+							
+							
+					} else {
 							$ERROR++;
 							$ERRORSTR[] = "We were unable to remove the requested assessments from the system. The MEdTech Unit has been informed of this issue and will address it shortly; please try again later.";
 

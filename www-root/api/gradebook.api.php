@@ -98,7 +98,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	if (isset($_POST["value"])) {
 		$tmp_input = clean_input($_POST["value"], array("trim"));
 		if(isset($tmp_input) && $tmp_input != "") {
-			$grade_value = $tmp_input;	
+			$grade_value = $tmp_input;
 		} else {
 			if(isset($GRADE_ID)) {
 				//Empty grade value posted with a grade ID, delete the grade.
@@ -127,7 +127,9 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 		$grade = $db->GetRow($query);
 		if(isset($grade) && is_array($grade) && (count($grade) >= 1)) {
 			$assessment = &$grade;
-			$mode = "update";
+			if(!isset($mode)) {
+				$mode = "update";
+			}
 		} else {
 			echo "Error! Grade not found.";
 			application_log("error", "Failed to provide a valid grade identifier when trying to AJAX edit.");
@@ -143,9 +145,12 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 		if(isset($grade) && is_array($grade) && (count($grade) >= 1)) {
 			// Found grade without proxy ID 
 			$assessment = &$grade;
-			$mode = "update";
+			if(!isset($mode)) {
+				$mode = "update";
+			}
 		}
 	}
+	
 	if(!isset($mode)) {
 		// No grades found, create one for this proxy_id and assessment_id pair.
 		$mode = "create";
@@ -164,11 +169,14 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 		}
 	}
 	
+	// Format grade value for insertion or update. If it comes back as blank, then delete.
+	$GRADE_VALUE = get_storage_grade($grade_value, $assessment);
+	
+	
 	// Grade or assessment has been found if it has been specified, 
 	// Delete an exisiting grade if it was cleared
-	if($mode == "delete") {
+	if($mode == "delete" || $GRADE_VALUE === "") {
 		$query = "DELETE FROM `assessment_grades` WHERE `assessment_grades`.`proxy_id` = ".$db->qstr($grade["proxy_id"])." AND `assessment_grades`.`assessment_id` = ".$db->qstr($grade["assessment_id"]);
-		var_dump($query);
 		if($db->Execute($query)) {
 			echo "-";
 		} else {
@@ -176,9 +184,6 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 			application_log("error", "Failed to delete grade when AJAX editing. DB said [".$db->ErrorMsg()."]");
 		}
 	} else {
-		// Not deleting, either creating or updating. In any case,
-		// Format grade value for insertion or update
-		$GRADE_VALUE = format_input_grade($grade_value, $assessment);
 		
 		// If a grade was specified in the request (update mode), update it.
 		if($mode == "update") {
@@ -198,7 +203,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 			} else if($mode == "create") {
 				$GRADE_ID = $db->Insert_ID();
 			}
-		 	echo $GRADE_ID."|".$GRADE_VALUE;
+		 	echo $GRADE_ID."|". format_retrieved_grade($GRADE_VALUE, $assessment);
 		} else {
 			echo "Error saving grade!";
 			application_log("error", "Failed to save grade when AJAX editing. DB said [".$db->ErrorMsg()."]");

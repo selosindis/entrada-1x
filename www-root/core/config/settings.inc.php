@@ -12,8 +12,13 @@
  * @version $Id$
 */
 
+if (defined("ENTRADA_TESTING_CONFIG")) {
+	$config_data = require ENTRADA_TESTING_CONFIG;
+} else {
+	$config_data = require "config.inc.php";
+}
 
-$config = new Zend_Config(require "config.inc.php");
+$config = new Zend_Config($config_data);
 
 /**
  * The default timezone based on PHP's supported timezones:

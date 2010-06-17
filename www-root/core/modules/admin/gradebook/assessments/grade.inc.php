@@ -84,14 +84,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				
 				$students = $db->GetAll($query);
 				if(count($students) >= 1): ?>
+					<span id="assessment_name" style="display: none;"><?php echo $assessment["name"]; ?></span>
+					<div id="gradebook_grades">
 					<table class="gradebook single">
-						<thead>
-							<tr>
-								<th style="width: 200px;">Student</th>
-								<th>Student Number</th>
-								<?php echo "<th>{$assessment["name"]}</th>\n"; ?>
-							</tr>
-						</thead>
 						<tbody>
 						<?php foreach($students as $key => $student): ?>
 							<tr id="grades<?php echo $student["proxy_id"]; ?>">
@@ -122,6 +117,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						<?php endforeach; ?>
 						</tbody>
 					</table>
+					</div>
+					<div id="gradebook_stats">
+						<h2>Statistics</h2>
+					</div>
 				<?php
 				else:
 				?>

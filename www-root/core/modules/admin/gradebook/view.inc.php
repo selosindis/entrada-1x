@@ -165,6 +165,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 			if ((is_array($curriculum_path)) && (count($curriculum_path))) {
 				echo "<h1>" . implode(": ", $curriculum_path) . " Gradebook </h1>";
 			}
+			
+			 if ($ENTRADA_ACL->amIAllowed("assessment", "create", false)) { ?>
+				<div style="float: right">
+					<ul class="page-action">
+						<li><a id="gradebook_assessment_add" href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE . "/assessments/?" . replace_query(array("section" => "add", "step" => false)); ?>" class="strong-green">Add New Assessment</a></li>
+					</ul>
+				</div>
+				<div style="clear: both"><br/></div>
+			<?php
+			}
+			
 			// Fetch all associated assessments
 			$query = "	SELECT `assessments`.`assessment_id`,`assessments`.`grad_year`,`assessments`.`name`,`assessments`.`type`, `assessment_marking_schemes`.`name` as 'marking_scheme_name'
 						FROM `assessments`
@@ -205,9 +216,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				<tfoot>
 					<tr>
 						<td></td>
-						<td colspan="4" style="padding-top: 10px">
+						<td colspan="3" style="padding-top: 10px">
 							<input type="submit" class="button" value="Delete Selected" />
 						</td>
+						<td><a id="fullscreen-edit" class="button" href="<?php echo ENTRADA_URL . "/admin/gradebook?" . replace_query(array("section" => "api-edit")); ?>"><div>Edit Fullscreen</div></a>
 					</tr>
 				</tfoot>
 				<tbody>
@@ -230,6 +242,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					?>
 				</tbody>
 			</table>
+			<div class="gradebook_edit" style="display: none;"></div>
 				<?php
 				if ($ENTRADA_ACL->amIAllowed("assessment", "delete", false)) {
 					echo "</form>";

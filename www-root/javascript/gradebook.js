@@ -1,6 +1,5 @@
 var ENTRADA_URL;
 
-
 jQuery(document).ready(function($) {
 	var loading_html = '<img width="16" height="16" src="'+ENTRADA_URL+'/images/loading.gif">';
 	
@@ -108,6 +107,8 @@ jQuery(document).ready(function($) {
 		});
 	};	
 	
+	gradebookize();
+	
 	$('.gradebook_edit').jqm({
 		ajax: '@href',
 		ajaxText: loading_html,
@@ -140,6 +141,6 @@ jQuery(document).ready(function($) {
 	});
 	
 	$('.gradebook_edit_add').live('click', function(e) {
-		$("#gradebook_add_assessment").trigger('click');
+		window.location = $("#gradebook_assessment_add").attr('href');
 	});
 });

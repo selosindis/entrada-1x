@@ -39,6 +39,19 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
+	/**
+	 * Add PlotKit to the beginning of the $HEAD array.
+	 */
+	array_unshift($HEAD,
+		"<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/MochiKit/MochiKit.js\"></script>",
+		"<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/PlotKit/excanvas.js\"></script>",
+		"<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/PlotKit/Base.js\"></script>",
+		"<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/PlotKit/Layout.js\"></script>",
+		"<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/PlotKit/Canvas.js\"></script>",
+		"<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/PlotKit/SweetCanvas.js\"></script>",
+		"<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/PlotKit/EasyPlot.js\"></script>"
+		);
+		
 	if ($COURSE_ID) {
 		$query			= "	SELECT * FROM `courses` 
 							WHERE `course_id` = ".$db->qstr($COURSE_ID)."
@@ -48,7 +61,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 		if ($course_details && $ENTRADA_ACL->amIAllowed(new GradebookResource($course_details["course_id"], $course_details["organisation_id"]), "read")) {
 			$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/gradebook/assessments?".replace_query(array("section" => "grade", "id" => $COURSE_ID, "step" => false)), "title" => "Grading Assessment");
 			
-			$query = "	SELECT `assessments`.*,`assessment_marking_schemes`.`handler`
+			$query = "	SELECT `assessments`.*,`assessment_marking_schemes`.`id` as `marking_scheme_id`, `assessment_marking_schemes`.`handler`
 						FROM `assessments`
 						LEFT JOIN `assessment_marking_schemes` ON `assessment_marking_schemes`.`id` = `assessments`.`marking_scheme_id`
 						WHERE `assessments`.`assessment_id` = ".$db->qstr($ASSESSMENT_ID);
@@ -120,6 +133,91 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					</div>
 					<div id="gradebook_stats">
 						<h2>Statistics</h2>
+						<div id="graph"></div>
+					 	<?php 
+							switch($assessment["marking_scheme_id"]) {
+							case 1:
+							case 4:
+							//pass/fail
+								$grades = array(0,0,0);
+								foreach($students as $key => $student) {
+									if($student["grade_value"] == "") {
+										$grades[2]++;
+									} else if($student["grade_value"] > 50){
+										$grades[0]++;
+									} else {
+										$grades[1]++;
+									}
+								}
+								$grade_data = "";
+								foreach($grades as $key => $grade) {
+									$grade_data .= "[$key, $grade],";
+								}
+								?>
+								<script type="text/javascript" charset="utf-8">
+									var data = [<?php echo $grade_data; ?>];
+									var plotter = PlotKit.EasyPlot(
+										"pie", 
+										{
+											"xTicks": [{v:0, label:"<?php echo $assessment["marking_scheme_id"] == 4 ? "Complete" : "Pass" ?>"}, 
+									          			{v:1, label:"<?php echo $assessment["marking_scheme_id"] == 4 ? "Incomplete" : "Fail" ?>"},
+														{v:2, label:"Not Entered"}],
+										}, 
+										$("graph"), 
+										[data]
+									);
+								</script>
+								Unentered grades: <?php echo $grades[2]; ?>
+								<?php
+								
+							break;
+							case 2: 
+							//percentage
+								$grades = array(0,0,0,0,0,0,0,0,0,0,0);
+								foreach($students as $key => $student) {
+									if($student["grade_value"] == "") {
+										$grades[10]++;
+									} else {
+										$key = floor($student["grade_value"] / 10);
+										$grades[$key]++;
+									}
+								}
+								$grade_data = "";
+								foreach($grades as $key => $grade) {
+									$grade_data .= "[$key, $grade],";
+								}
+								?>
+								<script type="text/javascript" charset="utf-8">
+									var data = [<?php echo $grade_data; ?>];
+									var plotter = PlotKit.EasyPlot(
+										"bar", 
+										{
+											"xTicks": [{v:0, label:"0%-9%"}, 
+									          			{v:1, label:"10%-19%"},
+									          			{v:2, label:"20%-29%"},
+									          			{v:3, label:"30%-39%"},
+									          			{v:4, label:"40%-49%"},
+									          			{v:5, label:"50%-59%"},
+									          			{v:6, label:"60%-69%"},
+									          			{v:7, label:"70%-79%"},
+									          			{v:8, label:"80%-89%"},
+									          			{v:9, label:"90%-100%"},
+														{v:10, label:"Not Entered"}],
+										}, 
+										$("graph"), 
+										[data]
+									);
+								</script>
+								Unentered grades: <?php echo $grades[10]; ?>
+								<?php
+							break;
+							case 3:
+							//numeric
+							break;							
+							default:
+								echo "No statistics for this marking scheme.";
+							break; 
+							} ?>
 					</div>
 				<?php
 				else:

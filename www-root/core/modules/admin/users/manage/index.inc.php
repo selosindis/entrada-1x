@@ -629,7 +629,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 						<div class="tab-page">
 							<h2 class="tab">Edit Profile</h2>
 							<h1 style="margin-top: 0px">Edit Profile Details</h1>
-							<form name="user-edit" id="user-edit" action="<?php echo ENTRADA_URL; ?>/admin/users?section=edit&amp;id=<?php echo $PROXY_ID; ?>&amp;step=2" method="post" onsubmit="selIt()">
+							<form name="user-edit" id="user-edit" action="<?php echo ENTRADA_URL; ?>/admin/users/manage?id=<?php echo $PROXY_ID; ?>&amp;step=2" method="post" onsubmit="selIt()">
 								<table style="width: 100%" cellspacing="1" cellpadding="1" border="0" summary="Edit MEdTech Profile">
 									<colgroup>
 										<col style="width: 3%" />

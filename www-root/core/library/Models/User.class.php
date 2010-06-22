@@ -23,8 +23,7 @@
  * @author Developer: Jonathan Fingland <jonathan.fingland@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
- * @version 
- */
+*/
 
 /**
  * Simple User class with basic information

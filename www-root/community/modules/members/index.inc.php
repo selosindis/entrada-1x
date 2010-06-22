@@ -10,7 +10,6 @@
  * @author Developer: Matt Simpson <matt.simpson@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  * 
- * @version $Id: index.inc.php 1080 2010-03-26 17:33:23Z simpson $
 */
 
 if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MEMBERS"))) {

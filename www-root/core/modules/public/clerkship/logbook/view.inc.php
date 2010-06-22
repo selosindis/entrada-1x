@@ -23,7 +23,6 @@
  * @author Developer: James Ellis <james.ellis@queensu.ca>
  * @copyright Copyright 2009 University of Calgary. All Rights Reserved.
  *
- * @version $Id: view.inc.php 600 2009-11-09 15:19:17Z simpson $
 */
 if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 	exit;

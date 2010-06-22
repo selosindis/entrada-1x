@@ -22,8 +22,7 @@
  * @author Developer: Andrew Dos-Santos <ad29@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
- * @version $Id: $
- */
+*/
 
 if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 	exit;

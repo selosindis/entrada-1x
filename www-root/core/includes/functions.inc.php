@@ -23,8 +23,7 @@
  * @author Developer: James Ellis <james.ellis@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
- * @version $Id: functions.inc.php 1215 2010-06-14 20:25:20Z simpson $
- */
+*/
 
 /**
  * Returns username and password based matching employee / student number returned by CAS.

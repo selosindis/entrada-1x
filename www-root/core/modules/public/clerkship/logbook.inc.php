@@ -23,8 +23,7 @@
  * @author Developer: Ilya Sorokin <isorokin@ucalgary.ca>
  * @copyright Copyright 2010 University of Calgary. All Rights Reserved.
  *
- * @version $Id: forms.inc.php 1109 2010-04-07 16:47:21Z simpson $
- */
+*/
 
 if (!defined("IN_CLERKSHIP")) {
 	exit;

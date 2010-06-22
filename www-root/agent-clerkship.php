@@ -22,7 +22,6 @@
  * @author Developer: Matt Simpson <matt.simpson@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  * 
- * @version $Id: agent-feedback.php 466 2009-06-12 03:41:16Z simpson $
 */
 
 @set_include_path(implode(PATH_SEPARATOR, array(

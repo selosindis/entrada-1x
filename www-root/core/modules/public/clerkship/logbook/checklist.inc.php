@@ -22,7 +22,6 @@
  * @author Developer: Doug Hall <hall@ucalgary.ca>
  * @copyright Copyright 2009 University of Calgary. All Rights Reserved.
  *
- * @version $Id: checklist.inc.php 1 2009-11-19 15:19:17Z hall $
 */
 
 if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {

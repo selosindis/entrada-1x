@@ -10,7 +10,6 @@
  * @author Developer: Matt Simpson <matt.simpson@queensu.ca>
  * @copyright Copyright 2008 University of Calgary. All Rights Reserved.
  * 
- * @version $Id: en.lang.php 1191 2010-05-13 17:11:26Z hbrundage $
 */
     
 return array (

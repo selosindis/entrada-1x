@@ -23,7 +23,6 @@
  * @author Developer: Matt Simpson <matt.simpson@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  * 
- * @version $Id: dbconnection.inc.php 1183 2010-05-05 13:51:59Z hbrundage $
 */
 
 $ADODB_QUOTE_FIELDNAMES = true;	// Whether or not you want ADOdb to backtick field names in AutoExecute, GetInsertSQL and GetUpdateSQL.

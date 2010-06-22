@@ -22,8 +22,7 @@
  * @author Developer: Jonathan Fingland <jonathan.fingland@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
- * @version 
- */
+*/
 
 require_once("InternalAwardReceipt.class.php");
 require_once("Collection.class.php");

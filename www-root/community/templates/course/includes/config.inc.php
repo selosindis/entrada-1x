@@ -9,7 +9,6 @@
  * @author Developer: James Ellis <james.ellis@queensu.ca>
  * @copyright Copyright 2009 Queen's University. All Rights Reserved.
  * 
- * @version $Id:  $
 */
 
 define("HIDE_NAV", true);

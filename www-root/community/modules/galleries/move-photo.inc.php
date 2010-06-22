@@ -12,7 +12,6 @@
  * @author Developer: James Ellis <james.ellis@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  * 
- * @version $Id: delete-photo.inc.php 389 2009-04-03 20:29:47Z jellis $
 */
 
 if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_GALLERIES"))) {

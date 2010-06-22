@@ -30,7 +30,6 @@
 * @copyright Michael Wimmer
 * @link http://www.flaimo.com/
 * @package iCalendar
-* @version 1.032
 */
 class iCalBase {
 

@@ -23,7 +23,6 @@
  * @author Developer: Matt Simpson <matt.simpson@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  * 
- * @version $Id: index.inc.php 360 2009-02-12 20:36:32Z simpson $
 */
 
 if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {

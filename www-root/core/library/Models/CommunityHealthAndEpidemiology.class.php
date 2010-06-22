@@ -14,7 +14,7 @@ class CommunityHealthAndEpidemiology extends SupervisedProject {
 		$query		= "SELECT * FROM `student_community_health_and_epidemiology` WHERE `user_id` = ".$db->qstr($user_id);
 		$result = $db->getRow($query);
 		if ($result) {
-			$critical_enquiry =  new CriticalEnquiry($result['user_id'], $result['title'], $result['organization'], $result['location'], $result['supervisor'], $result['approved']);
+			$critical_enquiry =  new CommunityHealthAndEpidemiology($result['user_id'], $result['title'], $result['organization'], $result['location'], $result['supervisor'], $result['approved']);
 			return $critical_enquiry;
 		}
 	} 

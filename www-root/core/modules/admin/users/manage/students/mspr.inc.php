@@ -87,16 +87,16 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 
 <div class="section">
 	<h2 title="Clerkship Core Rotations Completed Satisfactorily to Date Section">Clerkship Core Rotations Completed Satisfactorily to Date</h2>
-	<div id="clerkship-core-rotations-completed-satisfactorily-to-date-section"><?php display_clerkship_core_completed($user); ?></div>
+	<div id="clerkship-core-rotations-completed-satisfactorily-to-date-section"><?php echo display_clerkship_core_completed($clerkship_core_completed); ?></div>
 
 </div>
 <div class="section">
 	<h2 title="Clerkship Core Rotations Pending Section" >Clerkship Core Rotations Pending</h2>
-	<div id="clerkship-core-rotations-pending-section"><?php display_clerkship_core_pending($user); ?></div>
+	<div id="clerkship-core-rotations-pending-section"><?php echo display_clerkship_core_pending($clerkship_core_pending); ?></div>
 </div>
 <div class="section">
 	<h2 title="Clerkship Electives Completed Satisfactorily to Date Section" >Clerkship Electives Completed Satisfactorily to Date</h2>
-	<div id="clerkship-electives-completed-satisfactorily-to-date-section"><?php display_clerkship_elective_completed($user); ?></div>
+	<div id="clerkship-electives-completed-satisfactorily-to-date-section"><?php echo display_clerkship_elective_completed($clerkship_elective_completed); ?></div>
 
 </div>
 <div class="section">
@@ -155,7 +155,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 	</form>
 
 
-	<div id="clinical_performance_eval_comments"><?php display_clineval_admin($user); ?></div>
+	<div id="clinical_performance_eval_comments"><?php echo display_clineval_admin($clinical_evaluation_comments); ?></div>
 
 	<script language="javascript">
 
@@ -287,7 +287,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 			
 				<div class="clear">&nbsp;</div>
 			</form>
-			<div id="student_run_electives"><?php display_student_run_electives_admin($user); ?></div>
+			<div id="student_run_electives"><?php echo display_student_run_electives_admin($student_run_electives); ?></div>
 		
 			<script language="javascript">
 			var student_run_electives = new ActiveDataEntryProcessor({
@@ -306,12 +306,45 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 </div>
 <div class="section">
 <h2>Critical Enquiry</h2>
+	<div id="critical_enquiry"><?php echo display_critical_enquiry_admin($critical_enquiry); ?></div>
+	<div class="clear">&nbsp;</div>
+	<script language="javascript">
+	var critical_enquiry = new ActiveApprovalProcessor({
+		url : '<?php echo webservice_url("mspr-admin"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=critical_enquiry',
+		data_destination: $('critical_enquiry'),
+		approve_forms_selector: '.approve_critical_enquiry_form',
+		unapprove_forms_selector: '.unapprove_critical_enquiry_form'
+	});
+	
+	</script>
 </div>
 <div class="section">
 <h2>Community Health and Epidemiology</h2>
+	<div id="community_health_and_epidemiology"><?php echo display_community_health_and_epidemiology_admin($community_health_and_epidemiology); ?></div>
+	<div class="clear">&nbsp;</div>
+	<script language="javascript">
+	var community_health_and_epidemiology = new ActiveApprovalProcessor({
+		url : '<?php echo webservice_url("mspr-admin"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=community_health_and_epidemiology',
+		data_destination: $('community_health_and_epidemiology'),
+		approve_forms_selector: '.approve_community_health_and_epidemiology_form',
+		unapprove_forms_selector: '.unapprove_community_health_and_epidemiology_form'
+	});
+	
+	</script>
 </div>
 <div class="section">
 <h2>Research</h2>
+	<div class="clear">&nbsp;</div>
+	<div id="research_citations"><?php echo display_research_citations_admin($research_citations); ?></div>
+	<script language="javascript">
+		var research_citations = new ActiveApprovalProcessor({
+			url : '<?php echo webservice_url("mspr-admin"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=research_citations',
+			data_destination: $('research_citations'),
+			approve_forms_selector: '.approve_research_citations_form',
+			unapprove_forms_selector: '.unapprove_research_citations_form'
+		});
+	
+	</script>
 </div>
 <div class="section">
 <h2>Academic Awards</h2>
@@ -390,7 +423,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 	
 		<div class="clear">&nbsp;</div>
 	</form>
-	<div id="internal_awards"><?php display_internal_awards_admin($user); ?></div>
+	<div id="internal_awards"><?php echo display_internal_awards_admin($internal_awards); ?></div>
 
 	<script language="javascript">
 	var internal_awards = new ActiveDataEntryProcessor({
@@ -409,7 +442,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 	 
 	<h3>External Awards</h3>
 	<div class="clear">&nbsp;</div>
-	<div id="external_awards"><?php display_external_awards_admin($user); ?></div>
+	<div id="external_awards"><?php echo display_external_awards_admin($external_awards); ?></div>
 	<script language="javascript">
 		var external_awards = new ActiveApprovalProcessor({
 			url : '<?php echo webservice_url("mspr-admin"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=external_awards',
@@ -490,7 +523,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 		<div class="clear">&nbsp;</div>
 	</form>
 	
-	<div id="studentships"><?php display_studentships_admin($user); ?></div>
+	<div id="studentships"><?php echo display_studentships_admin($studentships); ?></div>
 	
 	
 	<script language="javascript">
@@ -510,7 +543,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 	<h2>Contributions to Medical School</h2>
 
 	<div class="clear">&nbsp;</div>
-	<div id="contributions"><?php display_contributions_admin($user); ?></div>
+	<div id="contributions"><?php echo display_contributions_admin($contributions); ?></div>
 	<script language="javascript">
 		var contributions = new ActiveApprovalProcessor({
 			url : '<?php echo webservice_url("mspr-admin"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=contributions',
@@ -523,25 +556,21 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 <div class="section">
 <h2>Leaves of Absence</h2>
 <?php 
-	$loas = LeavesOfAbsence::get($user);
-	echo display_mspr_details_table($loas);
+	echo display_mspr_details_table($leaves_of_absence);
 	?>
 </div>
 <div class="section">
 <h2>Formal Remediation Received</h2>
 <?php 
-	$frs = FormalRemediations::get($user);
-	echo display_mspr_details_table($frs);
+	echo display_mspr_details_table($formal_remediation_received);
 	?>
 </div>
 <div class="section">
 <h2>Disciplinary Actions</h2> 
 	<?php 
-	$das = DisciplinaryActions::get($user);
-	echo display_mspr_details_table($das);
+	echo display_mspr_details_table($disciplinary_actions);
 	?>
 </div>
-
 <?php 
 }
 ?> 

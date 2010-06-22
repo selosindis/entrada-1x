@@ -718,16 +718,6 @@ function display_research_citations_profile(ResearchCitations $research_citation
 
 	?>
 	</tbody></table>
-	<script>
-	/*var research_citation_priority_list = new PriorityList({
-		url : '<?php echo webservice_url("mspr-profile"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=research_citations',
-		format: /research_citation_([0-9]*)$/,
-		tag: "tr",
-		elements:$$('#research_citations_body tr'), 
-		handle:'.handle'
-	});*/
-	
-	</script>
-		<?php
+	<?php
 	return ob_get_clean();
 }

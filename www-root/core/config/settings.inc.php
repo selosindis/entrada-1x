@@ -12,8 +12,13 @@
  * @version $Id$
 */
 
+if (defined("ENTRADA_TESTING_CONFIG")) {
+	$config_data = require ENTRADA_TESTING_CONFIG;
+} else {
+	$config_data = require "config.inc.php";
+}
 
-$config = new Zend_Config(require "config.inc.php");
+$config = new Zend_Config($config_data);
 
 /**
  * The default timezone based on PHP's supported timezones:
@@ -436,6 +441,7 @@ $MODULES["regionaled"] = array("title" => "Regional Education", "resource" => "r
 $MODULES["objectives"]	= array("title" => "Manage Objectives", "resource" => "objectivecontent", "permission" => "update");
 $MODULES["users"] = array("title" => "Manage Users", "resource" => "user", "permission" => "update");
 $MODULES["reports"] = array("title" => "System Reports", "resource" => "reportindex", "permission" => "read");
+$MODULES["awards"] = array("title" => "Manage Awards", "resource" => "awards", "permission" => "update");
 
 /**
  * System groups define which system groups & role combinations are allowed to

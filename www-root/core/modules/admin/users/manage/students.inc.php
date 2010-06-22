@@ -44,6 +44,3 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MANAGE_USER"))) {
 		exit;
 	}
 }
-
-
-?>

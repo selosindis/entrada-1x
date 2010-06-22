@@ -120,9 +120,11 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	
 	// Find the grade or assessment being modified in the system.
 	if(isset($GRADE_ID)) {
-		$query = "  SELECT a.*, b.*, c.`handler` FROM `assessment_grades` AS a
+		$query = "  SELECT a.*, b.*, c.`handler`, d.`organisation_id` FROM `assessment_grades` AS a
 					LEFT JOIN `assessments` as b on a.`assessment_id` = b.`assessment_id`
 					LEFT JOIN `assessment_marking_schemes` as c on b.`marking_scheme_id` = c.`id`
+					LEFT JOIN `courses` as d on b.`course_id` = d.`course_id`
+					
 					WHERE a.`grade_id` = ".$db->qstr($GRADE_ID);
 		$grade = $db->GetRow($query);
 		if(isset($grade) && is_array($grade) && (count($grade) >= 1)) {
@@ -137,9 +139,10 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 		}
 	} else if(isset($PROXY_ID) && isset($ASSESSMENT_ID)) {
 		// Find a grade not by ID but by proxy_id and assessment_id pair. Redundant fallback, may not succeed
-		$query = "  SELECT a.*, b.*, c.`handler` FROM `assessment_grades` AS a
+		$query = "  SELECT a.*, b.*, c.`handler`, d.`organisation_id` FROM `assessment_grades` AS a
 					LEFT JOIN `assessments` as b on a.`assessment_id` = b.`assessment_id`
 					LEFT JOIN `assessment_marking_schemes` as c on b.`marking_scheme_id` = c.`id`
+					LEFT JOIN `courses` as d on b.`course_id` = d.`course_id`
 					WHERE a.`assessment_id` = ".$db->qstr($ASSESSMENT_ID)." AND a.`proxy_id` = ".$db->qstr($PROXY_ID);
 		$grade = $db->GetRow($query);
 		if(isset($grade) && is_array($grade) && (count($grade) >= 1)) {
@@ -158,8 +161,9 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	
 	// If we're creating a grade assessment wont be set yet, find the assessment in the system so we know the marking scheme handler.
 	if(!isset($assessment)) {
-		$query = "  SELECT a.*, b.`handler` FROM `assessments` as a
+		$query = "  SELECT a.*, b.`handler`, c.`organisation_id` FROM `assessments` as a
 					LEFT JOIN `assessment_marking_schemes` as b on a.`marking_scheme_id` = b.`id`
+					LEFT JOIN `courses` as c on a.`course_id` = c.`course_id`
 					WHERE a.`assessment_id` = ".$db->qstr($ASSESSMENT_ID);
 		$assessment = $db->GetRow($query);
 		if(!isset($assessment) || !is_array($assessment) || !(count($assessment) >= 1)) {
@@ -169,6 +173,11 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 		}
 	}
 	
+	if(!$ENTRADA_ACL->amIAllowed(new GradebookResource($assessment["course_id"], $assessment["organisation_id"]), "update")) {
+		echo "Permissions Error!";
+		application_log("error", "User tried to edit grades for an assessment without permission.");
+		exit;
+	}
 	// Format grade value for insertion or update. If it comes back as blank, then delete.
 	$GRADE_VALUE = get_storage_grade($grade_value, $assessment);
 	

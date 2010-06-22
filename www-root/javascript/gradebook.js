@@ -45,7 +45,7 @@ jQuery(document).ready(function($) {
 			});
 		});
 
-		$('table.gradebook .grade').editable(ENTRADA_URL+'/api/gradebook.api.php', {
+		$('table.gradebook.gradebook_editable .grade').editable(ENTRADA_URL+'/api/gradebook.api.php', {
 			placeholder: '-',
 			indicator: loading_html,
 			onblur: 'submit',

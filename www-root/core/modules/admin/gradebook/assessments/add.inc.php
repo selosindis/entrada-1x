@@ -290,7 +290,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					<table style="width: 100%" cellspacing="0" cellpadding="0" border="0">
 					<tr>
 						<td style="width: 25%; text-align: left">
-							<input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/gradebook/assessments?<?php echo replace_query(array("step" => false, "section" => "index", "assessment_id" => false)); ?>'" />
+							<input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/gradebook?<?php echo replace_query(array("step" => false, "section" => "view", "assessment_id" => false)); ?>'" />
 						</td>
 						<td style="width: 75%; text-align: right; vertical-align: middle">
 							<span class="content-small">After saving:</span>

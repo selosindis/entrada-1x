@@ -89,8 +89,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				$query .= 	" WHERE c.`group` = 'student' AND c.`role` = ".$db->qstr($GRAD_YEAR);
 				$query .=	" GROUP BY b.`id`";
 				
-				$students = $db->GetAll($query); ?>
-				<table class="gradebook">
+				$students = $db->GetAll($query); 
+				$editable = $ENTRADA_ACL->amIAllowed(new GradebookResource($course_details["course_id"], $course_details["organisation_id"]), "update") ? "gradebook_editable" : "gradebook_not_editable";
+				?>
+				<table class="gradebook <?php echo $editable; ?>">
 					<thead>
 						<tr>
 							<th style="width: 200px;">Student</th>

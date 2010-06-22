@@ -96,10 +96,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				$query .= 	" WHERE c.`group` = 'student' AND c.`role` = ".$db->qstr($GRAD_YEAR);
 				
 				$students = $db->GetAll($query);
+				$editable = $ENTRADA_ACL->amIAllowed(new GradebookResource($course_details["course_id"], $course_details["organisation_id"]), "update") ? "gradebook_editable" : "gradebook_not_editable";
 				if(count($students) >= 1): ?>
 					<span id="assessment_name" style="display: none;"><?php echo $assessment["name"]; ?></span>
 					<div id="gradebook_grades">
-					<table class="gradebook single">
+					<table class="gradebook single <?php echo $editable; ?>">
 						<tbody>
 						<?php foreach($students as $key => $student): ?>
 							<tr id="grades<?php echo $student["proxy_id"]; ?>">
@@ -167,17 +168,25 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 										[data]
 									);
 								</script>
-								Unentered grades: <?php echo $grades[2]; ?>
+								<br/>
+								<p>Unentered grades: <?php echo $grades[2]; ?></p>
 								<?php
 								
 							break;
 							case 2: 
-							//percentage
+							case 3:
+							//percentage (numeric interpreted as percentage)
 								$grades = array(0,0,0,0,0,0,0,0,0,0,0);
+								$sum = 0;
+								$entered = 0;
+								$grade_values = array();
 								foreach($students as $key => $student) {
 									if($student["grade_value"] == "") {
 										$grades[10]++;
 									} else {
+										$sum += $student["grade_value"];
+										$entered++;
+										$grade_values[] = $student["grade_value"];
 										$key = floor($student["grade_value"] / 10);
 										$grades[$key]++;
 									}
@@ -186,38 +195,35 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								foreach($grades as $key => $grade) {
 									$grade_data .= "[$key, $grade],";
 								}
+								sort($grade_values);
 								?>
 								<script type="text/javascript" charset="utf-8">
 									var data = [<?php echo $grade_data; ?>];
 									var plotter = PlotKit.EasyPlot(
 										"bar", 
 										{
-											"xTicks": [{v:0, label:"0%-9%"}, 
-									          			{v:1, label:"10%-19%"},
-									          			{v:2, label:"20%-29%"},
-									          			{v:3, label:"30%-39%"},
-									          			{v:4, label:"40%-49%"},
-									          			{v:5, label:"50%-59%"},
-									          			{v:6, label:"60%-69%"},
-									          			{v:7, label:"70%-79%"},
-									          			{v:8, label:"80%-89%"},
-									          			{v:9, label:"90%-100%"},
+											"xTicks": [{v:0, label:"0-9"}, 
+									          			{v:2, label:"20-29"},
+									          			{v:4, label:"40-49"},
+									          			{v:6, label:"60-69"},
+									          			{v:8, label:"80-89"},
 														{v:10, label:"Not Entered"}],
 										}, 
 										$("graph"), 
 										[data]
 									);
 								</script>
-								Unentered grades: <?php echo $grades[10]; ?>
+								<br/>
+								<p>Unentered grades: <?php echo $grades[10]; ?></p>
+								<p>Mean grade: <?php echo $sum / $entered; ?>%</p>
+								<p>Median grade: <?php echo $grade_values[floor(count($grade_values)/2)]; ?>%</p>
 								<?php
-							break;
-							case 3:
-							//numeric
 							break;							
 							default:
 								echo "No statistics for this marking scheme.";
 							break; 
 							} ?>
+							<a style="float: right" href="javascript:location.reload(true)">Refresh</a>
 					</div>
 				<?php
 				else:
@@ -235,11 +241,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 
 		} else {
 			$ERROR++;
-			$ERRORSTR[] = "In order to edit a course you must provide a valid course identifier. The provided ID does not exist in this system.";
+			$ERRORSTR[] = "You don't have permission to edit this gradebook.";
 
 			echo display_error();
 
-			application_log("notice", "Failed to provide a valid course identifier when attempting to edit an assessment's grades.");
+			application_log("error", "User tried to edit gradebook without permission.");
 		}
 	} else {
 		$ERROR++;

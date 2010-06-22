@@ -219,7 +219,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						<td colspan="3" style="padding-top: 10px">
 							<input type="submit" class="button" value="Delete Selected" />
 						</td>
-						<td><a id="fullscreen-edit" class="button" href="<?php echo ENTRADA_URL . "/admin/gradebook?" . replace_query(array("section" => "api-edit")); ?>"><div>Edit Fullscreen</div></a>
+						<td><a id="fullscreen-edit" class="button" href="<?php echo ENTRADA_URL . "/admin/gradebook?" . replace_query(array("section" => "api-edit")); ?>"><div>Fullscreen</div></a>
 					</tr>
 				</tfoot>
 				<tbody>

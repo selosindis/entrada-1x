@@ -30,13 +30,13 @@ class Entrada_ACL extends ACL_Factory {
 			"awards",
 			"community",
 			"course" => array (
-				"gradebook" => array(
-					"assessment"
-				),
 				"coursecontent",
 				"event" => array (
 					"eventcontent"
 				)
+			),
+			"gradebook" => array(
+				"assessment"
 			),
 			"regionaled" => array (
 				"apartments",

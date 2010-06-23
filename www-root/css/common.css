@@ -2568,16 +2568,16 @@ div.objective-container {
 }
 .objectives-list li span.next {
 	padding-left: 10px;
-	background: url(../../../../images/record-next-on.gif) no-repeat top left;
+	background: url(../images/record-next-on.gif) no-repeat top left;
 }
 .objectives-list li span.next.off {
-	background-image: url(../../../../images/record-next-off.gif);
+	background-image: url(../images/record-next-off.gif);
 }
 #objectivelists > li > div {
 	font-weight: bold;
 }
 #objectivelists .drop_hover {
-	background: url(../../../../images/drag.png) no-repeat bottom left;
+	background: url(../images/drag.png) no-repeat bottom left;
 }
 
 ul.objectives-list ul span.delete {
@@ -2659,6 +2659,36 @@ table.mspr_table tr.unapproved {
 	background-color:#F0F0F0;
 }
 
-table.mspr_table tr.unapproved td{
+table.mspr_table tr.unapproved td {
 	color:#999999;
+}
+#gradebook_grades, #gradebook_stats {
+	float: left;
+}
+#gradebook_grades {
+	margin-right: 10px;
+}
+#gradebook_stats {
+	width: 300px;
+}
+#gradebook_stats h2 {
+	margin-top: 0px;
+}
+.gradebook_edit {
+	width: 100%;
+	height: 100%;
+	position: fixed;
+	left: 0px;
+	top: 0px;
+	background: #FFFFFF;
+}
+#filter_grad_year {
+	padding: 0px;
+	margin: 0px;
+}
+.gradebook_edit_close {
+	background: url(../images/action-delete.gif) no-repeat top left;
+}
+.gradebook_edit_add {
+	background: url(../images/add.png) no-repeat top left;
 }

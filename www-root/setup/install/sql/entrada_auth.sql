@@ -92,7 +92,10 @@ INSERT INTO `acl_permissions` (`permission_id`, `resource_type`, `resource_value
 (NULL, 'objectivecontent', NULL, 'group', 'faculty', 1, NULL, NULL, 1, 1, NULL),
 (NULL, 'objective', NULL, 'group:role', 'staff:admin', 1, 1, 1, 1, 1, NULL),
 (NULL, 'objective', NULL, 'group:role', 'medtech:admin', 1, 1, 1, 1, 1, NULL),
-(NULL, 'annualreport', NULL, 'group', 'faculty', 1, 1, 1, 1, 1, NULL);
+(NULL, 'annualreport', NULL, 'group', 'faculty', 1, 1, 1, 1, 1, NULL),
+(NULL, 'gradebook', NULL, 'role', 'pcoordinator', 1, NULL, 1, NULL, NULL, 'GradebookOwner'),
+(NULL, 'gradebook', NULL, 'group:role', 'faculty:admin', 1, NULL, 1, NULL, NULL, 'GradebookOwner'),
+(NULL, 'gradebook', NULL, 'group:role', 'faculty:director', 1, NULL, 1, NULL, NULL, 'GradebookOwner');
 
 CREATE TABLE IF NOT EXISTS `departments` (
   `department_id` int(12) UNSIGNED NOT NULL auto_increment,

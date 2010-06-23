@@ -97,7 +97,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	if (isset($_POST["value"])) {
 		$tmp_input = clean_input($_POST["value"], array("trim"));
 		if(isset($tmp_input) && $tmp_input != "") {
-			$grade_value = $tmp_input;	
+			$grade_value = $tmp_input;
 		} else {
 			if(isset($GRADE_ID)) {
 				//Empty grade value posted with a grade ID, delete the grade.
@@ -119,14 +119,18 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	
 	// Find the grade or assessment being modified in the system.
 	if(isset($GRADE_ID)) {
-		$query = "  SELECT a.*, b.*, c.`handler` FROM `assessment_grades` AS a
+		$query = "  SELECT a.*, b.*, c.`handler`, d.`organisation_id` FROM `assessment_grades` AS a
 					LEFT JOIN `assessments` as b on a.`assessment_id` = b.`assessment_id`
 					LEFT JOIN `assessment_marking_schemes` as c on b.`marking_scheme_id` = c.`id`
+					LEFT JOIN `courses` as d on b.`course_id` = d.`course_id`
+					
 					WHERE a.`grade_id` = ".$db->qstr($GRADE_ID);
 		$grade = $db->GetRow($query);
 		if(isset($grade) && is_array($grade) && (count($grade) >= 1)) {
 			$assessment = &$grade;
-			$mode = "update";
+			if(!isset($mode)) {
+				$mode = "update";
+			}
 		} else {
 			echo "Error! Grade not found.";
 			application_log("error", "Failed to provide a valid grade identifier when trying to AJAX edit.");
@@ -134,17 +138,21 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 		}
 	} else if(isset($PROXY_ID) && isset($ASSESSMENT_ID)) {
 		// Find a grade not by ID but by proxy_id and assessment_id pair. Redundant fallback, may not succeed
-		$query = "  SELECT a.*, b.*, c.`handler` FROM `assessment_grades` AS a
+		$query = "  SELECT a.*, b.*, c.`handler`, d.`organisation_id` FROM `assessment_grades` AS a
 					LEFT JOIN `assessments` as b on a.`assessment_id` = b.`assessment_id`
 					LEFT JOIN `assessment_marking_schemes` as c on b.`marking_scheme_id` = c.`id`
+					LEFT JOIN `courses` as d on b.`course_id` = d.`course_id`
 					WHERE a.`assessment_id` = ".$db->qstr($ASSESSMENT_ID)." AND a.`proxy_id` = ".$db->qstr($PROXY_ID);
 		$grade = $db->GetRow($query);
 		if(isset($grade) && is_array($grade) && (count($grade) >= 1)) {
 			// Found grade without proxy ID 
 			$assessment = &$grade;
-			$mode = "update";
+			if(!isset($mode)) {
+				$mode = "update";
+			}
 		}
 	}
+	
 	if(!isset($mode)) {
 		// No grades found, create one for this proxy_id and assessment_id pair.
 		$mode = "create";
@@ -152,8 +160,9 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	
 	// If we're creating a grade assessment wont be set yet, find the assessment in the system so we know the marking scheme handler.
 	if(!isset($assessment)) {
-		$query = "  SELECT a.*, b.`handler` FROM `assessments` as a
+		$query = "  SELECT a.*, b.`handler`, c.`organisation_id` FROM `assessments` as a
 					LEFT JOIN `assessment_marking_schemes` as b on a.`marking_scheme_id` = b.`id`
+					LEFT JOIN `courses` as c on a.`course_id` = c.`course_id`
 					WHERE a.`assessment_id` = ".$db->qstr($ASSESSMENT_ID);
 		$assessment = $db->GetRow($query);
 		if(!isset($assessment) || !is_array($assessment) || !(count($assessment) >= 1)) {
@@ -163,11 +172,19 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 		}
 	}
 	
+	if(!$ENTRADA_ACL->amIAllowed(new GradebookResource($assessment["course_id"], $assessment["organisation_id"]), "update")) {
+		echo "Permissions Error!";
+		application_log("error", "User tried to edit grades for an assessment without permission.");
+		exit;
+	}
+	// Format grade value for insertion or update. If it comes back as blank, then delete.
+	$GRADE_VALUE = get_storage_grade($grade_value, $assessment);
+	
+	
 	// Grade or assessment has been found if it has been specified, 
 	// Delete an exisiting grade if it was cleared
-	if($mode == "delete") {
+	if($mode == "delete" || $GRADE_VALUE === "") {
 		$query = "DELETE FROM `assessment_grades` WHERE `assessment_grades`.`proxy_id` = ".$db->qstr($grade["proxy_id"])." AND `assessment_grades`.`assessment_id` = ".$db->qstr($grade["assessment_id"]);
-		var_dump($query);
 		if($db->Execute($query)) {
 			echo "-";
 		} else {
@@ -175,9 +192,6 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 			application_log("error", "Failed to delete grade when AJAX editing. DB said [".$db->ErrorMsg()."]");
 		}
 	} else {
-		// Not deleting, either creating or updating. In any case,
-		// Format grade value for insertion or update
-		$GRADE_VALUE = format_input_grade($grade_value, $assessment);
 		
 		// If a grade was specified in the request (update mode), update it.
 		if($mode == "update") {
@@ -197,7 +211,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 			} else if($mode == "create") {
 				$GRADE_ID = $db->Insert_ID();
 			}
-		 	echo $GRADE_ID."|".$GRADE_VALUE;
+		 	echo $GRADE_ID."|". format_retrieved_grade($GRADE_VALUE, $assessment);
 		} else {
 			echo "Error saving grade!";
 			application_log("error", "Failed to save grade when AJAX editing. DB said [".$db->ErrorMsg()."]");

@@ -114,7 +114,23 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							$ERROR++;
 							$ERRORSTR[] = "The <strong>Marking Scheme</strong> field is a required field.";
 						}
-					
+						
+						
+						// Sometimes requried field "number grade points total". Specifies what a numeric marking scheme assessment is "out of".
+						// Only required when marking scheme is numeric, ID 3, hardcoded.
+						if((isset($_POST["numeric_grade_points_total"])) && ($points_total = clean_input($_POST["numeric_grade_points_total"], array("notags", "trim")))) {
+							$PROCESSED["numeric_grade_points_total"] = $points_total;
+						} else {
+							$PROCESSED["numeric_grade_points_total"] = "";
+							if(isset($PROCESSED["marking_scheme_id"])) {
+								// Numberic marking scheme, hardcoded, lame
+								if($PROCESSED["marking_scheme_id"] == 3) {
+									$ERROR++;
+									$ERRORSTR[] = "The <strong>Maximum Points</strong> field is a required field when using the \"Numeric\" marking scheme.";
+								}
+							}
+						}
+						
 						if (isset($_POST["post_action"])) {
 							if(@in_array($_POST["post_action"], array("new", "index", "parent"))) {
 								$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] = $_POST["post_action"];
@@ -143,7 +159,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 										break;
 									case "index" :
 									default :
-										$url = ENTRADA_URL."/admin/gradebook/assessments?".replace_query(array("step" => false, "section" => "index", "assessment_id" => false));
+										$url = ENTRADA_URL."/admin/gradebook?".replace_query(array("step" => false, "section" => "view", "id" => $assessment_details["course_id"], "assessment_id" => false));
 										$msg = "You will now be redirected to the <strong>assessment index</strong> page for ". $course_details["course_name"] . "; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 										break;
 								}
@@ -261,14 +277,30 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							</select>
 							</td>
 						</tr>
+						<tr id="numeric_marking_scheme_details" style="display: none;">
+							<td></td>
+							<td><label for="numeric_grade_points_total" class="form-required">Maximum Points</label></td>
+							<td><input type="text" id="numeric_grade_points_total" name="numeric_grade_points_total" value="<?php echo html_encode($PROCESSED["numeric_grade_points_total"]); ?>" maxlength="64" style="width: 243px" />
+								<p class="content-small">Enter a number here to specify the maximum points possible on this assessment. Example: <strong>20</strong> if the assessment is "out of" 20 points total.</p></td>					
+						</tr>
 					</tbody>
 					</table>
+					<script type="text/javascript" charset="utf-8">
+						jQuery(function($) {
+							$('#marking_scheme_id').change(function() {
+								if($(':selected', this).val() == 3 || $(':selected', this).text() == "Numeric") {
+									$('#numeric_marking_scheme_details').show();
+								} else {
+									$('#numeric_marking_scheme_details').hide();
+								}
+							}).trigger('change');
+						});
+					</script>
 					<div style="padding-top: 25px">
 						<table style="width: 100%" cellspacing="0" cellpadding="0" border="0">
 						<tr>
 							<td style="width: 25%; text-align: left">
-								<input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/gradebook/assessments?<?php echo replace_query(array("step" => false, "section" => "index", "assessment_id" => false)); ?>'" />
-							</td>
+							<input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/gradebook?<?php echo replace_query(array("step" => false, "section" => "view", "assessment_id" => false)); ?>'" />							</td>
 							<td style="width: 75%; text-align: right; vertical-align: middle">
 								<span class="content-small">After saving:</span>
 								<select id="post_action" name="post_action">

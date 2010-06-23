@@ -12,22 +12,26 @@ function assessment_suffix($assessment) {
 	$handler = assessment_handler($assessment);
 	return $handler->presentationSuffix(); 
 }
-
 function format_input_grade($grade, $assessment) {
 	$handler = assessment_handler($assessment);
 	return $handler->getFormattedGradeFromInput($grade);
 }
-
+function get_storage_grade($grade, $assessment) {
+	$handler = assessment_handler($assessment);
+	return $handler->getDecimalGrade($grade);
+}
 function format_retrieved_grade($grade, $assessment) {
 	$handler = assessment_handler($assessment);
 	return $handler->getFormattedGradeFromDecimal($grade);	
 }
 
 abstract class MarkingSchemeHandlerAbstract {
-	private $assessment;
+	public $assessment;
+	
 	function __construct($assessment) {
 		$this->assessment = $assessment;
 	}
+	
 	public abstract function getDecimalGrade($input);
 	public abstract function getFormattedGradeFromDecimal($decimal);
 	
@@ -36,16 +40,19 @@ abstract class MarkingSchemeHandlerAbstract {
 		return $this->getFormattedGradeFromDecimal($input);
 	}
 	
-	public function stripNumericInput($input) {
+	public function stripNumericInput($input, $max = false) {
 	 	$input = preg_replace("/(?![0-9\.])/", "", $input);
-		if($input > 100) {
-			$input = 100;
+		if($max === false) {
+			$max = 100;
+		}
+		if($input > $max) {
+			$input = $max;
 		}
 		if($input < 0) {
 			$input = 0;
 		}
-		if(!($input >= 0) && !($input <= 100)) {
-			$input = 0;
+		if(!($input >= 0) && !($input <= $max)) {
+			$input = "";
 		}
 		return $input;
 	}
@@ -58,7 +65,7 @@ abstract class MarkingSchemeHandlerAbstract {
 class PercentageGradeHandler extends MarkingSchemeHandlerAbstract {
 	public function getDecimalGrade($input) {
 		$input = $this->stripNumericInput($input);
-		return intval($input);
+		return $input;
 	}
 	public function getFormattedGradeFromDecimal($decimal) {
 		$decimal = $this->stripNumericInput($decimal);
@@ -69,11 +76,18 @@ class PercentageGradeHandler extends MarkingSchemeHandlerAbstract {
 	}
 }
 
-class NumericGradeHandler extends MarkingSchemeHandlerAbstract {
+class NumericGradeHandler extends MarkingSchemeHandlerAbstract {	
 	public function getDecimalGrade($input) {
-		$input = $this->stripNumericInput($input);
+		// Strip input according to the max points total (you can only get 20/20, not 21/20)
+		if($this->getMaxPoints() != 100) {
+			$max = $this->getMaxPoints();
+		} else {
+			$max = false;
+		}
+		$input = $this->stripNumericInput($input, $max);
+		
 		if($input >= 0) {
-			return intval($input)/(20);
+			return ($input / $this->getMaxPoints()) * 100;
 		} else {
 			return "";
 		}
@@ -81,26 +95,33 @@ class NumericGradeHandler extends MarkingSchemeHandlerAbstract {
 
 	public function getFormattedGradeFromDecimal($decimal) {
 		if($decimal >= 0) {
-			return $decimal*20;
+			return ($decimal / 100) * $this->getMaxPoints();
 		} else {
 			return "";
 		}
 	}
 	
 	public function presentationSuffix() {
-		return "/20";
+		return "/" . $this->getMaxPoints();
+	}
+	
+	private function getMaxPoints() {
+		if(isset($this->assessment["numeric_grade_points_total"])) {
+			return $this->assessment["numeric_grade_points_total"];
+		} else {
+			return 100;
+		}
 	}
 }
 
 class BooleanGradeHandler extends MarkingSchemeHandlerAbstract {
 	
-	private $pass_values = array("p", "pass", "1", 100);
-	private $pass_text = "P";
-	private $fail_text = "F";
+	public $pass_values = array("p", "pass", "1", 100);
+	public $pass_text = "P";
+	public $fail_text = "F";
 	
 	public function getDecimalGrade($input) {
 		$input = strtolower($input);
-		
 		if(in_array($input, $this->pass_values)) {
 			return 100;
 		} else {
@@ -118,7 +139,7 @@ class BooleanGradeHandler extends MarkingSchemeHandlerAbstract {
 }
 
 class IncompleteCompleteGradeHandler extends BooleanGradeHandler {
-	private $pass_values = array("p", "pass", "1", "c", "complete", 100);
-	private $pass_text = "Complete";
-	private $fail_text = "Incomplete";
+	public $pass_values = array("p", "pass", "1", "c", "complete", 100);
+	public $pass_text = "C";
+	public $fail_text = "I";
 }

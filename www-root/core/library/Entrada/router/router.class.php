@@ -18,6 +18,7 @@ class Entrada_Router {
 	private $section = "";
 	private $base_path = "";
 	private $load_path = "";
+	private $initialized = false;
 
     public function __construct () {
 		$path_info = ((isset($_SERVER["PATH_INFO"])) ? clean_input($_SERVER["PATH_INFO"], array("url", "lowercase")) : "dashboard");
@@ -34,8 +35,8 @@ class Entrada_Router {
 
 		return false;
     }
-
-	public function setBasePath($path = "") {
+    
+    public function setBasePath($path = "") {
 		$path = clean_input($path, "dir");
 
 		if ($path) {
@@ -46,19 +47,47 @@ class Entrada_Router {
 	public function setSection($section = "") {
 		$section = clean_input($section, "module");
 
-		if ($section) {
-			$this->section = $section;
-		}
+		return ($section &&($this->section = $section));
 	}
 
 	public function getLoadPath() {
 		return $this->load_path;
 	}
+	
+	/**
+	 * Adds a module (directory) to the requests
+	 * @param string $module
+	 */
+	public function addModule($module = "") {
+		$module = clean_input($module, "module");
+		//the check for the end is to ensure we don't end up loading the same module twice
+		return ($module && end($this->modules) && (current($this->modules) == $module || ($this->modules[] = $module)));
+	}
 
-	public function initRoute() {
+	public function initRoute($insert_module = "") {
+		$insert_module = clean_input($insert_module, "module");
+		
 		$load_path = array();
 
 		$current_depth = substr_count($this->load_path, "/");
+		
+		if ($insert_module) {
+			if (!is_array($this->modules)){
+				$this->modules = array();
+			} 
+
+			//check modules array to see if it is next in line anyways
+			//if not, splice/push it in
+	
+			if (isset($this->modules[$current_depth])) {
+				if ($this->modules[$current_depth] != $insert_module) {
+					array_splice($this->modules, $current_depth, 0, $insert_module);
+				}
+			} else {
+				array_push($this->modules, $insert_module);
+			} 
+		}
+		
 		$request_depth = ((is_array($this->modules)) ? count($this->modules) : 1);
 
 		if ($current_depth <= $request_depth) {
@@ -75,7 +104,7 @@ class Entrada_Router {
 		}
 
 		$this->load_path = "/".((count($load_path)) ? implode(DIRECTORY_SEPARATOR, $load_path).".inc.php" : false);
-
+		$this->initialized = true;
 		return $this->load_path;
 	}
 

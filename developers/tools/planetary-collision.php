@@ -25,6 +25,16 @@
  *
  */
 
+/**
+ * MERGE NOTES
+ * Ensure courses.parent_id field is gone
+ * Ensure courses.course_active (int default 1) is present
+
+
+
+
+
+*/
 set_include_path(get_include_path().PATH_SEPARATOR.dirname(__FILE__)."/includes");
 
 set_time_limit(0);
@@ -44,7 +54,7 @@ $SECONDARY_DB_CONF		= array("host" => $HOST, "database_prefix" => "rehab_test_"	
 $DESTINATION_DB_CONF	= array("host" => $HOST, "database_prefix" => "destination_", "user" => $DBUSER, "pass"=>$PASSWORD);
 
 $NURSING_CONF = array(	"app_id" => 701, "auth_username" => "701", "auth_password" => "sassafraz", 
-						"authorize_proxy_ids" => array(1),
+						"authorize_proxy_ids" => array(1, 4468), // Matt and Angelo Varriano
 						"create_organisations" => array(
 							array("name" => "Nursing: 4 year Baccalaureate Program"),
 							array("name" => "Nursing: 2 year Baccalaureate Program"),

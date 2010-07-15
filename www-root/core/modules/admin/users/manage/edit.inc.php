@@ -495,132 +495,402 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 					if (@file_exists(STORAGE_USER_PHOTOS."/".$PROXY_ID."-upload")) {
 						$size_upload = getimagesize(STORAGE_USER_PHOTOS."/".$PROXY_ID."-upload");
 					}
-					?>
-					<h1 style="margin-top: 0px">User Overview</h1>
-					<div style="display: block" id="opened_details">
-						<table style="width: 100%; border: 1px #CCCCCC solid" cellspacing="0" cellpadding="1">
-							<tr>
-								<td style="height: 15px; background-image: url('<?php echo APPLICATION_URL; ?>/images/table-head-on.gif'); background-color: #EEEEEE; border-bottom: 1px #CCCCCC solid; padding-left: 5px">
-									User Profile
-								</td>
-							</tr>
-							<tr>
-								<td style="padding: 5px">
-									<table style="width: 100%" cellspacing="0" cellpadding="0" border="0">
-										<tr>
-											<td style="width: 110px; vertical-align: top; padding-left: 10px">
-												<div style="position: relative">
+					$ONLOAD[] = "provStateFunction(\$F($('user-edit')['country_id']))";	?>
+					<h1 style="margin-top: 0px">Edit Profile Details</h1>
+					<form name="user-edit" id="user-edit" action="<?php echo ENTRADA_URL; ?>/admin/users/manage?section=edit&id=<?php echo $PROXY_ID; ?>&amp;step=2" method="post" onsubmit="selIt()">
+						<table style="width: 100%" cellspacing="1" cellpadding="1" border="0" summary="Edit MEdTech Profile">
+							<colgroup>
+								<col style="width: 3%" />
+								<col style="width: 25%" />
+								<col style="width: 72%" />
+							</colgroup>
+							<tfoot>
+								<tr>
+									<td colspan="3">&nbsp;</td>
+								</tr>
+								<tr>
+									<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
+										<input type="submit" class="button" value="Save" />
+									</td>
+								</tr>
+							</tfoot>
+							<tbody>
+								<tr>
+									<td colspan="3">
+										<h2>Account Details</h2>
+									</td>
+								</tr>
+								<tr>
+									<td>&nbsp;</td>
+									<td><label for="number" class="form-nrequired">Staff / Student Number:</label></td>
+									<td>
+										<input type="text" id="number" name="number" value="<?php echo ((isset($PROCESSED["number"])) ? html_encode($PROCESSED["number"]) : ""); ?>" style="width: 250px" maxlength="25" />
+										<span class="content-small">(<strong>Important:</strong> Required when ever possible)</span>
+									</td>
+								</tr>
+								<tr>
+									<td>&nbsp;</td>
+									<td><label for="username" class="form-required">MEdTech Username:</label></td>
+									<td>
+										<input type="text" id="username" name="username" value="<?php echo ((isset($PROCESSED["username"])) ? html_encode($PROCESSED["username"]) : ""); ?>" style="width: 250px" maxlength="25" />
+										<span class="content-small">(<strong>Important:</strong> Should be the Queen's NetID)</span>
+									</td>
+								</tr>
+								<tr>
+									<td>&nbsp;</td>
+									<td style="vertical-align: top"><label for="password" class="form-required">MEdTech Password:</label></td>
+									<td>
+										<input type="text" id="password" name="password" value="" style="width: 250px" maxlength="25" />
+										<div class="content-small" style="margin-top: 5px">
+											<strong>Important:</strong> Enter a new password only if you want to change the current password.
+										</div>
+									</td>
+								</tr>
+								<tr>
+									<td colspan="3">&nbsp;</td>
+								</tr>
+								<tr>
+									<td>&nbsp;</td>
+									<td style="vertical-align: top"><label for="group" class="form-required">Account Type:</label></td>
+									<td>
+										<select id="group" name="group" style="width: 209px"></select> <span class="content-small"><strong>Account Group</strong></span><br />
+										<select id="role" name="role" style="width: 209px; margin-top: 5px"></select> <span class="content-small"><strong>Account Role</strong></span>
+									</td>
+								</tr>
+								<tr>
+									<td colspan="3">
+										<h2>Account Options</h2>
+									</td>
+								</tr>
+								<tr>
+									<td>&nbsp;</td>
+									<td style="vertical-align: top"><label for="account_active" class="form-required">Account Status:</label></td>
+									<td>
+										<select id="account_active" name="account_active" style="width: 209px">
+											<option value="true"<?php echo (((!isset($PROCESSED_ACCESS["account_active"])) || ($PROCESSED_ACCESS["account_active"] == "true")) ? " selected=\"selected\"" : ""); ?>>Active</option>
+											<option value="false"<?php echo (($PROCESSED_ACCESS["account_active"] == "false") ? " selected=\"selected\"" : ""); ?>>Disabled</option>
+										</select>
+									</td>
+								</tr>
+								<?php echo generate_calendars("access", "Access", true, true, ((isset($PROCESSED_ACCESS["access_starts"])) ? $PROCESSED_ACCESS["access_starts"] : time()), true, false, ((isset($PROCESSED_ACCESS["access_expires"])) ? $PROCESSED_ACCESS["access_expires"] : 0)); ?>
+								<tr>
+									<td colspan="3">
+										<h2>Personal Information</h2>
+									</td>
+								</tr>
+								<?php
+								$query = "SELECT * FROM `".AUTH_DATABASE."`.`user_photos` WHERE `photo_type`='1' AND `proxy_id` = ".$db->qstr($PROXY_ID);
+								$uploaded_photo = $db->GetRow($query);
+								if ($uploaded_photo && @file_exists(STORAGE_USER_PHOTOS."/".$PROXY_ID."-upload")) {
+									?>
+									<tr>
+										<td>&nbsp;</td>
+										<td style="vertical-align: bottom; padding-bottom: 15px;"><label for="photo_active" class="photo_active">Uploaded Photo:</label></td>
+										<td>
+											<div style="position: relative">
 												<?php
-												$uploaded_file_active = $db->GetOne("SELECT `photo_active` FROM `".AUTH_DATABASE."`.`user_photos` WHERE `photo_type` = 1 AND `proxy_id` = ".$db->qstr($user_record["id"]));
 												echo "		<div style=\"position: relative; width: 74px; height: 102px;\" id=\"img-holder-".$user_record["id"]."\" class=\"img-holder\">\n";
-
-												$offical_file_active	= false;
-												$uploaded_file_active	= false;
-
-												/**
-												 * If the photo file actually exists
-												 */
-												if (@file_exists(STORAGE_USER_PHOTOS."/".$user_record["id"]."-official")) {
-													$offical_file_active	= true;
-												}
-
-												/**
-												 * If the photo file actually exists, and
-												 * If the uploaded file is active in the user_photos table, and
-												 * If the proxy_id has their privacy set to "Basic Information" or higher.
-												 */
-												if ((@file_exists(STORAGE_USER_PHOTOS."/".$user_record["id"]."-upload")) && ($db->GetOne("SELECT `photo_active` FROM `".AUTH_DATABASE."`.`user_photos` WHERE `photo_type` = '1' AND `photo_active` = '1' AND `proxy_id` = ".$db->qstr($user_record["id"]))) && ((int) $user_record["privacy_level"] >= 2)) {
-													$uploaded_file_active = true;
-												}
-
-												if ($offical_file_active) {
-													echo "		<img id=\"official_photo_".$user_record["id"]."\" class=\"official\" src=\"".webservice_url("photo", array($user_record["id"], "official"))."\" width=\"72\" height=\"100\" alt=\"".html_encode($user_record["prefix"]." ".$user_record["firstname"]." ".$user_record["lastname"])."\" title=\"".html_encode($user_record["prefix"]." ".$user_record["firstname"]." ".$user_record["lastname"])."\" />\n";
-												}
-
-												if ($uploaded_file_active) {
-													echo "		<img id=\"uploaded_photo_".$user_record["id"]."\" class=\"uploaded\" src=\"".webservice_url("photo", array($user_record["id"], "upload"))."\" width=\"72\" height=\"100\" alt=\"".html_encode($user_record["prefix"]." ".$user_record["firstname"]." ".$user_record["lastname"])."\" title=\"".html_encode($user_record["prefix"]." ".$user_record["firstname"]." ".$user_record["lastname"])."\" />\n";
-												}
-
-												if (($offical_file_active) || ($uploaded_file_active)) {
-													echo "		<a id=\"zoomin_photo_".$user_record["id"]."\" class=\"zoomin\" onclick=\"growPic($('official_photo_".$user_record["id"]."'), $('uploaded_photo_".$user_record["id"]."'), $('official_link_".$user_record["id"]."'), $('uploaded_link_".$user_record["id"]."'), $('zoomout_photo_".$user_record["id"]."'));\">+</a>";
-													echo "		<a id=\"zoomout_photo_".$user_record["id"]."\" class=\"zoomout\" onclick=\"shrinkPic($('official_photo_".$user_record["id"]."'), $('uploaded_photo_".$user_record["id"]."'), $('official_link_".$user_record["id"]."'), $('uploaded_link_".$user_record["id"]."'), $('zoomout_photo_".$user_record["id"]."'));\"></a>";
-												} else {
-													echo "		<img src=\"".ENTRADA_URL."/images/headshot-male.gif\" width=\"72\" height=\"100\" alt=\"No Photo Available\" title=\"No Photo Available\" />\n";
-												}
-
-												if (($offical_file_active) && ($uploaded_file_active)) {
-													echo "		<a id=\"official_link_".$user_record["id"]."\" class=\"img-selector one\" onclick=\"showOfficial($('official_photo_".$user_record["id"]."'), $('official_link_".$user_record["id"]."'), $('uploaded_link_".$user_record["id"]."'));\" href=\"javascript: void(0);\">1</a>";
-													echo "		<a id=\"uploaded_link_".$user_record["id"]."\" class=\"img-selector two\" onclick=\"hideOfficial($('official_photo_".$user_record["id"]."'), $('official_link_".$user_record["id"]."'), $('uploaded_link_".$user_record["id"]."'));\" href=\"javascript: void(0);\">2</a>";
+												echo "			<img src=\"".webservice_url("photo", array($user_record["id"], "upload"))."\" width=\"72\" height=\"100\" alt=\"".$user_record["prefix"]." ".$user_record["firstname"]." ".$user_record["lastname"]."\" title=\"".$user_record["prefix"]." ".$user_record["firstname"]." ".$user_record["lastname"]."\" class=\"current-".$user_record["id"]."\" id=\"uploaded_profile_pic_".$user_record["id"]."\" name=\"uploaded_profile_pic_".$user_record["id"]."\" style=\"border: 1px solid #999999; position: absolute; z-index: 5;\"/>\n";
+												if (($uploaded_file_active)) {
+													echo "		<a id=\"zoomin_profile_photo_".$user_record["id"]."\" class=\"zoomin\" onclick=\"growPic($('uploaded_profile_pic_".$user_record["id"]."'), $('uploaded_profile_pic_".$user_record["id"]."'), null, null, $('zoomout_profile_photo_".$user_record["id"]."'));\">+</a>";
+													echo "		<a id=\"zoomout_profile_photo_".$user_record["id"]."\" class=\"zoomout\" onclick=\"shrinkPic($('uploaded_profile_pic_".$user_record["id"]."'), $('uploaded_profile_pic_".$user_record["id"]."'), null, null, $('zoomout_profile_photo_".$user_record["id"]."'));\"></a>";
 												}
 												echo "		</div>\n";
 												?>
-												</div>
-											</td>
-											<td style="width: 100%; vertical-align: top; padding-left: 5px">
-												<table width="100%" cellspacing="0" cellpadding="1" border="0">
-													<tr>
-														<td style="width: 20%">Full Name:</td>
-														<td style="width: 80%"><?php echo $user_record["prefix"]." ".$user_record["firstname"]." ".$user_record["lastname"]; ?></td>
-													</tr>
-													<tr>
-														<td>Gender:</td>
-														<td><?php echo $gender;?></td>
-													</tr>
-													<tr>
-														<td>Student Number:</td>
-														<td><?php echo $user_record["number"]; ?></td>
-													</tr>
-													<tr>
-														<td>E-Mail Address:</td>
-														<td><a href="mailto:<?php echo $user_record["email"]; ?>"><?php echo $user_record["email"]; ?></a></td>
-													</tr>
-												</table>
-											</td>
-										</tr>
-									</table>
-								</td>
-							</tr>
-						</table>
-					</div>
-					<?php
-					$query		= "SELECT a.*, CONCAT_WS(', ', b.lastname, b.firstname) as `reported_by` FROM `".AUTH_DATABASE."`.`user_incidents` as a LEFT JOIN `".AUTH_DATABASE."`.`user_data` as b ON `incident_author_id` = `id` WHERE a.`proxy_id` = ".$db->qstr($PROXY_ID)." AND `incident_status` > 0 ORDER BY `incident_date` ASC";
-					$results	= $db->GetAll($query);
-					if ($results) {
-						?>
-						<h2 style="padding-top: 25px;">Open Incidents</h2>
-						<div style="padding-top: 15px; clear: both">
-							<table class="tableList" cellspacing="0" summary="List of Open Incidents">
-								<colgroup>
-									<col class="title" />
-									<col class="date" />
-									<col class="date" />
-								</colgroup>
-								<thead>
-									<tr>
-										<td class="title" style="border-left: 1px #999999 solid">Incident Title</td>
-										<td class="date sortedASC" style="border-left: none"><a>Incident Date</a></td>
-										<td class="date" style="border-left: none">Follow-up Date</td>
+											</div>
+											<br/><input style="margin-bottom: 15px" type="checkbox" id="photo_active" name="photo_active" value="1" <?php echo ($uploaded_photo["photo_active"] == 1 ? " checked=\"true\"" : "") ?> /> <?php echo ( $uploaded_photo["photo_active"] == 1  ? "<span class=\"content-small\">Uncheck this to deactivate the uploaded photo for this user.</span>" : "<span class=\"content-small\">Check this to activate the uploaded photo of this user.</span>" ); ?>
+										</td>
 									</tr>
-								</thead>
-								<tbody>
-								<?php
-								foreach ($results as $result) {
-									$url = ENTRADA_URL."/admin/users/manage/incidents?section=edit&id=".$result["proxy_id"]."&incident-id=".$result["incident_id"];
-									echo "<tr ".(!$result["incident_status"] ? " class=\"closed\"" : "").">\n";
-									echo "	<td class=\"title\"><a href=\"".$url."\" title=\"Incident Title: ".html_encode($result["incident_title"])."\">[".html_encode($result["incident_severity"])."] ".html_encode(limit_chars($result["incident_title"], 75))."</a></td>\n";
-									echo "	<td class=\"date\"><a href=\"".$url."\" title=\"Incident Date\">".date(DEFAULT_DATE_FORMAT, $result["incident_date"])."</a></td>\n";
-									echo "	<td class=\"date\"><a href=\"".$url."\" title=\"Incident Follow-Up Date\">".(isset($result["follow_up_date"]) && ((int)$result["follow_up_date"]) ? date(DEFAULT_DATE_FORMAT, $result["follow_up_date"]) : "")."</a></td>\n";
-									echo "</tr>\n";
+									<?php
 								}
 								?>
-								</tbody>
-							</table>
-						</div>
-						<?php
-					} else {
-						echo "<div style=\"height: 120px;\">&nbsp;</div>";
-					}
-			
+								<tr>
+									<td>&nbsp;</td>
+									<td><label for="prefix" class="form-nrequired">Prefix:</label></td>
+									<td>
+										<select id="prefix" name="prefix" style="width: 55px; vertical-align: middle; margin-right: 5px">
+										<option value=""<?php echo ((!$result["prefix"]) ? " selected=\"selected\"" : ""); ?>></option>
+										<?php
+										if ((@is_array($PROFILE_NAME_PREFIX)) && (@count($PROFILE_NAME_PREFIX))) {
+											foreach ($PROFILE_NAME_PREFIX as $key => $prefix) {
+												echo "<option value=\"".html_encode($prefix)."\"".(((isset($PROCESSED["prefix"])) && ($PROCESSED["prefix"] == $prefix)) ? " selected=\"selected\"" : "").">".html_encode($prefix)."</option>\n";
+											}
+										}
+										?>
+										</select>
+									</td>
+								</tr>
+								<tr>
+									<td>&nbsp;</td>
+									<td><label for="firstname" class="form-required">Firstname:</label></td>
+									<td><input type="text" id="firstname" name="firstname" value="<?php echo ((isset($PROCESSED["firstname"])) ? html_encode($PROCESSED["firstname"]) : ""); ?>" style="width: 250px; vertical-align: middle" maxlength="35" /></td>
+								</tr>
+								<tr>
+									<td>&nbsp;</td>
+									<td><label for="lastname" class="form-required">Lastname:</label></td>
+									<td><input type="text" id="lastname" name="lastname" value="<?php echo ((isset($PROCESSED["lastname"])) ? html_encode($PROCESSED["lastname"]) : ""); ?>" style="width: 250px; vertical-align: middle" maxlength="35" /></td>
+								</tr>
+								<tr>
+									<td colspan="3">&nbsp;</td>
+								</tr>
+								<tr>
+									<td>&nbsp;</td>
+									<td><label for="email" class="form-required">Primary E-Mail:</label></td>
+									<td>
+										<input type="text" id="email" name="email" value="<?php echo ((isset($PROCESSED["email"])) ? html_encode($PROCESSED["email"]) : ""); ?>" style="width: 250px; vertical-align: middle" maxlength="128" />
+										<span class="content-small">(<strong>Important:</strong> Official e-mail accounts only)</span>
+									</td>
+								</tr>
+								<tr>
+									<td>&nbsp;</td>
+									<td><label for="email_alt" class="form-nrequired">Alternative E-Mail:</label></td>
+									<td><input type="text" id="email_alt" name="email_alt" value="<?php echo ((isset($PROCESSED["email_alt"])) ? html_encode($PROCESSED["email_alt"]) : ""); ?>" style="width: 250px; vertical-align: middle" maxlength="128" /></td>
+								</tr>
+								<tr>
+									<td colspan="2">&nbsp;</td>
+								</tr>
+								<tr>
+									<td>&nbsp;</td>
+									<td><label for="telephone" class="form-nrequired">Telephone Number:</label></td>
+									<td>
+										<input type="text" id="telephone" name="telephone" value="<?php echo ((isset($PROCESSED["telephone"])) ? html_encode($PROCESSED["telephone"]) : ""); ?>" style="width: 250px; vertical-align: middle" maxlength="25" />
+										<span class="content-small">(<strong>Example:</strong> 613-533-6000 x74918)</span>
+									</td>
+								</tr>
+								<tr>
+									<td>&nbsp;</td>
+									<td><label for="fax" class="form-nrequired">Fax Number:</label></td>
+									<td>
+										<input type="text" id="fax" name="fax" value="<?php echo ((isset($PROCESSED["fax"])) ? html_encode($PROCESSED["fax"]) : ""); ?>" style="width: 250px; vertical-align: middle" maxlength="25" />
+										<span class="content-small">(<strong>Example:</strong> 613-533-3204)</span>
+									</td>
+								</tr>
+								<tr>
+									<td colspan="3">&nbsp;</td>
+								</tr>
+								<tr>
+									<td>&nbsp;</td>
+									<td><label for="country_id" class="form-nrequired">Country</label></td>
+									<td>
+										<?php
+										$countries = fetch_countries();
+										if ((is_array($countries)) && (count($countries))) {
+											echo "<select id=\"country_id\" name=\"country_id\" style=\"width: 256px\" onchange=\"provStateFunction(this.value);\">\n";
+											echo "<option value=\"0\"".((!$PROCESSED["country_id"]) ? " selected=\"selected\"" : "").">-- Select Country --</option>\n";
+											foreach ($countries as $country) {
+												echo "<option value=\"".(int) $country["countries_id"]."\"".(($PROCESSED["country_id"] == $country["countries_id"]) ? " selected=\"selected\"" : "").">".html_encode($country["country"])."</option>\n";
+											}
+											echo "</select>\n";
+										} else {
+											echo "<input type=\"hidden\" id=\"countries_id\" name=\"countries_id\" value=\"0\" />\n";
+											echo "Country information not currently available.\n";
+										}
+										?>
+									</td>
+								</tr>
+								<tr>
+									<td>&nbsp;</td>
+									<td><label id="prov_state_label" for="prov_state_div" class="form-nrequired">Province / State</label></td>
+									<td>
+										<div id="prov_state_div">Please select a <strong>Country</strong> from above first.</div>
+									</td>
+								</tr>
+								<tr>
+									<td>&nbsp;</td>
+									<td><label for="city" class="form-nrequired">City:</label></td>
+									<td>
+										<input type="text" id="city" name="city" value="<?php echo ((isset($PROCESSED["city"])) ? html_encode($PROCESSED["city"]) : "Kingston"); ?>" style="width: 250px; vertical-align: middle" maxlength="35" />
+									</td>
+								</tr>
+								<tr>
+									<td>&nbsp;</td>
+									<td><label for="address" class="form-nrequired">Address:</label></td>
+									<td>
+										<input type="text" id="address" name="address" value="<?php echo ((isset($PROCESSED["address"])) ? html_encode($PROCESSED["address"]) : ""); ?>" style="width: 250px; vertical-align: middle" maxlength="255" />
+									</td>
+								</tr>
+								<tr>
+									<td>&nbsp;</td>
+									<td><label for="postcode" class="form-nrequired">Postal Code:</label></td>
+									<td>
+										<input type="text" id="postcode" name="postcode" value="<?php echo ((isset($PROCESSED["postcode"])) ? html_encode($PROCESSED["postcode"]) : "K7L 3N6"); ?>" style="width: 250px; vertical-align: middle" maxlength="7" />
+										<span class="content-small">(<strong>Example:</strong> K7L 3N6)</span>
+									</td>
+								</tr>
+								<tr>
+									<td colspan="3">&nbsp;</td>
+								</tr>
+								<tr>
+									<td>&nbsp;</td>
+									<td style="vertical-align: top"><label for="office_hours">Office Hours:</label></td>
+									<td>
+										<textarea id="office_hours" name="office_hours" style="width: 254px; height: 40px;" maxlength="100"><?php echo html_encode($PROCESSED["office_hours"]); ?></textarea>
+									</td>
+								</tr>
+								<tr>
+									<td colspan="3">&nbsp;</td>
+								</tr>
+								<tr>
+									<td>&nbsp;</td>
+									<td style="vertical-align: top"><label for="notes" class="form-nrequired">General Comments:</label></td>
+									<td>
+										<textarea id="notes" name="notes" class="expandable" style="width: 246px; height: 75px"><?php echo ((isset($PROCESSED["notes"])) ? html_encode($PROCESSED["notes"]) : ""); ?></textarea>
+									</td>
+								</tr>
+								<tr>
+									<td colspan="3">
+										<h2>Departmental Options</h2>
+									</td>
+								</tr>
+								<tr>
+									<td>&nbsp;</td>
+									<td><label for="organisation_id" class="form-required">Organisation</label></td>
+									<td><select id="organisation_id" name="organisation_id" style="width: 250px" onchange="organisationChange();">
+										<?php
+										$query		= "SELECT `organisation_id`, `organisation_title` FROM `".AUTH_DATABASE."`.`organisations`";
+										$results	= $db->GetAll($query);
+										if ($results) {
+											foreach ($results as $result) {
+												if ($ENTRADA_ACL->amIAllowed(new CourseResource(null, $result['organisation_id']), 'create')) {
+													$organisation_categories[$result["organisation_id"]] = array($result["organisation_title"]);
+													echo "<option value=\"".(int) $result["organisation_id"]."\"".(((isset($PROCESSED["organisation_id"])) && ($PROCESSED["organisation_id"] == $result["organisation_id"])) ? " selected=\"selected\"" : "").">".html_encode($result["organisation_title"])."</option>\n";
+												}
+											}
+										}
+										?>
+										</select>
+									</td>
+								</tr>
+								<tr>
+									<td>&nbsp;</td>
+									<td>Departments</td>
+									<td>
+										<?php
+										$ONLOAD[] = "organisationChange()";
+										if (isset($DEPARTMENT_LIST) && is_array($DEPARTMENT_LIST) && !empty($DEPARTMENT_LIST)) {
+											$departments = array();
+
+											foreach ($DEPARTMENT_LIST as $organisation_id => $dlist) {
+												foreach ($dlist as $d) {
+
+													if (in_array($d["department_id"], $PROCESSED_DEPARTMENTS)) {
+														$checked = "checked=\"checked\"";
+													} else {
+														$checked = "";
+													}
+
+													if (isset($organisation_categories[$organisation_id])) {
+														$departments[$organisation_id][] = array('text' => $d['department_title'], 'value' => $d['department_id'], 'checked' => $checked);
+													}
+												}
+											}
+
+											foreach ($departments as $organisation_id => $dlist) {
+												echo lp_multiple_select_popup("departments_".$organisation_id, $dlist, array("title" => "Select Departments:", "class" => "department_multi", "submit_text" => "Done", "cancel" => false, "submit" => true));
+											}
+										}
+										?>
+										<input class="multi-picklist" id="in_departments" name="in_departments" style="display: none;">
+										<div id="in_departments_list"></div>
+										<input type="button" onclick="$('departments_'+$F('organisation_id')+'_options').show();" value="Select Multiple" >
+
+										<script type="text/javascript">
+
+										function provStateFunction(country_id) {
+											var url='<?php echo webservice_url("province"); ?>';
+											<?php
+											    if ($PROCESSED["province"] || $PROCESSED["province_id"]) {
+													$source_arr = $PROCESSED;
+											        $province = $source_arr["province"];
+											    	$province_id = $source_arr["province_id"];
+											    	$prov_state = ($province) ? $province : $province_id;
+											    }
+											?>
+											
+											url = url + '?countries_id=' + country_id + '&prov_state=<?php echo $prov_state; ?>';
+											new Ajax.Updater($('prov_state_div'), url,
+												{
+													method:'get',
+													onComplete: function (init_run) {
+														
+														if ($('prov_state').type == 'select-one') {
+															$('prov_state_label').removeClassName('form-nrequired');
+															$('prov_state_label').addClassName('form-required');
+															if (!init_run) 
+																$("prov_state").selectedIndex = 0;
+															
+															
+														} else {
+															
+															$('prov_state_label').removeClassName('form-required');
+															$('prov_state_label').addClassName('form-nrequired');
+															if (!init_run) 
+																$("prov_state").clear();
+															
+															
+														}
+													}.curry(!provStateFunction.initialzed)
+												});
+											provStateFunction.initialzed = true;
+											
+										}
+										provStateFunction.initialzed = false;
+
+										
+										var multiselect = new Array();
+										function organisationChange() {
+											$$('.department_multi').invoke('hide');
+											$('in_departments').value = "";
+											if (multiselect[$F('organisation_id')]) {
+												multiselect[$F('organisation_id')].scanCheckBoxes();
+											} else {
+												$('in_departments_list').immediateDescendants().invoke('remove');
+											}
+										}
+
+										$$('.department_multi').each(function(element) {
+											var id = element.id;
+											numeric_id = id.substring(12,13);
+											generic = element.id.substring(0, element.id.length - 8);
+											this[numeric_id] = new Control.SelectMultiple('in_departments',id,{
+												labelSeparator: '; ',
+												checkboxSelector: 'table.select_multiple_table tr td input[type=checkbox]',
+												nameSelector: 'table.select_multiple_table tr td.select_multiple_name label',
+												overflowLength: 70,
+												filter: generic+'_select_filter',
+												resize: generic+'_scroll',
+												afterCheck: apresCheck,
+												updateDiv: updateDepartmentList
+											});
+
+											$(generic+'_close').observe('click',function(event){
+												this.container.hide();
+												return false;
+											}.bindAsEventListener(this[numeric_id]));
+										}, multiselect);
+
+										function apresCheck(element) {
+											var tr = $(element.parentNode.parentNode);
+											tr.removeClassName('selected');
+											if (element.checked) {
+												tr.addClassName('selected');
+											}
+										}
+
+										function updateDepartmentList(options) {
+											ul = options.inject(new Element('ul', {'class':'associated_list'}), function(list, option) {
+												list.appendChild(new Element('li').update(option));
+												return list;
+											});
+											$('in_departments_list').update(ul);
+										}
+										</script>
+									</td>
+								</tr>
+							</tbody>
+						</table>
+					</form>
+					<?php
 				break;
 			}
 		} else {

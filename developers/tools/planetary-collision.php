@@ -29,11 +29,6 @@
  * MERGE NOTES
  * Ensure courses.parent_id field is gone
  * Ensure courses.course_active (int default 1) is present
-
-
-
-
-
 */
 set_include_path(get_include_path().PATH_SEPARATOR.dirname(__FILE__)."/includes");
 
@@ -53,18 +48,6 @@ $PRIMARY_DB_CONF		= array("host" => $HOST, "database_prefix" => "shared_test_", 
 $SECONDARY_DB_CONF		= array("host" => $HOST, "database_prefix" => "rehab_test_"	, "user" => $DBUSER, "pass"=>$PASSWORD, "app_id" => 700);
 $DESTINATION_DB_CONF	= array("host" => $HOST, "database_prefix" => "destination_", "user" => $DBUSER, "pass"=>$PASSWORD);
 
-$NURSING_CONF = array(	"app_id" => 701, "auth_username" => "701", "auth_password" => "sassafraz", 
-						"authorize_proxy_ids" => array(1, 4468), // Matt and Angelo Varriano
-						"create_organisations" => array(
-							array("name" => "Nursing: 4 year Baccalaureate Program"),
-							array("name" => "Nursing: 2 year Baccalaureate Program"),
-							array("name" => "Nursing: Registered Nurses track"),
-							array("name" => "Nursing: MSc - Pattern 1"),
-							array("name" => "Nursing: MSc - Pattern 11"),
-							array("name" => "Nursing: Primary Health Care Nurse Practitioner"),
-							array("name" => "Nursing: Primary Health Care Nurse Practitioner"),	
-							)
-						);
 $DB_CONNECTIONS = array();
 
 $MERGE = array("truncate" 		=> true, 
@@ -74,8 +57,7 @@ $MERGE = array("truncate" 		=> true,
 				"clerkship" 	=> true, 
 				"communities" 	=> true, 
 				"courses" 		=> true, 
-				"support" 		=> true, 
-				"nursing" 		=> true
+				"support" 		=> true
 			);
 
 function get_db_connection($which, $database_name) {
@@ -462,23 +444,6 @@ if($MERGE["support"] == true) {
 	
 	// Support Tables
 	move_table_array("primary", "entrada", array("filetypes", "global_lu_countries", "global_lu_disciplines", "global_lu_objectives", "global_lu_provinces", "global_lu_schools"));
-}
-
-if($MERGE["nursing"] == true) {
-
-	$db = get_db_connection("destination", "auth");
-
-	// Create Nursing App
-	$db->AutoExecute("registered_apps", array("id" => $NURSING_CONF["app_id"], "script_id" => $NURSING_CONF["auth_username"], "script_password" => md5($NURSING_CONF["auth_password"]), "server_ip" => "%", "server_url" => "%", "employee_rep" => 1, "notes" => "NursingCentral"));
-	
-	// Make some proxy ids able to get at it
-	foreach($NURSING_CONF["authorize_proxy_ids"] as $proxy_id) {
-		$db->AutoExecute("user_access", array("user_id" => $proxy_id, "app_id" => $NURSING_CONF["app_id"], "account_active" => true, "access_starts" => 0, "access_expires" => 0, "last_login" => 0, "last_ip" => 0, "role" => "admin", "group" => "medtech"), "INSERT");		
-	}
-	
-	foreach($NURSING_CONF["create_organisations"] as $org_details) {
-		$db->AutoExecute("organisations", array("organisation_title" => $org_details["name"]));
-	}
 }
 
 $mtime = microtime();

@@ -1,4 +1,4 @@
-		<?php
+<?php
 /**
  * Entrada [ http://www.entrada-project.org ]
  *

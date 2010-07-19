@@ -51,7 +51,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 			 * Valid: director, name
 			 */
 			if (isset($_GET["sb"])) {
-				if (@in_array(trim($_GET["sb"]), array("name", "year", "type", "entered"))) {
+				if (@in_array(trim($_GET["sb"]), array("name", "year", "type", "scheme"))) {
 					$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]	= trim($_GET["sb"]);
 				} else {
 					$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] = "name";
@@ -114,7 +114,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				case "type" :
 					$sort_by	= "`assessments`.`type` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]);
 				break;
-				case "entered" :
+				case "scheme" :
+					$sort_by	= "`assessment_marking_schemes`.`name` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]);
+				break;
 				default :
 					$sort_by	= "`assessments`.`name` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]);
 				break;
@@ -187,8 +189,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 			}
 			
 			// Fetch all associated assessments
-			$query = "	SELECT `assessment_id`,`grad_year`,`name`,`type`  
-						FROM `assessments` 
+			$query = "	SELECT `assessments`.`assessment_id`,`assessments`.`grad_year`,`assessments`.`name`,`assessments`.`type`, `assessment_marking_schemes`.`name` as 'marking_scheme_name'
+						FROM `assessments`
+						LEFT JOIN `assessment_marking_schemes` ON `assessments`.`marking_scheme_id` = `assessment_marking_schemes`.`id`
 						WHERE `course_id` = ".$db->qstr($COURSE_ID)."
 						ORDER BY %s
 						LIMIT %s, %s";
@@ -219,7 +222,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						<td class="title<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "name") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("name", "Name", "assessments"); ?></td>
 						<td class="general<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "year") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("year", "Graduating Year", "assessments"); ?></td>
 						<td class="general<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "type") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("type", "Assessment Type", "assessments"); ?></td>
-						<td class="general<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "entered") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("entered", "Grades Entered", "assessments"); ?></td>
+						<td class="general<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "scheme") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("scheme", "Marking Scheme", "assessments"); ?></td>
 					</tr>
 				</thead>
 				<tfoot>
@@ -244,7 +247,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						echo "	<td class=\"title\"><a href=\"$url\">".$assessment["name"]."</a></td>";
 						echo "	<td class=\"general\"><a href=\"$url\">".$assessment["grad_year"]."</a></td>";
 						echo "	<td class=\"general\"><a href=\"$url\">".$assessment["type"]."</a></td>";
-						echo "	<td class=\"general\">"."&nbsp;"."</td>";
+						echo "	<td class=\"general\"><a href=\"$url\">".$assessment["marking_scheme_name"]."</a></td>";
 						echo "</tr>";
 					}
 					?>

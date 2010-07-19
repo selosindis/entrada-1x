@@ -334,7 +334,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 			}
 			
 			echo "<tr id=\"course-".$result["course_id"]."\" class=\"course".((!$url) ? " np" : "")."\">\n";
-			echo "	<td class=\"modified\">".(($administrator) ? "<input type=\"checkbox\" name=\"delete[]\" value=\"".$result["course_id"]."\" />" : "<img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"19\" height=\"19\" alt=\"\" title=\"\" />")."</td>\n";
+			echo "	<td class=\"modified\">&nbsp;</td>\n";
 			echo "	<td class=\"general".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Gradebook for: ".html_encode($result["course_name"])."\">" : "").html_encode($result["curriculum_type_name"]).(($url) ? "</a>" : "")."</td>\n";
 			echo "	<td class=\"title".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Gradebook for: ".html_encode($result["course_name"])."\">" : "").html_encode($result["course_name"].(($result["course_code"]) ? ": ".$result["course_code"] : "")).(($url) ? "</a>" : "")."</td>\n";
 			echo "	<td class=\"teacher".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Course Director: ".html_encode($result["fullname"])."\">" : "").html_encode($result["fullname"]).(($url) ? "</a>" : "")."</td>\n";

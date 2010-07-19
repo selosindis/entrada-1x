@@ -109,46 +109,54 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					$query .= 	" WHERE c.`group` = 'student' AND c.`role` = ".$db->qstr($GRAD_YEAR);
 					$query .=	" GROUP BY b.`id`";
 					
-					$students = $db->GetAll($query); ?>
-					<table class="gradebook">
-						<thead>
-							<tr>
-								<th style="width: 200px;">Student</th>
-								<th>Grad Year</th>
-								<?php foreach($assessments as $assessment){
-									echo "<th>{$assessment["name"]}</th>\n";
-								} ?>
-							</tr>
-						</thead>
-						<tbody>
-						<?php foreach($students as $key => $student): ?>
-							<tr id="grades<?php echo $student["proxy_id"]; ?>">
-								<td><?php echo $student["fullname"]; ?></td>
-								<td><?php echo $student["role"]; ?></td>
-								<?php foreach($assessments as $key2 => $assessment): 
-								
-								if(isset($student["grade_".$key2."_id"])) {
-									$grade_id = $student["grade_".$key2."_id"];
-								} else {
-									$grade_id = "";
-								}
-								if(isset($student["grade_".$key2."_value"])) {
-									$grade_value = format_retrieved_grade($student["grade_".$key2."_value"], $assessment);
-								} else {
-									$grade_value = "-";
-								} ?>
-									<td>
-										<span class="grade" 
-											data-grade-id="<?php echo $grade_id; ?>"
-											data-assessment-id="<?php echo $assessment["assessment_id"]; ?>"
-											data-proxy-id="<?php echo $student["proxy_id"] ?>"
-										><?php echo $grade_value; ?></span><span class="gradesuffix" <?php echo ($grade_value == "-") ? "style=\"display: none;\"" : "" ?>><?php echo assessment_suffix($assessment); ?></span>
-									</td>
-								<?php endforeach; ?>
-							</tr>
-						<?php endforeach; ?>
-						</tbody>
-					</table>
+					$students = $db->GetAll($query);
+					if(count($students) >= 1): ?>
+						<table class="gradebook">
+							<thead>
+								<tr>
+									<th style="width: 200px;">Student</th>
+									<th>Grad Year</th>
+									<?php foreach($assessments as $assessment){
+										echo "<th>{$assessment["name"]}</th>\n";
+									} ?>
+								</tr>
+							</thead>
+							<tbody>
+							<?php foreach($students as $key => $student): ?>
+								<tr id="grades<?php echo $student["proxy_id"]; ?>">
+									<td><?php echo $student["fullname"]; ?></td>
+									<td><?php echo $student["role"]; ?></td>
+									<?php foreach($assessments as $key2 => $assessment): 
+									if(isset($student["grade_".$key2."_id"])) {
+										$grade_id = $student["grade_".$key2."_id"];
+									} else {
+										$grade_id = "";
+									}
+									if(isset($student["grade_".$key2."_value"])) {
+										$grade_value = format_retrieved_grade($student["grade_".$key2."_value"], $assessment);
+									} else {
+										$grade_value = "-";
+									} ?>
+										<td>
+											<span class="grade" 
+												data-grade-id="<?php echo $grade_id; ?>"
+												data-assessment-id="<?php echo $assessment["assessment_id"]; ?>"
+												data-proxy-id="<?php echo $student["proxy_id"] ?>"
+											><?php echo $grade_value; ?></span>
+											<span class="gradesuffix" <?php echo (($grade_value === "-") ? "style=\"display: none;\"" : "") ?>>
+												<?php echo assessment_suffix($assessment); ?>
+											</span>
+										</td>
+									<?php endforeach; ?>
+								</tr>
+							<?php endforeach; ?>
+							</tbody>
+						</table>
+					<?php
+					else:
+					?>
+					<div class="display-notice">There are no students in the system for this Graduating Year <strong><?php echo $GRAD_YEAR; ?></strong>.</div>
+					<?php endif; ?>
 				<?php
 				} else {
 					$NOTICE++;

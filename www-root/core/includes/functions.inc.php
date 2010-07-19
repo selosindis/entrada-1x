@@ -421,6 +421,13 @@ function navigator_tabs() {
 	$PUBLIC_MODULES[] = array("name" => "courses", "text" => "Courses");
 	$PUBLIC_MODULES[] = array("name" => "events", "text" => "Learning Events");
 	$PUBLIC_MODULES[] = array("name" => "clerkship", "text" => "Clerkship", "resource" => "clerkship", "permission" => "read");
+
+//uncomment when the module is completed after policy is completed
+	
+//	if ($_SESSION["details"]["group"] == "faculty" || $_SESSION["details"]["group"] == "student") {
+//		$PUBLIC_MODULES[] = array("name" => "observerships", "text" => "Observerships", "resource" => "observerships", "permission" => "read");
+//	}
+
 	$PUBLIC_MODULES[] = array("name" => "search", "text" => "Curriculum Search");
 	$PUBLIC_MODULES[] = array("name" => "people", "text" => "People Search");
 
@@ -10011,14 +10018,15 @@ function require_mspr_models() {
 	require_once("Models/ClerkshipRotations.class.php");
 	
 	require_once("Models/StudentRunElectives.class.php");
+	require_once("Models/Observerships.class.php");
 	require_once("Models/CriticalEnquiry.class.php");
 	require_once("Models/CommunityHealthAndEpidemiology.class.php");
 	require_once("Models/ResearchCitations.class.php");
 }
 
-function getMonthName($month_num) {
+function getMonthName($month_number) {
 	static $months;
-	
+
 	//initialization of static if not done
 	if (!$months) {
 		$months=array();
@@ -10028,10 +10036,11 @@ function getMonthName($month_num) {
 			$months[$month_num] = $month_name;
 		}
 	}
-	//the -1 and +1 are to ensure the month num is from 1 to 12, not 0 to 11.
-	$month_num = (($month_num - 1) % 12) + 1;
+	//the -1 and +1 are to ensure the month num is from 1 to 12, not 0 to 11. The mod is done to  ensure the value is ithin bounds
+	$month_number = (($month_number - 1) % 12) + 1;
 	
-	return $months[$month_num];
+	$month_name = $months[$month_number];
+	return $month_name;
 }
 
 function formatDateRange($start_date, $end_date) {
@@ -10050,45 +10059,77 @@ function formatDateRange($start_date, $end_date) {
 	//year - year, or month year - month year
 	//month month year or just year
 	if ($ye && $ye != $ys) {
-		if ($ms && $me){
-			//full case
-			$start = getMonthName($ms) . " " . $ys;
-			$end = getMonthName($me) .   " " . $ye;
-			$period = $start . " - " . $end;
-		} elseif ($ms) {
-			//no end month, but year end... assume same end month
-			$month_name = getMonthName($ms);
-			$start = $month_name . " " . $ys;
-			$end = $month_name .   " " . $ye;
-			$period = $start . " - " . $end;
-		} elseif ($me) {
-			//end month exists but no month start? assume same month
-			$month_name = getMonthName($me);
-			$start = $month_name . " " . $ys;
-			$end = $month_name .   " " . $ye;
+		if ($ms || $me){
+			//if one of them is mising assume they are the same
+			if (!$me) {
+				$me = $ms;
+			} elseif(!$ms) {
+				$ms = $me;
+			}
+			if ($ds || $de) {
+				//if one of them is mising assume they are the same
+				if (!$de) {
+					$de = $ds;
+				} elseif(!$ds) {
+					$ds = $de;
+				}
+				//full case: month day, year - month day, year
+				$start = getMonthName($ms) . " " . $ds . ", " . $ys;
+				$end = getMonthName($me) .   " " . $de . ", " . $ye;
+			} else {
+				//no day info: month year - month year
+				$start = getMonthName($ms) . " " . $ys;
+				$end = getMonthName($me) .   " " . $ye;
+			}
 			$period = $start . " - " . $end;
 		} else {
 			//year range without months at all...
 			$period = $ys . " - " . $ye;
+			//no check for days because days without months would be meaningless.
 		}
 		
 	} else {
 		//there is either no end year, or the end year is the same as the start year (equivalent)
-		if ($ms && $me){
-			//full case of months
-			$start = getMonthName($ms);
-			$end = getMonthName($me) .   " " . $ys;
-			$period = $start . " - " . $end;
-		} elseif ($ms) {
-			//no end month, assume singe month/year
-			$month_name = getMonthName($ms);
-			$start = $month_name . " " . $ys;
-			$period = $start ;
-		} elseif ($me) {
-			//end month exists but no month start? assume same month
-			$month_name = getMonthName($me);
-			$start = $month_name . " " . $ys;
-			$period = $start;
+		if ($ms || $me){
+			if (!$me) {
+				$me = $ms;
+			} elseif(!$ms) {
+				$ms = $me;
+			}
+			
+			if ($me == $ms) {
+				$month_name = getMonthName($ms);
+				if ($ds || $de) {
+					if ($ds && $de && $ds != $de) {
+						$period = $month_name . " " . $ds . " - " . $de . ", " . $ys;
+					} else {
+						$period = $month_name . " " . ($ds ? $ds : $de) . ", " . $ys;
+					}
+				} else {
+					$period = $month_name . " " . $ys;
+				}
+			} else {	
+				//months are different.		
+				if ($de || $ds) {
+					//we already have a range 
+					
+					//assume same start and end day if only one exists
+					if (!$de) {
+						$de = $ds;
+					} elseif(!$ds) {
+						$ds = $de;
+					}
+					$start = getMonthName($ms) . " " . $ds;
+					$end = getMonthName($me) . " " . $de .  ", " . $ys;
+				} else {
+					//no day info...
+					$start = getMonthName($ms);
+					$end = getMonthName($me) .   " " . $ys;
+				}
+				$period = $start . " - " . $end;
+			}
+			
+			
 		} else {
 			//single year entry
 			$period = $ys;

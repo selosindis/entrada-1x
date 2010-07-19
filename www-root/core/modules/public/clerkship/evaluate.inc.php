@@ -21,7 +21,6 @@
  * @author Developer: Matt Simpson <matt.simpson@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
- * @version $Id: evaluate.inc.php 1171 2010-05-01 14:39:27Z ad29 $
 */
 if((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 	exit;

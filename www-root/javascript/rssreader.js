@@ -203,7 +203,6 @@ document.observe("dom:loaded", function() {
 	}
 	
 	$('rss-add-form').observe('submit', function(e) {
-		add_rss_modal.close();	
 		Event.stop(e);
 		var url = $F('rss-add-url');
 		var title = $F('rss-add-title');
@@ -241,6 +240,7 @@ document.observe("dom:loaded", function() {
 				},
 				onError: EntradaRSS.feedErrorHTML
 			});
+			add_rss_modal.close();	
 		} else {
 			$('rss-add-url').addClassName('error');
 			alert("Invalid RSS URL, please try again.");

@@ -22,8 +22,7 @@
  * @author Developer: Matt Simpson <matt.simpson@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
- * @version $Id: index.php 1168 2010-05-01 13:50:36Z simpson $
- */
+*/
 
 $frontend_options = array(
    "lifetime" => CACHE_TIMEOUT,

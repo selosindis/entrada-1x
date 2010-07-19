@@ -9,7 +9,6 @@
  * @author Developer: Doug Hall <hall@ucalgary.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
- * @version $Id: header.tpl.php  2009-05-11 10:21:49Z hall $
 */
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "DTD/xhtml1-transitional.dtd">

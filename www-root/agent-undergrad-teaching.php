@@ -22,7 +22,6 @@
  * @author Developer: Andrew Dos-Santos <ad29@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
- * @version $Id: agent-feedback.php 1103 2010-04-05 15:20:37Z simpson $
 */
 
 @set_include_path(implode(PATH_SEPARATOR, array(

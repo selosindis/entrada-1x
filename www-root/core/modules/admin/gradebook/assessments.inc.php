@@ -23,8 +23,7 @@
  * @author Developer: Matt Simpson <matt.simpson@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
- * @version $Id: events.inc.php 1169 2010-05-01 14:18:49Z simpson $
- */
+*/
 
 if(!defined("PARENT_INCLUDED")) {
 	exit;
@@ -41,7 +40,7 @@ if(!defined("PARENT_INCLUDED")) {
 } else {
 	define("IN_ASSESSMENTS",	true);
 
-	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/gradebook/assessments?".replace_query(array("section" => "index", "id" => $COURSE_ID, "step" => false)), "title" => "Assessments");
+	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/gradebook?".replace_query(array("section" => "view", "id" => $COURSE_ID, "step" => false)), "title" => "Assessments");
 
 	if (($router) && ($router->initRoute())) {
 		$PREFERENCES = preferences_load($MODULE);

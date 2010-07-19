@@ -9,7 +9,6 @@
  * @author Developer: Matt Simpson <matt.simpson@queensu.ca>
  * @copyright Copyright 2008 Queen's University. All Rights Reserved.
  *
- * @version $Id: index.php 600 2009-08-12 15:19:17Z simpson $
 */
 @set_include_path(implode(PATH_SEPARATOR, array(
     dirname(__FILE__) . "/../core",

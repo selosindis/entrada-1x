@@ -10,8 +10,7 @@
  * @author Developer: James Ellis <james.ellis@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
- * @version $Id: functions.inc.php 1132 2010-04-21 15:35:19Z finglanj $
- */
+*/
 
 /**
  * Handy function that takes the QUERY_STRING and adds / modifies / removes elements from it

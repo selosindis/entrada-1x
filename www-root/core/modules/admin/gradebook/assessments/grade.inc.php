@@ -21,6 +21,7 @@
  * @author Developer: James Ellis <james.ellis@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
+ * @version $Id: edit.inc.php 1169 2010-05-01 14:18:49Z simpson $
  */
 
 if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
@@ -45,70 +46,50 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 		$course_details	= $db->GetRow($query);
 		
 		if ($course_details && $ENTRADA_ACL->amIAllowed(new GradebookResource($course_details["course_id"], $course_details["organisation_id"]), "read")) {
-			$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "edit", "id" => $COURSE_ID, "step" => false)), "title" => "Editing Gradebook");
+			$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/gradebook/assessments?".replace_query(array("section" => "grade", "id" => $COURSE_ID, "step" => false)), "title" => "Grading Assessment");
 			
-
-			
-			if (isset($_GET["year"]) && ($tmp_input = clean_input($_GET["year"], array("nows", "int")))) {
-				$GRAD_YEAR = $tmp_input;
-			} else {
-				$GRAD_YEAR = (int)(date("Y"));
-			}			
-				
-			courses_subnavigation($course_details);
-
-			?>
-			
-			<h1><?php echo $course_details["course_name"]; ?> Gradebook</h1>
-			Graduating Class: <select id="filter_grad_year" name="filter_grad_year" style="width: 203px, float: right;" onchange="window.location = '<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "edit", "id" => $COURSE_ID, "step" => false, "year" => false)) ?>&year=' + $F(this);">
-			<?php
-			for($year = (date("Y", time()) + 4); $year >= (date("Y", time()) - 1); $year--) {
-				echo "<option value=\"".(int) $year."\"".(($GRAD_YEAR == $year) ? " selected=\"selected\"" : "").">Class of ".html_encode($year)."</option>\n";
-			}
-			?>
-			</select>
-			<div style="float: right; text-align: right;">
-				<ul class="page-action">
-					<li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE . "/assessments/?" . replace_query(array("section" => "index", "step" => false)); ?>" class="strong-green">Edit Assessments</a></li>
-				</ul>
-			</div>
-			<div style="clear: both"><br/></div>
-			
-			<?php
 			$query = "	SELECT `assessments`.*,`assessment_marking_schemes`.`handler`
 						FROM `assessments`
 						LEFT JOIN `assessment_marking_schemes` ON `assessment_marking_schemes`.`id` = `assessments`.`marking_scheme_id`
-						WHERE `assessments`.`course_id` = ".$db->qstr($COURSE_ID)."
-						AND `assessments`.`grad_year` = ".$db->qstr($GRAD_YEAR);
-			$assessments = $db->GetAll($query);
-			if($assessments) {
-				$query	= 	"SELECT b.`id` AS `proxy_id`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, b.`number`";
-				foreach($assessments as $key => $assessment) {
-					$query 	.= ", g$key.`grade_id` AS `grade_".$key."_id`, g$key.`value` AS `grade_".$key."_value`";
-				}
-				$query 	.=" FROM `".AUTH_DATABASE."`.`user_data` AS b
-							LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS c
-							ON c.`user_id` = b.`id` AND c.`app_id`=".$db->qstr(AUTH_APP_ID)."
-							AND c.`account_active`='true'
-							AND (c.`access_starts`='0' OR c.`access_starts`<=".$db->qstr(time()).")
-							AND (c.`access_expires`='0' OR c.`access_expires`>=".$db->qstr(time()).") ";
-				foreach($assessments as $key => $assessment) {
-					$query .= "LEFT JOIN `".DATABASE_NAME."`.`assessment_grades` AS g$key ON b.`id` = g$key.`proxy_id` AND g$key.`assessment_id` = ".$db->qstr($assessment["assessment_id"])."\n";
-				}
+						WHERE `assessments`.`assessment_id` = ".$db->qstr($ASSESSMENT_ID);
+						
+			$assessment = $db->GetRow($query);
+			
+			if($assessment) {
+				$GRAD_YEAR = $assessment["grad_year"];
 				
+				courses_subnavigation($course_details);
+
+				?>
+				<h1><?php echo $course_details["course_name"]; ?> Gradebook: <?php echo $assessment["name"]; ?> (Class of <?php echo $assessment["grad_year"]; ?>)</h1>
+			
+				<div style="float: right; text-align: right;">
+					<ul class="page-action">
+						<li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE . "/assessments/?" . replace_query(array("section" => "edit", "step" => false)); ?>" class="strong-green">Edit Assessment</a></li>
+					</ul>
+				</div>
+				<div style="clear: both"><br/></div>
+			
+				<?php
+				$query	= 	"SELECT b.`id` AS `proxy_id`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, b.`number`";
+				$query 	.=  ", g.`grade_id` AS `grade_id`, g.`value` AS `grade_value` ";
+				$query 	.=  " FROM `".AUTH_DATABASE."`.`user_data` AS b
+							  LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS c
+							  ON c.`user_id` = b.`id` AND c.`app_id`=".$db->qstr(AUTH_APP_ID)."
+							  AND c.`account_active`='true'
+							  AND (c.`access_starts`='0' OR c.`access_starts`<=".$db->qstr(time()).")
+							  AND (c.`access_expires`='0' OR c.`access_expires`>=".$db->qstr(time()).") ";
+				$query .=   " LEFT JOIN `".DATABASE_NAME."`.`assessment_grades` AS g ON b.`id` = g.`proxy_id` AND g.`assessment_id` = ".$db->qstr($assessment["assessment_id"])."\n";
 				$query .= 	" WHERE c.`group` = 'student' AND c.`role` = ".$db->qstr($GRAD_YEAR);
-				$query .=	" GROUP BY b.`id`";
 				
 				$students = $db->GetAll($query);
 				if(count($students) >= 1): ?>
-					<table class="gradebook">
+					<table class="gradebook single">
 						<thead>
 							<tr>
 								<th style="width: 200px;">Student</th>
-								<th>Grad Year</th>
-								<?php foreach($assessments as $assessment){
-									echo "<th>{$assessment["name"]}</th>\n";
-								} ?>
+								<th>Student Number</th>
+								<?php echo "<th>{$assessment["name"]}</th>\n"; ?>
 							</tr>
 						</thead>
 						<tbody>
@@ -116,14 +97,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							<tr id="grades<?php echo $student["proxy_id"]; ?>">
 								<td><?php echo $student["fullname"]; ?></td>
 								<td><?php echo $student["number"]; ?></td>
-								<?php foreach($assessments as $key2 => $assessment): 
-								if(isset($student["grade_".$key2."_id"])) {
-									$grade_id = $student["grade_".$key2."_id"];
+								<?php
+								if(isset($student["grade_id"])) {
+									$grade_id = $student["grade_id"];
 								} else {
 									$grade_id = "";
 								}
-								if(isset($student["grade_".$key2."_value"])) {
-									$grade_value = format_retrieved_grade($student["grade_".$key2."_value"], $assessment);
+								if(isset($student["grade_value"])) {
+									$grade_value = format_retrieved_grade($student["grade_value"], $assessment);
 								} else {
 									$grade_value = "-";
 								} ?>
@@ -137,7 +118,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 											<?php echo assessment_suffix($assessment); ?>
 										</span>
 									</td>
-								<?php endforeach; ?>
 							</tr>
 						<?php endforeach; ?>
 						</tbody>
@@ -145,15 +125,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				<?php
 				else:
 				?>
-				<div class="display-notice">There are no students in the system for this Graduating Year <strong><?php echo $GRAD_YEAR; ?></strong>.</div>
-				<?php endif; ?>
-			<?php
+				<div class="display-notice">There are no students in the system for this assessment's Graduating Year <strong><?php echo $GRAD_YEAR; ?></strong>.</div>
+				<?php endif;
 			} else {
-				$NOTICE++;
-				$NOTICESTR[] = "No assessments could be found for this gradebook for the graduating class of $GRAD_YEAR.";
+				$ERROR++;
+				$ERRORSTR[] = "In order to edit an assessment's grades you must provide a valid assessment identifier.";
 
-				echo display_notice();
-			
+				echo display_error();
+
+				application_log("notice", "Failed to provide a valid assessment identifier when attempting to edit an assessment's grades.");
 			}
 
 		} else {
@@ -162,15 +142,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 
 			echo display_error();
 
-			application_log("notice", "Failed to provide a valid course identifer when attempting to view a gradebook");
+			application_log("notice", "Failed to provide a valid course identifier when attempting to edit an assessment's grades.");
 		}
 	} else {
 		$ERROR++;
-		$ERRORSTR[] = "In order to edit a course you must provide the courses identifier.";
+		$ERRORSTR[] = "In order to edit a course you must provide a valid course identifier.";
 
 		echo display_error();
 
-		application_log("notice", "Failed to provide course identifer when attempting to view a gradebook");
+		application_log("notice", "Failed to provide course identifier when attempting to edit an assessment's grades.");
 	}
 }
 ?>

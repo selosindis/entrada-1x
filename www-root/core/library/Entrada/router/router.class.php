@@ -10,8 +10,7 @@
  * @author Developer: Matt Simpson <matt.simpson@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  * 
- * @version $Id: router.class.php 1137 2010-04-27 17:22:03Z ad29 $
- */
+*/
 class Entrada_Router {
 	private $request = "";
 	private $modules = array();

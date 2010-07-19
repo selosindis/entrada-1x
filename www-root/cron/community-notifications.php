@@ -10,7 +10,6 @@
  * @author Developer: James Ellis <james.ellis@queensu.ca>
  * @copyright Copyright 2008 University of Calgary. All Rights Reserved.
  *
- * @version $Id: community-notifications.php 381 2009-04-18 13:08:33Z simpson $
 */
 @set_time_limit(0);
 @set_include_path(implode(PATH_SEPARATOR, array(

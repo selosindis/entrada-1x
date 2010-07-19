@@ -23,7 +23,6 @@
  * @author Developer: Matt Simpson <matt.simpson@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  * 
- * @version $Id: content.inc.php 1190 2010-05-11 18:23:51Z jellis $
 */
 
 if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {

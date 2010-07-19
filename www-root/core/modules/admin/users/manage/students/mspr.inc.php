@@ -9,8 +9,7 @@
  * @author Developer: Jonathan Fingland <jonathan.fingland@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
- * @version $Id: profile.inc.php 1114 2010-04-09 18:15:05Z finglanj $
- */
+*/
 if (!defined("IN_MANAGE_USER_STUDENTS")) {
 	exit;
 } elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {

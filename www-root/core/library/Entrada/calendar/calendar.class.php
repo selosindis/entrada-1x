@@ -11,8 +11,7 @@
  * @author Developer: Matt Simpson <matt.simpson@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
- * @version $Id: calendar.class.php 1140 2010-04-27 18:59:15Z simpson $
- */
+*/
 class Calendar {
 	/**
 	* Base URL used for navigation.

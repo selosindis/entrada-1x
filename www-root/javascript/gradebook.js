@@ -1,12 +1,14 @@
 var ENTRADA_URL;
 
 jQuery(document).ready(function($) {
-	$('table.gradebook').flexigrid({
+	var flexiopts = {
 		minwidth: 50,
 		height: 'auto',
-		width: 774,
 		disableSelect: true
-	});
+	};
+	$('table.gradebook.single').flexigrid($.extend(flexiopts, {width: 450}));
+	$('table.gradebook').flexigrid(flexiopts);
+
 	$('table.gradebook .grade').editable(ENTRADA_URL+'/api/gradebook.api.php', {
 		placeholder: '-',
 		indicator: '<img width="16" height="16" src="'+ENTRADA_URL+'/images/loading.gif">',

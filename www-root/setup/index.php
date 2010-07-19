@@ -9,8 +9,7 @@
  * @author Developer: Ilya Sorokin <isorokin@ucalgary.ca>
  * @copyright Copyright 2010 University of Calgary. All Rights Reserved.
  *
- * @version $Id: init.inc.php 1086 2010-04-01 22:43:13Z simpson $
- */
+*/
 
 ini_set('display_errors', '1');
 

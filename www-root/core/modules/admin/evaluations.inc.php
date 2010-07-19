@@ -22,7 +22,6 @@
  * @author Developer: Ilya Sorokin <isorokin@ucalgary.ca>
  * @copyright Copyright 2010 University of Calgary. All Rights Reserved.
  *
- * @version $Id: $
 */
 
 if (!defined("PARENT_INCLUDED")) {

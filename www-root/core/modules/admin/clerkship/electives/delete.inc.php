@@ -20,8 +20,7 @@
  * @author Developer: James Ellis <james.ellis@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
- * @version $Id: $
- */
+*/
 
 require_once("Entrada/phpmailer/class.phpmailer.php");
 

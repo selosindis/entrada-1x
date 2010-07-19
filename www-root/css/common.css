@@ -2649,7 +2649,7 @@ table.manage_awards tbody tr td {
 	width: 100%;
 }
 
-table.mspr_table tbody tr td {
+table.mspr_table tbody tr td, table.obs_table tbody tr td {
 	white-space:normal;
 	vertical-align:top;
 	padding-top: 5px;

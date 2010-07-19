@@ -55,46 +55,46 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				$GRAD_YEAR = (int)(date("Y"));
 			}			
 				
-			courses_subnavigation($course_details);
+				courses_subnavigation($COURSE_ID);
 
-			?>
-			
-			<h1><?php echo $course_details["course_name"]; ?> Gradebook</h1>
-			Graduating Class: <select id="filter_grad_year" name="filter_grad_year" style="width: 203px, float: right;" onchange="window.location = '<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "edit", "id" => $COURSE_ID, "step" => false, "year" => false)) ?>&year=' + $F(this);">
-			<?php
-			for($year = (date("Y", time()) + 4); $year >= (date("Y", time()) - 1); $year--) {
-				echo "<option value=\"".(int) $year."\"".(($GRAD_YEAR == $year) ? " selected=\"selected\"" : "").">Class of ".html_encode($year)."</option>\n";
-			}
-			?>
-			</select>
-			<div style="float: right; text-align: right;">
-				<ul class="page-action">
-					<li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE . "/assessments/?" . replace_query(array("section" => "index", "step" => false)); ?>" class="strong-green">Edit Assessments</a></li>
-				</ul>
-			</div>
-			<div style="clear: both"><br/></div>
-			
-			<?php
-			$query = "	SELECT `assessments`.*,`assessment_marking_schemes`.`handler`
-						FROM `assessments`
-						LEFT JOIN `assessment_marking_schemes` ON `assessment_marking_schemes`.`id` = `assessments`.`marking_scheme_id`
-						WHERE `assessments`.`course_id` = ".$db->qstr($COURSE_ID)."
-						AND `assessments`.`grad_year` = ".$db->qstr($GRAD_YEAR);
-			$assessments = $db->GetAll($query);
-			if($assessments) {
-				$query	= 	"SELECT b.`id` AS `proxy_id`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, b.`number`";
-				foreach($assessments as $key => $assessment) {
-					$query 	.= ", g$key.`grade_id` AS `grade_".$key."_id`, g$key.`value` AS `grade_".$key."_value`";
+				?>
+				
+				<h1><?php echo $course_details["course_name"]; ?> Gradebook</h1>
+				Graduating Class: <select id="filter_grad_year" name="filter_grad_year" style="width: 203px, float: right;" onchange="window.location = '<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "edit", "id" => $COURSE_ID, "step" => false, "year" => false)) ?>&year=' + $F(this);">
+				<?php
+				for($year = (date("Y", time()) + 4); $year >= (date("Y", time()) - 1); $year--) {
+					echo "<option value=\"".(int) $year."\"".(($GRAD_YEAR == $year) ? " selected=\"selected\"" : "").">Class of ".html_encode($year)."</option>\n";
 				}
-				$query 	.=" FROM `".AUTH_DATABASE."`.`user_data` AS b
-							LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS c
-							ON c.`user_id` = b.`id` AND c.`app_id`=".$db->qstr(AUTH_APP_ID)."
-							AND c.`account_active`='true'
-							AND (c.`access_starts`='0' OR c.`access_starts`<=".$db->qstr(time()).")
-							AND (c.`access_expires`='0' OR c.`access_expires`>=".$db->qstr(time()).") ";
-				foreach($assessments as $key => $assessment) {
-					$query .= "LEFT JOIN `".DATABASE_NAME."`.`assessment_grades` AS g$key ON b.`id` = g$key.`proxy_id` AND g$key.`assessment_id` = ".$db->qstr($assessment["assessment_id"])."\n";
-				}
+				?>
+				</select>
+				<div style="float: right; text-align: right;">
+					<ul class="page-action">
+						<li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE . "/assessments/?" . replace_query(array("section" => "index", "step" => false)); ?>" class="strong-green">Edit Assessments</a></li>
+					</ul>
+				</div>
+				<div style="clear: both"><br/></div>
+				
+				<?php
+				$query = "	SELECT `assessments`.*,`assessment_marking_schemes`.`handler`
+							FROM `assessments`
+							LEFT JOIN `assessment_marking_schemes` ON `assessment_marking_schemes`.`id` = `assessments`.`marking_scheme_id`
+							WHERE `assessments`.`course_id` = ".$db->qstr($COURSE_ID)."
+							AND `assessments`.`grad_year` = ".$db->qstr($GRAD_YEAR);
+				$assessments = $db->GetAll($query);
+				if($assessments) {
+					$query	= 	"SELECT b.`id` AS `proxy_id`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, c.`role`";
+					foreach($assessments as $key => $assessment) {
+						$query 	.= ", g$key.`grade_id` AS `grade_".$key."_id`, g$key.`value` AS `grade_".$key."_value`";
+					}
+					$query 	.=" FROM `".AUTH_DATABASE."`.`user_data` AS b
+								LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS c
+								ON c.`user_id` = b.`id` AND c.`app_id`=".$db->qstr(AUTH_APP_ID)."
+								AND c.`account_active`='true'
+								AND (c.`access_starts`='0' OR c.`access_starts`<=".$db->qstr(time()).")
+								AND (c.`access_expires`='0' OR c.`access_expires`>=".$db->qstr(time()).") ";
+					foreach($assessments as $key => $assessment) {
+						$query .= "LEFT JOIN `".DATABASE_NAME."`.`assessment_grades` AS g$key ON b.`id` = g$key.`proxy_id` AND g$key.`assessment_id` = ".$db->qstr($assessment["assessment_id"])."\n";
+					}
 				
 				$query .= 	" WHERE c.`group` = 'student' AND c.`role` = ".$db->qstr($GRAD_YEAR);
 				$query .=	" GROUP BY b.`id`";

@@ -53,14 +53,94 @@ if (!defined("IN_OBSERVERSHIPS_STUDENTS")) {
 
 	
 ?>
-<h1>Observerships</h1>
+<h1>Observerships Overview</h1>
 
-link to review past Observerships
+<h2>Completed Observerships Requiring Feedback</h2>
+	<table class="obs_table tableList" cellspacing="0">
+		<colgroup>
+			<col width="25%"></col>
+			<col width="30%"></col>
+			<col width="25%"></col>
+			<col width="20%"></col>
+		</colgroup>
+		<thead>
+			<tr>
+				<td class="general">
+					Preceptor/Specialty
+				</td>
+				<td class="general">
+					Location
+				</td>
+				<td class="general">
+					Date
+				</td>
+				<td class="general">
+					Actions
+				</td>
+			</tr>
+		</thead>
+		<tbody>
+			<tr>
+				<td>
+				Dr. A. Burns<br/>Family Medicine		
+				</td>
+				<td>
+				Kingston General Hospital 		
+				</td>
+				<td>
+				2010-01-07 10:30 - 2010-01-07 14:00 		
+				</td>
+				<td>
+				Cancel<br />
+				Enter Feedback		
+				</td>
+			</tr>
+		</tbody>
+	</table>
+	
+	<br/>
+	
+	<h2>Pending Observerships</h2>
+	<table class="obs_table tableList" cellspacing="0">
+		<colgroup>
+			<col width="25%"></col>
+			<col width="30%"></col>
+			<col width="25%"></col>
+			<col width="20%"></col>
+		</colgroup>
+		<thead>
+			<tr>
+				<td class="general">
+					Preceptor/Specialty
+				</td>
+				<td class="general">
+					Location
+				</td>
+				<td class="general">
+					Date
+				</td>
+				<td class="general">
+					Actions
+				</td>
+			</tr>
+		</thead>
+		<tbody>
+			<tr>
+				<td>
+				Dr. M. Gibson<br/>Geriatrics		
+				</td>
+				<td>
+				St. Mary's 		
+				</td>
+				<td>
+				2010-09-07 10:30 - 2010-09-07 14:00 		
+				</td>
+				<td>
+				Cancel
+				</td>
+			</tr>
+		</tbody>
+	</table>
 
-table showing completed observerships that require feedback
-
-link to add new obs request
-
-table showing upcoming observerships
 <?php
 }

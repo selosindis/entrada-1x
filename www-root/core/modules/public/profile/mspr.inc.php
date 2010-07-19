@@ -68,6 +68,8 @@ $clinical_evaluation_comments = ClinicalPerformanceEvaluations::get($user);
 
 $critical_enquiry = CriticalEnquiry::get($user);
 $student_run_electives = StudentRunElectives::get($user);
+$observerships = Observerships::get($user);
+
 $internal_awards = InternalAwardReceipts::get($user);
 $external_awards = ExternalAwardReceipts::get($user);
 $studentships = Studentships::get($user);
@@ -110,6 +112,7 @@ $research_citations = ResearchCitations::get($user);
 	
 	<div class="subsection" >
 	<h3>Observerships</h3>
+	<div id="observershipss"><?php echo display_observerships_public($observerships); ?></div>
 	</div>
 	<div class="subsection" >
 	<h3>Student-Run Electives</h3>

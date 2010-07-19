@@ -48,6 +48,13 @@ function process_mspr_admin($user) {
 				echo display_student_run_electives_admin($student_run_electives);
 			break;
 			
+			case 'observerships':
+				process_observerships_actions($user);
+				$observerships = Observerships::get($user);
+				display_status_messages();
+				echo display_observerships_admin($observerships);
+			break;
+			
 			case 'critical_enquiry':
 				process_critical_enquiry_actions($user);
 				$critical_enquiry = CriticalEnquiry::get($user);
@@ -148,6 +155,37 @@ function process_student_run_electives_actions(User $user) {
 				$sre = StudentRunElective::get($id);
 				if ($sre) {
 					$sre->delete();
+				}
+			}
+		}
+	}
+}
+
+function process_observerships_actions(User $user) {
+	global $SUCCESS,$SUCCESSSTR,$ERROR,$ERRORSTR,$NOTICE,$NOTICESTR;
+	
+	if (isset($_POST['action'])) {
+		if ($_POST['action'] == "add_observership") {
+			$user_id = (isset($_POST['student_id']) ? $_POST['student_id'] : 0);
+			
+			$title = $_POST['observership_title'];
+			$site = $_POST['observership_site'];
+			$location = $_POST['observership_location'];
+			$start = $_POST['observership_start'];
+				
+			if ($user_id && $title && $site && $location && $start) {
+				$end = $_POST['observership_end'];
+								
+				Observership::create($user, $title, $site, $location, $start, $end);
+			}
+		
+		} elseif ($_POST['action'] == "remove_observership") {
+			$id = (isset($_POST['obs_id']) ? $_POST['obs_id'] : 0);
+			
+			if ($id) {
+				$obs = Observership::get($id);
+				if ($obs) {
+					$obs->delete();
 				}
 			}
 		}
@@ -892,6 +930,69 @@ function display_research_citations_admin(ResearchCitations $research_citations)
 		<?php
 	}
 
+	?>
+	</tbody></table>
+	<?php
+	return ob_get_clean();
+}
+
+function display_observerships_admin(Observerships $obss) {
+	ob_start();
+	?>
+		<table class="mspr_table observerships tableList" cellspacing="0">
+		<colgroup>
+			<col width="55%"></col>
+			<col width="42%"></col>
+			<col width="3%"></col>
+		</colgroup>
+		<thead>
+			<tr>
+				<td class="general">
+					Details
+				</td>
+				<td class="sortedDESC">
+					Period
+				</td>
+				<td class="general">&nbsp;</td>
+			</tr>
+			</thead>
+			<tbody>
+	<?php 
+	if ($obss) {
+		
+		foreach($obss as $obs) {
+			?>
+			<tr>
+				<td class="award">
+					<?php echo clean_input($obs->getDetails(), array("notags", "specialchars", "nl2br")) ?>	
+				</td>
+				<td class="award_terms">
+					<?php echo clean_input($obs->getPeriod(), array("notags", "specialchars")) ?>	
+				
+				</td>
+				<td class="controls">
+					<form class="remove_student_run_elective_form" action="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $obs->getStudentID(); ?>" method="post" >
+						<input type="hidden" name="student_id" value="<?php echo $obs->getStudentID(); ?>"></input>
+						<input type="hidden" name="action" value="remove_observership"></input>
+						<input type="hidden" name="obs_id" value="<?php echo $obs->getID(); ?>"></input>
+						
+						<input type="image" src="<?php echo ENTRADA_URL ?>/images/action-delete.gif"></input> 
+					</form>
+					
+				</td>
+			</tr>
+			<?php 
+			
+		}
+	} else {
+	?>
+		<tr>
+			<td colspan="3">
+				None	
+			</td>
+		</tr>
+	<?php
+	}
 	?>
 	</tbody></table>
 	<?php

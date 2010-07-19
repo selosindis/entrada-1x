@@ -626,6 +626,63 @@ function display_student_run_electives_public(StudentRunElectives $sres=null) {
 }
 
 /**
+ * Returns an HTML table containing Observerships.
+ * @param Observerships $obss
+ * @return string
+ */
+function display_observerships_public(Observerships $obss=null) {
+	ob_start();
+	?>
+		<table class="mspr_table observerships tableList" cellspacing="0">
+		<colgroup>
+			<col width="60%"></col>
+			<col width="40%"></col>
+		</colgroup>
+		<thead>
+			<tr>
+				<td class="general">
+					Details
+				</td>
+				<td class="sortedDESC">
+					Period
+				</td>
+			</tr>
+		</thead>
+		<tbody>
+	<?php 
+	if ($obss && ($obss->count() > 0)) {
+		
+		foreach($obss as $obs) {
+			?>
+			<tr>
+				<td class="award">
+					<?php echo clean_input($obs->getDetails(), array("notags", "specialchars", "nl2br")) ?>	
+				</td>
+				<td class="award_terms">
+					<?php echo clean_input($obs->getPeriod(), array("notags", "specialchars")) ?>	
+				
+				</td>
+			</tr>
+			<?php 
+			
+		}
+	} else {
+	?>
+		<tr>
+			<td colspan="2">
+				None	
+			</td>
+		</tr>
+	<?php
+	}
+	?>
+	</tbody></table>
+	
+	<?php
+	return ob_get_clean();
+}
+
+/**
  * Returns a single-row-table (for consistency of formatting and markup) containing the critical entry project details.
  * @param CriticalEnquiry $critical_enquiry
  * @return string

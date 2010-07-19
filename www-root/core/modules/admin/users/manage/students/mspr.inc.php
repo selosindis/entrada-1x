@@ -66,6 +66,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 	
 	$critical_enquiry = CriticalEnquiry::get($user);
 	$student_run_electives = StudentRunElectives::get($user);
+	$observerships = Observerships::get($user);
 	$internal_awards = InternalAwardReceipts::get($user);
 	$external_awards = ExternalAwardReceipts::get($user);
 	$studentships = Studentships::get($user);
@@ -177,6 +178,98 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 	<div id="extracurricular-learning-activities-section" >
 		<div class="subsection">
 			<h3>Observerships</h3>
+			<script>
+				document.observe("dom:loaded",function() {
+					$('observership_start').observe('focus',function(e) {
+						showCalendar('',this,this,null,null,0,30,1);
+					}.bind($('observership_start')));
+					$('observership_end').observe('focus',function(e) {
+						showCalendar('',this,this,null,null,0,30,1);
+					}.bind($('observership_end')));
+				});
+			</script>
+			
+				<div id="add_observership_link" style="float: right;<?php if ($show_observership_form) { echo "display:none;"; }   ?>">
+				<ul class="page-action">
+					<li><a id="add_observership" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&show=observership_form&id=<?php echo $PROXY_ID; ?>" class="strong-green">Add Observership</a></li>
+				</ul>
+			</div>
+			
+			<div class="clear">&nbsp;</div>
+			<form id="add_observership_form" name="add_observership_form" action="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" method="post" <?php if (!$show_observership_form) { echo "style=\"display:none;\""; }   ?> >
+				<input type="hidden" name="action" value="add_observership"></input>
+				<input type="hidden" name="student_id" value="<?php echo $user->getID(); ?>"></input>
+				<table class="mspr_form">
+					<colgroup>
+						<col width="3%"></col>
+						<col width="25%"></col>
+						<col width="72%"></col>
+					</colgroup>
+					<tfoot>
+						<tr>
+							<td colspan="3">&nbsp;</td>
+						</tr>
+						<tr>
+							<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
+								<input type="submit" class="button" value="Add Observership" />
+								<div id="hide_observership_link" style="display:inline-block;">
+									<ul class="page-action-cancel">
+										<li><a id="hide_observership" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" class="strong-green">[ Cancel Adding Observership ]</a></li>
+									</ul>
+								</div>
+							</td>
+						</tr>
+					</tfoot>
+					<tbody>
+						<tr>
+							<td>&nbsp;</td>
+							<td><label class="form-required" for="observership_title">Title/Discipline:</label></td>
+ 							<td><input name="observership_title"></input> <span class="content-small"><strong>Example:</strong> Family Medicine</span></td>
+						</tr>	
+						<tr>
+							<td>&nbsp;</td>
+							<td><label class="form-required" for="observership_site">Site:</label></td>
+							<td><input name="observership_site"></input> <span class="content-small"><strong>Example:</strong> Kingston General Hospital</span></td>
+						</tr>	
+						<tr>
+							<td>&nbsp;</td>
+							<td><label class="form-required" for="observership_location">Location:</label></td>
+							<td><input name="observership_location" value="Kingston, ON"></input> <span class="content-small"><strong>Example:</strong> Kingston, ON</span></td>
+						</tr>	
+						<tr>
+							<td>&nbsp;</td>
+							<td><label class="form-required" for="observership_start">Start Date:</label></td>
+							<td>
+								<input type="text" name="observership_start" id="observership_start"></input> <span class="content-small"><strong>Format:</strong> yyyy-mm-dd</span>
+							</td>
+						</tr>
+						<tr>
+							<td>&nbsp;</td>
+							<td><label class="form-required" for="observership_end">End Date:</label></td>
+							<td>
+								<input type="text" name="observership_end" id="observership_end"></input>
+							</td>
+						</tr>
+					</tbody>
+				
+				</table>	
+			
+				<div class="clear">&nbsp;</div>
+			</form>
+			<div id="observerships"><?php echo display_observerships_admin($observerships); ?></div>
+		
+			<script language="javascript">
+			var observerships = new ActiveDataEntryProcessor({
+				url : '<?php echo webservice_url("mspr-admin"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=observerships',
+				data_destination: $('observerships'),
+				new_form: $('add_observership_form'),
+				remove_forms_selector: '.remove_observership_form',
+				new_button: $('add_observership_link'),
+				hide_button: $('hide_observership')
+		
+			});
+			
+			</script>
 		</div>
 		<div class="subsection">
 			<h3>Student-Run Electives</h3>
@@ -573,4 +666,3 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 </div>
 <?php 
 }
-?> 

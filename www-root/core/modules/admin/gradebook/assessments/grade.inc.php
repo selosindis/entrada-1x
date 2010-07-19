@@ -1,3 +1,4 @@
+
 <?php
 /**
  * Entrada [ http://www.entrada-project.org ]
@@ -20,7 +21,7 @@
  * @author Developer: James Ellis <james.ellis@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
- * @version $Id: index.inc.php 1169 2010-05-01 14:18:49Z simpson $
+ * @version $Id: edit.inc.php 1169 2010-05-01 14:18:49Z simpson $
  */
 
 if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
@@ -39,344 +40,220 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 	/**
-	 * Update requested column to sort by.
-	 * Valid: director, name
+	 * Add PlotKit to the beginning of the $HEAD array.
 	 */
-	if (isset($_GET["sb"])) {
-		if (@in_array(trim($_GET["sb"]), array("type", "name", "director", "notices"))) {
-			$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]	= trim($_GET["sb"]);
-		}
+	array_unshift($HEAD,
+		"<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/MochiKit/MochiKit.js\"></script>",
+		"<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/PlotKit/excanvas.js\"></script>",
+		"<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/PlotKit/Base.js\"></script>",
+		"<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/PlotKit/Layout.js\"></script>",
+		"<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/PlotKit/Canvas.js\"></script>",
+		"<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/PlotKit/SweetCanvas.js\"></script>",
+		"<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/PlotKit/EasyPlot.js\"></script>"
+		);
+		
+	if ($COURSE_ID) {
+		$query			= "	SELECT * FROM `courses` 
+							WHERE `course_id` = ".$db->qstr($COURSE_ID)."
+							AND `course_active` = '1'";
+		$course_details	= $db->GetRow($query);
+		
+		if ($course_details && $ENTRADA_ACL->amIAllowed(new GradebookResource($course_details["course_id"], $course_details["organisation_id"]), "read")) {
+			$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/gradebook/assessments?".replace_query(array("section" => "grade", "id" => $COURSE_ID, "step" => false)), "title" => "Grading Assessment");
+			
+			$query = "	SELECT `assessments`.*,`assessment_marking_schemes`.`id` as `marking_scheme_id`, `assessment_marking_schemes`.`handler`
+						FROM `assessments`
+						LEFT JOIN `assessment_marking_schemes` ON `assessment_marking_schemes`.`id` = `assessments`.`marking_scheme_id`
+						WHERE `assessments`.`assessment_id` = ".$db->qstr($ASSESSMENT_ID);
+						
+			$assessment = $db->GetRow($query);
+			
+			if($assessment) {
+				$GRAD_YEAR = $assessment["grad_year"];
+				
+				courses_subnavigation($course_details);
 
-		$_SERVER["QUERY_STRING"]	= replace_query(array("sb" => false));
-	} else {
-		if (!isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"])) {
-			$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] = "name";
-		}
-	}
-
-	/**
-	 * Update requested order to sort by.
-	 * Valid: asc, desc
-	 */
-	if (isset($_GET["so"])) {
-		$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"] = ((strtolower($_GET["so"]) == "desc") ? "desc" : "asc");
-
-		$_SERVER["QUERY_STRING"] = replace_query(array("so" => false));
-	} else {
-		if (!isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"])) {
-			$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"] = "asc";
-		}
-	}
-
-	/**
-	 * Update requsted number of rows per page.
-	 * Valid: any integer really.
-	 */
-	if ((isset($_GET["pp"])) && ((int) trim($_GET["pp"]))) {
-		$integer = (int) trim($_GET["pp"]);
-
-		if (($integer > 0) && ($integer <= 250)) {
-			$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"] = $integer;
-		}
-
-		$_SERVER["QUERY_STRING"] = replace_query(array("pp" => false));
-	} else {
-		if (!isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"])) {
-			$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"] = DEFAULT_ROWS_PER_PAGE;
-		}
-	}
-
-	/**
-	 * Update requsted organisation filter
-	 * Valid: any integer really.
-	 */
-	if(isset($_GET["organisation_id"])) {
-		if($_GET["organisation_id"] == "all") {
-			$organisation_id = null;
-		} else if((int) trim($_GET["organisation_id"])) {
-				$organisation_id = (int) trim($_GET["organisation_id"]);
-				$organisation_where = "`organisation_id` = ".$organisation_id;
-			}
-
-		$_SERVER["QUERY_STRING"] = replace_query(array("organisation_id" => false));
-		$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["organisation_id"] = $organisation_id;
-	} else {
-		if (!isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["organisation_id"])) {
-			$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["organisation_id"] = $_SESSION["details"]["organisation_id"];
-			$organisation_id = $_SESSION["details"]["organisation_id"];
-		} else {
-			$organisation_id = $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["organisation_id"];
-		}
-		$organisation_where = "`organisation_id` = ".$organisation_id;
-	}
-
-	/**
-	 * Check if preferences need to be updated on the server at this point.
-	 */
-	preferences_update($MODULE, $PREFERENCES);
-
-	/**
-	 * Provide the queries with the columns to order by.
-	 */
-	switch($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) {
-		case "director" :
-			$SORT_BY	= "`fullname` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]).", `courses`.`course_name` ASC";
-			break;
-		case "name" :
-		default :
-			$SORT_BY	= "`courses`.`course_name` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]);
-		break;
-	}
-
-	/**
-	 * Get the total number of results using the generated queries above and calculate the total number
-	 * of pages that are available based on the results per page preferences.
-	 */
-	if ($ENTRADA_ACL->amIAllowed("course", "update", false)) {
-		$query	= "	SELECT COUNT(*) AS `total_rows` FROM `courses` WHERE `courses`.`course_active` = '1'".(isset($organisation_where) ? " AND `courses`.".$organisation_where : "");
-	} else {
-		$query	= "	SELECT COUNT(*) AS `total_rows`
-					FROM `courses` AS a
-					LEFT JOIN `course_contacts` AS b
-					ON b.`course_id` = a.`course_id`
-					AND b.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
-					AND b.`contact_type` = 'director'
-					LEFT JOIN `community_courses` AS c
-					ON c.`course_id` = a.`course_id`
-					LEFT JOIN `community_members` AS d
-					ON d.`community_id` = c.`community_id`
-					AND d.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
-					WHERE 
-					(
-						a.`pcoord_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
-						OR b.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
-						OR d.`member_acl` = '1'
-					)
-					".(isset($organisation_where) ? " AND `a`.".$organisation_where : "")."
-					AND a.`course_active` = '1'";
-	}
-	$result = $db->GetRow($query);
-	if ($result) {
-		$TOTAL_ROWS	= $result["total_rows"];
-
-		if ($TOTAL_ROWS <= $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) {
-			$TOTAL_PAGES = 1;
-		} elseif (($TOTAL_ROWS % $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) == 0) {
-			$TOTAL_PAGES = (int) ($TOTAL_ROWS / $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]);
-		} else {
-			$TOTAL_PAGES = (int) ($TOTAL_ROWS / $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) + 1;
-		}
-	} else {
-		$TOTAL_ROWS		= 0;
-		$TOTAL_PAGES	= 1;
-	}
-
-	/**
-	 * Check if pv variable is set and see if it's a valid page, other wise page 1 it is.
-	 */
-	if (isset($_GET["pv"])) {
-		$PAGE_CURRENT = (int) trim($_GET["pv"]);
-
-		if (($PAGE_CURRENT < 1) || ($PAGE_CURRENT > $TOTAL_PAGES)) {
-			$PAGE_CURRENT = 1;
-		}
-	} else {
-		$PAGE_CURRENT = 1;
-	}
-
-	$PAGE_PREVIOUS	= (($PAGE_CURRENT > 1) ? ($PAGE_CURRENT - 1) : false);
-	$PAGE_NEXT	= (($PAGE_CURRENT < $TOTAL_PAGES) ? ($PAGE_CURRENT + 1) : false);
-
-	echo "	<h1>Gradebooks</h1>";
-	
-
-	?>
-	<table style="clear: both; width: 100%; margin-bottom: 10px" cellspacing="0" cellpadding="0" border="0">
-	<tr>
-		<td style="width: 100%; text-align: right">
-			<div style="white-space: nowrap">
-				<form action="<?php echo ENTRADA_URL."/admin/".$MODULE;?>" method="get" id="organisationSelector" style="vertical-align: middle">
-					<label for="organisation_id">Organisation filter:</label>
-					<select name="organisation_id" id="organisation_id" onchange="$('organisationSelector').submit();" style="display:inline;">
-							<?php
-							$query		= "SELECT `organisation_id`, `organisation_title` FROM `".AUTH_DATABASE."`.`organisations`";
-							$results	= $db->GetAll($query);
-							$all = true;
-							if($results) {
-								foreach($results as $result) {
-							if($ENTRADA_ACL->amIAllowed(new CourseResource(null, $result["organisation_id"]), "read")) {
-										echo "<option value=\"".(int) $result["organisation_id"]."\"".(isset($organisation_id) && $organisation_id == $result["organisation_id"] ? " selected=\"selected\"" : "").">".html_encode($result["organisation_title"])."</option>\n";
+				?>
+				<h1><?php echo $course_details["course_name"]; ?> Gradebook: <?php echo $assessment["name"]; ?> (Class of <?php echo $assessment["grad_year"]; ?>)</h1>
+			
+				<div style="float: right; text-align: right;">
+					<ul class="page-action">
+						<li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE . "/assessments/?" . replace_query(array("section" => "edit", "step" => false)); ?>" class="strong-green">Edit Assessment</a></li>
+					</ul>
+				</div>
+				<div style="clear: both"><br/></div>
+			
+				<?php
+				$query	= 	"SELECT b.`id` AS `proxy_id`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, b.`number`";
+				$query 	.=  ", g.`grade_id` AS `grade_id`, g.`value` AS `grade_value` ";
+				$query 	.=  " FROM `".AUTH_DATABASE."`.`user_data` AS b
+							  LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS c
+							  ON c.`user_id` = b.`id` AND c.`app_id`=".$db->qstr(AUTH_APP_ID)."
+							  AND c.`account_active`='true'
+							  AND (c.`access_starts`='0' OR c.`access_starts`<=".$db->qstr(time()).")
+							  AND (c.`access_expires`='0' OR c.`access_expires`>=".$db->qstr(time()).") ";
+				$query .=   " LEFT JOIN `".DATABASE_NAME."`.`assessment_grades` AS g ON b.`id` = g.`proxy_id` AND g.`assessment_id` = ".$db->qstr($assessment["assessment_id"])."\n";
+				$query .= 	" WHERE c.`group` = 'student' AND c.`role` = ".$db->qstr($GRAD_YEAR);
+				
+				$students = $db->GetAll($query);
+				$editable = $ENTRADA_ACL->amIAllowed(new GradebookResource($course_details["course_id"], $course_details["organisation_id"]), "update") ? "gradebook_editable" : "gradebook_not_editable";
+				if(count($students) >= 1): ?>
+					<span id="assessment_name" style="display: none;"><?php echo $assessment["name"]; ?></span>
+					<div id="gradebook_grades">
+					<table class="gradebook single <?php echo $editable; ?>">
+						<tbody>
+						<?php foreach($students as $key => $student): ?>
+							<tr id="grades<?php echo $student["proxy_id"]; ?>">
+								<td><?php echo $student["fullname"]; ?></td>
+								<td><?php echo $student["number"]; ?></td>
+								<?php
+								if(isset($student["grade_id"])) {
+									$grade_id = $student["grade_id"];
+								} else {
+									$grade_id = "";
+								}
+								if(isset($student["grade_value"])) {
+									$grade_value = format_retrieved_grade($student["grade_value"], $assessment);
+								} else {
+									$grade_value = "-";
+								} ?>
+									<td>
+										<span class="grade" 
+											data-grade-id="<?php echo $grade_id; ?>"
+											data-assessment-id="<?php echo $assessment["assessment_id"]; ?>"
+											data-proxy-id="<?php echo $student["proxy_id"] ?>"
+										><?php echo $grade_value; ?></span>
+										<span class="gradesuffix" <?php echo (($grade_value === "-") ? "style=\"display: none;\"" : "") ?>>
+											<?php echo assessment_suffix($assessment); ?>
+										</span>
+									</td>
+							</tr>
+						<?php endforeach; ?>
+						</tbody>
+					</table>
+					</div>
+					<div id="gradebook_stats">
+						<h2>Statistics</h2>
+						<div id="graph"></div>
+					 	<?php 
+							switch($assessment["marking_scheme_id"]) {
+							case 1:
+							case 4:
+							//pass/fail
+								$grades = array(0,0,0);
+								foreach($students as $key => $student) {
+									if($student["grade_value"] == "") {
+										$grades[2]++;
+									} else if($student["grade_value"] > 50){
+										$grades[0]++;
 									} else {
-										$all = false;
+										$grades[1]++;
 									}
 								}
-							}
-							if($all) {
-								echo "<option value=\"all\" ".(isset($organisation_id) && $organisation_id == "all" ? "selected=\"selected\"" : "").">All organisations</option>";
-							}
-							?>
-					</select>
-				</form>
-					<?php
-					if ($TOTAL_PAGES > 1) {
-						echo "<form action=\"".ENTRADA_URL."/admin/".$MODULE."\" method=\"get\" id=\"pageSelector\" style=\"display:inline;\">\n";
-						echo "<span style=\"width: 20px; vertical-align: middle; margin-right: 3px; text-align: left\">\n";
-						if ($PAGE_PREVIOUS) {
-							echo "<a href=\"".ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("pv" => $PAGE_PREVIOUS))."\"><img src=\"".ENTRADA_URL."/images/record-previous-on.gif\" border=\"0\" width=\"11\" height=\"11\" alt=\"Back to page ".$PAGE_PREVIOUS.".\" title=\"Back to page ".$PAGE_PREVIOUS.".\" style=\"vertical-align: middle\" /></a>\n";
-						} else {
-							echo "<img src=\"".ENTRADA_URL."/images/record-previous-off.gif\" width=\"11\" height=\"11\" alt=\"\" title=\"\" style=\"vertical-align: middle\" />";
-						}
-						echo "</span>";
-						echo "<span style=\"vertical-align: middle\">\n";
-						echo "<select name=\"pv\" onchange=\"$('pageSelector').submit();\"".(($TOTAL_PAGES <= 1) ? " disabled=\"disabled\"" : "").">\n";
-						for($i = 1; $i <= $TOTAL_PAGES; $i++) {
-							echo "<option value=\"".$i."\"".(($i == $PAGE_CURRENT) ? " selected=\"selected\"" : "").">".(($i == $PAGE_CURRENT) ? " Viewing" : "Jump To")." Page ".$i."</option>\n";
-						}
-						echo "</select>\n";
-						echo "</span>\n";
-						echo "<span style=\"width: 20px; vertical-align: middle; margin-left: 3px; text-align: right\">\n";
-						if ($PAGE_CURRENT < $TOTAL_PAGES) {
-							echo "<a href=\"".ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("pv" => $PAGE_NEXT))."\"><img src=\"".ENTRADA_URL."/images/record-next-on.gif\" border=\"0\" width=\"11\" height=\"11\" alt=\"Forward to page ".$PAGE_NEXT.".\" title=\"Forward to page ".$PAGE_NEXT.".\" style=\"vertical-align: middle\" /></a>";
-						} else {
-							echo "<img src=\"".ENTRADA_URL."/images/record-next-off.gif\" width=\"11\" height=\"11\" alt=\"\" title=\"\" style=\"vertical-align: middle\" />";
-						}
-						echo "</span>\n";
-					}
-					echo "</form>\n";
-					echo "</div>\n";
-					?>
-		</td>
-	</tr>
-</table>
-	<?php
-	/**
-	 * Provides the first parameter of MySQLs LIMIT statement by calculating which row to start results from.
-	 */
-	$limit_parameter = (int) (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"] * $PAGE_CURRENT) - $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]);
-	
-	if ($ENTRADA_ACL->amIAllowed("course", "update", false)) {
-		$query	= "	SELECT `courses`.`course_id`,  `courses`.`organisation_id`, `courses`.`course_name`, `courses`.`course_code`, `courses`.`course_url`, `courses`.`notifications`, `curriculum_lu_types`.`curriculum_type_name`, CONCAT_WS(', ', `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname`) AS `fullname`
-					FROM `courses`
-					LEFT JOIN `curriculum_lu_types`
-					ON `curriculum_lu_types`.`curriculum_type_id` = `courses`.`curriculum_type_id`
-					LEFT JOIN `course_contacts`
-					ON `course_contacts`.`course_id` = `courses`.`course_id`
-					AND `course_contacts`.`contact_type` = 'director'
-					AND `course_contacts`.`contact_order` = 0
-					LEFT JOIN `".AUTH_DATABASE."`.`user_data`
-					ON `".AUTH_DATABASE."`.`user_data`.`id` = `course_contacts`.`proxy_id`
-					WHERE `courses`.`course_active` = '1'
-					".(isset($organisation_where) ? " AND `courses`.".$organisation_where : "")."
-					ORDER BY %s LIMIT %s, %s";
-	} else {
-		$query	= "	SELECT `courses`.`course_id`, `courses`.`organisation_id`, `courses`.`course_name`, `courses`.`course_code`, `courses`.`course_url`, `courses`.`notifications`, `curriculum_lu_types`.`curriculum_type_name`, CONCAT_WS(', ', `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname`) AS `fullname`
-					FROM `courses`
-					LEFT JOIN `course_contacts`
-					ON `course_contacts`.`course_id` = `courses`.`course_id`
-					AND `course_contacts`.`contact_type` = 'director'
-					AND `course_contacts`.`contact_order` = 0
-					LEFT JOIN `curriculum_lu_types`
-					ON `curriculum_lu_types`.`curriculum_type_id` = `courses`.`curriculum_type_id`
-					LEFT JOIN `".AUTH_DATABASE."`.`user_data`
-					ON `".AUTH_DATABASE."`.`user_data`.`id` = `course_contacts`.`proxy_id`
-					LEFT JOIN `community_courses`
-					ON `community_courses`.`course_id` = `courses`.`course_id`
-					LEFT JOIN `community_members`
-					ON `community_members`.`community_id` = `community_courses`.`community_id`
-					AND `community_members`.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
-					WHERE 
-					(
-						`courses`.`pcoord_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
-						OR `course_contacts`.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
-						OR `community_members`.`member_acl` = '1'
-					)
-					AND `courses`.`course_active` = '1'
-					".(isset($organisation_where) ? " AND `courses`.".$organisation_where : "")."
-					ORDER BY %s LIMIT %s, %s";
-	}
+								$grade_data = "";
+								foreach($grades as $key => $grade) {
+									$grade_data .= "[$key, $grade],";
+								}
+								?>
+								<script type="text/javascript" charset="utf-8">
+									var data = [<?php echo $grade_data; ?>];
+									var plotter = PlotKit.EasyPlot(
+										"pie", 
+										{
+											"xTicks": [{v:0, label:"<?php echo $assessment["marking_scheme_id"] == 4 ? "Complete" : "Pass" ?>"}, 
+									          			{v:1, label:"<?php echo $assessment["marking_scheme_id"] == 4 ? "Incomplete" : "Fail" ?>"},
+														{v:2, label:"Not Entered"}],
+										}, 
+										$("graph"), 
+										[data]
+									);
+								</script>
+								<br/>
+								<p>Unentered grades: <?php echo $grades[2]; ?></p>
+								<?php
+								
+							break;
+							case 2: 
+							case 3:
+							//percentage (numeric interpreted as percentage)
+								$grades = array(0,0,0,0,0,0,0,0,0,0,0);
+								$sum = 0;
+								$entered = 0;
+								$grade_values = array();
+								foreach($students as $key => $student) {
+									if($student["grade_value"] == "") {
+										$grades[10]++;
+									} else {
+										$sum += $student["grade_value"];
+										$entered++;
+										$grade_values[] = $student["grade_value"];
+										$key = floor($student["grade_value"] / 10);
+										$grades[$key]++;
+									}
+								}
+								$grade_data = "";
+								foreach($grades as $key => $grade) {
+									$grade_data .= "[$key, $grade],";
+								}
+								sort($grade_values);
+								?>
+								<script type="text/javascript" charset="utf-8">
+									var data = [<?php echo $grade_data; ?>];
+									var plotter = PlotKit.EasyPlot(
+										"bar", 
+										{
+											"xTicks": [{v:0, label:"0-9"}, 
+									          			{v:2, label:"20-29"},
+									          			{v:4, label:"40-49"},
+									          			{v:6, label:"60-69"},
+									          			{v:8, label:"80-89"},
+														{v:10, label:"Not Entered"}],
+										}, 
+										$("graph"), 
+										[data]
+									);
+								</script>
+								<br/>
+								<p>Unentered grades: <?php echo $grades[10]; ?></p>
+								<p>Mean grade: <?php echo $sum / $entered; ?>%</p>
+								<p>Median grade: <?php echo $grade_values[floor(count($grade_values)/2)]; ?>%</p>
+								<?php
+							break;							
+							default:
+								echo "No statistics for this marking scheme.";
+							break; 
+							} ?>
+							<a style="float: right" href="javascript:location.reload(true)">Refresh</a>
+					</div>
+				<?php
+				else:
+				?>
+				<div class="display-notice">There are no students in the system for this assessment's Graduating Year <strong><?php echo $GRAD_YEAR; ?></strong>.</div>
+				<?php endif;
+			} else {
+				$ERROR++;
+				$ERRORSTR[] = "In order to edit an assessment's grades you must provide a valid assessment identifier.";
 
-	$query		= sprintf($query, $SORT_BY, $limit_parameter, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]);
-	$results	= $db->GetAll($query);
-	if ($results) {
-	?> 
-		<table class="tableList" cellspacing="0" summary="List of Gradebooks">
-		<colgroup>
-			<col class="modified" />
-			<col class="general" />
-			<col class="title" />
-			<col class="teacher" />
-			<col class="attachment" />
-		</colgroup>
-		<thead>
-			<tr>
-				<td class="modified">&nbsp;</td>
-				<td class="general<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "type") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("type", "Category"); ?></td>
-				<td class="title<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "name") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("name", "Course Name"); ?></td>
-				<td class="teacher<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "director") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("director", "Course Director"); ?></td>
-				<td class="grades">&nbsp;</td>
-			</tr>
-		</thead>
-		<tbody>
-		<?php
-		if ((@count($results) == 1) && !($ENTRADA_ACL->amIAllowed(new CourseResource($results[0]["course_id"], $results[0]["organisation_id"]), "update"))) {
-			header("Location: ".ENTRADA_URL."/admin/".$MODULE."?section=content&id=".$results[0]["course_id"]);
-			exit;
-		}
+				echo display_error();
 
-		foreach ($results as $result) {
-			$url			= "";
-			$administrator	= false;
-
-			if ($ENTRADA_ACL->amIAllowed(new GradebookResource($result["course_id"], $result["organisation_id"]), "update")) {
-				$allowed_ids	= array($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]);
-				$administrator	= true;
-				$url			= ENTRADA_URL."/admin/gradebook/?section=edit&amp;id=".$result["course_id"];
+				application_log("notice", "Failed to provide a valid assessment identifier when attempting to edit an assessment's grades.");
 			}
-			
-			echo "<tr id=\"course-".$result["course_id"]."\" class=\"course".((!$url) ? " np" : "")."\">\n";
-			echo "	<td class=\"modified\">&nbsp;</td>\n";
-			echo "	<td class=\"general".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Gradebook for: ".html_encode($result["course_name"])."\">" : "").html_encode($result["curriculum_type_name"]).(($url) ? "</a>" : "")."</td>\n";
-			echo "	<td class=\"title".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Gradebook for: ".html_encode($result["course_name"])."\">" : "").html_encode($result["course_name"].(($result["course_code"]) ? ": ".$result["course_code"] : "")).(($url) ? "</a>" : "")."</td>\n";
-			echo "	<td class=\"teacher".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Course Director: ".html_encode($result["fullname"])."\">" : "").html_encode($result["fullname"]).(($url) ? "</a>" : "")."</td>\n";
-			echo "	<td class=\"grades\">".
-				(($url) ? "<a href=\"".ENTRADA_URL."/admin/courses?section=content&amp;id=".$result["course_id"]."\"><img src=\"".ENTRADA_URL."/images/event-contents.gif\" width=\"16\" height=\"16\" alt=\"Manage Course Content\" title=\"Manage Course Content\" border=\"0\" /></a>" : "<img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"16\" height=\"16\" alt=\"\" title=\"\" />").
-				("&nbsp;<a href=\"$url\"><img src=\"".ENTRADA_URL."/images/book_go.png\" width=\"16\" height=\"16\" alt=\"View Gradebook\" title=\"View Gradebook\" border=\"0\" /></a>").
-			"</td>\n";
-			echo "</tr>\n";
+
+		} else {
+			$ERROR++;
+			$ERRORSTR[] = "You don't have permission to edit this gradebook.";
+
+			echo display_error();
+
+			application_log("error", "User tried to edit gradebook without permission.");
 		}
-		?>
-		</tbody>
-		</table>
-		<?php
 	} else {
-		?>
-		<div class="display-notice">
-			<h3>No Available Courses</h3>
-		</div>
-		<?php
+		$ERROR++;
+		$ERRORSTR[] = "In order to edit a course you must provide a valid course identifier.";
+
+		echo display_error();
+
+		application_log("notice", "Failed to provide course identifier when attempting to edit an assessment's grades.");
 	}
-
-	/**
-	 * Sidebar item that will provide another method for sorting, ordering, etc.
-	 */
-	$sidebar_html  = "Sort columns:\n";
-	$sidebar_html .= "<ul class=\"menu\">\n";
-	$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) == "name") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("sb" => "name"))."\" title=\"Sort by Course Name\">by course name</a></li>\n";
-	$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) == "director") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("sb" => "director"))."\" title=\"Sort by Course Director\">by course director</a></li>\n";
-	$sidebar_html .= "</ul>\n";
-	$sidebar_html .= "Order columns:\n";
-	$sidebar_html .= "<ul class=\"menu\">\n";
-	$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) == "asc") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("so" => "asc"))."\" title=\"Ascending Order\">in ascending order</a></li>\n";
-	$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) == "desc") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("so" => "desc"))."\" title=\"Descending Order\">in descending order</a></li>\n";
-	$sidebar_html .= "</ul>\n";
-	$sidebar_html .= "Rows per page:\n";
-	$sidebar_html .= "<ul class=\"menu\">\n";
-	$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) == "5") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("pp" => "5"))."\" title=\"Display 5 Rows Per Page\">5 rows per page</a></li>\n";
-	$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) == "15") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("pp" => "15"))."\" title=\"Display 15 Rows Per Page\">15 rows per page</a></li>\n";
-	$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) == "25") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("pp" => "25"))."\" title=\"Display 25 Rows Per Page\">25 rows per page</a></li>\n";
-	$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) == "50") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("pp" => "50"))."\" title=\"Display 50 Rows Per Page\">50 rows per page</a></li>\n";
-	$sidebar_html .= "</ul>\n";
-
-	new_sidebar_item("Sort Results", $sidebar_html, "sort-results", "open");
 }
 ?>

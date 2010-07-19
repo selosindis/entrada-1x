@@ -116,9 +116,9 @@ class NumericGradeHandler extends MarkingSchemeHandlerAbstract {
 
 class BooleanGradeHandler extends MarkingSchemeHandlerAbstract {
 	
-	private $pass_values = array("p", "pass", "1", 100);
-	private $pass_text = "P";
-	private $fail_text = "F";
+	public $pass_values = array("p", "pass", "1", 100);
+	public $pass_text = "P";
+	public $fail_text = "F";
 	
 	public function getDecimalGrade($input) {
 		$input = strtolower($input);
@@ -139,7 +139,7 @@ class BooleanGradeHandler extends MarkingSchemeHandlerAbstract {
 }
 
 class IncompleteCompleteGradeHandler extends BooleanGradeHandler {
-	private $pass_values = array("p", "pass", "1", "c", "complete", 100);
-	private $pass_text = "Complete";
-	private $fail_text = "Incomplete";
+	public $pass_values = array("p", "pass", "1", "c", "complete", 100);
+	public $pass_text = "C";
+	public $fail_text = "I";
 }

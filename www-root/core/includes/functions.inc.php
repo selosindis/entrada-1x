@@ -4287,7 +4287,7 @@ function communities_fetch_pages($community_id = 0, $user_access = 0) {
 									"link_parent"	=> 0,
 									"link_url"		=> "",
 									"link_title"	=> (isset($home_title) && ($home_title != "") ? $home_title : "Home"),
-									"link_selected" => ($result["page_url"] == $PAGE_URL ? true : false),
+									"link_selected" => (isset($result) && $result["page_url"] == $PAGE_URL ? true : false),
 									"link_type"		=> "dashboard");
 
 		$full_query		= "SELECT `cpage_id`, `page_url`, `menu_title`, `page_order`, `page_type` FROM `community_pages` WHERE `community_id` = ".$db->qstr($community_id)." AND `page_url` != '' AND `page_active` = '1' ORDER BY `page_order` ASC";

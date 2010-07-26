@@ -32,7 +32,7 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 		foreach($array as $key => &$item) {
 			if($key == 0) { //key 0 has an int item defining the parent for the next ones in the array.
 				if($item == -1) {
-					if($root_found) {
+					if(isset($root_found) && $root_found == true) {
 						return false;
 					} else {
 						$root_found = true;

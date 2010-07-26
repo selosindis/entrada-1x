@@ -1013,7 +1013,11 @@ class EntradaAclResource implements Zend_Acl_Resource_Interface {
 	 * @return string
 	 */
 	public function getResourceId() {
-		return $this->resource_id;
+		if($this->specific) {
+			return $this->resource_id;
+		} else {
+			return preg_replace('/[0-9]+/', "", $this->resource_id);
+		}
 	}
 }
 

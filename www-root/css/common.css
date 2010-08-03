@@ -1271,8 +1271,8 @@ padding:3px;
 
 .section, .subsection {
 	clear: both;
-	padding: 10px 0 10px 10px;
-	margin:10px 0 10px 10px;
+	padding: 1ex 0 1ex 1em;
+	margin:1ex 0 1ex 1em;
 }
 
 
@@ -2355,21 +2355,21 @@ padding:4px 0 0;
 cursor:pointer;
 }
 
-h2.collapsable {
+.collapsable {
 cursor:pointer;
 }
 
-h2.collapsable.expanded:before {
+.collapsable.expanded:before {
 float: right;
 content: url(../images/minus.gif);
 clear: both;
 }
 
-h2.collapsable.collapsed {
+.collapsable.collapsed {
 color: #CCC;
 }
 
-h2.collapsable.collapsed:before {
+.collapsable.collapsed:before {
 float: right;
 content: url(../images/plus.gif);
 clear: both;
@@ -2691,4 +2691,70 @@ table.mspr_table tr.unapproved td {
 }
 .gradebook_edit_add {
 	background: url(../images/add.png) no-repeat top left;
+}
+
+.mspr-tree .collapsable.expanded:before {
+float: left !important; 
+content: url(../images/minus.gif);
+clear: both;
+margin: 0 1em 0 0;
+}
+
+.mspr-tree .collapsable.collapsed {
+color: #9ac;
+}
+
+.mspr-tree .collapsable.collapsed:before {
+float: left !important;
+content: url(../images/plus.gif);
+clear: both;
+margin: 0 1em 0 0;
+}
+
+.mspr-tree .section > div {
+	margin-left: 3em;
+}
+
+.mspr-tree h2 {
+	margin: 2ex 0 0 0;
+}
+
+.handle {
+	cursor:pointer;
+}
+
+.mspr-list {
+	padding: 0;
+}
+
+.mspr-list .entry {
+	list-style-type:none;
+	border-top: 1px solid black;
+	border-bottom: 1px solid black;
+	margin: 2ex 0;
+	padding:1%;
+}
+
+.mspr-list .entry.unapproved {
+	background-color:FloralWhite;
+}
+
+.mspr-list .entry .label {
+	display:inline-block;
+	margin: 0.5ex 0;
+	width: 20%;
+	vertical-align:top;
+}
+.mspr-list .entry .label + * {
+	display:inline-block;
+	margin: 0.5ex 0;
+	width:65%;
+	vertical-align:top;
+}
+
+.mspr-list .entry .data {
+}
+
+.mspr-list .entry .heading {
+	font-weight:bold;
 }

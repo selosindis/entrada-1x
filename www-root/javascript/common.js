@@ -400,31 +400,46 @@ var CollapseHeadings = Class.create({
 				this.el.addClassName('expanded');
 			}
 
-			Event.observe(this.el, 'click', this.toggler.bind(this));
+			Event.observe(this.el, 'click', this.toggle.bind(this));
+			this.el.observe('CollapseHeadings:collapse',this.collapse.bind(this));
+			this.el.observe('CollapseHeadings:expand',this.expand.bind(this));
+			document.observe('CollapseHeadings:collapse-all', this.collapse.bind(this));
+			document.observe('CollapseHeadings:expand-all', this.expand.bind(this));
 		}
 	},
 	
-	toggler: function() {
+	toggle: function() {
+		if ($(this.child).visible()) {
+			this.collapse();
+		} else {
+			this.expand();
+		}
+	},
+	
+	collapse: function () {
 		if ($(this.child).visible()) {
 			this.el.removeClassName('expanded');
 			this.el.addClassName('collapsed');
 
 			Effect.BlindUp(this.child, { duration: 0.3 })
-		} else {
+		} // else already collapsed
+	},
+	expand: function () {
+		if (!$(this.child).visible()) {
 			this.el.removeClassName('collapsed');
 			this.el.addClassName('expanded');
 
 			Effect.BlindDown(this.child, { duration: 0.3 })
-		}
-	}
+		} //else already expanded
+	}	
 });
 
-Event.observe(window, 'load', function() {
+document.observe("dom:loaded", function() {
 	$$('textarea.expandable').each(function(el) {
 		new ExpandableTextarea(el);
 	});
 	
-	$$('h2').each(function (el) {
+	$$('h2','.collapsable').each(function (el) {
 		new CollapseHeadings(el);
 	});
 });

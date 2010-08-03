@@ -24,6 +24,7 @@
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
 */
+require_once("SimpleCache.class.php");
 
 /**
  * Simple User class with basic information
@@ -87,12 +88,16 @@ class User {
 	}
 	
 	public static function get($user_id) {
-		global $db;
-		$query = "SELECT * FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($user_id);
-		$result = $db->getRow($query);
-		if ($result) {
-			$user =  new User($result['id'], $result['username'], $result['lastname'], $result['firstname']);
-			return $user;
-		}		
+		$cache = SimpleCache::getCache();
+		$user = $cache->get("User",$user_id);
+		if (!$user) {
+			global $db;
+			$query = "SELECT * FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($user_id);
+			$result = $db->getRow($query);
+			if ($result) {
+				$user =  new User($result['id'], $result['username'], $result['lastname'], $result['firstname']);			
+			}		
+		} 
+		return $user;
 	}
 }

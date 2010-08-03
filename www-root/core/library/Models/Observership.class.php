@@ -81,7 +81,7 @@ class Observership {
 		$result = $db->getRow($query);
 		if ($result) {
 			
-			$obs =  new Observerships($result['id'], $result['student_id'], $result['title'], $result['site'], $result['location'], $result['start'], $result['end']);
+			$obs =  new Observership($result['id'], $result['student_id'], $result['title'], $result['site'], $result['location'], $result['start'], $result['end']);
 			return $obs;
 		}
 	} 

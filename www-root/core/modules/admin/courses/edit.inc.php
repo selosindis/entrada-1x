@@ -38,6 +38,45 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 	if ($COURSE_ID) {
+		/** 
+		* Fetch the Clinical Presentation details.
+		*/
+		$clinical_presentations_list	= array();
+		$clinical_presentations			= array();
+	
+		$results	= fetch_mcc_objectives();
+		if ($results) {
+			foreach ($results as $result) {
+				$clinical_presentations_list[$result["objective_id"]] = $result["objective_name"];
+			}
+		}
+	
+		if ((isset($_POST["clinical_presentations"])) && (is_array($_POST["clinical_presentations"])) && (count($_POST["clinical_presentations"]))) {
+			foreach ($_POST["clinical_presentations"] as $objective_id) {
+				if ($objective_id = clean_input($objective_id, array("trim", "int"))) {
+					$query	= "	SELECT `objective_id` FROM `global_lu_objectives` 
+								WHERE `objective_id` = ".$db->qstr($objective_id)."
+								AND `objective_active` = '1'";
+					$result	= $db->GetRow($query);
+					if ($result) {
+						$clinical_presentations[$objective_id] = $clinical_presentations_list[$objective_id];
+					}
+				}
+			}
+		} else {
+			$query		= "SELECT `objective_id` FROM `course_objectives` WHERE `objective_type` = 'event' AND `course_id` = ".$db->qstr($COURSE_ID);
+			$results	= $db->GetAll($query);
+			if ($results) {
+				foreach ($results as $result) {
+					$clinical_presentations[$result["objective_id"]] = $clinical_presentations_list[$result["objective_id"]];
+				}
+			}
+		}
+		
+		$HEAD[]		= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/picklist.js\"></script>\n";
+		$HEAD[]		= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/scriptaculous/tree.js\"></script>\n";
+		$ONLOAD[]	= "$('clinical_presentations_list').style.display = 'none'";
+		
 		$query			= "	SELECT * FROM `courses` 
 							WHERE `course_id` = ".$db->qstr($COURSE_ID)."
 							AND `course_active` = '1'";
@@ -193,6 +232,22 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 									$db->Execute("UPDATE `community_members` SET `member_acl` = '0' WHERE `proxy_id` IN (".$delete_ids_string.") AND `community_id` = ".$db->qstr($community_id));
 								}
 							}
+							/**
+							 * Update Clinical Presentations.
+							 */
+							$query = "DELETE FROM `course_objectives` WHERE `objective_type` = 'event' AND `course_id` = ".$db->qstr($COURSE_ID);
+							if ($db->Execute($query)) {
+								if ((is_array($clinical_presentations)) && (count($clinical_presentations))) {
+									foreach ($clinical_presentations as $objective_id => $presentation_name) {
+										if (!$db->AutoExecute("course_objectives", array("course_id" => $COURSE_ID, "objective_id" => $objective_id, "objective_type" => "event", "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT")) {
+											$ERROR++;
+											$ERRORSTR[] = "There was an error when trying to insert a &quot;clinical presentation&quot; into the system. System administrators have been informed of this error; please try again later.";
+											application_log("error", "Unable to insert a new clinical presentation to the database when adding a new event. Database said: ".$db->ErrorMsg());
+											echo $db->ErrorMsg();
+										}
+									}
+								}
+							}
 							$query = "DELETE FROM `course_contacts` WHERE `course_id`=".$db->qstr($COURSE_ID);
 							if ($db->Execute($query)) {
 								if ((isset($_POST["associated_director"])) && ($associated_directors = explode(",", $_POST["associated_director"])) && (@is_array($associated_directors)) && (@count($associated_directors))) {
@@ -283,7 +338,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								break;
 							}
 
-							$db->Execute("DELETE FROM `course_objectives` WHERE `course_id` = ".$db->qstr($COURSE_ID));
+							$db->Execute("DELETE FROM `course_objectives` WHERE `objective_type` = 'course' AND `course_id` = ".$db->qstr($COURSE_ID));
 							if (is_array($PRIMARY_OBJECTIVES) && count($PRIMARY_OBJECTIVES)) {
 								foreach($PRIMARY_OBJECTIVES as $objective_id) {
 									$db->Execute("INSERT INTO `course_objectives` SET `course_id` = ".$db->qstr($COURSE_ID).", `objective_id` = ".$db->qstr($objective_id).", `updated_date` = ".$db->qstr(time()).", `updated_by` = ".$db->qstr($_SESSION["details"]["id"]).", `importance` = '1'");
@@ -487,7 +542,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						echo display_error();
 					}
 					?>
-					<form action="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?<?php echo replace_query(array("step" => 2)); ?>" method="post" onsubmit="$$('.PickList option').each(function (e) { e.selected = true; })">
+					<form action="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?<?php echo replace_query(array("step" => 2)); ?>" method="post" onsubmit="selIt()">
 					<h2 title="Course Details Section">Course Details</h2>
 					<div id="course-details-section">
 						<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Editing Course Details">
@@ -704,6 +759,64 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 									<?php echo course_objectives_in_list($course_objectives["objectives"], 1, true); ?>
 									</div>
 								</td>
+							</tr>
+							<tr>
+								<td colspan="3">&nbsp;</td>
+							</tr>
+							<tr>
+								<td style="vertical-align: top">
+									Clinical Presentations
+									<div class="content-small" style="margin-top: 5px">
+										<strong>Note:</strong> For more detailed information please refer to the <a href="http://www.mcc.ca/Objectives_online/objectives.pl?lang=english&loc=contents" target="_blank" style="font-size: 11px">MCC Objectives for the Qualifying Examination</a>.
+									</div>
+								</td>
+								<td colspan="2">
+									<select class="multi-picklist" id="PickList" name="clinical_presentations[]" multiple="multiple" size="5" style="width: 100%; margin-bottom: 5px">
+									<?php
+									if ((is_array($clinical_presentations)) && (count($clinical_presentations))) {
+										foreach ($clinical_presentations as $objective_id => $presentation_name) {
+											echo "<option value=\"".(int) $objective_id."\">".html_encode($presentation_name)."</option>\n";
+										}
+									}
+									?>
+									</select>
+									<div style="float: left; display: inline">
+										<input type="button" id="clinical_presentations_list_state_btn" class="button" value="Show List" onclick="toggle_list('clinical_presentations_list')" />
+									</div>
+									<div style="float: right; display: inline">
+										<input type="button" id="clinical_presentations_list_remove_btn" class="button-remove" onclick="delIt()" value="Remove" />
+										<input type="button" id="clinical_presentations_list_add_btn" class="button-add" onclick="addIt()" style="display: none" value="Add" />
+									</div>
+									<div id="clinical_presentations_list" style="clear: both; padding-top: 3px; display: none">
+										<h2>Clinical Presentations List</h2>
+										<select class="multi-picklist" id="SelectList" name="other_event_objectives_list" multiple="multiple" size="15" style="width: 100%">
+										<?php
+										if ((is_array($clinical_presentations_list)) && (count($clinical_presentations_list))) {
+											foreach ($clinical_presentations_list as $objective_id => $presentation_name) {
+												if (!array_key_exists($objective_id, $clinical_presentations)) {
+													echo "<option value=\"".(int) $objective_id."\">".html_encode($presentation_name)."</option>\n";
+												}
+											}
+										}
+										?>
+										</select>
+									</div>
+									<script type="text/javascript">
+									$('PickList').observe('keypress', function(event) {
+										if (event.keyCode == Event.KEY_DELETE) {
+											delIt();
+										}
+									});
+									$('SelectList').observe('keypress', function(event) {
+										if (event.keyCode == Event.KEY_RETURN) {
+											addIt();
+										}
+									});
+									</script>
+								</td>
+							</tr>
+							<tr>
+								<td colspan="3">&nbsp;</td>
 							</tr>
 						</tbody>
 						</table>

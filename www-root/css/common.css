@@ -2723,35 +2723,70 @@ margin: 0 1em 0 0;
 	cursor:pointer;
 }
 
+.priority-list .entry .handle {
+	position:absolute;
+	left: 5px;
+	top: 0;
+	height: 100%;
+	vertical-align:middle;
+	width:20px;
+	background-image: url(../images/arrow_up_down.png);
+	background-repeat:no-repeat;
+	background-position: center center;
+	display:inline-block;
+}
+
+.priority-list .entry .label {
+	padding-left: 25px;
+}
+
+.entry .handle img {
+	display:none;
+}
+
 .mspr-list {
 	padding: 0;
 }
 
-.mspr-list .entry {
+.mspr-list > * {
 	list-style-type:none;
-	border-top: 1px solid black;
-	border-bottom: 1px solid black;
-	margin: 2ex 0;
+	margin: 1ex 0;
 	padding:1%;
+}
+
+.mspr-list .entry {
+	border-bottom: 1px solid darkgray;
+	background-color:WhiteSmoke;
+	position:relative;
 }
 
 .mspr-list .entry.unapproved {
 	background-color:FloralWhite;
 }
 
+.mspr-list .entry.rejected {
+	background-color:MistyRose;
+}
+
 .mspr-list .entry .label {
 	display:inline-block;
 	margin: 0.5ex 0;
-	width: 20%;
+	width: 18%;
 	vertical-align:top;
 }
 .mspr-list .entry .label + * {
 	display:inline-block;
-	margin: 0.5ex 0;
-	width:65%;
+	margin: 0.5ex 20% 0.5ex 0;
+	width:45%;
 	vertical-align:top;
 }
 
+.mspr-list .entry > .controls {
+	position:absolute;
+	top:10px;
+	bottom: 10px;
+	right:10px;
+}
 .mspr-list .entry .data {
 }
 

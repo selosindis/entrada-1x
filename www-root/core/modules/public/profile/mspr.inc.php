@@ -68,7 +68,8 @@ $clinical_evaluation_comments = ClinicalPerformanceEvaluations::get($user);
 $critical_enquiry = CriticalEnquiry::get($user);
 $student_run_electives = StudentRunElectives::get($user);
 $observerships = Observerships::get($user);
-
+$international_activities = InternationalActivities::get($user);
+	
 $internal_awards = InternalAwardReceipts::get($user);
 $external_awards = ExternalAwardReceipts::get($user);
 $studentships = Studentships::get($user);
@@ -91,6 +92,23 @@ $research_citations = ResearchCitations::get($user);
 
 	<h2 title="Required Information Section">Information Required From You</h2>
 	<div id="required-information-section">
+		<div class="instructions" style="margin-left:2em;margin-top:2ex;">
+			<strong>Instructions</strong>
+			<p>The sections below require require your input. The information you provide will appear on your Medical School Performance Report. All submisions are subject to dean approval.</p>
+			<ul>
+				<li>
+					Each section below provides a link to add new entires or edit in the case of single entires (Critical Enquiry, and Community Health and Epidemiology Project).  
+				</li>
+				<li>
+					All entries have a background color corresponding to their status: 
+					<ul>
+						<li>Gray - Approved</li>
+						<li>Yellow - Pending Approval</li>
+						<li>Red - Rejected</li>
+					</ul>
+				</li>
+			</ul>
+		</div>
 		<div class="section" >
 			<h3 title="Critical Enquiry" class="collapsable collapsed">Critical Enquiry</h3>
 			<div id="critical-enquiry">
@@ -116,7 +134,6 @@ $research_citations = ResearchCitations::get($user);
 			</div>
 			<div class="clear">&nbsp;</div>
 			<form id="edit_critical_enquiry_form" name="edit_critical_enquiry_form" action="<?php echo ENTRADA_URL; ?>/profile?section=mspr&id=<?php echo $PROXY_ID; ?>" method="post" style="display:none;">
-				<input type="hidden" name="action" value="edit_critical_enquiry"></input>
 				<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
 				<table class="mspr_form">
 					<colgroup>
@@ -130,7 +147,7 @@ $research_citations = ResearchCitations::get($user);
 						</tr>
 						<tr>
 							<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
-								<input type="submit" class="button" value="Update Project" />
+								<input type="submit" name="action" value="Update" />
 								<div id="hide_critical_enquiry_link" style="display:inline-block;">
 									<ul class="page-action-cancel">
 										<li><a id="hide_critical_enquiry" href="<?php echo ENTRADA_URL; ?>/profile?section=mspr&id=<?php echo $PROXY_ID; ?>" class="strong-green">[ Cancel Editing Project ]</a></li>
@@ -142,23 +159,23 @@ $research_citations = ResearchCitations::get($user);
 					<tbody>
 						<tr>
 							<td>&nbsp;</td>
-							<td><label class="form-required" for="critical_enquiry_title">Title:</label></td>
-							<td><input name="critical_enquiry_title" type="text" style="width:40%;" value="<?php echo $ce_title; ?>"></input></td>
+							<td><label class="form-required" for="title">Title:</label></td>
+							<td><input name="title" type="text" style="width:40%;" value="<?php echo $ce_title; ?>"></input></td>
 						</tr>	
 						<tr>
 							<td>&nbsp;</td>
-							<td><label class="form-required" for="critical_enquiry_organization">Organization:</label></td>
-							<td><input name="critical_enquiry_organization" type="text" style="width:40%;" value="<?php echo $ce_organization; ?>"></input></td>
+							<td><label class="form-required" for="organization">Organization:</label></td>
+							<td><input name="organization" type="text" style="width:40%;" value="<?php echo $ce_organization; ?>"></input></td>
 						</tr>	
 						<tr>
 							<td>&nbsp;</td>
-							<td><label class="form-required" for="critical_enquiry_location">Location:</label></td>
-							<td><input name="critical_enquiry_location" type="text" style="width:40%;" value="<?php echo $ce_location; ?>"></input></td>
+							<td><label class="form-required" for="location">Location:</label></td>
+							<td><input name="location" type="text" style="width:40%;" value="<?php echo $ce_location; ?>"></input></td>
 						</tr>	
 						<tr>
 							<td>&nbsp;</td>
-							<td><label class="form-required" for="critical_enquiry_supervisor">Supervisor:</label></td>
-							<td><input name="critical_enquiry_supervisor" type="text" style="width:40%;" value="<?php echo $ce_supervisor; ?>"></input></td>
+							<td><label class="form-required" for="supervisor">Supervisor:</label></td>
+							<td><input name="supervisor" type="text" style="width:40%;" value="<?php echo $ce_supervisor; ?>"></input></td>
 						</tr>	
 					</tbody>
 				
@@ -211,7 +228,6 @@ $research_citations = ResearchCitations::get($user);
 			</div>
 			<div class="clear">&nbsp;</div>
 			<form id="edit_community_health_and_epidemiology_form" name="edit_community_health_and_epidemiology_form" action="<?php echo ENTRADA_URL; ?>/profile?section=mspr&id=<?php echo $PROXY_ID; ?>" method="post" <?php if (!$show_community_health_and_epidemiology_form) { echo "style=\"display:none;\""; }   ?> >
-				<input type="hidden" name="action" value="edit_community_health_and_epidemiology"></input>
 				<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
 				<table class="mspr_form">
 					<colgroup>
@@ -225,7 +241,7 @@ $research_citations = ResearchCitations::get($user);
 						</tr>
 						<tr>
 							<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
-								<input type="submit" class="button" value="Update Project" />
+								<input type="submit" name="action" value="Update" />
 								<div id="hide_community_health_and_epidemiology_link" style="display:inline-block;">
 									<ul class="page-action-cancel">
 										<li><a id="hide_community_health_and_epidemiology" href="<?php echo ENTRADA_URL; ?>/profile?section=mspr&id=<?php echo $PROXY_ID; ?>" class="strong-green">[ Cancel Editing Project ]</a></li>
@@ -237,23 +253,23 @@ $research_citations = ResearchCitations::get($user);
 					<tbody>
 						<tr>
 							<td>&nbsp;</td>
-							<td><label class="form-required" for="community_health_and_epidemiology_title">Title:</label></td>
-							<td><input name="community_health_and_epidemiology_title" type="text" style="width:40%;" value="<?php echo $chae_title; ?>"></input></td>
+							<td><label class="form-required" for="title">Title:</label></td>
+							<td><input name="title" type="text" style="width:40%;" value="<?php echo $chae_title; ?>"></input></td>
 						</tr>	
 						<tr>
 							<td>&nbsp;</td>
-							<td><label class="form-required" for="community_health_and_epidemiology_organization">Organization:</label></td>
-							<td><input name="community_health_and_epidemiology_organization" type="text" style="width:40%;" value="<?php echo $chae_organization; ?>"></input></td>
+							<td><label class="form-required" for="organization">Organization:</label></td>
+							<td><input name="organization" type="text" style="width:40%;" value="<?php echo $chae_organization; ?>"></input></td>
 						</tr>	
 						<tr>
 							<td>&nbsp;</td>
-							<td><label class="form-required" for="community_health_and_epidemiology_location">Location:</label></td>
-							<td><input name="community_health_and_epidemiology_location" type="text" style="width:40%;" value="<?php echo $chae_location; ?>"></input></td>
+							<td><label class="form-required" for="location">Location:</label></td>
+							<td><input name="location" type="text" style="width:40%;" value="<?php echo $chae_location; ?>"></input></td>
 						</tr>	
 						<tr>
 							<td>&nbsp;</td>
-							<td><label class="form-required" for="community_health_and_epidemiology_supervisor">Supervisor:</label></td>
-							<td><input name="community_health_and_epidemiology_supervisor" type="text" style="width:40%;" value="<?php echo $chae_supervisor; ?>"></input></td>
+							<td><label class="form-required" for="supervisor">Supervisor:</label></td>
+							<td><input name="supervisor" type="text" style="width:40%;" value="<?php echo $chae_supervisor; ?>"></input></td>
 						</tr>	
 					</tbody>
 				
@@ -279,6 +295,12 @@ $research_citations = ResearchCitations::get($user);
 		</div><div class="section" >
 			<h3 title="Research" class="collapsable collapsed">Research</h3>
 			<div id="research">
+				<div class="instructions">
+					<ul>
+						<li>Only add citations of published research in which you were a named author</li>
+						<li>Citations below may be re-ordered. The top-six <em>approved</em> citations will appear on your MSPR.</li>
+					</ul>
+				</div>
 				<div id="add_research_citation_link" style="float: right;">
 					<ul class="page-action">
 						<li><a id="add_research_citation" href="<?php echo ENTRADA_URL; ?>/profile?section=mspr&id=<?php echo $PROXY_ID; ?>" class="strong-green">Add Research Citation</a></li>
@@ -286,7 +308,6 @@ $research_citations = ResearchCitations::get($user);
 				</div>
 				<div class="clear">&nbsp;</div>
 				<form id="add_research_citation_form" name="add_research_citation_form" action="<?php echo ENTRADA_URL; ?>/profile?section=mspr&id=<?php echo $PROXY_ID; ?>" method="post" style="display:none;" >
-					<input type="hidden" name="action" value="add_research_citation"></input>
 					<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
 					<table class="mspr_form">
 						<colgroup>
@@ -300,7 +321,7 @@ $research_citations = ResearchCitations::get($user);
 							</tr>
 							<tr>
 								<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
-									<input type="submit" class="button" value="Add Research" />
+									<input type="submit" name="action" value="Add" />
 									<div id="hide_research_citation_link" style="display:inline-block;">
 										<ul class="page-action-cancel">
 											<li><a id="hide_research_citation" href="<?php echo ENTRADA_URL; ?>/profile?section=mspr&id=<?php echo $PROXY_ID; ?>" class="strong-green">[ Cancel Adding Contribution ]</a></li>
@@ -312,8 +333,8 @@ $research_citations = ResearchCitations::get($user);
 						<tbody>
 							<tr>
 							<td>&nbsp;</td>
-							<td><label class="form-required" for="research_citation_details">Citation:</label></td>
-							<td><input name="research_citation_details" type="text" style="width:40%;"></input> <span class="content-small">Note: Shoul adhere to MLA guidelines.</span>
+							<td valign="top"><label class="form-required" for="details">Citation:</label></td>
+							<td><textarea name="details" style="width:80%;"></textarea><br /><span class="content-small">Note: Should adhere to MLA guidelines.</span>
 							</td>
 							</tr>
 						</tbody>
@@ -325,13 +346,12 @@ $research_citations = ResearchCitations::get($user);
 			
 				<div id="research_citations"><?php echo display_research_citations_profile($research_citations); ?></div>
 				<div class="clear">&nbsp;</div>
-				<em>Note: Grayed rows indicate the research details are subject to, and pending, dean approval.</em>
 				<script language="javascript">
 				var research_citations = new ActiveDataEntryProcessor({
 					url : '<?php echo webservice_url("mspr-profile"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=research_citations',
 					data_destination: $('research_citations'),
 					new_form: $('add_research_citation_form'),
-					remove_forms_selector: '.remove_research_citation_form',
+					remove_forms_selector: '#research .entry form',
 					new_button: $('add_research_citation_link'),
 					hide_button: $('hide_research_citation'),
 					section:'research_citations'
@@ -342,10 +362,10 @@ $research_citations = ResearchCitations::get($user);
 					url : '<?php echo webservice_url("mspr-profile"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=research_citations',
 					data_destination: $('research_citations'),
 					format: /research_citation_([0-9]*)$/,
-					tag: "tr",
+					tag: "li",
 					handle:'.handle',
 					section:'research_citations',
-					element: 'research_citations_body'
+					element: 'citations_list'
 				});
 				</script>
 			</div>
@@ -361,7 +381,6 @@ $research_citations = ResearchCitations::get($user);
 			</div>
 			<div class="clear">&nbsp;</div>
 			<form id="add_external_award_form" style="display:none;" name="add_external_award_form" action="<?php echo ENTRADA_URL; ?>/profile?section=mspr&id=<?php echo $PROXY_ID; ?>" method="post">
-				<input type="hidden" name="action" value="add_external_award"></input>
 				<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
 				<table class="mspr_form">
 					<colgroup>
@@ -375,7 +394,7 @@ $research_citations = ResearchCitations::get($user);
 						</tr>
 						<tr>
 							<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
-								<input type="submit" class="button" value="Add Award" />
+								<input type="submit" name="action" value="Add" />
 								<div id="hide_external_award_link" style="display:inline-block;">
 									<ul class="page-action-cancel">
 										<li><a id="hide_external_award" href="<?php echo ENTRADA_URL; ?>/profile?section=mspr&id=<?php echo $PROXY_ID; ?>" class="strong-green">[ Cancel Adding External Award ]</a></li>
@@ -387,23 +406,23 @@ $research_citations = ResearchCitations::get($user);
 					<tbody>
 						<tr>
 						<td>&nbsp;</td>
-						<td><label class="form-required" for="external_award_title">Title:</label></td>
-						<td><input name="external_award_title" type="text" style="width:60%;"></input></td>
+						<td><label class="form-required" for="title">Title:</label></td>
+						<td><input name="title" type="text" style="width:60%;"></input></td>
 						</tr>	
 						<tr>
 						<td>&nbsp;</td>
-						<td><label class="form-required" for="external_award_body">Awarding Body:</label></td>
-						<td><input name="external_award_body" type="text" style="width:60%;"></input></td>
+						<td><label class="form-required" for="body">Awarding Body:</label></td>
+						<td><input name="body" type="text" style="width:60%;"></input></td>
 						</tr>	
 						<tr>
 						<td>&nbsp;</td>
-						<td><label class="form-required" for="external_award_terms">Award Terms:</label></td>
-						<td><textarea name="external_award_terms" style="width: 100%; height: 100px;" cols="65" rows="20"></textarea></td>
+						<td><label class="form-required" for="terms">Award Terms:</label></td>
+						<td><textarea name="terms" style="width: 100%; height: 100px;" cols="65" rows="20"></textarea></td>
 						</tr>	
 						<tr>
 						<td>&nbsp;</td>
-						<td><label class="form-required" for="external_award_year">Year Awarded:</label></td>
-						<td><select name="external_award_year">
+						<td><label class="form-required" for="year">Year Awarded:</label></td>
+						<td><select name="year">
 							<?php 
 							
 							$cur_year = (int) date("Y");
@@ -425,13 +444,12 @@ $research_citations = ResearchCitations::get($user);
 			</form>
 			<div id="external_awards"><?php echo display_external_awards_profile($external_awards); ?></div>
 			<div class="clear">&nbsp;</div>
-			<em>Note: Grayed rows indicate the award is subject to, and pending, dean approval.</em>
 			<script language="javascript">
 			var external_awards = new ActiveDataEntryProcessor({
 				url : '<?php echo webservice_url("mspr-profile"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=external_awards',
 				data_destination: $('external_awards'),
 				new_form: $('add_external_award_form'),
-				remove_forms_selector: '.remove_external_award_form',
+				remove_forms_selector: '#external_awards .entry form',
 				new_button: $('add_external_award_link'),
 				hide_button: $('hide_external_award'),
 			section:'external_awards'
@@ -455,7 +473,6 @@ $research_citations = ResearchCitations::get($user);
 			</div>
 			<div class="clear">&nbsp;</div>
 			<form id="add_contribution_form" name="add_contribution_form" action="<?php echo ENTRADA_URL; ?>/profile?section=mspr&id=<?php echo $PROXY_ID; ?>" method="post" <?php if (!$show_contributions_form) { echo "style=\"display:none;\""; }   ?> >
-				<input type="hidden" name="action" value="add_contribution"></input>
 				<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
 				<table class="mspr_form">
 					<colgroup>
@@ -469,7 +486,7 @@ $research_citations = ResearchCitations::get($user);
 						</tr>
 						<tr>
 							<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
-								<input type="submit" class="button" value="Add Contribution" />
+								<input type="submit" name="action" value="Add" />
 								<div id="hide_contribution_link" style="display:inline-block;">
 									<ul class="page-action-cancel">
 										<li><a id="hide_contribution" href="<?php echo ENTRADA_URL; ?>/profile?section=mspr&id=<?php echo $PROXY_ID; ?>" class="strong-green">[ Cancel Adding Contribution ]</a></li>
@@ -481,19 +498,19 @@ $research_citations = ResearchCitations::get($user);
 					<tbody>
 						<tr>
 						<td>&nbsp;</td>
-						<td><label class="form-required" for="contribution_role">Role:</label></td>
-						<td><input name="contribution_role" type="text" style="width:40%;"></input></td>
+						<td><label class="form-required" for="role">Role:</label></td>
+						<td><input name="role" type="text" style="width:40%;"></input></td>
 						</tr>	
 						<tr>
 						<td>&nbsp;</td>
-						<td><label class="form-required" for="contribution_org_event">Organization/Event:</label></td>
-						<td><input name="contribution_org_event" type="text" style="width:40%;"></input></td>
+						<td><label class="form-required" for="org_event">Organization/Event:</label></td>
+						<td><input name="org_event" type="text" style="width:40%;"></input></td>
 						</tr>	
 												<tr>
 									<td>&nbsp;</td>
-									<td><label class="form-required" for="contribution_start">Start:</label></td>
+									<td><label class="form-required" for="start">Start:</label></td>
 									<td>
-										<select name="contribution_start_month">
+										<select name="start_month">
 										<?php
 										echo build_option("","Month",true);
 											
@@ -502,7 +519,7 @@ $research_citations = ResearchCitations::get($user);
 										}
 										?>
 										</select>
-										<select name="contribution_start_year">
+										<select name="start_year">
 										<?php 
 										$cur_year = (int) date("Y");
 										$start_year = $cur_year - 6;
@@ -517,9 +534,9 @@ $research_citations = ResearchCitations::get($user);
 								</tr>
 								<tr>
 									<td>&nbsp;</td>
-									<td><label class="form-required" for="contribution_end">End:</label></td>
+									<td><label class="form-required" for="end">End:</label></td>
 									<td>
-										<select tabindex="1" name="contribution_end_month">
+										<select tabindex="1" name="end_month">
 										<?php
 										echo build_option("","Month",true);
 											
@@ -528,7 +545,7 @@ $research_citations = ResearchCitations::get($user);
 										}
 										?>
 										</select>
-										<select name="contribution_end_year">
+										<select name="end_year">
 										<?php 
 										echo build_option("","Year",true);
 										$cur_year = (int) date("Y");
@@ -551,13 +568,12 @@ $research_citations = ResearchCitations::get($user);
 		
 			<div id="contributions"><?php echo display_contributions_profile($contributions); ?></div>
 			<div class="clear">&nbsp;</div>
-			<em>Note: Grayed rows indicate the award is subject to, and pending, dean approval.</em>
 			<script language="javascript">
 			var contributions = new ActiveDataEntryProcessor({
 				url : '<?php echo webservice_url("mspr-profile"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=contributions',
 				data_destination: $('contributions'),
 				new_form: $('add_contribution_form'),
-				remove_forms_selector: '.remove_contribution_form',
+				remove_forms_selector: '#contributions .entry form',
 				new_button: $('add_contribution_link'),
 				hide_button: $('hide_contribution'),
 				section:'contributions'
@@ -595,17 +611,23 @@ $research_citations = ResearchCitations::get($user);
 			<div id="clinical_performance_eval_comments"><?php echo display_clineval_profile($clinical_evaluation_comments); ?></div>
 			
 		</div>
+		
+		
 		</div><div class="section" >
 			<h3 title="Extra-curricular Learning Activities" class="collapsable collapsed">Extra-curricular Learning Activities</h3>
 			<div id="extra-curricular-learning-activities">
 			
-			<div class="subsection" >
-			<h4>Observerships</h4>
-			<div id="observerships"><?php echo display_observerships_public($observerships); ?></div>
+			<div class="subsection">
+				<h4 title="International Activities">International Activities</h4>
+				<div id="international-activities"><?php echo display_international_activities($international_activities); ?></div>
 			</div>
 			<div class="subsection" >
-			<h4>Student-Run Electives</h4>
-			<div id="student_run_electives"><?php echo display_student_run_electives_public($student_run_electives); ?></div>
+				<h4>Observerships</h4>
+				<div id="observerships"><?php echo display_observerships_public($observerships); ?></div>
+			</div>
+			<div class="subsection" >
+				<h4>Student-Run Electives</h4>
+				<div id="student_run_electives"><?php echo display_student_run_electives_public($student_run_electives); ?></div>
 			</div>
 		</div>
 		
@@ -622,7 +644,7 @@ $research_citations = ResearchCitations::get($user);
 			<h3 title="Leaves of Absence" class="collapsable collapsed">Leaves of Absence</h3>
 			<div id="leaves-of-absence">
 			<?php 
-			echo display_mspr_details_table($leaves_of_absence);
+			echo display_mspr_details($leaves_of_absence);
 			?>
 			</div>
 		</div>
@@ -630,7 +652,7 @@ $research_citations = ResearchCitations::get($user);
 			<h3 title="Formal Remediation Received" class="collapsable collapsed">Formal Remediation Received</h3>
 			<div id="formal-remediation-received">
 			<?php 
-			echo display_mspr_details_table($formal_remediations);
+			echo display_mspr_details($formal_remediations);
 			?>
 			</div>
 		</div>
@@ -638,7 +660,7 @@ $research_citations = ResearchCitations::get($user);
 			<h3 title="Disciplinary Actions" class="collapsable collapsed">Disciplinary Actions</h3>
 			<div id="disciplinary-actions"> 
 			<?php 
-			echo display_mspr_details_table($disciplinary_actions);
+			echo display_mspr_details($disciplinary_actions);
 			?>
 			</div>
 		</div>

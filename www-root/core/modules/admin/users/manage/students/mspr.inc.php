@@ -101,8 +101,8 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 				var contributions = new ActiveApprovalProcessor({
 					url : '<?php echo webservice_url("mspr-admin"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=contributions',
 					data_destination: $('contributions-to-medical-school'),
-					approve_forms_selector: '.approve_contribution_form',
-					unapprove_forms_selector: '.unapprove_contribution_form'
+					action_form_selector: '#contributions-to-medical-school .entry form',
+					section: "contributions"
 				});
 			</script>
 		</div>
@@ -115,8 +115,8 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 				var critical_enquiry = new ActiveApprovalProcessor({
 					url : '<?php echo webservice_url("mspr-admin"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=critical_enquiry',
 					data_destination: $('critical_enquiry'),
-					approve_forms_selector: '.approve_critical_enquiry_form',
-					unapprove_forms_selector: '.unapprove_critical_enquiry_form'
+					action_form_selector: '#critical_enquiry .entry form',
+					section: "critical_enquiry"
 				});
 				
 				</script>
@@ -131,8 +131,8 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 				var community_health_and_epidemiology = new ActiveApprovalProcessor({
 					url : '<?php echo webservice_url("mspr-admin"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=community_health_and_epidemiology',
 					data_destination: $('community_health_and_epidemiology'),
-					approve_forms_selector: '.approve_community_health_and_epidemiology_form',
-					unapprove_forms_selector: '.unapprove_community_health_and_epidemiology_form'
+					action_form_selector: '#community_health_and_epidemiology .entry form',
+					section: "community_health_and_epidemiology"
 				});
 				
 				</script>
@@ -148,8 +148,8 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 				var research_citations = new ActiveApprovalProcessor({
 					url : '<?php echo webservice_url("mspr-admin"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=research_citations',
 					data_destination: $('research'),
-					approve_forms_selector: '.approve_research_citations_form',
-					unapprove_forms_selector: '.unapprove_research_citations_form'
+					action_form_selector: '#research .entry form',
+					section: "research"
 				});
 			
 			</script>
@@ -163,7 +163,8 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 					var external_awards = new ActiveApprovalProcessor({
 						url : '<?php echo webservice_url("mspr-admin"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=external_awards',
 						data_destination: $('external_awards'),
-						action_form_selector: '#external_awards .entry form'
+						action_form_selector: '#external_awards .entry form',
+						section: "external_awards"
 					});
 				
 				</script>
@@ -249,7 +250,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 			<h3 title="Summer Studentships" class="collapsable collapsed">Summer Studentships</h3>
 			<div id="summer-studentships">
 			
-			<div id="add_studentship_link" style="float: right;<?php if (!$show_studentship_form) { echo "display:none;"; }   ?>">
+			<div id="add_studentship_link" style="float: right;">
 				<ul class="page-action">
 					<li><a id="add_studentship" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&show=studentship_form&id=<?php echo $PROXY_ID; ?>" class="strong-green">Add Studentship</a></li>
 				</ul>
@@ -257,8 +258,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 			<div class="clear">&nbsp;</div>
 			
 			
-			<form id="add_studentship_form" name="add_studentship_form" action="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" method="post" <?php if ($show_studentship_form) { echo "style=\"display:none;\""; }   ?> >
-				<input type="hidden" name="action" value="add_studentship"></input>
+			<form id="add_studentship_form" name="add_studentship_form" action="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" method="post" style="display:none;" >
 				<input type="hidden" name="user_id" value="<?php echo $PROXY_ID; ?>"></input>
 		
 				<table class="mspr_form">
@@ -273,7 +273,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 						</tr>
 						<tr>
 							<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
-								<input type="submit" class="button" value="Add Studentship" />
+								<input type="submit" name="action" value="Add" />
 								<div id="hide_studenstship_link" style="display:inline-block;">
 									<ul class="page-action-cancel">
 										<li><a id="hide_studentship" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" class="strong-green">[ Cancel Adding Studentship ]</a></li>
@@ -285,13 +285,13 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 					<tbody>
 						<tr>
 						<td>&nbsp;</td>
-						<td><label class="form-required" for="studentship_title">Title:</label></td>
-						<td><input type="text" name="studentship_title"></input></td>
+						<td><label class="form-required" for="title">Title:</label></td>
+						<td><input type="text" name="title"></input></td>
 						</tr>	
 						<tr>
 						<td>&nbsp;</td>
-						<td><label class="form-required" for="studentship_year">Year Awarded:</label></td>
-						<td><select name="studentship_year">
+						<td><label class="form-required" for="year">Year Awarded:</label></td>
+						<td><select name="year">
 							<?php 
 							
 							$cur_year = (int) date("Y");
@@ -767,7 +767,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 			<h3 title="Leaves of Absence" class="collapsable collapsed">Leaves of Absence</h3>
 			<div id="leaves-of-absence">
 			<?php 
-			echo display_mspr_details_table($leaves_of_absence);
+			echo display_mspr_details($leaves_of_absence);
 			?>
 			</div>
 		</div>
@@ -775,7 +775,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 			<h3 title="Formal Remediation Received" class="collapsable collapsed">Formal Remediation Received</h3>
 			<div id="formal-remediation-received">
 			<?php 
-			echo display_mspr_details_table($formal_remediations);
+			echo display_mspr_details($formal_remediations);
 			?>
 			</div>
 		</div>
@@ -783,7 +783,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 			<h3 title="Disciplinary Actions" class="collapsable collapsed">Disciplinary Actions</h3>
 			<div id="disciplinary-actions"> 
 			<?php 
-			echo display_mspr_details_table($disciplinary_actions);
+			echo display_mspr_details($disciplinary_actions);
 			?>
 			</div>
 		</div>

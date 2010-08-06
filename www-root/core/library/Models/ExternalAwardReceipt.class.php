@@ -35,22 +35,32 @@ require_once("ExternalAward.class.php");
  * @author Developer: Jonathan Fingland <jonathan.fingland@quensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  */
-class ExternalAwardReceipt {
+class ExternalAwardReceipt implements Approvable,AttentionRequirable {
 	private $award_receipt_id;
 	private $award;
 	private $user;
 	private $year;
 	private $approved;
+	private $rejected;
 	
-	function __construct(User $user, Award $award, $award_receipt_id, $year, $approved){
+	function __construct(User $user, Award $award, $award_receipt_id, $year, $approved = false, $rejected = false){
 		$this->user = $user;
 		$this->award = $award;
 		$this->award_receipt_id = $award_receipt_id;
 		$this->year = $year;
-		$this->approved = $approved;
+		$this->approved = (bool)$approved;
+		$this->rejected = (bool)$rejected;
 	}
 	
-	public function isapproved() {
+	/**
+	 * Requires attention if not approved, unless rejected
+	 * @see www-root/core/library/Models/AttentionRequirable#isAttentionRequired()
+	 */
+	public function isAttentionRequired() {
+		return !$this->isApproved() && !$this->isRejected();
+	}
+	
+	public function isApproved() {
 		return (bool)($this->approved);	
 	}
 	
@@ -70,10 +80,14 @@ class ExternalAwardReceipt {
 		return $this->award;
 	}
 	
+	public function isRejected() {
+		return (bool)($this->rejected);
+	}
+		
 	static public function create($user_id, $title, $terms, $awarding_body,$year, $approved = false) {
 		global $db,$SUCCESS,$SUCCESSSTR,$ERROR,$ERRORSTR;
 		$approved = (int) $approved;
-		$query = "INSERT INTO `student_awards_external` (`user_id`,`title`, `award_terms`, `awarding_body`, `year`, `approved`) VALUES (".$db->qstr($user_id).", ".$db->qstr($title).", ".$db->qstr($terms).", ".$db->qstr($awarding_body).", ".$db->qstr($year).", ".$db->qstr($approved).")";
+		$query = "INSERT INTO `student_awards_external` (`user_id`,`title`, `award_terms`, `awarding_body`, `year`, `status`) VALUES (".$db->qstr($user_id).", ".$db->qstr($title).", ".$db->qstr($terms).", ".$db->qstr($awarding_body).", ".$db->qstr($year).", ".$db->qstr($approved ? 1 : 0).")";
 		if(!$db->Execute($query)) {
 			$ERROR++;
 			$ERRORSTR[] = "Failed to add award recipient to database. Please check your values and try again.";
@@ -91,7 +105,7 @@ class ExternalAwardReceipt {
 	 */
 	static public function get($award_receipt_id) {
 		global $db;
-		$query		= "SELECT a.id as `award_receipt_id`, b.id as user_id, a.title, a.award_terms, a.awarding_body, a.approved, lastname, firstname, a.year 
+		$query		= "SELECT a.id as `award_receipt_id`, b.id as user_id, a.title, a.award_terms, a.awarding_body, a.status, lastname, firstname, a.year 
 				FROM `". DATABASE_NAME ."`.`student_awards_external` a 
 				left join `".AUTH_DATABASE."`.`user_data` b on a.`user_id` = b.`id` 
 				WHERE a.id = ".$db->qstr($award_receipt_id);
@@ -99,9 +113,12 @@ class ExternalAwardReceipt {
 		$result	= $db->GetRow($query);
 			
 		if ($result) {
+			$rejected=($result['status'] == -1);
+			$approved = (bool) $result['status'];
+				
 			$user = new User($result['user_id'], null, $result['lastname'], $result['firstname']);
 			$award = new ExternalAward($result['title'], $result['award_terms'], $result['awarding_body']);
-			return new ExternalAwardReceipt( $user, $award, $result['award_receipt_id'], $result['year'], $result['approved']);
+			return new ExternalAwardReceipt( $user, $award, $result['award_receipt_id'], $result['year'], $approved, $rejected);
 		} else {
 			$ERROR++;
 			$ERRORSTR[] = "Failed to retreive award receipt from database.";
@@ -124,41 +141,32 @@ class ExternalAwardReceipt {
 		}
 	}
 	
-	public function approve() {
-		if (!$this->isApproved()) {
-			global $db,$SUCCESS,$SUCCESSSTR,$ERROR,$ERRORSTR;
-			$query = "update `student_awards_external` set
-					 `approved`=1 
-					 where `id`=".$db->qstr($this->award_receipt_id);
-			
-			if(!$db->Execute($query)) {
-				$ERROR++;
-				$ERRORSTR[] = "Failed to approved award.".$db->ErrorMsg();
-				application_log("error", "Unable to update a student_awards_external record. Database said: ".$db->ErrorMsg());
-			} else {
-				$SUCCESS++;
-				$SUCCESSSTR[] = "Successfully approved award.";
-				$this->approved = true;
-			}
+	private function setStatus($status_code) {
+		global $db,$SUCCESS,$SUCCESSSTR,$ERROR,$ERRORSTR;
+		$query = "update `student_awards_external` set
+				 `status`=".$db->qstr($status_code)." 
+				 where `id`=".$db->qstr($this->award_receipt_id);
+		
+		if(!$db->Execute($query)) {
+			$ERROR++;
+			$ERRORSTR[] = "Failed to update award.";
+			application_log("error", "Unable to update a student_awards_external record. Database said: ".$db->ErrorMsg());
+		} else {
+			$SUCCESS++;
+			$SUCCESSSTR[] = "Successfully updated award.";
+			$this->approved = true;
 		}
 	}
 	
+	public function approve() {
+		$this->setStatus(1);
+	}
+	
 	public function unapprove() {
-		if ($this->isApproved()) {
-			global $db,$SUCCESS,$SUCCESSSTR,$ERROR,$ERRORSTR;
-			$query = "update `student_awards_external` set
-					 `approved`=0 
-					 where `id`=".$db->qstr($this->award_receipt_id);
-			
-			if(!$db->Execute($query)) {
-				$ERROR++;
-				$ERRORSTR[] = "Failed to unapproved award.";
-				application_log("error", "Unable to update a student_awards_external record. Database said: ".$db->ErrorMsg());
-			} else {
-				$SUCCESS++;
-				$SUCCESSSTR[] = "Successfully unapproved award.";
-				$this->approved = false;
-			}
-		}
+		$this->setStatus(0);
+	}
+	
+	public function reject() {
+		$this->setStatus(-1);
 	}
 }

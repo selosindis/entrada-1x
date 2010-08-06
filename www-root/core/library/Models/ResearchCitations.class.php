@@ -3,7 +3,7 @@
 require_once("Collection.class.php");
 require_once("ResearchCitation.class.php");
 
-class ResearchCitations extends Collection {
+class ResearchCitations extends Collection implements AttentionRequirable {
 	public static function get(User $user) {
 		global $db;
 		$user_id = $user->getID();
@@ -12,7 +12,9 @@ class ResearchCitations extends Collection {
 		$citations = array();
 		if ($results) {
 			foreach ($results as $result) {
-				$citation =  new ResearchCitation($result['id'], $result['user_id'], $result['citation'], $result['priority'], $result['approved']);
+				$rejected=($result['status'] == -1);
+				$approved = (bool) $result['status'];
+				$citation =  new ResearchCitation($result['id'], $result['user_id'], $result['citation'], $result['priority'], $approved, $rejected);
 				$citations[] = $citation;
 			}
 		}
@@ -36,5 +38,14 @@ class ResearchCitations extends Collection {
 				break;
 			}
 		}
+	}
+	
+	public function isAttentionRequired() {
+		$att_req = false;
+		foreach ($this as $element) {
+			$att_req = $element->isAttentionRequired();
+			if ($att_req) break;
+		}
+		return $att_req;
 	}
 }

@@ -1,20 +1,22 @@
 <?php
 
-abstract class SupervisedProject {
+abstract class SupervisedProject implements Approvable,AttentionRequirable {
 	private $user_id;
 	private $location;
 	private $organization;
 	private $title;
 	private $supervisor;
 	private $approved;
+	private $rejected;
 	
-	function __construct($user_id, $title, $organization, $location, $supervisor, $approved = false) {
+	function __construct($user_id, $title, $organization, $location, $supervisor, $approved = false, $rejected = false) {
 		$this->user_id = $user_id;
 		$this->location = $location;
 		$this->title = $title;
 		$this->organization = $organization;
 		$this->supervisor = $supervisor;
 		$this->approved  = (bool)$approved;
+		$this->rejected = (bool)$rejected;
 	}
 	
 	public function getID() {
@@ -55,4 +57,17 @@ abstract class SupervisedProject {
 	public function isApproved() {
 		return (bool)($this->approved);
 	}	
+	
+	/**
+	 * Requires attention if not approved, unless rejected
+	 * @see www-root/core/library/Models/AttentionRequirable#isAttentionRequired()
+	 */
+	public function isAttentionRequired() {
+		return !$this->isApproved() && !$this->isRejected();
+	}
+	
+	public function isRejected() {
+		return (bool)($this->rejected);
+	}
+	
 }

@@ -9979,44 +9979,37 @@ function display_status_messages() {
 	echo "</div>";
 }
 
-function display_mspr_details_table($data) {
+function display_mspr_details($data) {
 	ob_start();
 	?>
-
-	<table class="tableList mspr_table" cellspacing="0">
-		<colgroup>
-			<col width="100%"></col>
-		</colgroup>
-			<tbody>
-			
-	<?php 
+	<ul class="mspr-list">
+	<?php
 	if ($data) {
 		foreach($data as $datum) {
-			?>
-			<tr>
-				<td >
-					<?php echo clean_input($datum->getDetails(), array("notags", "specialchars")) ?>	
-				</td>
-			</tr>
-			<?php 
-			
+		?>
+		<li class="entry">
+			<?php echo clean_input($datum->getDetails(), array("notags", "specialchars")) ?>
+		</li>	
+		<?php 
 		}
 	} else {
 		?>
-			<tr>
-				<td >
-					None	
-				</td>
-			</tr>
+		<li>
+		None
+		</li>	
 		<?php
 	}
 	?>
-	</table>
+	</ul>	
 	<?php
 	return ob_get_clean();
 }
 
 function require_mspr_models() {
+	
+	require_once("Models/Approvable.interface.php");
+	require_once("Models/AttentionRequirable.interface.php");
+	
 	require_once("Models/InternalAwardReceipts.class.php");
 	require_once("Models/ExternalAwardReceipts.class.php");
 	
@@ -10036,9 +10029,25 @@ function require_mspr_models() {
 	
 	require_once("Models/StudentRunElectives.class.php");
 	require_once("Models/Observerships.class.php");
+	require_once("Models/InternationalActivities.class.php");
 	require_once("Models/CriticalEnquiry.class.php");
 	require_once("Models/CommunityHealthAndEpidemiology.class.php");
 	require_once("Models/ResearchCitations.class.php");
+}
+
+function isMSPRAttentionRequired(User $user) {
+
+	require_mspr_models();
+	//get all student entered data;
+	$att_reqs[] = CriticalEnquiry::get($user);
+	$att_reqs[] = ExternalAwardReceipts::get($user);
+	$att_reqs[] = Contributions::get($user);
+	$att_reqs[] = CommunityHealthAndEpidemiology::get($user);
+	$att_reqs[] = ResearchCitations::get($user);
+	foreach ($att_reqs as $att_req) {
+		if ($att_req->isAttentionRequired()) return true;
+	}
+	return false;
 }
 
 function getMonthName($month_number) {

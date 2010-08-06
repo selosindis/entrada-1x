@@ -652,8 +652,9 @@ function display_research_citations_profile(ResearchCitations $research_citation
 	<?php 
 	if ($research_citations && $research_citations->count() > 0) {
 		foreach($research_citations as $research_citation) {
+			$class = ($research_citation->isRejected() ? "rejected" : ($research_citation->isApproved()? "approved" : "unapproved"));
 		?>
-		<li class="entry" id="research_citation_<?php echo $research_citation->getID(); ?>">
+		<li class="entry <?php echo $class; ?>" id="research_citation_<?php echo $research_citation->getID(); ?>">
 			<span class="handle"><img src="<?php echo ENTRADA_URL; ?>/images/arrow_up_down.png" /></span> 
 			<span class="label">
 				Citation: 

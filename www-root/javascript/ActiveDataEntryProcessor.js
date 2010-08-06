@@ -20,6 +20,7 @@
 						}
 						new_form.reset()
 						add_entry_remove_listeners();
+						document.fire(section+':onAfterUpdate');
 					}
 				});
 			document.fire(section + ':onBeforeUpdate');
@@ -39,6 +40,7 @@
 							messages.update(data_destination.down('.status_messages'));
 						}
 						add_entry_remove_listeners();
+						document.fire(section+':onAfterUpdate');
 					}
 				});
 			}

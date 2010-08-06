@@ -111,8 +111,6 @@ class Entrada_Router {
 		if ($this->base_path && $this->load_path) {
 			$load_route = $this->base_path . $this->load_path;
 
-//			echo "[".$load_route."]<br />";
-			
 			if ((@file_exists($load_route)) && (@is_readable($load_route))) {
 				return $load_route;
 			} else {

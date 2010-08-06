@@ -441,6 +441,7 @@ $MODULES["objectives"]	= array("title" => "Manage Objectives", "resource" => "ob
 $MODULES["users"] = array("title" => "Manage Users", "resource" => "user", "permission" => "update");
 $MODULES["reports"] = array("title" => "System Reports", "resource" => "reportindex", "permission" => "read");
 $MODULES["awards"] = array("title" => "Manage Awards", "resource" => "awards", "permission" => "update");
+$MODULES["mspr"] = array("title" => "Manage MSPRs", "resource" => "mspr", "permission" => "update");
 $MODULES["observerships"] = array("title" => "Manage Observerships", "resource" => "observerships", "permission" => "update");
 
 /**

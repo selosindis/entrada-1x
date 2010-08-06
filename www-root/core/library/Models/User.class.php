@@ -39,12 +39,18 @@ class User {
 	private $username;
 	private $firstname;
 	private $lastname;
+	private $number;
 	
-	function __construct($id,$username, $firstname, $lastname) {
+	function __construct($id,$username, $firstname, $lastname, $number = 0) {
 		$this->id = $id;
 		$this->username = $username;
 		$this->firstname = $firstname;
 		$this->lastname = $lastname;
+		$this->number = $number;
+		
+		//be sure to cache this whenever created.
+		$cache = SimpleCache::getCache();
+		$cache->set($this,"User",$this->$id);
 	}
 	
 	/**
@@ -87,6 +93,14 @@ class User {
 		return $this->lastname . ", " . $this->firstname;
 	}
 	
+	/**
+	 * Returns the real world student number/employee number
+	 * @return int
+	 */
+	function getNumber() {
+		return $this->number;
+	}
+	
 	public static function get($user_id) {
 		$cache = SimpleCache::getCache();
 		$user = $cache->get("User",$user_id);
@@ -95,7 +109,7 @@ class User {
 			$query = "SELECT * FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($user_id);
 			$result = $db->getRow($query);
 			if ($result) {
-				$user =  new User($result['id'], $result['username'], $result['lastname'], $result['firstname']);			
+				$user =  new User($result['id'], $result['username'], $result['lastname'], $result['firstname'], $result['number']);			
 			}		
 		} 
 		return $user;

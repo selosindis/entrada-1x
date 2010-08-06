@@ -6,6 +6,9 @@ class SimpleCache {
 		$this->cacheArr = array();
 	}
 	
+	/**
+	 * @return SimpleCache
+	 */
 	public static function getCache() {
 		static $cache;
 		if (!$cache) {

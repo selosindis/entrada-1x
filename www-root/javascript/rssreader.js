@@ -191,7 +191,8 @@ document.observe("dom:loaded", function() {
 	var add_rss_modal = new Control.Modal($('rss-add-details'),{  
 	    overlayOpacity: 0.75,  
 	    className: 'modal',  
-	    fade: true  
+	    fade: true,
+		fadeDuration: 0.30
 	});
 		
 	function addRSSFeed(e) {
@@ -255,11 +256,11 @@ document.observe("dom:loaded", function() {
 		if(RSS_EDITING) {
 			//destroy sortables
 			EntradaRSS.destroySortables();
-			$('edit-rss-feeds-link').update("Edit and Arrange RSS Feeds");
+			$('edit-rss-feeds-link').update("Modify RSS Feeds");
 		} else {
 			//create sortables
 			EntradaRSS.createSortables();
-			$('edit-rss-feeds-link').update("Stop Editing RSS Feeds");
+			$('edit-rss-feeds-link').update("Stop Modifying RSS Feeds");
 		}
 		
 		RSS_EDITING = !RSS_EDITING;

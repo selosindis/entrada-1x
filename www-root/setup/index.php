@@ -802,8 +802,8 @@ $storage_path = implode(DIRECTORY_SEPARATOR, array_slice(explode(DIRECTORY_SEPAR
 					</label>
 					<br />
 					<textarea id="htaccess_text" name="htaccess_text" style="width: 80%; height: 330px; font-size: 11px" onclick="this.select()" readonly="readonly"><?php
-						if (isset($display_htaccess) && $display_htaccess) {
-							$htaccess_text = file_get_contents($setup->entrada_absolute.Entrada_Setup::$HTACCESS_FILE);
+					if (isset($display_htaccess) && $display_htaccess) {
+							$htaccess_text = file_get_contents($setup->entrada_absolute.$setup->htaccess_file);
 							$htaccess_text = str_replace("ENTRADA_RELATIVE", $setup->entrada_relative, $htaccess_text);
 							echo $htaccess_text;
 						}

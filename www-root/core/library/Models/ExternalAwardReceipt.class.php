@@ -114,7 +114,7 @@ class ExternalAwardReceipt implements Approvable,AttentionRequirable {
 			
 		if ($result) {
 			$rejected=($result['status'] == -1);
-			$approved = (bool) $result['status'];
+			$approved = ($result['status'] == 1);
 				
 			$user = new User($result['user_id'], null, $result['lastname'], $result['firstname']);
 			$award = new ExternalAward($result['title'], $result['award_terms'], $result['awarding_body']);

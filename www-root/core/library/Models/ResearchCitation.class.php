@@ -75,7 +75,7 @@ class ResearchCitation implements Approvable, AttentionRequirable {
 		$result = $db->getRow($query);
 		if ($result) {
 			$rejected=($result['status'] == -1);
-			$approved = (bool) $result['status'];
+			$approved = ($result['status'] == 1);
 			
 			$citation =  new self($result['id'], $result['user_id'], $result['citation'], $result['priority'], $approved, $rejected);
 			return $citation;
@@ -155,7 +155,7 @@ class ResearchCitation implements Approvable, AttentionRequirable {
 			application_log("error", "Unable to update a student_research record. Database said: ".$db->ErrorMsg());
 		} else {
 			$SUCCESS++;
-			$SUCCESSSTR[] = "Successfully update Research Citation.";
+			$SUCCESSSTR[] = "Successfully updated Research Citation.";
 			$this->approved = true;
 		}
 	}

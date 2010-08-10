@@ -13,7 +13,7 @@ class ResearchCitations extends Collection implements AttentionRequirable {
 		if ($results) {
 			foreach ($results as $result) {
 				$rejected=($result['status'] == -1);
-				$approved = (bool) $result['status'];
+				$approved = ($result['status'] == 1);
 				$citation =  new ResearchCitation($result['id'], $result['user_id'], $result['citation'], $result['priority'], $approved, $rejected);
 				$citations[] = $citation;
 			}

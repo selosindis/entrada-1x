@@ -61,7 +61,7 @@ class ExternalAwardReceipts extends Collection implements AttentionRequirable {
 				//$user = new User($result['id'], null, $result['lastname'], $result['firstname']);
 				$award = new ExternalAward($result['title'], $result['award_terms'], $result['awarding_body']);
 				$rejected=($result['status'] == -1);
-				$approved = (bool) $result['status'];
+				$approved = ($result['status'] == 1);
 				
 				$receipt = new ExternalAwardReceipt( $user, $award, $result['award_receipt_id'], $result['year'], $approved, $rejected);
 				$receipts[] = $receipt;

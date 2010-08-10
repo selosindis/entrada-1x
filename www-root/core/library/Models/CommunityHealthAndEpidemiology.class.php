@@ -15,11 +15,11 @@ class CommunityHealthAndEpidemiology extends SupervisedProject {
 		$result = $db->getRow($query);
 		if ($result) {
 			$rejected=($result['status'] == -1);
-			$approved = (bool) $result['status'];
+			$approved = ($result['status'] == 1);
 			
-			$critical_enquiry =  new CommunityHealthAndEpidemiology($result['user_id'], $result['title'], $result['organization'], $result['location'], $result['supervisor'], $approved, $rejected);
-			return $critical_enquiry;
-		}
+			$comm_health =  new CommunityHealthAndEpidemiology($result['user_id'], $result['title'], $result['organization'], $result['location'], $result['supervisor'], $approved, $rejected);
+			return $comm_health;
+		} 
 	} 
 
 	/**

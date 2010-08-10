@@ -103,7 +103,7 @@ class Contribution implements Approvable, AttentionRequirable {
 		$result = $db->getRow($query);
 		if ($result) {
 			$rejected=($result['status'] == -1);
-			$approved = (bool) $result['status'];
+			$approved = ($result['status'] == 1);
 			
 			$contribution =  new Contribution($result['id'], $result['user_id'], $result['role'], $result['org_event'], $result['start_month'], $result['start_year'], $result['end_month'], $result['end_year'], $approved, $rejected);
 			return $contribution;

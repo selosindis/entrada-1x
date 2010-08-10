@@ -644,7 +644,7 @@ function display_external_awards_admin(ExternalAwardReceipts $receipts) {
 					<input type="hidden" name="entity_id" value="<?php echo $receipt->getID(); ?>"></input>
 					<input type="submit" name="action" value="<?php echo $mode; ?>"></input>
 				</form>
-				<?php if (!$receipt->isApproved()) { ?>
+				<?php if (!$receipt->isApproved() && !$receipt->isRejected()) { ?>
 				<form action="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $user->getID(); ?>" method="post">
 					<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
 					<input type="hidden" name="entity_id" value="<?php echo $receipt->getID(); ?>"></input>
@@ -655,6 +655,10 @@ function display_external_awards_admin(ExternalAwardReceipts $receipts) {
 		</li>
 		<?php 
 		}
+	} else {
+	?>
+		<li>None</li>
+	<?php
 	}
 	?>
 	</ul>
@@ -667,7 +671,7 @@ function display_contributions_admin(Contributions $contributions) {
 	?>
 	<ul class="mspr-list">
 	<?php 
-	if ($contributions) {
+	if ($contributions && $contributions->count() > 0) {
 		foreach($contributions as $contribution) {
 			$mode =  (!$contribution->isApproved() || $contribution->isRejected())? "Approve" : "Unapprove";
 			$class = ($contribution->isRejected() ? "rejected" : ($contribution->isApproved()? "approved" : "unapproved"));
@@ -698,7 +702,7 @@ function display_contributions_admin(Contributions $contributions) {
 					<input type="hidden" name="entity_id" value="<?php echo $contribution->getID(); ?>"></input>
 					<input type="submit" name="action" value="<?php echo $mode; ?>"></input>
 				</form> 
-				<?php if (!$contribution->isApproved()) { ?>
+				<?php if (!$contribution->isApproved() && !$contribution->isRejected()) { ?>
 				<form action="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $contribution->getUserID(); ?>" method="post">
 					<input type="hidden" name="user_id" value="<?php echo $contribution->getUserID(); ?>"></input>
 					<input type="hidden" name="entity_id" value="<?php echo $contribution->getID(); ?>"></input>
@@ -838,7 +842,7 @@ function display_supervised_project_admin($section, SupervisedProject $project =
 					<input type="hidden" name="user_id" value="<?php echo $project->getUserID(); ?>"></input>
 					<input type="submit" name="action" value="<?php echo $mode; ?>"></input>
 				</form> 
-				<?php if (!$project->isApproved()) { ?>
+				<?php if (!$project->isApproved() && !$project->isRejected()) { ?>
 				<form action="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $project->getUserID(); ?>" method="post">
 					<input type="hidden" name="user_id" value="<?php echo $project->getUserID(); ?>"></input>
 					<input type="submit" name="action" value="Reject"></input>
@@ -861,11 +865,11 @@ function display_supervised_project_admin($section, SupervisedProject $project =
 	return ob_get_clean();
 }
 
-function display_critical_enquiry_admin(CriticalEnquiry $critical_enquiry) {
+function display_critical_enquiry_admin(CriticalEnquiry $critical_enquiry = null) {
 	return display_supervised_project_admin("critical_enquiry", $critical_enquiry);
 }
 
-function display_community_health_and_epidemiology_admin(CommunityHealthAndEpidemiology $community_health_and_epidemiology) {
+function display_community_health_and_epidemiology_admin(CommunityHealthAndEpidemiology $community_health_and_epidemiology = null) {
 	return display_supervised_project_admin("community_health_and_epidemiology", $community_health_and_epidemiology);	
 }
 
@@ -875,7 +879,7 @@ function display_research_citations_admin(ResearchCitations $research_citations)
 	
 	<ul class="mspr-list">
 	<?php 
-	if ($research_citations) {
+	if ($research_citations && $research_citations->count() > 0) {
 		foreach($research_citations as $research_citation) {
 			$mode =  (!$research_citation->isApproved() || $research_citation->isRejected())? "Approve" : "Unapprove";
 			$class = ($research_citation->isRejected() ? "rejected" : ($research_citation->isApproved()? "approved" : "unapproved"));
@@ -893,7 +897,7 @@ function display_research_citations_admin(ResearchCitations $research_citations)
 					<input type="hidden" name="entity_id" value="<?php echo $research_citation->getID(); ?>"></input>
 					<input type="submit" name="action" value="<?php echo $mode; ?>"></input>
 				</form>
-				<?php if (!$research_citation->isApproved()) { ?>
+				<?php if (!$research_citation->isApproved() && !$research_citation->isRejected()) { ?>
 				<form action="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $research_citation->getUserID(); ?>" method="post">
 					<input type="hidden" name="user_id" value="<?php echo $research_citation->getUserID(); ?>"></input>
 					<input type="hidden" name="entity_id" value="<?php echo $research_citation->getID(); ?>"></input>

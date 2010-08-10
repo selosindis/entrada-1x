@@ -73,11 +73,23 @@ function add_student_management_sidebar () {
 	$sidebar_html .= "	<li class=\"link\"><a href=\"".$baseurl."?section=leavesofabsence&id=".$PROXY_ID."\">Leaves of Absence</a></li>\n";
 	$sidebar_html .= "	<li class=\"link\"><a href=\"".$baseurl."?section=formalremediation&id=".$PROXY_ID."\">Formal Remediation Received</a></li>\n";
 	$sidebar_html .= "	<li class=\"link\"><a href=\"".$baseurl."?section=disciplinaryactions&id=".$PROXY_ID."\">Disciplinary Actions</a></li>\n";
-	
 	$sidebar_html .= "</ul>";
 
 	new_sidebar_item("Student Management", $sidebar_html, "student-management-nav", "open");
 }
 
+function add_mspr_management_sidebar () {
+	global $ENTRADA_ACL, $PROXY_ID;
+	$user = User::get($PROXY_ID);
+	$year = $user->getGradYear();
+	$sidebar_html  = "<ul class=\"menu\">";
+	$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/users/manage/students?section=mspr-options&id=".$PROXY_ID."\">MSPR Options</a></li>\n";
+	$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/mspr?year=".$year ."\">Manage Class of ". $year ." MSPRs</a></li>\n";
+	$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/mspr?all\">Manage All MSPRs Requiring Attention</a></li>\n";
+	
+	$sidebar_html .= "</ul>";
+
+	new_sidebar_item("MSPR Management", $sidebar_html, "mspr-management-nav", "open");
+}
 
 ?>

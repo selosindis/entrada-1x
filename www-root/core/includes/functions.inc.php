@@ -2731,10 +2731,13 @@ function xml_decode($string) {
  * @param bool $required
  * @param int $current_time
  * @param bool $use_times
- * @param int $add_line_break
+ * @param bool $add_line_break
+ * @param bool $auto_end_date
+ * @param bool $disabled
+ * @param bool $optional Indicates whether this date/time field is optional. Checkbox if true, date/time fields only if false. default: true
  * @return string
  */
-function generate_calendar($fieldname, $display_name = "", $required = false, $current_time = 0, $use_times = true, $add_line_break = false, $auto_end_date = false, $disabled = false) {
+function generate_calendar($fieldname, $display_name = "", $required = false, $current_time = 0, $use_times = true, $add_line_break = false, $auto_end_date = false, $disabled = false, $optional=true) {
 	global $HEAD, $ONLOAD;
 
 	if (!$display_name) {
@@ -2747,7 +2750,9 @@ function generate_calendar($fieldname, $display_name = "", $required = false, $c
 		$ONLOAD[]	= "updateTime('".$fieldname."')";
 	}
 
-	$ONLOAD[]	= "dateLock('".$fieldname."')";
+	if ($optional) {
+		$ONLOAD[]	= "dateLock('".$fieldname."')";
+	}
 
 	if ($current_time) {
 		$time		= 1;
@@ -2768,7 +2773,11 @@ function generate_calendar($fieldname, $display_name = "", $required = false, $c
 		$readonly = "";
 	}
 	$output .= "<tr>\n";
-	$output .= "	<td style=\"vertical-align: top\"><input type=\"checkbox\" name=\"".$fieldname."\" id=\"".$fieldname."\" value=\"1\"".(($time) ? " checked=\"checked\"" : "").(($required) ? " readonly=\"readonly\"" : "")." onclick=\"".(($required) ? "this.checked = true" : "dateLock('".$fieldname."')")."\" style=\"vertical-align: middle\" /></td>\n";
+	if ($optional) {
+		$output .= "	<td style=\"vertical-align: top\"><input type=\"checkbox\" name=\"".$fieldname."\" id=\"".$fieldname."\" value=\"1\"".(($time) ? " checked=\"checked\"" : "").(($required) ? " readonly=\"readonly\"" : "")." onclick=\"".(($required) ? "this.checked = true" : "dateLock('".$fieldname."')")."\" style=\"vertical-align: middle\" /></td>\n";
+	} else {
+		$output .= "	<td style=\"vertical-align: top\">&nbsp;</td>\n";		
+	}
 	$output .= "	<td style=\"vertical-align: top; padding-top: 4px\"><label id=\"".$fieldname."_text\" for=\"".$fieldname."\" class=\"".($required ? "form-required" : "form-nrequired")."\">".html_encode($display_name)."</label></td>\n";
 	$output .= "	<td style=\"vertical-align: top\">\n";
 	$output .= "		<input type=\"text\" name=\"".$fieldname."_date\" id=\"".$fieldname."_date\" value=\"".$time_date."\" $readonly autocomplete=\"off\" ".(!$disabled ? "onfocus=\"showCalendar('', this, this, '', '".$fieldname."_date', 0, 20, 1)\"" : "")."style=\"width: 170px; vertical-align: middle\" />&nbsp;";
@@ -10007,47 +10016,26 @@ function display_mspr_details($data) {
 
 function require_mspr_models() {
 	
+	require_once("Models/User.class.php");
+	
 	require_once("Models/Approvable.interface.php");
 	require_once("Models/AttentionRequirable.interface.php");
 	
 	require_once("Models/InternalAwardReceipts.class.php");
 	require_once("Models/ExternalAwardReceipts.class.php");
-	
 	require_once("Models/Studentships.class.php");
-	
-	require_once("Models/User.class.php");
-	
 	require_once("Models/ClinicalPerformanceEvaluations.class.php");
-	
 	require_once("Models/Contributions.class.php");
-	
 	require_once("Models/DisciplinaryActions.class.php");
 	require_once("Models/LeavesOfAbsence.class.php");
 	require_once("Models/FormalRemediations.class.php");
-
 	require_once("Models/ClerkshipRotations.class.php");
-	
 	require_once("Models/StudentRunElectives.class.php");
 	require_once("Models/Observerships.class.php");
 	require_once("Models/InternationalActivities.class.php");
 	require_once("Models/CriticalEnquiry.class.php");
 	require_once("Models/CommunityHealthAndEpidemiology.class.php");
 	require_once("Models/ResearchCitations.class.php");
-}
-
-function isMSPRAttentionRequired(User $user) {
-
-	require_mspr_models();
-	//get all student entered data;
-	$att_reqs[] = CriticalEnquiry::get($user);
-	$att_reqs[] = ExternalAwardReceipts::get($user);
-	$att_reqs[] = Contributions::get($user);
-	$att_reqs[] = CommunityHealthAndEpidemiology::get($user);
-	$att_reqs[] = ResearchCitations::get($user);
-	foreach ($att_reqs as $att_req) {
-		if ($att_req->isAttentionRequired()) return true;
-	}
-	return false;
 }
 
 function getMonthName($month_number) {

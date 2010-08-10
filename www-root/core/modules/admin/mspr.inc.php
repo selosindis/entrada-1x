@@ -62,3 +62,14 @@ if (!defined("PARENT_INCLUDED")) {
 		preferences_update($MODULE, $PREFERENCES);
 	}
 }
+
+function add_mspr_admin_sidebar ($year) {
+	$sidebar_html  = "<ul class=\"menu\">";
+	$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/mspr?section=mspr-options&year=".$year."\">Class of ".$year." MSPR Options</a></li>\n";
+	$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/mspr?year=".$year ."\">Manage Class of ". $year ." MSPRs</a></li>\n";
+	$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/mspr?all\">Manage All MSPRs Requiring Attention</a></li>\n";
+	
+	$sidebar_html .= "</ul>";
+
+	new_sidebar_item("MSPR Admin", $sidebar_html, "mspr-admin-nav", "open");
+}

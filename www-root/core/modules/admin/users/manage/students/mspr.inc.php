@@ -25,9 +25,9 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
 }  else {
 	
-	require_mspr_models();	
-	
-	$user = new User($user_record["id"], $user_record["username"], $user_record["lastname"], $user_record["firstname"]);
+	require_once("Models/MSPR.class.php");
+	$PROXY_ID					= $user_record["id"];
+	$user = User::get($user_record["id"]);
 	
 	process_mspr_admin($user);
 	
@@ -35,9 +35,8 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 	$PAGE_META["description"]	= "";
 	$PAGE_META["keywords"]		= "";
 
-	$PROXY_ID					= $user_record["id"];
 
-	$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/users/manage/students?section=mspr", "title" => "MSPR");
+	$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/users/manage/students?section=mspr&id=".$PROXY_ID, "title" => "MSPR");
 
 	$PROCESSED		= array();
 	$HEAD[] = "<script language='javascript' src='".ENTRADA_URL."/javascript/ActiveDataEntryProcessor.js'></script>";
@@ -57,33 +56,40 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 	}
 
 	
-	$clerkship_core_completed = ClerkshipRotations::getCoreCompleted($user);
-	$clerkship_core_pending = ClerkshipRotations::getCorePending($user);
-	$clerkship_elective_completed = ClerkshipRotations::getElectiveCompleted($user);
+	$mspr = MSPR::get($user);
 	
-	$clinical_evaluation_comments = ClinicalPerformanceEvaluations::get($user);
+	$clerkship_core_completed = $mspr["Clerkship Core Completed"];
+	$clerkship_core_pending = $mspr["Clerkship Core Pending"];
+	$clerkship_elective_completed = $mspr["Clerkship Electives Completed"];
 	
-	$critical_enquiry = CriticalEnquiry::get($user);
-	$student_run_electives = StudentRunElectives::get($user);
-	$observerships = Observerships::get($user);
-	$international_activities = InternationalActivities::get($user);
+	$clinical_evaluation_comments = $mspr["Clinical Performance Evaluation Comments"];
 	
-	$internal_awards = InternalAwardReceipts::get($user);
-	$external_awards = ExternalAwardReceipts::get($user);
-	$studentships = Studentships::get($user);
+	$critical_enquiry = $mspr["Critical Enquiry"];
+	$student_run_electives = $mspr["Student-Run Electives"];
+	$observerships = $mspr["Observerships"];
+	$international_activities = $mspr["International Activities"];
+		
+	$internal_awards = $mspr["Internal Awards"];
+	$external_awards = $mspr["External Awards"];
 	
-	$contributions = Contributions::get($user);
+	$studentships = $mspr["Studentships"];
 	
-	$leaves_of_absence = LeavesOfAbsence::get($user);
-	$formal_remediations = FormalRemediations::get($user);
-	$disciplinary_actions = DisciplinaryActions::get($user);
+	$contributions = $mspr["Contributions to Medical School"];
 	
-	$community_health_and_epidemiology = CommunityHealthAndEpidemiology::get($user);
-	$research_citations = ResearchCitations::get($user);
+	$leaves_of_absence = $mspr["Leaves of Absence"];
+	$formal_remediations = $mspr["Formal Remediation Received"];
+	$disciplinary_actions = $mspr["Disciplinary Actions"];
+	
+	$community_health_and_epidemiology = $mspr["Community Health and Epidemiology"];
+	$research_citations = $mspr["Research"];
 			
 	display_status_messages();
+	
+	$year = $user->getGradYear();
+	add_mspr_management_sidebar();
 ?>
-<h1>Medical School Performance Report<?php echo (isMSPRAttentionRequired($user)) ? ": Attention Required" : ""; ?></h1> 
+ 
+<h1>Medical School Performance Report<?php echo ($mspr->isAttentionRequired()) ? ": Attention Required" : ""; ?></h1> 
 
 <div class="mspr-tree">
 
@@ -108,7 +114,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 		</div>
 		
 		<div class="section">
-			<h3 title="Critical Enquiry" class="collapsable<?php echo ($critical_enquiry->isAttentionRequired()) ? "" : " collapsed"; ?>">Critical Enquiry</h3>
+			<h3 title="Critical Enquiry" class="collapsable<?php echo ($critical_enquiry && $critical_enquiry->isAttentionRequired()) ? "" : " collapsed"; ?>">Critical Enquiry</h3>
 			<div id="critical-enquiry">
 				<div id="critical_enquiry"><?php echo display_critical_enquiry_admin($critical_enquiry); ?></div>
 				<script language="javascript">
@@ -124,7 +130,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 		</div>
 		
 		<div class="section">
-			<h3 title="Community Health and Epidemiology" class="collapsable<?php echo ($community_health_and_epidemiology->isAttentionRequired()) ? "" : " collapsed"; ?>">Community Health and Epidemiology</h3>
+			<h3 title="Community Health and Epidemiology" class="collapsable<?php echo ($community_health_and_epidemiology && $community_health_and_epidemiology->isAttentionRequired()) ? "" : " collapsed"; ?>">Community Health and Epidemiology</h3>
 			<div id="community-health-and-epidemiology">
 				<div id="community_health_and_epidemiology"><?php echo display_community_health_and_epidemiology_admin($community_health_and_epidemiology); ?></div>
 				<script language="javascript">

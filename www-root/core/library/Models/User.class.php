@@ -40,13 +40,15 @@ class User {
 	private $firstname;
 	private $lastname;
 	private $number;
+	private $grad_year;
 	
-	function __construct($id,$username, $firstname, $lastname, $number = 0) {
+	function __construct($id,$username, $lastname, $firstname, $number = 0, $grad_year = null) {
 		$this->id = $id;
 		$this->username = $username;
 		$this->firstname = $firstname;
 		$this->lastname = $lastname;
 		$this->number = $number;
+		$this->grad_year = $grad_year;
 		
 		//be sure to cache this whenever created.
 		$cache = SimpleCache::getCache();
@@ -67,6 +69,14 @@ class User {
 	 */
 	function getUsername() {
 		return $this->username;
+	}
+	
+	/**
+	 * Returns the graduating year of the user, if available
+	 * @return int
+	 */
+	function getGradYear() {
+		return $this->grad_year;
 	}
 	
 	/**
@@ -109,7 +119,7 @@ class User {
 			$query = "SELECT * FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($user_id);
 			$result = $db->getRow($query);
 			if ($result) {
-				$user =  new User($result['id'], $result['username'], $result['lastname'], $result['firstname'], $result['number']);			
+				$user =  new User($result['id'], $result['username'], $result['lastname'], $result['firstname'], $result['number'],$result['grad_year']);			
 			}		
 		} 
 		return $user;

@@ -277,7 +277,7 @@ function display_studentships(Studentships $studentships = null) {
  * @param ExternalAwardReceipts $receipts
  * @return string
  */
-function display_external_awards_profile(ExternalAwardReceipts $receipts) {
+function display_external_awards_profile(ExternalAwardReceipts $receipts, $view_mode = false) {
 	ob_start();
 	?>
 		<ul class="mspr-list">
@@ -285,6 +285,7 @@ function display_external_awards_profile(ExternalAwardReceipts $receipts) {
 	if ($receipts && $receipts->count() > 0) {
 		
 		foreach($receipts as $receipt) {
+			if ($view_mode && $receipt->isRejected()) continue;
 			
 			$award = $receipt->getAward();
 			$mode =  ($receipt->isApproved())? "Unapprove" : "Approve";
@@ -316,6 +317,7 @@ function display_external_awards_profile(ExternalAwardReceipts $receipts) {
 			<span class="data">
 				<?php echo clean_input($receipt->getAwardYear(), array("notags", "specialchars")) ?>	
 			</span>
+			<?php if (!$view_mode) { ?>
 			<div class="controls">
 				<form class="remove_external_award_form" action="<?php echo ENTRADA_URL; ?>/profile?section=mspr&id=<?php echo $user->getID(); ?>" method="post" >
 					<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
@@ -323,6 +325,8 @@ function display_external_awards_profile(ExternalAwardReceipts $receipts) {
 					<input type="submit" name="action" value="Remove"></input> 
 				</form>
 			</div>
+			<?php } ?>
+
 		</li>
 		<?php 
 		}
@@ -342,14 +346,16 @@ function display_external_awards_profile(ExternalAwardReceipts $receipts) {
  * @param Contributions $contributions
  * @return string
  */
-function display_contributions_profile(Contributions $contributions) {
+function display_contributions_profile(Contributions $contributions,$view_mode=false) {
 	ob_start();
 	?>
 	
 	<ul class="mspr-list">
 	<?php 
-	if ($contributions) {
+	if ($contributions && $contributions->count() > 0) {
 		foreach($contributions as $contribution) {
+			if ($view_mode && $contribution->isRejected()) continue;
+			
 			$mode =  ($contribution->isApproved())? "Unapprove" : "Approve";
 			$class = ($contribution->isRejected() ? "rejected" : ($contribution->isApproved()? "approved" : "unapproved")); 
 			?>
@@ -373,13 +379,15 @@ function display_contributions_profile(Contributions $contributions) {
 			<span class="data">
 				<?php echo clean_input($contribution->getPeriod() , array("notags", "specialchars")) ?>
 			</span>
+			<?php if (!$view_mode) { ?>
 			<div class="controls">
 				<form action="<?php echo ENTRADA_URL; ?>/profile?section=mspr&id=<?php echo $contribution->getUserID(); ?>" method="post" >
 					<input type="hidden" name="user_id" value="<?php echo $contribution->getUserID(); ?>"></input>
 					<input type="hidden" name="entity_id" value="<?php echo $contribution->getID(); ?>"></input>
 					<input type="submit" name="action" value="Remove"></input> 
 				</form>
-			</div>			
+			</div>
+			<?php } ?>			
 		</li>
 		<?php 
 		}
@@ -644,24 +652,26 @@ function display_supervised_project_profile(SupervisedProject $project = null) {
 	return ob_get_clean();
 }
 
-function display_research_citations_profile(ResearchCitations $research_citations) {
+function display_research_citations_profile(ResearchCitations $research_citations, $view_mode=false) {
 	ob_start();
 	?>
 	
-	<ul class="mspr-list priority-list" id="citations_list">
+	<ul class="mspr-list<?php echo ($view_mode) ? "" : " priority-list"; ?>" id="citations_list">
 	<?php 
 	if ($research_citations && $research_citations->count() > 0) {
 		foreach($research_citations as $research_citation) {
+			if ($view_mode && $research_citation->isRejected()) continue;
 			$class = ($research_citation->isRejected() ? "rejected" : ($research_citation->isApproved()? "approved" : "unapproved"));
 		?>
 		<li class="entry <?php echo $class; ?>" id="research_citation_<?php echo $research_citation->getID(); ?>">
-			<span class="handle"><img src="<?php echo ENTRADA_URL; ?>/images/arrow_up_down.png" /></span> 
+			<?php if ($view_mode) { ?> <span class="handle"><img src="<?php echo ENTRADA_URL; ?>/images/arrow_up_down.png" /></span><?php } ?> 
 			<span class="label">
 				Citation: 
 			</span>
 			<p class="data">
 				<?php echo clean_input($research_citation->getText(), array("notags", "specialchars", "nl2br")) ?>
 			</p>
+			<?php if (!$view_mode) { ?>
 			<div class="controls">
 				<form action="<?php echo ENTRADA_URL; ?>/profile?section=mspr&id=<?php echo $research_citation->getUserID(); ?>" method="post" >
 					<input type="hidden" name="user_id" value="<?php echo $research_citation->getUserID(); ?>"></input>
@@ -670,6 +680,8 @@ function display_research_citations_profile(ResearchCitations $research_citation
 					<input type="submit" name="action" value="Remove" ></input> 
 				</form>
 			</div>
+			<?php } ?>
+
 		</li>
 		<?php 
 		}

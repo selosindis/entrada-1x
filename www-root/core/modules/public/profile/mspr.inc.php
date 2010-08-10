@@ -26,7 +26,11 @@ if (!defined("IN_PROFILE")) {
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
 }  else {
 	require_once(dirname(__FILE__)."/includes/functions.inc.php");
-	require_mspr_models();
+	
+	require_once("Models/MSPR.class.php");
+	
+	//require_mspr_models();
+	$user = User::get($PROXY_ID);
 	
 	$PAGE_META["title"]			= "MSPR";
 	$PAGE_META["description"]	= "";
@@ -34,8 +38,6 @@ if (!defined("IN_PROFILE")) {
 
 	$PROXY_ID					= $_SESSION["details"]["id"];
 	
-	$user = User::get($PROXY_ID);
-	process_external_awards_profile($user);
 	
 	$BREADCRUMB[]	= array("url" => ENTRADA_URL."/profile?section=mspr", "title" => "MSPR");
 
@@ -59,37 +61,59 @@ if (!defined("IN_PROFILE")) {
 	
 echo display_status_messages();
 
-$clerkship_core_completed = ClerkshipRotations::getCoreCompleted($user);
-$clerkship_core_pending = ClerkshipRotations::getCorePending($user);
-$clerkship_elective_completed = ClerkshipRotations::getElectiveCompleted($user);
+$mspr = MSPR::get($user);
 
-$clinical_evaluation_comments = ClinicalPerformanceEvaluations::get($user);
+$clerkship_core_completed = $mspr["Clerkship Core Completed"];
+$clerkship_core_pending = $mspr["Clerkship Core Pending"];
+$clerkship_elective_completed = $mspr["Clerkship Electives Completed"];
 
-$critical_enquiry = CriticalEnquiry::get($user);
-$student_run_electives = StudentRunElectives::get($user);
-$observerships = Observerships::get($user);
-$international_activities = InternationalActivities::get($user);
+$clinical_evaluation_comments = $mspr["Clinical Performance Evaluation Comments"];
+
+$critical_enquiry = $mspr["Critical Enquiry"];
+$student_run_electives = $mspr["Student-Run Electives"];
+$observerships = $mspr["Observerships"];
+$international_activities = $mspr["International Activities"];
 	
-$internal_awards = InternalAwardReceipts::get($user);
-$external_awards = ExternalAwardReceipts::get($user);
-$studentships = Studentships::get($user);
+$internal_awards = $mspr["Internal Awards"];
+$external_awards = $mspr["External Awards"];
 
-$contributions = Contributions::get($user);
+$studentships = $mspr["Studentships"];
 
-$leaves_of_absence = LeavesOfAbsence::get($user);
-$formal_remediations = FormalRemediations::get($user);
-$disciplinary_actions = DisciplinaryActions::get($user);
+$contributions = $mspr["Contributions to Medical School"];
 
-$community_health_and_epidemiology = CommunityHealthAndEpidemiology::get($user);
-$research_citations = ResearchCitations::get($user);
+$leaves_of_absence = $mspr["Leaves of Absence"];
+$formal_remediations = $mspr["Formal Remediation Received"];
+$disciplinary_actions = $mspr["Disciplinary Actions"];
 
+$community_health_and_epidemiology = $mspr["Community Health and Epidemiology"];
+$research_citations = $mspr["Research"];
+
+$closed = $mspr->isClosed();
+$generated = $mspr->isGenerated();
 ?>
 
 <h1>Medical School Performance Report</h1> 
+
+<?php 
+if ($closed) {
+?>
+<div class="display-notice">
+	<p>MSPR submission closed on <?php echo date("F j, Y \a\\t g:i a",$mspr->getClosedTimestamp()); ?></p>
+	<?php if ($generated) {	?>
+	<p>Doc icons go here</p>
+	<?php } else { ?>
+	<p>Finalized documents are not yet available.</p>
+	<?php } ?>
+</div>
+<?php } ?>
+
 <div class="mspr-tree">
 
 	<a href="#" onclick='document.fire("CollapseHeadings:expand-all");'>Expand All</a> / <a href="#" onclick='document.fire("CollapseHeadings:collapse-all");'>Collapse All</a>
 
+	<?php 
+	if (!$closed) {
+	?>
 	<h2 title="Required Information Section">Information Required From You</h2>
 	<div id="required-information-section">
 		<div class="instructions" style="margin-left:2em;margin-top:2ex;">
@@ -665,6 +689,114 @@ $research_citations = ResearchCitations::get($user);
 			</div>
 		</div>
 	</div>
+	<?php 
+	} else {
+	?>
+	<div class="section" >
+		<h3 title="Critical Enquiry" class="collapsable collapsed">Critical Enquiry</h3>
+		<div id="critical-enquiry">
+			<div id="critical_enquiry"><?php echo display_supervised_project_profile($critical_enquiry); ?></div>
+		</div>
+	</div>
+	<div class="section" >
+		<h3 title="Community Health and Epidemiology" class="collapsable collapsed">Community Health and Epidemiology</h3>
+		<div id="community-health-and-epidemiology">
+			<div id="community_health_and_epidemiology"><?php echo display_supervised_project_profile($community_health_and_epidemiology); ?></div>
+		</div>
+	</div>
+	<div class="section" >
+		<h3 title="Research" class="collapsable collapsed">Research</h3>
+		<div id="research">
+			<div id="research_citations"><?php echo display_research_citations_profile($research_citations, true); ?></div>
+		</div>
+	</div>
+	<div class="section">
+		 
+		<h3 class="collapsable collapsed" title="External Awards Section">External Awards</h3>
+		<div id="external-awards-section">
+			<div id="external_awards"><?php echo display_external_awards_profile($external_awards,true); ?></div>
+		</div>
+	</div>
+	<div class="section" >
+		<h3 title="Contributions to Medical School" class="collapsable collapsed">Contributions to Medical School</h3>
+		<div id="contributions-to-medical-school">
+			<div id="contributions"><?php echo display_contributions_profile($contributions,true); ?></div>
+		</div>
+	</div>
+	<div class="section">
+		<h3 title="Clerkship Core Rotations Completed Satisfactorily to Date" class="collapsable collapsed">Clerkship Core Rotations Completed Satisfactorily to Date</h3>
+		<div id="clerkship-core-rotations-completed-satisfactorily-to-date">
+			<div id="clerkships_core_completed"><?php echo display_clerkship_details($clerkship_core_completed); ?></div>
+		</div>
+	</div>
+	<div class="section">
+		<h3 title="Clerkship Core Rotations Pending" class="collapsable collapsed">Clerkship Core Rotations Pending</h3>
+		<div id="clerkship-core-rotations-pending">
+			<div id="clerkships_core_pending"><?php echo display_clerkship_details($clerkship_core_pending); ?></div>
+		</div>
+	</div>
+	<div class="section">
+		<h3 title="Clerkship Electives Completed Satisfactorily to Date" class="collapsable collapsed">Clerkship Electives Completed Satisfactorily to Date</h3>
+		<div id="clerkship-electives-completed-satisfactorily-to-date">
+			<div id="clerkships_electves_completed"><?php echo display_clerkship_details($clerkship_elective_completed); ?></div>
+		</div>
+	</div>
+	<div class="section" >
+		<h3 title="Clinical Performance Evaluation Comments" class="collapsable collapsed">Clinical Performance Evaluation Comments</h3>
+		<div id="clinical-performance-evaluation-comments">
+			<div id="clinical_performance_eval_comments"><?php echo display_clineval_profile($clinical_evaluation_comments); ?></div>
+		</div>
+	</div>
+	
+	<div class="section" >
+		<h3 title="Extra-curricular Learning Activities" class="collapsable collapsed">Extra-curricular Learning Activities</h3>
+		<div id="extra-curricular-learning-activities">
+		
+			<div class="subsection">
+				<h4 title="International Activities">International Activities</h4>
+				<div id="international-activities"><?php echo display_international_activities($international_activities); ?></div>
+			</div>
+			<div class="subsection" >
+				<h4>Observerships</h4>
+				<div id="observerships"><?php echo display_observerships_public($observerships); ?></div>
+			</div>
+			<div class="subsection" >
+				<h4>Student-Run Electives</h4>
+				<div id="student_run_electives"><?php echo display_student_run_electives_public($student_run_electives); ?></div>
+			</div>
+		</div>
+	</div>
+	
+	<div class="section">
+		<h3 title="Internal Awards" class="collapsable collapsed">Internal Awards</h3>
+		<div id="internal-awards"><?php echo display_internal_awards($internal_awards); ?></div>
+	</div>
+	<div class="section" >
+		<h3 title="Summer Studentships" class="collapsable collapsed">Summer Studentships</h3>
+		<div id="summer-studentships"><?php echo display_studentships($studentships); ?></div>
+	</div>
+	<div class="section">
+		<h3 title="Leaves of Absence" class="collapsable collapsed">Leaves of Absence</h3>
+		<div id="leaves-of-absence">
+		<?php echo display_mspr_details($leaves_of_absence); ?>
+		</div>
+	</div>
+	<div class="section">
+		<h3 title="Formal Remediation Received" class="collapsable collapsed">Formal Remediation Received</h3>
+		<div id="formal-remediation-received">
+		<?php echo display_mspr_details($formal_remediations); ?>
+		</div>
+	</div>
+	<div class="section">
+		<h3 title="Disciplinary Actions" class="collapsable collapsed">Disciplinary Actions</h3>
+		<div id="disciplinary-actions"> 
+		<?php echo display_mspr_details($disciplinary_actions); ?>
+		</div>
+	</div>
+	<?php 
+	}
+	?>
+	
 	
 </div>
 

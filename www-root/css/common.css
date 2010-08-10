@@ -2793,3 +2793,15 @@ margin: 0 1em 0 0;
 .mspr-list .entry .heading {
 	font-weight:bold;
 }
+
+.attention-required {
+	background-color: FloralWhite;
+}
+
+#mspr-class-list .attention-not-required {
+	display:none;
+}
+
+#mspr-class-list.show-all .attention-not-required {
+	display:table-row;
+}

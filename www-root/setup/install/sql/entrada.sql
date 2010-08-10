@@ -2260,3 +2260,16 @@ CREATE TABLE `assessment_marking_schemes` (
   `enabled` tinyint(1) NOT NULL DEFAULT '1',
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM;
+
+delimiter $$
+
+drop function if exists `isnumeric` $$
+create function `isnumeric` (s varchar(255)) returns int
+begin
+set @match =
+   '^(([0-9+-.$]{1})|([+-]?[$]?[0-9]*(([.]{1}[0-9]*)|([.]?[0-9]+))))$';
+
+return if(s regexp @match, 1, 0);
+end $$
+
+delimiter ;

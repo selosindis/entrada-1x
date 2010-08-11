@@ -177,7 +177,7 @@ return array (
   'admin' =>
   array (
     'firstname' => '{$this->admin_firstname}',
-    'lastname' => '{$this->entrada_relative}',
+    'lastname' => '{$this->admin_lastname}',
     'email' => '{$this->admin_email}',
   ),
 );

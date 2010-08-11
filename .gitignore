@@ -3,5 +3,6 @@ nbproject
 .tmproj
 .DS_Store
 .htaccess
+www-root/core/config/config.inc.php
 www-root/calendars/*
 www-root/syllabi/*

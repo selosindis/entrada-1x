@@ -1271,13 +1271,29 @@ function fetch_objective_title($objective_id = 0) {
 	return false;
 }
 
-function fetch_mcc_objectives($parent_id = 0, $objectives = array()) {
+function fetch_mcc_objectives($parent_id = 0, $objectives = array(), $course_id = 0, $objective_ids = array()) {
 	global $db;
+	
 	if ($parent_id) {
 		$where = " WHERE `objective_parent` = ".$db->qstr($parent_id);
 	} else {
 		$where = " WHERE `objective_name` LIKE 'MCC Objectives'";
 	}
+	
+	if ($course_id) {
+		$query = "	SELECT `objective_id` 
+					FROM `course_objectives`
+					WHERE `course_id` = ".$db->qstr($course_id)."
+					AND `objective_type` = 'event'";
+		$allowed_objectives = $db->GetAll($query);
+		if (isset($allowed_objectives) && is_array($allowed_objectives) && count($allowed_objectives)) {
+			$objective_ids = array();
+			foreach ($allowed_objectives as $objective) {
+				$objective_ids[] = $objective["objective_id"];
+			}
+		}
+	}
+	
 	$query = "SELECT * FROM `global_lu_objectives`".$where;
 	$results = $db->GetAll($query);
 	if ($results) {
@@ -1285,10 +1301,16 @@ function fetch_mcc_objectives($parent_id = 0, $objectives = array()) {
 			if ($parent_id) {
 				$objectives[] = $result;
 			}
-			$objectives = fetch_mcc_objectives($result["objective_id"], $objectives);
+			$objectives = fetch_mcc_objectives($result["objective_id"], $objectives, 0, (isset($objective_ids) && $objective_ids ? $objective_ids : array()));
 		}
 	}
-
+	if (!$parent_id && $objective_ids) {
+		foreach ($objectives as $key => $objective) {
+			if (array_search($objective["objective_id"], $objective_ids) === false) {
+				unset($objectives[$key]);
+			}
+		}
+	}
 	return $objectives;
 }
 

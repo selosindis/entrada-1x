@@ -198,6 +198,10 @@ background:transparent url(../images/list-notice.gif) no-repeat 0 2px;
 background:transparent url(../images/list-error.gif) no-repeat 0 2px;
 }
 
+.display-generic a {
+text-decoration: underline;
+}
+
 div.container {
 position: relative;
 }
@@ -1191,14 +1195,14 @@ left:19px;
 
 h1 {
 font-family:'Century Gothic', Helvetica, Arial, sans-serif;
-font-size:24px;
+font-size:26px;
 font-weight:400;
 color:#036;
 }
 
 h2 {
 font-family:'Century Gothic', Helvetica, Arial, sans-serif;
-font-size:16px;
+font-size:18px;
 color:#036;
 border-bottom:2px #CCC solid;
 }
@@ -1389,7 +1393,6 @@ ul.rss-list.first li {
 div.rss-add {
 	padding-top:10px;
 	clear:both;
-	text-align: right;	
 }
 #rss-add-details, #rss-edit-details {
 	text-align: left;
@@ -1418,15 +1421,17 @@ div.rss-add {
 }
 
 a.rss-remove-link {
-	background: transparent url(../images/action-delete.gif) no-repeat center left;
-	margin: 10px 0 0 10px;
-	padding-left: 20px;
-	font-weight: bold;
-	display: none;
+background: transparent url(../images/feed_delete.png) no-repeat center left;
+margin: 10px 0 0 10px;
+padding-left: 20px;
+height: 16px;
+font-weight: bold;
+color: #bc4305;
+display: none;
 }
 
 #dashboard-syndicated-content.editing a.rss-remove-link {
-	display: block;
+display: block;
 }
 
 div.rss-add a.feeds {
@@ -2530,13 +2535,21 @@ a.feeds {
 font-size:11px;
 color:#A7A7A7;
 text-decoration:none;
-padding:2px 10px 2px 16px;
+padding:2px 10px 2px 17px;
 }
 a.feeds:hover {
 text-decoration: underline;
 }
 a.feeds.rss {
 background:transparent url(../images/rss-enabled.gif) no-repeat center left;
+}
+
+a.feeds.edit-rss {
+background:transparent url(../images/feed_edit.png) no-repeat center left;
+}
+
+a.feeds.add-rss {
+background:transparent url(../images/feed_add.png) no-repeat center left;
 }
 
 a.feeds.ics {

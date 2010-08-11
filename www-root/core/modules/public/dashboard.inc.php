@@ -786,45 +786,49 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 	preferences_update($MODULE, $PREFERENCES);
 	?>
 	<div class="rss-add">
-		<a id="add-rss-feeds-link" href="#edit-rss-feeds" class="feeds rss">Add new RSS Feed</a><a id="edit-rss-feeds-link" href="#edit-rss-feeds" class="feeds rss">Edit and Arrange RSS Feeds</a>
-		<div id="rss-edit-details" style="display: none;">
-			<p>Drag the RSS feeds below to reorder them. You can also <a href="#edit-rss-feeds" id="rss-feed-reset" />Reset to Default RSS Feeds</a><span id="rss-save-results">&nbsp;</span></p>
+		<a id="add-rss-feeds-link" href="#edit-rss-feeds" class="feeds add-rss">Add RSS Feed</a>
+		<a id="edit-rss-feeds-link" href="#edit-rss-feeds" class="feeds edit-rss">Modify RSS Feeds</a>
+		
+		<div id="rss-edit-details" class="display-generic" style="display: none;">
+			While you are in <strong>edit mode</strong> you can rearrange the feeds below by dragging them to your preferred location. You can also <a href="#edit-rss-feeds" id="rss-feed-reset">reset this page to the default RSS feeds</a> if you would like. <span id="rss-save-results">&nbsp;</span>
 		</div>
 		<div id="rss-add-details">
 			<form id="rss-add-form">
-				<table style="width: 450px;" cellspacing="0" cellpadding="2" border="0" summary="Editing Dashboard RSS Feeds">
+				<table style="width: 450px;" cellspacing="0" cellpadding="2" border="0" summary="Adding Dashboard RSS Feed">
 					<colgroup>
 						<col style="width: 3%" />
-						<col style="width: 30%" />
-						<col style="width: 67%" />
+						<col style="width: 25%" />
+						<col style="width: 72%" />
 					</colgroup>
 					<tr>						
 						<td colspan="3">
-							<h2>New RSS Feed</h2>
+							<h2 style="margin-top: 0">Add RSS Feed</h2>
+							<p>You can add your own external news feeds to your dashboard by providing both a title, and the full URL to your valid RSS feed.</p>
 						</td>
 					</tr>
 					<tr>
 						<td></td>
 						<td><label for="rss-add-title" class="form-required">RSS Feed Title</label></td>
-						<td><input id="rss-add-title" style="width: 50%"></td>
+						<td><input id="rss-add-title" style="width: 98%" /></td>
 					</tr>
 					<tr>
 						<td></td>
 						<td><label id="rss-add-url-label" for="rss-add-url" class="form-required">RSS Feed URL</label></td>
-						<td><input id="rss-add-url" style="width: 98%"></td>
+						<td><input id="rss-add-url" style="width: 98%" value="http://" /></td>
 					</tr>
 					<tr>
 						<td colspan="3">
-						<table style="width: 100%" cellspacing="0" cellpadding="0" border="0">
-							<tr>
-								<td style="width: 25%; text-align: left">
-									<input type="button" class="button" value="Cancel" id="add-rss-feeds-close-link"/>
-								</td>
-								<td style="width: 75%; text-align: right; vertical-align: middle">
-									<input type="submit" id="rss-add-button" value="Add">
-								</td>
-							</tr>
-						</table>
+							<table style="margin-top: 15px; width: 100%" cellspacing="0" cellpadding="0" border="0">
+								<tr>
+									<td style="width: 25%; text-align: left">
+										<input type="button" class="button" value="Cancel" id="add-rss-feeds-close-link"/>
+									</td>
+									<td style="width: 75%; text-align: right; vertical-align: middle">
+										<input type="submit" id="rss-add-button" value="Add">
+									</td>
+								</tr>
+							</table>
+						</td>
 					</tr>
 				</table>
 			</form>

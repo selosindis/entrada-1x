@@ -38,21 +38,22 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 	if ($COURSE_ID) {
-		$query				= "	SELECT * FROM `courses` 
-							WHERE `course_id` = ".$db->qstr($COURSE_ID)."
-							AND `course_active` = '1'";
-		$course_details		= $db->GetRow($query);
+		$query = "	SELECT * FROM `courses`
+					WHERE `course_id` = ".$db->qstr($COURSE_ID)."
+					AND `course_active` = '1'";
+		$course_details	= $db->GetRow($query);
 
-		$m_query			= "	SELECT * FROM `assessment_marking_schemes` 
-							WHERE `enabled` = 1;";
-		$MARKING_SCHEMES	= $db->GetAll($m_query);
-		
+		$m_query = "	SELECT * FROM `assessment_marking_schemes`
+						WHERE `enabled` = 1;";
+		$MARKING_SCHEMES = $db->GetAll($m_query);
+
 		if ($course_details && $MARKING_SCHEMES && $ENTRADA_ACL->amIAllowed(new GradebookResource($course_details["course_id"], $course_details["organisation_id"]), "update")) {
 			function return_id($arr) {
 				return $arr["id"];
-			}			
+			}
+			
 			$MARKING_SCHEME_IDS = array_map("return_id", $MARKING_SCHEMES);
-			$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "edit", "id" => $COURSE_ID, "step" => false)), "title" => "Adding Assessment");
+			$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "edit", "id" => $COURSE_ID, "step" => false)), "title" => "Adding Assessment");
 			
 			// Error Checking
 			switch($STEP) {
@@ -323,4 +324,3 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 		application_log("notice", "Failed to provide course identifier when attempting to add an assessment");
 	}
 }
-?>

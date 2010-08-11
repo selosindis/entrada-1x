@@ -56,6 +56,7 @@ if(!defined("PARENT_INCLUDED")) {
 		} else {
 			$ASSESSMENT_ID = 0;
 		}
+		
 		$module_file = $router->getRoute();
 		if ($module_file) {
 			require_once($module_file);

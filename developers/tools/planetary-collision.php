@@ -319,7 +319,7 @@ if($MERGE["auth"] == true) {
 	//Merge user preferences
 	merge_tables("auth", "user_preferences", array("preference_id" => false, "proxy_id" => $COLLIDE_ID));
 	
-	move_table_array("primary", "auth", array("acl_permissions", "statistics", "user_incidents")); // None of this stuff from rehab is present/different
+	move_table_array("primary", "auth", array("acl_permissions", "statistics", "user_incidents", "entity_type")); // None of this stuff from rehab is present/different
 }
 
 if($MERGE["clerkship"] == true) {
@@ -344,7 +344,7 @@ if($MERGE["communities"] == true) {
 		"COMMUNITY_MAILING_LIST_MEMBER_ID_DELTA"	=> array("community_mailing_list_members", 	"cmlmember_id", 	true, true),
 		"COMMUNITY_MAILING_LIST_ID_DELTA"	 		=> array("community_mailing_lists",			"cmlist_id", 		true, true),
 		"COMMUNITY_MEMBER_ID_DELTA" 				=> array("community_members", 				"cmember_id", 		true, true),
-		"COMMUNITY_MODULE_ID_DELTA"					=> array("community_modules", 				"cmodule_id", 		true, false),
+		"COMMUNITY_MODULE_ID_DELTA"					=> array("community_modules", 				"cmodule_id", 		true, true),
 		"COMMUNITY_NOTIFICATION_ID_DELTA"			=> array("community_notifications", 		"cnotification_id", true, false), // Needs polymorph callback
 		"COMMUNITY_PAGE_OPTION_DELTA"				=> array("community_page_options", 			"cpoption_id", 		true, true),
 		"COMMUNITY_POLL_ID_DELTA"					=> array("community_polls", 				"cpolls_id", 		true, true),

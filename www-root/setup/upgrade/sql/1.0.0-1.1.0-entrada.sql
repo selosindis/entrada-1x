@@ -27,3 +27,11 @@ CREATE TABLE IF NOT EXISTS `assessment_marking_schemes` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 ALTER TABLE `courses` ADD COLUMN `objective_type` enum('event','course') DEFAULT 'course' AFTER `importance`;
+
+CREATE TABLE IF NOT EXISTS `settings` (
+  `shortname` VARCHAR( 64 ) NOT NULL ,
+  `value` TEXT NOT NULL ,
+  PRIMARY KEY ( `shortname` )
+) ENGINE = MYISAM DEFAULT CHARSET=utf8;
+
+INSERT INTO `settings` (`shortname`, `value`) VALUES ('version_db', '1.1.0');

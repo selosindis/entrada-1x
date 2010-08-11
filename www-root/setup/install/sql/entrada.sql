@@ -2225,6 +2225,14 @@ CREATE TABLE IF NOT EXISTS `quiz_question_responses` (
   KEY `response_is_html` (`response_is_html`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
+CREATE TABLE IF NOT EXISTS `settings` (
+  `shortname` VARCHAR( 64 ) NOT NULL ,
+  `value` TEXT NOT NULL ,
+  PRIMARY KEY ( `shortname` )
+) ENGINE = MYISAM DEFAULT CHARSET=utf8;
+
+INSERT INTO `settings` (`shortname`, `value`) VALUES ('version_db', '1.1.0');
+
 CREATE TABLE IF NOT EXISTS `statistics` (
   `statistic_id` int(12) NOT NULL AUTO_INCREMENT,
   `proxy_id` int(12) NOT NULL DEFAULT '0',

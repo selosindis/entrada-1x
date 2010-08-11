@@ -26,4 +26,4 @@ CREATE TABLE IF NOT EXISTS `assessment_marking_schemes` (
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-ALTER TABLE `courses` ADD COLUMN `objective_type` enum('event','course') DEFAULT 'course' AFTER `importance`;
+ALTER TABLE `course_objectives` ADD COLUMN `objective_type` enum('event','course') DEFAULT 'course' AFTER `importance`;

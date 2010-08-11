@@ -1410,8 +1410,8 @@ div.rss-add {
 	color: #000;
 }
 #dashboard-syndicated-content.editing ul.rss-list li {
-	padding: 0px 5px 5px 5px;
-	margin: 5px;
+	padding: 0px 3px 3px 3px;
+	margin: 5px 3px;
 	border: 1px #AAA dashed;
 	cursor: move;
 }

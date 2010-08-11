@@ -28,6 +28,13 @@ CREATE TABLE IF NOT EXISTS `assessment_marking_schemes` (
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
+INSERT INTO `assessment_marking_schemes` (`id`,`name`,`handler`,`enabled`)
+VALUES
+	(1, 'Pass/Fail', 'Boolean', 1),
+	(2, 'Percentage', 'Percentage', 1),
+	(3, 'Numeric', 'Numeric', 1),
+	(4, 'Complete/Incomplete', 'IncompleteComplete', 1);
+
 CREATE TABLE IF NOT EXISTS `communities` (
   `community_id` int(12) NOT NULL AUTO_INCREMENT,
   `community_parent` int(12) NOT NULL DEFAULT '0',

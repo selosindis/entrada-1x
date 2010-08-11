@@ -143,14 +143,17 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 										}
 									}
 								}
-								foreach ($PROCESSED_OBJECTIVES as $objective_id => $objective) {
-									$objective_found = $db->GetOne("SELECT `objective_id` FROM `course_objectives` WHERE `objective_id` = ".$db->qstr($objective_id)." AND `course_id` = ".$db->qstr($COURSE_ID));
-									if ($objective_found) {
-										$db->AutoExecute("course_objectives", array("objective_details" => $objective, "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "UPDATE", "`objective_id` = ".$db->qstr($objective_id)." AND `course_id` = ".$db->qstr($COURSE_ID));
-									} else {
-										$db->AutoExecute("course_objectives", array("course_id" => $COURSE_ID, "objective_id" => $objective_id, "objective_details" => $objective, "importance" => 0, "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT");
+
+								if (is_array($PROCESSED_OBJECTIVES)) {
+									foreach ($PROCESSED_OBJECTIVES as $objective_id => $objective) {
+										$objective_found = $db->GetOne("SELECT `objective_id` FROM `course_objectives` WHERE `objective_id` = ".$db->qstr($objective_id)." AND `course_id` = ".$db->qstr($COURSE_ID));
+										if ($objective_found) {
+											$db->AutoExecute("course_objectives", array("objective_details" => $objective, "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "UPDATE", "`objective_id` = ".$db->qstr($objective_id)." AND `course_id` = ".$db->qstr($COURSE_ID));
+										} else {
+											$db->AutoExecute("course_objectives", array("course_id" => $COURSE_ID, "objective_id" => $objective_id, "objective_details" => $objective, "importance" => 0, "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT");
+										}
+
 									}
-									
 								}
 	
 								$SUCCESS++;

@@ -338,15 +338,39 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								break;
 							}
 
+							$query = "SELECT * FROM `course_objectives` WHERE `objective_type` = 'course' AND `course_id` = ".$db->qstr($COURSE_ID);
+							$course_objectives = $db->GetAll($query);
+							$objective_details = array();
+							if ($course_objectives && count($course_objectives)) {
+								foreach ($course_objectives as $course_objective) {
+									if ($course_objective["objective_details"]) {
+										$objective_details[$course_objective["objective_id"]]["details"] = $course_objective["objective_details"];
+										$objective_details[$course_objective["objective_id"]]["found"] = false;
+									}
+								}
+							}
 							$db->Execute("DELETE FROM `course_objectives` WHERE `objective_type` = 'course' AND `course_id` = ".$db->qstr($COURSE_ID));
 							if (is_array($PRIMARY_OBJECTIVES) && count($PRIMARY_OBJECTIVES)) {
 								foreach($PRIMARY_OBJECTIVES as $objective_id) {
-									$db->Execute("INSERT INTO `course_objectives` SET `course_id` = ".$db->qstr($COURSE_ID).", `objective_id` = ".$db->qstr($objective_id).", `updated_date` = ".$db->qstr(time()).", `updated_by` = ".$db->qstr($_SESSION["details"]["id"]).", `importance` = '1'");
+									$db->Execute("INSERT INTO `course_objectives` SET `course_id` = ".$db->qstr($COURSE_ID).", `objective_id` = ".$db->qstr($objective_id).", `updated_date` = ".$db->qstr(time()).", `updated_by` = ".$db->qstr($_SESSION["details"]["id"]).", `importance` = '1', `objective_details` = ".(isset($objective_details[$objective_id]) && $objective_details[$objective_id] ? $db->qstr($objective_details[$objective_id]["details"]) : "NULL"));
+									if (isset($objective_details[$objective_id]) && $objective_details[$objective_id]) {
+										$objective_details[$objective_id]["found"] = true;
+									}
 								}
 							}
 							if (is_array($SECONDARY_OBJECTIVES) && count($SECONDARY_OBJECTIVES)) {
 								foreach($SECONDARY_OBJECTIVES as $objective_id) {
-									$db->Execute("INSERT INTO `course_objectives` SET `course_id` = ".$db->qstr($COURSE_ID).", `objective_id` = ".$db->qstr($objective_id).", `updated_date` = ".$db->qstr(time()).", `updated_by` = ".$db->qstr($_SESSION["details"]["id"]).", `importance` = '2'");
+									$db->Execute("INSERT INTO `course_objectives` SET `course_id` = ".$db->qstr($COURSE_ID).", `objective_id` = ".$db->qstr($objective_id).", `updated_date` = ".$db->qstr(time()).", `updated_by` = ".$db->qstr($_SESSION["details"]["id"]).", `importance` = '2', `objective_details` = ".(isset($objective_details[$objective_id]) && $objective_details[$objective_id] ? $db->qstr($objective_details[$objective_id]["details"]) : "NULL"));
+									if (isset($objective_details[$objective_id]) && $objective_details[$objective_id]) {
+										$objective_details[$objective_id]["found"] = true;
+									}
+								}
+							}
+							if (is_array($objective_details) && count($objective_details)) {
+								foreach($objective_details as $objective_id => $objective) {
+									if (!$objective["found"]) {
+										$db->Execute("INSERT INTO `course_objectives` SET `course_id` = ".$db->qstr($COURSE_ID).", `objective_id` = ".$db->qstr($objective_id).", `updated_date` = ".$db->qstr(time()).", `updated_by` = ".$db->qstr($_SESSION["details"]["id"]).", `importance` = '1', `objective_details` = ".$db->qstr($objective["details"]));
+									}
 								}
 							}
 
@@ -764,13 +788,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								<td colspan="3">&nbsp;</td>
 							</tr>
 							<tr>
+								<td>&nbsp;</td>
 								<td style="vertical-align: top">
 									Clinical Presentations
 									<div class="content-small" style="margin-top: 5px">
 										<strong>Note:</strong> For more detailed information please refer to the <a href="http://www.mcc.ca/Objectives_online/objectives.pl?lang=english&loc=contents" target="_blank" style="font-size: 11px">MCC Objectives for the Qualifying Examination</a>.
 									</div>
 								</td>
-								<td colspan="2">
+								<td>
 									<select class="multi-picklist" id="PickList" name="clinical_presentations[]" multiple="multiple" size="5" style="width: 100%; margin-bottom: 5px">
 									<?php
 									if ((is_array($clinical_presentations)) && (count($clinical_presentations))) {

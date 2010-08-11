@@ -7439,6 +7439,7 @@ function courses_fetch_objectives($course_ids, $parent_id = 1, $objectives = fal
 							"secondary_ids" => array());
 		$query		= "	SELECT `objective_id`, `importance`, `objective_details`, `course_id` FROM `course_objectives` 
 						WHERE ".($fetch_all_text ? "" : "`importance` != '0'
+						AND `objective_type` = 'course'
 						AND ")."`course_id` IN (";
 		$escaped_course_ids = "";
 		for ($i = 0; $i < (count($course_ids) - 1); $i++) {

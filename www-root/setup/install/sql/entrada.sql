@@ -28,12 +28,11 @@ CREATE TABLE IF NOT EXISTS `assessment_marking_schemes` (
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-INSERT INTO `assessment_marking_schemes` (`id`,`name`,`handler`,`enabled`)
-VALUES
-	(1, 'Pass/Fail', 'Boolean', 1),
-	(2, 'Percentage', 'Percentage', 1),
-	(3, 'Numeric', 'Numeric', 1),
-	(4, 'Complete/Incomplete', 'IncompleteComplete', 1);
+INSERT INTO `assessment_marking_schemes` (`id`,`name`,`handler`,`enabled`) VALUES
+(1, 'Pass/Fail', 'Boolean', 1),
+(2, 'Percentage', 'Percentage', 1),
+(3, 'Numeric', 'Numeric', 1),
+(4, 'Complete/Incomplete', 'IncompleteComplete', 1);
 
 CREATE TABLE IF NOT EXISTS `communities` (
   `community_id` int(12) NOT NULL AUTO_INCREMENT,
@@ -2231,6 +2230,14 @@ CREATE TABLE IF NOT EXISTS `quiz_question_responses` (
   KEY `qquestion_id` (`qquestion_id`,`response_order`,`response_correct`),
   KEY `response_is_html` (`response_is_html`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `settings` (
+  `shortname` VARCHAR( 64 ) NOT NULL ,
+  `value` TEXT NOT NULL ,
+  PRIMARY KEY ( `shortname` )
+) ENGINE = MYISAM DEFAULT CHARSET=utf8;
+
+INSERT INTO `settings` (`shortname`, `value`) VALUES ('version_db', '1.1.0');
 
 CREATE TABLE IF NOT EXISTS `statistics` (
   `statistic_id` int(12) NOT NULL AUTO_INCREMENT,

@@ -7723,7 +7723,7 @@ function events_process_sorting() {
  * controls and current filter status (Showing Events That Include:) box.
  */
 function events_output_filter_controls($module_type = "") {
-	global $db;
+	global $db, $ENTRADA_ACL;
 
 	/**
 	 * Determine whether or not this is being called from the admin section.

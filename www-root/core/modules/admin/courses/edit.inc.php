@@ -210,6 +210,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							$posted_objectives["secondary"][] = clean_input($objective, "int");
 						}
 					}
+
+					if ((isset($_POST["tertiary_objectives"])) && ($objectives = $_POST["tertiary_objectives"]) && (count($objectives))) {
+						$TERTIARY_OBJECTIVES = array();
+						foreach ($objectives as $objective_key => $objective) {
+							$TERTIARY_OBJECTIVES[] = clean_input($objective, "int");
+							$posted_objectives["tertiary"][] = clean_input($objective, "int");
+						}
+					}
 					
 					if (!$ERROR) {
 						$PROCESSED["updated_date"]	= time();
@@ -361,6 +369,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							if (is_array($SECONDARY_OBJECTIVES) && count($SECONDARY_OBJECTIVES)) {
 								foreach($SECONDARY_OBJECTIVES as $objective_id) {
 									$db->Execute("INSERT INTO `course_objectives` SET `course_id` = ".$db->qstr($COURSE_ID).", `objective_id` = ".$db->qstr($objective_id).", `updated_date` = ".$db->qstr(time()).", `updated_by` = ".$db->qstr($_SESSION["details"]["id"]).", `importance` = '2', `objective_details` = ".(isset($objective_details[$objective_id]) && $objective_details[$objective_id] ? $db->qstr($objective_details[$objective_id]["details"]) : "NULL"));
+									if (isset($objective_details[$objective_id]) && $objective_details[$objective_id]) {
+										$objective_details[$objective_id]["found"] = true;
+									}
+								}
+							}
+							if (is_array($TERTIARY_OBJECTIVES) && count($TERTIARY_OBJECTIVES)) {
+								foreach($TERTIARY_OBJECTIVES as $objective_id) {
+									$db->Execute("INSERT INTO `course_objectives` SET `course_id` = ".$db->qstr($COURSE_ID).", `objective_id` = ".$db->qstr($objective_id).", `updated_date` = ".$db->qstr(time()).", `updated_by` = ".$db->qstr($_SESSION["details"]["id"]).", `importance` = '3', `objective_details` = ".(isset($objective_details[$objective_id]) && $objective_details[$objective_id] ? $db->qstr($objective_details[$objective_id]["details"]) : "NULL"));
 									if (isset($objective_details[$objective_id]) && $objective_details[$objective_id]) {
 										$objective_details[$objective_id]["found"] = true;
 									}
@@ -648,6 +664,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						$sidebar_html  = "<div style=\"margin: 2px 0px 10px 3px; font-size: 10px\">\n";
 						$sidebar_html .= "	<div><img src=\"".ENTRADA_URL."/images/legend-primary-objective.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" style=\"vertical-align: middle\" /> Primary Objective</div>\n";
 						$sidebar_html .= "	<div><img src=\"".ENTRADA_URL."/images/legend-secondary-objective.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" style=\"vertical-align: middle\" /> Secondary Objective</div>\n";
+						$sidebar_html .= "	<div><img src=\"".ENTRADA_URL."/images/legend-tertiary-objective.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" style=\"vertical-align: middle\" /> Tertiary Objective</div>\n";
 						$sidebar_html .= "</div>\n";
 						
 						new_sidebar_item("Objective Importance", $sidebar_html, "objective-legend", "open");
@@ -665,6 +682,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						if (is_array($course_objectives["secondary_ids"])) {
 							foreach ($course_objectives["secondary_ids"] as $objective_id) {
 								echo "<input type=\"hidden\" class=\"secondary_objectives\" id=\"secondary_objective_".$objective_id."\" name=\"secondary_objectives[]\" value=\"".$objective_id."\" />\n";
+							}
+						}
+						if (is_array($course_objectives["tertiary_ids"])) {
+							foreach ($course_objectives["tertiary_ids"] as $objective_id) {
+								echo "<input type=\"hidden\" class=\"tertiary_objectives\" id=\"tertiary_objective_".$objective_id."\" name=\"tertiary_objectives[]\" value=\"".$objective_id."\" />\n";
 							}
 						}
 						?>
@@ -728,7 +750,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								<td>&nbsp;</td>
 								<td>&nbsp;</td>
 								<td>
-									<span class="content-small">Select a Competency and a list of available course and curricular objectives will be displayed to choose from. Once you have selected an objective, it will be placed in the list below and you may leave it as primary or change the importance to secondary.</span>
+									<span class="content-small">Select a Competency and a list of available course and curricular objectives will be displayed to choose from. Once you have selected an objective, it will be placed in the list below and you may leave it as primary or change the importance to secondary or tertiary.</span>
 									<?php echo $objective_select; ?>
 									<script type="text/javascript">
 										var multiselect = [];

@@ -7436,7 +7436,8 @@ function courses_fetch_objectives($course_ids, $parent_id = 1, $objectives = fal
 							"objectives" => array(), 
 							"used_ids" => array(), 
 							"primary_ids" => array(), 
-							"secondary_ids" => array());
+							"secondary_ids" => array(), 
+							"tertiary_ids" => array());
 		$query		= "	SELECT `objective_id`, `importance`, `objective_details`, `course_id` FROM `course_objectives` 
 						WHERE ".($fetch_all_text ? "" : "`importance` != '0'
 						AND `objective_type` = 'course'
@@ -7454,13 +7455,15 @@ function courses_fetch_objectives($course_ids, $parent_id = 1, $objectives = fal
 					$objectives["primary_ids"][$result["objective_id"]] = $result["objective_id"];
 				} elseif ($result["importance"] == 2) {
 					$objectives["secondary_ids"][$result["objective_id"]] = $result["objective_id"];
+				} elseif ($result["importance"] == 3) {
+					$objectives["tertiary_ids"][$result["objective_id"]] = $result["objective_id"];
 				}
 				$objectives["used_ids"][$result["objective_id"]] = $result["objective_id"];
 				$objectives["objectives"][$result["objective_id"]]["objective_details"] = $result["objective_details"];
 			}
 		}
 		if (is_array($objective_ids)) {
-			if (is_array($objective_ids["primary"])) {
+			if (isset($objective_ids["primary"]) && is_array($objective_ids["primary"])) {
 				foreach ($objective_ids["primary"] as $objective_id) {
 					if (array_search($objective_id, $objectives["used_ids"]) === false) {
 						$objectives["primary_ids"][$objective_id] = $objective_id;
@@ -7468,10 +7471,18 @@ function courses_fetch_objectives($course_ids, $parent_id = 1, $objectives = fal
 					}
 				}
 			}
-			if (is_array($objective_ids["secondary"])) {
+			if (isset($objective_ids["secondary"]) && is_array($objective_ids["secondary"])) {
 				foreach ($objective_ids["secondary"] as $objective_id) {
 					if (array_search($objective_id, $objectives["used_ids"]) === false) {
 						$objectives["secondary_ids"][$objective_id] = $objective_id;
+						$objectives["used_ids"][$objective_id] = $objective_id;
+					}
+				}
+			}
+			if (isset($objective_ids["tertiary"]) && is_array($objective_ids["tertiary"])) {
+				foreach ($objective_ids["tertiary"] as $objective_id) {
+					if (array_search($objective_id, $objectives["used_ids"]) === false) {
+						$objectives["tertiary_ids"][$objective_id] = $objective_id;
 						$objectives["used_ids"][$objective_id] = $objective_id;
 					}
 				}
@@ -7488,8 +7499,10 @@ function courses_fetch_objectives($course_ids, $parent_id = 1, $objectives = fal
 	if($results) {
 		foreach($results as $result) {
 			if ($parent_id == 1) {
+				$objectives["objectives"][$result["objective_id"]]["objective_children"] = 0;
 				$objectives["objectives"][$result["objective_id"]]["children_primary"] = 0;
 				$objectives["objectives"][$result["objective_id"]]["children_secondary"] = 0;
+				$objectives["objectives"][$result["objective_id"]]["children_tertiary"] = 0;
 				$objectives["objectives"][$result["objective_id"]]["name"] = $result["objective_name"];
 				$objectives["objectives"][$result["objective_id"]]["description"] = (isset($objectives["objectives"][$result["objective_id"]]["objective_details"]) && $objectives["objectives"][$result["objective_id"]]["objective_details"] ? $objectives["objectives"][$result["objective_id"]]["objective_details"] : $result["objective_description"]);
 				$objectives["objectives"][$result["objective_id"]]["parent"] = 1;
@@ -7511,8 +7524,13 @@ function courses_fetch_objectives($course_ids, $parent_id = 1, $objectives = fal
 				} else {
 					$objectives["objectives"][$result["objective_id"]]["secondary"] = false;
 				}
+				if (is_array($objectives["tertiary_ids"]) && array_search($result["objective_id"], $objectives["tertiary_ids"]) !== false) {
+					$objectives["objectives"][$result["objective_id"]]["tertiary"] = true;
+				} else {
+					$objectives["objectives"][$result["objective_id"]]["tertiary"] = false;
+				}
 				foreach ($objectives["objectives"][$result["objective_id"]]["parent_ids"] as $parent_id) {
-					if ($parent_id != 1 && ($objectives["objectives"][$result["objective_id"]]["primary"] || $objectives["objectives"][$result["objective_id"]]["secondary"])) {
+					if ($parent_id != 1 && ($objectives["objectives"][$result["objective_id"]]["primary"] || $objectives["objectives"][$result["objective_id"]]["secondary"]) || $objectives["objectives"][$result["objective_id"]]["tertiary"]) {
 						$objectives["objectives"][$parent_id]["objective_children"]++;
 					}
 				}
@@ -7543,6 +7561,17 @@ function courses_fetch_objectives($course_ids, $parent_id = 1, $objectives = fal
 				}
 			}
 		}
+		foreach ($objectives["tertiary_ids"] as $tertiary_id) {
+			if (is_array($objectives["objectives"][$tertiary_id]["parent_ids"])) {
+				foreach ($objectives["objectives"][$tertiary_id]["parent_ids"] as $parent_id) {
+					if (array_search($parent_id, $objectives["used_ids"]) !== false) {
+						unset($objectives["used_ids"][$tertiary_id]);
+						unset($objectives["tertiary_ids"][$tertiary_id]);
+						$objectives["objectives"][$primary_id]["tertiary"] = false;
+					}
+				}
+			}
+		}
 	}
 	ksort($objectives["objectives"]);
 	if ($event_id) {
@@ -7564,21 +7593,22 @@ function course_objectives_in_list($objectives, $parent_id, $edit_importance = f
 	$output = "";
 
 	if ((is_array($objectives)) && (count($objectives))) {
-		if (((count($objectives[$parent_id]["parent_ids"]) > 1) || $hierarchical) && count($objectives[$parent_id]["parent_ids"]) < 3) {
+		if (((isset($objectives[$parent_id]) && count($objectives[$parent_id]["parent_ids"]) > 1) || $hierarchical) && count($objectives[$parent_id]["parent_ids"]) < 3) {
 			$output .= "<ul class=\"objective-list\" id=\"objective_".$parent_id."_list\"".($parent_id == 1 && (count($objectives[$parent_id]["parent_ids"]) > 2)|| !$hierarchical ? "" : " style=\"padding-left: 15px;\"")." >";
 		}
 		ksort($objectives);
 		foreach ($objectives as $objective_id => $objective) {
-			if (($objective["parent"] == $parent_id) && (($objective["objective_children"]) || ($objective["primary"]) || ($objective["secondary"]) || ($parent_active && count($objective["parent_ids"]) > 2 && !$selected_only) || ($selected_only && $objective["event_objective"]))) {
-				$importance = (($objective["primary"]) ? 1 : ($objective["secondary"] ? 2 : $importance));
+			if (($objective["parent"] == $parent_id) && (($objective["objective_children"]) || (isset($objective["primary"]) && $objective["primary"]) || (isset($objective["secondary"]) && $objective["secondary"]) || (isset($objective["tertiary"]) && $objective["tertiary"]) || ($parent_active && count($objective["parent_ids"]) > 2 && !$selected_only) || ($selected_only && $objective["event_objective"]))) {
+				$importance = ((isset($objective["primary"]) && $objective["primary"]) ? 1 : ((isset($objective["secondary"]) && $objective["secondary"]) ? 2 : ((isset($objective["tertiary"]) && $objective["tertiary"]) ? 3 : $importance)));
 				if ((count($objective["parent_ids"]) > 2) || $hierarchical) {
-					$output .= "<li".((($parent_active) || ($objective["primary"]) || $objective["secondary"]) && (count($objective["parent_ids"]) > 2) ? " class=\"".($importance == 2 ? "secondary" : "primary")."\"" : "")." id=\"objective_".$objective_id."_row\">\n";
+					$output .= "<li".((($parent_active) || ($objective["primary"]) || $objective["secondary"] || $objective["tertiary"]) && (count($objective["parent_ids"]) > 2) ? " class=\"".($importance == 1 ? "primary" : ($importance == 2 ? "secondary" : "tertiary"))."\"" : "")." id=\"objective_".$objective_id."_row\">\n";
 				}
-				if (($edit_importance) && (($objective["primary"]) || ($objective["secondary"]))) {
+				if (($edit_importance) && (($objective["primary"]) || ($objective["secondary"]) || ($objective["tertiary"]))) {
 					if ((count($objective["parent_ids"]) > 2) || $hierarchical) {
 						$output .= "<select onchange=\"javascript: moveObjective('".$objective_id."', this.value);\" style=\"float: right; margin: 5px\">\n";
 						$output .= "	<option value=\"primary\"".(($objective["primary"]) ? " selected=\"selected\"" : "").">Primary</option>\n";
 						$output .= "	<option value=\"secondary\"".(($objective["secondary"]) ? " selected=\"selected\"" : "").">Secondary</option>\n";
+						$output .= "	<option value=\"tertiary\"".(($objective["tertiary"]) ? " selected=\"selected\"" : "").">Tertiary</option>\n";
 						$output .= "</select>";
 					}
 				}
@@ -7591,10 +7621,10 @@ function course_objectives_in_list($objectives, $parent_id, $edit_importance = f
 					$output .= "	</div>";
 					$output .= "</li>";
 				}
-				$output .= course_objectives_in_list($objectives, $objective_id, $edit_importance, ((($objective["primary"]) || ($objective["secondary"])) ? true : false), $importance, $hierarchical, $selected_only);
+				$output .= course_objectives_in_list($objectives, $objective_id, $edit_importance, (((isset($objective["primary"]) && $objective["primary"]) || (isset($objective["secondary"]) && $objective["secondary"]) || (isset($objective["tertiary"]) && $objective["tertiary"])) ? true : false), $importance, $hierarchical, $selected_only);
 			}
 		}
-		if (((count($objectives[$parent_id]["parent_ids"]) > 1) || $hierarchical) && count($objectives[$parent_id]["parent_ids"]) < 3) {
+		if (((isset($objectives[$parent_id]) && count($objectives[$parent_id]["parent_ids"]) > 1) || $hierarchical) && count($objectives[$parent_id]["parent_ids"]) < 3) {
 			$output .= "</ul>";
 		}
 	}
@@ -8567,11 +8597,11 @@ function event_objectives_in_list($objectives, $parent_id, $edit_text = false, $
 		foreach ($objectives as $objective_id => $objective) {
 			$count++;
 
-			if (($objective["parent"] == $parent_id) && (($objective["objective_children"]) || ($objective["primary"]) || ($objective["secondary"]) || ($parent_active))) {
-				$importance = (($objective["primary"]) ? 1 : ($objective["secondary"] ? 2 : $importance));
+			if (($objective["parent"] == $parent_id) && (($objective["objective_children"]) || ($objective["primary"]) || ($objective["secondary"]) || ($objective["tertiary"]) || ($parent_active))) {
+				$importance = (($objective["primary"]) ? 1 : ($objective["secondary"] ? 2 : ($objective["tertiary"] ? 3 : $importance)));
 
-				if (((($objective["primary"]) || ($objective["secondary"]) || ($parent_active)) && (count($objective["parent_ids"]) > 2))) {
-					$output .= "<li".((($edit_text) || (isset($objective["event_objective"]) && $objective["event_objective"])) && (count($objective["parent_ids"]) > 2) ? " class=\"".($importance == 2 ? "secondary" : "primary")."\"" : "").">\n";
+				if (((($objective["primary"]) || ($objective["secondary"]) || ($objective["tertiary"]) || ($parent_active)) && (count($objective["parent_ids"]) > 2))) {
+					$output .= "<li".((($edit_text) || (isset($objective["event_objective"]) && $objective["event_objective"])) && (count($objective["parent_ids"]) > 2) ? " class=\"".($importance == 2 ? "secondary" : ($importance == 3 ? "tertiary" : "primary"))."\"" : "").">\n";
 					if ($edit_text && !$course) {
 						$output .= "<div id=\"objective_table_".$objective_id."\">\n";
 						$output .= "	<input type=\"checkbox\" name=\"checked_objectives[".$objective_id."]\" id=\"objective_checkbox_".$objective_id."\"".($course ? " disabled=\"true\" checked=\"checked\"" : " onclick=\"if (this.checked) { $('c_objective_".$objective_id."').enable(); } else { $('c_objective_".$objective_id."').disable(); }\"".($objective["event_objective"] ? " checked=\"checked\"" : ""))." style=\"float: left;\" value=\"1\" />\n";
@@ -8592,7 +8622,7 @@ function event_objectives_in_list($objectives, $parent_id, $edit_text = false, $
 						$output .= "	<div class=\"content-small\" style=\"padding-left: 25px;\" id=\"objective_description_".$objective_id."\">".(isset($objective["objective_details"]) && $objective["objective_details"] ? $objective["objective_details"] : $objective["description"])."</div>\n";
 						$output .= "</div>\n";
 					} else {
-						$output .= "<input type=\"checkbox\" id=\"objective_checkbox_".$objective_id."\ name=\"course_objectives[".$objective_id."]\"".(isset($objective["event_objective"]) && $objective["event_objective"] ? " checked=\"checked\"" : "")." onclick=\"if (this.checked) { this.parentNode.addClassName('".($importance == 2 ? "secondary" : "primary")."'); } else { this.parentNode.removeClassName('".($importance == 2 ? "secondary" : "primary")."'); }\" style=\"float: left;\" value=\"1\" />\n";
+						$output .= "<input type=\"checkbox\" id=\"objective_checkbox_".$objective_id."\ name=\"course_objectives[".$objective_id."]\"".(isset($objective["event_objective"]) && $objective["event_objective"] ? " checked=\"checked\"" : "")." onclick=\"if (this.checked) { this.parentNode.addClassName('".($importance == 2 ? "secondary" : ($importance == 3 ? "tertiary" : "primary"))."'); } else { this.parentNode.removeClassName('".($importance == 2 ? "secondary" : ($importance == 3 ? "tertiary" : "primary"))."'); }\" style=\"float: left;\" value=\"1\" />\n";
 						$output .= "<label for=\"objective_checkbox_".$objective_id."\" class=\"heading\">".$objective["name"]."</label>\n";
 						$output .= "<div style=\"padding-left: 25px;\">\n";
 						$output .=		$objective["description"]."\n";
@@ -8605,7 +8635,7 @@ function event_objectives_in_list($objectives, $parent_id, $edit_text = false, $
 					$output .= "</li>\n";
 
 				} else {
-					$output .= event_objectives_in_list($objectives, $objective_id, $edit_text, ((($objective["primary"]) || ($objective["secondary"])) ? true : false), $importance, $course, false);
+					$output .= event_objectives_in_list($objectives, $objective_id, $edit_text, ((($objective["primary"]) || ($objective["secondary"]) || ($objective["tertiary"])) ? true : false), $importance, $course, false);
 				}
 			}
 		}

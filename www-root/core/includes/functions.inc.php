@@ -10187,3 +10187,22 @@ function checkDateFormat($date) {
   else
     return false;
 }
+
+/**
+ * Easier method for writing a file.
+ * @param string $filename
+ * @param string $contents
+ * @return bool Returns false on error; true otherwise.
+ */
+function writeFile($filename, $contents) {
+	if (!($res = fopen($filename, "w"))) {
+		return false;
+	}
+	if (!fwrite($res,$contents)) {
+		return false;
+	}
+	if(!fclose($res)) {
+		return false;
+	}		
+	return true;
+}

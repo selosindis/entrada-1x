@@ -40,25 +40,33 @@ class MSPR implements ArrayAccess, AttentionRequirable {
 	}
 	
 	/**
-	 * Returns true if the closed timestamp exceeds the 
+	 * Returns true if the closed timestamp/class deadline exceeds the current time
 	 */
 	function isClosed() {
-		return (!is_null($this->closed) && $this->closed < time());
+		//first check the local timestamp
+		if (!is_null($this->closed)) {
+			return $this->closed < time();
+		} elseif ($class_closed = MSPRClassData::get($this->getUser()->getGradYear())) { //check the class data
+			return $class_closed < time();
+		} 
+		return false; //no close date
 	}
 	
 	/**
 	 * Sets the scheduled closed timestamp
+	 * alias for setClosedTimestamp
 	 * @param $timestamp
 	 */
 	function close($timestamp) {
-		
+		$this->setClosedTimestamp($timestamp);
 	}
 	
 	/**
 	 * Clears the scheduled closed timestamp
+	 * alias for setClosedTimestamp(null)
 	 */
 	function open() {
-		
+		$this->setClosedTimestamp(null);
 	}
 	
 	function isGenerated() {
@@ -134,7 +142,7 @@ class MSPR implements ArrayAccess, AttentionRequirable {
     }
     
     public static function create(User $user, $closed_ts = NULL) {
-    	global $db,$SUCCESS,$SUCCESSSTR,$ERROR,$ERRORSTR;
+    	global $db;
 
 		$user_id = $user->getID();
 		$query = "insert into `student_mspr` (`user_id`, `closed`) value (".$db->qstr($user_id).", ".$db->qstr($closed).")";
@@ -145,5 +153,31 @@ class MSPR implements ArrayAccess, AttentionRequirable {
 		} else {
 			return true;
 		}
-    } 
+    }
+
+	public function setClosedTimestamp($timestamp) {
+		global $db,$ERROR,$ERRORSTR;
+		$query = "update `student_mspr` set
+				 `closed`=".$db->qstr($timestamp)."
+				 where `user_id`=".$db->qstr($this->user_id);
+		
+		if(!$db->Execute($query)) {
+			$ERROR++;
+			$ERRORSTR[] = "Failed to update Submission Deadline.".$db->ErrorMsg();
+			application_log("error", "Unable to update a student_mspr record. Database said: ".$db->ErrorMsg());
+		}
+	}
+	
+	public function setGeneratedTimestamp($timestamp) {
+		global $db,$ERROR,$ERRORSTR;
+		$query = "update `student_mspr` set
+				 `generated`=".$db->qstr($timestamp)."
+				 where `user_id`=".$db->qstr($this->user_id);
+				
+		if(!$db->Execute($query)) {
+			$ERROR++;
+			$ERRORSTR[] = "Failed to update MSPR Generation Time.".$db->ErrorMsg();
+			application_log("error", "Unable to update a student_mspr record. Database said: ".$db->ErrorMsg());
+		}
+	}
 }

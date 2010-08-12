@@ -39,9 +39,15 @@ if(!defined("PARENT_INCLUDED")) {
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
 	define("IN_EVENTS",	true);
-
 	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/events", "title" => $MODULES[strtolower($MODULE)]["title"]);
-
+	
+	?>
+	<script type="text/javascript">
+		var DELETE_IMAGE_URL = "<?php echo ENTRADA_URL."/images/action-delete.gif"; ?>";
+	</script>
+	<?php
+	
+	
 	if (($router) && ($router->initRoute())) {
 		$PREFERENCES = preferences_load($MODULE);
 

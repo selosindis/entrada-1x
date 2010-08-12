@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS `acl_permissions` (
   `resource_value` int(12) DEFAULT NULL,
   `entity_type` varchar(64) DEFAULT NULL,
   `entity_value` varchar(64) DEFAULT NULL,
-  `app_id` int(12) NOT NULL,
+  `app_id` int(12) NULL DEFAULT NULL,
   `create` tinyint(1) DEFAULT NULL,
   `read` tinyint(1) DEFAULT NULL,
   `update` tinyint(1) DEFAULT NULL,

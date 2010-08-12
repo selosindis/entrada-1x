@@ -156,7 +156,6 @@ class ResearchCitation implements Approvable, AttentionRequirable {
 		} else {
 			$SUCCESS++;
 			$SUCCESSSTR[] = "Successfully updated Research Citation.";
-			$this->approved = true;
 		}
 	}
 	

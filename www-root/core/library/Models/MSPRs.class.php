@@ -54,6 +54,46 @@ class MSPRs extends Collection {
 		}
 		return new self($msprs);
 	}
+	
+	static public function hasCustomDeadlines_Year($year) {
+		global $db;
+		$query		= "select count(*) from `student_mspr` a 
+						left join `".AUTH_DATABASE."`.`user_data` b 
+						on a.user_id = b.id 
+						where `grad_year`=".$db->qstr($year)."  
+						and a.closed is not null group by user_id";
+		
+		$result	= $db->GetOne($query);
+		return $result > 0;
+	}
+	
+	
+	static public function clearCustomDeadlines_Year($year) {
+		global $db,$ERROR,$ERRORSTR;
+		$query = "update `student_mspr`,`".AUTH_DATABASE."`.`user_data` 
+				 set `closed`=NULL
+				 where `grad_year`=".$db->qstr($year) ." and user_id=id ";
+		
+		if(!$db->Execute($query)) {
+			$ERROR++;
+			$ERRORSTR[] = "Failed to update Submission Deadline.".$db->ErrorMsg();
+			application_log("error", "Unable to update a student_mspr record. Database said: ".$db->ErrorMsg());
+		}
+	}
+	
+	static public function clearCustomDeadlinesEarlierThan_Year($year, $timestamp) {
+		global $db,$ERROR,$ERRORSTR;
+		$query = "update `student_mspr`,`".AUTH_DATABASE."`.`user_data` 
+				 set `closed`=NULL
+				 where `grad_year`=".$db->qstr($year) ." and user_id=id
+				 and `closed` < ".$db->qstr($timestamp);
+		
+		if(!$db->Execute($query)) {
+			$ERROR++;
+			$ERRORSTR[] = "Failed to update Submission Deadline.".$db->ErrorMsg();
+			application_log("error", "Unable to update a student_mspr record. Database said: ".$db->ErrorMsg());
+		}
+	}
 }
 
 class MSPRClassData {
@@ -100,6 +140,19 @@ class MSPRClassData {
 		} else {
 			$SUCCESS++;
 			$SUCCESSSTR[] = "Successfully created new MSPR Class.";
+		}
+	}
+	
+	public function setClosedTimestamp($timestamp) {
+		global $db,$ERROR,$ERRORSTR;
+		$query = "update `student_mspr_class` set
+				 `closed`=".$db->qstr($timestamp)."
+				 where `year`=".$db->qstr($this->year);
+		
+		if(!$db->Execute($query)) {
+			$ERROR++;
+			$ERRORSTR[] = "Failed to update Class Submission Deadline.".$db->ErrorMsg();
+			application_log("error", "Unable to update a student_mspr_class record. Database said: ".$db->ErrorMsg());
 		}
 	}
 }

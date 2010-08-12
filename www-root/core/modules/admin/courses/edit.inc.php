@@ -595,8 +595,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							<tr>
 								<td></td>
 								<td><label for="organisation_id" class="form-required">Course Organisation</label></td>
-												<td>
-													<select id="organisation_id" name="organisation_id" style="width: 250px">
+								<td>
+									<select id="organisation_id" name="organisation_id" style="width: 250px">
 									<?php
 									$query		= "SELECT `organisation_id`, `organisation_title` FROM `".AUTH_DATABASE."`.`organisations`";
 									$results	= $db->GetAll($query);
@@ -703,7 +703,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 									<label for="objective_select" class="form-nrequired">Curricular Objectives</label>
 								</td>
 								<td>
-									<select id="objective_select" onclick="showMultiSelect()">
+									<select id="objective_select" onchange="showMultiSelect()">
 									<option value="">- Select Competency -</option>
 									<?php
 									$objective_select = "";
@@ -966,7 +966,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 										?>
 										<div class="autocomplete" id="director_name_auto_complete"></div><script type="text/javascript">new Ajax.Autocompleter('director_name', 'director_name_auto_complete', '<?php echo ENTRADA_RELATIVE; ?>/api/personnel.api.php?type=director', {frequency: 0.2, minChars: 2, afterUpdateElement: function (text, li) {selectItem(li.id, 'director'); copyItem('director');}});</script>
 										<input type="hidden" id="associated_director" name="associated_director" />
-										<!-- <ul class="page-action" style="display: inline;"><li><a onclick="addItem('director');" style="cursor: pointer;">Add Director</a></li></ul><br/> -->
 										<input type="button" class="button-sm" onclick="addItem('director');" value="Add" style="vertical-align: middle" />
 										<span class="content-small">(<strong>Example:</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?>)</span>
 										<ul id="director_list" class="menu" style="margin-top: 15px">
@@ -1010,7 +1009,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 										?>
 										<div class="autocomplete" id="coordinator_name_auto_complete"></div><script type="text/javascript">new Ajax.Autocompleter('coordinator_name', 'coordinator_name_auto_complete', '<?php echo ENTRADA_RELATIVE; ?>/api/personnel.api.php?type=coordinator', {frequency: 0.2, minChars: 2, afterUpdateElement: function (text, li) {selectItem(li.id, 'coordinator'); copyItem('coordinator');}});</script>
 										<input type="hidden" id="associated_coordinator" name="associated_coordinator" />
-										<!-- <ul class="page-action" style="display: inline;"><li><a onclick="addItem('coordinator');" style="cursor: pointer;">Add Coordinator</a></li></ul><br/> -->
 										<input type="button" class="button-sm" onclick="addItem('coordinator');" value="Add" style="vertical-align: middle" />
 										<span class="content-small">(<strong>Example:</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?>)</span>
 										<ul id="coordinator_list" class="menu" style="margin-top: 15px">
@@ -1035,7 +1033,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								<td colspan="3">&nbsp;</td>
 							</tr>
 
-							<!-- Lising the Program Coordinator for the selected coures -->
+							<!-- Listing the Program Coordinator for the selected course -->
 							<tr>
 								<td></td>
 								<td><label for="programcoodinator_id" class="form-nrequired">Program Coordinator</label></td>
@@ -1067,7 +1065,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							</tr>
 
 
-							<!-- Lising the Evaluation Rep for the selected coures -->
+							<!-- Listing the Evaluation Rep for the selected course -->
 							<tr>
 								<td></td>
 								<td><label for="evaluationrep_id" class="form-nrequired">Evaluation Rep.</label></td>
@@ -1088,7 +1086,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								</td>
 							</tr>
 
-							<!-- Lising the Student Rep for the selected coures -->
+							<!-- Listing the Student Rep for the selected course -->
 							<tr>
 								<td></td>
 								<td><label for="studentrep_id" class="form-nrequired">Student Rep.</label></td>

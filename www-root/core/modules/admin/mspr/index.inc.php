@@ -157,10 +157,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MSPR_ADMIN"))) {
 			<div class="instructions">
 				
 			</div>
+			<p><strong>Submission deadline:</strong> <?php echo ($class_close ? date("F j, Y \a\\t g:i a",$class_close) : "Unset"); ?> &nbsp;&nbsp;(<a href="<?php echo ENTRADA_URL; ?>/admin/mspr?section=mspr-options&year=<?php echo $year; ?>">change</a>)</p>
+			
 			
 			<a href="#" onclick='showAll();'>Show All</a> / <a href="#" onclick='hideAttentionNotRequired();'>Show only those requiring attention</a>
 			
 			<table id="mspr-class-list" class="tableList">
+				<col width="40%" />
+				<col width="10%" />
+				<col width="25%" />
+				<col width="25%" />
 				<thead>
 					<tr>
 						<td class="general">
@@ -246,8 +252,4 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MSPR_ADMIN"))) {
 			<a href="?all">Manage All MSPRs requiring attention</a></div>
 		<?php
 	}
-	
-
-
-		
 }

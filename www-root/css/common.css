@@ -1249,6 +1249,11 @@ border-left:5px solid #E9D9FE;
 background-color:#FFF;
 }
 
+ul.objective-list li.tertiary {
+border-left:5px solid #FFCCFF;
+background-color:#FFF;
+}
+
 ol.objective-list {
 margin-top: 5px;
 }
@@ -1410,8 +1415,8 @@ div.rss-add {
 	color: #000;
 }
 #dashboard-syndicated-content.editing ul.rss-list li {
-	padding: 0px 5px 5px 5px;
-	margin: 5px;
+	padding: 0px 3px 3px 3px;
+	margin: 5px 3px;
 	border: 1px #AAA dashed;
 	cursor: move;
 }
@@ -2155,6 +2160,11 @@ border-left:5px solid #E9D9FE;
 background-color:#FFF;
 }
 
+td.objectives li.tertiary {
+border-left:5px solid #FFCCFF;
+background-color:#FFF;
+}
+
 textarea.objective {
 width:70%;
 margin-left:25px;
@@ -2394,6 +2404,9 @@ background-color:#D9E9FE;
 
 table.select_multiple_table tr.secondary {
 background-color:#E9D9FE;
+}
+table.select_multiple_table tr.tertiary {
+background-color:#FFCCFF;
 }
 
 div#associated_faculty_list ul.menu li.community,div#associated_student_list ul.menu li.community,div#associated_director_list ul.menu li.community,div#associated_coordinator_list ul.menu li.community {

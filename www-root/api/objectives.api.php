@@ -47,15 +47,15 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 				foreach ($temp_objectives as $objective_id => $objective) {
 					if ($objective["event_objective"]) {
 						if (!array_key_exists($objective_id, $objectives["used_ids"])) {
-							$objectives["objectives"][$objective_id][($objectives["objectives"][$objectives["objectives"][$objective_id]["parent"]]["primary"] ? "primary" : "secondary")] = true;
-							$objectives[($objectives["objectives"][$objectives["objectives"][$objective_id]["parent"]]["primary"] ? "primary_ids" : "secondary_ids")][] = $objective_id;
+							$objectives["objectives"][$objective_id][($objectives["objectives"][$objectives["objectives"][$objective_id]["parent"]]["primary"] ? "primary" : ($objectives["objectives"][$objectives["objectives"][$objective_id]["parent"]]["secondary"] ? "secondary" : "tertiary"))] = true;
+							$objectives[($objectives["objectives"][$objectives["objectives"][$objective_id]["parent"]]["primary"] ? "primary_ids" : ($objectives["objectives"][$objectives["objectives"][$objective_id]["parent"]]["secondary"] ? "secondary_ids" : "tertiary_ids"))][] = $objective_id;
 							$objectives["used_ids"][] = $objective_id;
 							foreach ($objective["parent_ids"] as $parent_id) {
 								$objectives["objectives"][$parent_id]["objective_children"]++;
 							}
 						}
 						$show_objectives = true;
-					} elseif ($objective["primary"] || $objective["secondary"]) {
+					} elseif ($objective["primary"] || $objective["secondary"] || $objective["tertiary"]) {
 						foreach ($objective["parent_ids"] as $parent_id) {
 							$objectives["objectives"][$parent_id]["objective_children"]--;
 						}
@@ -66,6 +66,9 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 						} elseif ($objective["secondary"]) {
 							unset($objectives["secondary_ids"][$objective_id]);
 							$objectives["objectives"][$objective_id]["secondary"] = false;
+						} elseif ($objective["tertiary"]) {
+							unset($objectives["tertiary_ids"][$objective_id]);
+							$objectives["objectives"][$objective_id]["tertiary"] = false;
 						}
 					}
 				}
@@ -94,7 +97,15 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 			} else {
 				$secondary_ids = array();
 			}
-			$objectives = courses_fetch_objectives($course_ids, 1, false, array("primary" => $primary_ids, "secondary" => $secondary_ids), $event_id);
+			if (isset($_POST["tertiary_ids"]) && $_POST["tertiary_ids"]) {
+				$tertiary_ids = explode(",", $_POST["tertiary_ids"]);
+				if (!is_array($tertiary_ids)) {
+					$tertiary_ids = array($_POST["tertiary_ids"]);
+				}
+			} else {
+				$tertiary_ids = array();
+			}
+			$objectives = courses_fetch_objectives($course_ids, 1, false, array("primary" => $primary_ids, "secondary" => $secondary_ids, "tertiary" => $tertiary_ids), $event_id);
 			$objectives = $objectives["objectives"];
 			echo course_objectives_in_list($objectives, 1, true, false, 1, true);
 		}

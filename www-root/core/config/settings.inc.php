@@ -84,6 +84,7 @@ $CLERKSHIP_FIELD_STATUS["cancelled"] = array("name" => "Cancelled", "visible" =>
 define("AUTH_PRODUCTION", ENTRADA_URL."/authentication/authenticate.php");
 
 define("AUTH_APP_ID", "1");														// Application ID for the MEdTech Authentication System.
+define("AUTH_APP_IDS_STRING", "1,97");														// Application ID for the MEdTech Authentication System.
 define("AUTH_USERNAME", "30000001");											// Application username to connect to the MEdTech Authentication System.
 define("AUTH_PASSWORD", "apple123");											// Application password to connect to the MEdTech Authentication System.
 define("AUTH_METHOD", "local");													// The method used to authenticate users into the application (local or ldap).

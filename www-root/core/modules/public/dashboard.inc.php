@@ -806,6 +806,9 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 							<p>You can add your own external news feeds to your dashboard by providing both a title, and the full URL to your valid RSS feed.</p>
 						</td>
 					</tr>
+					<tr>						
+						<td id="rss-add-status" colspan="3"></td>
+					</tr>
 					<tr>
 						<td></td>
 						<td><label for="rss-add-title" class="form-required">RSS Feed Title</label></td>

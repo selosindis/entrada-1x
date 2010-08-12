@@ -225,6 +225,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							} ?>
 							<a style="float: right" href="javascript:location.reload(true)">Refresh</a>
 					</div>
+					<button onclick="window.location='<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "io", "download" => "csv", "assessment_ids" => $ASSESSMENT_ID)); ?>'">Download CSV</button>
 				<?php
 				else:
 				?>

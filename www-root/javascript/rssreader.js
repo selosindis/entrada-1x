@@ -217,7 +217,7 @@ document.observe("dom:loaded", function() {
 		var url = $F('rss-add-url');
 		var title = $F('rss-add-title');
 		if(url.match(/https?:\/\/([\-\w\.]+)+(:\d+)?(\/([\w\/_\.]*(\?\S+)?)?)?/i)) {
-			if(title != "") {
+			if(title.match(/^[A-Za-z0-9\s]*$/)) {
 				$('rss-add-status').update(new Element('img', {src: SPINNER_URL}));
 				var div = new Element('div', {'class': "rss-content"}).writeAttribute('data-feedurl', url);
 				
@@ -256,7 +256,7 @@ document.observe("dom:loaded", function() {
 					}
 				});
 			} else {
-				$('rss-add-status').update("<div class=\"display-error\">There was an error adding this RSS feed. Please ensure that the feed URL is a valid RSS/Atom feed.</div>");
+				$('rss-add-status').update("<div class=\"display-error\">There was an error adding this RSS feed. Please ensure that the feed title is present and contains no special characters.</div>");
 			}
 		} else {
 			$('rss-add-status').update("<div class=\"display-error\">There was an error adding this RSS feed. Please ensure that the feed URL is a valid RSS/Atom feed.</div>");

@@ -132,7 +132,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						}
 						
 						if (isset($_POST["post_action"])) {
-							if(@in_array($_POST["post_action"], array("new", "index", "parent"))) {
+							if(@in_array($_POST["post_action"], array("new", "index", "parent", "grade"))) {
 								$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] = $_POST["post_action"];
 							} else {
 								$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] = "index";
@@ -149,8 +149,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							if($db->AutoExecute("assessments", $PROCESSED, "UPDATE", "`assessment_id` = ".$db->qstr($assessment_details["assessment_id"]))) {
 							
 								switch($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"]) {
+									case "grade" :
+										$url = ENTRADA_URL."/admin/gradebook/assessments?".replace_query(array("step" => false, "section" => "grade", "assessment_id" => $ASSESSMENT_ID));
+										$msg = "You will now be redirected to the <strong>Grade Assessment</strong> page for \"<strong>".$PROCESSED["name"] . "</strong>\"; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+										break;
 									case "new" :
-										$url = ENTRADA_URL."/admin/gradebook/assessments?".replace_query(array("step" => false, "section" => "add", "assessment_id" => false));
+										$url = ENTRADA_URL."/admin/gradebook/assessments?".replace_query(array("step" => false, "section" => "add"));
 										$msg = "You will now be redirected to another <strong>Add Assessment</strong> page for the ". $course_details["course_name"] . " gradebook; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 										break;
 									case "parent" :
@@ -159,7 +163,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 										break;
 									case "index" :
 									default :
-										$url = ENTRADA_URL."/admin/gradebook?".replace_query(array("step" => false, "section" => "view", "id" => $assessment_details["course_id"], "assessment_id" => false));
+											$url = ENTRADA_URL."/admin/gradebook?".replace_query(array("step" => false, "section" => "view", "assessment_id" => false));
 										$msg = "You will now be redirected to the <strong>assessment index</strong> page for ". $course_details["course_name"] . "; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 										break;
 								}
@@ -304,6 +308,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							<td style="width: 75%; text-align: right; vertical-align: middle">
 								<span class="content-small">After saving:</span>
 								<select id="post_action" name="post_action">
+								<option value="grade"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "grade") ? " selected=\"selected\"" : ""); ?>>Grade assessment</option>	
 								<option value="new"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "new") ? " selected=\"selected\"" : ""); ?>>Add another assessment</option>
 								<option value="index"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "index") ? " selected=\"selected\"" : ""); ?>>Return to assessment list</option>
 								<option value="parent"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "parent") ? " selected=\"selected\"" : ""); ?>>Return to all gradebooks list</option>

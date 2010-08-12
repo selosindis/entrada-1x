@@ -100,6 +100,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				if(count($students) >= 1): ?>
 					<span id="assessment_name" style="display: none;"><?php echo $assessment["name"]; ?></span>
 					<div id="gradebook_grades">
+					<h2>Grades</h2>						
 					<table class="gradebook single <?php echo $editable; ?>">
 						<tbody>
 						<?php foreach($students as $key => $student): ?>
@@ -215,7 +216,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								</script>
 								<br/>
 								<p>Unentered grades: <?php echo $grades[10]; ?></p>
-								<p>Mean grade: <?php echo $sum / $entered; ?>%</p>
+								<p>Mean grade: <?php echo ($entered > 0 ? $sum / $entered : ""); ?>%</p>
 								<p>Median grade: <?php echo $grade_values[floor(count($grade_values)/2)]; ?>%</p>
 								<?php
 							break;							
@@ -223,9 +224,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								echo "No statistics for this marking scheme.";
 							break; 
 							} ?>
-							<a style="float: right" href="javascript:location.reload(true)">Refresh</a>
+							<button onclick="location.reload(true)">Refresh</button>
+							<button onclick="window.location='<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "io", "download" => "csv", "assessment_ids" => $ASSESSMENT_ID)); ?>'">Download CSV</button>
 					</div>
-					<button onclick="window.location='<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "io", "download" => "csv", "assessment_ids" => $ASSESSMENT_ID)); ?>'">Download CSV</button>
 				<?php
 				else:
 				?>

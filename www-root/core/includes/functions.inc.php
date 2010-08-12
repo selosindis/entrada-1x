@@ -7759,7 +7759,6 @@ function events_output_filter_controls($module_type = "") {
 					<option value="course">Course Filters</option>
 					<option value="phase">Phase / Term Filters</option>
 					<option value="eventtype">Event Type Filters</option>
-					<option value="organisation">Organisation Filters</option>
 					<option value="clinical_presentation">Clinical Presentation Filters</option>
 				</select>
 				<?php
@@ -8356,7 +8355,6 @@ function events_fetch_filtered_events() {
 		$where_grad_year = array();
 		$where_phase = array();
 		$where_type = array();
-		$where_organisation = array();
 		$where_clinical_presentation = array();
 		$join_event_contacts = array();
 		$contact_sql = "";
@@ -8464,9 +8462,6 @@ function events_fetch_filtered_events() {
 						case "eventtype" :
 							$where_type[] = "(`types`.`eventtype_id` = ".$db->qstr((int) $filter_value).")";
 						break;
-						case "organisation" :
-							$where_organisation[] = "(`courses`.`organisation_id` = ".$db->qstr((int) $filter_value).")";
-						break;
 						case "objective" :
 							$where_clinical_presentation[] = "(`event_objectives`.`objective_id` = ".$db->qstr((int) $filter_value).")";
 						break;
@@ -8495,9 +8490,6 @@ function events_fetch_filtered_events() {
 		}
 		if (isset($where_type) && count($where_type)) {
 			$tmp_query[] = implode(" OR ", $where_type);
-		}
-		if (isset($where_organisation) && count($where_organisation)) {
-			$tmp_query[] = implode(" OR ", $where_organisation);
 		}
 		if (isset($where_clinical_presentation) && count($where_clinical_presentation)) {
 			$tmp_query[] = implode(" OR ", $where_clinical_presentation);

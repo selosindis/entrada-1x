@@ -27,7 +27,7 @@ if (!defined("IN_PROFILE")) {
 }  else {
 	require_once(dirname(__FILE__)."/includes/functions.inc.php");
 	
-	require_once("Models/MSPR.class.php");
+	require_once("Models/MSPRs.class.php");
 	
 	//require_mspr_models();
 	$user = User::get($PROXY_ID);
@@ -58,38 +58,40 @@ if (!defined("IN_PROFILE")) {
 		new_sidebar_item("Delegated Permissions", $sidebar_html, "delegated-permissions", "open");
 	}
 
+
+	$mspr = MSPR::get($user);
+	$clerkship_core_completed = $mspr["Clerkship Core Completed"];
+	$clerkship_core_pending = $mspr["Clerkship Core Pending"];
+	$clerkship_elective_completed = $mspr["Clerkship Electives Completed"];
+	$clinical_evaluation_comments = $mspr["Clinical Performance Evaluation Comments"];
+	$critical_enquiry = $mspr["Critical Enquiry"];
+	$student_run_electives = $mspr["Student-Run Electives"];
+	$observerships = $mspr["Observerships"];
+	$international_activities = $mspr["International Activities"];
+	$internal_awards = $mspr["Internal Awards"];
+	$external_awards = $mspr["External Awards"];
+	$studentships = $mspr["Studentships"];
+	$contributions = $mspr["Contributions to Medical School"];
+	$leaves_of_absence = $mspr["Leaves of Absence"];
+	$formal_remediations = $mspr["Formal Remediation Received"];
+	$disciplinary_actions = $mspr["Disciplinary Actions"];
+	$community_health_and_epidemiology = $mspr["Community Health and Epidemiology"];
+	$research_citations = $mspr["Research"];
 	
-echo display_status_messages();
-
-$mspr = MSPR::get($user);
-
-$clerkship_core_completed = $mspr["Clerkship Core Completed"];
-$clerkship_core_pending = $mspr["Clerkship Core Pending"];
-$clerkship_elective_completed = $mspr["Clerkship Electives Completed"];
-
-$clinical_evaluation_comments = $mspr["Clinical Performance Evaluation Comments"];
-
-$critical_enquiry = $mspr["Critical Enquiry"];
-$student_run_electives = $mspr["Student-Run Electives"];
-$observerships = $mspr["Observerships"];
-$international_activities = $mspr["International Activities"];
+	$closed = $mspr->isClosed();
+	$generated = $mspr->isGenerated();
 	
-$internal_awards = $mspr["Internal Awards"];
-$external_awards = $mspr["External Awards"];
-
-$studentships = $mspr["Studentships"];
-
-$contributions = $mspr["Contributions to Medical School"];
-
-$leaves_of_absence = $mspr["Leaves of Absence"];
-$formal_remediations = $mspr["Formal Remediation Received"];
-$disciplinary_actions = $mspr["Disciplinary Actions"];
-
-$community_health_and_epidemiology = $mspr["Community Health and Epidemiology"];
-$research_citations = $mspr["Research"];
-
-$closed = $mspr->isClosed();
-$generated = $mspr->isGenerated();
+	$year = $user->getGradYear();
+	$class_data = MSPRClassData::get($year);
+	
+	$mspr_close = $mspr->getClosedTimestamp();
+	
+	if (!$mspr_close) { //no custom time.. use the class default
+		$mspr_close = $class_data->getClosedTimestamp();	
+	}
+	
+	display_status_messages();
+	
 ?>
 
 <h1>Medical School Performance Report</h1> 
@@ -98,14 +100,22 @@ $generated = $mspr->isGenerated();
 if ($closed) {
 ?>
 <div class="display-notice">
-	<p>MSPR submission closed on <?php echo date("F j, Y \a\\t g:i a",$mspr->getClosedTimestamp()); ?></p>
+	<p>MSPR submission closed on <?php echo date("F j, Y \a\\t g:i a",$mspr_close); ?></p>
 	<?php if ($generated) {	?>
 	<p>Doc icons go here</p>
 	<?php } else { ?>
 	<p>Finalized documents are not yet available.</p>
 	<?php } ?>
 </div>
-<?php } ?>
+<?php 
+} elseif ($mspr_close) {
+?>
+<div class="display-notice">
+The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\\t g:i a",$mspr_close); ?>. Please note that submissions may be approved, unapproved, or rejected after this date.  
+</div>
+<?php
+}
+?>
 
 <div class="mspr-tree">
 

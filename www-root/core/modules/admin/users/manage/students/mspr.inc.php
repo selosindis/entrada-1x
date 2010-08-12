@@ -25,7 +25,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
 }  else {
 	
-	require_once("Models/MSPR.class.php");
+	require_once("Models/MSPRs.class.php");
 	$PROXY_ID					= $user_record["id"];
 	$user = User::get($user_record["id"]);
 	
@@ -61,35 +61,50 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 	$clerkship_core_completed = $mspr["Clerkship Core Completed"];
 	$clerkship_core_pending = $mspr["Clerkship Core Pending"];
 	$clerkship_elective_completed = $mspr["Clerkship Electives Completed"];
-	
 	$clinical_evaluation_comments = $mspr["Clinical Performance Evaluation Comments"];
-	
 	$critical_enquiry = $mspr["Critical Enquiry"];
 	$student_run_electives = $mspr["Student-Run Electives"];
 	$observerships = $mspr["Observerships"];
 	$international_activities = $mspr["International Activities"];
-		
 	$internal_awards = $mspr["Internal Awards"];
 	$external_awards = $mspr["External Awards"];
-	
 	$studentships = $mspr["Studentships"];
-	
 	$contributions = $mspr["Contributions to Medical School"];
-	
 	$leaves_of_absence = $mspr["Leaves of Absence"];
 	$formal_remediations = $mspr["Formal Remediation Received"];
 	$disciplinary_actions = $mspr["Disciplinary Actions"];
-	
 	$community_health_and_epidemiology = $mspr["Community Health and Epidemiology"];
 	$research_citations = $mspr["Research"];
-			
-	display_status_messages();
-	
+				
 	$year = $user->getGradYear();
+	$class_data = MSPRClassData::get($year);
+	
+	$mspr_close = $mspr->getClosedTimestamp();
+	
+	if (!$mspr_close) { //no custom time.. use the class default
+		$mspr_close = $class_data->getClosedTimestamp();	
+	}
+
+	$is_closed = $mspr->isClosed();
+	
+	display_status_messages();
 	add_mspr_management_sidebar();
+	
 ?>
  
 <h1>Medical School Performance Report<?php echo ($mspr->isAttentionRequired()) ? ": Attention Required" : ""; ?></h1> 
+
+<?php 
+	if ($is_closed) {
+		?>
+<div class="display-notice"><strong>Note: </strong>This MSPR is now <strong>closed</strong> to student submissions. (Deadline was <?php echo date("F j, Y \a\\t g:i a",$mspr_close); ?>.) You may continue to approve, unapprove, or reject submissions, however students are unable to submit new data.</div>
+		<?php
+	} elseif ($mspr_close) {
+		?>
+<div class="display-notice"><strong>Note: </strong>The student submission deadline is <?php echo date("F j, Y \a\\t g:i a",$mspr_close); ?>. You may continue to approve, unapprove, or reject submissions after this date, however students will be unable to submit new data.</div>
+		<?php
+	}
+?>
 
 <div class="mspr-tree">
 

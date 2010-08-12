@@ -45,17 +45,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 		$course_details	= $db->GetRow($query);
 		if ($course_details && $ENTRADA_ACL->amIAllowed(new GradebookResource($course_details["course_id"], $course_details["organisation_id"]), "update")) {		
 			
-			echo "<div class=\"no-printing\">\n";
-			echo "	<div style=\"float: right\">\n";
-			if($ENTRADA_ACL->amIAllowed(new CourseResource($course_details["course_id"], $course_details["organisation_id"]), "read")) {
-				echo "		<a href=\"".ENTRADA_URL."/admin/courses?".replace_query(array("section" => "edit", "id" => $course_details["course_id"], "step" => false))."\"><img src=\"".ENTRADA_URL."/images/event-details.gif\" width=\"16\" height=\"16\" alt=\"Edit course details\" title=\"Edit course details\" border=\"0\" style=\"vertical-align: middle; margin-bottom: 2px;\" /></a> <a href=\"".ENTRADA_URL."/admin/courses?".replace_query(array("section" => "edit", "id" => $course_details["course_id"], "step" => false))."\" style=\"font-size: 10px; margin-right: 8px\">Edit course details</a><br/>\n";
-			}
-			if($ENTRADA_ACL->amIAllowed(new CourseContentResource($course_details["course_id"], $course_details["organisation_id"]), "read")) {
-				echo "		<a href=\"".ENTRADA_URL."/admin/courses?".replace_query(array("section" => "content", "id" => $COURSE_ID, "step" => false))."\"><img src=\"".ENTRADA_URL."/images/event-contents.gif\" width=\"16\" height=\"16\" alt=\"Manage course content\" title=\"Manage course content\" border=\"0\" style=\"vertical-align: middle; margin-bottom: 2px;\" /></a> <a href=\"".ENTRADA_URL."/admin/courses?".replace_query(array("section" => "content", "id" => $COURSE_ID, "step" => false))."\" style=\"font-size: 10px; margin-right: 8px;\">Manage course content</a><br/>\n";
-			}
-			echo "<a href=\"".ENTRADA_URL."/admin/gradebook?section=edit&amp;id=".$COURSE_ID."\" style=\"font-size: 10px;\"><img src=\"".ENTRADA_URL."/images/book_go.png\" width=\"16\" height=\"16\" alt=\"Manage course content\" title=\"Manage course content\" border=\"0\" style=\"vertical-align: middle\" />&nbsp;Manage course gradebook</a>";				
-			echo "	</div>\n";
-			echo "</div>\n";
+			courses_subnavigation($course_details);
 			
 			$curriculum_path = curriculum_hierarchy($COURSE_ID);
 			if ((is_array($curriculum_path)) && (count($curriculum_path))) {
@@ -63,7 +53,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 			}
 			echo "<br/>";
 			$ASSESSMENT_IDS	= array();
-			$INDEX_URL = ENTRADA_URL."/admin/gradebook/assessments?".replace_query(array("section" => "index"));
+			$INDEX_URL = ENTRADA_URL."/admin/gradebook?".replace_query(array("section" => "view", "step" => false));
 			// Error Checking
 			switch($STEP) {
 				case 2 :

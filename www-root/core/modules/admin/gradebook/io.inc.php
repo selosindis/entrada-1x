@@ -74,7 +74,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				// CSV Download
 							
 				$query	= 	"SELECT b.`id` AS `proxy_id`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, b.`number`";
+				$years = array();
 				foreach($assessments as $key => $assessment) {
+					$years[] = $assessment["grad_year"];
 					$query 	.=  ", assessment_$key.`grade_id` AS `".$key."_grade_id`, assessment_$key.`value` AS `".$key."_grade_value` ";
 				}
 				
@@ -90,6 +92,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				
 				if(isset($GRAD_YEAR)) {
 					$query .= 	" WHERE c.`group` = 'student' AND c.`role` = ".$db->qstr($GRAD_YEAR);
+				} else {					
+					$query .= 	" WHERE c.`group` = 'student' AND c.`role` IN (".implode(",", $years).")";
 				}
 
 				$students = $db->GetAll($query);
@@ -109,8 +113,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						$cols[]	= (($student["group"] == "student") ? $student["number"] : 0);
 						$cols[]	= $student["fullname"];
 						
-						foreach($assessments as $key => $assessment) {					
-							$cols[] = $student[$key."_grade_value"];
+						foreach($assessments as $key => $assessment) {	
+							$cols[] = format_retrieved_grade($student[$key."_grade_value"], $assessment) . assessment_suffix($assessment);
 						}
 						
 						echo "\"".implode("\",\"", $cols)."\"", "\n";

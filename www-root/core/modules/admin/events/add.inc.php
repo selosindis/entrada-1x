@@ -39,6 +39,9 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
+	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/eventtypes_list.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+	echo "<script language=\"text/javascript\">var DELETE_IMAGE_URL = '".ENTRADA_URL."/images/action-delete.gif';</script>";
+	
 	$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/events?".replace_query(array("section" => "add")), "title" => "Adding Event");
 
 	$PROCESSED["associated_faculty"]	= array();
@@ -48,8 +51,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 	$PROCESSED["associated_proxy_ids"]	= array();
 	$PROCESSED["event_types"]			= array();
 
-	echo "<h1>Adding Event</h1>\n";
-
+	echo "<h1>Adding Event</h1>\n";	
 	// Error Checking
 	switch($STEP) {
 		case 2 :
@@ -191,9 +193,9 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				$eventtype_durations = $_POST["duration_segment"];
 				foreach($event_types as $order => $eventtype_id) {
 					if(($eventtype_id = clean_input($eventtype_id, array("trim", "int"))) && ($duration = clean_input($eventtype_durations[$order], array("trim", "int")))) {
-						if(!($duration > 0)) {
+						if (!($duration >= 60)) {
 							$ERROR++;
-							$ERRORSTR[] = "Event type <strong>durations</strong> may not be 0 or negative.";
+							$ERRORSTR[] = "Event Type <strong>durations</strong> may not be less than 60 minutes.";
 						}
 						$query	= "SELECT eventtype_title FROM `events_lu_eventtypes` WHERE `eventtype_id` = ".$db->qstr($eventtype_id);
 						$result	= $db->GetRow($query);

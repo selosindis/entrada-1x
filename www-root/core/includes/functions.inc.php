@@ -7723,7 +7723,16 @@ function events_process_sorting() {
  * controls and current filter status (Showing Events That Include:) box.
  */
 function events_output_filter_controls($module_type = "") {
-	global $db, $ENTRADA_ACL;
+	global $db, $ENTRADA_ACL, $ORGANISATION_ID;
+
+	if (!isset($ORGANISATION_ID) || !$ORGANISATION_ID) {
+		if (isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["organisation_id"]) && $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["organisation_id"]) {
+			$ORGANISATION_ID = $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["organisation_id"];
+		} else {
+			$ORGANISATION_ID = $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"];
+			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["organisation_id"] = $ORGANISATION_ID;
+		}
+	}
 
 	/**
 	 * Determine whether or not this is being called from the admin section.
@@ -7754,12 +7763,19 @@ function events_output_filter_controls($module_type = "") {
 					<option value="clinical_presentation">Clinical Presentation Filters</option>
 				</select>
 				<?php
+
 				$query = "SELECT `organisation_id`,`organisation_title` FROM `".AUTH_DATABASE."`.`organisations` ORDER BY `organisation_title` ASC";
 				$organisation_results = $db->GetAll($query);
+				$organisation_ids_string = "";
 				if ($organisation_results) {
 					$organisations = array();
 					foreach ($organisation_results as $result) {
 						if($ENTRADA_ACL->amIAllowed("resourceorganisation".$result["organisation_id"], "read")) {
+							if (!$organisation_ids_string) {
+								$organisation_ids_string = $db->qstr($result["organisation_id"]);
+							} else {
+								$organisation_ids_string .= ", ".$db->qstr($result["organisation_id"]);
+							}
 							if (isset($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["organisation"]) && is_array($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["organisation"]) && (in_array($result["organisation_id"], $_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["organisation"]))) {
 								$checked = 'checked="checked"';
 							} else {
@@ -7769,16 +7785,17 @@ function events_output_filter_controls($module_type = "") {
 							$organisation_categories[$result["organisation_id"]] = array('text' => $result["organisation_title"], 'value' => 'organisation_'.$result["organisation_id"], 'category'=>true);
 						}
 					}
-
-					echo lp_multiple_select_popup('organisation', $organisations, array('title'=>'Select Organisations:', 'submit_text'=>'Apply', 'cancel'=>true, 'submit'=>true));
 				}
-
+				if (!$organisation_ids_string) {
+					$organisation_ids_string = $db->qstr($ORGANISATION_ID);
+				}
 				// Get the possible teacher filters
 				$query = "	SELECT a.`id` AS `proxy_id`, a.`organisation_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`
 							FROM `".AUTH_DATABASE."`.`user_data` AS a
 							LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 							ON b.`user_id` = a.`id`
 							WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+							AND a.`organisation_id` IN (".$organisation_ids_string.")
 							AND (b.`group` = 'faculty' OR (b.`group` = 'resident' AND b.`role` = 'lecturer'))
 							ORDER BY `fullname` ASC";
 				$teacher_results = $db->GetAll($query);
@@ -7793,7 +7810,7 @@ function events_output_filter_controls($module_type = "") {
 
 						$teachers[$r["organisation_id"]]['options'][] = array('text' => $r['fullname'], 'value' => 'teacher_'.$r['proxy_id'], 'checked' => $checked);
 					}
-					echo lp_multiple_select_popup('teacher', $teachers, array('title'=>'Select Teachers:', 'submit_text'=>'Apply', 'cancel'=>true, 'submit'=>true));
+					//echo lp_multiple_select_popup('teacher', $teachers, array('title'=>'Select Teachers:', 'submit_text'=>'Apply', 'cancel'=>true, 'submit'=>true));
 				}
 
 				// Get the possible Student filters
@@ -7802,6 +7819,7 @@ function events_output_filter_controls($module_type = "") {
 							LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 							ON a.`id` = b.`user_id`
 							WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+							a.`organisation_id` = ".$db->qstr($ORGANISATION_ID)."
 							AND b.`account_active` = 'true'
 							AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
 							AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
@@ -7825,7 +7843,10 @@ function events_output_filter_controls($module_type = "") {
 				}
 
 				// Get the possible courses filters
-				$query = "SELECT `course_id`, `course_name` FROM `courses` ORDER BY `course_name` ASC";
+				$query = "	SELECT `course_id`, `course_name` 
+							FROM `courses` 
+							WHERE `organisation_id` = ".$db->qstr($ORGANISATION_ID)."
+							ORDER BY `course_name` ASC";
 				$courses_results = $db->GetAll($query);
 				if ($courses_results) {
 					$courses = array();
@@ -8276,8 +8297,17 @@ function events_process_filters($action = "", $module_type = "") {
  * filter settings and results that can be iterated through by these views.
  */
 function events_fetch_filtered_events() {
-	global $db;
+	global $db, $ORGANISATION_ID;
 
+	if (!isset($ORGANISATION_ID) || !$ORGANISATION_ID) {
+		if (isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["organisation_id"]) && $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["organisation_id"]) {
+			$ORGANISATION_ID = $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["organisation_id"];
+		} else {
+			$ORGANISATION_ID = $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"];
+			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["organisation_id"] = $ORGANISATION_ID;
+		}
+	}
+	
 	$output = array(
 				"duration_start" => 0,
 				"duration_end" => 0,
@@ -8348,7 +8378,8 @@ function events_fetch_filtered_events() {
 							LEFT JOIN `event_objectives`
 							ON `event_objectives`.`event_id` = `events`.`event_id`
 							AND `event_objectives`.`objective_type` = 'course'
-							WHERE `courses`.`course_active` = '1'";
+							WHERE `courses`.`course_active` = '1'
+							AND `courses`.`organisation_id` = ".$db->qstr($ORGANISATION_ID);
 
 		$query_events = "	SELECT `events`.`event_id`,
 							`events`.`course_id`,
@@ -8384,7 +8415,8 @@ function events_fetch_filtered_events() {
 							AND `statistics`.`action` = 'view'
 							AND `statistics`.`action_field` = 'event_id'
 							AND `statistics`.`action_value` = `events`.`event_id`
-							WHERE `courses`.`course_active` = '1'";
+							WHERE `courses`.`course_active` = '1'
+							AND `courses`.`organisation_id` = ".$db->qstr($ORGANISATION_ID);
 
 		if ($display_duration) {
 			$tmp_query[] = "(`events`.`event_start` BETWEEN ".$db->qstr($display_duration["start"])." AND ".$db->qstr($display_duration["end"]).")";
@@ -8487,7 +8519,10 @@ function events_fetch_filtered_events() {
 	} else {
 		$query_count = "	SELECT COUNT(DISTINCT `events`.`event_id`) AS `total_rows`
 							FROM `events`
-							".(($display_duration) ? " WHERE `events`.`event_start` BETWEEN ".$db->qstr($display_duration["start"])." AND ".$db->qstr($display_duration["end"]) : "");
+							LEFT JOIN `courses`
+							ON `events`.`course_id` = `courses`.`course_id`
+							WHERE `courses`.`organisation_id` = ".$db->qstr($ORGANISATION_ID)."
+							".(($display_duration) ? " AND `events`.`event_start` BETWEEN ".$db->qstr($display_duration["start"])." AND ".$db->qstr($display_duration["end"]) : "");
 
 		$query_events = "	SELECT `events`.`event_id`,
 							`events`.`course_id`,
@@ -8518,6 +8553,7 @@ function events_fetch_filtered_events() {
 							AND `statistics`.`action_field` = 'event_id'
 							AND `statistics`.`action_value` = `events`.`event_id`
 							WHERE `courses`.`course_active` = '1'
+							AND `courses`.`organisation_id` = ".$db->qstr($ORGANISATION_ID)."
 							".(($display_duration) ? "AND `events`.`event_start` BETWEEN ".$db->qstr($display_duration["start"])." AND ".$db->qstr($display_duration["end"]) : "")."
 							GROUP BY `events`.`event_id`
 							ORDER BY %s LIMIT %s, %s";

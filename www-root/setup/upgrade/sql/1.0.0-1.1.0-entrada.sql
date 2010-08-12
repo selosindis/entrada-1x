@@ -32,9 +32,6 @@ INSERT INTO `assessment_marking_schemes` (`id`,`name`,`handler`,`enabled`) VALUE
 (3, 'Numeric', 'Numeric', 1),
 (4, 'Complete/Incomplete', 'IncompleteComplete', 1);
 
-ALTER TABLE `acl_permissions` CHANGE `app_id` `app_id` int(12) NULL DEFAULT NULL;
-
-
 ALTER TABLE `courses` ADD COLUMN `objective_type` enum('event','course') DEFAULT 'course' AFTER `importance`;
 
 ALTER TABLE `course_objectives` ADD COLUMN `objective_type` enum('event','course') DEFAULT 'course' AFTER `importance`;

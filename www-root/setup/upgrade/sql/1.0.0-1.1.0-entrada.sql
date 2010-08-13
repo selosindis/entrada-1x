@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS `assessment_grades` (
   `grade_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `assessment_id` int(10) unsigned NOT NULL,
   `proxy_id` int(10) unsigned NOT NULL,
-  `value` int(10) NOT NULL,
+  `value` float NOT NULL,
   PRIMARY KEY (`grade_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 

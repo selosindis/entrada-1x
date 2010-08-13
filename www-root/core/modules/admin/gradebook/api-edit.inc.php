@@ -72,7 +72,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						AND `assessments`.`grad_year` = ".$db->qstr($GRAD_YEAR);
 			$assessments = $db->GetAll($query);
 			if($assessments) {
-				$query	= 	"SELECT b.`id` AS `proxy_id`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, b.`number`";
+				$query	= 	"SELECT b.`id` AS `proxy_id`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, b.`number`, c.`role`";
 				foreach($assessments as $key => $assessment) {
 					$query 	.= ", g$key.`grade_id` AS `grade_".$key."_id`, g$key.`value` AS `grade_".$key."_value`";
 				}
@@ -96,7 +96,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					<thead>
 						<tr>
 							<th style="width: 200px;">Student</th>
-							<th>Grad Year</th>
+							<th>Number</th>
+							<th>Graduating Class</th>
 							<?php foreach($assessments as $assessment){
 								echo "<th>{$assessment["name"]}</th>\n";
 							} ?>
@@ -107,6 +108,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						<tr id="grades<?php echo $student["proxy_id"]; ?>">
 							<td><?php echo $student["fullname"]; ?></td>
 							<td><?php echo $student["number"]; ?></td>
+							<td><?php echo $student["role"]; ?></td>
 							<?php foreach($assessments as $key2 => $assessment): 
 							if(isset($student["grade_".$key2."_id"])) {
 								$grade_id = $student["grade_".$key2."_id"];

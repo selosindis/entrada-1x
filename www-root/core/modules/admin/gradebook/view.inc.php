@@ -196,7 +196,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					echo "<form action=\"".ENTRADA_URL . "/admin/gradebook/assessments?".replace_query(array("section" => "delete", "step"=>1))."\" method=\"post\">";
 				}
 				?>
-				<table class="tableList" cellspacing="0" summary="List of Assessments">
+				<table class="tableList" cellspacing="0" summary="List of Assessments" id="assessment_list">
 				<colgroup>
 					<col class="modified" />
 					<col class="title" />
@@ -207,17 +207,32 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				<thead>
 					<tr>
 						<td class="modified">&nbsp;</td>
-						<td class="title<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "name") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("name", "Name", "assessments"); ?></td>
-						<td class="general<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "year") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("year", "Graduating Year", "assessments"); ?></td>
-						<td class="general<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "type") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("type", "Assessment Type", "assessments"); ?></td>
-						<td class="general<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "scheme") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("scheme", "Marking Scheme", "assessments"); ?></td>
+						<td class="title<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "name") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("name", "Name"); ?></td>
+						<td class="general<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "year") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("year", "Graduating Year"); ?></td>
+						<td class="general<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "type") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("type", "Assessment Type"); ?></td>
+						<td class="general<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "scheme") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("scheme", "Marking Scheme"); ?></td>
 					</tr>
 				</thead>
 				<tfoot>
 					<tr>
 						<td></td>
 						<td colspan="3" style="padding-top: 10px">
+							<script type="text/javascript" charset="utf-8">
+								function exportSelected() {
+									var ids = [];
+									$$('#assessment_list .modified input:checked').each(function(checkbox) {
+										ids.push($F(checkbox));
+									});
+									if(ids.length > 0) {
+										window.location = '<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "io", "download" => "csv", "assessment_ids" => false)); ?>&assessment_ids='+ids.join(',');
+									} else {
+										alert("You must select some assessments to export.");
+									}
+									return false;
+								}
+							</script>
 							<input type="submit" class="button" value="Delete Selected" />
+							<input type="submit" class="button" value="Export Selected" onclick="exportSelected(); return false;"/>
 						</td>
 						<td><a id="fullscreen-edit" class="button" href="<?php echo ENTRADA_URL . "/admin/gradebook?" . replace_query(array("section" => "api-edit")); ?>"><div>Fullscreen</div></a>
 					</tr>

@@ -95,7 +95,8 @@ class NumericGradeHandler extends MarkingSchemeHandlerAbstract {
 
 	public function getFormattedGradeFromDecimal($decimal) {
 		if($decimal >= 0) {
-			return round(($decimal / 100) * $this->getMaxPoints() * 1000)/1000;
+//			return round(($decimal / 100) * $this->getMaxPoints());
+			return round(($decimal / 100) * $this->getMaxPoints() * 1000) / 1000;
 		} else {
 			return "";
 		}

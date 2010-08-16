@@ -95,12 +95,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				<table class="gradebook <?php echo $editable; ?>">
 					<thead>
 						<tr>
-							<th style="width: 200px;">Student</th>
-							<th>Number</th>
-							<th>Graduating Class</th>
-							<?php foreach($assessments as $assessment){
+							<th style="width: 175px;">Student Name</th>
+							<th style="width: 100px;">Student Number</th>
+							<th style="width: 100px;">Graduating Class</th>
+							<?php
+							foreach($assessments as $assessment) {
 								echo "<th>{$assessment["name"]}</th>\n";
-							} ?>
+							}
+							?>
 						</tr>
 					</thead>
 					<tbody>
@@ -109,19 +111,22 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							<td><?php echo $student["fullname"]; ?></td>
 							<td><?php echo $student["number"]; ?></td>
 							<td><?php echo $student["role"]; ?></td>
-							<?php foreach($assessments as $key2 => $assessment): 
-							if(isset($student["grade_".$key2."_id"])) {
-								$grade_id = $student["grade_".$key2."_id"];
-							} else {
-								$grade_id = "";
-							}
-							if(isset($student["grade_".$key2."_value"])) {
-								$grade_value = format_retrieved_grade($student["grade_".$key2."_value"], $assessment);
-							} else {
-								$grade_value = "-";
-							} ?>
+							<?php
+							foreach($assessments as $key2 => $assessment) {
+								if(isset($student["grade_".$key2."_id"])) {
+									$grade_id = $student["grade_".$key2."_id"];
+								} else {
+									$grade_id = "";
+								}
+
+								if(isset($student["grade_".$key2."_value"])) {
+									$grade_value = format_retrieved_grade($student["grade_".$key2."_value"], $assessment);
+								} else {
+									$grade_value = "-";
+								}
+								?>
 								<td>
-									<span class="grade" 
+									<span class="grade"
 										data-grade-id="<?php echo $grade_id; ?>"
 										data-assessment-id="<?php echo $assessment["assessment_id"]; ?>"
 										data-proxy-id="<?php echo $student["proxy_id"] ?>"
@@ -130,7 +135,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 										<?php echo assessment_suffix($assessment); ?>
 									</span>
 								</td>
-							<?php endforeach; ?>
+								<?php
+							}
+							?>
 						</tr>
 					<?php endforeach; ?>
 					</tbody>
@@ -169,5 +176,5 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 		application_log("notice", "Failed to provide course identifer when attempting to view a gradebook");
 	}
 }
+
 exit;
-?>

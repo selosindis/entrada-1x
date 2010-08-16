@@ -228,7 +228,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					</tr>
 					<tr>
 						<td></td>
-						<td><label for="grad_year" class="form-required">Grad Year</label></td>
+						<td><label for="grad_year" class="form-required">Graduating Year</label></td>
 						<td>
 							<select id="grad_year" name="grad_year" style="width: 250px">
 							<?php

@@ -4,18 +4,19 @@ jQuery(document).ready(function($) {
 	var loading_html = '<img width="16" height="16" src="'+ENTRADA_URL+'/images/loading.gif">';
 	
 	var flexiopts = {
-		minwidth: 100,
+		resizable: false,
 		height: 'auto',
-		disableSelect: true
+		disableSelect: true,
+		showToggleBtn: false
 	};
 	
 	var gradebookize = function() {
 		$('table.gradebook.single').flexigrid($.extend({}, flexiopts, {
-			resizeable: false,
+			width: 440,
 			colModel: [
-				{display: 'Student Name', name: 'name', width: 150, sortable: false},
-				{display: 'Student Number', name: 'number', width: 100, sortable: false},
-				{display: $('#assessment_name').html(), name: 'name', width: 110, sortable: false}
+				{display: 'Student Name', name: 'name', width: 200, sortable: false},
+				{display: 'Student Number', name: 'number', width: 120, sortable: false},
+				{display: $('#assessment_name').html(), name: 'name', width: 120, sortable: false}
 			]
 		}));
 

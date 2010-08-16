@@ -670,7 +670,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						new_sidebar_item("Objective Importance", $sidebar_html, "objective-legend", "open");
 					?>
 					<a name="course-objectives-section"></a>
-					<h2 title="Curricular Objectives Section">Curricular Objectives</h2>
+					<h2 title="Course Objectives Section">Course Objectives</h2>
 					<div id="course-objectives-section">
 						<input type="hidden" id="objectives_head" name="course_objectives" value="" />
 						<?php
@@ -697,118 +697,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							<col width="75%" />
 						</colgroup>
 						<tbody>
-							<tr>
-								<td>&nbsp;</td>
-								<td>
-									<label for="objective_select" class="form-nrequired">Curricular Objectives</label>
-								</td>
-								<td>
-									<select id="objective_select" onchange="showMultiSelect()">
-									<option value="">- Select Competency -</option>
-									<?php
-									$objective_select = "";
-									foreach ($course_objectives["objectives"] as $parent_id => $parent) {
-										if ($parent["parent"] == 1) {
-											echo "<optgroup label=\"".$parent["name"]."\">";
-											foreach($course_objectives["objectives"] as $objective_id => $objective) {
-												if ($objective["parent"] == $parent_id) {
-													echo "<option value=\"id_".$objective_id."\">".$objective["name"]."</option>";
-													foreach ($course_objectives["objectives"] as $child_id => $child) {
-														if ($child["parent"] == $objective_id) {
-															if (array_search($child_id, $course_objectives["used_ids"]) !== false) {
-																$checked = "checked=\"checked\"";
-															} else {
-																$checked = "";
-															}
-															$selectable_objectives[$child_id] = array("text" => $child["name"], "value" => $child_id, "checked" => $checked, "category" => true);
-															foreach($course_objectives["objectives"] as $grandkid_id => $grandkid) {
-																if ($grandkid["parent"] == $child_id) {
-																	if (array_search($grandkid_id, $course_objectives["used_ids"]) !== false) {
-																		$checked = "checked=\"checked\"";
-																	} else {
-																		$checked = "";
-																	}
-																	if ($grandkid["parent"] == $child_id) {
-																		$selectable_objectives[$grandkid_id] = array("text" => "<strong>".$grandkid["name"]."</strong><br />".$grandkid["description"], "value" => $grandkid_id, "checked" => $checked);
-																	}
-																}
-															}
-														}
-													}
-													$objective_select .= course_objectives_multiple_select_options_checked("id_".$objective_id, $selectable_objectives, array("title" => "Please select program or curricular objectives", "cancel" => true, "cancel_text" => "Close", "submit" => false, "width" => "550px"));
-												}
-												unset($selectable_objectives);
-											}
-											echo "\n</optgroup>";
-										}
-									}
-									?>
-									</select>
-								</td>
-							</tr>
-							<tr>
-								<td>&nbsp;</td>
-								<td>&nbsp;</td>
-								<td>
-									<span class="content-small">Select a Competency and a list of available course and curricular objectives will be displayed to choose from. Once you have selected an objective, it will be placed in the list below and you may leave it as primary or change the importance to secondary or tertiary.</span>
-									<?php echo $objective_select; ?>
-									<script type="text/javascript">
-										var multiselect = [];
-										var id;
-										function showMultiSelect() {
-											$$('select_multiple_container').invoke('hide');
-											id = $F('objective_select');
-											if (multiselect[id]) {
-												$('objective_select').hide();
-												multiselect[id].container.show();
-												multiselect[id].container.down("input").activate();
-											} else {
-												if ($(id+'_options')) {
-													$(id+'_options').addClassName('multiselect-processed');
-													multiselect[id] = new Control.SelectMultiple('objectives_head',id+'_options',{
-														checkboxSelector: 'table.select_multiple_table tr td input[type=checkbox]',
-														nameSelector: 'table.select_multiple_table tr td.select_multiple_name label',
-														resize: id+'_scroll',
-														afterCheck: function(element) {
-															if (element.checked) {
-																addObjective(element);
-															} else {
-																removeObjective(element);
-															}
-														}
-													});
-	
-													$(id+'_cancel').observe('click',function(event){
-														this.container.hide();
-														$('objective_select').show();
-														$('objective_select').options.selectedIndex = 0;
-														return false;
-													}.bindAsEventListener(multiselect[id]));;
-	
-													$('objective_select').hide();
-													multiselect[id].container.show();
-													multiselect[id].container.down("input").activate();
-												}
-											}
-											return false;
-										}
-									</script>
-								</td>
-							</tr>
-							<tr>
-								<td colspan="3">&nbsp;</td>
-							</tr>
-							<tr>
-								<td>&nbsp;</td>
-								<td colspan="2">
-									<div id="objectives_list">
-									<?php echo course_objectives_in_list($course_objectives["objectives"], 1, true); ?>
-									</div>
-								</td>
-							</tr>
-							<tr>
-								<td colspan="3">&nbsp;</td>
-							</tr>
 							<tr>
 								<td>&nbsp;</td>
 								<td style="vertical-align: top">
@@ -860,6 +748,115 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 										}
 									});
 									</script>
+								</td>
+							</tr>
+							<tr>
+								<td colspan="3">&nbsp;</td>
+							</tr>
+							<tr>
+								<td>&nbsp;</td>
+								<td>
+									<label for="objective_select" class="form-nrequired">Curriculum Objectives</label>
+								</td>
+								<td>
+									<select id="objective_select" onchange="showMultiSelect()">
+									<option value="">- Select Competency -</option>
+									<?php
+									$objective_select = "";
+									foreach ($course_objectives["objectives"] as $parent_id => $parent) {
+										if ($parent["parent"] == 1) {
+											echo "<optgroup label=\"".$parent["name"]."\">";
+											foreach($course_objectives["objectives"] as $objective_id => $objective) {
+												if ($objective["parent"] == $parent_id) {
+													echo "<option value=\"id_".$objective_id."\">".$objective["name"]."</option>";
+													foreach ($course_objectives["objectives"] as $child_id => $child) {
+														if ($child["parent"] == $objective_id) {
+															if (array_search($child_id, $course_objectives["used_ids"]) !== false) {
+																$checked = "checked=\"checked\"";
+															} else {
+																$checked = "";
+															}
+															$selectable_objectives[$child_id] = array("text" => $child["name"], "value" => $child_id, "checked" => $checked, "category" => true);
+															foreach($course_objectives["objectives"] as $grandkid_id => $grandkid) {
+																if ($grandkid["parent"] == $child_id) {
+																	if (array_search($grandkid_id, $course_objectives["used_ids"]) !== false) {
+																		$checked = "checked=\"checked\"";
+																	} else {
+																		$checked = "";
+																	}
+																	if ($grandkid["parent"] == $child_id) {
+																		$selectable_objectives[$grandkid_id] = array("text" => "<strong>".$grandkid["name"]."</strong><br />".$grandkid["description"], "value" => $grandkid_id, "checked" => $checked);
+																	}
+																}
+															}
+														}
+													}
+													$objective_select .= course_objectives_multiple_select_options_checked("id_".$objective_id, $selectable_objectives, array("title" => "Please select program or curricular objectives", "cancel" => true, "cancel_text" => "Close", "submit" => false, "width" => "550px"));
+												}
+												unset($selectable_objectives);
+											}
+											echo "\n</optgroup>";
+										}
+									}
+									?>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>&nbsp;</td>
+								<td>&nbsp;</td>
+								<td>
+									<span class="content-small"><strong>Helpful Tip:</strong> Select a competency from the select box above, and a list of course and curricular objectives will then be displayed. Once you have selected an objective it will be placed in the list below and you may leave it as primary or change the importance to secondary or tertiary.</span>
+									<?php echo $objective_select; ?>
+									<script type="text/javascript">
+										var multiselect = [];
+										var id;
+										function showMultiSelect() {
+											$$('select_multiple_container').invoke('hide');
+											id = $F('objective_select');
+											if (multiselect[id]) {
+												$('objective_select').hide();
+												multiselect[id].container.show();
+												multiselect[id].container.down("input").activate();
+											} else {
+												if ($(id+'_options')) {
+													$(id+'_options').addClassName('multiselect-processed');
+													multiselect[id] = new Control.SelectMultiple('objectives_head',id+'_options',{
+														checkboxSelector: 'table.select_multiple_table tr td input[type=checkbox]',
+														nameSelector: 'table.select_multiple_table tr td.select_multiple_name label',
+														resize: id+'_scroll',
+														afterCheck: function(element) {
+															if (element.checked) {
+																addObjective(element);
+															} else {
+																removeObjective(element);
+															}
+														}
+													});
+	
+													$(id+'_cancel').observe('click',function(event){
+														this.container.hide();
+														$('objective_select').show();
+														$('objective_select').options.selectedIndex = 0;
+														return false;
+													}.bindAsEventListener(multiselect[id]));;
+	
+													$('objective_select').hide();
+													multiselect[id].container.show();
+													multiselect[id].container.down("input").activate();
+												}
+											}
+											return false;
+										}
+									</script>
+								</td>
+							</tr>
+							<tr>
+								<td colspan="2">&nbsp;</td>
+								<td style="padding-top: 5px;">
+									<div id="objectives_list">
+									<?php echo course_objectives_in_list($course_objectives["objectives"], 1, true); ?>
+									</div>
 								</td>
 							</tr>
 							<tr>

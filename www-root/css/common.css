@@ -1014,6 +1014,10 @@ color:#333;
 text-decoration:none;
 }
 
+table.tableList thead tr td {
+padding: 0px 2px 0px 3px;
+}
+
 table.tableList tbody tr td {
 height:24px;
 font-size:11px;
@@ -1051,10 +1055,6 @@ background-color:#E7ECF4;
 
 table.tableList tbody tr.individual {
 background-color:#E7ECF4;
-}
-
-table.tableList thead tr td, table.tableList tbody tr td {
-padding: 0px 2px 0px 3px;
 }
 
 table.tableList tr td.modified {
@@ -1216,6 +1216,10 @@ font-family:'Century Gothic', Helvetica, Arial, sans-serif;
 font-size:13px;
 color:#036;
 margin:0 0 5px 0;
+}
+
+ul.objective-list {
+margin: 0;
 }
 
 ul.objective-list li {
@@ -1430,7 +1434,7 @@ background: transparent url(../images/feed_delete.png) no-repeat center left;
 margin: 10px 0 0 10px;
 padding-left: 20px;
 height: 16px;
-font-weight: bold;
+font-weight: 700;
 color: #bc4305;
 display: none;
 }
@@ -1714,7 +1718,7 @@ padding:0 14px 0 16px;
 .page-action-edit li a {
 color:#333;
 padding-left:5px;
-font-weight:bold;
+font-weight:700;
 }
 
 .page-action li a {
@@ -2202,7 +2206,7 @@ color:#C00;
 text-decoration:none;
 }
 
-span.response_feedback_term.correctly,#tabs li.tab_bold,table.quizResults tbody tr td.bold,ul#director_list li:first-child {
+.bold,span.response_feedback_term.correctly,#tabs li.tab_bold,ul#director_list li:first-child {
 font-weight:700;
 }
 
@@ -2276,6 +2280,10 @@ font-size:10px;
 padding-bottom:4px;
 padding-left:20px;
 background:transparent url(../images/checkbox-on.gif) no-repeat;
+}
+
+table {
+width:100%;
 }
 
 table.quizResults,table.tableList {

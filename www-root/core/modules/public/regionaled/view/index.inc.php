@@ -190,7 +190,7 @@ if (!defined("IN_REGIONALED_VIEW")) {
 		<?php
 	}
 	?>
-	<h1>Accommodation Information</h1>
+	<h1>Accommodation Details</h1>
 
 	<?php
 	display_status_messages();

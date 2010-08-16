@@ -421,14 +421,10 @@ function navigator_tabs() {
 	$PUBLIC_MODULES[] = array("name" => "events", "text" => "Learning Events");
 	$PUBLIC_MODULES[] = array("name" => "clerkship", "text" => "Clerkship", "resource" => "clerkship", "permission" => "read");
 	$PUBLIC_MODULES[] = array("name" => "objectives", "text" => "Curriculum Objectives", "resource" => "clerkship", "permission" => "read");
+	$PUBLIC_MODULES[] = array("name" => "regionaled", "text" => "Accommodations", "resource" => "regionaled_tab", "permission" => "read");
 	$PUBLIC_MODULES[] = array("name" => "search", "text" => "Curriculum Search");
 	$PUBLIC_MODULES[] = array("name" => "people", "text" => "People Search");
-
-    // This should be handled via an assertion in the ACL.
-    if ($_SESSION["details"]["group"] == "faculty") {
-		$PUBLIC_MODULES[] = array("name" => "annualreport", "text" => "Annual Report", "resource" => "annualreport", "permission" => "read");
-	}
-
+	$PUBLIC_MODULES[] = array("name" => "annualreport", "text" => "Annual Report", "resource" => "annualreport", "permission" => "read");
     $PUBLIC_MODULES[] = array("name" => "profile", "text" => "My Profile");
 	$PUBLIC_MODULES[] = array("name" => "library", "text" => "Library", "target" => "_blank");
 	$PUBLIC_MODULES[] = array("name" => "help", "text" => "Help");
@@ -442,24 +438,28 @@ function navigator_tabs() {
 
 	foreach ($PUBLIC_MODULES as $module) {
 		$current = false;
-		$counter++;
-		if (isset($module["resource"]) && isset($module["permission"])) {
-			if (!$ENTRADA_ACL->amIAllowed($module["resource"], $module["permission"])) {
-				continue;
-			}
-		}
 		$class = array();
 
-		if($counter == 1) {
+		if (isset($module["resource"]) && isset($module["permission"])) {
+			if ($ENTRADA_ACL->amIAllowed($module["resource"], $module["permission"])) {
+				$counter++;
+			} else {
+				continue;
+			}
+		} else {
+			$counter++;
+		}
+		
+		if ($counter == 1) {
 			$class[] = "first";
 		}
 
-        if($MODULE == $module["name"]) {
+        if ($MODULE == $module["name"]) {
 			$class[] = "current";
 			$current = true;
 		}
 		
-		$tab = "<li class=\"".implode(" ", $class)."\"><a href=\"".ENTRADA_URL."/".$module["name"]."\"><span>".$module["text"]."</span></a></li>\n";
+		$tab = "<li".(!empty($class) ? " class=\"".implode(" ", $class)."\"" : "")."><a href=\"".ENTRADA_URL."/".$module["name"]."\"><span>".$module["text"]."</span></a></li>\n";
 
 		// Push excess public tabs into more
 		if ($counter > $max_public) {
@@ -7595,7 +7595,8 @@ function course_objectives_in_list($objectives, $parent_id, $edit_importance = f
 
 	if ((is_array($objectives)) && (count($objectives))) {
 		if (((isset($objectives[$parent_id]) && count($objectives[$parent_id]["parent_ids"]) > 1) || $hierarchical) && count($objectives[$parent_id]["parent_ids"]) < 3) {
-			$output .= "<ul class=\"objective-list\" id=\"objective_".$parent_id."_list\"".($parent_id == 1 && (count($objectives[$parent_id]["parent_ids"]) > 2)|| !$hierarchical ? "" : " style=\"padding-left: 15px;\"")." >";
+//			$output .= "\n<ul class=\"objective-list\" id=\"objective_".$parent_id."_list\"".((($parent_id == 1) && (count($objectives[$parent_id]["parent_ids"]) > 2) || !$hierarchical) ? " style=\"padding-left: 0; margin-top: 0\"" : " style=\"padding-left: 15px;\"")." >";
+			$output .= "\n<ul class=\"objective-list\" id=\"objective_".$parent_id."_list\"".((($parent_id == 1) || !$hierarchical) ? " style=\"padding-left: 0; margin-top: 0\"" : "").">\n";
 		}
 		ksort($objectives);
 		foreach ($objectives as $objective_id => $objective) {

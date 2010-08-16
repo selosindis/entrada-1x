@@ -43,6 +43,7 @@ class Entrada_ACL extends ACL_Factory {
 				"regions",
 				"schedules"
 			),
+			"regionaled_tab",
 			"dashboard",
 			"clerkship" => array (
 				"electives",
@@ -789,6 +790,9 @@ class NotGuestAssertion implements Zend_Acl_Assert_Interface {
 		if(isset($role->details) && isset($role->details["group"])) {
 			$GROUP = $role->details["group"];
 		} else {
+/**
+ * @todo This needs to be fixed, or perhaps this would never even happen? The user_data table doesn't contain group or role fields, that's in user_access.
+ */
 			$role_id = $role->getRoleId();
 			$user_id = preg_replace('/[^0-9]+/', "", $role_id);
 			$query = "SELECT `group`, `role` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($user_id);
@@ -916,6 +920,40 @@ class ClerkshipDirectorAssertion implements Zend_Acl_Assert_Interface {
 	}
 }
 
+/**
+ * Regional Education Has Accommodations Class
+ *
+ * Checks to see if the resident has regional accommodations assigned to them
+ * by the regional education office.
+ */
+class HasAccommodationsAssertion implements Zend_Acl_Assert_Interface {
+	public function assert(Zend_Acl $acl, Zend_Acl_Role_Interface $role = null, Zend_Acl_Resource_Interface $resource = null, $privilege = null) {
+		global $db;
+		
+		if (!($role instanceof EntradaUser) || !isset($role->details) || !isset($role->details["id"])) {
+			if(isset($acl->_entrada_last_query_role)) {
+				$role = $acl->_entrada_last_query_role;
+				if(($role instanceof EntradaUser) || isset($role->details) || isset($role->details["id"])) {
+					$proxy_id = $role->details["id"];
+				}
+			}
+		} else {
+			$proxy_id = $role->details["id"];
+		}
+
+		if ((isset($proxy_id)) && ((int) $proxy_id)) {
+			$query = "SELECT COUNT(*) AS `total` FROM `".CLERKSHIP_DATABASE."`.`apartment_schedule` WHERE `proxy_id` = ".$db->qstr($proxy_id);
+			$result = $db->GetRow($query);
+
+			if ($result && ($result["total"] > 0)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+}
+
 class QuizOwnerAssertion implements Zend_Acl_Assert_Interface {
 	public function assert(Zend_Acl $acl, Zend_Acl_Role_Interface $role = null, Zend_Acl_Resource_Interface $resource = null, $privilege = null) {
 
@@ -970,6 +1008,8 @@ class QuizOwnerAssertion implements Zend_Acl_Assert_Interface {
 		return false;
 	}
 }
+
+
 
 /**
  * Base class for smart Entrada resource objects. Used for dummy checks and non assertion checks.

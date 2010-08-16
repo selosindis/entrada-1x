@@ -44,6 +44,7 @@ if (!defined("PARENT_INCLUDED")) {
 	$PAGE_META["title"] = "Regional Education Accommodations";
 
 	$BREADCRUMB[] = array("url" => ENTRADA_URL."/regionaled", "title" => "Regional Education");
+	$BREADCRUMB[] = array("url" => ENTRADA_URL."/regionaled", "title" => "Accommodations");
 
 	if (($router) && ($router->initRoute())) {
 		$PREFERENCES = preferences_load($MODULE);

@@ -7,7 +7,10 @@ INSERT INTO `acl_permissions` (`resource_type`, `resource_value`, `entity_type`,
 ('gradebook', NULL, 'role', 'pcoordinator', 1, NULL, 1, NULL, NULL, 'GradebookOwner'), 
 ('gradebook', NULL, 'group:role', 'faculty:admin', 1, NULL, 1, NULL, NULL, 'GradebookOwner'),
 ('gradebook', NULL, 'group:role', 'faculty:director', 1, NULL, 1, NULL, NULL, 'GradebookOwner'),
-('dashboard', NULL, NULL, NULL, NULL, NULL, NULL, 1, NULL, 'NotGuest');
+('dashboard', NULL, NULL, NULL, NULL, NULL, NULL, 1, NULL, 'NotGuest'),
+('regionaled', NULL, 'group', 'resident', '1', NULL, '1', NULL, NULL, 'HasAccommodations'),
+('regionaled', NULL, 'group', 'student', '1', NULL, '1', NULL, NULL, 'HasAccommodations'),
+('regionaled_tab', NULL, 'group', 'resident', '1', NULL, '1', NULL, NULL, 'HasAccommodations');
 
 -- Table: departments
 

@@ -2697,7 +2697,7 @@ table.mspr_table tr.unapproved td {
 #gradebook_stats {
 	width: 300px;
 }
-#gradebook_stats h2 {
+#gradebook_stats h2, #gradebook_grades h2 {
 	margin-top: 0px;
 }
 .gradebook_edit {
@@ -2707,6 +2707,7 @@ table.mspr_table tr.unapproved td {
 	left: 0px;
 	top: 0px;
 	background: #FFFFFF;
+	overflow: scroll;
 }
 #filter_grad_year {
 	padding: 0px;

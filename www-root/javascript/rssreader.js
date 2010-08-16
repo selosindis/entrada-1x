@@ -1,3 +1,5 @@
+var RSS_EDITING = false;
+
 // XML RSS feed parsing wrapper
 var RSSFeed = Class.create({
 	channel_title: "",
@@ -183,7 +185,6 @@ Object.extend(EntradaRSS, {
 });
 
 document.observe("dom:loaded", function() {
-	var RSS_EDITING = false;
 	
 	$$('.rss-list li').invoke('identify');
 	
@@ -246,9 +247,12 @@ document.observe("dom:loaded", function() {
 							after: new Element('a', {'class': "rss-remove-link", href: "#"}).observe('click', EntradaRSS.removeRSSFeed).update("Remove this Feed")
 						});
 						
-						EntradaRSS.resetSortables();
 						EntradaRSS.feedToHTML(element, feed);
+						EntradaRSS.resetSortables();
 						EntradaRSS.saveRSSFeeds();
+						if(!RSS_EDITING) {
+							EntradaRSS.destroySortables();
+						}
 						add_rss_modal.close();
 					},
 					onError: function(element, feed) {

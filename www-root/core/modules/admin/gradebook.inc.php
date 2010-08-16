@@ -44,10 +44,10 @@ if(!defined("PARENT_INCLUDED")) {
 	$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery.min.js\"></script>\n";
 	$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery.modal.js\"></script>\n";
 	$JQUERY[] = "<link href=\"".ENTRADA_URL."/css/jquery/flexigrid.css\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />";
-	$JQUERY[] = "<script language=\"javascript\" type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/flexigrid.js\"></script>\n";
-	$JQUERY[] = "<script language=\"javascript\" type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery.editable.js\"></script>\n";
+	$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/flexigrid.js\"></script>\n";
+	$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery.editable.js\"></script>\n";
 	$JQUERY[] = "<script type=\"text/javascript\">jQuery.noConflict(); var ENTRADA_URL = '".ENTRADA_URL."';</script>";
-	$JQUERY[] = "<script language=\"javascript\" type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/gradebook.js\"></script>\n";
+	$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/gradebook.js\"></script>\n";
 	
 	$ASSESSMENT_TYPES = array("Formative", "Summative", "Narrative");
 	

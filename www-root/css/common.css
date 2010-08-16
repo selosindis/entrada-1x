@@ -1014,6 +1014,10 @@ color:#333;
 text-decoration:none;
 }
 
+table.tableList thead tr td {
+padding: 0px 2px 0px 3px;
+}
+
 table.tableList tbody tr td {
 height:24px;
 font-size:11px;
@@ -1051,10 +1055,6 @@ background-color:#E7ECF4;
 
 table.tableList tbody tr.individual {
 background-color:#E7ECF4;
-}
-
-table.tableList thead tr td, table.tableList tbody tr td {
-padding: 0px 2px 0px 3px;
 }
 
 table.tableList tr td.modified {
@@ -1216,6 +1216,10 @@ font-family:'Century Gothic', Helvetica, Arial, sans-serif;
 font-size:13px;
 color:#036;
 margin:0 0 5px 0;
+}
+
+ul.objective-list {
+margin: 0;
 }
 
 ul.objective-list li {
@@ -2276,6 +2280,10 @@ font-size:10px;
 padding-bottom:4px;
 padding-left:20px;
 background:transparent url(../images/checkbox-on.gif) no-repeat;
+}
+
+table {
+width:100%;
 }
 
 table.quizResults,table.tableList {

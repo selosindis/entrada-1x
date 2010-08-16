@@ -187,100 +187,122 @@ if (!defined("PARENT_INCLUDED")) {
 					<h1><?php echo html_encode($course_details["course_name"].(($course_details["course_code"]) ? ": ".$course_details["course_code"] : "")); ?></h1>
 				</div>
 
+				<a name="course-details-section"></a>
+				<h2 title="Course Details Section">Course Details</h2>
+				<div id="course-details-section">
+					<?php
+					echo "<table summary=\"Course Details\">\n";
+					echo "	<colgroup>\n";
+					echo "		<col style=\"width: 22%\" />\n";
+					echo "		<col style=\"width: 78%\" />\n";
+					echo "	</colgroup>\n";
+					echo "	<tbody>\n";
+
+					if ($course_url = clean_input($course_details["course_url"], array("notags", "nows"))) {
+						echo "	<tr>\n";
+						echo "		<td>External Website</td>\n";
+						echo "		<td><a href=\"".html_encode($course_url)."\" target=\"_blank\">View <strong>".html_encode($course_details["course_name"])."</strong> Website</a></td>\n";
+						echo "	</tr>\n";
+						echo "	<tr>\n";
+						echo "		 <td colspan=\"2\">&nbsp;</td>\n";
+						echo "	</tr>\n";
+					}
+
+					echo "		<tr>\n";
+					echo "			<td style=\"vertical-align: top\">Course Directors</td>\n";
+					echo "			<td>\n";
+										$squery = "	SELECT a.`proxy_id`, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`email`
+													FROM `course_contacts` AS a
+													LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
+													ON b.`id` = a.`proxy_id`
+													WHERE a.`course_id` = ".$db->qstr($course_details["course_id"])."
+													AND a.`contact_type` = 'director'
+													AND b.`id` IS NOT NULL
+													ORDER BY a.`contact_order` ASC";
+										$results = $db->GetAll($squery);
+										if ($results) {
+											foreach ($results as $key => $sresult) {
+												echo "<a href=\"mailto:".html_encode($sresult["email"])."\">".html_encode($sresult["fullname"])."</a><br />\n";
+											}
+										} else {
+											echo "To Be Announced";
+										}
+					echo "			</td>\n";
+					echo "		</tr>\n";
+					echo "		<tr>\n";
+					echo "			<td style=\"vertical-align: top\">Curriculum Coordinators</td>\n";
+					echo "			<td>\n";
+										$squery = "	SELECT a.`proxy_id`, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`email`
+													FROM `course_contacts` AS a
+													LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
+													ON b.`id` = a.`proxy_id`
+													WHERE a.`course_id` = ".$db->qstr($course_details["course_id"])."
+													AND a.`contact_type` = 'ccoordinator'
+													AND b.`id` IS NOT NULL
+													ORDER BY a.`contact_order` ASC";
+										$results = $db->GetAll($squery);
+										if ($results) {
+											foreach ($results as $key => $sresult) {
+												echo "<a href=\"mailto:".html_encode($sresult["email"])."\">".html_encode($sresult["fullname"])."</a><br />\n";
+											}
+										} else {
+											echo "To Be Announced";
+										}
+					echo "			</td>\n";
+					echo "		</tr>\n";
+					if((int) $course_details["pcoord_id"]) {
+						echo "	<tr>\n";
+						echo "		<td>Program Coordinator</td>\n";
+						echo "		<td><a href=\"mailto:".get_account_data("email", $course_details["pcoord_id"])."\">".get_account_data("fullname", $course_details["pcoord_id"])."</a></td>\n";
+						echo "	</tr>\n";
+					}
+
+					if((int) $course_details["evalrep_id"]) {
+						echo "	<tr>\n";
+						echo "		<td>Evaluation Rep</td>\n";
+						echo "		<td><a href=\"mailto:".get_account_data("email", $course_details["evalrep_id"])."\">".get_account_data("fullname", $course_details["evalrep_id"])."</a></td>\n";
+						echo "	</tr>\n";
+					}
+
+					if((int) $course_details["studrep_id"]) {
+						echo "	<tr>\n";
+						echo "		<td>Student Rep</td>\n";
+						echo "		<td><a href=\"mailto:".get_account_data("email", $course_details["studrep_id"])."\">".get_account_data("fullname", $course_details["studrep_id"])."</a></td>\n";
+						echo "	</tr>\n";
+					}
+
+					if (clean_input($course_details["course_description"], array("notags", "nows")) != "") {
+						$course_description_section = true;
+
+						echo "	<tr>\n";
+						echo "		<td colspan=\"2\">&nbsp;</td>\n";
+						echo "	</tr>\n";
+						echo "	<tr>\n";
+						echo "		<td colspan=\"2\">\n";
+						echo "			<h3>Course Description</h3>\n";
+						echo 			trim(strip_selected_tags($course_details["course_description"], array("font")));
+						echo "		</td>\n";
+						echo "	</tr>\n";
+					}
+
+					if (clean_input($course_details["course_message"], array("notags", "nows")) != "") {
+						$course_message_section = true;
+						echo "	<tr>\n";
+						echo "		<td colspan=\"2\">&nbsp;</td>\n";
+						echo "	</tr>\n";
+						echo "	<tr>\n";
+						echo "		<td colspan=\"2\">\n";
+						echo "			<h3>Director's Message</h3>\n";
+						echo			trim(strip_selected_tags($course_details["course_message"], array("font")));
+						echo "		</td>\n";
+						echo "	</tr>\n";
+					}
+					echo "	</tbody>\n";
+					echo "</table>\n";
+					?>
+				</div>
+
 				<?php
-				echo "<table style=\"width: 100%\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" summary=\"Detailed Course Information\">\n";
-				echo "<colgroup>\n";
-				echo "	<col style=\"width: 22%\" />\n";
-				echo "	<col style=\"width: 78%\" />\n";
-				echo "</colgroup>\n";
-				echo "<tr>\n";
-				echo "	<td colspan=\"2\"><a name=\"course_details_section\"></a><h2>Course Details</h2></td>\n";
-				echo "</tr>\n";
-
-				if ($course_url = clean_input($course_details["course_url"], array("notags", "nows"))) {
-					echo "<tr>\n";
-					echo "	<td>External Website</td>\n";
-					echo "	<td><a href=\"".html_encode($course_url)."\" target=\"_blank\">View <strong>".html_encode($course_details["course_name"])."</strong> Website</a></td>\n";
-					echo "</tr>\n";
-					echo "<tr>\n";
-					echo "    <td colspan=\"2\">&nbsp;</td>\n";
-					echo "</tr>\n";
-				}
-
-				echo "	<tr>\n";
-				echo "		<td style=\"vertical-align: top\">Course Directors</td>\n";
-				echo "		<td>\n";
-							$squery		= "	SELECT a.`proxy_id`, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`email`
-											FROM `course_contacts` AS a
-											LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
-											ON b.`id` = a.`proxy_id`
-											WHERE a.`course_id` = ".$db->qstr($course_details["course_id"])."
-											AND a.`contact_type` = 'director'
-											AND b.`id` IS NOT NULL
-											ORDER BY a.`contact_order` ASC";
-							$results	= $db->GetAll($squery);
-							if ($results) {
-								foreach ($results as $key => $sresult) {
-									echo "<a href=\"mailto:".html_encode($sresult["email"])."\">".html_encode($sresult["fullname"])."</a><br />\n";
-								}
-							} else {
-								echo "To Be Announced";
-							}
-				echo "		</td>\n";
-				echo "	</tr>\n";
-				echo "	<tr>\n";
-				echo "		<td colspan=\"2\">&nbsp;</td>\n";
-				echo "	</tr>\n";
-				echo "	<tr>\n";
-				echo "		<td style=\"vertical-align: top\">Curriculum Coordinators</td>\n";
-				echo "		<td>\n";
-							$squery		= "	SELECT a.`proxy_id`, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`email`
-											FROM `course_contacts` AS a
-											LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
-											ON b.`id` = a.`proxy_id`
-											WHERE a.`course_id` = ".$db->qstr($course_details["course_id"])."
-											AND a.`contact_type` = 'ccoordinator'
-											AND b.`id` IS NOT NULL
-											ORDER BY a.`contact_order` ASC";
-							$results	= $db->GetAll($squery);
-							if ($results) {
-								foreach ($results as $key => $sresult) {
-									echo "<a href=\"mailto:".html_encode($sresult["email"])."\">".html_encode($sresult["fullname"])."</a><br />\n";
-								}
-							} else {
-								echo "To Be Announced";
-							}
-				echo "		</td>\n";
-				echo "	</tr>\n";
-				echo "<tr>\n";
-				echo "    <td colspan=\"2\">&nbsp;</td>\n";
-				echo "</tr>\n";
-				echo "<tr>\n";
-				echo "    <td>Program Coordinator</td>\n";
-				echo "    <td>".(($course_details["pcoord_id"]) ? "<a href=\"mailto:".get_account_data("email", $course_details["pcoord_id"])."\">".get_account_data("fullname", $course_details["pcoord_id"])."</a>" : "To Be Announced")."</td>\n";
-				echo "</tr>\n";
-				echo "<tr>\n";
-				echo "    <td>Evaluation Rep.</td>\n";
-				echo "    <td>".(($course_details["evalrep_id"]) ? "<a href=\"mailto:".get_account_data("email", $course_details["evalrep_id"])."\">".get_account_data("fullname", $course_details["evalrep_id"])."</a>" : "To Be Announced")."</td>\n";
-				echo "</tr>\n";
-				echo "<tr>\n";
-				echo "    <td>Student Rep.</td>\n";
-				echo "    <td>".(($course_details["studrep_id"]) ? "<a href=\"mailto:".get_account_data("email", $course_details["studrep_id"])."\">".get_account_data("fullname", $course_details["studrep_id"])."</a>" : "To Be Announced")."</td>\n";
-				echo "</tr>\n";
-
-				if (clean_input($course_details["course_description"], array("notags", "nows")) != "") {
-					$course_description_section = true;
-
-					echo "<tr>\n";
-					echo "	<td colspan=\"2\">&nbsp;</td>\n";
-					echo "</tr>\n";
-					echo "<tr>\n";
-					echo "	<td colspan=\"2\"><a name=\"course_description_section\"></a><h2>Course Description</h2></td>\n";
-					echo "</tr>\n";
-					echo "<tr>\n";
-					echo "	<td colspan=\"2\" style=\"text-align: justify\">".trim(strip_selected_tags($course_details["course_description"], array("font")))."</td>\n";
-					echo "</tr>\n";
-				}
 				$show_objectives = false;
 				$objectives = courses_fetch_objectives(array($COURSE_ID), 1, false);
 				foreach ($objectives["objectives"] as $objective) {
@@ -291,283 +313,211 @@ if (!defined("PARENT_INCLUDED")) {
 				}
 
 				if ($show_objectives || clean_input($course_details["course_objectives"], array("notags", "nows"))) {
-						echo "<tr>\n";
-						echo "	<td colspan=\"2\"><a name=\"course_objectives_section\"></a><h2>Curriculum Objectives</h2></td>\n";
-						echo "</tr>\n";
+					echo "<a name=\"course-objectives-section\"></a>\n";
+					echo "<h2 title=\"Course Objectives Section\">Course Objectives</h2>\n";
+					echo "<div id=\"course-objectives-section\">\n";
+					echo "	<table summary=\"Course Objectives\">\n";
+					echo "		<colgroup>\n";
+					echo "			<col style=\"width: 22%\" />\n";
+					echo "			<col style=\"width: 78%\" />\n";
+					echo "		</colgroup>\n";
+					echo "		<tbody>\n";
 					if (clean_input($course_details["course_objectives"], array("notags", "nows"))) {
 						$course_objectives_section = true;
-						echo "<tr>\n";
-						echo "	<td colspan=\"2\" style=\"text-align: justify; padding-left: 25px\">\n";
-						echo 	trim(strip_selected_tags($course_details["course_objectives"], array("font")));
-						echo "	</td>\n";
-						echo "</tr>\n";
+						echo "		<tr>\n";
+						echo "			<td colspan=\"2\" style=\"text-align: justify; padding-left: 25px\">\n";
+						echo				trim(strip_selected_tags($course_details["course_objectives"], array("font")));
+						echo "			</td>\n";
+						echo "		</tr>\n";
 					}
+
 					if ($show_objectives) {
-						echo "<tr>\n";
-						echo "	<td colspan=\"2\" style=\"text-align: justify;\" class=\"objectives\">\n";
-						?>
-						<script type="text/javascript">
-						function renewList (hierarchy) {
-							if (hierarchy != null && hierarchy) {
-								hierarchy = 1;
+						echo "		<tr>\n";
+						echo "			<td colspan=\"2\" style=\"text-align: justify;\" class=\"objectives\">\n";
+											?>
+											<script type="text/javascript">
+											function renewList (hierarchy) {
+												if (hierarchy != null && hierarchy) {
+													hierarchy = 1;
+												} else {
+													hierarchy = 0;
+												}
+												new Ajax.Updater('objectives_list', '<?php echo ENTRADA_URL; ?>/api/objectives.api.php',
+													{
+														method:	'post',
+														parameters: 'course_ids=<?php echo $COURSE_ID ?>&hierarchy='+hierarchy
+													}
+												);
+											}
+											</script>
+											<?php
+						echo "				<h3>Curriculum Objectives</h3>";
+						echo "				<div style=\"float: right;\">\n";
+						echo "					<label for=\"show_hierarchy\" class=\"content-small\" />Show objective hierarchy <input type=\"checkbox\" id=\"show_hierarcy\" onclick=\"renewList(this.checked)\" /></label>\n";
+						echo "				</div>\n";
+						echo "				<strong>The learner will be able to:</strong>";
+						echo "				<div id=\"objectives_list\">\n".course_objectives_in_list($objectives["objectives"], 1, false, false, 1, false)."\n</div>\n";
+						echo "			</td>\n";
+						echo "		</tr>\n";
+					}
+					echo "		</tbody>";
+					echo "	</table>";
+					echo "</div>";
+
+					$sidebar_html  = "<div style=\"margin: 2px 0px 10px 3px; font-size: 10px\">\n";
+					$sidebar_html .= "	<div><img src=\"".ENTRADA_URL."/images/legend-primary-objective.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" style=\"vertical-align: middle\" /> Primary Objective</div>\n";
+					$sidebar_html .= "	<div><img src=\"".ENTRADA_URL."/images/legend-secondary-objective.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" style=\"vertical-align: middle\" /> Secondary Objective</div>\n";
+					$sidebar_html .= "	<div><img src=\"".ENTRADA_URL."/images/legend-tertiary-objective.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" style=\"vertical-align: middle\" /> Tertiary Objective</div>\n";
+					$sidebar_html .= "</div>\n";
+
+					new_sidebar_item("Objective Importance", $sidebar_html, "objective-legend", "open");
+				}
+				?>
+
+				<a name="course-resources-section"></a>
+				<h2 title="Course Resources Section">Course Resources</h2>
+				<div id="course-resources-section">
+					<?php
+					$query = "	SELECT `course_files`.*, MAX(`statistics`.`timestamp`) AS `last_visited`
+								FROM `course_files`
+								LEFT JOIN `statistics`
+								ON `statistics`.`module`=".$db->qstr($MODULE)."
+								AND `statistics`.`proxy_id`=".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+								AND `statistics`.`action`='file_download'
+								AND `statistics`.`action_field`='file_id'
+								AND `statistics`.`action_value`=`course_files`.`id`
+								WHERE `course_files`.`course_id`=".$db->qstr($COURSE_ID)."
+								GROUP BY `course_files`.`id`
+								ORDER BY `file_category` ASC, `file_title` ASC";
+					$results = $db->GetAll($query);
+					echo "<table class=\"tableList\" cellspacing=\"0\" summary=\"List of File Attachments\">\n";
+					echo "<colgroup>\n";
+					echo "	<col class=\"modified\" />\n";
+					echo "	<col class=\"file-category\" />\n";
+					echo "	<col class=\"title\" />\n";
+					echo "	<col class=\"date\" />\n";
+					echo "</colgroup>\n";
+					echo "<thead>\n";
+					echo "	<tr>\n";
+					echo "		<td class=\"modified\">&nbsp;</td>\n";
+					echo "		<td class=\"file-category sortedASC\"><div class=\"noLink\">File Category</div></td>\n";
+					echo "		<td class=\"title\"><div class=\"noLink\">File Title</div></td>\n";
+					echo "		<td class=\"date\">Last Updated</td>\n";
+					echo "	</tr>\n";
+					echo "</thead>\n";
+					echo "<tbody>\n";
+					if ($results) {
+						foreach ($results as $result) {
+							$filename	= $result["file_name"];
+							$parts		= pathinfo($filename);
+							$ext		= $parts["extension"];
+
+							echo "<tr id=\"file-".$result["id"]."\">\n";
+							echo "	<td class=\"modified\" style=\"vertical-align: top\">".(((int) $result["last_visited"]) ? (((int) $result["last_visited"] >= (int) $result["updated_date"]) ? "<img src=\"".ENTRADA_URL."/images/accept.png\" width=\"16\" height=\"16\" alt=\"You have already downloaded the latest version.\" title=\"You have already downloaded the latest version.\" />" : "<img src=\"".ENTRADA_URL."/images/exclamation.png\" width=\"16\" height=\"16\" alt=\"An updated version of this file is available.\" title=\"An updated version of this file is available.\" />") : "")."</td>\n";
+							echo "	<td class=\"file-category\" style=\"vertical-align: top\">".((isset($RESOURCE_CATEGORIES["course"][$result["file_category"]])) ? html_encode($RESOURCE_CATEGORIES["course"][$result["file_category"]]) : "Unknown Category")."</td>\n";
+							echo "	<td class=\"title\" style=\"vertical-align: top; white-space: normal; overflow: visible\">\n";
+							echo "		<img src=\"".ENTRADA_URL."/serve-icon.php?ext=".$ext."\" width=\"16\" height=\"16\" alt=\"".strtoupper($ext)." Document\" title=\"".strtoupper($ext)." Document\" style=\"vertical-align: middle\" />\n";
+							if (((!(int) $result["valid_from"]) || ($result["valid_from"] <= time())) && ((!(int) $result["valid_until"]) || ($result["valid_until"] >= time()))) {
+								echo "	<a href=\"".ENTRADA_URL."/file-course.php?id=".$result["id"]."\" title=\"Click to download ".html_encode($result["file_title"])."\" style=\"font-weight: bold\"".(((int) $result["access_method"]) ? " target=\"_blank\"" : "").">".html_encode($result["file_title"])."</a>";
 							} else {
-								hierarchy = 0;
+								echo "	<span style=\"color: #666666; font-weight: bold\">".html_encode($result["file_title"])."</span>";
 							}
-							new Ajax.Updater('objectives_list', '<?php echo ENTRADA_URL; ?>/api/objectives.api.php',
-								{
-									method:	'post',
-									parameters: 'course_ids=<?php echo $COURSE_ID ?>&hierarchy='+hierarchy
-								}
-							);
+							echo "		<span class=\"content-small\">(".readable_size($result["file_size"]).")</span>";
+							echo "		<div class=\"content-small\" style=\"margin-top: 3px; margin-bottom: 5px\">\n";
+							if (((int) $result["valid_from"]) && ($result["valid_from"] > time())) {
+								echo "		This file will be available for downloading <strong>".date(DEFAULT_DATE_FORMAT, $result["valid_from"])."</strong>.<br /><br />";
+							} elseif (((int) $result["valid_until"]) && ($result["valid_until"] < time())) {
+								echo "		This file was only available for download until <strong>".date(DEFAULT_DATE_FORMAT, $result["valid_until"])."</strong>. Please contact the primary teacher for assistance if required.<br /><br />";
+							}
+
+							if (clean_input($result["file_notes"], array("notags", "nows")) != "") {
+								echo "		".trim(strip_selected_tags($result["file_notes"], array("font")))."\n";
+							}
+
+							echo "		</div>\n";
+							echo "	</td>\n";
+							echo "	<td class=\"date\" style=\"vertical-align: top\">".(((int) $result["updated_date"]) ? date(DEFAULT_DATE_FORMAT, $result["updated_date"]) : "Unknown")."</td>\n";
+							echo "</tr>\n";
 						}
-						</script>
-						<?php
-						echo "	<div style=\"text-align: right; padding-right: 20px;\"><label for=\"show_hierarchy\" class=\"content-small\" style=\"vertical-align: middle;\"/>Display Hierarchy For These Objectives</label><input type=\"checkbox\" id=\"show_hierarcy\" onclick=\"renewList(this.checked)\" /></div>\n";
-						echo "<strong>The student will be able to:</strong>";
-						echo "<div id=\"objectives_list\">\n".course_objectives_in_list($objectives["objectives"], 1, false, false, 1, false)."\n</div>\n";
-						echo "	</td>\n";
-						echo "</tr>\n";
-					}
-				}
-
-				$sidebar_html  = "<div style=\"margin: 2px 0px 10px 3px; font-size: 10px\">\n";
-				$sidebar_html .= "	<div><img src=\"".ENTRADA_URL."/images/legend-primary-objective.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" style=\"vertical-align: middle\" /> Primary Objective</div>\n";
-				$sidebar_html .= "	<div><img src=\"".ENTRADA_URL."/images/legend-secondary-objective.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" style=\"vertical-align: middle\" /> Secondary Objective</div>\n";
-				$sidebar_html .= "	<div><img src=\"".ENTRADA_URL."/images/legend-tertiary-objective.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" style=\"vertical-align: middle\" /> Tertiary Objective</div>\n";
-				$sidebar_html .= "</div>\n";
-
-				new_sidebar_item("Objective Importance", $sidebar_html, "objective-legend", "open");
-
-				/**
-				 * Pull all of the assessment info together into a single string.
-				 */
-				$output = "";
-				if (clean_input($course_details["unit_summative_assessment"], array("notags", "nows")) != "") {
-					$output .= "<h3>Summative Assessment</h3>\n";
-					$output .= trim(strip_selected_tags($course_details["unit_summative_assessment"], array("font")));
-				}
-
-				if (clean_input($course_details["unit_formative_assessment"], array("notags", "nows")) != "") {
-					$output .= "<h3>Formative Assessment</h3>\n";
-					$output .= trim(strip_selected_tags($course_details["unit_formative_assessment"], array("font")));
-				}
-
-				if (clean_input($course_details["unit_grading"], array("notags", "nows")) != "") {
-					$output .= "<h3>Grading</h3>\n";
-					$output .= trim(strip_selected_tags($course_details["unit_grading"], array("font")));
-				}
-
-				if ($output != "") {
-					$course_assessment_section = true;
-					echo "<tr>\n";
-					echo "	<td colspan=\"2\"><a name=\"course_assessment_section\"></a><h2>Assessment of Student Progress</h2></td>\n";
-					echo "</tr>\n";
-					echo "<tr>\n";
-					echo "	<td colspan=\"2\" style=\"text-align: justify; padding-left: 25px\">\n";
-					echo 	$output;
-					echo "	</td>\n";
-						echo "</tr>\n";
-				}
-
-				/**
-				 * Pull all of the textbook info together into a single string.
-				 */
-				$output = "";
-				if (clean_input($course_details["resources_required"], array("notags", "nows")) != "") {
-					$output .= "<h3>Required Resources</h3>\n";
-					$output .= trim(strip_selected_tags($course_details["resources_required"], array("font")));
-				}
-
-				if (clean_input($course_details["resources_optional"], array("notags", "nows")) != "") {
-					$output .= "<h3>Optional Resources</h3>\n";
-					$output .= trim(strip_selected_tags($course_details["resources_optional"], array("font")));
-				}
-
-				if ($output != "") {
-					$course_textbook_section = true;
-					echo "<tr>\n";
-					echo "	<td colspan=\"2\"><a name=\"course_textbook_section\"></a><h2>Textbook Resources</h2></td>\n";
-					echo "</tr>\n";
-					echo "<tr>\n";
-					echo "	<td colspan=\"2\" style=\"text-align: justify; padding-left: 25px\">\n";
-					echo 	$output;
-					echo "	</td>\n";
-					echo "</tr>\n";
-				}
-
-				if (clean_input($course_details["course_message"], array("notags", "nows")) != "") {
-					$course_message_section = true;
-					echo "<tr>\n";
-					echo "	<td colspan=\"2\">&nbsp;</td>\n";
-					echo "</tr>\n";
-					echo "<tr>\n";
-					echo "	<td colspan=\"2\"><a name=\"course_message_section\"></a><h2>Director's Message</h2></td>\n";
-					echo "</tr>\n";
-					echo "<tr>\n";
-					echo "	<td colspan=\"2\" style=\"text-align: justify\">".trim(strip_selected_tags($course_details["course_message"], array("font")))."</td>\n";
-					echo "</tr>\n";
-				}
-
-				echo "<tr>\n";
-				echo "	<td colspan=\"2\">&nbsp;</td>\n";
-				echo "</tr>\n";
-				echo "<tr>\n";
-				echo "	<td colspan=\"2\"><a name=\"course_resources_section\"></a><h2>Course Resources</h2></td>\n";
-				echo "</tr>\n";
-				echo "<tr>\n";
-				echo "	<td colspan=\"2\">\n";
-				$query	= "	SELECT `course_files`.*, MAX(`statistics`.`timestamp`) AS `last_visited`
-							FROM `course_files`
-							LEFT JOIN `statistics`
-							ON `statistics`.`module`=".$db->qstr($MODULE)."
-							AND `statistics`.`proxy_id`=".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
-							AND `statistics`.`action`='file_download'
-							AND `statistics`.`action_field`='file_id'
-							AND `statistics`.`action_value`=`course_files`.`id`
-							WHERE `course_files`.`course_id`=".$db->qstr($COURSE_ID)."
-							GROUP BY `course_files`.`id`
-							ORDER BY `file_category` ASC, `file_title` ASC";
-				$results	= ((USE_CACHE) ? $db->CacheGetAll(CACHE_TIMEOUT, $query) : $db->GetAll($query));
-				echo "<table class=\"tableList\" cellspacing=\"0\" summary=\"List of File Attachments\">\n";
-				echo "<colgroup>\n";
-				echo "	<col class=\"modified\" />\n";
-				echo "	<col class=\"file-category\" />\n";
-				echo "	<col class=\"title\" />\n";
-				echo "	<col class=\"date\" />\n";
-				echo "</colgroup>\n";
-				echo "<thead>\n";
-				echo "	<tr>\n";
-				echo "		<td class=\"modified\">&nbsp;</td>\n";
-				echo "		<td class=\"file-category sortedASC\"><div class=\"noLink\">File Category</div></td>\n";
-				echo "		<td class=\"title\"><div class=\"noLink\">File Title</div></td>\n";
-				echo "		<td class=\"date\">Last Updated</td>\n";
-				echo "	</tr>\n";
-				echo "</thead>\n";
-				echo "<tbody>\n";
-				if ($results) {
-					foreach ($results as $result) {
-						$filename	= $result["file_name"];
-						$parts		= pathinfo($filename);
-						$ext		= $parts["extension"];
-
-						echo "<tr id=\"file-".$result["id"]."\">\n";
-						echo "	<td class=\"modified\" style=\"vertical-align: top\">".(((int) $result["last_visited"]) ? (((int) $result["last_visited"] >= (int) $result["updated_date"]) ? "<img src=\"".ENTRADA_URL."/images/checkmark.gif\" width=\"20\" height=\"20\" alt=\"You have already downloaded the latest version\" title=\"You have already downloaded the latest version\" style=\"vertical-align: middle\" />" : "<img src=\"".ENTRADA_URL."/images/exclamation.gif\" width=\"20\" height=\"20\" alt=\"An updated version of this file is available\" title=\"An updated version of this file is available\" style=\"vertical-align: middle\" />") : "")."</td>\n";
-						echo "	<td class=\"file-category\" style=\"vertical-align: top\">".((isset($RESOURCE_CATEGORIES["course"][$result["file_category"]])) ? html_encode($RESOURCE_CATEGORIES["course"][$result["file_category"]]) : "Unknown Category")."</td>\n";
-						echo "	<td class=\"title\" style=\"vertical-align: top; white-space: normal; overflow: visible\">\n";
-						echo "		<img src=\"".ENTRADA_URL."/serve-icon.php?ext=".$ext."\" width=\"16\" height=\"16\" alt=\"".strtoupper($ext)." Document\" title=\"".strtoupper($ext)." Document\" style=\"vertical-align: middle\" />\n";
-						if (((!(int) $result["valid_from"]) || ($result["valid_from"] <= time())) && ((!(int) $result["valid_until"]) || ($result["valid_until"] >= time()))) {
-							echo "	<a href=\"".ENTRADA_URL."/file-course.php?id=".$result["id"]."\" title=\"Click to download ".html_encode($result["file_title"])."\" style=\"font-weight: bold\"".(((int) $result["access_method"]) ? " target=\"_blank\"" : "").">".html_encode($result["file_title"])."</a>";
-						} else {
-							echo "	<span style=\"color: #666666; font-weight: bold\">".html_encode($result["file_title"])."</span>";
-						}
-						echo "		<span class=\"content-small\">(".readable_size($result["file_size"]).")</span>";
-						echo "		<div class=\"content-small\" style=\"margin-top: 3px; margin-bottom: 5px\">\n";
-						if (((int) $result["valid_from"]) && ($result["valid_from"] > time())) {
-							echo "		This file will be available for downloading <strong>".date(DEFAULT_DATE_FORMAT, $result["valid_from"])."</strong>.<br /><br />";
-						} elseif (((int) $result["valid_until"]) && ($result["valid_until"] < time())) {
-							echo "		This file was only available for download until <strong>".date(DEFAULT_DATE_FORMAT, $result["valid_until"])."</strong>. Please contact the primary teacher for assistance if required.<br /><br />";
-						}
-
-						if (clean_input($result["file_notes"], array("notags", "nows")) != "") {
-							echo "		".trim(strip_selected_tags($result["file_notes"], array("font")))."\n";
-						}
-
-						echo "		</div>\n";
-						echo "	</td>\n";
-						echo "	<td class=\"date\" style=\"vertical-align: top\">".(((int) $result["updated_date"]) ? date(DEFAULT_DATE_FORMAT, $result["updated_date"]) : "Unknown")."</td>\n";
-						echo "</tr>\n";
-					}
-				} else {
-					echo "<tr>\n";
-					echo "	<td colspan=\"4\">\n";
-					echo "		<div class=\"content-small\" style=\"margin-top: 3px; margin-bottom: 5px\">There have been no file downloads added to this course.</div>\n";
-					echo "	</td>\n";
-					echo "</tr>\n";
-				}
-				echo "</tbody>\n";
-				echo "</table>\n";
-				echo "<br />\n";
-
-				$query		= "SELECT * FROM `course_links` WHERE `course_id`=".$db->qstr($COURSE_ID)." ORDER BY `link_title` ASC";
-				$results	= ((USE_CACHE) ? $db->CacheGetAll(CACHE_TIMEOUT, $query) : $db->GetAll($query));
-				echo "<table class=\"tableList\" cellspacing=\"0\" summary=\"List of Linked Resources\">\n";
-				echo "<colgroup>\n";
-				echo "	<col class=\"modified\" />\n";
-				echo "	<col class=\"title\" />\n";
-				echo "	<col class=\"date\" />\n";
-				echo "</colgroup>\n";
-				echo "<thead>\n";
-				echo "	<tr>\n";
-				echo "		<td class=\"modified\">&nbsp;</td>\n";
-				echo "		<td class=\"title sortedASC\"><div class=\"noLink\">Linked Resource</div></td>\n";
-				echo "		<td class=\"date\">Last Updated</td>\n";
-				echo "	</tr>\n";
-				echo "</thead>\n";
-				echo "<tbody>\n";
-				if ($results) {
-					foreach ($results as $result) {
+					} else {
 						echo "<tr>\n";
-						echo "	<td class=\"modified\" style=\"vertical-align: top\"><img src=\"".ENTRADA_URL."/images/url".(($result["proxify"] == "1") ? "-proxy" : "").".gif\" width=\"16\" height=\"16\" alt=\"\" /></td>\n";
-						echo "	<td class=\"title\" style=\"vertical-align: top; white-space: normal; overflow: visible\">\n";
-
-						if (((!(int) $result["valid_from"]) || ($result["valid_from"] <= time())) && ((!(int) $result["valid_until"]) || ($result["valid_until"] >= time()))) {
-							echo "	<a href=\"".ENTRADA_URL."/link-course.php?id=".$result["id"]."\" title=\"Click to visit ".$result["link"]."\" style=\"font-weight:  bold\" target=\"_blank\">".(($result["link_title"] != "") ? html_encode($result["link_title"]) : $result["link"])."</a>\n";
-						} else {
-							echo "	<span style=\"color: #666666; font-weight: bold\">".(($result["link_title"] != "") ? html_encode($result["link_title"]) : "Untitled Link")."</span>";
-						}
-
-						echo "		<div class=\"content-small\" style=\"margin-top: 3px; margin-bottom: 5px\">\n";
-						if (((int) $result["valid_from"]) && ($result["valid_from"] > time())) {
-							echo "		This link will become accessible <strong>".date(DEFAULT_DATE_FORMAT, $result["valid_from"])."</strong>.<br /><br />";
-						} elseif (((int) $result["valid_until"]) && ($result["valid_until"] < time())) {
-							echo "		This link was only accessible until <strong>".date(DEFAULT_DATE_FORMAT, $result["valid_until"])."</strong>. Please contact the primary teacher for assistance if required.<br /><br />";
-						}
-
-						if (clean_input($result["link_notes"], array("notags", "nows")) != "") {
-							echo "		".trim(strip_selected_tags($result["link_notes"], array("font")))."\n";
-						}
-						echo "		</div>\n";
+						echo "	<td colspan=\"4\">\n";
+						echo "		<div class=\"content-small\" style=\"margin-top: 3px; margin-bottom: 5px\">There have been no file downloads added to this course.</div>\n";
 						echo "	</td>\n";
-						echo "	<td class=\"date\" style=\"vertical-align: top\">".(((int) $result["updated_date"]) ? date(DEFAULT_DATE_FORMAT, $result["updated_date"]) : "Unknown")."</td>\n";
 						echo "</tr>\n";
 					}
-				} else {
-					echo "<tr>\n";
-					echo "	<td colspan=\"2\">\n";
-					echo "		<div class=\"content-small\" style=\"margin-top: 3px; margin-bottom: 5px\">There have been no linked resources added to this course.</div>\n";
-					echo "	</td>\n";
-					echo "</tr>\n";
-				}
-				echo "</tbody>\n";
-				echo "</table>\n";
-				echo "	</td>\n";
-				echo "</tr>\n";
-				echo "</table>\n";
+					echo "</tbody>\n";
+					echo "</table>\n";
+					echo "<br />\n";
 
+					$query = "SELECT * FROM `course_links` WHERE `course_id`=".$db->qstr($COURSE_ID)." ORDER BY `link_title` ASC";
+					$results = $db->GetAll($query);
+					echo "<table class=\"tableList\" cellspacing=\"0\" summary=\"List of Linked Resources\">\n";
+					echo "<colgroup>\n";
+					echo "	<col class=\"modified\" />\n";
+					echo "	<col class=\"title\" />\n";
+					echo "	<col class=\"date\" />\n";
+					echo "</colgroup>\n";
+					echo "<thead>\n";
+					echo "	<tr>\n";
+					echo "		<td class=\"modified\">&nbsp;</td>\n";
+					echo "		<td class=\"title sortedASC\"><div class=\"noLink\">Linked Resource</div></td>\n";
+					echo "		<td class=\"date\">Last Updated</td>\n";
+					echo "	</tr>\n";
+					echo "</thead>\n";
+					echo "<tbody>\n";
+					if ($results) {
+						foreach ($results as $result) {
+							echo "<tr>\n";
+							echo "	<td class=\"modified\" style=\"vertical-align: top\"><img src=\"".ENTRADA_URL."/images/url".(($result["proxify"] == "1") ? "-proxy" : "").".gif\" width=\"16\" height=\"16\" alt=\"\" /></td>\n";
+							echo "	<td class=\"title\" style=\"vertical-align: top; white-space: normal; overflow: visible\">\n";
+
+							if (((!(int) $result["valid_from"]) || ($result["valid_from"] <= time())) && ((!(int) $result["valid_until"]) || ($result["valid_until"] >= time()))) {
+								echo "	<a href=\"".ENTRADA_URL."/link-course.php?id=".$result["id"]."\" title=\"Click to visit ".$result["link"]."\" style=\"font-weight:  bold\" target=\"_blank\">".(($result["link_title"] != "") ? html_encode($result["link_title"]) : $result["link"])."</a>\n";
+							} else {
+								echo "	<span style=\"color: #666666; font-weight: bold\">".(($result["link_title"] != "") ? html_encode($result["link_title"]) : "Untitled Link")."</span>";
+							}
+
+							echo "		<div class=\"content-small\" style=\"margin-top: 3px; margin-bottom: 5px\">\n";
+							if (((int) $result["valid_from"]) && ($result["valid_from"] > time())) {
+								echo "		This link will become accessible <strong>".date(DEFAULT_DATE_FORMAT, $result["valid_from"])."</strong>.<br /><br />";
+							} elseif (((int) $result["valid_until"]) && ($result["valid_until"] < time())) {
+								echo "		This link was only accessible until <strong>".date(DEFAULT_DATE_FORMAT, $result["valid_until"])."</strong>. Please contact the primary teacher for assistance if required.<br /><br />";
+							}
+
+							if (clean_input($result["link_notes"], array("notags", "nows")) != "") {
+								echo "		".trim(strip_selected_tags($result["link_notes"], array("font")))."\n";
+							}
+							echo "		</div>\n";
+							echo "	</td>\n";
+							echo "	<td class=\"date\" style=\"vertical-align: top\">".(((int) $result["updated_date"]) ? date(DEFAULT_DATE_FORMAT, $result["updated_date"]) : "Unknown")."</td>\n";
+							echo "</tr>\n";
+						}
+					} else {
+						echo "<tr>\n";
+						echo "	<td colspan=\"2\">\n";
+						echo "		<div class=\"content-small\" style=\"margin-top: 3px; margin-bottom: 5px\">There have been no linked resources added to this course.</div>\n";
+						echo "	</td>\n";
+						echo "</tr>\n";
+					}
+					echo "</tbody>\n";
+					echo "</table>\n";
+					?>
+				</div>
+
+				<?php
 				/**
 				 * Sidebar item that will provide the links to the different sections within this page.
 				 */
 				$sidebar_html  = "<ul class=\"menu\">\n";
 				if ($course_details_section) {
-					$sidebar_html .= "	<li class=\"link\"><a href=\"#course_details_section\" title=\"Course Details\">Course Details</a></li>\n";
-				}
-				if ($course_description_section) {
-					$sidebar_html .= "	<li class=\"link\"><a href=\"#course_description_section\" title=\"Course Description\">Course Description</a></li>\n";
+					$sidebar_html .= "	<li class=\"link\"><a href=\"#course-details-section\" title=\"Course Details\">Course Details</a></li>\n";
 				}
 				if ($course_objectives_section) {
-					$sidebar_html .= "	<li class=\"link\"><a href=\"#course_objectives_section\" title=\"Course Objectives\">Course Objectives</a></li>\n";
-				}
-				if ($course_assessment_section) {
-					$sidebar_html .= "	<li class=\"link\"><a href=\"#course_assessment_section\" title=\"Assessment of Student Progress\">Assessment of Progress</a></li>\n";
-				}
-				if ($course_textbook_section) {
-					$sidebar_html .= "	<li class=\"link\"><a href=\"#course_textbook_section\" title=\"Textbook Resources\">Textbook Resources</a></li>\n";
-				}
-				if ($course_message_section) {
-					$sidebar_html .= "	<li class=\"link\"><a href=\"#course_message_section\" title=\"Director's Message\">Director's Message</a></li>\n";
+					$sidebar_html .= "	<li class=\"link\"><a href=\"#course-objectives-section\" title=\"Course Objectives\">Course Objectives</a></li>\n";
 				}
 				if ($course_resources_section) {
-					$sidebar_html .= "	<li class=\"link\"><a href=\"#course_resources_section\" title=\"Course Resources\">Course Resources</a></li>\n";
+					$sidebar_html .= "	<li class=\"link\"><a href=\"#course-resources-section\" title=\"Course Resources\">Course Resources</a></li>\n";
 				}
 				$sidebar_html .= "</ul>\n";
 

@@ -420,6 +420,7 @@ function navigator_tabs() {
 	$PUBLIC_MODULES[] = array("name" => "courses", "text" => "Courses");
 	$PUBLIC_MODULES[] = array("name" => "events", "text" => "Learning Events");
 	$PUBLIC_MODULES[] = array("name" => "clerkship", "text" => "Clerkship", "resource" => "clerkship", "permission" => "read");
+	$PUBLIC_MODULES[] = array("name" => "objectives", "text" => "Curriculum Objectives", "resource" => "clerkship", "permission" => "read");
 	$PUBLIC_MODULES[] = array("name" => "search", "text" => "Curriculum Search");
 	$PUBLIC_MODULES[] = array("name" => "people", "text" => "People Search");
 
@@ -10199,7 +10200,7 @@ function formatDateRange($start_date, $end_date) {
 
 /**
  * This function gets all of the departments a user is in
- * @param string $uer_id
+ * @param string $user_id
  * @return array $results
  */
 function get_user_departments($user_id) {
@@ -10212,4 +10213,79 @@ function get_user_departments($user_id) {
 	$results = $db->GetAll($query);
 	
 	return $results;
+}
+
+/**
+ * This function generates a 2 dimensional array of the competencies
+ * and the courses which they are associated with, used for building
+ * a table to display the aforementioned matrix.
+ * 
+ * @return array $obectives
+ */
+function objectives_build_course_competencies_array() {
+	global $db;
+	$courses_array = array();
+	$query = "	SELECT * FROM `courses`
+				WHERE `course_id` IN (
+					SELECT DISTINCT(`course_id`) FROM `course_objectives`
+					WHERE `objective_type` = 'course'
+				)";
+	$courses = $db->GetAll($query);
+		if ($courses) {
+		foreach ($courses as $course) {
+			$courses_array["courses"][$course["course_id"]]["competencies"] = array();
+			$courses_array["competencies"] = array();
+			$courses_array["courses"][$course["course_id"]]["course_name"] = $course["course_name"];
+		}
+		$query = "	SELECT * FROM `global_lu_objectives`
+					WHERE `objective_parent` = ".$db->qstr(CURRICULAR_OBJECTIVES_PARENT_ID);
+		$competencies = $db->GetAll($query);
+		if ($competencies && count($competencies)) {
+			foreach ($competencies as $competency) {
+				$courses_array["competencies"][] = $competency["objective_name"]; 
+				$objective_ids_string = objectives_build_objective_descendants_id_string($competency["objective_id"], $db->qstr($competency["objective_id"]));
+				if ($objective_ids_string) {
+					foreach ($courses_array["courses"] as $course_id => &$course) {
+						$query = "	SELECT * FROM `course_objectives`
+									WHERE `objective_type` = 'course'
+									AND `course_id` = ".$db->qstr($course_id)."
+									AND `objective_id` IN (".$objective_ids_string.")";
+						$found = $db->GetRow($query);
+						if ($found) {
+							$course["competencies"][$competency["objective_name"]] =true;
+						} else {
+							$course["competencies"][$competency["objective_name"]] = false;
+						}
+					}
+				}
+			}
+		}
+	}
+	return $courses_array;
+}
+
+/**
+ * This function returns a string containing all of the objectives which
+ * are descendants of the objective_id received.
+ * 
+ * @param $objective_id
+ * @param $objective_ids_string
+ * @return $objective_ids_string
+ */
+function objectives_build_objective_descendants_id_string($objective_id = 0, $objective_ids_string = "") {
+	global $db;
+	$query = "	SELECT `objective_id` FROM `global_lu_objectives`
+				WHERE `objective_parent` = ".$db->qstr($objective_id);
+	$objective_ids = $db->GetAll($query);
+	if ($objective_ids) {
+		foreach ($objective_ids as $objective_id) {
+			if ($objective_ids_string) {
+				$objective_ids_string .= ", ".$db->qstr($objective_id["objective_id"]);
+			} else {
+				$objective_ids_string = $db->qstr($objective_id["objective_id"]);
+			}
+			$objective_ids_string = objectives_build_objective_descendants_id_string($objective_id["objective_id"], $objective_ids_string);
+		}
+	}
+	return $objective_ids_string;
 }

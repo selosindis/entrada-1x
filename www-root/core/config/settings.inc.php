@@ -81,6 +81,8 @@ $CLERKSHIP_FIELD_STATUS["approval"] = array("name" => "Awaiting Approval", "visi
 $CLERKSHIP_FIELD_STATUS["trash"] = array("name" => "Trash", "visible" => false);
 $CLERKSHIP_FIELD_STATUS["cancelled"] = array("name" => "Cancelled", "visible" => false);
 
+define("CURRICULAR_OBJECTIVES_PARENT_ID", 1);
+
 define("AUTH_PRODUCTION", ENTRADA_URL."/authentication/authenticate.php");
 
 define("AUTH_APP_ID", "1");														// Application ID for the MEdTech Authentication System.

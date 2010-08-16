@@ -1430,7 +1430,7 @@ background: transparent url(../images/feed_delete.png) no-repeat center left;
 margin: 10px 0 0 10px;
 padding-left: 20px;
 height: 16px;
-font-weight: bold;
+font-weight: 700;
 color: #bc4305;
 display: none;
 }
@@ -1714,7 +1714,7 @@ padding:0 14px 0 16px;
 .page-action-edit li a {
 color:#333;
 padding-left:5px;
-font-weight:bold;
+font-weight:700;
 }
 
 .page-action li a {
@@ -2202,7 +2202,7 @@ color:#C00;
 text-decoration:none;
 }
 
-span.response_feedback_term.correctly,#tabs li.tab_bold,table.quizResults tbody tr td.bold,ul#director_list li:first-child {
+.bold,span.response_feedback_term.correctly,#tabs li.tab_bold,ul#director_list li:first-child {
 font-weight:700;
 }
 

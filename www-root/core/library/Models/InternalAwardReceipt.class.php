@@ -58,7 +58,7 @@ class InternalAwardReceipt {
 	}
 	
 	public function getUser() {
-		return $this->user;
+		return User::get($this->user_id);
 	}
 	
 	public function getAward() {
@@ -86,18 +86,16 @@ class InternalAwardReceipt {
 	 */
 	static public function get($award_receipt_id) {
 		global $db;
-		$query		= "SELECT a.id as `award_receipt_id`, b.id as user_id, award_id, c.title, c.award_terms, c.disabled, lastname, firstname, a.year 
+		$query		= "SELECT a.id as `award_receipt_id`, user_id, award_id, c.title, c.award_terms, c.disabled, lastname, firstname, a.year 
 				FROM `". DATABASE_NAME ."`.`student_awards_internal` a 
 				left join `". DATABASE_NAME ."`.`student_awards_internal_types` c on c.id = a.award_id 
-				right join `".AUTH_DATABASE."`.`user_data` b on a.`user_id` = b.`id` 
 				WHERE a.id = ".$db->qstr($award_receipt_id);
 		
 		$result	= $db->GetRow($query);
 			
 		if ($result) {
-			$user = new User($result['user_id'], null, $result['lastname'], $result['firstname']);
 			$award = new InternalAward($result['award_id'], $result['title'], $result['award_terms'], $result['disabled']);
-			return new InternalAwardReceipt( $user, $award, $result['award_receipt_id'], $result['year']);
+			return new InternalAwardReceipt( $result['user_id'], $award, $result['award_receipt_id'], $result['year']);
 		} else {
 			$ERROR++;
 			$ERRORSTR[] = "Failed to retreive award receipt from database.";

@@ -48,7 +48,7 @@ class ExternalAwardReceipts extends Collection implements AttentionRequirable {
 	}
 	static private function getByUser(User $user) {
 		global $db;
-		$query		= "SELECT a.id as `award_receipt_id`, a.title, a.award_terms, a.status, a.awarding_body, a.year 
+		$query		= "SELECT a.id as `award_receipt_id`, a.user_id, a.title, a.award_terms, a.status, a.awarding_body, a.year 
 				FROM `". DATABASE_NAME ."`.`student_awards_external` a 
 				WHERE a.`user_id` = ".$db->qstr($user->getID()) ." 
 				order by a.year desc";
@@ -58,12 +58,11 @@ class ExternalAwardReceipts extends Collection implements AttentionRequirable {
 		if ($results) {
 			foreach ($results as $result) {
 				
-				//$user = new User($result['id'], null, $result['lastname'], $result['firstname']);
 				$award = new ExternalAward($result['title'], $result['award_terms'], $result['awarding_body']);
 				$rejected=($result['status'] == -1);
 				$approved = ($result['status'] == 1);
 				
-				$receipt = new ExternalAwardReceipt( $user, $award, $result['award_receipt_id'], $result['year'], $approved, $rejected);
+				$receipt = new ExternalAwardReceipt( $result['user_id'], $award, $result['award_receipt_id'], $result['year'], $approved, $rejected);
 				$receipts[] = $receipt;
 			}
 		}

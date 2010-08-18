@@ -38,13 +38,13 @@ require_once("ExternalAward.class.php");
 class ExternalAwardReceipt implements Approvable,AttentionRequirable {
 	private $award_receipt_id;
 	private $award;
-	private $user;
+	private $user_id;
 	private $year;
 	private $approved;
 	private $rejected;
 	
-	function __construct(User $user, Award $award, $award_receipt_id, $year, $approved = false, $rejected = false){
-		$this->user = $user;
+	function __construct($user_id, Award $award, $award_receipt_id, $year, $approved = false, $rejected = false){
+		$this->user_id = $user_id;
 		$this->award = $award;
 		$this->award_receipt_id = $award_receipt_id;
 		$this->year = $year;
@@ -73,7 +73,7 @@ class ExternalAwardReceipt implements Approvable,AttentionRequirable {
 	}
 	
 	public function getUser() {
-		return $this->user;
+		return User::get($this->user_id);
 	}
 	
 	public function getAward() {
@@ -105,9 +105,8 @@ class ExternalAwardReceipt implements Approvable,AttentionRequirable {
 	 */
 	static public function get($award_receipt_id) {
 		global $db;
-		$query		= "SELECT a.id as `award_receipt_id`, b.id as user_id, a.title, a.award_terms, a.awarding_body, a.status, lastname, firstname, a.year 
+		$query		= "SELECT a.id as `award_receipt_id`, user_id, a.title, a.award_terms, a.awarding_body, a.status, a.year 
 				FROM `". DATABASE_NAME ."`.`student_awards_external` a 
-				left join `".AUTH_DATABASE."`.`user_data` b on a.`user_id` = b.`id` 
 				WHERE a.id = ".$db->qstr($award_receipt_id);
 		
 		$result	= $db->GetRow($query);
@@ -116,9 +115,8 @@ class ExternalAwardReceipt implements Approvable,AttentionRequirable {
 			$rejected=($result['status'] == -1);
 			$approved = ($result['status'] == 1);
 				
-			$user = new User($result['user_id'], null, $result['lastname'], $result['firstname']);
 			$award = new ExternalAward($result['title'], $result['award_terms'], $result['awarding_body']);
-			return new ExternalAwardReceipt( $user, $award, $result['award_receipt_id'], $result['year'], $approved, $rejected);
+			return new ExternalAwardReceipt( $result['user_id'], $award, $result['award_receipt_id'], $result['year'], $approved, $rejected);
 		} else {
 			$ERROR++;
 			$ERRORSTR[] = "Failed to retreive award receipt from database.";

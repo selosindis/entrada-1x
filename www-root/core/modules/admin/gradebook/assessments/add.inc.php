@@ -17,10 +17,10 @@
  *
  * @author Organisation: Queen's University
  * @author Unit: School of Medicine
- * @author Developer: James Ellis <james.ellis@queensu.ca>
+ * @author Developer: Harry Brundage <hbrundage@qmed.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
-*/
+ */
 
 if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 	exit;
@@ -38,21 +38,22 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 	if ($COURSE_ID) {
-		$query				= "	SELECT * FROM `courses` 
-							WHERE `course_id` = ".$db->qstr($COURSE_ID)."
-							AND `course_active` = '1'";
-		$course_details		= $db->GetRow($query);
+		$query = "	SELECT * FROM `courses`
+					WHERE `course_id` = ".$db->qstr($COURSE_ID)."
+					AND `course_active` = '1'";
+		$course_details	= $db->GetRow($query);
 
-		$m_query			= "	SELECT * FROM `assessment_marking_schemes` 
-							WHERE `enabled` = 1;";
-		$MARKING_SCHEMES	= $db->GetAll($m_query);
-		
+		$m_query = "	SELECT * FROM `assessment_marking_schemes`
+						WHERE `enabled` = 1;";
+		$MARKING_SCHEMES = $db->GetAll($m_query);
+
 		if ($course_details && $MARKING_SCHEMES && $ENTRADA_ACL->amIAllowed(new GradebookResource($course_details["course_id"], $course_details["organisation_id"]), "update")) {
 			function return_id($arr) {
 				return $arr["id"];
-			}			
+			}
+			
 			$MARKING_SCHEME_IDS = array_map("return_id", $MARKING_SCHEMES);
-			$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "edit", "id" => $COURSE_ID, "step" => false)), "title" => "Adding Assessment");
+			$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "edit", "id" => $COURSE_ID, "step" => false)), "title" => "Adding Assessment");
 			
 			// Error Checking
 			switch($STEP) {
@@ -118,7 +119,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					}
 					
 					if (isset($_POST["post_action"])) {
-						if(@in_array($_POST["post_action"], array("new", "index", "parent"))) {
+						if(@in_array($_POST["post_action"], array("new", "index", "parent", "grade"))) {
 							$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] = $_POST["post_action"];
 						} else {
 							$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] = "index";
@@ -140,6 +141,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							}
 							
 							switch($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"]) {
+								case "grade" :
+									$url = ENTRADA_URL."/admin/gradebook/assessments?".replace_query(array("step" => false, "section" => "grade", "assessment_id" => $ASSESSMENT_ID));
+									$msg = "You will now be redirected to the <strong>Grade Assessment</strong> page for \"<strong>".$PROCESSED["name"] . "</strong>\"; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+									break;
 								case "new" :
 									$url = ENTRADA_URL."/admin/gradebook/assessments?".replace_query(array("step" => false, "section" => "add"));
 									$msg = "You will now be redirected to another <strong>Add Assessment</strong> page for the ". $course_details["course_name"] . " gradebook; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
@@ -150,7 +155,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 									break;
 								case "index" :
 								default :
-										$url = ENTRADA_URL."/admin/gradebook?".replace_query(array("step" => false, "section" => "view", "id" => $assessment_details["course_id"], "assessment_id" => false));
+										$url = ENTRADA_URL."/admin/gradebook?".replace_query(array("step" => false, "section" => "view", "assessment_id" => false));
 									$msg = "You will now be redirected to the <strong>assessment index</strong> page for ". $course_details["course_name"] . "; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 									break;
 							}
@@ -208,9 +213,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				<tbody>
 					<tr>
 						<td></td>
-						<td><label class="form-required">Assessment Gradebook</label></td>
+						<td><label class="form-required">Course Name</label></td>
 						<td>
-							<a href="<?php echo ENTRADA_URL; ?>/admin/gradebook?<?php echo replace_query(array("step" => false, "section" => "view")); ?>"><?php echo $course_details["course_name"]; ?></a>
+							<a href="<?php echo ENTRADA_URL; ?>/admin/gradebook?<?php echo replace_query(array("step" => false, "section" => "view")); ?>"><?php echo html_encode($course_details["course_name"]); ?></a>
 						</td>
 					</tr>
 					<tr>
@@ -223,9 +228,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					</tr>
 					<tr>
 						<td></td>
-						<td><label for="grad_year" class="form-required">Grad Year</label></td>
+						<td><label for="grad_year" class="form-required">Graduating Year</label></td>
 						<td>
-							<select id="grad_year" name="grad_year" style="width: 203px">
+							<select id="grad_year" name="grad_year" style="width: 250px">
 							<?php
 							for($year = (date("Y", time()) + 4); $year >= (date("Y", time()) - 1); $year--) {
 								echo "<option value=\"".(int) $year."\"".(($PROCESSED["grad_year"] == $year) ? " selected=\"selected\"" : "").">Class of ".html_encode($year)."</option>\n";
@@ -239,8 +244,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					</tr>
 					<tr>
 						<td></td>
-						<td><label for="description" class="form-nrequired">Description</label></td>
-						<td><textarea id="description" name="description" style="width: 243px"><?php echo html_encode($PROCESSED["description"]); ?></textarea></td>
+						<td style="vertical-align: top"><label for="description" class="form-nrequired">Assessment Description</label></td>
+						<td><textarea id="description" name="description" style="width: 99%; height: 50px"><?php echo html_encode($PROCESSED["description"]); ?></textarea></td>
 					</tr>
 					<tr>
 						<td colspan="3"><h2>Assessment Strategy</h2></td>
@@ -248,29 +253,37 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					<tr>
 						<td></td>
 						<td><label for="type" class="form-required">Type</label></td>
-						<td><select id="type" name="type" style="width: 203px">
-							<?php foreach($ASSESSMENT_TYPES as $type) {
+						<td>
+							<select id="type" name="type" style="width: 203px">
+							<?php
+							foreach($ASSESSMENT_TYPES as $type) {
 								echo "<option value=\"".$type."\"".(($PROCESSED["type"] == $type) ? " selected=\"selected\"" : "").">".$type."</option>";
-							} ?>
+							}
+							?>
 							</select>
 						</td>
 					</tr>
 					<tr>
 						<td></td>
 						<td><label for="marking_scheme_id" class="form-required">Marking Scheme</label></td>
-						<td><select id="marking_scheme_id" name="marking_scheme_id" style="width: 203px">
-							<?php foreach($MARKING_SCHEMES as $scheme) {
+						<td>
+							<select id="marking_scheme_id" name="marking_scheme_id" style="width: 203px">
+							<?php
+							foreach($MARKING_SCHEMES as $scheme) {
 								echo "<option value=\"".$scheme["id"]."\"".(($PROCESSED["marking_scheme_id"] == $scheme["id"]) ? " selected=\"selected\"" : "").">".$scheme["name"]."</option>";
 								
-							}?>
-						</select>
+							}
+							?>
+							</select>
 						</td>
 					</tr>
 					<tr id="numeric_marking_scheme_details" style="display: none;">
 						<td></td>
-						<td><label for="numeric_grade_points_total" class="form-required">Maximum Points</label></td>
-						<td><input type="text" id="numeric_grade_points_total" name="numeric_grade_points_total" value="<?php echo html_encode($PROCESSED["numeric_grade_points_total"]); ?>" maxlength="64" style="width: 243px" />
-							<p class="content-small">Enter a number here to specify the maximum points possible on this assessment. Example: <strong>20</strong> if the assessment is "out of" 20 points total.</p></td>					
+						<td style="vertical-align: top"><label for="numeric_grade_points_total" class="form-required">Maximum Points</label></td>
+						<td>
+							<input type="text" id="numeric_grade_points_total" name="numeric_grade_points_total" value="<?php echo html_encode($PROCESSED["numeric_grade_points_total"]); ?>" maxlength="3" style="width: 50px" />
+							<span class="content-small"><strong>Tip:</strong> Maximum points possible for this assessment (i.e. <strong>20</strong> for &quot;X out of 20).</span>
+						</td>
 					</tr>
 				</tbody>
 				</table>
@@ -294,6 +307,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						<td style="width: 75%; text-align: right; vertical-align: middle">
 							<span class="content-small">After saving:</span>
 							<select id="post_action" name="post_action">
+							<option value="grade"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "grade") ? " selected=\"selected\"" : ""); ?>>Grade assessment</option>
 							<option value="new"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "new") ? " selected=\"selected\"" : ""); ?>>Add another assessment</option>
 							<option value="index"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "index") ? " selected=\"selected\"" : ""); ?>>Return to assessment list</option>
 							<option value="parent"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "parent") ? " selected=\"selected\"" : ""); ?>>Return to all gradebooks list</option>
@@ -323,4 +337,3 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 		application_log("notice", "Failed to provide course identifier when attempting to add an assessment");
 	}
 }
-?>

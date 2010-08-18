@@ -89,7 +89,7 @@ return array (
 	 * Public Communities Module
 	 * modules/public/communities
 	 */
-    "public_communities_heading_line" => "Creating a <strong>new community</strong> in the <strong>Entrada<br />Community System</strong> gives you a <strong>place to connect</strong> on-line.</h3>",
+    "public_communities_heading_line" => "Creating a <strong>new community</strong> in the <strong>Entrada<br />Community System</strong> gives you a <strong>place to connect</strong> on-line.",
     "public_communities_title" => "Entrada Communities",
     "breadcrumb_communities_title"=> "Entrada Communities",
     

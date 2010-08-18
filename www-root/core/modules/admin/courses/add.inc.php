@@ -40,6 +40,36 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 	$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "add")), "title" => "Adding Course");
 
 	echo "<h1>Adding Course</h1>\n";
+	
+	/** 
+	* Fetch the Clinical Presentation details.
+	*/
+	$clinical_presentations_list	= array();
+	$clinical_presentations			= array();
+
+	$results	= fetch_mcc_objectives();
+	if ($results) {
+		foreach ($results as $result) {
+			$clinical_presentations_list[$result["objective_id"]] = $result["objective_name"];
+		}
+	}
+
+	if ((isset($_POST["clinical_presentations"])) && (is_array($_POST["clinical_presentations"])) && (count($_POST["clinical_presentations"]))) {
+		foreach ($_POST["clinical_presentations"] as $objective_id) {
+			if ($objective_id = clean_input($objective_id, array("trim", "int"))) {
+				$query	= "	SELECT `objective_id` FROM `global_lu_objectives` 
+							WHERE `objective_id` = ".$db->qstr($objective_id)."
+							AND `objective_active` = '1'";
+				$result	= $db->GetRow($query);
+				if ($result) {
+					$clinical_presentations[$objective_id] = $clinical_presentations_list[$objective_id];
+				}
+			}
+		}
+	}
+	$HEAD[]		= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/picklist.js\"></script>\n";
+	$HEAD[]		= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/scriptaculous/tree.js\"></script>\n";
+	$ONLOAD[]	= "$('clinical_presentations_list').style.display = 'none'";
 
 	// Error Checking
 	switch($STEP) {
@@ -169,6 +199,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					$posted_objectives["secondary"][] = clean_input($objective, "int");
 				}
 			}
+
+			if ((isset($_POST["tertiary_objectives"])) && ($objectives = $_POST["tertiary_objectives"]) && (count($objectives))) {
+				$TERTIARY_OBJECTIVES = array();
+				foreach ($objectives as $objective_key => $objective) {
+					$TERTIARY_OBJECTIVES[] = clean_input($objective, "int");
+					$posted_objectives["tertiary"][] = clean_input($objective, "int");
+				}
+			}
 			
 			if (!$ERROR) {
 				$PROCESSED["updated_date"]	= time();
@@ -177,6 +215,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				if ($db->AutoExecute("courses", $PROCESSED, "INSERT")) {
 					if ($COURSE_ID = $db->Insert_Id()) {
 						
+
+						/**
+						 * Insert Clinical Presentations.
+						 */
+						if ((is_array($clinical_presentations)) && (count($clinical_presentations))) {
+							foreach ($clinical_presentations as $objective_id => $presentation_name) {
+								if (!$db->AutoExecute("course_objectives", array("course_id" => $COURSE_ID, "objective_id" => $objective_id, "objective_type" => "event", "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT")) {
+									$ERROR++;
+									$ERRORSTR[] = "There was an error when trying to insert a &quot;clinical presentation&quot; into the system. System administrators have been informed of this error; please try again later.";
+
+									application_log("error", "Unable to insert a new clinical presentation to the database when adding a new event. Database said: ".$db->ErrorMsg());
+								}
+							}
+						}
 						if ((isset($_POST["associated_director"])) && ($associated_directors = explode(",", $_POST["associated_director"])) && (@is_array($associated_directors)) && (@count($associated_directors))) {
 							$order = 0;
 							foreach($associated_directors as $proxy_id) {
@@ -233,6 +285,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								$db->Execute("INSERT INTO `course_objectives` SET `course_id` = ".$db->qstr($COURSE_ID).", `objective_id` = ".$db->qstr($objective_id).", `updated_date` = ".$db->qstr(time()).", `updated_by` = ".$db->qstr($_SESSION["details"]["id"]).", `importance` = '2'");
 							}
 						}
+						if (is_array($TERTIARY_OBJECTIVES) && count($TERTIARY_OBJECTIVES)) {
+							foreach($TERTIARY_OBJECTIVES as $objective_id) {
+								$db->Execute("INSERT INTO `course_objectives` SET `course_id` = ".$db->qstr($COURSE_ID).", `objective_id` = ".$db->qstr($objective_id).", `updated_date` = ".$db->qstr(time()).", `updated_by` = ".$db->qstr($_SESSION["details"]["id"]).", `importance` = '3'");
+							}
+						}
 
 						$SUCCESS++;
 						$SUCCESSSTR[]	= "You have successfully added <strong>".html_encode($PROCESSED["course_name"])."</strong> to this system.<br /><br />".$msg;
@@ -273,7 +330,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			break;
 		case 1 :
 		default :
-			require_once(ENTRADA_ABSOLUTE."/javascript/courses.js.php");
+			require_once(ENTRADA_ABSOLUTE."/javascript/courses.js.php");				
 			
 			$LASTUPDATED	= $course_details["updated_date"];
 
@@ -405,7 +462,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				echo display_error();
 			}
 			?>
-			<form action="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?<?php echo replace_query(array("step" => 2)); ?>" method="post" onsubmit="$$('.PickList option').each(function (e) { e.selected = true; });">
+			<form action="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?<?php echo replace_query(array("step" => 2)); ?>" method="post" onsubmit="selIt()">
 			<h2 title="Course Details Section">Course Details</h2>
 			<div id="course-details-section">
 				<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Adding Course Details">
@@ -485,6 +542,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				$sidebar_html  = "<div style=\"margin: 2px 0px 10px 3px; font-size: 10px\">\n";
 				$sidebar_html .= "	<div><img src=\"".ENTRADA_URL."/images/legend-primary-objective.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" style=\"vertical-align: middle\" /> Primary Objective</div>\n";
 				$sidebar_html .= "	<div><img src=\"".ENTRADA_URL."/images/legend-secondary-objective.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" style=\"vertical-align: middle\" /> Secondary Objective</div>\n";
+				$sidebar_html .= "	<div><img src=\"".ENTRADA_URL."/images/legend-tertiary-objective.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" style=\"vertical-align: middle\" /> Tertiary Objective</div>\n";
 				$sidebar_html .= "</div>\n";
 				
 				new_sidebar_item("Objective Importance", $sidebar_html, "objective-legend", "open");
@@ -505,6 +563,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				if (is_array($course_objectives["secondary_ids"])) {
 					foreach ($course_objectives["secondary_ids"] as $objective_id) {
 						echo "<input type=\"hidden\" class=\"secondary_objectives\" id=\"secondary_objective_".$objective_id."\" name=\"secondary_objectives[]\" value=\"".$objective_id."\" />\n";
+					}
+				}
+				if (is_array($course_objectives["tertiary_ids"])) {
+					foreach ($course_objectives["tertiary_ids"] as $objective_id) {
+						echo "<input type=\"hidden\" class=\"tertiary_objectives\" id=\"tertiary_objective_".$objective_id."\" name=\"tertiary_objectives[]\" value=\"".$objective_id."\" />\n";
 					}
 				}
 				?>
@@ -568,7 +631,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						<td>&nbsp;</td>
 						<td>&nbsp;</td>
 						<td>
-							<span class="content-small">Select a Competency and a list of available course and curriculum objectives will be displayed to choose from. Once you have selected an objective, it will be placed in the list below and you may leave it as primary or change the importance to secondary.</span>
+							<span class="content-small">Select a Competency and a list of available course and curriculum objectives will be displayed to choose from. Once you have selected an objective, it will be placed in the list below and you may leave it as primary or change the importance to secondary or tertiary.</span>
 							<?php echo $objective_select; ?>
 							<script type="text/javascript">
 								var multiselect = [];
@@ -624,6 +687,65 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							</div>
 						</td>
 					</tr>
+					<tr>
+						<td colspan="3">&nbsp;</td>
+					</tr>
+					<tr>
+						<td>&nbsp;</td>
+						<td style="vertical-align: top">
+							Clinical Presentations
+							<div class="content-small" style="margin-top: 5px">
+								<strong>Note:</strong> For more detailed information please refer to the <a href="http://www.mcc.ca/Objectives_online/objectives.pl?lang=english&loc=contents" target="_blank" style="font-size: 11px">MCC Objectives for the Qualifying Examination</a>.
+							</div>
+						</td>
+						<td>
+							<select class="multi-picklist" id="PickList" name="clinical_presentations[]" multiple="multiple" size="5" style="width: 100%; margin-bottom: 5px">
+							<?php
+							if ((is_array($clinical_presentations)) && (count($clinical_presentations))) {
+								foreach ($clinical_presentations as $objective_id => $presentation_name) {
+									echo "<option value=\"".(int) $objective_id."\">".html_encode($presentation_name)."</option>\n";
+								}
+							}
+							?>
+							</select>
+							<div style="float: left; display: inline">
+								<input type="button" id="clinical_presentations_list_state_btn" class="button" value="Show List" onclick="toggle_list('clinical_presentations_list')" />
+							</div>
+							<div style="float: right; display: inline">
+								<input type="button" id="clinical_presentations_list_remove_btn" class="button-remove" onclick="delIt()" value="Remove" />
+								<input type="button" id="clinical_presentations_list_add_btn" class="button-add" onclick="addIt()" style="display: none" value="Add" />
+							</div>
+							<div id="clinical_presentations_list" style="clear: both; padding-top: 3px; display: none">
+								<h2>Clinical Presentations List</h2>
+								<select class="multi-picklist" id="SelectList" name="other_event_objectives_list" multiple="multiple" size="15" style="width: 100%">
+								<?php
+								if ((is_array($clinical_presentations_list)) && (count($clinical_presentations_list))) {
+									foreach ($clinical_presentations_list as $objective_id => $presentation_name) {
+										if (!array_key_exists($objective_id, $clinical_presentations)) {
+											echo "<option value=\"".(int) $objective_id."\">".html_encode($presentation_name)."</option>\n";
+										}
+									}
+								}
+								?>
+								</select>
+							</div>
+							<script type="text/javascript">
+							$('PickList').observe('keypress', function(event) {
+								if (event.keyCode == Event.KEY_DELETE) {
+									delIt();
+								}
+							});
+							$('SelectList').observe('keypress', function(event) {
+								if (event.keyCode == Event.KEY_RETURN) {
+									addIt();
+								}
+							});
+							</script>
+						</td>
+					</tr>
+					<tr>
+						<td colspan="3">&nbsp;</td>
+					</tr>
 				</tbody>
 				</table>
 			</div>
@@ -646,6 +768,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								function updateOrder(type) {
 									$('associated_'+type).value = Sortable.sequence(type+'_list');
 								}
+								
 								function addItem(type) {
 									if (($(type+'_id') != null) && ($(type+'_id').value != '') && ($(type+'_'+$(type+'_id').value) == null)) {
 										var li = new Element('li', {'class':'community', 'id':type+'_'+$(type+'_id').value, 'style':'cursor: move;'}).update($(type+'_name').value);
@@ -710,7 +833,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								
 								</script>
 								<input type="text" id="director_name" name="fullname" size="30" autocomplete="off" style="width: 203px; vertical-align: middle" onkeyup="checkItem('director')" onblur="addItemNoError('director')" />
-								<script>
+								<script type="text/javascript">
 									$('director_name').observe('keypress', function(event){
 									    if (event.keyCode == Event.KEY_RETURN) {
 									        addItem('director');
@@ -724,7 +847,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								?>
 								<div class="autocomplete" id="director_name_auto_complete"></div><script type="text/javascript">new Ajax.Autocompleter('director_name', 'director_name_auto_complete', '<?php echo ENTRADA_RELATIVE; ?>/api/personnel.api.php?type=director', {frequency: 0.2, minChars: 2, afterUpdateElement: function (text, li) {selectItem(li.id, 'director'); copyItem('director');}});</script>
 								<input type="hidden" id="associated_director" name="associated_director" />
-								<!-- <ul class="page-action" style="display: inline;"><li><a onclick="addItem('director');" style="cursor: pointer;">Add Director</a></li></ul><br/> -->
 								<input type="button" class="button-sm" onclick="addItem('director');" value="Add" style="vertical-align: middle" />
 								<span class="content-small">(<strong>Example:</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?>)</span>
 								<ul id="director_list" class="menu" style="margin-top: 15px">
@@ -754,7 +876,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						<td>
 							<div style="position: relative;">
 								<input type="text" id="coordinator_name" name="fullname" size="30" autocomplete="off" style="width: 203px; vertical-align: middle" onkeyup="checkItem('coordinator')" onblur="addItemNoError('coordinator')" />
-								<script>
+								<script type="text/javascript">
 									$('coordinator_name').observe('keypress', function(event){
 									    if (event.keyCode == Event.KEY_RETURN) {
 									        addItem('coordinator');
@@ -768,7 +890,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								?>
 								<div class="autocomplete" id="coordinator_name_auto_complete"></div><script type="text/javascript">new Ajax.Autocompleter('coordinator_name', 'coordinator_name_auto_complete', '<?php echo ENTRADA_RELATIVE; ?>/api/personnel.api.php?type=coordinator', {frequency: 0.2, minChars: 2, afterUpdateElement: function (text, li) {selectItem(li.id, 'coordinator'); copyItem('coordinator');}});</script>
 								<input type="hidden" id="associated_coordinator" name="associated_coordinator" />
-								<!-- <ul class="page-action" style="display: inline;"><li><a onclick="addItem('coordinator');" style="cursor: pointer;">Add Coordinator</a></li></ul><br/> -->
 								<input type="button" class="button-sm" onclick="addItem('coordinator');" value="Add" style="vertical-align: middle" />
 								<span class="content-small">(<strong>Example:</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?>)</span>
 								<ul id="coordinator_list" class="menu" style="margin-top: 15px">
@@ -792,7 +913,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					<tr>
 						<td colspan="3">&nbsp;</td>
 					</tr>
-					<!-- Lising the Program Coordinator for the selected coures -->
+					<!-- Listing the Program Coordinator for the selected course -->
 					<tr>
 						<td></td>
 						<td><label for="programcoodinator_id" class="form-nrequired">Program Coordinator</label></td>
@@ -823,7 +944,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						<td colspan="3">&nbsp;</td>
 					</tr>
 
-					<!-- Lising the Evaluation Rep for the selected coures -->
+					<!-- Listing the Evaluation Rep for the selected course -->
 					<tr>
 						<td></td>
 						<td><label for="evaluationrep_id" class="form-nrequired">Evaluation Rep.</label></td>
@@ -844,7 +965,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						</td>
 					</tr>
 
-					<!-- Lising the Student Rep for the selected coures -->
+					<!-- Listing the Student Rep for the selected course -->
 					<tr>
 						<td></td>
 						<td><label for="studentrep_id" class="form-nrequired">Student Rep.</label></td>

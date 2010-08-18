@@ -81,9 +81,12 @@ $CLERKSHIP_FIELD_STATUS["approval"] = array("name" => "Awaiting Approval", "visi
 $CLERKSHIP_FIELD_STATUS["trash"] = array("name" => "Trash", "visible" => false);
 $CLERKSHIP_FIELD_STATUS["cancelled"] = array("name" => "Cancelled", "visible" => false);
 
+define("CURRICULAR_OBJECTIVES_PARENT_ID", 1);
+
 define("AUTH_PRODUCTION", ENTRADA_URL."/authentication/authenticate.php");
 
 define("AUTH_APP_ID", "1");														// Application ID for the MEdTech Authentication System.
+define("AUTH_APP_IDS_STRING", "1,97");														// Application ID for the MEdTech Authentication System.
 define("AUTH_USERNAME", "30000001");											// Application username to connect to the MEdTech Authentication System.
 define("AUTH_PASSWORD", "apple123");											// Application password to connect to the MEdTech Authentication System.
 define("AUTH_METHOD", "local");													// The method used to authenticate users into the application (local or ldap).
@@ -248,7 +251,7 @@ define("DEBUG_MODE", true);														// Some places have extra debug code to
 define("SHOW_LOAD_STATS", true);												// Do you want to see the time it takes to load each page?
 
 define("APPLICATION_NAME", "Entrada");											// The name of this application in your school (i.e. MedCentral, Osler, etc.)
-define("APPLICATION_VERSION", "1.0.0");											// The current version of this application.
+define("APPLICATION_VERSION", "1.1.0");											// The current version of this application.
 define("APPLICATION_IDENTIFIER", "app-".AUTH_APP_ID);							// PHP does not allow session key's to be integers (sometimes), so we have to make it a string.
 
 $DEFAULT_META["title"] = "Entrada: An eLearning Community";
@@ -438,7 +441,7 @@ $MODULES["events"] = array("title" => "Manage Events", "resource" => "eventconte
 $MODULES["quizzes"] = array("title" => "Manage Quizzes", "resource" => "quiz", "permission" => "update");
 $MODULES["clerkship"] = array("title" => "Manage Clerkship", "resource" => "clerkship", "permission" => "update");
 $MODULES["regionaled"] = array("title" => "Regional Education", "resource" => "regionaled", "permission" => "update");
-$MODULES["objectives"]	= array("title" => "Manage Objectives", "resource" => "objectivecontent", "permission" => "update");
+$MODULES["objectives"]	= array("title" => "Manage Objectives", "resource" => "objective", "permission" => "update");
 $MODULES["users"] = array("title" => "Manage Users", "resource" => "user", "permission" => "update");
 $MODULES["reports"] = array("title" => "System Reports", "resource" => "reportindex", "permission" => "read");
 $MODULES["awards"] = array("title" => "Manage Awards", "resource" => "awards", "permission" => "update");

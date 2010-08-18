@@ -1,105 +1,115 @@
 SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
 
 CREATE TABLE IF NOT EXISTS `apartments` (
-  `apartment_id` int(12) NOT NULL auto_increment,
-  `region_id` int(12) NOT NULL default '0',
-  `apartment_title` varchar(86) NOT NULL default '',
-  `apartment_number` varchar(12) NOT NULL default '',
-  `apartment_address` varchar(86) NOT NULL default '',
-  `apartment_city` varchar(48) NOT NULL default '',
-  `apartment_province` varchar(24) NOT NULL default '',
-  `apartment_postcode` varchar(12) NOT NULL default '',
-  `apartment_country` varchar(48) NOT NULL default '',
-  `apartment_phone` varchar(24) NOT NULL default '',
-  `apartment_email` varchar(128) NOT NULL default '',
-  `max_occupants` int(8) NOT NULL default '0',
-  `apartment_longitude` varchar(24) NOT NULL default '',
-  `apartment_latitude` varchar(24) NOT NULL default '',
-  `available_start` bigint(64) NOT NULL default '0',
-  `available_finish` bigint(64) NOT NULL default '0',
-  `updated_last` bigint(64) NOT NULL default '0',
-  `updated_by` int(12) NOT NULL default '0',
-  `apartment_status` varchar(12) NOT NULL default '',
-  PRIMARY KEY  (`apartment_id`),
+  `apartment_id` int(12) NOT NULL AUTO_INCREMENT,
+  `countries_id` int(12) NOT NULL DEFAULT '0',
+  `province_id` int(12) NOT NULL DEFAULT '0',
+  `apartment_province` varchar(24) NOT NULL DEFAULT '',
+  `region_id` int(12) NOT NULL DEFAULT '0',
+  `apartment_title` varchar(86) NOT NULL DEFAULT '',
+  `apartment_number` varchar(12) NOT NULL DEFAULT '',
+  `apartment_address` varchar(86) NOT NULL DEFAULT '',
+  `apartment_postcode` varchar(12) NOT NULL DEFAULT '',
+  `apartment_phone` varchar(24) NOT NULL DEFAULT '',
+  `apartment_email` varchar(128) NOT NULL DEFAULT '',
+  `apartment_information` text NOT NULL,
+  `super_firstname` varchar(32) NOT NULL,
+  `super_lastname` varchar(32) NOT NULL,
+  `super_phone` varchar(32) NOT NULL,
+  `super_email` varchar(128) NOT NULL,
+  `max_occupants` int(8) NOT NULL DEFAULT '0',
+  `apartment_longitude` varchar(24) NOT NULL DEFAULT '',
+  `apartment_latitude` varchar(24) NOT NULL DEFAULT '',
+  `available_start` bigint(64) NOT NULL DEFAULT '0',
+  `available_finish` bigint(64) NOT NULL DEFAULT '0',
+  `updated_last` bigint(64) NOT NULL DEFAULT '0',
+  `updated_by` int(12) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`apartment_id`),
   KEY `region_id` (`region_id`),
   KEY `apartment_title` (`apartment_title`),
   KEY `apartment_address` (`apartment_address`),
-  KEY `apartment_city` (`apartment_city`),
   KEY `apartment_province` (`apartment_province`),
-  KEY `apartment_country` (`apartment_country`),
   KEY `max_occupants` (`max_occupants`),
   KEY `apartment_longitude` (`apartment_longitude`),
   KEY `apartment_latitude` (`apartment_latitude`),
   KEY `available_start` (`available_start`),
   KEY `available_finish` (`available_finish`),
-  KEY `apartment_status` (`apartment_status`)
+  KEY `countries_id` (`countries_id`),
+  KEY `province_id` (`province_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `apartment_accounts` (
-  `aaccount_id` int(12) NOT NULL auto_increment,
-  `apartment_id` int(12) NOT NULL default '0',
-  `aaccount_company` varchar(128) NOT NULL default '',
-  `aaccount_custnumber` varchar(128) NOT NULL default '',
+  `aaccount_id` int(12) NOT NULL AUTO_INCREMENT,
+  `apartment_id` int(12) NOT NULL DEFAULT '0',
+  `aaccount_company` varchar(128) NOT NULL DEFAULT '',
+  `aaccount_custnumber` varchar(128) NOT NULL DEFAULT '',
   `aaccount_details` text NOT NULL,
-  `updated_last` bigint(64) NOT NULL default '0',
-  `updated_by` int(12) NOT NULL default '0',
-  `account_status` varchar(12) NOT NULL default '',
+  `updated_last` bigint(64) NOT NULL DEFAULT '0',
+  `updated_by` int(12) NOT NULL DEFAULT '0',
+  `account_status` varchar(12) NOT NULL DEFAULT '',
   PRIMARY KEY  (`aaccount_id`),
   KEY `apartment_id` (`apartment_id`),
   KEY `aaccount_company` (`aaccount_company`),
   KEY `aaccount_custnumber` (`aaccount_custnumber`),
   KEY `account_status` (`account_status`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `apartment_photos` (
-  `aphoto_id` int(12) NOT NULL auto_increment,
-  `apartment_id` int(12) NOT NULL default '0',
-  `aphoto_name` varchar(64) NOT NULL default '',
-  `aphoto_type` varchar(32) NOT NULL default '',
-  `aphoto_size` int(32) NOT NULL default '0',
+  `aphoto_id` int(12) NOT NULL AUTO_INCREMENT,
+  `apartment_id` int(12) NOT NULL DEFAULT '0',
+  `aphoto_name` varchar(64) NOT NULL DEFAULT '',
+  `aphoto_type` varchar(32) NOT NULL DEFAULT '',
+  `aphoto_size` int(32) NOT NULL DEFAULT '0',
   `aphoto_desc` text NOT NULL,
   PRIMARY KEY  (`aphoto_id`),
   KEY `apartment_id` (`apartment_id`),
   KEY `aphoto_name` (`aphoto_name`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `apartment_schedule` (
-  `aschedule_id` int(12) NOT NULL auto_increment,
-  `apartment_id` int(12) NOT NULL default '0',
-  `event_id` int(12) NOT NULL default '0',
-  `econtact_id` int(12) NOT NULL default '0',
-  `econtact_notes` text NOT NULL,
-  `inhabiting_start` bigint(64) NOT NULL default '0',
-  `inhabiting_finish` bigint(64) NOT NULL default '0',
-  `updated_last` bigint(64) NOT NULL default '0',
-  `updated_by` int(12) NOT NULL default '0',
-  `aschedule_status` varchar(12) NOT NULL default '',
-  PRIMARY KEY  (`aschedule_id`),
+  `aschedule_id` int(12) NOT NULL AUTO_INCREMENT,
+  `apartment_id` int(12) NOT NULL DEFAULT '0',
+  `event_id` int(12) NOT NULL DEFAULT '0',
+  `proxy_id` int(12) NOT NULL DEFAULT '0',
+  `occupant_title` varchar(64) NOT NULL,
+  `occupant_type` varchar(16) NOT NULL DEFAULT 'undergrad',
+  `confirmed` int(1) NOT NULL DEFAULT '1',
+  `cost_recovery` int(1) NOT NULL DEFAULT '0',
+  `notes` text NOT NULL,
+  `inhabiting_start` bigint(64) NOT NULL DEFAULT '0',
+  `inhabiting_finish` bigint(64) NOT NULL DEFAULT '0',
+  `updated_last` bigint(64) NOT NULL DEFAULT '0',
+  `updated_by` int(12) NOT NULL DEFAULT '0',
+  `aschedule_status` varchar(12) NOT NULL DEFAULT '',
+  PRIMARY KEY (`aschedule_id`),
   KEY `apartment_id` (`apartment_id`),
   KEY `event_id` (`event_id`),
-  KEY `econtact_id` (`econtact_id`),
+  KEY `proxy_id` (`proxy_id`),
   KEY `inhabiting_start` (`inhabiting_start`),
   KEY `inhabiting_finish` (`inhabiting_finish`),
-  KEY `aschedule_status` (`aschedule_status`)
+  KEY `aschedule_status` (`aschedule_status`),
+  KEY `occupant_type` (`occupant_type`),
+  KEY `confirmed` (`confirmed`),
+  KEY `cost_recovery` (`cost_recovery`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `categories` (
-  `category_id` int(12) NOT NULL auto_increment,
-  `category_parent` int(12) NOT NULL default '0',
-  `category_code` varchar(12) default NULL,
-  `category_type` int(12) NOT NULL default '0',
-  `category_name` varchar(128) NOT NULL default '',
+  `category_id` int(12) NOT NULL AUTO_INCREMENT,
+  `category_parent` int(12) NOT NULL DEFAULT '0',
+  `category_code` varchar(12) DEFAULT NULL,
+  `category_type` int(12) NOT NULL DEFAULT '0',
+  `category_name` varchar(128) NOT NULL DEFAULT '',
   `category_desc` text,
-  `category_min` int(12) default NULL,
-  `category_max` int(12) default NULL,
-  `category_buffer` int(12) default NULL,
-  `category_start` bigint(64) NOT NULL default '0',
-  `category_finish` bigint(64) NOT NULL default '0',
-  `subcategory_strict` int(1) NOT NULL default '0',
-  `category_expiry` bigint(64) NOT NULL default '0',
-  `category_status` varchar(12) NOT NULL default 'published',
-  `category_order` int(3) NOT NULL default '0',
-  `rotation_id` int(12) NOT NULL default '0',
+  `category_min` int(12) DEFAULT NULL,
+  `category_max` int(12) DEFAULT NULL,
+  `category_buffer` int(12) DEFAULT NULL,
+  `category_start` bigint(64) NOT NULL DEFAULT '0',
+  `category_finish` bigint(64) NOT NULL DEFAULT '0',
+  `subcategory_strict` int(1) NOT NULL DEFAULT '0',
+  `category_expiry` bigint(64) NOT NULL DEFAULT '0',
+  `category_status` varchar(12) NOT NULL DEFAULT 'published',
+  `category_order` int(3) NOT NULL DEFAULT '0',
+  `rotation_id` int(12) NOT NULL DEFAULT '0',
   PRIMARY KEY  (`category_id`),
   KEY `category_parent` (`category_parent`),
   KEY `category_code` (`category_code`),
@@ -115,10 +125,10 @@ CREATE TABLE IF NOT EXISTS `categories` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `category_departments` (
-  `cdep_id` int(12) NOT NULL auto_increment,
-  `category_id` int(12) NOT NULL default '0',
-  `department_id` int(12) NOT NULL default '0',
-  `contact_id` int(12) NOT NULL default '0',
+  `cdep_id` int(12) NOT NULL AUTO_INCREMENT,
+  `category_id` int(12) NOT NULL DEFAULT '0',
+  `department_id` int(12) NOT NULL DEFAULT '0',
+  `contact_id` int(12) NOT NULL DEFAULT '0',
   PRIMARY KEY  (`cdep_id`),
   KEY `category_id` (`category_id`),
   KEY `department_id` (`department_id`),
@@ -126,18 +136,18 @@ CREATE TABLE IF NOT EXISTS `category_departments` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `category_type` (
-  `ctype_id` int(12) NOT NULL auto_increment,
-  `ctype_parent` int(12) NOT NULL default '0',
-  `ctype_name` varchar(128) NOT NULL default '',
+  `ctype_id` int(12) NOT NULL AUTO_INCREMENT,
+  `ctype_parent` int(12) NOT NULL DEFAULT '0',
+  `ctype_name` varchar(128) NOT NULL DEFAULT '',
   `ctype_desc` text NOT NULL,
-  `require_min` int(11) NOT NULL default '0',
-  `require_max` int(11) NOT NULL default '0',
-  `require_buffer` int(11) NOT NULL default '0',
-  `require_start` int(11) NOT NULL default '0',
-  `require_finish` int(11) NOT NULL default '0',
-  `require_expiry` int(11) NOT NULL default '0',
-  `ctype_filterable` int(11) NOT NULL default '0',
-  `ctype_order` int(3) NOT NULL default '0',
+  `require_min` int(11) NOT NULL DEFAULT '0',
+  `require_max` int(11) NOT NULL DEFAULT '0',
+  `require_buffer` int(11) NOT NULL DEFAULT '0',
+  `require_start` int(11) NOT NULL DEFAULT '0',
+  `require_finish` int(11) NOT NULL DEFAULT '0',
+  `require_expiry` int(11) NOT NULL DEFAULT '0',
+  `ctype_filterable` int(11) NOT NULL DEFAULT '0',
+  `ctype_order` int(3) NOT NULL DEFAULT '0',
   PRIMARY KEY  (`ctype_id`),
   KEY `ctype_parent` (`ctype_parent`),
   KEY `require_start` (`require_start`),
@@ -172,82 +182,90 @@ INSERT INTO `category_type` (`ctype_id`, `ctype_parent`, `ctype_name`, `ctype_de
 (32, 30, 'Rotation', '', 0, 0, 0, 0, 0, 0, 0, 0);
 
 CREATE TABLE IF NOT EXISTS `electives` (
-  `electives_id` int(12) NOT NULL auto_increment,
+  `electives_id` int(12) NOT NULL AUTO_INCREMENT,
   `event_id` int(12) NOT NULL,
-  `geo_location` varchar(15) NOT NULL default 'National',
+  `geo_location` varchar(15) NOT NULL DEFAULT 'National',
   `department_id` int(12) NOT NULL,
   `discipline_id` int(11) NOT NULL,
-  `sub_discipline` varchar(100) default NULL,
+  `sub_discipline` varchar(100) DEFAULT NULL,
   `schools_id` int(11) NOT NULL,
-  `other_medical_school` varchar(150) default NULL,
+  `other_medical_school` varchar(150) DEFAULT NULL,
   `objective` text NOT NULL,
-  `preceptor_first_name` varchar(50) default NULL,
+  `preceptor_first_name` varchar(50) DEFAULT NULL,
   `preceptor_last_name` varchar(50) NOT NULL,
   `address` varchar(250) NOT NULL,
   `countries_id` int(12) NOT NULL,
   `city` varchar(100) NOT NULL,
   `prov_state` varchar(200) NOT NULL,
-  `region_id` int(12) NOT NULL default '0',
-  `postal_zip_code` varchar(20) default NULL,
-  `fax` varchar(25) default NULL,
-  `phone` varchar(25) default NULL,
+  `region_id` int(12) NOT NULL DEFAULT '0',
+  `postal_zip_code` varchar(20) DEFAULT NULL,
+  `fax` varchar(25) DEFAULT NULL,
+  `phone` varchar(25) DEFAULT NULL,
   `email` varchar(150) NOT NULL,
   `updated_date` bigint(64) NOT NULL,
   `updated_by` int(12) NOT NULL,
-  PRIMARY KEY  (`electives_id`)
+  PRIMARY KEY (`electives_id`),
+  KEY `region_id` (`region_id`),
+  KEY `event_id` (`event_id`),
+  KEY `department_id` (`department_id`),
+  KEY `discipline_id` (`discipline_id`),
+  KEY `schools_id` (`schools_id`),
+  KEY `countries_id` (`countries_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `evaluations` (
-  `item_id` int(12) NOT NULL auto_increment,
-  `form_id` int(12) NOT NULL default '0',
-  `category_id` int(12) NOT NULL default '0',
-  `category_recurse` int(2) NOT NULL default '1',
-  `item_title` varchar(128) NOT NULL default '',
-  `item_maxinstances` int(4) NOT NULL default '1',
-  `item_start` int(12) NOT NULL default '1',
-  `item_end` int(12) NOT NULL default '30',
-  `item_status` varchar(12) NOT NULL default 'published',
-  `modified_last` bigint(64) NOT NULL default '0',
-  `modified_by` int(12) NOT NULL default '0',
-  PRIMARY KEY  (`item_id`),
+  `item_id` int(12) NOT NULL AUTO_INCREMENT,
+  `form_id` int(12) NOT NULL DEFAULT '0',
+  `active` int(1) NOT NULL DEFAULT '0',
+  `category_id` int(12) NOT NULL DEFAULT '0',
+  `category_recurse` int(2) NOT NULL DEFAULT '1',
+  `item_title` varchar(128) NOT NULL DEFAULT '',
+  `item_maxinstances` int(4) NOT NULL DEFAULT '1',
+  `item_start` int(12) NOT NULL DEFAULT '1',
+  `item_end` int(12) NOT NULL DEFAULT '30',
+  `item_status` varchar(12) NOT NULL DEFAULT 'published',
+  `modified_last` bigint(64) NOT NULL DEFAULT '0',
+  `modified_by` int(12) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`item_id`),
   KEY `form_id` (`form_id`),
   KEY `category_id` (`category_id`),
   KEY `item_status` (`item_status`),
   KEY `item_end` (`item_end`),
   KEY `item_start` (`item_start`),
   KEY `item_maxinstances` (`item_maxinstances`),
-  KEY `category_recurse` (`category_recurse`)
+  KEY `category_recurse` (`category_recurse`),
+  KEY `active` (`active`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `eval_answers` (
-  `answer_id` int(12) NOT NULL auto_increment,
-  `question_id` int(12) NOT NULL default '0',
-  `answer_type` varchar(50) NOT NULL default '',
-  `answer_label` varchar(50) NOT NULL default '',
-  `answer_value` varchar(50) NOT NULL default '',
-  `answer_lastmod` bigint(64) default NULL,
+  `answer_id` int(12) NOT NULL AUTO_INCREMENT,
+  `question_id` int(12) NOT NULL DEFAULT '0',
+  `answer_type` varchar(50) NOT NULL DEFAULT '',
+  `answer_label` varchar(50) NOT NULL DEFAULT '',
+  `answer_value` varchar(50) NOT NULL DEFAULT '',
+  `answer_lastmod` bigint(64) DEFAULT NULL,
   PRIMARY KEY  (`answer_id`),
   KEY `question_id` (`question_id`),
   KEY `answer_value` (`answer_value`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `eval_approved` (
-  `approved_id` int(12) NOT NULL auto_increment,
-  `notification_id` int(12) NOT NULL default '0',
-  `completed_id` int(12) NOT NULL default '0',
-  `modified_last` bigint(64) NOT NULL default '0',
-  `modified_by` int(12) NOT NULL default '0',
+  `approved_id` int(12) NOT NULL AUTO_INCREMENT,
+  `notification_id` int(12) NOT NULL DEFAULT '0',
+  `completed_id` int(12) NOT NULL DEFAULT '0',
+  `modified_last` bigint(64) NOT NULL DEFAULT '0',
+  `modified_by` int(12) NOT NULL DEFAULT '0',
   PRIMARY KEY  (`approved_id`),
   KEY `notification_id` (`notification_id`),
   KEY `completed_id` (`completed_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `eval_completed` (
-  `completed_id` int(12) NOT NULL auto_increment,
-  `notification_id` int(12) NOT NULL default '0',
-  `instructor_id` varchar(24) NOT NULL default '0',
-  `completed_status` varchar(12) NOT NULL default 'pending',
-  `completed_lastmod` bigint(64) NOT NULL default '0',
+  `completed_id` int(12) NOT NULL AUTO_INCREMENT,
+  `notification_id` int(12) NOT NULL DEFAULT '0',
+  `instructor_id` varchar(24) NOT NULL DEFAULT '0',
+  `completed_status` varchar(12) NOT NULL DEFAULT 'pending',
+  `completed_lastmod` bigint(64) NOT NULL DEFAULT '0',
   PRIMARY KEY  (`completed_id`),
   KEY `notification_id` (`notification_id`),
   KEY `instructor_id` (`instructor_id`),
@@ -255,14 +273,14 @@ CREATE TABLE IF NOT EXISTS `eval_completed` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `eval_forms` (
-  `form_id` int(12) NOT NULL auto_increment,
-  `form_type` varchar(12) NOT NULL default '',
-  `nmessage_id` int(12) NOT NULL default '0',
-  `form_title` varchar(128) NOT NULL default '',
-  `form_author` int(12) NOT NULL default '0',
+  `form_id` int(12) NOT NULL AUTO_INCREMENT,
+  `form_type` varchar(12) NOT NULL DEFAULT '',
+  `nmessage_id` int(12) NOT NULL DEFAULT '0',
+  `form_title` varchar(128) NOT NULL DEFAULT '',
+  `form_author` int(12) NOT NULL DEFAULT '0',
   `form_desc` text NOT NULL,
-  `form_status` varchar(12) NOT NULL default 'published',
-  `form_lastmod` bigint(64) default NULL,
+  `form_status` varchar(12) NOT NULL DEFAULT 'published',
+  `form_lastmod` bigint(64) DEFAULT NULL,
   PRIMARY KEY  (`form_id`),
   KEY `form_type` (`form_type`),
   KEY `nmessage_id` (`nmessage_id`),
@@ -270,46 +288,47 @@ CREATE TABLE IF NOT EXISTS `eval_forms` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `eval_questions` (
-  `question_id` int(12) NOT NULL auto_increment,
-  `form_id` int(12) NOT NULL default '0',
+  `question_id` int(12) NOT NULL AUTO_INCREMENT,
+  `form_id` int(12) NOT NULL DEFAULT '0',
   `question_text` text NOT NULL,
-  `question_style` varchar(50) NOT NULL default '',
-  `question_required` varchar(50) NOT NULL default '',
-  `question_lastmod` bigint(64) default NULL,
+  `question_style` varchar(50) NOT NULL DEFAULT '',
+  `question_required` varchar(50) NOT NULL DEFAULT '',
+  `question_lastmod` bigint(64) DEFAULT NULL,
   PRIMARY KEY  (`question_id`),
   KEY `form_id` (`form_id`),
   KEY `question_required` (`question_required`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `eval_results` (
-  `result_id` int(12) NOT NULL auto_increment,
-  `completed_id` int(12) NOT NULL default '0',
-  `answer_id` int(12) NOT NULL default '0',
+  `result_id` int(12) NOT NULL AUTO_INCREMENT,
+  `completed_id` int(12) NOT NULL DEFAULT '0',
+  `answer_id` int(12) NOT NULL DEFAULT '0',
   `result_value` text NOT NULL,
-  `result_lastmod` bigint(64) NOT NULL default '0',
+  `result_lastmod` bigint(64) NOT NULL DEFAULT '0',
   PRIMARY KEY  (`result_id`),
   KEY `completed_id` (`completed_id`),
   KEY `answer_id` (`answer_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `events` (
-  `event_id` int(12) NOT NULL auto_increment,
-  `category_id` int(12) NOT NULL default '0',
-  `rotation_id` int(12) NOT NULL default '0',
-  `region_id` int(12) NOT NULL default '0',
-  `event_title` varchar(255) NOT NULL default '',
+  `event_id` int(12) NOT NULL AUTO_INCREMENT,
+  `category_id` int(12) NOT NULL DEFAULT '0',
+  `rotation_id` int(12) NOT NULL DEFAULT '0',
+  `region_id` int(12) NOT NULL DEFAULT '0',
+  `event_title` varchar(255) NOT NULL DEFAULT '',
   `event_desc` text,
-  `event_start` bigint(64) NOT NULL default '0',
-  `event_finish` bigint(64) NOT NULL default '0',
-  `event_expiry` bigint(64) NOT NULL default '0',
-  `accessible_start` bigint(64) NOT NULL default '0',
-  `accessible_finish` bigint(64) NOT NULL default '0',
-  `modified_last` bigint(64) NOT NULL default '0',
-  `modified_by` int(12) NOT NULL default '0',
-  `event_type` varchar(12) NOT NULL default 'academic',
-  `event_access` varchar(12) NOT NULL default 'public',
-  `event_status` varchar(12) NOT NULL default 'published',
-  PRIMARY KEY  (`event_id`),
+  `event_start` bigint(64) NOT NULL DEFAULT '0',
+  `event_finish` bigint(64) NOT NULL DEFAULT '0',
+  `event_expiry` bigint(64) NOT NULL DEFAULT '0',
+  `accessible_start` bigint(64) NOT NULL DEFAULT '0',
+  `accessible_finish` bigint(64) NOT NULL DEFAULT '0',
+  `modified_last` bigint(64) NOT NULL DEFAULT '0',
+  `modified_by` int(12) NOT NULL DEFAULT '0',
+  `event_type` varchar(12) NOT NULL DEFAULT 'academic',
+  `event_access` varchar(12) NOT NULL DEFAULT 'public',
+  `event_status` varchar(12) NOT NULL DEFAULT 'published',
+  `requires_apartment` int(1) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`event_id`),
   KEY `category_id` (`category_id`),
   KEY `region_id` (`region_id`),
   KEY `event_type` (`event_type`),
@@ -319,20 +338,22 @@ CREATE TABLE IF NOT EXISTS `events` (
   KEY `accessible_start` (`accessible_start`),
   KEY `event_expiry` (`event_expiry`),
   KEY `event_finish` (`event_finish`),
-  KEY `event_start` (`event_start`)
+  KEY `event_start` (`event_start`),
+  KEY `requires_apartment` (`requires_apartment`),
+  KEY `rotation_id` (`rotation_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `event_contacts` (
-  `econtact_id` int(12) NOT NULL auto_increment,
-  `event_id` int(12) NOT NULL default '0',
-  `econtact_type` varchar(12) NOT NULL default 'student',
-  `etype_id` int(12) NOT NULL default '0',
-  `econtact_parent` int(12) NOT NULL default '0',
+  `econtact_id` int(12) NOT NULL AUTO_INCREMENT,
+  `event_id` int(12) NOT NULL DEFAULT '0',
+  `econtact_type` varchar(12) NOT NULL DEFAULT 'student',
+  `etype_id` int(12) NOT NULL DEFAULT '0',
+  `econtact_parent` int(12) NOT NULL DEFAULT '0',
   `econtact_desc` text,
-  `econtact_start` bigint(64) NOT NULL default '0',
-  `econtact_finish` bigint(64) NOT NULL default '0',
-  `econtact_status` varchar(12) NOT NULL default 'published',
-  `econtact_order` int(3) NOT NULL default '0',
+  `econtact_start` bigint(64) NOT NULL DEFAULT '0',
+  `econtact_finish` bigint(64) NOT NULL DEFAULT '0',
+  `econtact_status` varchar(12) NOT NULL DEFAULT 'published',
+  `econtact_order` int(3) NOT NULL DEFAULT '0',
   PRIMARY KEY  (`econtact_id`),
   KEY `event_id` (`event_id`),
   KEY `econtact_type` (`econtact_type`),
@@ -345,13 +366,13 @@ CREATE TABLE IF NOT EXISTS `event_contacts` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `event_locations` (
-  `elocation_id` int(12) NOT NULL auto_increment,
-  `event_id` int(12) NOT NULL default '0',
-  `location_id` int(12) NOT NULL default '0',
-  `elocation_start` bigint(64) NOT NULL default '0',
-  `elocation_finish` bigint(64) NOT NULL default '0',
-  `elocation_status` varchar(12) NOT NULL default 'published',
-  `elocation_order` int(3) NOT NULL default '0',
+  `elocation_id` int(12) NOT NULL AUTO_INCREMENT,
+  `event_id` int(12) NOT NULL DEFAULT '0',
+  `location_id` int(12) NOT NULL DEFAULT '0',
+  `elocation_start` bigint(64) NOT NULL DEFAULT '0',
+  `elocation_finish` bigint(64) NOT NULL DEFAULT '0',
+  `elocation_status` varchar(12) NOT NULL DEFAULT 'published',
+  `elocation_order` int(3) NOT NULL DEFAULT '0',
   PRIMARY KEY  (`elocation_id`),
   KEY `event_id` (`event_id`),
   KEY `location_id` (`location_id`),
@@ -359,112 +380,14 @@ CREATE TABLE IF NOT EXISTS `event_locations` (
   KEY `elocation_finish` (`elocation_finish`),
   KEY `elocation_status` (`elocation_status`),
   KEY `elocation_order` (`elocation_order`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
-
-CREATE TABLE IF NOT EXISTS `notifications` (
-  `notification_id` int(12) NOT NULL auto_increment,
-  `user_id` int(12) NOT NULL default '0',
-  `event_id` int(12) NOT NULL default '0',
-  `category_id` int(12) NOT NULL default '0',
-  `item_id` int(12) NOT NULL default '0',
-  `item_maxinstances` int(4) NOT NULL default '1',
-  `notification_status` varchar(16) NOT NULL default 'initiated',
-  `notified_last` bigint(64) NOT NULL default '0',
-  PRIMARY KEY  (`notification_id`),
-  KEY `user_id` (`user_id`),
-  KEY `event_id` (`event_id`),
-  KEY `category_id` (`category_id`),
-  KEY `item_id` (`item_id`),
-  KEY `item_maxinstances` (`item_maxinstances`),
-  KEY `notification_status` (`notification_status`),
-  KEY `notified_last` (`notified_last`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
-CREATE TABLE IF NOT EXISTS `notification_log` (
-  `nlog_id` int(12) NOT NULL auto_increment,
-  `notification_id` int(12) NOT NULL default '0',
-  `user_id` int(12) NOT NULL default '0',
-  `nlog_timestamp` bigint(64) NOT NULL default '0',
-  `nlog_address` varchar(128) NOT NULL default '',
-  `nlog_message` text NOT NULL,
-  `prune_after` bigint(64) NOT NULL default '0',
-  PRIMARY KEY  (`nlog_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
-CREATE TABLE IF NOT EXISTS `notification_messages` (
-  `nmessage_id` int(12) NOT NULL auto_increment,
-  `form_type` varchar(12) NOT NULL default 'rotation',
-  `nmessage_title` varchar(128) NOT NULL default '',
-  `nmessage_version` int(4) NOT NULL default '0',
-  `nmessage_from_email` varchar(128) NOT NULL default 'eval@meds.queensu.ca',
-  `nmessage_from_name` varchar(64) NOT NULL default 'Evaluation System',
-  `nmessage_reply_email` varchar(128) NOT NULL default 'eval@meds.queensu.ca',
-  `nmessage_reply_name` varchar(64) NOT NULL default 'Evaluation System',
-  `nmessage_subject` varchar(255) NOT NULL default '',
-  `nmessage_body` text NOT NULL,
-  `modified_last` bigint(64) NOT NULL default '0',
-  `modified_by` int(12) NOT NULL default '0',
-  `nmessage_status` varchar(12) NOT NULL default 'published',
-  PRIMARY KEY  (`nmessage_id`),
-  KEY `form_type` (`form_type`),
-  KEY `nmessage_version` (`nmessage_version`),
-  KEY `nmessage_status` (`nmessage_status`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
-CREATE TABLE IF NOT EXISTS `notification_monitor` (
-  `nmonitor_id` int(12) NOT NULL auto_increment,
-  `item_id` int(12) NOT NULL default '0',
-  `form_id` int(12) NOT NULL default '0',
-  `category_id` int(12) NOT NULL default '0',
-  `category_recurse` int(2) NOT NULL default '1',
-  `item_title` varchar(128) NOT NULL default '',
-  `item_maxinstances` int(12) NOT NULL default '1',
-  `item_start` int(12) NOT NULL default '1',
-  `item_end` int(12) NOT NULL default '30',
-  `item_status` varchar(12) NOT NULL default 'published',
-  `modified_last` bigint(64) NOT NULL default '0',
-  `modified_by` int(12) NOT NULL default '0',
-  PRIMARY KEY  (`nmonitor_id`),
-  KEY `item_id` (`item_id`),
-  KEY `form_id` (`form_id`),
-  KEY `category_id` (`category_id`),
-  KEY `category_recurse` (`category_recurse`),
-  KEY `item_start` (`item_start`),
-  KEY `item_end` (`item_end`),
-  KEY `item_status` (`item_status`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
-CREATE TABLE IF NOT EXISTS `other_teachers` (
-  `oteacher_id` int(12) NOT NULL auto_increment,
-  `proxy_id` int(12) NOT NULL default '0',
-  `firstname` varchar(50) NOT NULL default '',
-  `lastname` varchar(50) NOT NULL default '',
-  `email` varchar(150) NOT NULL default '',
-  PRIMARY KEY  (`oteacher_id`),
-  KEY `proxy_id` (`proxy_id`),
-  KEY `firstname` (`firstname`),
-  KEY `lastname` (`lastname`),
-  KEY `email` (`email`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
-CREATE TABLE IF NOT EXISTS `regions` (
-  `region_id` int(12) NOT NULL auto_increment,
-  `region_name` varchar(64) NOT NULL default '',
-  `manage_apartments` int(1) NOT NULL default '0',
-  `is_core` int(1) NOT NULL default '0',
-  `countries_id` int(12) default NULL,
-  `prov_state` varchar(200) default NULL,
-  PRIMARY KEY  (`region_id`),
-  KEY `region_name` (`region_name`),
-  KEY `manage_apartments` (`manage_apartments`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `global_lu_rotations` (
-  `rotation_id` int(12) unsigned NOT NULL auto_increment,
-  `rotation_title` varchar(24) default NULL,
+  `rotation_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
+  `rotation_title` varchar(24) DEFAULT NULL,
   `percent_required` int(3) NOT NULL,
   `percent_period_complete` int(3) NOT NULL,
-  `course_id` int(12) NOT NULL default '0',
+  `course_id` int(12) NOT NULL DEFAULT '0',
   PRIMARY KEY  (`rotation_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
@@ -480,35 +403,26 @@ INSERT INTO `global_lu_rotations` (`rotation_id`, `rotation_title`, `percent_req
 (9, 'Integrated', 50, 50, 0);
 
 CREATE TABLE IF NOT EXISTS `logbook_entries` (
-  `lentry_id` int(12) unsigned NOT NULL auto_increment,
+  `lentry_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
   `proxy_id` int(12) unsigned NOT NULL,
   `encounter_date` int(12) NOT NULL,
-  `updated_date` bigint(64) unsigned NOT NULL default '0',
+  `updated_date` bigint(64) unsigned NOT NULL DEFAULT '0',
   `patient_info` varchar(30) NOT NULL,
-  `agerange_id` int(12) unsigned NOT NULL default '0',
-  `gender` varchar(1) NOT NULL default '0',
-  `rotation_id` int(12) unsigned NOT NULL default '0',
-  `llocation_id` int(12) unsigned NOT NULL default '0',
+  `agerange_id` int(12) unsigned NOT NULL DEFAULT '0',
+  `gender` varchar(1) NOT NULL DEFAULT '0',
+  `rotation_id` int(12) unsigned NOT NULL DEFAULT '0',
+  `llocation_id` int(12) unsigned NOT NULL DEFAULT '0',
   `lsite_id` int(11) NOT NULL,
-  `comments` text default NULL,
-  `reflection` text NOT NULL default '',
-  `participation_level` int(2) NOT NULL default '2',
-  `entry_active` int(1) NOT NULL default '1',
+  `comments` text DEFAULT NULL,
+  `reflection` text NOT NULL DEFAULT '',
+  `participation_level` int(2) NOT NULL DEFAULT '2',
+  `entry_active` int(1) NOT NULL DEFAULT '1',
   PRIMARY KEY  (`lentry_id`),
   KEY `proxy_id` (`proxy_id`,`updated_date`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `logbook_entry_evaluations` (
-  `leevaluation_id` int(11) unsigned NOT NULL auto_increment,
-  `levaluation_id` int(12) unsigned NOT NULL,
-  `item_status` int(1) NOT NULL default '0',
-  `updated_date` bigint(64) NOT NULL,
-  PRIMARY KEY  (`leevaluation_id`),
-  UNIQUE KEY `levaluation_id` (`levaluation_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
-
 CREATE TABLE IF NOT EXISTS `logbook_entry_checklist` (
-  `lechecklist_id` int(12) unsigned NOT NULL auto_increment,
+  `lechecklist_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
   `proxy_id` int(12) unsigned NOT NULL,
   `rotation_id` int(12) unsigned NOT NULL,
   `checklist` bigint(64) unsigned NOT NULL,
@@ -517,26 +431,34 @@ CREATE TABLE IF NOT EXISTS `logbook_entry_checklist` (
   UNIQUE KEY `proxy_id` (`proxy_id`,`rotation_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
+CREATE TABLE IF NOT EXISTS `logbook_entry_evaluations` (
+  `leevaluation_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `levaluation_id` int(12) unsigned NOT NULL,
+  `item_status` int(1) NOT NULL DEFAULT '0',
+  `updated_date` bigint(64) NOT NULL,
+  PRIMARY KEY  (`leevaluation_id`),
+  UNIQUE KEY `levaluation_id` (`levaluation_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `logbook_entry_objectives` (
-  `leobjective_id` int(12) unsigned NOT NULL auto_increment,
-  `lentry_id` int(12) unsigned NOT NULL default '0',
-  `objective_id` int(12) unsigned NOT NULL default '0',
+  `leobjective_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
+  `lentry_id` int(12) unsigned NOT NULL DEFAULT '0',
+  `objective_id` int(12) unsigned NOT NULL DEFAULT '0',
   PRIMARY KEY  (`leobjective_id`,`lentry_id`,`objective_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `logbook_entry_procedures` (
-  `leprocedure_id` int(12) unsigned NOT NULL auto_increment,
-  `lentry_id` int(12) unsigned NOT NULL default '0',
-  `lprocedure_id` int(12) unsigned NOT NULL default '0',
+  `leprocedure_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
+  `lentry_id` int(12) unsigned NOT NULL DEFAULT '0',
+  `lprocedure_id` int(12) unsigned NOT NULL DEFAULT '0',
   `level` smallint(6) NOT NULL COMMENT 'Level of involvement',
   PRIMARY KEY  (`leprocedure_id`,`lentry_id`,`lprocedure_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `logbook_lu_agerange` (
-  `agerange_id` int(12) unsigned NOT NULL auto_increment,
-  `rotation_id` int(12) unsigned NOT NULL default '0',
-  `age` varchar(8) default NULL,
+  `agerange_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
+  `rotation_id` int(12) unsigned NOT NULL DEFAULT '0',
+  `age` varchar(8) DEFAULT NULL,
   PRIMARY KEY  (`agerange_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
@@ -563,22 +485,12 @@ INSERT INTO `logbook_lu_agerange` (`agerange_id`, `rotation_id`, `age`) VALUES
 (20, 6, '12 - 17'),
 (21, 6, '18 - 34');
 
-CREATE TABLE IF NOT EXISTS `logbook_lu_evaluations` (
-  `levaluation_id` int(12) unsigned NOT NULL auto_increment,
-  `rotation_id` int(12) unsigned NOT NULL,
-  `line` int(11) default NULL,
-  `type` int(11) NOT NULL,
-  `indent` int(11) default NULL,
-  `item` varchar(255) NOT NULL,
-  PRIMARY KEY  (`levaluation_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
 CREATE TABLE IF NOT EXISTS `logbook_lu_checklist` (
-  `lchecklist_id` int(12) unsigned NOT NULL auto_increment,
+  `lchecklist_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
   `rotation_id` int(12) unsigned NOT NULL,
-  `line` int(11) default NULL,
+  `line` int(11) DEFAULT NULL,
   `type` int(11) NOT NULL,
-  `indent` int(11) default NULL,
+  `indent` int(11) DEFAULT NULL,
   `item` varchar(255) NOT NULL,
   PRIMARY KEY  (`lchecklist_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
@@ -648,9 +560,19 @@ INSERT INTO `logbook_lu_checklist` (`lchecklist_id`, `rotation_id`, `line`, `typ
 (62, 7, 7, 2, 2, 'Final ITER'),
 (63, 7, 8, 2, 2, 'Summative MCQ Exam');
 
+CREATE TABLE IF NOT EXISTS `logbook_lu_evaluations` (
+  `levaluation_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
+  `rotation_id` int(12) unsigned NOT NULL,
+  `line` int(11) DEFAULT NULL,
+  `type` int(11) NOT NULL,
+  `indent` int(11) DEFAULT NULL,
+  `item` varchar(255) NOT NULL,
+  PRIMARY KEY  (`levaluation_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
 CREATE TABLE IF NOT EXISTS `logbook_lu_locations` (
-  `llocation_id` int(12) unsigned NOT NULL auto_increment,
-  `location` varchar(64) default NULL,
+  `llocation_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
+  `location` varchar(64) DEFAULT NULL,
   PRIMARY KEY  (`llocation_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
@@ -673,7 +595,7 @@ INSERT INTO `logbook_lu_locations` (`llocation_id`, `location`) VALUES
 (16, 'Nursery');
 
 CREATE TABLE IF NOT EXISTS `logbook_lu_procedures` (
-  `lprocedure_id` int(12) unsigned NOT NULL auto_increment,
+  `lprocedure_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
   `procedure` varchar(60) NOT NULL,
   PRIMARY KEY  (`lprocedure_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
@@ -706,8 +628,8 @@ INSERT INTO `logbook_lu_procedures` (`lprocedure_id`, `procedure`) VALUES
 (25, 'Surgical technique/OR assist');
 
 CREATE TABLE IF NOT EXISTS `logbook_lu_sites` (
-  `lsite_id` int(11) NOT NULL auto_increment,
-  `site_type` int(11) default NULL,
+  `lsite_id` int(11) NOT NULL AUTO_INCREMENT,
+  `site_type` int(11) DEFAULT NULL,
   `site_name` varchar(64) NOT NULL,
   PRIMARY KEY  (`lsite_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
@@ -729,10 +651,10 @@ INSERT INTO `logbook_lu_sites` (`lsite_id`, `site_type`, `site_name`) VALUES
 (14, 1, 'Queen''s University');
 
 CREATE TABLE IF NOT EXISTS `logbook_mandatory_objectives` (
-  `lmobjective_id` int(12) unsigned NOT NULL auto_increment,
-  `rotation_id` int(12) unsigned default NULL,
-  `objective_id` int(12) unsigned default NULL,
-  `number_required` int(2) NOT NULL default '1',
+  `lmobjective_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
+  `rotation_id` int(12) unsigned DEFAULT NULL,
+  `objective_id` int(12) unsigned DEFAULT NULL,
+  `number_required` int(2) NOT NULL DEFAULT '1',
   PRIMARY KEY  (`lmobjective_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
@@ -852,7 +774,7 @@ INSERT INTO `logbook_mandatory_objectives` (`lmobjective_id`, `rotation_id`, `ob
 (113, 1, 284, 1);
 
 CREATE TABLE IF NOT EXISTS `logbook_notification_history` (
-  `lnhistory_id` int(12) NOT NULL auto_increment,
+  `lnhistory_id` int(12) NOT NULL AUTO_INCREMENT,
   `clerk_id` int(12) NOT NULL,
   `proxy_id` int(12) NOT NULL,
   `rotation_id` int(12) NOT NULL,
@@ -861,22 +783,22 @@ CREATE TABLE IF NOT EXISTS `logbook_notification_history` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `logbook_overdue` (
-  `lologging_id` int(12) NOT NULL auto_increment,
+  `lologging_id` int(12) NOT NULL AUTO_INCREMENT,
   `proxy_id` int(12) NOT NULL,
   `rotation_id` int(12) NOT NULL,
   `event_id` int(12) NOT NULL,
   `logged_required` int(12) NOT NULL,
-  `logged_completed` int(12) NOT NULL default '0',
+  `logged_completed` int(12) NOT NULL DEFAULT '0',
   PRIMARY KEY  (`lologging_id`),
   UNIQUE KEY `lologging_id` (`lologging_id`,`proxy_id`,`event_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `logbook_preferred_procedures` (
-  `lpprocedure_id` int(12) unsigned NOT NULL auto_increment,
+  `lpprocedure_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
   `rotation_id` int(12) unsigned NOT NULL,
   `order` smallint(6) NOT NULL,
   `lprocedure_id` int(12) unsigned NOT NULL,
-  `number_required` int(2) NOT NULL default '1',
+  `number_required` int(2) NOT NULL DEFAULT '1',
   PRIMARY KEY  (`lpprocedure_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
@@ -912,55 +834,46 @@ INSERT INTO `logbook_preferred_procedures` (`lpprocedure_id`, `rotation_id`, `or
 (29, 8, 0, 22, 1);
 
 CREATE TABLE IF NOT EXISTS `logbook_rotation_comments` (
-  `lrcomment_id` int(12) NOT NULL auto_increment,
+  `lrcomment_id` int(12) NOT NULL AUTO_INCREMENT,
   `clerk_id` int(12) NOT NULL,
-  `proxy_id` int(12) NOT NULL default '0',
-  `rotation_id` int(12) NOT NULL default '0',
+  `proxy_id` int(12) NOT NULL DEFAULT '0',
+  `rotation_id` int(12) NOT NULL DEFAULT '0',
   `comments` text NOT NULL,
   `updated_date` int(12) NOT NULL,
-  `comment_active` int(1) NOT NULL default '1',
+  `comment_active` int(1) NOT NULL DEFAULT '1',
   PRIMARY KEY  (`lrcomment_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `logbook_rotation_notifications` (
-  `lrnotification_id` int(12) NOT NULL auto_increment,
+  `lrnotification_id` int(12) NOT NULL AUTO_INCREMENT,
   `proxy_id` int(12) NOT NULL,
   `rotation_id` int(12) NOT NULL,
-  `notified` int(1) NOT NULL default '0',
-  `updated_date` int(12) NOT NULL default '0',
+  `notified` int(1) NOT NULL DEFAULT '0',
+  `updated_date` int(12) NOT NULL DEFAULT '0',
   PRIMARY KEY  (`lrnotification_id`),
   UNIQUE KEY `proxy_id` (`proxy_id`,`rotation_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `logbook_rotation_sites` (
-  `lrsite_id` smallint(6) NOT NULL auto_increment,
-  `site_description` varchar(255) default NULL,
-  `rotation_id` smallint(6) default NULL,
+  `lrsite_id` smallint(6) NOT NULL AUTO_INCREMENT,
+  `site_description` varchar(255) DEFAULT NULL,
+  `rotation_id` smallint(6) DEFAULT NULL,
   PRIMARY KEY  (`lrsite_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `logbook_virtual_patients` (
-  `lvpatient_id` int(12) unsigned NOT NULL default '0',
-  `title` varchar(30) default NULL,
-  `url` varchar(200) default NULL,
+  `lvpatient_id` int(12) unsigned NOT NULL DEFAULT '0',
+  `title` varchar(30) DEFAULT NULL,
+  `url` varchar(200) DEFAULT NULL,
   PRIMARY KEY  (`lvpatient_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `logbook_virtual_patient_objectives` (
-  `lvpobjective_id` int(12) unsigned NOT NULL default '0',
-  `objective_id` int(12) unsigned default NULL,
-  `lvpatient_id` int(12) unsigned default NULL,
+  `lvpobjective_id` int(12) unsigned NOT NULL DEFAULT '0',
+  `objective_id` int(12) unsigned DEFAULT NULL,
+  `lvpatient_id` int(12) unsigned DEFAULT NULL,
   PRIMARY KEY  (`lvpobjective_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
-
-CREATE TABLE IF NOT EXISTS `lottery_clerk_streams` (
-  `lcstream_id` int(12) NOT NULL AUTO_INCREMENT,
-  `lottery_clerk_id` int(12) NOT NULL DEFAULT '0',
-  `category_id` int(12) NOT NULL DEFAULT '0',
-  `rationale` text,
-  `stream_order` int(12) NOT NULL DEFAULT '0',
-  PRIMARY KEY (`lcstream_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `lottery_clerks` (
   `lottery_clerk_id` int(12) NOT NULL AUTO_INCREMENT,
@@ -972,4 +885,118 @@ CREATE TABLE IF NOT EXISTS `lottery_clerks` (
   `chosen_rationale` text,
   `chosen_order` int(12) NOT NULL DEFAULT '0',
   PRIMARY KEY (`lottery_clerk_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `lottery_clerk_streams` (
+  `lcstream_id` int(12) NOT NULL AUTO_INCREMENT,
+  `lottery_clerk_id` int(12) NOT NULL DEFAULT '0',
+  `category_id` int(12) NOT NULL DEFAULT '0',
+  `rationale` text,
+  `stream_order` int(12) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`lcstream_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `notifications` (
+  `notification_id` int(12) NOT NULL AUTO_INCREMENT,
+  `user_id` int(12) NOT NULL DEFAULT '0',
+  `event_id` int(12) NOT NULL DEFAULT '0',
+  `category_id` int(12) NOT NULL DEFAULT '0',
+  `item_id` int(12) NOT NULL DEFAULT '0',
+  `item_maxinstances` int(4) NOT NULL DEFAULT '1',
+  `notification_status` varchar(16) NOT NULL DEFAULT 'initiated',
+  `notified_last` bigint(64) NOT NULL DEFAULT '0',
+  PRIMARY KEY  (`notification_id`),
+  KEY `user_id` (`user_id`),
+  KEY `event_id` (`event_id`),
+  KEY `category_id` (`category_id`),
+  KEY `item_id` (`item_id`),
+  KEY `item_maxinstances` (`item_maxinstances`),
+  KEY `notification_status` (`notification_status`),
+  KEY `notified_last` (`notified_last`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `notification_log` (
+  `nlog_id` int(12) NOT NULL AUTO_INCREMENT,
+  `notification_id` int(12) NOT NULL DEFAULT '0',
+  `user_id` int(12) NOT NULL DEFAULT '0',
+  `nlog_timestamp` bigint(64) NOT NULL DEFAULT '0',
+  `nlog_address` varchar(128) NOT NULL DEFAULT '',
+  `nlog_message` text NOT NULL,
+  `prune_after` bigint(64) NOT NULL DEFAULT '0',
+  PRIMARY KEY  (`nlog_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `notification_messages` (
+  `nmessage_id` int(12) NOT NULL AUTO_INCREMENT,
+  `form_type` varchar(12) NOT NULL DEFAULT 'rotation',
+  `nmessage_title` varchar(128) NOT NULL DEFAULT '',
+  `nmessage_version` int(4) NOT NULL DEFAULT '0',
+  `nmessage_from_email` varchar(128) NOT NULL DEFAULT 'eval@meds.queensu.ca',
+  `nmessage_from_name` varchar(64) NOT NULL DEFAULT 'Evaluation System',
+  `nmessage_reply_email` varchar(128) NOT NULL DEFAULT 'eval@meds.queensu.ca',
+  `nmessage_reply_name` varchar(64) NOT NULL DEFAULT 'Evaluation System',
+  `nmessage_subject` varchar(255) NOT NULL DEFAULT '',
+  `nmessage_body` text NOT NULL,
+  `modified_last` bigint(64) NOT NULL DEFAULT '0',
+  `modified_by` int(12) NOT NULL DEFAULT '0',
+  `nmessage_status` varchar(12) NOT NULL DEFAULT 'published',
+  PRIMARY KEY  (`nmessage_id`),
+  KEY `form_type` (`form_type`),
+  KEY `nmessage_version` (`nmessage_version`),
+  KEY `nmessage_status` (`nmessage_status`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `notification_monitor` (
+  `nmonitor_id` int(12) NOT NULL AUTO_INCREMENT,
+  `item_id` int(12) NOT NULL DEFAULT '0',
+  `form_id` int(12) NOT NULL DEFAULT '0',
+  `category_id` int(12) NOT NULL DEFAULT '0',
+  `category_recurse` int(2) NOT NULL DEFAULT '1',
+  `item_title` varchar(128) NOT NULL DEFAULT '',
+  `item_maxinstances` int(12) NOT NULL DEFAULT '1',
+  `item_start` int(12) NOT NULL DEFAULT '1',
+  `item_end` int(12) NOT NULL DEFAULT '30',
+  `item_status` varchar(12) NOT NULL DEFAULT 'published',
+  `modified_last` bigint(64) NOT NULL DEFAULT '0',
+  `modified_by` int(12) NOT NULL DEFAULT '0',
+  PRIMARY KEY  (`nmonitor_id`),
+  KEY `item_id` (`item_id`),
+  KEY `form_id` (`form_id`),
+  KEY `category_id` (`category_id`),
+  KEY `category_recurse` (`category_recurse`),
+  KEY `item_start` (`item_start`),
+  KEY `item_end` (`item_end`),
+  KEY `item_status` (`item_status`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `other_teachers` (
+  `oteacher_id` int(12) NOT NULL AUTO_INCREMENT,
+  `proxy_id` int(12) NOT NULL DEFAULT '0',
+  `firstname` varchar(50) NOT NULL DEFAULT '',
+  `lastname` varchar(50) NOT NULL DEFAULT '',
+  `email` varchar(150) NOT NULL DEFAULT '',
+  PRIMARY KEY  (`oteacher_id`),
+  KEY `proxy_id` (`proxy_id`),
+  KEY `firstname` (`firstname`),
+  KEY `lastname` (`lastname`),
+  KEY `email` (`email`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `regions` (
+  `region_id` int(12) NOT NULL AUTO_INCREMENT,
+  `region_name` varchar(64) NOT NULL DEFAULT '',
+  `province_id` int(12) NOT NULL DEFAULT '0',
+  `countries_id` int(12) NOT NULL DEFAULT '0',
+  `prov_state` varchar(200) DEFAULT NULL,
+  `manage_apartments` int(1) NOT NULL DEFAULT '0',
+  `is_core` int(1) NOT NULL DEFAULT '0',
+  `region_active` int(1) NOT NULL DEFAULT '1',
+  `updated_date` bigint(64) NOT NULL DEFAULT '0',
+  `updated_by` int(12) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`region_id`),
+  KEY `region_name` (`region_name`),
+  KEY `manage_apartments` (`manage_apartments`),
+  KEY `province_id` (`province_id`),
+  KEY `countries_id` (`countries_id`),
+  KEY `is_core` (`is_core`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;

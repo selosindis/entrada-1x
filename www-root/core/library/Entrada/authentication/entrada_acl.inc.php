@@ -50,9 +50,7 @@ class Entrada_ACL extends ACL_Factory {
 				"logbook",
 				"lottery"
 			),
-			"objective" => array (
-				"objectivecontent"
-			),
+			"objective",
 			"clerkshipschedules",
 			"discussion",
 			"photo",

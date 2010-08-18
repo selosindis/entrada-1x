@@ -60,6 +60,45 @@ if (!defined("IN_PROFILE")) {
 
 
 	$mspr = MSPR::get($user);
+	$number = $user->getNumber();
+	$revisions = $mspr->getMSPRRevisions();
+	$closed = $mspr->isClosed();
+	$generated = $mspr->isGenerated();
+	
+	$year = $user->getGradYear();
+	$class_data = MSPRClassData::get($year);
+	
+	$mspr_close = $mspr->getClosedTimestamp();
+	
+	if (!$mspr_close) { //no custom time.. use the class default
+		$mspr_close = $class_data->getClosedTimestamp();	
+	}
+	
+	if ($type = $_GET['get']) {
+		$name = $user->getFirstname() . " " . $user->getLastname();
+		switch($type) {
+			case 'html':
+				header('Content-type: text/html');
+				header('Content-Disposition: filename="MSPR - '.$name.'('.$number.').html"');
+				
+				break;
+			case 'pdf':
+				header('Content-type: application/pdf');
+				header('Content-Disposition: attachment; filename="MSPR - '.$name.'('.$number.').pdf"');
+				break;
+			default:
+				$ERROR++;
+				$ERRORSTR[] = "Unknown file type: " . $type;
+		}
+		if (!$ERROR) {
+			ob_clear_open_buffers();
+			flush();
+			echo $mspr->getMSPRFile($type,$generated);
+			exit();	
+		}
+		
+	}
+	
 	$clerkship_core_completed = $mspr["Clerkship Core Completed"];
 	$clerkship_core_pending = $mspr["Clerkship Core Pending"];
 	$clerkship_elective_completed = $mspr["Clerkship Electives Completed"];
@@ -78,17 +117,7 @@ if (!defined("IN_PROFILE")) {
 	$community_health_and_epidemiology = $mspr["Community Health and Epidemiology"];
 	$research_citations = $mspr["Research"];
 	
-	$closed = $mspr->isClosed();
-	$generated = $mspr->isGenerated();
-	
-	$year = $user->getGradYear();
-	$class_data = MSPRClassData::get($year);
-	
-	$mspr_close = $mspr->getClosedTimestamp();
-	
-	if (!$mspr_close) { //no custom time.. use the class default
-		$mspr_close = $class_data->getClosedTimestamp();	
-	}
+
 	
 	display_status_messages();
 	
@@ -102,7 +131,10 @@ if ($closed) {
 <div class="display-notice">
 	<p>MSPR submission closed on <?php echo date("F j, Y \a\\t g:i a",$mspr_close); ?></p>
 	<?php if ($generated) {	?>
-	<p>Doc icons go here</p>
+	<p>Your MSPR is available in HTML and PDF, below:</p>
+	<span class="file-block"><a href="<?php echo ENTRADA_URL; ?>/profile?section=mspr&get=html"><img src="<?php echo ENTRADA_URL; ?>/serve-icon.php?ext=html" /> HTML</a>&nbsp;&nbsp;&nbsp;<a href="<?php echo ENTRADA_URL; ?>/profile?section=mspr&get=pdf"><img src="<?php echo ENTRADA_URL; ?>/serve-icon.php?ext=pdf" /> PDF</a></span>
+	<div class="clearfix">&nbsp;</div>
+	<span class="last-update">Last Updated: <?php echo date("F j, Y \a\\t g:i a",$generated); ?></span>
 	<?php } else { ?>
 	<p>Finalized documents are not yet available.</p>
 	<?php } ?>
@@ -115,6 +147,7 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 </div>
 <?php
 }
+
 ?>
 
 <div class="mspr-tree">

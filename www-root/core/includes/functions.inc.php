@@ -10214,9 +10214,9 @@ function generatePDF($html,$output_filename=null) {
 
 		//This used to have every option separated by a backslash and newline. In testing it was discovered that there was a magical limit of 4 backslashes -- beyond which it would barf.
 		$exec_command	= $APPLICATION_PATH["htmldoc"]." \
-		--format pdf14 --charset ".DEFAULT_CHARSET." --size Letter --pagemode document --no-duplex --encryption --compression=6 --permissions print \
-		--permissions no-modify --browserwidth 800 --top 1cm --bottom 1cm --left 2cm --right 2cm --header --footer --embedfonts --bodyfont Times --headfootsize 8 \
-		--headfootfont Courier --firstpage p1 --quiet --book --color --no-toc --no-title --no-links --textfont Times - ";
+		--format pdf14 --charset ".DEFAULT_CHARSET." --size Letter --pagemode document --no-duplex --encryption --compression=6 --permissions print,no-modify \
+		--header ... --footer ... --headfootsize 0 --browserwidth 800 --top 1cm --bottom 1cm --left 2cm --right 2cm --embedfonts --bodyfont Times --headfootsize 8 \
+		--headfootfont Times --headingfont Times --firstpage p1 --quiet --book --color --no-toc --no-title --no-links --textfont Times - ";
 		
 		if ($output_filename) {
 			@exec($exec_command);

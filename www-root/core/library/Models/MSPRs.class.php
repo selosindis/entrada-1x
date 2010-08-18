@@ -2,16 +2,20 @@
 
 require_once("MSPR.class.php");
 
+$ORGANISATION_ID	= $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"];
+
+
 class MSPRs extends Collection {
 	
 	/**
 	 * @return MSPRs
 	 */
 	static public function getAll() {
-		global $db;
+		global $db, $ORGANISATION_ID;
 		$query		= "select * from `student_mspr` a 
 						left join `".AUTH_DATABASE."`.`user_data` b 
 						on a.user_id = b.id
+						where `organisation_id`=".$db->qstr($ORGANISATION_ID)."
 						order by lastname, firstname";
 		
 		$results	= $db->GetAll($query);
@@ -35,13 +39,13 @@ class MSPRs extends Collection {
 	 * @return MSPRs
 	 */
 	static public function getYear($year) {
-		global $db;
+		global $db, $ORGANISATION_ID;
 		$query		= "select * from `student_mspr` a 
 						left join `".AUTH_DATABASE."`.`user_data` b 
 						on a.user_id = b.id 
-						where `grad_year`=".$db->qstr($year)."  
+						where `grad_year`=".$db->qstr($year)." 
+						and `organisation_id`=".$db->qstr($ORGANISATION_ID)."
 						order by lastname, firstname";
-		
 		$results	= $db->GetAll($query);
 		$msprs = array();
 		if ($results) {
@@ -57,11 +61,12 @@ class MSPRs extends Collection {
 	}
 	
 	static public function hasCustomDeadlines_Year($year) {
-		global $db;
+		global $db, $ORGANISATION_ID;
 		$query		= "select count(*) from `student_mspr` a 
 						left join `".AUTH_DATABASE."`.`user_data` b 
 						on a.user_id = b.id 
 						where `grad_year`=".$db->qstr($year)."  
+						and `organisation_id`=".$db->qstr($ORGANISATION_ID)."
 						and a.closed is not null group by user_id";
 		
 		$result	= $db->GetOne($query);
@@ -70,10 +75,12 @@ class MSPRs extends Collection {
 	
 	
 	static public function clearCustomDeadlines_Year($year) {
-		global $db,$ERROR,$ERRORSTR;
+		global $db, $ORGANISATION_ID,$ERROR,$ERRORSTR;
 		$query = "update `student_mspr`,`".AUTH_DATABASE."`.`user_data` 
 				 set `closed`=NULL
-				 where `grad_year`=".$db->qstr($year) ." and user_id=id ";
+				 where `grad_year`=".$db->qstr($year) ." 
+				 and `organisation_id`=".$db->qstr($ORGANISATION_ID)."
+				 and user_id=id ";
 		
 		if(!$db->Execute($query)) {
 			$ERROR++;
@@ -83,10 +90,11 @@ class MSPRs extends Collection {
 	}
 	
 	static public function clearCustomDeadlinesEarlierThan_Year($year, $timestamp) {
-		global $db,$ERROR,$ERRORSTR;
+		global $db, $ORGANISATION_ID,$ERROR,$ERRORSTR;
 		$query = "update `student_mspr`,`".AUTH_DATABASE."`.`user_data` 
 				 set `closed`=NULL
 				 where `grad_year`=".$db->qstr($year) ." and user_id=id
+				 and `organisation_id`=".$db->qstr($ORGANISATION_ID)."
 				 and `closed` < ".$db->qstr($timestamp);
 		
 		if(!$db->Execute($query)) {

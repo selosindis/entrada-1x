@@ -2805,3 +2805,31 @@ margin: 0 1em 0 0;
 #mspr-class-list.show-all .attention-not-required {
 	display:table-row;
 }
+
+.revision-list li {
+	margin-bottom:1ex;
+}
+
+.revision-list img, .display-notice img, .tableList img {
+	border:0;
+	vertical-align:middle;
+}
+
+.clearfix {
+	clear:both;
+	line-height:0;
+	height:0;
+	max-height:0;
+}
+
+.file-block {
+	background-color:white;
+	padding:1ex;
+	margin:1ex;
+}
+
+.last-update {
+	margin-top:1ex;
+	display:block;
+	font-size:0.85em;
+}

@@ -35,6 +35,9 @@ class MSPR implements ArrayAccess, AttentionRequirable {
 		$this->generated = $generated;
 	}
 	
+	/**
+	 * @return User
+	 */
 	function getUser() {
 		return User::get($this->user_id);
 	}
@@ -46,7 +49,7 @@ class MSPR implements ArrayAccess, AttentionRequirable {
 		//first check the local timestamp
 		if (!is_null($this->closed)) {
 			return $this->closed < time();
-		} elseif ($class_closed = MSPRClassData::get($this->getUser()->getGradYear())) { //check the class data
+		} elseif ($class_closed = MSPRClassData::get($this->getUser()->getGradYear())->getClosedTimestamp()) { //check the class data
 			return $class_closed < time();
 		} 
 		return false; //no close date
@@ -72,11 +75,7 @@ class MSPR implements ArrayAccess, AttentionRequirable {
 	function isGenerated() {
 		return (!is_null($this->generated) && $this->generated < time());
 	}
-	
-	function generate() {
-		//TODO call document generation
-	}
-	
+		
 	/**
 	 * Returns a timestamp of submission closure
 	 */
@@ -176,8 +175,109 @@ class MSPR implements ArrayAccess, AttentionRequirable {
 				
 		if(!$db->Execute($query)) {
 			$ERROR++;
-			$ERRORSTR[] = "Failed to update MSPR Generation Time.".$db->ErrorMsg();
+			$ERRORSTR[] = "Failed to update MSPR Generation Time.";
 			application_log("error", "Unable to update a student_mspr record. Database said: ".$db->ErrorMsg());
 		}
 	}
+	
+	/**
+	 * Uses htmldoc to generate a pdf file from the provided html. returns the pdf as text. 
+	 * @param unknown_type $timestamp
+	 * @param unknown_type $html
+	 * @return string
+	 */
+	private function generatePDF($html) {
+		return generatePDF($html);
+	}
+	
+	/**
+	 * Returns html
+	 * @param int $timestamp
+	 * @return string
+	 */
+	public function generateHTML($timestamp) {
+		require_once("Entrada/mspr/mspr_gen.php");
+		return generateMSPRHTML($this);
+	}
+	
+	public function saveMSPRFiles($timestamp=null,$location=null) {
+		global $SUCCESS,$SUCCESSSTR,$ERROR,$ERRORSTR;
+		if (!$location) {
+			$location = MSPR_STORAGE; //use default
+		}
+		if (!$timestamp) {
+			$timestamp = time();
+		}
+		
+		//generate HTML file first, then
+		//use the result to make the pdf
+		
+		$html = $this->generateHTML($timestamp);
+		$pdf = $this->generatePDF($html);
+		
+		//prepare filename
+		$user = $this->getUser();
+		$number = $user->getNumber();
+		
+		$filebase = $number."-".$timestamp;
+		
+		//now write the files and return success/fail (true/false)
+		$wroteHTML = writeFile($location."/".$filebase.".html",$html);
+		$wrotePDF = writeFile($location."/".$filebase.".pdf",$pdf);
+		
+		if ($wroteHTML && $wrotePDF) {
+			$this->setGeneratedTimestamp($timestamp);
+			return true;
+		}	
+		return false;
+	}
+	
+	public function getMSPRFile($type = "pdf", $timestamp = null, $location = null) {
+		if (!$location) {
+			$location = MSPR_STORAGE; //use default
+		}
+		$number = $this->getUser()->getNumber();
+		$revisions = $this->getMSPRRevisions($type);
+		if ($revisions) {
+			if (!$timestamp) {
+				$revision = $revisions[0];
+			} else {
+				if (in_array($timestamp,$revisions)) {
+					$revision = $timestamp;
+				} else {
+					return false;
+				}
+			}
+			return @file_get_contents($location."/".$number."-".$revision.".".$type);
+		}
+		return false;
+	}
+
+	/**
+	 * 
+	 * @param string $type default: pdf
+	 * @param string $location default: [internally specified]
+	 * @return array An empty array indicates no revisions are present
+	 */
+	public function getMSPRRevisions($type="pdf", $location = null) {
+		if (!$location) {
+			$location = MSPR_STORAGE; //use default
+		}
+		$user = $this->getUser();
+		$search_string = $location . "/" .$user->getNumber()."-*.".$type; 
+		$files = glob($search_string);
+		
+		//extract timestamps - the only part we care about
+		$revisions = array();
+		foreach ($files as $file) {
+			$basename = basename($file,".".$type);
+			$parts = explode("-",$basename);
+			$revisions[] = $parts[1];
+		}
+		//sort by timestamp (newest first)
+		sort($revisions,SORT_NUMERIC);
+		return array_reverse($revisions);
+	}
+	
+
 }

@@ -19,7 +19,8 @@ class MSPRs extends Collection {
 		if ($results) {
 			foreach ($results as $result) {
 				
-				$user = new User($result['id'], $result['username'], $result['lastname'], $result['firstname'], $result['number'], $result['grad_year']);
+				//unfortunate but cuts down on db requests by including this in the main query
+				$user = new User($result['id'], $result['username'], $result['lastname'], $result['firstname'], $result['number'], $result['grad_year'], $result['entry_year']);
 				
 				$mspr = new MSPR( $result['id'], $result['last_update'], $result['closed'], $result['generated']);
 				$msprs[] = $mspr;
@@ -46,7 +47,7 @@ class MSPRs extends Collection {
 		if ($results) {
 			foreach ($results as $result) {
 				
-				$user = new User($result['id'], $result['username'], $result['lastname'], $result['firstname'], $result['number'], $result['grad_year']);
+				$user = new User($result['id'], $result['username'], $result['lastname'], $result['firstname'], $result['number'], $result['grad_year'], $result['entry_year']);
 				
 				$mspr = new MSPR( $result['id'], $result['last_update'], $result['closed'], $result['generated']);
 				$msprs[] = $mspr;

@@ -41,14 +41,16 @@ class User {
 	private $lastname;
 	private $number;
 	private $grad_year;
+	private $entry_year;
 	
-	function __construct($id,$username, $lastname, $firstname, $number = 0, $grad_year = null) {
+	function __construct($id,$username, $lastname, $firstname, $number = 0, $grad_year = null, $entry_year = null) {
 		$this->id = $id;
 		$this->username = $username;
 		$this->firstname = $firstname;
 		$this->lastname = $lastname;
 		$this->number = $number;
 		$this->grad_year = $grad_year;
+		$this->entry_year = $entry_year;
 		
 		//be sure to cache this whenever created.
 		$cache = SimpleCache::getCache();
@@ -77,6 +79,14 @@ class User {
 	 */
 	function getGradYear() {
 		return $this->grad_year;
+	}
+	
+	/**
+	 * Returns the year a student enetered med school, if available
+	 * @return int
+	 */
+	function getEntryYear() {
+		return $this->entry_year;
 	}
 	
 	/**
@@ -119,7 +129,7 @@ class User {
 			$query = "SELECT * FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($user_id);
 			$result = $db->getRow($query);
 			if ($result) {
-				$user =  new User($result['id'], $result['username'], $result['lastname'], $result['firstname'], $result['number'],$result['grad_year']);			
+				$user =  new User($result['id'], $result['username'], $result['lastname'], $result['firstname'], $result['number'],$result['grad_year'],$result['entry_year']);			
 			}		
 		} 
 		return $user;

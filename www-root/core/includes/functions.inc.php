@@ -10206,3 +10206,52 @@ function writeFile($filename, $contents) {
 	}		
 	return true;
 }
+
+function generatePDF($html,$output_filename=null) {
+	global $APPLICATION_PATH;
+	@set_time_limit(0);
+	if((is_array($APPLICATION_PATH)) && (isset($APPLICATION_PATH["htmldoc"])) && (@is_executable($APPLICATION_PATH["htmldoc"]))) {
+
+		//This used to have every option separated by a backslash and newline. In testing it was discovered that there was a magical limit of 4 backslashes -- beyond which it would barf.
+		$exec_command	= $APPLICATION_PATH["htmldoc"]." \
+		--format pdf14 --charset ".DEFAULT_CHARSET." --size Letter --pagemode document --no-duplex --encryption --compression=6 --permissions print \
+		--permissions no-modify --browserwidth 800 --top 1cm --bottom 1cm --left 2cm --right 2cm --header --footer --embedfonts --bodyfont Times --headfootsize 8 \
+		--headfootfont Courier --firstpage p1 --quiet --book --color --no-toc --no-title --no-links --textfont Times - ";
+		
+		if ($output_filename) {
+			@exec($exec_command);
+			@exec("chmod 644 ".$output_filename);
+		} else {
+			/**
+			 * This section needs a little explanation.
+			 * 
+			 * exec and shell_exec were not used because they cannot receive standard input.
+			 * proc_open allows the specification of pipes (or files) for standard input/output/error
+			 * hence the descriptorsepc array specifiying pipes for all three
+			 * and writing to pipe[0] for standard input
+			 * and reading the stream from pipe[1] for standard output.
+			 */
+			
+			$descriptorspec = array(
+			   0 => array("pipe", "r"),  // stdin is a pipe that the child will read from
+			   1 => array("pipe", "w"),  // stdout is a pipe that the child will write to
+			   2 => array("pipe", "w")   // stderr is a pipe that the child will write to
+			);
+			
+			$proc = proc_open($exec_command, $descriptorspec, $pipes);
+			
+			fwrite($pipes[0], $html);
+			fclose($pipes[0]);
+
+			$pdf_string = stream_get_contents($pipes[1]);
+			fclose($pipes[1]);
+			
+			//$err_string = stream_get_contents($pipes[2]);
+			fclose($pipes[2]); //just close we're not interested in the error info
+			
+			$return_val = proc_close($proc);
+			
+			return $pdf_string;
+		}
+	}
+}

@@ -149,7 +149,32 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MSPR_ADMIN"))) {
 				eraseCookie("mspr-class-list");
 			}
 
-			document.observe("dom:loaded",function() { if (readCookie("mspr-class-list") == "show-all") showAll() });
+			function checkAll(event) {
+				var state = Event.findElement(event).checked;
+				//var state = $$("#mspr-class-list thead input[type=checkbox]").pluck("checked").any();
+				$$("#mspr-class-list tbody input[type=checkbox]").reject(isDisabled).each(function (el) { el.checked=state; });
+			}
+
+			function areAllChecked() {
+				return $$("#mspr-class-list tbody input[type=checkbox]").reject(isDisabled).pluck("checked").all();
+			}
+
+			function isDisabled(el) {
+				return el.disabled;
+			}
+
+			function setCheckAll() {
+				var state = areAllChecked();
+				$$("#mspr-class-list thead input[type=checkbox]").each(function (el) { el.checked=state; });
+			}
+
+			document.observe("dom:loaded",function() { 
+					if (readCookie("mspr-class-list") == "show-all") showAll();
+					$$("#mspr-class-list tbody input[type=checkbox]").invoke("observe","click",setCheckAll);
+					$$("#mspr-class-list thead input[type=checkbox]").invoke("observe","click",checkAll);
+				});
+			
+			
 			</script>
 			
 			<h1>Manage MSPRs: Class of <?php echo $year;?></h1>
@@ -161,58 +186,80 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MSPR_ADMIN"))) {
 			
 			
 			<a href="#" onclick='showAll();'>Show All</a> / <a href="#" onclick='hideAttentionNotRequired();'>Show only those requiring attention</a>
+			<form method="post" action="?section=generate">
+				<input type="hidden" name="year" value="<?php echo $year; ?>" />  
+				<table id="mspr-class-list" class="tableList">
+					<col width="3%"  />
+					<col width="37%" />
+					<col width="10%" />
+					<col width="25%" />
+					<col width="25%" />
+					<thead>
+						<tr>
+							<td class="general">
+								<input type="checkbox" name="all" value="all" />
+							</td>
+							<td class="general">
+								Student Name
+							</td>
+							<td class="general">
+								Status
+							</td>
+							<td class="general">
+								Submission Deadline
+							</td>
+							<td class="general">
+								Documents
+							</td>
+							
+						</tr>
+					</thead>
+					<tbody>
+						<?php foreach($msprs as $mspr) {
+							$status = ($mspr->isAttentionRequired() ? "attention-required" : "attention-not-required");
+							$user = $mspr->getUser();
+							$user_id = $user->getID();
+							?>
+						<tr class="<?php echo $status; ?>">
+							<td class="general">
+								<input type="checkbox" name="user_id[]" value="<?php echo $user->getID(); ?>" <?php echo ($mspr->isClosed())? "": "disabled=\"disabled\" class=\"disabled\"";?> />
+							</td>
+							<td>
+								<?php
+									echo "<a href=\"".ENTRADA_URL."/admin/users/manage/students?section=mspr&id=".$user_id."\">".$user->getFullname() ."</a>";
+								?>
+							</td>
+							<td>
+								<?php echo $mspr->isClosed() ? "closed" : "open"; ?>
+							</td>
+							<td>
+								<?php 
+								$cts = $mspr->getClosedTimestamp();
+								if ($cts) {
+									echo date("Y-m-d @ H:i",$cts); 
+								}
+								?>
+							</td>
+							<td>
+								<?php
+								if ($revision = $mspr->getGeneratedTimestamp()) {
+								?>
+									<a href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr-revisions&id=<?php echo $user_id; ?>&get=html&revision=<?php echo $revision; ?>"><img src="<?php echo ENTRADA_URL; ?>/serve-icon.php?ext=html" /> HTML</a> <a href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr-revisions&id=<?php echo $user_id; ?>&get=pdf&revision=<?php echo $revision; ?>"><img src="<?php echo ENTRADA_URL; ?>/serve-icon.php?ext=pdf" /> PDF</a> (<a href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr-revisions&id=<?php echo $user_id; ?>">revisions</a>)		
+								<?php
+								} else {
+									echo "None";
+								} 						
+								?>
+							</td>
+						</tr>
+						<?php } ?>
+					</tbody>
+				</table>
+				<br />
+				<input type="submit" name="generate" value="Generate Report" />
+			</form><br /><br />
+			<div class="instructions">Note: Only MSPRs closed to submissions will be generated.</div>
 			
-			<table id="mspr-class-list" class="tableList">
-				<col width="40%" />
-				<col width="10%" />
-				<col width="25%" />
-				<col width="25%" />
-				<thead>
-					<tr>
-						<td class="general">
-							Student Name
-						</td>
-						<td class="general">
-							Status
-						</td>
-						<td class="general">
-							Submission Deadline
-						</td>
-						<td class="general">
-							Documents
-						</td>
-						
-					</tr>
-				</thead>
-				<tbody>
-					<?php foreach($msprs as $mspr) {
-						$status = ($mspr->isAttentionRequired() ? "attention-required" : "attention-not-required");
-					?>
-					<tr class="<?php echo $status; ?>">
-						<td>
-							<?php
-								$user = $mspr->getUser();
-								echo "<a href=\"".ENTRADA_URL."/admin/users/manage/students?section=mspr&id=".$user->getID()."\">".$user->getFullname() ."</a>";
-							?>
-						</td>
-						<td>
-							<?php echo $mspr->isClosed() ? "closed" : "open"; ?>
-						</td>
-						<td>
-							<?php 
-							$cts = $mspr->getClosedTimestamp();
-							if ($cts) {
-								echo date("Y-m-d @ H:i",$cts); 
-							}
-							?>
-						</td>
-						<td>
-							None
-						</td>
-					</tr>
-					<?php } ?>
-				</tbody>
-			</table>
 			<?php
 			
 			break;

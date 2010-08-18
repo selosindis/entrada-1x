@@ -64,6 +64,7 @@ if (!defined("IN_PROFILE")) {
 	$revisions = $mspr->getMSPRRevisions();
 	$closed = $mspr->isClosed();
 	$generated = $mspr->isGenerated();
+	$revision = $mspr->getGeneratedTimestamp();
 	
 	$year = $user->getGradYear();
 	$class_data = MSPRClassData::get($year);
@@ -93,7 +94,7 @@ if (!defined("IN_PROFILE")) {
 		if (!$ERROR) {
 			ob_clear_open_buffers();
 			flush();
-			echo $mspr->getMSPRFile($type,$generated);
+			echo $mspr->getMSPRFile($type,$revision);
 			exit();	
 		}
 		
@@ -134,7 +135,7 @@ if ($closed) {
 	<p>Your MSPR is available in HTML and PDF, below:</p>
 	<span class="file-block"><a href="<?php echo ENTRADA_URL; ?>/profile?section=mspr&get=html"><img src="<?php echo ENTRADA_URL; ?>/serve-icon.php?ext=html" /> HTML</a>&nbsp;&nbsp;&nbsp;<a href="<?php echo ENTRADA_URL; ?>/profile?section=mspr&get=pdf"><img src="<?php echo ENTRADA_URL; ?>/serve-icon.php?ext=pdf" /> PDF</a></span>
 	<div class="clearfix">&nbsp;</div>
-	<span class="last-update">Last Updated: <?php echo date("F j, Y \a\\t g:i a",$generated); ?></span>
+	<span class="last-update">Last Updated: <?php echo date("F j, Y \a\\t g:i a",$revision); ?></span>
 	<?php } else { ?>
 	<p>Finalized documents are not yet available.</p>
 	<?php } ?>

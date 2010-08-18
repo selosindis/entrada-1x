@@ -312,6 +312,18 @@ function generateMSPRHTML(MSPR $mspr,$timestamp = null) {
 			?>
 			<h3><u>Contributions to Medical School/Student Life</u></h3>
 			<i>Participation in the School of Medicine student government, committees (such as admissions), and organization of extra-curricular learning activities and Seminars is listed below.</i><br><br>
+			<table width="100%" border=0 cellpadding=5 cellspacing=0>
+			<?php
+					foreach($component as $entity) {
+						?>
+				<tr>
+					<td valign="top" width="50%"><?php echo $entity->getOrgEvent()."<br>".$entity->getRole(); ?></td>
+					<td valign="top" width="50%" align="right"><?php echo $entity->getPeriod(); ?></td>
+				</tr>
+						<?php
+					}
+			?>
+			</table><br>
 			<?php 
 				}
 			?>

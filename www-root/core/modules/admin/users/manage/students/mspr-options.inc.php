@@ -87,7 +87,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 		}
 		
 		if (!$ERROR){
-			$is_early = $timestamp < $class_close;
+			$is_early = $timestamp !== null && $timestamp < $class_close;
 			if ($_POST["confirm"] != "Continue" && $is_early) {
 				//the requested custom close is earlier than the class default. need to confirm
 				$page_mode = "confirm"; 
@@ -128,7 +128,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 		case "confirm":
 		?>
 		<div class="display-notice">The requested custom submission deadline is earlier than the class default. Please choose how this should be handled below.</div>
-		<form action="<?php echo ENTRADA_URL; ?>/admin/mspr?section=mspr-options&year=<?php echo $year; ?>" method="post">
+		<form action="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr-options&id=<?php echo $PROXY_ID; ?>" method="post">
 			<?php 
 				foreach ($_POST as $name=>$value) {
 					

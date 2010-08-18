@@ -613,8 +613,9 @@ function display_supervised_project_profile(SupervisedProject $project = null) {
 	<ul class="mspr-list">
 	<?php 
 	if ($project) {
+		$class = ($project->isRejected() ? "rejected" : ($project->isApproved()? "approved" : "unapproved"));
 	?>
-		<li class="entry">
+		<li class="entry <?php echo $class; ?>">
 			<span class="label">
 				Title: 
 			</span>

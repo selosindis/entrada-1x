@@ -57,9 +57,37 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 
 	
 	$mspr = MSPR::get($user);
+	$is_closed = $mspr->isClosed();
 	
-	if (isset($_GET['generate'])){
+	$generated = $mspr->isGenerated();
+	$revision = $mspr->getGeneratedTimestamp();
+	$number = $user->getNumber();
+	if (isset($_GET['generate']) && $is_closed){
+		$mspr->saveMSPRFiles();
 		header("Location: ".ENTRADA_URL."/admin/users/manage/students?section=mspr&id=".$PROXY_ID);
+	} elseif ($type = $_GET['get']) {
+		$name = $user->getFirstname() . " " . $user->getLastname();
+		switch($type) {
+			case 'html':
+				header('Content-type: text/html');
+				header('Content-Disposition: filename="MSPR - '.$name.'('.$number.').html"');
+				
+				break;
+			case 'pdf':
+				header('Content-type: application/pdf');
+				header('Content-Disposition: attachment; filename="MSPR - '.$name.'('.$number.').pdf"');
+				break;
+			default:
+				$ERROR++;
+				$ERRORSTR[] = "Unknown file type: " . $type;
+		}
+		if (!$ERROR) {
+			ob_clear_open_buffers();
+			flush();
+			echo $mspr->getMSPRFile($type,$revision);
+			exit();	
+		}
+		
 	}
 	
 	$clerkship_core_completed = $mspr["Clerkship Core Completed"];
@@ -88,9 +116,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 	if (!$mspr_close) { //no custom time.. use the class default
 		$mspr_close = $class_data->getClosedTimestamp();	
 	}
-
-	$is_closed = $mspr->isClosed();
-	
+		
 	display_status_messages();
 	add_mspr_management_sidebar();
 	
@@ -101,7 +127,16 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 <?php 
 	if ($is_closed) {
 		?>
-<div class="display-notice"><strong>Note: </strong>This MSPR is now <strong>closed</strong> to student submissions. (Deadline was <?php echo date("F j, Y \a\\t g:i a",$mspr_close); ?>.) You may continue to approve, unapprove, or reject submissions, however students are unable to submit new data.</div>
+<div class="display-notice"><p><strong>Note: </strong>This MSPR is now <strong>closed</strong> to student submissions. (Deadline was <?php echo date("F j, Y \a\\t g:i a",$mspr_close); ?>.) You may continue to approve, unapprove, or reject submissions, however students are unable to submit new data.</p>
+	<?php if ($generated) {	?>
+	<p>The latest revision of this MSPR is available in HTML and PDF below: </p>
+	<span class="file-block"><a href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>&get=html"><img src="<?php echo ENTRADA_URL; ?>/serve-icon.php?ext=html" /> HTML</a>&nbsp;&nbsp;&nbsp;<a href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>&get=pdf"><img src="<?php echo ENTRADA_URL; ?>/serve-icon.php?ext=pdf" /> PDF</a></span>
+	<div class="clearfix">&nbsp;</div>
+	<span class="last-update">Last Updated: <?php echo date("F j, Y \a\\t g:i a",$revision); ?></span>
+	<?php }?>
+	<hr />
+	<a href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&generate&id=<?php echo $PROXY_ID; ?>">Generate Report</a>
+	</div>
 		<?php
 	} elseif ($mspr_close) {
 		?>

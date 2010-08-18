@@ -36,6 +36,6 @@ class ClerkshipRotation {
 	}
 	
 	public function getPeriod() {
-		return date("F j, Y", $this->event_start) . " - " . date("F j, Y", $this->event_start); 
+		return date("F j, Y", $this->event_start) . " - " . date("F j, Y", $this->event_finish); 
 	}
 }

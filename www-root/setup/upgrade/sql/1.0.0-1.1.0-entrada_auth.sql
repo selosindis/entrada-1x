@@ -12,7 +12,10 @@ INSERT INTO `acl_permissions` (`resource_type`, `resource_value`, `entity_type`,
 ('dashboard', NULL, NULL, NULL, NULL, NULL, NULL, 1, NULL, 'NotGuest'),
 ('regionaled', NULL, 'group', 'resident', '1', NULL, '1', NULL, NULL, 'HasAccommodations'),
 ('regionaled', NULL, 'group', 'student', '1', NULL, '1', NULL, NULL, 'HasAccommodations'),
-('regionaled_tab', NULL, 'group', 'resident', '1', NULL, '1', NULL, NULL, 'HasAccommodations');
+('regionaled_tab', NULL, 'group', 'resident', '1', NULL, '1', NULL, NULL, 'HasAccommodations'),
+('awards', NULL, 'group:role', 'staff:admin', 1, 1, 1, 1, 1, NULL),
+('mspr', NULL, 'group:role', 'staff:admin', 1, 1, 1, 1, 1, NULL),
+('mspr', NULL, 'group', 'student', 1, NULL, 1, 1, NULL, NULL);
 
 -- Table: departments
 
@@ -21,4 +24,8 @@ ADD INDEX ( `parent_id` );
 
 ALTER TABLE `departments` ADD `department_active` INT( 1 ) NOT NULL DEFAULT '1' AFTER `department_desc`,
 ADD INDEX ( `department_active` );
+
+-- Table: departments
+
+ALTER TABLE `user_data` ADD `grad_year` int(11) default NULL, `entry_year` int(11) default NULL; 
 

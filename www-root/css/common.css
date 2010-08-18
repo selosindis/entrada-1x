@@ -2602,10 +2602,6 @@ div.objective-container {
 }
 .objectives-list li span.next {
 	padding-left: 10px;
-	background: url(../images/record-next-on.gif) no-repeat top left;
-}
-.objectives-list li span.next.off {
-	background-image: url(../images/record-next-off.gif);
 }
 #objectivelists > li > div {
 	font-weight: bold;

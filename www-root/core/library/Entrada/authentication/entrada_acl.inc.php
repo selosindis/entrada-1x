@@ -50,9 +50,7 @@ class Entrada_ACL extends ACL_Factory {
 				"logbook",
 				"lottery"
 			),
-			"objective" => array (
-				"objectivecontent"
-			),
+			"objective",
 			"clerkshipschedules",
 			"discussion",
 			"photo",
@@ -1383,17 +1381,6 @@ class EventContentResource extends EventResource {
 	 */
 	public function getResourceId() {
 		return "eventcontent".($this->specific ? $this->course_id : "");
-	}
-}
-
-class ObjectiveContentResource extends EventResource {
-	/**
-	 * ACL method for keeping track. Required by Zend_Acl_Resource_Interface.
-	 * Will return based on specifc property of this resource instance.
-	 * @return string
-	 */
-	public function getResourceId() {
-		return "objectivecontent".($this->specific ? $this->objective_id : "");
 	}
 }
 

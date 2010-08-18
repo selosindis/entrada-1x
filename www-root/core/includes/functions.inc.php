@@ -10239,7 +10239,10 @@ function objectives_build_course_competencies_array() {
 			$courses_array["courses"][$course["course_id"]]["course_name"] = $course["course_name"];
 		}
 		$query = "	SELECT * FROM `global_lu_objectives`
-					WHERE `objective_parent` = ".$db->qstr(CURRICULAR_OBJECTIVES_PARENT_ID);
+					WHERE `objective_parent` IN (
+						SELECT `objective_id` FROM `global_lu_objectives`
+						WHERE `objective_parent` = ".$db->qstr(CURRICULAR_OBJECTIVES_PARENT_ID)."
+					)";
 		$competencies = $db->GetAll($query);
 		if ($competencies && count($competencies)) {
 			foreach ($competencies as $competency) {
@@ -10253,9 +10256,9 @@ function objectives_build_course_competencies_array() {
 									AND `objective_id` IN (".$objective_ids_string.")";
 						$found = $db->GetRow($query);
 						if ($found) {
-							$course["competencies"][$competency["objective_name"]] =true;
+							$course["competencies"][$competency["objective_id"]] = true;
 						} else {
-							$course["competencies"][$competency["objective_name"]] = false;
+							$course["competencies"][$competency["objective_id"]] = false;
 						}
 					}
 				}

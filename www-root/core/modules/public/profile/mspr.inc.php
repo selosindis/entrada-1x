@@ -15,7 +15,7 @@ if (!defined("IN_PROFILE")) {
 } elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	header("Location: ".ENTRADA_URL);
 	exit;
-} elseif(!$ENTRADA_ACL->isLoggedInAllowed('mspr', 'read',true) || $_SESSION["details"]["group"] != "student") {
+} elseif(!$ENTRADA_ACL->isLoggedInAllowed('mspr', 'update',true) || $_SESSION["details"]["group"] != "student") {
 	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/".$MODULE."\\'', 15000)";
 
 	$ERROR++;

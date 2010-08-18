@@ -24,7 +24,7 @@ get_include_path(),
 require_once("init.inc.php");
 
 if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
-	if ($ENTRADA_ACL->amIAllowed("mspr", "read", false)) {
+	if ($ENTRADA_ACL->amIAllowed("mspr", "update", false)) {
 
 		ob_clear_open_buffers();
 	

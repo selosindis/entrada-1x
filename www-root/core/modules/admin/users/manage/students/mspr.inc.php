@@ -15,7 +15,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 } elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	header("Location: ".ENTRADA_URL);
 	exit;
-} elseif(!$ENTRADA_ACL->isLoggedInAllowed('mspr', 'read',true) || $user_record["group"] != "student") {
+} elseif(!$ENTRADA_ACL->isLoggedInAllowed('mspr', 'create',true) || $user_record["group"] != "student") {
 	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/".$MODULE."\\'', 15000)";
 
 	$ERROR++;
@@ -57,6 +57,10 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 
 	
 	$mspr = MSPR::get($user);
+	
+	if (isset($_GET['generate'])){
+		header("Location: ".ENTRADA_URL."/admin/users/manage/students?section=mspr&id=".$PROXY_ID);
+	}
 	
 	$clerkship_core_completed = $mspr["Clerkship Core Completed"];
 	$clerkship_core_pending = $mspr["Clerkship Core Pending"];
@@ -207,7 +211,6 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 			</div>
 			<div class="clear">&nbsp;</div>
 			<form id="add_clineval_form" name="add_clineval_form" action="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" method="post" style="display:none;" >
-				<input type="hidden" name="action" value="add_clineval_comment"></input>
 				<input type="hidden" name="user_id" value="<?php echo $PROXY_ID; ?>"></input>
 				<table class="mspr_form">
 					<colgroup>
@@ -221,7 +224,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 						</tr>
 						<tr>
 							<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
-								<input type="submit" class="button" value="Add Comment" />
+								<input type="submit" class="button" name="action" value="Add" />
 								<div id="hide_clineval_link" style="display:inline-block;">
 									<ul class="page-action-cancel">
 										<li><a id="hide_clineval" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" class="strong-green">[ Cancel Adding Comment ]</a></li>
@@ -233,13 +236,13 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 					<tbody>
 						<tr>
 						<td>&nbsp;</td>
-						<td><label class="form-required" for="clineval_comment_source">Source:</label></td>
-						<td><input type="text" name="clineval_comment_source"></input></td>
+						<td><label class="form-required" for="source">Source:</label></td>
+						<td><input type="text" name="source"></input></td>
 						</tr>	
 						<tr>
 						<td>&nbsp;</td>
-						<td><label class="form-required" for="clineval_comment_text">Comment:</label></td>
-						<td><textarea name="clineval_comment_text"></textarea></td>
+						<td><label class="form-required" for="text">Comment:</label></td>
+						<td><textarea name="text"></textarea></td>
 						</tr>
 					</tbody>
 				
@@ -372,7 +375,6 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 				
 				<div class="clear">&nbsp;</div>
 				<form id="add_int_act_form" name="add_int_act_form" action="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" method="post" <?php if (!$show_int_act_form) { echo "style=\"display:none;\""; }   ?> >
-					<input type="hidden" name="action" value="add_international_activity"></input>
 					<input type="hidden" name="student_id" value="<?php echo $user->getID(); ?>"></input>
 					<table class="mspr_form">
 						<colgroup>
@@ -387,7 +389,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 							</tr>
 							<tr>
 								<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
-									<input type="submit" class="button" value="Add Activity" />
+									<input type="submit" name="action" class="button" value="Add" />
 									<div id="hide_int_act_link" style="display:inline-block;">
 										<ul class="page-action-cancel">
 											<li><a id="hide_int_act" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" class="strong-green">[ Cancel Adding International Activity ]</a></li>
@@ -399,31 +401,31 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 						<tbody>
 							<tr>
 								<td>&nbsp;</td>
-								<td><label class="form-required" for="int_act_title">Title:</label></td>
-	 							<td><input name="int_act_title"></input></td><td><span class="content-small"><strong>Example:</strong> Geriatrics Observership</span></td>
+								<td><label class="form-required" for="title">Title:</label></td>
+	 							<td><input name="title"></input></td><td><span class="content-small"><strong>Example:</strong> Geriatrics Observership</span></td>
 							</tr>	
 							<tr>
 								<td>&nbsp;</td>
-								<td><label class="form-required" for="int_act_site">Site:</label></td>
-								<td><input name="int_act_site"></input></td><td><span class="content-small"><strong>Example:</strong> Tokyo Metropolitan Hospital</span></td>
+								<td><label class="form-required" for="site">Site:</label></td>
+								<td><input name="site"></input></td><td><span class="content-small"><strong>Example:</strong> Tokyo Metropolitan Hospital</span></td>
 							</tr>	
 							<tr>
 								<td>&nbsp;</td>
-								<td><label class="form-required" for="int_act_location">Location:</label></td>
-								<td><input name="int_act_location"></input></td><td><span class="content-small"><strong>Example:</strong> Tokyo, Japan</span></td>
+								<td><label class="form-required" for="location">Location:</label></td>
+								<td><input name="location"></input></td><td><span class="content-small"><strong>Example:</strong> Tokyo, Japan</span></td>
 							</tr>	
 							<tr>
 								<td>&nbsp;</td>
-								<td><label class="form-required" for="int_act_start">Start Date:</label></td>
+								<td><label class="form-required" for="start">Start Date:</label></td>
 								<td>
-									<input type="text" name="int_act_start" id="int_act_start"></input></td><td><span class="content-small"><strong>Format:</strong> yyyy-mm-dd</span>
+									<input type="text" name="start" id="int_act_start"></input></td><td><span class="content-small"><strong>Format:</strong> yyyy-mm-dd</span>
 								</td>
 							</tr>
 							<tr>
 								<td>&nbsp;</td>
-								<td><label class="form-required" for="int_act_end">End Date:</label></td>
+								<td><label class="form-required" for="end">End Date:</label></td>
 								<td>
-									<input type="text" name="int_act_end" id="int_act_end"></input></td><td>
+									<input type="text" name="end" id="int_act_end"></input></td><td>
 								</td>
 							</tr>
 						</tbody>
@@ -471,7 +473,6 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 				
 				<div class="clear">&nbsp;</div>
 				<form id="add_observership_form" name="add_observership_form" action="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" method="post" <?php if (!$show_observership_form) { echo "style=\"display:none;\""; }   ?> >
-					<input type="hidden" name="action" value="add_observership"></input>
 					<input type="hidden" name="student_id" value="<?php echo $user->getID(); ?>"></input>
 					<table class="mspr_form">
 						<colgroup>
@@ -485,7 +486,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 							</tr>
 							<tr>
 								<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
-									<input type="submit" class="button" value="Add Observership" />
+									<input type="submit" name="action" class="button" value="Add" />
 									<div id="hide_observership_link" style="display:inline-block;">
 										<ul class="page-action-cancel">
 											<li><a id="hide_observership" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" class="strong-green">[ Cancel Adding Observership ]</a></li>
@@ -497,31 +498,31 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 						<tbody>
 							<tr>
 								<td>&nbsp;</td>
-								<td><label class="form-required" for="observership_title">Title/Discipline:</label></td>
-	 							<td><input name="observership_title"></input> <span class="content-small"><strong>Example:</strong> Family Medicine</span></td>
+								<td><label class="form-required" for="title">Title/Discipline:</label></td>
+	 							<td><input name="title"></input> <span class="content-small"><strong>Example:</strong> Family Medicine</span></td>
 							</tr>	
 							<tr>
 								<td>&nbsp;</td>
-								<td><label class="form-required" for="observership_site">Site:</label></td>
-								<td><input name="observership_site"></input> <span class="content-small"><strong>Example:</strong> Kingston General Hospital</span></td>
+								<td><label class="form-required" for="site">Site:</label></td>
+								<td><input name="site"></input> <span class="content-small"><strong>Example:</strong> Kingston General Hospital</span></td>
 							</tr>	
 							<tr>
 								<td>&nbsp;</td>
-								<td><label class="form-required" for="observership_location">Location:</label></td>
-								<td><input name="observership_location" value="Kingston, ON"></input> <span class="content-small"><strong>Example:</strong> Kingston, ON</span></td>
+								<td><label class="form-required" for="location">Location:</label></td>
+								<td><input name="location" value="Kingston, ON"></input> <span class="content-small"><strong>Example:</strong> Kingston, ON</span></td>
 							</tr>	
 							<tr>
 								<td>&nbsp;</td>
-								<td><label class="form-required" for="observership_start">Start Date:</label></td>
+								<td><label class="form-required" for="start">Start Date:</label></td>
 								<td>
-									<input type="text" name="observership_start" id="observership_start"></input> <span class="content-small"><strong>Format:</strong> yyyy-mm-dd</span>
+									<input type="text" name="start" id="observership_start"></input> <span class="content-small"><strong>Format:</strong> yyyy-mm-dd</span>
 								</td>
 							</tr>
 							<tr>
 								<td>&nbsp;</td>
-								<td><label class="form-required" for="observership_end">End Date:</label></td>
+								<td><label class="form-required" for="end">End Date:</label></td>
 								<td>
-									<input type="text" name="observership_end" id="observership_end"></input>
+									<input type="text" name="end" id="observership_end"></input>
 								</td>
 							</tr>
 						</tbody>
@@ -560,7 +561,6 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 				
 				<div class="clear">&nbsp;</div>
 				<form id="add_student_run_elective_form" name="add_student_run_elective_form" action="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" method="post" <?php if (!$show_student_run_elective_form) { echo "style=\"display:none;\""; }   ?> >
-					<input type="hidden" name="action" value="add_student_run_elective"></input>
 					<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
 					<table class="mspr_form">
 						<colgroup>
@@ -574,7 +574,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 							</tr>
 							<tr>
 								<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
-									<input type="submit" class="button" value="Add SRE" />
+									<input type="submit" name="action" class="button" value="Add" />
 									<div id="hide_student_run_elective_link" style="display:inline-block;">
 										<ul class="page-action-cancel">
 											<li><a id="hide_student_run_elective" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" class="strong-green">[ Cancel Adding Student-Run Elective ]</a></li>
@@ -586,24 +586,24 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 						<tbody>
 							<tr>
 								<td>&nbsp;</td>
-								<td><label class="form-required" for="student_run_elective_group_name">Group Name:</label></td>
-								<td><input name="student_run_elective_group_name"></input></td>
+								<td><label class="form-required" for="group_name">Group Name:</label></td>
+								<td><input name="group_name"></input></td>
 							</tr>	
 							<tr>
 								<td>&nbsp;</td>
-								<td><label class="form-required" for="student_run_elective_university">University:</label></td>
-								<td><input name="student_run_elective_university" value="Queen's University"></input></td>
+								<td><label class="form-required" for="university">University:</label></td>
+								<td><input name="university" value="Queen's University"></input></td>
 							</tr>	
 							<tr>
 								<td>&nbsp;</td>
-								<td><label class="form-required" for="student_run_elective_location">Location:</label></td>
-								<td><input name="student_run_elective_location" value="Kingston, ON"></input></td>
+								<td><label class="form-required" for="location">Location:</label></td>
+								<td><input name="location" value="Kingston, ON"></input></td>
 							</tr>	
 							<tr>
 								<td>&nbsp;</td>
-								<td><label class="form-required" for="student_run_elective_start">Start:</label></td>
+								<td><label class="form-required" for="start">Start:</label></td>
 								<td>
-									<select name="student_run_elective_start_month">
+									<select name="start_month">
 									<?php
 									echo build_option("","Month",true);
 										
@@ -612,7 +612,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 									}
 									?>
 									</select>
-									<select name="student_run_elective_start_year">
+									<select name="start_year">
 									<?php 
 									$cur_year = (int) date("Y");
 									$start_year = $cur_year - 6;
@@ -627,9 +627,9 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 							</tr>
 							<tr>
 								<td>&nbsp;</td>
-								<td><label class="form-required" for="student_run_elective_end">End:</label></td>
+								<td><label class="form-required" for="end">End:</label></td>
 								<td>
-									<select name="student_run_elective_end_month">
+									<select name="end_month">
 									<?php
 									echo build_option("","Month",true);
 										
@@ -638,7 +638,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 									}
 									?>
 									</select>
-									<select name="student_run_elective_end_year">
+									<select name="end_year">
 									<?php 
 									echo build_option("","Year",true);
 									$cur_year = (int) date("Y");
@@ -687,7 +687,6 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 			
 				<div class="clear">&nbsp;</div>
 				<form id="add_internal_award_form" name="add_internal_award_form" action="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" method="post" style="display:none;" >
-					<input type="hidden" name="action" value="add_internal_award"></input>
 					<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
 					<table class="mspr_form">
 						<colgroup>
@@ -701,7 +700,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 							</tr>
 							<tr>
 								<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
-									<input type="submit" class="button" value="Add Award" />
+									<input type="submit" name="action" class="button" value="Add" />
 									<div id="hide_internal_award_link" style="display:inline-block;">
 										<ul class="page-action-cancel">
 											<li><a id="hide_internal_award" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" class="strong-green">[ Cancel Adding Internal Award ]</a></li>
@@ -713,8 +712,8 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 						<tbody>
 							<tr>
 							<td>&nbsp;</td>
-							<td><label class="form-required" for="internal_award_title">Title:</label></td>
-							<td><select name="internal_award_title">
+							<td><label class="form-required" for="title">Title:</label></td>
+							<td><select name="title">
 								<?php 
 									$query		= "SELECT * FROM `student_awards_internal_types` where `disabled` = 0 order by `title` asc";
 									$results	= $db->GetAll($query);
@@ -728,8 +727,8 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 							</tr>	
 							<tr>
 							<td>&nbsp;</td>
-							<td><label class="form-required" for="internal_award_year">Year Awarded:</label></td>
-							<td><select name="internal_award_year">
+							<td><label class="form-required" for="year">Year Awarded:</label></td>
+							<td><select name="year">
 								<?php 
 								
 								$cur_year = (int) date("Y");

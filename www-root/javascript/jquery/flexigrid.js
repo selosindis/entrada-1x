@@ -1135,7 +1135,7 @@
 		.html('<span></span>');
 		$(g.bDiv).after(g.vDiv);
 		}
-		
+
 		if (p.resizable && p.width !='auto' && !p.nohresize) 
 		{
 		g.rDiv.className = 'hGrip';

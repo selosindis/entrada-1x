@@ -1,4 +1,3 @@
-
 <?php
 /**
  * Entrada [ http://www.entrada-project.org ]
@@ -18,10 +17,9 @@
  *
  * @author Organisation: Queen's University
  * @author Unit: School of Medicine
- * @author Developer: James Ellis <james.ellis@queensu.ca>
+ * @author Developer: Harry Brundage <hbrundage@qmed.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
- * @version $Id: edit.inc.php 1169 2010-05-01 14:18:49Z simpson $
  */
 
 if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
@@ -59,23 +57,31 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 		$course_details	= $db->GetRow($query);
 		
 		if ($course_details && $ENTRADA_ACL->amIAllowed(new GradebookResource($course_details["course_id"], $course_details["organisation_id"]), "read")) {
-			$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/gradebook/assessments?".replace_query(array("section" => "grade", "id" => $COURSE_ID, "step" => false)), "title" => "Grading Assessment");
-			
+			$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/gradebook/assessments?".replace_query(array("section" => "grade", "id" => $COURSE_ID, "step" => false)), "title" => "Grading Assessment");
+
 			$query = "	SELECT `assessments`.*,`assessment_marking_schemes`.`id` as `marking_scheme_id`, `assessment_marking_schemes`.`handler`
 						FROM `assessments`
 						LEFT JOIN `assessment_marking_schemes` ON `assessment_marking_schemes`.`id` = `assessments`.`marking_scheme_id`
 						WHERE `assessments`.`assessment_id` = ".$db->qstr($ASSESSMENT_ID);
-						
 			$assessment = $db->GetRow($query);
-			
-			if($assessment) {
+			if ($assessment) {
 				$GRAD_YEAR = $assessment["grad_year"];
 				
 				courses_subnavigation($course_details);
 
+				echo "<div class=\"content-small\">";
+				if ($COURSE_ID) {
+					$curriculum_path = curriculum_hierarchy($COURSE_ID);
+					if ((is_array($curriculum_path)) && (count($curriculum_path))) {
+						echo implode(" &gt; ", $curriculum_path);
+					}
+				} else {
+					echo "No Associated Course";
+				}
+				echo "</div>\n";
 				?>
-				<h1><?php echo $course_details["course_name"]; ?> Gradebook: <?php echo $assessment["name"]; ?> (Class of <?php echo $assessment["grad_year"]; ?>)</h1>
-			
+				<h1 class="event-title"><?php echo $assessment["name"]; ?> (Class of <?php echo $assessment["grad_year"]; ?>)</h1>
+				
 				<div style="float: right; text-align: right;">
 					<ul class="page-action">
 						<li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE . "/assessments/?" . replace_query(array("section" => "edit", "step" => false)); ?>" class="strong-green">Edit Assessment</a></li>
@@ -84,148 +90,167 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				<div style="clear: both"><br/></div>
 			
 				<?php
-				$query	= 	"SELECT b.`id` AS `proxy_id`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, b.`number`";
-				$query 	.=  ", g.`grade_id` AS `grade_id`, g.`value` AS `grade_value` ";
-				$query 	.=  " FROM `".AUTH_DATABASE."`.`user_data` AS b
-							  LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS c
-							  ON c.`user_id` = b.`id` AND c.`app_id`=".$db->qstr(AUTH_APP_ID)."
-							  AND c.`account_active`='true'
-							  AND (c.`access_starts`='0' OR c.`access_starts`<=".$db->qstr(time()).")
-							  AND (c.`access_expires`='0' OR c.`access_expires`>=".$db->qstr(time()).") ";
-				$query .=   " LEFT JOIN `".DATABASE_NAME."`.`assessment_grades` AS g ON b.`id` = g.`proxy_id` AND g.`assessment_id` = ".$db->qstr($assessment["assessment_id"])."\n";
-				$query .= 	" WHERE c.`group` = 'student' AND c.`role` = ".$db->qstr($GRAD_YEAR);
+				$query = "	SELECT b.`id` AS `proxy_id`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, b.`number`, g.`grade_id` AS `grade_id`, g.`value` AS `grade_value`
+							FROM `".AUTH_DATABASE."`.`user_data` AS b
+							LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS c
+							ON c.`user_id` = b.`id` AND c.`app_id`=".$db->qstr(AUTH_APP_ID)."
+							AND c.`account_active`='true'
+							AND (c.`access_starts`='0' OR c.`access_starts`<=".$db->qstr(time()).")
+							AND (c.`access_expires`='0' OR c.`access_expires`>=".$db->qstr(time()).")
+							LEFT JOIN `".DATABASE_NAME."`.`assessment_grades` AS g ON b.`id` = g.`proxy_id` AND g.`assessment_id` = ".$db->qstr($assessment["assessment_id"])."
+							WHERE c.`group` = 'student'
+							AND c.`role` = ".$db->qstr($GRAD_YEAR)."
+							ORDER BY b.`lastname` ASC, b.`firstname` ASC";
 				
 				$students = $db->GetAll($query);
 				$editable = $ENTRADA_ACL->amIAllowed(new GradebookResource($course_details["course_id"], $course_details["organisation_id"]), "update") ? "gradebook_editable" : "gradebook_not_editable";
-				if(count($students) >= 1): ?>
+				if (count($students) >= 1): ?>
 					<span id="assessment_name" style="display: none;"><?php echo $assessment["name"]; ?></span>
 					<div id="gradebook_grades">
-					<h2>Grades</h2>						
-					<table class="gradebook single <?php echo $editable; ?>">
-						<tbody>
-						<?php foreach($students as $key => $student): ?>
-							<tr id="grades<?php echo $student["proxy_id"]; ?>">
-								<td><?php echo $student["fullname"]; ?></td>
-								<td><?php echo $student["number"]; ?></td>
+						<h2>Grades</h2>
+						<table style="width: 440px" class="gradebook single <?php echo $editable; ?>">
+							<tbody>
 								<?php
-								if(isset($student["grade_id"])) {
-									$grade_id = $student["grade_id"];
-								} else {
-									$grade_id = "";
+								foreach ($students as $key => $student) {
+									if (isset($student["grade_id"])) {
+										$grade_id = $student["grade_id"];
+									} else {
+										$grade_id = "";
+									}
+									
+									if (isset($student["grade_value"])) {
+										$grade_value = format_retrieved_grade($student["grade_value"], $assessment);
+									} else {
+										$grade_value = "-";
+									}
+									?>
+									<tr id="grades<?php echo $student["proxy_id"]; ?>">
+										<td><?php echo $student["fullname"]; ?></td>
+										<td><?php echo $student["number"]; ?></td>
+										<td>
+											<span class="grade"
+												data-grade-id="<?php echo $grade_id; ?>"
+												data-assessment-id="<?php echo $assessment["assessment_id"]; ?>"
+												data-proxy-id="<?php echo $student["proxy_id"] ?>"
+											><?php echo $grade_value; ?></span>
+											<span class="gradesuffix" <?php echo (($grade_value === "-") ? "style=\"display: none;\"" : "") ?>>
+												<?php echo assessment_suffix($assessment); ?>
+											</span>
+										</td>
+									</tr>
+									<?php
 								}
-								if(isset($student["grade_value"])) {
-									$grade_value = format_retrieved_grade($student["grade_value"], $assessment);
-								} else {
-									$grade_value = "-";
-								} ?>
-									<td>
-										<span class="grade" 
-											data-grade-id="<?php echo $grade_id; ?>"
-											data-assessment-id="<?php echo $assessment["assessment_id"]; ?>"
-											data-proxy-id="<?php echo $student["proxy_id"] ?>"
-										><?php echo $grade_value; ?></span>
-										<span class="gradesuffix" <?php echo (($grade_value === "-") ? "style=\"display: none;\"" : "") ?>>
-											<?php echo assessment_suffix($assessment); ?>
-										</span>
-									</td>
-							</tr>
-						<?php endforeach; ?>
-						</tbody>
-					</table>
+								?>
+							</tbody>
+						</table>
 					</div>
 					<div id="gradebook_stats">
 						<h2>Statistics</h2>
 						<div id="graph"></div>
 					 	<?php 
-							switch($assessment["marking_scheme_id"]) {
+						switch($assessment["marking_scheme_id"]) {
 							case 1:
 							case 4:
-							//pass/fail
+								//pass/fail
 								$grades = array(0,0,0);
-								foreach($students as $key => $student) {
-									if($student["grade_value"] == "") {
-										$grades[2]++;
-									} else if($student["grade_value"] > 50){
+								$unentered = 0;
+
+								foreach ($students as $key => $student) {
+									if ($student["grade_value"] == "") {
+										$unentered++;
+									} elseif ($student["grade_value"] > 50){
 										$grades[0]++;
 									} else {
 										$grades[1]++;
 									}
 								}
-								$grade_data = "";
-								foreach($grades as $key => $grade) {
-									$grade_data .= "[$key, $grade],";
+
+								$grade_data = array();
+								foreach ($grades as $key => $grade) {
+									$grade_data[] = "[$key, $grade]";
 								}
 								?>
 								<script type="text/javascript" charset="utf-8">
-									var data = [<?php echo $grade_data; ?>];
+									var data = [<?php echo implode(", ", $grade_data); ?>];
 									var plotter = PlotKit.EasyPlot(
-										"pie", 
+										"pie",
 										{
-											"xTicks": [{v:0, label:"<?php echo $assessment["marking_scheme_id"] == 4 ? "Complete" : "Pass" ?>"}, 
-									          			{v:1, label:"<?php echo $assessment["marking_scheme_id"] == 4 ? "Incomplete" : "Fail" ?>"},
-														{v:2, label:"Not Entered"}],
-										}, 
-										$("graph"), 
+											"xTicks": [{v:0, label:"<?php echo $assessment["marking_scheme_id"] == 4 ? "Complete" : "Pass" ?>"},
+														{v:1, label:"<?php echo $assessment["marking_scheme_id"] == 4 ? "Incomplete" : "Fail" ?>"}]
+										},
+										$("graph"),
 										[data]
 									);
 								</script>
 								<br/>
-								<p>Unentered grades: <?php echo $grades[2]; ?></p>
+								<p>Unentered grades: <?php echo (int) $unentered; ?></p>
 								<?php
-								
 							break;
-							case 2: 
+							case 2:
 							case 3:
-							//percentage (numeric interpreted as percentage)
+								// Percentage (numeric interpreted as percentage)
 								$grades = array(0,0,0,0,0,0,0,0,0,0,0);
+
 								$sum = 0;
+
 								$entered = 0;
+								$unentered = 0;
+
 								$grade_values = array();
-								foreach($students as $key => $student) {
-									if($student["grade_value"] == "") {
-										$grades[10]++;
+								foreach ($students as $key => $student) {
+									if ($student["grade_value"] == "") {
+										//$grades[11]++;
+										$unentered++;
 									} else {
 										$sum += $student["grade_value"];
 										$entered++;
 										$grade_values[] = $student["grade_value"];
+
 										$key = floor($student["grade_value"] / 10);
 										$grades[$key]++;
 									}
 								}
-								$grade_data = "";
-								foreach($grades as $key => $grade) {
-									$grade_data .= "[$key, $grade],";
+
+								$grade_data = array();
+								foreach ($grades as $key => $grade) {
+									$grade_data[] = "[$key, $grade]";
 								}
 								sort($grade_values);
 								?>
 								<script type="text/javascript" charset="utf-8">
-									var data = [<?php echo $grade_data; ?>];
+									var data = [<?php echo implode(", ", $grade_data); ?>];
 									var plotter = PlotKit.EasyPlot(
-										"bar", 
+										"bar",
 										{
-											"xTicks": [{v:0, label:"0-9"}, 
-									          			{v:2, label:"20-29"},
-									          			{v:4, label:"40-49"},
-									          			{v:6, label:"60-69"},
-									          			{v:8, label:"80-89"},
-														{v:10, label:"Not Entered"}],
-										}, 
-										$("graph"), 
+											"xTicks": [{v:0, label:"0s"},
+														{v:1, label:"10s"},
+														{v:2, label:"20s"},
+														{v:3, label:"30s"},
+														{v:4, label:"40s"},
+														{v:5, label:"50s"},
+														{v:6, label:"60s"},
+														{v:7, label:"70s"},
+														{v:8, label:"80s"},
+														{v:9, label:"90s"},
+														{v:10, label:"100"}]
+										},
+										$("graph"),
 										[data]
 									);
 								</script>
 								<br/>
-								<p>Unentered grades: <?php echo $grades[10]; ?></p>
-								<p>Mean grade: <?php echo ($entered > 0 ? $sum / $entered : ""); ?>%</p>
-								<p>Median grade: <?php echo $grade_values[floor(count($grade_values)/2)]; ?>%</p>
+								<p>Unentered grades: <?php echo (int) $unentered; ?></p>
+								<p>Mean grade: <?php echo number_format(($entered > 0 ? $sum / $entered : ""), 0); ?>%</p>
+								<p>Median grade: <?php echo $grade_values[floor(count($grade_values) / 2)]; ?>%</p>
 								<?php
-							break;							
+							break;
 							default:
 								echo "No statistics for this marking scheme.";
-							break; 
-							} ?>
-							<button onclick="location.reload(true)">Refresh</button>
-							<button onclick="window.location='<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "io", "download" => "csv", "assessment_ids" => $ASSESSMENT_ID)); ?>'">Download CSV</button>
+							break;
+						}
+						?>
+						<button onclick="window.location='<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "io", "download" => "csv", "assessment_ids" => $ASSESSMENT_ID)); ?>'">Download CSV</button>
+						<button onclick="location.reload(true)">Refresh</button>
 					</div>
 				<?php
 				else:

@@ -17,10 +17,10 @@
  *
  * @author Organisation: Queen's University
  * @author Unit: School of Medicine
- * @author Developer: James Ellis <james.ellis@queensu.ca>
+ * @author Developer: Harry Brundage <hbrundage@qmed.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
-*/
+ */
 
 if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 	exit;
@@ -115,7 +115,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							$ERRORSTR[] = "The <strong>Marking Scheme</strong> field is a required field.";
 						}
 						
-						
 						// Sometimes requried field "number grade points total". Specifies what a numeric marking scheme assessment is "out of".
 						// Only required when marking scheme is numeric, ID 3, hardcoded.
 						if((isset($_POST["numeric_grade_points_total"])) && ($points_total = clean_input($_POST["numeric_grade_points_total"], array("notags", "trim")))) {
@@ -185,9 +184,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						}
 					break;
 					case 1 :
-						$PROCESSED = $assessment_details;
 					default :
-						continue;
+						$PROCESSED = $assessment_details;
 					break;
 				}
 
@@ -223,9 +221,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					<tbody>
 						<tr>
 							<td></td>
-							<td><label class="form-required">Assessment Gradebook</label></td>
+							<td><label class="form-required">Course Name</label></td>
 							<td>
-								<a href="<?php echo ENTRADA_URL; ?>/admin/gradebook?<?php echo replace_query(array("step" => false, "section" => "view")); ?>"><?php echo $course_details["course_name"]; ?></a>
+								<a href="<?php echo ENTRADA_URL; ?>/admin/gradebook?<?php echo replace_query(array("step" => false, "section" => "view")); ?>"><?php echo html_encode($course_details["course_name"]); ?></a>
 							</td>
 						</tr>
 						<tr>
@@ -238,9 +236,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						</tr>
 						<tr>
 							<td></td>
-							<td><label for="grad_year" class="form-required">Grad Year</label></td>
+							<td><label for="grad_year" class="form-required">Graduating Year</label></td>
 							<td>
-								<select id="grad_year" name="grad_year" style="width: 203px">
+								<select id="grad_year" name="grad_year" style="width: 250px">
 								<?php
 								for($year = (date("Y", time()) + 4); $year >= (date("Y", time()) - 1); $year--) {
 									echo "<option value=\"".(int) $year."\"".(($PROCESSED["grad_year"] == $year) ? " selected=\"selected\"" : "").">Class of ".html_encode($year)."</option>\n";
@@ -254,8 +252,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						</tr>
 						<tr>
 							<td></td>
-							<td><label for="description" class="form-nrequired">Description</label></td>
-							<td><textarea id="description" name="description" style="width: 243px"><?php echo html_encode($PROCESSED["description"]); ?></textarea></td>
+							<td style="vertical-align: top"><label for="description" class="form-nrequired">Assessment Description</label></td>
+							<td><textarea id="description" name="description" style="width: 99%; height: 50px"><?php echo html_encode($PROCESSED["description"]); ?></textarea></td>
 						</tr>
 						<tr>
 							<td colspan="3"><h2>Assessment Strategy</h2></td>
@@ -263,29 +261,37 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						<tr>
 							<td></td>
 							<td><label for="type" class="form-required">Type</label></td>
-							<td><select id="type" name="type" style="width: 203px">
-								<?php foreach($ASSESSMENT_TYPES as $type) {
+							<td>
+								<select id="type" name="type" style="width: 203px">
+								<?php
+								foreach($ASSESSMENT_TYPES as $type) {
 									echo "<option value=\"".$type."\"".(($PROCESSED["type"] == $type) ? " selected=\"selected\"" : "").">".$type."</option>";
-								} ?>
+								}
+								?>
 								</select>
 							</td>
 						</tr>
 						<tr>
 							<td></td>
 							<td><label for="marking_scheme_id" class="form-required">Marking Scheme</label></td>
-							<td><select id="marking_scheme_id" name="marking_scheme_id" style="width: 203px">
-								<?php foreach($MARKING_SCHEMES as $scheme) {
+							<td>
+								<select id="marking_scheme_id" name="marking_scheme_id" style="width: 203px">
+								<?php
+								foreach($MARKING_SCHEMES as $scheme) {
 									echo "<option value=\"".$scheme["id"]."\"".(($PROCESSED["marking_scheme_id"] == $scheme["id"]) ? " selected=\"selected\"" : "").">".$scheme["name"]."</option>";
 								
-								}?>
+								}
+								?>
 							</select>
 							</td>
 						</tr>
 						<tr id="numeric_marking_scheme_details" style="display: none;">
 							<td></td>
-							<td><label for="numeric_grade_points_total" class="form-required">Maximum Points</label></td>
-							<td><input type="text" id="numeric_grade_points_total" name="numeric_grade_points_total" value="<?php echo html_encode($PROCESSED["numeric_grade_points_total"]); ?>" maxlength="64" style="width: 243px" />
-								<p class="content-small">Enter a number here to specify the maximum points possible on this assessment. Example: <strong>20</strong> if the assessment is "out of" 20 points total.</p></td>					
+						<td style="vertical-align: top"><label for="numeric_grade_points_total" class="form-required">Maximum Points</label></td>
+						<td>
+							<input type="text" id="numeric_grade_points_total" name="numeric_grade_points_total" value="<?php echo html_encode($PROCESSED["numeric_grade_points_total"]); ?>" maxlength="3" style="width: 50px" />
+							<span class="content-small"><strong>Tip:</strong> Maximum points possible for this assessment (i.e. <strong>20</strong> for &quot;X out of 20).</span>
+						</td>
 						</tr>
 					</tbody>
 					</table>

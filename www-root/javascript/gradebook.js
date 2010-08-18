@@ -4,18 +4,19 @@ jQuery(document).ready(function($) {
 	var loading_html = '<img width="16" height="16" src="'+ENTRADA_URL+'/images/loading.gif">';
 	
 	var flexiopts = {
-		minwidth: 100,
+		resizable: false,
 		height: 'auto',
-		disableSelect: true
+		disableSelect: true,
+		showToggleBtn: false
 	};
 	
 	var gradebookize = function() {
 		$('table.gradebook.single').flexigrid($.extend({}, flexiopts, {
-			resizeable: false,
+			width: 440,
 			colModel: [
-				{display: 'Student Name', name: 'name', width: 150, sortable: false},
-				{display: 'Student Number', name: 'number', width: 100, sortable: false},
-				{display: $('#assessment_name').html(), name: 'name', width: 110, sortable: false}
+				{display: 'Student Name', name: 'name', width: 200, sortable: false},
+				{display: 'Student Number', name: 'number', width: 120, sortable: false},
+				{display: $('#assessment_name').html(), name: 'name', width: 120, sortable: false}
 			]
 		}));
 
@@ -80,29 +81,32 @@ jQuery(document).ready(function($) {
 			}
 		}).keyup(function(e){
 			var dest;
+			
 			switch(e.which) {
-				case 38:
-				case 40: 
-				// Go up or down a line
-				$('input', this).trigger('blur');
-				var pos = $(this).parent().parent().prevAll().length;
-				var row = $(this).parent().parent().parent();
-				if(e.which == 38) { //going up!
-					dest = row.prev();
-				} else {
-					dest = row.next();
-				}
-
-				if(dest) {
-					var next = dest.children()[pos];
-					if(next) {
-						next = $(next).find('.grade');
+				case 38: // Up
+				case 40: // Down
+				case 13: // Enter
+					// Go up or down a line
+					$('input', this).trigger('blur');
+					var pos = $(this).parent().parent().prevAll().length;
+					var row = $(this).parent().parent().parent();
+					if(e.which == 38) { //going up!
+						dest = row.prev();
+					} else {
+						dest = row.next();
 					}
-				}
 
-				$(next).trigger('click');
+					if(dest) {
+						var next = dest.children()[pos];
+						if(next) {
+							next = $(next).find('.grade');
+						}
+					}
+
+					$(next).trigger('click');
 				break;
 				default:
+				break;
 			}
 		});
 	};	

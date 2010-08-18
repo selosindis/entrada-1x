@@ -17,10 +17,10 @@
  *
  * @author Organisation: Queen's University
  * @author Unit: School of Medicine
- * @author Developer: James Ellis <james.ellis@queensu.ca>
+ * @author Developer: Harry Brundage <hbrundage@qmed.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
-*/
+ */
 
 if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 	exit;
@@ -228,7 +228,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					</tr>
 					<tr>
 						<td></td>
-						<td><label for="grad_year" class="form-required">Grad Year</label></td>
+						<td><label for="grad_year" class="form-required">Graduating Year</label></td>
 						<td>
 							<select id="grad_year" name="grad_year" style="width: 250px">
 							<?php

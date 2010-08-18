@@ -81,29 +81,32 @@ jQuery(document).ready(function($) {
 			}
 		}).keyup(function(e){
 			var dest;
+			
 			switch(e.which) {
-				case 38:
-				case 40: 
-				// Go up or down a line
-				$('input', this).trigger('blur');
-				var pos = $(this).parent().parent().prevAll().length;
-				var row = $(this).parent().parent().parent();
-				if(e.which == 38) { //going up!
-					dest = row.prev();
-				} else {
-					dest = row.next();
-				}
-
-				if(dest) {
-					var next = dest.children()[pos];
-					if(next) {
-						next = $(next).find('.grade');
+				case 38: // Up
+				case 40: // Down
+				case 13: // Enter
+					// Go up or down a line
+					$('input', this).trigger('blur');
+					var pos = $(this).parent().parent().prevAll().length;
+					var row = $(this).parent().parent().parent();
+					if(e.which == 38) { //going up!
+						dest = row.prev();
+					} else {
+						dest = row.next();
 					}
-				}
 
-				$(next).trigger('click');
+					if(dest) {
+						var next = dest.children()[pos];
+						if(next) {
+							next = $(next).find('.grade');
+						}
+					}
+
+					$(next).trigger('click');
 				break;
 				default:
+				break;
 			}
 		});
 	};	

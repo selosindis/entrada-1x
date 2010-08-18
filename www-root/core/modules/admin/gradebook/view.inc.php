@@ -1,4 +1,3 @@
-
 <?php
 /**
  * Entrada [ http://www.entrada-project.org ]
@@ -18,10 +17,10 @@
  *
  * @author Organisation: Queen's University
  * @author Unit: School of Medicine
- * @author Developer: James Ellis <james.ellis@queensu.ca>
+ * @author Developer: Harry Brundage <hbrundage@qmed.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
-*/
+ */
 
 if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 	exit;

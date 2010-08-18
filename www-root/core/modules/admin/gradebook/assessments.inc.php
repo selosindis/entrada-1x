@@ -15,15 +15,12 @@
  * You should have received a copy of the GNU General Public License
  * along with Entrada.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Primary controller file for the Events module.
- * /admin/events
- *
  * @author Organisation: Queen's University
  * @author Unit: School of Medicine
- * @author Developer: Matt Simpson <matt.simpson@queensu.ca>
+ * @author Developer: Harry Brundage <hbrundage@qmed.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
-*/
+ */
 
 if(!defined("PARENT_INCLUDED")) {
 	exit;
@@ -38,7 +35,7 @@ if(!defined("PARENT_INCLUDED")) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
-	define("IN_ASSESSMENTS",	true);
+	define("IN_ASSESSMENTS", true);
 
 	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/gradebook?".replace_query(array("section" => "view", "id" => $COURSE_ID, "step" => false)), "title" => "Assessments");
 

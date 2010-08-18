@@ -1,4 +1,3 @@
-
 <?php
 /**
  * Entrada [ http://www.entrada-project.org ]
@@ -18,10 +17,9 @@
  *
  * @author Organisation: Queen's University
  * @author Unit: School of Medicine
- * @author Developer: James Ellis <james.ellis@queensu.ca>
+ * @author Developer: Harry Brundage <hbrundage@qmed.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
- * @version $Id: edit.inc.php 1169 2010-05-01 14:18:49Z simpson $
  */
 
 if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
@@ -59,23 +57,31 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 		$course_details	= $db->GetRow($query);
 		
 		if ($course_details && $ENTRADA_ACL->amIAllowed(new GradebookResource($course_details["course_id"], $course_details["organisation_id"]), "read")) {
-			$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/gradebook/assessments?".replace_query(array("section" => "grade", "id" => $COURSE_ID, "step" => false)), "title" => "Grading Assessment");
-			
+			$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/gradebook/assessments?".replace_query(array("section" => "grade", "id" => $COURSE_ID, "step" => false)), "title" => "Grading Assessment");
+
 			$query = "	SELECT `assessments`.*,`assessment_marking_schemes`.`id` as `marking_scheme_id`, `assessment_marking_schemes`.`handler`
 						FROM `assessments`
 						LEFT JOIN `assessment_marking_schemes` ON `assessment_marking_schemes`.`id` = `assessments`.`marking_scheme_id`
 						WHERE `assessments`.`assessment_id` = ".$db->qstr($ASSESSMENT_ID);
-						
 			$assessment = $db->GetRow($query);
-			
-			if($assessment) {
+			if ($assessment) {
 				$GRAD_YEAR = $assessment["grad_year"];
 				
 				courses_subnavigation($course_details);
 
+				echo "<div class=\"content-small\">";
+				if ($COURSE_ID) {
+					$curriculum_path = curriculum_hierarchy($COURSE_ID);
+					if ((is_array($curriculum_path)) && (count($curriculum_path))) {
+						echo implode(" &gt; ", $curriculum_path);
+					}
+				} else {
+					echo "No Associated Course";
+				}
+				echo "</div>\n";
 				?>
-				<h1><?php echo $course_details["course_name"]; ?> Gradebook: <?php echo $assessment["name"]; ?> (Class of <?php echo $assessment["grad_year"]; ?>)</h1>
-			
+				<h1 class="event-title"><?php echo $assessment["name"]; ?> (Class of <?php echo $assessment["grad_year"]; ?>)</h1>
+				
 				<div style="float: right; text-align: right;">
 					<ul class="page-action">
 						<li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE . "/assessments/?" . replace_query(array("section" => "edit", "step" => false)); ?>" class="strong-green">Edit Assessment</a></li>
@@ -98,7 +104,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				
 				$students = $db->GetAll($query);
 				$editable = $ENTRADA_ACL->amIAllowed(new GradebookResource($course_details["course_id"], $course_details["organisation_id"]), "update") ? "gradebook_editable" : "gradebook_not_editable";
-				if(count($students) >= 1): ?>
+				if (count($students) >= 1): ?>
 					<span id="assessment_name" style="display: none;"><?php echo $assessment["name"]; ?></span>
 					<div id="gradebook_grades">
 						<h2>Grades</h2>
@@ -160,7 +166,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								}
 
 								$grade_data = array();
-								foreach($grades as $key => $grade) {
+								foreach ($grades as $key => $grade) {
 									$grade_data[] = "[$key, $grade]";
 								}
 								?>
@@ -191,7 +197,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								$unentered = 0;
 
 								$grade_values = array();
-								foreach($students as $key => $student) {
+								foreach ($students as $key => $student) {
 									if ($student["grade_value"] == "") {
 										//$grades[11]++;
 										$unentered++;

@@ -2,8 +2,6 @@
 /**
  * Entrada [ http://www.entrada-project.org ]
  *
- * Serves the categories list up in a select box.
- *
  * @author Organisation: Queen's University
  * @author Unit: School of Medicine
  * @author Developer: Jonathan Fingland <jonathan.fingland@queensu.ca>
@@ -31,7 +29,7 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 		require_mspr_models();
 		
 		
-		$user = new User($user_record["id"], $user_record["username"], $user_record["lastname"], $user_record["firstname"]);
+		$user = User::get($user_record["id"]);
 		process_mspr_admin($user);		
 		
 	}

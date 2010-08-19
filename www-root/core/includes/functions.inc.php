@@ -2704,8 +2704,16 @@ function poll_results($poll_id = 0) {
  * @param string $string
  * @return string
  */
-function html_encode($string) {
-	return htmlentities($string, ENT_QUOTES, DEFAULT_CHARSET);
+function html_encode($string = "") {
+	if (!defined("DEFAULT_CHARSET")) {
+		define("DEFAULT_CHARSET", "UTF-8");
+	}
+
+	if ($string) {
+		return htmlentities($string, ENT_QUOTES, DEFAULT_CHARSET);
+	}
+
+	return "";
 }
 
 /**
@@ -3544,7 +3552,7 @@ function generate_hash($num_chars = 32) {
 		$num_chars = 32;
 	}
 
-	return substr(md5(uniqid(rand(), 1)), 0, $num_chars);
+	return substr(hash("sha256", uniqid(rand(), 1)), 0, $num_chars);
 }
 
 /**

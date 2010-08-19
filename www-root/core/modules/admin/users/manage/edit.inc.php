@@ -9,7 +9,6 @@
  * @author Developer: Matt Simpson <matt.simpson@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
- * @version $Id: index.inc.php 1200 2010-06-10 19:07:17Z simpson $
 */
 
 if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
@@ -111,10 +110,32 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 							$ERROR++;
 							$ERRORSTR[] = "You must provide a valid	Account Type &gt; Role which this persons account will live under.";
 						}
+						if ($PROCESSED_ACCESS["group"] == "student") {
+							if (isset($_POST["entry_year"]) && isset($_POST["grad_year"])) {
+								$entry_year = clean_input($_POST["entry_year"],"int");
+								$grad_year = clean_input($_POST["grad_year"],"int");
+								$sanity_start = 2004;
+								$sanity_end = date("Y", time()) + ((date("m", time()) < 7) ?  3 : 4);
+								if ($grad_year <= $sanity_end && $grad_year >= $sanity_start) {
+									$PROCESSED["grad_year"] = $grad_year;
+								} else {
+									$ERROR++;
+									$ERRORSTR[] = "You must provide a valid graduation year";
+								}			
+								if ($entry_year <= $sanity_end && $entry_year >= $sanity_start) {
+									$PROCESSED["entry_year"] = $entry_year;
+								} else {
+									$ERROR++;
+									$ERRORSTR[] = "You must provide a valid program entry year";
+								}
+							}
+						} 
 					} else {
 						$ERROR++;
 						$ERRORSTR[] = "You must provide a valid	Account Type &gt; Group which this persons account will live under.";
 					}
+					
+					
 
 					/*
 					 * Required field "account_active" / Account Status.
@@ -392,8 +413,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 							$SUCCESS++;
 							$SUCCESSSTR[] = "You have successfully updated the <strong>".html_encode($PROCESSED["firstname"]." ".$PROCESSED["lastname"])."</strong> account in the authentication system.<br /><br />You will now be redirected to the users index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 
-							$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
-
+							header( "refresh:5;url=".$url );
+				
 							application_log("success", "Proxy ID [".$_SESSION["details"]["id"]."] successfully updated the proxy id [".$PROXY_ID."] user profile.");
 						} else {
 							$ERROR++;
@@ -480,14 +501,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 
 					$ONLOAD[] = "toggle_visibility_checkbox($('send_notification'), 'send_notification_msg')";
 
-					if ($ERROR) {
-						echo display_error();
-					}
-
-					if ($NOTICE) {
-						echo display_notice();
-					}
-
+					display_status_messages();
+					
 					if (@file_exists(STORAGE_USER_PHOTOS."/".$PROXY_ID."-official")) {
 						$size_official = getimagesize(STORAGE_USER_PHOTOS."/".$PROXY_ID."-official");
 					}
@@ -495,7 +510,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 					if (@file_exists(STORAGE_USER_PHOTOS."/".$PROXY_ID."-upload")) {
 						$size_upload = getimagesize(STORAGE_USER_PHOTOS."/".$PROXY_ID."-upload");
 					}
-					$ONLOAD[] = "provStateFunction(\$F($('user-edit')['country_id']))";	?>
+					$ONLOAD[] = "provStateFunction(\$F($('user-edit')['country_id']))";	
+					?>
 					<h1 style="margin-top: 0px">Edit Profile Details</h1>
 					<form name="user-edit" id="user-edit" action="<?php echo ENTRADA_URL; ?>/admin/users/manage?section=edit&id=<?php echo $PROXY_ID; ?>&amp;step=2" method="post" onsubmit="selIt()">
 						<table style="width: 100%" cellspacing="1" cellpadding="1" border="0" summary="Edit MEdTech Profile">
@@ -555,6 +571,35 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 									<td>
 										<select id="group" name="group" style="width: 209px"></select> <span class="content-small"><strong>Account Group</strong></span><br />
 										<select id="role" name="role" style="width: 209px; margin-top: 5px"></select> <span class="content-small"><strong>Account Role</strong></span>
+									</td>
+								</tr>
+								<tr style="<?php echo $PROCESSED_ACCESS["group"]=="student" ? "" : "display:none;"; ?>" id="entry_year_data">
+									<td>&nbsp;</td>
+									<td style="vertical-align: top"><label for="group" class="form-required">Year of Program Entry:</label></td>
+									<td>
+										<select id="entry_year" name="entry_year" style="width: 209px">
+										<?php
+											$selected_year = (isset($PROCESSED["entry_year"])) ? $PROCESSED["entry_year"] : (date("Y", time()) - ((date("m", time()) < 7) ?  1 : 0));
+											for($i = (date("Y", time()) + ((date("m", time()) < 7) ?  3 : 4)); $i >= 2004; $i--) {
+												$selected = $selected_year == $i;
+												echo build_option($i, $i, $selected);
+											} 
+										?>
+										</select>
+									</td>
+								</tr>
+								<tr style="<?php echo $PROCESSED_ACCESS["group"]=="student" ? "" : "display:none;"; ?>" id="grad_year_data">
+									<td>&nbsp;</td>
+									<td style="vertical-align: top"><label for="group" class="form-required">Graduating Year:</label></td>
+									<td>
+										<select id="grad_year" name="grad_year" style="width: 209px; margin-top: 5px">
+										<?php
+										for($i = (date("Y", time()) + ((date("m", time()) < 7) ?  3 : 4)); $i >= 2004; $i--) {
+											$selected = (isset($PROCESSED["grad_year"]) && $PROCESSED["grad_year"] == $i);
+											echo build_option($i, $i, $selected);
+										} 
+										?>
+										</select>
 									</td>
 								</tr>
 								<tr>
@@ -796,6 +841,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 
 										<script type="text/javascript">
 
+										
 										function provStateFunction(country_id) {
 											var url='<?php echo webservice_url("province"); ?>';
 											<?php
@@ -884,6 +930,21 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 											});
 											$('in_departments_list').update(ul);
 										}
+
+										document.observe("dom:loaded",function() {
+											var grad_year = $('grad_year_data');
+											var entry_year = $('entry_year_data');
+											$('group').observe("change",function() {
+												console.log($F('group'));
+												if ($F('group') == "student") {
+													grad_year.show();
+													entry_year.show();	
+												} else {
+													grad_year.hide();
+													entry_year.hide();	
+												}
+											});
+										});
 										</script>
 									</td>
 								</tr>

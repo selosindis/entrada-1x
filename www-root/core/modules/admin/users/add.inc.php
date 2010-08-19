@@ -192,6 +192,27 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 						$ERROR++;
 						$ERRORSTR[] = "You must provide a valid password for this user to login with.";
 					}
+					
+					if ($PROCESSED_ACCESS["group"] == "student") {
+						if (isset($_POST["entry_year"]) && isset($_POST["grad_year"])) {
+							$entry_year = clean_input($_POST["entry_year"],"int");
+							$grad_year = clean_input($_POST["grad_year"],"int");
+							$sanity_start = 2004;
+							$sanity_end = date("Y", time()) + ((date("m", time()) < 7) ?  3 : 4);
+							if ($grad_year <= $sanity_end && $grad_year >= $sanity_start) {
+								$PROCESSED["grad_year"] = $grad_year;
+							} else {
+								$ERROR++;
+								$ERRORSTR[] = "You must provide a valid graduation year";
+							}			
+							if ($entry_year <= $sanity_end && $entry_year >= $sanity_start) {
+								$PROCESSED["entry_year"] = $entry_year;
+							} else {
+								$ERROR++;
+								$ERRORSTR[] = "You must provide a valid program entry year";
+							}
+						}
+					} 
 
 					/**
 					 * Non-required field "prefix" / Prefix.
@@ -760,6 +781,35 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 					<select id="role" name="role" style="width: 209px; margin-top: 5px"></select> <span class="content-small"><strong>Account Role</strong></span>
 				</td>
 			</tr>
+			<tr style="<?php echo $PROCESSED_ACCESS["group"]=="student" ? "" : "display:none;"; ?>" id="entry_year_data">
+				<td>&nbsp;</td>
+				<td style="vertical-align: top"><label for="group" class="form-required">Year of Program Entry:</label></td>
+				<td>
+					<select id="entry_year" name="entry_year" style="width: 209px">
+					<?php
+					$selected_year = (isset($PROCESSED["entry_year"])) ? $PROCESSED["entry_year"] : (date("Y", time()) - ((date("m", time()) < 7) ?  1 : 0));
+					for($i = (date("Y", time()) + ((date("m", time()) < 7) ?  3 : 4)); $i >= 2004; $i--) {
+						$selected = $selected_year == $i;
+						echo build_option($i, $i, $selected);
+					} 
+					?>
+					</select>
+				</td>
+			</tr>
+			<tr style="<?php echo $PROCESSED_ACCESS["group"]=="student" ? "" : "display:none;"; ?>" id="grad_year_data">
+				<td>&nbsp;</td>
+				<td style="vertical-align: top"><label for="group" class="form-required">Graduating Year:</label></td>
+				<td>
+					<select id="grad_year" name="grad_year" style="width: 209px; margin-top: 5px">
+					<?php
+					for($i = (date("Y", time()) + ((date("m", time()) < 7) ?  3 : 4)); $i >= 2004; $i--) {
+						$selected = (isset($PROCESSED["grad_year"]) && $PROCESSED["grad_year"] == $i);
+						echo build_option($i, $i, $selected);
+					} 
+					?>
+					</select>
+				</td>
+			</tr>
 			<tr>
 				<td colspan="3">
 					<h2>Account Options</h2>
@@ -1023,6 +1073,28 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 							});
 							$('in_departments_list').update(ul);
 						}
+
+						var grad_year, entry_year;
+
+						function onGroupChange() {
+							if ($F('group') == "student") {
+								grad_year.show();
+								entry_year.show();	
+							} else {
+								grad_year.hide();
+								entry_year.hide();	
+							}
+						}
+						document.observe("dom:loaded",function() {
+							grad_year = $('grad_year_data');
+							entry_year = $('entry_year_data');
+							var group_observer = new Form.Element.Observer($('group'),0.1,function() {
+								group_observer.stop();
+								onGroupChange();
+									
+							});
+							$('group').observe("change",onGroupChange);
+						});
 					</script>
 				</td>
 			</tr>

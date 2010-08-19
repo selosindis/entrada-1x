@@ -4,7 +4,10 @@ require_once("ClerkshipElective.class.php");
 require_once("Collection.class.php");
 
 class ClerkshipRotations extends Collection {
-	public static function getCoreCompleted(User $user) {
+}
+
+class ClerkshipCoreCompleted extends ClerkshipRotations {
+	public static function get(User $user) {
 		global $db;
 		$user_id = $user->getID();
 		$completed_cutoff = strtotime("October 26, ".date("Y"));
@@ -27,10 +30,12 @@ class ClerkshipRotations extends Collection {
 				$rotations[] = $rotation;
 			}
 		}
-		return new self($rotations);
-	}
+		return new self($rotations);		
+	} 
+}
 
-	public static function getCorePending(User $user) {
+class ClerkshipCorePending extends ClerkshipRotations {
+	public static function get(User $user) {
 		global $db;
 		$user_id = $user->getID();
 		$completed_cutoff = strtotime("October 26, ".date("Y"));
@@ -56,9 +61,11 @@ class ClerkshipRotations extends Collection {
 			}
 		}
 		return new self($rotations);
-	}
+	} 
+}
 
-	public static function getElectiveCompleted(User $user) {
+class ClerkshipElectivesCompleted extends ClerkshipRotations {
+	public static function get(User $user) {
 		global $db;
 		$user_id = $user->getID();
 		$completed_cutoff = strtotime("October 26, ".date("Y"));
@@ -97,5 +104,5 @@ class ClerkshipRotations extends Collection {
 			}
 		}
 		return new self($electives);
-	}
+	} 
 }

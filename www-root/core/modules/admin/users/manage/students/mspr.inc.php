@@ -15,7 +15,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 } elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	header("Location: ".ENTRADA_URL);
 	exit;
-} elseif(!$ENTRADA_ACL->isLoggedInAllowed('mspr', 'read',true) || $user_record["group"] != "student") {
+} elseif(!$ENTRADA_ACL->isLoggedInAllowed('mspr', 'create',true) || $user_record["group"] != "student") {
 	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/".$MODULE."\\'', 15000)";
 
 	$ERROR++;
@@ -25,9 +25,9 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
 }  else {
 	
-	require_mspr_models();	
-	
-	$user = new User($user_record["id"], $user_record["username"], $user_record["lastname"], $user_record["firstname"]);
+	require_once("Models/MSPRs.class.php");
+	$PROXY_ID					= $user_record["id"];
+	$user = User::get($user_record["id"]);
 	
 	process_mspr_admin($user);
 	
@@ -35,9 +35,8 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 	$PAGE_META["description"]	= "";
 	$PAGE_META["keywords"]		= "";
 
-	$PROXY_ID					= $user_record["id"];
 
-	$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/users/manage/students?section=mspr", "title" => "MSPR");
+	$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/users/manage/students?section=mspr&id=".$PROXY_ID, "title" => "MSPR");
 
 	$PROCESSED		= array();
 	$HEAD[] = "<script language='javascript' src='".ENTRADA_URL."/javascript/ActiveDataEntryProcessor.js'></script>";
@@ -57,139 +56,197 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 	}
 
 	
-	$clerkship_core_completed = ClerkshipRotations::getCoreCompleted($user);
-	$clerkship_core_pending = ClerkshipRotations::getCorePending($user);
-	$clerkship_elective_completed = ClerkshipRotations::getElectiveCompleted($user);
+	$mspr = MSPR::get($user);
+	$is_closed = $mspr->isClosed();
 	
-	$clinical_evaluation_comments = ClinicalPerformanceEvaluations::get($user);
-	
-	$critical_enquiry = CriticalEnquiry::get($user);
-	$student_run_electives = StudentRunElectives::get($user);
-	$internal_awards = InternalAwardReceipts::get($user);
-	$external_awards = ExternalAwardReceipts::get($user);
-	$studentships = Studentships::get($user);
-	
-	$contributions = Contributions::get($user);
-	
-	$leaves_of_absence = LeavesOfAbsence::get($user);
-	$formal_remediations = FormalRemediations::get($user);
-	$disciplinary_actions = DisciplinaryActions::get($user);
-	
-	$community_health_and_epidemiology = CommunityHealthAndEpidemiology::get($user);
-	$research_citations = ResearchCitations::get($user);
+	$generated = $mspr->isGenerated();
+	$revision = $mspr->getGeneratedTimestamp();
+	$number = $user->getNumber();
+	if (isset($_GET['generate']) && $is_closed){
+		$mspr->saveMSPRFiles();
+		header("Location: ".ENTRADA_URL."/admin/users/manage/students?section=mspr&id=".$PROXY_ID);
+	} elseif ($type = $_GET['get']) {
+		$name = $user->getFirstname() . " " . $user->getLastname();
+		switch($type) {
+			case 'html':
+				header('Content-type: text/html');
+				header('Content-Disposition: filename="MSPR - '.$name.'('.$number.').html"');
+				
+				break;
+			case 'pdf':
+				header('Content-type: application/pdf');
+				header('Content-Disposition: attachment; filename="MSPR - '.$name.'('.$number.').pdf"');
+				break;
+			default:
+				$ERROR++;
+				$ERRORSTR[] = "Unknown file type: " . $type;
+		}
+		if (!$ERROR) {
+			ob_clear_open_buffers();
+			flush();
+			echo $mspr->getMSPRFile($type,$revision);
+			exit();	
+		}
 		
+	}
 	
+	$clerkship_core_completed = $mspr["Clerkship Core Completed"];
+	$clerkship_core_pending = $mspr["Clerkship Core Pending"];
+	$clerkship_elective_completed = $mspr["Clerkship Electives Completed"];
+	$clinical_evaluation_comments = $mspr["Clinical Performance Evaluation Comments"];
+	$critical_enquiry = $mspr["Critical Enquiry"];
+	$student_run_electives = $mspr["Student-Run Electives"];
+	$observerships = $mspr["Observerships"];
+	$international_activities = $mspr["International Activities"];
+	$internal_awards = $mspr["Internal Awards"];
+	$external_awards = $mspr["External Awards"];
+	$studentships = $mspr["Studentships"];
+	$contributions = $mspr["Contributions to Medical School"];
+	$leaves_of_absence = $mspr["Leaves of Absence"];
+	$formal_remediations = $mspr["Formal Remediation Received"];
+	$disciplinary_actions = $mspr["Disciplinary Actions"];
+	$community_health_and_epidemiology = $mspr["Community Health and Epidemiology"];
+	$research_citations = $mspr["Research"];
+				
+	$year = $user->getGradYear();
+	$class_data = MSPRClassData::get($year);
+	
+	$mspr_close = $mspr->getClosedTimestamp();
+	
+	if (!$mspr_close) { //no custom time.. use the class default
+		$mspr_close = $class_data->getClosedTimestamp();	
+	}
+		
 	display_status_messages();
+	add_mspr_management_sidebar();
+	
 ?>
-<h1>Medical School Performance Report</h1> 
-(Dean's Letter)
+ 
+<h1>Medical School Performance Report<?php echo ($mspr->isAttentionRequired()) ? ": Attention Required" : ""; ?></h1> 
 
-<div class="section">
-	<h2 title="Clerkship Core Rotations Completed Satisfactorily to Date Section">Clerkship Core Rotations Completed Satisfactorily to Date</h2>
-	<div id="clerkship-core-rotations-completed-satisfactorily-to-date-section"><?php display_clerkship_core_completed($user); ?></div>
-
-</div>
-<div class="section">
-	<h2 title="Clerkship Core Rotations Pending Section" >Clerkship Core Rotations Pending</h2>
-	<div id="clerkship-core-rotations-pending-section"><?php display_clerkship_core_pending($user); ?></div>
-</div>
-<div class="section">
-	<h2 title="Clerkship Electives Completed Satisfactorily to Date Section" >Clerkship Electives Completed Satisfactorily to Date</h2>
-	<div id="clerkship-electives-completed-satisfactorily-to-date-section"><?php display_clerkship_elective_completed($user); ?></div>
-
-</div>
-<div class="section">
-	<?php 
-	$show_clineval_form =  ($_GET['show'] == "clineval_form");
-	?>	
-	<h2 title="Clinical Performance Evaluation Comments Section">Clinical Performance Evaluation Comments</h2>
-	<div id="clinical-performance-evaluation-comments-section">
-	
-	<div id="add_clineval_link" style="float: right;<?php if ($show_clineval_form) { echo "display:none;"; }   ?>">
-		<ul class="page-action">
-			<li><a id="add_clineval" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&show=clineval_form&id=<?php echo $PROXY_ID; ?>" class="strong-green">Add Clinical Performance Evaluation Comment</a></li>
-		</ul>
+<?php 
+	if ($is_closed) {
+		?>
+<div class="display-notice"><p><strong>Note: </strong>This MSPR is now <strong>closed</strong> to student submissions. (Deadline was <?php echo date("F j, Y \a\\t g:i a",$mspr_close); ?>.) You may continue to approve, unapprove, or reject submissions, however students are unable to submit new data.</p>
+	<?php if ($generated) {	?>
+	<p>The latest revision of this MSPR is available in HTML and PDF below: </p>
+	<span class="file-block"><a href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>&get=html"><img src="<?php echo ENTRADA_URL; ?>/serve-icon.php?ext=html" /> HTML</a>&nbsp;&nbsp;&nbsp;<a href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>&get=pdf"><img src="<?php echo ENTRADA_URL; ?>/serve-icon.php?ext=pdf" /> PDF</a></span>
+	<div class="clearfix">&nbsp;</div>
+	<span class="last-update">Last Updated: <?php echo date("F j, Y \a\\t g:i a",$revision); ?></span>
+	<?php }?>
+	<hr />
+	<a href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&generate&id=<?php echo $PROXY_ID; ?>">Generate Report</a>
 	</div>
-	<div class="clear">&nbsp;</div>
-	<form id="add_clineval_form" name="add_clineval_form" action="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" method="post" <?php if (!$show_clineval_form) { echo "style=\"display:none;\""; }   ?> >
-		<input type="hidden" name="action" value="add_clineval_comment"></input>
-		<input type="hidden" name="user_id" value="<?php echo $PROXY_ID; ?>"></input>
-		<table class="mspr_form">
-			<colgroup>
-				<col width="3%"></col>
-				<col width="25%"></col>
-				<col width="72%"></col>
-			</colgroup>
-			<tfoot>
-				<tr>
-					<td colspan="3">&nbsp;</td>
-				</tr>
-				<tr>
-					<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
-						<input type="submit" class="button" value="Add Comment" />
-						<div id="hide_clineval_link" style="display:inline-block;">
-							<ul class="page-action-cancel">
-								<li><a id="hide_clineval" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" class="strong-green">[ Cancel Adding Comment ]</a></li>
-							</ul>
-						</div>
-					</td>
-				</tr>
-			</tfoot>
-			<tbody>
-				<tr>
-				<td>&nbsp;</td>
-				<td><label class="form-required" for="clineval_comment_source">Source:</label></td>
-				<td><input type="text" name="clineval_comment_source"></input></td>
-				</tr>	
-				<tr>
-				<td>&nbsp;</td>
-				<td><label class="form-required" for="clineval_comment_text">Comment:</label></td>
-				<td><textarea name="clineval_comment_text"></textarea></td>
-				</tr>
-			</tbody>
-		
-		</table>	
+		<?php
+	} elseif ($mspr_close) {
+		?>
+<div class="display-notice"><strong>Note: </strong>The student submission deadline is <?php echo date("F j, Y \a\\t g:i a",$mspr_close); ?>. You may continue to approve, unapprove, or reject submissions after this date, however students will be unable to submit new data.</div>
+		<?php
+	}
+?>
+
+<div class="mspr-tree">
+
+	<a href="#" onclick='document.fire("CollapseHeadings:expand-all");'>Expand All</a> / <a href="#" onclick='document.fire("CollapseHeadings:collapse-all");'>Collapse All</a>
+
+	<h2 title="Information Requiring Approval">Information Requiring Approval</h2>
+	<div id="information-requiring-approval">
 	
-		<div class="clear">&nbsp;</div>
-	</form>
-
-
-	<div id="clinical_performance_eval_comments"><?php display_clineval_admin($user); ?></div>
-
-	<script language="javascript">
-
-	var clineval_comments = new ActiveDataEntryProcessor({
-		url : '<?php echo webservice_url("mspr-admin"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=clineval',
-		data_destination: $('clinical_performance_eval_comments'),
-		new_form: $('add_clineval_form'),
-		remove_forms_selector: '.remove_clineval_form',
-		new_button: $('add_clineval_link'),
-		hide_button: $('hide_clineval')
-		
-	});
-
-	</script>
-	</div>
-</div>
-<div class="section">
-	<h2 title="Extracurricular Learning Activities Section">Extra-curricular Learning Activities</h2>
-	<div id="extracurricular-learning-activities-section" >
-		<div class="subsection">
-			<h3>Observerships</h3>
+		<div class="section">
+			<h3 title="Contributions to Medical School" class="collapsable<?php echo ($contributions->isAttentionRequired()) ? "" : " collapsed"; ?>">Contributions to Medical School</h3>
+			<div id="contributions-to-medical-school">
+				<?php echo display_contributions_admin($contributions); ?>
+			</div>
+			<script language="javascript">
+				var contributions = new ActiveApprovalProcessor({
+					url : '<?php echo webservice_url("mspr-admin"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=contributions',
+					data_destination: $('contributions-to-medical-school'),
+					action_form_selector: '#contributions-to-medical-school .entry form',
+					section: "contributions"
+				});
+			</script>
 		</div>
-		<div class="subsection">
-			<h3>Student-Run Electives</h3>
+		
+		<div class="section">
+			<h3 title="Critical Enquiry" class="collapsable<?php echo ($critical_enquiry && $critical_enquiry->isAttentionRequired()) ? "" : " collapsed"; ?>">Critical Enquiry</h3>
+			<div id="critical-enquiry">
+				<div id="critical_enquiry"><?php echo display_critical_enquiry_admin($critical_enquiry); ?></div>
+				<script language="javascript">
+				var critical_enquiry = new ActiveApprovalProcessor({
+					url : '<?php echo webservice_url("mspr-admin"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=critical_enquiry',
+					data_destination: $('critical_enquiry'),
+					action_form_selector: '#critical_enquiry .entry form',
+					section: "critical_enquiry"
+				});
+				
+				</script>
+			</div>
+		</div>
+		
+		<div class="section">
+			<h3 title="Community Health and Epidemiology" class="collapsable<?php echo ($community_health_and_epidemiology && $community_health_and_epidemiology->isAttentionRequired()) ? "" : " collapsed"; ?>">Community Health and Epidemiology</h3>
+			<div id="community-health-and-epidemiology">
+				<div id="community_health_and_epidemiology"><?php echo display_community_health_and_epidemiology_admin($community_health_and_epidemiology); ?></div>
+				<script language="javascript">
+				var community_health_and_epidemiology = new ActiveApprovalProcessor({
+					url : '<?php echo webservice_url("mspr-admin"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=community_health_and_epidemiology',
+					data_destination: $('community_health_and_epidemiology'),
+					action_form_selector: '#community_health_and_epidemiology .entry form',
+					section: "community_health_and_epidemiology"
+				});
+				
+				</script>
+			</div>
+		</div>
+		
+		<div class="section">
+			<h3 title="Research" class="collapsable<?php echo ($research_citations->isAttentionRequired()) ? "" : " collapsed"; ?>">Research</h3>
+			<div id="research">
+				<?php echo display_research_citations_admin($research_citations); ?>
+			</div>
+			<script language="javascript">
+				var research_citations = new ActiveApprovalProcessor({
+					url : '<?php echo webservice_url("mspr-admin"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=research_citations',
+					data_destination: $('research'),
+					action_form_selector: '#research .entry form',
+					section: "research"
+				});
+			
+			</script>
+		</div>
+		
+		<div class="section">
+			<h3 title="External Awards" class="collapsable<?php echo ($external_awards->isAttentionRequired()) ? "" : " collapsed"; ?>">External Awards</h3>
+			<div id="external-awards">
+				<div id="external_awards"><?php echo display_external_awards_admin($external_awards); ?></div>
+				<script language="javascript">
+					var external_awards = new ActiveApprovalProcessor({
+						url : '<?php echo webservice_url("mspr-admin"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=external_awards',
+						data_destination: $('external_awards'),
+						action_form_selector: '#external_awards .entry form',
+						section: "external_awards"
+					});
+				
+				</script>
+			</div>
+		</div>
+	</div>
+
+	<h2 title="Required Information Section">Information Requiring Entry</h2>
+	<div id="required-information-section">
 	
-			<div id="add_student_run_elective_link" style="float: right;<?php if ($show_student_run_elective_form) { echo "display:none;"; }   ?>">
+		<div class="section">
+			<h3 title="Clinical Performance Evaluation Comments Section" class="collapsable collapsed">Clinical Performance Evaluation Comments</h3>
+			<div id="clinical-performance-evaluation-comments-section">
+			
+			<div id="add_clineval_link" style="float: right;">
 				<ul class="page-action">
-					<li><a id="add_student_run_elective" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&show=student_run_elective_form&id=<?php echo $PROXY_ID; ?>" class="strong-green">Add Student Run Elective</a></li>
+					<li><a id="add_clineval" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" class="strong-green">Add Clinical Performance Evaluation Comment</a></li>
 				</ul>
 			</div>
-			
 			<div class="clear">&nbsp;</div>
-			<form id="add_student_run_elective_form" name="add_student_run_elective_form" action="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" method="post" <?php if (!$show_student_run_elective_form) { echo "style=\"display:none;\""; }   ?> >
-				<input type="hidden" name="action" value="add_student_run_elective"></input>
-				<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
+			<form id="add_clineval_form" name="add_clineval_form" action="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" method="post" style="display:none;" >
+				<input type="hidden" name="user_id" value="<?php echo $PROXY_ID; ?>"></input>
 				<table class="mspr_form">
 					<colgroup>
 						<col width="3%"></col>
@@ -202,10 +259,10 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 						</tr>
 						<tr>
 							<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
-								<input type="submit" class="button" value="Add SRE" />
-								<div id="hide_student_run_elective_link" style="display:inline-block;">
+								<input type="submit" class="button" name="action" value="Add" />
+								<div id="hide_clineval_link" style="display:inline-block;">
 									<ul class="page-action-cancel">
-										<li><a id="hide_student_run_elective" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" class="strong-green">[ Cancel Adding Student-Run Elective ]</a></li>
+										<li><a id="hide_clineval" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" class="strong-green">[ Cancel Adding Comment ]</a></li>
 									</ul>
 								</div>
 							</td>
@@ -213,72 +270,14 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 					</tfoot>
 					<tbody>
 						<tr>
-							<td>&nbsp;</td>
-							<td><label class="form-required" for="student_run_elective_group_name">Group Name:</label></td>
-							<td><input name="student_run_elective_group_name"></input></td>
+						<td>&nbsp;</td>
+						<td><label class="form-required" for="source">Source:</label></td>
+						<td><input type="text" name="source"></input></td>
 						</tr>	
 						<tr>
-							<td>&nbsp;</td>
-							<td><label class="form-required" for="student_run_elective_university">University:</label></td>
-							<td><input name="student_run_elective_university" value="Queen's University"></input></td>
-						</tr>	
-						<tr>
-							<td>&nbsp;</td>
-							<td><label class="form-required" for="student_run_elective_location">Location:</label></td>
-							<td><input name="student_run_elective_location" value="Kingston, ON"></input></td>
-						</tr>	
-						<tr>
-							<td>&nbsp;</td>
-							<td><label class="form-required" for="student_run_elective_start">Start:</label></td>
-							<td>
-								<select name="student_run_elective_start_month">
-								<?php
-								echo build_option("","Month",true);
-									
-								for($month_num = 1; $month_num <= 12; $month_num++) {
-									echo build_option($month_num, getMonthName($month_num));
-								}
-								?>
-								</select>
-								<select name="student_run_elective_start_year">
-								<?php 
-								$cur_year = (int) date("Y");
-								$start_year = $cur_year - 6;
-								$end_year = $cur_year + 4;
-								
-								for ($opt_year = $start_year; $opt_year <= $end_year; ++$opt_year) {
-										echo build_option($opt_year, $opt_year, $opt_year == $cur_year);
-								}
-								?>
-								</select>
-							</td>
-						</tr>
-						<tr>
-							<td>&nbsp;</td>
-							<td><label class="form-required" for="student_run_elective_end">End:</label></td>
-							<td>
-								<select name="student_run_elective_end_month">
-								<?php
-								echo build_option("","Month",true);
-									
-								for($month_num = 1; $month_num <= 12; $month_num++) {
-									echo build_option($month_num, getMonthName($month_num));
-								}
-								?>
-								</select>
-								<select name="student_run_elective_end_year">
-								<?php 
-								echo build_option("","Year",true);
-								$cur_year = (int) date("Y");
-								$start_year = $cur_year - 6;
-								$end_year = $cur_year + 4;
-								
-								for ($opt_year = $start_year; $opt_year <= $end_year; ++$opt_year) {
-										echo build_option($opt_year, $opt_year, false);
-								}
-								?>
-								</select>
-							</td>
+						<td>&nbsp;</td>
+						<td><label class="form-required" for="text">Comment:</label></td>
+						<td><textarea name="text"></textarea></td>
 						</tr>
 					</tbody>
 				
@@ -286,261 +285,564 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 			
 				<div class="clear">&nbsp;</div>
 			</form>
-			<div id="student_run_electives"><?php display_student_run_electives_admin($user); ?></div>
+		
+		
+			<div id="clinical_performance_eval_comments"><?php echo display_clineval_admin($clinical_evaluation_comments); ?></div>
 		
 			<script language="javascript">
-			var student_run_electives = new ActiveDataEntryProcessor({
-				url : '<?php echo webservice_url("mspr-admin"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=student_run_electives',
-				data_destination: $('student_run_electives'),
-				new_form: $('add_student_run_elective_form'),
-				remove_forms_selector: '.remove_student_run_elective_form',
-				new_button: $('add_student_run_elective_link'),
-				hide_button: $('hide_student_run_elective')
+		
+			var clineval_comments = new ActiveDataEntryProcessor({
+				url : '<?php echo webservice_url("mspr-admin"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=clineval',
+				data_destination: $('clinical_performance_eval_comments'),
+				new_form: $('add_clineval_form'),
+				remove_forms_selector: '.remove_clineval_form',
+				new_button: $('add_clineval_link'),
+				hide_button: $('hide_clineval')
+				
+			});
+		
+			</script>
+			</div>
+		</div>
+		
+		<div class="section">
+			<h3 title="Summer Studentships" class="collapsable collapsed">Summer Studentships</h3>
+			<div id="summer-studentships">
+			
+			<div id="add_studentship_link" style="float: right;">
+				<ul class="page-action">
+					<li><a id="add_studentship" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&show=studentship_form&id=<?php echo $PROXY_ID; ?>" class="strong-green">Add Studentship</a></li>
+				</ul>
+			</div>
+			<div class="clear">&nbsp;</div>
+			
+			
+			<form id="add_studentship_form" name="add_studentship_form" action="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" method="post" style="display:none;" >
+				<input type="hidden" name="user_id" value="<?php echo $PROXY_ID; ?>"></input>
+		
+				<table class="mspr_form">
+					<colgroup>
+						<col width="3%"></col>
+						<col width="25%"></col>
+						<col width="72%"></col>
+					</colgroup>
+					<tfoot>
+						<tr>
+							<td colspan="3">&nbsp;</td>
+						</tr>
+						<tr>
+							<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
+								<input type="submit" name="action" value="Add" />
+								<div id="hide_studenstship_link" style="display:inline-block;">
+									<ul class="page-action-cancel">
+										<li><a id="hide_studentship" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" class="strong-green">[ Cancel Adding Studentship ]</a></li>
+									</ul>
+								</div>
+							</td>
+						</tr>
+					</tfoot>
+					<tbody>
+						<tr>
+						<td>&nbsp;</td>
+						<td><label class="form-required" for="title">Title:</label></td>
+						<td><input type="text" name="title"></input></td>
+						</tr>	
+						<tr>
+						<td>&nbsp;</td>
+						<td><label class="form-required" for="year">Year Awarded:</label></td>
+						<td><select name="year">
+							<?php 
+							
+							$cur_year = (int) date("Y");
+							$start_year = $cur_year - 4;
+							$end_year = $cur_year + 4;
+							
+							for ($opt_year = $start_year; $opt_year <= $end_year; ++$opt_year) {
+									echo build_option($opt_year, $opt_year, $opt_year == $cur_year);
+							}
+							
+							?>
+							</select></td>
+						</tr>
+					</tbody>
+				
+				</table>	
+			
+				<div class="clear">&nbsp;</div>
+			</form>
+			
+			<div id="studentships"><?php echo display_studentships_admin($studentships); ?></div>
+			</div>
+			<script language="javascript">
+			var studentships = new ActiveDataEntryProcessor({
+				url : '<?php echo webservice_url("mspr-admin"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=studentships',
+				data_destination: $('studentships'),
+				new_form: $('add_studentship_form'),
+				remove_forms_selector: '.remove_studentship_form',
+				new_button: $('add_studentship_link'),
+				hide_button: $('hide_studentship')
 		
 			});
 			
 			</script>
 		</div>
-	</div>
-</div>
-<div class="section">
-<h2>Critical Enquiry</h2>
-</div>
-<div class="section">
-<h2>Community Health and Epidemiology</h2>
-</div>
-<div class="section">
-<h2>Research</h2>
-</div>
-<div class="section">
-<h2>Academic Awards</h2>
-<div class="subsection">
-	<?php 
-	$show_internal_awards_form =  ($_GET['show'] == "internal_awards_form");
-	?>	
-	<h3>Internal Awards</h3>
 
-	<div id="add_internal_award_link" style="float: right;<?php if ($show_internal_award_form) { echo "display:none;"; }   ?>">
-		<ul class="page-action">
-			<li><a id="add_internal_award" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&show=internal_award_form&id=<?php echo $PROXY_ID; ?>" class="strong-green">Add Internal Award</a></li>
-		</ul>
-	</div>
-	<div class="clear">&nbsp;</div>
-	<form id="add_internal_award_form" name="add_internal_award_form" action="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" method="post" <?php if (!$show_internal_award_form) { echo "style=\"display:none;\""; }   ?> >
-		<input type="hidden" name="action" value="add_internal_award"></input>
-		<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
-		<table class="mspr_form">
-			<colgroup>
-				<col width="3%"></col>
-				<col width="25%"></col>
-				<col width="72%"></col>
-			</colgroup>
-			<tfoot>
-				<tr>
-					<td colspan="3">&nbsp;</td>
-				</tr>
-				<tr>
-					<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
-						<input type="submit" class="button" value="Add Award" />
-						<div id="hide_internal_award_link" style="display:inline-block;">
-							<ul class="page-action-cancel">
-								<li><a id="hide_internal_award" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" class="strong-green">[ Cancel Adding Internal Award ]</a></li>
-							</ul>
-						</div>
-					</td>
-				</tr>
-			</tfoot>
-			<tbody>
-				<tr>
-				<td>&nbsp;</td>
-				<td><label class="form-required" for="internal_award_title">Title:</label></td>
-				<td><select name="internal_award_title">
-					<?php 
-						$query		= "SELECT * FROM `student_awards_internal_types` where `disabled` = 0 order by `title` asc";
-						$results	= $db->GetAll($query);
-						if ($results) {
-							foreach ($results as $result) {
-								echo build_option($result['id'], clean_input($result["title"], array("notags", "specialchars")));
-							}
-						}
-					?>
-					</select></td>
-				</tr>	
-				<tr>
-				<td>&nbsp;</td>
-				<td><label class="form-required" for="internal_award_year">Year Awarded:</label></td>
-				<td><select name="internal_award_year">
-					<?php 
+		<div class="section">
+
+			<h3 title="International Activities" class="collapsable collapsed">International Activities</h3>
+			<div id="international-activities">
+				<script>
+					document.observe("dom:loaded",function() {
+						$('int_act_start').observe('focus',function(e) {
+							showCalendar('',this,this,null,null,0,30,1);
+						}.bind($('int_act_start')));
+						$('int_act_end').observe('focus',function(e) {
+							showCalendar('',this,this,null,null,0,30,1);
+						}.bind($('int_act_end')));
+					});
+				</script>
+				
+					<div id="add_int_act_link" style="float: right;<?php if ($show_int_act_form) { echo "display:none;"; }   ?>">
+					<ul class="page-action">
+						<li><a id="add_int_act" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&show=int_act_form&id=<?php echo $PROXY_ID; ?>" class="strong-green">Add Activity</a></li>
+					</ul>
+				</div>
+				
+				<div class="clear">&nbsp;</div>
+				<form id="add_int_act_form" name="add_int_act_form" action="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" method="post" <?php if (!$show_int_act_form) { echo "style=\"display:none;\""; }   ?> >
+					<input type="hidden" name="student_id" value="<?php echo $user->getID(); ?>"></input>
+					<table class="mspr_form">
+						<colgroup>
+							<col width="3%"></col>
+							<col width="25%"></col>
+							<col width="25%"></col>
+							<col width="47%"></col>
+						</colgroup>
+						<tfoot>
+							<tr>
+								<td colspan="4">&nbsp;</td>
+							</tr>
+							<tr>
+								<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
+									<input type="submit" name="action" class="button" value="Add" />
+									<div id="hide_int_act_link" style="display:inline-block;">
+										<ul class="page-action-cancel">
+											<li><a id="hide_int_act" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" class="strong-green">[ Cancel Adding International Activity ]</a></li>
+										</ul>
+									</div>
+								</td>
+							</tr>
+						</tfoot>
+						<tbody>
+							<tr>
+								<td>&nbsp;</td>
+								<td><label class="form-required" for="title">Title:</label></td>
+	 							<td><input name="title"></input></td><td><span class="content-small"><strong>Example:</strong> Geriatrics Observership</span></td>
+							</tr>	
+							<tr>
+								<td>&nbsp;</td>
+								<td><label class="form-required" for="site">Site:</label></td>
+								<td><input name="site"></input></td><td><span class="content-small"><strong>Example:</strong> Tokyo Metropolitan Hospital</span></td>
+							</tr>	
+							<tr>
+								<td>&nbsp;</td>
+								<td><label class="form-required" for="location">Location:</label></td>
+								<td><input name="location"></input></td><td><span class="content-small"><strong>Example:</strong> Tokyo, Japan</span></td>
+							</tr>	
+							<tr>
+								<td>&nbsp;</td>
+								<td><label class="form-required" for="start">Start Date:</label></td>
+								<td>
+									<input type="text" name="start" id="int_act_start"></input></td><td><span class="content-small"><strong>Format:</strong> yyyy-mm-dd</span>
+								</td>
+							</tr>
+							<tr>
+								<td>&nbsp;</td>
+								<td><label class="form-required" for="end">End Date:</label></td>
+								<td>
+									<input type="text" name="end" id="int_act_end"></input></td><td>
+								</td>
+							</tr>
+						</tbody>
 					
-					$cur_year = (int) date("Y");
-					$start_year = $cur_year - 4;
-					$end_year = $cur_year + 4;
-					
-					for ($opt_year = $start_year; $opt_year <= $end_year; ++$opt_year) {
-							echo build_option($opt_year, $opt_year, $opt_year == $cur_year);
-					}
-					
-					?>
-					</select></td>
-				</tr>
-			</tbody>
+					</table>	
+				
+					<div class="clear">&nbsp;</div>
+				</form>
+				<div id="int_acts"><?php echo display_international_activities_admin($international_activities); ?></div>
+			
+				<script language="javascript">
+				var int_acts = new ActiveDataEntryProcessor({
+					url : '<?php echo webservice_url("mspr-admin"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=int_acts',
+					data_destination: $('int_acts'),
+					new_form: $('add_int_act_form'),
+					remove_forms_selector: '.remove_international_activity_form',
+					new_button: $('add_int_act_link'),
+					hide_button: $('hide_int_act')
+			
+				});
+				
+				</script>
+			</div>
+		</div>
 		
-		</table>	
-	
-		<div class="clear">&nbsp;</div>
-	</form>
-	<div id="internal_awards"><?php display_internal_awards_admin($user); ?></div>
-
-	<script language="javascript">
-	var internal_awards = new ActiveDataEntryProcessor({
-		url : '<?php echo webservice_url("mspr-admin"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=internal_awards',
-		data_destination: $('internal_awards'),
-		new_form: $('add_internal_award_form'),
-		remove_forms_selector: '.remove_internal_award_form',
-		new_button: $('add_internal_award_link'),
-		hide_button: $('hide_internal_award')
-
-	});
-	
-	</script>
-</div>
-<div class="subsection">
-	 
-	<h3>External Awards</h3>
-	<div class="clear">&nbsp;</div>
-	<div id="external_awards"><?php display_external_awards_admin($user); ?></div>
-	<script language="javascript">
-		var external_awards = new ActiveApprovalProcessor({
-			url : '<?php echo webservice_url("mspr-admin"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=external_awards',
-			data_destination: $('external_awards'),
-			approve_forms_selector: '.approve_external_award_form',
-			unapprove_forms_selector: '.unapprove_external_award_form'
-		});
-	
-	</script>
-</div>
-</div>
-<div class="section">
-<?php 
-	$show_studentship_form =  ($_GET['show'] != "studentship_form");
-?>	
-	<h2>Summer Studentships</h2>
-	
-	<div id="add_studentship_link" style="float: right;<?php if (!$show_studentship_form) { echo "display:none;"; }   ?>">
-		<ul class="page-action">
-			<li><a id="add_studentship" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&show=studentship_form&id=<?php echo $PROXY_ID; ?>" class="strong-green">Add Studentship</a></li>
-		</ul>
-	</div>
-	<div class="clear">&nbsp;</div>
-	
-	
-	<form id="add_studentship_form" name="add_studentship_form" action="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" method="post" <?php if ($show_studentship_form) { echo "style=\"display:none;\""; }   ?> >
-		<input type="hidden" name="action" value="add_studentship"></input>
-		<input type="hidden" name="user_id" value="<?php echo $PROXY_ID; ?>"></input>
-
-		<table class="mspr_form">
-			<colgroup>
-				<col width="3%"></col>
-				<col width="25%"></col>
-				<col width="72%"></col>
-			</colgroup>
-			<tfoot>
-				<tr>
-					<td colspan="3">&nbsp;</td>
-				</tr>
-				<tr>
-					<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
-						<input type="submit" class="button" value="Add Studentship" />
-						<div id="hide_studenstship_link" style="display:inline-block;">
-							<ul class="page-action-cancel">
-								<li><a id="hide_studentship" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" class="strong-green">[ Cancel Adding Studentship ]</a></li>
-							</ul>
-						</div>
-					</td>
-				</tr>
-			</tfoot>
-			<tbody>
-				<tr>
-				<td>&nbsp;</td>
-				<td><label class="form-required" for="studentship_title">Title:</label></td>
-				<td><input type="text" name="studentship_title"></input></td>
-				</tr>	
-				<tr>
-				<td>&nbsp;</td>
-				<td><label class="form-required" for="studentship_year">Year Awarded:</label></td>
-				<td><select name="studentship_year">
-					<?php 
+		<div class="section">
+			<h3 title="Observerships" class="collapsable collapsed">Observerships</h3>
+			<div id="observerships">
+				<script>
+					document.observe("dom:loaded",function() {
+						$('observership_start').observe('focus',function(e) {
+							showCalendar('',this,this,null,null,0,30,1);
+						}.bind($('observership_start')));
+						$('observership_end').observe('focus',function(e) {
+							showCalendar('',this,this,null,null,0,30,1);
+						}.bind($('observership_end')));
+					});
+				</script>
+				
+				<div id="add_observership_link" style="float: right;<?php if ($show_observership_form) { echo "display:none;"; }   ?>">
+					<ul class="page-action">
+						<li><a id="add_observership" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&show=observership_form&id=<?php echo $PROXY_ID; ?>" class="strong-green">Add Observership</a></li>
+					</ul>
+				</div>
+				
+				<div class="clear">&nbsp;</div>
+				<form id="add_observership_form" name="add_observership_form" action="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" method="post" <?php if (!$show_observership_form) { echo "style=\"display:none;\""; }   ?> >
+					<input type="hidden" name="student_id" value="<?php echo $user->getID(); ?>"></input>
+					<table class="mspr_form">
+						<colgroup>
+							<col width="3%"></col>
+							<col width="25%"></col>
+							<col width="72%"></col>
+						</colgroup>
+						<tfoot>
+							<tr>
+								<td colspan="3">&nbsp;</td>
+							</tr>
+							<tr>
+								<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
+									<input type="submit" name="action" class="button" value="Add" />
+									<div id="hide_observership_link" style="display:inline-block;">
+										<ul class="page-action-cancel">
+											<li><a id="hide_observership" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" class="strong-green">[ Cancel Adding Observership ]</a></li>
+										</ul>
+									</div>
+								</td>
+							</tr>
+						</tfoot>
+						<tbody>
+							<tr>
+								<td>&nbsp;</td>
+								<td><label class="form-required" for="title">Title/Discipline:</label></td>
+	 							<td><input name="title"></input> <span class="content-small"><strong>Example:</strong> Family Medicine</span></td>
+							</tr>	
+							<tr>
+								<td>&nbsp;</td>
+								<td><label class="form-required" for="site">Site:</label></td>
+								<td><input name="site"></input> <span class="content-small"><strong>Example:</strong> Kingston General Hospital</span></td>
+							</tr>	
+							<tr>
+								<td>&nbsp;</td>
+								<td><label class="form-required" for="location">Location:</label></td>
+								<td><input name="location" value="Kingston, ON"></input> <span class="content-small"><strong>Example:</strong> Kingston, ON</span></td>
+							</tr>	
+							<tr>
+								<td>&nbsp;</td>
+								<td><label class="form-required" for="start">Start Date:</label></td>
+								<td>
+									<input type="text" name="start" id="observership_start"></input> <span class="content-small"><strong>Format:</strong> yyyy-mm-dd</span>
+								</td>
+							</tr>
+							<tr>
+								<td>&nbsp;</td>
+								<td><label class="form-required" for="end">End Date:</label></td>
+								<td>
+									<input type="text" name="end" id="observership_end"></input>
+								</td>
+							</tr>
+						</tbody>
 					
-					$cur_year = (int) date("Y");
-					$start_year = $cur_year - 4;
-					$end_year = $cur_year + 4;
-					
-					for ($opt_year = $start_year; $opt_year <= $end_year; ++$opt_year) {
-							echo build_option($opt_year, $opt_year, $opt_year == $cur_year);
-					}
-					
-					?>
-					</select></td>
-				</tr>
-			</tbody>
+					</table>	
+				
+					<div class="clear">&nbsp;</div>
+				</form>
+				<div id="observerships"><?php echo display_observerships_admin($observerships); ?></div>
+			
+				<script language="javascript">
+				var observerships = new ActiveDataEntryProcessor({
+					url : '<?php echo webservice_url("mspr-admin"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=observerships',
+					data_destination: $('observerships'),
+					new_form: $('add_observership_form'),
+					remove_forms_selector: '.remove_observership_form',
+					new_button: $('add_observership_link'),
+					hide_button: $('hide_observership')
+			
+				});
+				
+				</script>
+			</div>
+		</div>
 		
-		</table>	
-	
-		<div class="clear">&nbsp;</div>
-	</form>
-	
-	<div id="studentships"><?php display_studentships_admin($user); ?></div>
-	
-	
-	<script language="javascript">
-	var studentships = new ActiveDataEntryProcessor({
-		url : '<?php echo webservice_url("mspr-admin"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=studentships',
-		data_destination: $('studentships'),
-		new_form: $('add_studentship_form'),
-		remove_forms_selector: '.remove_studentship_form',
-		new_button: $('add_studentship_link'),
-		hide_button: $('hide_studentship')
+		<div class="section">
 
-	});
+			<h3 title="Student-Run Electives" class="collapsable collapsed">Student-Run Electives</h3>
+			<div id="student-run-electives">
 	
-	</script>
+				<div id="add_student_run_elective_link" style="float: right;<?php if ($show_student_run_elective_form) { echo "display:none;"; }   ?>">
+					<ul class="page-action">
+						<li><a id="add_student_run_elective" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&show=student_run_elective_form&id=<?php echo $PROXY_ID; ?>" class="strong-green">Add Student Run Elective</a></li>
+					</ul>
+				</div>
+				
+				<div class="clear">&nbsp;</div>
+				<form id="add_student_run_elective_form" name="add_student_run_elective_form" action="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" method="post" <?php if (!$show_student_run_elective_form) { echo "style=\"display:none;\""; }   ?> >
+					<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
+					<table class="mspr_form">
+						<colgroup>
+							<col width="3%"></col>
+							<col width="25%"></col>
+							<col width="72%"></col>
+						</colgroup>
+						<tfoot>
+							<tr>
+								<td colspan="3">&nbsp;</td>
+							</tr>
+							<tr>
+								<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
+									<input type="submit" name="action" class="button" value="Add" />
+									<div id="hide_student_run_elective_link" style="display:inline-block;">
+										<ul class="page-action-cancel">
+											<li><a id="hide_student_run_elective" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" class="strong-green">[ Cancel Adding Student-Run Elective ]</a></li>
+										</ul>
+									</div>
+								</td>
+							</tr>
+						</tfoot>
+						<tbody>
+							<tr>
+								<td>&nbsp;</td>
+								<td><label class="form-required" for="group_name">Group Name:</label></td>
+								<td><input name="group_name"></input></td>
+							</tr>	
+							<tr>
+								<td>&nbsp;</td>
+								<td><label class="form-required" for="university">University:</label></td>
+								<td><input name="university" value="Queen's University"></input></td>
+							</tr>	
+							<tr>
+								<td>&nbsp;</td>
+								<td><label class="form-required" for="location">Location:</label></td>
+								<td><input name="location" value="Kingston, ON"></input></td>
+							</tr>	
+							<tr>
+								<td>&nbsp;</td>
+								<td><label class="form-required" for="start">Start:</label></td>
+								<td>
+									<select name="start_month">
+									<?php
+									echo build_option("","Month",true);
+										
+									for($month_num = 1; $month_num <= 12; $month_num++) {
+										echo build_option($month_num, getMonthName($month_num));
+									}
+									?>
+									</select>
+									<select name="start_year">
+									<?php 
+									$cur_year = (int) date("Y");
+									$start_year = $cur_year - 6;
+									$end_year = $cur_year + 4;
+									
+									for ($opt_year = $start_year; $opt_year <= $end_year; ++$opt_year) {
+											echo build_option($opt_year, $opt_year, $opt_year == $cur_year);
+									}
+									?>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>&nbsp;</td>
+								<td><label class="form-required" for="end">End:</label></td>
+								<td>
+									<select name="end_month">
+									<?php
+									echo build_option("","Month",true);
+										
+									for($month_num = 1; $month_num <= 12; $month_num++) {
+										echo build_option($month_num, getMonthName($month_num));
+									}
+									?>
+									</select>
+									<select name="end_year">
+									<?php 
+									echo build_option("","Year",true);
+									$cur_year = (int) date("Y");
+									$start_year = $cur_year - 6;
+									$end_year = $cur_year + 4;
+									
+									for ($opt_year = $start_year; $opt_year <= $end_year; ++$opt_year) {
+											echo build_option($opt_year, $opt_year, false);
+									}
+									?>
+									</select>
+								</td>
+							</tr>
+						</tbody>
+					
+					</table>	
+				
+					<div class="clear">&nbsp;</div>
+				</form>
+				<div id="student_run_electives"><?php echo display_student_run_electives_admin($student_run_electives); ?></div>
+			
+				<script language="javascript">
+				var student_run_electives = new ActiveDataEntryProcessor({
+					url : '<?php echo webservice_url("mspr-admin"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=student_run_electives',
+					data_destination: $('student_run_electives'),
+					new_form: $('add_student_run_elective_form'),
+					remove_forms_selector: '.remove_student_run_elective_form',
+					new_button: $('add_student_run_elective_link'),
+					hide_button: $('hide_student_run_elective')
+			
+				});
+				
+				</script>
+			</div>
+		</div>
+		
+		<div class="section">
+			<h3 title="Internal Awards" class="collapsable collapsed">Internal Awards</h3>
+			<div id="internal-awards">
+		
+				<div id="add_internal_award_link" style="float: right;">
+					<ul class="page-action">
+						<li><a id="add_internal_award" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" class="strong-green">Add Internal Award</a></li>
+					</ul>
+				</div>
+			
+				<div class="clear">&nbsp;</div>
+				<form id="add_internal_award_form" name="add_internal_award_form" action="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" method="post" style="display:none;" >
+					<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
+					<table class="mspr_form">
+						<colgroup>
+							<col width="3%"></col>
+							<col width="25%"></col>
+							<col width="72%"></col>
+						</colgroup>
+						<tfoot>
+							<tr>
+								<td colspan="3">&nbsp;</td>
+							</tr>
+							<tr>
+								<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
+									<input type="submit" name="action" class="button" value="Add" />
+									<div id="hide_internal_award_link" style="display:inline-block;">
+										<ul class="page-action-cancel">
+											<li><a id="hide_internal_award" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" class="strong-green">[ Cancel Adding Internal Award ]</a></li>
+										</ul>
+									</div>
+								</td>
+							</tr>
+						</tfoot>
+						<tbody>
+							<tr>
+							<td>&nbsp;</td>
+							<td><label class="form-required" for="title">Title:</label></td>
+							<td><select name="title">
+								<?php 
+									$query		= "SELECT * FROM `student_awards_internal_types` where `disabled` = 0 order by `title` asc";
+									$results	= $db->GetAll($query);
+									if ($results) {
+										foreach ($results as $result) {
+											echo build_option($result['id'], clean_input($result["title"], array("notags", "specialchars")));
+										}
+									}
+								?>
+								</select></td>
+							</tr>	
+							<tr>
+							<td>&nbsp;</td>
+							<td><label class="form-required" for="year">Year Awarded:</label></td>
+							<td><select name="year">
+								<?php 
+								
+								$cur_year = (int) date("Y");
+								$start_year = $cur_year - 4;
+								$end_year = $cur_year + 4;
+								
+								for ($opt_year = $start_year; $opt_year <= $end_year; ++$opt_year) {
+										echo build_option($opt_year, $opt_year, $opt_year == $cur_year);
+								}
+								
+								?>
+								</select></td>
+							</tr>
+						</tbody>
+					
+					</table>	
+				
+					<div class="clear">&nbsp;</div>
+				</form>
+				<div id="internal_awards"><?php echo display_internal_awards_admin($internal_awards); ?></div>
+			
+				<script language="javascript">
+				var internal_awards = new ActiveDataEntryProcessor({
+					url : '<?php echo webservice_url("mspr-admin"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=internal_awards',
+					data_destination: $('internal_awards'),
+					new_form: $('add_internal_award_form'),
+					remove_forms_selector: '.remove_internal_award_form',
+					new_button: $('add_internal_award_link'),
+					hide_button: $('hide_internal_award')
+			
+				});
+				
+				</script>
+			</div>
+		</div>
+	</div>
+	
+	<h2 title="Extracted Information Section" class="collapsed">Information Extracted from Other Sources</h2>
+	<div id="extracted-information-section">
+	
+		<div class="section">
+			<h3 title="Clerkship Core Rotations Completed Satisfactorily to Date Section"  class="collapsable collapsed">Clerkship Core Rotations Completed Satisfactorily to Date</h3>
+			<div id="clerkship-core-rotations-completed-satisfactorily-to-date-section"><?php echo display_clerkship_core_completed($clerkship_core_completed); ?></div>
+		</div>
+		
+		<div class="section">
+			<h3 title="Clerkship Core Rotations Pending Section"  class="collapsable collapsed">Clerkship Core Rotations Pending</h3>
+			<div id="clerkship-core-rotations-pending-section"><?php echo display_clerkship_core_pending($clerkship_core_pending); ?></div>
+		</div>
+		
+		<div class="section">
+			<h3 title="Clerkship Electives Completed Satisfactorily to Date Section"  class="collapsable collapsed">Clerkship Electives Completed Satisfactorily to Date</h3>
+			<div id="clerkship-electives-completed-satisfactorily-to-date-section"><?php echo display_clerkship_elective_completed($clerkship_elective_completed); ?></div>
+		</div>
+		<div class="section">
+			<h3 title="Leaves of Absence" class="collapsable collapsed">Leaves of Absence</h3>
+			<div id="leaves-of-absence">
+			<?php 
+			echo display_mspr_details($leaves_of_absence);
+			?>
+			</div>
+		</div>
+		<div class="section">
+			<h3 title="Formal Remediation Received" class="collapsable collapsed">Formal Remediation Received</h3>
+			<div id="formal-remediation-received">
+			<?php 
+			echo display_mspr_details($formal_remediations);
+			?>
+			</div>
+		</div>
+		<div class="section">
+			<h3 title="Disciplinary Actions" class="collapsable collapsed">Disciplinary Actions</h3>
+			<div id="disciplinary-actions"> 
+			<?php 
+			echo display_mspr_details($disciplinary_actions);
+			?>
+			</div>
+		</div>
+	</div>
 </div>
-<div class="section">
-	<h2>Contributions to Medical School</h2>
-
-	<div class="clear">&nbsp;</div>
-	<div id="contributions"><?php display_contributions_admin($user); ?></div>
-	<script language="javascript">
-		var contributions = new ActiveApprovalProcessor({
-			url : '<?php echo webservice_url("mspr-admin"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=contributions',
-			data_destination: $('contributions'),
-			approve_forms_selector: '.approve_contribution_form',
-			unapprove_forms_selector: '.unapprove_contribution_form'
-		});
-	</script>
-</div>
-<div class="section">
-<h2>Leaves of Absence</h2>
-<?php 
-	$loas = LeavesOfAbsence::get($user);
-	echo display_mspr_details_table($loas);
-	?>
-</div>
-<div class="section">
-<h2>Formal Remediation Received</h2>
-<?php 
-	$frs = FormalRemediations::get($user);
-	echo display_mspr_details_table($frs);
-	?>
-</div>
-<div class="section">
-<h2>Disciplinary Actions</h2> 
-	<?php 
-	$das = DisciplinaryActions::get($user);
-	echo display_mspr_details_table($das);
-	?>
-</div>
-
 <?php 
 }
-?> 

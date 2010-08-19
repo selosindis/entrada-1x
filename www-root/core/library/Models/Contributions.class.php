@@ -3,7 +3,7 @@
 require_once("Contribution.class.php");
 require_once("Collection.class.php");
 
-class Contributions extends Collection {
+class Contributions extends Collection implements AttentionRequirable {
 	public static function get(User $user) {
 		global $db;
 		$user_id = $user->getID();
@@ -12,10 +12,22 @@ class Contributions extends Collection {
 		$contributions = array();
 		if ($results) {
 			foreach ($results as $result) {
-				$contribution =  new Contribution($result['id'], $result['user_id'], $result['role'], $result['org_event'], $result['start_month'], $result['start_year'], $result['end_month'], $result['end_year'], $result['approved']);
+				$rejected=($result['status'] == -1);
+				$approved = ($result['status'] == 1);
+			
+				$contribution =  new Contribution($result['id'], $result['user_id'], $result['role'], $result['org_event'], $result['start_month'], $result['start_year'], $result['end_month'], $result['end_year'], $approved, $rejected);
 				$contributions[] = $contribution;
 			}
 		}
 		return new self($contributions);
+	}
+	
+	public function isAttentionRequired() {
+		$att_req = false;
+		foreach ($this as $element) {
+			$att_req = $element->isAttentionRequired();
+			if ($att_req) break;
+		}
+		return $att_req;
 	}
 }

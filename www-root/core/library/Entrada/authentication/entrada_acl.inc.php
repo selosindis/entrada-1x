@@ -59,9 +59,9 @@ class Entrada_ACL extends ACL_Factory {
 			"people",
 			"podcast",
 			"profile" => array(
-				"observership",
 				"mspr"
 			),
+			"observerships",
 			"search",
 			"notice",
 			"permission",
@@ -177,6 +177,7 @@ class Entrada_ACL extends ACL_Factory {
 		if(!($user instanceof Zend_Acl_Role_Interface)) {
 			$user = new EntradaUser($user);
 		}
+		
 		return $this->acl->isAllowed($user, $resource, $action);
 	}
 

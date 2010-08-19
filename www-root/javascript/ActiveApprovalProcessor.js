@@ -1,14 +1,12 @@
 	function ActiveApprovalProcessor(options) {
+		try {
 		var url = options.url;
 		var data_destination = options.data_destination;
-		var approve_forms_selector = options.approve_forms_selector;
-		var unapprove_forms_selector = options.unapprove_forms_selector;
+		var action_form_selector = options.action_form_selector;
 		var section = options.section;
 		var messages = options.messages;
-		
-		
 
-		function process_entry(form) {
+		function process_entry(form, action) {
 			document.fire(section + ':onBeforeUpdate');
 			new Ajax.Updater(data_destination, url,
 				{
@@ -20,16 +18,16 @@
 							messages.update(data_destination.down('.status_messages'));
 						}
 						add_entry_listeners();
+						document.fire(section+':onAfterUpdate');
 					}
 				});
-			
+			document.fire(section+':onBeforeUpdate');
 		}
 
 		function entry_process_ajax(event) {
-			event.stop();
+			Event.stop(event);
 			var form = Event.findElement(event, 'form');
 			process_entry(form);
-			
 		}
 
 		function addListener (element) { element.observe('submit',entry_process_ajax) }
@@ -37,18 +35,9 @@
 		
 		var add_entry_listeners, remove_entry_listeners;
 					
-		if (unapprove_forms_selector) {
-			if (approve_forms_selector && (approve_forms_selector != unapprove_forms_selector)) {
-				add_entry_listeners = function() { $$(unapprove_forms_selector).each(addListener); $$(approve_forms_selector).each(addListener); }
-				remove_entry_listeners =  function() { $$(unapprove_forms_selector).each(removeListener); $$(approve_forms_selector).each(removeListener); }
-			} else {
-				add_entry_listeners =  function() { $$(unapprove_forms_selector).each(addListener); }
-				remove_entry_listeners = function() { $$(unapprove_forms_selector).each(removeListener); }
-			}
-		} else {
-			add_entry_listeners =  function() { $$(approve_forms_selector).each(addListener); }
-			remove_entry_listeners = function() { $$(approve_forms_selector).each(removeListener); }
-		}
+		
+		add_entry_listeners =  function() { $$(action_form_selector).each(addListener); }
+		remove_entry_listeners = function() { $$(action_form_selector).each(removeListener); }
 		function init() {
 			add_entry_listeners();
 		}
@@ -70,4 +59,6 @@
 		}
 
 		document.observe(section+':onBeforeUpdate', onBeforeUpdate);
+		}
+		catch (e) {console.log(e);}
 	}

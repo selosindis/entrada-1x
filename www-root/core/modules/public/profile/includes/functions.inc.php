@@ -52,20 +52,20 @@ function process_mspr_profile($user) {
  */
 function process_external_awards_profile(User $user) {
 	if (isset($_POST['action'])) {
-		if ($_POST['action'] == "add_external_award") {
+		if ($_POST['action'] == "Add") {
 			$user_id = (isset($_POST['user_id']) ? $_POST['user_id'] : 0);
 			
-			$title = (isset($_POST['external_award_title']) ? $_POST['external_award_title'] : '');
-			$body = (isset($_POST['external_award_body']) ? $_POST['external_award_body'] : '');
-			$terms = (isset($_POST['external_award_terms']) ? $_POST['external_award_terms'] : '');
-			$year = (isset($_POST['external_award_year']) ? $_POST['external_award_year'] : '');
+			$title = (isset($_POST['title']) ? $_POST['title'] : '');
+			$body = (isset($_POST['body']) ? $_POST['body'] : '');
+			$terms = (isset($_POST['terms']) ? $_POST['terms'] : '');
+			$year = (isset($_POST['year']) ? $_POST['year'] : '');
 			$user_id = (isset($_POST['user_id']) ? $_POST['user_id'] : 0);
 			if ($user_id && $title && $terms && $year && $body && ($user->getID() == $user_id)) {
 				ExternalAwardReceipt::create($user_id,$title, $terms, $body, $year);
 			}
 		
-		} elseif ($_POST['action'] == "remove_external_award") {
-			$id = (isset($_POST['external_award_id']) ? $_POST['external_award_id'] : 0);
+		} elseif ($_POST['action'] == "Remove") {
+			$id = (isset($_POST['entity_id']) ? $_POST['entity_id'] : 0);
 			
 			if ($id) {
 				$recipient = ExternalAwardReceipt::get($id);
@@ -84,24 +84,24 @@ function process_external_awards_profile(User $user) {
 function process_contributions_profile(User $user) {
 	$action = $_POST['action'];
 	if (isset($_POST['action'])) {
-		if ($action == "add_contribution") {
+		if ($action == "Add") {
 			$user_id = (isset($_POST['user_id']) ? $_POST['user_id'] : 0);
 			
-			$role = (isset($_POST['contribution_role']) ? $_POST['contribution_role'] : '');
-			$org_event = (isset($_POST['contribution_org_event']) ? $_POST['contribution_org_event'] : '');
-			$date = (isset($_POST['contribution_date']) ? $_POST['contribution_date'] : '');
-			$start_year = $_POST['contribution_start_year'];
+			$role = (isset($_POST['role']) ? $_POST['role'] : '');
+			$org_event = (isset($_POST['org_event']) ? $_POST['org_event'] : '');
+			$date = (isset($_POST['date']) ? $_POST['date'] : '');
+			$start_year = $_POST['start_year'];
 				
 			if (($user_id == $user->getID()) && $role && $org_event && $start_year) {
-				$end_year = $_POST['contribution_end_year'];
-				$start_month = $_POST['contribution_start_month'];
-				$end_month = $_POST['contribution_end_month'];
+				$end_year = $_POST['end_year'];
+				$start_month = $_POST['start_month'];
+				$end_month = $_POST['end_month'];
 
 				Contribution::create($user,$role, $org_event, $start_month, $start_year, $end_month, $end_year);
 			}
 		
-		} elseif ($action == "remove_contribution") {
-			$id = (isset($_POST['contribution_id']) ? $_POST['contribution_id'] : 0);
+		} elseif ($action == "Remove") {
+			$id = (isset($_POST['entity_id']) ? $_POST['entity_id'] : 0);
 			
 			if ($id) {
 				$contribution = Contribution::get($id);
@@ -120,13 +120,13 @@ function process_contributions_profile(User $user) {
 function process_critical_enquiry_profile(User $user) {
 	$section = 'critical_enquiry';
 	if (isset($_POST['action'])) {
-		if ($_POST['action'] == "edit_".$section) {
+		if ($_POST['action'] == "Update") {
 			$user_id = (isset($_POST['user_id']) ? $_POST['user_id'] : 0);
 			
-			$title = (isset($_POST[$section.'_title']) ? $_POST[$section.'_title'] : '');
-			$organization = (isset($_POST[$section.'_organization']) ? $_POST[$section.'_organization'] : '');
-			$location = (isset($_POST[$section.'_location']) ? $_POST[$section.'_location'] : '');
-			$supervisor = (isset($_POST[$section.'_supervisor']) ? $_POST[$section.'_supervisor'] : '');
+			$title = (isset($_POST['title']) ? $_POST['title'] : '');
+			$organization = (isset($_POST['organization']) ? $_POST['organization'] : '');
+			$location = (isset($_POST['location']) ? $_POST['location'] : '');
+			$supervisor = (isset($_POST['supervisor']) ? $_POST['supervisor'] : '');
 			$user_id = (isset($_POST['user_id']) ? $_POST['user_id'] : 0);
 			if ($user_id && $title && $organization && $supervisor && $location) {
 				CriticalEnquiry::create($user_id,$title, $organization, $location, $supervisor);
@@ -141,15 +141,14 @@ function process_critical_enquiry_profile(User $user) {
  * @param User $user
  */
 function process_community_health_and_epidemiology_profile(User $user) {
-	$section = 'community_health_and_epidemiology';
 	if (isset($_POST['action'])) {
-		if ($_POST['action'] == "edit_".$section) {
+		if ($_POST['action'] == "Update") {
 			$user_id = (isset($_POST['user_id']) ? $_POST['user_id'] : 0);
 			
-			$title = (isset($_POST[$section.'_title']) ? $_POST[$section.'_title'] : '');
-			$organization = (isset($_POST[$section.'_organization']) ? $_POST[$section.'_organization'] : '');
-			$location = (isset($_POST[$section.'_location']) ? $_POST[$section.'_location'] : '');
-			$supervisor = (isset($_POST[$section.'_supervisor']) ? $_POST[$section.'_supervisor'] : '');
+			$title = (isset($_POST['title']) ? $_POST['title'] : '');
+			$organization = (isset($_POST['organization']) ? $_POST['organization'] : '');
+			$location = (isset($_POST['location']) ? $_POST['location'] : '');
+			$supervisor = (isset($_POST['supervisor']) ? $_POST['supervisor'] : '');
 			$user_id = (isset($_POST['user_id']) ? $_POST['user_id'] : 0);
 			if ($user_id && $title && $organization && $supervisor && $location) {
 				CommunityHealthAndEpidemiology::create($user_id,$title, $organization, $location, $supervisor);
@@ -162,17 +161,17 @@ function process_community_health_and_epidemiology_profile(User $user) {
 function process_research_citations_profile(User $user) {
 	$action = $_POST['action'];
 	if (isset($_POST['action'])) {
-		if ($_POST['action'] == "add_research_citation") {
+		if ($_POST['action'] == "Add") {
 			$user_id = (isset($_POST['user_id']) ? $_POST['user_id'] : 0);
 			
-			$citation = (isset($_POST['research_citation_details']) ? $_POST['research_citation_details'] : '');
+			$citation = (isset($_POST['details']) ? $_POST['details'] : '');
 				
 			if (($user_id == $user->getID()) && $citation ) {
-				ResearchCitation::create($user,$citation);
+				ResearchCitation::create($user_id,$citation);
 			}
 		
-		} elseif ($_POST['action'] == "remove_research_citation") {
-			$id = (isset($_POST['research_citation_id']) ? $_POST['research_citation_id'] : 0);
+		} elseif ($_POST['action'] == "Remove") {
+			$id = (isset($_POST['entity_id']) ? $_POST['entity_id'] : 0);
 			
 			if ($id) {
 				$citation = ResearchCitation::get($id);
@@ -194,51 +193,39 @@ function process_research_citations_profile(User $user) {
  * @param InternalAwardReceipts $received_awards
  * @return string 
  */
-function display_internal_awards(InternalAwardReceipts $received_awards = null) {
+function display_internal_awards(InternalAwardReceipts $receipts = null) {
 	ob_start();
 	?>
-
-	<table class="tableList mspr_table" cellspacing="0">
-		<colgroup>
-			<col width="85%"></col>
-			<col width="15%"></col>
-		</colgroup>
-			<thead>
-				<tr>
-					<td>Award Title</td>
-					<td>Year Awarded</td>
-				</tr>
-			</thead>
-			<tbody id="internal_awards_body">
-			
+	<ul class="mspr-list">
 	<?php 
-	if ($received_awards) {
-		foreach($received_awards as $received_award) {
-			$award = $received_award->getAward();
+	if ($receipts && $receipts->count() > 0) {
+		foreach($receipts as $receipt) {
+			$award = $receipt->getAward();
+			$user = $receipt->getUser();
 			?>
-			<tr id="internal-award-receipt_<?php echo $received_award->getID()?>">
-				<td>
-					<?php echo clean_input($award->getTitle(), array("notags", "specialchars")) ?>	
-				</td>
-				<td>
-					<?php echo clean_input($received_award->getAwardYear(), array("notags", "specialchars")) ?>	
-				</td>
-				
-			</tr>
-			<?php 
-			
+		<li class="entry">
+			<span class="label">
+				Award Title: 
+			</span>
+			<span class="heading">
+				<?php echo clean_input($award->getTitle(), array("notags", "specialchars")) ?>
+			</span>
+			<span class="label">
+				Year Awarded: 
+			</span>
+			<span class="data">
+				<?php echo clean_input($receipt->getAwardYear(), array("notags", "specialchars")) ?>
+			</span>
+		</li>
+		<?php 
 		}
 	} else {
-		?>
-			<tr>
-				<td colspan="2">
-					None	
-				</td>
-			</tr>
-		<?php
+	?>
+		<li>None</li>
+	<?php
 	}
 	?>
-	</table>
+	</ul>
 	<?php
 	return ob_get_clean();
 }
@@ -252,46 +239,35 @@ function display_studentships(Studentships $studentships = null) {
 	ob_start();
 	?>
 
-	<table class="tableList mspr_table" cellspacing="0">
-		<colgroup>
-			<col width="85%"></col>
-			<col width="15%"></col>
-		</colgroup>
-			<thead>
-				<tr>
-					<td>Title</td>
-					<td>Year Awarded</td>
-				</tr>
-			</thead>
-			<tbody>
-			
+	<ul class="mspr-list">
 	<?php 
-	if ($studentships) {
+	if ($studentships && $studentships->count() > 0) {
+		
 		foreach($studentships as $studentship) {
-			?>
-			<tr>
-				<td>
-					<?php echo clean_input($studentship->getTitle(), array("notags", "specialchars")) ?>	
-				</td>
-				<td>
-					<?php echo clean_input($studentship->getYear(), array("notags", "specialchars")) ?>	
-				</td>
-				
-			</tr>
-			<?php 
-			
+		?>
+		<li class="entry">
+			<span class="label">
+				Title:
+			</span>
+			<span class="heading">
+				<?php echo clean_input($studentship->getTitle(), array("notags", "specialchars")) ?>
+			</span>
+			<span class="label">
+				Year Awarded:
+			</span>
+			<span class="data">
+				<?php echo clean_input($studentship->getYear(), array("notags", "specialchars")) ?>
+			</span>
+		</li>
+		<?php 
 		}
 	} else {
-		?>
-			<tr>
-				<td colspan="2">
-					None	
-				</td>
-			</tr>
-		<?php
+	?>
+		<li>None</li>
+	<?php
 	}
 	?>
-	</table>
+	</ul>
 	<?php
 	return ob_get_clean();
 }
@@ -301,82 +277,66 @@ function display_studentships(Studentships $studentships = null) {
  * @param ExternalAwardReceipts $receipts
  * @return string
  */
-function display_external_awards_profile(ExternalAwardReceipts $receipts) {
+function display_external_awards_profile(ExternalAwardReceipts $receipts, $view_mode = false) {
 	ob_start();
 	?>
-	<table class="mspr_table awards tableList"  cellspacing="0">
-		<colgroup>
-			<col width="30%"></col>
-			<col width="37%"></col>
-			<col width="17%"></col>
-			<col width="13%"></col>
-			<col width="3%"></col>
-		</colgroup>
-		<thead>
-			<tr>
-				<td class="general">
-					Award Title
-				</td>
-				<td class="general">
-					Award Terms
-				</td>
-				<td class="general">
-					Awarding Body
-				</td>
-				<td class="sortedDESC">
-					Year Awarded
-				</td>
-				<td class="general">&nbsp;</td>
-			</tr>
-			</thead>
-			<tbody>
+		<ul class="mspr-list">
 	<?php 
-	if ($receipts) {
+	if ($receipts && $receipts->count() > 0) {
 		
 		foreach($receipts as $receipt) {
-			$award = $receipt->getAward();
-			$user = $receipt->getUser();
-			?>
-			<tr<?php echo (!$receipt->isApproved())? " class=\"unapproved\"" : ""; ?>>
-				<td class="award">
-					<?php echo clean_input($award->getTitle(), array("notags", "specialchars")) ?>	
-				</td>
-				<td class="award_terms">
-					<?php echo clean_input($award->getTerms(), array("notags", "specialchars")) ?>	
-				
-				</td>
-				<td>
-					<?php echo clean_input($award->getAwardingBody(), array("notags", "specialchars")) ?>	
-				</td>
-				<td class="award_year">
-					<?php echo clean_input($receipt->getAwardYear(), array("notags", "specialchars")) ?>	
-				
-				</td>
-				<td class="controls">
-					<form class="remove_external_award_form" action="<?php echo ENTRADA_URL; ?>/profile?section=mspr&id=<?php echo $user->getID(); ?>" method="post" >
-						<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
-						<input type="hidden" name="action" value="remove_external_award"></input>
-						<input type="hidden" name="external_award_id" value="<?php echo $receipt->getID(); ?>"></input>
-						
-						<input type="image" src="<?php echo ENTRADA_URL ?>/images/action-delete.gif"></input> 
-					</form>
-					
-				</td>
-			</tr>
-			<?php 
+			if ($view_mode && $receipt->isRejected()) continue;
 			
+			$award = $receipt->getAward();
+			$mode =  ($receipt->isApproved())? "Unapprove" : "Approve";
+			$user = $receipt->getUser();
+			$class = ($receipt->isRejected() ? "rejected" : ($receipt->isApproved()? "approved" : "unapproved")); 
+		?>
+		<li class="entry <?php echo $class; ?>">
+			<span class="label">
+			Title: 
+			</span>
+			<span class="heading">
+			<?php echo clean_input($award->getTitle(), array("notags", "specialchars")) ?>
+			</span>
+			<span class="label">
+				Terms:
+			</span>
+			<p class="data">
+				<?php echo clean_input($award->getTerms(), array("notags", "specialchars")) ?>
+			</p>
+			<span class="label">
+				Awarding Body:
+			</span>
+			<span class="data">
+				<?php echo clean_input($award->getAwardingBody(), array("notags", "specialchars")) ?>	
+			</span>
+			<span class="label">
+				Year Awarded:	
+			</span>
+			<span class="data">
+				<?php echo clean_input($receipt->getAwardYear(), array("notags", "specialchars")) ?>	
+			</span>
+			<?php if (!$view_mode) { ?>
+			<div class="controls">
+				<form class="remove_external_award_form" action="<?php echo ENTRADA_URL; ?>/profile?section=mspr&id=<?php echo $user->getID(); ?>" method="post" >
+					<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
+					<input type="hidden" name="entity_id" value="<?php echo $receipt->getID(); ?>"></input>
+					<input type="submit" name="action" value="Remove"></input> 
+				</form>
+			</div>
+			<?php } ?>
+
+		</li>
+		<?php 
 		}
 	} else {
 	?>
-		<tr>
-			<td colspan="5">
-				None	
-			</td>
-		</tr>
+		<li>None</li>
 	<?php
-}
+	}
 	?>
-	</tbody></table>
+	</ul>
 	<?php
 	return ob_get_clean();
 }
@@ -386,73 +346,58 @@ function display_external_awards_profile(ExternalAwardReceipts $receipts) {
  * @param Contributions $contributions
  * @return string
  */
-function display_contributions_profile(Contributions $contributions) {
+function display_contributions_profile(Contributions $contributions,$view_mode=false) {
 	ob_start();
 	?>
-	<table class="mspr_table awards tableList"  cellspacing="0">
-		<colgroup>
-			<col width="35%"></col>
-			<col width="42%"></col>
-			<col width="20%"></col>
-			<col width="3%"></col>
-		</colgroup>
-		<thead>
-			<tr>
-				<td class="general">
-					Role
-				</td>
-				<td class="general">
-					Organization/Event
-				</td>
-				<td class="general">
-					Date
-				</td>
-				<td class="general">&nbsp;</td>
-			</tr>
-			</thead>
-			<tbody>
+	
+	<ul class="mspr-list">
 	<?php 
-	if ($contributions) {
-		
+	if ($contributions && $contributions->count() > 0) {
 		foreach($contributions as $contribution) {
-			?>
-			<tr<?php echo (!$contribution->isApproved())? " class=\"unapproved\"" : ""; ?>>
-				<td class="award">
-					<?php echo clean_input($contribution->getRole(), array("notags", "specialchars")) ?>	
-				</td>
-				<td class="award_terms">
-					<?php echo clean_input($contribution->getOrgEvent(), array("notags", "specialchars")) ?>	
-				
-				</td>
-				<td>
-					<?php echo clean_input($contribution->getPeriod(), array("notags", "specialchars")) ?>	
-				</td>
-				<td class="controls">
-					<form class="remove_contribution_form" action="<?php echo ENTRADA_URL; ?>/profile?section=mspr&id=<?php echo $contribution->getUserID(); ?>" method="post" >
-						<input type="hidden" name="user_id" value="<?php echo $contribution->getUserID(); ?>"></input>
-						<input type="hidden" name="action" value="remove_contribution"></input>
-						<input type="hidden" name="contribution_id" value="<?php echo $contribution->getID(); ?>"></input>
-						
-						<input type="image" src="<?php echo ENTRADA_URL ?>/images/action-delete.gif"></input> 
-					</form>
-					
-				</td>
-			</tr>
-			<?php 
+			if ($view_mode && $contribution->isRejected()) continue;
 			
+			$mode =  ($contribution->isApproved())? "Unapprove" : "Approve";
+			$class = ($contribution->isRejected() ? "rejected" : ($contribution->isApproved()? "approved" : "unapproved")); 
+			?>
+		<li class="entry <?php echo $class; ?>">
+
+			<span class="label">
+				Role:
+			</span>
+			<span class="heading">
+				<?php echo clean_input($contribution->getRole(), array("notags", "specialchars")) ?>
+			</span>
+			<span class="label">
+				Organization/Event:
+			</span>
+			<span class="data">
+				<?php echo clean_input($contribution->getOrgEvent(), array("notags", "specialchars")) ?>
+			</span>
+			<span class="label">
+				Period:
+			</span>
+			<span class="data">
+				<?php echo clean_input($contribution->getPeriod() , array("notags", "specialchars")) ?>
+			</span>
+			<?php if (!$view_mode) { ?>
+			<div class="controls">
+				<form action="<?php echo ENTRADA_URL; ?>/profile?section=mspr&id=<?php echo $contribution->getUserID(); ?>" method="post" >
+					<input type="hidden" name="user_id" value="<?php echo $contribution->getUserID(); ?>"></input>
+					<input type="hidden" name="entity_id" value="<?php echo $contribution->getID(); ?>"></input>
+					<input type="submit" name="action" value="Remove"></input> 
+				</form>
+			</div>
+			<?php } ?>			
+		</li>
+		<?php 
 		}
 	} else {
-		?>
-			<tr>
-				<td colspan="4">
-					None	
-				</td>
-			</tr>
-		<?php
-	}
-
 	?>
-	</tbody></table>
+		<li>None</li>
+	<?php
+	}
+	?>
+	</ul>
 	<?php
 	return ob_get_clean();
 }
@@ -465,49 +410,34 @@ function display_contributions_profile(Contributions $contributions) {
 function display_clerkship_details(ClerkShipRotations $rotations = null) {
 	ob_start();
 	?>
-	<table class="mspr_table clineval tableList" cellspacing="0">
-		<colgroup>
-			<col width="65%"></col>
-			<col width="35%"></col>
-		</colgroup>
-		<thead>
-			<tr>
-				<td class="general">
-					Details
-				</td>
-				<td class="sortedDESC">
-					Dates
-				</td>
-			</tr>
-			</thead>
-			<tbody>
-			
+	<ul class="mspr-list">
 	<?php 
-	if ($rotations && ($rotations->count() > 0)) {
+	if ($rotations && $rotations->count() > 0) {
 		foreach($rotations as $rotation) {
-			?>
-			<tr>
-				<td class="clerkship_details">
-					<?php echo clean_input($rotation->getDetails(), array("notags", "specialchars", "nl2br")) ?>	
-				</td>
-				<td class="clerkship_dates">
-					<?php echo clean_input($rotation->getDates(), array("notags", "specialchars")) ?>	
-				
-				</td>
-			</tr>
-			<?php 
+		?>
+		<li class="entry">
+			<span class="label">
+				Details: 
+			</span>
+			<p class="data">
+				<?php echo clean_input($rotation->getDetails(), array("notags", "specialchars", "nl2br")) ?>
+			</p>
+			<span class="label">
+				Period: 
+			</span>
+			<span class="data">
+				<?php echo clean_input($rotation->getPeriod(), array("notags", "specialchars")) ?>
+			</span>
+		</li>
+		<?php 
 		}
 	} else {
-		?>
-			<tr>
-				<td colspan="2">
-					None	
-				</td>
-			</tr>
-		<?php
+	?>
+		<li>None</li>
+	<?php
 	}
 	?>
-	</table>
+	</ul>
 	<?php	
 	return ob_get_clean();
 }
@@ -520,50 +450,34 @@ function display_clerkship_details(ClerkShipRotations $rotations = null) {
 function display_clineval_profile(ClinicalPerformanceEvaluations $clinevals = null) {
 	ob_start();	
 	?>
-	<table class="mspr_table clineval tableList" cellspacing="0">
-		<colgroup>
-			<col width="65%"></col>
-			<col width="35%"></col>
-		</colgroup>
-		<thead>
-			<tr>
-				<td class="general">
-					Comment
-				</td>
-				<td class="sortedDESC">
-					Source
-				</td>
-			</tr>
-			</thead>
-			<tbody>
-			
+	<ul class="mspr-list">
 	<?php 
-	if ($clinevals) {
+	if ($clinevals && $clinevals->count() > 0) {
 		foreach($clinevals as $clineval) {
-			?>
-			<tr>
-				<td class="clineval_comment">
-					<?php echo clean_input($clineval->getComment(), array("notags", "specialchars")) ?>	
-				</td>
-				<td class="clineval_source">
-					<?php echo clean_input($clineval->getSource(), array("notags", "specialchars")) ?>	
-				
-				</td>
-			</tr>
-			<?php 
-			
+		?>
+		<li class="entry">
+			<span class="label">
+				Comment: 
+			</span>
+			<p class="data">
+				<?php echo clean_input($clineval->getComment(), array("notags", "specialchars", "nl2br")) ?>
+			</p>
+			<span class="label">
+				Source: 
+			</span>
+			<span class="data">
+				<?php echo clean_input($clineval->getSource(), array("notags", "specialchars")) ?>
+			</span>
+		</li>
+		<?php 
 		}
 	} else {
-		?>
-			<tr>
-				<td colspan="2">
-					None	
-				</td>
-			</tr>
-		<?php
+	?>
+		<li>None</li>
+	<?php
 	}
 	?>
-	</table>
+	</ul>
 	<?php
 	return ob_get_clean();
 }
@@ -576,51 +490,114 @@ function display_clineval_profile(ClinicalPerformanceEvaluations $clinevals = nu
 function display_student_run_electives_public(StudentRunElectives $sres=null) {
 	ob_start();
 	?>
-		<table class="mspr_table student-run-electives tableList" cellspacing="0">
-		<colgroup>
-			<col width="60%"></col>
-			<col width="40%"></col>
-		</colgroup>
-		<thead>
-			<tr>
-				<td class="general">
-					Details
-				</td>
-				<td class="sortedDESC">
-					Period
-				</td>
-			</tr>
-		</thead>
-		<tbody>
+	<ul class="mspr-list">
 	<?php 
 	if ($sres && ($sres->count() > 0)) {
-		
 		foreach($sres as $sre) {
-			?>
-			<tr>
-				<td class="award">
-					<?php echo clean_input($sre->getDetails(), array("notags", "specialchars", "nl2br")) ?>	
-				</td>
-				<td class="award_terms">
-					<?php echo clean_input($sre->getPeriod(), array("notags", "specialchars")) ?>	
-				
-				</td>
-			</tr>
-			<?php 
-			
+		?>
+		<li class="entry">
+			<span class="label">
+				Details: 
+			</span>
+			<p class="data">
+				<?php echo clean_input($sre->getDetails(), array("notags", "specialchars", "nl2br")); ?>
+			</p>
+			<span class="label">
+				Period: 
+			</span>
+			<span class="data">
+				<?php echo clean_input($sre->getPeriod(), array("notags", "specialchars")); ?>
+			</span>
+		</li>
+		<?php 
 		}
 	} else {
 	?>
-		<tr>
-			<td colspan="2">
-				None	
-			</td>
-		</tr>
+		<li>None</li>
 	<?php
 	}
 	?>
-	</tbody></table>
-	
+	</ul>
+	<?php
+	return ob_get_clean();
+}
+
+/**
+ * Returns an HTML table containing Observerships.
+ * @param Observerships $obss
+ * @return string
+ */
+function display_observerships_public(Observerships $obss=null) {
+	ob_start();
+	?>
+	<ul class="mspr-list">
+	<?php 
+	if ($obss && ($obss->count() > 0)) {
+		foreach($obss as $obs) {
+		?>
+		<li class="entry">
+			<span class="label">
+				Details: 
+			</span>
+			<p class="data">
+				<?php echo clean_input($obs->getDetails(), array("notags", "specialchars", "nl2br")) ?>
+			</p>
+			<span class="label">
+				Period: 
+			</span>
+			<span class="data">
+				<?php echo clean_input($obs->getPeriod(), array("notags", "specialchars")) ?>
+			</span>
+		</li>
+		<?php 
+		}
+	} else {
+	?>
+		<li>None</li>
+	<?php
+	}
+	?>
+	</ul>
+	<?php
+	return ob_get_clean();
+}
+
+/**
+ * Returns an HTML table containing Observerships.
+ * @param Observerships $obss
+ * @return string
+ */
+function display_international_activities(InternationalActivities $int_acts) {
+	ob_start();
+	?>
+	<ul class="mspr-list">
+	<?php 
+	if ($int_acts && $int_acts->count() > 0) {
+		foreach($int_acts as $int_act) {
+		?>
+		<li class="entry">
+			<span class="label">
+				Details: 
+			</span>
+			<p class="data">
+				<?php echo clean_input($int_act->getDetails(), array("notags", "specialchars", "nl2br")) ?>
+			</p>
+			<span class="label">
+				Period: 
+			</span>
+			<span class="data">
+				<?php echo clean_input($int_act->getPeriod(), array("notags", "specialchars")) ?>
+			</span>
+		</li>
+		<?php 
+		}
+	} else {
+	?>
+		<li>None</li>
+	<?php
+	}
+	?>
+	</ul>
 	<?php
 	return ob_get_clean();
 }
@@ -633,101 +610,89 @@ function display_student_run_electives_public(StudentRunElectives $sres=null) {
 function display_supervised_project_profile(SupervisedProject $project = null) {
 	ob_start();
 	?>
-	<table class="mspr_table student-run-electives tableList" cellspacing="0">
-		<colgroup>
-			<col width="100%"></col>
-		</colgroup>
-		<thead>
-			<tr>
-				<td class="general">
-					Project Details
-				</td>
-			</tr>
-		</thead>
-		<tbody>
-			<tr>
-				<td class="details">
-					<?php 
-					if ($project) {
-						echo clean_input($project->getDetails(), array("notags", "specialchars", "nl2br"));
-					} else {
-						echo "Not yet entered.";
-					}
-					?>	
-				</td>
-			</tr>
-		</tbody>
-	</table>
-	
+	<ul class="mspr-list">
+	<?php 
+	if ($project) {
+		$class = ($project->isRejected() ? "rejected" : ($project->isApproved()? "approved" : "unapproved"));
+	?>
+		<li class="entry <?php echo $class; ?>">
+			<span class="label">
+				Title: 
+			</span>
+			<span class="heading">
+				<?php echo clean_input($project->getTitle(), array("notags", "specialchars")); ?>
+			</span>
+			<span class="label">
+				Organization:
+			</span>
+			<span class="data">
+				<?php echo clean_input($project->getOrganization(), array("notags", "specialchars")); ?>
+			</span>
+			<span class="label">
+				Location:
+			</span>
+			<span class="data">
+				<?php echo clean_input($project->getLocation(), array("notags", "specialchars")); ?>
+			</span>
+			<span class="label">
+				Supervisor:
+			</span>
+			<span class="data">
+				<?php echo clean_input($project->getSupervisor(), array("notags", "specialchars")); ?>
+			</span>
+		</li>
+		<?php 
+	} else {
+	?>
+		<li>Not yet entered</li>
+	<?php
+	}
+	?>
+	</ul>
 	<?php
 	return ob_get_clean();
 }
 
-function display_research_citations_profile(ResearchCitations $research_citations) {
+function display_research_citations_profile(ResearchCitations $research_citations, $view_mode=false) {
 	ob_start();
 	?>
-	<table class="mspr_table tableList"  cellspacing="0">
-		<colgroup>
-			<col width="3%"></col>
-			<col width="94%"></col>
-			<col width="3%"></col>
-		</colgroup>
-		<thead>
-			<tr>
-				<td class="general"></td>
-				<td class="general">
-					Details
-				</td>
-				<td class="general">&nbsp;</td>
-			</tr>
-			</thead>
-			<tbody id="research_citations_body">
+	
+	<ul class="mspr-list<?php echo ($view_mode) ? "" : " priority-list"; ?>" id="citations_list">
 	<?php 
-	if ($research_citations) {
-		
+	if ($research_citations && $research_citations->count() > 0) {
 		foreach($research_citations as $research_citation) {
-			?>
-			<tr<?php echo (!$research_citation->isApproved())? " class=\"unapproved\"" : ""; ?> id="research_citation_<?php echo $research_citation->getID(); ?>">
-			
-				<td class="handle"><img src="<?php echo ENTRADA_URL; ?>/images/arrow_up_down.png" /></td>
-				<td>
-					<?php echo clean_input($research_citation->getText(), array("notags", "specialchars")) ?>	
-				</td>
-				<td class="controls">
-					<form class="remove_research_citation_form" action="<?php echo ENTRADA_URL; ?>/profile?section=mspr&id=<?php echo $research_citation->getUserID(); ?>" method="post" >
-						<input type="hidden" name="user_id" value="<?php echo $research_citation->getUserID(); ?>"></input>
-						<input type="hidden" name="action" value="remove_research_citation"></input>
-						<input type="hidden" name="research_citation_id" value="<?php echo $research_citation->getID(); ?>"></input>
-						
-						<input type="image" src="<?php echo ENTRADA_URL ?>/images/action-delete.gif"></input> 
-					</form>
-				</td>
-			</tr>
-			<?php 
-			
+			if ($view_mode && $research_citation->isRejected()) continue;
+			$class = ($research_citation->isRejected() ? "rejected" : ($research_citation->isApproved()? "approved" : "unapproved"));
+		?>
+		<li class="entry <?php echo $class; ?>" id="research_citation_<?php echo $research_citation->getID(); ?>">
+			<?php if ($view_mode) { ?> <span class="handle"><img src="<?php echo ENTRADA_URL; ?>/images/arrow_up_down.png" /></span><?php } ?> 
+			<span class="label">
+				Citation: 
+			</span>
+			<p class="data">
+				<?php echo clean_input($research_citation->getText(), array("notags", "specialchars", "nl2br")) ?>
+			</p>
+			<?php if (!$view_mode) { ?>
+			<div class="controls">
+				<form action="<?php echo ENTRADA_URL; ?>/profile?section=mspr&id=<?php echo $research_citation->getUserID(); ?>" method="post" >
+					<input type="hidden" name="user_id" value="<?php echo $research_citation->getUserID(); ?>"></input>
+					<input type="hidden" name="entity_id" value="<?php echo $research_citation->getID(); ?>"></input>
+					
+					<input type="submit" name="action" value="Remove" ></input> 
+				</form>
+			</div>
+			<?php } ?>
+
+		</li>
+		<?php 
 		}
 	} else {
-		?>
-			<tr>
-				<td colspan="3">
-					None	
-				</td>
-			</tr>
-		<?php
-	}
-
 	?>
-	</tbody></table>
-	<script>
-	/*var research_citation_priority_list = new PriorityList({
-		url : '<?php echo webservice_url("mspr-profile"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=research_citations',
-		format: /research_citation_([0-9]*)$/,
-		tag: "tr",
-		elements:$$('#research_citations_body tr'), 
-		handle:'.handle'
-	});*/
-	
-	</script>
-		<?php
+		<li>None</li>
+	<?php
+	}
+	?>
+	</ul>
+	<?php
 	return ob_get_clean();
 }

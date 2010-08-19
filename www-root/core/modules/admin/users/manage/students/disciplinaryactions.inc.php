@@ -15,7 +15,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 } elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	header("Location: ".ENTRADA_URL);
 	exit;
-} elseif(!$ENTRADA_ACL->isLoggedInAllowed('user', 'update',true) || $user_record["group"] != "student") {
+} elseif(!$ENTRADA_ACL->isLoggedInAllowed('user', 'create',true) || $user_record["group"] != "student") {
 	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/".$MODULE."\\'', 15000)";
 
 	$ERROR++;

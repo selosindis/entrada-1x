@@ -24,6 +24,7 @@
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
 */
+require_once("SimpleCache.class.php");
 
 /**
  * Simple User class with basic information
@@ -38,12 +39,22 @@ class User {
 	private $username;
 	private $firstname;
 	private $lastname;
+	private $number;
+	private $grad_year;
+	private $entry_year;
 	
-	function __construct($id,$username, $firstname, $lastname) {
+	function __construct($id,$username, $lastname, $firstname, $number = 0, $grad_year = null, $entry_year = null) {
 		$this->id = $id;
 		$this->username = $username;
 		$this->firstname = $firstname;
 		$this->lastname = $lastname;
+		$this->number = $number;
+		$this->grad_year = $grad_year;
+		$this->entry_year = $entry_year;
+		
+		//be sure to cache this whenever created.
+		$cache = SimpleCache::getCache();
+		$cache->set($this,"User",$this->$id);
 	}
 	
 	/**
@@ -60,6 +71,22 @@ class User {
 	 */
 	function getUsername() {
 		return $this->username;
+	}
+	
+	/**
+	 * Returns the graduating year of the user, if available
+	 * @return int
+	 */
+	function getGradYear() {
+		return $this->grad_year;
+	}
+	
+	/**
+	 * Returns the year a student enetered med school, if available
+	 * @return int
+	 */
+	function getEntryYear() {
+		return $this->entry_year;
 	}
 	
 	/**
@@ -86,13 +113,25 @@ class User {
 		return $this->lastname . ", " . $this->firstname;
 	}
 	
+	/**
+	 * Returns the real world student number/employee number
+	 * @return int
+	 */
+	function getNumber() {
+		return $this->number;
+	}
+	
 	public static function get($user_id) {
-		global $db;
-		$query = "SELECT * FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($user_id);
-		$result = $db->getRow($query);
-		if ($result) {
-			$user =  new User($result['id'], $result['username'], $result['lastname'], $result['firstname']);
-			return $user;
-		}		
+		$cache = SimpleCache::getCache();
+		$user = $cache->get("User",$user_id);
+		if (!$user) {
+			global $db;
+			$query = "SELECT * FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($user_id);
+			$result = $db->getRow($query);
+			if ($result) {
+				$user =  new User($result['id'], $result['username'], $result['lastname'], $result['firstname'], $result['number'],$result['grad_year'],$result['entry_year']);			
+			}		
+		} 
+		return $user;
 	}
 }

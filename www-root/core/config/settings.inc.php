@@ -243,6 +243,7 @@ define("ANNUALREPORT_STORAGE", $config->entrada_storage."/annualreports");		// F
 
 define("STORAGE_USER_PHOTOS", $config->entrada_storage . "/user-photos");		// Full directory path where user profile photos are stored without trailing slash.
 define("FILE_STORAGE_PATH", $config->entrada_storage . "/event-files");			// Full directory path where off-line files are stored without trailing slash.
+define("MSPR_STORAGE",$config->entrada_storage . "/msprs");					//Full directory path where student Medical School Performance Reports should be sotred
 
 define("SENDMAIL_PATH", "/usr/sbin/sendmail -t -i");							// Full path and parametres to sendmail.
 
@@ -443,6 +444,9 @@ $MODULES["regionaled"] = array("title" => "Regional Education", "resource" => "r
 $MODULES["objectives"]	= array("title" => "Manage Objectives", "resource" => "objective", "permission" => "update");
 $MODULES["users"] = array("title" => "Manage Users", "resource" => "user", "permission" => "update");
 $MODULES["reports"] = array("title" => "System Reports", "resource" => "reportindex", "permission" => "read");
+$MODULES["awards"] = array("title" => "Manage Awards", "resource" => "awards", "permission" => "update");
+$MODULES["mspr"] = array("title" => "Manage MSPRs", "resource" => "mspr", "permission" => "create");
+$MODULES["observerships"] = array("title" => "Manage Observerships", "resource" => "observerships", "permission" => "update");
 
 /**
  * System groups define which system groups & role combinations are allowed to

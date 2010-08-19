@@ -11,19 +11,21 @@
  * @author Developer: Jonathan Fingland <jonathan.fingland@quensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  */
-class ResearchCitation {
+class ResearchCitation implements Approvable, AttentionRequirable {
 	private $id;
 	private $user_id;
 	private $citation;
 	private $priority;
 	private $approved;
+	private $rejected;
 	
-	function __construct($id, $user_id, $citation, $priority, $approved = false) {
+	function __construct($id, $user_id, $citation, $priority, $approved = false, $rejected = false) {
 		$this->id = $id;
 		$this->user_id = $user_id;
 		$this->citation = $citation;
 		$this->priority = $priority;
 		$this->approved = (bool) $approved;
+		$this->rejected = (bool) $rejected;
 	}
 	
 	public function getID() {
@@ -42,6 +44,10 @@ class ResearchCitation {
 		return $this->citation;
 	}
 	
+	public function isAttentionRequired() {
+		return !$this->isApproved() && !$this->isRejected();
+	}
+	
 	/**
 	 * Returns the priority of the citation 
 	 */
@@ -51,6 +57,10 @@ class ResearchCitation {
 	
 	public function isApproved() {
 		return (bool)($this->approved);
+	}
+	
+	public function isRejected() {
+		return (bool)($this->rejected);
 	}
 	
 		
@@ -64,8 +74,10 @@ class ResearchCitation {
 		$query		= "SELECT * FROM `student_research` WHERE `id` = ".$db->qstr($id);
 		$result = $db->getRow($query);
 		if ($result) {
+			$rejected=($result['status'] == -1);
+			$approved = ($result['status'] == 1);
 			
-			$citation =  new self($result['id'], $result['user_id'], $result['citation'], $result['priority'], $result['approved']);
+			$citation =  new self($result['id'], $result['user_id'], $result['citation'], $result['priority'], $approved, $rejected);
 			return $citation;
 		}
 	} 
@@ -75,6 +87,7 @@ class ResearchCitation {
 	 * @param $user_id
 	 */
 	private static function getNewPriority($user_id) {
+		global $db;
 		$query = "select MAX(`priority`) + 1 as hp from student_research where user_id=".$db->qstr($user_id)." group by `user_id`";
 		$result = $db->getRow($query);
 		if (!$result) {
@@ -91,12 +104,12 @@ class ResearchCitation {
 	 * @param $citation
 	 * @param $approved
 	 */
-	public static function create($user_id, $citation, $approved = false) {
+	public static function create($user_id, $citation, $approved = false, $rejected = false) {
 		
 		global $db,$SUCCESS,$SUCCESSSTR,$ERROR,$ERRORSTR;
 		$approved = (int) $approved;
 		$priority = self::getNewPriority($user_id);
-		$query = "insert into `student_research` (`user_id`, `citation`, `priority`, `approved`) value (".$db->qstr($user_id).", ".$db->qstr($citation).", ".$db->qstr($priority).", ". $db->qstr($approved).")";
+		$query = "insert into `student_research` (`user_id`, `citation`, `priority`, `status`) value (".$db->qstr($user_id).", ".$db->qstr($citation).", ".$db->qstr($priority).", ". $db->qstr($approved ? 1 : 0).")";
 		if(!$db->Execute($query)) {
 			$ERROR++;
 			$ERRORSTR[] = "Failed to create new Research Citation.";
@@ -130,47 +143,42 @@ class ResearchCitation {
 				
 	}
 	
-	public function approve() {
-		if (!$this->isApproved()) {
-			global $db,$SUCCESS,$SUCCESSSTR,$ERROR,$ERRORSTR;
-			$query = "update `student_research` set
-					 `approved`=1 
-					 where `id`=".$db->qstr($this->id);
-			
-			if(!$db->Execute($query)) {
-				$ERROR++;
-				$ERRORSTR[] = "Failed to approved Research Citation.".$db->ErrorMsg();
-				application_log("error", "Unable to update a student_research record. Database said: ".$db->ErrorMsg());
-			} else {
-				$SUCCESS++;
-				$SUCCESSSTR[] = "Successfully approved Research Citation.";
-				$this->approved = true;
-			}
+	public function setStatus($status_code) {
+		global $db,$SUCCESS,$SUCCESSSTR,$ERROR,$ERRORSTR;
+		$query = "update `student_research` set
+				 `status`=".$db->qstr($status_code)."
+				 where `id`=".$db->qstr($this->id);
+		
+		if(!$db->Execute($query)) {
+			$ERROR++;
+			$ERRORSTR[] = "Failed to update Research Citation.".$db->ErrorMsg();
+			application_log("error", "Unable to update a student_research record. Database said: ".$db->ErrorMsg());
+		} else {
+			$SUCCESS++;
+			$SUCCESSSTR[] = "Successfully updated Research Citation.";
 		}
+	}
+	
+	public function approve() {
+		$this->setStatus(1);
 	}
 	
 	public function unapprove() {
-		if ($this->isApproved()) {
-			global $db,$SUCCESS,$SUCCESSSTR,$ERROR,$ERRORSTR;
-			$query = "update `student_research` set
-					 `approved`=0 
-					 where `id`=".$db->qstr($this->id);
-			
-			if(!$db->Execute($query)) {
-				$ERROR++;
-				$ERRORSTR[] = "Failed to unapproved Research Citation.";
-				application_log("error", "Unable to update a student_research record. Database said: ".$db->ErrorMsg());
-			} else {
-				$SUCCESS++;
-				$SUCCESSSTR[] = "Successfully unapproved Research Citation.";
-				$this->approved = false;
-			}
-		}
+		$this->setStatus(0);
 	}
 	
+	
+	public function reject() {
+		$this->setStatus(-1);
+	}
+	
+	/**
+	 * CAUTION: this does not affect other entries. it would be easy to create a conflict with unexpected results. Use ResearchCitations::resequence() instead.
+	 * @param int $priority
+	 */
 	public function setPriority($priority) {
 		$query = "update `student_research` set
-				 `approved`=0 
+				 `priority`=0 
 				 where `id`=".$db->qstr($this->id);
 		
 		if($db->Execute($query)) {

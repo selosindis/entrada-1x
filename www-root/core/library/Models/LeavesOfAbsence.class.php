@@ -3,7 +3,7 @@
 
 require_once("LeaveOfAbsence.class.php");
 
-class LeavesOfAbsence {
+class LeavesOfAbsence extends Collection {
 	public static function get(User $user) {
 		global $db;
 		$user_id = $user->getID();
@@ -15,7 +15,7 @@ class LeavesOfAbsence {
 				$fr =  new LeaveOfAbsence($user, $result['id'], $result['absence_details']);
 				$frs[] = $fr;
 			}
-			return $frs;
+			return new self($frs);
 		}
 	}
 }

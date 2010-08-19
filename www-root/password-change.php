@@ -158,127 +158,94 @@ switch($STEP) {
 </head>
 <body>
 <table style="width: 950px" cellspacing="0" cellpadding="0" border="0">
-<tr>
-	<td style="width: 185px; height: 25px; background-color: #003366"><img src="<?php echo ENTRADA_RELATIVE; ?>/images/pixel.gif" width="185" height="25" alt="" title="" /></td>
-	<td colspan="3" style="width: 765px; height: 25px; background-color: #EEEEEE; padding-left: 20px">
-		&nbsp;
-	</td>
-</tr>
-<tr>
-	<td style="width: 185px; height: 48px; background-color: #EEEEEE; text-align: center"><img src="<?php echo ENTRADA_RELATIVE; ?>/images/pixel.gif" width="185" height="48" alt="" title="" /></td>
-	<td style="width: 538px; height: 48px; background-color: #EEEEEE; text-align: left"><img src="<?php echo ENTRADA_RELATIVE; ?>/images/school_of_medicine.gif" width="368" height="48" alt="School of Medicine" title="School of Medicine" /></td>
-	<td colspan="2" style="width: 227px; height: 48px; background-color: #EEEEEE; text-align: left; vertical-align: bottom"><img src="<?php echo ENTRADA_RELATIVE; ?>/images/medtech_logo.gif" width="227" height="48" alt="Medical Education Technology Unit" title="Medical Education Technology Unit" /></td>
-</tr>
-<tr>
-	<td style="width: 185px; height: 2px; background-color: #003366; text-align: left"><img src="<?php echo ENTRADA_RELATIVE; ?>/images/pixel.gif" width="185" height="2" alt="" title="" /></td>
-	<td colspan="3" style="width: 765px; height: 2px; background-color: #003366; text-align: left"><img src="<?php echo ENTRADA_RELATIVE; ?>/images/pixel.gif" width="595" height="2" alt="" title="" /></td>
-</tr>
-<tr>
-	<td style="width: 185px; height: 10px; background-color: #FFFFFF"><img src="<?php echo ENTRADA_RELATIVE; ?>/images/pixel.gif" width="185" height="10" alt="" title="" /></td>
-	<td style="width: 538px; height: 10px; background-color: #FFFFFF"><img src="<?php echo ENTRADA_RELATIVE; ?>/images/pixel.gif" width="368" height="10" alt="" title="" /></td>
-	<td style="width: 140px; height: 10px; background-color: #A8CB49"><img src="<?php echo ENTRADA_RELATIVE; ?>/images/pixel.gif" width="140" height="10" alt="" title="" /></td>
-	<td style="width: 87px; height: 10px; background-color: #FFFFFF"><img src="<?php echo ENTRADA_RELATIVE; ?>/images/pixel.gif" width="87" height="10" alt="" title="" /></td>
-</tr>
-</table>
-
-<table style="width: 950px" cellspacing="0" cellpadding="0" border="0">
-<tbody>
-	<tr>
-		<td style="width: 200px">
-			&nbsp;
-		</td>
-		<td style="width: 750px; vertical-align: top; text-align: left; padding-left: 5px; padding-top: 5px; background-color: #FFFFFF">
-			<div style="width: 750px">
-				<h1><?php echo APPLICATION_NAME; ?> Authentication System</h1>
-				<h2>Password Change System</h2>
-				<?php
-				// Page Display Step
-				switch($STEP) {
-					case 2 :
-						if($ERROR) {
-							echo display_error();
-						}
-						if($NOTICE) {
-							echo display_error();
-						}
-						if($SUCCESS) {
-							echo display_success();
-						}
-					break;
-					case 1 :
-					default :
-						if($ERROR) {
-							echo display_error();
-						}
-						if($NOTICE) {
-							echo display_error();
-						}
-						if($SUCCESS) {
-							echo display_success();
-						}
-						?>
-						<div class="display-notice" style="padding: 10px">
-							This page allows you to change your <?php echo APPLICATION_NAME; ?> password. To begin please enter your <?php echo APPLICATION_NAME; ?> username, current password and desired password into the form below then click Change.
-						</div>
-						<form action="<?php echo html_encode(basename(__FILE__)); ?>" method="post">
-						<input type="hidden" name="step" value="2" />
-						<table style="width: 100%" cellspacing="1" cellpadding="1" border="0">
-						<colgroup>
-							<col style="width: 25%" />
-							<col style="width: 75%" />
-						</colgroup>
-						<tfoot>
-							<tr>
-								<td colspan="2" style="padding-top: 15px; text-align: right">
-									<input type="button" value="Cancel" class="button" onclick="window.location='<?php echo ENTRADA_URL; ?>'" />
-									<input type="submit" class="button" value="Change" />
-								</td>
-							</tr>
-						</tfoot>
-						<tbody>
-							<tr>
-								<td><label for="username" class="form-required"><?php echo APPLICATION_NAME; ?> Username:</label></td>
-								<td>
-									<input type="text" id="username" name="username" value="<?php echo ((isset($_POST["username"])) ? html_encode(trim($_POST["username"])) : ""); ?>" style="width: 200px" maxlength="32" />
-								</td>
-							</tr>
-							<tr>
-								<td style="padding-bottom: 15px"><label for="password" class="form-required">Current Password:</label></td>
-								<td style="padding-bottom: 15px">
-									<input type="password" id="password" name="password" value="" style="width: 200px" maxlength="24" />
-									<span class="content-small" style="padding-left: 5px">Don't know your current password? <a href="<?php echo ENTRADA_URL; ?>/password-reset.php" style="font-size: 10px">Click here</a></span>
-								</td>
-							</tr>
-							<tr>
-								<td><label for="npassword1" class="form-required">Enter New Password:</label></td>
-								<td>
-									<input type="password" id="npassword1" name="npassword1" value="" style="width: 200px" maxlength="24" />
-									<span class="content-small" style="padding-left: 5px">Password must be 6 - 24 alphanumeric characters.</span>
-								</td>
-							</tr>
-							<tr>
-								<td><label for="npassword2" class="form-required">Re-enter New Password:</label></td>
-								<td><input type="password" id="npassword2" name="npassword2" value="" style="width: 200px" maxlength="24" /></td>
-							</tr>
-						</tbody>
-						</table>
-						</form>
-						<?php
-					break;
-				}
-				?>
-			</div>
-		</td>
-	</tr>
-</tbody>
-<tbody class="no-printing">
-	<tr>
-		<td style="width: 200px">&nbsp;</td>
-		<td style="width: 750px; padding-left: 5px; padding-top: 10px">
-			<span class="copyright"><?php echo COPYRIGHT_STRING; ?></span>
-		</td>
-	</tr>
+	<tbody>
+		<tr>
+			<td style="width: 200px">
+				&nbsp;
+			</td>
+			<td style="width: 750px; vertical-align: top; text-align: left; padding-left: 5px; padding-top: 5px; background-color: #FFFFFF">
+				<div style="width: 750px">
+					<h1><?php echo APPLICATION_NAME; ?> Authentication System</h1>
+					<h2>Password Change System</h2>
+					<?php
+					// Page Display Step
+					switch($STEP) {
+						case 2 :
+							if($ERROR) {
+								echo display_error();
+							}
+							if($NOTICE) {
+								echo display_error();
+							}
+							if($SUCCESS) {
+								echo display_success();
+							}
+						break;
+						case 1 :
+						default :
+							if($ERROR) {
+								echo display_error();
+							}
+							if($NOTICE) {
+								echo display_error();
+							}
+							if($SUCCESS) {
+								echo display_success();
+							}
+							?>
+							<div class="display-notice" style="padding: 10px">
+								This page allows you to change your <?php echo APPLICATION_NAME; ?> password. To begin please enter your <?php echo APPLICATION_NAME; ?> username, current password and desired password into the form below then click Change.
+							</div>
+							<form action="<?php echo html_encode(basename(__FILE__)); ?>" method="post">
+							<input type="hidden" name="step" value="2" />
+							<table style="width: 100%" cellspacing="1" cellpadding="1" border="0">
+							<colgroup>
+								<col style="width: 25%" />
+								<col style="width: 75%" />
+							</colgroup>
+							<tfoot>
+								<tr>
+									<td colspan="2" style="padding-top: 15px; text-align: right">
+										<input type="button" value="Cancel" class="button" onclick="window.location='<?php echo ENTRADA_URL; ?>'" />
+										<input type="submit" class="button" value="Change" />
+									</td>
+								</tr>
+							</tfoot>
+							<tbody>
+								<tr>
+									<td><label for="username" class="form-required"><?php echo APPLICATION_NAME; ?> Username:</label></td>
+									<td>
+										<input type="text" id="username" name="username" value="<?php echo ((isset($_POST["username"])) ? html_encode(trim($_POST["username"])) : ""); ?>" style="width: 200px" maxlength="32" />
+									</td>
+								</tr>
+								<tr>
+									<td style="padding-bottom: 15px"><label for="password" class="form-required">Current Password:</label></td>
+									<td style="padding-bottom: 15px">
+										<input type="password" id="password" name="password" value="" style="width: 200px" maxlength="24" />
+										<span class="content-small" style="padding-left: 5px">Don't know your current password? <a href="<?php echo ENTRADA_URL; ?>/password-reset.php" style="font-size: 10px">Click here</a></span>
+									</td>
+								</tr>
+								<tr>
+									<td><label for="npassword1" class="form-required">Enter New Password:</label></td>
+									<td>
+										<input type="password" id="npassword1" name="npassword1" value="" style="width: 200px" maxlength="24" />
+										<span class="content-small" style="padding-left: 5px">Password must be 6 - 24 alphanumeric characters.</span>
+									</td>
+								</tr>
+								<tr>
+									<td><label for="npassword2" class="form-required">Re-enter New Password:</label></td>
+									<td><input type="password" id="npassword2" name="npassword2" value="" style="width: 200px" maxlength="24" /></td>
+								</tr>
+							</tbody>
+							</table>
+							</form>
+							<?php
+						break;
+					}
+					?>
+				</div>
+			</td>
+		</tr>
 	</tbody>
-</table>
 </body>
 </html>

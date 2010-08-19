@@ -28,7 +28,7 @@ function generateMSPRHTML(MSPR $mspr,$timestamp = null) {
 		
 		<body>
 			<h1></h1>
-			<div align="right"><img src="<?php echo ENTRADA_URL;?>/images/Letterhead.png" height=300 width=402></div>
+			<div align="right"><img src="<?php echo ENTRADA_URL;?>/images/Letterhead.png" height=300 width=400></div>
 			<div align="right"><b><u><?php echo $doc_date; ?></u></b></div>
 			<center><h2><u><?php echo $name; ?></u></h2></center>
 			<div><?php echo $name;?> entered the first year at Queen's University, School of Medicine in <?php echo $entry_year; ?> and is expected to graduate with the degree of Doctor of Medicine from Queen's in May of <?php echo $grad_year; ?>. The following is intended to supplement the official Queen's University Transcript.</div>

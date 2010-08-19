@@ -22,3 +22,7 @@ ADD INDEX ( `parent_id` );
 ALTER TABLE `departments` ADD `department_active` INT( 1 ) NOT NULL DEFAULT '1' AFTER `department_desc`,
 ADD INDEX ( `department_active` );
 
+-- Table: registered_apps
+
+ALTER TABLE `registered_apps` CHANGE `script_id` `script_id` varchar(32) NOT NULL DEFAULT '0';
+ALTER TABLE `registered_apps` CHANGE `script_password` `script_password` varchar(32) NOT NULL DEFAULT '';

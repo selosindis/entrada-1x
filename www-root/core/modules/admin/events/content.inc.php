@@ -23,7 +23,6 @@
  * @author Developer: Matt Simpson <matt.simpson@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  * 
- * @version $Id: content.inc.php 1190 2010-05-11 18:23:51Z jellis $
 */
 
 if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
@@ -41,6 +40,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
+	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/eventtypes_list.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+?>
+<script type="text/javascript" charset="utf-8">
+	var EVENT_LIST_STATIC_TOTAL_DURATION = true;
+</script>
+<?php
 	if ($EVENT_ID) {
 		$query		= "	SELECT a.*, b.`organisation_id`
 						FROM `events` AS a
@@ -124,7 +129,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				$clinical_presentations_list	= array();
 				$clinical_presentations			= array();
 
-				$results	= fetch_mcc_objectives();
+				$results	= fetch_mcc_objectives(0, array(), $event_info["course_id"]);
 				if ($results) {
 					foreach ($results as $result) {
 						$clinical_presentations_list[$result["objective_id"]] = $result["objective_name"];
@@ -134,9 +139,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				if ((isset($_POST["clinical_presentations"])) && (is_array($_POST["clinical_presentations"])) && (count($_POST["clinical_presentations"]))) {
 					foreach ($_POST["clinical_presentations"] as $objective_id) {
 						if ($objective_id = clean_input($objective_id, array("trim", "int"))) {
-							$query	= "	SELECT `objective_id` FROM `global_lu_objectives` 
-										WHERE `objective_id` = ".$db->qstr($objective_id)."
-										AND `objective_active` = '1'";
+							$query	= "	SELECT a.`objective_id` 
+										FROM `global_lu_objectives` AS a
+										JOIN `course_objectives` AS b
+										ON b.`course_id` = ".$event_info["course_id"]."
+										AND a.`objective_id` = b.`objective_id`
+										WHERE a.`objective_id` = ".$db->qstr($objective_id)."
+										AND b.`objective_type` = 'event'
+										AND a.`objective_active` = '1'";
 							$result	= $db->GetRow($query);
 							if ($result) {
 								$clinical_presentations[$objective_id] = $clinical_presentations_list[$objective_id];
@@ -144,7 +154,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						}
 					}
 				} else {
-					$query		= "SELECT `objective_id` FROM `event_objectives` WHERE `objective_type` = 'event' AND `event_id` = ".$db->qstr($EVENT_ID);
+					$query		= "	SELECT a.`objective_id` 
+									FROM `event_objectives` AS a
+									JOIN `course_objectives` AS b
+									ON b.`course_id` = ".$event_info["course_id"]."
+									AND a.`objective_id` = b.`objective_id`
+									WHERE a.`objective_type` = 'event' 
+									AND b.`objective_type` = 'event'
+									AND a.`event_id` = ".$db->qstr($EVENT_ID);
 					$results	= $db->GetAll($query);
 					if ($results) {
 						foreach ($results as $result) {
@@ -195,17 +212,33 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					}
 				}
 
+				$query		= "SELECT * FROM `event_eventtypes` WHERE `event_id` = ".$db->qstr($EVENT_ID)." ORDER BY `eeventtype_id` ASC";
+				$results	= $db->GetAll($query);
+				$initial_duration = 0;
+				if ($results) {
+					foreach ($results as $result) {
+						$initial_duration += $result["duration"];
+						$event_eventtypes[] = array($result["eventtype_id"], $result["duration"], $event_eventtypes_list[$result["eventtype_id"]]);
+					}
+				}
+				?>
+				<script type="text/javascript" charset="utf-8">
+					var INITIAL_EVENT_DURATION = <?php echo $initial_duration; ?>
+				</script>
+				<?php
 				if (isset($_POST["eventtype_duration_order"])) {
+					$old_event_eventtypes = $event_eventtypes;
+					$event_eventtypes = array();
 					$eventtype_durations = $_POST["duration_segment"];
 
 					$event_types = explode(",", trim($_POST["eventtype_duration_order"]));
-
+					
 					if ((is_array($event_types)) && (count($event_types))) {
 						foreach ($event_types as $order => $eventtype_id) {
 							if (($eventtype_id = clean_input($eventtype_id, array("trim", "int"))) && ($duration = clean_input($eventtype_durations[$order], array("trim", "int")))) {
-								if (!($duration > 0)) {
+								if (!($duration >= 60)) {
 									$ERROR++;
-									$ERRORSTR[] = "Event type <strong>durations</strong> may not be 0 or negative.";
+									$ERRORSTR[] = "Event type <strong>durations</strong> may not be less than 60 minutes.";
 								}
 
 								$query	= "SELECT `eventtype_title` FROM `events_lu_eventtypes` WHERE `eventtype_id` = ".$db->qstr($eventtype_id);
@@ -215,214 +248,223 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								}
 							}
 						}
+						
+						$event_duration	= 0;
+						$old_event_duration = 0;
+						foreach($event_eventtypes as $event_type) {
+							$event_duration += $event_type[1];
+						}
+						
+						foreach($old_event_eventtypes as $event_type) {
+							$old_event_duration += $event_type[1];
+						}
+
+						if($old_event_duration != $event_duration) {
+							$ERROR++;
+							$ERRORSTR[] = "The modified <strong>Event Types</strong> duration specified is different than the exisitng one, please ensure the event's duration remains the same.";
+						}
 					} else {
 						$ERROR++;
 						$ERRORSTR[] = "At least one event type in the <strong>Event Types</strong> field is required.";
-					}
-				} else {
-					$query		= "SELECT * FROM `event_eventtypes` WHERE `event_id` = ".$db->qstr($EVENT_ID)." ORDER BY `eeventtype_id` ASC";
-					$results	= $db->GetAll($query);
-					if ($results) {
-						foreach ($results as $result) {
-							$event_eventtypes[] = array($result["eventtype_id"], $result["duration"], $event_eventtypes_list[$result["eventtype_id"]]);
-						}
 					}
 				}
 
 				if (isset($_POST["type"])) {
 					switch ($_POST["type"]) {
 						case "content" :
-							/**
-							 * Event Description
-							 */
-							if ((isset($_POST["event_description"])) && (clean_input($_POST["event_description"], array("notags", "nows")))) {
-								$event_description = clean_input($_POST["event_description"], array("allowedtags"));
-							} else {
-								$event_description = "";
-							}
-
-							/**
-							 * Free-Text Objectives
-							 */
-							if ((isset($_POST["event_objectives"])) && (clean_input($_POST["event_objectives"], array("notags", "nows")))) {
-								$event_objectives = clean_input($_POST["event_objectives"], array("allowedtags"));
-							} else {
-								$event_objectives = "";
-							}
-
-							/**
-							 * Teacher's Message
-							 */
-							if ((isset($_POST["event_message"])) && (clean_input($_POST["event_message"], array("notags", "nows")))) {
-								$event_message = clean_input($_POST["event_message"], array("allowedtags"));
-							} else {
-								$event_message = "";
-							}
-
-							$event_finish	= $event_info["event_start"];
-							$event_duration	= 0;
-
-							foreach($event_eventtypes as $event_type) {
-								$event_finish += ($event_type[1] * 60);
-								$event_duration += $event_type[1];
-							}
-
-
-							/**
-							 * Update base Learning Event.
-							 */
-							if ($db->AutoExecute("events", array("event_objectives" => $event_objectives, "event_description" => $event_description, "event_message" => $event_message, "event_finish" => $event_finish, "event_duration" => $event_duration, "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "UPDATE", "`event_id` = ".$db->qstr($EVENT_ID))) {
-								$SUCCESS++;
-								$SUCCESSSTR[] = "You have successfully updated the event details for this learning event.";
-
-								application_log("success", "Updated learning event content.");
-							} else {
-								application_log("error", "Failed to update learning event content. Database said: ".$db->ErrorMsg());
-							}
-
-							/**
-							 * Update Event Types.
-							 */
-							$query = "DELETE FROM `event_eventtypes` WHERE `event_id` = ".$db->qstr($EVENT_ID);
-							if ($db->Execute($query)) {
-								foreach ($event_eventtypes as $event_type) {
-									if (!$db->AutoExecute("event_eventtypes", array("event_id" => $EVENT_ID, "eventtype_id" => $event_type[0], "duration" => $event_type[1]), "INSERT")) {
-										$ERROR++;
-										$ERRORSTR[] = "There was an error while trying to save the selected <strong>Event Type</strong> for this event.<br /><br />The system administrator was informed of this error; please try again later.";
-
-										application_log("error", "Unable to insert a new event_eventtype record while adding a new event. Database said: ".$db->ErrorMsg());
-									}
+							if(!$ERROR) {
+								/**
+								 * Event Description
+								 */
+								if ((isset($_POST["event_description"])) && (clean_input($_POST["event_description"], array("notags", "nows")))) {
+									$event_description = clean_input($_POST["event_description"], array("allowedtags"));
+								} else {
+									$event_description = "";
 								}
-							} else {
-								$ERROR++;
-								$ERRORSTR[] = "There was an error while trying to update the selected <strong>Event Types</strong> for this event.<br /><br />The system administrator was informed of this error; please try again later.";
 
-								application_log("error", "Unable to delete any eventtype records while editing an event. Database said: ".$db->ErrorMsg());
-							}
+								/**
+								 * Free-Text Objectives
+								 */
+								if ((isset($_POST["event_objectives"])) && (clean_input($_POST["event_objectives"], array("notags", "nows")))) {
+									$event_objectives = clean_input($_POST["event_objectives"], array("allowedtags"));
+								} else {
+									$event_objectives = "";
+								}
 
-							/**
-							 * Update Clinical Presentations.
-							 */
-							$query = "DELETE FROM `event_objectives` WHERE `objective_type` = 'event' AND `event_id` = ".$db->qstr($EVENT_ID);
-							if ($db->Execute($query)) {
-								if ((is_array($clinical_presentations)) && (count($clinical_presentations))) {
-									foreach ($clinical_presentations as $objective_id => $presentation_name) {
-										if (!$db->AutoExecute("event_objectives", array("event_id" => $EVENT_ID, "objective_id" => $objective_id, "objective_type" => "event", "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT")) {
+								/**
+								 * Teacher's Message
+								 */
+								if ((isset($_POST["event_message"])) && (clean_input($_POST["event_message"], array("notags", "nows")))) {
+									$event_message = clean_input($_POST["event_message"], array("allowedtags"));
+								} else {
+									$event_message = "";
+								}
+
+								$event_finish	= $event_info["event_start"];
+								$event_duration	= 0;
+
+								foreach($event_eventtypes as $event_type) {
+									$event_finish += ($event_type[1] * 60);
+									$event_duration += $event_type[1];
+								}
+					
+								/**
+								 * Update base Learning Event.
+								 */
+								if ($db->AutoExecute("events", array("event_objectives" => $event_objectives, "event_description" => $event_description, "event_message" => $event_message, "event_finish" => $event_finish, "event_duration" => $event_duration, "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "UPDATE", "`event_id` = ".$db->qstr($EVENT_ID))) {
+									$SUCCESS++;
+									$SUCCESSSTR[] = "You have successfully updated the event details for this learning event.";
+
+									application_log("success", "Updated learning event content.");
+								} else {
+									application_log("error", "Failed to update learning event content. Database said: ".$db->ErrorMsg());
+								}
+
+								/**
+								 * Update Event Types.
+								 */
+							
+								$query = "DELETE FROM `event_eventtypes` WHERE `event_id` = ".$db->qstr($EVENT_ID);
+								if ($db->Execute($query)) {
+									foreach ($event_eventtypes as $event_type) {
+										if (!$db->AutoExecute("event_eventtypes", array("event_id" => $EVENT_ID, "eventtype_id" => $event_type[0], "duration" => $event_type[1]), "INSERT")) {
 											$ERROR++;
-											$ERRORSTR[] = "There was an error when trying to insert a &quot;clinical presentation&quot; into the system. System administrators have been informed of this error; please try again later.";
+											$ERRORSTR[] = "There was an error while trying to save the selected <strong>Event Type</strong> for this event.<br /><br />The system administrator was informed of this error; please try again later.";
 
-											application_log("error", "Unable to insert a new clinical presentation to the database when adding a new event. Database said: ".$db->ErrorMsg());
+											application_log("error", "Unable to insert a new event_eventtype record while adding a new event. Database said: ".$db->ErrorMsg());
 										}
 									}
+								} else {
+									$ERROR++;
+									$ERRORSTR[] = "There was an error while trying to update the selected <strong>Event Types</strong> for this event.<br /><br />The system administrator was informed of this error; please try again later.";
+
+									application_log("error", "Unable to delete any eventtype records while editing an event. Database said: ".$db->ErrorMsg());
 								}
-							}
+			
+								/**
+								 * Update Clinical Presentations.
+								 */
+								$query = "DELETE FROM `event_objectives` WHERE `objective_type` = 'event' AND `event_id` = ".$db->qstr($EVENT_ID);
+								if ($db->Execute($query)) {
+									if ((is_array($clinical_presentations)) && (count($clinical_presentations))) {
+										foreach ($clinical_presentations as $objective_id => $presentation_name) {
+											if (!$db->AutoExecute("event_objectives", array("event_id" => $EVENT_ID, "objective_id" => $objective_id, "objective_type" => "event", "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT")) {
+												$ERROR++;
+												$ERRORSTR[] = "There was an error when trying to insert a &quot;clinical presentation&quot; into the system. System administrators have been informed of this error; please try again later.";
 
-							/**
-							 * Update Curriculum Objectives.
-							 */
-							$query = "DELETE FROM `event_objectives` WHERE `objective_type` = 'course' AND `event_id` = ".$db->qstr($EVENT_ID);
-							if ($db->Execute($query)) {
-								if ((isset($curriculum_objectives)) && (is_array($curriculum_objectives)) && (count($curriculum_objectives))) {
-									foreach ($curriculum_objectives as $objective_id => $objective_text) {
-										if ($objective_id = (int) $objective_id) {
-											$query	= "	SELECT * FROM `global_lu_objectives` 
-														WHERE `objective_id` = ".$db->qstr($objective_id)."
-														AND `objective_active` = '1'";
-											$result	= $db->GetRow($query);
-											if ($result) {
-												if (!$db->AutoExecute("event_objectives", array("event_id" => $EVENT_ID, "objective_details" => $objective_text, "objective_id" => $objective_id, "objective_type" => "course", "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT")) {
-													$ERROR++;
-													$ERRORSTR[] = "There was an error when trying to insert a &quot;course objective&quot; into the system. System administrators have been informed of this error; please try again later.";
-
-													application_log("error", "Unable to insert a new course objective to the database when adding a new event. Database said: ".$db->ErrorMsg());
-												}
-											}
-										}
-									}
-
-									/**
-									 * Changes have been made so update the $curriculum_objectives_list variable.
-									 */
-									$curriculum_objectives_list = courses_fetch_objectives(array($event_info["course_id"]), 1, false, false, $EVENT_ID, true);
-								}
-							}
-
-							/**
-							 * Update ED10 information.
-							 */
-							$query = "DELETE FROM `event_ed10` WHERE `event_id` = ".$db->qstr($EVENT_ID);
-							if ($db->Execute($query)) {
-								if ((isset($_POST["event_ed10"])) && (is_array($_POST["event_ed10"])) && (count($_POST["event_ed10"]))) {
-									foreach ($_POST["event_ed10"] as $ed10_id => $value) {
-										if ($ed10_id = clean_input($ed10_id, array("trim", "int"))) {
-											$squery		= "SELECT * FROM `events_lu_ed10` WHERE `ed10_id` = ".$db->qstr($ed10_id);
-											$sresult	= $db->GetRow($squery);
-											if ($sresult) {
-												if ((isset($value["major_topic"])) && ($value["major_topic"] == "major")) {
-													if (!$db->AutoExecute("event_ed10", array("event_id" => $EVENT_ID, "ed10_id" => $ed10_id, "major_topic" => "1", "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT")) {
-														$ERROR++;
-														$ERRORSTR[] = "There was an error when trying to insert an ED10 response into the system. System administrators have been informed of this error; please try again later.";
-
-														application_log("error", "Unable to insert a new event_ed10 entry into the database while modifying event contents. Database said: ".$db->ErrorMsg());
-													}
-												} elseif ((isset($value["minor_topic"])) && ($value["minor_topic"] == "minor")) {
-													if (!$db->AutoExecute("event_ed10", array("event_id" => $EVENT_ID, "ed10_id" => $ed10_id, "minor_topic" => "1", "minor_desc" => ((isset($value["minor_desc"])) ? (int) trim($value["minor_desc"]) : ""), "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT")) {
-														$ERROR++;
-														$ERRORSTR[] = "There was an error when trying to insert an ED10 response into the system. System administrators have been informed of this error; please try again later.";
-
-														application_log("error", "Unable to insert a new event_ed10 response to the database while modifying event contents. Database said: ".$db->ErrorMsg());
-													}
-												}
+												application_log("error", "Unable to insert a new clinical presentation to the database when adding a new event. Database said: ".$db->ErrorMsg());
 											}
 										}
 									}
 								}
-							}
 
-							/**
-							 * Update ED11 information.
-							 */
-							$query = "DELETE FROM `event_ed11` WHERE `event_id` = ".$db->qstr($EVENT_ID);
-							if ($db->Execute($query)) {
-								if ((isset($_POST["event_ed11"])) && (is_array($_POST["event_ed11"])) && (count($_POST["event_ed11"]))) {
-									foreach ($_POST["event_ed11"] as $ed11_id => $value) {
-										if ($ed11_id = clean_input($ed11_id, array("trim", "int"))) {
-											$squery		= "SELECT * FROM `events_lu_ed11` WHERE `ed11_id` = ".$db->qstr($ed11_id);
-											$sresult	= $db->GetRow($squery);
-											if ($sresult) {
-												if ((isset($value["major_topic"])) && ($value["major_topic"] == "major")) {
-													if (!$db->AutoExecute("event_ed11", array("event_id" => $EVENT_ID, "ed11_id" => $ed11_id, "major_topic" => "1", "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT")) {
+								/**
+								 * Update Curriculum Objectives.
+								 */
+								$query = "DELETE FROM `event_objectives` WHERE `objective_type` = 'course' AND `event_id` = ".$db->qstr($EVENT_ID);
+								if ($db->Execute($query)) {
+									if ((isset($curriculum_objectives)) && (is_array($curriculum_objectives)) && (count($curriculum_objectives))) {
+										foreach ($curriculum_objectives as $objective_id => $objective_text) {
+											if ($objective_id = (int) $objective_id) {
+												$query	= "	SELECT * FROM `global_lu_objectives` 
+															WHERE `objective_id` = ".$db->qstr($objective_id)."
+															AND `objective_active` = '1'";
+												$result	= $db->GetRow($query);
+												if ($result) {
+													if (!$db->AutoExecute("event_objectives", array("event_id" => $EVENT_ID, "objective_details" => $objective_text, "objective_id" => $objective_id, "objective_type" => "course", "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT")) {
 														$ERROR++;
-														$ERRORSTR[] = "There was an error when trying to insert an ED11 response into the system. System administrators have been informed of this error; please try again later.";
+														$ERRORSTR[] = "There was an error when trying to insert a &quot;course objective&quot; into the system. System administrators have been informed of this error; please try again later.";
 
-														application_log("error", "Unable to insert a new event_ed11 entry into the database while modifying event contents. Database said: ".$db->ErrorMsg());
+														application_log("error", "Unable to insert a new course objective to the database when adding a new event. Database said: ".$db->ErrorMsg());
 													}
-												} elseif ((isset($value["minor_topic"])) && ($value["minor_topic"] == "minor")) {
-													if (!$db->AutoExecute("event_ed11", array("event_id" => $EVENT_ID, "ed11_id" => $ed11_id, "minor_topic" => "1", "minor_desc" => ((isset($value["minor_desc"])) ? (int) trim($value["minor_desc"]) : ""), "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT")) {
-														$ERROR++;
-														$ERRORSTR[] = "There was an error when trying to insert an ED11 response into the system. System administrators have been informed of this error; please try again later.";
+												}
+											}
+										}
 
-														application_log("error", "Unable to insert a new event_ed11 response to the database while modifying event contents. Database said: ".$db->ErrorMsg());
+										/**
+										 * Changes have been made so update the $curriculum_objectives_list variable.
+										 */
+										$curriculum_objectives_list = courses_fetch_objectives(array($event_info["course_id"]), 1, false, false, $EVENT_ID, true);
+									}
+								}
+
+								/**
+								 * Update ED10 information.
+								 */
+								$query = "DELETE FROM `event_ed10` WHERE `event_id` = ".$db->qstr($EVENT_ID);
+								if ($db->Execute($query)) {
+									if ((isset($_POST["event_ed10"])) && (is_array($_POST["event_ed10"])) && (count($_POST["event_ed10"]))) {
+										foreach ($_POST["event_ed10"] as $ed10_id => $value) {
+											if ($ed10_id = clean_input($ed10_id, array("trim", "int"))) {
+												$squery		= "SELECT * FROM `events_lu_ed10` WHERE `ed10_id` = ".$db->qstr($ed10_id);
+												$sresult	= $db->GetRow($squery);
+												if ($sresult) {
+													if ((isset($value["major_topic"])) && ($value["major_topic"] == "major")) {
+														if (!$db->AutoExecute("event_ed10", array("event_id" => $EVENT_ID, "ed10_id" => $ed10_id, "major_topic" => "1", "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT")) {
+															$ERROR++;
+															$ERRORSTR[] = "There was an error when trying to insert an ED10 response into the system. System administrators have been informed of this error; please try again later.";
+
+															application_log("error", "Unable to insert a new event_ed10 entry into the database while modifying event contents. Database said: ".$db->ErrorMsg());
+														}
+													} elseif ((isset($value["minor_topic"])) && ($value["minor_topic"] == "minor")) {
+														if (!$db->AutoExecute("event_ed10", array("event_id" => $EVENT_ID, "ed10_id" => $ed10_id, "minor_topic" => "1", "minor_desc" => ((isset($value["minor_desc"])) ? (int) trim($value["minor_desc"]) : ""), "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT")) {
+															$ERROR++;
+															$ERRORSTR[] = "There was an error when trying to insert an ED10 response into the system. System administrators have been informed of this error; please try again later.";
+
+															application_log("error", "Unable to insert a new event_ed10 response to the database while modifying event contents. Database said: ".$db->ErrorMsg());
+														}
 													}
 												}
 											}
 										}
 									}
 								}
-							}
 
-							/**
-							 * Refresh the event_info array based on new details.
-							 */
-							$query		= "	SELECT a.*, b.`organisation_id`
-											FROM `events` AS a
-											LEFT JOIN `courses` AS b
-											ON b.`course_id` = a.`course_id`
-											WHERE a.`event_id` = ".$db->qstr($EVENT_ID)."
-											AND b.`course_active` = '1'";
-							$event_info	= $db->GetRow($query);
-							if (!$event_info) {
-								application_log("error", "After updating the text content of event_id [".$EVENT_ID."] the select query failed.");
+								/**
+								 * Update ED11 information.
+								 */
+								$query = "DELETE FROM `event_ed11` WHERE `event_id` = ".$db->qstr($EVENT_ID);
+								if ($db->Execute($query)) {
+									if ((isset($_POST["event_ed11"])) && (is_array($_POST["event_ed11"])) && (count($_POST["event_ed11"]))) {
+										foreach ($_POST["event_ed11"] as $ed11_id => $value) {
+											if ($ed11_id = clean_input($ed11_id, array("trim", "int"))) {
+												$squery		= "SELECT * FROM `events_lu_ed11` WHERE `ed11_id` = ".$db->qstr($ed11_id);
+												$sresult	= $db->GetRow($squery);
+												if ($sresult) {
+													if ((isset($value["major_topic"])) && ($value["major_topic"] == "major")) {
+														if (!$db->AutoExecute("event_ed11", array("event_id" => $EVENT_ID, "ed11_id" => $ed11_id, "major_topic" => "1", "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT")) {
+															$ERROR++;
+															$ERRORSTR[] = "There was an error when trying to insert an ED11 response into the system. System administrators have been informed of this error; please try again later.";
+
+															application_log("error", "Unable to insert a new event_ed11 entry into the database while modifying event contents. Database said: ".$db->ErrorMsg());
+														}
+													} elseif ((isset($value["minor_topic"])) && ($value["minor_topic"] == "minor")) {
+														if (!$db->AutoExecute("event_ed11", array("event_id" => $EVENT_ID, "ed11_id" => $ed11_id, "minor_topic" => "1", "minor_desc" => ((isset($value["minor_desc"])) ? (int) trim($value["minor_desc"]) : ""), "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT")) {
+															$ERROR++;
+															$ERRORSTR[] = "There was an error when trying to insert an ED11 response into the system. System administrators have been informed of this error; please try again later.";
+
+															application_log("error", "Unable to insert a new event_ed11 response to the database while modifying event contents. Database said: ".$db->ErrorMsg());
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+
+								/**
+								 * Refresh the event_info array based on new details.
+								 */
+								$query		= "	SELECT a.*, b.`organisation_id`
+												FROM `events` AS a
+												LEFT JOIN `courses` AS b
+												ON b.`course_id` = a.`course_id`
+												WHERE a.`event_id` = ".$db->qstr($EVENT_ID)."
+												AND b.`course_active` = '1'";
+								$event_info	= $db->GetRow($query);
+								if (!$event_info) {
+									application_log("error", "After updating the text content of event_id [".$EVENT_ID."] the select query failed.");
+								}
 							}
 						break;
 						case "files" :
@@ -875,54 +917,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 									?>
 									<div id="total_duration" class="content-small">Total time: 0 minutes.</div>
 									<input id="eventtype_duration_order" name="eventtype_duration_order" style="display: none;">
-									<script type="text/javascript">
-									var sortable;
-									function cleanupList() {
-										ol = $('duration_container');
-                                        if (ol.immediateDescendants().length > 0) {
-                                            ol.show();
-                                            $('duration_notice').hide();
-                                        } else {
-                                            ol.hide();
-                                            $('duration_notice').show();
-                                        }
-                                        total = $$('input.duration_segment').inject(0, function(acc, e) {
-                                            seg = parseInt($F(e));
-                                            if (Object.isNumber(seg)) {
-                                                acc += seg;
-                                            }
-                                            return acc;
-                                        });
-                                        $('total_duration').update('Total time: '+total+' minutes.');
-                                        sortable = Sortable.create('duration_container', {
-                                            onUpdate: writeOrder
-                                        });
-                                        writeOrder(null);
-									}
-
-									function writeOrder(container) {
-										$('eventtype_duration_order').value = Sortable.sequence('duration_container').join(',');
-									}
-
-									$('eventtype_ids').observe('change', function(event) {
-										select = $('eventtype_ids');
-										option = select.options[select.selectedIndex];
-										li = new Element('li', {id: 'type_'+option.value, 'class': ''});
-										li.insert(option.text+"  ");
-										li.insert(new Element('a', {href: '#', onclick: '$(this).up().remove(); cleanupList(); return false;', 'class': 'remove'}).insert(new Element('img', {src: '<?php echo ENTRADA_URL; ?>/images/action-delete.gif'})));
-										span = new Element('span', {'class': 'duration_segment_container'});
-										span.insert('Duration: ');
-										name = 'duration_segment[]';
-										span.insert(new Element('input', {'class': 'duration_segment', name: 'duration_segment[]', onchange: 'cleanupList();', 'value': 0}));
-										span.insert(' minutes');
-										li.insert(span);
-										$('duration_container').insert(li);
-										cleanupList();
-										select.selectedIndex = 0;
-
-									});
-									cleanupList();
-									</script>
 								</td>
 							</tr>
 							<tr>
@@ -1119,6 +1113,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								$sidebar_html  = "<div style=\"margin: 2px 0px 10px 3px; font-size: 10px\">\n";
 								$sidebar_html .= "	<div><img src=\"".ENTRADA_URL."/images/legend-primary-objective.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" style=\"vertical-align: middle\" /> Primary Objective</div>\n";
 								$sidebar_html .= "	<div><img src=\"".ENTRADA_URL."/images/legend-secondary-objective.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" style=\"vertical-align: middle\" /> Secondary Objective</div>\n";
+								$sidebar_html .= "	<div><img src=\"".ENTRADA_URL."/images/legend-tertiary-objective.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" style=\"vertical-align: middle\" /> Tertiary Objective</div>\n";
 								$sidebar_html .= "</div>\n";
 
 								new_sidebar_item("Objective Importance", $sidebar_html, "objective-legend", "open");

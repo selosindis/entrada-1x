@@ -10,7 +10,6 @@
  * @author Developer: Ilya Sorokin <isorokin@ucalgary.ca>
  * @copyright Copyright 2008 University of Calgary. All Rights Reserved.
  *
- * @version $Id$
 */
 
 class Entrada_Setup
@@ -178,7 +177,7 @@ return array (
   'admin' =>
   array (
     'firstname' => '{$this->admin_firstname}',
-    'lastname' => '{$this->entrada_relative}',
+    'lastname' => '{$this->admin_lastname}',
     'email' => '{$this->admin_email}',
   ),
 );

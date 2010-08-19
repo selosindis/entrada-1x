@@ -22,7 +22,6 @@
  * @author Developer: Matt Simpson <matt.simpson@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  * 
- * @version $Id: agent-regionaled.php 1204 2010-06-12 16:50:11Z simpson $
 */
 
 @set_include_path(implode(PATH_SEPARATOR, array(

@@ -15,15 +15,11 @@
  * You should have received a copy of the GNU General Public License
  * along with Entrada.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Primary controller file for the Events module.
- * /admin/events
- *
  * @author Organisation: Queen's University
  * @author Unit: School of Medicine
- * @author Developer: Matt Simpson <matt.simpson@queensu.ca>
+ * @author Developer: Harry Brundage <hbrundage@qmed.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
- * @version $Id: events.inc.php 1169 2010-05-01 14:18:49Z simpson $
  */
 
 if(!defined("PARENT_INCLUDED")) {
@@ -39,9 +35,9 @@ if(!defined("PARENT_INCLUDED")) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
-	define("IN_ASSESSMENTS",	true);
+	define("IN_ASSESSMENTS", true);
 
-	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/gradebook/assessments?".replace_query(array("section" => "index", "id" => $COURSE_ID, "step" => false)), "title" => "Assessments");
+	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/gradebook?".replace_query(array("section" => "view", "id" => $COURSE_ID, "step" => false)), "title" => "Assessments");
 
 	if (($router) && ($router->initRoute())) {
 		$PREFERENCES = preferences_load($MODULE);
@@ -57,6 +53,7 @@ if(!defined("PARENT_INCLUDED")) {
 		} else {
 			$ASSESSMENT_ID = 0;
 		}
+		
 		$module_file = $router->getRoute();
 		if ($module_file) {
 			require_once($module_file);

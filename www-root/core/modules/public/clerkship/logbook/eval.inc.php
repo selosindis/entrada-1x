@@ -20,7 +20,6 @@
  * @author Developer: James Ellis <james.ellis@queensu.ca>
  * @copyright Copyright 2009 Queen's University. All Rights Reserved.
  *
- * @version $Id: $
 */
 if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
     exit;

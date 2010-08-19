@@ -143,14 +143,17 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 										}
 									}
 								}
-								foreach ($PROCESSED_OBJECTIVES as $objective_id => $objective) {
-									$objective_found = $db->GetOne("SELECT `objective_id` FROM `course_objectives` WHERE `objective_id` = ".$db->qstr($objective_id)." AND `course_id` = ".$db->qstr($COURSE_ID));
-									if ($objective_found) {
-										$db->AutoExecute("course_objectives", array("objective_details" => $objective, "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "UPDATE", "`objective_id` = ".$db->qstr($objective_id)." AND `course_id` = ".$db->qstr($COURSE_ID));
-									} else {
-										$db->AutoExecute("course_objectives", array("course_id" => $COURSE_ID, "objective_id" => $objective_id, "objective_details" => $objective, "importance" => 0, "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT");
+
+								if (is_array($PROCESSED_OBJECTIVES)) {
+									foreach ($PROCESSED_OBJECTIVES as $objective_id => $objective) {
+										$objective_found = $db->GetOne("SELECT `objective_id` FROM `course_objectives` WHERE `objective_id` = ".$db->qstr($objective_id)." AND `course_id` = ".$db->qstr($COURSE_ID));
+										if ($objective_found) {
+											$db->AutoExecute("course_objectives", array("objective_details" => $objective, "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "UPDATE", "`objective_id` = ".$db->qstr($objective_id)." AND `course_id` = ".$db->qstr($COURSE_ID));
+										} else {
+											$db->AutoExecute("course_objectives", array("course_id" => $COURSE_ID, "objective_id" => $objective_id, "objective_details" => $objective, "importance" => 0, "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT");
+										}
+
 									}
-									
 								}
 	
 								$SUCCESS++;
@@ -370,22 +373,9 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					}
 					$course_ids_string = $COURSE_ID;
 					require_once(ENTRADA_ABSOLUTE."/javascript/courses.js.php");
-					if($ENTRADA_ACL->amIAllowed(new CourseResource($course_details["course_id"], $course_details["organisation_id"]), 'update')) {
-						echo "<div class=\"no-printing\">\n";
-						echo "	<div style=\"float: right; text-align: right\">\n";
-						echo "		<a href=\"".ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "edit", "id" => $course_details["course_id"], "step" => false))."\"><img src=\"".ENTRADA_URL."/images/event-details.gif\" width=\"16\" height=\"16\" alt=\"Edit course details\" title=\"Edit course details\" border=\"0\" style=\"vertical-align: middle\" /></a> <a href=\"".ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "edit", "id" => $course_details["course_id"], "step" => false))."\" style=\"font-size: 10px; margin-right: 8px\">Edit course details</a>\n";
-						echo "	</div>\n";
-						echo "</div>\n";
-					}
-	
-					$sidebar_html  = "<div style=\"margin: 2px 0px 10px 3px; font-size: 10px\">\n";
-					$sidebar_html .= "	<div><img src=\"".ENTRADA_URL."/images/legend-primary-objective.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" style=\"vertical-align: middle\" /> Primary Objective</div>\n";
-					$sidebar_html .= "	<div><img src=\"".ENTRADA_URL."/images/legend-secondary-objective.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" style=\"vertical-align: middle\" /> Secondary Objective</div>\n";
-					$sidebar_html .= "</div>\n";
-					
-					new_sidebar_item("Objective Importance", $sidebar_html, "objective-legend", "open");
-					
-					
+
+					courses_subnavigation($course_details);
+
 					echo "<h1>".html_encode($course_details["course_name"])."</h1>\n";
 	
 					if($SUCCESS) {
@@ -407,112 +397,112 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						<form action="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?<?php echo replace_query(); ?>" method="post">
 						<input type="hidden" name="type" value="text" />
 						<table style="width: 100%" cellspacing="0" cellpadding="2" border="0">
-						<colgroup>
-							<col width="22%" />
-							<col width="78%" />
-						</colgroup>
-						<tfoot>
-							<tr>
-								<td colspan="2" style="text-align: right; padding-top: 5px"><input type="submit" value="Save" /></td>
-							</tr>
-						</tfoot>
-						<tbody>
-						<?php
-						echo "	<tr>\n";
-						echo "		<td style=\"vertical-align: top\">Course Directors</td>\n";
-						echo "		<td>\n";
-									$squery		= "	SELECT a.`proxy_id`, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`email`
-													FROM `course_contacts` AS a
-													LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
-													ON b.`id` = a.`proxy_id`
-													WHERE a.`course_id` = ".$db->qstr($course_details["course_id"])."
-													AND a.`contact_type` = 'director'
-													AND b.`id` IS NOT NULL
-													ORDER BY a.`contact_order` ASC";
-									$results	= $db->GetAll($squery);
-									if($results) {
-										foreach($results as $key => $sresult) {
-											echo "<a href=\"mailto:".html_encode($sresult["email"])."\">".html_encode($sresult["fullname"])."</a><br />\n";
+							<colgroup>
+								<col width="22%" />
+								<col width="78%" />
+							</colgroup>
+							<tfoot>
+								<tr>
+									<td colspan="2" style="text-align: right; padding-top: 5px"><input type="submit" value="Save" /></td>
+								</tr>
+							</tfoot>
+							<tbody>
+							<?php
+							echo "<tr>\n";
+							echo "	<td><label for=\"course_url\" class=\"form-nrequired\">External Website URL</label></td>\n";
+							echo "	<td><input type=\"text\" id=\"course_url\" name=\"course_url\" value=\"".((isset($PROCESSED["course_url"])) ? html_encode($PROCESSED["course_url"]) : "")."\" style=\"width: 450px\" /></td>\n";
+							echo "</tr>\n";
+							echo "<tr>\n";
+							echo "	<td>&nbsp;</td>\n";
+							echo "	<td><span class=\"content-small\"><strong>Please Note:</strong> If you have an external course website or have created a Community for your course, please enter the URL here and a link will be automatically created on the public side.</span></td>\n";
+							echo "</tr>\n";
+							echo "<tr>\n";
+							echo "	<td colspan=\"2\">&nbsp;</td>\n";
+							echo "</tr>\n";
+							echo "<tr>\n";
+							echo "	<td style=\"vertical-align: top\">Course Directors</td>\n";
+							echo "	<td>\n";
+										$squery		= "	SELECT a.`proxy_id`, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`email`
+														FROM `course_contacts` AS a
+														LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
+														ON b.`id` = a.`proxy_id`
+														WHERE a.`course_id` = ".$db->qstr($course_details["course_id"])."
+														AND a.`contact_type` = 'director'
+														AND b.`id` IS NOT NULL
+														ORDER BY a.`contact_order` ASC";
+										$results	= $db->GetAll($squery);
+										if($results) {
+											foreach($results as $key => $sresult) {
+												echo "<a href=\"mailto:".html_encode($sresult["email"])."\">".html_encode($sresult["fullname"])."</a><br />\n";
+											}
+										} else {
+											echo "To Be Announced";
 										}
-									} else {
-										echo "To Be Announced";
-									}
-						echo "		</td>\n";
-						echo "	</tr>\n";
-						
-						echo "	<tr>\n";
-						echo "		<td style=\"vertical-align: top\">Curriculum Coordinators</td>\n";
-						echo "		<td>\n";
-									$squery		= "	SELECT a.`proxy_id`, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`email`
-													FROM `course_contacts` AS a
-													LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
-													ON b.`id` = a.`proxy_id`
-													WHERE a.`course_id` = ".$db->qstr($course_details["course_id"])."
-													AND a.`contact_type` = 'ccoordinator'
-													AND b.`id` IS NOT NULL
-													ORDER BY a.`contact_order` ASC";
-									$results	= $db->GetAll($squery);
-									if($results) {
-										foreach($results as $key => $sresult) {
-											echo "<a href=\"mailto:".html_encode($sresult["email"])."\">".html_encode($sresult["fullname"])."</a><br />\n";
+							echo "		</td>\n";
+							echo "	</tr>\n";
+
+							echo "	<tr>\n";
+							echo "		<td style=\"vertical-align: top\">Curriculum Coordinators</td>\n";
+							echo "		<td>\n";
+										$squery		= "	SELECT a.`proxy_id`, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`email`
+														FROM `course_contacts` AS a
+														LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
+														ON b.`id` = a.`proxy_id`
+														WHERE a.`course_id` = ".$db->qstr($course_details["course_id"])."
+														AND a.`contact_type` = 'ccoordinator'
+														AND b.`id` IS NOT NULL
+														ORDER BY a.`contact_order` ASC";
+										$results	= $db->GetAll($squery);
+										if($results) {
+											foreach($results as $key => $sresult) {
+												echo "<a href=\"mailto:".html_encode($sresult["email"])."\">".html_encode($sresult["fullname"])."</a><br />\n";
+											}
+										} else {
+											echo "To Be Announced";
 										}
-									} else {
-										echo "To Be Announced";
-									}
-						echo "		</td>\n";
-						echo "	</tr>\n";
-	
-						if((int) $course_details["pcoord_id"]) {
+							echo "		</td>\n";
+							echo "	</tr>\n";
+
+							if((int) $course_details["pcoord_id"]) {
+								echo "<tr>\n";
+								echo "    <td>Program Coordinator</td>\n";
+								echo "    <td><a href=\"mailto:".get_account_data("email", $course_details["pcoord_id"])."\">".get_account_data("fullname", $course_details["pcoord_id"])."</a></td>\n";
+								echo "</tr>\n";
+							}
+
+							if((int) $course_details["evalrep_id"]) {
+								echo "<tr>\n";
+								echo "    <td>Evaluation Rep</td>\n";
+								echo "    <td><a href=\"mailto:".get_account_data("email", $course_details["evalrep_id"])."\">".get_account_data("fullname", $course_details["evalrep_id"])."</a></td>\n";
+								echo "</tr>\n";
+							}
+
+							if((int) $course_details["studrep_id"]) {
+								echo "<tr>\n";
+								echo "    <td>Student Rep</td>\n";
+								echo "    <td><a href=\"mailto:".get_account_data("email", $course_details["studrep_id"])."\">".get_account_data("fullname", $course_details["studrep_id"])."</a></td>\n";
+								echo "</tr>\n";
+							}
 							echo "<tr>\n";
-							echo "    <td>Program Coordinator</td>\n";
-							echo "    <td><a href=\"mailto:".get_account_data("email", $course_details["pcoord_id"])."\">".get_account_data("fullname", $course_details["pcoord_id"])."</a></td>\n";
+							echo "	<td colspan=\"2\">&nbsp;</td>\n";
 							echo "</tr>\n";
-						}
-	
-						if((int) $course_details["evalrep_id"]) {
 							echo "<tr>\n";
-							echo "    <td>Evaluation Rep</td>\n";
-							echo "    <td><a href=\"mailto:".get_account_data("email", $course_details["evalrep_id"])."\">".get_account_data("fullname", $course_details["evalrep_id"])."</a></td>\n";
+							echo "	<td style=\"vertical-align: top\"><label for=\"course_description\" class=\"form-nrequired\">Course Description</label></td>\n";
+							echo "	<td>\n";
+							echo "		<textarea id=\"course_description\" name=\"course_description\" style=\"width: 100%; height: 150px\" cols=\"70\" rows=\"10\">".((isset($PROCESSED["course_description"])) ? html_encode(trim(strip_selected_tags($PROCESSED["course_description"], array("font")))) : "")."</textarea>";
+							echo "	</td>\n";
 							echo "</tr>\n";
-						}
-	
-						if((int) $course_details["studrep_id"]) {
 							echo "<tr>\n";
-							echo "    <td>Student Rep</td>\n";
-							echo "    <td><a href=\"mailto:".get_account_data("email", $course_details["studrep_id"])."\">".get_account_data("fullname", $course_details["studrep_id"])."</a></td>\n";
+							echo "	<td colspan=\"2\">&nbsp;</td>\n";
 							echo "</tr>\n";
-						}
-						echo "<tr>\n";
-						echo "	<td colspan=\"2\">&nbsp;</td>\n";
-						echo "</tr>\n";
-						echo "<tr>\n";
-						echo "	<td><label for=\"course_url\" class=\"form-nrequired\">External Website URL</label></td>\n";
-						echo "	<td><input type=\"text\" id=\"course_url\" name=\"course_url\" value=\"".((isset($PROCESSED["course_url"])) ? html_encode($PROCESSED["course_url"]) : "")."\" style=\"width: 450px\" /></td>\n";
-						echo "</tr>\n";
-						echo "<tr>\n";
-						echo "	<td>&nbsp;</td>\n";
-						echo "	<td><span class=\"content-small\"><strong>Please Note:</strong> If you have an external course website or have created a Community for your course, please enter the URL here and a link will be automatically created on the public side.</span></td>\n";
-						echo "</tr>\n";
-						echo "<tr>\n";
-						echo "	<td colspan=\"2\">&nbsp;</td>\n";
-						echo "</tr>\n";
-						echo "<tr>\n";
-						echo "	<td style=\"vertical-align: top\"><label for=\"course_description\" class=\"form-nrequired\">Course Description</label></td>\n";
-						echo "	<td>\n";
-						echo "		<textarea id=\"course_description\" name=\"course_description\" style=\"width: 100%; height: 150px\" cols=\"70\" rows=\"10\">".((isset($PROCESSED["course_description"])) ? html_encode(trim(strip_selected_tags($PROCESSED["course_description"], array("font")))) : "")."</textarea>";
-						echo "	</td>\n";
-						echo "</tr>\n";
-						echo "<tr>\n";
-						echo "	<td colspan=\"2\">&nbsp;</td>\n";
-						echo "</tr>\n";
-						echo "<tr>\n";
-						echo "	<td style=\"vertical-align: top\"><label for=\"course_message\" class=\"form-nrequired\">Director's Message</label></td>\n";
-						echo "	<td>\n";
-						echo "		<textarea id=\"course_message\" name=\"course_message\" style=\"width: 100%; height: 150px\" cols=\"70\" rows=\"10\">".((isset($PROCESSED["course_message"])) ? html_encode(trim(strip_selected_tags($PROCESSED["course_message"], array("font")))) : "")."</textarea>";
-						echo "	</td>\n";
-						echo "</tr>\n";
-						?>
-						</tbody>
+							echo "<tr>\n";
+							echo "	<td style=\"vertical-align: top\"><label for=\"course_message\" class=\"form-nrequired\">Director's Message</label></td>\n";
+							echo "	<td>\n";
+							echo "		<textarea id=\"course_message\" name=\"course_message\" style=\"width: 100%; height: 150px\" cols=\"70\" rows=\"10\">".((isset($PROCESSED["course_message"])) ? html_encode(trim(strip_selected_tags($PROCESSED["course_message"], array("font")))) : "")."</textarea>";
+							echo "	</td>\n";
+							echo "</tr>\n";
+							?>
+							</tbody>
 						</table>
 						</form>
 					</div>
@@ -520,7 +510,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					if (count($course_objectives["used_ids"])) {
 						?>
 						<a name="course-objectives-section"></a>
-						<h2 title="Course Objectives Section">Curriculum Objectives</h2>
+						<h2 title="Course Objectives Section">Course Objectives</h2>
 						<div id="course-objectives-section">
 							<form action="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?<?php echo replace_query(); ?>" method="post">
 							<input type="hidden" name="type" value="objectives" />
@@ -554,6 +544,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								<tr>
 									<td colspan="2">
 										<div id="objectives_list">
+										<h3>Curriculum Objectives</h3>
+										<strong>The learner will be able to:</strong>
 										<?php echo event_objectives_in_list($course_objectives["objectives"], 1, true); ?>
 										</div>
 									</td>
@@ -563,6 +555,14 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							</form>
 						</div>
 						<?php
+						$sidebar_html  = "<div style=\"margin: 2px 0px 10px 3px; font-size: 10px\">\n";
+						$sidebar_html .= "	<div><img src=\"".ENTRADA_URL."/images/legend-primary-objective.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" style=\"vertical-align: middle\" /> Primary Objective</div>\n";
+						$sidebar_html .= "	<div><img src=\"".ENTRADA_URL."/images/legend-secondary-objective.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" style=\"vertical-align: middle\" /> Secondary Objective</div>\n";
+						$sidebar_html .= "	<div><img src=\"".ENTRADA_URL."/images/legend-tertiary-objective.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" style=\"vertical-align: middle\" /> Tertiary Objective</div>\n";
+						$sidebar_html .= "</div>\n";
+
+						new_sidebar_item("Objective Importance", $sidebar_html, "objective-legend", "open");
+
 						if ((@is_array($edit_ajax)) && (@count($edit_ajax))) {
 							echo "<script type=\"text/javascript\">\n";
 							foreach ($edit_ajax as $objective_id) {

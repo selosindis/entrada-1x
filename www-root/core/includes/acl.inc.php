@@ -22,7 +22,6 @@
  * @author Developer: Harry Brundage <hbrundage@qmed.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
- * @version $Id: $
 */
 
 require_once("Entrada/authentication/aclfactory.inc.php");

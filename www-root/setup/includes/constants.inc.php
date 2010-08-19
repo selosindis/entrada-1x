@@ -11,7 +11,6 @@
  * @author Developer: James Ellis <james.ellis@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
- * @version $Id: constants.inc.php 1126 2010-04-16 12:56:49Z jellis $
 */
 
 $GNU = <<<GNUPUBLICLICENSE

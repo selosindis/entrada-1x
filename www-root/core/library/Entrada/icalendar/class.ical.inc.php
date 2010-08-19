@@ -56,7 +56,6 @@ include_once 'class.icaljournal.inc.php';
 * @package iCalendar
 * @abstract
 * @example sample_ical.php Sample script
-* @version 1.032
 */
 class iCal {
 

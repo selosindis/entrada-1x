@@ -20,8 +20,7 @@
  * @author Developer: James Ellis <james.ellis@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
- * @version $Id: edit.inc.php 1202 2010-06-10 19:19:49Z hbrundage $
- */
+*/
 
 if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 	exit;
@@ -39,6 +38,45 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 	if ($COURSE_ID) {
+		/** 
+		* Fetch the Clinical Presentation details.
+		*/
+		$clinical_presentations_list	= array();
+		$clinical_presentations			= array();
+	
+		$results	= fetch_mcc_objectives();
+		if ($results) {
+			foreach ($results as $result) {
+				$clinical_presentations_list[$result["objective_id"]] = $result["objective_name"];
+			}
+		}
+	
+		if ((isset($_POST["clinical_presentations"])) && (is_array($_POST["clinical_presentations"])) && (count($_POST["clinical_presentations"]))) {
+			foreach ($_POST["clinical_presentations"] as $objective_id) {
+				if ($objective_id = clean_input($objective_id, array("trim", "int"))) {
+					$query	= "	SELECT `objective_id` FROM `global_lu_objectives` 
+								WHERE `objective_id` = ".$db->qstr($objective_id)."
+								AND `objective_active` = '1'";
+					$result	= $db->GetRow($query);
+					if ($result) {
+						$clinical_presentations[$objective_id] = $clinical_presentations_list[$objective_id];
+					}
+				}
+			}
+		} else {
+			$query		= "SELECT `objective_id` FROM `course_objectives` WHERE `objective_type` = 'event' AND `course_id` = ".$db->qstr($COURSE_ID);
+			$results	= $db->GetAll($query);
+			if ($results) {
+				foreach ($results as $result) {
+					$clinical_presentations[$result["objective_id"]] = $clinical_presentations_list[$result["objective_id"]];
+				}
+			}
+		}
+		
+		$HEAD[]		= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/picklist.js\"></script>\n";
+		$HEAD[]		= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/scriptaculous/tree.js\"></script>\n";
+		$ONLOAD[]	= "$('clinical_presentations_list').style.display = 'none'";
+		
 		$query			= "	SELECT * FROM `courses` 
 							WHERE `course_id` = ".$db->qstr($COURSE_ID)."
 							AND `course_active` = '1'";
@@ -46,14 +84,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 		if ($course_details && $ENTRADA_ACL->amIAllowed(new CourseResource($course_details['course_id'], $course_details['organisation_id']), 'update')) {
 			$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "edit", "id" => $COURSE_ID, "step" => false)), "title" => "Editing Course");
 
-			echo "<div class=\"no-printing\">\n";
-			echo "	<div style=\"float: right;\">\n";
-			echo "		<a href=\"".ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "content", "id" => $COURSE_ID, "step" => false))."\"><img src=\"".ENTRADA_URL."/images/event-contents.gif\" width=\"16\" height=\"16\" alt=\"Manage course content\" title=\"Manage course content\" border=\"0\" style=\"vertical-align: middle\" /></a> <a href=\"".ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "content", "id" => $COURSE_ID, "step" => false))."\" style=\"font-size: 10px; margin-right: 8px;\">Manage course content</a>\n";
-			if ($ENTRADA_ACL->amIAllowed(new GradebookResource($result["course_id"], $result["organisation_id"]), "read")) {
-				echo "<a href=\"".ENTRADA_URL."/admin/gradebook?section=edit&amp;id=".$COURSE_ID."\" style=\"font-size: 10px;\"><img src=\"".ENTRADA_URL."/images/book_go.png\" width=\"16\" height=\"16\" alt=\"Manage course content\" title=\"Manage course content\" border=\"0\" style=\"vertical-align: middle\" />&nbsp;Manage course gradebook</a>";				
-			}
-			echo "	</div>\n";
-			echo "</div>\n";
+			courses_subnavigation($course_details);
 
 			echo "<h1>Editing Course</h1>\n";
 
@@ -179,6 +210,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							$posted_objectives["secondary"][] = clean_input($objective, "int");
 						}
 					}
+
+					if ((isset($_POST["tertiary_objectives"])) && ($objectives = $_POST["tertiary_objectives"]) && (count($objectives))) {
+						$TERTIARY_OBJECTIVES = array();
+						foreach ($objectives as $objective_key => $objective) {
+							$TERTIARY_OBJECTIVES[] = clean_input($objective, "int");
+							$posted_objectives["tertiary"][] = clean_input($objective, "int");
+						}
+					}
 					
 					if (!$ERROR) {
 						$PROCESSED["updated_date"]	= time();
@@ -199,6 +238,22 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 										}
 									}
 									$db->Execute("UPDATE `community_members` SET `member_acl` = '0' WHERE `proxy_id` IN (".$delete_ids_string.") AND `community_id` = ".$db->qstr($community_id));
+								}
+							}
+							/**
+							 * Update Clinical Presentations.
+							 */
+							$query = "DELETE FROM `course_objectives` WHERE `objective_type` = 'event' AND `course_id` = ".$db->qstr($COURSE_ID);
+							if ($db->Execute($query)) {
+								if ((is_array($clinical_presentations)) && (count($clinical_presentations))) {
+									foreach ($clinical_presentations as $objective_id => $presentation_name) {
+										if (!$db->AutoExecute("course_objectives", array("course_id" => $COURSE_ID, "objective_id" => $objective_id, "objective_type" => "event", "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT")) {
+											$ERROR++;
+											$ERRORSTR[] = "There was an error when trying to insert a &quot;clinical presentation&quot; into the system. System administrators have been informed of this error; please try again later.";
+											application_log("error", "Unable to insert a new clinical presentation to the database when adding a new event. Database said: ".$db->ErrorMsg());
+											echo $db->ErrorMsg();
+										}
+									}
 								}
 							}
 							$query = "DELETE FROM `course_contacts` WHERE `course_id`=".$db->qstr($COURSE_ID);
@@ -291,15 +346,47 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								break;
 							}
 
-							$db->Execute("DELETE FROM `course_objectives` WHERE `course_id` = ".$db->qstr($COURSE_ID));
+							$query = "SELECT * FROM `course_objectives` WHERE `objective_type` = 'course' AND `course_id` = ".$db->qstr($COURSE_ID);
+							$course_objectives = $db->GetAll($query);
+							$objective_details = array();
+							if ($course_objectives && count($course_objectives)) {
+								foreach ($course_objectives as $course_objective) {
+									if ($course_objective["objective_details"]) {
+										$objective_details[$course_objective["objective_id"]]["details"] = $course_objective["objective_details"];
+										$objective_details[$course_objective["objective_id"]]["found"] = false;
+									}
+								}
+							}
+							$db->Execute("DELETE FROM `course_objectives` WHERE `objective_type` = 'course' AND `course_id` = ".$db->qstr($COURSE_ID));
 							if (is_array($PRIMARY_OBJECTIVES) && count($PRIMARY_OBJECTIVES)) {
 								foreach($PRIMARY_OBJECTIVES as $objective_id) {
-									$db->Execute("INSERT INTO `course_objectives` SET `course_id` = ".$db->qstr($COURSE_ID).", `objective_id` = ".$db->qstr($objective_id).", `updated_date` = ".$db->qstr(time()).", `updated_by` = ".$db->qstr($_SESSION["details"]["id"]).", `importance` = '1'");
+									$db->Execute("INSERT INTO `course_objectives` SET `course_id` = ".$db->qstr($COURSE_ID).", `objective_id` = ".$db->qstr($objective_id).", `updated_date` = ".$db->qstr(time()).", `updated_by` = ".$db->qstr($_SESSION["details"]["id"]).", `importance` = '1', `objective_details` = ".(isset($objective_details[$objective_id]) && $objective_details[$objective_id] ? $db->qstr($objective_details[$objective_id]["details"]) : "NULL"));
+									if (isset($objective_details[$objective_id]) && $objective_details[$objective_id]) {
+										$objective_details[$objective_id]["found"] = true;
+									}
 								}
 							}
 							if (is_array($SECONDARY_OBJECTIVES) && count($SECONDARY_OBJECTIVES)) {
 								foreach($SECONDARY_OBJECTIVES as $objective_id) {
-									$db->Execute("INSERT INTO `course_objectives` SET `course_id` = ".$db->qstr($COURSE_ID).", `objective_id` = ".$db->qstr($objective_id).", `updated_date` = ".$db->qstr(time()).", `updated_by` = ".$db->qstr($_SESSION["details"]["id"]).", `importance` = '2'");
+									$db->Execute("INSERT INTO `course_objectives` SET `course_id` = ".$db->qstr($COURSE_ID).", `objective_id` = ".$db->qstr($objective_id).", `updated_date` = ".$db->qstr(time()).", `updated_by` = ".$db->qstr($_SESSION["details"]["id"]).", `importance` = '2', `objective_details` = ".(isset($objective_details[$objective_id]) && $objective_details[$objective_id] ? $db->qstr($objective_details[$objective_id]["details"]) : "NULL"));
+									if (isset($objective_details[$objective_id]) && $objective_details[$objective_id]) {
+										$objective_details[$objective_id]["found"] = true;
+									}
+								}
+							}
+							if (is_array($TERTIARY_OBJECTIVES) && count($TERTIARY_OBJECTIVES)) {
+								foreach($TERTIARY_OBJECTIVES as $objective_id) {
+									$db->Execute("INSERT INTO `course_objectives` SET `course_id` = ".$db->qstr($COURSE_ID).", `objective_id` = ".$db->qstr($objective_id).", `updated_date` = ".$db->qstr(time()).", `updated_by` = ".$db->qstr($_SESSION["details"]["id"]).", `importance` = '3', `objective_details` = ".(isset($objective_details[$objective_id]) && $objective_details[$objective_id] ? $db->qstr($objective_details[$objective_id]["details"]) : "NULL"));
+									if (isset($objective_details[$objective_id]) && $objective_details[$objective_id]) {
+										$objective_details[$objective_id]["found"] = true;
+									}
+								}
+							}
+							if (is_array($objective_details) && count($objective_details)) {
+								foreach($objective_details as $objective_id => $objective) {
+									if (!$objective["found"]) {
+										$db->Execute("INSERT INTO `course_objectives` SET `course_id` = ".$db->qstr($COURSE_ID).", `objective_id` = ".$db->qstr($objective_id).", `updated_date` = ".$db->qstr(time()).", `updated_by` = ".$db->qstr($_SESSION["details"]["id"]).", `importance` = '1', `objective_details` = ".$db->qstr($objective["details"]));
+									}
 								}
 							}
 
@@ -495,7 +582,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						echo display_error();
 					}
 					?>
-					<form action="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?<?php echo replace_query(array("step" => 2)); ?>" method="post" onsubmit="$$('.PickList option').each(function (e) { e.selected = true; })">
+					<form action="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?<?php echo replace_query(array("step" => 2)); ?>" method="post" onsubmit="selIt()">
 					<h2 title="Course Details Section">Course Details</h2>
 					<div id="course-details-section">
 						<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Editing Course Details">
@@ -508,8 +595,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							<tr>
 								<td></td>
 								<td><label for="organisation_id" class="form-required">Course Organisation</label></td>
-												<td>
-													<select id="organisation_id" name="organisation_id" style="width: 250px">
+								<td>
+									<select id="organisation_id" name="organisation_id" style="width: 250px">
 									<?php
 									$query		= "SELECT `organisation_id`, `organisation_title` FROM `".AUTH_DATABASE."`.`organisations`";
 									$results	= $db->GetAll($query);
@@ -577,12 +664,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						$sidebar_html  = "<div style=\"margin: 2px 0px 10px 3px; font-size: 10px\">\n";
 						$sidebar_html .= "	<div><img src=\"".ENTRADA_URL."/images/legend-primary-objective.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" style=\"vertical-align: middle\" /> Primary Objective</div>\n";
 						$sidebar_html .= "	<div><img src=\"".ENTRADA_URL."/images/legend-secondary-objective.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" style=\"vertical-align: middle\" /> Secondary Objective</div>\n";
+						$sidebar_html .= "	<div><img src=\"".ENTRADA_URL."/images/legend-tertiary-objective.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" style=\"vertical-align: middle\" /> Tertiary Objective</div>\n";
 						$sidebar_html .= "</div>\n";
 						
 						new_sidebar_item("Objective Importance", $sidebar_html, "objective-legend", "open");
 					?>
 					<a name="course-objectives-section"></a>
-					<h2 title="Curricular Objectives Section">Curricular Objectives</h2>
+					<h2 title="Course Objectives Section">Course Objectives</h2>
 					<div id="course-objectives-section">
 						<input type="hidden" id="objectives_head" name="course_objectives" value="" />
 						<?php
@@ -596,6 +684,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								echo "<input type=\"hidden\" class=\"secondary_objectives\" id=\"secondary_objective_".$objective_id."\" name=\"secondary_objectives[]\" value=\"".$objective_id."\" />\n";
 							}
 						}
+						if (is_array($course_objectives["tertiary_ids"])) {
+							foreach ($course_objectives["tertiary_ids"] as $objective_id) {
+								echo "<input type=\"hidden\" class=\"tertiary_objectives\" id=\"tertiary_objective_".$objective_id."\" name=\"tertiary_objectives[]\" value=\"".$objective_id."\" />\n";
+							}
+						}
 						?>
 						<table style="width: 100%" cellspacing="0" cellpadding="2" border="0">
 						<colgroup>
@@ -606,11 +699,67 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						<tbody>
 							<tr>
 								<td>&nbsp;</td>
-								<td>
-									<label for="objective_select" class="form-nrequired">Curricular Objectives</label>
+								<td style="vertical-align: top">
+									Clinical Presentations
+									<div class="content-small" style="margin-top: 5px">
+										<strong>Note:</strong> For more detailed information please refer to the <a href="http://www.mcc.ca/Objectives_online/objectives.pl?lang=english&loc=contents" target="_blank" style="font-size: 11px">MCC Objectives for the Qualifying Examination</a>.
+									</div>
 								</td>
 								<td>
-									<select id="objective_select" onclick="showMultiSelect()">
+									<select class="multi-picklist" id="PickList" name="clinical_presentations[]" multiple="multiple" size="5" style="width: 100%; margin-bottom: 5px">
+									<?php
+									if ((is_array($clinical_presentations)) && (count($clinical_presentations))) {
+										foreach ($clinical_presentations as $objective_id => $presentation_name) {
+											echo "<option value=\"".(int) $objective_id."\">".html_encode($presentation_name)."</option>\n";
+										}
+									}
+									?>
+									</select>
+									<div style="float: left; display: inline">
+										<input type="button" id="clinical_presentations_list_state_btn" class="button" value="Show List" onclick="toggle_list('clinical_presentations_list')" />
+									</div>
+									<div style="float: right; display: inline">
+										<input type="button" id="clinical_presentations_list_remove_btn" class="button-remove" onclick="delIt()" value="Remove" />
+										<input type="button" id="clinical_presentations_list_add_btn" class="button-add" onclick="addIt()" style="display: none" value="Add" />
+									</div>
+									<div id="clinical_presentations_list" style="clear: both; padding-top: 3px; display: none">
+										<h2>Clinical Presentations List</h2>
+										<select class="multi-picklist" id="SelectList" name="other_event_objectives_list" multiple="multiple" size="15" style="width: 100%">
+										<?php
+										if ((is_array($clinical_presentations_list)) && (count($clinical_presentations_list))) {
+											foreach ($clinical_presentations_list as $objective_id => $presentation_name) {
+												if (!array_key_exists($objective_id, $clinical_presentations)) {
+													echo "<option value=\"".(int) $objective_id."\">".html_encode($presentation_name)."</option>\n";
+												}
+											}
+										}
+										?>
+										</select>
+									</div>
+									<script type="text/javascript">
+									$('PickList').observe('keypress', function(event) {
+										if (event.keyCode == Event.KEY_DELETE) {
+											delIt();
+										}
+									});
+									$('SelectList').observe('keypress', function(event) {
+										if (event.keyCode == Event.KEY_RETURN) {
+											addIt();
+										}
+									});
+									</script>
+								</td>
+							</tr>
+							<tr>
+								<td colspan="3">&nbsp;</td>
+							</tr>
+							<tr>
+								<td>&nbsp;</td>
+								<td>
+									<label for="objective_select" class="form-nrequired">Curriculum Objectives</label>
+								</td>
+								<td>
+									<select id="objective_select" onchange="showMultiSelect()">
 									<option value="">- Select Competency -</option>
 									<?php
 									$objective_select = "";
@@ -657,7 +806,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								<td>&nbsp;</td>
 								<td>&nbsp;</td>
 								<td>
-									<span class="content-small">Select a Competency and a list of available course and curricular objectives will be displayed to choose from. Once you have selected an objective, it will be placed in the list below and you may leave it as primary or change the importance to secondary.</span>
+									<span class="content-small"><strong>Helpful Tip:</strong> Select a competency from the select box above, and a list of course and curricular objectives will then be displayed. Once you have selected an objective it will be placed in the list below and you may leave it as primary or change the importance to secondary or tertiary.</span>
 									<?php echo $objective_select; ?>
 									<script type="text/javascript">
 										var multiselect = [];
@@ -703,15 +852,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								</td>
 							</tr>
 							<tr>
-								<td colspan="3">&nbsp;</td>
-							</tr>
-							<tr>
-								<td>&nbsp;</td>
-								<td colspan="2">
+								<td colspan="2">&nbsp;</td>
+								<td style="padding-top: 5px;">
 									<div id="objectives_list">
 									<?php echo course_objectives_in_list($course_objectives["objectives"], 1, true); ?>
 									</div>
 								</td>
+							</tr>
+							<tr>
+								<td colspan="3">&nbsp;</td>
 							</tr>
 						</tbody>
 						</table>
@@ -814,7 +963,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 										?>
 										<div class="autocomplete" id="director_name_auto_complete"></div><script type="text/javascript">new Ajax.Autocompleter('director_name', 'director_name_auto_complete', '<?php echo ENTRADA_RELATIVE; ?>/api/personnel.api.php?type=director', {frequency: 0.2, minChars: 2, afterUpdateElement: function (text, li) {selectItem(li.id, 'director'); copyItem('director');}});</script>
 										<input type="hidden" id="associated_director" name="associated_director" />
-										<!-- <ul class="page-action" style="display: inline;"><li><a onclick="addItem('director');" style="cursor: pointer;">Add Director</a></li></ul><br/> -->
 										<input type="button" class="button-sm" onclick="addItem('director');" value="Add" style="vertical-align: middle" />
 										<span class="content-small">(<strong>Example:</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?>)</span>
 										<ul id="director_list" class="menu" style="margin-top: 15px">
@@ -858,7 +1006,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 										?>
 										<div class="autocomplete" id="coordinator_name_auto_complete"></div><script type="text/javascript">new Ajax.Autocompleter('coordinator_name', 'coordinator_name_auto_complete', '<?php echo ENTRADA_RELATIVE; ?>/api/personnel.api.php?type=coordinator', {frequency: 0.2, minChars: 2, afterUpdateElement: function (text, li) {selectItem(li.id, 'coordinator'); copyItem('coordinator');}});</script>
 										<input type="hidden" id="associated_coordinator" name="associated_coordinator" />
-										<!-- <ul class="page-action" style="display: inline;"><li><a onclick="addItem('coordinator');" style="cursor: pointer;">Add Coordinator</a></li></ul><br/> -->
 										<input type="button" class="button-sm" onclick="addItem('coordinator');" value="Add" style="vertical-align: middle" />
 										<span class="content-small">(<strong>Example:</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?>)</span>
 										<ul id="coordinator_list" class="menu" style="margin-top: 15px">
@@ -883,7 +1030,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								<td colspan="3">&nbsp;</td>
 							</tr>
 
-							<!-- Lising the Program Coordinator for the selected coures -->
+							<!-- Listing the Program Coordinator for the selected course -->
 							<tr>
 								<td></td>
 								<td><label for="programcoodinator_id" class="form-nrequired">Program Coordinator</label></td>
@@ -915,7 +1062,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							</tr>
 
 
-							<!-- Lising the Evaluation Rep for the selected coures -->
+							<!-- Listing the Evaluation Rep for the selected course -->
 							<tr>
 								<td></td>
 								<td><label for="evaluationrep_id" class="form-nrequired">Evaluation Rep.</label></td>
@@ -936,7 +1083,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								</td>
 							</tr>
 
-							<!-- Lising the Student Rep for the selected coures -->
+							<!-- Listing the Student Rep for the selected course -->
 							<tr>
 								<td></td>
 								<td><label for="studentrep_id" class="form-nrequired">Student Rep.</label></td>

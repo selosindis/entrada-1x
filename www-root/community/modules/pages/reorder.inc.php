@@ -10,7 +10,6 @@
  * @author Developer: Matt Simpson <matt.simpson@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
- * @version $Id: delete.inc.php 375 2009-03-02 20:56:18Z simpson $
 */
 
 if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_PAGES")) || !COMMUNITY_INCLUDED || !IN_PAGES) {
@@ -33,7 +32,7 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 		foreach($array as $key => &$item) {
 			if($key == 0) { //key 0 has an int item defining the parent for the next ones in the array.
 				if($item == -1) {
-					if($root_found) {
+					if(isset($root_found) && $root_found == true) {
 						return false;
 					} else {
 						$root_found = true;

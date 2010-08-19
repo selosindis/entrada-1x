@@ -9,7 +9,6 @@
  * @author Developer: Jonathan Fingland <jonathan.fingland@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
- * @version $Id: incident-edit.inc.php 1094 2010-04-04 17:25:34Z simpson $
 */
 
 if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MANAGE_USER"))) {

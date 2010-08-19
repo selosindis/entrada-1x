@@ -34,7 +34,6 @@ include_once 'class.icalbase.inc.php';
 * @copyright Michael Wimmer
 * @link http://www.flaimo.com/
 * @package iCalendar
-* @version 1.032
 */
 class iCalJournal extends iCalBase {
 

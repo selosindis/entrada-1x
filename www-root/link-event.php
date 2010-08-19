@@ -22,7 +22,6 @@
  * @author Developer: Matt Simpson <matt.simpson@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  * 
- * @version $Id: link-event.php 1171 2010-05-01 14:39:27Z ad29 $
 */
 
 @set_include_path(implode(PATH_SEPARATOR, array(

@@ -22,7 +22,6 @@
  * @author Developer: Matt Simpson <matt.simpson@queensu.ca>
  * @copyright Copyright 2009 Queen's University. All Rights Reserved.
  *
- * @version $Id: index.inc.php 1215 2010-06-14 20:25:20Z simpson $
 */
 
 if((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {

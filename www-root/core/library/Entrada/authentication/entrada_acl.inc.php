@@ -9,8 +9,7 @@
  * @author Developer: Harry Brundage <hbrundage@qmed.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
- * @version $Id$
- */
+*/
 
 /**
  * Entrada Resource Tree Builder
@@ -31,28 +30,27 @@ class Entrada_ACL extends ACL_Factory {
 			"awards",
 			"community",
 			"course" => array (
-				"gradebook" => array(
-					"assessment"
-				),
 				"coursecontent",
 				"event" => array (
 					"eventcontent"
 				)
+			),
+			"gradebook" => array(
+				"assessment"
 			),
 			"regionaled" => array (
 				"apartments",
 				"regions",
 				"schedules"
 			),
+			"regionaled_tab",
 			"dashboard",
 			"clerkship" => array (
 				"electives",
 				"logbook",
 				"lottery"
 			),
-			"objective" => array (
-				"objectivecontent"
-			),
+			"objective",
 			"clerkshipschedules",
 			"discussion",
 			"photo",
@@ -413,7 +411,61 @@ class CourseOwnerAssertion implements Zend_Acl_Assert_Interface {
 		return false;
 	}
 }
+/**
+ * Gradebook Owner Assertion
+ *
+ * Used to assert that the course referenced by the course resource is owned by the user referenced by the user role.
+ *
+ * @author Organisation: Queen's University
+ * @author Unit: School of Medicine
+ * @author Developer: Harry Brundage <hbrundage@qmed.ca>
+ * @copyright Copyright 2010 Queen's University. All Rights Reserved.
+ */
+class GradebookOwnerAssertion extends CourseOwnerAssertion {
 
+/**
+ * Asserts that the role references the director, coordinator, or secondary director of the course resource
+ *
+ * @param Zend_Acl $acl The ACL object isself (the one calling the assertion)
+ * @param Zend_Acl_Role_Interface $role The role being queried
+ * @param Zend_Acl_Resource_Interface $resource The resource being queried
+ * @param string $privilege The privilege being queried
+ * @return boolean
+ */
+	public function assert(Zend_Acl $acl, Zend_Acl_Role_Interface $role = null, Zend_Acl_Resource_Interface $resource = null, $privilege = null) {
+		//If asserting is off then return true right away
+		if((isset($resource->assert) && $resource->assert == false) || (isset($acl->_entrada_last_query) && isset($acl->_entrada_last_query->assert) && $acl->_entrada_last_query->assert == false)) {
+			return true;
+		}
+
+		if(isset($resource->course_id)) {
+			$course_id = $resource->course_id;
+		} else if(isset($acl->_entrada_last_query->course_id)) {
+			$course_id = $acl->_entrada_last_query->course_id;
+		} else {
+			//Parse out the user ID and course ID
+			$resource_id = $resource->getResourceId();
+			$resource_type = preg_replace('/[0-9]+/', "", $resource_id);
+
+			if($resource_type !== "gradebook" && $resource_type !== "assessment") {
+				//This only asserts for users on gradebooks.
+				return false;
+			}
+
+			$course_id = preg_replace('/[^0-9]+/', "", $resource_id);
+		}
+
+		$role_id = $role->getRoleId();
+		$user_id	= preg_replace('/[^0-9]+/', "", $role_id);
+
+		if($user_id == "") {
+			$role_id = $acl->_entrada_last_query_role->getRoleId();
+			$user_id	= preg_replace('/[^0-9]+/', "", $role_id);
+		}
+		// Inherited from course owner assertion
+		return $this->_checkCourseOwner($user_id, $course_id);
+	}
+}
 /**
  * Event Owner Assertion
  *
@@ -736,6 +788,9 @@ class NotGuestAssertion implements Zend_Acl_Assert_Interface {
 		if(isset($role->details) && isset($role->details["group"])) {
 			$GROUP = $role->details["group"];
 		} else {
+/**
+ * @todo This needs to be fixed, or perhaps this would never even happen? The user_data table doesn't contain group or role fields, that's in user_access.
+ */
 			$role_id = $role->getRoleId();
 			$user_id = preg_replace('/[^0-9]+/', "", $role_id);
 			$query = "SELECT `group`, `role` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($user_id);
@@ -863,6 +918,40 @@ class ClerkshipDirectorAssertion implements Zend_Acl_Assert_Interface {
 	}
 }
 
+/**
+ * Regional Education Has Accommodations Class
+ *
+ * Checks to see if the resident has regional accommodations assigned to them
+ * by the regional education office.
+ */
+class HasAccommodationsAssertion implements Zend_Acl_Assert_Interface {
+	public function assert(Zend_Acl $acl, Zend_Acl_Role_Interface $role = null, Zend_Acl_Resource_Interface $resource = null, $privilege = null) {
+		global $db;
+		
+		if (!($role instanceof EntradaUser) || !isset($role->details) || !isset($role->details["id"])) {
+			if(isset($acl->_entrada_last_query_role)) {
+				$role = $acl->_entrada_last_query_role;
+				if(($role instanceof EntradaUser) || isset($role->details) || isset($role->details["id"])) {
+					$proxy_id = $role->details["id"];
+				}
+			}
+		} else {
+			$proxy_id = $role->details["id"];
+		}
+
+		if ((isset($proxy_id)) && ((int) $proxy_id)) {
+			$query = "SELECT COUNT(*) AS `total` FROM `".CLERKSHIP_DATABASE."`.`apartment_schedule` WHERE `proxy_id` = ".$db->qstr($proxy_id);
+			$result = $db->GetRow($query);
+
+			if ($result && ($result["total"] > 0)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+}
+
 class QuizOwnerAssertion implements Zend_Acl_Assert_Interface {
 	public function assert(Zend_Acl $acl, Zend_Acl_Role_Interface $role = null, Zend_Acl_Resource_Interface $resource = null, $privilege = null) {
 
@@ -918,6 +1007,8 @@ class QuizOwnerAssertion implements Zend_Acl_Assert_Interface {
 	}
 }
 
+
+
 /**
  * Base class for smart Entrada resource objects. Used for dummy checks and non assertion checks.
  *
@@ -960,7 +1051,11 @@ class EntradaAclResource implements Zend_Acl_Resource_Interface {
 	 * @return string
 	 */
 	public function getResourceId() {
-		return $this->resource_id;
+		if($this->specific) {
+			return $this->resource_id;
+		} else {
+			return preg_replace('/[0-9]+/', "", $this->resource_id);
+		}
 	}
 }
 
@@ -1286,17 +1381,6 @@ class EventContentResource extends EventResource {
 	 */
 	public function getResourceId() {
 		return "eventcontent".($this->specific ? $this->course_id : "");
-	}
-}
-
-class ObjectiveContentResource extends EventResource {
-	/**
-	 * ACL method for keeping track. Required by Zend_Acl_Resource_Interface.
-	 * Will return based on specifc property of this resource instance.
-	 * @return string
-	 */
-	public function getResourceId() {
-		return "objectivecontent".($this->specific ? $this->objective_id : "");
 	}
 }
 

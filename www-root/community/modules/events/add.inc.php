@@ -9,7 +9,6 @@
  * @author Developer: James Ellis <james.ellis@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  * 
- * @version $Id: add.inc.php 1213 2010-06-14 16:38:40Z jellis $
 */
 
 if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_EVENTS"))) {

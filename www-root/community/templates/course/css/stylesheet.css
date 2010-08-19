@@ -1344,6 +1344,11 @@ border-left:5px solid #E9D9FE;
 background-color:#FFF;
 }
 
+div.content ul.objective-list li.tertiary {
+border-left:5px solid #FFCCFF;
+background-color:#FFF;
+}
+
 textarea.expandable {
 width:100%;
 padding:4px;
@@ -1489,6 +1494,10 @@ background-color:#D9E9FE;
 
 tr.secondary,table.select_multiple_table tr.secondary,ul.objective-list li.secondary {
 background-color:#E9D9FE;
+}
+
+tr.tertiary,table.select_multiple_table tr.tertiary,ul.objective-list li.tertiary {
+background-color:#FFCCFF;
 }
 
 table.select_multiple_table td.indent_1,table.select_multiple_table td.description {
@@ -1686,6 +1695,10 @@ z-index:1500;
 
 table.select_multiple_table tr.secondary,li.secondary {
 background-color:#E9D9FE;
+}
+
+table.select_multiple_table tr.tertiary,li.tertiary {
+background-color:#FFCCFF;
 }
 
 .pointer,table.select_multiple_table label {

@@ -23,7 +23,7 @@
  * @author Developer: Matt Simpson <matt.simpson@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  * 
- * @version $Id: people.inc.php 1200 2010-06-10 19:07:17Z simpson $
+ * @version $Id: people.inc.php 1171 2010-05-01 14:39:27Z ad29 $
 */
 if (!defined("PARENT_INCLUDED")) {
 	exit;
@@ -49,11 +49,20 @@ if (!defined("PARENT_INCLUDED")) {
 
 	$is_administrator = $ENTRADA_ACL->amIallowed('user', 'update');
 	
+	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/people.js\"></script>";
+	
 	$BREADCRUMB[]	= array("url" => ENTRADA_URL."/people", "title" => "People Search");
 	
 	$PROCESSED		= array();
 	$PREFERENCES	= preferences_load($MODULE);
 
+	$ORGANISATION_ID = $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"];
+	$organisation_query = "SELECT * FROM `".AUTH_DATABASE."`.`organisations`";
+	$ORGANISATIONS = $db->GetAll($organisation_query);
+	$ORGANISATION_BY_ID = array();
+	foreach($ORGANISATIONS as $o) {
+		$ORGANISATIONS_BY_ID[$o["organisation_id"]] = $o;
+	}
 	$search_query	= "";
 	$plaintext_query = "";
 	$year_offset = (strtotime("July 15th, ".date("Y", time())) < time() ? 1 : 0);
@@ -90,7 +99,7 @@ if (!defined("PARENT_INCLUDED")) {
 		$load_profile = clean_input($_GET["profile"], array("credentials"));
 	}
 
-	if ($load_profile) {
+	if (isset($load_profile) && $load_profile) {
 		$query_profile	= "
 						SELECT a.*, b.`group`, b.`role`
 						FROM `".AUTH_DATABASE."`.`user_data` AS a
@@ -112,11 +121,12 @@ if (!defined("PARENT_INCLUDED")) {
 		$search_type = clean_input($_GET["type"], "trim");	
 	}
 	
-	if ($search_type) {
+	if (isset($search_type) && $search_type) {
 		switch ($search_type) {
 			case "browse-group" :
-				$PROCESSED["group"]	= false;
-				$PROCESSED["role"]	= false;
+				$PROCESSED["organisation"]	= false;
+				$PROCESSED["group"]			= false;
+				$PROCESSED["role"]			= false;
 				
 				if ((isset($_POST["g"])) && (isset($SYSTEM_GROUPS[$group = clean_input($_POST["g"], "credentials")]))) {
 					$PROCESSED["group"]	= $group;
@@ -147,16 +157,15 @@ if (!defined("PARENT_INCLUDED")) {
 					$ERRORSTR[] = "To browse a group, you must select a group from the group select list.";	
 				}
 				
-				if (!$ERROR) {
-					$query_counter	= "	SELECT COUNT(a.`id`) AS `total_rows`
-										FROM `".AUTH_DATABASE."`.`user_data` AS a
-										LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
-										ON b.`user_id` = a.`id`
-										AND b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
-										WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
-										AND b.`group` ".($PROCESSED["group"] == "staff" ? "IN ('staff', 'medtech')" : "= ".$db->qstr($PROCESSED["group"]))."
-										".(($PROCESSED["role"]) ? "AND b.`role` = ".$db->qstr($PROCESSED["role"]) : "");
-					
+				if(isset($_GET["o"]) && ($organisation = clean_input($_GET["o"], array("trim", "int"))) && isset($ORGANISATIONS_BY_ID[$organisation])) {
+					$PROCESSED["organisation"] = $organisation;
+					$search_query .= " in ".$ORGANISATIONS_BY_ID[$organisation]["organisation_title"];
+				} else {
+					$ERROR++;
+					$ERRORSTR[] = "To browse a group, you must select a organisation from the organisation select list.";
+				}
+				
+				if (!$ERROR) {					
 					$query_search	= "	SELECT a.*, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, b.`account_active`, b.`access_starts`, b.`access_expires`, b.`last_login`, b.`role`, b.`group`
 										FROM `".AUTH_DATABASE."`.`user_data` AS a
 										LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
@@ -165,8 +174,19 @@ if (!defined("PARENT_INCLUDED")) {
 										WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
 										AND b.`group` ".($PROCESSED["group"] == "staff" ? "IN ('staff', 'medtech')" : "= ".$db->qstr($PROCESSED["group"]))."
 										".(($PROCESSED["role"]) ? "AND b.`role` = ".$db->qstr($PROCESSED["role"]) : "")."
+										GROUP BY a.`id`
 										ORDER BY `fullname` ASC
 										LIMIT %s, %s";
+					$query_count	= "	SELECT a.*, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, b.`account_active`, b.`access_starts`, b.`access_expires`, b.`last_login`, b.`role`, b.`group`
+										FROM `".AUTH_DATABASE."`.`user_data` AS a
+										LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+										ON b.`user_id` = a.`id`
+										AND b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+										WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+										AND b.`group` ".($PROCESSED["group"] == "staff" ? "IN ('staff', 'medtech')" : "= ".$db->qstr($PROCESSED["group"]))."
+										".(($PROCESSED["role"]) ? "AND b.`role` = ".$db->qstr($PROCESSED["role"]) : "")."
+										GROUP BY a.`id`
+										ORDER BY `fullname` ASC";
 				}
 			break;
 			case "browse-dept" :
@@ -214,15 +234,6 @@ if (!defined("PARENT_INCLUDED")) {
 				}
 				
 				if (!$ERROR) {
-					$query_counter	= "	SELECT COUNT(a.`id`) AS `total_rows`
-										FROM `".AUTH_DATABASE."`.`user_data` AS a
-										LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
-										ON b.`user_id` = a.`id`
-										AND b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
-										LEFT JOIN `".AUTH_DATABASE."`.`user_departments` AS c
-										ON c.`user_id` = a.`id`
-										WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
-										AND c.`dep_id` = ".$db->qstr($browse_department);
 					
 					$query_search	= "	SELECT a.*, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, b.`account_active`, b.`access_starts`, b.`access_expires`, b.`last_login`, b.`role`, b.`group`
 										FROM `".AUTH_DATABASE."`.`user_data` AS a
@@ -231,20 +242,50 @@ if (!defined("PARENT_INCLUDED")) {
 										AND b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
 										LEFT JOIN `".AUTH_DATABASE."`.`user_departments` AS c
 										ON c.`user_id` = a.`id`
-										WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+										WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
 										AND c.`dep_id` = ".$db->qstr($browse_department)."
+										GROUP BY a.`id`
 										ORDER BY `fullname` ASC
 										LIMIT %s, %s";
+					$query_count	= "	SELECT a.*, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, b.`account_active`, b.`access_starts`, b.`access_expires`, b.`last_login`, b.`role`, b.`group`
+										FROM `".AUTH_DATABASE."`.`user_data` AS a
+										LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+										ON b.`user_id` = a.`id`
+										AND b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+										LEFT JOIN `".AUTH_DATABASE."`.`user_departments` AS c
+										ON c.`user_id` = a.`id`
+										WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+										AND c.`dep_id` = ".$db->qstr($browse_department)."
+										GROUP BY a.`id`
+										ORDER BY `fullname` ASC";
 				}
 			break;
 			case "search" :
 			default :
-				$group_string 	= "";
-				$role_string 	= "";
+				$group_string			= "";
+				$role_string			= "";
+				$organisation_string	= "";
 				if ((isset($_REQUEST["q"])) && ($query = clean_input($_REQUEST["q"], array("trim", "notags")))) {
 					$search_query		= $query;
 					$plaintext_query	= $search_query;
 					$search_query_text	= html_encode($query);
+				}
+
+				
+				if (isset($_REQUEST["search_organisations"]) && ($search_organisations = explode(",", $_REQUEST["search_organisations"]))) {
+					foreach ($search_organisations as $org) {
+						if (isset($organisations_string) && ($org = clean_input($org, "credentials"))) {
+							$organisations_string .= ", ".$db->qstr($org);
+						} elseif (($org = clean_input($org, "credentials"))) {
+							$organisations_string = $db->qstr($org);
+						} else {
+							$search_organisations = array($ORGANISATION_ID);
+							$organisations_string = "'$ORGANISATION_ID'";
+						}
+					}
+				} else {
+					$search_organisations = array("$ORGANISATION_ID");
+					$organisations_string = "'$ORGANISATION_ID'";
 				}
 				
 				if (isset($_REQUEST["search_groups"]) && ($search_groups = explode(",", $_REQUEST["search_groups"]))) {
@@ -293,21 +334,6 @@ if (!defined("PARENT_INCLUDED")) {
 					}
 				}
 
-				$query_counter	= "	SELECT COUNT(a.`id`) AS `total_rows`
-									FROM `".AUTH_DATABASE."`.`user_data` AS a
-									LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
-									ON b.`user_id` = a.`id`
-									AND b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
-									WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
-									AND (b.`group` ".($group_string && $role_string ? "IN (".$group_string.")
-									OR (b.`group` = 'student' 
-										AND b.`role` IN (".$role_string.")))" : ($role_string ? "= 'student' 
-									AND b.`role` IN (".$role_string."))" : ( $group_string ? "IN (".$group_string."))" : "!= 'guest')")))."
-									AND (a.`number` LIKE ".$db->qstr("%%".str_replace("%", "", $search_query)."%%")."
-									OR a.`username` LIKE ".$db->qstr("%%".str_replace("%", "", $search_query)."%%")."
-									OR a.`email` LIKE ".$db->qstr("%%".str_replace("%", "", $search_query)."%%")."
-									OR CONCAT_WS(' ' , a.`firstname`, a.`lastname`) LIKE ".$db->qstr("%%".str_replace("%", "", $search_query)."%%").")";
-				
 				$query_search	= "	SELECT a.*, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, b.`account_active`, b.`access_starts`, b.`access_expires`, b.`last_login`, b.`role`, b.`group`
 									FROM `".AUTH_DATABASE."`.`user_data` AS a
 									LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
@@ -322,18 +348,37 @@ if (!defined("PARENT_INCLUDED")) {
 									OR a.`username` LIKE ".$db->qstr("%%".str_replace("%", "", $search_query)."%%")."
 									OR a.`email` LIKE ".$db->qstr("%%".str_replace("%", "", $search_query)."%%")."
 									OR CONCAT_WS(' ', a.`firstname`, a.`lastname`) LIKE ".$db->qstr("%%".str_replace("%", "", $search_query)."%%").")
+									GROUP BY a.`id`
 									ORDER BY `fullname` ASC
-									LIMIT %s, %s";				
+									LIMIT %s, %s";
+				
+				$query_count	= "	SELECT a.*, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, b.`account_active`, b.`access_starts`, b.`access_expires`, b.`last_login`, b.`role`, b.`group`
+									FROM `".AUTH_DATABASE."`.`user_data` AS a
+									LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+									ON b.`user_id` = a.`id`
+									AND b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+									WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+									AND (b.`group` ".($group_string && $role_string ? "IN (".$group_string.")
+									OR (b.`group` = 'student' 
+										AND b.`role` IN (".$role_string.")))" : ($role_string ? "= 'student' 
+									AND b.`role` IN (".$role_string."))" : ( $group_string ? "IN (".$group_string."))" : "!= 'guest')")))."
+									AND (a.`number` LIKE ".$db->qstr("%%".str_replace("%", "", $search_query)."%%")."
+									OR a.`username` LIKE ".$db->qstr("%%".str_replace("%", "", $search_query)."%%")."
+									OR a.`email` LIKE ".$db->qstr("%%".str_replace("%", "", $search_query)."%%")."
+									OR CONCAT_WS(' ', a.`firstname`, a.`lastname`) LIKE ".$db->qstr("%%".str_replace("%", "", $search_query)."%%").")
+									GROUP BY a.`id`
+									ORDER BY `fullname` ASC, FIELD(b.`app_id`, ".AUTH_APP_IDS_STRING.")";
 			break;
 		}
-
+		
+		$results	= $db->GetAll($query_count);
 		/**
 		 * Get the total number of results using the generated queries above and calculate the total number
 		 * of pages that are available based on the results per page preferences.
 		 */
-		$result = ((USE_CACHE) ? $db->CacheGetRow(CACHE_TIMEOUT, $query_counter) : $db->GetRow($query_counter));
+		$result 	= count($results);
 		if ($result) {
-			$total_rows	= $result["total_rows"];
+			$total_rows	= $result;
 
 			if ($total_rows <= $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) {
 				$total_pages = 1;
@@ -520,33 +565,31 @@ if (!defined("PARENT_INCLUDED")) {
 					<td style="padding-top: 15px; vertical-align: top;"><label class="form-required">Groups to search:</label></td>
 					<td style="padding-top: 15px;">
 						<script type="text/javascript">
-							function addClass() {
-								$('search_classes').value = "0";
-								$$('.search_classes').each( function (e) {
+							function addSomething(which) {
+								$('search_'+which).value = "0";
+								$$('.search_'+which).each( function (e) {
 									if (e.checked) {
-										if ($('search_classes').value != '0') {
-											$('search_classes').value += ","+e.value;
+										if ($('search_'+which).value != '0') {
+											$('search_'+which).value += ","+e.value;
 										} else {
-											$('search_classes').value = e.value;
+											$('search_'+which).value = e.value;
 										}
 									}
 								});
 							}
+							function addClass() {
+								addSomething('classes');
+							}
 							function addGroup() {
-								$('search_groups').value = "0";
-								$$('.search_groups').each( function (e) {
-									if (e.checked) {
-										if ($('search_groups').value != '0') {
-											$('search_groups').value += ","+e.value;
-										} else {
-											$('search_groups').value = e.value;
-										}
-									}
-								});
+								addSomething('groups');
+							}
+							function addOrganisation() {
+								addSomething('organisations');
 							}
 						</script>
 						<div>
 							<input type="hidden" name="search_groups" id="search_groups" value="<?php echo (isset($_GET["search_groups"]) ? $_GET["search_groups"] : "faculty,resident,staff"); ?>" />
+							<input type="hidden" name="search_organisations" id="search_organisations" value="<?php echo (isset($_GET["search_organisations"]) ? $_GET["search_organisations"] : $ORGANISATION_ID); ?>" />
 							<input type="hidden" name="search_classes" id="search_classes" value="<?php echo (isset($_GET["search_classes"]) ? $_GET["search_classes"] : (date("Y", time()) + $year_offset).",".(date("Y", time()) + $year_offset + 1).",".(date("Y", time()) + $year_offset + 2).",".(date("Y", time()) + $year_offset + 3)); ?>" />
 
 							<table style="width: 350px; padding-left: 50px;">
@@ -566,6 +609,37 @@ if (!defined("PARENT_INCLUDED")) {
 									<td><input class="search_classes" id="class_<?php echo (date("Y", time()) + $year_offset + 2); ?>" type="checkbox" <?php echo ((isset($_REQUEST["search_classes"]) && is_array(explode(',', $_REQUEST["search_classes"])) && array_search((date("Y", time()) + $year_offset + 2), (explode(',', $_REQUEST["search_classes"]))) !== false) || (isset($_REQUEST["search_classes"]) && $_REQUEST["search_classes"] == (date("Y", time()) + $year_offset + 2)) || (!isset($_REQUEST["search_groups"]) && !isset($_REQUEST["search_classes"]) && !isset($_REQUEST["search_alumni"])) ? "checked=\"checked\" " : ""); ?>value="<?php echo (date("Y", time()) + $year_offset + 2)."\" onclick=\"addClass()\" /><label class=\"content-small\" for=\"class_".(date("Y", time()) + $year_offset + 2)."\"> Class of ".(date("Y", time()) + $year_offset + 2); ?></label></td>
 									<td><input class="search_classes" id="class_<?php echo (date("Y", time()) + $year_offset + 3); ?>" type="checkbox" <?php echo ((isset($_REQUEST["search_classes"]) && is_array(explode(',', $_REQUEST["search_classes"])) && array_search((date("Y", time()) + $year_offset + 3), (explode(',', $_REQUEST["search_classes"]))) !== false) || (isset($_REQUEST["search_classes"]) && $_REQUEST["search_classes"] == (date("Y", time()) + $year_offset + 3)) || (!isset($_REQUEST["search_groups"]) && !isset($_REQUEST["search_classes"]) && !isset($_REQUEST["search_alumni"])) ? "checked=\"checked\" " : ""); ?>value="<?php echo (date("Y", time()) + $year_offset + 3)."\" onclick=\"addClass()\" /><label class=\"content-small\" for=\"class_".(date("Y", time()) + $year_offset + 3)."\"> Class of ".(date("Y", time()) + $year_offset + 3); ?></label></td>
 								</tr>
+							</table>
+						</div>
+					</td>
+				</tr>
+				<tr>
+					<td>&nbsp;</td>
+					<td style="padding-top: 15px; vertical-align: top;"><label class="form-required">Organisations to search:</label></td>
+					<td style="padding-top: 15px;">
+						<div>
+							<table style="width: 350px; padding-left: 50px;">
+								<?php 
+								$search_arr = $search_organisations;
+								for($i = 0; $i < count($ORGANISATIONS)/2; $i++) : ?>
+								<tr>
+									<?php 
+									// For every two organisaions
+									for($j = 0; $j < 2; $j++): 
+										if(isset($ORGANISATIONS[2*$i+$j])):
+											$o = $ORGANISATIONS[2*$i+$j]; 
+											$o["id"] = $o["organisation_id"]; ?>
+											<td>
+												<input id="org_<?php echo $o["id"];?>" class="search_organisations" type="checkbox" <?php echo ((isset($search_arr) && (is_array($search_arr) && array_search($o['id'], $search_arr) !== false) || (!isset($search_arr) && $o['id'] == $ORGANISATION_ID)) ? "checked=\"checked\" " : ""); ?>value="<?php echo $o["id"]; ?>" onclick="addOrganisation()" />
+												<label class="content-small" for="org_<?php echo $o["id"];?>"><?php echo $o["organisation_title"];?></label>
+											</td>
+										<?php else: ?>
+											<td>&nbsp;</td>
+										<?php endif; ?>
+										
+									<?php endfor; ?>
+								</tr>
+								<?php endfor; ?>
 							</table>
 						</div>
 					</td>
@@ -597,6 +671,17 @@ if (!defined("PARENT_INCLUDED")) {
 				</tr>
 			</tfoot>
 			<tbody>
+				<tr>
+					<td>&nbsp;</td>
+					<td><label for="group" class="form-required">Browse Organisation:</label></td>
+					<td>
+						<select id="organisations" name="o" style="width: 209px">
+							<?php foreach($ORGANISATIONS as $o) {
+								echo "<option value=\"".$o["organisation_id"]."\"".(isset($PROCESSED["organisation"]) && $o["organisation_id"] == $PROCESSED["organisation"] ? "selected=\"selected\"" : "").">".$o["organisation_title"]."</option>";
+							}?>
+						</select>
+					</td>
+				</tr>
 				<tr>
 					<td>&nbsp;</td>
 					<td><label for="group" class="form-required">Browse Group:</label></td>
@@ -668,7 +753,7 @@ if (!defined("PARENT_INCLUDED")) {
 	</div>
 	<script type="text/javascript">setupAllTabs(true);</script>
 	<?php
-	if (($search_query) || ($load_profile)) {
+	if (($search_query) || (isset($load_profile) && $load_profile)) {
 		if ($search_query) {
 			if ($total_pages > 1) {
 				echo "<br />\n";
@@ -701,15 +786,33 @@ if (!defined("PARENT_INCLUDED")) {
 			/**
 			 * Provides the first parameter of MySQLs LIMIT statement by calculating which row to start results from.
 			 */
-			$limit_parameter = (int) (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"] * $page_current) - $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]);
+			$limit_parameter 	= (int) (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"] * $page_current) - $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]);
 
-			$query_search	= sprintf($query_search, $limit_parameter, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]);
-			$results		= $db->GetAll($query_search);
+			$query_search		= sprintf($query_search, $limit_parameter, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]);
+			$results			= $db->GetAll($query_search);
 		} elseif ($load_profile) {
-			$results		= $db->GetAll($query_profile);
-			$search_query	= $load_profile;
+			$results			= $db->GetAll($query_profile);
+			if (!$results) {
+				$query_profile	= "
+								SELECT a.*, b.`group`, b.`role`
+								FROM `".AUTH_DATABASE."`.`user_data` AS a
+								LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+								ON b.`user_id` = a.`id`
+								WHERE  b.`app_id` IN (".AUTH_APP_IDS_STRING.")
+								AND b.`account_active` = 'true'
+								AND (b.`access_starts` = '0' OR b.`access_starts` < ".$db->qstr(time()).")
+								AND (b.`access_expires` = '0' OR b.`access_expires` >= ".$db->qstr(time()).")
+								AND ".((is_numeric($load_profile)) ? "a.`id` = ".$db->qstr((int) $load_profile) : "a.`username` = ".$db->qstr($load_profile))."
+								GROUP BY a.`id`";
+				$results		= $db->GetAll($query_profile);
+			}
+			$search_query		= $load_profile;
+			$total_rows 		= 1;
+			$limit_parameter	= 5;
+			$total_pages		= 1;
 		}
-		
+		var_dump($results);
+		echo($db->ErrorMsg());
 		if ($results) {
 			echo "<br />\n";
 			echo "<div class=\"searchTitle\" style=\"margin: auto;\">\n";
@@ -796,10 +899,10 @@ if (!defined("PARENT_INCLUDED")) {
 							echo "<br />".ucwords($departmentValue["department_title"]);
 						}
 					}
-					echo "</div>";
 				} else {
-					echo "			<div class=\"content-small\" style=\"margin-bottom: 15px\">".ucwords($result["group"])." > ".($result["group"] == "student" ? "Class of " : "").ucwords($result["role"])."</div>\n";
+					echo "			<div class=\"content-small\" style=\"margin-bottom: 15px\">".ucwords($result["group"])." > ".($result["group"] == "student" ? "Class of " : "").ucwords($result["role"]);
 				}
+				echo (isset($ORGANISATIONS_BY_ID[$result["organisation_id"]]) ? "<br/>".$ORGANISATIONS_BY_ID[$result["organisation_id"]]["organisation_title"] : "")."</div>\n";
 				if ($result["privacy_level"] > 1 || $is_administrator) {
 					echo "			<a href=\"mailto:".html_encode($result["email"])."\" style=\"font-size: 10px;\">".html_encode($result["email"])."</a><br />\n";
 					

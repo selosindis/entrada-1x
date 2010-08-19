@@ -10,7 +10,6 @@
  * @author Developer: Matt Simpson <matt.simpson@queensu.ca>
  * @copyright Copyright 2008 University of Calgary. All Rights Reserved.
  * 
- * @version $Id: en.lang.php 1191 2010-05-13 17:11:26Z hbrundage $
 */
     
 return array (
@@ -90,7 +89,7 @@ return array (
 	 * Public Communities Module
 	 * modules/public/communities
 	 */
-    "public_communities_heading_line" => "Creating a <strong>new community</strong> in the <strong>Entrada<br />Community System</strong> gives you a <strong>place to connect</strong> on-line.</h3>",
+    "public_communities_heading_line" => "Creating a <strong>new community</strong> in the <strong>Entrada<br />Community System</strong> gives you a <strong>place to connect</strong> on-line.",
     "public_communities_title" => "Entrada Communities",
     "breadcrumb_communities_title"=> "Entrada Communities",
     

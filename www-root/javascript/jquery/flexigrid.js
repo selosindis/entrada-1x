@@ -675,9 +675,7 @@
 										{
 										this.className = 'sorted';
 										}
-									console.log($('div:first',pth)[0]);
-									console.log($($('div:first',pth)[0]).css('width'));
-									 $(tdDiv).css({textAlign:pth.align,width: $($('div:first',pth)[0]).css('width')});
+									 $(tdDiv).css({textAlign:pth.align,width: $($('div:first',pth)[0]).width()});
 									 
 									 if (pth.hidden) $(this).css('display','none');
 									 
@@ -964,7 +962,7 @@
 							}
 							
 						
-						 $(thdiv).css({textAlign:this.align, width: $(this).css('width')});
+						 $(thdiv).css({textAlign:this.align, width: $(this).width()});
 						 thdiv.innerHTML = this.innerHTML;
 						 
 						$(this).empty().append(thdiv).removeAttr('width')
@@ -1137,7 +1135,7 @@
 		.html('<span></span>');
 		$(g.bDiv).after(g.vDiv);
 		}
-		
+
 		if (p.resizable && p.width !='auto' && !p.nohresize) 
 		{
 		g.rDiv.className = 'hGrip';

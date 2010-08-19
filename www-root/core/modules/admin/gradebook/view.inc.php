@@ -1,4 +1,3 @@
-
 <?php
 /**
  * Entrada [ http://www.entrada-project.org ]
@@ -18,10 +17,9 @@
  *
  * @author Organisation: Queen's University
  * @author Unit: School of Medicine
- * @author Developer: James Ellis <james.ellis@queensu.ca>
+ * @author Developer: Harry Brundage <hbrundage@qmed.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
- * @version $Id: edit.inc.php 1169 2010-05-01 14:18:49Z simpson $
  */
 
 if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
@@ -39,19 +37,21 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
+		
 	if ($COURSE_ID) {
 		$query			= "	SELECT * FROM `courses` 
 							WHERE `course_id` = ".$db->qstr($COURSE_ID)."
 							AND `course_active` = '1'";
 		$course_details	= $db->GetRow($query);
 		if ($course_details && $ENTRADA_ACL->amIAllowed(new GradebookResource($course_details["course_id"], $course_details["organisation_id"]), "read")) {
+			$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/gradebook?".replace_query(array("section" => "view", "id" => $COURSE_ID, "step" => false)), "title" => "Assessments");
 			
 			/**
 			 * Update requested column to sort by.
 			 * Valid: director, name
 			 */
 			if (isset($_GET["sb"])) {
-				if (@in_array(trim($_GET["sb"]), array("name", "year", "type", "entered"))) {
+				if (@in_array(trim($_GET["sb"]), array("name", "year", "type", "scheme"))) {
 					$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]	= trim($_GET["sb"]);
 				} else {
 					$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] = "name";
@@ -114,7 +114,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				case "type" :
 					$sort_by	= "`assessments`.`type` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]);
 				break;
-				case "entered" :
+				case "scheme" :
+					$sort_by	= "`assessment_marking_schemes`.`name` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]);
+				break;
 				default :
 					$sort_by	= "`assessments`.`name` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]);
 				break;
@@ -155,40 +157,28 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 			}
 			
 			$limit_parameter = (int) (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"] * $page_current) - $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]);
-			
-			
-			echo "<div class=\"no-printing\">\n";
-			echo "	<div style=\"float: right\">\n";
-			if($ENTRADA_ACL->amIAllowed(new CourseResource($course_details["course_id"], $course_details["organisation_id"]), "read")) {
-				echo "		<a href=\"".ENTRADA_URL."/admin/courses?".replace_query(array("section" => "edit", "id" => $course_details["course_id"], "step" => false))."\"><img src=\"".ENTRADA_URL."/images/event-details.gif\" width=\"16\" height=\"16\" alt=\"Edit course details\" title=\"Edit course details\" border=\"0\" style=\"vertical-align: middle; margin-bottom: 2px;\" /></a> <a href=\"".ENTRADA_URL."/admin/courses?".replace_query(array("section" => "edit", "id" => $course_details["course_id"], "step" => false))."\" style=\"font-size: 10px; margin-right: 8px\">Edit course details</a><br/>\n";
-			}
-			if($ENTRADA_ACL->amIAllowed(new CourseContentResource($course_details["course_id"], $course_details["organisation_id"]), "read")) {
-				echo "		<a href=\"".ENTRADA_URL."/admin/courses?".replace_query(array("section" => "content", "id" => $COURSE_ID, "step" => false))."\"><img src=\"".ENTRADA_URL."/images/event-contents.gif\" width=\"16\" height=\"16\" alt=\"Manage course content\" title=\"Manage course content\" border=\"0\" style=\"vertical-align: middle; margin-bottom: 2px;\" /></a> <a href=\"".ENTRADA_URL."/admin/courses?".replace_query(array("section" => "content", "id" => $COURSE_ID, "step" => false))."\" style=\"font-size: 10px; margin-right: 8px;\">Manage course content</a><br/>\n";
-			}
-			echo "<a href=\"".ENTRADA_URL."/admin/gradebook?section=edit&amp;id=".$COURSE_ID."\" style=\"font-size: 10px;\"><img src=\"".ENTRADA_URL."/images/book_go.png\" width=\"16\" height=\"16\" alt=\"Manage course content\" title=\"Manage course content\" border=\"0\" style=\"vertical-align: middle\" />&nbsp;Manage course gradebook</a>";				
-			echo "	</div>\n";
-			echo "</div>\n";
+						
+			courses_subnavigation($course_details);
 			
 			$curriculum_path = curriculum_hierarchy($COURSE_ID);
 			if ((is_array($curriculum_path)) && (count($curriculum_path))) {
 				echo "<h1>" . implode(": ", $curriculum_path) . " Gradebook </h1>";
 			}
 			
-			if ($ENTRADA_ACL->amIAllowed("assessment", "create", false)) {
-				?>
-				<br/>
+			 if ($ENTRADA_ACL->amIAllowed("assessment", "create", false)) { ?>
 				<div style="float: right">
 					<ul class="page-action">
-						<li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE . "/assessments/?" . replace_query(array("section" => "add", "step" => false)); ?>" class="strong-green">Add New Assessment</a></li>
+						<li><a id="gradebook_assessment_add" href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE . "/assessments/?" . replace_query(array("section" => "add", "step" => false)); ?>" class="strong-green">Add New Assessment</a></li>
 					</ul>
 				</div>
 				<div style="clear: both"><br/></div>
-				<?php
+			<?php
 			}
 			
 			// Fetch all associated assessments
-			$query = "	SELECT `assessment_id`,`grad_year`,`name`,`type`  
-						FROM `assessments` 
+			$query = "	SELECT `assessments`.`assessment_id`,`assessments`.`grad_year`,`assessments`.`name`,`assessments`.`type`, `assessment_marking_schemes`.`name` as 'marking_scheme_name'
+						FROM `assessments`
+						LEFT JOIN `assessment_marking_schemes` ON `assessments`.`marking_scheme_id` = `assessment_marking_schemes`.`id`
 						WHERE `course_id` = ".$db->qstr($COURSE_ID)."
 						ORDER BY %s
 						LIMIT %s, %s";
@@ -205,7 +195,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					echo "<form action=\"".ENTRADA_URL . "/admin/gradebook/assessments?".replace_query(array("section" => "delete", "step"=>1))."\" method=\"post\">";
 				}
 				?>
-				<table class="tableList" cellspacing="0" summary="List of Assessments">
+				<table class="tableList" cellspacing="0" summary="List of Assessments" id="assessment_list">
 				<colgroup>
 					<col class="modified" />
 					<col class="title" />
@@ -216,24 +206,40 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				<thead>
 					<tr>
 						<td class="modified">&nbsp;</td>
-						<td class="title<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "name") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("name", "Name", "assessments"); ?></td>
-						<td class="general<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "year") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("year", "Graduating Year", "assessments"); ?></td>
-						<td class="general<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "type") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("type", "Assessment Type", "assessments"); ?></td>
-						<td class="general<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "entered") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("entered", "Grades Entered", "assessments"); ?></td>
+						<td class="title<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "name") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("name", "Name"); ?></td>
+						<td class="general<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "year") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("year", "Graduating Year"); ?></td>
+						<td class="general<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "type") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("type", "Assessment Type"); ?></td>
+						<td class="general<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "scheme") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("scheme", "Marking Scheme"); ?></td>
 					</tr>
 				</thead>
 				<tfoot>
 					<tr>
 						<td></td>
-						<td colspan="4" style="padding-top: 10px">
+						<td colspan="3" style="padding-top: 10px">
+							<script type="text/javascript" charset="utf-8">
+								function exportSelected() {
+									var ids = [];
+									$$('#assessment_list .modified input:checked').each(function(checkbox) {
+										ids.push($F(checkbox));
+									});
+									if(ids.length > 0) {
+										window.location = '<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "io", "download" => "csv", "assessment_ids" => false)); ?>&assessment_ids='+ids.join(',');
+									} else {
+										alert("You must select some assessments to export.");
+									}
+									return false;
+								}
+							</script>
 							<input type="submit" class="button" value="Delete Selected" />
+							<input type="submit" class="button" value="Export Selected" onclick="exportSelected(); return false;"/>
 						</td>
+						<td><a id="fullscreen-edit" class="button" href="<?php echo ENTRADA_URL . "/admin/gradebook?" . replace_query(array("section" => "api-edit")); ?>"><div>Fullscreen</div></a>
 					</tr>
 				</tfoot>
 				<tbody>
 					<?php
 					foreach($assessments as $key => $assessment) {
-						$url = ENTRADA_URL."/admin/gradebook/assessments?section=edit&amp;id=".$COURSE_ID."&amp;assessment_id=".$assessment["assessment_id"];
+						$url = ENTRADA_URL."/admin/gradebook/assessments?section=grade&amp;id=".$COURSE_ID."&amp;assessment_id=".$assessment["assessment_id"];
 						
 						echo "<tr id=\"assessment-".$assessment["assessment_id"]."\">";
 						if ($ENTRADA_ACL->amIAllowed("assessment", "delete", false)) {
@@ -244,12 +250,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						echo "	<td class=\"title\"><a href=\"$url\">".$assessment["name"]."</a></td>";
 						echo "	<td class=\"general\"><a href=\"$url\">".$assessment["grad_year"]."</a></td>";
 						echo "	<td class=\"general\"><a href=\"$url\">".$assessment["type"]."</a></td>";
-						echo "	<td class=\"general\">"."&nbsp;"."</td>";
+						echo "	<td class=\"general\"><a href=\"$url\">".$assessment["marking_scheme_name"]."</a></td>";
 						echo "</tr>";
 					}
 					?>
 				</tbody>
 			</table>
+			<div class="gradebook_edit" style="display: none;"></div>
 				<?php
 				if ($ENTRADA_ACL->amIAllowed("assessment", "delete", false)) {
 					echo "</form>";

@@ -3,7 +3,7 @@
 
 require_once("FormalRemediation.class.php");
 
-class FormalRemediations {
+class FormalRemediations extends Collection {
 	public static function get(User $user) {
 		global $db;
 		$user_id = $user->getID();
@@ -15,7 +15,7 @@ class FormalRemediations {
 				$fr =  new FormalRemediation($user, $result['id'], $result['remediation_details']);
 				$frs[] = $fr;
 			}
-			return $frs;
 		}
+		return new self ($frs);
 	}
 }

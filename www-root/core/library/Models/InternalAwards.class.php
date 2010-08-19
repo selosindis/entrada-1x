@@ -24,6 +24,8 @@
  *
 */
 
+require_once("SimpleCache.class.php");
+
 require_once("InternalAward.class.php");
 require_once("Award.class.php");
 

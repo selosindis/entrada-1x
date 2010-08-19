@@ -21,10 +21,11 @@
 						if (messages) {
 							messages.update(data_destination.down('.status_messages'));
 						}
-						//edit_form.reset()
+						document.fire(section+':onAfterUpdate');
 					}
 				});
 			hide_edit_entry_handle();
+			document.fire(section+':onBeforeUpdate');
 		}
 
 		function submit_entry_ajax(event) {

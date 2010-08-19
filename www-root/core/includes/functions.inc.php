@@ -2755,10 +2755,13 @@ function xml_decode($string) {
  * @param bool $required
  * @param int $current_time
  * @param bool $use_times
- * @param int $add_line_break
+ * @param bool $add_line_break
+ * @param bool $auto_end_date
+ * @param bool $disabled
+ * @param bool $optional Indicates whether this date/time field is optional. Checkbox if true, date/time fields only if false. default: true
  * @return string
  */
-function generate_calendar($fieldname, $display_name = "", $required = false, $current_time = 0, $use_times = true, $add_line_break = false, $auto_end_date = false, $disabled = false) {
+function generate_calendar($fieldname, $display_name = "", $required = false, $current_time = 0, $use_times = true, $add_line_break = false, $auto_end_date = false, $disabled = false, $optional=true) {
 	global $HEAD, $ONLOAD;
 
 	if (!$display_name) {
@@ -2771,7 +2774,9 @@ function generate_calendar($fieldname, $display_name = "", $required = false, $c
 		$ONLOAD[]	= "updateTime('".$fieldname."')";
 	}
 
-	$ONLOAD[]	= "dateLock('".$fieldname."')";
+	if ($optional) {
+		$ONLOAD[]	= "dateLock('".$fieldname."')";
+	}
 
 	if ($current_time) {
 		$time		= 1;
@@ -2792,7 +2797,11 @@ function generate_calendar($fieldname, $display_name = "", $required = false, $c
 		$readonly = "";
 	}
 	$output .= "<tr>\n";
-	$output .= "	<td style=\"vertical-align: top\"><input type=\"checkbox\" name=\"".$fieldname."\" id=\"".$fieldname."\" value=\"1\"".(($time) ? " checked=\"checked\"" : "").(($required) ? " readonly=\"readonly\"" : "")." onclick=\"".(($required) ? "this.checked = true" : "dateLock('".$fieldname."')")."\" style=\"vertical-align: middle\" /></td>\n";
+	if ($optional) {
+		$output .= "	<td style=\"vertical-align: top\"><input type=\"checkbox\" name=\"".$fieldname."\" id=\"".$fieldname."\" value=\"1\"".(($time) ? " checked=\"checked\"" : "").(($required) ? " readonly=\"readonly\"" : "")." onclick=\"".(($required) ? "this.checked = true" : "dateLock('".$fieldname."')")."\" style=\"vertical-align: middle\" /></td>\n";
+	} else {
+		$output .= "	<td style=\"vertical-align: top\">&nbsp;</td>\n";		
+	}
 	$output .= "	<td style=\"vertical-align: top; padding-top: 4px\"><label id=\"".$fieldname."_text\" for=\"".$fieldname."\" class=\"".($required ? "form-required" : "form-nrequired")."\">".html_encode($display_name)."</label></td>\n";
 	$output .= "	<td style=\"vertical-align: top\">\n";
 	$output .= "		<input type=\"text\" name=\"".$fieldname."_date\" id=\"".$fieldname."_date\" value=\"".$time_date."\" $readonly autocomplete=\"off\" ".(!$disabled ? "onfocus=\"showCalendar('', this, this, '', '".$fieldname."_date', 0, 20, 1)\"" : "")."style=\"width: 170px; vertical-align: middle\" />&nbsp;";
@@ -10065,70 +10074,59 @@ function display_status_messages() {
 	echo "</div>";
 }
 
-function display_mspr_details_table($data) {
+function display_mspr_details($data) {
 	ob_start();
 	?>
-
-	<table class="tableList mspr_table" cellspacing="0">
-		<colgroup>
-			<col width="100%"></col>
-		</colgroup>
-			<tbody>
-			
-	<?php 
+	<ul class="mspr-list">
+	<?php
 	if ($data) {
 		foreach($data as $datum) {
-			?>
-			<tr>
-				<td >
-					<?php echo clean_input($datum->getDetails(), array("notags", "specialchars")) ?>	
-				</td>
-			</tr>
-			<?php 
-			
+		?>
+		<li class="entry">
+			<?php echo clean_input($datum->getDetails(), array("notags", "specialchars")) ?>
+		</li>	
+		<?php 
 		}
 	} else {
 		?>
-			<tr>
-				<td >
-					None	
-				</td>
-			</tr>
+		<li>
+		None
+		</li>	
 		<?php
 	}
 	?>
-	</table>
+	</ul>	
 	<?php
 	return ob_get_clean();
 }
 
 function require_mspr_models() {
-	require_once("Models/InternalAwardReceipts.class.php");
-	require_once("Models/ExternalAwardReceipts.class.php");
-	
-	require_once("Models/Studentships.class.php");
 	
 	require_once("Models/User.class.php");
 	
+	require_once("Models/Approvable.interface.php");
+	require_once("Models/AttentionRequirable.interface.php");
+	
+	require_once("Models/InternalAwardReceipts.class.php");
+	require_once("Models/ExternalAwardReceipts.class.php");
+	require_once("Models/Studentships.class.php");
 	require_once("Models/ClinicalPerformanceEvaluations.class.php");
-	
 	require_once("Models/Contributions.class.php");
-	
 	require_once("Models/DisciplinaryActions.class.php");
 	require_once("Models/LeavesOfAbsence.class.php");
 	require_once("Models/FormalRemediations.class.php");
-
 	require_once("Models/ClerkshipRotations.class.php");
-	
 	require_once("Models/StudentRunElectives.class.php");
+	require_once("Models/Observerships.class.php");
+	require_once("Models/InternationalActivities.class.php");
 	require_once("Models/CriticalEnquiry.class.php");
 	require_once("Models/CommunityHealthAndEpidemiology.class.php");
 	require_once("Models/ResearchCitations.class.php");
 }
 
-function getMonthName($month_num) {
+function getMonthName($month_number) {
 	static $months;
-	
+
 	//initialization of static if not done
 	if (!$months) {
 		$months=array();
@@ -10138,10 +10136,11 @@ function getMonthName($month_num) {
 			$months[$month_num] = $month_name;
 		}
 	}
-	//the -1 and +1 are to ensure the month num is from 1 to 12, not 0 to 11.
-	$month_num = (($month_num - 1) % 12) + 1;
+	//the -1 and +1 are to ensure the month num is from 1 to 12, not 0 to 11. The mod is done to  ensure the value is ithin bounds
+	$month_number = (($month_number - 1) % 12) + 1;
 	
-	return $months[$month_num];
+	$month_name = $months[$month_number];
+	return $month_name;
 }
 
 function formatDateRange($start_date, $end_date) {
@@ -10160,45 +10159,77 @@ function formatDateRange($start_date, $end_date) {
 	//year - year, or month year - month year
 	//month month year or just year
 	if ($ye && $ye != $ys) {
-		if ($ms && $me){
-			//full case
-			$start = getMonthName($ms) . " " . $ys;
-			$end = getMonthName($me) .   " " . $ye;
-			$period = $start . " - " . $end;
-		} elseif ($ms) {
-			//no end month, but year end... assume same end month
-			$month_name = getMonthName($ms);
-			$start = $month_name . " " . $ys;
-			$end = $month_name .   " " . $ye;
-			$period = $start . " - " . $end;
-		} elseif ($me) {
-			//end month exists but no month start? assume same month
-			$month_name = getMonthName($me);
-			$start = $month_name . " " . $ys;
-			$end = $month_name .   " " . $ye;
+		if ($ms || $me){
+			//if one of them is mising assume they are the same
+			if (!$me) {
+				$me = $ms;
+			} elseif(!$ms) {
+				$ms = $me;
+			}
+			if ($ds || $de) {
+				//if one of them is mising assume they are the same
+				if (!$de) {
+					$de = $ds;
+				} elseif(!$ds) {
+					$ds = $de;
+				}
+				//full case: month day, year - month day, year
+				$start = getMonthName($ms) . " " . $ds . ", " . $ys;
+				$end = getMonthName($me) .   " " . $de . ", " . $ye;
+			} else {
+				//no day info: month year - month year
+				$start = getMonthName($ms) . " " . $ys;
+				$end = getMonthName($me) .   " " . $ye;
+			}
 			$period = $start . " - " . $end;
 		} else {
 			//year range without months at all...
 			$period = $ys . " - " . $ye;
+			//no check for days because days without months would be meaningless.
 		}
 		
 	} else {
 		//there is either no end year, or the end year is the same as the start year (equivalent)
-		if ($ms && $me){
-			//full case of months
-			$start = getMonthName($ms);
-			$end = getMonthName($me) .   " " . $ys;
-			$period = $start . " - " . $end;
-		} elseif ($ms) {
-			//no end month, assume singe month/year
-			$month_name = getMonthName($ms);
-			$start = $month_name . " " . $ys;
-			$period = $start ;
-		} elseif ($me) {
-			//end month exists but no month start? assume same month
-			$month_name = getMonthName($me);
-			$start = $month_name . " " . $ys;
-			$period = $start;
+		if ($ms || $me){
+			if (!$me) {
+				$me = $ms;
+			} elseif(!$ms) {
+				$ms = $me;
+			}
+			
+			if ($me == $ms) {
+				$month_name = getMonthName($ms);
+				if ($ds || $de) {
+					if ($ds && $de && $ds != $de) {
+						$period = $month_name . " " . $ds . " - " . $de . ", " . $ys;
+					} else {
+						$period = $month_name . " " . ($ds ? $ds : $de) . ", " . $ys;
+					}
+				} else {
+					$period = $month_name . " " . $ys;
+				}
+			} else {	
+				//months are different.		
+				if ($de || $ds) {
+					//we already have a range 
+					
+					//assume same start and end day if only one exists
+					if (!$de) {
+						$de = $ds;
+					} elseif(!$ds) {
+						$ds = $de;
+					}
+					$start = getMonthName($ms) . " " . $ds;
+					$end = getMonthName($me) . " " . $de .  ", " . $ys;
+				} else {
+					//no day info...
+					$start = getMonthName($ms);
+					$end = getMonthName($me) .   " " . $ys;
+				}
+				$period = $start . " - " . $end;
+			}
+			
+			
 		} else {
 			//single year entry
 			$period = $ys;
@@ -10300,4 +10331,91 @@ function objectives_build_objective_descendants_id_string($objective_id = 0, $ob
 		}
 	}
 	return $objective_ids_string;
+}
+
+/**
+ * @author http://roshanbh.com.np/2008/05/date-format-validation-php.html
+ * @param string $date
+ * @return bool
+ */
+function checkDateFormat($date) {
+  //match the format of the date
+  if (preg_match ("/^([0-9]{4})-([0-9]{2})-([0-9]{2})$/", $date, $parts))
+  {
+    //check weather the date is valid of not
+        if(checkdate($parts[2],$parts[3],$parts[1]))
+          return true;
+        else
+         return false;
+  }
+  else
+    return false;
+}
+
+/**
+ * Easier method for writing a file.
+ * @param string $filename
+ * @param string $contents
+ * @return bool Returns false on error; true otherwise.
+ */
+function writeFile($filename, $contents) {
+	if (!($res = fopen($filename, "w"))) {
+		return false;
+	}
+	if (!fwrite($res,$contents)) {
+		return false;
+	}
+	if(!fclose($res)) {
+		return false;
+	}		
+	return true;
+}
+
+function generatePDF($html,$output_filename=null) {
+	global $APPLICATION_PATH;
+	@set_time_limit(0);
+	if((is_array($APPLICATION_PATH)) && (isset($APPLICATION_PATH["htmldoc"])) && (@is_executable($APPLICATION_PATH["htmldoc"]))) {
+
+		//This used to have every option separated by a backslash and newline. In testing it was discovered that there was a magical limit of 4 backslashes -- beyond which it would barf.
+		$exec_command	= $APPLICATION_PATH["htmldoc"]." \
+		--format pdf14 --charset ".DEFAULT_CHARSET." --size Letter --pagemode document --no-duplex --encryption --compression=6 --permissions print,no-modify \
+		--header ... --footer ... --headfootsize 0 --browserwidth 800 --top 1cm --bottom 1cm --left 2cm --right 2cm --embedfonts --bodyfont Times --headfootsize 8 \
+		--headfootfont Times --headingfont Times --firstpage p1 --quiet --book --color --no-toc --no-title --no-links --textfont Times - ";
+		
+		if ($output_filename) {
+			@exec($exec_command);
+			@exec("chmod 644 ".$output_filename);
+		} else {
+			/**
+			 * This section needs a little explanation.
+			 * 
+			 * exec and shell_exec were not used because they cannot receive standard input.
+			 * proc_open allows the specification of pipes (or files) for standard input/output/error
+			 * hence the descriptorsepc array specifiying pipes for all three
+			 * and writing to pipe[0] for standard input
+			 * and reading the stream from pipe[1] for standard output.
+			 */
+			
+			$descriptorspec = array(
+			   0 => array("pipe", "r"),  // stdin is a pipe that the child will read from
+			   1 => array("pipe", "w"),  // stdout is a pipe that the child will write to
+			   2 => array("pipe", "w")   // stderr is a pipe that the child will write to
+			);
+			
+			$proc = proc_open($exec_command, $descriptorspec, $pipes);
+			
+			fwrite($pipes[0], $html);
+			fclose($pipes[0]);
+
+			$pdf_string = stream_get_contents($pipes[1]);
+			fclose($pipes[1]);
+			
+			//$err_string = stream_get_contents($pipes[2]);
+			fclose($pipes[2]); //just close we're not interested in the error info
+			
+			$return_val = proc_close($proc);
+			
+			return $pdf_string;
+		}
+	}
 }

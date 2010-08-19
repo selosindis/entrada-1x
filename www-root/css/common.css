@@ -1284,8 +1284,8 @@ padding:3px;
 
 .section, .subsection {
 	clear: both;
-	padding: 10px 0 10px 10px;
-	margin:10px 0 10px 10px;
+	padding: 1ex 0 1ex 1em;
+	margin:1ex 0 1ex 1em;
 }
 
 
@@ -2378,21 +2378,21 @@ padding:4px 0 0;
 cursor:pointer;
 }
 
-h2.collapsable {
+.collapsable {
 cursor:pointer;
 }
 
-h2.collapsable.expanded:before {
+.collapsable.expanded:before {
 float: right;
 content: url(../images/minus.gif);
 clear: both;
 }
 
-h2.collapsable.collapsed {
+.collapsable.collapsed {
 color: #CCC;
 }
 
-h2.collapsable.collapsed:before {
+.collapsable.collapsed:before {
 float: right;
 content: url(../images/plus.gif);
 clear: both;
@@ -2679,7 +2679,7 @@ table.manage_awards tbody tr td {
 	width: 100%;
 }
 
-table.mspr_table tbody tr td {
+table.mspr_table tbody tr td, table.obs_table tbody tr td {
 	white-space:normal;
 	vertical-align:top;
 	padding-top: 5px;
@@ -2722,4 +2722,145 @@ table.mspr_table tr.unapproved td {
 }
 .gradebook_edit_add {
 	background: url(../images/add.png) no-repeat top left;
+}
+
+.mspr-tree .collapsable.expanded:before {
+float: left !important; 
+content: url(../images/minus.gif);
+clear: both;
+margin: 0 1em 0 0;
+}
+
+.mspr-tree .collapsable.collapsed {
+color: #9ac;
+}
+
+.mspr-tree .collapsable.collapsed:before {
+float: left !important;
+content: url(../images/plus.gif);
+clear: both;
+margin: 0 1em 0 0;
+}
+
+.mspr-tree .section > div {
+	margin-left: 3em;
+}
+
+.mspr-tree h2 {
+	margin: 2ex 0 0 0;
+}
+
+.handle {
+	cursor:pointer;
+}
+
+.priority-list .entry .handle {
+	position:absolute;
+	left: 5px;
+	top: 0;
+	height: 100%;
+	vertical-align:middle;
+	width:20px;
+	background-image: url(../images/arrow_up_down.png);
+	background-repeat:no-repeat;
+	background-position: center center;
+	display:inline-block;
+}
+
+.priority-list .entry .label {
+	padding-left: 25px;
+}
+
+.entry .handle img {
+	display:none;
+}
+
+.mspr-list {
+	padding: 0;
+}
+
+.mspr-list > * {
+	list-style-type:none;
+	margin: 1ex 0;
+	padding:1%;
+}
+
+.mspr-list .entry {
+	border-bottom: 1px solid darkgray;
+	background-color:WhiteSmoke;
+	position:relative;
+}
+
+.mspr-list .entry.unapproved {
+	background-color:FloralWhite;
+}
+
+.mspr-list .entry.rejected {
+	background-color:MistyRose;
+}
+
+.mspr-list .entry .label {
+	display:inline-block;
+	margin: 0.5ex 0;
+	width: 18%;
+	vertical-align:top;
+}
+.mspr-list .entry .label + * {
+	display:inline-block;
+	margin: 0.5ex 20% 0.5ex 0;
+	width:45%;
+	vertical-align:top;
+}
+
+.mspr-list .entry > .controls {
+	position:absolute;
+	top:10px;
+	bottom: 10px;
+	right:10px;
+}
+.mspr-list .entry .data {
+}
+
+.mspr-list .entry .heading {
+	font-weight:bold;
+}
+
+.attention-required {
+	background-color: FloralWhite;
+}
+
+#mspr-class-list .attention-not-required {
+	display:none;
+}
+
+#mspr-class-list.show-all .attention-not-required {
+	display:table-row;
+}
+
+.revision-list li {
+	margin-bottom:1ex;
+}
+
+.revision-list img, .display-notice img, .tableList img {
+	border:0;
+	vertical-align:middle;
+}
+
+.clearfix {
+	clear:both;
+	line-height:0;
+	height:0;
+	max-height:0;
+}
+
+.file-block {
+	background-color:white;
+	padding:1ex;
+	margin:1ex;
+}
+
+.last-update {
+	margin-top:1ex;
+	display:block;
+	font-size:0.85em;
 }

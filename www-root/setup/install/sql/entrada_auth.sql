@@ -91,7 +91,11 @@ INSERT INTO `acl_permissions` (`resource_type`, `resource_value`, `entity_type`,
 ('dashboard', NULL, NULL, NULL, NULL, NULL, NULL, 1, NULL, 'NotGuest'),
 ('regionaled', NULL, 'group', 'resident', '1', NULL, '1', NULL, NULL, 'HasAccommodations'),
 ('regionaled', NULL, 'group', 'student', '1', NULL, '1', NULL, NULL, 'HasAccommodations'),
-('regionaled_tab', NULL, 'group', 'resident', '1', NULL, '1', NULL, NULL, 'HasAccommodations');
+('regionaled_tab', NULL, 'group', 'resident', '1', NULL, '1', NULL, NULL, 'HasAccommodations'),
+('awards', NULL, 'group:role', 'staff:admin', 1, 1, 1, 1, 1, NULL),
+('mspr', NULL, 'group:role', 'staff:admin', 1, 1, 1, 1, 1, NULL),
+('mspr', NULL, 'group', 'student', 1, NULL, 1, 1, NULL, NULL);
+
 
 CREATE TABLE IF NOT EXISTS `departments` (
   `department_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
@@ -289,6 +293,8 @@ CREATE TABLE IF NOT EXISTS `user_data` (
   `privacy_level` int(1) DEFAULT '0',
   `notifications` int(1) NOT NULL DEFAULT '0',
   `clinical` int(1) NOT NULL DEFAULT '0',
+  `grad_year` int(11) default NULL,
+  `entry_year` int(11) default NULL,
   PRIMARY KEY  (`id`),
   UNIQUE KEY `username` (`username`),
   KEY `number` (`number`),
@@ -353,3 +359,18 @@ CREATE TABLE IF NOT EXISTS `user_preferences` (
   PRIMARY KEY  (`preference_id`),
   KEY `app_id` (`app_id`,`proxy_id`,`module`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+-- Function: isnumeric
+
+delimiter $$
+
+drop function if exists `isnumeric` $$
+create function `isnumeric` (s varchar(255)) returns int
+begin
+set @match =
+   '^(([0-9+-.$]{1})|([+-]?[$]?[0-9]*(([.]{1}[0-9]*)|([.]?[0-9]+))))$';
+
+return if(s regexp @match, 1, 0);
+end $$
+
+delimiter ;

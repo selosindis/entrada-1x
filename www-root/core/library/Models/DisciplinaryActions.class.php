@@ -3,7 +3,7 @@
 
 require_once("DisciplinaryAction.class.php");
 
-class DisciplinaryActions {
+class DisciplinaryActions extends Collection {
 	public static function get(User $user) {
 		global $db;
 		$user_id = $user->getID();
@@ -15,7 +15,7 @@ class DisciplinaryActions {
 				$da =  new DisciplinaryAction($user, $result['id'], $result['action_details']);
 				$das[] = $da;
 			}
-			return $das;
+			return new self($das);
 		}
 	}
 }

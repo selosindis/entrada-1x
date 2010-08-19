@@ -1,24 +1,22 @@
 <?php
-
 return array (
-'entrada_url' => (((isset($_SERVER["HTTPS"])) ? "https" : "http")."://developer.qmed.ca/~finglanj/entrada/www-root"),
-'entrada_relative' => "/~finglanj/entrada/www-root",
-'entrada_absolute' => "/Users/finglanj/Sites/entrada/www-root",
-'entrada_storage' => "/Users/finglanj/Sites/entrada/www-root/core/storage",
-'database' =>
-array (
-'host' => 'localhost',
-'username' => 'entrada',
-'password' => 'MMe7yyaa',
-'entrada_database' => 'medtech_central',
-'auth_database' => 'medtech_auth',
-'clerkship_database' => 'medtech_clerkship',
-),
-'admin' =>
-array (
-'firstname' => 'Jonathan',
-'lastname' => 'Fingland',
-'email' => 'jonathan.fingland@queensu.ca',
-)
+  'entrada_url' => 'http://localhost/entrada',
+  'entrada_relative' => '/entrada',
+  'entrada_absolute' => '/Users/username/Sites/entrada',
+  'entrada_storage' => '/Users/username/Sites/entrada/core/storage',
+  'database' =>
+  array (
+    'host' => 'localhost',
+    'username' => 'entrada',
+    'password' => '',
+    'entrada_database' => 'entrada',
+    'auth_database' => 'entrada_auth',
+    'clerkship_database' => 'entrada_clerkship',
+  ),
+  'admin' =>
+  array (
+    'firstname' => 'System',
+    'lastname' => 'Administrator',
+    'email' => 'null@entrada-project.org',
+  ),
 );
-?>

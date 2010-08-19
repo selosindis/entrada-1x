@@ -665,7 +665,7 @@ function display_research_citations_profile(ResearchCitations $research_citation
 			$class = ($research_citation->isRejected() ? "rejected" : ($research_citation->isApproved()? "approved" : "unapproved"));
 		?>
 		<li class="entry <?php echo $class; ?>" id="research_citation_<?php echo $research_citation->getID(); ?>">
-			<?php if ($view_mode) { ?> <span class="handle"><img src="<?php echo ENTRADA_URL; ?>/images/arrow_up_down.png" /></span><?php } ?> 
+			<?php if (!$view_mode) { ?> <span class="handle"><img src="<?php echo ENTRADA_URL; ?>/images/arrow_up_down.png" /></span><?php } ?> 
 			<span class="label">
 				Citation: 
 			</span>

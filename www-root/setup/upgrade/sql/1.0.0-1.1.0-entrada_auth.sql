@@ -25,9 +25,14 @@ ADD INDEX ( `parent_id` );
 ALTER TABLE `departments` ADD `department_active` INT( 1 ) NOT NULL DEFAULT '1' AFTER `department_desc`,
 ADD INDEX ( `department_active` );
 
--- Table: departments
+-- Table: registered_apps
 
-ALTER TABLE `user_data` ADD `grad_year` int(11) default NULL, `entry_year` int(11) default NULL; 
+ALTER TABLE `registered_apps` CHANGE `script_id` `script_id` varchar(32) NOT NULL DEFAULT '0';
+ALTER TABLE `registered_apps` CHANGE `script_password` `script_password` varchar(32) NOT NULL DEFAULT '';
+
+-- Table: user_data
+
+ALTER TABLE `user_data` ADD `grad_year` int(11) default NULL, ADD `entry_year` int(11) default NULL;
 
 -- Function: isnumeric
 
@@ -36,8 +41,7 @@ delimiter $$
 drop function if exists `isnumeric` $$
 create function `isnumeric` (s varchar(255)) returns int
 begin
-set @match =
-   '^(([0-9+-.$]{1})|([+-]?[$]?[0-9]*(([.]{1}[0-9]*)|([.]?[0-9]+))))$';
+set @match = '^(([0-9+-.$]{1})|([+-]?[$]?[0-9]*(([.]{1}[0-9]*)|([.]?[0-9]+))))$';
 
 return if(s regexp @match, 1, 0);
 end $$
@@ -46,5 +50,5 @@ delimiter ;
 
 -- Table: user_data
 
-UPDATE `user_data` a, `user_access` b SET a.`grad_year`=b.`role` WHERE a.`id` = b.`user_id` AND b.`group` = "student" AND isnumeric(b.`role`) AND `app_id` = 1;
-UPDATE `user_data` SET `entry_year` = `grad_year` - 4 WHERE `grad_year` IS NOT NULL; 
+UPDATE `user_data` a, `user_access` b SET a.`grad_year` = b.`role` WHERE a.`id` = b.`user_id` AND b.`group` = "student" AND isnumeric(b.`role`) AND `app_id` = 1;
+UPDATE `user_data` SET `entry_year` = `grad_year` - 4 WHERE `grad_year` IS NOT NULL;

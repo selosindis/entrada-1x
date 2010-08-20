@@ -330,122 +330,104 @@ switch($STEP) {
 </head>
 <body>
 <table style="width: 950px" cellspacing="0" cellpadding="0" border="0">
-<tr>
-	<td style="width: 185px; height: 25px; background-color: #003366"><img src="<?php echo ENTRADA_RELATIVE; ?>/images/pixel.gif" width="185" height="25" alt="" title="" /></td>
-	<td colspan="3" style="width: 765px; height: 25px; background-color: #EEEEEE; padding-left: 20px">
-		&nbsp;
-	</td>
-</tr>
-<tr>
-	<td style="width: 185px; height: 48px; background-color: #EEEEEE; text-align: center"><img src="<?php echo ENTRADA_RELATIVE; ?>/images/pixel.gif" width="185" height="48" alt="" title="" /></td>
-	<td style="width: 538px; height: 48px; background-color: #EEEEEE; text-align: left"><img src="<?php echo ENTRADA_RELATIVE; ?>/images/school_of_medicine.gif" width="368" height="48" alt="School of Medicine" title="School of Medicine" /></td>
-	<td colspan="2" style="width: 227px; height: 48px; background-color: #EEEEEE; text-align: left; vertical-align: bottom"><img src="<?php echo ENTRADA_RELATIVE; ?>/images/medtech_logo.gif" width="227" height="48" alt="Medical Education Technology Unit" title="Medical Education Technology Unit" /></td>
-</tr>
-<tr>
-	<td style="width: 185px; height: 2px; background-color: #003366; text-align: left"><img src="<?php echo ENTRADA_RELATIVE; ?>/images/pixel.gif" width="185" height="2" alt="" title="" /></td>
-	<td colspan="3" style="width: 765px; height: 2px; background-color: #003366; text-align: left"><img src="<?php echo ENTRADA_RELATIVE; ?>/images/pixel.gif" width="595" height="2" alt="" title="" /></td>
-</tr>
-<tr>
-	<td style="width: 185px; height: 10px; background-color: #FFFFFF"><img src="<?php echo ENTRADA_RELATIVE; ?>/images/pixel.gif" width="185" height="10" alt="" title="" /></td>
-	<td style="width: 538px; height: 10px; background-color: #FFFFFF"><img src="<?php echo ENTRADA_RELATIVE; ?>/images/pixel.gif" width="368" height="10" alt="" title="" /></td>
-	<td style="width: 140px; height: 10px; background-color: #A8CB49"><img src="<?php echo ENTRADA_RELATIVE; ?>/images/pixel.gif" width="140" height="10" alt="" title="" /></td>
-	<td style="width: 87px; height: 10px; background-color: #FFFFFF"><img src="<?php echo ENTRADA_RELATIVE; ?>/images/pixel.gif" width="87" height="10" alt="" title="" /></td>
-</tr>
-</table>
+	<tbody>
+		<tr>
+			<td style="width: 200px">
+				&nbsp;
+			</td>
+			<td style="width: 750px; vertical-align: top; text-align: left; padding-left: 5px; padding-top: 5px; background-color: #FFFFFF">
+				<div style="width: 750px">
+					<h1><?php echo APPLICATION_NAME; ?> Authentication System</h1>
+					<h2>Password Reset</h2>
+					<?php
+					// Page Display Step
+					switch($STEP) {
+						case 4 :
+							if($ERROR) {
+								echo display_error();
+							}
+							if($NOTICE) {
+								echo display_error();
+							}
+							if($SUCCESS) {
+								echo display_success();
+							}
+						break;
+						case 3 :
+							if($pieces = @explode(":", rawurldecode(trim($_GET["hash"])))) {
+								if(count($pieces) == 2) {
+									$PROXY_ID	= (int) trim($pieces[0]);
+									$HASH		= clean_input($pieces[1], array("credentials"));
 
-<table style="width: 950px" cellspacing="0" cellpadding="0" border="0">
-<tbody>
-	<tr>
-		<td style="width: 200px">
-			&nbsp;
-		</td>
-		<td style="width: 750px; vertical-align: top; text-align: left; padding-left: 5px; padding-top: 5px; background-color: #FFFFFF">
-			<div style="width: 750px">
-				<h1><?php echo APPLICATION_NAME; ?> Authentication System</h1>
-				<h2>Password Reset</h2>
-				<?php
-				// Page Display Step
-				switch($STEP) {
-					case 4 :
-						if($ERROR) {
-							echo display_error();
-						}
-						if($NOTICE) {
-							echo display_error();
-						}
-						if($SUCCESS) {
-							echo display_success();
-						}
-					break;
-					case 3 :
-						if($pieces = @explode(":", rawurldecode(trim($_GET["hash"])))) {
-							if(count($pieces) == 2) {
-								$PROXY_ID	= (int) trim($pieces[0]);
-								$HASH		= clean_input($pieces[1], array("credentials"));
+									$query		= "SELECT * FROM `".AUTH_DATABASE."`.`password_reset` WHERE `user_id` = ".$db->qstr($PROXY_ID, get_magic_quotes_gpc())." AND `hash` = ".$db->qstr($HASH, get_magic_quotes_gpc());
+									$result		= $db->GetRow($query);
+									if($result) {
+										if(!(int) $result["complete"]) {
+											$query	= "SELECT `username`,`firstname` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id`=".$db->qstr($PROXY_ID, get_magic_quotes_gpc());
+											$result	= $db->GetRow($query);
+											if($result) {
+												if($ERROR) {
+													echo display_error();
+												}
+												if($NOTICE) {
+													echo display_error();
+												}
+												if($SUCCESS) {
+													echo display_success();
+												}
+												?>
+												Welcome to the password reset program <strong><?php echo html_encode($result["firstname"]); ?></strong>. Using the form below enter the new password that you would like for the <?php echo APPLICATION_NAME; ?> Authentication System. <span style="background-color: #FFFFCC; padding-left: 5px; padding-right: 5px">Please be aware that your password must be between 6 and 24 characters.</span>
+												<br /><br />
+												<form action="<?php echo html_encode(basename(__FILE__)); ?>?hash=<?php echo rawurlencode(rawurldecode(trim($_GET["hash"]))); ?>" method="post">
+												<input type="hidden" name="step" value="4" />
+												<table style="width: 100%" cellspacing="1" cellpadding="1" border="0">
+												<colgroup>
+													<col style="width: 25%" />
+													<col style="width: 75%" />
+												</colgroup>
+												<tfoot>
+													<tr>
+														<td colspan="2" style="padding-top: 15px; text-align: right">
+															<input type="button" value="Cancel" class="button" onclick="window.location='<?php echo ENTRADA_RELATIVE; ?>'" />
+															<input type="submit" class="button" value="Change" />
+														</td>
+													</tr>
+												</tfoot>
+												<tbody>
+													<tr>
+														<td style="padding-bottom: 10px"><span class="form-nrequired"><?php echo APPLICATION_NAME; ?> Username:</span></td>
+														<td style="padding-bottom: 10px"><strong><?php echo html_encode($result["username"]); ?></strong></td>
+													</tr>
+													<tr>
+														<td><label for="npassword1" class="form-required">Enter New Password:</label></td>
+														<td>
+															<input type="password" id="npassword1" name="npassword1" value="" style="width: 200px" maxlength="24" />
+															<span class="content-small" style="padding-left: 5px">(<strong>Notice:</strong> your password must be 6 to 24 characters.)</span>
+														</td>
+													</tr>
+													<tr>
+														<td><label for="npassword2" class="form-required">Re-enter New Password:</label></td>
+														<td><input type="password" id="npassword2" name="npassword2" value="" style="width: 200px" maxlength="24" /></td>
+													</tr>
+												</tbody>
+												</table>
+												</form>
+												<?php
+											} else {
+												$ERROR++;
+												$ERRORSTR[] = "Sorry, there was a problem with this password reset entry. Please start the process again: <a href=\"".html_encode(basename(__FILE__))."\" style=\"font-weight: bold\">click here</b></a>.";
 
-								$query		= "SELECT * FROM `".AUTH_DATABASE."`.`password_reset` WHERE `user_id` = ".$db->qstr($PROXY_ID, get_magic_quotes_gpc())." AND `hash` = ".$db->qstr($HASH, get_magic_quotes_gpc());
-								$result		= $db->GetRow($query);
-								if($result) {
-									if(!(int) $result["complete"]) {
-										$query	= "SELECT `username`,`firstname` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id`=".$db->qstr($PROXY_ID, get_magic_quotes_gpc());
-										$result	= $db->GetRow($query);
-										if($result) {
-											if($ERROR) {
-												echo display_error();
+												echo display_error($ERRORSTR);
 											}
-											if($NOTICE) {
-												echo display_error();
-											}
-											if($SUCCESS) {
-												echo display_success();
-											}
-											?>
-											Welcome to the password reset program <strong><?php echo html_encode($result["firstname"]); ?></strong>. Using the form below enter the new password that you would like for the <?php echo APPLICATION_NAME; ?> Authentication System. <span style="background-color: #FFFFCC; padding-left: 5px; padding-right: 5px">Please be aware that your password must be between 6 and 24 characters.</span>
-											<br /><br />
-											<form action="<?php echo html_encode(basename(__FILE__)); ?>?hash=<?php echo rawurlencode(rawurldecode(trim($_GET["hash"]))); ?>" method="post">
-											<input type="hidden" name="step" value="4" />
-											<table style="width: 100%" cellspacing="1" cellpadding="1" border="0">
-											<colgroup>
-												<col style="width: 25%" />
-												<col style="width: 75%" />
-											</colgroup>
-											<tfoot>
-												<tr>
-													<td colspan="2" style="padding-top: 15px; text-align: right">
-														<input type="button" value="Cancel" class="button" onclick="window.location='<?php echo ENTRADA_RELATIVE; ?>'" />
-														<input type="submit" class="button" value="Change" />
-													</td>
-												</tr>
-											</tfoot>
-											<tbody>
-												<tr>
-													<td style="padding-bottom: 10px"><span class="form-nrequired"><?php echo APPLICATION_NAME; ?> Username:</span></td>
-													<td style="padding-bottom: 10px"><strong><?php echo html_encode($result["username"]); ?></strong></td>
-												</tr>
-												<tr>
-													<td><label for="npassword1" class="form-required">Enter New Password:</label></td>
-													<td>
-														<input type="password" id="npassword1" name="npassword1" value="" style="width: 200px" maxlength="24" />
-														<span class="content-small" style="padding-left: 5px">(<strong>Notice:</strong> your password must be 6 to 24 characters.)</span>
-													</td>
-												</tr>
-												<tr>
-													<td><label for="npassword2" class="form-required">Re-enter New Password:</label></td>
-													<td><input type="password" id="npassword2" name="npassword2" value="" style="width: 200px" maxlength="24" /></td>
-												</tr>
-											</tbody>
-											</table>
-											</form>
-											<?php
 										} else {
 											$ERROR++;
-											$ERRORSTR[] = "Sorry, there was a problem with this password reset entry. Please start the process again: <a href=\"".html_encode(basename(__FILE__))."\" style=\"font-weight: bold\">click here</b></a>.";
+											$ERRORSTR[] = "The password reset details that you have provided have already been completed. If you've forgotten your ".APPLICATION_NAME." password again, please create a new password reset entry by starting the process over again. <a href=\"".html_encode(basename(__FILE__))."\" style=\"font-weight: bold\">Click here</a> to start again.";
 
 											echo display_error($ERRORSTR);
 										}
 									} else {
 										$ERROR++;
-										$ERRORSTR[] = "The password reset details that you have provided have already been completed. If you've forgotten your ".APPLICATION_NAME." password again, please create a new password reset entry by starting the process over again. <a href=\"".html_encode(basename(__FILE__))."\" style=\"font-weight: bold\">Click here</a> to start again.";
+										$ERRORSTR[] = "There seems to be a problem with the URL that you are visiting. Please be sure that if you are trying to reset your ".APPLICATION_NAME." password, that you copy and paste the entire address (URL) string into your browser window. Sometimes if you just click the link your e-mail client may not include the whole link in what you click.";
 
 										echo display_error($ERRORSTR);
 									}
@@ -461,79 +443,65 @@ switch($STEP) {
 
 								echo display_error($ERRORSTR);
 							}
-						} else {
-							$ERROR++;
-							$ERRORSTR[] = "There seems to be a problem with the URL that you are visiting. Please be sure that if you are trying to reset your ".APPLICATION_NAME." password, that you copy and paste the entire address (URL) string into your browser window. Sometimes if you just click the link your e-mail client may not include the whole link in what you click.";
-
-							echo display_error($ERRORSTR);
-						}
-					break;
-					case 2 :
-						if($ERROR) {
-							echo display_error();
-						}
-						if($NOTICE) {
-							echo display_error();
-						}
-						if($SUCCESS) {
-							echo display_success();
-						}
-					break;
-					case 1 :
-					default :
-						if($ERROR) {
-							echo display_error();
-						}
-						if($NOTICE) {
-							echo display_error();
-						}
-						if($SUCCESS) {
-							echo display_success();
-						}
-						?>
-						<div class="display-notice" style="padding: 10px">
-							This page allows you to reset your <?php echo APPLICATION_NAME; ?> password. To begin please enter your official e-mail address into the textbox below and click <strong>Continue</strong>. The system will search for your e-mail address, and send you further instructions.
-						</div>
-						<form action="<?php echo html_encode(basename(__FILE__)); ?>" method="get">
-						<table style="width: 100%" cellspacing="1" cellpadding="1" border="0">
-						<colgroup>
-							<col style="width: 25%" />
-							<col style="width: 75%" />
-						</colgroup>
-						<tbody>
-							<tr>
-								<td><label for="email_address" style="font-weight: bold">Official E-Mail Address:</label></td>
-								<td>
-									<input type="text" id="email_address" style="width: 275px; vertical-align: middle" name="email_address" value="<?php echo ((isset($_POST["email_address"])) ? html_encode($_POST["email_address"]) : ""); ?>" />
-									<input type="submit" class="button" value="Continue" style="vertical-align: middle; margin-left: 15px" />
-								</td>
-							</tr>
-							<tr>
-								<td>&nbsp;</td>
-								<td style="padding-top: 10px">
-									<div class="content-small" style="width: 75%">
-										<strong>Notice:</strong> Your official e-mail address is the one registered with the institution.
-									</div>
-								</td>
-							</tr>
-						</tbody>
-						</table>
-						</form>
-						<?php
-					break;
-				}
-				?>
-			</div>
-		</td>
-	</tr>
-</tbody>
-<tbody class="no-printing">
-	<tr>
-		<td style="width: 200px">&nbsp;</td>
-		<td style="width: 750px; padding-left: 5px; padding-top: 10px">
-			<span class="copyright"><?php echo COPYRIGHT_STRING; ?></span>
-		</td>
-	</tr>
+						break;
+						case 2 :
+							if($ERROR) {
+								echo display_error();
+							}
+							if($NOTICE) {
+								echo display_error();
+							}
+							if($SUCCESS) {
+								echo display_success();
+							}
+						break;
+						case 1 :
+						default :
+							if($ERROR) {
+								echo display_error();
+							}
+							if($NOTICE) {
+								echo display_error();
+							}
+							if($SUCCESS) {
+								echo display_success();
+							}
+							?>
+							<div class="display-notice" style="padding: 10px">
+								This page allows you to reset your <?php echo APPLICATION_NAME; ?> password. To begin please enter your official e-mail address into the textbox below and click <strong>Continue</strong>. The system will search for your e-mail address, and send you further instructions.
+							</div>
+							<form action="<?php echo html_encode(basename(__FILE__)); ?>" method="get">
+							<table style="width: 100%" cellspacing="1" cellpadding="1" border="0">
+							<colgroup>
+								<col style="width: 25%" />
+								<col style="width: 75%" />
+							</colgroup>
+							<tbody>
+								<tr>
+									<td><label for="email_address" style="font-weight: bold">Official E-Mail Address:</label></td>
+									<td>
+										<input type="text" id="email_address" style="width: 275px; vertical-align: middle" name="email_address" value="<?php echo ((isset($_POST["email_address"])) ? html_encode($_POST["email_address"]) : ""); ?>" />
+										<input type="submit" class="button" value="Continue" style="vertical-align: middle; margin-left: 15px" />
+									</td>
+								</tr>
+								<tr>
+									<td>&nbsp;</td>
+									<td style="padding-top: 10px">
+										<div class="content-small" style="width: 75%">
+											<strong>Notice:</strong> Your official e-mail address is the one registered with the institution.
+										</div>
+									</td>
+								</tr>
+							</tbody>
+							</table>
+							</form>
+							<?php
+						break;
+					}
+					?>
+				</div>
+			</td>
+		</tr>
 	</tbody>
 </table>
 </body>

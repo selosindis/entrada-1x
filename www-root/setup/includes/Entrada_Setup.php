@@ -40,6 +40,9 @@ class Entrada_Setup
 	public $admin_lastname;
 	public $admin_email;
 	
+	public $auth_username;
+	public $auth_password;
+
 	public $config_file_path;
 
 	public function __construct($processed_array)
@@ -62,6 +65,9 @@ class Entrada_Setup
 		$this->admin_firstname = (isset($processed_array["admin_firstname"]) ? $processed_array["admin_firstname"] : "");
 		$this->admin_lastname = (isset($processed_array["admin_lastname"]) ? $processed_array["admin_lastname"] : "");
 		$this->admin_email = (isset($processed_array["admin_email"]) ? $processed_array["admin_email"] : "");
+
+		$this->auth_username = (isset($processed_array["auth_username"]) ? $processed_array["auth_username"] : generate_hash());
+		$this->auth_password = (isset($processed_array["auth_password"]) ? $processed_array["auth_password"] : generate_hash());
 		
 		$this->config_file_path = $this->entrada_absolute . "/core/config/config.inc.php";
 	}
@@ -137,12 +143,14 @@ class Entrada_Setup
 					"entrada_database"			=> $this->entrada_database,
 					"auth_database"				=> $this->auth_database,
 					"clerkship_database"		=> $this->clerkship_database,
-					),
-					"admin" => array(
-						"firstname"					=> $this->admin_firstname,
-						"lastname"					=> $this->admin_lastname,
-						"email"						=> $this->admin_email,
-					)
+				),
+				"admin" => array(
+					"firstname"					=> $this->admin_firstname,
+					"lastname"					=> $this->admin_lastname,
+					"email"						=> $this->admin_email,
+				),
+				"auth_username" => $this->auth_username,
+				"auth_password" => $this->auth_password,
 			);
 			$config = new Zend_Config($configArray);
 			$writer = new Zend_Config_Writer_Array();
@@ -165,8 +173,7 @@ return array (
   'entrada_relative' => '{$this->entrada_relative}',
   'entrada_absolute' => '{$this->entrada_absolute}',
   'entrada_storage' => '{$this->entrada_storage}',
-  'database' =>
-  array (
+  'database' => array (
     'host' => '{$this->database_host}',
     'username' => '{$this->database_username}',
     'password' => '{$this->database_password}',
@@ -174,12 +181,13 @@ return array (
     'auth_database' => '{$this->auth_database}',
     'clerkship_database' => '{$this->clerkship_database}',
   ),
-  'admin' =>
-  array (
+  'admin' => array (
     'firstname' => '{$this->admin_firstname}',
     'lastname' => '{$this->admin_lastname}',
     'email' => '{$this->admin_email}',
   ),
+  'auth_username' => '{$this->auth_username}',
+  'auth_password' => '{$this->auth_password}'
 );
 CONFIGTEXT;
 		return $config_text;
@@ -240,7 +248,9 @@ CONFIGTEXT;
 			if ((trim($sql_line) != "") && (strpos($sql_line, "--") === false)) {
 				$query .= $sql_line;
 				if (preg_match("/;[\040]*\$/", $sql_line)) {
-					$query = str_replace(array("%ADMIN_FIRSTNAME%", "%ADMIN_LASTNAME%", "%ADMIN_EMAIL%", "%ADMIN_USERNAME%", "%ADMIN_PASSWORD_HASH%", ), array($this->admin_firstname, $this->admin_lastname, $this->admin_email, $this->admin_username, $this->admin_password_hash), $query);
+					$search = array("%ADMIN_FIRSTNAME%", "%ADMIN_LASTNAME%", "%ADMIN_EMAIL%", "%ADMIN_USERNAME%", "%ADMIN_PASSWORD_HASH%", "%AUTH_USERNAME%", "%AUTH_PASSWORD%");
+					$replace = array($this->admin_firstname, $this->admin_lastname, $this->admin_email, $this->admin_username, $this->admin_password_hash, $this->auth_username, $this->auth_password);
+					$query = str_replace($search, $replace, $query);
 					$sql_dump[] = $query;
 					$query = "";
 				}
@@ -261,7 +271,7 @@ CONFIGTEXT;
 			{
 				$db = NewADOConnection(DATABASE_TYPE);
 				$db->Connect($this->database_host, $this->database_username, $this->database_password, $database_name);
-				$rs = $db->GetAll("SHOW TABLES;");
+				$rs = $db->GetAll("SHOW TABLES");
 				foreach($rs as $row) {
 					$db->Execute("DROP TABLE `".$row[0]."`");
 				}

@@ -84,11 +84,10 @@ $CLERKSHIP_FIELD_STATUS["cancelled"] = array("name" => "Cancelled", "visible" =>
 define("CURRICULAR_OBJECTIVES_PARENT_ID", 1);
 
 define("AUTH_PRODUCTION", ENTRADA_URL."/authentication/authenticate.php");
-
-define("AUTH_APP_ID", "1");														// Application ID for the MEdTech Authentication System.
-define("AUTH_APP_IDS_STRING", "1,97");														// Application ID for the MEdTech Authentication System.
-define("AUTH_USERNAME", "30000001");											// Application username to connect to the MEdTech Authentication System.
-define("AUTH_PASSWORD", "apple123");											// Application password to connect to the MEdTech Authentication System.
+define("AUTH_APP_ID", "1");														// Application ID for the Authentication System.
+define("AUTH_APP_IDS_STRING", "1");												// Application ID's to query for users in.
+define("AUTH_USERNAME", $config->auth_username);								// Application username to connect to the Authentication System.
+define("AUTH_PASSWORD", $config->auth_password);								// Application password to connect to the Authentication System.
 define("AUTH_METHOD", "local");													// The method used to authenticate users into the application (local or ldap).
 define("AUTH_DATABASE",	$config->database->auth_database);						// The name of the database that the authentication tables are located in. Must be able to connect to this using DATABASE_HOST, DATABASE_USER and DATABASE_PASS which are specified below.
 define("AUTH_MAX_LOGIN_ATTEMPTS", 5);											// The number of login attempts a user can make before they are locked out of the system for the lockout duration

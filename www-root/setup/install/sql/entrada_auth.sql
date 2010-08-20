@@ -200,8 +200,8 @@ CREATE TABLE IF NOT EXISTS `password_reset` (
 
 CREATE TABLE IF NOT EXISTS `registered_apps` (
   `id` int(12) unsigned NOT NULL AUTO_INCREMENT,
-  `script_id` varchar(25) NOT NULL DEFAULT '0',
-  `script_password` varchar(255) NOT NULL DEFAULT '',
+  `script_id` varchar(32) NOT NULL DEFAULT '0',
+  `script_password` varchar(32) NOT NULL DEFAULT '',
   `server_ip` varchar(75) NOT NULL DEFAULT '',
   `server_url` text NOT NULL,
   `employee_rep` int(12) unsigned NOT NULL DEFAULT '0',
@@ -214,7 +214,7 @@ CREATE TABLE IF NOT EXISTS `registered_apps` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `registered_apps` (`id`, `script_id`, `script_password`, `server_ip`, `server_url`, `employee_rep`, `notes`) VALUES
-(1, '30000001', MD5('apple123'), '%', '%', 1, 'Entrada');
+(1, '%AUTH_USERNAME%', MD5('%AUTH_PASSWORD%'), '%', '%', 1, 'Entrada');
 
 CREATE TABLE IF NOT EXISTS `sessions` (
   `sesskey` varchar(64) NOT NULL DEFAULT '',

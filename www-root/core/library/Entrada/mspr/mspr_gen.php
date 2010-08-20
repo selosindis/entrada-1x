@@ -1,6 +1,10 @@
 <?php
 require_once("Models/MSPRs.class.php");
 
+define("MAX_CONTRIBUTIONS", 6);
+define("MAX_OBSERVERSHIPS", 8);
+
+
 function generateMSPRHTML(MSPR $mspr,$timestamp = null) {
 	if (!$timestamp) {
 		$timestamp = time();
@@ -28,7 +32,7 @@ function generateMSPRHTML(MSPR $mspr,$timestamp = null) {
 		
 		<body>
 			<h1></h1>
-			<div align="right"><img src="<?php echo ENTRADA_URL;?>/images/Letterhead.png" height=300 width=402></div>
+			<div align="right"><img src="<?php echo ENTRADA_URL;?>/images/Letterhead.png" height=300 width=400></div>
 			<div align="right"><b><u><?php echo $doc_date; ?></u></b></div>
 			<center><h2><u><?php echo $name; ?></u></h2></center>
 			<div><?php echo $name;?> entered the first year at Queen's University, School of Medicine in <?php echo $entry_year; ?> and is expected to graduate with the degree of Doctor of Medicine from Queen's in May of <?php echo $grad_year; ?>. The following is intended to supplement the official Queen's University Transcript.</div>
@@ -130,11 +134,13 @@ function generateMSPRHTML(MSPR $mspr,$timestamp = null) {
 
 				$component = $observerships;
 				if ($component && $component->count() > 0) { 
+					$observership_no = 0;
 			?>
 			<h4>Observerships</h4>
 			<table width="100%" border=0 cellpadding=5 cellspacing=0>
 			<?php
 					foreach($component as $entity) {
+						if (++$observership_no > MAX_OBSERVERSHIPS) break;
 						?>
 				<tr>
 					<td valign="top" width="50%"><?php echo nl2br($entity->getDetails()); ?></td>
@@ -309,12 +315,14 @@ function generateMSPRHTML(MSPR $mspr,$timestamp = null) {
 
 				$component = $mspr["Contributions to Medical School"];
 				if ($component && $component->count() > 0) { 
+					$contribution_no = 0;
 			?>
 			<h3><u>Contributions to Medical School/Student Life</u></h3>
 			<i>Participation in the School of Medicine student government, committees (such as admissions), and organization of extra-curricular learning activities and Seminars is listed below.</i><br><br>
 			<table width="100%" border=0 cellpadding=5 cellspacing=0>
 			<?php
 					foreach($component as $entity) {
+						if (++$contribution_no > MAX_CONTRIBUTIONS) break;
 						?>
 				<tr>
 					<td valign="top" width="50%"><?php echo $entity->getOrgEvent()."<br>".$entity->getRole(); ?></td>

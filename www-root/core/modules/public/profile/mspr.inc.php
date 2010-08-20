@@ -162,7 +162,7 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 	<div id="required-information-section">
 		<div class="instructions" style="margin-left:2em;margin-top:2ex;">
 			<strong>Instructions</strong>
-			<p>The sections below require require your input. The information you provide will appear on your Medical School Performance Report. All submisions are subject to dean approval.</p>
+			<p>The sections below require your input. The information you provide will appear on your Medical School Performance Report. All submisions are subject to dean approval.</p>
 			<ul>
 				<li>
 					Each section below provides a link to add new entires or edit in the case of single entires (Critical Enquiry, and Community Health and Epidemiology Project).  
@@ -233,17 +233,17 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 						<tr>
 							<td>&nbsp;</td>
 							<td><label class="form-required" for="organization">Organization:</label></td>
-							<td><input name="organization" type="text" style="width:40%;" value="<?php echo $ce_organization; ?>"></input></td>
+							<td><input name="organization" type="text" style="width:40%;" value="<?php echo $ce_organization; ?>"></input> <span class="content-small"><strong>Example</strong>: Queen's University</span></td>
 						</tr>	
 						<tr>
 							<td>&nbsp;</td>
 							<td><label class="form-required" for="location">Location:</label></td>
-							<td><input name="location" type="text" style="width:40%;" value="<?php echo $ce_location; ?>"></input></td>
+							<td><input name="location" type="text" style="width:40%;" value="<?php echo $ce_location; ?>"></input> <span class="content-small"><strong>Example</strong>: Kingston, Ontario</span></td>
 						</tr>	
 						<tr>
 							<td>&nbsp;</td>
 							<td><label class="form-required" for="supervisor">Supervisor:</label></td>
-							<td><input name="supervisor" type="text" style="width:40%;" value="<?php echo $ce_supervisor; ?>"></input></td>
+							<td><input name="supervisor" type="text" style="width:40%;" value="<?php echo $ce_supervisor; ?>"></input> <span class="content-small"><strong>Example</strong>: Dr. Nick Riviera</span></td>
 						</tr>	
 					</tbody>
 				
@@ -327,17 +327,17 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 						<tr>
 							<td>&nbsp;</td>
 							<td><label class="form-required" for="organization">Organization:</label></td>
-							<td><input name="organization" type="text" style="width:40%;" value="<?php echo $chae_organization; ?>"></input></td>
+							<td><input name="organization" type="text" style="width:40%;" value="<?php echo $chae_organization; ?>"></input> <span class="content-small"><strong>Example</strong>: Housing First/Queen's University</span></td>
 						</tr>	
 						<tr>
 							<td>&nbsp;</td>
 							<td><label class="form-required" for="location">Location:</label></td>
-							<td><input name="location" type="text" style="width:40%;" value="<?php echo $chae_location; ?>"></input></td>
+							<td><input name="location" type="text" style="width:40%;" value="<?php echo $chae_location; ?>"></input> <span class="content-small"><strong>Example</strong>: Kingston, Ontario</span></td>
 						</tr>	
 						<tr>
 							<td>&nbsp;</td>
 							<td><label class="form-required" for="supervisor">Supervisor:</label></td>
-							<td><input name="supervisor" type="text" style="width:40%;" value="<?php echo $chae_supervisor; ?>"></input></td>
+							<td><input name="supervisor" type="text" style="width:40%;" value="<?php echo $chae_supervisor; ?>"></input> <span class="content-small"><strong>Example</strong>: Dr. Nick Riviera</span></td>
 						</tr>	
 					</tbody>
 				
@@ -367,6 +367,7 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 					<ul>
 						<li>Only add citations of published research in which you were a named author</li>
 						<li>Citations below may be re-ordered. The top-six <em>approved</em> citations will appear on your MSPR.</li>
+						<li>Research citations should be provided in a format following <a href="http://owl.english.purdue.edu/owl/resource/747/01/">MLA guidelines</a></li>
 					</ul>
 				</div>
 				<div id="add_research_citation_link" style="float: right;">
@@ -402,7 +403,7 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 							<tr>
 							<td>&nbsp;</td>
 							<td valign="top"><label class="form-required" for="details">Citation:</label></td>
-							<td><textarea name="details" style="width:80%;"></textarea><br /><span class="content-small">Note: Should adhere to MLA guidelines.</span>
+							<td><textarea name="details" style="width:80%;height:8ex;"></textarea><br /><span class="content-small">Note: Should adhere to MLA guidelines.</span>
 							</td>
 							</tr>
 						</tbody>
@@ -442,6 +443,12 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 			 
 			<h3 class="collapsable collapsed" title="External Awards Section">External Awards</h3>
 			<div id="external-awards-section">
+				<div class="instructions">
+					<ul>
+						<li>Only awards of academic significance will be considered.</li>
+						<li>Award terms must be provided to be considered. Awards not accompanied by terms will be rejected.</li>
+					</ul>
+				</div>
 			<div id="add_external_award_link" style="float: right;">
 				<ul class="page-action">
 					<li><a id="add_external_award" href="#external-awards-section" class="strong-green">Add External Award</a></li>
@@ -484,8 +491,8 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 						</tr>	
 						<tr>
 						<td>&nbsp;</td>
-						<td><label class="form-required" for="terms">Award Terms:</label></td>
-						<td><textarea name="terms" style="width: 100%; height: 100px;" cols="65" rows="20"></textarea></td>
+						<td valign="top"><label class="form-required" for="terms">Award Terms:</label></td>
+						<td><textarea name="terms" style="width: 80%; height: 12ex;" cols="65" rows="20"></textarea></td>
 						</tr>	
 						<tr>
 						<td>&nbsp;</td>
@@ -528,133 +535,149 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 			</div>
 		</div>
 		<div class="section" >
-			<h3 title="Contributions to Medical School" class="collapsable collapsed">Contributions to Medical School</h3>
+			<h3 title="Contributions to Medical School" class="collapsable collapsed">Contributions to Medical School/Student Life</h3>
 			<div id="contributions-to-medical-school">
+				<div class="instructions">
+					<ul>
+						<li>Extra-curricular learning activities are only approved if verified</li>
+						<li>Examples of contributions to medical school/student life include:
+							<ul>
+								<li>Participation in School of Medicine student government</li>
+								<li>Committees (such as admissions)</li>
+								<li>Organizing extra-curricular learning activities and seminars</li>					
+							</ul>
+						</li>
+					</ul>
+				</div>
 			
-			<?php 
-			$show_contributions_form =  ($_GET['show'] == "contributions_form");
-			?>	
-			<div id="add_contribution_link" style="float: right;<?php if ($show_contributions_form) { echo "display:none;"; }   ?>">
-				<ul class="page-action">
-					<li><a id="add_contribution" href="<?php echo ENTRADA_URL; ?>/profile?section=mspr&show=contributions_form&id=<?php echo $PROXY_ID; ?>" class="strong-green">Add Contribution</a></li>
-				</ul>
-			</div>
-			<div class="clear">&nbsp;</div>
-			<form id="add_contribution_form" name="add_contribution_form" action="<?php echo ENTRADA_URL; ?>/profile?section=mspr&id=<?php echo $PROXY_ID; ?>" method="post" <?php if (!$show_contributions_form) { echo "style=\"display:none;\""; }   ?> >
-				<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
-				<table class="mspr_form">
-					<colgroup>
-						<col width="3%"></col>
-						<col width="25%"></col>
-						<col width="72%"></col>
-					</colgroup>
-					<tfoot>
-						<tr>
-							<td colspan="3">&nbsp;</td>
-						</tr>
-						<tr>
-							<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
-								<input type="submit" name="action" value="Add" />
-								<div id="hide_contribution_link" style="display:inline-block;">
-									<ul class="page-action-cancel">
-										<li><a id="hide_contribution" href="<?php echo ENTRADA_URL; ?>/profile?section=mspr&id=<?php echo $PROXY_ID; ?>" class="strong-green">[ Cancel Adding Contribution ]</a></li>
-									</ul>
-								</div>
-							</td>
-						</tr>
-					</tfoot>
-					<tbody>
-						<tr>
-						<td>&nbsp;</td>
-						<td><label class="form-required" for="role">Role:</label></td>
-						<td><input name="role" type="text" style="width:40%;"></input></td>
-						</tr>	
-						<tr>
-						<td>&nbsp;</td>
-						<td><label class="form-required" for="org_event">Organization/Event:</label></td>
-						<td><input name="org_event" type="text" style="width:40%;"></input></td>
-						</tr>	
-												<tr>
-									<td>&nbsp;</td>
-									<td><label class="form-required" for="start">Start:</label></td>
-									<td>
-										<select name="start_month">
-										<?php
-										echo build_option("","Month",true);
-											
-										for($month_num = 1; $month_num <= 12; $month_num++) {
-											echo build_option($month_num, getMonthName($month_num));
-										}
-										?>
-										</select>
-										<select name="start_year">
-										<?php 
-										$cur_year = (int) date("Y");
-										$start_year = $cur_year - 6;
-										$end_year = $cur_year + 4;
-										
-										for ($opt_year = $start_year; $opt_year <= $end_year; ++$opt_year) {
-												echo build_option($opt_year, $opt_year, $opt_year == $cur_year);
-										}
-										?>
-										</select>
-									</td>
-								</tr>
-								<tr>
-									<td>&nbsp;</td>
-									<td><label class="form-required" for="end">End:</label></td>
-									<td>
-										<select tabindex="1" name="end_month">
-										<?php
-										echo build_option("","Month",true);
-											
-										for($month_num = 1; $month_num <= 12; $month_num++) {
-											echo build_option($month_num, getMonthName($month_num));
-										}
-										?>
-										</select>
-										<select name="end_year">
-										<?php 
-										echo build_option("","Year",true);
-										$cur_year = (int) date("Y");
-										$start_year = $cur_year - 6;
-										$end_year = $cur_year + 4;
-										
-										for ($opt_year = $start_year; $opt_year <= $end_year; ++$opt_year) {
-												echo build_option($opt_year, $opt_year, false);
-										}
-										?>
-										</select>
-									</td>
-								</tr>
-					</tbody>
-				
-				</table>	
-			
+				<?php 
+				$show_contributions_form =  ($_GET['show'] == "contributions_form");
+				?>	
+				<div id="add_contribution_link" style="float: right;<?php if ($show_contributions_form) { echo "display:none;"; }   ?>">
+					<ul class="page-action">
+						<li><a id="add_contribution" href="<?php echo ENTRADA_URL; ?>/profile?section=mspr&show=contributions_form&id=<?php echo $PROXY_ID; ?>" class="strong-green">Add Contribution</a></li>
+					</ul>
+				</div>
 				<div class="clear">&nbsp;</div>
-			</form>
+				<form id="add_contribution_form" name="add_contribution_form" action="<?php echo ENTRADA_URL; ?>/profile?section=mspr&id=<?php echo $PROXY_ID; ?>" method="post" <?php if (!$show_contributions_form) { echo "style=\"display:none;\""; }   ?> >
+					<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
+					<table class="mspr_form">
+						<colgroup>
+							<col width="3%"></col>
+							<col width="25%"></col>
+							<col width="72%"></col>
+						</colgroup>
+						<tfoot>
+							<tr>
+								<td colspan="3">&nbsp;</td>
+							</tr>
+							<tr>
+								<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
+									<input type="submit" name="action" value="Add" />
+									<div id="hide_contribution_link" style="display:inline-block;">
+										<ul class="page-action-cancel">
+											<li><a id="hide_contribution" href="<?php echo ENTRADA_URL; ?>/profile?section=mspr&id=<?php echo $PROXY_ID; ?>" class="strong-green">[ Cancel Adding Contribution ]</a></li>
+										</ul>
+									</div>
+								</td>
+							</tr>
+						</tfoot>
+						<tbody>
+							<tr>
+							<td>&nbsp;</td>
+							<td><label class="form-required" for="role">Role:</label></td>
+							<td><input name="role" type="text" style="width:40%;"></input> <span class="content-small"><strong>Example</strong>: Interviewer</span></td>
+							</tr>	
+							<tr>
+							<td>&nbsp;</td>
+							<td><label class="form-required" for="org_event">Organization/Event:</label></td>
+							<td><input name="org_event" type="text" style="width:40%;"></input> <span class="content-small"><strong>Example</strong>: Medical School Interview Weekend</span></td>
+							</tr>	
+													<tr>
+										<td>&nbsp;</td>
+										<td><label class="form-required" for="start">Start:</label></td>
+										<td>
+											<select name="start_month">
+											<?php
+											echo build_option("","Month",true);
+												
+											for($month_num = 1; $month_num <= 12; $month_num++) {
+												echo build_option($month_num, getMonthName($month_num));
+											}
+											?>
+											</select>
+											<select name="start_year">
+											<?php 
+											$cur_year = (int) date("Y");
+											$start_year = $cur_year - 6;
+											$end_year = $cur_year + 4;
+											
+											for ($opt_year = $start_year; $opt_year <= $end_year; ++$opt_year) {
+													echo build_option($opt_year, $opt_year, $opt_year == $cur_year);
+											}
+											?>
+											</select>
+										</td>
+									</tr>
+									<tr>
+										<td>&nbsp;</td>
+										<td><label class="form-required" for="end">End:</label></td>
+										<td>
+											<select tabindex="1" name="end_month">
+											<?php
+											echo build_option("","Month",true);
+												
+											for($month_num = 1; $month_num <= 12; $month_num++) {
+												echo build_option($month_num, getMonthName($month_num));
+											}
+											?>
+											</select>
+											<select name="end_year">
+											<?php 
+											echo build_option("","Year",true);
+											$cur_year = (int) date("Y");
+											$start_year = $cur_year - 6;
+											$end_year = $cur_year + 4;
+											
+											for ($opt_year = $start_year; $opt_year <= $end_year; ++$opt_year) {
+													echo build_option($opt_year, $opt_year, false);
+											}
+											?>
+											</select>
+										</td>
+									</tr>
+						</tbody>
+					
+					</table>	
+				
+					<div class="clear">&nbsp;</div>
+				</form>
 		
-			<div id="contributions"><?php echo display_contributions_profile($contributions); ?></div>
-			<div class="clear">&nbsp;</div>
-			<script language="javascript">
-			var contributions = new ActiveDataEntryProcessor({
-				url : '<?php echo webservice_url("mspr-profile"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=contributions',
-				data_destination: $('contributions'),
-				new_form: $('add_contribution_form'),
-				remove_forms_selector: '#contributions .entry form',
-				new_button: $('add_contribution_link'),
-				hide_button: $('hide_contribution'),
-				section:'contributions'
-		
-			});
+				<div id="contributions"><?php echo display_contributions_profile($contributions); ?></div>
+				<div class="clear">&nbsp;</div>
+				<script language="javascript">
+				var contributions = new ActiveDataEntryProcessor({
+					url : '<?php echo webservice_url("mspr-profile"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=contributions',
+					data_destination: $('contributions'),
+					new_form: $('add_contribution_form'),
+					remove_forms_selector: '#contributions .entry form',
+					new_button: $('add_contribution_link'),
+					hide_button: $('hide_contribution'),
+					section:'contributions'
 			
-			</script>
-		
+				});
+				
+				</script>
+			
+			</div>
 		</div>
-	</div>
 	</div>
 	<h2 title="Supplied Information Section" class="collapsed">Information Supplied by Staff and Faculty</h2>
 	<div id="supplied-information-section">
+		<div class="instructions">
+		<p>This section consists of information entered by staff or extracted from other sources (for example, clerkship schedules).</p>
+		<p>Please periodically read over the information in the following sections to verify its accuracy. If any errors are found, please contact the undergraduate office.</p>
+		</div>
 	
 		<div class="section">
 		<h3 title="Clerkship Core Rotations Completed Satisfactorily to Date" class="collapsable collapsed">Clerkship Core Rotations Completed Satisfactorily to Date</h3>

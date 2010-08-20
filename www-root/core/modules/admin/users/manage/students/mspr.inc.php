@@ -62,6 +62,8 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 	$generated = $mspr->isGenerated();
 	$revision = $mspr->getGeneratedTimestamp();
 	$number = $user->getNumber();
+	
+	$name = $user->getFirstname() . " " . $user->getLastname();
 	if (isset($_GET['generate']) && $is_closed){
 		$mspr->saveMSPRFiles();
 		header("Location: ".ENTRADA_URL."/admin/users/manage/students?section=mspr&id=".$PROXY_ID);
@@ -151,10 +153,49 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 
 	<h2 title="Information Requiring Approval">Information Requiring Approval</h2>
 	<div id="information-requiring-approval">
-	
+		<div class="instructions" style="margin-left:2em;margin-top:2ex;">
+			<strong>Instructions</strong>
+			<p>The sections below consist of student-submitted information. The submissions require approval or rejection.</p>
+			<ul>
+				<li>
+					If an entry is verifiably accurate and meets criteria, it should be approved.
+				</li>
+				<li>
+					If an entry is verifiably innacurate or contains errors in spelling or formatting, it should be rejected.
+				</li>
+				<li>
+					If previously approved information comes into question, it's status can be reverted to unapproved, and rejected if deemed appropriate.
+				</li>
+				<li>
+					All entries have a background color corresponding to their status: 
+					<ul>
+						<li>Gray - Approved</li>
+						<li>Yellow - Pending Approval</li>
+						<li>Red - Rejected</li>
+					</ul>
+				</li>
+			</ul>
+		</div>	
 		<div class="section">
-			<h3 title="Contributions to Medical School" class="collapsable<?php echo ($contributions->isAttentionRequired()) ? "" : " collapsed"; ?>">Contributions to Medical School</h3>
+			<h3 title="Contributions to Medical School" class="collapsable<?php echo ($contributions->isAttentionRequired()) ? "" : " collapsed"; ?>">Contributions to Medical School/Student Life</h3>
 			<div id="contributions-to-medical-school">
+				<div class="instructions">
+					<ul>
+						<li>Examples of contributions to medical school/student life include:
+							<ul>
+								<li>Participation in School of Medicine student government</li>
+								<li>Committees (such as admissions)</li>
+								<li>Organizing extra-curricular learning activities and seminars</li>					
+							</ul>
+						</li>
+						<li>Examples of submissions that do <em>not</em> qualify:
+							<ul>
+								<li>Captain of intramural soccer team.</li>
+								<li>Member of Oprah's book of the month club.</li>
+							</ul>
+						</li>
+					</ul>
+				</div>
 				<?php echo display_contributions_admin($contributions); ?>
 			</div>
 			<script language="javascript">
@@ -202,6 +243,13 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 		<div class="section">
 			<h3 title="Research" class="collapsable<?php echo ($research_citations->isAttentionRequired()) ? "" : " collapsed"; ?>">Research</h3>
 			<div id="research">
+				<div class="instructions">
+					<ul>
+						<li>Only approve citations of published research in which <?php echo $name; ?> was a named author</li>
+						<li>Approve a maximum of <em>six</em> research citations</li>
+						<li>Approved research citations should be in a format following <a href="http://owl.english.purdue.edu/owl/resource/747/01/">MLA guidelines</a></li>
+					</ul>
+				</div>
 				<?php echo display_research_citations_admin($research_citations); ?>
 			</div>
 			<script language="javascript">
@@ -218,6 +266,12 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 		<div class="section">
 			<h3 title="External Awards" class="collapsable<?php echo ($external_awards->isAttentionRequired()) ? "" : " collapsed"; ?>">External Awards</h3>
 			<div id="external-awards">
+				<div class="instructions">
+					<ul>
+						<li>Only awards of academic significance should be considered.</li>
+						<li>Award terms must be provided to be approved. Awards not accompanied by terms should be rejected.</li>
+					</ul>
+				</div>
 				<div id="external_awards"><?php echo display_external_awards_admin($external_awards); ?></div>
 				<script language="javascript">
 					var external_awards = new ActiveApprovalProcessor({
@@ -238,7 +292,10 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 		<div class="section">
 			<h3 title="Clinical Performance Evaluation Comments Section" class="collapsable collapsed">Clinical Performance Evaluation Comments</h3>
 			<div id="clinical-performance-evaluation-comments-section">
-			
+			<div class="instructions">
+				<p>Comments should be copied in whole or in part from Clinical Performance Evaluations from the student's clerkship rotations and electives.</p>
+				<p>There should be one comment for each core rotation and one per received elective.</p>
+			</div>
 			<div id="add_clineval_link" style="float: right;">
 				<ul class="page-action">
 					<li><a id="add_clineval" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" class="strong-green">Add Clinical Performance Evaluation Comment</a></li>
@@ -272,12 +329,12 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 						<tr>
 						<td>&nbsp;</td>
 						<td><label class="form-required" for="source">Source:</label></td>
-						<td><input type="text" name="source"></input></td>
+						<td><input type="text" name="source"></input><span class="content-small"> <strong>Example</strong>: Pediatrics Rotation</span></td>
 						</tr>	
 						<tr>
 						<td>&nbsp;</td>
-						<td><label class="form-required" for="text">Comment:</label></td>
-						<td><textarea name="text"></textarea></td>
+						<td valign="top"><label class="form-required" for="text">Comment:</label></td>
+						<td><textarea name="text" style="width:80%;height:12ex;"></textarea><br /></td>
 						</tr>
 					</tbody>
 				
@@ -345,7 +402,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 						<tr>
 						<td>&nbsp;</td>
 						<td><label class="form-required" for="title">Title:</label></td>
-						<td><input type="text" name="title"></input></td>
+						<td><input type="text" name="title"></input> <span class="content-small"><strong>Example</strong>: The Canadian Institute of Health Studentship</span></td>
 						</tr>	
 						<tr>
 						<td>&nbsp;</td>
@@ -534,7 +591,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 							<tr>
 								<td>&nbsp;</td>
 								<td><label class="form-required" for="title">Title/Discipline:</label></td>
-	 							<td><input name="title"></input> <span class="content-small"><strong>Example:</strong> Family Medicine</span></td>
+	 							<td><input name="title"></input> <span class="content-small"><strong>Example:</strong> Family Medicine Observership</span></td>
 							</tr>	
 							<tr>
 								<td>&nbsp;</td>
@@ -575,10 +632,10 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 					new_form: $('add_observership_form'),
 					remove_forms_selector: '.remove_observership_form',
 					new_button: $('add_observership_link'),
-					hide_button: $('hide_observership')
+					hide_button: $('hide_observership'),
+					section: "observerships"
 			
 				});
-				
 				</script>
 			</div>
 		</div>
@@ -622,17 +679,17 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 							<tr>
 								<td>&nbsp;</td>
 								<td><label class="form-required" for="group_name">Group Name:</label></td>
-								<td><input name="group_name"></input></td>
+								<td><input name="group_name"></input> <span class="content-small"><strong>Example</strong>: Emergency Medicine Elective</span></td>
 							</tr>	
 							<tr>
 								<td>&nbsp;</td>
 								<td><label class="form-required" for="university">University:</label></td>
-								<td><input name="university" value="Queen's University"></input></td>
+								<td><input name="university" value="Queen's University"></input> <span class="content-small"><strong>Example</strong>: Queen's University</span></td>
 							</tr>	
 							<tr>
 								<td>&nbsp;</td>
 								<td><label class="form-required" for="location">Location:</label></td>
-								<td><input name="location" value="Kingston, ON"></input></td>
+								<td><input name="location" value="Kingston, ON"></input> <span class="content-small"><strong>Example</strong>: Kingston, Ontario</span></td>
 							</tr>	
 							<tr>
 								<td>&nbsp;</td>

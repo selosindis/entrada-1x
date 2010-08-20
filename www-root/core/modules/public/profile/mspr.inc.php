@@ -162,7 +162,7 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 	<div id="required-information-section">
 		<div class="instructions" style="margin-left:2em;margin-top:2ex;">
 			<strong>Instructions</strong>
-			<p>The sections below require require your input. The information you provide will appear on your Medical School Performance Report. All submisions are subject to dean approval.</p>
+			<p>The sections below require your input. The information you provide will appear on your Medical School Performance Report. All submisions are subject to dean approval.</p>
 			<ul>
 				<li>
 					Each section below provides a link to add new entires or edit in the case of single entires (Critical Enquiry, and Community Health and Epidemiology Project).  
@@ -367,6 +367,7 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 					<ul>
 						<li>Only add citations of published research in which you were a named author</li>
 						<li>Citations below may be re-ordered. The top-six <em>approved</em> citations will appear on your MSPR.</li>
+						<li>Research citations should be provided in a format following <a href="http://owl.english.purdue.edu/owl/resource/747/01/">MLA guidelines</a></li>
 					</ul>
 				</div>
 				<div id="add_research_citation_link" style="float: right;">
@@ -442,6 +443,12 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 			 
 			<h3 class="collapsable collapsed" title="External Awards Section">External Awards</h3>
 			<div id="external-awards-section">
+				<div class="instructions">
+					<ul>
+						<li>Only awards of academic significance will be considered.</li>
+						<li>Award terms must be provided to be considered. Awards not accompanied by terms will be rejected.</li>
+					</ul>
+				</div>
 			<div id="add_external_award_link" style="float: right;">
 				<ul class="page-action">
 					<li><a id="add_external_award" href="#external-awards-section" class="strong-green">Add External Award</a></li>
@@ -528,7 +535,19 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 			</div>
 		</div>
 		<div class="section" >
-			<h3 title="Contributions to Medical School" class="collapsable collapsed">Contributions to Medical School</h3>
+			<h3 title="Contributions to Medical School" class="collapsable collapsed">Contributions to Medical School/Student Life</h3>
+			<div class="instructions">
+				<ul>
+					<li>Extra-curricular learning activities are only approved if verified</li>
+					<li>Examples of contributions to medical school/student life include:
+						<ul>
+							<li>Participation in School of Medicine student government</li>
+							<li>Committees (such as admissions)</li>
+							<li>Organizing extra-curricular learning activities and seminars</li>					
+						</ul>
+					</li>
+				</ul>
+			</div>
 			<div id="contributions-to-medical-school">
 			
 			<?php 
@@ -655,6 +674,10 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 	</div>
 	<h2 title="Supplied Information Section" class="collapsed">Information Supplied by Staff and Faculty</h2>
 	<div id="supplied-information-section">
+		<div class="instructions">
+		<p>This section consists of information entered by staff or extracted from other sources (for example, clerkship schedules).</p>
+		<p>Please periodically read over the information in the following sections to verify its accuracy. If any errors are found, please contact the undergraduate office.</p>
+		</div>
 	
 		<div class="section">
 		<h3 title="Clerkship Core Rotations Completed Satisfactorily to Date" class="collapsable collapsed">Clerkship Core Rotations Completed Satisfactorily to Date</h3>

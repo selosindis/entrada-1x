@@ -10268,17 +10268,36 @@ function get_user_departments($user_id) {
 function objectives_build_course_competencies_array() {
 	global $db;
 	$courses_array = array();
-	$query = "	SELECT * FROM `courses`
-				WHERE `course_id` IN (
+	$query = "	SELECT a.*, b.`curriculum_type_name` FROM `courses` AS a
+				LEFT JOIN `curriculum_lu_types` AS b
+				ON a.`curriculum_type_id` = b.`curriculum_type_id`
+				WHERE a.`course_id` IN (
 					SELECT DISTINCT(`course_id`) FROM `course_objectives`
 					WHERE `objective_type` = 'course'
-				)";
+				)
+				ORDER BY `curriculum_type_id` ASC, `course_code` ASC";
 	$courses = $db->GetAll($query);
-		if ($courses) {
+	if ($courses) {
+		$last_term_name = "";
 		foreach ($courses as $course) {
 			$courses_array["courses"][$course["course_id"]]["competencies"] = array();
 			$courses_array["competencies"] = array();
 			$courses_array["courses"][$course["course_id"]]["course_name"] = $course["course_name"];
+			$courses_array["courses"][$course["course_id"]]["term_name"] = $course["curriculum_type_name"];
+			$courses_array["courses"][$course["course_id"]]["new_term"] = (isset($last_term_name) && $last_term_name && $last_term_name != $course["curriculum_type_name"] ? true : false);
+			$last_term_name = $course["curriculum_type_name"];
+		}
+		$reorder_courses = $courses_array["courses"];
+		$courses_array["courses"] = array();
+		foreach ($reorder_courses as $course_id => $course) {
+			if (isset($course["term_name"]) && $course["term_name"]) {
+				$courses_array["courses"][$course_id] = $course;
+			}
+		}
+		foreach ($reorder_courses as $course_id => $course) {
+			if (!isset($course["term_name"]) || !$course["term_name"]) {
+				$courses_array["courses"][$course_id] = $course;
+			}
 		}
 		$query = "	SELECT * FROM `global_lu_objectives`
 					WHERE `objective_parent` IN (

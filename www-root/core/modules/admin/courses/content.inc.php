@@ -550,6 +550,37 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 										</div>
 									</td>
 								</tr>
+								<tr>
+									<td colspan="2">&nbsp;</td>
+								</tr>
+								<tr>
+									<td colspan="2">
+										<?php
+										echo "<h3>Clinical Presentations</h3>";
+										$query = "	SELECT b.*
+													FROM `course_objectives` AS a
+													JOIN `global_lu_objectives` AS b
+													ON a.`objective_id` = b.`objective_id`
+													WHERE a.`objective_type` = 'event'
+													AND b.`objective_active` = '1'
+													AND a.`course_id` = ".$db->qstr($COURSE_ID)."
+													GROUP BY b.`objective_id`
+													ORDER BY b.`objective_order`";
+										$results = $db->GetAll($query);
+										if ($results) {
+											echo "<ul class=\"objectives\">\n";
+											foreach ($results as $result) {
+												if ($result["objective_name"]) {
+													echo "	<li>".$result["objective_name"]."</li>\n";
+												}
+											}
+											echo "</ul>\n";
+										} else {
+											echo "<div class=\"display-notice\">While medical presentations may be used to illustrate concepts in this course, there are no specific presentations from the Medical Council of Canada that have been selected.</div>";
+										}
+										?>
+									</td>
+								</tr>
 							</tbody>
 							</table>
 							</form>

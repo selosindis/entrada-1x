@@ -391,9 +391,6 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 		.objectives {
 			border-right: 1px solid #EBEBEB;
 		}
-		table.tableList {
-			border-collapse: separate;
-		}
 		li {
 			margin-top: 10px;
 		}
@@ -414,8 +411,12 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 				</tr>
 				<?php
 				foreach ($objectives["courses"] as $course_id => $course) {
+					if (isset($course["new_term"]) && $course["new_term"]) {
+						echo "<tr style=\"border-top: 5px solid #EBEBEB;\">";
+					} else {
+						echo "<tr>";
+					}
 					?>
-					<tr>
 						<td>&nbsp;</td>
 						<td class="objectives" colspan="2"><?php echo html_encode($course["course_name"]); ?></td>
 						<?php

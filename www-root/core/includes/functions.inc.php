@@ -10318,6 +10318,9 @@ function objectives_build_course_competencies_array() {
 				$count++;
 			}
 		}
+		if ($term_course_id) {
+			$courses_array["courses"][$term_course_id]["total_in_term"] = $count;
+		}
 		
 		$query = "	SELECT * FROM `global_lu_objectives`
 					WHERE `objective_parent` IN (

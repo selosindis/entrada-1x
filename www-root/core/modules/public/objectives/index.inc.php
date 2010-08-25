@@ -377,6 +377,9 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 			overflow: visible;
 			white-space: nowrap;
 		}
+		.term {
+			background-color: #EBEBEB;
+		}
 		.middle {
 			vertical-align: middle;
 			width: 25px;
@@ -416,8 +419,10 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 					} else {
 						echo "<tr>";
 					}
+					if (isset($course["total_in_term"]) && $course["total_in_term"]) {
+						echo "<td class=\"term\" style=\"border-bottom: 5px solid white;\" rowspan=\"".$course["total_in_term"]."\"><div class=\"vertical\">".$course["term_name"]."</div></td>";
+					}
 					?>
-						<td>&nbsp;</td>
 						<td class="objectives" colspan="2"><?php echo html_encode($course["course_name"]); ?></td>
 						<?php
 						foreach ($course["competencies"] as $COMPETENCY_ID => $competency) {

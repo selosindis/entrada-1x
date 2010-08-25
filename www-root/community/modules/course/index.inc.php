@@ -975,12 +975,11 @@ if ($community_courses) {
 		break;
 		case "mcc_presentations" :
 			$query = "	SELECT b.*
-						FROM `event_objectives` AS a
+						FROM `course_objectives` AS a
 						JOIN `global_lu_objectives` AS b
 						ON a.`objective_id` = b.`objective_id`
 						WHERE a.`objective_type` = 'event'
-						AND b.`objective_active` = '1'
-						AND a.`event_id` IN (".implode(", ", $event_ids).")
+						AND a.`course_id` IN (".implode(", ", $course_ids).")
 						GROUP BY b.`objective_id`
 						ORDER BY b.`objective_order`";
 			$results = $db->GetAll($query);

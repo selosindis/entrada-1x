@@ -219,6 +219,43 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 				        }
 						$course_objectives = courses_fetch_objectives($course_ids, 1, false, false, 0, true);
 					}
+					
+					if ($PAGE_TYPE == "course" && $page_details["page_url"] == "mcc_presentations") {
+						$HEAD[]		= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/picklist.js\"></script>\n";
+						$clinical_presentations_list	= array();
+						$clinical_presentations			= array();
+					
+						$results	= fetch_mcc_objectives();
+						if ($results) {
+							foreach ($results as $result) {
+								$clinical_presentations_list[$result["objective_id"]] = $result["objective_name"];
+							}
+						}
+						
+						if ((isset($_POST["clinical_presentations"])) && (is_array($_POST["clinical_presentations"])) && (count($_POST["clinical_presentations"]))) {
+							foreach ($_POST["clinical_presentations"] as $objective_id) {
+								if ($objective_id = clean_input($objective_id, array("trim", "int"))) {
+									$query	= "	SELECT `objective_id` FROM `global_lu_objectives` 
+												WHERE `objective_id` = ".$db->qstr($objective_id)."
+												AND `objective_active` = '1'";
+									$result	= $db->GetRow($query);
+									if ($result) {
+										$clinical_presentations[$objective_id] = $clinical_presentations_list[$objective_id];
+									}
+								}
+							}
+						} else {
+							foreach ($course_ids as $course_id) {
+								$query		= "SELECT `objective_id` FROM `course_objectives` WHERE `objective_type` = 'event' AND `course_id` = ".$db->qstr($course_id);
+								$results	= $db->GetAll($query);
+								if ($results) {
+									foreach ($results as $result) {
+										$clinical_presentations[$result["objective_id"]] = $clinical_presentations_list[$result["objective_id"]];
+									}
+								}
+							}
+						}
+					}
 				
 					// Error Checking
 					switch($STEP) {
@@ -589,6 +626,35 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 				
 												application_log("success", "Page [".$PAGE_ID."] updated in the system.");
 											}
+										}  elseif ($PAGE_TYPE == "course" && $page_details["page_url"] == "mcc_presentations") {
+											foreach ($course_ids as $course_id) {
+												/**
+												 * Update Clinical Presentations.
+												 */
+												$query = "DELETE FROM `course_objectives` WHERE `objective_type` = 'event' AND `course_id` = ".$db->qstr($course_id);
+												if ($db->Execute($query)) {
+													if ((is_array($clinical_presentations)) && (count($clinical_presentations))) {
+														foreach ($clinical_presentations as $objective_id => $presentation_name) {
+															if (!$db->AutoExecute("course_objectives", array("course_id" => $course_id, "objective_id" => $objective_id, "objective_type" => "event", "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT")) {
+																$ERROR++;
+																$ERRORSTR[] = "There was an error when trying to insert a &quot;clinical presentation&quot; into the system. System administrators have been informed of this error; please try again later.";
+																application_log("error", "Unable to insert a new clinical presentation to the database when adding a new event. Database said: ".$db->ErrorMsg());
+																echo $db->ErrorMsg();
+															}
+														}
+													}
+												}
+											}
+											if (!$ERROR) {
+												$url = ENTRADA_URL."/community".$community_details["community_url"].":pages";
+				
+												$SUCCESS++;
+												$SUCCESSSTR[]	= "You have successfully updated this page of the community.<br /><br />You will now be redirected to the page management index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+				
+												$HEAD[]			= "<script type=\"text/javascript\"> setTimeout('window.location=\\'".$url."\\'', 5000); </script>";
+				
+												application_log("success", "Page [".$PAGE_ID."] updated in the system.");
+											}
 										} elseif ($PAGE_TYPE == "url") { 
 											if ($db->Execute("UPDATE `community_page_options` SET `option_value` = ".$db->qstr($page_options["new_window"]["option_value"])." WHERE `cpoption_id` = ".$db->qstr($page_options["new_window"]["cpoption_id"]))) {
 												if (!$ERROR) {
@@ -693,7 +759,7 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 								}
 							}
 							</script>
-							<form action="<?php echo ENTRADA_URL."/community".$community_details["community_url"].":pages?".replace_query(array("action" => "edit", "step" => 2)); ?>" method="post" enctype="multipart/form-data">
+							<form action="<?php echo ENTRADA_URL."/community".$community_details["community_url"].":pages?".replace_query(array("action" => "edit", "step" => 2)); ?>" method="post" enctype="multipart/form-data" onsubmit="selIt()">
 							<table style="width: 95%;" cellspacing="0" cellpadding="2" border="0" summary="Editing Page">
 							<colgroup>
 								<col style="width: 30%" />
@@ -927,10 +993,11 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 									$sidebar_html  = "<div style=\"margin: 2px 0px 10px 3px; font-size: 10px\">\n";
 									$sidebar_html .= "	<div><img src=\"".ENTRADA_URL."/images/legend-primary-objective.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" style=\"vertical-align: middle\" /> Primary Objective</div>\n";
 									$sidebar_html .= "	<div><img src=\"".ENTRADA_URL."/images/legend-secondary-objective.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" style=\"vertical-align: middle\" /> Secondary Objective</div>\n";
+									$sidebar_html .= "	<div><img src=\"".ENTRADA_URL."/images/legend-tertiary-objective.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" style=\"vertical-align: middle\" /> Tertiary Objective</div>\n";
 									$sidebar_html .= "</div>\n";
 									
 									new_sidebar_item("Objective Importance", $sidebar_html, "objective-legend", "open");
-									if ((is_array($course_objectives["primary_ids"]) && count($course_objectives["primary_ids"])) || (is_array($course_objectives["secondary_ids"]) && count($course_objectives["secondary_ids"]))) {
+									if ((is_array($course_objectives["primary_ids"]) && count($course_objectives["primary_ids"])) || (is_array($course_objectives["secondary_ids"]) && count($course_objectives["secondary_ids"])) || (is_array($course_objectives["tertiary_ids"]) && count($course_objectives["tertiary_ids"]))) {
 										?>
 										<tr>
 											<td colspan="2">
@@ -948,6 +1015,11 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 													if (is_array($course_objectives["secondary_ids"])) {
 														foreach ($course_objectives["secondary_ids"] as $objective_id) {
 															echo "<input type=\"hidden\" class=\"secondary_objectives\" id=\"secondary_objective_".$objective_id."\" name=\"secondary_objectives[]\" value=\"".$objective_id."\" />\n";
+														}
+													}
+													if (is_array($course_objectives["tertiary_ids"])) {
+														foreach ($course_objectives["tertiary_ids"] as $objective_id) {
+															echo "<input type=\"hidden\" class=\"tertiary_objectives\" id=\"tertiary_objective_".$objective_id."\" name=\"tertiary_objectives[]\" value=\"".$objective_id."\" />\n";
 														}
 													}
 													?>
@@ -980,6 +1052,69 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 													}
 													?>
 												</div>
+											</td>
+										</tr>
+										<?php
+									}
+								} elseif ($PAGE_TYPE == "course" && $page_record["page_url"] == "mcc_presentations") {
+									$sidebar_html  = "<div style=\"margin: 2px 0px 10px 3px; font-size: 10px\">\n";
+									$sidebar_html .= "	<div><img src=\"".ENTRADA_URL."/images/legend-primary-objective.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" style=\"vertical-align: middle\" /> Primary Objective</div>\n";
+									$sidebar_html .= "	<div><img src=\"".ENTRADA_URL."/images/legend-secondary-objective.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" style=\"vertical-align: middle\" /> Secondary Objective</div>\n";
+									$sidebar_html .= "	<div><img src=\"".ENTRADA_URL."/images/legend-tertiary-objective.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" style=\"vertical-align: middle\" /> Tertiary Objective</div>\n";
+									$sidebar_html .= "</div>\n";
+									
+									new_sidebar_item("Objective Importance", $sidebar_html, "objective-legend", "open");
+									if ((is_array($course_objectives["primary_ids"]) && count($course_objectives["primary_ids"])) || (is_array($course_objectives["secondary_ids"]) && count($course_objectives["secondary_ids"])) || (is_array($course_objectives["tertiary_ids"]) && count($course_objectives["tertiary_ids"]))) {
+										?>
+										<tr>
+											<td colspan="2">
+												<h2 title="MCC Presentations">Clinical Presentations</h2>
+												<div class="content-small" style="margin-top: 5px">
+													<strong>Note:</strong> For more detailed information please refer to the <a href="http://www.mcc.ca/Objectives_online/objectives.pl?lang=english&loc=contents" target="_blank" style="font-size: 11px">MCC Objectives for the Qualifying Examination</a>.
+												</div>
+												
+												<select class="multi-picklist" id="PickList" name="clinical_presentations[]" multiple="multiple" size="5" style="width: 100%; margin-bottom: 5px">
+												<?php
+												if ((is_array($clinical_presentations)) && (count($clinical_presentations))) {
+													foreach ($clinical_presentations as $objective_id => $presentation_name) {
+														echo "<option value=\"".(int) $objective_id."\">".html_encode($presentation_name)."</option>\n";
+													}
+												}
+												?>
+												</select>
+												<div style="float: left; display: inline">
+													<input type="button" id="clinical_presentations_list_state_btn" class="button" value="Show List" onclick="toggle_list('clinical_presentations_list')" />
+												</div>
+												<div style="float: right; display: inline">
+													<input type="button" id="clinical_presentations_list_remove_btn" class="button-remove" onclick="delIt()" value="Remove" />
+													<input type="button" id="clinical_presentations_list_add_btn" class="button-add" onclick="addIt()" style="display: none" value="Add" />
+												</div>
+												<div id="clinical_presentations_list" style="clear: both; padding-top: 3px; display: none">
+													<h2>Clinical Presentations List</h2>
+													<select class="multi-picklist" id="SelectList" name="other_event_objectives_list" multiple="multiple" size="15" style="width: 100%">
+													<?php
+													if ((is_array($clinical_presentations_list)) && (count($clinical_presentations_list))) {
+														foreach ($clinical_presentations_list as $objective_id => $presentation_name) {
+															if (!array_key_exists($objective_id, $clinical_presentations)) {
+																echo "<option value=\"".(int) $objective_id."\">".html_encode($presentation_name)."</option>\n";
+															}
+														}
+													}
+													?>
+													</select>
+												</div>
+												<script type="text/javascript">
+												$('PickList').observe('keypress', function(event) {
+													if (event.keyCode == Event.KEY_DELETE) {
+														delIt();
+													}
+												});
+												$('SelectList').observe('keypress', function(event) {
+													if (event.keyCode == Event.KEY_RETURN) {
+														addIt();
+													}
+												});
+												</script>
 											</td>
 										</tr>
 										<?php

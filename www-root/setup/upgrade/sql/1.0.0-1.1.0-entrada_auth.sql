@@ -52,3 +52,7 @@ delimiter ;
 
 UPDATE `user_data` a, `user_access` b SET a.`grad_year` = b.`role` WHERE a.`id` = b.`user_id` AND b.`group` = "student" AND isnumeric(b.`role`) AND `app_id` = 1;
 UPDATE `user_data` SET `entry_year` = `grad_year` - 4 WHERE `grad_year` IS NOT NULL;
+
+-- Function: isnumeric
+
+DROP function `isnumeric`;

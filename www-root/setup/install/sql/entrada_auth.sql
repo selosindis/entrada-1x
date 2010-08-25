@@ -359,18 +359,3 @@ CREATE TABLE IF NOT EXISTS `user_preferences` (
   PRIMARY KEY  (`preference_id`),
   KEY `app_id` (`app_id`,`proxy_id`,`module`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
--- Function: isnumeric
-
-delimiter $$
-
-drop function if exists `isnumeric` $$
-create function `isnumeric` (s varchar(255)) returns int
-begin
-set @match =
-   '^(([0-9+-.$]{1})|([+-]?[$]?[0-9]*(([.]{1}[0-9]*)|([.]?[0-9]+))))$';
-
-return if(s regexp @match, 1, 0);
-end $$
-
-delimiter ;

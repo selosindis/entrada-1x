@@ -151,6 +151,61 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 			echo "</ul>\n";
 		}
 	} elseif ($COURSE_ID && $OBJECTIVE_ID) {
+		
+		
+		/**
+		 * Update requested length of time to display.
+		 * Valid: day, week, month, year
+		 */
+		if (isset($_GET["dtype"])) {
+			if (in_array(trim($_GET["dtype"]), array("day", "week", "month", "year"))) {
+				$_SESSION[APPLICATION_IDENTIFIER]["objectives"]["dtype"] = trim($_GET["dtype"]);
+			}
+	
+			$_SERVER["QUERY_STRING"] = replace_query(array("dtype" => false));
+		} else {
+			if (!isset($_SESSION[APPLICATION_IDENTIFIER]["objectives"]["dtype"])) {
+				$_SESSION[APPLICATION_IDENTIFIER]["objectives"]["dtype"] = "week";
+			}
+		}
+	
+		/**
+		 * Update requested timestamp to display.
+		 * Valid: Unix timestamp
+		 */
+		if (isset($_GET["dstamp"])) {
+			$integer = (int) trim($_GET["dstamp"]);
+			if ($integer) {
+				$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dstamp"] = $integer;
+			}
+	
+			$_SERVER["QUERY_STRING"] = replace_query(array("dstamp" => false));
+		} else {
+			if (!isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dstamp"])) {
+				$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dstamp"] = time();
+			}
+		}
+		
+		/**
+		 * Update requsted number of rows per page.
+		 * Valid: any integer really.
+		 */
+		if ((isset($_GET["pp"])) && ((int) trim($_GET["pp"]))) {
+			$integer = (int) trim($_GET["pp"]);
+	
+			if (($integer > 0) && ($integer <= 250)) {
+				$_SESSION[APPLICATION_IDENTIFIER]["objectives"]["pp"] = $integer;
+			}
+	
+			$_SERVER["QUERY_STRING"] = replace_query(array("pp" => false));
+		} else {
+			if (!isset($_SESSION[APPLICATION_IDENTIFIER]["objectives"]["pp"])) {
+				$_SESSION[APPLICATION_IDENTIFIER]["objectives"]["pp"] = DEFAULT_ROWS_PER_PAGE;
+			}
+		}
+		
+		$display_duration = fetch_timestamps($_SESSION[APPLICATION_IDENTIFIER]["objectives"]["dtype"], $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dstamp"]);
+		
 		$query = "	SELECT CONCAT_WS(' - ',`course_name`, `course_code`) FROM `courses` WHERE `course_id` = ".$db->qstr($COURSE_ID);
 		$course_name = $db->GetOne($query);
 		$query = "	SELECT `objective_name` FROM `global_lu_objectives` WHERE `objective_id` = ".$db->qstr($OBJECTIVE_ID);
@@ -167,23 +222,12 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 							SELECT `event_id` FROM `events`
 							WHERE `course_id` = ".$db->qstr($COURSE_ID)."
 						)
+						AND `event_start` >= ".$db->qstr($display_duration["start"])."
+						AND `event_start` <= ".$db->qstr($display_duration["end"])."
 						AND a.`objective_type` = 'course'
 						ORDER BY b.`event_start`, b.`event_id`";
 			$event_objectives = $db->GetAll($query);
-			if ($event_objectives) {
-				$last_event_id = 0;
-				foreach ($event_objectives as $event_objective) {
-					if ($event_objective["event_id"] != $last_event_id) {
-						if ($last_event_id) {
-							echo "</ul>\n";
-						}
-						echo "<br/>\n";
-						echo "<h3>".html_encode($event_objective["event_title"])." - <span class=\"content-small\">".date(DEFAULT_DATE_FORMAT, $event_objective["event_start"])."</span></h3>\n";
-						echo "<ul>\n";
-					}
-					echo "<li>".$event_objective["objective_name"]." - <span class=\"content-small\">".(isset($event_objective["objective_details"]) && $event_objective["objective_details"] ? $event_objective["objective_details"] : "No additional details in this event.")."</span></li>\n";
-				}
-			} else {
+			if (!$event_objectives) {
 				$query = "	SELECT * FROM `event_objectives` AS a
 							JOIN `events` AS b
 							ON a.`event_id` = b.`event_id`
@@ -194,27 +238,122 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 								SELECT `event_id` FROM `events`
 								WHERE `course_id` = ".$db->qstr($COURSE_ID)."
 							)
+							AND `event_start` >= ".$db->qstr($display_duration["start"])."
+							AND `event_start` <= ".$db->qstr($display_duration["end"])."
 							AND a.`objective_type` = 'course'
 							ORDER BY b.`event_start`, b.`event_id`";
 				$event_objectives = $db->GetAll($query);
-				if ($event_objectives) {
-					$last_event_id = 0;
-					foreach ($event_objectives as $event_objective) {
-						if ($event_objective["event_id"] != $last_event_id) {
-							if ($last_event_id) {
-								echo "</ul>\n";
-							}
-							echo "<br/>\n";
-							echo "<h3>".html_encode($event_objective["event_title"])." - <span class=\"content-small\">".date(DEFAULT_DATE_FORMAT, $event_objective["event_start"])."</span></h3>\n";
-							echo "<ul>\n";
-						}
-						echo "<li>".$event_objective["objective_name"]." - <span class=\"content-small\">".(isset($event_objective["objective_details"]) && $event_objective["objective_details"] ? $event_objective["objective_details"] : "No additional details in this event.")."</span></li>\n";
-					}
-				} else {
-					$NOTICE++;
-					$NOTICESTR[] = "There were no events found to be linked with the selected objective in the selected course.";
-					echo display_notice();
+			}
+			$total_pages = (int)(count($event_objectives) / $_SESSION[APPLICATION_IDENTIFIER]["objectives"]["pp"]) + (count($event_objectives) % $_SESSION[APPLICATION_IDENTIFIER]["objectives"]["pp"] > 0 ? 1 : 0);
+			/**
+			 * Check if pv variable is set and see if it's a valid page, other wise page 1 it is.
+			 */
+			if (isset($_GET["pv"])) {
+				$page_current = (int) trim($_GET["pv"]);
+		
+				if (($page_current < 1) || ($page_current > $total_pages)) {
+					$page_current = 1;
 				}
+			} else {
+				$page_current = 1;
+			}
+			
+			/**
+			 * Sidebar item that will provide another method for sorting, ordering, etc.
+			 */
+			$sidebar_html = "<ul class=\"menu\">\n";
+			$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) == "5") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/objectives?".replace_query(array("pp" => "5"))."\" title=\"Display 5 Rows Per Page\">5 rows per page</a></li>\n";
+			$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) == "15") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/objectives?".replace_query(array("pp" => "15"))."\" title=\"Display 15 Rows Per Page\">15 rows per page</a></li>\n";
+			$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) == "25") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/objectives?".replace_query(array("pp" => "25"))."\" title=\"Display 25 Rows Per Page\">25 rows per page</a></li>\n";
+			$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) == "50") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/objectives?".replace_query(array("pp" => "50"))."\" title=\"Display 50 Rows Per Page\">50 rows per page</a></li>\n";
+			$sidebar_html .= "</ul>\n";
+	
+			new_sidebar_item("Rows per page", $sidebar_html, "sort-results", "open");
+			
+			objectives_output_calendar_controls();
+			?>
+			<div class="tableListTop">
+				<img src="<?php echo ENTRADA_URL; ?>/images/lecture-info.gif" width="15" height="15" alt="" title="" style="vertical-align: middle" />
+				<?php
+				switch ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["dtype"]) {
+					case "day" :
+						echo "Found ".count($event_objectives)." event".((count($event_objectives) != 1) ? "s" : "")." that take place on <strong>".date("D, M jS, Y", $display_duration["start"])."</strong>.\n";
+					break;
+					case "month" :
+						echo "Found ".count($event_objectives)." event".((count($event_objectives) != 1) ? "s" : "")." that take place during <strong>".date("F", $display_duration["start"])."</strong> of <strong>".date("Y", $display_duration["start"])."</strong>.\n";
+					break;
+					case "year" :
+						echo "Found ".count($event_objectives)." event".((count($event_objectives) != 1) ? "s" : "")." that take place during <strong>".date("Y", $display_duration["start"])."</strong>.\n";
+					break;
+					default :
+					case "week" :
+						echo "Found ".count($event_objectives)." event".((count($event_objectives) != 1) ? "s" : "")." from <strong>".date("D, M jS, Y", $display_duration["start"])."</strong> to <strong>".date("D, M jS, Y", $display_duration["end"])."</strong>.\n";
+					break;
+				}
+				?>
+			</div>
+			<table class="tableList" cellspacing="0" cellpadding="1" summary="List of Events">
+				<colgroup>
+					<col class="modified" />
+					<col class="date" />
+					<col class="date-smallest" />
+					<col class="title" />
+				</colgroup>
+				<thead>
+					<tr>
+						<td class="modified">&nbsp;</td>
+						<td class="date">Event Date</td>
+						<td class="date-smallest">Objective Name</td>
+						<td class="title">Event Title</td>
+					</tr>
+				</thead>
+				<tbody>
+			<?php
+			if ($event_objectives) {
+				for ($i = (($page_current - 1) * $_SESSION[APPLICATION_IDENTIFIER]["objectives"]["pp"]); $i < (($page_current * $_SESSION[APPLICATION_IDENTIFIER]["objectives"]["pp"]) < count($event_objectives) ? ($page_current * $_SESSION[APPLICATION_IDENTIFIER]["objectives"]["pp"]) : count($event_objectives)); $i++) {
+					echo "<tr>\n";
+					echo "	<td>&nbsp;</td>\n";
+					echo "	<td>".date(DEFAULT_DATE_FORMAT, $event_objectives[$i]["event_start"])."</td>\n";
+					echo "	<td>".$event_objectives[$i]["objective_name"]."</td>\n";
+					echo "	<td>".html_encode($event_objectives[$i]["event_title"])."</td>\n";
+					echo "</tr>\n";
+				}
+				?>
+				</tbody>
+			</table>					
+			<?php
+			} else {
+				?>
+					<tr>
+						<td colspan="4">	
+							<div class="display-notice" style="white-space: normal">
+								<h3>No Matching Events</h3>
+								There are no learning events scheduled
+								<?php
+								switch ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["dtype"]) {
+									case "day" :
+										echo "that take place on <strong>".date(DEFAULT_DATE_FORMAT, $display_duration["start"])."</strong>";
+									break;
+									case "month" :
+										echo "that take place during <strong>".date("F", $display_duration["start"])."</strong> of <strong>".date("Y", $display_duration["start"])."</strong>";
+									break;
+									case "year" :
+										echo "that take place during <strong>".date("Y", $display_duration["start"])."</strong>";
+									break;
+									default :
+									case "week" :
+										echo "from <strong>".date(DEFAULT_DATE_FORMAT, $display_duration["start"])."</strong> to <strong>".date(DEFAULT_DATE_FORMAT, $display_duration["end"])."</strong>";
+									break;
+								}
+								?> which are also in the [<?php echo $course_name; ?>] course and are linked to the [<?php echo $objective_name; ?>] objective.
+								<br /><br />
+								If this is unexpected, you can check to make sure that you are browsing the intended time period. For example, if you trying to browse <?php echo date("F", time()); ?> of <?php echo date("Y", time()); ?>, make sure that the results bar above says &quot;... takes place in <strong><?php echo date("F", time()); ?></strong> of <strong><?php echo date("Y", time()); ?></strong>
+							</div>
+						</td>
+					</tr>
+				</tbody>
+			</table>				
+			<?php
 			}
 		} else {
 			$ERROR++;

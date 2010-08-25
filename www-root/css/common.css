@@ -2864,3 +2864,18 @@ margin: 0 1em 0 0;
 	display:block;
 	font-size:0.85em;
 }
+
+ul.objectives li {
+white-space:nowrap;
+overflow:hidden;
+font-size:11px;
+text-decoration:none;
+line-height:135%;
+padding:1px;
+}
+
+ul.objectives li {
+padding-bottom:4px;
+padding-left:17px;
+background:transparent url(../images/list-objective.gif) no-repeat 0 3px;
+}

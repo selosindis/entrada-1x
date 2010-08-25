@@ -315,7 +315,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 					echo "	<td>&nbsp;</td>\n";
 					echo "	<td>".date(DEFAULT_DATE_FORMAT, $event_objectives[$i]["event_start"])."</td>\n";
 					echo "	<td>".$event_objectives[$i]["objective_name"]."</td>\n";
-					echo "	<td>".html_encode($event_objectives[$i]["event_title"])."</td>\n";
+					echo "	<td><a href=\"".ENTRADA_URL."/events?id=".$event_objectives[$i]["event_id"]."\">".html_encode($event_objectives[$i]["event_title"])."</a></td>\n";
 					echo "</tr>\n";
 				}
 				?>

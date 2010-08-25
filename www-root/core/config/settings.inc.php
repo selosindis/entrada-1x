@@ -432,20 +432,20 @@ USERNOTIFICATION;
  * the public ones, which needs to be changed.
  */
 $MODULES = array();
-$MODULES["notices"] = array("title" => "Manage Notices", "resource" => "notice", "permission" => "update");
-$MODULES["polls"] = array("title" => "Manage Polls", "resource" => "poll", "permission" => "update");
-$MODULES["courses"] = array("title" => "Manage Courses", "resource"=> "coursecontent", "permission" => "update");
-$MODULES["gradebook"] = array("title" => "Manage Gradebook", "resource" => "gradebook", "permission" => "read");
-$MODULES["events"] = array("title" => "Manage Events", "resource" => "eventcontent", "permission" => "update");
-$MODULES["quizzes"] = array("title" => "Manage Quizzes", "resource" => "quiz", "permission" => "update");
-$MODULES["clerkship"] = array("title" => "Manage Clerkship", "resource" => "clerkship", "permission" => "update");
-$MODULES["regionaled"] = array("title" => "Regional Education", "resource" => "regionaled", "permission" => "update");
-$MODULES["objectives"]	= array("title" => "Manage Objectives", "resource" => "objective", "permission" => "update");
-$MODULES["users"] = array("title" => "Manage Users", "resource" => "user", "permission" => "update");
-$MODULES["reports"] = array("title" => "System Reports", "resource" => "reportindex", "permission" => "read");
 $MODULES["awards"] = array("title" => "Manage Awards", "resource" => "awards", "permission" => "update");
+$MODULES["clerkship"] = array("title" => "Manage Clerkship", "resource" => "clerkship", "permission" => "update");
+$MODULES["courses"] = array("title" => "Manage Courses", "resource"=> "coursecontent", "permission" => "update");
+$MODULES["events"] = array("title" => "Manage Events", "resource" => "eventcontent", "permission" => "update");
+$MODULES["gradebook"] = array("title" => "Manage Gradebook", "resource" => "gradebook", "permission" => "read");
 $MODULES["mspr"] = array("title" => "Manage MSPRs", "resource" => "mspr", "permission" => "create");
+$MODULES["notices"] = array("title" => "Manage Notices", "resource" => "notice", "permission" => "update");
+$MODULES["objectives"]	= array("title" => "Manage Objectives", "resource" => "objective", "permission" => "update");
 $MODULES["observerships"] = array("title" => "Manage Observerships", "resource" => "observerships", "permission" => "update");
+$MODULES["polls"] = array("title" => "Manage Polls", "resource" => "poll", "permission" => "update");
+$MODULES["quizzes"] = array("title" => "Manage Quizzes", "resource" => "quiz", "permission" => "update");
+$MODULES["users"] = array("title" => "Manage Users", "resource" => "user", "permission" => "update");
+$MODULES["regionaled"] = array("title" => "Regional Education", "resource" => "regionaled", "permission" => "update");
+$MODULES["reports"] = array("title" => "System Reports", "resource" => "reportindex", "permission" => "read");
 
 /**
  * System groups define which system groups & role combinations are allowed to

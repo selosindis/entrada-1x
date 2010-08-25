@@ -10275,17 +10275,27 @@ function objectives_build_course_competencies_array() {
 					SELECT DISTINCT(`course_id`) FROM `course_objectives`
 					WHERE `objective_type` = 'course'
 				)
+				AND a.`course_active` = 1
 				ORDER BY `curriculum_type_id` ASC, `course_code` ASC";
 	$courses = $db->GetAll($query);
 	if ($courses) {
 		$last_term_name = "";
+		$term_course_id = 0;
+		$count = 0;
 		foreach ($courses as $course) {
 			$courses_array["courses"][$course["course_id"]]["competencies"] = array();
 			$courses_array["competencies"] = array();
 			$courses_array["courses"][$course["course_id"]]["course_name"] = $course["course_name"];
 			$courses_array["courses"][$course["course_id"]]["term_name"] = $course["curriculum_type_name"];
 			$courses_array["courses"][$course["course_id"]]["new_term"] = (isset($last_term_name) && $last_term_name && $last_term_name != $course["curriculum_type_name"] ? true : false);
-			$last_term_name = $course["curriculum_type_name"];
+			if ($last_term_name != $course["curriculum_type_name"]) {
+				$last_term_name = $course["curriculum_type_name"];
+				$courses_array["courses"][$term_course_id]["total_in_term"] = $count;
+				$term_course_id = $course["course_id"];
+				$count = 1;
+			} else {
+				$count++;
+			}
 		}
 		$reorder_courses = $courses_array["courses"];
 		$courses_array["courses"] = array();

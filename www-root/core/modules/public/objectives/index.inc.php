@@ -41,11 +41,13 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 	if ($COURSE_ID && $COMPETENCY_ID) {
+		$BREADCRUMB[] = array("url" => "", "title" => "Course Objectives");
 		?>
 		<style type="text/css">
 		li.pad-top {
-			height: 50px;
+			margin-bottom: 10px;
 		}
+
 		ul.pad {
 			padding-top: 10px;
 			padding-bottom: 10px;
@@ -54,6 +56,9 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 		<?php
 		$objective_ids_string = objectives_build_course_objectives_id_string($COURSE_ID);
 		$competency_ids_string = objectives_build_objective_descendants_id_string($COMPETENCY_ID);
+
+		$primary = $secondary = $tertiary = array();
+
 		$query = "	SELECT * FROM `course_objectives` AS a
 					JOIN `global_lu_objectives` AS b
 					ON a.`objective_id` = b.`objective_id`
@@ -65,52 +70,59 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 					AND a.`objective_type` = 'course'
 					ORDER BY a.`importance` ASC";
 		$objectives = $db->GetAll($query);
-		$primary = $secondary = $tertiary = array();
-		foreach ($objectives AS $objective) {
-			$query = "	SELECT a.*, b.`objective_details` FROM `global_lu_objectives` AS a
-						LEFT JOIN `course_objectives` AS b
-						ON a.`objective_id` = b.`objective_id`
-						AND b.`course_id` = ".$db->qstr($COURSE_ID)."
-						AND b.`objective_type` = 'course'
-						WHERE a.`objective_parent` = ".$db->qstr($objective["objective_id"])."
-						ORDER BY a.`objective_order` ASC";
-			$child_objectives = $db->GetAll($query);
-			if ($objective["importance"] == 1) {
-				$primary[$objective["objective_id"]]["children"] = array();
-			} elseif ($objective["importance"] == 2) {
-				$secondary[$objective["objective_id"]]["children"] = array();
-			} elseif ($objective["importance"] == 3) {
-				$tertiary[$objective["objective_id"]]["children"] = array();
-			}
-			foreach ($child_objectives as $child_objective) {
+		if ($objectives) {
+			foreach ($objectives AS $objective) {
+				$query = "	SELECT a.*, b.`objective_details` FROM `global_lu_objectives` AS a
+							LEFT JOIN `course_objectives` AS b
+							ON a.`objective_id` = b.`objective_id`
+							AND b.`course_id` = ".$db->qstr($COURSE_ID)."
+							AND b.`objective_type` = 'course'
+							WHERE a.`objective_parent` = ".$db->qstr($objective["objective_id"])."
+							ORDER BY a.`objective_order` ASC";
+				$child_objectives = $db->GetAll($query);
 				if ($objective["importance"] == 1) {
-					$primary[$objective["objective_id"]]["children"][] = $child_objective;
+					$primary[$objective["objective_id"]]["children"] = array();
 				} elseif ($objective["importance"] == 2) {
-					$secondary[$objective["objective_id"]]["children"][] = $child_objective;
+					$secondary[$objective["objective_id"]]["children"] = array();
 				} elseif ($objective["importance"] == 3) {
-					$tertiary[$objective["objective_id"]]["children"][] = $child_objective;
+					$tertiary[$objective["objective_id"]]["children"] = array();
+				}
+
+				foreach ($child_objectives as $child_objective) {
+					if ($objective["importance"] == 1) {
+						$primary[$objective["objective_id"]]["children"][] = $child_objective;
+					} elseif ($objective["importance"] == 2) {
+						$secondary[$objective["objective_id"]]["children"][] = $child_objective;
+					} elseif ($objective["importance"] == 3) {
+						$tertiary[$objective["objective_id"]]["children"][] = $child_objective;
+					}
+				}
+
+				if ($objective["importance"] == 1) {
+					$primary[$objective["objective_id"]]["objective"] = $objective;
+				} elseif ($objective["importance"] == 2) {
+					$secondary[$objective["objective_id"]]["objective"] = $objective;
+				} elseif ($objective["importance"] == 3) {
+					$tertiary[$objective["objective_id"]]["objective"] = $objective;
 				}
 			}
-			if ($objective["importance"] == 1) {
-				$primary[$objective["objective_id"]]["objective"] = $objective;
-			} elseif ($objective["importance"] == 2) {
-				$secondary[$objective["objective_id"]]["objective"] = $objective;
-			} elseif ($objective["importance"] == 3) {
-				$tertiary[$objective["objective_id"]]["objective"] = $objective;
-			}
 		}
+		
 		$competency = $db->GetRow("SELECT * FROM `global_lu_objectives` WHERE `objective_id` = ".$db->qstr($COMPETENCY_ID));
 		$course = $db->GetRow("SELECT * FROM `courses` WHERE `course_id` = ".$db->qstr($COURSE_ID));
-		echo "<h2>[".$competency["objective_name"]."] objectives in [".$course["course_name"]." - ".$course["course_code"]."]</h2>\n";
+
+		echo "<h1>".html_encode($course["course_name"])."</h1>";
+		echo "<h2>".html_encode($competency["objective_name"])." Objectives</h2>\n";
+
 		if ($primary) {
 			echo "<h3>Primary Objectives</h3>\n";
 			echo "<ul>\n";
 			foreach ($primary as $objective) {
-				echo "<li>\n<a href=\"".ENTRADA_URL."/objectives?cid=".$COURSE_ID."&oid=".$objective["objective"]["objective_id"]."\">".$objective["objective"]["objective_name"]."</a>".(isset($objective["objective"]["objective_details"]) && $objective["objective"]["objective_details"] ? " - <span class=\"content-small\">".$objective["objective"]["objective_details"]."</span>" : " - <span class=\"content-small\">".$objective["objective"]["objective_description"]."</span>" )."\n";
+				echo "<li>\n<a href=\"".ENTRADA_URL."/objectives?cid=".$COURSE_ID."&oid=".$objective["objective"]["objective_id"]."\">".$objective["objective"]["objective_name"]."</a><div class=\"content-small\">".(isset($objective["objective"]["objective_details"]) && $objective["objective"]["objective_details"] ? $objective["objective"]["objective_details"] : $objective["objective"]["objective_description"])."</div>\n";
 				if (isset($objective["children"]) && count($objective["children"])) {
 					echo "<ul class=\"pad\">\n";
 					foreach ($objective["children"] as $objective_child) {
-						echo "<li class=\"pad-top\"><a href=\"".ENTRADA_URL."/objectives?cid=".$COURSE_ID."&oid=".$objective_child["objective_id"]."\">".$objective_child["objective_name"]."</a>".(isset($objective_child["objective_details"]) && $objective_child["objective_details"] ? " - <span class=\"content-small\">".$objective_child["objective_details"]."</span>" : " - <span class=\"content-small\">".$objective_child["objective_description"]."</span>" )."</li>\n";
+						echo "<li class=\"pad-top\"><a href=\"".ENTRADA_URL."/objectives?cid=".$COURSE_ID."&oid=".$objective_child["objective_id"]."\">".$objective_child["objective_name"]."</a><div class=\"content-small\">".(isset($objective_child["objective_details"]) && $objective_child["objective_details"] ? $objective_child["objective_details"] : $objective_child["objective_description"])."</div></li>\n";
 					}
 					echo "</ul>\n";
 				}
@@ -122,11 +134,11 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 			echo "<h3>Secondary Objectives</h3>\n";
 			echo "<ul>\n";
 			foreach ($secondary as $objective) {
-				echo "<li>\n<a href=\"".ENTRADA_URL."/objectives?cid=".$COURSE_ID."&oid=".$objective["objective"]["objective_id"]."\">".$objective["objective"]["objective_name"]."</a>".(isset($objective["objective"]["objective_details"]) && $objective["objective"]["objective_details"] ? " - <span class=\"content-small\">".$objective["objective"]["objective_details"]."</span>" : " - <span class=\"content-small\">".$objective["objective"]["objective_description"]."</span>" )."\n";
+				echo "<li>\n<a href=\"".ENTRADA_URL."/objectives?cid=".$COURSE_ID."&oid=".$objective["objective"]["objective_id"]."\">".$objective["objective"]["objective_name"]."</a><div class=\"content-small\">".(isset($objective["objective"]["objective_details"]) && $objective["objective"]["objective_details"] ? $objective["objective"]["objective_details"] : $objective["objective"]["objective_description"])."</div>\n";
 				if (isset($objective["children"]) && count($objective["children"])) {
 					echo "<ul class=\"pad\">\n";
 					foreach ($objective["children"] as $objective_child) {
-						echo "<li class=\"pad-top\"><a href=\"".ENTRADA_URL."/objectives?cid=".$COURSE_ID."&oid=".$objective_child["objective_id"]."\">".$objective_child["objective_name"]."</a>".(isset($objective_child["objective_details"]) && $objective_child["objective_details"] ? " - <span class=\"content-small\">".$objective_child["objective_details"]."</span>" : " - <span class=\"content-small\">".$objective_child["objective_description"]."</span>" )."</li>\n";
+						echo "<li class=\"pad-top\"><a href=\"".ENTRADA_URL."/objectives?cid=".$COURSE_ID."&oid=".$objective_child["objective_id"]."\">".$objective_child["objective_name"]."</a><div class=\"content-small\">".(isset($objective_child["objective_details"]) && $objective_child["objective_details"] ? $objective_child["objective_details"] : $objective_child["objective_description"])."</div></li>\n";
 					}
 					echo "</ul>\n";
 				}
@@ -138,11 +150,11 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 			echo "<h3>Tertiary Objectives</h3>\n";
 			echo "<ul>\n";
 			foreach ($tertiary as $objective) {
-				echo "<li>\n<a href=\"".ENTRADA_URL."/objectives?cid=".$COURSE_ID."&oid=".$objective["objective"]["objective_id"]."\"><a href=\"".ENTRADA_URL."/objectives?cid=".$COURSE_ID."&oid=".$objective["objective"]["objective_id"]."\">".$objective["objective"]["objective_name"]."</a>"."</a>".(isset($objective["objective"]["objective_details"]) && $objective["objective"]["objective_details"] ? " - <span class=\"content-small\">".$objective["objective"]["objective_details"]."</span>" : " - <span class=\"content-small\">".$objective["objective"]["objective_description"]."</span>" )."\n";
+				echo "<li>\n<a href=\"".ENTRADA_URL."/objectives?cid=".$COURSE_ID."&oid=".$objective["objective"]["objective_id"]."\"><a href=\"".ENTRADA_URL."/objectives?cid=".$COURSE_ID."&oid=".$objective["objective"]["objective_id"]."\">".$objective["objective"]["objective_name"]."</a><div class=\"content-small\">".(isset($objective["objective"]["objective_details"]) && $objective["objective"]["objective_details"] ? $objective["objective"]["objective_details"] : $objective["objective"]["objective_description"])."</div>\n";
 				if (isset($objective["children"]) && count($objective["children"])) {
 					echo "<ul class=\"pad\">\n";
 					foreach ($objective["children"] as $objective_child) {
-						echo "<li class=\"pad-top\"><a href=\"".ENTRADA_URL."/objectives?cid=".$COURSE_ID."&oid=".$objective_child["objective_id"]."\"><a href=\"".ENTRADA_URL."/objectives?cid=".$COURSE_ID."&oid=".$objective_child["objective_id"]."\">".$objective_child["objective_name"]."</a>"."</a>".(isset($objective_child["objective_details"]) && $objective_child["objective_details"] ? " - <span class=\"content-small\">".$objective_child["objective_details"]."</span>" : " - <span class=\"content-small\">".$objective_child["objective_description"]."</span>" )."</li>\n";
+						echo "<li class=\"pad-top\"><a href=\"".ENTRADA_URL."/objectives?cid=".$COURSE_ID."&oid=".$objective_child["objective_id"]."\"><a href=\"".ENTRADA_URL."/objectives?cid=".$COURSE_ID."&oid=".$objective_child["objective_id"]."\">".$objective_child["objective_name"]."</a><div class=\"content-small\">".(isset($objective_child["objective_details"]) && $objective_child["objective_details"] ? $objective_child["objective_details"] : $objective_child["objective_description"])."</div></li>\n";
 					}
 					echo "</ul>\n";
 				}
@@ -206,12 +218,14 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 		
 		$display_duration = fetch_timestamps($_SESSION[APPLICATION_IDENTIFIER]["objectives"]["dtype"], $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dstamp"]);
 		
-		$query = "	SELECT CONCAT_WS(' - ',`course_name`, `course_code`) FROM `courses` WHERE `course_id` = ".$db->qstr($COURSE_ID);
+		$query = "	SELECT `course_name` FROM `courses` WHERE `course_id` = ".$db->qstr($COURSE_ID);
 		$course_name = $db->GetOne($query);
 		$query = "	SELECT `objective_name` FROM `global_lu_objectives` WHERE `objective_id` = ".$db->qstr($OBJECTIVE_ID);
 		$objective_name = $db->GetOne($query);
 		if (isset($course_name) && $course_name && isset($objective_name) && $objective_name) {
-			echo "<h2>Events in [".$course_name."] associated with [".$objective_name."]</h2>\n";
+			echo "<h1>".html_encode($course_name)."</h2>";
+
+			echo "<h2>Learning Events Associated with ".$objective_name."</h2>\n";
 			$query = "	SELECT * FROM `event_objectives` AS a
 						JOIN `events` AS b
 						ON a.`event_id` = b.`event_id`

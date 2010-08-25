@@ -1939,6 +1939,9 @@ function clean_input($string, $rules = array()) {
 				case "alpha" :			// Remove anything that is not an alpha.
 					$string = preg_replace("/[^a-z]+/i", "", $string);
 				break;
+				case "numeric" :		// Remove everything but numbers 0 - 9 for when int won't do.
+					$string = preg_replace("/[^0-9]+/i", "", $string);
+				break;
 				case "name" :			// @todo jellis ?
 					$string = preg_replace("/^([a-z]+(\'|-|\.\s|\s)?[a-z]*){1,2}$/i", "", $string);
 				break;

@@ -18,6 +18,9 @@
  * 
  * Changes:
  * =============================================================================
+ * 1.3.0 - August 25th, 2010
+ * [*]	Due to chained auth_method, passwords must be sent to server.
+ *
  * 1.2.0 - October 24th, 2008
  * [*]  Ported to PHP5 code.
  * [*]  Removed setURL() function as this is now handled in the contstructor.
@@ -101,13 +104,6 @@ class AuthSystem {
 		$this->data["username"]		= $username;
 		$this->data["password"]		= $password;
 		$this->data["auth_method"]	= $auth_method;
-		
-		/**
-		 * If the local database is being used, send the hash of the password instead.
-		 */
-		if($auth_method == "local") {
-			$this->data["password"] = md5($this->data["password"]);
-		}
 	}
 
 	/**

@@ -8292,7 +8292,7 @@ function events_process_filters($action = "", $module_type = "") {
 				case "medtech" :
 				case "staff" :
 				default :
-					$_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["organisation"][0] = $_SESSION["details"]["organisation_id"];
+					continue;
 				break;
 			}
 

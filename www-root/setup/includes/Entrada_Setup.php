@@ -24,6 +24,7 @@ class Entrada_Setup
 	public $entrada_absolute;
 	public $entrada_storage;
 	
+	public $database_adapter;
 	public $database_host;
 	public $database_username;
 	public $database_password;
@@ -52,6 +53,7 @@ class Entrada_Setup
 		$this->entrada_absolute = (isset($processed_array["entrada_absolute"]) ? $processed_array["entrada_absolute"] : "");
 		$this->entrada_storage = (isset($processed_array["entrada_storage"]) ? $processed_array["entrada_storage"] : "");
 		
+		$this->database_adapter = (isset($processed_array["database_adapter"]) ? $processed_array["database_adapter"] : "mysql");
 		$this->database_host = (isset($processed_array["database_host"]) ? $processed_array["database_host"] : "");
 		$this->database_username = (isset($processed_array["database_username"]) ? $processed_array["database_username"] : "");
 		$this->database_password = (isset($processed_array["database_password"]) ? $processed_array["database_password"] : "");
@@ -76,7 +78,7 @@ class Entrada_Setup
 	{
 		try
 		{
-			$db = NewADOConnection(DATABASE_TYPE);
+			$db = NewADOConnection($this->database_adapter);
 			return @$db->Connect($this->database_host, $this->database_username, $this->database_password, $this->entrada_database);
 		}
 		catch(Exception $e)
@@ -89,7 +91,7 @@ class Entrada_Setup
 	{
 		try
 		{
-			$db = NewADOConnection(DATABASE_TYPE);
+			$db = NewADOConnection($this->database_adapter);
 			return @$db->Connect($this->database_host, $this->database_username, $this->database_password, $this->auth_database);
 		}
 		catch(Exception $e)
@@ -100,7 +102,7 @@ class Entrada_Setup
 
 	public function checkClerkshipDBConnection() {
 		try {
-			$db = NewADOConnection(DATABASE_TYPE);
+			$db = NewADOConnection($this->database_adapter);
 			return @$db->Connect($this->database_host, $this->database_username, $this->database_password, $this->clerkship_database);
 		} catch (Exception $e) {
 			return false;
@@ -137,17 +139,18 @@ class Entrada_Setup
 				"entrada_absolute" => $this->entrada_absolute,
 				"entrada_storage" => $this->entrada_storage,
 				"database" => array(
-					"host"						=> $this->database_host,
-					"username"					=> $this->database_username,
-					"password"					=> $this->database_password,
-					"entrada_database"			=> $this->entrada_database,
-					"auth_database"				=> $this->auth_database,
-					"clerkship_database"		=> $this->clerkship_database,
+					"adapter" => $this->database_adapter,
+					"host" => $this->database_host,
+					"username" => $this->database_username,
+					"password" => $this->database_password,
+					"entrada_database" => $this->entrada_database,
+					"auth_database" => $this->auth_database,
+					"clerkship_database" => $this->clerkship_database,
 				),
 				"admin" => array(
-					"firstname"					=> $this->admin_firstname,
-					"lastname"					=> $this->admin_lastname,
-					"email"						=> $this->admin_email,
+					"firstname" => $this->admin_firstname,
+					"lastname" => $this->admin_lastname,
+					"email" => $this->admin_email,
 				),
 				"auth_username" => $this->auth_username,
 				"auth_password" => $this->auth_password,
@@ -174,6 +177,7 @@ return array (
   'entrada_absolute' => '{$this->entrada_absolute}',
   'entrada_storage' => '{$this->entrada_storage}',
   'database' => array (
+    'adapter' => '{$this->database_adapter}',
     'host' => '{$this->database_host}',
     'username' => '{$this->database_username}',
     'password' => '{$this->database_password}',
@@ -215,7 +219,7 @@ CONFIGTEXT;
 		{
 			foreach($db_dump_files as $database_name => $dump_file)
 			{
-				$db = NewADOConnection(DATABASE_TYPE);
+				$db = NewADOConnection($this->database_adapter);
 				$db->Connect($this->database_host, $this->database_username, $this->database_password, $database_name);
 				$queries = $this->parseDatabaseDump($dump_file);
 				foreach ($queries as $query)
@@ -269,7 +273,7 @@ CONFIGTEXT;
 		{
 			foreach($dbs as $database_name)
 			{
-				$db = NewADOConnection(DATABASE_TYPE);
+				$db = NewADOConnection($this->database_adapter);
 				$db->Connect($this->database_host, $this->database_username, $this->database_password, $database_name);
 				$rs = $db->GetAll("SHOW TABLES");
 				foreach($rs as $row) {

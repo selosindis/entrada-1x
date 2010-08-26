@@ -49,15 +49,15 @@ if ($community_courses) {
 		$course_ids[] = $db->qstr($community_course["course_id"]);
 	}
 
-		$query	= "	SELECT *
-					FROM `events`
-					WHERE `course_id` IN (".implode(", ", $course_ids).")";
-		$course_events = $db->GetAll($query);
+	$query	= "	SELECT *
+				FROM `events`
+				WHERE `course_id` IN (".implode(", ", $course_ids).")";
+	$course_events = $db->GetAll($query);
 
-		$event_ids = array();
-		foreach ($course_events as $course_event) {
-			$event_ids[] = $db->qstr($course_event["event_id"]);
-		}
+	$event_ids = array();
+	foreach ($course_events as $course_event) {
+		$event_ids[] = $db->qstr($course_event["event_id"]);
+	}
 
 	switch ($PAGE_URL) {
 		case "" :
@@ -70,6 +70,7 @@ if ($community_courses) {
 						AND c.`app_id` = ".$db->qstr(AUTH_APP_ID)."
 						WHERE a.`course_id` IN (".implode(", ", $course_ids).")
 						AND a.`contact_type` = 'director'
+						GROUP BY b.`id`
 						ORDER BY `contact_order` ASC";
 			if ($results = $db->GetAll($query)) {
 				echo "<h2>Course Director".(count($results) > 1 ? "s" : "")."</h2>\n";
@@ -209,7 +210,8 @@ if ($community_courses) {
 						ON c.`user_id` = b.`id`
 						AND c.`app_id` = ".$db->qstr(AUTH_APP_ID)."
 						WHERE a.`course_id` IN (".implode(", ", $course_ids).")
-						AND a.`course_active` = '1'";
+						AND a.`course_active` = '1'
+						GROUP BY b.`id`";
 			if ($results = $db->GetAll($query)) {
 				echo "<h2>Program Coordinator</h2>\n";
 				foreach ($results as $key => $result) {
@@ -348,6 +350,7 @@ if ($community_courses) {
 						AND c.`app_id` = ".$db->qstr(AUTH_APP_ID)."
 						WHERE a.`course_id` IN (".implode(", ", $course_ids).")
 						AND a.`contact_type` = 'ccoordinator'
+						GROUP BY b.`id`
 						ORDER BY `contact_order` ASC";
 			if ($results = $db->GetAll($query)) {
 				echo "<h2>Curriculum Coordinator".(count($results) > 1 ? "s" : "")."</h2>\n";

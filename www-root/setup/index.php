@@ -24,8 +24,6 @@
     get_include_path(),
 )));
 
-define("DATABASE_TYPE", "mysqli");
-
 /**
  * Register the Zend autoloader so we use any part of Zend Framework without
  * the need to require the specific Zend Framework files.
@@ -56,6 +54,18 @@ if ((isset($_GET["step"])) && ((int) trim($_GET["step"]))) {
 	$STEP = 1;
 }
 
+/**
+ * A list of valid database adapters that Entrada can utilize.
+ */
+$DATABASE_ADAPTERS = array(
+	"mysql" => "MySQL",
+	"mysqli" => "MySQL Improved",
+	"pdo_mysql" => "PDO MySQL"
+);
+
+/**
+ * Just used for reference.
+ */
 $PROCESSED = array(
 	"auth_username" => "",
 	"auth_password" => "",
@@ -63,6 +73,7 @@ $PROCESSED = array(
 	"entrada_relative" => "",
 	"entrada_absolute" => "",
 	"entrada_storage" => "",
+	"database_adapter" => "",
 	"database_host" => "",
 	"database_username" => "",
 	"database_password" => "",
@@ -132,6 +143,13 @@ switch ($STEP) {
 			$STEP = 4;
 		}
 	case 4 :
+		if (isset($_POST["database_adapter"]) && ($database_adapter = clean_input($_POST["database_adapter"], "credentials")) && array_key_exists($database_adapter, $DATABASE_ADAPTERS)) {
+			$PROCESSED["database_adapter"] = $database_adapter;
+		} else {
+			$ERROR++;
+			$ERRORSTR[] = "A valid database type must be selected before being able to continue.";
+		}
+
 		if (isset($_POST["database_host"]) && ($database_host = clean_input($_POST["database_host"], "url"))) {
 			$PROCESSED["database_host"] = $database_host;
 		} else {
@@ -705,6 +723,24 @@ $storage_path = implode(DIRECTORY_SEPARATOR, array_slice(explode(DIRECTORY_SEPAR
 								<col width="75%" />
 							</colgroup>
 							<tbody>
+								<tr>
+									<td>
+										<div class="valign">
+											<label for="database_adapter">Database Adapter</label>
+										</div>
+									</td>
+									<td>
+										<div class="valign">
+											<select id="database_adapter" name="database_adapter" style="width: 205px">
+												<?php
+												foreach ($DATABASE_ADAPTERS as $type => $title) {
+													echo "<option value=\"".html_encode($type)."\"".((isset($PROCESSED["database_adapter"]) && ($PROCESSED["database_adapter"] == $type)) ? " selected=\"selected\"" : "").">".html_encode($title)."</option>\n";
+												}
+												?>
+											</select>
+										</div>
+									</td>
+								</tr>
 								<tr>
 									<td>
 										<div class="valign">

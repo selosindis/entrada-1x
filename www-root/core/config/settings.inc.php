@@ -58,7 +58,7 @@ define("COMMUNITY_URL", ENTRADA_URL."/community");								// Full URL to the com
 define("COMMUNITY_ABSOLUTE", ENTRADA_ABSOLUTE."/community");					// Full Directory Path to the community directory without a trailing slash.
 define("COMMUNITY_RELATIVE", ENTRADA_RELATIVE."/community");					// Absolute Path from the document_root to the community without a trailing slash.
 
-define("DATABASE_TYPE", "mysqli");												// Database Connection Type
+define("DATABASE_TYPE", $config->database->adapter);												// Database Connection Type
 define("DATABASE_HOST", $config->database->host);								// The hostname or IP of the database server you want to connnect to.
 define("DATABASE_NAME", $config->database->entrada_database);					// The name of the database to connect to.
 define("DATABASE_USER", $config->database->username);							// A username that can access this database.

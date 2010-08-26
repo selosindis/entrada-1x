@@ -83,7 +83,7 @@ if ($result) {
 				$community_announcements .= "<h3>".date("l F dS Y", $result["release_date"])."</h3>\n";
 				$community_announcements .= "<ul class=\"announcements\">\n";
 			}
-			$community_announcements .= "<li".(!($key % 2) ? " style=\"background-color: #F7F7F7\"" : "")."><a href=\"".COMMUNITY_RELATIVE.$COMMUNITY_URL.":".$result["page_url"]."?id=".$result["cannouncement_id"]."\">".html_encode($result["announcement_title"])."</a></li>\n";
+			$community_announcements .= "<li".(!($key % 2) ? " class=\"odd-announcement\"" : "")."><a href=\"".COMMUNITY_RELATIVE.$COMMUNITY_URL.":".$result["page_url"]."?id=".$result["cannouncement_id"]."\">".html_encode($result["announcement_title"])."</a></li>\n";
 		}
 		$community_announcements .= "</ul>\n";
 	}
@@ -159,7 +159,7 @@ if ($result) {
 				$community_events .= "<h3>".date("l F dS Y", $result["event_start"])."</h3>\n";
 				$community_events .= "<ul class=\"announcements\">\n";
 			}
-			$community_events .= "<li".(!($key % 2) ? " style=\"background-color: #F7F7F7\"" : "")."><a href=\"".COMMUNITY_RELATIVE.$COMMUNITY_URL.":".$result["page_url"]."?id=".$result["cevent_id"]."\">".html_encode($result["event_title"])."</a></li>\n";
+			$community_events .= "<li".(!($key % 2) ? " class=\"odd-announcement\"" : "")."><a href=\"".COMMUNITY_RELATIVE.$COMMUNITY_URL.":".$result["page_url"]."?id=".$result["cevent_id"]."\">".html_encode($result["event_title"])."</a></li>\n";
 		}
 		$community_events .= "</ul>\n";
 	}

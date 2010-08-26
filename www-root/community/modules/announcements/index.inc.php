@@ -302,12 +302,14 @@ if (communities_module_access($COMMUNITY_ID, $MODULE_ID, "delete")) {
 				echo "<div id=\"announcement-".(int) $result["cannouncement_id"]."\" class=\"announcement\">\n";
 				echo "	<a name=\"announcement-".(int) $result["cannouncement_id"]."\"></a>\n";
 				echo "<h2 id=\"announcement-".(int) $result["cannouncement_id"]."-title\">".html_encode($result["announcement_title"])."</h2>\n";
+				echo "<div>\n";
 				echo "<div class=\"tagline\">\n";
 				echo "	Released ".date("F dS, Y", $result["release_date"])." by <strong>".html_encode($result["fullname"])."</strong>";
 				echo 	((communities_module_access($COMMUNITY_ID, $MODULE_ID, "edit")) ? " (<a class=\"action\" href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=edit&amp;id=".$result["cannouncement_id"]."\">edit</a>)" : "");
 				echo 	((communities_module_access($COMMUNITY_ID, $MODULE_ID, "delete")) ? " (<a class=\"action\" href=\"javascript:announcementDelete('".$result["cannouncement_id"]."')\">delete</a>)" : "");
 				echo "</div>\n";
 				echo strip_tags($result["announcement_description"], $ALLOWED_HTML_TAGS);
+				echo "</div>\n";
 				echo "</div>";
 			}
 		} else {
@@ -360,12 +362,14 @@ if (communities_module_access($COMMUNITY_ID, $MODULE_ID, "delete")) {
 				echo "<div id=\"announcement-".(int) $result["cannouncement_id"]."\" class=\"announcement".((!$accessible) ? " na" : "")."\">\n";
 				echo "	<a name=\"announcement-".(int) $result["cannouncement_id"]."\"></a>\n";
 				echo "	<a href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?id=".$result["cannouncement_id"]."\" id=\"announcement-".(int) $result["cannouncement_id"]."-title\" class=\"title\">".html_encode($result["announcement_title"])."</a>\n";
+				echo "<div>\n";
 				echo "	<div class=\"tagline\">\n";
 				echo "		Released ".date("F dS, Y", $result["release_date"])." by <strong>".html_encode($result["fullname"])."</strong>";
 				echo		((communities_module_access($COMMUNITY_ID, $MODULE_ID, "edit")) ? " (<a class=\"action\" href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=edit&amp;id=".$result["cannouncement_id"]."\">edit</a>)" : "");
 				echo		((communities_module_access($COMMUNITY_ID, $MODULE_ID, "delete")) ? " (<a class=\"action\" href=\"javascript:announcementDelete('".$result["cannouncement_id"]."')\">delete</a>)" : "");
 				echo "	</div>\n";
 				echo	strip_tags($result["announcement_description"], $ALLOWED_HTML_TAGS);
+				echo "</div>\n";
 				echo "</div>";
 			}
 		} else {

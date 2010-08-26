@@ -163,7 +163,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 			echo "</ul>\n";
 		}
 	} elseif ($COURSE_ID && $OBJECTIVE_ID) {
-		
+		$BREADCRUMB[] = array("url" => ENTRADA_RELATIVE."/objectives", "title" => "Course Objectives");
+		$BREADCRUMB[] = array("url" => "", "title" => "Learning Events");
 		
 		/**
 		 * Update requested length of time to display.

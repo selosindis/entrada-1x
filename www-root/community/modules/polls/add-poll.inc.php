@@ -646,11 +646,12 @@ switch($STEP) {
 																ON a.`id` = b.`user_id`
 																LEFT JOIN `community_members` AS c
 																ON a.`id` = c.`proxy_id`
-																WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+																WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
 																AND b.`account_active` = 'true'
 																AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
 																AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
 																AND c.`community_id` = ".$db->qstr($COMMUNITY_ID)."
+																GROUP BY a.`id`
 																ORDER BY a.`lastname` ASC, a.`firstname` ASC";
 											//Fetch list of categories
 											$query	= "SELECT `organisation_id`,`organisation_title` FROM `".AUTH_DATABASE."`.`organisations` ORDER BY `organisation_title` ASC";

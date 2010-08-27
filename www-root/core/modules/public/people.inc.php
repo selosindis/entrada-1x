@@ -170,8 +170,9 @@ if (!defined("PARENT_INCLUDED")) {
 										FROM `".AUTH_DATABASE."`.`user_data` AS a
 										LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 										ON b.`user_id` = a.`id`
-										AND b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
-										WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+										AND b.`app_id` IN (".AUTH_APP_IDS_STRING.")
+										WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
+										AND a.`organisation_id` = ".$db->qstr($PROCESSED["organisation"])."
 										AND b.`group` ".($PROCESSED["group"] == "staff" ? "IN ('staff', 'medtech')" : "= ".$db->qstr($PROCESSED["group"]))."
 										".(($PROCESSED["role"]) ? "AND b.`role` = ".$db->qstr($PROCESSED["role"]) : "")."
 										GROUP BY a.`id`
@@ -181,8 +182,9 @@ if (!defined("PARENT_INCLUDED")) {
 										FROM `".AUTH_DATABASE."`.`user_data` AS a
 										LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 										ON b.`user_id` = a.`id`
-										AND b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
-										WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+										AND b.`app_id` IN (".AUTH_APP_IDS_STRING.")
+										WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
+										AND a.`organisation_id` = ".$db->qstr($PROCESSED["organisation"])."
 										AND b.`group` ".($PROCESSED["group"] == "staff" ? "IN ('staff', 'medtech')" : "= ".$db->qstr($PROCESSED["group"]))."
 										".(($PROCESSED["role"]) ? "AND b.`role` = ".$db->qstr($PROCESSED["role"]) : "")."
 										GROUP BY a.`id`
@@ -239,7 +241,7 @@ if (!defined("PARENT_INCLUDED")) {
 										FROM `".AUTH_DATABASE."`.`user_data` AS a
 										LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 										ON b.`user_id` = a.`id`
-										AND b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+										AND b.`app_id` IN (".AUTH_APP_IDS_STRING.")
 										LEFT JOIN `".AUTH_DATABASE."`.`user_departments` AS c
 										ON c.`user_id` = a.`id`
 										WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
@@ -251,10 +253,10 @@ if (!defined("PARENT_INCLUDED")) {
 										FROM `".AUTH_DATABASE."`.`user_data` AS a
 										LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 										ON b.`user_id` = a.`id`
-										AND b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+										AND b.`app_id` IN (".AUTH_APP_IDS_STRING.")
 										LEFT JOIN `".AUTH_DATABASE."`.`user_departments` AS c
 										ON c.`user_id` = a.`id`
-										WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+										WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
 										AND c.`dep_id` = ".$db->qstr($browse_department)."
 										GROUP BY a.`id`
 										ORDER BY `fullname` ASC";
@@ -338,9 +340,10 @@ if (!defined("PARENT_INCLUDED")) {
 									FROM `".AUTH_DATABASE."`.`user_data` AS a
 									LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 									ON b.`user_id` = a.`id`
-									AND b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
-									WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
-									AND (b.`group` ".($group_string && $role_string ? "IN (".$group_string.")
+									AND b.`app_id` IN (".AUTH_APP_IDS_STRING.")
+									WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
+									AND a.`organisation_id` IN (" . $organisations_string . ")
+									AND (b.`group` ".($group_string && $role_string ? "IN (".$group_string.")									
 									OR (b.`group` = 'student' 
 										AND b.`role` IN (".$role_string.")))" : ($role_string ? "= 'student' 
 									AND b.`role` IN (".$role_string."))" : ( $group_string ? "IN (".$group_string."))" : "!= 'guest')")))."
@@ -356,8 +359,9 @@ if (!defined("PARENT_INCLUDED")) {
 									FROM `".AUTH_DATABASE."`.`user_data` AS a
 									LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 									ON b.`user_id` = a.`id`
-									AND b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
-									WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+									AND b.`app_id` IN (".AUTH_APP_IDS_STRING.")
+									WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
+									AND a.`organisation_id` IN (" . $organisations_string . ")
 									AND (b.`group` ".($group_string && $role_string ? "IN (".$group_string.")
 									OR (b.`group` = 'student' 
 										AND b.`role` IN (".$role_string.")))" : ($role_string ? "= 'student' 

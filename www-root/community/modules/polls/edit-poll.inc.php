@@ -703,20 +703,21 @@ if ($RECORD_ID) {
 													$nmembers_query			= "";
 													$nmembers_results		= false;
 													$nmembers_query	= "	SELECT a.`id` AS `proxy_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, a.`username`, a.`organisation_id`, b.`group`, b.`role`, d.`proxy_id` as `access`
-																				FROM `".AUTH_DATABASE."`.`user_data` AS a
-																				LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
-																				ON a.`id` = b.`user_id`
-																				LEFT JOIN `community_members` AS c
-																				ON a.`id` = c.`proxy_id`
-																				LEFT JOIN `community_polls_access` AS d
-																				ON d.`proxy_id` = c.`proxy_id`
-																				AND d.`cpolls_id` = ".$db->qstr($RECORD_ID)."
-																				WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
-																				AND b.`account_active` = 'true'
-																				AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
-																				AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
-																				AND c.`community_id` = ".$db->qstr($COMMUNITY_ID)."
-																				ORDER BY b.`group`, b.`role`, a.`lastname` ASC, a.`firstname` ASC";
+																		FROM `".AUTH_DATABASE."`.`user_data` AS a
+																		LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+																		ON a.`id` = b.`user_id`
+																		LEFT JOIN `community_members` AS c
+																		ON a.`id` = c.`proxy_id`
+																		LEFT JOIN `community_polls_access` AS d
+																		ON d.`proxy_id` = c.`proxy_id`
+																		AND d.`cpolls_id` = ".$db->qstr($RECORD_ID)."
+																		WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
+																		AND b.`account_active` = 'true'
+																		AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
+																		AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
+																		AND c.`community_id` = ".$db->qstr($COMMUNITY_ID)."
+																		GROUP BY a.`id`
+																		ORDER BY b.`group`, b.`role`, a.`lastname` ASC, a.`firstname` ASC";
 													//Fetch list of categories
 													$query	= "SELECT `organisation_id`,`organisation_title` FROM `".AUTH_DATABASE."`.`organisations` ORDER BY `organisation_title` ASC";
 													$organisation_results	= $db->GetAll($query);

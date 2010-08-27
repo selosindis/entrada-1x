@@ -109,10 +109,11 @@ if(isset($COMMUNITY_ID) && isset($ACTION)) {
 											a.`organisation_id` = ".$db->qstr($ORGANISATION_ID)."
 											AND b.`group` = ".$db->qstr($GROUP)."
 											".($ROLE != 'all' ? "AND b.`role` = ".$db->qstr($ROLE) : "")."
-											AND b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+											AND b.`app_id` IN (".AUTH_APP_IDS_STRING.")
 											AND b.`account_active` = 'true'
 											AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
 											AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
+											GROUP BY a.`id`
 											ORDER BY a.`lastname` ASC, a.`firstname` ASC";
 
 						//Fetch list of current members

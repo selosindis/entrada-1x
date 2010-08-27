@@ -755,6 +755,13 @@ function get_account_data($type = "", $id = 0) {
 		}
 
 		$result = ((USE_CACHE) ? $db->CacheGetRow(LONG_CACHE_TIMEOUT, $query) : $db->GetRow($query));
+		if (!$result && strtolower($type) == "role") {
+			$query = "SELECT `role` FROM `".AUTH_DATABASE."`.`user_access` WHERE `user_id` = ".$db->qstr($id)." AND `app_id` IN (".AUTH_APP_IDS_STRING.")";
+			$result = ((USE_CACHE) ? $db->CacheGetRow(LONG_CACHE_TIMEOUT, $query) : $db->GetRow($query));
+		} elseif (!$result && strtolower($type) == "group") {
+			$query = "SELECT `group` FROM `".AUTH_DATABASE."`.`user_access` WHERE `user_id` = ".$db->qstr($id)." AND `app_id` IN (".AUTH_APP_IDS_STRING.")";
+			$result = ((USE_CACHE) ? $db->CacheGetRow(LONG_CACHE_TIMEOUT, $query) : $db->GetRow($query));
+		}
 		return $result[$type];
 	} else {
 		return "";

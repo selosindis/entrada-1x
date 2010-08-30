@@ -32,7 +32,17 @@ ALTER TABLE `registered_apps` CHANGE `script_password` `script_password` varchar
 
 -- Table: user_data
 
-ALTER TABLE `user_data` ADD `grad_year` int(11) default NULL, ADD `entry_year` int(11) default NULL;
+ALTER TABLE `user_data` ADD `country_id` int(12) NULL DEFAULT NULL AFTER `country`,
+ADD `province_id` int(12) NULL DEFAULT NULL AFTER `country_id`,
+ADD `entry_year` int(11) default NULL AFTER `notifications`,
+ADD `grad_year` int(11) default NULL AFTER `entry_year`,
+ADD `gender` int(11) NOT NULL default '0' AFTER `grad_year`,
+ADD `updated_date` bigint(64) NOT NULL default '0' AFTER `clinical`,
+ADD `updated_by` int(12) NOT NULL default '0' AFTER `updated_date`,
+ADD INDEX (`organisation_id`),
+ADD INDEX (`gender`),
+ADD INDEX (`country_id`),
+ADD INDEX (`province_id`);
 
 -- Function: isnumeric
 

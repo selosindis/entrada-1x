@@ -7601,7 +7601,6 @@ function courses_fetch_objectives($course_ids, $parent_id = 1, $objectives = fal
 			}
 		}
 	}
-	ksort($objectives["objectives"]);
 	if ($event_id) {
 		foreach ($objectives["objectives"] as $objective_id => $objective) {
 			if ($event_objective_details = $db->GetRow("SELECT * FROM `event_objectives`

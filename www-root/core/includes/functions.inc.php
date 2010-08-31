@@ -8628,6 +8628,15 @@ function events_fetch_filtered_events() {
 	$limit_parameter = (int) (($_SESSION[APPLICATION_IDENTIFIER]["events"]["pp"] * $output["page_current"]) - $_SESSION[APPLICATION_IDENTIFIER]["events"]["pp"]);
 
 	/**
+	 * Save the result ID so it can be used when displaying events.
+	 */
+	if ($limit_parameter) {
+		$output["rid"] = $limit_parameter;
+	} else {
+		$output["rid"] = 0;
+	}
+
+	/**
 	 * Provide the previous query so we can have previous / next event links on the details page.
 	 */
 	$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["query"] = $query_events;

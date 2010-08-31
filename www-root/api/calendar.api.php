@@ -50,6 +50,7 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 	$user_role				= $_SESSION["details"]["role"];
 	$user_group				= $_SESSION["details"]["group"];
 	$user_organisation_id	= $_SESSION["details"]["organisation_id"];
+	$user_grad_year			= $_SESSION["details"]["grad_year"];
 } else {
 	if (!isset($_SERVER["PHP_AUTH_USER"])) {
 		http_authenticate();
@@ -82,23 +83,24 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 				$user_group				= $result["GROUP"];
 				$user_organisation_id	= $result["ORGANISATION_ID"];
 				
-			switch ($user_group) {
-				case "student" :
-					if ((!isset($result["ROLE"])) || (!(int) $result["ROLE"])) {
+				switch ($user_group) {
+					case "student" :
+						if ((!isset($result["ROLE"])) || (!(int) $result["ROLE"])) {
+							$user_grad_year = (date("Y", time()) + ((date("m", time()) < 7) ?  3 : 4));
+						} else {
+							$user_grad_year = $user_role;
+						}
+					break;
+					default :
+						/**
+						 * If you're not a student, always assign a graduating year,
+						 * because having no events in the calendar causes it not
+						 * to validate.
+						 */
 						$user_grad_year = (date("Y", time()) + ((date("m", time()) < 7) ?  3 : 4));
-					} else {
-						$user_grad_year = $user_role;
-					}
-				break;
-				default :
-					/**
-					 * If you're in MEdTech, always assign a graduating year,
-					 * because we normally see more than normal users.
-					 */
-					$user_grad_year = (date("Y", time()) + ((date("m", time()) < 7) ?  3 : 4));
-					continue;
-				break;
-			}
+						continue;
+					break;
+				}
 			}
 		} else {
 			$ERROR++;

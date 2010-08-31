@@ -7825,6 +7825,7 @@ function events_output_filter_controls($module_type = "") {
 							WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
 							AND a.`organisation_id` IN (".$organisation_ids_string.")
 							AND (b.`group` = 'faculty' OR (b.`group` = 'resident' AND b.`role` = 'lecturer'))
+							GROUP BY a.`id`
 							ORDER BY `fullname` ASC";
 				$teacher_results = $db->GetAll($query);
 				if ($teacher_results) {
@@ -7854,6 +7855,7 @@ function events_output_filter_controls($module_type = "") {
 							AND b.`group` = 'student'
 							AND b.`role` >= ".$db->qstr(((date("Y", time()) + ((date("m", time()) < 7) ?  3 : 4)) - 4)).
 							(($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"] == "student") ? " AND a.`id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]) : "")."
+							GROUP BY a.`id`
 							ORDER BY b.`role` DESC, a.`lastname` ASC, a.`firstname` ASC";
 				$student_results = $db->GetAll($query);
 				if ($student_results) {

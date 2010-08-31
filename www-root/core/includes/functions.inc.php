@@ -7033,7 +7033,7 @@ function clerkship_get_elective_location($event_id) {
 				ON a.`region_id` = b.`region_id` 
 				WHERE a.`event_id` = ".$db->qstr($event_id);
 	$result = $db->GetRow($query);
-	if ($result["region_name"]) {
+	if (isset($result["region_name"]) && $result["region_name"]) {
 		$result["city"] = $result["region_name"];
 	}
 	return $result;
@@ -7822,7 +7822,7 @@ function events_output_filter_controls($module_type = "") {
 							FROM `".AUTH_DATABASE."`.`user_data` AS a
 							LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 							ON b.`user_id` = a.`id`
-							WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+							WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
 							AND a.`organisation_id` IN (".$organisation_ids_string.")
 							AND (b.`group` = 'faculty' OR (b.`group` = 'resident' AND b.`role` = 'lecturer'))
 							ORDER BY `fullname` ASC";
@@ -7838,7 +7838,7 @@ function events_output_filter_controls($module_type = "") {
 
 						$teachers[$r["organisation_id"]]['options'][] = array('text' => $r['fullname'], 'value' => 'teacher_'.$r['proxy_id'], 'checked' => $checked);
 					}
-					//echo lp_multiple_select_popup('teacher', $teachers, array('title'=>'Select Teachers:', 'submit_text'=>'Apply', 'cancel'=>true, 'submit'=>true));
+					echo lp_multiple_select_popup('teacher', $teachers, array('title'=>'Select Teachers:', 'submit_text'=>'Apply', 'cancel'=>true, 'submit'=>true));
 				}
 
 				// Get the possible Student filters
@@ -7846,8 +7846,8 @@ function events_output_filter_controls($module_type = "") {
 							FROM `".AUTH_DATABASE."`.`user_data` AS a
 							LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 							ON a.`id` = b.`user_id`
-							WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
-							a.`organisation_id` = ".$db->qstr($ORGANISATION_ID)."
+							WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
+							AND a.`organisation_id` = ".$db->qstr($ORGANISATION_ID)."
 							AND b.`account_active` = 'true'
 							AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
 							AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")

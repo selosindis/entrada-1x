@@ -24,12 +24,12 @@
  *
 */
 
-if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
+if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 	exit;
-} elseif((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
+} elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	header("Location: ".ENTRADA_URL);
 	exit;
-} elseif(!$ENTRADA_ACL->amIAllowed('objective', 'create', false)) {
+} elseif (!$ENTRADA_ACL->amIAllowed('objective', 'create', false)) {
 	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/".$MODULE."\\'', 15000)";
 
 	$ERROR++;
@@ -39,15 +39,15 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
-	$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/objectives?".replace_query(array("section" => "add")), "title" => "Adding Objective");
-	//Error Checking
+	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/objectives?".replace_query(array("section" => "add")), "title" => "Adding Objective");
+	
+	// Error Checking
 	switch ($STEP) {
-		case 2:
-
+		case 2 :
 			/**
 			 * Required field "objective_name" / Objective Name
 			 */
-			if(isset($_POST["objective_name"]) && ($objective_name = clean_input($_POST["objective_name"], array("notags", "trim")))) {
+			if (isset($_POST["objective_name"]) && ($objective_name = clean_input($_POST["objective_name"], array("notags", "trim")))) {
 				$PROCESSED["objective_name"] = $objective_name;
 			} else {
 				$ERROR++;
@@ -57,7 +57,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 			/**
 			 * Non-required field "objective_code" / Objective Code
 			 */
-			if(isset($_POST["objective_code"]) && ($objective_code = clean_input($_POST["objective_code"], array("notags", "trim")))) {
+			if (isset($_POST["objective_code"]) && ($objective_code = clean_input($_POST["objective_code"], array("notags", "trim")))) {
 				$PROCESSED["objective_code"] = $objective_code;
 			} else {
 				$PROCESSED["objective_code"] = "";
@@ -66,29 +66,30 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 			/**
 			 * Non-required field "objective_parent" / Objective Parent
 			 */
-			if(isset($_POST["objective_id"]) && ($objective_parent = clean_input($_POST["objective_id"], array("int")))) {
+			if (isset($_POST["objective_id"]) && ($objective_parent = clean_input($_POST["objective_id"], array("int")))) {
 				$PROCESSED["objective_parent"] = $objective_parent;
+
+				$_SESSION[APPLICATION_IDENTIFIER]["objectives"]["objective_parent"] = $objective_parent;
 			} else {
 				$PROCESSED["objective_parent"] = 0;
-			}
-
-			/**
-			 * Non-required field "objective_description" / Objective Description
-			 */
-			if(isset($_POST["objective_description"]) && ($objective_description = clean_input($_POST["objective_description"], array("notags", "trim")))) {
-				$PROCESSED["objective_description"] = $objective_description;
-			} else {
-				$PROCESSED["objective_description"] = "";
 			}
 		
 			/**
 			 * Required field "objective_order" / Objective Order
 			 */
-			if(isset($_POST["objective_order"]) && ($objective_order = clean_input($_POST["objective_order"], array("int")))) {
+			if (isset($_POST["objective_order"]) && ($objective_order = clean_input($_POST["objective_order"], array("int")))) {
 				$PROCESSED["objective_order"] = $objective_order;
 			} else {
-				$ERROR++;
-				$ERRORSTR[] = "The <strong>Objective Order</strong> is a required field.";
+				$PROCESSED["objective_order"] = 0;
+			}
+
+			/**
+			 * Non-required field "objective_description" / Objective Description
+			 */
+			if (isset($_POST["objective_description"]) && ($objective_description = clean_input($_POST["objective_description"], array("notags", "trim")))) {
+				$PROCESSED["objective_description"] = $objective_description;
+			} else {
+				$PROCESSED["objective_description"] = "";
 			}
 
 			if (!$ERROR && $objective_details["objective_order"] != $PROCESSED["objective_order"]) {
@@ -112,18 +113,21 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 				}
 			}
 			
-			if(!$ERROR) {
-				$PROCESSED["updated_date"]	= time();
-				$PROCESSED["updated_by"]	= $_SESSION["details"]["id"];
-				if($db->AutoExecute("global_lu_objectives", $PROCESSED, "INSERT")) {
-					if($OBJECTIVE_ID = $db->Insert_Id()) {
+			if (!$ERROR) {
+				$PROCESSED["updated_date"] = time();
+				$PROCESSED["updated_by"] = $_SESSION["details"]["id"];
+
+				if ($db->AutoExecute("global_lu_objectives", $PROCESSED, "INSERT")) {
+					if ($OBJECTIVE_ID = $db->Insert_Id()) {
+						$url = ENTRADA_URL . "/admin/objectives";
+
 						$SUCCESS++;
-						$SUCCESSSTR[]	= "You have successfully added a new objective [".html_encode($PROCESSED["objective_name"])."] to the system.";
-						$ONLOAD[]		= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/objectives\\'', 5000)";
+						$SUCCESSSTR[] = "You have successfully added <strong>".html_encode($PROCESSED["objective_name"])."</strong> to the system.<br /><br />You will now be redirected to the objectives index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+						
+						$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
 
 						application_log("success", "New Objective [".$OBJECTIVE_ID."] added to the system.");
 					}
-
 				} else {
 					$ERROR++;
 					$ERRORSTR[] = "There was a problem inserting this objective into the system. The system administrator was informed of this error; please try again later.";
@@ -131,35 +135,43 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 					application_log("error", "There was an error inserting an objective. Database said: ".$db->ErrorMsg());
 				}
 			}
+
 			if ($ERROR) {
 				$STEP = 1;
 			}
 		break;
-		case 1:
-			continue;
-		default:
+		case 1 :
+		default :
+			if (isset($_SESSION[APPLICATION_IDENTIFIER]["objectives"]["objective_parent"]) && ($objective_parent = (int) $_SESSION[APPLICATION_IDENTIFIER]["objectives"]["objective_parent"])) {
+				$PROCESSED["objective_parent"] = $objective_parent;
+			} else {
+				$PROCESSED["objective_parent"] = 0;
+			}
 		break;
 	}
-	//Display Content
+
+	// Display Content
 	switch ($STEP) {
-		case 2:
-			if($SUCCESS) {
+		case 2 :
+			if ($SUCCESS) {
 				echo display_success();
 			}
-			if($NOTICE) {
+
+			if ($NOTICE) {
 				echo display_notice();
 			}
-			if($ERROR) {
+
+			if ($ERROR) {
 				echo display_error();
 			}
 		break;
-		case 1:
+		case 1 :
 			
-			if($ERROR) {
+			if ($ERROR) {
 				echo display_error();
 			}
-			$HEAD[]	= "
-						<script type=\"text/javascript\">
+
+			$HEAD[]	= "	<script type=\"text/javascript\">
 						function selectObjective(parent_id, objective_id) {
 							new Ajax.Updater('selectObjectiveField', '".ENTRADA_URL."/api/objectives-list.api.php', {parameters: {'pid': parent_id}});
 							return;
@@ -169,8 +181,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 							return;
 						}
 						</script>";
-			$ONLOAD[]	= "selectObjective(".(isset($PROCESSED["objective_parent"]) && $PROCESSED["objective_parent"] ? $PROCESSED["objective_parent"] : "0").")";
-			$ONLOAD[]	= "selectOrder(".(isset($PROCESSED["objective_parent"]) && $PROCESSED["objective_parent"] ? $PROCESSED["objective_parent"] : "0").")";
+			$ONLOAD[] = "selectObjective(".(isset($PROCESSED["objective_parent"]) && $PROCESSED["objective_parent"] ? $PROCESSED["objective_parent"] : "0").")";
+			$ONLOAD[] = "selectOrder(".(isset($PROCESSED["objective_parent"]) && $PROCESSED["objective_parent"] ? $PROCESSED["objective_parent"] : "0").")";
 			?>
 			<form action="<?php echo ENTRADA_URL."/admin/objectives"."?".replace_query(array("action" => "add", "step" => 2)); ?>" method="post">
 			<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Adding Page">
@@ -210,7 +222,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 					<td colspan="2">&nbsp;</td>
 				</tr>
 				<tr>
-					<td style="vertical-align: top; padding-top: 15px"><label for="objective_order" class="form-required">Objective Order:</label></td>
+					<td style="vertical-align: top"><label for="objective_order" class="form-required">Objective Order:</label></td>
 					<td style="vertical-align: top"><div id="selectOrderField"></div></td>
 				</tr>
 				<tr>

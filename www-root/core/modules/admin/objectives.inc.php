@@ -25,12 +25,12 @@
  *
 */
 
-if(!defined("PARENT_INCLUDED")) {
+if (!defined("PARENT_INCLUDED")) {
 	exit;
-} elseif((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
+} elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	header("Location: ".ENTRADA_URL);
 	exit;
-} elseif (!$ENTRADA_ACL->amIAllowed('objective', 'update', false)) {
+} elseif (!$ENTRADA_ACL->amIAllowed("objective", "update", false)) {
 	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/".$MODULE."\\'', 15000)";
 
 	$ERROR++;
@@ -42,31 +42,12 @@ if(!defined("PARENT_INCLUDED")) {
 } else {
 	define("IN_OBJECTIVES",	true);
 
-	$STEP			= 1;
-	$PROCESSED		= array();
-	$SECTION		= "index";
-	$ACTION			= "";
-
-
 	if (($router) && ($router->initRoute())) {
 		$PREFERENCES = preferences_load($MODULE);
 		
-		if(isset($_GET["action"])) {
-			if(trim($_GET["action"]) != "") {
-				$ACTION = clean_input($_GET["action"], "url");
-			}
-		}
-	
-		if((isset($_GET["step"])) && ((int) trim($_GET["step"]))) {
-			$STEP = (int) trim($_GET["step"]);
-		} elseif((isset($_POST["step"])) && ((int) trim($_POST["step"]))) {
-			$STEP = (int) trim($_POST["step"]);
-		}
-	
-		if((isset($_GET["id"])) && ((int) trim($_GET["id"]))) {
+		if ((isset($_GET["id"])) && ((int) trim($_GET["id"]))) {
 			$OBJECTIVE_ID = (int) trim($_GET["id"]);
 		}
-		
 		
 		$module_file = $router->getRoute();
 		if ($module_file) {
@@ -79,4 +60,3 @@ if(!defined("PARENT_INCLUDED")) {
 		preferences_update($MODULE, $PREFERENCES);
 	}
 }
-?>

@@ -269,19 +269,19 @@ The Annual Report by Clinical Faculty aligns two distinct evaluative processes:<
 		{
 			$department = $result["department"];
 			echo "<tr>\n";
-			echo "	<td class=\"student_name\" width=\"25%\"><b>Name: </b>".html_encode($_SESSION["details"]["firstname"]). " " . html_encode($_SESSION["details"]["lastname"])."</td>\n";
-			echo "	<td class=\"department\" width=\"75%\"><b>Department: </b>".$department."</td>\n";
+			echo "	<td class=\"student_name\" width=\"25%\"><b>Name: </b>".html_encode($_SESSION["details"]["firstname"]). " " . html_encode($_SESSION["details"]["lastname"])."&nbsp;</td>\n";
+			echo "	<td class=\"department\" width=\"75%\"><b>Department: </b>".$department."&nbsp;</td>\n";
 			echo "</tr>";
 			echo "<tr>\n";
 			
 			$staffNumber = getNumberFromProxy($proxy_id);
 			
-			echo "	<td class=\"student_name\" width=\"25%\"><b>Staff Number: </b>".$staffNumber."</td>\n";
+			echo "	<td class=\"student_name\" width=\"25%\"><b>Staff Number: </b>".$staffNumber."&nbsp;</td>\n";
 			echo "	<td class=\"department\" width=\"75%\">&nbsp;</td>\n";
 			echo "</tr>";
 			echo "<tr>\n";
-			echo "	<td class=\"student_name\" width=\"25%\"><b>Period: </b>Calendar Year ".$REPORT_YEAR."</td>\n";
-			echo "	<td class=\"department\" width=\"75%\"><b>Cross-Appointments: </b>".$result["cross_department"]."</td>\n";
+			echo "	<td class=\"student_name\" width=\"25%\"><b>Period: </b>Calendar Year ".$REPORT_YEAR."&nbsp;</td>\n";
+			echo "	<td class=\"department\" width=\"75%\"><b>Cross-Appointments: </b>".$result["cross_department"]."&nbsp;</td>\n";
 			echo "</tr>";
 		}
 	?>
@@ -405,21 +405,21 @@ if(!$undergraduateTeachingResults = $db->GetAll($undergraduateTeachingQuery))
 					$commentsArray[$ctr]['comments'] = $result['comments'];
 				}
 				echo "<tr>\n";
-				echo "	<td class=\"delete\">".$listing."</td>\n";					
-				echo "	<td class=\"course_number\">".((strlen(html_encode($result['course_number'])) > 15) ? substr(html_encode($result['course_number']), 0, 14) . "..." : html_encode($result['course_number']))."</td>\n";
-				echo "	<td class=\"course_name\">".((strlen(html_encode($result['course_name'])) > 80) ? substr(html_encode($result['course_name']), 0, 79) . "..." : html_encode($result['course_name']))."</td>\n";
-				echo "	<td class=\"assigned\">".html_encode($result['assigned'])."</td>\n";									
-				echo "	<td class=\"small_numbers\">".html_encode($result['lecture_hours'])."</td>\n";
-				echo "	<td class=\"small_numbers\">".html_encode($result['lab_hours'])."</td>\n";
-				echo "	<td class=\"small_numbers\">".html_encode($result['small_group_hours'])."</td>\n";
-				echo "	<td class=\"small_numbers\">".html_encode($result['symposium_hours'])."</td>\n";
-				echo "	<td class=\"small_numbers\">".html_encode($result['directed_independant_learning_hours'])."</td>\n";
-				echo "	<td class=\"small_numbers\">".html_encode($result['review_feedback_session_hours'])."</td>\n";
-				echo "	<td class=\"small_numbers\">".html_encode($result['examination_hours'])."</td>\n";
-				echo "	<td class=\"small_numbers\">".html_encode($result['clerkship_seminar_hours'])."</td>\n";
-				echo "	<td class=\"small_numbers\">".html_encode($result['other_hours'])."</td>\n";
+				echo "	<td class=\"delete\">".$listing."&nbsp;</td>\n";					
+				echo "	<td class=\"course_number\">".((strlen(html_encode($result['course_number'])) > 15) ? substr(html_encode($result['course_number']), 0, 14) . "..." : html_encode($result['course_number']))."&nbsp;</td>\n";
+				echo "	<td class=\"course_name\">".((strlen(html_encode($result['course_name'])) > 80) ? substr(html_encode($result['course_name']), 0, 79) . "..." : html_encode($result['course_name']))."&nbsp;</td>\n";
+				echo "	<td class=\"assigned\">".html_encode($result['assigned'])."&nbsp;</td>\n";									
+				echo "	<td class=\"small_numbers\">".html_encode($result['lecture_hours'])."&nbsp;</td>\n";
+				echo "	<td class=\"small_numbers\">".html_encode($result['lab_hours'])."&nbsp;</td>\n";
+				echo "	<td class=\"small_numbers\">".html_encode($result['small_group_hours'])."&nbsp;</td>\n";
+				echo "	<td class=\"small_numbers\">".html_encode($result['symposium_hours'])."&nbsp;</td>\n";
+				echo "	<td class=\"small_numbers\">".html_encode($result['directed_independant_learning_hours'])."&nbsp;</td>\n";
+				echo "	<td class=\"small_numbers\">".html_encode($result['review_feedback_session_hours'])."&nbsp;</td>\n";
+				echo "	<td class=\"small_numbers\">".html_encode($result['examination_hours'])."&nbsp;</td>\n";
+				echo "	<td class=\"small_numbers\">".html_encode($result['clerkship_seminar_hours'])."&nbsp;</td>\n";
+				echo "	<td class=\"small_numbers\">".html_encode($result['other_hours'])."&nbsp;</td>\n";
 				if($clinical_value) {
-					echo "	<td class=\"small_numbers\">".html_encode($result['coord_enrollment'])."</td>\n";
+					echo "	<td class=\"small_numbers\">".html_encode($result['coord_enrollment'])."&nbsp;</td>\n";
 				}
 				echo "</tr>\n";
 				$ctr++;
@@ -447,9 +447,9 @@ if(!$undergraduateTeachingResults = $db->GetAll($undergraduateTeachingQuery))
 				{	
 					$listing 								= $i+1;
 					echo "<tr>\n";
-					echo "	<td class=\"delete\" width=\"2%\">".$listing."</td>\n";					
-					echo "	<td class=\"course_number\" width=\"25%\">".html_encode($commentsArray[$i]['course_number'])."</td>\n";
-					echo "	<td class=\"full_description\" width=\"73%\">".html_encode($commentsArray[$i]['comments'])."</td>\n";
+					echo "	<td class=\"delete\" width=\"2%\">".$listing."&nbsp;</td>\n";					
+					echo "	<td class=\"course_number\" width=\"25%\">".html_encode($commentsArray[$i]['course_number'])."&nbsp;</td>\n";
+					echo "	<td class=\"full_description\" width=\"73%\">".html_encode($commentsArray[$i]['comments'])."&nbsp;</td>\n";
 					echo "</tr>\n";
 				}
 			?>
@@ -530,22 +530,22 @@ else {
 				}
 				
 				echo "<tr>\n";
-				echo "	<td class=\"delete\">".$listing."</td>\n";					
-				echo "	<td class=\"course_number\">".((strlen(html_encode($result['course_number'])) > 15) ? substr(html_encode($result['course_number']), 0, 14) . "..." : html_encode($result['course_number']))."</td>\n";
-				echo "	<td class=\"course_name\">".((strlen(html_encode($result['course_name'])) > 80) ? substr(html_encode($result['course_name']), 0, 79) . "..." : html_encode($result['course_name']))."</td>\n";
-				echo "	<td class=\"assigned\">".html_encode($result['assigned'])."</td>\n";					
-				echo "	<td class=\"small_numbers\">".html_encode($result['lec_enrollment'])."</td>\n";					
-				echo "	<td class=\"small_numbers\">".html_encode($result['lec_hours'])."</td>\n";					
-				echo "	<td class=\"small_numbers\">".html_encode($result['lab_enrollment'])."</td>\n";					
-				echo "	<td class=\"small_numbers\">".html_encode($result['lab_hours'])."</td>\n";					
-				echo "	<td class=\"small_numbers\">".html_encode($result['tut_enrollment'])."</td>\n";					
-				echo "	<td class=\"small_numbers\">".html_encode($result['tut_hours'])."</td>\n";					
-				echo "	<td class=\"small_numbers\">".html_encode($result['sem_enrollment'])."</td>\n";					
-				echo "	<td class=\"small_numbers\">".html_encode($result['sem_hours'])."</td>\n";					
+				echo "	<td class=\"delete\">".$listing."&nbsp;</td>\n";					
+				echo "	<td class=\"course_number\">".((strlen(html_encode($result['course_number'])) > 15) ? substr(html_encode($result['course_number']), 0, 14) . "..." : html_encode($result['course_number']))."&nbsp;</td>\n";
+				echo "	<td class=\"course_name\">".((strlen(html_encode($result['course_name'])) > 80) ? substr(html_encode($result['course_name']), 0, 79) . "..." : html_encode($result['course_name']))."&nbsp;</td>\n";
+				echo "	<td class=\"assigned\">".html_encode($result['assigned'])."&nbsp;</td>\n";					
+				echo "	<td class=\"small_numbers\">".html_encode($result['lec_enrollment'])."&nbsp;</td>\n";					
+				echo "	<td class=\"small_numbers\">".html_encode($result['lec_hours'])."&nbsp;</td>\n";					
+				echo "	<td class=\"small_numbers\">".html_encode($result['lab_enrollment'])."&nbsp;</td>\n";					
+				echo "	<td class=\"small_numbers\">".html_encode($result['lab_hours'])."&nbsp;</td>\n";					
+				echo "	<td class=\"small_numbers\">".html_encode($result['tut_enrollment'])."&nbsp;</td>\n";					
+				echo "	<td class=\"small_numbers\">".html_encode($result['tut_hours'])."&nbsp;</td>\n";					
+				echo "	<td class=\"small_numbers\">".html_encode($result['sem_enrollment'])."&nbsp;</td>\n";					
+				echo "	<td class=\"small_numbers\">".html_encode($result['sem_hours'])."&nbsp;</td>\n";					
 				if($clinical_value) {
-					echo "	<td class=\"small_numbers\">".html_encode($result['coord_enrollment'])."</td>\n";
+					echo "	<td class=\"small_numbers\">".html_encode($result['coord_enrollment'])."&nbsp;</td>\n";
 				}
-				echo "	<td class=\"small_numbers\">".html_encode($result['pbl_hours'])."</td>\n";					
+				echo "	<td class=\"small_numbers\">".html_encode($result['pbl_hours'])."&nbsp;</td>\n";					
 				echo "</tr>\n";
 				$ctr++;
 			}
@@ -572,7 +572,7 @@ else {
 			{	
 				$listing 								= $i+1;
 				echo "<tr>\n";
-				echo "	<td class=\"delete\" width=\"2%\">".$listing."</td>\n";					
+				echo "	<td class=\"delete\" width=\"2%\">".$listing."&nbsp;</td>\n";					
 				echo "	<td class=\"course_number\" width=\"25%\">".html_encode($commentsArray[$i]['course_number'])."&nbsp;</td>\n";
 				echo "	<td class=\"full_description\" width=\"73%\">".html_encode($commentsArray[$i]['comments'])."&nbsp;</td>\n";
 				echo "</tr>\n";
@@ -665,22 +665,22 @@ else
 				}
 				
 				echo "<tr>\n";
-				echo "	<td class=\"delete\">".$listing."</td>\n";					
-				echo "	<td class=\"course_number\">".((strlen(html_encode($result['course_number'])) > 15) ? substr(html_encode($result['course_number']), 0, 14) . "..." : html_encode($result['course_number']))."</td>\n";
-				echo "	<td class=\"course_name\">".((strlen(html_encode($result['course_name'])) > 80) ? substr(html_encode($result['course_name']), 0, 79) . "..." : html_encode($result['course_name']))."</td>\n";
-				echo "	<td class=\"assigned\">".html_encode($result['assigned'])."</td>\n";					
-				echo "	<td class=\"small_numbers\">".html_encode($result['lec_enrollment'])."</td>\n";					
-				echo "	<td class=\"small_numbers\">".html_encode($result['lec_hours'])."</td>\n";					
-				echo "	<td class=\"small_numbers\">".html_encode($result['lab_enrollment'])."</td>\n";					
-				echo "	<td class=\"small_numbers\">".html_encode($result['lab_hours'])."</td>\n";					
-				echo "	<td class=\"small_numbers\">".html_encode($result['tut_enrollment'])."</td>\n";					
-				echo "	<td class=\"small_numbers\">".html_encode($result['tut_hours'])."</td>\n";					
-				echo "	<td class=\"small_numbers\">".html_encode($result['sem_enrollment'])."</td>\n";					
-				echo "	<td class=\"small_numbers\">".html_encode($result['sem_hours'])."</td>\n";					
+				echo "	<td class=\"delete\">".$listing."&nbsp;</td>\n";					
+				echo "	<td class=\"course_number\">".((strlen(html_encode($result['course_number'])) > 15) ? substr(html_encode($result['course_number']), 0, 14) . "..." : html_encode($result['course_number']))."&nbsp;</td>\n";
+				echo "	<td class=\"course_name\">".((strlen(html_encode($result['course_name'])) > 80) ? substr(html_encode($result['course_name']), 0, 79) . "..." : html_encode($result['course_name']))."&nbsp;</td>\n";
+				echo "	<td class=\"assigned\">".html_encode($result['assigned'])."&nbsp;</td>\n";					
+				echo "	<td class=\"small_numbers\">".html_encode($result['lec_enrollment'])."&nbsp;</td>\n";					
+				echo "	<td class=\"small_numbers\">".html_encode($result['lec_hours'])."&nbsp;</td>\n";					
+				echo "	<td class=\"small_numbers\">".html_encode($result['lab_enrollment'])."&nbsp;</td>\n";					
+				echo "	<td class=\"small_numbers\">".html_encode($result['lab_hours'])."&nbsp;</td>\n";					
+				echo "	<td class=\"small_numbers\">".html_encode($result['tut_enrollment'])."&nbsp;</td>\n";					
+				echo "	<td class=\"small_numbers\">".html_encode($result['tut_hours'])."&nbsp;</td>\n";					
+				echo "	<td class=\"small_numbers\">".html_encode($result['sem_enrollment'])."&nbsp;</td>\n";					
+				echo "	<td class=\"small_numbers\">".html_encode($result['sem_hours'])."&nbsp;</td>\n";					
 				if($clinical_value) {
-					echo "	<td class=\"small_numbers\">".html_encode($result['coord_enrollment'])."</td>\n";
+					echo "	<td class=\"small_numbers\">".html_encode($result['coord_enrollment'])."&nbsp;</td>\n";
 				}
-				echo "	<td class=\"small_numbers\">".html_encode($result['pbl_hours'])."</td>\n";					
+				echo "	<td class=\"small_numbers\">".html_encode($result['pbl_hours'])."&nbsp;</td>\n";					
 				echo "</tr>\n";
 				$ctr++;
 			}
@@ -707,9 +707,9 @@ else
 				{	
 					$listing 								= $i+1;
 					echo "<tr>\n";
-					echo "	<td class=\"delete\" width=\"2%\">".$listing."</td>\n";					
-					echo "	<td class=\"course_number\" width=\"25%\">".html_encode($commentsArray[$i]['course_number'])."</td>\n";
-					echo "	<td class=\"full_description\" width=\"73%\">".html_encode($commentsArray[$i]['comments'])."</td>\n";
+					echo "	<td class=\"delete\" width=\"2%\">".$listing."&nbsp;</td>\n";					
+					echo "	<td class=\"course_number\" width=\"25%\">".html_encode($commentsArray[$i]['course_number'])."&nbsp;</td>\n";
+					echo "	<td class=\"full_description\" width=\"73%\">".html_encode($commentsArray[$i]['comments'])."&nbsp;</td>\n";
 					echo "</tr>\n";
 				}
 			?>
@@ -761,12 +761,12 @@ else
 			foreach($results as $result)
 			{
 				echo "<tr>\n";
-				echo "	<td class=\"delete\">".$ctr."</td>\n";					
-				echo "	<td class=\"student_name\">".html_encode($result['student_name'])."</td>\n";
-				echo "	<td class=\"course_name\">".html_encode($result['degree'])."</td>\n";
-				echo "	<td class=\"course_number\">".html_encode($result['course_number'])."</td>\n";
-				echo "	<td class=\"course_number\">".html_encode($result['supervision'])."</td>\n";
-				echo "	<td class=\"full_description\">".(isset($result['comments']) && $result['comments'] != "" ? html_encode($result['comments']) : "N/A")."</td>\n";
+				echo "	<td class=\"delete\">".$ctr."&nbsp;</td>\n";					
+				echo "	<td class=\"student_name\">".html_encode($result['student_name'])."&nbsp;</td>\n";
+				echo "	<td class=\"course_name\">".html_encode($result['degree'])."&nbsp;</td>\n";
+				echo "	<td class=\"course_number\">".html_encode($result['course_number'])."&nbsp;</td>\n";
+				echo "	<td class=\"course_number\">".html_encode($result['supervision'])."&nbsp;</td>\n";
+				echo "	<td class=\"full_description\">".(isset($result['comments']) && $result['comments'] != "" ? html_encode($result['comments']) : "N/A")."&nbsp;</td>\n";
 				echo "</tr>\n";
 				$ctr++;
 			}
@@ -821,14 +821,14 @@ else
 			foreach($results as $result)
 			{
 				echo "<tr>\n";
-				echo "	<td class=\"delete\" width=\"2%\">".$ctr."</td>\n";					
-				echo "	<td class=\"student_name\" width=\"18%\">".html_encode($result['student_name'])."</td>\n";
-				echo "	<td class=\"small_numbers\" width=\"15%\">".html_encode($result['degree'])."</td>\n";
-				echo "	<td class=\"small_numbers\" width=\"10%\">".html_encode($result['active'])."</td>\n";				
-				echo "	<td class=\"course_number\" width=\"15%\">".html_encode($result['supervision'])."</td>\n";					
-				echo "	<td class=\"small_numbers\" width=\"10%\">".html_encode($result['year_started'])."</td>\n";	
-				echo "	<td class=\"small_numbers\" width=\"10%\">".html_encode($result['thesis_defended'])."</td>\n";	
-				echo "	<td class=\"full_description\" width=\"20%\">".(isset($result['comments']) && $result['comments'] != "" ? html_encode($result['comments']) : "N/A")."</td>\n";		
+				echo "	<td class=\"delete\" width=\"2%\">".$ctr."&nbsp;</td>\n";					
+				echo "	<td class=\"student_name\" width=\"18%\">".html_encode($result['student_name'])."&nbsp;</td>\n";
+				echo "	<td class=\"small_numbers\" width=\"15%\">".html_encode($result['degree'])."&nbsp;</td>\n";
+				echo "	<td class=\"small_numbers\" width=\"10%\">".html_encode($result['active'])."&nbsp;</td>\n";				
+				echo "	<td class=\"course_number\" width=\"15%\">".html_encode($result['supervision'])."&nbsp;</td>\n";					
+				echo "	<td class=\"small_numbers\" width=\"10%\">".html_encode($result['year_started'])."&nbsp;</td>\n";	
+				echo "	<td class=\"small_numbers\" width=\"10%\">".html_encode($result['thesis_defended'])."&nbsp;</td>\n";	
+				echo "	<td class=\"full_description\" width=\"20%\">".(isset($result['comments']) && $result['comments'] != "" ? html_encode($result['comments']) : "N/A")."&nbsp;</td>\n";		
 				echo "</tr>\n";
 				$ctr++;
 			}
@@ -883,11 +883,11 @@ else
 			foreach($results as $result)
 			{
 				echo "<tr>\n";
-				echo "	<td class=\"delete\">".$ctr."</td>\n";					
-				echo "	<td class=\"student_name\">".html_encode($result['student_name'])."</td>\n";
-				echo "	<td class=\"small_numbers\">".html_encode($result['degree'])."</td>\n";
-				echo "	<td class=\"course_name\">".html_encode($result['department'])."</td>\n";				
-				echo "	<td class=\"course_name\">".html_encode($result['university'])."</td>\n";
+				echo "	<td class=\"delete\">".$ctr."&nbsp;</td>\n";					
+				echo "	<td class=\"student_name\">".html_encode($result['student_name'])."&nbsp;</td>\n";
+				echo "	<td class=\"small_numbers\">".html_encode($result['degree'])."&nbsp;</td>\n";
+				echo "	<td class=\"course_name\">".html_encode($result['department'])."&nbsp;</td>\n";				
+				echo "	<td class=\"course_name\">".html_encode($result['university'])."&nbsp;</td>\n";
 				echo "	<td class=\"full_description\">".html_encode($result['role']);
 				if(isset($result['role_description']) && trim($result['role_description']) != '')
 				{
@@ -945,7 +945,7 @@ else
 					foreach($results as $result)
 					{
 						echo "<tr>\n";
-						echo "	<td class=\"delete\">".$ctr."</td>\n";					
+						echo "	<td class=\"delete\">".$ctr."&nbsp;</td>\n";					
 						echo "	<td class=\"student_name\">".html_encode($result['level']);
 						if(isset($result['level_description']) && trim($result['level_description']) != '')
 						{
@@ -958,8 +958,8 @@ else
 							echo ": " .html_encode($result['location_description']);
 						}
 						echo "</td>\n";
-						echo "	<td class=\"average_hours\">".html_encode($result['average_hours'])."</td>\n";
-						echo "	<td class=\"full_description\">".html_encode($result['description'])."</td>\n";
+						echo "	<td class=\"average_hours\">".html_encode($result['average_hours'])."&nbsp;</td>\n";
+						echo "	<td class=\"full_description\">".html_encode($result['description'])."&nbsp;</td>\n";
 						echo "</tr>\n";
 						$ctr++;
 					}
@@ -1013,14 +1013,14 @@ else
 					foreach($results as $result)
 					{
 						echo "<tr>\n";
-						echo "	<td class=\"delete\">".$ctr."</td>\n";					
-						echo "	<td class=\"student_name\">".html_encode($result['unit'])."</td>";
-						echo "	<td class=\"student_name\">" .html_encode($result['location'])."</td>\n";
-						echo "	<td class=\"average_hours\">".html_encode($result['average_hours'])."</td>\n";
-						echo "	<td class=\"full_description\">".html_encode($result['description'])."</td>\n";
+						echo "	<td class=\"delete\">".$ctr."&nbsp;</td>\n";					
+						echo "	<td class=\"student_name\">".html_encode($result['unit'])."&nbsp;</td>";
+						echo "	<td class=\"student_name\">" .html_encode($result['location'])."&nbsp;</td>\n";
+						echo "	<td class=\"average_hours\">".html_encode($result['average_hours'])."&nbsp;</td>\n";
+						echo "	<td class=\"full_description\">".html_encode($result['description'])."&nbsp;</td>\n";
 						echo "	<td class=\"student_name\">". html_encode($result['start_month']) ."-".html_encode($result['start_year']) . " / "
-															 .((html_encode($result['end_month']) == 0 ? "N/A" : html_encode($result['end_month']) ."-".html_encode($result['end_year'])))."</td>";
-						echo "	<td class=\"small_numbers\">".html_encode($result['total_hours'])."</td>";
+															 .((html_encode($result['end_month']) == 0 ? "N/A" : html_encode($result['end_month']) ."-".html_encode($result['end_year'])))."&nbsp;</td>";
+						echo "	<td class=\"small_numbers\">".html_encode($result['total_hours'])."&nbsp;</td>";
 						echo "</tr>";
 						$ctr++;
 					}
@@ -1071,11 +1071,11 @@ else
 					foreach($results as $result)
 					{
 						echo "<tr>\n";
-						echo "	<td class=\"delete\" width=\"2%\">".$ctr."</td>\n";					
-						echo "	<td class=\"course_name\" width=\"25%\">".html_encode($result['course_name'])."</td>";
-						echo "	<td class=\"course_number\" width=\"13%\">" .html_encode($result['course_number'])."</td>\n";
-						echo "	<td class=\"student_name\" width=\"30%\">".html_encode($result['type'])."</td>\n";
-						echo "	<td class=\"full_description\" width=\"30%\">".html_encode($result['description'])."</td>\n";
+						echo "	<td class=\"delete\" width=\"2%\">".$ctr."&nbsp;</td>\n";					
+						echo "	<td class=\"course_name\" width=\"25%\">".html_encode($result['course_name'])."&nbsp;</td>";
+						echo "	<td class=\"course_number\" width=\"13%\">" .html_encode($result['course_number'])."&nbsp;</td>\n";
+						echo "	<td class=\"student_name\" width=\"30%\">".html_encode($result['type'])."&nbsp;</td>\n";
+						echo "	<td class=\"full_description\" width=\"30%\">".html_encode($result['description'])."&nbsp;</td>\n";
 						echo "</tr>";
 						$ctr++;
 					}
@@ -1123,10 +1123,10 @@ else
 				foreach($results as $result)
 				{
 					echo "<tr>\n";
-					echo "	<td class=\"delete\" width=\"2%\">".$ctr."</td>\n";					
-					echo "	<td class=\"course_name\" width=\"40%\">".html_encode($result['course_name'])."</td>";
-					echo "	<td class=\"student_name\" width=\"13%\">".html_encode($result['type'])."</td>\n";
-					echo "	<td class=\"full_description\" width=\"45%\">".html_encode($result['description'])."</td>\n";
+					echo "	<td class=\"delete\" width=\"2%\">".$ctr."&nbsp;</td>\n";					
+					echo "	<td class=\"course_name\" width=\"40%\">".html_encode($result['course_name'])."&nbsp;</td>";
+					echo "	<td class=\"student_name\" width=\"13%\">".html_encode($result['type'])."&nbsp;</td>\n";
+					echo "	<td class=\"full_description\" width=\"45%\">".html_encode($result['description'])."&nbsp;</td>\n";
 					echo "</tr>";
 					$ctr++;
 				}
@@ -1178,9 +1178,9 @@ else
 			<tbody>";
 			
 			echo "<tr>\n";
-			echo "	<td class=\"delete\" width=\"2%\">".$ctr."</td>\n";
-			echo "	<td class=\"full_description\" width=\"49%\">".html_encode($result['grant_title'])."</td>";
-			echo "	<td class=\"student_name\" width=\"49%\">".html_encode($result['amount_received'])."</td>\n";
+			echo "	<td class=\"delete\" width=\"2%\">".$ctr."&nbsp;</td>\n";
+			echo "	<td class=\"full_description\" width=\"49%\">".html_encode($result['grant_title'])."&nbsp;</td>";
+			echo "	<td class=\"student_name\" width=\"49%\">".html_encode($result['amount_received'])."&nbsp;</td>\n";
 			echo "</tr>
 			<thead>
 				<tr>
@@ -1191,8 +1191,8 @@ else
 			</thead>";
 			echo "<tr>\n";
 			echo "	<td class=\"delete\" width=\"2%\"></td>\n";					
-			echo "	<td class=\"full_description\" width=\"49%\">".html_encode($result['type'])."</td>";
-			echo "	<td class=\"student_name\" width=\"49%\">".html_encode($result['role'])."</td>";
+			echo "	<td class=\"full_description\" width=\"49%\">".html_encode($result['type'])."&nbsp;</td>";
+			echo "	<td class=\"student_name\" width=\"49%\">".html_encode($result['role'])."&nbsp;</td>";
 			echo "</tr>
 			<thead>
 				<tr>
@@ -1203,9 +1203,9 @@ else
 			</thead>";
 			echo "<tr>\n";
 			echo "	<td class=\"delete\" width=\"2%\"></td>\n";					
-			echo "	<td class=\"full_description\" width=\"49%\">".html_encode($result['agency'])."</td>";
+			echo "	<td class=\"full_description\" width=\"49%\">".html_encode($result['agency'])."&nbsp;</td>";
 			echo "	<td class=\"student_name\" width=\"49%\">". html_encode($result['start_month']) ."-".html_encode($result['start_year']) . " / "
-												.((html_encode($result['end_month']) == 0 ? "N/A" : html_encode($result['end_month']) ."-".html_encode($result['end_year'])))."</td>";
+												.((html_encode($result['end_month']) == 0 ? "N/A" : html_encode($result['end_month']) ."-".html_encode($result['end_year'])))."&nbsp;</td>";
 			echo "</tr>
 			<thead>
 				<tr>
@@ -1215,7 +1215,7 @@ else
 			</thead>";
 			echo "<tr>\n";
 			echo "	<td class=\"delete\"></td>\n";					
-			echo "	<td class=\"full_description\" colspan=\"2\">".html_encode($result['principal_investigator'])."</td>";
+			echo "	<td class=\"full_description\" colspan=\"2\">".html_encode($result['principal_investigator'])."&nbsp;</td>";
 			echo "</tr>
 			<thead>
 				<tr>
@@ -1225,7 +1225,7 @@ else
 			</thead>";
 			echo "<tr>\n";
 			echo "	<td class=\"delete\"></td>\n";					
-			echo "	<td class=\"full_description\" colspan=\"2\">".html_encode($result['co_investigator_list'])."</td>";
+			echo "	<td class=\"full_description\" colspan=\"2\">".html_encode($result['co_investigator_list'])."&nbsp;</td>";
 			echo "</tr>";
 			$ctr++;
 			
@@ -1274,9 +1274,9 @@ else
 			<tbody>";
 			
 			echo "<tr>\n";
-			echo "	<td class=\"delete\" width=\"2%\">".$ctr."</td>\n";					
-			echo "	<td class=\"full_description\" width=\"49%\">".html_encode($result['grant_title'])."</td>";
-			echo "	<td class=\"student_name\" width=\"49%\">".html_encode($result['amount_received'])."</td>\n";
+			echo "	<td class=\"delete\" width=\"2%\">".$ctr."&nbsp;</td>\n";					
+			echo "	<td class=\"full_description\" width=\"49%\">".html_encode($result['grant_title'])."&nbsp;</td>";
+			echo "	<td class=\"student_name\" width=\"49%\">".html_encode($result['amount_received'])."&nbsp;</td>\n";
 			echo "</tr>
 			<thead>
 				<tr>
@@ -1287,8 +1287,8 @@ else
 			</thead>";
 			echo "<tr>\n";
 			echo "	<td class=\"delete\" width=\"2%\"></td>\n";					
-			echo "	<td class=\"full_description\" width=\"49%\">".html_encode($result['type'])."</td>";
-			echo "	<td class=\"student_name\" width=\"49%\">".html_encode($result['role'])."</td>";
+			echo "	<td class=\"full_description\" width=\"49%\">".html_encode($result['type'])."&nbsp;</td>";
+			echo "	<td class=\"student_name\" width=\"49%\">".html_encode($result['role'])."&nbsp;</td>";
 			echo "</tr>
 			<thead>
 				<tr>
@@ -1299,9 +1299,9 @@ else
 			</thead>";
 			echo "<tr>\n";
 			echo "	<td class=\"delete\" width=\"2%\"></td>\n";					
-			echo "	<td class=\"full_description\" width=\"49%\">".html_encode($result['agency'])."</td>";
+			echo "	<td class=\"full_description\" width=\"49%\">".html_encode($result['agency'])."&nbsp;</td>";
 			echo "	<td class=\"student_name\" width=\"49%\">". html_encode($result['start_month']) ."-".html_encode($result['start_year']) . " / "
-												.((html_encode($result['end_month']) == 0 ? "N/A" : html_encode($result['end_month']) ."-".html_encode($result['end_year'])))."</td>";
+												.((html_encode($result['end_month']) == 0 ? "N/A" : html_encode($result['end_month']) ."-".html_encode($result['end_year'])))."&nbsp;</td>";
 			echo "</tr>
 			<thead>
 				<tr>
@@ -1311,7 +1311,7 @@ else
 			</thead>";
 			echo "<tr>\n";
 			echo "	<td class=\"delete\"></td>\n";					
-			echo "	<td class=\"full_description\" colspan=\"2\">".html_encode($result['principal_investigator'])."</td>";
+			echo "	<td class=\"full_description\" colspan=\"2\">".html_encode($result['principal_investigator'])."&nbsp;</td>";
 			echo "</tr>
 			<thead>
 				<tr>
@@ -1321,7 +1321,7 @@ else
 			</thead>";
 			echo "<tr>\n";
 			echo "	<td class=\"delete\"></td>\n";					
-			echo "	<td class=\"full_description\" colspan=\"2\">".html_encode($result['co_investigator_list'])."</td>";
+			echo "	<td class=\"full_description\" colspan=\"2\">".html_encode($result['co_investigator_list'])."&nbsp;</td>";
 			echo "</tr>";
 			$ctr++;
 			
@@ -1370,10 +1370,10 @@ else
 		<tbody>";
 		
 		echo "<tr>\n";
-		echo "	<td class=\"delete\" width=\"2%\">".$ctr."</td>\n";					
-		echo "	<td class=\"full_description\" width=\"49%\">".html_encode($result['grant_title'])."</td>";
+		echo "	<td class=\"delete\" width=\"2%\">".$ctr."&nbsp;</td>\n";					
+		echo "	<td class=\"full_description\" width=\"49%\">".html_encode($result['grant_title'])."&nbsp;</td>";
 		echo "	<td class=\"student_name\" width=\"49%\">". html_encode($result['start_month']) ."-".html_encode($result['start_year']) . " / "
-											.((html_encode($result['end_month']) == 0 ? "N/A" : html_encode($result['end_month']) ."-".html_encode($result['end_year'])))."</td>";
+											.((html_encode($result['end_month']) == 0 ? "N/A" : html_encode($result['end_month']) ."-".html_encode($result['end_year'])))."&nbsp;</td>";
 		echo "</tr>
 		<thead>
 			<tr>
@@ -1384,8 +1384,8 @@ else
 		</thead>";
 		echo "<tr>\n";
 		echo "	<td class=\"delete\" width=\"2%\"></td>\n";					
-		echo "	<td class=\"full_description\" width=\"49%\">".html_encode($result['type'])."</td>";
-		echo "	<td class=\"student_name\" width=\"49%\">".html_encode($result['role'])."</td>";
+		echo "	<td class=\"full_description\" width=\"49%\">".html_encode($result['type'])."&nbsp;</td>";
+		echo "	<td class=\"student_name\" width=\"49%\">".html_encode($result['role'])."&nbsp;</td>";
 		echo "</tr>
 		<thead>
 			<tr>
@@ -1395,7 +1395,7 @@ else
 		</thead>";
 		echo "<tr>\n";
 		echo "	<td class=\"delete\"></td>\n";					
-		echo "	<td class=\"full_description\" colspan=\"2\">".html_encode($result['principal_investigator'])."</td>";
+		echo "	<td class=\"full_description\" colspan=\"2\">".html_encode($result['principal_investigator'])."&nbsp;</td>";
 		echo "</tr>
 		<thead>
 			<tr>
@@ -1405,7 +1405,7 @@ else
 		</thead>";
 		echo "<tr>\n";
 		echo "	<td class=\"delete\"></td>\n";					
-		echo "	<td class=\"full_description\" colspan=\"2\">".html_encode($result['co_investigator_list'])."</td>";
+		echo "	<td class=\"full_description\" colspan=\"2\">".html_encode($result['co_investigator_list'])."&nbsp;</td>";
 		echo "</tr>";
 		$ctr++;
 		
@@ -1520,13 +1520,13 @@ if($results = queryIt($proxy_id, $table, $startDate, $endDate, $db)) {
 			foreach($results as $result) {	
 					$url			= ENTRADA_URL."/research?section=edit_conference_papers&rid=".$result["conference_papers_id"];
 					echo "<tr id=\"event-".$result["conference_papers_id"]."\" class=\"event".(($is_modified) ? " modified" : "")."\">\n";
-					echo "	<td class=\"delete\">".$ctr."</td>\n";					
-					echo "	<td class=\"student_name\">".html_encode($result["lectures_papers_list"])."</td>\n";
-					echo "	<td class=\"small_numbers\">".html_encode($result["status"])."</td>\n";
-					echo "	<td class=\"course_name\">".html_encode($result["institution"])."</td>\n";
-					echo "	<td class=\"small_numbers\">".html_encode($result["location"])."</td>\n";
-					echo "	<td class=\"small_numbers\">".html_encode($result["type"])."</td>\n";
-					echo "	<td class=\"assigned\">".html_encode($result['year_reported'])."</td>\n";
+					echo "	<td class=\"delete\">".$ctr."&nbsp;</td>\n";					
+					echo "	<td class=\"student_name\">".html_encode($result["lectures_papers_list"])."&nbsp;</td>\n";
+					echo "	<td class=\"small_numbers\">".html_encode($result["status"])."&nbsp;</td>\n";
+					echo "	<td class=\"course_name\">".html_encode($result["institution"])."&nbsp;</td>\n";
+					echo "	<td class=\"small_numbers\">".html_encode($result["location"])."&nbsp;</td>\n";
+					echo "	<td class=\"small_numbers\">".html_encode($result["type"])."&nbsp;</td>\n";
+					echo "	<td class=\"assigned\">".html_encode($result['year_reported'])."&nbsp;</td>\n";
 					echo "</tr>\n";
 					$ctr++;
 				
@@ -1575,9 +1575,9 @@ else
 		foreach($results as $result)
 		{
 			echo "<tr>\n";
-			echo "	<td class=\"delete\" width=\"2%\">".$ctr."</td>\n";					
-			echo "	<td class=\"course_name\" width=\"23%\">".html_encode($result['scholarly_activity_type'])."</td>";
-			echo "	<td class=\"full_description\" width=\"75%\">".html_encode($result['description'])."</td>\n";
+			echo "	<td class=\"delete\" width=\"2%\">".$ctr."&nbsp;</td>\n";					
+			echo "	<td class=\"course_name\" width=\"23%\">".html_encode($result['scholarly_activity_type'])."&nbsp;</td>";
+			echo "	<td class=\"full_description\" width=\"75%\">".html_encode($result['description'])."&nbsp;</td>\n";
 			echo "</tr>";
 			$ctr++;
 		}
@@ -1623,9 +1623,9 @@ else
 		foreach($results as $result)
 		{
 			echo "<tr>\n";
-			echo "	<td class=\"delete\" width=\"2%\">".$ctr."</td>\n";					
-			echo "	<td class=\"course_name\" width=\"23%\">".html_encode($result['patent_activity_type'])."</td>";
-			echo "	<td class=\"full_description\" width=\"75%\">".html_encode($result['description'])."</td>\n";
+			echo "	<td class=\"delete\" width=\"2%\">".$ctr."&nbsp;</td>\n";					
+			echo "	<td class=\"course_name\" width=\"23%\">".html_encode($result['patent_activity_type'])."&nbsp;</td>";
+			echo "	<td class=\"full_description\" width=\"75%\">".html_encode($result['description'])."&nbsp;</td>\n";
 			echo "</tr>";
 			$ctr++;
 		}
@@ -1676,15 +1676,15 @@ else
 				foreach($results as $result)
 				{
 					echo "<tr>\n";
-					echo "	<td class=\"delete\" width=\"2%\">".$ctr."</td>\n";					
+					echo "	<td class=\"delete\" width=\"2%\">".$ctr."&nbsp;</td>\n";					
 					echo "	<td class=\"student_name\" width=\"23%\">".html_encode($result['site']);
 					if(isset($result['site_description']) && trim($result['site_description']) != '')
 					{
 						echo ": " .html_encode($result['site_description']);
 					}
 					echo "</td>\n";	
-					echo "	<td class=\"full_description\" width=\"60%\">".html_encode($result['description'])."</td>";
-					echo "	<td class=\"average_hours\" width=\"15%\">".html_encode($result['average_hours'])."</td>\n";
+					echo "	<td class=\"full_description\" width=\"60%\">".html_encode($result['description'])."&nbsp;</td>";
+					echo "	<td class=\"average_hours\" width=\"15%\">".html_encode($result['average_hours'])."&nbsp;</td>\n";
 					echo "</tr>";
 					$ctr++;
 				}
@@ -1734,11 +1734,11 @@ else
 				foreach($results as $result)
 				{
 					echo "<tr>\n";
-					echo "	<td class=\"delete\" width=\"2%\">".$ctr."</td>\n";					
-					echo "	<td class=\"student_name\" width=\"44%\">".html_encode($result['service'])."</td>\n";	
-					echo "	<td class=\"average_hours\" width=\"18%\">".html_encode($result['average_patients'])."</td>";
-					echo "	<td class=\"average_hours\" width=\"18%\">".html_encode($result['months'])."</td>\n";
-					echo "	<td class=\"average_hours\" width=\"18%\">".html_encode($result['average_clerks'])."</td>\n";
+					echo "	<td class=\"delete\" width=\"2%\">".$ctr."&nbsp;</td>\n";					
+					echo "	<td class=\"student_name\" width=\"44%\">".html_encode($result['service'])."&nbsp;</td>\n";	
+					echo "	<td class=\"average_hours\" width=\"18%\">".html_encode($result['average_patients'])."&nbsp;</td>";
+					echo "	<td class=\"average_hours\" width=\"18%\">".html_encode($result['months'])."&nbsp;</td>\n";
+					echo "	<td class=\"average_hours\" width=\"18%\">".html_encode($result['average_clerks'])."&nbsp;</td>\n";
 					echo "</tr>";
 					$ctr++;
 				}
@@ -1792,13 +1792,13 @@ else
 				foreach($results as $result)
 				{
 					echo "<tr>\n";
-					echo "	<td class=\"delete\" width=\"2%\">".$ctr."</td>\n";					
-					echo "	<td class=\"student_name\" width=\"13%\">".html_encode($result['clinic'])."</td>\n";	
-					echo "	<td class=\"average_hours\" width=\"17%\">".html_encode($result['patients'])."</td>";
-					echo "	<td class=\"average_hours\" width=\"17%\">".html_encode($result['half_days'])."</td>\n";
-					echo "	<td class=\"average_hours\" width=\"17%\">".html_encode($result['new_repeat'])."</td>\n";
-					echo "	<td class=\"average_hours\" width=\"17%\">".html_encode($result['weeks'])."</td>\n";
-					echo "	<td class=\"average_hours\" width=\"17%\">".html_encode($result['average_clerks'])."</td>\n";
+					echo "	<td class=\"delete\" width=\"2%\">".$ctr."&nbsp;</td>\n";					
+					echo "	<td class=\"student_name\" width=\"13%\">".html_encode($result['clinic'])."&nbsp;</td>\n";	
+					echo "	<td class=\"average_hours\" width=\"17%\">".html_encode($result['patients'])."&nbsp;</td>";
+					echo "	<td class=\"average_hours\" width=\"17%\">".html_encode($result['half_days'])."&nbsp;</td>\n";
+					echo "	<td class=\"average_hours\" width=\"17%\">".html_encode($result['new_repeat'])."&nbsp;</td>\n";
+					echo "	<td class=\"average_hours\" width=\"17%\">".html_encode($result['weeks'])."&nbsp;</td>\n";
+					echo "	<td class=\"average_hours\" width=\"17%\">".html_encode($result['average_clerks'])."&nbsp;</td>\n";
 					echo "</tr>";
 					$ctr++;
 				}
@@ -1848,16 +1848,16 @@ else
 				foreach($results as $result)
 				{
 					echo "<tr>\n";
-					echo "	<td class=\"delete\" width=\"2%\">".$ctr."</td>\n";					
-					echo "	<td class=\"student_name\" width=\"23%\">".html_encode($result['activity'])."</td>\n";	
+					echo "	<td class=\"delete\" width=\"2%\">".$ctr."&nbsp;</td>\n";					
+					echo "	<td class=\"student_name\" width=\"23%\">".html_encode($result['activity'])."&nbsp;</td>\n";	
 					echo "	<td class=\"student_name\" width=\"40%\">".html_encode($result['site']);
 					if(isset($result['site_description']) && trim($result['site_description']) != '')
 					{
 						echo ": " .html_encode($result['site_description']);
 					}
 					echo "</td>\n";
-					echo "	<td class=\"average_hours\" width=\"17%\">".html_encode($result['months'])."</td>\n";
-					echo "	<td class=\"average_hours\" width=\"18%\">".html_encode($result['average_consults'])."</td>\n";
+					echo "	<td class=\"average_hours\" width=\"17%\">".html_encode($result['months'])."&nbsp;</td>\n";
+					echo "	<td class=\"average_hours\" width=\"18%\">".html_encode($result['average_consults'])."&nbsp;</td>\n";
 					echo "</tr>";
 					$ctr++;
 				}
@@ -1905,15 +1905,15 @@ else
 				foreach($results as $result)
 				{
 					echo "<tr>\n";
-					echo "	<td class=\"delete\" width=\"2%\">".$ctr."</td>\n";
+					echo "	<td class=\"delete\" width=\"2%\">".$ctr."&nbsp;</td>\n";
 					echo "	<td class=\"student_name\" width=\"50%\">".html_encode($result['site']);
 					if(isset($result['site_description']) && trim($result['site_description']) != '')
 					{
 						echo ": " .html_encode($result['site_description']);
 					}
 					echo "</td>\n";
-					echo "	<td class=\"average_hours\" width=\"18%\">".html_encode($result['frequency'])."</td>\n";
-					echo "	<td class=\"full_description\" width=\"30%\">".html_encode($result['special_features'])."</td>\n";
+					echo "	<td class=\"average_hours\" width=\"18%\">".html_encode($result['frequency'])."&nbsp;</td>\n";
+					echo "	<td class=\"full_description\" width=\"30%\">".html_encode($result['special_features'])."&nbsp;</td>\n";
 					echo "</tr>";
 					$ctr++;
 				}
@@ -1961,15 +1961,15 @@ else
 				foreach($results as $result)
 				{
 					echo "<tr>\n";
-					echo "	<td class=\"delete\" width=\"2%\">".$ctr."</td>\n";
+					echo "	<td class=\"delete\" width=\"2%\">".$ctr."&nbsp;</td>\n";
 					echo "	<td class=\"student_name\" width=\"50%\">".html_encode($result['site']);
 					if(isset($result['site_description']) && trim($result['site_description']) != '')
 					{
 						echo ": " .html_encode($result['site_description']);
 					}
 					echo "</td>\n";
-					echo "	<td class=\"average_hours\" width=\"18%\">".html_encode($result['average_hours'])."</td>\n";
-					echo "	<td class=\"full_description\" width=\"30%\">".html_encode($result['special_features'])."</td>\n";
+					echo "	<td class=\"average_hours\" width=\"18%\">".html_encode($result['average_hours'])."&nbsp;</td>\n";
+					echo "	<td class=\"full_description\" width=\"30%\">".html_encode($result['special_features'])."&nbsp;</td>\n";
 					echo "</tr>";
 					$ctr++;
 				}
@@ -2017,15 +2017,15 @@ else
 				foreach($results as $result)
 				{
 					echo "<tr>\n";
-					echo "	<td class=\"delete\" width=\"2%\">".$ctr."</td>\n";
+					echo "	<td class=\"delete\" width=\"2%\">".$ctr."&nbsp;</td>\n";
 					echo "	<td class=\"student_name\" width=\"50%\">".html_encode($result['site']);
 					if(isset($result['site_description']) && trim($result['site_description']) != '')
 					{
 						echo ": " .html_encode($result['site_description']);
 					}
 					echo "</td>\n";
-					echo "	<td class=\"average_hours\" width=\"18%\">".html_encode($result['average_hours'])."</td>\n";
-					echo "	<td class=\"full_description\" width=\"30%\">".html_encode($result['special_features'])."</td>\n";
+					echo "	<td class=\"average_hours\" width=\"18%\">".html_encode($result['average_hours'])."&nbsp;</td>\n";
+					echo "	<td class=\"full_description\" width=\"30%\">".html_encode($result['special_features'])."&nbsp;</td>\n";
 					echo "</tr>";
 					$ctr++;
 				}
@@ -2069,8 +2069,8 @@ else
 				foreach($results as $result)
 				{
 					echo "<tr>\n";
-					echo "	<td class=\"delete\" width=\"2%\">".$ctr."</td>\n";
-					echo "	<td class=\"full_description\" width=\"98%\">".html_encode($result['description'])."</td>\n";
+					echo "	<td class=\"delete\" width=\"2%\">".$ctr."&nbsp;</td>\n";
+					echo "	<td class=\"full_description\" width=\"98%\">".html_encode($result['description'])."&nbsp;</td>\n";
 					echo "</tr>";
 					$ctr++;
 				}
@@ -2146,7 +2146,7 @@ else
 			<?php
 			}
 			echo "<tr>\n";
-			echo "	<td class=\"delete\" width=\"2%\">".$ctr."</td>\n";					
+			echo "	<td class=\"delete\" width=\"2%\">".$ctr."&nbsp;</td>\n";					
 			echo "	<td class=\"student_name\" width=\"23%\">".html_encode($result['activity_type']);
 			if(isset($result['activity_type_description']) && trim($result['activity_type_description']) != '')
 			{
@@ -2159,8 +2159,8 @@ else
 				echo ": " .html_encode($result['role_description']);
 			}
 			echo "</td>\n";
-			echo "	<td class=\"full_description\" width=\"30%\">".html_encode($result['description'])."</td>\n";
-			echo "	<td class=\"average_hours\" width=\"12%\">".(html_encode($result['commitment_type']) != "variable" ? html_encode($result['time_commitment'])." Hours / " .html_encode($result['commitment_type']) : "")."</td>\n";
+			echo "	<td class=\"full_description\" width=\"30%\">".html_encode($result['description'])."&nbsp;</td>\n";
+			echo "	<td class=\"average_hours\" width=\"12%\">".(html_encode($result['commitment_type']) != "variable" ? html_encode($result['time_commitment'])." Hours / " .html_encode($result['commitment_type']) : "")."&nbsp;</td>\n";
 			echo "  <td class=\"student_name\" width=\"13%\">";
 			if(!$clinical_value) {
 				echo html_encode($result['start_month']) ."-".html_encode($result['start_year']) . " / "
@@ -2219,11 +2219,11 @@ else
 			foreach($results as $result)
 			{
 				echo "<tr>\n";
-				echo "	<td class=\"delete\" width=\"2%\">".$ctr."</td>\n";
+				echo "	<td class=\"delete\" width=\"2%\">".$ctr."&nbsp;</td>\n";
 				echo "	<td class=\"organisation\" width=\"23%\">".html_encode($result['organisation']);
-				echo "	<td class=\"city_country\" width=\"15%\">".html_encode($result['city_country'])."</td>\n";
-				echo "	<td class=\"description\" width=\"50%\">".html_encode($result['description'])."</td>\n";
-				echo "	<td class=\"average_hours\" width=\"10%\">".html_encode($result['days_of_year'])."</td>\n";
+				echo "	<td class=\"city_country\" width=\"15%\">".html_encode($result['city_country'])."&nbsp;</td>\n";
+				echo "	<td class=\"description\" width=\"50%\">".html_encode($result['description'])."&nbsp;</td>\n";
+				echo "	<td class=\"average_hours\" width=\"10%\">".html_encode($result['days_of_year'])."&nbsp;</td>\n";
 				echo "</tr>";
 				$ctr++;
 			}
@@ -2275,12 +2275,12 @@ else
 		foreach($results as $result)
 		{	
 			echo "<tr>\n";
-			echo "	<td class=\"delete\" width=\"2%\">".$ctr."</td>\n";					
-			echo "	<td class=\"full_description\" width=\"48%\">".html_encode($result['description'])."</td>\n";
-			echo "	<td class=\"student_name\" width=\"15%\">".html_encode($result['activity_type'])."</td>\n";
-			echo "	<td class=\"student_name\" width=\"25%\">".html_encode($result['institution'])."</td>\n";
+			echo "	<td class=\"delete\" width=\"2%\">".$ctr."&nbsp;</td>\n";					
+			echo "	<td class=\"full_description\" width=\"48%\">".html_encode($result['description'])."&nbsp;</td>\n";
+			echo "	<td class=\"student_name\" width=\"15%\">".html_encode($result['activity_type'])."&nbsp;</td>\n";
+			echo "	<td class=\"student_name\" width=\"25%\">".html_encode($result['institution'])."&nbsp;</td>\n";
 			echo "	<td class=\"student_name\" width=\"10%\">". html_encode($result['start_month']) ."-".html_encode($result['start_year']) . " / "
-													 .((html_encode($result['end_month']) == 0 ? "N/A" : html_encode($result['end_month']) ."-".html_encode($result['end_year'])))."</td>";
+													 .((html_encode($result['end_month']) == 0 ? "N/A" : html_encode($result['end_month']) ."-".html_encode($result['end_year'])))."&nbsp;</td>";
 			echo "</tr>";
 			$ctr++;
 		}
@@ -2330,10 +2330,10 @@ else
 		foreach($results as $result)
 		{	
 			echo "<tr>\n";
-			echo "	<td class=\"delete\" width=\"2%\">".$ctr."</td>\n";
-			echo "	<td class=\"student_name\" width=\"18%\">".html_encode($result['category'])."</td>\n";
-			echo "	<td class=\"student_name\" width=\"20%\">".html_encode($result['prize_type'])."</td>\n";
-			echo "	<td class=\"full_description\" width=\"60%\">".html_encode($result['description'])."</td>\n";
+			echo "	<td class=\"delete\" width=\"2%\">".$ctr."&nbsp;</td>\n";
+			echo "	<td class=\"student_name\" width=\"18%\">".html_encode($result['category'])."&nbsp;</td>\n";
+			echo "	<td class=\"student_name\" width=\"20%\">".html_encode($result['prize_type'])."&nbsp;</td>\n";
+			echo "	<td class=\"full_description\" width=\"60%\">".html_encode($result['description'])."&nbsp;</td>\n";
 			echo "</tr>";
 			$ctr++;
 		}
@@ -2378,27 +2378,27 @@ else
 				<?php
 					echo "<tr>\n";
 					echo "	<td class=\"full_description\" width=\"75%\">Education Outside Clinical Setting</td>\n";
-					echo "	<td class=\"average_hours\" width=\"25%\">".html_encode($result['education'])."</td>\n";
+					echo "	<td class=\"average_hours\" width=\"25%\">".html_encode($result['education'])."&nbsp;</td>\n";
 					echo "</tr>";
 					echo "<tr>\n";
 					echo "	<td class=\"full_description\" width=\"75%\">Scholarship / Research</td>\n";
-					echo "	<td class=\"average_hours\" width=\"25%\">".html_encode($result['research'])."</td>\n";
+					echo "	<td class=\"average_hours\" width=\"25%\">".html_encode($result['research'])."&nbsp;</td>\n";
 					echo "</tr>";
 					echo "<tr>\n";
 					echo "	<td class=\"full_description\" width=\"75%\">Non-Teaching Clinical Activity</td>\n";
-					echo "	<td class=\"average_hours\" width=\"25%\">".html_encode($result['clinical'])."</td>\n";
+					echo "	<td class=\"average_hours\" width=\"25%\">".html_encode($result['clinical'])."&nbsp;</td>\n";
 					echo "</tr>";
 					echo "<tr>\n";
 					echo "	<td class=\"full_description\" width=\"75%\">Combined Clinical / Education Activity</td>\n";
-					echo "	<td class=\"average_hours\" width=\"25%\">".html_encode($result['combined'])."</td>\n";
+					echo "	<td class=\"average_hours\" width=\"25%\">".html_encode($result['combined'])."&nbsp;</td>\n";
 					echo "</tr>";
 					echo "<tr>\n";
 					echo "	<td class=\"full_description\" width=\"75%\">Service / Administration</td>\n";
-					echo "	<td class=\"average_hours\" width=\"25%\">".html_encode($result['service'])."</td>\n";
+					echo "	<td class=\"average_hours\" width=\"25%\">".html_encode($result['service'])."&nbsp;</td>\n";
 					echo "</tr>";
 					echo "<tr>\n";
 					echo "	<td class=\"full_description\" width=\"75%\">Total</td>\n";
-					echo "	<td class=\"average_hours\" width=\"25%\">".html_encode($result['total'])."</td>\n";
+					echo "	<td class=\"average_hours\" width=\"25%\">".html_encode($result['total'])."&nbsp;</td>\n";
 					echo "</tr>";
 				?>
 			</tbody>
@@ -2421,19 +2421,19 @@ else
 				<?php
 					echo "<tr>\n";
 					echo "	<td class=\"full_description\" width=\"75%\">Education (%)</td>\n";
-					echo "	<td class=\"average_hours\" width=\"25%\">".html_encode($result['education'])."</td>\n";
+					echo "	<td class=\"average_hours\" width=\"25%\">".html_encode($result['education'])."&nbsp;</td>\n";
 					echo "</tr>";
 					echo "<tr>\n";
 					echo "	<td class=\"full_description\" width=\"75%\">Scholarship / Research (%)</td>\n";
-					echo "	<td class=\"average_hours\" width=\"25%\">".html_encode($result['research'])."</td>\n";
+					echo "	<td class=\"average_hours\" width=\"25%\">".html_encode($result['research'])."&nbsp;</td>\n";
 					echo "</tr>";
 					echo "<tr>\n";
 					echo "	<td class=\"full_description\" width=\"75%\">Service / Administration (%)</td>\n";
-					echo "	<td class=\"average_hours\" width=\"25%\">".html_encode($result['service'])."</td>\n";
+					echo "	<td class=\"average_hours\" width=\"25%\">".html_encode($result['service'])."&nbsp;</td>\n";
 					echo "</tr>";
 					echo "<tr>\n";
 					echo "	<td class=\"full_description\" width=\"75%\">Total (%)</td>\n";
-					echo "	<td class=\"average_hours\" width=\"25%\">".html_encode($result['total'])."</td>\n";
+					echo "	<td class=\"average_hours\" width=\"25%\">".html_encode($result['total'])."&nbsp;</td>\n";
 					echo "</tr>";
 				?>
 			</tbody>
@@ -2460,8 +2460,8 @@ else
 				<tbody>	
 			<?php
 					echo "<tr>\n";
-					echo "	<td class=\"student_name\" width=\"50%\">".html_encode($result['hospital_hours'])."</td>\n";
-					echo "	<td class=\"student_name\" width=\"50%\">".html_encode($result['on_call_hours'])."</td>\n";
+					echo "	<td class=\"student_name\" width=\"50%\">".html_encode($result['hospital_hours'])."&nbsp;</td>\n";
+					echo "	<td class=\"student_name\" width=\"50%\">".html_encode($result['on_call_hours'])."&nbsp;</td>\n";
 					echo "</tr>";
 			?>
 			</tbody>
@@ -2486,8 +2486,8 @@ else
 			<tbody>	
 		<?php
 				echo "<tr>\n";
-				echo "	<td class=\"average_hours\" width=\"15%\">".html_encode($result['consistent'])."</td>\n";
-				echo "	<td class=\"full_description\" width=\"85%\">". ($result['consistent_comments'] == "" ? "N/A" : html_encode($result['consistent_comments']))."</td>\n";
+				echo "	<td class=\"average_hours\" width=\"15%\">".html_encode($result['consistent'])."&nbsp;</td>\n";
+				echo "	<td class=\"full_description\" width=\"85%\">". ($result['consistent_comments'] == "" ? "N/A" : html_encode($result['consistent_comments']))."&nbsp;</td>\n";
 				echo "</tr>";
 		?>
 		</tbody>
@@ -2508,8 +2508,8 @@ else
 			<tbody>	
 		<?php
 				echo "<tr>\n";
-				echo "	<td class=\"average_hours\" width=\"15%\">".html_encode($result['career_goals'])."</td>\n";
-				echo "	<td class=\"full_description\" width=\"85%\">". ($result['career_comments'] == "" ? "N/A" : html_encode($result['career_comments']))."</td>\n";
+				echo "	<td class=\"average_hours\" width=\"15%\">".html_encode($result['career_goals'])."&nbsp;</td>\n";
+				echo "	<td class=\"full_description\" width=\"85%\">". ($result['career_comments'] == "" ? "N/A" : html_encode($result['career_comments']))."&nbsp;</td>\n";
 				echo "</tr>";
 		?>
 		</tbody>
@@ -2536,9 +2536,9 @@ else
 					<tbody>	
 				<?php
 						echo "<tr>\n";
-						echo "	<td class=\"student_name\" width=\"25%\">".html_encode($result['roles'])."</td>\n";
-						echo "	<td class=\"average_hours\" width=\"15%\">".html_encode($result['roles_compatible'])."</td>\n";
-						echo "	<td class=\"full_description\" width=\"60%\">". ($result['roles_comments'] == "" ? "N/A" : html_encode($result['roles_comments']))."</td>\n";
+						echo "	<td class=\"student_name\" width=\"25%\">".html_encode($result['roles'])."&nbsp;</td>\n";
+						echo "	<td class=\"average_hours\" width=\"15%\">".html_encode($result['roles_compatible'])."&nbsp;</td>\n";
+						echo "	<td class=\"full_description\" width=\"60%\">". ($result['roles_comments'] == "" ? "N/A" : html_encode($result['roles_comments']))."&nbsp;</td>\n";
 						echo "</tr>";
 				?>
 				</tbody>
@@ -2560,7 +2560,7 @@ else
 			<tbody>	
 		<?php
 				echo "<tr>\n";
-				echo "	<td class=\"full_description\" width=\"100%\">". ($result['comments'] == "" ? "N/A" : html_encode($result['comments']))."</td>\n";
+				echo "	<td class=\"full_description\" width=\"100%\">". ($result['comments'] == "" ? "N/A" : html_encode($result['comments']))."&nbsp;</td>\n";
 				echo "</tr>";
 		?>
 		</tbody>

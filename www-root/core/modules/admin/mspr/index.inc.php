@@ -94,7 +94,23 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MSPR_ADMIN"))) {
 							?>
 						</td>
 						<td>
-							None
+							<?php
+								$revision = $mspr->getGeneratedTimestamp();
+								if (!$revision) {
+									$revisions = $mspr->getMSPRRevisions();
+									if ($revisions) {
+										$revision = array_shift($revisions);
+									}
+								}
+		
+								if ($revision) {
+								?>
+									<a href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr-revisions&id=<?php echo $user_id; ?>&get=html&revision=<?php echo $revision; ?>"><img src="<?php echo ENTRADA_URL; ?>/serve-icon.php?ext=html" /> HTML</a> <a href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr-revisions&id=<?php echo $user_id; ?>&get=pdf&revision=<?php echo $revision; ?>"><img src="<?php echo ENTRADA_URL; ?>/serve-icon.php?ext=pdf" /> PDF</a> (<a href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr-revisions&id=<?php echo $user_id; ?>">revisions</a>)		
+								<?php
+								} else {
+									echo "None";
+								} 						
+							?>
 						</td>
 					</tr>
 					<?php } 
@@ -242,7 +258,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MSPR_ADMIN"))) {
 							</td>
 							<td>
 								<?php
-								if ($revision = $mspr->getGeneratedTimestamp()) {
+								$revision = $mspr->getGeneratedTimestamp();
+								if (!$revision) {
+									$revisions = $mspr->getMSPRRevisions();
+									if ($revisions) {
+										$revision = array_shift($revisions);
+									}
+								}
+		
+								if ($revision) {
 								?>
 									<a href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr-revisions&id=<?php echo $user_id; ?>&get=html&revision=<?php echo $revision; ?>"><img src="<?php echo ENTRADA_URL; ?>/serve-icon.php?ext=html" /> HTML</a> <a href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr-revisions&id=<?php echo $user_id; ?>&get=pdf&revision=<?php echo $revision; ?>"><img src="<?php echo ENTRADA_URL; ?>/serve-icon.php?ext=pdf" /> PDF</a> (<a href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr-revisions&id=<?php echo $user_id; ?>">revisions</a>)		
 								<?php

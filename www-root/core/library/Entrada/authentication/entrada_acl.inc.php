@@ -396,10 +396,8 @@ class CourseOwnerAssertion implements Zend_Acl_Assert_Interface {
 						OR d.`proxy_id` = ".$db->qstr($user_id)."
 					)
 					AND a.`course_active` = '1'";
-		var_dump($query);
+		
 		$results = $db->GetRow($query);
-		var_dump($results);
-		var_dump($db->ErrorMsg());
 		if($results) {
 			foreach($results as $result) {
 				foreach(array("director_id", "coordinator", "admin_id") as $owner) {

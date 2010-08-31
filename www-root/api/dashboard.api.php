@@ -62,8 +62,6 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 				}
 				
 				$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["feeds"] = $new_feeds;
-				var_dump(preferences_update($MODULE, $PREFERENCES));
-				
 				break;
 			case "reset":
 				$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["feeds"] = null;

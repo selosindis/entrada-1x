@@ -420,7 +420,7 @@ function navigator_tabs() {
 	$PUBLIC_MODULES[] = array("name" => "courses", "text" => "Courses");
 	$PUBLIC_MODULES[] = array("name" => "events", "text" => "Learning Events");
 	$PUBLIC_MODULES[] = array("name" => "clerkship", "text" => "Clerkship", "resource" => "clerkship", "permission" => "read");
-	$PUBLIC_MODULES[] = array("name" => "objectives", "text" => "Curriculum Objectives", "resource" => "clerkship", "permission" => "read");
+	$PUBLIC_MODULES[] = array("name" => "objectives", "text" => "Curriculum Objectives", "resource" => "objectives", "permission" => "read");
 	$PUBLIC_MODULES[] = array("name" => "regionaled", "text" => "Accommodations", "resource" => "regionaled_tab", "permission" => "read");
 	$PUBLIC_MODULES[] = array("name" => "search", "text" => "Curriculum Search");
 	$PUBLIC_MODULES[] = array("name" => "people", "text" => "People Search");
@@ -8626,6 +8626,15 @@ function events_fetch_filtered_events() {
 	 * Provides the first parameter of MySQLs LIMIT statement by calculating which row to start results from.
 	 */
 	$limit_parameter = (int) (($_SESSION[APPLICATION_IDENTIFIER]["events"]["pp"] * $output["page_current"]) - $_SESSION[APPLICATION_IDENTIFIER]["events"]["pp"]);
+
+	/**
+	 * Save the result ID so it can be used when displaying events.
+	 */
+	if ($limit_parameter) {
+		$output["rid"] = $limit_parameter;
+	} else {
+		$output["rid"] = 0;
+	}
 
 	/**
 	 * Provide the previous query so we can have previous / next event links on the details page.

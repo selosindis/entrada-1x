@@ -838,7 +838,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 												ON b.`event_id` = a.`event_id`
 												JOIN `courses` AS c
 												ON a.`course_id` = c.`course_id`
-												AND c.`organisation_id` = ".$db->qstr($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"])."
+												AND c.`organisation_id` = ".$db->qstr($event_info["organisation_id"])."
 												WHERE (a.`event_start` BETWEEN ".$db->qstr($event_info["event_start"])." AND ".$db->qstr(($event_info["event_finish"] - 1)).")
 												AND a.`event_id` <> ".$db->qstr($event_info["event_id"])."
 												AND b.`audience_type` = 'grad_year'

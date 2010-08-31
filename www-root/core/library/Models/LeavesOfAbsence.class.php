@@ -1,6 +1,6 @@
 <?php
 
-
+require_once("Collection.class.php");
 require_once("LeaveOfAbsence.class.php");
 
 class LeavesOfAbsence extends Collection {

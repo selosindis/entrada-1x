@@ -1,6 +1,6 @@
 <?php
 
-
+require_once("Collection.class.php");
 require_once("FormalRemediation.class.php");
 
 class FormalRemediations extends Collection {

@@ -15,7 +15,9 @@ INSERT INTO `acl_permissions` (`resource_type`, `resource_value`, `entity_type`,
 ('regionaled_tab', NULL, 'group', 'resident', '1', NULL, '1', NULL, NULL, 'HasAccommodations'),
 ('awards', NULL, 'group:role', 'staff:admin', 1, 1, 1, 1, 1, NULL),
 ('mspr', NULL, 'group:role', 'staff:admin', 1, 1, 1, 1, 1, NULL),
-('mspr', NULL, 'group', 'student', 1, NULL, 1, 1, NULL, NULL);
+('mspr', NULL, 'group', 'student', 1, NULL, 1, 1, NULL, NULL),
+('user', NULL, 'group:role', 'staff:admin', 1, 1, 1, 1, 1, NULL),
+('incident', NULL, 'group:role', 'staff:admin', 1, 1, 1, 1, 1, NULL);
 
 -- Table: departments
 

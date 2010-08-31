@@ -31,9 +31,17 @@ $query		= "	SELECT a.*, b.`etype_id` as `proxy_id`, c.*, CONCAT_WS(' ', e.`first
 				ON a.`rotation_id` = c.`rotation_id`
 				JOIN `".AUTH_DATABASE."`.`user_data` AS e
 				ON b.`etype_id` = e.`id`
+				JOIN `".AUTH_DATABASE."`.`user_access` AS f
+				ON e.`id` = f.`user_id`
+				AND f.`app_id` = '".AUTH_APP_ID."'
 				WHERE b.`econtact_type` = 'student'
+				AND f.`group` >= 'student'
+				AND f.`role` >= ".$db->qstr(CLERKSHIP_FIRST_CLASS)."
+				AND c.`rotation_id` > 0
+				AND c.`rotation_id` < ".$db->qstr(MAX_ROTATION)."
 				GROUP BY b.`etype_id`, a.`rotation_id`
 				ORDER BY `fullname` ASC";
+
 $results = $db->GetAll($query);
 
 if ($results) {
@@ -74,7 +82,7 @@ if ($results) {
 							}
 						}
 					}
-					if (((($total_logged / $total_required * 100) < $result["percent_required"]) || ($result["finish"] < time() && $total_logged < $total_required)) && (((($result["event_finish"] - $result["event_start"]) / ($result["event_finish"] - time()) * 100) >= $result["percent_period_complete"]) || $result["event_finish"] < time())) {
+					if (((($total_logged / $total_required * 100) < $result["percent_required"]) || ($result["finish"] < time() && $total_logged < $total_required)) && (((($result["finish"] - $result["start"]) / ($result["finish"] - time()) * 100) >= $result["percent_period_complete"]) || $result["finish"] < time())) {
 						$overdue_logging = array(
 													"proxy_id" => $result["proxy_id"],
 													"rotation_id" => $result["rotation_id"],
@@ -87,17 +95,17 @@ if ($results) {
 						if (defined("CLERKSHIP_EMAIL_NOTIFICATIONS") && CLERKSHIP_EMAIL_NOTIFICATIONS) {
 							$mail = new Zend_Mail();
 							$mail->addHeader("X-Originating-IP", $_SERVER["REMOTE_ADDR"]);
-							$mail->addHeader("X-Section", "Clerkship Notify System",true);
+							$mail->addHeader("X-Section", "Clerkship Notification System",true);
 							$mail->clearFrom();
 							$mail->clearSubject();
 							$mail->setFrom($AGENT_CONTACTS["agent-notifications"]["email"], APPLICATION_NAME.' Clerkship System');
 							$mail->setSubject("Clerkship Logbook Deficiency Notification");
 							$NOTIFICATION_MESSAGE		 	 = array();
 											
-							$query	 		= "	SELECT CONCAT_WS(' ', `firstname`, `lastname`) as `fullname`, `email`, `id`
+							$query			= "     SELECT CONCAT_WS(' ', `firstname`, `lastname`) as `fullname`, `email`, `id` 
 												FROM `".AUTH_DATABASE."`.`user_data`
 												WHERE `id` = ".$db->quote($result["proxy_id"]);
-							$clerk		= $db->GetRow($query);
+							$clerk			= $db->GetRow($query);
 							
 							$query 			= "	SELECT a.`rotation_title`, c.`email`, CONCAT_WS(' ', c.`firstname`, c.`lastname`) as `fullname`, b.`pcoord_id`
 												FROM `".CLERKSHIP_DATABASE."`.`global_lu_rotations` AS a
@@ -118,7 +126,7 @@ if ($results) {
 											LIMIT 1";
 								$last_notified = $db->GetOne($query);
 								
-								if ($last_notified <= (strtotime("-2 weeks"))) {
+								if ($last_notified <= (strtotime("-1 week"))) {
 																	
 									$search	= array(
 														"%CLERK_FULLNAME%",
@@ -139,7 +147,7 @@ if ($results) {
 														ENTRADA_URL
 													);
 									
-									$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".DEFAULT_TEMPLATE."/email/clerkship-deficiency-admin-notification.txt");
+									$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(WEBSITE_ABSOLUTE."/templates/".DEFAULT_TEMPLATE."/email/clerkship-deficiency-admin-notification.txt");
 									$mail->setBodyText(clean_input(str_replace($search, $replace, $NOTIFICATION_MESSAGE["textbody"]), array("postclean")));
 									
 									if ($rotation["pcoord_id"]) {
@@ -147,7 +155,7 @@ if ($results) {
 															"target" => "proxy_id:".$rotation["pcoord_id"],
 															"notice_summary" => clean_input(str_replace($search, $replace, "The clerk [%CLERK_FULLNAME%] has not met the logging requirements for their current rotation [%ROTATION_TITLE%] after the allotted time. Please review their logbook entries and progress via the <a href=\"%ROTATION_OVERVIEW_URL%\">Rotation progress</a> section."), array("postclean")),
 															"display_from" => time(),
-															"display_until" => strtotime("+2 weeks"),
+															"display_until" => strtotime("+1 week"),
 															"updated_date" => time(),
 															"updated_by" => 3499,
 															"organisation_id" => 1
@@ -166,6 +174,7 @@ if ($results) {
 									$mail->clearRecipients();
 									if (strlen($rotation['email'])) {
 										$mail->addTo($rotation['email'], $rotation['fullname']);
+										$sent = true;
 										try {
 											$mail->send();
 										}
@@ -202,8 +211,8 @@ if ($results) {
 											LIMIT 1";
 								$last_notified = $db->GetOne($query);
 								
-								if ($last_notified <= (strtotime("-2 weeks"))) {
-									$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".DEFAULT_TEMPLATE."/email/clerkship-deficiency-clerk-notification.txt");
+								if ($last_notified <= (strtotime("-1 week"))) {
+									$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(WEBSITE_ABSOLUTE."/templates/".DEFAULT_TEMPLATE."/email/clerkship-deficiency-clerk-notification.txt");
 									
 									$search	= array(
 														"%ROTATION_TITLE%",
@@ -227,7 +236,7 @@ if ($results) {
 														"target" => "proxy_id:".$result["proxy_id"],
 														"notice_summary" => clean_input(str_replace($search, $replace, "It has come to our attention that you have not met the logging requirements for the [%ROTATION_TITLE%] rotation after the allotted time. Please review your logbook entries and progress, and make note of how you plan to solve this problem via the <a href=\"%ROTATION_OVERVIEW_URL%\">Rotation progress</a> section."), array("postclean")),
 														"display_from" => time(),
-														"display_until" => strtotime("+2 weeks"),
+														"display_until" => strtotime("+1 week"),
 														"updated_date" => time(),
 														"updated_by" => 3499,
 														"organisation_id" => 1
@@ -245,6 +254,7 @@ if ($results) {
 									$mail->clearRecipients();
 									if (strlen($clerk['email'])) {
 										$mail->addTo($clerk['email'], $clerk['fullname']);
+										$sent = true;
 										try {
 											$mail->send();
 										}

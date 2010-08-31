@@ -58,69 +58,84 @@ if (!defined("IN_PROFILE")) {
 		new_sidebar_item("Delegated Permissions", $sidebar_html, "delegated-permissions", "open");
 	}
 
+	$name = $user->getFirstname() . " " . $user->getLastname();
+	$number = $user->getNumber();
+	$year = $user->getGradYear();
 
 	$mspr = MSPR::get($user);
-	$number = $user->getNumber();
-	$revisions = $mspr->getMSPRRevisions();
-	$closed = $mspr->isClosed();
-	$generated = $mspr->isGenerated();
-	$revision = $mspr->getGeneratedTimestamp();
 	
-	$year = $user->getGradYear();
-	$class_data = MSPRClassData::get($year);
-	
-	$mspr_close = $mspr->getClosedTimestamp();
-	
-	if (!$mspr_close) { //no custom time.. use the class default
-		$mspr_close = $class_data->getClosedTimestamp();	
+	if (!$mspr) { //no mspr yet. create one
+		MSPR::create($user);
+		$mspr = MSPR::get($user);
 	}
-	
-	if ($type = $_GET['get']) {
-		$name = $user->getFirstname() . " " . $user->getLastname();
-		switch($type) {
-			case 'html':
-				header('Content-type: text/html');
-				header('Content-Disposition: filename="MSPR - '.$name.'('.$number.').html"');
-				
-				break;
-			case 'pdf':
-				header('Content-type: application/pdf');
-				header('Content-Disposition: attachment; filename="MSPR - '.$name.'('.$number.').pdf"');
-				break;
-			default:
-				$ERROR++;
-				$ERRORSTR[] = "Unknown file type: " . $type;
-		}
-		if (!$ERROR) {
-			ob_clear_open_buffers();
-			flush();
-			echo $mspr->getMSPRFile($type,$revision);
-			exit();	
+
+	if (!$mspr) {
+		$NOTICE++;
+		$NOTICE[] ="MSPR not yet available. Please try again later.";
+		application_log("error", "Error creating MSPR for user " .$PROXY_ID. ": " . $name . "(".$number.")");
+		display_status_messages();
+	} else {
+		$revisions = $mspr->getMSPRRevisions();
+		$closed = $mspr->isClosed();
+		$generated = $mspr->isGenerated();
+		$revision = $mspr->getGeneratedTimestamp();
+		if (!$revision && $revisions) {
+			$revision = array_shift($revisions);
 		}
 		
-	}
+		$class_data = MSPRClassData::get($year);
+		
+		$mspr_close = $mspr->getClosedTimestamp();
+		
+		if (!$mspr_close) { //no custom time.. use the class default
+			$mspr_close = $class_data->getClosedTimestamp();	
+		}
+		
+		if ($type = $_GET['get']) {
+			switch($type) {
+				case 'html':
+					header('Content-type: text/html');
+					header('Content-Disposition: filename="MSPR - '.$name.'('.$number.').html"');
+					
+					break;
+				case 'pdf':
+					header('Content-type: application/pdf');
+					header('Content-Disposition: attachment; filename="MSPR - '.$name.'('.$number.').pdf"');
+					break;
+				default:
+					$ERROR++;
+					$ERRORSTR[] = "Unknown file type: " . $type;
+			}
+			if (!$ERROR) {
+				ob_clear_open_buffers();
+				flush();
+				echo $mspr->getMSPRFile($type,$revision);
+				exit();	
+			}
+			
+		}
+		
+		$clerkship_core_completed = $mspr["Clerkship Core Completed"];
+		$clerkship_core_pending = $mspr["Clerkship Core Pending"];
+		$clerkship_elective_completed = $mspr["Clerkship Electives Completed"];
+		$clinical_evaluation_comments = $mspr["Clinical Performance Evaluation Comments"];
+		$critical_enquiry = $mspr["Critical Enquiry"];
+		$student_run_electives = $mspr["Student-Run Electives"];
+		$observerships = $mspr["Observerships"];
+		$international_activities = $mspr["International Activities"];
+		$internal_awards = $mspr["Internal Awards"];
+		$external_awards = $mspr["External Awards"];
+		$studentships = $mspr["Studentships"];
+		$contributions = $mspr["Contributions to Medical School"];
+		$leaves_of_absence = $mspr["Leaves of Absence"];
+		$formal_remediations = $mspr["Formal Remediation Received"];
+		$disciplinary_actions = $mspr["Disciplinary Actions"];
+		$community_health_and_epidemiology = $mspr["Community Health and Epidemiology"];
+		$research_citations = $mspr["Research"];
+		
 	
-	$clerkship_core_completed = $mspr["Clerkship Core Completed"];
-	$clerkship_core_pending = $mspr["Clerkship Core Pending"];
-	$clerkship_elective_completed = $mspr["Clerkship Electives Completed"];
-	$clinical_evaluation_comments = $mspr["Clinical Performance Evaluation Comments"];
-	$critical_enquiry = $mspr["Critical Enquiry"];
-	$student_run_electives = $mspr["Student-Run Electives"];
-	$observerships = $mspr["Observerships"];
-	$international_activities = $mspr["International Activities"];
-	$internal_awards = $mspr["Internal Awards"];
-	$external_awards = $mspr["External Awards"];
-	$studentships = $mspr["Studentships"];
-	$contributions = $mspr["Contributions to Medical School"];
-	$leaves_of_absence = $mspr["Leaves of Absence"];
-	$formal_remediations = $mspr["Formal Remediation Received"];
-	$disciplinary_actions = $mspr["Disciplinary Actions"];
-	$community_health_and_epidemiology = $mspr["Community Health and Epidemiology"];
-	$research_citations = $mspr["Research"];
-	
-
-	
-	display_status_messages();
+		
+		display_status_messages();
 	
 ?>
 
@@ -131,7 +146,7 @@ if ($closed) {
 ?>
 <div class="display-notice">
 	<p>MSPR submission closed on <?php echo date("F j, Y \a\\t g:i a",$mspr_close); ?></p>
-	<?php if ($generated) {	?>
+	<?php if ($revision) {	?>
 	<p>Your MSPR is available in HTML and PDF, below:</p>
 	<span class="file-block"><a href="<?php echo ENTRADA_URL; ?>/profile?section=mspr&get=html"><img src="<?php echo ENTRADA_URL; ?>/serve-icon.php?ext=html" /> HTML</a>&nbsp;&nbsp;&nbsp;<a href="<?php echo ENTRADA_URL; ?>/profile?section=mspr&get=pdf"><img src="<?php echo ENTRADA_URL; ?>/serve-icon.php?ext=pdf" /> PDF</a></span>
 	<div class="clearfix">&nbsp;</div>
@@ -868,5 +883,6 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 </div>
 
 <?php 
+	}
 }
 ?>

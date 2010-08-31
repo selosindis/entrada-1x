@@ -815,7 +815,7 @@ if (!defined("PARENT_INCLUDED")) {
 			$limit_parameter	= 5;
 			$total_pages		= 1;
 		}
-		var_dump($results);
+		
 		echo($db->ErrorMsg());
 		if ($results) {
 			echo "<br />\n";

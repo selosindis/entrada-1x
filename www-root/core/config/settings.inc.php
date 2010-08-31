@@ -70,6 +70,7 @@ define("CLERKSHIP_EMAIL_NOTIFICATIONS", true);									// Whether email notifica
 define("CLERKSHIP_LOTTERY_START", strtotime("March 1st, 2010"));
 define("CLERKSHIP_LOTTERY_FINISH", strtotime("March 14th, 2010"));
 define("CLERKSHIP_LOTTERY_MAX", 6);
+define("CLERKSHIP_FIRST_CLASS", 2011);
 $CLERKSHIP_REQUIRED_WEEKS = 14;
 $CLERKSHIP_CATEGORY_TYPE_ID = 13;
 $CLERKSHIP_EVALUATION_FORM = "http://url_of_your_schools_precptor_evaluation_of_clerk_form.pdf";

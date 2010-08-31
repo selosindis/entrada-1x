@@ -12,14 +12,12 @@
  * @copyright Copyright 2009 Queen's University. All Rights Reserved.
  *
 */
-
 @set_include_path(implode(PATH_SEPARATOR, array(
     dirname(__FILE__) . "/../core",
     dirname(__FILE__) . "/../core/includes",
     dirname(__FILE__) . "/../core/library",
     get_include_path(),
 )));
-
 /**
  * Include the Entrada init code.
  */
@@ -52,6 +50,7 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 	$user_role				= $_SESSION["details"]["role"];
 	$user_group				= $_SESSION["details"]["group"];
 	$user_organisation_id	= $_SESSION["details"]["organisation_id"];
+	$user_grad_year			= $_SESSION["details"]["grad_year"];
 } else {
 	if (!isset($_SERVER["PHP_AUTH_USER"])) {
 		http_authenticate();
@@ -83,6 +82,25 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 				$user_role				= $result["ROLE"];
 				$user_group				= $result["GROUP"];
 				$user_organisation_id	= $result["ORGANISATION_ID"];
+				
+				switch ($user_group) {
+					case "student" :
+						if ((!isset($result["ROLE"])) || (!(int) $result["ROLE"])) {
+							$user_grad_year = (date("Y", time()) + ((date("m", time()) < 7) ?  3 : 4));
+						} else {
+							$user_grad_year = $user_role;
+						}
+					break;
+					default :
+						/**
+						 * If you're not a student, always assign a graduating year,
+						 * because having no events in the calendar causes it not
+						 * to validate.
+						 */
+						$user_grad_year = (date("Y", time()) + ((date("m", time()) < 7) ?  3 : 4));
+						continue;
+					break;
+				}
 			}
 		} else {
 			$ERROR++;
@@ -120,11 +138,14 @@ if ($user_proxy_id) {
 					AND c.`action` = 'view'
 					AND c.`action_field` = 'event_id'
 					AND c.`action_value` = a.`event_id`
+					JOIN `courses` AS d
+					ON a.`course_id` = d.`course_id`
 					WHERE (".(($user_group == "student") ? " (b.`audience_type` = 'grad_year' AND b.`audience_value` = ".$db->qstr($user_role).") OR" : "")."
-					".(($user_group == "medtech") ? " (b.`audience_type` = 'grad_year' AND b.`audience_value` = '".(int) $_SESSION["details"]["grad_year"]."') OR" : "")."
+					".(($user_group == "medtech") ? " (b.`audience_type` = 'grad_year' AND b.`audience_value` = '".(int) $user_grad_year."') OR" : "")."
 					(b.`audience_type` = 'proxy_id' AND b.`audience_value` = ".$db->qstr($user_proxy_id).")	OR (b.`audience_type` = 'organisation_id' AND b.`audience_value` = ".$db->qstr($user_organisation_id)."))
 					".(($event_start) ? " AND a.`event_start` >= ".$event_start : "")."
 					".(($event_finish) ? " AND a.`event_finish` <= ".$event_finish : "")."
+					AND d.`organisation_id` = ".$db->qstr($user_organisation_id)."
 					GROUP BY a.`event_id`
 					ORDER BY a.`event_start` ASC, a.`event_id` ASC";
 	$results	= $db->GetAll($query);

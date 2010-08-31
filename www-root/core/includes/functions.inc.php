@@ -7033,7 +7033,7 @@ function clerkship_get_elective_location($event_id) {
 				ON a.`region_id` = b.`region_id` 
 				WHERE a.`event_id` = ".$db->qstr($event_id);
 	$result = $db->GetRow($query);
-	if ($result["region_name"]) {
+	if (isset($result["region_name"]) && $result["region_name"]) {
 		$result["city"] = $result["region_name"];
 	}
 	return $result;
@@ -7822,9 +7822,10 @@ function events_output_filter_controls($module_type = "") {
 							FROM `".AUTH_DATABASE."`.`user_data` AS a
 							LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 							ON b.`user_id` = a.`id`
-							WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+							WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
 							AND a.`organisation_id` IN (".$organisation_ids_string.")
 							AND (b.`group` = 'faculty' OR (b.`group` = 'resident' AND b.`role` = 'lecturer'))
+							GROUP BY a.`id`
 							ORDER BY `fullname` ASC";
 				$teacher_results = $db->GetAll($query);
 				if ($teacher_results) {
@@ -7838,7 +7839,7 @@ function events_output_filter_controls($module_type = "") {
 
 						$teachers[$r["organisation_id"]]['options'][] = array('text' => $r['fullname'], 'value' => 'teacher_'.$r['proxy_id'], 'checked' => $checked);
 					}
-					//echo lp_multiple_select_popup('teacher', $teachers, array('title'=>'Select Teachers:', 'submit_text'=>'Apply', 'cancel'=>true, 'submit'=>true));
+					echo lp_multiple_select_popup('teacher', $teachers, array('title'=>'Select Teachers:', 'submit_text'=>'Apply', 'cancel'=>true, 'submit'=>true));
 				}
 
 				// Get the possible Student filters
@@ -7846,14 +7847,15 @@ function events_output_filter_controls($module_type = "") {
 							FROM `".AUTH_DATABASE."`.`user_data` AS a
 							LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 							ON a.`id` = b.`user_id`
-							WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
-							a.`organisation_id` = ".$db->qstr($ORGANISATION_ID)."
+							WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
+							AND a.`organisation_id` = ".$db->qstr($ORGANISATION_ID)."
 							AND b.`account_active` = 'true'
 							AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
 							AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
 							AND b.`group` = 'student'
 							AND b.`role` >= ".$db->qstr(((date("Y", time()) + ((date("m", time()) < 7) ?  3 : 4)) - 4)).
 							(($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"] == "student") ? " AND a.`id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]) : "")."
+							GROUP BY a.`id`
 							ORDER BY b.`role` DESC, a.`lastname` ASC, a.`firstname` ASC";
 				$student_results = $db->GetAll($query);
 				if ($student_results) {
@@ -8406,6 +8408,8 @@ function events_fetch_filtered_events() {
 							ON `event_objectives`.`event_id` = `events`.`event_id`
 							AND `event_objectives`.`objective_type` = 'course'
 							WHERE `courses`.`course_active` = '1'
+							AND (`events`.`release_date` <= ".$db->qstr(time())." OR `events`.`release_date` = 0)
+							AND (`events`.`release_until` >= ".$db->qstr(time())." OR `events`.`release_until` = 0)
 							AND `courses`.`organisation_id` = ".$db->qstr($ORGANISATION_ID);
 
 		$query_events = "	SELECT `events`.`event_id`,
@@ -8543,6 +8547,8 @@ function events_fetch_filtered_events() {
 							LEFT JOIN `courses`
 							ON `events`.`course_id` = `courses`.`course_id`
 							WHERE `courses`.`organisation_id` = ".$db->qstr($ORGANISATION_ID)."
+							AND (`events`.`release_date` <= ".$db->qstr(time())." OR `events`.`release_date` = 0)
+							AND (`events`.`release_until` >= ".$db->qstr(time())." OR `events`.`release_until` = 0)
 							".(($display_duration) ? " AND `events`.`event_start` BETWEEN ".$db->qstr($display_duration["start"])." AND ".$db->qstr($display_duration["end"]) : "");
 
 		$query_events = "	SELECT `events`.`event_id`,

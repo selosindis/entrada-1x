@@ -49,8 +49,11 @@ class MSPR implements ArrayAccess, AttentionRequirable {
 		//first check the local timestamp
 		if (!is_null($this->closed)) {
 			return $this->closed < time();
-		} elseif ($class_closed = MSPRClassData::get($this->getUser()->getGradYear())->getClosedTimestamp()) { //check the class data
-			return $class_closed < time();
+		} elseif ($class_data = MSPRClassData::get($this->getUser()->getGradYear())) {		
+			if ($class_data) {
+				$class_closed = $class_data->getClosedTimestamp(); //check the class data
+				return $class_closed < time();
+			}
 		} 
 		return false; //no close date
 	}

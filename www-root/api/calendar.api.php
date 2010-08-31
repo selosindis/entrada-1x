@@ -120,11 +120,14 @@ if ($user_proxy_id) {
 					AND c.`action` = 'view'
 					AND c.`action_field` = 'event_id'
 					AND c.`action_value` = a.`event_id`
+					JOIN `courses` AS d
+					ON a.`course_id` = d.`course_id`
 					WHERE (".(($user_group == "student") ? " (b.`audience_type` = 'grad_year' AND b.`audience_value` = ".$db->qstr($user_role).") OR" : "")."
 					".(($user_group == "medtech") ? " (b.`audience_type` = 'grad_year' AND b.`audience_value` = '".(int) $_SESSION["details"]["grad_year"]."') OR" : "")."
 					(b.`audience_type` = 'proxy_id' AND b.`audience_value` = ".$db->qstr($user_proxy_id).")	OR (b.`audience_type` = 'organisation_id' AND b.`audience_value` = ".$db->qstr($user_organisation_id)."))
 					".(($event_start) ? " AND a.`event_start` >= ".$event_start : "")."
 					".(($event_finish) ? " AND a.`event_finish` <= ".$event_finish : "")."
+					AND d.`organisation_id` = ".$db->qstr($_SESSION["details"]["organisation_id"])."
 					GROUP BY a.`event_id`
 					ORDER BY a.`event_start` ASC, a.`event_id` ASC";
 	$results	= $db->GetAll($query);

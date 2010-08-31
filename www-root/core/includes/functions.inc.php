@@ -7474,7 +7474,10 @@ function courses_fetch_objectives($course_ids, $parent_id = 1, $objectives = fal
 							"primary_ids" => array(), 
 							"secondary_ids" => array(), 
 							"tertiary_ids" => array());
-		$query		= "	SELECT `objective_id`, `importance`, `objective_details`, `course_id` FROM `course_objectives` 
+		$query		= "	SELECT a.`objective_id`, a.`importance`, a.`objective_details`, a.`course_id` 
+						FROM `course_objectives` AS a
+						JOIN `global_lu_objectives` AS b
+						ON a.`objective_id` = b.`objective_id`
 						WHERE ".($fetch_all_text ? "" : "`importance` != '0'
 						AND `objective_type` = 'course'
 						AND ")."`course_id` IN (";
@@ -7483,7 +7486,8 @@ function courses_fetch_objectives($course_ids, $parent_id = 1, $objectives = fal
 			$escaped_course_ids .= $db->qstr($course_ids[$i]).",";
 		}
 		$escaped_course_ids .= $db->qstr($course_ids[(count($course_ids) - 1)]);
-		$query .= $escaped_course_ids.")";
+		$query .= $escaped_course_ids.")
+						ORDER BY b.`objective_order` ASC";
 		$results	= $db->GetAll($query);
 		if($results && !is_array($objective_ids)) {
 			foreach($results as $result) {
@@ -7609,7 +7613,6 @@ function courses_fetch_objectives($course_ids, $parent_id = 1, $objectives = fal
 			}
 		}
 	}
-	ksort($objectives["objectives"]);
 	if ($event_id) {
 		foreach ($objectives["objectives"] as $objective_id => $objective) {
 			if ($event_objective_details = $db->GetRow("SELECT * FROM `event_objectives`
@@ -7633,7 +7636,6 @@ function course_objectives_in_list($objectives, $parent_id, $edit_importance = f
 //			$output .= "\n<ul class=\"objective-list\" id=\"objective_".$parent_id."_list\"".((($parent_id == 1) && (count($objectives[$parent_id]["parent_ids"]) > 2) || !$hierarchical) ? " style=\"padding-left: 0; margin-top: 0\"" : " style=\"padding-left: 15px;\"")." >";
 			$output .= "\n<ul class=\"objective-list\" id=\"objective_".$parent_id."_list\"".((($parent_id == 1) || !$hierarchical) ? " style=\"padding-left: 0; margin-top: 0\"" : "").">\n";
 		}
-		ksort($objectives);
 		foreach ($objectives as $objective_id => $objective) {
 			if (($objective["parent"] == $parent_id) && (($objective["objective_children"]) || (isset($objective["primary"]) && $objective["primary"]) || (isset($objective["secondary"]) && $objective["secondary"]) || (isset($objective["tertiary"]) && $objective["tertiary"]) || ($parent_active && count($objective["parent_ids"]) > 2 && !$selected_only) || ($selected_only && $objective["event_objective"]))) {
 				$importance = ((isset($objective["primary"]) && $objective["primary"]) ? 1 : ((isset($objective["secondary"]) && $objective["secondary"]) ? 2 : ((isset($objective["tertiary"]) && $objective["tertiary"]) ? 3 : $importance)));
@@ -8673,7 +8675,6 @@ function event_objectives_in_list($objectives, $parent_id, $edit_text = false, $
 		if ($top) {
 			$output	= "\n<ul class=\"objective-list\" id=\"objective_".$parent_id."_list\"".($parent_id == 1 ? " style=\"padding-left: 0; margin-top: 0\"" : "").">\n";
 		}
-		ksort($objectives);
 		foreach ($objectives as $objective_id => $objective) {
 			$count++;
 

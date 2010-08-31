@@ -461,6 +461,7 @@ if (!defined("PARENT_INCLUDED")) {
 										ON b.`event_id` = a.`event_id`
 										LEFT JOIN `courses` AS c
 										ON a.`course_id` = c.`course_id`
+										AND c.`organisation_id` = ".$db->qstr($event_info["organisation_id"])."
 										WHERE (a.`event_start` BETWEEN ".$db->qstr($event_info["event_start"])." AND ".$db->qstr(($event_info["event_finish"] - 1)).")
 										AND c.`course_active` = '1'
 										AND a.`event_id` <> ".$db->qstr($event_info["event_id"])."

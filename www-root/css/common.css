@@ -2282,10 +2282,6 @@ padding-left:20px;
 background:transparent url(../images/checkbox-on.gif) no-repeat;
 }
 
-table {
-width:100%;
-}
-
 table.quizResults,table.tableList {
 width:100%;
 display:table;

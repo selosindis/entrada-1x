@@ -553,54 +553,6 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							</ol>
 							<div id="total_duration" class="content-small">Total time: 0 minutes.</div>
 							<input id="eventtype_duration_order" name="eventtype_duration_order" style="display: none;">
-							<script type="text/javascript">
-								var sortable;
-								function cleanupList() {
-									ol = $('duration_container');
-									if(ol.immediateDescendants().length > 0) {
-										ol.show();
-										$('duration_notice').hide();
-									} else {
-										ol.hide();
-										$('duration_notice').show();
-									}
-									total = $$('input.duration_segment').inject(0, function(acc, e) {
-										seg = parseInt($F(e));
-										if (Object.isNumber(seg)) {
-											acc += seg;
-										}
-										return acc;
-									});
-									$('total_duration').update('Total time: '+total+' minutes.');
-									sortable = Sortable.create('duration_container', {
-										onUpdate: writeOrder
-									});
-									writeOrder(null);
-								}
-
-								function writeOrder(container) {
-									$('eventtype_duration_order').value = Sortable.sequence('duration_container').join(',');
-								}
-
-								$('eventtype_ids').observe('change', function(event){
-									select = $('eventtype_ids');
-									option = select.options[select.selectedIndex];
-									li = new Element('li', {id: 'type_'+option.value, 'class': ''});
-									li.insert(option.text+"  ");
-									li.insert(new Element('a', {href: '#', onclick: '$(this).up().remove(); cleanupList(); return false;', 'class': 'remove'}).insert(new Element('img', {src: '<?php echo ENTRADA_URL; ?>/images/action-delete.gif'})));
-									span = new Element('span', {'class': 'duration_segment_container'});
-									span.insert('Duration: ');
-									name = 'duration_segment[]';
-									span.insert(new Element('input', {'class': 'duration_segment', name: 'duration_segment[]', onchange: 'cleanupList();', 'value': 0}));
-									span.insert(' minutes');
-									li.insert(span);
-									$('duration_container').insert(li);
-									cleanupList();
-									select.selectedIndex = 0;
-
-								});
-								cleanupList();
-							</script>
 						</td>
 					</tr>
 					<tr>

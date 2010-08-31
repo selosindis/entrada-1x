@@ -1,6 +1,7 @@
 <?php
 
 
+require_once("Collection.class.php");
 require_once("DisciplinaryAction.class.php");
 
 class DisciplinaryActions extends Collection {

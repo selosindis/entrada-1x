@@ -65,8 +65,32 @@ function on_checkout($buffer) {
 	$buffer = check_body($buffer);
 	$buffer = check_sidebar($buffer);
 	$buffer = check_breadcrumb($buffer);
-
+	$buffer = check_script($buffer);
 	return $buffer;
+}
+
+
+function check_script($buffer) {
+	global $SCRIPT, $ONLOAD, $ONUNLOAD;
+
+	$elements = array();
+
+	if ((isset($ONLOAD)) && (count($ONLOAD))) {
+		$elements["load"] = "document.observe('dom:loaded', function() {\n".implode(";\n\t", $ONLOAD).";\n});\n";
+	}
+
+	if ((isset($ONUNLOAD)) && (count($ONUNLOAD))) {
+		$elements["unload"] = "document.observe('unload', function() {\n".implode(";\n\t", $ONUNLOAD).";\n});\n";
+	}
+
+	if ($elements) {
+		$SCRIPT[] = "<script type=\"text/javascript\">".implode("\n",$elements)."</script>";
+	}
+	$output = "";
+	if (isset($SCRIPT) && (count($SCRIPT))) {
+		$output .= implode("\n", $SCRIPT);
+	}
+	return str_replace("%SCRIPT%", $output, $buffer);
 }
 
 /**
@@ -136,23 +160,7 @@ function check_meta($buffer) {
  * @return string buffer
  */
 function check_body($buffer) {
-	global $ONLOAD, $ONUNLOAD;
-
-	$elements = array();
-
-	if ((isset($ONLOAD)) && (count($ONLOAD))) {
-		$elements["load"] = "onload=\"".implode(", ", $ONLOAD)."\"";
-	}
-
-	if ((isset($ONUNLOAD)) && (count($ONUNLOAD))) {
-		$elements["unload"]	= "onunload=\"".implode(", ", $ONUNLOAD)."\"";
-	}
-
-	if (count($elements)) {
-		return str_replace("<body>", "<body ".implode(" ", $elements).">", $buffer);
-	} else {
-		return $buffer;
-	}
+	return $buffer;
 }
 
 /**

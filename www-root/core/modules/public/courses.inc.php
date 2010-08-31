@@ -56,7 +56,7 @@ if (!defined("PARENT_INCLUDED")) {
 	 * Check for groups which have access to the administrative side of this module
 	 * and add the appropriate toggle sidebar item.
 	 */
-	if ($ENTRADA_ACL->amIAllowed(new CourseContentResource(null, null, false), 'update')) {
+	if ($ENTRADA_ACL->amIAllowed("coursecontent", "update", false)) {
 		switch ($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]) {
 			case "admin" :
 				$admin_wording	= "Administrator View";

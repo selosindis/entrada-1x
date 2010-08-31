@@ -1116,7 +1116,7 @@ if (!defined("PARENT_INCLUDED")) {
 				</thead>
 				<tbody>
 					<?php
-					$rid = 0;
+					$rid = $learning_events["rid"];
 					$count_modified = 0;
 					$count_grad_year = 0;
 					$count_group = 0;

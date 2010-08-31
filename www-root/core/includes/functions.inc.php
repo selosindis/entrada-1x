@@ -8406,8 +8406,8 @@ function events_fetch_filtered_events() {
 							ON `event_objectives`.`event_id` = `events`.`event_id`
 							AND `event_objectives`.`objective_type` = 'course'
 							WHERE `courses`.`course_active` = '1'
-							AND `events`.`release_date` <= ".$db->qstr(time())."
-							AND `events`.`release_until` >= ".$db->qstr(time())."
+							AND (`events`.`release_date` <= ".$db->qstr(time())." OR `events`.`release_date` = 0)
+							AND (`events`.`release_until` >= ".$db->qstr(time())." OR `events`.`release_until` = 0)
 							AND `courses`.`organisation_id` = ".$db->qstr($ORGANISATION_ID);
 
 		$query_events = "	SELECT `events`.`event_id`,
@@ -8545,8 +8545,8 @@ function events_fetch_filtered_events() {
 							LEFT JOIN `courses`
 							ON `events`.`course_id` = `courses`.`course_id`
 							WHERE `courses`.`organisation_id` = ".$db->qstr($ORGANISATION_ID)."
-							AND `events`.`release_date` <= ".$db->qstr(time())."
-							AND `events`.`release_until` >= ".$db->qstr(time())."
+							AND (`events`.`release_date` <= ".$db->qstr(time())." OR `events`.`release_date` = 0)
+							AND (`events`.`release_until` >= ".$db->qstr(time())." OR `events`.`release_until` = 0)
 							".(($display_duration) ? " AND `events`.`event_start` BETWEEN ".$db->qstr($display_duration["start"])." AND ".$db->qstr($display_duration["end"]) : "");
 
 		$query_events = "	SELECT `events`.`event_id`,

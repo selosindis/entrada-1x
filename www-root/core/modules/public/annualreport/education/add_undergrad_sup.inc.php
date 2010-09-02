@@ -126,7 +126,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 							break;
 							case "index" :
 							default :
-								$url = ADMIN_URL."/education#supervision";
+								$url 	= ENTRADA_URL."/annualreport/education";
 								$msg	= "You will now be redirected to the education page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 							break;
 						}

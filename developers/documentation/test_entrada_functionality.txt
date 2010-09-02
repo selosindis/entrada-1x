@@ -1,4 +1,7 @@
 ENTRADA Functionality Test Template							Completed:	20090607
+
+@todo This needs to be updated, or something needs to be done about this.
+
 ********************************************************************************
 Description: This test suite document is intended to guide the developer/teser
 			 through all the application's possible functionalities.

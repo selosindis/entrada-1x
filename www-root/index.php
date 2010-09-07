@@ -470,7 +470,7 @@ switch ($MODULE) {
 		$router->setBasePath(ENTRADA_CORE.DIRECTORY_SEPARATOR."modules".DIRECTORY_SEPARATOR."public");
 		$router->setSection($SECTION);
 
-		if (($router) && ($route = $router->initRoute($MODULE))) {
+		if (($router) && ($route = $router->initRoute())) {
 			/**
 			 * Responsible for displaying the permission masks sidebar item
 			 * if they have more than their own permission set available.

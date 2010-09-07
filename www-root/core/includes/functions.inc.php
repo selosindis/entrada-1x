@@ -8485,7 +8485,7 @@ function events_fetch_filtered_events() {
 											WHERE `user_id` = ".$db->qstr($student_proxy_id)."
 											AND `app_id` = ".$db->qstr(AUTH_APP_ID)."
 											AND `group` = 'student'";
-								$result = $db->GetRow($query);
+								$result = $db->GetRow($squery);
 								if (($result) && ($tmp_input = (int) $result["grad_year"])) {
 									$student_grad_year = "(`event_audience`.`audience_type` = 'grad_year' AND `event_audience`.`audience_value` = ".$db->qstr($tmp_input).") OR ";
 								}

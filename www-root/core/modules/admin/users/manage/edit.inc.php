@@ -466,22 +466,22 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 					$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/picklist.js\"></script>\n";
 					$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/elementresizer.js\"></script>\n";
 
-					$i = count($ONLOAD);
-				//	$HEAD[$i]  = "<script type=\"text/javascript\">\n";
-					$ONLOAD[$i] = "addListGroup('account_type', 'cs-top');\n";
+					$i = count($HEAD);
+					$HEAD[$i]  = "<script type=\"text/javascript\">\n";
+					$HEAD[$i] .= "addListGroup('account_type', 'cs-top');\n";
 					if (is_array($SYSTEM_GROUPS)) {
 						$item = 1;
 						foreach ($SYSTEM_GROUPS as $group => $roles) {
-							$ONLOAD[$i] .= "addList('cs-top', '".ucwords($group)."', '".$group."', 'cs-sub-".$item."', ".(((isset($PROCESSED_ACCESS["group"])) && ($PROCESSED_ACCESS["group"] == $group)) ? "1" : "0").");\n";
+							$HEAD[$i] .= "addList('cs-top', '".ucwords($group)."', '".$group."', 'cs-sub-".$item."', ".(((isset($PROCESSED_ACCESS["group"])) && ($PROCESSED_ACCESS["group"] == $group)) ? "1" : "0").");\n";
 							if (is_array($roles)) {
 								foreach ($roles as $role) {
-									$ONLOAD[$i] .= "addOption('cs-sub-".$item."', '".ucwords($role)."', '".$role."', ".(((isset($PROCESSED_ACCESS["role"])) && ($PROCESSED_ACCESS["role"] == $role)) ? "1" : "0").");\n";
+									$HEAD[$i] .= "addOption('cs-sub-".$item."', '".ucwords($role)."', '".$role."', ".(((isset($PROCESSED_ACCESS["role"])) && ($PROCESSED_ACCESS["role"] == $role)) ? "1" : "0").");\n";
 								}
 							}
 							$item++;
 						}
 					}
-					//$HEAD[$i] .= "</script>\n";
+					$HEAD[$i] .= "</script>\n";
 
 					$ONLOAD[] = "initListGroup('account_type', document.getElementById('group'), document.getElementById('role'))";
 					$ONLOAD[] = "setMaxLength()";

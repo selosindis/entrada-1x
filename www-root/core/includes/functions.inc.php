@@ -1302,8 +1302,8 @@ function fetch_mcc_objectives($parent_id = 0, $objectives = array(), $course_id 
 					WHERE `course_id` = ".$db->qstr($course_id)."
 					AND `objective_type` = 'event'";
 		$allowed_objectives = $db->GetAll($query);
+		$objective_ids = array();
 		if (isset($allowed_objectives) && is_array($allowed_objectives) && count($allowed_objectives)) {
-			$objective_ids = array();
 			foreach ($allowed_objectives as $objective) {
 				$objective_ids[] = $objective["objective_id"];
 			}
@@ -1320,7 +1320,7 @@ function fetch_mcc_objectives($parent_id = 0, $objectives = array(), $course_id 
 			$objectives = fetch_mcc_objectives($result["objective_id"], $objectives, 0, (isset($objective_ids) && $objective_ids ? $objective_ids : array()));
 		}
 	}
-	if (!$parent_id && $objective_ids) {
+	if (!$parent_id && is_array($objective_ids)) {
 		foreach ($objectives as $key => $objective) {
 			if (array_search($objective["objective_id"], $objective_ids) === false) {
 				unset($objectives[$key]);
@@ -7937,6 +7937,7 @@ function events_output_filter_controls($module_type = "") {
 				$phases = array(
 					array('text'=>'Term 1', 'value'=>'phase_1', 'checked'=>''),
 					array('text'=>'Term 2', 'value'=>'phase_2', 'checked'=>''),
+					array('text'=>'Term 3', 'value'=>'phase_t3', 'checked'=>''),
 					array('text'=>'Phase 2A', 'value'=>'phase_2a', 'checked'=>''),
 					array('text'=>'Phase 2B', 'value'=>'phase_2b', 'checked'=>''),
 					array('text'=>'Phase 2C', 'value'=>'phase_2c', 'checked'=>''),

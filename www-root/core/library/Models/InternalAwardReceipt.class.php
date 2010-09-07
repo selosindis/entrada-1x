@@ -39,10 +39,10 @@ require_once("InternalAward.class.php");
 class InternalAwardReceipt {
 	private $award_receipt_id;
 	private $award;
-	private $user;
+	private $user_id;
 	private $year;
 	
-	function __construct(User $user, Award $award, $award_receipt_id, $year){
+	function __construct($user_id, Award $award, $award_receipt_id, $year){
 		$this->user = $user;
 		$this->award = $award;
 		$this->award_receipt_id = $award_receipt_id;
@@ -86,13 +86,12 @@ class InternalAwardReceipt {
 	 */
 	static public function get($award_receipt_id) {
 		global $db;
-		$query		= "SELECT a.id as `award_receipt_id`, user_id, award_id, c.title, c.award_terms, c.disabled, lastname, firstname, a.year 
+		$query		= "SELECT a.id as `award_receipt_id`, user_id, award_id, c.title, c.award_terms, c.disabled, a.year 
 				FROM `". DATABASE_NAME ."`.`student_awards_internal` a 
 				left join `". DATABASE_NAME ."`.`student_awards_internal_types` c on c.id = a.award_id 
 				WHERE a.id = ".$db->qstr($award_receipt_id);
 		
 		$result	= $db->GetRow($query);
-			
 		if ($result) {
 			$award = new InternalAward($result['award_id'], $result['title'], $result['award_terms'], $result['disabled']);
 			return new InternalAwardReceipt( $result['user_id'], $award, $result['award_receipt_id'], $result['year']);

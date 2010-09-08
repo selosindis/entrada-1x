@@ -1075,6 +1075,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 													echo "<option value=\"".(int) $objective_id."\">".html_encode($presentation_name)."</option>\n";
 												}
 											}
+										} else {
+											$NOTICE++;
+											$NOTICESTR[] = "Please ensure there are MCC Objectives attached to the course which this Learning Event resides in before attempting to add them at the event level.";
+											echo display_notice();
 										}
 										?>
 										</select>
@@ -1378,7 +1382,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						echo "<thead>\n";
 						echo "	<tr>\n";
 						echo "		<td class=\"modified\">&nbsp;</td>\n";
-						echo "		<td class=\"title sortedASC\"><div class=\"noLink\">Linked Resourcs</div></td>\n";
+						echo "		<td class=\"title sortedASC\"><div class=\"noLink\">Linked Resources</div></td>\n";
 						echo "		<td class=\"date-small\">Accessible Start</td>\n";
 						echo "		<td class=\"date-small\">Accessible Finish</td>\n";
 						echo "		<td class=\"accesses\">Hits</td>\n";

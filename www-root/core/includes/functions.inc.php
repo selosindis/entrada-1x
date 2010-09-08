@@ -1302,8 +1302,8 @@ function fetch_mcc_objectives($parent_id = 0, $objectives = array(), $course_id 
 					WHERE `course_id` = ".$db->qstr($course_id)."
 					AND `objective_type` = 'event'";
 		$allowed_objectives = $db->GetAll($query);
+		$objective_ids = array();
 		if (isset($allowed_objectives) && is_array($allowed_objectives) && count($allowed_objectives)) {
-			$objective_ids = array();
 			foreach ($allowed_objectives as $objective) {
 				$objective_ids[] = $objective["objective_id"];
 			}
@@ -1320,7 +1320,7 @@ function fetch_mcc_objectives($parent_id = 0, $objectives = array(), $course_id 
 			$objectives = fetch_mcc_objectives($result["objective_id"], $objectives, 0, (isset($objective_ids) && $objective_ids ? $objective_ids : array()));
 		}
 	}
-	if (!$parent_id && $objective_ids) {
+	if (!$parent_id && is_array($objective_ids)) {
 		foreach ($objectives as $key => $objective) {
 			if (array_search($objective["objective_id"], $objective_ids) === false) {
 				unset($objectives[$key]);
@@ -1795,9 +1795,15 @@ function preferences_update($module, $preferences = array()) {
  */
 function application_log($type, $message) {
 	global $AGENT_CONTACTS;
-
+	$page_url = 'http';
+	if ($_SERVER["HTTPS"] == "on") {
+		$page_url .= "s";
+	}
+	$page_url .= "://";
+	$page_url .= $_SERVER["SERVER_NAME"].$_SERVER["REQUEST_URI"];
+	
 	$search		= array("\t", "\r", "\n");
-	$log_entry	= date("r", time())."\t".str_replace($search, " ", $message)."\t".((isset($_SESSION["details"]["id"])) ? str_replace($search, " ", $_SESSION["details"]["id"]) : 0)."\t".((isset($_SERVER["REMOTE_ADDR"])) ? str_replace($search, " ", $_SERVER["REMOTE_ADDR"]) : 0)."\t".((isset($_SERVER["HTTP_USER_AGENT"])) ? str_replace($search, " ", $_SERVER["HTTP_USER_AGENT"]) : false)."\n";
+	$log_entry	= date("r", time())."\t".str_replace($search, " ", $message)."\t".((isset($_SESSION["details"]["id"])) ? str_replace($search, " ", $_SESSION["details"]["id"]) : 0)."\t".((isset($page_url)) ? clean_input($page_url, array("nows")) : "")."\t".((isset($_SERVER["REMOTE_ADDR"])) ? str_replace($search, " ", $_SERVER["REMOTE_ADDR"]) : 0)."\t".((isset($_SERVER["HTTP_USER_AGENT"])) ? str_replace($search, " ", $_SERVER["HTTP_USER_AGENT"]) : false)."\n";
 
 	switch($type) {
 		case "access" :
@@ -7938,6 +7944,7 @@ function events_output_filter_controls($module_type = "") {
 				$phases = array(
 					array('text'=>'Term 1', 'value'=>'phase_1', 'checked'=>''),
 					array('text'=>'Term 2', 'value'=>'phase_2', 'checked'=>''),
+					array('text'=>'Term 3', 'value'=>'phase_t3', 'checked'=>''),
 					array('text'=>'Phase 2A', 'value'=>'phase_2a', 'checked'=>''),
 					array('text'=>'Phase 2B', 'value'=>'phase_2b', 'checked'=>''),
 					array('text'=>'Phase 2C', 'value'=>'phase_2c', 'checked'=>''),
@@ -8486,7 +8493,7 @@ function events_fetch_filtered_events() {
 											WHERE `user_id` = ".$db->qstr($student_proxy_id)."
 											AND `app_id` = ".$db->qstr(AUTH_APP_ID)."
 											AND `group` = 'student'";
-								$result = $db->GetRow($query);
+								$result = $db->GetRow($squery);
 								if (($result) && ($tmp_input = (int) $result["grad_year"])) {
 									$student_grad_year = "(`event_audience`.`audience_type` = 'grad_year' AND `event_audience`.`audience_value` = ".$db->qstr($tmp_input).") OR ";
 								}

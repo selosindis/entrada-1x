@@ -350,10 +350,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 						$PROCESSED["updated_by"]			= $_SESSION["details"]["id"];
 						
 						$EVENT["category_id"]				= $PROCESSED["category_id"];
-						$query = "	SELECT `region_id` FROM `".CLERKSHIP_LOGBOOK."`.`regions`
+						$query = "	SELECT `region_id` FROM `".CLERKSHIP_DATABASE."`.`regions`
 									WHERE `countries_id` = ".$db->qstr($PROCESSED["countries_id"])."
 									AND `prov_state` = ".$db->qstr($PROCESSED["prov_state"])."
-									AND `region_name` LIKE ".$db->qstr($PROCESSED["city"]);
+									AND `region_name` LIKE ".$db->qstr($PROCESSED["city"])."
+									AND `region_active` = 1";
 						$region_id = $db->GetOne($query);
 						
 						if ($region_id) {

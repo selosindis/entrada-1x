@@ -1794,9 +1794,15 @@ function preferences_update($module, $preferences = array()) {
  */
 function application_log($type, $message) {
 	global $AGENT_CONTACTS;
-
+	$page_url = 'http';
+	if ($_SERVER["HTTPS"] == "on") {
+		$page_url .= "s";
+	}
+	$page_url .= "://";
+	$page_url .= $_SERVER["SERVER_NAME"].$_SERVER["REQUEST_URI"];
+	
 	$search		= array("\t", "\r", "\n");
-	$log_entry	= date("r", time())."\t".str_replace($search, " ", $message)."\t".((isset($_SESSION["details"]["id"])) ? str_replace($search, " ", $_SESSION["details"]["id"]) : 0)."\t".((isset($_SERVER["REMOTE_ADDR"])) ? str_replace($search, " ", $_SERVER["REMOTE_ADDR"]) : 0)."\t".((isset($_SERVER["HTTP_USER_AGENT"])) ? str_replace($search, " ", $_SERVER["HTTP_USER_AGENT"]) : false)."\n";
+	$log_entry	= date("r", time())."\t".str_replace($search, " ", $message)."\t".((isset($_SESSION["details"]["id"])) ? str_replace($search, " ", $_SESSION["details"]["id"]) : 0)."\t".((isset($page_url)) ? clean_input($page_url, array("nows")) : "")."\t".((isset($_SERVER["REMOTE_ADDR"])) ? str_replace($search, " ", $_SERVER["REMOTE_ADDR"]) : 0)."\t".((isset($_SERVER["HTTP_USER_AGENT"])) ? str_replace($search, " ", $_SERVER["HTTP_USER_AGENT"]) : false)."\n";
 
 	switch($type) {
 		case "access" :

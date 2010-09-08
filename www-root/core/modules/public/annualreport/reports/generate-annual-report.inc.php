@@ -75,9 +75,9 @@ if($result = $db->GetRow($query)) {
 	exit;
 }
 
-if((isset($_GET["clinical"])) && ($_SESSION['administrator'] || $_SESSION['departmentHead'])) {
+if(isset($_GET["clinical"])) {
 	$clinical_value = clean_input($_GET["clinical"], array("trim"));
-	if($clinical_value == "YES") {
+	if($clinical_value == "NO") {
 		$clinical_value = true;
 	} else {
 		$clinical_value = false;
@@ -202,7 +202,7 @@ function display($results, $db)
 
 $NEXT_YEAR 					= (int)$REPORT_YEAR + 1;
 
-if($clinical_value) {
+if(!$clinical_value) {
 	$DUE_DATE 				= "February 1, " . $NEXT_YEAR;
 }
 else {
@@ -217,7 +217,7 @@ $ERRORSTR				= array();
 
 $STEP					= 1;
 
-$pdf_string 	= str_replace("'", "", $_SESSION["details"]["lastname"]) . "_" .$REPORT_YEAR;
+$pdf_string 	= str_replace("'", "", $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["lastname"] ) . "_" .$REPORT_YEAR;
 $pdf_string 	= str_replace(" ", "_", $pdf_string);
 $pdf_string 	= strtolower($pdf_string);
 $output_file	= ANNUALREPORT_STORAGE."/".$pdf_string;
@@ -269,7 +269,7 @@ The Annual Report by Clinical Faculty aligns two distinct evaluative processes:<
 		{
 			$department = $result["department"];
 			echo "<tr>\n";
-			echo "	<td class=\"student_name\" width=\"25%\"><b>Name: </b>".html_encode($_SESSION["details"]["firstname"]). " " . html_encode($_SESSION["details"]["lastname"])."&nbsp;</td>\n";
+			echo "	<td class=\"student_name\" width=\"25%\"><b>Name: </b>".html_encode($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["firstname"]). " " . html_encode($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["lastname"])."&nbsp;</td>\n";
 			echo "	<td class=\"department\" width=\"75%\"><b>Department: </b>".$department."&nbsp;</td>\n";
 			echo "</tr>";
 			echo "<tr>\n";
@@ -334,7 +334,7 @@ The Annual Report by Clinical Faculty aligns two distinct evaluative processes:<
 <h1>Section I - Education</h1>
 <h2>A. Course Instruction</h2>
 <?php
-echo display_default_enrollment(true);
+//echo display_default_enrollment(true);
 $undergraduateTeachingQuery = "SELECT * 
 FROM `ar_undergraduate_teaching` 
 WHERE `year_reported` = ".$db->qstr($REPORT_YEAR)."
@@ -363,7 +363,7 @@ if(!$undergraduateTeachingResults = $db->GetAll($undergraduateTeachingQuery))
 			<col class="small_numbers" />
 			<col class="small_numbers" />
 			<col class="small_numbers" />
-			<?php if($clinical_value) { ?>
+			<?php if(!$clinical_value) { ?>
 				<col class="small_numbers" />
 			<?php } ?>
 		</colgroup>
@@ -382,7 +382,7 @@ if(!$undergraduateTeachingResults = $db->GetAll($undergraduateTeachingQuery))
 				<td class="small_numbers" id="colexam">Exam</td>
 				<td class="small_numbers" id="colsem">Clerkship Seminar</td>
 				<td class="small_numbers" id="coloth">Other</td>
-				<?php if($clinical_value) { ?>
+				<?php if(!$clinical_value) { ?>
 					<td class="small_numbers" id="colcoord_enrollment">Co-Ord Enrol</td>
 				<?php } ?>
 			</tr>
@@ -418,7 +418,7 @@ if(!$undergraduateTeachingResults = $db->GetAll($undergraduateTeachingQuery))
 				echo "	<td class=\"small_numbers\">".html_encode($result['examination_hours'])."&nbsp;</td>\n";
 				echo "	<td class=\"small_numbers\">".html_encode($result['clerkship_seminar_hours'])."&nbsp;</td>\n";
 				echo "	<td class=\"small_numbers\">".html_encode($result['other_hours'])."&nbsp;</td>\n";
-				if($clinical_value) {
+				if(!$clinical_value) {
 					echo "	<td class=\"small_numbers\">".html_encode($result['coord_enrollment'])."&nbsp;</td>\n";
 				}
 				echo "</tr>\n";
@@ -486,7 +486,7 @@ else {
 			<col class="small_numbers" />
 			<col class="small_numbers" />
 			<col class="small_numbers" />
-			<?php if($clinical_value) { ?>
+			<?php if(!$clinical_value) { ?>
 				<col class="small_numbers" />
 			<?php } ?>
 			<col class="small_numbers" />
@@ -505,7 +505,7 @@ else {
 				<td class="small_numbers" id="coltut_hours">Tut Hrs</td>				
 				<td class="small_numbers" id="colsem_enrollment">Sem Enrol</td>				
 				<td class="small_numbers" id="colsem_hours">Sem Hrs</td>
-				<?php if($clinical_value) { ?>
+				<?php if(!$clinical_value) { ?>
 					<td class="small_numbers" id="colcoord_enrollment">Co-Ord Enrol</td>
 				<?php } ?>
 				<td class="small_numbers" id="colpbl_hours">PBL Hrs</td>				
@@ -542,7 +542,7 @@ else {
 				echo "	<td class=\"small_numbers\">".html_encode($result['tut_hours'])."&nbsp;</td>\n";					
 				echo "	<td class=\"small_numbers\">".html_encode($result['sem_enrollment'])."&nbsp;</td>\n";					
 				echo "	<td class=\"small_numbers\">".html_encode($result['sem_hours'])."&nbsp;</td>\n";					
-				if($clinical_value) {
+				if(!$clinical_value) {
 					echo "	<td class=\"small_numbers\">".html_encode($result['coord_enrollment'])."&nbsp;</td>\n";
 				}
 				echo "	<td class=\"small_numbers\">".html_encode($result['pbl_hours'])."&nbsp;</td>\n";					
@@ -612,7 +612,7 @@ else
 			<col class="small_numbers" />
 			<col class="small_numbers" />
 			<col class="small_numbers" />
-			<?php if($clinical_value) { ?>
+			<?php if(!$clinical_value) { ?>
 				<col class="small_numbers" />
 			<?php } ?>
 			<col class="small_numbers" />
@@ -631,7 +631,7 @@ else
 				<td class="small_numbers" id="coltut_hours">Tut Hrs</td>				
 				<td class="small_numbers" id="colsem_enrollment">Sem Enrol</td>				
 				<td class="small_numbers" id="colsem_hours">Sem Hrs</td>
-				<?php if($clinical_value) { ?>
+				<?php if(!$clinical_value) { ?>
 					<td class="small_numbers" id="colcoord_enrollment">Co-Ord Enrol</td>
 				<?php } ?>
 				<td class="small_numbers" id="colpbl_hours">PBL Hrs</td>				
@@ -677,7 +677,7 @@ else
 				echo "	<td class=\"small_numbers\">".html_encode($result['tut_hours'])."&nbsp;</td>\n";					
 				echo "	<td class=\"small_numbers\">".html_encode($result['sem_enrollment'])."&nbsp;</td>\n";					
 				echo "	<td class=\"small_numbers\">".html_encode($result['sem_hours'])."&nbsp;</td>\n";					
-				if($clinical_value) {
+				if(!$clinical_value) {
 					echo "	<td class=\"small_numbers\">".html_encode($result['coord_enrollment'])."&nbsp;</td>\n";
 				}
 				echo "	<td class=\"small_numbers\">".html_encode($result['pbl_hours'])."&nbsp;</td>\n";					

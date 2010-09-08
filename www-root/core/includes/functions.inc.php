@@ -1697,6 +1697,7 @@ function permissions_mask() {
 					if($result["valid_from"] <= time()) {
 						if($result["valid_until"] >= time()) {
 							$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"] = (int) trim($result["assigned_by"]);
+							$_SESSION["details"]["clinical_member"] = getClinicalFromProxy($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]);
 						} else {
 							application_log("notice", $_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]." [".$_SESSION["details"]["id"]."] tried to masquerade as proxy id [".$result["assigned_by"]."], but their permission to this account has expired.");
 						}
@@ -10579,4 +10580,21 @@ function objectives_output_calendar_controls() {
 		</tr>
 	</table>
 	<?php
+}
+
+/**
+ * This function gets clinical flag from the user_data table
+ *
+ * @param int $proxy_id
+ * @return array result["clinical"]
+ */
+function getClinicalFromProxy($proxy_id) {
+    global $db;
+
+    $query = "SELECT `clinical`
+	FROM `".AUTH_DATABASE."`.`user_data` WHERE `id`=". $db->qstr($proxy_id);
+    
+    $result = $db->GetRow($query);
+    
+	return $result["clinical"];
 }

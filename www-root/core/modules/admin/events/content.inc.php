@@ -126,10 +126,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				/**
 				 * Fetch the Clinical Presentation details.
 				 */
-				$clinical_presentations_list	= array();
-				$clinical_presentations			= array();
+				$clinical_presentations_list = array();
+				$clinical_presentations = array();
 
-				$results	= fetch_mcc_objectives(0, array(), $event_info["course_id"]);
+				$results = fetch_mcc_objectives(0, array(), $event_info["course_id"]);
 				if ($results) {
 					foreach ($results as $result) {
 						$clinical_presentations_list[$result["objective_id"]] = $result["objective_name"];
@@ -154,15 +154,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						}
 					}
 				} else {
-					$query		= "	SELECT a.`objective_id` 
-									FROM `event_objectives` AS a
-									JOIN `course_objectives` AS b
-									ON b.`course_id` = ".$event_info["course_id"]."
-									AND a.`objective_id` = b.`objective_id`
-									WHERE a.`objective_type` = 'event' 
-									AND b.`objective_type` = 'event'
-									AND a.`event_id` = ".$db->qstr($EVENT_ID);
-					$results	= $db->GetAll($query);
+					$query = "	SELECT a.`objective_id`
+								FROM `event_objectives` AS a
+								JOIN `course_objectives` AS b
+								ON b.`course_id` = ".$event_info["course_id"]."
+								AND a.`objective_id` = b.`objective_id`
+								WHERE a.`objective_type` = 'event'
+								AND b.`objective_type` = 'event'
+								AND a.`event_id` = ".$db->qstr($EVENT_ID);
+					$results = $db->GetAll($query);
 					if ($results) {
 						foreach ($results as $result) {
 							$clinical_presentations[$result["objective_id"]] = $clinical_presentations_list[$result["objective_id"]];

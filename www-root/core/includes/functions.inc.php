@@ -1294,7 +1294,7 @@ function fetch_objective_title($objective_id = 0) {
 	return false;
 }
 
-function fetch_mcc_objectives($parent_id = 0, $objectives = array(), $course_id = 0, $objective_ids = array()) {
+function fetch_mcc_objectives($parent_id = 0, $objectives = array(), $course_id = 0, $objective_ids = false) {
 	global $db;
 	
 	if ($parent_id) {
@@ -1334,6 +1334,7 @@ function fetch_mcc_objectives($parent_id = 0, $objectives = array(), $course_id 
 			}
 		}
 	}
+
 	return $objectives;
 }
 

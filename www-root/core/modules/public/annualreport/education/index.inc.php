@@ -84,7 +84,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 	
 	// Get the default enrollments to be used to determine how many learners were enrolled in an event
 	$defaultEnrollments = getDefaultEnrollment();
-		
+	
 	foreach($results as $result) {
 		$eventID 			= trim($result['event_id']);
 		$currentYear 		= trim((date("Y", $result["event_start"])));
@@ -141,6 +141,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 		}
 		$previousEventID = $eventID;
 	}
+	
 	foreach($undergraduateArray as $year => $value) {
 		foreach($value as $course => $nextValue) {
 			foreach($nextValue as $coursenum => $nextNextValue) {

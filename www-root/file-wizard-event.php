@@ -110,7 +110,6 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 		<script type="text/javascript" src="<?php echo ENTRADA_URL; ?>/javascript/calendar/script/xc2_inpage.js"></script>
 
 		%HEAD%
-
 		<script type="text/javascript" src="<?php echo ENTRADA_URL; ?>/javascript/scriptaculous/prototype.js?release=<?php echo html_encode(APPLICATION_VERSION); ?>"></script>
 		<script type="text/javascript" src="<?php echo ENTRADA_URL; ?>/javascript/scriptaculous/scriptaculous.js?release=<?php echo html_encode(APPLICATION_VERSION); ?>"></script>
 		<script type="text/javascript" src="<?php echo ENTRADA_URL; ?>/javascript/common.js?release=<?php echo html_encode(APPLICATION_VERSION); ?>"></script>

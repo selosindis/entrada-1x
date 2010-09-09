@@ -46,6 +46,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	exit;
 } else {
 	define("IN_ADMIN", true);
+
 	/**
 	 * If they were logged into another application and came here, they should still be
 	 * signed in, unfortunately I can't do that yet, so they're logged out.
@@ -80,13 +81,10 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 		$proxy_id = $_SESSION["details"]["id"];
 	}
 
-	//Redirect guest users away from the admin section.
-	if($_SESSION['details']['group'] == 'guest') {
-		header("Location: ".ENTRADA_URL);
-		exit;
-	}
-
-	if(!isset($ADMINISTRATION[$_SESSION["permissions"][$proxy_id]["group"]][$_SESSION["permissions"][$proxy_id]["role"]])) {
+	/**
+	 * Redirect guests and students users away from the admin section.
+	 */
+	if (in_array($_SESSION["details"]["group"], array("guest", "student"))) {
 		header("Location: ".ENTRADA_URL);
 		exit;
 	}
@@ -127,8 +125,7 @@ $router->setSection($SECTION);
 define("PARENT_INCLUDED", true);
 
 require_once (ENTRADA_ABSOLUTE."/templates/".DEFAULT_TEMPLATE."/layouts/admin/header.tpl.php");
-
-if (($router) && ($route = $router->initRoute())) {
+if (($router) && ($route = $router->initRoute($MODULE))) {
 	/**
 	 * Responsible for displaying the permission masks sidebar item
 	 * if they have more than their own permission set available.

@@ -984,6 +984,8 @@ INSERT INTO `assessment_marking_schemes` (`id`,`name`,`handler`,`enabled`) VALUE
 
 ALTER TABLE `course_objectives` ADD COLUMN `objective_type` enum('event','course') DEFAULT 'course' AFTER `importance`;
 
+INSERT INTO `course_objectives` (`course_id`, `objective_id`, `importance`, `objective_type`) (SELECT b.`course_id`, a.`objective_id`, 1, 'event' FROM `event_objectives` AS a JOIN `events` AS b ON a.`event_id` = b.`event_id` GROUP BY a.`objective_id`, b.`course_id`);
+
 ALTER TABLE `notices` ADD INDEX (`organisation_id`);
 
 CREATE TABLE IF NOT EXISTS `settings` (

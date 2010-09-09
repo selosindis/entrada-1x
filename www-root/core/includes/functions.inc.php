@@ -84,13 +84,14 @@ function check_script($buffer) {
 	}
 
 	if ($elements) {
-		$SCRIPT[] = "<script type=\"text/javascript\">".implode("\n",$elements)."</script>";
+		$SCRIPT[] = "\n<script type=\"text/javascript\">\n".implode("\n",$elements)."</script>";
 	}
+
 	$output = "";
 	if (isset($SCRIPT) && (count($SCRIPT))) {
 		$output .= implode("\n", $SCRIPT);
 	}
-	return str_replace("%SCRIPT%", $output, $buffer);
+	return str_replace("</body>", $output."\n</body>", $buffer);
 }
 
 /**
@@ -429,10 +430,16 @@ function navigator_tabs() {
 	$PUBLIC_MODULES[] = array("name" => "events", "text" => "Learning Events");
 	$PUBLIC_MODULES[] = array("name" => "clerkship", "text" => "Clerkship", "resource" => "clerkship", "permission" => "read");
 	$PUBLIC_MODULES[] = array("name" => "objectives", "text" => "Curriculum Objectives", "resource" => "objectives", "permission" => "read");
-	$PUBLIC_MODULES[] = array("name" => "regionaled", "text" => "Accommodations", "resource" => "regionaled_tab", "permission" => "read");
+
+	if (in_array($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"], array("student", "resident"))) {
+		$PUBLIC_MODULES[] = array("name" => "regionaled", "text" => "Accommodations", "resource" => "regionaled_tab", "permission" => "read");
+	}
+
 	$PUBLIC_MODULES[] = array("name" => "search", "text" => "Curriculum Search");
 	$PUBLIC_MODULES[] = array("name" => "people", "text" => "People Search");
+
 	$PUBLIC_MODULES[] = array("name" => "annualreport", "text" => "Annual Report", "resource" => "annualreport", "permission" => "read");
+
     $PUBLIC_MODULES[] = array("name" => "profile", "text" => "My Profile");
 	$PUBLIC_MODULES[] = array("name" => "library", "text" => "Library", "target" => "_blank");
 	$PUBLIC_MODULES[] = array("name" => "help", "text" => "Help");
@@ -1697,6 +1704,7 @@ function permissions_mask() {
 					if($result["valid_from"] <= time()) {
 						if($result["valid_until"] >= time()) {
 							$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"] = (int) trim($result["assigned_by"]);
+							$_SESSION["details"]["clinical_member"] = getClinicalFromProxy($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]);
 						} else {
 							application_log("notice", $_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]." [".$_SESSION["details"]["id"]."] tried to masquerade as proxy id [".$result["assigned_by"]."], but their permission to this account has expired.");
 						}
@@ -7809,7 +7817,7 @@ function events_output_filter_controls($module_type = "") {
 				<?php
 
 				$query = "SELECT `organisation_id`,`organisation_title` FROM `".AUTH_DATABASE."`.`organisations` ORDER BY `organisation_title` ASC";
-				$organisation_results = $db->GetAll($query);
+				$organisation_results = $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
 				$organisation_ids_string = "";
 				if ($organisation_results) {
 					$organisations = array();
@@ -7833,17 +7841,21 @@ function events_output_filter_controls($module_type = "") {
 				if (!$organisation_ids_string) {
 					$organisation_ids_string = $db->qstr($ORGANISATION_ID);
 				}
+
 				// Get the possible teacher filters
 				$query = "	SELECT a.`id` AS `proxy_id`, a.`organisation_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`
 							FROM `".AUTH_DATABASE."`.`user_data` AS a
 							LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 							ON b.`user_id` = a.`id`
+							LEFT JOIN `event_contacts` AS c
+							ON c.`proxy_id` = a.`id`
 							WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
 							AND a.`organisation_id` IN (".$organisation_ids_string.")
 							AND (b.`group` = 'faculty' OR (b.`group` = 'resident' AND b.`role` = 'lecturer'))
+							AND c.`econtact_id` IS NOT NULL
 							GROUP BY a.`id`
 							ORDER BY `fullname` ASC";
-				$teacher_results = $db->GetAll($query);
+				$teacher_results = $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
 				if ($teacher_results) {
 					$teachers = $organisation_categories;
 					foreach ($teacher_results as $r) {
@@ -7873,7 +7885,7 @@ function events_output_filter_controls($module_type = "") {
 							(($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"] == "student") ? " AND a.`id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]) : "")."
 							GROUP BY a.`id`
 							ORDER BY b.`role` DESC, a.`lastname` ASC, a.`firstname` ASC";
-				$student_results = $db->GetAll($query);
+				$student_results = $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
 				if ($student_results) {
 					$students = $organisation_categories;
 					foreach ($student_results as $r) {
@@ -7893,7 +7905,7 @@ function events_output_filter_controls($module_type = "") {
 							FROM `courses` 
 							WHERE `organisation_id` = ".$db->qstr($ORGANISATION_ID)."
 							ORDER BY `course_name` ASC";
-				$courses_results = $db->GetAll($query);
+				$courses_results = $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
 				if ($courses_results) {
 					$courses = array();
 					foreach ($courses_results as $c) {
@@ -7911,7 +7923,7 @@ function events_output_filter_controls($module_type = "") {
 
 				// Get the possible event type filters
 				$query = "SELECT `eventtype_id`, `eventtype_title` FROM `events_lu_eventtypes` WHERE `eventtype_active` = '1' ORDER BY `eventtype_order` ASC";
-				$eventtype_results = $db->GetAll($query);
+				$eventtype_results = $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
 				if ($eventtype_results) {
 					$eventtypes = array();
 					foreach ($eventtype_results as $result) {
@@ -10586,4 +10598,21 @@ function objectives_output_calendar_controls() {
 		</tr>
 	</table>
 	<?php
+}
+
+/**
+ * This function gets clinical flag from the user_data table
+ *
+ * @param int $proxy_id
+ * @return array result["clinical"]
+ */
+function getClinicalFromProxy($proxy_id) {
+    global $db;
+
+    $query = "SELECT `clinical`
+	FROM `".AUTH_DATABASE."`.`user_data` WHERE `id`=". $db->qstr($proxy_id);
+    
+    $result = $db->GetRow($query);
+    
+	return $result["clinical"];
 }

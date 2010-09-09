@@ -521,6 +521,12 @@ $ADMINISTRATION["staff"]["pcoordinator"] = array(
 											"assistant_support"	=> true
 											);
 
+$ADMINISTRATION["staff"]["staff"] = array(
+										"start_file" => "dashboard",
+										"registered" => array("dashboard"),
+										"assistant_support"	=> false
+										);
+
 /**
  * These are the avialable character sets in both PHP and their cooresponding MySQL names and collation.
  */

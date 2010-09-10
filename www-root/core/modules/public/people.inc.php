@@ -460,7 +460,6 @@ if (!defined("PARENT_INCLUDED")) {
 
 	$i = count($HEAD);
 	$HEAD[$i]  = "<script type=\"text/javascript\">\n";
-	$HEAD[$i]  .= "document.observe(\"dom:loaded\", function() {\n";
 	$HEAD[$i] .= "addListGroup('account_type', 'cs-top');\n";
 	if (is_array($browse_people)) {
 		foreach ($browse_people as $key => $result) {
@@ -472,7 +471,6 @@ if (!defined("PARENT_INCLUDED")) {
 				}
 		}
 	}
-	$HEAD[$i] .= "});\n";
 	$HEAD[$i] .= "</script>\n";
 
 	$ONLOAD[] = "initListGroup('account_type', $('group'), $('role'))";

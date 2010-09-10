@@ -6135,6 +6135,46 @@ function google_create_id() {
 	return false;
 }
 
+function google_reset_password($password = "") {
+	global $db, $GOOGLE_APPS;
+
+	if ((isset($GOOGLE_APPS)) && (is_array($GOOGLE_APPS)) && (isset($GOOGLE_APPS["active"])) && ((bool) $GOOGLE_APPS["active"]) && ($password)) {
+		$query = "	SELECT a.*, b.`group`, b.`role`
+					FROM `".AUTH_DATABASE."`.`user_data` AS a
+					LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+					ON a.`id` = b.`user_id`
+					WHERE a.`id` = ".$db->qstr($_SESSION["details"]["id"])."
+					AND b.`app_id` = ".$db->qstr(AUTH_APP_ID);
+		$result	= $db->GetRow($query);
+		if ($result) {
+			if (!in_array($result["google_id"], array("", "opt-out", "opt-in"))) {
+				try {
+					$client = Zend_Gdata_ClientLogin::getHttpClient($GOOGLE_APPS["admin_username"], $GOOGLE_APPS["admin_password"], Zend_Gdata_Gapps::AUTH_SERVICE_NAME);
+					$service = new Zend_Gdata_Gapps($client, $GOOGLE_APPS["domain"]);
+
+					$account = $service->retrieveUser($result["google_id"]);
+					$account->login->password = $password;
+					$account->save();
+
+					application_log("success", "Successfully updated Google account password for google_id [".$result["google_id"]."] and proxy_id [".$_SESSION["details"]["id"]."].");
+
+					return true;
+				} catch (Zend_Gdata_Gapps_ServiceException $e) {
+					if (is_array($e->getErrors())) {
+						foreach ($e->getErrors() as $error) {
+							application_log("error", "Unable to change password for google_id [".$google_id."] for proxy_id [".$_SESSION["details"]["id"]."]. Error details: [".$error->getErrorCode()."] ".$error->getReason().".");
+						}
+					}
+				}
+			}
+		} else {
+			application_log("error", "google_reset_password() failed because we were unable to fetch information on proxy_id [".$_SESSION["details"]["id"]."]. Database said: ".$db->ErrorMsg());
+		}
+	}
+
+	return false;
+}
+
 /**
  * Function takes minutes and converts them to hours.
  *

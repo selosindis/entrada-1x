@@ -25,10 +25,10 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
 }  else {
 	
-	require_once("Models/User.class.php");
-	require_once("Models/FormalRemediations.class.php");
+	require_once("Models/users/User.class.php");
+	require_once("Models/mspr/FormalRemediations.class.php");
 		
-	$user = new User($user_record["id"], $user_record["username"], $user_record["lastname"], $user_record["firstname"]);
+	$user = User::get($user_record["id"]);
 	
 	$PAGE_META["title"]			= "Formal Remediations";
 	$PAGE_META["description"]	= "";

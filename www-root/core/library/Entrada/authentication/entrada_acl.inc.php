@@ -82,7 +82,8 @@ class Entrada_ACL extends ACL_Factory {
 									"notifications",
 									"reports"
 									),
-			"annualreport"
+			"annualreport",
+			"tasks"
 		)
 	);
 	/**

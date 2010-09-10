@@ -61,7 +61,7 @@ function award_details_edit($award) {
 	return ob_get_clean();
 }
 
-function award_recipients_list($award) {
+function award_recipients_list(InternalAward $award) {
 		$receipts = $award->getRecipients();
 		?>
 		<table class="award_history tableList" cellspacing="0">

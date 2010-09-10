@@ -426,6 +426,7 @@ function navigator_tabs() {
 	$PUBLIC_MODULES[] = array("name" => "dashboard", "text" => "Dashboard");
 	$PUBLIC_MODULES[] = array("name" => "communities", "text" => "Communities");
 	$PUBLIC_MODULES[] = array("name" => "courses", "text" => "Courses");
+	$PUBLIC_MODULES[] = array("name" => "tasks", "text" => "Tasks");
 	$PUBLIC_MODULES[] = array("name" => "events", "text" => "Learning Events");
 	$PUBLIC_MODULES[] = array("name" => "clerkship", "text" => "Clerkship", "resource" => "clerkship", "permission" => "read");
 	$PUBLIC_MODULES[] = array("name" => "objectives", "text" => "Curriculum Objectives", "resource" => "objectives", "permission" => "read");
@@ -10136,26 +10137,27 @@ function display_mspr_details($data) {
 
 function require_mspr_models() {
 	
-	require_once("Models/User.class.php");
+	require_once("Models/users/User.class.php");
 	
-	require_once("Models/Approvable.interface.php");
-	require_once("Models/AttentionRequirable.interface.php");
+	require_once("Models/utility/Approvable.interface.php");
+	require_once("Models/utility/AttentionRequirable.interface.php");
 	
-	require_once("Models/InternalAwardReceipts.class.php");
-	require_once("Models/ExternalAwardReceipts.class.php");
-	require_once("Models/Studentships.class.php");
-	require_once("Models/ClinicalPerformanceEvaluations.class.php");
-	require_once("Models/Contributions.class.php");
-	require_once("Models/DisciplinaryActions.class.php");
-	require_once("Models/LeavesOfAbsence.class.php");
-	require_once("Models/FormalRemediations.class.php");
-	require_once("Models/ClerkshipRotations.class.php");
-	require_once("Models/StudentRunElectives.class.php");
-	require_once("Models/Observerships.class.php");
-	require_once("Models/InternationalActivities.class.php");
-	require_once("Models/CriticalEnquiry.class.php");
-	require_once("Models/CommunityHealthAndEpidemiology.class.php");
-	require_once("Models/ResearchCitations.class.php");
+	require_once("Models/awards/InternalAwardReceipts.class.php");
+	
+	require_once("Models/mspr/ExternalAwardReceipts.class.php");
+	require_once("Models/mspr/Studentships.class.php");
+	require_once("Models/mspr/ClinicalPerformanceEvaluations.class.php");
+	require_once("Models/mspr/Contributions.class.php");
+	require_once("Models/mspr/DisciplinaryActions.class.php");
+	require_once("Models/mspr/LeavesOfAbsence.class.php");
+	require_once("Models/mspr/FormalRemediations.class.php");
+	require_once("Models/mspr/ClerkshipRotations.class.php");
+	require_once("Models/mspr/StudentRunElectives.class.php");
+	require_once("Models/mspr/Observerships.class.php");
+	require_once("Models/mspr/InternationalActivities.class.php");
+	require_once("Models/mspr/CriticalEnquiry.class.php");
+	require_once("Models/mspr/CommunityHealthAndEpidemiology.class.php");
+	require_once("Models/mspr/ResearchCitations.class.php");
 }
 
 function getMonthName($month_number) {
@@ -10579,4 +10581,14 @@ function objectives_output_calendar_controls() {
 		</tr>
 	</table>
 	<?php
+}
+
+function add_task_sidebar () {
+	require_once("Models/users/User.class.php");
+	global $ENTRADA_ACL, $PROXY_ID;
+	$user = User::get($PROXY_ID);
+	$sidebar_html  = "<ul>";
+	$sidebar_html .= "</ul>";
+
+	new_sidebar_item("Task List", $sidebar_html, "task-list", "open");
 }

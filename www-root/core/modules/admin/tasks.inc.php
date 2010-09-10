@@ -15,12 +15,10 @@
  * You should have received a copy of the GNU General Public License
  * along with Entrada.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Primary controller file for the Users module.
- * /admin/users
  *
  * @author Organisation: Queen's University
  * @author Unit: School of Medicine
- * @author Developer: Jonathan Fingland <jonathan.fingland@queensu.ca>
+ * @author Developer: Matt Simpson <matt.simpson@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
 */
@@ -30,7 +28,7 @@ if (!defined("PARENT_INCLUDED")) {
 } elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	header("Location: ".ENTRADA_URL);
 	exit;
-} elseif (!$ENTRADA_ACL->amIAllowed("awards", "update", false)) {
+} elseif (!$ENTRADA_ACL->amIAllowed("tasks", "create", false)) {
 	$ERROR++;
 	$ERRORSTR[]	= "Your account does not have the permissions required to use this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
 
@@ -38,17 +36,14 @@ if (!defined("PARENT_INCLUDED")) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
-	define("IN_AWARDS", true);
-	require_once("Models/awards/InternalAwards.class.php");
-	require_once("awards/includes/functions.inc.php");
-	
-	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/awards", "title" => "Manage Awards");
+	define("IN_TASKS", true);
+
+	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/tasks", "title" => "Manage Tasks");
 
 	if (($router) && ($router->initRoute())) {
 		$module_file = $router->getRoute();
 		if ($module_file) {
 			require_once($module_file);
 		}
-
 	}
 }

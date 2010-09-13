@@ -84,13 +84,14 @@ function check_script($buffer) {
 	}
 
 	if ($elements) {
-		$SCRIPT[] = "<script type=\"text/javascript\">".implode("\n",$elements)."</script>";
+		$SCRIPT[] = "\n<script type=\"text/javascript\">\n".implode("\n",$elements)."</script>";
 	}
+
 	$output = "";
 	if (isset($SCRIPT) && (count($SCRIPT))) {
 		$output .= implode("\n", $SCRIPT);
 	}
-	return str_replace("%SCRIPT%", $output, $buffer);
+	return str_replace("</body>", $output."\n</body>", $buffer);
 }
 
 /**
@@ -429,10 +430,16 @@ function navigator_tabs() {
 	$PUBLIC_MODULES[] = array("name" => "events", "text" => "Learning Events");
 	$PUBLIC_MODULES[] = array("name" => "clerkship", "text" => "Clerkship", "resource" => "clerkship", "permission" => "read");
 	$PUBLIC_MODULES[] = array("name" => "objectives", "text" => "Curriculum Objectives", "resource" => "objectives", "permission" => "read");
-	$PUBLIC_MODULES[] = array("name" => "regionaled", "text" => "Accommodations", "resource" => "regionaled_tab", "permission" => "read");
+
+	if (in_array($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"], array("student", "resident"))) {
+		$PUBLIC_MODULES[] = array("name" => "regionaled", "text" => "Accommodations", "resource" => "regionaled_tab", "permission" => "read");
+	}
+
 	$PUBLIC_MODULES[] = array("name" => "search", "text" => "Curriculum Search");
 	$PUBLIC_MODULES[] = array("name" => "people", "text" => "People Search");
+
 	$PUBLIC_MODULES[] = array("name" => "annualreport", "text" => "Annual Report", "resource" => "annualreport", "permission" => "read");
+
     $PUBLIC_MODULES[] = array("name" => "profile", "text" => "My Profile");
 	$PUBLIC_MODULES[] = array("name" => "library", "text" => "Library", "target" => "_blank");
 	$PUBLIC_MODULES[] = array("name" => "help", "text" => "Help");
@@ -1287,7 +1294,7 @@ function fetch_objective_title($objective_id = 0) {
 	return false;
 }
 
-function fetch_mcc_objectives($parent_id = 0, $objectives = array(), $course_id = 0, $objective_ids = array()) {
+function fetch_mcc_objectives($parent_id = 0, $objectives = array(), $course_id = 0, $objective_ids = false) {
 	global $db;
 	
 	if ($parent_id) {
@@ -1327,6 +1334,7 @@ function fetch_mcc_objectives($parent_id = 0, $objectives = array(), $course_id 
 			}
 		}
 	}
+
 	return $objectives;
 }
 
@@ -6127,6 +6135,50 @@ function google_create_id() {
 	return false;
 }
 
+function google_reset_password($password = "") {
+	global $db, $GOOGLE_APPS;
+
+	if ((isset($GOOGLE_APPS)) && (is_array($GOOGLE_APPS)) && (isset($GOOGLE_APPS["active"])) && ((bool) $GOOGLE_APPS["active"]) && ($password)) {
+		$query = "	SELECT a.*, b.`group`, b.`role`
+					FROM `".AUTH_DATABASE."`.`user_data` AS a
+					LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+					ON a.`id` = b.`user_id`
+					WHERE a.`id` = ".$db->qstr($_SESSION["details"]["id"])."
+					AND b.`app_id` = ".$db->qstr(AUTH_APP_ID);
+		$result	= $db->GetRow($query);
+		if ($result) {
+			if (!in_array($result["google_id"], array("", "opt-out", "opt-in"))) {
+				try {
+					$client = Zend_Gdata_ClientLogin::getHttpClient($GOOGLE_APPS["admin_username"], $GOOGLE_APPS["admin_password"], Zend_Gdata_Gapps::AUTH_SERVICE_NAME);
+					$service = new Zend_Gdata_Gapps($client, $GOOGLE_APPS["domain"]);
+
+					$account = $service->retrieveUser($result["google_id"]);
+					$account->login->password = $password;
+					$account->save();
+
+					application_log("success", "Successfully updated Google account password for google_id [".$result["google_id"]."] and proxy_id [".$_SESSION["details"]["id"]."].");
+
+					return true;
+				} catch (Zend_Gdata_Gapps_ServiceException $e) {
+<<<<<<< HEAD
+					application_log("error", "Unable to change password for google_id [".$google_id."] for proxy_id [".$_SESSION["details"]["id"]."]. Error details: [".$error->getErrorCode()."] ".$error->getReason().".");
+=======
+>>>>>>> ced97180c37779165a5647294039c82a997b5da9
+					if (is_array($e->getErrors())) {
+						foreach ($e->getErrors() as $error) {
+							application_log("error", "Unable to change password for google_id [".$google_id."] for proxy_id [".$_SESSION["details"]["id"]."]. Error details: [".$error->getErrorCode()."] ".$error->getReason().".");
+						}
+					}
+				}
+			}
+		} else {
+			application_log("error", "google_reset_password() failed because we were unable to fetch information on proxy_id [".$_SESSION["details"]["id"]."]. Database said: ".$db->ErrorMsg());
+		}
+	}
+
+	return false;
+}
+
 /**
  * Function takes minutes and converts them to hours.
  *
@@ -7455,7 +7507,7 @@ function courses_subnavigation($course_details) {
 	global $ENTRADA_ACL;
 	echo "<div class=\"no-printing\">\n";
 	echo "	<div style=\"float: right\">\n";
-	if($ENTRADA_ACL->amIAllowed(new CourseResource($course_details["course_id"], $course_details["organisation_id"]), "read")) {
+	if($ENTRADA_ACL->amIAllowed(new CourseResource($course_details["course_id"], $course_details["organisation_id"]), "update")) {
 		echo "<a href=\"".ENTRADA_URL."/admin/courses?".replace_query(array("section" => "edit", "id" => $course_details["course_id"], "step" => false))."\"><img src=\"".ENTRADA_URL."/images/event-details.gif\" width=\"16\" height=\"16\" alt=\"Edit course details\" title=\"Edit course details\" border=\"0\" style=\"vertical-align: middle; margin-bottom: 2px;\" /></a> <a href=\"".ENTRADA_URL."/admin/courses?".replace_query(array("section" => "edit", "id" => $course_details["course_id"], "step" => false))."\" style=\"font-size: 10px; margin-right: 8px\">Edit course details</a>\n";
 	}
 	if($ENTRADA_ACL->amIAllowed(new CourseContentResource($course_details["course_id"], $course_details["organisation_id"]), "read")) {
@@ -7481,20 +7533,37 @@ function courses_fetch_objectives($course_ids, $parent_id = 1, $objectives = fal
 							"primary_ids" => array(), 
 							"secondary_ids" => array(), 
 							"tertiary_ids" => array());
-		$query		= "	SELECT a.`objective_id`, a.`importance`, a.`objective_details`, a.`course_id` 
-						FROM `course_objectives` AS a
-						JOIN `global_lu_objectives` AS b
-						ON a.`objective_id` = b.`objective_id`
-						WHERE ".($fetch_all_text ? "" : "`importance` != '0'
-						AND `objective_type` = 'course'
-						AND ")."`course_id` IN (";
 		$escaped_course_ids = "";
 		for ($i = 0; $i < (count($course_ids) - 1); $i++) {
 			$escaped_course_ids .= $db->qstr($course_ids[$i]).",";
 		}
 		$escaped_course_ids .= $db->qstr($course_ids[(count($course_ids) - 1)]);
-		$query .= $escaped_course_ids.")
-						ORDER BY b.`objective_order` ASC";
+		$query		= "	SELECT a.`objective_id`, a.`importance`, a.`objective_details`, a.`course_id`, b.`objective_parent`, b.`objective_order`
+						FROM `course_objectives` AS a
+						JOIN `global_lu_objectives` AS b
+						ON a.`objective_id` = b.`objective_id`
+						WHERE ".($fetch_all_text ? "" : "`importance` != '0'
+						AND `objective_type` = 'course'
+						AND ")."`course_id` IN (".$escaped_course_ids.")
+						UNION
+						SELECT b.`objective_id`, a.`importance`, a.`objective_details`, a.`course_id`, b.`objective_parent`, b.`objective_order`
+						FROM `course_objectives` AS a
+						JOIN `global_lu_objectives` AS b
+						ON a.`objective_id` = b.`objective_parent`
+						AND `course_id` IN (".$escaped_course_ids.")
+						WHERE ".($fetch_all_text ? "" : "`importance` != '0'
+						AND `objective_type` = 'course'
+						AND ")."a.`objective_type` = 'course'
+						AND b.`objective_id` NOT IN (
+							SELECT a.`objective_id`
+							FROM `course_objectives` AS a
+							JOIN `global_lu_objectives` AS b
+							ON a.`objective_id` = b.`objective_id`
+							WHERE ".($fetch_all_text ? "" : "`importance` != '0'
+							AND `objective_type` = 'course'
+							AND ")."`course_id` IN (".$escaped_course_ids.")
+						)
+						ORDER BY `objective_parent`, `objective_order` ASC";
 		$results	= $db->GetAll($query);
 		if($results && !is_array($objective_ids)) {
 			foreach($results as $result) {
@@ -7506,6 +7575,7 @@ function courses_fetch_objectives($course_ids, $parent_id = 1, $objectives = fal
 					$objectives["tertiary_ids"][$result["objective_id"]] = $result["objective_id"];
 				}
 				$objectives["used_ids"][$result["objective_id"]] = $result["objective_id"];
+				$objectives["objectives"][$result["objective_id"]] = array();
 				$objectives["objectives"][$result["objective_id"]]["objective_details"] = $result["objective_details"];
 			}
 		}
@@ -7603,7 +7673,7 @@ function courses_fetch_objectives($course_ids, $parent_id = 1, $objectives = fal
 					if (array_search($parent_id, $objectives["used_ids"]) !== false) {
 						unset($objectives["used_ids"][$secondary_id]);
 						unset($objectives["secondary_ids"][$secondary_id]);
-						$objectives["objectives"][$primary_id]["secondary"] = false;
+						$objectives["objectives"][$secondary_id]["secondary"] = false;
 					}
 				}
 			}
@@ -7614,7 +7684,7 @@ function courses_fetch_objectives($course_ids, $parent_id = 1, $objectives = fal
 					if (array_search($parent_id, $objectives["used_ids"]) !== false) {
 						unset($objectives["used_ids"][$tertiary_id]);
 						unset($objectives["tertiary_ids"][$tertiary_id]);
-						$objectives["objectives"][$primary_id]["tertiary"] = false;
+						$objectives["objectives"][$tertiary_id]["tertiary"] = false;
 					}
 				}
 			}
@@ -7622,12 +7692,23 @@ function courses_fetch_objectives($course_ids, $parent_id = 1, $objectives = fal
 	}
 	if ($event_id) {
 		foreach ($objectives["objectives"] as $objective_id => $objective) {
-			if ($event_objective_details = $db->GetRow("SELECT * FROM `event_objectives`
-														WHERE `event_id` = ".$db->qstr($event_id)."
-														AND `objective_type` = 'course'
-														AND `objective_id` = ".$db->qstr($objective_id))) {
-				$objectives["objectives"][$objective_id]["event_objective_details"] = $event_objective_details["objective_details"];
-				$objectives["objectives"][$objective_id]["event_objective"] = true;
+			if ($event_objectives_string) {
+				$event_objectives_string .= ", ".$db->qstr($objective_id);
+			} else {
+				$event_objectives_string = $db->qstr($objective_id);
+			}
+		}
+		$event_objectives = $db->GetAll("	SELECT a.* FROM `event_objectives` AS a
+											JOIN `global_lu_objectives` AS b
+											ON a.`objective_id` = b.`objective_id`
+											WHERE a.`event_id` = ".$db->qstr($event_id)."
+											AND a.`objective_type` = 'course'
+											AND a.`objective_id` IN (".$event_objectives_string.")
+											ORDER BY b.`objective_order` ASC");
+		if ($event_objectives) {
+			foreach ($event_objectives as $objective) {
+				$objectives["objectives"][$objective["objective_id"]]["event_objective_details"] = $objective["objective_details"];
+				$objectives["objectives"][$objective["objective_id"]]["event_objective"] = true;
 			}
 		}
 	}
@@ -7810,7 +7891,7 @@ function events_output_filter_controls($module_type = "") {
 				<?php
 
 				$query = "SELECT `organisation_id`,`organisation_title` FROM `".AUTH_DATABASE."`.`organisations` ORDER BY `organisation_title` ASC";
-				$organisation_results = $db->GetAll($query);
+				$organisation_results = $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
 				$organisation_ids_string = "";
 				if ($organisation_results) {
 					$organisations = array();
@@ -7834,17 +7915,21 @@ function events_output_filter_controls($module_type = "") {
 				if (!$organisation_ids_string) {
 					$organisation_ids_string = $db->qstr($ORGANISATION_ID);
 				}
+
 				// Get the possible teacher filters
 				$query = "	SELECT a.`id` AS `proxy_id`, a.`organisation_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`
 							FROM `".AUTH_DATABASE."`.`user_data` AS a
 							LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 							ON b.`user_id` = a.`id`
+							LEFT JOIN `event_contacts` AS c
+							ON c.`proxy_id` = a.`id`
 							WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
 							AND a.`organisation_id` IN (".$organisation_ids_string.")
 							AND (b.`group` = 'faculty' OR (b.`group` = 'resident' AND b.`role` = 'lecturer'))
+							AND c.`econtact_id` IS NOT NULL
 							GROUP BY a.`id`
 							ORDER BY `fullname` ASC";
-				$teacher_results = $db->GetAll($query);
+				$teacher_results = $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
 				if ($teacher_results) {
 					$teachers = $organisation_categories;
 					foreach ($teacher_results as $r) {
@@ -7874,7 +7959,7 @@ function events_output_filter_controls($module_type = "") {
 							(($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"] == "student") ? " AND a.`id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]) : "")."
 							GROUP BY a.`id`
 							ORDER BY b.`role` DESC, a.`lastname` ASC, a.`firstname` ASC";
-				$student_results = $db->GetAll($query);
+				$student_results = $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
 				if ($student_results) {
 					$students = $organisation_categories;
 					foreach ($student_results as $r) {
@@ -7894,7 +7979,7 @@ function events_output_filter_controls($module_type = "") {
 							FROM `courses` 
 							WHERE `organisation_id` = ".$db->qstr($ORGANISATION_ID)."
 							ORDER BY `course_name` ASC";
-				$courses_results = $db->GetAll($query);
+				$courses_results = $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
 				if ($courses_results) {
 					$courses = array();
 					foreach ($courses_results as $c) {
@@ -7912,7 +7997,7 @@ function events_output_filter_controls($module_type = "") {
 
 				// Get the possible event type filters
 				$query = "SELECT `eventtype_id`, `eventtype_title` FROM `events_lu_eventtypes` WHERE `eventtype_active` = '1' ORDER BY `eventtype_order` ASC";
-				$eventtype_results = $db->GetAll($query);
+				$eventtype_results = $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
 				if ($eventtype_results) {
 					$eventtypes = array();
 					foreach ($eventtype_results as $result) {

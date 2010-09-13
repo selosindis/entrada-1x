@@ -70,7 +70,7 @@ Please enter your <?php echo APPLICATION_NAME; ?> username and password to log i
 		</tr>
 		<tr>
 			<td><label for="password" style="font-weight: bold">Password:</label></td>
-			<td style="text-align: right"><input type="password" id="password" name="password" value="" style="width: 150px" autocomplete="off" /></td>
+			<td style="text-align: right"><input type="password" id="password" name="password" value="" style="width: 150px" /></td>
 		</tr>
 	</tbody>
 	</table>

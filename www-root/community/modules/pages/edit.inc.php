@@ -244,6 +244,19 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 									$ERRORSTR[] = "The <strong>Page Type</strong> field is required and is either empty or an invalid value.";
 								}
 
+	
+								/**
+								 * Required field "parent_id" / Page Parent.
+								 */
+								if (isset($_POST["parent_id"]) && !$home_page) {
+									if ($parent_id = clean_input($_POST["parent_id"], array("trim", "int"))) {
+										$PROCESSED["parent_id"] = $parent_id;
+									} else {
+										$PROCESSED["parent_id"] = 0;
+									}
+								} else {
+									$PROCESSED["parent_id"] = 0;
+								}
 		
 								/**
 								 * Required field "menu_title" / Menu Title.
@@ -364,7 +377,66 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 							}
 
 							if (!$ERROR) {
-								
+								if ($PAGE_TYPE != "course" && !$home_page) {
+									/**
+									 * Non-required "page_order" / Page Position.
+									 * This special field will change the order which this page will appear under the parent.
+									 * Don't get confused though, because page_order isn't the actual number, you've still got
+									 * to do some math ;)
+									 * 
+									 * note: this is never changed for the home page, it should always be 0.
+									 */
+									if ((isset($_POST["page_order"])) && ($_POST["page_order"] != "no") && !$home_page) {
+										$page_order = clean_input($_POST["page_order"], array("trim", "int"));
+										if ($page_order == 0) {
+											$first_available = $db->GetOne("SELECT MAX(`page_order`) FROM `community_pages` WHERE `page_type` = 'course' AND `community_id` = ".$db->qstr($COMMUNITY_ID));
+											if ($first_available) {
+												$page_order = (int)$first_available + 1;
+											}
+										}
+			
+										if ($PROCESSED["parent_id"] == $page_details["parent_id"]) {
+											
+											$PROCESSED["page_order"] = $page_order;
+	
+											/**
+											 * Go through this process the first time to put each page in the proper order.
+											 */
+											$query		= "SELECT `cpage_id`, `page_order` FROM `community_pages` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `parent_id` = ".$db->qstr($PROCESSED["parent_id"])." AND `page_order` >= ".$PROCESSED["page_order"]." AND `page_url` != '' ORDER BY `page_order` ASC";
+											$results	= $db->GetAll($query);
+											if ($results) {
+												foreach ($results as $result) {
+													$query = "UPDATE `community_pages` SET `page_order` = ".$db->qstr(($result["page_order"] + 1))." WHERE `cpage_id` = ".$db->qstr($result["cpage_id"]);
+													if (!$db->Execute($query)) {
+														application_log("error", "Unable to update the page order of page_id ".$result["page_id"]);
+													}
+												}
+											}
+										} else {
+											$NOTICE++;
+											$NOTICESTR[] = "You cannot update the <strong>Page Position</strong> of this page if you have also changed the <strong>Page Parent</strong>. The new page position was disregarded.";								
+										}
+									}
+		
+									if ($PROCESSED["parent_id"] != $page_details["parent_id"] && !$home_page) {
+										$query	= "SELECT COUNT(*) AS `new_order` FROM `community_pages` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `parent_id` = ".$db->qstr($PROCESSED["parent_id"])." AND `page_url` != ''";
+										$result	= $db->GetRow($query);
+										if ($result) {
+											$PROCESSED["page_order"] = (int) $result["new_order"];
+										} else {
+											$PROCESSED["page_order"] = 0;
+										}
+										
+										$query			= "SELECT `cpage_id`, `page_order` FROM `community_pages` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `parent_id` = ".$db->qstr($page_details["parent_id"])." AND `page_order` > ".$db->qstr($page_details["page_order"])." AND `page_url` != ''";
+										$moving_pages	= $db->GetAll($query);
+										if ($moving_pages) {
+											foreach ($moving_pages as $moving_page) {
+												$query = "UPDATE `community_pages` SET `page_order` = ".$db->qstr($moving_page["page_order"] - 1)." WHERE `cpage_id` = ".$db->qstr($moving_page["cpage_id"]);
+												$db->Execute($query);
+											}
+										}
+									}
+								}
 								if ($home_page && $PAGE_TYPE == "default") {
 									/**
 									 * Non-required fields for various page options of what to display on default home pages
@@ -517,6 +589,24 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 										communities_log_history($COMMUNITY_ID, $PAGE_ID, 0, "community_history_edit_page", 1);
 										if ($PROCESSED["menu_title"] != $page_details["menu_title"]) {
 											communities_set_children_urls($PAGE_ID, $PROCESSED["page_url"]);
+										}
+										if ((isset($PROCESSED["page_order"])) && ($PROCESSED["page_order"] != $page_details["page_order"])) {
+											/**
+											 * Go through this process the second time to ensure each page is in the correct order.
+											 */
+											$query		= "SELECT `cpage_id`, `page_order` FROM `community_pages` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `parent_id` = ".$db->qstr($PROCESSED["parent_id"])." AND `page_url` != '' ORDER BY `page_order` ASC";
+											$results	= $db->GetAll($query);
+											if ($results) {
+												foreach ($results as $key => $result) {
+													$order = $key;
+													if ((int) $order != (int) $result["page_order"]) {
+														$query = "UPDATE `community_pages` SET `page_order` = ".$db->qstr($order)." WHERE `cpage_id` = ".$db->qstr($result["cpage_id"]);
+														if (!$db->Execute($query)) {
+															application_log("error", "Unable to update the page order of page_id ".$result["page_id"]);
+														}
+													}
+												}
+											}
 										}
 										if ($PAGE_TYPE == "announcements" || $PAGE_TYPE == "events") {
 											if ($db->Execute("UPDATE `community_page_options` SET `option_value` = ".$db->qstr($page_options["moderate_posts"]["option_value"])." WHERE `cpoption_id` = ".$db->qstr($page_options["moderate_posts"]["cpoption_id"]))) {
@@ -741,6 +831,30 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 										?>
 									</td>
 								</tr>
+								<?php 
+								if (!$home_page && $PAGE_TYPE != "course") {
+										?>
+									<tr>
+										<td colspan="2">&nbsp;</td>
+									</tr>
+									<tr>
+										<td><label for="parent_id" class="form-required">Page Parent:</label></td>
+										<td>
+											<select id="parent_id" name="parent_id" onchange="if (this.value == <?php echo $PROCESSED["parent_id"]?>) { $('page_order').disabled = false; } else { $('page_order').disabled = true; } " style="width: 304px">
+											<?php
+											echo "<option value=\"0\" selected=\"selected\">-- No Parent Page --</option>\n";
+											
+											$current_selected	= array($page_details["parent_id"]);
+											$exclude			= array($PAGE_ID);
+											
+											echo communities_pages_inselect(0, $current_selected, 0, $exclude, $COMMUNITY_ID);
+											?>
+											</select>
+										</td>
+									</tr>
+									<?php
+								}
+								?>
 								<tr>
 									<td colspan="2">&nbsp;</td>
 								</tr>
@@ -1065,7 +1179,39 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 								<?php
 								}
 								if (!$home_page && $PAGE_TYPE != "course") {
-									?>
+									$query		= "SELECT `cpage_id`, `page_order`, `menu_title` FROM `community_pages` WHERE `cpage_id` <> ".$db->qstr($PAGE_ID)." AND `parent_id` = ".$db->qstr($PROCESSED["parent_id"])." AND `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `page_url` != '' AND `page_type` != 'course' ORDER BY `page_order` ASC";
+									$results	= $db->GetAll($query);
+									if ($results) {
+										?>
+										<tr>
+											<td><label for="page_order" class="form-nrequired">Page Position:</label></td>
+											<td>
+												<select id="page_order" name="page_order" style="width: 304px">
+													<option value="no">Do Not Move Page</option>
+													<?php
+													if ((int) $PROCESSED["parent_id"]) {
+														?>
+														<optgroup label="&rarr; /<?php echo html_encode($PROCESSED["menu_title"]); ?>">
+														<?php
+													} else {
+														?>
+														<optgroup label="/">
+														<?php
+													}
+													?>
+													<option value="0">Appear First</option>
+													<?php
+													foreach ($results as $result) {
+														echo "<option value=\"".(((int) $result["page_order"]) + 1)."\">After &quot;".html_encode($result["menu_title"])."&quot;</option>\n";
+													}
+													?>
+													</optgroup>
+												</select>
+											</td>
+										</tr>
+										<?php
+									}							
+									?>	
 									<tr>
 										<td><label for="page_visibile" class="form-nrequired">Page Visibility:</label></td>
 										<td>

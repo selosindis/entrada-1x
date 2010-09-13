@@ -1334,6 +1334,7 @@ function fetch_mcc_objectives($parent_id = 0, $objectives = array(), $course_id 
 			}
 		}
 	}
+
 	return $objectives;
 }
 
@@ -6159,7 +6160,10 @@ function google_reset_password($password = "") {
 
 					return true;
 				} catch (Zend_Gdata_Gapps_ServiceException $e) {
+<<<<<<< HEAD
 					application_log("error", "Unable to change password for google_id [".$google_id."] for proxy_id [".$_SESSION["details"]["id"]."]. Error details: [".$error->getErrorCode()."] ".$error->getReason().".");
+=======
+>>>>>>> ced97180c37779165a5647294039c82a997b5da9
 					if (is_array($e->getErrors())) {
 						foreach ($e->getErrors() as $error) {
 							application_log("error", "Unable to change password for google_id [".$google_id."] for proxy_id [".$_SESSION["details"]["id"]."]. Error details: [".$error->getErrorCode()."] ".$error->getReason().".");

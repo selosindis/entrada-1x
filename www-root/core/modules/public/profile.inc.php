@@ -49,28 +49,30 @@ if (!defined("PARENT_INCLUDED")) {
 		$module_file = $router->getRoute();
 		if ($module_file) {
 		
-
 			if (isset($ACTION)) {
 				switch(trim(strtolower($ACTION))) {
 					case "privacy-update" :
 						profile_update_privacy();
-						break;
+					break;
 					case "google-update" :
 						profile_update_google();
-						break;
+					break;
+					case "google-password-reset" :
+						profile_update_google_password();
+					break;
 					case "privacy-google-update" :
 						profile_update_google_privacy();
-						break;
+					break;
 					case "profile-update" :
 						profile_update_personal_info();
-						break;
+					break;
 					case "assistant-add" :
 						profile_add_assistant();
-						break;
+					break;
 					case "assistant-remove" :
 						profile_remove_assistant();
+					break;
 				}
-
 			}
 			add_profile_sidebar();
 			
@@ -100,6 +102,7 @@ function add_profile_sidebar () {
 	if ($ENTRADA_ACL->isLoggedInAllowed('assistant_support', 'create')) {
 		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/profile?section=assistants\">My Admin Assistants</a></li>\n";
 	}
+
 	if ($_SESSION["details"]["group"] == "student") {
 		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/profile?section=mspr\">MSPR</a></li>\n";
 	}
@@ -418,6 +421,24 @@ function profile_update_google() {
 	}
 }
 
+function profile_update_google_password() {
+	global $db, $GOOGLE_APPS, $ERROR, $ERRORSTR, $SUCCESS, $SUCCESSSTR;
+
+	ob_clear_open_buffers();
+
+	if ((bool) $GOOGLE_APPS["active"]) {
+		if (isset($_POST["password"]) && ($tmp_input = clean_input($_POST["password"], "trim"))) {
+			if (google_reset_password($tmp_input)) {
+				echo 1;
+				exit;
+			}
+		}
+	}
+
+	echo 0;
+	exit;
+}
+
 function profile_add_assistant() {
 	global $db, $PROCESSED, $ERROR, $ERRORSTR, $SUCCESS, $SUCCESSSTR,$ENTRADA_ACL;
 	
@@ -426,7 +447,7 @@ function profile_add_assistant() {
 
 		if (!$ERROR) {
 			if ((isset($access_timeframe["start"])) && ((int) $access_timeframe["start"])) {
-				$PROCESSED["valid_from"]	= (int) $access_timeframe["start"];
+				$PROCESSED["valid_from"] = (int) $access_timeframe["start"];
 			}
 
 			if ((isset($access_timeframe["finish"])) && ((int) $access_timeframe["finish"])) {

@@ -175,7 +175,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 			$mail->Subject	= "Report Missing /Incorrect Teaching Submission - ".APPLICATION_NAME;
 			$mail->Body		= $message;
 			$mail->ClearAddresses();
-			$mail->AddAddress(FEEDBACK_EMAIL, FEEDBACK_NAME);
+			$mail->AddAddress($AGENT_CONTACTS["annualreport-support"]["email"], $AGENT_CONTACTS["annualreport-support"]["name"]);
 			if($mail->Send()) {
 				$SUCCESS++;
 				$SUCCESSSTR[]	= "Thank-you for informing us of the missing / incorrect undergraduate teaching. If we have questions regarding any of the information you provided, we will get in touch with you via e-mail, otherwise the teaching will be adjusted within two business days.";

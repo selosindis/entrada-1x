@@ -74,7 +74,8 @@ if(!defined("PARENT_INCLUDED")) {
 		$sidebar_html .= "<li class=\"link\"><a href=\"".ENTRADA_URL."/annualreport/selfeducation\" title=\"Self Education/Faculty Development\">Self Education / Faculty Development</a></li>\n";
 		$sidebar_html .= "<li class=\"link\"><a href=\"".ENTRADA_URL."/annualreport/prizes\" title=\"Prizes, Honours and Awards\">Prizes, Honours and Awards</a></li>\n";
 		$sidebar_html .= "<li class=\"link\"><a href=\"".ENTRADA_URL."/annualreport/activityprofile\" title=\"Activity Profile\">Activity Profile</a></li>\n";
-		$sidebar_html .= "<li class=\"link\"><a href=\"".ENTRADA_URL."/annualreport/reports\" title=\"Reports\">Reports</a></li>\n";
+		$sidebar_html .= "<li class=\"link\"><a href=\"".ENTRADA_URL."/annualreport/generate\" title=\"Annual Report Generator\">Annual Report Generator</a></li>\n";
+		$sidebar_html .= "<li class=\"link\"><a href=\"".ENTRADA_URL."/annualreport/reports\" title=\"Annual Report Generator\">My Reports</a></li>\n";
 		$sidebar_html .= "</div>\n";
 		
 		new_sidebar_item("Annual Report Sections", $sidebar_html, "annual-report-nav", "open");

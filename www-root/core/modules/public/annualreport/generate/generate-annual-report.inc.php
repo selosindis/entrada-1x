@@ -41,7 +41,7 @@ $PAGE_META["title"]		= "Annual Report Generation";
 $PAGE_META["category"]	= "Generate a PDF version of your Annual Report";
 $PAGE_META["keywords"]	= "";
 
-$BREADCRUMB[]	= array("url" => ENTRADA_URL."/annualreport/reports?section=generate-annual-report", "title" => "Annual Report Generation");
+$BREADCRUMB[]	= array("url" => ENTRADA_URL."/annualreport/generate?section=generate-annual-report", "title" => "Annual Report Generation");
 
 // This grid should be expanded upon redirecting back to the prizes index.
 $_SESSION["reports_expand_grid"] = "reports_grid";

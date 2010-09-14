@@ -957,7 +957,7 @@ CREATE TABLE IF NOT EXISTS `assessments` (
   `description` text NOT NULL,
   `type` varchar(255) NOT NULL,
   `marking_scheme_id` int(10) unsigned NOT NULL,
-  `numeric_grade_points_total` int(10) unsigned DEFAULT NULL,
+  `numeric_grade_points_total` float unsigned DEFAULT NULL,
   PRIMARY KEY (`assessment_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 

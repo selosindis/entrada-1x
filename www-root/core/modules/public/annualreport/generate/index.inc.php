@@ -39,7 +39,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 		$clinical_member = "YES";
 	}
 	?>
-	<h1>Section <?php echo ($_SESSION["details"]["clinical_member"] ? "VIII" : "VII"); ?> - Reports</h1>
+	<h1>Section <?php echo ($_SESSION["details"]["clinical_member"] ? "VIII" : "VII"); ?> - Annual Report Generator</h1>
 	
 	<table id="flex1" style="display:none"></table>
 	
@@ -92,7 +92,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 					jQuery('.trSelected', grid).each(function() {
 						var id = jQuery(this).attr('id');
 						id = id.substring(id.lastIndexOf('row')+3);
-						window.location='<?php echo ENTRADA_URL; ?>/annualreport/reports?section=generate-annual-report&amp;rid='+id+'&amp;proxy_id='+<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>+'&amp;clinical=<?php echo $clinical_member; ?>';
+						window.location='<?php echo ENTRADA_URL; ?>/annualreport/generate?section=generate-annual-report&amp;rid='+id+'&amp;proxy_id='+<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>+'&amp;clinical=<?php echo $clinical_member; ?>';
 					});
 		    	} 
 			});
@@ -100,7 +100,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
     }
      
     function reportGo(celDiv,id) {
-    	celDiv.innerHTML = "<a href='<?php echo ENTRADA_URL; ?>/annualreport/reports?section=generate-annual-report&amp;rid="+id+"&amp;proxy_id="+<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>+"&amp;clinical=<?php echo $clinical_member; ?>' style=\"cursor: pointer; cursor: hand\" text-decoration: none><img src=\"<?php echo ENTRADA_RELATIVE; ?>/css/jquery/images/report_go.gif\" style=\"border: none\"/></a>";
+    	celDiv.innerHTML = "<a href='<?php echo ENTRADA_URL; ?>/annualreport/generate?section=generate-annual-report&amp;rid="+id+"&amp;proxy_id="+<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>+"&amp;clinical=<?php echo $clinical_member; ?>' style=\"cursor: pointer; cursor: hand\" text-decoration: none><img src=\"<?php echo ENTRADA_RELATIVE; ?>/css/jquery/images/report_go.gif\" style=\"border: none\"/></a>";
     } 
 	</script>
 	<?php

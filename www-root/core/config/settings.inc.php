@@ -281,6 +281,7 @@ $AGENT_CONTACTS["agent-notifications"] = array("name" => "Undergraduate Educatio
 $AGENT_CONTACTS["agent-clerkship"] = array("name" => "Clerkship Administrator", "email" => $config->admin->email, "director_ids" => array(0));
 $AGENT_CONTACTS["agent-clerkship-international"] = array("name" => "International Clerkship Administrator", "email" => $config->admin->email);
 $AGENT_CONTACTS["agent-regionaled"] = array("name" => "Apartment Administrator", "email" => $config->admin->email);
+$AGENT_CONTACTS["annualreport-support"] = array("name" => "Annual Report Administrator", "email" => $config->admin->email);
 
 /**
  * A list of reserved names of community pages (in lower case). If a new community page matches

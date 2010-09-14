@@ -228,18 +228,10 @@ CREATE TABLE IF NOT EXISTS `ar_lu_clinical_locations` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `ar_lu_clinical_locations` (`id`, `clinical_location`) VALUES
-(1, 'Community'),
-(2, 'HDH'),
-(3, 'KFLA Health Unit'),
-(4, 'KGH'),
-(5, 'SMOL'),
-(6, 'KGH/HDH'),
-(7, 'KGH/HDH/SMOL'),
-(8, 'KGH/HDH/SMOL/Community'),
-(9, 'Moose Factory'),
-(10, 'Ongwanada'),
-(11, 'Rideau Regional Centre - Smith Falls'),
-(12, 'Other (specify)');
+(1, 'Hospital A'),
+(2, 'Hospital B'),
+(3, 'Hospital C'),
+(4, 'Other (specify)');
 
 CREATE TABLE IF NOT EXISTS `ar_lu_conference_paper_types` (
   `id` int(11) NOT NULL auto_increment,
@@ -258,13 +250,10 @@ CREATE TABLE IF NOT EXISTS `ar_lu_consult_locations` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `ar_lu_consult_locations` (`id`, `consult_location`) VALUES
-(1, 'HDH'),
-(2, 'KGH'),
-(3, 'SMOL'),
-(4, 'KGH/HDH'),
-(5, 'KGH/HDH/SMOL'),
-(6, 'KGH - KRCC'),
-(7, 'Other (specify)');
+(1, 'Hospital A'),
+(2, 'Hospital B'),
+(3, 'Hospital C'),
+(4, 'Other (specify)');
 
 CREATE TABLE IF NOT EXISTS `ar_lu_contribution_roles` (
   `id` int(11) NOT NULL auto_increment,
@@ -339,15 +328,10 @@ CREATE TABLE IF NOT EXISTS `ar_lu_education_locations` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `ar_lu_education_locations` (`id`, `education_location`) VALUES
-(1, 'Clinical Learning Centre'),
-(2, 'Rounds'),
-(3, 'HDH'),
-(4, 'KFLA Health Unit'),
-(5, 'KGH'),
-(6, 'SMOL'),
-(7, 'KGH/HDH'),
-(8, 'KGH/HDH/SMOL'),
-(9, 'Other (specify)');
+(1, 'Hospital A'),
+(2, 'Hospital B'),
+(3, 'Hospital C'),
+(4, 'Other (specify)');
 
 CREATE TABLE IF NOT EXISTS `ar_lu_focus_groups` (
   `group_id` int(11) NOT NULL auto_increment,
@@ -389,12 +373,9 @@ CREATE TABLE IF NOT EXISTS `ar_lu_hospital_location` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `ar_lu_hospital_location` (`hosp_id`, `hosp_desc`) VALUES
-(1, 'KGH'),
-(2, 'HDH'),
-(3, 'PCCC'),
-(4, 'Ongwanada'),
-(5, 'QCRI'),
-(6, 'Belleville General Hospital');
+(1, 'Hospital A'),
+(2, 'Hospital B'),
+(3, 'Hospital C');
 
 CREATE TABLE IF NOT EXISTS `ar_lu_innovation_types` (
   `id` int(11) NOT NULL auto_increment,
@@ -430,12 +411,9 @@ CREATE TABLE IF NOT EXISTS `ar_lu_on_call_locations` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `ar_lu_on_call_locations` (`id`, `on_call_location`) VALUES
-(1, 'HDH'),
-(2, 'KGH'),
-(3, 'SMOL'),
-(4, 'KGH/HDH'),
-(5, 'KGH/HDH/SMOL'),
-(6, 'KGH - KRCC');
+(1, 'Hospital A'),
+(2, 'Hospital B'),
+(3, 'Hospital C');
 
 CREATE TABLE IF NOT EXISTS `ar_lu_other_locations` (
   `id` int(11) NOT NULL auto_increment,
@@ -444,20 +422,10 @@ CREATE TABLE IF NOT EXISTS `ar_lu_other_locations` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `ar_lu_other_locations` (`id`, `other_location`) VALUES
-(1, 'HDH'),
-(2, 'KGH'),
-(3, 'SMOL'),
-(4, 'KGH/HDH'),
-(5, 'KGH/HDH/SMOL'),
-(6, 'KGH - KRCC'),
-(7, 'KFLA Health Unit'),
-(8, 'Belleville General Hospital'),
-(9, 'Lennox & Addington County General Hospital'),
-(10, 'Moose Factory'),
-(11, 'Ongwanada'),
-(12, 'Rideau Regional Centre - Smith Falls'),
-(13, 'Student Health Service'),
-(14, 'Other (specify)');
+(1, 'Hospital A'),
+(2, 'Hospital B'),
+(3, 'Hospital C'),
+(4, 'Other (specify)');
 
 CREATE TABLE IF NOT EXISTS `ar_lu_patent_types` (
   `id` int(11) NOT NULL auto_increment,
@@ -985,6 +953,80 @@ INSERT INTO `assessment_marking_schemes` (`id`,`name`,`handler`,`enabled`) VALUE
 ALTER TABLE `course_objectives` ADD COLUMN `objective_type` enum('event','course') DEFAULT 'course' AFTER `importance`;
 
 INSERT INTO `course_objectives` (`course_id`, `objective_id`, `importance`, `objective_type`) (SELECT b.`course_id`, a.`objective_id`, 1, 'event' FROM `event_objectives` AS a JOIN `events` AS b ON a.`event_id` = b.`event_id` WHERE a.`objective_type` = 'event' GROUP BY a.`objective_id`, b.`course_id`);
+
+CREATE TABLE IF NOT EXISTS `global_lu_focus_groups` (
+  `group_id` int(11) NOT NULL auto_increment,
+  `focus_group` varchar(100) NOT NULL default '',
+  PRIMARY KEY  (`group_id`),
+  KEY `focus_group` (`focus_group`)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+
+INSERT INTO `global_lu_focus_groups` (`group_id`, `focus_group`) VALUES
+(1, 'Cancer'),
+(2, 'Neurosciences'),
+(3, 'Cardiovascular, Circulatory and Respiratory'),
+(4, 'Gastrointestinal'),
+(5, 'Musculoskeletal\n'),
+(6, 'Health Services Research'),
+(15, 'Other'),
+(7, 'Protein Function and Discovery'),
+(8, 'Reproductive Sciences'),
+(9, 'Genetics'),
+(10, 'Nursing'),
+(11, 'Primary Care Studies'),
+(12, 'Emergency'),
+(13, 'Critical Care'),
+(14, 'Nephrology'),
+(16, 'Educational Research'),
+(17, 'Microbiology and Immunology'),
+(18, 'Urology'),
+(19, 'Psychiatry'),
+(20, 'Anesthesiology'),
+(22, 'Obstetrics and Gynecology'),
+(23, 'Rehabilitation Therapy'),
+(24, 'Occupational Therapy');
+
+CREATE TABLE IF NOT EXISTS `global_lu_hospital_location` (
+  `hosp_id` int(11) NOT NULL default '0',
+  `hosp_desc` varchar(100) NOT NULL default '',
+  PRIMARY KEY  (`hosp_id`),
+  KEY `hosp_desc` (`hosp_desc`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `global_lu_publication_type` (
+  `type_id` int(11) NOT NULL default '0',
+  `type_description` varchar(50) NOT NULL default '',
+  PRIMARY KEY  (`type_id`),
+  KEY `type_description` (`type_description`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+INSERT INTO `global_lu_publication_type` (`type_id`, `type_description`) VALUES
+(1, 'Peer-Reviewed Article'),
+(2, 'Non-Peer-Reviewed Article'),
+(3, 'Chapter'),
+(4, 'Peer-Reviewed Abstract'),
+(5, 'Non-Peer-Reviewed Abstract'),
+(6, 'Complete Book'),
+(7, 'Monograph'),
+(8, 'Editorial'),
+(9, 'Published Conference Proceeding'),
+(10, 'Poster Presentations'),
+(11, 'Technical Report');
+
+CREATE TABLE IF NOT EXISTS `global_lu_roles` (
+  `role_id` int(11) NOT NULL default '0',
+  `role_description` varchar(50) NOT NULL default '',
+  PRIMARY KEY  (`role_id`),
+  KEY `role_description` (`role_description`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+INSERT INTO `global_lu_roles` (`role_id`, `role_description`) VALUES
+(1, 'Lead Author'),
+(2, 'Contributing Author'),
+(3, 'Editor'),
+(4, 'Co-Editor'),
+(5, 'Senior Author'),
+(6, 'Co-Lead');
 
 ALTER TABLE `notices` ADD INDEX (`organisation_id`);
 

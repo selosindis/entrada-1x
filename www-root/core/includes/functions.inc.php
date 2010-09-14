@@ -6160,6 +6160,7 @@ function google_reset_password($password = "") {
 
 					return true;
 				} catch (Zend_Gdata_Gapps_ServiceException $e) {
+					application_log("error", "Unable to change password for google_id [".$google_id."] for proxy_id [".$_SESSION["details"]["id"]."]. Error details: [".$error->getErrorCode()."] ".$error->getReason().".");
 					if (is_array($e->getErrors())) {
 						foreach ($e->getErrors() as $error) {
 							application_log("error", "Unable to change password for google_id [".$google_id."] for proxy_id [".$_SESSION["details"]["id"]."]. Error details: [".$error->getErrorCode()."] ".$error->getReason().".");
@@ -7503,7 +7504,7 @@ function courses_subnavigation($course_details) {
 	global $ENTRADA_ACL;
 	echo "<div class=\"no-printing\">\n";
 	echo "	<div style=\"float: right\">\n";
-	if($ENTRADA_ACL->amIAllowed(new CourseResource($course_details["course_id"], $course_details["organisation_id"]), "read")) {
+	if($ENTRADA_ACL->amIAllowed(new CourseResource($course_details["course_id"], $course_details["organisation_id"]), "update")) {
 		echo "<a href=\"".ENTRADA_URL."/admin/courses?".replace_query(array("section" => "edit", "id" => $course_details["course_id"], "step" => false))."\"><img src=\"".ENTRADA_URL."/images/event-details.gif\" width=\"16\" height=\"16\" alt=\"Edit course details\" title=\"Edit course details\" border=\"0\" style=\"vertical-align: middle; margin-bottom: 2px;\" /></a> <a href=\"".ENTRADA_URL."/admin/courses?".replace_query(array("section" => "edit", "id" => $course_details["course_id"], "step" => false))."\" style=\"font-size: 10px; margin-right: 8px\">Edit course details</a>\n";
 	}
 	if($ENTRADA_ACL->amIAllowed(new CourseContentResource($course_details["course_id"], $course_details["organisation_id"]), "read")) {
@@ -7529,20 +7530,37 @@ function courses_fetch_objectives($course_ids, $parent_id = 1, $objectives = fal
 							"primary_ids" => array(), 
 							"secondary_ids" => array(), 
 							"tertiary_ids" => array());
-		$query		= "	SELECT a.`objective_id`, a.`importance`, a.`objective_details`, a.`course_id` 
-						FROM `course_objectives` AS a
-						JOIN `global_lu_objectives` AS b
-						ON a.`objective_id` = b.`objective_id`
-						WHERE ".($fetch_all_text ? "" : "`importance` != '0'
-						AND `objective_type` = 'course'
-						AND ")."`course_id` IN (";
 		$escaped_course_ids = "";
 		for ($i = 0; $i < (count($course_ids) - 1); $i++) {
 			$escaped_course_ids .= $db->qstr($course_ids[$i]).",";
 		}
 		$escaped_course_ids .= $db->qstr($course_ids[(count($course_ids) - 1)]);
-		$query .= $escaped_course_ids.")
-						ORDER BY b.`objective_order` ASC";
+		$query		= "	SELECT a.`objective_id`, a.`importance`, a.`objective_details`, a.`course_id`, b.`objective_parent`, b.`objective_order`
+						FROM `course_objectives` AS a
+						JOIN `global_lu_objectives` AS b
+						ON a.`objective_id` = b.`objective_id`
+						WHERE ".($fetch_all_text ? "" : "`importance` != '0'
+						AND `objective_type` = 'course'
+						AND ")."`course_id` IN (".$escaped_course_ids.")
+						UNION
+						SELECT b.`objective_id`, a.`importance`, a.`objective_details`, a.`course_id`, b.`objective_parent`, b.`objective_order`
+						FROM `course_objectives` AS a
+						JOIN `global_lu_objectives` AS b
+						ON a.`objective_id` = b.`objective_parent`
+						AND `course_id` IN (".$escaped_course_ids.")
+						WHERE ".($fetch_all_text ? "" : "`importance` != '0'
+						AND `objective_type` = 'course'
+						AND ")."a.`objective_type` = 'course'
+						AND b.`objective_id` NOT IN (
+							SELECT a.`objective_id`
+							FROM `course_objectives` AS a
+							JOIN `global_lu_objectives` AS b
+							ON a.`objective_id` = b.`objective_id`
+							WHERE ".($fetch_all_text ? "" : "`importance` != '0'
+							AND `objective_type` = 'course'
+							AND ")."`course_id` IN (".$escaped_course_ids.")
+						)
+						ORDER BY `objective_parent`, `objective_order` ASC";
 		$results	= $db->GetAll($query);
 		if($results && !is_array($objective_ids)) {
 			foreach($results as $result) {
@@ -7554,6 +7572,7 @@ function courses_fetch_objectives($course_ids, $parent_id = 1, $objectives = fal
 					$objectives["tertiary_ids"][$result["objective_id"]] = $result["objective_id"];
 				}
 				$objectives["used_ids"][$result["objective_id"]] = $result["objective_id"];
+				$objectives["objectives"][$result["objective_id"]] = array();
 				$objectives["objectives"][$result["objective_id"]]["objective_details"] = $result["objective_details"];
 			}
 		}
@@ -7651,7 +7670,7 @@ function courses_fetch_objectives($course_ids, $parent_id = 1, $objectives = fal
 					if (array_search($parent_id, $objectives["used_ids"]) !== false) {
 						unset($objectives["used_ids"][$secondary_id]);
 						unset($objectives["secondary_ids"][$secondary_id]);
-						$objectives["objectives"][$primary_id]["secondary"] = false;
+						$objectives["objectives"][$secondary_id]["secondary"] = false;
 					}
 				}
 			}
@@ -7662,7 +7681,7 @@ function courses_fetch_objectives($course_ids, $parent_id = 1, $objectives = fal
 					if (array_search($parent_id, $objectives["used_ids"]) !== false) {
 						unset($objectives["used_ids"][$tertiary_id]);
 						unset($objectives["tertiary_ids"][$tertiary_id]);
-						$objectives["objectives"][$primary_id]["tertiary"] = false;
+						$objectives["objectives"][$tertiary_id]["tertiary"] = false;
 					}
 				}
 			}
@@ -7670,12 +7689,23 @@ function courses_fetch_objectives($course_ids, $parent_id = 1, $objectives = fal
 	}
 	if ($event_id) {
 		foreach ($objectives["objectives"] as $objective_id => $objective) {
-			if ($event_objective_details = $db->GetRow("SELECT * FROM `event_objectives`
-														WHERE `event_id` = ".$db->qstr($event_id)."
-														AND `objective_type` = 'course'
-														AND `objective_id` = ".$db->qstr($objective_id))) {
-				$objectives["objectives"][$objective_id]["event_objective_details"] = $event_objective_details["objective_details"];
-				$objectives["objectives"][$objective_id]["event_objective"] = true;
+			if ($event_objectives_string) {
+				$event_objectives_string .= ", ".$db->qstr($objective_id);
+			} else {
+				$event_objectives_string = $db->qstr($objective_id);
+			}
+		}
+		$event_objectives = $db->GetAll("	SELECT a.* FROM `event_objectives` AS a
+											JOIN `global_lu_objectives` AS b
+											ON a.`objective_id` = b.`objective_id`
+											WHERE a.`event_id` = ".$db->qstr($event_id)."
+											AND a.`objective_type` = 'course'
+											AND a.`objective_id` IN (".$event_objectives_string.")
+											ORDER BY b.`objective_order` ASC");
+		if ($event_objectives) {
+			foreach ($event_objectives as $objective) {
+				$objectives["objectives"][$objective["objective_id"]]["event_objective_details"] = $objective["objective_details"];
+				$objectives["objectives"][$objective["objective_id"]]["event_objective"] = true;
 			}
 		}
 	}

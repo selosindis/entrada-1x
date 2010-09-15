@@ -365,7 +365,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 				url : '<?php echo webservice_url("mspr-admin"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=clineval',
 				data_destination: $('clinical_performance_eval_comments'),
 				new_form: $('add_clineval_form'),
-				remove_forms_selector: '.remove_clineval_form',
+				remove_forms_selector: '#clinical_performance_eval_comments .entry form',
 				new_button: $('add_clineval_link'),
 				hide_button: $('hide_clineval')
 				
@@ -448,7 +448,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 				url : '<?php echo webservice_url("mspr-admin"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=studentships',
 				data_destination: $('studentships'),
 				new_form: $('add_studentship_form'),
-				remove_forms_selector: '.remove_studentship_form',
+				remove_forms_selector: '#studentships .entry form',
 				new_button: $('add_studentship_link'),
 				hide_button: $('hide_studentship')
 		
@@ -546,7 +546,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 					url : '<?php echo webservice_url("mspr-admin"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=int_acts',
 					data_destination: $('int_acts'),
 					new_form: $('add_int_act_form'),
-					remove_forms_selector: '.remove_international_activity_form',
+					remove_forms_selector: '#int_acts .entry form',
 					new_button: $('add_int_act_link'),
 					hide_button: $('hide_int_act')
 			
@@ -643,7 +643,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 					url : '<?php echo webservice_url("mspr-admin"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=observerships',
 					data_destination: $('observerships'),
 					new_form: $('add_observership_form'),
-					remove_forms_selector: '.remove_observership_form',
+					remove_forms_selector: '#observerships .entry form',
 					new_button: $('add_observership_link'),
 					hide_button: $('hide_observership'),
 					section: "observerships"
@@ -770,7 +770,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 					url : '<?php echo webservice_url("mspr-admin"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=student_run_electives',
 					data_destination: $('student_run_electives'),
 					new_form: $('add_student_run_elective_form'),
-					remove_forms_selector: '.remove_student_run_elective_form',
+					remove_forms_selector: '#student_run_electives .entry form',
 					new_button: $('add_student_run_elective_link'),
 					hide_button: $('hide_student_run_elective')
 			
@@ -860,7 +860,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 					url : '<?php echo webservice_url("mspr-admin"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=internal_awards',
 					data_destination: $('internal_awards'),
 					new_form: $('add_internal_award_form'),
-					remove_forms_selector: '.remove_internal_award_form',
+					remove_forms_selector: '#internal_awards .entry form',
 					new_button: $('add_internal_award_link'),
 					hide_button: $('hide_internal_award')
 			

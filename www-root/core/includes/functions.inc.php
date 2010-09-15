@@ -3363,10 +3363,8 @@ function load_rte($buttons = array(), $plugins = array(), $other_options = array
 	$tinymce .= "	theme_advanced_buttons1 : '".(((is_array($buttons)) && (is_array($buttons[1])) && (count($buttons[1]))) ? implode(",", $buttons[1]) : "")."',\n";
 	$tinymce .= "	theme_advanced_buttons2 : '".(((is_array($buttons)) && (is_array($buttons[2])) && (count($buttons[2]))) ? implode(",", $buttons[2]) : "")."',\n";
 	$tinymce .= "	theme_advanced_buttons3 : '".(((is_array($buttons)) && (is_array($buttons[3])) && (count($buttons[3]))) ? implode(",", $buttons[3]) : "")."',\n";
-	$tinymce .= "	tab_focus : ':prev,:next',";
-	$tinymce .= "	extended_valid_elements : 'a[name|href|target|title],img[class|src|border=0|alt|title|hspace|vspace|width|height|align|name],hr[class|width|size|noshade],font[face|size|color|style],span[class|align|style],object[classid|width|height|codebase|data|type|*]',\n";
-	$tinymce .= "	relative_urls : false,\n";
-	$tinymce .= "	remove_script_host : false\n";
+	$tinymce .= "	tab_focus : ':prev,:next',\n";
+	$tinymce .= "	extended_valid_elements : 'a[name|href|target|title|class],img[class|src|border=0|alt|title|hspace|vspace|width|height|align|name],hr[class|width|size|noshade],font[face|size|color|style],span[class|align|style],object[classid|width|height|codebase|data|type|*]'";
 	$tinymce .= 	((count($other_options)) ? ",\n\t".implode(",\n\t", $other_options) : "")."\n";
 	$tinymce .= "});\n";
 	$tinymce .= "function toggleEditor(id) {\n";

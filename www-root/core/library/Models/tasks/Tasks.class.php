@@ -37,22 +37,69 @@ class Tasks extends Collection {
 	
 	/**
 	 * Returns a Collection of Task objects
-	 * TODO add criteria to selection process 
 	 * @param array
 	 * @return Tasks
 	 */
-	static public function get( ) {
-		$query = "SELECT * from `tasks`";
+	static private function getAll( ) {
+		global $db;
+		$ORGANISATION_ID	= $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"];
+		
+		$query = "SELECT * from `tasks` where `organization_id`=".$db->qstr($ORGANISATION_ID);
 		
 		$results = $db->getAll($query);
 		$tasks = array();
 		if ($results) {
 			foreach ($results as $result) {
-				$task =  new Task($result['task_id'], $result['last_updated_date'], $result['last_updated_by'], $result['title'], $result['owner_type'],$result['owner_id'],$result['entry_year']);
+				$task = new Task($result['task_id'], $result['last_updated_date'], $result['last_updated_by'], $result['title'], $result['deadline'], $result['duration'], $result['description'],$result['release_start'], $result['release_finish'], $result['organisation_id']);
 				$tasks[] = $task;
 			}
 		}
 		return new self($tasks);
+	}
+	
+	/**
+	 * Returns a Collection of Tasks 
+	 * @param int $award_id
+	 * @return Tasks
+	 */
+	static public function get($obj = null) {
+		if ($obj instanceof User) {
+			$tasks = self::getByOwner($obj);
+		} elseif ($obj instanceof Course) {
+			$tasks = self::getByCourse($obj);
+		} elseif ($obj instanceof Event) {
+			$tasks = self::getByEvent($obj);
+		} else {
+			$tasks = self::getAll();
+		}
+		return $receipts;
+	}
+	
+	static private function getByOwner(User $user) {
+		return self::getByOwnerType(TASK_OWNER_USER,$user->getID());
+	}
+	
+	static private function getByCourse(Course $course) {
+		return self::getByOwnerType(TASK_OWNER_COURSE, $course->getID());
+	}
+	
+	static private function getByEvent(Event $event) {
+		return self::getByOwnerType(TASK_OWNER_EVENT,$event->getID());
+	}
+	
+	static private function getByOwnerType($owner_type, $owner_id) {
+		global $db;
+		$query = "SELECT * from `tasks` a left join `task_owners` b on a.`task_id`=b.`task_id` where b.`owner_type`=".$db->qstr($owner_type)." AND b.`owner_id`=".$db->qstr($owner_id);
+		$results = $db->getAll($query);
+		$tasks = array();
+		if ($results) {
+			foreach ($results as $result) {
+				$task = new Task($result['task_id'], $result['last_updated_date'], $result['last_updated_by'], $result['title'], $result['deadline'], $result['duration'], $result['description'],$result['release_start'], $result['release_finish'], $result['organisation_id']);
+				$tasks[] = $task;
+			}
+		}
+		return new self($tasks);
+		
 	}
 
 }

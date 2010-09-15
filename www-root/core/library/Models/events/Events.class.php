@@ -25,6 +25,7 @@
 require_once("Models/utility/SimpleCache.class.php");
 require_once("Event.class.php");
 require_once("Models/utility/Collection.class.php");
+require_once("Models/users/User.class.php");
 
 /**
  * Utility Class for getting a list of Events
@@ -38,18 +39,32 @@ class Events extends Collection {
 	
 	/**
 	 * Returns a Collection of Event objects 
-	 * TODO add criteria to selection process 
 	 * @param array
 	 * @return Users
 	 */
-	static public function get($criteria = null ) {
+	static public function get() {
 		$query = "SELECT * from `events`";
 		
 		$results = $db->getAll($query);
 		$events = array();
 		if ($results) {
 			foreach ($results as $result) {
-				$event =  new Event();
+				$event = new Event($result['event_id'],$result['recurring_id'],$result['region_id'],$result['course_id'],$result['event_phase'],$result['event_title'],$result['event_description'],$result['event_goals'],$result['event_objectives'],$result['event_message'],$result['event_location'],$result['event_start'],$result['event_finish'],$result['event_duration'],$result['release_date'],$result['release_until'],$result['updated_date'],$result['updated_by']);
+				$events[] = $event;
+			}
+		}
+		return new self($events);
+	}
+	
+	static public function getByContact(User $user) {
+		global $db;
+		$user_id = $user->getID();
+		$query = "SELECT * from `events` a join `event_contacts` b on a.`event_id`=b.`event_id` where `proxy_id`=".$db->qstr($user_id);
+		$results = $db->getAll($query);
+		$events = array();
+		if ($results) {
+			foreach ($results as $result) {
+				$event = new Event($result['event_id'],$result['recurring_id'],$result['region_id'],$result['course_id'],$result['event_phase'],$result['event_title'],$result['event_description'],$result['event_goals'],$result['event_objectives'],$result['event_message'],$result['event_location'],$result['event_start'],$result['event_finish'],$result['event_duration'],$result['release_date'],$result['release_until'],$result['updated_date'],$result['updated_by']);
 				$events[] = $event;
 			}
 		}

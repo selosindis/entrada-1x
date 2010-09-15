@@ -116,7 +116,7 @@ class Course {
 		$this->active = $active;
 		//be sure to cache this whenever created.
 		$cache = SimpleCache::getCache();
-		$cache->set($this,"Course",$this->$id);
+		$cache->set($this,"Course",$this->course_id);
 	}
 	
 	/**
@@ -226,6 +226,12 @@ class Course {
 	public function hasNotifications() {
 		return $this->notifications === 1;
 	}
+	
+	public function isOwner(User $user) {
+		$user_id = $user->getID();
+		return (($user_id == $this->director_id) || ($user_id == $this->pcoord_id));
+	}
+	
 	
 	public function getOrganization() {
 		//TODO return the organization object once the class is created

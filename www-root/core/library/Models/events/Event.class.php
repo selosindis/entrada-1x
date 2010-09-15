@@ -24,7 +24,9 @@
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
 */
-require_once("SimpleCache.class.php");
+require_once("Models/utility/SimpleCache.class.php");
+require_once("Models/courses/Course.class.php");
+require_once("Models/events/EventContacts.class.php");
 
 /**
  * Simple User class with basic information
@@ -34,102 +36,153 @@ require_once("SimpleCache.class.php");
  * @author Developer: Jonathan Fingland <jonathan.fingland@quensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  */
-class User {
-	private $id;
-	private $username;
-	private $firstname;
-	private $lastname;
-	private $number;
-	private $grad_year;
-	private $entry_year;
+class Event {
+	private $event_id,
+			$recurring_id,
+			$region_id,
+			$course_id,
+			$event_phase,
+			$event_title,
+			$event_description,
+			$event_goals,
+			$event_objectives,
+			$event_message,
+			$event_location,
+			$event_start,
+			$event_finish,
+			$event_duration,
+			$release_date,
+			$release_until,
+			$updated_date,
+			$updated_by;
 	
-	function __construct($id,$username, $lastname, $firstname, $number = 0, $grad_year = null, $entry_year = null) {
-		$this->id = $id;
-		$this->username = $username;
-		$this->firstname = $firstname;
-		$this->lastname = $lastname;
-		$this->number = $number;
-		$this->grad_year = $grad_year;
-		$this->entry_year = $entry_year;
+	function __construct(	$event_id,
+							$recurring_id,
+							$region_id,
+							$course_id,
+							$event_phase,
+							$event_title,
+							$event_description,
+							$event_goals,
+							$event_objectives,
+							$event_message,
+							$event_location,
+							$event_start,
+							$event_finish,
+							$event_duration,
+							$release_date,
+							$release_until,
+							$updated_date,
+							$updated_by
+							) {
+		$this->event_id = $event_id;
+		
+		$this->recurring_id = $recurring_id;
+		$this->region_id = $region_id;
+		$this->course_id = $course_id;
+		$this->event_phase = $event_phase;
+		$this->event_title = $event_title;
+		$this->event_description = $event_description;
+		$this->event_goals = $event_goals;
+		$this->event_objectives = $event_objectives;
+		$this->event_message = $event_message;
+		$this->event_location = $event_location;
+		$this->event_start = $event_start;
+		$this->event_finish = $event_finish;
+		$this->event_duration = $event_duration;
+		$this->release_date = $release_date;
+		$this->release_until = $release_until;
+		$this->updated_date = $updated_date;
+		$this->updated_by = $updated_by;
 		
 		//be sure to cache this whenever created.
 		$cache = SimpleCache::getCache();
-		$cache->set($this,"User",$this->$id);
+		$cache->set($this,"Event",$this->event_id);
 	}
 	
 	/**
-	 * Returns the id of the user
+	 * Returns the id of the event
 	 * @return int
 	 */
 	public function getID() {
-		return $this->id;
+		return $this->event_id;
 	}
-		
+	
 	/**
-	 * Returns the username of the user
+	 * @return RecurringEvent
+	 */
+	public function getRecurringEvent() {
+		//TODO return RecurringEvent data after class created
+	}
+	
+	
+	public function getEventComponents() {
+		//TODO return from event_eventtypes table after new class created 
+	}
+	
+	public function getRegion() {
+		//TODO return region obj
+	}
+	
+	/**
+	 * @return Course
+	 */
+	public function getCourse() {
+		return Course::get($course_id);
+	}
+	
+	public function getPhase() {
+		return $this->getPhase();	
+	}
+	
+	/**
 	 * @return string
 	 */
-	function getUsername() {
-		return $this->username;
+	public function getTitle() {
+		return $this->event_title;
+	}
+	
+	public function getDescription() {
+		return $this->event_description;
+	}
+	
+	public function getGoals() {
+		return $this->event_goals;
+	}
+	
+	public function getObjectives() {
+		return $this->event_objectives;
 	}
 	
 	/**
-	 * Returns the graduating year of the user, if available
-	 * @return int
+	 * @return EventContacts
 	 */
-	function getGradYear() {
-		return $this->grad_year;
+	public function getContacts() {
+		return EventContacts::get($this->event_id);
 	}
 	
-	/**
-	 * Returns the year a student enetered med school, if available
-	 * @return int
-	 */
-	function getEntryYear() {
-		return $this->entry_year;
+	//TODO Complete creation of getters, update, etc
+	
+	public function isOwner(User $user) {
+		//check first if they are course owner, then check the event contacts.
+		$course = $this->getCourse();
+		if ($course->isOwner($user)) {
+			return true;
+		} else {
+			$contacts = $this->getContacts();
+			return $contacts->contains($user);
+		}
 	}
 	
-	/**
-	 * Returns the first name of the user
-	 * @return string
-	 */
-	function getFirstname(){
-		return $this->firstname;
-	} 
-	
-	/**
-	 * Returns the last name of the user
-	 * @return string
-	 */
-	function getLastname() {
-		return $this->lastname;
-	}
-	
-	/**
-	 * Returns the Last and First names formatted as "lastname, firstname"
-	 * @return string
-	 */
-	function getFullname() {
-		return $this->lastname . ", " . $this->firstname;
-	}
-	
-	/**
-	 * Returns the real world student number/employee number
-	 * @return int
-	 */
-	function getNumber() {
-		return $this->number;
-	}
-	
-	public static function get($user_id) {
+	public static function get($event_id) {
 		$cache = SimpleCache::getCache();
-		$user = $cache->get("User",$user_id);
+		$event = $cache->get("Event",$event_id);
 		if (!$user) {
 			global $db;
-			$query = "SELECT * FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($user_id);
+			$query = "SELECT * FROM `events` WHERE `id` = ".$db->qstr($event_id);
 			$result = $db->getRow($query);
 			if ($result) {
-				$user =  new User($result['id'], $result['username'], $result['lastname'], $result['firstname'], $result['number'],$result['grad_year'],$result['entry_year']);			
+				$event = new Event($result['event_id'],$result['recurring_id'],$result['region_id'],$result['course_id'],$result['event_phase'],$result['event_title'],$result['event_description'],$result['event_goals'],$result['event_objectives'],$result['event_message'],$result['event_location'],$result['event_start'],$result['event_finish'],$result['event_duration'],$result['release_date'],$result['release_until'],$result['updated_date'],$result['updated_by']);
 			}		
 		} 
 		return $user;

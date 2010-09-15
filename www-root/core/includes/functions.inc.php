@@ -10592,3 +10592,21 @@ function add_task_sidebar () {
 
 	new_sidebar_item("Task List", $sidebar_html, "task-list", "open");
 }
+
+function add_error($message) {
+	global $ERROR, $ERRORSTR;
+	$ERROR++;
+	$ERRORSTR[] = $message;
+}
+
+function add_notice($message) {
+	global $NOTICE, $NOTICESTR;
+	$NOTICE++;
+	$NOTICESTR[] = $message;
+}
+
+function add_success($message) {
+	global $SUCCESS, $SUCCESSSTR;
+	$SUCCESS++;
+	$SUCCESSSTR[] = $message;
+}

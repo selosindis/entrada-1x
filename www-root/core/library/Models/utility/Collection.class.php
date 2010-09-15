@@ -75,4 +75,8 @@ class Collection implements Iterator, ArrayAccess, Countable {
     public function count() {
     	return count($this->container);
     }
+    
+    public function contains($element) {
+    	return in_array($element, $this->container, true);
+    }
 }

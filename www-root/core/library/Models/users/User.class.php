@@ -122,7 +122,7 @@ class User {
 		
 		//be sure to cache this whenever created.
 		$cache = SimpleCache::getCache();
-		$cache->set($this,"User",$this->$id);
+		$cache->set($this,"User",$this->id);
 	}
 	
 	/**

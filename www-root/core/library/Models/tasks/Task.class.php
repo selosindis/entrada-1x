@@ -62,6 +62,13 @@ class Task {
 	
 	
 	/**
+	 * id of organisation to which this task belongs.
+	 * @var int
+	 */
+	private $organisation_id;
+	
+	
+	/**
 	 * Returns a User, Course, or Event depending on the owner type
 	 * @return mixed
 	 */
@@ -141,6 +148,10 @@ class Task {
 		return $this->release_finish;
 	}
 	
+	function getOrganisationID() {
+		return $this->organisation_id;
+	}
+	
 	/**
 	 * Creates a new task. Returns new task_id
 	 * 
@@ -151,10 +162,11 @@ class Task {
 	 * @param string $description
 	 * @param int $release_start
 	 * @param int $release_finish
+	 * @param int $organisation_id
 	 * 
 	 * @return int
 	 */
-	static function create($creator_id, $title, $owner_type, $owner_id, $deadline, $duration = 0, $description = "", $release_start = null, $release_finish = null) {
+	static function create($creator_id, $title, $owner_type, $owner_id, $deadline, $duration = 0, $description = "", $release_start = null, $release_finish = null, $organisation_id=null) {
 		
 	} 
 	
@@ -206,7 +218,7 @@ class Task {
 			$query = "SELECT * FROM `tasks` WHERE `id` = ".$db->qstr($task_id);
 			$result = $db->getRow($query);
 			if ($result) {
-				$task = new Task($result['task_id'], $result['last_updated_date'], $result['last_updated_by'], $result['title'], $result['entry_year']);			
+				$task = new Task($result['task_id'], $result['last_updated_date'], $result['last_updated_by'], $result['title'], $result['deadline'], $result['duration'], $result['description'],$result['release_start'], $result['release_finish'], $result['organisation_id']);			
 			}		
 		} 
 		return $task;
@@ -223,8 +235,9 @@ class Task {
 	 * @param string $description
 	 * @param int $release_start
 	 * @param int $release_finish
+	 * @param int $organisation_id
 	 */
-	function __construct($task_id, $last_updated_date, $last_updated_by, $title, $deadline, $duration = 0, $description = "", $release_start = null, $release_finish = null) {
+	function __construct($task_id, $last_updated_date, $last_updated_by, $title, $deadline, $duration = 0, $description = "", $release_start = null, $release_finish = null, $organisation_id=null) {
 		$this->$task_id = $task_id;
 		$this->last_updated_date = $last_updated_date;
 		$this->last_updated_by = $last_updated_by;
@@ -234,6 +247,7 @@ class Task {
 		$this->description = $description;
 		$this->release_start = $release_start;
 		$this->release_finish = $release_finish;
+		$this->organisation_id = $organisation_id;
 		
 		$cache = SimpleCache::getCache();
 		$cache->set($this,"Task", $task_id);

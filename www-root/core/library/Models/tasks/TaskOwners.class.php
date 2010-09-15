@@ -1,12 +1,18 @@
 <?php
-require_once("Collection.class.php");
+require_once("Models/utility/Collection.class.php");
 require_once("Task.class.php");
+require_once("Models/users/User.class.php");
+require_once("Models/courses/Course.class.php");
+require_once("Models/events/Event.class.php");
 
 class TaskOwners extends Collection {
 	
-	
+	/**
+	 * @return TaskOwners
+	 */
 	static function get($task_id) {
-		$query = "SELECT * from `task_owner`";
+		global $db;
+		$query = "SELECT * from `task_owner` where `task_id`=".$db->qstr($task_id);
 		
 		$results = $db->getAll($query);
 		$owners = array();
@@ -24,11 +30,14 @@ class TaskOwners extends Collection {
 					case TASK_OWNER_EVENT:
 						$owner = Event::get($oid);
 						break;
+					default:
+						$owner = null; // not a valid owner type. ensures we don't use the same owner as the last run through the loop.
 				}
-				$task =  new Task($result['task_id'], $result['last_updated_date'], $result['last_updated_by'], $result['title'], $result['entry_year']);
-				$tasks[] = $task;
+				if ($owner) {
+					$owners[] = $owner;
+				}
 			}
 		}
-		return new self($tasks);
+		return new self($owners);
 	}
 }

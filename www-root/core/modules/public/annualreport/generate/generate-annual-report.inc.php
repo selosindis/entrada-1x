@@ -2816,7 +2816,7 @@ $exec_command    = <<<COMMAND
 COMMAND;
 
 	@exec($exec_command);
-	@exec("chmod 644 ".$output_file.".pdf");
+	@chmod($output_file.".pdf", 0644);
 } else {
 	application_log("error", "Unable to locate the executable HTMLDoc application that is required to generate the annual report'");
 }

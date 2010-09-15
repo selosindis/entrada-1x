@@ -9358,6 +9358,24 @@ function getPublicationRoles() {
 }
 
 /**
+ * This function gets lookup data from the global_lu_roles table
+ *
+ * @return array $result
+ */
+function getPublicationRoleSpecificFromID($roleID) {
+    global $db;
+
+    $query = "SELECT `role_description`
+	FROM `global_lu_roles`
+	WHERE `role_id` = '$roleID'";
+	
+    $result = $db->GetRow($query);
+	
+	return $result["role_description"];
+}
+
+
+/**
  * This function gets lookup data from the ar_lu_activity_types table
  *
  * @return array $results
@@ -9707,6 +9725,40 @@ function getPublicationTypesSpecific($type) {
 		ORDER BY `type_description`";
     }
 	
+    $results = $db->GetAll($query);
+	
+	return $results;
+}
+
+/**
+ * This function gets lookup data from the ar_lu_publication_type table
+ *
+ * @return array $result
+ */
+function getPublicationTypesSpecificFromID($type_id) {
+    global $db;
+	    
+    $query = "SELECT `type_description`
+	FROM `ar_lu_publication_type`
+	WHERE `type_id`= '$type_id'";
+    
+    $result = $db->GetRow($query);
+	
+	return $result["type_description"];
+}
+
+/**
+ * This function gets lookup data from the ar_lu_publication_type table
+ *
+ * @return array $results
+ */
+function getPublicationTypes() {
+    global $db;
+	
+    $query = "SELECT *
+	FROM `ar_lu_publication_type`
+	ORDER BY `type_description`";
+
     $results = $db->GetAll($query);
 	
 	return $results;

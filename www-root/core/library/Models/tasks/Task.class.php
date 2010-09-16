@@ -1,10 +1,10 @@
 <?php
 
 
-require_once("User.class.php");
-require_once("Course.class.php");
-require_once("Event.class.php");
-require_once("SimpleCache.class.php");
+require_once("Models/users/User.class.php");
+require_once("Models/courses/Course.class.php");
+require_once("Models/events/Event.class.php");
+require_once("Models/utility/SimpleCache.class.php");
 
 class Task {
 	/**

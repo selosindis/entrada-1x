@@ -22,7 +22,7 @@
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
 */
-require_once("Models/courses/SimpleCache.class.php");
+require_once("Models/utility/SimpleCache.class.php");
 
 /**
  * Course class with all information. Methods referring to other classes are not all complete.
@@ -240,9 +240,9 @@ class Course {
 	public static function get($course_id) {
 		$cache = SimpleCache::getCache();
 		$course = $cache->get("Course",$course_id);
-		if (!$user) {
+		if (!$course) {
 			global $db;
-			$query = "SELECT * FROM `courses` WHERE `id` = ".$db->qstr($course_id);
+			$query = "SELECT * FROM `courses` WHERE `course_id` = ".$db->qstr($course_id);
 			$result = $db->getRow($query);
 			if ($result) {
 				$course =  new Course($result['course_id'],$result['curriculum_type_id'],$result['director_id'],$result['pcoord_id'],$result['evalrep_id'],$result['studrep_id'],$result['course_name'],$result['course_code'],$result['course_description'],$result['unit_collaborator'],$result['unit_communicator'],$result['unit_health_advocate'],$result['unit_manager'],$result['unit_professional'],$result['unit_scholar'],$result['unit_medical_expert'],$result['unit_summative_assessment'],$result['unit_formative_assessment'],$result['unit_grading'],$result['resources_required'],$result['resources_optional'],$result['course_url'],$result['course_message'],$result['notifications'],$result['organization'],$result['active']);			

@@ -39,7 +39,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
-	$BREADCRUMB[] = array("url" => ENTRADA_URL."/annualreport/reports", "title" => "My Reports");
+	$BREADCRUMB[] = array("url" => ENTRADA_URL."/annualreport/generate", "title" => "Annual Report Generator");
 
 	if (($router) && ($router->initRoute())) {
 		$module_file = $router->getRoute();

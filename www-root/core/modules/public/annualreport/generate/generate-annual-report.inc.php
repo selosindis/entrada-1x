@@ -41,7 +41,7 @@ $PAGE_META["title"]		= "Annual Report Generation";
 $PAGE_META["category"]	= "Generate a PDF version of your Annual Report";
 $PAGE_META["keywords"]	= "";
 
-$BREADCRUMB[]	= array("url" => ENTRADA_URL."/annualreport/reports?section=generate-annual-report", "title" => "Annual Report Generation");
+$BREADCRUMB[]	= array("url" => ENTRADA_URL."/annualreport/generate?section=generate-annual-report", "title" => "Annual Report Generation");
 
 // This grid should be expanded upon redirecting back to the prizes index.
 $_SESSION["reports_expand_grid"] = "reports_grid";
@@ -351,50 +351,41 @@ if(!$undergraduateTeachingResults = $db->GetAll($undergraduateTeachingQuery))
 	<table class="tableListReport" border="1" cellspacing="0" summary="Education">
 		<colgroup>
 			<col class="delete" />
-			<col class="course_number" />
+			<col class="course_number" style="width: 100px"/>
 			<col class="course_name"  style="width: 100px"/>
 			<col class="assigned" />
-			<col class="small_numbers" />
-			<col class="small_numbers" />	
-			<col class="small_numbers" />
-			<col class="small_numbers" />
-			<col class="small_numbers" />
-			<col class="small_numbers" />
-			<col class="small_numbers" />
-			<col class="small_numbers" />
-			<col class="small_numbers" />
-			<?php if(!$clinical_value) { ?>
-				<col class="small_numbers" />
-			<?php } ?>
 		</colgroup>
 		<thead>
 			<tr>
 				<td class="delete" id="colDelete">#</td>
-				<td class="course_number" id="colcourse_number">Course Number</td>
+				<td class="course_number" id="colcourse_number" style="width: 100px">Course Number</td>
 				<td class="course_name" id="colcourse_name" style="width: 100px">Course Name</td>
 				<td class="assigned" id="colassigned">Assigned</td>
-				<td class="small_numbers" id="collec">Lec</td>
-				<td class="small_numbers" id="collab">Lab</td>
-				<td class="small_numbers" id="colsg">Small Group</td>
-				<td class="small_numbers" id="colsym" style="width: 65px">Symposium</td>
-				<td class="small_numbers" id="coldir">Directed Learning</td>
-				<td class="small_numbers" id="colfb">Feedback</td>
-				<td class="small_numbers" id="colexam">Exam</td>
-				<td class="small_numbers" id="colsem">Clerkship Seminar</td>
-				<td class="small_numbers" id="coloth">Other</td>
-				<?php if(!$clinical_value) { ?>
-					<td class="small_numbers" id="colcoord_enrollment">Co-Ord Enrol</td>
-				<?php } ?>
 			</tr>
 		</thead>
 		<tbody>
 		<?php
 			$ctr 			= 0;
 			$commentsArray 	= array();
+			$hoursArray 	= array();
 			foreach($undergraduateTeachingResults as $result)
 			{	
 				$listing 								= $ctr+1;
+				$hoursArray[$ctr]['course_number']		= $result['course_number'];
 				$commentsArray[$ctr]['course_number']	= $result['course_number'];
+				
+				$hoursArray[$ctr]["lecture_hours"] = $result['lecture_hours'];
+				$hoursArray[$ctr]["lab_hours"] = $result['lab_hours'];
+				$hoursArray[$ctr]["small_group_hours"] = $result['small_group_hours'];
+				$hoursArray[$ctr]["symposium_hours"] = $result['symposium_hours'];
+				$hoursArray[$ctr]["directed_independant_learning_hours"] = $result['directed_independant_learning_hours'];
+				$hoursArray[$ctr]["review_feedback_session_hours"] = $result['review_feedback_session_hours'];
+				$hoursArray[$ctr]["examination_hours"] = $result['examination_hours'];
+				$hoursArray[$ctr]["clerkship_seminar_hours"] = $result['clerkship_seminar_hours'];
+				$hoursArray[$ctr]["other_hours"] = $result['other_hours'];
+				if(!$clinical_value) {
+					$hoursArray[$ctr]["coord_enrollment"] = $result['coord_enrollment'];
+				}
 				
 				if($result['comments'] == '')
 				{
@@ -406,25 +397,71 @@ if(!$undergraduateTeachingResults = $db->GetAll($undergraduateTeachingQuery))
 				}
 				echo "<tr>\n";
 				echo "	<td class=\"delete\">".$listing."&nbsp;</td>\n";					
-				echo "	<td class=\"course_number\">".((strlen(html_encode($result['course_number'])) > 15) ? substr(html_encode($result['course_number']), 0, 14) . "..." : html_encode($result['course_number']))."&nbsp;</td>\n";
+				echo "	<td class=\"course_number\">".html_encode($result['course_number'])."&nbsp;</td>\n";
 				echo "	<td class=\"course_name\">".((strlen(html_encode($result['course_name'])) > 80) ? substr(html_encode($result['course_name']), 0, 79) . "..." : html_encode($result['course_name']))."&nbsp;</td>\n";
-				echo "	<td class=\"assigned\">".html_encode($result['assigned'])."&nbsp;</td>\n";									
-				echo "	<td class=\"small_numbers\">".html_encode($result['lecture_hours'])."&nbsp;</td>\n";
-				echo "	<td class=\"small_numbers\">".html_encode($result['lab_hours'])."&nbsp;</td>\n";
-				echo "	<td class=\"small_numbers\">".html_encode($result['small_group_hours'])."&nbsp;</td>\n";
-				echo "	<td class=\"small_numbers\">".html_encode($result['symposium_hours'])."&nbsp;</td>\n";
-				echo "	<td class=\"small_numbers\">".html_encode($result['directed_independant_learning_hours'])."&nbsp;</td>\n";
-				echo "	<td class=\"small_numbers\">".html_encode($result['review_feedback_session_hours'])."&nbsp;</td>\n";
-				echo "	<td class=\"small_numbers\">".html_encode($result['examination_hours'])."&nbsp;</td>\n";
-				echo "	<td class=\"small_numbers\">".html_encode($result['clerkship_seminar_hours'])."&nbsp;</td>\n";
-				echo "	<td class=\"small_numbers\">".html_encode($result['other_hours'])."&nbsp;</td>\n";
-				if(!$clinical_value) {
-					echo "	<td class=\"small_numbers\">".html_encode($result['coord_enrollment'])."&nbsp;</td>\n";
-				}
+				echo "	<td class=\"assigned\">".html_encode($result['assigned'])."&nbsp;</td>\n";
 				echo "</tr>\n";
 				$ctr++;
 			}
 		?>
+		</tbody>
+	</table>
+	<br />
+	<table class="tableListReport" border="1" cellspacing="0" summary="Education Hours">
+			<colgroup>
+				<col class="delete" />
+				<col class="small_numbers" />
+				<col class="small_numbers" />	
+				<col class="small_numbers" />
+				<col class="small_numbers" />
+				<col class="small_numbers" />
+				<col class="small_numbers" />
+				<col class="small_numbers" />
+				<col class="small_numbers" />
+				<col class="small_numbers" />
+				<?php if(!$clinical_value) { ?>
+					<col class="small_numbers" />
+				<?php } ?>
+			</colgroup>
+			<thead>
+				<tr>
+					<td class="delete" id="colDelete" width=\"2%\">#</td>
+					<td class="small_numbers" id="collec">Lec</td>
+					<td class="small_numbers" id="collab">Lab</td>
+					<td class="small_numbers" id="colsg">Small Group</td>
+					<td class="small_numbers" id="colsym" style="width: 65px">Symposium</td>
+					<td class="small_numbers" id="coldir">Directed Learning</td>
+					<td class="small_numbers" id="colfb">Feedback</td>
+					<td class="small_numbers" id="colexam">Exam</td>
+					<td class="small_numbers" id="colsem">Clerkship Seminar</td>
+					<td class="small_numbers" id="coloth">Other</td>
+					<?php if(!$clinical_value) { ?>
+						<td class="small_numbers" id="colcoord_enrollment">Co-Ord Enrol</td>
+					<?php } ?>
+				</tr>
+			</thead>
+			<tbody>
+			<?php
+				for($i=0; $i < count($hoursArray); $i++)
+				{	
+					$listing 								= $i+1;
+					echo "<tr>\n";
+					echo "	<td class=\"delete\" width=\"2%\">".$listing."&nbsp;</td>\n";
+						echo "	<td class=\"small_numbers\">".html_encode($hoursArray[$i]['lecture_hours'])."&nbsp;</td>\n";
+						echo "	<td class=\"small_numbers\">".html_encode($hoursArray[$i]['lab_hours'])."&nbsp;</td>\n";
+						echo "	<td class=\"small_numbers\">".html_encode($hoursArray[$i]['small_group_hours'])."&nbsp;</td>\n";
+						echo "	<td class=\"small_numbers\">".html_encode($hoursArray[$i]['symposium_hours'])."&nbsp;</td>\n";
+						echo "	<td class=\"small_numbers\">".html_encode($hoursArray[$i]['directed_independant_learning_hours'])."&nbsp;</td>\n";
+						echo "	<td class=\"small_numbers\">".html_encode($hoursArray[$i]['review_feedback_session_hours'])."&nbsp;</td>\n";
+						echo "	<td class=\"small_numbers\">".html_encode($hoursArray[$i]['examination_hours'])."&nbsp;</td>\n";
+						echo "	<td class=\"small_numbers\">".html_encode($hoursArray[$i]['clerkship_seminar_hours'])."&nbsp;</td>\n";
+						echo "	<td class=\"small_numbers\">".html_encode($hoursArray[$i]['other_hours'])."&nbsp;</td>\n";
+						if(!$clinical_value) {
+							echo "	<td class=\"small_numbers\">".html_encode($hoursArray[$i]['coord_enrollment'])."&nbsp;</td>\n";
+						}
+					echo "</tr>\n";
+				}
+			?>
 		</tbody>
 	</table>
 	<br />
@@ -437,8 +474,8 @@ if(!$undergraduateTeachingResults = $db->GetAll($undergraduateTeachingQuery))
 			<thead>
 				<tr>
 					<td class="delete" id="colDelete" width=\"2%\">#</td>
-					<td class="course_number" id="colcourse_number" width=\"25%\">Course Number</td>
-					<td class="full_description" id="colcourse_name" width=\"73%\">Course Name</td>
+					<td class="course_number" id="colcourse_number" width=\"25%\" style="width: 100px">Course Number</td>
+					<td class="full_description" id="colcourse_name" width=\"73%\">Comments</td>
 				</tr>
 			</thead>
 			<tbody>
@@ -448,7 +485,7 @@ if(!$undergraduateTeachingResults = $db->GetAll($undergraduateTeachingQuery))
 					$listing 								= $i+1;
 					echo "<tr>\n";
 					echo "	<td class=\"delete\" width=\"2%\">".$listing."&nbsp;</td>\n";					
-					echo "	<td class=\"course_number\" width=\"25%\">".html_encode($commentsArray[$i]['course_number'])."&nbsp;</td>\n";
+					echo "	<td class=\"course_number\" width=\"25%\" style=\"width: 100px\">".html_encode($commentsArray[$i]['course_number'])."&nbsp;</td>\n";
 					echo "	<td class=\"full_description\" width=\"73%\">".html_encode($commentsArray[$i]['comments'])."&nbsp;</td>\n";
 					echo "</tr>\n";
 				}
@@ -475,7 +512,7 @@ else {
 	<table class="tableListReport" border="1" cellspacing="0" summary="Education">
 		<colgroup>
 			<col class="delete" />
-			<col class="course_number" />
+			<col class="course_number" style="width: 100px"/>
 			<col class="course_name" />
 			<col class="assigned" />
 			<col class="small_numbers" />
@@ -494,7 +531,7 @@ else {
 		<thead>
 			<tr>
 				<td class="delete" id="colDelete">#</td>
-				<td class="course_number" id="colcourse_number">Course Number</td>
+				<td class="course_number" id="colcourse_number" style="width: 100px">Course Number</td>
 				<td class="course_name" id="colcourse_name">Course Name</td>
 				<td class="assigned" id="colassigned">Assigned</td>				
 				<td class="small_numbers" id="collec_enrollment">Lec Enrol</td>				
@@ -531,7 +568,7 @@ else {
 				
 				echo "<tr>\n";
 				echo "	<td class=\"delete\">".$listing."&nbsp;</td>\n";					
-				echo "	<td class=\"course_number\">".((strlen(html_encode($result['course_number'])) > 15) ? substr(html_encode($result['course_number']), 0, 14) . "..." : html_encode($result['course_number']))."&nbsp;</td>\n";
+				echo "	<td class=\"course_number\">".html_encode($result['course_number'])."&nbsp;</td>\n";
 				echo "	<td class=\"course_name\">".((strlen(html_encode($result['course_name'])) > 80) ? substr(html_encode($result['course_name']), 0, 79) . "..." : html_encode($result['course_name']))."&nbsp;</td>\n";
 				echo "	<td class=\"assigned\">".html_encode($result['assigned'])."&nbsp;</td>\n";					
 				echo "	<td class=\"small_numbers\">".html_encode($result['lec_enrollment'])."&nbsp;</td>\n";					
@@ -563,7 +600,7 @@ else {
 			<tr>
 				<td class="delete" id="colDelete" width=\"2%\">#</td>
 				<td class="course_number" id="colcourse_number" width=\"25%\">Course Number</td>
-				<td class="full_description" id="colcourse_name" width=\"73%\">Course Name</td>
+				<td class="full_description" id="colcourse_name" width=\"73%\">Comments</td>
 			</tr>
 		</thead>
 		<tbody>
@@ -698,7 +735,7 @@ else
 				<tr>
 					<td class="delete" id="colDelete" width="2%">#</td>
 					<td class="course_number" id="colcourse_number" width="25%">Course Number</td>
-					<td class="full_description" id="colcourse_name" width="73%">Course Name</td>
+					<td class="full_description" id="colcourse_name" width="73%">Comments</td>
 				</tr>
 			</thead>
 			<tbody>
@@ -2781,9 +2818,6 @@ if(!$clinical_value) {
 
 		application_log("error", "Error downloading Annual Report Document (".$output_file.".html".") for ".$proxy_id.".");
 	}
-	?>
-
-<?php 
 
 if((is_array($APPLICATION_PATH)) && (isset($APPLICATION_PATH["htmldoc"])) && (@is_executable($APPLICATION_PATH["htmldoc"]))) {
 $exec_command    = <<<COMMAND
@@ -2816,7 +2850,7 @@ $exec_command    = <<<COMMAND
 COMMAND;
 
 	@exec($exec_command);
-	@exec("chmod 644 ".$output_file.".pdf");
+	@chmod($output_file.".pdf", 0644);
 } else {
 	application_log("error", "Unable to locate the executable HTMLDoc application that is required to generate the annual report'");
 }

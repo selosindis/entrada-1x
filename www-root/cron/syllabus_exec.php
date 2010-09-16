@@ -68,7 +68,7 @@ if((is_array($APPLICATION_PATH)) && (isset($APPLICATION_PATH["htmldoc"])) && (@i
 			$filename	= str_replace(array("%GRADYEAR%", "%PHASE%"), array($grad_year, $phase), $output_file);
 			
 			@exec($command);
-			@exec("chmod 644 ".$filename);
+			@chmod($filename, 0644);
 		}
 	}
 } else {

@@ -134,7 +134,6 @@ if (!defined("IN_PROFILE")) {
 		$research_citations = $mspr["Research"];
 		
 	
-		
 		display_status_messages();
 	
 ?>
@@ -848,7 +847,6 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 			</div>
 		</div>
 	</div>
-	
 	<div class="section">
 		<h3 title="Internal Awards" class="collapsable collapsed">Internal Awards</h3>
 		<div id="internal-awards"><?php echo display_internal_awards($internal_awards); ?></div>
@@ -880,8 +878,7 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 	?>
 	
 	
-</div>
-
+</div>	
 <?php 
 	}
 }

@@ -163,7 +163,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										 * PITA, I know.
 										 */
 										if((isset($_POST["timedrelease"])) && ($_POST["timedrelease"] == "yes")) {
-											$timed_release		= validate_calendar("valid", false, false);
+											$timed_release		= validate_calendars("valid", false, false);
 
 											if($ERROR) {
 												$ONLOAD[]		= "alert('".addslashes($ERRORSTR[0])."')";
@@ -439,7 +439,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 								 * PITA, I know.
 								 */
 								if((isset($_POST["timedrelease"])) && ($_POST["timedrelease"] == "yes")) {
-									$timed_release = validate_calendar("valid", false, false);
+									$timed_release = validate_calendars("valid", false, false);
 
 									if($ERROR) {
 										$ONLOAD[]		= "alert('".addslashes($ERRORSTR[0])."')";

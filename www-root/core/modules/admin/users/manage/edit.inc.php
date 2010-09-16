@@ -147,10 +147,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 					}
 
 					/**
-					 * Required field "access_starts" / Access Start (validated through validate_calendar function).
-					 * Non-required field "access_finish" / Access Finish (validated through validate_calendar function).
+					 * Required field "access_starts" / Access Start (validated through validate_calendars function).
+					 * Non-required field "access_finish" / Access Finish (validated through validate_calendars function).
 					 */
-					$access_date = validate_calendar("access", true, false);
+					$access_date = validate_calendars("access", true, false);
 					if ((isset($access_date["start"])) && ((int) $access_date["start"])) {
 						$PROCESSED_ACCESS["access_starts"] = (int) $access_date["start"];
 					}

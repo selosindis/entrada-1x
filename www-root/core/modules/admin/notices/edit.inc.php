@@ -87,7 +87,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 						$ERRORSTR[] = "You must provide a notice summary.";
 					}
 
-					$display_date = validate_calendar("display", true, true);
+					$display_date = validate_calendars("display", true, true);
 					if((isset($display_date["start"])) && ((int) $display_date["start"])) {
 						$PROCESSED["display_from"] = (int) $display_date["start"];
 					} else {

@@ -181,9 +181,9 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						}
 
 						/**
-						 * Required field "event_start" / Event Date & Time Start (validated through validate_calendar function).
+						 * Required field "event_start" / Event Date & Time Start (validated through validate_calendars function).
 						 */
-						$start_date = validate_calendar("event", true, false);
+						$start_date = validate_calendars("event", true, false);
 						if((isset($start_date["start"])) && ((int) $start_date["start"])) {
 							$PROCESSED["event_start"] = (int) $start_date["start"];
 						}
@@ -268,10 +268,10 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						}
 	
 						/**
-						 * Non-required field "release_date" / Viewable Start (validated through validate_calendar function).
-						 * Non-required field "release_until" / Viewable Finish (validated through validate_calendar function).
+						 * Non-required field "release_date" / Viewable Start (validated through validate_calendars function).
+						 * Non-required field "release_until" / Viewable Finish (validated through validate_calendars function).
 						 */
-						$viewable_date = validate_calendar("viewable", false, false);
+						$viewable_date = validate_calendars("viewable", false, false);
 						if((isset($viewable_date["start"])) && ((int) $viewable_date["start"])) {
 							$PROCESSED["release_date"] = (int) $viewable_date["start"];
 						} else {

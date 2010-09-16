@@ -223,10 +223,10 @@ if (!defined("IN_MANAGE")) {
 			}
 
 			/**
-			 * Required field "release_date" / Available Start (validated through validate_calendar function).
-			 * Non-required field "release_until" / Available Finish (validated through validate_calendar function).
+			 * Required field "release_date" / Available Start (validated through validate_calendars function).
+			 * Non-required field "release_until" / Available Finish (validated through validate_calendars function).
 			 */
-			$available_date = validate_calendar("available", true, false, false);
+			$available_date = validate_calendars("available", true, false, false);
 			if ((isset($available_date["start"])) && ((int) $available_date["start"])) {
 				$PROCESSED["available_start"] = (int) $available_date["start"];
 			} else {

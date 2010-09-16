@@ -17,8 +17,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 	header("Location: ".ENTRADA_URL);
 	exit;
 } elseif (!$ENTRADA_ACL->amIAllowed("tasks", "create", false)) {
-	$ERROR++;
-	$ERRORSTR[]	= "Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
+	add_error("Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.");
 
 	echo display_error();
 
@@ -26,7 +25,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 } else {
 	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/tasks?section=create", "title" => "Create Task");
 	
+	$ORGANISATION_ID = $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"];
+	
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/AutoCompleteList.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+	
+	require_once("Models/courses/Courses.class.php");
+	require_once("Models/tasks/Tasks.class.php");
+	require_once("Models/users/User.class.php");
 	
 	$PROCESSED = array();
 	$PROCESSED["task_audience_type"] = "proxy_id";
@@ -44,130 +49,121 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 		/**
 		 * Required field "course_id" / Course
 		 */
-		if((isset($_POST["course_id"])) && ($course_id = clean_input($_POST["course_id"], array("int")))) {
+		if((isset($_POST["course_id"])) &&($course_id = clean_input($_POST["course_id"], array("int"))) ) {
 			$course = Course::get($course_id);
 			if ($course) {
-				$ENTRADA_ACL->amIAllowed(new TaskResource(), "create");
-			}
-			
-			$query	= "	SELECT * FROM `courses` 
-						WHERE `course_id` = ".$db->qstr($course_id)."
-						AND `course_active` = '1'";
-			$result	= $db->GetRow($query);
-			if ($result) {
-				if($ENTRADA_ACL->amIAllowed(new EventResource(null, $course_id, $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"]), "create")) {
-					$PROCESSED["course_id"] = $course_id;
+				if ($ENTRADA_ACL->amIAllowed(new TaskResource(null,$course_id,$ORGANISATION_ID), "create")) {
+					$PROCESSED['course_id'] = $course_id;
 				} else {
-					$ERROR++;
-					$ERRORSTR[] = "You do not have permission to add an event for the course you selected. <br /><br />Please re-select the course you would like to place this event into.";
-					application_log("error", "A program coordinator attempted to add an event to a course [".$course_id."] they were not the coordinator of.");
+					add_error("You do not have permission to add a task for the course you selected. <br />Please re-select the course you would like to associate with this task.");
+					application_log("error", "A program coordinator attempted to add a task to a course [".$course_id."] they were not the coordinator of.");
 				}
 			} else {
-				$ERROR++;
-				$ERRORSTR[] = "The <strong>Course</strong> you selected does not exist.";
+				add_error("The <strong>Course</strong> you selected does not exist.");
 			}
-		} else {
-			$ERROR++;
-			$ERRORSTR[] = "The <strong>Course</strong> field is a required field.";
+		}
+		
+		$deadline = validate_calendar("Deadline","task_deadline");
+		if((isset($deadline)) && ((int) $deadline)) {
+			$PROCESSED["task_deadline"] = (int) $deadline;
 		}
 		
 		
-		/////////////
+		if (isset($_POST["time_required"]) && ($time_required = clean_input($_POST['time_required']))) {
+			$PROCESSED['time_required'] = $time_required;
+		}
 		
-				if(isset($_POST["event_audience_type"])) {
-				$PROCESSED["event_audience_type"] = clean_input($_POST["event_audience_type"], array("page_url"));
+		if (isset($_POST['description']) && (clean_input($_POST["description"], array("notags", "nows")))) {
+			$PROCESSED['description'] = clean_input($_POST["description"], array("allowedtags"));
+		}
+				
+		if(isset($_POST["task_audience_type"])) {
+			$PROCESSED["task_audience_type"] = clean_input($_POST["task_audience_type"], array("page_url"));
 
-				switch($PROCESSED["event_audience_type"]) {
-					case "grad_year" :
-					/**
-					 * Required field "associated_grad_years" / Graduating Year
-					 * This data is inserted into the event_audience table as grad_year.
-					 */
-						if((isset($_POST["associated_grad_years"]))) {
-							$associated_grad_years = explode(',', $_POST["associated_grad_years"]);
-							if((isset($associated_grad_years)) && (is_array($associated_grad_years)) && (count($associated_grad_years))) {
-								foreach($associated_grad_years as $year) {
-									if($year = clean_input($year, array("trim", "int"))) {
-										$PROCESSED["associated_grad_years"][] = $year;
-									}
+			switch($PROCESSED["task_audience_type"]) {
+				case "grad_year" :
+				/**
+				 * Required field "associated_grad_years" / Graduating Year
+				 * This data is inserted into the task_audience table as grad_year.
+				 */
+					if((isset($_POST["associated_grad_years"]))) {
+						$associated_grad_years = explode(',', $_POST["associated_grad_years"]);
+						if((isset($associated_grad_years)) && (is_array($associated_grad_years)) && (count($associated_grad_years))) {
+							foreach($associated_grad_years as $year) {
+								if($year = clean_input($year, array("trim", "int"))) {
+									$PROCESSED["associated_grad_years"][] = $year;
 								}
-								if(!count($PROCESSED["associated_grad_years"])) {
-									$ERROR++;
-									$ERRORSTR[] = "You have chosen <strong>Entire Class Event</strong> as an <strong>Event Audience</strong> type, but have not selected any graduating years.";
-								}
-							} else {
-								$ERROR++;
-								$ERRORSTR[] = "You have chosen <strong>Entire Class Event</strong> as an <strong>Event Audience</strong> type, but have not selected any graduating years.";
 							}
-						}
-
-						break;
-					case "group_id" :
-						$ERROR++;
-						$ERRORSTR[] = "The <strong>Group Event</strong> as an <strong>Event Audience</strong> type, has not yet been implemented.";
-						break;
-					case "proxy_id" :
-					/**
-					 * Required field "associated_proxy_ids" / Associated Students
-					 * This data is inserted into the event_audience table as proxy_id.
-					 */
-						if((isset($_POST["associated_student"]))) {
-							$associated_proxies = explode(',', $_POST["associated_student"]);
-							if((isset($associated_proxies)) && (is_array($associated_proxies)) && (count($associated_proxies))) {
-								foreach($associated_proxies as $proxy_id) {
-									if($proxy_id = clean_input($proxy_id, array("trim", "int"))) {
-										$query = "	SELECT a.*
-													FROM `".AUTH_DATABASE."`.`user_data` AS a
-													LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
-													ON a.`id` = b.`user_id`
-													WHERE a.`id` = ".$db->qstr($proxy_id)."
-													AND b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
-													AND b.`account_active` = 'true'
-													AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
-													AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")";
-										$result	= $db->GetRow($query);
-										if($result) {
-											$PROCESSED["associated_proxy_ids"][] = $proxy_id;
-										}
-									}
-								}
-								if(!count($PROCESSED["associated_proxy_ids"])) {
-									$ERROR++;
-									$ERRORSTR[] = "You have chosen <strong>Individual Student Event</strong> as an <strong>Event Audience</strong> type, but have not selected any individuals.";
-								}
-							} else {
-								$ERROR++;
-								$ERRORSTR[] = "You have chosen <strong>Individual Student Event</strong> as an <strong>Event Audience</strong> type, but have not selected any individuals.";
-							}
-						}
-						break;
-					case "organisation_id":
-						if((isset($_POST["associated_organisation_id"])) && ($associated_organisation_id = clean_input($_POST["associated_organisation_id"], array("trim", "int")))) {
-							if($ENTRADA_ACL->amIAllowed('resourceorganisation'.$associated_organisation_id, 'create')) {
-								$PROCESSED["associated_organisation_id"] = $associated_organisation_id;
-							} else {
-								$ERROR++;
-								$ERRORSTR[] = "You do not have permission to add an event for this organisation, please select a different one.";
+							if(!count($PROCESSED["associated_grad_years"])) {
+								add_error("You have chosen <strong>Entire Class Task</strong> as a <strong>Task Audience</strong> type, but have not selected any graduating years.");
 							}
 						} else {
-							$ERROR++;
-							$ERRORSTR[] = "You have chosen <strong>Entire Class Event</strong> as an <strong>Event Audience</strong> type, but have not selected a graduating year.";
+							add_error("You have chosen <strong>Entire Class Task</strong> as an <strong>Task Audience</strong> type, but have not selected any graduating years.");
 						}
-						break;
-					default :
-						$ERROR++;
-						$ERRORSTR[] = "Unable to proceed because the <strong>Event Audience</strong> type is unrecognized.";
+					}
 
-						application_log("error", "Unrecognized event_audience_type [".$_POST["event_audience_type"]."] encountered.");
-						break;
-				}
-			} else {
-				$ERROR++;
-				$ERRORSTR[] = "Unable to proceed because the <strong>Event Audience</strong> type is unrecognized.";
-
-				application_log("error", "The event_audience_type field has not been set.");
+					break;
+				case "group_id" :
+					add_error("The <strong>Group Task</strong> as a <strong>Task Audience</strong> type, has not yet been implemented.");
+					break;
+				case "proxy_id" :
+				/**
+				 * Required field "associated_proxy_ids" / Associated Students
+				 * This data is inserted into the task_audience table as proxy_id.
+				 */
+					if((isset($_POST["associated_individual"]))) {
+						$associated_proxies = explode(',', $_POST["associated_individual"]);
+						if((isset($associated_proxies)) && (is_array($associated_proxies)) && (count($associated_proxies))) {
+							foreach($associated_proxies as $proxy_id) {
+								if($proxy_id = clean_input($proxy_id, array("trim", "int"))) {
+									$query = "	SELECT a.*
+												FROM `".AUTH_DATABASE."`.`user_data` AS a
+												LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+												ON a.`id` = b.`user_id`
+												WHERE a.`id` = ".$db->qstr($proxy_id)."
+												AND b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+												AND b.`account_active` = 'true'
+												AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
+												AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")";
+									$result	= $db->GetRow($query);
+									if($result) {
+										$PROCESSED["associated_proxy_ids"][] = $proxy_id;
+									}
+								}
+							}
+							if(!count($PROCESSED["associated_proxy_ids"])) {
+								add_error("You have chosen <strong>Individual Task</strong> as a <strong>Task Audience</strong> type, but have not selected any individuals.");
+							}
+						} else {
+							add_error("You have chosen <strong>Individual Task</strong> as a <strong>Task Audience</strong> type, but have not selected any individuals.");
+						}
+					}
+					break;
+				case "organisation_id":
+					if((isset($_POST["associated_organisation_id"])) && ($associated_organisation_id = clean_input($_POST["associated_organisation_id"], array("trim", "int")))) {
+						if($ENTRADA_ACL->amIAllowed('resourceorganisation'.$associated_organisation_id, 'create')) {
+							$PROCESSED["associated_organisation_id"] = $associated_organisation_id;
+						} else {
+							add_error("You do not have permission to add a task for this organisation, please select a different one.");
+						}
+					} else {
+						add_error("You have chosen <strong>Entire Organisation Event</strong> as an <strong>Event Audience</strong> type, but have not selected an organisation.");
+					}
+					break;
+				default :
+					add_error("Unable to proceed because the <strong>Event Audience</strong> type is unrecognized.");
+					application_log("error", "Unrecognized event_audience_type [".$_POST["event_audience_type"]."] encountered.");
+					break;
 			}
+		} else {
+			add_error("Unable to proceed because the <strong>Event Audience</strong> type is unrecognized.");
+			application_log("error", "The event_audience_type field has not been set.");
+		}
 		
+		//Error processing comeplete
+		if (!has_error()) {
+			
+		}
 		
 	}
 	
@@ -211,6 +207,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 						</table>
 					</td>
 				</tr>
+			</tfoot>
 			<tbody>
 				<tr>
 					<td>&nbsp;</td>
@@ -218,7 +215,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 						<label for="title" class="form-required">Task Title</label>
 					</td>
 					<td >
-						<input id="title" name="title" type="text" maxlength="4096" style="width: 250px; vertical-align: middle;" ></input>	
+						<input id="title" name="title" type="text" maxlength="4096" style="width: 250px; vertical-align: middle;" value="<?php echo html_encode($PROCESSED["title"]); ?>"></input>	
 					</td>
 				</tr>
 				<tr>
@@ -226,7 +223,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 						<td><label for="course_id" class="form-nrequired">Course</label></td>
 						<td>
 							<select id="course_id" name="course_id" style="width: 95%">
-							<option value="none">None</option>
+							<option value="0">None</option>
 							<?php
 							$query		= "	SELECT * FROM `courses` 
 											WHERE `course_active` = '1'
@@ -244,7 +241,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 						</td>
 					</tr>
 				<?php
-					echo generate_calendar("task_deadline","Deadline",true,$PROCESSED['deadline'],true,false,false,false,false);
+					echo generate_calendar("task_deadline","Deadline",true,$PROCESSED['task_deadline'],true,false,false,false,false);
 				?>
 				<tr>
 					<td>&nbsp;</td>
@@ -264,7 +261,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 				<tr>
 					<td>&nbsp;</td>
 					<td colspan="2">
-						<textarea id="description" name="description" style="width: 100%; height: 100px;" cols="65" rows="20"></textarea>	
+						<textarea id="description" name="description" style="width: 100%; height: 100px;" cols="65" rows="20"><?php echo html_encode(trim(strip_selected_tags($PROCESSED['description'], array("font")))); ?></textarea>	
 					</td>
 				</tr>
 				<tr>

@@ -167,7 +167,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 						$PROCESSED["plan_body"] = $plan_body;
 					}
 					
-					$timeline_dates = validate_calendar("timeline", true, true);
+					$timeline_dates = validate_calendars("timeline", true, true);
 					if ((isset($timeline_dates["start"])) && ((int) $timeline_dates["start"])) {
 						$PROCESSED["timeline_start"] = (int) $timeline_dates["start"];
 					} else {

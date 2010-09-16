@@ -2892,7 +2892,7 @@ function generate_calendars($fieldname, $display_name = "", $show_start = false,
  * @param int $require_finish
  * @return array
  */
-function validate_calendar($fieldname, $require_start = true, $require_finish = true, $use_times = true) {
+function validate_calendars($fieldname, $require_start = true, $require_finish = true, $use_times = true) {
 	global $ERROR, $ERRORSTR;
 
 	$timestamp_start	= 0;
@@ -2973,23 +2973,22 @@ function validate_calendar($fieldname, $require_start = true, $require_finish = 
  * @param bool $use_times
  * @return int $timestamp
  */
-function validate_single_calendar($fieldname, $use_times = true) {
+function validate_calendar($label, $fieldname, $use_times = true) {
 	global $ERROR, $ERRORSTR;
 
 	$timestamp_start	= 0;
 	$timestamp_finish	= 0;
 
 	if((!isset($_POST[$fieldname."_date"])) || (!trim($_POST[$fieldname."_date"]))) {
-		$ERROR++;
-		$ERRORSTR[] = "You have checked <strong>".ucwords(strtolower($fieldname))."</strong> but not selected a calendar date.";
+		add_error("<strong>".$label."</strong> date not entered.");
+	} elseif (!checkDateFormat($_POST[$fieldname."_date"])) {
+		add_error("Invalid format for <strong>".$label."</strong> date.");
 	} else {
 		if(($use_times) && ((!isset($_POST[$fieldname."_hour"])))) {
-			$ERROR++;
-			$ERRORSTR[] = "You have checked <strong>".ucwords(strtolower($fieldname))."</strong> but not selected an hour of the day.";
+			add_error("<strong>".$label."</strong> hour not entered.");
 		} else {
 			if(($use_times) && ((!isset($_POST[$fieldname."_min"])))) {
-				$ERROR++;
-				$ERRORSTR[] = "You have checked <strong>".ucwords(strtolower($fieldname))."</strong> but not selected a minute of the hour.";
+				add_error("<strong>".$label."</strong> minute not entered.");
 			} else {
 				$pieces	= explode("-", $_POST[$fieldname."_date"]);
 				$hour	= (($use_times) ? (int) trim($_POST[$fieldname."_hour"]) : 0);
@@ -10090,19 +10089,18 @@ function build_option($value, $label, $selected = false) {
  * routine to display standard status messages, Error, Notice, and Success
  */
 function display_status_messages() {
-	global $ERROR,$SUCCESS,$NOTICE;
 	echo "<div class=\"status_messages\">";
-	if ($ERROR) {
+	if (has_error()) {
 		fade_element("out", "display-error-box");
 		echo display_error();
 	}
 
-	if ($SUCCESS) {
+	if (has_success()) {
 		fade_element("out", "display-success-box");
 		echo display_success();
 	}
 
-	if ($NOTICE) {
+	if (has_notice()) {
 		fade_element("out", "display-notice-box");
 		echo display_notice();
 	}
@@ -10114,7 +10112,7 @@ function display_mspr_details($data) {
 	?>
 	<ul class="mspr-list">
 	<?php
-	if ($data) {
+	if ($data && ($data->count() > 0)) {
 		foreach($data as $datum) {
 		?>
 		<li class="entry">
@@ -10609,4 +10607,19 @@ function add_success($message) {
 	global $SUCCESS, $SUCCESSSTR;
 	$SUCCESS++;
 	$SUCCESSSTR[] = $message;
+}
+
+function has_error() {
+	global $ERROR,$ERRORSTR;
+	return ($ERROR || $ERRORSTR);
+}
+
+function has_notice() {
+	global $NOTICE,$NOTICESTR;
+	return ($NOTICE || $NOTICESTR);
+}
+
+function has_success() {
+	global $SUCCESS, $SUCCESSSTR;
+	return ($SUCCESS||$SUCCESSSTR);
 }

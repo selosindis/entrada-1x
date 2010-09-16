@@ -450,7 +450,7 @@ if (!defined("IN_PROFILE")) {
 			break;
 			case "assistant-add" :
 				if ($ENTRADA_ACL->isLoggedInAllowed('assistant_support', 'create')) {
-					$access_timeframe = validate_calendar("valid", true, true);
+					$access_timeframe = validate_calendars("valid", true, true);
 
 					if (!$ERROR) {
 						if ((isset($access_timeframe["start"])) && ((int) $access_timeframe["start"])) {

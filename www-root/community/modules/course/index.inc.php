@@ -983,6 +983,7 @@ if ($community_courses) {
 						ON a.`objective_id` = b.`objective_id`
 						WHERE a.`objective_type` = 'event'
 						AND a.`course_id` IN (".implode(", ", $course_ids).")
+						AND b.`objective_active` = 1
 						GROUP BY b.`objective_id`
 						ORDER BY b.`objective_order`";
 			$results = $db->GetAll($query);

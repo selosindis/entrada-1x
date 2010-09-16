@@ -40,7 +40,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
-	if ($COURSE_ID && $COMPETENCY_ID) {
+	if ((isset($COURSE_ID) && $COURSE_ID) && (isset($COMPETENCY_ID) && $COMPETENCY_ID)) {
 		$BREADCRUMB[] = array("url" => "", "title" => "Course Objectives");
 		?>
 		<style type="text/css">
@@ -162,7 +162,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 			}
 			echo "</ul>\n";
 		}
-	} elseif ($COURSE_ID && $OBJECTIVE_ID) {
+	} elseif ((isset($COURSE_ID) && $COURSE_ID) && (isset($OBJECTIVE_ID) && $OBJECTIVE_ID)) {
 		$BREADCRUMB[] = array("url" => ENTRADA_RELATIVE."/objectives", "title" => "Course Objectives");
 		$BREADCRUMB[] = array("url" => "", "title" => "Learning Events");
 		
@@ -375,6 +375,100 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 			$ERRORSTR[] = "Valid objective and course identifiers are required to view this page, please ensure you have selected a valid objective and try again.";
 			echo display_error();
 		}
+	} elseif ((isset($COURSE_ID) && $COURSE_ID)) {
+		$BREADCRUMB[] = array("url" => "", "title" => "Course Objectives");
+		?>
+		<style type="text/css">
+		li.pad-top {
+			margin-bottom: 10px;
+		}
+
+		ul.pad {
+			padding-top: 10px;
+			padding-bottom: 10px;
+		}
+		</style>
+		<?php
+		$objective_ids_string = objectives_build_course_objectives_id_string($COURSE_ID);
+
+		$primary = $secondary = $tertiary = array();
+
+		$query = "	SELECT * FROM `course_objectives` AS a
+					JOIN `global_lu_objectives` AS b
+					ON a.`objective_id` = b.`objective_id`
+					WHERE a.`course_id` = ".$db->qstr($COURSE_ID)."
+					AND (
+						b.`objective_parent` NOT IN (".$objective_ids_string.")
+					)
+					AND a.`objective_type` = 'course'
+					ORDER BY a.`importance` ASC";
+		$objectives_array = $db->GetAll($query);
+		if ($objectives_array) {
+			foreach ($objectives_array AS $objective) {
+				$query = "	SELECT a.*, b.`objective_details` FROM `global_lu_objectives` AS a
+							LEFT JOIN `course_objectives` AS b
+							ON a.`objective_id` = b.`objective_id`
+							AND b.`course_id` = ".$db->qstr($COURSE_ID)."
+							AND b.`objective_type` = 'course'
+							WHERE a.`objective_parent` = ".$db->qstr($objective["objective_id"])."
+							ORDER BY a.`objective_order` ASC";
+				$child_objectives = $db->GetAll($query);
+				$objectives[$objective["objective_id"]]["children"] = array();
+
+				foreach ($child_objectives as $child_objective) {
+					$objectives[$objective["objective_id"]]["children"][] = $child_objective;
+				}
+				$objectives[$objective["objective_id"]]["objective"] = $objective;				
+			}
+		}
+		
+		$query = "	SELECT * FROM `global_lu_objectives`
+					WHERE `objective_parent` IN (
+						SELECT `objective_id` FROM `global_lu_objectives`
+						WHERE `objective_parent` = ".$db->qstr(CURRICULAR_OBJECTIVES_PARENT_ID)."
+					)";
+		$competencies = $db->GetAll($query);
+		foreach ($competencies as $competency) {
+			$competencies_array[$competency["objective_id"]] = $competency;
+		}
+		$last_competency = false;
+		$last_importance = false;
+		$course = $db->GetRow("SELECT * FROM `courses` WHERE `course_id` = ".$db->qstr($COURSE_ID));
+
+		echo "<h1>".html_encode($course["course_name"])."</h1>";
+		foreach ($objectives as $objective_id => $objective) {
+			if (array_key_exists($objective["objective"]["objective_parent"], $competencies_array)) {
+				$query = "	SELECT * FROM `global_lu_objectives`
+							WHERE `objective_id` = ".$db->qstr($objective["objective"]["objective_parent"]);
+				$competency = $db->GetRow($query);
+			} else {
+				$query = "	SELECT b.* FROM `global_lu_objectives` AS a
+							JOIN `global_lu_objectives` AS b
+							ON a.`objective_parent` = b.`objective_id`
+							WHERE `objective_id` = ".$db->qstr($objective["objective"]["objective_parent"]);
+				$competency = $db->GetRow($query);
+			}
+			if (!$last_competency || ($competency["objective_id"] != $last_competency)) {
+				echo "<h2>".html_encode($competency["objective_name"])." Objectives</h2>\n";
+				$last_importance = false;
+			}
+			$last_competency = $competency["objective_id"];
+			if (!$last_importance || $last_importance != $objective["objective"]["importance"]) {
+				echo "<h3>".($objective["objective"]["importance"] == 3 ? "Tertiary" : ($objective["objective"]["importance"] == 2 ? "Secondary" : "Primary"))." Objectives</h3>\n";
+			}
+			echo "<ul>\n";
+			echo "<li>\n<a href=\"".ENTRADA_URL."/objectives?cid=".$COURSE_ID."&oid=".$objective["objective"]["objective_id"]."\">".$objective["objective"]["objective_name"]."</a><div class=\"content-small\">".(isset($objective["objective"]["objective_details"]) && $objective["objective"]["objective_details"] ? $objective["objective"]["objective_details"] : $objective["objective"]["objective_description"])."</div>\n";
+			if (isset($objective["children"]) && count($objective["children"])) {
+				echo "<ul class=\"pad\">\n";
+				foreach ($objective["children"] as $objective_child) {
+					echo "<li class=\"pad-top\"><a href=\"".ENTRADA_URL."/objectives?cid=".$COURSE_ID."&oid=".$objective_child["objective_id"]."\">".$objective_child["objective_name"]."</a><div class=\"content-small\">".(isset($objective_child["objective_details"]) && $objective_child["objective_details"] ? $objective_child["objective_details"] : $objective_child["objective_description"])."</div></li>\n";
+				}
+				echo "</ul>\n";
+			}
+			echo "</li>\n";
+			echo "</ul>\n";
+			$last_importance = $objective["objective"]["importance"];			
+		}
 	} else {
 		echo "<h1>Competencies by Course</h1>";
 		$objectives = objectives_build_course_competencies_array();
@@ -420,9 +514,9 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 					<td class="title" style="padding-bottom: 20px; border-right: none;"><h3>Courses</h3></td>
 					<td class="title" style="padding: 0 0 80px 50px;"><h3 class="vertical">Competencies</h3></td>
 					<?php
-						foreach ($objectives["competencies"] as $competency) {
+						foreach ($objectives["competencies"] as $competency_id => $competency) {
 							?>
-							<td class="title middle bottom"><div class="vertical"><?php echo $competency ?></div></td>
+							<td class="title middle bottom"><div class="vertical"><?php echo "<a href=\"".ENTRADA_URL."/objectives?id=".$competency_id."\" style=\"text-decoration: none;\">".$competency."</a>"; ?></div></td>
 							<?php
 						}
 					?>
@@ -438,7 +532,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 						echo "<td class=\"term\" style=\"border-bottom: 5px solid white;\" rowspan=\"".$course["total_in_term"]."\"><div class=\"vertical\">".$course["term_name"]."</div></td>";
 					}
 					?>
-						<td class="objectives" colspan="2"><?php echo html_encode($course["course_name"]); ?></td>
+						<td class="objectives" colspan="2"><?php echo "<a href=\"".ENTRADA_URL."/objectives?cid=".$course_id."\" style=\"text-decoration: none;\">".html_encode($course["course_name"])."</a>"; ?></td>
 						<?php
 						foreach ($course["competencies"] as $COMPETENCY_ID => $competency) {
 							?>

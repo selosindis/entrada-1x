@@ -10451,7 +10451,7 @@ function objectives_build_course_competencies_array() {
 		$competencies = $db->GetAll($query);
 		if ($competencies && count($competencies)) {
 			foreach ($competencies as $competency) {
-				$courses_array["competencies"][] = $competency["objective_name"]; 
+				$courses_array["competencies"][$competency["objective_id"]] = $competency["objective_name"]; 
 				$objective_ids_string = objectives_build_objective_descendants_id_string($competency["objective_id"], $db->qstr($competency["objective_id"]));
 				if ($objective_ids_string) {
 					foreach ($courses_array["courses"] as $course_id => &$course) {
@@ -10513,6 +10513,7 @@ function objectives_build_course_objectives_id_string($course_id = 0) {
 				WHERE `course_id` = ".$db->qstr($course_id);
 	$objective_ids = $db->GetAll($query);
 	if ($objective_ids) {
+		$objective_ids_string = false;
 		foreach ($objective_ids as $objective_id) {
 			if ($objective_ids_string) {
 				$objective_ids_string .= ", ".$db->qstr($objective_id["objective_id"]);

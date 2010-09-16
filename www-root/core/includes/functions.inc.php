@@ -10252,7 +10252,7 @@ function display_mspr_details($data) {
 	?>
 	<ul class="mspr-list">
 	<?php
-	if ($data) {
+	if ($data && ($data->count() > 0)) {
 		foreach($data as $datum) {
 		?>
 		<li class="entry">

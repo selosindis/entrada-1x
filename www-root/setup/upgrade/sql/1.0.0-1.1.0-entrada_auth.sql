@@ -32,6 +32,16 @@ ADD INDEX ( `department_active` );
 ALTER TABLE `registered_apps` CHANGE `script_id` `script_id` varchar(32) NOT NULL DEFAULT '0';
 ALTER TABLE `registered_apps` CHANGE `script_password` `script_password` varchar(32) NOT NULL DEFAULT '';
 
+-- Table: user_access
+
+ALTER TABLE `user_access` ADD INDEX `user_app_id` (`user_id`, `app_id`);
+ALTER TABLE `user_access` ADD `private_hash` VARCHAR( 32 ) NULL DEFAULT NULL AFTER `extras` ,
+ADD UNIQUE (
+`private_hash`
+);
+
+UPDATE `user_access` SET `private_hash` = MD5(CONCAT(`id`, `user_id`, `app_id`, rand(), `last_ip`, `role`, `group`)) WHERE `private_hash` IS NULL;
+
 -- Table: user_data
 
 ALTER TABLE `user_data` ADD `country_id` int(12) NULL DEFAULT NULL AFTER `country`,

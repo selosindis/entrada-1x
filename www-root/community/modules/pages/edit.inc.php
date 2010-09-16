@@ -193,13 +193,11 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 						load_rte(	array(		1 => array("fullscreen", "styleprops", "|", "formatselect", "fontselect", "fontsizeselect", "|", "bold", "italic", "underline", "forecolor", "backcolor", "|", "justifyleft", "justifycenter", "justifyright", "justifyfull"),
 												2 => array("replace", "pasteword", "pastetext", "|", "undo", "redo", "|", "tablecontrols", "|", "insertlayer", "moveforward", "movebackward", "absolute", "|", "visualaid"),
 												3 => array("ltr", "rtl", "|", "outdent", "indent", "|", "bullist", "numlist", "|", "link", "unlink", "anchor", "image", "media", "|", "sub", "sup", "|", "charmap", "insertdate", "inserttime", "nonbreaking", "|", "cleanup", "code", "removeformat")),
-									array("preview", "inlinepopups", "style", "layer", "table", "advimage", "advlink", "insertdatetime", "media", "contextmenu", "paste", "directionality", "fullscreen", "noneditable", "visualchars", "nonbreaking", "xhtmlxtras"),
-									array("extended_valid_elements : 'a[name|href|target|title|class],img[class|src|border=0|alt|title|hspace|vspace|width|height|align|name],hr[class|width|size|noshade],font[face|size|color|style],span[class|align|style],object[classid|width|height|codebase|data|type|*]'", "relative_urls : false", "remove_script_host : false"));
+									array("preview", "inlinepopups", "style", "layer", "table", "advimage", "advlink", "insertdatetime", "media", "contextmenu", "paste", "directionality", "fullscreen", "noneditable", "visualchars", "nonbreaking", "xhtmlxtras"));
 					} else {
 						load_rte(	array(		1 => array("fullscreen", "styleprops", "|", "formatselect", "fontselect", "fontsizeselect", "|", "bold", "italic", "underline", "forecolor", "backcolor", "|", "justifyleft", "justifycenter", "justifyright", "justifyfull"),
 												2 => array("replace", "pasteword", "pastetext", "ltr", "rtl", "|", "outdent", "indent", "|", "bullist", "numlist", "|", "link", "unlink", "anchor", "image", "media", "|", "sub", "sup", "|", "charmap", "insertdate", "inserttime", "nonbreaking", "|", "cleanup", "code", "removeformat")),
-									array("preview", "inlinepopups", "style", "layer", "table", "advimage", "advlink", "insertdatetime", "media", "contextmenu", "paste", "directionality", "fullscreen", "noneditable", "visualchars", "nonbreaking", "xhtmlxtras"),
-									array("extended_valid_elements : 'a[name|href|target|title|class],img[class|src|border=0|alt|title|hspace|vspace|width|height|align|name],hr[class|width|size|noshade],font[face|size|color|style],span[class|align|style],object[classid|width|height|codebase|data|type|*]'", "relative_urls : false", "remove_script_host : false"));
+									array("preview", "inlinepopups", "style", "layer", "table", "advimage", "advlink", "insertdatetime", "media", "contextmenu", "paste", "directionality", "fullscreen", "noneditable", "visualchars", "nonbreaking", "xhtmlxtras"));
 					}
 					
 					$BREADCRUMB[]	= array("url" => "", "title" => "Edit Page");

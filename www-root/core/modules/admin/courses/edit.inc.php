@@ -51,17 +51,23 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			}
 		}
 	
+		if (isset($_POST["clinical_presentations_submit"]) && $_POST["clinical_presentations_submit"]) {
 		if ((isset($_POST["clinical_presentations"])) && (is_array($_POST["clinical_presentations"])) && (count($_POST["clinical_presentations"]))) {
 			foreach ($_POST["clinical_presentations"] as $objective_id) {
 				if ($objective_id = clean_input($objective_id, array("trim", "int"))) {
-					$query	= "	SELECT `objective_id` FROM `global_lu_objectives` 
+						$query	= "	SELECT `objective_id`
+									FROM `global_lu_objectives` 
 								WHERE `objective_id` = ".$db->qstr($objective_id)."
-								AND `objective_active` = '1'";
+									AND `objective_active` = '1'
+									ORDER BY `objective_order` ASC";
 					$result	= $db->GetRow($query);
 					if ($result) {
 						$clinical_presentations[$objective_id] = $clinical_presentations_list[$objective_id];
 					}
 				}
+			}
+		} else {
+				$clinical_presentations = array();
 			}
 		} else {
 			$query		= "SELECT `objective_id` FROM `course_objectives` WHERE `objective_type` = 'event' AND `course_id` = ".$db->qstr($COURSE_ID);
@@ -736,6 +742,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 										?>
 										</select>
 									</div>
+									<input type="hidden" value="1" name="clinical_presentations_submit" />
 									<script type="text/javascript">
 									$('PickList').observe('keypress', function(event) {
 										if (event.keyCode == Event.KEY_DELETE) {

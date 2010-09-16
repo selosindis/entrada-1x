@@ -53,7 +53,15 @@ if (isset($MAILING_LISTS) && is_array($MAILING_LISTS) && $MAILING_LISTS["active"
 
 							echo "Delete: ".$member["email"]." -> ".$community_id."<br />";
 
+							try {
 							$list->remove_member($member["proxy_id"]);
+							} catch (Exception $e) {
+								echo $e->getCode()." - ".$e->getMessage();
+								if ($e->getCode() == "502") {
+									exit;
+								}
+								application_log("notice", "An issue was encountered while attempting to remove a user's email [".$member["email"]."] from a community [".$community_id."] mailing list. The server said: ".$e->getCode()." - ".$e->getMessage());
+							}
 
 							/**
 							 * Email limit so exit
@@ -84,8 +92,15 @@ if (isset($MAILING_LISTS) && is_array($MAILING_LISTS) && $MAILING_LISTS["active"
 							}
 
 							echo "Activate: ".$member["email"]." -> ".$community_id."<br/>";
-
+							try {
 							$list->activate_member($member["proxy_id"], ((int)$member["list_administrator"]));
+							} catch (Exception $e) {
+								echo $e->getMessage();
+								if ($e->getCode() == "502") {
+									exit;
+								}
+								application_log("notice", "An issue was encountered while attempting to add a user's email [".$member["email"]."] to a community [".$community_id."] mailing list. The server said: ".$e->getCode()." - ".$e->getMessage());
+							}
 
 							/**
 							 * Email limit so exit
@@ -116,8 +131,15 @@ if (isset($MAILING_LISTS) && is_array($MAILING_LISTS) && $MAILING_LISTS["active"
 							}
 
 							echo "Promote: ".$member["email"]." -> ".$community_id."<br/>";
-
+							try {
 							$list->edit_member($member["proxy_id"], true);
+							} catch (Exception $e) {
+								echo $e->getMessage();
+								if ($e->getCode() == "502") {
+									exit;
+								}
+								application_log("notice", "An issue was encountered while attempting to promote a user's email [".$member["email"]."] to owner on a community [".$community_id."] mailing list. The server said: ".$e->getCode()." - ".$e->getMessage());
+							}
 
 							/**
 							 * Email limit so exit
@@ -150,7 +172,15 @@ if (isset($MAILING_LISTS) && is_array($MAILING_LISTS) && $MAILING_LISTS["active"
 
 							echo "Demote: ".$member["email"]." -> ".$community_id."<br/>";
 
+							try {
 							$list->edit_member($member["proxy_id"], false);
+							} catch (Exception $e) {
+								echo $e->getMessage();
+								if ($e->getCode() == "502") {
+									exit;
+								}
+								application_log("notice", "An issue was encountered while attempting to demote a user's email [".$member["email"]."] to owner on a community [".$community_id."] mailing list. The server said: ".$e->getCode()." - ".$e->getMessage());
+							}
 
 							/**
 							 * Email limit so exit

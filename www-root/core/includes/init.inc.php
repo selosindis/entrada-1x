@@ -35,7 +35,9 @@ require_once("config/settings.inc.php");
 
 require_once("Entrada/adodb/adodb.inc.php");
 require_once("functions.inc.php");
+
 require_once("dbconnection.inc.php");
+
 require_once("Entrada/pagination/pagination.class.php");
 require_once("Entrada/router/router.class.php");
 

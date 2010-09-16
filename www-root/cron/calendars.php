@@ -25,7 +25,7 @@ require_once("init.inc.php");
 require_once("Entrada/icalendar/class.ical.inc.php");
 
 $grad_year_start	= (date("Y", time()) + ((date("m", time()) < 7) ?  3 : 4));
-$grad_year_finish 	= ($grad_year_start - ((date("m", time()) < 7) ?  3 : 4));
+$grad_year_finish 	= ($grad_year_start - 4);
 
 for($grad_year = $grad_year_start; $grad_year >= $grad_year_finish; $grad_year--) {
 	$query		= "

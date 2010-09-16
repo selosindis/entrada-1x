@@ -136,7 +136,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					}
 				}
 
-				if ((isset($_POST["clinical_presentations"])) && (is_array($_POST["clinical_presentations"])) && (count($_POST["clinical_presentations"]))) {
+				if (isset($_POST["clinical_presentations_submit"]) && $_POST["clinical_presentations_submit"]) {
+					if (((isset($_POST["clinical_presentations"])) && (is_array($_POST["clinical_presentations"])) && (count($_POST["clinical_presentations"])))) {
 					foreach ($_POST["clinical_presentations"] as $objective_id) {
 						if ($objective_id = clean_input($objective_id, array("trim", "int"))) {
 							$query	= "	SELECT a.`objective_id` 
@@ -152,6 +153,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								$clinical_presentations[$objective_id] = $clinical_presentations_list[$objective_id];
 							}
 						}
+					}
+				} else {
+						$clinical_presentations = array();
 					}
 				} else {
 					$query = "	SELECT a.`objective_id`
@@ -1058,6 +1062,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 									}
 									?>
 									</select>
+									<input type="hidden" value="1" name="clinical_presentations_submit" />
 									<div style="float: left; display: inline">
 										<input type="button" id="clinical_presentations_list_state_btn" class="button" value="Show List" onclick="toggle_list('clinical_presentations_list')" />
 									</div>
@@ -1067,21 +1072,25 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 									</div>
 									<div id="clinical_presentations_list" style="clear: both; padding-top: 3px; display: none">
 										<h2>Clinical Presentations List</h2>
-										<select class="multi-picklist" id="SelectList" name="other_event_objectives_list" multiple="multiple" size="15" style="width: 100%">
 										<?php
 										if ((is_array($clinical_presentations_list)) && (count($clinical_presentations_list))) {
+											?>
+											<select class="multi-picklist" id="SelectList" name="other_event_objectives_list" multiple="multiple" size="15" style="width: 100%">
+											<?php
 											foreach ($clinical_presentations_list as $objective_id => $presentation_name) {
 												if (!array_key_exists($objective_id, $clinical_presentations)) {
 													echo "<option value=\"".(int) $objective_id."\">".html_encode($presentation_name)."</option>\n";
 												}
 											}
+											?>
+											</select>
+											<?php
 										} else {
 											$NOTICE++;
 											$NOTICESTR[] = "Please ensure there are MCC Objectives attached to the course which this Learning Event resides in before attempting to add them at the event level.";
 											echo display_notice();
 										}
 										?>
-										</select>
 									</div>
 									<script type="text/javascript">
 									$('PickList').observe('keypress', function(event) {

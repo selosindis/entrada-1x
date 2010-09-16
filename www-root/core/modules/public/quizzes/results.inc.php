@@ -41,7 +41,7 @@ if ($RECORD_ID) {
 						LEFT JOIN `events` AS d
 						ON d.`event_id` = a.`event_id`
 						LEFT JOIN `courses` AS e
-						ON e.`course_id` = a.`course_id`
+						ON e.`course_id` = d.`course_id`
 						LEFT JOIN `quizzes_lu_quiztypes` AS f
 						ON f.`quiztype_id` = b.`quiztype_id`
 						WHERE a.`eqprogress_id` = ".$db->qstr($RECORD_ID)."

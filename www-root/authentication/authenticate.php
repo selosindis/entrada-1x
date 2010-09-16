@@ -462,6 +462,9 @@ if (!$ERROR) {
 						case "group" :
 							echo "\t\t<".$value.">".encrypt($user_access["group"], $auth_password)."</".$value.">\n";
 						break;
+						case "private_hash" :
+							echo "\t\t<".$value.">".encrypt($user_access["private_hash"], $auth_password)."</".$value.">\n";
+						break;
 						case "private" :
 							if ($type[1]) {
 								echo "\t\t<private-".$type[1].">".(($APPLICATION_SPECIFIC[$type[1]]) ? encrypt($APPLICATION_SPECIFIC[$type[1]], $auth_password) : "")."</private-".$type[1].">\n";

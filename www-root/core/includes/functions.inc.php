@@ -3363,10 +3363,8 @@ function load_rte($buttons = array(), $plugins = array(), $other_options = array
 	$tinymce .= "	theme_advanced_buttons1 : '".(((is_array($buttons)) && (is_array($buttons[1])) && (count($buttons[1]))) ? implode(",", $buttons[1]) : "")."',\n";
 	$tinymce .= "	theme_advanced_buttons2 : '".(((is_array($buttons)) && (is_array($buttons[2])) && (count($buttons[2]))) ? implode(",", $buttons[2]) : "")."',\n";
 	$tinymce .= "	theme_advanced_buttons3 : '".(((is_array($buttons)) && (is_array($buttons[3])) && (count($buttons[3]))) ? implode(",", $buttons[3]) : "")."',\n";
-	$tinymce .= "	tab_focus : ':prev,:next',";
-	$tinymce .= "	extended_valid_elements : 'a[name|href|target|title],img[class|src|border=0|alt|title|hspace|vspace|width|height|align|name],hr[class|width|size|noshade],font[face|size|color|style],span[class|align|style],object[classid|width|height|codebase|data|type|*]',\n";
-	$tinymce .= "	relative_urls : false,\n";
-	$tinymce .= "	remove_script_host : false\n";
+	$tinymce .= "	tab_focus : ':prev,:next',\n";
+	$tinymce .= "	extended_valid_elements : 'a[name|href|target|title|class],img[class|src|border=0|alt|title|hspace|vspace|width|height|align|name],hr[class|width|size|noshade],font[face|size|color|style],span[class|align|style],object[classid|width|height|codebase|data|type|*]'";
 	$tinymce .= 	((count($other_options)) ? ",\n\t".implode(",\n\t", $other_options) : "")."\n";
 	$tinymce .= "});\n";
 	$tinymce .= "function toggleEditor(id) {\n";
@@ -7097,7 +7095,7 @@ function clerkship_get_elective_location($event_id) {
 				ON a.`region_id` = b.`region_id` 
 				WHERE a.`event_id` = ".$db->qstr($event_id);
 	$result = $db->GetRow($query);
-	if (isset($result["region_name"]) && $result["region_name"]) {
+	if ($result && $result["region_name"]) {
 		$result["city"] = $result["region_name"];
 	}
 	return $result;
@@ -8542,10 +8540,10 @@ function events_fetch_filtered_events() {
 							AND `event_objectives`.`objective_type` = 'course'
 							LEFT JOIN `statistics`
 							ON `statistics`.`module` = ".$db->qstr("events")."
+							AND `statistics`.`action_value` = `events`.`event_id`
 							AND `statistics`.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
 							AND `statistics`.`action` = 'view'
 							AND `statistics`.`action_field` = 'event_id'
-							AND `statistics`.`action_value` = `events`.`event_id`
 							WHERE `courses`.`course_active` = '1'
 							AND `courses`.`organisation_id` = ".$db->qstr($ORGANISATION_ID);
 
@@ -8575,7 +8573,7 @@ function events_fetch_filtered_events() {
 											WHERE `user_id` = ".$db->qstr($student_proxy_id)."
 											AND `app_id` = ".$db->qstr(AUTH_APP_ID)."
 											AND `group` = 'student'";
-								$result = $db->GetRow($squery);
+								$result = $db->GetRow($query);
 								if (($result) && ($tmp_input = (int) $result["grad_year"])) {
 									$student_grad_year = "(`event_audience`.`audience_type` = 'grad_year' AND `event_audience`.`audience_value` = ".$db->qstr($tmp_input).") OR ";
 								}
@@ -9375,7 +9373,6 @@ function getPublicationRoleSpecificFromID($roleID) {
 	
 	return $result["role_description"];
 }
-
 
 /**
  * This function gets lookup data from the ar_lu_activity_types table
@@ -10507,13 +10504,13 @@ function objectives_build_course_competencies_array() {
 				$objective_ids_string = objectives_build_objective_descendants_id_string($competency["objective_id"], $db->qstr($competency["objective_id"]));
 				if ($objective_ids_string) {
 					foreach ($courses_array["courses"] as $course_id => &$course) {
-						$query = "	SELECT * FROM `course_objectives`
+						$query = "	SELECT MIN(`importance`) as `importance` FROM `course_objectives`
 									WHERE `objective_type` = 'course'
 									AND `course_id` = ".$db->qstr($course_id)."
 									AND `objective_id` IN (".$objective_ids_string.")";
 						$found = $db->GetRow($query);
 						if ($found) {
-							$course["competencies"][$competency["objective_id"]] = true;
+							$course["competencies"][$competency["objective_id"]] = $found["importance"];
 						} else {
 							$course["competencies"][$competency["objective_id"]] = false;
 						}

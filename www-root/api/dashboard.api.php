@@ -66,8 +66,6 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 			case "reset":
 				$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["feeds"] = null;
 				$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["feed_break"] = -1;
-				
-				var_dump(preferences_update($MODULE, 42)); //make sure this gets saved as null, null != 42
 				break;
 			default:
 				echo "Unrecognized Action!";

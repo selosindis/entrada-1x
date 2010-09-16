@@ -54,8 +54,7 @@ if ($RECORD_ID) {
 				/**
 				 * This must be done twice in order to close both of the open buffers.
 				 */
-				@ob_end_clean();
-				@ob_end_clean();
+				@ob_clear_open_buffers();
 
 				header("Cache-Control: max-age=2592000");
 				header("Content-Type: ".$photo_record["photo_mimetype"]);

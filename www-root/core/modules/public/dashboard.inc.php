@@ -36,7 +36,6 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
-
 	$DISPLAY_DURATION		= array();
 	$notice_where_clause	= "";
 	$poll_where_clause		= "";
@@ -568,7 +567,7 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 				</table>
 				<div id="dashboardCalendar"></div>
 				<div style="text-align: right; margin-top: 5px">
-					<a href="<?php echo ENTRADA_URL; ?>/calendars/<?php echo html_encode($_SESSION["details"]["username"]); ?>.ics" class="feeds ics">Subscribe to Calendar</a>
+					<a href="<?php echo ENTRADA_URL; ?>/calendars<?php echo ((isset($_SESSION["details"]["private_hash"])) ? "/private-".html_encode($_SESSION["details"]["private_hash"]) : ""); ?>/<?php echo html_encode($_SESSION["details"]["username"]); ?>.ics" class="feeds ics">Subscribe to Calendar</a>
 				</div>
 				<?php
 			}

@@ -41,6 +41,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 	
 	$PROCESSED_ACCESS = array();
 	$PROCESSED_ACCESS["app_id"] = AUTH_APP_ID;
+	$PROCESSED_ACCESS["private_hash"] = generate_hash(32);
+
 	$PROCESSED_DEPARTMENTS = array();
 
 	echo "<h1>Adding User</h1>\n";
@@ -48,7 +50,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 	// Error Checking
 	switch ($STEP) {
 		case 2 :
-			$permissions_only	= false;
+			$permissions_only = false;
 
 			/**
 			 * Required field "group" / Account Type (Group).

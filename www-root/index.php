@@ -146,6 +146,7 @@ if ($ACTION == "login") {
 				"access_expires",
 				"last_login",
 				"privacy_level",
+				"private_hash",
 				"private-allow_podcasting",
 				"acl"
 			)
@@ -210,6 +211,7 @@ if ($ACTION == "login") {
 			$_SESSION["details"]["expires"] = $result["ACCESS_EXPIRES"];
 			$_SESSION["details"]["lastlogin"] = $result["LAST_LOGIN"];
 			$_SESSION["details"]["privacy_level"] = $result["PRIVACY_LEVEL"];
+			$_SESSION["details"]["private_hash"] = $result["PRIVATE_HASH"];
 			$_SESSION["details"]["allow_podcasting"] = false;
 
 			if ((isset($ENTRADA_CACHE)) && (!AUTH_DEVELOPMENT_MODE)) {
@@ -470,7 +472,7 @@ switch ($MODULE) {
 		$router->setBasePath(ENTRADA_CORE.DIRECTORY_SEPARATOR."modules".DIRECTORY_SEPARATOR."public");
 		$router->setSection($SECTION);
 
-		if (($router) && ($route = $router->initRoute())) {
+		if (($router) && ($route = $router->initRoute($MODULE))) {
 			/**
 			 * Responsible for displaying the permission masks sidebar item
 			 * if they have more than their own permission set available.

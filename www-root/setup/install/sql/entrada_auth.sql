@@ -256,8 +256,10 @@ CREATE TABLE IF NOT EXISTS `user_access` (
   `role` varchar(35) NOT NULL DEFAULT '',
   `group` varchar(35) NOT NULL DEFAULT '',
   `extras` longtext NOT NULL,
+  `private_hash` varchar(32) DEFAULT NULL,
   `notes` text NOT NULL,
   PRIMARY KEY  (`id`),
+  UNIQUE KEY `private_hash` (`private_hash`),
   KEY `user_id` (`user_id`),
   KEY `app_id` (`app_id`),
   KEY `account_active` (`account_active`),
@@ -267,8 +269,8 @@ CREATE TABLE IF NOT EXISTS `user_access` (
   KEY `group` (`group`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-INSERT INTO `user_access` (`id`, `user_id`, `app_id`, `account_active`, `access_starts`, `access_expires`, `last_login`, `last_ip`, `login_attempts`, `locked_out_until`, `role`, `group`, `extras`, `notes`) VALUES
-(1, 1, 1, 'true', 1216149930, 0, 0, '', NULL, NULL, 'admin', 'medtech', 'YToxOntzOjE2OiJhbGxvd19wb2RjYXN0aW5nIjtzOjM6ImFsbCI7fQ==', '');
+INSERT INTO `user_access` (`id`, `user_id`, `app_id`, `account_active`, `access_starts`, `access_expires`, `last_login`, `last_ip`, `login_attempts`, `locked_out_until`, `role`, `group`, `extras`, `private_hash`, `notes`) VALUES
+(1, 1, 1, 'true', 1216149930, 0, 0, '', NULL, NULL, 'admin', 'medtech', 'YToxOntzOjE2OiJhbGxvd19wb2RjYXN0aW5nIjtzOjM6ImFsbCI7fQ==', MD5(CONCAT(rand(), CURRENT_TIMESTAMP)), '');
 
 CREATE TABLE IF NOT EXISTS `user_data` (
   `id` int(12) unsigned NOT NULL AUTO_INCREMENT,

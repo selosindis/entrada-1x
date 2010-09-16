@@ -34,6 +34,7 @@
 					if ($('objective-loading').visible()) {
 						$('objective-loading').hide();
 					}
+					loadObjectiveInvolvement($('obj_'+objective_id+'_participation_level'));
 				},
 				onCreate: function () {
 					if (!$('objective-loading').visible()) {

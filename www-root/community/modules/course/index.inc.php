@@ -973,7 +973,7 @@ if ($community_courses) {
     		</script>
 			<?php
 			echo "<div style=\"text-align: right; padding-right: 20px;\"><label for=\"show_hierarchy\" class=\"content-small\" style=\"vertical-align: middle;\"/>Display Hierarchy For These Objectives</label><input type=\"checkbox\" id=\"show_hierarcy\" onclick=\"renewList(this.checked)\" /></div>\n";
-			echo "<strong>The student will be able to:</strong>";
+			echo "<strong>The learner will be able to:</strong>";
 			echo "<div id=\"objectives_list\">\n".course_objectives_in_list($objectives["objectives"], 1, false, false, 1, false)."\n</div>\n";
 		break;
 		case "mcc_presentations" :
@@ -983,6 +983,7 @@ if ($community_courses) {
 						ON a.`objective_id` = b.`objective_id`
 						WHERE a.`objective_type` = 'event'
 						AND a.`course_id` IN (".implode(", ", $course_ids).")
+						AND b.`objective_active` = 1
 						GROUP BY b.`objective_id`
 						ORDER BY b.`objective_order`";
 			$results = $db->GetAll($query);
@@ -994,8 +995,6 @@ if ($community_courses) {
 					}
 				}
 				echo "</ul>\n";
-			} else {
-				echo "<div class=\"display-notice\">While medical presentations may be used to illustrate concepts in this course, there are no specific presentations from the Medical Council of Canada that have been selected.</div>";
 			}
 		break;
 		default :

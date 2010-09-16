@@ -667,7 +667,7 @@ if ($COMMUNITY_URL) {
 			header($_SERVER["SERVER_PROTOCOL"]." 404 Not Found");
 
 			$ERROR++;
-			$ERRORSTR[] = "<strong>The community that you are trying to access is no longer active.</strong><br /><br />For further information, please contact the MEdTech Unit directly.";
+			$ERRORSTR[] = "<strong>The community that you are trying to access is no longer active.</strong><br /><br />Please use the <a href=\"".ENTRADA_URL."/communities\">Communities Search</a> feature to find the community that you are looking for.";
 	
 			$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/communities\\'', 10000)";
 	
@@ -677,7 +677,7 @@ if ($COMMUNITY_URL) {
 	
 			$smarty->display("error.tpl");
 	
-			application_log("error", "Community [".$COMMUNITY_URL."] is no longer active.");
+			application_log("notice", "Community [".$COMMUNITY_URL."] is no longer active.");
 		}
 	} else {
 		/**
@@ -697,7 +697,7 @@ if ($COMMUNITY_URL) {
 
 		$smarty->display("error.tpl");
 
-		application_log("error", "Community [".$COMMUNITY_URL."] does not exist.");
+		application_log("notice", "Community [".$COMMUNITY_URL."] does not exist.");
 	}
 } else {
 	header("Location: ".ENTRADA_URL."/communities");

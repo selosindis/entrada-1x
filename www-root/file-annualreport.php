@@ -54,6 +54,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	if((isset($_GET["file"])) && (trim($_GET["file"]))) {
 		$FILE = clean_input($_GET["file"], "file");
 	}
+	
 	if(file_exists(ANNUALREPORT_STORAGE."/".$FILE)) {
 		$filesize = filesize(ANNUALREPORT_STORAGE."/".$FILE);
 		header("Pragma: public");

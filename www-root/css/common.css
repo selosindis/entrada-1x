@@ -1104,6 +1104,9 @@ border-left:none;
 padding-left:5px;
 }
 
+table.tableList tr td.report-hours.large {
+width:150px;
+}
 table.tableList tr td.region-large {
 width:90px;
 border-left:none;

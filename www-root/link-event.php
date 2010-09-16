@@ -31,6 +31,11 @@
     get_include_path(),
 )));
 
+/**
+ * Include the Entrada init code.
+ */
+require_once("init.inc.php");
+
 if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	header("Location: ".ENTRADA_URL.((isset($_SERVER["REQUEST_URI"])) ? "?url=".rawurlencode(clean_input($_SERVER["REQUEST_URI"], array("nows", "url"))) : ""));
 	exit;

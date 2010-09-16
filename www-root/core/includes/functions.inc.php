@@ -7095,7 +7095,7 @@ function clerkship_get_elective_location($event_id) {
 				ON a.`region_id` = b.`region_id` 
 				WHERE a.`event_id` = ".$db->qstr($event_id);
 	$result = $db->GetRow($query);
-	if (isset($result["region_name"]) && $result["region_name"]) {
+	if ($result && $result["region_name"]) {
 		$result["city"] = $result["region_name"];
 	}
 	return $result;
@@ -8540,10 +8540,10 @@ function events_fetch_filtered_events() {
 							AND `event_objectives`.`objective_type` = 'course'
 							LEFT JOIN `statistics`
 							ON `statistics`.`module` = ".$db->qstr("events")."
+							AND `statistics`.`action_value` = `events`.`event_id`
 							AND `statistics`.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
 							AND `statistics`.`action` = 'view'
 							AND `statistics`.`action_field` = 'event_id'
-							AND `statistics`.`action_value` = `events`.`event_id`
 							WHERE `courses`.`course_active` = '1'
 							AND `courses`.`organisation_id` = ".$db->qstr($ORGANISATION_ID);
 
@@ -8573,7 +8573,7 @@ function events_fetch_filtered_events() {
 											WHERE `user_id` = ".$db->qstr($student_proxy_id)."
 											AND `app_id` = ".$db->qstr(AUTH_APP_ID)."
 											AND `group` = 'student'";
-								$result = $db->GetRow($squery);
+								$result = $db->GetRow($query);
 								if (($result) && ($tmp_input = (int) $result["grad_year"])) {
 									$student_grad_year = "(`event_audience`.`audience_type` = 'grad_year' AND `event_audience`.`audience_value` = ".$db->qstr($tmp_input).") OR ";
 								}
@@ -9373,7 +9373,6 @@ function getPublicationRoleSpecificFromID($roleID) {
 	
 	return $result["role_description"];
 }
-
 
 /**
  * This function gets lookup data from the ar_lu_activity_types table
@@ -10505,13 +10504,13 @@ function objectives_build_course_competencies_array() {
 				$objective_ids_string = objectives_build_objective_descendants_id_string($competency["objective_id"], $db->qstr($competency["objective_id"]));
 				if ($objective_ids_string) {
 					foreach ($courses_array["courses"] as $course_id => &$course) {
-						$query = "	SELECT * FROM `course_objectives`
+						$query = "	SELECT MIN(`importance`) as `importance` FROM `course_objectives`
 									WHERE `objective_type` = 'course'
 									AND `course_id` = ".$db->qstr($course_id)."
 									AND `objective_id` IN (".$objective_ids_string.")";
 						$found = $db->GetRow($query);
 						if ($found) {
-							$course["competencies"][$competency["objective_id"]] = true;
+							$course["competencies"][$competency["objective_id"]] = $found["importance"];
 						} else {
 							$course["competencies"][$competency["objective_id"]] = false;
 						}

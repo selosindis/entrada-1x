@@ -170,4 +170,3 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 		}
 	}
 }
-?>

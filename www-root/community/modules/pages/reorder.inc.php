@@ -24,25 +24,38 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 
 	echo display_notice();
 } else {
-
-	//Recursive function to clean all dimensions of the array and reorient it so that the parent for a particular item can be easily looked up.
-	//array is the array being cleaned, count is the count of items in all the arrays for verification, valid_ids holds the id #s that are permitted to
-	//appear in the data, and when that id is happened upon the value at that location in the array is replaced with that id's parent in the new ordering.
+	/**
+	 * Recursive function to clean all dimensions of the array and reorient it so that the parent for a particular item can be easily looked up.
+	 * array is the array being cleaned, count is the count of items in all the arrays for verification, valid_ids holds the id #s that are permitted to
+	 * appear in the data, and when that id is happened upon the value at that location in the array is replaced with that id's parent in the new ordering.
+	 *
+	 * @param array $array
+	 * @param int $count
+	 * @param boolean $valid_ids
+	 * @param array $order
+	 * @param int $parent_id
+	 * @param boolean $level_url
+	 * @return <type>
+	 */
 	function deep_clean_and_orient(&$array, &$count, &$valid_ids, &$order, $parent_id = 0, $level_url = array()) {
 		foreach($array as $key => &$item) {
-			if($key == 0) { //key 0 has an int item defining the parent for the next ones in the array.
+			// Key 0 has an int item defining the parent for the next ones in the array.
+			if ($key == 0) {
 				if($item == -1) {
 					if(isset($root_found) && $root_found == true) {
 						return false;
 					} else {
 						$root_found = true;
 					}
-					continue; //skip the root key as it has no meaning, parent_id will be 0.
+
+					// Skip the root key as it has no meaning, parent_id will be 0.
+					continue;
 				}
 				
 				if(!is_numeric($item) || !($item = clean_input($item, array('trim', 'int')))) {
 					return false;
 				}
+
 				if(isset($valid_ids[$item]) && ($valid_ids[$item]['found'] === false)) { //valid id must be TRUE, not 1, for this id to be accepted
 					$valid_ids[$item]['found'] = true; // set to parent so it is known no valid ids occured twice
 					$level_url[] = $valid_ids[$item]['old_url_suffix'];
@@ -64,18 +77,22 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 	
 	$pageorder = str_replace('\\', '',  $_POST["pageorder"]);
 	$pagelists = Zend_Json::decode($pageorder);
+
 	if($pagelists !== null && $pagelists !== false) {
-		$page_ids_query			= "SELECT `cpage_id`, `page_url` FROM `community_pages` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `page_url` != ''";
-		$page_records	= $db->GetAll($page_ids_query);
 		$page_ids = array();
+
+
+		$page_ids_query	= "SELECT `cpage_id`, `page_url` FROM `community_pages` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `page_url` != '' AND `page_active` = '1'";
+		$page_records	= $db->GetAll($page_ids_query);
+
 		foreach($page_records as $record) {
 			$url = end(explode(DIRECTORY_SEPARATOR, $record['page_url']));
 			$page_ids[$record['cpage_id']] = array('found' => false, 'old_url_suffix'=>$url, 'old_id'=>$record['cpage_id']); //set this array up so that if a page_id is in this community, $page_ids[id] = true
 		}
+
 		$count = 0; //account for home page that isn't sortable
 		$order = array();
 		if(deep_clean_and_orient($pagelists, $count, $page_ids, $order)) {
-			
 			$unaccounted_for_pages = false;
 			foreach($page_ids as $key => $found) {
 				if(!$found['found']) {
@@ -83,6 +100,7 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 					break;
 				}
 			}
+			
 			if(isset($page_ids) && (count($page_ids) == $count) && !$unaccounted_for_pages) {
 				//submitted data has been cleaned and all pages are accounted for, commit re-ordering
 				$page_order = 1;

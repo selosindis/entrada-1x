@@ -445,7 +445,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 							<td class="objectives" style="text-align: center;">
 							<?php
 							if ($competency) {
-								echo "<a href=\"".ENTRADA_URL."/objectives?id=".$COMPETENCY_ID."&cid=".$course_id."\" style=\"text-decoration: none;\">X</a>";
+								echo "<a href=\"".ENTRADA_URL."/objectives?id=".$COMPETENCY_ID."&cid=".$course_id."\" style=\"text-decoration: none;\">".html_encode($competency)."</a>";
 							} else {
 								echo "&nbsp;";
 							}

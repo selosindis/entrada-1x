@@ -51,6 +51,7 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 					WHERE a.`countries_id` = ".$db->qstr($countries_id)."
 					AND a.`region_name` LIKE ".$db->qstr("%".$region_name."%")."
 					AND a.`region_active` = '1'
+					GROUP BY a.`region_name`, a.`prov_state`
 					ORDER BY c.`country`, b.`province`, a.`prov_state`, a.`region_name` ASC, a.`manage_apartments` DESC";
 		$results = $db->GetAll($query);
 		if ($results) {

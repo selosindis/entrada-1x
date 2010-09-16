@@ -1362,6 +1362,12 @@ class TaskResource extends EntradaAclResource {
 	var $task_id;
 
 	/**
+	 * The course ID for the course this event belongs to
+	 * @var integer
+	 */
+	var $course_id;
+	
+	/**
 	 * This event's parent course's organisation ID, used for ResourceOrganisationAssertion.
 	 * @see ResourceOrganisationAssertion()
 	 * @var integer
@@ -1375,8 +1381,9 @@ class TaskResource extends EntradaAclResource {
 	 * @param integer $organisation_id This event's parent course's organisation ID
 	 * @param boolean $assert Wheather or not to use assertions when looking at rules
 	 */
-	function __construct($task_id, $organisation_id = null, $assert = null) {
+	function __construct($task_id, $course_id= null, $organisation_id = null, $assert = null) {
 		$this->task_id = $task_id;
+		$this->course_id = $course_id;
 		$this->organisation_id = $organisation_id;
 		if(isset($assert)) {
 			$this->assert = $assert;

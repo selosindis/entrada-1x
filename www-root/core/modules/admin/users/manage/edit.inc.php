@@ -135,7 +135,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 						$ERRORSTR[] = "You must provide a valid	Account Type &gt; Group which this persons account will live under.";
 					}
 					
-					
+					/*
+					 * Required field "clinical" / Clinical.
+					 */
+					if ((isset($_POST["clinical"])) && (int)($_POST["clinical"] == 0)) {
+						$PROCESSED["clinical"] = 0;
+					} else {
+						$PROCESSED["clinical"] = 1;
+					}
 
 					/*
 					 * Required field "account_active" / Account Status.
@@ -603,6 +610,22 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 									</td>
 								</tr>
 								<tr>
+									<td colspan="3">&nbsp;</td>
+								</tr>
+								<tr>
+									<td>&nbsp;</td>
+									<td style="vertical-align: top"><label for="group" class="form-required">Clinical:</label></td>
+									<td>
+										<select id="clinical" name="clinical" style="width: 55px">
+										<option value="1"<?php echo (((!isset($PROCESSED["clinical"])) || ($PROCESSED["clinical"] === "1")) ? " selected=\"selected\"" : ""); ?>>Yes</option>
+										<option value="0"<?php echo ((($PROCESSED["clinical"] === "0")) ? " selected=\"selected\"" : ""); ?>>No</option>
+										</select><br />
+										<div class="content-small" style="margin-top: 5px">
+											<strong>Note:</strong> Select "Yes" if this person is clinical (i.e. has clinics, performs procedures at a hospital, etc.)
+										</div>
+									</td>
+								</tr>
+								<tr>
 									<td colspan="3">
 										<h2>Account Options</h2>
 									</td>
@@ -715,7 +738,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 								</tr>
 								<tr>
 									<td>&nbsp;</td>
-									<td><label for="country_id" class="form-nrequired">Country</label></td>
+									<td><label for="country_id" class="form-required">Country</label></td>
 									<td>
 										<?php
 										$countries = fetch_countries();

@@ -794,8 +794,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 			</tr>
 			<tr style="<?php echo $PROCESSED_ACCESS["group"]=="student" ? "" : "display:none;"; ?>" id="entry_year_data">
 				<td>&nbsp;</td>
-				<td style="vertical-align: top"><label for="group" class="form-required">Year of Program Entry:</label></td>
-				<td>
+				<td style="padding-top: 15px"><label for="group" class="form-required">Year of Program Entry</label></td>
+				<td style="padding-top: 15px">
 					<select id="entry_year" name="entry_year" style="width: 209px">
 					<?php
 					$selected_year = (isset($PROCESSED["entry_year"])) ? $PROCESSED["entry_year"] : (date("Y", time()) - ((date("m", time()) < 7) ?  1 : 0));
@@ -809,7 +809,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 			</tr>
 			<tr style="<?php echo $PROCESSED_ACCESS["group"]=="student" ? "" : "display:none;"; ?>" id="grad_year_data">
 				<td>&nbsp;</td>
-				<td style="vertical-align: top"><label for="group" class="form-required">Graduating Year:</label></td>
+				<td><label for="group" class="form-required">Expected Graduation Year</label></td>
 				<td>
 					<select id="grad_year" name="grad_year" style="width: 209px; margin-top: 5px">
 					<?php
@@ -822,10 +822,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 				</td>
 			</tr>
 			<tr style="<?php echo $PROCESSED_ACCESS["group"]!="faculty" ? "" : "display:none;" ?>" id="clinical_area">
-				<td>&nbsp;</td>
-				<td><label for="clinical" class="form-nrequired">Clinical</label></td>
-				<td><input type="checkbox" id="clinical" name="clinical" value="1"<?php echo (((empty($_POST)) || ((isset($_POST["clinical"])) && ((int) $_POST["clinical"]))) ? " checked=\"checked\"" : ""); ?> style="vertical-align: middle;" />
-				<span class="content-small"><strong>Note:</strong> Used to determine which annual report sections to display (i.e science or clinical)</span></td>
+				<td colspan="2">&nbsp;</td>
+				<td style="padding-top: 15px">
+					<input type="checkbox" id="clinical" name="clinical" value="1"<?php echo (((empty($_POST)) || ((isset($_POST["clinical"])) && ((int) $_POST["clinical"]))) ? " checked=\"checked\"" : ""); ?> style="vertical-align: middle;" />
+					<label for="clinical" class="form-nrequired">This new user is a <strong>clinical</strong> faculty member.</label>
+				</td>
 			</tr>
 			<tr>
 				<td colspan="3">&nbsp;</td>

@@ -71,9 +71,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 			}
 			
 			/*
-			 * Required field "clinical" / Clinical.
+			 * Non-Required field "clinical" / Clinical.
 			 */
-			if ((isset($_POST["clinical"])) && (int)($_POST["clinical"] == 0)) {
+			if (!isset($_POST["clinical"])) {
 				$PROCESSED["clinical"] = 0;
 			} else {
 				$PROCESSED["clinical"] = 1;
@@ -679,7 +679,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 
 
 			$ONLOAD[] = "toggle_visibility_checkbox($('send_notification'), 'send_notification_msg')";
-
+			
 			if ($ERROR) {
 				echo display_error();
 			}
@@ -821,21 +821,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 					</select>
 				</td>
 			</tr>
-			<tr>
-				<td colspan="3">&nbsp;</td>
+			<tr style="<?php echo $PROCESSED_ACCESS["group"]!="faculty" ? "" : "display:none;" ?>" id="clinical_area">
+				<td>&nbsp;</td>
+				<td><label for="clinical" class="form-nrequired">Clinical</label></td>
+				<td><input type="checkbox" id="clinical" name="clinical" value="1"<?php echo (((empty($_POST)) || ((isset($_POST["clinical"])) && ((int) $_POST["clinical"]))) ? " checked=\"checked\"" : ""); ?> style="vertical-align: middle;" />
+				<span class="content-small"><strong>Note:</strong> Used to determine which annual report sections to display (i.e science or clinical)</span></td>
 			</tr>
 			<tr>
-				<td>&nbsp;</td>
-				<td style="vertical-align: top"><label for="group" class="form-required">Clinical:</label></td>
-				<td>
-					<select id="clinical" name="clinical" style="width: 55px">
-					<option value="1"<?php echo (((!isset($PROCESSED["clinical"])) || ($PROCESSED["clinical"] === "1")) ? " selected=\"selected\"" : ""); ?>>Yes</option>
-					<option value="0"<?php echo ((($PROCESSED["clinical"] === "0")) ? " selected=\"selected\"" : ""); ?>>No</option>
-					</select><br />
-					<div class="content-small" style="margin-top: 5px">
-						<strong>Note:</strong> Select "Yes" if this person is clinical (i.e. has clinics, performs procedures at a hospital, etc.)
-					</div>
-				</td>
+				<td colspan="3">&nbsp;</td>
 			</tr>
 			<tr>
 				<td colspan="3">
@@ -1106,15 +1099,23 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 						function onGroupChange() {
 							if ($F('group') == "student") {
 								grad_year.show();
-								entry_year.show();	
+								entry_year.show();
+								clinical.hide();
 							} else {
 								grad_year.hide();
 								entry_year.hide();	
+								if($F('group') == "faculty") {
+									clinical.show();
+								} else {
+									clinical.hide();
+								}
 							}
+							
 						}
 						document.observe("dom:loaded",function() {
 							grad_year = $('grad_year_data');
 							entry_year = $('entry_year_data');
+							clinical = $('clinical_area');
 							var group_observer = new Form.Element.Observer($('group'),0.1,function() {
 								group_observer.stop();
 								onGroupChange();

@@ -66,7 +66,7 @@ class Task {
 	 * @var int
 	 */
 	private $organisation_id;
-	
+		
 	
 	/**
 	 * Returns a User, Course, or Event depending on the owner type
@@ -126,9 +126,9 @@ class Task {
 	
 	/**
 	 * Returns the User that last updated this information
-	 * 
+	 * @return User
 	 */
-	function getLasUpdateUser() {
+	function getLastUpdateUser() {
 		return User::get($this->last_updated_by);
 	}
 	
@@ -152,6 +152,10 @@ class Task {
 		return $this->organisation_id;
 	}
 	
+	function addOwner($obj) {
+		TaskOwners::add($this,$obj);
+	}
+	
 	/**
 	 * Creates a new task. Returns new task_id
 	 * 
@@ -166,8 +170,17 @@ class Task {
 	 * 
 	 * @return int
 	 */
-	static function create($creator_id, $title, $owner_type, $owner_id, $deadline, $duration = 0, $description = "", $release_start = null, $release_finish = null, $organisation_id=null) {
-		
+	static function create($creator_id, $title, $deadline, $duration = 0, $description = "", $release_start = null, $release_finish = null, $organisation_id=null) {
+		global $db;
+		$query = "insert into `tasks` (`updated_by`, `updated_date`, `title`, `deadline`,`duration`,`description`, `release_start`, `release_finish`, `organisation_id`) 
+				value (".$db->qstr($creator_id).", ".$db->qstr(time()).", ".$db->qstr($title).", ".$db->qstr($deadline).", ".$db->qstr($duration).", ".$db->qstr($description).", ".$db->qstr($release_start).", ". $db->qstr($release_finish).",".$db->qstr($organisation_id).")";
+		if(!$db->Execute($query)) {
+			add_error("Failed to create Task".$db->ErrorMsg());
+			application_log("error", "Unable to update a tasks record. Database said: ".$db->ErrorMsg());
+		} else {
+			add_success("Successfully created task.");
+			return ($db->Insert_ID('tasks','task_id'));
+		}
 	} 
 	
 	/**
@@ -181,6 +194,7 @@ class Task {
 	 * @param int $release_finish
 	 */
 	function update($updater_id, $title, $deadline, $duration = 0, $description = "", $release_start = null, $release_finish = null) {
+		global $db;
 		
 	}
 	
@@ -196,12 +210,10 @@ class Task {
 					a.`task_id` = d.`task_id` and
 					a.`task_id`=".$db->qstr($this->task_id);
 		if(!$db->Execute($query)) {
-			$ERROR++;
-			$ERRORSTR[] = "Failed to remove task from database.";
+			add_error("Failed to remove task from database.");
 			application_log("error", "Unable to delete a tasks record. Database said: ".$db->ErrorMsg());
 		} else {
-			$SUCCESS++;
-			$SUCCESSSTR[] = "Successfully removed task.";
+			add_success("Successfully removed task.");
 		}		
 	}
 	

@@ -43,6 +43,7 @@ class Users extends Collection {
 	 * @return Users
 	 */
 	static public function get() {
+		global $db;
 		$query = "SELECT * from `".AUTH_DATABASE."`.`user_data`";
 		
 		$results = $db->getAll($query);

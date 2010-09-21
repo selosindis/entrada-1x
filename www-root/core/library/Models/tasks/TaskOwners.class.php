@@ -40,4 +40,42 @@ class TaskOwners extends Collection {
 		}
 		return new self($owners);
 	}
+	
+	static public function add($task_id,$owners) {
+		global $db;
+		if (!is_array($owners)) { //single owner case?
+			$owners = array($owners);
+		}
+		$query = "insert ignore into `task_owners` (`task_id`,`owner_id`, `owner_type` ) values ";
+		$q_task_id = $db->qstr($task_id);
+		$records = array();
+		foreach($owners as $owner) {
+			if ($owner instanceof User) {
+				$owner_type = TASK_OWNER_USER;
+				$owner_id = $owner->getID();
+			} elseif ($owner instanceof Course) {
+				$owner_type = TASK_OWNER_COURSE;
+				$owner_id = $owner->getID();
+			} elseif ($owner instanceof Organisation) {
+				$owner_type = TASK_OWNER_EVENT;
+				$owner_id = $owner->getID();
+			} elseif (is_array($owner)) {
+				//manually passing type and id
+				$owner_type = $owner['type'];
+				$owner_id = $owner['id'];
+			} else {
+				continue; //skip if invalid
+			}
+			
+			$records[] = "(".$q_task_id.",".$db->qstr($owner_id)."," . $db->qstr($owner_type) . ")";
+		}
+		$query .= implode(",",$records);
+		
+		if(!$db->Execute($query)) {
+			add_error("Failed to add owners to task");
+			application_log("error", "Unable to create task_owners records. Database said: ".$db->ErrorMsg());
+		} else {
+			add_success("Successfully added owners to task.");
+		}
+	}
 }

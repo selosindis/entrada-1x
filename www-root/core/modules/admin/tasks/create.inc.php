@@ -16,7 +16,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 } elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	header("Location: ".ENTRADA_URL);
 	exit;
-} elseif (!$ENTRADA_ACL->amIAllowed("tasks", "create", false)) {
+} elseif (!$ENTRADA_ACL->amIAllowed("task", "create", false)) {
 	add_error("Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.");
 
 	echo display_error();
@@ -30,11 +30,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/AutoCompleteList.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 	
 	require_once("Models/courses/Courses.class.php");
+	require_once("Models/organisations/Organisations.class.php");
 	require_once("Models/tasks/Tasks.class.php");
+	require_once("Models/tasks/TaskOwners.class.php");
+	require_once("Models/tasks/TaskRecipients.class.php");
+	require_once("Models/tasks/TaskVerification.class.php");
 	require_once("Models/users/User.class.php");
+	require_once("Models/users/GraduatingClass.class.php");
 	
+	//set defaults
 	$PROCESSED = array();
-	$PROCESSED["task_audience_type"] = "proxy_id";
+	$PROCESSED["task_recipient_type"] = TASK_DEFAULT_RECIPIENT_TYPE;
+	$PROCESSED['require_verification'] = TASK_DEFAULT_REQUIRE_VERIFICATION;
 	
 	
 	if (isset($_POST['action']) && ($_POST['action'] === 'Save')) {
@@ -77,14 +84,21 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 			$PROCESSED['description'] = clean_input($_POST["description"], array("allowedtags"));
 		}
 				
-		if(isset($_POST["task_audience_type"])) {
-			$PROCESSED["task_audience_type"] = clean_input($_POST["task_audience_type"], array("page_url"));
+		
+		if ($_POST['require_verification']) {
+			$PROCESSED['require_verification'] = TASK_VERIFICATION_REQUIRED;
+		} else {
+			$PROCESSED['require_verification'] = TASK_VERIFICATION_NOT_REQUIRED;
+		}
+		
+		if(isset($_POST["task_recipient_type"])) {
+			$PROCESSED["task_recipient_type"] = clean_input($_POST["task_recipient_type"], array("page_url"));
 
-			switch($PROCESSED["task_audience_type"]) {
+			switch($PROCESSED["task_recipient_type"]) {
 				case "grad_year" :
 				/**
 				 * Required field "associated_grad_years" / Graduating Year
-				 * This data is inserted into the task_audience table as grad_year.
+				 * This data is inserted into the task_recipient table as grad_year.
 				 */
 					if((isset($_POST["associated_grad_years"]))) {
 						$associated_grad_years = explode(',', $_POST["associated_grad_years"]);
@@ -95,21 +109,21 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 								}
 							}
 							if(!count($PROCESSED["associated_grad_years"])) {
-								add_error("You have chosen <strong>Entire Class Task</strong> as a <strong>Task Audience</strong> type, but have not selected any graduating years.");
+								add_error("You have chosen <strong>Entire Class Task</strong> as <strong>Task Recipients</strong>, but have not selected any graduating years.");
 							}
 						} else {
-							add_error("You have chosen <strong>Entire Class Task</strong> as an <strong>Task Audience</strong> type, but have not selected any graduating years.");
+							add_error("You have chosen <strong>Entire Class Task</strong> as an <strong>Task Recipients</strong> type, but have not selected any graduating years.");
 						}
 					}
 
 					break;
 				case "group_id" :
-					add_error("The <strong>Group Task</strong> as a <strong>Task Audience</strong> type, has not yet been implemented.");
+					add_error("The <strong>Group Task</strong> as <strong>Task Recipients</strong> type, has not yet been implemented.");
 					break;
 				case "proxy_id" :
 				/**
 				 * Required field "associated_proxy_ids" / Associated Students
-				 * This data is inserted into the task_audience table as proxy_id.
+				 * This data is inserted into the task_recipients table as proxy_id.
 				 */
 					if((isset($_POST["associated_individual"]))) {
 						$associated_proxies = explode(',', $_POST["associated_individual"]);
@@ -132,37 +146,101 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 								}
 							}
 							if(!count($PROCESSED["associated_proxy_ids"])) {
-								add_error("You have chosen <strong>Individual Task</strong> as a <strong>Task Audience</strong> type, but have not selected any individuals.");
+								add_error("You have chosen <strong>Individual Task</strong> as <strong>Task Recipients</strong> type, but have not selected any individuals.");
 							}
 						} else {
-							add_error("You have chosen <strong>Individual Task</strong> as a <strong>Task Audience</strong> type, but have not selected any individuals.");
+							add_error("You have chosen <strong>Individual Task</strong> as a <strong>Task Recipients</strong> type, but have not selected any individuals.");
 						}
 					}
 					break;
 				case "organisation_id":
-					if((isset($_POST["associated_organisation_id"])) && ($associated_organisation_id = clean_input($_POST["associated_organisation_id"], array("trim", "int")))) {
+					if ($PROCESSED['require_verification'] == TASK_VERIFICATION_REQUIRED) {
+						add_error("Task completion verification is not available for an Organisation-wide recipient list.");
+					} elseif((isset($_POST["associated_organisation_id"])) && ($associated_organisation_id = clean_input($_POST["associated_organisation_id"], array("trim", "int")))) {
 						if($ENTRADA_ACL->amIAllowed('resourceorganisation'.$associated_organisation_id, 'create')) {
 							$PROCESSED["associated_organisation_id"] = $associated_organisation_id;
 						} else {
 							add_error("You do not have permission to add a task for this organisation, please select a different one.");
 						}
 					} else {
-						add_error("You have chosen <strong>Entire Organisation Event</strong> as an <strong>Event Audience</strong> type, but have not selected an organisation.");
+						add_error("You have chosen <strong>Entire Organisation Task</strong> as a <strong>Task Recipients</strong> type, but have not selected an organisation.");
 					}
 					break;
 				default :
-					add_error("Unable to proceed because the <strong>Event Audience</strong> type is unrecognized.");
-					application_log("error", "Unrecognized event_audience_type [".$_POST["event_audience_type"]."] encountered.");
+					add_error("Unable to proceed because the <strong>Task Recipients</strong> type is unrecognized.");
+					application_log("error", "Unrecognized task_recipient_type [".$_POST["task_recipient_type"]."] encountered.");
 					break;
 			}
 		} else {
-			add_error("Unable to proceed because the <strong>Event Audience</strong> type is unrecognized.");
-			application_log("error", "The event_audience_type field has not been set.");
-		}
+			add_error("Unable to proceed because the <strong>Task Recipients</strong> type is unrecognized.");
+			application_log("error", "The task_recipient_type field has not been set.");
+		}		
 		
 		//Error processing comeplete
 		if (!has_error()) {
+			//first create the task, then add the owners, and finally, if verification is required add those records.
+
+			$org_id = ($PROCESSED["associated_organisation_id"] ? $PROCESSED["associated_organisation_id"] : $ORGANISATION_ID); //default to associated organisation as user may have access to multiple
+			$task_id = Task::create($PROXY_ID,$PROCESSED['title'], $PROCESSED['deadline'], $PROCESSED['duration'], $PROCESSED['description'], $PROCESSED['release_start'], $PROCESSED['release_finish'], $org_id);
+			if ($task_id) {
+				
+				$owners = array();
+				
+				//stub, owners for now limited to a single course and the creator
+				$owners[] = User::get($PROXY_ID);
+				if ($PROCESSED["course_id"]) {
+					$owners[] = array("type" => TASK_OWNER_COURSE, "id" => $PROCESSED["course_id"]);
+				}
+				
+				TaskOwners::add($task_id, $owners);
+				
+				$recipients = array();
+				switch($PROCESSED['task_recipient_type']) {
+					case TASK_RECIPIENT_USER:
+						foreach($PROCESSED["associated_proxy_ids"] as $proxy_id) {
+							$recipients[] = array("type" => TASK_RECIPIENT_USER, "id" => $proxy_id);	
+						}
+						break;
+					case TASK_RECIPIENT_CLASS:
+						foreach($PROCESSED["associated_grad_years"] as $grad_year) {
+							$recipients[] = array("type" => TASK_RECIPIENT_CLASS, "id" => $grad_year);	
+						}
+						break;
+					case TASK_RECIPIENT_ORGANISATION:
+						$recipients[] = array("type"=>TASK_RECIPIENT_ORGANISATION, "id" => $PROCESSED["associated_organisation_id"]);
+						break;
+				}
+				
+				TaskRecipients::add($task_id,$recipients);
+				
+				if ($PROCESSED['require_verification'] == TASK_VERIFICATION_REQUIRED) {
+					$verification_ids = $PROCESSED["associated_proxy_ids"];
+					if ($PROCESSED["associated_grad_years"]) {
+						foreach ($PROCESSED["associated_grad_years"] as $grad_year) {
+							$students = GraduatingClass::get($grad_year);
+							foreach ($students as $student) {
+								$verification_ids[] = $student->getID();	
+							}
+						}
+					}
+					$verification_ids = array_unique($verification_ids);
+					TaskVerification::add($task_id, $verification_ids);
+				}
+			}
 			
+			if (!has_error()) {
+				switch($_POST['post_action']) {
+					case 'new':
+						header( "refresh:5;url=".ENTRADA_URL."/admin/tasks?section=create" );
+						break;
+					case 'index':
+					default:
+						header( "refresh:5;url=".ENTRADA_URL."/admin/tasks" );
+				
+				}
+				display_status_messages();
+				exit;
+			}
 		}
 		
 	}
@@ -173,7 +251,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 	
 	load_rte(); //load the Rich Text Editor
 	
-	$ONLOAD[]	= "selectTaskAudienceOption('".$PROCESSED["task_audience_type"]."')";
+	$ONLOAD[]	= "selectTaskRecipientsOption('".$PROCESSED["task_recipient_type"]."')";
 	
 	display_status_messages();
 	?>
@@ -231,7 +309,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 							$results	= $db->GetAll($query);
 							if($results) {
 								foreach($results as $result) {
-									if ($ENTRADA_ACL->amIAllowed(new EventResource(null, $result["course_id"], $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"]), "create")) {
+									if ($ENTRADA_ACL->amIAllowed(new TaskResource(null, $result["course_id"], $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"]), "create")) {
 										echo "<option value=\"".(int) $result["course_id"]."\"".(($PROCESSED["course_id"] == $result["course_id"]) ? " selected=\"selected\"" : "").">".html_encode($result["course_name"])."</option>\n";
 									}
 								}
@@ -265,31 +343,31 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 					</td>
 				</tr>
 				<tr>
-						<td colspan="3"><h2>Task Audience</h2></td>
+						<td colspan="3"><h2>Task Recipients</h2></td>
 					</tr>
 				<tr>
 					<td>
-						<input type="checkbox" name="verification_required" id="verification_required"></input>
+						<input type="checkbox" name="require_verification" id="require_verification" <?php echo ($PROCESSED['require_verification'] == TASK_VERIFICATION_REQUIRED)?"checked=\"checked\"":"" ?>></input>
 					</td>
 					<td colspan="2">
-						<label for="verification_required" class="form_nrequired">Verification Required</label>
+						<label for="require_verification" class="form_nrequired">Completion of this task requires verification</label>
 					</td>
 				</tr>
 				<tr>
 						<td colspan="3">&nbsp;</td>
 					</tr>
 				<tr>
-					<td style="vertical-align: top"><input type="radio" name="task_audience_type" id="task_audience_type_grad_year" value="grad_year" onclick="selectTaskAudienceOption('grad_year')" style="vertical-align: middle"<?php echo (($PROCESSED["task_audience_type"] == "grad_year") ? " checked=\"checked\"" : ""); ?> /></td>
+					<td style="vertical-align: top"><input type="radio" name="task_recipient_type" id="task_recipient_type_grad_year" value="grad_year" onclick="selectTaskRecipientsOption('grad_year')" style="vertical-align: middle"<?php echo (($PROCESSED["task_recipient_type"] == "grad_year") ? " checked=\"checked\"" : ""); ?> /></td>
 					<td colspan="2" style="padding-bottom: 15px">
-						<label for="task_audience_type_grad_year" class="radio-group-title">Entire Class task</label>
+						<label for="task_recipient_type_grad_year" class="radio-group-title">Entire Class task</label>
 						<div class="content-small">This task is intended for an entire class.</div>
 					</td>
 				</tr>
-				<tr class="task_audience grad_year_audience">
+				<tr class="task_recipient grad_year_recipient">
 					<td></td>
-					<td><label for="associated_grad_year" class="form-required">Graduating Year</label></td>
+					<td><label for="associated_grad_years" class="form-required">Graduating Year</label></td>
 					<td>
-						<select id="associated_grad_year" name="associated_grad_year" style="width: 203px">
+						<select id="associated_grad_years" name="associated_grad_years" style="width: 203px">
 						<?php
 						for($year = (date("Y", time()) + 4); $year >= (date("Y", time()) - 1); $year--) {
 							echo "<option value=\"".(int) $year."\"".(($PROCESSED["associated_grad_year"] == $year) ? " selected=\"selected\"" : "").">Class of ".html_encode($year)."</option>\n";
@@ -302,13 +380,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 					<td colspan="3">&nbsp;</td>
 				</tr>
 				<tr>
-					<td style="vertical-align: top"><input type="radio" name="task_audience_type" id="task_audience_type_proxy_id" value="proxy_id" onclick="selectTaskAudienceOption('proxy_id')" style="vertical-align: middle"<?php echo (($PROCESSED["task_audience_type"] == "proxy_id") ? " checked=\"checked\"" : ""); ?> /></td>
+					<td style="vertical-align: top"><input type="radio" name="task_recipient_type" id="task_recipient_type_proxy_id" value="proxy_id" onclick="selectTaskRecipientsOption('proxy_id')" style="vertical-align: middle"<?php echo (($PROCESSED["task_recipient_type"] == "proxy_id") ? " checked=\"checked\"" : ""); ?> /></td>
 					<td colspan="2" style="padding-bottom: 15px">
-						<label for="task_audience_type_proxy_id" class="radio-group-title">Individual task</label>
+						<label for="task_recipient_type_proxy_id" class="radio-group-title">Individual task</label>
 						<div class="content-small">This task is intended for a specific individual or individuals.</div>
 					</td>
 				</tr>
-				<tr class="task_audience proxy_id_audience">
+				<tr class="task_recipient proxy_id_recipient">
 					<td></td>
 					<td style="vertical-align: top"><label for="associated_proxy_ids" class="form-required">Associated Individuals</label></td>
 					<td>
@@ -323,10 +401,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 						<ul id="individual_list" class="menu" style="margin-top: 15px">
 							<?php
 							if (is_array($PROCESSED["associated_proxy_ids"]) && count($PROCESSED["associated_proxy_ids"])) {
-								foreach ($PROCESSED["associated_proxy_ids"] as $individual) {
-									if ((array_key_exists($individual, $STUDENT_LIST)) && is_array($STUDENT_LIST[$individual])) {
+								foreach ($PROCESSED["associated_proxy_ids"] as $proxy_id) {
+									if ($individual = User::get($proxy_id)) {
 										?>
-										<li class="community" id="individual_<?php echo $STUDENT_LIST[$individual]["proxy_id"]; ?>" style="cursor: move;"><?php echo $STUDENT_LIST[$individual]["fullname"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" class="list-cancel-image" onclick="removeItem('<?php echo $STUDENT_LIST[$individual]["proxy_id"]; ?>', 'individual');"/></li>
+										<li class="community" id="individual_<?php echo $individual->getID(); ?>" style="cursor: move;"><?php echo $individual->getFullname(); ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" class="list-cancel-image" onclick="removeItem('<?php echo $individual->getID(); ?>', 'individual');"/></li>
 										<?php
 									}
 								}
@@ -340,23 +418,26 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 				<tr>
 					<td colspan="3">&nbsp;</td>
 				</tr>
-				<?php if ($ENTRADA_ACL->amIAllowed(new EventResource(null, null, $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"]), 'create')) { ?>
+				<?php if ($ENTRADA_ACL->amIAllowed(new TaskResource(null, null, $ORGANISATION_ID), 'create')) { ?>
 				<tr>
-					<td style="vertical-align: top"><input type="radio" name="task_audience_type" id="event_audience_type_organisation_id" value="organisation_id" onclick="selectTaskAudienceOption('organisation_id')" style="vertical-align: middle"<?php echo (($PROCESSED["task_audience_type"] == "organisation_id") ? " checked=\"checked\"" : ""); ?> /></td>
+					<td style="vertical-align: top"><input type="radio" name="task_recipient_type" id="task_recipient_type_organisation_id" value="organisation_id" onclick="selectTaskRecipientsOption('organisation_id')" style="vertical-align: middle"<?php echo (($PROCESSED["task_recipient_type"] == "organisation_id") ? " checked=\"checked\"" : ""); ?> /></td>
 					<td colspan="2" style="padding-bottom: 15px">
-						<label for="task_audience_type_organisation_id" class="radio-group-title">Entire Organisation Task</label>
+						<label for="task_recipient_type_organisation_id" class="radio-group-title">Entire Organisation Task</label>
 						<div class="content-small">This task is intended for every member of an organisation.</div>
 					</td>
 				</tr>
-				<tr class="task_audience organisation_id_audience">
+				<tr class="task_recipient organisation_id_recipient">
 					<td></td>
 					<td><label for="associated_organisation_id" class="form-required">Organisation</label></td>
 					<td>
 						<select id="associated_organisation_id" name="associated_organisation_id" style="width: 203px">
 							<?php
-							if (is_array($organisation_categories) && count($organisation_categories)) {
-								foreach($organisation_categories as $organisation_id => $organisation_info) {
-									echo "<option value=\"".$organisation_id."\"".(($PROCESSED["associated_organisation_id"] == $year) ? " selected=\"selected\"" : "").">".$organisation_info['text']."</option>\n";
+							$organisations = Organisations::get();
+							if ($organisations) {
+								foreach($organisations as $organisation) {
+									$organisation_id = $organisation->getID();
+									$organisation_title = $organisation->getTitle();
+									echo "<option value=\"".$organisation_id."\"".(($PROCESSED["associated_organisation_id"] == $year) ? " selected=\"selected\"" : "").">".$organisation_title."</option>\n";
 								}
 							}
 							?>
@@ -375,11 +456,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 		</table>
 	</form>
 	<script type="text/javascript">
-		function selectTaskAudienceOption(type) {
-			$$('.task_audience').invoke('hide');
-			$$('.'+type+'_audience').invoke('show');
+		function selectTaskRecipientsOption(type) {
+			$$('.task_recipient').invoke('hide');
+			$$('.'+type+'_recipient').invoke('show');
 		}
 	</script>
 	<?php
-
 }

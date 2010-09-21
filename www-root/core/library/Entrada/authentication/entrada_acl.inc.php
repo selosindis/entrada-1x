@@ -83,7 +83,7 @@ class Entrada_ACL extends ACL_Factory {
 									"reports"
 									),
 			"annualreport",
-			"tasks"
+			"task"
 		)
 	);
 	/**
@@ -173,12 +173,11 @@ class Entrada_ACL extends ACL_Factory {
 		if($resource instanceof Zend_Acl_Resource_Interface) {
 			$resource->assert = $assert;
 		} else {
-		 	$resource = new EntradaAclResource($resource, $assert);
+			$resource = new EntradaAclResource($resource, $assert);
 		}
 		if(!($user instanceof Zend_Acl_Role_Interface)) {
 			$user = new EntradaUser($user);
 		}
-		
 		return $this->acl->isAllowed($user, $resource, $action);
 	}
 
@@ -1373,7 +1372,7 @@ class TaskResource extends EntradaAclResource {
 	 * @var integer
 	 */
 	var $organisation_id;
-
+	
 	/**
 	 * Creates this event resource with the supplied information
 	 * @param integer $event_id This event's ID
@@ -1396,7 +1395,7 @@ class TaskResource extends EntradaAclResource {
 	 * @return string
 	 */
 	public function getResourceId() {
-		return "task".($this->specific ? $this->event_id : "");
+		return "task".($this->specific ? $this->task_id : "");
 	}
 }
 

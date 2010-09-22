@@ -278,8 +278,6 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 		
 		$dateWhere = " AND ((SUBSTRING(status_date, -4, 4) >= $startYear AND SUBSTRING(status_date, -4, 4) <= $endYear) OR status_date IS NULL OR status_date = 00)";
 		
-		//$usersDepartments = get_user_departments($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]);
-		
 		$listOfDepartmentMembers = array();
 		
 		$departmentOuput = fetch_department_title($departmentID);

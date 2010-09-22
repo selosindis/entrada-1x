@@ -27,6 +27,15 @@ ADD INDEX ( `parent_id` );
 ALTER TABLE `departments` ADD `department_active` INT( 1 ) NOT NULL DEFAULT '1' AFTER `department_desc`,
 ADD INDEX ( `department_active` );
 
+-- Table: department_heads
+
+CREATE TABLE IF NOT EXISTS `department_heads` (
+  `department_heads_id` int(11) NOT NULL auto_increment,
+  `department_id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  PRIMARY KEY  (`department_heads_id`)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+
 -- Table: registered_apps
 
 ALTER TABLE `registered_apps` CHANGE `script_id` `script_id` varchar(32) NOT NULL DEFAULT '0';

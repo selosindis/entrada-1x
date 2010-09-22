@@ -496,7 +496,7 @@ switch($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_
 		 * If a department is selected, display the schedule.
 		 */
 		if((isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["department_id"])) && ((int) $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["department_id"])) {
-			$department_title = clerkship_department_title($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["department_id"]);
+			$department_title = fetch_department_title($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["department_id"]);
 			?>
 			<h2><?php echo html_encode($department_title); ?></h2>
 			<table style="width: 100%" cellspacing="0" cellpadding="0" border="0" summary="Weekly Student Calendar">

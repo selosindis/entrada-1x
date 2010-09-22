@@ -36,8 +36,10 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
-	$BREADCRUMB[]	= array("url" => "", "title" => "Publications for ");
 	$departmentID = is_department_head($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]);
+	$departmentOuput = fetch_department_title($departmentID);
+	
+	$BREADCRUMB[]	= array("url" => "", "title" => "Publications for ".$departmentOuput);
 	
 	function display($results, $db)
     {	

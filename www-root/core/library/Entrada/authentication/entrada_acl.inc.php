@@ -82,7 +82,8 @@ class Entrada_ACL extends ACL_Factory {
 									"notifications",
 									"reports"
 									),
-			"annualreport"
+			"annualreport",
+			"mydepartment"
 		)
 	);
 	/**
@@ -1453,5 +1454,38 @@ class EntradaUser implements Zend_Acl_Role_Interface {
 	}
 	function getRoleId() {
 		return $this->userid;
+	}
+}
+
+/**
+ * Department Head Assertion Class
+ *
+ * Checks to see if the faculty department head's proxy_id is in the department_heads table
+ * which therefore gives them access to the Department Reports section within My Reports.
+ */
+class DepartmentHeadAssertion implements Zend_Acl_Assert_Interface {
+	public function assert(Zend_Acl $acl, Zend_Acl_Role_Interface $role = null, Zend_Acl_Resource_Interface $resource = null, $privilege = null) {
+		global $db;
+		
+		if(!($role instanceof EntradaUser) || !isset($role->details) || !isset($role->details["id"])) {
+			if(isset($acl->_entrada_last_query_role)) {
+				$role = $acl->_entrada_last_query_role;
+				if(($role instanceof EntradaUser) || isset($role->details) || isset($role->details["id"])) {
+					$proxy_id = $role->details["id"];
+				}
+			}
+		} else {
+			$proxy_id = $role->details["id"];
+		}
+		
+		if ((isset($proxy_id)) && ((int) $proxy_id)) {
+			if (!(is_department_head($proxy_id))) {
+				return false;
+			} else {
+				return true;
+			}
+		}
+		
+		return false;
 	}
 }

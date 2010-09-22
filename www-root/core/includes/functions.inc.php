@@ -1385,6 +1385,46 @@ function fetch_department_title($department_id = 0) {
 }
 
 /**
+ * Function will return the parent_id based on the provided department_id.
+ * @param int $department_id
+ * @return parent_id or bool
+ */
+function fetch_department_parent($department_id = 0) {
+	global $db;
+
+	if($department_id = (int) $department_id) {
+		$query	= "SELECT `parent_id` FROM `".AUTH_DATABASE."`.`departments` WHERE `department_id` = ".$db->qstr($department_id);
+		$result	= $db->GetRow($query);
+
+		if(($result)) {
+			return $result["parent_id"];
+		}
+	}
+	return false;
+}
+
+/**
+ * Function will return the children of a department (i.e. divisions) based on the provided department_id.
+ * @param int $department_id
+ * @return array(department IDs) or bool (false)
+ */
+function fetch_department_children($department_id = 0) {
+	global $db;
+
+	if($department_id = (int) $department_id) {
+		$query	= "SELECT `department_id` FROM `".AUTH_DATABASE."`.`departments` WHERE `parent_id` = ".$db->qstr($department_id);
+		$results = $db->GetAll($query);
+
+		if(($results)) {
+			return $results;
+		} else {
+			return false;
+		}
+	}
+	return false;
+}
+
+/**
  * Function will return a list of Countries.
  * @param none
  * @return resultset(countries_id, country) or bool
@@ -5041,26 +5081,6 @@ function clerkship_region_name($region_id = 0) {
 		$result	= $db->GetRow($query);
 		if($result) {
 			return $result["region_name"];
-		}
-	}
-
-	return false;
-}
-
-/**
- * This function will return the name of a department based on it's ID.
- *
- * @param int $department_id
- * @return string
- */
-function clerkship_department_title($department_id = 0) {
-	global $db;
-
-	if($department_id = (int) $department_id) {
-		$query	= "SELECT `department_title` FROM `".AUTH_DATABASE."`.`departments` WHERE `department_id` = ".$db->qstr($department_id);
-		$result	= $db->GetRow($query);
-		if($result) {
-			return $result["department_title"];
 		}
 	}
 
@@ -10419,13 +10439,33 @@ function formatDateRange($start_date, $end_date) {
 function get_user_departments($user_id) {
 	global $db;
 	
-	$query = "SELECT `department_title` FROM `".AUTH_DATABASE."`.`user_departments`, `".AUTH_DATABASE."`.`departments` 
-	WHERE `user_id`=".$db->qstr($user_id)."
-	AND `dep_id` = `department_id`";
+	$query = "	SELECT `department_title`, `department_id` 
+				FROM `".AUTH_DATABASE."`.`user_departments`, `".AUTH_DATABASE."`.`departments` 
+				WHERE `user_id`=".$db->qstr($user_id)."
+				AND `dep_id` = `department_id`";
 	
 	$results = $db->GetAll($query);
 	
 	return $results;
+}
+
+/**
+ * This function gets determines if a user is a department head
+ * @param int $user_id
+ * @return int $department_id, bool returns false otherwise
+ */
+function is_department_head($user_id) {
+	global $db;
+	
+	$query = "	SELECT `department_id` 
+				FROM `".AUTH_DATABASE."`.`department_heads`
+				WHERE `user_id`=".$db->qstr($user_id);
+	
+	if($result = $db->GetRow($query)) {	
+		return $result["department_id"];
+	} else {
+		return false;
+	}
 }
 
 /**

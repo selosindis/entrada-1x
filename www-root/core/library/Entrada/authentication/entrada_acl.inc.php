@@ -1467,23 +1467,13 @@ class DepartmentHeadAssertion implements Zend_Acl_Assert_Interface {
 	public function assert(Zend_Acl $acl, Zend_Acl_Role_Interface $role = null, Zend_Acl_Resource_Interface $resource = null, $privilege = null) {
 		global $db;
 		
-		if(!($role instanceof EntradaUser) || !isset($role->details) || !isset($role->details["id"])) {
-			if(isset($acl->_entrada_last_query_role)) {
-				$role = $acl->_entrada_last_query_role;
-				if(($role instanceof EntradaUser) || isset($role->details) || isset($role->details["id"])) {
-					$proxy_id = $role->details["id"];
-				}
-			}
+		// This was done so that the correct proxy_id was being used as $role->details["id"] was not using the "masked" id.
+		// I'm sure there is a way to get this ID without using the SESSION but I needed to get this into production ASAP.
+		// I will fix this as soon as I find out how to access the masked ID without going through the session.
+		if (!(is_department_head($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]))) {
+			return false;
 		} else {
-			$proxy_id = $role->details["id"];
-		}
-		
-		if ((isset($proxy_id)) && ((int) $proxy_id)) {
-			if (!(is_department_head($proxy_id))) {
-				return false;
-			} else {
-				return true;
-			}
+			return true;
 		}
 		
 		return false;

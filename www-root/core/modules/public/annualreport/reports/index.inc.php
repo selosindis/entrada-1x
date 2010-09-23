@@ -60,9 +60,19 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 	<ol class="system-reports">
 		<li>
 			<a href="<?php echo ENTRADA_URL; ?>/annualreport/reports?section=my_publications">My Publications</a><br />
-			A report that shows all of the publications you've entered between a specific date range.
+			A report that shows all of the publications you've for a specific date range.
 		</li>
 	</ol>
-	<?php
+	<?php 
+	if($ENTRADA_ACL->amIAllowed('mydepartment', 'read', 'DepartmentHead')) { ?>
+	<h2 style="color: #669900">My Department Reports</h2>
+	<ol class="system-reports">
+		<li>
+			<a href="<?php echo ENTRADA_URL; ?>/annualreport/reports?section=my_departmental_publications">Publications</a><br />
+			A report that shows all of the publications in your department for a specific date range.
+		</li>
+	</ol>
+	<?php 
+	} 
 }
 ?>

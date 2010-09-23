@@ -10570,8 +10570,35 @@ function objectives_build_course_objectives_id_string($course_id = 0) {
 				$objective_ids_string = $db->qstr($objective_id["objective_id"]);
 			}
 		}
+		return $objective_ids_string;
 	}
-	return $objective_ids_string;
+	return false;
+}
+
+/**
+ * This function returns a string containing all of the courses which
+ * are attached to the selected competency.
+ * 
+ * @param $objective_id
+ * @param $objective_ids_string
+ * @return $objective_ids_string
+ */
+function objectives_competency_courses($competency_id = 0) {
+	global $db;
+	$query = "	SELECT a.*, MIN(b.`importance`) AS `importance` 
+				FROM `courses` AS a
+				JOIN `course_objectives` AS b
+				ON a.`course_id` = b.`course_id`
+				AND `objective_id` IN (".objectives_build_objective_descendants_id_string($competency_id).")
+				GROUP BY a.`course_id`";
+	$courses = $db->GetAll($query);
+	if ($courses) {
+		$courses_array = false;
+		foreach ($courses as $course) {
+			$courses_array[$course["course_id"]] = $course;
+		}
+	}
+	return $courses_array;
 }
 
 /**

@@ -126,6 +126,13 @@ CREATE TABLE IF NOT EXISTS `departments` (
 INSERT INTO `departments` (`department_id`, `organisation_id`, `entity_id`, `department_title`, `department_address1`, `department_address2`, `department_city`, `department_province`, `department_country`, `department_postcode`, `department_telephone`, `department_fax`, `department_email`, `department_url`, `department_desc`) VALUES
 (1, 1, 5, 'Medical IT', '', '', 'Kingston', 'ON', 'CA', '', '', '', '', '', NULL);
 
+CREATE TABLE IF NOT EXISTS `department_heads` (
+  `department_heads_id` int(11) NOT NULL auto_increment,
+  `department_id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  PRIMARY KEY  (`department_heads_id`)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+
 CREATE TABLE IF NOT EXISTS `entity_type` (
   `entity_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
   `entity_title` varchar(100) NOT NULL DEFAULT '',

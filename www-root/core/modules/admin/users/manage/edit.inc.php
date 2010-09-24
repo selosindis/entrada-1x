@@ -136,9 +136,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 					}
 					
 					/*
-					 * Required field "clinical" / Clinical.
+					 * Non-Required field "clinical" / Clinical.
 					 */
-					if ((isset($_POST["clinical"])) && (int)($_POST["clinical"] == 0)) {
+					if (!isset($_POST["clinical"])) {
 						$PROCESSED["clinical"] = 0;
 					} else {
 						$PROCESSED["clinical"] = 1;
@@ -582,8 +582,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 								</tr>
 								<tr style="<?php echo $PROCESSED_ACCESS["group"]=="student" ? "" : "display:none;"; ?>" id="entry_year_data">
 									<td>&nbsp;</td>
-									<td style="vertical-align: top"><label for="group" class="form-required">Year of Program Entry:</label></td>
-									<td>
+									<td style="padding-top: 15px"><label for="group" class="form-required">Year of Program Entry</label></td>
+									<td style="padding-top: 15px">
 										<select id="entry_year" name="entry_year" style="width: 209px">
 										<?php
 											$selected_year = (isset($PROCESSED["entry_year"])) ? $PROCESSED["entry_year"] : (date("Y", time()) - ((date("m", time()) < 7) ?  1 : 0));
@@ -597,7 +597,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 								</tr>
 								<tr style="<?php echo $PROCESSED_ACCESS["group"]=="student" ? "" : "display:none;"; ?>" id="grad_year_data">
 									<td>&nbsp;</td>
-									<td style="vertical-align: top"><label for="group" class="form-required">Graduating Year:</label></td>
+									<td><label for="group" class="form-required">Expected Graduation Year</label></td>
 									<td>
 										<select id="grad_year" name="grad_year" style="width: 209px; margin-top: 5px">
 										<?php
@@ -609,20 +609,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 										</select>
 									</td>
 								</tr>
-								<tr>
-									<td colspan="3">&nbsp;</td>
-								</tr>
-								<tr>
-									<td>&nbsp;</td>
-									<td style="vertical-align: top"><label for="group" class="form-required">Clinical:</label></td>
-									<td>
-										<select id="clinical" name="clinical" style="width: 55px">
-										<option value="1"<?php echo (((!isset($PROCESSED["clinical"])) || ($PROCESSED["clinical"] === "1")) ? " selected=\"selected\"" : ""); ?>>Yes</option>
-										<option value="0"<?php echo ((($PROCESSED["clinical"] === "0")) ? " selected=\"selected\"" : ""); ?>>No</option>
-										</select><br />
-										<div class="content-small" style="margin-top: 5px">
-											<strong>Note:</strong> Select "Yes" if this person is clinical (i.e. has clinics, performs procedures at a hospital, etc.)
-										</div>
+								<tr style="<?php echo $PROCESSED_ACCESS["group"]=="faculty" ? "" : "display:none;" ?>" id="clinical_area">
+									<td colspan="2">&nbsp;</td>
+									<td style="padding-top: 15px">
+										<input type="checkbox" id="clinical" name="clinical" value="1"<?php echo (((empty($PROCESSED)) || ((isset($PROCESSED["clinical"])) && ((int) $PROCESSED["clinical"]))) ? " checked=\"checked\"" : ""); ?> style="vertical-align: middle;" />
+										<label for="clinical" class="form-nrequired">This new user is a <strong>clinical</strong> faculty member.</label>
 									</td>
 								</tr>
 								<tr>
@@ -957,14 +948,21 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 										document.observe("dom:loaded",function() {
 											var grad_year = $('grad_year_data');
 											var entry_year = $('entry_year_data');
+											var clinical = $('clinical_area');
 											$('group').observe("change",function() {
 												console.log($F('group'));
 												if ($F('group') == "student") {
 													grad_year.show();
-													entry_year.show();	
+													entry_year.show();
+													clinical.hide();
 												} else {
 													grad_year.hide();
 													entry_year.hide();	
+													if($F('group') == "faculty") {
+														clinical.show();
+													} else {
+														clinical.hide();
+													}
 												}
 											});
 										});

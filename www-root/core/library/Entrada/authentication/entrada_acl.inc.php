@@ -1161,7 +1161,7 @@ class GradebookResource extends CourseResource {
 }
 
 /**
- * Matt in Dev.
+ * Creates a photo resource.
  */
 class PhotoResource extends EntradaAclResource {
 	var $proxy_id;

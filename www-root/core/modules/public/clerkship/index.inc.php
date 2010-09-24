@@ -956,7 +956,7 @@ switch($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_
 															JOIN `".CLERKSHIP_DATABASE."`.`logbook_entries` AS b
 															ON `entry_active` = '1' 
 															AND `proxy_id` = ".$db->qstr($clerks[$i]["id"])."
-															AND a.`lentry_id` = b.`lentry_id
+															AND a.`lentry_id` = b.`lentry_id`
 															WHERE `lprocedure_id` = ".$db->qstr($required_procedure["lprocedure_id"])."
 															GROUP BY `lprocedure_id`";
 												$recorded = $db->CacheGetOne(LONG_CACHE_TIMEOUT, $query);

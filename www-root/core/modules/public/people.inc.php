@@ -206,7 +206,7 @@ if (!defined("PARENT_INCLUDED")) {
 					$result = $db->GetRow($query);
 					if ($result) {
 						$browse_department	= $department;
-						$search_query_text	= html_encode(limit_chars($result["organisation_title"], 18).": ".$result["department_title"]." ".(($result["entity_title"]) ? "(".$result["entity_title"].")" : ""));
+						$search_query_text	= html_encode($result["department_title"]);
 						$search_query		= $search_query_text;
 					} else {
 						$ERROR++;
@@ -224,7 +224,7 @@ if (!defined("PARENT_INCLUDED")) {
 					$result = $db->GetRow($query);
 					if ($result) {
 						$browse_department	= $department;
-						$search_query_text	= html_encode(limit_chars($result["organisation_title"], 18).": ".$result["department_title"]." ".(($result["entity_title"]) ? "(".$result["entity_title"].")" : ""));
+						$search_query_text	= html_encode($result["department_title"]);
 						$search_query		= $search_query_text;
 					} else {
 						$ERROR++;
@@ -731,18 +731,31 @@ if (!defined("PARENT_INCLUDED")) {
 					<td>
 						<select id="department" name="d" style="width: 95%">
 						<?php
-						$query		= "	SELECT a.`department_id`, a.`department_title`, a.`organisation_id`, b.`entity_title`, c.`organisation_title`
-										FROM `".AUTH_DATABASE."`.`departments` AS a
-										LEFT JOIN `".AUTH_DATABASE."`.`entity_type` AS b
-										ON a.`entity_id` = b.`entity_id`
-										LEFT JOIN `".AUTH_DATABASE."`.`organisations` AS c
-										ON a.`organisation_id` = c.`organisation_id`
-										ORDER BY c.`organisation_title` ASC, a.`department_title`";
+						$query = "	SELECT a.`department_id`, a.`department_title`, a.`organisation_id`, b.`entity_title`, c.`organisation_title`
+									FROM `".AUTH_DATABASE."`.`departments` AS a
+									LEFT JOIN `".AUTH_DATABASE."`.`entity_type` AS b
+									ON a.`entity_id` = b.`entity_id`
+									LEFT JOIN `".AUTH_DATABASE."`.`organisations` AS c
+									ON a.`organisation_id` = c.`organisation_id`
+									WHERE a.`department_active` = '1'
+									ORDER BY c.`organisation_title` ASC, a.`department_title`";
 						$results	= $db->GetAll($query);
 						if ($results) {
-							foreach ($results as $result) {
-								echo "<option value=\"".(int) $result["department_id"]."\"".(((isset($browse_department)) && ((int) $browse_department) && ($browse_department == $result["department_id"])) ? " selected=\"selected\"" : "").">".html_encode(limit_chars($result["organisation_title"], 18)).": ".html_encode(limit_chars($result["department_title"], 42))." ".(($result["entity_title"]) ? "(".html_encode(limit_chars($result["entity_title"], 24)).")" : "")."</option>\n";
+							$organisation_title = "";
+
+							foreach ($results as $key => $result) {
+								if ($organisation_title != $result["organisation_title"]) {
+									if ($key) {
+										echo "</optgroup>";
+									}
+									echo "<optgroup label=\"".html_encode($result["organisation_title"])."\">";
+
+									$organisation_title = $result["organisation_title"];
+								}
+
+								echo "<option value=\"".(int) $result["department_id"]."\"".(((isset($browse_department)) && ((int) $browse_department) && ($browse_department == $result["department_id"])) ? " selected=\"selected\"" : "").">".html_encode($result["department_title"])."</option>\n";
 							}
+							echo "</optgroup>";
 						}
 						?>
 						</select>
@@ -814,7 +827,6 @@ if (!defined("PARENT_INCLUDED")) {
 			$total_pages		= 1;
 		}
 		
-		echo($db->ErrorMsg());
 		if ($results) {
 			echo "<br />\n";
 			echo "<div class=\"searchTitle\" style=\"margin: auto;\">\n";

@@ -43,14 +43,39 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 	
 	$BREADCRUMB[]	= array("url" => ENTRADA_URL."/".$MODULE, "title" => "View Courses");
 
-	$sidebar_html  = "<ul class=\"menu\">\n";
-	$sidebar_html .= "	<li class=\"on\"><a href=\"".ENTRADA_URL."/".$MODULE.(($COURSE_ID) ? "?".replace_query(array("id" => $COURSE_ID, "action" => false)) : "")."\">Student View</a></li>\n";
-	if (($admin_wording) && ($admin_url)) {
-		$sidebar_html .= "<li class=\"off\"><a href=\"".$admin_url."\">".html_encode($admin_wording)."</a></li>\n";
-	}
-	$sidebar_html .= "</ul>\n";
 
-	new_sidebar_item("Display Style", $sidebar_html, "display-style", "open");
+	/**
+	 * Check for groups which have access to the administrative side of this module
+	 * and add the appropriate toggle sidebar item.
+	 */
+	if ($ENTRADA_ACL->amIAllowed("coursecontent", "update", false)) {
+		switch ($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]) {
+			case "admin" :
+				$admin_wording	= "Administrator View";
+				$admin_url		= ENTRADA_URL."/admin/".$MODULE.(($COURSE_ID) ? "?".replace_query(array("section" => "edit", "id" => $COURSE_ID)) : "");
+			break;
+			case "pcoordinator" :
+				$admin_wording	= "Coordinator View";
+				$admin_url		= ENTRADA_URL."/admin/".$MODULE.(($COURSE_ID) ? "?".replace_query(array("section" => "content", "id" => $COURSE_ID)) : "");
+			break;
+			case "director" :
+				$admin_wording	= "Director View";
+				$admin_url		= ENTRADA_URL."/admin/".$MODULE.(($COURSE_ID) ? "?".replace_query(array("section" => "content", "id" => $COURSE_ID)) : "");
+			break;
+			default :
+				$admin_wording	= "";
+				$admin_url		= "";
+			break;
+		}
+		$sidebar_html  = "<ul class=\"menu\">\n";
+		$sidebar_html .= "	<li class=\"on\"><a href=\"".ENTRADA_URL."/".$MODULE.(($COURSE_ID) ? "?".replace_query(array("id" => $COURSE_ID, "action" => false)) : "")."\">Student View</a></li>\n";
+		if (($admin_wording) && ($admin_url)) {
+			$sidebar_html .= "<li class=\"off\"><a href=\"".$admin_url."\">".html_encode($admin_wording)."</a></li>\n";
+		}
+		$sidebar_html .= "</ul>\n";
+	
+		new_sidebar_item("Display Style", $sidebar_html, "display-style", "open");
+	}
 
 	$COURSE_LIST	= array();
 
@@ -534,14 +559,16 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			}
 		}
 	} else {
-		$sidebar_html  = "<form action=\"".ENTRADA_URL."/search\" method=\"get\" style=\"display: inline\">\n";
+		$sidebar_html  = "<div><form action=\"".ENTRADA_URL."/search\" method=\"get\" style=\"display: inline\">\n";
 		$sidebar_html .= "<label for=\"q\" class=\"form-nrequired\">Search the curriculum:</label><br />";
 		$sidebar_html .= "<input type=\"text\" id=\"q\" name=\"q\" value=\"\" style=\"width: 95%\" /><br />\n";
 		$sidebar_html .= "<span style=\"float: left; padding-top: 7px;\"><a href=\"".ENTRADA_URL."/search\" style=\"font-size: 11px\">Advanced Search</a></span>\n";
 		$sidebar_html .= "<span style=\"float: right; padding-top: 4px;\"><input type=\"submit\" class=\"button-sm\" value=\"Search\" /></span>\n";
-		$sidebar_html .= "</form>\n";
+		$sidebar_html .= "</form></div>\n";
+		$sidebar_html .= "<br/><br/><hr style=\"clear: both;\"/>\n";
+		$sidebar_html .= "<a href=\"".ENTRADA_URL."/courses/objectives\">View <strong>Curriculum Map</strong></a>\n";
 
-		new_sidebar_item("Curriculum Search", $sidebar_html, "curriculum-search-bar", "open");
+		new_sidebar_item("Our Curriculum", $sidebar_html, "curriculum-search-bar", "open");
 		?>
 		<div style="text-align: right">
 			<form>

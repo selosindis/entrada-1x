@@ -43,7 +43,7 @@ if (!defined("PARENT_INCLUDED") || !defined("IN_COURSES")) {
 	define("IN_OBJECTIVES",	true);
 
 	if (($router) && ($router->initRoute())) {
-		$BREADCRUMB[] = array("url" => ENTRADA_RELATIVE."/".$MODULE, "title" => "Curriculum Objectives");
+		$BREADCRUMB[] = array("url" => ENTRADA_RELATIVE."/courses/objectives", "title" => "Curriculum Objectives");
 
 		$PREFERENCES = preferences_load($MODULE);
 		

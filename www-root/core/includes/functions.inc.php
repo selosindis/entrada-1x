@@ -7707,7 +7707,7 @@ function courses_fetch_objectives($course_ids, $parent_id = 1, $objectives = fal
 	}
 	if ($event_id) {
 		foreach ($objectives["objectives"] as $objective_id => $objective) {
-			if ($event_objectives_string) {
+			if (isset($event_objectives_string) && $event_objectives_string) {
 				$event_objectives_string .= ", ".$db->qstr($objective_id);
 			} else {
 				$event_objectives_string = $db->qstr($objective_id);
@@ -7740,7 +7740,7 @@ function course_objectives_in_list($objectives, $parent_id, $edit_importance = f
 			$output .= "\n<ul class=\"objective-list\" id=\"objective_".$parent_id."_list\"".((($parent_id == 1) || !$hierarchical) ? " style=\"padding-left: 0; margin-top: 0\"" : "").">\n";
 		}
 		foreach ($objectives as $objective_id => $objective) {
-			if (($objective["parent"] == $parent_id) && (($objective["objective_children"]) || (isset($objective["primary"]) && $objective["primary"]) || (isset($objective["secondary"]) && $objective["secondary"]) || (isset($objective["tertiary"]) && $objective["tertiary"]) || ($parent_active && count($objective["parent_ids"]) > 2 && !$selected_only) || ($selected_only && $objective["event_objective"]))) {
+			if (($objective["parent"] == $parent_id) && (($objective["objective_children"]) || (isset($objective["primary"]) && $objective["primary"]) || (isset($objective["secondary"]) && $objective["secondary"]) || (isset($objective["tertiary"]) && $objective["tertiary"]) || ($parent_active && count($objective["parent_ids"]) > 2 && !$selected_only) || ($selected_only && isset($objective["event_objective"]) && $objective["event_objective"]))) {
 				$importance = ((isset($objective["primary"]) && $objective["primary"]) ? 1 : ((isset($objective["secondary"]) && $objective["secondary"]) ? 2 : ((isset($objective["tertiary"]) && $objective["tertiary"]) ? 3 : $importance)));
 				if ((count($objective["parent_ids"]) > 2) || $hierarchical) {
 					$output .= "<li".((($parent_active) || ($objective["primary"]) || $objective["secondary"] || $objective["tertiary"]) && (count($objective["parent_ids"]) > 2) ? " class=\"".($importance == 1 ? "primary" : ($importance == 2 ? "secondary" : "tertiary"))."\"" : "")." id=\"objective_".$objective_id."_row\">\n";

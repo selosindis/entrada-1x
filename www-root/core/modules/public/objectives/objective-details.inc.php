@@ -40,19 +40,47 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
-	if ((isset($COMPETENCY_ID) && $COMPETENCY_ID)) {
+	if ((isset($OBJECTIVE_ID) && $OBJECTIVE_ID) && (!isset($API) || !$API)) {
 		$BREADCRUMB[] = array("url" => "", "title" => "Courses by Competency");
-		?>
-		<style type="text/css">
-		li.pad-top {
-			margin-bottom: 10px;
+		$query = "	SELECT a.*".(isset($COURSE_ID) && $COURSE_ID ? ", b.`objective_details`" : "")." 
+					FROM `global_lu_objectives` AS a
+					".(isset($COURSE_ID) && $COURSE_ID ? "
+					LEFT JOIN `course_objectives` AS b
+					ON a.`objective_id` = b.`objective_id`
+					AND b.`course_id` = ".$db->qstr($COURSE_ID) : "")."
+					WHERE a.`objective_id` = ".$db->qstr($OBJECTIVE_ID);
+		$objective = $db->GetRow($query);
+		echo "<h1>".$objective["objective_name"]."</h2>\n";
+		if (isset($objective["objective_details"]) && $objective["objective_details"]) {
+			echo "<p>".$objective["objective_details"]."</p>\n";
+		} elseif (isset($objective["objective_description"]) && $objective["objective_description"]) {
+			echo "<p>".$objective["objective_description"]."</p>\n";
+		} else {
+			$NOTICE++;
+			$NOTICESTR[] = "No details were found for this objective.";
+			echo display_notice();
 		}
-
-		ul.pad {
-			padding-top: 10px;
-			padding-bottom: 10px;
+	} elseif ((isset($OBJECTIVE_ID) && $OBJECTIVE_ID) && $API) {
+		$query = "	SELECT a.*".(isset($COURSE_ID) && $COURSE_ID ? ", b.`objective_details`" : "")." 
+					FROM `global_lu_objectives` AS a
+					".(isset($COURSE_ID) && $COURSE_ID ? "
+					LEFT JOIN `course_objectives` AS b
+					ON a.`objective_id` = b.`objective_id`
+					AND b.`course_id` = ".$db->qstr($COURSE_ID) : "")."
+					WHERE a.`objective_id` = ".$db->qstr($OBJECTIVE_ID);
+		$objective = $db->GetRow($query);
+		ob_clean();
+		echo "<h2>".$objective["objective_name"]."</h2>\n";
+		echo "<img style=\"position: absolute; top: 5px; right: 10px; cursor: pointer;\" src=\"".ENTRADA_URL."/images/window_close.gif\" onclick=\"Control.Modal.close()\"/>\n";
+		if (isset($objective["objective_details"]) && $objective["objective_details"]) {
+			echo "<p>".$objective["objective_details"]."</p>\n";
+		} elseif (isset($objective["objective_description"]) && $objective["objective_description"]) {
+			echo "<p>".$objective["objective_description"]."</p>\n";
+		} else {
+			$NOTICE++;
+			$NOTICESTR[] = "No details were found for this objective.";
+			echo display_notice();
 		}
-		</style>
-		<?php
+		exit;
 	}
 }

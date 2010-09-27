@@ -58,6 +58,10 @@ if(!defined("PARENT_INCLUDED")) {
 		if((isset($_GET["cid"])) && ((int) trim($_GET["cid"]))) {
 			$COURSE_ID = (int) trim($_GET["cid"]);
 		}
+	
+		if((isset($_GET["api"])) && (trim($_GET["api"]))) {
+			$API = ($_GET["api"] == "true" ? true : false);
+		}
 		
 		$module_file = $router->getRoute();
 		if ($module_file) {

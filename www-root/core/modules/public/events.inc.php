@@ -621,7 +621,7 @@ if (!defined("PARENT_INCLUDED")) {
 					echo "		</table>\n";
 					echo "	</div>\n";
 
-					$query					= "	SELECT b.`objective_name`
+					$query					= "	SELECT b.`objective_id`, b.`objective_name`
 												FROM `event_objectives` AS a
 												LEFT JOIN `global_lu_objectives` AS b
 												ON b.`objective_id` = a.`objective_id`
@@ -681,9 +681,27 @@ if (!defined("PARENT_INCLUDED")) {
 						if ($show_clinical_presentations) {
 							echo "	<div class=\"section-holder\">\n";
 							echo "		<h3>Clinical Presentations</h3>\n";
-							foreach ($clinical_presentations as $key => $result) {
-								echo (($key) ? ", " : "").$result["objective_name"];
+							echo "<ul class=\"objectives\">\n";
+							$HEAD[] = "
+								<script type=\"text/javascript\" defer=\"defer\">
+								Event.observe(window, 'load', function() {";
+							foreach ($clinical_presentations as $result) {
+								$HEAD[] = "
+									new Control.Modal($('objective-".$result["objective_id"]."-details'), {
+										overlayOpacity:	0.75,
+										closeOnClick:	'overlay',
+										className:		'modal-description',
+										fade:			true,
+										fadeDuration:	0.30
+									});";
+								if ($result["objective_name"]) {
+									echo "<li><a id=\"objective-".$result["objective_id"]."-details\" style=\"text-decoration: none;\" href=\"".ENTRADA_URL."/objectives?section=objective-details&api=true&oid=".$result["objective_id"]."&cid=".$event_info["course_id"]."\">".$result["objective_name"]."</a></li>\n";
+								}
 							}
+							$HEAD[] = "
+								});
+								</script>";
+							echo "</ul>\n";
 							echo "	</div>\n";
 						}
 						

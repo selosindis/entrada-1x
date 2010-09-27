@@ -54,5 +54,51 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 		}
 		</style>
 		<?php
+		$query = "SELECT * FROM `global_lu_objectives` WHERE `objective_id` = ".$db->qstr($COMPETENCY_ID);
+		$competency = $db->GetRow($query);
+		if ($competency) {
+			echo "<h1>Courses containing <strong>".$competency["objective_name"]."</strong> objectives</h1>\n";
+			$courses = objectives_competency_courses($COMPETENCY_ID);
+			$show_primary = $show_secondary = $show_tertiary = false;
+			foreach ($courses as $course) {
+				if ($course["importance"] == 1) {
+					$show_primary = true;
+				} elseif ($course["importance"] == 2) {
+					$show_secondary = true;
+				} elseif ($course["importance"] == 3) {
+					$show_tertiary = true;
+				}
+			}
+			if ($show_primary) {
+				echo "<h2>Objectives linked as Primary</h2>\n";;
+				echo "\n<ul>\n";
+				foreach ($courses as $course) {
+					if ($course["importance"] == 1) {
+						echo "<li><a href=\"".ENTRADA_URL."/objectives?section=course-competency-objectives&id=".$COMPETENCY_ID."&cid=".$course["course_id"]."\" style=\"text-decoration: none;\">".$course["course_name"]."</a></li>\n";
+					}
+				}
+				echo "\n</ul><br/>\n";
+			}
+			if ($show_secondary) {
+				echo "<h2>Objectives linked as Secondary</h2>\n";;
+				echo "\n<ul>\n";
+				foreach ($courses as $course) {
+					if ($course["importance"] == 2) {
+						echo "<li><a href=\"".ENTRADA_URL."/objectives?section=course-competency-objectives&id=".$COMPETENCY_ID."&cid=".$course["course_id"]."\" style=\"text-decoration: none;\">".$course["course_name"]."</a></li>\n";
+					}
+				}
+				echo "\n</ul><br/>\n";
+			}
+			if ($show_tertiary) {
+				echo "<h2>Objectives linked as Tertiary</h2>\n";;
+				echo "\n<ul>\n";
+				foreach ($courses as $course) {
+					if ($course["importance"] == 3) {
+						echo "<li><a href=\"".ENTRADA_URL."/objectives?section=course-competency-objectives&id=".$COMPETENCY_ID."&cid=".$course["course_id"]."\" style=\"text-decoration: none;\">".$course["course_name"]."</a></li>\n";
+					}
+				}
+				echo "\n</ul>\n";
+			}
+		}
 	}
 }

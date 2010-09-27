@@ -1922,13 +1922,29 @@ border-radius:10px;
 padding:20px;
 }
 
+.modal-description {
+position:relative;
+width:450px;
+background-color:#FFF;
+-moz-border-radius:10px;
+-webkit-border-radius:10px;
+border-radius:10px;
+padding:0 20px 20px 20px;
+}
+
+.modal-description div.body {
+height:55px;
+overflow:auto;
+margin:8px 0;
+}
+
 .modal-confirmation div.body {
 height:105px;
 overflow:auto;
 margin:8px 0;
 }
 
-.modal-confirmation div.content {
+.modal-confirmation div.content, .modal-description div.content {
 background-color:#FFC;
 border:1px #FC0 solid;
 color:#333;
@@ -1939,7 +1955,7 @@ margin:0;
 padding:15px;
 }
 
-.modal-confirmation div.footer {
+.modal-confirmation div.footer, .modal-description div.footer {
 position:absolute;
 bottom:0;
 left:0;
@@ -2862,6 +2878,10 @@ margin: 0 1em 0 0;
 	margin-top:1ex;
 	display:block;
 	font-size:0.85em;
+}
+
+ul.objectives {
+padding-left: 10px;
 }
 
 ul.objectives li {

@@ -374,11 +374,25 @@ if (!defined("PARENT_INCLUDED")) {
 						$results = $db->GetAll($query);
 						if ($results) {
 							echo "				<ul class=\"objectives\">\n";
+							$HEAD[] = "
+								<script type=\"text/javascript\" defer=\"defer\">
+								Event.observe(window, 'load', function() {";
 							foreach ($results as $result) {
+								$HEAD[] = "
+									new Control.Modal($('objective-".$result["objective_id"]."-details'), {
+										overlayOpacity:	0.75,
+										closeOnClick:	'overlay',
+										className:		'modal-description',
+										fade:			true,
+										fadeDuration:	0.30
+									});";
 								if ($result["objective_name"]) {
-									echo "			<li>".$result["objective_name"]."</li>\n";
+									echo "<li><a id=\"objective-".$result["objective_id"]."-details\" style=\"text-decoration: none;\" href=\"".ENTRADA_URL."/objectives?section=objective-details&api=true&oid=".$result["objective_id"]."&cid=".$COURSE_ID."\">".$result["objective_name"]."</a></li>\n";
 								}
 							}
+							$HEAD[] = "
+								});
+								</script>";
 							echo "				</ul>\n";
 						} else {
 							echo "<div class=\"display-notice\">While medical presentations may be used to illustrate concepts in this course, there are no specific presentations from the Medical Council of Canada that have been selected.</div>";

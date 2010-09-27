@@ -74,7 +74,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 				echo "\n<ul>\n";
 				foreach ($courses as $course) {
 					if ($course["importance"] == 1) {
-						echo "<li><a href=\"".ENTRADA_URL."/objectives?section=course-competency-objectives&id=".$COMPETENCY_ID."&cid=".$course["course_id"]."\" style=\"text-decoration: none;\">".$course["course_name"]."</a></li>\n";
+						echo "<li><a href=\"".ENTRADA_URL."/courses/objectives?section=course-competency-objectives&id=".$COMPETENCY_ID."&cid=".$course["course_id"]."\" style=\"text-decoration: none;\">".$course["course_name"]."</a></li>\n";
 					}
 				}
 				echo "\n</ul><br/>\n";
@@ -84,7 +84,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 				echo "\n<ul>\n";
 				foreach ($courses as $course) {
 					if ($course["importance"] == 2) {
-						echo "<li><a href=\"".ENTRADA_URL."/objectives?section=course-competency-objectives&id=".$COMPETENCY_ID."&cid=".$course["course_id"]."\" style=\"text-decoration: none;\">".$course["course_name"]."</a></li>\n";
+						echo "<li><a href=\"".ENTRADA_URL."/courses/objectives?section=course-competency-objectives&id=".$COMPETENCY_ID."&cid=".$course["course_id"]."\" style=\"text-decoration: none;\">".$course["course_name"]."</a></li>\n";
 					}
 				}
 				echo "\n</ul><br/>\n";
@@ -94,7 +94,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 				echo "\n<ul>\n";
 				foreach ($courses as $course) {
 					if ($course["importance"] == 3) {
-						echo "<li><a href=\"".ENTRADA_URL."/objectives?section=course-competency-objectives&id=".$COMPETENCY_ID."&cid=".$course["course_id"]."\" style=\"text-decoration: none;\">".$course["course_name"]."</a></li>\n";
+						echo "<li><a href=\"".ENTRADA_URL."/courses/objectives?section=course-competency-objectives&id=".$COMPETENCY_ID."&cid=".$course["course_id"]."\" style=\"text-decoration: none;\">".$course["course_name"]."</a></li>\n";
 					}
 				}
 				echo "\n</ul>\n";

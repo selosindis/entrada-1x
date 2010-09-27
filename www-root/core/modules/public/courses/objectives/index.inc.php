@@ -31,7 +31,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 		header("Location: ".ENTRADA_URL);
 		exit;
 } elseif (!$ENTRADA_ACL->amIAllowed($MODULES["objectives"]["resource"], "read", false)) {
-	$ONLOAD[] = "setTimeout('window.location=\\'".ENTRADA_URL."/admin/".$MODULE."\\'', 15000)";
+	$ONLOAD[] = "setTimeout('window.location=\\'".ENTRADA_URL."/".$MODULE."\\'', 15000)";
 
 	$ERROR++;
 	$ERRORSTR[]	= "Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
@@ -86,7 +86,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 					<?php
 						foreach ($objectives["competencies"] as $competency_id => $competency) {
 							?>
-							<td class="title middle bottom"><div class="vertical"><?php echo "<a href=\"".ENTRADA_URL."/objectives?section=competency-courses&id=".$competency_id."\" style=\"text-decoration: none;\">".$competency."</a>"; ?></div></td>
+							<td class="title middle bottom"><div class="vertical"><?php echo "<a href=\"".ENTRADA_URL."/courses/objectives?section=competency-courses&id=".$competency_id."\" style=\"text-decoration: none;\">".$competency."</a>"; ?></div></td>
 							<?php
 						}
 					?>
@@ -102,14 +102,14 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 						echo "<td class=\"term\" style=\"border-bottom: 5px solid white;\" rowspan=\"".$course["total_in_term"]."\"><div class=\"vertical\">".$course["term_name"]."</div></td>";
 					}
 					?>
-						<td class="objectives" colspan="2"><?php echo "<a href=\"".ENTRADA_URL."/objectives?section=course-objectives&cid=".$course_id."\" style=\"text-decoration: none;\">".html_encode($course["course_name"])."</a>"; ?></td>
+						<td class="objectives" colspan="2"><?php echo "<a href=\"".ENTRADA_URL."/courses/objectives?section=course-objectives&cid=".$course_id."\" style=\"text-decoration: none;\">".html_encode($course["course_name"])."</a>"; ?></td>
 						<?php
 						foreach ($course["competencies"] as $COMPETENCY_ID => $competency) {
 							?>
 							<td class="objectives" style="text-align: center;">
 							<?php
 							if ($competency) {
-								echo "<a href=\"".ENTRADA_URL."/objectives?section=course-competency-objectives&id=".$COMPETENCY_ID."&cid=".$course_id."\" style=\"text-decoration: none;\">".html_encode($competency)."</a>";
+								echo "<a href=\"".ENTRADA_URL."/courses/objectives?section=course-competency-objectives&id=".$COMPETENCY_ID."&cid=".$course_id."\" style=\"text-decoration: none;\">".html_encode($competency)."</a>";
 							} else {
 								echo "&nbsp;";
 							}

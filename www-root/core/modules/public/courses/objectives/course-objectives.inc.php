@@ -121,18 +121,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 		$course = $db->GetRow("SELECT * FROM `courses` WHERE `course_id` = ".$db->qstr($COURSE_ID));
 
 		echo "<h1>".html_encode($course["course_name"])."</h1>";
-		$HEAD[] = "
-			<script type=\"text/javascript\" defer=\"defer\">
-			Event.observe(window, 'load', function() {";
 		foreach ($objectives as $objective_id => $objective) {
-			$HEAD[] = "
-				new Control.Modal($('objective-".$objective["objective"]["objective_id"]."-details'), {
-					overlayOpacity:	0.75,
-					closeOnClick:	'overlay',
-					className:		'modal-description',
-					fade:			true,
-					fadeDuration:	0.30
-				});";
 			if (array_key_exists($objective["objective"]["objective_parent"], $competencies_array)) {
 				$query = "	SELECT * FROM `global_lu_objectives`
 							WHERE `objective_id` = ".$db->qstr($objective["objective"]["objective_parent"]);
@@ -153,19 +142,11 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 				echo "<h3>".($objective["objective"]["importance"] == 3 ? "Tertiary" : ($objective["objective"]["importance"] == 2 ? "Secondary" : "Primary"))." Objectives</h3>\n";
 			}
 			echo "<ul>\n";
-			echo "<li>\n<a id=\"objective-".$objective["objective"]["objective_id"]."-details\" href=\"".ENTRADA_URL."/objectives?section=objective-details&api=true&cid=".$COURSE_ID."&oid=".$objective["objective"]["objective_id"]."\">".$objective["objective"]["objective_name"]."</a> <a href=\"".ENTRADA_URL."/objectives?section=course-objective-events&cid=".$COURSE_ID."&oid=".$objective["objective"]["objective_id"]."\"><img style=\"border: none; margin-left: 5px;\" src=\"".ENTRADA_URL."/images/ics-enabled.gif\" /></a><div class=\"content-small\">".(isset($objective["objective"]["objective_details"]) && $objective["objective"]["objective_details"] ? $objective["objective"]["objective_details"] : $objective["objective"]["objective_description"])."</div>\n";
+			echo "<li>\n<a href=\"".ENTRADA_URL."/courses/objectives?section=course-objective-events&cid=".$COURSE_ID."&oid=".$objective["objective"]["objective_id"]."\">".$objective["objective"]["objective_name"]." <img style=\"border: none; margin-left: 5px;\" src=\"".ENTRADA_URL."/images/ics-enabled.gif\" /></a><div class=\"content-small\">".(isset($objective["objective"]["objective_details"]) && $objective["objective"]["objective_details"] ? $objective["objective"]["objective_details"] : $objective["objective"]["objective_description"])."</div>\n";
 			if (isset($objective["children"]) && count($objective["children"])) {
 				echo "<ul class=\"pad\">\n";
 				foreach ($objective["children"] as $objective_child) {
-					$HEAD[] = "
-						new Control.Modal($('objective-".$objective_child["objective_id"]."-details'), {
-							overlayOpacity:	0.75,
-							closeOnClick:	'overlay',
-							className:		'modal-description',
-							fade:			true,
-							fadeDuration:	0.30
-						});";
-					echo "<li class=\"pad-top\"><a id=\"objective-".$objective_child["objective_id"]."-details\" href=\"".ENTRADA_URL."/objectives?section=objective-details&api=true&cid=".$COURSE_ID."&oid=".$objective_child["objective_id"]."\">".$objective_child["objective_name"]."</a> <a href=\"".ENTRADA_URL."/objectives?section=course-objective-events&cid=".$COURSE_ID."&oid=".$objective_child["objective_id"]."\"><img style=\"border: none; margin-left: 5px;\" src=\"".ENTRADA_URL."/images/ics-enabled.gif\" /></a><div class=\"content-small\">".(isset($objective_child["objective_details"]) && $objective_child["objective_details"] ? $objective_child["objective_details"] : $objective_child["objective_description"])."</div></li>\n";
+					echo "<li class=\"pad-top\"><a href=\"".ENTRADA_URL."/courses/objectives?section=course-objective-events&cid=".$COURSE_ID."&oid=".$objective_child["objective_id"]."\">".$objective_child["objective_name"]." <img style=\"border: none; margin-left: 5px;\" src=\"".ENTRADA_URL."/images/ics-enabled.gif\" /></a><div class=\"content-small\">".(isset($objective_child["objective_details"]) && $objective_child["objective_details"] ? $objective_child["objective_details"] : $objective_child["objective_description"])."</div></li>\n";
 				}
 				echo "</ul>\n";
 			}
@@ -173,8 +154,5 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 			echo "</ul>\n";
 			$last_importance = $objective["objective"]["importance"];			
 		}
-		$HEAD[] = "
-			});
-			</script>";
 	}
 }

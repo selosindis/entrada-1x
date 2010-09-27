@@ -25,9 +25,9 @@
  *
 */
 
-if(!defined("PARENT_INCLUDED")) {
+if (!defined("PARENT_INCLUDED") || !defined("IN_COURSES")) {
 	exit;
-} elseif((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
+} elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	header("Location: ".ENTRADA_URL);
 	exit;
 } elseif (!$ENTRADA_ACL->amIAllowed($MODULES["objectives"]["resource"], "read", false)) {
@@ -72,5 +72,11 @@ if(!defined("PARENT_INCLUDED")) {
 		 * Check if preferences need to be updated on the server at this point.
 		 */
 		preferences_update($MODULE, $PREFERENCES);
+	} else {
+		$url = ENTRADA_URL;
+		application_log("error", "The Entrada_Router failed to load a request. The user was redirected to [".$url."].");
+
+		header("Location: ".$url);
+		exit;
 	}
 }

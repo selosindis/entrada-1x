@@ -69,7 +69,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				$HEAD[]		= "<style type=\"text/css\">.dynamic-tab-pane-control .tab-page {height:auto;}</style>\n";
 				$HEAD[]		= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/picklist.js\"></script>\n";
 				$HEAD[]		= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/scriptaculous/tree.js\"></script>\n";
-				$ONLOAD[]	= "$('clinical_presentations_list').style.display = 'none'";
 
 				/**
 				 * Load the rich text editor.
@@ -138,23 +137,23 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 				if (isset($_POST["clinical_presentations_submit"]) && $_POST["clinical_presentations_submit"]) {
 					if (((isset($_POST["clinical_presentations"])) && (is_array($_POST["clinical_presentations"])) && (count($_POST["clinical_presentations"])))) {
-					foreach ($_POST["clinical_presentations"] as $objective_id) {
-						if ($objective_id = clean_input($objective_id, array("trim", "int"))) {
-							$query	= "	SELECT a.`objective_id` 
-										FROM `global_lu_objectives` AS a
-										JOIN `course_objectives` AS b
-										ON b.`course_id` = ".$event_info["course_id"]."
-										AND a.`objective_id` = b.`objective_id`
-										WHERE a.`objective_id` = ".$db->qstr($objective_id)."
-										AND b.`objective_type` = 'event'
-										AND a.`objective_active` = '1'";
-							$result	= $db->GetRow($query);
-							if ($result) {
-								$clinical_presentations[$objective_id] = $clinical_presentations_list[$objective_id];
+						foreach ($_POST["clinical_presentations"] as $objective_id) {
+							if ($objective_id = clean_input($objective_id, array("trim", "int"))) {
+								$query	= "	SELECT a.`objective_id`
+											FROM `global_lu_objectives` AS a
+											JOIN `course_objectives` AS b
+											ON b.`course_id` = ".$event_info["course_id"]."
+											AND a.`objective_id` = b.`objective_id`
+											WHERE a.`objective_id` = ".$db->qstr($objective_id)."
+											AND b.`objective_type` = 'event'
+											AND a.`objective_active` = '1'";
+								$result	= $db->GetRow($query);
+								if ($result) {
+									$clinical_presentations[$objective_id] = $clinical_presentations_list[$objective_id];
+								}
 							}
 						}
-					}
-				} else {
+					} else {
 						$clinical_presentations = array();
 					}
 				} else {
@@ -178,7 +177,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				 * Fetch the Curriculum Objective details.
 				 */
 				$curriculum_objectives_list = courses_fetch_objectives(array($event_info["course_id"]), 1, false, false, $EVENT_ID, true);
-				$curriculum_objectives		= array();
+				$curriculum_objectives = array();
 
 				if (isset($_POST["checked_objectives"]) && ($checked_objectives = $_POST["checked_objectives"]) && (is_array($checked_objectives))) {
 					foreach ($checked_objectives as $objective_id => $status) {
@@ -805,7 +804,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					echo display_error();
 				}
 				?>
-				<form action="<?php echo ENTRADA_URL; ?>/admin/events?<?php echo replace_query(); ?>" method="post" onsubmit="selIt()">
+				<form action="<?php echo ENTRADA_URL; ?>/admin/events?<?php echo replace_query(); ?>" method="post"<?php echo (((is_array($clinical_presentations_list)) && (!empty($clinical_presentations_list))) ? " onsubmit=\"selIt()\"" : ""); ?>>
 				<input type="hidden" name="type" value="content" />
 
 				<a name="event-details-section"></a>
@@ -1045,36 +1044,36 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							<tr>
 								<td colspan="2">&nbsp;</td>
 							</tr>
-							<tr>
-								<td style="vertical-align: top">
-									Clinical Presentations
-									<div class="content-small" style="margin-top: 5px">
-										<strong>Note:</strong> For more detailed information please refer to the <a href="http://www.mcc.ca/Objectives_online/objectives.pl?lang=english&loc=contents" target="_blank" style="font-size: 11px">MCC Objectives for the Qualifying Examination</a>.
-									</div>
-								</td>
-								<td>
-									<select class="multi-picklist" id="PickList" name="clinical_presentations[]" multiple="multiple" size="5" style="width: 100%; margin-bottom: 5px">
-									<?php
-									if ((is_array($clinical_presentations)) && (count($clinical_presentations))) {
-										foreach ($clinical_presentations as $objective_id => $presentation_name) {
-											echo "<option value=\"".(int) $objective_id."\">".html_encode($presentation_name)."</option>\n";
-										}
-									}
-									?>
-									</select>
-									<input type="hidden" value="1" name="clinical_presentations_submit" />
-									<div style="float: left; display: inline">
-										<input type="button" id="clinical_presentations_list_state_btn" class="button" value="Show List" onclick="toggle_list('clinical_presentations_list')" />
-									</div>
-									<div style="float: right; display: inline">
-										<input type="button" id="clinical_presentations_list_remove_btn" class="button-remove" onclick="delIt()" value="Remove" />
-										<input type="button" id="clinical_presentations_list_add_btn" class="button-add" onclick="addIt()" style="display: none" value="Add" />
-									</div>
-									<div id="clinical_presentations_list" style="clear: both; padding-top: 3px; display: none">
-										<h2>Clinical Presentations List</h2>
+							<?php
+							if ((is_array($clinical_presentations_list)) && (!empty($clinical_presentations_list))) {
+								?>
+								<tr>
+									<td style="vertical-align: top">
+										Clinical Presentations
+										<div class="content-small" style="margin-top: 5px">
+											<strong>Note:</strong> For more detailed information please refer to the <a href="http://www.mcc.ca/Objectives_online/objectives.pl?lang=english&loc=contents" target="_blank" style="font-size: 11px">MCC Objectives for the Qualifying Examination</a>.
+										</div>
+									</td>
+									<td>
+										<select class="multi-picklist" id="PickList" name="clinical_presentations[]" multiple="multiple" size="5" style="width: 100%; margin-bottom: 5px">
 										<?php
-										if ((is_array($clinical_presentations_list)) && (count($clinical_presentations_list))) {
-											?>
+										if ((is_array($clinical_presentations)) && (count($clinical_presentations))) {
+											foreach ($clinical_presentations as $objective_id => $presentation_name) {
+												echo "<option value=\"".(int) $objective_id."\">".html_encode($presentation_name)."</option>\n";
+											}
+										}
+										?>
+										</select>
+										<input type="hidden" value="1" name="clinical_presentations_submit" />
+										<div style="float: left; display: inline">
+											<input type="button" id="clinical_presentations_list_state_btn" class="button" value="Show List" onclick="toggle_list('clinical_presentations_list')" />
+										</div>
+										<div style="float: right; display: inline">
+											<input type="button" id="clinical_presentations_list_remove_btn" class="button-remove" onclick="delIt()" value="Remove" />
+											<input type="button" id="clinical_presentations_list_add_btn" class="button-add" onclick="addIt()" style="display: none" value="Add" />
+										</div>
+										<div id="clinical_presentations_list" style="clear: both; padding-top: 3px; display: none">
+											<h2>Clinical Presentations List</h2>
 											<select class="multi-picklist" id="SelectList" name="other_event_objectives_list" multiple="multiple" size="15" style="width: 100%">
 											<?php
 											foreach ($clinical_presentations_list as $objective_id => $presentation_name) {
@@ -1084,32 +1083,32 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 											}
 											?>
 											</select>
-											<?php
-										} else {
-											$NOTICE++;
-											$NOTICESTR[] = "Please ensure there are MCC Objectives attached to the course which this Learning Event resides in before attempting to add them at the event level.";
-											echo display_notice();
+										</div>
+										<script type="text/javascript">
+										if ($('PickList')) {
+											$('PickList').observe('keypress', function(event) {
+												if (event.keyCode == Event.KEY_DELETE) {
+													delIt();
+												}
+											});
 										}
-										?>
-									</div>
-									<script type="text/javascript">
-									$('PickList').observe('keypress', function(event) {
-										if (event.keyCode == Event.KEY_DELETE) {
-											delIt();
+
+										if ($('SelectList')) {
+											$('SelectList').observe('keypress', function(event) {
+												if (event.keyCode == Event.KEY_RETURN) {
+													addIt();
+												}
+											});
 										}
-									});
-									$('SelectList').observe('keypress', function(event) {
-										if (event.keyCode == Event.KEY_RETURN) {
-											addIt();
-										}
-									});
-									</script>
-								</td>
-							</tr>
-							<tr>
-								<td colspan="2">&nbsp;</td>
-							</tr>
-							<?php
+										</script>
+									</td>
+								</tr>
+								<tr>
+									<td colspan="2">&nbsp;</td>
+								</tr>
+								<?php
+							}
+							
 							if ((is_array($curriculum_objectives_list["used_ids"])) && (count($curriculum_objectives_list["used_ids"]))) {
 								echo "<tr>\n";
 								echo "	<td style=\"vertical-align: top;\">\n";

@@ -47,7 +47,7 @@ define("DEVELOPMENT_MODE", false);
  */
 define("AUTH_DEVELOPMENT", "");
 
-$DEVELOPER_IPS = array("130.15.105.131");
+$DEVELOPER_IPS = array();
 
 define("ENTRADA_URL", $config->entrada_url);									// Full URL to application's index file without a trailing slash.
 define("ENTRADA_RELATIVE", $config->entrada_relative);							// Absolute Path from the document_root to application's index file without a trailing slash.

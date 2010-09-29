@@ -140,7 +140,8 @@ if (!defined("IN_PROFILE")) {
 
 <h1>Medical School Performance Report</h1> 
 
-<?php 
+<?php
+getMonthName(2); 
 if ($closed) {
 ?>
 <div class="display-notice">

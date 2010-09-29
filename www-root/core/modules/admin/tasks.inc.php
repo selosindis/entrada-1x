@@ -40,6 +40,12 @@ if (!defined("PARENT_INCLUDED")) {
 
 	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/tasks", "title" => "Manage Tasks");
 
+	if (isset($_GET["id"]) && ($tmp_input = clean_input($_GET["id"], array("nows", "int")))) {
+		$TASK_ID = $tmp_input;
+	} else {
+		$TASK_ID = 0;
+	}
+	
 	if (($router) && ($router->initRoute())) {
 		$module_file = $router->getRoute();
 		if ($module_file) {

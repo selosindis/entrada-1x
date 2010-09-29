@@ -127,24 +127,50 @@ class Course {
 		return $this->course_id;
 	}
 	
+	/**
+	 * returns the User object for the Director of this course
+	 *@return User
+	 */
 	public function getDirector(){
 		return User::get($this->director_id);
 	}
 	
+	/**
+	 * returns the User object for the Coordinator for this course
+	 *@return User
+	 */
 	public function getPCoordinator() {
 		return User::get($this->pcoord_id);
 	}
 	
+	/**
+	 * returns the User object for the evaluation rep for this course
+	 *@return User
+	 */
 	public function getEvalRep() {
 		return User::get($this->evalrep_id);
 	}
 	
+	/**
+	 * returns the User object for the student rep for this course
+	 *@return User
+	 */
 	public function getStudentRep() {
 		return User::get($this->studrep_id);
 	}
 	
+	/**
+	 * @return string
+	 */
 	public function getCourseName() {
 		return $this->course_name;
+	}
+	
+	/**
+	 * Alias of getCourseName()
+	 */
+	public function getTitle() {
+		return $this->getCourseName();
 	}
 	
 	public function getCourseCode() {
@@ -245,9 +271,13 @@ class Course {
 			$query = "SELECT * FROM `courses` WHERE `course_id` = ".$db->qstr($course_id);
 			$result = $db->getRow($query);
 			if ($result) {
-				$course =  new Course($result['course_id'],$result['curriculum_type_id'],$result['director_id'],$result['pcoord_id'],$result['evalrep_id'],$result['studrep_id'],$result['course_name'],$result['course_code'],$result['course_description'],$result['unit_collaborator'],$result['unit_communicator'],$result['unit_health_advocate'],$result['unit_manager'],$result['unit_professional'],$result['unit_scholar'],$result['unit_medical_expert'],$result['unit_summative_assessment'],$result['unit_formative_assessment'],$result['unit_grading'],$result['resources_required'],$result['resources_optional'],$result['course_url'],$result['course_message'],$result['notifications'],$result['organization'],$result['active']);			
+				$course =  self::fromArray($result);			
 			}		
 		} 
 		return $course;
+	}
+	
+	public static function fromArray($arr) {
+		return new Course($arr['course_id'],$arr['curriculum_type_id'],$arr['director_id'],$arr['pcoord_id'],$arr['evalrep_id'],$arr['studrep_id'],$arr['course_name'],$arr['course_code'],$arr['course_description'],$arr['unit_collaborator'],$arr['unit_communicator'],$arr['unit_health_advocate'],$arr['unit_manager'],$arr['unit_professional'],$arr['unit_scholar'],$arr['unit_medical_expert'],$arr['unit_summative_assessment'],$arr['unit_formative_assessment'],$arr['unit_grading'],$arr['resources_required'],$arr['resources_optional'],$arr['course_url'],$arr['course_message'],$arr['notifications'],$arr['organization'],$arr['active']);		
 	}
 }

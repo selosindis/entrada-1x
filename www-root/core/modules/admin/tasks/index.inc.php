@@ -25,17 +25,83 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 
+	require_once("Models/tasks/Tasks.class.php");
+	$user = User::get($PROXY_ID);
+	
+	$sort_by = 'title';
+	$sort_order = 'asc';
+	
+	if (isset($_GET['sb'])) {
+		$sort_by = $_GET['sb'];
+	}
+	if (isset($_GET['so'])) {
+		$sort_order = $_GET['so'];
+	} 
+	$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] = $sort_by;
+	$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"] = $sort_order;
+	$tasks = Tasks::getAll(array('order_by' => $sort_by, 'dir' => $sort_order/*, 'limit' => 25, 'offset'=>0*/ )); //no limit for now. TODO work on pagination later.
+	
 	?>
 	
 	<h1>Manage Tasks</h1>
 	
-	<div id="filter-box"><!--  Include something similar to learning event filters -->
-	<div id="filter-select">Apply Filter: <select><option>Teacher Filters</option></select></div>
-	<div id="active-filters"></div>
+	<div id="add_new_task_link" style="float: right;">
+	<ul class="page-action">
+		<li><a id="add_new_task"
+			href="<?php echo ENTRADA_URL; ?>/admin/tasks?section=create"
+			class="strong-green">Add new task</a></li>
+	</ul>
 	</div>
-	
+	<div class="clear">&nbsp;</div>
+
 	<!--  Include something similar to learning event calendar/range select here -->
-	<table ></table>
+	<table class="tableList" cellspacing="0" cellpadding="1" summary="List of Events">
+		<colgroup>
+			<col class="modified" />
+			<col class="deadline" />
+			<col class="course" />
+			<col class="title" />
+			<col class="attachment" />
+		</colgroup>
+		<thead>
+			<tr>
+				<td class="modified">&nbsp;</td>
+				<td class="deadline<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "deadline") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("deadline", "Deadline"); ?></td>
+				<td class="course">Course</td>
+				<td class="title<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "title") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("title", " Task Title"); ?></td>
+				<td class="attachment">&nbsp;</td>
+			</tr>
+		</thead>
+		<?php if ($ENTRADA_ACL->amIAllowed("task", "delete", false)) : ?>
+		<tfoot>
+			<tr>
+				<td>&nbsp;</td>
+				<td colspan="4" style="padding-top: 10px">
+					<input type="submit" class="button" value="Delete Selected" />
+				</td>
+			</tr>
+		</tfoot>
+		<?php endif; ?>
+		
+		<tbody>
+		<?php foreach ($tasks as $task) { ?>
+			<tr>
+				<td>&nbsp;</td>
+				<td><?php echo ($task->getDeadline()) ? date(DEFAULT_DATE_FORMAT,$task->getDeadline()) : ""; ?></td>
+				<td><?php 
+					$course = $task->getCourse();
+					if ($course) {
+						?><a href="<?php echo ENTRADA_URL; ?>/courses?id=<?php echo $course->getID(); ?>">
+						<?php echo $course->getTitle(); ?></a>
+					<?php
+					}
+				?></td>
+				<td><a href="<?php echo ENTRADA_URL; ?>/admin/tasks?section=edit&id=<?php echo $task->getID(); ?>"><?php echo $task->getTitle(); ?></a></td>
+				<td><a href="<?php echo ENTRADA_URL; ?>/admin/tasks?section=completion&id=<?php echo $task->getID(); ?>" ><img src="<?php echo ENTRADA_URL; ?>/images/edit_list.png" title="Edit task completion information" alt="Edit task completion information"/></a></td>
+			</tr>
+		<?php } ?>
+		</tbody>	
+	</table>
 	<?php
 
 }

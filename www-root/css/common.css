@@ -2417,9 +2417,10 @@ div#associated_faculty_list ul.menu li.community,div#associated_student_list ul.
 cursor:move;
 }
 
-ul#faculty_list,ul#student_list,ul#director_list,ul#coordinator_list {
+ul#faculty_list,ul#student_list,ul#director_list,ul#coordinator_list, ul#individual_list {
 width:250px;
 overflow:none;
+position:relative;
 }
 
 ul.notify-communities li {
@@ -2874,4 +2875,33 @@ ul.objectives li {
 padding-bottom:4px;
 padding-left:17px;
 background:transparent url(../images/list-objective.gif) no-repeat 0 3px;
+}
+
+#task-list ul {
+	margin:0;
+	padding:0;
+	width:160px;
+}
+
+#task-list ul li {
+	list-style-type:none;
+	padding-bottom:10px;
+	padding-left:7px;
+	width:160px;
+}
+
+#task-list li a {
+	white-space:nowrap;
+	overflow:hidden;
+}
+#task-list li span {
+	display:block;
+	text-align:right;
+}
+
+#task-list .see-all {
+	display:block;
+	text-align:center;
+	border-top:1px solid #EBEBEB;
+	padding-top:3px;
 }

@@ -426,7 +426,7 @@ function navigator_tabs() {
 	$PUBLIC_MODULES[] = array("name" => "dashboard", "text" => "Dashboard");
 	$PUBLIC_MODULES[] = array("name" => "communities", "text" => "Communities");
 	$PUBLIC_MODULES[] = array("name" => "courses", "text" => "Courses");
-	$PUBLIC_MODULES[] = array("name" => "task", "text" => "Tasks");
+	$PUBLIC_MODULES[] = array("name" => "tasks", "text" => "Tasks");
 	$PUBLIC_MODULES[] = array("name" => "events", "text" => "Learning Events");
 	$PUBLIC_MODULES[] = array("name" => "clerkship", "text" => "Clerkship", "resource" => "clerkship", "permission" => "read");
 	$PUBLIC_MODULES[] = array("name" => "objectives", "text" => "Curriculum Objectives", "resource" => "objectives", "permission" => "read");
@@ -10165,8 +10165,8 @@ function getMonthName($month_number) {
 	if (!$months) {
 		$months=array();
 		for($month_num = 1; $month_num <= 12; $month_num++) {
-			$time = mktime(null, null,null,$month_num);
-			$month_name= date("F", $time); 
+			$time = gmmktime(0, 0,0,$month_num,1);
+			$month_name= gmdate("F", $time); 
 			$months[$month_num] = $month_name;
 		}
 	}
@@ -10583,43 +10583,105 @@ function objectives_output_calendar_controls() {
 
 function add_task_sidebar () {
 	require_once("Models/users/User.class.php");
+	require_once("Models/tasks/TaskCompletions.class.php");
 	global $ENTRADA_ACL, $PROXY_ID;
 	$user = User::get($PROXY_ID);
-	$sidebar_html  = "<ul>";
-	$sidebar_html .= "</ul>";
-
-	new_sidebar_item("Task List", $sidebar_html, "task-list", "open");
+	
+	
+	$tasks_completions = TaskCompletions::getByRecipient($user, array('order_by'=>array(array('deadline', 'asc')), 'limit' => 5, 'where' => 'completed_date IS NULL'));
+	
+	foreach ($tasks_completions as $completion) {
+		$tasks[] = $completion->getTask();
+	}
+	if ($tasks) {
+		/*$sidebar_html = "<span class='subheading'>Recently Created or Updated</span>";	
+		$updated_limit = time() - (3600*24*3);
+		$updated_tasks = Tasks::getByRecipient($user, array('order_by'=>'updated_date', 'dir' => 'desc', 'limit' => 5, 'where' => 'updated_date > '.$updated_limit));
+		$sidebar_html .= "<ul>";
+		foreach ($updated_tasks as $task) {
+			$sidebar_html .= "
+			<li>
+				<a href='".ENTRADA_URL."/tasks?section=details&id=".$task->getID()."'>".html_encode($task->getTitle())."</a>
+				<span class='content-small'>".(($task->getDeadline()) ? date(DEFAULT_DATE_FORMAT,$task->getDeadline()) : "")."</span>
+			</li>";
+		}
+		$sidebar_html .= "</ul>";
+		
+		
+		$sidebar_html .= "<span class='subheading'>Upcoming</span>";*/ //XXX Left for now. looks too cluttered. may reinstate after redeign.
+		
+		$sidebar_html = "<ul>";
+		foreach ($tasks as $task) {
+			$sidebar_html .= "
+			<li>
+				<a href='".ENTRADA_URL."/tasks?section=details&id=".$task->getID()."'>".html_encode($task->getTitle())."</a>
+				<span class='content-small'>".(($task->getDeadline()) ? date(DEFAULT_DATE_FORMAT,$task->getDeadline()) : "")."</span>
+			</li>";
+		}
+		$sidebar_html .= "</ul>";
+		
+		$sidebar_html .= "<a class='see-all' href='".ENTRADA_URL."/tasks'>See all tasks</a>"; 
+	
+		
+		new_sidebar_item("Upcoming Tasks", $sidebar_html, "task-list", "open");
+	}
 }
 
 function add_error($message) {
-	global $ERROR, $ERRORSTR;
-	$ERROR++;
-	$ERRORSTR[] = $message;
+	add_message("error",$message);
 }
 
 function add_notice($message) {
-	global $NOTICE, $NOTICESTR;
-	$NOTICE++;
-	$NOTICESTR[] = $message;
+	add_message("notice",$message);
 }
 
 function add_success($message) {
-	global $SUCCESS, $SUCCESSSTR;
-	$SUCCESS++;
-	$SUCCESSSTR[] = $message;
+	add_message("success",$message);
+}
+
+function add_message($type,$message) {
+	$type = strtoupper($type);
+	$strings = $type."STR";
+	global ${$type}, ${$strings};
+	${$type}++;
+	${$strings}[] = $message;
+}
+
+function has_message($type) {
+	$type = strtoupper($type);
+	$strings = $type."STR";
+	global ${$type}, ${$strings};
+	return (${$type} || ${$strings});
 }
 
 function has_error() {
-	global $ERROR,$ERRORSTR;
-	return ($ERROR || $ERRORSTR);
+	return has_message("error");
 }
 
 function has_notice() {
-	global $NOTICE,$NOTICESTR;
-	return ($NOTICE || $NOTICESTR);
+	return has_message("notice");
 }
 
 function has_success() {
-	global $SUCCESS, $SUCCESSSTR;
-	return ($SUCCESS||$SUCCESSSTR);
+	return has_message("success");
+}
+
+function clear_error(){
+	clear_message("error");
+}
+
+function clear_success() {
+	clear_message("success");
+}
+
+function clear_notice() {
+	clear_message("notice");
+}
+
+function clear_message($type) {
+	$type = strtoupper($type);
+	$strings = $type."STR";
+	global ${$type}, ${$strings};
+	${$type} = 0;
+	${$strings} = array();
 }

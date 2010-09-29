@@ -463,28 +463,63 @@ class TaskOwnerAssertion implements Zend_Acl_Assert_Interface {
 			$user_id	= preg_replace('/[^0-9]+/', "", $role_id);
 		}
 		
+		require_once("Models/users/User.class.php");
 		$user = User::get($user_id);
 		
-		require_once("Models/tasks/TaskOwners.class.php");
-		
-		$task_owners = TaskOwners::get($task_id);
-		if ($task_owners->count() == 0) {
-			//no owners? orphan?
-			application_log("error", "A task was found to have no owners associated with it. Task ID: ".$task_id);
-			return false;
+		require_once("Models/tasks/Task.class.php");
+		$task = Task::get($task_id);
+		return 	$task->isOwner($user);
+	}
+}
+
+
+class TaskRecipientAssertion implements Zend_Acl_Assert_Interface {
+
+/**
+ * Asserts that the role references the director, coordinator, or secondary director of the course resource
+ *
+ * @param Zend_Acl $acl The ACL object isself (the one calling the assertion)
+ * @param Zend_Acl_Role_Interface $role The role being queried
+ * @param Zend_Acl_Resource_Interface $resource The resource being queried
+ * @param string $privilege The privilege being queried
+ * @return boolean
+ */
+	public function assert(Zend_Acl $acl, Zend_Acl_Role_Interface $role = null, Zend_Acl_Resource_Interface $resource = null, $privilege = null) {
+		//If asserting is off then return true right away
+		if((isset($resource->assert) && $resource->assert == false) || (isset($acl->_entrada_last_query) && isset($acl->_entrada_last_query->assert) && $acl->_entrada_last_query->assert == false)) {
+			return true;
 		}
-		
-		
-		foreach($task_owners as $task_owner) {
-			if (($task_owner instanceof User) && ($task_owner === $user)  ) {
-				return true;
-			} else if(($task_owner instanceof Course) && ($task_owner->isOwner($user))) {
-				return true;
-			} else if(($task_owner instanceof Event) && ($task_owner->isOwner($user))) {
-				return true;
+
+		if(isset($resource->task_id)) {
+			$task_id = $resource->task_id;
+		} else if(isset($acl->_entrada_last_query->task_id)) {
+			$task_id = $acl->_entrada_last_query->task_id;
+		} else {
+			//Parse out the user ID and course ID
+			$resource_id = $resource->getResourceId();
+			$resource_type = preg_replace('/[0-9]+/', "", $resource_id);
+
+			if($resource_type !== "task") {
+				return false;
 			}
+
+			$task_id = preg_replace('/[^0-9]+/', "", $resource_id);
 		}
-		return false;
+
+		$role_id = $role->getRoleId();
+		$user_id	= preg_replace('/[^0-9]+/', "", $role_id);
+
+		if($user_id == "") {
+			$role_id = $acl->_entrada_last_query_role->getRoleId();
+			$user_id	= preg_replace('/[^0-9]+/', "", $role_id);
+		}
+		
+		require_once("Models/users/User.class.php");
+		$user = User::get($user_id);
+		
+		require_once("Models/tasks/Task.class.php");
+		$task = Task::get($task_id);
+		return 	$task->isRecipient($user);
 	}
 }
 

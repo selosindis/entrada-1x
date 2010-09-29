@@ -23,6 +23,8 @@
  *
 */
 require_once("Models/utility/SimpleCache.class.php");
+require_once("Models/organisations/Organisation.class.php");
+require_once("Models/users/GraduatingClass.class.php");
 
 /**
  * Simple User class with basic information
@@ -41,7 +43,7 @@ class User {
 			$grad_year,
 			$entry_year,
 			$password,
-			$organization_id,
+			$organisation_id,
 			$department,
 			$prefix,
 			$email,
@@ -71,7 +73,7 @@ class User {
 							$grad_year,
 							$entry_year,
 							$password,
-							$organization_id,
+							$organisation_id,
 							$department,
 							$prefix,
 							$email,
@@ -99,7 +101,7 @@ class User {
 		$this->grad_year = $grad_year;
 		$this->entry_year = $entry_year;
 		$this->password = $password;
-		$this->organization_id = $organization_id;
+		$this->organisation_id = $organisation_id;
 		$this->department = $department;
 		$this->prefix = $prefix;
 		$this->email = $email;
@@ -149,6 +151,12 @@ class User {
 		return $this->grad_year;
 	}
 	
+	function getGraduatingClass() {
+		if ($this->grad_year) {
+			return GraduatingClass::get($this->grad_year);
+		}
+	}
+	
 	/**
 	 * Returns the year a student enetered med school, if available
 	 * @return int
@@ -189,6 +197,10 @@ class User {
 		return $this->number;
 	}
 	
+	function getOrganisation() {
+		return Organisation::get($this->organisation_id);
+	}
+	
 	public static function get($user_id) {
 		$cache = SimpleCache::getCache();
 		$user = $cache->get("User",$user_id);
@@ -197,9 +209,13 @@ class User {
 			$query = "SELECT * FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($user_id);
 			$result = $db->getRow($query);
 			if ($result) {
-				$user =  new User($result['id'],$result['username'],$result['firstname'],$result['lastname'],$result['number'],$result['grad_year'],$result['entry_year'],$result['password'],$result['organization_id'],$result['department'],$result['prefix'],$result['email'],$result['email_alt'],$result['google_id'],$result['telephone'],$result['fax'],$result['address'],$result['city'],$result['province'],$result['postcode'],$result['country'],$result['country_id'],$result['province_id'],$result['notes'],$result['privacy_level'],$result['notifications'],$result['office_hours'],$result['clinical']);			
+				$user = self::fromArray($result);  			
 			}		
 		} 
 		return $user;
+	}
+	
+	public static function fromArray($arr) {
+		return new User($arr['id'],$arr['username'],$arr['firstname'],$arr['lastname'],$arr['number'],$arr['grad_year'],$arr['entry_year'],$arr['password'],$arr['organisation_id'],$arr['department'],$arr['prefix'],$arr['email'],$arr['email_alt'],$arr['google_id'],$arr['telephone'],$arr['fax'],$arr['address'],$arr['city'],$arr['province'],$arr['postcode'],$arr['country'],$arr['country_id'],$arr['province_id'],$arr['notes'],$arr['privacy_level'],$arr['notifications'],$arr['office_hours'],$arr['clinical']);	
 	}
 }

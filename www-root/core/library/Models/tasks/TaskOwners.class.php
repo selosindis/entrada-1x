@@ -12,14 +12,14 @@ class TaskOwners extends Collection {
 	 */
 	static function get($task_id) {
 		global $db;
-		$query = "SELECT * from `task_owner` where `task_id`=".$db->qstr($task_id);
+		$query = "SELECT * from `task_owners` where `task_id`=".$db->qstr($task_id);
 		
 		$results = $db->getAll($query);
 		$owners = array();
 		if ($results) {
 			foreach ($results as $result) {
 				$otype = $result['owner_type'];
-				$oid = $this->owner_id;
+				$oid = $result['owner_id'];
 				switch($otype) {
 					case TASK_OWNER_USER:
 						$owner = User::get($oid);
@@ -39,6 +39,15 @@ class TaskOwners extends Collection {
 			}
 		}
 		return new self($owners);
+	}
+	
+	static function getCourse($task_id) {
+		global $db;
+		$query = "SELECT `owner_id` from `task_owners` where `task_id`=".$db->qstr($task_id) ." and `owner_type`=".$db->qstr(TASK_OWNER_COURSE);
+		$result = $db->getOne($query);
+		if ($result) {
+			return Course::get($result);
+		}
 	}
 	
 	static public function add($task_id,$owners) {

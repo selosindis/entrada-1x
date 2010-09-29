@@ -20,7 +20,7 @@ class TaskRecipients extends Collection {
 		if ($results) {
 			foreach ($results as $result) {
 				$rtype = $result['recipient_type'];
-				$rid = $this->recipient_id;
+				$rid = $result['recipient_id'];
 				switch($rtype) {
 					case TASK_RECIPIENT_USER:
 						$recipient = User::get($rid);
@@ -39,7 +39,7 @@ class TaskRecipients extends Collection {
 				}
 			}
 		}
-		return new self($recipients);
+		return new self($recipients, $task_id);
 	}
 	
 	function __construct($recipients, $task_id) {
@@ -77,11 +77,9 @@ class TaskRecipients extends Collection {
 			} else {
 				continue;
 			}
-			
 			$records[] = "(".$q_task_id.",".$db->qstr($recipient_id)."," . $db->qstr($recipient_type) . ")";
 		}
 		$query .= implode(",",$records);
-		
 		if(!$db->Execute($query)) {
 			add_error("Failed to add recipients to task");
 			application_log("error", "Unable to create task_recipients records. Database said: ".$db->ErrorMsg());

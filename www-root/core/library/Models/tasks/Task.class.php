@@ -4,7 +4,11 @@
 require_once("Models/users/User.class.php");
 require_once("Models/courses/Course.class.php");
 require_once("Models/events/Event.class.php");
+require_once("Models/organisations/Organisation.class.php");
 require_once("Models/utility/SimpleCache.class.php");
+require_once("Models/tasks/TaskOwners.class.php");
+require_once("Models/tasks/TaskRecipients.class.php");
+require_once("TaskOwners.class.php");
 
 class Task {
 	/**
@@ -66,7 +70,12 @@ class Task {
 	 * @var int
 	 */
 	private $organisation_id;
-		
+	
+	/**
+	 * Boolean status of verfification requirement. True if required.
+	 * @var bool
+	 */
+	private $require_verification;
 	
 	/**
 	 * Returns a User, Course, or Event depending on the owner type
@@ -148,13 +157,90 @@ class Task {
 		return $this->release_finish;
 	}
 	
-	function getOrganisationID() {
-		return $this->organisation_id;
+	/**
+	 * @return Organisation
+	 */
+	function getOrganisation() {
+		return Organisation::get($this->organisation_id);
 	}
+	
+	/**
+	 * @return Course
+	 */
+	function getCourse() {
+		return TaskOwners::getCourse($this->task_id);
+	} 
 	
 	function addOwner($obj) {
 		TaskOwners::add($this,$obj);
 	}
+	
+	function isOwner(User $user) {
+		$task_owners = $this->getOwners();
+		if ($task_owners->count() == 0) {
+			//no owners? orphan?
+			application_log("error", "A task was found to have no owners associated with it. Task ID: ".$task_id);
+			return false;
+		}
+		
+		
+		foreach($task_owners as $task_owner) {
+			if (($task_owner instanceof User) && ($task_owner === $user)  ) {
+				return true;
+			} else if(($task_owner instanceof Course) && ($task_owner->isOwner($user))) {
+				return true;
+			} else if(($task_owner instanceof Event) && ($task_owner->isOwner($user))) {
+				return true;
+			}
+		}
+		
+	}
+	
+	function isRecipient(User $user) {
+		$task_recipients = TaskRecipients::get($task_id);
+		
+		var_dump($task_recipients);
+		if ($task_recipients->count() == 0) {
+			application_log("error", "A task was found to have no recipients associated with it. Task ID: ".$task_id);
+			return false;
+		}
+		foreach($task_recipients as $task_recipient) {
+			if (($task_recipient instanceof User) && ($task_recipient === $user)  ) {
+				return true;
+			} else if(($task_recipient instanceof GraduatingClass) && ($user->getGraduatingClass() == $task_recipient)) {
+				return true;
+			} else if(($task_recipient instanceof Organisation) && ($task_recipient == $user->getOrganisation())) {
+				return true;
+			}
+		}
+	}
+
+	function isVerificationRequired() {
+		return $this->require_verification;
+	}
+		
+	/**
+	 * Allows sorting by 'deadline', 'course', and 'title'
+	 * @param Task $task
+	 * @param string $sort_by
+	 */
+	function compare(Task $task, $compare_by='title') {
+		switch($compare_by) {
+			case 'deadline':
+				return $this->deadline == $task->deadline ? 0 : ( $this->deadline > $task->deadline ? 1 : -1 );
+				break;
+			case 'title':
+				return strcasecmp($this->title, $task->title);
+				break;
+			case 'course':
+				$thiscourse = $this->getCourse();
+				$thatcourse = $task->getCourse();
+				$thistitle = ($thiscourse) ? $thiscourse->getTitle() : "";
+				$thattitle = ($thatcourse) ? $thatcourse->getTitle() : "";
+				return strcasecmp($thiscourse->getTitle(),$thatcourse->getTitle());
+				break;
+		}
+	} 
 	
 	/**
 	 * Creates a new task. Returns new task_id
@@ -167,14 +253,15 @@ class Task {
 	 * @param int $release_start
 	 * @param int $release_finish
 	 * @param int $organisation_id
+	 * @param bool $require_verification
 	 * 
 	 * @return int
 	 */
-	static function create($creator_id, $title, $deadline, $duration = 0, $description = "", $release_start = null, $release_finish = null, $organisation_id=null) {
+	static function create($creator_id, $title, $deadline, $duration = 0, $description = "", $release_start = null, $release_finish = null, $organisation_id=null, $require_verification=0) {
 		global $db;
-		$query = "insert into `tasks` (`updated_by`, `updated_date`, `title`, `deadline`,`duration`,`description`, `release_start`, `release_finish`, `organisation_id`) 
-				value (".$db->qstr($creator_id).", ".$db->qstr(time()).", ".$db->qstr($title).", ".$db->qstr($deadline).", ".$db->qstr($duration).", ".$db->qstr($description).", ".$db->qstr($release_start).", ". $db->qstr($release_finish).",".$db->qstr($organisation_id).")";
-		if(!$db->Execute($query)) {
+		$query = "insert into `tasks` (`updated_by`, `updated_date`, `title`, `deadline`,`duration`,`description`, `release_start`, `release_finish`, `organisation_id`, `require_verification`) 
+				value (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+		if(!$db->Execute($query, array($creator_id, time(), $title, $deadline, $duration, $description, $release_start, $release_finish, $organisation_id, $require_verification))) {
 			add_error("Failed to create Task".$db->ErrorMsg());
 			application_log("error", "Unable to update a tasks record. Database said: ".$db->ErrorMsg());
 		} else {
@@ -204,12 +291,13 @@ class Task {
 	function delete() {
 		global $db,$SUCCESS,$SUCCESSSTR,$ERROR,$ERRORSTR;
 		$query = "DELETE `tasks`, `task_owner`, `task_audience`, `task_verified`
-					FROM `tasks` a left join `task_owner` b left join `task_audience` c left join `task_verified` d
+					FROM `tasks` a left join `task_owner` b left join `task_audience` c left join `task_verified` d left join `task_recipients` e
 					where a.`task_id` = b.`task_id` and 
 					a.`task_id` = c.`task_id` and
 					a.`task_id` = d.`task_id` and
-					a.`task_id`=".$db->qstr($this->task_id);
-		if(!$db->Execute($query)) {
+					a.`task_id` = e.`task_id` and
+					a.`task_id`= ?";
+		if(!$db->Execute($query, array($this->task_id))) {
 			add_error("Failed to remove task from database.");
 			application_log("error", "Unable to delete a tasks record. Database said: ".$db->ErrorMsg());
 		} else {
@@ -227,10 +315,10 @@ class Task {
 		$task = $cache->get("Task",$task_id);
 		if (!$task) {
 			global $db;
-			$query = "SELECT * FROM `tasks` WHERE `id` = ".$db->qstr($task_id);
+			$query = "SELECT * FROM `tasks` WHERE `task_id` = ".$db->qstr($task_id);
 			$result = $db->getRow($query);
 			if ($result) {
-				$task = new Task($result['task_id'], $result['last_updated_date'], $result['last_updated_by'], $result['title'], $result['deadline'], $result['duration'], $result['description'],$result['release_start'], $result['release_finish'], $result['organisation_id']);			
+				$task = self::fromArray($result);		
 			}		
 		} 
 		return $task;
@@ -248,9 +336,10 @@ class Task {
 	 * @param int $release_start
 	 * @param int $release_finish
 	 * @param int $organisation_id
+	 * @param bool $require_verification
 	 */
-	function __construct($task_id, $last_updated_date, $last_updated_by, $title, $deadline, $duration = 0, $description = "", $release_start = null, $release_finish = null, $organisation_id=null) {
-		$this->$task_id = $task_id;
+	function __construct($task_id, $last_updated_date, $last_updated_by, $title, $deadline, $duration = 0, $description = "", $release_start = null, $release_finish = null, $organisation_id=null, $require_verification=0) {
+		$this->task_id = $task_id;
 		$this->last_updated_date = $last_updated_date;
 		$this->last_updated_by = $last_updated_by;
 		$this->title = $title;
@@ -260,8 +349,13 @@ class Task {
 		$this->release_start = $release_start;
 		$this->release_finish = $release_finish;
 		$this->organisation_id = $organisation_id;
+		$this->require_verification = (bool) $require_verification;
 		
 		$cache = SimpleCache::getCache();
 		$cache->set($this,"Task", $task_id);
+	}
+	
+	static public function fromArray($arr) {
+		return new Task($arr['task_id'], $arr['last_updated_date'], $arr['last_updated_by'], $arr['title'], $arr['deadline'], $arr['duration'], $arr['description'],$arr['release_start'], $arr['release_finish'], $arr['organisation_id'], $arr['require_verification']);
 	}
 }

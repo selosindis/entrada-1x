@@ -40,17 +40,39 @@ class Tasks extends Collection {
 	 * @param array
 	 * @return Tasks
 	 */
-	static private function getAll( ) {
+	static public function getAll($options = null) {
 		global $db;
 		$ORGANISATION_ID	= $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"];
 		
-		$query = "SELECT * from `tasks` where `organization_id`=".$db->qstr($ORGANISATION_ID);
+		if (isset($options['dir'])){
+			$direction = $options['dir'];
+		}
+		if (isset($options['order_by'])) {
+			if ($options['order_by'] == "deadline") {
+				$options['order_by'] = "COALESCE(`deadline`,9223372036854775807)";
+			} else {
+				$options['order_by'] = '`'.$options['order_by'].'`';
+			}
+			$order_by = " ORDER BY ".$options['order_by']." ".$direction;
+		}
+		if (isset($options['limit'])) {
+			$limit = $options['limit'];
+		} else {
+			$limit = -1;
+		}
+		if (isset($options['offset'])) {
+			$offset = $options['offset'];
+		} else {
+			$offset = -1;
+		}
 		
-		$results = $db->getAll($query);
 		$tasks = array();
-		if ($results) {
+		$rs = $db->selectLimit("SELECT * from `tasks` where `organisation_id`=? ".$order_by, $limit, $offset, array($ORGANISATION_ID));
+		if ($rs) {
+			$results = $rs->getIterator();	
 			foreach ($results as $result) {
-				$task = new Task($result['task_id'], $result['last_updated_date'], $result['last_updated_by'], $result['title'], $result['deadline'], $result['duration'], $result['description'],$result['release_start'], $result['release_finish'], $result['organisation_id']);
+				$task = Task::fromArray($result);
+				//$task = new Task($result['task_id'], $result['last_updated_date'], $result['last_updated_by'], $result['title'], $result['deadline'], $result['duration'], $result['description'],$result['release_start'], $result['release_finish'], $result['organisation_id']);
 				$tasks[] = $task;
 			}
 		}
@@ -58,48 +80,122 @@ class Tasks extends Collection {
 	}
 	
 	/**
-	 * Returns a Collection of Tasks 
+	 * Returns a Collection of Tasks.. tries to guess which type you want. Recommended to go with getBy____ functions
 	 * @param int $award_id
 	 * @return Tasks
 	 */
-	static public function get($obj = null) {
+	static public function get($obj = null, $options = null) {
 		if ($obj instanceof User) {
-			$tasks = self::getByOwner($obj);
+			$tasks = self::getByOwner($obj, $options);
 		} elseif ($obj instanceof Course) {
-			$tasks = self::getByCourse($obj);
+			$tasks = self::getByCourse($obj, $options);
 		} elseif ($obj instanceof Event) {
-			$tasks = self::getByEvent($obj);
+			$tasks = self::getByEvent($obj, $options);
 		} else {
-			$tasks = self::getAll();
+			$tasks = self::getAll($options);
 		}
-		return $receipts;
+		return $tasks;
 	}
 	
-	static private function getByOwner(User $user) {
-		return self::getByOwnerType(TASK_OWNER_USER,$user->getID());
-	}
-	
-	static private function getByCourse(Course $course) {
-		return self::getByOwnerType(TASK_OWNER_COURSE, $course->getID());
-	}
-	
-	static private function getByEvent(Event $event) {
-		return self::getByOwnerType(TASK_OWNER_EVENT,$event->getID());
-	}
-	
-	static private function getByOwnerType($owner_type, $owner_id) {
+	static public function getByRecipient(User $user, $options=null) {
+		$org = $user->getOrganisation();
+		
+		$user_id = $user->getID();
+		$org_id = $org->getID();
+		$grad_year = $user->getGradYear();
+		
 		global $db;
-		$query = "SELECT * from `tasks` a left join `task_owners` b on a.`task_id`=b.`task_id` where b.`owner_type`=".$db->qstr($owner_type)." AND b.`owner_id`=".$db->qstr($owner_id);
-		$results = $db->getAll($query);
+		if (isset($options['dir'])){
+			$direction = $options['dir'];
+		}
+		if (isset($options['order_by'])) {
+			if ($options['order_by'] == "deadline") {
+				$options['order_by'] = "COALESCE(`deadline`,9223372036854775807)";
+			} else {
+				$options['order_by'] = '`'.$options['order_by'].'`';
+			}
+			$order_by = " ORDER BY ".$options['order_by']." ".$direction;
+		}
+		if (isset($options['limit'])) {
+			$limit = $options['limit'];
+		} else {
+			$limit = -1;
+		}
+		if (isset($options['offset'])) {
+			$offset = $options['offset'];
+		} else {
+			$offset = -1;
+		}
+		if (isset($options['where'])) {
+			$where = ' AND ' . $options['where'];
+		}		
+		
 		$tasks = array();
-		if ($results) {
+		$query = "	SELECT a.* from `tasks` a 
+					left join `task_recipients` b on a.`task_id`=b.`task_id` 
+					where (b.`recipient_type`=? AND b.`recipient_id`=?) 
+					OR (b.`recipient_type`=? AND b.`recipient_id`=?) 
+					OR (b.`recipient_type`=? AND b.`recipient_id`=?)";
+		$rs = $db->selectLimit($query.$where.$order_by, $limit, $offset, array(TASK_RECIPIENT_USER,$user_id,TASK_RECIPIENT_CLASS,$grad_year,TASK_RECIPIENT_ORGANISATION,$org_id));
+		if ($rs) {
+			$results = $rs->getIterator();	
 			foreach ($results as $result) {
-				$task = new Task($result['task_id'], $result['last_updated_date'], $result['last_updated_by'], $result['title'], $result['deadline'], $result['duration'], $result['description'],$result['release_start'], $result['release_finish'], $result['organisation_id']);
+				$task = Task::fromArray($result);
+				$tasks[] = $task;
+			}
+		}
+		return new self($tasks);
+		 
+	}
+	
+	static public function getByOwner(User $user, $options=null) {
+		return self::getByOwnerType(TASK_OWNER_USER,$user->getID(), $options);
+	}
+	
+	static public function getByCourse(Course $course, $options=null) {
+		return self::getByOwnerType(TASK_OWNER_COURSE, $course->getID(), $options);
+	}
+	
+	static public function getByEvent(Event $event, $options=null) {
+		return self::getByOwnerType(TASK_OWNER_EVENT,$event->getID(), $options);
+	}
+	
+	static private function getByOwnerType($owner_type, $owner_id, $options=null) {
+		global $db;
+		
+		if (isset($options['dir'])){
+			$direction = $options['dir'];
+		}
+		if (isset($options['order_by'])) {
+			if ($options['order_by'] == "deadline") {
+				$options['order_by'] = "COALESCE(`deadline`,9223372036854775807)";
+			} else {
+				$options['order_by'] = '`'.$options['order_by'].'`';
+			}
+			$order_by = " ORDER BY ".$options['order_by']." ".$direction;
+		}
+		if (isset($options['limit'])) {
+			$limit = $options['limit'];
+		} else {
+			$limit = -1;
+		}
+		if (isset($options['offset'])) {
+			$offset = $options['offset'];
+		} else {
+			$offset = -1;
+		}
+		
+		$tasks = array();
+		$rs = $db->selectLimit("SELECT a.* from `tasks` a left join `task_owners` b on a.`task_id`=b.`task_id` where b.`owner_type`=? AND b.`owner_id`=? ".$order_by, $limit, $offset, array($owner_type,$owner_id));
+		if ($rs) {
+			$results = $rs->getIterator();	
+			foreach ($results as $result) {
+				$task = Task::fromArray($result);
+				//$task = new Task($result['task_id'], $result['last_updated_date'], $result['last_updated_by'], $result['title'], $result['deadline'], $result['duration'], $result['description'],$result['release_start'], $result['release_finish'], $result['organisation_id']);
 				$tasks[] = $task;
 			}
 		}
 		return new self($tasks);
 		
 	}
-
 }

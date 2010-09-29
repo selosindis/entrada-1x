@@ -50,7 +50,7 @@ class Courses extends Collection {
 		$courses = array();
 		if ($results) {
 			foreach ($results as $result) {
-				$course =  new Course($result['course_id'],$result['curriculum_type_id'],$result['director_id'],$result['pcoord_id'],$result['evalrep_id'],$result['studrep_id'],$result['course_name'],$result['course_code'],$result['course_description'],$result['unit_collaborator'],$result['unit_communicator'],$result['unit_health_advocate'],$result['unit_manager'],$result['unit_professional'],$result['unit_scholar'],$result['unit_medical_expert'],$result['unit_summative_assessment'],$result['unit_formative_assessment'],$result['unit_grading'],$result['resources_required'],$result['resources_optional'],$result['course_url'],$result['course_message'],$result['notifications'],$result['organization'],$result['active']);
+				$course =  Course::fromArray($result);
 				$courses[] = $course;
 			}
 		}
@@ -66,7 +66,7 @@ class Courses extends Collection {
 		$courses = array();
 		if ($results) {
 			foreach ($results as $result) {
-				$course =  new Course($result['course_id'],$result['curriculum_type_id'],$result['director_id'],$result['pcoord_id'],$result['evalrep_id'],$result['studrep_id'],$result['course_name'],$result['course_code'],$result['course_description'],$result['unit_collaborator'],$result['unit_communicator'],$result['unit_health_advocate'],$result['unit_manager'],$result['unit_professional'],$result['unit_scholar'],$result['unit_medical_expert'],$result['unit_summative_assessment'],$result['unit_formative_assessment'],$result['unit_grading'],$result['resources_required'],$result['resources_optional'],$result['course_url'],$result['course_message'],$result['notifications'],$result['organization'],$result['active']);
+				$course =  Course::fromArray($result);
 				$courses[] = $course;
 			}
 		}

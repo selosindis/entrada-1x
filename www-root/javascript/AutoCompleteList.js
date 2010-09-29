@@ -6,9 +6,35 @@ var AutoCompleteList = function() {
 		var type = options.type;
 		var url = options.url;
 		var remove_image = options.remove_image;
+		var limit = options.limit;
+		var onOverLimit = options.onOverLimit;
+		var onUnderLimit = options.onUnderLimit;
 		
 		var self = this;
+
+		if (!onOverLimit) {
+			var onOverLimit = function() {
+				//hide the input box/add button
+				$(type + '_name').hide();
+				$('add_associated_'+type).hide();
+				$(type + "_example").hide();
+				
+			}
+		}
 		
+		if (!onUnderLimit) {
+			var onUnderLimit = function() {
+				//hide the input box/add button
+				$(type + '_name').show();
+				$('add_associated_'+type).show();
+				$(type + "_example").show();
+				
+			}
+		}
+		
+		function isOverLimit() {
+			return Sortable.sequence($(type+"_list")).length >= limit;
+		}
 		
 		function updateOrder() {
 			$('associated_'+type).value = Sortable.sequence(type+'_list');
@@ -23,20 +49,23 @@ var AutoCompleteList = function() {
 				li.insert({bottom:img});
 				$(type+'_id').value	= '';
 				$(type+'_list').appendChild(li);
-				img.observe('click', self.removeItem(id));
-				sortables[type] = Sortable.destroy($(type+'_list'));
+				img.observe('click', self.removeItem.curry(id));
+				Sortable.destroy($(type+'_list'));
 				Sortable.create(type+'_list', {onUpdate : updateOrder});
 				updateOrder(type);
 			} else if ($(type+'_'+$(type+'_id').value) != null) {
 				alert('Important: Each user may only be added once.');
 				$(type+'_id').value = '';
 				$(type+'_name').value = '';
-				return false;
 			} else if ($(type+'_name').value != '' && $(type+'_name').value != null) {
 				alert('Important: When you see the correct name pop-up in the list as you type, make sure you select the name with your mouse, do not press the Enter button.');
-				return false;
-			} else {
-				return false;
+			} 
+			if (limit) {
+				if (isOverLimit()) {
+					document.fire(type+'_autocomplete:overlimit');
+				} else {
+					document.fire(type+'_autocomplete:underlimit');
+				}
 			}
 		}
 		
@@ -47,12 +76,17 @@ var AutoCompleteList = function() {
 		}
 		
 		this.removeItem = function(id) {
-			return function() {
-				if ($(type+'_'+id)) {
-					$(type+'_'+id).remove();
-					Sortable.destroy($(type+'_list'));
-					Sortable.create(type+'_list', {onUpdate : updateOrder});
-					updateOrder();
+			if ($(type+'_'+id)) {
+				$(type+'_'+id).remove();
+				Sortable.destroy($(type+'_list'));
+				Sortable.create(type+'_list', {onUpdate : updateOrder});
+				updateOrder();
+				if (limit) {
+					if (!isOverLimit()) {
+						document.fire(type+'_autocomplete:underlimit');
+					} else {
+						document.fire(type+'_autocomplete:overlimit');
+					}
 				}
 			}
 		}
@@ -103,9 +137,20 @@ var AutoCompleteList = function() {
 				Event.stop(event);
 			}
 		});
+		if (limit) {
+			document.observe(type+'_autocomplete:overlimit',onOverLimit);
+			document.observe(type+'_autocomplete:underlimit',onUnderLimit);
+		}
 		
 		Sortable.create(type + '_list', {onUpdate : updateOrder});
-		$('associated_'+type).value = Sortable.sequence(type+'_list');
+		$('associated_'+type).value = Sortable.sequence($(type+'_list'));
 		
+		if (limit) {
+			if (!isOverLimit()) {
+				document.fire(type+'_autocomplete:underlimit');
+			} else {
+				document.fire(type+'_autocomplete:overlimit');
+			}
+		}
 	};
 }();

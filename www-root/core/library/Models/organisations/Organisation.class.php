@@ -109,7 +109,7 @@ class Organisation {
 		$organisation = $cache->get("Organisation",$organisation_id);
 		if (!$organisation) {
 			global $db;
-			$query = "SELECT * FROM `".AUTH_DATABASE."`.`organisations` WHERE `id` = ".$db->qstr($organisation_id);
+			$query = "SELECT * FROM `".AUTH_DATABASE."`.`organisations` WHERE `organisation_id` = ".$db->qstr($organisation_id);
 			$result = $db->getRow($query);
 			if ($result) {
 				$organisation = new Organisation($result['organisation_id'],$result['organisation_title'],$result['organisation_address1'],$result['organisation_address2'],$result['organisation_city'],$result['organisation_province'],$result['organisation_country'],$result['organisation_postcode'],$result['organisation_telephone'],$result['organisation_fax'],$result['organisation_email'],$result['organisation_url'],$result['organisation_desc']);			

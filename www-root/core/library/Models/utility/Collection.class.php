@@ -2,9 +2,9 @@
 
 class Collection implements Iterator, ArrayAccess, Countable {
     private $position = 0;
-    private $container = array();  
+    protected $container = array();  
 
-    public function __construct($array) {
+    public function __construct($array=array()) {
         $this->position = 0;
         if (is_array($array)) {
         	$this->container = $array; 
@@ -79,4 +79,33 @@ class Collection implements Iterator, ArrayAccess, Countable {
     public function contains($element) {
     	return in_array($element, $this->container, true);
     }
+    
+    public function sort ($direction = 'asc', $sort_by='') {
+		$this->_sort($sort_by);    	
+    	
+		if ($direction=='desc') {
+			$this->container = array_reverse($this->container);
+		}
+	} 
+	
+	private function _sort($sort_by) {
+		if (count($this->container) < 2) return;
+    	
+		$left = new self();
+		$right = new self();
+		
+		$pivot = array_shift($this->container);
+		
+		foreach ($this->container as $k => $element) {
+			if ($element->compare($pivot,$sort_by) < 0 ) {
+				$left->container[] = $element;
+			} else {
+				$right->container[] = $element;
+			}	
+		}
+		$left->_sort($sort_by);
+		$right->_sort($sort_by);
+		
+		$this->container = array_merge($left->container, array($pivot), $right->container);
+	}
 }

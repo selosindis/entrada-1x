@@ -47,7 +47,7 @@ define("DEVELOPMENT_MODE", false);
  */
 define("AUTH_DEVELOPMENT", "");
 
-$DEVELOPER_IPS = array();
+$DEVELOPER_IPS = array("130.15.105.131");
 
 define("ENTRADA_URL", $config->entrada_url);									// Full URL to application's index file without a trailing slash.
 define("ENTRADA_RELATIVE", $config->entrada_relative);							// Absolute Path from the document_root to application's index file without a trailing slash.
@@ -97,7 +97,7 @@ define("AUTH_LOCKOUT_TIMEOUT", 900);											// The amount of time in seconds 
 define("AUTH_FORCE_SSL", false);												// If you want to force all login attempts to use SSL, set this to true, otherwise false.
 
 define("AUTH_ALLOW_CAS", false);												// Whether or not you wish to allow CAS authorisation.
-define("AUTH_CAS_HOSTNAME", "cas.schoolu.ca");									// Hostname of your CAS server.
+define("AUTH_CAS_HOSTNAME", "cas.choolu.ca");									// Hostname of your CAS server.
 define("AUTH_CAS_PORT", 443);													// Port that CAS is running on.
 define("AUTH_CAS_URI", "cas");													// The URI where CAS is located on the CAS host.
 
@@ -439,6 +439,7 @@ $MODULES["courses"] = array("title" => "Manage Courses", "resource"=> "coursecon
 $MODULES["events"] = array("title" => "Manage Events", "resource" => "eventcontent", "permission" => "update");
 $MODULES["gradebook"] = array("title" => "Manage Gradebook", "resource" => "gradebook", "permission" => "read");
 $MODULES["mspr"] = array("title" => "Manage MSPRs", "resource" => "mspr", "permission" => "create");
+$MODULES["tasks"] = array("title" => "Manage Tasks", "resource" => "task", "permission" => "create");
 $MODULES["notices"] = array("title" => "Manage Notices", "resource" => "notice", "permission" => "update");
 $MODULES["objectives"]	= array("title" => "Manage Objectives", "resource" => "objective", "permission" => "update");
 $MODULES["observerships"] = array("title" => "Manage Observerships", "resource" => "observerships", "permission" => "update");
@@ -552,3 +553,29 @@ $AR_CUR_YEAR = (date("Y") - ((date("n") < 5) ? 1 : 0));
 $AR_NEXT_YEAR = (int) $AR_CUR_YEAR + 1;
 $AR_PAST_YEARS = 1985;
 $AR_FUTURE_YEARS = $AR_CUR_YEAR + 10;
+
+/**
+ * Defines for Tasks Module
+ * 
+ */
+//Owners
+
+$TASK_OWNERS = array("USER" => "user");
+
+define("TASK_OWNER_USER", "user");
+define("TASK_OWNER_COURSE", "course");
+define("TASK_OWNER_EVENT", "event");
+
+//Audience
+define("TASK_RECIPIENT_USER", "user"); 
+define("TASK_RECIPIENT_CLASS", "grad_year"); 
+define("TASK_RECIPIENT_ORGANISATION", "organisation"); 
+
+//Verification
+define("TASK_VERIFICATION_REQUIRED", true);
+define("TASK_VERIFICATION_NOT_REQUIRED",false);
+
+//Defaults
+define("TASK_DEFAULT_RECIPIENT_TYPE",TASK_RECIPIENT_USER); //options are: proxy_id, grad_year, organisation_id
+define("TASK_DEFAULT_REQUIRE_VERIFICATION", TASK_VERIFICATION_NOT_REQUIRED); //Verification is not required by default
+

@@ -49,31 +49,6 @@ if (($router) && ($router->initRoute())) {
 		$ORGANISATION_ID = (int) trim($_GET["org"]);
 	}
 
-	/**
-	 * Check for groups which have access to the administrative side of this module
-	 * and add the appropriate toggle sidebar item.
-	 */
-	if ($ENTRADA_ACL->amIAllowed("coursecontent", "update", false)) {
-		switch ($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]) {
-			case "admin" :
-				$admin_wording	= "Administrator View";
-				$admin_url		= ENTRADA_URL."/admin/".$MODULE.(($COURSE_ID) ? "?".replace_query(array("section" => "edit", "id" => $COURSE_ID)) : "");
-			break;
-			case "pcoordinator" :
-				$admin_wording	= "Coordinator View";
-				$admin_url		= ENTRADA_URL."/admin/".$MODULE.(($COURSE_ID) ? "?".replace_query(array("section" => "content", "id" => $COURSE_ID)) : "");
-			break;
-			case "director" :
-				$admin_wording	= "Director View";
-				$admin_url		= ENTRADA_URL."/admin/".$MODULE.(($COURSE_ID) ? "?".replace_query(array("section" => "content", "id" => $COURSE_ID)) : "");
-			break;
-			default :
-				$admin_wording	= "";
-				$admin_url		= "";
-			break;
-		}
-	}
-
 	$module_file = $router->getRoute();
 	if ($module_file) {
 		require_once($module_file);

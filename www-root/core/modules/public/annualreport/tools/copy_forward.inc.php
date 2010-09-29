@@ -27,7 +27,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 	header("Location: ".ENTRADA_URL.((isset($_SERVER["REQUEST_URI"])) ? "?url=".rawurlencode(clean_input($_SERVER["REQUEST_URI"], array("nows", "url"))) : ""));
 	exit;
 } elseif (!$ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
-	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/".$MODULE."\\'', 15000)";
+	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/".$MODULE."\\'', 5000)";
 
 	$ERROR++;
 	$ERRORSTR[]	= "You do not have the permissions required to use this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
@@ -37,10 +37,6 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
 	$BREADCRUMB[]	= array("url" => "", "title" => "Copy Forward" );
-        
-    echo "<div id=\"display-error-box\" class=\"display-generic\">\n";
-    echo "<strong>Note:</strong> Copying forward should only be used once a year to copy records from the previous year. If records are copied by accident you can simply go back and delete them.";
-    echo "</div>";
     if($STEP == 2) {
     	if(isset($_POST["copy_from"]) && $copy_from = clean_input($_POST["copy_from"], array("int"))) {
     		$PROCESSED["copy_from"] = $copy_from;
@@ -50,13 +46,15 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
     	}
     	
     	if(isset($_POST["copy_to"]) && ($copy_to = clean_input($_POST["copy_to"], array("int")))) {
-    		$PROCESSED["copy_to"] = $copy_to;
+    		$PROCESSED["copy_to"] = $copy_to;    		
     	} else {
     		$ERROR++;
     		$ERRORSTR[] = "You must select a year to <strong>Copy To</strong>.";
     	}
     	
     	if($_POST["copy_from"] >= $_POST["copy_to"]) {
+    		$PROCESSED["copy_to"] = $_POST["copy_to"]; 
+    		
     		$ERROR++;
     		$ERRORSTR[] = "<strong>Copy To</strong> must be greater than <strong>Copy From</strong>.";
     	}
@@ -67,44 +65,114 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 		} else {
 			$PROCESSED["copy"] = $_POST["copy"];
 		}
-		
 		if(!$ERROR) {
-			foreach($PROCESSED["copy"] as $copy) {
+			$tablesCopied = array();
+			$tablesNotCopied = array();
+			$tablesErrored = array();
+			
+			foreach($PROCESSED["copy"] as $copyData) {
+				$copy = explode("|", $copyData);
+				$table = $copy[0];
+				$title = $copy[1];
+				
 				$getRecordsToCopy = "	SELECT * 
-										FROM `".$copy."`
+										FROM `".$table."`
 										WHERE `proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
 										AND `year_reported` = ".$db->qstr($PROCESSED["copy_from"]);
 				
+				// If they are attempting to copy their activity profile ensure they do not already have record for the year they are copying to
+				if($table == "ar_profile") {
+					$doubleCheckProfile = "	SELECT * 
+										FROM `".$table."`
+										WHERE `proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+										AND `year_reported` = ".$db->qstr($PROCESSED["copy_to"]);
+					
+					if($checkResult = $db->GetRow($doubleCheckProfile)) {
+						$skip = true;
+						$tablesErrored[] = $title;
+					} else {
+						$skip = false;
+					}
+				} else {
+					$skip = false;
+				}
+				
 				if($results = $db->GetAll($getRecordsToCopy)) {
-					foreach($results as $result) {
-						$result["year_reported"] = $PROCESSED["copy_to"];
-						$result["updated_date"]	= time();
-						$result["updated_by"] = $_SESSION["details"]["id"];
-						$result["proxy_id"]	= $_SESSION[APPLICATION_IDENTIFIER]['tmp']['proxy_id'];
-						
-						// Remove the ID from the array so that the insert can happen as if it were a new record.
-						array_shift($result);
-						
-						if($db->AutoExecute($copy, $result, "INSERT")) {
-								$url 	= ENTRADA_URL."/annualreport/tools";
-								$msg	= "You will now be redirected to the Tools page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-			
-								$SUCCESS++;
-								$SUCCESSSTR[]  = "You have successfully copied forward from <strong>". $PROCESSED["copy_from"] ."</strong> to <strong>". $PROCESSED["copy_to"] ."</strong>. <br /><br />".$msg;
-								$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000);";
-			
-								application_log("success", "User ID: ".$_SESSION["details"]["id"]." - Copied forward from ". $PROCESSED["copy_from"] ." to ". $PROCESSED["copy_to"] .".");					
-			
-						} else {
-							$ERROR++;
-							$ERRORSTR[] = "There was a problem Copying Forward. The MEdTech Unit was informed of this error; please try again later.";
-			
-							application_log("error", "There was an error Copying Forward. Database said: ".$db->ErrorMsg());
+					if(!$skip) {
+						foreach($results as $result) {
+							$result["year_reported"] = $PROCESSED["copy_to"];
+							$result["updated_date"]	= time();
+							$result["updated_by"] = $_SESSION["details"]["id"];
+							$result["proxy_id"]	= $_SESSION[APPLICATION_IDENTIFIER]['tmp']['proxy_id'];
+							
+							// Remove the ID from the array so that the insert can happen as if it were a new record.
+							array_shift($result);
+							
+							if($db->AutoExecute($table, $result, "INSERT")) {
+								if(!in_array($title, $tablesCopied)) {
+									$tablesCopied[] = $title;
+								}
+							} else {
+								$ERROR++;
+								$ERRORSTR[] = "There was a problem Copying Forward. The MEdTech Unit was informed of this error; please try again later.";
+				
+								application_log("error", "There was an error Copying Forward. Database said: ".$db->ErrorMsg());
+							}
 						}
 					}
+				} else {
+					$tablesNotCopied[] = $title;
 				}
 			}
+			
+			echo "<div id=\"display-notice-box\" class=\"display-generic\">\n";
+		    echo "<strong>Here is the audit report from your Copy Forward Request: <br /><br /></strong>";
+		    
+			$url 	= ENTRADA_URL."/annualreport/tools";
+
+			if(isset($tablesCopied) && count($tablesCopied) > 0) {
+				echo "The following sections were copied from " . $PROCESSED["copy_from"] . " to " . $PROCESSED["copy_to"] . ": <br /><br />";
+			
+				$tableString = "<tt>";
+				
+				foreach($tablesCopied as $table) {
+					$tableString = $tableString . $table ."<br />";
+				}
+				$tableString = 	$tableString."</tt><br />";
+				echo $tableString;	
+			}
+			
+			if(isset($tablesNotCopied) && count($tablesNotCopied) > 0) {
+				echo "The following sections were <strong>NOT</strong> copied because there was no data in them for " . $PROCESSED["copy_from"] . ": <br /><br />";
+				
+				$tableString = "<tt>";
+				
+				foreach($tablesNotCopied as $table) {
+					$tableString = $tableString . $table ."<br />";
+				}
+				$tableString = 	$tableString."</tt><br />";
+				echo $tableString;	
+			}
+			
+			if(isset($tablesErrored) && count($tablesErrored) > 0) {
+				echo "The following sections were <strong>NOT</strong> copied because you already have a record for " . $PROCESSED["copy_to"] . " in that section and you are only allowed to have one record per year: <br /><br />";
+				
+				$tableString = "<tt>";
+				
+				foreach($tablesErrored as $table) {
+					$tableString = $tableString . $table ."<br />";
+				}
+				$tableString = 	$tableString."</tt><br />";
+				echo $tableString;	
+			}
+			
+			echo "Once you are finished reviewing this audit report click <a href=\"".$url."\">here</a> to return to the Tools page";
+			echo "</div>";
+			application_log("success", "User ID: ".$_SESSION["details"]["id"]." - Copied forward from ". $PROCESSED["copy_from"] ." to ". $PROCESSED["copy_to"] .".");
 		} else {
+			if($ERROR) {
+				echo display_error();
+			}
 			$STEP = 1;
 		}
     }
@@ -141,6 +209,11 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 		break;
 		case 1 :
 		default :
+			echo "<div id=\"display-error-box\" class=\"display-generic\">\n";
+		    echo "<strong>Note:</strong> Copying forward should only be used once a year to copy records from the previous year. 
+		    If records are copied by accident you can simply go back and delete them. If records exist in the system for the year you are copying forward to these records
+		    will remain untouched.";
+		    echo "</div>";
 			?>
 		<div class="no-printing">
 			<form action="<?php echo ENTRADA_URL; ?>/annualreport/tools?section=<?php echo $SECTION; ?>&step=2" method="post">
@@ -181,6 +254,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 					<td><label for="copy_to" class="form-required">Copy To</label></td>
 					<td><select name="copy_to" id="copy_to" style="vertical-align: middle">
 					<?php
+						$copy_to = array();
 						// If it is between July and December then allow them to copy forward to THIS year
 						// otherwise they need to copy forward to NEXT Year
 						if((int)date("m") > 7 && (int)date("m") <= 12) {	
@@ -192,7 +266,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 						}
 						
 						foreach($copy_to as $i) {
-							if(isset($PROCESSED["copy_to"]) && $PROCESSED["copy_to"] != '')
+							if(isset($PROCESSED["copy_to"]) && $PROCESSED["copy_to"] != "")
 							{
 								$defaultToYear = $PROCESSED["copy_to"];
 							}
@@ -211,36 +285,36 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 					<td><label for="copy" class="form-required">Copy</label></td>
 					<td><select name="copy[]" id="copy" multiple style="vertical-align: middle">
 					<?php
-						echo "<option value=\"ar_undergraduate_nonmedical_teaching\" selected=\"selected\">Undergraduate (Other) Teaching</option>\n";
-						echo "<option value=\"ar_graduate_teaching\" selected=\"selected\">Graduate Teaching</option>\n";
-						echo "<option value=\"ar_undergraduate_supervision\" selected=\"selected\">Undergraduate Supervision</option>\n";
-						echo "<option value=\"ar_graduate_supervision\" selected=\"selected\">Graduate Supervision</option>\n";
-						echo "<option value=\"ar_memberships\" selected=\"selected\">Membership on Graduate Examining and Supervisory Committees (Excluding Supervision)</option>\n";
+						echo "<option value=\"ar_undergraduate_nonmedical_teaching|Undergraduate (Other) Teaching\" selected=\"selected\">Undergraduate (Other) Teaching</option>\n";
+						echo "<option value=\"ar_graduate_teaching|Graduate Teaching\" selected=\"selected\">Graduate Teaching</option>\n";
+						echo "<option value=\"ar_undergraduate_supervision|Undergraduate Supervision\" selected=\"selected\">Undergraduate Supervision</option>\n";
+						echo "<option value=\"ar_graduate_supervision|Graduate Supervision\" selected=\"selected\">Graduate Supervision</option>\n";
+						echo "<option value=\"ar_memberships|Membership on Graduate Examining and Supervisory Committees (Excluding Supervision)\" selected=\"selected\">Membership on Graduate Examining and Supervisory Committees (Excluding Supervision)</option>\n";
 						if($_SESSION["details"]["clinical_member"]) {
-							echo "<option value=\"ar_clinical_education\" selected=\"selected\">Education of Clinical Trainees Including Clinical Clerks</option>\n";
+							echo "<option value=\"ar_clinical_education|Education of Clinical Trainees Including Clinical Clerks\" selected=\"selected\">Education of Clinical Trainees Including Clinical Clerks</option>\n";
 						}
-						echo "<option value=\"ar_continuing_education\" selected=\"selected\">Continuing Education</option>\n";
-						echo "<option value=\"ar_innovation\" selected=\"selected\">Innovation in Education</option>\n";
-						echo "<option value=\"ar_other\" selected=\"selected\">Other Education</option>\n";
+						echo "<option value=\"ar_continuing_education|Continuing Education\" selected=\"selected\">Continuing Education</option>\n";
+						echo "<option value=\"ar_innovation|Innovation in Education\" selected=\"selected\">Innovation in Education</option>\n";
+						echo "<option value=\"ar_other|Other Education\" selected=\"selected\">Other Education</option>\n";
 						if($_SESSION["details"]["clinical_member"]) {
-							echo "<option value=\"ar_clinical_activity\" selected=\"selected\">Clinical Activity</option>\n";
-							echo "<option value=\"ar_ward_supervision\" selected=\"selected\">Ward Supervision</option>\n";
-							echo "<option value=\"ar_clinics\" selected=\"selected\">Clinics</option>\n";
-							echo "<option value=\"ar_consults\" selected=\"selected\">In-Hospital Consultations</option>\n";
-							echo "<option value=\"ar_on_call\" selected=\"selected\">On-Call Responsibility</option>\n";
-							echo "<option value=\"ar_procedures\" selected=\"selected\">Procedures</option>\n";
-							echo "<option value=\"ar_other_activity\" selected=\"selected\">Other Professional Activity</option>\n";
-							echo "<option value=\"ar_clinical_innovation\" selected=\"selected\">Innovation in Clinical Activity</option>\n";
+							echo "<option value=\"ar_clinical_activity|Clinical Activity\" selected=\"selected\">Clinical Activity</option>\n";
+							echo "<option value=\"ar_ward_supervision|Ward Supervision\" selected=\"selected\">Ward Supervision</option>\n";
+							echo "<option value=\"ar_clinics|Clinics\" selected=\"selected\">Clinics</option>\n";
+							echo "<option value=\"ar_consults|In-Hospital Consultations\" selected=\"selected\">In-Hospital Consultations</option>\n";
+							echo "<option value=\"ar_on_call|On-Call Responsibility\" selected=\"selected\">On-Call Responsibility</option>\n";
+							echo "<option value=\"ar_procedures|Procedures\" selected=\"selected\">Procedures</option>\n";
+							echo "<option value=\"ar_other_activity|Other Professional Activity\" selected=\"selected\">Other Professional Activity</option>\n";
+							echo "<option value=\"ar_clinical_innovation|Innovation in Clinical Activity\" selected=\"selected\">Innovation in Clinical Activity</option>\n";
 						}
-					    echo "<option value=\"ar_research\" selected=\"selected\">Projects / Grants / Contracts</option>\n";
-					    echo "<option value=\"ar_conference_papers\" selected=\"selected\">Invited Lectures / Conference Papers</option>\n";
-					    echo "<option value=\"ar_scholarly_activity\" selected=\"selected\">Other Scholarly Activity</option>\n";
-					    echo "<option value=\"ar_patent_activity\" selected=\"selected\">Patents</option>\n";
-					    echo "<option value=\"ar_internal_contributions\" selected=\"selected\">Service Contributions on Behalf of Queen's University</option>\n";
-					    echo "<option value=\"ar_external_contributions\" selected=\"selected\">External Contributions</option>\n";
-					    echo "<option value=\"ar_self_education\" selected=\"selected\">Self Education</option>\n";
-					    echo "<option value=\"ar_prizes\" selected=\"selected\">Prizes, Honours and Awards</option>\n";
-					    echo "<option value=\"ar_profile\" selected=\"selected\">Activity Profile</option>\n";
+					    echo "<option value=\"ar_research|Projects / Grants / Contracts\" selected=\"selected\">Projects / Grants / Contracts</option>\n";
+					    echo "<option value=\"ar_conference_papers|Invited Lectures / Conference Papers\" selected=\"selected\">Invited Lectures / Conference Papers</option>\n";
+					    echo "<option value=\"ar_scholarly_activity|Other Scholarly Activity\" selected=\"selected\">Other Scholarly Activity</option>\n";
+					    echo "<option value=\"ar_patent_activity|Patents\" selected=\"selected\">Patents</option>\n";
+					    echo "<option value=\"ar_internal_contributions|Service Contributions on Behalf of Queen's University\" selected=\"selected\">Service Contributions on Behalf of Queen's University</option>\n";
+					    echo "<option value=\"ar_external_contributions|External Contributions\" selected=\"selected\">External Contributions</option>\n";
+					    echo "<option value=\"ar_self_education|Self Education\" selected=\"selected\">Self Education</option>\n";
+					    echo "<option value=\"ar_prizes|Prizes, Honours and Awards\" selected=\"selected\">Prizes, Honours and Awards</option>\n";
+					    echo "<option value=\"ar_profile|Activity Profile\" selected=\"selected\">Activity Profile</option>\n";
 					    echo "</select>";
 					?>
 					</td>

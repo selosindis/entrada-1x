@@ -1,3 +1,4 @@
+Allow from 130.15.105.68        # James
 Allow from 127.0.0.1            # localhost
 
 # 

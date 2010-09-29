@@ -41,7 +41,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 	if ((isset($COURSE_ID) && $COURSE_ID)) {
-		$BREADCRUMB[] = array("url" => "", "title" => "Course Objectives");
+		$BREADCRUMB[] = array("url" => ENTRADA_URL."/courses/objectives?section=course-objectives&cid=".$COURSE_ID, "title" => "Course Objectives");
 		?>
 		<style type="text/css">
 		li.pad-top {
@@ -142,11 +142,11 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 				echo "<h3>".($objective["objective"]["importance"] == 3 ? "Tertiary" : ($objective["objective"]["importance"] == 2 ? "Secondary" : "Primary"))." Objectives</h3>\n";
 			}
 			echo "<ul>\n";
-			echo "<li>\n<a title=\"View events in this course related to this objective.\" href=\"".ENTRADA_URL."/courses/objectives?section=course-objective-events&cid=".$COURSE_ID."&oid=".$objective["objective"]["objective_id"]."\">".$objective["objective"]["objective_name"]." <img style=\"border: none; margin-left: 5px;\" src=\"".ENTRADA_URL."/images/ics-enabled.gif\" /></a><div class=\"content-small\">".(isset($objective["objective"]["objective_details"]) && $objective["objective"]["objective_details"] ? $objective["objective"]["objective_details"] : $objective["objective"]["objective_description"])."</div>\n";
+			echo "<li>\n<a title=\"View events in this course related to this objective.\" href=\"".ENTRADA_URL."/courses/objectives?section=course-objective-events&cid=".$COURSE_ID."&oid=".$objective["objective"]["objective_id"]."\">".$objective["objective"]["objective_name"]."</a><div class=\"content-small\">".(isset($objective["objective"]["objective_details"]) && $objective["objective"]["objective_details"] ? $objective["objective"]["objective_details"] : $objective["objective"]["objective_description"])."</div>\n";
 			if (isset($objective["children"]) && count($objective["children"])) {
 				echo "<ul class=\"pad\">\n";
 				foreach ($objective["children"] as $objective_child) {
-					echo "<li class=\"pad-top\"><a title=\"View events in this course related to this objective.\" href=\"".ENTRADA_URL."/courses/objectives?section=course-objective-events&cid=".$COURSE_ID."&oid=".$objective_child["objective_id"]."\">".$objective_child["objective_name"]." <img style=\"border: none; margin-left: 5px;\" src=\"".ENTRADA_URL."/images/ics-enabled.gif\" /></a><div class=\"content-small\">".(isset($objective_child["objective_details"]) && $objective_child["objective_details"] ? $objective_child["objective_details"] : $objective_child["objective_description"])."</div></li>\n";
+					echo "<li class=\"pad-top\"><a title=\"View events in this course related to this objective.\" href=\"".ENTRADA_URL."/courses/objectives?section=course-objective-events&cid=".$COURSE_ID."&oid=".$objective_child["objective_id"]."\">".$objective_child["objective_name"]."</a><div class=\"content-small\">".(isset($objective_child["objective_details"]) && $objective_child["objective_details"] ? $objective_child["objective_details"] : $objective_child["objective_description"])."</div></li>\n";
 				}
 				echo "</ul>\n";
 			}

@@ -9219,123 +9219,127 @@ function notify_regional_education($action, $event_id) {
 								ON b.`apartment_id` = a.`apartment_id`
 								WHERE a.`event_id` = ".$db->qstr($event_id);
 				$apartments	= $db->GetAll($query);
-	
-				switch($action) {
-					case "deleted" : 
-						$message  = "Attention ".$AGENT_CONTACTS["agent-regionaled"]["name"].",\n\n";
-						$message .= $_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]." has removed an event from ".$whole_name."'s ";
-						$message .= "clerkship schedule, to which you had previously assigned housing. Due to the removal of this event from the system, ";
-						$message .= "the housing associated with it has also been removed.\n\n";
-						$message .= "Information For Reference:\n\n";
-						$message .= "Event Information:\n";
-						$message .= "Event Title:\t".html_decode($result["event_title"])."\n";
-						$message .= "Region:\t\t".$result["region_name"]."\n";
-						$message .= "Start Date:\t".date(DEFAULT_DATE_FORMAT, $result["event_start"])."\n";
-						$message .= "Finish Date:\t".date(DEFAULT_DATE_FORMAT, $result["event_finish"])."\n\n";
-						if(($apartments) && ($assigned_apartments = @count($apartments))) {
-							$message .= "Apartment".(($assigned_apartments != 1) ? "s" : "")." ".$whole_name." was removed from:\n";
-							foreach($apartments as $apartment) {
-								$message .= "Apartment Title:\t".$apartment["apartment_title"]."\n";
-								$message .= "Inhabiting Start:\t".date(DEFAULT_DATE_FORMAT, $apartment["inhabiting_start"])."\n";
-								$message .= "Inhabiting Finish:\t".date(DEFAULT_DATE_FORMAT, $apartment["inhabiting_finish"])."\n\n";
+				if ($apartments) {
+					switch($action) {
+						case "deleted" : 
+							$message  = "Attention ".$AGENT_CONTACTS["agent-regionaled"]["name"].",\n\n";
+							$message .= $_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]." has removed an event from ".$whole_name."'s ";
+							$message .= "clerkship schedule, to which you had previously assigned housing. Due to the removal of this event from the system, ";
+							$message .= "the housing associated with it has also been removed.\n\n";
+							$message .= "Information For Reference:\n\n";
+							$message .= "Event Information:\n";
+							$message .= "Event Title:\t".html_decode($result["event_title"])."\n";
+							$message .= "Region:\t\t".$result["region_name"]."\n";
+							$message .= "Start Date:\t".date(DEFAULT_DATE_FORMAT, $result["event_start"])."\n";
+							$message .= "Finish Date:\t".date(DEFAULT_DATE_FORMAT, $result["event_finish"])."\n\n";
+							if(($apartments) && ($assigned_apartments = @count($apartments))) {
+								$message .= "Apartment".(($assigned_apartments != 1) ? "s" : "")." ".$whole_name." was removed from:\n";
+								foreach($apartments as $apartment) {
+									$message .= "Apartment Title:\t".$apartment["apartment_title"]."\n";
+									$message .= "Inhabiting Start:\t".date(DEFAULT_DATE_FORMAT, $apartment["inhabiting_start"])."\n";
+									$message .= "Inhabiting Finish:\t".date(DEFAULT_DATE_FORMAT, $apartment["inhabiting_finish"])."\n\n";
+								}
 							}
-						}
-						$message .= "=======================================================\n\n";
-						$message .= "Deletion Date:\t".date("r", time())."\n";
-						$message .= "Deleted By:\t".$_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]." (".$_SESSION["details"]["id"].")\n";
-					break;
-					case "change-critical" :
-						$message  = "Attention ".$AGENT_CONTACTS["agent-regionaled"]["name"].",\n\n";
-						$message .= $_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]." has updated an event in ".$whole_name."'s ";
-						$message .= "clerkship schedule, to which you had previously assigned housing. This update involves a change to the region or the ";
-						$message .= "dates that the event took place in. Due to this critical change taking place, the housing for this event for this ";
-						$message .= "student has been removed.\n\n";
-						if($result["manage_apartments"]) {
-							$message .= "Please log into the clerkship system and re-assign housing to this student for this event.\n\n";
-						} else {
-							$message .= "Since this event no longer is taking place in a region which is managed by Regional Education, \n";
-							$message .= "no further action is required on your part in the system.\n\n";
-						}
-						$message .= "Information For Reference:\n\n";
-						$message .= "OLD Event Information:\n";
-						$message .= "Event Title:\t".$event_info["event_title"]."\n";
-						$message .= "Region:\t\t".get_region_name($event_info["region_id"])."\n";
-						$message .= "Start Date:\t".date(DEFAULT_DATE_FORMAT, $event_info["event_start"])."\n";
-						$message .= "Finish Date:\t".date(DEFAULT_DATE_FORMAT, $event_info["event_finish"])."\n\n";
-						$message .= "NEW Event Information:\n";
-						$message .= "Event Title:\t".html_decode($result["event_title"])."\n";
-						$message .= "Region:\t\t".$result["region_name"]."\n";
-						$message .= "Start Date:\t".date(DEFAULT_DATE_FORMAT, $result["event_start"])."\n";
-						$message .= "Finish Date:\t".date(DEFAULT_DATE_FORMAT, $result["event_finish"])."\n\n";
-						if(($apartments) && ($assigned_apartments = @count($apartments))) {
-							$message .= "Apartment".(($assigned_apartments != 1) ? "s" : "")." ".$whole_name." was removed from:\n";
-							foreach($apartments as $apartment) {
-								$message .= "Apartment Title:\t".$apartment["apartment_title"]."\n";
-								$message .= "Inhabiting Start:\t".date(DEFAULT_DATE_FORMAT, $apartment["inhabiting_start"])."\n";
-								$message .= "Inhabiting Finish:\t".date(DEFAULT_DATE_FORMAT, $apartment["inhabiting_finish"])."\n\n";
+							$message .= "=======================================================\n\n";
+							$message .= "Deletion Date:\t".date("r", time())."\n";
+							$message .= "Deleted By:\t".$_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]." (".$_SESSION["details"]["id"].")\n";
+						break;
+						case "change-critical" :
+							$message  = "Attention ".$AGENT_CONTACTS["agent-regionaled"]["name"].",\n\n";
+							$message .= $_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]." has updated an event in ".$whole_name."'s ";
+							$message .= "clerkship schedule, to which you had previously assigned housing. This update involves a change to the region or the ";
+							$message .= "dates that the event took place in. Due to this critical change taking place, the housing for this event for this ";
+							$message .= "student has been removed.\n\n";
+							if($result["manage_apartments"]) {
+								$message .= "Please log into the clerkship system and re-assign housing to this student for this event.\n\n";
+							} else {
+								$message .= "Since this event no longer is taking place in a region which is managed by Regional Education, \n";
+								$message .= "no further action is required on your part in the system.\n\n";
 							}
-						}
-						$message .= "=======================================================\n\n";
-						$message .= "Deletion Date:\t".date("r", time())."\n";
-						$message .= "Deleted By:\t".$_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]." (".$_SESSION["details"]["id"].")\n";
-					break;
-					case "change-non-critical" :
-					case "updated" :
-					default :
-						$message  = "Attention ".$AGENT_CONTACTS["agent-regionaled"]["name"].",\n\n";
-						$message .= $_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]." has updated an event in ".$whole_name."'s ";
-						$message .= "clerkship schedule, to which you had previously assigned housing.\n\n";
-						$message .= "Important:\n";
-						$message .= "This update does not affect the date or region of this event, as such this change is considered non-critical ";
-						$message .= "and no action is required on your part.\n\n";
-						$message .= "Information For Reference:\n\n";
-						$message .= "OLD Event Information:\n";
-						$message .= "Event Title:\t".$event_info["event_title"]."\n";
-						$message .= "Region:\t\t".get_region_name($event_info["region_id"])."\n";
-						$message .= "Start Date:\t".date(DEFAULT_DATE_FORMAT, $event_info["event_start"])."\n";
-						$message .= "Finish Date:\t".date(DEFAULT_DATE_FORMAT, $event_info["event_finish"])."\n\n";
-						$message .= "NEW Event Information:\n";
-						$message .= "Event Title:\t".html_decode($result["event_title"])."\n";
-						$message .= "Region:\t\t".$result["region_name"]."\n";
-						$message .= "Start Date:\t".date(DEFAULT_DATE_FORMAT, $result["event_start"])."\n";
-						$message .= "Finish Date:\t".date(DEFAULT_DATE_FORMAT, $result["event_finish"])."\n\n";
-						if(($apartments) && ($assigned_apartments = @count($apartments))) {
-							$message .= "Apartment".(($assigned_apartments != 1) ? "s" : "")." ".$whole_name." is assigned to:\n";
-							foreach($apartments as $apartment) {
-								$message .= "Apartment Title:\t".$apartment["apartment_title"]."\n";
-								$message .= "Inhabiting Start:\t".date(DEFAULT_DATE_FORMAT, $apartment["inhabiting_start"])."\n";
-								$message .= "Inhabiting Finish:\t".date(DEFAULT_DATE_FORMAT, $apartment["inhabiting_finish"])."\n\n";
+							$message .= "Information For Reference:\n\n";
+							$message .= "OLD Event Information:\n";
+							$message .= "Event Title:\t".$event_info["event_title"]."\n";
+							$message .= "Region:\t\t".get_region_name($event_info["region_id"])."\n";
+							$message .= "Start Date:\t".date(DEFAULT_DATE_FORMAT, $event_info["event_start"])."\n";
+							$message .= "Finish Date:\t".date(DEFAULT_DATE_FORMAT, $event_info["event_finish"])."\n\n";
+							$message .= "NEW Event Information:\n";
+							$message .= "Event Title:\t".html_decode($result["event_title"])."\n";
+							$message .= "Region:\t\t".$result["region_name"]."\n";
+							$message .= "Start Date:\t".date(DEFAULT_DATE_FORMAT, $result["event_start"])."\n";
+							$message .= "Finish Date:\t".date(DEFAULT_DATE_FORMAT, $result["event_finish"])."\n\n";
+							if(($apartments) && ($assigned_apartments = @count($apartments))) {
+								$message .= "Apartment".(($assigned_apartments != 1) ? "s" : "")." ".$whole_name." was removed from:\n";
+								foreach($apartments as $apartment) {
+									$message .= "Apartment Title:\t".$apartment["apartment_title"]."\n";
+									$message .= "Inhabiting Start:\t".date(DEFAULT_DATE_FORMAT, $apartment["inhabiting_start"])."\n";
+									$message .= "Inhabiting Finish:\t".date(DEFAULT_DATE_FORMAT, $apartment["inhabiting_finish"])."\n\n";
+								}
 							}
-						}
-						$message .= "=======================================================\n\n";
-						$message .= "Updated Date:\t".date("r", time())."\n";
-						$message .= "Update By:\t".$_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]." (".$_SESSION["details"]["id"].")\n";
-					break;
-				}
-	
-				$mail = new Zend_Mail();
-				$mail->addHeader("X-Originating-IP", $_SERVER["REMOTE_ADDR"]);
-				$mail->addHeader("X-Section", "Clerkship Notify System",true);
-				$mail->clearFrom();
-				$mail->clearSubject();
-				$mail->setFrom($AGENT_CONTACTS["agent-notifications"]["email"], APPLICATION_NAME.' Clerkship System');
-				$mail->setSubject("MEdTech Clerkship System - ".ucwords($action)." Event");
-				$mail->setBodyText($message);
-				$mail->clearRecipients();
-				$mail->addTo($AGENT_CONTACTS["agent-regionaled"]["email"], $AGENT_CONTACTS["agent-regionaled"]["name"]);
-				$sent = true;
-				try {
-					$mail->send();
-				}
-				catch (Exception $e) {
-					$sent = false;
-				}
-				if($sent) {
-					return true;
+							$message .= "=======================================================\n\n";
+							$message .= "Deletion Date:\t".date("r", time())."\n";
+							$message .= "Deleted By:\t".$_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]." (".$_SESSION["details"]["id"].")\n";
+						break;
+						case "change-non-critical" :
+						case "updated" :
+						default :
+							$message  = "Attention ".$AGENT_CONTACTS["agent-regionaled"]["name"].",\n\n";
+							$message .= $_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]." has updated an event in ".$whole_name."'s ";
+							$message .= "clerkship schedule, to which you had previously assigned housing.\n\n";
+							$message .= "Important:\n";
+							$message .= "This update does not affect the date or region of this event, as such this change is considered non-critical ";
+							$message .= "and no action is required on your part.\n\n";
+							$message .= "Information For Reference:\n\n";
+							$message .= "OLD Event Information:\n";
+							$message .= "Event Title:\t".$event_info["event_title"]."\n";
+							$message .= "Region:\t\t".get_region_name($event_info["region_id"])."\n";
+							$message .= "Start Date:\t".date(DEFAULT_DATE_FORMAT, $event_info["event_start"])."\n";
+							$message .= "Finish Date:\t".date(DEFAULT_DATE_FORMAT, $event_info["event_finish"])."\n\n";
+							$message .= "NEW Event Information:\n";
+							$message .= "Event Title:\t".html_decode($result["event_title"])."\n";
+							$message .= "Region:\t\t".$result["region_name"]."\n";
+							$message .= "Start Date:\t".date(DEFAULT_DATE_FORMAT, $result["event_start"])."\n";
+							$message .= "Finish Date:\t".date(DEFAULT_DATE_FORMAT, $result["event_finish"])."\n\n";
+							if(($apartments) && ($assigned_apartments = @count($apartments))) {
+								$message .= "Apartment".(($assigned_apartments != 1) ? "s" : "")." ".$whole_name." is assigned to:\n";
+								foreach($apartments as $apartment) {
+									$message .= "Apartment Title:\t".$apartment["apartment_title"]."\n";
+									$message .= "Inhabiting Start:\t".date(DEFAULT_DATE_FORMAT, $apartment["inhabiting_start"])."\n";
+									$message .= "Inhabiting Finish:\t".date(DEFAULT_DATE_FORMAT, $apartment["inhabiting_finish"])."\n\n";
+								}
+							}
+							$message .= "=======================================================\n\n";
+							$message .= "Updated Date:\t".date("r", time())."\n";
+							$message .= "Update By:\t".$_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]." (".$_SESSION["details"]["id"].")\n";
+						break;
+					}
+		
+					$mail = new Zend_Mail();
+					$mail->addHeader("X-Originating-IP", $_SERVER["REMOTE_ADDR"]);
+					$mail->addHeader("X-Section", "Clerkship Notify System",true);
+					$mail->clearFrom();
+					$mail->clearSubject();
+					$mail->setFrom($AGENT_CONTACTS["agent-notifications"]["email"], APPLICATION_NAME.' Clerkship System');
+					$mail->setSubject("MEdTech Clerkship System - ".ucwords($action)." Event");
+					$mail->setBodyText($message);
+					$mail->clearRecipients();
+					$mail->addTo($AGENT_CONTACTS["agent-regionaled"]["email"], $AGENT_CONTACTS["agent-regionaled"]["name"]);
+					$sent = true;
+					try {
+						$mail->send();
+					}
+					catch (Exception $e) {
+						$sent = false;
+					}
+					if($sent) {
+						return true;
+					} else {
+						system_log_data("error", "Unable to send ".$action." notification to regional education. PHPMailer said: ".$mail->ErrorInfo);
+		
+						return false;
+					}
 				} else {
-					system_log_data("error", "Unable to send ".$action." notification to regional education. PHPMailer said: ".$mail->ErrorInfo);
-	
-					return false;
+					// No need to notify Regional Education because the event doesn't have housing assigned yet, just return true.
+					return true;
 				}
 			} else {
 				// No need to notify Regional Education because the event is already over, just return true.

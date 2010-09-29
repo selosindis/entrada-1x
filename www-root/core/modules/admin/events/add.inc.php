@@ -46,7 +46,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 	$PROCESSED["associated_faculty"]	= array();
 	$PROCESSED["event_audience_type"]	= "grad_year";
-	$PROCESSED["associated_grad_years"]	= "";
+	$PROCESSED["associated_grad_year"]	= "";
 	$PROCESSED["associated_group_ids"]	= array();
 	$PROCESSED["associated_proxy_ids"]	= array();
 	$PROCESSED["event_types"]			= array();
@@ -84,29 +84,17 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			 */
 			if(isset($_POST["event_audience_type"])) {
 				$PROCESSED["event_audience_type"] = clean_input($_POST["event_audience_type"], array("page_url"));
-
 				switch($PROCESSED["event_audience_type"]) {
 					case "grad_year" :
-					/**
-					 * Required field "associated_grad_years" / Graduating Year
-					 * This data is inserted into the event_audience table as grad_year.
-					 */
-						if((isset($_POST["associated_grad_years"]))) {
-							$associated_grad_years = explode(',', $_POST["associated_grad_years"]);
-							if((isset($associated_grad_years)) && (is_array($associated_grad_years)) && (count($associated_grad_years))) {
-								foreach($associated_grad_years as $year) {
-									if($year = clean_input($year, array("trim", "int"))) {
-										$PROCESSED["associated_grad_years"][] = $year;
-									}
-								}
-								if(!count($PROCESSED["associated_grad_years"])) {
-									$ERROR++;
-									$ERRORSTR[] = "You have chosen <strong>Entire Class Event</strong> as an <strong>Event Audience</strong> type, but have not selected any graduating years.";
-								}
-							} else {
-								$ERROR++;
-								$ERRORSTR[] = "You have chosen <strong>Entire Class Event</strong> as an <strong>Event Audience</strong> type, but have not selected any graduating years.";
-							}
+						/**
+						 * Required field "associated_grad_year" / Graduating Year
+						 * This data is inserted into the event_audience table as grad_year.
+						 */
+						if (isset($_POST["associated_grad_year"]) && $year = clean_input($_POST["associated_grad_year"], array("trim", "int"))) {
+							$PROCESSED["associated_grad_year"] = $year;
+						} else {
+							$ERROR++;
+							$ERRORSTR[] = "You have chosen <strong>Entire Class Event</strong> as an <strong>Event Audience</strong> type, but have not selected a graduating year.";
 						}
 
 						break;
@@ -320,14 +308,12 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							 * If there are any graduating years associated with this event,
 							 * add it to the event_audience table.
 							 */
-								if($PROCESSED["associated_grad_years"]) {
-									foreach($PROCESSED["associated_grad_years"] as $year) {
-										if(!$db->AutoExecute("event_audience", array("event_id" => $EVENT_ID, "audience_type" => "grad_year", "audience_value" => $year, "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT")) {
-											$ERROR++;
-											$ERRORSTR[] = "There was an error while trying to attach the selected <strong>Graduating Year</strong> to this event.<br /><br />The system administrator was informed of this error; please try again later.";
+								if($PROCESSED["associated_grad_year"]) {
+									if(!$db->AutoExecute("event_audience", array("event_id" => $EVENT_ID, "audience_type" => "grad_year", "audience_value" => $PROCESSED["associated_grad_year"], "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT")) {
+										$ERROR++;
+										$ERRORSTR[] = "There was an error while trying to attach the selected <strong>Graduating Year</strong> to this event.<br /><br />The system administrator was informed of this error; please try again later.";
 
-											application_log("error", "Unable to insert a new event_audience record while adding a new event. Database said: ".$db->ErrorMsg());
-										}
+										application_log("error", "Unable to insert a new event_audience record while adding a new event. Database said: ".$db->ErrorMsg());
 									}
 								}
 								break;

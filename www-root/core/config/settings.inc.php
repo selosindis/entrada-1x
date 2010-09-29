@@ -277,7 +277,6 @@ $AGENT_CONTACTS = array();
 $AGENT_CONTACTS["administrator"] = array("name" => $config->admin->firstname." ".$config->admin->lastname, "email" => $config->admin->email);
 $AGENT_CONTACTS["general-contact"] = array("name" => "Undergraduate Education", "email" => $config->admin->email);
 $AGENT_CONTACTS["agent-feedback"] = array("name" => "System Administrator", "email" => $config->admin->email);
-$AGENT_CONTACTS["agent-anonymous-feedback"] = array("name" => "Dr. Tony Sanfilippo", "email" => "james@jamesellis.ca");
 $AGENT_CONTACTS["agent-notifications"] = array("name" => "Undergraduate Education", "email" => $config->admin->email);
 $AGENT_CONTACTS["agent-clerkship"] = array("name" => "Clerkship Administrator", "email" => $config->admin->email, "director_ids" => array(0));
 $AGENT_CONTACTS["agent-clerkship-international"] = array("name" => "International Clerkship Administrator", "email" => $config->admin->email);

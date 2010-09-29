@@ -1,23 +1,23 @@
 <?php
 return array (
-  'entrada_url' => 'http://jamesellis.ca/entrada/www-root',
-  'entrada_relative' => '/entrada/www-root',
-  'entrada_absolute' => '/Users/jamesellis/Sites/entrada/www-root',
-  'entrada_storage' => '/Users/jamesellis/Sites/entrada/www-root/core/storage',
+  'entrada_url' => 'http://localhost/entrada',
+  'entrada_relative' => '/entrada',
+  'entrada_absolute' => '/Users/username/Sites/entrada',
+  'entrada_storage' => '/Users/username/Sites/entrada/core/storage',
   'database' => array (
     'adapter' => 'mysql',
-    'host' => '127.0.0.1',
-    'username' => 'root',
-    'password' => 'password',
-    'entrada_database' => 'medtech_central',
-    'auth_database' => 'medtech_auth',
-    'clerkship_database' => 'medtech_clerkship'
+    'host' => 'localhost',
+    'username' => 'entrada',
+    'password' => '',
+    'entrada_database' => 'entrada',
+    'auth_database' => 'entrada_auth',
+    'clerkship_database' => 'entrada_clerkship'
   ),
   'admin' => array (
     'firstname' => 'System',
     'lastname' => 'Administrator',
-    'email' => 'me@jamesellis.ca'
+    'email' => 'null@entrada-project.org'
   ),
-  'auth_username' => '30000001',
-  'auth_password' => 'apple123'
+  'auth_username' => '',
+  'auth_password' => ''
 );

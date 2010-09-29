@@ -173,7 +173,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 		usepager: true,
 		showToggleBtn: false,
 		collapseTable: <?php echo ($_SESSION["academic_expand_grid"] == "external_grid" ? "false" : "true"); ?>,
-		title: 'A. Service Internal to Queen\'s University',
+		title: 'B. Service External to Queen\'s University',
 		useRp: true,
 		rp: 15,
 		showTableToggleBtn: true,

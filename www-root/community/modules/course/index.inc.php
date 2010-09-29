@@ -96,7 +96,7 @@ if ($community_courses) {
 					 *  If the user is trying to view their own photo, or
 					 *  If the proxy_id has their privacy set to "Any Information"
 					 */
-					if ((@file_exists(STORAGE_USER_PHOTOS."/".$result["id"]."-official")) && ($ENTRADA_ACL->amIAllowed(new PhotoResource($result["id"], (int) $result["privacy_level"], "official"), "read"))) {
+					if ((@file_exists(STORAGE_USER_PHOTOS."/".$result["id"]."-official")) && $ENTRADA_ACL && ($ENTRADA_ACL->amIAllowed(new PhotoResource($result["id"], (int) $result["privacy_level"], "official"), "read"))) {
 						$offical_file_active	= true;
 					}
 
@@ -107,7 +107,7 @@ if ($community_courses) {
 					 */
 					$query			= "SELECT `photo_active` FROM `".AUTH_DATABASE."`.`user_photos` WHERE `photo_type` = '1' AND `photo_active` = '1' AND `proxy_id` = ".$db->qstr($result["id"]);
 					$photo_active	= $db->GetOne($query);
-					if ((@file_exists(STORAGE_USER_PHOTOS."/".$result["id"]."-upload")) && ($photo_active) && ($ENTRADA_ACL->amIAllowed(new PhotoResource($result["id"], (int) $result["privacy_level"], "upload"), "read"))) {
+					if ((@file_exists(STORAGE_USER_PHOTOS."/".$result["id"]."-upload")) && $photo_active && $ENTRADA_ACL && ($ENTRADA_ACL->amIAllowed(new PhotoResource($result["id"], (int) $result["privacy_level"], "upload"), "read"))) {
 						$uploaded_file_active = true;
 					}
 
@@ -200,8 +200,6 @@ if ($community_courses) {
 				}
 			}
 
-
-
 			$query = "	SELECT b.*, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, c.`account_active`, c.`access_starts`, c.`access_expires`, c.`last_login`, c.`role`, c.`group`
 						FROM `courses` AS a
 						JOIN `".AUTH_DATABASE."`.`user_data` AS b
@@ -236,7 +234,7 @@ if ($community_courses) {
 					 *  If the user is trying to view their own photo, or
 					 *  If the proxy_id has their privacy set to "Any Information"
 					 */
-					if ((@file_exists(STORAGE_USER_PHOTOS."/".$result["id"]."-official")) && ($ENTRADA_ACL->amIAllowed(new PhotoResource($result["id"], (int) $result["privacy_level"], "official"), "read"))) {
+					if ((@file_exists(STORAGE_USER_PHOTOS."/".$result["id"]."-official")) && $ENTRADA_ACL && ($ENTRADA_ACL->amIAllowed(new PhotoResource($result["id"], (int) $result["privacy_level"], "official"), "read"))) {
 						$offical_file_active	= true;
 					}
 
@@ -247,7 +245,7 @@ if ($community_courses) {
 					 */
 					$query			= "SELECT `photo_active` FROM `".AUTH_DATABASE."`.`user_photos` WHERE `photo_type` = '1' AND `photo_active` = '1' AND `proxy_id` = ".$db->qstr($result["id"]);
 					$photo_active	= $db->GetOne($query);
-					if ((@file_exists(STORAGE_USER_PHOTOS."/".$result["id"]."-upload")) && ($photo_active) && ($ENTRADA_ACL->amIAllowed(new PhotoResource($result["id"], (int) $result["privacy_level"], "upload"), "read"))) {
+					if ((@file_exists(STORAGE_USER_PHOTOS."/".$result["id"]."-upload")) && $photo_active && $ENTRADA_ACL && ($ENTRADA_ACL->amIAllowed(new PhotoResource($result["id"], (int) $result["privacy_level"], "upload"), "read"))) {
 						$uploaded_file_active = true;
 					}
 
@@ -376,7 +374,7 @@ if ($community_courses) {
 					 *  If the user is trying to view their own photo, or
 					 *  If the proxy_id has their privacy set to "Any Information"
 					 */
-					if ((@file_exists(STORAGE_USER_PHOTOS."/".$result["id"]."-official")) && ($ENTRADA_ACL->amIAllowed(new PhotoResource($result["id"], (int) $result["privacy_level"], "official"), "read"))) {
+					if ((@file_exists(STORAGE_USER_PHOTOS."/".$result["id"]."-official")) && $ENTRADA_ACL && ($ENTRADA_ACL->amIAllowed(new PhotoResource($result["id"], (int) $result["privacy_level"], "official"), "read"))) {
 						$offical_file_active	= true;
 					}
 
@@ -387,7 +385,7 @@ if ($community_courses) {
 					 */
 					$query			= "SELECT `photo_active` FROM `".AUTH_DATABASE."`.`user_photos` WHERE `photo_type` = '1' AND `photo_active` = '1' AND `proxy_id` = ".$db->qstr($result["id"]);
 					$photo_active	= $db->GetOne($query);
-					if ((@file_exists(STORAGE_USER_PHOTOS."/".$result["id"]."-upload")) && ($photo_active) && ($ENTRADA_ACL->amIAllowed(new PhotoResource($result["id"], (int) $result["privacy_level"], "upload"), "read"))) {
+					if ((@file_exists(STORAGE_USER_PHOTOS."/".$result["id"]."-upload")) && $photo_active && $ENTRADA_ACL && ($ENTRADA_ACL->amIAllowed(new PhotoResource($result["id"], (int) $result["privacy_level"], "upload"), "read"))) {
 						$uploaded_file_active = true;
 					}
 
@@ -989,11 +987,25 @@ if ($community_courses) {
 			$results = $db->GetAll($query);
 			if ($results) {
 				echo "<ul class=\"objectives\">\n";
+				$HEAD[] = "
+					<script type=\"text/javascript\" defer=\"defer\">
+					Event.observe(window, 'load', function() {";
 				foreach ($results as $result) {
+					$HEAD[] = "
+						new Control.Modal($('objective-".$result["objective_id"]."-details'), {
+							overlayOpacity:	0.75,
+							closeOnClick:	'overlay',
+							className:		'modal-description',
+							fade:			true,
+							fadeDuration:	0.30
+						});";
 					if ($result["objective_name"]) {
-						echo "<li>".$result["objective_name"]."</li>\n";
+						echo "<li><a id=\"objective-".$result["objective_id"]."-details\" style=\"text-decoration: none;\" href=\"".ENTRADA_URL."/objectives?section=objective-details&api=true&oid=".$result["objective_id"]."&cid=".$COURSE_ID."\">".$result["objective_name"]."</a></li>\n";
 					}
 				}
+				$HEAD[] = "
+					});
+					</script>";
 				echo "</ul>\n";
 			}
 		break;

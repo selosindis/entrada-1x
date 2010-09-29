@@ -439,14 +439,20 @@ function process_user_photo_official($original_file, $proxy_id = 0) {
 	global $VALID_MAX_DIMENSIONS;
 
 	if(!@function_exists("gd_info")) {
+		echo "Error: ".__LINE__;
+
 		return false;
 	}
 
 	if((!@file_exists($original_file)) || (!@is_readable($original_file))) {
+		echo "Error: ".__LINE__;
+
 		return false;
 	}
 
 	if(!$proxy_id = (int) $proxy_id) {
+		echo "Error: ".__LINE__;
+
 		return false;
 	}
 
@@ -474,6 +480,8 @@ function process_user_photo_official($original_file, $proxy_id = 0) {
 					$original_img_resource = @imagecreatefromgif($original_file);
 				break;
 				default :
+					echo "Error: ".__LINE__;
+
 					return false;
 				break;
 			}
@@ -501,21 +509,29 @@ function process_user_photo_official($original_file, $proxy_id = 0) {
 							case "image/pjpeg":
 							case "image/jpeg":
 							case "image/jpg":
-								if(!@imagejpeg($new_img_resource, $new_file, $img_quality)) {
+								if(!imagejpeg($new_img_resource, $new_file, $img_quality)) {
+									echo "Error: ".__LINE__;
+
 									return false;
 								}
 							break;
 							case "image/png":
 								if(!@imagepng($new_img_resource, $new_file)) {
+									echo "Error: ".__LINE__;
+
 									return false;
 								}
 							break;
 							case "image/gif":
 								if(!@imagegif($new_img_resource, $new_file)) {
+									echo "Error: ".__LINE__;
+
 									return false;
 								}
 							break;
 							default :
+								echo "Error: ".__LINE__;
+
 								return false;
 							break;
 						}
@@ -528,12 +544,18 @@ function process_user_photo_official($original_file, $proxy_id = 0) {
 						@imagedestroy($original_img_resource);
 						@imagedestroy($new_img_resource);
 					} else {
+						echo "Error: ".__LINE__;
+
 						return false;
 					}
 				} else {
+					echo "Error: ".__LINE__;
+
 					return false;
 				}
 			} else {
+				echo "Error: ".__LINE__;
+
 				return false;
 			}
 		} else {
@@ -547,6 +569,8 @@ function process_user_photo_official($original_file, $proxy_id = 0) {
 				$new_file_width		= $original_file_width;
 				$new_file_height	= $original_file_height;
 			} else {
+				echo "Error: ".__LINE__;
+
 				return false;
 			}
 		}
@@ -570,6 +594,8 @@ function process_user_photo_official($original_file, $proxy_id = 0) {
 					$original_img_resource = @imagecreatefromgif($new_file);
 				break;
 				default :
+					echo "Error: ".__LINE__;
+
 					return false;
 				break;
 			}
@@ -607,20 +633,28 @@ function process_user_photo_official($original_file, $proxy_id = 0) {
 						case "image/jpeg":
 						case "image/jpg":
 							if(!@imagejpeg($new_img_resource, $new_file."-thumbnail", $img_quality)) {
+								echo "Error: ".__LINE__;
+
 								return false;
 							}
 						break;
 						case "image/png":
 							if(!@imagepng($new_img_resource, $new_file."-thumbnail")) {
+								echo "Error: ".__LINE__;
+
 								return false;
 							}
 						break;
 						case "image/gif":
 							if(!@imagegif($new_img_resource, $new_file."-thumbnail")) {
+								echo "Error: ".__LINE__;
+
 								return false;
 							}
 						break;
 						default :
+							echo "Error: ".__LINE__;
+
 							return false;
 						break;
 					}
@@ -643,12 +677,18 @@ function process_user_photo_official($original_file, $proxy_id = 0) {
 					return true;
 				}
 			} else {
+				echo "Error: ".__LINE__;
+
 				return false;
 			}
 		} else {
+			echo "Error: ".__LINE__;
+
 			return false;
 		}
 	} else {
+		echo "Error: ".__LINE__;
+
 		return false;
 	}
 }

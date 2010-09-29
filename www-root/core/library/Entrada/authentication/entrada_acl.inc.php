@@ -82,7 +82,8 @@ class Entrada_ACL extends ACL_Factory {
 									"notifications",
 									"reports"
 									),
-			"annualreport"
+			"annualreport",
+			"mydepartment"
 		)
 	);
 	/**
@@ -1161,7 +1162,7 @@ class GradebookResource extends CourseResource {
 }
 
 /**
- * Matt in Dev.
+ * Creates a photo resource.
  */
 class PhotoResource extends EntradaAclResource {
 	var $proxy_id;
@@ -1453,5 +1454,28 @@ class EntradaUser implements Zend_Acl_Role_Interface {
 	}
 	function getRoleId() {
 		return $this->userid;
+	}
+}
+
+/**
+ * Department Head Assertion Class
+ *
+ * Checks to see if the faculty department head's proxy_id is in the department_heads table
+ * which therefore gives them access to the Department Reports section within My Reports.
+ */
+class DepartmentHeadAssertion implements Zend_Acl_Assert_Interface {
+	public function assert(Zend_Acl $acl, Zend_Acl_Role_Interface $role = null, Zend_Acl_Resource_Interface $resource = null, $privilege = null) {
+		global $db;
+		
+		// This was done so that the correct proxy_id was being used as $role->details["id"] was not using the "masked" id.
+		// I'm sure there is a way to get this ID without using the SESSION but I needed to get this into production ASAP.
+		// I will fix this as soon as I find out how to access the masked ID without going through the session.
+		if (!(is_department_head($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]))) {
+			return false;
+		} else {
+			return true;
+		}
+		
+		return false;
 	}
 }

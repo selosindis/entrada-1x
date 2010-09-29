@@ -44,7 +44,8 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 					FROM `".AUTH_DATABASE."`.`user_data` AS a
 					LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 					ON b.`user_id` = a.`id`
-					WHERE CONCAT_WS(', ', a.`lastname`, a.`firstname`) LIKE ".$db->qstr("%".$fullname."%");
+					WHERE CONCAT_WS(', ', a.`lastname`, a.`firstname`) LIKE ".$db->qstr("%".$fullname."%")."
+					AND (b.`group` <> 'guest')";
 		switch ($type) {
 			case "faculty" :
 				$query .= "	AND (b.`group` = 'faculty' OR (b.`group` = 'resident' AND b.`role` = 'lecturer'))";

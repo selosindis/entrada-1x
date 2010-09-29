@@ -412,19 +412,30 @@ switch($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_
 					<select id="department" name="d" style="width: 95%" onchange="$('department-change-form').submit()">
 					<option value="">-- Select the Department to Browse --</option>
 					<?php
-					$query		= "
-								SELECT a.`department_id`, a.`department_title`, a.`organisation_id`, b.`entity_title`, c.`organisation_title`
+					$query = "	SELECT a.`department_id`, a.`department_title`, a.`organisation_id`, b.`entity_title`, c.`organisation_title`
 								FROM `".AUTH_DATABASE."`.`departments` AS a
 								LEFT JOIN `".AUTH_DATABASE."`.`entity_type` AS b
 								ON a.`entity_id` = b.`entity_id`
 								LEFT JOIN `".AUTH_DATABASE."`.`organisations` AS c
 								ON a.`organisation_id` = c.`organisation_id`
+								WHERE a.`department_active` = '1'
 								ORDER BY c.`organisation_title` ASC, a.`department_title`";
-					$results	= $db->GetAll($query);
-					if($results) {
-						foreach($results as $result) {
-							echo "<option value=\"".(int) $result["department_id"]."\"".(((isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["department_id"])) && ((int) $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["department_id"]) && ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["department_id"] == $result["department_id"])) ? " selected=\"selected\"" : "").">".html_encode(limit_chars($result["organisation_title"], 11)).": ".html_encode($result["department_title"])." ".(($result["entity_title"]) ? "(".html_encode($result["entity_title"]).")" : "")."</option>\n";
+					$results = $db->GetAll($query);
+					if ($results) {
+						$organisation_title = "";
+
+						foreach ($results as $key => $result) {
+							if ($organisation_title != $result["organisation_title"]) {
+								if ($key) {
+									echo "</optgroup>";
+								}
+								echo "<optgroup label=\"".html_encode($result["organisation_title"])."\">";
+								
+								$organisation_title = $result["organisation_title"];
+							}
+							echo "<option value=\"".(int) $result["department_id"]."\"".(((isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["department_id"])) && ((int) $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["department_id"]) && ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["department_id"] == $result["department_id"])) ? " selected=\"selected\"" : "").">".html_encode($result["department_title"])."</option>\n";
 						}
+						echo "</optgroup>";
 					}
 					?>
 					</select>
@@ -446,57 +457,67 @@ switch($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_
 			$sidebar_html .= "</ul>\n";
 	
 			new_sidebar_item("Rows per page", $sidebar_html, "sort-results", "open");
-?>
-			<h1>Clerkship Rotations</h1>
-			<form id="rotation-logbook-form" action="<?php echo ENTRADA_URL; ?>/clerkship" method="get">
-			<table style="width: 100%" cellspacing="1" cellpadding="2" border="0" summary="Select Rotation">
-			<colgroup>
-				<col style="width: 3%" />
-				<col style="width: 25%" />
-				<col style="width: 72%" />
-			</colgroup>
-			<tbody>
-				<tr>
-					<td>&nbsp;</td>
-					<td><label for="rotation" class="form-required">Select Rotation:</label></td>
-					<td>
-						<select id="rotation" name="r" style="width: 95%" onchange="$('rotation-logbook-form').submit()">
-						<option value="">-- Select the Rotation to View --</option>
-						<?php
-						$query		= "	SELECT a.`rotation_id`, a.`rotation_title`, a.`course_id`, b.`organisation_id`
-										FROM `".CLERKSHIP_DATABASE."`.`global_lu_rotations` AS a
-										LEFT JOIN `".DATABASE_NAME."`.`courses` AS b
-										ON a.`course_id` = b.`course_id`
-										WHERE b.`course_active` = '1'
-										ORDER BY a.`rotation_id`";
-						
-						$results	= $db->GetAll($query); 
-						if($results) {
-							foreach($results as $result) {
-								if (!(stristr($result["rotation_title"], "ricc") === FALSE)) { // Look for RICC
-								    $result["rotation_title"] = 'Rural Integrated Clerkship';
-								    $RICC = $result["rotation_id"];
-								}
-								if ($ENTRADA_ACL->amIAllowed(new CourseContentResource($result["course_id"], $result["organisation_id"]), 'update')) {
-									echo "<option value=\"".(int) $result["rotation_id"]."\"".(( ($rotation_id == $result["rotation_id"])) ? " selected=\"selected\"" : "").">".html_encode($result["rotation_title"])."</option>\n";
-								}
-							}
-						}
-						?>
-						</select>
-					</td>
 
-				</tr>
-			</tbody>
-			</table>
-			</form>
-			<?php
+			$query = "	SELECT a.`rotation_id`, a.`rotation_title`, a.`course_id`, b.`organisation_id`
+						FROM `".CLERKSHIP_DATABASE."`.`global_lu_rotations` AS a
+						LEFT JOIN `".DATABASE_NAME."`.`courses` AS b
+						ON a.`course_id` = b.`course_id`
+						WHERE b.`course_active` = '1'
+						ORDER BY a.`rotation_id`";
+			$results = $db->GetAll($query);
+			if ($results) {
+				$rotations = array();
+
+				foreach($results as $result) {
+					if ($ENTRADA_ACL->amIAllowed(new CourseContentResource($result["course_id"], $result["organisation_id"]), 'update')) {
+						$rotations[] = $result;
+					}
+				}
+
+				if (!empty($rotations)) {
+					?>
+					<h1>Clerkship Rotations</h1>
+					<form id="rotation-logbook-form" action="<?php echo ENTRADA_URL; ?>/clerkship" method="get">
+					<table style="width: 100%" cellspacing="1" cellpadding="2" border="0" summary="Select Rotation">
+					<colgroup>
+						<col style="width: 3%" />
+						<col style="width: 25%" />
+						<col style="width: 72%" />
+					</colgroup>
+					<tbody>
+						<tr>
+							<td>&nbsp;</td>
+							<td><label for="rotation" class="form-required">Select Rotation:</label></td>
+							<td>
+								<select id="rotation" name="r" style="width: 95%" onchange="$('rotation-logbook-form').submit()">
+								<option value="">-- Select the Rotation to View --</option>
+								<?php
+								foreach($rotations as $result) {
+									if (!(stristr($result["rotation_title"], "ricc") === FALSE)) { // Look for RICC
+										$result["rotation_title"] = 'Rural Integrated Clerkship';
+										$RICC = $result["rotation_id"];
+									}
+
+									if ($ENTRADA_ACL->amIAllowed(new CourseContentResource($result["course_id"], $result["organisation_id"]), 'update')) {
+										echo "<option value=\"".(int) $result["rotation_id"]."\"".(( ($rotation_id == $result["rotation_id"])) ? " selected=\"selected\"" : "").">".html_encode($result["rotation_title"])."</option>\n";
+									}
+								}
+								?>
+								</select>
+							</td>
+						</tr>
+					</tbody>
+					</table>
+					</form>
+					<?php
+				}
+			}
 		}
 		/**
 		 * If a department is selected, display the schedule.
 		 */
 		if((isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["department_id"])) && ((int) $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["department_id"])) {
-			$department_title = clerkship_department_title($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["department_id"]);
+			$department_title = fetch_department_title($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["department_id"]);
 			?>
 			<h2><?php echo html_encode($department_title); ?></h2>
 			<table style="width: 100%" cellspacing="0" cellpadding="0" border="0" summary="Weekly Student Calendar">
@@ -935,7 +956,7 @@ switch($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_
 															JOIN `".CLERKSHIP_DATABASE."`.`logbook_entries` AS b
 															ON `entry_active` = '1' 
 															AND `proxy_id` = ".$db->qstr($clerks[$i]["id"])."
-															AND a.`lentry_id` = b.`lentry_id
+															AND a.`lentry_id` = b.`lentry_id`
 															WHERE `lprocedure_id` = ".$db->qstr($required_procedure["lprocedure_id"])."
 															GROUP BY `lprocedure_id`";
 												$recorded = $db->CacheGetOne(LONG_CACHE_TIMEOUT, $query);

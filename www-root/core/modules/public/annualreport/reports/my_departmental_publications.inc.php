@@ -26,7 +26,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 } else if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	header("Location: ".ENTRADA_URL.((isset($_SERVER["REQUEST_URI"])) ? "?url=".rawurlencode(clean_input($_SERVER["REQUEST_URI"], array("nows", "url"))) : ""));
 	exit;
-} elseif (!$ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
+} elseif (!$ENTRADA_ACL->amIAllowed('mydepartment', 'read', 'DepartmentHead')) {
 	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/".$MODULE."\\'', 15000)";
 
 	$ERROR++;
@@ -36,7 +36,10 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
-	$BREADCRUMB[]	= array("url" => "", "title" => "My Publications" );
+	$departmentID = is_department_head($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]);
+	$departmentOuput = fetch_department_title($departmentID);
+	
+	$BREADCRUMB[]	= array("url" => "", "title" => "Publications for ".$departmentOuput);
 	
 	function display($results, $db)
     {	
@@ -92,11 +95,6 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 	            if($lastChar == "," || $lastChar == ":") {
 	                $formattedRec = substr($formattedRec, 0, $lengthOfRec);
 	            }
-	            
-	            $typeDesc = getPublicationTypesSpecificFromID($result["type_id"]);
-	            $roleDesc = getPublicationRoleSpecificFromID($result["role_id"]);
-	            
-	            $formattedRec .=  " <b> - " . $roleDesc . " (" . $typeDesc . ")</b>";
 	        }
 	        $outputArray[$result["status"]][] = $formattedRec;
 	    }
@@ -266,6 +264,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 	if($STEP == 2) {
 		$publicationTypes		= $_POST["type_id"];
 		$dateWhere 				= "";
+		$departmentMembers		= array();
 		
 		if(isset($_POST['start_year']) && $_POST['start_year'] != "") {
 			$startYear = (int)$_POST['start_year'];
@@ -281,13 +280,40 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 		
 		$dateWhere = " AND ((SUBSTRING(status_date, -4, 4) >= $startYear AND SUBSTRING(status_date, -4, 4) <= $endYear) OR status_date IS NULL OR status_date = 00)";
 		
-		echo "<h1 style=\"page-break-before: avoid\">Your Publications</h1>";
+		$listOfDepartmentMembers = array();
+		
+		$departmentOuput = fetch_department_title($departmentID);
+		
+		if($isParentDepartment = fetch_department_children($departmentID)) {
+			foreach($isParentDepartment as $userDepartment) {
+				$thisDept = $userDepartment["department_id"];
+				
+				$departmentQuery .= " OR `dep_id`=".$db->qstr($thisDept);
+			}
+		}
+		$usersInDepartmentQuery = "SELECT DISTINCT `user_id` FROM `".AUTH_DATABASE."`.`user_departments`
+		WHERE `dep_id` = ".$db->qstr($departmentID).$departmentQuery;
+		
+		$departmentMembers = $db->GetAll($usersInDepartmentQuery);
+			
+		foreach($departmentMembers as $departmentMemberValue) {
+			$listOfDepartmentMembers[] = $departmentMemberValue["user_id"];
+		}
+		
+		$listOfDepartmentMembers = implode(",", $listOfDepartmentMembers);
+		
+		if(substr($departmentOuput, -1, 1) == "s") {
+			$departmentOuput = $departmentOuput."'";
+		} else {
+			$departmentOuput = $departmentOuput."'s";
+		}
+		
+		echo "<h1 style=\"page-break-before: avoid\">Department of ".$departmentOuput." Publications</h1>";
 		echo "<div class=\"content-small\" style=\"margin-bottom: 10px\">\n";
 		echo "	<strong>Date Range:</strong> ".$startYear." <strong>to</strong> ".$endYear;
 		echo "</div>";
 	
 		foreach($PROCESSED["type_id"] as $typeID) {
-			
 			switch ($typeID) {
 				case 1:
 				case 4: 
@@ -311,7 +337,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			
 			$query = "SELECT *
 			FROM `".$table."` 
-			WHERE `proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])." 
+			WHERE `proxy_id` IN(".$listOfDepartmentMembers.")
 			AND `type_id` = '$typeID'".$dateWhere;
 			
 			if($results = $db->GetAll($query)) {

@@ -54,25 +54,15 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			font-weight:	bold;
 		}
 	</style>
-	<h1>My Reports</h1>
+	<h1>Tools</h1>
 	
-	<h2 style="color: #669900">Research Reports</h2>
+	<h2 style="color: #669900">Tools</h2>
 	<ol class="system-reports">
 		<li>
-			<a href="<?php echo ENTRADA_URL; ?>/annualreport/reports?section=my_publications">My Publications</a><br />
-			A report that shows all of the publications you've for a specific date range.
+			<a href="<?php echo ENTRADA_URL; ?>/annualreport/tools?section=copy_forward">Copy Forward</a><br />
+			Use this to copy records from one year to the next.
 		</li>
 	</ol>
-	<?php 
-	if($ENTRADA_ACL->amIAllowed('mydepartment', 'read', 'DepartmentHead')) { ?>
-	<h2 style="color: #669900">My Department Reports</h2>
-	<ol class="system-reports">
-		<li>
-			<a href="<?php echo ENTRADA_URL; ?>/annualreport/reports?section=my_departmental_publications">Publications</a><br />
-			A report that shows all of the publications in your department for a specific date range.
-		</li>
-	</ol>
-	<?php 
-	} 
+	<?php
 }
 ?>

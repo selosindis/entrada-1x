@@ -40,130 +40,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
-	if ($COURSE_ID && $COMPETENCY_ID) {
-		$BREADCRUMB[] = array("url" => "", "title" => "Course Objectives");
-		?>
-		<style type="text/css">
-		li.pad-top {
-			margin-bottom: 10px;
-		}
-
-		ul.pad {
-			padding-top: 10px;
-			padding-bottom: 10px;
-		}
-		</style>
-		<?php
-		$objective_ids_string = objectives_build_course_objectives_id_string($COURSE_ID);
-		$competency_ids_string = objectives_build_objective_descendants_id_string($COMPETENCY_ID);
-
-		$primary = $secondary = $tertiary = array();
-
-		$query = "	SELECT * FROM `course_objectives` AS a
-					JOIN `global_lu_objectives` AS b
-					ON a.`objective_id` = b.`objective_id`
-					WHERE a.`course_id` = ".$db->qstr($COURSE_ID)."
-					AND (
-						b.`objective_id` IN (".$competency_ids_string.")
-						AND b.`objective_parent` NOT IN (".$objective_ids_string.")
-					)
-					AND a.`objective_type` = 'course'
-					ORDER BY a.`importance` ASC";
-		$objectives = $db->GetAll($query);
-		if ($objectives) {
-			foreach ($objectives AS $objective) {
-				$query = "	SELECT a.*, b.`objective_details` FROM `global_lu_objectives` AS a
-							LEFT JOIN `course_objectives` AS b
-							ON a.`objective_id` = b.`objective_id`
-							AND b.`course_id` = ".$db->qstr($COURSE_ID)."
-							AND b.`objective_type` = 'course'
-							WHERE a.`objective_parent` = ".$db->qstr($objective["objective_id"])."
-							ORDER BY a.`objective_order` ASC";
-				$child_objectives = $db->GetAll($query);
-				if ($objective["importance"] == 1) {
-					$primary[$objective["objective_id"]]["children"] = array();
-				} elseif ($objective["importance"] == 2) {
-					$secondary[$objective["objective_id"]]["children"] = array();
-				} elseif ($objective["importance"] == 3) {
-					$tertiary[$objective["objective_id"]]["children"] = array();
-				}
-
-				foreach ($child_objectives as $child_objective) {
-					if ($objective["importance"] == 1) {
-						$primary[$objective["objective_id"]]["children"][] = $child_objective;
-					} elseif ($objective["importance"] == 2) {
-						$secondary[$objective["objective_id"]]["children"][] = $child_objective;
-					} elseif ($objective["importance"] == 3) {
-						$tertiary[$objective["objective_id"]]["children"][] = $child_objective;
-					}
-				}
-
-				if ($objective["importance"] == 1) {
-					$primary[$objective["objective_id"]]["objective"] = $objective;
-				} elseif ($objective["importance"] == 2) {
-					$secondary[$objective["objective_id"]]["objective"] = $objective;
-				} elseif ($objective["importance"] == 3) {
-					$tertiary[$objective["objective_id"]]["objective"] = $objective;
-				}
-			}
-		}
-		
-		$competency = $db->GetRow("SELECT * FROM `global_lu_objectives` WHERE `objective_id` = ".$db->qstr($COMPETENCY_ID));
-		$course = $db->GetRow("SELECT * FROM `courses` WHERE `course_id` = ".$db->qstr($COURSE_ID));
-
-		echo "<h1>".html_encode($course["course_name"])."</h1>";
-		echo "<h2>".html_encode($competency["objective_name"])." Objectives</h2>\n";
-
-		if ($primary) {
-			echo "<h3>Primary Objectives</h3>\n";
-			echo "<ul>\n";
-			foreach ($primary as $objective) {
-				echo "<li>\n<a href=\"".ENTRADA_URL."/objectives?cid=".$COURSE_ID."&oid=".$objective["objective"]["objective_id"]."\">".$objective["objective"]["objective_name"]."</a><div class=\"content-small\">".(isset($objective["objective"]["objective_details"]) && $objective["objective"]["objective_details"] ? $objective["objective"]["objective_details"] : $objective["objective"]["objective_description"])."</div>\n";
-				if (isset($objective["children"]) && count($objective["children"])) {
-					echo "<ul class=\"pad\">\n";
-					foreach ($objective["children"] as $objective_child) {
-						echo "<li class=\"pad-top\"><a href=\"".ENTRADA_URL."/objectives?cid=".$COURSE_ID."&oid=".$objective_child["objective_id"]."\">".$objective_child["objective_name"]."</a><div class=\"content-small\">".(isset($objective_child["objective_details"]) && $objective_child["objective_details"] ? $objective_child["objective_details"] : $objective_child["objective_description"])."</div></li>\n";
-					}
-					echo "</ul>\n";
-				}
-				echo "</li>\n";
-			}
-			echo "</ul>\n";
-		}
-		if ($secondary) {
-			echo "<h3>Secondary Objectives</h3>\n";
-			echo "<ul>\n";
-			foreach ($secondary as $objective) {
-				echo "<li>\n<a href=\"".ENTRADA_URL."/objectives?cid=".$COURSE_ID."&oid=".$objective["objective"]["objective_id"]."\">".$objective["objective"]["objective_name"]."</a><div class=\"content-small\">".(isset($objective["objective"]["objective_details"]) && $objective["objective"]["objective_details"] ? $objective["objective"]["objective_details"] : $objective["objective"]["objective_description"])."</div>\n";
-				if (isset($objective["children"]) && count($objective["children"])) {
-					echo "<ul class=\"pad\">\n";
-					foreach ($objective["children"] as $objective_child) {
-						echo "<li class=\"pad-top\"><a href=\"".ENTRADA_URL."/objectives?cid=".$COURSE_ID."&oid=".$objective_child["objective_id"]."\">".$objective_child["objective_name"]."</a><div class=\"content-small\">".(isset($objective_child["objective_details"]) && $objective_child["objective_details"] ? $objective_child["objective_details"] : $objective_child["objective_description"])."</div></li>\n";
-					}
-					echo "</ul>\n";
-				}
-				echo "</li>\n";
-			}
-			echo "</ul>\n";
-		}
-		if ($tertiary) {
-			echo "<h3>Tertiary Objectives</h3>\n";
-			echo "<ul>\n";
-			foreach ($tertiary as $objective) {
-				echo "<li>\n<a href=\"".ENTRADA_URL."/objectives?cid=".$COURSE_ID."&oid=".$objective["objective"]["objective_id"]."\"><a href=\"".ENTRADA_URL."/objectives?cid=".$COURSE_ID."&oid=".$objective["objective"]["objective_id"]."\">".$objective["objective"]["objective_name"]."</a><div class=\"content-small\">".(isset($objective["objective"]["objective_details"]) && $objective["objective"]["objective_details"] ? $objective["objective"]["objective_details"] : $objective["objective"]["objective_description"])."</div>\n";
-				if (isset($objective["children"]) && count($objective["children"])) {
-					echo "<ul class=\"pad\">\n";
-					foreach ($objective["children"] as $objective_child) {
-						echo "<li class=\"pad-top\"><a href=\"".ENTRADA_URL."/objectives?cid=".$COURSE_ID."&oid=".$objective_child["objective_id"]."\"><a href=\"".ENTRADA_URL."/objectives?cid=".$COURSE_ID."&oid=".$objective_child["objective_id"]."\">".$objective_child["objective_name"]."</a><div class=\"content-small\">".(isset($objective_child["objective_details"]) && $objective_child["objective_details"] ? $objective_child["objective_details"] : $objective_child["objective_description"])."</div></li>\n";
-					}
-					echo "</ul>\n";
-				}
-				echo "</li>\n";
-			}
-			echo "</ul>\n";
-		}
-	} elseif ($COURSE_ID && $OBJECTIVE_ID) {
-		$BREADCRUMB[] = array("url" => ENTRADA_RELATIVE."/objectives", "title" => "Course Objectives");
+	if ((isset($COURSE_ID) && $COURSE_ID) && (isset($OBJECTIVE_ID) && $OBJECTIVE_ID)) {
+		$BREADCRUMB[] = array("url" => ENTRADA_RELATIVE."/courses/objectives?section=course-objectives&cid=".$COURSE_ID, "title" => "Course Objectives");
 		$BREADCRUMB[] = array("url" => "", "title" => "Learning Events");
 		
 		/**
@@ -277,10 +155,10 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 			 * Sidebar item that will provide another method for sorting, ordering, etc.
 			 */
 			$sidebar_html = "<ul class=\"menu\">\n";
-			$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) == "5") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/objectives?".replace_query(array("pp" => "5"))."\" title=\"Display 5 Rows Per Page\">5 rows per page</a></li>\n";
-			$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) == "15") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/objectives?".replace_query(array("pp" => "15"))."\" title=\"Display 15 Rows Per Page\">15 rows per page</a></li>\n";
-			$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) == "25") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/objectives?".replace_query(array("pp" => "25"))."\" title=\"Display 25 Rows Per Page\">25 rows per page</a></li>\n";
-			$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) == "50") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/objectives?".replace_query(array("pp" => "50"))."\" title=\"Display 50 Rows Per Page\">50 rows per page</a></li>\n";
+			$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) == "5") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/courses/objectives?".replace_query(array("pp" => "5"))."\" title=\"Display 5 Rows Per Page\">5 rows per page</a></li>\n";
+			$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) == "15") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/courses/objectives?".replace_query(array("pp" => "15"))."\" title=\"Display 15 Rows Per Page\">15 rows per page</a></li>\n";
+			$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) == "25") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/courses/objectives?".replace_query(array("pp" => "25"))."\" title=\"Display 25 Rows Per Page\">25 rows per page</a></li>\n";
+			$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) == "50") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/courses/objectives?".replace_query(array("pp" => "50"))."\" title=\"Display 50 Rows Per Page\">50 rows per page</a></li>\n";
 			$sidebar_html .= "</ul>\n";
 	
 			new_sidebar_item("Rows per page", $sidebar_html, "sort-results", "open");
@@ -375,91 +253,5 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 			$ERRORSTR[] = "Valid objective and course identifiers are required to view this page, please ensure you have selected a valid objective and try again.";
 			echo display_error();
 		}
-	} else {
-		echo "<h1>Competencies by Course</h1>";
-		$objectives = objectives_build_course_competencies_array();
-		?>
-		<style type="text/css">
-		.title {
-			vertical-align: bottom;
-		}
-		.vertical {
-			-moz-transform:rotate(-90deg); 
-			-webkit-transform: rotate(-90deg);
-			-o-transform: rotate(-90deg);
-			writing-mode: tb-rl;
-			filter: flipv fliph;
-			overflow: visible;
-			white-space: nowrap;
-		}
-		.term {
-			background-color: #EBEBEB;
-		}
-		.middle {
-			vertical-align: middle;
-			width: 25px;
-		}
-		table.tableList tbody tr td.bottom {
-			vertical-align: bottom;
-			padding-bottom: 15px;
-		}
-		.title {
-			border-right: 1px solid #EBEBEB;
-		}
-		.objectives {
-			border-right: 1px solid #EBEBEB;
-		}
-		li {
-			margin-top: 10px;
-		}
-		</style>
-		<table class="tableList" cellspacing="0" summary="List of Objectives">
-			<tbody>
-				<tr style="height: 200px;">
-					<td class="modified">&nbsp;</td>
-					<td class="title" style="padding-bottom: 20px; border-right: none;"><h3>Courses</h3></td>
-					<td class="title" style="padding: 0 0 80px 50px;"><h3 class="vertical">Competencies</h3></td>
-					<?php
-						foreach ($objectives["competencies"] as $competency) {
-							?>
-							<td class="title middle bottom"><div class="vertical"><?php echo $competency ?></div></td>
-							<?php
-						}
-					?>
-				</tr>
-				<?php
-				foreach ($objectives["courses"] as $course_id => $course) {
-					if (isset($course["new_term"]) && $course["new_term"]) {
-						echo "<tr style=\"border-top: 5px solid #EBEBEB;\">";
-					} else {
-						echo "<tr>";
-					}
-					if (isset($course["total_in_term"]) && $course["total_in_term"]) {
-						echo "<td class=\"term\" style=\"border-bottom: 5px solid white;\" rowspan=\"".$course["total_in_term"]."\"><div class=\"vertical\">".$course["term_name"]."</div></td>";
-					}
-					?>
-						<td class="objectives" colspan="2"><?php echo html_encode($course["course_name"]); ?></td>
-						<?php
-						foreach ($course["competencies"] as $COMPETENCY_ID => $competency) {
-							?>
-							<td class="objectives" style="text-align: center;">
-							<?php
-							if ($competency) {
-								echo "<a href=\"".ENTRADA_URL."/objectives?id=".$COMPETENCY_ID."&cid=".$course_id."\" style=\"text-decoration: none;\">".html_encode($competency)."</a>";
-							} else {
-								echo "&nbsp;";
-							}
-							?>
-							</td>
-							<?php
-						}
-						?>
-					</tr>
-					<?php
-				}
-				?>
-			</tbody>
-		</table>
-		<?php
 	}
 }

@@ -1562,7 +1562,7 @@ CREATE TABLE IF NOT EXISTS `courses` (
   `pcoord_id` int(12) unsigned NOT NULL DEFAULT '0',
   `evalrep_id` int(12) unsigned NOT NULL DEFAULT '0',
   `studrep_id` int(12) unsigned NOT NULL DEFAULT '0',
-  `course_name` varchar(64) NOT NULL DEFAULT '',
+  `course_name` varchar(85) NOT NULL DEFAULT '',
   `course_code` varchar(16) NOT NULL DEFAULT '',
   `course_description` text,
   `course_objectives` text,

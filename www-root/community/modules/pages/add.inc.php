@@ -680,8 +680,8 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 								<td><label for="page_visibile" class="form-nrequired">Page Visibility:</label></td>
 								<td>
 									<select id="page_visibile" name="page_visibile">
-										<option value="1"<?php echo (((int)$PROCESSED["page_visible"]) == 1 ? " selected=\"true\"" : ""); ?>>Show this page on menu</option>
-										<option value="0"<?php echo (((int)$PROCESSED["page_visible"]) == 0 ? " selected=\"true\"" : ""); ?>>Hide this page from menu</option>
+										<option value="1"<?php echo (!isset($PROCESSED["page_visible"]) || ((int) $PROCESSED["page_visible"] == 1) ? " selected=\"selected\"" : ""); ?>>Show this page on menu</option>
+										<option value="0"<?php echo (isset($PROCESSED["page_visible"]) && ((int) $PROCESSED["page_visible"] == 0) ? " selected=\"selected\"" : ""); ?>>Hide this page from menu</option>
 									</select>
 								</td>
 							</tr>

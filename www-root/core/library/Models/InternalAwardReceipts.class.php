@@ -53,7 +53,7 @@ class InternalAwardReceipts extends Collection {
 	}
 	static private function getByAward(Award $award) {
 		global $db;
-		$query		= "SELECT a.id as `award_receipt_id`, user_id a.year 
+		$query		= "SELECT a.id as `award_receipt_id`, user_id, a.year 
 				FROM `". DATABASE_NAME ."`.`student_awards_internal` a 
 				WHERE a.`award_id` = ".$db->qstr($award->getID()) ." 
 				order by a.year desc";
@@ -74,7 +74,7 @@ class InternalAwardReceipts extends Collection {
 	
 	static private function getByUser(User $user) {
 		global $db;
-		$query		= "SELECT a.id as `award_receipt_id`, c.id, c.title, c.award_terms, c.disabled, a.year 
+		$query		= "SELECT a.id as `award_receipt_id`, c.id, a.`user_id`, c.title, c.award_terms, c.disabled, a.year 
 				FROM `". DATABASE_NAME ."`.`student_awards_internal` a 
 				left join `". DATABASE_NAME ."`.`student_awards_internal_types` c on c.id = a.award_id 
 				WHERE a.`user_id` = ".$db->qstr($user->getID()) ." 
@@ -88,7 +88,7 @@ class InternalAwardReceipts extends Collection {
 				//$user = new User($result['id'], null, $result['lastname'], $result['firstname']);
 				$award = new InternalAward($result['id'], $result['title'], $result['award_terms'], $result['disabled']);
 				
-				$receipt = new InternalAwardReceipt( $user, $award, $result['award_receipt_id'], $result['year']);
+				$receipt = new InternalAwardReceipt( $result['user_id'], $award, $result['award_receipt_id'], $result['year']);
 				$receipts[] = $receipt;
 			}
 		}

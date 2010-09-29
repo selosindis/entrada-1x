@@ -67,9 +67,14 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 			A teaching report that shows how many hours faculty are teaching in Clinical Skills, Expanded Clinical Skills, PBL, etc.
 		</li>
 		<li>
+			<a href="<?php echo ENTRADA_URL; ?>/admin/reports?section=teaching-report-by-department">Faculty Teaching Report By Department (half days)</a><br />
+			A teaching report that shows how many hours faculty are teaching different event types broken down by department and division.
+		</li>
+		<li>
 			<a href="<?php echo ENTRADA_URL; ?>/admin/reports?section=teaching-faculty-contact-details">Teaching Faculty Contact Details</a><br />
 			Contact information for teachers who have taught between the selected time period.
 		</li>
+		
 	</ol>
 	
 	<h2 style="color: #669900">Elective Reports</h2>

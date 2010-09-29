@@ -1,4 +1,5 @@
 <?php
+ini_set("display_errors", 1);
 /**
  * Entrada [ http://www.entrada-project.org ]
  *
@@ -516,6 +517,10 @@ require_once(ENTRADA_ABSOLUTE."/templates/".DEFAULT_TEMPLATE."/layouts/public/fo
 if ((isset($_SESSION["isAuthorized"])) && ($_SESSION["isAuthorized"])) {
 	$sidebar_html  = "<a href=\"javascript: sendFeedback('".ENTRADA_URL."/agent-feedback.php?enc=".feedback_enc()."')\"><img src=\"".ENTRADA_URL."/images/feedback.gif\" width=\"48\" height=\"48\" alt=\"Give Feedback\" border=\"0\" align=\"right\" hspace=\"3\" vspace=\"5\" /></a>";
 	$sidebar_html .= "Giving feedback is a very important part of application development. Please <a href=\"javascript: sendFeedback('".ENTRADA_URL."/agent-feedback.php?enc=".feedback_enc()."')\" style=\"font-size: 11px; font-weight: bold\">click here</a> to send us any feedback you may have about <u>this</u> page.<br /><br />\n";
+	if (false) {
+		$sidebar_html .= "<hr/><br/>\n";
+		$sidebar_html .= "<div><div style=\"width: 80px; float: left; font-size: 9px;\"><a href=\"javascript: sendAnonymousFeedback('".ENTRADA_URL."/agent-anonymous-feedback.php?enc=".feedback_enc()."')\" style=\"font-size: 16px;\">Talk to Tony</a><br/>Do you have something you would like to <strong>anonymously</strong> tell Dr. Sanfilippo?</div><a href=\"javascript: sendAnonymousFeedback('".ENTRADA_URL."/agent-anonymous-feedback.php?enc=".feedback_enc()."')\"><img src=\"".ENTRADA_URL."/images/tonysanfilippo.jpg\" style=\"float: left; height: 100px;\" /></a></div>";
+	}
 
-	new_sidebar_item("Page Feedback", $sidebar_html, "page-feedback", "open");
+	new_sidebar_item("Feedback", $sidebar_html, "page-feedback", "open");
 }

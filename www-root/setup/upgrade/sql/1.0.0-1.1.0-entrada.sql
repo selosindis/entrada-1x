@@ -950,6 +950,8 @@ INSERT INTO `assessment_marking_schemes` (`id`,`name`,`handler`,`enabled`) VALUE
 (3, 'Numeric', 'Numeric', 1),
 (4, 'Complete/Incomplete', 'IncompleteComplete', 1);
 
+ALTER TABLE `courses` CHANGE `course_name` `course_name` VARCHAR(85) NOT NULL DEFAULT '';
+
 ALTER TABLE `course_objectives` ADD COLUMN `objective_type` enum('event','course') DEFAULT 'course' AFTER `importance`;
 
 INSERT INTO `course_objectives` (`course_id`, `objective_id`, `importance`, `objective_type`) (SELECT b.`course_id`, a.`objective_id`, 1, 'event' FROM `event_objectives` AS a JOIN `events` AS b ON a.`event_id` = b.`event_id` WHERE a.`objective_type` = 'event' GROUP BY a.`objective_id`, b.`course_id`);

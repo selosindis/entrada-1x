@@ -641,7 +641,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							<tr>
 								<td></td>
 								<td><label for="course_name" class="form-required">Course Name</label></td>
-								<td><input type="text" id="course_name" name="course_name" value="<?php echo html_encode($PROCESSED["course_name"]); ?>" maxlength="64" style="width: 243px" /></td>
+								<td><input type="text" id="course_name" name="course_name" value="<?php echo html_encode($PROCESSED["course_name"]); ?>" maxlength="85" style="width: 243px" /></td>
 							</tr>
 							<tr>
 								<td></td>

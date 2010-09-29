@@ -180,6 +180,26 @@ function sendFeedback(url) {
 	return;
 }
 
+function sendAnonymousFeedback(url) {
+	if(url) {
+		var windowW = 485;
+		var windowH = 485;
+
+		var windowX = (screen.width / 2) - (windowW / 2);
+		var windowY = (screen.height / 2) - (windowH / 2);
+
+		feedbackWindow = window.open(url, 'feedbackWindow', 'width='+windowW+', height='+windowH+', scrollbars=yes');
+		feedbackWindow.blur();
+		window.focus();
+
+		feedbackWindow.resizeTo(windowW, windowH);
+		feedbackWindow.moveTo(windowX, windowY);
+
+		feedbackWindow.focus();
+	}
+	return;
+}
+
 function sendClerkship(url) {
 	if(url) {
 		var windowW = 485;

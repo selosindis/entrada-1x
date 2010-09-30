@@ -10328,7 +10328,7 @@ function getMonthName($month_number) {
 	if (!$months) {
 		$months=array();
 		for($month_num = 1; $month_num <= 12; $month_num++) {
-			$time = mktime(null, null,null,$month_num);
+			$time = mktime(0,0,0,$month_num,1);
 			$month_name= date("F", $time); 
 			$months[$month_num] = $month_name;
 		}

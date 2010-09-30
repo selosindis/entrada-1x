@@ -39,11 +39,11 @@ require_once("InternalAward.class.php");
 class InternalAwardReceipt {
 	private $award_receipt_id;
 	private $award;
-	private $user;
+	private $user_id;
 	private $year;
 	
-	function __construct(User $user, Award $award, $award_receipt_id, $year){
-		$this->user = $user;
+	function __construct($user_id, Award $award, $award_receipt_id, $year){
+		$this->user_id = $user_id;
 		$this->award = $award;
 		$this->award_receipt_id = $award_receipt_id;
 		$this->year = $year;

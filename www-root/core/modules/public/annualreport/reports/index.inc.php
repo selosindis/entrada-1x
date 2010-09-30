@@ -64,7 +64,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 		</li>
 	</ol>
 	<?php 
-	if($ENTRADA_ACL->amIAllowed('mydepartment', 'read', 'DepartmentHead')) { ?>
+	if($ENTRADA_ACL->amIAllowed('mydepartment', 'read', 'DepartmentHead') || $ENTRADA_ACL->amIAllowed('myowndepartment', 'read', 'DepartmentRep')) { ?>
 	<h2 style="color: #669900">My Department Reports</h2>
 	<ol class="system-reports">
 		<li>
@@ -72,7 +72,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			A report that shows all of the publications in your department for a specific date range.
 		</li>
 	</ol>
-	<?php 
-	} 
+	<?php
+	}
 }
 ?>

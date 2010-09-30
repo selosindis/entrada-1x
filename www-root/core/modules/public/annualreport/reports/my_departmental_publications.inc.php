@@ -26,7 +26,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 } else if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	header("Location: ".ENTRADA_URL.((isset($_SERVER["REQUEST_URI"])) ? "?url=".rawurlencode(clean_input($_SERVER["REQUEST_URI"], array("nows", "url"))) : ""));
 	exit;
-} elseif (!$ENTRADA_ACL->amIAllowed('mydepartment', 'read', 'DepartmentHead')) {
+} elseif (!$ENTRADA_ACL->amIAllowed('mydepartment', 'read', 'DepartmentHead') && !$ENTRADA_ACL->amIAllowed('myowndepartment', 'read', 'DepartmentRep')) {
 	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/".$MODULE."\\'', 15000)";
 
 	$ERROR++;
@@ -36,7 +36,17 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
+	// Attempt to get the departmentID from the department heads table as most of the time this file will
+	// be accessed by department heads, however, there are also department reps that may access this file
+	// therefore a fall back needs to be added to grab their department.
 	$departmentID = is_department_head($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]);
+	
+	if(!$departmentID || $departmentID == 0) {
+		$departmentID = get_user_departments($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]);
+		
+		$departmentID = $departmentID[0]["department_id"];
+	}
+	
 	$departmentOuput = fetch_department_title($departmentID);
 	
 	$BREADCRUMB[]	= array("url" => "", "title" => "Publications for ".$departmentOuput);

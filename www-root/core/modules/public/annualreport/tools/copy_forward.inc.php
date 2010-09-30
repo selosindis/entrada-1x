@@ -37,6 +37,66 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
 	$BREADCRUMB[]	= array("url" => "", "title" => "Copy Forward" );
+	
+	$arrayOfTables = array( 
+						"ar_undergraduate_nonmedical_teaching|Undergraduate (Other) Teaching",
+						"ar_graduate_teaching|Graduate Teaching",
+						"ar_undergraduate_supervision|Undergraduate Supervision",
+						"ar_graduate_supervision|Graduate Supervision",
+						"ar_memberships|Membership on Graduate Examining and Supervisory Committees (Excluding Supervision)",
+						"ar_continuing_education|Continuing Education",
+						"ar_innovation|Innovation in Education",
+						"ar_other|Other Education",
+						"ar_ward_supervision|Ward Supervision",
+						"ar_clinics|Clinics",
+						"ar_consults|In-Hospital Consultations",
+						"ar_on_call|On-Call Responsibility",
+						"ar_procedures|Procedures",
+						"ar_other_activity|Other Professional Activity",
+						"ar_research|Projects / Grants / Contracts",
+						"ar_conference_papers|Invited Lectures / Conference Papers",
+						"ar_scholarly_activity|Other Scholarly Activity",
+						"ar_patent_activity|Patents",
+						"ar_internal_contributions|Service Contributions on Behalf of Queen's University",
+						"ar_external_contributions|External Contributions",
+						"ar_self_education|Self Education",
+						"ar_prizes|Prizes",
+						"ar_profile|Activity Profile");
+						
+	$arrayOfClinicalTables = array( 
+						"ar_undergraduate_nonmedical_teaching|Undergraduate (Other) Teaching",
+						"ar_graduate_teaching|Graduate Teaching",
+						"ar_undergraduate_supervision|Undergraduate Supervision",
+						"ar_graduate_supervision|Graduate Supervision",
+						"ar_memberships|Membership on Graduate Examining and Supervisory Committees (Excluding Supervision)",
+						"ar_clinical_education|Education of Clinical Trainees Including Clinical Clerks",
+						"ar_continuing_education|Continuing Education",
+						"ar_innovation|Innovation in Education",
+						"ar_other|Other Education",
+						"ar_clinical_activity|Clinical Activity",
+						"ar_ward_supervision|Ward Supervision",
+						"ar_clinics|Clinics",
+						"ar_consults|In-Hospital Consultations",
+						"ar_on_call|On-Call Responsibility",
+						"ar_procedures|Procedures",
+						"ar_other_activity|Other Professional Activity",
+						"ar_clinical_innovation|Innovation in Clinical Activity",
+						"ar_research|Projects / Grants / Contracts",
+						"ar_conference_papers|Invited Lectures / Conference Papers",
+						"ar_scholarly_activity|Other Scholarly Activity",
+						"ar_patent_activity|Patents",
+						"ar_internal_contributions|Service Contributions on Behalf of Queen's University",
+						"ar_external_contributions|External Contributions",
+						"ar_self_education|Self Education",
+						"ar_prizes|Prizes",
+						"ar_profile|Activity Profile");
+	
+	if($_SESSION["details"]["clinical_member"]) {
+		$tablesToUse = $arrayOfClinicalTables;
+	} else {
+		$tablesToUse = $arrayOfTables;
+	}
+	
     if($STEP == 2) {
     	if(isset($_POST["copy_from"]) && $copy_from = clean_input($_POST["copy_from"], array("int"))) {
     		$PROCESSED["copy_from"] = $copy_from;
@@ -193,7 +253,32 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 	div.top-link {
 		float: right;
 	}
+	
+	label {
+	    display: block;
+	    padding-left: 15px;
+	    text-indent: -15px;
+	}
+	input {
+	    width: 13px;
+	    height: 13px;
+	    padding: 0;
+	    margin:0;
+	    vertical-align: bottom;
+	    position: relative;
+	    top: -1px;
+	    *overflow: hidden;
+	}
 	</style>
+	<SCRIPT LANGUAGE="JavaScript">
+		function selectAll() {
+	    	jQuery("input[type='checkbox']:not([disabled='disabled'])").attr('checked', true);
+		}
+		
+		function deselectAll() {
+	    	jQuery("input[type='checkbox']:not([disabled='disabled'])").attr('checked', false);
+		}
+	</script>
 	<?php
 	switch($STEP) {
 		case 2 :
@@ -216,7 +301,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 		    echo "</div>";
 			?>
 		<div class="no-printing">
-			<form action="<?php echo ENTRADA_URL; ?>/annualreport/tools?section=<?php echo $SECTION; ?>&step=2" method="post">
+			<form name="myForm" action="<?php echo ENTRADA_URL; ?>/annualreport/tools?section=<?php echo $SECTION; ?>&step=2" method="post">
 			<input type="hidden" name="update" value="1" />
 			<table style="width: 100%" cellspacing="0" cellpadding="2" border="0">
 			<colgroup>
@@ -281,42 +366,40 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 					</td>
 				</tr>
 				<tr>
+					<td colspan="3">&nbsp;</td>
+				</tr>
+				<tr id="test">
 					<td></td>
-					<td><label for="copy" class="form-required">Copy</label></td>
-					<td><select name="copy[]" id="copy" multiple style="vertical-align: middle">
-					<?php
-						echo "<option value=\"ar_undergraduate_nonmedical_teaching|Undergraduate (Other) Teaching\" selected=\"selected\">Undergraduate (Other) Teaching</option>\n";
-						echo "<option value=\"ar_graduate_teaching|Graduate Teaching\" selected=\"selected\">Graduate Teaching</option>\n";
-						echo "<option value=\"ar_undergraduate_supervision|Undergraduate Supervision\" selected=\"selected\">Undergraduate Supervision</option>\n";
-						echo "<option value=\"ar_graduate_supervision|Graduate Supervision\" selected=\"selected\">Graduate Supervision</option>\n";
-						echo "<option value=\"ar_memberships|Membership on Graduate Examining and Supervisory Committees (Excluding Supervision)\" selected=\"selected\">Membership on Graduate Examining and Supervisory Committees (Excluding Supervision)</option>\n";
-						if($_SESSION["details"]["clinical_member"]) {
-							echo "<option value=\"ar_clinical_education|Education of Clinical Trainees Including Clinical Clerks\" selected=\"selected\">Education of Clinical Trainees Including Clinical Clerks</option>\n";
-						}
-						echo "<option value=\"ar_continuing_education|Continuing Education\" selected=\"selected\">Continuing Education</option>\n";
-						echo "<option value=\"ar_innovation|Innovation in Education\" selected=\"selected\">Innovation in Education</option>\n";
-						echo "<option value=\"ar_other|Other Education\" selected=\"selected\">Other Education</option>\n";
-						if($_SESSION["details"]["clinical_member"]) {
-							echo "<option value=\"ar_clinical_activity|Clinical Activity\" selected=\"selected\">Clinical Activity</option>\n";
-							echo "<option value=\"ar_ward_supervision|Ward Supervision\" selected=\"selected\">Ward Supervision</option>\n";
-							echo "<option value=\"ar_clinics|Clinics\" selected=\"selected\">Clinics</option>\n";
-							echo "<option value=\"ar_consults|In-Hospital Consultations\" selected=\"selected\">In-Hospital Consultations</option>\n";
-							echo "<option value=\"ar_on_call|On-Call Responsibility\" selected=\"selected\">On-Call Responsibility</option>\n";
-							echo "<option value=\"ar_procedures|Procedures\" selected=\"selected\">Procedures</option>\n";
-							echo "<option value=\"ar_other_activity|Other Professional Activity\" selected=\"selected\">Other Professional Activity</option>\n";
-							echo "<option value=\"ar_clinical_innovation|Innovation in Clinical Activity\" selected=\"selected\">Innovation in Clinical Activity</option>\n";
-						}
-					    echo "<option value=\"ar_research|Projects / Grants / Contracts\" selected=\"selected\">Projects / Grants / Contracts</option>\n";
-					    echo "<option value=\"ar_conference_papers|Invited Lectures / Conference Papers\" selected=\"selected\">Invited Lectures / Conference Papers</option>\n";
-					    echo "<option value=\"ar_scholarly_activity|Other Scholarly Activity\" selected=\"selected\">Other Scholarly Activity</option>\n";
-					    echo "<option value=\"ar_patent_activity|Patents\" selected=\"selected\">Patents</option>\n";
-					    echo "<option value=\"ar_internal_contributions|Service Contributions on Behalf of Queen's University\" selected=\"selected\">Service Contributions on Behalf of Queen's University</option>\n";
-					    echo "<option value=\"ar_external_contributions|External Contributions\" selected=\"selected\">External Contributions</option>\n";
-					    echo "<option value=\"ar_self_education|Self Education\" selected=\"selected\">Self Education</option>\n";
-					    echo "<option value=\"ar_prizes|Prizes, Honours and Awards\" selected=\"selected\">Prizes, Honours and Awards</option>\n";
-					    echo "<option value=\"ar_profile|Activity Profile\" selected=\"selected\">Activity Profile</option>\n";
-					    echo "</select>";
-					?>
+					<td valign=top><label class="form-required">Sections to Copy:</label></td>
+					<td>
+						<table class="tableList" cellspacing="0" style="white-space:normal;" cellpadding="1" border="0">
+							<colgroup>
+								<col style="width: 100%" />
+							</colgroup>
+							<tbody>
+								<?php
+									echo "<tr class=\"details\">
+										<td>
+											<input type=\"button\" name=\"checkAll\" value=\"Check All\" onclick=\"selectAll();\"/>
+											<input type=\"button\" name=\"unCheckAll\" value=\"Uncheck All\" onclick=\"deselectAll();\"/>
+										</td>
+									</tr>
+									<tr>
+										<td colspan=\"3\">&nbsp;</td>
+									</tr>";
+									foreach($tablesToUse as $outputTable) {
+										$values = explode("|", $outputTable);
+										echo "<tr class=\"details\">
+											<td>
+												<label><input type=\"checkbox\" name=\"copy[]\" id=\"copy\" value=\"".$outputTable."\" selected=\"selected\" \>
+												".$values[1]."
+												</label>
+											</td>
+										</tr>";
+									}
+								?>
+							</tbody>
+						</table>
 					</td>
 				</tr>
 				<tr>

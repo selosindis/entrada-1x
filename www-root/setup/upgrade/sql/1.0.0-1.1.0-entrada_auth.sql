@@ -17,7 +17,9 @@ INSERT INTO `acl_permissions` (`resource_type`, `resource_value`, `entity_type`,
 ('mspr', NULL, 'group:role', 'staff:admin', 1, 1, 1, 1, 1, NULL),
 ('mspr', NULL, 'group', 'student', 1, NULL, 1, 1, NULL, NULL),
 ('user', NULL, 'group:role', 'staff:admin', 1, 1, 1, 1, 1, NULL),
-('incident', NULL, 'group:role', 'staff:admin', 1, 1, 1, 1, 1, NULL);
+('incident', NULL, 'group:role', 'staff:admin', 1, 1, 1, 1, 1, NULL),
+('mydepartment', NULL, 'group', 'faculty', NULL, 1, 1, 1, 1, 'DepartmentHead'),
+('myowndepartment', NULL, 'user', '1', NULL, 1, 1, 1, 1, NULL);
 
 -- Table: departments
 

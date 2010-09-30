@@ -246,104 +246,6 @@ if (!defined("IN_PROFILE")) {
 									} else {
 										$google_address = html_encode($result["google_id"]."@".$GOOGLE_APPS["domain"]);
 										?>
-										<div id="reset-google-password-box" class="modal-confirmation">
-											<h1>Reset <strong><?php echo ucwords($GOOGLE_APPS["domain"]); ?></strong> Password</h1>
-											<div id="reset-google-password-form">
-												<div id="reset-google-password-form-status">To reset your <?php echo ucwords($GOOGLE_APPS["domain"]); ?> account password at Google, please enter your new password below and click the <strong>Submit</strong> button.</div>
-												<form action="#" method="post">
-													<table style="width: 100%; margin-top: 15px" cellspacing="2" cellpadding="0">
-														<colgroup>
-															<col style="width: 35%" />
-															<col style="width: 65%" />
-														</colgroup>
-														<tbody>
-															<tr>
-																<td><label for="google_password_1" class="form-required">New Password</label></td>
-																<td><input type="password" id="google_password_1" name="password1" value="" style="width: 175px" maxlength="24" /></td>
-															</tr>
-															<tr>
-																<td><label for="google_password_2" class="form-required">Re-Enter Password</label></td>
-																<td><input type="password" id="google_password_2" name="password2" value="" style="width: 175px" maxlength="24" /></td>
-															</tr>
-														</tbody>
-													</table>
-												</form>
-											</div>
-											<div id="reset-google-password-waiting" class="display-generic" style="display: none">
-												<img src="<?php echo ENTRADA_RELATIVE; ?>/images/indicator.gif" width="16" height="16" alt="Please wait" border="0" style="margin-right: 2px; vertical-align: middle" /> <span class="content-small">Please wait while your password is being changed ...</span>
-											</div>
-											<div id="reset-google-password-success" class="display-success" style="display: none">
-												We have successfully reset your <?php echo $GOOGLE_APPS["domain"]; ?> account password at Google.<br /><br />If you would like to log into your webmail account, please do so via <a href="http://webmail.qmed.ca" target="_blank">http://webmail.qmed.ca</a>.
-											</div>
-											<div class="footer">
-												<button id="reset-google-password-close" style="float: left; margin: 8px 0px 4px 10px">Close</button>
-												<button id="reset-google-password-submit" style="float: right; margin: 8px 10px 4px 0px">Submit</button>
-											</div>
-										</div>
-										<script type="text/javascript" defer="defer">
-										Event.observe(window, 'load', function() {
-											new Control.Modal('reset-google-password', {
-												overlayOpacity:	0.75,
-												closeOnClick: 'overlay',
-												className: 'modal-confirmation',
-												fade: true,
-												fadeDuration: 0.30
-											});
-										});
-										$('reset-google-password-close').observe('click', function() {
-											$('reset-google-password-submit', 'reset-google-password-form').invoke('show');
-											$('reset-google-password-success', 'reset-google-password-waiting').invoke('hide');
-									
-											$('google_password_1').setValue('');
-											$('google_password_2').setValue('');
-											Control.Modal.close();
-										});
-									
-										$('reset-google-password-submit').observe('click', function() {
-											$('reset-google-password-submit', 'reset-google-password-form').invoke('hide');
-											$('reset-google-password-waiting').show();
-									
-											if ($('google_password_1') && $('google_password_2')) {
-												var new_password = $F('google_password_1');
-												var test_password = $F('google_password_2');
-									
-												if (new_password && test_password) {
-													if (new_password == test_password) {
-														new Ajax.Request('<?php echo ENTRADA_URL; ?>/profile', {
-															method: 'post',
-															parameters: {
-																'action' : 'google-password-reset',
-																'password' : new_password,
-																'ajax' : 1
-															},
-															onSuccess: function(response) {
-																$('reset-google-password-form-status').update('');
-																$('reset-google-password-waiting').hide();
-																$('reset-google-password-success').show();
-															},
-															onFailure: function(response) {
-																$('reset-google-password-form-status').update('<div class="display-error">We were unable to reset your password at this time, please try again later. If this error persists please contact the system administrator and inform them of the error.</div>');
-																$('reset-google-password-waiting').hide();
-																$('reset-google-password-submit', 'reset-google-password-form').invoke('show');
-															}
-														});
-													} else {
-														$('reset-google-password-form-status').update('<div class="display-error">Your passwords did not match, please try again.</div>');
-														$('reset-google-password-waiting').hide();
-														$('reset-google-password-submit', 'reset-google-password-form').invoke('show');
-													}
-												} else {
-													$('reset-google-password-form-status').update('<div class="display-error" style="margin: 0">Please make sure you enter your new password, then re-enter it again in the space provided.</div>');
-													$('reset-google-password-waiting').hide();
-													$('reset-google-password-submit', 'reset-google-password-form').invoke('show');
-												}
-											} else {
-												$('reset-google-password-form-status').update('<div class="display-error" style="margin: 0">Please make sure you enter your new password, then re-enter it again in the space provided.</div>');
-												$('reset-google-password-waiting').hide();
-												$('reset-google-password-submit', 'reset-google-password-form').invoke('show');
-											}
-										});
-										</script>
 										<a href="mailto:"<?php echo $google_address; ?>"><?php echo $google_address; ?></a> ( <a href="#reset-google-password-box" id="reset-google-password" class="action">reset my <strong><?php echo $GOOGLE_APPS["domain"]; ?></strong> password</a> | <a href="http://webmail.<?php echo $GOOGLE_APPS["domain"]; ?>" class="action" target="_blank">visit <?php echo html_encode($GOOGLE_APPS["domain"]); ?> webmail</a> )
 										<?php
 									}
@@ -497,7 +399,110 @@ if (!defined("IN_PROFILE")) {
 				</tbody>
 			</table>
 		</form>
+		
 		<?php
+		if (((bool) $GOOGLE_APPS["active"]) && $result["google_id"] && !in_array($result["google_id"], array("opt-out", "opt-in"))) {
+			?>
+			<div id="reset-google-password-box" class="modal-confirmation">
+				<h1>Reset <strong><?php echo ucwords($GOOGLE_APPS["domain"]); ?></strong> Password</h1>
+				<div id="reset-google-password-form">
+					<div id="reset-google-password-form-status">To reset your <?php echo ucwords($GOOGLE_APPS["domain"]); ?> account password at Google, please enter your new password below and click the <strong>Submit</strong> button.</div>
+					<form action="#" method="post">
+						<table style="width: 100%; margin-top: 15px" cellspacing="2" cellpadding="0">
+							<colgroup>
+								<col style="width: 35%" />
+								<col style="width: 65%" />
+							</colgroup>
+							<tbody>
+								<tr>
+									<td><label for="google_password_1" class="form-required">New Password</label></td>
+									<td><input type="password" id="google_password_1" name="password1" value="" style="width: 175px" maxlength="24" /></td>
+								</tr>
+								<tr>
+									<td><label for="google_password_2" class="form-required">Re-Enter Password</label></td>
+									<td><input type="password" id="google_password_2" name="password2" value="" style="width: 175px" maxlength="24" /></td>
+								</tr>
+							</tbody>
+						</table>
+					</form>
+				</div>
+				<div id="reset-google-password-waiting" class="display-generic" style="display: none">
+					<img src="<?php echo ENTRADA_RELATIVE; ?>/images/indicator.gif" width="16" height="16" alt="Please wait" border="0" style="margin-right: 2px; vertical-align: middle" /> <span class="content-small">Please wait while your password is being changed ...</span>
+				</div>
+				<div id="reset-google-password-success" class="display-success" style="display: none">
+					We have successfully reset your <?php echo $GOOGLE_APPS["domain"]; ?> account password at Google.<br /><br />If you would like to log into your webmail account, please do so via <a href="http://webmail.qmed.ca" target="_blank">http://webmail.qmed.ca</a>.
+				</div>
+				<div class="footer">
+					<button id="reset-google-password-close" style="float: left; margin: 8px 0px 4px 10px">Close</button>
+					<button id="reset-google-password-submit" style="float: right; margin: 8px 10px 4px 0px">Submit</button>
+				</div>
+			</div>
+			<script type="text/javascript" defer="defer">
+			Event.observe(window, 'load', function() {
+				new Control.Modal('reset-google-password', {
+					overlayOpacity:	0.75,
+					closeOnClick: 'overlay',
+					className: 'modal-confirmation',
+					fade: true,
+					fadeDuration: 0.30
+				});
+			});
+			$('reset-google-password-close').observe('click', function() {
+				$('reset-google-password-submit', 'reset-google-password-form').invoke('show');
+				$('reset-google-password-success', 'reset-google-password-waiting').invoke('hide');
+	
+				$('google_password_1').setValue('');
+				$('google_password_2').setValue('');
+				Control.Modal.close();
+			});
+	
+			$('reset-google-password-submit').observe('click', function() {
+				$('reset-google-password-submit', 'reset-google-password-form').invoke('hide');
+				$('reset-google-password-waiting').show();
+	
+				if ($('google_password_1') && $('google_password_2')) {
+					var new_password = $F('google_password_1');
+					var test_password = $F('google_password_2');
+	
+					if (new_password && test_password) {
+						if (new_password == test_password) {
+							new Ajax.Request('<?php echo ENTRADA_URL; ?>/profile', {
+								method: 'post',
+								parameters: {
+									'action' : 'google-password-reset',
+									'password' : new_password,
+									'ajax' : 1
+								},
+								onSuccess: function(response) {
+									$('reset-google-password-form-status').update('');
+									$('reset-google-password-waiting').hide();
+									$('reset-google-password-success').show();
+								},
+								onFailure: function(response) {
+									$('reset-google-password-form-status').update('<div class="display-error">We were unable to reset your password at this time, please try again later. If this error persists please contact the system administrator and inform them of the error.</div>');
+									$('reset-google-password-waiting').hide();
+									$('reset-google-password-submit', 'reset-google-password-form').invoke('show');
+								}
+							});
+						} else {
+							$('reset-google-password-form-status').update('<div class="display-error">Your passwords did not match, please try again.</div>');
+							$('reset-google-password-waiting').hide();
+							$('reset-google-password-submit', 'reset-google-password-form').invoke('show');
+						}
+					} else {
+						$('reset-google-password-form-status').update('<div class="display-error" style="margin: 0">Please make sure you enter your new password, then re-enter it again in the space provided.</div>');
+						$('reset-google-password-waiting').hide();
+						$('reset-google-password-submit', 'reset-google-password-form').invoke('show');
+					}
+				} else {
+					$('reset-google-password-form-status').update('<div class="display-error" style="margin: 0">Please make sure you enter your new password, then re-enter it again in the space provided.</div>');
+					$('reset-google-password-waiting').hide();
+					$('reset-google-password-submit', 'reset-google-password-form').invoke('show');
+				}
+			});
+			</script>		
+			<?php
+		}
 	} else {
 		$NOTICE++;
 		$NOTICESTR[]	= "Unfortunately your ".APPLICATION_NAME." profile is not accessible at this time, please try again later.";

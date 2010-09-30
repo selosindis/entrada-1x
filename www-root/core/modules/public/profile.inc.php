@@ -38,6 +38,7 @@ if (!defined("PARENT_INCLUDED")) {
 	application_log("error", "Group [".$GROUP."] and role [".$ROLE."] do not have access to this module [".$MODULE."]");
 } else {
 	define("IN_PROFILE", true);
+	
 	$VALID_MIME_TYPES			= array("image/pjpeg" => "jpg", "image/jpeg" => "jpg", "image/jpg" => "jpg", "image/gif" => "gif", "image/png" => "png");
 	$VALID_MAX_FILESIZE			= 2097512; // 2MB
 	$VALID_MAX_DIMENSIONS		= array("photo-width" => 216, "photo-height" => 300, "thumb-width" => 75, "thumb-height" => 104);
@@ -104,7 +105,7 @@ function add_profile_sidebar () {
 	}
 
 	if ($_SESSION["details"]["group"] == "student") {
-		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/profile?section=mspr\">MSPR</a></li>\n";
+		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/profile?section=mspr\">My MSPR</a></li>\n";
 	}
 	
 	$sidebar_html .= "</ul>";

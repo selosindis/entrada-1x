@@ -65,7 +65,7 @@ function on_checkout($buffer) {
 	$buffer = check_body($buffer);
 	$buffer = check_sidebar($buffer);
 	$buffer = check_breadcrumb($buffer);
-d	$buffer = check_script($buffer);
+	$buffer = check_script($buffer);
 	return $buffer;
 }
 

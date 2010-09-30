@@ -212,7 +212,7 @@ if (!defined("IN_REGIONALED_VIEW")) {
 	}
 
 	if (strip_tags(trim($APARTMENT_INFO["apartment_information"]))) {
-		echo html_encode($APARTMENT_INFO["apartment_information"], "safehtml");
+		echo clean_input($APARTMENT_INFO["apartment_information"], "nicehtml");
 	}
 	?>
 

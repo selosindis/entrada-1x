@@ -57,7 +57,23 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 				}
 			}
 		});
-		
+	
+	var jQueryError = jQuery('<div></div>')
+	.html('<span class="ui-icon ui-icon-locked" style="float:left; margin:0 7px 50px 0;"></span>Error: You cannot delete records from previous years. Contact support if you need one deleted.')
+	.dialog({
+		autoOpen: false,
+		title: 'Error',
+		buttons: {
+			Cancel: function() {
+				jQuery(this).dialog('close');
+			},
+			'Contact Support': function() {
+				sendFeedback('<?php echo ENTRADA_URL;?>/agent-feedback.php?enc=<?php echo feedback_enc()?>');
+				jQuery(this).dialog('close');
+			}
+		}
+	});
+	
 	<?php $fields = "ar_research,research_id,principal_investigator,grant_title,amount_received,year_reported"; ?>
 	var research_grid = jQuery("#flex1").flexigrid
 	(
@@ -112,19 +128,29 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
     function deleteRecord(com,grid) {
 	    if (com=='Delete Selected') {
 	    	jQuery(function() {
+	    		var error = "false";
 				if(jQuery('.trSelected',grid).length>0) {
 		    		// a workaround for a flaw in the demo system (http://dev.jqueryui.com/ticket/4375), ignore!
 					jQuery("#dialog-confirm").dialog("destroy");
-				
-					jQuery("#dialog-confirm").dialog({
+					jQuery('.trSelected', grid).each(function() {  
+               			var reportYear = jQuery(this).find('div')[3].textContent;
+						if(reportYear < <?php echo $AR_CUR_YEAR;?>) {
+	               			// Do not allow the deletion of years that are prior to the current reporting year.
+	               			error = "true";
+						}
+					});
+					
+					if(error == "false") {
+						// allow deletion
+						jQuery("#dialog-confirm").dialog({
 						resizable: false,
 						height:180,
 						modal: true,
 						buttons: {
 							'Delete all items': function() {
 								var ids = "";
-			               		jQuery('.trSelected', grid).each(function() {
-									var id = jQuery(this).attr('id');
+			               		jQuery('.trSelected', grid).each(function() {  
+			               			var id = jQuery(this).attr('id');
 									id = id.substring(id.lastIndexOf('row')+3);
 									if(ids == "") {
 										ids = id;
@@ -146,13 +172,17 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 								jQuery(this).dialog('close');
 							}
 						}
-					});
+						});
+					} else {
+						jQueryError.dialog('open');
+					}
 		    	} else {
 			    	jQuerydialog.dialog('open');
 		    	}
 			});
-	    }          
-	} 
+	    }
+	}
+	
 	<?php $fields = "ar_peer_reviewed_papers,peer_reviewed_papers_id,source,title,author_list,year_reported"; ?>
 	var peer_reviewed_grid = jQuery("#flex2").flexigrid
 	(
@@ -682,19 +712,29 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
     function deleteScholarly(com,grid) {
 	    if (com=='Delete Selected') {
 	    	jQuery(function() {
+	    		var error = "false";
 				if(jQuery('.trSelected',grid).length>0) {
 		    		// a workaround for a flaw in the demo system (http://dev.jqueryui.com/ticket/4375), ignore!
 					jQuery("#dialog-confirm").dialog("destroy");
-				
-					jQuery("#dialog-confirm").dialog({
+					jQuery('.trSelected', grid).each(function() {  
+               			var reportYear = jQuery(this).find('div')[3].textContent;
+						if(reportYear < <?php echo $AR_CUR_YEAR;?>) {
+	               			// Do not allow the deletion of years that are prior to the current reporting year.
+	               			error = "true";
+						}
+					});
+					
+					if(error == "false") {
+						// allow deletion
+						jQuery("#dialog-confirm").dialog({
 						resizable: false,
 						height:180,
 						modal: true,
 						buttons: {
 							'Delete all items': function() {
 								var ids = "";
-			               		jQuery('.trSelected', grid).each(function() {
-									var id = jQuery(this).attr('id');
+			               		jQuery('.trSelected', grid).each(function() {  
+			               			var id = jQuery(this).attr('id');
 									id = id.substring(id.lastIndexOf('row')+3);
 									if(ids == "") {
 										ids = id;
@@ -716,13 +756,17 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 								jQuery(this).dialog('close');
 							}
 						}
-					});
+						});
+					} else {
+						jQueryError.dialog('open');
+					}
 		    	} else {
 			    	jQuerydialog.dialog('open');
 		    	}
 			});
-	    }          
+	    }
 	}
+	
 	<?php $fields = "ar_patent_activity,patent_activity_id,patent_activity_type,description,location,year_reported"; ?>
 	var patent_grid = jQuery("#flex8").flexigrid
 	(
@@ -777,19 +821,29 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
     function deletePatent(com,grid) {
 	    if (com=='Delete Selected') {
 	    	jQuery(function() {
+	    		var error = "false";
 				if(jQuery('.trSelected',grid).length>0) {
 		    		// a workaround for a flaw in the demo system (http://dev.jqueryui.com/ticket/4375), ignore!
 					jQuery("#dialog-confirm").dialog("destroy");
-				
-					jQuery("#dialog-confirm").dialog({
+					jQuery('.trSelected', grid).each(function() {  
+               			var reportYear = jQuery(this).find('div')[3].textContent;
+						if(reportYear < <?php echo $AR_CUR_YEAR;?>) {
+	               			// Do not allow the deletion of years that are prior to the current reporting year.
+	               			error = "true";
+						}
+					});
+					
+					if(error == "false") {
+						// allow deletion
+						jQuery("#dialog-confirm").dialog({
 						resizable: false,
 						height:180,
 						modal: true,
 						buttons: {
 							'Delete all items': function() {
 								var ids = "";
-			               		jQuery('.trSelected', grid).each(function() {
-									var id = jQuery(this).attr('id');
+			               		jQuery('.trSelected', grid).each(function() {  
+			               			var id = jQuery(this).attr('id');
 									id = id.substring(id.lastIndexOf('row')+3);
 									if(ids == "") {
 										ids = id;
@@ -811,12 +865,15 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 								jQuery(this).dialog('close');
 							}
 						}
-					});
+						});
+					} else {
+						jQueryError.dialog('open');
+					}
 		    	} else {
 			    	jQuerydialog.dialog('open');
 		    	}
 			});
-	    }          
+	    }
 	}
 	</script>
 	

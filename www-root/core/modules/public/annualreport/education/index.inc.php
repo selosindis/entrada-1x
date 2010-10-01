@@ -258,6 +258,23 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			}
 		});
 	
+	var jQueryError = jQuery('<div></div>')
+	.html('<span class="ui-icon ui-icon-locked" style="float:left; margin:0 7px 50px 0;"></span>Error: You cannot delete records from previous years. Contact support if you need one deleted.')
+	.dialog({
+		autoOpen: false,
+		title: 'Error',
+		buttons: {
+			Cancel: function() {
+				jQuery(this).dialog('close');
+			},
+			'Contact Support': function() {
+				sendFeedback('<?php echo ENTRADA_URL;?>/agent-feedback.php?enc=<?php echo feedback_enc()?>');
+				jQuery(this).dialog('close');
+			}
+		}
+	});
+	
+	
 	var undergraduate_medical_teaching_grid = jQuery("#flex1").flexigrid
 	(
 		{
@@ -360,19 +377,29 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
     function deleteRecord(com,grid) {
 	    if (com=='Delete Selected') {
 	    	jQuery(function() {
+	    		var error = "false";
 				if(jQuery('.trSelected',grid).length>0) {
 		    		// a workaround for a flaw in the demo system (http://dev.jqueryui.com/ticket/4375), ignore!
 					jQuery("#dialog-confirm").dialog("destroy");
-				
-					jQuery("#dialog-confirm").dialog({
+					jQuery('.trSelected', grid).each(function() {  
+               			var reportYear = jQuery(this).find('div')[3].textContent;
+						if(reportYear < <?php echo $AR_CUR_YEAR;?>) {
+	               			// Do not allow the deletion of years that are prior to the current reporting year.
+	               			error = "true";
+						}
+					});
+					
+					if(error == "false") {
+						// allow deletion
+						jQuery("#dialog-confirm").dialog({
 						resizable: false,
 						height:180,
 						modal: true,
 						buttons: {
 							'Delete all items': function() {
 								var ids = "";
-			               		jQuery('.trSelected', grid).each(function() {
-									var id = jQuery(this).attr('id');
+			               		jQuery('.trSelected', grid).each(function() {  
+			               			var id = jQuery(this).attr('id');
 									id = id.substring(id.lastIndexOf('row')+3);
 									if(ids == "") {
 										ids = id;
@@ -394,13 +421,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 								jQuery(this).dialog('close');
 							}
 						}
-					});
+						});
+					} else {
+						jQueryError.dialog('open');
+					}
 		    	} else {
 			    	jQuerydialog.dialog('open');
 		    	}
 			});
-	    }          
-	} 
+	    }
+	}
+	
 	<?php $fields = "ar_graduate_teaching,graduate_teaching_id,course_number,course_name,assigned,year_reported"; ?>
 	var graduate_grid = jQuery("#flex3").flexigrid
 	(
@@ -455,19 +486,29 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
     function deleteGraduate(com,grid) {
 	    if (com=='Delete Selected') {
 	    	jQuery(function() {
+	    		var error = "false";
 				if(jQuery('.trSelected',grid).length>0) {
 		    		// a workaround for a flaw in the demo system (http://dev.jqueryui.com/ticket/4375), ignore!
 					jQuery("#dialog-confirm").dialog("destroy");
-				
-					jQuery("#dialog-confirm").dialog({
+					jQuery('.trSelected', grid).each(function() {  
+               			var reportYear = jQuery(this).find('div')[3].textContent;
+						if(reportYear < <?php echo $AR_CUR_YEAR;?>) {
+	               			// Do not allow the deletion of years that are prior to the current reporting year.
+	               			error = "true";
+						}
+					});
+					
+					if(error == "false") {
+						// allow deletion
+						jQuery("#dialog-confirm").dialog({
 						resizable: false,
 						height:180,
 						modal: true,
 						buttons: {
 							'Delete all items': function() {
 								var ids = "";
-			               		jQuery('.trSelected', grid).each(function() {
-									var id = jQuery(this).attr('id');
+			               		jQuery('.trSelected', grid).each(function() {  
+			               			var id = jQuery(this).attr('id');
 									id = id.substring(id.lastIndexOf('row')+3);
 									if(ids == "") {
 										ids = id;
@@ -489,13 +530,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 								jQuery(this).dialog('close');
 							}
 						}
-					});
+						});
+					} else {
+						jQueryError.dialog('open');
+					}
 		    	} else {
 			    	jQuerydialog.dialog('open');
 		    	}
 			});
-	    }          
+	    }
 	}
+	
 	<?php $fields = "ar_undergraduate_supervision,undergraduate_supervision_id,course_number,student_name,degree,year_reported"; ?>
 	var undergraduate_supervision_grid = jQuery("#flex4").flexigrid
 	(
@@ -550,19 +595,29 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
     function deleteUndergraduateSupervision(com,grid) {
 	    if (com=='Delete Selected') {
 	    	jQuery(function() {
+	    		var error = "false";
 				if(jQuery('.trSelected',grid).length>0) {
 		    		// a workaround for a flaw in the demo system (http://dev.jqueryui.com/ticket/4375), ignore!
 					jQuery("#dialog-confirm").dialog("destroy");
-				
-					jQuery("#dialog-confirm").dialog({
+					jQuery('.trSelected', grid).each(function() {  
+               			var reportYear = jQuery(this).find('div')[3].textContent;
+						if(reportYear < <?php echo $AR_CUR_YEAR;?>) {
+	               			// Do not allow the deletion of years that are prior to the current reporting year.
+	               			error = "true";
+						}
+					});
+					
+					if(error == "false") {
+						// allow deletion
+						jQuery("#dialog-confirm").dialog({
 						resizable: false,
 						height:180,
 						modal: true,
 						buttons: {
 							'Delete all items': function() {
 								var ids = "";
-			               		jQuery('.trSelected', grid).each(function() {
-									var id = jQuery(this).attr('id');
+			               		jQuery('.trSelected', grid).each(function() {  
+			               			var id = jQuery(this).attr('id');
 									id = id.substring(id.lastIndexOf('row')+3);
 									if(ids == "") {
 										ids = id;
@@ -584,13 +639,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 								jQuery(this).dialog('close');
 							}
 						}
-					});
+						});
+					} else {
+						jQueryError.dialog('open');
+					}
 		    	} else {
 			    	jQuerydialog.dialog('open');
 		    	}
 			});
-	    }          
+	    }
 	}
+	
 	<?php 	$fields = "ar_graduate_supervision,graduate_supervision_id,supervision,student_name,degree,year_reported"; ?>
 	var graduate_supervision_grid = jQuery("#flex5").flexigrid
 	(
@@ -645,19 +704,29 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
     function deleteGraduateSupervision(com,grid) {
 	    if (com=='Delete Selected') {
 	    	jQuery(function() {
+	    		var error = "false";
 				if(jQuery('.trSelected',grid).length>0) {
 		    		// a workaround for a flaw in the demo system (http://dev.jqueryui.com/ticket/4375), ignore!
 					jQuery("#dialog-confirm").dialog("destroy");
-				
-					jQuery("#dialog-confirm").dialog({
+					jQuery('.trSelected', grid).each(function() {  
+               			var reportYear = jQuery(this).find('div')[3].textContent;
+						if(reportYear < <?php echo $AR_CUR_YEAR;?>) {
+	               			// Do not allow the deletion of years that are prior to the current reporting year.
+	               			error = "true";
+						}
+					});
+					
+					if(error == "false") {
+						// allow deletion
+						jQuery("#dialog-confirm").dialog({
 						resizable: false,
 						height:180,
 						modal: true,
 						buttons: {
 							'Delete all items': function() {
 								var ids = "";
-			               		jQuery('.trSelected', grid).each(function() {
-									var id = jQuery(this).attr('id');
+			               		jQuery('.trSelected', grid).each(function() {  
+			               			var id = jQuery(this).attr('id');
 									id = id.substring(id.lastIndexOf('row')+3);
 									if(ids == "") {
 										ids = id;
@@ -679,13 +748,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 								jQuery(this).dialog('close');
 							}
 						}
-					});
+						});
+					} else {
+						jQueryError.dialog('open');
+					}
 		    	} else {
 			    	jQuerydialog.dialog('open');
 		    	}
 			});
-	    }          
+	    }
 	}
+	
 	<?php $fields = "ar_memberships,memberships_id,student_name,department,degree,year_reported"; ?>
 	var memberships_grid = jQuery("#flex6").flexigrid
 	(
@@ -740,19 +813,29 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
     function deleteMemberships(com,grid) {
 	    if (com=='Delete Selected') {
 	    	jQuery(function() {
+	    		var error = "false";
 				if(jQuery('.trSelected',grid).length>0) {
 		    		// a workaround for a flaw in the demo system (http://dev.jqueryui.com/ticket/4375), ignore!
 					jQuery("#dialog-confirm").dialog("destroy");
-				
-					jQuery("#dialog-confirm").dialog({
+					jQuery('.trSelected', grid).each(function() {  
+               			var reportYear = jQuery(this).find('div')[3].textContent;
+						if(reportYear < <?php echo $AR_CUR_YEAR;?>) {
+	               			// Do not allow the deletion of years that are prior to the current reporting year.
+	               			error = "true";
+						}
+					});
+					
+					if(error == "false") {
+						// allow deletion
+						jQuery("#dialog-confirm").dialog({
 						resizable: false,
 						height:180,
 						modal: true,
 						buttons: {
 							'Delete all items': function() {
 								var ids = "";
-			               		jQuery('.trSelected', grid).each(function() {
-									var id = jQuery(this).attr('id');
+			               		jQuery('.trSelected', grid).each(function() {  
+			               			var id = jQuery(this).attr('id');
 									id = id.substring(id.lastIndexOf('row')+3);
 									if(ids == "") {
 										ids = id;
@@ -774,13 +857,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 								jQuery(this).dialog('close');
 							}
 						}
-					});
+						});
+					} else {
+						jQueryError.dialog('open');
+					}
 		    	} else {
 			    	jQuerydialog.dialog('open');
 		    	}
 			});
-	    }          
+	    }
 	}
+	
 	<?php 
 	if($_SESSION["details"]["clinical_member"]) {
 		$fields = "ar_clinical_education,clinical_education_id,level,description,location,year_reported";?>
@@ -834,22 +921,32 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
         	celDiv.innerHTML = "<a href='<?php echo ENTRADA_URL; ?>/annualreport/education?section=edit_clinical&amp;rid="+id+"' style=\"cursor: pointer; cursor: hand\" text-decoration: none><img src=\"<?php echo ENTRADA_RELATIVE; ?>/images/action-edit.gif\" style=\"border: none\"/></a>";
 	    }
 	    
-        function deleteClinicalEducation(com,grid) {
+	    function deleteClinicalEducation(com,grid) {
 		    if (com=='Delete Selected') {
 		    	jQuery(function() {
+		    		var error = "false";
 					if(jQuery('.trSelected',grid).length>0) {
 			    		// a workaround for a flaw in the demo system (http://dev.jqueryui.com/ticket/4375), ignore!
 						jQuery("#dialog-confirm").dialog("destroy");
-					
-						jQuery("#dialog-confirm").dialog({
+						jQuery('.trSelected', grid).each(function() {  
+	               			var reportYear = jQuery(this).find('div')[3].textContent;
+							if(reportYear < <?php echo $AR_CUR_YEAR;?>) {
+		               			// Do not allow the deletion of years that are prior to the current reporting year.
+		               			error = "true";
+							}
+						});
+						
+						if(error == "false") {
+							// allow deletion
+							jQuery("#dialog-confirm").dialog({
 							resizable: false,
 							height:180,
 							modal: true,
 							buttons: {
 								'Delete all items': function() {
 									var ids = "";
-				               		jQuery('.trSelected', grid).each(function() {
-										var id = jQuery(this).attr('id');
+				               		jQuery('.trSelected', grid).each(function() {  
+				               			var id = jQuery(this).attr('id');
 										id = id.substring(id.lastIndexOf('row')+3);
 										if(ids == "") {
 											ids = id;
@@ -871,13 +968,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 									jQuery(this).dialog('close');
 								}
 							}
-						});
+							});
+						} else {
+							jQueryError.dialog('open');
+						}
 			    	} else {
 				    	jQuerydialog.dialog('open');
 			    	}
 				});
-		    }          
+		    }
 		}
+		
 	<?php 
 	}
 	$fields = "ar_continuing_education,continuing_education_id,unit,description,location,year_reported"; ?>
@@ -934,19 +1035,29 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
     function deleteContinuingEducation(com,grid) {
 	    if (com=='Delete Selected') {
 	    	jQuery(function() {
+	    		var error = "false";
 				if(jQuery('.trSelected',grid).length>0) {
 		    		// a workaround for a flaw in the demo system (http://dev.jqueryui.com/ticket/4375), ignore!
 					jQuery("#dialog-confirm").dialog("destroy");
-				
-					jQuery("#dialog-confirm").dialog({
+					jQuery('.trSelected', grid).each(function() {  
+               			var reportYear = jQuery(this).find('div')[3].textContent;
+						if(reportYear < <?php echo $AR_CUR_YEAR;?>) {
+	               			// Do not allow the deletion of years that are prior to the current reporting year.
+	               			error = "true";
+						}
+					});
+					
+					if(error == "false") {
+						// allow deletion
+						jQuery("#dialog-confirm").dialog({
 						resizable: false,
 						height:180,
 						modal: true,
 						buttons: {
 							'Delete all items': function() {
 								var ids = "";
-			               		jQuery('.trSelected', grid).each(function() {
-									var id = jQuery(this).attr('id');
+			               		jQuery('.trSelected', grid).each(function() {  
+			               			var id = jQuery(this).attr('id');
 									id = id.substring(id.lastIndexOf('row')+3);
 									if(ids == "") {
 										ids = id;
@@ -968,13 +1079,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 								jQuery(this).dialog('close');
 							}
 						}
-					});
+						});
+					} else {
+						jQueryError.dialog('open');
+					}
 		    	} else {
 			    	jQuerydialog.dialog('open');
 		    	}
 			});
-	    }          
+	    }
 	}
+	
 	<?php $fields = "ar_innovation,innovation_id,course_number,course_name,type,year_reported"; ?>
 	var innovation_grid = jQuery("#flex9").flexigrid
 	(
@@ -1029,19 +1144,29 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
     function deleteInnovation(com,grid) {
 	    if (com=='Delete Selected') {
 	    	jQuery(function() {
+	    		var error = "false";
 				if(jQuery('.trSelected',grid).length>0) {
 		    		// a workaround for a flaw in the demo system (http://dev.jqueryui.com/ticket/4375), ignore!
 					jQuery("#dialog-confirm").dialog("destroy");
-				
-					jQuery("#dialog-confirm").dialog({
+					jQuery('.trSelected', grid).each(function() {  
+               			var reportYear = jQuery(this).find('div')[3].textContent;
+						if(reportYear < <?php echo $AR_CUR_YEAR;?>) {
+	               			// Do not allow the deletion of years that are prior to the current reporting year.
+	               			error = "true";
+						}
+					});
+					
+					if(error == "false") {
+						// allow deletion
+						jQuery("#dialog-confirm").dialog({
 						resizable: false,
 						height:180,
 						modal: true,
 						buttons: {
 							'Delete all items': function() {
 								var ids = "";
-			               		jQuery('.trSelected', grid).each(function() {
-									var id = jQuery(this).attr('id');
+			               		jQuery('.trSelected', grid).each(function() {  
+			               			var id = jQuery(this).attr('id');
 									id = id.substring(id.lastIndexOf('row')+3);
 									if(ids == "") {
 										ids = id;
@@ -1063,13 +1188,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 								jQuery(this).dialog('close');
 							}
 						}
-					});
+						});
+					} else {
+						jQueryError.dialog('open');
+					}
 		    	} else {
 			    	jQuerydialog.dialog('open');
 		    	}
 			});
-	    }          
+	    }
 	}
+	
 	<?php $fields = "ar_other,other_id,description,course_name,type,year_reported"; ?>
 	var other_grid = jQuery("#flex10").flexigrid
 	(
@@ -1124,19 +1253,29 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
     function deleteOther(com,grid) {
 	    if (com=='Delete Selected') {
 	    	jQuery(function() {
+	    		var error = "false";
 				if(jQuery('.trSelected',grid).length>0) {
 		    		// a workaround for a flaw in the demo system (http://dev.jqueryui.com/ticket/4375), ignore!
 					jQuery("#dialog-confirm").dialog("destroy");
-				
-					jQuery("#dialog-confirm").dialog({
+					jQuery('.trSelected', grid).each(function() {  
+               			var reportYear = jQuery(this).find('div')[3].textContent;
+						if(reportYear < <?php echo $AR_CUR_YEAR;?>) {
+	               			// Do not allow the deletion of years that are prior to the current reporting year.
+	               			error = "true";
+						}
+					});
+					
+					if(error == "false") {
+						// allow deletion
+						jQuery("#dialog-confirm").dialog({
 						resizable: false,
 						height:180,
 						modal: true,
 						buttons: {
 							'Delete all items': function() {
 								var ids = "";
-			               		jQuery('.trSelected', grid).each(function() {
-									var id = jQuery(this).attr('id');
+			               		jQuery('.trSelected', grid).each(function() {  
+			               			var id = jQuery(this).attr('id');
 									id = id.substring(id.lastIndexOf('row')+3);
 									if(ids == "") {
 										ids = id;
@@ -1158,12 +1297,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 								jQuery(this).dialog('close');
 							}
 						}
-					});
+						});
+					} else {
+						jQueryError.dialog('open');
+					}
 		    	} else {
 			    	jQuerydialog.dialog('open');
 		    	}
 			});
-	    }          
+	    }
 	}
 	</script>
 	

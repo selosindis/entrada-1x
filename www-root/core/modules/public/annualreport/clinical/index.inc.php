@@ -69,6 +69,22 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 			}
 		});
 		
+	var jQueryError = jQuery('<div></div>')
+	.html('<span class="ui-icon ui-icon-locked" style="float:left; margin:0 7px 50px 0;"></span>Error: You cannot delete records from previous years. Contact support if you need one deleted.')
+	.dialog({
+		autoOpen: false,
+		title: 'Error',
+		buttons: {
+			Cancel: function() {
+				jQuery(this).dialog('close');
+			},
+			'Contact Support': function() {
+				sendFeedback('<?php echo ENTRADA_URL;?>/agent-feedback.php?enc=<?php echo feedback_enc()?>');
+				jQuery(this).dialog('close');
+			}
+		}
+	});
+	
 	<?php $fields = "ar_clinical_activity,clinical_activity_id,average_hours,site,description,year_reported"; ?>
 	var clinical_grid = jQuery("#flex1").flexigrid
 	(
@@ -123,19 +139,29 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
     function deleteRecord(com,grid) {
 	    if (com=='Delete Selected') {
 	    	jQuery(function() {
+	    		var error = "false";
 				if(jQuery('.trSelected',grid).length>0) {
 		    		// a workaround for a flaw in the demo system (http://dev.jqueryui.com/ticket/4375), ignore!
 					jQuery("#dialog-confirm").dialog("destroy");
-				
-					jQuery("#dialog-confirm").dialog({
+					jQuery('.trSelected', grid).each(function() {  
+               			var reportYear = jQuery(this).find('div')[3].textContent;
+						if(reportYear < <?php echo $AR_CUR_YEAR;?>) {
+	               			// Do not allow the deletion of years that are prior to the current reporting year.
+	               			error = "true";
+						}
+					});
+					
+					if(error == "false") {
+						// allow deletion
+						jQuery("#dialog-confirm").dialog({
 						resizable: false,
 						height:180,
 						modal: true,
 						buttons: {
 							'Delete all items': function() {
 								var ids = "";
-			               		jQuery('.trSelected', grid).each(function() {
-									var id = jQuery(this).attr('id');
+			               		jQuery('.trSelected', grid).each(function() {  
+			               			var id = jQuery(this).attr('id');
 									id = id.substring(id.lastIndexOf('row')+3);
 									if(ids == "") {
 										ids = id;
@@ -157,13 +183,16 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 								jQuery(this).dialog('close');
 							}
 						}
-					});
+						});
+					} else {
+						jQueryError.dialog('open');
+					}
 		    	} else {
 			    	jQuerydialog.dialog('open');
 		    	}
 			});
-	    }          
-	} 
+	    }
+	}
 	<?php $fields = "ar_ward_supervision,ward_supervision_id,average_clerks,average_patients,service,year_reported"; ?>
 	var ward_grid = jQuery("#flex2").flexigrid
 	(
@@ -218,19 +247,29 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
     function deleteWard(com,grid) {
 	    if (com=='Delete Selected') {
 	    	jQuery(function() {
+	    		var error = "false";
 				if(jQuery('.trSelected',grid).length>0) {
 		    		// a workaround for a flaw in the demo system (http://dev.jqueryui.com/ticket/4375), ignore!
 					jQuery("#dialog-confirm").dialog("destroy");
-				
-					jQuery("#dialog-confirm").dialog({
+					jQuery('.trSelected', grid).each(function() {  
+               			var reportYear = jQuery(this).find('div')[3].textContent;
+						if(reportYear < <?php echo $AR_CUR_YEAR;?>) {
+	               			// Do not allow the deletion of years that are prior to the current reporting year.
+	               			error = "true";
+						}
+					});
+					
+					if(error == "false") {
+						// allow deletion
+						jQuery("#dialog-confirm").dialog({
 						resizable: false,
 						height:180,
 						modal: true,
 						buttons: {
 							'Delete all items': function() {
 								var ids = "";
-			               		jQuery('.trSelected', grid).each(function() {
-									var id = jQuery(this).attr('id');
+			               		jQuery('.trSelected', grid).each(function() {  
+			               			var id = jQuery(this).attr('id');
 									id = id.substring(id.lastIndexOf('row')+3);
 									if(ids == "") {
 										ids = id;
@@ -252,12 +291,15 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 								jQuery(this).dialog('close');
 							}
 						}
-					});
+						});
+					} else {
+						jQueryError.dialog('open');
+					}
 		    	} else {
 			    	jQuerydialog.dialog('open');
 		    	}
 			});
-	    }          
+	    }
 	}
 	<?php $fields = "ar_clinics,clinics_id,average_clerks,patients,clinic,year_reported"; ?>
 	var clinic_grid = jQuery("#flex3").flexigrid
@@ -313,19 +355,29 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
     function deleteClinic(com,grid) {
 	    if (com=='Delete Selected') {
 	    	jQuery(function() {
+	    		var error = "false";
 				if(jQuery('.trSelected',grid).length>0) {
 		    		// a workaround for a flaw in the demo system (http://dev.jqueryui.com/ticket/4375), ignore!
 					jQuery("#dialog-confirm").dialog("destroy");
-				
-					jQuery("#dialog-confirm").dialog({
+					jQuery('.trSelected', grid).each(function() {  
+               			var reportYear = jQuery(this).find('div')[3].textContent;
+						if(reportYear < <?php echo $AR_CUR_YEAR;?>) {
+	               			// Do not allow the deletion of years that are prior to the current reporting year.
+	               			error = "true";
+						}
+					});
+					
+					if(error == "false") {
+						// allow deletion
+						jQuery("#dialog-confirm").dialog({
 						resizable: false,
 						height:180,
 						modal: true,
 						buttons: {
 							'Delete all items': function() {
 								var ids = "";
-			               		jQuery('.trSelected', grid).each(function() {
-									var id = jQuery(this).attr('id');
+			               		jQuery('.trSelected', grid).each(function() {  
+			               			var id = jQuery(this).attr('id');
 									id = id.substring(id.lastIndexOf('row')+3);
 									if(ids == "") {
 										ids = id;
@@ -347,13 +399,17 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 								jQuery(this).dialog('close');
 							}
 						}
-					});
+						});
+					} else {
+						jQueryError.dialog('open');
+					}
 		    	} else {
 			    	jQuerydialog.dialog('open');
 		    	}
 			});
-	    }          
+	    }
 	}
+	
 	<?php $fields = "ar_consults,consults_id,months,average_consults,activity,year_reported"; ?>
 	var consults_grid = jQuery("#flex4").flexigrid
 	(
@@ -408,19 +464,29 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
     function deleteConsult(com,grid) {
 	    if (com=='Delete Selected') {
 	    	jQuery(function() {
+	    		var error = "false";
 				if(jQuery('.trSelected',grid).length>0) {
 		    		// a workaround for a flaw in the demo system (http://dev.jqueryui.com/ticket/4375), ignore!
 					jQuery("#dialog-confirm").dialog("destroy");
-				
-					jQuery("#dialog-confirm").dialog({
+					jQuery('.trSelected', grid).each(function() {  
+               			var reportYear = jQuery(this).find('div')[3].textContent;
+						if(reportYear < <?php echo $AR_CUR_YEAR;?>) {
+	               			// Do not allow the deletion of years that are prior to the current reporting year.
+	               			error = "true";
+						}
+					});
+					
+					if(error == "false") {
+						// allow deletion
+						jQuery("#dialog-confirm").dialog({
 						resizable: false,
 						height:180,
 						modal: true,
 						buttons: {
 							'Delete all items': function() {
 								var ids = "";
-			               		jQuery('.trSelected', grid).each(function() {
-									var id = jQuery(this).attr('id');
+			               		jQuery('.trSelected', grid).each(function() {  
+			               			var id = jQuery(this).attr('id');
 									id = id.substring(id.lastIndexOf('row')+3);
 									if(ids == "") {
 										ids = id;
@@ -442,13 +508,17 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 								jQuery(this).dialog('close');
 							}
 						}
-					});
+						});
+					} else {
+						jQueryError.dialog('open');
+					}
 		    	} else {
 			    	jQuerydialog.dialog('open');
 		    	}
 			});
-	    }          
+	    }
 	}
+	
 	<?php $fields = "ar_on_call,on_call_id,frequency,site,special_features,year_reported"; ?>
 	var on_call_grid = jQuery("#flex5").flexigrid
 	(
@@ -503,19 +573,29 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
     function deleteOnCall(com,grid) {
 	    if (com=='Delete Selected') {
 	    	jQuery(function() {
+	    		var error = "false";
 				if(jQuery('.trSelected',grid).length>0) {
 		    		// a workaround for a flaw in the demo system (http://dev.jqueryui.com/ticket/4375), ignore!
 					jQuery("#dialog-confirm").dialog("destroy");
-				
-					jQuery("#dialog-confirm").dialog({
+					jQuery('.trSelected', grid).each(function() {  
+               			var reportYear = jQuery(this).find('div')[3].textContent;
+						if(reportYear < <?php echo $AR_CUR_YEAR;?>) {
+	               			// Do not allow the deletion of years that are prior to the current reporting year.
+	               			error = "true";
+						}
+					});
+					
+					if(error == "false") {
+						// allow deletion
+						jQuery("#dialog-confirm").dialog({
 						resizable: false,
 						height:180,
 						modal: true,
 						buttons: {
 							'Delete all items': function() {
 								var ids = "";
-			               		jQuery('.trSelected', grid).each(function() {
-									var id = jQuery(this).attr('id');
+			               		jQuery('.trSelected', grid).each(function() {  
+			               			var id = jQuery(this).attr('id');
 									id = id.substring(id.lastIndexOf('row')+3);
 									if(ids == "") {
 										ids = id;
@@ -537,13 +617,17 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 								jQuery(this).dialog('close');
 							}
 						}
-					});
+						});
+					} else {
+						jQueryError.dialog('open');
+					}
 		    	} else {
 			    	jQuerydialog.dialog('open');
 		    	}
 			});
-	    }          
+	    }
 	}
+	
 	<?php $fields = "ar_procedures,procedures_id,average_hours,site,special_features,year_reported"; ?>
 	var procedures_grid = jQuery("#flex6").flexigrid
 	(
@@ -598,19 +682,29 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
     function deleteProcedure(com,grid) {
 	    if (com=='Delete Selected') {
 	    	jQuery(function() {
+	    		var error = "false";
 				if(jQuery('.trSelected',grid).length>0) {
 		    		// a workaround for a flaw in the demo system (http://dev.jqueryui.com/ticket/4375), ignore!
 					jQuery("#dialog-confirm").dialog("destroy");
-				
-					jQuery("#dialog-confirm").dialog({
+					jQuery('.trSelected', grid).each(function() {  
+               			var reportYear = jQuery(this).find('div')[3].textContent;
+						if(reportYear < <?php echo $AR_CUR_YEAR;?>) {
+	               			// Do not allow the deletion of years that are prior to the current reporting year.
+	               			error = "true";
+						}
+					});
+					
+					if(error == "false") {
+						// allow deletion
+						jQuery("#dialog-confirm").dialog({
 						resizable: false,
 						height:180,
 						modal: true,
 						buttons: {
 							'Delete all items': function() {
 								var ids = "";
-			               		jQuery('.trSelected', grid).each(function() {
-									var id = jQuery(this).attr('id');
+			               		jQuery('.trSelected', grid).each(function() {  
+			               			var id = jQuery(this).attr('id');
 									id = id.substring(id.lastIndexOf('row')+3);
 									if(ids == "") {
 										ids = id;
@@ -632,13 +726,17 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 								jQuery(this).dialog('close');
 							}
 						}
-					});
+						});
+					} else {
+						jQueryError.dialog('open');
+					}
 		    	} else {
 			    	jQuerydialog.dialog('open');
 		    	}
 			});
-	    }          
+	    }
 	}
+	
 	<?php $fields = "ar_other_activity,other_activity_id,average_hours,site,special_features,year_reported"; ?>
 	var other_grid = jQuery("#flex7").flexigrid
 	(
@@ -693,19 +791,29 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
     function deleteOther(com,grid) {
 	    if (com=='Delete Selected') {
 	    	jQuery(function() {
+	    		var error = "false";
 				if(jQuery('.trSelected',grid).length>0) {
 		    		// a workaround for a flaw in the demo system (http://dev.jqueryui.com/ticket/4375), ignore!
 					jQuery("#dialog-confirm").dialog("destroy");
-				
-					jQuery("#dialog-confirm").dialog({
+					jQuery('.trSelected', grid).each(function() {  
+               			var reportYear = jQuery(this).find('div')[3].textContent;
+						if(reportYear < <?php echo $AR_CUR_YEAR;?>) {
+	               			// Do not allow the deletion of years that are prior to the current reporting year.
+	               			error = "true";
+						}
+					});
+					
+					if(error == "false") {
+						// allow deletion
+						jQuery("#dialog-confirm").dialog({
 						resizable: false,
 						height:180,
 						modal: true,
 						buttons: {
 							'Delete all items': function() {
 								var ids = "";
-			               		jQuery('.trSelected', grid).each(function() {
-									var id = jQuery(this).attr('id');
+			               		jQuery('.trSelected', grid).each(function() {  
+			               			var id = jQuery(this).attr('id');
 									id = id.substring(id.lastIndexOf('row')+3);
 									if(ids == "") {
 										ids = id;
@@ -727,13 +835,17 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 								jQuery(this).dialog('close');
 							}
 						}
-					});
+						});
+					} else {
+						jQueryError.dialog('open');
+					}
 		    	} else {
 			    	jQuerydialog.dialog('open');
 		    	}
 			});
-	    }          
+	    }
 	}
+	
 	<?php $fields = "ar_clinical_innovation,clinical_innovation_id,description,year_reported"; ?>
 	var innovation_grid = jQuery("#flex8").flexigrid
 	(
@@ -784,19 +896,29 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
     function deleteInnovation(com,grid) {
 	    if (com=='Delete Selected') {
 	    	jQuery(function() {
+	    		var error = "false";
 				if(jQuery('.trSelected',grid).length>0) {
 		    		// a workaround for a flaw in the demo system (http://dev.jqueryui.com/ticket/4375), ignore!
 					jQuery("#dialog-confirm").dialog("destroy");
-				
-					jQuery("#dialog-confirm").dialog({
+					jQuery('.trSelected', grid).each(function() {  
+               			var reportYear = jQuery(this).find('div')[3].textContent;
+						if(reportYear < <?php echo $AR_CUR_YEAR;?>) {
+	               			// Do not allow the deletion of years that are prior to the current reporting year.
+	               			error = "true";
+						}
+					});
+					
+					if(error == "false") {
+						// allow deletion
+						jQuery("#dialog-confirm").dialog({
 						resizable: false,
 						height:180,
 						modal: true,
 						buttons: {
 							'Delete all items': function() {
 								var ids = "";
-			               		jQuery('.trSelected', grid).each(function() {
-									var id = jQuery(this).attr('id');
+			               		jQuery('.trSelected', grid).each(function() {  
+			               			var id = jQuery(this).attr('id');
 									id = id.substring(id.lastIndexOf('row')+3);
 									if(ids == "") {
 										ids = id;
@@ -818,12 +940,15 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 								jQuery(this).dialog('close');
 							}
 						}
-					});
+						});
+					} else {
+						jQueryError.dialog('open');
+					}
 		    	} else {
 			    	jQuerydialog.dialog('open');
 		    	}
 			});
-	    }          
+	    }
 	}
 	</script>
 	

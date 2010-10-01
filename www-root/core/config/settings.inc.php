@@ -576,6 +576,6 @@ define("TASK_VERIFICATION_REQUIRED", true);
 define("TASK_VERIFICATION_NOT_REQUIRED",false);
 
 //Defaults
-define("TASK_DEFAULT_RECIPIENT_TYPE",TASK_RECIPIENT_USER); //options are: proxy_id, grad_year, organisation_id
+define("TASK_DEFAULT_RECIPIENT_TYPE",TASK_RECIPIENT_USER); //options are: user, grad_year, organisation
 define("TASK_DEFAULT_REQUIRE_VERIFICATION", TASK_VERIFICATION_NOT_REQUIRED); //Verification is not required by default
 

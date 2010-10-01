@@ -14,7 +14,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 } elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	header("Location: ".ENTRADA_URL);
 	exit;
-} elseif (!$ENTRADA_ACL->amIAllowed(new TaskResource($TASK_ID), "update")) {
+} elseif (!$ENTRADA_ACL->amIAllowed(new TaskResource($TASK_ID, null, $ORGANISATION_ID), "update")) {
 	add_error("Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.");
 
 	echo display_error();
@@ -22,7 +22,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 	
-	$ORGANISATION_ID = $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"];
 	
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/AutoCompleteList.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 	
@@ -42,7 +41,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 		$task_completions = TaskCompletions::getByTask($TASK_ID, array("order_by" => array(array("lastname","asc"), array("firstname", "asc") ) ));
 		
 		$BULK_COMPLETE = "Verify Complete";
-		
+		$user = User::get($PROXY_ID);
 		switch ($_POST['action']) {
 			case $BULK_COMPLETE:
 				$recipients_to_complete = $_POST['complete_verify'];
@@ -50,15 +49,35 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 					add_error("No recipients were selected for task completion");
 				} else {
 					//NOTE: This makes no distunction between verification required vs. not required. This is to ensure there is a record of who "completed" the task.
+					$task_successes = array();
 					foreach ($recipients_to_complete as $recipient_id) {
+						$recipient = User::get($recipient_id);
 						$completion = TaskCompletion::get($TASK_ID,$recipient_id);
 						$completion->update(time(),$PROXY_ID,time());
+						task_verification_notification(	"confirm",
+													array(
+														"firstname" => $recipient->getFirstname(),
+														"lastname" => $recipient->getLastname(),
+														"email" => $recipient->getEmail()),
+													array(
+														"to_fullname" => $recipient->getFirstname(). " " . $recipient->getLastname(),
+														"from_firstname" => $user->getFirstname(),
+														"from_lastname" => $user->getLastname(),
+														"task_title" => $task->getTitle(),
+														"application_name" => APPLICATION_NAME . " Task System"
+														));
+						$task_successes[$task->getTitle()][] = $recipient->getFirstname(). " " . $recipient->getLastname();
 					}
 					if (!has_error()) {
 						clear_success();
-						add_success("Successfully updated task completion information for ".html_encode($task->getTitle()));
+						
+						$success_listing = generate_bulk_task_verify_success_list($task_successes);
+						$page_title = html_encode($task->getTitle()). " Completion Information";
 						$url = ENTRADA_URL."/admin/tasks?section=completion&id=".$TASK_ID;
-						$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
+
+						add_success("<p>You have successfully <strong>verified</strong> completion for the following:</p>".$success_listing."<p>You will now be redirected to the <strong>".$page_title."</strong> page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\">click here</a> to continue.</p>");
+						
+						header( "refresh:5;url=".$url );
 						display_status_messages();
 						break;
 					}
@@ -90,7 +109,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 					</tfoot>
 					<thead>
 						<tr>
-							<td><input type="checkbox" id="check_all" /></td>
+							<td><input type="checkbox" id="check_all" title="Select all" /></td>
 							<td>Recipient</td>
 							<td>Task Completion</td>
 							<td>Verifier</td>
@@ -100,13 +119,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 					<tbody>
 						<?php 
 							foreach ($task_completions as $task_completion) {
-							$recipient = $task_completion->getRecipient();
-							$verifier = $task_completion->getVerifier();			 
+								$recipient = $task_completion->getRecipient();
+								$verifier = $task_completion->getVerifier();
+								$v_date = $task_completion->getVerifiedDate();			 
 						?>
 						<tr>
 							<td>
-								<?php if ($verifier) { ?>
-								<img src="<?php echo ENTRADA_URL?>/images/accept.png" />
+								<?php if ($verifier && $v_date) { ?>
+								<img src="<?php echo ENTRADA_URL?>/images/task_completed.png" alt="Task Completed" title="Task Completed" />
 								<?php } else { ?> 
 								<input type="checkbox" name="complete_verify[]" value="<?php echo $recipient->getID(); ?>" />
 								<?php } ?>
@@ -125,7 +145,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 								<?php } ?>
 							</td>
 							<td>
-								<?php echo ($task_completion->isVerified())? date(DEFAULT_DATE_FORMAT, $task_completion->getVerifiedDate()) : "&nbsp;"?>
+								<?php echo ($task_completion->isVerified())? date(DEFAULT_DATE_FORMAT, $v_date) : "&nbsp;"?>
 							</td>
 						</tr>
 						<?php 
@@ -193,7 +213,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 						<tr>
 							<td>
 								<?php if ($task_completion->isCompleted()) { ?>
-								<img src="<?php echo ENTRADA_URL?>/images/accept.png" />
+								<img src="<?php echo ENTRADA_URL?>/images/task_completed.png" />
 								<?php } else { ?> 
 								<input type="checkbox" name="complete_verify[]" value="<?php echo $recipient->getID(); ?>" />
 								<?php } ?>

@@ -2905,3 +2905,12 @@ background:transparent url(../images/list-objective.gif) no-repeat 0 3px;
 	border-top:1px solid #EBEBEB;
 	padding-top:3px;
 }
+
+#task_verify_form {
+	margin: 3ex 0;
+	display:block;
+}
+
+.success_task .task_title {
+	font-weight:bold;
+}

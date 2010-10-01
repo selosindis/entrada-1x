@@ -55,53 +55,81 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 	<div class="clear">&nbsp;</div>
 
 	<!--  Include something similar to learning event calendar/range select here -->
-	<table class="tableList" cellspacing="0" cellpadding="1" summary="List of Events">
-		<colgroup>
-			<col class="modified" />
-			<col class="deadline" />
-			<col class="course" />
-			<col class="title" />
-			<col class="attachment" />
-		</colgroup>
-		<thead>
-			<tr>
-				<td class="modified">&nbsp;</td>
-				<td class="deadline<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "deadline") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("deadline", "Deadline"); ?></td>
-				<td class="course">Course</td>
-				<td class="title<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "title") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("title", " Task Title"); ?></td>
-				<td class="attachment">&nbsp;</td>
-			</tr>
-		</thead>
-		<?php if ($ENTRADA_ACL->amIAllowed("task", "delete", false)) : ?>
-		<tfoot>
-			<tr>
-				<td>&nbsp;</td>
-				<td colspan="4" style="padding-top: 10px">
-					<input type="submit" class="button" value="Delete Selected" />
-				</td>
-			</tr>
-		</tfoot>
-		<?php endif; ?>
-		
-		<tbody>
-		<?php foreach ($tasks as $task) { ?>
-			<tr>
-				<td>&nbsp;</td>
-				<td><?php echo ($task->getDeadline()) ? date(DEFAULT_DATE_FORMAT,$task->getDeadline()) : ""; ?></td>
-				<td><?php 
-					$course = $task->getCourse();
-					if ($course) {
-						?><a href="<?php echo ENTRADA_URL; ?>/courses?id=<?php echo $course->getID(); ?>">
-						<?php echo $course->getTitle(); ?></a>
-					<?php
-					}
-				?></td>
-				<td><a href="<?php echo ENTRADA_URL; ?>/admin/tasks?section=edit&id=<?php echo $task->getID(); ?>"><?php echo $task->getTitle(); ?></a></td>
-				<td><a href="<?php echo ENTRADA_URL; ?>/admin/tasks?section=completion&id=<?php echo $task->getID(); ?>" ><img src="<?php echo ENTRADA_URL; ?>/images/edit_list.png" title="Edit task completion information" alt="Edit task completion information"/></a></td>
-			</tr>
-		<?php } ?>
-		</tbody>	
-	</table>
+	<form method="post" action="<?php echo ENTRADA_URL; ?>/admin/tasks?section=delete">
+		<table class="tableList" id="task_list_admin" cellspacing="0" cellpadding="1" summary="List of Events">
+			<colgroup>
+				<col width="3%" />
+				<col class="deadline" />
+				<col class="course" />
+				<col class="title" />
+				<col class="attachment" />
+			</colgroup>
+			<thead>
+				<tr>
+					<td class="modified"><input type="checkbox" id="check_all" title="Select all" /></td>
+					<td class="deadline<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "deadline") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("deadline", "Deadline"); ?></td>
+					<td class="course">Course</td>
+					<td class="title<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "title") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("title", " Task Title"); ?></td>
+					<td class="attachment">&nbsp;</td>
+				</tr>
+			</thead>
+			<?php if ($ENTRADA_ACL->amIAllowed("task", "delete", false)) : ?>
+			<tfoot>
+				<tr>
+					<td>&nbsp;</td>
+					<td colspan="4" style="padding-top: 10px">
+						<input type="submit" class="button" value="Delete Selected" />
+					</td>
+				</tr>
+			</tfoot>
+			<?php endif; ?>
+			
+			<tbody>
+			<?php foreach ($tasks as $task) { ?>
+				<tr>
+					<td>
+						<input type="checkbox" name="tasks[]" value="<?php echo $task->getID(); ?>" />
+					</td>
+					<td><a href="<?php echo ENTRADA_URL; ?>/admin/tasks?section=edit&id=<?php echo $task->getID(); ?>"><?php echo ($task->getDeadline()) ? date(DEFAULT_DATE_FORMAT,$task->getDeadline()) : ""; ?></a></td>
+					<td><?php 
+						$course = $task->getCourse();
+						if ($course) {
+							?><a href="<?php echo ENTRADA_URL; ?>/admin/tasks?section=edit&id=<?php echo $task->getID(); ?>">
+							<?php echo $course->getTitle(); ?></a>
+						<?php
+						}
+					?></td>
+					<td><a href="<?php echo ENTRADA_URL; ?>/admin/tasks?section=edit&id=<?php echo $task->getID(); ?>"><?php echo $task->getTitle(); ?></a></td>
+					<td><a href="<?php echo ENTRADA_URL; ?>/admin/tasks?section=completion&id=<?php echo $task->getID(); ?>" ><img src="<?php echo ENTRADA_URL; ?>/images/edit_list.png" title="Edit task completion information" alt="Edit task completion information"/></a></td>
+				</tr>
+			<?php } ?>
+			</tbody>	
+		</table>
+	</form>
+	<script type="text/javascript">
+	function checkAll(event) {
+		var state = Event.findElement(event).checked;
+		$$("#task_list_admin tbody input[type=checkbox]").reject(isDisabled).each(function (el) { el.checked=state; });
+	}
+
+	function areAllChecked() {
+		return $$("#task_list_admin tbody input[type=checkbox]").reject(isDisabled).pluck("checked").all();
+	}
+
+	function isDisabled(el) {
+		return el.disabled;
+	}
+
+	function setCheckAll() {
+		var state = areAllChecked();
+		$$("#task_list_admin thead input[type=checkbox]").each(function (el) { el.checked=state; });
+	}
+
+	document.observe("dom:loaded",function() { 
+			$$("#task_list_admin tbody input[type=checkbox]").invoke("observe","click",setCheckAll);
+			$$("#task_list_admin thead input[type=checkbox]").invoke("observe","click",checkAll);
+		});
+	</script>
 	<?php
 
 }

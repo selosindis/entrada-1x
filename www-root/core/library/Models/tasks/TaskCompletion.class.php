@@ -48,6 +48,16 @@ class TaskCompletion {
 	}
 	
 	/**
+	 * 
+	 * @param User $user
+	 * 
+	 * @return bool
+	 */
+	public function isVerifier(User $user) {
+		return $user === $this->getVerifier();
+	}
+	
+	/**
 	 * @return bool
 	 */
 	public function isVerified() {
@@ -156,11 +166,10 @@ class TaskCompletion {
 			
 			$result = $db->GetRow($query, array($task_id,$recipient_id, $task_id,$recipient_id, $task_id,$recipient_id));
 			if ($result) {
-				$task_v = self::fromArray($result);  
-			}
+				$task_v = self::fromArray($result);
+			} 
 		}
 		return $task_v;
-		
 	}
 	
 	function __construct($task_id, $recipient_id, $verifier_id=null, $verified_date=null, $completed_date=null) {

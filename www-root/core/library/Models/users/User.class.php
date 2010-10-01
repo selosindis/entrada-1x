@@ -189,6 +189,10 @@ class User {
 		return $this->lastname . ", " . $this->firstname;
 	}
 	
+	function getEmail() {
+		return $this->email;
+	}
+	
 	/**
 	 * Returns the real world student number/employee number
 	 * @return int

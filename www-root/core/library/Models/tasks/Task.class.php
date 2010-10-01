@@ -171,10 +171,22 @@ class Task {
 		return TaskOwners::getCourse($this->task_id);
 	} 
 	
+	/**
+	 * 
+	 * @param $obj
+	 * 
+	 * @return bool
+	 */
 	function addOwner($obj) {
 		TaskOwners::add($this,$obj);
 	}
 	
+	/**
+	 * 
+	 * @param User $user
+	 * 
+	 * @return bool
+	 */
 	function isOwner(User $user) {
 		$task_owners = $this->getOwners();
 		if ($task_owners->count() == 0) {
@@ -182,7 +194,6 @@ class Task {
 			application_log("error", "A task was found to have no owners associated with it. Task ID: ".$task_id);
 			return false;
 		}
-		
 		
 		foreach($task_owners as $task_owner) {
 			if (($task_owner instanceof User) && ($task_owner === $user)  ) {
@@ -193,13 +204,17 @@ class Task {
 				return true;
 			}
 		}
-		
 	}
 	
+	/**
+	 * 
+	 * @param User $user
+	 * 
+	 * @return bool
+	 */
 	function isRecipient(User $user) {
-		$task_recipients = TaskRecipients::get($task_id);
+		$task_recipients = TaskRecipients::get($this->task_id);
 		
-		var_dump($task_recipients);
 		if ($task_recipients->count() == 0) {
 			application_log("error", "A task was found to have no recipients associated with it. Task ID: ".$task_id);
 			return false;
@@ -214,7 +229,20 @@ class Task {
 			}
 		}
 	}
-
+	
+	/**
+	 * Returns true if the supplied user is a verifier for any of the recipients
+	 * @param $user
+	 * 
+	 * @return bool
+	 */
+	function isVerifier(User $user) {
+		return TaskCompletions::isVerifier($user->getID(), $this->task_id);
+	}
+	
+	/**
+	 * @return bool
+	 */
 	function isVerificationRequired() {
 		return $this->require_verification;
 	}
@@ -280,23 +308,29 @@ class Task {
 	 * @param int $release_start
 	 * @param int $release_finish
 	 */
-	function update($updater_id, $title, $deadline, $duration = 0, $description = "", $release_start = null, $release_finish = null) {
+	function update($updater_id, $title, $deadline, $duration = 0, $description = "", $release_start = null, $release_finish = null, $organisation_id=null, $require_verification=0) {
 		global $db;
+		$query = "UPDATE `tasks` set `updated_by`=?, `updated_date`=?, `title`=?, `deadline`=?, `duration`=?, `description`=?, `release_start`=?, `release_finish`=?, `organisation_id`=?, `require_verification`=? where `task_id`=?";
 		
+		if(!$db->Execute($query, array($updater_id, time(), $title, $deadline, $duration, $description, $release_start, $release_finish, $organisation_id, $require_verification, $this->task_id))) {
+			add_error("Failed to update Task");
+			application_log("error", "Unable to update a tasks record. Database said: ".$db->ErrorMsg());
+		} else {
+			add_success("Successfully updated task.");
+		}
 	}
 	
 	/**
 	 * Deletes the task record AND associated audience, owners, and verification
 	 */
 	function delete() {
-		global $db,$SUCCESS,$SUCCESSSTR,$ERROR,$ERRORSTR;
-		$query = "DELETE `tasks`, `task_owner`, `task_audience`, `task_verified`
-					FROM `tasks` a left join `task_owner` b left join `task_audience` c left join `task_verified` d left join `task_recipients` e
-					where a.`task_id` = b.`task_id` and 
-					a.`task_id` = c.`task_id` and
-					a.`task_id` = d.`task_id` and
-					a.`task_id` = e.`task_id` and
-					a.`task_id`= ?";
+		global $db;
+		$query = "	DELETE a,b,c,d
+					FROM `tasks` a 
+					left join `task_owners` b on a.`task_id`=b.`task_id` 
+					left join `task_completion` c on a.`task_id`=c.`task_id`
+					left join `task_recipients` d on a.`task_id`=d.`task_id`
+					where a.`task_id` = ?";
 		if(!$db->Execute($query, array($this->task_id))) {
 			add_error("Failed to remove task from database.");
 			application_log("error", "Unable to delete a tasks record. Database said: ".$db->ErrorMsg());

@@ -29,4 +29,11 @@ class GraduatingClass extends Collection {
 	public function getGradYear() {
 		return $this->grad_year;
 	}
+	
+	/**
+	 * alias of getGradYear()
+	 */
+	public function getID() {
+		return $this->getGradYear();
+	}
 }

@@ -54,9 +54,6 @@ class TaskRecipients extends Collection {
 	 */
 	public static function add($task_id, $recipients) {
 		global $db;
-		if (!is_array($recipients)) { //single recipient case?
-			$recipients = array($recipients);
-		}
 		$query = "insert ignore into `task_recipients` (`task_id`,`recipient_id`, `recipient_type` ) values ";
 		$q_task_id = $db->qstr($task_id);
 		$records = array();
@@ -86,5 +83,38 @@ class TaskRecipients extends Collection {
 		} else {
 			add_success("Successfully added recipients to task.");
 		}
+	}
+	
+	public static function remove($task_id, $recipients) {
+		global $db;
+		$query = "delete from `task_recipients` where `task_id`=? and (";
+		$q_task_id = $db->qstr($task_id);
+		$records = array();
+		foreach($recipients as $recipient) {
+			if ($recipient instanceof User) {
+				$recipient_type = TASK_RECIPIENT_USER;
+				$recipient_id = $recipient->getID();
+			} elseif ($recipient instanceof GraduatingClass) {
+				$recipient_type = TASK_RECIPIENT_CLASS;
+				$recipient_id = $recipient->getGradYear();
+			} elseif ($recipient instanceof Organisation) {
+				$recipient_type = TASK_RECIPIENT_ORGANISATION;
+				$recipient_id = $recipient->getID();
+			} elseif (is_array($recipient)) {
+				//manually passing type and id
+				$recipient_type = $recipient['type'];
+				$recipient_id = $recipient['id'];
+			} else {
+				continue;
+			}
+			$records[] = "(`recipient_id`=".$db->qstr($recipient_id)." AND `recipient_type`=" . $db->qstr($recipient_type) . ")";
+		}
+		$query .= implode(" OR ",$records) . ")";
+		if(!$db->Execute($query, array($task_id))) {
+			add_error("Failed to remove recipients from task");
+			application_log("error", "Unable to remove from task_recipients records. Database said: ".$db->ErrorMsg());
+		} else {
+			add_success("Successfully removed recipients from task.");
+		}		
 	}
 }

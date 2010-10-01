@@ -65,23 +65,57 @@ class TaskCompletions extends Collection {
 		return new self($completions);
 	}
 	
-	public static function getByVerifier(User $verifier) {
+	public static function getByVerifier($proxy_id, $options=null) {
+		
+		if (isset($options['order_by'])) {
+			if (is_array($options['order_by'])) {
+				foreach ($options['order_by'] as $orders) {
+					$order[] = "`".$orders[0]."` ". (isset($orders[1]) ? $orders[1] : "asc"); 
+				}	
+			}
+			$order_by = " ORDER BY ".implode(",",$order);
+		}
+		if (isset($options['limit'])) {
+			$limit = $options['limit'];
+		} else {
+			$limit = -1;
+		}
+		if (isset($options['offset'])) {
+			$offset = $options['offset'];
+		} else {
+			$offset = -1;
+		}
+		if (isset($options['where'])) {
+			$where = " AND " . $options['where'];
+		}
 		global $db;
-
-		$proxy_id = $verifier->getID();
 		
-		$query = "SELECT * from `task_completion` where `verifier_id`=".$db->qstr($task_id);
+		$query = "	SELECT a.*, b.*,c.* from `task_completion` a
+					left join `tasks` b on b.`task_id`=a.`task_id`
+					inner join `".AUTH_DATABASE."`.`user_data` c on a.`recipient_id`=c.`id` 
+					where a.`verifier_id`=?".$where.$order_by;
 		
-		$results = $db->getAll($query);
+		$results = $db->SelectLimit($query,$limit, $offset, array($proxy_id));
 		$completions = array();
 		if ($results) {
 			foreach ($results as $result) {
+				$task = Task::fromArray($result);//for cache
+				$user = User::fromArray($result);//for cache
 				$completion = TaskCompletion::fromArray($result);
 				$completions[] = $completion;
 			}
 		}
 		return new self($completions);
+	}
+	
+	public static function isVerifier($proxy_id, $task_id) {
+		global $db;
+
+		$query = "SELECT `verifier_id` from `task_completion` where `verifier_id`=? and `task_id`=?";
 		
+		$result = $db->getOne($query, array($proxy_id,$task_id));
+		
+		return (!!$result);
 	}
 	
 	public static function getByRecipient(User $recipient, $options=null) {

@@ -72,7 +72,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 				}
 			}
 			
-			$deadline = validate_calendar("Deadline","deadline");
+			$deadline = validate_calendar("Deadline","deadline", true, false);
 			if((isset($deadline)) && ((int) $deadline)) {
 				$PROCESSED["deadline"] = (int) $deadline;
 			}
@@ -231,15 +231,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 					switch($_POST['post_action']) {
 						case 'new':
 							$url = ENTRADA_URL."/admin/tasks?section=create";
+							$page_title="Create Task";
 							break;
 						case 'index':
 						default:
+							$page_title="Manage Tasks";
 							$url = ENTRADA_URL."/admin/tasks";
 					}
-					$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
-							
+					header( "refresh:5;url=".$url );
+								
 					clear_success(); //clear sucess messages from models.
-					add_success("Successully created task.");
+					add_success("<p>You have successfully created the <strong>".$PROCESSED['title']."</strong> task.</p><p>You will now be redirected to the <strong>".$page_title."</strong> page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\">click here</a> to continue.</p>");
 					display_status_messages();
 					break;
 				}
@@ -354,7 +356,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 						<td colspan="3">&nbsp;</td>
 					</tr>
 				<tr>
-					<td style="vertical-align: top"><input type="radio" name="task_recipient_type" id="task_recipient_type_grad_year" value="<?php echo TASK_RECIPIENT_CLASS; ?>" onclick="selectTaskRecipientsOption('<?php echo TASK_RECIPIENT_CLASS; ?>')" style="vertical-align: middle"<?php echo (($PROCESSED["task_recipient_type"] == TASK_RECIPIENT_CLASS) ? " checked=\"checked\"" : ""); ?> /></td>
+					<td style="vertical-align: top"><input type="radio" name="task_recipient_type" id="task_recipient_type_<?php echo TASK_RECIPIENT_CLASS; ?>" value="<?php echo TASK_RECIPIENT_CLASS; ?>" onclick="selectTaskRecipientsOption('<?php echo TASK_RECIPIENT_CLASS; ?>')" style="vertical-align: middle"<?php echo (($PROCESSED["task_recipient_type"] == TASK_RECIPIENT_CLASS) ? " checked=\"checked\"" : ""); ?> /></td>
 					<td colspan="2" style="padding-bottom: 15px">
 						<label for="task_recipient_type_<?php echo TASK_RECIPIENT_CLASS; ?>" class="radio-group-title">Entire Class Task</label>
 						<div class="content-small">This task is intended for an entire class.</div>
@@ -377,7 +379,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 					<td colspan="3">&nbsp;</td>
 				</tr>
 				<tr>
-					<td style="vertical-align: top"><input type="radio" name="task_recipient_type" id="task_recipient_type_proxy_id" value="<?php echo TASK_RECIPIENT_USER; ?>" onclick="selectTaskRecipientsOption('<?php echo TASK_RECIPIENT_USER; ?>')" style="vertical-align: middle"<?php echo (($PROCESSED["task_recipient_type"] == TASK_RECIPIENT_USER) ? " checked=\"checked\"" : ""); ?> /></td>
+					<td style="vertical-align: top"><input type="radio" name="task_recipient_type" id="task_recipient_type_<?php echo TASK_RECIPIENT_USER; ?>" value="<?php echo TASK_RECIPIENT_USER; ?>" onclick="selectTaskRecipientsOption('<?php echo TASK_RECIPIENT_USER; ?>')" style="vertical-align: middle"<?php echo (($PROCESSED["task_recipient_type"] == TASK_RECIPIENT_USER) ? " checked=\"checked\"" : ""); ?> /></td>
 					<td colspan="2" style="padding-bottom: 15px">
 						<label for="task_recipient_type_<?php echo TASK_RECIPIENT_USER; ?>" class="radio-group-title">Individual Student Task</label> 
 						<div class="content-small">This task is intended for a specific student or students.</div>
@@ -419,7 +421,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 				<tr>
 					<td style="vertical-align: top"><input type="radio" name="task_recipient_type" id="task_recipient_type_<?php echo TASK_RECIPIENT_ORGANISATION; ?>" value="<?php echo TASK_RECIPIENT_ORGANISATION; ?>" onclick="selectTaskRecipientsOption('<?php echo TASK_RECIPIENT_ORGANISATION; ?>')" style="vertical-align: middle"<?php echo (($PROCESSED["task_recipient_type"] == TASK_RECIPIENT_ORGANISATION) ? " checked=\"checked\"" : ""); ?> /></td>
 					<td colspan="2" style="padding-bottom: 15px">
-						<label for="task_recipient_type_organisation_id" class="radio-group-title">Entire Organisation Task</label>
+						<label for="task_recipient_type_<?php echo TASK_RECIPIENT_ORGANISATION; ?>" class="radio-group-title">Entire Organisation Task</label>
 						<div class="content-small">This task is intended for every member of an organisation.</div>
 					</td>
 				</tr>
@@ -433,8 +435,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 							if ($organisations) {
 								foreach($organisations as $organisation) {
 									$organisation_id = $organisation->getID();
-									$organisation_title = $organisation->getTitle();
-									echo "<option value=\"".$organisation_id."\"".(($PROCESSED["associated_organisation_id"] == $year) ? " selected=\"selected\"" : "").">".$organisation_title."</option>\n";
+									if ($ENTRADA_ACL->amIAllowed(new TaskResource(null, null, $organisation_id), 'create')) { 
+										$organisation_title = $organisation->getTitle();
+										echo "<option value=\"".$organisation_id."\"".(($PROCESSED["associated_organisation_id"] == $year) ? " selected=\"selected\"" : "").">".$organisation_title."</option>\n";
+									}
 								}
 							}
 							?>

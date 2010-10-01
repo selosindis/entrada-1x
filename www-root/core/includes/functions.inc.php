@@ -10808,3 +10808,38 @@ function getClinicalFromProxy($proxy_id) {
     
 	return $result["clinical"];
 }
+
+/**
+ * This function determines whether to allow users to edit the Year Reported value within the Annual
+ * Reporting module. If the uer is attemtping to edit a previous year then the year reported field cannot
+ * be changed. If they are editing a current year and changing it to a previous year then they should
+ * be allowed to change the value after a submit containing an error (uses $allowEdit for this).
+ *
+ * @param int $year_reported, $AR_CUR_YEAR, $AR_PAST_YEARS, $AR_FUTURE_YEARS, $allowEdit
+ * @return displays appropriate HTML
+ */
+function displayARYearReported($year_reported, $AR_CUR_YEAR, $AR_PAST_YEARS, $AR_FUTURE_YEARS, $allowEdit = false) {
+	if(isset($year_reported) && $year_reported < $AR_CUR_YEAR && !$allowEdit) {
+		echo "<td>".$year_reported." - <span class=\"content-small\"><strong>Note: </strong>Previous Reporting Years cannot be changed.</span>
+		<input type=\"hidden\" name=\"year_reported\" value=\"".$year_reported."\" />";
+	} else {
+	?>
+	<td><select name="year_reported" id="year_reported" style="vertical-align: middle">
+	<?php
+		for($i=$AR_PAST_YEARS; $i<=$AR_FUTURE_YEARS; $i++) {
+			if(isset($year_reported) && $year_reported != '') {
+				$defaultYear = $year_reported;
+			} else if(isset($year_reported) && $year_reported != '') {
+				$defaultYear = $year_reported;
+			} else  {
+				$defaultYear = $AR_CUR_YEAR;
+			}
+			echo "<option value=\"".$i."\"".(($defaultYear == $i) ? " selected=\"selected\"" : "").">".$i."</option>\n";
+		}
+		echo "</select>";
+		}
+		
+	?>
+	</td>
+	<?php
+}

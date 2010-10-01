@@ -70,14 +70,34 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 				}
 				if (!has_error()) {
 					$completion->update(time(),$verifier->getID(), $verification_date);
+					if ($task->isVerificationRequired()) { //don't email if verification isn't required
+						task_verification_notification(	"request",
+														array(
+															"firstname" => $verifier->getFirstname(),
+															"lastname" => $verifier->getLastname(),
+															"email" => $verifier->getEmail()),
+														array(
+															"to_fullname" => $verifier->getFirstname(). " " . $verifier->getLastname(),
+															"from_firstname" => $user->getFirstname(),
+															"from_lastname" => $user->getLastname(),
+															"task_title" => $task->getTitle(),
+															"application_name" => APPLICATION_NAME . " Task System",
+															"task_verification_url" => ENTRADA_URL."/tasks?section=verify&id=".$task->getID()."&recipient=".$user->getID()
+															));
+					}
 				}
 				
 				if (!has_error()) {
 					clear_success();
-					add_success("Successfully updated task completion information for ".html_encode($task->getTitle()));
+					$page_title = "Task Details";
 					$url = ENTRADA_URL."/tasks?section=details&id=".$TASK_ID;
-					$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
-					display_status_messages();
+					if (!$task->isVerificationRequired()) {
+						add_success("<p>You have successfully submitted <strong>completion</strong> of the <strong>".html_encode($task->getTitle())."</strong> task.</p><p>You will now be redirected to the <strong>".$page_title."</strong> page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\">click here</a> to continue.</p>");
+					} else {
+						add_success("<p>You have successfully <strong>requested verification</strong> from <strong>".$verifier->getFirstname() . " " . $verifier->getLastname()."</strong> for completion the <strong>".html_encode($task->getTitle())."</strong> task.</p><p>You will now be redirected to the <strong>".$page_title."</strong> page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\">click here</a> to continue.</p>");
+					}
+						header( "refresh:5;url=".$url );
+						display_status_messages();
 					break;
 				}
 				
@@ -103,7 +123,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 					<tr>
 						<td>&nbsp;</td>
 						<td>Course</td>
-						<td><a href="<?php echo ENTRADA_URL; ?>/courses?id=<?php echo $course_id; ?>"><?php echo $course_title; ?></a></td>
+						<td><a href="<?php echo ENTRADA_URL; ?>/courses?id=<?php echo $course_id; ?>"><?php echo html_encode($course_title); ?></a></td>
 					</tr>
 					<?php 
 						}
@@ -116,15 +136,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 					</tr>
 					<?php } ?>
 					<tr>
+						<td colspan="3">&nbsp;</td>
+					</tr>
+					<tr>
 						<td>&nbsp;</td>
-						<td>Description</td>
-						<td><?php echo html_encode($task->getDescription()); ?></td>
+						<td style="vertical-align:top;">Description</td>
+						<td><?php echo clean_input($task->getDescription(),array("allowedtags")); ?></td>
 					</tr>
 					<?php if ($task->isRecipient($user)) { //might be allowed to view, but not actually a recipient. e.g. admin. ?>
 					<tr>
 						<td colspan="3"><h2>Task Completion</h2></td>
 					</tr>
-					<?php if ($completion->isCompleted() && (!$task->isVerificationRequired() || $completion->isVerified()) ) { ?>
+					<?php if ($completion->isCompleted()) { ?>
 					<tr>
 						<td>&nbsp;</td>
 						<td>Task Completed</td>
@@ -157,7 +180,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 					<?php
 							}
 						}
-					} else { 
+					} else {
 					?> 
 					<tr>
 						<td>

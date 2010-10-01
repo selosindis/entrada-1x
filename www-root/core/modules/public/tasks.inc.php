@@ -46,6 +46,14 @@ if (!defined("PARENT_INCLUDED")) {
 		$TASK_ID = 0;
 	}
 	
+	if (isset($_GET["recipient"]) && ($tmp_input = clean_input($_GET["recipient"], array("nows", "int")))) {
+		$RECIPIENT_ID = $tmp_input;
+	} else {
+		$RECIPIENT_ID = 0;
+	}
+	
+	$ORGANISATION_ID = $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"];
+	
 	if (($router) && ($router->initRoute())) {
 		$module_file = $router->getRoute();
 		if ($module_file) {

@@ -83,7 +83,9 @@ class Entrada_ACL extends ACL_Factory {
 									"reports"
 									),
 			"annualreport",
-			"task"
+			"task" => array(
+				"taskverification"
+			)
 		)
 	);
 	/**
@@ -520,6 +522,68 @@ class TaskRecipientAssertion implements Zend_Acl_Assert_Interface {
 		require_once("Models/tasks/Task.class.php");
 		$task = Task::get($task_id);
 		return 	$task->isRecipient($user);
+	}
+}
+
+class TaskVerifierAssertion implements Zend_Acl_Assert_Interface {
+
+/**
+ * Asserts that the role references the director, coordinator, or secondary director of the course resource
+ *
+ * @param Zend_Acl $acl The ACL object isself (the one calling the assertion)
+ * @param Zend_Acl_Role_Interface $role The role being queried
+ * @param Zend_Acl_Resource_Interface $resource The resource being queried
+ * @param string $privilege The privilege being queried
+ * @return boolean
+ */
+	public function assert(Zend_Acl $acl, Zend_Acl_Role_Interface $role = null, Zend_Acl_Resource_Interface $resource = null, $privilege = null) {
+		//If asserting is off then return true right away
+		if((isset($resource->assert) && $resource->assert == false) || (isset($acl->_entrada_last_query) && isset($acl->_entrada_last_query->assert) && $acl->_entrada_last_query->assert == false)) {
+			return true;
+		}
+
+		if(isset($resource->task_id)) {
+			$task_id = $resource->task_id;
+		} else if(isset($acl->_entrada_last_query->task_id)) {
+			$task_id = $acl->_entrada_last_query->task_id;
+		} else {
+			
+			return false;
+			// TODO implement parsing of task_id, and recipient_id.
+		}
+
+		$verifier_id = $resource->verifier_id;
+
+		if (!$verifier_id) {
+			$role_id = $role->getRoleId();
+			$verifier_id	= preg_replace('/[^0-9]+/', "", $role_id);
+		}
+
+		if($verifier_id == "") {
+			$role_id = $acl->_entrada_last_query_role->getRoleId();
+			$verifier_id	= preg_replace('/[^0-9]+/', "", $role_id);
+		}
+		
+		require_once("Models/users/User.class.php");
+		$verifier = User::get($verifier_id);
+		
+		$recipient_id = $resource->recipient_id;
+		
+		if ($recipient_id) {
+			require_once("Models/tasks/TaskCompletion.class.php");
+			$task = TaskCompletion::get($task_id, $recipient_id);
+		} else {
+			//might be a verifier checking the task 
+			$resource_id = $resource->getResourceId();
+			$resource_type = preg_replace('/[0-9]+/', "", $resource_id);
+			if ($resource_type == "task") {
+				require_once("Models/tasks/Task.class.php");
+				$task = Task::get($task_id);
+			}
+			return false;	
+		}
+		
+		return 	$task->isVerifier($verifier);
 	}
 }
 
@@ -1431,6 +1495,59 @@ class TaskResource extends EntradaAclResource {
 	 */
 	public function getResourceId() {
 		return "task".($this->specific ? $this->task_id : "");
+	}
+}
+
+/**
+ * TaskCompletion resource object for the EntradaACL.
+ *
+ * @author Organisation: Queen's University
+ * @author Unit: School of Medicine
+ * @author Developer: Jonathan Fingland <jonathan.fingland@queensu.ca>
+ * @copyright Copyright 2010 Queen's University. All Rights Reserved.
+ */
+class TaskVerificationResource extends EntradaAclResource {
+	/**
+	 * The event ID this resource represents
+	 * @var integer
+	 */
+	var $task_id;
+
+	/**
+	 * This organisation ID, used for ResourceOrganisationAssertion.
+	 * @see ResourceOrganisationAssertion()
+	 * @var integer
+	 */
+	var $organisation_id;
+	
+	var $recipient_id;
+	
+	var $verifier_id;
+	
+	/**
+	 * Creates this event resource with the supplied information
+	 * @param integer $event_id This event's ID
+	 * @param integer $course_id This event's parent course's ID
+	 * @param integer $organisation_id This event's parent course's organisation ID
+	 * @param boolean $assert Wheather or not to use assertions when looking at rules
+	 */
+	function __construct($task_id, $recipient_id=null, $verifier_id=null, $organisation_id = null, $assert = null) {
+		$this->task_id = $task_id;
+		$this->recipient_id = $recipient_id;
+		$this->verifier_id = $verifier_id;
+		$this->organisation_id = $organisation_id;
+		if(isset($assert)) {
+			$this->assert = $assert;
+		}
+	}
+
+	/**
+	 * ACL method for keeping track. Required by Zend_Acl_Resource_Interface.
+	 * Will return based on specifc property of this resource instance.
+	 * @return string
+	 */
+	public function getResourceId() {
+		return "taskverification".($this->specific ? $this->task_id : "");
 	}
 }
 

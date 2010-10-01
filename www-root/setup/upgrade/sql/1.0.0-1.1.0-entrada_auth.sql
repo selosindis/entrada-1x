@@ -17,7 +17,15 @@ INSERT INTO `acl_permissions` (`resource_type`, `resource_value`, `entity_type`,
 ('mspr', NULL, 'group:role', 'staff:admin', 1, 1, 1, 1, 1, NULL),
 ('mspr', NULL, 'group', 'student', 1, NULL, 1, 1, NULL, NULL),
 ('user', NULL, 'group:role', 'staff:admin', 1, 1, 1, 1, 1, NULL),
-('incident', NULL, 'group:role', 'staff:admin', 1, 1, 1, 1, 1, NULL);
+('incident', NULL, 'group:role', 'staff:admin', 1, 1, 1, 1, 1, NULL),
+('task', NULL, 'group:role', 'staff:admin', 1, 1, 1, 1, 1, 'ResourceOrganisation'),
+('task', NULL, 'group:role', 'faculty:director', 1, NULL, 1, 1, NULL, 'TaskOwner'),
+('task', NULL, NULL, NULL, 1, NULL, 1, NULL, NULL, 'TaskRecipient'),
+('task', NULL, 'role', 'pcoordinator', 1, NULL, 1, 1, NULL, 'TaskOwner'),
+('task', NULL, 'group:role', 'faculty:director', 1, 1, 1, 1, 1, 'CourseOwner'),
+('task', NULL, 'role', 'pcoordinator', 1, 1, 1, 1, 1, 'CourseOwner'),
+('taskverification', NULL, NULL, NULL, 1, NULL, NULL, 1, NULL, 'TaskVerifier'),
+('task', NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, 'TaskVerifier');
 
 -- Table: departments
 

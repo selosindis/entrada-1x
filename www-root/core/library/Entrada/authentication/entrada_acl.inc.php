@@ -83,8 +83,11 @@ class Entrada_ACL extends ACL_Factory {
 									"reports"
 									),
 			"annualreport",
+			"task" => array(
+				"taskverification",
 			"mydepartment",
 			"myowndepartment"
+			)
 		)
 	);
 	/**
@@ -174,12 +177,11 @@ class Entrada_ACL extends ACL_Factory {
 		if($resource instanceof Zend_Acl_Resource_Interface) {
 			$resource->assert = $assert;
 		} else {
-		 	$resource = new EntradaAclResource($resource, $assert);
+			$resource = new EntradaAclResource($resource, $assert);
 		}
 		if(!($user instanceof Zend_Acl_Role_Interface)) {
 			$user = new EntradaUser($user);
 		}
-		
 		return $this->acl->isAllowed($user, $resource, $action);
 	}
 
@@ -412,6 +414,181 @@ class CourseOwnerAssertion implements Zend_Acl_Assert_Interface {
 		return false;
 	}
 }
+
+
+/**
+ * Task Owner Assertion
+ *
+ * Used to assert that the task referenced by the task resource is owned by the user referenced by the user role, or is an owner of a referenced owner group.
+ *
+ * @author Organisation: Queen's University
+ * @author Unit: School of Medicine
+ * @author Developer: Harry Brundage <hbrundage@qmed.ca>
+ * @copyright Copyright 2010 Queen's University. All Rights Reserved.
+ */
+class TaskOwnerAssertion implements Zend_Acl_Assert_Interface {
+
+/**
+ * Asserts that the role references the director, coordinator, or secondary director of the course resource
+ *
+ * @param Zend_Acl $acl The ACL object isself (the one calling the assertion)
+ * @param Zend_Acl_Role_Interface $role The role being queried
+ * @param Zend_Acl_Resource_Interface $resource The resource being queried
+ * @param string $privilege The privilege being queried
+ * @return boolean
+ */
+	public function assert(Zend_Acl $acl, Zend_Acl_Role_Interface $role = null, Zend_Acl_Resource_Interface $resource = null, $privilege = null) {
+		//If asserting is off then return true right away
+		if((isset($resource->assert) && $resource->assert == false) || (isset($acl->_entrada_last_query) && isset($acl->_entrada_last_query->assert) && $acl->_entrada_last_query->assert == false)) {
+			return true;
+		}
+
+		if(isset($resource->task_id)) {
+			$task_id = $resource->task_id;
+		} else if(isset($acl->_entrada_last_query->task_id)) {
+			$task_id = $acl->_entrada_last_query->task_id;
+		} else {
+			//Parse out the user ID and course ID
+			$resource_id = $resource->getResourceId();
+			$resource_type = preg_replace('/[0-9]+/', "", $resource_id);
+
+			if($resource_type !== "task") {
+				return false;
+			}
+
+			$task_id = preg_replace('/[^0-9]+/', "", $resource_id);
+		}
+
+		$role_id = $role->getRoleId();
+		$user_id	= preg_replace('/[^0-9]+/', "", $role_id);
+
+		if($user_id == "") {
+			$role_id = $acl->_entrada_last_query_role->getRoleId();
+			$user_id	= preg_replace('/[^0-9]+/', "", $role_id);
+		}
+		
+		require_once("Models/users/User.class.php");
+		$user = User::get($user_id);
+		
+		require_once("Models/tasks/Task.class.php");
+		$task = Task::get($task_id);
+		return 	$task->isOwner($user);
+	}
+}
+
+
+class TaskRecipientAssertion implements Zend_Acl_Assert_Interface {
+
+/**
+ * Asserts that the role references the director, coordinator, or secondary director of the course resource
+ *
+ * @param Zend_Acl $acl The ACL object isself (the one calling the assertion)
+ * @param Zend_Acl_Role_Interface $role The role being queried
+ * @param Zend_Acl_Resource_Interface $resource The resource being queried
+ * @param string $privilege The privilege being queried
+ * @return boolean
+ */
+	public function assert(Zend_Acl $acl, Zend_Acl_Role_Interface $role = null, Zend_Acl_Resource_Interface $resource = null, $privilege = null) {
+		//If asserting is off then return true right away
+		if((isset($resource->assert) && $resource->assert == false) || (isset($acl->_entrada_last_query) && isset($acl->_entrada_last_query->assert) && $acl->_entrada_last_query->assert == false)) {
+			return true;
+		}
+
+		if(isset($resource->task_id)) {
+			$task_id = $resource->task_id;
+		} else if(isset($acl->_entrada_last_query->task_id)) {
+			$task_id = $acl->_entrada_last_query->task_id;
+		} else {
+			//Parse out the user ID and course ID
+			$resource_id = $resource->getResourceId();
+			$resource_type = preg_replace('/[0-9]+/', "", $resource_id);
+
+			if($resource_type !== "task") {
+				return false;
+			}
+
+			$task_id = preg_replace('/[^0-9]+/', "", $resource_id);
+		}
+
+		$role_id = $role->getRoleId();
+		$user_id	= preg_replace('/[^0-9]+/', "", $role_id);
+
+		if($user_id == "") {
+			$role_id = $acl->_entrada_last_query_role->getRoleId();
+			$user_id	= preg_replace('/[^0-9]+/', "", $role_id);
+		}
+		
+		require_once("Models/users/User.class.php");
+		$user = User::get($user_id);
+		
+		require_once("Models/tasks/Task.class.php");
+		$task = Task::get($task_id);
+		return 	$task->isRecipient($user);
+	}
+}
+
+class TaskVerifierAssertion implements Zend_Acl_Assert_Interface {
+
+/**
+ * Asserts that the role references the director, coordinator, or secondary director of the course resource
+ *
+ * @param Zend_Acl $acl The ACL object isself (the one calling the assertion)
+ * @param Zend_Acl_Role_Interface $role The role being queried
+ * @param Zend_Acl_Resource_Interface $resource The resource being queried
+ * @param string $privilege The privilege being queried
+ * @return boolean
+ */
+	public function assert(Zend_Acl $acl, Zend_Acl_Role_Interface $role = null, Zend_Acl_Resource_Interface $resource = null, $privilege = null) {
+		//If asserting is off then return true right away
+		if((isset($resource->assert) && $resource->assert == false) || (isset($acl->_entrada_last_query) && isset($acl->_entrada_last_query->assert) && $acl->_entrada_last_query->assert == false)) {
+			return true;
+		}
+
+		if(isset($resource->task_id)) {
+			$task_id = $resource->task_id;
+		} else if(isset($acl->_entrada_last_query->task_id)) {
+			$task_id = $acl->_entrada_last_query->task_id;
+		} else {
+			
+			return false;
+			// TODO implement parsing of task_id, and recipient_id.
+		}
+
+		$verifier_id = $resource->verifier_id;
+
+		if (!$verifier_id) {
+			$role_id = $role->getRoleId();
+			$verifier_id	= preg_replace('/[^0-9]+/', "", $role_id);
+		}
+
+		if($verifier_id == "") {
+			$role_id = $acl->_entrada_last_query_role->getRoleId();
+			$verifier_id	= preg_replace('/[^0-9]+/', "", $role_id);
+		}
+		
+		require_once("Models/users/User.class.php");
+		$verifier = User::get($verifier_id);
+		
+		$recipient_id = $resource->recipient_id;
+		
+		if ($recipient_id) {
+			require_once("Models/tasks/TaskCompletion.class.php");
+			$task = TaskCompletion::get($task_id, $recipient_id);
+		} else {
+			//might be a verifier checking the task 
+			$resource_id = $resource->getResourceId();
+			$resource_type = preg_replace('/[0-9]+/', "", $resource_id);
+			if ($resource_type == "task") {
+				require_once("Models/tasks/Task.class.php");
+				$task = Task::get($task_id);
+			}
+			return false;	
+		}
+		
+		return 	$task->isVerifier($verifier);
+	}
+}
+
 /**
  * Gradebook Owner Assertion
  *
@@ -515,7 +692,7 @@ class EventOwnerAssertion implements Zend_Acl_Assert_Interface {
 
 		if($user_id == "") {
 			$role_id = $acl->_entrada_last_query_role->getRoleId();
-			$user_id	= preg_replace('/[^0-9]+/', "", $role_id);
+			$user_id = preg_replace('/[^0-9]+/', "", $role_id);
 		}
 
 		return $this->_checkEventOwner($user_id, $event_id);
@@ -554,38 +731,6 @@ class EventOwnerAssertion implements Zend_Acl_Assert_Interface {
 		}
 		
 		return false;
-	}
-}
-
-/**
- * Is Student Assertion 
- *
- * Used to assert that the user referenced is a student
- *
- * @author Organisation: Queen's University
- * @author Unit: School of Medicine
- * @author Developer: Jonathan Fingland <jonathan.fingland@queensu.ca>
- * @copyright Copyright 2010 Queen's University. All Rights Reserved.
- */
-class IsStudentAssertion implements Zend_Acl_Assert_Interface {
-/**
- * Asserts that the user group is student 
- *
- * @param Zend_Acl $acl The ACL object isself (the one calling the assertion)
- * @param Zend_Acl_Role_Interface $role The role being queried
- * @param Zend_Acl_Resource_Interface $resource The resource being queried
- * @param string $privilege The privilege being queried
- * @return boolean
- */
-	public function assert(Zend_Acl $acl, Zend_Acl_Role_Interface $role = null, Zend_Acl_Resource_Interface $resource = null, $privilege = null) {
-		
-		if((isset($resource->assert) && $resource->assert == false) || (isset($acl->last_query) && isset($acl->last_query->assert) && $acl->last_query->assert == false)) {
-			return true;
-		}
-		
-		echo "Assertion required<br />";
-		
-		return ($acl && $acl->last_query_role && $acl->last_query_role->details && $acl->last_query_role->details->group == "student");
 	}
 }
 
@@ -1298,6 +1443,113 @@ class EventResource extends EntradaAclResource {
 	 */
 	public function getResourceId() {
 		return "event".($this->specific ? $this->event_id : "");
+	}
+}
+
+/**
+ * Task resource object for the EntradaACL.
+ *
+ * @author Organisation: Queen's University
+ * @author Unit: School of Medicine
+ * @author Developer: Jonathan Fingland <jonathan.fingland@queensu.ca>
+ * @copyright Copyright 2010 Queen's University. All Rights Reserved.
+ */
+class TaskResource extends EntradaAclResource {
+	/**
+	 * The event ID this resource represents
+	 * @var integer
+	 */
+	var $task_id;
+
+	/**
+	 * The course ID for the course this event belongs to
+	 * @var integer
+	 */
+	var $course_id;
+	
+	/**
+	 * This event's parent course's organisation ID, used for ResourceOrganisationAssertion.
+	 * @see ResourceOrganisationAssertion()
+	 * @var integer
+	 */
+	var $organisation_id;
+	
+	/**
+	 * Creates this event resource with the supplied information
+	 * @param integer $event_id This event's ID
+	 * @param integer $course_id This event's parent course's ID
+	 * @param integer $organisation_id This event's parent course's organisation ID
+	 * @param boolean $assert Wheather or not to use assertions when looking at rules
+	 */
+	function __construct($task_id, $course_id= null, $organisation_id = null, $assert = null) {
+		$this->task_id = $task_id;
+		$this->course_id = $course_id;
+		$this->organisation_id = $organisation_id;
+		if(isset($assert)) {
+			$this->assert = $assert;
+		}
+	}
+
+	/**
+	 * ACL method for keeping track. Required by Zend_Acl_Resource_Interface.
+	 * Will return based on specifc property of this resource instance.
+	 * @return string
+	 */
+	public function getResourceId() {
+		return "task".($this->specific ? $this->task_id : "");
+	}
+}
+
+/**
+ * TaskCompletion resource object for the EntradaACL.
+ *
+ * @author Organisation: Queen's University
+ * @author Unit: School of Medicine
+ * @author Developer: Jonathan Fingland <jonathan.fingland@queensu.ca>
+ * @copyright Copyright 2010 Queen's University. All Rights Reserved.
+ */
+class TaskVerificationResource extends EntradaAclResource {
+	/**
+	 * The event ID this resource represents
+	 * @var integer
+	 */
+	var $task_id;
+
+	/**
+	 * This organisation ID, used for ResourceOrganisationAssertion.
+	 * @see ResourceOrganisationAssertion()
+	 * @var integer
+	 */
+	var $organisation_id;
+	
+	var $recipient_id;
+	
+	var $verifier_id;
+	
+	/**
+	 * Creates this event resource with the supplied information
+	 * @param integer $event_id This event's ID
+	 * @param integer $course_id This event's parent course's ID
+	 * @param integer $organisation_id This event's parent course's organisation ID
+	 * @param boolean $assert Wheather or not to use assertions when looking at rules
+	 */
+	function __construct($task_id, $recipient_id=null, $verifier_id=null, $organisation_id = null, $assert = null) {
+		$this->task_id = $task_id;
+		$this->recipient_id = $recipient_id;
+		$this->verifier_id = $verifier_id;
+		$this->organisation_id = $organisation_id;
+		if(isset($assert)) {
+			$this->assert = $assert;
+		}
+	}
+
+	/**
+	 * ACL method for keeping track. Required by Zend_Acl_Resource_Interface.
+	 * Will return based on specifc property of this resource instance.
+	 * @return string
+	 */
+	public function getResourceId() {
+		return "taskverification".($this->specific ? $this->task_id : "");
 	}
 }
 

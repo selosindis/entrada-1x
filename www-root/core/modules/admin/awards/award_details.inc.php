@@ -39,24 +39,24 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_AWARDS"))) {
 } else {
 
 	if (isset($_GET["id"]) && ($tmp_input = clean_input($_GET["id"], array("trim", "int")))) {
-		$PROXY_ID = $tmp_input;
+		$award_id = $tmp_input;
 	} else {
-		$PROXY_ID = 0;
+		$award_id = 0;
 	}
-	if ($PROXY_ID) {
+	if ($award_id) {
 
-		require_once("Models/InternalAwards.class.php");
+		require_once("Models/awards/InternalAwards.class.php");
 	
 		process_manage_award_details();
 
 		
-		$award = InternalAward::get($PROXY_ID);
+		$award = InternalAward::get($award_id);
 		
 		echo "<div id=\"award_messages\">";
 		display_status_messages();
 		echo "</div>";
 		
-		$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/awards?section=award_details&id=".$PROXY_ID, "title" => "Award: " . $award->getTitle());
+		$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/awards?section=award_details&id=".$award_id, "title" => "Award: " . $award->getTitle());
 
 		$PAGE_META["title"]			= "Award Details: " . $award->getTitle();
 		$PAGE_META["description"]	= "";
@@ -84,11 +84,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_AWARDS"))) {
 
 
 <form id="add_award_recipient_form" name="add_award_recipient_form"
-	action="<?php echo ENTRADA_URL; ?>/admin/awards?section=award_details&id=<?php echo $PROXY_ID; ?>&tab=recipients"
+	action="<?php echo ENTRADA_URL; ?>/admin/awards?section=award_details&id=<?php echo $award_id; ?>&tab=recipients"
 	method="post"
 	<?php if ($show_add_recipient_form) { echo "style=\"display:none;\""; }   ?>>
 <input type="hidden" name="action" value="add_award_recipient"></input>
-<input type="hidden" name="award_id" value="<?php echo $PROXY_ID; ?>"></input>
+<input type="hidden" name="award_id" value="<?php echo $award_id; ?>"></input>
 
 	
 <table class="award_recipients" style="width:100%;">
@@ -107,7 +107,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_AWARDS"))) {
 				<div id="hide_award_recipient_link" style="display:inline-block;">
 					<ul class="page-action-cancel">
 						<li><a id="hide_award_recipient"
-							href="<?php echo ENTRADA_URL; ?>/admin/awards?section=award_details&id=<?php echo $PROXY_ID; ?>"
+							href="<?php echo ENTRADA_URL; ?>/admin/awards?section=award_details&id=<?php echo $award_id; ?>"
 							class="strong-green">[ Cancel Adding Internal Award ]</a></li>
 					</ul>
 				</div>
@@ -161,7 +161,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_AWARDS"))) {
 <div id="add_award_recipient_link" style="float: right;<?php if (!$show_add_recipient_form) { echo "display:none;"; }   ?>">
 <ul class="page-action">
 	<li><a id="add_award_recipient"
-		href="<?php echo ENTRADA_URL; ?>/admin/awards?section=award_details&show=add_recipient&id=<?php echo $PROXY_ID; ?>"
+		href="<?php echo ENTRADA_URL; ?>/admin/awards?section=award_details&show=add_recipient&id=<?php echo $award_id; ?>"
 		class="strong-green">Add Award Recipient</a></li>
 </ul>
 </div>

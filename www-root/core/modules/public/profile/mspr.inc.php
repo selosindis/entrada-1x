@@ -27,7 +27,7 @@ if (!defined("IN_PROFILE")) {
 }  else {
 	require_once(dirname(__FILE__)."/includes/functions.inc.php");
 	
-	require_once("Models/MSPRs.class.php");
+	require_once("Models/mspr/MSPRs.class.php");
 	
 	//require_mspr_models();
 	$user = User::get($PROXY_ID);
@@ -134,14 +134,13 @@ if (!defined("IN_PROFILE")) {
 		$research_citations = $mspr["Research"];
 		
 	
-		
 		display_status_messages();
 	
 ?>
 
 <h1>Medical School Performance Report</h1> 
 
-<?php 
+<?php
 if ($closed) {
 ?>
 <div class="display-notice">
@@ -848,7 +847,6 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 			</div>
 		</div>
 	</div>
-	
 	<div class="section">
 		<h3 title="Internal Awards" class="collapsable collapsed">Internal Awards</h3>
 		<div id="internal-awards"><?php echo display_internal_awards($internal_awards); ?></div>
@@ -880,8 +878,7 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 	?>
 	
 	
-</div>
-
+</div>	
 <?php 
 	}
 }

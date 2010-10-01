@@ -22,8 +22,7 @@ get_include_path(),
  * Include the Entrada init code.
  */
 require_once("init.inc.php");
-require_once("Models/InternalAwards.class.php");
-require_once("Models/InternalAward.class.php");
+require_once("Models/awards/InternalAwards.class.php");
 
 if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 	if ($ENTRADA_ACL->amIAllowed("awards", "update", false)) {

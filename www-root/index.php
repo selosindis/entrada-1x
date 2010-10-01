@@ -514,6 +514,8 @@ require_once(ENTRADA_ABSOLUTE."/templates/".DEFAULT_TEMPLATE."/layouts/public/fo
  *
  */
 if ((isset($_SESSION["isAuthorized"])) && ($_SESSION["isAuthorized"])) {
+	add_task_sidebar();
+	
 	$sidebar_html  = "<a href=\"javascript: sendFeedback('".ENTRADA_URL."/agent-feedback.php?enc=".feedback_enc()."')\"><img src=\"".ENTRADA_URL."/images/feedback.gif\" width=\"48\" height=\"48\" alt=\"Give Feedback\" border=\"0\" align=\"right\" hspace=\"3\" vspace=\"5\" /></a>";
 	$sidebar_html .= "Giving feedback is a very important part of application development. Please <a href=\"javascript: sendFeedback('".ENTRADA_URL."/agent-feedback.php?enc=".feedback_enc()."')\" style=\"font-size: 11px; font-weight: bold\">click here</a> to send us any feedback you may have about <u>this</u> page.<br /><br />\n";
 

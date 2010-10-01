@@ -3436,3 +3436,43 @@ CREATE TABLE IF NOT EXISTS `users_online` (
   KEY `proxy_id` (`proxy_id`),
   KEY `timestamp` (`timestamp`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+-- Tasks Module tables
+
+CREATE TABLE IF NOT EXISTS `tasks` (
+  `task_id` int(12) unsigned NOT NULL auto_increment,
+  `title` varchar(255) NOT NULL,
+  `description` text,
+  `release_start` bigint(64) default NULL,
+  `release_finish` bigint(64) default NULL,
+  `duration` bigint(64) default NULL,
+  `updated_date` bigint(64) default NULL,
+  `updated_by` int(12) unsigned default NULL,
+  `deadline` bigint(64) default NULL,
+  `organisation_id` int(12) unsigned NOT NULL,
+  `require_verification` tinyint(1) NOT NULL default '0',
+  PRIMARY KEY  (`task_id`)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=34 ;
+
+CREATE TABLE IF NOT EXISTS `task_completion` (
+  `task_id` int(12) unsigned NOT NULL,
+  `verifier_id` int(12) unsigned default NULL,
+  `verified_date` bigint(64) default NULL,
+  `recipient_id` int(12) unsigned NOT NULL,
+  `completed_date` bigint(64) default NULL,
+  PRIMARY KEY  (`task_id`,`recipient_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `task_owners` (
+  `task_id` int(12) unsigned NOT NULL default '0',
+  `owner_id` int(12) unsigned NOT NULL default '0',
+  `owner_type` enum('course','event','user') NOT NULL default 'course',
+  PRIMARY KEY  (`task_id`,`owner_id`,`owner_type`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `task_recipients` (
+  `task_id` int(12) unsigned NOT NULL,
+  `recipient_type` enum('user','group','grad_year','organisation') NOT NULL,
+  `recipient_id` int(12) unsigned NOT NULL,
+  PRIMARY KEY  (`task_id`,`recipient_type`,`recipient_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;

@@ -107,7 +107,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 					$PROCESSED["event_desc"] = "";
 				}
 
-				$event_dates = validate_calendar("event", true, true);
+				$event_dates = validate_calendars("event", true, true);
 				if ((isset($event_dates["start"])) && ((int) $event_dates["start"])) {
 					$PROCESSED["event_start"] = (int) $event_dates["start"];
 				} else {

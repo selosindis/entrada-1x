@@ -232,8 +232,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 					}
 					
 					/**
-					 * Non-required field "release_date" / Accessible Start (validated through validate_calendar function).
-					 * Non-required field "release_until" / Accessible Finish (validated through validate_calendar function).
+					 * Non-required field "release_date" / Accessible Start (validated through validate_calendars function).
+					 * Non-required field "release_until" / Accessible Finish (validated through validate_calendars function).
 					 */
 					switch ($PROCESSED["timeframe"]) {
 						case "pre" :
@@ -254,7 +254,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						break;
 					}
 
-					$viewable_date = validate_calendar("accessible", $require_start, $require_finish);
+					$viewable_date = validate_calendars("accessible", $require_start, $require_finish);
 					if ((isset($viewable_date["start"])) && ((int) $viewable_date["start"])) {
 						$PROCESSED["release_date"] = (int) $viewable_date["start"];
 					} else {

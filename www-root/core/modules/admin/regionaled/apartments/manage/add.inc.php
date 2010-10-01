@@ -104,7 +104,7 @@ if (!defined("IN_MANAGE")) {
 				$PROCESSED["notes"] = $tmp_input;
 			}
 
-			$inhabiting_date = validate_calendar("inhabiting", true, true, false);
+			$inhabiting_date = validate_calendars("inhabiting", true, true, false);
 			
 			if ((isset($inhabiting_date["start"])) && ((int) $inhabiting_date["start"])) {
 				$PROCESSED["inhabiting_start"] = (int) $inhabiting_date["start"];

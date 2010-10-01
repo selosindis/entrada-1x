@@ -41,6 +41,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_AWARDS"))) {
 	
 	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/awards", "title" => "Awards Listing");
 	
+	require_once("Models/awards/InternalAwards.class.php");
+	require_once("Models/awards/InternalAwardReceipts.class.php");
 	process_manage_award_details();
 	$awards = InternalAwards::get(true);
 					

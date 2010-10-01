@@ -315,8 +315,8 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 									}
 
 									/**
-									 * Non-required field "release_date" / Accessible Start (validated through validate_calendar function).
-									 * Non-required field "release_until" / Accessible Finish (validated through validate_calendar function).
+									 * Non-required field "release_date" / Accessible Start (validated through validate_calendars function).
+									 * Non-required field "release_until" / Accessible Finish (validated through validate_calendars function).
 									 */
 									switch ($PROCESSED["timeframe"]) {
 										case "pre" :
@@ -345,7 +345,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										}
 									}
 									
-									$viewable_date = validate_calendar("accessible", $require_start, $require_finish);
+									$viewable_date = validate_calendars("accessible", $require_start, $require_finish);
 									if ((isset($viewable_date["start"])) && ((int) $viewable_date["start"])) {
 										$PROCESSED["release_date"] = (int) $viewable_date["start"];
 									} else {
@@ -431,7 +431,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 
 								/**
 								 * If the release_date and release_until variables are set,
-								 * set the additional variables required for validate_calendar().
+								 * set the additional variables required for validate_calendars().
 								 */
 								if ((int) $PROCESSED["release_date"]) {
 									$PROCESSED["accessible_start"]		= 1;
@@ -830,8 +830,8 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 									}
 
 									/**
-									 * Non-required field "release_date" / Accessible Start (validated through validate_calendar function).
-									 * Non-required field "release_until" / Accessible Finish (validated through validate_calendar function).
+									 * Non-required field "release_date" / Accessible Start (validated through validate_calendars function).
+									 * Non-required field "release_until" / Accessible Finish (validated through validate_calendars function).
 									 */
 									switch ($PROCESSED["timeframe"]) {
 										case "pre" :
@@ -860,7 +860,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										}
 									}
 
-									$viewable_date = validate_calendar("accessible", $require_start, $require_finish);
+									$viewable_date = validate_calendars("accessible", $require_start, $require_finish);
 									if ((isset($viewable_date["start"])) && ((int) $viewable_date["start"])) {
 										$PROCESSED["release_date"] = (int) $viewable_date["start"];
 									} else {

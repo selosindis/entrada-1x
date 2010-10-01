@@ -427,6 +427,7 @@ function navigator_tabs() {
 	$PUBLIC_MODULES[] = array("name" => "dashboard", "text" => "Dashboard");
 	$PUBLIC_MODULES[] = array("name" => "communities", "text" => "Communities");
 	$PUBLIC_MODULES[] = array("name" => "courses", "text" => "Courses");
+	$PUBLIC_MODULES[] = array("name" => "tasks", "text" => "Tasks");
 	$PUBLIC_MODULES[] = array("name" => "events", "text" => "Learning Events");
 	$PUBLIC_MODULES[] = array("name" => "clerkship", "text" => "Clerkship", "resource" => "clerkship", "permission" => "read");
 	$PUBLIC_MODULES[] = array("name" => "objectives", "text" => "Curriculum Objectives", "resource" => "objectives", "permission" => "read");
@@ -2946,7 +2947,7 @@ function generate_calendars($fieldname, $display_name = "", $show_start = false,
  * @param int $require_finish
  * @return array
  */
-function validate_calendar($fieldname, $require_start = true, $require_finish = true, $use_times = true) {
+function validate_calendars($fieldname, $require_start = true, $require_finish = true, $use_times = true) {
 	global $ERROR, $ERRORSTR;
 
 	$timestamp_start	= 0;
@@ -3027,23 +3028,26 @@ function validate_calendar($fieldname, $require_start = true, $require_finish = 
  * @param bool $use_times
  * @return int $timestamp
  */
-function validate_single_calendar($fieldname, $use_times = true) {
+function validate_calendar($label, $fieldname, $use_times = true, $required=true) {
 	global $ERROR, $ERRORSTR;
 
 	$timestamp_start	= 0;
 	$timestamp_finish	= 0;
 
 	if((!isset($_POST[$fieldname."_date"])) || (!trim($_POST[$fieldname."_date"]))) {
-		$ERROR++;
-		$ERRORSTR[] = "You have checked <strong>".ucwords(strtolower($fieldname))."</strong> but not selected a calendar date.";
+		if ($required) {
+			add_error("<strong>".$label."</strong> date not entered.");
+		} else {
+			return;
+		}
+	} elseif (!checkDateFormat($_POST[$fieldname."_date"])) {
+		add_error("Invalid format for <strong>".$label."</strong> date.");
 	} else {
 		if(($use_times) && ((!isset($_POST[$fieldname."_hour"])))) {
-			$ERROR++;
-			$ERRORSTR[] = "You have checked <strong>".ucwords(strtolower($fieldname))."</strong> but not selected an hour of the day.";
+			add_error("<strong>".$label."</strong> hour not entered.");
 		} else {
 			if(($use_times) && ((!isset($_POST[$fieldname."_min"])))) {
-				$ERROR++;
-				$ERRORSTR[] = "You have checked <strong>".ucwords(strtolower($fieldname))."</strong> but not selected a minute of the hour.";
+				add_error("<strong>".$label."</strong> minute not entered.");
 			} else {
 				$pieces	= explode("-", $_POST[$fieldname."_date"]);
 				$hour	= (($use_times) ? (int) trim($_POST[$fieldname."_hour"]) : 0);
@@ -10251,21 +10255,20 @@ function build_option($value, $label, $selected = false) {
 /**
  * routine to display standard status messages, Error, Notice, and Success
  */
-function display_status_messages() {
-	global $ERROR,$SUCCESS,$NOTICE;
+function display_status_messages($fade = false) {
 	echo "<div class=\"status_messages\">";
-	if ($ERROR) {
-		fade_element("out", "display-error-box");
+	if (has_error()) {
+		if ($fade) fade_element("out", "display-error-box");
 		echo display_error();
 	}
 
-	if ($SUCCESS) {
-		fade_element("out", "display-success-box");
+	if (has_success()) {
+		if ($fade) fade_element("out", "display-success-box");
 		echo display_success();
 	}
 
-	if ($NOTICE) {
-		fade_element("out", "display-notice-box");
+	if (has_notice()) {
+		if ($fade) fade_element("out", "display-notice-box");
 		echo display_notice();
 	}
 	echo "</div>";
@@ -10299,26 +10302,27 @@ function display_mspr_details($data) {
 
 function require_mspr_models() {
 	
-	require_once("Models/User.class.php");
+	require_once("Models/users/User.class.php");
 	
-	require_once("Models/Approvable.interface.php");
-	require_once("Models/AttentionRequirable.interface.php");
+	require_once("Models/utility/Approvable.interface.php");
+	require_once("Models/utility/AttentionRequirable.interface.php");
 	
-	require_once("Models/InternalAwardReceipts.class.php");
-	require_once("Models/ExternalAwardReceipts.class.php");
-	require_once("Models/Studentships.class.php");
-	require_once("Models/ClinicalPerformanceEvaluations.class.php");
-	require_once("Models/Contributions.class.php");
-	require_once("Models/DisciplinaryActions.class.php");
-	require_once("Models/LeavesOfAbsence.class.php");
-	require_once("Models/FormalRemediations.class.php");
-	require_once("Models/ClerkshipRotations.class.php");
-	require_once("Models/StudentRunElectives.class.php");
-	require_once("Models/Observerships.class.php");
-	require_once("Models/InternationalActivities.class.php");
-	require_once("Models/CriticalEnquiry.class.php");
-	require_once("Models/CommunityHealthAndEpidemiology.class.php");
-	require_once("Models/ResearchCitations.class.php");
+	require_once("Models/awards/InternalAwardReceipts.class.php");
+	
+	require_once("Models/mspr/ExternalAwardReceipts.class.php");
+	require_once("Models/mspr/Studentships.class.php");
+	require_once("Models/mspr/ClinicalPerformanceEvaluations.class.php");
+	require_once("Models/mspr/Contributions.class.php");
+	require_once("Models/mspr/DisciplinaryActions.class.php");
+	require_once("Models/mspr/LeavesOfAbsence.class.php");
+	require_once("Models/mspr/FormalRemediations.class.php");
+	require_once("Models/mspr/ClerkshipRotations.class.php");
+	require_once("Models/mspr/StudentRunElectives.class.php");
+	require_once("Models/mspr/Observerships.class.php");
+	require_once("Models/mspr/InternationalActivities.class.php");
+	require_once("Models/mspr/CriticalEnquiry.class.php");
+	require_once("Models/mspr/CommunityHealthAndEpidemiology.class.php");
+	require_once("Models/mspr/ResearchCitations.class.php");
 }
 
 function getMonthName($month_number) {
@@ -10842,4 +10846,185 @@ function displayARYearReported($year_reported, $AR_CUR_YEAR, $AR_PAST_YEARS, $AR
 	?>
 	</td>
 	<?php
+}
+
+function add_task_sidebar () {
+	require_once("Models/users/User.class.php");
+	require_once("Models/tasks/TaskCompletions.class.php");
+	global $ENTRADA_ACL;
+
+	$proxy_id = $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"];
+	$user = User::get($proxy_id);
+	
+	
+	$tasks_completions = TaskCompletions::getByRecipient($user, array('order_by'=>array(array('deadline', 'asc')), 'limit' => 5, 'where' => 'completed_date IS NULL'));
+	$task_verifications = TaskCompletions::getByVerifier($user->getID(), array("where" => "`verified_date` IS NULL" ));
+	$has_verification_requests = (count($task_verifications) > 0);
+	
+	foreach ($tasks_completions as $completion) {
+		$tasks[] = $completion->getTask();
+	}
+	if ($tasks) {
+		/*$sidebar_html = "<span class='subheading'>Recently Created or Updated</span>";	
+		$updated_limit = time() - (3600*24*3);
+		$updated_tasks = Tasks::getByRecipient($user, array('order_by'=>'updated_date', 'dir' => 'desc', 'limit' => 5, 'where' => 'updated_date > '.$updated_limit));
+		$sidebar_html .= "<ul>";
+		foreach ($updated_tasks as $task) {
+			$sidebar_html .= "
+			<li>
+				<a href='".ENTRADA_URL."/tasks?section=details&id=".$task->getID()."'>".html_encode($task->getTitle())."</a>
+				<span class='content-small'>".(($task->getDeadline()) ? date(DEFAULT_DATE_FORMAT,$task->getDeadline()) : "")."</span>
+			</li>";
+		}
+		$sidebar_html .= "</ul>";
+		
+		
+		$sidebar_html .= "<span class='subheading'>Upcoming</span>";*/ //XXX Left for now. looks too cluttered. may reinstate after redeign.
+		
+		$sidebar_html = "<ul>";
+		foreach ($tasks as $task) {
+			$sidebar_html .= "
+			<li>
+				<a href='".ENTRADA_URL."/tasks?section=details&id=".$task->getID()."'>".html_encode($task->getTitle())."</a>
+				<span class='content-small'>".(($task->getDeadline()) ? date(DEFAULT_DATE_FORMAT,$task->getDeadline()) : "")."</span>
+			</li>";
+		}
+		$sidebar_html .= "</ul>";
+		
+		$sidebar_html .= "<a class='see-all' href='".ENTRADA_URL."/tasks'>See all tasks</a>"; 
+		
+		new_sidebar_item("Upcoming Tasks", $sidebar_html, "task-list", "open");
+	}
+}
+
+function add_error($message) {
+	add_message("error",$message);
+}
+
+function add_notice($message) {
+	add_message("notice",$message);
+}
+
+function add_success($message) {
+	add_message("success",$message);
+}
+
+function add_message($type,$message) {
+	$type = strtoupper($type);
+	$strings = $type."STR";
+	global ${$type}, ${$strings};
+	${$type}++;
+	${$strings}[] = $message;
+}
+
+function has_message($type) {
+	$type = strtoupper($type);
+	$strings = $type."STR";
+	global ${$type}, ${$strings};
+	return (${$type} || ${$strings});
+}
+
+function has_error() {
+	return has_message("error");
+}
+
+function has_notice() {
+	return has_message("notice");
+}
+
+function has_success() {
+	return has_message("success");
+}
+
+function clear_error(){
+	clear_message("error");
+}
+
+function clear_success() {
+	clear_message("success");
+}
+
+function clear_notice() {
+	clear_message("notice");
+}
+
+function clear_message($type) {
+	$type = strtoupper($type);
+	$strings = $type."STR";
+	global ${$type}, ${$strings};
+	${$type} = 0;
+	${$strings} = array();
+}
+
+/**
+ * 
+ * @param string $type One of "confirm", "request", "denial"
+ * @param array $to associative array consisting of firstname, lastname, and email
+ * @param array $keywords Associative array of keywords mapped to the replacement contents
+ */
+function task_verification_notification($type="",$to = array(), $keywords = array()) {
+	global $AGENT_CONTACTS;
+	if (!is_array($to) || !isset($to["email"]) || !valid_address($to["email"]) || !isset($to["firstname"]) || !isset($to["lastname"])) {
+		application_log("error", "Attempting to send a task_verification_notification() however the recipient information was not complete.");
+		
+		return false;
+	}
+	
+	if (!in_array($type, array("confirm", "request", "denial"))) {
+		application_log("error", "Encountered an unrecognized notification type [".$type."] when attempting to send a task_verification_notification().");
+
+		return false;
+	}
+
+	$xml_file = TEMPLATE_ABSOLUTE."/email/task-verification-".$type.".xml";
+	$xml = @simplexml_load_file($xml_file);
+	if ($xml && isset($xml->lang->{DEFAULT_LANGUAGE})) {
+		$subject = trim($xml->lang->{DEFAULT_LANGUAGE}->subject);
+		$message = trim($xml->lang->{DEFAULT_LANGUAGE}->body);
+
+		foreach ($keywords as $keyword => $value) {
+			$subject = str_ireplace("%".strtoupper($keyword)."%", $value, $subject);
+			$message = str_ireplace("%".strtoupper($keyword)."%", $value, $message);
+		}
+
+		/**
+		 * Notify the learner they have been removed from this apartment.
+		 */
+		$mail = new Zend_Mail();
+		$mail->addHeader("X-Originating-IP", $_SERVER["REMOTE_ADDR"]);
+		$mail->addHeader("X-Section", "Tasks Module", true);
+		$mail->clearFrom();
+		$mail->clearSubject();
+		$mail->setFrom($AGENT_CONTACTS["agent-notifications"]["email"], APPLICATION_NAME." Task System");
+		$mail->setSubject($subject);
+		$mail->setBodyText(clean_input($message, "emailcontent"));
+
+		$mail->clearRecipients();
+		$mail->addTo($to["email"], $to["firstname"]." ".$to["lastname"]);
+
+		if ($mail->send()) {
+			return true;
+		} else {
+			$NOTICE++;
+			$NOTICESTR[] = "We were unable to e-mail an e-mail notification <strong>".$to["email"]."</strong>.<br /><br />A system administrator was notified of this issue, but you may wish to contact this individual manually and let them know their task verification status.";
+
+			application_log("error", "Unable to send task verification notification to [".$to["email"]."] / type [".$type."]. Zend_Mail said: ".$mail->ErrorInfo);
+		}
+	} else {
+		application_log("error", "Unable to load the XML file [".$xml_file."] or the XML file did not contain the language requested [".DEFAULT_LANGUAGE."], when attempting to send a regional education notification.");
+	}
+
+	return false;
+}
+
+function generate_bulk_task_verify_success_list($task_successes) {
+	$success_listing = "";
+	foreach($task_successes as $task_title=>$recipients) {
+		$success_listing .= "<div class='success_task'><span class='task_title'>".html_encode($task_title)."</span><ul>";
+		foreach ($recipients as $recipient) {
+			$success_listing .= "<li>".$recipient."</li>";
+		}
+		$success_listing .= "</ul></div>";
+	}
+	return $success_listing;
 }

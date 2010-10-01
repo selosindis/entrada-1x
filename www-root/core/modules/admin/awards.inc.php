@@ -39,7 +39,7 @@ if (!defined("PARENT_INCLUDED")) {
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
 	define("IN_AWARDS", true);
-	require_once("Models/InternalAwards.class.php");
+	require_once("Models/awards/InternalAwards.class.php");
 	require_once("awards/includes/functions.inc.php");
 	
 	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/awards", "title" => "Manage Awards");

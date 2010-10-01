@@ -40,7 +40,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MSPR_ADMIN"))) {
 		display_status_messages();
 	}
 	if (!$ERROR) {
-		require_once("Models/MSPRs.class.php");
+		require_once("Models/mspr/MSPRs.class.php");
 		switch($mode) {
 			case "user_mode":
 				$user = User::get($user_id);

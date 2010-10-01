@@ -2973,14 +2973,18 @@ function validate_calendars($fieldname, $require_start = true, $require_finish =
  * @param bool $use_times
  * @return int $timestamp
  */
-function validate_calendar($label, $fieldname, $use_times = true) {
+function validate_calendar($label, $fieldname, $use_times = true, $required=true) {
 	global $ERROR, $ERRORSTR;
 
 	$timestamp_start	= 0;
 	$timestamp_finish	= 0;
 
 	if((!isset($_POST[$fieldname."_date"])) || (!trim($_POST[$fieldname."_date"]))) {
-		add_error("<strong>".$label."</strong> date not entered.");
+		if ($required) {
+			add_error("<strong>".$label."</strong> date not entered.");
+		} else {
+			return;
+		}
 	} elseif (!checkDateFormat($_POST[$fieldname."_date"])) {
 		add_error("Invalid format for <strong>".$label."</strong> date.");
 	} else {
@@ -10088,20 +10092,20 @@ function build_option($value, $label, $selected = false) {
 /**
  * routine to display standard status messages, Error, Notice, and Success
  */
-function display_status_messages() {
+function display_status_messages($fade = false) {
 	echo "<div class=\"status_messages\">";
 	if (has_error()) {
-		fade_element("out", "display-error-box");
+		if ($fade) fade_element("out", "display-error-box");
 		echo display_error();
 	}
 
 	if (has_success()) {
-		fade_element("out", "display-success-box");
+		if ($fade) fade_element("out", "display-success-box");
 		echo display_success();
 	}
 
 	if (has_notice()) {
-		fade_element("out", "display-notice-box");
+		if ($fade) fade_element("out", "display-notice-box");
 		echo display_notice();
 	}
 	echo "</div>";
@@ -10584,11 +10588,15 @@ function objectives_output_calendar_controls() {
 function add_task_sidebar () {
 	require_once("Models/users/User.class.php");
 	require_once("Models/tasks/TaskCompletions.class.php");
-	global $ENTRADA_ACL, $PROXY_ID;
-	$user = User::get($PROXY_ID);
+	global $ENTRADA_ACL;
+
+	$proxy_id = $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"];
+	$user = User::get($proxy_id);
 	
 	
 	$tasks_completions = TaskCompletions::getByRecipient($user, array('order_by'=>array(array('deadline', 'asc')), 'limit' => 5, 'where' => 'completed_date IS NULL'));
+	$task_verifications = TaskCompletions::getByVerifier($user->getID(), array("where" => "`verified_date` IS NULL" ));
+	$has_verification_requests = (count($task_verifications) > 0);
 	
 	foreach ($tasks_completions as $completion) {
 		$tasks[] = $completion->getTask();
@@ -10621,7 +10629,6 @@ function add_task_sidebar () {
 		$sidebar_html .= "</ul>";
 		
 		$sidebar_html .= "<a class='see-all' href='".ENTRADA_URL."/tasks'>See all tasks</a>"; 
-	
 		
 		new_sidebar_item("Upcoming Tasks", $sidebar_html, "task-list", "open");
 	}
@@ -10684,4 +10691,77 @@ function clear_message($type) {
 	global ${$type}, ${$strings};
 	${$type} = 0;
 	${$strings} = array();
+}
+
+/**
+ * 
+ * @param string $type One of "confirm", "request", "denial"
+ * @param array $to associative array consisting of firstname, lastname, and email
+ * @param array $keywords Associative array of keywords mapped to the replacement contents
+ */
+function task_verification_notification($type="",$to = array(), $keywords = array()) {
+	global $AGENT_CONTACTS;
+	if (!is_array($to) || !isset($to["email"]) || !valid_address($to["email"]) || !isset($to["firstname"]) || !isset($to["lastname"])) {
+		application_log("error", "Attempting to send a task_verification_notification() however the recipient information was not complete.");
+		
+		return false;
+	}
+	
+	if (!in_array($type, array("confirm", "request", "denial"))) {
+		application_log("error", "Encountered an unrecognized notification type [".$type."] when attempting to send a task_verification_notification().");
+
+		return false;
+	}
+
+	$xml_file = TEMPLATE_ABSOLUTE."/email/task-verification-".$type.".xml";
+	$xml = @simplexml_load_file($xml_file);
+	if ($xml && isset($xml->lang->{DEFAULT_LANGUAGE})) {
+		$subject = trim($xml->lang->{DEFAULT_LANGUAGE}->subject);
+		$message = trim($xml->lang->{DEFAULT_LANGUAGE}->body);
+
+		foreach ($keywords as $keyword => $value) {
+			$subject = str_ireplace("%".strtoupper($keyword)."%", $value, $subject);
+			$message = str_ireplace("%".strtoupper($keyword)."%", $value, $message);
+		}
+
+		/**
+		 * Notify the learner they have been removed from this apartment.
+		 */
+		$mail = new Zend_Mail();
+		$mail->addHeader("X-Originating-IP", $_SERVER["REMOTE_ADDR"]);
+		$mail->addHeader("X-Section", "Tasks Module", true);
+		$mail->clearFrom();
+		$mail->clearSubject();
+		$mail->setFrom($AGENT_CONTACTS["agent-notifications"]["email"], APPLICATION_NAME." Task System");
+		$mail->setSubject($subject);
+		$mail->setBodyText(clean_input($message, "emailcontent"));
+
+		$mail->clearRecipients();
+		$mail->addTo($to["email"], $to["firstname"]." ".$to["lastname"]);
+
+		if ($mail->send()) {
+			return true;
+		} else {
+			$NOTICE++;
+			$NOTICESTR[] = "We were unable to e-mail an e-mail notification <strong>".$to["email"]."</strong>.<br /><br />A system administrator was notified of this issue, but you may wish to contact this individual manually and let them know their task verification status.";
+
+			application_log("error", "Unable to send task verification notification to [".$to["email"]."] / type [".$type."]. Zend_Mail said: ".$mail->ErrorInfo);
+		}
+	} else {
+		application_log("error", "Unable to load the XML file [".$xml_file."] or the XML file did not contain the language requested [".DEFAULT_LANGUAGE."], when attempting to send a regional education notification.");
+	}
+
+	return false;
+}
+
+function generate_bulk_task_verify_success_list($task_successes) {
+	$success_listing = "";
+	foreach($task_successes as $task_title=>$recipients) {
+		$success_listing .= "<div class='success_task'><span class='task_title'>".html_encode($task_title)."</span><ul>";
+		foreach ($recipients as $recipient) {
+			$success_listing .= "<li>".$recipient."</li>";
+		}
+		$success_listing .= "</ul></div>";
+	}
+	return $success_listing;
 }

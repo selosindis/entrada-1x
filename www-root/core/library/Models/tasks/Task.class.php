@@ -8,6 +8,7 @@ require_once("Models/organisations/Organisation.class.php");
 require_once("Models/utility/SimpleCache.class.php");
 require_once("Models/tasks/TaskOwners.class.php");
 require_once("Models/tasks/TaskRecipients.class.php");
+require_once("Models/tasks/TaskCompletions.class.php");
 require_once("TaskOwners.class.php");
 
 class Task {

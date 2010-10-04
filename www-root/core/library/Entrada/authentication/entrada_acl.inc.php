@@ -590,9 +590,11 @@ class TaskVerifierAssertion implements Zend_Acl_Assert_Interface {
 			if ($resource_type == "task") {
 				require_once("Models/tasks/Task.class.php");
 				$task = Task::get($task_id);
-			}
-			return false;	
+			} else {
+				return false;
+			}	
 		}
+		
 		if ($task && $verifier) {
 			return 	$task->isVerifier($verifier);
 		} else {

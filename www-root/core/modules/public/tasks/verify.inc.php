@@ -33,7 +33,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 	require_once("Models/tasks/Tasks.class.php");
 	require_once("Models/tasks/TaskOwners.class.php");
 	require_once("Models/tasks/TaskRecipients.class.php");
-	require_once("Models/tasks/TaskCompletion.class.php");
+	require_once("Models/tasks/TaskCompletions.class.php");
 	require_once("Models/users/User.class.php");
 	require_once("Models/users/GraduatingClass.class.php");
 	

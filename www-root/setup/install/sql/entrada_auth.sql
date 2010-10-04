@@ -104,7 +104,7 @@ INSERT INTO `acl_permissions` (`resource_type`, `resource_value`, `entity_type`,
 ('task', NULL, 'group:role', 'faculty:director', 1, 1, 1, 1, 1, 'CourseOwner'),
 ('task', NULL, 'role', 'pcoordinator', 1, 1, 1, 1, 1, 'CourseOwner'),
 ('taskverification', NULL, NULL, NULL, 1, NULL, NULL, 1, NULL, 'TaskVerifier'),
-('task', NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, 'TaskVerifier'),
+('task', NULL, NULL, NULL, 1, NULL, NULL, NULL, NULL, 'TaskVerifier'),
 ('mydepartment', NULL, 'group', 'faculty', NULL, 1, 1, 1, 1, 'DepartmentHead'),
 ('myowndepartment', NULL, 'user', '1', NULL, 1, 1, 1, 1, NULL);
 

@@ -2937,3 +2937,7 @@ background:transparent url(../images/list-objective.gif) no-repeat 0 3px;
 .success_task .task_title {
 	font-weight:bold;
 }
+
+#task_details {
+	width:100%;
+}

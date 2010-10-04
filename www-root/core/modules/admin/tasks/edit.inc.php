@@ -116,7 +116,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 			}
 			
 			
-			if (isset($_POST["time_required"]) && ($time_required = clean_input($_POST['time_required']))) {
+			if (isset($_POST["time_required"]) && ($time_required = clean_input($_POST['time_required'], array("int")))) {
 				$PROCESSED['time_required'] = $time_required;
 			}
 			

@@ -109,7 +109,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 		
 		<form method="post">
 			<input type="hidden" name="task_id" value="<?php echo $TASK_ID; ?>" />
-			<table class="task_details">
+			<table id="task_details">
 				<colgroup>
 					<col width="3%"></col>
 					<col width="25%"></col>
@@ -127,6 +127,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 					</tr>
 					<?php 
 						}
+						if ($time_required = $task->getDuration()) {
+					?>
+					<tr>
+						<td>&nbsp;</td>
+						<td>Estimated Time Required</td>
+						<td><?php echo html_encode($time_required); ?> minutes</td>
+					</tr>
+					<?php	
+						}
 						if ($deadline = $task->getDeadline()) {	
 					?>
 					<tr>
@@ -138,12 +147,23 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 					<tr>
 						<td colspan="3">&nbsp;</td>
 					</tr>
+					<?php
+						if ($description = $task->getDescription()) {
+					?>
 					<tr>
 						<td>&nbsp;</td>
-						<td style="vertical-align:top;">Description</td>
-						<td><?php echo clean_input($task->getDescription(),array("allowedtags")); ?></td>
+						<td colspan="2">
+							<h2>Description</h2>
+						</td>
 					</tr>
-					<?php if ($task->isRecipient($user)) { //might be allowed to view, but not actually a recipient. e.g. admin. ?>
+					<tr>
+						<td>&nbsp;</td>
+						<td colspan="2"><?php echo clean_input($description,array("allowedtags")); ?></td>
+					</tr>
+					<?php 
+						} 
+						if ($task->isRecipient($user)) { //might be allowed to view, but not actually a recipient. e.g. admin. 
+					?>
 					<tr>
 						<td colspan="3"><h2>Task Completion</h2></td>
 					</tr>

@@ -472,7 +472,12 @@ class TaskOwnerAssertion implements Zend_Acl_Assert_Interface {
 		
 		require_once("Models/tasks/Task.class.php");
 		$task = Task::get($task_id);
-		return 	$task->isOwner($user);
+		
+		if ($task && $user) {
+			return 	$task->isOwner($user);
+		} else {
+			return false;
+		}
 	}
 }
 
@@ -523,7 +528,11 @@ class TaskRecipientAssertion implements Zend_Acl_Assert_Interface {
 		
 		require_once("Models/tasks/Task.class.php");
 		$task = Task::get($task_id);
-		return 	$task->isRecipient($user);
+		if ($task && $user) {
+			return 	$task->isRecipient($user);
+		} else {
+			return false;
+		}
 	}
 }
 
@@ -584,8 +593,11 @@ class TaskVerifierAssertion implements Zend_Acl_Assert_Interface {
 			}
 			return false;	
 		}
-		
-		return 	$task->isVerifier($verifier);
+		if ($task && $verifier) {
+			return 	$task->isVerifier($verifier);
+		} else {
+			return false;
+		}
 	}
 }
 

@@ -668,3 +668,47 @@ function readCookie(name) {
 function eraseCookie(name) {
 	createCookie(name,"",-1);
 }
+
+function CheckboxCheckAll(master,slaves) {
+	//if slaves is a string, then use it as a pattern and, if not, use the nodes
+
+	function getSlaves() {
+		if (typeof slaves == "string") {
+			return $$(slaves);
+		} else return slaves;
+	}
+	
+	function getMaster() {
+		return $(master);
+	}
+	
+	function checkAll(event) {
+		var state = getMaster().checked;
+		getSlaves().reject(isDisabled).each(function (el) { el.checked=state; });
+	}
+	
+	function areAllChecked() {
+		return getSlaves().reject(isDisabled).pluck("checked").all();
+	}
+
+	function setCheckAll() {
+		var state = areAllChecked();
+		getMaster().checked=state;
+	}
+
+	this.disable = function () {
+		getMaster().stopObserving('click',checkAll);
+		getSlaves().invoke("stopObserving","click",setCheckAll);
+	}
+	
+	this.enable = function() {
+		var slaves = getSlaves();
+		getMaster().observe('click',checkAll);
+		slaves.invoke("observe","click",setCheckAll);
+	}
+	this.enable();
+}
+
+function isDisabled(el) {
+	return el.disabled;
+}

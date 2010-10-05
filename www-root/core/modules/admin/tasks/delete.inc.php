@@ -69,7 +69,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 		}
 	}
 	if (!$done) {
-		$ONLOAD[] = "task_check_all = new CheckboxCheckAll($('task_list_admin').down('thead input[type=checkbox]',0),'#task_list_admin tbody input[type=checkbox]');";
 		?>
 		
 		<h1>Delete Tasks</h1>
@@ -79,6 +78,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 		<?php 
 			$total_tasks = count($tasks);
 			if ($total_tasks > 0) { 
+				$ONLOAD[] = "task_check_all = new CheckboxCheckAll($('task_list_admin').down('thead input[type=checkbox]',0),'#task_list_admin tbody input[type=checkbox]');";
 				echo display_notice(array("Please review the following task".(($total_tasks > 1) ? "s" : "")." to ensure that you wish to <strong>permanently delete</strong> ".(($total_tasks > 1) ? "them" : "it").".<br /><br />This will also remove any attached resources, task completion info, etc. and this action cannot be undone."));
 		?>
 		

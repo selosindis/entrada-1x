@@ -1036,7 +1036,7 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 										</tr>
 										<?php
 									}
-								} elseif ($PAGE_TYPE == "course" && $page_record["page_url"] == "objectives") {
+								} elseif ($PAGE_TYPE == "course" && strpos($page_record["page_url"], "objectives") !== false) {
 									$sidebar_html  = "<div style=\"margin: 2px 0px 10px 3px; font-size: 10px\">\n";
 									$sidebar_html .= "	<div><img src=\"".ENTRADA_URL."/images/legend-primary-objective.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" style=\"vertical-align: middle\" /> Primary Objective</div>\n";
 									$sidebar_html .= "	<div><img src=\"".ENTRADA_URL."/images/legend-secondary-objective.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" style=\"vertical-align: middle\" /> Secondary Objective</div>\n";
@@ -1103,7 +1103,7 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 										</tr>
 										<?php
 									}
-								} elseif ($PAGE_TYPE == "course" && $page_record["page_url"] == "mcc_presentations") {
+								} elseif ($PAGE_TYPE == "course" && strpos($page_record["page_url"], "mcc_presentations") !== false) {
 									?>
 									<tr>
 										<td colspan="2">

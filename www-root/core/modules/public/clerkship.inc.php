@@ -220,16 +220,60 @@ if(!defined("PARENT_INCLUDED")) {
 		$clinical_rotation	 	= clerkship_get_rotation(($rotation ? $rotation : ($ROTATION_ID ? $ROTATION_ID : 0)));
 		$rotation				= $clinical_rotation["id"];
 		$clinical_encounters	= clerkship_get_rotation_overview($rotation);
+		
+		$objectives_required = 0;
+	    $objectives_recorded = 0;
+	    
+		$query = "	SELECT `objective_id`, MAX(`number_required`) AS `required`
+					FROM `".CLERKSHIP_DATABASE."`.`logbook_mandatory_objectives`
+					WHERE `rotation_id` = ".$db->qstr($ROTATION_ID)."
+					GROUP BY `objective_id`";
+		$required_objectives = $db->GetAll($query);
+		if ($required_objectives) {
+			foreach ($required_objectives as $required_objective) {
+				$objectives_required += $required_objective["required"];
+				$number_required[$required_objective["objective_id"]] = $required_objective["required"];
+				$query = "SELECT COUNT(`objective_id`) AS `recorded`
+						FROM `".CLERKSHIP_DATABASE."`.`logbook_entry_objectives`
+						WHERE `lentry_id` IN
+						(
+							SELECT `lentry_id` FROM `".CLERKSHIP_DATABASE."`.`logbook_entries`
+							WHERE `entry_active` = '1' 
+							AND `proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
+						)
+						AND `objective_id` = ".$db->qstr($required_objective["objective_id"])."
+						GROUP BY `objective_id`";
+				$recorded = $db->GetOne($query);
+				
+				if ($recorded) {
+					if ($required_objective["required"] > $recorded) {
+						if ($objective_ids) {
+							$objective_ids .= ",".$db->qstr($required_objective["objective_id"]);
+						} else {
+							$objective_ids = $db->qstr($required_objective["objective_id"]);
+						}
+						$number_required[$required_objective["objective_id"]] -= $recorded;
+					}
+					$objectives_recorded += ($recorded <= $required_objective["required"] ? $recorded : $required_objective["required"]);
+				} else {
+					if ($objective_ids) {
+						$objective_ids .= ",".$db->qstr($required_objective["objective_id"]);
+					} else {
+						$objective_ids = $db->qstr($required_objective["objective_id"]);
+					}
+				}
+			}
+		}
 		$remaining_weeks	 	= clerkship_get_rotation_schedule($rotation);
 		$sidebar_html  			= "<center><a href=\"".ENTRADA_URL."/clerkship/logbook?section=select\"><strong>$clinical_rotation[title]</strong></a></center><br>";
 		$sidebar_html 			.= "<ul class=\"menu\">\n";
-		$sidebar_html 			.= "	<li class=\"incorrect\"><a href=\"".ENTRADA_URL."/clerkship/logbook?section=view&type=missing&core=$rotation\"><strong>".($clinical_encounters["all_mandatories"]-$clinical_encounters["mandatories"])."</strong>  CPs Not Seen</a></li>\n";
-		$sidebar_html 			.= "	<li class=\"checkmark\"><a href=\"".ENTRADA_URL."/clerkship/logbook?section=view&type=mandatories&core=$rotation\"><strong>".($clinical_encounters["mandatories"])."</strong>  Cps Seen</a></li>\n";
+		$sidebar_html 			.= "	<li class=\"incorrect\"><a href=\"".ENTRADA_URL."/clerkship/logbook?section=view&type=missing&core=$rotation\"><strong>".($objectives_required-$objectives_recorded)."</strong>  CPs Not Seen</a></li>\n";
+		$sidebar_html 			.= "	<li class=\"checkmark\"><a href=\"".ENTRADA_URL."/clerkship/logbook?section=view&type=mandatories&core=$rotation\"><strong>".($objectives_recorded)."</strong>  CPs Seen</a></li>\n";
 		$sidebar_html 			.= "	<li><a href=\"".ENTRADA_URL."/clerkship/logbook?section=view&type=procedures&core=$rotation\"><strong>".$clinical_encounters["procedures"]."</strong> Procedures</a></li>\n";
 		$sidebar_html 			.= "</ul>\n";
 		$sidebar_html .= "	<a href=\"".ENTRADA_URL."/clerkship/logbook?section=add&event=".$clerkship_schedule[0]["event_id"]."\">Log encounter</a>\n";
 		if((int)$clinical_encounters["entries"] > 0) {
-		    $sidebar_html .= "	<br/><br/><a href=\"".ENTRADA_URL."/clerkship/logbook?sb=rotation&rotation=".$rotation."\">View ".($clinical_encounters["entries"]==1?"entry":"entries - $clinical_encounters[entries]")."</a>\n";
+		    $sidebar_html .= "	<br/><br/><a href=\"".ENTRADA_URL."/clerkship/logbook?sb=rotation&rotation=".$rotation."\">View ".($clinical_encounters["entries"]==1?"entry":"entries - ".$clinical_encounters["entries"])."</a>\n";
 		}
 		if ($rotation) {
 			$sidebar_html .= "<div style=\"margin-top: 10px\">\n";

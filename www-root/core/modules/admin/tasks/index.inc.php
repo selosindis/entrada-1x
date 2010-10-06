@@ -52,7 +52,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 	</ul>
 	</div>
 	<div class="clear">&nbsp;</div>
-
+	<?php 
+	if (count($tasks) > 0 ) {
+	?>
 	<!--  Include something similar to learning event calendar/range select here -->
 	<form method="post" action="<?php echo ENTRADA_URL; ?>/admin/tasks?section=delete">
 		<table class="tableList" id="task_list_admin" cellspacing="0" cellpadding="1" summary="List of Events">
@@ -130,5 +132,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 		});
 	</script>
 	<?php
-
+	} else {
+		?>
+		<div class="display-notice"><h3>No Matching Tasks</h3>
+			<?php
+			$message = "There are no tasks scheduled."; 
+		
+			echo $message; 
+			?>
+		</div>
+		<?php
+	}
 }

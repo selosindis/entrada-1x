@@ -35,7 +35,7 @@ class SimpleCache {
 		$curArr =& $this->cacheArr;
 		
 		for ($i = 0; $i < $numargs -1; $i++) {
-			if (!is_array($curArr[$args[$i]])) {
+			if (!isset($curArr[$args[$i]]) || !is_array($curArr[$args[$i]])) {
 				$curArr[$args[$i]] = array();
 			}
 			$curArr =& $curArr[$args[$i]];
@@ -56,7 +56,7 @@ class SimpleCache {
 		$curArr =& $this->cacheArr;
 		
 		for ($i = 0; $i < $numargs -1; $i++) {
-			if (!is_array($curArr[$args[$i]])) {
+			if (!isset($curArr[$args[$i]]) || !is_array($curArr[$args[$i]])) {
 				return;
 			}
 			$curArr =& $curArr[$args[$i]];

@@ -143,13 +143,17 @@ class MSPR implements ArrayAccess, AttentionRequirable {
 		}    	
     }
     
-    public static function create(User $user, $closed_ts = NULL) {
+    public static function create(User $user, $closed_ts = null) {
     	global $db;
 
 		$user_id = $user->getID();
-		$query = "insert into `student_mspr` (`user_id`, `closed`) value (".$db->qstr($user_id).", ".(isset($closed) && $closed ? $db->qstr($closed) : "NULL").")";
+		$query = "insert into `student_mspr` (`user_id`, `closed`) value (?,?)"; 
 		
-		if(!$db->Execute($query)) {
+		if ((!is_null($closed_ts) && (!is_int($closed_ts) || $closed_ts < 0))) {
+			$closed_ts = null;
+		}
+		
+		if(!$db->Execute($query, array($user_id, $closed_ts))) {
 			application_log("error", "Unable to update a student_mspr record. Database said: ".$db->ErrorMsg());
 			return false;
 		} else {

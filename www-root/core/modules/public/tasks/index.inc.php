@@ -45,14 +45,19 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 	$task_verifications = TaskCompletions::getByVerifier($user->getID(), array("where" => "`verified_date` IS NULL" ));
 	$has_verification_requests = (count($task_verifications) > 0);
 	$task_completions = TaskCompletions::getByRecipient($user, array('order_by'=>array(array($sort_by, $sort_order))));
-	
+	$has_completions = (count($task_completions) > 0);
 	?>
 	
 	<h1>My Tasks</h1>
 	
-	<?php if ($has_verification_requests) {?>
-	<div class="display-notice">You have outstanding task verification requests. Please go to the <a href="<?php echo ENTRADA_URL;?>/tasks?section=verification">Task Verification</a> page to manage them.</div>
-	<?php } ?>
+	<?php 
+	if ($has_verification_requests) {
+	?>
+	<div class="display-notice"><h3>Outstanding Verifications</h3>You have outstanding task verification requests. Please go to the <a href="<?php echo ENTRADA_URL;?>/tasks?section=verification">Task Verification</a> page to manage them.</div>
+	<?php 
+	} 
+	if ($has_completions) {
+	?>
 	<!--  Include something similar to learning event calendar/range select here -->
 	<table class="tableList" cellspacing="0" cellpadding="1" summary="List of Events">
 		<colgroup>
@@ -70,7 +75,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 			</tr>
 		</thead>
 		<tbody>
-		<?php foreach ($task_completions as $task_completion) { 
+		<?php 
+		foreach ($task_completions as $task_completion) { 
 			$task = $task_completion->getTask();
 			?>
 		
@@ -113,4 +119,44 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 		</tbody>	
 	</table>
 	<?php
+	} else {
+		?>
+		<div class="display-notice"><h3>No Matching Tasks</h3>
+			<?php
+			$message = "There are no tasks scheduled"; 
+		
+			switch ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["dtype"]) {
+				case "day" :
+					$message .= " that take place on <strong>".date(DEFAULT_DATE_FORMAT, $learning_events["duration_start"])."</strong>";
+				break;
+				case "month" :
+					$message .= " that take place during <strong>".date("F", $learning_events["duration_start"])."</strong> of <strong>".date("Y", $learning_events["duration_start"])."</strong>";
+				break;
+				case "year" :
+					$message .= " that take place during <strong>".date("Y", $learning_events["duration_start"])."</strong>";
+				break;
+				default :
+				case "week" :
+					$message .= " from <strong>".date(DEFAULT_DATE_FORMAT, $learning_events["duration_start"])."</strong> to <strong>".date(DEFAULT_DATE_FORMAT, $learning_events["duration_end"])."</strong>";
+				break;
+				default :
+					continue;
+				break;
+			}
+			$message .= (($filters_applied) ? " that also match the supplied &quot;Show Only&quot; restrictions." : ".");
+			echo $message; 
+			?>
+			<br /><br />
+			If this is unexpected there are a few things that you can check:
+			<ol>
+				<li style="padding: 3px">Make sure that you are browsing the intended time period. For example, if you trying to browse <?php echo date("F", time()); ?> of <?php echo date("Y", time()); ?>, make sure that the results bar above says &quot;... takes place in <strong><?php echo date("F", time()); ?></strong> of <strong><?php echo date("Y", time()); ?></strong>&quot;.</li>
+				<?php
+				if ($filters_applied) {
+					echo "<li style=\"padding: 3px\">You also have ".$filters_total." filter".(($filters_total != 1) ? "s" : "")." applied to the event list. you may wish to remove ".(($filters_total != 1) ? "one or more of these" : "it")." by clicking the link in the &quot;Showing Events That Include&quot; box above.</li>";
+				}
+				?>
+			</ol>
+		</div>
+		<?php
+	}
 }

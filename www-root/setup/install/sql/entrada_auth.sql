@@ -106,7 +106,8 @@ INSERT INTO `acl_permissions` (`resource_type`, `resource_value`, `entity_type`,
 ('taskverification', NULL, NULL, NULL, 1, NULL, NULL, 1, NULL, 'TaskVerifier'),
 ('task', NULL, NULL, NULL, 1, NULL, NULL, NULL, NULL, 'TaskVerifier'),
 ('mydepartment', NULL, 'group', 'faculty', NULL, 1, 1, 1, 1, 'DepartmentHead'),
-('myowndepartment', NULL, 'user', '1', NULL, 1, 1, 1, 1, NULL);
+('myowndepartment', NULL, 'user', '1', NULL, 1, 1, 1, 1, NULL),
+('tasktab', NULL, NULL, NULL, 1, NULL, 1, NULL, NULL, 'ShowTaskTab');
 
 
 CREATE TABLE IF NOT EXISTS `departments` (

@@ -7562,8 +7562,8 @@ function courses_fetch_objectives($course_ids, $parent_id = 1, $objectives = fal
 						JOIN `global_lu_objectives` AS b
 						ON a.`objective_id` = b.`objective_id`
 						WHERE ".($fetch_all_text ? "" : "`importance` != '0'
-						AND `objective_type` = 'course'
 						AND ")."`course_id` IN (".$escaped_course_ids.")
+						AND a.`objective_type` = 'course'
 						UNION
 						SELECT b.`objective_id`, a.`importance`, a.`objective_details`, a.`course_id`, b.`objective_parent`, b.`objective_order`
 						FROM `course_objectives` AS a
@@ -7571,7 +7571,7 @@ function courses_fetch_objectives($course_ids, $parent_id = 1, $objectives = fal
 						ON a.`objective_id` = b.`objective_parent`
 						AND `course_id` IN (".$escaped_course_ids.")
 						WHERE ".($fetch_all_text ? "" : "`importance` != '0'
-						AND `objective_type` = 'course'
+						AND a.`objective_type` = 'course'
 						AND ")."a.`objective_type` = 'course'
 						AND b.`objective_id` NOT IN (
 							SELECT a.`objective_id`
@@ -7579,8 +7579,8 @@ function courses_fetch_objectives($course_ids, $parent_id = 1, $objectives = fal
 							JOIN `global_lu_objectives` AS b
 							ON a.`objective_id` = b.`objective_id`
 							WHERE ".($fetch_all_text ? "" : "`importance` != '0'
-							AND `objective_type` = 'course'
 							AND ")."`course_id` IN (".$escaped_course_ids.")
+							AND `objective_type` = 'course'
 						)
 						ORDER BY `objective_parent`, `objective_order` ASC";
 		$results	= $db->GetAll($query);

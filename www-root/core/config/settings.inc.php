@@ -565,10 +565,8 @@ $AR_FUTURE_YEARS = $AR_CUR_YEAR + 10;
  * Defines for Tasks Module
  * 
  */
+
 //Owners
-
-$TASK_OWNERS = array("USER" => "user");
-
 define("TASK_OWNER_USER", "user");
 define("TASK_OWNER_COURSE", "course");
 define("TASK_OWNER_EVENT", "event");

@@ -44,7 +44,7 @@ if (!defined("PARENT_INCLUDED")) {
 
 	if (($router) && ($router->initRoute())) {
 		$PREFERENCES = preferences_load($MODULE);
-
+		
 		if (isset($_GET["id"]) && ($tmp_input = clean_input($_GET["id"], array("trim", "int")))) {
 			$PROXY_ID = $tmp_input;
 		} else {
@@ -55,7 +55,6 @@ if (!defined("PARENT_INCLUDED")) {
 		if ($module_file) {
 			require_once($module_file);
 		}
-
 		/**
 		 * Check if preferences need to be updated on the server at this point.
 		 */
@@ -66,8 +65,8 @@ if (!defined("PARENT_INCLUDED")) {
 function add_mspr_admin_sidebar ($year) {
 	$sidebar_html  = "<ul class=\"menu\">";
 	$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/mspr?section=mspr-options&year=".$year."\">Class of ".$year." MSPR Options</a></li>\n";
-	$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/mspr?year=".$year ."\">Manage Class of ". $year ." MSPRs</a></li>\n";
-	$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/mspr?all\">Manage All MSPRs Requiring Attention</a></li>\n";
+	$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/mspr?mode=year&year=".$year ."\">Manage Class of ". $year ." MSPRs</a></li>\n";
+	$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/mspr?mode=all\">Manage All MSPRs Requiring Attention</a></li>\n";
 	
 	$sidebar_html .= "</ul>";
 

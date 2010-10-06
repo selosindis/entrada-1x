@@ -1845,7 +1845,7 @@ function preferences_update($module, $preferences = array()) {
 function application_log($type, $message) {
 	global $AGENT_CONTACTS;
 	$page_url = 'http';
-	if ($_SERVER["HTTPS"] == "on") {
+	if ((isset($_SERVER["HTTPS"])) && $_SERVER["HTTPS"] == "on") {
 		$page_url .= "s";
 	}
 	$page_url .= "://";

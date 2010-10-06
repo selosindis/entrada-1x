@@ -147,7 +147,7 @@ class MSPR implements ArrayAccess, AttentionRequirable {
     	global $db;
 
 		$user_id = $user->getID();
-		$query = "insert into `student_mspr` (`user_id`, `closed`) value (".$db->qstr($user_id).", ".$db->qstr($closed).")";
+		$query = "insert into `student_mspr` (`user_id`, `closed`) value (".$db->qstr($user_id).", ".(isset($closed) && $closed ? $db->qstr($closed) : "NULL").")";
 		
 		if(!$db->Execute($query)) {
 			application_log("error", "Unable to update a student_mspr record. Database said: ".$db->ErrorMsg());

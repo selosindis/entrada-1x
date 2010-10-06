@@ -28,10 +28,8 @@ if (!defined("IN_PROFILE")) {
 	require_once(dirname(__FILE__)."/includes/functions.inc.php");
 	
 	require_once("Models/mspr/MSPRs.class.php");
-	
 	//require_mspr_models();
 	$user = User::get($PROXY_ID);
-	
 	$PAGE_META["title"]			= "MSPR";
 	$PAGE_META["description"]	= "";
 	$PAGE_META["keywords"]		= "";
@@ -71,7 +69,7 @@ if (!defined("IN_PROFILE")) {
 
 	if (!$mspr) {
 		$NOTICE++;
-		$NOTICE[] ="MSPR not yet available. Please try again later.";
+		$NOTICESTR[] ="MSPR not yet available. Please try again later.";
 		application_log("error", "Error creating MSPR for user " .$PROXY_ID. ": " . $name . "(".$number.")");
 		display_status_messages();
 	} else {

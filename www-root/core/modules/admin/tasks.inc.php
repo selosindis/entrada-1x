@@ -40,18 +40,27 @@ if (!defined("PARENT_INCLUDED")) {
 
 	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/tasks", "title" => "Manage Tasks");
 
-	if (isset($_GET["id"]) && ($tmp_input = clean_input($_GET["id"], array("nows", "int")))) {
-		$TASK_ID = $tmp_input;
-	} else {
-		$TASK_ID = 0;
-	}
 	
 	$ORGANISATION_ID = $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"];
 	
 	if (($router) && ($router->initRoute())) {
+
+		$PREFERENCES = preferences_load($MODULE);
+		
+		if (isset($_GET["id"]) && ($tmp_input = clean_input($_GET["id"], array("nows", "int")))) {
+			$TASK_ID = $tmp_input;
+		} else {
+			$TASK_ID = 0;
+		}
+			
 		$module_file = $router->getRoute();
 		if ($module_file) {
 			require_once($module_file);
 		}
+		
+		/**
+		 * Check if preferences need to be updated on the server at this point.
+		 */
+		preferences_update($MODULE, $PREFERENCES);
 	}
 }

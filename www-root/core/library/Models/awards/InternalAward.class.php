@@ -33,23 +33,21 @@ class InternalAward extends Award{
 	private $disabled;
 
 	function __construct($id, $title, $terms, $disabled) {
-		$awarding_body = "Queen's University";
+		$awarding_body = INTERNAL_AWARD_AWARDING_BODY;
 		parent::__construct($title,$terms, $awarding_body);
 		$this->id = $id;
 		$this->disabled = $disabled;
 	}
 	
 	static function create($title,$terms) {
-		global $db,$SUCCESS,$SUCCESSSTR,$ERROR,$ERRORSTR;
+		global $db;
 		
 		$query = "insert into `student_awards_internal_types` (`title`,`award_terms`) value (".$db->qstr($title).", ".$db->qstr($terms).")";
 		if(!$db->Execute($query)) {
-			$ERROR++;
-			$ERRORSTR[] = "Failed to create new award .";
+			add_error("Failed to create new award .");
 			application_log("error", "Unable to update a student_awards_internal_types record. Database said: ".$db->ErrorMsg());
 		} else {
-			$SUCCESS++;
-			$SUCCESSSTR[] = "Successfully added new award.";
+			add_success("Successfully added new award.");
 			$insert_id = $db->Insert_ID();
 			return self::get($insert_id); 
 		}
@@ -76,74 +74,65 @@ class InternalAward extends Award{
 	}
 	
 	public function update($title,$terms) {
-		global $db,$SUCCESS,$SUCCESSSTR,$ERROR,$ERRORSTR;
+		global $db;
 		$query = "update `student_awards_internal_types` set
 				 `title`=".$db->qstr($title).", 
 				 `award_terms`=".$db->qstr($terms)." 
 				 where `id`=".$db->qstr($this->id);
 		
 		if(!$db->Execute($query)) {
-			$ERROR++;
-			$ERRORSTR[] = "Failed to update award.";
+			add_error("Failed to update award.");
 			application_log("error", "Unable to update a student_awards_internal_types record. Database said: ".$db->ErrorMsg());
 		} else {
-			$SUCCESS++;
-			$SUCCESSSTR[] = "Successfully updated award.";
+			add_success("Successfully updated award.");
 			$this->title = $title;
 			$this->terms = $terms;
 		}
 	}
 	
 	public function disable() {
-		global $db,$SUCCESS,$SUCCESSSTR,$ERROR,$ERRORSTR;
+		global $db;
 		$query = "Update `student_awards_internal_types` set `disabled`=1 where `id`=".$db->qstr($this->id);
 		if(!$db->Execute($query)) {
-			$ERROR++;
-			$ERRORSTR[] = "Failed to disable award.";
+			add_error("Failed to disable award.");
 			application_log("error", "Unable to update a student_awards_internal_types record. Database said: ".$db->ErrorMsg());
 		} else {
-			$SUCCESS++;
-			$SUCCESSSTR[] = "Successfully disabled award.";
+			add_success("Successfully disabled award.");
 			$this->disabled = 1;
 		}
 		
 	}
 	
 	public function enable() {
-		global $db,$SUCCESS,$SUCCESSSTR,$ERROR,$ERRORSTR;
+		global $db;
 		$query = "Update `student_awards_internal_types` set `disabled`=0 where `id`=".$db->qstr($this->id);
 		if(!$db->Execute($query)) {
-			$ERROR++;
-			$ERRORSTR[] = "Failed to enable award.";
+			add_error("Failed to enable award.");
 			application_log("error", "Unable to update a student_awards_internal_types record. Database said: ".$db->ErrorMsg());
 		} else {
-			$SUCCESS++;
-			$SUCCESSSTR[] = "Successfully enabled award.";
+			add_success("Successfully enabled award.");
 			$this->disabled = 0;
 		}
 	}
 	
 	public function delete() {
-		global $db,$SUCCESS,$SUCCESSSTR,$ERROR,$ERRORSTR;
+		global $db;
 	
 		//first get the list of recipients and make sure we're not going to break things deleting this.
 		
 		$recipients = $this->getRecipients();
 		
 		if (is_array($recipients) && count($recipients) > 0) {
-			$ERROR++;
-			$ERRORSTR[] = "Failed to remove award from database. Please unassign all recipients of this award prior to deleting it.";
+			add_error("Failed to remove award from database. Please unassign all recipients of this award prior to deleting it.");
 			return;
 		}
 		
 		$query = "DELETE FROM `student_awards_internal_types` where `id`=".$db->qstr($this->id);
 		if(!$db->Execute($query)) {
-			$ERROR++;
-			$ERRORSTR[] = "Failed to remove award from database.";
+			add_error("Failed to remove award from database.");
 			application_log("error", "Unable to delete a student_awards_internal_type record. Database said: ".$db->ErrorMsg());
 		} else {
-			$SUCCESS++;
-			$SUCCESSSTR[] = "Successfully removed award.";
+			add_success("Successfully removed award.");
 		}		
 	}
 }

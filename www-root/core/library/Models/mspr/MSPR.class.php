@@ -162,27 +162,25 @@ class MSPR implements ArrayAccess, AttentionRequirable {
     }
 
 	public function setClosedTimestamp($timestamp) {
-		global $db,$ERROR,$ERRORSTR;
+		global $db;
 		$query = "update `student_mspr` set
 				 `closed`=".$db->qstr($timestamp)."
 				 where `user_id`=".$db->qstr($this->user_id);
 		
 		if(!$db->Execute($query)) {
-			$ERROR++;
-			$ERRORSTR[] = "Failed to update Submission Deadline.".$db->ErrorMsg();
+			add_error("Failed to update Submission Deadline.");
 			application_log("error", "Unable to update a student_mspr record. Database said: ".$db->ErrorMsg());
 		}
 	}
 	
 	public function setGeneratedTimestamp($timestamp) {
-		global $db,$ERROR,$ERRORSTR;
+		global $db;
 		$query = "update `student_mspr` set
 				 `generated`=".$db->qstr($timestamp)."
 				 where `user_id`=".$db->qstr($this->user_id);
 				
 		if(!$db->Execute($query)) {
-			$ERROR++;
-			$ERRORSTR[] = "Failed to update MSPR Generation Time.";
+			add_error("Failed to update MSPR Generation Time.");
 			application_log("error", "Unable to update a student_mspr record. Database said: ".$db->ErrorMsg());
 		}
 	}
@@ -208,7 +206,6 @@ class MSPR implements ArrayAccess, AttentionRequirable {
 	}
 	
 	public function saveMSPRFiles($timestamp=null,$location=null) {
-		global $SUCCESS,$SUCCESSSTR,$ERROR,$ERRORSTR;
 		if (!$location) {
 			$location = MSPR_STORAGE; //use default
 		}

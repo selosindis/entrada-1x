@@ -18,8 +18,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 } elseif(!$ENTRADA_ACL->isLoggedInAllowed('mspr', 'create',true) || $user_record["group"] != "student") {
 	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/".$MODULE."\\'', 15000)";
 
-	$ERROR++;
-	$ERRORSTR[]	= "Your account does not have the permissions required to use this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
+	add_error("Your account does not have the permissions required to use this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.");
 	echo display_error();
 
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
@@ -69,10 +68,9 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 					header('Content-Disposition: attachment; filename="MSPR - '.$name.'('.$number.').pdf"');
 					break;
 				default:
-					$ERROR++;
-					$ERRORSTR[] = "Unknown file type: " . $type;
+					add_error("Unknown file type: " . $type);
 			}
-			if (!$ERROR) {
+			if (!has_error()) {
 				ob_clear_open_buffers();
 				flush();
 				echo $mspr->getMSPRFile($type,$revision);

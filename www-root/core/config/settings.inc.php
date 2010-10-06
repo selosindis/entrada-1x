@@ -561,6 +561,13 @@ $AR_NEXT_YEAR = (int) $AR_CUR_YEAR + 1;
 $AR_PAST_YEARS = 1985;
 $AR_FUTURE_YEARS = $AR_CUR_YEAR + 10;
 
+
+/**
+ * Defines for MSPR
+ */
+
+define("INTERNAL_AWARD_AWARDING_BODY","Queen's University");
+
 /**
  * Defines for Tasks Module
  * 

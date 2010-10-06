@@ -41,32 +41,28 @@ class Studentship {
 	} 
 	
 	public static function create($user, $title, $year) {
-		global $db,$SUCCESS,$SUCCESSSTR,$ERROR,$ERRORSTR;
+		global $db;
 		$user_id = $user->getID();
 	
 		$query = "insert into `student_studentships` (`user_id`, `title`,`year`) value (".$db->qstr($user_id).", ".$db->qstr($title).", ".$db->qstr($year).")";
 		if(!$db->Execute($query)) {
-			$ERROR++;
-			$ERRORSTR[] = "Failed to create new studentship.";
+			add_error("Failed to create new studentship.");
 			application_log("error", "Unable to update a student_studentships record. Database said: ".$db->ErrorMsg());
 		} else {
-			$SUCCESS++;
-			$SUCCESSSTR[] = "Successfully added new studentship.";
+			add_success("Successfully added new studentship.");
 			$insert_id = $db->Insert_ID();
 			return self::get($insert_id); 
 		}
 	}
 	
 	public function delete() {
-		global $db,$SUCCESS,$SUCCESSSTR,$ERROR,$ERRORSTR;
+		global $db;
 		$query = "DELETE FROM `student_studentships` where `id`=".$db->qstr($this->id);
 		if(!$db->Execute($query)) {
-			$ERROR++;
-			$ERRORSTR[] = "Failed to remove studentship from database.";
+			add_error("Failed to remove studentship from database.");
 			application_log("error", "Unable to delete a student_studentships record. Database said: ".$db->ErrorMsg());
 		} else {
-			$SUCCESS++;
-			$SUCCESSSTR[] = "Successfully removed studentship.";
+			add_success("Successfully removed studentship.");
 		}		
 	}
 }

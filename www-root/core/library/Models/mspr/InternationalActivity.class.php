@@ -87,31 +87,27 @@ class InternationalActivity {
 	} 
 
 	public static function create($user, $title, $site, $location, $start, $end) {
-		global $db,$SUCCESS,$SUCCESSSTR,$ERROR,$ERRORSTR;
+		global $db;
 		$student_id = $user->getID();
 		$query = "insert into `student_international_activities` (`student_id`, `title`,`site`,`location`,`start`, `end`) value (".$db->qstr($student_id).", ".$db->qstr($title).", ".$db->qstr($site).", ".$db->qstr($location).", ".$db->qstr($start).", ".$db->qstr($end).")";
 		if(!$db->Execute($query)) {
-			$ERROR++;
-			$ERRORSTR[] = "Failed to create new International Activity.";
+			add_error("Failed to create new International Activity.");
 			application_log("error", "Unable to update a student_international_activity record. Database said: ".$db->ErrorMsg());
 		} else {
-			$SUCCESS++;
-			$SUCCESSSTR[] = "Successfully added new International Activity.";
+			add_success("Successfully added new International Activity.");
 			$insert_id = $db->Insert_ID();
 			return self::get($insert_id); 
 		}
 	}
 	
 	public function delete() {
-		global $db,$SUCCESS,$SUCCESSSTR,$ERROR,$ERRORSTR;
+		global $db;
 		$query = "DELETE FROM `student_international_activities` where `id`=".$db->qstr($this->id);
 		if(!$db->Execute($query)) {
-			$ERROR++;
-			$ERRORSTR[] = "Failed to remove International Activity from database.";
+			add_error("Failed to remove International Activity from database.");
 			application_log("error", "Unable to delete a student_international_activity record. Database said: ".$db->ErrorMsg());
 		} else {
-			$SUCCESS++;
-			$SUCCESSSTR[] = "Successfully removed International Activity.";
+			add_success("Successfully removed International Activity.");
 		}		
 	}
 }

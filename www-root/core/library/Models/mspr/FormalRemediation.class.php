@@ -24,34 +24,30 @@ class FormalRemediation extends AbstractStudentDetails {
 	}
 	
 	public static function create($user, $details) {
-		global $db,$SUCCESS,$SUCCESSSTR,$ERROR,$ERRORSTR;
+		global $db;
 
 		$user_id = $user->getID();
 		$query = "insert into `student_formal_remediations` (`user_id`, `remediation_details`) value (".$db->qstr($user_id).", ".$db->qstr($details).")";
 		
 		if(!$db->Execute($query)) {
-			$ERROR++;
-			$ERRORSTR[] = "Failed to create new Formal Remediation.";
+			add_error("Failed to create new Formal Remediation.");
 			application_log("error", "Unable to update a student_formal_remediations record. Database said: ".$db->ErrorMsg());
 		} else {
-			$SUCCESS++;
-			$SUCCESSSTR[] = "Successfully added new Formal Remediation.";
+			add_success("Successfully added new Formal Remediation.");
 			$insert_id = $db->Insert_ID();
 			return self::get($insert_id); 
 		}
 	}
 	
 	public function delete() {
-		global $db,$SUCCESS,$SUCCESSSTR,$ERROR,$ERRORSTR;
+		global $db;
 		
 		$query = "DELETE FROM `student_formal_remediations` where `id`=".$db->qstr($this->id);
 		if(!$db->Execute($query)) {
-			$ERROR++;
-			$ERRORSTR[] = "Failed to remove formal remediation from database.";
+			add_error("Failed to remove formal remediation from database.");
 			application_log("error", "Unable to delete a student_formal_remediations record. Database said: ".$db->ErrorMsg());
 		} else {
-			$SUCCESS++;
-			$SUCCESSSTR[] = "Successfully removed Formal Remediation.";
+			add_success("Successfully removed Formal Remediation.");
 		}	
 	}
 

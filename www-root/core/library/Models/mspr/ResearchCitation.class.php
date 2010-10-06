@@ -110,17 +110,15 @@ class ResearchCitation implements Approvable, AttentionRequirable {
 	 */
 	public static function create($user_id, $citation, $approved = false, $rejected = false) {
 		
-		global $db,$SUCCESS,$SUCCESSSTR,$ERROR,$ERRORSTR;
+		global $db;
 		$approved = (int) $approved;
 		$priority = self::getNewPriority($user_id);
 		$query = "insert into `student_research` (`user_id`, `citation`, `priority`, `status`) value (".$db->qstr($user_id).", ".$db->qstr($citation).", ".$db->qstr($priority).", ". $db->qstr($approved ? 1 : 0).")";
 		if(!$db->Execute($query)) {
-			$ERROR++;
-			$ERRORSTR[] = "Failed to create new Research Citation.";
+			add_error("Failed to create new Research Citation.");
 			application_log("error", "Unable to create a student_research record. Database said: ".$db->ErrorMsg());
 		} else {
-			$SUCCESS++;
-			$SUCCESSSTR[] = "Successfully added new Research Citation.";
+			add_success("Successfully added new Research Citation.");
 		}
 	}
 	
@@ -132,15 +130,13 @@ class ResearchCitation implements Approvable, AttentionRequirable {
 		$cur_priority = $this->priority;
 		$user_id = $this->user_id;
 		
-		global $db,$SUCCESS,$SUCCESSSTR,$ERROR,$ERRORSTR;
+		global $db;
 		$query = "DELETE FROM `student_research` where `id`=".$db->qstr($this->id);
 		if(!$db->Execute($query)) {
-			$ERROR++;
-			$ERRORSTR[] = "Failed to remove Research Citation from database.";
+			add_error("Failed to remove Research Citation from database.");
 			application_log("error", "Unable to delete a student_research record. Database said: ".$db->ErrorMsg());
 		} else {
-			$SUCCESS++;
-			$SUCCESSSTR[] = "Successfully removed Research Citation.";
+			add_success("Successfully removed Research Citation.");
 		}
 		$query = "UPDATE `student_research` set `priority`=`priority`-1 where `priority` > ".$db->qstr($cur_priority)." and `user_id`=".$db->qstr($user_id);
 		$db->Execute($query);
@@ -148,18 +144,16 @@ class ResearchCitation implements Approvable, AttentionRequirable {
 	}
 	
 	public function setStatus($status_code) {
-		global $db,$SUCCESS,$SUCCESSSTR,$ERROR,$ERRORSTR;
+		global $db;
 		$query = "update `student_research` set
 				 `status`=".$db->qstr($status_code)."
 				 where `id`=".$db->qstr($this->id);
 		
 		if(!$db->Execute($query)) {
-			$ERROR++;
-			$ERRORSTR[] = "Failed to update Research Citation.".$db->ErrorMsg();
+			add_error("Failed to update Research Citation.");
 			application_log("error", "Unable to update a student_research record. Database said: ".$db->ErrorMsg());
 		} else {
-			$SUCCESS++;
-			$SUCCESSSTR[] = "Successfully updated Research Citation.";
+			add_success("Successfully updated Research Citation.");
 		}
 	}
 	

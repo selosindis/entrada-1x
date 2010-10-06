@@ -18,8 +18,7 @@ if (!defined("IN_PROFILE")) {
 } elseif(!$ENTRADA_ACL->isLoggedInAllowed('mspr', 'update',true) || $_SESSION["details"]["group"] != "student") {
 	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/".$MODULE."\\'', 15000)";
 
-	$ERROR++;
-	$ERRORSTR[]	= "Your account does not have the permissions required to use this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
+	add_error("Your account does not have the permissions required to use this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.");
 
 	echo display_error();
 
@@ -68,8 +67,7 @@ if (!defined("IN_PROFILE")) {
 	}
 
 	if (!$mspr) {
-		$NOTICE++;
-		$NOTICESTR[] ="MSPR not yet available. Please try again later.";
+		add_notice("MSPR not yet available. Please try again later.");
 		application_log("error", "Error creating MSPR for user " .$PROXY_ID. ": " . $name . "(".$number.")");
 		display_status_messages();
 	} else {
@@ -101,10 +99,9 @@ if (!defined("IN_PROFILE")) {
 					header('Content-Disposition: attachment; filename="MSPR - '.$name.'('.$number.').pdf"');
 					break;
 				default:
-					$ERROR++;
-					$ERRORSTR[] = "Unknown file type: " . $type;
+					add_error("Unknown file type: " . $type);
 			}
-			if (!$ERROR) {
+			if (!has_error()) {
 				ob_clear_open_buffers();
 				flush();
 				echo $mspr->getMSPRFile($type,$revision);

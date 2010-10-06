@@ -55,6 +55,9 @@ if (!defined("PARENT_INCLUDED")) {
 					case "privacy-update" :
 						profile_update_privacy();
 					break;
+					case "notifications-update" :
+						profile_update_notifications();
+					break;
 					case "google-update" :
 						profile_update_google();
 					break;
@@ -100,6 +103,9 @@ function add_profile_sidebar () {
 	$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/profile\">Personal Information</a></li>\n";
 	//$sidebar_html .= "	<li class=\"link\"><a href=\"".$this_module."?section=photo\">Profile Photo</a></li>\n";
 	$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/profile?section=privacy\">Privacy Settings</a></li>\n";
+	if ((defined("COMMUNITY_NOTIFICATIONS_ACTIVE")) && ((bool) COMMUNITY_NOTIFICATIONS_ACTIVE)) {
+		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/profile?section=notifications\">Community Notifications</a></li>\n";
+	}
 	if ($ENTRADA_ACL->isLoggedInAllowed('assistant_support', 'create')) {
 		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/profile?section=assistants\">My Admin Assistants</a></li>\n";
 	}
@@ -550,4 +556,86 @@ function profile_remove_assistant () {
 		application_log("error", "User tried to remove assistants from profile without an acceptable group & role.");
 	}
 }
+
+function profile_update_notifications() {
+	global $db, $PROCESSED, $ERROR, $ERRORSTR, $SUCCESS, $SUCCESSSTR,$ENTRADA_ACL;
+
+	if ($_POST["enable-notifications"] == 1) {
+		if ($_POST["notify_announcements"] && is_array($_POST["notify_announcements"])) {
+			$notify_announcements = $_POST["notify_announcements"]; 
+		} else {
+			$notify_announcements = array();
+		}
+		if ($_POST["notify_events"] && is_array($_POST["notify_events"])) {
+			$notify_events = $_POST["notify_events"];
+		} else {
+			$notify_events = array();
+		}
+		if ($_POST["notify_polls"] && is_array($_POST["notify_polls"])) {
+			$notify_polls = $_POST["notify_polls"];
+		} else {
+			$notify_polls = array();
+		}
+		if ($_POST["notify_members"] && is_array($_POST["notify_members"])) {
+			$notify_members = $_POST["notify_members"];
+		} else {
+			$notify_members = array();
+		}
+		
+		$user_notifications = $db->GetOne("SELECT `notifications` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($_SESSION["details"]["id"]));
+		if (((int)$user_notifications) != 1) {
+			if (!$db->Execute("UPDATE `".AUTH_DATABASE."`.`user_data` SET `notifications` = '1' WHERE `id` = ".$db->qstr($_SESSION["details"]["id"]))) {
+				$ERROR++;
+				application_log("error", "Notification settings for the Proxy ID [".$_SESSION["details"]["id"]."] could not be activated. Database said: ".$db->ErrorMsg());
+			}
+		}
+		
+		$query = "SELECT `community_id` FROM `community_members` WHERE `proxy_id` = ".$db->qstr($_SESSION["details"]["id"])." AND `member_active` = '1'";
+		$communities = $db->GetAll($query);
+		if ($communities) {
+			foreach ($communities as $community) {
+				$PROCESSED_NOTIFICATIONS[$community["community_id"]]["announcements"] = (isset($notify_announcements[$community["community_id"]]) && $notify_announcements[$community["community_id"]] ? 1 : 0);
+				$PROCESSED_NOTIFICATIONS[$community["community_id"]]["events"] = (isset($notify_events[$community["community_id"]]) && $notify_events[$community["community_id"]] ? 1 : 0);
+				$PROCESSED_NOTIFICATIONS[$community["community_id"]]["polls"] = (isset($notify_polls[$community["community_id"]]) && $notify_polls[$community["community_id"]] ? 1 : 0);
+				$PROCESSED_NOTIFICATIONS[$community["community_id"]]["members"] = (isset($notify_members[$community["community_id"]]) && $notify_members[$community["community_id"]] ? 1 : 0);
+			}
+		}
+		if ($PROCESSED_NOTIFICATIONS && is_array($PROCESSED_NOTIFICATIONS)) {
+			if ($db->Execute("DELETE FROM `community_notify_members` WHERE `proxy_id` = ".$db->qstr($_SESSION["details"]["id"])." AND `notify_type` IN ('announcement', 'event', 'poll', 'members')")) {
+				foreach ($PROCESSED_NOTIFICATIONS as $community_id => $notify) {
+					if (!$ERROR) {
+						if (!$db->Execute("	INSERT INTO `community_notify_members` 
+											(`proxy_id`, `community_id`, `record_id`, `notify_type`, `notify_active`) VALUES 
+											(".$db->qstr($_SESSION["details"]["id"]).", ".$db->qstr($community_id).", ".$db->qstr($community_id).", 'announcement', ".$notify["announcements"]."),
+											(".$db->qstr($_SESSION["details"]["id"]).", ".$db->qstr($community_id).", ".$db->qstr($community_id).", 'event', ".$notify["events"]."),
+											(".$db->qstr($_SESSION["details"]["id"]).", ".$db->qstr($community_id).", ".$db->qstr($community_id).", 'members', ".$notify["members"]."),
+											(".$db->qstr($_SESSION["details"]["id"]).", ".$db->qstr($community_id).", ".$db->qstr($community_id).", 'poll', ".$notify["polls"].")")) {
+							$ERROR++;
+							application_log("error", "Community notifications settings for proxy ID [".$_SESSION["details"]["id"]."] could not be updated. Database said: ".$db->ErrorMsg());
+						}
+					}
+				}
+				if (!$ERROR) {
+					$SUCCESS++;
+					$SUCCESSSTR[] = "Your community notification settings have been successfully updated.";
+				}
+			} else {
+				$ERROR++;
+				application_log("error", "Community notifications settings for proxy ID [".$_SESSION["details"]["id"]."] could not be deleted. Database said: ".$db->ErrorMsg());
+			}
+		}
+		if ($ERROR) {
+			$ERRORSTR[] = "There was an issue while attempting to set your notification settings. The system administrator has been informed of the problem, please try again later.";	
+		}
+	} else {
+		$user_notifications = $db->GetOne("SELECT `notifications` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($_SESSION["details"]["id"]));
+		if (((int)$user_notifications) != 0) {
+			if (!$db->Execute("UPDATE `".AUTH_DATABASE."`.`user_data` SET `notifications` = '0' WHERE `id` = ".$db->qstr($_SESSION["details"]["id"]))) {
+				$ERROR++;
+				application_log("error", "Notification settings for the Proxy ID [".$_SESSION["details"]["id"]."] could not be deactivated. Database said: ".$db->ErrorMsg());
+			}
+		}
+	}
+}
+
 ?>

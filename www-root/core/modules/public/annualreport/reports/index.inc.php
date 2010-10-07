@@ -72,7 +72,14 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			A report that shows all of the publications in your department for a specific date range.
 		</li>
 	</ol>
+	<?php } ?>
+	<h2 style="color: #669900">Blank ART Form</h2>
+	<ol class="system-reports">
+		<li>
+			<a href="<?php echo ENTRADA_URL; ?>/annualreport/reports?section=blank_art&clinical=NO">Blank ART Forms</a><br />
+			This will generate a blank copy of both versions of the Annual Report (Clinical and Basic Sciences)
+		</li>
+	</ol>
 	<?php
-	}
 }
 ?>

@@ -567,6 +567,8 @@ $AR_FUTURE_YEARS = $AR_CUR_YEAR + 10;
  */
 
 define("INTERNAL_AWARD_AWARDING_BODY","Queen's University");
+define("CLERKSHIP_COMPLETED_CUTOFF", "October 26");
+
 
 /**
  * Defines for Tasks Module

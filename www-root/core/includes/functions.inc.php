@@ -11094,3 +11094,20 @@ function generate_bulk_task_verify_success_list($task_successes) {
 	}
 	return $success_listing;
 }
+
+/**
+ * This function gets the min and max years that are in the Annual Reporting Module for report generation purposes
+ *
+ * @param null
+ * @return array(start, end)
+ */
+function getMinMaxARYears() {
+    global $db;
+
+    $query = "SELECT MIN(year_reported) AS `start_year`, MAX(year_reported) AS `end_year`
+	FROM `ar_profile`";
+    
+    $result = $db->GetRow($query);
+    
+	return $result;
+}

@@ -88,8 +88,8 @@ class Entrada_ACL extends ACL_Factory {
 				"tasktab"
 			),
 			"mydepartment",
-			"myowndepartment"
-			
+			"myowndepartment",
+			"annualreportadmin"
 		)
 	);
 	/**

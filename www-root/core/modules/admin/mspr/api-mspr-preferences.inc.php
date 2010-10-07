@@ -24,19 +24,14 @@ get_include_path(),
 require_once("init.inc.php");
 
 if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
-	if ($ENTRADA_ACL->amIAllowed("mspr", "update", false)) {
+	if ($ENTRADA_ACL->amIAllowed("mspr", "create", false)) {
 
-		require_once(dirname(__FILE__)."/includes/functions.inc.php");
-		
 		ob_clear_open_buffers();
-	
-		
-		require_mspr_models();
-		
-		
-		$user = User::get($_SESSION["details"]["id"]);
-		process_mspr_profile($user);		
-		
+		$PROXY_ID = $_SESSION["details"]["id"];
+		$user = User::get($PROXY_ID);
+		if (isset($_POST['showAll'])) {
+			$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["showAll"] = ($_POST['showAll'] == "showAll");
+		}
 	}
 	exit;
 }

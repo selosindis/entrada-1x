@@ -281,7 +281,6 @@ $AGENT_CONTACTS["agent-notifications"] = array("name" => "Undergraduate Educatio
 $AGENT_CONTACTS["agent-clerkship"] = array("name" => "Clerkship Administrator", "email" => $config->admin->email, "director_ids" => array(0));
 $AGENT_CONTACTS["agent-clerkship-international"] = array("name" => "International Clerkship Administrator", "email" => $config->admin->email);
 $AGENT_CONTACTS["agent-regionaled"] = array("name" => "Apartment Administrator", "email" => $config->admin->email);
-$AGENT_CONTACTS["annualreport-support"] = array("name" => "Annual Report Administrator", "email" => $config->admin->email);
 
 /**
  * A list of reserved names of community pages (in lower case). If a new community page matches
@@ -449,6 +448,7 @@ $MODULES["quizzes"] = array("title" => "Manage Quizzes", "resource" => "quiz", "
 $MODULES["users"] = array("title" => "Manage Users", "resource" => "user", "permission" => "update");
 $MODULES["regionaled"] = array("title" => "Regional Education", "resource" => "regionaled", "permission" => "update");
 $MODULES["reports"] = array("title" => "System Reports", "resource" => "reportindex", "permission" => "read");
+$MODULES["annualreport"] = array("title" => "Annual Reports", "resource" => "annualreportadmin", "permission" => "read");
 
 /**
  * System groups define which system groups & role combinations are allowed to
@@ -561,14 +561,21 @@ $AR_NEXT_YEAR = (int) $AR_CUR_YEAR + 1;
 $AR_PAST_YEARS = 1985;
 $AR_FUTURE_YEARS = $AR_CUR_YEAR + 10;
 
+
+/**
+ * Defines for MSPR
+ */
+
+define("INTERNAL_AWARD_AWARDING_BODY","Queen's University");
+define("CLERKSHIP_COMPLETED_CUTOFF", "October 26");
+
+
 /**
  * Defines for Tasks Module
  * 
  */
+
 //Owners
-
-$TASK_OWNERS = array("USER" => "user");
-
 define("TASK_OWNER_USER", "user");
 define("TASK_OWNER_COURSE", "course");
 define("TASK_OWNER_EVENT", "event");

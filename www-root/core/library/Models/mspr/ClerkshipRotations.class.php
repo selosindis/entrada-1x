@@ -10,12 +10,12 @@ class ClerkshipCoreCompleted extends ClerkshipRotations {
 	public static function get(User $user) {
 		global $db;
 		$user_id = $user->getID();
-		$completed_cutoff = strtotime("October 26, ".date("Y"));
+		$completed_cutoff = strtotime(CLERKSHIP_COMPLETED_CUTOFF.", ".date("Y"));
 		$query		= "	SELECT a.`event_title`, a.`event_start`, a.`event_finish`, a.`category_id`, c.`category_name`
-										FROM `medtech_clerkship`.`events` AS a
-										LEFT JOIN `medtech_clerkship`.`event_contacts` AS b
+										FROM `".CLERKSHIP_DATABASE."`.`events` AS a
+										LEFT JOIN `".CLERKSHIP_DATABASE."`.`event_contacts` AS b
 										ON b.`event_id` = a.`event_id`
-										LEFT JOIN `medtech_clerkship`.`categories` as c
+										LEFT JOIN `".CLERKSHIP_DATABASE."`.`categories` as c
 										ON a.`category_id` = c.`category_id`
 										WHERE a.`event_type` <> 'elective'
 										AND b.`econtact_type` = 'student'
@@ -38,13 +38,13 @@ class ClerkshipCorePending extends ClerkshipRotations {
 	public static function get(User $user) {
 		global $db;
 		$user_id = $user->getID();
-		$completed_cutoff = strtotime("October 26, ".date("Y"));
+		$completed_cutoff = strtotime(CLERKSHIP_COMPLETED_CUTOFF.", ".date("Y"));
 
 		$query		= "	SELECT a.`event_title`, a.`event_start`, a.`event_finish`, a.`category_id`, c.`category_name`
-										FROM `medtech_clerkship`.`events` AS a
-										LEFT JOIN `medtech_clerkship`.`event_contacts` AS b
+										FROM `".CLERKSHIP_DATABASE."`.`events` AS a
+										LEFT JOIN `".CLERKSHIP_DATABASE."`.`event_contacts` AS b
 										ON b.`event_id` = a.`event_id`
-										LEFT JOIN `medtech_clerkship`.`categories` as c
+										LEFT JOIN `".CLERKSHIP_DATABASE."`.`categories` as c
 										ON a.`category_id` = c.`category_id`
 										WHERE a.`event_type` <> 'elective'
 										AND b.`econtact_type` = 'student'
@@ -68,18 +68,18 @@ class ClerkshipElectivesCompleted extends ClerkshipRotations {
 	public static function get(User $user) {
 		global $db;
 		$user_id = $user->getID();
-		$completed_cutoff = strtotime("October 26, ".date("Y"));
+		$completed_cutoff = strtotime(CLERKSHIP_COMPLETED_CUTOFF.", ".date("Y"));
 		$query		= "	SELECT a.`event_title`, a.`event_start`, a.`event_finish`, c.`preceptor_first_name`, c.`preceptor_last_name`, c.`city`, c.`prov_state`, d.`category_name` AS `department_title`, e.`discipline`, f.`school_title`
-										FROM `medtech_clerkship`.`events` AS a
-										LEFT JOIN `medtech_clerkship`.`event_contacts` AS b
+										FROM `".CLERKSHIP_DATABASE."`.`events` AS a
+										LEFT JOIN `".CLERKSHIP_DATABASE."`.`event_contacts` AS b
 										ON b.`event_id` = a.`event_id`
-										LEFT JOIN `medtech_clerkship`.`electives` AS c
+										LEFT JOIN `".CLERKSHIP_DATABASE."`.`electives` AS c
 										ON c.`event_id` = a.`event_id`
-										LEFT JOIN `medtech_clerkship`.`categories` AS d
+										LEFT JOIN `".CLERKSHIP_DATABASE."`.`categories` AS d
 										ON d.`category_id` = c.`department_id`
-										LEFT JOIN `medtech_central`.`global_lu_disciplines` AS e
+										LEFT JOIN `".ENTRADA_DATABASE."`.`global_lu_disciplines` AS e
 										ON e.`discipline_id` = c.`discipline_id`
-										LEFT JOIN `medtech_central`.`global_lu_schools` AS f
+										LEFT JOIN `".ENTRADA_DATABASE."`.`global_lu_schools` AS f
 										ON f.`schools_id` = c.`schools_id`
 										WHERE a.`event_type` = 'elective'
 										AND b.`econtact_type` = 'student'

@@ -38,17 +38,15 @@ class ClinicalPerformanceEvaluation {
 	}
 	
 	public static function create($user, $comment,$source) {
-		global $db,$SUCCESS,$SUCCESSSTR,$ERROR,$ERRORSTR;
+		global $db;
 		$user_id = $user->getID();
 	
 		$query = "insert into `student_clineval_comments` (`user_id`, `comment`,`source`) value (".$db->qstr($user_id).", ".$db->qstr($comment).", ".$db->qstr($source).")";
 		if(!$db->Execute($query)) {
-			$ERROR++;
-			$ERRORSTR[] = "Failed to create new clinical performance evaluation.";
+			add_error("Failed to create new clinical performance evaluation.");
 			application_log("error", "Unable to update a student_clineval_comment record. Database said: ".$db->ErrorMsg());
 		} else {
-			$SUCCESS++;
-			$SUCCESSSTR[] = "Successfully added new clinical performance evaluation.";
+			add_success("Successfully added new clinical performance evaluation.");
 			$insert_id = $db->Insert_ID();
 			return self::get($insert_id); 
 		}
@@ -66,15 +64,13 @@ class ClinicalPerformanceEvaluation {
 	}  
 	
 	public function delete() {
-		global $db,$SUCCESS,$SUCCESSSTR,$ERROR,$ERRORSTR;
+		global $db;
 		$query = "DELETE FROM `student_clineval_comments` where `id`=".$db->qstr($this->id);
 		if(!$db->Execute($query)) {
-			$ERROR++;
-			$ERRORSTR[] = "Failed to remove clinical performance evaluation from database.";
+			add_error("Failed to remove clinical performance evaluation from database.");
 			application_log("error", "Unable to delete a student_clineval_comment record. Database said: ".$db->ErrorMsg());
 		} else {
-			$SUCCESS++;
-			$SUCCESSSTR[] = "Successfully removed clinical performance evaluation.";
+			add_success("Successfully removed clinical performance evaluation.");
 		}		
 	}
 }

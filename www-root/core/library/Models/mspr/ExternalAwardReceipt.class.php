@@ -85,16 +85,14 @@ class ExternalAwardReceipt implements Approvable,AttentionRequirable {
 	}
 		
 	static public function create($user_id, $title, $terms, $awarding_body,$year, $approved = false) {
-		global $db,$SUCCESS,$SUCCESSSTR,$ERROR,$ERRORSTR;
+		global $db;
 		$approved = (int) $approved;
 		$query = "INSERT INTO `student_awards_external` (`user_id`,`title`, `award_terms`, `awarding_body`, `year`, `status`) VALUES (".$db->qstr($user_id).", ".$db->qstr($title).", ".$db->qstr($terms).", ".$db->qstr($awarding_body).", ".$db->qstr($year).", ".$db->qstr($approved ? 1 : 0).")";
 		if(!$db->Execute($query)) {
-			$ERROR++;
-			$ERRORSTR[] = "Failed to add award recipient to database. Please check your values and try again.";
+			add_error("Failed to add award recipient to database. Please check your values and try again.");
 			application_log("error", "Unable to insert a student_awards_external record. Database said: ".$db->ErrorMsg());
 		} else {
-			$SUCCESS++;
-			$SUCCESSSTR[] = "Successfully added Award Recipient.";
+			add_success("Successfully added Award Recipient.");
 		}
 	}
 	
@@ -118,40 +116,35 @@ class ExternalAwardReceipt implements Approvable,AttentionRequirable {
 			$award = new ExternalAward($result['title'], $result['award_terms'], $result['awarding_body']);
 			return new ExternalAwardReceipt( $result['user_id'], $award, $result['award_receipt_id'], $result['year'], $approved, $rejected);
 		} else {
-			$ERROR++;
-			$ERRORSTR[] = "Failed to retreive award receipt from database.";
+			add_error("Failed to retreive award receipt from database.");
 			application_log("error", "Unable to retrieve a student_awards_external record. Database said: ".$db->ErrorMsg());
 		}
 			 
 	} 
 	
 	public function delete() {
-		global $db,$SUCCESS,$SUCCESSSTR,$ERROR,$ERRORSTR;
+		global $db;
 	
 		$query = "DELETE FROM `student_awards_external` where `id`=".$db->qstr($this->award_receipt_id);
 		if(!$db->Execute($query)) {
-			$ERROR++;
-			$ERRORSTR[] = "Failed to remove award receipt from database.";
+			add_error("Failed to remove award receipt from database.");
 			application_log("error", "Unable to delete a student_awards_external record. Database said: ".$db->ErrorMsg());
 		} else {
-			$SUCCESS++;
-			$SUCCESSSTR[] = "Successfully removed award receipt.";
+			add_success("Successfully removed award receipt.");
 		}
 	}
 	
 	private function setStatus($status_code) {
-		global $db,$SUCCESS,$SUCCESSSTR,$ERROR,$ERRORSTR;
+		global $db;
 		$query = "update `student_awards_external` set
 				 `status`=".$db->qstr($status_code)." 
 				 where `id`=".$db->qstr($this->award_receipt_id);
 		
 		if(!$db->Execute($query)) {
-			$ERROR++;
-			$ERRORSTR[] = "Failed to update award.";
+			add_error("Failed to update award.");
 			application_log("error", "Unable to update a student_awards_external record. Database said: ".$db->ErrorMsg());
 		} else {
-			$SUCCESS++;
-			$SUCCESSSTR[] = "Successfully updated award.";
+			add_success("Successfully updated award.");
 			$this->approved = true;
 		}
 	}

@@ -17,8 +17,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MSPR_ADMIN"))) {
 	header("Location: ".ENTRADA_URL);
 	exit;
 } elseif (!$ENTRADA_ACL->amIAllowed("mspr", "create", false)) {
-	$ERROR++;
-	$ERRORSTR[]	= "Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
+	add_error("Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.");
 
 	echo display_error();
 
@@ -26,8 +25,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MSPR_ADMIN"))) {
 } else {
 
 	require_once("Models/mspr/MSPRs.class.php");
-	//$msprs = MSPRs::get();
-	//var_dump($msprs);
+	
+	if (isset($_GET['mode'])) {
+		$mode = $_GET['mode'];
+	}
 	
 	if (isset($_GET['year'])) {
 		$year = $_GET['year'];
@@ -36,20 +37,21 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MSPR_ADMIN"))) {
 		}
 	}
 	
-	
-	if (isset($_GET['all']))
-		$mode = "all";
-	elseif($year) {
-		$mode = "year";
-	}
-	
 	switch($mode) {
 		case "all" :
 			$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/mspr?all", "title" => "Attention Required" );
-			//XXX this could end up quite slow... relies on numerous queries. Will get slower over time. Should try to replace with a single query, at least for getting user ids
-			$msprs = MSPRs::getAll();
 			
+			//XXX this could end up quite slow... relies on numerous queries. Will get slower over time. Should try to replace with a single getAllAttentionRequired()
+			$msprs = MSPRs::getAll();
+
+			$att_reqs = array();
+			foreach ($msprs as $mspr) {
+				if ($mspr->isAttentionRequired()) {
+					$att_reqs[] = $mspr;
+				}
+			}
 			//no need to create mspr records. Only listing ones requiring attention... records obviously already created.
+			if (count($att_reqs) > 0) {
 			?>
 			<table id="mspr-class-list" class="tableList">
 				<thead>
@@ -71,8 +73,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MSPR_ADMIN"))) {
 				</thead>
 				<tbody>
 					<?php 
-					foreach($msprs as $mspr) {
-						if ($mspr->isAttentionRequired()) {
+					foreach($att_reqs as $mspr) {
 							$status = "attention-required";
 					?>
 					<tr class="<?php echo $status; ?>">
@@ -113,179 +114,217 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MSPR_ADMIN"))) {
 							?>
 						</td>
 					</tr>
-					<?php } 
-					} ?>
+					<?php 
+					} 
+					?>
 				</tbody>
 			</table>
 			<?php
+			} else {
+			?>
+			<div class="display-notice"><h3>None Found</h3>No MSPRs require attention at this time.</div>
+			<?php
+			}
 			
 			break;
 		case "year":
-			$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/mspr?year=".$year, "title" => "Class of ".$year );
-			
-			$mspr_meta = MSPRClassData::get($year);
-			
-			add_mspr_admin_sidebar($year);
-			
-			if (!$mspr_meta) {
-				//no class data set up.. create it now
-				MSPRClassData::create($year,null);
-				$mspr_meta = MSPRClassData::get($year);
-			}
-			
-			$class_close = $mspr_meta->getClosedTimestamp();
-			
-			if (!$class_close) {
-				$opt_notice = "<div class=\"display-notice\">MSPR submission deadline has not been set. It is strongly recommended that you <a href=\"".ENTRADA_URL."/admin/mspr?section=mspr-options&year=".$year."\" >set the deadline</a> in the options now.</div>";	
-			}
-			
-			//cannot assume that the class list hasn't changed.
-			
-			$query = "INSERT IGNORE into `student_mspr` (`user_id`) select a.id from `".AUTH_DATABASE."`.`user_data` a 
-						where a.`grad_year`=".$db->qstr($year)." and 
-						a.`id` NOT IN (SELECT b.`user_id` from `student_mspr` b)";
-
-			if(!$db->Execute($query)) {
-				$ERROR++;
-				$ERRORSTR[] = "Failed to update MSPR Clas List";
-				application_log("error", "Unable to update student_mspr records. Database said: ".$db->ErrorMsg());
-			}
-			
-			$msprs = MSPRs::getYear($year);
-
-			?>
-			<script>
-			function showAll() {
-				$("mspr-class-list").addClassName("show-all");
-				createCookie("mspr-class-list","show-all",365);
-			}
-
-			function hideAttentionNotRequired() {
-				$("mspr-class-list").removeClassName("show-all");
-				eraseCookie("mspr-class-list");
-			}
-
-			function checkAll(event) {
-				var state = Event.findElement(event).checked;
-				//var state = $$("#mspr-class-list thead input[type=checkbox]").pluck("checked").any();
-				$$("#mspr-class-list tbody input[type=checkbox]").reject(isDisabled).each(function (el) { el.checked=state; });
-			}
-
-			function areAllChecked() {
-				return $$("#mspr-class-list tbody input[type=checkbox]").reject(isDisabled).pluck("checked").all();
-			}
-
-			function isDisabled(el) {
-				return el.disabled;
-			}
-
-			function setCheckAll() {
-				var state = areAllChecked();
-				$$("#mspr-class-list thead input[type=checkbox]").each(function (el) { el.checked=state; });
-			}
-
-			document.observe("dom:loaded",function() { 
-					if (readCookie("mspr-class-list") == "show-all") showAll();
-					$$("#mspr-class-list tbody input[type=checkbox]").invoke("observe","click",setCheckAll);
-					$$("#mspr-class-list thead input[type=checkbox]").invoke("observe","click",checkAll);
-				});
-			
-			
-			</script>
-			
-			<h1>Manage MSPRs: Class of <?php echo $year;?></h1>
-			<?php echo display_status_messages(); echo $opt_notice;?>
-			<div class="instructions">
+			if ($year) {
+				$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/mspr?year=".$year, "title" => "Class of ".$year );
 				
-			</div>
-			<p><strong>Submission deadline:</strong> <?php echo ($class_close ? date("F j, Y \a\\t g:i a",$class_close) : "Unset"); ?> &nbsp;&nbsp;(<a href="<?php echo ENTRADA_URL; ?>/admin/mspr?section=mspr-options&year=<?php echo $year; ?>">change</a>)</p>
-			
-			
-			<a href="#" onclick='showAll();'>Show All</a> / <a href="#" onclick='hideAttentionNotRequired();'>Show only those requiring attention</a>
-			<form method="post" action="?section=generate">
-				<input type="hidden" name="year" value="<?php echo $year; ?>" />  
-				<table id="mspr-class-list" class="tableList">
-					<col width="3%"  />
-					<col width="37%" />
-					<col width="10%" />
-					<col width="25%" />
-					<col width="25%" />
-					<thead>
-						<tr>
-							<td class="general">
-								<input type="checkbox" name="all" value="all" />
-							</td>
-							<td class="general">
-								Student Name
-							</td>
-							<td class="general">
-								Status
-							</td>
-							<td class="general">
-								Submission Deadline
-							</td>
-							<td class="general">
-								Documents
-							</td>
-							
-						</tr>
-					</thead>
-					<tbody>
-						<?php foreach($msprs as $mspr) {
-							$status = ($mspr->isAttentionRequired() ? "attention-required" : "attention-not-required");
-							$user = $mspr->getUser();
-							$user_id = $user->getID();
-							?>
-						<tr class="<?php echo $status; ?>">
-							<td class="general">
-								<input type="checkbox" name="user_id[]" value="<?php echo $user->getID(); ?>" <?php echo ($mspr->isClosed())? "": "disabled=\"disabled\" class=\"disabled\"";?> />
-							</td>
-							<td>
-								<?php
-									echo "<a href=\"".ENTRADA_URL."/admin/users/manage/students?section=mspr&id=".$user_id."\">".$user->getFullname() ."</a>";
-								?>
-							</td>
-							<td>
-								<?php echo $mspr->isClosed() ? "closed" : "open"; ?>
-							</td>
-							<td>
-								<?php 
-								$cts = $mspr->getClosedTimestamp();
-								if ($cts) {
-									echo date("Y-m-d @ H:i",$cts); 
+				$mspr_meta = MSPRClassData::get($year);
+				
+				add_mspr_admin_sidebar($year);
+				
+				if (!$mspr_meta) {
+					//no class data set up.. create it now
+					MSPRClassData::create($year,null);
+					$mspr_meta = MSPRClassData::get($year);
+				}
+				
+				$class_close = $mspr_meta->getClosedTimestamp();
+				
+				if (!$class_close) {
+					$opt_notice = "<div class=\"display-notice\">MSPR submission deadline has not been set. It is strongly recommended that you <a href=\"".ENTRADA_URL."/admin/mspr?section=mspr-options&year=".$year."\" >set the deadline</a> in the options now.</div>";	
+				}
+				
+				//cannot assume that the class list hasn't changed.
+				
+				$query = "INSERT IGNORE into `student_mspr` (`user_id`) select a.id from `".AUTH_DATABASE."`.`user_data` a 
+							where a.`grad_year`=".$db->qstr($year)." and 
+							a.`id` NOT IN (SELECT b.`user_id` from `student_mspr` b)";
+	
+				if(!$db->Execute($query)) {
+					add_error("Failed to update MSPR Clas List");
+					application_log("error", "Unable to update student_mspr records. Database said: ".$db->ErrorMsg());
+				}
+				
+				$msprs = MSPRs::getYear($year);
+				
+				if (!isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["showAll"])) {
+					$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["showAll"] = true;
+				}
+				
+				if ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["showAll"] == true) {
+					$ONLOAD[] = "showAll();";
+				} else {
+					$ONLOAD[] = "hideAttentionNotRequired();";
+				}
+				?>
+				<script>
+
+				function showAll() {
+					$("mspr-class-list").addClassName("show-all");
+				}
+				
+				function showAllUpdate() {
+					showAll();
+					new Ajax.Request('<?php echo ENTRADA_URL; ?>/admin/mspr?section=api-mspr-preferences',
+							{
+								method:"post",
+								parameters: {showAll:"showAll"}
+							}
+							); //unconcerned with response
+				}
+
+				function hideAttentionNotRequiredUpdate() {
+					hideAttentionNotRequired();
+					new Ajax.Request('<?php echo ENTRADA_URL; ?>/admin/mspr?section=api-mspr-preferences',
+							{
+								method:"post",
+								parameters: {showAll:"hide"},
+								onSuccess: function (response) {
+									console.log(response);
 								}
+							}
+							); //unconcerned with response
+				}
+				function hideAttentionNotRequired() {
+					$("mspr-class-list").removeClassName("show-all");
+				}
+	
+				function checkAll(event) {
+					var state = Event.findElement(event).checked;
+					//var state = $$("#mspr-class-list thead input[type=checkbox]").pluck("checked").any();
+					$$("#mspr-class-list tbody input[type=checkbox]").reject(isDisabled).each(function (el) { el.checked=state; });
+				}
+	
+				function areAllChecked() {
+					return $$("#mspr-class-list tbody input[type=checkbox]").reject(isDisabled).pluck("checked").all();
+				}
+	
+				function isDisabled(el) {
+					return el.disabled;
+				}
+	
+				function setCheckAll() {
+					var state = areAllChecked();
+					$$("#mspr-class-list thead input[type=checkbox]").each(function (el) { el.checked=state; });
+				}
+	
+				document.observe("dom:loaded",function() { 
+						$$("#mspr-class-list tbody input[type=checkbox]").invoke("observe","click",setCheckAll);
+						$$("#mspr-class-list thead input[type=checkbox]").invoke("observe","click",checkAll);
+					});
+				
+				
+				</script>
+				
+				<h1>Manage MSPRs: Class of <?php echo $year;?></h1>
+				<?php echo display_status_messages(); echo $opt_notice;?>
+				<div class="instructions">
+					
+				</div>
+				<p><strong>Submission deadline:</strong> <?php echo ($class_close ? date("F j, Y \a\\t g:i a",$class_close) : "Unset"); ?> &nbsp;&nbsp;(<a href="<?php echo ENTRADA_URL; ?>/admin/mspr?section=mspr-options&year=<?php echo $year; ?>">change</a>)</p>
+				
+				
+				<a href="#" onclick='showAllUpdate();'>Show All</a> / <a href="#" onclick='hideAttentionNotRequiredUpdate();'>Show only those requiring attention</a>
+				<form method="post" action="?section=generate">
+					<input type="hidden" name="year" value="<?php echo $year; ?>" />  
+					<table id="mspr-class-list" class="tableList">
+						<col width="3%"  />
+						<col width="37%" />
+						<col width="10%" />
+						<col width="25%" />
+						<col width="25%" />
+						<thead>
+							<tr>
+								<td class="general">
+									<input type="checkbox" name="all" value="all" />
+								</td>
+								<td class="general">
+									Student Name
+								</td>
+								<td class="general">
+									Status
+								</td>
+								<td class="general">
+									Submission Deadline
+								</td>
+								<td class="general">
+									Documents
+								</td>
+								
+							</tr>
+						</thead>
+						<tbody>
+							<?php foreach($msprs as $mspr) {
+								$status = ($mspr->isAttentionRequired() ? "attention-required" : "attention-not-required");
+								$user = $mspr->getUser();
+								$user_id = $user->getID();
 								?>
-							</td>
-							<td>
-								<?php
-								$revision = $mspr->getGeneratedTimestamp();
-								if (!$revision) {
-									$revisions = $mspr->getMSPRRevisions();
-									if ($revisions) {
-										$revision = array_shift($revisions);
+							<tr class="<?php echo $status; ?>">
+								<td class="general">
+									<input type="checkbox" name="user_id[]" value="<?php echo $user->getID(); ?>" <?php echo ($mspr->isClosed())? "": "disabled=\"disabled\" class=\"disabled\"";?> />
+								</td>
+								<td>
+									<?php
+										echo "<a href=\"".ENTRADA_URL."/admin/users/manage/students?section=mspr&id=".$user_id."\">".$user->getFullname() ."</a>";
+									?>
+								</td>
+								<td>
+									<?php echo $mspr->isClosed() ? "closed" : "open"; ?>
+								</td>
+								<td>
+									<?php 
+									$cts = $mspr->getClosedTimestamp();
+									if ($cts) {
+										echo date("Y-m-d @ H:i",$cts); 
 									}
-								}
-		
-								if ($revision) {
-								?>
-									<a href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr-revisions&id=<?php echo $user_id; ?>&get=html&revision=<?php echo $revision; ?>"><img src="<?php echo ENTRADA_URL; ?>/serve-icon.php?ext=html" /> HTML</a> <a href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr-revisions&id=<?php echo $user_id; ?>&get=pdf&revision=<?php echo $revision; ?>"><img src="<?php echo ENTRADA_URL; ?>/serve-icon.php?ext=pdf" /> PDF</a> (<a href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr-revisions&id=<?php echo $user_id; ?>">revisions</a>)		
-								<?php
-								} else {
-									echo "None";
-								} 						
-								?>
-							</td>
-						</tr>
-						<?php } ?>
-					</tbody>
-				</table>
-				<br />
-				<input type="submit" name="generate" value="Generate Report" />
-			</form><br /><br />
-			<div class="instructions">Note: Only MSPRs closed to submissions will be generated.</div>
+									?>
+								</td>
+								<td>
+									<?php
+									$revision = $mspr->getGeneratedTimestamp();
+									if (!$revision) {
+										$revisions = $mspr->getMSPRRevisions();
+										if ($revisions) {
+											$revision = array_shift($revisions);
+										}
+									}
 			
+									if ($revision) {
+									?>
+										<a href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr-revisions&id=<?php echo $user_id; ?>&get=html&revision=<?php echo $revision; ?>"><img src="<?php echo ENTRADA_URL; ?>/serve-icon.php?ext=html" /> HTML</a> <a href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr-revisions&id=<?php echo $user_id; ?>&get=pdf&revision=<?php echo $revision; ?>"><img src="<?php echo ENTRADA_URL; ?>/serve-icon.php?ext=pdf" /> PDF</a> (<a href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr-revisions&id=<?php echo $user_id; ?>">revisions</a>)		
+									<?php
+									} else {
+										echo "None";
+									} 						
+									?>
+								</td>
+							</tr>
+							<?php } ?>
+						</tbody>
+					</table>
+					<br />
+					<input type="submit" name="generate" value="Generate Report" />
+				</form><br /><br />
+				<div class="instructions">Note: Only MSPRs closed to submissions will be generated.</div>
+				
 			<?php
-			
+			} else {
+				add_error("Invalid graduating year provided.");
+				display_status_messages();	
+			}
 			break;
 		default:
 			$query		= "select distinct(`grad_year`) from `". AUTH_DATABASE . "`.`user_data` where `grad_year` is not null  
@@ -301,6 +340,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MSPR_ADMIN"))) {
 			</div><br />
 			<div style="display:inline-block; width:35%; margin:1em 0 1em 1em; background-color:WhiteSmoke; padding:2ex 2em;vertical-align:top;height:16ex;">
 				<form method="get">
+					<input type="hidden" name="mode" value="year" />
 					Choose Class to manage: 
 					<br /><br/>
 					<div style="margin-left:2em;">
@@ -320,7 +360,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MSPR_ADMIN"))) {
 					</div>
 				</form>
 			</div><div style="display:inline-block;width:2em;line-height:16ex;vertical-align:middle; margin:1em;">OR</div><div style="display:inline-block; width:35%; margin:1em 1em 1em 0; background-color:WhiteSmoke;padding:2ex 2em;vertical-align:top;height:16ex;">
-			<a href="?all">Manage All MSPRs requiring attention</a></div>
+			<a href="?mode=all">Manage All MSPRs requiring attention</a></div>
 		<?php
 	}
 }

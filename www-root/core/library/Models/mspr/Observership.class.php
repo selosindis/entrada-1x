@@ -87,31 +87,27 @@ class Observership {
 	} 
 
 	public static function create($user, $title, $site, $location, $start, $end) {
-		global $db,$SUCCESS,$SUCCESSSTR,$ERROR,$ERRORSTR;
+		global $db;
 		$student_id = $user->getID();
 		$query = "insert into `student_observerships` (`student_id`, `title`,`site`,`location`,`start`, `end`) value (".$db->qstr($student_id).", ".$db->qstr($title).", ".$db->qstr($site).", ".$db->qstr($location).", ".$db->qstr($start).", ".$db->qstr($end).")";
 		if(!$db->Execute($query)) {
-			$ERROR++;
-			$ERRORSTR[] = "Failed to create new Observership.";
+			add_error("Failed to create new Observership.");
 			application_log("error", "Unable to update a student_observerships record. Database said: ".$db->ErrorMsg());
 		} else {
-			$SUCCESS++;
-			$SUCCESSSTR[] = "Successfully added new Observership.";
+			add_success("Successfully added new Observership.");
 			$insert_id = $db->Insert_ID();
 			return self::get($insert_id); 
 		}
 	}
 	
 	public function delete() {
-		global $db,$SUCCESS,$SUCCESSSTR,$ERROR,$ERRORSTR;
+		global $db;
 		$query = "DELETE FROM `student_observerships` where `id`=".$db->qstr($this->id);
 		if(!$db->Execute($query)) {
-			$ERROR++;
-			$ERRORSTR[] = "Failed to remove Observership from database.";
+			add_error("Failed to remove Observership from database.");
 			application_log("error", "Unable to delete a student_observerships record. Database said: ".$db->ErrorMsg());
 		} else {
-			$SUCCESS++;
-			$SUCCESSSTR[] = "Successfully removed Observership.";
+			add_success("Successfully removed Observership.");
 		}		
 	}
 }

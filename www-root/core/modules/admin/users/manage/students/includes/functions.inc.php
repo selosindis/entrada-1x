@@ -162,7 +162,6 @@ function process_community_health_and_epidemiology_actions(User $user) {
 }
 
 function process_contributions_actions(User $user) {
-	global $SUCCESS,$SUCCESSSTR,$ERROR,$ERRORSTR,$NOTICE,$NOTICESTR;
 	if (isset($_POST['action'])) {
 		if ($_POST['action'] == "Approve") {
 			$contribution_id = (isset($_POST['entity_id']) ? $_POST['entity_id'] : 0);
@@ -195,8 +194,6 @@ function process_contributions_actions(User $user) {
 }
 
 function process_student_run_electives_actions(User $user) {
-	global $SUCCESS,$SUCCESSSTR,$ERROR,$ERRORSTR,$NOTICE,$NOTICESTR;
-	
 	if (isset($_POST['action'])) {
 		if ($_POST['action'] == "Add") {
 			$user_id = (isset($_POST['user_id']) ? $_POST['user_id'] : 0);
@@ -228,8 +225,6 @@ function process_student_run_electives_actions(User $user) {
 }
 
 function process_observerships_actions(User $user) {
-	global $SUCCESS,$SUCCESSSTR,$ERROR,$ERRORSTR,$NOTICE,$NOTICESTR;
-	
 	if (isset($_POST['action'])) {
 		if ($_POST['action'] == "Add") {
 			$user_id = (isset($_POST['student_id']) ? $_POST['student_id'] : 0);
@@ -259,8 +254,6 @@ function process_observerships_actions(User $user) {
 }
 
 function process_international_activities_actions(User $user) {
-	global $SUCCESS,$SUCCESSSTR,$ERROR,$ERRORSTR,$NOTICE,$NOTICESTR;
-	
 	if (isset($_POST['action'])) {
 		if ($_POST['action'] == "Add") {
 			$user_id = (isset($_POST['student_id']) ? $_POST['student_id'] : 0);
@@ -292,8 +285,6 @@ function process_international_activities_actions(User $user) {
  * Routine to process actions available for studentships: add and delete 
  */
 function process_studentship_actions(User $user) {
-	global $SUCCESS,$SUCCESSSTR,$ERROR,$ERRORSTR,$NOTICE,$NOTICESTR;
-//TODO add error processing (e.g. invalid year, etc) 	
 	if (isset($_POST['action'])) {
 		if ($_POST['action'] == "Add" && $user) {
 				$title = $_POST['title'];
@@ -315,8 +306,6 @@ function process_studentship_actions(User $user) {
  * Routine to process the various actions available on Clinical Performance Evaluation Comments
  */
 function process_clineval_actions($user) {
-	global $SUCCESS,$SUCCESSSTR,$ERROR,$ERRORSTR,$NOTICE,$NOTICESTR;
-	
 	if (isset($_POST['action'])) {
 		if ($_POST['action'] == "Add") {
 			if ($user) {
@@ -340,8 +329,6 @@ function process_clineval_actions($user) {
 }
 
 function process_internal_awards_actions($user) {
-	global $SUCCESS,$SUCCESSSTR,$ERROR,$ERRORSTR,$NOTICE,$NOTICESTR;
-	
 	if (isset($_POST['action'])) {
 		if ($_POST['action'] == "Add") {
 			$user_id = (isset($_POST['user_id']) ? $_POST['user_id'] : 0);
@@ -419,7 +406,6 @@ function process_leaves_of_absence($user) {
 }
 
 function process_external_awards_actions($user) {
-	global $SUCCESS,$SUCCESSSTR,$ERROR,$ERRORSTR,$NOTICE,$NOTICESTR;
 	if (isset($_POST['action'])) {
 		if ($_POST['action'] == "Approve") {
 			$award_id = (isset($_POST['entity_id']) ? $_POST['entity_id'] : 0);

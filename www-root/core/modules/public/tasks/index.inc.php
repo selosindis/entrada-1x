@@ -17,8 +17,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 	header("Location: ".ENTRADA_URL);
 	exit;
 } elseif (!$ENTRADA_ACL->amIAllowed("task", "read", false)) {
-	$ERROR++;
-	$ERRORSTR[]	= "Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
+	add_error("Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.");
 
 	echo display_error();
 
@@ -45,14 +44,19 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 	$task_verifications = TaskCompletions::getByVerifier($user->getID(), array("where" => "`verified_date` IS NULL" ));
 	$has_verification_requests = (count($task_verifications) > 0);
 	$task_completions = TaskCompletions::getByRecipient($user, array('order_by'=>array(array($sort_by, $sort_order))));
-	
+	$has_completions = (count($task_completions) > 0);
 	?>
 	
 	<h1>My Tasks</h1>
 	
-	<?php if ($has_verification_requests) {?>
-	<div class="display-notice">You have outstanding task verification requests. Please go to the <a href="<?php echo ENTRADA_URL;?>/tasks?section=verification">Task Verification</a> page to manage them.</div>
-	<?php } ?>
+	<?php 
+	if ($has_verification_requests) {
+	?>
+	<div class="display-notice"><h3>Outstanding Verifications</h3>You have outstanding task verification requests. Please go to the <a href="<?php echo ENTRADA_URL;?>/tasks?section=verification">Task Verification</a> page to manage them.</div>
+	<?php 
+	} 
+	if ($has_completions) {
+	?>
 	<!--  Include something similar to learning event calendar/range select here -->
 	<table class="tableList" cellspacing="0" cellpadding="1" summary="List of Events">
 		<colgroup>
@@ -70,7 +74,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 			</tr>
 		</thead>
 		<tbody>
-		<?php foreach ($task_completions as $task_completion) { 
+		<?php 
+		foreach ($task_completions as $task_completion) { 
 			$task = $task_completion->getTask();
 			?>
 		
@@ -113,4 +118,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 		</tbody>	
 	</table>
 	<?php
+	} else {
+		?>
+		<div class="display-notice"><h3>No Matching Tasks</h3>
+			<?php
+			$message = "You have no tasks scheduled."; 
+			echo $message; 
+			?>
+		</div>
+		<?php
+	}
 }

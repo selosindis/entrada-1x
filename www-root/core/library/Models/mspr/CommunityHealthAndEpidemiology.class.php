@@ -32,7 +32,7 @@ class CommunityHealthAndEpidemiology extends SupervisedProject {
 	 */
 	public static function create($user_id, $title, $organization, $location, $supervisor) {
 		
-		global $db,$SUCCESS,$SUCCESSSTR,$ERROR,$ERRORSTR;
+		global $db;
 		$query = "insert into `student_community_health_and_epidemiology` 
 					(`user_id`, `title`, `organization`,`location`,`supervisor`, `status`)
 					value 
@@ -40,25 +40,21 @@ class CommunityHealthAndEpidemiology extends SupervisedProject {
 					on duplicate key update 
 					`title`=".$db->qstr($title).", `organization`=".$db->qstr($organization).", `location`=".$db->qstr($location).", `supervisor`=".$db->qstr($supervisor).", `status`=".$db->qstr(0);
 		if(!$db->Execute($query)) {
-			$ERROR++;
-			$ERRORSTR[] = "Failed to update Community Health and Epidemiology entry.";
+			add_error("Failed to update Community Health and Epidemiology entry.");
 			application_log("error", "Unable to update a student_community_health_and_epidemiology record. Database said: ".$db->ErrorMsg());
 		} else {
-			$SUCCESS++;
-			$SUCCESSSTR[] = "Successfully updated Community Health and Epidemiology entry.";
+			add_success("Successfully updated Community Health and Epidemiology entry.");
 		}
 	}
 	
 	private function setStatus($status_code) {
-		global $db,$SUCCESS,$SUCCESSSTR,$ERROR,$ERRORSTR;
+		global $db;
 		$query = "update `student_community_health_and_epidemiology` set `status`=".$db->qstr($status_code)." where `user_id`=".$db->qstr($this->getUserID());
 		if(!$db->Execute($query)) {
-			$ERROR++;
-			$ERRORSTR[] = "Failed to update Critical Enquiry entry.";
+			add_error("Failed to update Critical Enquiry entry.");
 			application_log("error", "Unable to update a student_community_health_and_epidemiology record. Database said: ".$db->ErrorMsg());
 		} else {
-			$SUCCESS++;
-			$SUCCESSSTR[] = "Successfully updated Community Health and Epidemiology entry.";
+			add_success("Successfully updated Community Health and Epidemiology entry.");
 		}
 	}
 	

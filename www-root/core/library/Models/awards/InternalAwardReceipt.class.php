@@ -66,16 +66,14 @@ class InternalAwardReceipt {
 	}
 	
 	static public function create($award_id, $user_id, $year) {
-		global $db,$SUCCESS,$SUCCESSSTR,$ERROR,$ERRORSTR;
+		global $db;
 	
 		$query = "INSERT INTO `student_awards_internal` (`user_id`,`award_id`, `year`) VALUES (".$db->qstr($user_id).", ".$db->qstr($award_id).", ".$db->qstr($year).")";
 		if(!$db->Execute($query)) {
-			$ERROR++;
-			$ERRORSTR[] = "Failed to add award recipient to database. Please check your values and try again.";
+			add_error("Failed to add award recipient to database. Please check your values and try again.");
 			application_log("error", "Unable to insert a student_awards_internal record. Database said: ".$db->ErrorMsg());
 		} else {
-			$SUCCESS++;
-			$SUCCESSSTR[] = "Successfully added Award Recipient.";
+			add_success("Successfully added Award Recipient.");
 		}
 	}
 	
@@ -97,24 +95,21 @@ class InternalAwardReceipt {
 			$award = new InternalAward($result['award_id'], $result['title'], $result['award_terms'], $result['disabled']);
 			return new InternalAwardReceipt( $result['user_id'], $award, $result['award_receipt_id'], $result['year']);
 		} else {
-			$ERROR++;
-			$ERRORSTR[] = "Failed to retreive award receipt from database.";
+			add_error("Failed to retreive award receipt from database.");
 			application_log("error", "Unable to retrieve a student_awards_internal record. Database said: ".$db->ErrorMsg());
 		}
 			 
 	} 
 	
 	public function delete() {
-		global $db,$SUCCESS,$SUCCESSSTR,$ERROR,$ERRORSTR;
+		global $db;
 	
 		$query = "DELETE FROM `student_awards_internal` where `id`=".$db->qstr($this->award_receipt_id);
 		if(!$db->Execute($query)) {
-			$ERROR++;
-			$ERRORSTR[] = "Failed to remove award receipt from database.";
+			add_error("Failed to remove award receipt from database.");
 			application_log("error", "Unable to delete a student_awards_internal record. Database said: ".$db->ErrorMsg());
 		} else {
-			$SUCCESS++;
-			$SUCCESSSTR[] = "Successfully removed award receipt.";
+			add_success("Successfully removed award receipt.");
 		}
 	}
 }

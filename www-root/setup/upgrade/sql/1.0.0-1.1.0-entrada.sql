@@ -1253,3 +1253,8 @@ CREATE TABLE IF NOT EXISTS `task_recipients` (
   `recipient_id` int(12) unsigned NOT NULL,
   PRIMARY KEY  (`task_id`,`recipient_type`,`recipient_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+-- Events modifications
+
+ALTER TABLE `events`
+DROP COLUMN `eventtype_id`;

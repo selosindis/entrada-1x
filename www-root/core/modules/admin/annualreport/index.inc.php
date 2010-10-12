@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with Entrada.  If not, see <http://www.gnu.org/licenses/>.
  *
- * This file is used to add events to the entrada.events table.
+ * This file is used to display annual report reports.
  *
  * @author Organisation: Queen's University
  * @author Unit: School of Medicine
@@ -29,8 +29,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 } elseif((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	header("Location: ".ENTRADA_URL);
 	exit;
-} elseif(!$ENTRADA_ACL->amIAllowed('annualreport', 'read', false)) {
-	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/".$MODULE."\\'', 15000)";
+} elseif(!$ENTRADA_ACL->amIAllowed('annualreportadmin', 'read', false)) {
+	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/".$MODULE."\\'', 15000)";
 
 	$ERROR++;
 	$ERRORSTR[]	= "Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
@@ -54,30 +54,13 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			font-weight:	bold;
 		}
 	</style>
-	<h1>My Reports</h1>
+	<h1><?php echo $MODULES[strtolower($MODULE)]["title"]; ?></h1>
 	
-	<h2 style="color: #669900">Research Reports</h2>
+	<h2 style="color: #669900">Completion Reports</h2>
 	<ol class="system-reports">
 		<li>
-			<a href="<?php echo ENTRADA_URL; ?>/annualreport/reports?section=my_publications">My Publications</a><br />
-			A report that shows all of the publications you've for a specific date range.
-		</li>
-	</ol>
-	<?php 
-	if($ENTRADA_ACL->amIAllowed('mydepartment', 'read', 'DepartmentHead') || $ENTRADA_ACL->amIAllowed('myowndepartment', 'read', 'DepartmentRep')) { ?>
-	<h2 style="color: #669900">My Department Reports</h2>
-	<ol class="system-reports">
-		<li>
-			<a href="<?php echo ENTRADA_URL; ?>/annualreport/reports?section=my_departmental_publications">Publications</a><br />
-			A report that shows all of the publications in your department for a specific date range.
-		</li>
-	</ol>
-	<?php } ?>
-	<h2 style="color: #669900">Blank ART Form</h2>
-	<ol class="system-reports">
-		<li>
-			<a href="<?php echo ENTRADA_URL; ?>/annualreport/reports?section=blank_art&clinical=NO">Blank ART Forms</a><br />
-			This will generate a blank copy of both versions of the Annual Report (Clinical and Basic Sciences)
+			<a href="<?php echo ENTRADA_URL; ?>/admin/annualreport?section=report-status">Report By Faculty Member</a><br />
+			A report idicating a faculty Member's annual report completiong status for a given period.
 		</li>
 	</ol>
 	<?php

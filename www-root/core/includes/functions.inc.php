@@ -427,7 +427,7 @@ function navigator_tabs() {
 	$PUBLIC_MODULES[] = array("name" => "dashboard", "text" => "Dashboard");
 	$PUBLIC_MODULES[] = array("name" => "communities", "text" => "Communities");
 	$PUBLIC_MODULES[] = array("name" => "courses", "text" => "Courses");
-	$PUBLIC_MODULES[] = array("name" => "tasks", "text" => "Tasks");
+	$PUBLIC_MODULES[] = array("name" => "tasks", "text" => "Tasks", "resource" => "tasktab", "permission" => "read");
 	$PUBLIC_MODULES[] = array("name" => "events", "text" => "Learning Events");
 	$PUBLIC_MODULES[] = array("name" => "clerkship", "text" => "Clerkship", "resource" => "clerkship", "permission" => "read");
 	$PUBLIC_MODULES[] = array("name" => "objectives", "text" => "Curriculum Objectives", "resource" => "objectives", "permission" => "read");
@@ -1845,7 +1845,7 @@ function preferences_update($module, $preferences = array()) {
 function application_log($type, $message) {
 	global $AGENT_CONTACTS;
 	$page_url = 'http';
-	if ($_SERVER["HTTPS"] == "on") {
+	if ((isset($_SERVER["HTTPS"])) && $_SERVER["HTTPS"] == "on") {
 		$page_url .= "s";
 	}
 	$page_url .= "://";
@@ -7562,8 +7562,8 @@ function courses_fetch_objectives($course_ids, $parent_id = 1, $objectives = fal
 						JOIN `global_lu_objectives` AS b
 						ON a.`objective_id` = b.`objective_id`
 						WHERE ".($fetch_all_text ? "" : "`importance` != '0'
-						AND `objective_type` = 'course'
 						AND ")."`course_id` IN (".$escaped_course_ids.")
+						AND a.`objective_type` = 'course'
 						UNION
 						SELECT b.`objective_id`, a.`importance`, a.`objective_details`, a.`course_id`, b.`objective_parent`, b.`objective_order`
 						FROM `course_objectives` AS a
@@ -7571,7 +7571,7 @@ function courses_fetch_objectives($course_ids, $parent_id = 1, $objectives = fal
 						ON a.`objective_id` = b.`objective_parent`
 						AND `course_id` IN (".$escaped_course_ids.")
 						WHERE ".($fetch_all_text ? "" : "`importance` != '0'
-						AND `objective_type` = 'course'
+						AND a.`objective_type` = 'course'
 						AND ")."a.`objective_type` = 'course'
 						AND b.`objective_id` NOT IN (
 							SELECT a.`objective_id`
@@ -7579,8 +7579,8 @@ function courses_fetch_objectives($course_ids, $parent_id = 1, $objectives = fal
 							JOIN `global_lu_objectives` AS b
 							ON a.`objective_id` = b.`objective_id`
 							WHERE ".($fetch_all_text ? "" : "`importance` != '0'
-							AND `objective_type` = 'course'
 							AND ")."`course_id` IN (".$escaped_course_ids.")
+							AND `objective_type` = 'course'
 						)
 						ORDER BY `objective_parent`, `objective_order` ASC";
 		$results	= $db->GetAll($query);
@@ -10254,6 +10254,7 @@ function build_option($value, $label, $selected = false) {
 
 /**
  * routine to display standard status messages, Error, Notice, and Success
+ * @param bool $fade true if the messages should fade out 
  */
 function display_status_messages($fade = false) {
 	echo "<div class=\"status_messages\">";
@@ -10274,6 +10275,9 @@ function display_status_messages($fade = false) {
 	echo "</div>";
 }
 
+/**
+ * Returns formatted mspr data supporting getDetails(), at this time only Leaves of absence, formal remdiation, and disciplinary actions 
+ */
 function display_mspr_details($data) {
 	ob_start();
 	?>
@@ -10300,6 +10304,9 @@ function display_mspr_details($data) {
 	return ob_get_clean();
 }
 
+/**
+ * Adds require_onces for all of the models needed for MSPRs
+ */
 function require_mspr_models() {
 	
 	require_once("Models/users/User.class.php");
@@ -10325,6 +10332,10 @@ function require_mspr_models() {
 	require_once("Models/mspr/ResearchCitations.class.php");
 }
 
+/**
+ * converts a month number (1-12) into a month name (January-December)
+ * @param int $month_number
+ */
 function getMonthName($month_number) {
 	static $months;
 
@@ -10344,10 +10355,13 @@ function getMonthName($month_number) {
 	return $month_name;
 }
 
+/**
+ * Given two dates, this function will return a human-readable range  
+ * @param array $start_date {"d" => day, "m" => month, "y" => year}
+ * @param array $end_date {"d" => day, "m" => month, "y" => year}
+ */
 function formatDateRange($start_date, $end_date) {
-	//assigned here for easy refactoring should a date class be used in future
-	//note: days are currently ignored
-	
+
 	$ds = $start_date["d"];
 	$ms = $start_date["m"];
 	$ys = $start_date["y"];
@@ -10687,6 +10701,11 @@ function writeFile($filename, $contents) {
 	return true;
 }
 
+/**
+ * Generates a PDF file from the string of html provided. If a filename is supplied, it will be written to the file; otherwise it will be returned from the function
+ * @param unknown_type $html
+ * @param unknown_type $output_filename
+ */
 function generatePDF($html,$output_filename=null) {
 	global $APPLICATION_PATH;
 	@set_time_limit(0);
@@ -10848,6 +10867,9 @@ function displayARYearReported($year_reported, $AR_CUR_YEAR, $AR_PAST_YEARS, $AR
 	<?php
 }
 
+/**
+ * Adds the task sidebar, and populates it, only if there are tasks to be completed
+ */
 function add_task_sidebar () {
 	require_once("Models/users/User.class.php");
 	require_once("Models/tasks/TaskCompletions.class.php");
@@ -10858,28 +10880,11 @@ function add_task_sidebar () {
 	
 	
 	$tasks_completions = TaskCompletions::getByRecipient($user, array('order_by'=>array(array('deadline', 'asc')), 'limit' => 5, 'where' => 'completed_date IS NULL'));
-	$task_verifications = TaskCompletions::getByVerifier($user->getID(), array("where" => "`verified_date` IS NULL" ));
-	$has_verification_requests = (count($task_verifications) > 0);
 	
 	foreach ($tasks_completions as $completion) {
 		$tasks[] = $completion->getTask();
 	}
 	if ($tasks) {
-		/*$sidebar_html = "<span class='subheading'>Recently Created or Updated</span>";	
-		$updated_limit = time() - (3600*24*3);
-		$updated_tasks = Tasks::getByRecipient($user, array('order_by'=>'updated_date', 'dir' => 'desc', 'limit' => 5, 'where' => 'updated_date > '.$updated_limit));
-		$sidebar_html .= "<ul>";
-		foreach ($updated_tasks as $task) {
-			$sidebar_html .= "
-			<li>
-				<a href='".ENTRADA_URL."/tasks?section=details&id=".$task->getID()."'>".html_encode($task->getTitle())."</a>
-				<span class='content-small'>".(($task->getDeadline()) ? date(DEFAULT_DATE_FORMAT,$task->getDeadline()) : "")."</span>
-			</li>";
-		}
-		$sidebar_html .= "</ul>";
-		
-		
-		$sidebar_html .= "<span class='subheading'>Upcoming</span>";*/ //XXX Left for now. looks too cluttered. may reinstate after redeign.
 		
 		$sidebar_html = "<ul>";
 		foreach ($tasks as $task) {
@@ -10897,18 +10902,35 @@ function add_task_sidebar () {
 	}
 }
 
+/**
+ * Adds an error message
+ * @param string $message
+ */
 function add_error($message) {
 	add_message("error",$message);
 }
 
+/**
+ * Adds a notice message
+ * @param string $message
+ */
 function add_notice($message) {
 	add_message("notice",$message);
 }
 
+/**
+ * Adds a success message
+ * @param string $message
+ */
 function add_success($message) {
 	add_message("success",$message);
 }
 
+/**
+ * Adds the supplied message to the type-specified collection of messages 
+ * @param string $type At this time, one of "success","error",or "notice"
+ * @param string $message
+ */
 function add_message($type,$message) {
 	$type = strtoupper($type);
 	$strings = $type."STR";
@@ -10917,43 +10939,83 @@ function add_message($type,$message) {
 	${$strings}[] = $message;
 }
 
+/**
+ * Returns true if there are any messages of the specified type 
+ * @param string $type At this time, one of "success","error",or "notice"
+ * @return bool
+ */
 function has_message($type) {
-	$type = strtoupper($type);
-	$strings = $type."STR";
-	global ${$type}, ${$strings};
-	return (${$type} || ${$strings});
+	switch ($type) {
+		case "success":
+		case "error":
+		case "notice":
+			$type = strtoupper($type);
+			$strings = $type."STR";
+			global ${$type}, ${$strings};
+			return (${$type} || ${$strings});
+	}
 }
 
+/**
+ * Returns true if there are any error messages 
+ * @return bool
+ */
 function has_error() {
 	return has_message("error");
 }
 
+/**
+ * Returns true if there are any notice messages 
+ * @return bool
+ */
 function has_notice() {
 	return has_message("notice");
 }
 
+/**
+ * Returns true if there are any success messages 
+ * @return bool
+ */
 function has_success() {
 	return has_message("success");
 }
 
+/**
+ * Clears error messages
+ */
 function clear_error(){
 	clear_message("error");
 }
 
+/**
+ * Clears success messages
+ */
 function clear_success() {
 	clear_message("success");
 }
 
+/**
+ * Clears notice messages
+ */
 function clear_notice() {
 	clear_message("notice");
 }
 
+/**
+ * Empties the the specified message type
+ * @param string $type At this time, one of "success","error",or "notice"
+ */
 function clear_message($type) {
-	$type = strtoupper($type);
-	$strings = $type."STR";
-	global ${$type}, ${$strings};
-	${$type} = 0;
-	${$strings} = array();
+	switch ($type) {
+		case "success":
+		case "error":
+		case "notice":
+			$type = strtoupper($type);
+			$strings = $type."STR";
+			global ${$type}, ${$strings};
+			${$type} = 0;
+			${$strings} = array();
+	}
 }
 
 /**
@@ -11017,6 +11079,10 @@ function task_verification_notification($type="",$to = array(), $keywords = arra
 	return false;
 }
 
+/**
+ * Generates the list of successful verifications when verifying task completion in bulk. 
+ * @param array $task_successes 2-dimensional array consisting of "task name" => array_of_recipients pairs
+ */
 function generate_bulk_task_verify_success_list($task_successes) {
 	$success_listing = "";
 	foreach($task_successes as $task_title=>$recipients) {
@@ -11027,4 +11093,21 @@ function generate_bulk_task_verify_success_list($task_successes) {
 		$success_listing .= "</ul></div>";
 	}
 	return $success_listing;
+}
+
+/**
+ * This function gets the min and max years that are in the Annual Reporting Module for report generation purposes
+ *
+ * @param null
+ * @return array(start, end)
+ */
+function getMinMaxARYears() {
+    global $db;
+
+    $query = "SELECT MIN(year_reported) AS `start_year`, MAX(year_reported) AS `end_year`
+	FROM `ar_profile`";
+    
+    $result = $db->GetRow($query);
+    
+	return $result;
 }

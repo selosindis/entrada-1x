@@ -31,7 +31,7 @@ class CriticalEnquiry extends SupervisedProject {
 	 */
 	public static function create($user_id, $title, $organization, $location, $supervisor) {
 		
-		global $db,$SUCCESS,$SUCCESSSTR,$ERROR,$ERRORSTR;
+		global $db;
 		$query = "insert into `student_critical_enquiries` 
 					(`user_id`, `title`, `organization`,`location`,`supervisor`, `status`)
 					value 
@@ -39,51 +39,43 @@ class CriticalEnquiry extends SupervisedProject {
 					on duplicate key update 
 					`title`=".$db->qstr($title).", `organization`=".$db->qstr($organization).", `location`=".$db->qstr($location).", `supervisor`=".$db->qstr($supervisor).", `status`=".$db->qstr(0);
 		if(!$db->Execute($query)) {
-			$ERROR++;
-			$ERRORSTR[] = "Failed to update Critical Enquiry entry.";
+			add_error("Failed to update Critical Enquiry entry.");
 			application_log("error", "Unable to update a student_critical_enquiries record. Database said: ".$db->ErrorMsg());
 		} else {
-			$SUCCESS++;
-			$SUCCESSSTR[] = "Successfully updated Critical Enquiry entry.";
+			add_success("Successfully updated Critical Enquiry entry.");
 		}
 	}
 	
 	public function approve() {
-		global $db,$SUCCESS,$SUCCESSSTR,$ERROR,$ERRORSTR;
+		global $db;
 		$query = "update `student_critical_enquiries` set `status`=1 where `user_id`=".$db->qstr($this->getUserID());
 		if(!$db->Execute($query)) {
-			$ERROR++;
-			$ERRORSTR[] = "Failed to update Critical Enquiry entry.";
+			add_error("Failed to update Critical Enquiry entry.");
 			application_log("error", "Unable to update a student_critical_enquiries record. Database said: ".$db->ErrorMsg());
 		} else {
-			$SUCCESS++;
-			$SUCCESSSTR[] = "Successfully updated Critical Enquiry entry.";
+			add_success("Successfully updated Critical Enquiry entry.");
 		}
 	}
 	
 	public function unapprove() {
-		global $db,$SUCCESS,$SUCCESSSTR,$ERROR,$ERRORSTR;
+		global $db;
 		$query = "update `student_critical_enquiries` set `status`=0 where `user_id`=".$db->qstr($this->getUserID());
 		if(!$db->Execute($query)) {
-			$ERROR++;
-			$ERRORSTR[] = "Failed to update Critical Enquiry entry.";
+			add_error("Failed to update Critical Enquiry entry.");
 			application_log("error", "Unable to update a student_critical_enquiries record. Database said: ".$db->ErrorMsg());
 		} else {
-			$SUCCESS++;
-			$SUCCESSSTR[] = "Successfully updated Critical Enquiry entry.";
+			add_success("Successfully updated Critical Enquiry entry.");
 		}
 	}
 	
 	public function reject() {
-		global $db,$SUCCESS,$SUCCESSSTR,$ERROR,$ERRORSTR;
+		global $db;
 		$query = "update `student_critical_enquiries` set `status`=-1 where `user_id`=".$db->qstr($this->getUserID());
 		if(!$db->Execute($query)) {
-			$ERROR++;
-			$ERRORSTR[] = "Failed to update Critical Enquiry entry.";
+			add_error("Failed to update Critical Enquiry entry.");
 			application_log("error", "Unable to update a student_critical_enquiries record. Database said: ".$db->ErrorMsg());
 		} else {
-			$SUCCESS++;
-			$SUCCESSSTR[] = "Successfully updated Critical Enquiry entry.";
+			add_success("Successfully updated Critical Enquiry entry.");
 		}
 	}
 	

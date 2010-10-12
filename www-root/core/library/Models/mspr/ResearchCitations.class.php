@@ -27,13 +27,12 @@ class ResearchCitations extends Collection implements AttentionRequirable {
 	 * @param array $ids
 	 */
 	public static function Resequence(User $user, $ids) {
-		global $db,$SUCCESS,$SUCCESSSTR,$ERROR,$ERRORSTR;
+		global $db;
 		$user_id = $user->getID();
 		$stmt = $db->Prepare('update `student_research` set `priority`=? where `user_id`=? and `id`=?');
 		foreach($ids as $priority=>$id) {
 			if (!$db->Execute($stmt,array($priority, $user_id, $id))) {
-				$ERROR++;
-				$ERRORSTR[] = "Failed to re-sequence Research Citations.";
+				add_error("Failed to re-sequence Research Citations.");
 				application_log("error", "Unable to modify a student_research record. Database said: ".$db->ErrorMsg());
 				break;
 			}

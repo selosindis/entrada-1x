@@ -17,8 +17,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 	header("Location: ".ENTRADA_URL);
 	exit;
 } elseif (!$ENTRADA_ACL->amIAllowed("task", "create", false)) {
-	$ERROR++;
-	$ERRORSTR[]	= "Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
+	add_error("Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.");
 
 	echo display_error();
 
@@ -53,7 +52,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 	</ul>
 	</div>
 	<div class="clear">&nbsp;</div>
-
+	<?php 
+	if (count($tasks) > 0 ) {
+	?>
 	<!--  Include something similar to learning event calendar/range select here -->
 	<form method="post" action="<?php echo ENTRADA_URL; ?>/admin/tasks?section=delete">
 		<table class="tableList" id="task_list_admin" cellspacing="0" cellpadding="1" summary="List of Events">
@@ -131,5 +132,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 		});
 	</script>
 	<?php
-
+	} else {
+		?>
+		<div class="display-notice"><h3>No Matching Tasks</h3>
+			<?php
+			$message = "There are no tasks scheduled."; 
+		
+			echo $message; 
+			?>
+		</div>
+		<?php
+	}
 }

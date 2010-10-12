@@ -156,7 +156,7 @@ switch($ACTION) {
 				$item->author		= isset($organisation['title']) ? $organisation['title'] : 'Undergraduate Medical Office';
 				$rss->addItem($item);
 			}
-			echo $rss->createFeed();
 		}
-	break;
+		echo $rss->createFeed();
+		break;
 }

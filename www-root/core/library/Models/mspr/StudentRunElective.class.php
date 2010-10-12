@@ -103,31 +103,27 @@ class StudentRunElective {
 	} 
 
 	public static function create($user, $group_name, $university, $location, $start_month, $start_year, $end_month, $end_year) {
-		global $db,$SUCCESS,$SUCCESSSTR,$ERROR,$ERRORSTR;
+		global $db;
 		$user_id = $user->getID();
 		$query = "insert into `student_student_run_electives` (`user_id`, `group_name`,`university`,`location`,`start_month`, `start_year`, `end_month`, `end_year`) value (".$db->qstr($user_id).", ".$db->qstr($group_name).", ".$db->qstr($university).", ".$db->qstr($location).", ".$db->qstr($start_month).", ".$db->qstr($start_year).", ".$db->qstr($end_month).", ".$db->qstr($end_year).")";
 		if(!$db->Execute($query)) {
-			$ERROR++;
-			$ERRORSTR[] = "Failed to create new Student-Run Elective.";
+			add_error("Failed to create new Student-Run Elective.");
 			application_log("error", "Unable to update a student_student_run_electives record. Database said: ".$db->ErrorMsg());
 		} else {
-			$SUCCESS++;
-			$SUCCESSSTR[] = "Successfully added new Student-Run Elective.";
+			add_success("Successfully added new Student-Run Elective.");
 			$insert_id = $db->Insert_ID();
 			return self::get($insert_id); 
 		}
 	}
 	
 	public function delete() {
-		global $db,$SUCCESS,$SUCCESSSTR,$ERROR,$ERRORSTR;
+		global $db;
 		$query = "DELETE FROM `student_student_run_electives` where `id`=".$db->qstr($this->id);
 		if(!$db->Execute($query)) {
-			$ERROR++;
-			$ERRORSTR[] = "Failed to remove Student-run Elective from database.";
+			add_error("Failed to remove Student-run Elective from database.");
 			application_log("error", "Unable to delete a student_student_run_electives record. Database said: ".$db->ErrorMsg());
 		} else {
-			$SUCCESS++;
-			$SUCCESSSTR[] = "Successfully removed Student-Run Elective.";
+			add_success("Successfully removed Student-Run Elective.");
 		}		
 	}
 }

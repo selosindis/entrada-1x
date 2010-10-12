@@ -76,7 +76,7 @@ class MSPRs extends Collection {
 	
 	
 	static public function clearCustomDeadlines_Year($year) {
-		global $db, $ORGANISATION_ID,$ERROR,$ERRORSTR;
+		global $db, $ORGANISATION_ID;
 		$query = "update `student_mspr`,`".AUTH_DATABASE."`.`user_data` 
 				 set `closed`=NULL
 				 where `grad_year`=".$db->qstr($year) ." 
@@ -84,14 +84,13 @@ class MSPRs extends Collection {
 				 and user_id=id ";
 		
 		if(!$db->Execute($query)) {
-			$ERROR++;
-			$ERRORSTR[] = "Failed to update Submission Deadline.".$db->ErrorMsg();
+			add_error("Failed to update Submission Deadline.");
 			application_log("error", "Unable to update a student_mspr record. Database said: ".$db->ErrorMsg());
 		}
 	}
 	
 	static public function clearCustomDeadlinesEarlierThan_Year($year, $timestamp) {
-		global $db, $ORGANISATION_ID,$ERROR,$ERRORSTR;
+		global $db, $ORGANISATION_ID;
 		$query = "update `student_mspr`,`".AUTH_DATABASE."`.`user_data` 
 				 set `closed`=NULL
 				 where `grad_year`=".$db->qstr($year) ." and user_id=id
@@ -99,8 +98,7 @@ class MSPRs extends Collection {
 				 and `closed` < ".$db->qstr($timestamp);
 		
 		if(!$db->Execute($query)) {
-			$ERROR++;
-			$ERRORSTR[] = "Failed to update Submission Deadline.".$db->ErrorMsg();
+			add_error("Failed to update Submission Deadline.");
 			application_log("error", "Unable to update a student_mspr record. Database said: ".$db->ErrorMsg());
 		}
 	}
@@ -140,28 +138,25 @@ class MSPRClassData {
 	}
 	
 	public static function create($year, $closed = null) {
-		global $db,$SUCCESS,$SUCCESSSTR,$ERROR,$ERRORSTR;
+		global $db;
 		
 		$query = "insert into `student_mspr_class` (`year`, `closed`) value (".$db->qstr($year).", ".$db->qstr($closed).")";
 		if(!$db->Execute($query)) {
-			$ERROR++;
-			$ERRORSTR[] = "Failed to create new MSPR Class.";
+			add_error("Failed to create new MSPR Class.");
 			application_log("error", "Unable to update a student_mspr_class record. Database said: ".$db->ErrorMsg());
 		} else {
-			$SUCCESS++;
-			$SUCCESSSTR[] = "Successfully created new MSPR Class.";
+			add_success("Successfully created new MSPR Class.");
 		}
 	}
 	
 	public function setClosedTimestamp($timestamp) {
-		global $db,$ERROR,$ERRORSTR;
+		global $db;
 		$query = "update `student_mspr_class` set
 				 `closed`=".$db->qstr($timestamp)."
 				 where `year`=".$db->qstr($this->year);
 		
 		if(!$db->Execute($query)) {
-			$ERROR++;
-			$ERRORSTR[] = "Failed to update Class Submission Deadline.".$db->ErrorMsg();
+			add_error("Failed to update Class Submission Deadline.".$db->ErrorMsg());
 			application_log("error", "Unable to update a student_mspr_class record. Database said: ".$db->ErrorMsg());
 		}
 	}

@@ -1689,7 +1689,6 @@ INSERT INTO `curriculum_lu_types` (`curriculum_type_id`, `parent_id`, `curriculu
 CREATE TABLE IF NOT EXISTS `events` (
   `event_id` int(12) NOT NULL AUTO_INCREMENT,
   `recurring_id` int(12) DEFAULT '0',
-  `eventtype_id` int(12) DEFAULT '0',
   `region_id` int(12) DEFAULT '0',
   `course_id` int(12) NOT NULL DEFAULT '0',
   `event_phase` varchar(12) DEFAULT NULL,

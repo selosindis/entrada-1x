@@ -143,7 +143,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 	<tbody>
 	<?php
 	foreach($results as $result) {
-		$url = ENTRADA_URL."/admin/users?section=incident-edit&id=".$result["proxy_id"]."&incident-id=".$result["incident_id"];
+		$url = ENTRADA_URL."/admin/users/manage/incidents?section=edit&id=".$result["proxy_id"]."&incident-id=".$result["incident_id"];
 		echo "<tr>\n";
 		echo "	<td class=\"general\"><a href=\"".$url."\" title=\"Student Name: ".html_encode($result["fullname"])."\">".html_encode($result["fullname"])."</a></td>\n";
 		echo "	<td class=\"date\"><a href=\"".$url."\" title=\"Incident Follow-Up Date\">".(isset($result["follow_up_date"]) && ((int)$result["follow_up_date"]) ? date(DEFAULT_DATE_FORMAT, $result["follow_up_date"]) : "")."</a></td>\n";

@@ -478,7 +478,7 @@ if ($community_courses) {
 				}
 			}
 		break;
-		case "course_calendar" :
+		case strpos($PAGE_URL, "course_calendar") !== false :
 			$HEAD[] = "<link href=\"".ENTRADA_URL."/javascript/calendar/css/xc2_default.css\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />";
 			$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/calendar/config/xc2_default.js\"></script>";
 			$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/calendar/script/xc2_inpage.js\"></script>";
@@ -926,7 +926,7 @@ if ($community_courses) {
 
 			new_sidebar_item("Learning Event Legend", $sidebar_html, "event-legend", "open");
 		break;
-		case "objectives" :
+		case (strpos($PAGE_URL, "objectives") !== false) :
 			$results = $db->GetAll("SELECT `course_id` FROM `community_courses` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID));
 			$course_ids_str = "";
 			$clean_ids_str = "";
@@ -974,7 +974,7 @@ if ($community_courses) {
 			echo "<strong>The learner will be able to:</strong>";
 			echo "<div id=\"objectives_list\">\n".course_objectives_in_list($objectives["objectives"], 1, false, false, 1, false)."\n</div>\n";
 		break;
-		case "mcc_presentations" :
+		case (strpos($PAGE_URL, "mcc_presentations") !== false) :
 			$query = "	SELECT b.*
 						FROM `course_objectives` AS a
 						JOIN `global_lu_objectives` AS b

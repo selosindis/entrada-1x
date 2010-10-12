@@ -580,11 +580,67 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				<tbody>
 					<tr>
 						<td>&nbsp;</td>
+						<td style="vertical-align: top">
+							Clinical Presentations
+							<div class="content-small" style="margin-top: 5px">
+								<strong>Note:</strong> For more detailed information please refer to the <a href="http://www.mcc.ca/Objectives_online/objectives.pl?lang=english&loc=contents" target="_blank" style="font-size: 11px">MCC Objectives for the Qualifying Examination</a>.
+							</div>
+						</td>
+						<td>
+							<select class="multi-picklist" id="PickList" name="clinical_presentations[]" multiple="multiple" size="5" style="width: 100%; margin-bottom: 5px">
+							<?php
+							if ((is_array($clinical_presentations)) && (count($clinical_presentations))) {
+								foreach ($clinical_presentations as $objective_id => $presentation_name) {
+									echo "<option value=\"".(int) $objective_id."\">".html_encode($presentation_name)."</option>\n";
+								}
+							}
+							?>
+							</select>
+							<div style="float: left; display: inline">
+								<input type="button" id="clinical_presentations_list_state_btn" class="button" value="Show List" onclick="toggle_list('clinical_presentations_list')" />
+							</div>
+							<div style="float: right; display: inline">
+								<input type="button" id="clinical_presentations_list_remove_btn" class="button-remove" onclick="delIt()" value="Remove" />
+								<input type="button" id="clinical_presentations_list_add_btn" class="button-add" onclick="addIt()" style="display: none" value="Add" />
+							</div>
+							<div id="clinical_presentations_list" style="clear: both; padding-top: 3px; display: none">
+								<h2>Clinical Presentations List</h2>
+								<select class="multi-picklist" id="SelectList" name="other_event_objectives_list" multiple="multiple" size="15" style="width: 100%">
+								<?php
+								if ((is_array($clinical_presentations_list)) && (count($clinical_presentations_list))) {
+									foreach ($clinical_presentations_list as $objective_id => $presentation_name) {
+										if (!array_key_exists($objective_id, $clinical_presentations)) {
+											echo "<option value=\"".(int) $objective_id."\">".html_encode($presentation_name)."</option>\n";
+										}
+									}
+								}
+								?>
+								</select>
+							</div>
+							<script type="text/javascript">
+							$('PickList').observe('keypress', function(event) {
+								if (event.keyCode == Event.KEY_DELETE) {
+									delIt();
+								}
+							});
+							$('SelectList').observe('keypress', function(event) {
+								if (event.keyCode == Event.KEY_RETURN) {
+									addIt();
+								}
+							});
+							</script>
+						</td>
+					</tr>
+					<tr>
+						<td colspan="3">&nbsp;</td>
+					</tr>
+					<tr>
+						<td>&nbsp;</td>
 						<td>
 							<label for="objective_select" class="form-nrequired">Course Objectives</label>
 						</td>
 						<td>
-							<select id="objective_select" onclick="showMultiSelect()">
+							<select id="objective_select" onchange="showMultiSelect()">
 							<option value="">- Select Competency -</option>
 							<?php
 							$objective_select = "";
@@ -685,62 +741,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							<div id="objectives_list">
 							<?php echo course_objectives_in_list($course_objectives["objectives"], 1, true); ?>
 							</div>
-						</td>
-					</tr>
-					<tr>
-						<td colspan="3">&nbsp;</td>
-					</tr>
-					<tr>
-						<td>&nbsp;</td>
-						<td style="vertical-align: top">
-							Clinical Presentations
-							<div class="content-small" style="margin-top: 5px">
-								<strong>Note:</strong> For more detailed information please refer to the <a href="http://www.mcc.ca/Objectives_online/objectives.pl?lang=english&loc=contents" target="_blank" style="font-size: 11px">MCC Objectives for the Qualifying Examination</a>.
-							</div>
-						</td>
-						<td>
-							<select class="multi-picklist" id="PickList" name="clinical_presentations[]" multiple="multiple" size="5" style="width: 100%; margin-bottom: 5px">
-							<?php
-							if ((is_array($clinical_presentations)) && (count($clinical_presentations))) {
-								foreach ($clinical_presentations as $objective_id => $presentation_name) {
-									echo "<option value=\"".(int) $objective_id."\">".html_encode($presentation_name)."</option>\n";
-								}
-							}
-							?>
-							</select>
-							<div style="float: left; display: inline">
-								<input type="button" id="clinical_presentations_list_state_btn" class="button" value="Show List" onclick="toggle_list('clinical_presentations_list')" />
-							</div>
-							<div style="float: right; display: inline">
-								<input type="button" id="clinical_presentations_list_remove_btn" class="button-remove" onclick="delIt()" value="Remove" />
-								<input type="button" id="clinical_presentations_list_add_btn" class="button-add" onclick="addIt()" style="display: none" value="Add" />
-							</div>
-							<div id="clinical_presentations_list" style="clear: both; padding-top: 3px; display: none">
-								<h2>Clinical Presentations List</h2>
-								<select class="multi-picklist" id="SelectList" name="other_event_objectives_list" multiple="multiple" size="15" style="width: 100%">
-								<?php
-								if ((is_array($clinical_presentations_list)) && (count($clinical_presentations_list))) {
-									foreach ($clinical_presentations_list as $objective_id => $presentation_name) {
-										if (!array_key_exists($objective_id, $clinical_presentations)) {
-											echo "<option value=\"".(int) $objective_id."\">".html_encode($presentation_name)."</option>\n";
-										}
-									}
-								}
-								?>
-								</select>
-							</div>
-							<script type="text/javascript">
-							$('PickList').observe('keypress', function(event) {
-								if (event.keyCode == Event.KEY_DELETE) {
-									delIt();
-								}
-							});
-							$('SelectList').observe('keypress', function(event) {
-								if (event.keyCode == Event.KEY_RETURN) {
-									addIt();
-								}
-							});
-							</script>
 						</td>
 					</tr>
 					<tr>

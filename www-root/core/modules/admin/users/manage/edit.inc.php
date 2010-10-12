@@ -77,8 +77,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 									$ERRORSTR[] = "The new username must be between 3 and 24 characters.";
 								}
 							}
+						} else {
+							$PROCESSED["username"] = $user_record;
 						}
 					} else {
+						$PROCESSED["username"] = $user_record;
 						$ERROR++;
 						$ERRORSTR[] = "You must provide a valid username for this user to login with. We suggest that you use their University NetID if at all possible.";
 					}
@@ -114,7 +117,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 							if (isset($_POST["entry_year"]) && isset($_POST["grad_year"])) {
 								$entry_year = clean_input($_POST["entry_year"],"int");
 								$grad_year = clean_input($_POST["grad_year"],"int");
-								$sanity_start = 2004;
+								$sanity_start = 1995;
 								$sanity_end = date("Y", time()) + ((date("m", time()) < 7) ?  3 : 4);
 								if ($grad_year <= $sanity_end && $grad_year >= $sanity_start) {
 									$PROCESSED["grad_year"] = $grad_year;
@@ -587,7 +590,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 										<select id="entry_year" name="entry_year" style="width: 209px">
 										<?php
 											$selected_year = (isset($PROCESSED["entry_year"])) ? $PROCESSED["entry_year"] : (date("Y", time()) - ((date("m", time()) < 7) ?  1 : 0));
-											for($i = (date("Y", time()) + ((date("m", time()) < 7) ?  3 : 4)); $i >= 2004; $i--) {
+											for($i = (date("Y", time()) + ((date("m", time()) < 7) ?  3 : 4)); $i >= 1995; $i--) {
 												$selected = $selected_year == $i;
 												echo build_option($i, $i, $selected);
 											} 
@@ -601,7 +604,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 									<td>
 										<select id="grad_year" name="grad_year" style="width: 209px; margin-top: 5px">
 										<?php
-										for($i = (date("Y", time()) + ((date("m", time()) < 7) ?  3 : 4)); $i >= 2004; $i--) {
+										for($i = (date("Y", time()) + ((date("m", time()) < 7) ?  3 : 4)); $i >= 1995; $i--) {
 											$selected = (isset($PROCESSED["grad_year"]) && $PROCESSED["grad_year"] == $i);
 											echo build_option($i, $i, $selected);
 										} 

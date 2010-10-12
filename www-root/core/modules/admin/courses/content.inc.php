@@ -543,18 +543,6 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								</tr>
 								<tr>
 									<td colspan="2">
-										<div id="objectives_list">
-										<h3>Curriculum Objectives</h3>
-										<strong>The learner will be able to:</strong>
-										<?php echo event_objectives_in_list($course_objectives["objectives"], 1, true); ?>
-										</div>
-									</td>
-								</tr>
-								<tr>
-									<td colspan="2">&nbsp;</td>
-								</tr>
-								<tr>
-									<td colspan="2">
 										<?php
 										echo "<h3>Clinical Presentations</h3>";
 										$query = "	SELECT b.*
@@ -576,9 +564,21 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 											}
 											echo "</ul>\n";
 										} else {
-											echo "<div class=\"display-notice\">While medical presentations may be used to illustrate concepts in this course, there are no specific presentations from the Medical Council of Canada that have been selected.</div>";
+											echo "<div class=\"display-notice\">While clinical presentations may be used to illustrate concepts in this course, there are no specific presentations from the Medical Council of Canada that have been selected.</div>";
 										}
 										?>
+									</td>
+								</tr>
+								<tr>
+									<td colspan="2">&nbsp;</td>
+								</tr>
+								<tr>
+									<td colspan="2">
+										<div id="objectives_list">
+										<h3>Curriculum Objectives</h3>
+										<strong>The learner will be able to:</strong>
+										<?php echo event_objectives_in_list($course_objectives["objectives"], 1, true); ?>
+										</div>
 									</td>
 								</tr>
 							</tbody>

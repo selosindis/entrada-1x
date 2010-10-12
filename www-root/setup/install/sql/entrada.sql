@@ -3228,7 +3228,7 @@ CREATE TABLE IF NOT EXISTS `settings` (
   PRIMARY KEY (`shortname`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-INSERT INTO `settings` (`shortname`, `value`) VALUES ('version_db', '1.1.0');
+INSERT INTO `settings` (`shortname`, `value`) VALUES ('version_db', '1.2.0');
 
 CREATE TABLE IF NOT EXISTS `statistics` (
   `statistic_id` int(12) NOT NULL AUTO_INCREMENT,

@@ -48,6 +48,19 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 	
 	echo "<h1>Add Activity Profile</h1>";
 	
+	$departments = get_user_departments($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]);
+	foreach($departments as $department) {
+		if($parent = fetch_department_parent($department["department_id"])) {
+			$department["department_title"] = fetch_department_title($parent);
+		}
+		
+		if(isset($departmentString)) {
+			$departmentString = $departmentString . ", " . $department["department_title"];
+		} else {
+			$departmentString = $department["department_title"];
+		}
+	}
+	
 	if($_SESSION["details"]["clinical_member"]) {
 		// Error Checking
 		switch($STEP) {
@@ -352,14 +365,14 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 				<td></td>
 				<td style="vertical-align: top"><label for="department" class="form-required">Departmental Association</label></td>
 				<td><input type="text" id="department" name="department" 
-				value="<?php echo (html_encode($PROCESSED["department"]) != "" ? $PROCESSED["department"] : $department); ?>" style="width: 500px" /></td>
+				value="<?php echo (html_encode($PROCESSED["department"]) != "" ? $PROCESSED["department"] : $departmentString); ?>" style="width: 500px" /></td>
 			</tr>
 			<tr>
 				<td></td>
 				<td style="vertical-align: top"><label for="cross_department" class="form-nrequired">Cross Department(s)</label></td>
 				<td><input type="text" id="cross_department" name="cross_department" 
-				value="<?php echo (html_encode($PROCESSED["cross_department"]) != "" ? $PROCESSED["cross_department"] : $crossAppointments); ?>" style="width: 500px" />
-				<div class="content-small" style="width: 95%"><strong>Note:</strong> The department fields have been populated for you, you can change these if you so desire.</div></td>
+				value="<?php echo (html_encode($PROCESSED["cross_department"]) != "" ? $PROCESSED["cross_department"] : ""); ?>" style="width: 500px" />
+				<div class="content-small" style="width: 95%"><strong>Note:</strong> The department field has been populated for you, you can edit it if you so desire. This is what will appear on the cover of your annual report.</div></td>
 			</tr>
 			<tr>
 				<td colspan="3">&nbsp;</td>
@@ -979,14 +992,14 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 				<td></td>
 				<td style="vertical-align: top"><label for="department" class="form-required">Departmental Association</label></td>
 				<td><input type="text" id="department" name="department" 
-				value="<?php echo (html_encode($PROCESSED["department"]) != "" ? $PROCESSED["department"] : $department); ?>" style="width: 500px" /></td>
+				value="<?php echo (html_encode($PROCESSED["department"]) != "" ? $PROCESSED["department"] : $departmentString); ?>" style="width: 500px" /></td>
 			</tr>
 			<tr>
 				<td></td>
 				<td style="vertical-align: top"><label for="cross_department" class="form-nrequired">Cross Department(s)</label></td>
 				<td><input type="text" id="cross_department" name="cross_department" 
-				value="<?php echo (html_encode($PROCESSED["cross_department"]) != "" ? $PROCESSED["cross_department"] : $crossAppointments); ?>" style="width: 500px" />
-				<div class="content-small" style="width: 95%"><strong>Note:</strong> The department fields have been populated for you, you can change these if you so desire. This is what will appear on the cover of your annual report.</div></td>
+				value="<?php echo (html_encode($PROCESSED["cross_department"]) != "" ? $PROCESSED["cross_department"] : ""); ?>" style="width: 500px" />
+				<div class="content-small" style="width: 95%"><strong>Note:</strong> The department field has been populated for you, you can edit it if you so desire. This is what will appear on the cover of your annual report.</div></td>
 			</tr>
 			<tr>
 				<td colspan="3">&nbsp;</td>

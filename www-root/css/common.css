@@ -1247,17 +1247,17 @@ vertical-align: middle;
 }
 
 ul.objective-list li.primary {
-border-left:5px solid #D9E9FE;
+border-left:5px solid #5A9B36;
 background-color:#FFF;
 }
 
 ul.objective-list li.secondary {
-border-left:5px solid #E9D9FE;
+border-left:5px solid #E5C203;
 background-color:#FFF;
 }
 
 ul.objective-list li.tertiary {
-border-left:5px solid #FFCCFF;
+border-left:5px solid #D3490C;
 background-color:#FFF;
 }
 
@@ -2126,7 +2126,7 @@ background-color:#F7F7F7;
 
 table.select_multiple_table tr.selected {
 background-image:none;
-background-color:#D9E9FE;
+background-color:#5A9B36;
 font-weight:700;
 }
 
@@ -2174,17 +2174,17 @@ z-index:1500;
 }
 
 td.objectives li.primary {
-border-left:5px solid #D9E9FE;
+border-left:5px solid #5A9B36;
 background-color:#FFF;
 }
 
 td.objectives li.secondary {
-border-left:5px solid #E9D9FE;
+border-left:5px solid #E5C203;
 background-color:#FFF;
 }
 
 td.objectives li.tertiary {
-border-left:5px solid #FFCCFF;
+border-left:5px solid #D3490C;
 background-color:#FFF;
 }
 
@@ -2422,14 +2422,14 @@ padding-left:20px;
 }
 
 table.select_multiple_table tr.primary {
-background-color:#D9E9FE;
+background-color:#5A9B36;
 }
 
 table.select_multiple_table tr.secondary {
-background-color:#E9D9FE;
+background-color:#E5C203;
 }
 table.select_multiple_table tr.tertiary {
-background-color:#FFCCFF;
+background-color:#D3490C;
 }
 
 div#associated_faculty_list ul.menu li.community,div#associated_student_list ul.menu li.community,div#associated_director_list ul.menu li.community,div#associated_coordinator_list ul.menu li.community {

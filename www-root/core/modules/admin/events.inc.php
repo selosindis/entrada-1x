@@ -91,9 +91,9 @@ if(!defined("PARENT_INCLUDED")) {
 			new_sidebar_item("Display Style", $sidebar_html, "display-style", "open");
 		}
 
-		$ORGANISATION_LIST	= array();
-		$query		= "SELECT `organisation_id`, `organisation_title` FROM `".AUTH_DATABASE."`.`organisations` ORDER BY `organisation_title` ASC";
-		$results	= $db->GetAll($query);
+		$ORGANISATION_LIST = array();
+		$query = "SELECT `organisation_id`, `organisation_title` FROM `".AUTH_DATABASE."`.`organisations` ORDER BY `organisation_title` ASC";
+		$results = $db->GetAll($query);
 		if ($results) {
 			foreach ($results as $result) {
 				if ($ENTRADA_ACL->amIAllowed("resourceorganisation".$result["organisation_id"], "read")) {
@@ -118,9 +118,9 @@ if(!defined("PARENT_INCLUDED")) {
 			$sidebar_html  = "<ul class=\"menu\">\n";
 			foreach ($ORGANISATION_LIST as $key => $organisation_title) {
 				if ($key == $ORGANISATION_ID) {
-					$sidebar_html .= "	<li class=\"on\"><a href=\"".ENTRADA_URL."/events?".replace_query(array("org" => $key))."\">".html_encode($organisation_title)."</a></li>\n";
+					$sidebar_html .= "	<li class=\"on\"><a href=\"".ENTRADA_URL."/admin/events?".replace_query(array("org" => $key))."\">".html_encode($organisation_title)."</a></li>\n";
 				} else {
-					$sidebar_html .= "<li class=\"off\"><a href=\"".ENTRADA_URL."/events?".replace_query(array("org" => $key))."\">".html_encode($organisation_title)."</a></li>\n";
+					$sidebar_html .= "<li class=\"off\"><a href=\"".ENTRADA_URL."/admin/events?".replace_query(array("org" => $key))."\">".html_encode($organisation_title)."</a></li>\n";
 				}
 			}
 			$sidebar_html .= "</ul>\n";

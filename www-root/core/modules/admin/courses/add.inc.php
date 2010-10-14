@@ -27,7 +27,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 } elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	header("Location: ".ENTRADA_URL);
 	exit;
-} elseif (!$ENTRADA_ACL->amIAllowed('course', 'create', false)) {
+} elseif (!$ENTRADA_ACL->amIAllowed("course", "create", false)) {
 	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/".$MODULE."\\'', 15000)";
 
 	$ERROR++;
@@ -44,10 +44,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 	/** 
 	* Fetch the Clinical Presentation details.
 	*/
-	$clinical_presentations_list	= array();
-	$clinical_presentations			= array();
+	$clinical_presentations_list = array();
+	$clinical_presentations = array();
 
-	$results	= fetch_mcc_objectives();
+	$results = fetch_mcc_objectives();
 	if ($results) {
 		foreach ($results as $result) {
 			$clinical_presentations_list[$result["objective_id"]] = $result["objective_name"];
@@ -57,19 +57,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 	if ((isset($_POST["clinical_presentations"])) && (is_array($_POST["clinical_presentations"])) && (count($_POST["clinical_presentations"]))) {
 		foreach ($_POST["clinical_presentations"] as $objective_id) {
 			if ($objective_id = clean_input($objective_id, array("trim", "int"))) {
-				$query	= "	SELECT `objective_id` FROM `global_lu_objectives` 
+				$query = "	SELECT `objective_id` FROM `global_lu_objectives`
 							WHERE `objective_id` = ".$db->qstr($objective_id)."
 							AND `objective_active` = '1'";
-				$result	= $db->GetRow($query);
+				$result = $db->GetRow($query);
 				if ($result) {
 					$clinical_presentations[$objective_id] = $clinical_presentations_list[$objective_id];
 				}
 			}
 		}
 	}
-	$HEAD[]		= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/picklist.js\"></script>\n";
-	$HEAD[]		= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/scriptaculous/tree.js\"></script>\n";
-	$ONLOAD[]	= "$('clinical_presentations_list').style.display = 'none'";
+
+	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/picklist.js\"></script>\n";
+	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/scriptaculous/tree.js\"></script>\n";
+	$ONLOAD[] = "$('clinical_presentations_list').style.display = 'none'";
 
 	// Error Checking
 	switch($STEP) {
@@ -104,7 +105,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					$ERRORSTR[] = "You do not have permission to add a course for this organisation. This error has been logged and will be investigated.";
 					application_log("error", "Proxy id [".$_SESSION['details']['proxy_id']."] tried to create a course within an organisation [".$organisation_id."] they didn't have permissions on. ");
 				}
-
 			} else {
 				$ERROR++;
 				$ERRORSTR[] = "The <strong>Organisation Name</strong> field is required.";
@@ -357,8 +357,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				$DIRECTOR_LIST = $course_directors;
 			}
 			
-			$query	= "
-							SELECT `".AUTH_DATABASE."`.`user_data`.`id` AS `proxy_id`, CONCAT_WS(', ', `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname`) AS `fullname`, `".AUTH_DATABASE."`.`organisations`.`organisation_id`
+			$query = "	SELECT `".AUTH_DATABASE."`.`user_data`.`id` AS `proxy_id`, CONCAT_WS(', ', `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname`) AS `fullname`, `".AUTH_DATABASE."`.`organisations`.`organisation_id`
 						FROM `".AUTH_DATABASE."`.`user_data`
 						LEFT JOIN `".AUTH_DATABASE."`.`user_access`
 						ON `".AUTH_DATABASE."`.`user_access`.`user_id` = `".AUTH_DATABASE."`.`user_data`.`id`
@@ -401,17 +400,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			// Compiles Program Coordinator list
 			$programcoodinators = array();
 
-			$query		= "	SELECT `".AUTH_DATABASE."`.`user_data`.`id` AS `proxy_id`, CONCAT_WS(', ', `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname`) AS `fullname`,`".AUTH_DATABASE."`.`user_data`.`id`, `".AUTH_DATABASE."`.`organisations`.`organisation_title`
-							FROM `".AUTH_DATABASE."`.`user_data`
-							LEFT JOIN `".AUTH_DATABASE."`.`user_access`
-							ON `".AUTH_DATABASE."`.`user_access`.`user_id` = `".AUTH_DATABASE."`.`user_data`.`id`
-							LEFT JOIN `".AUTH_DATABASE."`.`organisations`
-							ON `".AUTH_DATABASE."`.`user_data`.`organisation_id` = `".AUTH_DATABASE."`.`organisations`.`organisation_id`
-							WHERE `".AUTH_DATABASE."`.`user_access`.`role` = 'pcoordinator'
-							AND `".AUTH_DATABASE."`.`user_access`.`app_id` = '".AUTH_APP_ID."'
-							AND `".AUTH_DATABASE."`.`user_access`.`account_active` = 'true'
-							ORDER BY `fullname` ASC";
-			$results	= ((USE_CACHE) ? $db->CacheGetAll(AUTH_CACHE_TIMEOUT, $query) : $db->GetAll($query));
+			$query = "	SELECT `".AUTH_DATABASE."`.`user_data`.`id` AS `proxy_id`, CONCAT_WS(', ', `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname`) AS `fullname`,`".AUTH_DATABASE."`.`user_data`.`id`, `".AUTH_DATABASE."`.`organisations`.`organisation_title`
+						FROM `".AUTH_DATABASE."`.`user_data`
+						LEFT JOIN `".AUTH_DATABASE."`.`user_access`
+						ON `".AUTH_DATABASE."`.`user_access`.`user_id` = `".AUTH_DATABASE."`.`user_data`.`id`
+						LEFT JOIN `".AUTH_DATABASE."`.`organisations`
+						ON `".AUTH_DATABASE."`.`user_data`.`organisation_id` = `".AUTH_DATABASE."`.`organisations`.`organisation_id`
+						WHERE `".AUTH_DATABASE."`.`user_access`.`role` = 'pcoordinator'
+						AND `".AUTH_DATABASE."`.`user_access`.`app_id` = '".AUTH_APP_ID."'
+						AND `".AUTH_DATABASE."`.`user_access`.`account_active` = 'true'
+						ORDER BY `fullname` ASC";
+			$results = ((USE_CACHE) ? $db->CacheGetAll(AUTH_CACHE_TIMEOUT, $query) : $db->GetAll($query));
 			if ($results) {
 				foreach($results as $result) {
 					$programcoodinators[$result["proxy_id"]] = $result["fullname"]. ' (' . $result['organisation_title'].')';
@@ -421,17 +420,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			// Compiles Evaluation Representative (evalrep_id)  list
 			$evaluationreps = array();
 
-			$query		= "	SELECT `".AUTH_DATABASE."`.`user_data`.`id` AS `proxy_id`, CONCAT_WS(', ', `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname`) AS `fullname`,`".AUTH_DATABASE."`.`user_data`.`id`, `".AUTH_DATABASE."`.`organisations`.`organisation_title`
-							FROM `".AUTH_DATABASE."`.`user_data`
-							LEFT JOIN `".AUTH_DATABASE."`.`user_access`
-							ON `".AUTH_DATABASE."`.`user_access`.`user_id` = `".AUTH_DATABASE."`.`user_data`.`id`
-							LEFT JOIN `".AUTH_DATABASE."`.`organisations`
-							ON `".AUTH_DATABASE."`.`user_data`.`organisation_id` = `".AUTH_DATABASE."`.`organisations`.`organisation_id`
-							WHERE `".AUTH_DATABASE."`.`user_access`.`group` = 'faculty'
-							AND `".AUTH_DATABASE."`.`user_access`.`app_id` = '".AUTH_APP_ID."'
-							AND `".AUTH_DATABASE."`.`user_access`.`account_active` = 'true'
-							ORDER BY `fullname` ASC";
-			$results	= ((USE_CACHE) ? $db->CacheGetAll(AUTH_CACHE_TIMEOUT, $query) : $db->GetAll($query));
+			$query = "	SELECT `".AUTH_DATABASE."`.`user_data`.`id` AS `proxy_id`, CONCAT_WS(', ', `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname`) AS `fullname`,`".AUTH_DATABASE."`.`user_data`.`id`, `".AUTH_DATABASE."`.`organisations`.`organisation_title`
+						FROM `".AUTH_DATABASE."`.`user_data`
+						LEFT JOIN `".AUTH_DATABASE."`.`user_access`
+						ON `".AUTH_DATABASE."`.`user_access`.`user_id` = `".AUTH_DATABASE."`.`user_data`.`id`
+						LEFT JOIN `".AUTH_DATABASE."`.`organisations`
+						ON `".AUTH_DATABASE."`.`user_data`.`organisation_id` = `".AUTH_DATABASE."`.`organisations`.`organisation_id`
+						WHERE `".AUTH_DATABASE."`.`user_access`.`group` = 'faculty'
+						AND `".AUTH_DATABASE."`.`user_access`.`app_id` = '".AUTH_APP_ID."'
+						AND `".AUTH_DATABASE."`.`user_access`.`account_active` = 'true'
+						ORDER BY `fullname` ASC";
+			$results = ((USE_CACHE) ? $db->CacheGetAll(AUTH_CACHE_TIMEOUT, $query) : $db->GetAll($query));
 			if ($results) {
 				foreach($results as $result) {
 					$evaluationreps[$result["proxy_id"]] = $result["fullname"] . ' (' . $result['organisation_title'].')';
@@ -441,17 +440,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			// Compiles Student Representative (evalrep_id)  list
 			$studentreps = array();
 
-			$query		= "	SELECT `".AUTH_DATABASE."`.`user_data`.`id` AS `proxy_id`, CONCAT_WS(', ', `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname`) AS `fullname`,`".AUTH_DATABASE."`.`user_data`.`id`, `".AUTH_DATABASE."`.`organisations`.`organisation_title`
-							FROM `".AUTH_DATABASE."`.`user_data`
-							LEFT JOIN `".AUTH_DATABASE."`.`user_access`
-							ON `".AUTH_DATABASE."`.`user_access`.`user_id` = `".AUTH_DATABASE."`.`user_data`.`id`
-							LEFT JOIN `".AUTH_DATABASE."`.`organisations`
-							ON `".AUTH_DATABASE."`.`user_data`.`organisation_id` = `".AUTH_DATABASE."`.`organisations`.`organisation_id`
-							WHERE `".AUTH_DATABASE."`.`user_access`.`group` = 'student'
-							AND `".AUTH_DATABASE."`.`user_access`.`app_id` = '".AUTH_APP_ID."'
-							AND `".AUTH_DATABASE."`.`user_access`.`account_active` = 'true'
-							ORDER BY `fullname` ASC";
-			$results	= ((USE_CACHE) ? $db->CacheGetAll(AUTH_CACHE_TIMEOUT, $query) : $db->GetAll($query));
+			$query = "	SELECT `".AUTH_DATABASE."`.`user_data`.`id` AS `proxy_id`, CONCAT_WS(', ', `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname`) AS `fullname`,`".AUTH_DATABASE."`.`user_data`.`id`, `".AUTH_DATABASE."`.`organisations`.`organisation_title`
+						FROM `".AUTH_DATABASE."`.`user_data`
+						LEFT JOIN `".AUTH_DATABASE."`.`user_access`
+						ON `".AUTH_DATABASE."`.`user_access`.`user_id` = `".AUTH_DATABASE."`.`user_data`.`id`
+						LEFT JOIN `".AUTH_DATABASE."`.`organisations`
+						ON `".AUTH_DATABASE."`.`user_data`.`organisation_id` = `".AUTH_DATABASE."`.`organisations`.`organisation_id`
+						WHERE `".AUTH_DATABASE."`.`user_access`.`group` = 'student'
+						AND `".AUTH_DATABASE."`.`user_access`.`app_id` = '".AUTH_APP_ID."'
+						AND `".AUTH_DATABASE."`.`user_access`.`account_active` = 'true'
+						ORDER BY `fullname` ASC";
+			$results = ((USE_CACHE) ? $db->CacheGetAll(AUTH_CACHE_TIMEOUT, $query) : $db->GetAll($query));
 			if ($results) {
 				foreach($results as $result) {
 					$studentreps[$result["proxy_id"]] = $result["fullname"] . ' (' . $result['organisation_title'].')';

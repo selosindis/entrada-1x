@@ -48,7 +48,6 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			
 			echo "<h1>Edit Undergraduate Teaching</h1>\n";
 			
-			//echo display_default_enrollment();
 			// Error Checking
 			switch($STEP) {
 				case 2 :

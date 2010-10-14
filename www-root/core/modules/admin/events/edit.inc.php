@@ -36,6 +36,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
+	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/AutoCompleteList.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/eventtypes_list.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 	if ($EVENT_ID) {
 		$query = "	SELECT a.*, b.`organisation_id`
@@ -631,90 +632,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 									<td></td>
 									<td style="vertical-align: top"><label for="faculty_name" class="form-nrequired">Associated Faculty</label></td>
 									<td>
-										<script type="text/javascript">
-										var sortables = new Array();
-										function updateOrder(type) {
-											$('associated_'+type).value = Sortable.sequence(type+'_list');
-										}
-
-										function addItem(type) {
-											if (($(type+'_id') != null) && ($(type+'_id').value != '') && ($(type+'_'+$(type+'_id').value) == null)) {
-												var li = new Element('li', {'class':'community', 'id':type+'_'+$(type+'_id').value, 'style':'cursor: move;'}).update($(type+'_name').value);
-												$(type+'_name').value = '';
-												li.insert({bottom: '<img src=\"<?php echo ENTRADA_URL; ?>/images/action-delete.gif\" class=\"list-cancel-image\" onclick=\"removeItem(\''+$(type+'_id').value+'\', \''+type+'\')\" />'});
-												$(type+'_id').value	= '';
-												$(type+'_list').appendChild(li);
-												sortables[type] = Sortable.destroy($(type+'_list'));
-												Sortable.create(type+'_list', {onUpdate : function(){updateOrder(type);}});
-												updateOrder(type);
-											} else if ($(type+'_'+$(type+'_id').value) != null) {
-												alert('Important: Each user may only be added once.');
-												$(type+'_id').value = '';
-												$(type+'_name').value = '';
-												return false;
-											} else if ($(type+'_name').value != '' && $(type+'_name').value != null) {
-												alert('Important: When you see the correct name pop-up in the list as you type, make sure you select the name with your mouse, do not press the Enter button.');
-												return false;
-											} else {
-												return false;
-											}
-										}
-
-										function addItemNoError(type) {
-											if (($(type+'_id') != null) && ($(type+'_id').value != '') && ($(type+'_'+$(type+'_id').value) == null)) {
-												addItem(type);
-											}
-										}
-
-										function copyItem(type) {
-											if (($(type+'_name') != null) && ($(type+'_ref') != null)) {
-												$(type+'_ref').value = $(type+'_name').value;
-											}
-
-											return true;
-										}
-
-										function checkItem(type) {
-											if (($(type+'_name') != null) && ($(type+'_ref') != null) && ($(type+'_id') != null)) {
-												if ($(type+'_name').value != $(type+'_ref').value) {
-													$(type+'_id').value = '';
-												}
-											}
-
-											return true;
-										}
-
-										function removeItem(id, type) {
-											if ($(type+'_'+id)) {
-												$(type+'_'+id).remove();
-												Sortable.destroy($(type+'_list'));
-												Sortable.create(type+'_list', {onUpdate : function (type) {updateOrder(type)}});
-												updateOrder(type);
-											}
-										}
-
-										function selectItem(id, type) {
-											if ((id != null) && ($(type+'_id') != null)) {
-												$(type+'_id').value = id;
-											}
-										}
-										</script>
-										<input type="text" id="faculty_name" name="fullname" size="30" autocomplete="off" style="width: 203px; vertical-align: middle" onkeyup="checkItem('faculty')" onblur="addItemNoError('faculty')" />
-										<script type="text/javascript">
-											$('faculty_name').observe('keypress', function(event){
-												if (event.keyCode == Event.KEY_RETURN) {
-													addItem('faculty');
-													Event.stop(event);
-												}
-											});
-										</script>
+										<input type="text" id="faculty_name" name="fullname" size="30" autocomplete="off" style="width: 203px; vertical-align: middle" />
 										<?php
-										$ONLOAD[] = "Sortable.create('faculty_list', {onUpdate : function() {updateOrder('faculty')}})";
-										$ONLOAD[] = "$('associated_faculty').value = Sortable.sequence('faculty_list')";
+										$ONLOAD[] = "faculty_list = new AutoCompleteList({ type: 'faculty', url: '". ENTRADA_RELATIVE ."/api/personnel.api.php?type=faculty', remove_image: '". ENTRADA_RELATIVE ."/images/action-delete.gif'})";
 										?>
-										<div class="autocomplete" id="faculty_name_auto_complete"></div><script type="text/javascript">new Ajax.Autocompleter('faculty_name', 'faculty_name_auto_complete', '<?php echo ENTRADA_RELATIVE; ?>/api/personnel.api.php?type=faculty', {frequency: 0.2, minChars: 2, afterUpdateElement: function (text, li) {selectItem(li.id, 'faculty'); copyItem('faculty');}});</script>
+										<div class="autocomplete" id="faculty_name_auto_complete"></div>
 										<input type="hidden" id="associated_faculty" name="associated_faculty" />
-										<input type="button" class="button-sm" onclick="addItem('faculty');" value="Add" style="vertical-align: middle" />
+										<input type="button" class="button-sm" id="add_associated_faculty" value="Add" style="vertical-align: middle" />
 										<span class="content-small">(<strong>Example:</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?>)</span>
 										<ul id="faculty_list" class="menu" style="margin-top: 15px">
 											<?php
@@ -722,7 +646,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 												foreach ($PROCESSED["associated_faculty"] as $faculty) {
 													if ((array_key_exists($faculty, $FACULTY_LIST)) && is_array($FACULTY_LIST[$faculty])) {
 														?>
-														<li class="community" id="faculty_<?php echo $FACULTY_LIST[$faculty]["proxy_id"]; ?>" style="cursor: move;"><?php echo $FACULTY_LIST[$faculty]["fullname"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" class="list-cancel-image" onclick="removeItem('<?php echo $FACULTY_LIST[$faculty]["proxy_id"]; ?>', 'faculty');"/></li>
+														<li class="community" id="faculty_<?php echo $FACULTY_LIST[$faculty]["proxy_id"]; ?>" style="cursor: move;"><?php echo $FACULTY_LIST[$faculty]["fullname"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="faculty_list.removeItem('<?php echo $FACULTY_LIST[$faculty]["proxy_id"]; ?>');" class="list-cancel-image" /></li>
 														<?php
 													}
 												}
@@ -812,24 +736,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 									<td></td>
 									<td style="vertical-align: top"><label for="associated_proxy_ids" class="form-required">Associated Students</label></td>
 									<td>
-										<input type="text" id="student_name" name="fullname" size="30" autocomplete="off" style="width: 203px; vertical-align: middle" onkeyup="checkItem('student')" onblur="addItemNoError('student')" />
-										<script type="text/javascript">
-											$('student_name').observe('keypress', function(event){
-												if (event.keyCode == Event.KEY_RETURN) {
-													addItem('student');
-													Event.stop(event);
-												}
-											});
-										</script>
+										<input type="text" id="student_name" name="fullname" size="30" autocomplete="off" style="width: 203px; vertical-align: middle" />
 										<?php
-										if ($PROCESSED["event_audience_type"] == "proxy_id") {
-											$ONLOAD[] = "Sortable.create('student_list', {onUpdate : function() {updateOrder('student')}})";
-											$ONLOAD[] = "$('associated_student').value = Sortable.sequence('student_list')";
-										}
+										$ONLOAD[] = "student_list = new AutoCompleteList({ type: 'student', url: '". ENTRADA_RELATIVE ."/api/personnel.api.php?type=student', remove_image: '". ENTRADA_RELATIVE ."/images/action-delete.gif'})";
 										?>
-										<div class="autocomplete" id="student_name_auto_complete"></div><script type="text/javascript">new Ajax.Autocompleter('student_name', 'student_name_auto_complete', '<?php echo ENTRADA_RELATIVE; ?>/api/personnel.api.php?type=student', {frequency: 0.2, minChars: 2, afterUpdateElement: function (text, li) {selectItem(li.id, 'student'); copyItem('student');}});</script>
+										<div class="autocomplete" id="student_name_auto_complete"></div>
+										
 										<input type="hidden" id="associated_student" name="associated_student" />
-										<input type="button" class="button-sm" onclick="addItem('student');" value="Add" style="vertical-align: middle" />
+										<input type="button" class="button-sm" id="add_associated_student" value="Add" style="vertical-align: middle" />
 										<span class="content-small">(<strong>Example:</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?>)</span>
 										<ul id="student_list" class="menu" style="margin-top: 15px">
 											<?php
@@ -837,7 +751,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 												foreach ($PROCESSED["associated_proxy_ids"] as $student) {
 													if ((array_key_exists($student, $STUDENT_LIST)) && is_array($STUDENT_LIST[$student])) {
 														?>
-														<li class="community" id="student_<?php echo $STUDENT_LIST[$student]["proxy_id"]; ?>" style="cursor: move;"><?php echo $STUDENT_LIST[$student]["fullname"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" class="list-cancel-image" onclick="removeItem('<?php echo $STUDENT_LIST[$student]["proxy_id"]; ?>', 'student');"/></li>
+														<li class="community" id="student_<?php echo $STUDENT_LIST[$student]["proxy_id"]; ?>" style="cursor: move;"><?php echo $STUDENT_LIST[$student]["fullname"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="student_list.removeItem('<?php echo $STUDENT_LIST[$student]["proxy_id"]; ?>');" class="list-cancel-image" /></li>
 														<?php
 													}
 												}

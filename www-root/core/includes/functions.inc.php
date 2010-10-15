@@ -69,14 +69,25 @@ function on_checkout($buffer) {
 	return $buffer;
 }
 
+/**
+ * surrounds the supplied string with a javascript try/catch
+ * @param string $element
+ */
+function add_try_catch_js($element) {
+	return "try {".$element.";}catch(e){ clog(e); }";
+}
 
+/**
+ * processes the supplied string to add script elements including onload and onunload blocks.
+ * @param string $buffer
+ */
 function check_script($buffer) {
 	global $SCRIPT, $ONLOAD, $ONUNLOAD;
 
 	$elements = array();
-
 	if ((isset($ONLOAD)) && (count($ONLOAD))) {
-		$elements["load"] = "document.observe('dom:loaded', function() {\n".implode(";\n\t", $ONLOAD).";\n});\n";
+		$ONLOAD = array_map('add_try_catch_js',$ONLOAD);
+		$elements["load"] = "document.observe('dom:loaded', function() {\n".implode(";\n\t", $ONLOAD)."\n});\n";
 	}
 
 	if ((isset($ONUNLOAD)) && (count($ONUNLOAD))) {

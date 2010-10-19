@@ -1340,6 +1340,18 @@ function fetch_mcc_objectives($parent_id = 0, $objectives = array(), $course_id 
 }
 
 /**
+ * Function returns the graduating year of the first year class. This year is
+ * frequently used used as a default or fallback throughout Entrada.
+ */
+function fetch_first_year() {
+	/**
+	 * This is based on a 4 year program with a year cut-off of July 1.
+	 * @todo This should be in the settings.inc.php file.
+	 */
+	return date("Y") + (date("m") < 7 ? 3 : 4);
+}
+
+/**
  * This function provides the unix timestamps of the start and end of the requested date type.
  *
  * @uses startof()
@@ -1347,8 +1359,8 @@ function fetch_mcc_objectives($parent_id = 0, $objectives = array(), $course_id 
  * @param int $timestamp
  * @return array or false if $type = all
  */
-function fetch_timestamps($type, $timestamp) {
-	$start = startof($type, $timestamp);
+function fetch_timestamps($type, $timestamp_start, $timestamp_finish = 0) {
+	$start = startof($type, $timestamp_start);
 
 	switch($type) {
 		case "all" :
@@ -1359,6 +1371,9 @@ function fetch_timestamps($type, $timestamp) {
 		case "month" :
 		case "year" :
 			return array("start" => $start, "end" => (strtotime("+1 ".$type, $start) - 1));
+		break;
+		case "custom" :
+			return array("start" => $timestamp_start, "end" => $timestamp_finish);
 		break;
 		default :
 			return array("start" => $start, "end" => (strtotime("+1 week", $start) - 1));

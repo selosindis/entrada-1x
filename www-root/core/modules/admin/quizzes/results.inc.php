@@ -78,7 +78,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 				$calculation_targets			= array();
 				$calculation_targets["all"]		= "all quiz respondents";
 				$calculation_targets["student"]	= "all students";
-				$fyear = (date("Y", time()) + ((date("m", time()) < 7) ?  3 : 4));
+				$fyear = fetch_first_year();
 				for ($year = $fyear; $year >= ($fyear - 3); $year--) {
 					$calculation_targets["student:".$year]	= "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;class of ".$year;
 				}

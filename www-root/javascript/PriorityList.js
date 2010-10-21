@@ -55,8 +55,8 @@
 		
 		function init() {
 			try {
-			Sortable.create(element, options);
-			} catch (e) {console.log(e);}
+				Sortable.create(element, options);
+			} catch (e) {clog(e);}
 		}
 		
 		if (document.loaded) {

@@ -97,7 +97,7 @@ define("AUTH_LOCKOUT_TIMEOUT", 900);											// The amount of time in seconds 
 define("AUTH_FORCE_SSL", false);												// If you want to force all login attempts to use SSL, set this to true, otherwise false.
 
 define("AUTH_ALLOW_CAS", false);												// Whether or not you wish to allow CAS authorisation.
-define("AUTH_CAS_HOSTNAME", "cas.choolu.ca");									// Hostname of your CAS server.
+define("AUTH_CAS_HOSTNAME", "cas.schoolu.ca");									// Hostname of your CAS server.
 define("AUTH_CAS_PORT", 443);													// Port that CAS is running on.
 define("AUTH_CAS_URI", "cas");													// The URI where CAS is located on the CAS host.
 

@@ -1351,6 +1351,18 @@ function fetch_mcc_objectives($parent_id = 0, $objectives = array(), $course_id 
 }
 
 /**
+ * Function returns the graduating year of the first year class. This year is
+ * frequently used used as a default or fallback throughout Entrada.
+ */
+function fetch_first_year() {
+	/**
+	 * This is based on a 4 year program with a year cut-off of July 1.
+	 * @todo This should be in the settings.inc.php file.
+	 */
+	return date("Y") + (date("m") < 7 ? 3 : 4);
+}
+
+/**
  * This function provides the unix timestamps of the start and end of the requested date type.
  *
  * @uses startof()
@@ -1358,8 +1370,8 @@ function fetch_mcc_objectives($parent_id = 0, $objectives = array(), $course_id 
  * @param int $timestamp
  * @return array or false if $type = all
  */
-function fetch_timestamps($type, $timestamp) {
-	$start = startof($type, $timestamp);
+function fetch_timestamps($type, $timestamp_start, $timestamp_finish = 0) {
+	$start = startof($type, $timestamp_start);
 
 	switch($type) {
 		case "all" :
@@ -1370,6 +1382,9 @@ function fetch_timestamps($type, $timestamp) {
 		case "month" :
 		case "year" :
 			return array("start" => $start, "end" => (strtotime("+1 ".$type, $start) - 1));
+		break;
+		case "custom" :
+			return array("start" => $timestamp_start, "end" => $timestamp_finish);
 		break;
 		default :
 			return array("start" => $start, "end" => (strtotime("+1 week", $start) - 1));
@@ -7988,7 +8003,7 @@ function events_output_filter_controls($module_type = "") {
 							AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
 							AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
 							AND b.`group` = 'student'
-							AND b.`role` >= ".$db->qstr(((date("Y", time()) + ((date("m", time()) < 7) ?  3 : 4)) - 4)).
+							AND b.`role` >= ".$db->qstr((fetch_first_year() - 4)).
 							(($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"] == "student") ? " AND a.`id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]) : "")."
 							GROUP BY a.`id`
 							ORDER BY b.`role` DESC, a.`lastname` ASC, a.`firstname` ASC";
@@ -8290,6 +8305,47 @@ function events_output_calendar_controls($module_type = "") {
 }
 
 /**
+ * Function used to create the default filter settings for Learning Events
+ * 
+ * @param int $proxy_id
+ * @param string $group
+ * @param string $role
+ * @return array Containing the default filters.
+ */
+function events_filters_defaults($proxy_id = 0, $group = "", $role = "") {
+	$filters = array();
+
+	switch ($group) {
+		case "resident" :
+		case "faculty" :
+			/**
+			 * Teaching faculty see events which they are involved with by default.
+			 */
+			if (in_array($role, array("director", "lecturer", "teacher"))) {
+				$filters["teacher"][0] = (int) $proxy_id;
+			}
+		break;
+		case "student" :
+			/**
+			 * Students see events they are involved with by default.
+			 */
+			$filters["student"][0] = (int) $proxy_id;
+		break;
+		case "medtech" :
+		case "staff" :
+		default :
+			$filters["grad"][0] = (int) fetch_first_year();
+		break;
+	}
+
+	if (!empty($filters)) {
+		ksort($filters);
+	}
+
+	return $filters;
+}
+
+/**
  * Function used by public events and admin events index to process the provided filter settings.
  */
 function events_process_filters($action = "", $module_type = "") {
@@ -8411,39 +8467,11 @@ function events_process_filters($action = "", $module_type = "") {
 				unset($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]);
 			}
 
-			switch ($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]) {
-				case "resident" :
-				case "faculty" :
-					/**
-					 * Faculty (who are teachers) see events which they are involved with by default.
-					 */
-					switch ($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]) {
-						case "director" :
-						case "lecturer" :
-						case "teacher" :
-							$_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["teacher"][0] = (int) $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"];
-						break;
-						default :
-							continue;
-						break;
-					}
-				break;
-				case "student" :
-					/**
-					 * Students see events in their own graduating year by default.
-					 */
-					$_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["student"][0] = (int) $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"];
-				break;
-				case "medtech" :
-				case "staff" :
-				default :
-					continue;
-				break;
-			}
-
-			if (is_array($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"])) {
-				ksort($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]);
-			}
+			$_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"] = events_filters_defaults(
+				$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"],
+				$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"],
+				$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]
+			);
 
 			$_SERVER["QUERY_STRING"] = replace_query(array("action" => false, "filter" => false));
 		break;
@@ -8462,18 +8490,9 @@ function events_process_filters($action = "", $module_type = "") {
  * Function used by public events and admin events index to generate the SQL queries based on the users
  * filter settings and results that can be iterated through by these views.
  */
-function events_fetch_filtered_events() {
-	global $db, $ORGANISATION_ID;
+function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_role = "", $organisation_id = 0, $sort_by = "", $sort_order = "", $date_type = "", $timestamp_start = 0, $timestamp_finish = 0, $filters = array(), $pagination = true, $current_page = 1, $results_per_page = 15) {
+	global $db;
 
-	if (!isset($ORGANISATION_ID) || !$ORGANISATION_ID) {
-		if (isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["organisation_id"]) && $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["organisation_id"]) {
-			$ORGANISATION_ID = $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["organisation_id"];
-		} else {
-			$ORGANISATION_ID = $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"];
-			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["organisation_id"] = $ORGANISATION_ID;
-		}
-	}
-	
 	$output = array(
 				"duration_start" => 0,
 				"duration_end" => 0,
@@ -8485,37 +8504,90 @@ function events_fetch_filtered_events() {
 				"events" => array()
 			);
 
+	if (!$proxy_id = (int) $proxy_id) {
+		return false;
+	}
+
+	$user_group = clean_input($user_group);
+	$user_role = clean_input($user_role);
+
+	if (!$organisation_id = (int) $organisation_id) {
+		return false;
+	}
+
+	$sort_by = clean_input($sort_by);
+	$sort_order = ((strtoupper($sort_order) == "ASC") ? "ASC" : "DESC");
+	$date_type = clean_input($date_type);
+
+	if (!$timestamp_start = (int) $timestamp_start) {
+		return false;
+	}
+
+	$timestamp_finish = (int) $timestamp_finish;
+
+	if (!is_array($filters)) {
+		$filters = array();
+	}
+
+	$pagination = (bool) $pagination;
+
+	if (!$current_page = (int) $current_page) {
+		$current_page = 1;
+	}
+
+	if (!$results_per_page = (int) $results_per_page) {
+		$results_per_page = 15;
+	}
+
 	/**
 	 * Provide the queries with the columns to order by.
 	 */
-	switch ($_SESSION[APPLICATION_IDENTIFIER]["events"]["sb"]) {
+	switch ($sort_by) {
 		case "teacher" :
-			$sort_by = "`fullname` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["events"]["so"]).", `events`.`event_start` ASC";
+			$sort_by = "`fullname` ".strtoupper($sort_order).", `events`.`event_start` ASC";
 		break;
 		case "title" :
-			$sort_by = "`events`.`event_title` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["events"]["so"]).", `events`.`event_start` ASC";
+			$sort_by = "`events`.`event_title` ".strtoupper($sort_order).", `events`.`event_start` ASC";
 		break;
 		case "phase" :
-			$sort_by = "`events`.`event_phase` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["events"]["so"]).", `events`.`event_start` ASC";
+			$sort_by = "`events`.`event_phase` ".strtoupper($sort_order).", `events`.`event_start` ASC";
 		break;
 		case "date" :
 		default :
-			$sort_by = "`events`.`event_start` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["events"]["so"]);
+			$sort_by = "`events`.`event_start` ".strtoupper($sort_order);
 		break;
 	}
 
 	/**
 	 * This fetches the unix timestamps from the first and last second of the day, week, month, year, etc.
 	 */
-	$display_duration = fetch_timestamps($_SESSION[APPLICATION_IDENTIFIER]["events"]["dtype"], $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dstamp"]);
-
+	$display_duration = fetch_timestamps($date_type, $timestamp_start, $timestamp_finish);
+	
 	$output["duration_start"] = $display_duration["start"];
 	$output["duration_end"] = $display_duration["end"];
+
+	$query_events = "	SELECT `events`.`event_id`,
+						`events`.`course_id`,
+						`events`.`event_phase`,
+						`events`.`event_title`,
+						`events`.`event_message`,
+						`events`.`event_location`,
+						`events`.`event_start`,
+						`events`.`event_finish`,
+						`events`.`release_date`,
+						`events`.`release_until`,
+						`events`.`updated_date`,
+						`event_audience`.`audience_type`,
+						`courses`.`organisation_id`,
+						`courses`.`course_name`,
+						CONCAT_WS(', ', `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname`) AS `fullname`,
+						MAX(`statistics`.`timestamp`) AS `last_visited`
+						FROM `events`";
 
 	/**
 	 * If there are filters set by the user, build the SQL to reflect the filters.
 	 */
-	if ((isset($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"])) && (@count($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]))) {
+	if (is_array($filters) && !empty($filters)) {
 		$tmp_query = array();
 		$where_teacher = array();
 		$where_course = array();
@@ -8546,22 +8618,9 @@ function events_fetch_filtered_events() {
 							WHERE `courses`.`course_active` = '1'
 							AND (`events`.`release_date` <= ".$db->qstr(time())." OR `events`.`release_date` = 0)
 							AND (`events`.`release_until` >= ".$db->qstr(time())." OR `events`.`release_until` = 0)
-							AND `courses`.`organisation_id` = ".$db->qstr($ORGANISATION_ID);
+							AND `courses`.`organisation_id` = ".$db->qstr($organisation_id);
 
-		$query_events = "	SELECT `events`.`event_id`,
-							`events`.`course_id`,
-							`events`.`event_title`,
-							`events`.`event_start`,
-							`events`.`event_phase`,
-							`events`.`release_date`,
-							`events`.`release_until`,
-							`events`.`updated_date`,
-							`event_audience`.`audience_type`,
-							`courses`.`organisation_id`,
-							CONCAT_WS(', ', `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname`) AS `fullname`,
-							MAX(`statistics`.`timestamp`) AS `last_visited`
-							FROM `events`
-							LEFT JOIN `event_contacts` AS `primary_teacher`
+		$query_events .= "	LEFT JOIN `event_contacts` AS `primary_teacher`
 							ON `primary_teacher`.`event_id` = `events`.`event_id`
 							AND `primary_teacher`.`contact_order` = '0'
 							LEFT JOIN `event_eventtypes` AS `types`
@@ -8572,71 +8631,77 @@ function events_fetch_filtered_events() {
 							LEFT JOIN `".AUTH_DATABASE."`.`user_data`
 							ON `".AUTH_DATABASE."`.`user_data`.`id` = `primary_teacher`.`proxy_id`
 							LEFT JOIN `courses`
-							ON  (`courses`.`course_id` = `events`.`course_id`)
+							ON  `courses`.`course_id` = `events`.`course_id`
 							LEFT JOIN `event_objectives`
 							ON `event_objectives`.`event_id` = `events`.`event_id`
 							AND `event_objectives`.`objective_type` = 'course'
 							LEFT JOIN `statistics`
-							ON `statistics`.`module` = ".$db->qstr("events")."
-							AND `statistics`.`action_value` = `events`.`event_id`
-							AND `statistics`.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+							ON `statistics`.`action_value` = `events`.`event_id`
+							AND `statistics`.`module` = 'events'
+							AND `statistics`.`proxy_id` = ".$db->qstr($proxy_id)."
 							AND `statistics`.`action` = 'view'
 							AND `statistics`.`action_field` = 'event_id'
 							WHERE `courses`.`course_active` = '1'
-							AND `courses`.`organisation_id` = ".$db->qstr($ORGANISATION_ID);
+							AND `courses`.`organisation_id` = ".$db->qstr($organisation_id);
 
 		if ($display_duration) {
 			$tmp_query[] = "(`events`.`event_start` BETWEEN ".$db->qstr($display_duration["start"])." AND ".$db->qstr($display_duration["end"]).")";
 		}
 
-		foreach ($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"] as $filter_type => $filter_contents) {
-			if ((is_array($filter_contents)) && (count($filter_contents))) {
-				foreach ($filter_contents as $filter_key => $filter_value) {
-					switch ($filter_type) {
-						case "teacher" :
-							$where_teacher[] = "(`primary_teacher`.`proxy_id` = ".$db->qstr($filter_value)." OR `event_contacts`.`proxy_id` = ".$db->qstr($filter_value).")";
+		if (!is_array($filters) || empty($filters)) {
+			// Apply default filters.
+		}
 
-							$join_event_contacts[] = "(`event_contacts`.`proxy_id` = ".$db->qstr($filter_value).")";
-						break;
-						case "student" :
-							if (($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"] != "student") || ($filter_value == $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])) {
-								$student_grad_year = "";
-								$student_proxy_id = (int) $filter_value;
+		if (!empty($filters)) {
+			foreach ($filters as $filter_type => $filter_contents) {
+				if ((is_array($filter_contents)) && (count($filter_contents))) {
+					foreach ($filter_contents as $filter_key => $filter_value) {
+						switch ($filter_type) {
+							case "teacher" :
+								$where_teacher[] = "(`primary_teacher`.`proxy_id` = ".$db->qstr($filter_value)." OR `event_contacts`.`proxy_id` = ".$db->qstr($filter_value).")";
 
-								/**
-								 * Get the grad_year of the proxy_id.
-								 */
-								$query = "	SELECT `role` AS `grad_year`
-											FROM `".AUTH_DATABASE."`.`user_access`
-											WHERE `user_id` = ".$db->qstr($student_proxy_id)."
-											AND `app_id` = ".$db->qstr(AUTH_APP_ID)."
-											AND `group` = 'student'";
-								$result = $db->GetRow($query);
-								if (($result) && ($tmp_input = (int) $result["grad_year"])) {
-									$student_grad_year = "(`event_audience`.`audience_type` = 'grad_year' AND `event_audience`.`audience_value` = ".$db->qstr($tmp_input).") OR ";
+								$join_event_contacts[] = "(`event_contacts`.`proxy_id` = ".$db->qstr($filter_value).")";
+							break;
+							case "student" :
+								if (($user_group != "student") || ($filter_value == $proxy_id)) {
+									$student_grad_year = "";
+									$student_proxy_id = (int) $filter_value;
+
+									/**
+									 * Get the grad_year of the proxy_id.
+									 */
+									$query = "	SELECT `role` AS `grad_year`
+												FROM `".AUTH_DATABASE."`.`user_access`
+												WHERE `user_id` = ".$db->qstr($student_proxy_id)."
+												AND `app_id` = ".$db->qstr(AUTH_APP_ID)."
+												AND `group` = 'student'";
+									$result = $db->GetRow($query);
+									if (($result) && ($tmp_input = (int) $result["grad_year"])) {
+										$student_grad_year = "(`event_audience`.`audience_type` = 'grad_year' AND `event_audience`.`audience_value` = ".$db->qstr($tmp_input).") OR ";
+									}
+
+									$where_student[] = "(".$student_grad_year."(`event_audience`.`audience_type` = 'proxy_id' AND `event_audience`.`audience_value` = ".$db->qstr($student_proxy_id)."))";
 								}
-
-								$where_student[] = "(".$student_grad_year."(`event_audience`.`audience_type` = 'proxy_id' AND `event_audience`.`audience_value` = ".$db->qstr($student_proxy_id)."))";
-							}
-						break;
-						case "grad" :
-							$where_grad_year[] = "(`event_audience`.`audience_type` = 'grad_year' AND `event_audience`.`audience_value` = ".$db->qstr((int) $filter_value).")";
-						break;
-						case "course" :
-							$where_course[] = "(`events`.`course_id` = ".$db->qstr($filter_value).")";
-						break;
-						case "phase" :
-							$where_phase[] = "(`events`.`event_phase` LIKE ".$db->qstr($filter_value).")";
-						break;
-						case "eventtype" :
-							$where_type[] = "(`types`.`eventtype_id` = ".$db->qstr((int) $filter_value).")";
-						break;
-						case "objective" :
-							$where_clinical_presentation[] = "(`event_objectives`.`objective_id` = ".$db->qstr((int) $filter_value).")";
-						break;
-						default :
-							continue;
-						break;
+							break;
+							case "grad" :
+								$where_grad_year[] = "(`event_audience`.`audience_type` = 'grad_year' AND `event_audience`.`audience_value` = ".$db->qstr((int) $filter_value).")";
+							break;
+							case "course" :
+								$where_course[] = "(`events`.`course_id` = ".$db->qstr($filter_value).")";
+							break;
+							case "phase" :
+								$where_phase[] = "(`events`.`event_phase` LIKE ".$db->qstr($filter_value).")";
+							break;
+							case "eventtype" :
+								$where_type[] = "(`types`.`eventtype_id` = ".$db->qstr((int) $filter_value).")";
+							break;
+							case "objective" :
+								$where_clinical_presentation[] = "(`event_objectives`.`objective_id` = ".$db->qstr((int) $filter_value).")";
+							break;
+							default :
+								continue;
+							break;
+						}
 					}
 				}
 			}
@@ -8676,31 +8741,18 @@ function events_fetch_filtered_events() {
 		}
 
 	 	$query_count = str_replace("%CONTACT_JOIN%", $contact_sql, $query_count);
-		$query_events = str_replace("%CONTACT_JOIN%", $contact_sql, $query_events)." GROUP BY `events`.`event_id` ORDER BY %s LIMIT %s, %s";
+		$query_events = str_replace("%CONTACT_JOIN%", $contact_sql, $query_events)." GROUP BY `events`.`event_id` ORDER BY %s".($pagination ? " LIMIT %s, %s" : "");
 	} else {
 		$query_count = "	SELECT COUNT(DISTINCT `events`.`event_id`) AS `total_rows`
 							FROM `events`
 							LEFT JOIN `courses`
 							ON `events`.`course_id` = `courses`.`course_id`
-							WHERE `courses`.`organisation_id` = ".$db->qstr($ORGANISATION_ID)."
+							WHERE `courses`.`organisation_id` = ".$db->qstr($organisation_id)."
 							AND (`events`.`release_date` <= ".$db->qstr(time())." OR `events`.`release_date` = 0)
 							AND (`events`.`release_until` >= ".$db->qstr(time())." OR `events`.`release_until` = 0)
 							".(($display_duration) ? " AND `events`.`event_start` BETWEEN ".$db->qstr($display_duration["start"])." AND ".$db->qstr($display_duration["end"]) : "");
 
-		$query_events = "	SELECT `events`.`event_id`,
-							`events`.`course_id`,
-							`events`.`event_title`,
-							`events`.`event_start`,
-							`events`.`event_phase`,
-							`events`.`release_date`,
-							`events`.`release_until`,
-							`events`.`updated_date`,
-							`event_audience`.`audience_type`,
-							`courses`.`organisation_id`,
-							CONCAT_WS(', ', `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname`) AS `fullname`,
-							MAX(`statistics`.`timestamp`) AS `last_visited`
-							FROM `events`
-							LEFT JOIN `event_contacts`
+		$query_events .= "	LEFT JOIN `event_contacts`
 							ON `event_contacts`.`event_id` = `events`.`event_id`
 							AND `event_contacts`.`contact_order` = '0'
 							LEFT JOIN `event_audience`
@@ -8710,16 +8762,16 @@ function events_fetch_filtered_events() {
 							LEFT JOIN `courses`
 							ON  (`courses`.`course_id` = `events`.`course_id`)
 							LEFT JOIN `statistics`
-							ON `statistics`.`module` = ".$db->qstr("events")."
-							AND `statistics`.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+							ON `statistics`.`action_value` = `events`.`event_id`
+							AND `statistics`.`module` = ".$db->qstr("events")."
+							AND `statistics`.`proxy_id` = ".$db->qstr($proxy_id)."
 							AND `statistics`.`action` = 'view'
 							AND `statistics`.`action_field` = 'event_id'
-							AND `statistics`.`action_value` = `events`.`event_id`
-							WHERE `courses`.`course_active` = '1'
-							AND `courses`.`organisation_id` = ".$db->qstr($ORGANISATION_ID)."
+							WHERE`courses`.`course_active` = '1'
+							AND `courses`.`organisation_id` = ".$db->qstr($organisation_id)."
 							".(($display_duration) ? "AND `events`.`event_start` BETWEEN ".$db->qstr($display_duration["start"])." AND ".$db->qstr($display_duration["end"]) : "")."
 							GROUP BY `events`.`event_id`
-							ORDER BY %s LIMIT %s, %s";
+							ORDER BY %s".($pagination ? " LIMIT %s, %s" : "");
 	}
 
 	/**
@@ -8730,12 +8782,12 @@ function events_fetch_filtered_events() {
 	if ($result_count) {
 		$output["total_rows"] = (int) $result_count["total_rows"];
 
-		if ($output["total_rows"] <= $_SESSION[APPLICATION_IDENTIFIER]["events"]["pp"]) {
+		if ($output["total_rows"] <= $results_per_page) {
 			$output["total_pages"] = 1;
-		} elseif (($output["total_rows"] % $_SESSION[APPLICATION_IDENTIFIER]["events"]["pp"]) == 0) {
-			$output["total_pages"] = (int) ($output["total_rows"] / $_SESSION[APPLICATION_IDENTIFIER]["events"]["pp"]);
+		} elseif (($output["total_rows"] % $results_per_page) == 0) {
+			$output["total_pages"] = (int) ($output["total_rows"] / $results_per_page);
 		} else {
-			$output["total_pages"] = (int) ($output["total_rows"] / $_SESSION[APPLICATION_IDENTIFIER]["events"]["pp"]) + 1;
+			$output["total_pages"] = (int) ($output["total_rows"] / $results_per_page) + 1;
 		}
 	} else {
 		$output["total_rows"] = 0;
@@ -8745,8 +8797,8 @@ function events_fetch_filtered_events() {
 	/**
 	 * Check if pv variable is set and see if it's a valid page, other wise page 1 it is.
 	 */
-	if (isset($_GET["pv"])) {
-		$output["page_current"] = (int) trim($_GET["pv"]);
+	if ($current_page) {
+		$output["page_current"] = (int) trim($current_page);
 
 		if (($output["page_current"] < 1) || ($output["page_current"] > $output["total_pages"])) {
 			$output["page_current"] = 1;
@@ -8761,7 +8813,7 @@ function events_fetch_filtered_events() {
 	/**
 	 * Provides the first parameter of MySQLs LIMIT statement by calculating which row to start results from.
 	 */
-	$limit_parameter = (int) (($_SESSION[APPLICATION_IDENTIFIER]["events"]["pp"] * $output["page_current"]) - $_SESSION[APPLICATION_IDENTIFIER]["events"]["pp"]);
+	$limit_parameter = (int) (($results_per_page * $output["page_current"]) - $results_per_page);
 
 	/**
 	 * Save the result ID so it can be used when displaying events.
@@ -8775,10 +8827,15 @@ function events_fetch_filtered_events() {
 	/**
 	 * Provide the previous query so we can have previous / next event links on the details page.
 	 */
-	$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["query"] = $query_events;
-	$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["total_rows"] = $output["total_rows"];
+	if (session_id()) {
+		$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dashboard"]["previous_query"]["query"] = $query_events;
+		$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dashboard"]["previous_query"]["total_rows"] = $output["total_rows"];
 
-	$query_events = sprintf($query_events, $sort_by, $limit_parameter, $_SESSION[APPLICATION_IDENTIFIER]["events"]["pp"]);
+		$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["query"] = $query_events;
+		$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["total_rows"] = $output["total_rows"];
+	}
+
+	$query_events = sprintf($query_events, $sort_by, $limit_parameter, $results_per_page);
 	$learning_events = $db->GetAll($query_events);
 
 	if ($learning_events) {

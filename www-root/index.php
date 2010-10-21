@@ -239,7 +239,7 @@ if ($ACTION == "login") {
 			switch ($_SESSION["details"]["group"]) {
 				case "student" :
 					if ((!isset($result["ROLE"])) || (!(int) $result["ROLE"])) {
-						$_SESSION["details"]["grad_year"] = (date("Y", time()) + ((date("m", time()) < 7) ?  3 : 4));
+						$_SESSION["details"]["grad_year"] = fetch_first_year();
 					} else {
 						$_SESSION["details"]["grad_year"] = $result["ROLE"];
 					}
@@ -249,7 +249,7 @@ if ($ACTION == "login") {
 					 * If you're in MEdTech, always assign a graduating year,
 					 * because we normally see more than normal users.
 					 */
-					$_SESSION["details"]["grad_year"] = (date("Y", time()) + ((date("m", time()) < 7) ?  3 : 4));
+					$_SESSION["details"]["grad_year"] = fetch_first_year();
 				break;
 				case "staff" :
 				case "faculty" :

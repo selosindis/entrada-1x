@@ -49,6 +49,7 @@ $PODCAST_OUTPUT		= array();
 
 $ACTION				= "feed";
 
+$USER_PROXY_ID		= 0;
 $USER_FIRSTNAME		= "";
 $USER_LASTNAME		= "";
 $USER_EMAIL			= "";
@@ -144,16 +145,7 @@ switch($ACTION) {
 							
 							$db->Execute("UPDATE `event_files` SET `accesses` = '".($download + 1)."' WHERE `efile_id` = ".$db->qstr($EFILE_ID));
 
-							$stat					= array();
-							$stat["proxy_id"]		= $USER_PROXY_ID;
-							$stat["timestamp"]		= time();
-							$stat["module"]			= "podcasts";
-							$stat["action"]			= "file_download";
-							$stat["action_field"]	= "file_id";
-							$stat["action_value"]	= $EFILE_ID;
-							$stat["prune_after"]	= mktime(0, 0, 0, 8, 15, (date("Y", time()) + 1));
-
-							$db->AutoExecute("statistics", $stat, "INSERT");
+							add_statistic("podcasts", "file_download", "file_id", $EFILE_ID);
 							exit;
 						} else {
 							exit;
@@ -395,6 +387,8 @@ switch($ACTION) {
 			}
 		}
 		echo $rss->createFeed("PODCAST");
+
+		add_statistic("podcasts", "view", "proxy_id", $USER_PROXY_ID);
 	break;
 	default :
 		continue;

@@ -56,8 +56,21 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 	/**
 	 * Fetch all of the events that apply to the current filter set.
 	 */
-	$learning_events = events_fetch_filtered_events();
-	
+	$learning_events = events_fetch_filtered_events(
+			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"],
+			$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"],
+			$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"],
+			$ORGANISATION_ID,
+			$_SESSION[APPLICATION_IDENTIFIER]["events"]["sb"],
+			$_SESSION[APPLICATION_IDENTIFIER]["events"]["so"],
+			$_SESSION[APPLICATION_IDENTIFIER]["events"]["dtype"],
+			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dstamp"],
+			0,
+			$_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"],
+			true,
+			(isset($_GET["pv"]) ? (int) trim($_GET["pv"]) : 1),
+			$_SESSION[APPLICATION_IDENTIFIER]["events"]["pp"]);
+
 	echo "<h1>".$MODULES[strtolower($MODULE)]["title"]."</h1>";
 
 	/**
@@ -81,7 +94,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 	 */
 	events_output_calendar_controls("admin");
 
-	if (count($learning_events["events"])) {
+	if (!empty($learning_events["events"])) {
 		if ($ENTRADA_ACL->amIAllowed("event", "delete", false)) : ?>
 		<form action="<?php echo ENTRADA_URL; ?>/admin/events?section=delete" method="post">
 		<?php endif; ?>

@@ -455,10 +455,10 @@ $MODULES["annualreport"] = array("title" => "Annual Reports", "resource" => "ann
  * access this system. Note the student and alumni groups have many roles.
  */
 $SYSTEM_GROUPS = array();
-for($i = (date("Y", time()) + ((date("m", time()) < 7) ?  3 : 4)); $i >= 2004; $i--) {
+for($i = (date("Y") + (date("m") < 7 ? 3 : 4)); $i >= 2004; $i--) {
 	$SYSTEM_GROUPS["student"][] = $i;
 }
-for($i = (date("Y", time()) + ((date("m", time()) < 7) ?  3 : 4)); $i >= 1997; $i--) {
+for($i = (date("Y") + (date("m") < 7 ? 3 : 4)); $i >= 1997; $i--) {
 	$SYSTEM_GROUPS["alumni"][] = $i;
 }
 $SYSTEM_GROUPS["faculty"] = array("faculty", "lecturer", "director", "admin");

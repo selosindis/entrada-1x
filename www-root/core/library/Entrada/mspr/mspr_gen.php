@@ -209,7 +209,7 @@ function generateMSPRHTML(MSPR $mspr,$timestamp = null) {
 				$entity = $mspr["Community Health and Epidemiology"];
 				if ($entity) { 
 			?>
-			<h3><u>Community Health and Epidemiology Project</u></h3>
+			<h3><u>Community-Based Project</u></h3>
 			<i>Students are required to complete a project in either Community Health <u>or</u> History of Medicine. The title of the project appears below.</i><br><br>
 			<table width="100%" border=0 cellpadding=5 cellspacing=0>
 				<tr>

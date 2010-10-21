@@ -569,6 +569,9 @@ $AR_FUTURE_YEARS = $AR_CUR_YEAR + 10;
 define("INTERNAL_AWARD_AWARDING_BODY","Queen's University");
 define("CLERKSHIP_COMPLETED_CUTOFF", "October 26");
 
+define("MSPR_REJECTION_REASON_REQUIRED",true);	//defines whether a reason is required when rejecting a submission 
+define("MSPR_REJECTION_SEND_EMAIL",true);	//defines whether an email should be send on rejection of a student submission to their mspr
+
 
 /**
  * Defines for Tasks Module

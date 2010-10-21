@@ -78,7 +78,7 @@ function add_try_catch_js($element) {
 }
 
 /**
- * processes the supplied string to add script elements including onload and onunload blocks.
+ * processes the supplied string to add script elements including onload and onunload blocks. called by on_checkout
  * @param string $buffer
  */
 function check_script($buffer) {
@@ -2034,9 +2034,11 @@ function clean_input($string, $rules = array()) {
 					$string = preg_replace('/\<br\s*\/?\>/i', "\n", $string);
 					$string = str_replace("&nbsp;", " ", $string);
 				break;
+				case "html_decode" :
 				case "decode" :			// Returns the output of the html_decode() function.
 					$string = html_decode($string);
 				break;
+				case "html_encode" :
 				case "encode" :			// Returns the output of the html_encode() function.
 					$string = html_encode($string);
 				break;

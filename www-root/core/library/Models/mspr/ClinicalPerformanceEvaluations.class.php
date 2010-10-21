@@ -13,7 +13,7 @@ class ClinicalPerformanceEvaluations extends Collection {
 		$clinevals = array();
 		if ($results) {
 			foreach ($results as $result) {
-				$clineval =  new ClinicalPerformanceEvaluation($user, $result['id'], $result['comment'], $result['source']);
+				$clineval =  ClinicalPerformanceEvaluation::fromArray($result);
 				$clinevals[] = $clineval;
 			}
 		}

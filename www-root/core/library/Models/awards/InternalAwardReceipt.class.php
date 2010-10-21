@@ -84,7 +84,7 @@ class InternalAwardReceipt {
 	 */
 	static public function get($award_receipt_id) {
 		global $db;
-		$query		= "SELECT a.id as `award_receipt_id`, user_id, award_id, c.title, c.award_terms, c.disabled, lastname, firstname, a.year 
+		$query		= "SELECT a.id as `award_receipt_id`, user_id, award_id, c.title, c.award_terms, c.disabled, a.year 
 				FROM `". DATABASE_NAME ."`.`student_awards_internal` a 
 				left join `". DATABASE_NAME ."`.`student_awards_internal_types` c on c.id = a.award_id 
 				WHERE a.id = ".$db->qstr($award_receipt_id);

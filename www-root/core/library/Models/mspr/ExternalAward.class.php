@@ -28,5 +28,7 @@ require_once("ExternalAwardReceipts.class.php");
 require_once("Models/awards/Award.class.php");
 	
 class ExternalAward extends Award{
-	
+	public static function fromArray(array $arr) {
+		return new self($arr['title'], $arr['award_terms'], $arr['awarding_body']);
+	}
 }

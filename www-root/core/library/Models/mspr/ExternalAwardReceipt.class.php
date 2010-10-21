@@ -42,14 +42,22 @@ class ExternalAwardReceipt implements Approvable,AttentionRequirable {
 	private $year;
 	private $approved;
 	private $rejected;
+	private $comment;
 	
-	function __construct($user_id, Award $award, $award_receipt_id, $year, $approved = false, $rejected = false){
+	function __construct($user_id, $award, $award_receipt_id, $year, $comment, $approved = false, $rejected = false){
 		$this->user_id = $user_id;
 		$this->award = $award;
 		$this->award_receipt_id = $award_receipt_id;
 		$this->year = $year;
+		$this->comment = $comment;
 		$this->approved = (bool)$approved;
 		$this->rejected = (bool)$rejected;
+	}
+	
+	public static function fromArray(array $arr) {
+		$rejected=($arr['status'] == -1);
+		$approved = ($arr['status'] == 1);
+		return new self($arr['user_id'], $arr['award'], $arr['award_receipt_id'], $arr['year'], $arr['comment'], $approved, $rejected);
 	}
 	
 	/**
@@ -83,6 +91,10 @@ class ExternalAwardReceipt implements Approvable,AttentionRequirable {
 	public function isRejected() {
 		return (bool)($this->rejected);
 	}
+	
+	public function getComment() {
+		return $this->comment;
+	}
 		
 	static public function create($user_id, $title, $terms, $awarding_body,$year, $approved = false) {
 		global $db;
@@ -110,11 +122,10 @@ class ExternalAwardReceipt implements Approvable,AttentionRequirable {
 		$result	= $db->GetRow($query);
 			
 		if ($result) {
-			$rejected=($result['status'] == -1);
-			$approved = ($result['status'] == 1);
 				
-			$award = new ExternalAward($result['title'], $result['award_terms'], $result['awarding_body']);
-			return new ExternalAwardReceipt( $result['user_id'], $award, $result['award_receipt_id'], $result['year'], $approved, $rejected);
+			$award = ExternalAward::fromArray($result);
+			$result['award'] = $award;
+			return ExternalAwardReceipt::fromArray($result);
 		} else {
 			add_error("Failed to retreive award receipt from database.");
 			application_log("error", "Unable to retrieve a student_awards_external record. Database said: ".$db->ErrorMsg());
@@ -134,13 +145,13 @@ class ExternalAwardReceipt implements Approvable,AttentionRequirable {
 		}
 	}
 	
-	private function setStatus($status_code) {
+	private function setStatus($status_code, $comment=null) {
 		global $db;
 		$query = "update `student_awards_external` set
-				 `status`=".$db->qstr($status_code)." 
-				 where `id`=".$db->qstr($this->award_receipt_id);
+				 `status`=?, `comment`=?
+				 where `id`=?";
 		
-		if(!$db->Execute($query)) {
+		if(!$db->Execute($query, array($status_code, $comment, $this->award_receipt_id))) {
 			add_error("Failed to update award.");
 			application_log("error", "Unable to update a student_awards_external record. Database said: ".$db->ErrorMsg());
 		} else {
@@ -157,7 +168,7 @@ class ExternalAwardReceipt implements Approvable,AttentionRequirable {
 		$this->setStatus(0);
 	}
 	
-	public function reject() {
-		$this->setStatus(-1);
+	public function reject($comment) {
+		$this->setStatus(-1,$comment);
 	}
 }

@@ -112,7 +112,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_AWARDS"))) {
 <ul class="page-action">
 	<li><a id="add_new_award"
 		href="<?php echo ENTRADA_URL; ?>/admin/awards?show=add_new_award"
-		class="strong-green">Add internal Award</a></li>
+		class="strong-green">Add Internal Award</a></li>
 </ul>
 </div>
 <div class="clear">&nbsp;</div>

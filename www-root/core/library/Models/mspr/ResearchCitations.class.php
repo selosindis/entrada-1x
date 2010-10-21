@@ -2,8 +2,9 @@
 
 require_once("Models/utility/Collection.class.php");
 require_once("ResearchCitation.class.php");
+require_once("Models/utility/Sequenceable.interface.php");
 
-class ResearchCitations extends Collection implements AttentionRequirable {
+class ResearchCitations extends Collection implements AttentionRequirable, Sequenceable {
 	public static function get(User $user) {
 		global $db;
 		$user_id = $user->getID();
@@ -12,9 +13,7 @@ class ResearchCitations extends Collection implements AttentionRequirable {
 		$citations = array();
 		if ($results) {
 			foreach ($results as $result) {
-				$rejected=($result['status'] == -1);
-				$approved = ($result['status'] == 1);
-				$citation =  new ResearchCitation($result['id'], $result['user_id'], $result['citation'], $result['priority'], $approved, $rejected);
+				$citation = ResearchCitation::fromArray($result);
 				$citations[] = $citation;
 			}
 		}
@@ -26,7 +25,7 @@ class ResearchCitations extends Collection implements AttentionRequirable {
 	 * @param User $user
 	 * @param array $ids
 	 */
-	public static function Resequence(User $user, $ids) {
+	public function setSequence(User $user, array $ids) {
 		global $db;
 		$user_id = $user->getID();
 		$stmt = $db->Prepare('update `student_research` set `priority`=? where `user_id`=? and `id`=?');

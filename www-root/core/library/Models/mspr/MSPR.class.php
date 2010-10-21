@@ -8,6 +8,8 @@ class MSPR implements ArrayAccess, AttentionRequirable {
 	private $generated;
 	private $last_update;
 	private $user_id;
+	private $carms_number;
+	
 	private $models = array ( // Title => Class
 							"Internal Awards" => "InternalAwardReceipts",
 							"External Awards" => "ExternalAwardReceipts",
@@ -28,11 +30,16 @@ class MSPR implements ArrayAccess, AttentionRequirable {
 							"Clerkship Electives Completed" => "ClerkshipElectivesCompleted"
 							);
 	
-	function __construct($user_id, $last_update, $closed = NULL, $generated = NULL) {
+	function __construct($user_id, $last_update, $carms_number = NULL,$closed = NULL, $generated = NULL) {
 		$this->user_id = $user_id;
 		$this->last_update = $last_update;
+		$this->carms_number = $carms_number;
 		$this->closed = $closed;
 		$this->generated = $generated;
+	}
+	
+	public static function fromArray($arr) {
+		return new self($arr['user_id'], $arr['last_update'], $arr['carms_number'],$arr['closed'], $arr['generated']);
 	}
 	
 	/**
@@ -138,7 +145,7 @@ class MSPR implements ArrayAccess, AttentionRequirable {
 		$query		= "SELECT * FROM `student_mspr` WHERE `user_id` = ".$db->qstr($user_id);
 		$result = $db->getRow($query);
 		if ($result) {
-			$mspr =  new self($result['user_id'], $result['last_update'], $result['closed'], $result['generated']);
+			$mspr =  self::fromArray($result);
 			return $mspr;
 		}    	
     }

@@ -12,10 +12,7 @@ class Contributions extends Collection implements AttentionRequirable {
 		$contributions = array();
 		if ($results) {
 			foreach ($results as $result) {
-				$rejected=($result['status'] == -1);
-				$approved = ($result['status'] == 1);
-			
-				$contribution =  new Contribution($result['id'], $result['user_id'], $result['role'], $result['org_event'], $result['start_month'], $result['start_year'], $result['end_month'], $result['end_year'], $approved, $rejected);
+				$contribution =  Contribution::fromArray($result);
 				$contributions[] = $contribution;
 			}
 		}

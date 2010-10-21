@@ -277,8 +277,8 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 			</div>
 		</div>
 		<div class="section" >
-			<h3 title="Community Health and Epidemiology" class="collapsable collapsed">Community Health and Epidemiology</h3>
-			<div id="community-health-and-epidemiology">
+			<h3 title="Community-Based Project" class="collapsable collapsed">Community-Based Project</h3>
+			<div id="community-based-project">
 			
 			
 				<?php 
@@ -719,26 +719,26 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 			
 			<div class="subsection">
 				<h4 title="International Activities">International Activities</h4>
-				<div id="international-activities"><?php echo display_international_activities($international_activities); ?></div>
+				<div id="international-activities"><?php echo display_international_activities_profile($international_activities); ?></div>
 			</div>
 			<div class="subsection" >
 				<h4>Observerships</h4>
-				<div id="observerships"><?php echo display_observerships_public($observerships); ?></div>
+				<div id="observerships"><?php echo display_observerships_profile($observerships); ?></div>
 			</div>
 			<div class="subsection" >
 				<h4>Student-Run Electives</h4>
-				<div id="student_run_electives"><?php echo display_student_run_electives_public($student_run_electives); ?></div>
+				<div id="student_run_electives"><?php echo display_student_run_electives_profile($student_run_electives); ?></div>
 			</div>
 		</div>
 		
 		</div>
 		<div class="section">
 			<h3 title="Internal Awards" class="collapsable collapsed">Internal Awards</h3>
-			<div id="internal-awards"><?php echo display_internal_awards($internal_awards); ?></div>
+			<div id="internal-awards"><?php echo display_internal_awards_profile($internal_awards); ?></div>
 			
 		</div><div class="section" >
 			<h3 title="Summer Studentships" class="collapsable collapsed">Summer Studentships</h3>
-			<div id="summer-studentships"><?php echo display_studentships($studentships); ?></div>
+			<div id="summer-studentships"><?php echo display_studentships_profile($studentships); ?></div>
 		</div>
 		<div class="section">
 			<h3 title="Leaves of Absence" class="collapsable collapsed">Leaves of Absence</h3>
@@ -830,25 +830,25 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 		
 			<div class="subsection">
 				<h4 title="International Activities">International Activities</h4>
-				<div id="international-activities"><?php echo display_international_activities($international_activities); ?></div>
+				<div id="international-activities"><?php echo display_international_activities_profile($international_activities); ?></div>
 			</div>
 			<div class="subsection" >
 				<h4>Observerships</h4>
-				<div id="observerships"><?php echo display_observerships_public($observerships); ?></div>
+				<div id="observerships"><?php echo display_observerships_profile($observerships); ?></div>
 			</div>
 			<div class="subsection" >
 				<h4>Student-Run Electives</h4>
-				<div id="student_run_electives"><?php echo display_student_run_electives_public($student_run_electives); ?></div>
+				<div id="student_run_electives"><?php echo display_student_run_electives_profile($student_run_electives); ?></div>
 			</div>
 		</div>
 	</div>
 	<div class="section">
 		<h3 title="Internal Awards" class="collapsable collapsed">Internal Awards</h3>
-		<div id="internal-awards"><?php echo display_internal_awards($internal_awards); ?></div>
+		<div id="internal-awards"><?php echo display_internal_awards_profile($internal_awards); ?></div>
 	</div>
 	<div class="section" >
 		<h3 title="Summer Studentships" class="collapsable collapsed">Summer Studentships</h3>
-		<div id="summer-studentships"><?php echo display_studentships($studentships); ?></div>
+		<div id="summer-studentships"><?php echo display_studentships_profile($studentships); ?></div>
 	</div>
 	<div class="section">
 		<h3 title="Leaves of Absence" class="collapsable collapsed">Leaves of Absence</h3>

@@ -32,13 +32,15 @@ class Template {
 		$filename = realpath($filename);
 		if (file_exists($filename)) {
 			$this->_template_data = new DOMDocument();
+			$this->_template_data->preserveWhiteSpace = false;
 			$this->_template_data->load($filename);
+			//note the above instruction to NOT preserve whitespace is required. PHP does not handle cdata sections properly if there is *any* text around them. this could obviously mess up a <pre> section if you have one 
 		} else {
-			throw new RuntimeException("File not found");
+			throw new RuntimeException("File not found: " .$filename);
 		} 
 	}
 	
-	public function getResult($language="", array $bind_array = array()) {
+	public function getResult($language="", array $bind_array = array(), array $select = array()) {
 		if (!$language) {
 			if (defined("DEFAULT_LANGUAGE")) {
 				$language = DEFAULT_LANGUAGE;
@@ -49,13 +51,24 @@ class Template {
 		
 		if ($this->_template_data) {
 			$xpath = new DOMXpath($this->_template_data);
-			$t_query = "//template[@lang='".$language."']";
+			$t_query = "//template[@lang='".$language."'";
+			if ($select) {
+				foreach ($select as $attribute=>$criteria) {
+					$t_query .= " and @".$attribute."='".$criteria."'";
+				}
+			}
+			$t_query .= "]";
 			$t_data = $xpath->query($t_query);
 			
 			//if the selected language is not available, try the default
 			if (($t_data->length == 0) && (defined("DEFAULT_LANGUAGE"))) {
 				$language = DEFAULT_LANGUAGE;
 				$t_query = "//template[@lang='".$language."']";
+				if ($select) {
+					foreach ($select as $attribute=>$criteria) {
+						$t_query .= " and @".$attribute."='".$criteria."'";
+					}
+				}
 				$t_data = $xpath->query($t_query);
 			}
 			
@@ -84,7 +97,8 @@ class Template {
 				
 			}
 
+		} else {
+			throw new Exception("Template not loaded.");
 		}
-		throw new Exception("Template not loaded.");
 	}	
 }

@@ -367,13 +367,12 @@ function get_submission_information($entity) {
 function process_mspr_details($translator,$section) {
 	$action = clean_input((isset($_POST['action']) ? $_POST['action'] : ""), array("lower"));
 	if (!$action) {
-		add_error($translator->translate("mspr_no_action"));
 		return;
 	}
 	switch($action) {
 		case 'add':
 			$user_id = clean_input((isset($_POST['user_id']) ? $_POST['user_id'] : 0), array("int"));
-			$details = clean_input((isset($_POST['action_details']) ? $_POST['action_details'] : "" ), array("html_encode"));
+			$details = clean_input((isset($_POST['details']) ? $_POST['details'] : "" ), array("html_encode"));
 			if (!$user_id) {
 				add_error($translator->translate("mspr_invalid_user_info"));
 			}
@@ -419,9 +418,6 @@ function process_mspr_details($translator,$section) {
 				}
 			}
 			break;
-		default:
-			add_error($translator->translate("mspr_invalid_action"));
-			
 	}
 	
 }

@@ -54,7 +54,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 	}
 	
 	
-	process_formal_remediations($user);
+	process_mspr_details($translate, "formal_remediation");
 	display_status_messages();
 
 	
@@ -73,7 +73,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 	<div class="clear">&nbsp;</div>
 	
 <form id="formal_remediations_form" action="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=formalremediation&id=<?php echo $user->getID(); ?>" method="post" <?php if (!$show_fr_form) { echo "style=\"display:none;\""; }   ?> >
-	<input type="hidden" name="action" value="add_formal_remediation"></input>
+	<input type="hidden" name="action" value="add"></input>
 	<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
 	<table class="formal_remediations">
 		<colgroup>
@@ -100,10 +100,10 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 			<tr>
 				<td>&nbsp;</td>
 				<td >
-					<label for="action_details" class="form-required">Details of Action:</label>
+					<label for="details" class="form-required">Details of Action:</label>
 				</td>
 				<td >
-					<textarea id="action_details" name="action_details" style="width: 100%; height: 100px;" cols="65" rows="20"></textarea>	
+					<textarea id="details" name="details" style="width: 100%; height: 100px;" cols="65" rows="20"></textarea>	
 				</td>
 			</tr>
 		</tbody>
@@ -142,8 +142,8 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 					<td class="controls">
 						<form class="remove_formal_remediations_form" action="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=formalremediation&id=<?php echo $user->getID(); ?>" method="post" >
 							<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
-							<input type="hidden" name="action" value="remove_formal_remediation"></input>
-							<input type="hidden" name="formal_remediation_id" value="<?php echo $fr->getID(); ?>"></input>
+							<input type="hidden" name="action" value="remove"></input>
+							<input type="hidden" name="entity_id" value="<?php echo $fr->getID(); ?>"></input>
 							
 							<input type="image" src="<?php echo ENTRADA_URL ?>/images/action-delete.gif"></input> 
 						</form>

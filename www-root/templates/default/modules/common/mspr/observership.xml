@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates>
+	<template lang="en">
+		<![CDATA[
+			<span class="label">
+				Details: 
+			</span>
+			<span class="data">
+				%DETAILS%
+			</span>
+			<span class="label">
+				Period: 
+			</span>
+			<span class="data">
+				%PERIOD%
+			</span>
+		]]>
+	</template>
+</templates>

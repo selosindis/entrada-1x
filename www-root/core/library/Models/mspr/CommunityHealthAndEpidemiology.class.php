@@ -62,7 +62,7 @@ class CommunityHealthAndEpidemiology extends SupervisedProject {
 	private function setStatus($status_code, $comment=null) {
 		global $db;
 		$query = "update `student_community_health_and_epidemiology` set `status`=?, `comment`=? where `user_id`=?";
-		if(!$db->Execute($query, arra($status_code, $comment, $this->getUserID()))) {
+		if(!$db->Execute($query, array($status_code, $comment, $this->getUserID()))) {
 			add_error("Failed to update Community-Based Project entry.");
 			application_log("error", "Unable to update a student_community_health_and_epidemiology record. Database said: ".$db->ErrorMsg());
 		} else {

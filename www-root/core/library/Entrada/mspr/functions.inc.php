@@ -187,7 +187,7 @@ function display_contributions(Contributions $contributions,$type, $hide_control
 }
 
 function display_clerkship_details(ClerkshipRotations $rotations) {
-	$content_file = TEMPLATE_ABSOLUTE."/modules/common/mspr/student_run_elective.xml";
+	$content_file = TEMPLATE_ABSOLUTE."/modules/common/mspr/clerkship_details.xml";
 	$content_template = new Template($content_file);
 	
 	$contents = "";
@@ -209,6 +209,31 @@ function display_clerkship_details(ClerkshipRotations $rotations) {
 	return list_wrap_content($contents);
 }
 
+function display_clerkship_elective_details(ClerkshipElectivesCompleted $rotations) {
+	$content_file = TEMPLATE_ABSOLUTE."/modules/common/mspr/clerkship_elective.xml";
+	$content_template = new Template($content_file);
+	
+	$contents = "";
+	
+	if ($rotations && count($rotations) > 0) {
+		foreach($rotations as $rotation) {
+			
+			$content_bind = array (
+				"details" => clean_input($rotation->getDetails(), array("notags", "specialchars", "nl2br")),
+				"period" 	=> clean_input($rotation->getPeriod() , array("notags", "specialchars")),
+				"location"	=> clean_input($rotation->getLocation() , array("notags", "specialchars")),
+				"supervisor" => clean_input($rotation->getSupervisor() , array("notags", "specialchars"))
+			);
+			
+			$contents .= $content_template->getResult(DEFAULT_LANGUAGE, $content_bind);			
+		}
+	} else {
+		$contents = "<li>None</li>";
+	}
+	
+	return list_wrap_content($contents);
+}
+
 function display_clerkship_core_completed(ClerkshipRotations $rotations) {
 	return display_clerkship_details($rotations);
 }
@@ -217,8 +242,8 @@ function display_clerkship_core_pending(ClerkshipRotations $rotations) {
 	return display_clerkship_details($rotations);
 }
 
-function display_clerkship_elective_completed(ClerkshipRotations $rotations) {
-	return display_clerkship_details($rotations);
+function display_clerkship_elective_completed(ClerkshipElectivesCompleted $rotations) {
+	return display_clerkship_elective_details($rotations);
 }
 
 function display_student_run_electives(StudentRunElectives $sres,$type, $hide_controls = false) {

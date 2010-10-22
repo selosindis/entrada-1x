@@ -77,16 +77,15 @@ class ClerkshipElectivesCompleted extends ClerkshipRotations {
 										ON c.`event_id` = a.`event_id`
 										LEFT JOIN `".CLERKSHIP_DATABASE."`.`categories` AS d
 										ON d.`category_id` = c.`department_id`
-										LEFT JOIN `".ENTRADA_DATABASE."`.`global_lu_disciplines` AS e
+										LEFT JOIN `".DATABASE_NAME."`.`global_lu_disciplines` AS e
 										ON e.`discipline_id` = c.`discipline_id`
-										LEFT JOIN `".ENTRADA_DATABASE."`.`global_lu_schools` AS f
+										LEFT JOIN `".DATABASE_NAME."`.`global_lu_schools` AS f
 										ON f.`schools_id` = c.`schools_id`
 										WHERE a.`event_type` = 'elective'
 										AND b.`econtact_type` = 'student'
 										AND b.`etype_id` = ".$db->qstr($user_id)."
 										AND a.`event_finish` < ".$db->qstr($completed_cutoff)." 
 										ORDER BY a.`event_start` ASC";
-		
 		$results	= $db->GetAll($query);
 		$electives = array();
 		$ugly	= array();

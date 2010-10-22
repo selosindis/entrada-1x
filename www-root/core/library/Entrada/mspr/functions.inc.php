@@ -219,7 +219,7 @@ function display_clerkship_elective_details(ClerkshipElectivesCompleted $rotatio
 		foreach($rotations as $rotation) {
 			
 			$content_bind = array (
-				"details" => clean_input($rotation->getDetails(), array("notags", "specialchars", "nl2br")),
+				"details" => clean_input($rotation->getTitle(), array("notags", "specialchars", "nl2br")),
 				"period" 	=> clean_input($rotation->getPeriod() , array("notags", "specialchars")),
 				"location"	=> clean_input($rotation->getLocation() , array("notags", "specialchars")),
 				"supervisor" => clean_input($rotation->getSupervisor() , array("notags", "specialchars"))

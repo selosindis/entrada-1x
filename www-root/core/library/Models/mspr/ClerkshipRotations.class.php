@@ -96,7 +96,7 @@ class ClerkshipElectivesCompleted extends ClerkshipRotations {
 		if($results) {
 			foreach($results as $result) {
 				$location = (($result["school_title"]) ? ucwords(strtolower($result["school_title"])).", " : "").(($result["city"]) ? ucwords(strtolower($result["city"])).", " : "").(($result["prov_state"]) ? $result["prov_state"] : "");
-				$supervisor = "Dr. ".(($result["preceptor_first_name"]) ? $result["preceptor_first_name"]." " : "REQUIRES FIRSTNAME").(($result["preceptor_last_name"]) ? $result["preceptor_last_name"]." " : "REQUIRES LASTNAME");
+				$supervisor = "Dr. ".(($result["preceptor_first_name"]) ? $result["preceptor_first_name"]." " : "").(($result["preceptor_last_name"]) ? $result["preceptor_last_name"]." " : "");
 				$title = str_replace($ugly, "", html_entity_decode(ucwords(strtolower($result["department_title"])))).((trim($result["discipline"]) != "") ? " / ".str_replace($ugly, "", html_entity_decode(ucwords(strtolower($result["discipline"])))) : "");
 				$elective = new ClerkshipElective($title, $location, $supervisor, $result['event_start'], $result['event_finish'], true);
 				$electives[] = $elective;

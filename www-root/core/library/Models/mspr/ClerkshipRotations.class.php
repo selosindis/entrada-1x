@@ -11,12 +11,14 @@ class ClerkshipCoreCompleted extends ClerkshipRotations {
 		global $db;
 		$user_id = $user->getID();
 		$completed_cutoff = strtotime(CLERKSHIP_COMPLETED_CUTOFF.", ".date("Y"));
-		$query		= "	SELECT a.`event_title`, a.`event_start`, a.`event_finish`, a.`category_id`, c.`category_name`
+		$query		= "	SELECT a.`event_title`, a.`event_start`, a.`event_finish`, a.`category_id`, c.`category_name`, d.`rotation_title`
 										FROM `".CLERKSHIP_DATABASE."`.`events` AS a
 										LEFT JOIN `".CLERKSHIP_DATABASE."`.`event_contacts` AS b
 										ON b.`event_id` = a.`event_id`
 										LEFT JOIN `".CLERKSHIP_DATABASE."`.`categories` as c
 										ON a.`category_id` = c.`category_id`
+										LEFT JOIN `".CLERKSHIP_DATABASE."`.`global_lu_rotations` as d
+										ON a.`rotation_id` = d.`rotation_id`
 										WHERE a.`event_type` <> 'elective'
 										AND b.`econtact_type` = 'student'
 										AND b.`etype_id` = ".$db->qstr($user_id)."
@@ -26,7 +28,17 @@ class ClerkshipCoreCompleted extends ClerkshipRotations {
 		$rotations = array();
 		if($results) {
 			foreach($results as $result) {
-				$rotation = new ClerkshipRotation($result['category_name'], $result['event_start'], $result['event_finish'], true);
+				
+				$title_parts = array();
+				$title_parts[] = str_replace(" and ", " & ", trim($result['rotation_title']));
+				$title_parts[] = str_replace(" and ", " & ", trim($result['category_name']));
+				
+				$title_parts = array_unique($title_parts);
+				$title_parts = array_filter($title_parts);
+				
+				$title = implode(" / " ,$title_parts);
+				
+				$rotation = new ClerkshipRotation($title, $result['event_start'], $result['event_finish'], true);
 				$rotations[] = $rotation;
 			}
 		}
@@ -40,12 +52,14 @@ class ClerkshipCorePending extends ClerkshipRotations {
 		$user_id = $user->getID();
 		$completed_cutoff = strtotime(CLERKSHIP_COMPLETED_CUTOFF.", ".date("Y"));
 
-		$query		= "	SELECT a.`event_title`, a.`event_start`, a.`event_finish`, a.`category_id`, c.`category_name`
+		$query		= "	SELECT a.`event_title`, a.`event_start`, a.`event_finish`, a.`category_id`, c.`category_name`, d.`rotation_title`
 										FROM `".CLERKSHIP_DATABASE."`.`events` AS a
 										LEFT JOIN `".CLERKSHIP_DATABASE."`.`event_contacts` AS b
 										ON b.`event_id` = a.`event_id`
 										LEFT JOIN `".CLERKSHIP_DATABASE."`.`categories` as c
 										ON a.`category_id` = c.`category_id`
+										LEFT JOIN `".CLERKSHIP_DATABASE."`.`global_lu_rotations` as d
+										ON a.`rotation_id` = d.`rotation_id`
 										WHERE a.`event_type` <> 'elective'
 										AND b.`econtact_type` = 'student'
 										AND b.`etype_id` = ".$db->qstr($user_id)."
@@ -56,7 +70,16 @@ class ClerkshipCorePending extends ClerkshipRotations {
 		$rotations = array();
 		if($results) {
 			foreach($results as $result) {
-				$rotation = new ClerkshipRotation($result['category_name'], $result['event_start'], $result['event_finish'], false);
+				$title_parts = array();
+				$title_parts[] = str_replace(" and ", " & ", trim($result['rotation_title']));
+				$title_parts[] = str_replace(" and ", " & ", trim($result['category_name']));
+				
+				$title_parts = array_unique($title_parts);
+				$title_parts = array_filter($title_parts);
+				
+				$title = implode(" / " ,$title_parts);
+				
+				$rotation = new ClerkshipRotation($title, $result['event_start'], $result['event_finish'], false);
 				$rotations[] = $rotation;
 			}
 		}

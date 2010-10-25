@@ -363,6 +363,24 @@ switch($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_
 
 			}
 		}
+		
+		/**
+		 * Update requsted number of rows per page.
+		 * Valid: any integer really.
+		 */
+		if ((isset($_GET["pp"])) && ((int) trim($_GET["pp"]))) {
+			$integer = (int) trim($_GET["pp"]);
+	
+			if (($integer > 0) && ($integer <= 250)) {
+				$_SESSION[APPLICATION_IDENTIFIER]["clerkship"]["pp"] = $integer;
+			}
+	
+			$_SERVER["QUERY_STRING"] = replace_query(array("pp" => false));
+		} else {
+			if (!isset($_SESSION[APPLICATION_IDENTIFIER]["clerkship"]["pp"])) {
+				$_SESSION[APPLICATION_IDENTIFIER]["clerkship"]["pp"] = DEFAULT_ROWS_PER_PAGE;
+			}
+		}
 
 		$DATE_INFO		= getdate($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["timestamp"]);
 		$DATE_START		= mktime(0, 0, 0, date("n", $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["timestamp"]), 1, date("Y", $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["timestamp"]));
@@ -394,19 +412,30 @@ switch($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_
 					<select id="department" name="d" style="width: 95%" onchange="$('department-change-form').submit()">
 					<option value="">-- Select the Department to Browse --</option>
 					<?php
-					$query		= "
-								SELECT a.`department_id`, a.`department_title`, a.`organisation_id`, b.`entity_title`, c.`organisation_title`
+					$query = "	SELECT a.`department_id`, a.`department_title`, a.`organisation_id`, b.`entity_title`, c.`organisation_title`
 								FROM `".AUTH_DATABASE."`.`departments` AS a
 								LEFT JOIN `".AUTH_DATABASE."`.`entity_type` AS b
 								ON a.`entity_id` = b.`entity_id`
 								LEFT JOIN `".AUTH_DATABASE."`.`organisations` AS c
 								ON a.`organisation_id` = c.`organisation_id`
+								WHERE a.`department_active` = '1'
 								ORDER BY c.`organisation_title` ASC, a.`department_title`";
-					$results	= $db->GetAll($query);
-					if($results) {
-						foreach($results as $result) {
-							echo "<option value=\"".(int) $result["department_id"]."\"".(((isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["department_id"])) && ((int) $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["department_id"]) && ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["department_id"] == $result["department_id"])) ? " selected=\"selected\"" : "").">".html_encode(limit_chars($result["organisation_title"], 11)).": ".html_encode($result["department_title"])." ".(($result["entity_title"]) ? "(".html_encode($result["entity_title"]).")" : "")."</option>\n";
+					$results = $db->GetAll($query);
+					if ($results) {
+						$organisation_title = "";
+
+						foreach ($results as $key => $result) {
+							if ($organisation_title != $result["organisation_title"]) {
+								if ($key) {
+									echo "</optgroup>";
+								}
+								echo "<optgroup label=\"".html_encode($result["organisation_title"])."\">";
+								
+								$organisation_title = $result["organisation_title"];
+							}
+							echo "<option value=\"".(int) $result["department_id"]."\"".(((isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["department_id"])) && ((int) $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["department_id"]) && ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["department_id"] == $result["department_id"])) ? " selected=\"selected\"" : "").">".html_encode($result["department_title"])."</option>\n";
 						}
+						echo "</optgroup>";
 					}
 					?>
 					</select>
@@ -417,57 +446,78 @@ switch($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_
 		</form>
 <?php
 		if ($ENTRADA_ACL->amIAllowed('clerkship', 'read')) {
-?>
-			<h1>Clerkship Rotations</h1>
-			<form id="rotation-logbook-form" action="<?php echo ENTRADA_URL; ?>/clerkship" method="get">
-			<table style="width: 100%" cellspacing="1" cellpadding="2" border="0" summary="Select Rotation">
-			<colgroup>
-				<col style="width: 3%" />
-				<col style="width: 25%" />
-				<col style="width: 72%" />
-			</colgroup>
-			<tbody>
-				<tr>
-					<td>&nbsp;</td>
-					<td><label for="rotation" class="form-required">Select Rotation:</label></td>
-					<td>
-						<select id="rotation" name="r" style="width: 95%" onchange="$('rotation-logbook-form').submit()">
-						<option value="">-- Select the Rotation to View --</option>
-						<?php
-						$query		= "	SELECT a.`rotation_id`, a.`rotation_title`, a.`course_id`, b.`organisation_id`
-										FROM `".CLERKSHIP_DATABASE."`.`global_lu_rotations` AS a
-										LEFT JOIN `".DATABASE_NAME."`.`courses` AS b
-										ON a.`course_id` = b.`course_id`
-										WHERE b.`course_active` = '1'
-										ORDER BY a.`rotation_id`";
-						
-						$results	= $db->GetAll($query); 
-						if($results) {
-							foreach($results as $result) {
-								if (!(stristr($result["rotation_title"], "ricc") === FALSE)) { // Look for RICC
-								    $result["rotation_title"] = 'Rural Integrated Clerkship';
-								    $RICC = $result["rotation_id"];
-								}
-								if ($ENTRADA_ACL->amIAllowed(new CourseContentResource($result["course_id"], $result["organisation_id"]), 'update')) {
-									echo "<option value=\"".(int) $result["rotation_id"]."\"".(( ($rotation_id == $result["rotation_id"])) ? " selected=\"selected\"" : "").">".html_encode($result["rotation_title"])."</option>\n";
-								}
-							}
-						}
-						?>
-						</select>
-					</td>
+			/**
+			 * Sidebar item that will provide another method for sorting, ordering, etc.
+			 */
+			$sidebar_html = "<ul class=\"menu\">\n";
+			$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) == "5") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/clerkship?".replace_query(array("pp" => "5"))."\" title=\"Display 5 Rows Per Page\">5 rows per page</a></li>\n";
+			$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) == "15") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/clerkship?".replace_query(array("pp" => "15"))."\" title=\"Display 15 Rows Per Page\">15 rows per page</a></li>\n";
+			$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) == "25") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/clerkship?".replace_query(array("pp" => "25"))."\" title=\"Display 25 Rows Per Page\">25 rows per page</a></li>\n";
+			$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) == "50") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/clerkship?".replace_query(array("pp" => "50"))."\" title=\"Display 50 Rows Per Page\">50 rows per page</a></li>\n";
+			$sidebar_html .= "</ul>\n";
+	
+			new_sidebar_item("Rows per page", $sidebar_html, "sort-results", "open");
 
-				</tr>
-			</tbody>
-			</table>
-			</form>
-			<?php
+			$query = "	SELECT a.`rotation_id`, a.`rotation_title`, a.`course_id`, b.`organisation_id`
+						FROM `".CLERKSHIP_DATABASE."`.`global_lu_rotations` AS a
+						LEFT JOIN `".DATABASE_NAME."`.`courses` AS b
+						ON a.`course_id` = b.`course_id`
+						WHERE b.`course_active` = '1'
+						ORDER BY a.`rotation_id`";
+			$results = $db->GetAll($query);
+			if ($results) {
+				$rotations = array();
+
+				foreach($results as $result) {
+					if ($ENTRADA_ACL->amIAllowed(new CourseContentResource($result["course_id"], $result["organisation_id"]), 'update')) {
+						$rotations[] = $result;
+					}
+				}
+
+				if (!empty($rotations)) {
+					?>
+					<h1>Clerkship Rotations</h1>
+					<form id="rotation-logbook-form" action="<?php echo ENTRADA_URL; ?>/clerkship" method="get">
+					<table style="width: 100%" cellspacing="1" cellpadding="2" border="0" summary="Select Rotation">
+					<colgroup>
+						<col style="width: 3%" />
+						<col style="width: 25%" />
+						<col style="width: 72%" />
+					</colgroup>
+					<tbody>
+						<tr>
+							<td>&nbsp;</td>
+							<td><label for="rotation" class="form-required">Select Rotation:</label></td>
+							<td>
+								<select id="rotation" name="r" style="width: 95%" onchange="$('rotation-logbook-form').submit()">
+								<option value="">-- Select the Rotation to View --</option>
+								<?php
+								foreach($rotations as $result) {
+									if (!(stristr($result["rotation_title"], "ricc") === FALSE)) { // Look for RICC
+										$result["rotation_title"] = 'Rural Integrated Clerkship';
+										$RICC = $result["rotation_id"];
+									}
+
+									if ($ENTRADA_ACL->amIAllowed(new CourseContentResource($result["course_id"], $result["organisation_id"]), 'update')) {
+										echo "<option value=\"".(int) $result["rotation_id"]."\"".(( ($rotation_id == $result["rotation_id"])) ? " selected=\"selected\"" : "").">".html_encode($result["rotation_title"])."</option>\n";
+									}
+								}
+								?>
+								</select>
+							</td>
+						</tr>
+					</tbody>
+					</table>
+					</form>
+					<?php
+				}
+			}
 		}
 		/**
 		 * If a department is selected, display the schedule.
 		 */
 		if((isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["department_id"])) && ((int) $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["department_id"])) {
-			$department_title = clerkship_department_title($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["department_id"]);
+			$department_title = fetch_department_title($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["department_id"]);
 			?>
 			<h2><?php echo html_encode($department_title); ?></h2>
 			<table style="width: 100%" cellspacing="0" cellpadding="0" border="0" summary="Weekly Student Calendar">
@@ -708,7 +758,7 @@ switch($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_
 				<tbody>
 					<tr>
 						<td>&nbsp;</td>
-						<td colspan="2">
+						<td style="width: 53%; vertical-align: top; text-align: left">
 							<table style="width: 298px; height: 23px" cellspacing="0" cellpadding="0" border="0" summary="Display Duration Type">
 								<tr>
 									<td style="width: 22px; height: 23px"><a href="<?php echo ENTRADA_URL."/clerkship?".replace_query(array("dstamp" => ($DISPLAY_DURATION["start"] - 2))); ?>" title="Previous <?php echo ucwords($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["dtype"]); ?>"><img src="<?php echo ENTRADA_URL; ?>/images/cal-back.gif" border="0" width="22" height="23" alt="Previous <?php echo ucwords($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["dtype"]); ?>" title="Previous <?php echo ucwords($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["dtype"]); ?>" /></a></td>
@@ -722,47 +772,92 @@ switch($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_
 								</tr>
 							</table>
 						</td>
+						<?php
+					    // Get the clerks for this core block and this rotation
+					    $query = "  SELECT a.`id`, c.`role`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`
+					    			FROM `".AUTH_DATABASE."`.`user_data` AS a
+								    LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS c
+								    ON a.`id` = c.`user_id`
+								    AND c.`app_id` = ".$db->qstr(AUTH_APP_ID).",
+									(
+										SELECT DISTINCT c.`etype_id`
+									    FROM `".CLERKSHIP_DATABASE."`.`event_contacts` AS c
+									    INNER JOIN `".CLERKSHIP_DATABASE."`.`events` AS e 
+									    ON c.`event_id` = e.`event_id`
+									    WHERE e.`rotation_id` = ".$db->qstr($rotation["id"])."
+									    GROUP BY c.`etype_id`, e.`rotation_id`
+									    HAVING 
+								    	(
+								    		(
+								    			MIN(e.`event_start`) >= ".$db->qstr($DISPLAY_DURATION["start"])."
+								    			AND MIN(e.`event_start`) <= ".$db->qstr($DISPLAY_DURATION["end"])."
+								    		)
+								    		OR 
+								    		(
+								    			MAX(e.`event_finish`) >= ".$db->qstr($DISPLAY_DURATION["start"])."
+								    			AND MAX(e.`event_finish`) <= ".$db->qstr($DISPLAY_DURATION["end"])."
+								    		)
+								    		OR 
+								    		(
+								    			MIN(e.`event_start`) <= ".$db->qstr($DISPLAY_DURATION["start"])."
+								    			AND MAX(e.`event_finish`) >= ".$db->qstr($DISPLAY_DURATION["start"])."
+								    		)
+								    	)
+								    ) AS b
+									WHERE a.`id` = b.`etype_id`
+									ORDER BY c.`role` DESC, a.`lastname`, a.`firstname` ASC";
+					    $clerks = $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
+					    $clerk_count = count($clerks);
+						$total_pages = (int)($clerk_count / $_SESSION[APPLICATION_IDENTIFIER]["clerkship"]["pp"]) + ($clerk_count % $_SESSION[APPLICATION_IDENTIFIER]["clerkship"]["pp"] > 0 ? 1 : 0);
+						/**
+						 * Check if pv variable is set and see if it's a valid page, other wise page 1 it is.
+						 */
+						if (isset($_GET["pv"])) {
+							$page_current = (int) trim($_GET["pv"]);
+					
+							if (($page_current < 1) || ($page_current > $total_pages)) {
+								$page_current = 1;
+							}
+						} else {
+							$page_current = 1;
+						}
+						?>
+						<td style="width: 47%; vertical-align: top; text-align: right">
+						<?php
+						if ($total_pages > 1) {
+							echo "<form action=\"".ENTRADA_URL."/clerkship\" method=\"get\" id=\"pageSelector\">\n";
+							echo "<input type=\"hidden\" name=\"r\" value=\"".$rotation["id"]."\" />\n";
+							echo "<div style=\"white-space: nowrap\">\n";
+							echo "<span style=\"width: 20px; vertical-align: middle; margin-right: 3px; text-align: left\">\n";
+							if (($page_current - 1)) {
+								echo "<a href=\"".ENTRADA_URL."/clerkship?".replace_query(array("pv" => ($page_current - 1)))."\"><img src=\"".ENTRADA_URL."/images/record-previous-on.gif\" border=\"0\" width=\"11\" height=\"11\" alt=\"Back to page ".($page_current - 1).".\" title=\"Back to page ".($page_current - 1).".\" style=\"vertical-align: middle\" /></a>\n";
+							} else {
+								echo "<img src=\"".ENTRADA_URL."/images/record-previous-off.gif\" width=\"11\" height=\"11\" alt=\"\" title=\"\" style=\"vertical-align: middle\" />";
+							}
+							echo "</span>";
+							echo "<span style=\"vertical-align: middle\">\n";
+							echo "<select name=\"pv\" onchange=\"$('pageSelector').submit();\"".(($total_pages <= 1) ? " disabled=\"disabled\"" : "").">\n";
+							for ($i = 1; $i <= $total_pages; $i++) {
+								echo "<option value=\"".$i."\"".(($i == $page_current) ? " selected=\"selected\"" : "").">".(($i == $page_current) ? " Viewing" : "Jump To")." Page ".$i."</option>\n";
+							}
+							echo "</select>\n";
+							echo "</span>\n";
+							echo "<span style=\"width: 20px; vertical-align: middle; margin-left: 3px; text-align: right\">\n";
+							if ($page_current < $total_pages) {
+								echo "<a href=\"".ENTRADA_URL."/clerkship?".replace_query(array("pv" => ($page_current + 1)))."\"><img src=\"".ENTRADA_URL."/images/record-next-on.gif\" border=\"0\" width=\"11\" height=\"11\" alt=\"Forward to page ".($page_current + 1).".\" title=\"Forward to page ".($page_current + 1).".\" style=\"vertical-align: middle\" /></a>";
+							} else {
+								echo "<img src=\"".ENTRADA_URL."/images/record-next-off.gif\" width=\"11\" height=\"11\" alt=\"\" title=\"\" style=\"vertical-align: middle\" />";
+							}
+							echo "</span>\n";
+							echo "</div>\n";
+							echo "</form>\n";
+						}
+						?>
+					</td>
 					</tr>
 					<tr>
 						<td colspan="3">&nbsp;</td>
 					</tr>
-					<?php
-				    // Get the clerks for this core block and this rotation
-				     $query = "  SELECT a.`id`, c.`role`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`
-				    			FROM `".AUTH_DATABASE."`.`user_data` AS a
-							    LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS c
-							    ON a.`id` = c.`user_id`
-							    AND c.`app_id` = ".$db->qstr(AUTH_APP_ID).",
-								(
-									SELECT DISTINCT c.`etype_id`
-								    FROM `".CLERKSHIP_DATABASE."`.`event_contacts` AS c
-								    INNER JOIN `".CLERKSHIP_DATABASE."`.`events` AS e 
-								    ON c.`event_id` = e.`event_id`
-								    WHERE e.`rotation_id` = ".$db->qstr($rotation["id"])."
-								    GROUP BY c.`etype_id`, e.`rotation_id`
-								    HAVING 
-							    	(
-							    		(
-							    			MIN(e.`event_start`) >= ".$db->qstr($DISPLAY_DURATION["start"])."
-							    			AND MIN(e.`event_start`) <= ".$db->qstr($DISPLAY_DURATION["end"])."
-							    		)
-							    		OR 
-							    		(
-							    			MAX(e.`event_finish`) >= ".$db->qstr($DISPLAY_DURATION["start"])."
-							    			AND MAX(e.`event_finish`) <= ".$db->qstr($DISPLAY_DURATION["end"])."
-							    		)
-							    		OR 
-							    		(
-							    			MIN(e.`event_start`) <= ".$db->qstr($DISPLAY_DURATION["start"])."
-							    			AND MAX(e.`event_finish`) >= ".$db->qstr($DISPLAY_DURATION["start"])."
-							    		)
-							    	)
-							    ) AS b
-								WHERE a.`id` = b.`etype_id`
-								ORDER BY c.`role` DESC, a.`lastname`, a.`firstname` ASC";
-				    $clerks = $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
-				    $clerk_count = count($clerks);
-					?>
 					<tr>
 						<td colspan="3">
 							<div class="tableListTop">
@@ -814,10 +909,10 @@ switch($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_
 							</thead>
 							<tbody>
 								<?php							
-								    foreach ($clerks as $clerk) {
-										$query  = " SELECT COUNT(*) FROM `".CLERKSHIP_DATABASE."`.`logbook_entries` WHERE `proxy_id` = ".$db->qstr($clerk["id"])." AND `entry_active` = 1 AND
+								    for ($i = (($page_current - 1) * $_SESSION[APPLICATION_IDENTIFIER]["clerkship"]["pp"]); $i < (($page_current * $_SESSION[APPLICATION_IDENTIFIER]["clerkship"]["pp"]) < $clerk_count ? ($page_current * $_SESSION[APPLICATION_IDENTIFIER]["clerkship"]["pp"]) : $clerk_count); $i++) {
+										$query  = " SELECT COUNT(*) FROM `".CLERKSHIP_DATABASE."`.`logbook_entries` WHERE `proxy_id` = ".$db->qstr($clerks[$i]["id"])." AND `entry_active` = 1 AND
 													`rotation_id` IN (Select e.`event_id` FROM `".CLERKSHIP_DATABASE."`.`events` as e
-											    	where e.`rotation_id` = ".$db->qstr($rotation["id"]).")";
+											    	WHERE e.`rotation_id` = ".$db->qstr($rotation["id"]).")";
 										$entries = $db->CacheGetOne(LONG_CACHE_TIMEOUT, $query);
 										
 									    $procedures_required = 0;
@@ -833,16 +928,14 @@ switch($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_
 										if ($required_objectives) {
 											foreach ($required_objectives as $required_objective) {
 												$objectives_required += $required_objective["required"];
-												$query = "SELECT COUNT(`objective_id`) AS `recorded`
-														FROM `".CLERKSHIP_DATABASE."`.`logbook_entry_objectives`
-														WHERE `lentry_id` IN
-														(
-															SELECT `lentry_id` FROM `".CLERKSHIP_DATABASE."`.`logbook_entries`
-															WHERE `entry_active` = '1' 
-															AND `proxy_id` = ".$db->qstr($clerk["id"])."
-														)
-														AND `objective_id` = ".$db->qstr($required_objective["objective_id"])."
-														GROUP BY `objective_id`";
+												$query = "	SELECT COUNT(a.`objective_id`) AS `recorded`
+															FROM `".CLERKSHIP_DATABASE."`.`logbook_entry_objectives` AS a
+															JOIN `".CLERKSHIP_DATABASE."`.`logbook_entries` AS b
+															ON `entry_active` = '1' 
+															AND `proxy_id` = ".$db->qstr($clerks[$i]["id"])."
+															AND a.`lentry_id` = b.`lentry_id`
+															WHERE `objective_id` = ".$db->qstr($required_objective["objective_id"])."
+															GROUP BY `objective_id`";
 												$recorded = $db->CacheGetOne(LONG_CACHE_TIMEOUT, $query);
 												
 												if ($recorded) {
@@ -858,16 +951,14 @@ switch($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_
 										if ($required_procedures) {
 											foreach ($required_procedures as $required_procedure) {
 												$procedures_required += $required_procedure["required"];
-												$query = "SELECT COUNT(`lprocedure_id`) AS `recorded`
-														FROM `".CLERKSHIP_DATABASE."`.`logbook_entry_procedures`
-														WHERE `lentry_id` IN
-														(
-															SELECT `lentry_id` FROM `".CLERKSHIP_DATABASE."`.`logbook_entries`
-															WHERE `entry_active` = '1' 
-															AND `proxy_id` = ".$db->qstr($clerk["id"])."
-														)
-														AND `lprocedure_id` = ".$db->qstr($required_procedure["lprocedure_id"])."
-														GROUP BY `lprocedure_id`";
+												$query = "	SELECT COUNT(`lprocedure_id`) AS `recorded`
+															FROM `".CLERKSHIP_DATABASE."`.`logbook_entry_procedures` AS a
+															JOIN `".CLERKSHIP_DATABASE."`.`logbook_entries` AS b
+															ON `entry_active` = '1' 
+															AND `proxy_id` = ".$db->qstr($clerks[$i]["id"])."
+															AND a.`lentry_id` = b.`lentry_id`
+															WHERE `lprocedure_id` = ".$db->qstr($required_procedure["lprocedure_id"])."
+															GROUP BY `lprocedure_id`";
 												$recorded = $db->CacheGetOne(LONG_CACHE_TIMEOUT, $query);
 												
 												if ($recorded) {
@@ -876,10 +967,10 @@ switch($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_
 											}
 										}
 										
-								    	$url = ENTRADA_URL."/clerkship?section=clerk&ids=".$clerk["id"];
+								    	$url = ENTRADA_URL."/clerkship?section=clerk&ids=".$clerks[$i]["id"];
 								    	echo "<tr>";
-										echo "<td><a href=\"".$url."\">".$clerk["fullname"]."</td>";
-										echo "<td><a href=\"".$url."\">".$clerk["role"]."</td>";
+										echo "<td><a href=\"".$url."\">".$clerks[$i]["fullname"]."</td>";
+										echo "<td><a href=\"".$url."\">".$clerks[$i]["role"]."</td>";
 									    echo "<td><a href=\"".$url."\" style=\"color:#222;\">".($entries ? $entries : "0")."</a></td>";
 									    echo "<td><a href=\"".$url."\" style=\"color:#222;\">".($objectives_recorded ? $objectives_recorded : "0")." / ".($objectives_required ? $objectives_required : "0")."</a></td>";
 									    echo "<td><a href=\"".$url."\" style=\"color:#222;\">".($procedures_recorded ? $procedures_recorded : "0")." / ".($procedures_required ? $procedures_required : "0")."</a></td>";

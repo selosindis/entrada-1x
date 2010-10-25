@@ -276,17 +276,17 @@ table.tableListReport tr td.attachment {
 }
 
 h1 {
-	font-family:		"Century Gothic", Helvetica, Arial, sans-serif;
-	font-size:		15px;
-	font-weight:		normal;
-	color:			#003366;
+	font-family:'Century Gothic', Helvetica, Arial, sans-serif;
+	font-size:26px;
+	font-weight:400;
+	color:#036;
 }
 
 h2 {
-	font-family:		"Century Gothic", Helvetica, Arial, sans-serif;
-	font-size:		10px;
-	color:			#003366;
-	border-bottom:		2px #CCCCCC solid;
+	font-family:'Century Gothic', Helvetica, Arial, sans-serif;
+	font-size:18px;
+	color:#036;
+	border-bottom:2px #CCC solid;
 }
 
 .highlight {

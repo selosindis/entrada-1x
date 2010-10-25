@@ -12,7 +12,6 @@
  * @copyright Copyright 2009 Queen's University. All Rights Reserved.
  *
 */
-
 @set_include_path(implode(PATH_SEPARATOR, array(
     dirname(__FILE__) . "/../core",
     dirname(__FILE__) . "/../core/includes",
@@ -25,81 +24,150 @@
  */
 require_once("init.inc.php");
 
-$user_proxy_id			= 0;
-$user_username			= "";
-$user_firstname			= "";
-$user_lastname			= "";
-$user_email				= "";
-$user_role				= "";
-$user_group				= "";
-$user_organisation_id	= 0;
+$request = explode("/", ((isset( $_GET["request"])) ? clean_input($_GET["request"], array("url", "lowercase", "nows")) : ""));
 
-$calendar_type			= "json";
+$user_proxy_id = 0;
+$user_username = "";
+$user_firstname = "";
+$user_lastname = "";
+$user_email = "";
+$user_role = "";
+$user_group = "";
+$user_organisation_id = 0;
+
+$calendar_type = "json";
+$user_private_hash = "";
+$user_grad_year = (int) (date("Y", time()) + ((date("m", time()) < 7) ?  3 : 4));
 
 /**
- * Request information.
+ * Check if the request has multiple parts to it indicating the URL contains a private_hash,
+ * which allows them to by-pass the authentication for this calendar, thus allowing them to
+ * load a calendar into Google Calendar.
+ *
+ * http://demo.entrada-project.org/calendars/private-jd7ghr5ga5f7cc5bd4357ab6d707faaa/username.ics
+ *
  */
-if ((isset($_GET["request"])) && (substr(trim($_GET["request"]), -4) == ".ics" )) {
+if (is_array($request) && (count($request) == 2) && isset($request[0]) && (substr($request[0], 0, 8) == "private-") && ($tmp_input = str_ireplace("private-", "", $request[0]))) {
+	$user_private_hash = $tmp_input;
+	$request_filename = (isset($request[1]) ? $request[1] : "");
+} else {
+	$request_filename = (isset($request[0]) ? $request[0] : "");
+}
+
+/**
+ * Determine the type of calendar the user is requesting.
+ */
+if (substr($request_filename, -4) == ".ics") {
 	$calendar_type = "ics";
 }
 
+/**
+ * Check if the user is already authenticated.
+ */
 if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
-	$user_proxy_id			= $_SESSION["details"]["id"];
-	$user_username			= $_SESSION["details"]["username"];
-	$user_firstname			= $_SESSION["details"]["firstname"];
-	$user_lastname			= $_SESSION["details"]["lastname"];
-	$user_email				= $_SESSION["details"]["email"];
-	$user_role				= $_SESSION["details"]["role"];
-	$user_group				= $_SESSION["details"]["group"];
-	$user_organisation_id	= $_SESSION["details"]["organisation_id"];
+	$user_proxy_id = $_SESSION["details"]["id"];
+	$user_username = $_SESSION["details"]["username"];
+	$user_firstname = $_SESSION["details"]["firstname"];
+	$user_lastname = $_SESSION["details"]["lastname"];
+	$user_email = $_SESSION["details"]["email"];
+	$user_role = $_SESSION["details"]["role"];
+	$user_group = $_SESSION["details"]["group"];
+	$user_organisation_id = $_SESSION["details"]["organisation_id"];
+
+	if (isset($_SESSION["details"]["grad_year"]) && (int) $_SESSION["details"]["grad_year"]) {
+		$user_grad_year = (int) $_SESSION["details"]["grad_year"];
+	}
 } else {
-	if (!isset($_SERVER["PHP_AUTH_USER"])) {
-		http_authenticate();
-	} else {
-		require_once("Entrada/authentication/authentication.class.php");
+	/**
+	 * If the are not already authenticated, check to see if they have provided
+	 * a private hash in the URL.
+	 */
+	if ($user_private_hash) {
+		/**
+		 * @todo Add a setUserHashAuthentication() method to the authentication client and server so we can use the
+		 * web-service instead of querying the data directly to authenticate a private-hash.
+		 */
+		$query = "	SELECT a.`id`, a.`username`, a.`firstname`, a.`lastname`, a.`email`, b.`role`, b.`group`, a.`organisation_id`
+					FROM `".AUTH_DATABASE."`.`user_data` AS a
+					LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+					ON b.`user_id` = a.`id`
+					WHERE b.`private_hash` = ".$db->qstr($user_private_hash)."
+					AND b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+					AND b.`account_active` = 'true'
+					AND (b.`access_starts`='0' OR b.`access_starts` <= ".$db->qstr(time()).")
+					AND (b.`access_expires`='0' OR b.`access_expires` >= ".$db->qstr(time()).")
+					GROUP BY a.`id`";
+		$result = $db->GetRow($query);
+		if ($result) {
+			$user_proxy_id = $result["id"];
+			$user_username = $result["username"];
+			$user_firstname = $result["firstname"];
+			$user_lastname = $result["lastname"];
+			$user_email = $result["email"];
+			$user_role = $result["role"];
+			$user_group = $result["group"];
+			$user_organisation_id = $result["organisation_id"];
 
-		$username = clean_input($_SERVER["PHP_AUTH_USER"], "credentials");
-		$password = clean_input($_SERVER["PHP_AUTH_PW"], "trim");
-
-		$auth = new AuthSystem((((defined("AUTH_DEVELOPMENT")) && (AUTH_DEVELOPMENT != "")) ? AUTH_DEVELOPMENT : AUTH_PRODUCTION));
-		$auth->setAppAuthentication(AUTH_APP_ID, AUTH_USERNAME, AUTH_PASSWORD);
-		$auth->setUserAuthentication($username, $password, AUTH_METHOD);
-		$result = $auth->Authenticate(array("id", "username", "firstname", "lastname", "email", "role", "group", "organisation_id"));
-
-		$ERROR = 0;
-		if ($result["STATUS"] == "success") {
-			if (($result["ACCESS_STARTS"]) && ($result["ACCESS_STARTS"] > time())) {
-				$ERROR++;
-				application_log("error", "User[".$username."] tried to access account prior to activation date.");
-			} elseif (($result["ACCESS_EXPIRES"]) && ($result["ACCESS_EXPIRES"] < time())) {
-				$ERROR++;
-				application_log("error", "User[".$username."] tried to access account after expiration date.");
-			} else {
-				$user_proxy_id			= $result["ID"];
-				$user_username			= $result["USERNAME"];
-				$user_firstname			= $result["FIRSTNAME"];
-				$user_lastname			= $result["LASTNAME"];
-				$user_email				= $result["EMAIL"];
-				$user_role				= $result["ROLE"];
-				$user_group				= $result["GROUP"];
-				$user_organisation_id	= $result["ORGANISATION_ID"];
+			if (($user_group == "student") && (int) $user_role) {
+				$user_grad_year = (int) $user_role;
 			}
 		} else {
-			$ERROR++;
-			application_log("access", $result["MESSAGE"]);
+			/**
+			 * If the query above fails, redirect them back here but without the
+			 * private hash which will trigger the HTTP Authentication.
+			 */
+			header("Location: ".ENTRADA_URL."/calendars/".$request_filename);
+			exit;
 		}
-
-		if($ERROR) {
+	} else {
+		/**
+		 * If they are not already authenticated, and they don't have a private
+		 * hash in the URL, then send them through to HTTP authentication.
+		 */
+		if (!isset($_SERVER["PHP_AUTH_USER"])) {
 			http_authenticate();
-		}
+		} else {
+			require_once("Entrada/authentication/authentication.class.php");
 
-		unset($username, $password);
+			$username = clean_input($_SERVER["PHP_AUTH_USER"], "credentials");
+			$password = clean_input($_SERVER["PHP_AUTH_PW"], "trim");
+
+			$auth = new AuthSystem((((defined("AUTH_DEVELOPMENT")) && (AUTH_DEVELOPMENT != "")) ? AUTH_DEVELOPMENT : AUTH_PRODUCTION));
+			$auth->setAppAuthentication(AUTH_APP_ID, AUTH_USERNAME, AUTH_PASSWORD);
+			$auth->setUserAuthentication($username, $password, AUTH_METHOD);
+			$result = $auth->Authenticate(array("id", "username", "firstname", "lastname", "email", "role", "group", "organisation_id"));
+
+			$ERROR = 0;
+			if ($result["STATUS"] == "success") {
+				$user_proxy_id = $result["ID"];
+				$user_username = $result["USERNAME"];
+				$user_firstname = $result["FIRSTNAME"];
+				$user_lastname = $result["LASTNAME"];
+				$user_email = $result["EMAIL"];
+				$user_role = $result["ROLE"];
+				$user_group = $result["GROUP"];
+				$user_organisation_id = $result["ORGANISATION_ID"];
+
+				if (($user_group == "student") && (int) $user_role) {
+					$user_grad_year = (int) $user_role;
+				}
+			} else {
+				$ERROR++;
+				application_log("access", $result["MESSAGE"]);
+			}
+
+			if($ERROR) {
+				http_authenticate();
+			}
+
+			unset($username, $password);
+		}
 	}
 }
 
 if ($user_proxy_id) {
-	$event_start	= 0;
-	$event_finish	= 0;
+	$event_start = strtotime("-12 months 00:00:00");
+	$event_finish = strtotime("+12 months 23:59:59");
 
 	if ((isset($_GET["start"])) && ($tmp_input = clean_input($_GET["start"], array("trim", "int")))) {
 		$event_start = $tmp_input;
@@ -108,42 +176,40 @@ if ($user_proxy_id) {
 		$event_finish = $tmp_input;
 	}
 
-	$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dstamp"] = $event_start;
+	$learning_events = events_fetch_filtered_events(
+			$user_proxy_id,
+			$user_group,
+			$user_role,
+			$user_organisation_id,
+			"date",
+			"asc",
+			"custom",
+			$event_start,
+			$event_finish,
+			events_filters_defaults($user_proxy_id, $user_group, $user_role),
+			true,
+			1,
+			1750);
 
-	$query		= "	SELECT a.*, b.`audience_type`, MAX(c.`timestamp`) AS `last_visited`
-					FROM `events` AS a
-					LEFT JOIN `event_audience` AS b
-					ON b.`event_id` = a.`event_id`
-					LEFT JOIN `statistics` AS c
-					ON c.`module` = 'events'
-					AND c.`proxy_id` = ".$db->qstr($user_proxy_id)."
-					AND c.`action` = 'view'
-					AND c.`action_field` = 'event_id'
-					AND c.`action_value` = a.`event_id`
-					WHERE (".(($user_group == "student") ? " (b.`audience_type` = 'grad_year' AND b.`audience_value` = ".$db->qstr($user_role).") OR" : "")."
-					".(($user_group == "medtech") ? " (b.`audience_type` = 'grad_year' AND b.`audience_value` = '".(int) $_SESSION["details"]["grad_year"]."') OR" : "")."
-					(b.`audience_type` = 'proxy_id' AND b.`audience_value` = ".$db->qstr($user_proxy_id).")	OR (b.`audience_type` = 'organisation_id' AND b.`audience_value` = ".$db->qstr($user_organisation_id)."))
-					".(($event_start) ? " AND a.`event_start` >= ".$event_start : "")."
-					".(($event_finish) ? " AND a.`event_finish` <= ".$event_finish : "")."
-					GROUP BY a.`event_id`
-					ORDER BY a.`event_start` ASC, a.`event_id` ASC";
-	$results	= $db->GetAll($query);
-	if ($results) {
-		switch ($calendar_type) {
-			case "ics" :
-				require_once("Entrada/icalendar/class.ical.inc.php");
-				$ical = new iCal("-//".html_encode($_SERVER["HTTP_HOST"])."//iCal ".APPLICATION_NAME." Calendar MIMEDIR//EN", 1, ENTRADA_ABSOLUTE."/calendars/", $user_username);
+	switch ($calendar_type) {
+		case "ics" :
+			add_statistic("calendar.api", "view", "type", "ics");
 
-				foreach ($results as $result) {
+			require_once("Entrada/icalendar/class.ical.inc.php");
+
+			$ical = new iCal("-//".html_encode($_SERVER["HTTP_HOST"])."//iCal ".APPLICATION_NAME." Calendar MIMEDIR//EN", 1, ENTRADA_ABSOLUTE."/calendars/", $user_username);
+
+			if (!empty($learning_events["events"])) {
+				foreach ($learning_events["events"] as $event) {
 					$ical->addEvent(
 						array(), // Organizer
-						(int) $result["event_start"], // Start Time (timestamp; for an allday event the startdate has to start at YYYY-mm-dd 00:00:00)
-						(int) $result["event_finish"], // End Time (write 'allday' for an allday event instead of a timestamp)
-						(($result["event_location"]) ? $result["event_location"] : "To Be Announced"), // Location
+						(int) $event["event_start"], // Start Time (timestamp; for an allday event the startdate has to start at YYYY-mm-dd 00:00:00)
+						(int) $event["event_finish"], // End Time (write 'allday' for an allday event instead of a timestamp)
+						(($event["event_location"]) ? $event["event_location"] : "To Be Announced"), // Location
 						1, // Transparancy (0 = OPAQUE | 1 = TRANSPARENT)
 						array(), // Array with Strings
-						strip_tags($result["event_message"]), // Description
-						strip_tags($result["event_title"]), // Title
+						strip_tags($event["event_message"]), // Description
+						strip_tags($event["event_title"]), // Title
 						1, // Class (0 = PRIVATE | 1 = PUBLIC | 2 = CONFIDENTIAL)
 						array(), // Array (key = attendee name, value = e-mail, second value = role of the attendee [0 = CHAIR | 1 = REQ | 2 = OPT | 3 =NON])
 						5, // Priority = 0-9
@@ -155,45 +221,48 @@ if ($user_proxy_id) {
 						"", // exeption dates: Array with timestamps of dates that should not be includes in the recurring event
 						0,  // Sets the time in minutes an alarm appears before the event in the programm. no alarm if empty string or 0
 						1, // Status of the event (0 = TENTATIVE, 1 = CONFIRMED, 2 = CANCELLED)
-						str_replace("http://", "https://", ENTRADA_URL)."/events?id=".(int) $result["event_id"], // optional URL for that event
+						str_replace("http://", "https://", ENTRADA_URL)."/events?id=".(int) $event["event_id"], // optional URL for that event
 						"en", // Language of the Strings
-						md5((int) $result["event_id"])
+						md5((int) $event["event_id"])
 					);
 				}
+			}
 
-				$ical->outputFile();
-			break;
-			case "json" :
-			default :
-				$events = array();
-				foreach ($results as $result) {
-					$cal_type		= 1;
-					$cal_updated	= "";
+			$ical->outputFile();
+		break;
+		case "json" :
+		default :
+			$events = array();
 
-					if ($result["audience_type"] == "proxy_id") {
+			if (!empty($learning_events["events"])) {
+				foreach ($learning_events["events"] as $drid => $event) {
+					$cal_type = 1;
+					$cal_updated = "";
+
+					if ($event["audience_type"] == "proxy_id") {
 						$cal_type = 3;
 					}
 
-					if (((int) $result["last_visited"]) && ((int) $result["last_visited"] < (int) $result["updated_date"])) {
+					if (((int) $event["last_visited"]) && ((int) $event["last_visited"] < (int) $event["updated_date"])) {
 						$cal_type = 2;
 
-						$cal_updated = date(DEFAULT_DATE_FORMAT, $result["updated_date"]);
+						$cal_updated = date(DEFAULT_DATE_FORMAT, $event["updated_date"]);
 					}
 
 					$events[] = array (
-								"id" => $result["event_id"],
-								"start"	=> date("c", $result["event_start"]),
-								"end" => date("c", $result["event_finish"]),
-								"title" => strip_tags($result["event_title"]),
-								"loc" => strip_tags($result["event_location"]),
+								"drid" => $drid,
+								"id" => $event["event_id"],
+								"start"	=> date("c", $event["event_start"]),
+								"end" => date("c", $event["event_finish"]),
+								"title" => strip_tags($event["event_title"]),
+								"loc" => strip_tags($event["event_location"]),
 								"type" => $cal_type,
 								"updated" => $cal_updated
 					);
 				}
+			}
 
-				echo json_encode($events);
-			break;
-		}
+			echo json_encode($events);
+		break;
 	}
 }
-?>

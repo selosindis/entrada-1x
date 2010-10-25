@@ -36,7 +36,6 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
-
 	$DISPLAY_DURATION		= array();
 	$notice_where_clause	= "";
 	$poll_where_clause		= "";
@@ -109,18 +108,19 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 
 	switch ($ACTION) {
 		case "read" :
-			if ((isset($_POST["mark_read"])) && (@is_array($_POST["mark_read"]))) {
+			if ((isset($_POST["mark_read"])) && (is_array($_POST["mark_read"]))) {
 				foreach ($_POST["mark_read"] as $notice_id) {
 					if ($notice_id = (int) $notice_id) {
 						add_statistic("notices", "read", "notice_id", $notice_id);
 					}
 				}
 			}
+			
 			$_SERVER["QUERY_STRING"] = replace_query(array("action" => false));
-			break;
+		break;
 		default :
 			continue;
-			break;
+		break;
 	}
 
 	switch ($_SESSION["details"]["group"]) {
@@ -274,7 +274,7 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 			 * How did this person not get assigned this already? Mak'em new.
 			 */
 			if (!isset($_SESSION["details"]["grad_year"])) {
-				$_SESSION["details"]["grad_year"] = (date("Y", time()) + ((date("m", time()) < 7) ?  3 : 4));
+				$_SESSION["details"]["grad_year"] = fetch_first_year();
 			}
 
 			$display_schedule_tabs	= false;
@@ -493,9 +493,9 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 							$event.find('.wc-time,.wc-title').qtip({
 								content: {
 									text: '<img class="throbber" src="<?php echo ENTRADA_RELATIVE; ?>/images/throbber.gif" alt="Loading..." />',
-									url: '<?php echo ENTRADA_RELATIVE; ?>/api/events.api.php?id=' + calEvent.id,
+									url: '<?php echo ENTRADA_RELATIVE; ?>/api/events.api.php?id=' + calEvent.id + (calEvent.drid != 'undefined' ? '&drid=' + calEvent.drid : ''),
 									title: {
-										text: '<a href="<?php echo ENTRADA_RELATIVE; ?>/events?id=' + calEvent.id + '">' + calEvent.title + '</a>',
+										text: '<a href="<?php echo ENTRADA_RELATIVE; ?>/events?' + (calEvent.drid != 'undefined' ? 'drid=' + calEvent.drid : 'id=' + calEvent.id) + '">' + calEvent.title + '</a>',
 										button: 'Close'
 									}
 								},
@@ -568,7 +568,7 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 				</table>
 				<div id="dashboardCalendar"></div>
 				<div style="text-align: right; margin-top: 5px">
-					<a href="<?php echo ENTRADA_URL; ?>/calendars/<?php echo html_encode($_SESSION["details"]["username"]); ?>.ics" class="feeds ics">Subscribe to Calendar</a>
+					<a href="<?php echo str_ireplace(array("https://", "http://"), "webcal://", ENTRADA_URL); ?>/calendars<?php echo ((isset($_SESSION["details"]["private_hash"])) ? "/private-".html_encode($_SESSION["details"]["private_hash"]) : ""); ?>/<?php echo html_encode($_SESSION["details"]["username"]); ?>.ics" class="feeds ics">Subscribe to Calendar</a>
 				</div>
 				<?php
 			}
@@ -740,17 +740,17 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 					switch ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["dlength"]) {
 						case 1 :
 							echo "<strong>last term</strong>.";
-							break;
+						break;
 						case 3 :
 							echo "<strong>this month</strong>.";
-							break;
+						break;
 						case 4 :
 							echo "<strong>next term</strong>.";
-							break;
+						break;
 						case 2 :
 						default :
 							echo "<strong>this term</strong>.";
-							break;
+						break;
 					}
 					?>
 					<br /><br />
@@ -758,7 +758,12 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 				</div>
 				<?php
 			}
-			break;
+			?>
+			<div style="text-align: right; margin-top: 5px">
+				<a href="<?php echo str_ireplace(array("https://", "http://"), "webcal://", ENTRADA_URL); ?>/calendars<?php echo ((isset($_SESSION["details"]["private_hash"])) ? "/private-".html_encode($_SESSION["details"]["private_hash"]) : ""); ?>/<?php echo html_encode($_SESSION["details"]["username"]); ?>.ics" class="feeds ics">Subscribe to Calendar</a>
+			</div>
+			<?php
+		break;
 		case "staff" :
 		default :
 			continue;

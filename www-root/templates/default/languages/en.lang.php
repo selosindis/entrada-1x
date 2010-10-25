@@ -133,6 +133,22 @@ return array (
     "community_history_rename_community" => "Community is now known as <a href=\"%SITE_COMMUNITY_URL%\">%RECORD_TITLE%</a>",
     "community_history_activate_module" => "The <a href=\"%SITE_COMMUNITY_URL%:%PAGE_URL%\">%RECORD_TITLE%</a> module was activated for this community.",
     "community_history_move_file" => "The <a href=\"%SITE_COMMUNITY_URL%:%PAGE_URL%?action=view-file&id=%RECORD_ID%\">%RECORD_TITLE%</a> file was moved to a different <a href=\"%SITE_COMMUNITY_URL%:%PAGE_URL%?action=view-folder&id=%PARENT_ID%\">folder</a>.",
-	"community_history_move_photo" => "The <a href=\"%SITE_COMMUNITY_URL%:%PAGE_URL%?action=view-photo&id=%RECORD_ID%\">%RECORD_TITLE%</a> photo was moved to a different <a href=\"%SITE_COMMUNITY_URL%:%PAGE_URL%?action=view-gallery&id=%PARENT_ID%\">gallery</a>."
+	"community_history_move_photo" => "The <a href=\"%SITE_COMMUNITY_URL%:%PAGE_URL%?action=view-photo&id=%RECORD_ID%\">%RECORD_TITLE%</a> photo was moved to a different <a href=\"%SITE_COMMUNITY_URL%:%PAGE_URL%?action=view-gallery&id=%PARENT_ID%\">gallery</a>.",
+	
+	/**
+	 * 
+	 */
+	"mspr_no_entity" => "No Entity ID provided.",
+	"mspr_invalid_entity" => "Item not found or invalid identifier provided",
+	"mspr_no_action" => "No action requested.",
+	"mspr_invalid_action" => "Invalid action requested for this item",
+	"mspr_no_section" => "No MSPR section specified",
+	"mspr_invalid_section" => "Invalid MSPR section specified",
+	"mspr_no_comment" => "A comment is required and none was provided",
+	"mspr_no_reject_reason" => "A reason for the rejection is required and none was provided",
+	"mspr_invalid_user_info" => "Invalid user information provided",
+	"mspr_no_details" => "Details are required and none were provided",
+	"mspr_insufficient_info" => "Insufficient information provided.",
+	"mspr_email_failed" => "Failed to send rejection email."
 	);
 ?>

@@ -1362,3 +1362,7 @@ ul.community-page-list ul ul ul ul ul ul span.delete {
 .sortable .community-page-container span.next {
 	background-image: url(../../../../images/arrow-resize.png);
 }
+
+.odd-announcements {
+	background-color: #F7F7F7;
+}

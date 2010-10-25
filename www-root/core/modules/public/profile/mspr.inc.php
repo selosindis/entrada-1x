@@ -18,8 +18,7 @@ if (!defined("IN_PROFILE")) {
 } elseif(!$ENTRADA_ACL->isLoggedInAllowed('mspr', 'update',true) || $_SESSION["details"]["group"] != "student") {
 	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/".$MODULE."\\'', 15000)";
 
-	$ERROR++;
-	$ERRORSTR[]	= "Your account does not have the permissions required to use this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
+	add_error("Your account does not have the permissions required to use this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.");
 
 	echo display_error();
 
@@ -27,11 +26,9 @@ if (!defined("IN_PROFILE")) {
 }  else {
 	require_once(dirname(__FILE__)."/includes/functions.inc.php");
 	
-	require_once("Models/MSPRs.class.php");
-	
+	require_once("Models/mspr/MSPRs.class.php");
 	//require_mspr_models();
 	$user = User::get($PROXY_ID);
-	
 	$PAGE_META["title"]			= "MSPR";
 	$PAGE_META["description"]	= "";
 	$PAGE_META["keywords"]		= "";
@@ -58,80 +55,92 @@ if (!defined("IN_PROFILE")) {
 		new_sidebar_item("Delegated Permissions", $sidebar_html, "delegated-permissions", "open");
 	}
 
+	$name = $user->getFirstname() . " " . $user->getLastname();
+	$number = $user->getNumber();
+	$year = $user->getGradYear();
 
 	$mspr = MSPR::get($user);
-	$number = $user->getNumber();
-	$revisions = $mspr->getMSPRRevisions();
-	$closed = $mspr->isClosed();
-	$generated = $mspr->isGenerated();
-	$revision = $mspr->getGeneratedTimestamp();
 	
-	$year = $user->getGradYear();
-	$class_data = MSPRClassData::get($year);
-	
-	$mspr_close = $mspr->getClosedTimestamp();
-	
-	if (!$mspr_close) { //no custom time.. use the class default
-		$mspr_close = $class_data->getClosedTimestamp();	
+	if (!$mspr) { //no mspr yet. create one
+		MSPR::create($user);
+		$mspr = MSPR::get($user);
 	}
-	
-	if ($type = $_GET['get']) {
-		$name = $user->getFirstname() . " " . $user->getLastname();
-		switch($type) {
-			case 'html':
-				header('Content-type: text/html');
-				header('Content-Disposition: filename="MSPR - '.$name.'('.$number.').html"');
-				
-				break;
-			case 'pdf':
-				header('Content-type: application/pdf');
-				header('Content-Disposition: attachment; filename="MSPR - '.$name.'('.$number.').pdf"');
-				break;
-			default:
-				$ERROR++;
-				$ERRORSTR[] = "Unknown file type: " . $type;
-		}
-		if (!$ERROR) {
-			ob_clear_open_buffers();
-			flush();
-			echo $mspr->getMSPRFile($type,$revision);
-			exit();	
+
+	if (!$mspr) {
+		add_notice("MSPR not yet available. Please try again later.");
+		application_log("error", "Error creating MSPR for user " .$PROXY_ID. ": " . $name . "(".$number.")");
+		display_status_messages();
+	} else {
+		$revisions = $mspr->getMSPRRevisions();
+		$closed = $mspr->isClosed();
+		$generated = $mspr->isGenerated();
+		$revision = $mspr->getGeneratedTimestamp();
+		if (!$revision && $revisions) {
+			$revision = array_shift($revisions);
 		}
 		
-	}
+		$class_data = MSPRClassData::get($year);
+		
+		$mspr_close = $mspr->getClosedTimestamp();
+		
+		if (!$mspr_close) { //no custom time.. use the class default
+			$mspr_close = $class_data->getClosedTimestamp();	
+		}
+		
+		if ($type = $_GET['get']) {
+			switch($type) {
+				case 'html':
+					header('Content-type: text/html');
+					header('Content-Disposition: filename="MSPR - '.$name.'('.$number.').html"');
+					
+					break;
+				case 'pdf':
+					header('Content-type: application/pdf');
+					header('Content-Disposition: attachment; filename="MSPR - '.$name.'('.$number.').pdf"');
+					break;
+				default:
+					add_error("Unknown file type: " . $type);
+			}
+			if (!has_error()) {
+				ob_clear_open_buffers();
+				flush();
+				echo $mspr->getMSPRFile($type,$revision);
+				exit();	
+			}
+			
+		}
+		
+		$clerkship_core_completed = $mspr["Clerkship Core Completed"];
+		$clerkship_core_pending = $mspr["Clerkship Core Pending"];
+		$clerkship_elective_completed = $mspr["Clerkship Electives Completed"];
+		$clinical_evaluation_comments = $mspr["Clinical Performance Evaluation Comments"];
+		$critical_enquiry = $mspr["Critical Enquiry"];
+		$student_run_electives = $mspr["Student-Run Electives"];
+		$observerships = $mspr["Observerships"];
+		$international_activities = $mspr["International Activities"];
+		$internal_awards = $mspr["Internal Awards"];
+		$external_awards = $mspr["External Awards"];
+		$studentships = $mspr["Studentships"];
+		$contributions = $mspr["Contributions to Medical School"];
+		$leaves_of_absence = $mspr["Leaves of Absence"];
+		$formal_remediations = $mspr["Formal Remediation Received"];
+		$disciplinary_actions = $mspr["Disciplinary Actions"];
+		$community_health_and_epidemiology = $mspr["Community Health and Epidemiology"];
+		$research_citations = $mspr["Research"];
+		
 	
-	$clerkship_core_completed = $mspr["Clerkship Core Completed"];
-	$clerkship_core_pending = $mspr["Clerkship Core Pending"];
-	$clerkship_elective_completed = $mspr["Clerkship Electives Completed"];
-	$clinical_evaluation_comments = $mspr["Clinical Performance Evaluation Comments"];
-	$critical_enquiry = $mspr["Critical Enquiry"];
-	$student_run_electives = $mspr["Student-Run Electives"];
-	$observerships = $mspr["Observerships"];
-	$international_activities = $mspr["International Activities"];
-	$internal_awards = $mspr["Internal Awards"];
-	$external_awards = $mspr["External Awards"];
-	$studentships = $mspr["Studentships"];
-	$contributions = $mspr["Contributions to Medical School"];
-	$leaves_of_absence = $mspr["Leaves of Absence"];
-	$formal_remediations = $mspr["Formal Remediation Received"];
-	$disciplinary_actions = $mspr["Disciplinary Actions"];
-	$community_health_and_epidemiology = $mspr["Community Health and Epidemiology"];
-	$research_citations = $mspr["Research"];
-	
-
-	
-	display_status_messages();
+		display_status_messages();
 	
 ?>
 
 <h1>Medical School Performance Report</h1> 
 
-<?php 
+<?php
 if ($closed) {
 ?>
 <div class="display-notice">
 	<p>MSPR submission closed on <?php echo date("F j, Y \a\\t g:i a",$mspr_close); ?></p>
-	<?php if ($generated) {	?>
+	<?php if ($revision) {	?>
 	<p>Your MSPR is available in HTML and PDF, below:</p>
 	<span class="file-block"><a href="<?php echo ENTRADA_URL; ?>/profile?section=mspr&get=html"><img src="<?php echo ENTRADA_URL; ?>/serve-icon.php?ext=html" /> HTML</a>&nbsp;&nbsp;&nbsp;<a href="<?php echo ENTRADA_URL; ?>/profile?section=mspr&get=pdf"><img src="<?php echo ENTRADA_URL; ?>/serve-icon.php?ext=pdf" /> PDF</a></span>
 	<div class="clearfix">&nbsp;</div>
@@ -162,7 +171,7 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 	<div id="required-information-section">
 		<div class="instructions" style="margin-left:2em;margin-top:2ex;">
 			<strong>Instructions</strong>
-			<p>The sections below require require your input. The information you provide will appear on your Medical School Performance Report. All submisions are subject to dean approval.</p>
+			<p>The sections below require your input. The information you provide will appear on your Medical School Performance Report. All submisions are subject to dean approval.</p>
 			<ul>
 				<li>
 					Each section below provides a link to add new entires or edit in the case of single entires (Critical Enquiry, and Community Health and Epidemiology Project).  
@@ -233,17 +242,17 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 						<tr>
 							<td>&nbsp;</td>
 							<td><label class="form-required" for="organization">Organization:</label></td>
-							<td><input name="organization" type="text" style="width:40%;" value="<?php echo $ce_organization; ?>"></input></td>
+							<td><input name="organization" type="text" style="width:40%;" value="<?php echo $ce_organization; ?>"></input> <span class="content-small"><strong>Example</strong>: Queen's University</span></td>
 						</tr>	
 						<tr>
 							<td>&nbsp;</td>
 							<td><label class="form-required" for="location">Location:</label></td>
-							<td><input name="location" type="text" style="width:40%;" value="<?php echo $ce_location; ?>"></input></td>
+							<td><input name="location" type="text" style="width:40%;" value="<?php echo $ce_location; ?>"></input> <span class="content-small"><strong>Example</strong>: Kingston, Ontario</span></td>
 						</tr>	
 						<tr>
 							<td>&nbsp;</td>
 							<td><label class="form-required" for="supervisor">Supervisor:</label></td>
-							<td><input name="supervisor" type="text" style="width:40%;" value="<?php echo $ce_supervisor; ?>"></input></td>
+							<td><input name="supervisor" type="text" style="width:40%;" value="<?php echo $ce_supervisor; ?>"></input> <span class="content-small"><strong>Example</strong>: Dr. Nick Riviera</span></td>
 						</tr>	
 					</tbody>
 				
@@ -268,8 +277,8 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 			</div>
 		</div>
 		<div class="section" >
-			<h3 title="Community Health and Epidemiology" class="collapsable collapsed">Community Health and Epidemiology</h3>
-			<div id="community-health-and-epidemiology">
+			<h3 title="Community-Based Project" class="collapsable collapsed">Community-Based Project</h3>
+			<div id="community-based-project">
 			
 			
 				<?php 
@@ -327,17 +336,17 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 						<tr>
 							<td>&nbsp;</td>
 							<td><label class="form-required" for="organization">Organization:</label></td>
-							<td><input name="organization" type="text" style="width:40%;" value="<?php echo $chae_organization; ?>"></input></td>
+							<td><input name="organization" type="text" style="width:40%;" value="<?php echo $chae_organization; ?>"></input> <span class="content-small"><strong>Example</strong>: Housing First/Queen's University</span></td>
 						</tr>	
 						<tr>
 							<td>&nbsp;</td>
 							<td><label class="form-required" for="location">Location:</label></td>
-							<td><input name="location" type="text" style="width:40%;" value="<?php echo $chae_location; ?>"></input></td>
+							<td><input name="location" type="text" style="width:40%;" value="<?php echo $chae_location; ?>"></input> <span class="content-small"><strong>Example</strong>: Kingston, Ontario</span></td>
 						</tr>	
 						<tr>
 							<td>&nbsp;</td>
 							<td><label class="form-required" for="supervisor">Supervisor:</label></td>
-							<td><input name="supervisor" type="text" style="width:40%;" value="<?php echo $chae_supervisor; ?>"></input></td>
+							<td><input name="supervisor" type="text" style="width:40%;" value="<?php echo $chae_supervisor; ?>"></input> <span class="content-small"><strong>Example</strong>: Dr. Nick Riviera</span></td>
 						</tr>	
 					</tbody>
 				
@@ -367,6 +376,7 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 					<ul>
 						<li>Only add citations of published research in which you were a named author</li>
 						<li>Citations below may be re-ordered. The top-six <em>approved</em> citations will appear on your MSPR.</li>
+						<li>Research citations should be provided in a format following <a href="http://owl.english.purdue.edu/owl/resource/747/01/">MLA guidelines</a></li>
 					</ul>
 				</div>
 				<div id="add_research_citation_link" style="float: right;">
@@ -402,7 +412,7 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 							<tr>
 							<td>&nbsp;</td>
 							<td valign="top"><label class="form-required" for="details">Citation:</label></td>
-							<td><textarea name="details" style="width:80%;"></textarea><br /><span class="content-small">Note: Should adhere to MLA guidelines.</span>
+							<td><textarea name="details" style="width:80%;height:8ex;"></textarea><br /><span class="content-small">Note: Should adhere to MLA guidelines.</span>
 							</td>
 							</tr>
 						</tbody>
@@ -442,6 +452,12 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 			 
 			<h3 class="collapsable collapsed" title="External Awards Section">External Awards</h3>
 			<div id="external-awards-section">
+				<div class="instructions">
+					<ul>
+						<li>Only awards of academic significance will be considered.</li>
+						<li>Award terms must be provided to be considered. Awards not accompanied by terms will be rejected.</li>
+					</ul>
+				</div>
 			<div id="add_external_award_link" style="float: right;">
 				<ul class="page-action">
 					<li><a id="add_external_award" href="#external-awards-section" class="strong-green">Add External Award</a></li>
@@ -484,8 +500,8 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 						</tr>	
 						<tr>
 						<td>&nbsp;</td>
-						<td><label class="form-required" for="terms">Award Terms:</label></td>
-						<td><textarea name="terms" style="width: 100%; height: 100px;" cols="65" rows="20"></textarea></td>
+						<td valign="top"><label class="form-required" for="terms">Award Terms:</label></td>
+						<td><textarea name="terms" style="width: 80%; height: 12ex;" cols="65" rows="20"></textarea></td>
 						</tr>	
 						<tr>
 						<td>&nbsp;</td>
@@ -528,133 +544,149 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 			</div>
 		</div>
 		<div class="section" >
-			<h3 title="Contributions to Medical School" class="collapsable collapsed">Contributions to Medical School</h3>
+			<h3 title="Contributions to Medical School" class="collapsable collapsed">Contributions to Medical School/Student Life</h3>
 			<div id="contributions-to-medical-school">
+				<div class="instructions">
+					<ul>
+						<li>Extra-curricular learning activities are only approved if verified</li>
+						<li>Examples of contributions to medical school/student life include:
+							<ul>
+								<li>Participation in School of Medicine student government</li>
+								<li>Committees (such as admissions)</li>
+								<li>Organizing extra-curricular learning activities and seminars</li>					
+							</ul>
+						</li>
+					</ul>
+				</div>
 			
-			<?php 
-			$show_contributions_form =  ($_GET['show'] == "contributions_form");
-			?>	
-			<div id="add_contribution_link" style="float: right;<?php if ($show_contributions_form) { echo "display:none;"; }   ?>">
-				<ul class="page-action">
-					<li><a id="add_contribution" href="<?php echo ENTRADA_URL; ?>/profile?section=mspr&show=contributions_form&id=<?php echo $PROXY_ID; ?>" class="strong-green">Add Contribution</a></li>
-				</ul>
-			</div>
-			<div class="clear">&nbsp;</div>
-			<form id="add_contribution_form" name="add_contribution_form" action="<?php echo ENTRADA_URL; ?>/profile?section=mspr&id=<?php echo $PROXY_ID; ?>" method="post" <?php if (!$show_contributions_form) { echo "style=\"display:none;\""; }   ?> >
-				<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
-				<table class="mspr_form">
-					<colgroup>
-						<col width="3%"></col>
-						<col width="25%"></col>
-						<col width="72%"></col>
-					</colgroup>
-					<tfoot>
-						<tr>
-							<td colspan="3">&nbsp;</td>
-						</tr>
-						<tr>
-							<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
-								<input type="submit" name="action" value="Add" />
-								<div id="hide_contribution_link" style="display:inline-block;">
-									<ul class="page-action-cancel">
-										<li><a id="hide_contribution" href="<?php echo ENTRADA_URL; ?>/profile?section=mspr&id=<?php echo $PROXY_ID; ?>" class="strong-green">[ Cancel Adding Contribution ]</a></li>
-									</ul>
-								</div>
-							</td>
-						</tr>
-					</tfoot>
-					<tbody>
-						<tr>
-						<td>&nbsp;</td>
-						<td><label class="form-required" for="role">Role:</label></td>
-						<td><input name="role" type="text" style="width:40%;"></input></td>
-						</tr>	
-						<tr>
-						<td>&nbsp;</td>
-						<td><label class="form-required" for="org_event">Organization/Event:</label></td>
-						<td><input name="org_event" type="text" style="width:40%;"></input></td>
-						</tr>	
-												<tr>
-									<td>&nbsp;</td>
-									<td><label class="form-required" for="start">Start:</label></td>
-									<td>
-										<select name="start_month">
-										<?php
-										echo build_option("","Month",true);
-											
-										for($month_num = 1; $month_num <= 12; $month_num++) {
-											echo build_option($month_num, getMonthName($month_num));
-										}
-										?>
-										</select>
-										<select name="start_year">
-										<?php 
-										$cur_year = (int) date("Y");
-										$start_year = $cur_year - 6;
-										$end_year = $cur_year + 4;
-										
-										for ($opt_year = $start_year; $opt_year <= $end_year; ++$opt_year) {
-												echo build_option($opt_year, $opt_year, $opt_year == $cur_year);
-										}
-										?>
-										</select>
-									</td>
-								</tr>
-								<tr>
-									<td>&nbsp;</td>
-									<td><label class="form-required" for="end">End:</label></td>
-									<td>
-										<select tabindex="1" name="end_month">
-										<?php
-										echo build_option("","Month",true);
-											
-										for($month_num = 1; $month_num <= 12; $month_num++) {
-											echo build_option($month_num, getMonthName($month_num));
-										}
-										?>
-										</select>
-										<select name="end_year">
-										<?php 
-										echo build_option("","Year",true);
-										$cur_year = (int) date("Y");
-										$start_year = $cur_year - 6;
-										$end_year = $cur_year + 4;
-										
-										for ($opt_year = $start_year; $opt_year <= $end_year; ++$opt_year) {
-												echo build_option($opt_year, $opt_year, false);
-										}
-										?>
-										</select>
-									</td>
-								</tr>
-					</tbody>
-				
-				</table>	
-			
+				<?php 
+				$show_contributions_form =  ($_GET['show'] == "contributions_form");
+				?>	
+				<div id="add_contribution_link" style="float: right;<?php if ($show_contributions_form) { echo "display:none;"; }   ?>">
+					<ul class="page-action">
+						<li><a id="add_contribution" href="<?php echo ENTRADA_URL; ?>/profile?section=mspr&show=contributions_form&id=<?php echo $PROXY_ID; ?>" class="strong-green">Add Contribution</a></li>
+					</ul>
+				</div>
 				<div class="clear">&nbsp;</div>
-			</form>
+				<form id="add_contribution_form" name="add_contribution_form" action="<?php echo ENTRADA_URL; ?>/profile?section=mspr&id=<?php echo $PROXY_ID; ?>" method="post" <?php if (!$show_contributions_form) { echo "style=\"display:none;\""; }   ?> >
+					<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
+					<table class="mspr_form">
+						<colgroup>
+							<col width="3%"></col>
+							<col width="25%"></col>
+							<col width="72%"></col>
+						</colgroup>
+						<tfoot>
+							<tr>
+								<td colspan="3">&nbsp;</td>
+							</tr>
+							<tr>
+								<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
+									<input type="submit" name="action" value="Add" />
+									<div id="hide_contribution_link" style="display:inline-block;">
+										<ul class="page-action-cancel">
+											<li><a id="hide_contribution" href="<?php echo ENTRADA_URL; ?>/profile?section=mspr&id=<?php echo $PROXY_ID; ?>" class="strong-green">[ Cancel Adding Contribution ]</a></li>
+										</ul>
+									</div>
+								</td>
+							</tr>
+						</tfoot>
+						<tbody>
+							<tr>
+							<td>&nbsp;</td>
+							<td><label class="form-required" for="role">Role:</label></td>
+							<td><input name="role" type="text" style="width:40%;"></input> <span class="content-small"><strong>Example</strong>: Interviewer</span></td>
+							</tr>	
+							<tr>
+							<td>&nbsp;</td>
+							<td><label class="form-required" for="org_event">Organization/Event:</label></td>
+							<td><input name="org_event" type="text" style="width:40%;"></input> <span class="content-small"><strong>Example</strong>: Medical School Interview Weekend</span></td>
+							</tr>	
+													<tr>
+										<td>&nbsp;</td>
+										<td><label class="form-required" for="start">Start:</label></td>
+										<td>
+											<select name="start_month">
+											<?php
+											echo build_option("","Month",true);
+												
+											for($month_num = 1; $month_num <= 12; $month_num++) {
+												echo build_option($month_num, getMonthName($month_num));
+											}
+											?>
+											</select>
+											<select name="start_year">
+											<?php 
+											$cur_year = (int) date("Y");
+											$start_year = $cur_year - 6;
+											$end_year = $cur_year + 4;
+											
+											for ($opt_year = $start_year; $opt_year <= $end_year; ++$opt_year) {
+													echo build_option($opt_year, $opt_year, $opt_year == $cur_year);
+											}
+											?>
+											</select>
+										</td>
+									</tr>
+									<tr>
+										<td>&nbsp;</td>
+										<td><label class="form-required" for="end">End:</label></td>
+										<td>
+											<select tabindex="1" name="end_month">
+											<?php
+											echo build_option("","Month",true);
+												
+											for($month_num = 1; $month_num <= 12; $month_num++) {
+												echo build_option($month_num, getMonthName($month_num));
+											}
+											?>
+											</select>
+											<select name="end_year">
+											<?php 
+											echo build_option("","Year",true);
+											$cur_year = (int) date("Y");
+											$start_year = $cur_year - 6;
+											$end_year = $cur_year + 4;
+											
+											for ($opt_year = $start_year; $opt_year <= $end_year; ++$opt_year) {
+													echo build_option($opt_year, $opt_year, false);
+											}
+											?>
+											</select>
+										</td>
+									</tr>
+						</tbody>
+					
+					</table>	
+				
+					<div class="clear">&nbsp;</div>
+				</form>
 		
-			<div id="contributions"><?php echo display_contributions_profile($contributions); ?></div>
-			<div class="clear">&nbsp;</div>
-			<script language="javascript">
-			var contributions = new ActiveDataEntryProcessor({
-				url : '<?php echo webservice_url("mspr-profile"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=contributions',
-				data_destination: $('contributions'),
-				new_form: $('add_contribution_form'),
-				remove_forms_selector: '#contributions .entry form',
-				new_button: $('add_contribution_link'),
-				hide_button: $('hide_contribution'),
-				section:'contributions'
-		
-			});
+				<div id="contributions"><?php echo display_contributions_profile($contributions); ?></div>
+				<div class="clear">&nbsp;</div>
+				<script language="javascript">
+				var contributions = new ActiveDataEntryProcessor({
+					url : '<?php echo webservice_url("mspr-profile"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=contributions',
+					data_destination: $('contributions'),
+					new_form: $('add_contribution_form'),
+					remove_forms_selector: '#contributions .entry form',
+					new_button: $('add_contribution_link'),
+					hide_button: $('hide_contribution'),
+					section:'contributions'
 			
-			</script>
-		
+				});
+				
+				</script>
+			
+			</div>
 		</div>
-	</div>
 	</div>
 	<h2 title="Supplied Information Section" class="collapsed">Information Supplied by Staff and Faculty</h2>
 	<div id="supplied-information-section">
+		<div class="instructions">
+		<p>This section consists of information entered by staff or extracted from other sources (for example, clerkship schedules).</p>
+		<p>Please periodically read over the information in the following sections to verify its accuracy. If any errors are found, please contact the undergraduate office.</p>
+		</div>
 	
 		<div class="section">
 		<h3 title="Clerkship Core Rotations Completed Satisfactorily to Date" class="collapsable collapsed">Clerkship Core Rotations Completed Satisfactorily to Date</h3>
@@ -687,26 +719,26 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 			
 			<div class="subsection">
 				<h4 title="International Activities">International Activities</h4>
-				<div id="international-activities"><?php echo display_international_activities($international_activities); ?></div>
+				<div id="international-activities"><?php echo display_international_activities_profile($international_activities); ?></div>
 			</div>
 			<div class="subsection" >
 				<h4>Observerships</h4>
-				<div id="observerships"><?php echo display_observerships_public($observerships); ?></div>
+				<div id="observerships"><?php echo display_observerships_profile($observerships); ?></div>
 			</div>
 			<div class="subsection" >
 				<h4>Student-Run Electives</h4>
-				<div id="student_run_electives"><?php echo display_student_run_electives_public($student_run_electives); ?></div>
+				<div id="student_run_electives"><?php echo display_student_run_electives_profile($student_run_electives); ?></div>
 			</div>
 		</div>
 		
 		</div>
 		<div class="section">
 			<h3 title="Internal Awards" class="collapsable collapsed">Internal Awards</h3>
-			<div id="internal-awards"><?php echo display_internal_awards($internal_awards); ?></div>
+			<div id="internal-awards"><?php echo display_internal_awards_profile($internal_awards); ?></div>
 			
 		</div><div class="section" >
 			<h3 title="Summer Studentships" class="collapsable collapsed">Summer Studentships</h3>
-			<div id="summer-studentships"><?php echo display_studentships($studentships); ?></div>
+			<div id="summer-studentships"><?php echo display_studentships_profile($studentships); ?></div>
 		</div>
 		<div class="section">
 			<h3 title="Leaves of Absence" class="collapsable collapsed">Leaves of Absence</h3>
@@ -798,26 +830,25 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 		
 			<div class="subsection">
 				<h4 title="International Activities">International Activities</h4>
-				<div id="international-activities"><?php echo display_international_activities($international_activities); ?></div>
+				<div id="international-activities"><?php echo display_international_activities_profile($international_activities); ?></div>
 			</div>
 			<div class="subsection" >
 				<h4>Observerships</h4>
-				<div id="observerships"><?php echo display_observerships_public($observerships); ?></div>
+				<div id="observerships"><?php echo display_observerships_profile($observerships); ?></div>
 			</div>
 			<div class="subsection" >
 				<h4>Student-Run Electives</h4>
-				<div id="student_run_electives"><?php echo display_student_run_electives_public($student_run_electives); ?></div>
+				<div id="student_run_electives"><?php echo display_student_run_electives_profile($student_run_electives); ?></div>
 			</div>
 		</div>
 	</div>
-	
 	<div class="section">
 		<h3 title="Internal Awards" class="collapsable collapsed">Internal Awards</h3>
-		<div id="internal-awards"><?php echo display_internal_awards($internal_awards); ?></div>
+		<div id="internal-awards"><?php echo display_internal_awards_profile($internal_awards); ?></div>
 	</div>
 	<div class="section" >
 		<h3 title="Summer Studentships" class="collapsable collapsed">Summer Studentships</h3>
-		<div id="summer-studentships"><?php echo display_studentships($studentships); ?></div>
+		<div id="summer-studentships"><?php echo display_studentships_profile($studentships); ?></div>
 	</div>
 	<div class="section">
 		<h3 title="Leaves of Absence" class="collapsable collapsed">Leaves of Absence</h3>
@@ -842,8 +873,8 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 	?>
 	
 	
-</div>
-
+</div>	
 <?php 
+	}
 }
 ?>

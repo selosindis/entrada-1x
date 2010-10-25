@@ -1854,3 +1854,7 @@ background:transparent url(../../../../images/indicator.gif) no-repeat right top
 form.inplaceeditor-form a {
 margin-left:10px;
 }
+
+.odd-announcements {
+	background-color: #F7F7F7;
+}

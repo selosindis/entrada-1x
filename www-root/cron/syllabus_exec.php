@@ -58,9 +58,9 @@ if((is_array($APPLICATION_PATH)) && (isset($APPLICATION_PATH["htmldoc"])) && (@i
 	--outfile ".$output_file;
 	
 	$timestamp	= time();
-	$graduation	= (date("Y", $timestamp) + ((date("m", $timestamp) < 7) ?  3 : 4));
+	$graduation	= fetch_first_year();
 	
-	$phases		= array("1", "2", "3", "2A", "2B", "2C", "2E");
+	$phases = array("1", "2", "T3", "T4", "2A", "2B", "2C", "2E", "3");
 	
 	for($grad_year = $graduation; $grad_year > ($graduation - 3); $grad_year--) {
 		foreach($phases as $phase) {
@@ -68,7 +68,7 @@ if((is_array($APPLICATION_PATH)) && (isset($APPLICATION_PATH["htmldoc"])) && (@i
 			$filename	= str_replace(array("%GRADYEAR%", "%PHASE%"), array($grad_year, $phase), $output_file);
 			
 			@exec($command);
-			@exec("chmod 644 ".$filename);
+			@chmod($filename, 0644);
 		}
 	}
 } else {

@@ -58,7 +58,7 @@ define("COMMUNITY_URL", ENTRADA_URL."/community");								// Full URL to the com
 define("COMMUNITY_ABSOLUTE", ENTRADA_ABSOLUTE."/community");					// Full Directory Path to the community directory without a trailing slash.
 define("COMMUNITY_RELATIVE", ENTRADA_RELATIVE."/community");					// Absolute Path from the document_root to the community without a trailing slash.
 
-define("DATABASE_TYPE", "mysqli");												// Database Connection Type
+define("DATABASE_TYPE", $config->database->adapter);												// Database Connection Type
 define("DATABASE_HOST", $config->database->host);								// The hostname or IP of the database server you want to connnect to.
 define("DATABASE_NAME", $config->database->entrada_database);					// The name of the database to connect to.
 define("DATABASE_USER", $config->database->username);							// A username that can access this database.
@@ -70,6 +70,7 @@ define("CLERKSHIP_EMAIL_NOTIFICATIONS", true);									// Whether email notifica
 define("CLERKSHIP_LOTTERY_START", strtotime("March 1st, 2010"));
 define("CLERKSHIP_LOTTERY_FINISH", strtotime("March 14th, 2010"));
 define("CLERKSHIP_LOTTERY_MAX", 6);
+define("CLERKSHIP_FIRST_CLASS", 2011);
 $CLERKSHIP_REQUIRED_WEEKS = 14;
 $CLERKSHIP_CATEGORY_TYPE_ID = 13;
 $CLERKSHIP_EVALUATION_FORM = "http://url_of_your_schools_precptor_evaluation_of_clerk_form.pdf";
@@ -84,11 +85,10 @@ $CLERKSHIP_FIELD_STATUS["cancelled"] = array("name" => "Cancelled", "visible" =>
 define("CURRICULAR_OBJECTIVES_PARENT_ID", 1);
 
 define("AUTH_PRODUCTION", ENTRADA_URL."/authentication/authenticate.php");
-
-define("AUTH_APP_ID", "1");														// Application ID for the MEdTech Authentication System.
-define("AUTH_APP_IDS_STRING", "1,97");														// Application ID for the MEdTech Authentication System.
-define("AUTH_USERNAME", "30000001");											// Application username to connect to the MEdTech Authentication System.
-define("AUTH_PASSWORD", "apple123");											// Application password to connect to the MEdTech Authentication System.
+define("AUTH_APP_ID", "1");														// Application ID for the Authentication System.
+define("AUTH_APP_IDS_STRING", "1");												// Application ID's to query for users in.
+define("AUTH_USERNAME", $config->auth_username);								// Application username to connect to the Authentication System.
+define("AUTH_PASSWORD", $config->auth_password);								// Application password to connect to the Authentication System.
 define("AUTH_METHOD", "local");													// The method used to authenticate users into the application (local or ldap).
 define("AUTH_DATABASE",	$config->database->auth_database);						// The name of the database that the authentication tables are located in. Must be able to connect to this using DATABASE_HOST, DATABASE_USER and DATABASE_PASS which are specified below.
 define("AUTH_MAX_LOGIN_ATTEMPTS", 5);											// The number of login attempts a user can make before they are locked out of the system for the lockout duration
@@ -251,7 +251,7 @@ define("DEBUG_MODE", true);														// Some places have extra debug code to
 define("SHOW_LOAD_STATS", true);												// Do you want to see the time it takes to load each page?
 
 define("APPLICATION_NAME", "Entrada");											// The name of this application in your school (i.e. MedCentral, Osler, etc.)
-define("APPLICATION_VERSION", "1.1.0");											// The current version of this application.
+define("APPLICATION_VERSION", "1.2.0");											// The current filesystem version of Entrada.
 define("APPLICATION_IDENTIFIER", "app-".AUTH_APP_ID);							// PHP does not allow session key's to be integers (sometimes), so we have to make it a string.
 
 $DEFAULT_META["title"] = "Entrada: An eLearning Community";
@@ -433,30 +433,32 @@ USERNOTIFICATION;
  * the public ones, which needs to be changed.
  */
 $MODULES = array();
-$MODULES["notices"] = array("title" => "Manage Notices", "resource" => "notice", "permission" => "update");
-$MODULES["polls"] = array("title" => "Manage Polls", "resource" => "poll", "permission" => "update");
-$MODULES["courses"] = array("title" => "Manage Courses", "resource"=> "coursecontent", "permission" => "update");
-$MODULES["gradebook"] = array("title" => "Manage Gradebook", "resource" => "gradebook", "permission" => "read");
-$MODULES["events"] = array("title" => "Manage Events", "resource" => "eventcontent", "permission" => "update");
-$MODULES["quizzes"] = array("title" => "Manage Quizzes", "resource" => "quiz", "permission" => "update");
-$MODULES["clerkship"] = array("title" => "Manage Clerkship", "resource" => "clerkship", "permission" => "update");
-$MODULES["regionaled"] = array("title" => "Regional Education", "resource" => "regionaled", "permission" => "update");
-$MODULES["objectives"]	= array("title" => "Manage Objectives", "resource" => "objective", "permission" => "update");
-$MODULES["users"] = array("title" => "Manage Users", "resource" => "user", "permission" => "update");
-$MODULES["reports"] = array("title" => "System Reports", "resource" => "reportindex", "permission" => "read");
 $MODULES["awards"] = array("title" => "Manage Awards", "resource" => "awards", "permission" => "update");
+$MODULES["clerkship"] = array("title" => "Manage Clerkship", "resource" => "clerkship", "permission" => "update");
+$MODULES["courses"] = array("title" => "Manage Courses", "resource"=> "coursecontent", "permission" => "update");
+$MODULES["events"] = array("title" => "Manage Events", "resource" => "eventcontent", "permission" => "update");
+$MODULES["gradebook"] = array("title" => "Manage Gradebook", "resource" => "gradebook", "permission" => "read");
 $MODULES["mspr"] = array("title" => "Manage MSPRs", "resource" => "mspr", "permission" => "create");
+$MODULES["tasks"] = array("title" => "Manage Tasks", "resource" => "task", "permission" => "create");
+$MODULES["notices"] = array("title" => "Manage Notices", "resource" => "notice", "permission" => "update");
+$MODULES["objectives"]	= array("title" => "Manage Objectives", "resource" => "objective", "permission" => "update");
 $MODULES["observerships"] = array("title" => "Manage Observerships", "resource" => "observerships", "permission" => "update");
+$MODULES["polls"] = array("title" => "Manage Polls", "resource" => "poll", "permission" => "update");
+$MODULES["quizzes"] = array("title" => "Manage Quizzes", "resource" => "quiz", "permission" => "update");
+$MODULES["users"] = array("title" => "Manage Users", "resource" => "user", "permission" => "update");
+$MODULES["regionaled"] = array("title" => "Regional Education", "resource" => "regionaled", "permission" => "update");
+$MODULES["reports"] = array("title" => "System Reports", "resource" => "reportindex", "permission" => "read");
+$MODULES["annualreport"] = array("title" => "Annual Reports", "resource" => "annualreportadmin", "permission" => "read");
 
 /**
  * System groups define which system groups & role combinations are allowed to
  * access this system. Note the student and alumni groups have many roles.
  */
 $SYSTEM_GROUPS = array();
-for($i = (date("Y", time()) + ((date("m", time()) < 7) ?  3 : 4)); $i >= 2004; $i--) {
+for($i = (date("Y") + (date("m") < 7 ? 3 : 4)); $i >= 2004; $i--) {
 	$SYSTEM_GROUPS["student"][] = $i;
 }
-for($i = (date("Y", time()) + ((date("m", time()) < 7) ?  3 : 4)); $i >= 1997; $i--) {
+for($i = (date("Y") + (date("m") < 7 ? 3 : 4)); $i >= 1997; $i--) {
 	$SYSTEM_GROUPS["alumni"][] = $i;
 }
 $SYSTEM_GROUPS["faculty"] = array("faculty", "lecturer", "director", "admin");
@@ -521,6 +523,12 @@ $ADMINISTRATION["staff"]["pcoordinator"] = array(
 											"assistant_support"	=> true
 											);
 
+$ADMINISTRATION["staff"]["staff"] = array(
+										"start_file" => "dashboard",
+										"registered" => array("dashboard"),
+										"assistant_support"	=> false
+										);
+
 /**
  * These are the avialable character sets in both PHP and their cooresponding MySQL names and collation.
  */
@@ -552,3 +560,39 @@ $AR_CUR_YEAR = (date("Y") - ((date("n") < 5) ? 1 : 0));
 $AR_NEXT_YEAR = (int) $AR_CUR_YEAR + 1;
 $AR_PAST_YEARS = 1985;
 $AR_FUTURE_YEARS = $AR_CUR_YEAR + 10;
+
+
+/**
+ * Defines for MSPR
+ */
+
+define("INTERNAL_AWARD_AWARDING_BODY","Queen's University");
+define("CLERKSHIP_COMPLETED_CUTOFF", "October 26");
+
+define("MSPR_REJECTION_REASON_REQUIRED",true);	//defines whether a reason is required when rejecting a submission 
+define("MSPR_REJECTION_SEND_EMAIL",true);	//defines whether an email should be send on rejection of a student submission to their mspr
+
+
+/**
+ * Defines for Tasks Module
+ * 
+ */
+
+//Owners
+define("TASK_OWNER_USER", "user");
+define("TASK_OWNER_COURSE", "course");
+define("TASK_OWNER_EVENT", "event");
+
+//Audience
+define("TASK_RECIPIENT_USER", "user"); 
+define("TASK_RECIPIENT_CLASS", "grad_year"); 
+define("TASK_RECIPIENT_ORGANISATION", "organisation"); 
+
+//Verification
+define("TASK_VERIFICATION_REQUIRED", true);
+define("TASK_VERIFICATION_NOT_REQUIRED",false);
+
+//Defaults
+define("TASK_DEFAULT_RECIPIENT_TYPE",TASK_RECIPIENT_USER); //options are: user, grad_year, organisation
+define("TASK_DEFAULT_REQUIRE_VERIFICATION", TASK_VERIFICATION_NOT_REQUIRED); //Verification is not required by default
+

@@ -49,15 +49,15 @@ if ($community_courses) {
 		$course_ids[] = $db->qstr($community_course["course_id"]);
 	}
 
-		$query	= "	SELECT *
-					FROM `events`
-					WHERE `course_id` IN (".implode(", ", $course_ids).")";
-		$course_events = $db->GetAll($query);
+	$query	= "	SELECT *
+				FROM `events`
+				WHERE `course_id` IN (".implode(", ", $course_ids).")";
+	$course_events = $db->GetAll($query);
 
-		$event_ids = array();
-		foreach ($course_events as $course_event) {
-			$event_ids[] = $db->qstr($course_event["event_id"]);
-		}
+	$event_ids = array();
+	foreach ($course_events as $course_event) {
+		$event_ids[] = $db->qstr($course_event["event_id"]);
+	}
 
 	switch ($PAGE_URL) {
 		case "" :
@@ -67,9 +67,10 @@ if ($community_courses) {
 						ON b.`id` = a.`proxy_id`
 						JOIN `".AUTH_DATABASE."`.`user_access` AS c
 						ON c.`user_id` = b.`id`
-						AND c.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+						AND c.`app_id` IN (".AUTH_APP_IDS_STRING.")
 						WHERE a.`course_id` IN (".implode(", ", $course_ids).")
 						AND a.`contact_type` = 'director'
+						GROUP BY b.`id`
 						ORDER BY `contact_order` ASC";
 			if ($results = $db->GetAll($query)) {
 				echo "<h2>Course Director".(count($results) > 1 ? "s" : "")."</h2>\n";
@@ -95,7 +96,7 @@ if ($community_courses) {
 					 *  If the user is trying to view their own photo, or
 					 *  If the proxy_id has their privacy set to "Any Information"
 					 */
-					if ((@file_exists(STORAGE_USER_PHOTOS."/".$result["id"]."-official")) && ($ENTRADA_ACL->amIAllowed(new PhotoResource($result["id"], (int) $result["privacy_level"], "official"), "read"))) {
+					if ((@file_exists(STORAGE_USER_PHOTOS."/".$result["id"]."-official")) && $ENTRADA_ACL && ($ENTRADA_ACL->amIAllowed(new PhotoResource($result["id"], (int) $result["privacy_level"], "official"), "read"))) {
 						$offical_file_active	= true;
 					}
 
@@ -106,7 +107,7 @@ if ($community_courses) {
 					 */
 					$query			= "SELECT `photo_active` FROM `".AUTH_DATABASE."`.`user_photos` WHERE `photo_type` = '1' AND `photo_active` = '1' AND `proxy_id` = ".$db->qstr($result["id"]);
 					$photo_active	= $db->GetOne($query);
-					if ((@file_exists(STORAGE_USER_PHOTOS."/".$result["id"]."-upload")) && ($photo_active) && ($ENTRADA_ACL->amIAllowed(new PhotoResource($result["id"], (int) $result["privacy_level"], "upload"), "read"))) {
+					if ((@file_exists(STORAGE_USER_PHOTOS."/".$result["id"]."-upload")) && $photo_active && $ENTRADA_ACL && ($ENTRADA_ACL->amIAllowed(new PhotoResource($result["id"], (int) $result["privacy_level"], "upload"), "read"))) {
 						$uploaded_file_active = true;
 					}
 
@@ -199,17 +200,16 @@ if ($community_courses) {
 				}
 			}
 
-
-
 			$query = "	SELECT b.*, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, c.`account_active`, c.`access_starts`, c.`access_expires`, c.`last_login`, c.`role`, c.`group`
 						FROM `courses` AS a
 						JOIN `".AUTH_DATABASE."`.`user_data` AS b
 						ON b.`id` = a.`pcoord_id`
 						JOIN `".AUTH_DATABASE."`.`user_access` AS c
 						ON c.`user_id` = b.`id`
-						AND c.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+						AND c.`app_id` IN (".AUTH_APP_IDS_STRING.")
 						WHERE a.`course_id` IN (".implode(", ", $course_ids).")
-						AND a.`course_active` = '1'";
+						AND a.`course_active` = '1'
+						GROUP BY b.`id`";
 			if ($results = $db->GetAll($query)) {
 				echo "<h2>Program Coordinator</h2>\n";
 				foreach ($results as $key => $result) {
@@ -234,7 +234,7 @@ if ($community_courses) {
 					 *  If the user is trying to view their own photo, or
 					 *  If the proxy_id has their privacy set to "Any Information"
 					 */
-					if ((@file_exists(STORAGE_USER_PHOTOS."/".$result["id"]."-official")) && ($ENTRADA_ACL->amIAllowed(new PhotoResource($result["id"], (int) $result["privacy_level"], "official"), "read"))) {
+					if ((@file_exists(STORAGE_USER_PHOTOS."/".$result["id"]."-official")) && $ENTRADA_ACL && ($ENTRADA_ACL->amIAllowed(new PhotoResource($result["id"], (int) $result["privacy_level"], "official"), "read"))) {
 						$offical_file_active	= true;
 					}
 
@@ -245,7 +245,7 @@ if ($community_courses) {
 					 */
 					$query			= "SELECT `photo_active` FROM `".AUTH_DATABASE."`.`user_photos` WHERE `photo_type` = '1' AND `photo_active` = '1' AND `proxy_id` = ".$db->qstr($result["id"]);
 					$photo_active	= $db->GetOne($query);
-					if ((@file_exists(STORAGE_USER_PHOTOS."/".$result["id"]."-upload")) && ($photo_active) && ($ENTRADA_ACL->amIAllowed(new PhotoResource($result["id"], (int) $result["privacy_level"], "upload"), "read"))) {
+					if ((@file_exists(STORAGE_USER_PHOTOS."/".$result["id"]."-upload")) && $photo_active && $ENTRADA_ACL && ($ENTRADA_ACL->amIAllowed(new PhotoResource($result["id"], (int) $result["privacy_level"], "upload"), "read"))) {
 						$uploaded_file_active = true;
 					}
 
@@ -345,9 +345,10 @@ if ($community_courses) {
 						ON b.`id` = a.`proxy_id`
 						JOIN `".AUTH_DATABASE."`.`user_access` AS c
 						ON c.`user_id` = b.`id`
-						AND c.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+						AND c.`app_id` IN (".AUTH_APP_IDS_STRING.")
 						WHERE a.`course_id` IN (".implode(", ", $course_ids).")
 						AND a.`contact_type` = 'ccoordinator'
+						GROUP BY b.`id`
 						ORDER BY `contact_order` ASC";
 			if ($results = $db->GetAll($query)) {
 				echo "<h2>Curriculum Coordinator".(count($results) > 1 ? "s" : "")."</h2>\n";
@@ -373,7 +374,7 @@ if ($community_courses) {
 					 *  If the user is trying to view their own photo, or
 					 *  If the proxy_id has their privacy set to "Any Information"
 					 */
-					if ((@file_exists(STORAGE_USER_PHOTOS."/".$result["id"]."-official")) && ($ENTRADA_ACL->amIAllowed(new PhotoResource($result["id"], (int) $result["privacy_level"], "official"), "read"))) {
+					if ((@file_exists(STORAGE_USER_PHOTOS."/".$result["id"]."-official")) && $ENTRADA_ACL && ($ENTRADA_ACL->amIAllowed(new PhotoResource($result["id"], (int) $result["privacy_level"], "official"), "read"))) {
 						$offical_file_active	= true;
 					}
 
@@ -384,7 +385,7 @@ if ($community_courses) {
 					 */
 					$query			= "SELECT `photo_active` FROM `".AUTH_DATABASE."`.`user_photos` WHERE `photo_type` = '1' AND `photo_active` = '1' AND `proxy_id` = ".$db->qstr($result["id"]);
 					$photo_active	= $db->GetOne($query);
-					if ((@file_exists(STORAGE_USER_PHOTOS."/".$result["id"]."-upload")) && ($photo_active) && ($ENTRADA_ACL->amIAllowed(new PhotoResource($result["id"], (int) $result["privacy_level"], "upload"), "read"))) {
+					if ((@file_exists(STORAGE_USER_PHOTOS."/".$result["id"]."-upload")) && $photo_active && $ENTRADA_ACL && ($ENTRADA_ACL->amIAllowed(new PhotoResource($result["id"], (int) $result["privacy_level"], "upload"), "read"))) {
 						$uploaded_file_active = true;
 					}
 
@@ -477,7 +478,7 @@ if ($community_courses) {
 				}
 			}
 		break;
-		case "course_calendar" :
+		case strpos($PAGE_URL, "course_calendar") !== false :
 			$HEAD[] = "<link href=\"".ENTRADA_URL."/javascript/calendar/css/xc2_default.css\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />";
 			$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/calendar/config/xc2_default.js\"></script>";
 			$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/calendar/script/xc2_inpage.js\"></script>";
@@ -925,7 +926,7 @@ if ($community_courses) {
 
 			new_sidebar_item("Learning Event Legend", $sidebar_html, "event-legend", "open");
 		break;
-		case "objectives" :
+		case (strpos($PAGE_URL, "objectives") !== false) :
 			$results = $db->GetAll("SELECT `course_id` FROM `community_courses` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID));
 			$course_ids_str = "";
 			$clean_ids_str = "";
@@ -970,30 +971,42 @@ if ($community_courses) {
     		</script>
 			<?php
 			echo "<div style=\"text-align: right; padding-right: 20px;\"><label for=\"show_hierarchy\" class=\"content-small\" style=\"vertical-align: middle;\"/>Display Hierarchy For These Objectives</label><input type=\"checkbox\" id=\"show_hierarcy\" onclick=\"renewList(this.checked)\" /></div>\n";
-			echo "<strong>The student will be able to:</strong>";
+			echo "<strong>The learner will be able to:</strong>";
 			echo "<div id=\"objectives_list\">\n".course_objectives_in_list($objectives["objectives"], 1, false, false, 1, false)."\n</div>\n";
 		break;
-		case "mcc_presentations" :
+		case (strpos($PAGE_URL, "mcc_presentations") !== false) :
 			$query = "	SELECT b.*
-						FROM `event_objectives` AS a
+						FROM `course_objectives` AS a
 						JOIN `global_lu_objectives` AS b
 						ON a.`objective_id` = b.`objective_id`
 						WHERE a.`objective_type` = 'event'
-						AND b.`objective_active` = '1'
-						AND a.`event_id` IN (".implode(", ", $event_ids).")
+						AND a.`course_id` IN (".implode(", ", $course_ids).")
+						AND b.`objective_active` = 1
 						GROUP BY b.`objective_id`
 						ORDER BY b.`objective_order`";
 			$results = $db->GetAll($query);
 			if ($results) {
 				echo "<ul class=\"objectives\">\n";
+				$HEAD[] = "
+					<script type=\"text/javascript\" defer=\"defer\">
+					Event.observe(window, 'load', function() {";
 				foreach ($results as $result) {
+					$HEAD[] = "
+						new Control.Modal($('objective-".$result["objective_id"]."-details'), {
+							overlayOpacity:	0.75,
+							closeOnClick:	'overlay',
+							className:		'modal-description',
+							fade:			true,
+							fadeDuration:	0.30
+						});";
 					if ($result["objective_name"]) {
-						echo "<li>".$result["objective_name"]."</li>\n";
+						echo "<li><a id=\"objective-".$result["objective_id"]."-details\" style=\"text-decoration: none;\" href=\"".ENTRADA_URL."/objectives?section=objective-details&api=true&oid=".$result["objective_id"]."&cid=".$COURSE_ID."\">".$result["objective_name"]."</a></li>\n";
 					}
 				}
+				$HEAD[] = "
+					});
+					</script>";
 				echo "</ul>\n";
-			} else {
-				echo "<div class=\"display-notice\">While medical presentations may be used to illustrate concepts in this course, there are no specific presentations from the Medical Council of Canada that have been selected.</div>";
 			}
 		break;
 		default :

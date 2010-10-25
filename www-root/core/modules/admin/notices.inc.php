@@ -49,7 +49,7 @@ if(!defined("PARENT_INCLUDED")) {
 		$NOTICE_TARGETS = array();
 		$NOTICE_TARGETS["all"] = "Visible to all students, faculty &amp; staff";
 		$NOTICE_TARGETS["students"] = "Visible to all students";
-		$first_year	= (date("Y", time()) + ((date("m", time()) < 7) ?  3 : 4));
+		$first_year	= fetch_first_year();
 		for($year = $first_year; $year >= ($first_year - 3); $year--) {
 			$NOTICE_TARGETS[$year] = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Visible to class of ".$year;
 		}

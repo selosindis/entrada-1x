@@ -70,10 +70,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 					}
 					
 					/**
-					 * Required field "incident_date" / Incident Start (validated through validate_calendar function).
-					 * Non-required field "follow_up_date" / Incident Finish (validated through validate_calendar function).
+					 * Required field "incident_date" / Incident Start (validated through validate_calendars function).
+					 * Non-required field "follow_up_date" / Incident Finish (validated through validate_calendars function).
 					 */
-					$incident_date = validate_calendar("incident", true, false);
+					$incident_date = validate_calendars("incident", true, false);
 					if ((isset($incident_date["start"])) && ((int) $incident_date["start"])) {
 						$PROCESSED["incident_date"] = (int) $incident_date["start"];
 					}

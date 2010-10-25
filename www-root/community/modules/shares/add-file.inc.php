@@ -142,11 +142,11 @@ if ($RECORD_ID) {
 						}
 	
 						/**
-						 * Required field "release_from" / Release Start (validated through validate_calendar function).
-						 * Non-required field "release_until" / Release Finish (validated through validate_calendar function).
+						 * Required field "release_from" / Release Start (validated through validate_calendars function).
+						 * Non-required field "release_until" / Release Finish (validated through validate_calendars function).
 						 */
 						if (($LOGGED_IN && $folder_record["allow_troll_read"]) || ($LOGGED_IN && $COMMUNITY_MEMBER && $folder_record["allow_member_read"]) || $COMMUNITY_ADMIN){
-							$release_dates = validate_calendar("release", true, false);
+							$release_dates = validate_calendars("release", true, false);
 							if ((isset($release_dates["start"])) && ((int) $release_dates["start"])) {
 								$PROCESSED["release_date"]	= (int) $release_dates["start"];
 							} else {

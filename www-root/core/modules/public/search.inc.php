@@ -284,7 +284,7 @@ if(!defined("PARENT_INCLUDED")) {
 				} else {
 					$i			= 0;
 					$timestamp	= time();
-					$graduation	= (date("Y", $timestamp) + ((date("m", $timestamp) < 7) ?  3 : 4));
+					$graduation	= fetch_first_year();
 
 					for($gradyear = $graduation; $gradyear > ($graduation - 4); $gradyear--) {
 						echo "grad_years[".$i."] = ".$gradyear.";\n";

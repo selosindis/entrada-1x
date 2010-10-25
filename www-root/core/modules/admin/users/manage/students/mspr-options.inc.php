@@ -18,14 +18,13 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 } elseif(!$ENTRADA_ACL->isLoggedInAllowed('mspr', 'create',true) || $user_record["group"] != "student") {
 	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/".$MODULE."\\'', 15000)";
 
-	$ERROR++;
-	$ERRORSTR[]	= "Your account does not have the permissions required to use this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
+	add_error("Your account does not have the permissions required to use this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.");
 	echo display_error();
 
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
 }  else {
 	
-	require_once("Models/MSPRs.class.php");
+	require_once("Models/mspr/MSPRs.class.php");
 	$PROXY_ID					= $user_record["id"];
 	$user = User::get($user_record["id"]);
 	
@@ -73,20 +72,18 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 	
 			//error checking.... the fun part
 			if (!$mspr_close_date || !checkDateFormat($mspr_close_date) ) { 
-				$ERROR++;
-				$ERRORSTR[] = "Invalid date format. The submission deadline date must be in the format yyyy-mm-dd, and be a valid date.";
+				add_error("Invalid date format. The submission deadline date must be in the format yyyy-mm-dd, and be a valid date.");
 			}
 			
 			if (!$mspr_close_hour < 0 || $mspr_close_hour > 23 || $mspr_close_mins < 0 || $mspr_close_mins > 59) {
-				$ERROR++;
-				$ERRORSTR[] = "Invalid time. Please check your values and try again.";
+				add_error("Invalid time. Please check your values and try again.");
 			}
 			$parts = date_parse($mspr_close_date);  
 			$timestamp = mktime($mspr_close_hour,$mspr_close_min, 0, $parts['month'],$parts['day'], $parts['year']); 
 			
 		}
 		
-		if (!$ERROR){
+		if (!has_error()){
 			$is_early = $timestamp !== null && $timestamp < $class_close;
 			if ($_POST["confirm"] != "Continue" && $is_early) {
 				//the requested custom close is earlier than the class default. need to confirm
@@ -109,9 +106,8 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 				}
 				
 				
-				if (!$ERROR){
-					$SUCCESS++;
-					$SUCCESSSTR[]="MSPR options for ". $user->getFullname() ." successfully updated.<br /><br />You will be redirected to their MSPR page in 5 seconds.";
+				if (!has_error()){
+					add_success("MSPR options for ". $user->getFullname() ." successfully updated.<br /><br />You will be redirected to their MSPR page in 5 seconds.");
 					$page_mode="complete";
 					header( "refresh:5;url=".ENTRADA_URL."/admin/users/manage/students?section=mspr&id=".$PROXY_ID );
 				}

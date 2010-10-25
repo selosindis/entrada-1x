@@ -77,8 +77,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 									$ERRORSTR[] = "The new username must be between 3 and 24 characters.";
 								}
 							}
+						} else {
+							$PROCESSED["username"] = $user_record;
 						}
 					} else {
+						$PROCESSED["username"] = $user_record;
 						$ERROR++;
 						$ERRORSTR[] = "You must provide a valid username for this user to login with. We suggest that you use their University NetID if at all possible.";
 					}
@@ -114,8 +117,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 							if (isset($_POST["entry_year"]) && isset($_POST["grad_year"])) {
 								$entry_year = clean_input($_POST["entry_year"],"int");
 								$grad_year = clean_input($_POST["grad_year"],"int");
-								$sanity_start = 2004;
-								$sanity_end = date("Y", time()) + ((date("m", time()) < 7) ?  3 : 4);
+								$sanity_start = 1995;
+								$sanity_end = fetch_first_year();
 								if ($grad_year <= $sanity_end && $grad_year >= $sanity_start) {
 									$PROCESSED["grad_year"] = $grad_year;
 								} else {
@@ -135,7 +138,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 						$ERRORSTR[] = "You must provide a valid	Account Type &gt; Group which this persons account will live under.";
 					}
 					
-					
+					/*
+					 * Non-Required field "clinical" / Clinical.
+					 */
+					if (!isset($_POST["clinical"])) {
+						$PROCESSED["clinical"] = 0;
+					} else {
+						$PROCESSED["clinical"] = 1;
+					}
 
 					/*
 					 * Required field "account_active" / Account Status.
@@ -147,10 +157,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 					}
 
 					/**
-					 * Required field "access_starts" / Access Start (validated through validate_calendar function).
-					 * Non-required field "access_finish" / Access Finish (validated through validate_calendar function).
+					 * Required field "access_starts" / Access Start (validated through validate_calendars function).
+					 * Non-required field "access_finish" / Access Finish (validated through validate_calendars function).
 					 */
-					$access_date = validate_calendar("access", true, false);
+					$access_date = validate_calendars("access", true, false);
 					if ((isset($access_date["start"])) && ((int) $access_date["start"])) {
 						$PROCESSED_ACCESS["access_starts"] = (int) $access_date["start"];
 					}
@@ -575,12 +585,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 								</tr>
 								<tr style="<?php echo $PROCESSED_ACCESS["group"]=="student" ? "" : "display:none;"; ?>" id="entry_year_data">
 									<td>&nbsp;</td>
-									<td style="vertical-align: top"><label for="group" class="form-required">Year of Program Entry:</label></td>
-									<td>
+									<td style="padding-top: 15px"><label for="group" class="form-required">Year of Program Entry</label></td>
+									<td style="padding-top: 15px">
 										<select id="entry_year" name="entry_year" style="width: 209px">
 										<?php
 											$selected_year = (isset($PROCESSED["entry_year"])) ? $PROCESSED["entry_year"] : (date("Y", time()) - ((date("m", time()) < 7) ?  1 : 0));
-											for($i = (date("Y", time()) + ((date("m", time()) < 7) ?  3 : 4)); $i >= 2004; $i--) {
+											for($i = fetch_first_year(); $i >= 1995; $i--) {
 												$selected = $selected_year == $i;
 												echo build_option($i, $i, $selected);
 											} 
@@ -590,16 +600,23 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 								</tr>
 								<tr style="<?php echo $PROCESSED_ACCESS["group"]=="student" ? "" : "display:none;"; ?>" id="grad_year_data">
 									<td>&nbsp;</td>
-									<td style="vertical-align: top"><label for="group" class="form-required">Graduating Year:</label></td>
+									<td><label for="group" class="form-required">Expected Graduation Year</label></td>
 									<td>
 										<select id="grad_year" name="grad_year" style="width: 209px; margin-top: 5px">
 										<?php
-										for($i = (date("Y", time()) + ((date("m", time()) < 7) ?  3 : 4)); $i >= 2004; $i--) {
+										for($i = fetch_first_year(); $i >= 1995; $i--) {
 											$selected = (isset($PROCESSED["grad_year"]) && $PROCESSED["grad_year"] == $i);
 											echo build_option($i, $i, $selected);
 										} 
 										?>
 										</select>
+									</td>
+								</tr>
+								<tr style="<?php echo $PROCESSED_ACCESS["group"]=="faculty" ? "" : "display:none;" ?>" id="clinical_area">
+									<td colspan="2">&nbsp;</td>
+									<td style="padding-top: 15px">
+										<input type="checkbox" id="clinical" name="clinical" value="1"<?php echo (((empty($PROCESSED)) || ((isset($PROCESSED["clinical"])) && ((int) $PROCESSED["clinical"]))) ? " checked=\"checked\"" : ""); ?> style="vertical-align: middle;" />
+										<label for="clinical" class="form-nrequired">This new user is a <strong>clinical</strong> faculty member.</label>
 									</td>
 								</tr>
 								<tr>
@@ -715,7 +732,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 								</tr>
 								<tr>
 									<td>&nbsp;</td>
-									<td><label for="country_id" class="form-nrequired">Country</label></td>
+									<td><label for="country_id" class="form-required">Country</label></td>
 									<td>
 										<?php
 										$countries = fetch_countries();
@@ -934,14 +951,21 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 										document.observe("dom:loaded",function() {
 											var grad_year = $('grad_year_data');
 											var entry_year = $('entry_year_data');
+											var clinical = $('clinical_area');
 											$('group').observe("change",function() {
 												console.log($F('group'));
 												if ($F('group') == "student") {
 													grad_year.show();
-													entry_year.show();	
+													entry_year.show();
+													clinical.hide();
 												} else {
 													grad_year.hide();
 													entry_year.hide();	
+													if($F('group') == "faculty") {
+														clinical.show();
+													} else {
+														clinical.hide();
+													}
 												}
 											});
 										});

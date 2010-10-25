@@ -175,7 +175,7 @@ if ($community_record) {
 					ON d.`user_id` = b.`id`
 					WHERE a.`community_id` = ".$db->qstr($COMMUNITY_ID)."
 					AND a.`member_active` = '1'
-					AND d.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+					AND d.`app_id` IN (".AUTH_APP_IDS_STRING.")
 					AND d.`account_active` = 'true'
 					AND (d.`access_starts` = '0' OR d.`access_starts` <= ".$db->qstr(time()).")
 					AND (d.`access_expires` = '0' OR d.`access_expires` > ".$db->qstr(time()).")

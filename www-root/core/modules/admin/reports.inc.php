@@ -47,7 +47,7 @@ if (!defined("PARENT_INCLUDED")) {
 		$ORGANISATION_LIST = array();
 
 		if ((isset($_POST["reporting_start"])) && ((int) trim($_POST["reporting_start"])) && (isset($_POST["reporting_finish"])) && ((int) trim($_POST["reporting_finish"]))) {
-			$report_date = validate_calendar("reporting", true, true, true);
+			$report_date = validate_calendars("reporting", true, true, true);
 
 			if ((isset($report_date["start"])) && ((int) $report_date["start"])) {
 				$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_start"] = (int) $report_date["start"];

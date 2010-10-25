@@ -44,29 +44,33 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 					FROM `".AUTH_DATABASE."`.`user_data` AS a
 					LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 					ON b.`user_id` = a.`id`
-					WHERE CONCAT_WS(', ', a.`lastname`, a.`firstname`) LIKE ".$db->qstr("%".$fullname."%");
+					WHERE CONCAT_WS(', ', a.`lastname`, a.`firstname`) LIKE ".$db->qstr("%".$fullname."%")."
+					AND (b.`group` <> 'guest')";
 		switch ($type) {
+			case "facultyorstaff":
+				$query .= "	AND (b.`group` = 'faculty' OR (b.`group` = 'resident' AND b.`role` = 'lecturer') OR b.`group` = 'staff')";
+				break;
 			case "faculty" :
 				$query .= "	AND (b.`group` = 'faculty' OR (b.`group` = 'resident' AND b.`role` = 'lecturer'))";
-			break;
+				break;
 			case "resident" :
 			case "postgrad" :
 				$query .= "	AND b.`group` = 'resident'";
-			break;
+				break;
 			case "undergrad" :
 			case "student" :
 			case "clerk" :
 				$query .= "	AND b.`group` = 'student' AND b.`role` >= '".(date("Y") - ((date("m") < 7) ? 2 : 1))."'";
-			break;
+				break;
 			case "learners" :
 				$query .= "	AND (b.`group` = 'resident' OR (b.`group` = 'student' AND b.`role` >= '".(date("Y") - ((date("m") < 7) ? 2 : 1))."'))";
-			break;
+				break;
 			case "director" :
 				$query .= "	AND b.`group` = 'faculty' AND (b.`role` = 'director' OR b.`role` = 'admin')";
-			break;
+				break;
 			case "coordinator" :
 				$query .= "	AND b.`group` = 'staff' AND b.`role` = 'admin'";
-			break;
+				break;
 		}
 		$query .= "	AND b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
 					AND b.`account_active` = 'true'

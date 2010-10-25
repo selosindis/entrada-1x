@@ -18,14 +18,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MSPR_ADMIN"))) {
 } elseif (!$ENTRADA_ACL->amIAllowed("mspr", "create", false)) {
 	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/".$MODULE."\\'', 15000)";
 
-	$ERROR++;
-	$ERRORSTR[]	= "Your account does not have the permissions required to use this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
+	add_error("Your account does not have the permissions required to use this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.");
 	echo display_error();
 
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
 }  else {
 	
-	require_once("Models/MSPRs.class.php");
+	require_once("Models/mspr/MSPRs.class.php");
 	
 	$PAGE_META["title"]			= "MSPR Class Options";
 	$PAGE_META["description"]	= "";
@@ -70,19 +69,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MSPR_ADMIN"))) {
 
 		//error checking.... the fun part
 		if (!$class_close_date || !checkDateFormat($class_close_date) ) { 
-			$ERROR++;
-			$ERRORSTR[] = "Invalid date format. The submission deadline date must be in the format yyyy-mm-dd, and be a valid date.";
+			add_error("Invalid date format. The submission deadline date must be in the format yyyy-mm-dd, and be a valid date.");
 		}
 		
 		if (!$class_close_hour < 0 || $class_close_hour > 23 || $class_close_mins < 0 || $class_close_mins > 59) {
-			$ERROR++;
-			$ERRORSTR[] = "Invalid time. Please check your values and try again.";
+			add_error("Invalid time. Please check your values and try again.");
 		}
 		
 		$parts = date_parse($class_close_date);  
 		$timestamp = mktime($class_close_hour,$class_close_min, 0, $parts['month'],$parts['day'], $parts['year']); 
 
-		if (!$ERROR){
+		if (!has_error()){
 			$has_custom = MSPRs::hasCustomDeadlines_Year($year);
 			if ($_POST["confirm"] != "Continue" && $has_custom) {
 				//there are set custom deadlines. need to present another set of options
@@ -102,9 +99,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MSPR_ADMIN"))) {
 				}
 				
 				
-				if (!$ERROR){
-					$SUCCESS++;
-					$SUCCESSSTR[]="MSPR options for the class of ". $year ." successfully updated.<br /><br />You will be redirected to the MSPR Class page in 5 seconds.";
+				if (!has_error()){
+					add_success("MSPR options for the class of ". $year ." successfully updated.<br /><br />You will be redirected to the MSPR Class page in 5 seconds.");
 					$page_mode = "complete";
 					header( "refresh:5;url=".ENTRADA_URL."/admin/mspr?year=".$year );
 				}	

@@ -304,7 +304,6 @@ function application_log($type, $message) {
 	}
 }
 
-
 /**
  * This function cleans a string with any valid rules that have been provided in the $rules array.
  * Note that $rules can also be a string if you only want to apply a single rule.
@@ -315,20 +314,27 @@ function application_log($type, $message) {
  * @example $variable = clean_input(" 1235\t\t", array("nows", "int")); // $variable will equal an integer value of 1235.
  */
 function clean_input($string, $rules = array()) {
-	if(@is_string($rules)) {
-		if(trim($rules) != "") {
+	if (is_scalar($rules)) {
+		if (trim($rules) != "") {
 			$rules = array($rules);
 		} else {
 			$rules = array();
 		}
 	}
-	if(@count($rules) > 0) {
-		foreach($rules as $rule) {
-			switch($rule) {
-				case "url" :
+
+	if (count($rules) > 0) {
+		foreach ($rules as $rule) {
+			switch ($rule) {
+				case "page_url" :		// Acceptable characters for community page urls.
+				case "module" :
+					$string = preg_replace("/[^a-z0-9_\-]/i", "", $string);
+				break;
+				case "url" :			// Allows only a minimal number of characters
+					$string = preg_replace(array("/[^a-z0-9_\-\.\/\~\?\&\:\#\=\+]/i", "/(\.)\.+/", "/(\/)\/+/"), "$1", $string);
+				break;
 				case "file" :
-				case "dir" :			// Removes unwanted charachters and space from url's, files and directory names.
-					$string = str_replace(array(" ", "\t", "\n", "\r", "\0", "\x0B", "..", "://"), "", $string);
+				case "dir" :			// Allows only a minimal number of characters
+					$string = preg_replace(array("/[^a-z0-9_\-\.\/]/i", "/(\.)\.+/", "/(\/)\/+/"), "$1", $string);
 				break;
 				case "int" :			// Change string to an integer.
 					$string = (int) $string;
@@ -345,6 +351,16 @@ function clean_input($string, $rules = array()) {
 				case "trim" :			// Trim whitespace from ends of string.
 					$string = trim($string);
 				break;
+				case "trimds" :			// Removes double spaces.
+					$string = str_replace(array(" ", "\t", "\n", "\r", "\0", "\x0B", "&nbsp;", "\x7f", "\xff", "\x0", "\x1f"), " ", $string);
+					$string = html_decode(str_replace("&nbsp;", "", html_encode($string)));
+				break;
+				case "nl2br" :
+					$string = nl2br($string);
+				break;
+				case "underscores" :	// Trim all whitespace anywhere in the string.
+					$string = str_replace(array(" ", "\t", "\n", "\r", "\0", "\x0B", "&nbsp;"), "_", $string);
+				break;
 				case "lower" :			// Change string to all lower case.
 				case "lowercase" :
 					$string = strtolower($string);
@@ -356,14 +372,33 @@ function clean_input($string, $rules = array()) {
 				case "ucwords" :		// Change string to correct word case.
 					$string = ucwords(strtolower($string));
 				break;
-				case "notags" :			// Strips tags from the string.
-					$string = strip_tags($string);
-				break;
 				case "boolops" :		// Removed recognized boolean operators.
 					$string = str_replace(array("\"", "+", "-", "AND", "OR", "NOT", "(", ")", ",", "-"), "", $string);
 				break;
 				case "quotemeta" :		// Quote's meta characters
 					$string = quotemeta($string);
+				break;
+				case "credentials" :	// Acceptable characters for login credentials.
+					$string = preg_replace("/[^a-z0-9_\-\.]/i", "", $string);
+				break;
+				case "alphanumeric" :	// Remove anything that is not alphanumeric.
+					$string = preg_replace("/[^a-z0-9]+/i", "", $string);
+				break;
+				case "alpha" :			// Remove anything that is not an alpha.
+					$string = preg_replace("/[^a-z]+/i", "", $string);
+				break;
+				case "numeric" :		// Remove everything but numbers 0 - 9 for when int won't do.
+					$string = preg_replace("/[^0-9]+/i", "", $string);
+				break;
+				case "name" :			// @todo jellis ?
+					$string = preg_replace("/^([a-z]+(\'|-|\.\s|\s)?[a-z]*){1,2}$/i", "", $string);
+				break;
+				case "emailcontent" :	// Check for evil tags that could be used to spam.
+					$string = str_ireplace(array("content-type:", "bcc:","to:", "cc:"), "", $string);
+				break;
+				case "postclean" :		// @todo jellis ?
+					$string = preg_replace('/\<br\s*\/?\>/i', "\n", $string);
+					$string = str_replace("&nbsp;", " ", $string);
 				break;
 				case "decode" :			// Returns the output of the html_decode() function.
 					$string = html_decode($string);
@@ -371,30 +406,19 @@ function clean_input($string, $rules = array()) {
 				case "encode" :			// Returns the output of the html_encode() function.
 					$string = html_encode($string);
 				break;
-				case "specialchars" :	// Returns the output of the htmlspecialchars() function.
-					$string = htmlspecialchars($string);
+				case "htmlspecialchars" : // Returns the output of the htmlspecialchars() function.
+				case "specialchars" :
+					$string = htmlspecialchars($string, ENT_QUOTES, DEFAULT_CHARSET);
 				break;
-				case "trimds" :		// Removes double spaces.
-					$string = str_replace(array(" ", "\t", "\n", "\r", "\0", "\x0B", "&nbsp;", "\x7f", "\xff", "\x0", "\x1f"), " ", $string);
-					$string = html_decode(str_replace("&nbsp;", "", html_encode($string)));
+				case "htmlbrackets" :	// Converts only brackets into entities.
+					$string = str_replace(array("<", ">"), array("&lt;", "&gt;"), $string);
 				break;
-				case "credentials" :	// Acceptable characters for login credentials.
-					$string = preg_replace("/[^a-z0-9_\-\.]/i", "", $string);
+				case "notags" :			// Strips tags from the string.
+				case "nohtml" :
+				case "striptags" :
+					$string = strip_tags($string);
 				break;
-				case "alphanumeric" :
-					$string = preg_replace("/[^a-z0-9]+/i", "", $string);
-				break;
-				case "alpha" :
-					$string = preg_replace("/[^a-z]+/i", "", $string);
-				break;
-				case "emailcontent" :	// Check for evil tags that could be used to spam.
-					if(function_exists("str_ireplace")) {
-						$string = str_ireplace(array("content-type:", "bcc:","to:", "cc:"), "", $string);
-					} else {
-						$string = ((($tmp_string = strtolower(str_replace(array("content-type:", "bcc:","to:", "cc:"), "", $string))) != strtolower($string)) ? $tmp_string : $string);
-					}
-				break;
-				default : // Unknown rule, log notice.
+				default :				// Unknown rule, log notice.
 					continue;
 				break;
 			}
@@ -405,4 +429,3 @@ function clean_input($string, $rules = array()) {
 		return trim($string);
 	}
 }
-?>

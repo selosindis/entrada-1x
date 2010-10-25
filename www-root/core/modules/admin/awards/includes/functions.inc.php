@@ -61,7 +61,7 @@ function award_details_edit($award) {
 	return ob_get_clean();
 }
 
-function award_recipients_list($award) {
+function award_recipients_list(InternalAward $award) {
 		$receipts = $award->getRecipients();
 		?>
 		<table class="award_history tableList" cellspacing="0">
@@ -212,20 +212,30 @@ function process_manage_award_details() {
 				$award_id = (isset($_POST['award_id']) ? $_POST['award_id'] : 0);
 				$disabled = (bool)($_POST['award_disabled']);
  
-				$title = $_POST['award_title'];
-				$terms = $_POST['award_terms'];
-				if ($award_id) {
-					$award = InternalAward::get($award_id);
-					if ($award) {
-						edit_award_details($award, $title, $terms, $disabled);
+				$title = clean_input($_POST['award_title'], array("notags","specialchars"));
+				$terms = clean_input($_POST['award_terms'], array("notags","specialchars", "nl2br"));
+				if (!$title || !$terms) {
+					add_error("Insufficient information please check the fields and try again");
+				} else {
+					if ($award_id) {
+						$award = InternalAward::get($award_id);
+						if ($award) {
+							edit_award_details($award, $title, $terms, $disabled);
+						}
+					} else {
+						add_error("Award not found");
 					}
 				}
 			break;
 			
 			case "new_award":
-				$title = $_POST['award_title'];
-				$terms = $_POST['award_terms'];
-				InternalAward::create($title,$terms);
+				$title = clean_input($_POST['award_title'], array("notags","specialchars"));
+				$terms = clean_input($_POST['award_terms'], array("notags","specialchars", "nl2br"));
+				if (!$title || !$terms) {
+					add_error("Insufficient information please check the fields and try again");
+				} else {
+					InternalAward::create($title,$terms);
+				}
 			break;
 			
 			case "remove_award":

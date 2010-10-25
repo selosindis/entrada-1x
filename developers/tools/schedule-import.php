@@ -51,7 +51,7 @@ set_include_path(get_include_path().PATH_SEPARATOR.dirname(__FILE__)."/includes"
 @ini_set("magic_quotes_runtime", 0);
 set_time_limit(0);
 
-if((!isset($_SERVER["argv"])) || (@count($_SERVER["argv"]) < 1)) {
+if ((!isset($_SERVER["argv"])) || (@count($_SERVER["argv"]) < 1)) {
 	echo "<html>\n";
 	echo "<head>\n";
 	echo "	<title>Processing Error</title>\n";
@@ -74,7 +74,7 @@ $COPY_EVENT_ED10		= false;	// Copy ED10 data from old events.
 $COPY_EVENT_ED11		= false;	// Copy ED11 data from old events.
 $COPY_EVENT_FILES		= true;		// Copy event files from old events.
 $COPY_EVENT_LINKS		= true;		// Copy event links from old events.
-$COPY_EVENT_OJBECTIVES	= false;	// Copy event objectives from old events.
+$COPY_EVENT_OBJECTIVES	= true;		// Copy event objectives from old events.
 
 $ACTION					= ((isset($_SERVER["argv"][1])) ? trim($_SERVER["argv"][1]) : "-usage");
 $CSV_FILE				= (((isset($_SERVER["argv"][2])) && (trim($_SERVER["argv"][2]) != "")) ? trim($_SERVER["argv"][2]) : false);
@@ -86,13 +86,13 @@ $SUCCESS				= 0;
 $NOTICE					= 0;
 $ERROR					= 0;
 
-switch($ACTION) {
+switch ($ACTION) {
 	case "-testimport" :
 		$SKIP_FILE_COPY = true;
 
 	case "-import" :
 		$handle = fopen($CSV_FILE, "r");
-		if($handle) {
+		if ($handle) {
 			$row_count	= 0;
 			
 			while (($row = fgetcsv($handle)) !== false) {
@@ -102,7 +102,7 @@ switch($ACTION) {
 				 * We do not want the first row to be imported because it should
 				 * be the CSV heading titles.
 				 */
-				if($row_count > 1) {
+				if ($row_count > 1) {
 					$event_ids			= array();
 					$proxy_ids			= array();
 		
@@ -122,11 +122,11 @@ switch($ACTION) {
 					/**
 					 * Validation for provided previous lecture ids.
 					 */
-					if($event_id) {
+					if ($event_id) {
 						$pieces = explode(";", $event_id);
-						if((is_array($pieces)) && (count($pieces))) {
-							foreach($pieces as $tmp_event_id) {
-								if(($tmp_event_id = clean_input($tmp_event_id, array("nows", "int"))) && (validate_event_id($tmp_event_id))) {
+						if ((is_array($pieces)) && (count($pieces))) {
+							foreach ($pieces as $tmp_event_id) {
+								if (($tmp_event_id = clean_input($tmp_event_id, array("nows", "int"))) && (validate_event_id($tmp_event_id))) {
 									$event_ids[] = $tmp_event_id;
 								}
 							}
@@ -144,12 +144,12 @@ switch($ACTION) {
 					/**
 					 * Validation for provided staff ids.
 					 */
-					if($staff_numbers) {
+					if ($staff_numbers) {
 						$pieces = explode(";", $staff_numbers);
-						if((is_array($pieces)) && (count($pieces))) {
-							foreach($pieces as $tmp_staff_number) {
-								if($tmp_staff_number = clean_input($tmp_staff_number, array("nows", "int"))) {
-									if($proxy_id = get_proxy_id($tmp_staff_number)) {
+						if ((is_array($pieces)) && (count($pieces))) {
+							foreach ($pieces as $tmp_staff_number) {
+								if ($tmp_staff_number = clean_input($tmp_staff_number, array("nows", "int"))) {
+									if ($proxy_id = get_proxy_id($tmp_staff_number)) {
 										$proxy_ids[] = $proxy_id;
 									}
 								}
@@ -180,7 +180,7 @@ switch($ACTION) {
 					$processed_event["updated_date"]		= time();
 					$processed_event["updated_by"]			= 1;
 		
-					if(($db->AutoExecute("events", $processed_event, "INSERT")) && ($new_event_id = $db->Insert_Id())) {
+					if (($db->AutoExecute("events", $processed_event, "INSERT")) && ($new_event_id = $db->Insert_Id())) {
 						output_success("[Row ".$row_count."]\tImported learning event for phase ".$event_phase." [".$new_event_id."] on ".date("r", $processed_event["event_start"]));
 							
 						/**
@@ -193,35 +193,35 @@ switch($ACTION) {
 						$processed_audience["updated_date"]		= time();
 						$processed_audience["updated_by"]		= 1;
 						
-						if($db->AutoExecute("event_audience", $processed_audience, "INSERT")) {
+						if ($db->AutoExecute("event_audience", $processed_audience, "INSERT")) {
 							output_success("[Row ".$row_count."]\tAttached event_id [".$new_event_id."] to class of ".$event_grad_year);
 
 							/**
 							 * Attach teachers to new event.
 							 */
-							if(count($proxy_ids)) {
-								foreach($proxy_ids as $key => $proxy_id) {
-									if($db->AutoExecute("event_contacts", array("event_id" => $new_event_id, "proxy_id" => $proxy_id, "contact_order" => $key, "updated_date" => time(), "updated_by" => 1), "INSERT")) {
+							if (count($proxy_ids)) {
+								foreach ($proxy_ids as $key => $proxy_id) {
+									if ($db->AutoExecute("event_contacts", array("event_id" => $new_event_id, "proxy_id" => $proxy_id, "contact_order" => $key, "updated_date" => time(), "updated_by" => 1), "INSERT")) {
 										output_success("[Row ".$row_count."]\tAttached proxy_id [".$proxy_id."] to event_id [".$new_event_id."] as teacher #".$key.".");
 									}
 								}
 							}
 
-							if(count($event_ids)) {
-								foreach($event_ids as $old_event_id) {
+							if (count($event_ids)) {
+								foreach ($event_ids as $old_event_id) {
 									$historical	= get_event_data($old_event_id);
 
 									/**
 									 * Attach any ED10 data from the previous event to this new event.
 									 */
-									if($COPY_EVENT_ED10) {
+									if ($COPY_EVENT_ED10) {
 										$query		= "SELECT * FROM `event_ed10` WHERE `event_id` = ".$db->qstr($old_event_id);
 										$results	= $db->GetAll($query);
-										if($results) {
+										if ($results) {
 											$copied_ed10	= array();
 											
-											foreach($results as $result) {
-												if(!in_array($result["ed10_id"], $copied_ed10)) {
+											foreach ($results as $result) {
+												if (!in_array($result["ed10_id"], $copied_ed10)) {
 													$processed_ed10					= array();
 													$processed_ed10["event_id"]		= $new_event_id;
 													$processed_ed10["ed10_id"]		= $result["ed10_id"];
@@ -231,7 +231,7 @@ switch($ACTION) {
 													$processed_ed10["updated_date"]	= $result["updated_date"];
 													$processed_ed10["updated_by"]	= $result["updated_by"];
 	
-													if(($db->AutoExecute("event_ed10", $processed_ed10, "INSERT")) && ($new_eed10_id = $db->Insert_Id())) {
+													if (($db->AutoExecute("event_ed10", $processed_ed10, "INSERT")) && ($new_eed10_id = $db->Insert_Id())) {
 														output_success("[Row ".$row_count."]\tCopied ed10_id [".$processed_ed10["ed10_id"]."] to new event_id [".$new_event_id."].");
 														
 														$copied_ed10[] = $processed_ed10["ed10_id"];
@@ -246,14 +246,14 @@ switch($ACTION) {
 									/**
 									 * Attach any ED11 data from the previous event to this new event.
 									 */
-									if($COPY_EVENT_ED11) {
+									if ($COPY_EVENT_ED11) {
 										$query		= "SELECT * FROM `event_ed11` WHERE `event_id` = ".$db->qstr($old_event_id);
 										$results	= $db->GetAll($query);
-										if($results) {
+										if ($results) {
 											$copied_ed11	= array();
 											
-											foreach($results as $result) {
-												if(!in_array($result["ed11_id"], $copied_ed11)) {
+											foreach ($results as $result) {
+												if (!in_array($result["ed11_id"], $copied_ed11)) {
 													$processed_ed11					= array();
 													$processed_ed11["event_id"]		= $new_event_id;
 													$processed_ed11["ed11_id"]		= $result["ed11_id"];
@@ -263,7 +263,7 @@ switch($ACTION) {
 													$processed_ed11["updated_date"]	= $result["updated_date"];
 													$processed_ed11["updated_by"]	= $result["updated_by"];
 	
-													if(($db->AutoExecute("event_ed11", $processed_ed11, "INSERT")) && ($new_eed11_id = $db->Insert_Id())) {
+													if (($db->AutoExecute("event_ed11", $processed_ed11, "INSERT")) && ($new_eed11_id = $db->Insert_Id())) {
 														output_success("[Row ".$row_count."]\tCopied ed11_id [".$processed_ed11["ed11_id"]."] to new event_id [".$new_event_id."].");
 														
 														$copied_ed11[] = $processed_ed11["ed11_id"];
@@ -278,14 +278,14 @@ switch($ACTION) {
 									/**
 									 * Attach any files from the previous event to this new event.
 									 */
-									if($COPY_EVENT_FILES) {
+									if ($COPY_EVENT_FILES) {
 										$query		= "SELECT * FROM `event_files` WHERE `event_id` = ".$db->qstr($old_event_id);
 										$results	= $db->GetAll($query);
-										if($results) {
+										if ($results) {
 											$copied_files	= array();
 											
-											foreach($results as $result) {
-												if((!in_array($result["file_name"], $copied_files)) && ($result["file_category"] != "podcast")) {
+											foreach ($results as $result) {
+												if ((!in_array($result["file_name"], $copied_files)) && ($result["file_category"] != "podcast")) {
 													$old_event_file = FILE_STORAGE_PATH."/".$result["efile_id"];
 	
 													if ((@file_exists($old_event_file)) || ((bool) $SKIP_FILE_COPY)) {
@@ -306,11 +306,11 @@ switch($ACTION) {
 														$processed_file["updated_date"]		= $result["updated_date"];
 														$processed_file["updated_by"]		= $result["updated_by"];
 	
-														if(($db->AutoExecute("event_files", $processed_file, "INSERT")) && ($new_file_id = $db->Insert_Id())) {
+														if (($db->AutoExecute("event_files", $processed_file, "INSERT")) && ($new_file_id = $db->Insert_Id())) {
 															output_success("[Row ".$row_count."]\tCopied file [".$processed_file["file_name"]."] to new event_id [".$new_event_id."] in database.");
 														
-															if(!(bool) $SKIP_FILE_COPY) {
-																if(copy($old_event_file, FILE_STORAGE_PATH."/".$new_file_id)) {
+															if (!(bool) $SKIP_FILE_COPY) {
+																if (copy($old_event_file, FILE_STORAGE_PATH."/".$new_file_id)) {
 																	output_success("[Row ".$row_count."]\tCopied file [".$processed_file["file_name"]."] to new event_id [".$new_event_id."] in filesystem.");
 	
 																	$copied_files[] = $processed_file["file_name"];
@@ -336,14 +336,14 @@ switch($ACTION) {
 									/**
 									 * Attach any links from the previous event to this new event.
 									 */
-									if($COPY_EVENT_LINKS) {
+									if ($COPY_EVENT_LINKS) {
 										$query		= "SELECT * FROM `event_links` WHERE `event_id` = ".$db->qstr($old_event_id);
 										$results	= $db->GetAll($query);
-										if($results) {
+										if ($results) {
 											$copied_links	= array();
 											
-											foreach($results as $result) {
-												if(!in_array($result["link"], $copied_links)) {
+											foreach ($results as $result) {
+												if (!in_array($result["link"], $copied_links)) {
 													$processed_link						= array();
 													$processed_link["event_id"]			= $new_event_id;
 													$processed_link["required"]			= $result["required"];
@@ -358,7 +358,7 @@ switch($ACTION) {
 													$processed_link["updated_date"]		= $result["updated_date"];
 													$processed_link["updated_by"]		= $result["updated_by"];
 	
-													if(($db->AutoExecute("event_links", $processed_link, "INSERT")) && ($new_link_id = $db->Insert_Id())) {
+													if (($db->AutoExecute("event_links", $processed_link, "INSERT")) && ($new_link_id = $db->Insert_Id())) {
 														output_success("[Row ".$row_count."]\tCopied link [".$processed_link["link_title"]."] to new event_id [".$new_event_id."].");
 														
 														$copied_links[] = $processed_link["link"];
@@ -373,21 +373,23 @@ switch($ACTION) {
 									/**
 									 * Attach any objectives from the previous event to this new event.
 									 */
-									if($COPY_EVENT_OBJECTIVES) {
+									if ($COPY_EVENT_OBJECTIVES) {
 										$query		= "SELECT * FROM `event_objectives` WHERE `event_id` = ".$db->qstr($old_event_id);
 										$results	= $db->GetAll($query);
-										if($results) {
+										if ($results) {
 											$copied_objectives	= array();
 											
-											foreach($results as $result) {
-												if(!in_array($result["objective_id"], $copied_objectives)) {
-													$processed_objective					= array();
-													$processed_objective["event_id"]		= $new_event_id;
-													$processed_objective["objective_id"]	= $result["objective_id"];
-													$processed_objective["updated_date"]	= $result["updated_date"];
-													$processed_objective["updated_by"]		= $result["updated_by"];
+											foreach ($results as $result) {
+												if (!in_array($result["objective_id"], $copied_objectives)) {
+													$processed_objective = array();
+													$processed_objective["event_id"] = $new_event_id;
+													$processed_objective["objective_id"] = $result["objective_id"];
+													$processed_objective["updated_date"] = $result["updated_date"];
+													$processed_objective["updated_by"] = $result["updated_by"];
+													$processed_objective["objective_type"] = $result["objective_type"];
+													$processed_objective["objective_details"] = $result["objective_details"];
 	
-													if(($db->AutoExecute("event_objectives", $processed_objective, "INSERT")) && ($new_eobjective_id = $db->Insert_Id())) {
+													if (($db->AutoExecute("event_objectives", $processed_objective, "INSERT")) && ($new_eobjective_id = $db->Insert_Id())) {
 														output_success("[Row ".$row_count."]\tCopied objective_id [".$processed_objective["objective_id"]."] to new event_id [".$new_event_id."].");
 														
 														$copied_objectives[] = $processed_objective["objective_id"];
@@ -406,11 +408,10 @@ switch($ACTION) {
 									$processed_related["event_id"]			= $new_event_id;
 									$processed_related["related_type"]		= "event_id";
 									$processed_related["related_value"]		= $old_event_id;
-									$processed_related["related_comment"]	= "";
 									$processed_related["updated_date"]		= time();
 									$processed_related["updated_by"]		= 1;
 		
-									if($db->AutoExecute("event_related", $processed_related, "INSERT")) {
+									if ($db->AutoExecute("event_related", $processed_related, "INSERT")) {
 										output_success("[Row ".$row_count."]\tAdded relationship between old event_id [".$old_event_id."] and new event_id [".$new_event_id."].");
 									} else {
 										output_error("[Row ".$row_count."]\tUnable to add relationship between old event_id [".$old_event_id."] and new event_id [".$new_event_id."]. Database said: ".$db->ErrorMsg());
@@ -432,7 +433,7 @@ switch($ACTION) {
 	break;
 	case "-validate" :
 		$handle = fopen($CSV_FILE, "r");
-		if($handle) {
+		if ($handle) {
 			$row_count	= 0;
 			
 			while (($row = fgetcsv($handle)) !== false) {
@@ -442,7 +443,7 @@ switch($ACTION) {
 				 * We do not want the first row to be imported because it should
 				 * be the CSV heading titles.
 				 */
-				if($row_count > 1) {
+				if ($row_count > 1) {
 					$event_ids			= array();
 					$proxy_ids			= array();
 		
@@ -459,12 +460,12 @@ switch($ACTION) {
 					$event_location		= ((isset($row[10]) && ($row[10] != "")) ? clean_input($row[10]) : "TBA");
 					$staff_numbers		= ((isset($row[11])) ? clean_input($row[11]) : "");
 
-					if($event_id) {
+					if ($event_id) {
 						$pieces = explode(";", $event_id);
-						if((is_array($pieces)) && (count($pieces))) {
-							foreach($pieces as $tmp_event_id) {
-								if($tmp_event_id = clean_input($tmp_event_id, array("nows", "int"))) {
-									if(!validate_event_id($tmp_event_id)) {
+						if ((is_array($pieces)) && (count($pieces))) {
+							foreach ($pieces as $tmp_event_id) {
+								if ($tmp_event_id = clean_input($tmp_event_id, array("nows", "int"))) {
+									if (!validate_event_id($tmp_event_id)) {
 										output_notice("[Row ".$row_count."]\tAn old event_id [".$tmp_event_id."] does not exist in the database.");
 									}
 								}
@@ -480,40 +481,40 @@ switch($ACTION) {
 						$course_name = "General Events";
 					}
 
-					if($event_phase == "") {
+					if ($event_phase == "") {
 						output_notice("[Row ".$row_count."]\tThe event phase [".$event_phase."] appears to be missing.");
 					}
 
-					if(!(int) $event_grad_year) {
+					if (!(int) $event_grad_year) {
 						output_notice("[Row ".$row_count."]\tThe event grad year [".$event_grad_year."] appears to be missing or invalid.");
 					}
 
-					if(!get_eventtype_id($event_type)) {
+					if (!get_eventtype_id($event_type)) {
 						output_notice("[Row ".$row_count."]\tUnable to locate an event type id match for event type [".$event_type."].");
 					}
 
-					if(!get_course_id($course_name)) {
+					if (!get_course_id($course_name)) {
 						output_notice("[Row ".$row_count."]\tUnable to locate a course_id match for course name [".$course_name."].");
 					}
 
-					if(!$event_start = strtotime($event_date." ".$event_start_time)) {
+					if (!$event_start = strtotime($event_date." ".$event_start_time)) {
 						output_notice("[Row ".$row_count."]\tUnable to parse the UNIX timestamp for [".$event_date." ".$event_start_time."].");
 					}
 					
-					if(!(int) $event_duration) {
+					if (!(int) $event_duration) {
 						output_notice("[Row ".$row_count."]\tThe event duration [".$event_duration."] appears to be missing or invalid.");
 					}
 					
-					if($event_title == "") {
+					if ($event_title == "") {
 						output_notice("[Row ".$row_count."]\tThe event title [".$event_title."] appears to be missing.");
 					}
 					
-					if($staff_numbers) {
+					if ($staff_numbers) {
 						$pieces = explode(";", $staff_numbers);
-						if((is_array($pieces)) && (count($pieces))) {
-							foreach($pieces as $tmp_staff_number) {
-								if($tmp_staff_number = clean_input($tmp_staff_number, array("nows", "int"))) {
-									if(!get_proxy_id($tmp_staff_number)) {
+						if ((is_array($pieces)) && (count($pieces))) {
+							foreach ($pieces as $tmp_staff_number) {
+								if ($tmp_staff_number = clean_input($tmp_staff_number, array("nows", "int"))) {
+									if (!get_proxy_id($tmp_staff_number)) {
 										output_notice("[Row ".$row_count."]\tUnable to locate a proxy_id for staff number [".$tmp_staff_number."].");
 									}
 								}
@@ -527,7 +528,7 @@ switch($ACTION) {
 			output_error("Unable to open the provided CSV file [".$CSV_FILE."].");
 		}
 		
-		if((!$SUCCESS) && (!$NOTICE) && (!$ERROR)) {
+		if ((!$SUCCESS) && (!$NOTICE) && (!$ERROR)) {
 			echo "\nThis CSV file has been parsed, but there does not not appear to be any errors or notices.";
 		}
 	break;

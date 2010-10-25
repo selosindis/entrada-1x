@@ -132,10 +132,10 @@ switch($STEP) {
 		}
 
 		/**
-		 * Required field "release_from" / Release Start (validated through validate_calendar function).
-		 * Non-required field "release_until" / Release Finish (validated through validate_calendar function).
+		 * Required field "release_from" / Release Start (validated through validate_calendars function).
+		 * Non-required field "release_until" / Release Finish (validated through validate_calendars function).
 		 */
-		$release_dates = validate_calendar("release", true, false);
+		$release_dates = validate_calendars("release", true, false);
 		if ((isset($release_dates["start"])) && ((int) $release_dates["start"])) {
 			$PROCESSED["release_date"]	= (int) $release_dates["start"];
 		} else {

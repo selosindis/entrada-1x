@@ -31,15 +31,14 @@ if (!defined("PARENT_INCLUDED")) {
 	header("Location: ".ENTRADA_URL);
 	exit;
 } elseif (!$ENTRADA_ACL->amIAllowed("awards", "update", false)) {
-	$ERROR++;
-	$ERRORSTR[]	= "Your account does not have the permissions required to use this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
+	add_error("Your account does not have the permissions required to use this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.");
 
 	echo display_error();
 
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
 	define("IN_AWARDS", true);
-	require_once("Models/InternalAwards.class.php");
+	require_once("Models/awards/InternalAwards.class.php");
 	require_once("awards/includes/functions.inc.php");
 	
 	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/awards", "title" => "Manage Awards");

@@ -1,7 +1,7 @@
 <?php
 /**
  * Entrada [ http://www.entrada-project.org ]
- * 
+ *
  * Entrada is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -15,100 +15,71 @@
  * You should have received a copy of the GNU General Public License
  * along with Entrada.  If not, see <http://www.gnu.org/licenses/>.
  *
+ * This file is used to add events to the entrada.events table.
+ *
  * @author Organisation: Queen's University
  * @author Unit: School of Medicine
  * @author Developer: Andrew Dos-Santos <andrew.dos-santos@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
 */
+
 if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 	exit;
 } elseif((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	header("Location: ".ENTRADA_URL);
 	exit;
-}
+} elseif(!$ENTRADA_ACL->amIAllowed('annualreport', 'read', false)) {
+	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/".$MODULE."\\'', 15000)";
 
-switch($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]) {
-	case "faculty" :
-		/**
-		 * Display Annual Report Sections to the Faculty.
-		 */
-		if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {			
-			if(!isset($_SESSION["reports_expand_grid"])) {
-				$_SESSION["reports_expand_grid"] = "reports_grid";
-			}
-			
-    		if($_SESSION["details"]["clinical_member"]) {
-    			$clinical_member = "NO";
-    		} else {
-    			$clinical_member = "YES";
-    		}
-			?>
-			<h1>Section <?php echo (!$_SESSION["details"]["clinical_member"] ? "VIII" : "VII"); ?> - Reports</h1>
-			
-			<table id="flex1" style="display:none"></table>
-			
-			<?php $fields = "ar_profile,profile_id,report_completed,career_goals,consistent,year_reported"; ?>
-			
-			<script type="text/javascript">
-			var reports_grid = jQuery("#flex1").flexigrid
-			(
-				{
-				url: '<?php echo ENTRADA_URL; ?>/api/ar_loadgrid.api.php?id=<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>&t=<?php echo $fields; ?>',
-				dataType: 'json',
-				method: 'POST',
-				colModel : [
-					{display: 'Report Completed', name : 'report_completed', width : 188, sortable : true, align: 'left'},
-					{display: 'In Keeping With Career Goals', name : 'career_goals', width : 188, sortable : true, align: 'left'},
-					{display: 'Consistent', name : 'consistent', width : 163, sortable : true, align: 'left'},
-					{display: 'Year', name : 'year_reported', width : 50, sortable : true, align: 'left'},
-					{display: 'Generate', name : 'ctlgo', width : 50,  sortable : false, align: 'center', process:reportGo}
-					],
-				searchitems : [
-					{display: 'Report Completed', name : 'report_completed'},
-					{display: 'In Keeping With Career Goals', name : 'career_goals'},
-					{display: 'Consistent', name : 'consistent'},
-					{display: 'Year', name : 'year_reported', isdefault: true}
-					],
-				sortname: "year_reported",
-				sortorder: "desc",
-				resizable: false, 
-				usepager: true,
-				showToggleBtn: false,
-				singleSelect: true,
-				collapseTable: <?php echo ($_SESSION["reports_expand_grid"] == "reports_grid" ? "false" : "true"); ?>,
-				title: 'A. Generate Annual Report',
-				useRp: true,
-				rp: 15,
-				showTableToggleBtn: true,
-				width: 732,
-				height: 200,
-				nomsg: 'No Results', 
-				buttons : [
-	                {name: 'Generate Report', bclass: 'report_go', onpress : generateReport},
-	                ]
-				}
-			);
-            
-            function generateReport(com,grid) {
-                if (com=='Generate Report') {
-                	jQuery(function() {
-						if(jQuery('.trSelected',grid).length>0) {
-							jQuery('.trSelected', grid).each(function() {
-								var id = jQuery(this).attr('id');
-								id = id.substring(id.lastIndexOf('row')+3);
-								window.location='<?php echo ENTRADA_URL; ?>/annualreport/reports?section=generate-annual-report&amp;rid='+id+'&amp;proxy_id='+<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>+'&amp;clinical=<?php echo $clinical_member; ?>';
-							});
-				    	} 
-					});
-                }            
-            }
-             
-            function reportGo(celDiv,id) {
-            	celDiv.innerHTML = "<a href='<?php echo ENTRADA_URL; ?>/annualreport/reports?section=generate-annual-report&amp;rid="+id+"&amp;proxy_id="+<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>+"&amp;clinical=<?php echo $clinical_member; ?>' style=\"cursor: pointer; cursor: hand\" text-decoration: none><img src=\"<?php echo ENTRADA_RELATIVE; ?>/css/jquery/images/report_go.gif\" style=\"border: none\"/></a>";
-		    } 
-			</script>
-			<?php
+	$ERROR++;
+	$ERRORSTR[]	= "Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
+
+	echo display_error();
+
+	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
+} else {
+	?>
+	<style type="text/css">
+		ol.system-reports li {
+			width:			70%;
+			color:			#666666;
+			font-size:		12px;
+			padding:		0px 15px 15px 0px;
+			margin-left:	5px;
 		}
-	break;
+		
+		ol.system-reports li a {
+			font-size:		13px;
+			font-weight:	bold;
+		}
+	</style>
+	<h1>My Reports</h1>
+	
+	<h2 style="color: #669900">Research Reports</h2>
+	<ol class="system-reports">
+		<li>
+			<a href="<?php echo ENTRADA_URL; ?>/annualreport/reports?section=my_publications">My Publications</a><br />
+			A report that shows all of the publications you've for a specific date range.
+		</li>
+	</ol>
+	<?php 
+	if($ENTRADA_ACL->amIAllowed('mydepartment', 'read', 'DepartmentHead') || $ENTRADA_ACL->amIAllowed('myowndepartment', 'read', 'DepartmentRep')) { ?>
+	<h2 style="color: #669900">My Department Reports</h2>
+	<ol class="system-reports">
+		<li>
+			<a href="<?php echo ENTRADA_URL; ?>/annualreport/reports?section=my_departmental_publications">Publications</a><br />
+			A report that shows all of the publications in your department for a specific date range.
+		</li>
+	</ol>
+	<?php } ?>
+	<h2 style="color: #669900">Blank ART Form</h2>
+	<ol class="system-reports">
+		<li>
+			<a href="<?php echo ENTRADA_URL; ?>/annualreport/reports?section=blank_art&clinical=NO">Blank ART Forms</a><br />
+			This will generate a blank copy of both versions of the Annual Report (Clinical and Basic Sciences)
+		</li>
+	</ol>
+	<?php
 }
+?>

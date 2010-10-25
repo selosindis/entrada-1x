@@ -170,8 +170,9 @@ if (!defined("PARENT_INCLUDED")) {
 										FROM `".AUTH_DATABASE."`.`user_data` AS a
 										LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 										ON b.`user_id` = a.`id`
-										AND b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
-										WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+										AND b.`app_id` IN (".AUTH_APP_IDS_STRING.")
+										WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
+										AND a.`organisation_id` = ".$db->qstr($PROCESSED["organisation"])."
 										AND b.`group` ".($PROCESSED["group"] == "staff" ? "IN ('staff', 'medtech')" : "= ".$db->qstr($PROCESSED["group"]))."
 										".(($PROCESSED["role"]) ? "AND b.`role` = ".$db->qstr($PROCESSED["role"]) : "")."
 										GROUP BY a.`id`
@@ -181,8 +182,9 @@ if (!defined("PARENT_INCLUDED")) {
 										FROM `".AUTH_DATABASE."`.`user_data` AS a
 										LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 										ON b.`user_id` = a.`id`
-										AND b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
-										WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+										AND b.`app_id` IN (".AUTH_APP_IDS_STRING.")
+										WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
+										AND a.`organisation_id` = ".$db->qstr($PROCESSED["organisation"])."
 										AND b.`group` ".($PROCESSED["group"] == "staff" ? "IN ('staff', 'medtech')" : "= ".$db->qstr($PROCESSED["group"]))."
 										".(($PROCESSED["role"]) ? "AND b.`role` = ".$db->qstr($PROCESSED["role"]) : "")."
 										GROUP BY a.`id`
@@ -204,7 +206,7 @@ if (!defined("PARENT_INCLUDED")) {
 					$result = $db->GetRow($query);
 					if ($result) {
 						$browse_department	= $department;
-						$search_query_text	= html_encode(limit_chars($result["organisation_title"], 18).": ".$result["department_title"]." ".(($result["entity_title"]) ? "(".$result["entity_title"].")" : ""));
+						$search_query_text	= html_encode($result["department_title"]);
 						$search_query		= $search_query_text;
 					} else {
 						$ERROR++;
@@ -222,7 +224,7 @@ if (!defined("PARENT_INCLUDED")) {
 					$result = $db->GetRow($query);
 					if ($result) {
 						$browse_department	= $department;
-						$search_query_text	= html_encode(limit_chars($result["organisation_title"], 18).": ".$result["department_title"]." ".(($result["entity_title"]) ? "(".$result["entity_title"].")" : ""));
+						$search_query_text	= html_encode($result["department_title"]);
 						$search_query		= $search_query_text;
 					} else {
 						$ERROR++;
@@ -239,7 +241,7 @@ if (!defined("PARENT_INCLUDED")) {
 										FROM `".AUTH_DATABASE."`.`user_data` AS a
 										LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 										ON b.`user_id` = a.`id`
-										AND b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+										AND b.`app_id` IN (".AUTH_APP_IDS_STRING.")
 										LEFT JOIN `".AUTH_DATABASE."`.`user_departments` AS c
 										ON c.`user_id` = a.`id`
 										WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
@@ -251,10 +253,10 @@ if (!defined("PARENT_INCLUDED")) {
 										FROM `".AUTH_DATABASE."`.`user_data` AS a
 										LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 										ON b.`user_id` = a.`id`
-										AND b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+										AND b.`app_id` IN (".AUTH_APP_IDS_STRING.")
 										LEFT JOIN `".AUTH_DATABASE."`.`user_departments` AS c
 										ON c.`user_id` = a.`id`
-										WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+										WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
 										AND c.`dep_id` = ".$db->qstr($browse_department)."
 										GROUP BY a.`id`
 										ORDER BY `fullname` ASC";
@@ -338,9 +340,10 @@ if (!defined("PARENT_INCLUDED")) {
 									FROM `".AUTH_DATABASE."`.`user_data` AS a
 									LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 									ON b.`user_id` = a.`id`
-									AND b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
-									WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
-									AND (b.`group` ".($group_string && $role_string ? "IN (".$group_string.")
+									AND b.`app_id` IN (".AUTH_APP_IDS_STRING.")
+									WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
+									AND a.`organisation_id` IN (" . $organisations_string . ")
+									AND (b.`group` ".($group_string && $role_string ? "IN (".$group_string.")									
 									OR (b.`group` = 'student' 
 										AND b.`role` IN (".$role_string.")))" : ($role_string ? "= 'student' 
 									AND b.`role` IN (".$role_string."))" : ( $group_string ? "IN (".$group_string."))" : "!= 'guest')")))."
@@ -356,8 +359,9 @@ if (!defined("PARENT_INCLUDED")) {
 									FROM `".AUTH_DATABASE."`.`user_data` AS a
 									LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 									ON b.`user_id` = a.`id`
-									AND b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
-									WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+									AND b.`app_id` IN (".AUTH_APP_IDS_STRING.")
+									WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
+									AND a.`organisation_id` IN (" . $organisations_string . ")
 									AND (b.`group` ".($group_string && $role_string ? "IN (".$group_string.")
 									OR (b.`group` = 'student' 
 										AND b.`role` IN (".$role_string.")))" : ($role_string ? "= 'student' 
@@ -456,7 +460,6 @@ if (!defined("PARENT_INCLUDED")) {
 
 	$i = count($HEAD);
 	$HEAD[$i]  = "<script type=\"text/javascript\">\n";
-	$HEAD[$i]  .= "document.observe(\"dom:loaded\", function() {\n";
 	$HEAD[$i] .= "addListGroup('account_type', 'cs-top');\n";
 	if (is_array($browse_people)) {
 		foreach ($browse_people as $key => $result) {
@@ -468,7 +471,6 @@ if (!defined("PARENT_INCLUDED")) {
 				}
 		}
 	}
-	$HEAD[$i] .= "});\n";
 	$HEAD[$i] .= "</script>\n";
 
 	$ONLOAD[] = "initListGroup('account_type', $('group'), $('role'))";
@@ -729,18 +731,31 @@ if (!defined("PARENT_INCLUDED")) {
 					<td>
 						<select id="department" name="d" style="width: 95%">
 						<?php
-						$query		= "	SELECT a.`department_id`, a.`department_title`, a.`organisation_id`, b.`entity_title`, c.`organisation_title`
-										FROM `".AUTH_DATABASE."`.`departments` AS a
-										LEFT JOIN `".AUTH_DATABASE."`.`entity_type` AS b
-										ON a.`entity_id` = b.`entity_id`
-										LEFT JOIN `".AUTH_DATABASE."`.`organisations` AS c
-										ON a.`organisation_id` = c.`organisation_id`
-										ORDER BY c.`organisation_title` ASC, a.`department_title`";
+						$query = "	SELECT a.`department_id`, a.`department_title`, a.`organisation_id`, b.`entity_title`, c.`organisation_title`
+									FROM `".AUTH_DATABASE."`.`departments` AS a
+									LEFT JOIN `".AUTH_DATABASE."`.`entity_type` AS b
+									ON a.`entity_id` = b.`entity_id`
+									LEFT JOIN `".AUTH_DATABASE."`.`organisations` AS c
+									ON a.`organisation_id` = c.`organisation_id`
+									WHERE a.`department_active` = '1'
+									ORDER BY c.`organisation_title` ASC, a.`department_title`";
 						$results	= $db->GetAll($query);
 						if ($results) {
-							foreach ($results as $result) {
-								echo "<option value=\"".(int) $result["department_id"]."\"".(((isset($browse_department)) && ((int) $browse_department) && ($browse_department == $result["department_id"])) ? " selected=\"selected\"" : "").">".html_encode(limit_chars($result["organisation_title"], 18)).": ".html_encode(limit_chars($result["department_title"], 42))." ".(($result["entity_title"]) ? "(".html_encode(limit_chars($result["entity_title"], 24)).")" : "")."</option>\n";
+							$organisation_title = "";
+
+							foreach ($results as $key => $result) {
+								if ($organisation_title != $result["organisation_title"]) {
+									if ($key) {
+										echo "</optgroup>";
+									}
+									echo "<optgroup label=\"".html_encode($result["organisation_title"])."\">";
+
+									$organisation_title = $result["organisation_title"];
+								}
+
+								echo "<option value=\"".(int) $result["department_id"]."\"".(((isset($browse_department)) && ((int) $browse_department) && ($browse_department == $result["department_id"])) ? " selected=\"selected\"" : "").">".html_encode($result["department_title"])."</option>\n";
 							}
+							echo "</optgroup>";
 						}
 						?>
 						</select>
@@ -811,8 +826,7 @@ if (!defined("PARENT_INCLUDED")) {
 			$limit_parameter	= 5;
 			$total_pages		= 1;
 		}
-		var_dump($results);
-		echo($db->ErrorMsg());
+		
 		if ($results) {
 			echo "<br />\n";
 			echo "<div class=\"searchTitle\" style=\"margin: auto;\">\n";

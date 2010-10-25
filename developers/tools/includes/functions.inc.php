@@ -306,26 +306,32 @@ function clean_data($string = "", $rules = array()) {
  * Note that $rules can also be a string if you only want to apply a single rule.
  * If no rules are provided, then the string will simply be trimmed using the trim() function.
  * @param string $string
- * @param mixed $rules
+ * @param array $rules
  * @return string
  * @example $variable = clean_input(" 1235\t\t", array("nows", "int")); // $variable will equal an integer value of 1235.
  */
-function clean_input($string = "", $rules = array()) {
-	if(is_scalar($rules)) {
-		if(trim($rules) != "") {
+function clean_input($string, $rules = array()) {
+	if (is_scalar($rules)) {
+		if (trim($rules) != "") {
 			$rules = array($rules);
 		} else {
 			$rules = array();
 		}
 	}
-	
-	if((is_array($rules)) && (count($rules))) {
-		foreach($rules as $rule) {
-			switch($rule) {
-				case "url" :
+
+	if (count($rules) > 0) {
+		foreach ($rules as $rule) {
+			switch ($rule) {
+				case "page_url" :		// Acceptable characters for community page urls.
+				case "module" :
+					$string = preg_replace("/[^a-z0-9_\-]/i", "", $string);
+				break;
+				case "url" :			// Allows only a minimal number of characters
+					$string = preg_replace(array("/[^a-z0-9_\-\.\/\~\?\&\:\#\=\+]/i", "/(\.)\.+/", "/(\/)\/+/"), "$1", $string);
+				break;
 				case "file" :
-				case "dir" :			// Removes unwanted charachters and space from url's, files and directory names.
-					$string = str_replace(array(" ", "\t", "\n", "\r", "\0", "\x0B", "..", "://"), "", $string);
+				case "dir" :			// Allows only a minimal number of characters
+					$string = preg_replace(array("/[^a-z0-9_\-\.\/]/i", "/(\.)\.+/", "/(\/)\/+/"), "$1", $string);
 				break;
 				case "int" :			// Change string to an integer.
 					$string = (int) $string;
@@ -342,6 +348,16 @@ function clean_input($string = "", $rules = array()) {
 				case "trim" :			// Trim whitespace from ends of string.
 					$string = trim($string);
 				break;
+				case "trimds" :			// Removes double spaces.
+					$string = str_replace(array(" ", "\t", "\n", "\r", "\0", "\x0B", "&nbsp;", "\x7f", "\xff", "\x0", "\x1f"), " ", $string);
+					$string = html_decode(str_replace("&nbsp;", "", html_encode($string)));
+				break;
+				case "nl2br" :
+					$string = nl2br($string);
+				break;
+				case "underscores" :	// Trim all whitespace anywhere in the string.
+					$string = str_replace(array(" ", "\t", "\n", "\r", "\0", "\x0B", "&nbsp;"), "_", $string);
+				break;
 				case "lower" :			// Change string to all lower case.
 				case "lowercase" :
 					$string = strtolower($string);
@@ -353,14 +369,33 @@ function clean_input($string = "", $rules = array()) {
 				case "ucwords" :		// Change string to correct word case.
 					$string = ucwords(strtolower($string));
 				break;
-				case "notags" :			// Strips tags from the string.
-					$string = strip_tags($string);
-				break;
 				case "boolops" :		// Removed recognized boolean operators.
 					$string = str_replace(array("\"", "+", "-", "AND", "OR", "NOT", "(", ")", ",", "-"), "", $string);
 				break;
 				case "quotemeta" :		// Quote's meta characters
 					$string = quotemeta($string);
+				break;
+				case "credentials" :	// Acceptable characters for login credentials.
+					$string = preg_replace("/[^a-z0-9_\-\.]/i", "", $string);
+				break;
+				case "alphanumeric" :	// Remove anything that is not alphanumeric.
+					$string = preg_replace("/[^a-z0-9]+/i", "", $string);
+				break;
+				case "alpha" :			// Remove anything that is not an alpha.
+					$string = preg_replace("/[^a-z]+/i", "", $string);
+				break;
+				case "numeric" :		// Remove everything but numbers 0 - 9 for when int won't do.
+					$string = preg_replace("/[^0-9]+/i", "", $string);
+				break;
+				case "name" :			// @todo jellis ?
+					$string = preg_replace("/^([a-z]+(\'|-|\.\s|\s)?[a-z]*){1,2}$/i", "", $string);
+				break;
+				case "emailcontent" :	// Check for evil tags that could be used to spam.
+					$string = str_ireplace(array("content-type:", "bcc:","to:", "cc:"), "", $string);
+				break;
+				case "postclean" :		// @todo jellis ?
+					$string = preg_replace('/\<br\s*\/?\>/i', "\n", $string);
+					$string = str_replace("&nbsp;", " ", $string);
 				break;
 				case "decode" :			// Returns the output of the html_decode() function.
 					$string = html_decode($string);
@@ -368,29 +403,20 @@ function clean_input($string = "", $rules = array()) {
 				case "encode" :			// Returns the output of the html_encode() function.
 					$string = html_encode($string);
 				break;
-				case "specialchars" :	// Returns the output of the htmlspecialchars() function.
-					$string = htmlspecialchars($string);
+				case "htmlspecialchars" : // Returns the output of the htmlspecialchars() function.
+				case "specialchars" :
+					$string = htmlspecialchars($string, ENT_QUOTES, DEFAULT_CHARSET);
 				break;
-				case "trimds" :		// Removes double spaces.
-					$string = str_replace(array(" ", "\t", "\n", "\r", "\0", "\x0B", "&nbsp;", "\x7f", "\xff", "\x0", "\x1f"), " ", $string);
-					$string = html_decode(str_replace("&nbsp;", "", html_encode($string)));
+				case "htmlbrackets" :	// Converts only brackets into entities.
+					$string = str_replace(array("<", ">"), array("&lt;", "&gt;"), $string);
 				break;
-				case "credentials" :	// Acceptable characters for login credentials.
-					$string = preg_replace("/[^a-z0-9_\-\.]/i", "", $string);
+				case "notags" :			// Strips tags from the string.
+				case "nohtml" :
+				case "striptags" :
+					$string = strip_tags($string);
 				break;
-				case "alphanumeric" :
-					$string = preg_replace("/[^a-z0-9]+/i", "", $string);
-				break;
-				case "emailcontent" :	// Check for evil tags that could be used to spam.
-					$string = str_ireplace(array("content-type:", "bcc:","to:", "cc:"), "", $string);
-				break;
-				case "allowedtags" :
-					$string = strip_tags($string, "<br><div><span><table><caption><tbody><thead><tfoot><tr><td><colgroup><col><th><p><img><a><li><ul><ol><strong><b><i><embed><object><param><abbr><acronym><blockquote><h1><h2><h3><h4><h5><h6><em><dfn><code><samp><kbd><var><cite><s><strike><q><legend><ins><del><hr><dl><dt><dd><big><bdo><map><area><address><center><font><style><menu><small><sub><sup><tt><u>");
-					$string = str_ireplace(array("onload", "onunload", "onblur", "onchange", "onfocus", "onreset", "onselect", "onsubmit", "onkeydown", "onkeypress", "onkeyup", "onclick", "ondblclick", "onmousedown", "onmousemove", "onmouseout", "onmouseover", "onmouseup"), "playnicekids", $string);
-					$string = str_ireplace("javascript:", "java<strong></strong>script:", $string);
-				break;
-				default :		// Unknown rule, log notice.
-					continue;
+				default :				// Unknown rule, log notice.
+					application_log("notice", "Unknown clean_input function rule [".$rule."]");
 				break;
 			}
 		}
@@ -413,14 +439,20 @@ function process_user_photo_official($original_file, $proxy_id = 0) {
 	global $VALID_MAX_DIMENSIONS;
 
 	if(!@function_exists("gd_info")) {
+		echo "Error: ".__LINE__;
+
 		return false;
 	}
 
 	if((!@file_exists($original_file)) || (!@is_readable($original_file))) {
+		echo "Error: ".__LINE__;
+
 		return false;
 	}
 
 	if(!$proxy_id = (int) $proxy_id) {
+		echo "Error: ".__LINE__;
+
 		return false;
 	}
 
@@ -448,6 +480,8 @@ function process_user_photo_official($original_file, $proxy_id = 0) {
 					$original_img_resource = @imagecreatefromgif($original_file);
 				break;
 				default :
+					echo "Error: ".__LINE__;
+
 					return false;
 				break;
 			}
@@ -475,21 +509,29 @@ function process_user_photo_official($original_file, $proxy_id = 0) {
 							case "image/pjpeg":
 							case "image/jpeg":
 							case "image/jpg":
-								if(!@imagejpeg($new_img_resource, $new_file, $img_quality)) {
+								if(!imagejpeg($new_img_resource, $new_file, $img_quality)) {
+									echo "Error: ".__LINE__;
+
 									return false;
 								}
 							break;
 							case "image/png":
 								if(!@imagepng($new_img_resource, $new_file)) {
+									echo "Error: ".__LINE__;
+
 									return false;
 								}
 							break;
 							case "image/gif":
 								if(!@imagegif($new_img_resource, $new_file)) {
+									echo "Error: ".__LINE__;
+
 									return false;
 								}
 							break;
 							default :
+								echo "Error: ".__LINE__;
+
 								return false;
 							break;
 						}
@@ -502,12 +544,18 @@ function process_user_photo_official($original_file, $proxy_id = 0) {
 						@imagedestroy($original_img_resource);
 						@imagedestroy($new_img_resource);
 					} else {
+						echo "Error: ".__LINE__;
+
 						return false;
 					}
 				} else {
+					echo "Error: ".__LINE__;
+
 					return false;
 				}
 			} else {
+				echo "Error: ".__LINE__;
+
 				return false;
 			}
 		} else {
@@ -521,6 +569,8 @@ function process_user_photo_official($original_file, $proxy_id = 0) {
 				$new_file_width		= $original_file_width;
 				$new_file_height	= $original_file_height;
 			} else {
+				echo "Error: ".__LINE__;
+
 				return false;
 			}
 		}
@@ -544,6 +594,8 @@ function process_user_photo_official($original_file, $proxy_id = 0) {
 					$original_img_resource = @imagecreatefromgif($new_file);
 				break;
 				default :
+					echo "Error: ".__LINE__;
+
 					return false;
 				break;
 			}
@@ -581,20 +633,28 @@ function process_user_photo_official($original_file, $proxy_id = 0) {
 						case "image/jpeg":
 						case "image/jpg":
 							if(!@imagejpeg($new_img_resource, $new_file."-thumbnail", $img_quality)) {
+								echo "Error: ".__LINE__;
+
 								return false;
 							}
 						break;
 						case "image/png":
 							if(!@imagepng($new_img_resource, $new_file."-thumbnail")) {
+								echo "Error: ".__LINE__;
+
 								return false;
 							}
 						break;
 						case "image/gif":
 							if(!@imagegif($new_img_resource, $new_file."-thumbnail")) {
+								echo "Error: ".__LINE__;
+
 								return false;
 							}
 						break;
 						default :
+							echo "Error: ".__LINE__;
+
 							return false;
 						break;
 					}
@@ -617,12 +677,18 @@ function process_user_photo_official($original_file, $proxy_id = 0) {
 					return true;
 				}
 			} else {
+				echo "Error: ".__LINE__;
+
 				return false;
 			}
 		} else {
+			echo "Error: ".__LINE__;
+
 			return false;
 		}
 	} else {
+		echo "Error: ".__LINE__;
+
 		return false;
 	}
 }

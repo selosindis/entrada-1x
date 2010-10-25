@@ -17,8 +17,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MSPR_ADMIN"))) {
 	header("Location: ".ENTRADA_URL);
 	exit;
 } elseif (!$ENTRADA_ACL->amIAllowed("mspr", "create", false)) {
-	$ERROR++;
-	$ERRORSTR[]	= "Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
+	add_error("Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.");
 
 	echo display_error();
 
@@ -35,12 +34,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MSPR_ADMIN"))) {
 		$mode = "group_mode";
 		$user_ids = $_POST['user_id'];
 	} else {
-		$ERROR++;
-		$ERRORSTR[] = "Insufficient data provided to generate report(s)";
+		add_error("Insufficient data provided to generate report(s)");
 		display_status_messages();
 	}
-	if (!$ERROR) {
-		require_once("Models/MSPRs.class.php");
+	if (!has_error()) {
+		require_once("Models/mspr/MSPRs.class.php");
 		switch($mode) {
 			case "user_mode":
 				$user = User::get($user_id);
@@ -48,11 +46,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MSPR_ADMIN"))) {
 				$name = $user->getFirstname() . " " . $user->getLastname();
 				
 				if ($mspr->saveMSPRFiles()) {
-					$SUCCESS++;
-					$SUCCESSSTR[] = "Report successfully generated. You will be redirected to the student's MSPR page in 5 seconds.";
+					add_success("Report successfully generated. You will be redirected to the student's MSPR page in 5 seconds.");
 				} else {
-					$ERROR++;
-					$ERRORSTR[] = "Error generating report for $name. You will be redirected to the student's MSPR page in 5 seconds.";
+					add_error("Error generating report for $name. You will be redirected to the student's MSPR page in 5 seconds.");
 				}
 				header( "refresh:5;url=".ENTRADA_URL."/admin/users/manage?section=mspr&id=$user_id" );
 				break;
@@ -66,17 +62,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MSPR_ADMIN"))) {
 					$name = $user->getFirstname() . " " . $user->getLastname();
 					
 					if (!$mspr->saveMSPRFiles($timestamp)) {
-						$ERROR++;
-						$ERRORSTR[] = "Error generating report for $name.";
+						add_error("Error generating report for $name.");
 					}
 											
 				}
-				if (!$ERROR) {
-					$SUCCESS++;
-					$SUCCESSSTR[] = "Reports successfully generated. You will be redirected to the class MSPR page in 5 seconds."; 
+				if (!has_error()) {
+					add_success("Reports successfully generated. You will be redirected to the class MSPR page in 5 seconds."); 
 				} else {
-					$ERROR++;
-					$ERRORSTR[] = "You will be redirected to the class MSPR page in 5 seconds.";
+					add_error("You will be redirected to the class MSPR page in 5 seconds.");
 				}
 				header( "refresh:5;url=".ENTRADA_URL."/admin/mspr?year=".$year );
 				break;

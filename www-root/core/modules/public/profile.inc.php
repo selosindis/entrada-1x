@@ -38,6 +38,7 @@ if (!defined("PARENT_INCLUDED")) {
 	application_log("error", "Group [".$GROUP."] and role [".$ROLE."] do not have access to this module [".$MODULE."]");
 } else {
 	define("IN_PROFILE", true);
+	
 	$VALID_MIME_TYPES			= array("image/pjpeg" => "jpg", "image/jpeg" => "jpg", "image/jpg" => "jpg", "image/gif" => "gif", "image/png" => "png");
 	$VALID_MAX_FILESIZE			= 2097512; // 2MB
 	$VALID_MAX_DIMENSIONS		= array("photo-width" => 216, "photo-height" => 300, "thumb-width" => 75, "thumb-height" => 104);
@@ -49,28 +50,33 @@ if (!defined("PARENT_INCLUDED")) {
 		$module_file = $router->getRoute();
 		if ($module_file) {
 		
-
 			if (isset($ACTION)) {
 				switch(trim(strtolower($ACTION))) {
 					case "privacy-update" :
 						profile_update_privacy();
-						break;
+					break;
+					case "notifications-update" :
+						profile_update_notifications();
+					break;
 					case "google-update" :
 						profile_update_google();
-						break;
+					break;
+					case "google-password-reset" :
+						profile_update_google_password();
+					break;
 					case "privacy-google-update" :
 						profile_update_google_privacy();
-						break;
+					break;
 					case "profile-update" :
 						profile_update_personal_info();
-						break;
+					break;
 					case "assistant-add" :
 						profile_add_assistant();
-						break;
+					break;
 					case "assistant-remove" :
 						profile_remove_assistant();
+					break;
 				}
-
 			}
 			add_profile_sidebar();
 			
@@ -97,11 +103,15 @@ function add_profile_sidebar () {
 	$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/profile\">Personal Information</a></li>\n";
 	//$sidebar_html .= "	<li class=\"link\"><a href=\"".$this_module."?section=photo\">Profile Photo</a></li>\n";
 	$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/profile?section=privacy\">Privacy Settings</a></li>\n";
+	if ((defined("COMMUNITY_NOTIFICATIONS_ACTIVE")) && ((bool) COMMUNITY_NOTIFICATIONS_ACTIVE)) {
+		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/profile?section=notifications\">Community Notifications</a></li>\n";
+	}
 	if ($ENTRADA_ACL->isLoggedInAllowed('assistant_support', 'create')) {
 		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/profile?section=assistants\">My Admin Assistants</a></li>\n";
 	}
+
 	if ($_SESSION["details"]["group"] == "student") {
-		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/profile?section=mspr\">MSPR</a></li>\n";
+		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/profile?section=mspr\">My MSPR</a></li>\n";
 	}
 	
 	$sidebar_html .= "</ul>";
@@ -418,15 +428,33 @@ function profile_update_google() {
 	}
 }
 
+function profile_update_google_password() {
+	global $db, $GOOGLE_APPS, $ERROR, $ERRORSTR, $SUCCESS, $SUCCESSSTR;
+
+	ob_clear_open_buffers();
+
+	if ((bool) $GOOGLE_APPS["active"]) {
+		if (isset($_POST["password"]) && ($tmp_input = clean_input($_POST["password"], "trim"))) {
+			if (google_reset_password($tmp_input)) {
+				echo 1;
+				exit;
+			}
+		}
+	}
+
+	echo 0;
+	exit;
+}
+
 function profile_add_assistant() {
 	global $db, $PROCESSED, $ERROR, $ERRORSTR, $SUCCESS, $SUCCESSSTR,$ENTRADA_ACL;
 	
 	if ($ENTRADA_ACL->isLoggedInAllowed('assistant_support', 'create')) {
-		$access_timeframe = validate_calendar("valid", true, true);
+		$access_timeframe = validate_calendars("valid", true, true);
 
 		if (!$ERROR) {
 			if ((isset($access_timeframe["start"])) && ((int) $access_timeframe["start"])) {
-				$PROCESSED["valid_from"]	= (int) $access_timeframe["start"];
+				$PROCESSED["valid_from"] = (int) $access_timeframe["start"];
 			}
 
 			if ((isset($access_timeframe["finish"])) && ((int) $access_timeframe["finish"])) {
@@ -528,4 +556,86 @@ function profile_remove_assistant () {
 		application_log("error", "User tried to remove assistants from profile without an acceptable group & role.");
 	}
 }
+
+function profile_update_notifications() {
+	global $db, $PROCESSED, $ERROR, $ERRORSTR, $SUCCESS, $SUCCESSSTR,$ENTRADA_ACL;
+
+	if ($_POST["enable-notifications"] == 1) {
+		if ($_POST["notify_announcements"] && is_array($_POST["notify_announcements"])) {
+			$notify_announcements = $_POST["notify_announcements"]; 
+		} else {
+			$notify_announcements = array();
+		}
+		if ($_POST["notify_events"] && is_array($_POST["notify_events"])) {
+			$notify_events = $_POST["notify_events"];
+		} else {
+			$notify_events = array();
+		}
+		if ($_POST["notify_polls"] && is_array($_POST["notify_polls"])) {
+			$notify_polls = $_POST["notify_polls"];
+		} else {
+			$notify_polls = array();
+		}
+		if ($_POST["notify_members"] && is_array($_POST["notify_members"])) {
+			$notify_members = $_POST["notify_members"];
+		} else {
+			$notify_members = array();
+		}
+		
+		$user_notifications = $db->GetOne("SELECT `notifications` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($_SESSION["details"]["id"]));
+		if (((int)$user_notifications) != 1) {
+			if (!$db->Execute("UPDATE `".AUTH_DATABASE."`.`user_data` SET `notifications` = '1' WHERE `id` = ".$db->qstr($_SESSION["details"]["id"]))) {
+				$ERROR++;
+				application_log("error", "Notification settings for the Proxy ID [".$_SESSION["details"]["id"]."] could not be activated. Database said: ".$db->ErrorMsg());
+			}
+		}
+		
+		$query = "SELECT `community_id` FROM `community_members` WHERE `proxy_id` = ".$db->qstr($_SESSION["details"]["id"])." AND `member_active` = '1'";
+		$communities = $db->GetAll($query);
+		if ($communities) {
+			foreach ($communities as $community) {
+				$PROCESSED_NOTIFICATIONS[$community["community_id"]]["announcements"] = (isset($notify_announcements[$community["community_id"]]) && $notify_announcements[$community["community_id"]] ? 1 : 0);
+				$PROCESSED_NOTIFICATIONS[$community["community_id"]]["events"] = (isset($notify_events[$community["community_id"]]) && $notify_events[$community["community_id"]] ? 1 : 0);
+				$PROCESSED_NOTIFICATIONS[$community["community_id"]]["polls"] = (isset($notify_polls[$community["community_id"]]) && $notify_polls[$community["community_id"]] ? 1 : 0);
+				$PROCESSED_NOTIFICATIONS[$community["community_id"]]["members"] = (isset($notify_members[$community["community_id"]]) && $notify_members[$community["community_id"]] ? 1 : 0);
+			}
+		}
+		if ($PROCESSED_NOTIFICATIONS && is_array($PROCESSED_NOTIFICATIONS)) {
+			if ($db->Execute("DELETE FROM `community_notify_members` WHERE `proxy_id` = ".$db->qstr($_SESSION["details"]["id"])." AND `notify_type` IN ('announcement', 'event', 'poll', 'members')")) {
+				foreach ($PROCESSED_NOTIFICATIONS as $community_id => $notify) {
+					if (!$ERROR) {
+						if (!$db->Execute("	INSERT INTO `community_notify_members` 
+											(`proxy_id`, `community_id`, `record_id`, `notify_type`, `notify_active`) VALUES 
+											(".$db->qstr($_SESSION["details"]["id"]).", ".$db->qstr($community_id).", ".$db->qstr($community_id).", 'announcement', ".$notify["announcements"]."),
+											(".$db->qstr($_SESSION["details"]["id"]).", ".$db->qstr($community_id).", ".$db->qstr($community_id).", 'event', ".$notify["events"]."),
+											(".$db->qstr($_SESSION["details"]["id"]).", ".$db->qstr($community_id).", ".$db->qstr($community_id).", 'members', ".$notify["members"]."),
+											(".$db->qstr($_SESSION["details"]["id"]).", ".$db->qstr($community_id).", ".$db->qstr($community_id).", 'poll', ".$notify["polls"].")")) {
+							$ERROR++;
+							application_log("error", "Community notifications settings for proxy ID [".$_SESSION["details"]["id"]."] could not be updated. Database said: ".$db->ErrorMsg());
+						}
+					}
+				}
+				if (!$ERROR) {
+					$SUCCESS++;
+					$SUCCESSSTR[] = "Your community notification settings have been successfully updated.";
+				}
+			} else {
+				$ERROR++;
+				application_log("error", "Community notifications settings for proxy ID [".$_SESSION["details"]["id"]."] could not be deleted. Database said: ".$db->ErrorMsg());
+			}
+		}
+		if ($ERROR) {
+			$ERRORSTR[] = "There was an issue while attempting to set your notification settings. The system administrator has been informed of the problem, please try again later.";	
+		}
+	} else {
+		$user_notifications = $db->GetOne("SELECT `notifications` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($_SESSION["details"]["id"]));
+		if (((int)$user_notifications) != 0) {
+			if (!$db->Execute("UPDATE `".AUTH_DATABASE."`.`user_data` SET `notifications` = '0' WHERE `id` = ".$db->qstr($_SESSION["details"]["id"]))) {
+				$ERROR++;
+				application_log("error", "Notification settings for the Proxy ID [".$_SESSION["details"]["id"]."] could not be deactivated. Database said: ".$db->ErrorMsg());
+			}
+		}
+	}
+}
+
 ?>

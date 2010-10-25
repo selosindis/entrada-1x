@@ -146,6 +146,7 @@ if ($ACTION == "login") {
 				"access_expires",
 				"last_login",
 				"privacy_level",
+				"private_hash",
 				"private-allow_podcasting",
 				"acl"
 			)
@@ -210,6 +211,7 @@ if ($ACTION == "login") {
 			$_SESSION["details"]["expires"] = $result["ACCESS_EXPIRES"];
 			$_SESSION["details"]["lastlogin"] = $result["LAST_LOGIN"];
 			$_SESSION["details"]["privacy_level"] = $result["PRIVACY_LEVEL"];
+			$_SESSION["details"]["private_hash"] = $result["PRIVATE_HASH"];
 			$_SESSION["details"]["allow_podcasting"] = false;
 
 			if ((isset($ENTRADA_CACHE)) && (!AUTH_DEVELOPMENT_MODE)) {
@@ -237,7 +239,7 @@ if ($ACTION == "login") {
 			switch ($_SESSION["details"]["group"]) {
 				case "student" :
 					if ((!isset($result["ROLE"])) || (!(int) $result["ROLE"])) {
-						$_SESSION["details"]["grad_year"] = (date("Y", time()) + ((date("m", time()) < 7) ?  3 : 4));
+						$_SESSION["details"]["grad_year"] = fetch_first_year();
 					} else {
 						$_SESSION["details"]["grad_year"] = $result["ROLE"];
 					}
@@ -247,7 +249,7 @@ if ($ACTION == "login") {
 					 * If you're in MEdTech, always assign a graduating year,
 					 * because we normally see more than normal users.
 					 */
-					$_SESSION["details"]["grad_year"] = (date("Y", time()) + ((date("m", time()) < 7) ?  3 : 4));
+					$_SESSION["details"]["grad_year"] = fetch_first_year();
 				break;
 				case "staff" :
 				case "faculty" :
@@ -470,7 +472,7 @@ switch ($MODULE) {
 		$router->setBasePath(ENTRADA_CORE.DIRECTORY_SEPARATOR."modules".DIRECTORY_SEPARATOR."public");
 		$router->setSection($SECTION);
 
-		if (($router) && ($route = $router->initRoute())) {
+		if (($router) && ($route = $router->initRoute($MODULE))) {
 			/**
 			 * Responsible for displaying the permission masks sidebar item
 			 * if they have more than their own permission set available.
@@ -512,6 +514,8 @@ require_once(ENTRADA_ABSOLUTE."/templates/".DEFAULT_TEMPLATE."/layouts/public/fo
  *
  */
 if ((isset($_SESSION["isAuthorized"])) && ($_SESSION["isAuthorized"])) {
+	add_task_sidebar();
+	
 	$sidebar_html  = "<a href=\"javascript: sendFeedback('".ENTRADA_URL."/agent-feedback.php?enc=".feedback_enc()."')\"><img src=\"".ENTRADA_URL."/images/feedback.gif\" width=\"48\" height=\"48\" alt=\"Give Feedback\" border=\"0\" align=\"right\" hspace=\"3\" vspace=\"5\" /></a>";
 	$sidebar_html .= "Giving feedback is a very important part of application development. Please <a href=\"javascript: sendFeedback('".ENTRADA_URL."/agent-feedback.php?enc=".feedback_enc()."')\" style=\"font-size: 11px; font-weight: bold\">click here</a> to send us any feedback you may have about <u>this</u> page.<br /><br />\n";
 

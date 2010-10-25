@@ -174,7 +174,7 @@ if($COMMUNITY_ID) {
 									}
 								}
 								if($GUEST_PROXY_ID > 0) {
-									$query = "SELECT `account_active`, `access_starts`, `access_expires` FROM `".AUTH_DATABASE."`.`user_access` WHERE `user_id` = $GUEST_PROXY_ID AND `app_id` = ".AUTH_APP_ID;
+									$query = "SELECT `account_active`, `access_starts`, `access_expires` FROM `".AUTH_DATABASE."`.`user_access` WHERE `user_id` = ".$db->qstr($GUEST_PROXY_ID)." AND `app_id` IN (".AUTH_APP_IDS_STRING.")";
 									$result = $db->GetRow($query);
 									if($result) {
 										if($result['account_active'] == 'false') {
@@ -284,7 +284,7 @@ if($COMMUNITY_ID) {
 												FROM `".AUTH_DATABASE."`.`user_data` AS a
 												LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 												ON b.`user_id` = ".$db->qstr($GUEST_PROXY_ID)."
-												AND b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+												AND b.`app_id` IN (".AUTH_APP_IDS_STRING.")
 												LEFT JOIN `community_members` AS c
 												ON c.`proxy_id` = ".$db->qstr($GUEST_PROXY_ID)."
 												AND c.`community_id` = ".$db->qstr($COMMUNITY_ID)."
@@ -365,7 +365,7 @@ if($COMMUNITY_ID) {
 												FROM `".AUTH_DATABASE."`.`user_data` AS a
 												LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 												ON b.`user_id` = ".$db->qstr($proxy_id)."
-												AND b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+												AND b.`app_id` IN (".AUTH_APP_IDS_STRING.")
 												LEFT JOIN `community_members` AS c
 												ON c.`proxy_id` = ".$db->qstr($proxy_id)."
 												AND c.`community_id` = ".$db->qstr($COMMUNITY_ID)."
@@ -427,7 +427,7 @@ if($COMMUNITY_ID) {
 													FROM `".AUTH_DATABASE."`.`user_data` AS a
 													LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 													ON b.`user_id` = ".$db->qstr($proxy_id)."
-													AND b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+													AND b.`app_id` IN (".AUTH_APP_IDS_STRING.")
 													WHERE a.`id` = ".$db->qstr($proxy_id);
 											$result	= $db->GetRow($query);
 											if($result) {
@@ -520,7 +520,7 @@ if($COMMUNITY_ID) {
 													FROM `".AUTH_DATABASE."`.`user_data` AS a
 													LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 													ON b.`user_id` = ".$db->qstr($proxy_id)."
-													AND b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+													AND b.`app_id` IN (".AUTH_APP_IDS_STRING.")
 													WHERE a.`id` = ".$db->qstr($proxy_id);
 											$result	= $db->GetRow($query);
 											if($result) {
@@ -732,6 +732,16 @@ if($COMMUNITY_ID) {
 								} else {
 									$TOTAL_PAGES = (int) ($TOTAL_ROWS / $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) + 1;
 								}
+								
+								if(isset($_GET["mpv"])) {
+									$PAGE_CURRENT = (int) trim($_GET["mpv"]);
+	
+									if(($PAGE_CURRENT < 1) || ($PAGE_CURRENT > $TOTAL_PAGES)) {
+										$PAGE_CURRENT = 1;
+									}
+								} else {
+									$PAGE_CURRENT = 1;
+								}
 
 								if($TOTAL_PAGES > 1) {
 									$member_pagination = new Pagination($PAGE_CURRENT, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"], $TOTAL_ROWS, ENTRADA_URL."/".$MODULE, replace_query(), "mpv");
@@ -742,20 +752,18 @@ if($COMMUNITY_ID) {
 								$TOTAL_ROWS		= 0;
 								$TOTAL_PAGES	= 1;
 							}
-
-							/**
-							 * Check if pv variable is set and see if it's a valid page, other wise page 1 it is.
-							 */
-							if(isset($_GET["mpv"])) {
-								$PAGE_CURRENT = (int) trim($_GET["mpv"]);
-
-								if(($PAGE_CURRENT < 1) || ($PAGE_CURRENT > $TOTAL_PAGES)) {
+							if (!isset($PAGE_CURRENT) || !$PAGE_CURRENT) {
+								if(isset($_GET["mpv"])) {
+									$PAGE_CURRENT = (int) trim($_GET["mpv"]);
+	
+									if(($PAGE_CURRENT < 1) || ($PAGE_CURRENT > $TOTAL_PAGES)) {
+										$PAGE_CURRENT = 1;
+									}
+								} else {
 									$PAGE_CURRENT = 1;
 								}
-							} else {
-								$PAGE_CURRENT = 1;
 							}
-
+							
 							$PAGE_PREVIOUS	= (($PAGE_CURRENT > 1) ? ($PAGE_CURRENT - 1) : false);
 							$PAGE_NEXT		= (($PAGE_CURRENT < $TOTAL_PAGES) ? ($PAGE_CURRENT + 1) : false);
 							if ($MAILING_LISTS["active"]) {
@@ -773,10 +781,11 @@ if($COMMUNITY_ID) {
 										ON a.`proxy_id` = b.`id`
 										LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS c
 										ON c.`user_id` = b.`id`
-										AND c.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+										AND c.`app_id` IN (".AUTH_APP_IDS_STRING.")
 										WHERE a.`community_id` = ".$db->qstr($COMMUNITY_ID)."
 										AND a.`member_active` = '1'
 										AND a.`member_acl` = '0'
+										GROUP BY b.`id`
 										ORDER BY %s
 										LIMIT %s, %s";
 
@@ -1036,11 +1045,12 @@ if($COMMUNITY_ID) {
 																		FROM `".AUTH_DATABASE."`.`user_data` AS a
 																		LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 																		ON a.`id` = b.`user_id`
-																		WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+																		WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
 																		AND b.`account_active` = 'true'
 																		AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
 																		AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
 																		AND (".implode(" OR ", $role_group_combinations).")
+																		GROUP BY a.`id`
 																		ORDER BY a.`lastname` ASC, a.`firstname` ASC";
 																}
 															}
@@ -1063,11 +1073,12 @@ if($COMMUNITY_ID) {
 																		FROM `".AUTH_DATABASE."`.`user_data` AS a
 																		LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 																		ON a.`id` = b.`user_id`
-																		WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+																		WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
 																		AND b.`account_active` = 'true'
 																		AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
 																		AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
 																		AND a.`id` IN ('".implode("', '", $tmp_community_member_list)."')
+																		GROUP BY a.`id`
 																		ORDER BY a.`lastname` ASC, a.`firstname` ASC";
 																}
 															}
@@ -1081,10 +1092,11 @@ if($COMMUNITY_ID) {
 																FROM `".AUTH_DATABASE."`.`user_data` AS a
 																LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 																ON a.`id` = b.`user_id`
-																WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+																WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
 																AND b.`account_active` = 'true'
 																AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
 																AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
+																GROUP BY a.`id`
 																ORDER BY a.`lastname` ASC, a.`firstname` ASC";
 															break;
 													}

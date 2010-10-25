@@ -240,27 +240,13 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 					<tr>
 						<td></td>
 						<td><label for="year_reported" class="form-required">Report Year</label></td>
-						<td><select name="year_reported" id="year_reported" style="vertical-align: middle">
 						<?php
-							for($i=$AR_PAST_YEARS; $i<=$AR_FUTURE_YEARS; $i++)
-							{
-								if(isset($PROCESSED["year_reported"]) && $PROCESSED["year_reported"] != '')
-								{
-									$defaultYear = $PROCESSED["year_reported"];
-								}
-								else if(isset($undergraduateSupResult["year_reported"]) && $undergraduateSupResult["year_reported"] != '')
-								{
-									$defaultYear = $undergraduateSupResult["year_reported"];
-								}
-								else 
-								{
-									$defaultYear = $AR_CUR_YEAR;
-								}
-								echo "<option value=\"".$i."\"".(($defaultYear == $i) ? " selected=\"selected\"" : "").">".$i."</option>\n";
-							}
-							echo "</select>";
+						if((isset($PROCESSED["year_reported"]) && $PROCESSED["year_reported"] != "")) {
+							displayARYearReported($PROCESSED["year_reported"], $AR_CUR_YEAR, $AR_PAST_YEARS, $AR_FUTURE_YEARS, true);
+						} else {
+							displayARYearReported($undergraduateSupResult["year_reported"], $AR_CUR_YEAR, $AR_PAST_YEARS, $AR_FUTURE_YEARS, false);
+						}
 						?>
-						</td>
 					</tr>
 					<tr>
 						<td colspan="3" style="padding-top: 25px">

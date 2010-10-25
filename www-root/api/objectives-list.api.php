@@ -85,6 +85,10 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 				}
 				echo "<option id=\"after_obj_".$objective["objective_id"]."\" value=\"".($count+1)."\" >After ".$objective["objective_name"]."</option>\n";
 				echo "</select>\n";
+			} else {
+				echo "<select id=\"objective_order\" name=\"objective_order\">\n";
+				echo "<option id=\"first\" value=\"1\" >-- Only Objective --</option>\n";
+				echo "</select>\n";
 			}
 		} else {
 			if ($parent_id) {
@@ -166,4 +170,3 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 		}
 	}
 }
-?>

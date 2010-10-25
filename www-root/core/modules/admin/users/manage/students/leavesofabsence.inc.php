@@ -16,19 +16,18 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 	header("Location: ".ENTRADA_URL);
 	exit;
 } elseif(!$ENTRADA_ACL->isLoggedInAllowed('user', 'create',true) || $user_record["group"] != "student") {
-	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/".$MODULE."\\'', 15000)";
-
-	$ERROR++;
-	$ERRORSTR[]	= "Your account does not have the permissions required to use this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
+	header( "refresh:15;url=".ENTRADA_URL."/admin/users" );
+	
+	add_error("Your account does not have the permissions required to use this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.");
 	echo display_error();
 
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
 }  else {
 	
-	require_once("Models/User.class.php");
-	require_once("Models/LeavesOfAbsence.class.php");
+	require_once("Models/users/User.class.php");
+	require_once("Models/mspr/LeavesOfAbsence.class.php");
 		
-	$user = new User($user_record["id"], $user_record["username"], $user_record["lastname"], $user_record["firstname"]);
+	$user = User::get($user_record["id"]);
 	
 	$PAGE_META["title"]			= "Leaves of Absence";
 	$PAGE_META["description"]	= "";
@@ -54,8 +53,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 		new_sidebar_item("Delegated Permissions", $sidebar_html, "delegated-permissions", "open");
 	}
 	
-	
-	process_leaves_of_absence($user);
+	process_mspr_details($translate, "leaves_of_absence");
 	display_status_messages();
 
 	
@@ -74,7 +72,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 	<div class="clear">&nbsp;</div>
 	
 <form id="leave_of_absence_form" action="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=leavesofabsence&id=<?php echo $user->getID(); ?>" method="post" <?php if (!$show_loa_form) { echo "style=\"display:none;\""; }   ?> >
-	<input type="hidden" name="action" value="add_leave_of_absence"></input>
+	<input type="hidden" name="action" value="add"></input>
 	<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
 	<table class="leave_of_absence">
 		<colgroup>
@@ -101,10 +99,10 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 			<tr>
 				<td>&nbsp;</td>
 				<td >
-					<label for="action_details" class="form-required">Details of Absence:</label>
+					<label for="details" class="form-required">Details of Absence:</label>
 				</td>
 				<td >
-					<textarea id="action_details" name="action_details" style="width: 100%; height: 100px;" cols="65" rows="20"></textarea>	
+					<textarea id="details" name="details" style="width: 100%; height: 100px;" cols="65" rows="20"></textarea>	
 				</td>
 			</tr>
 		</tbody>
@@ -140,8 +138,8 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 				<td class="controls">
 					<form class="remove_leave_of_absence_form" action="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=leavesofabsence&id=<?php echo $user->getID(); ?>" method="post" >
 						<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
-						<input type="hidden" name="action" value="remove_leave_of_absence"></input>
-						<input type="hidden" name="leave_of_absence_id" value="<?php echo $fr->getID(); ?>"></input>
+						<input type="hidden" name="action" value="remove"></input>
+						<input type="hidden" name="entity_id" value="<?php echo $fr->getID(); ?>"></input>
 						
 						<input type="image" src="<?php echo ENTRADA_URL ?>/images/action-delete.gif"></input> 
 					</form>

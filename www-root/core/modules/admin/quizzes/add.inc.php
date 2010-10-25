@@ -163,23 +163,26 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 			 * Compiles the full list of people who are able to access this
 			 * module based on the $ADMINISTRATION array in settings.inc.php.
 			 */
-			$author_list_where	= array();
-			$groups_roles		= permissions_by_module($MODULE);
+			$author_list_where = array();
+			$author_list_where[] = "(a.`id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]).")";
+
+			$groups_roles = permissions_by_module($MODULE);
 			foreach ($groups_roles as $group => $roles) {
 				foreach ($roles as $role) {
 					$author_list_where[] = "(b.`group` = ".$db->qstr($group)." AND b.`role` = ".$db->qstr($role).")";
 				}
 			}
-			
-			$author_list	= array();
-			$query			= "	SELECT a.`id` AS `proxy_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, a.`organisation_id`, b.`group`, b.`role`
-								FROM `".AUTH_DATABASE."`.`user_data` AS a
-								LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
-								ON b.`user_id` = a.`id`
-								WHERE b.`app_id` = '".AUTH_APP_ID."'
-								AND (".implode(" OR ", $author_list_where).")
-								ORDER BY a.`lastname` ASC, a.`firstname` ASC";
-			$results		= $db->GetAll($query);
+
+			$author_list = array();
+			$query = "	SELECT a.`id` AS `proxy_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, a.`organisation_id`, b.`group`, b.`role`
+						FROM `".AUTH_DATABASE."`.`user_data` AS a
+						LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+						ON b.`user_id` = a.`id`
+						WHERE b.`app_id` = '".AUTH_APP_ID."'
+						AND (".implode(" OR ", $author_list_where).")
+						GROUP BY a.`id`
+						ORDER BY a.`lastname` ASC, a.`firstname` ASC";
+			$results = $db->GetAll($query);
 			if ($results) {
 				foreach ($results as $result) {
 					$author_list[] = array('proxy_id'=>$result["proxy_id"], 'fullname'=>$result["fullname"]." (".ucwords($result["group"])." > ".ucwords($result["role"]).")", 'organisation_id'=>$result['organisation_id']);
@@ -243,81 +246,83 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						</div>
 					</td>
 					<td>
-				<div style="position: relative;">
-								<?php
-								if ((isset($PROCESSED["associated_proxy_ids"])) && (is_array($PROCESSED["associated_proxy_ids"]))) {
-									if (!in_array($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"], $PROCESSED["associated_proxy_ids"])) {
-										array_unshift($PROCESSED["associated_proxy_ids"], $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]);
-									}
+						<div style="position: relative;">
+							<?php
+							if ((isset($PROCESSED["associated_proxy_ids"])) && (is_array($PROCESSED["associated_proxy_ids"]))) {
+								if (!in_array($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"], $PROCESSED["associated_proxy_ids"])) {
+									array_unshift($PROCESSED["associated_proxy_ids"], $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]);
 								}
-								//Fetch list of categories
-								$query	= "SELECT `organisation_id`,`organisation_title` FROM `".AUTH_DATABASE."`.`organisations` ORDER BY `organisation_title` ASC";
-								$organisation_results	= $db->GetAll($query);
-								if($organisation_results) {
-									$organisations = array();
-									foreach($organisation_results as $result) {
-										if($ENTRADA_ACL->amIAllowed('resourceorganisation'.$result["organisation_id"], 'read')) {
-											$organisation_categories[$result["organisation_id"]] = array('text' => $result["organisation_title"], 'value' => 'organisation_'.$result["organisation_id"], 'category'=>true);
-										}
-									}
-								}
-
-								//Get the possible teacher filters
-								if(isset($author_list) && is_array($author_list) && !empty($author_list)) {
-									$authors = $organisation_categories;
-									foreach($author_list as $r) {
-										if(in_array($r['proxy_id'], $PROCESSED["associated_proxy_ids"])) {
-											$checked = 'checked="checked"';
-										} else {
-											$checked = '';
-										}
-										if(isset($authors[$r["organisation_id"]])) {
-											$authors[$r["organisation_id"]]['options'][] = array('text' => $r['fullname'], 'value' => $r['proxy_id'], 'checked' => $checked);
-										}
-									}
-
-									echo lp_multiple_select_popup('associated_proxy_ids', $authors, array('title'=>'Select Multiple Authors:', 'width'=> '500px', 'submit_text'=>'Done', 'cancel'=>false, 'submit'=>true));
-								}
-
-								?>
-				</div>
-				<input class="multi-picklist" id="associated_proxy_ids" name="associated_proxy_ids" style="display: none;">
-				<div id="associated_proxy_ids_list"></div>
-				<input type="button" onclick="$('associated_proxy_ids_options').show();" value="Select Multiple">
-				<script type="text/javascript">
-					if($('associated_proxy_ids_options')) {
-						$('associated_proxy_ids_options').addClassName('multiselect-processed');
-						multiselect = new Control.SelectMultiple('associated_proxy_ids','associated_proxy_ids_options',{
-							labelSeparator: '; ',
-							checkboxSelector: 'table.select_multiple_table tr td input[type=checkbox]',
-							nameSelector: 'table.select_multiple_table tr td.select_multiple_name label',
-							overflowLength: 70,
-							filter: 'associated_proxy_ids_select_filter',
-							resize: 'associated_proxy_ids_scroll',
-							afterCheck: function(element) {
-								var tr = $(element.parentNode.parentNode);
-								tr.removeClassName('selected');
-								if(element.checked) {
-									tr.addClassName('selected');
-								}
-							},
-							updateDiv: function(options, isnew) {
-								ul = options.inject(new Element('ul', {'class':'menu'}), function(list, option) {
-									list.appendChild(new Element('li', {'class':'community'}).update(option));
-									return list;
-								});
-								$('associated_proxy_ids_list').update(ul);
 							}
-						});
 
-						$('associated_proxy_ids_close').observe('click',function(event){
-							this.container.hide();
-							return false;
-						}.bindAsEventListener(multiselect));
+							// Fetch list of categories
+							$query = "	SELECT `organisation_id`, `organisation_title`
+										FROM `".AUTH_DATABASE."`.`organisations`
+										ORDER BY `organisation_title` ASC";
+							$organisation_results = $db->GetAll($query);
+							if($organisation_results) {
+								$organisations = array();
+								foreach($organisation_results as $result) {
+									if($ENTRADA_ACL->amIAllowed('resourceorganisation'.$result["organisation_id"], 'read')) {
+										$organisation_categories[$result["organisation_id"]] = array('text' => $result["organisation_title"], 'value' => 'organisation_'.$result["organisation_id"], 'category'=>true);
+									}
+								}
+							}
 
-					}
-				</script>
-			</td>
+							//Get the possible teacher filters
+							if(isset($author_list) && is_array($author_list) && !empty($author_list)) {
+								$authors = $organisation_categories;
+								foreach($author_list as $r) {
+									if(in_array($r['proxy_id'], $PROCESSED["associated_proxy_ids"])) {
+										$checked = 'checked="checked"';
+									} else {
+										$checked = '';
+									}
+									if(isset($authors[$r["organisation_id"]])) {
+										$authors[$r["organisation_id"]]['options'][] = array('text' => $r['fullname'], 'value' => $r['proxy_id'], 'checked' => $checked);
+									}
+								}
+
+								echo lp_multiple_select_popup('associated_proxy_ids', $authors, array('title'=>'Select Multiple Authors:', 'width'=> '500px', 'submit_text'=>'Done', 'cancel'=>false, 'submit'=>true));
+							}
+							?>
+						</div>
+						<input class="multi-picklist" id="associated_proxy_ids" name="associated_proxy_ids" style="display: none;">
+						<div id="associated_proxy_ids_list"></div>
+						<input type="button" onclick="$('associated_proxy_ids_options').show();" value="Select Multiple">
+						<script type="text/javascript">
+						if($('associated_proxy_ids_options')) {
+							$('associated_proxy_ids_options').addClassName('multiselect-processed');
+							multiselect = new Control.SelectMultiple('associated_proxy_ids','associated_proxy_ids_options',{
+								labelSeparator: '; ',
+								checkboxSelector: 'table.select_multiple_table tr td input[type=checkbox]',
+								nameSelector: 'table.select_multiple_table tr td.select_multiple_name label',
+								overflowLength: 70,
+								filter: 'associated_proxy_ids_select_filter',
+								resize: 'associated_proxy_ids_scroll',
+								afterCheck: function(element) {
+									var tr = $(element.parentNode.parentNode);
+									tr.removeClassName('selected');
+									if(element.checked) {
+										tr.addClassName('selected');
+									}
+								},
+								updateDiv: function(options, isnew) {
+									ul = options.inject(new Element('ul', {'class':'menu'}), function(list, option) {
+										list.appendChild(new Element('li', {'class':'community'}).update(option));
+										return list;
+									});
+									$('associated_proxy_ids_list').update(ul);
+								}
+							});
+
+							$('associated_proxy_ids_close').observe('click',function(event){
+								this.container.hide();
+								return false;
+							}.bindAsEventListener(multiselect));
+
+						}
+						</script>
+					</td>
 				</tr>
 			</tbody>
 			</table>

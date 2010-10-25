@@ -63,23 +63,26 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 			 * Compiles the full list of people who are able to access this
 			 * module based on the $ADMINISTRATION array in settings.inc.php.
 			 */
-			$author_list_where	= array();
-			$groups_roles		= permissions_by_module($MODULE);
+			$author_list_where = array();
+			$author_list_where[] = "(a.`id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]).")";
+
+			$groups_roles = permissions_by_module($MODULE);
 			foreach ($groups_roles as $group => $roles) {
 				foreach ($roles as $role) {
 					$author_list_where[] = "(b.`group` = ".$db->qstr($group)." AND b.`role` = ".$db->qstr($role).")";
 				}
 			}
 
-			$author_list	= array();
-			$query			= "	SELECT a.`id` AS `proxy_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, a.`organisation_id`, b.`group`, b.`role`
-								FROM `".AUTH_DATABASE."`.`user_data` AS a
-								LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
-								ON b.`user_id` = a.`id`
-								WHERE b.`app_id` = '".AUTH_APP_ID."'
-								AND (".implode(" OR ", $author_list_where).")
-								ORDER BY a.`lastname` ASC, a.`firstname` ASC";
-			$results		= $db->GetAll($query);
+			$author_list = array();
+			$query = "	SELECT a.`id` AS `proxy_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, a.`organisation_id`, b.`group`, b.`role`
+						FROM `".AUTH_DATABASE."`.`user_data` AS a
+						LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+						ON b.`user_id` = a.`id`
+						WHERE b.`app_id` = '".AUTH_APP_ID."'
+						AND (".implode(" OR ", $author_list_where).")
+						GROUP BY a.`id`
+						ORDER BY a.`lastname` ASC, a.`firstname` ASC";
+			$results = $db->GetAll($query);
 			if ($results) {
 				foreach ($results as $result) {
 					$author_list[] = array('proxy_id'=>$result["proxy_id"], 'fullname'=>$result["fullname"]." (".ucwords($result["group"])." > ".ucwords($result["role"]).")", 'organisation_id'=>$result['organisation_id']);
@@ -288,13 +291,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 											array_unshift($PROCESSED["associated_proxy_ids"], $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]);
 										}
 									}
-									//Fetch list of categories
-									$query	= "SELECT `organisation_id`,`organisation_title` FROM `".AUTH_DATABASE."`.`organisations` ORDER BY `organisation_title` ASC";
-									$organisation_results	= $db->GetAll($query);
+									
+									// Fetch list of categories
+									$query = "	SELECT `organisation_id`, `organisation_title`
+												FROM `".AUTH_DATABASE."`.`organisations`
+												ORDER BY `organisation_title` ASC";
+									$organisation_results = $db->GetAll($query);
 									if($organisation_results) {
 										$organisations = array();
 										foreach($organisation_results as $result) {
-											if($ENTRADA_ACL->amIAllowed('resourceorganisation'.$result["organisation_id"], 'create')) {
+											if($ENTRADA_ACL->amIAllowed('resourceorganisation'.$result["organisation_id"], 'read')) {
 												$organisation_categories[$result["organisation_id"]] = array('text' => $result["organisation_title"], 'value' => 'organisation_'.$result["organisation_id"], 'category'=>true);
 											}
 										}
@@ -420,7 +426,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 														echo "	</div>\n";
 													}
 
-													echo "		<span id=\"question_text_".$question["qquestion_id"]."\" class=\"question\">".clean_input($question["question_text"], "allowedtags")."</span>";
+													echo "		<span id=\"question_text_".$question["qquestion_id"]."\" class=\"question\">".clean_input($question["question_text"], "trim")."</span>";
 													echo "	</div>\n";
 													echo "	<ul class=\"responses\">\n";
 													$query		= "	SELECT a.*
@@ -430,7 +436,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 													$responses	= $db->GetAll($query);
 													if ($responses) {
 														foreach ($responses as $response) {
-															echo "<li class=\"".(($response["response_correct"] == 1) ? "display-correct" : "display-incorrect")."\">".clean_input($response["response_text"], (($response["response_is_html"] == 1) ? "allowedtags" : "encode"))."</li>\n";
+															echo "<li class=\"".(($response["response_correct"] == 1) ? "display-correct" : "display-incorrect")."\">".clean_input($response["response_text"], (($response["response_is_html"] == 1) ? "trim" : "encode"))."</li>\n";
 														}
 													}
 													echo "	</ul>\n";

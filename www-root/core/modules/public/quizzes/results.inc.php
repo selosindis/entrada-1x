@@ -41,12 +41,11 @@ if ($RECORD_ID) {
 						LEFT JOIN `events` AS d
 						ON d.`event_id` = a.`event_id`
 						LEFT JOIN `courses` AS e
-						ON e.`course_id` = a.`event_id`
+						ON e.`course_id` = d.`course_id`
 						LEFT JOIN `quizzes_lu_quiztypes` AS f
 						ON f.`quiztype_id` = b.`quiztype_id`
 						WHERE a.`eqprogress_id` = ".$db->qstr($RECORD_ID)."
-						AND c.`quiz_active` = '1'
-						AND e.`course_active` = '1'";
+						AND c.`quiz_active` = '1'";
 	$quiz_record	= $db->GetRow($query);
 	if ($quiz_record) {
 		$is_administrator = false;
@@ -113,7 +112,7 @@ if ($RECORD_ID) {
 
 							echo "<li id=\"question_".$question["qquestion_id"]."\">";
 							echo "	<div class=\"question noneditable\">\n";
-							echo "		<span id=\"question_text_".$question["qquestion_id"]."\" class=\"question\">".clean_input($question["question_text"], "allowedtags")."</span>";
+							echo "		<span id=\"question_text_".$question["qquestion_id"]."\" class=\"question\">".clean_input($question["question_text"], "trim")."</span>";
 							echo "	</div>\n";
 							echo "	<ul class=\"responses\">\n";
 							$query		= "	SELECT a.*
@@ -142,7 +141,7 @@ if ($RECORD_ID) {
 									}
 
 									echo "<li".(($response_selected) ? " class=\"selected ".(($response_correct) ? "correct" : "incorrect")."\"" : (($response["response_correct"] == 1) ? " class=\"correct\"" : "")).">";
-									echo	clean_input($response["response_text"], (($response["response_is_html"] == 1) ? "allowedtags" : "encode"));
+									echo	clean_input($response["response_text"], (($response["response_is_html"] == 1) ? "trim" : "encode"));
 
 									if ($response_selected) {
 										if ($response["response_correct"] == 1) {

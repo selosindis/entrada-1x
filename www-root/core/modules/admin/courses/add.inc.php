@@ -27,7 +27,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 } elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	header("Location: ".ENTRADA_URL);
 	exit;
-} elseif (!$ENTRADA_ACL->amIAllowed('course', 'create', false)) {
+} elseif (!$ENTRADA_ACL->amIAllowed("course", "create", false)) {
 	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/".$MODULE."\\'', 15000)";
 
 	$ERROR++;
@@ -44,10 +44,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 	/** 
 	* Fetch the Clinical Presentation details.
 	*/
-	$clinical_presentations_list	= array();
-	$clinical_presentations			= array();
+	$clinical_presentations_list = array();
+	$clinical_presentations = array();
 
-	$results	= fetch_mcc_objectives();
+	$results = fetch_mcc_objectives();
 	if ($results) {
 		foreach ($results as $result) {
 			$clinical_presentations_list[$result["objective_id"]] = $result["objective_name"];
@@ -57,19 +57,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 	if ((isset($_POST["clinical_presentations"])) && (is_array($_POST["clinical_presentations"])) && (count($_POST["clinical_presentations"]))) {
 		foreach ($_POST["clinical_presentations"] as $objective_id) {
 			if ($objective_id = clean_input($objective_id, array("trim", "int"))) {
-				$query	= "	SELECT `objective_id` FROM `global_lu_objectives` 
+				$query = "	SELECT `objective_id` FROM `global_lu_objectives`
 							WHERE `objective_id` = ".$db->qstr($objective_id)."
 							AND `objective_active` = '1'";
-				$result	= $db->GetRow($query);
+				$result = $db->GetRow($query);
 				if ($result) {
 					$clinical_presentations[$objective_id] = $clinical_presentations_list[$objective_id];
 				}
 			}
 		}
 	}
-	$HEAD[]		= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/picklist.js\"></script>\n";
-	$HEAD[]		= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/scriptaculous/tree.js\"></script>\n";
-	$ONLOAD[]	= "$('clinical_presentations_list').style.display = 'none'";
+
+	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/picklist.js\"></script>\n";
+	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/scriptaculous/tree.js\"></script>\n";
+	$ONLOAD[] = "$('clinical_presentations_list').style.display = 'none'";
 
 	// Error Checking
 	switch($STEP) {
@@ -104,7 +105,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					$ERRORSTR[] = "You do not have permission to add a course for this organisation. This error has been logged and will be investigated.";
 					application_log("error", "Proxy id [".$_SESSION['details']['proxy_id']."] tried to create a course within an organisation [".$organisation_id."] they didn't have permissions on. ");
 				}
-
 			} else {
 				$ERROR++;
 				$ERRORSTR[] = "The <strong>Organisation Name</strong> field is required.";
@@ -357,8 +357,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				$DIRECTOR_LIST = $course_directors;
 			}
 			
-			$query	= "
-							SELECT `".AUTH_DATABASE."`.`user_data`.`id` AS `proxy_id`, CONCAT_WS(', ', `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname`) AS `fullname`, `".AUTH_DATABASE."`.`organisations`.`organisation_id`
+			$query = "	SELECT `".AUTH_DATABASE."`.`user_data`.`id` AS `proxy_id`, CONCAT_WS(', ', `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname`) AS `fullname`, `".AUTH_DATABASE."`.`organisations`.`organisation_id`
 						FROM `".AUTH_DATABASE."`.`user_data`
 						LEFT JOIN `".AUTH_DATABASE."`.`user_access`
 						ON `".AUTH_DATABASE."`.`user_access`.`user_id` = `".AUTH_DATABASE."`.`user_data`.`id`
@@ -401,17 +400,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			// Compiles Program Coordinator list
 			$programcoodinators = array();
 
-			$query		= "	SELECT `".AUTH_DATABASE."`.`user_data`.`id` AS `proxy_id`, CONCAT_WS(', ', `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname`) AS `fullname`,`".AUTH_DATABASE."`.`user_data`.`id`, `".AUTH_DATABASE."`.`organisations`.`organisation_title`
-							FROM `".AUTH_DATABASE."`.`user_data`
-							LEFT JOIN `".AUTH_DATABASE."`.`user_access`
-							ON `".AUTH_DATABASE."`.`user_access`.`user_id` = `".AUTH_DATABASE."`.`user_data`.`id`
-							LEFT JOIN `".AUTH_DATABASE."`.`organisations`
-							ON `".AUTH_DATABASE."`.`user_data`.`organisation_id` = `".AUTH_DATABASE."`.`organisations`.`organisation_id`
-							WHERE `".AUTH_DATABASE."`.`user_access`.`role` = 'pcoordinator'
-							AND `".AUTH_DATABASE."`.`user_access`.`app_id` = '".AUTH_APP_ID."'
-							AND `".AUTH_DATABASE."`.`user_access`.`account_active` = 'true'
-							ORDER BY `fullname` ASC";
-			$results	= ((USE_CACHE) ? $db->CacheGetAll(AUTH_CACHE_TIMEOUT, $query) : $db->GetAll($query));
+			$query = "	SELECT `".AUTH_DATABASE."`.`user_data`.`id` AS `proxy_id`, CONCAT_WS(', ', `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname`) AS `fullname`,`".AUTH_DATABASE."`.`user_data`.`id`, `".AUTH_DATABASE."`.`organisations`.`organisation_title`
+						FROM `".AUTH_DATABASE."`.`user_data`
+						LEFT JOIN `".AUTH_DATABASE."`.`user_access`
+						ON `".AUTH_DATABASE."`.`user_access`.`user_id` = `".AUTH_DATABASE."`.`user_data`.`id`
+						LEFT JOIN `".AUTH_DATABASE."`.`organisations`
+						ON `".AUTH_DATABASE."`.`user_data`.`organisation_id` = `".AUTH_DATABASE."`.`organisations`.`organisation_id`
+						WHERE `".AUTH_DATABASE."`.`user_access`.`role` = 'pcoordinator'
+						AND `".AUTH_DATABASE."`.`user_access`.`app_id` = '".AUTH_APP_ID."'
+						AND `".AUTH_DATABASE."`.`user_access`.`account_active` = 'true'
+						ORDER BY `fullname` ASC";
+			$results = ((USE_CACHE) ? $db->CacheGetAll(AUTH_CACHE_TIMEOUT, $query) : $db->GetAll($query));
 			if ($results) {
 				foreach($results as $result) {
 					$programcoodinators[$result["proxy_id"]] = $result["fullname"]. ' (' . $result['organisation_title'].')';
@@ -421,17 +420,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			// Compiles Evaluation Representative (evalrep_id)  list
 			$evaluationreps = array();
 
-			$query		= "	SELECT `".AUTH_DATABASE."`.`user_data`.`id` AS `proxy_id`, CONCAT_WS(', ', `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname`) AS `fullname`,`".AUTH_DATABASE."`.`user_data`.`id`, `".AUTH_DATABASE."`.`organisations`.`organisation_title`
-							FROM `".AUTH_DATABASE."`.`user_data`
-							LEFT JOIN `".AUTH_DATABASE."`.`user_access`
-							ON `".AUTH_DATABASE."`.`user_access`.`user_id` = `".AUTH_DATABASE."`.`user_data`.`id`
-							LEFT JOIN `".AUTH_DATABASE."`.`organisations`
-							ON `".AUTH_DATABASE."`.`user_data`.`organisation_id` = `".AUTH_DATABASE."`.`organisations`.`organisation_id`
-							WHERE `".AUTH_DATABASE."`.`user_access`.`group` = 'faculty'
-							AND `".AUTH_DATABASE."`.`user_access`.`app_id` = '".AUTH_APP_ID."'
-							AND `".AUTH_DATABASE."`.`user_access`.`account_active` = 'true'
-							ORDER BY `fullname` ASC";
-			$results	= ((USE_CACHE) ? $db->CacheGetAll(AUTH_CACHE_TIMEOUT, $query) : $db->GetAll($query));
+			$query = "	SELECT `".AUTH_DATABASE."`.`user_data`.`id` AS `proxy_id`, CONCAT_WS(', ', `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname`) AS `fullname`,`".AUTH_DATABASE."`.`user_data`.`id`, `".AUTH_DATABASE."`.`organisations`.`organisation_title`
+						FROM `".AUTH_DATABASE."`.`user_data`
+						LEFT JOIN `".AUTH_DATABASE."`.`user_access`
+						ON `".AUTH_DATABASE."`.`user_access`.`user_id` = `".AUTH_DATABASE."`.`user_data`.`id`
+						LEFT JOIN `".AUTH_DATABASE."`.`organisations`
+						ON `".AUTH_DATABASE."`.`user_data`.`organisation_id` = `".AUTH_DATABASE."`.`organisations`.`organisation_id`
+						WHERE `".AUTH_DATABASE."`.`user_access`.`group` = 'faculty'
+						AND `".AUTH_DATABASE."`.`user_access`.`app_id` = '".AUTH_APP_ID."'
+						AND `".AUTH_DATABASE."`.`user_access`.`account_active` = 'true'
+						ORDER BY `fullname` ASC";
+			$results = ((USE_CACHE) ? $db->CacheGetAll(AUTH_CACHE_TIMEOUT, $query) : $db->GetAll($query));
 			if ($results) {
 				foreach($results as $result) {
 					$evaluationreps[$result["proxy_id"]] = $result["fullname"] . ' (' . $result['organisation_title'].')';
@@ -441,17 +440,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			// Compiles Student Representative (evalrep_id)  list
 			$studentreps = array();
 
-			$query		= "	SELECT `".AUTH_DATABASE."`.`user_data`.`id` AS `proxy_id`, CONCAT_WS(', ', `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname`) AS `fullname`,`".AUTH_DATABASE."`.`user_data`.`id`, `".AUTH_DATABASE."`.`organisations`.`organisation_title`
-							FROM `".AUTH_DATABASE."`.`user_data`
-							LEFT JOIN `".AUTH_DATABASE."`.`user_access`
-							ON `".AUTH_DATABASE."`.`user_access`.`user_id` = `".AUTH_DATABASE."`.`user_data`.`id`
-							LEFT JOIN `".AUTH_DATABASE."`.`organisations`
-							ON `".AUTH_DATABASE."`.`user_data`.`organisation_id` = `".AUTH_DATABASE."`.`organisations`.`organisation_id`
-							WHERE `".AUTH_DATABASE."`.`user_access`.`group` = 'student'
-							AND `".AUTH_DATABASE."`.`user_access`.`app_id` = '".AUTH_APP_ID."'
-							AND `".AUTH_DATABASE."`.`user_access`.`account_active` = 'true'
-							ORDER BY `fullname` ASC";
-			$results	= ((USE_CACHE) ? $db->CacheGetAll(AUTH_CACHE_TIMEOUT, $query) : $db->GetAll($query));
+			$query = "	SELECT `".AUTH_DATABASE."`.`user_data`.`id` AS `proxy_id`, CONCAT_WS(', ', `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname`) AS `fullname`,`".AUTH_DATABASE."`.`user_data`.`id`, `".AUTH_DATABASE."`.`organisations`.`organisation_title`
+						FROM `".AUTH_DATABASE."`.`user_data`
+						LEFT JOIN `".AUTH_DATABASE."`.`user_access`
+						ON `".AUTH_DATABASE."`.`user_access`.`user_id` = `".AUTH_DATABASE."`.`user_data`.`id`
+						LEFT JOIN `".AUTH_DATABASE."`.`organisations`
+						ON `".AUTH_DATABASE."`.`user_data`.`organisation_id` = `".AUTH_DATABASE."`.`organisations`.`organisation_id`
+						WHERE `".AUTH_DATABASE."`.`user_access`.`group` = 'student'
+						AND `".AUTH_DATABASE."`.`user_access`.`app_id` = '".AUTH_APP_ID."'
+						AND `".AUTH_DATABASE."`.`user_access`.`account_active` = 'true'
+						ORDER BY `fullname` ASC";
+			$results = ((USE_CACHE) ? $db->CacheGetAll(AUTH_CACHE_TIMEOUT, $query) : $db->GetAll($query));
 			if ($results) {
 				foreach($results as $result) {
 					$studentreps[$result["proxy_id"]] = $result["fullname"] . ' (' . $result['organisation_title'].')';
@@ -515,7 +514,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					<tr>
 						<td></td>
 						<td><label for="course_name" class="form-required">Course Name</label></td>
-						<td><input type="text" id="course_name" name="course_name" value="<?php echo html_encode($PROCESSED["course_name"]); ?>" maxlength="64" style="width: 243px" /></td>
+						<td><input type="text" id="course_name" name="course_name" value="<?php echo html_encode($PROCESSED["course_name"]); ?>" maxlength="85" style="width: 243px" /></td>
 					</tr>
 					<tr>
 						<td></td>
@@ -580,11 +579,67 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				<tbody>
 					<tr>
 						<td>&nbsp;</td>
+						<td style="vertical-align: top">
+							Clinical Presentations
+							<div class="content-small" style="margin-top: 5px">
+								<strong>Note:</strong> For more detailed information please refer to the <a href="http://www.mcc.ca/Objectives_online/objectives.pl?lang=english&loc=contents" target="_blank" style="font-size: 11px">MCC Objectives for the Qualifying Examination</a>.
+							</div>
+						</td>
+						<td>
+							<select class="multi-picklist" id="PickList" name="clinical_presentations[]" multiple="multiple" size="5" style="width: 100%; margin-bottom: 5px">
+							<?php
+							if ((is_array($clinical_presentations)) && (count($clinical_presentations))) {
+								foreach ($clinical_presentations as $objective_id => $presentation_name) {
+									echo "<option value=\"".(int) $objective_id."\">".html_encode($presentation_name)."</option>\n";
+								}
+							}
+							?>
+							</select>
+							<div style="float: left; display: inline">
+								<input type="button" id="clinical_presentations_list_state_btn" class="button" value="Show List" onclick="toggle_list('clinical_presentations_list')" />
+							</div>
+							<div style="float: right; display: inline">
+								<input type="button" id="clinical_presentations_list_remove_btn" class="button-remove" onclick="delIt()" value="Remove" />
+								<input type="button" id="clinical_presentations_list_add_btn" class="button-add" onclick="addIt()" style="display: none" value="Add" />
+							</div>
+							<div id="clinical_presentations_list" style="clear: both; padding-top: 3px; display: none">
+								<h2>Clinical Presentations List</h2>
+								<select class="multi-picklist" id="SelectList" name="other_event_objectives_list" multiple="multiple" size="15" style="width: 100%">
+								<?php
+								if ((is_array($clinical_presentations_list)) && (count($clinical_presentations_list))) {
+									foreach ($clinical_presentations_list as $objective_id => $presentation_name) {
+										if (!array_key_exists($objective_id, $clinical_presentations)) {
+											echo "<option value=\"".(int) $objective_id."\">".html_encode($presentation_name)."</option>\n";
+										}
+									}
+								}
+								?>
+								</select>
+							</div>
+							<script type="text/javascript">
+							$('PickList').observe('keypress', function(event) {
+								if (event.keyCode == Event.KEY_DELETE) {
+									delIt();
+								}
+							});
+							$('SelectList').observe('keypress', function(event) {
+								if (event.keyCode == Event.KEY_RETURN) {
+									addIt();
+								}
+							});
+							</script>
+						</td>
+					</tr>
+					<tr>
+						<td colspan="3">&nbsp;</td>
+					</tr>
+					<tr>
+						<td>&nbsp;</td>
 						<td>
 							<label for="objective_select" class="form-nrequired">Course Objectives</label>
 						</td>
 						<td>
-							<select id="objective_select" onclick="showMultiSelect()">
+							<select id="objective_select" onchange="showMultiSelect()">
 							<option value="">- Select Competency -</option>
 							<?php
 							$objective_select = "";
@@ -685,62 +740,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							<div id="objectives_list">
 							<?php echo course_objectives_in_list($course_objectives["objectives"], 1, true); ?>
 							</div>
-						</td>
-					</tr>
-					<tr>
-						<td colspan="3">&nbsp;</td>
-					</tr>
-					<tr>
-						<td>&nbsp;</td>
-						<td style="vertical-align: top">
-							Clinical Presentations
-							<div class="content-small" style="margin-top: 5px">
-								<strong>Note:</strong> For more detailed information please refer to the <a href="http://www.mcc.ca/Objectives_online/objectives.pl?lang=english&loc=contents" target="_blank" style="font-size: 11px">MCC Objectives for the Qualifying Examination</a>.
-							</div>
-						</td>
-						<td>
-							<select class="multi-picklist" id="PickList" name="clinical_presentations[]" multiple="multiple" size="5" style="width: 100%; margin-bottom: 5px">
-							<?php
-							if ((is_array($clinical_presentations)) && (count($clinical_presentations))) {
-								foreach ($clinical_presentations as $objective_id => $presentation_name) {
-									echo "<option value=\"".(int) $objective_id."\">".html_encode($presentation_name)."</option>\n";
-								}
-							}
-							?>
-							</select>
-							<div style="float: left; display: inline">
-								<input type="button" id="clinical_presentations_list_state_btn" class="button" value="Show List" onclick="toggle_list('clinical_presentations_list')" />
-							</div>
-							<div style="float: right; display: inline">
-								<input type="button" id="clinical_presentations_list_remove_btn" class="button-remove" onclick="delIt()" value="Remove" />
-								<input type="button" id="clinical_presentations_list_add_btn" class="button-add" onclick="addIt()" style="display: none" value="Add" />
-							</div>
-							<div id="clinical_presentations_list" style="clear: both; padding-top: 3px; display: none">
-								<h2>Clinical Presentations List</h2>
-								<select class="multi-picklist" id="SelectList" name="other_event_objectives_list" multiple="multiple" size="15" style="width: 100%">
-								<?php
-								if ((is_array($clinical_presentations_list)) && (count($clinical_presentations_list))) {
-									foreach ($clinical_presentations_list as $objective_id => $presentation_name) {
-										if (!array_key_exists($objective_id, $clinical_presentations)) {
-											echo "<option value=\"".(int) $objective_id."\">".html_encode($presentation_name)."</option>\n";
-										}
-									}
-								}
-								?>
-								</select>
-							</div>
-							<script type="text/javascript">
-							$('PickList').observe('keypress', function(event) {
-								if (event.keyCode == Event.KEY_DELETE) {
-									delIt();
-								}
-							});
-							$('SelectList').observe('keypress', function(event) {
-								if (event.keyCode == Event.KEY_RETURN) {
-									addIt();
-								}
-							});
-							</script>
 						</td>
 					</tr>
 					<tr>

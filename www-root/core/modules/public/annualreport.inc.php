@@ -37,7 +37,7 @@ if(!defined("PARENT_INCLUDED")) {
 
 	echo display_error();
 
-	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]." and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
+	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
 	define("IN_ANNUAL_REPORT", true);
 	
@@ -74,10 +74,20 @@ if(!defined("PARENT_INCLUDED")) {
 		$sidebar_html .= "<li class=\"link\"><a href=\"".ENTRADA_URL."/annualreport/selfeducation\" title=\"Self Education/Faculty Development\">Self Education / Faculty Development</a></li>\n";
 		$sidebar_html .= "<li class=\"link\"><a href=\"".ENTRADA_URL."/annualreport/prizes\" title=\"Prizes, Honours and Awards\">Prizes, Honours and Awards</a></li>\n";
 		$sidebar_html .= "<li class=\"link\"><a href=\"".ENTRADA_URL."/annualreport/activityprofile\" title=\"Activity Profile\">Activity Profile</a></li>\n";
-		$sidebar_html .= "<li class=\"link\"><a href=\"".ENTRADA_URL."/annualreport/reports\" title=\"Reports\">Reports</a></li>\n";
+		$sidebar_html .= "<li class=\"link\"><a href=\"".ENTRADA_URL."/annualreport/generate\" title=\"Annual Report Generator\">Annual Report Generator</a></li>\n";
 		$sidebar_html .= "</div>\n";
 		
 		new_sidebar_item("Annual Report Sections", $sidebar_html, "annual-report-nav", "open");
+		
+		/**
+		 * Add the Annual Report Tools secondary navigation.
+		 */
+		$sidebar_html  = "<ul class=\"menu\">";
+		$sidebar_html .= "<li class=\"link\"><a href=\"".ENTRADA_URL."/annualreport/tools?section=copy_forward\" title=\"Tools\">Copy Forward</a></li>\n";
+		$sidebar_html .= "<li class=\"link\"><a href=\"".ENTRADA_URL."/annualreport/reports\" title=\"My Reports\">My Reports</a></li>\n";
+		$sidebar_html .= "</div>\n";
+		
+		new_sidebar_item("Annual Report Tools", $sidebar_html, "annual-report-nav", "open");
 		
 		$module_file = $router->getRoute();
 		if ($module_file) {

@@ -30,8 +30,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_AWARDS"))) {
 	header("Location: ".ENTRADA_URL);
 	exit;
 } elseif (!$ENTRADA_ACL->amIAllowed("awards", "update", false)) {
-	$ERROR++;
-	$ERRORSTR[]	= "Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
+	add_error("Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.");
 
 	echo display_error();
 
@@ -41,6 +40,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_AWARDS"))) {
 	
 	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/awards", "title" => "Awards Listing");
 	
+	require_once("Models/awards/InternalAwards.class.php");
+	require_once("Models/awards/InternalAwardReceipts.class.php");
 	process_manage_award_details();
 	$awards = InternalAwards::get(true);
 					
@@ -111,7 +112,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_AWARDS"))) {
 <ul class="page-action">
 	<li><a id="add_new_award"
 		href="<?php echo ENTRADA_URL; ?>/admin/awards?show=add_new_award"
-		class="strong-green">Add internal Award</a></li>
+		class="strong-green">Add Internal Award</a></li>
 </ul>
 </div>
 <div class="clear">&nbsp;</div>

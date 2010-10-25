@@ -40,7 +40,7 @@ set_include_path(get_include_path().PATH_SEPARATOR.dirname(__FILE__)."/includes"
 @ini_set("magic_quotes_runtime", 0);
 set_time_limit(0);
 
-if((!isset($_SERVER["argv"])) || (@count($_SERVER["argv"]) < 1)) {
+if ((!isset($_SERVER["argv"])) || (@count($_SERVER["argv"]) < 1)) {
 	echo "<html>\n";
 	echo "<head>\n";
 	echo "	<title>Processing Error</title>\n";
@@ -59,8 +59,8 @@ require_once("functions.inc.php");
 
 ini_set("sendmail_from", $AGENT_CONTACTS["administrator"]["email"]);
 
-$ACTION		= ((isset($_SERVER["argv"][1])) ? trim($_SERVER["argv"][1]) : "-usage");
-$CSV_FILE	= (((isset($_SERVER["argv"][2])) && (trim($_SERVER["argv"][2]) != "")) ? trim($_SERVER["argv"][2]) : false);
+$ACTION = ((isset($_SERVER["argv"][1])) ? trim($_SERVER["argv"][1]) : "-usage");
+$CSV_FILE = (((isset($_SERVER["argv"][2])) && (trim($_SERVER["argv"][2]) != "")) ? trim($_SERVER["argv"][2]) : false);
 
 $SKIP_EMAIL_NOTIFICATION	= false;
 $SEND_ADMIN_NOTIFICATION	= false;
@@ -68,7 +68,7 @@ $SEND_ADMIN_NOTIFICATION	= false;
 switch($ACTION) {
 	case "-validate" :
 		$handle = fopen($CSV_FILE, "r");
-		if($handle) {
+		if ($handle) {
 			$row_count = 0;
 			
 			while (($row = fgetcsv($handle)) !== false) {
@@ -79,37 +79,40 @@ switch($ACTION) {
 				 * We do not want the first row to be imported because it should
 				 * be the CSV heading titles.
 				 */
-				if($row_count > 1) {
-					$user				= array();
-					$user["number"]		= clean_input($row[0], array("nows", "int"));
-					$user["firstname"]	= clean_input($row[1], array("trim", "ucwords"));
-					$user["lastname"]	= clean_input($row[2], array("trim", "ucwords"));
-					$user["email"]		= clean_input($row[3], array("nows", "lowercase"));
-					$user["role"]		= clean_input($row[4], array("nows", "lowercase"));
-					$user["group"]		= clean_input($row[5], array("nows", "lowercase"));
+				if ($row_count > 1) {
+					$user = array();
+					$user["number"] = clean_input($row[0], array("nows", "int"));
+					$user["firstname"] = clean_input($row[1], array("trim", "ucwords"));
+					$user["lastname"] = clean_input($row[2], array("trim", "ucwords"));
+					$user["email"] = clean_input($row[3], array("nows", "lowercase"));
+					$user["role"] = clean_input($row[4], array("nows", "lowercase"));
+					$user["group"] = clean_input($row[5], array("nows", "lowercase"));
+					$user["organisation"] = isset($row[6]) ? clean_input($row[6], array("nows", "int")) : 1;
+					$user["entry_year"] = isset($row[7]) ? clean_input($row[7], array("nows", "int")) : "";
+					$user["grad_year"] = $user["role"];
 			
-					if(($user["email"] != "") && ($pieces = explode("@", $user["email"])) && (is_array($pieces))) {
+					if (($user["email"] != "") && ($pieces = explode("@", $user["email"])) && (is_array($pieces))) {
 						$user["username"] = trim($pieces[0]);
 					}
 					
-					if(!$user["number"]) {
+					if (!$user["number"]) {
 						output_notice("[Row ".$row_count."]\tThis user does not have a staff / student number in the CSV file.");
 					}
 					
-					if(!$user["firstname"]) {
+					if (!$user["firstname"]) {
 						output_error("[Row ".$row_count."]\tThis user does not have a firstname in the CSV file.");
 					}
 					
-					if(!$user["lastname"]) {
+					if (!$user["lastname"]) {
 						output_error("[Row ".$row_count."]\tThis user does not have a lastname in the CSV file.");
 					}
 					
-					if(!$user["email"]) {
+					if (!$user["email"]) {
 						output_error("[Row ".$row_count."]\tThis user does not have a lastname in the CSV file.");
 					}
 					
-					if($user["group"]) {
-						if(array_key_exists($user["group"], $SYSTEM_GROUPS)) {
+					if ($user["group"]) {
+						if (array_key_exists($user["group"], $SYSTEM_GROUPS)) {
 							$valid_group = true;
 						} else {
 							output_error("[Row ".$row_count."]\tThis group [".$user["group"]."] does not exist in your config.inc.php file.");
@@ -118,9 +121,9 @@ switch($ACTION) {
 						output_error("[Row ".$row_count."]\tThis user does not have a group in the CSV file.");
 					}
 					
-					if($user["role"]) {
-						if($valid_group) {
-							if(!in_array($user["role"], $SYSTEM_GROUPS[$user["group"]])) {
+					if ($user["role"]) {
+						if ($valid_group) {
+							if (!in_array($user["role"], $SYSTEM_GROUPS[$user["group"]])) {
 								output_error("[Row ".$row_count."]\tThis role [".$user["role"]."] does not exist within the specified group [".$user["group"]."] in your config.inc.php file.");
 							}
 						} else {
@@ -130,7 +133,7 @@ switch($ACTION) {
 						output_error("[Row ".$row_count."]\tThis user does not have a role in the CSV file.");
 					}
 					
-					if(!$user["username"]) {
+					if (!$user["username"]) {
 						output_error("[Row ".$row_count."]\tThe username could not be generated from the e-mail address for this user.");
 					}
 				}
@@ -151,7 +154,7 @@ switch($ACTION) {
 		$SEND_ADMIN_NOTIFICATION	= true;
 	case "-import" :
 		$handle = fopen($CSV_FILE, "r");
-		if($handle) {
+		if ($handle) {
 			$row_count = 0;
 			
 			while (($row = fgetcsv($handle)) !== false) {
@@ -161,26 +164,29 @@ switch($ACTION) {
 				 * We do not want the first row to be imported because it should
 				 * be the CSV heading titles.
 				 */
-				if($row_count > 1) {
-					$user				= array();
-					$user["number"]		= clean_input($row[0], array("nows", "int"));
-					$user["firstname"]	= clean_input($row[1], array("trim", "ucwords"));
-					$user["lastname"]	= clean_input($row[2], array("trim", "ucwords"));
-					$user["email"]		= clean_input($row[3], array("nows", "lowercase"));
-					$user["role"]		= clean_input($row[4], array("nows", "lowercase"));
-					$user["group"]		= clean_input($row[5], array("nows", "lowercase"));
-			
-					if(($user["email"] != "") && ($pieces = explode("@", $user["email"])) && (is_array($pieces))) {
+				if ($row_count > 1) {
+					$user = array();
+					$user["number"] = clean_input($row[0], array("nows", "int"));
+					$user["firstname"] = clean_input($row[1], array("trim", "ucwords"));
+					$user["lastname"] = clean_input($row[2], array("trim", "ucwords"));
+					$user["email"] = clean_input($row[3], array("nows", "lowercase"));
+					$user["role"] = clean_input($row[4], array("nows", "lowercase"));
+					$user["group"] = clean_input($row[5], array("nows", "lowercase"));
+					$user["organisation"] = isset($row[6]) ? clean_input($row[6], array("nows", "int")) : 1;
+					$user["entry_year"] = isset($row[7]) ? clean_input($row[7], array("nows", "int")) : "";
+					$user["grad_year"] = $user["role"];
+					
+					if (($user["email"] != "") && ($pieces = explode("@", $user["email"])) && (is_array($pieces))) {
 						$user["username"]		= trim($pieces[0]);
 						$user["password_plain"]	= generate_password();
 						$user["password"]		= md5($user["password_plain"]);
 			
 						$query	= "SELECT * FROM `".AUTH_DATABASE."`.`user_data` WHERE `number` = ".$db->qstr($user["number"])." OR `username` = ".$db->qstr($user["username"]);
 						$result	= $db->GetRow($query);
-						if($result) {
+						if ($result) {
 							output_notice("[Row ".$row_count."]\tSkipping staff / student number [".$user["number"]."] because they already exists in the database under proxy_id [".$result["id"]."].");
 						} else {
-							if(($db->AutoExecute(AUTH_DATABASE.".user_data", $user, "INSERT")) && ($proxy_id = $db->Insert_Id())) {
+							if (($db->AutoExecute(AUTH_DATABASE.".user_data", $user, "INSERT")) && ($proxy_id = $db->Insert_Id())) {
 								$access						= array();
 								$access["user_id"]			= $proxy_id;
 								$access["app_id"]			= AUTH_APP_ID;
@@ -192,26 +198,26 @@ switch($ACTION) {
 								$access["role"]				= $user["role"];
 								$access["group"]			= $user["group"];
 								
-								if($db->AutoExecute(AUTH_DATABASE.".user_access", $access, "INSERT")) {
+								if ($db->AutoExecute(AUTH_DATABASE.".user_access", $access, "INSERT")) {
 									
-									if($SKIP_EMAIL_NOTIFICATION) {
+									if ($SKIP_EMAIL_NOTIFICATION) {
 										output_success("[Row ".$row_count."]\tSuccessfully added username [".$user["username"]."] and skipped e-mail notification.");
 									} else {
 										do {
 											$hash = generate_hash();
 										} while($db->GetRow("SELECT `id` FROM `".AUTH_DATABASE."`.`password_reset` WHERE `hash` = ".$db->qstr($hash)));
 										
-										if($db->AutoExecute(AUTH_DATABASE.".password_reset", array("ip" => "127.0.0.1", "date" => time(), "user_id" => $proxy_id, "hash" => $hash, "complete" => 0), "INSERT")) {
+										if ($db->AutoExecute(AUTH_DATABASE.".password_reset", array("ip" => "127.0.0.1", "date" => time(), "user_id" => $proxy_id, "hash" => $hash, "complete" => 0), "INSERT")) {
 											$notification_search	= array("%firstname%", "%lastname%", "%username%", "%password_reset_url%", "%application_url%", "%application_name%");
 											$notification_replace	= array(stripslashes($user["firstname"]), stripslashes($user["lastname"]), stripslashes($user["username"]), PASSWORD_RESET_URL."?hash=".rawurlencode($proxy_id.":".$hash), ENTRADA_URL, APPLICATION_NAME);
 											
 											$message = str_ireplace($notification_search, $notification_replace, $DEFAULT_NEW_USER_NOTIFICATION);
 											
-											if($SEND_ADMIN_NOTIFICATION) {
+											if ($SEND_ADMIN_NOTIFICATION) {
 												$user["email"] = $AGENT_CONTACTS["administrator"]["email"];
 											}
 											
-											if(@mail($user["email"], "New User Account: ".APPLICATION_NAME, $message, "From: \"".$AGENT_CONTACTS["administrator"]["name"]."\" <".$AGENT_CONTACTS["administrator"]["email"].">\nReply-To: \"".$AGENT_CONTACTS["administrator"]["name"]."\" <".$AGENT_CONTACTS["administrator"]["email"].">")) {
+											if (@mail($user["email"], "New User Account: ".APPLICATION_NAME, $message, "From: \"".$AGENT_CONTACTS["administrator"]["name"]."\" <".$AGENT_CONTACTS["administrator"]["email"].">\nReply-To: \"".$AGENT_CONTACTS["administrator"]["name"]."\" <".$AGENT_CONTACTS["administrator"]["email"].">")) {
 												output_success("[Row ".$row_count."]\tSuccessfully added username [".$user["username"]."] and sent e-mail notification to [".$user["email"]."].");
 											} else {
 												output_error("[Row ".$row_count."]\tAdded username [".$user["username"]."] to the database, but could not send e-mail notification to [".$user["email"]."].");

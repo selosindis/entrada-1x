@@ -94,7 +94,21 @@ INSERT INTO `acl_permissions` (`resource_type`, `resource_value`, `entity_type`,
 ('regionaled_tab', NULL, 'group', 'resident', '1', NULL, '1', NULL, NULL, 'HasAccommodations'),
 ('awards', NULL, 'group:role', 'staff:admin', 1, 1, 1, 1, 1, NULL),
 ('mspr', NULL, 'group:role', 'staff:admin', 1, 1, 1, 1, 1, NULL),
-('mspr', NULL, 'group', 'student', 1, NULL, 1, 1, NULL, NULL);
+('mspr', NULL, 'group', 'student', 1, NULL, 1, 1, NULL, NULL),
+('user', NULL, 'group:role', 'staff:admin', 1, 1, 1, 1, 1, NULL),
+('incident', NULL, 'group:role', 'staff:admin', 1, 1, 1, 1, 1, NULL),
+('task', NULL, 'group:role', 'staff:admin', 1, 1, 1, 1, 1, 'ResourceOrganisation'),
+('task', NULL, 'group:role', 'faculty:director', 1, NULL, 1, 1, NULL, 'TaskOwner'),
+('task', NULL, NULL, NULL, 1, NULL, 1, NULL, NULL, 'TaskRecipient'),
+('task', NULL, 'role', 'pcoordinator', 1, NULL, 1, 1, NULL, 'TaskOwner'),
+('task', NULL, 'group:role', 'faculty:director', 1, 1, 1, 1, 1, 'CourseOwner'),
+('task', NULL, 'role', 'pcoordinator', 1, 1, 1, 1, 1, 'CourseOwner'),
+('taskverification', NULL, NULL, NULL, 1, NULL, NULL, 1, NULL, 'TaskVerifier'),
+('task', NULL, NULL, NULL, 1, NULL, NULL, NULL, NULL, 'TaskVerifier'),
+('mydepartment', NULL, 'group', 'faculty', NULL, 1, 1, 1, 1, 'DepartmentHead'),
+('myowndepartment', NULL, 'user', '1', NULL, 1, 1, 1, 1, NULL),
+('tasktab', NULL, NULL, NULL, 1, NULL, 1, NULL, NULL, 'ShowTaskTab'),
+('annualreportadmin', NULL, 'group:role', 'medtech:admin', NULL, 1, 1, 1, 1, NULL);
 
 
 CREATE TABLE IF NOT EXISTS `departments` (
@@ -123,6 +137,13 @@ CREATE TABLE IF NOT EXISTS `departments` (
 
 INSERT INTO `departments` (`department_id`, `organisation_id`, `entity_id`, `department_title`, `department_address1`, `department_address2`, `department_city`, `department_province`, `department_country`, `department_postcode`, `department_telephone`, `department_fax`, `department_email`, `department_url`, `department_desc`) VALUES
 (1, 1, 5, 'Medical IT', '', '', 'Kingston', 'ON', 'CA', '', '', '', '', '', NULL);
+
+CREATE TABLE IF NOT EXISTS `department_heads` (
+  `department_heads_id` int(11) NOT NULL auto_increment,
+  `department_id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  PRIMARY KEY  (`department_heads_id`)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `entity_type` (
   `entity_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
@@ -200,8 +221,8 @@ CREATE TABLE IF NOT EXISTS `password_reset` (
 
 CREATE TABLE IF NOT EXISTS `registered_apps` (
   `id` int(12) unsigned NOT NULL AUTO_INCREMENT,
-  `script_id` varchar(25) NOT NULL DEFAULT '0',
-  `script_password` varchar(255) NOT NULL DEFAULT '',
+  `script_id` varchar(32) NOT NULL DEFAULT '0',
+  `script_password` varchar(32) NOT NULL DEFAULT '',
   `server_ip` varchar(75) NOT NULL DEFAULT '',
   `server_url` text NOT NULL,
   `employee_rep` int(12) unsigned NOT NULL DEFAULT '0',
@@ -214,7 +235,7 @@ CREATE TABLE IF NOT EXISTS `registered_apps` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `registered_apps` (`id`, `script_id`, `script_password`, `server_ip`, `server_url`, `employee_rep`, `notes`) VALUES
-(1, '30000001', MD5('apple123'), '%', '%', 1, 'Entrada');
+(1, '%AUTH_USERNAME%', MD5('%AUTH_PASSWORD%'), '%', '%', 1, 'Entrada');
 
 CREATE TABLE IF NOT EXISTS `sessions` (
   `sesskey` varchar(64) NOT NULL DEFAULT '',
@@ -254,8 +275,10 @@ CREATE TABLE IF NOT EXISTS `user_access` (
   `role` varchar(35) NOT NULL DEFAULT '',
   `group` varchar(35) NOT NULL DEFAULT '',
   `extras` longtext NOT NULL,
+  `private_hash` varchar(32) DEFAULT NULL,
   `notes` text NOT NULL,
   PRIMARY KEY  (`id`),
+  UNIQUE KEY `private_hash` (`private_hash`),
   KEY `user_id` (`user_id`),
   KEY `app_id` (`app_id`),
   KEY `account_active` (`account_active`),
@@ -265,8 +288,8 @@ CREATE TABLE IF NOT EXISTS `user_access` (
   KEY `group` (`group`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-INSERT INTO `user_access` (`id`, `user_id`, `app_id`, `account_active`, `access_starts`, `access_expires`, `last_login`, `last_ip`, `login_attempts`, `locked_out_until`, `role`, `group`, `extras`, `notes`) VALUES
-(1, 1, 1, 'true', 1216149930, 0, 0, '', NULL, NULL, 'admin', 'medtech', 'YToxOntzOjE2OiJhbGxvd19wb2RjYXN0aW5nIjtzOjM6ImFsbCI7fQ==', '');
+INSERT INTO `user_access` (`id`, `user_id`, `app_id`, `account_active`, `access_starts`, `access_expires`, `last_login`, `last_ip`, `login_attempts`, `locked_out_until`, `role`, `group`, `extras`, `private_hash`, `notes`) VALUES
+(1, 1, 1, 'true', 1216149930, 0, 0, '', NULL, NULL, 'admin', 'medtech', 'YToxOntzOjE2OiJhbGxvd19wb2RjYXN0aW5nIjtzOjM6ImFsbCI7fQ==', MD5(CONCAT(rand(), CURRENT_TIMESTAMP)), '');
 
 CREATE TABLE IF NOT EXISTS `user_data` (
   `id` int(12) unsigned NOT NULL AUTO_INCREMENT,
@@ -288,13 +311,18 @@ CREATE TABLE IF NOT EXISTS `user_data` (
   `province` varchar(35) NOT NULL DEFAULT '',
   `postcode` varchar(12) NOT NULL DEFAULT '',
   `country` varchar(35) NOT NULL DEFAULT '',
+  `country_id` int(12) DEFAULT NULL,
+  `province_id` int(12) DEFAULT NULL,
   `notes` text NOT NULL,
   `office_hours` text,
   `privacy_level` int(1) DEFAULT '0',
   `notifications` int(1) NOT NULL DEFAULT '0',
+  `entry_year` int(11) DEFAULT NULL,
+  `grad_year` int(11) DEFAULT NULL,
+  `gender` int(1) NOT NULL DEFAULT '0',
   `clinical` int(1) NOT NULL DEFAULT '0',
-  `grad_year` int(11) default NULL,
-  `entry_year` int(11) default NULL,
+  `updated_date` bigint(64) NOT NULL DEFAULT '0',
+  `updated_by` int(12) NOT NULL DEFAULT '0',
   PRIMARY KEY  (`id`),
   UNIQUE KEY `username` (`username`),
   KEY `number` (`number`),
@@ -303,12 +331,16 @@ CREATE TABLE IF NOT EXISTS `user_data` (
   KEY `lastname` (`lastname`),
   KEY `privacy_level` (`privacy_level`),
   KEY `google_id` (`google_id`),
+  KEY `organisation_id` (`organisation_id`),
+  KEY `gender` (`gender`),
+  KEY `country_id` (`country_id`),
+  KEY `province_id` (`province_id`),
   KEY `clinical` (`clinical`),
   FULLTEXT KEY `firstname_2` (`firstname`,`lastname`,`email`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `user_data` (`id`, `number`, `username`, `password`, `organisation_id`, `department`, `prefix`, `firstname`, `lastname`, `email`, `email_alt`, `google_id`, `telephone`, `fax`, `address`, `city`, `province`, `postcode`, `country`, `notes`, `office_hours`, `privacy_level`, `notifications`, `clinical`) VALUES
-(1, 4857241, '%ADMIN_USERNAME%', '%ADMIN_PASSWORD_HASH%', 1, NULL, '', '%ADMIN_FIRSTNAME%', '%ADMIN_LASTNAME%', '%ADMIN_EMAIL%', '', NULL, '', '', '', '', '', '', '', 'System Administrator', NULL, 0, 0, 1);
+(1, 0, '%ADMIN_USERNAME%', '%ADMIN_PASSWORD_HASH%', 1, NULL, '', '%ADMIN_FIRSTNAME%', '%ADMIN_LASTNAME%', '%ADMIN_EMAIL%', '', NULL, '', '', '', '', '', '', '', 'System Administrator', NULL, 0, 0, 1);
 
 CREATE TABLE IF NOT EXISTS `user_departments` (
   `udep_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
@@ -359,18 +391,3 @@ CREATE TABLE IF NOT EXISTS `user_preferences` (
   PRIMARY KEY  (`preference_id`),
   KEY `app_id` (`app_id`,`proxy_id`,`module`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
--- Function: isnumeric
-
-delimiter $$
-
-drop function if exists `isnumeric` $$
-create function `isnumeric` (s varchar(255)) returns int
-begin
-set @match =
-   '^(([0-9+-.$]{1})|([+-]?[$]?[0-9]*(([.]{1}[0-9]*)|([.]?[0-9]+))))$';
-
-return if(s regexp @match, 1, 0);
-end $$
-
-delimiter ;

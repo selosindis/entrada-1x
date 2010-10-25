@@ -1104,6 +1104,9 @@ border-left:none;
 padding-left:5px;
 }
 
+table.tableList tr td.report-hours.large {
+width:150px;
+}
 table.tableList tr td.region-large {
 width:90px;
 border-left:none;
@@ -1244,17 +1247,17 @@ vertical-align: middle;
 }
 
 ul.objective-list li.primary {
-border-left:5px solid #D9E9FE;
+border-left:5px solid #5A9B36;
 background-color:#FFF;
 }
 
 ul.objective-list li.secondary {
-border-left:5px solid #E9D9FE;
+border-left:5px solid #E5C203;
 background-color:#FFF;
 }
 
 ul.objective-list li.tertiary {
-border-left:5px solid #FFCCFF;
+border-left:5px solid #D3490C;
 background-color:#FFF;
 }
 
@@ -1919,13 +1922,29 @@ border-radius:10px;
 padding:20px;
 }
 
+.modal-description {
+position:relative;
+width:450px;
+background-color:#FFF;
+-moz-border-radius:10px;
+-webkit-border-radius:10px;
+border-radius:10px;
+padding:0 20px 20px 20px;
+}
+
+.modal-description div.body {
+height:55px;
+overflow:auto;
+margin:8px 0;
+}
+
 .modal-confirmation div.body {
 height:105px;
 overflow:auto;
 margin:8px 0;
 }
 
-.modal-confirmation div.content {
+.modal-confirmation div.content, .modal-description div.content {
 background-color:#FFC;
 border:1px #FC0 solid;
 color:#333;
@@ -1936,7 +1955,7 @@ margin:0;
 padding:15px;
 }
 
-.modal-confirmation div.footer {
+.modal-confirmation div.footer, .modal-description div.footer {
 position:absolute;
 bottom:0;
 left:0;
@@ -2107,7 +2126,7 @@ background-color:#F7F7F7;
 
 table.select_multiple_table tr.selected {
 background-image:none;
-background-color:#D9E9FE;
+background-color:#5A9B36;
 font-weight:700;
 }
 
@@ -2155,17 +2174,17 @@ z-index:1500;
 }
 
 td.objectives li.primary {
-border-left:5px solid #D9E9FE;
+border-left:5px solid #5A9B36;
 background-color:#FFF;
 }
 
 td.objectives li.secondary {
-border-left:5px solid #E9D9FE;
+border-left:5px solid #E5C203;
 background-color:#FFF;
 }
 
 td.objectives li.tertiary {
-border-left:5px solid #FFCCFF;
+border-left:5px solid #D3490C;
 background-color:#FFF;
 }
 
@@ -2280,10 +2299,6 @@ font-size:10px;
 padding-bottom:4px;
 padding-left:20px;
 background:transparent url(../images/checkbox-on.gif) no-repeat;
-}
-
-table {
-width:100%;
 }
 
 table.quizResults,table.tableList {
@@ -2407,23 +2422,24 @@ padding-left:20px;
 }
 
 table.select_multiple_table tr.primary {
-background-color:#D9E9FE;
+background-color:#5A9B36;
 }
 
 table.select_multiple_table tr.secondary {
-background-color:#E9D9FE;
+background-color:#E5C203;
 }
 table.select_multiple_table tr.tertiary {
-background-color:#FFCCFF;
+background-color:#D3490C;
 }
 
 div#associated_faculty_list ul.menu li.community,div#associated_student_list ul.menu li.community,div#associated_director_list ul.menu li.community,div#associated_coordinator_list ul.menu li.community {
 cursor:move;
 }
 
-ul#faculty_list,ul#student_list,ul#director_list,ul#coordinator_list {
+ul#faculty_list,ul#student_list,ul#director_list,ul#coordinator_list, ul#individual_list {
 width:250px;
 overflow:none;
+position:relative;
 }
 
 ul.notify-communities li {
@@ -2763,7 +2779,7 @@ margin: 0 1em 0 0;
 	width:20px;
 	background-image: url(../images/arrow_up_down.png);
 	background-repeat:no-repeat;
-	background-position: center center;
+	background-position: center 5px;
 	display:inline-block;
 }
 
@@ -2863,4 +2879,69 @@ margin: 0 1em 0 0;
 	margin-top:1ex;
 	display:block;
 	font-size:0.85em;
+}
+
+ul.objectives {
+padding-left: 10px;
+}
+
+ul.objectives li {
+white-space:nowrap;
+overflow:hidden;
+font-size:11px;
+text-decoration:none;
+line-height:135%;
+padding:1px;
+}
+
+ul.objectives li {
+padding-bottom:4px;
+padding-left:17px;
+background:transparent url(../images/list-objective.gif) no-repeat 0 3px;
+}
+
+#task-list ul {
+	margin:0;
+	padding:0;
+	width:160px;
+}
+
+#task-list ul li {
+	list-style-type:none;
+	padding-bottom:10px;
+	padding-left:7px;
+	width:160px;
+}
+
+#task-list li a {
+	white-space:nowrap;
+	overflow:hidden;
+}
+#task-list li span {
+	display:block;
+	text-align:right;
+}
+
+#task-list .see-all {
+	display:block;
+	text-align:center;
+	border-top:1px solid #EBEBEB;
+	padding-top:3px;
+}
+
+#task_verify_form {
+	margin: 3ex 0;
+	display:block;
+}
+
+.success_task .task_title {
+	font-weight:bold;
+}
+
+#task_details {
+	width:100%;
+}
+
+.mspr-list .entry .item-status {
+	margin-top:2ex;
 }

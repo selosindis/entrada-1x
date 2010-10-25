@@ -18,18 +18,15 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 } elseif(!$ENTRADA_ACL->isLoggedInAllowed('mspr', 'create',true) || $user_record["group"] != "student") {
 	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/".$MODULE."\\'', 15000)";
 
-	$ERROR++;
-	$ERRORSTR[]	= "Your account does not have the permissions required to use this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
+	add_error("Your account does not have the permissions required to use this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.");
 	echo display_error();
 
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
 }  else {
 	
-	require_once("Models/MSPRs.class.php");
+	require_once("Models/mspr/MSPRs.class.php");
 	$PROXY_ID					= $user_record["id"];
 	$user = User::get($user_record["id"]);
-	
-	process_mspr_admin($user);
 	
 	$PAGE_META["title"]			= "MSPR";
 	$PAGE_META["description"]	= "";
@@ -57,68 +54,81 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 
 	
 	$mspr = MSPR::get($user);
-	$is_closed = $mspr->isClosed();
-	
-	$generated = $mspr->isGenerated();
-	$revision = $mspr->getGeneratedTimestamp();
-	$number = $user->getNumber();
-	if (isset($_GET['generate']) && $is_closed){
-		$mspr->saveMSPRFiles();
-		header("Location: ".ENTRADA_URL."/admin/users/manage/students?section=mspr&id=".$PROXY_ID);
-	} elseif ($type = $_GET['get']) {
+		
+	if (!$mspr) { //no mspr yet. create one
+		MSPR::create($user);
+		$mspr = MSPR::get($user);
+	}
+
+	if (!$mspr) {
+		add_notice("MSPR not yet available. Please try again later.");
+		application_log("error", "Error creating MSPR for user " .$PROXY_ID. ": " . $name . "(".$number.")");
+		display_status_messages();
+	} else {
+		
+		$is_closed = $mspr->isClosed();
+		
+		$generated = $mspr->isGenerated();
+		$revision = $mspr->getGeneratedTimestamp();
+		$number = $user->getNumber();
+		
 		$name = $user->getFirstname() . " " . $user->getLastname();
-		switch($type) {
-			case 'html':
-				header('Content-type: text/html');
-				header('Content-Disposition: filename="MSPR - '.$name.'('.$number.').html"');
-				
-				break;
-			case 'pdf':
-				header('Content-type: application/pdf');
-				header('Content-Disposition: attachment; filename="MSPR - '.$name.'('.$number.').pdf"');
-				break;
-			default:
-				$ERROR++;
-				$ERRORSTR[] = "Unknown file type: " . $type;
-		}
-		if (!$ERROR) {
-			ob_clear_open_buffers();
-			flush();
-			echo $mspr->getMSPRFile($type,$revision);
-			exit();	
+		if (isset($_GET['generate']) && $is_closed){
+			$mspr->saveMSPRFiles();
+			header("Location: ".ENTRADA_URL."/admin/users/manage/students?section=mspr&id=".$PROXY_ID);
+		} elseif ($type = $_GET['get']) {
+			$name = $user->getFirstname() . " " . $user->getLastname();
+			switch($type) {
+				case 'html':
+					header('Content-type: text/html');
+					header('Content-Disposition: filename="MSPR - '.$name.'('.$number.').html"');
+					
+					break;
+				case 'pdf':
+					header('Content-type: application/pdf');
+					header('Content-Disposition: attachment; filename="MSPR - '.$name.'('.$number.').pdf"');
+					break;
+				default:
+					add_error("Unknown file type: " . $type);
+			}
+			if (!has_error()) {
+				ob_clear_open_buffers();
+				flush();
+				echo $mspr->getMSPRFile($type,$revision);
+				exit();	
+			}
+			
 		}
 		
-	}
-	
-	$clerkship_core_completed = $mspr["Clerkship Core Completed"];
-	$clerkship_core_pending = $mspr["Clerkship Core Pending"];
-	$clerkship_elective_completed = $mspr["Clerkship Electives Completed"];
-	$clinical_evaluation_comments = $mspr["Clinical Performance Evaluation Comments"];
-	$critical_enquiry = $mspr["Critical Enquiry"];
-	$student_run_electives = $mspr["Student-Run Electives"];
-	$observerships = $mspr["Observerships"];
-	$international_activities = $mspr["International Activities"];
-	$internal_awards = $mspr["Internal Awards"];
-	$external_awards = $mspr["External Awards"];
-	$studentships = $mspr["Studentships"];
-	$contributions = $mspr["Contributions to Medical School"];
-	$leaves_of_absence = $mspr["Leaves of Absence"];
-	$formal_remediations = $mspr["Formal Remediation Received"];
-	$disciplinary_actions = $mspr["Disciplinary Actions"];
-	$community_health_and_epidemiology = $mspr["Community Health and Epidemiology"];
-	$research_citations = $mspr["Research"];
-				
-	$year = $user->getGradYear();
-	$class_data = MSPRClassData::get($year);
-	
-	$mspr_close = $mspr->getClosedTimestamp();
-	
-	if (!$mspr_close) { //no custom time.. use the class default
-		$mspr_close = $class_data->getClosedTimestamp();	
-	}
+		$clerkship_core_completed = $mspr["Clerkship Core Completed"];
+		$clerkship_core_pending = $mspr["Clerkship Core Pending"];
+		$clerkship_elective_completed = $mspr["Clerkship Electives Completed"];
+		$clinical_evaluation_comments = $mspr["Clinical Performance Evaluation Comments"];
+		$critical_enquiry = $mspr["Critical Enquiry"];
+		$student_run_electives = $mspr["Student-Run Electives"];
+		$observerships = $mspr["Observerships"];
+		$international_activities = $mspr["International Activities"];
+		$internal_awards = $mspr["Internal Awards"];
+		$external_awards = $mspr["External Awards"];
+		$studentships = $mspr["Studentships"];
+		$contributions = $mspr["Contributions to Medical School"];
+		$leaves_of_absence = $mspr["Leaves of Absence"];
+		$formal_remediations = $mspr["Formal Remediation Received"];
+		$disciplinary_actions = $mspr["Disciplinary Actions"];
+		$community_health_and_epidemiology = $mspr["Community Health and Epidemiology"];
+		$research_citations = $mspr["Research"];
+					
+		$year = $user->getGradYear();
+		$class_data = MSPRClassData::get($year);
 		
-	display_status_messages();
-	add_mspr_management_sidebar();
+		$mspr_close = $mspr->getClosedTimestamp();
+		
+		if (!$mspr_close && $class_data) { //no custom time.. use the class default
+			$mspr_close = $class_data->getClosedTimestamp();	
+		}
+			
+		display_status_messages();
+		add_mspr_management_sidebar();
 	
 ?>
  
@@ -151,83 +161,95 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 
 	<h2 title="Information Requiring Approval">Information Requiring Approval</h2>
 	<div id="information-requiring-approval">
-	
+		<div class="instructions" style="margin-left:2em;margin-top:2ex;">
+			<strong>Instructions</strong>
+			<p>The sections below consist of student-submitted information. The submissions require approval or rejection.</p>
+			<ul>
+				<li>
+					If an entry is verifiably accurate and meets criteria, it should be approved.
+				</li>
+				<li>
+					If an entry is verifiably innacurate or contains errors in spelling or formatting, it should be rejected.
+				</li>
+				<li>
+					If previously approved information comes into question, it's status can be reverted to unapproved, and rejected if deemed appropriate.
+				</li>
+				<li>
+					All entries have a background color corresponding to their status: 
+					<ul>
+						<li>Gray - Approved</li>
+						<li>Yellow - Pending Approval</li>
+						<li>Red - Rejected</li>
+					</ul>
+				</li>
+			</ul>
+		</div>	
 		<div class="section">
-			<h3 title="Contributions to Medical School" class="collapsable<?php echo ($contributions->isAttentionRequired()) ? "" : " collapsed"; ?>">Contributions to Medical School</h3>
+			<h3 title="Contributions to Medical School" class="collapsable<?php echo ($contributions->isAttentionRequired()) ? "" : " collapsed"; ?>">Contributions to Medical School/Student Life</h3>
 			<div id="contributions-to-medical-school">
-				<?php echo display_contributions_admin($contributions); ?>
+				<div class="instructions">
+					<ul>
+						<li>Examples of contributions to medical school/student life include:
+							<ul>
+								<li>Participation in School of Medicine student government</li>
+								<li>Committees (such as admissions)</li>
+								<li>Organizing extra-curricular learning activities and seminars</li>					
+							</ul>
+						</li>
+						<li>Examples of submissions that do <em>not</em> qualify:
+							<ul>
+								<li>Captain of intramural soccer team.</li>
+								<li>Member of Oprah's book of the month club.</li>
+							</ul>
+						</li>
+					</ul>
+				</div>
+				<div id="contributions-to-medical-school_section">
+					<?php echo display_contributions($contributions,"admin"); ?>
+				</div>
 			</div>
-			<script language="javascript">
-				var contributions = new ActiveApprovalProcessor({
-					url : '<?php echo webservice_url("mspr-admin"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=contributions',
-					data_destination: $('contributions-to-medical-school'),
-					action_form_selector: '#contributions-to-medical-school .entry form',
-					section: "contributions"
-				});
-			</script>
 		</div>
 		
 		<div class="section">
 			<h3 title="Critical Enquiry" class="collapsable<?php echo ($critical_enquiry && $critical_enquiry->isAttentionRequired()) ? "" : " collapsed"; ?>">Critical Enquiry</h3>
 			<div id="critical-enquiry">
-				<div id="critical_enquiry"><?php echo display_critical_enquiry_admin($critical_enquiry); ?></div>
-				<script language="javascript">
-				var critical_enquiry = new ActiveApprovalProcessor({
-					url : '<?php echo webservice_url("mspr-admin"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=critical_enquiry',
-					data_destination: $('critical_enquiry'),
-					action_form_selector: '#critical_enquiry .entry form',
-					section: "critical_enquiry"
-				});
-				
-				</script>
+				<div id="critical_enquiry"><?php echo display_critical_enquiry($critical_enquiry,"admin"); ?></div>
 			</div>
 		</div>
 		
 		<div class="section">
-			<h3 title="Community Health and Epidemiology" class="collapsable<?php echo ($community_health_and_epidemiology && $community_health_and_epidemiology->isAttentionRequired()) ? "" : " collapsed"; ?>">Community Health and Epidemiology</h3>
-			<div id="community-health-and-epidemiology">
-				<div id="community_health_and_epidemiology"><?php echo display_community_health_and_epidemiology_admin($community_health_and_epidemiology); ?></div>
-				<script language="javascript">
-				var community_health_and_epidemiology = new ActiveApprovalProcessor({
-					url : '<?php echo webservice_url("mspr-admin"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=community_health_and_epidemiology',
-					data_destination: $('community_health_and_epidemiology'),
-					action_form_selector: '#community_health_and_epidemiology .entry form',
-					section: "community_health_and_epidemiology"
-				});
-				
-				</script>
+			<h3 title="Community-Based Project" class="collapsable<?php echo ($community_health_and_epidemiology && $community_health_and_epidemiology->isAttentionRequired()) ? "" : " collapsed"; ?>">Community-Based Project</h3>
+			<div id="community-based-project">
+				<div id="community_health_and_epidemiology"><?php echo display_community_health_and_epidemiology($community_health_and_epidemiology,"admin"); ?></div>
 			</div>
 		</div>
 		
 		<div class="section">
 			<h3 title="Research" class="collapsable<?php echo ($research_citations->isAttentionRequired()) ? "" : " collapsed"; ?>">Research</h3>
 			<div id="research">
-				<?php echo display_research_citations_admin($research_citations); ?>
+				<div class="instructions">
+					<ul>
+						<li>Only approve citations of published research in which <?php echo $name; ?> was a named author</li>
+						<li>Approve a maximum of <em>six</em> research citations</li>
+						<li>Approved research citations should be in a format following <a href="http://owl.english.purdue.edu/owl/resource/747/01/">MLA guidelines</a></li>
+					</ul>
+				</div>
+				<div id="research_section">
+					<?php echo display_research_citations($research_citations,"admin"); ?>
+				</div>
 			</div>
-			<script language="javascript">
-				var research_citations = new ActiveApprovalProcessor({
-					url : '<?php echo webservice_url("mspr-admin"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=research_citations',
-					data_destination: $('research'),
-					action_form_selector: '#research .entry form',
-					section: "research"
-				});
-			
-			</script>
 		</div>
 		
 		<div class="section">
 			<h3 title="External Awards" class="collapsable<?php echo ($external_awards->isAttentionRequired()) ? "" : " collapsed"; ?>">External Awards</h3>
 			<div id="external-awards">
-				<div id="external_awards"><?php echo display_external_awards_admin($external_awards); ?></div>
-				<script language="javascript">
-					var external_awards = new ActiveApprovalProcessor({
-						url : '<?php echo webservice_url("mspr-admin"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=external_awards',
-						data_destination: $('external_awards'),
-						action_form_selector: '#external_awards .entry form',
-						section: "external_awards"
-					});
-				
-				</script>
+				<div class="instructions">
+					<ul>
+						<li>Only awards of academic significance should be considered.</li>
+						<li>Award terms must be provided to be approved. Awards not accompanied by terms should be rejected.</li>
+					</ul>
+				</div>
+				<div id="external_awards"><?php echo display_external_awards($external_awards,"admin"); ?></div>
 			</div>
 		</div>
 	</div>
@@ -238,7 +260,10 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 		<div class="section">
 			<h3 title="Clinical Performance Evaluation Comments Section" class="collapsable collapsed">Clinical Performance Evaluation Comments</h3>
 			<div id="clinical-performance-evaluation-comments-section">
-			
+			<div class="instructions">
+				<p>Comments should be copied in whole or in part from Clinical Performance Evaluations from the student's clerkship rotations and electives.</p>
+				<p>There should be one comment for each core rotation and one per received elective.</p>
+			</div>
 			<div id="add_clineval_link" style="float: right;">
 				<ul class="page-action">
 					<li><a id="add_clineval" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" class="strong-green">Add Clinical Performance Evaluation Comment</a></li>
@@ -272,12 +297,12 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 						<tr>
 						<td>&nbsp;</td>
 						<td><label class="form-required" for="source">Source:</label></td>
-						<td><input type="text" name="source"></input></td>
+						<td><input type="text" name="source"></input><span class="content-small"> <strong>Example</strong>: Pediatrics Rotation</span></td>
 						</tr>	
 						<tr>
 						<td>&nbsp;</td>
-						<td><label class="form-required" for="text">Comment:</label></td>
-						<td><textarea name="text"></textarea></td>
+						<td valign="top"><label class="form-required" for="text">Comment:</label></td>
+						<td><textarea name="text" style="width:80%;height:12ex;"></textarea><br /></td>
 						</tr>
 					</tbody>
 				
@@ -287,21 +312,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 			</form>
 		
 		
-			<div id="clinical_performance_eval_comments"><?php echo display_clineval_admin($clinical_evaluation_comments); ?></div>
-		
-			<script language="javascript">
-		
-			var clineval_comments = new ActiveDataEntryProcessor({
-				url : '<?php echo webservice_url("mspr-admin"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=clineval',
-				data_destination: $('clinical_performance_eval_comments'),
-				new_form: $('add_clineval_form'),
-				remove_forms_selector: '.remove_clineval_form',
-				new_button: $('add_clineval_link'),
-				hide_button: $('hide_clineval')
-				
-			});
-		
-			</script>
+			<div id="clinical_performance_eval_comments"><?php echo display_clineval($clinical_evaluation_comments,"admin"); ?></div>
 			</div>
 		</div>
 		
@@ -345,7 +356,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 						<tr>
 						<td>&nbsp;</td>
 						<td><label class="form-required" for="title">Title:</label></td>
-						<td><input type="text" name="title"></input></td>
+						<td><input type="text" name="title"></input> <span class="content-small"><strong>Example</strong>: The Canadian Institute of Health Studentship</span></td>
 						</tr>	
 						<tr>
 						<td>&nbsp;</td>
@@ -371,37 +382,14 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 				<div class="clear">&nbsp;</div>
 			</form>
 			
-			<div id="studentships"><?php echo display_studentships_admin($studentships); ?></div>
+			<div id="studentships"><?php echo display_studentships($studentships,"admin"); ?></div>
 			</div>
-			<script language="javascript">
-			var studentships = new ActiveDataEntryProcessor({
-				url : '<?php echo webservice_url("mspr-admin"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=studentships',
-				data_destination: $('studentships'),
-				new_form: $('add_studentship_form'),
-				remove_forms_selector: '.remove_studentship_form',
-				new_button: $('add_studentship_link'),
-				hide_button: $('hide_studentship')
-		
-			});
-			
-			</script>
 		</div>
 
 		<div class="section">
 
 			<h3 title="International Activities" class="collapsable collapsed">International Activities</h3>
 			<div id="international-activities">
-				<script>
-					document.observe("dom:loaded",function() {
-						$('int_act_start').observe('focus',function(e) {
-							showCalendar('',this,this,null,null,0,30,1);
-						}.bind($('int_act_start')));
-						$('int_act_end').observe('focus',function(e) {
-							showCalendar('',this,this,null,null,0,30,1);
-						}.bind($('int_act_end')));
-					});
-				</script>
-				
 					<div id="add_int_act_link" style="float: right;<?php if ($show_int_act_form) { echo "display:none;"; }   ?>">
 					<ul class="page-action">
 						<li><a id="add_int_act" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&show=int_act_form&id=<?php echo $PROXY_ID; ?>" class="strong-green">Add Activity</a></li>
@@ -469,37 +457,13 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 				
 					<div class="clear">&nbsp;</div>
 				</form>
-				<div id="int_acts"><?php echo display_international_activities_admin($international_activities); ?></div>
-			
-				<script language="javascript">
-				var int_acts = new ActiveDataEntryProcessor({
-					url : '<?php echo webservice_url("mspr-admin"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=int_acts',
-					data_destination: $('int_acts'),
-					new_form: $('add_int_act_form'),
-					remove_forms_selector: '.remove_international_activity_form',
-					new_button: $('add_int_act_link'),
-					hide_button: $('hide_int_act')
-			
-				});
-				
-				</script>
+				<div id="int_acts"><?php echo display_international_activities($international_activities,"admin"); ?></div>
 			</div>
 		</div>
 		
 		<div class="section">
 			<h3 title="Observerships" class="collapsable collapsed">Observerships</h3>
 			<div id="observerships">
-				<script>
-					document.observe("dom:loaded",function() {
-						$('observership_start').observe('focus',function(e) {
-							showCalendar('',this,this,null,null,0,30,1);
-						}.bind($('observership_start')));
-						$('observership_end').observe('focus',function(e) {
-							showCalendar('',this,this,null,null,0,30,1);
-						}.bind($('observership_end')));
-					});
-				</script>
-				
 				<div id="add_observership_link" style="float: right;<?php if ($show_observership_form) { echo "display:none;"; }   ?>">
 					<ul class="page-action">
 						<li><a id="add_observership" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&show=observership_form&id=<?php echo $PROXY_ID; ?>" class="strong-green">Add Observership</a></li>
@@ -534,7 +498,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 							<tr>
 								<td>&nbsp;</td>
 								<td><label class="form-required" for="title">Title/Discipline:</label></td>
-	 							<td><input name="title"></input> <span class="content-small"><strong>Example:</strong> Family Medicine</span></td>
+	 							<td><input name="title"></input> <span class="content-small"><strong>Example:</strong> Family Medicine Observership</span></td>
 							</tr>	
 							<tr>
 								<td>&nbsp;</td>
@@ -566,20 +530,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 				
 					<div class="clear">&nbsp;</div>
 				</form>
-				<div id="observerships"><?php echo display_observerships_admin($observerships); ?></div>
-			
-				<script language="javascript">
-				var observerships = new ActiveDataEntryProcessor({
-					url : '<?php echo webservice_url("mspr-admin"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=observerships',
-					data_destination: $('observerships'),
-					new_form: $('add_observership_form'),
-					remove_forms_selector: '.remove_observership_form',
-					new_button: $('add_observership_link'),
-					hide_button: $('hide_observership')
-			
-				});
-				
-				</script>
+				<div id="observerships"><?php echo display_observerships($observerships,"admin"); ?></div>
 			</div>
 		</div>
 		
@@ -622,17 +573,17 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 							<tr>
 								<td>&nbsp;</td>
 								<td><label class="form-required" for="group_name">Group Name:</label></td>
-								<td><input name="group_name"></input></td>
+								<td><input name="group_name"></input> <span class="content-small"><strong>Example</strong>: Emergency Medicine Elective</span></td>
 							</tr>	
 							<tr>
 								<td>&nbsp;</td>
 								<td><label class="form-required" for="university">University:</label></td>
-								<td><input name="university" value="Queen's University"></input></td>
+								<td><input name="university" value="Queen's University"></input> <span class="content-small"><strong>Example</strong>: Queen's University</span></td>
 							</tr>	
 							<tr>
 								<td>&nbsp;</td>
 								<td><label class="form-required" for="location">Location:</label></td>
-								<td><input name="location" value="Kingston, ON"></input></td>
+								<td><input name="location" value="Kingston, ON"></input> <span class="content-small"><strong>Example</strong>: Kingston, Ontario</span></td>
 							</tr>	
 							<tr>
 								<td>&nbsp;</td>
@@ -693,20 +644,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 				
 					<div class="clear">&nbsp;</div>
 				</form>
-				<div id="student_run_electives"><?php echo display_student_run_electives_admin($student_run_electives); ?></div>
-			
-				<script language="javascript">
-				var student_run_electives = new ActiveDataEntryProcessor({
-					url : '<?php echo webservice_url("mspr-admin"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=student_run_electives',
-					data_destination: $('student_run_electives'),
-					new_form: $('add_student_run_elective_form'),
-					remove_forms_selector: '.remove_student_run_elective_form',
-					new_button: $('add_student_run_elective_link'),
-					hide_button: $('hide_student_run_elective')
-			
-				});
-				
-				</script>
+				<div id="student_run_electives"><?php echo display_student_run_electives($student_run_electives,"admin"); ?></div>
 			</div>
 		</div>
 		
@@ -783,20 +721,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 				
 					<div class="clear">&nbsp;</div>
 				</form>
-				<div id="internal_awards"><?php echo display_internal_awards_admin($internal_awards); ?></div>
-			
-				<script language="javascript">
-				var internal_awards = new ActiveDataEntryProcessor({
-					url : '<?php echo webservice_url("mspr-admin"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=internal_awards',
-					data_destination: $('internal_awards'),
-					new_form: $('add_internal_award_form'),
-					remove_forms_selector: '.remove_internal_award_form',
-					new_button: $('add_internal_award_link'),
-					hide_button: $('hide_internal_award')
-			
-				});
-				
-				</script>
+				<div id="internal_awards"><?php echo display_internal_awards($internal_awards,"admin"); ?></div>
 			</div>
 		</div>
 	</div>
@@ -843,6 +768,174 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 			</div>
 		</div>
 	</div>
+	
 </div>
+
+<div id="reject-submission-box" class="modal-confirmation" style="height: 300px">
+	<h1>Reject Submission</h1>
+	<div class="display-notice">
+		Please confirm that you wish to <strong>reject</strong> this submission.
+	</div>
+	<p>
+		<label for="reject-submission-details" class="form-required">Please provide an explanation for this decision:</label><br />
+		<textarea id="reject-submission-details" name="reject_verify_details" style="width: 99%; height: 75px" cols="45" rows="5"></textarea>
+	</p>
+	<div class="footer">
+		<button class="left modal-close"">Close</button>
+		<button class="right modal-confirm" id="reject-submission-confirm">Reject</button>
+	</div>
+</div>
+
+<script type="text/javascript">
+
+document.observe('dom:loaded', function() {
+	try {
+	var reject_modal = new Control.Modal('reject-submission-box', {
+		overlayOpacity:	0.75,
+		closeOnClick:	'overlay',
+		className:		'modal-confirmation',
+		fade:			true,
+		fadeDuration:	0.30
+	});
+	
+	var api_url = '<?php echo webservice_url("mspr-admin"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=';
+	var contributions = new ActiveApprovalProcessor({
+		url : api_url + 'contributions',
+		data_destination: $('contributions-to-medical-school_section'),
+		action_form_selector: '#contributions-to-medical-school_section .entry form',
+		section: "contributions",
+		reject_modal: reject_modal
+	});
+
+	var critical_enquiry = new ActiveApprovalProcessor({
+		url : api_url + 'critical_enquiry',
+		data_destination: $('critical_enquiry'),
+		action_form_selector: '#critical_enquiry .entry form',
+		section: "critical_enquiry",
+		reject_modal: reject_modal
+	});
+
+	var community_health_and_epidemiology = new ActiveApprovalProcessor({
+		url : api_url + 'community_health_and_epidemiology',
+		data_destination: $('community_health_and_epidemiology'),
+		action_form_selector: '#community_health_and_epidemiology .entry form',
+		section: "community_health_and_epidemiology",
+		reject_modal: reject_modal
+	});
+	
+	var research_citations = new ActiveApprovalProcessor({
+		url : api_url + 'research_citations',
+		data_destination: $('research_section'),
+		action_form_selector: '#research_section .entry form',
+		section: "research",
+		reject_modal: reject_modal
+	});
+
+	var external_awards = new ActiveApprovalProcessor({
+		url : api_url + 'external_awards',
+		data_destination: $('external_awards'),
+		action_form_selector: '#external_awards .entry form',
+		section: "external_awards",
+		reject_modal: reject_modal
+	});
+
+	var clineval_comments = new ActiveDataEntryProcessor({
+		url : api_url + 'clineval',
+		data_destination: $('clinical_performance_eval_comments'),
+		new_form: $('add_clineval_form'),
+		remove_forms_selector: '#clinical_performance_eval_comments .entry form',
+		new_button: $('add_clineval_link'),
+		hide_button: $('hide_clineval')
+		
+	});
+	
+	var studentships = new ActiveDataEntryProcessor({
+		url : api_url + 'studentships',
+		data_destination: $('studentships'),
+		new_form: $('add_studentship_form'),
+		remove_forms_selector: '#studentships .entry form',
+		new_button: $('add_studentship_link'),
+		hide_button: $('hide_studentship')
+
+	});
+
+	$('int_act_start').observe('focus',function(e) {
+		showCalendar('',this,this,null,null,0,30,1);
+	}.bind($('int_act_start')));
+	$('int_act_end').observe('focus',function(e) {
+		showCalendar('',this,this,null,null,0,30,1);
+	}.bind($('int_act_end')));
+
+	var int_acts = new ActiveDataEntryProcessor({
+		url : api_url + 'int_acts',
+		data_destination: $('int_acts'),
+		new_form: $('add_int_act_form'),
+		remove_forms_selector: '#int_acts .entry form',
+		new_button: $('add_int_act_link'),
+		hide_button: $('hide_int_act')
+
+	});
+	
+	$('observership_start').observe('focus',function(e) {
+		showCalendar('',this,this,null,null,0,30,1);
+	}.bind($('observership_start')));
+	$('observership_end').observe('focus',function(e) {
+		showCalendar('',this,this,null,null,0,30,1);
+	}.bind($('observership_end')));
+	
+	var observerships = new ActiveDataEntryProcessor({
+		url : api_url + 'observerships',
+		data_destination: $('observerships'),
+		new_form: $('add_observership_form'),
+		remove_forms_selector: '#observerships .entry form',
+		new_button: $('add_observership_link'),
+		hide_button: $('hide_observership'),
+		section: "observerships"
+
+	});
+	var student_run_electives = new ActiveDataEntryProcessor({
+		url : api_url + 'student_run_electives',
+		data_destination: $('student_run_electives'),
+		new_form: $('add_student_run_elective_form'),
+		remove_forms_selector: '#student_run_electives .entry form',
+		new_button: $('add_student_run_elective_link'),
+		hide_button: $('hide_student_run_elective')
+
+	});
+
+	var internal_awards = new ActiveDataEntryProcessor({
+		url : api_url + 'internal_awards',
+		data_destination: $('internal_awards'),
+		new_form: $('add_internal_award_form'),
+		remove_forms_selector: '#internal_awards .entry form',
+		new_button: $('add_internal_award_link'),
+		hide_button: $('hide_internal_award')
+
+	});
+
+	}catch(e) {
+		clog(e);
+	}
+	
+	/**
+	$('task_verify_form').observe('submit',function (e) {
+		if ($('task_verify_no').checked) {
+			Event.stop(e);
+			verify_modal.open();
+		}
+	});
+	
+
+	Event.observe('reject-submission-confirm', 'click', function() {
+		$('task_verify').setValue('0');
+
+		if ($('reject-submission-details')) {
+			$('task_verify_details').setValue($('reject-submission-details').getValue());
+		}
+		$('decline_verification_form').submit();
+	});*/
+});
+</script>
 <?php 
+	}
 }

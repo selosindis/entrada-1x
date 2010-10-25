@@ -80,7 +80,7 @@ if (!defined("IN_PROFILE")) {
 		
 	<h1 style="margin-top: 0px">Privacy Level Setting</h1>
 	<form action="<?php echo ENTRADA_URL; ?>/profile?section=privacy" method="post" enctype="multipart/form-data" accept="<?php echo ((@is_array($VALID_MIME_TYPES)) ? implode(",", array_keys($VALID_MIME_TYPES)) : ""); ?>">
-		<input type="hidden" name="action" value="profile-update" />
+		<input type="hidden" name="action" value="privacy-update" />
 		<input type="hidden" name="tab" value="privacy-level" />
 		<table style="width: 100%" cellspacing="1" cellpadding="1" border="0" summary="My <?php echo APPLICATION_NAME;?> Profile Privacy">
 			<colgroup>

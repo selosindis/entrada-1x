@@ -103,15 +103,5 @@
 			remove_entry_remove_listeners();
 		}
 		
-		function init() {
-			add_entry_remove_listeners();
-		}
-		
-		if (document.loaded) {
-			init();
-		} else {
-			document.observe('dom:loaded', function () { 
-				init();
-			});
-		}
+		add_entry_remove_listeners();
 	}

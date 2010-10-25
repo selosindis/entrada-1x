@@ -165,18 +165,18 @@ if (!defined("PARENT_INCLUDED")) {
 		new_sidebar_item("Display Style", $sidebar_html, "display-style", "open");
 	}
 	
-	$ORGANISATION_LIST	= array();
-	$query		= "SELECT `organisation_id`, `organisation_title` FROM `".AUTH_DATABASE."`.`organisations` ORDER BY `organisation_title` ASC";
-	$results	= $db->GetAll($query);
+	$organisation_list = array();
+	$query = "SELECT `organisation_id`, `organisation_title` FROM `".AUTH_DATABASE."`.`organisations` ORDER BY `organisation_title` ASC";
+	$results = $db->GetAll($query);
 	if ($results) {
 		foreach ($results as $result) {
 			if ($ENTRADA_ACL->amIAllowed("resourceorganisation".$result["organisation_id"], "read")) {
-				$ORGANISATION_LIST[$result["organisation_id"]] = html_encode($result["organisation_title"]);
+				$organisation_list[$result["organisation_id"]] = html_encode($result["organisation_title"]);
 			}
 		}
 	}
 	
-	if (isset($_GET["org"]) && ($organisation = ((int)$_GET["org"])) && array_key_exists($organisation, $ORGANISATION_LIST)) {
+	if (isset($_GET["org"]) && ($organisation = ((int) $_GET["org"])) && array_key_exists($organisation, $organisation_list)) {
 		$ORGANISATION_ID = $organisation;
 		$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["organisation_id"] = $ORGANISATION_ID;
 	} else {
@@ -188,11 +188,11 @@ if (!defined("PARENT_INCLUDED")) {
 		}
 	}
 	
-	if ($ORGANISATION_LIST && count($ORGANISATION_LIST) > 1) {
-		$sidebar_html  = "<ul class=\"menu\">\n";
-		foreach ($ORGANISATION_LIST as $key => $organisation_title) {
+	if ($organisation_list && count($organisation_list) > 1) {
+		$sidebar_html = "<ul class=\"menu\">\n";
+		foreach ($organisation_list as $key => $organisation_title) {
 			if ($key == $ORGANISATION_ID) {
-				$sidebar_html .= "	<li class=\"on\"><a href=\"".ENTRADA_URL."/events?".replace_query(array("org" => $key))."\">".html_encode($organisation_title)."</a></li>\n";
+				$sidebar_html .= "<li class=\"on\"><a href=\"".ENTRADA_URL."/events?".replace_query(array("org" => $key))."\">".html_encode($organisation_title)."</a></li>\n";
 			} else {
 				$sidebar_html .= "<li class=\"off\"><a href=\"".ENTRADA_URL."/events?".replace_query(array("org" => $key))."\">".html_encode($organisation_title)."</a></li>\n";
 			}
@@ -461,6 +461,7 @@ if (!defined("PARENT_INCLUDED")) {
 										ON b.`event_id` = a.`event_id`
 										LEFT JOIN `courses` AS c
 										ON a.`course_id` = c.`course_id`
+										AND c.`organisation_id` = ".$db->qstr($event_info["organisation_id"])."
 										WHERE (a.`event_start` BETWEEN ".$db->qstr($event_info["event_start"])." AND ".$db->qstr(($event_info["event_finish"] - 1)).")
 										AND c.`course_active` = '1'
 										AND a.`event_id` <> ".$db->qstr($event_info["event_id"])."
@@ -620,7 +621,7 @@ if (!defined("PARENT_INCLUDED")) {
 					echo "		</table>\n";
 					echo "	</div>\n";
 
-					$query					= "	SELECT b.`objective_name`
+					$query					= "	SELECT b.`objective_id`, b.`objective_name`
 												FROM `event_objectives` AS a
 												LEFT JOIN `global_lu_objectives` AS b
 												ON b.`objective_id` = a.`objective_id`
@@ -680,9 +681,27 @@ if (!defined("PARENT_INCLUDED")) {
 						if ($show_clinical_presentations) {
 							echo "	<div class=\"section-holder\">\n";
 							echo "		<h3>Clinical Presentations</h3>\n";
-							foreach ($clinical_presentations as $key => $result) {
-								echo (($key) ? ", " : "").$result["objective_name"];
+							echo "<ul class=\"objectives\">\n";
+							$HEAD[] = "
+								<script type=\"text/javascript\" defer=\"defer\">
+								Event.observe(window, 'load', function() {";
+							foreach ($clinical_presentations as $result) {
+								$HEAD[] = "
+									new Control.Modal($('objective-".$result["objective_id"]."-details'), {
+										overlayOpacity:	0.75,
+										closeOnClick:	'overlay',
+										className:		'modal-description',
+										fade:			true,
+										fadeDuration:	0.30
+									});";
+								if ($result["objective_name"]) {
+									echo "<li><a id=\"objective-".$result["objective_id"]."-details\" style=\"text-decoration: none;\" href=\"".ENTRADA_URL."/objectives?section=objective-details&api=true&oid=".$result["objective_id"]."&cid=".$event_info["course_id"]."\">".$result["objective_name"]."</a></li>\n";
+								}
 							}
+							$HEAD[] = "
+								});
+								</script>";
+							echo "</ul>\n";
 							echo "	</div>\n";
 						}
 						
@@ -1059,7 +1078,20 @@ if (!defined("PARENT_INCLUDED")) {
 		/**
 		 * Fetch all of the events that apply to the current filter set.
 		 */
-		$learning_events = events_fetch_filtered_events();
+		$learning_events = events_fetch_filtered_events(
+				$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"],
+				$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"],
+				$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"],
+				$ORGANISATION_ID,
+				$_SESSION[APPLICATION_IDENTIFIER]["events"]["sb"],
+				$_SESSION[APPLICATION_IDENTIFIER]["events"]["so"],
+				$_SESSION[APPLICATION_IDENTIFIER]["events"]["dtype"],
+				$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dstamp"],
+				0,
+				$_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"],
+				true,
+				(isset($_GET["pv"]) ? (int) trim($_GET["pv"]) : 1),
+				$_SESSION[APPLICATION_IDENTIFIER]["events"]["pp"]);
 
 		echo "<h1>View Events</h1>";
 
@@ -1073,7 +1105,7 @@ if (!defined("PARENT_INCLUDED")) {
 		 */
 		events_output_calendar_controls();
 
-		if (count($learning_events["events"])) {
+		if (!empty($learning_events["events"])) {
 			?>
 			<div class="tableListTop">
 				<img src="<?php echo ENTRADA_URL; ?>/images/lecture-info.gif" width="15" height="15" alt="" title="" style="vertical-align: middle" />
@@ -1116,7 +1148,7 @@ if (!defined("PARENT_INCLUDED")) {
 				</thead>
 				<tbody>
 					<?php
-					$rid = 0;
+					$rid = $learning_events["rid"];
 					$count_modified = 0;
 					$count_grad_year = 0;
 					$count_group = 0;

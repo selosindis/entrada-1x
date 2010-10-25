@@ -54,6 +54,41 @@ if ($result) {
 		$community_events			= "";
 			
 		/**
+		 * If the events module is enabled, display the event details on this Dashboard.
+		 */
+		$query			= "	SELECT a.*, b.* FROM `community_modules` as a
+							LEFT JOIN `community_page_options` as b
+							ON a.`community_id` = b.`community_id`
+							WHERE a.`community_id` = ".$db->qstr($COMMUNITY_ID)." 
+							AND a.`module_id` = '1' 
+							AND a.`module_active` = '1'
+							AND b.`option_title` = 'show_events'
+							AND b.`option_value` = '1'";
+		$events_enabled	= $db->GetRow($query);
+		if ($events_enabled) {
+			/**
+			 * Fetch all community events and put the HTML output in a variable.
+			 */
+			$query		= "
+						SELECT a.*, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`username`, c.`page_url`
+						FROM `community_events` AS a
+						LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
+						ON a.`proxy_id` = b.`id`
+						LEFT JOIN `community_pages` AS c
+						ON c.`cpage_id` = a.`cpage_id`
+						WHERE a.`community_id` = ".$db->qstr($COMMUNITY_ID)."
+						AND c.`page_active` = '1'
+						AND c.`cpage_id` IN ('".implode("', '", $COMMUNITY_PAGES["available_ids"])."')
+						AND a.`event_active` = '1'
+						AND (a.`release_date` = '0' OR a.`release_date` <= '".time()."')
+						AND (a.`release_until` = '0' OR a.`release_until` > '".time()."')
+						AND (a.`event_finish` >= '".time()."')
+						AND (a.`event_start` <= '".strtotime("+1 month")."')
+						ORDER BY a.`event_start` DESC
+						LIMIT 0, 10";
+			$events	= $db->GetAll($query);
+		}
+		/**
 		 * If the announcement module is enabled, display the announcements details on this Dashboard.
 		 */
 		$query					= "	SELECT a.* FROM `community_modules` as a
@@ -97,7 +132,7 @@ if ($result) {
 						$community_announcements .= "<h3>".date("l F dS Y", $announcement["release_date"])."</h3>\n";
 						$community_announcements .= "<ul class=\"announcements\">\n";
 					}
-					$community_announcements .= "<li".(!($key % 2) ? " style=\"background-color: #F7F7F7\"" : "")."><a href=\"".COMMUNITY_RELATIVE.$COMMUNITY_URL.":".$announcement["page_url"]."?id=".$announcement["cannouncement_id"]."\">".html_encode(limit_chars($announcement["announcement_title"], 46))."</a></li>\n";
+					$community_announcements .= "<li".(!($key % 2) ? " class=\"odd-announcement\"" : "")."><a href=\"".COMMUNITY_RELATIVE.$COMMUNITY_URL.":".$announcement["page_url"]."?id=".$announcement["cannouncement_id"]."\">".html_encode(limit_chars($announcement["announcement_title"], (isset($events) && $events ? 46: 108)))."</a></li>\n";
 				}
 				$community_announcements .= "</ul>\n";
 			}
@@ -105,40 +140,7 @@ if ($result) {
 
 		}
 		
-		/**
-		 * If the events module is enabled, display the event details on this Dashboard.
-		 */
-		$query			= "	SELECT a.*, b.* FROM `community_modules` as a
-							LEFT JOIN `community_page_options` as b
-							ON a.`community_id` = b.`community_id`
-							WHERE a.`community_id` = ".$db->qstr($COMMUNITY_ID)." 
-							AND a.`module_id` = '1' 
-							AND a.`module_active` = '1'
-							AND b.`option_title` = 'show_events'
-							AND b.`option_value` = '1'";
-		$events_enabled	= $db->GetRow($query);
 		if ($events_enabled) {
-			/**
-			 * Fetch all community events and put the HTML output in a variable.
-			 */
-			$query		= "
-						SELECT a.*, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`username`, c.`page_url`
-						FROM `community_events` AS a
-						LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
-						ON a.`proxy_id` = b.`id`
-						LEFT JOIN `community_pages` AS c
-						ON c.`cpage_id` = a.`cpage_id`
-						WHERE a.`community_id` = ".$db->qstr($COMMUNITY_ID)."
-						AND c.`page_active` = '1'
-						AND c.`cpage_id` IN ('".implode("', '", $COMMUNITY_PAGES["available_ids"])."')
-						AND a.`event_active` = '1'
-						AND (a.`release_date` = '0' OR a.`release_date` <= '".time()."')
-						AND (a.`release_until` = '0' OR a.`release_until` > '".time()."')
-						AND (a.`event_finish` >= '".time()."')
-						AND (a.`event_start` <= '".strtotime("+1 month")."')
-						ORDER BY a.`event_start` DESC
-						LIMIT 0, 10";
-			$events	= $db->GetAll($query);
 			if ($events) {
 				$community_events .= "<h1 style=\"font-size: 16px;\">Upcoming Events</h1>\n";
 				$last_date = 0;
@@ -153,7 +155,7 @@ if ($result) {
 						$community_events .= "<h3>".date("l F dS Y", $event["event_start"])."</h3>\n";
 						$community_events .= "<ul class=\"announcements\">\n";
 					}
-					$community_events .= "<li".(!($key % 2) ? " style=\"background-color: #F7F7F7\"" : "")."><a href=\"".COMMUNITY_RELATIVE.$COMMUNITY_URL.":".$event["page_url"]."?id=".$event["cevent_id"]."\">".html_encode($event["event_title"])."</a></li>\n";
+					$community_events .= "<li".(!($key % 2) ? " class=\"odd-announcement\"" : "")."><a href=\"".COMMUNITY_RELATIVE.$COMMUNITY_URL.":".$event["page_url"]."?id=".$event["cevent_id"]."\">".html_encode($event["event_title"])."</a></li>\n";
 				}
 
 				$community_events .= "</ul>\n";

@@ -41,6 +41,7 @@ if (!defined("PARENT_INCLUDED")) {
 } else {
 	$BREADCRUMB[]	= array("url" => ENTRADA_URL."/clerkship", "title" => "Clerkship");
 	define("IN_CLERKSHIP",	true);
+	define("IN_ELECTIVES",	true);
 	
 	if (($router) && ($router->initRoute())) {
 		$PREFERENCES = preferences_load($MODULE);

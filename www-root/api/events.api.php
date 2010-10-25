@@ -26,9 +26,14 @@
 require_once("init.inc.php");
 
 $event_id = 0;
+$dashboard_result_id = false;
 
 if ((isset($_GET["id"])) && ($tmp_input = clean_input($_GET["id"], array("trim", "int")))) {
 	$event_id = $tmp_input;
+}
+
+if (isset($_GET["drid"])) {
+	$dashboard_result_id = clean_input($_GET["drid"], array("trim", "int"));
 }
 
 if (($event_id) && (isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
@@ -46,12 +51,11 @@ if (($event_id) && (isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAu
 	</head>
 	<body>
 	<?php
-	$query		= "	SELECT a.*, b.`organisation_id`
-					FROM `events` AS a
-					LEFT JOIN `courses` AS b
-					ON b.`course_id` = a.`course_id`
-					WHERE a.`event_id` = ".$db->qstr($event_id)."
-					AND b.`course_active` = '1'";
+	$query = "	SELECT a.*, b.`course_name`, b.`organisation_id`
+				FROM `events` AS a
+				LEFT JOIN `courses` AS b
+				ON b.`course_id` = a.`course_id`
+				WHERE a.`event_id` = ".$db->qstr($event_id);
 	$event_info	= $db->GetRow($query);
 	if ($event_info) {
 		$LASTUPDATED = $event_info["updated_date"];
@@ -79,6 +83,9 @@ if (($event_id) && (isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAu
 				<div id="eventToolTip">
 					<div class="colLeft">
 						<table style="width: 100%" cellspacing="1" cellpadding="1" border="0">
+						<tr>
+							<td colspan="2" style="padding-bottom: 5px"><a href="<?php echo ENTRADA_URL; ?>/courses?id=<?php echo $event_info["course_id"]; ?>" target="_blank" style="font-weight: bold"><?php echo html_encode($event_info["course_name"]); ?></a></td>
+						</tr>
 						<tr>
 							<td><strong>Date &amp; Time</strong></td>
 							<td><?php echo date(DEFAULT_DATE_FORMAT, $event_info["event_start"]); ?></td>
@@ -111,7 +118,7 @@ if (($event_id) && (isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAu
 						</ul>
 					</div>
 					<div style="clear: both; text-align: center; padding-top: 15px">
-						<a href="<?php echo ENTRADA_URL; ?>/events?id=<?php echo $event_id; ?>" style="font-weight: bold; font-size: 12px">Review Learning Event</a>
+						<a href="<?php echo ENTRADA_URL; ?>/events?<?php echo (($dashboard_result_id === 0 || $dashboard_result_id >= 1) ? "drid=" . $dashboard_result_id : "id=" . $event_id); ?>" style="font-weight: bold; font-size: 12px">Review Learning Event</a>
 					</div>
 				</div>
 				<?php

@@ -85,8 +85,8 @@ function add_mspr_management_sidebar () {
 	$sidebar_html  = "<ul class=\"menu\">";
 	$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/users/manage/students?section=mspr-options&id=".$PROXY_ID."\">MSPR Options</a></li>\n";
 	$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/users/manage/students?section=mspr-revisions&id=".$PROXY_ID."\">MSPR File Revisions</a></li>\n";
-	$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/mspr?year=".$year ."\">Manage Class of ". $year ." MSPRs</a></li>\n";
-	$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/mspr?all\">Manage All MSPRs Requiring Attention</a></li>\n";
+	$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/mspr?mode=year&year=".$year ."\">Manage Class of ". $year ." MSPRs</a></li>\n";
+	$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/mspr?mode=all\">Manage All MSPRs Requiring Attention</a></li>\n";
 	
 	$sidebar_html .= "</ul>";
 

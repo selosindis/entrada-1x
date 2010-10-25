@@ -56,8 +56,21 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 	/**
 	 * Fetch all of the events that apply to the current filter set.
 	 */
-	$learning_events = events_fetch_filtered_events();
-	
+	$learning_events = events_fetch_filtered_events(
+			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"],
+			$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"],
+			$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"],
+			$ORGANISATION_ID,
+			$_SESSION[APPLICATION_IDENTIFIER]["events"]["sb"],
+			$_SESSION[APPLICATION_IDENTIFIER]["events"]["so"],
+			$_SESSION[APPLICATION_IDENTIFIER]["events"]["dtype"],
+			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dstamp"],
+			0,
+			$_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"],
+			true,
+			(isset($_GET["pv"]) ? (int) trim($_GET["pv"]) : 1),
+			$_SESSION[APPLICATION_IDENTIFIER]["events"]["pp"]);
+
 	echo "<h1>".$MODULES[strtolower($MODULE)]["title"]."</h1>";
 
 	/**
@@ -81,9 +94,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 	 */
 	events_output_calendar_controls("admin");
 
-	if (count($learning_events["events"])) {
-		if ($ENTRADA_ACL->amIAllowed("event", "delete", false)) : ?>
-		<form action="<?php echo ENTRADA_URL; ?>/admin/events?section=delete" method="post">
+	if (!empty($learning_events["events"])) {
+		if ($ENTRADA_ACL->amIAllowed("event", "delete", false) or $ENTRADA_ACL->amIAllowed("event", "create", false)) : ?>
+		<form name="frmSelect" action="<?php echo ENTRADA_URL; ?>/admin/events?section=delete" method="post">
 		<?php endif; ?>
 		<div class="tableListTop">
 			<img src="<?php echo ENTRADA_URL; ?>/images/lecture-info.gif" width="15" height="15" alt="" title="" style="vertical-align: middle" />
@@ -124,13 +137,24 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					<td class="attachment">&nbsp;</td>
 				</tr>
 			</thead>
-			<?php if ($ENTRADA_ACL->amIAllowed("event", "delete", false)) : ?>
+			<?php if ($ENTRADA_ACL->amIAllowed("event", "delete", false) or $ENTRADA_ACL->amIAllowed("event", "create", false)) : ?>
 			<tfoot>
 				<tr>
 					<td></td>
-					<td colspan="5" style="padding-top: 10px">
-						<input type="submit" class="button" value="Delete Selected" />
+					<?php if ($ENTRADA_ACL->amIAllowed("event", "delete", false)) { ?>
+						<td style="padding-top: 10px">
+							<input type="submit" class="button" value="Delete Selected" />
+						</td>
+					<?php } else {
+						echo "<td></td>";
+					}
+					if ($ENTRADA_ACL->amIAllowed("event", "create", false)) { ?>
+						<td colspan="3" style="padding-top: 10px">
+						<input type="submit" class="button" value="Copy Selected"  onClick="document.frmSelect.action ='<?php echo ENTRADA_URL; ?>/admin/events?section=copy'" />
 					</td>
+					<?php } else {
+						echo '<td colspan="3" ></td>';
+					} ?>
 				</tr>
 			</tfoot>
 			<?php endif; ?>
@@ -176,7 +200,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				}
 
 				echo "<tr id=\"event-".$result["event_id"]."\" class=\"event".((!$url) ? " np" : ((!$accessible) ? " na" : (($result["audience_type"] == "proxy_id") ? " individual" : "")))."\">\n";
-				echo "	<td class=\"modified\">".(($administrator) ? "<input type=\"checkbox\" name=\"delete[]\" value=\"".$result["event_id"]."\" />" : "<img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"19\" height=\"19\" alt=\"\" title=\"\" />")."</td>\n";
+				echo "	<td class=\"modified\">".(($administrator) ? "<input type=\"checkbox\" name=\"checked[]\" value=\"".$result["event_id"]."\" />" : "<img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"19\" height=\"19\" alt=\"\" title=\"\" />")."</td>\n";
 				echo "	<td class=\"date".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Event Date\">" : "").date(DEFAULT_DATE_FORMAT, $result["event_start"]).(($url) ? "</a>" : "")."</td>\n";
 				echo "	<td class=\"phase".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Intended For Phase ".html_encode($result["event_phase"])."\">" : "").html_encode($result["event_phase"]).(($url) ? "</a>" : "")."</td>\n";
 				echo "	<td class=\"teacher".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Primary Teacher: ".html_encode($result["fullname"])."\">" : "").html_encode($result["fullname"]).(($url) ? "</a>" : "")."</td>\n";

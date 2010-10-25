@@ -90,7 +90,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_POLLS"))) {
 							$PROCESSED_ANSWERS[4] = $poll_answer_5;
 						}
 
-						$display_date = validate_calendar("poll", true, false);
+						$display_date = validate_calendars("poll", true, false);
 						if((isset($display_date["start"])) && ((int) $display_date["start"])) {
 							$PROCESSED["poll_from"] = (int) $display_date["start"];
 						} else {

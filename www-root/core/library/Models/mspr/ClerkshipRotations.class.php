@@ -69,7 +69,7 @@ class ClerkshipElectivesCompleted extends ClerkshipRotations {
 		global $db;
 		$user_id = $user->getID();
 		$completed_cutoff = strtotime(CLERKSHIP_COMPLETED_CUTOFF.", ".date("Y"));
-		$query		= "	SELECT a.`event_title`, a.`event_start`, a.`event_finish`, c.`preceptor_first_name`, c.`preceptor_last_name`, c.`city`, c.`prov_state`, d.`category_name` AS `department_title`, e.`discipline`, f.`school_title`
+		$query		= "	SELECT a.`event_title`, a.`event_start`, a.`event_finish`, c.`preceptor_first_name`, c.`preceptor_last_name`, c.`city`, c.`prov_state`, d.`category_name` AS `department_title`, c.`sub_discipline`, e.`discipline`, f.`school_title`
 										FROM `".CLERKSHIP_DATABASE."`.`events` AS a
 										LEFT JOIN `".CLERKSHIP_DATABASE."`.`event_contacts` AS b
 										ON b.`event_id` = a.`event_id`
@@ -106,8 +106,18 @@ class ClerkshipElectivesCompleted extends ClerkshipRotations {
 				if (preg_match("/\b[Dd][Rr]\./", $supervisor) == 0) {
 					$supervisor = "Dr. ".$supervisor;
 				}
+				$title_parts = array();
+				$title_parts[] = str_replace($ugly, "", $result["department_title"]);
+				if (trim($result["discipline"]) != "") {
+					$title_parts[] = str_replace($ugly, "", $result["discipline"]);
+				}
+				if (trim($result['sub_discipline']) != "") {
+					$title_parts[] = str_replace($ugly, "", $result["sub_discipline"]);
+				}
 				
-				$title = str_replace($ugly, "", $result["department_title"]).((trim($result["discipline"]) != "") ? " / ".str_replace($ugly, "", $result["discipline"]) : "");
+				$title = implode(" / ", $title_parts);
+				
+				
 				$elective = new ClerkshipElective($title, $location, $supervisor, $result['event_start'], $result['event_finish'], true);
 				$electives[] = $elective;
 			}

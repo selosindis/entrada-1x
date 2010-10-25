@@ -41,6 +41,7 @@ class MSPRAdminController {
 			$action = clean_input((isset($_POST['action']) ? $_POST['action'] : ""), array("lower"));
 			$comment = clean_input((isset($_POST['comment']) ? $_POST['comment'] : ""), array("html_encode"));
 			$user_id = clean_input((isset($_POST['user_id']) ? $_POST['user_id'] : 0), array("int"));
+			
 			if (!$action) {
 				add_error($translator->translate("mspr_no_action"));
 			}
@@ -239,7 +240,7 @@ class MSPRAdminController {
 		}
 	}
 	
-	private function add_observerhip($user_id) {
+	private function add_observership($user_id) {
 		$translator = $this->_translator;
 		
 		$title = clean_input((isset($_POST['title']) ? $_POST['title'] : "" ),array("html_encode"));
@@ -250,7 +251,7 @@ class MSPRAdminController {
 		if ($user_id && $title && $site && $location && $start) {
 			$end = clean_input((isset($_POST['end']) ? $_POST['end'] : "" ),array("int"));
 							
-			Observership::create($user, $title, $site, $location, $start, $end);
+			Observership::create($user_id, $title, $site, $location, $start, $end);
 		} else {
 			add_error($translator->translate("mspr_insufficient_info"));
 		}
@@ -309,7 +310,7 @@ class MSPRAdminController {
 			$start_month = clean_input((isset($_POST['start_month']) ? $_POST['start_month'] : "" ),array("int"));
 			$end_month = clean_input((isset($_POST['end_month']) ? $_POST['end_month'] : "" ),array("int"));
 							
-			StudentRunElective::create($user, $group_name, $university, $location, $start_month, $start_year, $end_month, $end_year);
+			StudentRunElective::create($user_id, $group_name, $university, $location, $start_month, $start_year, $end_month, $end_year);
 		} else {
 			add_error($translator->translate("mspr_insufficient_info"));
 		}

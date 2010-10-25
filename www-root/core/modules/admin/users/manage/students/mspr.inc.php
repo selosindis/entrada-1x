@@ -398,7 +398,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 				
 				<div class="clear">&nbsp;</div>
 				<form id="add_int_act_form" name="add_int_act_form" action="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" method="post" <?php if (!$show_int_act_form) { echo "style=\"display:none;\""; }   ?> >
-					<input type="hidden" name="student_id" value="<?php echo $user->getID(); ?>"></input>
+					<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
 					<table class="mspr_form">
 						<colgroup>
 							<col width="3%"></col>
@@ -472,7 +472,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 				
 				<div class="clear">&nbsp;</div>
 				<form id="add_observership_form" name="add_observership_form" action="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" method="post" <?php if (!$show_observership_form) { echo "style=\"display:none;\""; }   ?> >
-					<input type="hidden" name="student_id" value="<?php echo $user->getID(); ?>"></input>
+					<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
 					<table class="mspr_form">
 						<colgroup>
 							<col width="3%"></col>

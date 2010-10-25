@@ -86,9 +86,9 @@ class Observership {
 		}
 	} 
 
-	public static function create($user, $title, $site, $location, $start, $end) {
+	public static function create($user_id, $title, $site, $location, $start, $end) {
 		global $db;
-		$student_id = $user->getID();
+		$student_id = $user_id;
 		$query = "insert into `student_observerships` (`student_id`, `title`,`site`,`location`,`start`, `end`) value (".$db->qstr($student_id).", ".$db->qstr($title).", ".$db->qstr($site).", ".$db->qstr($location).", ".$db->qstr($start).", ".$db->qstr($end).")";
 		if(!$db->Execute($query)) {
 			add_error("Failed to create new Observership.");

@@ -95,9 +95,12 @@ class ClerkshipElectivesCompleted extends ClerkshipRotations {
 		
 		if($results) {
 			foreach($results as $result) {
-				$location = (($result["school_title"]) ? ucwords(strtolower($result["school_title"])).", " : "").(($result["city"]) ? ucwords(strtolower($result["city"])).", " : "").(($result["prov_state"]) ? $result["prov_state"] : "");
+				$school_title = (($result["school_title"]) ? $result["school_title"].", " : "");
+				$city =  (($result["city"]) ? $result["city"].", " : "");
+				$prov_state = (($result["prov_state"]) ? $result["prov_state"] : "");
+				$location = $school_title.$city.$prov_state;
 				$supervisor = "Dr. ".(($result["preceptor_first_name"]) ? $result["preceptor_first_name"]." " : "").(($result["preceptor_last_name"]) ? $result["preceptor_last_name"]." " : "");
-				$title = str_replace($ugly, "", html_entity_decode(ucwords(strtolower($result["department_title"])))).((trim($result["discipline"]) != "") ? " / ".str_replace($ugly, "", html_entity_decode(ucwords(strtolower($result["discipline"])))) : "");
+				$title = str_replace($ugly, "", $result["department_title"]).((trim($result["discipline"]) != "") ? " / ".str_replace($ugly, "", $result["discipline"]) : "");
 				$elective = new ClerkshipElective($title, $location, $supervisor, $result['event_start'], $result['event_finish'], true);
 				$electives[] = $elective;
 			}

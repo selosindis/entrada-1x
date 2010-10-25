@@ -39,7 +39,7 @@ class MSPRAdminController {
 			
 			$entity_id = clean_input((isset($_POST['entity_id']) ? $_POST['entity_id'] : 0), array("int"));
 			$action = clean_input((isset($_POST['action']) ? $_POST['action'] : ""), array("lower"));
-			$comment = clean_input((isset($_POST['comment']) ? $_POST['comment'] : ""), array("html_encode"));
+			$comment = clean_input((isset($_POST['comment']) ? $_POST['comment'] : ""), array("notags"));
 			$user_id = clean_input((isset($_POST['user_id']) ? $_POST['user_id'] : 0), array("int"));
 			
 			if (!$action) {
@@ -243,9 +243,9 @@ class MSPRAdminController {
 	private function add_observership($user_id) {
 		$translator = $this->_translator;
 		
-		$title = clean_input((isset($_POST['title']) ? $_POST['title'] : "" ),array("html_encode"));
-		$site = clean_input((isset($_POST['site']) ? $_POST['site'] : "" ),array("html_encode"));
-		$location = clean_input((isset($_POST['location']) ? $_POST['location'] : "" ),array("html_encode"));
+		$title = clean_input((isset($_POST['title']) ? $_POST['title'] : "" ),array("notags"));
+		$site = clean_input((isset($_POST['site']) ? $_POST['site'] : "" ),array("notags"));
+		$location = clean_input((isset($_POST['location']) ? $_POST['location'] : "" ),array("notags"));
 		$start = clean_input((isset($_POST['start']) ? $_POST['start'] : "" ),array("int"));
 			
 		if ($user_id && $title && $site && $location && $start) {
@@ -259,7 +259,7 @@ class MSPRAdminController {
 	private function add_studentship($user_id) {
 		$translator = $this->_translator;
 		
-		$title = clean_input((isset($_POST['title']) ? $_POST['title'] : "" ),array("html_encode"));
+		$title = clean_input((isset($_POST['title']) ? $_POST['title'] : "" ),array("notags"));
 		$year = clean_input((isset($_POST['year']) ? $_POST['year'] : "" ), array("int"));
 		if ($title && $year && $user_id) {
 			Studentship::create($user_id,$title,$year);
@@ -271,8 +271,8 @@ class MSPRAdminController {
 	private function add_clineval($user_id) {
 		$translator = $this->_translator;
 		
-		$source = clean_input((isset($_POST['source']) ? $_POST['source'] : "" ),array("html_encode"));
-		$comment = clean_input((isset($_POST['text']) ? $_POST['text'] : "" ),array("html_encode"));
+		$source = clean_input((isset($_POST['source']) ? $_POST['source'] : "" ),array("notags"));
+		$comment = clean_input((isset($_POST['text']) ? $_POST['text'] : "" ),array("notags"));
 		if ($source && $comment && $user_id) {
 			ClinicalPerformanceEvaluation::create($user_id,$comment,$source);
 		} else {
@@ -283,9 +283,9 @@ class MSPRAdminController {
 	private function add_int_act($user_id) {
 		$translator = $this->_translator;
 		
-		$title = clean_input((isset($_POST['title']) ? $_POST['title'] : "" ),array("html_encode"));
-		$site = clean_input((isset($_POST['site']) ? $_POST['site'] : "" ),array("html_encode"));
-		$location = clean_input((isset($_POST['location']) ? $_POST['location'] : "" ),array("html_encode"));
+		$title = clean_input((isset($_POST['title']) ? $_POST['title'] : "" ),array("notags"));
+		$site = clean_input((isset($_POST['site']) ? $_POST['site'] : "" ),array("notags"));
+		$location = clean_input((isset($_POST['location']) ? $_POST['location'] : "" ),array("notags"));
 		$start = clean_input((isset($_POST['start']) ? $_POST['start'] : "" ),array("int"));
 			
 		if ($user_id && $title && $site && $location && $start) {
@@ -300,9 +300,9 @@ class MSPRAdminController {
 	private function add_student_run_elective($user_id) {
 		$translator = $this->_translator;
 		
-		$group_name = clean_input((isset($_POST['group_name']) ? $_POST['group_name'] : "" ),array("html_encode"));
-		$university = clean_input((isset($_POST['university']) ? $_POST['university'] : "" ),array("html_encode"));
-		$location = clean_input((isset($_POST['location']) ? $_POST['location'] : "" ),array("html_encode"));
+		$group_name = clean_input((isset($_POST['group_name']) ? $_POST['group_name'] : "" ),array("notags"));
+		$university = clean_input((isset($_POST['university']) ? $_POST['university'] : "" ),array("notags"));
+		$location = clean_input((isset($_POST['location']) ? $_POST['location'] : "" ),array("notags"));
 		$start_year = clean_input((isset($_POST['start_year']) ? $_POST['start_year'] : "" ),array("int"));
 			
 		if ($user_id && $group_name && $university && $location && $start_year) {
@@ -373,7 +373,7 @@ function process_mspr_details($translator,$section) {
 	switch($action) {
 		case 'add':
 			$user_id = clean_input((isset($_POST['user_id']) ? $_POST['user_id'] : 0), array("int"));
-			$details = clean_input((isset($_POST['details']) ? $_POST['details'] : "" ), array("html_encode"));
+			$details = clean_input((isset($_POST['details']) ? $_POST['details'] : "" ), array("notags"));
 			if (!$user_id) {
 				add_error($translator->translate("mspr_invalid_user_info"));
 			}

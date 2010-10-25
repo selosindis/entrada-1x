@@ -4,6 +4,46 @@ require_once("ClerkshipElective.class.php");
 require_once("Models/utility/Collection.class.php");
 
 class ClerkshipRotations extends Collection {
+	/**
+	 * 
+	 * @param mixed $rotations can be an array or a ClerkshipRotations Collection 
+	 * @param string $distance e.g. "+1 week" format sensitive. 
+	 */
+	public static function merge_clerkship_rotations($rotations, $distance) {
+		if ($rotations instanceof Collection) {
+			$original = $rotations;
+			$rotations = $rotations->container;
+			$revert = true;
+			
+		}
+		if ($rotations && count($rotations) > 1) {
+			for ($i = 0; $i < count($rotations) - 1; $i++) { //not caching the length as it may change, doing -1 in the condition as we're comparing consecutive elements
+				$element = $rotations[$i];
+				$next_element = $rotations[$i+1];
+				if ($element->getTitle() == $next_element->getTitle()) { //only continue if the titles are the same
+					$cur_end = $element->getFinish();
+					$next_start = $element->getStart();
+					$cur_end_mod = strtotime(date(DATE_RFC2822, $cur_end) . " " . $distance);
+					if ($cur_end_mod >= $next_start) { //overlapping or meeting
+						//merge
+						$title = $element->getTitle();
+						$start = $element->getStart();
+						$finish = $next_element->getFinish();
+						
+						$new_element = new ClerkshipRotation($title, $start, $finish, true);
+						array_splice($rotations, $i, 2, array($new_element));
+						$i--;
+					}
+				} 
+			}
+		}
+		
+		if ($revert) {
+			$original->container = $rotations;
+		}
+		
+		return $rotations;
+	}
 }
 
 class ClerkshipCoreCompleted extends ClerkshipRotations {
@@ -41,6 +81,9 @@ class ClerkshipCoreCompleted extends ClerkshipRotations {
 				$rotation = new ClerkshipRotation($title, $result['event_start'], $result['event_finish'], true);
 				$rotations[] = $rotation;
 			}
+		}
+		if (MSPR_CLERKSHIP_MERGE_NEAR) {
+			$rotations = ClerkshipRotations::merge_clerkship_rotations($rotations, MSPR_CLERKSHIP_MERGE_DISTANCE);
 		}
 		return new self($rotations);		
 	} 
@@ -82,6 +125,9 @@ class ClerkshipCorePending extends ClerkshipRotations {
 				$rotation = new ClerkshipRotation($title, $result['event_start'], $result['event_finish'], false);
 				$rotations[] = $rotation;
 			}
+		}
+		if (MSPR_CLERKSHIP_MERGE_NEAR) {
+			$rotations = ClerkshipRotations::merge_clerkship_rotations($rotations, MSPR_CLERKSHIP_MERGE_DISTANCE);
 		}
 		return new self($rotations);
 	} 

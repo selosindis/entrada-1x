@@ -572,6 +572,8 @@ define("CLERKSHIP_COMPLETED_CUTOFF", "October 26");
 define("MSPR_REJECTION_REASON_REQUIRED",true);	//defines whether a reason is required when rejecting a submission 
 define("MSPR_REJECTION_SEND_EMAIL",true);	//defines whether an email should be send on rejection of a student submission to their mspr
 
+define("MSPR_CLERKSHIP_MERGE_NEAR", true); //defines whether or not clerkship rotation with the same title should be merged if they are near in time.
+define("MSPR_CLERKSHIP_MERGE_DISTANCE", "+1 week"); //defines how close together clerkship rotations with the SAME title need to be in order to be merged on the mspr display
 
 /**
  * Defines for Tasks Module

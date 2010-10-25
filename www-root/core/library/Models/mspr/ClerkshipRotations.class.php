@@ -83,6 +83,7 @@ class ClerkshipElectivesCompleted extends ClerkshipRotations {
 										ON f.`schools_id` = c.`schools_id`
 										WHERE a.`event_type` = 'elective'
 										AND b.`econtact_type` = 'student'
+										AND a.`event_status` = 'published'
 										AND b.`etype_id` = ".$db->qstr($user_id)."
 										AND a.`event_finish` < ".$db->qstr($completed_cutoff)." 
 										ORDER BY a.`event_start` ASC";
@@ -99,7 +100,13 @@ class ClerkshipElectivesCompleted extends ClerkshipRotations {
 				$city =  (($result["city"]) ? $result["city"].", " : "");
 				$prov_state = (($result["prov_state"]) ? $result["prov_state"] : "");
 				$location = $school_title.$city.$prov_state;
-				$supervisor = "Dr. ".(($result["preceptor_first_name"]) ? $result["preceptor_first_name"]." " : "").(($result["preceptor_last_name"]) ? $result["preceptor_last_name"]." " : "");
+				
+				$supervisor = trim((($result["preceptor_first_name"]) ? $result["preceptor_first_name"]." " : "").(($result["preceptor_last_name"]) ? $result["preceptor_last_name"]." " : ""));
+				
+				if (preg_match("/\b[Dd][Rr]\./", $supervisor) == 0) {
+					$supervisor = "Dr. ".$supervisor;
+				}
+				
 				$title = str_replace($ugly, "", $result["department_title"]).((trim($result["discipline"]) != "") ? " / ".str_replace($ugly, "", $result["discipline"]) : "");
 				$elective = new ClerkshipElective($title, $location, $supervisor, $result['event_start'], $result['event_finish'], true);
 				$electives[] = $elective;

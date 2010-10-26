@@ -53,14 +53,14 @@ function generateMSPRHTML(MSPR $mspr,$timestamp = null) {
 						<?php
 					}
 			?>
-			</table>
+			</table><br>
 			<?php 
 				}
 
 				$component = $mspr["Clerkship Core Pending"];
 				if ($component && $component->count() > 0) { 
 			?>
-			<br><h3><u>Clerkship Rotations Pending</u></h3>
+			<h3><u>Clerkship Rotations Pending</u></h3>
 			<table width="100%" border=0 cellpadding=5 cellspacing=0>
 			<?php
 					foreach($component as $entity) {
@@ -72,14 +72,14 @@ function generateMSPRHTML(MSPR $mspr,$timestamp = null) {
 						<?php
 					}
 			?>
-			</table>
+			</table><br>
 			<?php 
 				}
 
 				$component = $mspr["Clerkship Electives Completed"];
 				if ($component && $component->count() > 0) { 
 			?>
-			<br><h3><u>Clerkship Electives Completed Satisfactorily to Date</u></h3>
+			<h3><u>Clerkship Electives Completed Satisfactorily to Date</u></h3>
 			<table width="100%" border=0 cellpadding=5 cellspacing=0>
 			<?php
 					foreach($component as $entity) {
@@ -100,14 +100,14 @@ function generateMSPRHTML(MSPR $mspr,$timestamp = null) {
 						<?php
 					}
 			?>
-			</table>
+			</table><br>
 			<?php 
 				}
 
 				$component = $mspr["Clinical Performance Evaluation Comments"];
 				if ($component && $component->count() > 0) { 
 			?>
-			<br><h3><u>Clinical Performance Evaluation Comments</u></h3>
+			<h3><u>Clinical Performance Evaluation Comments</u></h3>
 			<table width="100%" border=0 cellpadding=5 cellspacing=0>
 			<?php
 					foreach($component as $entity) {
@@ -118,7 +118,7 @@ function generateMSPRHTML(MSPR $mspr,$timestamp = null) {
 						<?php
 					}
 			?>
-			</table>
+			</table><br>
 			<?php 
 				}
 
@@ -127,7 +127,7 @@ function generateMSPRHTML(MSPR $mspr,$timestamp = null) {
 				$international_activities = $mspr["International Activities"];
 				if (($observerships && $observerships->count() > 0) || ($student_run_electives && $student_run_electives->count() > 0 ) || ($international_activities && $international_activities->count() >0)) { 
 			?>
-			<br><h3><u>Extra-Curricular Learning Activities</u></h3>
+			<h3><u>Extra-Curricular Learning Activities</u></h3>
 			<i>Activities appear below only when a proof of attendance has been received. This category includes: Observerships, University-approved International Activities,(unless attributable to the Critical Enquiry Project) and extra-curricular learning activites.</i>
 			<?php 
 				}
@@ -136,7 +136,7 @@ function generateMSPRHTML(MSPR $mspr,$timestamp = null) {
 				if ($component && $component->count() > 0) { 
 					$observership_no = 0;
 			?>
-			<br><h4>Observerships</h4>
+			<h4>Observerships</h4>
 			<table width="100%" border=0 cellpadding=5 cellspacing=0>
 			<?php
 					foreach($component as $entity) {
@@ -153,7 +153,7 @@ function generateMSPRHTML(MSPR $mspr,$timestamp = null) {
 						<?php
 					}
 			?>
-			</table>
+			</table><br>
 		
 			<?php 
 				}
@@ -161,7 +161,7 @@ function generateMSPRHTML(MSPR $mspr,$timestamp = null) {
 				$component = $student_run_electives;
 				if ($component && $component->count() > 0) { 
 			?>
-			<br><h4>Student-Run Electives</h4>
+			<h4>Student-Run Electives</h4>
 			<table width="100%" border=0 cellpadding=5 cellspacing=0>
 			<?php
 					foreach($component as $entity) {
@@ -173,14 +173,14 @@ function generateMSPRHTML(MSPR $mspr,$timestamp = null) {
 						<?php
 					}
 			?>
-			</table>
+			</table><br>
 			<?php 
 				}
 
 				$component = $international_activities;
 				if ($component && $component->count() > 0) { 
 			?>
-			<br><h4>International Activities</h4>
+			<h4>International Activities</h4>
 			<table width="100%" border=0 cellpadding=5 cellspacing=0>
 			<?php
 					foreach($component as $entity) {
@@ -192,20 +192,20 @@ function generateMSPRHTML(MSPR $mspr,$timestamp = null) {
 						<?php
 					}
 			?>
-			</table>
+			</table><br>
 			<?php 
 				}
 
 				$entity = $mspr["Critical Enquiry"];
 				if ($entity) { 
 			?>
-			<br><h3><u>Critical Enquiry</u></h3>
+			<h3><u>Critical Enquiry</u></h3>
 			<i>All students are required to complete a Critical Enquiry project.<br>Critical Enquiry appears on the Official University Transcript under the course code MEDS 428.</i><br><br>
 			<table width="100%" border=0 cellpadding=5 cellspacing=0>
 				<tr>
 					<td valign="top"><?php echo nl2br($entity->getDetails()); ?></td>
 				</tr>
-			</table>
+			</table><br>
 			
 			<?php 
 				}
@@ -213,20 +213,20 @@ function generateMSPRHTML(MSPR $mspr,$timestamp = null) {
 				$entity = $mspr["Community Health and Epidemiology"];
 				if ($entity) { 
 			?>
-			<br><h3><u>Community-Based Project</u></h3>
+			<h3><u>Community-Based Project</u></h3>
 			<i>Students are required to complete a project in either Community Health <u>or</u> History of Medicine. The title of the project appears below.</i><br><br>
 			<table width="100%" border=0 cellpadding=5 cellspacing=0>
 				<tr>
 					<td valign="top"><?php echo nl2br($entity->getDetails()); ?></td>
 				</tr>
-			</table>
+			</table><br>
 			<?php 
 				}
 
 				$component = $mspr["Research"];
 				if ($component && $component->count() > 0) { 
 			?>
-			<br><h3><u>Research</u></h3>
+			<h3><u>Research</u></h3>
 			<i>Students are encouraged to pursue extracurricular research endeavours to enrich their academic experience. Research undertaken during the medical program appears below.</i><br><br>
 			<table width="100%" border=0 cellpadding=5 cellspacing=0>
 			<?php
@@ -238,7 +238,7 @@ function generateMSPRHTML(MSPR $mspr,$timestamp = null) {
 						<?php
 					}
 			?>
-			</table>
+			</table><br>
 			<?php 
 				}
 
@@ -246,7 +246,7 @@ function generateMSPRHTML(MSPR $mspr,$timestamp = null) {
 				$external_awards = $mspr["External Awards"];
 				if (($internal_awards && $internal_awards->count() > 0) || ($external_awards && $external_awards->count() > 0)) { 
 			?>
-			<br><h3><u>Academic Awards</u></h3>
+			<h3><u>Academic Awards</u></h3>
 			<i>A brief summary of the terms of reference accompanies each award. Only items of academic significance and either acknowledged or awarded by Queen's University are presented.</i><br><br>
 			<table width="100%" border=0 cellpadding=5 cellspacing=0>
 			<?php
@@ -292,14 +292,15 @@ function generateMSPRHTML(MSPR $mspr,$timestamp = null) {
 						<?php
 					}
 			?>
-			</table>
+			</table><br>
+			
 			<?php 
 				}
 
 				$component = $mspr["Studentships"];
 				if ($component && $component->count() > 0) { 
 			?>
-			<br><h3><u>Studentships</u></h3>
+			<h3><u>Studentships</u></h3>
 			<i>A limited number of summer scholarships may be available to students in the first and second medcal years through the office of the Associate Dean, Undergraduate Medical Education. Awards are adjudicated by the Awards Committee (Medicine) on the basis of academic achievement and preferred area of interest. Successfulstudents are required to arrange a research project with a faculty member and submit a proposal of the work to be undertaken for approval by the awards committee.</i><br><br>
 			<table width="100%" border=0 cellpadding=5 cellspacing=0>
 			<?php
@@ -312,7 +313,7 @@ function generateMSPRHTML(MSPR $mspr,$timestamp = null) {
 						<?php
 					}
 			?>
-			</table>
+			</table><br>
 			<?php 
 				}
 
@@ -320,7 +321,7 @@ function generateMSPRHTML(MSPR $mspr,$timestamp = null) {
 				if ($component && $component->count() > 0) { 
 					$contribution_no = 0;
 			?>
-			<br><h3><u>Contributions to Medical School/Student Life</u></h3>
+			<h3><u>Contributions to Medical School/Student Life</u></h3>
 			<i>Participation in the School of Medicine student government, committees (such as admissions), and organization of extra-curricular learning activities and Seminars is listed below.</i><br><br>
 			<table width="100%" border=0 cellpadding=5 cellspacing=0>
 			<?php
@@ -334,7 +335,7 @@ function generateMSPRHTML(MSPR $mspr,$timestamp = null) {
 						<?php
 					}
 			?>
-			</table>
+			</table><br>
 			<?php 
 				}
 			?>

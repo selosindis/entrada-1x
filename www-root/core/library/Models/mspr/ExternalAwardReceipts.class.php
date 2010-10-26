@@ -48,7 +48,7 @@ class ExternalAwardReceipts extends Collection implements AttentionRequirable {
 	}
 	static private function getByUser(User $user) {
 		global $db;
-		$query		= "SELECT a.id as `award_receipt_id`, a.user_id, a.title, a.award_terms, a.status, a.awarding_body, a.year 
+		$query		= "SELECT a.id as `award_receipt_id`, a.* 
 				FROM `". DATABASE_NAME ."`.`student_awards_external` a 
 				WHERE a.`user_id` = ".$db->qstr($user->getID()) ." 
 				order by a.year desc";

@@ -570,10 +570,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 								application_log("notice", "User pressed the Detach Selected button without selecting any quizzes to detach.");
 							} else {
-								foreach ($_POST["delete"] as $equiz_id) {
-									$equiz_id = clean_input($equiz_id, "int");
-									if ($equiz_id) {
-										$QUIZ_IDS[] = $equiz_id;
+								foreach ($_POST["delete"] as $aquiz_id) {
+									$aquiz_id = clean_input($aquiz_id, "int");
+									if ($aquiz_id) {
+										$QUIZ_IDS[] = $aquiz_id;
 									}
 								}
 
@@ -581,11 +581,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 									$ERROR++;
 									$ERRORSTR[] = "There were no valid quiz identifiers provided to detach.";
 								} else {
-									foreach ($QUIZ_IDS as $equiz_id) {
-										$query	= "SELECT * FROM `event_quizzes` WHERE `equiz_id` = ".$db->qstr($equiz_id)." AND `event_id` = ".$db->qstr($EVENT_ID);
+									foreach ($QUIZ_IDS as $aquiz_id) {
+										$query	= "SELECT * FROM `attached_quizzes` WHERE `aquiz_id` = ".$db->qstr($aquiz_id)." AND `content_type` = 'event' AND `content_id` = ".$db->qstr($EVENT_ID);
 										$result	= $db->GetRow($query);
 										if ($result) {
-											$query = "DELETE FROM `event_quizzes` WHERE `equiz_id` = ".$db->qstr($equiz_id)." AND `event_id` = ".$db->qstr($EVENT_ID);
+											$query = "DELETE FROM `attached_quizzes` WHERE `aquiz_id` = ".$db->qstr($aquiz_id)." AND `content_type` = 'event' AND `content_id` = ".$db->qstr($EVENT_ID);
 											if ($db->Execute($query)) {
 												if ($db->Affected_Rows()) {
 													application_log("success", "Detached quiz [".$result["quiz_id"]."] from event [".$EVENT_ID."].");
@@ -679,7 +679,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						var windowX = (screen.width / 2) - (windowW / 2);
 						var windowY = (screen.height / 2) - (windowH / 2);
 
-						quizWizard = window.open('<?php echo ENTRADA_URL; ?>/quiz-wizard-event.php?action=' + action + '&id=' + eid + ((qid) ? '&qid=' + qid : ''), 'quizWizard', 'width='+windowW+', height='+windowH+', scrollbars=no, resizable=yes');
+						quizWizard = window.open('<?php echo ENTRADA_URL; ?>/quiz-wizard.php?type=event&action=' + action + '&id=' + eid + ((qid) ? '&qid=' + qid : ''), 'quizWizard', 'width='+windowW+', height='+windowH+', scrollbars=no, resizable=yes');
 						quizWizard.blur();
 						window.focus();
 
@@ -1448,10 +1448,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						<div class="clear"></div>
 						<?php
 						$query		= "	SELECT a.*, b.`quiztype_title`
-										FROM `event_quizzes` AS a
+										FROM `attached_quizzes` AS a
 										LEFT JOIN `quizzes_lu_quiztypes` AS b
 										ON b.`quiztype_id` = a.`quiztype_id`
-										WHERE a.`event_id` = ".$db->qstr($EVENT_ID)."
+										WHERE a.`content_type` = 'event' 
+										AND a.`content_id` = ".$db->qstr($EVENT_ID)."
 										ORDER BY b.`quiztype_title` ASC, a.`quiz_title` ASC";
 						$results	= $db->GetAll($query);
 						echo "<form id=\"quiz-listing\" action=\"".ENTRADA_URL."/admin/events?".replace_query()."\" method=\"post\">\n";
@@ -1488,16 +1489,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							foreach ($results as $result) {
 								echo "<tr>\n";
 								echo "	<td class=\"modified\" style=\"width: 50px; white-space: nowrap\">\n";
-								echo "		<input type=\"checkbox\" name=\"delete[]\" value=\"".$result["equiz_id"]."\" style=\"vertical-align: middle\" />\n";
+								echo "		<input type=\"checkbox\" name=\"delete[]\" value=\"".$result["aquiz_id"]."\" style=\"vertical-align: middle\" />\n";
 								if ($result["accesses"] > 0) {
-									echo "	<a href=\"".ENTRADA_URL."/admin/quizzes?section=results&amp;id=".$result["equiz_id"]."\"><img src=\"".ENTRADA_URL."/images/view-stats.gif\" width=\"16\" height=\"16\" alt=\"View results of ".html_encode($result["quiz_title"])."\" title=\"View results of ".html_encode($result["quiz_title"])."\" style=\"vertical-align: middle\" border=\"0\" /></a>\n";
+									echo "	<a href=\"".ENTRADA_URL."/admin/quizzes?section=results&amp;id=".$result["aquiz_id"]."\"><img src=\"".ENTRADA_URL."/images/view-stats.gif\" width=\"16\" height=\"16\" alt=\"View results of ".html_encode($result["quiz_title"])."\" title=\"View results of ".html_encode($result["quiz_title"])."\" style=\"vertical-align: middle\" border=\"0\" /></a>\n";
 								} else {
 									echo "	<img src=\"".ENTRADA_URL."/images/view-stats-disabled.gif\" width=\"16\" height=\"16\" alt=\"No completed quizzes at this time.\" title=\"No completed quizzes at this time.\" style=\"vertical-align: middle\" border=\"0\" />\n";
 								}
 								echo "	</td>\n";
 								echo "	<td class=\"file-category\">".html_encode($result["quiztype_title"])."</td>\n";
 								echo "	<td class=\"title\" style=\"white-space: normal; overflow: visible\">\n";
-								echo "		<a href=\"javascript: openQuizWizard('".$EVENT_ID."', '".$result["equiz_id"]."', 'edit')\" title=\"Click to edit ".html_encode($result["quiz_title"])."\" style=\"font-weight: bold\">".html_encode($result["quiz_title"])."</a>\n";
+								echo "		<a href=\"javascript: openQuizWizard('".$EVENT_ID."', '".$result["aquiz_id"]."', 'edit')\" title=\"Click to edit ".html_encode($result["quiz_title"])."\" style=\"font-weight: bold\">".html_encode($result["quiz_title"])."</a>\n";
 								echo "	</td>\n";
 								echo "	<td class=\"date-small\"><span class=\"content-date\">".(((int) $result["release_date"]) ? date(DEFAULT_DATE_FORMAT, $result["release_date"]) : "No Restrictions")."</span></td>\n";
 								echo "	<td class=\"date-small\"><span class=\"content-date\">".(((int) $result["release_until"]) ? date(DEFAULT_DATE_FORMAT, $result["release_until"]) : "No Restrictions")."</span></td>\n";

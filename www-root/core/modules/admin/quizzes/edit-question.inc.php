@@ -45,6 +45,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 							FROM `quizzes` AS a
 							LEFT JOIN `quiz_questions` AS c
 							ON a.`quiz_id` = c.`quiz_id`
+							AND c.`question_active` = '1'
 							WHERE c.`qquestion_id` = ".$db->qstr($RECORD_ID)."
 							AND a.`quiz_active` = '1'";
 		$quiz_record	= $db->GetRow($query);
@@ -193,7 +194,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 							if($ENTRADA_ACL->amIAllowed(new QuizQuestionResource($RECORD_ID, $quiz_record["quiz_id"]), "update")) {
 								if ($db->AutoExecute("quiz_questions", $PROCESSED, "UPDATE", "`qquestion_id` = ".$db->qstr($RECORD_ID))) {
 
-									$query = "DELETE FROM `quiz_question_responses` WHERE `qquestion_id` = ".$db->qstr($RECORD_ID);
+									$query = "UPDATE `quiz_question_responses` SET `response_active` = '0' WHERE `qquestion_id` = ".$db->qstr($RECORD_ID);
 									$db->Execute($query);
 
 									/**
@@ -268,6 +269,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						$query		= "	SELECT a.*
 										FROM `quiz_question_responses` AS a
 										WHERE a.`qquestion_id` = ".$db->qstr($RECORD_ID)."
+										AND a.`response_active` = '1'
 										ORDER BY a.`response_order` ASC";
 						$results	= $db->GetAll($query);
 						if ($results) {

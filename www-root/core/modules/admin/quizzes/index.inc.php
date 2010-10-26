@@ -165,6 +165,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 				ON a.`quiz_id` = b.`quiz_id`
 				LEFT JOIN `quiz_questions` AS c
 				ON a.`quiz_id` = c.`quiz_id`
+				AND c.`question_active` = '1'
 				WHERE b.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
 				GROUP BY a.`quiz_id`
 				ORDER BY %s LIMIT %s, %s";

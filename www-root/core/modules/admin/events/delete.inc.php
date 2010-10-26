@@ -93,10 +93,11 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							 * Check to see if any quizzes are attached to this event.
 							 */
 							$query		= "	SELECT a.*
-											FROM `event_quizzes` AS a
-											LEFT JOIN `event_quiz_progress` AS b
-											ON b.`equiz_id` = a.`equiz_id`
-											WHERE a.`event_id` = ".$db->qstr($event_id);
+											FROM `attached_quizzes` AS a
+											LEFT JOIN `quiz_progress` AS b
+											ON b.`aquiz_id` = a.`aquiz_id`
+											WHERE a.`content_type` = 'event' 
+											AND a.`content_id` = ".$db->qstr($event_id);
 							$quizzes	= $db->GetAll($query);
 							if (($quizzes) && (count($quizzes) > 0)) {
 								$ERROR++;

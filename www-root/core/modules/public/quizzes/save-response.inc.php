@@ -22,8 +22,8 @@
  *
  * 0	Unable to start processing request.
  * 200	There were no errors, the response was recorded successfully.
- * 400: Unable to save response because no equiz_id was provided.
- * 401: Unable to save response because no valid equiz_id was provided.
+ * 400: Unable to save response because no aquiz_id was provided.
+ * 401: Unable to save response because no valid aquiz_id was provided.
  * 402: Attempted to submit a response to a question before the quiz release period.
  * 403: Attempted to submit a response to a question after the quiz release period.
  * 404: Attempted to submit a response to a question when they have already completed the quiz the maximum number of times.
@@ -58,12 +58,13 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_PUBLIC_QUIZZES"))) {
 
 if ($RECORD_ID) {
 	$query			= "	SELECT a.*, c.`event_title`, c.`event_start`, c.`event_finish`, c.`release_date` AS `event_release_date`, c.`release_until` AS `event_release_until`
-						FROM `event_quizzes` AS a
+						FROM `attached_quizzes` AS a
 						LEFT JOIN `quizzes` AS b
 						ON a.`quiz_id` = b.`quiz_id`
 						LEFT JOIN `events` AS c
-						ON a.`event_id` = c.`event_id`
-						WHERE a.`equiz_id` = ".$db->qstr($RECORD_ID)."
+						ON a.`content_type` = 'event' 
+						AND a.`content_id` = c.`event_id`
+						WHERE a.`aquiz_id` = ".$db->qstr($RECORD_ID)."
 						AND b.`quiz_active` = '1'";
 	$quiz_record	= $db->GetRow($query);
 	if ($quiz_record) {
@@ -80,8 +81,8 @@ if ($RECORD_ID) {
 				$completed_attempts = 0;
 
 				$query				= "	SELECT *
-										FROM `event_quiz_progress`
-										WHERE `equiz_id` = ".$db->qstr($RECORD_ID)."
+										FROM `quiz_progress`
+										WHERE `aquiz_id` = ".$db->qstr($RECORD_ID)."
 										AND `proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
 										AND `progress_value` = 'complete'
 										ORDER BY `updated_date` ASC";
@@ -96,11 +97,11 @@ if ($RECORD_ID) {
 				if (((int) $quiz_record["quiz_attempts"] === 0) || ($completed_attempts < $quiz_record["quiz_attempts"])) {
 					/**
 					 * Check to see if they currently have a quiz in progress,
-					 * if the do, then use that eqprogress_id.
+					 * if the do, then use that qprogress_id.
 					 */
 					$query				= "	SELECT *
-											FROM `event_quiz_progress`
-											WHERE `equiz_id` = ".$db->qstr($RECORD_ID)."
+											FROM `quiz_progress`
+											WHERE `aquiz_id` = ".$db->qstr($RECORD_ID)."
 											AND `proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
 											AND `progress_value` = 'inprogress'
 											ORDER BY `updated_date` ASC";
@@ -111,14 +112,14 @@ if ($RECORD_ID) {
 													"updated_by" => $_SESSION["details"]["id"]
 												);
 
-						if ($db->AutoExecute("event_quiz_progress", $quiz_progress_array, "UPDATE", "`eqprogress_id` = ".$db->qstr($progress_record["eqprogress_id"]))) {
+						if ($db->AutoExecute("quiz_progress", $quiz_progress_array, "UPDATE", "`qprogress_id` = ".$db->qstr($progress_record["qprogress_id"]))) {
 							if ((isset($_POST["qid"])) && ($tmp_input = clean_input($_POST["qid"], "int"))) {
 								$qquestion_id = $tmp_input;
 
 								if ((isset($_POST["rid"])) && ($tmp_input = clean_input($_POST["rid"], "int"))) {
 									$qqresponse_id = $tmp_input;
 
-									if (quiz_save_response($progress_record["eqprogress_id"], $progress_record["equiz_id"], $progress_record["event_id"], $progress_record["quiz_id"], $qquestion_id, $qqresponse_id)) {
+								if (quiz_save_response($progress_record["qprogress_id"], $progress_record["aquiz_id"], $progress_record["content_id"], $progress_record["quiz_id"], $qquestion_id, $qqresponse_id, $QUIZ_TYPE)) {
 										echo 200;
 										exit;
 									} else {
@@ -147,7 +148,7 @@ if ($RECORD_ID) {
 								exit;
 							}
 						} else {
-							application_log("error", "Unable to update the quiz_progress.updated_date field when attempting to submit a question response for eqprogress_id [".$progress_record["eqprogress_id"]."] when attempting to continue with a quiz. Database said: ".$db->ErrorMsg());
+							application_log("error", "Unable to update the quiz_progress.updated_date field when attempting to submit a question response for qprogress_id [".$progress_record["qprogress_id"]."] when attempting to continue with a quiz. Database said: ".$db->ErrorMsg());
 
 							/**
 							 * @exception 406: Unable to update the quiz_progress.updated_date field to the current timestamp.
@@ -156,7 +157,7 @@ if ($RECORD_ID) {
 							exit;
 						}
 					} else {
-						application_log("error", "Unable to locate a current event_quiz_progress record when attempting to submit a question response to equiz_id [".$RECORD_ID."] (quiz_id [".$quiz_record["quiz_id"]."] / event_id [".$quiz_record["event_id"]."]).");
+						application_log("error", "Unable to locate a current quiz_progress record when attempting to submit a question response to aquiz_id [".$RECORD_ID."] (quiz_id [".$quiz_record["quiz_id"]."] / event_id [".$quiz_record["event_id"]."]).");
 
 						/**
 						 * @exception 405: Unable to locate a current progress record.
@@ -165,7 +166,7 @@ if ($RECORD_ID) {
 						exit;
 					}
 				} else {
-					application_log("error", "Someone attempted to submit a question response to equiz_id [".$RECORD_ID."] (quiz_id [".$quiz_record["quiz_id"]."] / event_id [".$quiz_record["event_id"]."]) more than the total number of possible attempts [".$quiz_record["quiz_attempts"]."].");
+					application_log("error", "Someone attempted to submit a question response to aquiz_id [".$RECORD_ID."] (quiz_id [".$quiz_record["quiz_id"]."] / event_id [".$quiz_record["event_id"]."]) more than the total number of possible attempts [".$quiz_record["quiz_attempts"]."].");
 
 					/**
 					 * @exception 404: Attempted to submit a response to a question when they have already completed the quiz the maximum number of times.
@@ -192,19 +193,19 @@ if ($RECORD_ID) {
 			exit;
 		}
 	} else {
-		application_log("error", "Failed to provide a valid equiz_id identifier when attempting to save a response to a quiz question.");
+		application_log("error", "Failed to provide a valid aquiz_id identifier when attempting to save a response to a quiz question.");
 
 		/**
-		 * @exception 401: Unable to save response because no valid equiz_id was provided.
+		 * @exception 401: Unable to save response because no valid aquiz_id was provided.
 		 */
 		echo 401;
 		exit;
 	}
 } else {
-	application_log("error", "Failed to provide an equiz_id identifier when attempting to save a response to a quiz question.");
+	application_log("error", "Failed to provide an aquiz_id identifier when attempting to save a response to a quiz question.");
 
 	/**
-	 * @exception 400: Unable to save response because no equiz_id was provided.
+	 * @exception 400: Unable to save response because no aquiz_id was provided.
 	 */
 	echo 400;
 	exit;

@@ -106,7 +106,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 			}
 
 			$existing_event_relationship = array();
-			$query		= "SELECT `event_id` FROM `event_quizzes` WHERE `quiz_id` = ".$db->qstr($RECORD_ID);
+			$query		= "SELECT `content_type`, `content_id` FROM `attached_quizzes` WHERE `quiz_id` = ".$db->qstr($RECORD_ID);
 			$results	= $db->GetAll($query);
 			if ($results) {
 				foreach ($results as $result) {
@@ -277,7 +277,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						foreach ($PROCESSED["event_ids"] as $event_id) {
 							$PROCESSED["event_id"] = $event_id;
 
-							if ($db->AutoExecute("event_quizzes", $PROCESSED, "INSERT")) {
+							if ($db->AutoExecute("attached_quizzes", $PROCESSED, "INSERT")) {
 
 								$SUCCESS++;
 								$SUCCESSSTR[]	= "You have successfully attached <strong>".html_encode($quiz_record["quiz_title"])."</strong> as <strong>".html_encode($PROCESSED["quiz_title"])."</strong> to <strong>".html_encode($selected_learning_events[$PROCESSED["event_id"]]["event_title"])."</strong>.";

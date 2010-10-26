@@ -30,7 +30,48 @@ if (!defined("PARENT_INCLUDED")) {
 } elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	header("Location: ".ENTRADA_URL);
 	exit;
-} elseif (!$ENTRADA_ACL->amIAllowed($MODULES["quizzes"]["resource"], $MODULES["quizzes"]["permission"], false)) {
+}
+
+/**
+ * Allows you to specify which record id your particular component is
+ * dealing with (i.e. http:// ... /admin/events?section=edit&id=1562).
+ */
+if ((isset($_GET["id"])) && ($tmp_input = clean_input($_GET["id"], array("trim", "int")))) {
+	$RECORD_ID = $tmp_input;
+} elseif ((isset($_POST["id"])) && ($tmp_input = clean_input($_POST["id"], array("trim", "int")))) {
+	$RECORD_ID = $tmp_input;
+} else {
+	$RECORD_ID = 0;
+}
+
+if (isset($_REQUEST["community"]) && $_REQUEST["community"]) {
+	$QUIZ_TYPE = "community_page";
+} else {
+	$QUIZ_TYPE = "event";
+}
+
+if ($QUIZ_TYPE == "community_page" && $_SESSION["details"]["group"] != "student" && $SECTION == "results") {
+	$query		= "	SELECT `content_id`
+					FROM `attached_quizzes` 
+					WHERE `aquiz_id` = ".$db->qstr($RECORD_ID);
+	$cpage_id = $db->GetOne($query);
+	if ($cpage_id) {
+		$community_access_query = "	SELECT * FROM `community_members` AS a
+									JOIN `community_pages` AS b
+									ON a.`community_id` = b.`community_id`
+									WHERE b.`cpage_id` = ".$db->qstr($cpage_id)."
+									AND a.`proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
+									AND a.`member_active` = '1'
+									AND a.`member_acl` = '1'";
+		$access = ($db->GetRow($community_access_query) ? true : false);
+	} else {
+		$access = false;
+	}
+} else {
+	$access = false;
+}
+
+if (!$access && (!$ENTRADA_ACL->amIAllowed($MODULES["quizzes"]["resource"], $MODULES["quizzes"]["permission"], false))) {
 	$ERROR++;
 	$ERRORSTR[]	= "You do not have the permissions required to use this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
 
@@ -45,25 +86,13 @@ if (!defined("PARENT_INCLUDED")) {
 	if (($router) && ($router->initRoute())) {
 		$PREFERENCES = preferences_load($MODULE);
 
-		/**
-		 * Allows you to specify which record id your particular component is
-		 * dealing with (i.e. http:// ... /admin/events?section=edit&id=1562).
-		 */
-		if ((isset($_GET["id"])) && ($tmp_input = clean_input($_GET["id"], array("trim", "int")))) {
-			$RECORD_ID = $tmp_input;
-		} elseif ((isset($_POST["id"])) && ($tmp_input = clean_input($_POST["id"], array("trim", "int")))) {
-			$RECORD_ID = $tmp_input;
-		} else {
-			$RECORD_ID = 0;
-		}
-
 		$ALLOW_QUESTION_MODIFICATIONS = false;
 
 		/**
 		 * Check to see if we can add / modify / delete questions from this quiz.
 		 */
 		if ((int) $RECORD_ID) {
-			$query	= "SELECT COUNT(*) AS `total` FROM `event_quiz_progress` WHERE `quiz_id` = ".$db->qstr($RECORD_ID);
+			$query	= "SELECT COUNT(*) AS `total` FROM `quiz_progress` WHERE `quiz_id` = ".$db->qstr($RECORD_ID);
 			$result = $db->GetRow($query);
 			if ((!$result) || ((int) $result["total"] === 0)) {
 				$ALLOW_QUESTION_MODIFICATIONS = true;

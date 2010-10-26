@@ -61,6 +61,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 							ON a.`quiz_id` = b.`quiz_id`
 							LEFT JOIN `quiz_questions` AS c
 							ON a.`quiz_id` = c.`quiz_id`
+							AND c.`question_active` = '1'
 							WHERE c.`qquestion_id` = ".$db->qstr($RECORD_ID)."
 							AND a.`quiz_active` = '1'";
 		$quiz_record	= $db->GetRow($query);
@@ -72,9 +73,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 					 */
 					ob_clear_open_buffers();
 					if($ENTRADA_ACL->amIAllowed(new QuizQuestionResource($RECORD_ID, $quiz_record["quiz_id"]), "delete")) {
-						$query	= "DELETE FROM `quiz_question_responses` WHERE `qquestion_id` = ".$db->qstr($RECORD_ID);
+						$query	= "UPDATE `quiz_question_responses` SET `response_active` = '0' WHERE `qquestion_id` = ".$db->qstr($RECORD_ID);
 						if ($db->Execute($query)) {
-							$query	= "DELETE FROM `quiz_questions` WHERE `qquestion_id` = ".$db->qstr($RECORD_ID);
+							$query	= "UPDATE `quiz_questions` SET `question_active` = '0' WHERE `qquestion_id` = ".$db->qstr($RECORD_ID);
 							if ($db->Execute($query)) {
 								application_log("success", "Question id [".$RECORD_ID."] was removed from quiz id [".$quiz_record["quiz_id"]."].");
 

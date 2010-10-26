@@ -246,14 +246,41 @@ class MSPRAdminController {
 		$title = clean_input((isset($_POST['title']) ? $_POST['title'] : "" ),array("notags"));
 		$site = clean_input((isset($_POST['site']) ? $_POST['site'] : "" ),array("notags"));
 		$location = clean_input((isset($_POST['location']) ? $_POST['location'] : "" ),array("notags"));
-		$start = clean_input((isset($_POST['start']) ? $_POST['start'] : "" ),array("int"));
-			
-		if ($user_id && $title && $site && $location && $start) {
-			$end = clean_input((isset($_POST['end']) ? $_POST['end'] : "" ),array("int"));
-							
-			Observership::create($user_id, $title, $site, $location, $start, $end);
+		$start = clean_input((isset($_POST['start']) ? $_POST['start'] : "" ),array("notags"));
+		$end = clean_input((isset($_POST['end']) ? $_POST['end'] : "" ),array("int"));
+				
+		$preceptor_proxy_id = clean_input((isset($_POST['preceptor_proxy_id']) ? $_POST['preceptor_proxy_id'] : "" ),array("int"));
+		$preceptor_firstname = clean_input((isset($_POST['preceptor_firstname']) ? $_POST['preceptor_firstname'] : "" ),array("notags"));
+		$preceptor_lastname = clean_input((isset($_POST['preceptor_lastname']) ? $_POST['preceptor_lastname'] : "" ),array("notags"));
+		
+		if (!checkDateFormat($start)) {
+			add_error($translator->translate("mspr_observership_invalid_dates"));
 		} else {
-			add_error($translator->translate("mspr_insufficient_info"));
+			$parts = date_parse($start);  
+			$start_ts = mktime(0,0, 0, $parts['month'],$parts['day'], $parts['year']);
+			if (checkDateFormat($end)) {
+				$parts = date_parse($end);  
+				$end_ts = mktime(0,0, 0, $parts['month'],$parts['day'], $parts['year']);
+			} else {
+				$end_ts = null;
+			}
+		}
+		
+		if (!$preceptor_proxy_id) {
+			$preceptor_proxy_id = null; 
+		}
+		
+		if (!$preceptor_proxy_id && !($preceptor_firstname && $preceptor_lastname)) {
+			add_error($translator->translate("mspr_observership_preceptor_required"));
+		}
+		
+		if (!has_error()) {
+			if ($user_id && $title && $site && $location && $start_ts) {
+								
+				Observership::create($user_id, $title, $site, $location, $preceptor_proxy_id, $preceptor_firstname, $preceptor_lastname, $start_ts, $end_ts);
+			} else {
+				add_error($translator->translate("mspr_insufficient_info"));
+			}
 		}
 	}
 	private function add_studentship($user_id) {

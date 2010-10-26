@@ -348,8 +348,16 @@ function display_period_details(Collection $collection, $type, $template_name, $
 		foreach($collection as $entity) {
 			$status = getStatus($entity);
 			
+			$preceptor = trim($entity->getPreceptorFirstname() . " " . $entity->getPreceptorLastname());
+			if (preg_match("/\b[Dd][Rr]\./", $preceptor) == 0) {
+				$preceptor = "Dr. ".$preceptor;
+			}
+				
 			$content_bind = array (
-				"details" 	=> clean_input($entity->getDetails(), array("notags", "specialchars", "nl2br")),
+				"title" 	=> clean_input($entity->getTitle(), array("notags", "specialchars")),
+				"site" 	=> clean_input($entity->getSite(), array("notags", "specialchars")),
+				"location" 	=> clean_input($entity->getLocation(), array("notags", "specialchars")),
+				"preceptor" 	=> clean_input($preceptor, array("notags", "specialchars")),
 				"period" 	=> clean_input($entity->getPeriod() , array("notags", "specialchars"))
 			);
 			

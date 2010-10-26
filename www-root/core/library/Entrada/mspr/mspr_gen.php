@@ -100,7 +100,7 @@ function generateMSPRHTML(MSPR $mspr,$timestamp = null) {
 						<?php
 					}
 			?>
-			</ta
+			</table>
 			<?php 
 				}
 

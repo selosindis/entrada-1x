@@ -51,14 +51,18 @@ class ClerkshipCoreCompleted extends ClerkshipRotations {
 		global $db;
 		$user_id = $user->getID();
 		$completed_cutoff = strtotime(CLERKSHIP_COMPLETED_CUTOFF.", ".date("Y"));
-		$query		= "	SELECT a.`event_title`, a.`event_start`, a.`event_finish`, a.`category_id`, c.`category_name`, d.`rotation_title`
+		$query		= "	SELECT a.`event_title`, a.`event_start`, a.`event_finish`, a.`category_id`, c.`category_name` as cat1, d.`category_name` as cat2, e.`category_name` as cat3
 										FROM `".CLERKSHIP_DATABASE."`.`events` AS a
 										LEFT JOIN `".CLERKSHIP_DATABASE."`.`event_contacts` AS b
 										ON b.`event_id` = a.`event_id`
 										LEFT JOIN `".CLERKSHIP_DATABASE."`.`categories` as c
 										ON a.`category_id` = c.`category_id`
-										LEFT JOIN `".CLERKSHIP_DATABASE."`.`global_lu_rotations` as d
-										ON a.`rotation_id` = d.`rotation_id`
+										LEFT JOIN `".CLERKSHIP_DATABASE."`.`categories` AS d
+										ON c.`category_parent` = d.`category_id`
+										AND d.`category_parent` != 5986
+										LEFT JOIN `".CLERKSHIP_DATABASE."`.`categories` AS e
+										ON d.`category_parent` = e.`category_id`
+										AND e.`category_parent` != 5986
 										WHERE a.`event_type` <> 'elective'
 										AND b.`econtact_type` = 'student'
 										AND b.`etype_id` = ".$db->qstr($user_id)."
@@ -70,8 +74,9 @@ class ClerkshipCoreCompleted extends ClerkshipRotations {
 			foreach($results as $result) {
 				
 				$title_parts = array();
-				$title_parts[] = str_replace(" and ", " & ", trim($result['rotation_title']));
-				$title_parts[] = str_replace(" and ", " & ", trim($result['category_name']));
+				$title_parts[] = str_replace(" and ", " & ", trim($result['cat3']));
+				$title_parts[] = str_replace(" and ", " & ", trim($result['cat2']));
+				$title_parts[] = str_replace(" and ", " & ", trim($result['cat1']));
 				
 				$title_parts = array_unique($title_parts);
 				$title_parts = array_filter($title_parts);
@@ -95,14 +100,18 @@ class ClerkshipCorePending extends ClerkshipRotations {
 		$user_id = $user->getID();
 		$completed_cutoff = strtotime(CLERKSHIP_COMPLETED_CUTOFF.", ".date("Y"));
 
-		$query		= "	SELECT a.`event_title`, a.`event_start`, a.`event_finish`, a.`category_id`, c.`category_name`, d.`rotation_title`
+		$query		= "	SELECT a.`event_title`, a.`event_start`, a.`event_finish`, a.`category_id`, c.`category_name` as cat1, d.`category_name` as cat2, e.`category_name` as cat3
 										FROM `".CLERKSHIP_DATABASE."`.`events` AS a
 										LEFT JOIN `".CLERKSHIP_DATABASE."`.`event_contacts` AS b
 										ON b.`event_id` = a.`event_id`
 										LEFT JOIN `".CLERKSHIP_DATABASE."`.`categories` as c
 										ON a.`category_id` = c.`category_id`
-										LEFT JOIN `".CLERKSHIP_DATABASE."`.`global_lu_rotations` as d
-										ON a.`rotation_id` = d.`rotation_id`
+										LEFT JOIN `".CLERKSHIP_DATABASE."`.`categories` AS d
+										ON c.`category_parent` = d.`category_id`
+										AND d.`category_parent` != 5986
+										LEFT JOIN `".CLERKSHIP_DATABASE."`.`categories` AS e
+										ON d.`category_parent` = e.`category_id`
+										AND e.`category_parent` != 5986
 										WHERE a.`event_type` <> 'elective'
 										AND b.`econtact_type` = 'student'
 										AND b.`etype_id` = ".$db->qstr($user_id)."
@@ -114,8 +123,9 @@ class ClerkshipCorePending extends ClerkshipRotations {
 		if($results) {
 			foreach($results as $result) {
 				$title_parts = array();
-				$title_parts[] = str_replace(" and ", " & ", trim($result['rotation_title']));
-				$title_parts[] = str_replace(" and ", " & ", trim($result['category_name']));
+				$title_parts[] = str_replace(" and ", " & ", trim($result['cat3']));
+				$title_parts[] = str_replace(" and ", " & ", trim($result['cat2']));
+				$title_parts[] = str_replace(" and ", " & ", trim($result['cat1']));
 				
 				$title_parts = array_unique($title_parts);
 				$title_parts = array_filter($title_parts);

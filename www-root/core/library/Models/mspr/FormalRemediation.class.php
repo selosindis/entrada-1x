@@ -23,10 +23,9 @@ class FormalRemediation extends AbstractStudentDetails {
 		}
 	}
 	
-	public static function create($user, $details) {
+	public static function create($user_id, $details) {
 		global $db;
 
-		$user_id = $user->getID();
 		$query = "insert into `student_formal_remediations` (`user_id`, `remediation_details`) value (".$db->qstr($user_id).", ".$db->qstr($details).")";
 		
 		if(!$db->Execute($query)) {

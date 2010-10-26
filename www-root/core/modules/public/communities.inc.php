@@ -43,8 +43,8 @@ if (($router) && ($router->initRoute())) {
 		$COMMUNITY_ID = 0;
 	}
 
-	$year_start		= (date("Y", time()) + ((date("m", time()) < 7) ?  3 : 4));
-	$year_end		= ($year_start - 4);
+	$year_start = fetch_first_year();
+	$year_end = ($year_start - 4);
 
 	$GROUP_TARGETS						= array();
 	for($i = $year_start; $i > $year_end; $i--) {

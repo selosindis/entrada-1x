@@ -107,7 +107,8 @@ INSERT INTO `acl_permissions` (`resource_type`, `resource_value`, `entity_type`,
 ('task', NULL, NULL, NULL, 1, NULL, NULL, NULL, NULL, 'TaskVerifier'),
 ('mydepartment', NULL, 'group', 'faculty', NULL, 1, 1, 1, 1, 'DepartmentHead'),
 ('myowndepartment', NULL, 'user', '1', NULL, 1, 1, 1, 1, NULL),
-('tasktab', NULL, NULL, NULL, 1, NULL, 1, NULL, NULL, 'ShowTaskTab');
+('tasktab', NULL, NULL, NULL, 1, NULL, 1, NULL, NULL, 'ShowTaskTab'),
+('annualreportadmin', NULL, 'group:role', 'medtech:admin', NULL, 1, 1, 1, 1, NULL);
 
 
 CREATE TABLE IF NOT EXISTS `departments` (

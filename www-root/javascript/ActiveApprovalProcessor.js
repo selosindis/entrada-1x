@@ -5,13 +5,15 @@
 		var action_form_selector = options.action_form_selector;
 		var section = options.section;
 		var messages = options.messages;
+		var reject_modal = options.reject_modal;
 
-		function process_entry(form, action) {
+		
+		function process_entry(form_values) {
 			document.fire(section + ':onBeforeUpdate');
 			new Ajax.Updater(data_destination, url,
 				{
 					method:'post',
-					parameters: form.serialize(),
+					parameters: form_values,
 					evalScripts:true,
 					onComplete: function () {
 						if (messages) {
@@ -27,7 +29,35 @@
 		function entry_process_ajax(event) {
 			Event.stop(event);
 			var form = Event.findElement(event, 'form');
-			process_entry(form);
+			//having a reject modal defined changes the workflow a little.
+			//if there is no reject_modal, and we're rejecting, then process_entry can go right ahead and work,
+			//if not, then we have to pop up the modal and listen for the confirmation.
+			var form_values = form.serialize(true);
+			
+			if ((form_values.action != "Reject") || !reject_modal){
+				process_entry(form_values);
+			}
+			if ((form_values.action == "Reject") && reject_modal && reject_modal.container){
+				//now we have to listen for the confirmation in the the modal, 
+				//transfer the comment from the modal
+				//and submit the source form above.
+				reject_modal.open();
+				var modal_confirm = reject_modal.container.down(".modal-confirm");
+				var modal_close = reject_modal.container.down(".modal-close");
+				
+				var modal_comment = reject_modal.container.down("textarea"); 
+				modal_comment.focus();
+				modal_close.observe("click", function() {
+					modal_comment.clear();
+					reject_modal.close();
+				} );
+				
+				modal_confirm.observe("click", function() {
+					form_values.comment = modal_comment.getValue();
+					process_entry(form_values);
+					reject_modal.close();
+				});
+			}
 		}
 
 		function addListener (element) { element.observe('submit',entry_process_ajax) }
@@ -38,17 +68,7 @@
 		
 		add_entry_listeners =  function() { $$(action_form_selector).each(addListener); }
 		remove_entry_listeners = function() { $$(action_form_selector).each(removeListener); }
-		function init() {
-			add_entry_listeners();
-		}
-
-		if (document.loaded) {
-			init();
-		} else {
-			document.observe('dom:loaded', function () { 
-				init();
-			});
-		}	
+		
 		
 		function onBeforeUpdate() {
 			if(options.onBeforeUpdate) {
@@ -59,6 +79,7 @@
 		}
 
 		document.observe(section+':onBeforeUpdate', onBeforeUpdate);
-		}
-		catch (e) {console.log(e);}
+		add_entry_listeners();
+		
+		} catch (e) {clog(e);}
 	}

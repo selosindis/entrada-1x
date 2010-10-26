@@ -38,27 +38,13 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 	echo display_error();
 
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
-} else {
-	/**
-	 * Add PlotKit to the beginning of the $HEAD array.
-	 */
-	array_unshift($HEAD,
-		"<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/MochiKit/MochiKit.js\"></script>",
-		"<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/PlotKit/excanvas.js\"></script>",
-		"<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/PlotKit/Base.js\"></script>",
-		"<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/PlotKit/Layout.js\"></script>",
-		"<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/PlotKit/Canvas.js\"></script>",
-		"<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/PlotKit/SweetCanvas.js\"></script>"
-		);
-			
+} else {	
 	$BREADCRUMB[]	= array("url" => "", "title" => "Annual Report Completion Rate" );
 	
 	$years = getMinMaxARYears();
 	$PROCESSED["report_type"] = $_POST['report_type'];
 	$PROCESSED["year_reported"] = $_POST['year_reported'];
 	$PROCESSED["report_completed"] = $_POST['report_completed'];
-	
-	
 	?>
 	<style type="text/css">
 	h1 {
@@ -79,7 +65,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 	</style>
 	<a name="top"></a>
 	<div class="no-printing">
-		<form action="<?php echo ENTRADA_URL; ?>/admin/annualreport?section=<?php echo $SECTION; ?>&step=2" method="post">
+		<form action="<?php echo ENTRADA_URL; ?>/admin/annualreport/reports?section=<?php echo $SECTION; ?>&step=2" method="post">
 		<input type="hidden" name="update" value="1" />
 		<table style="width: 100%" cellspacing="0" cellpadding="2" border="0">
 		<colgroup>
@@ -147,58 +133,61 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 	if ($STEP == 2) {
 		switch($PROCESSED["report_type"]) {
 			case "Clinical":
-				$title_suffix = " for Clinical Facutly";
+				$title_suffix = " Clinical Facutly";
 				$type_where	= " AND `".AUTH_DATABASE."`.`user_data`.`clinical` = '1'";
 				break;
 			case "Non-Clinical":
-				$title_suffix = " for Non-Clinical Facutly";
+				$title_suffix = " Non-Clinical Facutly";
 				$type_where	= " AND `".AUTH_DATABASE."`.`user_data`.`clinical` = '0'";
 				break;
 			default:
 			case "All":
-				$title_suffix = " for All Facutly";
+				$title_suffix = " All Facutly";
 				$type_where = "";
 				break;
 		}
 		
 		switch($PROCESSED["report_completed"]) {
 			case "Pending":
-				$query = "SELECT `firstname`, `lastname`, `year_reported`, `report_completed`, `".AUTH_DATABASE."`.`user_data`.`clinical`, `department_title`
-				FROM `".DATABASE_NAME."`.`ar_profile`, `".AUTH_DATABASE."`.`user_data`, `".AUTH_DATABASE."`.`user_departments`, `".AUTH_DATABASE."`.`departments` 
-				WHERE `year_reported` = ".$db->qstr($PROCESSED["year_reported"]).$type_where."
-				AND `report_completed` = \"no\"
-				AND `".DATABASE_NAME."`.`ar_profile`.`proxy_id` = `".AUTH_DATABASE."`.`user_data`.`id` 
-				AND `".AUTH_DATABASE."`.`user_data`.`id` = `".AUTH_DATABASE."`.`user_departments`.`user_id`
-				AND `dep_id` = `department_id`";
+				$query = 	"SELECT `firstname`, `lastname`, `year_reported`, `report_completed`, `".AUTH_DATABASE."`.`user_data`.`clinical`, `department_title`, `ar_profile`.`profile_id`, `ar_profile`.`proxy_id`
+							FROM `".DATABASE_NAME."`.`ar_profile`, `".AUTH_DATABASE."`.`user_data`, `".AUTH_DATABASE."`.`user_departments`, `".AUTH_DATABASE."`.`departments` 
+							WHERE `year_reported` = ".$db->qstr($PROCESSED["year_reported"]).$type_where."
+							AND `report_completed` = \"no\"
+							AND `".DATABASE_NAME."`.`ar_profile`.`proxy_id` = `".AUTH_DATABASE."`.`user_data`.`id` 
+							AND `".AUTH_DATABASE."`.`user_data`.`id` = `".AUTH_DATABASE."`.`user_departments`.`user_id`
+							AND `dep_id` = `department_id`
+							ORDER BY `lastname` ASC";
 				break;
 			case "Missing":
 				// Not only does this query need to look for those that are set to "no" as completed,
 				// but it also needs to find all those that are still active in their departments but
 				// do not have a record in the profile table
-				$query = "SELECT `firstname`, `lastname`, `year_reported`, `report_completed`, `".AUTH_DATABASE."`.`user_data`.`clinical`, `department_title`
-				FROM `".DATABASE_NAME."`.`ar_profile` RIGHT JOIN `".AUTH_DATABASE."`.`user_departments`
-				ON `".DATABASE_NAME."`.`ar_profile`.`proxy_id` = `".AUTH_DATABASE."`.`user_departments`.`user_id`
-				LEFT JOIN `".AUTH_DATABASE."`.`user_data`
-				ON `".AUTH_DATABASE."`.`user_departments`.`user_id` = `".AUTH_DATABASE."`.`user_data`.`id`
-				LEFT JOIN `".AUTH_DATABASE."`.`departments`
-				ON `".AUTH_DATABASE."`.`departments`.`department_id` = `".AUTH_DATABASE."`.`user_departments`.`dep_id`
-				WHERE `".DATABASE_NAME."`.`ar_profile`.`proxy_id` IS NULL
-				".$type_where."
-				AND `dep_id` = `department_id`";
+				$query = 	"SELECT `firstname`, `lastname`, `year_reported`, `report_completed`, `".AUTH_DATABASE."`.`user_data`.`clinical`, `department_title`
+							FROM `".DATABASE_NAME."`.`ar_profile` RIGHT JOIN `".AUTH_DATABASE."`.`user_departments`
+							ON `".DATABASE_NAME."`.`ar_profile`.`proxy_id` = `".AUTH_DATABASE."`.`user_departments`.`user_id`
+							LEFT JOIN `".AUTH_DATABASE."`.`user_data`
+							ON `".AUTH_DATABASE."`.`user_departments`.`user_id` = `".AUTH_DATABASE."`.`user_data`.`id`
+							LEFT JOIN `".AUTH_DATABASE."`.`departments`
+							ON `".AUTH_DATABASE."`.`departments`.`department_id` = `".AUTH_DATABASE."`.`user_departments`.`dep_id`
+							WHERE `".DATABASE_NAME."`.`ar_profile`.`proxy_id` IS NULL
+							".$type_where."
+							AND `dep_id` = `department_id`
+							ORDER BY `lastname` ASC";
 				break;
 			case "Completed":
 			default:
-				$query = "SELECT `firstname`, `lastname`, `year_reported`, `report_completed`, `".AUTH_DATABASE."`.`user_data`.`clinical`, `department_title`
-				FROM `".DATABASE_NAME."`.`ar_profile`, `".AUTH_DATABASE."`.`user_data`, `".AUTH_DATABASE."`.`user_departments`, `".AUTH_DATABASE."`.`departments` 
-				WHERE `year_reported` = ".$db->qstr($PROCESSED["year_reported"]).$type_where."
-				AND `report_completed` = \"yes\" 
-				AND `".DATABASE_NAME."`.`ar_profile`.`proxy_id` = `".AUTH_DATABASE."`.`user_data`.`id` 
-				AND `".AUTH_DATABASE."`.`user_data`.`id` = `".AUTH_DATABASE."`.`user_departments`.`user_id`
-				AND `dep_id` = `department_id`";
+				$query = 	"SELECT `firstname`, `lastname`, `year_reported`, `report_completed`, `".AUTH_DATABASE."`.`user_data`.`clinical`, `department_title`, `ar_profile`.`profile_id`, `ar_profile`.`proxy_id`
+							FROM `".DATABASE_NAME."`.`ar_profile`, `".AUTH_DATABASE."`.`user_data`, `".AUTH_DATABASE."`.`user_departments`, `".AUTH_DATABASE."`.`departments` 
+							WHERE `year_reported` = ".$db->qstr($PROCESSED["year_reported"]).$type_where."
+							AND `report_completed` = \"yes\" 
+							AND `".DATABASE_NAME."`.`ar_profile`.`proxy_id` = `".AUTH_DATABASE."`.`user_data`.`id` 
+							AND `".AUTH_DATABASE."`.`user_data`.`id` = `".AUTH_DATABASE."`.`user_departments`.`user_id`
+							AND `dep_id` = `department_id`
+							ORDER BY `lastname` ASC";
 				break;
 		}
 		
-		echo "<h1>Annual Report Completion Rate for ".$title_suffix."</h1>";
+		echo "<h2>Annual Report Completion Rate for ".$title_suffix."</h2>";
 		echo "<div class=\"content-small\" style=\"margin-bottom: 10px\">\n";
 		echo "	<strong>Reporting Period:</strong> ".$PROCESSED["year_reported"]." <strong>";
 		echo "</div>\n";
@@ -214,6 +203,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 				<col class="title" />
 				<col class="completed" style="width: 75px; text-align: left;"/>
 				<col class="completed" style="width: 75px; text-align: left;"/>
+				<col class="modified" />
 			</colgroup>
 			<thead>
 				<tr>
@@ -222,6 +212,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 					<td class="title">Department</td>
 					<td class="completed" style="width: 75px; text-align: left;">Clinical</td>
 					<td class="completed" style="width: 75px; text-align: left;">Status</td>
+					<td class="modified"></td>
 				</tr>
 			</thead>
 			<tbody>
@@ -232,10 +223,13 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 				
 				if($result["report_completed"] == "yes") {
 					$status = "Completed";
+					$cell = "<td class=\"modified\"><a href=\"javascript: void(0)\" onclick=\"window.open('".ENTRADA_URL . "/annualreport/generate?section=generate-annual-report&amp;rid=".$result["profile_id"]."&amp;proxy_id=".$result["proxy_id"]."&amp;clinical=".$result["clinical"]."');\" style=\"cursor: pointer; cursor: hand\" text-decoration: none><img src=\"".ENTRADA_RELATIVE."/css/jquery/images/report_go.gif\" style=\"border: none\"/></a></td>";
 				} else if($result["report_completed"] == "no") {
 					$status = "Started";
+					$cell = "<td class=\"modified\"><a href=\"javascript: void(0)\" onclick=\"window.open('".ENTRADA_URL . "/annualreport/generate?section=generate-annual-report&amp;rid=".$result["profile_id"]."&amp;proxy_id=".$result["proxy_id"]."&amp;clinical=".$result["clinical"]."');\" style=\"cursor: pointer; cursor: hand\" text-decoration: none><img src=\"".ENTRADA_RELATIVE."/css/jquery/images/report_go.gif\" style=\"border: none\"/></a></td>";
 				} else {
 					$status = "Not Started";
+					$cell = "<td class=\"modified\">&nbsp;</td>";
 				}
 				echo "<tr>\n";
 				echo "	<td class=\"general\">".$result["firstname"]."</td>\n";
@@ -243,6 +237,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 				echo "	<td class=\"title\" style=\"white-space: normal\">".$result["department_title"]."</td>\n";
 				echo "	<td class=\"completed\" style=\"width: 75px; text-align: left;\">".($result["clinical"] == 1 ? "Yes" : "No")."</td>\n";
 				echo "	<td class=\"completed\" style=\"width: 75px; text-align: left;\">".$status."</td>\n";
+				echo $cell;
 				echo "</tr>\n";
 			}
 			?>

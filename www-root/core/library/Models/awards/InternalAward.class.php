@@ -44,7 +44,7 @@ class InternalAward extends Award{
 		
 		$query = "insert into `student_awards_internal_types` (`title`,`award_terms`) value (".$db->qstr($title).", ".$db->qstr($terms).")";
 		if(!$db->Execute($query)) {
-			add_error("Failed to create new award .");
+			add_error("Failed to create new award.");
 			application_log("error", "Unable to update a student_awards_internal_types record. Database said: ".$db->ErrorMsg());
 		} else {
 			add_success("Successfully added new award.");

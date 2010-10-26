@@ -51,6 +51,8 @@ if (!defined("PARENT_INCLUDED")) {
 		} else {
 			$TASK_ID = 0;
 		}
+		
+		require_once("Entrada/tasks/functions.inc.php");
 			
 		$module_file = $router->getRoute();
 		if ($module_file) {

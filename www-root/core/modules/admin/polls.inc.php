@@ -48,7 +48,7 @@ if (!defined("PARENT_INCLUDED")) {
 		$POLL_TARGETS = array();
 		$POLL_TARGETS["all"] = "Poll all students, faculty &amp; staff";
 		$POLL_TARGETS["students"] = "Poll all students";
-		$first_year	= (date("Y", time()) + ((date("m", time()) < 7) ?  3 : 4));
+		$first_year	= fetch_first_year();
 		for ($year = $first_year; $year >= ($first_year - 3); $year--) {
 			$POLL_TARGETS[$year]	= "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Poll class of ".$year;
 		}

@@ -48,11 +48,11 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 		case 2 :
 		case 1 :
 		default :
-			if((!isset($_POST["delete"])) || (!is_array($_POST["delete"])) || (!@count($_POST["delete"]))) {
+			if((!isset($_POST["checked"])) || (!is_array($_POST["checked"])) || (!@count($_POST["checked"]))) {
 				header("Location: ".ENTRADA_URL."/admin/events");
 				exit;
 			} else {
-				foreach($_POST["delete"] as $event_id) {
+				foreach($_POST["checked"] as $event_id) {
 					$event_id = (int) trim($event_id);
 					if($event_id) {
 						$EVENT_IDS[] = $event_id;
@@ -365,7 +365,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								$url 	= ENTRADA_URL."/admin/events?section=edit&amp;id=".$result["event_id"];
 								
 								echo "<tr id=\"event-".$result["event_id"]."\" class=\"event".((!$url) ? " np" : ((!$accessible) ? " na" : ""))."\">\n";
-								echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"delete[]\" value=\"".$result["event_id"]."\" checked=\"checked\" /></td>\n";
+								echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"checked[]\" value=\"".$result["event_id"]."\" checked=\"checked\" /></td>\n";
 								echo "	<td class=\"date".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Event Date\">" : "").date(DEFAULT_DATE_FORMAT, $result["event_start"]).(($url) ? "</a>" : "")."</td>\n";
 								echo "	<td class=\"phase".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Intended For Phase ".html_encode($result["event_phase"])."\">" : "").html_encode($result["event_phase"]).(($url) ? "</a>" : "")."</td>\n";
 								echo "	<td class=\"teacher".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Primary Teacher: ".html_encode($result["fullname"])."\">" : "").html_encode($result["fullname"]).(($url) ? "</a>" : "")."</td>\n";

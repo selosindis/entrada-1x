@@ -24,6 +24,7 @@
  *
 */
 
+ini_set("display_errors", 1);
 @set_include_path(implode(PATH_SEPARATOR, array(
     dirname(__FILE__) . "/core",
     dirname(__FILE__) . "/core/includes",
@@ -239,7 +240,7 @@ if ($ACTION == "login") {
 			switch ($_SESSION["details"]["group"]) {
 				case "student" :
 					if ((!isset($result["ROLE"])) || (!(int) $result["ROLE"])) {
-						$_SESSION["details"]["grad_year"] = (date("Y", time()) + ((date("m", time()) < 7) ?  3 : 4));
+						$_SESSION["details"]["grad_year"] = fetch_first_year();
 					} else {
 						$_SESSION["details"]["grad_year"] = $result["ROLE"];
 					}
@@ -249,7 +250,7 @@ if ($ACTION == "login") {
 					 * If you're in MEdTech, always assign a graduating year,
 					 * because we normally see more than normal users.
 					 */
-					$_SESSION["details"]["grad_year"] = (date("Y", time()) + ((date("m", time()) < 7) ?  3 : 4));
+					$_SESSION["details"]["grad_year"] = fetch_first_year();
 				break;
 				case "staff" :
 				case "faculty" :
@@ -518,6 +519,9 @@ if ((isset($_SESSION["isAuthorized"])) && ($_SESSION["isAuthorized"])) {
 	
 	$sidebar_html  = "<a href=\"javascript: sendFeedback('".ENTRADA_URL."/agent-feedback.php?enc=".feedback_enc()."')\"><img src=\"".ENTRADA_URL."/images/feedback.gif\" width=\"48\" height=\"48\" alt=\"Give Feedback\" border=\"0\" align=\"right\" hspace=\"3\" vspace=\"5\" /></a>";
 	$sidebar_html .= "Giving feedback is a very important part of application development. Please <a href=\"javascript: sendFeedback('".ENTRADA_URL."/agent-feedback.php?enc=".feedback_enc()."')\" style=\"font-size: 11px; font-weight: bold\">click here</a> to send us any feedback you may have about <u>this</u> page.<br /><br />\n";
-
-	new_sidebar_item("Page Feedback", $sidebar_html, "page-feedback", "open");
+	if ($_SESSION["details"]["group"] ==  "student") {
+		$sidebar_html .= "<hr/><br/>\n";
+		$sidebar_html .= "<div><a href=\"javascript: sendAnonymousFeedback('".ENTRADA_URL."/agent-anonymous-feedback.php?enc=".feedback_enc()."')\" style=\"font-size: 13px;\"><img src=\"".ENTRADA_URL."/images/tonysanfilippo.jpg\" style=\"float: right; height: 65px; border: none; margin-right: 8px; margin-top: -8px;\" />Talk to the Associate Dean</a></div>";
+	}
+	new_sidebar_item("Feedback", $sidebar_html, "page-feedback", "open");
 }

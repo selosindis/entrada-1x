@@ -40,9 +40,8 @@ class Studentship {
 		}
 	} 
 	
-	public static function create($user, $title, $year) {
+	public static function create($user_id, $title, $year) {
 		global $db;
-		$user_id = $user->getID();
 	
 		$query = "insert into `student_studentships` (`user_id`, `title`,`year`) value (".$db->qstr($user_id).", ".$db->qstr($title).", ".$db->qstr($year).")";
 		if(!$db->Execute($query)) {

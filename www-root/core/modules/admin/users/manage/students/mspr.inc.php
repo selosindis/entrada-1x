@@ -24,11 +24,10 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
 }  else {
 	
+	require_once("Models/users/ClinicalFacultyMembers.class.php");
 	require_once("Models/mspr/MSPRs.class.php");
 	$PROXY_ID					= $user_record["id"];
 	$user = User::get($user_record["id"]);
-	
-	process_mspr_admin($user);
 	
 	$PAGE_META["title"]			= "MSPR";
 	$PAGE_META["description"]	= "";
@@ -128,6 +127,8 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 		if (!$mspr_close && $class_data) { //no custom time.. use the class default
 			$mspr_close = $class_data->getClosedTimestamp();	
 		}
+		
+		$faculty = ClinicalFacultyMembers::get();
 			
 		display_status_messages();
 		add_mspr_management_sidebar();
@@ -206,47 +207,23 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 						</li>
 					</ul>
 				</div>
-				<?php echo display_contributions_admin($contributions); ?>
+				<div id="contributions-to-medical-school_section">
+					<?php echo display_contributions($contributions,"admin"); ?>
+				</div>
 			</div>
-			<script language="javascript">
-				var contributions = new ActiveApprovalProcessor({
-					url : '<?php echo webservice_url("mspr-admin"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=contributions',
-					data_destination: $('contributions-to-medical-school'),
-					action_form_selector: '#contributions-to-medical-school .entry form',
-					section: "contributions"
-				});
-			</script>
 		</div>
 		
 		<div class="section">
 			<h3 title="Critical Enquiry" class="collapsable<?php echo ($critical_enquiry && $critical_enquiry->isAttentionRequired()) ? "" : " collapsed"; ?>">Critical Enquiry</h3>
 			<div id="critical-enquiry">
-				<div id="critical_enquiry"><?php echo display_critical_enquiry_admin($critical_enquiry); ?></div>
-				<script language="javascript">
-				var critical_enquiry = new ActiveApprovalProcessor({
-					url : '<?php echo webservice_url("mspr-admin"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=critical_enquiry',
-					data_destination: $('critical_enquiry'),
-					action_form_selector: '#critical_enquiry .entry form',
-					section: "critical_enquiry"
-				});
-				
-				</script>
+				<div id="critical_enquiry"><?php echo display_critical_enquiry($critical_enquiry,"admin"); ?></div>
 			</div>
 		</div>
 		
 		<div class="section">
-			<h3 title="Community Health and Epidemiology" class="collapsable<?php echo ($community_health_and_epidemiology && $community_health_and_epidemiology->isAttentionRequired()) ? "" : " collapsed"; ?>">Community Health and Epidemiology</h3>
-			<div id="community-health-and-epidemiology">
-				<div id="community_health_and_epidemiology"><?php echo display_community_health_and_epidemiology_admin($community_health_and_epidemiology); ?></div>
-				<script language="javascript">
-				var community_health_and_epidemiology = new ActiveApprovalProcessor({
-					url : '<?php echo webservice_url("mspr-admin"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=community_health_and_epidemiology',
-					data_destination: $('community_health_and_epidemiology'),
-					action_form_selector: '#community_health_and_epidemiology .entry form',
-					section: "community_health_and_epidemiology"
-				});
-				
-				</script>
+			<h3 title="Community-Based Project" class="collapsable<?php echo ($community_health_and_epidemiology && $community_health_and_epidemiology->isAttentionRequired()) ? "" : " collapsed"; ?>">Community-Based Project</h3>
+			<div id="community-based-project">
+				<div id="community_health_and_epidemiology"><?php echo display_community_health_and_epidemiology($community_health_and_epidemiology,"admin"); ?></div>
 			</div>
 		</div>
 		
@@ -260,17 +237,10 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 						<li>Approved research citations should be in a format following <a href="http://owl.english.purdue.edu/owl/resource/747/01/">MLA guidelines</a></li>
 					</ul>
 				</div>
-				<?php echo display_research_citations_admin($research_citations); ?>
+				<div id="research_section">
+					<?php echo display_research_citations($research_citations,"admin"); ?>
+				</div>
 			</div>
-			<script language="javascript">
-				var research_citations = new ActiveApprovalProcessor({
-					url : '<?php echo webservice_url("mspr-admin"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=research_citations',
-					data_destination: $('research'),
-					action_form_selector: '#research .entry form',
-					section: "research"
-				});
-			
-			</script>
 		</div>
 		
 		<div class="section">
@@ -282,16 +252,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 						<li>Award terms must be provided to be approved. Awards not accompanied by terms should be rejected.</li>
 					</ul>
 				</div>
-				<div id="external_awards"><?php echo display_external_awards_admin($external_awards); ?></div>
-				<script language="javascript">
-					var external_awards = new ActiveApprovalProcessor({
-						url : '<?php echo webservice_url("mspr-admin"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=external_awards',
-						data_destination: $('external_awards'),
-						action_form_selector: '#external_awards .entry form',
-						section: "external_awards"
-					});
-				
-				</script>
+				<div id="external_awards"><?php echo display_external_awards($external_awards,"admin"); ?></div>
 			</div>
 		</div>
 	</div>
@@ -354,21 +315,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 			</form>
 		
 		
-			<div id="clinical_performance_eval_comments"><?php echo display_clineval_admin($clinical_evaluation_comments); ?></div>
-		
-			<script language="javascript">
-		
-			var clineval_comments = new ActiveDataEntryProcessor({
-				url : '<?php echo webservice_url("mspr-admin"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=clineval',
-				data_destination: $('clinical_performance_eval_comments'),
-				new_form: $('add_clineval_form'),
-				remove_forms_selector: '#clinical_performance_eval_comments .entry form',
-				new_button: $('add_clineval_link'),
-				hide_button: $('hide_clineval')
-				
-			});
-		
-			</script>
+			<div id="clinical_performance_eval_comments"><?php echo display_clineval($clinical_evaluation_comments,"admin"); ?></div>
 			</div>
 		</div>
 		
@@ -438,37 +385,14 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 				<div class="clear">&nbsp;</div>
 			</form>
 			
-			<div id="studentships"><?php echo display_studentships_admin($studentships); ?></div>
+			<div id="studentships"><?php echo display_studentships($studentships,"admin"); ?></div>
 			</div>
-			<script language="javascript">
-			var studentships = new ActiveDataEntryProcessor({
-				url : '<?php echo webservice_url("mspr-admin"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=studentships',
-				data_destination: $('studentships'),
-				new_form: $('add_studentship_form'),
-				remove_forms_selector: '#studentships .entry form',
-				new_button: $('add_studentship_link'),
-				hide_button: $('hide_studentship')
-		
-			});
-			
-			</script>
 		</div>
 
 		<div class="section">
 
 			<h3 title="International Activities" class="collapsable collapsed">International Activities</h3>
 			<div id="international-activities">
-				<script>
-					document.observe("dom:loaded",function() {
-						$('int_act_start').observe('focus',function(e) {
-							showCalendar('',this,this,null,null,0,30,1);
-						}.bind($('int_act_start')));
-						$('int_act_end').observe('focus',function(e) {
-							showCalendar('',this,this,null,null,0,30,1);
-						}.bind($('int_act_end')));
-					});
-				</script>
-				
 					<div id="add_int_act_link" style="float: right;<?php if ($show_int_act_form) { echo "display:none;"; }   ?>">
 					<ul class="page-action">
 						<li><a id="add_int_act" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&show=int_act_form&id=<?php echo $PROXY_ID; ?>" class="strong-green">Add Activity</a></li>
@@ -477,7 +401,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 				
 				<div class="clear">&nbsp;</div>
 				<form id="add_int_act_form" name="add_int_act_form" action="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" method="post" <?php if (!$show_int_act_form) { echo "style=\"display:none;\""; }   ?> >
-					<input type="hidden" name="student_id" value="<?php echo $user->getID(); ?>"></input>
+					<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
 					<table class="mspr_form">
 						<colgroup>
 							<col width="3%"></col>
@@ -536,37 +460,13 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 				
 					<div class="clear">&nbsp;</div>
 				</form>
-				<div id="int_acts"><?php echo display_international_activities_admin($international_activities); ?></div>
-			
-				<script language="javascript">
-				var int_acts = new ActiveDataEntryProcessor({
-					url : '<?php echo webservice_url("mspr-admin"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=int_acts',
-					data_destination: $('int_acts'),
-					new_form: $('add_int_act_form'),
-					remove_forms_selector: '#int_acts .entry form',
-					new_button: $('add_int_act_link'),
-					hide_button: $('hide_int_act')
-			
-				});
-				
-				</script>
+				<div id="int_acts"><?php echo display_international_activities($international_activities,"admin"); ?></div>
 			</div>
 		</div>
 		
 		<div class="section">
-			<h3 title="Observerships" class="collapsable collapsed">Observerships</h3>
-			<div id="observerships">
-				<script>
-					document.observe("dom:loaded",function() {
-						$('observership_start').observe('focus',function(e) {
-							showCalendar('',this,this,null,null,0,30,1);
-						}.bind($('observership_start')));
-						$('observership_end').observe('focus',function(e) {
-							showCalendar('',this,this,null,null,0,30,1);
-						}.bind($('observership_end')));
-					});
-				</script>
-				
+			<h3 title="Observerships Section" class="collapsable collapsed">Observerships</h3>
+			<div id="observerships-section">
 				<div id="add_observership_link" style="float: right;<?php if ($show_observership_form) { echo "display:none;"; }   ?>">
 					<ul class="page-action">
 						<li><a id="add_observership" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&show=observership_form&id=<?php echo $PROXY_ID; ?>" class="strong-green">Add Observership</a></li>
@@ -575,12 +475,12 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 				
 				<div class="clear">&nbsp;</div>
 				<form id="add_observership_form" name="add_observership_form" action="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" method="post" <?php if (!$show_observership_form) { echo "style=\"display:none;\""; }   ?> >
-					<input type="hidden" name="student_id" value="<?php echo $user->getID(); ?>"></input>
+					<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
 					<table class="mspr_form">
 						<colgroup>
 							<col width="3%"></col>
-							<col width="25%"></col>
-							<col width="72%"></col>
+							<col width="32%"></col>
+							<col width="65%"></col>
 						</colgroup>
 						<tfoot>
 							<tr>
@@ -612,6 +512,30 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 								<td>&nbsp;</td>
 								<td><label class="form-required" for="location">Location:</label></td>
 								<td><input name="location" value="Kingston, ON"></input> <span class="content-small"><strong>Example:</strong> Kingston, ON</span></td>
+							</tr>
+							<tr>
+								<td>&nbsp;</td>
+								<td><label class="form-nrequired" for="preceptor_proxy_id">Faculty Preceptor:</label></td>
+								<td>
+									<select name="preceptor_proxy_id">
+									<?php
+										echo build_option(0,"Non-Faculty",true);
+										foreach ($faculty as $faculty_member) {
+											echo build_option($faculty_member->getID(), $faculty_member->getLastname().", ".$faculty_member->getFirstname());
+										}
+									?>
+									</select>
+								</td>
+							</tr>	
+							<tr>
+								<td>&nbsp;</td>
+								<td><label class="form-nrequired" for="preceptor_firstname">Non-Faculty Preceptor First Name:</label></td>
+								<td><input name="preceptor_firstname"></input><span class="content-small"> <strong>Example:</strong> <?php echo $user->getFirstname(); ?></span></td>
+							</tr>	
+							<tr>
+								<td>&nbsp;</td>
+								<td><label class="form-nrequired" for="preceptor_lastname">Non-Faculty Preceptor Last Name:</label></td>
+								<td><input name="preceptor_lastname"></input><span class="content-small"> <strong>Example:</strong> <?php echo $user->getLastname(); ?></span></td>
 							</tr>	
 							<tr>
 								<td>&nbsp;</td>
@@ -622,7 +546,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 							</tr>
 							<tr>
 								<td>&nbsp;</td>
-								<td><label class="form-required" for="end">End Date:</label></td>
+								<td><label class="form-nrequired" for="end">End Date:</label></td>
 								<td>
 									<input type="text" name="end" id="observership_end"></input>
 								</td>
@@ -633,20 +557,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 				
 					<div class="clear">&nbsp;</div>
 				</form>
-				<div id="observerships"><?php echo display_observerships_admin($observerships); ?></div>
-			
-				<script language="javascript">
-				var observerships = new ActiveDataEntryProcessor({
-					url : '<?php echo webservice_url("mspr-admin"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=observerships',
-					data_destination: $('observerships'),
-					new_form: $('add_observership_form'),
-					remove_forms_selector: '#observerships .entry form',
-					new_button: $('add_observership_link'),
-					hide_button: $('hide_observership'),
-					section: "observerships"
-			
-				});
-				</script>
+				<div id="observerships"><?php echo display_observerships($observerships,"admin"); ?></div>
 			</div>
 		</div>
 		
@@ -760,20 +671,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 				
 					<div class="clear">&nbsp;</div>
 				</form>
-				<div id="student_run_electives"><?php echo display_student_run_electives_admin($student_run_electives); ?></div>
-			
-				<script language="javascript">
-				var student_run_electives = new ActiveDataEntryProcessor({
-					url : '<?php echo webservice_url("mspr-admin"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=student_run_electives',
-					data_destination: $('student_run_electives'),
-					new_form: $('add_student_run_elective_form'),
-					remove_forms_selector: '#student_run_electives .entry form',
-					new_button: $('add_student_run_elective_link'),
-					hide_button: $('hide_student_run_elective')
-			
-				});
-				
-				</script>
+				<div id="student_run_electives"><?php echo display_student_run_electives($student_run_electives,"admin"); ?></div>
 			</div>
 		</div>
 		
@@ -850,20 +748,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 				
 					<div class="clear">&nbsp;</div>
 				</form>
-				<div id="internal_awards"><?php echo display_internal_awards_admin($internal_awards); ?></div>
-			
-				<script language="javascript">
-				var internal_awards = new ActiveDataEntryProcessor({
-					url : '<?php echo webservice_url("mspr-admin"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=internal_awards',
-					data_destination: $('internal_awards'),
-					new_form: $('add_internal_award_form'),
-					remove_forms_selector: '#internal_awards .entry form',
-					new_button: $('add_internal_award_link'),
-					hide_button: $('hide_internal_award')
-			
-				});
-				
-				</script>
+				<div id="internal_awards"><?php echo display_internal_awards($internal_awards,"admin"); ?></div>
 			</div>
 		</div>
 	</div>
@@ -910,7 +795,174 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 			</div>
 		</div>
 	</div>
+	
 </div>
+
+<div id="reject-submission-box" class="modal-confirmation" style="height: 300px">
+	<h1>Reject Submission</h1>
+	<div class="display-notice">
+		Please confirm that you wish to <strong>reject</strong> this submission.
+	</div>
+	<p>
+		<label for="reject-submission-details" class="form-required">Please provide an explanation for this decision:</label><br />
+		<textarea id="reject-submission-details" name="reject_verify_details" style="width: 99%; height: 75px" cols="45" rows="5"></textarea>
+	</p>
+	<div class="footer">
+		<button class="left modal-close"">Close</button>
+		<button class="right modal-confirm" id="reject-submission-confirm">Reject</button>
+	</div>
+</div>
+
+<script type="text/javascript">
+
+document.observe('dom:loaded', function() {
+	try {
+	var reject_modal = new Control.Modal('reject-submission-box', {
+		overlayOpacity:	0.75,
+		closeOnClick:	'overlay',
+		className:		'modal-confirmation',
+		fade:			true,
+		fadeDuration:	0.30
+	});
+	
+	var api_url = '<?php echo webservice_url("mspr-admin"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=';
+	var contributions = new ActiveApprovalProcessor({
+		url : api_url + 'contributions',
+		data_destination: $('contributions-to-medical-school_section'),
+		action_form_selector: '#contributions-to-medical-school_section .entry form',
+		section: "contributions",
+		reject_modal: reject_modal
+	});
+
+	var critical_enquiry = new ActiveApprovalProcessor({
+		url : api_url + 'critical_enquiry',
+		data_destination: $('critical_enquiry'),
+		action_form_selector: '#critical_enquiry .entry form',
+		section: "critical_enquiry",
+		reject_modal: reject_modal
+	});
+
+	var community_health_and_epidemiology = new ActiveApprovalProcessor({
+		url : api_url + 'community_health_and_epidemiology',
+		data_destination: $('community_health_and_epidemiology'),
+		action_form_selector: '#community_health_and_epidemiology .entry form',
+		section: "community_health_and_epidemiology",
+		reject_modal: reject_modal
+	});
+	
+	var research_citations = new ActiveApprovalProcessor({
+		url : api_url + 'research_citations',
+		data_destination: $('research_section'),
+		action_form_selector: '#research_section .entry form',
+		section: "research",
+		reject_modal: reject_modal
+	});
+
+	var external_awards = new ActiveApprovalProcessor({
+		url : api_url + 'external_awards',
+		data_destination: $('external_awards'),
+		action_form_selector: '#external_awards .entry form',
+		section: "external_awards",
+		reject_modal: reject_modal
+	});
+
+	var clineval_comments = new ActiveDataEntryProcessor({
+		url : api_url + 'clineval',
+		data_destination: $('clinical_performance_eval_comments'),
+		new_form: $('add_clineval_form'),
+		remove_forms_selector: '#clinical_performance_eval_comments .entry form',
+		new_button: $('add_clineval_link'),
+		hide_button: $('hide_clineval')
+		
+	});
+	
+	var studentships = new ActiveDataEntryProcessor({
+		url : api_url + 'studentships',
+		data_destination: $('studentships'),
+		new_form: $('add_studentship_form'),
+		remove_forms_selector: '#studentships .entry form',
+		new_button: $('add_studentship_link'),
+		hide_button: $('hide_studentship')
+
+	});
+
+	$('int_act_start').observe('focus',function(e) {
+		showCalendar('',this,this,null,null,0,30,1);
+	}.bind($('int_act_start')));
+	$('int_act_end').observe('focus',function(e) {
+		showCalendar('',this,this,null,null,0,30,1);
+	}.bind($('int_act_end')));
+
+	var int_acts = new ActiveDataEntryProcessor({
+		url : api_url + 'int_acts',
+		data_destination: $('int_acts'),
+		new_form: $('add_int_act_form'),
+		remove_forms_selector: '#int_acts .entry form',
+		new_button: $('add_int_act_link'),
+		hide_button: $('hide_int_act')
+
+	});
+	
+	$('observership_start').observe('focus',function(e) {
+		showCalendar('',this,this,null,null,0,30,1);
+	}.bind($('observership_start')));
+	$('observership_end').observe('focus',function(e) {
+		showCalendar('',this,this,null,null,0,30,1);
+	}.bind($('observership_end')));
+	
+	var observerships = new ActiveDataEntryProcessor({
+		url : api_url + 'observerships',
+		data_destination: $('observerships'),
+		new_form: $('add_observership_form'),
+		remove_forms_selector: '#observerships .entry form',
+		new_button: $('add_observership_link'),
+		hide_button: $('hide_observership'),
+		section: "observerships"
+
+	});
+	var student_run_electives = new ActiveDataEntryProcessor({
+		url : api_url + 'student_run_electives',
+		data_destination: $('student_run_electives'),
+		new_form: $('add_student_run_elective_form'),
+		remove_forms_selector: '#student_run_electives .entry form',
+		new_button: $('add_student_run_elective_link'),
+		hide_button: $('hide_student_run_elective')
+
+	});
+
+	var internal_awards = new ActiveDataEntryProcessor({
+		url : api_url + 'internal_awards',
+		data_destination: $('internal_awards'),
+		new_form: $('add_internal_award_form'),
+		remove_forms_selector: '#internal_awards .entry form',
+		new_button: $('add_internal_award_link'),
+		hide_button: $('hide_internal_award')
+
+	});
+
+	}catch(e) {
+		clog(e);
+	}
+	
+	/**
+	$('task_verify_form').observe('submit',function (e) {
+		if ($('task_verify_no').checked) {
+			Event.stop(e);
+			verify_modal.open();
+		}
+	});
+	
+
+	Event.observe('reject-submission-confirm', 'click', function() {
+		$('task_verify').setValue('0');
+
+		if ($('reject-submission-details')) {
+			$('task_verify_details').setValue($('reject-submission-details').getValue());
+		}
+		$('decline_verification_form').submit();
+	});*/
+});
+</script>
 <?php 
 	}
 }

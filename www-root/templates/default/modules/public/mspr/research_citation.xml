@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates>
+	<template lang="en">
+		<![CDATA[
+			<span class="handle"><img src="%IMAGE%" /></span>
+			<span class="label">
+				Details: 
+			</span>
+			<p class="data">
+				%DETAILS%
+			</p>
+		]]>
+	</template>
+</templates>

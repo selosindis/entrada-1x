@@ -58,11 +58,9 @@ class ExternalAwardReceipts extends Collection implements AttentionRequirable {
 		if ($results) {
 			foreach ($results as $result) {
 				
-				$award = new ExternalAward($result['title'], $result['award_terms'], $result['awarding_body']);
-				$rejected=($result['status'] == -1);
-				$approved = ($result['status'] == 1);
-				
-				$receipt = new ExternalAwardReceipt( $result['user_id'], $award, $result['award_receipt_id'], $result['year'], $approved, $rejected);
+				$award = ExternalAward::fromArray($result);
+				$result['award'] = $award;
+				$receipt = ExternalAwardReceipt::fromArray( $result);
 				$receipts[] = $receipt;
 			}
 		}

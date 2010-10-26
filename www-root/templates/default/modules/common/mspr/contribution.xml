@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates>
+	<template lang="en">
+		<![CDATA[
+			<span class="label">
+				Role:
+			</span>
+			<span class="heading">
+				%ROLE%			
+			</span>
+			<span class="label">
+				Organization/Event:
+			</span>
+			<span class="data">
+				%ORG_EVENT%			
+			</span>
+			<span class="label">
+				Period:
+			</span>
+			<span class="data">
+				%PERIOD%
+			</span>
+		]]>
+	</template>
+</templates>

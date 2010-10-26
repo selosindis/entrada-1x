@@ -3568,7 +3568,7 @@ CREATE TABLE IF NOT EXISTS `tasks` (
   `organisation_id` int(12) unsigned NOT NULL,
   `require_verification` tinyint(1) NOT NULL default '0',
   PRIMARY KEY  (`task_id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=34 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `task_completion` (
   `task_id` int(12) unsigned NOT NULL,

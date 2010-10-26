@@ -874,8 +874,8 @@ if (!defined("PARENT_INCLUDED")) {
 							$total_questions	= quiz_count_questions($quiz_record["quiz_id"]);
 
 							$query				= "	SELECT *
-											FROM `event_quiz_progress`
-											WHERE `equiz_id` = ".$db->qstr($quiz_record["equiz_id"])."
+											FROM `quiz_progress`
+											WHERE `aquiz_id` = ".$db->qstr($quiz_record["aquiz_id"])."
 											AND `proxy_id` = ".$db->qstr($_SESSION["details"]["id"]);
 							$progress_record	= $db->GetAll($query);
 							if ($progress_record) {
@@ -890,11 +890,11 @@ if (!defined("PARENT_INCLUDED")) {
 								$allow_attempt = false;
 							}
 
-							echo "	<tr id=\"quiz-".$quiz_record["equiz_id"]."\">\n";
+							echo "	<tr id=\"quiz-".$quiz_record["aquiz_id"]."\">\n";
 							echo "		<td class=\"modified\" style=\"vertical-align: top\">".(((int) $quiz_record["last_visited"]) ? (((int) $quiz_record["last_visited"] >= (int) $quiz_record["updated_date"]) ? "<img src=\"".ENTRADA_URL."/images/checkmark.gif\" width=\"20\" height=\"20\" alt=\"You have previously completed this quiz.\" title=\"You have previously completed this quiz.\" style=\"vertical-align: middle\" />" : "<img src=\"".ENTRADA_URL."/images/exclamation.gif\" width=\"20\" height=\"20\" alt=\"This attached quiz has been updated since you last completed it.\" title=\"This attached quiz has been updated since you last completed it.\" style=\"vertical-align: middle\" />") : "")."</td>\n";
 							echo "		<td class=\"title\" style=\"vertical-align: top; white-space: normal; overflow: visible\">\n";
 							if ($allow_attempt) {
-								echo "		<a href=\"".ENTRADA_URL."/quizzes?section=attempt&amp;id=".$quiz_record["equiz_id"]."\" title=\"Take ".html_encode($quiz_record["quiz_title"])."\" style=\"font-weight: bold\">".html_encode($quiz_record["quiz_title"])."</a>";
+								echo "		<a href=\"".ENTRADA_URL."/quizzes?section=attempt&amp;id=".$quiz_record["aquiz_id"]."\" title=\"Take ".html_encode($quiz_record["quiz_title"])."\" style=\"font-weight: bold\">".html_encode($quiz_record["quiz_title"])."</a>";
 							} else {
 								echo "		<span style=\"color: #666666; font-weight: bold\">".html_encode($quiz_record["quiz_title"])."</span>";
 							}
@@ -927,8 +927,8 @@ if (!defined("PARENT_INCLUDED")) {
 											"updated_date" => time(),
 											"updated_by" => $_SESSION["details"]["id"]
 										);
-										if (!$db->AutoExecute("event_quiz_progress", $quiz_progress_array, "UPDATE", "eqprogress_id = ".$db->qstr($entry["eqprogress_id"]))) {
-											application_log("error", "Unable to update the eqprogress_id [".$eqprogress_id."] to expired. Database said: ".$db->ErrorMsg());
+										if (!$db->AutoExecute("quiz_progress", $quiz_progress_array, "UPDATE", "qprogress_id = ".$db->qstr($entry["qprogress_id"]))) {
+											application_log("error", "Unable to update the qprogress_id [".$qprogress_id."] to expired. Database said: ".$db->ErrorMsg());
 										}
 										$entry["progress_value"] = "expired";
 									}
@@ -939,7 +939,7 @@ if (!defined("PARENT_INCLUDED")) {
 												$percentage = ((round(($entry["quiz_score"] / $entry["quiz_value"]), 2)) * 100);
 												echo "<li class=\"".(($percentage >= 60) ? "correct" : "incorrect")."\">";
 												echo	date(DEFAULT_DATE_FORMAT, $entry["updated_date"])." <strong>Score:</strong> ".$entry["quiz_score"]."/".$entry["quiz_value"]." (".$percentage."%)";
-												echo "	( <a href=\"".ENTRADA_URL."/quizzes?section=results&amp;id=".$entry["eqprogress_id"]."\">review quiz</a> )";
+												echo "	( <a href=\"".ENTRADA_URL."/quizzes?section=results&amp;id=".$entry["qprogress_id"]."\">review quiz</a> )";
 												echo "</li>";
 											} else {
 												echo "<li>".date(DEFAULT_DATE_FORMAT, $entry["updated_date"])." <strong>Score:</strong> To Be Released ".date(DEFAULT_DATE_FORMAT, $quiz_record["release_until"])."</li>";
@@ -949,7 +949,7 @@ if (!defined("PARENT_INCLUDED")) {
 											echo "<li class=\"incorrect\">".date(DEFAULT_DATE_FORMAT, $entry["updated_date"])." <strong>Expired Attempt</strong>: not completed.</li>";
 										break;
 										case "inprogress" :
-											echo "<li>".date(DEFAULT_DATE_FORMAT, $entry["updated_date"])." <strong>Attempt In Progress</strong> ( <a href=\"".ENTRADA_URL."/quizzes?section=attempt&amp;id=".$quiz_record["equiz_id"]."\">continue quiz</a> )</li>";
+											echo "<li>".date(DEFAULT_DATE_FORMAT, $entry["updated_date"])." <strong>Attempt In Progress</strong> ( <a href=\"".ENTRADA_URL."/quizzes?section=attempt&amp;id=".$quiz_record["aquiz_id"]."\">continue quiz</a> )</li>";
 										break;
 										default :
 											continue;

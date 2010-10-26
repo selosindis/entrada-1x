@@ -1236,17 +1236,18 @@ function fetch_event_resources($event_id = 0, $options = array()) {
 			 * This query will retrieve all of the quizzes associated with this evevnt.
 			 */
 			$query	= "	SELECT a.*, b.`quiztype_code`, b.`quiztype_title`, MAX(c.`timestamp`) AS `last_visited`
-						FROM `event_quizzes` AS a
+						FROM `attached_quizzes` AS a
 						LEFT JOIN `quizzes_lu_quiztypes` AS b
 						ON b.`quiztype_id` = a.`quiztype_id`
 						LEFT JOIN `statistics` AS c
 						ON c.`module` = 'events'
 						AND c.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
 						AND c.`action` = 'quiz_complete'
-						AND c.`action_field` = 'equiz_id'
-						AND c.`action_value` = a.`equiz_id`
-						WHERE a.`event_id` = ".$db->qstr($event_id)."
-						GROUP BY a.`equiz_id`
+						AND c.`action_field` = 'aquiz_id'
+						AND c.`action_value` = a.`aquiz_id`
+						WHERE a.`content_type` = 'event'
+						AND a.`content_id` = ".$db->qstr($event_id)."
+						GROUP BY a.`aquiz_id`
 						ORDER BY a.`required` DESC, a.`quiz_title` ASC, a.`release_until` ASC";
 			$output["quizzes"] = $db->GetAll($query);
 		}
@@ -2335,7 +2336,7 @@ function attachment_check($event_id = 0, $side = "public") {
 			$grand_total += $total_links;
 		}
 
-		$query	= "SELECT COUNT(*) AS `total_quizzes` FROM `event_quizzes` WHERE `event_id` = ".$db->qstr($event_id).(($side == "public") ? " AND (`release_date` = '0' OR `release_date` <= '".time()."') AND (`release_until` = '0' OR `release_until` >= '".time()."')" : "");
+		$query	= "SELECT COUNT(*) AS `total_quizzes` FROM `attached_quizzes` WHERE a.`content_type` = 'event' AND a.`content_id` = ".$db->qstr($event_id).(($side == "public") ? " AND (`release_date` = '0' OR `release_date` <= '".time()."') AND (`release_until` = '0' OR `release_until` >= '".time()."')" : "");
 		$result	= ((USE_CACHE) ? $db->CacheGetRow(LONG_CACHE_TIMEOUT, $query) : $db->GetRow($query));
 		if($result) {
 			$total_quizzes = $result["total_quizzes"];
@@ -6749,33 +6750,33 @@ function quiz_generate_description($required = 0, $quiztype_code = "delayed", $q
 }
 
 /**
- * This function loads the current progress based on an eqprogress_id.
+ * This function loads the current progress based on an qprogress_id.
  *
  * @global object $db
- * @param int $eqprogress_id
+ * @param int $qprogress_id
  * @return array Returns the users currently progress or returns false if there
  * is an error.
  */
-function quiz_load_progress($eqprogress_id = 0) {
+function quiz_load_progress($qprogress_id = 0) {
 	global $db;
 
 	$output = array();
 
-	if ($eqprogress_id = (int) $eqprogress_id) {
+	if ($qprogress_id = (int) $qprogress_id) {
 	/**
 		 * Grab the specified progress identifier, but you better be sure this
 		 * is the correct one, and the results are being returned to the proper
 		 * user.
 	 */
 		$query		= "	SELECT *
-						FROM `event_quiz_progress`
-						WHERE `eqprogress_id` = ".$db->qstr($eqprogress_id);
+						FROM `quiz_progress`
+						WHERE `qprogress_id` = ".$db->qstr($qprogress_id);
 		$progress	= $db->GetRow($query);
 		if ($progress) {
 		/**
 		 * Add all of the qquestion_ids to the $output array so they're set.
 		 */
-			$query		= "SELECT * FROM `quiz_questions` WHERE `quiz_id` = ".$db->qstr($progress["quiz_id"])." ORDER BY `question_order` ASC";
+			$query		= "SELECT * FROM `quiz_questions` WHERE `quiz_id` = ".$db->qstr($progress["quiz_id"])." AND `question_active` = '1' ORDER BY `question_order` ASC";
 			$questions	= $db->GetAll($query);
 			if ($questions) {
 				foreach ($questions as $question) {
@@ -6789,8 +6790,8 @@ function quiz_load_progress($eqprogress_id = 0) {
 			 * Update the $output array with any currently selected responses.
 			 */
 			$query		= "	SELECT *
-							FROM `event_quiz_responses`
-							WHERE `eqprogress_id` = ".$db->qstr($eqprogress_id);
+							FROM `quiz_progress_responses`
+							WHERE `qprogress_id` = ".$db->qstr($qprogress_id);
 			$responses	= $db->GetAll($query);
 			if ($responses) {
 				foreach ($responses as $response) {
@@ -6805,24 +6806,25 @@ function quiz_load_progress($eqprogress_id = 0) {
 	return $output;
 }
 
-function quiz_save_response($eqprogress_id, $equiz_id, $event_id, $quiz_id, $qquestion_id, $qqresponse_id) {
+function quiz_save_response($qprogress_id, $aquiz_id, $content_id, $quiz_id, $qquestion_id, $qqresponse_id, $quiz_type = "event") {
 	global $db;
 
 	/**
 	 * Check to ensure that this response is associated with this question.
 	 */
-	$query	= "SELECT * FROM `quiz_question_responses` WHERE `qqresponse_id` = ".$db->qstr($qqresponse_id)." AND `qquestion_id` = ".$db->qstr($qquestion_id);
+	$query	= "SELECT * FROM `quiz_question_responses` WHERE `qqresponse_id` = ".$db->qstr($qqresponse_id)." AND `response_active` = '1' AND `qquestion_id` = ".$db->qstr($qquestion_id);
 	$result	= $db->GetRow($query);
 	if ($result) {
 	/**
 	 * See if they have already responded to this question or not as this
 	 * determines whether an INSERT or an UPDATE is required.
 	 */
-		$query = "	SELECT `eqresponse_id`, `qqresponse_id`
-					FROM `event_quiz_responses`
-					WHERE `eqprogress_id` = ".$db->qstr($eqprogress_id)."
-					AND `equiz_id` = ".$db->qstr($equiz_id)."
-					AND `event_id` = ".$db->qstr($event_id)."
+		$query = "	SELECT `qpresponse_id`, `qqresponse_id`
+					FROM `quiz_progress_responses`
+					WHERE `qprogress_id` = ".$db->qstr($qprogress_id)."
+					AND `aquiz_id` = ".$db->qstr($aquiz_id)."
+					AND `content_type` = ".$db->qstr($quiz_type)."
+					AND `content_id` = ".$db->qstr($content_id)."
 					AND `quiz_id` = ".$db->qstr($quiz_id)."
 					AND `proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
 					AND `qquestion_id` = ".$db->qstr($qquestion_id);
@@ -6839,7 +6841,7 @@ function quiz_save_response($eqprogress_id, $equiz_id, $event_id, $quiz_id, $qqu
 					"updated_by" => $_SESSION["details"]["id"]
 				);
 
-				if ($db->AutoExecute("event_quiz_responses", $quiz_response_array, "UPDATE", "`eqresponse_id` = ".$db->qstr($result["eqresponse_id"]))) {
+				if ($db->AutoExecute("quiz_progress_responses", $quiz_response_array, "UPDATE", "`qpresponse_id` = ".$db->qstr($result["qpresponse_id"]))) {
 					return true;
 				} else {
 					application_log("error", "Unable to update a response to a question that has already been recorded. Database said: ".$db->ErrorMsg());
@@ -6849,9 +6851,10 @@ function quiz_save_response($eqprogress_id, $equiz_id, $event_id, $quiz_id, $qqu
 			}
 		} else {
 			$quiz_response_array	= array (
-				"eqprogress_id" => $eqprogress_id,
-				"equiz_id" => $equiz_id,
-				"event_id" => $event_id,
+				"qprogress_id" => $qprogress_id,
+				"aquiz_id" => $aquiz_id,
+				"content_type" => $quiz_type,
+				"content_id" => $content_id,
 				"quiz_id" => $quiz_id,
 				"proxy_id" => $_SESSION["details"]["id"],
 				"qquestion_id" => $qquestion_id,
@@ -6860,7 +6863,7 @@ function quiz_save_response($eqprogress_id, $equiz_id, $event_id, $quiz_id, $qqu
 				"updated_by" => $_SESSION["details"]["id"]
 			);
 
-			if ($db->AutoExecute("event_quiz_responses", $quiz_response_array, "INSERT")) {
+			if ($db->AutoExecute("quiz_progress_responses", $quiz_response_array, "INSERT")) {
 				return true;
 			} else {
 				application_log("error", "Unable to record a response to a question that was submitted. Database said: ".$db->ErrorMsg());
@@ -7064,18 +7067,18 @@ function lp_multiple_select_category_select($id, $checkboxes, $options) {
 
 /**
  * This function returns the total number of attempts the user
- * has made on the provided equiz_id, completed, expired or otherwise.
+ * has made on the provided aquiz_id, completed, expired or otherwise.
 
- * @param int $equiz_id
+ * @param int $aquiz_id
  * @return int
  */
-function quiz_fetch_attempts($equiz_id = 0) {
+function quiz_fetch_attempts($aquiz_id = 0) {
 	global $db;
 
-	if ($equiz_id = (int) $equiz_id) {
+	if ($aquiz_id = (int) $aquiz_id) {
 		$query		= "	SELECT COUNT(*) AS `total`
-						FROM `event_quiz_progress`
-						WHERE `equiz_id` = ".$db->qstr($equiz_id)."
+						FROM `quiz_progress`
+						WHERE `aquiz_id` = ".$db->qstr($aquiz_id)."
 						AND `proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
 						AND `progress_value` <> 'inprogress'";
 		$attempts	= $db->GetRow($query);
@@ -7089,18 +7092,18 @@ function quiz_fetch_attempts($equiz_id = 0) {
 
 /**
  * This function returns the total number of completed attempts the user
- * has made on the provided equiz_id.
+ * has made on the provided aquiz_id.
 
- * @param int $equiz_id
+ * @param int $aquiz_id
  * @return int
  */
-function quiz_completed_attempts($equiz_id = 0) {
+function quiz_completed_attempts($aquiz_id = 0) {
 	global $db;
 
-	if ($equiz_id = (int) $equiz_id) {
+	if ($aquiz_id = (int) $aquiz_id) {
 		$query		= "	SELECT COUNT(*) AS `total`
-						FROM `event_quiz_progress`
-						WHERE `equiz_id` = ".$db->qstr($equiz_id)."
+						FROM `quiz_progress`
+						WHERE `aquiz_id` = ".$db->qstr($aquiz_id)."
 						AND `proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
 						AND `progress_value` = 'complete'";
 		$completed	= $db->GetRow($query);
@@ -7122,7 +7125,7 @@ function quiz_count_questions($quiz_id = 0) {
 	global $db;
 
 	if ($quiz_id = (int) $quiz_id) {
-		$query	= "SELECT COUNT(*) AS `total` FROM `quiz_questions` WHERE `quiz_id` = ".$db->qstr($quiz_id);
+		$query	= "SELECT COUNT(*) AS `total` FROM `quiz_questions` WHERE `quiz_id` = ".$db->qstr($quiz_id)." AND `question_active` = '1'";
 		$result	= $db->GetRow($query);
 		if ($result) {
 			return $result["total"];
@@ -10953,7 +10956,7 @@ function add_task_sidebar () {
 	foreach ($tasks_completions as $completion) {
 		$tasks[] = $completion->getTask();
 	}
-	if ($tasks) {
+	if (isset($tasks) && $tasks) {
 		
 		$sidebar_html = "<ul>";
 		foreach ($tasks as $task) {

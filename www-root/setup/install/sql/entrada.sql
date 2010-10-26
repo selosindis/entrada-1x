@@ -1038,7 +1038,8 @@ INSERT INTO `communities_modules` (`module_id`, `module_shortname`, `module_vers
 (3, 'galleries', '1.0.0', 'Galleries', 'The Galleries module allows you to add photo galleries and images to your community.', 1, 'a:13:{s:11:"add-comment";i:0;s:11:"add-gallery";i:1;s:9:"add-photo";i:0;s:10:"move-photo";i:0;s:14:"delete-comment";i:0;s:14:"delete-gallery";i:1;s:12:"delete-photo";i:0;s:12:"edit-comment";i:0;s:12:"edit-gallery";i:1;s:10:"edit-photo";i:0;s:5:"index";i:0;s:12:"view-gallery";i:0;s:10:"view-photo";i:0;}', 1173116408, 1),
 (4, 'shares', '1.0.0', 'Document Sharing', 'The Document Sharing module gives you the ability to upload and share documents within your community.', 1, 'a:15:{s:11:"add-comment";i:0;s:10:"add-folder";i:1;s:8:"add-file";i:0;s:9:"move-file";i:0;s:12:"add-revision";i:0;s:14:"delete-comment";i:0;s:13:"delete-folder";i:1;s:11:"delete-file";i:0;s:15:"delete-revision";i:0;s:12:"edit-comment";i:0;s:11:"edit-folder";i:1;s:9:"edit-file";i:0;s:5:"index";i:0;s:11:"view-folder";i:0;s:9:"view-file";i:0;}', 1173116408, 1),
 (5, 'polls', '1.0.0', 'Polling', 'This module allows communities to create their own polls for everything from adhoc open community polling to individual community member votes.', 1, 'a:10:{s:8:"add-poll";i:1;s:12:"add-question";i:1;s:13:"edit-question";i:1;s:15:"delete-question";i:1;s:11:"delete-poll";i:1;s:9:"edit-poll";i:1;s:9:"view-poll";i:0;s:9:"vote-poll";i:0;s:5:"index";i:0;s:8:"my-votes";i:0;}', 1216256830, 1408),
-(6, 'events', '1.0.0', 'Events', 'The Events module allows you to post events to your community which will be accessible through iCalendar ics files or viewable in the community.', 1, 'a:4:{s:3:"add";i:1;s:6:"delete";i:1;s:4:"edit";i:1;s:5:"index";i:0;}', 1225209600, 3499);
+(6, 'events', '1.0.0', 'Events', 'The Events module allows you to post events to your community which will be accessible through iCalendar ics files or viewable in the community.', 1, 'a:4:{s:3:"add";i:1;s:6:"delete";i:1;s:4:"edit";i:1;s:5:"index";i:0;}', 1225209600, 3499),
+(7, 'quizzes', '1.0.0', 'Quizzes', 'This module allows communities to create their own quizzes for summative or formative evaluation.', 1, 'a:1:{s:5:\"index\";i:0;}', 1216256830, 3499);
 
 CREATE TABLE IF NOT EXISTS `communities_most_active` (
   `cmactive_id` int(12) NOT NULL AUTO_INCREMENT,
@@ -1971,9 +1972,10 @@ CREATE TABLE IF NOT EXISTS `event_objectives` (
   KEY `objective_id` (`objective_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `event_quizzes` (
-  `equiz_id` int(12) NOT NULL AUTO_INCREMENT,
-  `event_id` int(12) NOT NULL DEFAULT '0',
+CREATE TABLE `attached_quizzes` (
+  `aquiz_id` int(12) NOT NULL AUTO_INCREMENT,
+  `content_type` enum('event','community_page') NOT NULL DEFAULT 'event',
+  `content_id` int(12) NOT NULL DEFAULT '0',
   `required` int(1) NOT NULL DEFAULT '0',
   `timeframe` varchar(64) NOT NULL,
   `quiz_id` int(12) NOT NULL DEFAULT '0',
@@ -1987,8 +1989,8 @@ CREATE TABLE IF NOT EXISTS `event_quizzes` (
   `release_until` bigint(64) NOT NULL DEFAULT '0',
   `updated_date` bigint(64) NOT NULL DEFAULT '0',
   `updated_by` int(12) NOT NULL DEFAULT '0',
-  PRIMARY KEY  (`equiz_id`),
-  KEY `event_id` (`event_id`),
+  PRIMARY KEY (`aquiz_id`),
+  KEY `content_id` (`content_id`),
   KEY `required` (`required`),
   KEY `timeframe` (`timeframe`),
   KEY `quiztype_id` (`quiztype_id`),
@@ -1996,13 +1998,15 @@ CREATE TABLE IF NOT EXISTS `event_quizzes` (
   KEY `accesses` (`accesses`),
   KEY `release_date` (`release_date`,`release_until`),
   KEY `quiz_timeout` (`quiz_timeout`),
-  KEY `quiz_attempts` (`quiz_attempts`)
+  KEY `quiz_attempts` (`quiz_attempts`),
+  KEY `content_id_2` (`content_id`,`release_date`,`release_until`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `event_quiz_progress` (
-  `eqprogress_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
-  `equiz_id` int(12) unsigned NOT NULL,
-  `event_id` int(12) unsigned NOT NULL,
+CREATE TABLE `quiz_progress` (
+  `qprogress_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
+  `aquiz_id` int(12) unsigned NOT NULL,
+  `content_type` enum('event','community_page') DEFAULT 'event',
+  `content_id` int(12) unsigned NOT NULL,
   `quiz_id` int(12) unsigned NOT NULL,
   `proxy_id` int(12) unsigned NOT NULL,
   `progress_value` varchar(16) NOT NULL,
@@ -2010,24 +2014,25 @@ CREATE TABLE IF NOT EXISTS `event_quiz_progress` (
   `quiz_value` int(12) NOT NULL,
   `updated_date` bigint(64) NOT NULL,
   `updated_by` int(12) unsigned NOT NULL,
-  PRIMARY KEY  (`eqprogress_id`),
-  KEY `event_id` (`equiz_id`, `event_id`,`proxy_id`),
+  PRIMARY KEY (`qprogress_id`),
+  KEY `content_id` (`aquiz_id`,`content_id`,`proxy_id`),
   KEY `quiz_id` (`quiz_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `event_quiz_responses` (
-  `eqresponse_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
-  `eqprogress_id` int(12) unsigned NOT NULL,
-  `equiz_id` int(12) unsigned NOT NULL,
-  `event_id` int(12) unsigned NOT NULL,
+CREATE TABLE `quiz_progress_responses` (
+  `qpresponse_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
+  `qprogress_id` int(12) unsigned NOT NULL,
+  `aquiz_id` int(12) unsigned NOT NULL,
+  `content_type` enum('event','community_page') NOT NULL DEFAULT 'event',
+  `content_id` int(12) unsigned NOT NULL,
   `quiz_id` int(12) unsigned NOT NULL,
   `proxy_id` int(12) unsigned NOT NULL,
   `qquestion_id` int(12) unsigned NOT NULL,
   `qqresponse_id` int(12) unsigned NOT NULL,
   `updated_date` bigint(64) NOT NULL,
   `updated_by` int(12) unsigned NOT NULL,
-  PRIMARY KEY  (`eqresponse_id`),
-  KEY `eqprogress_id` (`eqprogress_id`,`equiz_id`, `event_id`,`quiz_id`,`proxy_id`,`qquestion_id`,`qqresponse_id`)
+  PRIMARY KEY (`qpresponse_id`),
+  KEY `qprogress_id` (`qprogress_id`,`aquiz_id`,`content_id`,`quiz_id`,`proxy_id`,`qquestion_id`,`qqresponse_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `event_related` (

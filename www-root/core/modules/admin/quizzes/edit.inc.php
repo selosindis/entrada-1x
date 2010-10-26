@@ -148,9 +148,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						foreach ($results as $result) {
 							if (!in_array($result["proxy_id"], $PROCESSED["associated_proxy_ids"])) {
 								$query		= "	SELECT b.`proxy_id`
-												FROM `event_quizzes` AS a
+												FROM `attached_quizzes` AS a
 												LEFT JOIN `event_contacts` AS b
-												ON a.`event_id` = b.`event_id`
+												ON a.`content_type` = 'event' 
+												AND a.`content_id` = b.`event_id`
 												LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS c
 												ON b.`proxy_id` = c.`id`
 												WHERE a.`quiz_id` = ".$db->qstr($RECORD_ID)."
@@ -408,6 +409,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 								$query		= "	SELECT a.*
 												FROM `quiz_questions` AS a
 												WHERE a.`quiz_id` = ".$db->qstr($RECORD_ID)."
+												AND a.`question_active` = '1'
 												ORDER BY a.`question_order` ASC";
 								$questions	= $db->GetAll($query);
 								if ($questions) {
@@ -432,6 +434,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 													$query		= "	SELECT a.*
 																	FROM `quiz_question_responses` AS a
 																	WHERE a.`qquestion_id` = ".$db->qstr($question["qquestion_id"])."
+																	AND a.`response_active` = '1'
 																	ORDER BY ".(($question["randomize_responses"] == 1) ? "RAND()" : "a.`response_order` ASC");
 													$responses	= $db->GetAll($query);
 													if ($responses) {
@@ -646,18 +649,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 									</div>
 									<?php
 									$query		= "	SELECT a.*, b.`course_id`, b.`eventtype_id`, b.`event_title`, b.`event_start`, b.`event_duration`, CONCAT_WS(', ', d.`lastname`, d.`firstname`) AS `fullname`, e.`course_name`, e.`course_code`
-													FROM `event_quizzes` AS a
+													FROM `attached_quizzes` AS a
 													LEFT JOIN `events` AS b
-													ON b.`event_id` = a.`event_id`
+													ON a.`content_type` = 'event' 
+													AND	b.`event_id` = a.`content_id`
 													LEFT JOIN `event_contacts` AS c
-													ON c.`event_id` = a.`event_id`
+													ON a.`content_type` = 'event' 
+													ANDc.`event_id` = a.`content_id`
 													LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS d
 													ON d.`id` = c.`proxy_id`
 													LEFT JOIN `courses` AS e
 													ON e.`course_id` = b.`course_id`
 													WHERE a.`quiz_id` = ".$db->qstr($RECORD_ID)."
 													AND e.`course_active` = '1'
-													GROUP BY a.`event_id`
+													GROUP BY a.`content_type`, a.`content_id`
 													ORDER BY b.`event_start` DESC";
 									$results	= $db->GetAll($query);
 									if($results) {
@@ -687,7 +692,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 												echo "<tr id=\"event-".$result["event_id"]."\" class=\"event\">\n";
 												echo "	<td class=\"modified\">\n";
 												if ($result["accesses"] > 0) {
-													echo "	<a href=\"".ENTRADA_URL."/admin/quizzes?section=results&amp;id=".$result["equiz_id"]."\"><img src=\"".ENTRADA_URL."/images/view-stats.gif\" width=\"16\" height=\"16\" alt=\"View results of ".html_encode($result["quiz_title"])."\" title=\"View results of ".html_encode($result["quiz_title"])."\" style=\"vertical-align: middle\" border=\"0\" /></a>\n";
+													echo "	<a href=\"".ENTRADA_URL."/admin/quizzes?section=results&amp;id=".$result["aquiz_id"]."\"><img src=\"".ENTRADA_URL."/images/view-stats.gif\" width=\"16\" height=\"16\" alt=\"View results of ".html_encode($result["quiz_title"])."\" title=\"View results of ".html_encode($result["quiz_title"])."\" style=\"vertical-align: middle\" border=\"0\" /></a>\n";
 												} else {
 													echo "	<img src=\"".ENTRADA_URL."/images/view-stats-disabled.gif\" width=\"16\" height=\"16\" alt=\"No completed quizzes at this time.\" title=\"No completed quizzes at this time.\" style=\"vertical-align: middle\" border=\"0\" />\n";
 												}

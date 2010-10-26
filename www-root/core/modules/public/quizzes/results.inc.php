@@ -32,36 +32,59 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_PUBLIC_QUIZZES"))) {
 }
 
 if ($RECORD_ID) {
-	$query			= "	SELECT a.`quiz_score`, a.`quiz_value`, a.`proxy_id`, b.*, d.`event_title`, d.`event_start`, d.`event_finish`, d.`release_date` AS `event_release_date`, d.`release_until` AS `event_release_until`, d.`course_id`, e.`organisation_id`, f.`quiztype_code`
-						FROM `event_quiz_progress` AS a
-						LEFT JOIN `event_quizzes` AS b
-						ON b.`equiz_id` = a.`equiz_id`
-						LEFT JOIN `quizzes` AS c
-						ON c.`quiz_id` = a.`quiz_id`
-						LEFT JOIN `events` AS d
-						ON d.`event_id` = a.`event_id`
-						LEFT JOIN `courses` AS e
-						ON e.`course_id` = d.`course_id`
-						LEFT JOIN `quizzes_lu_quiztypes` AS f
-						ON f.`quiztype_id` = b.`quiztype_id`
-						WHERE a.`eqprogress_id` = ".$db->qstr($RECORD_ID)."
-						AND c.`quiz_active` = '1'";
-	$quiz_record	= $db->GetRow($query);
+	if ($QUIZ_TYPE == "event") {
+		$query			= "	SELECT a.`quiz_score`, a.`quiz_value`, a.`proxy_id`, b.*, d.`event_title` AS `content_title`, d.`event_start`, d.`event_finish`, d.`release_date` AS `event_release_date`, d.`release_until` AS `event_release_until`, d.`course_id`, e.`organisation_id`, f.`quiztype_code`
+							FROM `quiz_progress` AS a
+							LEFT JOIN `attached_quizzes` AS b
+							ON b.`aquiz_id` = a.`aquiz_id`
+							LEFT JOIN `quizzes` AS c
+							ON c.`quiz_id` = a.`quiz_id`
+							LEFT JOIN `events` AS d
+							ON a.`content_type` = 'event' 
+							AND d.`event_id` = a.`content_id`
+							LEFT JOIN `courses` AS e
+							ON e.`course_id` = d.`course_id`
+							LEFT JOIN `quizzes_lu_quiztypes` AS f
+							ON f.`quiztype_id` = b.`quiztype_id`
+							WHERE a.`qprogress_id` = ".$db->qstr($RECORD_ID)."
+							AND c.`quiz_active` = '1'";
+	} else {
+		$query			= "	SELECT a.`quiz_score`, a.`quiz_value`, a.`proxy_id`, b.*, dp.`page_title` AS `content_title`, d.`community_id`, d.`community_url`, dp.`page_url`, f.`quiztype_code`
+							FROM `quiz_progress` AS a
+							LEFT JOIN `attached_quizzes` AS b
+							ON b.`aquiz_id` = a.`aquiz_id`
+							LEFT JOIN `quizzes` AS c
+							ON c.`quiz_id` = a.`quiz_id`
+							LEFT JOIN `community_pages` AS dp
+							ON a.`content_type` = 'community_page' 
+							AND dp.`cpage_id` = a.`content_id`
+							LEFT JOIN `communities` AS d
+							ON d.`community_id` = dp.`community_id`
+							LEFT JOIN `quizzes_lu_quiztypes` AS f
+							ON f.`quiztype_id` = b.`quiztype_id`
+							WHERE a.`qprogress_id` = ".$db->qstr($RECORD_ID)."
+							AND c.`quiz_active` = '1'";
+	}
+	$quiz_record	= $db->GetRow($query); echo $db->ErrorMsg();
 	if ($quiz_record) {
 		$is_administrator = false;
-		
-		if ($ENTRADA_ACL->amIAllowed(new EventContentResource($quiz_record["event_id"], $quiz_record["course_id"], $quiz_record["organisation_id"]), "update")) {
-			$is_administrator	= true;
+		if ($QUIZ_TYPE == "event") {
+			if ($ENTRADA_ACL->amIAllowed(new EventContentResource($quiz_record["event_id"], $quiz_record["course_id"], $quiz_record["organisation_id"]), "update")) {
+				$is_administrator	= true;
+			}
 		}
 
 		if (($is_administrator) || ($quiz_record["proxy_id"] == $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])) {
 			$respondent_name = get_account_data("firstlast", $quiz_record["proxy_id"]);
-
-			$BREADCRUMB[]	= array("url" => ENTRADA_URL."/events?id=".$quiz_record["event_id"], "title" => limit_chars($quiz_record["event_title"], 32));
-			$BREADCRUMB[]	= array("url" => ENTRADA_URL."/".$MODULE."?section=results&id=".$RECORD_ID, "title" => limit_chars($quiz_record["quiz_title"], 32));
+			if ($QUIZ_TYPE == "event") {
+				$BREADCRUMB[]	= array("url" => ENTRADA_URL."/events?id=".$quiz_record["event_id"], "title" => limit_chars($quiz_record["content_title"], 32));
+			} else{
+				$BREADCRUMB[]	= array("url" => ENTRADA_URL."/community".$quiz_record["community_url"].":".$quiz_record["page_url"], "title" => limit_chars($quiz_record["content_title"], 32));
+			}
+			$BREADCRUMB[]	= array("url" => ENTRADA_URL."/".$MODULE."?section=results".($QUIZ_TYPE == "community_page" ? "&community=true" : "")."&id=".$RECORD_ID, "title" => limit_chars($quiz_record["quiz_title"], 32));
 
 			if ($is_administrator) {
-				$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/".$MODULE."?section=results&id=".$quiz_record["equiz_id"], "title" => "Quiz Results");
+				$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/".$MODULE."?section=results".($QUIZ_TYPE == "community_page" ? "&community=true" : "")."&id=".$quiz_record["aquiz_id"], "title" => "Quiz Results");
 				$BREADCRUMB[] = array("url" => "", "title" => $respondent_name);
 			}
 
@@ -76,6 +99,7 @@ if ($RECORD_ID) {
 				$query		= "	SELECT a.*
 								FROM `quiz_questions` AS a
 								WHERE a.`quiz_id` = ".$db->qstr($quiz_record["quiz_id"])."
+								AND a.`question_active` = '1'
 								ORDER BY a.`question_order` ASC";
 				$questions	= $db->GetAll($query);
 				if ($questions) {
@@ -118,6 +142,7 @@ if ($RECORD_ID) {
 							$query		= "	SELECT a.*
 											FROM `quiz_question_responses` AS a
 											WHERE a.`qquestion_id` = ".$db->qstr($question["qquestion_id"])."
+											AND a.`response_active` = '1'
 											ORDER BY ".(($question["randomize_responses"] == 1) ? "RAND()" : "a.`response_order` ASC");
 							$responses	= $db->GetAll($query);
 							if ($responses) {
@@ -167,7 +192,7 @@ if ($RECORD_ID) {
 					</div>
 					<div style="border-top: 2px #CCCCCC solid; margin-top: 10px; padding-top: 10px">
 						<span class="content-small">Reference ID: <?php echo $RECORD_ID; ?></span>
-						<button style="float: right" onclick="window.location = '<?php echo ENTRADA_URL; ?>/events?id=<?php echo $quiz_record["event_id"]; ?>'">Exit Quiz</button>
+						<button style="float: right" onclick="window.location = '<?php echo ($QUIZ_TYPE == "event" ? ENTRADA_URL."/events?id=".$quiz_record["event_id"] : ENTRADA_URL."/community".$quiz_record["community_url"].":".$quiz_record["page_url"]); ?>'">Exit Quiz</button>
 					</div>
 					<div class="clear"></div>
 					<?php
@@ -185,7 +210,7 @@ if ($RECORD_ID) {
 
 				echo display_notice();
 
-				application_log("error", "Someone attempted to review results of eqprogress_id [".$RECORD_ID."] (quiz_id [".$quiz_record["quiz_id"]."] / event_id [".$quiz_record["event_id"]."]) after the release date.");
+				application_log("error", "Someone attempted to review results of qprogress_id [".$RECORD_ID."] (quiz_id [".$quiz_record["quiz_id"]."] / event_id [".$quiz_record["event_id"]."]) after the release date.");
 			}
 		} else {
 			application_log("error", "Someone attempted to review results of eprogress_id [".$RECORD_ID."] that they were not entitled to view.");
@@ -199,7 +224,7 @@ if ($RECORD_ID) {
 
 		echo display_error();
 
-		application_log("error", "Failed to provide a valid eqprogress_id [".$RECORD_ID."] when attempting to view quiz results.");
+		application_log("error", "Failed to provide a valid qprogress_id [".$RECORD_ID."] when attempting to view quiz results.");
 	}
 } else {
 	$ERROR++;
@@ -207,5 +232,5 @@ if ($RECORD_ID) {
 
 	echo display_error();
 
-	application_log("error", "Failed to provide an eqprogress_id [".$RECORD_ID."] when attempting to view quiz results.");
+	application_log("error", "Failed to provide an qprogress_id [".$RECORD_ID."] when attempting to view quiz results.");
 }

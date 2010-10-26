@@ -42,11 +42,12 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_PUBLIC_QUIZZES"))) {
  * supposed to list.
  */
 $query		= "	SELECT a.`quiz_score`, a.`quiz_value`, a.`updated_date` AS `quiz_completed_date`, b.*, c.`course_id`, c.`event_title`, c.`event_start`, d.`quiztype_title`
-				FROM `event_quiz_progress` AS a
-				LEFT JOIN `event_quizzes` AS b
-				ON b.`equiz_id` = a.`equiz_id`
+				FROM `quiz_progress` AS a
+				LEFT JOIN `attached_quizzes` AS b
+				ON b.`aquiz_id` = a.`aquiz_id`
 				LEFT JOIN `events` AS c
-				ON c.`event_id` = a.`event_id`
+				ON a.`content_type` = 'event' 
+				AND c.`event_id` = a.`content_id`
 				LEFT JOIN `quizzes_lu_quiztypes` AS d
 				ON d.`quiztype_id` = b.`quiztype_id`
 				WHERE a.`proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."

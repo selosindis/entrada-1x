@@ -69,7 +69,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 							if (($db->Execute($query)) && ($db->Affected_Rows() > 0)) {
 								$query		= "	SELECT *
 												FROM `quiz_questions`
-												WHERE `quiz_id` = ".$db->qstr($RECORD_ID);
+												WHERE `quiz_id` = ".$db->qstr($RECORD_ID)."
+												AND `question_active` = '1'";
 								$questions	= $db->GetAll($query);
 								if ($questions) {
 									$new_qquestion_ids = array();
@@ -82,11 +83,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 														".$db->qstr($question["question_text"]).",
 														".$db->qstr($question["question_points"]).",
 														".$db->qstr($question["question_order"]).",
+														'1',
 														".$db->qstr($question["randomize_responses"])."
 													)";
 										if (($db->Execute($query)) && ($new_qquestion_id = $db->Insert_Id())) {
 											$query = "	INSERT INTO `quiz_question_responses`
-														SELECT NULL, '".$new_qquestion_id."', `response_text`, `response_order`, `response_correct`, `response_is_html`, `response_feedback`
+														SELECT NULL, '".$new_qquestion_id."', `response_text`, `response_order`, `response_correct`, `response_is_html`, `response_feedback`, `response_active`
 														FROM `quiz_question_responses`
 														WHERE `qquestion_id` = ".$db->qstr($question["qquestion_id"]);
 											if (($db->Execute($query)) && ($db->Affected_Rows() > 0)) {

@@ -736,4 +736,61 @@ function get_event_rotation_ids() {
 	}
 	return $events;
 }
+
+/**
+ * This function loads the current progress based on an eqprogress_id.
+ *
+ * @global object $db
+ * @param int $eqprogress_id
+ * @return array Returns the users currently progress or returns false if there
+ * is an error.
+ */
+function quiz_load_progress($eqprogress_id = 0) {
+	global $db;
+
+	$output = array();
+
+	if ($eqprogress_id = (int) $eqprogress_id) {
+	/**
+		 * Grab the specified progress identifier, but you better be sure this
+		 * is the correct one, and the results are being returned to the proper
+		 * user.
+	 */
+		$query		= "	SELECT *
+						FROM `event_quiz_progress`
+						WHERE `eqprogress_id` = ".$db->qstr($eqprogress_id);
+		$progress	= $db->GetRow($query);
+		if ($progress) {
+		/**
+		 * Add all of the qquestion_ids to the $output array so they're set.
+		 */
+			$query		= "SELECT * FROM `quiz_questions` WHERE `quiz_id` = ".$db->qstr($progress["quiz_id"])." ORDER BY `question_order` ASC";
+			$questions	= $db->GetAll($query);
+			if ($questions) {
+				foreach ($questions as $question) {
+					$output[$question["qquestion_id"]] = 0;
+				}
+			} else {
+				return false;
+			}
+
+			/**
+			 * Update the $output array with any currently selected responses.
+			 */
+			$query		= "	SELECT *
+							FROM `event_quiz_responses`
+							WHERE `eqprogress_id` = ".$db->qstr($eqprogress_id);
+			$responses	= $db->GetAll($query);
+			if ($responses) {
+				foreach ($responses as $response) {
+					$output[$response["qquestion_id"]] = $response["qqresponse_id"];
+				}
+			}
+		} else {
+			return false;
+		}
+	}
+
+	return $output;
+}
 ?>

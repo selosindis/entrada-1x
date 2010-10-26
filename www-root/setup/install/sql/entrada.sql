@@ -3481,8 +3481,11 @@ CREATE TABLE IF NOT EXISTS `student_observerships` (
   `title` varchar(256) NOT NULL,
   `location` varchar(256) NOT NULL,
   `site` varchar(256) NOT NULL,
-  `start` timestamp NOT NULL default '0000-00-00 00:00:00',
-  `end` timestamp NULL default NULL,
+  `start` int(11) NOT NULL,
+  `end` int(11) default NULL,
+  `preceptor_firstname` varchar(256) default NULL,
+  `preceptor_lastname` varchar(256) default NULL,
+  `preceptor_proxy_id` int(12) unsigned default NULL,
   PRIMARY KEY  (`id`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 

@@ -3182,7 +3182,7 @@ function search_description($description = "") {
  * @param string $action_value
  * @return bool
  */
-function add_statistic($module_name = "", $action = "", $action_field = "", $action_value = "") {
+function add_statistic($module_name = "", $action = "", $action_field = "", $action_value = "", $proxy_id = 0) {
 	global $MODULE, $db;
 
 	if(!$module_name) {
@@ -3193,8 +3193,12 @@ function add_statistic($module_name = "", $action = "", $action_field = "", $act
 		}
 	}
 
+	if (((int) $proxy_id == 0) && isset($_SESSION["details"]["id"])) {
+		$proxy_id = (int) $_SESSION["details"]["id"];
+	}
+
 	$stat					= array();
-	$stat["proxy_id"]		= $_SESSION["details"]["id"];
+	$stat["proxy_id"]		= $proxy_id;
 	$stat["timestamp"]		= time();
 	$stat["module"]			= $module_name;
 	$stat["action"]			= $action;

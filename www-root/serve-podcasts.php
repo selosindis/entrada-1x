@@ -145,7 +145,7 @@ switch($ACTION) {
 							
 							$db->Execute("UPDATE `event_files` SET `accesses` = '".($download + 1)."' WHERE `efile_id` = ".$db->qstr($EFILE_ID));
 
-							add_statistic("podcasts", "file_download", "file_id", $EFILE_ID);
+							add_statistic("podcasts", "file_download", "file_id", $EFILE_ID, $USER_PROXY_ID);
 							exit;
 						} else {
 							exit;

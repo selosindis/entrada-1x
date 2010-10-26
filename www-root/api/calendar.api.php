@@ -37,7 +37,7 @@ $user_organisation_id = 0;
 
 $calendar_type = "json";
 $user_private_hash = "";
-$user_grad_year = (int) (date("Y", time()) + ((date("m", time()) < 7) ?  3 : 4));
+$user_grad_year = fetch_first_year();
 
 /**
  * Check if the request has multiple parts to it indicating the URL contains a private_hash,

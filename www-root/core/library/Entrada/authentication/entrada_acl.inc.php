@@ -184,6 +184,7 @@ class Entrada_ACL extends ACL_Factory {
 		if(!($user instanceof Zend_Acl_Role_Interface)) {
 			$user = new EntradaUser($user);
 		}
+		
 		return $this->acl->isAllowed($user, $resource, $action);
 	}
 
@@ -401,22 +402,20 @@ class CourseOwnerAssertion implements Zend_Acl_Assert_Interface {
 						OR b.`proxy_id` = ".$db->qstr($user_id)."
 						OR d.`proxy_id` = ".$db->qstr($user_id)."
 					)
-					AND a.`course_active` = '1'";
-		
-		$results = $db->GetRow($query);
-		if($results) {
-			foreach($results as $result) {
-				foreach(array("director_id", "coordinator", "admin_id") as $owner) {
-					if($result[$owner] == $user_id) {
-						return true;
-					}
+					AND a.`course_active` = '1'
+					LIMIT 0, 1";
+		$result = $db->GetRow($query);
+		if ($result) {
+			foreach(array("director_id", "coordinator", "admin_id") as $owner) {
+				if($result[$owner] == $user_id) {
+					return true;
 				}
 			}
 		}
+
 		return false;
 	}
 }
-
 
 /**
  * Task Owner Assertion

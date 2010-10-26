@@ -97,7 +97,7 @@ define("AUTH_LOCKOUT_TIMEOUT", 900);											// The amount of time in seconds 
 define("AUTH_FORCE_SSL", false);												// If you want to force all login attempts to use SSL, set this to true, otherwise false.
 
 define("AUTH_ALLOW_CAS", false);												// Whether or not you wish to allow CAS authorisation.
-define("AUTH_CAS_HOSTNAME", "cas.choolu.ca");									// Hostname of your CAS server.
+define("AUTH_CAS_HOSTNAME", "cas.schoolu.ca");									// Hostname of your CAS server.
 define("AUTH_CAS_PORT", 443);													// Port that CAS is running on.
 define("AUTH_CAS_URI", "cas");													// The URI where CAS is located on the CAS host.
 
@@ -251,7 +251,7 @@ define("DEBUG_MODE", true);														// Some places have extra debug code to
 define("SHOW_LOAD_STATS", true);												// Do you want to see the time it takes to load each page?
 
 define("APPLICATION_NAME", "Entrada");											// The name of this application in your school (i.e. MedCentral, Osler, etc.)
-define("APPLICATION_VERSION", "1.1.0");											// The current version of this application.
+define("APPLICATION_VERSION", "1.2.0");											// The current filesystem version of Entrada.
 define("APPLICATION_IDENTIFIER", "app-".AUTH_APP_ID);							// PHP does not allow session key's to be integers (sometimes), so we have to make it a string.
 
 $DEFAULT_META["title"] = "Entrada: An eLearning Community";
@@ -455,10 +455,10 @@ $MODULES["annualreport"] = array("title" => "Annual Reports", "resource" => "ann
  * access this system. Note the student and alumni groups have many roles.
  */
 $SYSTEM_GROUPS = array();
-for($i = (date("Y", time()) + ((date("m", time()) < 7) ?  3 : 4)); $i >= 2004; $i--) {
+for($i = (date("Y") + (date("m") < 7 ? 3 : 4)); $i >= 2004; $i--) {
 	$SYSTEM_GROUPS["student"][] = $i;
 }
-for($i = (date("Y", time()) + ((date("m", time()) < 7) ?  3 : 4)); $i >= 1997; $i--) {
+for($i = (date("Y") + (date("m") < 7 ? 3 : 4)); $i >= 1997; $i--) {
 	$SYSTEM_GROUPS["alumni"][] = $i;
 }
 $SYSTEM_GROUPS["faculty"] = array("faculty", "lecturer", "director", "admin");
@@ -569,6 +569,11 @@ $AR_FUTURE_YEARS = $AR_CUR_YEAR + 10;
 define("INTERNAL_AWARD_AWARDING_BODY","Queen's University");
 define("CLERKSHIP_COMPLETED_CUTOFF", "October 26");
 
+define("MSPR_REJECTION_REASON_REQUIRED",true);	//defines whether a reason is required when rejecting a submission 
+define("MSPR_REJECTION_SEND_EMAIL",true);	//defines whether an email should be send on rejection of a student submission to their mspr
+
+define("MSPR_CLERKSHIP_MERGE_NEAR", true); //defines whether or not clerkship rotation with the same title should be merged if they are near in time.
+define("MSPR_CLERKSHIP_MERGE_DISTANCE", "+1 week"); //defines how close together clerkship rotations with the SAME title need to be in order to be merged on the mspr display
 
 /**
  * Defines for Tasks Module

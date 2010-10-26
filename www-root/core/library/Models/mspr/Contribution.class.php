@@ -15,18 +15,31 @@ class Contribution implements Approvable, AttentionRequirable {
 	private $approved;
 	private $rejected;
 	
-	function __construct($id, $user_id, $role, $org_event, $start_month, $start_year, $end_month, $end_year, $approved = false, $rejected = false) {
+	function __construct($id, $user_id, $role, $org_event, $start_month, $start_year, $end_month, $end_year, $comment, $approved = false, $rejected = false) {
 		$this->id = $id;
 		$this->user_id = $user_id;
 		$this->role = $role;
 		$this->org_event = $org_event;
 		$this->approved = (bool) $approved;
 		$this->rejected = (bool)$rejected;
+		$this->comment = $comment;
 		
 		$this->start_month = $start_month;
 		$this->start_year = $start_year;
 		$this->end_month = $end_month;
 		$this->end_year = $end_year;
+	}
+	
+	public static function fromArray(array $arr) {
+		$rejected=($arr['status'] == -1);
+		$approved = ($arr['status'] == 1);
+		
+		return new self($arr['id'], $arr['user_id'], $arr['role'], $arr['org_event'], $arr['start_month'], $arr['start_year'], $arr['end_month'], $arr['end_year'], $arr['comment'], $approved, $rejected);
+	
+	}
+	
+	public function getComment(){
+		return $this->comment;
 	}
 	
 	public function getID() {
@@ -105,10 +118,7 @@ class Contribution implements Approvable, AttentionRequirable {
 		$query		= "SELECT * FROM `student_contributions` WHERE `id` = ".$db->qstr($id);
 		$result = $db->getRow($query);
 		if ($result) {
-			$rejected=($result['status'] == -1);
-			$approved = ($result['status'] == 1);
-			
-			$contribution =  new Contribution($result['id'], $result['user_id'], $result['role'], $result['org_event'], $result['start_month'], $result['start_year'], $result['end_month'], $result['end_year'], $approved, $rejected);
+			$contribution = Contribution::fromArray($result);
 			return $contribution;
 		}
 	} 
@@ -137,13 +147,13 @@ class Contribution implements Approvable, AttentionRequirable {
 		}		
 	}
 	
-	private function setStatus($status_code) {
+	private function setStatus($status_code, $comment=null) {
 			global $db;
 			$query = "update `student_contributions` set
-					 `status`=".$db->qstr($status_code)." 
-					 where `id`=".$db->qstr($this->id);
+					 `status`=?, `comment`=?  
+					 where `id`=?";
 			
-			if(!$db->Execute($query)) {
+			if(!$db->Execute($query, array($status_code, $comment, $this->id))) {
 				add_error("Failed to update contribution.");
 				application_log("error", "Unable to update a student_contributions record. Database said: ".$db->ErrorMsg());
 			} else {
@@ -160,7 +170,7 @@ class Contribution implements Approvable, AttentionRequirable {
 		$this->setStatus(0);
 	}
 	
-	public function reject() {
-		$this->setStatus(-1);
+	public function reject($comment) {
+		$this->setStatus(-1, $comment);
 	}
 }

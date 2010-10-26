@@ -39,41 +39,13 @@ require_once("User.class.php");
 
 class ClinicalFacultyMember extends User{
 	
-	function __construct($id,$username, $firstname, $lastname) {
-		parent::__construct($id,$username,$firstname,$lastname);
-	}
-	
-	/**
-	 * Returns the id of the department the user is in
-	 * @return int
-	 */
-	public function getDepartmentID() {
-		return $this->department_id;
-	}
-		
-	/**
-	 * Returns the username of the user
-	 * @return string
-	 */
-	function getDepartmentName() {
-		return $this->department_name;
+	public static function fromArray(array $arr) {
+		$user = parent::fromArray($arr);
+		return $user;
 	}
 		
 	public static function get($user_id) {
-		global $db;
-		
-		$query = "SELECT `user_data`.`id`, username, firstname, lastname, dep_id, department_title
-				FROM user_departments
-				LEFT JOIN user_data ON user_departments.user_id = user_data.id
-				LEFT JOIN user_access ON `user_access`.`user_id` = `user_data`.`id`
-				LEFT JOIN departments ON `user_departments`.`dep_id` = `departments`.`department_id`
-				where user_access.group='faculty' and clinical='1' and ".$db->qstr($user_id)." group by department_title,lastname,firstname 
-				order by department_title,lastname,firstname";
-		$result = $db->getRow($query);
-		if ($result) {
-			$user =  new ClinicaFaculty($result['id'], $result['username'], $result['lastname'], $result['firstname'], $result['dep_id'], $result['department_title'] );
-			return $user;
-		}		
+		return parent::get($user_id);
 	
 	}
 }

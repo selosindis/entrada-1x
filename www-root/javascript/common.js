@@ -282,6 +282,7 @@ function photoShow(url, width, height) {
 		resizable: false
 	}).center().setContent("<img src=\'"+url+"\' />").show();
 }
+
 function setMaxLength() {
 	var x = document.getElementsByTagName('textarea');
 	var counter = document.createElement('div');
@@ -308,7 +309,6 @@ function checkMaxLength() {
 	else
 		this.relatedElement.className = 'content-small';
 	this.relatedElement.firstChild.nodeValue = currentLength;
-	// not innerHTML
 }
 
 var checkflag = 'false';
@@ -453,34 +453,6 @@ function checkForNewRegion() {
 		document.getElementById('new_region_layer').style.display = 'none';
 		document.getElementById('region_id').focus();
 	}
-}
-
-function setMaxLength() {
-	var x = document.getElementsByTagName('textarea');
-	var counter = document.createElement('div');
-	counter.className = 'content-small';
-	for (var i=0;i<x.length;i++) {
-		if (x[i].getAttribute('maxlength')) {
-			var counterClone = counter.cloneNode(true);
-			counterClone.relatedElement = x[i];
-			counterClone.innerHTML = 'Character Count: <span>0</span>/'+x[i].getAttribute('maxlength');
-			x[i].parentNode.insertBefore(counterClone,x[i].nextSibling);
-			x[i].relatedElement = counterClone.getElementsByTagName('span')[0];
-
-			x[i].onkeyup = x[i].onchange = checkMaxLength;
-			x[i].onkeyup();
-		}
-	}
-}
-
-function checkMaxLength() {
-	var maxLength = this.getAttribute('maxlength');
-	var currentLength = this.value.length;
-	if (currentLength > maxLength)
-		this.relatedElement.className = 'content-red';
-	else
-		this.relatedElement.className = 'content-small';
-	this.relatedElement.firstChild.nodeValue = currentLength;
 }
 
 var grow;
@@ -669,6 +641,11 @@ function eraseCookie(name) {
 	createCookie(name,"",-1);
 }
 
+/**
+ * Allows specification of a select all check box and a defined group of slaves to it. clicking the master (select all) will select/de-select all slaves. clicking one of the slaves may check/uncheck the master depending on the state of th other checkboxes (all checked -> master checked, one or more unchecked -> master unchecked)  
+ * @param master element which acts as the "selecct all" checkbox
+ * @param slaves css selector pattern, or nodelist/array of elements  
+ */
 function CheckboxCheckAll(master,slaves) {
 	//if slaves is a string, then use it as a pattern and, if not, use the nodes
 
@@ -709,6 +686,28 @@ function CheckboxCheckAll(master,slaves) {
 	this.enable();
 }
 
-function isDisabled(el) {
-	return el.disabled;
+/**
+ * Returns true if the passed element has a disabled property with a truthy value. false otherwise.  
+ * @param element
+ * @return boolean 
+ */
+function isDisabled(element) {
+	return (!!(element.disabled));
+}
+
+/**
+ *  Returns true if console.log is available. false otherwise.
+ *  @return boolean
+ */
+function hasConsole() { 
+	return (console && console.log && (typeof console.log == "function")); 
+}
+
+/**
+ * passes arguments to console.log if it is available. otherwise does nothing.
+ */
+function clog() {
+	if (hasConsole()) {
+		console.log.apply(this, arguments);
+	}
 }

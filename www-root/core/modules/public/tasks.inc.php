@@ -53,6 +53,8 @@ if (!defined("PARENT_INCLUDED")) {
 	
 	$ORGANISATION_ID = $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"];
 	
+	require_once("Entrada/tasks/functions.inc.php");
+		
 	if (($router) && ($router->initRoute())) {
 		$module_file = $router->getRoute();
 		if ($module_file) {

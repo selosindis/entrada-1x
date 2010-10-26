@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<message>
-	<lang>
-		<en>
-			<subject>Verification Declined Notice: %FROM_FIRSTNAME% %FROM_LASTNAME% Declined to Verify Completion of %TASK_TITLE% </subject>
-			<body>
+<templates>
+	<template lang="en">
+		<subject>Verification Declined Notice: %FROM_FIRSTNAME% %FROM_LASTNAME% Declined to Verify Completion of %TASK_TITLE% </subject>
+		<body>
 Dear %TO_FULLNAME%,
 
 This is a notice to inform you that %FROM_FIRSTNAME% %FROM_LASTNAME% has declined to verify completion of %TASK_TITLE%. 
@@ -18,7 +17,6 @@ Should you have any questions or concerns please contact %FROM_FIRSTNAME% %FROM_
 Sincerely,
 
 %APPLICATION_NAME%
-			</body>
-		</en>
-	</lang>
-</message>
+		</body>
+	</template>
+</templates>

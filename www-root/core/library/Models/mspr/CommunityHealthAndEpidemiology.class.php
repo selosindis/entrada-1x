@@ -8,18 +8,30 @@ class CommunityHealthAndEpidemiology extends SupervisedProject {
 	 * @param User $user
 	 * @return CommunityHealthAndEpidemiology
 	 */
-	public static function get(User $user) {
+	public static function get($id) {
 		global $db;
-		$user_id = $user->getID();
-		$query		= "SELECT * FROM `student_community_health_and_epidemiology` WHERE `user_id` = ".$db->qstr($user_id);
-		$result = $db->getRow($query);
+		if ($id instanceof User) {
+			$id = $id->getID();
+		}
+		
+		$query		= "SELECT * FROM `student_community_health_and_epidemiology` WHERE `user_id`=?";
+		$result = $db->getRow($query, array($id));
 		if ($result) {
-			$rejected=($result['status'] == -1);
-			$approved = ($result['status'] == 1);
-			
-			$comm_health =  new CommunityHealthAndEpidemiology($result['user_id'], $result['title'], $result['organization'], $result['location'], $result['supervisor'], $approved, $rejected);
+			$comm_health =  self::fromArray($result);
 			return $comm_health;
 		} 
+	} 
+
+	/**
+	 * Creates new project object from array
+	 * @param array $arr
+	 * @return CommunityHealthAndEpidemiology
+	 */
+	public static function fromArray(array $arr) {
+		$rejected=($arr['status'] == -1);
+		$approved = ($arr['status'] == 1);
+			
+		return new self($arr['user_id'], $arr['title'], $arr['organization'], $arr['location'], $arr['supervisor'], $arr['comment'],$approved, $rejected);
 	} 
 
 	/**
@@ -40,21 +52,21 @@ class CommunityHealthAndEpidemiology extends SupervisedProject {
 					on duplicate key update 
 					`title`=".$db->qstr($title).", `organization`=".$db->qstr($organization).", `location`=".$db->qstr($location).", `supervisor`=".$db->qstr($supervisor).", `status`=".$db->qstr(0);
 		if(!$db->Execute($query)) {
-			add_error("Failed to update Community Health and Epidemiology entry.");
+			add_error("Failed to update Community-Based Project entry.");
 			application_log("error", "Unable to update a student_community_health_and_epidemiology record. Database said: ".$db->ErrorMsg());
 		} else {
-			add_success("Successfully updated Community Health and Epidemiology entry.");
+			add_success("Successfully updated Community-Based Project entry.");
 		}
 	}
 	
-	private function setStatus($status_code) {
+	private function setStatus($status_code, $comment=null) {
 		global $db;
-		$query = "update `student_community_health_and_epidemiology` set `status`=".$db->qstr($status_code)." where `user_id`=".$db->qstr($this->getUserID());
-		if(!$db->Execute($query)) {
-			add_error("Failed to update Critical Enquiry entry.");
+		$query = "update `student_community_health_and_epidemiology` set `status`=?, `comment`=? where `user_id`=?";
+		if(!$db->Execute($query, array($status_code, $comment, $this->getUserID()))) {
+			add_error("Failed to update Community-Based Project entry.");
 			application_log("error", "Unable to update a student_community_health_and_epidemiology record. Database said: ".$db->ErrorMsg());
 		} else {
-			add_success("Successfully updated Community Health and Epidemiology entry.");
+			add_success("Successfully updated Community-Based Project entry.");
 		}
 	}
 	
@@ -65,7 +77,7 @@ class CommunityHealthAndEpidemiology extends SupervisedProject {
 	public function unapprove() {
 		$this->setStatus(0);
 	}
-	public function reject() {
-		$this->setStatus(-1);
+	public function reject($comment) {
+		$this->setStatus(-1, $comment);
 	}
 }

@@ -217,7 +217,8 @@ $ERRORSTR				= array();
 
 $STEP					= 1;
 
-$pdf_string 	= str_replace("'", "", $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["lastname"] ) . "_" .$REPORT_YEAR;
+$lastname = get_account_data("lastname", $proxy_id);
+$pdf_string 	= str_replace("'", "", $lastname) . "_" .$REPORT_YEAR;
 $pdf_string 	= str_replace(" ", "_", $pdf_string);
 $pdf_string 	= strtolower($pdf_string);
 $output_file	= ANNUALREPORT_STORAGE."/".$pdf_string;
@@ -268,8 +269,9 @@ The Annual Report by Clinical Faculty aligns two distinct evaluative processes:<
 		if($result = $db->GetRow($query))
 		{
 			$department = $result["department"];
+			$fullname = get_account_data("fullname", $proxy_id);
 			echo "<tr>\n";
-			echo "	<td class=\"student_name\" width=\"25%\"><b>Name: </b>".html_encode($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["firstname"]). " " . html_encode($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["lastname"])."&nbsp;</td>\n";
+			echo "	<td class=\"student_name\" width=\"25%\"><b>Name: </b>".$fullname."&nbsp;</td>\n";
 			echo "	<td class=\"department\" width=\"75%\"><b>Department: </b>".$department."&nbsp;</td>\n";
 			echo "</tr>";
 			echo "<tr>\n";

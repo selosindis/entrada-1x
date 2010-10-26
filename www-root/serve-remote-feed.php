@@ -36,12 +36,12 @@
  */
 require_once("init.inc.php");
 
-if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
+if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	header("Location: ".ENTRADA_URL.((isset($_SERVER["REQUEST_URI"])) ? "?url=".rawurlencode(clean_input($_SERVER["REQUEST_URI"], array("nows", "url"))) : ""));
 	exit;
 } else {
 	require_once("Entrada/rss.class.php");
-	if(!isset($_GET["url"])) {
+	if (!isset($_GET["url"])) {
 		header("HTTP/1.0 418 I'm A Teapot", false, 418);
 	} else {
 		header("Content-type: application/json");
@@ -51,7 +51,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 		$results = $rss_reader->fetch(html_entity_decode($_GET["url"]));
 		$feed = array("channel_title" => $results["title"], "url" => $_GET["url"], "items" => array());
 		
-		foreach($results["items"] as $key => $fetched_item) {
+		foreach ($results["items"] as $key => $fetched_item) {
 			$item = array("title" => $fetched_item["title"], "description" => $fetched_item["description"], "link" => $fetched_item["link"]);
 			$feed["items"][] = $item;
 		}

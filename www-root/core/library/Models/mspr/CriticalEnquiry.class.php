@@ -8,18 +8,31 @@ class CriticalEnquiry extends SupervisedProject {
 	 * @param User $user
 	 * @return CriticalEnquiry
 	 */
-	public static function get(User $user) {
+	public static function get($id) {
 		global $db;
-		$user_id = $user->getID();
-		$query		= "SELECT * FROM `student_critical_enquiries` WHERE `user_id` = ".$db->qstr($user_id);
-		$result = $db->getRow($query);
+		if ($id instanceof User) {
+			$id = $id->getID();
+		}
+		$query		= "SELECT * FROM `student_critical_enquiries` WHERE `user_id`=?";
+		$result = $db->getRow($query, array($id));
 		if ($result) {
-			$rejected=($result['status'] == -1);
-			$approved = ($result['status'] == 1);
-			$critical_enquiry =  new CriticalEnquiry($result['user_id'], $result['title'], $result['organization'], $result['location'], $result['supervisor'], $approved, $rejected);
+			$critical_enquiry = self::fromArray($result);
 			return $critical_enquiry;
 		}
 	} 
+	
+	/**
+	 * Creates new project object from array
+	 * @param array $arr
+	 * @return CriticalEnquiry
+	 */
+	public static function fromArray(array $arr) {
+		$rejected=($arr['status'] == -1);
+		$approved = ($arr['status'] == 1);
+			
+		return new self($arr['user_id'], $arr['title'], $arr['organization'], $arr['location'], $arr['supervisor'], $arr['comment'],$approved, $rejected);
+	} 
+	
 
 	/**
 	 * Creates a new Critical Enquiry entry OR updates if one already exists. This will reset the approval.
@@ -46,37 +59,30 @@ class CriticalEnquiry extends SupervisedProject {
 		}
 	}
 	
-	public function approve() {
+	public function setStatus($status_code, $comment=null) {
 		global $db;
-		$query = "update `student_critical_enquiries` set `status`=1 where `user_id`=".$db->qstr($this->getUserID());
-		if(!$db->Execute($query)) {
+		$query = 	"update `student_critical_enquiries` set 
+					`status`=?, `comment`=?
+					where `user_id`=?";
+		if(!$db->Execute($query, array($status_code, $comment, $this->getUserID()))) {
 			add_error("Failed to update Critical Enquiry entry.");
 			application_log("error", "Unable to update a student_critical_enquiries record. Database said: ".$db->ErrorMsg());
 		} else {
 			add_success("Successfully updated Critical Enquiry entry.");
 		}
+	}
+	
+	public function approve() {
+		$this->setStatus(1);
 	}
 	
 	public function unapprove() {
-		global $db;
-		$query = "update `student_critical_enquiries` set `status`=0 where `user_id`=".$db->qstr($this->getUserID());
-		if(!$db->Execute($query)) {
-			add_error("Failed to update Critical Enquiry entry.");
-			application_log("error", "Unable to update a student_critical_enquiries record. Database said: ".$db->ErrorMsg());
-		} else {
-			add_success("Successfully updated Critical Enquiry entry.");
-		}
+		$this->setStatus(0);
 	}
 	
-	public function reject() {
-		global $db;
-		$query = "update `student_critical_enquiries` set `status`=-1 where `user_id`=".$db->qstr($this->getUserID());
-		if(!$db->Execute($query)) {
-			add_error("Failed to update Critical Enquiry entry.");
-			application_log("error", "Unable to update a student_critical_enquiries record. Database said: ".$db->ErrorMsg());
-		} else {
-			add_success("Successfully updated Critical Enquiry entry.");
-		}
+	
+	public function reject($comment) {
+		$this->setStatus(-1, $comment);
 	}
 	
 }

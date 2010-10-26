@@ -12,10 +12,10 @@ class ClinicalPerformanceEvaluation {
 	private $comment;
 	private $id;
 	private $source;
-	private $user;
+	private $user_id;
 	
 	public function getUser() {
-		return $this->user;
+		return User::get($this->user_id);
 	}
 	
 	public function getComment() {
@@ -30,16 +30,15 @@ class ClinicalPerformanceEvaluation {
 		return $this->id;
 	}
 	
-	function __construct($user, $id, $comment,$source) {
-		$this->user = $user;
+	function __construct($user_id, $id, $comment,$source) {
+		$this->user_id = $user_id;
 		$this->id = $id;
 		$this->comment = $comment;
 		$this->source = $source;
 	}
 	
-	public static function create($user, $comment,$source) {
+	public static function create($user_id, $comment,$source) {
 		global $db;
-		$user_id = $user->getID();
 	
 		$query = "insert into `student_clineval_comments` (`user_id`, `comment`,`source`) value (".$db->qstr($user_id).", ".$db->qstr($comment).", ".$db->qstr($source).")";
 		if(!$db->Execute($query)) {
@@ -57,8 +56,7 @@ class ClinicalPerformanceEvaluation {
 		$query		= "SELECT * FROM `student_clineval_comments` WHERE `id` = ".$db->qstr($id);
 		$result = $db->getRow($query);
 		if ($result) {
-			$user = User::get($result['user_id']);
-			$clineval =  new ClinicalPerformanceEvaluation($user, $result['id'], $result['comment'], $result['source']);
+			$clineval =  self::fromArray($result);
 			return $clineval;
 		}
 	}  
@@ -72,5 +70,9 @@ class ClinicalPerformanceEvaluation {
 		} else {
 			add_success("Successfully removed clinical performance evaluation.");
 		}		
+	}
+	
+	public static function fromArray(array $arr) {
+		return new self($arr['user_id'], $arr['id'], $arr['comment'], $arr['source']);	
 	}
 }

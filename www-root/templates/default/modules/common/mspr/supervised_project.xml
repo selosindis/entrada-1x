@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates>
+	<template lang="en">
+		<![CDATA[
+			<span class="label">Title: </span>
+			<span class="heading">%TITLE%</span>
+			<span class="label">Organisation: </span>
+			<span class="data">%ORGANISATION%</span>
+			<span class="label">Location: </span>
+			<span class="data">%LOCATION%</span>
+			<span class="label">Supervisor: </span>
+			<span class="data">%SUPERVISOR%</span>
+		]]>
+	</template>
+</templates>

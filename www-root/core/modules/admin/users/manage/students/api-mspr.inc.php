@@ -28,10 +28,9 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 	
 		require_mspr_models();
 		
-		
 		$user = User::get($user_record["id"]);
-		process_mspr_admin($user);		
-		
+		$controller = new MSPRAdminController($translate, $user);
+		$controller->process();		
 	}
 	exit;
 }

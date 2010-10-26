@@ -11,13 +11,15 @@ abstract class SupervisedProject implements Approvable,AttentionRequirable {
 	private $supervisor;
 	private $approved;
 	private $rejected;
+	private $comment;
 	
-	function __construct($user_id, $title, $organization, $location, $supervisor, $approved = false, $rejected = false) {
+	function __construct($user_id, $title, $organization, $location, $supervisor, $comment, $approved = false, $rejected = false) {
 		$this->user_id = $user_id;
 		$this->location = $location;
 		$this->title = $title;
 		$this->organization = $organization;
 		$this->supervisor = $supervisor;
+		$this->comment = $comment;
 		$this->approved  = (bool)$approved;
 		$this->rejected = (bool)$rejected;
 	}
@@ -73,4 +75,7 @@ abstract class SupervisedProject implements Approvable,AttentionRequirable {
 		return (bool)($this->rejected);
 	}
 	
+	public function getComment() {
+		return $this->comment;
+	}
 }

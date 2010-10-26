@@ -88,8 +88,9 @@ class Entrada_ACL extends ACL_Factory {
 				"tasktab"
 			),
 			"mydepartment",
-			"myowndepartment",
-			"annualreportadmin"
+			"appointments",
+			"annualreportadmin",
+			"myowndepartment"
 		)
 	);
 	/**
@@ -405,11 +406,9 @@ class CourseOwnerAssertion implements Zend_Acl_Assert_Interface {
 		
 		$results = $db->GetRow($query);
 		if($results) {
-			foreach($results as $result) {
-				foreach(array("director_id", "coordinator", "admin_id") as $owner) {
-					if($result[$owner] == $user_id) {
-						return true;
-					}
+			foreach(array("director_id", "coordinator", "admin_id") as $owner) {
+				if($result[$owner] == $user_id) {
+					return true;
 				}
 			}
 		}

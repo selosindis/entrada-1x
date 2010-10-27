@@ -86,10 +86,9 @@ class InternationalActivity {
 		}
 	} 
 
-	public static function create($user, $title, $site, $location, $start, $end) {
-		global $db;
-		$student_id = $user->getID();
-		$query = "insert into `student_international_activities` (`student_id`, `title`,`site`,`location`,`start`, `end`) value (".$db->qstr($student_id).", ".$db->qstr($title).", ".$db->qstr($site).", ".$db->qstr($location).", ".$db->qstr($start).", ".$db->qstr($end).")";
+	public static function create($user_id, $title, $site, $location, $start, $end) {
+		global $db;;
+		$query = "insert into `student_international_activities` (`student_id`, `title`,`site`,`location`,`start`, `end`) value (".$db->qstr($user_id).", ".$db->qstr($title).", ".$db->qstr($site).", ".$db->qstr($location).", ".$db->qstr($start).", ".$db->qstr($end).")";
 		if(!$db->Execute($query)) {
 			add_error("Failed to create new International Activity.");
 			application_log("error", "Unable to update a student_international_activity record. Database said: ".$db->ErrorMsg());

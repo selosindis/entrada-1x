@@ -11106,3 +11106,27 @@ function getMinMaxARYears() {
     
 	return $result;
 }
+
+function get_redirect_message($url, $page_title, $success_message) {
+	return "<p>".$message."</p><p>You will now be redirected to the <strong>".$page_title."</strong>; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\">click here</a> to continue.</p>";
+}
+
+function success_redirect($url, $page_title, $success_message) {
+	add_success(get_redirect_message($url, $page_title, $success_message));
+	status_redirect($url);				
+}
+
+function error_redirect($url, $page_title, $error_message) {
+	add_error(get_redirect_message($url, $page_title, $error_message));				
+	status_redirect($url);				
+}
+
+function notice_redirect($url, $page_title, $notice_message) {
+	add_notice(get_redirect_message($url, $page_title, $notice_message));				
+	status_redirect($url);				
+}
+
+function status_redirect($url) {
+	header( "refresh:5;url=".$url );
+	display_status_messages();
+}

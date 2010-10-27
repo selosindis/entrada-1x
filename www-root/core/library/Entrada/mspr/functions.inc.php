@@ -345,11 +345,10 @@ function display_period_details(Collection $collection, $type, $template_name, $
 function display_observerships(Observerships $observerships,$type, $hide_controls = false) {
 	$content_file = TEMPLATE_ABSOLUTE."/modules/common/mspr/observership.xml";
 	$content_template =  new Template($content_file);
-	
 	$contents = "";
 	
-	if ($collection && $collection->count() > 0) {
-		foreach($collection as $entity) {
+	if ($observerships && $observerships->count() > 0) {
+		foreach($observerships as $entity) {
 			$status = getStatus($entity);
 			
 			$preceptor = trim($entity->getPreceptorFirstname() . " " . $entity->getPreceptorLastname());

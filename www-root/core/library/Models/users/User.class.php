@@ -189,6 +189,10 @@ class User {
 		return $this->lastname . ", " . $this->firstname;
 	}
 	
+	/**
+	 * Returns the user's email address, if available
+	 * @return string
+	 */
 	function getEmail() {
 		return $this->email;
 	}
@@ -201,10 +205,18 @@ class User {
 		return $this->number;
 	}
 	
+	/**
+	 * @return Organisation
+	 */
 	function getOrganisation() {
 		return Organisation::get($this->organisation_id);
 	}
 	
+	/**
+	 * 
+	 * @param int $user_id
+	 * @return User
+	 */
 	public static function get($user_id) {
 		$cache = SimpleCache::getCache();
 		$user = $cache->get("User",$user_id);
@@ -219,7 +231,12 @@ class User {
 		return $user;
 	}
 	
-	public static function fromArray($arr) {
+	/**
+	 * 
+	 * @param array $arr
+	 * @return User
+	 */
+	public static function fromArray(array $arr) {
 		return new User($arr['id'],$arr['username'],$arr['firstname'],$arr['lastname'],$arr['number'],$arr['grad_year'],$arr['entry_year'],$arr['password'],$arr['organisation_id'],$arr['department'],$arr['prefix'],$arr['email'],$arr['email_alt'],$arr['google_id'],$arr['telephone'],$arr['fax'],$arr['address'],$arr['city'],$arr['province'],$arr['postcode'],$arr['country'],$arr['country_id'],$arr['province_id'],$arr['notes'],$arr['privacy_level'],$arr['notifications'],$arr['office_hours'],$arr['clinical']);	
 	}
 }

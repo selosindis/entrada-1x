@@ -24,8 +24,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MSPR_ADMIN"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 
-	if (isset($_GET['id']) && is_int($_GET['id'])) {
-		$user_id = $_GET['id'];
+	if (isset($_GET['id'])) {
+		$user_id = clean_input($_GET['id'],array("int"));
 		
 		//single user generation
 		$mode = "user_mode";
@@ -45,35 +45,38 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MSPR_ADMIN"))) {
 				$mspr = MSPR::get($user);
 				$name = $user->getFirstname() . " " . $user->getLastname();
 				
+				$page_title = $name . "'s MSPR page";
+				$url = ENTRADA_URL."/admin/users/manage/students?section=mspr&id=".$user_id;
+				
 				if ($mspr->saveMSPRFiles()) {
-					add_success("Report successfully generated. You will be redirected to the student's MSPR page in 5 seconds.");
+					success_redirect($url, $page_title, "<p>Report successfully generated.</p>"); 
 				} else {
-					add_error("Error generating report for $name. You will be redirected to the student's MSPR page in 5 seconds.");
+					error_redirect($url, $page_title, "<p>Error generating report for ".$name.".</p>"); 
 				}
-				header( "refresh:5;url=".ENTRADA_URL."/admin/users/manage?section=mspr&id=$user_id" );
 				break;
 			case "group_mode";
-				$has_error = false;
 				$timestamp = time();
 				foreach ($user_ids as $user_id) {
 					
 					$user = User::get($user_id);
 					$mspr = MSPR::get($user);
 					$name = $user->getFirstname() . " " . $user->getLastname();
-					
+										
 					if (!$mspr->saveMSPRFiles($timestamp)) {
 						add_error("Error generating report for $name.");
 					}
 											
 				}
+				
+				$page_title = "Class of ". $year . " MSPR page";
+				$url = ENTRADA_URL."/admin/mspr?mode=year&year=".$year;
+				
 				if (!has_error()) {
-					add_success("Reports successfully generated. You will be redirected to the class MSPR page in 5 seconds."); 
+					success_redirect($url, $page_title, "<p>Reports successfully generated.</p>"); 
 				} else {
-					add_error("You will be redirected to the class MSPR page in 5 seconds.");
+					error_redirect($url, $page_title, ""); 
 				}
-				header( "refresh:5;url=".ENTRADA_URL."/admin/mspr?year=".$year );
 				break;
 		}
 	}
-	display_status_messages();
 }

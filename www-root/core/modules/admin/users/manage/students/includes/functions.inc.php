@@ -274,6 +274,13 @@ class MSPRAdminController {
 			add_error($translator->translate("mspr_observership_preceptor_required"));
 		}
 		
+		if ($preceptor_proxy_id === -1) {
+			//special case for "Various"
+			$preceptor_proxy_id = 0; //not faculty 
+			$preceptor_firstname = "Various";
+			$preceptor_lastname = "";
+		}
+		
 		if (!has_error()) {
 			if ($user_id && $title && $site && $location && $start_ts) {
 								

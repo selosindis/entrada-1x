@@ -64,6 +64,12 @@ if(!defined("PARENT_INCLUDED")) {
 			$RECORD_ID = 0;
 		}
 
+		if (isset($_REQUEST["community"]) && $_REQUEST["community"]) {
+			$QUIZ_TYPE = "community_page";
+		} else {
+			$QUIZ_TYPE = "event";
+		}
+		
 		$module_file = $router->getRoute();
 		if ($module_file) {
 			require_once($module_file);

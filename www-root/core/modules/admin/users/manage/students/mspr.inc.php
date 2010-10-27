@@ -24,6 +24,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
 }  else {
 	
+	require_once("Models/users/ClinicalFacultyMembers.class.php");
 	require_once("Models/mspr/MSPRs.class.php");
 	$PROXY_ID					= $user_record["id"];
 	$user = User::get($user_record["id"]);
@@ -126,6 +127,8 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 		if (!$mspr_close && $class_data) { //no custom time.. use the class default
 			$mspr_close = $class_data->getClosedTimestamp();	
 		}
+		
+		$faculty = ClinicalFacultyMembers::get();
 			
 		display_status_messages();
 		add_mspr_management_sidebar();
@@ -462,8 +465,8 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 		</div>
 		
 		<div class="section">
-			<h3 title="Observerships" class="collapsable collapsed">Observerships</h3>
-			<div id="observerships">
+			<h3 title="Observerships Section" class="collapsable collapsed">Observerships</h3>
+			<div id="observerships-section">
 				<div id="add_observership_link" style="float: right;<?php if ($show_observership_form) { echo "display:none;"; }   ?>">
 					<ul class="page-action">
 						<li><a id="add_observership" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&show=observership_form&id=<?php echo $PROXY_ID; ?>" class="strong-green">Add Observership</a></li>
@@ -476,8 +479,8 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 					<table class="mspr_form">
 						<colgroup>
 							<col width="3%"></col>
-							<col width="25%"></col>
-							<col width="72%"></col>
+							<col width="32%"></col>
+							<col width="65%"></col>
 						</colgroup>
 						<tfoot>
 							<tr>
@@ -509,6 +512,30 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 								<td>&nbsp;</td>
 								<td><label class="form-required" for="location">Location:</label></td>
 								<td><input name="location" value="Kingston, ON"></input> <span class="content-small"><strong>Example:</strong> Kingston, ON</span></td>
+							</tr>
+							<tr>
+								<td>&nbsp;</td>
+								<td><label class="form-nrequired" for="preceptor_proxy_id">Faculty Preceptor:</label></td>
+								<td>
+									<select name="preceptor_proxy_id">
+									<?php
+										echo build_option(0,"Non-Faculty",true);
+										foreach ($faculty as $faculty_member) {
+											echo build_option($faculty_member->getID(), $faculty_member->getLastname().", ".$faculty_member->getFirstname());
+										}
+									?>
+									</select>
+								</td>
+							</tr>	
+							<tr>
+								<td>&nbsp;</td>
+								<td><label class="form-nrequired" for="preceptor_firstname">Non-Faculty Preceptor First Name:</label></td>
+								<td><input name="preceptor_firstname"></input><span class="content-small"> <strong>Example:</strong> <?php echo $user->getFirstname(); ?></span></td>
+							</tr>	
+							<tr>
+								<td>&nbsp;</td>
+								<td><label class="form-nrequired" for="preceptor_lastname">Non-Faculty Preceptor Last Name:</label></td>
+								<td><input name="preceptor_lastname"></input><span class="content-small"> <strong>Example:</strong> <?php echo $user->getLastname(); ?></span></td>
 							</tr>	
 							<tr>
 								<td>&nbsp;</td>
@@ -519,7 +546,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 							</tr>
 							<tr>
 								<td>&nbsp;</td>
-								<td><label class="form-required" for="end">End Date:</label></td>
+								<td><label class="form-nrequired" for="end">End Date:</label></td>
 								<td>
 									<input type="text" name="end" id="observership_end"></input>
 								</td>

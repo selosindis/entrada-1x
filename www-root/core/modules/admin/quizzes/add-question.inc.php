@@ -168,7 +168,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						/**
 						 * Get the next order of this question from the quiz_questions table.
 						 */
-						$query	= "SELECT MAX(`question_order`) AS `next_order` FROM `quiz_questions` WHERE `quiz_id` = ".$db->qstr($RECORD_ID);
+						$query	= "SELECT MAX(`question_order`) AS `next_order` FROM `quiz_questions` WHERE `quiz_id` = ".$db->qstr($RECORD_ID)." AND `question_active` = '1'";
 						$result = $db->GetRow($query);
 						if ($result) {
 							$PROCESSED["question_order"] = ($result["next_order"] + 1);

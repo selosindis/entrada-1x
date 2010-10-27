@@ -339,13 +339,50 @@ function display_research_citations(ResearchCitations $research_citations, $type
 
 
 function display_period_details(Collection $collection, $type, $template_name, $hide_controls = false) {
-	$content_file = TEMPLATE_ABSOLUTE."/modules/common/mspr/".$template_name.".xml";
+
+}
+
+function display_observerships(Observerships $observerships,$type, $hide_controls = false) {
+	$content_file = TEMPLATE_ABSOLUTE."/modules/common/mspr/observership.xml";
 	$content_template =  new Template($content_file);
 	
 	$contents = "";
 	
 	if ($collection && $collection->count() > 0) {
 		foreach($collection as $entity) {
+			$status = getStatus($entity);
+			
+			$preceptor = trim($entity->getPreceptorFirstname() . " " . $entity->getPreceptorLastname());
+			if (preg_match("/\b[Dd][Rr]\./", $preceptor) == 0) {
+				$preceptor = "Dr. ".$preceptor;
+			}
+				
+			$content_bind = array (
+				"title" 	=> clean_input($entity->getTitle(), array("notags", "specialchars")),
+				"site" 	=> clean_input($entity->getSite(), array("notags", "specialchars")),
+				"location" 	=> clean_input($entity->getLocation(), array("notags", "specialchars")),
+				"preceptor" 	=> clean_input($preceptor, array("notags", "specialchars")),
+				"period" 	=> clean_input($entity->getPeriod() , array("notags", "specialchars"))
+			);
+			
+			$content = $content_template->getResult(DEFAULT_LANGUAGE, $content_bind);
+			
+			$contents .= item_wrap_content($type,$status, $entity->getStudentID(), $entity->getID(), $content, $hide_controls);		 
+		}
+	} else {
+		$contents = "<li>None</li>";
+	}
+	
+	return list_wrap_content($contents);
+}
+
+function display_international_activities(InternationalActivities $int_acts,$type, $hide_controls = false) {
+	$content_file = TEMPLATE_ABSOLUTE."/modules/common/mspr/international_activity.xml";
+	$content_template =  new Template($content_file);
+	
+	$contents = "";
+	if ($int_acts && $int_acts->count() > 0) {
+		foreach($int_acts as $entity) {
 			$status = getStatus($entity);
 			
 			$content_bind = array (
@@ -362,12 +399,4 @@ function display_period_details(Collection $collection, $type, $template_name, $
 	}
 	
 	return list_wrap_content($contents);
-}
-
-function display_observerships(Observerships $observerships,$type, $hide_controls = false) {
-	return display_period_details($observerships, $type, "observership", $hide_controls); 
-}
-
-function display_international_activities(InternationalActivities $int_acts,$type, $hide_controls = false) {
-	return display_period_details($int_acts, $type, "international_activity", $hide_controls);
 }

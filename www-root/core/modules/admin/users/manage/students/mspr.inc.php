@@ -74,10 +74,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 		$number = $user->getNumber();
 		
 		$name = $user->getFirstname() . " " . $user->getLastname();
-		if (isset($_GET['generate']) && $is_closed){
-			$mspr->saveMSPRFiles();
-			header("Location: ".ENTRADA_URL."/admin/users/manage/students?section=mspr&id=".$PROXY_ID);
-		} elseif ($type = $_GET['get']) {
+		if (isset($_GET['get']) && ($type = $_GET['get'])) {
 			$name = $user->getFirstname() . " " . $user->getLastname();
 			switch($type) {
 				case 'html':
@@ -148,7 +145,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 	<span class="last-update">Last Updated: <?php echo date("F j, Y \a\\t g:i a",$revision); ?></span>
 	<?php }?>
 	<hr />
-	<a href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&generate&id=<?php echo $PROXY_ID; ?>">Generate Report</a>
+	<a href="<?php echo ENTRADA_URL; ?>/admin/mspr?section=generate&id=<?php echo $PROXY_ID; ?>">Generate Report</a>
 	</div>
 		<?php
 	} elseif ($mspr_close) {

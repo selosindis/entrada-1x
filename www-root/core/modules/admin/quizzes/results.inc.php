@@ -248,7 +248,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 											FROM `quiz_progress` AS a
 											WHERE a.`aquiz_id` = ".$db->qstr($RECORD_ID)."
 											AND a.`proxy_id` = ".$db->qstr($respondent["proxy_id"])."
-											AND a.`progress_value` = 'complete'";
+											AND a.`progress_value` = 'complete'
+											AND a.`content_type` = ".$db->qstr($QUIZ_TYPE);
 							switch ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["attempt"]) {
 								case "last" :
 									$query .= "	ORDER BY a.`updated_date` DESC
@@ -275,6 +276,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 													JOIN `quiz_question_responses` AS b
 													ON a.`qqresponse_id` = b.`qqresponse_id`
 													WHERE a.`qprogress_id` = ".$db->qstr($result["qprogress_id"])."
+													AND a.`content_type` = ".$db->qstr($QUIZ_TYPE)."
 													AND b.`response_active` = '1'";
 									$responses = $db->GetAll($query);
 									if ($responses) {

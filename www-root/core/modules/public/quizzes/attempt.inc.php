@@ -139,7 +139,7 @@ if ($RECORD_ID) {
 												 * response $_POST, and if they've actually answered the question.
 												 */
 												if ((isset($_POST["responses"][$question["qquestion_id"]])) && ($qqresponse_id = clean_input($_POST["responses"][$question["qquestion_id"]], "int"))) {
-													if (!quiz_save_response($qprogress_id, $progress_record["aquiz_id"], $progress_record["content_id"], $progress_record["quiz_id"], $question["qquestion_id"], $qqresponse_id)) {
+													if (!quiz_save_response($qprogress_id, $progress_record["aquiz_id"], $progress_record["content_id"], $progress_record["quiz_id"], $question["qquestion_id"], $qqresponse_id, $QUIZ_TYPE)) {
 														$ERROR++;
 														$ERRORSTR[] = "A problem was found storing a question response, please verify your responses and try again.";
 

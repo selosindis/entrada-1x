@@ -78,10 +78,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 								}
 							}
 						} else {
-							$PROCESSED["username"] = $user_record;
+							$PROCESSED["username"] = $user_record["username"];
 						}
 					} else {
-						$PROCESSED["username"] = $user_record;
+						$PROCESSED["username"] = $user_record["username"];
 						$ERROR++;
 						$ERRORSTR[] = "You must provide a valid username for this user to login with. We suggest that you use their University NetID if at all possible.";
 					}
@@ -372,7 +372,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 							 */
 							if (!$db->AutoExecute(AUTH_DATABASE.".user_access", $PROCESSED_ACCESS, "UPDATE", "user_id = ".$db->qstr($PROXY_ID)." AND app_id = ".$db->qstr(AUTH_APP_ID))) {
 								$ERROR++;
-								$ERRORSTR[] = "We were unable to properly update your <strong>Account Options</strong> settings. The MEdTech Unit has been informed of this error, please try again later.";
+								$ERRORSTR[] = "We were unable to properly update your <strong>Account Options</strong> settings. The system administrator has been informed of this error, please try again later.";
 
 								application_log("error", "Unable to update data in the user_access table. Database said: ".$db->ErrorMsg());
 							}
@@ -383,7 +383,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 							 */
 								if (!$db->AutoExecute(AUTH_DATABASE.".user_photos", $PROCESSED_PHOTO, "UPDATE", "proxy_id = ".$db->qstr($PROXY_ID)." AND photo_type = '1'")) {
 									$ERROR++;
-									$ERRORSTR[] = "We were unable to properly update your <strong>Account Options</strong> settings. The MEdTech Unit has been informed of this error, please try again later.";
+									$ERRORSTR[] = "We were unable to properly update your <strong>Account Options</strong> settings. The system administrator has been informed of this error, please try again later.";
 
 									application_log("error", "Unable to update data in the user_access table. Database said: ".$db->ErrorMsg());
 								}
@@ -428,7 +428,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 							application_log("success", "Proxy ID [".$_SESSION["details"]["id"]."] successfully updated the proxy id [".$PROXY_ID."] user profile.");
 						} else {
 							$ERROR++;
-							$ERRORSTR[] = "Unable to update this user account at this time. The MEdTech Unit has been informed of this error, please try again later.";
+							$ERRORSTR[] = "Unable to update this user account at this time. The system administrator has been informed of this error, please try again later.";
 
 							application_log("error", "Unable to update user account [".$PROXY_ID."]. Database said: ".$db->ErrorMsg());
 						}

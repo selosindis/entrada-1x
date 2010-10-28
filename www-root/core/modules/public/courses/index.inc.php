@@ -34,7 +34,6 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 	
 	$BREADCRUMB[]	= array("url" => ENTRADA_URL."/".$MODULE, "title" => "View Courses");
 
-
 	/**
 	 * Check for groups which have access to the administrative side of this module
 	 * and add the appropriate toggle sidebar item.
@@ -58,6 +57,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				$admin_url		= "";
 			break;
 		}
+
 		$sidebar_html  = "<ul class=\"menu\">\n";
 		$sidebar_html .= "	<li class=\"on\"><a href=\"".ENTRADA_URL."/".$MODULE.(($COURSE_ID) ? "?".replace_query(array("id" => $COURSE_ID, "action" => false)) : "")."\">Student View</a></li>\n";
 		if (($admin_wording) && ($admin_url)) {

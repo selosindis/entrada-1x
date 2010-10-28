@@ -1,7 +1,7 @@
 <?php
 abstract class AbstractStudentDetails {
 	protected $id;
-	protected $user;
+	protected $user_id;
 	protected $details;
 		
 	public abstract function delete();
@@ -11,7 +11,7 @@ abstract class AbstractStudentDetails {
 	}
 	
 	public function getUser() {
-		return $this->user;
+		return User::get($this->user_id);
 	}
 	
 	public function getDetails() {

@@ -14,21 +14,23 @@
 require_once("Models/utility/Template.class.php");
 
 
-function item_wrap_content($type, $status, $user_id, $entity_id, $content, $hide_controls = false, $comment="", $id_string="") {
-	
-	//static and test used to minimize re-loading of the same template
+function item_wrap_content($type, $entity, $content, $hide_controls = false, $comment="", $id_string="") {
+
+	$status = getStatus($entity);
 	$status_file = TEMPLATE_ABSOLUTE."/modules/".$type."/mspr/item_status".($hide_controls?"_no_controls":"").".xml";
 	$status_template = new Template($status_file);
+	
+	if (!$hide_controls) {
+		$controls = getControls($entity, $type);
+	}
 	$status_bind = array (
 				"content"	=> $content,
-				"user_id"	=> $user_id,
-				"entity_id"	=> $entity_id,
 				"reason"	=> clean_input($comment,array("notags","specialchars","nl2br")),
 				"id"		=> ($id_string ? "id='".$id_string."'" : ""),
-				"form_url"	=> ENTRADA_URL . "/admin/users/manage/students?section=mspr&id=" . $user_id
+				"controls"	=> $controls
 	);
 	
-			
+		
 			
 	return $status_template->getResult(DEFAULT_LANGUAGE, $status_bind, array("status"=>$status));	
 }
@@ -46,10 +48,64 @@ function list_wrap_content($content, $class="", $id="") {
 	return $list_template->getResult(DEFAULT_LANGUAGE, $list_bind);	
 }
 
+function getControls($entity, $type) {
+	$controls_file = TEMPLATE_ABSOLUTE."/modules/common/mspr/controls.xml";
+	$control_template = new Template($controls_file);
+	
+	$user = $entity->getUser();
+	$user_id = $user->getID();
+	$control_bind = array(
+				"user_id"	=> $user_id,
+				"entity_id"	=> $entity->getID(),
+				"form_url"	=> ENTRADA_URL . "/admin/users/manage/students?section=mspr&id=" . $user_id
+	);
+	
+	$controls = array();
+	switch($type) { //the differences below are due to the fact that students can only edit approvable items, while staff can only edit non-approvable items
+		case "admin":
+			if ($entity instanceof Approvable) {
+				$status = getStatus($entity);
+				switch($status){
+					case 'approved':
+						$controls[] = $control_template->getResult(DEFAULT_LANGUAGE, $control_bind, array("type" => "unapprove")); 
+						break;
+					case 'unapproved':
+						$controls[] = $control_template->getResult(DEFAULT_LANGUAGE, $control_bind, array("type" => "reject"));
+						$controls[] = $control;
+						$controls[] = $control_template->getResult(DEFAULT_LANGUAGE, $control_bind, array("type" => "approve")); 
+						break;
+					case 'rejected':
+						$controls[] = $control_template->getResult(DEFAULT_LANGUAGE, $control_bind, array("type" => "approve")); 
+						break;
+				}
+			} else {
+				if ($entity instanceof Editable) {
+					$controls[] = $control_template->getResult(DEFAULT_LANGUAGE, $control_bind, array("type" => "edit")); 
+				}	
+				$controls[] = $control_template->getResult(DEFAULT_LANGUAGE, $control_bind, array("type" => "remove")); 
+			}
+			
+			break;
+		case "public": //fall through
+		default:
+			if ($entity instanceof Approvable) {
+				if ($entity instanceof Editable) {
+					$controls[] = $control_template->getResult(DEFAULT_LANGUAGE, $control_bind, array("type" => "edit")); 
+				}
+				$controls[] = $control_template->getResult(DEFAULT_LANGUAGE, $control_bind, array("type" => "remove")); 
+			}
+			break;
+	}
+	$control_content = implode("\n", $controls);
+	return $control_content;
+}
+
 function getStatus($entity) {
 	if ($entity instanceof Approvable) {
+		//student entered data
 		$status=($entity->isRejected() ? ($entity->getComment()?"rejected_reason":"rejected") : ($entity->isApproved()? "approved" : "unapproved"));
 	} else {
+		//staff entered data/extracted
 		$status="default";
 	}
 	return $status;
@@ -62,7 +118,6 @@ function display_studentships(Studentships $studentships, $type, $hide_controls 
 	
 	if ($studentships && count($studentships) > 0) {
 		foreach($studentships as $studentship) {
-			$status = getStatus($studentship);
 			
 			$content_bind = array (
 				"title"	=> clean_input($studentship->getTitle(), array("notags", "specialchars")),
@@ -70,7 +125,7 @@ function display_studentships(Studentships $studentships, $type, $hide_controls 
 			);
 			
 			$content = $content_template->getResult(DEFAULT_LANGUAGE, $content_bind);
-			$contents .= item_wrap_content($type,$status, $studentship->getUserID(), $studentship->getID(), $content, $hide_controls);
+			$contents .= item_wrap_content($type, $studentship,$content, $hide_controls);
 		}		
 	} else {
 		$contents = "<li>None</li>";
@@ -88,15 +143,13 @@ function display_clineval(ClinicalPerformanceEvaluations $clinevals,$type, $hide
 		foreach($clinevals as $clineval) {
 			$user = $clineval->getUser();
 			
-			$status = getStatus($clineval);
-			
 			$content_bind = array (
 				"comment"	=> clean_input($clineval->getComment(), array("notags", "specialchars", "nl2br")),
 				"source"	=> clean_input($clineval->getSource(), array("notags", "specialchars"))
 			);
 			
 			$content = $content_template->getResult(DEFAULT_LANGUAGE, $content_bind);
-			$contents .= item_wrap_content($type,$status, $user->getID(), $clineval->getID(), $content, $hide_controls);
+			$contents .= item_wrap_content($type, $clineval, $content, $hide_controls);
 		}		
 	} else {
 		$contents = "<li>None</li>";
@@ -112,7 +165,6 @@ function display_internal_awards(InternalAwardReceipts $receipts,$type, $hide_co
 	
 	if ($receipts && count($receipts) > 0) {
 		foreach($receipts as $receipt) {
-			$status = getStatus($receipt);
 			$award = $receipt->getAward();
 			$user = $receipt->getUser();
 			
@@ -122,7 +174,7 @@ function display_internal_awards(InternalAwardReceipts $receipts,$type, $hide_co
 			);
 			
 			$content = $content_template->getResult(DEFAULT_LANGUAGE, $content_bind);
-			$contents .= item_wrap_content($type,$status, $user->getID(), $receipt->getID(), $content, $hide_controls);
+			$contents .= item_wrap_content($type, $receipt, $content, $hide_controls);
 		}		
 	} else {
 		$contents = "<li>None</li>";
@@ -137,7 +189,6 @@ function display_external_awards(ExternalAwardReceipts $receipts,$type, $hide_co
 	
 	if ($receipts && count($receipts) > 0) {
 		foreach($receipts as $receipt) {
-			$status = getStatus($receipt);
 			$award = $receipt->getAward();
 			$user = $receipt->getUser();
 			
@@ -149,7 +200,7 @@ function display_external_awards(ExternalAwardReceipts $receipts,$type, $hide_co
 			);
 			
 			$content = $content_template->getResult(DEFAULT_LANGUAGE, $content_bind);
-			$contents .= item_wrap_content($type,$status, $user->getID(), $receipt->getID(), $content, $hide_controls, $receipt->getComment());
+			$contents .= item_wrap_content($type,$receipt, $content, $hide_controls, $receipt->getComment());
 		}		
 	} else {
 		$contents = "<li>None</li>";
@@ -167,8 +218,6 @@ function display_contributions(Contributions $contributions,$type, $hide_control
 	if ($contributions && count($contributions) > 0) {
 		foreach($contributions as $contribution) {
 			
-			$status = getStatus($contribution);
-			
 			$content_bind = array (
 				"role"		=> clean_input($contribution->getRole(), array("notags", "specialchars")),
 				"org_event"	=> clean_input($contribution->getOrgEvent(), array("notags", "specialchars")),
@@ -177,7 +226,7 @@ function display_contributions(Contributions $contributions,$type, $hide_control
 				
 			$content = $content_template->getResult(DEFAULT_LANGUAGE, $content_bind);
 			
-			$contents .= item_wrap_content($type,$status, $contribution->getUserID(), $contribution->getID(), $content, $hide_controls, $contribution->getComment());		
+			$contents .= item_wrap_content($type,$contribution, $content, $hide_controls, $contribution->getComment());		
 		}
 	} else {
 		$contents = "<li>None</li>";
@@ -254,7 +303,6 @@ function display_student_run_electives(StudentRunElectives $sres,$type, $hide_co
 	
 	if ($sres && count($sres) > 0) {
 		foreach($sres as $sre) {
-			$status = getStatus($sre);
 			
 			$content_bind = array (
 				"details" 	=> clean_input($sre->getDetails(), array("notags", "specialchars", "nl2br")),
@@ -263,7 +311,7 @@ function display_student_run_electives(StudentRunElectives $sres,$type, $hide_co
 			
 			$content = $content_template->getResult(DEFAULT_LANGUAGE, $content_bind);
 			
-			$contents .= item_wrap_content($type,$status, $sre->getUserID(), $sre->getID(), $content, $hide_controls);		
+			$contents .= item_wrap_content($type, $sre, $content, $hide_controls);		
 		}
 	} else {
 		$contents = "<li>None</li>";
@@ -277,8 +325,6 @@ function display_supervised_project(SupervisedProject $project = null, $type, $h
 	$content_template =  new Template($content_file);
 	
 	if ($project) {
-		$status = getStatus($project);
-		
 		$content_bind = array (
 			"title"			=> clean_input($project->getTitle(), array("notags", "specialchars")),
 			"organisation"	=> clean_input($project->getOrganization(), array("notags", "specialchars")),
@@ -288,7 +334,7 @@ function display_supervised_project(SupervisedProject $project = null, $type, $h
 		
 		$content = $content_template->getResult(DEFAULT_LANGUAGE, $content_bind);
 
-		$contents = item_wrap_content($type, $status, $project->getUserID(), $project->getUserID(), $content, $hide_controls, $project->getComment());
+		$contents = item_wrap_content($type, $project, $content, $hide_controls, $project->getComment());
 	} else {
 		$contents = "<li>Not yet entered.</li>";	
 	}
@@ -319,7 +365,6 @@ function display_research_citations(ResearchCitations $research_citations, $type
 	
 	if ($research_citations && $research_citations->count() > 0) {
 		foreach($research_citations as $research_citation) {
-			$status = getStatus($research_citation);
 			
 			$content_bind = array (
 				"image" => ENTRADA_URL. "/images/arrow_up_down.png",
@@ -328,7 +373,7 @@ function display_research_citations(ResearchCitations $research_citations, $type
 			
 			$content = $content_template->getResult(DEFAULT_LANGUAGE, $content_bind);
 			$id_string = "research_citation_".$research_citation->getID();
-			$contents .= item_wrap_content($type,$status, $research_citation->getUserID(), $research_citation->getID(), $content, $hide_controls, $research_citation->getComment(), $id_string);		
+			$contents .= item_wrap_content($type,$research_citation, $content, $hide_controls, $research_citation->getComment(), $id_string);		
 		}
 	} else {
 		$contents = "<li>None</li>";
@@ -349,8 +394,6 @@ function display_observerships(Observerships $observerships,$type, $hide_control
 	
 	if ($observerships && $observerships->count() > 0) {
 		foreach($observerships as $entity) {
-			$status = getStatus($entity);
-			
 			$preceptor = trim($entity->getPreceptorFirstname() . " " . $entity->getPreceptorLastname());
 			if (preg_match("/\b[Dd][Rr]\./", $preceptor) == 0) {
 				$preceptor = "Dr. ".$preceptor;
@@ -366,7 +409,7 @@ function display_observerships(Observerships $observerships,$type, $hide_control
 			
 			$content = $content_template->getResult(DEFAULT_LANGUAGE, $content_bind);
 			
-			$contents .= item_wrap_content($type,$status, $entity->getStudentID(), $entity->getID(), $content, $hide_controls);		 
+			$contents .= item_wrap_content($type, $entity, $content, $hide_controls);		 
 		}
 	} else {
 		$contents = "<li>None</li>";
@@ -382,7 +425,6 @@ function display_international_activities(InternationalActivities $int_acts,$typ
 	$contents = "";
 	if ($int_acts && $int_acts->count() > 0) {
 		foreach($int_acts as $entity) {
-			$status = getStatus($entity);
 			
 			$content_bind = array (
 				"details" 	=> clean_input($entity->getDetails(), array("notags", "specialchars", "nl2br")),
@@ -391,7 +433,7 @@ function display_international_activities(InternationalActivities $int_acts,$typ
 			
 			$content = $content_template->getResult(DEFAULT_LANGUAGE, $content_bind);
 			
-			$contents .= item_wrap_content($type,$status, $entity->getStudentID(), $entity->getID(), $content, $hide_controls);		 
+			$contents .= item_wrap_content($type,$entity, $content, $hide_controls);		 
 		}
 	} else {
 		$contents = "<li>None</li>";

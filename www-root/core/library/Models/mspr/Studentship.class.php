@@ -21,6 +21,10 @@ class Studentship {
 		return $this->user_id;	
 	}
 	
+	public function getUser() {
+		return User::get($this->user_id);
+	}
+	
 	public function getTitle(){
 		return $this->title;
 	}

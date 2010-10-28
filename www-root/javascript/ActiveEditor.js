@@ -1,12 +1,10 @@
-	function ActiveApprovalProcessor(options) {
-		try {
+	function ActiveEditor(options) {
 		var url = options.url;
 		var data_destination = options.data_destination;
-		var action_form_selector = options.action_form_selector;
-		var section = options.section;
+		var action_form_selector = options.edit_forms_selector;
+		var edit_modal = options.edit_modal;
 		var messages = options.messages;
-		var reject_modal = options.reject_modal;
-
+		var section = options.section;
 		
 		function process_entry(form_values) {
 			new Ajax.Updater(data_destination, url,
@@ -27,34 +25,44 @@
 		function entry_process_ajax(event) {
 			Event.stop(event);
 			var form = Event.findElement(event, 'form');
-			//having a reject modal defined changes the workflow a little.
-			//if there is no reject_modal, and we're rejecting, then process_entry can go right ahead and work,
-			//if not, then we have to pop up the modal and listen for the confirmation.
+			
 			var form_values = form.serialize(true);
 			
-			if ((form_values.action != "Reject") || !reject_modal){
-				process_entry(form_values);
-			}
-			if ((form_values.action == "Reject") && reject_modal && reject_modal.container){
-				//now we have to listen for the confirmation in the the modal, 
-				//transfer the comment from the modal
-				//and submit the source form above.
-				reject_modal.open();
-				var modal_confirm = reject_modal.container.down(".modal-confirm");
-				var modal_close = reject_modal.container.down(".modal-close");
+			if ((form_values.action == "Edit") && edit_modal && edit_modal.container){
+				edit_modal.open();
+				var modal_confirm = edit_modal.container.down(".modal-confirm");
+				var modal_close = edit_modal.container.down(".modal-close");
+								
+				var owner = form.up(".entry");
 				
-				var modal_comment = reject_modal.container.down("textarea"); 
-				modal_comment.focus();
-				modal_close.observe("click", function() {
-					modal_comment.clear();
-					reject_modal.close();
-				} );
+				var edit_fields = owner.down("form.edit_data").serialize(true);
 				
-				modal_confirm.observe("click", function() {
-					form_values.comment = modal_comment.getValue();
+				//beginning edit. transfer data to modal form
+				for(fieldname in edit_fields) {
+					edit_modal.container.down("*[name="+fieldname+"]").setValue(edit_fields[fieldname]); //uses * selector as it might be an input, or a textarea... or a button, etc
+				}
+				
+				
+				function close_modal() {
+					//clear all of the fields.
+					edit_modal.container.down("form").reset();
+					modal_close.stopObserving("click", close_modal);
+					modal_confirm.stopObserving("click", confirm_modal);
+					edit_modal.close();
+				} 
+				function confirm_modal() {
+					edited_fields = edit_modal.container.down("form").serialize(true);
+					Object.extend(form_values, edited_fields);
+					edit_modal.container.down("form").reset();
 					process_entry(form_values);
-					reject_modal.close();
-				});
+					edit_modal.close();
+					modal_close.stopObserving("click", close_modal);
+					modal_confirm.stopObserving("click", confirm_modal);
+				}
+				modal_confirm.observe("click", confirm_modal);
+				modal_close.observe("click", close_modal);
+				
+				
 			}
 		}
 
@@ -85,8 +93,5 @@
 		document.observe(section+':onBeforeUpdate', onBeforeUpdate);
 		document.observe(section+':onAfterUpdate', onAfterUpdate);
 		
-		
 		add_entry_listeners();
-		
-		} catch (e) {clog(e);}
 	}

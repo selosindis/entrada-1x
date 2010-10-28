@@ -49,6 +49,10 @@ class ResearchCitation implements Approvable, AttentionRequirable {
 		return $this->user_id;	
 	}
 	
+	public function getUser() {
+		return User::get($this->user_id);	
+	}
+	
 	/**
 	 * Returns the text of the citation
 	 * @return string

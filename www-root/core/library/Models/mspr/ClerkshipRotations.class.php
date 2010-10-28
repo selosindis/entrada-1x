@@ -29,8 +29,9 @@ class ClerkshipRotations extends Collection {
 						$title = $element->getTitle();
 						$start = $element->getStart();
 						$finish = $next_element->getFinish();
-						
-						$new_element = new ClerkshipRotation($title, $start, $finish, true);
+						$user = $element->getUser();
+						$user_id = $user->getID(); 
+						$new_element = new ClerkshipRotation($user_id, $title, $start, $finish, true);
 						array_splice($rotations, $i, 2, array($new_element));
 						$i--;
 					}
@@ -83,7 +84,7 @@ class ClerkshipCoreCompleted extends ClerkshipRotations {
 				
 				$title = implode(" / " ,$title_parts);
 				
-				$rotation = new ClerkshipRotation($title, $result['event_start'], $result['event_finish'], true);
+				$rotation = new ClerkshipRotation($user_id, $title, $result['event_start'], $result['event_finish'], true);
 				$rotations[] = $rotation;
 			}
 		}
@@ -132,7 +133,7 @@ class ClerkshipCorePending extends ClerkshipRotations {
 				
 				$title = implode(" / " ,$title_parts);
 				
-				$rotation = new ClerkshipRotation($title, $result['event_start'], $result['event_finish'], false);
+				$rotation = new ClerkshipRotation($user_id, $title, $result['event_start'], $result['event_finish'], false);
 				$rotations[] = $rotation;
 			}
 		}
@@ -197,7 +198,7 @@ class ClerkshipElectivesCompleted extends ClerkshipRotations {
 				$title = implode(" / ", $title_parts);
 				
 				
-				$elective = new ClerkshipElective($title, $location, $supervisor, $result['event_start'], $result['event_finish'], true);
+				$elective = new ClerkshipElective($user_id, $title, $location, $supervisor, $result['event_start'], $result['event_finish'], true);
 				$electives[] = $elective;
 			}
 		}

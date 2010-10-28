@@ -2,6 +2,10 @@
 <templates>
 	<template lang="en">
 		<![CDATA[
+			<form class="edit_data">
+				<input type="hidden" name="text" value="%COMMENT%" />
+				<input type="hidden" name="source" value="%SOURCE%" />
+			</form>
 			<span class="label">
 				Comment: 
 			</span>

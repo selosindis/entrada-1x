@@ -5,11 +5,7 @@
 		<li class="entry approved">
 			%CONTENT%
 			<div class="controls">
-				<form action="%FORM_URL%" method="post">
-					<input type="hidden" name="user_id" value="%USER_ID%"></input>
-					<input type="hidden" name="entity_id" value="%ENTITY_ID%"></input>
-					<input type="submit" name="action" value="Unapprove"></input>
-				</form>
+				%CONTROLS%
 			</div>
 			<div class="item-status">
 				<span class="label">
@@ -27,16 +23,7 @@
 		<li class="entry unapproved">
 			%CONTENT%
 			<div class="controls">
-				<form action="%FORM_URL%" method="post">
-					<input type="hidden" name="user_id" value="%USER_ID%"></input>
-					<input type="hidden" name="entity_id" value="%ENTITY_ID%"></input>
-					<input type="submit" name="action" value="Approve"></input>
-				</form>
-				<form action="%FORM_URL%" method="post">
-					<input type="hidden" name="user_id" value="%USER_ID%"></input>
-					<input type="hidden" name="entity_id" value="%ENTITY_ID%"></input>
-					<input type="submit" name="action" value="Reject"></input>
-				</form>
+				%CONTROLS%
 			</div>
 			<div class="item-status">
 				<span class="label">
@@ -54,11 +41,7 @@
 		<li class="entry rejected">
 			%CONTENT%
 			<div class="controls">
-				<form action="%FORM_URL%" method="post">
-					<input type="hidden" name="user_id" value="%USER_ID%"></input>
-					<input type="hidden" name="entity_id" value="%ENTITY_ID%"></input>
-					<input type="submit" name="action" value="Approve"></input>
-				</form>
+				%CONTROLS%
 			</div>
 			<div class="item-status">
 				<span class="label">
@@ -76,11 +59,7 @@
 		<li class="entry rejected">
 			%CONTENT%
 			<div class="controls">
-				<form action="%FORM_URL%" method="post">
-					<input type="hidden" name="user_id" value="%USER_ID%"></input>
-					<input type="hidden" name="entity_id" value="%ENTITY_ID%"></input>
-					<input type="submit" name="action" value="Approve"></input>
-				</form>
+				%CONTROLS%
 			</div>
 			<div class="item-status">
 				<span class="label">
@@ -104,11 +83,7 @@
 		<li class="entry">
 			%CONTENT%
 			<div class="controls">
-				<form action="%FORM_URL%" method="post">
-					<input type="hidden" name="user_id" value="%USER_ID%"></input>
-					<input type="hidden" name="entity_id" value="%ENTITY_ID%"></input>
-					<input type="submit" name="action" value="Remove"></input>
-				</form>
+				%CONTROLS%
 			</div>
 		</li>
 		]]>

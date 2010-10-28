@@ -36,6 +36,10 @@ class Observership {
 	public function getStudentID() {
 		return $this->student_id;	
 	}
+	
+	public function getUser() {
+		return User::get($this->student_id);
+	}
 
 	public function getSite() {
 		return $this->site;

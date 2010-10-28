@@ -171,7 +171,7 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 							echo "<li class=\"incorrect\">".date(DEFAULT_DATE_FORMAT, $entry["updated_date"])." <strong>Expired Attempt</strong>: not completed.</li>";
 						break;
 						case "inprogress" :
-							echo "<li>".date(DEFAULT_DATE_FORMAT, $entry["updated_date"])." <strong>Attempt In Progress</strong> ( <a href=\"".ENTRADA_URL."/quizzes?section=attempt&amp;id=".$quiz_record["aquiz_id"]."\">continue quiz</a> )</li>";
+							echo "<li>".date(DEFAULT_DATE_FORMAT, $entry["updated_date"])." <strong>Attempt In Progress</strong> ( <a href=\"".ENTRADA_URL."/quizzes?section=attempt&amp;community=true&amp;id=".$quiz_record["aquiz_id"]."\">continue quiz</a> )</li>";
 						break;
 						default :
 							continue;

@@ -164,7 +164,7 @@ class MSPRAdminController {
 							$this->add_observership($user_id);
 							break;
 						case 'int_acts':
-							$this->int_acts($user_id);
+							$this->add_int_act($user_id);
 							break;
 					}
 				}
@@ -247,7 +247,7 @@ class MSPRAdminController {
 		$site = clean_input((isset($_POST['site']) ? $_POST['site'] : "" ),array("notags"));
 		$location = clean_input((isset($_POST['location']) ? $_POST['location'] : "" ),array("notags"));
 		$start = clean_input((isset($_POST['start']) ? $_POST['start'] : "" ),array("notags"));
-		$end = clean_input((isset($_POST['end']) ? $_POST['end'] : "" ),array("int"));
+		$end = clean_input((isset($_POST['end']) ? $_POST['end'] : "" ),array("notags"));
 				
 		$preceptor_proxy_id = clean_input((isset($_POST['preceptor_proxy_id']) ? $_POST['preceptor_proxy_id'] : "" ),array("int"));
 		$preceptor_firstname = clean_input((isset($_POST['preceptor_firstname']) ? $_POST['preceptor_firstname'] : "" ),array("notags"));
@@ -258,7 +258,7 @@ class MSPRAdminController {
 		} else {
 			$parts = date_parse($start);  
 			$start_ts = mktime(0,0, 0, $parts['month'],$parts['day'], $parts['year']);
-			if (checkDateFormat($end)) {
+			if ($end && checkDateFormat($end)) {
 				$parts = date_parse($end);  
 				$end_ts = mktime(0,0, 0, $parts['month'],$parts['day'], $parts['year']);
 			} else {
@@ -320,12 +320,20 @@ class MSPRAdminController {
 		$title = clean_input((isset($_POST['title']) ? $_POST['title'] : "" ),array("notags"));
 		$site = clean_input((isset($_POST['site']) ? $_POST['site'] : "" ),array("notags"));
 		$location = clean_input((isset($_POST['location']) ? $_POST['location'] : "" ),array("notags"));
-		$start = clean_input((isset($_POST['start']) ? $_POST['start'] : "" ),array("int"));
+		$start = clean_input((isset($_POST['start']) ? $_POST['start'] : "" ),array("notags"));
+		$end = clean_input((isset($_POST['end']) ? $_POST['end'] : "" ),array("notags"));
 			
+		if (!checkDateFormat($start)) {
+			add_error($translator->translate("mspr_observership_invalid_dates"));
+		} else {
+			if (!$end || !checkDateFormat($end)) {
+				$end = $start;
+			}
+		}
+		
 		if ($user_id && $title && $site && $location && $start) {
-			$end = clean_input((isset($_POST['end']) ? $_POST['end'] : "" ),array("int"));
 							
-			InternationalActivity::create($user, $title, $site, $location, $start, $end);
+			InternationalActivity::create($user_id, $title, $site, $location, $start, $end);
 		} else {
 			add_error($translator->translate("mspr_insufficient_info"));
 		}

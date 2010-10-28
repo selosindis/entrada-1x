@@ -527,7 +527,7 @@ $ADMINISTRATION["staff"]["pcoordinator"] = array(
 
 $ADMINISTRATION["staff"]["staff"] = array(
 										"start_file" => "dashboard",
-										"registered" => array("dashboard"),
+										"registered" => array("dashboard", "quizzes"),
 										"assistant_support"	=> false
 										);
 

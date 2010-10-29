@@ -71,10 +71,10 @@ function getControls($entity, $type) {
 						break;
 					case 'unapproved':
 						$controls[] = $control_template->getResult(DEFAULT_LANGUAGE, $control_bind, array("type" => "reject"));
-						$controls[] = $control;
 						$controls[] = $control_template->getResult(DEFAULT_LANGUAGE, $control_bind, array("type" => "approve")); 
 						break;
 					case 'rejected':
+					case 'rejected_reason':
 						$controls[] = $control_template->getResult(DEFAULT_LANGUAGE, $control_bind, array("type" => "approve")); 
 						break;
 				}

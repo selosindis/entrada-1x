@@ -39,22 +39,32 @@
 				//now we have to listen for the confirmation in the the modal, 
 				//transfer the comment from the modal
 				//and submit the source form above.
-				reject_modal.open();
+				
 				var modal_confirm = reject_modal.container.down(".modal-confirm");
 				var modal_close = reject_modal.container.down(".modal-close");
-				
 				var modal_comment = reject_modal.container.down("textarea"); 
-				modal_comment.focus();
-				modal_close.observe("click", function() {
-					modal_comment.clear();
-					reject_modal.close();
-				} );
 				
-				modal_confirm.observe("click", function() {
-					form_values.comment = modal_comment.getValue();
-					process_entry(form_values);
+				function close_modal() {
+					//clear all of the fields.
 					reject_modal.close();
-				});
+					modal_comment.clear();
+					modal_close.stopObserving("click", close_modal);
+					modal_confirm.stopObserving("click", confirm_modal);
+				} 
+				function confirm_modal() {
+					reject_modal.close();
+					form_values.comment = modal_comment.getValue();
+					modal_comment.clear();
+					process_entry(form_values);
+					modal_close.stopObserving("click", close_modal);
+					modal_confirm.stopObserving("click", confirm_modal);
+				}
+
+				modal_confirm.observe("click", confirm_modal);
+				modal_close.observe("click", close_modal);
+
+				reject_modal.open();
+				modal_comment.focus();
 			}
 		}
 

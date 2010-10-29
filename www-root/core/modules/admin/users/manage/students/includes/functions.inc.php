@@ -26,7 +26,7 @@ class MSPRAdminController {
 								"clineval" => array("add","remove", "edit"),
 								"internal_awards" => array("add","remove"),
 								"student_run_electives" => array("add","remove"),
-								"observerships" => array("add","remove"),
+								"observerships" => array("add","remove", "edit"),
 								"int_acts" => array("add","remove"),
 								"external_awards" => array("approve","unapprove","reject"),
 								"contributions" => array("approve","unapprove","reject"),
@@ -144,6 +144,9 @@ class MSPRAdminController {
 								switch($section) {
 									case "clineval":
 										$this->edit_clineval($entity);
+										break;
+									case "observerships":
+										$this->edit_observership($entity);
 										break;
 								}
 						}
@@ -277,11 +280,11 @@ class MSPRAdminController {
 			$preceptor_proxy_id = null; 
 		}
 		
-		if (!$preceptor_proxy_id && !($preceptor_firstname && $preceptor_lastname)) {
+		if (!$preceptor_proxy_id && !($preceptor_firstname || $preceptor_lastname)) {
 			add_error($translator->translate("mspr_observership_preceptor_required"));
 		}
 		
-		if ($preceptor_proxy_id === -1) {
+		if ($preceptor_proxy_id == -1) {
 			//special case for "Various"
 			$preceptor_proxy_id = 0; //not faculty 
 			$preceptor_firstname = "Various";
@@ -298,8 +301,7 @@ class MSPRAdminController {
 		}
 	}
 	
-	private function edit_observsership($obs_id) {
-		//TODO all
+	private function edit_observership($obs) {
 		$translator = $this->_translator;
 		
 		$title = clean_input((isset($_POST['title']) ? $_POST['title'] : "" ),array("notags"));
@@ -329,7 +331,7 @@ class MSPRAdminController {
 			$preceptor_proxy_id = null; 
 		}
 		
-		if (!$preceptor_proxy_id && !($preceptor_firstname && $preceptor_lastname)) {
+		if (!$preceptor_proxy_id && !($preceptor_firstname || $preceptor_lastname)) {
 			add_error($translator->translate("mspr_observership_preceptor_required"));
 		}
 		
@@ -341,9 +343,8 @@ class MSPRAdminController {
 		}
 		
 		if (!has_error()) {
-			if ($user_id && $title && $site && $location && $start_ts) {
-								
-				Observership::create($user_id, $title, $site, $location, $preceptor_proxy_id, $preceptor_firstname, $preceptor_lastname, $start_ts, $end_ts);
+			if ($title && $site && $location && $start_ts) {
+				$obs->update($title, $site, $location, $preceptor_proxy_id, $preceptor_firstname, $preceptor_lastname, $start_ts, $end_ts);				
 			} else {
 				add_error($translator->translate("mspr_insufficient_info"));
 			}

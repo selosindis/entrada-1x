@@ -2070,6 +2070,9 @@ function clean_input($string, $rules = array()) {
 				case "striptags" :
 					$string = strip_tags($string);
 				break;
+				case "mbconvert":
+					$string = mb_convert_encoding($string, DEFAULT_CHARSET, 'auto');
+					break;
 				case "allowedtags" :	// Cleans and validates HTML, requires HTMLPurifier: http://htmlpurifier.org
 				case "nicehtml" :
 				case "html" :

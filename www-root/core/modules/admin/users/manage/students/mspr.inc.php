@@ -503,6 +503,73 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 					</ul>
 				</div>
 				
+				<div id="update-observership-box" class="modal-confirmation" style="width: 60em; height: 50ex;">
+				<h1>Edit Observership</h1>
+				<form method="post" name="edit_observership_form">
+					<table class="mspr_form">
+						<colgroup>
+							<col width="35%"></col>
+							<col width="65%"></col>
+						</colgroup>
+						<tbody>
+							<tr>
+								<td><label class="form-required" for="title">Title/Discipline:</label></td>
+	 							<td><input name="title"></input> <span class="content-small"><strong>Example:</strong> Family Medicine Observership</span></td>
+							</tr>	
+							<tr>
+								<td><label class="form-required" for="site">Site:</label></td>
+								<td><input name="site"></input> <span class="content-small"><strong>Example:</strong> Kingston General Hospital</span></td>
+							</tr>	
+							<tr>
+								<td><label class="form-required" for="location">Location:</label></td>
+								<td><input name="location" value="Kingston, ON"></input> <span class="content-small"><strong>Example:</strong> Kingston, ON</span></td>
+							</tr>
+							<tr>
+								<td><label class="form-nrequired" for="preceptor_proxy_id">Faculty Preceptor:</label></td>
+								<td>
+									<select name="preceptor_proxy_id">
+									<?php
+										echo build_option(0,"Non-Faculty");
+										echo build_option(-1,"Various");
+										foreach ($faculty as $faculty_member) {
+											echo build_option($faculty_member->getID(), $faculty_member->getLastname().", ".$faculty_member->getFirstname());
+										}
+									?>
+									</select>
+								</td>
+							</tr>	
+							<tr>
+								<td><label class="form-nrequired" for="preceptor_firstname">Non-Faculty Preceptor First Name:</label></td>
+								<td><input name="preceptor_firstname"></input><span class="content-small"> <strong>Example:</strong> <?php echo $user->getFirstname(); ?></span></td>
+							</tr>	
+							<tr>
+								<td><label class="form-nrequired" for="preceptor_lastname">Non-Faculty Preceptor Last Name:</label></td>
+								<td><input name="preceptor_lastname"></input><span class="content-small"> <strong>Example:</strong> <?php echo $user->getLastname(); ?></span></td>
+							</tr>	
+							<tr>
+								<td><label class="form-required" for="start">Start Date:</label></td>
+								<td>
+									<input type="text" name="start" id="observership_edit_start"></input> <span class="content-small"><strong>Format:</strong> yyyy-mm-dd</span>
+								</td>
+							</tr>
+							<tr>
+								<td><label class="form-nrequired" for="end">End Date:</label></td>
+								<td>
+									<input type="text" name="end" id="observership_edit_end"></input>
+								</td>
+							</tr>
+						</tbody>
+					
+					</table>
+				</form>
+				
+				<div class="footer">
+					<button class="left modal-close"">Close</button>
+					<button class="right modal-confirm" id="edit-submission-confirm">Update</button>
+				</div>
+				
+			</div>
+			
 				<div class="clear">&nbsp;</div>
 				<form id="add_observership_form" name="add_observership_form" action="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" method="post" <?php if (!$show_observership_form) { echo "style=\"display:none;\""; }   ?> >
 					<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
@@ -550,6 +617,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 									<select name="preceptor_proxy_id">
 									<?php
 										echo build_option(0,"Non-Faculty",true);
+										echo build_option(-1,"Various",false);
 										foreach ($faculty as $faculty_member) {
 											echo build_option($faculty_member->getID(), $faculty_member->getLastname().", ".$faculty_member->getFirstname());
 										}
@@ -863,8 +931,13 @@ document.observe('dom:loaded', function() {
 		fadeDuration:	0.30
 	});
 
-
-	
+	var edit_observership_modal = new Control.Modal('update-observership-box', {
+		overlayOpacity:	0.75,
+		closeOnClick:	'overlay',
+		className:		'modal-confirmation',
+		fade:			true,
+		fadeDuration:	0.30
+	});
 	
 	var api_url = '<?php echo webservice_url("mspr-admin"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=';
 	var contributions = new ActiveApprovalProcessor({
@@ -965,12 +1038,28 @@ document.observe('dom:loaded', function() {
 		url : api_url + 'observerships',
 		data_destination: $('observerships'),
 		new_form: $('add_observership_form'),
-		remove_forms_selector: '#observerships .entry form',
+		remove_forms_selector: '#observerships .entry form.remove_form',
 		new_button: $('add_observership_link'),
 		hide_button: $('hide_observership'),
 		section: "observerships"
 
 	});
+
+	$('observership_edit_start').observe('focus',function(e) {
+		showCalendar('',this,this,null,null,0,30,1);
+	}.bind($('observership_edit_start')));
+	$('observership_edit_end').observe('focus',function(e) {
+		showCalendar('',this,this,null,null,0,30,1);
+	}.bind($('observership_edit_end')));
+	
+	var observsership_edit = new ActiveEditor({
+		url : api_url + 'observerships',
+		data_destination: $('observerships'),
+		edit_forms_selector: '#observerships .entry form.edit_form',
+		edit_modal: edit_observership_modal,
+		section: 'observerships'
+	});
+	
 	var student_run_electives = new ActiveDataEntryProcessor({
 		url : api_url + 'student_run_electives',
 		data_destination: $('student_run_electives'),

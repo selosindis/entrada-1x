@@ -147,7 +147,7 @@ function generateMSPRHTML(MSPR $mspr,$timestamp = null) {
 					foreach($component as $entity) {
 						if (++$observership_no > MAX_OBSERVERSHIPS) break;
 							$preceptor = trim($entity->getPreceptorFirstname() . " " . $entity->getPreceptorLastname());
-							if (preg_match("/\b[Dd][Rr]\./", $preceptor) == 0) {
+							if ((preg_match("/\b[Dd][Rr]\./", $preceptor) == 0) && ($entity->getPreceptorFirstname() != "Various")) {
 								$preceptor = "Dr. ".$preceptor;
 							}
 						?>

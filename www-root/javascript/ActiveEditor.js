@@ -25,13 +25,34 @@
 		function entry_process_ajax(event) {
 			Event.stop(event);
 			var form = Event.findElement(event, 'form');
-			
 			var form_values = form.serialize(true);
 			
 			if ((form_values.action == "Edit") && edit_modal && edit_modal.container){
-				edit_modal.open();
+
 				var modal_confirm = edit_modal.container.down(".modal-confirm");
 				var modal_close = edit_modal.container.down(".modal-close");
+				
+				function close_modal() {
+					//clear all of the fields.
+					edit_modal.close();
+					edit_modal.container.down("form").reset();
+					modal_close.stopObserving("click", close_modal);
+					modal_confirm.stopObserving("click", confirm_modal);
+				} 
+				function confirm_modal() {
+					edit_modal.close();
+					edited_fields = edit_modal.container.down("form").serialize(true);
+					Object.extend(form_values, edited_fields);
+					edit_modal.container.down("form").reset();
+					process_entry(form_values);
+					modal_close.stopObserving("click", close_modal);
+					modal_confirm.stopObserving("click", confirm_modal);
+				}
+
+				modal_confirm.observe("click", confirm_modal);
+				modal_close.observe("click", close_modal);
+
+				edit_modal.open();
 								
 				var owner = form.up(".entry");
 				
@@ -41,28 +62,6 @@
 				for(fieldname in edit_fields) {
 					edit_modal.container.down("*[name="+fieldname+"]").setValue(edit_fields[fieldname]); //uses * selector as it might be an input, or a textarea... or a button, etc
 				}
-				
-				
-				function close_modal() {
-					//clear all of the fields.
-					edit_modal.container.down("form").reset();
-					modal_close.stopObserving("click", close_modal);
-					modal_confirm.stopObserving("click", confirm_modal);
-					edit_modal.close();
-				} 
-				function confirm_modal() {
-					edited_fields = edit_modal.container.down("form").serialize(true);
-					Object.extend(form_values, edited_fields);
-					edit_modal.container.down("form").reset();
-					process_entry(form_values);
-					edit_modal.close();
-					modal_close.stopObserving("click", close_modal);
-					modal_confirm.stopObserving("click", confirm_modal);
-				}
-				modal_confirm.observe("click", confirm_modal);
-				modal_close.observe("click", close_modal);
-				
-				
 			}
 		}
 

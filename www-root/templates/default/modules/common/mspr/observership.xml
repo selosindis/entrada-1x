@@ -2,6 +2,16 @@
 <templates>
 	<template lang="en">
 		<![CDATA[
+			<form class="edit_data">
+				<input type="hidden" name="title" value="%TITLE%" />
+				<input type="hidden" name="site" value="%SITE%" />
+				<input type="hidden" name="location" value="%LOCATION%" />
+				<input type="hidden" name="preceptor_proxy_id" value="%PRECEPTOR_PROXY_ID%" />
+				<input type="hidden" name="preceptor_firstname" value="%PRECEPTOR_FIRSTNAME%" />
+				<input type="hidden" name="preceptor_lastname" value="%PRECEPTOR_LASTNAME%" />
+				<input type="hidden" name="start" value="%START%" />
+				<input type="hidden" name="end" value="%END%" />
+			</form>
 			<span class="label">
 				Title: 
 			</span>

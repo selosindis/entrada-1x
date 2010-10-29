@@ -394,18 +394,42 @@ function display_observerships(Observerships $observerships,$type, $hide_control
 	
 	if ($observerships && $observerships->count() > 0) {
 		foreach($observerships as $entity) {
-			$preceptor = trim($entity->getPreceptorFirstname() . " " . $entity->getPreceptorLastname());
-			if (preg_match("/\b[Dd][Rr]\./", $preceptor) == 0) {
-				$preceptor = "Dr. ".$preceptor;
+			$preceptor = $entity->getPreceptor();
+			
+			if ($preceptor) {
+				$preceptor_proxy_id = $preceptor->getID();
+				$preceptor_firstname = "";
+				$preceptor_lastname = "";
+			} else {
+				$preceptor_proxy_id = 0;
+				$preceptor_firstname = $entity->getPreceptorFirstname();
+				$preceptor_lastname = $entity->getPreceptorLastname();
 			}
+			
+			
+			$preceptor_name = trim( $entity->getPreceptorFirstname() . " " . $entity->getPreceptorLastname());
+			if ((preg_match("/\b[Dd][Rr]\./", $preceptor_name) == 0) && ($preceptor_firstname != "Various") ) {
+				$preceptor_name = "Dr. ".$preceptor_name;
+			}
+			
+			$start = $entity->getStartDate();
+			$end = $entity->getEndDate();
+			
+			$start = $start['y']."-".$start['m']."-".$start['d'];
+			$end = $end['y']."-".$end['m']."-".$end['d'];
 				
 			$content_bind = array (
 				"title" 	=> clean_input($entity->getTitle(), array("notags", "specialchars")),
 				"site" 	=> clean_input($entity->getSite(), array("notags", "specialchars")),
 				"location" 	=> clean_input($entity->getLocation(), array("notags", "specialchars")),
-				"preceptor" 	=> clean_input($preceptor, array("notags", "specialchars")),
-				"period" 	=> clean_input($entity->getPeriod() , array("notags", "specialchars"))
-			);
+				"preceptor" 	=> clean_input($preceptor_name, array("notags", "specialchars")),
+				"period" 	=> clean_input($entity->getPeriod() , array("notags", "specialchars")),
+				"preceptor_proxy_id" => $preceptor_proxy_id,
+				"preceptor_firstname" => $preceptor_firstname,
+				"preceptor_lastname" => $preceptor_lastname,
+				"start" => $start,
+				"end" => $end
+			); 
 			
 			$content = $content_template->getResult(DEFAULT_LANGUAGE, $content_bind);
 			

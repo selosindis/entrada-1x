@@ -41,6 +41,7 @@ if (!defined("IN_PROFILE")) {
 	$HEAD[] = "<script language='javascript' src='".ENTRADA_URL."/javascript/ActiveDataEntryProcessor.js'></script>";
 	$HEAD[] = "<script language='javascript' src='".ENTRADA_URL."/javascript/ActiveEditProcessor.js'></script>";
 	$HEAD[] = "<script language='javascript' src='".ENTRADA_URL."/javascript/PriorityList.js'></script>";
+	$HEAD[] = "<script language='javascript' src='".ENTRADA_URL."/javascript/ActiveEditor.js'></script>";
 	
 	if ((is_array($_SESSION["permissions"])) && ($total_permissions = count($_SESSION["permissions"]) > 1)) {
 		$sidebar_html  = "The following individual".((($total_permissions - 1) != 1) ? "s have" : " has")." given you access to their ".APPLICATION_NAME." permission levels:";
@@ -385,6 +386,30 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 					</ul>
 				</div>
 				<div class="clear">&nbsp;</div>
+				
+				<div id="update-research-box" class="modal-confirmation" style="width: 50em; height: 40ex;">
+					<h1>Edit Clinical Performance Evaluation Comment</h1>
+					<form method="post" name="edit_clineval_form">
+						<table class="mspr_form">
+							<tbody>
+								<tr>
+								<td><label class="form-required" for="details">Citation:</label></td>
+								</tr>
+								<tr>
+								<td><textarea name="details" style="width:100%;height:25ex;"></textarea><br /></td>
+								</tr>
+							</tbody>
+						
+						</table>
+					</form>
+					
+					<div class="footer">
+						<button class="left modal-close"">Close</button>
+						<button class="right modal-confirm" id="edit-submission-confirm">Update</button>
+					</div>
+					
+				</div>
+				
 				<form id="add_research_citation_form" name="add_research_citation_form" action="<?php echo ENTRADA_URL; ?>/profile?section=mspr&id=<?php echo $PROXY_ID; ?>" method="post" style="display:none;" >
 					<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
 					<table class="mspr_form">
@@ -429,7 +454,7 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 					url : '<?php echo webservice_url("mspr-profile"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=research_citations',
 					data_destination: $('research_citations'),
 					new_form: $('add_research_citation_form'),
-					remove_forms_selector: '#research .entry form',
+					remove_forms_selector: '#research .entry form.remove_form',
 					new_button: $('add_research_citation_link'),
 					hide_button: $('hide_research_citation'),
 					section:'research_citations'
@@ -445,6 +470,25 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 					section:'research_citations',
 					element: 'citations_list'
 				});
+
+				var edit_research_modal = new Control.Modal('update-research-box', {
+					overlayOpacity:	0.75,
+					closeOnClick:	'overlay',
+					className:		'modal-confirmation',
+					fade:			true,
+					fadeDuration:	0.30
+				});
+
+				var research_edit = new ActiveEditor({
+					url : '<?php echo webservice_url("mspr-profile"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=research_citations',
+					data_destination: $('research_citations'),
+					edit_forms_selector: '#research_citations .entry form.edit_form',
+					edit_modal: edit_research_modal,
+					section: 'research_citations'
+				});
+				
+
+				
 				</script>
 			</div>
 		</div>

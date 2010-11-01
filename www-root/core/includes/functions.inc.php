@@ -1899,7 +1899,7 @@ function application_log($type, $message) {
 			break;
 		case "error" :
 			$log_file = "error_log.txt";
-
+			$log_entry .= get_caller_string() . "\n";
 			if((defined("NOTIFY_ADMIN_ON_ERROR")) && (NOTIFY_ADMIN_ON_ERROR)) {
 				@error_log($log_entry, 1, $AGENT_CONTACTS["administrator"]["email"], "Subject: ".APPLICATION_NAME.": Errorlog Entry\nFrom: \"".$AGENT_CONTACTS["administrator"]["name"]."\" <".$AGENT_CONTACTS["administrator"]["email"].">\n");
 			}
@@ -1914,6 +1914,17 @@ function application_log($type, $message) {
 	} else {
 		return false;
 	}
+}
+
+/**
+ * uses debug_backtrace to get the file and line number of the caller of the function calling this. 
+ */
+function get_caller_string() {
+	$bt = debug_backtrace();
+	if (isset($bt[1]) && is_array($bt[1]) && isset($bt[1]['file']) && isset($bt[1]['line'])) {
+		return " file: " . $bt[1]['file'] . " line: " . $bt[1]['line']; 
+	} 
+	return "";
 }
 
 /**
@@ -10750,7 +10761,7 @@ function objectives_competency_courses($competency_id = 0) {
  */
 function checkDateFormat($date) {
   //match the format of the date
-  if (preg_match ("/^([0-9]{4})-([0-9]{2})-([0-9]{2})$/", $date, $parts))
+  if (preg_match ("/^([0-9]{4})-([0-9]{1,2})-([0-9]{1,2})$/", $date, $parts))
   {
     //check weather the date is valid of not
         return(checkdate($parts[2],$parts[3],$parts[1]));

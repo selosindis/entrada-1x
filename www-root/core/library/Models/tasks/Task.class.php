@@ -189,6 +189,7 @@ class Task {
 	 * @return bool
 	 */
 	function isOwner(User $user) {
+		
 		$task_owners = $this->getOwners();
 		if ($task_owners->count() == 0) {
 			//no owners? orphan?
@@ -205,6 +206,7 @@ class Task {
 				return true;
 			}
 		}
+		return false;
 	}
 	
 	/**
@@ -391,6 +393,6 @@ class Task {
 	}
 	
 	static public function fromArray($arr) {
-		return new Task($arr['task_id'], $arr['last_updated_date'], $arr['last_updated_by'], $arr['title'], $arr['deadline'], $arr['duration'], $arr['description'],$arr['release_start'], $arr['release_finish'], $arr['organisation_id'], $arr['require_verification']);
+		return new Task($arr['task_id'], $arr['updated_date'], $arr['updated_by'], $arr['title'], $arr['deadline'], $arr['duration'], $arr['description'],$arr['release_start'], $arr['release_finish'], $arr['organisation_id'], $arr['require_verification']);
 	}
 }

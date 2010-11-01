@@ -16,7 +16,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 } elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	header("Location: ".ENTRADA_URL);
 	exit;
-} elseif (!$ENTRADA_ACL->amIAllowed(new TaskResource($TASK_ID, null, $ORGANISATION_ID), "update")) {
+} elseif (!$ENTRADA_ACL->amIAllowed(new TaskResource($TASK_ID, null, $ORGANISATION_ID), "update", true)) {
 	add_error("Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.");
 
 	echo display_error();
@@ -25,7 +25,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 } else {
 	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/tasks?section=edit", "title" => "Edit Task");
 	
-	$ORGANISATION_ID = $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"];
+	//$ORGANISATION_ID = $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"];
 	
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/AutoCompleteList.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 	
@@ -48,6 +48,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 	$PROCESSED['time_required'] = $task->getDuration();
 	$PROCESSED['description'] = $task->getDescription();
 	$PROCESSED['require_verification'] = $task->isVerificationRequired();
+	$PROCESSED['release_start'] = $task->getReleaseStart();
+	$PROCESSED['release_finish'] = $task->getReleaseFinish();
 	$recipients = TaskRecipients::get($task->getID());
 	$recipient = $recipients->current();
 	if ($recipient instanceof User) {
@@ -103,6 +105,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 			if((isset($deadline)) && ((int) $deadline)) {
 				$PROCESSED["deadline"] = (int) $deadline;
 			}
+			
 			
 			$release = validate_calendars("release",true,false,true);
 			if ($release) {

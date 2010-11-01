@@ -699,8 +699,8 @@ function isDisabled(element) {
  *  Returns true if console.log is available. false otherwise.
  *  @return boolean
  */
-function hasConsole() { 
-	return (console && console.log && (typeof console.log == "function")); 
+function hasConsole() {
+	return !Object.isUndefined(console) && Object.isFunction(console.log);
 }
 
 /**

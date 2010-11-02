@@ -134,7 +134,7 @@ function generateMSPRHTML(MSPR $mspr,$timestamp = null) {
 				if (($observerships && $observerships->count() > 0) || ($student_run_electives && $student_run_electives->count() > 0 ) || ($international_activities && $international_activities->count() >0)) { 
 			?>
 			<h3><u>Extra-Curricular Learning Activities</u></h3>
-			<i>Activities appear below only when a proof of attendance has been received. This category includes: Observerships, University-approved International Activities,(unless attributable to the Critical Enquiry Project) and extra-curricular learning activites.</i>
+			<i>Activities appear below only when a proof of attendance has been received. This category includes: Observerships, University-approved International Activities,(unless attributable to the Critical Enquiry Project) and extra-curricular learning activities.</i>
 			<?php 
 				}
 
@@ -299,7 +299,7 @@ function generateMSPRHTML(MSPR $mspr,$timestamp = null) {
 				if ($component && $component->count() > 0) { 
 			?>
 			<h3><u>Studentships</u></h3>
-			<i>A limited number of summer scholarships may be available to students in the first and second medcal years through the office of the Associate Dean, Undergraduate Medical Education. Awards are adjudicated by the Awards Committee (Medicine) on the basis of academic achievement and preferred area of interest. Successfulstudents are required to arrange a research project with a faculty member and submit a proposal of the work to be undertaken for approval by the awards committee.</i><br><br>
+			<i>A limited number of summer scholarships may be available to students in the first and second medical years through the office of the Associate Dean, Undergraduate Medical Education. Awards are adjudicated by the Awards Committee (Medicine) on the basis of academic achievement and preferred area of interest. Successful students are required to arrange a research project with a faculty member and submit a proposal of the work to be undertaken for approval by the awards committee.</i><br><br>
 			<table width="100%" border=0 cellpadding=5 cellspacing=0>
 			<?php
 					foreach($component as $entity) {

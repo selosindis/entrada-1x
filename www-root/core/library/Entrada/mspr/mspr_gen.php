@@ -474,7 +474,7 @@ The requirements for standing in clinical programs embrace behavioural standards
 
 <p>The honours / pass / fail grade is based on aggregate marks from different components of the course, as described in the course syllabus.</p>
 <ul>
-<li>Honours: &lt;=79.1%</li>
+<li>Honours: &gt;=79.1%</li>
 <li>Pass: &gt;=60%</li>
 <li>Fail: &lt;60%</li>
 </ul>

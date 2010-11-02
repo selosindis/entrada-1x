@@ -108,4 +108,13 @@ class Collection implements Iterator, ArrayAccess, Countable {
 		
 		$this->container = array_merge($left->container, array($pivot), $right->container);
 	}
+	
+	/**
+	 * works much the same as array_filter. supply a calback to return a boolean for each element. truthy elements are retained
+	 * @param callback $callback
+	 */
+	public function filter($callback=null) {
+		//array_merge is used as array_filter preserves keys... which we don't want.
+		$this->container = array_merge(array_filter($this->container,$callback));
+	}
 }

@@ -181,4 +181,15 @@ class Observership implements Editable {
 			return self::get($insert_id); 
 		}
 	}
+	
+	public function compare($obs, $compare_by='start') {
+		switch($compare_by) {
+			case 'start':
+			case 'end':
+				return $this->$compare_by == $obs->$compare_by ? 0 : ( $this->$compare_by > $obs->$compare_by ? 1 : -1 );
+				break;
+			case 'title':
+				return strcasecmp($this->$compare_by, $obs->$compare_by);
+		}
+	}
 }

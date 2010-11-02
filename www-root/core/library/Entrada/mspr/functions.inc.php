@@ -465,3 +465,7 @@ function display_international_activities(InternationalActivities $int_acts,$typ
 	
 	return list_wrap_content($contents);
 }
+
+function is_approved(Approvable $entity) {
+	return $entity->isApproved();
+}

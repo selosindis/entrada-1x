@@ -112,4 +112,17 @@ class InternalAwardReceipt {
 			add_success("Successfully removed award receipt.");
 		}
 	}
+	
+	public function compare($ar, $compare_by="year") {
+		switch($compare_by) {
+			case 'year':
+				return $this->year == $ar->year ? 0 : ( $this->year > $ar->year ? 1 : -1 );
+				break;
+			case 'title':
+				$award = $this->getAward();
+				$other_award = $ar->getAward();
+				return $award->compare($other_award);
+				break;
+		}
+	}
 }

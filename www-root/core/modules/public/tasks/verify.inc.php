@@ -133,8 +133,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 				
 				<?php display_status_messages(); ?>
 				
-				<div><?php echo $recipient->getFirstname() . " " . $recipient->getLastname(); ?> has asked you to verify that he or she completed the task, <a href="<?php echo ENTRADA_URL; ?>/tasks?section=details&id=<?php echo $TASK_ID; ?>"><?php echo $task->getTitle(); ?></a>, on <?php echo date(DEFAULT_DATE_FORMAT,$completion->getCompletedDate()); ?>.</div>
-				
+				<p><a href="<?php echo ENTRADA_URL; ?>/people?id=<?php echo $recipient->getID(); ?>"><?php echo $recipient->getFirstname() . " " . $recipient->getLastname(); ?></a> has asked you to verify that he or she completed the task, <a href="<?php echo ENTRADA_URL; ?>/tasks?section=details&id=<?php echo $TASK_ID; ?>"><?php echo $task->getTitle(); ?></a>, on <?php echo date(DEFAULT_DATE_FORMAT,$completion->getCompletedDate()); ?>.</p>
+				<p>Don't remember <?php echo $recipient->getFirstname() . " " . $recipient->getLastname(); ?>? Click <a href="<?php echo ENTRADA_URL; ?>/people?id=<?php echo $recipient->getID(); ?>">here</a> to view their profile and picture (if available).</p>
 				<form method="post"  id="task_verify_form">
 					<input type="hidden" name="task_id" value="<?php echo $TASK_ID; ?>"/>
 					<input type="hidden" name="recipient_id" value="<?php echo $RECIPIENT_ID; ?>"/>

@@ -1,7 +1,7 @@
 <?php
 require_once("Models/mspr/MSPRs.class.php");
 require_once("Entrada/mspr/functions.inc.php");
-define("MAX_CONTRIBUTIONS", 6);
+define("MAX_RESEARCH", 6);
 define("MAX_OBSERVERSHIPS", 8);
 
 
@@ -235,12 +235,15 @@ function generateMSPRHTML(MSPR $mspr,$timestamp = null) {
 				}
 				
 				if ($component && $component->count() > 0) { 
+					$research_no = 0;
 			?>
 			<h3><u>Research</u></h3>
 			<i>Students are encouraged to pursue extracurricular research endeavours to enrich their academic experience. Research undertaken during the medical program appears below.</i><br><br>
 			<table width="100%" border=0 cellpadding=5 cellspacing=0>
 			<?php
 					foreach($component as $entity) {
+						if (++$research_no > MAX_RESEARCH) break;
+						
 						?>
 				<tr>
 					<td valign="top"><?php echo nl2br($entity->getText()); ?></td>
@@ -320,14 +323,12 @@ function generateMSPRHTML(MSPR $mspr,$timestamp = null) {
 					$component->filter('is_approved');
 				}
 				if ($component && $component->count() > 0) { 
-					$contribution_no = 0;
 			?>
 			<h3><u>Contributions to Medical School/Student Life</u></h3>
 			<i>Participation in the School of Medicine student government, committees (such as admissions), and organization of extra-curricular learning activities and Seminars is listed below.</i><br><br>
 			<table width="100%" border=0 cellpadding=5 cellspacing=0>
 			<?php
 					foreach($component as $entity) {
-						if (++$contribution_no > MAX_CONTRIBUTIONS) break;
 						?>
 				<tr>
 					<td valign="top" width="50%"><?php echo $entity->getOrgEvent()."<br>".$entity->getRole(); ?></td>

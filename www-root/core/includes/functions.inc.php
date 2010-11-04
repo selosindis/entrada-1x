@@ -10789,23 +10789,42 @@ function writeFile($filename, $contents) {
 	return true;
 }
 
+
+class Latin1UTF8 {
+   
+    private $latin1_to_utf8;
+    private $utf8_to_latin1;
+    public function __construct() {
+        for($i=32; $i<=255; $i++) {
+            $this->latin1_to_utf8[chr($i)] = utf8_encode(chr($i));
+            $this->utf8_to_latin1[utf8_encode(chr($i))] = chr($i);
+        }
+    }
+   
+    public function mixed_to_latin1($text) {
+        foreach( $this->utf8_to_latin1 as $key => $val ) {
+            $text = str_replace($key, $val, $text);
+        }
+        return $text;
+    }
+
+    public function mixed_to_utf8($text) {
+        return utf8_encode($this->mixed_to_latin1($text));
+    }
+} 
+
 /**
  * Generates a PDF file from the string of html provided. If a filename is supplied, it will be written to the file; otherwise it will be returned from the function
  * @param unknown_type $html
  * @param unknown_type $output_filename
  */
-function generatePDF($html,$output_filename=null) {
-	$charset = mb_detect_encoding($html);
-	if (!$charset) {
-		$charset = DEFAULT_CHARSET;
-	}
+function generatePDF($html,$output_filename=null, $charset=DEFAULT_CHARSET) {
 	
-	//current stable version (1.8.27) of htmldoc does not support utf-8. mb_convert if necessary.
-	if (strtoupper($charset) == "UTF-8") {
-		$to_encoding = (strtoupper(DEFAULT_CHARSET) == "UTF-8" )? "iso-8859-1" : DEFAULT_CHARSET;
-		$html = mb_convert_encoding($html, $to_encoding, $charset);
-		$charset = $to_encoding;
-	} 
+	$cv = new Latin1UTF8();
+	$html = $cv->mixed_to_latin1($html);
+	
+	//and just in case there's still anything left...
+	$html = preg_replace('/[^(\x20-\x7F)]*/','', $html);
 	
 	global $APPLICATION_PATH;
 	@set_time_limit(0);

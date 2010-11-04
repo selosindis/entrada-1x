@@ -10795,13 +10795,25 @@ function writeFile($filename, $contents) {
  * @param unknown_type $output_filename
  */
 function generatePDF($html,$output_filename=null) {
+	$charset = mb_detect_encoding($html);
+	if (!$charset) {
+		$charset = DEFAULT_CHARSET;
+	}
+	
+	//current stable version (1.8.27) of htmldoc does not support utf-8. mb_convert if necessary.
+	if (strtoupper($charset) == "UTF-8") {
+		$to_encoding = (strtoupper(DEFAULT_CHARSET) == "UTF-8" )? "iso-8859-1" : DEFAULT_CHARSET;
+		$html = mb_convert_encoding($html, $to_encoding, $charset);
+		$charset = $to_encoding;
+	} 
+	
 	global $APPLICATION_PATH;
 	@set_time_limit(0);
 	if((is_array($APPLICATION_PATH)) && (isset($APPLICATION_PATH["htmldoc"])) && (@is_executable($APPLICATION_PATH["htmldoc"]))) {
 
 		//This used to have every option separated by a backslash and newline. In testing it was discovered that there was a magical limit of 4 backslashes -- beyond which it would barf.
 		$exec_command	= $APPLICATION_PATH["htmldoc"]." \
-		--format pdf14 --charset ".DEFAULT_CHARSET." --size Letter --pagemode document --no-duplex --encryption --compression=6 --permissions print,no-modify \
+		--format pdf14 --charset ".$charset." --size Letter --pagemode document --no-duplex --encryption --compression=6 --permissions print,no-modify \
 		--header ... --footer ... --headfootsize 0 --browserwidth 800 --top 1cm --bottom 1cm --left 2cm --right 2cm --embedfonts --bodyfont Times --headfootsize 8 \
 		--headfootfont Times --headingfont Times --firstpage p1 --quiet --book --color --no-toc --no-title --no-links --textfont Times - ";
 		

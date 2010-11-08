@@ -11156,7 +11156,7 @@ function getMinMaxARYears() {
 	return $result;
 }
 
-function get_redirect_message($url, $page_title, $success_message) {
+function get_redirect_message($url, $page_title, $message) {
 	return "<p>".$message."</p><p>You will now be redirected to the <strong>".$page_title."</strong>; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\">click here</a> to continue.</p>";
 }
 

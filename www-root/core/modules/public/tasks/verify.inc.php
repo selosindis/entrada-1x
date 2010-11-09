@@ -253,7 +253,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 						</p>
 						<div class="footer">
 							<button class="left" onclick="Control.Modal.close()">Close</button>
-							<button class="right" id="reject-verify-confirm">Reject</button>
+							<button class="right" id="reject-verify-confirm">Submit</button>
 						</div>
 					</div>
 			

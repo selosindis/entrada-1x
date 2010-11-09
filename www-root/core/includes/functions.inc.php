@@ -10789,19 +10789,50 @@ function writeFile($filename, $contents) {
 	return true;
 }
 
+
+class Latin1UTF8 {
+   
+    private $latin1_to_utf8;
+    private $utf8_to_latin1;
+    public function __construct() {
+        for($i=32; $i<=255; $i++) {
+            $this->latin1_to_utf8[chr($i)] = utf8_encode(chr($i));
+            $this->utf8_to_latin1[utf8_encode(chr($i))] = chr($i);
+        }
+    }
+   
+    public function mixed_to_latin1($text) {
+        foreach( $this->utf8_to_latin1 as $key => $val ) {
+            $text = str_replace($key, $val, $text);
+        }
+        return $text;
+    }
+
+    public function mixed_to_utf8($text) {
+        return utf8_encode($this->mixed_to_latin1($text));
+    }
+} 
+
 /**
  * Generates a PDF file from the string of html provided. If a filename is supplied, it will be written to the file; otherwise it will be returned from the function
  * @param unknown_type $html
  * @param unknown_type $output_filename
  */
-function generatePDF($html,$output_filename=null) {
+function generatePDF($html,$output_filename=null, $charset=DEFAULT_CHARSET) {
+	
+	$cv = new Latin1UTF8();
+	$html = $cv->mixed_to_latin1($html);
+	
+	//and just in case there's still anything left...
+	$html = preg_replace('/[^(\x20-\x7F)]*/','', $html);
+	
 	global $APPLICATION_PATH;
 	@set_time_limit(0);
 	if((is_array($APPLICATION_PATH)) && (isset($APPLICATION_PATH["htmldoc"])) && (@is_executable($APPLICATION_PATH["htmldoc"]))) {
 
 		//This used to have every option separated by a backslash and newline. In testing it was discovered that there was a magical limit of 4 backslashes -- beyond which it would barf.
 		$exec_command	= $APPLICATION_PATH["htmldoc"]." \
-		--format pdf14 --charset ".DEFAULT_CHARSET." --size Letter --pagemode document --no-duplex --encryption --compression=6 --permissions print,no-modify \
+		--format pdf14 --charset ".$charset." --size Letter --pagemode document --no-duplex --encryption --owner-password ".PDF_PASSWORD." --compression=6 --permissions print,modify \
 		--header ... --footer ... --headfootsize 0 --browserwidth 800 --top 1cm --bottom 1cm --left 2cm --right 2cm --embedfonts --bodyfont Times --headfootsize 8 \
 		--headfootfont Times --headingfont Times --firstpage p1 --quiet --book --color --no-toc --no-title --no-links --textfont Times - ";
 		
@@ -11125,7 +11156,7 @@ function getMinMaxARYears() {
 	return $result;
 }
 
-function get_redirect_message($url, $page_title, $success_message) {
+function get_redirect_message($url, $page_title, $message) {
 	return "<p>".$message."</p><p>You will now be redirected to the <strong>".$page_title."</strong>; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\">click here</a> to continue.</p>";
 }
 

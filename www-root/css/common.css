@@ -2872,7 +2872,12 @@ margin: 0 1em 0 0;
 .file-block {
 	background-color:white;
 	padding:1ex;
-	margin:1ex;
+}
+
+.edit-block {
+	background-color:white;
+	padding:1ex;
+	border-left:solid 1px black;
 }
 
 .last-update {

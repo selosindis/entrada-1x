@@ -166,7 +166,7 @@ function process_research_citations_profile(User $user) {
 		if ($_POST['action'] == "Add") {
 			$user_id = (isset($_POST['user_id']) ? $_POST['user_id'] : 0);
 			
-			$citation = clean_input((isset($_POST['details']) ? $_POST['details'] : ''), array("notags", "specialchars"));
+			$citation = clean_input((isset($_POST['details']) ? $_POST['details'] : ''), array("notags"));
 				
 			if (($user_id == $user->getID()) && $citation ) {
 				ResearchCitation::create($user_id,$citation);
@@ -183,7 +183,7 @@ function process_research_citations_profile(User $user) {
 			}
 		} elseif ($_POST['action'] == "Edit") {
 			$id = (isset($_POST['entity_id']) ? $_POST['entity_id'] : 0);
-			$text = clean_input((isset($_POST['details']) ? $_POST['details'] : ''), array("notags", "specialchars"));
+			$text = clean_input((isset($_POST['details']) ? $_POST['details'] : ''), array("notags"));
 			
 			if ($id) {
 				$citation = ResearchCitation::get($id);

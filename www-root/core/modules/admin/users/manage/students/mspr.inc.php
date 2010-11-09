@@ -93,7 +93,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 			if (!has_error()) {
 				ob_clear_open_buffers();
 				flush();
-				echo $mspr->getMSPRFile($type,$revision);
+				echo $mspr->getMSPRFile($type);
 				exit();	
 			}
 			
@@ -141,7 +141,10 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 <div class="display-notice"><p><strong>Note: </strong>This MSPR is now <strong>closed</strong> to student submissions. (Deadline was <?php echo date("F j, Y \a\\t g:i a",$mspr_close); ?>.) You may continue to approve, unapprove, or reject submissions, however students are unable to submit new data.</p>
 	<?php if ($generated) {	?>
 	<p>The latest revision of this MSPR is available in HTML and PDF below: </p>
-	<span class="file-block"><a href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>&get=html"><img src="<?php echo ENTRADA_URL; ?>/serve-icon.php?ext=html" /> HTML</a>&nbsp;&nbsp;&nbsp;<a href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>&get=pdf"><img src="<?php echo ENTRADA_URL; ?>/serve-icon.php?ext=pdf" /> PDF</a></span>
+	<span class="file-block"><a href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>&get=html"><img src="<?php echo ENTRADA_URL; ?>/serve-icon.php?ext=html" /> HTML</a>&nbsp;&nbsp;&nbsp;
+	<a href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>&get=pdf"><img src="<?php echo ENTRADA_URL; ?>/serve-icon.php?ext=pdf" /> PDF</a>
+	</span>
+	<span class="edit-block"><a href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr-edit&id=<?php echo $PROXY_ID; ?>&from=user"><img src="<?php echo ENTRADA_URL; ?>/images/btn-edit.gif" /> Edit</a></span>
 	<div class="clearfix">&nbsp;</div>
 	<span class="last-update">Last Updated: <?php echo date("F j, Y \a\\t g:i a",$revision); ?></span>
 	<?php }?>

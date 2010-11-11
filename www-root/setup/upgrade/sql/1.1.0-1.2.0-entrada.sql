@@ -4,7 +4,7 @@ ALTER TABLE `event_quizzes` CHANGE `event_id` `content_id` int(12) NOT NULL DEFA
 RENAME TABLE `event_quizzes` TO `attached_quizzes`;
 
 ALTER TABLE `event_quiz_progress` ADD COLUMN `content_type` enum('event','community_page') NOT NULL DEFAULT 'event' AFTER `equiz_id`;
-ALTER TABLE `event_quiz_progress` CHANGE `aquiz_id` int(12) unsigned NOT NULL;
+ALTER TABLE `event_quiz_progress` CHANGE `equiz_id` `aquiz_id` int(12) unsigned NOT NULL;
 ALTER TABLE `event_quiz_progress` CHANGE `event_id` `content_id` int(12) NOT NULL DEFAULT '0';
 ALTER TABLE `event_quiz_progress` CHANGE `eqprogress_id` `qprogress_id` int(12) unsigned NOT NULL AUTO_INCREMENT;
 RENAME TABLE `event_quiz_progress` TO `quiz_progress`;
@@ -18,8 +18,6 @@ RENAME TABLE `event_quiz_responses` TO `quiz_progress_responses`;
 
 ALTER TABLE `quiz_questions` ADD COLUMN `question_active` int(1) NOT NULL DEFAULT '1' AFTER `question_order`;
 ALTER TABLE `quiz_question_responses` ADD COLUMN `response_active` int(1) NOT NULL DEFAULT '1' AFTER `response_feedback`;
-
-UPDATE `settings` SET `value` = '1.2.0' WHERE `shortname` = 'version_db';
 
 ALTER TABLE `student_awards_external` ADD COLUMN `comment` varchar(4096) default NULL;
 ALTER TABLE `student_community_health_and_epidemiology` ADD COLUMN `comment` varchar(4096) default NULL;
@@ -43,3 +41,4 @@ VALUES (7, 'quizzes', '1.0.0', 'Quizzes', 'This module allows communities to cre
 INSERT INTO `community_modules` (`community_id`, `module_id`, `module_active`)
 SELECT `community_id`, 7, 1 FROM `communities` WHERE `community_active` = 1;
 
+UPDATE `settings` SET `value` = '1.2.0' WHERE `shortname` = 'version_db';

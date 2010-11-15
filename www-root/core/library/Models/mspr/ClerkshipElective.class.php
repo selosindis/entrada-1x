@@ -6,8 +6,8 @@ class ClerkshipElective extends ClerkshipRotation {
 	private $location;
 	private $supervisor;
 	
-	function __construct($title, $location, $supervisor, $event_start, $event_finish) {
-		parent::__construct($title, $event_start, $event_finish, $completed);
+	function __construct($user_id, $title, $location, $supervisor, $event_start, $event_finish) {
+		parent::__construct($user_id, $title, $event_start, $event_finish, $completed);
 		$this->location = $location;
 		$this->supervisor = $supervisor;
 	}

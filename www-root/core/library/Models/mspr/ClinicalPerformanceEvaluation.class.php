@@ -8,7 +8,10 @@
  * @author Developer: Jonathan Fingland <jonathan.fingland@quensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  */
-class ClinicalPerformanceEvaluation {
+
+require_once("Models/utility/Editable.interface.php");
+
+class ClinicalPerformanceEvaluation implements Editable {
 	private $comment;
 	private $id;
 	private $source;
@@ -74,5 +77,16 @@ class ClinicalPerformanceEvaluation {
 	
 	public static function fromArray(array $arr) {
 		return new self($arr['user_id'], $arr['id'], $arr['comment'], $arr['source']);	
+	}
+	
+	public function update($comment, $source) {
+		global $db;
+		$query = "Update `student_clineval_comments` set `comment`=?, `source`=? where `id`=?";
+		if(!$db->Execute($query, array($comment, $source, $this->id))) {
+			add_error("Failed to update a clinical performance evaluation comment.");
+			application_log("error", "Unable to update a student_clineval_comment record. Database said: ".$db->ErrorMsg());
+		} else {
+			add_success("Successfully updated clinical performance evaluation.");
+		}
 	}
 }

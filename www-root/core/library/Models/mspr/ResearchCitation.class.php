@@ -14,8 +14,9 @@
 
 require_once("Models/utility/Approvable.interface.php");
 require_once("Models/utility/AttentionRequirable.interface.php");
+require_once("Models/utility/Editable.interface.php");
 
-class ResearchCitation implements Approvable, AttentionRequirable {
+class ResearchCitation implements Approvable, AttentionRequirable, Editable {
 	private $id;
 	private $user_id;
 	private $citation;
@@ -47,6 +48,10 @@ class ResearchCitation implements Approvable, AttentionRequirable {
 	
 	public function getUserID() {
 		return $this->user_id;	
+	}
+	
+	public function getUser() {
+		return User::get($this->user_id);	
 	}
 	
 	/**
@@ -186,12 +191,26 @@ class ResearchCitation implements Approvable, AttentionRequirable {
 	 * @param int $priority
 	 */
 	public function setPriority($priority) {
+		global $db;
 		$query = "update `student_research` set
 				 `priority`=0 
 				 where `id`=".$db->qstr($this->id);
 		
 		if($db->Execute($query)) {
 			$this->priority = $priority;
+		}
+	}
+	
+	public function update($citation) {
+		global $db;
+		$query = "update `student_research` set `citation`=?, `status`=?, `comment`=? where `id`=?";
+		$status_code=0; //reset to unapproved
+		$comment = ""; //clear the comment. XXX should this be retained?
+		if(!$db->Execute($query, array($citation, $status_code, $comment, $this->id))) {
+			add_error("Failed to update Research Citation.");
+			application_log("error", "Unable to update a student_research record. Database said: ".$db->ErrorMsg());
+		} else {
+			add_success("Successfully updated Research Citation.");
 		}
 	}
 }

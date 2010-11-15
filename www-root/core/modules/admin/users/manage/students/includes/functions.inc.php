@@ -23,10 +23,10 @@ class MSPRAdminController {
 
 		static $valid = array(
 								"studentships" => array("add", "remove"),
-								"clineval" => array("add","remove"),
+								"clineval" => array("add","remove", "edit"),
 								"internal_awards" => array("add","remove"),
 								"student_run_electives" => array("add","remove"),
-								"observerships" => array("add","remove"),
+								"observerships" => array("add","remove", "edit"),
 								"int_acts" => array("add","remove"),
 								"external_awards" => array("approve","unapprove","reject"),
 								"contributions" => array("approve","unapprove","reject"),
@@ -34,9 +34,10 @@ class MSPRAdminController {
 								"community_health_and_epidemiology" => array("approve","unapprove","reject"),
 								"research_citations" => array("approve","unapprove","reject")
 								);
+								
+		$section =  clean_input((isset($_GET['mspr-section']) ? $_GET['mspr-section'] : ""), array("lower", "trim"));
 		
-		if (isset($_GET['mspr-section']) && ($section = $_GET['mspr-section'])) {
-			
+		if ($section) {
 			$entity_id = clean_input((isset($_POST['entity_id']) ? $_POST['entity_id'] : 0), array("int"));
 			$action = clean_input((isset($_POST['action']) ? $_POST['action'] : ""), array("lower"));
 			$comment = clean_input((isset($_POST['comment']) ? $_POST['comment'] : ""), array("notags"));
@@ -139,6 +140,15 @@ class MSPRAdminController {
 								}
 								$entity->reject($comment);
 								break;
+							case "edit":
+								switch($section) {
+									case "clineval":
+										$this->edit_clineval($entity);
+										break;
+									case "observerships":
+										$this->edit_observership($entity);
+										break;
+								}
 						}
 					}
 				}
@@ -270,11 +280,11 @@ class MSPRAdminController {
 			$preceptor_proxy_id = null; 
 		}
 		
-		if (!$preceptor_proxy_id && !($preceptor_firstname && $preceptor_lastname)) {
+		if (!$preceptor_proxy_id && !($preceptor_firstname || $preceptor_lastname)) {
 			add_error($translator->translate("mspr_observership_preceptor_required"));
 		}
 		
-		if ($preceptor_proxy_id === -1) {
+		if ($preceptor_proxy_id == -1) {
 			//special case for "Various"
 			$preceptor_proxy_id = 0; //not faculty 
 			$preceptor_firstname = "Various";
@@ -290,6 +300,57 @@ class MSPRAdminController {
 			}
 		}
 	}
+	
+	private function edit_observership($obs) {
+		$translator = $this->_translator;
+		
+		$title = clean_input((isset($_POST['title']) ? $_POST['title'] : "" ),array("notags"));
+		$site = clean_input((isset($_POST['site']) ? $_POST['site'] : "" ),array("notags"));
+		$location = clean_input((isset($_POST['location']) ? $_POST['location'] : "" ),array("notags"));
+		$start = clean_input((isset($_POST['start']) ? $_POST['start'] : "" ),array("notags"));
+		$end = clean_input((isset($_POST['end']) ? $_POST['end'] : "" ),array("notags"));
+				
+		$preceptor_proxy_id = clean_input((isset($_POST['preceptor_proxy_id']) ? $_POST['preceptor_proxy_id'] : "" ),array("int"));
+		$preceptor_firstname = clean_input((isset($_POST['preceptor_firstname']) ? $_POST['preceptor_firstname'] : "" ),array("notags"));
+		$preceptor_lastname = clean_input((isset($_POST['preceptor_lastname']) ? $_POST['preceptor_lastname'] : "" ),array("notags"));
+		
+		if (!checkDateFormat($start)) {
+			add_error($translator->translate("mspr_observership_invalid_dates"));
+		} else {
+			$parts = date_parse($start);  
+			$start_ts = mktime(0,0, 0, $parts['month'],$parts['day'], $parts['year']);
+			if ($end && checkDateFormat($end)) {
+				$parts = date_parse($end);  
+				$end_ts = mktime(0,0, 0, $parts['month'],$parts['day'], $parts['year']);
+			} else {
+				$end_ts = null;
+			}
+		}
+		
+		if (!$preceptor_proxy_id) {
+			$preceptor_proxy_id = null; 
+		}
+		
+		if (!$preceptor_proxy_id && !($preceptor_firstname || $preceptor_lastname)) {
+			add_error($translator->translate("mspr_observership_preceptor_required"));
+		}
+		
+		if ($preceptor_proxy_id === -1) {
+			//special case for "Various"
+			$preceptor_proxy_id = 0; //not faculty 
+			$preceptor_firstname = "Various";
+			$preceptor_lastname = "";
+		}
+		
+		if (!has_error()) {
+			if ($title && $site && $location && $start_ts) {
+				$obs->update($title, $site, $location, $preceptor_proxy_id, $preceptor_firstname, $preceptor_lastname, $start_ts, $end_ts);				
+			} else {
+				add_error($translator->translate("mspr_insufficient_info"));
+			}
+		}
+	}
+	
 	private function add_studentship($user_id) {
 		$translator = $this->_translator;
 		
@@ -309,6 +370,18 @@ class MSPRAdminController {
 		$comment = clean_input((isset($_POST['text']) ? $_POST['text'] : "" ),array("notags"));
 		if ($source && $comment && $user_id) {
 			ClinicalPerformanceEvaluation::create($user_id,$comment,$source);
+		} else {
+			add_error($translator->translate("mspr_insufficient_info"));
+		}
+	}
+	
+	private function edit_clineval($clineval) {
+		$translator = $this->_translator;
+		
+		$source = clean_input((isset($_POST['source']) ? $_POST['source'] : "" ),array("notags"));
+		$comment = clean_input((isset($_POST['text']) ? $_POST['text'] : "" ),array("notags"));
+		if ($source && $comment && $clineval) {
+			$clineval->update($comment, $source);
 		} else {
 			add_error($translator->translate("mspr_insufficient_info"));
 		}

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates>
+	<template lang="en" type="approve">
+		<![CDATA[
+		<form class="approve_form" action="%FORM_URL%" method="post">
+			<input type="hidden" name="user_id" value="%USER_ID%"></input>
+			<input type="hidden" name="entity_id" value="%ENTITY_ID%"></input>
+			<input type="submit" name="action" value="Approve"></input>
+		</form>
+		]]>
+	</template>
+	<template lang="en" type="unapprove">
+		<![CDATA[
+		<form class="unapprove_form" action="%FORM_URL%" method="post">
+			<input type="hidden" name="user_id" value="%USER_ID%"></input>
+			<input type="hidden" name="entity_id" value="%ENTITY_ID%"></input>
+			<input type="submit" name="action" value="Unapprove"></input>
+		</form>
+		]]>
+	</template>
+	<template lang="en" type="reject">
+		<![CDATA[
+		<form class="reject_form" action="%FORM_URL%" method="post">
+			<input type="hidden" name="user_id" value="%USER_ID%"></input>
+			<input type="hidden" name="entity_id" value="%ENTITY_ID%"></input>
+			<input type="submit" name="action" value="Reject"></input>
+		</form>
+		]]>
+	</template>
+	<template lang="en" type="edit">
+		<![CDATA[
+		<form class="edit_form" action="%FORM_URL%" method="post">
+			<input type="hidden" name="user_id" value="%USER_ID%"></input>
+			<input type="hidden" name="entity_id" value="%ENTITY_ID%"></input>
+			<input type="submit" name="action" value="Edit"></input>
+		</form>
+		]]>
+	</template>
+	<template lang="en" type="remove">
+		<![CDATA[
+		<form class="remove_form" action="%FORM_URL%" method="post">
+			<input type="hidden" name="user_id" value="%USER_ID%"></input>
+			<input type="hidden" name="entity_id" value="%ENTITY_ID%"></input>
+			<input type="submit" name="action" value="Remove"></input>
+		</form>
+		]]>
+	</template>
+</templates>

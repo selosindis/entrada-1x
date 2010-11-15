@@ -1,7 +1,7 @@
 <?php
 require_once("Models/mspr/MSPRs.class.php");
-
-define("MAX_CONTRIBUTIONS", 6);
+require_once("Entrada/mspr/functions.inc.php");
+define("MAX_RESEARCH", 6);
 define("MAX_OBSERVERSHIPS", 8);
 
 
@@ -130,10 +130,11 @@ function generateMSPRHTML(MSPR $mspr,$timestamp = null) {
 				$observerships = $mspr["Observerships"];
 				$student_run_electives = $mspr["Student-Run Electives"];
 				$international_activities = $mspr["International Activities"];
+				
 				if (($observerships && $observerships->count() > 0) || ($student_run_electives && $student_run_electives->count() > 0 ) || ($international_activities && $international_activities->count() >0)) { 
 			?>
 			<h3><u>Extra-Curricular Learning Activities</u></h3>
-			<i>Activities appear below only when a proof of attendance has been received. This category includes: Observerships, University-approved International Activities,(unless attributable to the Critical Enquiry Project) and extra-curricular learning activites.</i>
+			<i>Activities appear below only when a proof of attendance has been received. This category includes: Observerships, University-approved International Activities,(unless attributable to the Critical Enquiry Project) and extra-curricular learning activities.</i>
 			<?php 
 				}
 
@@ -147,7 +148,7 @@ function generateMSPRHTML(MSPR $mspr,$timestamp = null) {
 					foreach($component as $entity) {
 						if (++$observership_no > MAX_OBSERVERSHIPS) break;
 							$preceptor = trim($entity->getPreceptorFirstname() . " " . $entity->getPreceptorLastname());
-							if (preg_match("/\b[Dd][Rr]\./", $preceptor) == 0) {
+							if ((preg_match("/\b[Dd][Rr]\./", $preceptor) == 0) && ($entity->getPreceptorFirstname() != "Various")) {
 								$preceptor = "Dr. ".$preceptor;
 							}
 						?>
@@ -202,7 +203,7 @@ function generateMSPRHTML(MSPR $mspr,$timestamp = null) {
 				}
 
 				$entity = $mspr["Critical Enquiry"];
-				if ($entity) { 
+				if ($entity && $entity->isApproved()) { 
 			?>
 			<h3><u>Critical Enquiry</u></h3>
 			<i>All students are required to complete a Critical Enquiry project.<br>Critical Enquiry appears on the Official University Transcript under the course code MEDS 428.</i><br><br>
@@ -216,7 +217,7 @@ function generateMSPRHTML(MSPR $mspr,$timestamp = null) {
 				}
 
 				$entity = $mspr["Community Health and Epidemiology"];
-				if ($entity) { 
+				if ($entity && $entity->isApproved()) { 
 			?>
 			<h3><u>Community-Based Project</u></h3>
 			<i>Students are required to complete a project in either Community Health <u>or</u> History of Medicine. The title of the project appears below.</i><br><br>
@@ -229,13 +230,20 @@ function generateMSPRHTML(MSPR $mspr,$timestamp = null) {
 				}
 
 				$component = $mspr["Research"];
+				if ($component) {
+					$component->filter('is_approved');
+				}
+				
 				if ($component && $component->count() > 0) { 
+					$research_no = 0;
 			?>
 			<h3><u>Research</u></h3>
 			<i>Students are encouraged to pursue extracurricular research endeavours to enrich their academic experience. Research undertaken during the medical program appears below.</i><br><br>
 			<table width="100%" border=0 cellpadding=5 cellspacing=0>
 			<?php
 					foreach($component as $entity) {
+						if (++$research_no > MAX_RESEARCH) break;
+						
 						?>
 				<tr>
 					<td valign="top"><?php echo nl2br($entity->getText()); ?></td>
@@ -249,42 +257,30 @@ function generateMSPRHTML(MSPR $mspr,$timestamp = null) {
 
 				$internal_awards = $mspr["Internal Awards"];
 				$external_awards = $mspr["External Awards"];
-				if (($internal_awards && $internal_awards->count() > 0) || ($external_awards && $external_awards->count() > 0)) { 
+				if ($external_awards) {
+					$external_awards->filter('is_approved');
+				}
+				
+				$component = new Collection();
+				if ($internal_awards) {
+					foreach ($internal_awards as $award) {
+						$component->push($award);
+					}
+				}
+				if ($external_awards) {
+					foreach ($external_awards as $award) {
+						$component->push($award);
+					}
+				}
+				$component->sort('year','asc');
+
+				if ($component->count() > 0) { 
 			?>
 			<h3><u>Academic Awards</u></h3>
 			<i>A brief summary of the terms of reference accompanies each award. Only items of academic significance and either acknowledged or awarded by Queen's University are presented.</i><br><br>
 			<table width="100%" border=0 cellpadding=5 cellspacing=0>
 			<?php
-					$internal_awards->rewind();
-					$external_awards->rewind();
-					while(true) {
-						if (!$internal_awards->valid() && !$external_awards->valid())  {
-							 break;
-						} elseif($internal_awards->valid() && $external_awards->valid()) {
-							$in = $internal_awards->current();
-							$ex = $external_awards->current();
-							if (($in->getAwardYear() < $ex->getAwardYear())) {
-								$entity = $ex;
-								$external_awards->next();
-							} elseif ($in->getAwardYear() > $ex->getAwardYear()) {
-								$entity = $in;
-								$internal_awards->next();
-							} else {
-								if (strcasecmp($in->getAward()->getTitle(),$ex->getAward()->getTitle())) {
-									$entity = $in;
-									$internal_awards->next();
-								} elseif ($in->getAwardYear() > $ex->getAwardYear()) {
-									$entity = $ex;
-									$external_awards->next();
-								}	
-							}
-						} elseif($internal_awards->valid()) {
-							$entity = $internal_awards->current();
-							$internal_awards->next();
-						} elseif($external_awards->valid()) {
-							$entity = $external_awards->current();
-							$external_awards->next();
-						}
+					foreach($component as $entity) {
 						$award = $entity->getAward(); 
 						?>
 				<tr>
@@ -306,7 +302,7 @@ function generateMSPRHTML(MSPR $mspr,$timestamp = null) {
 				if ($component && $component->count() > 0) { 
 			?>
 			<h3><u>Studentships</u></h3>
-			<i>A limited number of summer scholarships may be available to students in the first and second medcal years through the office of the Associate Dean, Undergraduate Medical Education. Awards are adjudicated by the Awards Committee (Medicine) on the basis of academic achievement and preferred area of interest. Successfulstudents are required to arrange a research project with a faculty member and submit a proposal of the work to be undertaken for approval by the awards committee.</i><br><br>
+			<i>A limited number of summer scholarships may be available to students in the first and second medical years through the office of the Associate Dean, Undergraduate Medical Education. Awards are adjudicated by the Awards Committee (Medicine) on the basis of academic achievement and preferred area of interest. Successful students are required to arrange a research project with a faculty member and submit a proposal of the work to be undertaken for approval by the awards committee.</i><br><br>
 			<table width="100%" border=0 cellpadding=5 cellspacing=0>
 			<?php
 					foreach($component as $entity) {
@@ -323,15 +319,16 @@ function generateMSPRHTML(MSPR $mspr,$timestamp = null) {
 				}
 
 				$component = $mspr["Contributions to Medical School"];
+				if ($component) {
+					$component->filter('is_approved');
+				}
 				if ($component && $component->count() > 0) { 
-					$contribution_no = 0;
 			?>
 			<h3><u>Contributions to Medical School/Student Life</u></h3>
 			<i>Participation in the School of Medicine student government, committees (such as admissions), and organization of extra-curricular learning activities and Seminars is listed below.</i><br><br>
 			<table width="100%" border=0 cellpadding=5 cellspacing=0>
 			<?php
 					foreach($component as $entity) {
-						if (++$contribution_no > MAX_CONTRIBUTIONS) break;
 						?>
 				<tr>
 					<td valign="top" width="50%"><?php echo $entity->getOrgEvent()."<br>".$entity->getRole(); ?></td>
@@ -474,7 +471,7 @@ The requirements for standing in clinical programs embrace behavioural standards
 
 <p>The honours / pass / fail grade is based on aggregate marks from different components of the course, as described in the course syllabus.</p>
 <ul>
-<li>Honours: &lt;=79.1%</li>
+<li>Honours: &gt;=79.1%</li>
 <li>Pass: &gt;=60%</li>
 <li>Fail: &lt;60%</li>
 </ul>

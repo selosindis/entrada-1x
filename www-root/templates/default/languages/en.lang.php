@@ -150,7 +150,7 @@ return array (
 	"mspr_no_details" => "Details are required and none were provided",
 	"mspr_insufficient_info" => "Insufficient information provided.",
 	"mspr_email_failed" => "Failed to send rejection email.",
-	"mspr_observership_preceptor_required" => "A faculty preceprtor must be selected or a non-faculty preceptor name entered.",
+	"mspr_observership_preceptor_required" => "A faculty preceptor must be selected or a non-faculty preceptor name entered.",
 	"mspr_observership_invalid_dates" => "A valid start date is required."
 	);
 ?>

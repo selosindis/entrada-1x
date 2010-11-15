@@ -4,8 +4,8 @@ require_once("AbstractStudentDetails.class.php");
 
 class FormalRemediation extends AbstractStudentDetails {
 	
-	function __construct($user, $id, $details) {
-		$this->user = $user;
+	function __construct($user_id, $id, $details) {
+		$this->user_id = $user_id;
 		$this->id = $id;
 		$this->details = $details;
 	}
@@ -15,12 +15,13 @@ class FormalRemediation extends AbstractStudentDetails {
 		$query		= "SELECT * FROM `student_formal_remediations` where `id`=".$db->qstr($id);
 		$result	= $db->GetRow($query);
 		if ($result) {
-			$user = User::get($result['user_id']);
-			if ($user) {
-				$fr = new FormalRemediation($user, $result['id'], $result['remediation_details']);
-				return $fr;
-			}
+			$fr = FormalRemediation::fromArray($result);
+			return $fr;
 		}
+	}
+	
+	public static function fromArray(array $arr) {
+		return new FormalRemediation($arr['user_id'], $arr['id'], $arr['remediation_details']);
 	}
 	
 	public static function create($user_id, $details) {

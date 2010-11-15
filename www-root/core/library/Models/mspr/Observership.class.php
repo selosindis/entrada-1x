@@ -1,6 +1,8 @@
 <?php
 
-class Observership {
+require_once("Models/utility/Editable.interface.php");
+
+class Observership implements Editable {
 	private $id;
 	private $student_id;
 	private $title;
@@ -35,6 +37,10 @@ class Observership {
 	
 	public function getStudentID() {
 		return $this->student_id;	
+	}
+	
+	public function getUser() {
+		return User::get($this->student_id);
 	}
 
 	public function getSite() {
@@ -161,5 +167,29 @@ class Observership {
 		} else {
 			add_success("Successfully removed Observership.");
 		}		
+	}
+	
+	public function update($title, $site, $location, $preceptor_proxy_id, $preceptor_firstname, $preceptor_lastname, $start, $end) {
+		global $db;
+		$query = "update `student_observerships` set `title`=?, `site`=?,`location`=?,`preceptor_proxy_id`=?,`preceptor_firstname`=?, `preceptor_lastname`=?, `start`=?, `end`=? where `id`=?";
+		if(!$db->Execute($query, array($title, $site, $location, $preceptor_proxy_id, $preceptor_firstname, $preceptor_lastname, $start, $end, $this->id))) {
+			add_error("Failed to update Observership.");
+			application_log("error", "Unable to update a student_observerships record. Database said: ".$db->ErrorMsg());
+		} else {
+			add_success("Successfully updated Observership.");
+			$insert_id = $db->Insert_ID();
+			return self::get($insert_id); 
+		}
+	}
+	
+	public function compare($obs, $compare_by='start') {
+		switch($compare_by) {
+			case 'start':
+			case 'end':
+				return $this->$compare_by == $obs->$compare_by ? 0 : ( $this->$compare_by > $obs->$compare_by ? 1 : -1 );
+				break;
+			case 'title':
+				return strcasecmp($this->$compare_by, $obs->$compare_by);
+		}
 	}
 }

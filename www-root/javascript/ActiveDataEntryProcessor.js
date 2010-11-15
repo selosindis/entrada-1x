@@ -39,12 +39,11 @@
 						if (messages) {
 							messages.update(data_destination.down('.status_messages'));
 						}
-						add_entry_remove_listeners();
 						document.fire(section+':onAfterUpdate');
 					}
 				});
+				document.fire(section + ':onBeforeUpdate');
 			}
-			document.fire(section + ':onBeforeUpdate');
 		}
 
 		function submit_entry_ajax(event) {
@@ -86,14 +85,12 @@
 		hide_button.observe('click', hide_new_entry_handle);
 		hide_button.observe('keydown', hide_new_entry_handle);
 		new_form.observe('submit',submit_entry_ajax);
-		document.observe(section+':onAfterUpdate', onAfterUpdate);
-		document.observe(section+':onBeforeUpdate', onBeforeUpdate);
-
+		
 		function onAfterUpdate() {
 			if(options.onAfterUpdate) {
 				options.onAfterUpdate();
 			}
-			init();
+			add_entry_remove_listeners();
 		}
 		
 		function onBeforeUpdate() {
@@ -102,6 +99,9 @@
 			}
 			remove_entry_remove_listeners();
 		}
+		
+		document.observe(section+':onAfterUpdate', onAfterUpdate);
+		document.observe(section+':onBeforeUpdate', onBeforeUpdate);
 		
 		add_entry_remove_listeners();
 	}

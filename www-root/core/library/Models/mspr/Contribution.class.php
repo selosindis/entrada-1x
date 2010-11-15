@@ -50,6 +50,10 @@ class Contribution implements Approvable, AttentionRequirable {
 		return $this->user_id;	
 	}
 	
+	public function getUser() {
+		return User::get($this->user_id);
+	}
+	
 	public function getRole(){
 		return $this->role;
 	}

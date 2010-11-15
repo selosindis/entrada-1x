@@ -166,7 +166,7 @@ function process_research_citations_profile(User $user) {
 		if ($_POST['action'] == "Add") {
 			$user_id = (isset($_POST['user_id']) ? $_POST['user_id'] : 0);
 			
-			$citation = (isset($_POST['details']) ? $_POST['details'] : '');
+			$citation = clean_input((isset($_POST['details']) ? $_POST['details'] : ''), array("notags"));
 				
 			if (($user_id == $user->getID()) && $citation ) {
 				ResearchCitation::create($user_id,$citation);
@@ -179,6 +179,16 @@ function process_research_citations_profile(User $user) {
 				$citation = ResearchCitation::get($id);
 				if ($citation) {
 					$citation->delete();
+				}
+			}
+		} elseif ($_POST['action'] == "Edit") {
+			$id = (isset($_POST['entity_id']) ? $_POST['entity_id'] : 0);
+			$text = clean_input((isset($_POST['details']) ? $_POST['details'] : ''), array("notags"));
+			
+			if ($id) {
+				$citation = ResearchCitation::get($id);
+				if ($citation) {
+					$citation->update($text);
 				}
 			}
 		} elseif ($action == "resequence") {

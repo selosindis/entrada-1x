@@ -31,6 +31,10 @@ abstract class SupervisedProject implements Approvable,AttentionRequirable {
 	public function getUserID() {
 		return $this->user_id;	
 	}
+	
+	public function getUser() {
+		return User::get($this->user_id);	
+	}
 
 	public function getLocation () {
 		return $this->location;

@@ -171,4 +171,17 @@ class ExternalAwardReceipt implements Approvable,AttentionRequirable {
 	public function reject($comment) {
 		$this->setStatus(-1,$comment);
 	}
+	
+	public function compare($ar, $compare_by="year") {
+		switch($compare_by) {
+			case 'year':
+				return $this->year == $ar->year ? 0 : ( $this->year > $ar->year ? 1 : -1 );
+				break;
+			case 'title':
+				$award = $this->getAward();
+				$other_award = $ar->getAward();
+				return $award->compare($other_award);
+				break;
+		}
+	}
 }

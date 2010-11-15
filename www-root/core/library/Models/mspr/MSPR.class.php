@@ -198,7 +198,7 @@ class MSPR implements ArrayAccess, AttentionRequirable {
 	 * @param unknown_type $html
 	 * @return string
 	 */
-	private function generatePDF($html) {
+	public function generatePDF($html) {
 		return generatePDF($html);
 	}
 	
@@ -226,21 +226,25 @@ class MSPR implements ArrayAccess, AttentionRequirable {
 		$html = $this->generateHTML($timestamp);
 		$pdf = $this->generatePDF($html);
 
-		//prepare filename
-		$user = $this->getUser();
-		$number = $user->getNumber();
-		
-		$filebase = $number."-".$timestamp;
-		
-		//now write the files and return success/fail (true/false)
-		$wroteHTML = writeFile($location."/".$filebase.".html",$html);
-		$wrotePDF = writeFile($location."/".$filebase.".pdf",$pdf);
-		
-		if ($wroteHTML && $wrotePDF) {
+		if ($this->saveMSPRFile("html", $html, $timestamp, $location) && $this->saveMSPRFile("pdf", $pdf, $timestamp, $location)) {
 			$this->setGeneratedTimestamp($timestamp);
 			return true;
 		}	
 		return false;
+	}
+	
+	public function saveMSPRFile($type, $content, $timestamp=null, $location=null) {
+	if (!$location) {
+			$location = MSPR_STORAGE; //use default
+		}
+		if (!$timestamp) {
+			$timestamp = time();
+		}	
+		$user = $this->getUser();
+		$number = $user->getNumber();
+		
+		$filebase = $number."-".$timestamp;
+		return writeFile($location."/".$filebase.".".$type,$content);
 	}
 	
 	public function getMSPRFile($type = "pdf", $timestamp = null, $location = null) {

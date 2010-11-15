@@ -1366,3 +1366,100 @@ ul.community-page-list ul ul ul ul ul ul span.delete {
 .odd-announcements {
 	background-color: #F7F7F7;
 }
+
+div.quiz-questions ol.questions li {
+position:relative;
+margin-bottom:1px;
+}
+
+div.quiz-questions ol.questions li div.question {
+vertical-align:middle;
+cursor:move;
+border-top:1px #EEE solid;
+padding:8px;
+}
+
+div.quiz-questions ol.questions li div.question img.question-controls {
+border:0;
+width:16px;
+height:16px;
+vertical-align:middle;
+cursor:pointer;
+}
+
+div.quiz-questions ol.questions li div.question span.question {
+margin-left:8px;
+vertical-align:middle;
+}
+
+div.quiz-questions ol.questions li.question {
+padding-bottom:5px;
+}
+
+div.quiz-questions ul.responses {
+margin:0 0 8px 25px;
+}
+
+div.quiz-questions li {
+vertical-align: top;
+}
+
+div.quiz-questions ul.responses li {
+border:0;
+margin-bottom:5px;
+list-style-type:none;
+padding:0 5px;
+vertical-align: top;
+}
+
+div.quiz-questions ul.responses li.display-correct,
+div.quiz-questions ul.responses li.correct {
+list-style-image:url(../images/question-correct.gif);
+}
+
+div.quiz-questions ul.responses li.display-incorrect,
+div.quiz-questions ul.responses li.incorrect {
+list-style-image:url(../images/question-incorrect.gif);
+}
+
+div.quiz-questions ul.responses li.selected {
+font-weight:700;
+list-style-image:url(../images/record-next-on.gif);
+border-top:1px #CCC solid;
+border-bottom:1px #CCC solid;
+background-color:#F0F0F0;
+}
+
+div.quiz-questions ul.responses li.selected.correct {
+border-top:1px #A9D392 solid;
+border-bottom:1px #A9D392 solid;
+background-color:#DEE6E3;
+}
+
+div.quiz-questions ul.responses li.selected.incorrect {
+border-top:1px #C00 solid;
+border-bottom:1px #C00 solid;
+background-color:#FFD9D0;
+}
+
+div.quiz-questions ul.responses li.selected img.question-response-indicator {
+position:absolute;
+top:-7px;
+right:-3px;
+width:27px;
+height:27px;
+border:0;
+}
+
+div.quiz-questions ul.responses li input[type=radio] {
+vertical-align:middle;
+}
+
+div.quiz-questions ul.responses li {
+list-style-image: none;
+}
+
+div.quiz-questions ul.responses li label {
+margin-left:5px;
+vertical-align:middle;
+}

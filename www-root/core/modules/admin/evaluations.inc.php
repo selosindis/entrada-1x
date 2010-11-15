@@ -38,7 +38,7 @@ if (!defined("PARENT_INCLUDED")) {
 	application_log("error", "Group [".$GROUP."] and role [".$ROLE."] does not have access to this module [".$MODULE."]");
 } else {
 	define("IN_EVALUATIONS", true);
-	
+
 	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/evaluations", "title" => "Manage Evaluations");
 
 	if (($router) && ($router->initRoute())) {
@@ -48,7 +48,8 @@ if (!defined("PARENT_INCLUDED")) {
 		 * Add the Regional Education module secondary navigation.
 		 */
 		$sidebar_html  = "<ul class=\"menu\">";
-		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/evaluations\">Manage Evaluations</a></li>\n";
+		//$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/evaluations\">Manage Evaluations</a></li>\n";
+		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/evaluations/scheduler\">Manage Scheduler</a></li>\n";
 		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/evaluations/forms\">Manage Forms</a></li>\n";
 		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/evaluations/notifications\">Manage Notifications</a></li>\n";
 		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/evaluations/reports\">Evaluation Reports</a></li>\n";

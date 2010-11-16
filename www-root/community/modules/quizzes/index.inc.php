@@ -103,7 +103,7 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 
 			$exceeded_attempts	= ((((int) $quiz_record["quiz_attempts"] === 0) || ($quiz_attempts < $quiz_record["quiz_attempts"])) ? false : true);
 
-			if (((!(int) $quiz_record["release_date"]) || ($quiz_record["release_date"] <= time())) && ((!(int) $quiz_record["release_until"]) || ($quiz_record["release_until"] >= time())) && (!$exceeded_attempts)) {
+			if ($LOGGED_IN && ((!(int) $quiz_record["release_date"]) || ($quiz_record["release_date"] <= time())) && ((!(int) $quiz_record["release_until"]) || ($quiz_record["release_until"] >= time())) && (!$exceeded_attempts)) {
 				$allow_attempt = true;
 			} else {
 				$allow_attempt = false;
@@ -116,7 +116,7 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 				echo "	<a href=\"".ENTRADA_URL."/admin/quizzes?section=results&amp;community=true&amp;id=".$quiz_record["aquiz_id"]."\"><img src=\"".ENTRADA_URL."/images/view-stats.gif\" width=\"16\" height=\"16\" alt=\"View results of ".html_encode($quiz_record["quiz_title"])."\" title=\"View results of ".html_encode($quiz_record["quiz_title"])."\" style=\"vertical-align: middle\" border=\"0\" /></a>\n";
 			}
 			if ($allow_attempt) {
-				echo "		<a href=\"".ENTRADA_URL."/quizzes?section=attempt&amp;community=true&amp;id=".$quiz_record["aquiz_id"]."\" title=\"Take ".html_encode($quiz_record["quiz_title"])."\" style=\"font-weight: bold\">".html_encode($quiz_record["quiz_title"])."</a>";
+				echo "		<a href=\"".ENTRADA_URL."/community".$COMMUNITY_URL.":".$PAGE_URL."?section=attempt&amp;community=true&amp;id=".$quiz_record["aquiz_id"]."\" title=\"Take ".html_encode($quiz_record["quiz_title"])."\" style=\"font-weight: bold\">".html_encode($quiz_record["quiz_title"])."</a>";
 			} else {
 				echo "		<span style=\"color: #666666; font-weight: bold\">".html_encode($quiz_record["quiz_title"])."</span>";
 			}
@@ -161,7 +161,7 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 								$percentage = ((round(($entry["quiz_score"] / $entry["quiz_value"]), 2)) * 100);
 								echo "<li class=\"".(($percentage >= 60) ? "correct" : "incorrect")."\">";
 								echo	date(DEFAULT_DATE_FORMAT, $entry["updated_date"])." <strong>Score:</strong> ".$entry["quiz_score"]."/".$entry["quiz_value"]." (".$percentage."%)";
-								echo "	( <a href=\"".ENTRADA_URL."/quizzes?section=results&amp;community=true&amp;id=".$entry["qprogress_id"]."\">review quiz</a> )";
+								echo "	( <a href=\"".ENTRADA_URL."/community".$COMMUNITY_URL.":".$PAGE_URL."?section=results&amp;id=".$entry["qprogress_id"]."\">review quiz</a> )";
 								echo "</li>";
 							} else {
 								echo "<li>".date(DEFAULT_DATE_FORMAT, $entry["updated_date"])." <strong>Score:</strong> To Be Released ".date(DEFAULT_DATE_FORMAT, $quiz_record["release_until"])."</li>";
@@ -171,7 +171,7 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 							echo "<li class=\"incorrect\">".date(DEFAULT_DATE_FORMAT, $entry["updated_date"])." <strong>Expired Attempt</strong>: not completed.</li>";
 						break;
 						case "inprogress" :
-							echo "<li>".date(DEFAULT_DATE_FORMAT, $entry["updated_date"])." <strong>Attempt In Progress</strong> ( <a href=\"".ENTRADA_URL."/quizzes?section=attempt&amp;community=true&amp;id=".$quiz_record["aquiz_id"]."\">continue quiz</a> )</li>";
+							echo "<li>".date(DEFAULT_DATE_FORMAT, $entry["updated_date"])." <strong>Attempt In Progress</strong> ( <a href=\"".ENTRADA_URL."/community".$COMMUNITY_URL.":".$PAGE_URL."?section=attempt&amp;community=true&amp;id=".$quiz_record["aquiz_id"]."\">continue quiz</a> )</li>";
 						break;
 						default :
 							continue;

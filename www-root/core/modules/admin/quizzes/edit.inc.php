@@ -583,19 +583,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 									<?php
 									$query		= "	SELECT a.*, b.`course_id`, b.`eventtype_id`, b.`event_title`, b.`event_start`, b.`event_duration`, CONCAT_WS(', ', d.`lastname`, d.`firstname`) AS `fullname`, e.`course_name`, e.`course_code`
 													FROM `attached_quizzes` AS a
-													LEFT JOIN `events` AS b
+													JOIN `events` AS b
 													ON a.`content_type` = 'event' 
 													AND	b.`event_id` = a.`content_id`
-													LEFT JOIN `event_contacts` AS c
+													JOIN `event_contacts` AS c
 													ON a.`content_type` = 'event' 
-													ANDc.`event_id` = a.`content_id`
+													AND c.`event_id` = a.`content_id`
 													LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS d
 													ON d.`id` = c.`proxy_id`
-													LEFT JOIN `courses` AS e
+													JOIN `courses` AS e
 													ON e.`course_id` = b.`course_id`
 													WHERE a.`quiz_id` = ".$db->qstr($RECORD_ID)."
 													AND e.`course_active` = '1'
-													GROUP BY a.`content_type`, a.`content_id`
 													ORDER BY b.`event_start` DESC";
 									$results	= $db->GetAll($query);
 									if($results) {
@@ -643,6 +642,110 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 									} else {
 										$NOTICE++;
 										$NOTICESTR[] = "This quiz is not currently attached to any learning events.<br /><br />To add this quiz to an event you are teaching, click the <strong>Attach To Learning Event</strong> link above.";
+
+										echo display_notice();
+									}
+								}
+								?>
+							</td>
+						</tr>
+					</tbody>
+					<tbody id="community-pages">
+						<tr>
+							<td colspan="3">
+								&nbsp;
+							</td>
+						</tr>
+						<tr>
+							<td colspan="3">
+								<a name="community_pages_section"></a><h2 id="community_pages_section" title="Community Pages">Community Pages</h2>
+							</td>
+						</tr>
+						<tr>
+							<td colspan="3">
+								<?php
+								/**
+								 * If there are no questions in this quiz, then
+								 * a generic notice is spit out that gives the
+								 * user information on when they can assign this
+								 * quiz to a learning event.
+								 */
+								if (!(int) count($questions)) {
+									?>
+									<div class="display-generic">
+										Once you create questions for this quiz you will be able to assign it to pages in communities you administrate.
+									</div>
+									<?php
+								} else {
+									?>
+									<div style="margin-bottom: 10px">
+										<ul class="page-action">
+											<li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=attach&amp;community=true&amp;id=<?php echo $RECORD_ID; ?>">Attach To Community Page</a></li>
+										</ul>
+									</div>
+									<?php
+									$query		= "	SELECT a.*, b.`community_id`, b.`community_url`, b.`community_title`, CONCAT('[', b.`community_title`, '] ', bp.`menu_title`) AS `page_title`, bp.`page_url`, CONCAT_WS(', ', d.`lastname`, d.`firstname`) AS `fullname`
+													FROM `attached_quizzes` AS a
+													JOIN `communities` AS b
+													ON a.`content_type` = 'community_page' 
+													JOIN `community_pages` AS bp
+													ON a.`content_type` = 'community_page' 
+													AND	bp.`cpage_id` = a.`content_id`
+													AND bp.`community_id` = b.`community_id`
+													LEFT JOIN `community_members` AS c
+													ON c.`community_id` = b.`community_id`
+													AND c.`proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
+													AND c.`member_acl` = '1'
+													LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS d
+													ON d.`id` = c.`proxy_id`
+													WHERE a.`quiz_id` = ".$db->qstr($RECORD_ID)."
+													AND b.`community_active` = '1'
+													AND bp.`page_active` = '1'
+													ORDER BY b.`community_title` ASC";
+									$results	= $db->GetAll($query);
+									if($results) {
+										?>
+										<table class="tableList" cellspacing="0" summary="List of Community Pages">
+										<colgroup>
+											<col class="modified" />
+											<col class="title" />
+											<col class="title" />
+											<col class="completed" />
+										</colgroup>
+										<thead>
+											<tr>
+												<td class="modified">&nbsp;</td>
+												<td class="title sortedASC">Community Page</td>
+												<td class="title">Quiz Title</td>
+												<td class="completed">Completed</td>
+											</tr>
+										</thead>
+										<tbody>
+											<?php
+											foreach($results as $result) {
+												$url = ENTRADA_URL."/community".$result["community_url"].":".$result["page_url"];
+
+												echo "<tr id=\"community-page-".$result["cpage_id"]."\" class=\"community-page\">\n";
+												echo "	<td class=\"modified\">\n";
+												if ($result["accesses"] > 0) {
+													echo "	<a href=\"".ENTRADA_URL."/admin/quizzes?section=results&amp;community=true&amp;id=".$result["aquiz_id"]."\"><img src=\"".ENTRADA_URL."/images/view-stats.gif\" width=\"16\" height=\"16\" alt=\"View results of ".html_encode($result["quiz_title"])."\" title=\"View results of ".html_encode($result["quiz_title"])."\" style=\"vertical-align: middle\" border=\"0\" /></a>\n";
+												} else {
+													echo "	<img src=\"".ENTRADA_URL."/images/view-stats-disabled.gif\" width=\"16\" height=\"16\" alt=\"No completed quizzes at this time.\" title=\"No completed quizzes at this time.\" style=\"vertical-align: middle\" border=\"0\" />\n";
+												}
+												echo "	</td>\n";
+												echo "	<td class=\"title\"><a href=\"".$url."\" title=\"Community Page: [".html_encode($result["community_title"])."] ".html_encode($result["page_title"])."\">[".html_encode($result["community_title"])."] ".html_encode($result["page_title"])."</a></td>\n";
+												echo "	<td class=\"title\"><a href=\"".$url."\" title=\"Quiz Title: ".html_encode($result["quiz_title"])."\">".html_encode($result["quiz_title"])."</a></td>\n";
+												echo "	<td class=\"completed\">".(int) $result["accesses"]."</td>\n";
+												echo "</tr>\n";
+											}
+											?>
+										</tbody>
+										</table>
+										<?php
+									} else {
+										$NOTICESTR = array();
+										$NOTICE = 1;
+										$NOTICESTR[] = "This quiz is not currently attached to any community pages.<br /><br />To add this quiz to an page you are have administrative rights to, click the <strong>Attach To Community Page</strong> link above.";
 
 										echo display_notice();
 									}

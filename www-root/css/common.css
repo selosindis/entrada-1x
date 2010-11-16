@@ -2439,7 +2439,7 @@ div#associated_faculty_list ul.menu li.community,div#associated_student_list ul.
 cursor:move;
 }
 
-ul#faculty_list,ul#student_list,ul#director_list,ul#coordinator_list, ul#individual_list {
+ul#faculty_list,ul#student_list,ul#director_list,ul#coordinator_list,ul#individual_list,ul#author_list {
 width:250px;
 overflow:none;
 position:relative;

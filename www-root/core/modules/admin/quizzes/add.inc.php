@@ -42,7 +42,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 } else {
 	$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "add")), "title" => "Adding Quiz");
 	
-	$PROCESSED["associated_proxy_ids"]	= array();
+	$PROCESSED["associated_proxy_ids"] = array($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]);
 	
 	echo "<h1>Adding Quiz</h1>\n";
 
@@ -72,8 +72,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 			 * Required field "associated_proxy_ids" / Quiz Authors (array of proxy ids).
 			 * This is actually accomplished after the quiz is inserted below.
 			 */
-			if((isset($_POST["associated_proxy_ids"]))) {
-				$associated_proxy_ids = explode(',',$_POST["associated_proxy_ids"]);
+			if ((isset($_POST["associated_proxy_ids"]))) {
+				$associated_proxy_ids = explode(",", $_POST["associated_proxy_ids"]);
 				foreach($associated_proxy_ids as $contact_order => $proxy_id) {
 					if($proxy_id = clean_input($proxy_id, array("trim", "int"))) {
 						$PROCESSED["associated_proxy_ids"][(int) $contact_order] = $proxy_id;
@@ -153,41 +153,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 		case 1 :
 		default :
 			$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/elementresizer.js\"></script>\n";
+			$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/AutoCompleteList.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 			
 			/**
 			 * Load the rich text editor.
 			 */
 			load_rte();
-
-			/**
-			 * Compiles the full list of people who are able to access this
-			 * module based on the $ADMINISTRATION array in settings.inc.php.
-			 */
-			$author_list_where = array();
-			$author_list_where[] = "(a.`id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]).")";
-
-			$groups_roles = permissions_by_module($MODULE);
-			foreach ($groups_roles as $group => $roles) {
-				foreach ($roles as $role) {
-					$author_list_where[] = "(b.`group` = ".$db->qstr($group)." AND b.`role` = ".$db->qstr($role).")";
-				}
-			}
-
-			$author_list = array();
-			$query = "	SELECT a.`id` AS `proxy_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, a.`organisation_id`, b.`group`, b.`role`
-						FROM `".AUTH_DATABASE."`.`user_data` AS a
-						LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
-						ON b.`user_id` = a.`id`
-						WHERE b.`app_id` = '".AUTH_APP_ID."'
-						AND (".implode(" OR ", $author_list_where).")
-						GROUP BY a.`id`
-						ORDER BY a.`lastname` ASC, a.`firstname` ASC";
-			$results = $db->GetAll($query);
-			if ($results) {
-				foreach ($results as $result) {
-					$author_list[] = array('proxy_id'=>$result["proxy_id"], 'fullname'=>$result["fullname"]." (".ucwords($result["group"])." > ".ucwords($result["role"]).")", 'organisation_id'=>$result['organisation_id']);
-				}
-			}
 
 			if ($ERROR) {
 				echo display_error();
@@ -238,90 +209,54 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 					<td colspan="3">&nbsp;</td>
 				</tr>
 				<tr>
-					<td></td>
+					<td>&nbsp;</td>
 					<td style="vertical-align: top">
 						<label for="associated_proxy_ids" class="form-required">Quiz Authors</label>
 						<div class="content-small" style="margin-top: 15px">
 							<strong>Tip:</strong> Select any other individuals you would like to give access to assigning or modifying this quiz.
 						</div>
 					</td>
-					<td>
-						<div style="position: relative;">
+					<td style="vertical-align: top">
+						<input type="text" id="author_name" name="fullname" size="30" autocomplete="off" style="width: 203px" />
+						<?php
+						$ONLOAD[] = "author_list = new AutoCompleteList({ type: 'author', url: '". ENTRADA_RELATIVE ."/api/personnel.api.php?type=facultyorstaff', remove_image: '". ENTRADA_RELATIVE ."/images/action-delete.gif'})";
+						?>
+						<div class="autocomplete" id="author_name_auto_complete"></div>
+						<input type="hidden" id="associated_author" name="associated_proxy_ids" value="" />
+						<input type="button" class="button-sm" id="add_associated_author" value="Add" style="vertical-align: middle" />
+						<span class="content-small">(<strong>Example:</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?>)</span>
+						<ul id="author_list" class="menu" style="margin-top: 15px">
 							<?php
-							if ((isset($PROCESSED["associated_proxy_ids"])) && (is_array($PROCESSED["associated_proxy_ids"]))) {
-								if (!in_array($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"], $PROCESSED["associated_proxy_ids"])) {
-									array_unshift($PROCESSED["associated_proxy_ids"], $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]);
-								}
-							}
+							if (is_array($PROCESSED["associated_proxy_ids"]) && !empty($PROCESSED["associated_proxy_ids"])) {
+								$selected_authors = array();
 
-							// Fetch list of categories
-							$query = "	SELECT `organisation_id`, `organisation_title`
-										FROM `".AUTH_DATABASE."`.`organisations`
-										ORDER BY `organisation_title` ASC";
-							$organisation_results = $db->GetAll($query);
-							if($organisation_results) {
-								$organisations = array();
-								foreach($organisation_results as $result) {
-									if($ENTRADA_ACL->amIAllowed('resourceorganisation'.$result["organisation_id"], 'read')) {
-										$organisation_categories[$result["organisation_id"]] = array('text' => $result["organisation_title"], 'value' => 'organisation_'.$result["organisation_id"], 'category'=>true);
+								$query = "	SELECT `id` AS `proxy_id`, CONCAT_WS(', ', `lastname`, `firstname`) AS `fullname`, `organisation_id`
+											FROM `".AUTH_DATABASE."`.`user_data`
+											WHERE `id` IN (".implode(", ", $PROCESSED["associated_proxy_ids"]).")
+											ORDER BY `lastname` ASC, `firstname` ASC";
+								$results = $db->GetAll($query);
+								if ($results) {
+									foreach ($results as $result) {
+										$selected_authors[$result["proxy_id"]] = $result;
 									}
-								}
-							}
 
-							//Get the possible teacher filters
-							if(isset($author_list) && is_array($author_list) && !empty($author_list)) {
-								$authors = $organisation_categories;
-								foreach($author_list as $r) {
-									if(in_array($r['proxy_id'], $PROCESSED["associated_proxy_ids"])) {
-										$checked = 'checked="checked"';
-									} else {
-										$checked = '';
-									}
-									if(isset($authors[$r["organisation_id"]])) {
-										$authors[$r["organisation_id"]]['options'][] = array('text' => $r['fullname'], 'value' => $r['proxy_id'], 'checked' => $checked);
-									}
+									unset($results);
 								}
 
-								echo lp_multiple_select_popup('associated_proxy_ids', $authors, array('title'=>'Select Multiple Authors:', 'width'=> '500px', 'submit_text'=>'Done', 'cancel'=>false, 'submit'=>true));
+								foreach ($PROCESSED["associated_proxy_ids"] as $proxy_id) {
+									if ($proxy_id = (int) $proxy_id) {
+										if (array_key_exists($proxy_id, $selected_authors)) {
+											?>
+											<li class="community" id="author_<?php echo $proxy_id; ?>" style="cursor: move;"><?php echo $selected_authors[$proxy_id]["fullname"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="author_list.removeItem('<?php echo $proxy_id; ?>');" class="list-cancel-image" /></li>
+											<?php
+										}
+									}
+								}
 							}
 							?>
-						</div>
-						<input class="multi-picklist" id="associated_proxy_ids" name="associated_proxy_ids" style="display: none;">
-						<div id="associated_proxy_ids_list"></div>
-						<input type="button" onclick="$('associated_proxy_ids_options').show();" value="Select Multiple">
-						<script type="text/javascript">
-						if($('associated_proxy_ids_options')) {
-							$('associated_proxy_ids_options').addClassName('multiselect-processed');
-							multiselect = new Control.SelectMultiple('associated_proxy_ids','associated_proxy_ids_options',{
-								labelSeparator: '; ',
-								checkboxSelector: 'table.select_multiple_table tr td input[type=checkbox]',
-								nameSelector: 'table.select_multiple_table tr td.select_multiple_name label',
-								overflowLength: 70,
-								filter: 'associated_proxy_ids_select_filter',
-								resize: 'associated_proxy_ids_scroll',
-								afterCheck: function(element) {
-									var tr = $(element.parentNode.parentNode);
-									tr.removeClassName('selected');
-									if(element.checked) {
-										tr.addClassName('selected');
-									}
-								},
-								updateDiv: function(options, isnew) {
-									ul = options.inject(new Element('ul', {'class':'menu'}), function(list, option) {
-										list.appendChild(new Element('li', {'class':'community'}).update(option));
-										return list;
-									});
-									$('associated_proxy_ids_list').update(ul);
-								}
-							});
-
-							$('associated_proxy_ids_close').observe('click',function(event){
-								this.container.hide();
-								return false;
-							}.bindAsEventListener(multiselect));
-
-						}
-						</script>
+						</ul>
+						<input type="hidden" id="author_ref" name="author_ref" value="" />
+						<input type="hidden" id="author_id" name="author_id" value="" />
 					</td>
 				</tr>
 			</tbody>

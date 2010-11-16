@@ -106,7 +106,11 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 	                $formattedRec = substr($formattedRec, 0, $lengthOfRec);
 	            }
 	        }
-	        $outputArray[$result["status"]][] = $formattedRec;
+	        
+	        // Do not allow duplicates (i.e. multiple faculty report the same publication.
+	        if(in_array($formattedRec, $outputArray[$result["status"]]) === false) {
+	        	$outputArray[$result["status"]][] = $formattedRec;
+	        }
 	    }
 	    
 	    $keyHeader = "<b>(1) Published:</b><br>";

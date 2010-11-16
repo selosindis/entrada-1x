@@ -23,7 +23,6 @@
  * @copyright Copyright 2008 Queen's University. All Rights Reserved.
  *
 */
-
 if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 	exit;
 } elseif((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
@@ -35,18 +34,21 @@ if ($MAILING_LISTS["active"]) {
 	require_once("Entrada/mail-list/mail-list.class.php");
 }
 
-$COMMUNITY_ID		= 0;
+$EVALUATION_ID		= 0;
 $PREFERENCES		= preferences_load($MODULE);
 $PROXY_IDS			= array();
 
 /**
  * Check for a community category to proceed.
  */
-if((isset($_GET["community"])) && ((int) trim($_GET["community"]))) {
-	$COMMUNITY_ID	= (int) trim($_GET["community"]);
-} elseif((isset($_POST["community_id"])) && ((int) trim($_POST["community_id"]))) {
-	$COMMUNITY_ID	= (int) trim($_POST["community_id"]);
+if((isset($_GET["evaluation"])) && ((int) trim($_GET["evaluation"]))) {
+	$EVALUATION_ID	= (int) trim($_GET["evaluation"]);
+} elseif((isset($_POST["evaluation_id"])) && ((int) trim($_POST["evaluation_id"]))) {
+	$EVALUATION_ID	= (int) trim($_POST["evaluation_id"]);
+} elseif((isset($_POST["evaluation"])) && ((int) trim($_POST["evaluation"]))) {
+	$EVALUATION_ID	= (int) trim($_POST["evaluation"]);
 }
+
 
 if((isset($_GET["type"])) && ($tmp_action_type = clean_input(trim($_GET["type"]), "alphanumeric"))) {
 	$ACTION_TYPE	= $tmp_action_type;
@@ -54,8 +56,10 @@ if((isset($_GET["type"])) && ($tmp_action_type = clean_input(trim($_GET["type"])
 	$ACTION_TYPE	= $tmp_action_type;
 }
 unset($tmp_action_type);
-$EVALUATION_ID= clean_input($_GET["id"], array("notags", "trim"));
 
+echo "______log______"."EVALUATION_ID: ".$EVALUATION_ID."<br>";
+echo "______log______"."Step: ".$STEP."<br>";
+echo "______log______"."ACTION_TYPE: ".$ACTION_TYPE."<br>";
 /**
  * Ensure that the selected community is editable by you.
  */
@@ -65,6 +69,7 @@ if($EVALUATION_ID) {
 	if($evaluation_details) {
 		$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/picklist.js\"></script>\n";
 		$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/elementresizer.js\"></script>\n";
+		$HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/tabpane/tabpane.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
 		$HEAD[]		= "<link href=\"".ENTRADA_URL."/css/tabpane.css?release=".html_encode(APPLICATION_VERSION)."\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />\n";
 		$HEAD[]		= "<link href=\"".ENTRADA_URL."/css/tree.css?release=".html_encode(APPLICATION_VERSION)."\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />\n";
 		$HEAD[]		= "<style type=\"text/css\">.dynamic-tab-pane-control .tab-page {height:auto;}</style>\n";
@@ -274,7 +279,7 @@ if($EVALUATION_ID) {
 
 										if(@mail($PROCESSED['email'], APPLICATION_NAME." Community Invitation from ".$PROCESSED['firstname']." ".$PROCESSED['lastname'], $message, "From: \"".$AGENT_CONTACTS["administrator"]["name"]."\" <".$AGENT_CONTACTS["administrator"]["email"].">\nReply-To: \"".$AGENT_CONTACTS["administrator"]["name"]."\" <".$AGENT_CONTACTS["administrator"]["email"].">")) {
 											if ($MAILING_LISTS["active"]) {
-												$mail_list = new MailingList($COMMUNITY_ID);
+												$mail_list = new MailingList($EVALUATION_ID);
 											}
 										} else {
 											$ERROR++;
@@ -289,15 +294,15 @@ if($EVALUATION_ID) {
 												LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 												ON b.`user_id` = ".$db->qstr($GUEST_PROXY_ID)."
 												AND b.`app_id` IN (".AUTH_APP_IDS_STRING.")
-												LEFT JOIN `community_members` AS c
+												LEFT JOIN `evaluator_members` AS c
 												ON c.`proxy_id` = ".$db->qstr($GUEST_PROXY_ID)."
-												AND c.`community_id` = ".$db->qstr($COMMUNITY_ID)."
+												AND c.`community_id` = ".$db->qstr($EVALUATION_ID)."
 												WHERE a.`id` = ".$db->qstr($GUEST_PROXY_ID);
 										$result	= $db->GetRow($query);
 
 										if($result) {
 											if((int) $result["cmember_id"]) {
-												if(@$db->AutoExecute("community_members", array("member_active" => 1), "UPDATE", "`cmember_id` = ".$db->qstr((int) $result["cmember_id"]))) {
+												if(@$db->AutoExecute("evaluator_members", array("member_active" => 1), "UPDATE", "`cmember_id` = ".$db->qstr((int) $result["cmember_id"]))) {
 													if ($MAILING_LISTS["active"]) {
 														$mail_list->add_member($GUEST_PROXY_ID, ((bool)$result["member_acl"]));
 													}
@@ -308,13 +313,13 @@ if($EVALUATION_ID) {
 												}
 											} else {
 												$PROCESSED = array();
-												$PROCESSED["community_id"]	= $COMMUNITY_ID;
+												$PROCESSED["community_id"]	= $EVALUATION_ID;
 												$PROCESSED["proxy_id"]		= $GUEST_PROXY_ID;
 												$PROCESSED["member_active"]	= 1;
 												$PROCESSED["member_joined"]	= time();
 												$PROCESSED["member_acl"]	= 0;
 
-												if(@$db->AutoExecute("community_members", $PROCESSED, "INSERT")) {
+												if(@$db->AutoExecute("evaluator_members", $PROCESSED, "INSERT")) {
 													if ($MAILING_LISTS["active"]) {
 														$mail_list->add_member($GUEST_PROXY_ID);
 													}
@@ -328,7 +333,7 @@ if($EVALUATION_ID) {
 
 
 										if($member_add_success) {
-											$url = ENTRADA_URL."/communities?section=members&community=".$COMMUNITY_ID;
+											$url = ENTRADA_URL."admin/evaluations/scheduler?section=members&community=".$EVALUATION_ID;
 											$SUCCESS++;
 											if($GUEST_NEW_ACCESS) {
 												$SUCCESSSTR[]	= "You have successfully created a new guest user in system, and have given them access to this community.<br /><br />You will now be redirected back to the user manager; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
@@ -336,8 +341,8 @@ if($EVALUATION_ID) {
 												$SUCCESSSTR[]	= "You have successfully given a guest access to this community.<br /><br />You will now be redirected back to the user manager; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 											}
 											$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
-											communities_log_history($COMMUNITY_ID, 0, $member_add_success, "community_history_add_members", 1);
-											application_log("success", "Gave [".$PROCESSED_ACCESS["group"]." / ".$PROCESSED_ACCESS["role"]."] permissions to user id [".$PROCESSED_ACCESS["user_id"]."] as a guest for community $COMMUNITY_ID.");
+											communities_log_history($EVALUATION_ID, 0, $member_add_success, "community_history_add_members", 1);
+											application_log("success", "Gave [".$PROCESSED_ACCESS["group"]." / ".$PROCESSED_ACCESS["role"]."] permissions to user id [".$PROCESSED_ACCESS["user_id"]."] as a guest for community $EVALUATION_ID.");
 										} else {
 											$ERROR++;
 											$ERRORSTR[] = "The guest user has been added to the system however they have not joined your community. An administrator has been informed of this issue, please try again later.";
@@ -357,68 +362,43 @@ if($EVALUATION_ID) {
 						case "add" :
 							$member_add_success	= 0;
 							$member_add_failure	= 0;
-							if((isset($_POST["acc_community_members"])) && ($proxy_ids = explode(',', $_POST["acc_community_members"])) && (count($proxy_ids))) {
+							if((isset($_POST["acc_evaluator_members"])) && ($proxy_ids = explode(',', $_POST["acc_evaluator_members"])) && (count($proxy_ids))) {
 								if ($MAILING_LISTS["active"]) {
-									$mail_list = new MailingList($COMMUNITY_ID);
+									$mail_list = new MailingList($EVALUATION_ID);
 								}
 
 								foreach($proxy_ids as $proxy_id) {
+echo "______log______Into 1"."<br>";
 									if(($proxy_id = (int) trim($proxy_id))) {
-										$query	= "
-												SELECT a.`id` AS `proxy_id`, c.`cmember_id`, c.`member_acl`
-												FROM `".AUTH_DATABASE."`.`user_data` AS a
-												LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
-												ON b.`user_id` = ".$db->qstr($proxy_id)."
-												AND b.`app_id` IN (".AUTH_APP_IDS_STRING.")
-												LEFT JOIN `community_members` AS c
-												ON c.`proxy_id` = ".$db->qstr($proxy_id)."
-												AND c.`community_id` = ".$db->qstr($COMMUNITY_ID)."
-												WHERE a.`id` = ".$db->qstr($proxy_id);
-										$result	= $db->GetRow($query);
-										if($result) {
-											if((int) $result["cmember_id"]) {
-												if(@$db->AutoExecute("community_members", array("member_active" => 1), "UPDATE", "`cmember_id` = ".$db->qstr((int) $result["cmember_id"]))) {
-													if ($MAILING_LISTS["active"]) {
-														$mail_list->add_member($proxy_id, ((bool)$result["member_acl"]));
-													}
-													$member_add_success++;
-												} else {
-													$member_add_failure++;
-													application_error("error", "Unable to activate a deactivated member. Database said: ".$db->ErrorMsg());
-												}
-											} else {
 												$PROCESSED = array();
-												$PROCESSED["community_id"]	= $COMMUNITY_ID;
-												$PROCESSED["proxy_id"]		= (int) $result["proxy_id"];
-												$PROCESSED["member_active"]	= 1;
-												$PROCESSED["member_joined"]	= time();
-												$PROCESSED["member_acl"]	= 0;
+												$PROCESSED["evaluation_id"]	= $EVALUATION_ID;
+												$PROCESSED["evaluator_type"]	= "proxy_id";
+												$PROCESSED["evaluator_value"]	= $proxy_id;
 
-												if(@$db->AutoExecute("community_members", $PROCESSED, "INSERT")) {
-													if ($MAILING_LISTS["active"]) {
-														$mail_list->add_member($proxy_id);
-													}
+												if(@$db->AutoExecute("evaluation_evaluators", $PROCESSED, "INSERT")) {
 													$member_add_success++;
 												} else {
 													$member_add_failure++;
-													application_error("error", "Unable to insert a new community member. Database said: ".$db->ErrorMsg());
+													application_error("error", "Unable to insert a new evaluator. Database said: ".$db->ErrorMsg());
 												}
-
-											}
-										}
 									}
 								}
 							}
 
+echo "______log______proxy_ids"."<br>";
+var_export($proxy_ids);
+echo "______log______"."member_add_success: ".$member_add_success."<br>";
+echo "______log______"."member_add_failure: ".$member_add_failure."<br>";
+
 							if($member_add_success) {
 								$SUCCESS++;
-								$SUCCESSSTR[] = "You have successfully added ".$member_add_success." new member".(($member_add_success != 1) ? "s" : "")." to this community.<br /><br />You will now be redirected back to the Manage Members page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/".$MODULE."?section=members&community=".$COMMUNITY_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
+								$SUCCESSSTR[] = "You have successfully added ".$member_add_success." new evaluators".(($member_add_success != 1) ? "s" : "")." to this community.<br /><br />You will now be redirected back to the Manage Evaluators page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/evaluations/scheduler?section=members&evaluation=".$EVALUATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
 
-								communities_log_history($COMMUNITY_ID, 0, $member_add_success, "community_history_add_members", 1);
+								communities_log_history($EVALUATION_ID, 0, $member_add_success, "community_history_add_members", 1);
 							}
 							if($member_add_failure) {
 								$NOTICE++;
-								$NOTICESTR[] = "Failed to add or update".$member_add_failure." member".(($member_add_failure != 1) ? "s" : "")." during this process. The MEdTech Unit has been informed of this error, please try again later.<br /><br />You will now be redirected back to the Manage Members page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/".$MODULE."?section=members&community=".$COMMUNITY_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
+								$NOTICESTR[] = "Failed to add or update".$member_add_failure." member".(($member_add_failure != 1) ? "s" : "")." during this process. The MEdTech Unit has been informed of this error, please try again later.<br /><br />You will now be redirected back to the Manage Evaluators page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/evaluations/scheduler?section=members&evaluation=".$EVALUATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
 							}
 							break;
 						case "admins" :
@@ -444,56 +424,56 @@ if($EVALUATION_ID) {
 								if((is_array($PROXY_IDS)) && (count($PROXY_IDS))) {
 									switch(strtolower($_POST["admin_action"])) {
 										case "delete" :
-											$query	= "DELETE FROM `community_members` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `proxy_id` IN ('".implode("', '", $PROXY_IDS)."') AND `member_acl` = '1'";
+											$query	= "DELETE FROM `evaluator_members` WHERE `community_id` = ".$db->qstr($EVALUATION_ID)." AND `proxy_id` IN ('".implode("', '", $PROXY_IDS)."') AND `member_acl` = '1'";
 											$result	= $db->Execute($query);
 											if(($result) && ($total_deleted = $db->Affected_Rows())) {
 												if ($MAILING_LISTS["active"]) {
-													$mail_list = new MailingList($COMMUNITY_ID);
+													$mail_list = new MailingList($EVALUATION_ID);
 													foreach ($PROXY_IDS as $proxy_id) {
 														$mail_list->deactivate_member($proxy_id);
 													}
 												}
 												$SUCCESS++;
-												$SUCCESSSTR[] = "You have successfully removed <strong>".$total_deleted." administrator".(($total_deleted != 1) ? "s" : "")."</strong> from the <strong>".html_encode($evaluation_details["community_title"])."</strong> community.<br /><br />You will now be redirected back to the Manage Members page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/".$MODULE."?section=members&community=".$COMMUNITY_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
+												$SUCCESSSTR[] = "You have successfully removed <strong>".$total_deleted." administrator".(($total_deleted != 1) ? "s" : "")."</strong> from the <strong>".html_encode($evaluation_details["community_title"])."</strong> community.<br /><br />You will now be redirected back to the Manage Members page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/evaluations/scheduler?section=members&evaluation=".$EVALUATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
 											} else {
 												$ERROR++;
 												$ERRORSTR[] = "There was a problem removing these community administrators from the system; the MEdTech Unit has been informed of this error, please try again later.";
 
-												application_log("error", "Unable to remove admins from community_id [".$COMMUNITY_ID."]. Database said: ".$db->ErrorMsg());
+												application_log("error", "Unable to remove admins from community_id [".$EVALUATION_ID."]. Database said: ".$db->ErrorMsg());
 											}
 											break;
 										case "deactivate" :
-											if(($db->AutoExecute("community_members", array("member_active" => 0, "member_acl" => 0), "UPDATE", "`community_id` = ".$db->qstr($COMMUNITY_ID)." AND `proxy_id` IN ('".implode("', '", $PROXY_IDS)."') AND `member_active` = '1' AND `member_acl` = '1'")) && ($total_updated = $db->Affected_Rows())) {
+											if(($db->AutoExecute("evaluator_members", array("member_active" => 0, "member_acl" => 0), "UPDATE", "`community_id` = ".$db->qstr($EVALUATION_ID)." AND `proxy_id` IN ('".implode("', '", $PROXY_IDS)."') AND `member_active` = '1' AND `member_acl` = '1'")) && ($total_updated = $db->Affected_Rows())) {
 												if ($MAILING_LISTS["active"]) {
-													$mail_list = new MailingList($COMMUNITY_ID);
+													$mail_list = new MailingList($EVALUATION_ID);
 													foreach ($PROXY_IDS as $proxy_id) {
 														$mail_list->deactivate_member($proxy_id);
 													}
 												}
 												$SUCCESS++;
-												$SUCCESSSTR[] = "You have successfully deactivated <strong>".$total_updated." administrator".(($total_updated != 1) ? "s" : "")."</strong> in the <strong>".html_encode($evaluation_details["community_title"])."</strong> community.<br /><br />You will now be redirected back to the Manage Members page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/".$MODULE."?section=members&community=".$COMMUNITY_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
+												$SUCCESSSTR[] = "You have successfully deactivated <strong>".$total_updated." administrator".(($total_updated != 1) ? "s" : "")."</strong> in the <strong>".html_encode($evaluation_details["community_title"])."</strong> community.<br /><br />You will now be redirected back to the Manage Members page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/evaluations/scheduler?section=members&evaluation=".$EVALUATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
 											} else {
 												$ERROR++;
 												$ERRORSTR[] = "There was a problem deactivating these community administrators in the system; the MEdTech Unit has been informed of this error, please try again later.";
 
-												application_log("error", "Unable to deactivate admins from community_id [".$COMMUNITY_ID."]. Database said: ".$db->ErrorMsg());
+												application_log("error", "Unable to deactivate admins from community_id [".$EVALUATION_ID."]. Database said: ".$db->ErrorMsg());
 											}
 											break;
 										case "demote" :
-											if(($db->AutoExecute("community_members", array("member_acl" => 0), "UPDATE", "`community_id` = ".$db->qstr($COMMUNITY_ID)." AND `proxy_id` IN ('".implode("', '", $PROXY_IDS)."') AND `member_active` = '1' AND `member_acl` = '1'")) && ($total_updated = $db->Affected_Rows())) {
+											if(($db->AutoExecute("evaluator_members", array("member_acl" => 0), "UPDATE", "`community_id` = ".$db->qstr($EVALUATION_ID)." AND `proxy_id` IN ('".implode("', '", $PROXY_IDS)."') AND `member_active` = '1' AND `member_acl` = '1'")) && ($total_updated = $db->Affected_Rows())) {
 												if ($MAILING_LISTS["active"]) {
-													$mail_list = new MailingList($COMMUNITY_ID);
+													$mail_list = new MailingList($EVALUATION_ID);
 													foreach ($PROXY_IDS as $proxy_id) {
 														$mail_list->demote_administrator($proxy_id);
 													}
 												}
 												$SUCCESS++;
-												$SUCCESSSTR[] = "You have successfully demoted <strong>".$total_updated." administrator".(($total_updated != 1) ? "s" : "")."</strong> to regular member status in the  <strong>".html_encode($evaluation_details["community_title"])."</strong> community. They will no longer be able to perform administrative functions.<br /><br />You will now be redirected back to the Manage Members page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/".$MODULE."?section=members&community=".$COMMUNITY_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
+												$SUCCESSSTR[] = "You have successfully demoted <strong>".$total_updated." administrator".(($total_updated != 1) ? "s" : "")."</strong> to regular member status in the  <strong>".html_encode($evaluation_details["community_title"])."</strong> community. They will no longer be able to perform administrative functions.<br /><br />You will now be redirected back to the Manage Members page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/evaluations/scheduler?section=members&evaluation=".$EVALUATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
 											} else {
 												$ERROR++;
 												$ERRORSTR[] = "There was a problem demoting these community administrators; the MEdTech Unit has been informed of this error, please try again later.";
 
-												application_log("error", "Unable to demote admins from community_id [".$COMMUNITY_ID."]. Database said: ".$db->ErrorMsg());
+												application_log("error", "Unable to demote admins from community_id [".$EVALUATION_ID."]. Database said: ".$db->ErrorMsg());
 											}
 											break;
 										default :
@@ -537,45 +517,45 @@ if($EVALUATION_ID) {
 								if((is_array($PROXY_IDS)) && (count($PROXY_IDS))) {
 									switch(strtolower($_POST["member_action"])) {
 										case "delete" :
-											$query	= "DELETE FROM `community_members` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `proxy_id` IN ('".implode("', '", $PROXY_IDS)."') AND `member_acl` = '0'";
+											$query	= "DELETE FROM `evaluator_members` WHERE `community_id` = ".$db->qstr($EVALUATION_ID)." AND `proxy_id` IN ('".implode("', '", $PROXY_IDS)."') AND `member_acl` = '0'";
 											$result	= $db->Execute($query);
 											if(($result) && ($total_deleted = $db->Affected_Rows())) {
 												if ($MAILING_LISTS["active"]) {
-													$mail_list = new MailingList($COMMUNITY_ID);
+													$mail_list = new MailingList($EVALUATION_ID);
 													foreach ($PROXY_IDS as $proxy_id) {
 														$mail_list->deactivate_member($proxy_id);
 													}
 												}
 												$SUCCESS++;
-												$SUCCESSSTR[] = "You have successfully removed <strong>".$total_deleted." member".(($total_deleted != 1) ? "s" : "")."</strong> from the <strong>".html_encode($evaluation_details["community_title"])."</strong> community.<br /><br />You will now be redirected back to the Manage Members page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/".$MODULE."?section=members&community=".$COMMUNITY_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
+												$SUCCESSSTR[] = "You have successfully removed <strong>".$total_deleted." member".(($total_deleted != 1) ? "s" : "")."</strong> from the <strong>".html_encode($evaluation_details["community_title"])."</strong> community.<br /><br />You will now be redirected back to the Manage Members page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/evaluations/scheduler?section=members&evaluation=".$EVALUATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
 											} else {
 												$ERROR++;
 												$ERRORSTR[] = "There was a problem removing these community members from the system; the MEdTech Unit has been informed of this error, please try again later.";
 
-												application_log("error", "Unable to remove members from community_id [".$COMMUNITY_ID."]. Database said: ".$db->ErrorMsg());
+												application_log("error", "Unable to remove members from community_id [".$EVALUATION_ID."]. Database said: ".$db->ErrorMsg());
 											}
 											break;
 										case "deactivate" :
-											if(($db->AutoExecute("community_members", array("member_active" => 0), "UPDATE", "`community_id` = ".$db->qstr($COMMUNITY_ID)." AND `proxy_id` IN ('".implode("', '", $PROXY_IDS)."') AND `member_active` = '1' AND `member_acl` = '0'")) && ($total_updated = $db->Affected_Rows())) {
+											if(($db->AutoExecute("evaluator_members", array("member_active" => 0), "UPDATE", "`community_id` = ".$db->qstr($EVALUATION_ID)." AND `proxy_id` IN ('".implode("', '", $PROXY_IDS)."') AND `member_active` = '1' AND `member_acl` = '0'")) && ($total_updated = $db->Affected_Rows())) {
 												if ($MAILING_LISTS["active"]) {
-													$mail_list = new MailingList($COMMUNITY_ID);
+													$mail_list = new MailingList($EVALUATION_ID);
 													foreach ($PROXY_IDS as $proxy_id) {
 														$mail_list->deactivate_member($proxy_id);
 													}
 												}
 												$SUCCESS++;
-												$SUCCESSSTR[] = "You have successfully deactivated <strong>".$total_updated." member".(($total_updated != 1) ? "s" : "")."</strong> in the <strong>".html_encode($evaluation_details["community_title"])."</strong> community.<br /><br />You will now be redirected back to the Manage Members page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/".$MODULE."?section=members&community=".$COMMUNITY_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
+												$SUCCESSSTR[] = "You have successfully deactivated <strong>".$total_updated." member".(($total_updated != 1) ? "s" : "")."</strong> in the <strong>".html_encode($evaluation_details["community_title"])."</strong> community.<br /><br />You will now be redirected back to the Manage Members page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/evaluations/scheduler?section=members&evaluation=".$EVALUATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
 											} else {
 												$ERROR++;
 												$ERRORSTR[] = "There was a problem deactivating these community members in the system; the MEdTech Unit has been informed of this error, please try again later.";
 
-												application_log("error", "Unable to deactivate members from community_id [".$COMMUNITY_ID."]. Database said: ".$db->ErrorMsg());
+												application_log("error", "Unable to deactivate members from community_id [".$EVALUATION_ID."]. Database said: ".$db->ErrorMsg());
 											}
 											break;
 										case "promote" :
-											if(($db->AutoExecute("community_members", array("member_acl" => 1), "UPDATE", "`community_id` = ".$db->qstr($COMMUNITY_ID)." AND `proxy_id` IN ('".implode("', '", $PROXY_IDS)."') AND `member_active` = '1' AND `member_acl` = '0'")) && ($total_updated = $db->Affected_Rows())) {
+											if(($db->AutoExecute("evaluator_members", array("member_acl" => 1), "UPDATE", "`community_id` = ".$db->qstr($EVALUATION_ID)." AND `proxy_id` IN ('".implode("', '", $PROXY_IDS)."') AND `member_active` = '1' AND `member_acl` = '0'")) && ($total_updated = $db->Affected_Rows())) {
 												if ($MAILING_LISTS["active"]) {
-													$mail_list = new MailingList($COMMUNITY_ID);
+													$mail_list = new MailingList($EVALUATION_ID);
 													if ($mail_list) {
 														foreach ($PROXY_IDS as $proxy_id) {
 															$mail_list->promote_administrator($proxy_id);
@@ -583,12 +563,12 @@ if($EVALUATION_ID) {
 													}
 												}
 												$SUCCESS++;
-												$SUCCESSSTR[] = "You have successfully promoted <strong>".$total_updated." member".(($total_updated != 1) ? "s" : "")."</strong> in the <strong>".html_encode($evaluation_details["community_title"])."</strong> community to community administrators. They will now be able to perform all of the same actions as you in this community.<br /><br />You will now be redirected back to the Manage Members page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/".$MODULE."?section=members&community=".$COMMUNITY_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
+												$SUCCESSSTR[] = "You have successfully promoted <strong>".$total_updated." member".(($total_updated != 1) ? "s" : "")."</strong> in the <strong>".html_encode($evaluation_details["community_title"])."</strong> community to community administrators. They will now be able to perform all of the same actions as you in this community.<br /><br />You will now be redirected back to the Manage Members page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/evaluations/scheduler?section=members&evaluation=".$EVALUATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
 											} else {
 												$ERROR++;
 												$ERRORSTR[] = "There was a problem promoting these community members; the MEdTech Unit has been informed of this error, please try again later.";
 
-												application_log("error", "Unable to promote members from community_id [".$COMMUNITY_ID."]. Database said: ".$db->ErrorMsg());
+												application_log("error", "Unable to promote members from community_id [".$EVALUATION_ID."]. Database said: ".$db->ErrorMsg());
 											}
 											break;
 										default :
@@ -633,7 +613,7 @@ if($EVALUATION_ID) {
 
 					break;
 				case 2 :
-					$ONLOAD[]		= "setTimeout('window.location=\\'".ENTRADA_URL."/".$MODULE."?section=members&community=".$COMMUNITY_ID."\\'', 5000)";
+					$ONLOAD[]		= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/evaluations/scheduler?section=members&evaluation=".$EVALUATION_ID."\\'', 5000)";
 
 					if($SUCCESS) {
 						echo display_success();
@@ -715,16 +695,16 @@ if($EVALUATION_ID) {
 						echo display_error();
 					}
 					?>
-<div class="tab-pane" id="community_members_div">
+<div class="tab-pane" id="evaluator_members_div">
 	<div class="tab-page members">
-		<h2 class="tab">Members</h2>
-		<h2 style="margin-top: 0px">Community Members</h2>
+		<h2 class="tab">Evaluators</h2>
+		<h2 style="margin-top: 0px">Evaluators</h2>
 							<?php
 							/**
 							 * Get the total number of results using the generated queries above and calculate the total number
 							 * of pages that are available based on the results per page preferences.
 							 */
-							$query	= "SELECT COUNT(*) AS `total_rows` FROM `community_members` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `member_active` = '1' AND `member_acl` = '0'";
+							$query	= "SELECT COUNT(*) AS `total_rows` FROM `evaluation_evaluators` WHERE `evaluation_id` = ".$db->qstr($EVALUATION_ID);
 							$result	= $db->GetRow($query);
 							if($result) {
 								$TOTAL_ROWS	= $result["total_rows"];
@@ -770,9 +750,6 @@ if($EVALUATION_ID) {
 
 							$PAGE_PREVIOUS	= (($PAGE_CURRENT > 1) ? ($PAGE_CURRENT - 1) : false);
 							$PAGE_NEXT		= (($PAGE_CURRENT < $TOTAL_PAGES) ? ($PAGE_CURRENT + 1) : false);
-							if ($MAILING_LISTS["active"]) {
-								$mail_list = new MailingList($COMMUNITY_ID);
-							}
 
 							/**
 							 * Provides the first parameter of MySQLs LIMIT statement by calculating which row to start results from.
@@ -780,15 +757,13 @@ if($EVALUATION_ID) {
 							$limit_parameter = (int) (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"] * $PAGE_CURRENT) - $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]);
 							$query		= "
 										SELECT a.*, b.`username`, b.`firstname`, b.`lastname`, b.`email`, c.`group`
-										FROM `community_members` AS a
+										FROM `evaluation_evaluators` AS a
 										LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
 										ON a.`proxy_id` = b.`id`
 										LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS c
 										ON c.`user_id` = b.`id`
 										AND c.`app_id` IN (".AUTH_APP_IDS_STRING.")
-										WHERE a.`community_id` = ".$db->qstr($COMMUNITY_ID)."
-										AND a.`member_active` = '1'
-										AND a.`member_acl` = '0'
+										WHERE a.`evaluation_id` = ".$db->qstr($EVALUATION_ID)."
 										GROUP BY b.`id`
 										ORDER BY %s
 										LIMIT %s, %s";
@@ -864,7 +839,7 @@ if($EVALUATION_ID) {
 							 * Get the total number of results using the generated queries above and calculate the total number
 							 * of pages that are available based on the results per page preferences.
 							 */
-							$query	= "SELECT COUNT(*) AS `total_rows` FROM `community_members` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `member_active` = '1' AND `member_acl` = '1'";
+							$query	= "SELECT COUNT(*) AS `total_rows` FROM `evaluator_members` WHERE `community_id` = ".$db->qstr($EVALUATION_ID)." AND `member_active` = '1' AND `member_acl` = '1'";
 							$result	= $db->GetRow($query);
 							if($result) {
 								$TOTAL_ROWS	= $result["total_rows"];
@@ -910,10 +885,10 @@ if($EVALUATION_ID) {
 							$limit_parameter = (int) (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"] * $PAGE_CURRENT) - $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]);
 							$query		= "
 										SELECT a.*, b.`username`, b.`firstname`, b.`lastname`, b.`email`
-										FROM `community_members` AS a
+										FROM `evaluator_members` AS a
 										LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
 										ON a.`proxy_id` = b.`id`
-										WHERE a.`community_id` = ".$db->qstr($COMMUNITY_ID)."
+										WHERE a.`community_id` = ".$db->qstr($EVALUATION_ID)."
 										AND a.`member_active` = '1'
 										AND a.`member_acl` = '1'
 										ORDER BY %s
@@ -980,15 +955,15 @@ if($EVALUATION_ID) {
 							} else {
 								echo display_notice(array("Your community has no administrators at this time; the MEdTech Unit has been informed of this error, please try again later."));
 
-								application_log("error", "Someone [".$_SESSION["details"]["id"]."] accessed the Manage Members page in a community [".$COMMUNITY_ID."] with no administrators present.");
+								application_log("error", "Someone [".$_SESSION["details"]["id"]."] accessed the Manage Members page in a community [".$EVALUATION_ID."] with no administrators present.");
 							}
 							?>
 	</div>
 	<div class="tab-page members">
-		<h2 class="tab">Add Members</h2>
-		<h2 style="margin-top: 0px">Add Members</h2>
-		<form action="<?php echo ENTRADA_URL."/".$MODULE."?".replace_query(array("section" => "members", "type" => "add", "step" => 2)); ?>" method="post">
-			<table style="margin-top: 10px; width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Add Member">
+		<h2 class="tab">Add Evaluators</h2>
+		<h2 style="margin-top: 0px">Add Evaluators</h2>
+		<form action="<?php echo ENTRADA_URL."/admin/evaluations/scheduler?".replace_query(array("section" => "members", "type" => "add", "step" => 2)); ?>" method="post">
+			<table style="margin-top: 10px; width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Add Evaluators">
 				<colgroup>
 					<col style="width: 45%" />
 					<col style="width: 10%" />
@@ -997,7 +972,7 @@ if($EVALUATION_ID) {
 				<tfoot>
 					<tr>
 						<td colspan="3" style="padding-top: 15px; text-align: right">
-							<input type="submit" class="button" value="Add Members" style="vertical-align: middle" />
+							<input type="submit" class="button" value="Add Evaluators" style="vertical-align: middle" />
 						</td>
 					</tr>
 				</tfoot>
@@ -1025,9 +1000,9 @@ if($EVALUATION_ID) {
 														/**
 														 * List everyone in the specific groups with the specific role combination. What a PITA.
 														 */
-															if(($evaluation_details["community_members"] != "") && ($community_members = @unserialize($evaluation_details["community_members"])) && (is_array($community_members)) && (count($community_members))) {
+															if(($evaluation_details["evaluator_members"] != "") && ($evaluator_members = @unserialize($evaluation_details["evaluator_members"])) && (is_array($evaluator_members)) && (count($evaluator_members))) {
 																$role_group_combinations = array();
-																foreach($community_members as $member_group) {
+																foreach($evaluator_members as $member_group) {
 																	if($member_group != "") {
 																		$tmp_build	= array();
 																		$role	= "";
@@ -1060,9 +1035,9 @@ if($EVALUATION_ID) {
 															}
 															break;
 														case 3 :	// Selected Community Registration
-															if(($evaluation_details["community_members"] != "") && ($community_members = @unserialize($evaluation_details["community_members"])) && (is_array($community_members)) && (count($community_members))) {
+															if(($evaluation_details["evaluator_members"] != "") && ($evaluator_members = @unserialize($evaluation_details["evaluator_members"])) && (is_array($evaluator_members)) && (count($evaluator_members))) {
 																$tmp_community_member_list = array();
-																$query		= "SELECT `proxy_id` FROM `community_members` WHERE `member_active` = '1' AND `community_id` IN ('".implode("', '", $community_members)."')";
+																$query		= "SELECT `proxy_id` FROM `evaluator_members` WHERE `member_active` = '1' AND `community_id` IN ('".implode("', '", $evaluator_members)."')";
 																$results	= $db->GetAll($query);
 																if($results) {
 																	foreach($results as $result) {
@@ -1117,7 +1092,7 @@ if($EVALUATION_ID) {
 													}
 
 													$current_member_list	= array();
-													$query		= "SELECT `proxy_id` FROM `community_members` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `member_active` = '1'";
+													$query		= "SELECT `proxy_id` FROM `evaluator_members` WHERE `community_id` = ".$db->qstr($EVALUATION_ID)." AND `member_active` = '1'";
 													$results	= $db->GetAll($query);
 													if($results) {
 														foreach($results as $result) {
@@ -1151,7 +1126,7 @@ if($EVALUATION_ID) {
 																}
 															}
 
-															echo lp_multiple_select_inline('community_members', $members, array(
+															echo lp_multiple_select_inline('evaluator_members', $members, array(
 															'width'	=>'100%',
 															'ajax'=>true,
 															'selectboxname'=>'group and role',
@@ -1165,13 +1140,13 @@ if($EVALUATION_ID) {
 													}
 													?>
 
-								<input class="multi-picklist" id="community_members" name="community_members" style="display: none;">
+								<input class="multi-picklist" id="evaluator_members" name="evaluator_members" style="display: none;">
 							</div>
 						</td>
 						<td style="vertical-align: top; padding-left: 20px;">
-							<input id="acc_community_members" style="display: none;" name="acc_community_members"/>
+							<input id="acc_evaluator_members" style="display: none;" name="acc_evaluator_members"/>
 							<h3>Members to be Added on Submission</h3>
-							<div id="community_members_list"></div>
+							<div id="evaluator_members_list"></div>
 						</td>
 				</tbody>
 			</table>
@@ -1226,13 +1201,13 @@ if($EVALUATION_ID) {
 			row.appendChild(new Element('td').update(option));
 			return table;
 		});
-		$('community_members_list').update(table);
-		ids[index] = $F('community_members').split(',').compact();
-		$('acc_community_members').value = ids.flatten().join(',');
+		$('evaluator_members_list').update(table);
+		ids[index] = $F('evaluator_members').split(',').compact();
+		$('acc_evaluator_members').value = ids.flatten().join(',');
 	}
 
 
-	$('community_members_select_filter').observe('keypress', function(event){
+	$('evaluator_members_select_filter').observe('keypress', function(event){
 	    if(event.keyCode == Event.KEY_RETURN) {
 	        Event.stop(event);
 	    }
@@ -1241,23 +1216,23 @@ if($EVALUATION_ID) {
 	//Reload the multiselect every time the category select box changes
 	var multiselect;
 
-	$('community_members_category_select').observe('change', function(event) {
-		if ($('community_members_category_select').selectedIndex != 0) {
-			$('community_members_scroll').update(new Element('div', {'style':'width: 100%; height: 100%; background: transparent url(<?php echo ENTRADA_URL;?>/images/loading.gif) no-repeat center'}));
+	$('evaluator_members_category_select').observe('change', function(event) {
+		if ($('evaluator_members_category_select').selectedIndex != 0) {
+			$('evaluator_members_scroll').update(new Element('div', {'style':'width: 100%; height: 100%; background: transparent url(<?php echo ENTRADA_URL;?>/images/loading.gif) no-repeat center'}));
 
 			//Grab the new contents
-			var updater = new Ajax.Updater('community_members_scroll', '<?php echo ENTRADA_URL."/communities?section=membersapi&action=memberlist";?>',{
+			var updater = new Ajax.Updater('evaluator_members_scroll', '<?php echo ENTRADA_URL."/admin/evaluations/scheduler?section=membersadd&action=memberlist";?>',{
 				method:'post',
 				parameters: {
-					'ogr':$F('community_members_category_select'),
-					'community_id':'<?php echo $COMMUNITY_ID;?>'
+					'ogr':$F('evaluator_members_category_select'),
+					'evaluation_id':'<?php echo $EVALUATION_ID;?>'
 				},
 				onSuccess: function(transport) {
 					//onSuccess fires before the update actually takes place, so just set a flag for onComplete, which takes place after the update happens
 					this.makemultiselect = true;
 				},
 				onFailure: function(transport){
-					$('community_members_scroll').update(new Element('div', {'class':'display-error'}).update('There was a problem communicating with the server. An administrator has been notified, please try again later.'));
+					$('evaluator_members_scroll').update(new Element('div', {'class':'display-error'}).update('There was a problem communicating with the server. An administrator has been notified, please try again later.'));
 				},
 				onComplete: function(transport) {
 					//Only if successful (the flag set above), regenerate the multiselect based on the new options
@@ -1265,13 +1240,13 @@ if($EVALUATION_ID) {
 						if(multiselect) {
 							multiselect.destroy();
 						}
-						multiselect = new Control.SelectMultiple('community_members','community_members_options',{
+						multiselect = new Control.SelectMultiple('evaluator_members','evaluator_members_options',{
 							labelSeparator: '; ',
 							checkboxSelector: 'table.select_multiple_table tr td.select_multiple_checkbox input[type=checkbox]',
 							categoryCheckboxSelector: 'table.select_multiple_table tr td.select_multiple_checkbox_category input[type=checkbox]',
 							nameSelector: 'table.select_multiple_table tr td.select_multiple_name label',
 							overflowLength: 70,
-							filter: 'community_members_select_filter',
+							filter: 'evaluator_members_select_filter',
 							afterCheck: function(element) {
 								var tr = $(element.parentNode.parentNode);
 								tr.removeClassName('selected');
@@ -1280,7 +1255,7 @@ if($EVALUATION_ID) {
 								}
 							},
 							updateDiv: function(options, isnew) {
-								updatePeopleList(options, $('community_members_category_select').selectedIndex);
+								updatePeopleList(options, $('evaluator_members_category_select').selectedIndex);
 							}
 						});
 					}
@@ -1294,7 +1269,7 @@ if($EVALUATION_ID) {
 					break;
 			}
 	} else {
-		application_log("error", "User tried to manage members of a community id [".$COMMUNITY_ID."] that does not exist or is not active in the system.");
+		application_log("error", "User tried to manage members of a community id [".$EVALUATION_ID."] that does not exist or is not active in the system.");
 
 		$ERROR++;
 		$ERRORSTR[] = "The community you are trying to manage members either does not exist in the system or has been deactived by an administrator.<br /><br />If you feel you are receiving this message in error, please contact the MEdTech Unit (page feedback on left) and we will investigate. The MEdTech Unit has automatically been informed that this error has taken place.";
@@ -1302,9 +1277,9 @@ if($EVALUATION_ID) {
 		echo display_error();
 	}
 } else {
-	application_log("error", "User tried to manage members a community without providing a community_id.");
+	application_log("error", "User tried to manage members a evaluation without providing a evaluation_id.");
 
-	header("Location: ".ENTRADA_URL."/communities");
+	header("Location: ".ENTRADA_URL."/admin/evaluations/scheduler");
 	exit;
 }
 ?>

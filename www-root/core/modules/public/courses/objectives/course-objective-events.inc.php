@@ -34,23 +34,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 	if ((isset($COURSE_ID) && $COURSE_ID) && (isset($OBJECTIVE_ID) && $OBJECTIVE_ID)) {
 		$BREADCRUMB[] = array("url" => ENTRADA_RELATIVE."/courses/objectives?section=course-objectives&cid=".$COURSE_ID, "title" => "Course Objectives");
 		$BREADCRUMB[] = array("url" => "", "title" => "Learning Events");
-		
-		/**
-		 * Update requested length of time to display.
-		 * Valid: day, week, month, year
-		 */
-		if (isset($_GET["dtype"])) {
-			if (in_array(trim($_GET["dtype"]), array("day", "week", "month", "year"))) {
-				$_SESSION[APPLICATION_IDENTIFIER]["objectives"]["dtype"] = trim($_GET["dtype"]);
-			}
-	
-			$_SERVER["QUERY_STRING"] = replace_query(array("dtype" => false));
-		} else {
-			if (!isset($_SESSION[APPLICATION_IDENTIFIER]["objectives"]["dtype"])) {
-				$_SESSION[APPLICATION_IDENTIFIER]["objectives"]["dtype"] = "week";
-			}
-		}
-	
+			
 		/**
 		 * Update requested timestamp to display.
 		 * Valid: Unix timestamp
@@ -86,16 +70,16 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 			}
 		}
 		
-		$display_duration = fetch_timestamps($_SESSION[APPLICATION_IDENTIFIER]["objectives"]["dtype"], $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dstamp"]);
-		
+		$display_duration = fetch_timestamps("academic", $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dstamp"]);
 		$query = "	SELECT `course_name` FROM `courses` WHERE `course_id` = ".$db->qstr($COURSE_ID);
 		$course_name = $db->GetOne($query);
-		$query = "	SELECT `objective_name` FROM `global_lu_objectives` WHERE `objective_id` = ".$db->qstr($OBJECTIVE_ID);
-		$objective_name = $db->GetOne($query);
-		if (isset($course_name) && $course_name && isset($objective_name) && $objective_name) {
+		$query = "	SELECT * FROM `global_lu_objectives` WHERE `objective_id` = ".$db->qstr($OBJECTIVE_ID);
+		$objective = $db->GetRow($query);
+		if (isset($course_name) && $course_name && isset($objective["objective_name"]) && $objective["objective_name"]) {
 			echo "<h1>".html_encode($course_name)."</h2>";
 
-			echo "<h2>Learning Events Associated with ".$objective_name."</h2>\n";
+			echo "<h2>".$objective["objective_name"]."</h2>\n";
+			echo "<div class=\"content-small\">".$objective["objective_description"]."</div><br/>";
 			$query = "	SELECT * FROM `event_objectives` AS a
 						JOIN `events` AS b
 						ON a.`event_id` = b.`event_id`
@@ -159,21 +143,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 			<div class="tableListTop">
 				<img src="<?php echo ENTRADA_URL; ?>/images/lecture-info.gif" width="15" height="15" alt="" title="" style="vertical-align: middle" />
 				<?php
-				switch ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["dtype"]) {
-					case "day" :
-						echo "Found ".count($event_objectives)." event".((count($event_objectives) != 1) ? "s" : "")." that take place on <strong>".date("D, M jS, Y", $display_duration["start"])."</strong>.\n";
-					break;
-					case "month" :
-						echo "Found ".count($event_objectives)." event".((count($event_objectives) != 1) ? "s" : "")." that take place during <strong>".date("F", $display_duration["start"])."</strong> of <strong>".date("Y", $display_duration["start"])."</strong>.\n";
-					break;
-					case "year" :
-						echo "Found ".count($event_objectives)." event".((count($event_objectives) != 1) ? "s" : "")." that take place during <strong>".date("Y", $display_duration["start"])."</strong>.\n";
-					break;
-					default :
-					case "week" :
-						echo "Found ".count($event_objectives)." event".((count($event_objectives) != 1) ? "s" : "")." from <strong>".date("D, M jS, Y", $display_duration["start"])."</strong> to <strong>".date("D, M jS, Y", $display_duration["end"])."</strong>.\n";
-					break;
-				}
+				echo "Found ".count($event_objectives)." event".((count($event_objectives) != 1) ? "s" : "")." that take place during the <strong>".date("Y", $display_duration["start"])."/".(date("Y", $display_duration["start"]) + 1)."</strong> academic year.\n";
 				?>
 			</div>
 			<table class="tableList" cellspacing="0" cellpadding="1" summary="List of Events">
@@ -212,26 +182,10 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 						<td colspan="4">	
 							<div class="display-notice" style="white-space: normal">
 								<h3>No Matching Events</h3>
-								There are no learning events scheduled
-								<?php
-								switch ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["dtype"]) {
-									case "day" :
-										echo "that take place on <strong>".date(DEFAULT_DATE_FORMAT, $display_duration["start"])."</strong>";
-									break;
-									case "month" :
-										echo "that take place during <strong>".date("F", $display_duration["start"])."</strong> of <strong>".date("Y", $display_duration["start"])."</strong>";
-									break;
-									case "year" :
-										echo "that take place during <strong>".date("Y", $display_duration["start"])."</strong>";
-									break;
-									default :
-									case "week" :
-										echo "from <strong>".date(DEFAULT_DATE_FORMAT, $display_duration["start"])."</strong> to <strong>".date(DEFAULT_DATE_FORMAT, $display_duration["end"])."</strong>";
-									break;
-								}
-								?> which are also in the [<?php echo $course_name; ?>] course and are linked to the [<?php echo $objective_name; ?>] objective.
+								There are no learning events scheduled from <strong><?php echo date(DEFAULT_DATE_FORMAT, $display_duration["start"])."</strong> to <strong>".date(DEFAULT_DATE_FORMAT, $display_duration["end"]); ?></strong>
+								which are also in the [<?php echo $course_name; ?>] course and are linked to the [<?php echo $objective["objective_name"]; ?>] objective.
 								<br /><br />
-								If this is unexpected, you can check to make sure that you are browsing the intended time period. For example, if you trying to browse <?php echo date("F", time()); ?> of <?php echo date("Y", time()); ?>, make sure that the results bar above says &quot;... takes place in <strong><?php echo date("F", time()); ?></strong> of <strong><?php echo date("Y", time()); ?></strong>
+								If this is unexpected, you can check to make sure that you are browsing the intended time period. For example, if you trying to browse during the <?php echo (date("Y", time()) - 3)."/".(date("Y", time()) - 2); ?> academic year, make sure that the results bar above says &quot;... take place during the <strong><?php echo (date("Y", time()) - 3)."/".(date("Y", time()) - 2); ?></strong> academic year.
 							</div>
 						</td>
 					</tr>

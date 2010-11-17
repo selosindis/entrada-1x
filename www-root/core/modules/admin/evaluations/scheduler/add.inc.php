@@ -406,6 +406,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 								</tr>
 							</table>
 						</td>
+                                                <td><input type="button" value="Proceed" class="button" onclick="javascript:search_grad_year()" style="background-image: url('<?php echo ENTRADA_URL; ?>/images/btn_bg.gif');" />
+                                                        </td>
 					</tr>
                                 </div>
 				</table>
@@ -413,8 +415,9 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 				<?php //eval_sche_evaluators_filter_controls("admin"); ?>
 			<script type="text/javascript">
                                 function search_grad_year(){
-                                    document.addEvaluationForm.action="<?php echo ENTRADA_URL; ?>/admin/evaluations/scheduler?section=add";
-                                    document.addEvaluationForm.submit();
+                                    alert("Fly....");
+                                    //document.addEvaluationForm.action="<?php echo ENTRADA_URL; ?>/admin/evaluations/scheduler?section=add";
+                                    //document.addEvaluationForm.submit();
                                 }
 
 				function selectEventAudienceOption(type) {

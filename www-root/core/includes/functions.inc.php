@@ -7960,7 +7960,7 @@ function events_output_filter_controls($module_type = "") {
 					<option value="eventtype">Event Type Filters</option>
 					<option value="clinical_presentation">Clinical Presentation Filters</option>
 				</select>
-				<span id="filter_options_loading" style="display:none;"><img src="<?php echo ENTRADA_URL."/images/indicator.gif"; ?>"> Loading ... </span>
+				<span id="filter_options_loading" style="display:none; vertical-align: middle"><img src="<?php echo ENTRADA_RELATIVE; ?>/images/indicator.gif" width="16" height="16" alt="Please Wait" title="" style="vertical-align: middle" /> Loading ... </span>
 				<span id="options_container"></span>
 				</form>
 				<script type="text/javascript">

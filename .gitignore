@@ -9,3 +9,4 @@ www-root/calendars/*
 www-root/syllabi/*
 *.buildpath
 *.eclipse.*.prefs
+*.swp

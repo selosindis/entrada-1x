@@ -116,7 +116,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 	 * of pages that are available based on the results per page preferences.
 	 */
 
-	$query	= "	SELECT COUNT(*) AS `total_rows` FROM `quizzes`";
+	$query	= "	SELECT COUNT(*) AS `total_rows`
+				FROM `quizzes` AS a
+				LEFT JOIN `quiz_contacts` AS b
+				ON a.`quiz_id` = b.`quiz_id`
+				WHERE b.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]);
 	$result = $db->GetRow($query);
 	if ($result) {
 		$total_rows	= $result["total_rows"];
@@ -129,8 +133,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 			$total_pages = (int) ($total_rows / $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) + 1;
 		}
 	} else {
-		$total_rows		= 0;
-		$total_pages	= 1;
+		$total_rows = 0;
+		$total_pages = 1;
 	}
 
 	/**
@@ -146,8 +150,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 		$page_current = 1;
 	}
 
-	$page_previous	= (($page_current > 1) ? ($page_current - 1) : false);
-	$page_next		= (($page_current < $total_pages) ? ($page_current + 1) : false);
+	$page_previous = (($page_current > 1) ? ($page_current - 1) : false);
+	$page_next = (($page_current < $total_pages) ? ($page_current + 1) : false);
 	?>
 	
 	<h1><?php echo $MODULES[strtolower($MODULE)]["title"]; ?></h1>
@@ -156,6 +160,34 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 		<ul class="page-action">
 			<li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=add">Create New Quiz</a></li>
 		</ul>
+
+		<?php
+		if ($total_pages > 1) {
+			echo "<form action=\"".ENTRADA_URL."/admin/".$MODULE."\" method=\"get\" id=\"pageSelector\">\n";
+			echo "<span style=\"width: 20px; vertical-align: middle; margin-right: 3px; text-align: left\">\n";
+			if ($page_previous) {
+				echo "<a href=\"".ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("pv" => $page_previous))."\"><img src=\"".ENTRADA_URL."/images/record-previous-on.gif\" border=\"0\" width=\"11\" height=\"11\" alt=\"Back to page ".$page_previous.".\" title=\"Back to page ".$page_previous.".\" style=\"vertical-align: middle\" /></a>\n";
+			} else {
+				echo "<img src=\"".ENTRADA_URL."/images/record-previous-off.gif\" width=\"11\" height=\"11\" alt=\"\" title=\"\" style=\"vertical-align: middle\" />";
+			}
+			echo "</span>";
+			echo "<span style=\"vertical-align: middle\">\n";
+			echo "<select name=\"pv\" onchange=\"$('pageSelector').submit();\"".(($total_pages <= 1) ? " disabled=\"disabled\"" : "").">\n";
+			for($i = 1; $i <= $total_pages; $i++) {
+				echo "<option value=\"".$i."\"".(($i == $page_current) ? " selected=\"selected\"" : "").">".(($i == $page_current) ? " Viewing" : "Jump To")." Page ".$i."</option>\n";
+			}
+			echo "</select>\n";
+			echo "</span>\n";
+			echo "<span style=\"width: 20px; vertical-align: middle; margin-left: 3px; text-align: right\">\n";
+			if ($page_current < $total_pages) {
+				echo "<a href=\"".ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("pv" => $page_next))."\"><img src=\"".ENTRADA_URL."/images/record-next-on.gif\" border=\"0\" width=\"11\" height=\"11\" alt=\"Forward to page ".$page_next.".\" title=\"Forward to page ".$page_next.".\" style=\"vertical-align: middle\" /></a>";
+			} else {
+				echo "<img src=\"".ENTRADA_URL."/images/record-next-off.gif\" width=\"11\" height=\"11\" alt=\"\" title=\"\" style=\"vertical-align: middle\" />";
+			}
+			echo "</span>\n";
+			echo "</form>\n";
+		}
+		?>
 	</div>
 	<div class="clear"></div>
 	<?php
@@ -218,6 +250,29 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 		</table>
 		</form>
 		<?php
+		/**
+		 * Sidebar item that will provide another method for sorting, ordering, etc.
+		 */
+		$sidebar_html  = "Sort columns:\n";
+		$sidebar_html .= "<ul class=\"menu\">\n";
+		$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) == "title") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/quizzes?".replace_query(array("sb" => "title"))."\" title=\"Sort by Title\">by title</a></li>\n";
+		$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) == "status") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/quizzes?".replace_query(array("sb" => "status"))."\" title=\"Sort by Phase\">by status</a></li>\n";
+		$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) == "questions") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/quizzes?".replace_query(array("sb" => "questions"))."\" title=\"Sort by Teacher\">by questions</a></li>\n";
+		$sidebar_html .= "</ul>\n";
+		$sidebar_html .= "Order columns:\n";
+		$sidebar_html .= "<ul class=\"menu\">\n";
+		$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) == "asc") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/quizzes?".replace_query(array("so" => "asc"))."\" title=\"Ascending Order\">in ascending order</a></li>\n";
+		$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) == "desc") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/quizzes?".replace_query(array("so" => "desc"))."\" title=\"Descending Order\">in descending order</a></li>\n";
+		$sidebar_html .= "</ul>\n";
+		$sidebar_html .= "Rows per page:\n";
+		$sidebar_html .= "<ul class=\"menu\">\n";
+		$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) == "5") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/quizzes?".replace_query(array("pp" => "5"))."\" title=\"Display 5 Rows Per Page\">5 rows per page</a></li>\n";
+		$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) == "15") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/quizzes?".replace_query(array("pp" => "15"))."\" title=\"Display 15 Rows Per Page\">15 rows per page</a></li>\n";
+		$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) == "25") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/quizzes?".replace_query(array("pp" => "25"))."\" title=\"Display 25 Rows Per Page\">25 rows per page</a></li>\n";
+		$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) == "50") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/quizzes?".replace_query(array("pp" => "50"))."\" title=\"Display 50 Rows Per Page\">50 rows per page</a></li>\n";
+		$sidebar_html .= "</ul>\n";
+
+		new_sidebar_item("Sort Results", $sidebar_html, "sort-results", "open");
 	} else {
 		?>
 		<div class="display-generic">

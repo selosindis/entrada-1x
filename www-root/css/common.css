@@ -2385,8 +2385,11 @@ border-bottom:1px #A9D392 solid;
 ul.faculty-list,ul.page-action {
 list-style-type:none;
 white-space:nowrap;
-margin:0;
-padding:4px 0 0;
+margin:0 0 10px 0;
+}
+
+ul.page-action li.last {
+padding-right: 0;
 }
 
 .pointer,table.select_multiple_table label {
@@ -2436,7 +2439,7 @@ div#associated_faculty_list ul.menu li.community,div#associated_student_list ul.
 cursor:move;
 }
 
-ul#faculty_list,ul#student_list,ul#director_list,ul#coordinator_list, ul#individual_list {
+ul#faculty_list,ul#student_list,ul#director_list,ul#coordinator_list,ul#individual_list,ul#author_list {
 width:250px;
 overflow:none;
 position:relative;

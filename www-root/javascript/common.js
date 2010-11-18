@@ -442,6 +442,10 @@ document.observe("dom:loaded", function() {
 	$$('h2','.collapsable').each(function (el) {
 		new CollapseHeadings(el);
 	});
+
+	$$('ul.page-action li:last').each(function (el) {
+		el.addClassName('last');
+	});
 });
 
 // Used on the Adding / Editing Calendar Events page.

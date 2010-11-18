@@ -139,59 +139,53 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 			new_sidebar_item("Rows per page", $sidebar_html, "sort-results", "open");
 			
 			objectives_output_calendar_controls();
-			?>
-			<div class="tableListTop">
-				<img src="<?php echo ENTRADA_URL; ?>/images/lecture-info.gif" width="15" height="15" alt="" title="" style="vertical-align: middle" />
-				<?php
-				echo "Found ".count($event_objectives)." event".((count($event_objectives) != 1) ? "s" : "")." that take place during the <strong>".date("Y", $display_duration["start"])."/".(date("Y", $display_duration["start"]) + 1)."</strong> academic year.\n";
-				?>
-			</div>
-			<table class="tableList" cellspacing="0" cellpadding="1" summary="List of Events">
-				<colgroup>
-					<col class="modified" />
-					<col class="date" />
-					<col class="date-smallest" />
-					<col class="title" />
-				</colgroup>
-				<thead>
-					<tr>
-						<td class="modified">&nbsp;</td>
-						<td class="date">Event Date</td>
-						<td class="date-smallest">Objective Name</td>
-						<td class="title">Event Title</td>
-					</tr>
-				</thead>
-				<tbody>
-			<?php
 			if ($event_objectives) {
-				for ($i = (($page_current - 1) * $_SESSION[APPLICATION_IDENTIFIER]["objectives"]["pp"]); $i < (($page_current * $_SESSION[APPLICATION_IDENTIFIER]["objectives"]["pp"]) < count($event_objectives) ? ($page_current * $_SESSION[APPLICATION_IDENTIFIER]["objectives"]["pp"]) : count($event_objectives)); $i++) {
-					echo "<tr>\n";
-					echo "	<td>&nbsp;</td>\n";
-					echo "	<td>".date(DEFAULT_DATE_FORMAT, $event_objectives[$i]["event_start"])."</td>\n";
-					echo "	<td>".$event_objectives[$i]["objective_name"]."</td>\n";
-					echo "	<td><a href=\"".ENTRADA_URL."/events?id=".$event_objectives[$i]["event_id"]."\">".html_encode($event_objectives[$i]["event_title"])."</a></td>\n";
-					echo "</tr>\n";
-				}
-				?>
-				</tbody>
-			</table>					
-			<?php
+			?>
+				<div class="tableListTop">
+					<img src="<?php echo ENTRADA_URL; ?>/images/lecture-info.gif" width="15" height="15" alt="" title="" style="vertical-align: middle" />
+					<?php
+					echo "Found ".count($event_objectives)." event".((count($event_objectives) != 1) ? "s" : "")." that take place during the <strong>".date("Y", $display_duration["start"])."/".(date("Y", $display_duration["start"]) + 1)."</strong> academic year.\n";
+					?>
+				</div>
+				<table class="tableList" cellspacing="0" cellpadding="1" summary="List of Events">
+					<colgroup>
+						<col class="modified" />
+						<col class="date" />
+						<col class="date-smallest" />
+						<col class="title" />
+					</colgroup>
+					<thead>
+						<tr>
+							<td class="modified">&nbsp;</td>
+							<td class="date">Event Date</td>
+							<td class="date-smallest">Objective Name</td>
+							<td class="title">Event Title</td>
+						</tr>
+					</thead>
+					<tbody>
+					<?php
+					for ($i = (($page_current - 1) * $_SESSION[APPLICATION_IDENTIFIER]["objectives"]["pp"]); $i < (($page_current * $_SESSION[APPLICATION_IDENTIFIER]["objectives"]["pp"]) < count($event_objectives) ? ($page_current * $_SESSION[APPLICATION_IDENTIFIER]["objectives"]["pp"]) : count($event_objectives)); $i++) {
+						echo "<tr>\n";
+						echo "	<td>&nbsp;</td>\n";
+						echo "	<td>".date(DEFAULT_DATE_FORMAT, $event_objectives[$i]["event_start"])."</td>\n";
+						echo "	<td>".$event_objectives[$i]["objective_name"]."</td>\n";
+						echo "	<td><a href=\"".ENTRADA_URL."/events?id=".$event_objectives[$i]["event_id"]."\">".html_encode($event_objectives[$i]["event_title"])."</a></td>\n";
+						echo "</tr>\n";
+					}
+					?>
+					</tbody>
+				</table>					
+				<?php
 			} else {
 				?>
-					<tr>
-						<td colspan="4">	
-							<div class="display-notice" style="white-space: normal">
-								<h3>No Matching Events</h3>
-								There are no learning events scheduled from <strong><?php echo date(DEFAULT_DATE_FORMAT, $display_duration["start"])."</strong> to <strong>".date(DEFAULT_DATE_FORMAT, $display_duration["end"]); ?></strong>
-								which are also in the [<?php echo $course_name; ?>] course and are linked to the [<?php echo $objective["objective_name"]; ?>] objective.
-								<br /><br />
-								If this is unexpected, you can check to make sure that you are browsing the intended time period. For example, if you trying to browse during the <?php echo (date("Y", time()) - 3)."/".(date("Y", time()) - 2); ?> academic year, make sure that the results bar above says &quot;... take place during the <strong><?php echo (date("Y", time()) - 3)."/".(date("Y", time()) - 2); ?></strong> academic year.
-							</div>
-						</td>
-					</tr>
-				</tbody>
-			</table>				
-			<?php
+				<div class="display-notice" style="white-space: normal">
+					<h3>No Matching Events</h3>
+					There are no learning events scheduled from <strong><?php echo date(DEFAULT_DATE_FORMAT, $display_duration["start"])."</strong> to <strong>".date(DEFAULT_DATE_FORMAT, $display_duration["end"]); ?></strong>
+					which are also in the [<?php echo $course_name; ?>] course and are linked to the [<?php echo $objective["objective_name"]; ?>] objective.
+					<br /><br />
+					If this is unexpected, you can check to make sure that you are browsing the intended time period. For example, if you trying to browse during the <?php echo (date("Y", time()) - 3)."/".(date("Y", time()) - 2); ?> academic year, make sure that the results bar above says &quot;... take place during the <strong><?php echo (date("Y", time()) - 3)."/".(date("Y", time()) - 2); ?></strong> academic year.
+				</div>			
+				<?php
 			}
 		} else {
 			$ERROR++;

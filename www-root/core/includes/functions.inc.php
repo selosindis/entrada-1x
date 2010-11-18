@@ -8762,7 +8762,8 @@ function event_objectives_in_list($objectives, $parent_id, $edit_text = false, $
 				}
 			}
 			if ($top) {
-				$output .= "<h2>".ucwords($display_importance)." Objectives</h2>";
+				$output .= "<h2".($iterated ? " class=\"collapsed\"" : "")." title=\"".ucwords($display_importance)." Objectives\">".ucwords($display_importance)." Objectives</h2>\n";
+				$output .= "<div id=\"".($display_importance)."-objectives\">\n";
 			}		
 		foreach ($objectives as $objective_id => $objective) {
 			$count++;
@@ -8771,7 +8772,7 @@ function event_objectives_in_list($objectives, $parent_id, $edit_text = false, $
 					$importance = (($objective["primary"]) ? 1 : ($objective["secondary"] ? 2 : ($objective["tertiary"] ? 3 : $importance)));
 
 					if (((($objective[$display_importance]) || ($parent_active)) && (count($objective["parent_ids"]) > 2))) {
-					$output .= "<li".((($edit_text) || (isset($objective["event_objective"]) && $objective["event_objective"])) && (count($objective["parent_ids"]) > 2) ? " class=\"".($importance == 2 ? "secondary" : ($importance == 3 ? "tertiary" : "primary"))."\"" : "").">\n";
+					$output .= "<li>\n";
 					if ($edit_text && !$course) {
 						$output .= "<div id=\"objective_table_".$objective_id."\" class=\"content-small\" style=\"color: #000\">\n";
 						$output .= "	<input type=\"checkbox\" name=\"checked_objectives[".$objective_id."]\" id=\"objective_checkbox_".$objective_id."\"".($course ? " disabled=\"true\" checked=\"checked\"" : " onclick=\"if (this.checked) { $('objective_table_".$objective_id."_details').show(); $('objective_text_".$objective_id."').focus(); } else { $('objective_table_".$objective_id."_details').hide(); }\"".($objective["event_objective"] ? " checked=\"checked\"" : ""))." style=\"float: left;\" value=\"1\" />\n";
@@ -8805,7 +8806,10 @@ function event_objectives_in_list($objectives, $parent_id, $edit_text = false, $
 				}
 			}
 		}
-			$iterated = true;
+			$iterated = true;		
+			if ($top) {
+				$output .= "</div>\n";
+			}
 		} while ((($display_importance != "tertiary") && ($display_importance != "secondary" || $active["tertiary"]) && ($display_importance != "primary" || $active["secondary"] || $active["tertiary"])) && $top);
 		if ($top) {
 			$output .= "</ul>\n";

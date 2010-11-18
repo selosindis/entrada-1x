@@ -216,16 +216,16 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 						}
 					}
 					if (!$additional_level) {
-						echo "<li>\n<a title=\"View events in this course related to this objective.\" href=\"".ENTRADA_URL."/courses/objectives?section=course-objective-events&cid=".$COURSE_ID."&oid=".$objective["objective"]["objective_id"]."\">".$objective["objective"]["objective_name"]."</a><div class=\"content-small\">".(isset($objective["objective"]["objective_details"]) && $objective["objective"]["objective_details"] ? $objective["objective"]["objective_details"] : $objective["objective"]["objective_description"])."</div>\n";
+						echo "<li>\n<a title=\"View events in this course related to this objective.\" href=\"".ENTRADA_URL."/courses/objectives?section=course-objective-events&cid=".$COURSE_ID."&oid=".$objective["objective"]["objective_id"]."\">".$objective["objective"]["objective_name"]."</a><div style=\"color: #000;\" class=\"content-small\">".(isset($objective["objective"]["objective_details"]) && $objective["objective"]["objective_details"] ? $objective["objective"]["objective_details"] : $objective["objective"]["objective_description"])."</div>\n";
 					} else {
 						$letter = preg_split('/[\.]+[\d]?/', $objective["objective"]["objective_name"]);
-						echo "<li>\n".$letter[1].". <span class=\"content-small\">".(isset($objective["objective"]["objective_details"]) && $objective["objective"]["objective_details"] ? $objective["objective"]["objective_details"] : $objective["objective"]["objective_description"])." [<a title=\"View events in this course related to this objective.\" href=\"".ENTRADA_URL."/courses/objectives?section=course-objective-events&cid=".$COURSE_ID."&oid=".$objective["objective"]["objective_id"]."\"><img src=\"".ENTRADA_URL."/images/takenotice.gif\" />".$objective["objective"]["objective_name"]."</a>]</span>\n";
+						echo "<li>\n".$letter[1].". <span style=\"color: #000;\" class=\"content-small\">".(isset($objective["objective"]["objective_details"]) && $objective["objective"]["objective_details"] ? $objective["objective"]["objective_details"] : $objective["objective"]["objective_description"])." <a class=\"content-small external\" title=\"View events in this course related to this objective.\" href=\"".ENTRADA_URL."/courses/objectives?section=course-objective-events&cid=".$COURSE_ID."&oid=".$objective["objective"]["objective_id"]."\">".$objective["objective"]["objective_name"]."</a></span>\n";
 					}
 					if (isset($objective["children"]) && count($objective["children"])) {
 						echo "<ul class=\"pad\">\n";
 						foreach ($objective["children"] as $objective_child) {
 							$child_letter = preg_split('/[\.]+[\d]?/', $objective_child["objective_name"]);
-							echo "<li class=\"pad-top\">".$child_letter[1].". <span class=\"content-small\">".(isset($objective_child["objective_details"]) && $objective_child["objective_details"] ? $objective_child["objective_details"] : $objective_child["objective_description"])." [<a title=\"View events in this course related to this objective.\" href=\"".ENTRADA_URL."/courses/objectives?section=course-objective-events&cid=".$COURSE_ID."&oid=".$objective_child["objective_id"]."\"><img style=\"border: none;\" src=\"".ENTRADA_URL."/images/takenotice.gif\" />".$objective_child["objective_name"]."</a>]</span></li>\n";
+							echo "<li class=\"pad-top\">".$child_letter[1].". <span style=\"color: #000;\" class=\"content-small\">".(isset($objective_child["objective_details"]) && $objective_child["objective_details"] ? $objective_child["objective_details"] : $objective_child["objective_description"])." <a class=\"content-small external\" title=\"View events in this course related to this objective.\" href=\"".ENTRADA_URL."/courses/objectives?section=course-objective-events&cid=".$COURSE_ID."&oid=".$objective_child["objective_id"]."\">".$objective_child["objective_name"]."</a></span></li>\n";
 						}
 						echo "</ul>\n";
 					}

@@ -70,7 +70,7 @@ $message		= rawurldecode(clean_input($parameters[5], array("trim", "notags")));
 $file_type		= clean_input($parameters[6], array("nows", "lower"));
 
 $text			= new TextImage($message, $file_type, $width, $height);
-$text->font		= ENTRADA_ABSOLUTE."/includes/fonts/Vera.ttf";
+$text->font		= ENTRADA_ABSOLUTE."/core/fonts/Vera.ttf";
 $text->rotation	= $rotation;
 $text->padding	= $padding;
 $text->draw();

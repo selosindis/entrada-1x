@@ -111,7 +111,7 @@ if (!defined("IN_EVALUATIONS")) {
 	 * Output the filter HTML.
 	 */
 	//eval_sche_output_filter_controls("admin");
-        eval_sche_evaluators_filter_controls("admin");
+        //eval_sche_evaluators_filter_controls("admin");
 
 	if ($ENTRADA_ACL->amIAllowed("event", "create", false)) {
 		?>

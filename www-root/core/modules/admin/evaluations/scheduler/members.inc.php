@@ -17,10 +17,10 @@
  *
  * This file is used to add events to the entrada.events table.
  *
- * @author Organisation: Queen's University
+ * @author Organisation: University of Calgary
  * @author Unit: School of Medicine
- * @author Developer: Matt Simpson <matt.simpson@queensu.ca>
- * @copyright Copyright 2008 Queen's University. All Rights Reserved.
+ * @author Developer:  Howard Lu <yhlu@ucalgary.ca>
+ * @copyright Copyright 2010 University of Calgary. All Rights Reserved.
  *
 */
 if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
@@ -57,9 +57,6 @@ if((isset($_GET["type"])) && ($tmp_action_type = clean_input(trim($_GET["type"])
 }
 unset($tmp_action_type);
 
-echo "______log______"."EVALUATION_ID: ".$EVALUATION_ID."<br>";
-echo "______log______"."Step: ".$STEP."<br>";
-echo "______log______"."ACTION_TYPE: ".$ACTION_TYPE."<br>";
 /**
  * Ensure that the selected community is editable by you.
  */
@@ -368,7 +365,6 @@ if($EVALUATION_ID) {
 								}
 
 								foreach($proxy_ids as $proxy_id) {
-echo "______log______Into 1"."<br>";
 									if(($proxy_id = (int) trim($proxy_id))) {
 												$PROCESSED = array();
 												$PROCESSED["evaluation_id"]	= $EVALUATION_ID;
@@ -385,14 +381,9 @@ echo "______log______Into 1"."<br>";
 								}
 							}
 
-echo "______log______proxy_ids"."<br>";
-var_export($proxy_ids);
-echo "______log______"."member_add_success: ".$member_add_success."<br>";
-echo "______log______"."member_add_failure: ".$member_add_failure."<br>";
-
 							if($member_add_success) {
 								$SUCCESS++;
-								$SUCCESSSTR[] = "You have successfully added ".$member_add_success." new evaluators".(($member_add_success != 1) ? "s" : "")." to this community.<br /><br />You will now be redirected back to the Manage Evaluators page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/evaluations/scheduler?section=members&evaluation=".$EVALUATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
+								$SUCCESSSTR[] = "You have successfully added ".$member_add_success." new evaluators".(($member_add_success != 1) ? "s" : "")." to this evaluation.<br /><br />You will now be redirected back to the Manage Evaluators page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/evaluations/scheduler?section=members&evaluation=".$EVALUATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
 
 								communities_log_history($EVALUATION_ID, 0, $member_add_success, "community_history_add_members", 1);
 							}
@@ -517,7 +508,7 @@ echo "______log______"."member_add_failure: ".$member_add_failure."<br>";
 								if((is_array($PROXY_IDS)) && (count($PROXY_IDS))) {
 									switch(strtolower($_POST["member_action"])) {
 										case "delete" :
-											$query	= "DELETE FROM `evaluator_members` WHERE `community_id` = ".$db->qstr($EVALUATION_ID)." AND `proxy_id` IN ('".implode("', '", $PROXY_IDS)."') AND `member_acl` = '0'";
+											$query	= "DELETE FROM `evaluation_evaluators` WHERE `evaluation_id` = ".$db->qstr($EVALUATION_ID)." AND `evaluator_value` IN ('".implode("', '", $PROXY_IDS)."')";
 											$result	= $db->Execute($query);
 											if(($result) && ($total_deleted = $db->Affected_Rows())) {
 												if ($MAILING_LISTS["active"]) {
@@ -527,48 +518,12 @@ echo "______log______"."member_add_failure: ".$member_add_failure."<br>";
 													}
 												}
 												$SUCCESS++;
-												$SUCCESSSTR[] = "You have successfully removed <strong>".$total_deleted." member".(($total_deleted != 1) ? "s" : "")."</strong> from the <strong>".html_encode($evaluation_details["community_title"])."</strong> community.<br /><br />You will now be redirected back to the Manage Members page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/evaluations/scheduler?section=members&evaluation=".$EVALUATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
+												$SUCCESSSTR[] = "You have successfully removed <strong>".$total_deleted." evaluator".(($total_deleted != 1) ? "s" : "")."</strong> from the <strong>".html_encode($evaluation_details["community_title"])."</strong> evaluation.<br /><br />You will now be redirected back to the Manage Members page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/evaluations/scheduler?section=members&evaluation=".$EVALUATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
 											} else {
 												$ERROR++;
-												$ERRORSTR[] = "There was a problem removing these community members from the system; the MEdTech Unit has been informed of this error, please try again later.";
+												$ERRORSTR[] = "There was a problem removing these evaluation evaluators from the system; the MEdTech Unit has been informed of this error, please try again later.";
 
-												application_log("error", "Unable to remove members from community_id [".$EVALUATION_ID."]. Database said: ".$db->ErrorMsg());
-											}
-											break;
-										case "deactivate" :
-											if(($db->AutoExecute("evaluator_members", array("member_active" => 0), "UPDATE", "`community_id` = ".$db->qstr($EVALUATION_ID)." AND `proxy_id` IN ('".implode("', '", $PROXY_IDS)."') AND `member_active` = '1' AND `member_acl` = '0'")) && ($total_updated = $db->Affected_Rows())) {
-												if ($MAILING_LISTS["active"]) {
-													$mail_list = new MailingList($EVALUATION_ID);
-													foreach ($PROXY_IDS as $proxy_id) {
-														$mail_list->deactivate_member($proxy_id);
-													}
-												}
-												$SUCCESS++;
-												$SUCCESSSTR[] = "You have successfully deactivated <strong>".$total_updated." member".(($total_updated != 1) ? "s" : "")."</strong> in the <strong>".html_encode($evaluation_details["community_title"])."</strong> community.<br /><br />You will now be redirected back to the Manage Members page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/evaluations/scheduler?section=members&evaluation=".$EVALUATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
-											} else {
-												$ERROR++;
-												$ERRORSTR[] = "There was a problem deactivating these community members in the system; the MEdTech Unit has been informed of this error, please try again later.";
-
-												application_log("error", "Unable to deactivate members from community_id [".$EVALUATION_ID."]. Database said: ".$db->ErrorMsg());
-											}
-											break;
-										case "promote" :
-											if(($db->AutoExecute("evaluator_members", array("member_acl" => 1), "UPDATE", "`community_id` = ".$db->qstr($EVALUATION_ID)." AND `proxy_id` IN ('".implode("', '", $PROXY_IDS)."') AND `member_active` = '1' AND `member_acl` = '0'")) && ($total_updated = $db->Affected_Rows())) {
-												if ($MAILING_LISTS["active"]) {
-													$mail_list = new MailingList($EVALUATION_ID);
-													if ($mail_list) {
-														foreach ($PROXY_IDS as $proxy_id) {
-															$mail_list->promote_administrator($proxy_id);
-														}
-													}
-												}
-												$SUCCESS++;
-												$SUCCESSSTR[] = "You have successfully promoted <strong>".$total_updated." member".(($total_updated != 1) ? "s" : "")."</strong> in the <strong>".html_encode($evaluation_details["community_title"])."</strong> community to community administrators. They will now be able to perform all of the same actions as you in this community.<br /><br />You will now be redirected back to the Manage Members page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/evaluations/scheduler?section=members&evaluation=".$EVALUATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
-											} else {
-												$ERROR++;
-												$ERRORSTR[] = "There was a problem promoting these community members; the MEdTech Unit has been informed of this error, please try again later.";
-
-												application_log("error", "Unable to promote members from community_id [".$EVALUATION_ID."]. Database said: ".$db->ErrorMsg());
+												application_log("error", "Unable to remove evaluators from evaluation_id [".$EVALUATION_ID."]. Database said: ".$db->ErrorMsg());
 											}
 											break;
 										default :
@@ -584,7 +539,7 @@ echo "______log______"."member_add_failure: ".$member_add_failure."<br>";
 								}
 							} else {
 								$ERROR++;
-								$ERRORSTR[] = "Unrecognized Member Action error; the MEdTech Unit has been informed of this error. Please try again later.";
+								$ERRORSTR[] = "Unrecognized Evaluator Action error; the MEdTech Unit has been informed of this error. Please try again later.";
 
 								application_log("error", "The provided action_type [".$ACTION_TYPE."] is invalid.");
 							}
@@ -759,7 +714,7 @@ echo "______log______"."member_add_failure: ".$member_add_failure."<br>";
 										SELECT a.*, b.`username`, b.`firstname`, b.`lastname`, b.`email`, c.`group`
 										FROM `evaluation_evaluators` AS a
 										LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
-										ON a.`proxy_id` = b.`id`
+										ON a.`evaluator_value` = b.`id`
 										LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS c
 										ON c.`user_id` = b.`id`
 										AND c.`app_id` IN (".AUTH_APP_IDS_STRING.")
@@ -770,6 +725,8 @@ echo "______log______"."member_add_failure: ".$member_add_failure."<br>";
 
 							$query		= sprintf($query, $SORT_BY, $limit_parameter, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]);
 							$results	= $db->GetAll($query);
+                                                        //echo "______log______"."query: ".$query."<br>";
+                                                        //echo "______log______"."total_rows: ".$results["total_rows"]."<br>";
 
 							if($results) {
 								if(($TOTAL_PAGES > 1) && ($member_pagination)) {
@@ -778,21 +735,20 @@ echo "______log______"."member_add_failure: ".$member_add_failure."<br>";
 									echo "</div>\n";
 								}
 								?>
-								<form action="<?php echo ENTRADA_URL."/".$MODULE."?".replace_query(array("section" => "members", "type" => "members", "step" => 2)); ?>" method="post">
+								<form action="<?php echo ENTRADA_URL."/admin/evaluations/scheduler?".replace_query(array("section" => "members", "type" => "members", "step" => 2)); ?>" method="post">
 								<table class="tableList" style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Community Members">
 								<colgroup>
 									<col class="modified" />
 									<col class="date" />
 									<col class="title" />
-									<col class="type" />
 									<col class="list-status" />
 								</colgroup>
 								<thead>
 									<tr>
 										<td class="modified">&nbsp;</td>
-										<td class="date<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "date") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo public_order_link("date", "Member Since"); ?></td>
-										<td class="title<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "name") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo public_order_link("name", "Member Name"); ?></td>
-										<td class="type<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "type") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo public_order_link("type", "Member Type"); ?></td>
+										<td class="date<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "date") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo public_order_link("date", "Evaluator Since"); ?></td>
+										<td class="title<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "name") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo public_order_link("name", "Evaluator Name"); ?></td>
+										<td class="type<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "type") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo public_order_link("type", "Evaluator Type"); ?></td>
 										<td class="list-status<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "list-status") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>">Mail List Status</td>
 									</tr>
 								</thead>
@@ -801,10 +757,8 @@ echo "______log______"."member_add_failure: ".$member_add_failure."<br>";
 										<td colspan="2" style="padding-top: 15px">&nbsp;</td>
 										<td style="padding-top: 15px; text-align: right" colspan="3">
 											<select id="member_action" name="member_action" style="vertical-align: middle; width: 200px">
-												<option value="">-- Select Member Action --</option>
-												<option value="delete">1. Remove members</option>
-												<option value="deactivate">2. Deactivate / ban members</option>
-												<option value="promote">3. Promote to administrator</option>
+												<option value="">-- Select Evaluator Action --</option>
+												<option value="delete">1. Remove evaluators</option>
 											</select>
 											<input type="submit" class="button-sm" value="Proceed" style="vertical-align: middle" />
 										</td>
@@ -814,10 +768,10 @@ echo "______log______"."member_add_failure: ".$member_add_failure."<br>";
 								<?php
 								foreach($results as $result) {
 									echo "<tr>\n";
-									echo "	<td><input type=\"checkbox\" name=\"member_proxy_ids[]\" value=\"".(int) $result["proxy_id"]."\" /></td>\n";
+									echo "	<td><input type=\"checkbox\" name=\"member_proxy_ids[]\" value=\"".(int) $result["evaluator_value"]."\" /></td>\n";
 									echo "	<td>".date(DEFAULT_DATE_FORMAT, $result["member_joined"])."</td>\n";
 									echo "	<td><a href=\"".ENTRADA_URL."/people?profile=".html_encode($result["username"])."\"".(($result["proxy_id"] == $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]) ? " style=\"font-weight: bold" : "")."\">".html_encode($result["firstname"]." ".$result["lastname"])."</a></td>\n";
-									echo "	<td>".($result["group"] == "guest" ? "Guest" : "Member" )."</td>\n";
+									echo "	<td>".date(DEFAULT_DATE_FORMAT, $result["evaluator_type"])."</td>\n";
 									echo "	<td class=\"list-status\"><img src=\"images/".(($MAILING_LISTS["active"]) && $mail_list->users[($result["proxy_id"])]["member_active"] ? "list-status-online.gif" : "list-status-offline.gif")."\" /></td>\n";
 									echo "</tr>\n";
 								}
@@ -827,135 +781,7 @@ echo "______log______"."member_add_failure: ".$member_add_failure."<br>";
 								</form>
 								<?php
 							} else {
-								echo display_notice(array("Your community has no members at this time, you should add some people by clicking the &quot;<strong>Add Members</strong>&quot; tab."));
-							}
-							?>
-	</div>
-	<div class="tab-page members">
-		<h2 class="tab">Administrators</h2>
-		<h2 style="margin-top: 0px">Community Administrators</h2>
-							<?php
-							/**
-							 * Get the total number of results using the generated queries above and calculate the total number
-							 * of pages that are available based on the results per page preferences.
-							 */
-							$query	= "SELECT COUNT(*) AS `total_rows` FROM `evaluator_members` WHERE `community_id` = ".$db->qstr($EVALUATION_ID)." AND `member_active` = '1' AND `member_acl` = '1'";
-							$result	= $db->GetRow($query);
-							if($result) {
-								$TOTAL_ROWS	= $result["total_rows"];
-
-								if($TOTAL_ROWS <= $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) {
-									$TOTAL_PAGES = 1;
-								} elseif (($TOTAL_ROWS % $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) == 0) {
-									$TOTAL_PAGES = (int) ($TOTAL_ROWS / $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]);
-								} else {
-									$TOTAL_PAGES = (int) ($TOTAL_ROWS / $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) + 1;
-								}
-
-								if($TOTAL_PAGES > 1) {
-									$admin_pagination = new Pagination($PAGE_CURRENT, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"], $TOTAL_ROWS, ENTRADA_URL."/".$MODULE, replace_query(), "apv");
-								} else {
-									$admin_pagination = false;
-								}
-
-							} else {
-								$TOTAL_ROWS		= 0;
-								$TOTAL_PAGES	= 1;
-							}
-
-							/**
-							 * Check if pv variable is set and see if it's a valid page, other wise page 1 it is.
-							 */
-							if(isset($_GET["apv"])) {
-								$PAGE_CURRENT = (int) trim($_GET["apv"]);
-
-								if(($PAGE_CURRENT < 1) || ($PAGE_CURRENT > $TOTAL_PAGES)) {
-									$PAGE_CURRENT = 1;
-								}
-							} else {
-								$PAGE_CURRENT = 1;
-							}
-
-							$PAGE_PREVIOUS	= (($PAGE_CURRENT > 1) ? ($PAGE_CURRENT - 1) : false);
-							$PAGE_NEXT		= (($PAGE_CURRENT < $TOTAL_PAGES) ? ($PAGE_CURRENT + 1) : false);
-
-							/**
-							 * Provides the first parameter of MySQLs LIMIT statement by calculating which row to start results from.
-							 */
-							$limit_parameter = (int) (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"] * $PAGE_CURRENT) - $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]);
-							$query		= "
-										SELECT a.*, b.`username`, b.`firstname`, b.`lastname`, b.`email`
-										FROM `evaluator_members` AS a
-										LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
-										ON a.`proxy_id` = b.`id`
-										WHERE a.`community_id` = ".$db->qstr($EVALUATION_ID)."
-										AND a.`member_active` = '1'
-										AND a.`member_acl` = '1'
-										ORDER BY %s
-										LIMIT %s, %s";
-
-							// Ensure that if the user has sorted on Member Type in the members tab and has moved to the administrators tab
-							// that the member type sort is removed as this is not included in the above administrator query.
-							$SORT_BY = str_replace("CASE c.`group` WHEN 'guest' THEN 1 WHEN '%' THEN 2 END ASC", "a.`member_joined`", $SORT_BY);
-
-							$query		= sprintf($query, $SORT_BY, $limit_parameter, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]);
-							$results	= $db->GetAll($query);
-							if($results) {
-								if(($TOTAL_PAGES > 1) && ($admin_pagination)) {
-									echo "<div id=\"pagination-links\">\n";
-									echo "Pages: ".$admin_pagination->GetPageLinks();
-									echo "</div>\n";
-								}
-								?>
-		<form action="<?php echo ENTRADA_URL."/".$MODULE."?".replace_query(array("section" => "members", "type" => "admins", "step" => 2)); ?>" method="post">
-			<table class="tableList" style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Community Administrators">
-				<colgroup>
-					<col class="modified" />
-					<col class="date" />
-					<col class="title" />
-					<col class="list-status" />
-				</colgroup>
-				<thead>
-					<tr>
-						<td class="modified">&nbsp;</td>
-						<td class="date<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "date") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo public_order_link("date", "Member Since"); ?></td>
-						<td class="title<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "name") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo public_order_link("name", "Member Name"); ?></td>
-						<td class="list-status<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "list-status") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo public_order_link("list-status", "Mail List Status"); ?></td>
-					</tr>
-				</thead>
-				<tfoot>
-					<tr>
-						<td colspan="2" style="padding-top: 15px">&nbsp;</td>
-						<td style="padding-top: 15px; text-align: right" colspan="2">
-							<select id="admin_action" name="admin_action" style="vertical-align: middle; width: 200px">
-								<option value="">-- Select Admin Action --</option>
-								<option value="delete">1. Remove administrators</option>
-								<option value="deactivate">2. Deactivate / ban administrators</option>
-								<option value="demote">3. Demote to members</option>
-							</select>
-							<input type="submit" class="button-sm" value="Proceed" style="vertical-align: middle" />
-						</td>
-					</tr>
-				</tfoot>
-				<tbody>
-											<?php
-											foreach($results as $result) {
-												echo "<tr>\n";
-												echo "	<td><input type=\"checkbox\" name=\"admin_proxy_ids[]\" value=\"".(int) $result["proxy_id"]."\"".(($result["proxy_id"] == $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]) ? " onclick=\"this.checked = false\" disabled=\"disabled\"" : "")." /></td>\n";
-												echo "	<td>".date(DEFAULT_DATE_FORMAT, $result["member_joined"])."</td>\n";
-												echo "	<td><a href=\"".ENTRADA_URL."/people?profile=".html_encode($result["username"])."\"".(($result["proxy_id"] == $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]) ? " style=\"font-weight: bold" : "")."\">".html_encode($result["firstname"]." ".$result["lastname"])."</a></td>\n";
-												echo "	<td class=\"list-status\"><img src=\"images/".(($MAILING_LISTS["active"]) && $mail_list->users[($result["proxy_id"])]["member_active"] ? "list-status-online.gif" : "list-status-offline.gif")."\" /></td>\n";
-												echo "</tr>\n";
-											}
-											?>
-				</tbody>
-			</table>
-		</form>
-							<?php
-							} else {
-								echo display_notice(array("Your community has no administrators at this time; the MEdTech Unit has been informed of this error, please try again later."));
-
-								application_log("error", "Someone [".$_SESSION["details"]["id"]."] accessed the Manage Members page in a community [".$EVALUATION_ID."] with no administrators present.");
+								echo display_notice(array("Your evaluation has no evaluators at this time, you should add some people by clicking the &quot;<strong>Add Evaluators</strong>&quot; tab."));
 							}
 							?>
 	</div>
@@ -980,7 +806,7 @@ echo "______log______"."member_add_failure: ".$member_add_failure."<br>";
 					<tr>
 						<td colspan="3" style="vertical-align: top">
 								<p>
-									If you would like to add users that already exist in the system to this community yourself, you can do so by clicking the checkbox beside their name from the list below.
+									If you would like to add users that already exist in the system to this evaluation yourself, you can do so by clicking the checkbox beside their name from the list below.
 									Once you have reviewed the list at the bottom and are ready, click the <strong>Proceed</strong> button at the bottom to complete the process.
 								</p>
 						</td>
@@ -1145,43 +971,11 @@ echo "______log______"."member_add_failure: ".$member_add_failure."<br>";
 						</td>
 						<td style="vertical-align: top; padding-left: 20px;">
 							<input id="acc_evaluator_members" style="display: none;" name="acc_evaluator_members"/>
-							<h3>Members to be Added on Submission</h3>
+							<h3>Evaluators to be Added on Submission</h3>
 							<div id="evaluator_members_list"></div>
 						</td>
 				</tbody>
 			</table>
-		</form>
-	</div>
-	<div class="tab-page members">
-		<h2 class="tab">Add Guest Members</h2>
-		<h2 style="margin-top: 0px">Add Guest Members</h2>
-		<form action="<?php echo ENTRADA_URL."/".$MODULE."?".replace_query(array("section" => "members", "type" => "addguest", "step" => 2)); ?>" method="post">
-			<div class="member-add-type" id="guest-member-add-type">
-				<p>If you aren't able to find the user you wish to add on the Add Members tab, or you would like to add a new user to the system and register them in this community, you can do so by entering their e-mail, first name, and last name below.
-					Click the <strong>Add New Member</strong> button when you are done and the system will email the new user with their account information.</p>
-				<table cellspacing="0" cellpadding="2" border="0" summary="Adding Event" style="width: 100%;">
-					<colgroup>
-						<col style="width: 20%;"/>
-						<col style="width: 80%;"/>
-					</colgroup>
-					<div id="validation-message"></div>
-					<tr>
-						<td><label id="guest_first_text" class="form-required" for="guest_member_first">First Name</label></td>
-						<td><input id="guest_member_first" type="text" style="width: 203px;" maxlength="255" value="<?php echo $PROCESSED['firstname'];?>" name="firstname"/></td>
-					</tr>
-					<tr>
-						<td><label id="guest_last_text" class="form-required" for="guest_member_last">Last Name</label></td>
-						<td><input id="guest_member_last" type="text" style="width: 203px;" maxlength="255" value="<?php echo $PROCESSED['lastname'];?>" name="lastname"/></td>
-					</tr>
-					<tr>
-						<td><label id="guest_email_text" class="form-required" for="guest_email">E-mail Address</label></td>
-						<td><input id="guest_member_email" type="text" style="width: 203px;" maxlength="255" value="<?php echo $PROCESSED['email'];?>" name="email"/></td>
-					</tr>
-					<tr>
-						<td>&nbsp;</td>
-						<td><input type="submit" class="button" value="Add Guest">
-				</table>
-			</div>
 		</form>
 	</div>
 </div>

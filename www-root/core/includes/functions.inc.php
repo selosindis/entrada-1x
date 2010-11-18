@@ -11676,14 +11676,14 @@ function eval_sche_fetch_filtered_evals() {
 	 * of pages that are available based on the results per page preferences.
 	 */
 	$result_count = $db->GetRow($query_count);
-//var_export ($_SESSION[APPLICATION_IDENTIFIER]);
-//var_export ($_SESSION[APPLICATION_IDENTIFIER]);
-//var_export ("_______________evaluation:_______________");
-//var_export($_SESSION[APPLICATION_IDENTIFIER]["evaluations"]);
-//print_r($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["evaluations"]);
-//print_r($_SESSION[APPLICATION_IDENTIFIER][$modules]);
-//        application_log("error", "$result_count=".$result_count);
-//echo "______log______".'result_count[total_rows]: '. $result_count["total_rows"]."<br>";
+        //var_export ($_SESSION[APPLICATION_IDENTIFIER]);
+        //var_export ($_SESSION[APPLICATION_IDENTIFIER]);
+        //var_export ("_______________evaluation:_______________");
+        //var_export($_SESSION[APPLICATION_IDENTIFIER]["evaluations"]);
+        //print_r($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["evaluations"]);
+        //print_r($_SESSION[APPLICATION_IDENTIFIER][$modules]);
+        //        application_log("error", "$result_count=".$result_count);
+        //echo "______log______".'result_count[total_rows]: '. $result_count["total_rows"]."<br>";
         //echo "______log______".'result_count: '.$result_count."<br>";
 	if ($result_count) {
 		$output["total_rows"] = (int) $result_count["total_rows"];
@@ -11699,10 +11699,6 @@ function eval_sche_fetch_filtered_evals() {
 		$output["total_rows"] = 0;
 		$output["total_pages"] = 1;
 	}
-        echo "______log______".time()."_______<br><br>";
-        echo "______log______".'output[total_rows]: '. $output["total_rows"]."<br>";
-        echo "______log______".'output[total_pages]: '. $output["total_pages"]."<br>";
-        echo "______log______".'[evaluations][sb]: '. $_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["sb"]."<br>";
 	/**
 	 * Check if pv variable is set and see if it's a valid page, other wise page 1 it is.
 	 */
@@ -11742,7 +11738,7 @@ function eval_sche_fetch_filtered_evals() {
 	$query_evaluations = sprintf($query_evaluations, $sort_by, $limit_parameter, $_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["pp"]);
 	$scheduler_evaluations = $db->GetAll($query_evaluations);
 
-        echo "______log______".'query_evaluations: '. $query_evaluations."<br>";
+        //echo "______log______".'query_evaluations: '. $query_evaluations."<br>";
 	if ($scheduler_evaluations) {
 		$output["evaluations"] = $scheduler_evaluations;
 	}

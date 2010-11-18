@@ -8888,17 +8888,13 @@ function event_objectives_in_list($objectives, $parent_id, $edit_text = false, $
 				if (((($objective["primary"]) || ($objective["secondary"]) || ($objective["tertiary"]) || ($parent_active)) && (count($objective["parent_ids"]) > 2))) {
 					$output .= "<li".((($edit_text) || (isset($objective["event_objective"]) && $objective["event_objective"])) && (count($objective["parent_ids"]) > 2) ? " class=\"".($importance == 2 ? "secondary" : ($importance == 3 ? "tertiary" : "primary"))."\"" : "").">\n";
 					if ($edit_text && !$course) {
-						$output .= "<div id=\"objective_table_".$objective_id."\">\n";
-						$output .= "	<input type=\"checkbox\" name=\"checked_objectives[".$objective_id."]\" id=\"objective_checkbox_".$objective_id."\"".($course ? " disabled=\"true\" checked=\"checked\"" : " onclick=\"if (this.checked) { $('c_objective_".$objective_id."').enable(); } else { $('c_objective_".$objective_id."').disable(); }\"".($objective["event_objective"] ? " checked=\"checked\"" : ""))." style=\"float: left;\" value=\"1\" />\n";
-						$output .= "	<label for=\"objective_checkbox_".$objective_id."\" class=\"heading\">".$objective["name"]."</label>\n";
-						$output .= "	<div class=\"content-small\" style=\"padding-left: 25px;\">".$objective["description"]."</div>\n";
+						$output .= "<div id=\"objective_table_".$objective_id."\" class=\"content-small\" style=\"color: #000\">\n";
+						$output .= "	<input type=\"checkbox\" name=\"checked_objectives[".$objective_id."]\" id=\"objective_checkbox_".$objective_id."\"".($course ? " disabled=\"true\" checked=\"checked\"" : " onclick=\"if (this.checked) { $('objective_table_".$objective_id."_details').show(); $('objective_text_".$objective_id."').focus(); } else { $('objective_table_".$objective_id."_details').hide(); }\"".($objective["event_objective"] ? " checked=\"checked\"" : ""))." style=\"float: left;\" value=\"1\" />\n";
+						$output .= "	<div style=\"padding-left: 25px;\"><label for=\"objective_checkbox_".$objective_id."\">".$objective["description"]." <a class=\"external content-small\" href=\"".ENTRADA_RELATIVE."/courses/objectives?section=objective-details&amp;oid=".$objective_id."\">".$objective["name"]."</a></label></div>\n";
 						$output .= "</div>\n";
-						$output .= "<div style=\"padding-left: 25px; margin: 5px 0 5px 0\">\n";
-						$output .= "	<input type=\"checkbox\" id=\"c_objective_".$objective_id."\" name=\"course_objectives[".$objective_id."]\" onclick=\"objectiveClick(this, '".$objective_id."', '".str_replace("'", "\'", $objective["objective_details"])."')\"".((isset($objective["objective_details"]) && $objective["objective_details"] && $course) || (isset($objective["event_objective_details"]) && $objective["event_objective_details"] && !$course && $objective["event_objective"]) ? "checked=\"checked\"" : (!$course && !$objective["event_objective"] ? " disabled=\"disabled\"" : ""))." value=\"1\" />\n";
-						$output .= "	<label for=\"c_objective_".$objective_id."\" class=\"content-small\" id=\"objective_".$objective_id."_append\" style=\"vertical-align: middle;\">Add additional detail to this curriculum objective.</label>\n";
-						if (isset($objective["event_objective_details"]) && $objective["event_objective_details"] && $objective["event_objective"]) {
-							$output .= "<textarea name=\"objective_text[".$objective_id."]\" id=\"objective_text_".$objective_id."\" class=\"expandable objective\">".html_encode($objective["event_objective_details"])."</textarea>";
-						}
+						$output .= "<div id=\"objective_table_".$objective_id."_details\" style=\"padding-left: 25px; margin-top: 5px".($objective["event_objective"] ? "" : "; display: none")."\">\n";
+						$output .= "	<label for=\"c_objective_".$objective_id."\" class=\"content-small\" id=\"objective_".$objective_id."_append\" style=\"vertical-align: middle;\">Provide your sessional free-text objective below as it relates to this curricular objective.</label>\n";
+						$output .= "	<textarea name=\"objective_text[".$objective_id."]\" id=\"objective_text_".$objective_id."\" class=\"expandable\">".(isset($objective["event_objective_details"]) ? html_encode($objective["event_objective_details"]) : "")."</textarea>";
 						$output .= "</div>\n";
 					} elseif ($edit_text) {
 						$edit_ajax[] = $objective_id;

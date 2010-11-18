@@ -1247,17 +1247,14 @@ vertical-align: middle;
 }
 
 ul.objective-list li.primary {
-border-left:5px solid #5A9B36;
 background-color:#FFF;
 }
 
 ul.objective-list li.secondary {
-border-left:5px solid #E5C203;
 background-color:#FFF;
 }
 
 ul.objective-list li.tertiary {
-border-left:5px solid #D3490C;
 background-color:#FFF;
 }
 

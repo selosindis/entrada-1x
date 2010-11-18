@@ -8722,10 +8722,27 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 	return $output;
 }
 
-function event_objectives_in_list($objectives, $parent_id, $edit_text = false, $parent_active = false, $importance = 1, $course = true, $top = true) {
+function event_objectives_in_list($objectives, $parent_id, $edit_text = false, $parent_active = false, $importance = 1, $course = true, $top = true, $display_importance = "primary") {
 	global $edit_ajax;
 	$output = "";
-
+	$active = array("primary" => false, "secondary" => false, "tertiary" => false);
+	if ($top) {
+		if (!empty($objectives["primary_ids"])) {
+			$active["primary"] = true; echo "primary\n<br/>";
+		} elseif ($display_importance == "primary") {
+			$display_importance == "secondary";
+		}
+		if (!empty($objectives["secondary_ids"])) {
+			$active["secondary"] = true; echo "secondary\n<br/>";
+		} elseif ($display_importance == "secondary") {
+			$display_importance == "tertiary";
+		}
+		if (!empty($objectives["tertiary_ids"])) {
+			$active["tertiary"] = true; echo "tertiary\n<br/>";
+		}
+		$objectives = $objectives["objectives"];
+	}
+	
 	if (!is_array($edit_ajax)) {
 		$edit_ajax = array();
 	}
@@ -8735,13 +8752,25 @@ function event_objectives_in_list($objectives, $parent_id, $edit_text = false, $
 		if ($top) {
 			$output	= "\n<ul class=\"objective-list\" id=\"objective_".$parent_id."_list\"".($parent_id == 1 ? " style=\"padding-left: 0; margin-top: 0\"" : "").">\n";
 		}
+		$iterated = false;
+		do {
+			if ($iterated) {
+				if ($display_importance == "primary" && $active["secondary"]) {
+					$display_importance = "secondary";
+				} elseif ((($display_importance == "secondary" || $display_importance == "primary") && $active["tertiary"])) {
+					$display_importance = "tertiary";
+				}
+			}
+			if ($top) {
+				$output .= "<h2>".ucwords($display_importance)." Objectives</h2>";
+			}		
 		foreach ($objectives as $objective_id => $objective) {
 			$count++;
 
-			if (($objective["parent"] == $parent_id) && (($objective["objective_children"]) || ($objective["primary"]) || ($objective["secondary"]) || ($objective["tertiary"]) || ($parent_active))) {
-				$importance = (($objective["primary"]) ? 1 : ($objective["secondary"] ? 2 : ($objective["tertiary"] ? 3 : $importance)));
+				if (($objective["parent"] == $parent_id) && (($objective["objective_children"]) || ($objective[$display_importance]) || ($parent_active))) {
+					$importance = (($objective["primary"]) ? 1 : ($objective["secondary"] ? 2 : ($objective["tertiary"] ? 3 : $importance)));
 
-				if (((($objective["primary"]) || ($objective["secondary"]) || ($objective["tertiary"]) || ($parent_active)) && (count($objective["parent_ids"]) > 2))) {
+					if (((($objective[$display_importance]) || ($parent_active)) && (count($objective["parent_ids"]) > 2))) {
 					$output .= "<li".((($edit_text) || (isset($objective["event_objective"]) && $objective["event_objective"])) && (count($objective["parent_ids"]) > 2) ? " class=\"".($importance == 2 ? "secondary" : ($importance == 3 ? "tertiary" : "primary"))."\"" : "").">\n";
 					if ($edit_text && !$course) {
 						$output .= "<div id=\"objective_table_".$objective_id."\" class=\"content-small\" style=\"color: #000\">\n";
@@ -8772,10 +8801,12 @@ function event_objectives_in_list($objectives, $parent_id, $edit_text = false, $
 					$output .= "</li>\n";
 
 				} else {
-					$output .= event_objectives_in_list($objectives, $objective_id, $edit_text, ((($objective["primary"]) || ($objective["secondary"]) || ($objective["tertiary"])) ? true : false), $importance, $course, false);
+						$output .= event_objectives_in_list($objectives, $objective_id, $edit_text, (($objective[$display_importance]) ? true : false), $importance, $course, false, $display_importance);
 				}
 			}
 		}
+			$iterated = true;
+		} while ((($display_importance != "tertiary") && ($display_importance != "secondary" || $active["tertiary"]) && ($display_importance != "primary" || $active["secondary"] || $active["tertiary"])) && $top);
 		if ($top) {
 			$output .= "</ul>\n";
 		}

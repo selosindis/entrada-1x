@@ -1120,7 +1120,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								echo "	<td style=\"vertical-align: top\">\n";
 								echo "		<div id=\"course-objectives-section\">\n";
 								echo "			<strong>The learner will be able to:</strong>\n";
-								echo			event_objectives_in_list($curriculum_objectives_list["objectives"], 1, true, false, 1, false);
+								echo			event_objectives_in_list($curriculum_objectives_list, 1, true, false, 1, false);
 								echo "		</div>\n";
 								echo "	</td>\n";
 								echo "</tr>\n";

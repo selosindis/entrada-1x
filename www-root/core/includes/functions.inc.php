@@ -8728,17 +8728,17 @@ function event_objectives_in_list($objectives, $parent_id, $edit_text = false, $
 	$active = array("primary" => false, "secondary" => false, "tertiary" => false);
 	if ($top) {
 		if (!empty($objectives["primary_ids"])) {
-			$active["primary"] = true; echo "primary\n<br/>";
+			$active["primary"] = true;
 		} elseif ($display_importance == "primary") {
 			$display_importance == "secondary";
 		}
 		if (!empty($objectives["secondary_ids"])) {
-			$active["secondary"] = true; echo "secondary\n<br/>";
+			$active["secondary"] = true;
 		} elseif ($display_importance == "secondary") {
 			$display_importance == "tertiary";
 		}
 		if (!empty($objectives["tertiary_ids"])) {
-			$active["tertiary"] = true; echo "tertiary\n<br/>";
+			$active["tertiary"] = true;
 		}
 		$objectives = $objectives["objectives"];
 	}

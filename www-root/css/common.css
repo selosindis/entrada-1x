@@ -103,6 +103,13 @@ font-style:normal;
 padding:0 4px;
 }
 
+.external {
+background-position: 0% 60%;
+background-repeat: no-repeat;
+padding-left: 12px;
+background-image: url(../images/external.gif);
+}
+
 form {
 display:inline;
 }

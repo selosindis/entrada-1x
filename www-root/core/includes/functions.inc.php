@@ -2074,7 +2074,7 @@ function clean_input($string, $rules = array()) {
 				break;
 				case "htmlspecialchars" : // Returns the output of the htmlspecialchars() function.
 				case "specialchars" :
-					$string = htmlspecialchars($string, ENT_QUOTES, DEFAULT_CHARSET);
+					$string = htmlspecialchars($string, ENT_QUOTES, DEFAULT_CHARSET, false);
 				break;
 				case "htmlbrackets" :	// Converts only brackets into entities.
 					$string = str_replace(array("<", ">"), array("&lt;", "&gt;"), $string);
@@ -10237,34 +10237,6 @@ function display_mspr_details($data) {
 	</ul>	
 	<?php
 	return ob_get_clean();
-}
-
-/**
- * Adds require_onces for all of the models needed for MSPRs
- */
-function require_mspr_models() {
-	
-	require_once("Models/users/User.class.php");
-	
-	require_once("Models/utility/Approvable.interface.php");
-	require_once("Models/utility/AttentionRequirable.interface.php");
-	
-	require_once("Models/awards/InternalAwardReceipts.class.php");
-	
-	require_once("Models/mspr/ExternalAwardReceipts.class.php");
-	require_once("Models/mspr/Studentships.class.php");
-	require_once("Models/mspr/ClinicalPerformanceEvaluations.class.php");
-	require_once("Models/mspr/Contributions.class.php");
-	require_once("Models/mspr/DisciplinaryActions.class.php");
-	require_once("Models/mspr/LeavesOfAbsence.class.php");
-	require_once("Models/mspr/FormalRemediations.class.php");
-	require_once("Models/mspr/ClerkshipRotations.class.php");
-	require_once("Models/mspr/StudentRunElectives.class.php");
-	require_once("Models/mspr/Observerships.class.php");
-	require_once("Models/mspr/InternationalActivities.class.php");
-	require_once("Models/mspr/CriticalEnquiry.class.php");
-	require_once("Models/mspr/CommunityHealthAndEpidemiology.class.php");
-	require_once("Models/mspr/ResearchCitations.class.php");
 }
 
 /**

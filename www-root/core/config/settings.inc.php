@@ -577,6 +577,9 @@ define("MSPR_REJECTION_SEND_EMAIL",true);	//defines whether an email should be s
 define("MSPR_CLERKSHIP_MERGE_NEAR", true); //defines whether or not clerkship rotation with the same title should be merged if they are near in time.
 define("MSPR_CLERKSHIP_MERGE_DISTANCE", "+1 week"); //defines how close together clerkship rotations with the SAME title need to be in order to be merged on the mspr display
 
+define("AUTO_APPROVE_ADMIN_MSPR_EDITS",true); //if true, the comment will be cleared, and the entry approved.
+define("AUTO_APPROVE_ADMIN_MSPR_SUBMISSIONS", true); //when adding to student submissions, admin contributions in these areas are automatically approved, if true. 
+
 /**
  * Defines for Tasks Module
  * 

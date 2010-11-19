@@ -25,8 +25,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 } else {
 	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/tasks?section=edit", "title" => "Edit Task");
 	
-	//$ORGANISATION_ID = $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"];
-	
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/AutoCompleteList.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 	
 	require_once("Models/courses/Courses.class.php");

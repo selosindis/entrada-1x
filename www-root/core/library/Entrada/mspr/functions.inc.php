@@ -10,19 +10,40 @@
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
 */
 
- 
+require_once("Models/users/User.class.php");
+require_once("Models/users/ClinicalFacultyMembers.class.php");
+	
+require_once("Models/utility/Approvable.interface.php");
+require_once("Models/utility/AttentionRequirable.interface.php");
+require_once("Models/utility/Editable.interface.php");
 require_once("Models/utility/Template.class.php");
+
+require_once("Models/awards/InternalAwardReceipts.class.php");
+require_once("Models/mspr/ExternalAwardReceipts.class.php");
+require_once("Models/mspr/Studentships.class.php");
+require_once("Models/mspr/ClinicalPerformanceEvaluations.class.php");
+require_once("Models/mspr/Contributions.class.php");
+require_once("Models/mspr/DisciplinaryActions.class.php");
+require_once("Models/mspr/LeavesOfAbsence.class.php");
+require_once("Models/mspr/FormalRemediations.class.php");
+require_once("Models/mspr/ClerkshipRotations.class.php");
+require_once("Models/mspr/StudentRunElectives.class.php");
+require_once("Models/mspr/Observerships.class.php");
+require_once("Models/mspr/InternationalActivities.class.php");
+require_once("Models/mspr/CriticalEnquiry.class.php");
+require_once("Models/mspr/CommunityBasedProject.class.php");
+require_once("Models/mspr/ResearchCitations.class.php");
+require_once("Models/mspr/MSPRs.class.php");
 
 
 function item_wrap_content($type, $entity, $content, $hide_controls = false, $comment="", $id_string="") {
 
 	$status = getStatus($entity);
-	$status_file = TEMPLATE_ABSOLUTE."/modules/".$type."/mspr/item_status".($hide_controls?"_no_controls":"").".xml";
+	$status_file = TEMPLATE_ABSOLUTE."/modules/common/mspr/item_status.xml";
 	$status_template = new Template($status_file);
 	
-	if (!$hide_controls) {
-		$controls = getControls($entity, $type);
-	}
+	$controls = ($hide_controls)? "" : getControls($entity, $type);
+	
 	$status_bind = array (
 				"content"	=> $content,
 				"reason"	=> clean_input($comment,array("notags","specialchars","nl2br")),
@@ -57,6 +78,7 @@ function getControls($entity, $type) {
 	$control_bind = array(
 				"user_id"	=> $user_id,
 				"entity_id"	=> $entity->getID(),
+				"image_dir"	=> ENTRADA_URL . "/images",
 				"form_url"	=> ENTRADA_URL . "/admin/users/manage/students?section=mspr&id=" . $user_id
 	);
 	
@@ -79,11 +101,12 @@ function getControls($entity, $type) {
 						break;
 				}
 			} else {
-				if ($entity instanceof Editable) {
-					$controls[] = $control_template->getResult(DEFAULT_LANGUAGE, $control_bind, array("type" => "edit")); 
-				}	
 				$controls[] = $control_template->getResult(DEFAULT_LANGUAGE, $control_bind, array("type" => "remove")); 
 			}
+			if ($entity instanceof Editable) {
+				$controls[] = $control_template->getResult(DEFAULT_LANGUAGE, $control_bind, array("type" => "edit")); 
+			}	
+			
 			
 			break;
 		case "public": //fall through
@@ -97,7 +120,15 @@ function getControls($entity, $type) {
 			break;
 	}
 	$control_content = implode("\n", $controls);
-	return $control_content;
+	
+	if ($control_content) {
+		$control_set_file =	TEMPLATE_ABSOLUTE."/modules/common/mspr/control_set.xml";
+		$control_set_template = new Template($control_set_file);
+		$control_set_bind = array(
+				"controls"	=> $control_content
+		);
+		return $control_set_template->getResult(DEFAULT_LANGUAGE, $control_set_bind);
+	}
 }
 
 function getStatus($entity) {
@@ -169,6 +200,7 @@ function display_internal_awards(InternalAwardReceipts $receipts,$type, $hide_co
 			$user = $receipt->getUser();
 			
 			$content_bind = array (
+				"award_id" => clean_input($award->getID(), array("int")),
 				"title"	=> clean_input($award->getTitle(), array("notags", "specialchars")),
 				"year"	=> clean_input($receipt->getAwardYear(), array("notags", "specialchars"))
 			);
@@ -219,6 +251,10 @@ function display_contributions(Contributions $contributions,$type, $hide_control
 		foreach($contributions as $contribution) {
 			
 			$content_bind = array (
+				"start_year"		=> clean_input($contribution->getStartYear(), array("int")),
+				"end_year"	=> clean_input($contribution->getEndYear(), array("int")),
+				"start_month"		=> clean_input($contribution->getStartMonth(), array("int")),
+				"end_month"	=> clean_input($contribution->getEndMonth(), array("int")),
 				"role"		=> clean_input($contribution->getRole(), array("notags", "specialchars")),
 				"org_event"	=> clean_input($contribution->getOrgEvent(), array("notags", "specialchars")),
 				"period"	=> clean_input($contribution->getPeriod() , array("notags", "specialchars"))
@@ -305,8 +341,15 @@ function display_student_run_electives(StudentRunElectives $sres,$type, $hide_co
 		foreach($sres as $sre) {
 			
 			$content_bind = array (
-				"details" 	=> clean_input($sre->getDetails(), array("notags", "specialchars", "nl2br")),
-				"period" 	=> clean_input($sre->getPeriod() , array("notags", "specialchars"))
+				"group_name" 	=> clean_input($sre->getGroupName() , array("notags", "specialchars")),
+				"university" 	=> clean_input($sre->getUniversity() , array("notags", "specialchars")),
+				"location" 		=> clean_input($sre->getLocation() , array("notags", "specialchars")),
+				"start_month" 	=> clean_input($sre->getStartMonth() , array("notags", "specialchars")),
+				"start_year" 	=> clean_input($sre->getStartYear() , array("notags", "specialchars")),
+				"end_month" 	=> clean_input($sre->getEndMonth() , array("notags", "specialchars")),
+				"end_year"	 	=> clean_input($sre->getEndYear() , array("notags", "specialchars")),
+				"details" 		=> clean_input($sre->getDetails(), array("notags", "specialchars", "nl2br")),
+				"period" 		=> clean_input($sre->getPeriod() , array("notags", "specialchars"))
 			);
 			
 			$content = $content_template->getResult(DEFAULT_LANGUAGE, $content_bind);
@@ -346,18 +389,16 @@ function display_critical_enquiry(CriticalEnquiry $critical_enquiry = null, $typ
 	return display_supervised_project($critical_enquiry, $type, $hide_controls);
 }
 
-function display_community_health_and_epidemiology(CommunityHealthAndEpidemiology $community_health_and_epidemiology = null, $type, $hide_controls = false) {
-	return display_supervised_project($community_health_and_epidemiology, $type, $hide_controls);	
+function display_community_based_project(CommunityBasedProject $community_based_project = null, $type, $hide_controls = false) {
+	return display_supervised_project($community_based_project, $type, $hide_controls);	
 }
 
 function display_research_citations(ResearchCitations $research_citations, $type, $hide_controls = false) {
 	if ($hide_controls){
-		$content_file = TEMPLATE_ABSOLUTE."/modules/common/mspr/research_citation.xml";
+		$content_file = TEMPLATE_ABSOLUTE."/modules/public/mspr/research_citation.xml";
 	} else {
-		$content_file = TEMPLATE_ABSOLUTE."/modules/".$type."/mspr/research_citation.xml";
-		if ($type=="public") {
-			$class="priority-list";
-		}
+		$content_file = TEMPLATE_ABSOLUTE."/modules/common/mspr/research_citation.xml";
+		$class="priority-list";
 	}
 	$content_template =  new Template($content_file);
 	
@@ -450,7 +491,18 @@ function display_international_activities(InternationalActivities $int_acts,$typ
 	if ($int_acts && $int_acts->count() > 0) {
 		foreach($int_acts as $entity) {
 			
+			$start = $entity->getStartDate();
+			$end = $entity->getEndDate();
+			
+			$start = $start['y']."-".$start['m']."-".$start['d'];
+			$end = $end['y']."-".$end['m']."-".$end['d'];
+			
 			$content_bind = array (
+				"title" 	=> clean_input($entity->getTitle() , array("notags", "specialchars")),
+				"site" 		=> clean_input($entity->getSite() , array("notags", "specialchars")),
+				"location" 	=> clean_input($entity->getLocation() , array("notags", "specialchars")),
+				"start" 	=> $start,
+				"end"	 	=> $end,
 				"details" 	=> clean_input($entity->getDetails(), array("notags", "specialchars", "nl2br")),
 				"period" 	=> clean_input($entity->getPeriod() , array("notags", "specialchars"))
 			);
@@ -491,6 +543,9 @@ function load_mspr_editor() {
 		plugins : 'save, paste, inlinepopups, tabfocus, table, fullscreen',
 		editor_deselector : 'expandable',
 		save_enablewhendirty : true,
+		convert_fonts_to_spans: false,
+		inline_styles:false,
+		cleanup:false,
 		theme_advanced_layout_manager : 'SimpleLayout',
 		theme_advanced_toolbar_location : 'top',
 		theme_advanced_toolbar_align : 'left',
@@ -565,4 +620,236 @@ function load_mspr_editor() {
 		$HEAD[] = $tinymce;
 	}
 	return true;
+}
+
+function get_mspr_entity($type, $entity_id) {
+	switch($type) {
+		case 'studentships':
+			$entity = Studentship::get($entity_id);
+			break;
+		case 'clineval':
+			$entity = ClinicalPerformanceEvaluation::get($entity_id);
+			break;
+		case 'internal_awards':
+			$entity = InternalAwardReceipt::get($entity_id);
+			break;
+		case 'external_awards':
+			$entity = ExternalAwardReceipt::get($entity_id);
+			break;
+		case 'contributions':
+			$entity = Contribution::get($entity_id);
+			break;
+		case 'student_run_electives':
+			$entity = StudentRunElective::get($entity_id);
+			break;
+		case 'observerships':
+			$entity = Observership::get($entity_id);
+			break;
+		case 'int_acts':
+			$entity = InternationalActivity::get($entity_id);
+			break;
+		case 'critical_enquiry':
+			$entity = CriticalEnquiry::get($entity_id);
+			break;
+		case 'community_based_project':
+			$entity = CommunityBasedProject::get($entity_id);
+			break;
+		case 'research_citations':
+			$entity = ResearchCitation::get($entity_id);
+			break;
+	}
+	return $entity;	
+}
+
+function get_mspr_inputs($type) {
+	switch($type) {
+		case 'studentships':
+			$params = array(
+				'title'	=> FILTER_SANITIZE_STRING,
+				'year'	=> FILTER_VALIDATE_INT,
+			);
+			break;
+		case 'clineval':
+			$params = array(
+				'source'	=> FILTER_SANITIZE_STRING,
+				'text'		=> FILTER_SANITIZE_STRING
+			);
+			break;
+		case 'internal_awards':
+			$params = array(
+				'award_id'	=> FILTER_VALIDATE_INT,
+				'year'		=> FILTER_VALIDATE_INT
+			);
+			break;
+		case 'external_awards':
+			$params = array(
+				'title'	=> FILTER_SANITIZE_STRING,
+				'body'	=> FILTER_SANITIZE_STRING,
+				'terms'	=> FILTER_SANITIZE_STRING,
+				'year'	=> FILTER_VALIDATE_INT
+			);
+			break;
+		case 'contributions':
+			$params = array(
+				'role'			=> FILTER_SANITIZE_STRING,
+				'org_event'		=> FILTER_SANITIZE_STRING,
+				'start_year'	=> FILTER_VALIDATE_INT,
+				'end_year'		=> FILTER_VALIDATE_INT,
+				'start_month'	=> FILTER_VALIDATE_INT,
+				'end_month'		=> FILTER_VALIDATE_INT
+			);
+			break;
+		case 'student_run_electives':
+			$params = array(
+				'group_name'	=> FILTER_SANITIZE_STRING,
+				'university'	=> FILTER_SANITIZE_STRING,
+				'location'		=> FILTER_SANITIZE_STRING,
+				'start_year'	=> FILTER_VALIDATE_INT,
+				'end_year'		=> FILTER_VALIDATE_INT,
+				'start_month'	=> FILTER_VALIDATE_INT,
+				'end_month'		=> FILTER_VALIDATE_INT
+			);
+			break;
+		case 'observerships':
+			$params = array(
+				'title'					=> FILTER_SANITIZE_STRING,
+				'site'					=> FILTER_SANITIZE_STRING,
+				'location'				=> FILTER_SANITIZE_STRING,
+				'start'					=> FILTER_SANITIZE_STRING,
+				'end'					=> FILTER_SANITIZE_STRING,
+				'preceptor_proxy_id'	=> FILTER_VALIDATE_INT,
+				'preceptor_firstname'	=> FILTER_SANITIZE_STRING,
+				'preceptor_lastname'	=> FILTER_SANITIZE_STRING
+			);
+			break;
+		case 'int_acts':
+			$params = array(
+				'title'		=> FILTER_SANITIZE_STRING,
+				'site'		=> FILTER_SANITIZE_STRING,
+				'location'	=> FILTER_SANITIZE_STRING,
+				'start'		=> FILTER_SANITIZE_STRING,
+				'end'		=> FILTER_SANITIZE_STRING
+			);
+			break;
+		case 'critical_enquiry':
+		case 'community_based_project':
+			$params = array(
+				'title'			=> FILTER_SANITIZE_STRING,
+				'organization'	=> FILTER_SANITIZE_STRING,
+				'location'		=> FILTER_SANITIZE_STRING,
+				'supervisor'	=> FILTER_SANITIZE_STRING
+			);
+			break;
+		case 'research_citations':
+			$params = array(
+				'details'				=> FILTER_SANITIZE_STRING,
+				'research_citations'	=> array(
+											'filter' => FILTER_VALIDATE_INT,
+											'flags' => FILTER_REQUIRE_ARRAY
+											)
+			);
+			break;
+	}
+	$inputs = filter_input_array(INPUT_POST,$params);
+	return $inputs;	
+}
+
+/**
+ * adds errors, if found. May modify inputs in the process 
+ * @param string $type
+ * @param array $inputs May modify inputs in the process
+ * @param mixed $translator
+ */
+function process_mspr_inputs($type, array &$inputs, $translator) {
+	switch($type) {
+		case 'studentships':
+			if (!($inputs['title'] && $inputs['year'])) {
+				add_error($translator->translate("mspr_insufficient_info"));
+			}
+			break;
+		case 'clineval':
+			if (!($inputs['text'] && $inputs['source'])) {
+				add_error($translator->translate("mspr_insufficient_info"));
+			}
+			break;
+		case 'internal_awards':
+			if (!($inputs['award_id'] && $inputs['year'])) {
+				add_error($translator->translate("mspr_insufficient_info"));
+			}
+			break;
+		case 'external_awards':
+			if (!($inputs['title'] && $inputs['terms'] && $inputs['body'] && $inputs['year'])) {
+				add_error($translator->translate("mspr_insufficient_info"));
+			}
+			break;
+		case 'contributions':
+			if (!($inputs['role'] && $inputs['org_event'] && $inputs['start_year'])) {
+				add_error($translator->translate("mspr_insufficient_info"));
+			}
+			break;
+		case 'student_run_electives':
+			if (!($inputs['group_name'] && $inputs['university'] && $inputs['location'] && $inputs['start_year'])) {
+				add_error($translator->translate("mspr_insufficient_info"));
+			}
+			break;
+		case 'observerships':
+			if (!checkDateFormat($inputs['start'])) {
+				add_error($translator->translate("mspr_observership_invalid_dates"));
+			} else {
+				$parts = date_parse($inputs['start']);  
+				$start_ts = mktime(0,0, 0, $parts['month'],$parts['day'], $parts['year']);
+				if ($inputs['end'] && checkDateFormat($inputs['end'])) {
+					$parts = date_parse($inputs['end']);  
+					$end_ts = mktime(0,0, 0, $parts['month'],$parts['day'], $parts['year']);
+				} else {
+					$end_ts = null;
+				}
+				$inputs['start'] = $start_ts;
+				$inputs['end'] = $end_ts;
+			}
+			
+			if (!$inputs['preceptor_proxy_id']) {
+				$inputs['preceptor_proxy_id'] = null; 
+			}
+			
+			if (!$inputs['preceptor_proxy_id'] && !($inputs['preceptor_firstname'] || $inputs['preceptor_lastname'])) {
+				add_error($translator->translate("mspr_observership_preceptor_required"));
+			}
+			
+			if ($inputs['preceptor_proxy_id'] == -1) {
+				//special case for "Various"
+				$inputs['preceptor_proxy_id'] = 0; //not faculty 
+				$inputs['preceptor_firstname'] = "Various";
+				$inputs['preceptor_lastname'] = "";
+			}
+			if (!has_error() && !($inputs['title'] && $inputs['site'] && $inputs['location'] && $inputs['start'])) {
+				add_error($translator->translate("mspr_insufficient_info"));
+			}
+			break;
+		case 'int_acts':
+			if (!checkDateFormat($inputs['start'])) {
+				add_error($translator->translate("mspr_observership_invalid_dates"));
+			} else {
+				if (!$inputs['end'] || !checkDateFormat($inputs['end'])) {
+					$inputs['end'] = $inputs['start'];
+				}
+			}
+			
+			if (!has_error() && !($inputs['title'] && $inputs['site'] && $inputs['location'] && $inputs['start'])) {
+				add_error($translator->translate("mspr_insufficient_info"));
+			}
+		break;
+		case 'critical_enquiry':
+		case 'community_based_project':
+			if (!($inputs['title'] && $inputs['organization'] && $inputs['location'] && $inputs['supervisor'])) {
+				add_error($translator->translate("mspr_insufficient_info"));
+			}
+			break;
+		case 'research_citations':
+			if (!$inputs['details'] && !is_array($inputs['research_citations'])){
+				add_error($translator->translate("mspr_insufficient_info"));
+			}
+			break;
+	}
+		
 }

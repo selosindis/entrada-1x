@@ -69,7 +69,7 @@ class InternalAwardReceipts extends Collection {
 	
 	static private function getByUser(User $user) {
 		global $db;
-		$query		= "SELECT a.`id` as `award_receipt_id`, c.`id`, a.`user_id` , c.title, c.award_terms, c.disabled, a.year 
+		$query		= "SELECT a.`id` as `award_receipt_id`, c.`id` as award_id, a.`user_id` , c.title, c.award_terms, c.disabled, a.year 
 				FROM `". DATABASE_NAME ."`.`student_awards_internal` a 
 				left join `". DATABASE_NAME ."`.`student_awards_internal_types` c on c.id = a.award_id 
 				WHERE a.`user_id` = ".$db->qstr($user->getID()) ." 
@@ -79,8 +79,8 @@ class InternalAwardReceipts extends Collection {
 		$receipts = array();
 		if ($results) {
 			foreach ($results as $result) {
-				$award = new InternalAward($result['id'], $result['title'], $result['award_terms'], $result['disabled']);
-				$receipt = new InternalAwardReceipt( $result['user_id'], $award, $result['award_receipt_id'], $result['year']);
+				$award = InternalAward::fromArray($result);//for caching purposes
+				$receipt = InternalAwardReceipt::fromArray($result);
 				$receipts[] = $receipt;
 			}
 		}

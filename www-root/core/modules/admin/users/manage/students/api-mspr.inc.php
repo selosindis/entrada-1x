@@ -26,7 +26,7 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 
 		ob_clear_open_buffers();
 	
-		require_mspr_models();
+		require_once(dirname(__FILE__)."/includes/functions.inc.php");
 		
 		$user = User::get($user_record["id"]);
 		$controller = new MSPRAdminController($translate, $user);

@@ -26,6 +26,7 @@
 
 require_once("Models/users/User.class.php");
 require_once("ExternalAward.class.php");
+require_once("Models/utility/Editable.interface.php");
 
 /**
  * 
@@ -35,7 +36,7 @@ require_once("ExternalAward.class.php");
  * @author Developer: Jonathan Fingland <jonathan.fingland@quensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  */
-class ExternalAwardReceipt implements Approvable,AttentionRequirable {
+class ExternalAwardReceipt implements Approvable,AttentionRequirable, Editable {
 	private $award_receipt_id;
 	private $award;
 	private $user_id;
@@ -96,11 +97,12 @@ class ExternalAwardReceipt implements Approvable,AttentionRequirable {
 		return $this->comment;
 	}
 		
-	static public function create($user_id, $title, $terms, $awarding_body,$year, $approved = false) {
+	static public function create(array $input_arr) {
+		extract($input_arr);
 		global $db;
 		$approved = (int) $approved;
-		$query = "INSERT INTO `student_awards_external` (`user_id`,`title`, `award_terms`, `awarding_body`, `year`, `status`) VALUES (".$db->qstr($user_id).", ".$db->qstr($title).", ".$db->qstr($terms).", ".$db->qstr($awarding_body).", ".$db->qstr($year).", ".$db->qstr($approved ? 1 : 0).")";
-		if(!$db->Execute($query)) {
+		$query = "INSERT INTO `student_awards_external` (`user_id`,`title`, `award_terms`, `awarding_body`, `year`, `status`) VALUES (?,?,?,?,?,IFNULL(?,0))";
+		if(!$db->Execute($query, array($user_id, $title, $terms, $body, $year, $status))) {
 			add_error("Failed to add award recipient to database. Please check your values and try again.");
 			application_log("error", "Unable to insert a student_awards_external record. Database said: ".$db->ErrorMsg());
 		} else {
@@ -136,8 +138,8 @@ class ExternalAwardReceipt implements Approvable,AttentionRequirable {
 	public function delete() {
 		global $db;
 	
-		$query = "DELETE FROM `student_awards_external` where `id`=".$db->qstr($this->award_receipt_id);
-		if(!$db->Execute($query)) {
+		$query = "DELETE FROM `student_awards_external` where `id`=?";
+		if(!$db->Execute($query, array($this->getID()))) {
 			add_error("Failed to remove award receipt from database.");
 			application_log("error", "Unable to delete a student_awards_external record. Database said: ".$db->ErrorMsg());
 		} else {
@@ -182,6 +184,18 @@ class ExternalAwardReceipt implements Approvable,AttentionRequirable {
 				$other_award = $ar->getAward();
 				return $award->compare($other_award);
 				break;
+		}
+	}
+	
+	public function update(array $input_arr) {
+		extract($input_arr);
+		global $db;
+		$query = "update `student_awards_external` set `title`=?, `award_terms`=?, `awarding_body`=?, `year`=?, `status`=?, `comment`=? where `id`=?";
+		if(!$db->Execute($query, array($title, $terms, $body,$year, $status, $comment, $this->getID()))) {
+			add_error("Failed to update External Award.");
+			application_log("error", "Unable to update a student_awards_external record. Database said: ".$db->ErrorMsg());
+		} else {
+			add_success("Successfully updated External Award.");
 		}
 	}
 }

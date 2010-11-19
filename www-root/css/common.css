@@ -2750,128 +2750,6 @@ table.mspr_table tr.unapproved td {
 	background: url(../images/add.png) no-repeat top left;
 }
 
-.mspr-tree .collapsable.expanded:before {
-float: left !important; 
-content: url(../images/minus.gif);
-clear: both;
-margin: 0 1em 0 0;
-}
-
-.mspr-tree .collapsable.collapsed {
-color: #9ac;
-}
-
-.mspr-tree .collapsable.collapsed:before {
-float: left !important;
-content: url(../images/plus.gif);
-clear: both;
-margin: 0 1em 0 0;
-}
-
-.mspr-tree .section > div {
-	margin-left: 3em;
-}
-
-.mspr-tree h2 {
-	margin: 2ex 0 0 0;
-}
-
-.handle {
-	cursor:pointer;
-}
-
-.priority-list .entry .handle {
-	position:absolute;
-	left: 5px;
-	top: 0;
-	height: 100%;
-	vertical-align:middle;
-	width:20px;
-	background-image: url(../images/arrow_up_down.png);
-	background-repeat:no-repeat;
-	background-position: center 5px;
-	display:inline-block;
-}
-
-.priority-list .entry .label {
-	padding-left: 25px;
-}
-
-.entry .handle img {
-	display:none;
-}
-
-.mspr-list {
-	padding: 0;
-}
-
-.mspr-list > * {
-	list-style-type:none;
-	margin: 1ex 0;
-	padding:1%;
-}
-
-.mspr-list .entry {
-	border-bottom: 1px solid darkgray;
-	background-color:WhiteSmoke;
-	position:relative;
-}
-
-.mspr-list .entry.unapproved {
-	background-color:FloralWhite;
-}
-
-.mspr-list .entry.rejected {
-	background-color:MistyRose;
-}
-
-.mspr-list .entry .label {
-	display:inline-block;
-	margin: 0.5ex 0;
-	width: 18%;
-	vertical-align:top;
-}
-.mspr-list .entry .label + * {
-	display:inline-block;
-	margin: 0.5ex 20% 0.5ex 0;
-	width:45%;
-	vertical-align:top;
-}
-
-.mspr-list .entry > .controls {
-	position:absolute;
-	top:10px;
-	bottom: 10px;
-	right:10px;
-}
-.mspr-list .entry .data {
-}
-
-.mspr-list .entry .heading {
-	font-weight:bold;
-}
-
-.attention-required {
-	background-color: FloralWhite;
-}
-
-#mspr-class-list .attention-not-required {
-	display:none;
-}
-
-#mspr-class-list.show-all .attention-not-required {
-	display:table-row;
-}
-
-.revision-list li {
-	margin-bottom:1ex;
-}
-
-.revision-list img, .display-notice img, .tableList img {
-	border:0;
-	vertical-align:middle;
-}
-
 .clearfix {
 	clear:both;
 	line-height:0;
@@ -2934,6 +2812,7 @@ background:transparent url(../images/list-objective.gif) no-repeat 0 3px;
 }
 #task-list li span {
 	display:block;
+
 	text-align:right;
 }
 
@@ -2957,6 +2836,137 @@ background:transparent url(../images/list-objective.gif) no-repeat 0 3px;
 	width:100%;
 }
 
+.mspr-tree .collapsable.expanded:before {
+float: left !important; 
+content: url(../images/minus.gif);
+clear: both;
+margin: 0 1em 0 0;
+}
+
+.mspr-tree .collapsable.collapsed {
+color: #9ac;
+}
+
+.mspr-tree .collapsable.collapsed:before {
+float: left !important;
+content: url(../images/plus.gif);
+clear: both;
+margin: 0 1em 0 0;
+}
+
+.mspr-tree .section > div {
+	margin-left: 3em;
+}
+
+.mspr-tree h2 {
+	margin: 2ex 0 0 0;
+}
+
+.handle {
+	cursor:pointer;
+}
+
+.priority-list .entry .handle {
+	position:absolute;
+	left: 5px;
+	top: 0;
+	height: 100%;
+	vertical-align:middle;
+	width:20px;
+	background-image: url(../images/arrow_up_down.png);
+	background-repeat:no-repeat;
+	background-position: center 5px;
+	display:inline-block;
+}
+
+.priority-list .entry .label {
+	padding-left: 25px;
+}
+
+.entry .handle img {
+	display:none;
+}
+
+.mspr-list {
+	padding: 0;
+}
+
 .mspr-list .entry .item-status {
 	margin-top:2ex;
+}
+
+.mspr-list > * {
+	list-style-type:none;
+	margin: 1ex 0;
+	padding:1%;
+}
+
+.mspr-list .entry {
+	border-bottom: 1px solid darkgray;
+	background-color:WhiteSmoke;
+	position:relative;
+}
+
+.mspr-list .entry.unapproved {
+	background-color:FloralWhite;
+}
+
+.mspr-list .entry.rejected {
+	background-color:MistyRose;
+}
+
+.mspr-list .entry .label {
+	display:inline-block;
+	margin: 0.5ex 0;
+	width: 18%;
+	vertical-align:top;
+}
+.mspr-list .entry .label + * {
+	display:inline-block;
+	margin: 0.5ex 0 0.5ex 0;
+	width:75%;
+	vertical-align:top;
+}
+
+.mspr-list .entry .controls {
+	margin-top:2px;
+}
+
+.mspr-list .entry .controls .label {
+	vertical-align:middle;
+}
+.mspr-list .entry .controls * {
+	display:inline-block;
+}
+
+.mspr-list .entry .controls .actions > * {
+	margin-right: 0.5em;
+}
+
+.mspr-list .entry .data {
+}
+
+.mspr-list .entry .heading {
+	font-weight:bold;
+}
+
+.attention-required {
+	background-color: FloralWhite;
+}
+
+#mspr-class-list .attention-not-required {
+	display:none;
+}
+
+#mspr-class-list.show-all .attention-not-required {
+	display:table-row;
+}
+
+.revision-list li {
+	margin-bottom:1ex;
+}
+
+.revision-list img, .display-notice img, .tableList img {
+	border:0;
+	vertical-align:middle;
 }

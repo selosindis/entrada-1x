@@ -1,8 +1,16 @@
 <?php
 
-require_once("Models/users/User.class.php");
-require_mspr_models();
-
+/**
+ * 
+ * Entrada [ http://www.entrada-project.org ]
+ * 
+ * 
+ * @author Organisation: Queen's University
+ * @author Unit: School of Medicine
+ * @author Developer: Jonathan Fingland <jonathan.fingland@queensu.ca>
+ * @copyright Copyright 2010 Queen's University. All Rights Reserved.
+ *
+ */
 class MSPR implements ArrayAccess, AttentionRequirable {
 	private $closed;
 	private $generated;
@@ -23,7 +31,7 @@ class MSPR implements ArrayAccess, AttentionRequirable {
 							"Observerships" => "Observerships",
 							"International Activities" => "InternationalActivities",
 							"Critical Enquiry" => "CriticalEnquiry",
-							"Community Health and Epidemiology" => "CommunityHealthAndEpidemiology",
+							"Community Based Project" => "CommunityBasedProject",
 							"Research" => "ResearchCitations",
 							"Clerkship Core Completed" => "ClerkshipCoreCompleted",
 							"Clerkship Core Pending" => "ClerkshipCorePending",
@@ -113,7 +121,7 @@ class MSPR implements ArrayAccess, AttentionRequirable {
 		$att_reqs[] = CriticalEnquiry::get($user);
 		$att_reqs[] = ExternalAwardReceipts::get($user);
 		$att_reqs[] = Contributions::get($user);
-		$att_reqs[] = CommunityHealthAndEpidemiology::get($user);
+		$att_reqs[] = CommunityBasedProject::get($user);
 		$att_reqs[] = ResearchCitations::get($user);
 		foreach ($att_reqs as $att_req) {
 			if ($att_req && $att_req->isAttentionRequired()) return true;

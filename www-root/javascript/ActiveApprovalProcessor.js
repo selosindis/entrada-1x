@@ -44,25 +44,26 @@
 				var modal_close = reject_modal.container.down(".modal-close");
 				var modal_comment = reject_modal.container.down("textarea"); 
 				
+				function afterClose() {
+					modal_comment.clear();
+					modal_close.stopObserving("click", close_modal);
+					modal_confirm.stopObserving("click", confirm_modal);
+				}
+				
 				function close_modal() {
 					//clear all of the fields.
 					reject_modal.close();
-					modal_comment.clear();
-					modal_close.stopObserving("click", close_modal);
-					modal_confirm.stopObserving("click", confirm_modal);
 				} 
 				function confirm_modal() {
-					reject_modal.close();
 					form_values.comment = modal_comment.getValue();
-					modal_comment.clear();
+					reject_modal.close();
 					process_entry(form_values);
-					modal_close.stopObserving("click", close_modal);
-					modal_confirm.stopObserving("click", confirm_modal);
 				}
 
 				modal_confirm.observe("click", confirm_modal);
 				modal_close.observe("click", close_modal);
-
+				
+				reject_modal.options.afterClose = afterClose; 
 				reject_modal.open();
 				modal_comment.focus();
 			}

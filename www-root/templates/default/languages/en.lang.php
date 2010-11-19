@@ -151,6 +151,8 @@ return array (
 	"mspr_insufficient_info" => "Insufficient information provided.",
 	"mspr_email_failed" => "Failed to send rejection email.",
 	"mspr_observership_preceptor_required" => "A faculty preceptor must be selected or a non-faculty preceptor name entered.",
-	"mspr_observership_invalid_dates" => "A valid start date is required."
+	"mspr_observership_invalid_dates" => "A valid start date is required.",
+	"mspr_too_many_critical_enquiry" => "Cannot have more than one Critical Enquiry on MSPR. Please edit the existing project or remove it before adding a new one.",
+	"mspr_too_many_community_based_project" => "Cannot have more than one Community-Based Project on MSPR. Please edit the existing project or remove it before adding a new one."
 	);
 ?>

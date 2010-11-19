@@ -12,5 +12,5 @@
 
  
 interface Sequenceable {
-	public function setSequence(User $user, array $ids);
+	public function setSequence($user_id, array $ids);
 }

@@ -25,9 +25,8 @@ class ResearchCitations extends Collection implements AttentionRequirable, Seque
 	 * @param User $user
 	 * @param array $ids
 	 */
-	public function setSequence(User $user, array $ids) {
+	public function setSequence($user_id, array $ids) {
 		global $db;
-		$user_id = $user->getID();
 		$stmt = $db->Prepare('update `student_research` set `priority`=? where `user_id`=? and `id`=?');
 		foreach($ids as $priority=>$id) {
 			if (!$db->Execute($stmt,array($priority, $user_id, $id))) {

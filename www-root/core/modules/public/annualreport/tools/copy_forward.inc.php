@@ -161,6 +161,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 					if(!$skip) {
 						foreach($results as $result) {
 							$result["year_reported"] = $PROCESSED["copy_to"];
+							$result["report_completed"] = "no";
 							$result["updated_date"]	= time();
 							$result["updated_by"] = $_SESSION["details"]["id"];
 							$result["proxy_id"]	= $_SESSION[APPLICATION_IDENTIFIER]['tmp']['proxy_id'];

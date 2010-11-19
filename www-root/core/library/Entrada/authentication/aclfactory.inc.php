@@ -170,42 +170,48 @@ class ACL_Factory {
 
 			if($add) {
 				if(!$this->acl->has($resource)) {
-					//Error! The tree builder should have added all the resources needed. Weird man.
-				}
-				
-				if(isset($perm["assertion"])) {
-					$assertions = explode('&', $perm["assertion"]);
-					
-					if(isset($assertions[1])) {
-						$asserter = new MultipleAssertion($assertions);
-					} else {
-						$assertion_name = $perm["assertion"]."Assertion";
-						$asserter      	= new $assertion_name();
-					}
+                    //Error! The tree builder should have added all the resources needed.
+                    //This could happen if say two Entrada instances are using the same auth database,
+                    //which may or may not have different ACL resource sets.
+                    if(DEVELOPMENT_MODE) {
+                        application_log("error", "Resource [".$resource."] isn't defined in the ACL resource tree. Please fix this in the entrada_acl.php.");
+                    }
 				} else {
-					$asserter = null;
-				}
+				
+                    if(isset($perm["assertion"])) {
+                        $assertions = explode('&', $perm["assertion"]);
 
-				$permissions_to_be_granted	= array();
-				$permissions_to_be_denyed	= array();
+                        if(isset($assertions[1])) {
+                            $asserter = new MultipleAssertion($assertions);
+                        } else {
+                            $assertion_name = $perm["assertion"]."Assertion";
+                            $asserter      	= new $assertion_name();
+                        }
+                    } else {
+                        $asserter = null;
+                    }
 
-				foreach($this->crud as $individual_perm) {
-					//Only set a rule if the permission is 1 or 0, disregard null values.
-					if($perm[$individual_perm] == '1') {
-						$permissions_to_be_granted[] = $individual_perm;
-					} else if ($perm[$individual_perm] == '0') {
-						$permissions_to_be_denyed[] = $individual_perm;
-					}
-				}
+                    $permissions_to_be_granted	= array();
+                    $permissions_to_be_denyed	= array();
 
-				if(count($permissions_to_be_granted) > 0) {
-					$this->acl->allow($entity, $resource, $permissions_to_be_granted, $asserter);
-					//echo "Granting $entity ".$permissions_to_be_granted[0].$permissions_to_be_granted[1].$permissions_to_be_granted[2].$permissions_to_be_granted[3]." on $resource with ".get_class($asserter).". \n";
-				}
+                    foreach($this->crud as $individual_perm) {
+                        //Only set a rule if the permission is 1 or 0, disregard null values.
+                        if($perm[$individual_perm] == '1') {
+                            $permissions_to_be_granted[] = $individual_perm;
+                        } else if ($perm[$individual_perm] == '0') {
+                            $permissions_to_be_denyed[] = $individual_perm;
+                        }
+                    }
 
-				if(count($permissions_to_be_denyed) > 0) {
-					$this->acl->deny($entity, $resource, $permissions_to_be_denyed, $asserter);
-				}
+                    if(count($permissions_to_be_granted) > 0) {
+                        $this->acl->allow($entity, $resource, $permissions_to_be_granted, $asserter);
+                        //echo "Granting $entity ".$permissions_to_be_granted[0].$permissions_to_be_granted[1].$permissions_to_be_granted[2].$permissions_to_be_granted[3]." on $resource with ".get_class($asserter).". \n";
+                    }
+
+                    if(count($permissions_to_be_denyed) > 0) {
+                        $this->acl->deny($entity, $resource, $permissions_to_be_denyed, $asserter);
+                    }
+                }
 			}
 		}
 	}

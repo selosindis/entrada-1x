@@ -105,10 +105,6 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 	<h2 style="color: #669900">Other Reports</h2>
 	<ol class="system-reports">
 		<li>
-			<a href="<?php echo ENTRADA_URL; ?>/admin/reports?section=report-by-event-types">Learning Event Type Report (by Term)</a><br />
-			A detailed report containing the learning event type breakdown for Terms / Phases.
-		</li>
-		<li>
 			<a href="<?php echo ENTRADA_URL; ?>/admin/reports?section=report-on-podcasting">Podcast Usage Report</a><br />
 			A detailed report showing the usage statistics about all included podcasts.
 		</li>

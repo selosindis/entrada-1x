@@ -405,13 +405,7 @@ if(!defined("PARENT_INCLUDED")) {
 				<?php
 				if($SEARCH_CLASS) {
 					echo "<div style=\"border: 1px #CCCCCC solid; margin-bottom: 1px\">\n";
-					/**
-					 * @todo THIS MUST BE CHANGED BEFORE AUGUST 15th, 2009
-					 * Marco needs to add Freetype 2 support to the Meds server PHP installation.
-					 * This will be dynamically generated through the serve-images.php file
-					 * echo "	<img src=\"".ENTRADA_URL."/images/dynamic/14/314/5/90/".rawurlencode("Class of ".$SEARCH_CLASS)."/jpg\" width=\"25\" height=\"325\" align=\"left\" alt=\"Class of ".html_encode($SEARCH_CLASS)."\" title=\"Class of ".html_encode($SEARCH_CLASS)."\" />\n";
-					 */
-					echo "	<img src=\"".ENTRADA_URL."/images/search-class-of-".$SEARCH_CLASS.".jpg\" width=\"25\" height=\"325\" align=\"left\" alt=\"Class of ".html_encode($SEARCH_CLASS)."\" title=\"Class of ".html_encode($SEARCH_CLASS)."\" />\n";
+					echo "	<img src=\"".ENTRADA_URL."/images/dynamic/14/314/5/90/".rawurlencode("Class of ".$SEARCH_CLASS)."/jpg\" width=\"25\" height=\"325\" align=\"left\" alt=\"Class of ".html_encode($SEARCH_CLASS)."\" title=\"Class of ".html_encode($SEARCH_CLASS)."\" />\n";
 					echo "	<div id=\"search-timeline-".$SEARCH_CLASS."\" style=\"height: 325px\"></div>\n";
 					echo "</div>\n";
 				} else {
@@ -421,13 +415,7 @@ if(!defined("PARENT_INCLUDED")) {
 
 					for($gradyear = $graduation; $gradyear > ($graduation - 4); $gradyear--) {
 						echo "<div style=\"border: 1px #CCCCCC solid; margin-bottom: 1px\">\n";
-						/**
-						 * @todo THIS MUST BE CHANGED BEFORE AUGUST 15th, 2009
-						 * Marco needs to add Freetype 2 support to the Meds server PHP installation.
-						 * This will be dynamically generated through the serve-images.php file
-						 * echo "	<img src=\"".ENTRADA_URL."/images/dynamic/14/314/5/90/".rawurlencode("Class of ".$SEARCH_CLASS)."/jpg\" width=\"25\" height=\"325\" align=\"left\" alt=\"Class of ".html_encode($SEARCH_CLASS)."\" title=\"Class of ".html_encode($SEARCH_CLASS)."\" />\n";
-						 */
-						echo "	<img src=\"".ENTRADA_URL."/images/search-class-of-".$gradyear.".jpg\" width=\"25\" height=\"325\" align=\"left\" alt=\"Class of ".html_encode($gradyear)."\" title=\"Class of ".html_encode($gradyear)."\" />\n";
+						echo "	<img src=\"".ENTRADA_URL."/images/dynamic/14/314/5/90/".rawurlencode("Class of ".$gradyear)."/jpg\" width=\"25\" height=\"325\" align=\"left\" alt=\"Class of ".html_encode($gradyear)."\" title=\"Class of ".html_encode($gradyear)."\" />\n";
 						echo "	<div id=\"search-timeline-".$gradyear."\" style=\"height: 325px\"></div>\n";
 						echo "</div>\n";
 						$i++;

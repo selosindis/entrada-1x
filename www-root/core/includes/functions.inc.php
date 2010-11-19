@@ -1049,7 +1049,10 @@ function filter_name($filter_key) {
 		break;
 		case "organisation":
 			return "Organisations Involved";
-		break;
+			break;
+		case "objective":
+			return "Clinical Presentations Involved";
+			break;
 		default :
 			return false;
 		break;
@@ -7957,180 +7960,8 @@ function events_output_filter_controls($module_type = "") {
 					<option value="eventtype">Event Type Filters</option>
 					<option value="clinical_presentation">Clinical Presentation Filters</option>
 				</select>
-				<?php
-
-				$query = "SELECT `organisation_id`,`organisation_title` FROM `".AUTH_DATABASE."`.`organisations` ORDER BY `organisation_title` ASC";
-				$organisation_results = $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
-				$organisation_ids_string = "";
-				if ($organisation_results) {
-					$organisations = array();
-					foreach ($organisation_results as $result) {
-						if($ENTRADA_ACL->amIAllowed("resourceorganisation".$result["organisation_id"], "read")) {
-							if (!$organisation_ids_string) {
-								$organisation_ids_string = $db->qstr($result["organisation_id"]);
-							} else {
-								$organisation_ids_string .= ", ".$db->qstr($result["organisation_id"]);
-							}
-							if (isset($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["organisation"]) && is_array($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["organisation"]) && (in_array($result["organisation_id"], $_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["organisation"]))) {
-								$checked = 'checked="checked"';
-							} else {
-								$checked = '';
-							}
-							$organisations[$result["organisation_id"]] = array('text' => $result["organisation_title"], 'value' => 'organisation_'.$result["organisation_id"], 'checked' => $checked);
-							$organisation_categories[$result["organisation_id"]] = array('text' => $result["organisation_title"], 'value' => 'organisation_'.$result["organisation_id"], 'category'=>true);
-						}
-					}
-				}
-				if (!$organisation_ids_string) {
-					$organisation_ids_string = $db->qstr($ORGANISATION_ID);
-				}
-
-				// Get the possible teacher filters
-				$query = "	SELECT a.`id` AS `proxy_id`, a.`organisation_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`
-							FROM `".AUTH_DATABASE."`.`user_data` AS a
-							LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
-							ON b.`user_id` = a.`id`
-							LEFT JOIN `event_contacts` AS c
-							ON c.`proxy_id` = a.`id`
-							WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
-							AND a.`organisation_id` IN (".$organisation_ids_string.")
-							AND (b.`group` = 'faculty' OR (b.`group` = 'resident' AND b.`role` = 'lecturer'))
-							AND c.`econtact_id` IS NOT NULL
-							GROUP BY a.`id`
-							ORDER BY `fullname` ASC";
-				$teacher_results = $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
-				if ($teacher_results) {
-					$teachers = $organisation_categories;
-					foreach ($teacher_results as $r) {
-						if (isset($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["teacher"]) && is_array($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["teacher"]) && (in_array($r['proxy_id'], $_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]['teacher']))) {
-							$checked = 'checked="checked"';
-						} else {
-							$checked = '';
-						}
-
-						$teachers[$r["organisation_id"]]['options'][] = array('text' => $r['fullname'], 'value' => 'teacher_'.$r['proxy_id'], 'checked' => $checked);
-					}
-					echo lp_multiple_select_popup('teacher', $teachers, array('title'=>'Select Teachers:', 'submit_text'=>'Apply', 'cancel'=>true, 'submit'=>true));
-				}
-
-				// Get the possible Student filters
-				$query = "	SELECT a.`id` AS `proxy_id`, a.`organisation_id`, b.`role`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`
-							FROM `".AUTH_DATABASE."`.`user_data` AS a
-							LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
-							ON a.`id` = b.`user_id`
-							WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
-							AND a.`organisation_id` = ".$db->qstr($ORGANISATION_ID)."
-							AND b.`account_active` = 'true'
-							AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
-							AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
-							AND b.`group` = 'student'
-							AND b.`role` >= ".$db->qstr((fetch_first_year() - 4)).
-							(($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"] == "student") ? " AND a.`id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]) : "")."
-							GROUP BY a.`id`
-							ORDER BY b.`role` DESC, a.`lastname` ASC, a.`firstname` ASC";
-				$student_results = $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
-				if ($student_results) {
-					$students = $organisation_categories;
-					foreach ($student_results as $r) {
-						if (isset($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["student"]) && is_array($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["student"]) && (in_array($r['proxy_id'], $_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["student"]))) {
-							$checked = 'checked="checked"';
-						} else {
-							$checked = '';
-						}
-						$students[$r["organisation_id"]]['options'][] = array('text' => $r['fullname'], 'value' => 'student_'.$r['proxy_id'], 'checked' => $checked);
-					}
-
-					echo lp_multiple_select_popup('student', $students, array('title'=>'Select Students:', 'submit_text'=>'Apply', 'cancel'=>true, 'submit'=>true));
-				}
-
-				// Get the possible courses filters
-				$query = "	SELECT `course_id`, `course_name` 
-							FROM `courses` 
-							WHERE `organisation_id` = ".$db->qstr($ORGANISATION_ID)."
-							ORDER BY `course_name` ASC";
-				$courses_results = $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
-				if ($courses_results) {
-					$courses = array();
-					foreach ($courses_results as $c) {
-						if (isset($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["course"]) && is_array($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["course"]) && (in_array($c['course_id'], $_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["course"]))) {
-							$checked = 'checked="checked"';
-						} else {
-							$checked = '';
-						}
-
-						$courses[] = array('text' => $c['course_name'], 'value' => 'course_'.$c['course_id'], 'checked' => $checked);
-					}
-
-					echo lp_multiple_select_popup('course', $courses, array('title'=>'Select Courses:', 'submit_text'=>'Apply', 'cancel'=>true, 'submit'=>true));
-				}
-
-				// Get the possible event type filters
-				$query = "SELECT `eventtype_id`, `eventtype_title` FROM `events_lu_eventtypes` WHERE `eventtype_active` = '1' ORDER BY `eventtype_order` ASC";
-				$eventtype_results = $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
-				if ($eventtype_results) {
-					$eventtypes = array();
-					foreach ($eventtype_results as $result) {
-						if (isset($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["eventtype"]) && is_array($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["eventtype"]) && (in_array($result["eventtype_id"], $_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["eventtype"]))) {
-							$checked = 'checked="checked"';
-						} else {
-							$checked = '';
-						}
-						$eventtypes[] = array('text' => $result["eventtype_title"], 'value' => 'eventtype_'.$result["eventtype_id"], 'checked' => $checked);
-					}
-
-					echo lp_multiple_select_popup('eventtype', $eventtypes, array('title'=>'Select Event Types:', 'submit_text'=>'Apply', 'cancel'=>true, 'submit'=>true));
-				}
-
-				$syear		= (date("Y", time()) - 1);
-				$eyear		= (date("Y", time()) + 4);
-				$gradyears = array();
-				for ($year = $syear; $year <= $eyear; $year++) {
-					if (isset($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["grad"]) && is_array($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["grad"]) && (in_array($year, $_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["grad"]))) {
-						$checked = 'checked="checked"';
-					} else {
-						$checked = '';
-					}
-					$gradyears[] = array('text' => "Graduating in $year", 'value' => "grad_".$year, 'checked' => $checked);
-				}
-
-				echo lp_multiple_select_popup('grad', $gradyears, array('title'=>'Select Gradutating Years:', 'submit_text'=>'Apply', 'cancel'=>true, 'submit'=>true));
-
-				$phases = array(
-					array('text'=>'Term 1', 'value'=>'phase_1', 'checked'=>''),
-					array('text'=>'Term 2', 'value'=>'phase_2', 'checked'=>''),
-					array('text'=>'Term 3', 'value'=>'phase_t3', 'checked'=>''),
-					array('text'=>'Phase 2A', 'value'=>'phase_2a', 'checked'=>''),
-					array('text'=>'Phase 2B', 'value'=>'phase_2b', 'checked'=>''),
-					array('text'=>'Phase 2C', 'value'=>'phase_2c', 'checked'=>''),
-					array('text'=>'Phase 2E', 'value'=>'phase_2e', 'checked'=>''),
-					array('text'=>'Phase 3', 'value'=>'phase_3', 'checked'=>'')
-				);
-
-				for ($i = 0; $i < 6; $i++) {
-					if (isset($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["phase"]) && is_array($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["phase"])) {
-						$pieces = explode('_', $phases[$i]['value']);
-						if (in_array($pieces[1], $_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]['phase'])) {
-							$phases[$i]['checked'] = 'checked="checked"';
-						}
-					}
-				}
-
-				echo lp_multiple_select_popup('phase', $phases, array('title'=>'Select Phases / Terms:', 'submit_text'=>'Apply', 'cancel'=>true, 'submit'=>true));
-				
-				$clinical_presentations = fetch_mcc_objectives();
-				foreach ($clinical_presentations as &$clinical_presentation) {
-					$clinical_presentation["value"] = "objective_".$clinical_presentation["objective_id"];
-					$clinical_presentation["text"] = $clinical_presentation["objective_name"];
-					$clinical_presentation["checked"] = "";
-					if (isset($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["clinical_presentations"]) && is_array($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["clinical_presentations"])) {						
-						if (in_array($clinical_presentation["value"], $_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["clinical_presentations"])) {
-							$clinical_presentation["checked"] = "checked=\"checked\"";
-						}
-					}
-				}
-
-				echo lp_multiple_select_popup('clinical_presentation', $clinical_presentations, array('title'=>'Select Clinical Presentations:', 'submit_text'=>'Apply', 'cancel'=>true, 'submit'=>true));
-				?>
+				<span id="filter_options_loading" style="display:none; vertical-align: middle"><img src="<?php echo ENTRADA_RELATIVE; ?>/images/indicator.gif" width="16" height="16" alt="Please Wait" title="" style="vertical-align: middle" /> Loading ... </span>
+				<span id="options_container"></span>
 				</form>
 				<script type="text/javascript">
 				var multiselect = [];
@@ -8141,39 +7972,56 @@ function events_output_filter_controls($module_type = "") {
 					if (multiselect[id]) {
 						multiselect[id].container.show();
 					} else {
-						if ($(id+'_options')) {
-							$('filter_edit_type').value = id;
-							$(id+'_options').addClassName('multiselect-processed');
-							multiselect[id] = new Control.SelectMultiple('multifilter',id+'_options',{
-								checkboxSelector: 'table.select_multiple_table tr td input[type=checkbox]',
-								nameSelector: 'table.select_multiple_table tr td.select_multiple_name label',
-								filter: id+'_select_filter',
-								resize: id+'_scroll',
-								afterCheck: function(element) {
-									var tr = $(element.parentNode.parentNode);
-									tr.removeClassName('selected');
-									if (element.checked) {
-										tr.addClassName('selected');
-									}
+						new Ajax.Request('<?php echo ENTRADA_URL."/api/events_filters.api.php";?>', {
+							parameters: {options_for: id},
+							method: "GET",
+							onLoading: function() {
+								$('filter_options_loading').show();
+							},
+							onSuccess: function(response) {
+								$('options_container').insert(response.responseText);
+								if ($(id+'_options')) {
+									$('filter_edit_type').value = id;
+									$(id+'_options').addClassName('multiselect-processed');
+
+									multiselect[id] = new Control.SelectMultiple('multifilter',id+'_options',{
+										checkboxSelector: 'table.select_multiple_table tr td input[type=checkbox]',
+											nameSelector: 'table.select_multiple_table tr td.select_multiple_name label',
+											filter: id+'_select_filter',
+											resize: id+'_scroll',
+											afterCheck: function(element) {
+												var tr = $(element.parentNode.parentNode);
+												tr.removeClassName('selected');
+												if (element.checked) {
+													tr.addClassName('selected');
+												}
+											}
+									});
+
+									$(id+'_cancel').observe('click',function(event){
+										this.container.hide();
+										$('filter_select').options.selectedIndex = 0;
+										$('filter_select').show();
+										return false;
+									}.bindAsEventListener(multiselect[id]));
+
+									$(id+'_close').observe('click',function(event){
+										this.container.hide();
+										$('filter_edit').submit();
+										return false;
+									}.bindAsEventListener(multiselect[id]));
+
+									multiselect[id].container.show();
 								}
-							});
-
-							$(id+'_cancel').observe('click',function(event){
-								this.container.hide();
-								$('filter_select').options.selectedIndex = 0;
-									$('filter_select').show();
-								return false;
-							}.bindAsEventListener(multiselect[id]));
-
-							$(id+'_close').observe('click',function(event){
-								this.container.hide();
-								$('filter_edit').submit();
-								return false;
-							}.bindAsEventListener(multiselect[id]));
-
-							multiselect[id].container.show();
-						}
-					}
+							},
+							onError: function(response) {
+								alert("There was an error retrieving the events filter requested. Please try again.")		
+							},
+							onComplete: function() {
+								$('filter_options_loading').hide();
+							}
+						});
+					}	
 					return false;
 				}
 				function setDateValue(field, date) {
@@ -8888,17 +8736,13 @@ function event_objectives_in_list($objectives, $parent_id, $edit_text = false, $
 				if (((($objective["primary"]) || ($objective["secondary"]) || ($objective["tertiary"]) || ($parent_active)) && (count($objective["parent_ids"]) > 2))) {
 					$output .= "<li".((($edit_text) || (isset($objective["event_objective"]) && $objective["event_objective"])) && (count($objective["parent_ids"]) > 2) ? " class=\"".($importance == 2 ? "secondary" : ($importance == 3 ? "tertiary" : "primary"))."\"" : "").">\n";
 					if ($edit_text && !$course) {
-						$output .= "<div id=\"objective_table_".$objective_id."\">\n";
-						$output .= "	<input type=\"checkbox\" name=\"checked_objectives[".$objective_id."]\" id=\"objective_checkbox_".$objective_id."\"".($course ? " disabled=\"true\" checked=\"checked\"" : " onclick=\"if (this.checked) { $('c_objective_".$objective_id."').enable(); } else { $('c_objective_".$objective_id."').disable(); }\"".($objective["event_objective"] ? " checked=\"checked\"" : ""))." style=\"float: left;\" value=\"1\" />\n";
-						$output .= "	<label for=\"objective_checkbox_".$objective_id."\" class=\"heading\">".$objective["name"]."</label>\n";
-						$output .= "	<div class=\"content-small\" style=\"padding-left: 25px;\">".$objective["description"]."</div>\n";
+						$output .= "<div id=\"objective_table_".$objective_id."\" class=\"content-small\" style=\"color: #000\">\n";
+						$output .= "	<input type=\"checkbox\" name=\"checked_objectives[".$objective_id."]\" id=\"objective_checkbox_".$objective_id."\"".($course ? " disabled=\"true\" checked=\"checked\"" : " onclick=\"if (this.checked) { $('objective_table_".$objective_id."_details').show(); $('objective_text_".$objective_id."').focus(); } else { $('objective_table_".$objective_id."_details').hide(); }\"".($objective["event_objective"] ? " checked=\"checked\"" : ""))." style=\"float: left;\" value=\"1\" />\n";
+						$output .= "	<div style=\"padding-left: 25px;\"><label for=\"objective_checkbox_".$objective_id."\">".$objective["description"]." <a class=\"external content-small\" href=\"".ENTRADA_RELATIVE."/courses/objectives?section=objective-details&amp;oid=".$objective_id."\">".$objective["name"]."</a></label></div>\n";
 						$output .= "</div>\n";
-						$output .= "<div style=\"padding-left: 25px; margin: 5px 0 5px 0\">\n";
-						$output .= "	<input type=\"checkbox\" id=\"c_objective_".$objective_id."\" name=\"course_objectives[".$objective_id."]\" onclick=\"objectiveClick(this, '".$objective_id."', '".str_replace("'", "\'", $objective["objective_details"])."')\"".((isset($objective["objective_details"]) && $objective["objective_details"] && $course) || (isset($objective["event_objective_details"]) && $objective["event_objective_details"] && !$course && $objective["event_objective"]) ? "checked=\"checked\"" : (!$course && !$objective["event_objective"] ? " disabled=\"disabled\"" : ""))." value=\"1\" />\n";
-						$output .= "	<label for=\"c_objective_".$objective_id."\" class=\"content-small\" id=\"objective_".$objective_id."_append\" style=\"vertical-align: middle;\">Add additional detail to this curriculum objective.</label>\n";
-						if (isset($objective["event_objective_details"]) && $objective["event_objective_details"] && $objective["event_objective"]) {
-							$output .= "<textarea name=\"objective_text[".$objective_id."]\" id=\"objective_text_".$objective_id."\" class=\"expandable objective\">".html_encode($objective["event_objective_details"])."</textarea>";
-						}
+						$output .= "<div id=\"objective_table_".$objective_id."_details\" style=\"padding-left: 25px; margin-top: 5px".($objective["event_objective"] ? "" : "; display: none")."\">\n";
+						$output .= "	<label for=\"c_objective_".$objective_id."\" class=\"content-small\" id=\"objective_".$objective_id."_append\" style=\"vertical-align: middle;\">Provide your sessional free-text objective below as it relates to this curricular objective.</label>\n";
+						$output .= "	<textarea name=\"objective_text[".$objective_id."]\" id=\"objective_text_".$objective_id."\" class=\"expandable\">".(isset($objective["event_objective_details"]) ? html_encode($objective["event_objective_details"]) : "")."</textarea>";
 						$output .= "</div>\n";
 					} elseif ($edit_text) {
 						$edit_ajax[] = $objective_id;
@@ -11151,3 +10995,726 @@ function status_redirect($url) {
 	header( "refresh:5;url=".$url );
 	display_status_messages();
 }
+/**
+ * Function used by public evaluations and admin evaluations index to output the HTML for both the filter
+ * controls and current filter status (Showing Events That Include:) box.
+ */
+function eval_sche_output_filter_controls($module_type = "") {
+	global $db, $ENTRADA_ACL, $ORGANISATION_ID;
+
+	if (!isset($ORGANISATION_ID) || !$ORGANISATION_ID) {
+		if (isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["organisation_id"]) && $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["organisation_id"]) {
+			$ORGANISATION_ID = $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["organisation_id"];
+		} else {
+			$ORGANISATION_ID = $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"];
+			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["organisation_id"] = $ORGANISATION_ID;
+		}
+	}
+
+	/**
+	 * Determine whether or not this is being called from the admin section.
+	 */
+	if ($module_type == "admin") {
+		$module_type = "/admin";
+	} else {
+		$module_type = "";
+	}
+	?>
+	<table id="filterList" style="clear: both; width: 100%" cellspacing="0" cellpadding="0" border="0" summary="Event Filters">
+		<tr>
+			<td style="width: 53%; vertical-align: top">
+				<form action="<?php echo ENTRADA_URL.$module_type; ?>/events" method="get" id="filter_edit" name="filter_edit" style="position: relative;">
+				<input type="hidden" name="action" value="filter_edit" />
+				<input type="hidden" id="filter_edit_type" name="filter_type" value="" />
+				<input type="hidden" id="multifilter" name="filter" value="" />
+				<label for="filter_select" class="content-subheading" style="vertical-align: middle">Apply Filter:</label>
+				<select id="filter_select" onchange="showMultiSelect();" style="width: 184px; vertical-align: middle">
+					<option>Select Filter</option>
+					<option value="teacher">Teacher Filters</option>
+					<option value="student">Student Filters</option>
+					<option value="grad">Graduating Year Filters</option>
+					<option value="course">Course Filters</option>
+					<option value="phase">Phase / Term Filters</option>
+					<option value="eventtype">Event Type Filters</option>
+					<option value="clinical_presentation">Clinical Presentation Filters</option>
+				</select>
+				<?php
+
+				$query = "SELECT `organisation_id`,`organisation_title` FROM `".AUTH_DATABASE."`.`organisations` ORDER BY `organisation_title` ASC";
+				$organisation_results = $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
+				$organisation_ids_string = "";
+				if ($organisation_results) {
+					$organisations = array();
+					foreach ($organisation_results as $result) {
+						if($ENTRADA_ACL->amIAllowed("resourceorganisation".$result["organisation_id"], "read")) {
+							if (!$organisation_ids_string) {
+								$organisation_ids_string = $db->qstr($result["organisation_id"]);
+							} else {
+								$organisation_ids_string .= ", ".$db->qstr($result["organisation_id"]);
+							}
+							if (isset($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["organisation"]) && is_array($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["organisation"]) && (in_array($result["organisation_id"], $_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["organisation"]))) {
+								$checked = 'checked="checked"';
+							} else {
+								$checked = '';
+							}
+							$organisations[$result["organisation_id"]] = array('text' => $result["organisation_title"], 'value' => 'organisation_'.$result["organisation_id"], 'checked' => $checked);
+							$organisation_categories[$result["organisation_id"]] = array('text' => $result["organisation_title"], 'value' => 'organisation_'.$result["organisation_id"], 'category'=>true);
+						}
+					}
+				}
+				if (!$organisation_ids_string) {
+					$organisation_ids_string = $db->qstr($ORGANISATION_ID);
+				}
+
+				// Get the possible teacher filters
+				$query = "	SELECT a.`id` AS `proxy_id`, a.`organisation_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`
+							FROM `".AUTH_DATABASE."`.`user_data` AS a
+							LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+							ON b.`user_id` = a.`id`
+							LEFT JOIN `event_contacts` AS c
+							ON c.`proxy_id` = a.`id`
+							WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
+							AND a.`organisation_id` IN (".$organisation_ids_string.")
+							AND (b.`group` = 'faculty' OR (b.`group` = 'resident' AND b.`role` = 'lecturer'))
+							AND c.`econtact_id` IS NOT NULL
+							GROUP BY a.`id`
+							ORDER BY `fullname` ASC";
+				$teacher_results = $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
+				if ($teacher_results) {
+					$teachers = $organisation_categories;
+					foreach ($teacher_results as $r) {
+						if (isset($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["teacher"]) && is_array($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["teacher"]) && (in_array($r['proxy_id'], $_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]['teacher']))) {
+							$checked = 'checked="checked"';
+						} else {
+							$checked = '';
+						}
+
+						$teachers[$r["organisation_id"]]['options'][] = array('text' => $r['fullname'], 'value' => 'teacher_'.$r['proxy_id'], 'checked' => $checked);
+					}
+					echo lp_multiple_select_popup('teacher', $teachers, array('title'=>'Select Teachers:', 'submit_text'=>'Apply', 'cancel'=>true, 'submit'=>true));
+				}
+
+				// Get the possible Student filters
+				$query = "	SELECT a.`id` AS `proxy_id`, a.`organisation_id`, b.`role`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`
+							FROM `".AUTH_DATABASE."`.`user_data` AS a
+							LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+							ON a.`id` = b.`user_id`
+							WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
+							AND a.`organisation_id` = ".$db->qstr($ORGANISATION_ID)."
+							AND b.`account_active` = 'true'
+							AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
+							AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
+							AND b.`group` = 'student'
+							AND b.`role` >= ".$db->qstr(((date("Y", time()) + ((date("m", time()) < 7) ?  3 : 4)) - 4)).
+							(($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"] == "student") ? " AND a.`id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]) : "")."
+							GROUP BY a.`id`
+							ORDER BY b.`role` DESC, a.`lastname` ASC, a.`firstname` ASC";
+				$student_results = $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
+				if ($student_results) {
+					$students = $organisation_categories;
+					foreach ($student_results as $r) {
+						if (isset($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["student"]) && is_array($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["student"]) && (in_array($r['proxy_id'], $_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["student"]))) {
+							$checked = 'checked="checked"';
+						} else {
+							$checked = '';
+						}
+						$students[$r["organisation_id"]]['options'][] = array('text' => $r['fullname'], 'value' => 'student_'.$r['proxy_id'], 'checked' => $checked);
+					}
+
+					echo lp_multiple_select_popup('student', $students, array('title'=>'Select Students:', 'submit_text'=>'Apply', 'cancel'=>true, 'submit'=>true));
+				}
+
+				// Get the possible courses filters
+				$query = "	SELECT `course_id`, `course_name`
+							FROM `courses`
+							WHERE `organisation_id` = ".$db->qstr($ORGANISATION_ID)."
+							ORDER BY `course_name` ASC";
+				$courses_results = $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
+				if ($courses_results) {
+					$courses = array();
+					foreach ($courses_results as $c) {
+						if (isset($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["course"]) && is_array($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["course"]) && (in_array($c['course_id'], $_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["course"]))) {
+							$checked = 'checked="checked"';
+						} else {
+							$checked = '';
+						}
+
+						$courses[] = array('text' => $c['course_name'], 'value' => 'course_'.$c['course_id'], 'checked' => $checked);
+					}
+
+					echo lp_multiple_select_popup('course', $courses, array('title'=>'Select Courses:', 'submit_text'=>'Apply', 'cancel'=>true, 'submit'=>true));
+				}
+
+				// Get the possible event type filters
+				$query = "SELECT `eventtype_id`, `eventtype_title` FROM `events_lu_eventtypes` WHERE `eventtype_active` = '1' ORDER BY `eventtype_order` ASC";
+				$eventtype_results = $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
+				if ($eventtype_results) {
+					$eventtypes = array();
+					foreach ($eventtype_results as $result) {
+						if (isset($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["eventtype"]) && is_array($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["eventtype"]) && (in_array($result["eventtype_id"], $_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["eventtype"]))) {
+							$checked = 'checked="checked"';
+						} else {
+							$checked = '';
+						}
+						$eventtypes[] = array('text' => $result["eventtype_title"], 'value' => 'eventtype_'.$result["eventtype_id"], 'checked' => $checked);
+					}
+
+					echo lp_multiple_select_popup('eventtype', $eventtypes, array('title'=>'Select Event Types:', 'submit_text'=>'Apply', 'cancel'=>true, 'submit'=>true));
+				}
+
+				$syear		= (date("Y", time()) - 1);
+				$eyear		= (date("Y", time()) + 4);
+				$gradyears = array();
+				for ($year = $syear; $year <= $eyear; $year++) {
+					if (isset($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["grad"]) && is_array($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["grad"]) && (in_array($year, $_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["grad"]))) {
+						$checked = 'checked="checked"';
+					} else {
+						$checked = '';
+					}
+					$gradyears[] = array('text' => "Graduating in $year", 'value' => "grad_".$year, 'checked' => $checked);
+				}
+
+				echo lp_multiple_select_popup('grad', $gradyears, array('title'=>'Select Gradutating Years:', 'submit_text'=>'Apply', 'cancel'=>true, 'submit'=>true));
+
+				$phases = array(
+					array('text'=>'Term 1', 'value'=>'phase_1', 'checked'=>''),
+					array('text'=>'Term 2', 'value'=>'phase_2', 'checked'=>''),
+					array('text'=>'Term 3', 'value'=>'phase_t3', 'checked'=>''),
+					array('text'=>'Phase 2A', 'value'=>'phase_2a', 'checked'=>''),
+					array('text'=>'Phase 2B', 'value'=>'phase_2b', 'checked'=>''),
+					array('text'=>'Phase 2C', 'value'=>'phase_2c', 'checked'=>''),
+					array('text'=>'Phase 2E', 'value'=>'phase_2e', 'checked'=>''),
+					array('text'=>'Phase 3', 'value'=>'phase_3', 'checked'=>'')
+				);
+
+				for ($i = 0; $i < 6; $i++) {
+					if (isset($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["phase"]) && is_array($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["phase"])) {
+						$pieces = explode('_', $phases[$i]['value']);
+						if (in_array($pieces[1], $_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]['phase'])) {
+							$phases[$i]['checked'] = 'checked="checked"';
+						}
+					}
+				}
+
+				echo lp_multiple_select_popup('phase', $phases, array('title'=>'Select Phases / Terms:', 'submit_text'=>'Apply', 'cancel'=>true, 'submit'=>true));
+
+				$clinical_presentations = fetch_mcc_objectives();
+				foreach ($clinical_presentations as &$clinical_presentation) {
+					$clinical_presentation["value"] = "objective_".$clinical_presentation["objective_id"];
+					$clinical_presentation["text"] = $clinical_presentation["objective_name"];
+					$clinical_presentation["checked"] = "";
+					if (isset($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["clinical_presentations"]) && is_array($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["clinical_presentations"])) {
+						if (in_array($clinical_presentation["value"], $_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["clinical_presentations"])) {
+							$clinical_presentation["checked"] = "checked=\"checked\"";
+						}
+					}
+				}
+
+				echo lp_multiple_select_popup('clinical_presentation', $clinical_presentations, array('title'=>'Select Clinical Presentations:', 'submit_text'=>'Apply', 'cancel'=>true, 'submit'=>true));
+				?>
+				</form>
+				<script type="text/javascript">
+				var multiselect = [];
+				var id;
+				function showMultiSelect() {
+					$$('select_multiple_container').invoke('hide');
+					id = $F('filter_select');
+					if (multiselect[id]) {
+						multiselect[id].container.show();
+					} else {
+						if ($(id+'_options')) {
+							$('filter_edit_type').value = id;
+							$(id+'_options').addClassName('multiselect-processed');
+							multiselect[id] = new Control.SelectMultiple('multifilter',id+'_options',{
+								checkboxSelector: 'table.select_multiple_table tr td input[type=checkbox]',
+								nameSelector: 'table.select_multiple_table tr td.select_multiple_name label',
+								filter: id+'_select_filter',
+								resize: id+'_scroll',
+								afterCheck: function(element) {
+									var tr = $(element.parentNode.parentNode);
+									tr.removeClassName('selected');
+									if (element.checked) {
+										tr.addClassName('selected');
+									}
+								}
+							});
+
+							$(id+'_cancel').observe('click',function(event){
+								this.container.hide();
+								$('filter_select').options.selectedIndex = 0;
+									$('filter_select').show();
+								return false;
+							}.bindAsEventListener(multiselect[id]));
+
+							$(id+'_close').observe('click',function(event){
+								this.container.hide();
+								$('filter_edit').submit();
+								return false;
+							}.bindAsEventListener(multiselect[id]));
+
+							multiselect[id].container.show();
+						}
+					}
+					return false;
+				}
+				function setDateValue(field, date) {
+					timestamp = getMSFromDate(date);
+					if (field.value != timestamp) {
+						window.location = '<?php echo ENTRADA_URL.$module_type."/evaluations/scheduler?".(($_SERVER["QUERY_STRING"] != "") ? replace_query(array("dstamp" => false))."&" : ""); ?>dstamp='+timestamp;
+					}
+					return;
+				}
+				</script>
+			</td>
+			<td style="width: 47%; vertical-align: top">
+				<?php
+				if ((is_array($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"])) && (count($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]))) {
+					echo "<table class=\"inner-content-box\" id=\"filter-list\" cellspacing=\"0\" summary=\"Selected Filter List\">\n";
+					echo "<thead>\n";
+					echo "	<tr>\n";
+					echo "		<td class=\"inner-content-box-head\">Showing Events That Include:</td>\n";
+					echo "	</tr>\n";
+					echo "</thead>\n";
+					echo "<tbody>\n";
+					echo "	<tr>\n";
+					echo "		<td class=\"inner-content-box-body\">";
+					echo "		<div id=\"filter-list-resize-handle\" style=\"margin:0px -6px -6px -7px;\">";
+					echo "		<div id=\"filter-list-resize\" style=\"height: 60px; overflow: auto;  padding: 0px 6px 6px 6px;\">\n";
+					foreach ($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"] as $filter_type => $filter_contents) {
+						if (is_array($filter_contents)) {
+							echo 	$filter_name = filter_name($filter_type);
+							echo "	<div style=\"margin: 2px 0px 10px 3px\">\n";
+							foreach ($filter_contents as $filter_key => $filter_value) {
+								echo "	<div id=\"".$filter_type."_".$filter_key."\">";
+								echo "		<a href=\"".ENTRADA_URL.$module_type."/events?action=filter_remove&amp;filter=".$filter_type."_".$filter_key."\" title=\"Remove this filter\">";
+								echo "		<img src=\"".ENTRADA_URL."/images/checkbox-on.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" />";
+								switch ($filter_type) {
+									case "teacher" :
+									case "student" :
+										echo get_account_data("fullname", $filter_value);
+									break;
+									case "grad" :
+										echo "Class of ".$filter_value;
+									break;
+									case "course" :
+										echo course_name($filter_value);
+									break;
+									case "phase" :
+										echo "Phase / Term ".strtoupper($filter_value);
+									break;
+									case "eventtype" :
+										echo fetch_eventtype_title($filter_value);
+									break;
+									case "organisation":
+										echo fetch_organisation_title($filter_value);
+									break;
+									case "objective":
+										echo fetch_objective_title($filter_value);
+									break;
+									default :
+										echo strtoupper($filter_value);
+									break;
+								}
+								echo "		</a>";
+								echo "	</div>\n";
+							}
+							echo "	</div>\n";
+						}
+					}
+					echo "		</div>\n";
+					echo "		</div>\n";
+					echo "		</td>\n";
+					echo "	</tr>\n";
+					echo "</tbody>\n";
+					echo "</table>\n";
+					echo "<br />\n";
+					echo "<script type=\"text/javascript\">";
+					echo "	new ElementResizer($('filter-list-resize'), {handleElement: $('filter-list-resize-handle'), min: 40});";
+					echo "</script>";
+				}
+				?>
+			</td>
+		</tr>
+	</table>
+	<?php
+}
+/**
+ * Function used by public evaluations scheduler and admin evaluations index to output the HTML for the calendar controls.
+ */
+function eval_sche_output_calendar_controls($module_type = "") {
+	global $scheduler_evaluations;
+
+	/**
+	 * Determine whether or not this is being called from the admin section.
+	 */
+	if ($module_type == "admin") {
+		$module_type = "/admin";
+	} else {
+		$module_type = "";
+	}
+	?>
+	<table style="width: 100%; margin: 10px 0px 10px 0px" cellspacing="0" cellpadding="0" border="0">
+		<tr>
+			<td style="width: 53%; vertical-align: top; text-align: left">
+				<table style="width: 298px; height: 23px" cellspacing="0" cellpadding="0" border="0" summary="Display Duration Type">
+					<tr>
+						<td style="width: 22px; height: 23px"><a href="<?php echo ENTRADA_URL.$module_type."/evaluations/scheduler?".replace_query(array("dstamp" => ($scheduler_evaluations["duration_start"] - 2))); ?>" title="Previous <?php echo ucwords($_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["dtype"]); ?>"><img src="<?php echo ENTRADA_URL; ?>/images/cal-back.gif" border="0" width="22" height="23" alt="Previous <?php echo ucwords($_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["dtype"]); ?>" title="Previous <?php echo ucwords($_SESSION[APPLICATION_IDENTIFIER]["events"]["dtype"]); ?>" /></a></td>
+						<td style="width: 47px; height: 23px"><?php echo (($_SESSION[APPLICATION_IDENTIFIER]["events"]["dtype"] == "day") ? "<img src=\"".ENTRADA_URL."/images/cal-day-on.gif\" width=\"47\" height=\"23\" border=\"0\" alt=\"Day View\" title=\"Day View\" />" : "<a href=\"".ENTRADA_URL.$module_type."/evaluations/scheduler?".replace_query(array("dtype" => "day"))."\"><img src=\"".ENTRADA_URL."/images/cal-day-off.gif\" width=\"47\" height=\"23\" border=\"0\" alt=\"Day View\" title=\"Day View\" /></a>"); ?></td>
+						<td style="width: 47px; height: 23px"><?php echo (($_SESSION[APPLICATION_IDENTIFIER]["events"]["dtype"] == "week") ? "<img src=\"".ENTRADA_URL."/images/cal-week-on.gif\" width=\"47\" height=\"23\" border=\"0\" alt=\"Week View\" title=\"Week View\" />" : "<a href=\"".ENTRADA_URL.$module_type."/evaluations/scheduler?".replace_query(array("dtype" => "week"))."\"><img src=\"".ENTRADA_URL."/images/cal-week-off.gif\" width=\"47\" height=\"23\" border=\"0\" alt=\"Week View\" title=\"Week View\" /></a>"); ?></td>
+						<td style="width: 47px; height: 23px"><?php echo (($_SESSION[APPLICATION_IDENTIFIER]["events"]["dtype"] == "month") ? "<img src=\"".ENTRADA_URL."/images/cal-month-on.gif\" width=\"47\" height=\"23\" border=\"0\" alt=\"Month View\" title=\"Month View\" />" : "<a href=\"".ENTRADA_URL.$module_type."/evaluations/scheduler?".replace_query(array("dtype" => "month"))."\"><img src=\"".ENTRADA_URL."/images/cal-month-off.gif\" width=\"47\" height=\"23\" border=\"0\" alt=\"Month View\" title=\"Month View\" /></a>"); ?></td>
+						<td style="width: 47px; height: 23px"><?php echo (($_SESSION[APPLICATION_IDENTIFIER]["events"]["dtype"] == "year") ? "<img src=\"".ENTRADA_URL."/images/cal-year-on.gif\" width=\"47\" height=\"23\" border=\"0\" alt=\"Year View\" title=\"Year View\" />" : "<a href=\"".ENTRADA_URL.$module_type."/evaluations/scheduler?".replace_query(array("dtype" => "year"))."\"><img src=\"".ENTRADA_URL."/images/cal-year-off.gif\" width=\"47\" height=\"23\" border=\"0\" alt=\"Year View\" title=\"Year View\" /></a>"); ?></td>
+						<td style="width: 47px; height: 23px; border-left: 1px #9D9D9D solid"><a href="<?php echo ENTRADA_URL.$module_type."/evaluations/scheduler?".replace_query(array("dstamp" => ($scheduler_evaluations["duration_end"] + 1))); ?>" title="Following <?php echo ucwords($_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["dtype"]); ?>"><img src="<?php echo ENTRADA_URL; ?>/images/cal-next.gif" border="0" width="22" height="23" alt="Following <?php echo ucwords($_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["dtype"]); ?>" title="Following <?php echo ucwords($_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["dtype"]); ?>" /></a></td>
+						<td style="width: 33px; height: 23px; text-align: right"><a href="<?php echo ENTRADA_URL.$module_type; ?>/evaluations/scheduler?<?php echo replace_query(array("dstamp" => time())); ?>"><img src="<?php echo ENTRADA_URL; ?>/images/cal-home.gif" width="23" height="23" alt="Reset to display current calendar <?php echo $_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["dtype"]; ?>." title="Reset to display current calendar <?php echo $_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["dtype"]; ?>." border="0" /></a></td>
+						<td style="width: 33px; height: 23px; text-align: right"><img src="<?php echo ENTRADA_URL; ?>/images/cal-calendar.gif" width="23" height="23" alt="Show Calendar" title="Show Calendar" onclick="showCalendar('', document.getElementById('dstamp'), document.getElementById('dstamp'), '<?php echo html_encode($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dstamp"]); ?>', 'calendar-holder', 8, 8, 1)" style="cursor: pointer" id="calendar-holder" /></td>
+					</tr>
+				</table>
+			</td>
+			<td style="width: 47%; vertical-align: top; text-align: right">
+				<?php
+				if ($scheduler_evaluations["total_pages"] > 1) {
+					echo "<form action=\"".ENTRADA_URL.$module_type."/evaluations/scheduler\" method=\"get\" id=\"pageSelector\">\n";
+					echo "<div style=\"white-space: nowrap\">\n";
+					echo "<span style=\"width: 20px; vertical-align: middle; margin-right: 3px; text-align: left\">\n";
+					if ($scheduler_evaluations["page_previous"]) {
+						echo "<a href=\"".ENTRADA_URL.$module_type."/evaluations/scheduler?".replace_query(array("pv" => $scheduler_evaluations["page_previous"]))."\"><img src=\"".ENTRADA_URL."/images/record-previous-on.gif\" border=\"0\" width=\"11\" height=\"11\" alt=\"Back to page ".$scheduler_evaluations["page_previous"].".\" title=\"Back to page ".$scheduler_evaluations["page_previous"].".\" style=\"vertical-align: middle\" /></a>\n";
+					} else {
+						echo "<img src=\"".ENTRADA_URL."/images/record-previous-off.gif\" width=\"11\" height=\"11\" alt=\"\" title=\"\" style=\"vertical-align: middle\" />";
+					}
+					echo "</span>";
+					echo "<span style=\"vertical-align: middle\">\n";
+					echo "<select name=\"pv\" onchange=\"$('pageSelector').submit();\"".(($scheduler_evaluations["total_pages"] <= 1) ? " disabled=\"disabled\"" : "").">\n";
+					for ($i = 1; $i <= $scheduler_evaluations["total_pages"]; $i++) {
+						echo "<option value=\"".$i."\"".(($i == $scheduler_evaluations["page_current"]) ? " selected=\"selected\"" : "").">".(($i == $scheduler_evaluations["page_current"]) ? " Viewing" : "Jump To")." Page ".$i."</option>\n";
+					}
+					echo "</select>\n";
+					echo "</span>\n";
+					echo "<span style=\"width: 20px; vertical-align: middle; margin-left: 3px; text-align: right\">\n";
+					if ($scheduler_evaluations["page_current"] < $scheduler_evaluations["total_pages"]) {
+						echo "<a href=\"".ENTRADA_URL.$module_type."/evaluations/scheduler?".replace_query(array("pv" => $scheduler_evaluations["page_next"]))."\"><img src=\"".ENTRADA_URL."/images/record-next-on.gif\" border=\"0\" width=\"11\" height=\"11\" alt=\"Forward to page ".$scheduler_evaluations["page_next"].".\" title=\"Forward to page ".$learning_events["page_next"].".\" style=\"vertical-align: middle\" /></a>";
+					} else {
+						echo "<img src=\"".ENTRADA_URL."/images/record-next-off.gif\" width=\"11\" height=\"11\" alt=\"\" title=\"\" style=\"vertical-align: middle\" />";
+					}
+					echo "</span>\n";
+					echo "</div>\n";
+					echo "</form>\n";
+				}
+				?>
+			</td>
+		</tr>
+	</table>
+	<?php
+}
+
+/**
+ * Function used by public evaluations and admin evaluations schedular index to generate the SQL queries based on the users
+ * filter settings and results that can be iterated through by these views.
+ */
+function eval_sche_fetch_filtered_evals() {
+	global $db, $ORGANISATION_ID;
+
+	if (!isset($ORGANISATION_ID) || !$ORGANISATION_ID) {
+		if (isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["organisation_id"]) && $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["organisation_id"]) {
+			$ORGANISATION_ID = $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["organisation_id"];
+		} else {
+			$ORGANISATION_ID = $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"];
+			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["organisation_id"] = $ORGANISATION_ID;
+		}
+	}
+
+	$output = array(
+				"duration_start" => 0,
+				"duration_end" => 0,
+				"total_rows" => 0,
+				"total_pages" => 0,
+				"page_current" => 0,
+				"page_previous" => 0,
+				"page_next" => 0,
+				"evaluations" => array()
+			);
+
+	/**
+	 * Provide the queries with the columns to order by.
+	 */
+	switch ($_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["sb"]) {
+		case "teacher" :
+			$sort_by = "`fullname` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["so"]).", `evaluations`.`event_start` ASC";
+		break;
+		case "title" :
+			$sort_by = "`events`.`event_title` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["so"]).", `evaluations`.`event_start` ASC";
+		break;
+		case "phase" :
+			$sort_by = "`events`.`event_phase` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["so"]).", `evaluations`.`event_start` ASC";
+		break;
+		case "date" :
+		default :
+			$sort_by = "`evaluations`.`evaluation_id` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["so"]);
+		break;
+	}
+
+	/**
+	 * This fetches the unix timestamps from the first and last second of the day, week, month, year, etc.
+	 */
+	$display_duration = fetch_timestamps($_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["dtype"], $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dstamp"]);
+
+	$output["duration_start"] = $display_duration["start"];
+	$output["duration_end"] = $display_duration["end"];
+
+	/**
+	 * If there are filters set by the user, build the SQL to reflect the filters.
+	 */
+	if ((isset($_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["filters"])) && (@count($_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["filters"]))) {
+		$tmp_query = array();
+		$where_teacher = array();
+		$where_course = array();
+		$where_grad_year = array();
+		$where_phase = array();
+		$where_type = array();
+		$where_clinical_presentation = array();
+		$join_event_contacts = array();
+		$contact_sql = "";
+
+		$query_count = "	SELECT COUNT(DISTINCT `events`.`event_id`) AS `total_rows`
+							FROM `events`
+							LEFT JOIN `event_contacts` AS `primary_teacher`
+							ON `primary_teacher`.`event_id` = `events`.`event_id`
+							AND `primary_teacher`.`contact_order` = '0'
+							LEFT JOIN `event_eventtypes` AS `types`
+							ON `types`.`event_id` = `events`.`event_id`
+							LEFT JOIN `event_audience`
+							ON `event_audience`.`event_id` = `events`.`event_id`
+							%CONTACT_JOIN%
+							LEFT JOIN `".AUTH_DATABASE."`.`user_data`
+							ON `".AUTH_DATABASE."`.`user_data`.`id` = `primary_teacher`.`proxy_id`
+							LEFT JOIN `courses`
+							ON `courses`.`course_id` = `events`.`course_id`
+							LEFT JOIN `event_objectives`
+							ON `event_objectives`.`event_id` = `events`.`event_id`
+							AND `event_objectives`.`objective_type` = 'course'
+							WHERE `courses`.`course_active` = '1'
+							AND (`events`.`release_date` <= ".$db->qstr(time())." OR `events`.`release_date` = 0)
+							AND (`events`.`release_until` >= ".$db->qstr(time())." OR `events`.`release_until` = 0)
+							AND `courses`.`organisation_id` = ".$db->qstr($ORGANISATION_ID);
+
+		$query_events = "	SELECT `events`.`event_id`,
+							`events`.`course_id`,
+							`events`.`event_title`,
+							`events`.`event_start`,
+							`events`.`event_phase`,
+							`events`.`release_date`,
+							`events`.`release_until`,
+							`events`.`updated_date`,
+							`event_audience`.`audience_type`,
+							`courses`.`organisation_id`,
+							CONCAT_WS(', ', `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname`) AS `fullname`,
+							MAX(`statistics`.`timestamp`) AS `last_visited`
+							FROM `events`
+							LEFT JOIN `event_contacts` AS `primary_teacher`
+							ON `primary_teacher`.`event_id` = `events`.`event_id`
+							AND `primary_teacher`.`contact_order` = '0'
+							LEFT JOIN `event_eventtypes` AS `types`
+							ON `types`.`event_id` = `events`.`event_id`
+							LEFT JOIN `event_audience`
+							ON `event_audience`.`event_id` = `events`.`event_id`
+							%CONTACT_JOIN%
+							LEFT JOIN `".AUTH_DATABASE."`.`user_data`
+							ON `".AUTH_DATABASE."`.`user_data`.`id` = `primary_teacher`.`proxy_id`
+							LEFT JOIN `courses`
+							ON  (`courses`.`course_id` = `events`.`course_id`)
+							LEFT JOIN `event_objectives`
+							ON `event_objectives`.`event_id` = `events`.`event_id`
+							AND `event_objectives`.`objective_type` = 'course'
+							LEFT JOIN `statistics`
+							ON `statistics`.`module` = ".$db->qstr("events")."
+							AND `statistics`.`action_value` = `events`.`event_id`
+							AND `statistics`.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+							AND `statistics`.`action` = 'view'
+							AND `statistics`.`action_field` = 'event_id'
+							WHERE `courses`.`course_active` = '1'
+							AND `courses`.`organisation_id` = ".$db->qstr($ORGANISATION_ID);
+
+		if ($display_duration) {
+			$tmp_query[] = "(`events`.`event_start` BETWEEN ".$db->qstr($display_duration["start"])." AND ".$db->qstr($display_duration["end"]).")";
+		}
+
+		foreach ($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"] as $filter_type => $filter_contents) {
+			if ((is_array($filter_contents)) && (count($filter_contents))) {
+				foreach ($filter_contents as $filter_key => $filter_value) {
+					switch ($filter_type) {
+						case "teacher" :
+							$where_teacher[] = "(`primary_teacher`.`proxy_id` = ".$db->qstr($filter_value)." OR `event_contacts`.`proxy_id` = ".$db->qstr($filter_value).")";
+
+							$join_event_contacts[] = "(`event_contacts`.`proxy_id` = ".$db->qstr($filter_value).")";
+						break;
+						case "student" :
+							if (($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"] != "student") || ($filter_value == $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])) {
+								$student_grad_year = "";
+								$student_proxy_id = (int) $filter_value;
+
+								/**
+								 * Get the grad_year of the proxy_id.
+								 */
+								$query = "	SELECT `role` AS `grad_year`
+											FROM `".AUTH_DATABASE."`.`user_access`
+											WHERE `user_id` = ".$db->qstr($student_proxy_id)."
+											AND `app_id` = ".$db->qstr(AUTH_APP_ID)."
+											AND `group` = 'student'";
+								$result = $db->GetRow($query);
+								if (($result) && ($tmp_input = (int) $result["grad_year"])) {
+									$student_grad_year = "(`event_audience`.`audience_type` = 'grad_year' AND `event_audience`.`audience_value` = ".$db->qstr($tmp_input).") OR ";
+								}
+
+								$where_student[] = "(".$student_grad_year."(`event_audience`.`audience_type` = 'proxy_id' AND `event_audience`.`audience_value` = ".$db->qstr($student_proxy_id)."))";
+							}
+						break;
+						case "grad" :
+							$where_grad_year[] = "(`event_audience`.`audience_type` = 'grad_year' AND `event_audience`.`audience_value` = ".$db->qstr((int) $filter_value).")";
+						break;
+						case "course" :
+							$where_course[] = "(`events`.`course_id` = ".$db->qstr($filter_value).")";
+						break;
+						case "phase" :
+							$where_phase[] = "(`events`.`event_phase` LIKE ".$db->qstr($filter_value).")";
+						break;
+						case "eventtype" :
+							$where_type[] = "(`types`.`eventtype_id` = ".$db->qstr((int) $filter_value).")";
+						break;
+						case "objective" :
+							$where_clinical_presentation[] = "(`event_objectives`.`objective_id` = ".$db->qstr((int) $filter_value).")";
+						break;
+						default :
+							continue;
+						break;
+					}
+				}
+			}
+		}
+
+		if (isset($where_teacher) && count($where_teacher)) {
+			$tmp_query[] = implode(" OR ", $where_teacher);
+		}
+		if (isset($where_student) && count($where_student)) {
+			$tmp_query[] = implode(" OR ", $where_student);
+		}
+		if (isset($where_grad_year) && count($where_grad_year)) {
+			$tmp_query[] = implode(" OR ", $where_grad_year);
+		}
+		if (isset($where_course) && count($where_course)) {
+			$tmp_query[] = implode(" OR ", $where_course);
+		}
+		if (isset($where_phase) && count($where_phase)) {
+			$tmp_query[] = implode(" OR ", $where_phase);
+		}
+		if (isset($where_type) && count($where_type)) {
+			$tmp_query[] = implode(" OR ", $where_type);
+		}
+		if (isset($where_clinical_presentation) && count($where_clinical_presentation)) {
+			$tmp_query[] = implode(" OR ", $where_clinical_presentation);
+		}
+
+		if (isset($tmp_query) && count($tmp_query)) {
+			$query_count .= " AND (".implode(") AND (", $tmp_query).")";
+			$query_events .= " AND (".implode(") AND (", $tmp_query).")";
+		}
+
+		if (isset($join_event_contacts) && count($join_event_contacts)) {
+			$contact_sql = "	LEFT JOIN `event_contacts`
+								ON `event_contacts`.`event_id` = `events`.`event_id`
+								AND (".implode(" OR ", $join_event_contacts).")";
+		}
+
+	 	$query_count = str_replace("%CONTACT_JOIN%", $contact_sql, $query_count);
+		$query_events = str_replace("%CONTACT_JOIN%", $contact_sql, $query_events)." GROUP BY `events`.`event_id` ORDER BY %s LIMIT %s, %s";
+	} else {
+		$query_count = "	SELECT COUNT(DISTINCT `events`.`event_id`) AS `total_rows`
+							FROM `events`
+							LEFT JOIN `courses`
+							ON `events`.`course_id` = `courses`.`course_id`
+							WHERE `courses`.`organisation_id` = ".$db->qstr($ORGANISATION_ID)."
+							AND (`events`.`release_date` <= ".$db->qstr(time())." OR `events`.`release_date` = 0)
+							AND (`events`.`release_until` >= ".$db->qstr(time())." OR `events`.`release_until` = 0)
+							".(($display_duration) ? " AND `events`.`event_start` BETWEEN ".$db->qstr($display_duration["start"])." AND ".$db->qstr($display_duration["end"]) : "");
+                /**** Howard ***/
+                $query_count = "	SELECT COUNT(DISTINCT `evaluations`.`evaluation_id`) AS `total_rows`
+                                                        FROM `evaluations`";
+		$query_evaluations = "	SELECT `evaluations`.`evaluation_id`, `eform_id`, `evaluation_title`, `evaluation_description`, `evaluation_active`,
+                                            `evaluation_start`, `evaluation_finish`, `min_submittable`, `max_submittable`, `release_date`,
+                                            `release_until`, `updated_date`, `updated_by` from `evaluations`
+                                            ORDER BY %s
+                                            LIMIT %s, %s";
+	}
+
+	/**
+	 * Get the total number of results using the generated queries above and calculate the total number
+	 * of pages that are available based on the results per page preferences.
+	 */
+	$result_count = $db->GetRow($query_count);
+        //var_export ($_SESSION[APPLICATION_IDENTIFIER]);
+        //var_export ($_SESSION[APPLICATION_IDENTIFIER]);
+        //var_export ("_______________evaluation:_______________");
+        //var_export($_SESSION[APPLICATION_IDENTIFIER]["evaluations"]);
+        //print_r($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["evaluations"]);
+        //print_r($_SESSION[APPLICATION_IDENTIFIER][$modules]);
+        //        application_log("error", "$result_count=".$result_count);
+        //echo "______log______".'result_count[total_rows]: '. $result_count["total_rows"]."<br>";
+        //echo "______log______".'result_count: '.$result_count."<br>";
+	if ($result_count) {
+		$output["total_rows"] = (int) $result_count["total_rows"];
+
+		if ($output["total_rows"] <= $_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["pp"]) {
+			$output["total_pages"] = 1;
+		} elseif (($output["total_rows"] % $_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["pp"]) == 0) {
+			$output["total_pages"] = (int) ($output["total_rows"] / $_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["pp"]);
+		} else {
+			$output["total_pages"] = (int) ($output["total_rows"] / $_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["pp"]) + 1;
+		}
+	} else {
+		$output["total_rows"] = 0;
+		$output["total_pages"] = 1;
+	}
+	/**
+	 * Check if pv variable is set and see if it's a valid page, other wise page 1 it is.
+	 */
+	if (isset($_GET["pv"])) {
+		$output["page_current"] = (int) trim($_GET["pv"]);
+
+		if (($output["page_current"] < 1) || ($output["page_current"] > $output["total_pages"])) {
+			$output["page_current"] = 1;
+		}
+	} else {
+		$output["page_current"] = 1;
+	}
+
+	$output["page_previous"] = (($output["page_current"] > 1) ? ($output["page_current"] - 1) : false);
+	$output["page_next"] = (($output["page_current"] < $output["total_pages"]) ? ($output["page_current"] + 1) : false);
+
+	/**
+	 * Provides the first parameter of MySQLs LIMIT statement by calculating which row to start results from.
+	 */
+	$limit_parameter = (int) (($_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["pp"] * $output["page_current"]) - $_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["pp"]);
+
+	/**
+	 * Save the result ID so it can be used when displaying events.
+	 */
+	if ($limit_parameter) {
+		$output["rid"] = $limit_parameter;
+	} else {
+		$output["rid"] = 0;
+	}
+
+	/**
+	 * Provide the previous query so we can have previous / next event links on the details page.
+	 */
+	$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["evaluations"]["previous_query"]["query"] = $query_evaluations;
+	$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["evaluations"]["previous_query"]["total_rows"] = $output["total_rows"];
+
+	$query_evaluations = sprintf($query_evaluations, $sort_by, $limit_parameter, $_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["pp"]);
+	$scheduler_evaluations = $db->GetAll($query_evaluations);
+
+        //echo "______log______".'query_evaluations: '. $query_evaluations."<br>";
+	if ($scheduler_evaluations) {
+		$output["evaluations"] = $scheduler_evaluations;
+	}
+//echo "<br>";var_export ($output);
+	return $output;
+}
+

@@ -25,15 +25,6 @@
 */
 
 function show_log() {
-//var_export ($_SESSION[APPLICATION_IDENTIFIER]);
-//var_export ($_SESSION[APPLICATION_IDENTIFIER]);
-//var_export ("_______________evaluation:_______________");
-//var_export($_SESSION[APPLICATION_IDENTIFIER]["evaluations"]);
-//print_r($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["evaluations"]);
-//print_r($_SESSION[APPLICATION_IDENTIFIER][$modules]);
-//        application_log("error", "$result_count=".$result_count);
-//echo "______log______".'result_count[total_rows]: '. $result_count["total_rows"]."<br>";
-        //echo "______log______".'result_count: '.$result_count."<br>";
 }
 /**
  * Function used by public evaluations and admin evaluations index to output the HTML for both the filter
@@ -41,10 +32,6 @@ function show_log() {
  */
 function eval_sche_evaluators_filter_controls($module_type = "") {
 	global $db, $ENTRADA_ACL, $ORGANISATION_ID;
-    echo "______log______filters!"."<br>";
-var_export ($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]);
-var_export ($_SESSION[APPLICATION_IDENTIFIER]);
-    echo "______log______filters!"."<br>";
 	if (!isset($ORGANISATION_ID) || !$ORGANISATION_ID) {
 		if (isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["evaluations"]["organisation_id"]) && $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["evaluations"]["organisation_id"]) {
 			$ORGANISATION_ID = $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["evaluations"]["organisation_id"];

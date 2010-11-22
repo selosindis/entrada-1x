@@ -18,10 +18,10 @@
  * This file looks a bit different because it is called only by AJAX requests
  * and returns the members relevant to the requested group, role, and community.
  *
- * @author Organisation: Queen's University
+ * @author Organisation: University of Calgary
  * @author Unit: School of Medicine
- * @author Developer: Matt Simpson <matt.simpson@queensu.ca>
- * @copyright Copyright 2010 Queen's University. All Rights Reserved.
+ * @author Developer:  Howard Lu <yhlu@ucalgary.ca>
+ * @copyright Copyright 2010 University of Calgary. All Rights Reserved.
  *
  * @version $Id: add.inc.php 317 2009-01-19 19:26:35Z simpson $
  *

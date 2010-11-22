@@ -2,12 +2,14 @@
 <templates>
 	<template lang="en">
 		<![CDATA[
+		<div class="controls">
 			<span class="label">
-				Details: 
+				Actions:
 			</span>
-			<p class="data">
-				%DETAILS%
-			</p>
+			<span class="actions">
+				%CONTROLS%
+			</span>
+		</div>
 		]]>
 	</template>
 </templates>

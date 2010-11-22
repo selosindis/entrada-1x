@@ -1,9 +1,6 @@
 <?php
 
-require_once("Models/utility/Approvable.interface.php");
-require_once("Models/utility/AttentionRequirable.interface.php");
-
-class Contribution implements Approvable, AttentionRequirable {
+class Contribution implements Approvable, AttentionRequirable, Editable {
 	private $id;
 	private $user_id;
 	private $role;
@@ -12,16 +9,14 @@ class Contribution implements Approvable, AttentionRequirable {
 	private $start_year;
 	private $end_year;
 	private $org_event;
-	private $approved;
-	private $rejected;
+	private $status;
 	
-	function __construct($id, $user_id, $role, $org_event, $start_month, $start_year, $end_month, $end_year, $comment, $approved = false, $rejected = false) {
+	function __construct($id, $user_id, $role, $org_event, $start_month, $start_year, $end_month, $end_year, $comment, $status = 0) {
 		$this->id = $id;
 		$this->user_id = $user_id;
 		$this->role = $role;
 		$this->org_event = $org_event;
-		$this->approved = (bool) $approved;
-		$this->rejected = (bool)$rejected;
+		$this->status = $status;
 		$this->comment = $comment;
 		
 		$this->start_month = $start_month;
@@ -31,10 +26,7 @@ class Contribution implements Approvable, AttentionRequirable {
 	}
 	
 	public static function fromArray(array $arr) {
-		$rejected=($arr['status'] == -1);
-		$approved = ($arr['status'] == 1);
-		
-		return new self($arr['id'], $arr['user_id'], $arr['role'], $arr['org_event'], $arr['start_month'], $arr['start_year'], $arr['end_month'], $arr['end_year'], $arr['comment'], $approved, $rejected);
+		return new self($arr['id'], $arr['user_id'], $arr['role'], $arr['org_event'], $arr['start_month'], $arr['start_year'], $arr['end_month'], $arr['end_year'], $arr['comment'], $arr['status']);
 	
 	}
 	
@@ -97,7 +89,7 @@ class Contribution implements Approvable, AttentionRequirable {
 	}
 	
 	public function isApproved() {
-		return (bool)($this->approved);
+		return ($this->status == 1);
 	}
 	
 	/**
@@ -109,7 +101,7 @@ class Contribution implements Approvable, AttentionRequirable {
 	}
 	
 	public function isRejected() {
-		return (bool)($this->rejected);
+		return ($this->status == -1);
 	}
 		
 	/**
@@ -127,12 +119,12 @@ class Contribution implements Approvable, AttentionRequirable {
 		}
 	} 
 	
-	public static function create($user, $role, $org_event, $start_month, $start_year, $end_month, $end_year, $approved = false) {
+	public static function create(array $input_arr) {
+		extract($input_arr);
 		global $db;
-		$user_id = $user->getID();
-		$approved = (int) $approved;
-		$query = "insert into `student_contributions` (`user_id`, `role`,`org_event`,`start_month`, `start_year`, `end_month`,`end_year`, `status`) value (".$db->qstr($user_id).", ".$db->qstr($role).", ".$db->qstr($org_event).", ".$db->qstr($start_month).", ".$db->qstr($start_year).", ".$db->qstr($end_month).", ".$db->qstr($end_year).", ". $db->qstr($approved ? 1 : 0).")";
-		if(!$db->Execute($query)) {
+		$query = "insert into `student_contributions` (`user_id`, `role`,`org_event`,`start_month`, `start_year`, `end_month`,`end_year`, `status`) 
+				value (?,?,?,?,?,?,?,IFNULL(?,0))";
+		if(!$db->Execute($query, array($user_id, $role, $org_event, $start_month, $start_year, $end_month, $end_year, status))) {
 			add_error("Failed to create new contribution.");
 			application_log("error", "Unable to update a student_contributions record. Database said: ".$db->ErrorMsg());
 		} else {
@@ -152,18 +144,17 @@ class Contribution implements Approvable, AttentionRequirable {
 	}
 	
 	private function setStatus($status_code, $comment=null) {
-			global $db;
-			$query = "update `student_contributions` set
-					 `status`=?, `comment`=?  
-					 where `id`=?";
-			
-			if(!$db->Execute($query, array($status_code, $comment, $this->id))) {
-				add_error("Failed to update contribution.");
-				application_log("error", "Unable to update a student_contributions record. Database said: ".$db->ErrorMsg());
-			} else {
-				add_success("Successfully updated contribution.");
-				$this->approved = true;
-			}
+		global $db;
+		$query = "update `student_contributions` set
+				 `status`=?, `comment`=?  
+				 where `id`=?";
+		
+		if(!$db->Execute($query, array($status_code, $comment, $this->id))) {
+			add_error("Failed to update contribution.");
+			application_log("error", "Unable to update a student_contributions record. Database said: ".$db->ErrorMsg());
+		} else {
+			add_success("Successfully updated contribution.");
+		}
 	}
 	
 	public function approve() {
@@ -176,5 +167,23 @@ class Contribution implements Approvable, AttentionRequirable {
 	
 	public function reject($comment) {
 		$this->setStatus(-1, $comment);
+	}
+	
+	public function getStatus() {
+		return $this->status;
+	}
+	
+	public function update (array $input_arr) {
+		extract($input_arr);
+		global $db;
+		$query = "update `student_contributions` set
+				 `role`=?, `org_event`=?,`start_month`=?, `start_year`=?, `end_month`=?,`end_year`=?,`status`=?, `comment`=?  
+				 where `id`=?";
+		if(!$db->Execute($query, array($role, $org_event, $start_month, $start_year, $end_month, $end_year,$status, $comment, $this->id))) {
+			add_error("Failed to update contribution.");
+			application_log("error", "Unable to update a student_contributions record. Database said: ".$db->ErrorMsg());
+		} else {
+			add_success("Successfully updated contribution.");
+		}
 	}
 }

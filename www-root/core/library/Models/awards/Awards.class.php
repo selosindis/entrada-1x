@@ -15,7 +15,6 @@
  * You should have received a copy of the GNU General Public License
  * along with Entrada.  If not, see <http://www.gnu.org/licenses/>.
  *
- * The default file that is loaded when /admin/users is accessed.
  *
  * @author Organisation: Queen's University
  * @author Unit: School of Medicine
@@ -77,19 +76,5 @@ class Awards {
 		if ( $direction == SORT_DESC) {
 			array_reverse($awards);
 		}
-	}
-	
-	static function get($refresh = false) {
-		global $db;
-		if (! self::$initialized || $refresh) {
-			self::$awards = array();
-			$query		= "SELECT * FROM `student_awards_internal_types` order by title asc";
-			$results	= $db->GetAll($query);
-			foreach ($results as $result) {
-				array_push(self::$awards, new Award($result['id'], $result['title'], $result['award_terms'], $result['disabled']));
-			}
-			self::$initialized = true;
-		}
-		return self::$awards;
 	}
 }

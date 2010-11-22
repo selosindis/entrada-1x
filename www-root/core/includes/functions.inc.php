@@ -2082,7 +2082,7 @@ function clean_input($string, $rules = array()) {
 				break;
 				case "htmlspecialchars" : // Returns the output of the htmlspecialchars() function.
 				case "specialchars" :
-					$string = htmlspecialchars($string, ENT_QUOTES, DEFAULT_CHARSET);
+					$string = htmlspecialchars($string, ENT_QUOTES, DEFAULT_CHARSET, false);
 				break;
 				case "htmlbrackets" :	// Converts only brackets into entities.
 					$string = str_replace(array("<", ">"), array("&lt;", "&gt;"), $string);
@@ -7968,7 +7968,7 @@ function events_output_filter_controls($module_type = "") {
 					<option value="eventtype">Event Type Filters</option>
 					<option value="clinical_presentation">Clinical Presentation Filters</option>
 				</select>
-				<span id="filter_options_loading" style="display:none;"><img src="<?php echo ENTRADA_URL."/images/indicator.gif"; ?>"> Loading ... </span>
+				<span id="filter_options_loading" style="display:none; vertical-align: middle"><img src="<?php echo ENTRADA_RELATIVE; ?>/images/indicator.gif" width="16" height="16" alt="Please Wait" title="" style="vertical-align: middle" /> Loading ... </span>
 				<span id="options_container"></span>
 				</form>
 				<script type="text/javascript">
@@ -10283,34 +10283,6 @@ function display_mspr_details($data) {
 }
 
 /**
- * Adds require_onces for all of the models needed for MSPRs
- */
-function require_mspr_models() {
-	
-	require_once("Models/users/User.class.php");
-	
-	require_once("Models/utility/Approvable.interface.php");
-	require_once("Models/utility/AttentionRequirable.interface.php");
-	
-	require_once("Models/awards/InternalAwardReceipts.class.php");
-	
-	require_once("Models/mspr/ExternalAwardReceipts.class.php");
-	require_once("Models/mspr/Studentships.class.php");
-	require_once("Models/mspr/ClinicalPerformanceEvaluations.class.php");
-	require_once("Models/mspr/Contributions.class.php");
-	require_once("Models/mspr/DisciplinaryActions.class.php");
-	require_once("Models/mspr/LeavesOfAbsence.class.php");
-	require_once("Models/mspr/FormalRemediations.class.php");
-	require_once("Models/mspr/ClerkshipRotations.class.php");
-	require_once("Models/mspr/StudentRunElectives.class.php");
-	require_once("Models/mspr/Observerships.class.php");
-	require_once("Models/mspr/InternationalActivities.class.php");
-	require_once("Models/mspr/CriticalEnquiry.class.php");
-	require_once("Models/mspr/CommunityHealthAndEpidemiology.class.php");
-	require_once("Models/mspr/ResearchCitations.class.php");
-}
-
-/**
  * converts a month number (1-12) into a month name (January-December)
  * @param int $month_number
  */
@@ -11723,14 +11695,14 @@ function eval_sche_fetch_filtered_evals() {
 	 * of pages that are available based on the results per page preferences.
 	 */
 	$result_count = $db->GetRow($query_count);
-//var_export ($_SESSION[APPLICATION_IDENTIFIER]);
-//var_export ($_SESSION[APPLICATION_IDENTIFIER]);
-//var_export ("_______________evaluation:_______________");
-//var_export($_SESSION[APPLICATION_IDENTIFIER]["evaluations"]);
-//print_r($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["evaluations"]);
-//print_r($_SESSION[APPLICATION_IDENTIFIER][$modules]);
-//        application_log("error", "$result_count=".$result_count);
-//echo "______log______".'result_count[total_rows]: '. $result_count["total_rows"]."<br>";
+        //var_export ($_SESSION[APPLICATION_IDENTIFIER]);
+        //var_export ($_SESSION[APPLICATION_IDENTIFIER]);
+        //var_export ("_______________evaluation:_______________");
+        //var_export($_SESSION[APPLICATION_IDENTIFIER]["evaluations"]);
+        //print_r($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["evaluations"]);
+        //print_r($_SESSION[APPLICATION_IDENTIFIER][$modules]);
+        //        application_log("error", "$result_count=".$result_count);
+        //echo "______log______".'result_count[total_rows]: '. $result_count["total_rows"]."<br>";
         //echo "______log______".'result_count: '.$result_count."<br>";
 	if ($result_count) {
 		$output["total_rows"] = (int) $result_count["total_rows"];
@@ -11746,10 +11718,6 @@ function eval_sche_fetch_filtered_evals() {
 		$output["total_rows"] = 0;
 		$output["total_pages"] = 1;
 	}
-        echo "______log______".time()."_______<br><br>";
-        echo "______log______".'output[total_rows]: '. $output["total_rows"]."<br>";
-        echo "______log______".'output[total_pages]: '. $output["total_pages"]."<br>";
-        echo "______log______".'[evaluations][sb]: '. $_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["sb"]."<br>";
 	/**
 	 * Check if pv variable is set and see if it's a valid page, other wise page 1 it is.
 	 */
@@ -11789,7 +11757,7 @@ function eval_sche_fetch_filtered_evals() {
 	$query_evaluations = sprintf($query_evaluations, $sort_by, $limit_parameter, $_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["pp"]);
 	$scheduler_evaluations = $db->GetAll($query_evaluations);
 
-        echo "______log______".'query_evaluations: '. $query_evaluations."<br>";
+        //echo "______log______".'query_evaluations: '. $query_evaluations."<br>";
 	if ($scheduler_evaluations) {
 		$output["evaluations"] = $scheduler_evaluations;
 	}

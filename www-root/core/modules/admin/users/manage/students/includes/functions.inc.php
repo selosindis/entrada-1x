@@ -1,5 +1,4 @@
 <?php
-require_once("Models/utility/Template.class.php");
 require_once("Entrada/mspr/functions.inc.php");
 
 class MSPRAdminController {
@@ -22,26 +21,31 @@ class MSPRAdminController {
 		$type = $this->type;
 
 		static $valid = array(
-								"studentships" => array("add", "remove"),
+								"studentships" => array("add", "remove", "edit"),
 								"clineval" => array("add","remove", "edit"),
-								"internal_awards" => array("add","remove"),
-								"student_run_electives" => array("add","remove"),
+								"internal_awards" => array("add","remove", "edit"),
+								"student_run_electives" => array("add","remove", "edit"),
 								"observerships" => array("add","remove", "edit"),
-								"int_acts" => array("add","remove"),
-								"external_awards" => array("approve","unapprove","reject"),
-								"contributions" => array("approve","unapprove","reject"),
-								"critical_enquiry" => array("approve","unapprove","reject"),
-								"community_health_and_epidemiology" => array("approve","unapprove","reject"),
-								"research_citations" => array("approve","unapprove","reject")
+								"int_acts" => array("add","remove", "edit"),
+								"external_awards" => array("approve","unapprove","reject", "add", "edit"),
+								"contributions" => array("approve","unapprove","reject", "add", "edit"),
+								"critical_enquiry" => array("approve","unapprove","reject", "add", "edit"),
+								"community_based_project" => array("approve","unapprove","reject", "add", "edit"),
+								"research_citations" => array("approve","unapprove","reject", "add", "edit", "resequence")
 								);
 								
-		$section =  clean_input((isset($_GET['mspr-section']) ? $_GET['mspr-section'] : ""), array("lower", "trim"));
+		$section = filter_input(INPUT_GET, 'mspr-section', FILTER_CALLBACK, array('options'=>'strtolower'));
 		
 		if ($section) {
-			$entity_id = clean_input((isset($_POST['entity_id']) ? $_POST['entity_id'] : 0), array("int"));
-			$action = clean_input((isset($_POST['action']) ? $_POST['action'] : ""), array("lower"));
-			$comment = clean_input((isset($_POST['comment']) ? $_POST['comment'] : ""), array("notags"));
-			$user_id = clean_input((isset($_POST['user_id']) ? $_POST['user_id'] : 0), array("int"));
+			$params = array(
+				'entity_id'	=> FILTER_VALIDATE_INT,
+				'action'	=> array('filter' => FILTER_CALLBACK, 'options' => 'strtolower'),
+				'comment'	=> FILTER_SANITIZE_STRING,
+				'user_id'	=> FILTER_VALIDATE_INT
+			);
+			
+			$inputs = filter_input_array(INPUT_POST,$params);
+			extract($inputs);
 			
 			if (!$action) {
 				add_error($translator->translate("mspr_no_action"));
@@ -60,122 +64,125 @@ class MSPRAdminController {
 				}
 			}
 			
-			if (!has_error() && ($action != "add")) {
-				if (!$entity_id) {
-					add_error($translator->translate("mspr_no_entity"));
-				} else {
+			if (!has_error() && (in_array($action, array("add","edit","resequence")))) {
+				$inputs = get_mspr_inputs($section);
+				process_mspr_inputs($section, $inputs, $translator); //modifies inputs/adds errors
+			}
+			
+			
+			if (!has_error()) {
+				$inputs['user_id'] = $user_id;
+				if ($action == "add") {
+					if (AUTO_APPROVE_ADMIN_MSPR_SUBMISSIONS) {
+						$inputs['status'] = 1;
+					}
 					switch($section) {
-						case 'studentships':
-							$entity = Studentship::get($entity_id);
+						case "clineval":
+							ClinicalPerformanceEvaluation::create($inputs);
 							break;
-						case 'clineval':
-							$entity = ClinicalPerformanceEvaluation::get($entity_id);
+						case "observerships":
+							Observership::create($inputs);
+							break;
+						case 'studentships':
+							Studentship::create($inputs);
 							break;
 						case 'internal_awards':
-							$entity = InternalAwardReceipt::get($entity_id);
+							InternalAwardReceipt::create($inputs);
 							break;
 						case 'external_awards':
-							$entity = ExternalAwardReceipt::get($entity_id);
+							ExternalAwardReceipt::create($inputs);
 							break;
 						case 'contributions':
-							$entity = Contribution::get($entity_id);
+							Contribution::create($inputs);
 							break;
 						case 'student_run_electives':
-							$entity = StudentRunElective::get($entity_id);
-							break;
-						case 'observerships':
-							$entity = Observership::get($entity_id);
+							StudentRunElective::create($inputs);
 							break;
 						case 'int_acts':
-							$entity = InternationalActivity::get($entity_id);
+							InternationalActivity::create($inputs);
 							break;
 						case 'critical_enquiry':
-							$entity = CriticalEnquiry::get($entity_id);
+							if (CriticalEnquiry::get($user_id)) {
+								add_error($translator->translate("mspr_too_many_critical_enquiry"));  
+							} else {
+								CriticalEnquiry::create($inputs);
+							}
 							break;
-						case 'community_health_and_epidemiology':
-							$entity = CommunityHealthAndEpidemiology::get($entity_id);
+						case 'community_based_project':
+							if (CommunityBasedProject::get($user_id)) {
+								add_error($translator->translate("mspr_too_many_community_based_project"));  
+							} else {
+								CommunityBasedProject::create($inputs);
+							}
 							break;
 						case 'research_citations':
-							$entity = ResearchCitation::get($entity_id);
+							ResearchCitation::create($inputs);
 							break;
 					}
-					if (!$entity) {
-						add_error($translator->translate("mspr_invalid_entity"));
-					}
-					
-					if (!has_error()) {
-						switch($action) {
-							case "approve":
-								$entity->approve();
-								break;
-							case "unapprove":
-								$entity->unapprove();
-								break;
-							case "remove":
-								$entity->delete();
-								break;
-							case "reject":
-								if (MSPR_REJECTION_SEND_EMAIL) {
-									$sub_info = get_submission_information($entity);
-									$reason_type = ((!$comment) ?  "noreason" : "reason");
-									$active_user = User::get($_SESSION["details"]["id"]);
-									if ($active_user && $type) {
-			
-										submission_rejection_notification(	$reason_type,
-																		array(
-																			"firstname" => $user->getFirstname(),
-																			"lastname" => $user->getLastname(),
-																			"email" => $user->getEmail()),
-																		array(
-																			"to_fullname" => $user->getFirstname(). " " . $user->getLastname(),
-																			"from_firstname" => $active_user->getFirstname(),
-																			"from_lastname" => $active_user->getLastname(),
-																			"reason" => clean_input($comment,array("notags","specialchars")),
-																			"submission_details" => $sub_info,
-																			"application_name" => APPLICATION_NAME . " MSPR System"
-																			));
-									} else {
-										add_error($translator->translate("mspr_email_failed"));
-									}
-								}
-								$entity->reject($comment);
-								break;
-							case "edit":
-								switch($section) {
-									case "clineval":
-										$this->edit_clineval($entity);
-										break;
-									case "observerships":
-										$this->edit_observership($entity);
-										break;
-								}
-						}
-					}
-				}
-			} elseif($action == "add") {
-				if (!$user_id) {
-					add_error($translator->translate("mspr_invalid_user_info"));
-				}
-				if (!has_error()) {
+				} elseif ( $action == "resequence") {
 					switch($section) {
-						case 'studentships':
-							$this->add_studentship($user_id);
-							break;
-						case 'clineval':
-							$this->add_clineval($user_id);
-							break;
-						case 'internal_awards':
-							$this->add_internal_award_receipt($user_id);
-							break;
-						case 'student_run_electives':
-							$this->add_student_run_elective($user_id);
-							break;
-						case 'observerships':
-							$this->add_observership($user_id);
-							break;
-						case 'int_acts':
-							$this->add_int_act($user_id);
-							break;
+						case 'research_citations':
+							ResearchCitations::setSequence($user_id, $inputs['research_citations']);
+							break; 
+					}
+				} else { //everything else requires an entity
+					if ($entity_id) {
+						$entity = get_mspr_entity($section, $entity_id);
+						if ($entity) {
+							switch($action) {
+								case "approve":
+									$entity->approve();
+									break;
+								case "unapprove":
+									$entity->unapprove();
+									break;
+								case "remove":
+									$entity->delete();
+									break;
+								case "edit":
+									if ($entity instanceof Approvable){
+										if (AUTO_APPROVE_ADMIN_MSPR_EDITS) {
+											$inputs['comment'] = "";
+											$inputs['status'] = 1;
+										} else {
+											$inputs['comment'] = $entity->getComment();
+											$inputs['status'] = $entity->getStatus();
+										}
+									} 
+									$entity->update($inputs);//inputs processed above
+									break;
+								case "reject":
+									if (MSPR_REJECTION_SEND_EMAIL) {
+										$sub_info = get_submission_information($entity);
+										$reason_type = ((!$comment) ?  "noreason" : "reason");
+										$active_user = User::get($_SESSION["details"]["id"]);
+										if ($active_user && $type) {
+				
+											submission_rejection_notification(	$reason_type,
+																			array(
+																				"firstname" => $user->getFirstname(),
+																				"lastname" => $user->getLastname(),
+																				"email" => $user->getEmail()),
+																			array(
+																				"to_fullname" => $user->getFirstname(). " " . $user->getLastname(),
+																				"from_firstname" => $active_user->getFirstname(),
+																				"from_lastname" => $active_user->getLastname(),
+																				"reason" => clean_input($comment,array("notags","specialchars")),
+																				"submission_details" => $sub_info,
+																				"application_name" => APPLICATION_NAME . " MSPR System"
+																				));
+										} else {
+											add_error($translator->translate("mspr_email_failed"));
+										}
+									}
+									$entity->reject($comment);
+									break;
+							}
+						} else {
+							add_error($translator->translate("mspr_invalid_entity"));
+						} 
+					} else {
+						add_error($translator->translate("mspr_no_entity"));
 					}
 				}
 			}
@@ -235,10 +242,10 @@ class MSPRAdminController {
 					echo display_critical_enquiry($critical_enquiry, $type);
 				break;
 	
-				case 'community_health_and_epidemiology':
-					$community_health_and_epidemiology = CommunityHealthAndEpidemiology::get($user);
+				case 'community_based_project':
+					$community_based_project = CommunityBasedProject::get($user);
 					display_status_messages();
-					echo display_community_health_and_epidemiology($community_health_and_epidemiology, $type);
+					echo display_community_based_project($community_based_project, $type);
 				break;
 	
 				case 'research_citations':
@@ -249,200 +256,6 @@ class MSPRAdminController {
 			}
 		}
 	}
-	
-	private function add_observership($user_id) {
-		$translator = $this->_translator;
-		
-		$title = clean_input((isset($_POST['title']) ? $_POST['title'] : "" ),array("notags"));
-		$site = clean_input((isset($_POST['site']) ? $_POST['site'] : "" ),array("notags"));
-		$location = clean_input((isset($_POST['location']) ? $_POST['location'] : "" ),array("notags"));
-		$start = clean_input((isset($_POST['start']) ? $_POST['start'] : "" ),array("notags"));
-		$end = clean_input((isset($_POST['end']) ? $_POST['end'] : "" ),array("notags"));
-				
-		$preceptor_proxy_id = clean_input((isset($_POST['preceptor_proxy_id']) ? $_POST['preceptor_proxy_id'] : "" ),array("int"));
-		$preceptor_firstname = clean_input((isset($_POST['preceptor_firstname']) ? $_POST['preceptor_firstname'] : "" ),array("notags"));
-		$preceptor_lastname = clean_input((isset($_POST['preceptor_lastname']) ? $_POST['preceptor_lastname'] : "" ),array("notags"));
-		
-		if (!checkDateFormat($start)) {
-			add_error($translator->translate("mspr_observership_invalid_dates"));
-		} else {
-			$parts = date_parse($start);  
-			$start_ts = mktime(0,0, 0, $parts['month'],$parts['day'], $parts['year']);
-			if ($end && checkDateFormat($end)) {
-				$parts = date_parse($end);  
-				$end_ts = mktime(0,0, 0, $parts['month'],$parts['day'], $parts['year']);
-			} else {
-				$end_ts = null;
-			}
-		}
-		
-		if (!$preceptor_proxy_id) {
-			$preceptor_proxy_id = null; 
-		}
-		
-		if (!$preceptor_proxy_id && !($preceptor_firstname || $preceptor_lastname)) {
-			add_error($translator->translate("mspr_observership_preceptor_required"));
-		}
-		
-		if ($preceptor_proxy_id == -1) {
-			//special case for "Various"
-			$preceptor_proxy_id = 0; //not faculty 
-			$preceptor_firstname = "Various";
-			$preceptor_lastname = "";
-		}
-		
-		if (!has_error()) {
-			if ($user_id && $title && $site && $location && $start_ts) {
-								
-				Observership::create($user_id, $title, $site, $location, $preceptor_proxy_id, $preceptor_firstname, $preceptor_lastname, $start_ts, $end_ts);
-			} else {
-				add_error($translator->translate("mspr_insufficient_info"));
-			}
-		}
-	}
-	
-	private function edit_observership($obs) {
-		$translator = $this->_translator;
-		
-		$title = clean_input((isset($_POST['title']) ? $_POST['title'] : "" ),array("notags"));
-		$site = clean_input((isset($_POST['site']) ? $_POST['site'] : "" ),array("notags"));
-		$location = clean_input((isset($_POST['location']) ? $_POST['location'] : "" ),array("notags"));
-		$start = clean_input((isset($_POST['start']) ? $_POST['start'] : "" ),array("notags"));
-		$end = clean_input((isset($_POST['end']) ? $_POST['end'] : "" ),array("notags"));
-				
-		$preceptor_proxy_id = clean_input((isset($_POST['preceptor_proxy_id']) ? $_POST['preceptor_proxy_id'] : "" ),array("int"));
-		$preceptor_firstname = clean_input((isset($_POST['preceptor_firstname']) ? $_POST['preceptor_firstname'] : "" ),array("notags"));
-		$preceptor_lastname = clean_input((isset($_POST['preceptor_lastname']) ? $_POST['preceptor_lastname'] : "" ),array("notags"));
-		
-		if (!checkDateFormat($start)) {
-			add_error($translator->translate("mspr_observership_invalid_dates"));
-		} else {
-			$parts = date_parse($start);  
-			$start_ts = mktime(0,0, 0, $parts['month'],$parts['day'], $parts['year']);
-			if ($end && checkDateFormat($end)) {
-				$parts = date_parse($end);  
-				$end_ts = mktime(0,0, 0, $parts['month'],$parts['day'], $parts['year']);
-			} else {
-				$end_ts = null;
-			}
-		}
-		
-		if (!$preceptor_proxy_id) {
-			$preceptor_proxy_id = null; 
-		}
-		
-		if (!$preceptor_proxy_id && !($preceptor_firstname || $preceptor_lastname)) {
-			add_error($translator->translate("mspr_observership_preceptor_required"));
-		}
-		
-		if ($preceptor_proxy_id === -1) {
-			//special case for "Various"
-			$preceptor_proxy_id = 0; //not faculty 
-			$preceptor_firstname = "Various";
-			$preceptor_lastname = "";
-		}
-		
-		if (!has_error()) {
-			if ($title && $site && $location && $start_ts) {
-				$obs->update($title, $site, $location, $preceptor_proxy_id, $preceptor_firstname, $preceptor_lastname, $start_ts, $end_ts);				
-			} else {
-				add_error($translator->translate("mspr_insufficient_info"));
-			}
-		}
-	}
-	
-	private function add_studentship($user_id) {
-		$translator = $this->_translator;
-		
-		$title = clean_input((isset($_POST['title']) ? $_POST['title'] : "" ),array("notags"));
-		$year = clean_input((isset($_POST['year']) ? $_POST['year'] : "" ), array("int"));
-		if ($title && $year && $user_id) {
-			Studentship::create($user_id,$title,$year);
-		} else {
-			add_error($translator->translate("mspr_insufficient_info"));
-		}
-	}
-	
-	private function add_clineval($user_id) {
-		$translator = $this->_translator;
-		
-		$source = clean_input((isset($_POST['source']) ? $_POST['source'] : "" ),array("notags"));
-		$comment = clean_input((isset($_POST['text']) ? $_POST['text'] : "" ),array("notags"));
-		if ($source && $comment && $user_id) {
-			ClinicalPerformanceEvaluation::create($user_id,$comment,$source);
-		} else {
-			add_error($translator->translate("mspr_insufficient_info"));
-		}
-	}
-	
-	private function edit_clineval($clineval) {
-		$translator = $this->_translator;
-		
-		$source = clean_input((isset($_POST['source']) ? $_POST['source'] : "" ),array("notags"));
-		$comment = clean_input((isset($_POST['text']) ? $_POST['text'] : "" ),array("notags"));
-		if ($source && $comment && $clineval) {
-			$clineval->update($comment, $source);
-		} else {
-			add_error($translator->translate("mspr_insufficient_info"));
-		}
-	}
-	
-	private function add_int_act($user_id) {
-		$translator = $this->_translator;
-		
-		$title = clean_input((isset($_POST['title']) ? $_POST['title'] : "" ),array("notags"));
-		$site = clean_input((isset($_POST['site']) ? $_POST['site'] : "" ),array("notags"));
-		$location = clean_input((isset($_POST['location']) ? $_POST['location'] : "" ),array("notags"));
-		$start = clean_input((isset($_POST['start']) ? $_POST['start'] : "" ),array("notags"));
-		$end = clean_input((isset($_POST['end']) ? $_POST['end'] : "" ),array("notags"));
-			
-		if (!checkDateFormat($start)) {
-			add_error($translator->translate("mspr_observership_invalid_dates"));
-		} else {
-			if (!$end || !checkDateFormat($end)) {
-				$end = $start;
-			}
-		}
-		
-		if ($user_id && $title && $site && $location && $start) {
-							
-			InternationalActivity::create($user_id, $title, $site, $location, $start, $end);
-		} else {
-			add_error($translator->translate("mspr_insufficient_info"));
-		}
-	}
-	
-	private function add_student_run_elective($user_id) {
-		$translator = $this->_translator;
-		
-		$group_name = clean_input((isset($_POST['group_name']) ? $_POST['group_name'] : "" ),array("notags"));
-		$university = clean_input((isset($_POST['university']) ? $_POST['university'] : "" ),array("notags"));
-		$location = clean_input((isset($_POST['location']) ? $_POST['location'] : "" ),array("notags"));
-		$start_year = clean_input((isset($_POST['start_year']) ? $_POST['start_year'] : "" ),array("int"));
-			
-		if ($user_id && $group_name && $university && $location && $start_year) {
-			$end_year = clean_input((isset($_POST['end_year']) ? $_POST['end_year'] : "" ),array("int"));
-			$start_month = clean_input((isset($_POST['start_month']) ? $_POST['start_month'] : "" ),array("int"));
-			$end_month = clean_input((isset($_POST['end_month']) ? $_POST['end_month'] : "" ),array("int"));
-							
-			StudentRunElective::create($user_id, $group_name, $university, $location, $start_month, $start_year, $end_month, $end_year);
-		} else {
-			add_error($translator->translate("mspr_insufficient_info"));
-		}
-	}
-	
-	private function add_internal_award_receipt($user_id) {
-		$translator = $this->_translator;
-		
-		$award_id = clean_input((isset($_POST['title']) ? $_POST['title'] : 0), array("int"));
-		if ($user_id && $award_id) {
-			$year = clean_input((isset($_POST['year']) ? $_POST['year'] : "" ), array("int"));
-			InternalAwardReceipt::create($award_id,$user_id,$year);
-		} else {
-			add_error($translator->translate("mspr_insufficient_info"));
-		}
-	}
-	
 }
 
 /**
@@ -547,7 +360,7 @@ function process_mspr_details($translator,$section) {
 function submission_rejection_notification($type, $to = array(), $keywords = array()) {
 	global $AGENT_CONTACTS;
 	if (!is_array($to) || !isset($to["email"]) || !valid_address($to["email"]) || !isset($to["firstname"]) || !isset($to["lastname"])) {
-		application_log("error", "Attempting to send a task_verification_notification() however the recipient information was not complete.");
+		application_log("error", "Attempting to send a submission_rejection_notification() however the recipient information was not complete.");
 		
 		return false;
 	}

@@ -2,6 +2,10 @@
 <templates>
 	<template lang="en">
 		<![CDATA[
+			<span class="handle"><img src="%IMAGE%" /></span>
+			<form class="edit_data">
+				<input type="hidden" name="details" value="%DETAILS%" />
+			</form>
 			<span class="label">
 				Details: 
 			</span>

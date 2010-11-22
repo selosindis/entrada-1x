@@ -26,17 +26,13 @@ require_once("init.inc.php");
 if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 	if ($ENTRADA_ACL->amIAllowed("mspr", "update", false)) {
 
-		require_once(dirname(__FILE__)."/includes/functions.inc.php");
 		
 		ob_clear_open_buffers();
-	
-		
-		require_mspr_models();
-		
+		require_once(dirname(__FILE__)."/includes/functions.inc.php");
 		
 		$user = User::get($_SESSION["details"]["id"]);
-		process_mspr_profile($user);		
-		
+		$controller = new MSPRPublicController($translate, $user);
+		$controller->process();	
 	}
 	exit;
 }

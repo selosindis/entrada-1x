@@ -87,7 +87,7 @@ class InternalAwards {
 			$query		= "SELECT * FROM `student_awards_internal_types` order by title asc";
 			$results	= $db->GetAll($query);
 			foreach ($results as $result) {
-				array_push(self::$awards, new InternalAward($result['id'], $result['title'], $result['award_terms'], $result['disabled']));
+				array_push(self::$awards, InternalAward::fromArray($result));
 			}
 			self::$initialized = true;
 		}

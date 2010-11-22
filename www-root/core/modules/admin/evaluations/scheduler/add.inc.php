@@ -65,11 +65,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
         }
         unset($tmp_action_type);
 
-        echo "<div class=\"no-printing\">\n";
-	echo "	<div style=\"float: right; margin-top: 8px\">\n";
-	echo "		<a href=\"".ENTRADA_URL."/admin/evaluations/scheduler?".replace_query(array("section" => "content", "id" => $EVENT_ID))."\"><img src=\"".ENTRADA_URL."/images/event-contents.gif\" width=\"16\" height=\"16\" alt=\"Manage event content\" title=\"Manage event content\" border=\"0\" style=\"vertical-align: middle\" /></a> <a href=\"".ENTRADA_URL."/admin/evaluations/scheduler?".replace_query(array("section" => "content", "id" => $EVENT_ID, "step" => false))."\" style=\"font-size: 10px; margin-right: 8px\">Manage evaluation content</a>\n";
-	echo "	</div>\n";
-	echo "</div>\n";
+        
 	echo "<h1>Adding Evaluation</h1>\n";
         
         //Added by Howard
@@ -79,7 +75,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 	switch($STEP) {
 		case 2 :
 		/**
-		 * Required field "evaluation_title" / Event Title.
+		 * Required field "evaluation_title" / Evaluation Title.
 		 */
 			if((isset($_POST["evaluation_title"])) && ($evaluation_title = clean_input($_POST["evaluation_title"], array("notags", "trim")))) {
 				$PROCESSED["evaluation_title"] = $evaluation_title;
@@ -125,8 +121,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 			} else {
 				$PROCESSED["evaluation_finish"] = 0;
 			}
-                        echo "______log______evaluation_start: ".$PROCESSED["evaluation_start"]."<br>";
-                        echo "______log______evaluation_finish: ".$PROCESSED["evaluation_finish"]."<br>";
+                        //echo "______log______evaluation_start: ".$PROCESSED["evaluation_start"]."<br>";
+                        //echo "______log______evaluation_finish: ".$PROCESSED["evaluation_finish"]."<br>";
 
 					
 			/**
@@ -200,7 +196,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 								$ERROR++;
 								$ERRORSTR[] = "There was an error while trying to save this evaluation.<br /><br />The system administrator was informed of this error; please try again later.";
 
-								application_log("error", "Unable to insert a new evaluation record while adding a new event. Database said: ".$db->ErrorMsg());
+								application_log("error", "Unable to insert a new evaluation record while adding a new evaluation. Database said: ".$db->ErrorMsg());
 							}
 				} else {
 					$ERROR++;
@@ -289,7 +285,6 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 			}
 			?>
 			<form action="<?php echo ENTRADA_URL; ?>/admin/evaluations/scheduler?section=add&amp;step=2" method="post" name="addEvaluationForm" id="addEvaluationForm">
-
                                     <table cellspacing="0" cellpadding="0" border="0">
 					<colgroup>
 						<col style="width: 3%" />
@@ -406,6 +401,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 								</tr>
 							</table>
 						</td>
+                                                <td><input type="button" value="Proceed" class="button" onclick="javascript:search_grad_year()" style="background-image: url('<?php echo ENTRADA_URL; ?>/images/btn_bg.gif');" />
+                                                        </td>
 					</tr>
                                 </div>
 				</table>
@@ -413,8 +410,9 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 				<?php //eval_sche_evaluators_filter_controls("admin"); ?>
 			<script type="text/javascript">
                                 function search_grad_year(){
-                                    document.addEvaluationForm.action="<?php echo ENTRADA_URL; ?>/admin/evaluations/scheduler?section=add";
-                                    document.addEvaluationForm.submit();
+                                    alert("Fly....");
+                                    //document.addEvaluationForm.action="<?php echo ENTRADA_URL; ?>/admin/evaluations/scheduler?section=add";
+                                    //document.addEvaluationForm.submit();
                                 }
 
 				function selectEventAudienceOption(type) {

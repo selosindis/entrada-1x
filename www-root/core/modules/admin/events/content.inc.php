@@ -1120,16 +1120,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								echo "	<td style=\"vertical-align: top\">\n";
 								echo "		<div id=\"course-objectives-section\">\n";
 								echo "			<strong>The learner will be able to:</strong>\n";
-								echo			event_objectives_in_list($curriculum_objectives_list["objectives"], 1, true, false, 1, false);
+								echo			event_objectives_in_list($curriculum_objectives_list, 1, true, false, 1, false);
 								echo "		</div>\n";
 								echo "	</td>\n";
 								echo "</tr>\n";
-
-								$sidebar_html  = "<div style=\"margin: 2px 0px 10px 3px; font-size: 10px\">\n";
-								$sidebar_html .= "	<div><img src=\"".ENTRADA_URL."/images/legend-primary-objective.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" style=\"vertical-align: middle\" /> Primary Objective</div>\n";
-								$sidebar_html .= "	<div><img src=\"".ENTRADA_URL."/images/legend-secondary-objective.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" style=\"vertical-align: middle\" /> Secondary Objective</div>\n";
-								$sidebar_html .= "	<div><img src=\"".ENTRADA_URL."/images/legend-tertiary-objective.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" style=\"vertical-align: middle\" /> Tertiary Objective</div>\n";
-								$sidebar_html .= "</div>\n";
 
 								new_sidebar_item("Objective Importance", $sidebar_html, "objective-legend", "open");
 							}

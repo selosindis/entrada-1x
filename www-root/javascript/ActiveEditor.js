@@ -32,26 +32,31 @@
 				var modal_confirm = edit_modal.container.down(".modal-confirm");
 				var modal_close = edit_modal.container.down(".modal-close");
 				
-				function close_modal() {
+				function afterClose(event) {
+					edit_modal.container.down("form").reset();
+					modal_close.stopObserving("click", close_modal);
+					modal_confirm.stopObserving("click", confirm_modal);
+					edit_modal.container.down("form").stopObserving("submit", confirm_modal );
+				}
+				
+				function close_modal(event) {
 					//clear all of the fields.
 					edit_modal.close();
-					edit_modal.container.down("form").reset();
-					modal_close.stopObserving("click", close_modal);
-					modal_confirm.stopObserving("click", confirm_modal);
 				} 
-				function confirm_modal() {
-					edit_modal.close();
+				function confirm_modal(event) {
+					Event.stop(event);
 					edited_fields = edit_modal.container.down("form").serialize(true);
+					edit_modal.close();
 					Object.extend(form_values, edited_fields);
-					edit_modal.container.down("form").reset();
 					process_entry(form_values);
-					modal_close.stopObserving("click", close_modal);
-					modal_confirm.stopObserving("click", confirm_modal);
 				}
-
+				
+				edit_modal.container.down("form").observe("submit", confirm_modal );
+				
 				modal_confirm.observe("click", confirm_modal);
 				modal_close.observe("click", close_modal);
 
+				edit_modal.options.afterClose = afterClose;
 				edit_modal.open();
 								
 				var owner = form.up(".entry");

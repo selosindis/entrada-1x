@@ -23,9 +23,8 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
 }  else {
+	require_once(dirname(__FILE__)."/includes/functions.inc.php");
 	
-	require_once("Models/users/ClinicalFacultyMembers.class.php");
-	require_once("Models/mspr/MSPRs.class.php");
 	$PROXY_ID					= $user_record["id"];
 	$user = User::get($user_record["id"]);
 	
@@ -40,6 +39,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 	$HEAD[] = "<script language='javascript' src='".ENTRADA_URL."/javascript/ActiveDataEntryProcessor.js'></script>";
 	$HEAD[] = "<script language='javascript' src='".ENTRADA_URL."/javascript/ActiveEditor.js'></script>";
 	$HEAD[] = "<script language='javascript' src='".ENTRADA_URL."/javascript/ActiveApprovalProcessor.js'></script>";
+	$HEAD[] = "<script language='javascript' src='".ENTRADA_URL."/javascript/PriorityList.js'></script>";
 	
 	if ((is_array($_SESSION["permissions"])) && ($total_permissions = count($_SESSION["permissions"]) > 1)) {
 		$sidebar_html  = "The following individual".((($total_permissions - 1) != 1) ? "s have" : " has")." given you access to their ".APPLICATION_NAME." permission levels:";
@@ -114,7 +114,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 		$leaves_of_absence = $mspr["Leaves of Absence"];
 		$formal_remediations = $mspr["Formal Remediation Received"];
 		$disciplinary_actions = $mspr["Disciplinary Actions"];
-		$community_health_and_epidemiology = $mspr["Community Health and Epidemiology"];
+		$community_based_project = $mspr["Community Based Project"];
 		$research_citations = $mspr["Research"];
 					
 		$year = $user->getGradYear();
@@ -208,7 +208,170 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 						</li>
 					</ul>
 				</div>
-				<div id="contributions-to-medical-school_section">
+				<div id="add_contribution_link" style="float: right;">
+					<ul class="page-action">
+						<li><a id="add_contribution" href="<?php echo ENTRADA_URL; ?>/profile?section=mspr&show=contributions_form&id=<?php echo $PROXY_ID; ?>" class="strong-green">Add Contribution</a></li>
+					</ul>
+				</div>
+				
+				<div id="update-contribution-box" class="modal-confirmation" style="width: 50em; height: 40ex;">
+					<h1>Edit Contribution to Medical School/Student Life</h1>
+					<form method="post">
+						<table class="mspr_form">
+							<colgroup>
+								<col width="25%"></col>
+								<col width="72%"></col>
+							</colgroup>
+							<tbody>
+								<tr>
+									<td><label class="form-required" for="role">Role:</label></td>
+									<td><input name="role" type="text" style="width:40%;"></input> <span class="content-small"><strong>Example</strong>: Interviewer</span></td>
+								</tr>	
+								<tr>
+									<td><label class="form-required" for="org_event">Organization/Event:</label></td>
+									<td><input name="org_event" type="text" style="width:40%;"></input> <span class="content-small"><strong>Example</strong>: Medical School Interview Weekend</span></td>
+								</tr>	
+								<tr>
+									<td><label class="form-required" for="start">Start:</label></td>
+									<td>
+										<select name="start_month">
+										<?php
+										echo build_option("","Month",true);
+											
+										for($month_num = 1; $month_num <= 12; $month_num++) {
+											echo build_option($month_num, getMonthName($month_num));
+										}
+										?>
+										</select>
+										<select name="start_year">
+										<?php 
+										$cur_year = (int) date("Y");
+										$start_year = $cur_year - 6;
+										$end_year = $cur_year + 4;
+										
+										for ($opt_year = $start_year; $opt_year <= $end_year; ++$opt_year) {
+												echo build_option($opt_year, $opt_year, $opt_year == $cur_year);
+										}
+										?>
+										</select>
+									</td>
+								</tr>
+								<tr>
+									<td><label class="form-required" for="end">End:</label></td>
+									<td>
+										<select tabindex="1" name="end_month">
+										<?php
+										echo build_option("","Month",true);
+											
+										for($month_num = 1; $month_num <= 12; $month_num++) {
+											echo build_option($month_num, getMonthName($month_num));
+										}
+										?>
+										</select>
+										<select name="end_year">
+										<?php 
+										echo build_option("","Year",true);
+										$cur_year = (int) date("Y");
+										$start_year = $cur_year - 6;
+										$end_year = $cur_year + 4;
+										
+										for ($opt_year = $start_year; $opt_year <= $end_year; ++$opt_year) {
+												echo build_option($opt_year, $opt_year, false);
+										}
+										?>
+										</select>
+									</td>
+								</tr>
+							</tbody>
+						</table>
+					</form>
+					<div class="footer">
+						<button class="left modal-close"">Close</button>
+						<button class="right modal-confirm">Update</button>
+					</div>
+				</div>
+				
+				<div id="add-contribution-box" class="modal-confirmation" style="width: 50em; height: 40ex;">
+					<h1>Add Contribution to Medical School/Student Life</h1>
+					<form method="post">
+						<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
+						<input type="hidden" name="action" value="Add"></input>
+						<table class="mspr_form">
+							<colgroup>
+								<col width="25%"></col>
+								<col width="72%"></col>
+							</colgroup>
+							<tbody>
+								<tr>
+									<td><label class="form-required" for="role">Role:</label></td>
+									<td><input name="role" type="text" style="width:40%;"></input> <span class="content-small"><strong>Example</strong>: Interviewer</span></td>
+								</tr>	
+								<tr>
+									<td><label class="form-required" for="org_event">Organization/Event:</label></td>
+									<td><input name="org_event" type="text" style="width:40%;"></input> <span class="content-small"><strong>Example</strong>: Medical School Interview Weekend</span></td>
+								</tr>	
+								<tr>
+									<td><label class="form-required" for="start">Start:</label></td>
+									<td>
+										<select name="start_month">
+										<?php
+										echo build_option("","Month",true);
+											
+										for($month_num = 1; $month_num <= 12; $month_num++) {
+											echo build_option($month_num, getMonthName($month_num));
+										}
+										?>
+										</select>
+										<select name="start_year">
+										<?php 
+										$cur_year = (int) date("Y");
+										$start_year = $cur_year - 6;
+										$end_year = $cur_year + 4;
+										
+										for ($opt_year = $start_year; $opt_year <= $end_year; ++$opt_year) {
+												echo build_option($opt_year, $opt_year, $opt_year == $cur_year);
+										}
+										?>
+										</select>
+									</td>
+								</tr>
+								<tr>
+									<td><label class="form-required" for="end">End:</label></td>
+									<td>
+										<select tabindex="1" name="end_month">
+										<?php
+										echo build_option("","Month",true);
+											
+										for($month_num = 1; $month_num <= 12; $month_num++) {
+											echo build_option($month_num, getMonthName($month_num));
+										}
+										?>
+										</select>
+										<select name="end_year">
+										<?php 
+										echo build_option("","Year",true);
+										$cur_year = (int) date("Y");
+										$start_year = $cur_year - 6;
+										$end_year = $cur_year + 4;
+										
+										for ($opt_year = $start_year; $opt_year <= $end_year; ++$opt_year) {
+												echo build_option($opt_year, $opt_year, false);
+										}
+										?>
+										</select>
+									</td>
+								</tr>
+							</tbody>
+						</table>
+					</form>
+					<div class="footer">
+						<button class="left modal-close"">Close</button>
+						<button class="right modal-confirm">Submit</button>
+					</div>
+				</div>
+				
+				<div class="clear">&nbsp;</div>
+				<div id="contributions">
 					<?php echo display_contributions($contributions,"admin"); ?>
 				</div>
 			</div>
@@ -217,14 +380,197 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 		<div class="section">
 			<h3 title="Critical Enquiry" class="collapsable<?php echo ($critical_enquiry && $critical_enquiry->isAttentionRequired()) ? "" : " collapsed"; ?>">Critical Enquiry</h3>
 			<div id="critical-enquiry">
-				<div id="critical_enquiry"><?php echo display_critical_enquiry($critical_enquiry,"admin"); ?></div>
+				<div id="add_critical_enquiry_link" style="float: right;">
+					<ul class="page-action">
+						<li><a id="add_critical_enquiry" href="<?php echo ENTRADA_URL; ?>/profile?section=mspr&id=<?php echo $PROXY_ID; ?>" class="strong-green">Add Critical Enquiry</a></li>
+					</ul>
+				</div>
+				<div class="clear">&nbsp;</div>
+				
+				<div id="add-critical-enquiry-box" class="modal-confirmation" style="width: 40em; height: 30ex;">
+					<h1>Add Critical Enquiry</h1>
+					<form method="post"">
+						<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
+						<input type="hidden" name="action" value="Add"></input>
+					
+						<table class="mspr_form">
+							<colgroup>
+								<col width="3%"></col>
+								<col width="25%"></col>
+								<col width="72%"></col>
+							</colgroup>
+							<tbody>
+								<tr>
+									<td>&nbsp;</td>
+									<td><label class="form-required" for="title">Title:</label></td>
+									<td><input name="title" type="text" style="width:40%;" value=""></input></td>
+								</tr>	
+								<tr>
+									<td>&nbsp;</td>
+									<td><label class="form-required" for="organization">Organization:</label></td>
+									<td><input name="organization" type="text" style="width:40%;" value=""></input> <span class="content-small"><strong>Example</strong>: Queen's University</span></td>
+								</tr>	
+								<tr>
+									<td>&nbsp;</td>
+									<td><label class="form-required" for="location">Location:</label></td>
+									<td><input name="location" type="text" style="width:40%;" value=""></input> <span class="content-small"><strong>Example</strong>: Kingston, Ontario</span></td>
+								</tr>	
+								<tr>
+									<td>&nbsp;</td>
+									<td><label class="form-required" for="supervisor">Supervisor:</label></td>
+									<td><input name="supervisor" type="text" style="width:40%;" value=""></input> <span class="content-small"><strong>Example</strong>: Dr. Nick Riviera</span></td>
+								</tr>	
+							</tbody>
+						</table>	
+					</form>
+					
+					<div class="footer">
+						<button class="left modal-close">Close</button>
+						<button class="right modal-confirm">Submit</button>
+					</div>
+					
+				</div>
+				
+				<div id="update-critical-enquiry-box" class="modal-confirmation" style="width: 40em; height: 30ex;">
+					<h1>Edit Critical Enquiry</h1>
+					<form method="post">
+						<table class="mspr_form">
+							<colgroup>
+								<col width="3%"></col>
+								<col width="25%"></col>
+								<col width="72%"></col>
+							</colgroup>
+							<tbody>
+								<tr>
+									<td>&nbsp;</td>
+									<td><label class="form-required" for="title">Title:</label></td>
+									<td><input name="title" type="text" style="width:40%;" value=""></input></td>
+								</tr>	
+								<tr>
+									<td>&nbsp;</td>
+									<td><label class="form-required" for="organization">Organization:</label></td>
+									<td><input name="organization" type="text" style="width:40%;" value=""></input> <span class="content-small"><strong>Example</strong>: Queen's University</span></td>
+								</tr>	
+								<tr>
+									<td>&nbsp;</td>
+									<td><label class="form-required" for="location">Location:</label></td>
+									<td><input name="location" type="text" style="width:40%;" value=""></input> <span class="content-small"><strong>Example</strong>: Kingston, Ontario</span></td>
+								</tr>	
+								<tr>
+									<td>&nbsp;</td>
+									<td><label class="form-required" for="supervisor">Supervisor:</label></td>
+									<td><input name="supervisor" type="text" style="width:40%;" value=""></input> <span class="content-small"><strong>Example</strong>: Dr. Nick Riviera</span></td>
+								</tr>	
+							</tbody>
+						</table>	
+					</form>
+					
+					<div class="footer">
+						<button class="left modal-close">Close</button>
+						<button class="right modal-confirm">Update</button>
+					</div>
+					
+				</div>
+				<div id="critical_enquiry"><?php echo display_supervised_project($critical_enquiry,"admin"); ?></div>
 			</div>
 		</div>
 		
 		<div class="section">
-			<h3 title="Community-Based Project" class="collapsable<?php echo ($community_health_and_epidemiology && $community_health_and_epidemiology->isAttentionRequired()) ? "" : " collapsed"; ?>">Community-Based Project</h3>
+			<h3 title="Community-Based Project" class="collapsable<?php echo ($community_based_project && $community_based_project->isAttentionRequired()) ? "" : " collapsed"; ?>">Community-Based Project</h3>
 			<div id="community-based-project">
-				<div id="community_health_and_epidemiology"><?php echo display_community_health_and_epidemiology($community_health_and_epidemiology,"admin"); ?></div>
+				<div id="add_community_based_project_link" style="float: right;">
+					<ul class="page-action">
+						<li><a id="add_community_based_project" href="<?php echo ENTRADA_URL; ?>/profile?section=mspr&show=community_based_project_form&id=<?php echo $PROXY_ID; ?>" class="strong-green">Add Community-Based Project</a></li>
+					</ul>
+				</div>
+				<div class="clear">&nbsp;</div>
+				
+			
+				<div id="add-community-based-project-box" class="modal-confirmation" style="width: 40em; height: 30ex;">
+					<h1>Add Community-Based Project</h1>
+					<form method="post">
+						<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
+						<input type="hidden" name="action" value="Add"></input>
+					
+						<table class="mspr_form">
+							<colgroup>
+								<col width="3%"></col>
+								<col width="25%"></col>
+								<col width="72%"></col>
+							</colgroup>
+							<tbody>
+								<tr>
+									<td>&nbsp;</td>
+									<td><label class="form-required" for="title">Title:</label></td>
+									<td><input name="title" type="text" style="width:40%;" value=""></input></td>
+								</tr>	
+								<tr>
+									<td>&nbsp;</td>
+									<td><label class="form-required" for="organization">Organization:</label></td>
+									<td><input name="organization" type="text" style="width:40%;" value=""></input> <span class="content-small"><strong>Example</strong>: Queen's University</span></td>
+								</tr>	
+								<tr>
+									<td>&nbsp;</td>
+									<td><label class="form-required" for="location">Location:</label></td>
+									<td><input name="location" type="text" style="width:40%;" value=""></input> <span class="content-small"><strong>Example</strong>: Kingston, Ontario</span></td>
+								</tr>	
+								<tr>
+									<td>&nbsp;</td>
+									<td><label class="form-required" for="supervisor">Supervisor:</label></td>
+									<td><input name="supervisor" type="text" style="width:40%;" value=""></input> <span class="content-small"><strong>Example</strong>: Dr. Nick Riviera</span></td>
+								</tr>	
+							</tbody>
+						</table>	
+					</form>
+					
+					<div class="footer">
+						<button class="left modal-close">Close</button>
+						<button class="right modal-confirm">Submit</button>
+					</div>
+					
+				</div>
+				
+				<div id="update-community-based-project-box" class="modal-confirmation" style="width: 40em; height: 30ex;">
+					<h1>Edit Community-Based Project</h1>
+					<form method="post">
+						<table class="mspr_form">
+							<colgroup>
+								<col width="3%"></col>
+								<col width="25%"></col>
+								<col width="72%"></col>
+							</colgroup>
+							<tbody>
+								<tr>
+									<td>&nbsp;</td>
+									<td><label class="form-required" for="title">Title:</label></td>
+									<td><input name="title" type="text" style="width:40%;" value=""></input></td>
+								</tr>	
+								<tr>
+									<td>&nbsp;</td>
+									<td><label class="form-required" for="organization">Organization:</label></td>
+									<td><input name="organization" type="text" style="width:40%;" value=""></input> <span class="content-small"><strong>Example</strong>: Queen's University</span></td>
+								</tr>	
+								<tr>
+									<td>&nbsp;</td>
+									<td><label class="form-required" for="location">Location:</label></td>
+									<td><input name="location" type="text" style="width:40%;" value=""></input> <span class="content-small"><strong>Example</strong>: Kingston, Ontario</span></td>
+								</tr>	
+								<tr>
+									<td>&nbsp;</td>
+									<td><label class="form-required" for="supervisor">Supervisor:</label></td>
+									<td><input name="supervisor" type="text" style="width:40%;" value=""></input> <span class="content-small"><strong>Example</strong>: Dr. Nick Riviera</span></td>
+								</tr>	
+							</tbody>
+						</table>	
+					</form>
+					
+					<div class="footer">
+						<button class="left modal-close">Close</button>
+						<button class="right modal-confirm">Update</button>
+					</div>
+					
+				</div>
+				<div id="community_based_project"><?php echo display_supervised_project($community_based_project,"admin"); ?></div>
 			</div>
 		</div>
 		
@@ -238,7 +584,61 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 						<li>Approved research citations should be in a format following <a href="http://owl.english.purdue.edu/owl/resource/747/01/">MLA guidelines</a></li>
 					</ul>
 				</div>
-				<div id="research_section">
+				<div id="add_research_citation_link" style="float: right;">
+					<ul class="page-action">
+						<li><a id="add_research_citation" href="<?php echo ENTRADA_URL; ?>/profile?section=mspr&id=<?php echo $PROXY_ID; ?>" class="strong-green">Add Research Citation</a></li>
+					</ul>
+				</div>
+				<div class="clear">&nbsp;</div>
+				
+				<div id="update-research-box" class="modal-confirmation" style="width: 50em; height: 40ex;">
+					<h1>Edit Research Citation</h1>
+					<form method="post">
+						<table class="mspr_form">
+							<tbody>
+								<tr>
+								<td><label class="form-required" for="details">Citation:</label></td>
+								</tr>
+								<tr>
+								<td><textarea name="details" style="width:100%;height:25ex;"></textarea><br /></td>
+								</tr>
+							</tbody>
+						
+						</table>
+					</form>
+					
+					<div class="footer">
+						<button class="left modal-close"">Close</button>
+						<button class="right modal-confirm">Update</button>
+					</div>
+					
+				</div>
+				
+				<div id="add-research-box" class="modal-confirmation" style="width: 50em; height: 40ex;">
+					<h1>Add Research Citation</h1>
+					<form method="post">
+						<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
+						<input type="hidden" name="action" value="Add"></input>
+						<table class="mspr_form">
+							<tbody>
+								<tr>
+								<td><label class="form-required" for="details">Citation:</label></td>
+								</tr>
+								<tr>
+								<td><textarea name="details" style="width:100%;height:25ex;"></textarea><br /></td>
+								</tr>
+							</tbody>
+						
+						</table>
+					</form>
+					
+					<div class="footer">
+						<button class="left modal-close"">Close</button>
+						<button class="right modal-confirm">Submit</button>
+					</div>
+					
+				</div>
+				<div id="research_citations">
 					<?php echo display_research_citations($research_citations,"admin"); ?>
 				</div>
 			</div>
@@ -253,6 +653,108 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 						<li>Award terms must be provided to be approved. Awards not accompanied by terms should be rejected.</li>
 					</ul>
 				</div>
+				<div id="add_external_award_link" style="float: right;">
+					<ul class="page-action">
+						<li><a id="add_external_award" href="#external-awards-section" class="strong-green">Add External Award</a></li>
+					</ul>
+				</div>
+				<div class="clear">&nbsp;</div>
+			
+			
+				<div id="update-external-award-box" class="modal-confirmation" style="width: 50em; height: 40ex;">
+					<h1>Edit External Award</h1>
+					<form method="post">
+						<table class="mspr_form">
+							<colgroup>
+								<col width="25%"></col>
+								<col width="75%"></col>
+							</colgroup>
+							<tbody>
+								<tr>
+								<td><label class="form-required" for="title">Title:</label></td>
+								<td><input name="title" type="text" style="width:60%;"></input></td>
+								</tr>	
+								<tr>
+								<td><label class="form-required" for="body">Awarding Body:</label></td>
+								<td><input name="body" type="text" style="width:60%;"></input></td>
+								</tr>	
+								<tr>
+								<td valign="top"><label class="form-required" for="terms">Award Terms:</label></td>
+								<td><textarea name="terms" style="width: 80%; height: 12ex;" cols="65" rows="20"></textarea></td>
+								</tr>	
+								<tr>
+								<td><label class="form-required" for="year">Year Awarded:</label></td>
+								<td><select name="year">
+									<?php 
+									
+									$cur_year = (int) date("Y");
+									$start_year = $cur_year - 10;
+									$end_year = $cur_year + 4;
+									
+									for ($opt_year = $start_year; $opt_year <= $end_year; ++$opt_year) {
+											echo build_option($opt_year, $opt_year, $opt_year == $cur_year);
+									}
+									
+									?>
+									</select></td>
+								</tr>
+							</tbody>
+						</table>
+					</form>
+					<div class="footer">
+						<button class="left modal-close"">Close</button>
+						<button class="right modal-confirm">Update</button>
+					</div>
+					
+				</div>
+				
+				<div id="add-external-award-box" class="modal-confirmation" style="width: 50em; height: 40ex;">
+					<h1>Add External Award</h1>
+					<form method="post">
+						<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
+						<input type="hidden" name="action" value="Add"></input>
+						<table class="mspr_form">
+							<colgroup>
+								<col width="25%"></col>
+								<col width="75%"></col>
+							</colgroup>
+							<tbody>
+								<tr>
+								<td><label class="form-required" for="title">Title:</label></td>
+								<td><input name="title" type="text" style="width:60%;"></input></td>
+								</tr>	
+								<tr>
+								<td><label class="form-required" for="body">Awarding Body:</label></td>
+								<td><input name="body" type="text" style="width:60%;"></input></td>
+								</tr>	
+								<tr>
+								<td valign="top"><label class="form-required" for="terms">Award Terms:</label></td>
+								<td><textarea name="terms" style="width: 80%; height: 12ex;" cols="65" rows="20"></textarea></td>
+								</tr>	
+								<tr>
+								<td><label class="form-required" for="year">Year Awarded:</label></td>
+								<td><select name="year">
+									<?php 
+									
+									$cur_year = (int) date("Y");
+									$start_year = $cur_year - 10;
+									$end_year = $cur_year + 4;
+									
+									for ($opt_year = $start_year; $opt_year <= $end_year; ++$opt_year) {
+											echo build_option($opt_year, $opt_year, $opt_year == $cur_year);
+									}
+									
+									?>
+									</select></td>
+								</tr>
+							</tbody>
+						</table>
+					</form>
+					<div class="footer">
+						<button class="left modal-close"">Close</button>
+						<button class="right modal-confirm">Submit</button>
+					</div>
+				</div>
 				<div id="external_awards"><?php echo display_external_awards($external_awards,"admin"); ?></div>
 			</div>
 		</div>
@@ -264,48 +766,78 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 		<div class="section">
 			<h3 title="Clinical Performance Evaluation Comments Section" class="collapsable collapsed">Clinical Performance Evaluation Comments</h3>
 			<div id="clinical-performance-evaluation-comments-section">
-			<div class="instructions">
-				<p>Comments should be copied in whole or in part from Clinical Performance Evaluations from the student's clerkship rotations and electives.</p>
-				<p>There should be one comment for each core rotation and one per received elective.</p>
-			</div>
-			<div id="add_clineval_link" style="float: right;">
-				<ul class="page-action">
-					<li><a id="add_clineval" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" class="strong-green">Add Clinical Performance Evaluation Comment</a></li>
-				</ul>
-			</div>
-			
-			<div id="update-clineval-box" class="modal-confirmation" style="width: 50em; height: 50ex;">
-				<h1>Edit Clinical Performance Evaluation Comment</h1>
-				<form method="post" name="edit_clineval_form">
-					<table class="mspr_form">
-						<colgroup>
-							<col width="25%"></col>
-							<col width="75%"></col>
-						</colgroup>
-						<tbody>
-							<tr>
-							<td><label class="form-required" for="source">Source:</label></td>
-							<td><input type="text" name="source"></input><span class="content-small"> <strong>Example</strong>: Pediatrics Rotation</span></td>
-							</tr>	
-							<tr>
-							<td colspan="2"><label class="form-required" for="text">Comment:</label></td>
-							</tr>
-							<tr>
-							<td colspan="2"><textarea name="text" style="width:100%;height:30ex;"></textarea><br /></td>
-							</tr>
-						</tbody>
-					
-					</table>
-				</form>
-				
-				<div class="footer">
-					<button class="left modal-close"">Close</button>
-					<button class="right modal-confirm" id="edit-submission-confirm">Update</button>
+				<div class="instructions">
+					<p>Comments should be copied in whole or in part from Clinical Performance Evaluations from the student's clerkship rotations and electives.</p>
+					<p>There should be one comment for each core rotation and one per received elective.</p>
+				</div>
+				<div id="add_clineval_link" style="float: right;">
+					<ul class="page-action">
+						<li><a id="add_clineval" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" class="strong-green">Add Clinical Performance Evaluation Comment</a></li>
+					</ul>
 				</div>
 				
-			</div>
-			
-			
+				<div id="update-clineval-box" class="modal-confirmation" style="width: 60em; height: 50ex;">
+					<h1>Edit Clinical Performance Evaluation Comment</h1>
+					<form method="post" name="edit_clineval_form">
+						<table class="mspr_form">
+							<colgroup>
+								<col width="25%"></col>
+								<col width="75%"></col>
+							</colgroup>
+							<tbody>
+								<tr>
+								<td><label class="form-required" for="source">Source:</label></td>
+								<td><input type="text" name="source"></input><span class="content-small"> <strong>Example</strong>: Pediatrics Rotation</span></td>
+								</tr>	
+								<tr>
+								<td colspan="2"><label class="form-required" for="text">Comment:</label></td>
+								</tr>
+								<tr>
+								<td colspan="2"><textarea name="text" style="width:100%;height:30ex;"></textarea><br /></td>
+								</tr>
+							</tbody>
+						</table>
+					</form>
+					
+					<div class="footer">
+						<button class="left modal-close"">Close</button>
+						<button class="right modal-confirm" id="edit-submission-confirm">Update</button>
+					</div>
+					
+				</div>
+				
+				<div id="add-clineval-box" class="modal-confirmation" style="width: 60em; height: 50ex;">
+					<h1>Add Clinical Performance Evaluation Comment</h1>
+					<form method="post" name="add_int_act_form">
+						<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
+						<input type="hidden" name="action" value="Add"></input>
+						<table class="mspr_form">
+							<colgroup>
+								<col width="25%"></col>
+								<col width="75%"></col>
+							</colgroup>
+							<tbody>
+								<tr>
+								<td><label class="form-required" for="source">Source:</label></td>
+								<td><input type="text" name="source"></input><span class="content-small"> <strong>Example</strong>: Pediatrics Rotation</span></td>
+								</tr>	
+								<tr>
+								<td colspan="2"><label class="form-required" for="text">Comment:</label></td>
+								</tr>
+								<tr>
+								<td colspan="2"><textarea name="text" style="width:100%;height:30ex;"></textarea><br /></td>
+								</tr>
+							</tbody>
+						</table>
+					</form>
+					
+					<div class="footer">
+						<button class="left modal-close"">Close</button>
+						<button class="right modal-confirm">Submit</button>
+					</div>
+					
+				</div>
+				
 			<div class="clear">&nbsp;</div>
 			<form id="add_clineval_form" name="add_clineval_form" action="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" method="post" style="display:none;" >
 				<input type="hidden" name="user_id" value="<?php echo $PROXY_ID; ?>"></input>
@@ -357,68 +889,98 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 			<h3 title="Summer Studentships" class="collapsable collapsed">Summer Studentships</h3>
 			<div id="summer-studentships">
 			
-			<div id="add_studentship_link" style="float: right;">
-				<ul class="page-action">
-					<li><a id="add_studentship" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&show=studentship_form&id=<?php echo $PROXY_ID; ?>" class="strong-green">Add Studentship</a></li>
-				</ul>
-			</div>
-			<div class="clear">&nbsp;</div>
-			
-			<form id="add_studentship_form" name="add_studentship_form" action="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" method="post" style="display:none;" >
-				<input type="hidden" name="user_id" value="<?php echo $PROXY_ID; ?>"></input>
-		
-				<table class="mspr_form">
-					<colgroup>
-						<col width="3%"></col>
-						<col width="25%"></col>
-						<col width="72%"></col>
-					</colgroup>
-					<tfoot>
-						<tr>
-							<td colspan="3">&nbsp;</td>
-						</tr>
-						<tr>
-							<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
-								<input type="submit" name="action" value="Add" />
-								<div id="hide_studenstship_link" style="display:inline-block;">
-									<ul class="page-action-cancel">
-										<li><a id="hide_studentship" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" class="strong-green">[ Cancel Adding Studentship ]</a></li>
-									</ul>
-								</div>
-							</td>
-						</tr>
-					</tfoot>
-					<tbody>
-						<tr>
-						<td>&nbsp;</td>
-						<td><label class="form-required" for="title">Title:</label></td>
-						<td><input type="text" name="title"></input> <span class="content-small"><strong>Example</strong>: The Canadian Institute of Health Studentship</span></td>
-						</tr>	
-						<tr>
-						<td>&nbsp;</td>
-						<td><label class="form-required" for="year">Year Awarded:</label></td>
-						<td><select name="year">
-							<?php 
-							
-							$cur_year = (int) date("Y");
-							$start_year = $cur_year - 4;
-							$end_year = $cur_year + 4;
-							
-							for ($opt_year = $start_year; $opt_year <= $end_year; ++$opt_year) {
-									echo build_option($opt_year, $opt_year, $opt_year == $cur_year);
-							}
-							
-							?>
-							</select></td>
-						</tr>
-					</tbody>
-				
-				</table>	
-			
+				<div id="add_studentship_link" style="float: right;">
+					<ul class="page-action">
+						<li><a id="add_studentship" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&show=studentship_form&id=<?php echo $PROXY_ID; ?>" class="strong-green">Add Studentship</a></li>
+					</ul>
+				</div>
 				<div class="clear">&nbsp;</div>
-			</form>
 			
-			<div id="studentships"><?php echo display_studentships($studentships,"admin"); ?></div>
+				
+				<div id="update-studentship-box" class="modal-confirmation" style="width: 60em; height: 20ex;">
+					<h1>Edit Studentship</h1>
+					<form method="post" name="edit_studentship_form">
+						<table class="mspr_form">
+							<colgroup>
+								<col width="25%"></col>
+								<col width="75%"></col>
+							</colgroup>
+							<tbody>
+								<tr>
+								<td><label class="form-required" for="title">Title:</label></td>
+								<td><input type="text" name="title"></input> <span class="content-small"><strong>Example</strong>: The Canadian Institute of Health Studentship</span></td>
+								</tr>	
+								<tr>
+								<td><label class="form-required" for="year">Year Awarded:</label></td>
+								<td><select name="year">
+									<?php 
+									
+									$cur_year = (int) date("Y");
+									$start_year = $cur_year - 4;
+									$end_year = $cur_year + 4;
+									
+									for ($opt_year = $start_year; $opt_year <= $end_year; ++$opt_year) {
+											echo build_option($opt_year, $opt_year, $opt_year == $cur_year);
+									}
+									
+									?>
+									</select></td>
+								</tr>
+							</tbody>
+						
+						</table>	
+					</form>
+					
+					<div class="footer">
+						<button class="left modal-close"">Close</button>
+						<button class="right modal-confirm" id="edit-submission-confirm">Update</button>
+					</div>
+					
+				</div>
+				<div id="add-studentship-box" class="modal-confirmation" style="width: 60em; height: 20ex;">
+					<h1>Add Studentship</h1>
+					<form method="post" name="add_studentship_form">
+						<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
+						<input type="hidden" name="action" value="Add"></input>
+						<table class="mspr_form">
+							<colgroup>
+								<col width="25%"></col>
+								<col width="75%"></col>
+							</colgroup>
+							<tbody>
+								<tr>
+								<td><label class="form-required" for="title">Title:</label></td>
+								<td><input type="text" name="title"></input> <span class="content-small"><strong>Example</strong>: The Canadian Institute of Health Studentship</span></td>
+								</tr>	
+								<tr>
+								<td><label class="form-required" for="year">Year Awarded:</label></td>
+								<td><select name="year">
+									<?php 
+									
+									$cur_year = (int) date("Y");
+									$start_year = $cur_year - 4;
+									$end_year = $cur_year + 4;
+									
+									for ($opt_year = $start_year; $opt_year <= $end_year; ++$opt_year) {
+											echo build_option($opt_year, $opt_year, $opt_year == $cur_year);
+									}
+									
+									?>
+									</select></td>
+								</tr>
+							</tbody>
+						
+						</table>
+					</form>
+					
+					<div class="footer">
+						<button class="left modal-close"">Close</button>
+						<button class="right modal-confirm">Submit</button>
+					</div>
+					
+				</div>
+				
+				<div id="studentships"><?php echo display_studentships($studentships,"admin"); ?></div>
 			</div>
 		</div>
 
@@ -426,73 +988,106 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 
 			<h3 title="International Activities" class="collapsable collapsed">International Activities</h3>
 			<div id="international-activities">
-					<div id="add_int_act_link" style="float: right;<?php if ($show_int_act_form) { echo "display:none;"; }   ?>">
+				<div id="add_int_act_link" style="float: right;">
 					<ul class="page-action">
 						<li><a id="add_int_act" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&show=int_act_form&id=<?php echo $PROXY_ID; ?>" class="strong-green">Add Activity</a></li>
 					</ul>
 				</div>
-				
 				<div class="clear">&nbsp;</div>
-				<form id="add_int_act_form" name="add_int_act_form" action="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" method="post" <?php if (!$show_int_act_form) { echo "style=\"display:none;\""; }   ?> >
-					<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
-					<table class="mspr_form">
-						<colgroup>
-							<col width="3%"></col>
-							<col width="25%"></col>
-							<col width="25%"></col>
-							<col width="47%"></col>
-						</colgroup>
-						<tfoot>
-							<tr>
-								<td colspan="4">&nbsp;</td>
-							</tr>
-							<tr>
-								<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
-									<input type="submit" name="action" class="button" value="Add" />
-									<div id="hide_int_act_link" style="display:inline-block;">
-										<ul class="page-action-cancel">
-											<li><a id="hide_int_act" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" class="strong-green">[ Cancel Adding International Activity ]</a></li>
-										</ul>
-									</div>
-								</td>
-							</tr>
-						</tfoot>
-						<tbody>
-							<tr>
-								<td>&nbsp;</td>
-								<td><label class="form-required" for="title">Title:</label></td>
-	 							<td><input name="title"></input></td><td><span class="content-small"><strong>Example:</strong> Geriatrics Observership</span></td>
-							</tr>	
-							<tr>
-								<td>&nbsp;</td>
-								<td><label class="form-required" for="site">Site:</label></td>
-								<td><input name="site"></input></td><td><span class="content-small"><strong>Example:</strong> Tokyo Metropolitan Hospital</span></td>
-							</tr>	
-							<tr>
-								<td>&nbsp;</td>
-								<td><label class="form-required" for="location">Location:</label></td>
-								<td><input name="location"></input></td><td><span class="content-small"><strong>Example:</strong> Tokyo, Japan</span></td>
-							</tr>	
-							<tr>
-								<td>&nbsp;</td>
-								<td><label class="form-required" for="start">Start Date:</label></td>
-								<td>
-									<input type="text" name="start" id="int_act_start"></input></td><td><span class="content-small"><strong>Format:</strong> yyyy-mm-dd</span>
-								</td>
-							</tr>
-							<tr>
-								<td>&nbsp;</td>
-								<td><label class="form-required" for="end">End Date:</label></td>
-								<td>
-									<input type="text" name="end" id="int_act_end"></input></td><td>
-								</td>
-							</tr>
-						</tbody>
-					
-					</table>	
 				
-					<div class="clear">&nbsp;</div>
-				</form>
+				<div id="update-int-act-box" class="modal-confirmation" style="width: 60em; height: 35ex;">
+					<h1>Edit International Activity</h1>
+					<form method="post" name="edit_int_act_form">
+						<table class="mspr_form">
+							<colgroup>
+								<col width="25%"></col>
+								<col width="25%"></col>
+								<col width="50%"></col>
+							</colgroup>
+							<tbody>
+								<tr>
+									<td><label class="form-required" for="title">Title:</label></td>
+		 							<td><input name="title"></input></td><td><span class="content-small"><strong>Example:</strong> Geriatrics Observership</span></td>
+								</tr>	
+								<tr>
+									<td><label class="form-required" for="site">Site:</label></td>
+									<td><input name="site"></input></td><td><span class="content-small"><strong>Example:</strong> Tokyo Metropolitan Hospital</span></td>
+								</tr>	
+								<tr>
+									<td><label class="form-required" for="location">Location:</label></td>
+									<td><input name="location"></input></td><td><span class="content-small"><strong>Example:</strong> Tokyo, Japan</span></td>
+								</tr>	
+								<tr>
+									<td><label class="form-required" for="start">Start Date:</label></td>
+									<td>
+										<input type="text" name="start" id="int_act_start_edit"></input></td><td><span class="content-small"><strong>Format:</strong> yyyy-mm-dd</span>
+									</td>
+								</tr>
+								<tr>
+									<td><label class="form-required" for="end">End Date:</label></td>
+									<td>
+										<input type="text" name="end" id="int_act_end_edit"></input></td><td>
+									</td>
+								</tr>
+							</tbody>
+						
+						</table>
+					</form>
+					
+					<div class="footer">
+						<button class="left modal-close"">Close</button>
+						<button class="right modal-confirm" id="edit-submission-confirm">Update</button>
+					</div>
+					
+				</div>
+				
+				<div id="add-int-act-box" class="modal-confirmation" style="width: 60em; height: 35ex;">
+					<h1>Add International Activity</h1>
+					<form method="post" name="add_int_act_form">
+						<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
+						<input type="hidden" name="action" value="Add"></input>
+						<table class="mspr_form">
+							<colgroup>
+								<col width="25%"></col>
+								<col width="25%"></col>
+								<col width="50%"></col>
+							</colgroup>
+							<tbody>
+								<tr>
+									<td><label class="form-required" for="title">Title:</label></td>
+		 							<td><input name="title"></input></td><td><span class="content-small"><strong>Example:</strong> Geriatrics Observership</span></td>
+								</tr>	
+								<tr>
+									<td><label class="form-required" for="site">Site:</label></td>
+									<td><input name="site"></input></td><td><span class="content-small"><strong>Example:</strong> Tokyo Metropolitan Hospital</span></td>
+								</tr>	
+								<tr>
+									<td><label class="form-required" for="location">Location:</label></td>
+									<td><input name="location"></input></td><td><span class="content-small"><strong>Example:</strong> Tokyo, Japan</span></td>
+								</tr>	
+								<tr>
+									<td><label class="form-required" for="start">Start Date:</label></td>
+									<td>
+										<input type="text" name="start" id="int_act_start"></input></td><td><span class="content-small"><strong>Format:</strong> yyyy-mm-dd</span>
+									</td>
+								</tr>
+								<tr>
+									<td><label class="form-required" for="end">End Date:</label></td>
+									<td>
+										<input type="text" name="end" id="int_act_end"></input></td><td>
+									</td>
+								</tr>
+							</tbody>
+						
+						</table>	
+					</form>
+					
+					<div class="footer">
+						<button class="left modal-close"">Close</button>
+						<button class="right modal-confirm">Submit</button>
+					</div>
+					
+				</div>
 				<div id="int_acts"><?php echo display_international_activities($international_activities,"admin"); ?></div>
 			</div>
 		</div>
@@ -500,164 +1095,147 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 		<div class="section">
 			<h3 title="Observerships Section" class="collapsable collapsed">Observerships</h3>
 			<div id="observerships-section">
-				<div id="add_observership_link" style="float: right;<?php if ($show_observership_form) { echo "display:none;"; }   ?>">
+				<div id="add_observership_link" style="float: right;">
 					<ul class="page-action">
-						<li><a id="add_observership" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&show=observership_form&id=<?php echo $PROXY_ID; ?>" class="strong-green">Add Observership</a></li>
+						<li><a id="add_observership" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" class="strong-green">Add Observership</a></li>
 					</ul>
 				</div>
-				
+				<div class="clear">&nbsp;</div>
 				<div id="update-observership-box" class="modal-confirmation" style="width: 60em; height: 50ex;">
-				<h1>Edit Observership</h1>
-				<form method="post" name="edit_observership_form">
-					<table class="mspr_form">
-						<colgroup>
-							<col width="35%"></col>
-							<col width="65%"></col>
-						</colgroup>
-						<tbody>
-							<tr>
-								<td><label class="form-required" for="title">Title/Discipline:</label></td>
-	 							<td><input name="title"></input> <span class="content-small"><strong>Example:</strong> Family Medicine Observership</span></td>
-							</tr>	
-							<tr>
-								<td><label class="form-required" for="site">Site:</label></td>
-								<td><input name="site"></input> <span class="content-small"><strong>Example:</strong> Kingston General Hospital</span></td>
-							</tr>	
-							<tr>
-								<td><label class="form-required" for="location">Location:</label></td>
-								<td><input name="location" value="Kingston, ON"></input> <span class="content-small"><strong>Example:</strong> Kingston, ON</span></td>
-							</tr>
-							<tr>
-								<td><label class="form-nrequired" for="preceptor_proxy_id">Faculty Preceptor:</label></td>
-								<td>
-									<select name="preceptor_proxy_id">
-									<?php
-										echo build_option(0,"Non-Faculty");
-										echo build_option(-1,"Various");
-										foreach ($faculty as $faculty_member) {
-											echo build_option($faculty_member->getID(), $faculty_member->getLastname().", ".$faculty_member->getFirstname());
-										}
-									?>
-									</select>
-								</td>
-							</tr>	
-							<tr>
-								<td><label class="form-nrequired" for="preceptor_firstname">Non-Faculty Preceptor First Name:</label></td>
-								<td><input name="preceptor_firstname"></input><span class="content-small"> <strong>Example:</strong> <?php echo $user->getFirstname(); ?></span></td>
-							</tr>	
-							<tr>
-								<td><label class="form-nrequired" for="preceptor_lastname">Non-Faculty Preceptor Last Name:</label></td>
-								<td><input name="preceptor_lastname"></input><span class="content-small"> <strong>Example:</strong> <?php echo $user->getLastname(); ?></span></td>
-							</tr>	
-							<tr>
-								<td><label class="form-required" for="start">Start Date:</label></td>
-								<td>
-									<input type="text" name="start" id="observership_edit_start"></input> <span class="content-small"><strong>Format:</strong> yyyy-mm-dd</span>
-								</td>
-							</tr>
-							<tr>
-								<td><label class="form-nrequired" for="end">End Date:</label></td>
-								<td>
-									<input type="text" name="end" id="observership_edit_end"></input>
-								</td>
-							</tr>
-						</tbody>
+					<h1>Edit Observership</h1>
+					<form method="post" name="edit_observership_form">
+						<table class="mspr_form">
+							<colgroup>
+								<col width="35%"></col>
+								<col width="65%"></col>
+							</colgroup>
+							<tbody>
+								<tr>
+									<td><label class="form-required" for="title">Title/Discipline:</label></td>
+		 							<td><input name="title"></input> <span class="content-small"><strong>Example:</strong> Family Medicine Observership</span></td>
+								</tr>	
+								<tr>
+									<td><label class="form-required" for="site">Site:</label></td>
+									<td><input name="site"></input> <span class="content-small"><strong>Example:</strong> Kingston General Hospital</span></td>
+								</tr>	
+								<tr>
+									<td><label class="form-required" for="location">Location:</label></td>
+									<td><input name="location" value="Kingston, ON"></input> <span class="content-small"><strong>Example:</strong> Kingston, ON</span></td>
+								</tr>
+								<tr>
+									<td><label class="form-nrequired" for="preceptor_proxy_id">Faculty Preceptor:</label></td>
+									<td>
+										<select name="preceptor_proxy_id">
+										<?php
+											echo build_option(0,"Non-Faculty");
+											echo build_option(-1,"Various");
+											foreach ($faculty as $faculty_member) {
+												echo build_option($faculty_member->getID(), $faculty_member->getLastname().", ".$faculty_member->getFirstname());
+											}
+										?>
+										</select>
+									</td>
+								</tr>	
+								<tr>
+									<td><label class="form-nrequired" for="preceptor_firstname">Non-Faculty Preceptor First Name:</label></td>
+									<td><input name="preceptor_firstname"></input><span class="content-small"> <strong>Example:</strong> <?php echo $user->getFirstname(); ?></span></td>
+								</tr>	
+								<tr>
+									<td><label class="form-nrequired" for="preceptor_lastname">Non-Faculty Preceptor Last Name:</label></td>
+									<td><input name="preceptor_lastname"></input><span class="content-small"> <strong>Example:</strong> <?php echo $user->getLastname(); ?></span></td>
+								</tr>	
+								<tr>
+									<td><label class="form-required" for="start">Start Date:</label></td>
+									<td>
+										<input type="text" name="start" id="observership_edit_start"></input> <span class="content-small"><strong>Format:</strong> yyyy-mm-dd</span>
+									</td>
+								</tr>
+								<tr>
+									<td><label class="form-nrequired" for="end">End Date:</label></td>
+									<td>
+										<input type="text" name="end" id="observership_edit_end"></input>
+									</td>
+								</tr>
+							</tbody>
+						
+						</table>
+					</form>
 					
-					</table>
-				</form>
-				
-				<div class="footer">
-					<button class="left modal-close"">Close</button>
-					<button class="right modal-confirm" id="edit-submission-confirm">Update</button>
+					<div class="footer">
+						<button class="left modal-close"">Close</button>
+						<button class="right modal-confirm" id="edit-submission-confirm">Update</button>
+					</div>
+					
 				</div>
 				
-			</div>
-			
-				<div class="clear">&nbsp;</div>
-				<form id="add_observership_form" name="add_observership_form" action="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" method="post" <?php if (!$show_observership_form) { echo "style=\"display:none;\""; }   ?> >
-					<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
-					<table class="mspr_form">
-						<colgroup>
-							<col width="3%"></col>
-							<col width="32%"></col>
-							<col width="65%"></col>
-						</colgroup>
-						<tfoot>
-							<tr>
-								<td colspan="3">&nbsp;</td>
-							</tr>
-							<tr>
-								<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
-									<input type="submit" name="action" class="button" value="Add" />
-									<div id="hide_observership_link" style="display:inline-block;">
-										<ul class="page-action-cancel">
-											<li><a id="hide_observership" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" class="strong-green">[ Cancel Adding Observership ]</a></li>
-										</ul>
-									</div>
-								</td>
-							</tr>
-						</tfoot>
-						<tbody>
-							<tr>
-								<td>&nbsp;</td>
-								<td><label class="form-required" for="title">Title/Discipline:</label></td>
-	 							<td><input name="title"></input> <span class="content-small"><strong>Example:</strong> Family Medicine Observership</span></td>
-							</tr>	
-							<tr>
-								<td>&nbsp;</td>
-								<td><label class="form-required" for="site">Site:</label></td>
-								<td><input name="site"></input> <span class="content-small"><strong>Example:</strong> Kingston General Hospital</span></td>
-							</tr>	
-							<tr>
-								<td>&nbsp;</td>
-								<td><label class="form-required" for="location">Location:</label></td>
-								<td><input name="location" value="Kingston, ON"></input> <span class="content-small"><strong>Example:</strong> Kingston, ON</span></td>
-							</tr>
-							<tr>
-								<td>&nbsp;</td>
-								<td><label class="form-nrequired" for="preceptor_proxy_id">Faculty Preceptor:</label></td>
-								<td>
-									<select name="preceptor_proxy_id">
-									<?php
-										echo build_option(0,"Non-Faculty",true);
-										echo build_option(-1,"Various",false);
-										foreach ($faculty as $faculty_member) {
-											echo build_option($faculty_member->getID(), $faculty_member->getLastname().", ".$faculty_member->getFirstname());
-										}
-									?>
-									</select>
-								</td>
-							</tr>	
-							<tr>
-								<td>&nbsp;</td>
-								<td><label class="form-nrequired" for="preceptor_firstname">Non-Faculty Preceptor First Name:</label></td>
-								<td><input name="preceptor_firstname"></input><span class="content-small"> <strong>Example:</strong> <?php echo $user->getFirstname(); ?></span></td>
-							</tr>	
-							<tr>
-								<td>&nbsp;</td>
-								<td><label class="form-nrequired" for="preceptor_lastname">Non-Faculty Preceptor Last Name:</label></td>
-								<td><input name="preceptor_lastname"></input><span class="content-small"> <strong>Example:</strong> <?php echo $user->getLastname(); ?></span></td>
-							</tr>	
-							<tr>
-								<td>&nbsp;</td>
-								<td><label class="form-required" for="start">Start Date:</label></td>
-								<td>
-									<input type="text" name="start" id="observership_start"></input> <span class="content-small"><strong>Format:</strong> yyyy-mm-dd</span>
-								</td>
-							</tr>
-							<tr>
-								<td>&nbsp;</td>
-								<td><label class="form-nrequired" for="end">End Date:</label></td>
-								<td>
-									<input type="text" name="end" id="observership_end"></input>
-								</td>
-							</tr>
-						</tbody>
+				<div id="add-observership-box" class="modal-confirmation" style="width: 60em; height: 50ex;">
+					<h1>Add Observership</h1>
+					<form method="post" name="add_observership_form">
+						<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
+						<input type="hidden" name="action" value="Add"></input>
+						<table class="mspr_form">
+							<colgroup>
+								<col width="35%"></col>
+								<col width="65%"></col>
+							</colgroup>
+							<tbody>
+								<tr>
+									<td><label class="form-required" for="title">Title/Discipline:</label></td>
+		 							<td><input name="title"></input> <span class="content-small"><strong>Example:</strong> Family Medicine Observership</span></td>
+								</tr>	
+								<tr>
+									<td><label class="form-required" for="site">Site:</label></td>
+									<td><input name="site"></input> <span class="content-small"><strong>Example:</strong> Kingston General Hospital</span></td>
+								</tr>	
+								<tr>
+									<td><label class="form-required" for="location">Location:</label></td>
+									<td><input name="location" value="Kingston, ON"></input> <span class="content-small"><strong>Example:</strong> Kingston, ON</span></td>
+								</tr>
+								<tr>
+									<td><label class="form-nrequired" for="preceptor_proxy_id">Faculty Preceptor:</label></td>
+									<td>
+										<select name="preceptor_proxy_id">
+										<?php
+											echo build_option(0,"Non-Faculty");
+											echo build_option(-1,"Various");
+											foreach ($faculty as $faculty_member) {
+												echo build_option($faculty_member->getID(), $faculty_member->getLastname().", ".$faculty_member->getFirstname());
+											}
+										?>
+										</select>
+									</td>
+								</tr>	
+								<tr>
+									<td><label class="form-nrequired" for="preceptor_firstname">Non-Faculty Preceptor First Name:</label></td>
+									<td><input name="preceptor_firstname"></input><span class="content-small"> <strong>Example:</strong> <?php echo $user->getFirstname(); ?></span></td>
+								</tr>	
+								<tr>
+									<td><label class="form-nrequired" for="preceptor_lastname">Non-Faculty Preceptor Last Name:</label></td>
+									<td><input name="preceptor_lastname"></input><span class="content-small"> <strong>Example:</strong> <?php echo $user->getLastname(); ?></span></td>
+								</tr>	
+								<tr>
+									<td><label class="form-required" for="start">Start Date:</label></td>
+									<td>
+										<input type="text" name="start" id="observership_start"></input> <span class="content-small"><strong>Format:</strong> yyyy-mm-dd</span>
+									</td>
+								</tr>
+								<tr>
+									<td><label class="form-nrequired" for="end">End Date:</label></td>
+									<td>
+										<input type="text" name="end" id="observership_end"></input>
+									</td>
+								</tr>
+							</tbody>
+						
+						</table>
+					</form>
 					
-					</table>	
-				
-					<div class="clear">&nbsp;</div>
-				</form>
+					<div class="footer">
+						<button class="left modal-close"">Close</button>
+						<button class="right modal-confirm">Submit</button>
+					</div>
+					
+				</div>
 				<div id="observerships"><?php echo display_observerships($observerships,"admin"); ?></div>
 			</div>
 		</div>
@@ -667,111 +1245,187 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 			<h3 title="Student-Run Electives" class="collapsable collapsed">Student-Run Electives</h3>
 			<div id="student-run-electives">
 	
-				<div id="add_student_run_elective_link" style="float: right;<?php if ($show_student_run_elective_form) { echo "display:none;"; }   ?>">
+				<div id="add_student_run_elective_link" style="float: right;">
 					<ul class="page-action">
-						<li><a id="add_student_run_elective" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&show=student_run_elective_form&id=<?php echo $PROXY_ID; ?>" class="strong-green">Add Student Run Elective</a></li>
+						<li><a id="add_student_run_elective" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" class="strong-green">Add Student Run Elective</a></li>
 					</ul>
 				</div>
 				
 				<div class="clear">&nbsp;</div>
-				<form id="add_student_run_elective_form" name="add_student_run_elective_form" action="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" method="post" <?php if (!$show_student_run_elective_form) { echo "style=\"display:none;\""; }   ?> >
-					<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
-					<table class="mspr_form">
-						<colgroup>
-							<col width="3%"></col>
-							<col width="25%"></col>
-							<col width="72%"></col>
-						</colgroup>
-						<tfoot>
-							<tr>
-								<td colspan="3">&nbsp;</td>
-							</tr>
-							<tr>
-								<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
-									<input type="submit" name="action" class="button" value="Add" />
-									<div id="hide_student_run_elective_link" style="display:inline-block;">
-										<ul class="page-action-cancel">
-											<li><a id="hide_student_run_elective" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" class="strong-green">[ Cancel Adding Student-Run Elective ]</a></li>
-										</ul>
-									</div>
-								</td>
-							</tr>
-						</tfoot>
-						<tbody>
-							<tr>
-								<td>&nbsp;</td>
-								<td><label class="form-required" for="group_name">Group Name:</label></td>
-								<td><input name="group_name"></input> <span class="content-small"><strong>Example</strong>: Emergency Medicine Elective</span></td>
-							</tr>	
-							<tr>
-								<td>&nbsp;</td>
-								<td><label class="form-required" for="university">University:</label></td>
-								<td><input name="university" value="Queen's University"></input> <span class="content-small"><strong>Example</strong>: Queen's University</span></td>
-							</tr>	
-							<tr>
-								<td>&nbsp;</td>
-								<td><label class="form-required" for="location">Location:</label></td>
-								<td><input name="location" value="Kingston, ON"></input> <span class="content-small"><strong>Example</strong>: Kingston, Ontario</span></td>
-							</tr>	
-							<tr>
-								<td>&nbsp;</td>
-								<td><label class="form-required" for="start">Start:</label></td>
-								<td>
-									<select name="start_month">
-									<?php
-									echo build_option("","Month",true);
-										
-									for($month_num = 1; $month_num <= 12; $month_num++) {
-										echo build_option($month_num, getMonthName($month_num));
-									}
-									?>
-									</select>
-									<select name="start_year">
-									<?php 
-									$cur_year = (int) date("Y");
-									$start_year = $cur_year - 6;
-									$end_year = $cur_year + 4;
-									
-									for ($opt_year = $start_year; $opt_year <= $end_year; ++$opt_year) {
-											echo build_option($opt_year, $opt_year, $opt_year == $cur_year);
-									}
-									?>
-									</select>
-								</td>
-							</tr>
-							<tr>
-								<td>&nbsp;</td>
-								<td><label class="form-required" for="end">End:</label></td>
-								<td>
-									<select name="end_month">
-									<?php
-									echo build_option("","Month",true);
-										
-									for($month_num = 1; $month_num <= 12; $month_num++) {
-										echo build_option($month_num, getMonthName($month_num));
-									}
-									?>
-									</select>
-									<select name="end_year">
-									<?php 
-									echo build_option("","Year",true);
-									$cur_year = (int) date("Y");
-									$start_year = $cur_year - 6;
-									$end_year = $cur_year + 4;
-									
-									for ($opt_year = $start_year; $opt_year <= $end_year; ++$opt_year) {
-											echo build_option($opt_year, $opt_year, false);
-									}
-									?>
-									</select>
-								</td>
-							</tr>
-						</tbody>
-					
-					</table>	
 				
-					<div class="clear">&nbsp;</div>
-				</form>
+				<div id="add-sre-box" class="modal-confirmation" style="width: 60em; height: 35ex;">
+					<h1>Add Student-Run Elective/Interest Group</h1>
+					<form method="post" name="add_sre_form">
+						<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
+						<input type="hidden" name="action" value="Add"></input>
+						
+						<table class="mspr_form">
+							<colgroup>
+								<col width="25%"></col>
+								<col width="75%"></col>
+							</colgroup>
+							<tbody>
+								<tr>
+									<td><label class="form-required" for="group_name">Group Name:</label></td>
+									<td><input name="group_name"></input> <span class="content-small"><strong>Example</strong>: Emergency Medicine Elective</span></td>
+								</tr>	
+								<tr>
+									<td><label class="form-required" for="university">University:</label></td>
+									<td><input name="university" value="Queen's University"></input> <span class="content-small"><strong>Example</strong>: Queen's University</span></td>
+								</tr>	
+								<tr>
+									<td><label class="form-required" for="location">Location:</label></td>
+									<td><input name="location" value="Kingston, ON"></input> <span class="content-small"><strong>Example</strong>: Kingston, Ontario</span></td>
+								</tr>	
+								<tr>
+									<td><label class="form-required" for="start">Start:</label></td>
+									<td>
+										<select name="start_month">
+										<?php
+										echo build_option("","Month",true);
+											
+										for($month_num = 1; $month_num <= 12; $month_num++) {
+											echo build_option($month_num, getMonthName($month_num));
+										}
+										?>
+										</select>
+										<select name="start_year">
+										<?php 
+										$cur_year = (int) date("Y");
+										$start_year = $cur_year - 6;
+										$end_year = $cur_year + 4;
+										
+										for ($opt_year = $start_year; $opt_year <= $end_year; ++$opt_year) {
+												echo build_option($opt_year, $opt_year, $opt_year == $cur_year);
+										}
+										?>
+										</select>
+									</td>
+								</tr>
+								<tr>
+									<td><label class="form-required" for="end">End:</label></td>
+									<td>
+										<select name="end_month">
+										<?php
+										echo build_option("","Month",true);
+											
+										for($month_num = 1; $month_num <= 12; $month_num++) {
+											echo build_option($month_num, getMonthName($month_num));
+										}
+										?>
+										</select>
+										<select name="end_year">
+										<?php 
+										echo build_option("","Year",true);
+										$cur_year = (int) date("Y");
+										$start_year = $cur_year - 6;
+										$end_year = $cur_year + 4;
+										
+										for ($opt_year = $start_year; $opt_year <= $end_year; ++$opt_year) {
+												echo build_option($opt_year, $opt_year, false);
+										}
+										?>
+										</select>
+									</td>
+								</tr>
+							</tbody>
+						</table>	
+					</form>
+					
+					<div class="footer">
+						<button class="left modal-close"">Close</button>
+						<button class="right modal-confirm">Submit</button>
+					</div>
+					
+				</div>
+				
+				<div id="update-sre-box" class="modal-confirmation" style="width: 60em; height: 35ex;">
+					<h1>Edit Student-Run Elective/Interest Group</h1>
+					<form method="post" name="edit_sre_form">
+						<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
+						<input type="hidden" name="action" value="Edit"></input>
+						
+						<table class="mspr_form">
+							<colgroup>
+								<col width="25%"></col>
+								<col width="75%"></col>
+							</colgroup>
+							<tbody>
+								<tr>
+									<td><label class="form-required" for="group_name">Group Name:</label></td>
+									<td><input name="group_name"></input> <span class="content-small"><strong>Example</strong>: Emergency Medicine Elective</span></td>
+								</tr>	
+								<tr>
+									<td><label class="form-required" for="university">University:</label></td>
+									<td><input name="university" value="Queen's University"></input> <span class="content-small"><strong>Example</strong>: Queen's University</span></td>
+								</tr>	
+								<tr>
+									<td><label class="form-required" for="location">Location:</label></td>
+									<td><input name="location" value="Kingston, ON"></input> <span class="content-small"><strong>Example</strong>: Kingston, Ontario</span></td>
+								</tr>	
+								<tr>
+									<td><label class="form-required" for="start">Start:</label></td>
+									<td>
+										<select name="start_month">
+										<?php
+										echo build_option("","Month",true);
+											
+										for($month_num = 1; $month_num <= 12; $month_num++) {
+											echo build_option($month_num, getMonthName($month_num));
+										}
+										?>
+										</select>
+										<select name="start_year">
+										<?php 
+										$cur_year = (int) date("Y");
+										$start_year = $cur_year - 6;
+										$end_year = $cur_year + 4;
+										
+										for ($opt_year = $start_year; $opt_year <= $end_year; ++$opt_year) {
+												echo build_option($opt_year, $opt_year, $opt_year == $cur_year);
+										}
+										?>
+										</select>
+									</td>
+								</tr>
+								<tr>
+									<td><label class="form-required" for="end">End:</label></td>
+									<td>
+										<select name="end_month">
+										<?php
+										echo build_option("","Month",true);
+											
+										for($month_num = 1; $month_num <= 12; $month_num++) {
+											echo build_option($month_num, getMonthName($month_num));
+										}
+										?>
+										</select>
+										<select name="end_year">
+										<?php 
+										echo build_option("","Year",true);
+										$cur_year = (int) date("Y");
+										$start_year = $cur_year - 6;
+										$end_year = $cur_year + 4;
+										
+										for ($opt_year = $start_year; $opt_year <= $end_year; ++$opt_year) {
+												echo build_option($opt_year, $opt_year, false);
+										}
+										?>
+										</select>
+									</td>
+								</tr>
+							</tbody>
+						</table>	
+					</form>
+					
+					<div class="footer">
+						<button class="left modal-close"">Close</button>
+						<button class="right modal-confirm">Update</button>
+					</div>
+					
+				</div>
+				
+				<div class="clear">&nbsp;</div>
 				<div id="student_run_electives"><?php echo display_student_run_electives($student_run_electives,"admin"); ?></div>
 			</div>
 		</div>
@@ -787,65 +1441,117 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 				</div>
 			
 				<div class="clear">&nbsp;</div>
+				
+				
+				<div id="add-internal-award-box" class="modal-confirmation" style="width: 60em; height: 20ex;">
+					<h1>Add Internal Award</h1>
+					<form method="post" name="add_internal_award_form">
+						<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
+						<input type="hidden" name="action" value="Add"></input>
+						
+						<table class="mspr_form">
+							<colgroup>
+								<col width="25%"></col>
+								<col width="75%"></col>
+							</colgroup>
+							<tbody>
+								<tr>
+								<td><label class="form-required" for="title">Title:</label></td>
+								<td><select name="award_id">
+									<?php 
+										$query		= "SELECT * FROM `student_awards_internal_types` where `disabled` = 0 order by `title` asc";
+										$results	= $db->GetAll($query);
+										if ($results) {
+											foreach ($results as $result) {
+												echo build_option($result['id'], clean_input($result["title"], array("notags", "specialchars")));
+											}
+										}
+									?>
+									</select></td>
+								</tr>	
+								<tr>
+								<td><label class="form-required" for="year">Year Awarded:</label></td>
+								<td><select name="year">
+									<?php 
+									
+									$cur_year = (int) date("Y");
+									$start_year = $cur_year - 4;
+									$end_year = $cur_year + 4;
+									
+									for ($opt_year = $start_year; $opt_year <= $end_year; ++$opt_year) {
+											echo build_option($opt_year, $opt_year, $opt_year == $cur_year);
+									}
+									
+									?>
+									</select></td>
+								</tr>
+							</tbody>
+						</table>	
+					</form>
+					
+					<div class="footer">
+						<button class="left modal-close"">Close</button>
+						<button class="right modal-confirm">Submit</button>
+					</div>
+					
+				</div>
+				
+				<div id="update-internal-award-box" class="modal-confirmation" style="width: 60em; height: 20ex;">
+					<h1>Edit Internal Award</h1>
+					<form method="post" name="edit_internal_award_form">
+						<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
+						<input type="hidden" name="action" value="Edit"></input>
+						
+						<table class="mspr_form">
+							<colgroup>
+								<col width="25%"></col>
+								<col width="75%"></col>
+							</colgroup>
+							<tbody>
+								<tr>
+								<td><label class="form-required" for="title">Title:</label></td>
+								<td><select name="award_id">
+									<?php 
+										$query		= "SELECT * FROM `student_awards_internal_types` where `disabled` = 0 order by `title` asc";
+										$results	= $db->GetAll($query);
+										if ($results) {
+											foreach ($results as $result) {
+												echo build_option($result['id'], clean_input($result["title"], array("notags", "specialchars")));
+											}
+										}
+									?>
+									</select></td>
+								</tr>	
+								<tr>
+								<td><label class="form-required" for="year">Year Awarded:</label></td>
+								<td><select name="year">
+									<?php 
+									
+									$cur_year = (int) date("Y");
+									$start_year = $cur_year - 4;
+									$end_year = $cur_year + 4;
+									
+									for ($opt_year = $start_year; $opt_year <= $end_year; ++$opt_year) {
+											echo build_option($opt_year, $opt_year, $opt_year == $cur_year);
+									}
+									
+									?>
+									</select></td>
+								</tr>
+							</tbody>
+						</table>	
+					</form>
+					
+					<div class="footer">
+						<button class="left modal-close"">Close</button>
+						<button class="right modal-confirm">Update</button>
+					</div>
+					
+				</div>
+				
 				<form id="add_internal_award_form" name="add_internal_award_form" action="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" method="post" style="display:none;" >
 					<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
-					<table class="mspr_form">
-						<colgroup>
-							<col width="3%"></col>
-							<col width="25%"></col>
-							<col width="72%"></col>
-						</colgroup>
-						<tfoot>
-							<tr>
-								<td colspan="3">&nbsp;</td>
-							</tr>
-							<tr>
-								<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
-									<input type="submit" name="action" class="button" value="Add" />
-									<div id="hide_internal_award_link" style="display:inline-block;">
-										<ul class="page-action-cancel">
-											<li><a id="hide_internal_award" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" class="strong-green">[ Cancel Adding Internal Award ]</a></li>
-										</ul>
-									</div>
-								</td>
-							</tr>
-						</tfoot>
-						<tbody>
-							<tr>
-							<td>&nbsp;</td>
-							<td><label class="form-required" for="title">Title:</label></td>
-							<td><select name="title">
-								<?php 
-									$query		= "SELECT * FROM `student_awards_internal_types` where `disabled` = 0 order by `title` asc";
-									$results	= $db->GetAll($query);
-									if ($results) {
-										foreach ($results as $result) {
-											echo build_option($result['id'], clean_input($result["title"], array("notags", "specialchars")));
-										}
-									}
-								?>
-								</select></td>
-							</tr>	
-							<tr>
-							<td>&nbsp;</td>
-							<td><label class="form-required" for="year">Year Awarded:</label></td>
-							<td><select name="year">
-								<?php 
-								
-								$cur_year = (int) date("Y");
-								$start_year = $cur_year - 4;
-								$end_year = $cur_year + 4;
-								
-								for ($opt_year = $start_year; $opt_year <= $end_year; ++$opt_year) {
-										echo build_option($opt_year, $opt_year, $opt_year == $cur_year);
-								}
-								
-								?>
-								</select></td>
-							</tr>
-						</tbody>
 					
-					</table>	
 				
 					<div class="clear">&nbsp;</div>
 				</form>
@@ -918,81 +1624,198 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 
 document.observe('dom:loaded', function() {
 	try {
-	var reject_modal = new Control.Modal('reject-submission-box', {
-		overlayOpacity:	0.75,
-		closeOnClick:	'overlay',
-		className:		'modal-confirmation',
-		fade:			true,
-		fadeDuration:	0.30
-	});
+		function get_modal_options() {
+			return {
+				overlayOpacity:	0.75,
+				closeOnClick:	'overlay',
+				className:		'modal-confirmation',
+				fade:			true,
+				fadeDuration:	0.30
+			};
+		}
 
-	var edit_clineval_modal = new Control.Modal('update-clineval-box', {
-		overlayOpacity:	0.75,
-		closeOnClick:	'overlay',
-		className:		'modal-confirmation',
-		fade:			true,
-		fadeDuration:	0.30
-	});
-
-	var edit_observership_modal = new Control.Modal('update-observership-box', {
-		overlayOpacity:	0.75,
-		closeOnClick:	'overlay',
-		className:		'modal-confirmation',
-		fade:			true,
-		fadeDuration:	0.30
-	});
-	
 	var api_url = '<?php echo webservice_url("mspr-admin"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=';
-	var contributions = new ActiveApprovalProcessor({
-		url : api_url + 'contributions',
-		data_destination: $('contributions-to-medical-school_section'),
-		action_form_selector: '#contributions-to-medical-school_section .entry form',
-		section: "contributions",
+		
+	var reject_modal = new Control.Modal('reject-submission-box', get_modal_options());
+
+	var add_clineval_modal = new Control.Modal('add-clineval-box', get_modal_options());
+	var edit_clineval_modal = new Control.Modal('update-clineval-box', get_modal_options());
+
+	var edit_studentship_modal = new Control.Modal('update-studentship-box', get_modal_options());
+	var add_studentship_modal = new Control.Modal('add-studentship-box', get_modal_options());
+	
+	var edit_observership_modal = new Control.Modal('update-observership-box', get_modal_options());
+	var add_observership_modal = new Control.Modal('add-observership-box', get_modal_options());
+
+	var edit_int_act_modal = new Control.Modal('update-int-act-box', get_modal_options());
+	var add_int_act_modal = new Control.Modal('add-int-act-box', get_modal_options());
+
+	var edit_sre_modal = new Control.Modal('update-sre-box', get_modal_options());
+	var add_sre_modal = new Control.Modal('add-sre-box', get_modal_options());
+
+	var edit_internal_award_modal = new Control.Modal('update-internal-award-box', get_modal_options());
+	var add_internal_award_modal = new Control.Modal('add-internal-award-box', get_modal_options());
+	
+	var add_critical_enquiry_modal = new Control.Modal('add-critical-enquiry-box', get_modal_options());
+	var edit_critical_enquiry_modal = new Control.Modal('update-critical-enquiry-box', get_modal_options());
+
+	var add_community_based_project_modal = new Control.Modal('add-community-based-project-box', get_modal_options());
+	var edit_community_based_project_modal = new Control.Modal('update-community-based-project-box', get_modal_options());
+
+	var add_research_modal = new Control.Modal('add-research-box', get_modal_options());
+	var edit_research_modal = new Control.Modal('update-research-box',get_modal_options());
+
+	var add_contribution_modal = new Control.Modal('add-contribution-box', get_modal_options());
+	var edit_contribution_modal = new Control.Modal('update-contribution-box', get_modal_options());
+
+	var add_external_award_modal = new Control.Modal('add-external-award-box', get_modal_options());
+	var edit_external_award_modal = new Control.Modal('update-external-award-box', get_modal_options());
+	
+	var research_citations = new ActiveDataEntryProcessor({
+		url : api_url + 'research_citations',
+		data_destination: $('research_citations'),
+		remove_forms_selector: '#research .entry form.remove_form',
+		new_button: $('add_research_citation_link'),
+		section:'research_citations',
+		new_modal: add_research_modal
+	});
+
+	var research_citation_priority_list = new PriorityList({
+		url : api_url + 'research_citations',
+		data_destination: $('research_citations'),
+		format: /research_citation_([0-9]*)$/,
+		tag: "li",
+		handle:'.handle',
+		section:'research_citations',
+		element: 'citations_list',
+		params : { user_id: <?php echo $user->getID(); ?> }
+	});
+
+	var research_edit = new ActiveEditor({
+		url : api_url + 'research_citations',
+		data_destination: $('research_citations'),
+		edit_forms_selector: '#research_citations .entry form.edit_form',
+		edit_modal: edit_research_modal,
+		section: 'research_citations'
+	});
+
+	var research_citations_approval = new ActiveApprovalProcessor({
+		url : api_url + 'research_citations',
+		data_destination: $('research_citations'),
+		action_form_selector: '#research_citations .entry form.reject_form, #research_citations .entry form.approve_form, #research_citations .entry form.unapprove_form',
+		section: "research_citations",
 		reject_modal: reject_modal
 	});
-
-	var critical_enquiry = new ActiveApprovalProcessor({
+	
+	
+	var critical_enquiry = new ActiveDataEntryProcessor({
 		url : api_url + 'critical_enquiry',
 		data_destination: $('critical_enquiry'),
-		action_form_selector: '#critical_enquiry .entry form',
+		remove_forms_selector: '#critical_enquiry .entry form.remove_form',
+		new_button: $('add_critical_enquiry_link'),
+		section:'critical_enquiry',
+		new_modal: add_critical_enquiry_modal
+	});
+
+	var critical_enquiry_edit = new ActiveEditor({
+		url : api_url + 'critical_enquiry',
+		data_destination: $('critical_enquiry'),
+		edit_forms_selector: '#critical_enquiry .entry form.edit_form',
+		edit_modal: edit_critical_enquiry_modal,
+		section: 'critical_enquiry'
+	});
+
+	var critical_enquiry_approval = new ActiveApprovalProcessor({
+		url : api_url + 'critical_enquiry',
+		data_destination: $('critical_enquiry'),
+		action_form_selector: '#critical_enquiry .entry form.reject_form, #critical_enquiry .entry form.approve_form, #critical_enquiry .entry form.unapprove_form',
 		section: "critical_enquiry",
 		reject_modal: reject_modal
 	});
 
-	var community_health_and_epidemiology = new ActiveApprovalProcessor({
-		url : api_url + 'community_health_and_epidemiology',
-		data_destination: $('community_health_and_epidemiology'),
-		action_form_selector: '#community_health_and_epidemiology .entry form',
-		section: "community_health_and_epidemiology",
+	var community_based_project = new ActiveDataEntryProcessor({
+		url : api_url + 'community_based_project',
+		data_destination: $('community_based_project'),
+		remove_forms_selector: '#community_based_project .entry form.remove_form',
+		new_button: $('add_community_based_project_link'),
+		section:'community_based_project',
+		new_modal: add_community_based_project_modal
+	});
+
+	var community_based_project_edit = new ActiveEditor({
+		url : api_url + 'community_based_project',
+		data_destination: $('community_based_project'),
+		edit_forms_selector: '#community_based_project .entry form.edit_form',
+		edit_modal: edit_community_based_project_modal,
+		section: 'community_based_project'
+	});
+
+	var community_based_project_approval = new ActiveApprovalProcessor({
+		url : api_url + 'community_based_project',
+		data_destination: $('community_based_project'),
+		action_form_selector: '#community_based_project .entry form.reject_form, #community_based_project .entry form.approve_form, #community_based_project .entry form.unapprove_form',
+		section: "community_based_project",
 		reject_modal: reject_modal
 	});
 	
-	var research_citations = new ActiveApprovalProcessor({
-		url : api_url + 'research_citations',
-		data_destination: $('research_section'),
-		action_form_selector: '#research_section .entry form',
-		section: "research",
+
+	var external_awards = new ActiveDataEntryProcessor({
+		url : api_url + 'external_awards',
+		data_destination: $('external_awards'),
+		remove_forms_selector: '#external_awards .entry form.remove_form',
+		new_button: $('add_external_award_link'),
+		section:'external_awards',
+		new_modal: add_external_award_modal
+	});
+
+	var external_awards_edit = new ActiveEditor({
+		url : api_url + 'external_awards',
+		data_destination: $('external_awards'),
+		edit_forms_selector: '#external_awards .entry form.edit_form',
+		edit_modal: edit_external_award_modal,
+		section: 'external_awards'
+	});
+
+	var external_awards_approval = new ActiveApprovalProcessor({
+		url : api_url + 'external_awards',
+		data_destination: $('external_awards'),
+		action_form_selector: '#external_awards .entry form.reject_form, #external_awards .entry form.approve_form, #external_awards .entry form.unapprove_form',
+		section: "external_awards",
 		reject_modal: reject_modal
 	});
 
-	var external_awards = new ActiveApprovalProcessor({
-		url : api_url + 'external_awards',
-		data_destination: $('external_awards'),
-		action_form_selector: '#external_awards .entry form',
-		section: "external_awards",
+	var contributions = new ActiveDataEntryProcessor({
+		url : api_url + 'contributions',
+		data_destination: $('contributions'),
+		remove_forms_selector: '#contributions .entry form.remove_form',
+		new_button: $('add_contribution_link'),
+		section:'contributions',
+		new_modal: add_contribution_modal
+	});
+
+	var contributions_edit = new ActiveEditor({
+		url : api_url + 'contributions',
+		data_destination: $('contributions'),
+		edit_forms_selector: '#contributions .entry form.edit_form',
+		edit_modal: edit_contribution_modal,
+		section: 'contributions'
+	});
+	
+	var contributions_approval = new ActiveApprovalProcessor({
+		url : api_url + 'contributions',
+		data_destination: $('contributions'),
+		action_form_selector: '#contributions .entry form.reject_form, #contributions .entry form.approve_form, #contributions .entry form.unapprove_form',
+		section: "contributions",
 		reject_modal: reject_modal
 	});
 
 	var clineval_comments = new ActiveDataEntryProcessor({
 		url : api_url + 'clineval',
 		data_destination: $('clinical_performance_eval_comments'),
-		new_form: $('add_clineval_form'),
 		remove_forms_selector: '#clinical_performance_eval_comments .entry form.remove_form',
-		edit_forms_selector: '#clinical_performance_eval_comments .entry form.edit_form',
-		edit_form_modal: edit_clineval_modal,
 		new_button: $('add_clineval_link'),
-		hide_button: $('hide_clineval'),
-		section: 'clineval'
+		section: 'clineval',
+		new_modal: add_clineval_modal
 	});
 
 	var clineval_edit = new ActiveEditor({
@@ -1006,13 +1829,20 @@ document.observe('dom:loaded', function() {
 	var studentships = new ActiveDataEntryProcessor({
 		url : api_url + 'studentships',
 		data_destination: $('studentships'),
-		new_form: $('add_studentship_form'),
-		remove_forms_selector: '#studentships .entry form',
+		remove_forms_selector: '#studentships .entry form.remove_form',
 		new_button: $('add_studentship_link'),
-		hide_button: $('hide_studentship'),
-		section: 'studentships'
+		section: 'studentships',
+		new_modal: add_studentship_modal
 	});
 
+	var studentships_edit = new ActiveEditor({
+		url : api_url + 'studentships',
+		data_destination: $('studentships'),
+		edit_forms_selector: '#studentships .entry form.edit_form',
+		edit_modal: edit_studentship_modal,
+		section: 'studentships'
+	});
+	
 	$('int_act_start').observe('focus',function(e) {
 		showCalendar('',this,this,null,null,0,30,1);
 	}.bind($('int_act_start')));
@@ -1023,10 +1853,24 @@ document.observe('dom:loaded', function() {
 	var int_acts = new ActiveDataEntryProcessor({
 		url : api_url + 'int_acts',
 		data_destination: $('int_acts'),
-		new_form: $('add_int_act_form'),
-		remove_forms_selector: '#int_acts .entry form',
+		remove_forms_selector: '#int_acts .entry form.remove_form',
 		new_button: $('add_int_act_link'),
-		hide_button: $('hide_int_act'),
+		section: 'int_acts',
+		new_modal: add_int_act_modal
+	});
+
+	$('int_act_start_edit').observe('focus',function(e) {
+		showCalendar('',this,this,null,null,0,30,1);
+	}.bind($('int_act_start_edit')));
+	$('int_act_end_edit').observe('focus',function(e) {
+		showCalendar('',this,this,null,null,0,30,1);
+	}.bind($('int_act_end_edit')));
+
+	var int_acts_edit = new ActiveEditor({
+		url : api_url + 'int_acts',
+		data_destination: $('int_acts'),
+		edit_forms_selector: '#int_acts .entry form.edit_form',
+		edit_modal: edit_int_act_modal,
 		section: 'int_acts'
 	});
 	
@@ -1040,11 +1884,10 @@ document.observe('dom:loaded', function() {
 	var observerships = new ActiveDataEntryProcessor({
 		url : api_url + 'observerships',
 		data_destination: $('observerships'),
-		new_form: $('add_observership_form'),
 		remove_forms_selector: '#observerships .entry form.remove_form',
 		new_button: $('add_observership_link'),
-		hide_button: $('hide_observership'),
-		section: "observerships"
+		section: "observerships",
+		new_modal: add_observership_modal
 
 	});
 
@@ -1066,24 +1909,38 @@ document.observe('dom:loaded', function() {
 	var student_run_electives = new ActiveDataEntryProcessor({
 		url : api_url + 'student_run_electives',
 		data_destination: $('student_run_electives'),
-		new_form: $('add_student_run_elective_form'),
-		remove_forms_selector: '#student_run_electives .entry form',
+		remove_forms_selector: '#student_run_electives .entry form.remove_form',
 		new_button: $('add_student_run_elective_link'),
-		hide_button: $('hide_student_run_elective'),
-		section: 'student_run_electives'
+		section: 'student_run_electives',
+		new_modal: add_sre_modal
 	});
 
+	var student_run_electives_edit = new ActiveEditor({
+		url : api_url + 'student_run_electives',
+		data_destination: $('student_run_electives'),
+		edit_forms_selector: '#student_run_electives .entry form.edit_form',
+		edit_modal: edit_sre_modal,
+		section: 'student_run_electives'
+	});
+	
 	var internal_awards = new ActiveDataEntryProcessor({
 		url : api_url + 'internal_awards',
 		data_destination: $('internal_awards'),
-		new_form: $('add_internal_award_form'),
-		remove_forms_selector: '#internal_awards .entry form',
+		remove_forms_selector: '#internal_awards .entry form.remove_form',
 		new_button: $('add_internal_award_link'),
-		hide_button: $('hide_internal_award'),
-		section: 'internal_awards'
+		section: 'internal_awards',
+		new_modal: add_internal_award_modal
 	});
 
-	}catch(e) {
+	var internal_awards_edit = new ActiveEditor({
+		url : api_url + 'internal_awards',
+		data_destination: $('internal_awards'),
+		edit_forms_selector: '#internal_awards .entry form.edit_form',
+		edit_modal: edit_internal_award_modal,
+		section: 'internal_awards'
+	});
+	
+	}catch(e) {alert(e);
 		clog(e);
 	}
 });

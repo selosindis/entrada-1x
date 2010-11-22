@@ -19,8 +19,6 @@ RENAME TABLE `event_quiz_responses` TO `quiz_progress_responses`;
 ALTER TABLE `quiz_questions` ADD COLUMN `question_active` int(1) NOT NULL DEFAULT '1' AFTER `question_order`;
 ALTER TABLE `quiz_question_responses` ADD COLUMN `response_active` int(1) NOT NULL DEFAULT '1' AFTER `response_feedback`;
 
-UPDATE `settings` SET `value` = '1.2.0' WHERE `shortname` = 'version_db';
-
 ALTER TABLE `student_awards_external` ADD COLUMN `comment` varchar(4096) default NULL;
 ALTER TABLE `student_community_health_and_epidemiology` ADD COLUMN `comment` varchar(4096) default NULL;
 ALTER TABLE `student_contributions` ADD COLUMN `comment` varchar(4096) default NULL;
@@ -43,3 +41,6 @@ VALUES (7, 'quizzes', '1.0.0', 'Quizzes', 'This module allows communities to cre
 INSERT INTO `community_modules` (`community_id`, `module_id`, `module_active`)
 SELECT `community_id`, 7, 1 FROM `communities` WHERE `community_active` = 1;
 
+UPDATE `settings` SET `value` = '1.2.0' WHERE `shortname` = 'version_db';
+
+ALTER TABLE `evaluation_evaluators` ADD COLUMN `member_joined` bigint(64) NOT NULL DEFAULT '0';

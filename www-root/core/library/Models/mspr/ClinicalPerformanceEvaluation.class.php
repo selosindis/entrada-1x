@@ -9,8 +9,6 @@
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  */
 
-require_once("Models/utility/Editable.interface.php");
-
 class ClinicalPerformanceEvaluation implements Editable {
 	private $comment;
 	private $id;
@@ -40,11 +38,12 @@ class ClinicalPerformanceEvaluation implements Editable {
 		$this->source = $source;
 	}
 	
-	public static function create($user_id, $comment,$source) {
+	public static function create(array $input_arr) {
+		extract($input_arr);
 		global $db;
 	
-		$query = "insert into `student_clineval_comments` (`user_id`, `comment`,`source`) value (".$db->qstr($user_id).", ".$db->qstr($comment).", ".$db->qstr($source).")";
-		if(!$db->Execute($query)) {
+		$query = "insert into `student_clineval_comments` (`user_id`, `comment`,`source`) value (?,?,?)";
+		if(!$db->Execute($query, array($user_id, $text, $source))) {
 			add_error("Failed to create new clinical performance evaluation.");
 			application_log("error", "Unable to update a student_clineval_comment record. Database said: ".$db->ErrorMsg());
 		} else {
@@ -79,10 +78,11 @@ class ClinicalPerformanceEvaluation implements Editable {
 		return new self($arr['user_id'], $arr['id'], $arr['comment'], $arr['source']);	
 	}
 	
-	public function update($comment, $source) {
+	public function update(array $input_arr) {
+		extract($input_arr);
 		global $db;
 		$query = "Update `student_clineval_comments` set `comment`=?, `source`=? where `id`=?";
-		if(!$db->Execute($query, array($comment, $source, $this->id))) {
+		if(!$db->Execute($query, array($text, $source, $this->id))) {
 			add_error("Failed to update a clinical performance evaluation comment.");
 			application_log("error", "Unable to update a student_clineval_comment record. Database said: ".$db->ErrorMsg());
 		} else {

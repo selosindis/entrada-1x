@@ -10,7 +10,6 @@
  * @copyright Copyright 2010 University of Calgary. All Rights Reserved.
  *
 */
-show_log();
 if (!defined("IN_EVALUATIONS")) {
 	exit;
 } elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
@@ -93,8 +92,8 @@ if (!defined("IN_EVALUATIONS")) {
 
 	/**
 	 * Process any filter requests.
-	 */
 	events_process_filters($ACTION, "admin");
+	 */
 
 	/**
 	 * Check if preferences need to be updated.
@@ -112,7 +111,7 @@ if (!defined("IN_EVALUATIONS")) {
 	 * Output the filter HTML.
 	 */
 	//eval_sche_output_filter_controls("admin");
-        eval_sche_evaluators_filter_controls("admin");
+        //eval_sche_evaluators_filter_controls("admin");
 
 	if ($ENTRADA_ACL->amIAllowed("event", "create", false)) {
 		?>
@@ -214,14 +213,14 @@ if (!defined("IN_EVALUATIONS")) {
 					$accessible = false;
 				}
 				 */
-$url = ENTRADA_URL;
+                                $url = ENTRADA_URL."/admin/evaluations/scheduler?section=edit&amp;id=".$result["evaluation_id"];
 				echo "<tr id=\"event-".$result["evaluation_id"]."\" class=\"event".((!$url) ? " np" : ((!$accessible) ? " na" : (($result["audience_type"] == "proxy_id") ? " individual" : "")))."\">\n";
 				echo "	<td class=\"modified\">".(($administrator) ? "<input type=\"checkbox\" name=\"delete[]\" value=\"".$result["evaluation_id"]."\" />" : "<img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"19\" height=\"19\" alt=\"\" title=\"\" />")."</td>\n";
 				echo "	<td class=\"start".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Evaluation Date\">" : "").date(DEFAULT_DATE_FORMAT, $result["evaluation_start"]).(($url) ? "</a>" : "")."</td>\n";
 				echo "	<td class=\"finish".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Intended For Phase ".html_encode($result["evaluation_finish"])."\">" : "").date(DEFAULT_DATE_FORMAT, html_encode($result["evaluation_finish"])).(($url) ? "</a>" : "")."</td>\n";
 				echo "	<td class=\"id".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Primary Teacher: ".html_encode($result["evaluation_id"])."\">" : "").html_encode($result["evaluation_id"]).(($url) ? "</a>" : "")."</td>\n";
 				echo "	<td class=\"title".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Event Title: ".html_encode($result["evaluation_title"])."\">" : "").html_encode($result["evaluation_title"]).(($url) ? "</a>" : "")."</td>\n";
-				echo "	<td class=\"attachment\">".(($url) ? "<a href=\"".ENTRADA_URL."/admin/evaluations/scheduler?section=content&id=".$result["evaluation_id"]."\"><img src=\"".ENTRADA_URL."/images/event-contents.gif\" width=\"16\" height=\"16\" alt=\"Manage Event Content\" title=\"Manage Event Content\" border=\"0\" /></a>" : "<img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"16\" height=\"16\" alt=\"\" title=\"\" />")."</td>\n";
+				echo "	<td class=\"attachment\">".(($url) ? "<a href=\"".ENTRADA_URL."/admin/evaluations/scheduler?section=members&evaluation=".$result["evaluation_id"]."\"><img src=\"".ENTRADA_URL."/images/event-contents.gif\" width=\"16\" height=\"16\" alt=\"Manage Evaluation Content\" title=\"Manage Evaluation Content\" border=\"0\" /></a>" : "<img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"16\" height=\"16\" alt=\"\" title=\"\" />")."</td>\n";
 				echo "</tr>\n";
 			}
 			?>

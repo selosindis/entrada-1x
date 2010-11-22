@@ -1,6 +1,17 @@
 <?php
 
-class Studentship {
+/**
+ * 
+ * Entrada [ http://www.entrada-project.org ]
+ * 
+ * 
+ * @author Organisation: Queen's University
+ * @author Unit: School of Medicine
+ * @author Developer: Jonathan Fingland <jonathan.fingland@queensu.ca>
+ * @copyright Copyright 2010 Queen's University. All Rights Reserved.
+ *
+ */
+class Studentship implements Editable {
 	private $id;
 	private $user_id;
 	private $title;
@@ -44,11 +55,12 @@ class Studentship {
 		}
 	} 
 	
-	public static function create($user_id, $title, $year) {
+	public static function create(array $input_arr) {
+		extract($input_arr);
 		global $db;
 	
-		$query = "insert into `student_studentships` (`user_id`, `title`,`year`) value (".$db->qstr($user_id).", ".$db->qstr($title).", ".$db->qstr($year).")";
-		if(!$db->Execute($query)) {
+		$query = "insert into `student_studentships` (`user_id`, `title`,`year`) value (?,?,?)";
+		if(!$db->Execute($query, array($user_id, $title, $year))) {
 			add_error("Failed to create new studentship.");
 			application_log("error", "Unable to update a student_studentships record. Database said: ".$db->ErrorMsg());
 		} else {
@@ -62,10 +74,24 @@ class Studentship {
 		global $db;
 		$query = "DELETE FROM `student_studentships` where `id`=".$db->qstr($this->id);
 		if(!$db->Execute($query)) {
-			add_error("Failed to remove studentship from database.");
+			add_error("Failed to remove studentship.");
 			application_log("error", "Unable to delete a student_studentships record. Database said: ".$db->ErrorMsg());
 		} else {
 			add_success("Successfully removed studentship.");
 		}		
+	}
+	
+	public function update(array $input_arr) {
+		extract($input_arr);
+		global $db;
+		$query = "update `student_studentships` set
+				 `title`=?, `year`=?  
+				 where `id`=?";
+		if(!$db->Execute($query, array($title, $year, $this->id))) {
+			add_error("Failed to update studentship.");
+			application_log("error", "Unable to update a student_studentships record. Database said: ".$db->ErrorMsg());
+		} else {
+			add_success("Successfully updated studentship.");
+		}	
 	}
 }

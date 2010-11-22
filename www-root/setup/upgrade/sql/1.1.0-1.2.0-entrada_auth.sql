@@ -1,0 +1,4 @@
+update `acl_permissions` set `create`=null, `read`=1, `update`=1, `delete`=1 where `resource_type`='task' and `entity_value`='faculty:director' and `assertion`='TaskOwner'; 
+update `acl_permissions` set `create`=null, `read`=1, `update`=1, `delete`=1 where `resource_type`='task' and `entity_value`='pcoordinator' and `assertion`='TaskOwner';
+update `acl_permissions` set `create`=1, `read`=null, `update`=null, `delete`=null where `resource_type`='task' and `entity_value`='faculty:director' and `assertion`='CourseOwner';
+update `acl_permissions` set `create`=1, `read`=null, `update`=null, `delete`=null where `resource_type`='task' and `entity_value`='pcoordinator' and `assertion`='CourseOwner';

@@ -21,25 +21,20 @@ class ResearchCitation implements Approvable, AttentionRequirable, Editable {
 	private $user_id;
 	private $citation;
 	private $priority;
-	private $approved;
-	private $rejected;
+	private $status;
 	private $comment;
 	
-	function __construct($id, $user_id, $citation, $priority, $comment, $approved = false, $rejected = false) {
+	function __construct($id, $user_id, $citation, $priority, $comment, $status=0) {
 		$this->id = $id;
 		$this->user_id = $user_id;
 		$this->citation = $citation;
 		$this->priority = $priority;
 		$this->comment = $comment;
-		$this->approved = (bool) $approved;
-		$this->rejected = (bool) $rejected;
+		$this->status = $status;
 	}
 	
 	public static function fromArray(array $arr) {
-		$rejected=($arr['status'] == -1);
-		$approved = ($arr['status'] == 1);
-			
-		return new self($arr['id'], $arr['user_id'], $arr['citation'], $arr['priority'], $arr['comment'], $approved, $rejected);
+		return new self($arr['id'], $arr['user_id'], $arr['citation'], $arr['priority'], $arr['comment'], $arr['status']);
 	}
 	
 	public function getID() {
@@ -74,11 +69,11 @@ class ResearchCitation implements Approvable, AttentionRequirable, Editable {
 	}
 	
 	public function isApproved() {
-		return (bool)($this->approved);
+		return ($this->status == 1);
 	}
 	
 	public function isRejected() {
-		return (bool)($this->rejected);
+		return ($this->status == -1);
 	}
 	
 	public function getComment() {
@@ -124,13 +119,12 @@ class ResearchCitation implements Approvable, AttentionRequirable, Editable {
 	 * @param $citation
 	 * @param $approved
 	 */
-	public static function create($user_id, $citation, $approved = false, $rejected = false) {
-		
+	public static function create(array $input_arr) {
+		extract($input_arr);
 		global $db;
-		$approved = (int) $approved;
 		$priority = self::getNewPriority($user_id);
-		$query = "insert into `student_research` (`user_id`, `citation`, `priority`, `status`) value (".$db->qstr($user_id).", ".$db->qstr($citation).", ".$db->qstr($priority).", ". $db->qstr($approved ? 1 : 0).")";
-		if(!$db->Execute($query)) {
+		$query = "insert into `student_research` (`user_id`, `citation`, `priority`, `status`) value (?,?,?,IFNULL(?,0))";
+		if(!$db->Execute($query, array($user_id, $details, $priority, $status))) {
 			add_error("Failed to create new Research Citation.");
 			application_log("error", "Unable to create a student_research record. Database said: ".$db->ErrorMsg());
 		} else {
@@ -201,12 +195,11 @@ class ResearchCitation implements Approvable, AttentionRequirable, Editable {
 		}
 	}
 	
-	public function update($citation) {
+	public function update(array $input_arr) {
+		extract($input_arr);
 		global $db;
 		$query = "update `student_research` set `citation`=?, `status`=?, `comment`=? where `id`=?";
-		$status_code=0; //reset to unapproved
-		$comment = ""; //clear the comment. XXX should this be retained?
-		if(!$db->Execute($query, array($citation, $status_code, $comment, $this->id))) {
+		if(!$db->Execute($query, array($details, $status, $comment, $this->id))) {
 			add_error("Failed to update Research Citation.");
 			application_log("error", "Unable to update a student_research record. Database said: ".$db->ErrorMsg());
 		} else {

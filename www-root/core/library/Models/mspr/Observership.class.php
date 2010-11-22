@@ -1,7 +1,17 @@
 <?php
 
-require_once("Models/utility/Editable.interface.php");
-
+/**
+ * 
+ * Entrada [ http://www.entrada-project.org ]
+ * 
+ * Simple class for data-entry of observerships. XXX Replace when policy and plan in place for observserships going forward.
+ * 
+ * @author Organisation: Queen's University
+ * @author Unit: School of Medicine
+ * @author Developer: Jonathan Fingland <jonathan.fingland@queensu.ca>
+ * @copyright Copyright 2010 Queen's University. All Rights Reserved.
+ *
+ */
 class Observership implements Editable {
 	private $id;
 	private $student_id;
@@ -145,7 +155,8 @@ class Observership implements Editable {
 		}
 	} 
 
-	public static function create($user_id, $title, $site, $location, $preceptor_proxy_id, $preceptor_firstname, $preceptor_lastname, $start, $end) {
+	public static function create(array $input_arr) {
+		extract($input_arr);
 		global $db;
 		$query = "insert into `student_observerships` (`student_id`, `title`,`site`,`location`,`preceptor_proxy_id`,`preceptor_firstname`, `preceptor_lastname`, `start`, `end`) value (?,?,?,?,?,?,?,?,?)";
 		if(!$db->Execute($query, array($user_id, $title, $site, $location, $preceptor_proxy_id, $preceptor_firstname, $preceptor_lastname, $start, $end))) {
@@ -169,7 +180,8 @@ class Observership implements Editable {
 		}		
 	}
 	
-	public function update($title, $site, $location, $preceptor_proxy_id, $preceptor_firstname, $preceptor_lastname, $start, $end) {
+	public function update(array $input_arr) {
+		extract($input_arr);
 		global $db;
 		$query = "update `student_observerships` set `title`=?, `site`=?,`location`=?,`preceptor_proxy_id`=?,`preceptor_firstname`=?, `preceptor_lastname`=?, `start`=?, `end`=? where `id`=?";
 		if(!$db->Execute($query, array($title, $site, $location, $preceptor_proxy_id, $preceptor_firstname, $preceptor_lastname, $start, $end, $this->id))) {

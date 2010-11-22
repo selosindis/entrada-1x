@@ -78,7 +78,7 @@ xcFootButtonLinks=[];
 xcGridWidth=0;         // used as cellspacing
 
 // others
-xcBaseZIndex=10001;      // z-index for calendar layers
+xcBaseZIndex=20001;      // z-index for calendar layers
 xcMultiCalendar=0;     // 1:multi-calendar, 0:single-calendar
 xcShowCurrentDate=1;   // 1:highlight current date/today, 0:no highlight
 xcWeekStart=1;         // 0:Sunday, 1:Monday

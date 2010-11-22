@@ -27,10 +27,7 @@ class CriticalEnquiry extends SupervisedProject {
 	 * @return CriticalEnquiry
 	 */
 	public static function fromArray(array $arr) {
-		$rejected=($arr['status'] == -1);
-		$approved = ($arr['status'] == 1);
-			
-		return new self($arr['user_id'], $arr['title'], $arr['organization'], $arr['location'], $arr['supervisor'], $arr['comment'],$approved, $rejected);
+		return new self($arr['user_id'], $arr['title'], $arr['organization'], $arr['location'], $arr['supervisor'], $arr['comment'],$arr['status']);
 	} 
 	
 
@@ -42,20 +39,17 @@ class CriticalEnquiry extends SupervisedProject {
 	 * @param unknown_type $location
 	 * @param unknown_type $supervisor
 	 */
-	public static function create($user_id, $title, $organization, $location, $supervisor) {
-		
+	public static function create(array $input_arr) {
+		extract($input_arr);
 		global $db;
 		$query = "insert into `student_critical_enquiries` 
 					(`user_id`, `title`, `organization`,`location`,`supervisor`, `status`)
-					value 
-					(".$db->qstr($user_id).", ".$db->qstr($title).", ".$db->qstr($organization).", ".$db->qstr($location).", ".$db->qstr($supervisor).", ".$db->qstr(0).")
-					on duplicate key update 
-					`title`=".$db->qstr($title).", `organization`=".$db->qstr($organization).", `location`=".$db->qstr($location).", `supervisor`=".$db->qstr($supervisor).", `status`=".$db->qstr(0);
-		if(!$db->Execute($query)) {
-			add_error("Failed to update Critical Enquiry entry.");
-			application_log("error", "Unable to update a student_critical_enquiries record. Database said: ".$db->ErrorMsg());
+					value (?, ?, ?, ?, ?, IFNULL(?,0))";
+		if(!$db->Execute($query, array($user_id, $title, $organization, $location, $supervisor, $status))) {
+			add_error("Failed to create Critical Enquiry entry.");
+			application_log("error", "Unable to create a student_critical_enquiries record. Database said: ".$db->ErrorMsg());
 		} else {
-			add_success("Successfully updated Critical Enquiry entry.");
+			add_success("Successfully created Critical Enquiry entry.");
 		}
 	}
 	
@@ -85,4 +79,27 @@ class CriticalEnquiry extends SupervisedProject {
 		$this->setStatus(-1, $comment);
 	}
 	
+	public function update(array $input_arr) {
+		extract($input_arr);
+		global $db;
+		$query = "update `student_critical_enquiries` set `title`=?, `organization`=?, `location`=?, `supervisor`=?, `status`=?, `comment`=? where `user_id`=?";
+		$comment = ""; //clear the comment. XXX should this be retained?
+		if(!$db->Execute($query, array($title, $organization, $location, $supervisor, $status, $comment, $this->getID()))) {
+			add_error("Failed to update Critical Enquiry.");
+			application_log("error", "Unable to update a student_critical_enquiries record. Database said: ".$db->ErrorMsg());
+		} else {
+			add_success("Successfully updated Critical Enquiry.");
+		}
+	}
+	
+	public function delete() {
+		global $db;
+		$query = "DELETE FROM `student_critical_enquiries` where `user_id`=?";
+		if(!$db->Execute($query, array($this->getID()))) {
+			add_error("Failed to remove Critical Enquiry.");
+			application_log("error", "Unable to delete a student_critical_enquiries record. Database said: ".$db->ErrorMsg());
+		} else {
+			add_success("Successfully removed Critical Enquiry.");
+		}		
+	}
 }

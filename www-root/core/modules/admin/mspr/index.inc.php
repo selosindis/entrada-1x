@@ -24,7 +24,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MSPR_ADMIN"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 
-	require_once("Models/mspr/MSPRs.class.php");
+	require_once("Entrada/mspr/functions.inc.php");
 	
 	if (isset($_GET['mode'])) {
 		$mode = $_GET['mode'];

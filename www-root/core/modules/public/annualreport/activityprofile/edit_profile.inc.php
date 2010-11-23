@@ -46,7 +46,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 	if($_SESSION["details"]["clinical_member"]) {
 		$PROFILE_ID = $_GET["rid"];
 		if($PROFILE_ID) {
-			$query	= "SELECT * FROM `ar_profile` WHERE `profile_id`=".$db->qstr($PROFILE_ID);
+			$query	= "SELECT * FROM `ar_profile` WHERE `profile_id`=".$db->qstr($PROFILE_ID)." AND `proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]['tmp']['proxy_id']);
 			$result	= $db->GetRow($query);
 			if($result) {
 				// Error Checking

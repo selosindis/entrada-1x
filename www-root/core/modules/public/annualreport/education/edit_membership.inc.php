@@ -40,7 +40,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 	// This grid should be expanded upon redirecting back to the education index.
 	$_SESSION["education_expand_grid"] = "memberships_grid";
 	if($MEMBERSHIPS_ID) {
-		$query	= "SELECT * FROM `ar_memberships` WHERE `memberships_id`=".$db->qstr($MEMBERSHIPS_ID);
+		$query	= "SELECT * FROM `ar_memberships` WHERE `memberships_id`=".$db->qstr($MEMBERSHIPS_ID)." AND `proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]['tmp']['proxy_id']);
 		$result	= $db->GetRow($query);
 		if($result) {
 			$BREADCRUMB[]	= array("url" => ENTRADA_URL."/annualreport/education?section=edit_membership", "title" => "Edit Membership on Graduate Committees");

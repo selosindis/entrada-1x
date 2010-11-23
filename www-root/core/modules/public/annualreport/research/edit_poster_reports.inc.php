@@ -42,7 +42,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 	$_SESSION["research_expand_grid"] = "poster_reports_grid";
 	
 	if($POSTER_REPORTS_ID) {
-		$query	= "SELECT * FROM `ar_poster_reports` WHERE `poster_reports_id`=".$db->qstr($POSTER_REPORTS_ID);
+		$query	= "SELECT * FROM `ar_poster_reports` WHERE `poster_reports_id`=".$db->qstr($POSTER_REPORTS_ID)." AND `proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]['tmp']['proxy_id']);
 		$result	= $db->GetRow($query);
 		if($result) {
 			$BREADCRUMB[]	= array("url" => ENTRADA_URL."/annualreport/research?section=edit_poster_reports", "title" => "Edit Poster Presentations / Technical Reports");

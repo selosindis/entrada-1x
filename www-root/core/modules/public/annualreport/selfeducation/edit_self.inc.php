@@ -38,7 +38,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 } else {
 	$SELF_EDUCATION_ID = $_GET["rid"];
 	if($SELF_EDUCATION_ID) {
-		$query	= "SELECT * FROM `ar_self_education` WHERE `self_education_id`=".$db->qstr($SELF_EDUCATION_ID);
+		$query	= "SELECT * FROM `ar_self_education` WHERE `self_education_id`=".$db->qstr($SELF_EDUCATION_ID)." AND `proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]['tmp']['proxy_id']);
 		$result	= $db->GetRow($query);
 		if($result) {
 			$BREADCRUMB[]	= array("url" => ENTRADA_URL."/annualreport/selfeducation?section=edit_self", "title" => "Edit Scientific Meetings/Courses Attended and Other Self-Education Activities");

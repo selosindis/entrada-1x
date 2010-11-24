@@ -42,7 +42,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 	$_SESSION["clinical_expand_grid"] = "on_call_grid";
 	
 	if($ON_CALL_ID) {
-		$query	= "SELECT * FROM `ar_on_call` WHERE `on_call_id`=".$db->qstr($ON_CALL_ID);
+		$query	= "SELECT * FROM `ar_on_call` WHERE `on_call_id`=".$db->qstr($ON_CALL_ID)." AND `proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]['tmp']['proxy_id']);
 		$result	= $db->GetRow($query);
 		if($result) {
 			$BREADCRUMB[]	= array("url" => ENTRADA_URL."/annualreport/clinical?section=edit_on_call", "title" => "Edit On-Call Responsibility");

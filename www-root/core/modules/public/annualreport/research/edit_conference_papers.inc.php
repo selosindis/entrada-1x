@@ -42,7 +42,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 	$_SESSION["research_expand_grid"] = "conference_papers_grid";
 	
 	if($CONFERENCE_PAPERS_ID) {
-		$query	= "SELECT * FROM `ar_conference_papers` WHERE `conference_papers_id`=".$db->qstr($CONFERENCE_PAPERS_ID);
+		$query	= "SELECT * FROM `ar_conference_papers` WHERE `conference_papers_id`=".$db->qstr($CONFERENCE_PAPERS_ID)." AND `proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]['tmp']['proxy_id']);
 		$result	= $db->GetRow($query);
 		if($result) {
 			$BREADCRUMB[]	= array("url" => ENTRADA_URL."/annualreport/research?section=edit_conference_papers", "title" => "Edit Invited Lectures / Conference Papers");

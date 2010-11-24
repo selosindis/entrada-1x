@@ -40,7 +40,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 	// This grid should be expanded upon redirecting back to the education index.
 	$_SESSION["education_expand_grid"] = "continuing_education_grid";
 	if($CONTINUING_EDUCATION_ID) {
-		$query	= "SELECT * FROM `ar_continuing_education` WHERE `continuing_education_id`=".$db->qstr($CONTINUING_EDUCATION_ID);
+		$query	= "SELECT * FROM `ar_continuing_education` WHERE `continuing_education_id`=".$db->qstr($CONTINUING_EDUCATION_ID)." AND `proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]['tmp']['proxy_id']);
 		$result	= $db->GetRow($query);
 		if($result) {
 			$BREADCRUMB[]	= array("url" => ENTRADA_URL."/annualreport/education?section=edit_continuing", "title" => "Edit Continuing Education");

@@ -42,7 +42,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 	$_SESSION["research_expand_grid"] = "non_peer_reviewed_grid";
 	
 	if($NON_PEER_REVIEWED_PAPERS_ID) {
-		$query	= "SELECT * FROM `ar_non_peer_reviewed_papers` WHERE `non_peer_reviewed_papers_id`=".$db->qstr($NON_PEER_REVIEWED_PAPERS_ID);
+		$query	= "SELECT * FROM `ar_non_peer_reviewed_papers` WHERE `non_peer_reviewed_papers_id`=".$db->qstr($NON_PEER_REVIEWED_PAPERS_ID)." AND `proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]['tmp']['proxy_id']);
 		$result	= $db->GetRow($query);
 		if($result) {
 			$BREADCRUMB[]	= array("url" => ENTRADA_URL."/annualreport/research?section=edit_non_peer_reviewed", "title" => "Edit Non-Peer-Reviewed Publication");

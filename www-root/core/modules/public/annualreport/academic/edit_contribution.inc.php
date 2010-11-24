@@ -42,7 +42,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 	$_SESSION["academic_expand_grid"] = "internal_grid";
 	
 	if($INTERNAL_CONTRIBUTIONS_ID) {
-		$query	= "SELECT * FROM `ar_internal_contributions` WHERE `internal_contributions_id`=".$db->qstr($INTERNAL_CONTRIBUTIONS_ID);
+		$query	= "SELECT * FROM `ar_internal_contributions` WHERE `internal_contributions_id`=".$db->qstr($INTERNAL_CONTRIBUTIONS_ID)." AND `proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]['tmp']['proxy_id']);
 		$result	= $db->GetRow($query);
 		if($result) {
 			$BREADCRUMB[]	= array("url" => ENTRADA_URL."/annualreport/academic?section=edit_contribution", "title" => "Edit Service Contributions on Behalf of Queen's University");

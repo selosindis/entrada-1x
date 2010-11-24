@@ -407,13 +407,13 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								ORDER BY a.`event_start` ASC";
 				$results	= $db->GetAll($query);
 				if($results) {
-					echo display_notice(array("Select the event from the line".(($total_events != 1) ? "s" : "")." with a leading '+' to create a copy with a new event start time.<br /><br />This will also copy any attached resources, contacts, etc."));
+					echo display_notice(array("Select the event line".(($total_events != 1) ? "s" : "")." with the leading '+' to set event's copy new start time.<br /><br />All attached resources, contacts, etc. will be copied."));
 					?>
 					<script type="text/javascript">
 					var copies = [];
-					var cpIndx = 0;
 					var tTitle = "";
 					var tEv=0;
+					var addActive=0;
 					Array.prototype.find = function(searchStr) {
 					var returnArray = false;
 					for (i=0; i<this.length; i++) {
@@ -434,18 +434,35 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					function appendTableRows(row, html){
 						var temp = document.createElement("div");
 						var tbody = row.parentNode;
-						var nextSib = row.nextSibling;
 						temp.innerHTML = "<table><tbody>"+html;
 						var rows = temp.firstChild.firstChild.childNodes;
 						while(rows.length){
-							tbody.insertBefore(rows[0], nextSib);
+							tbody.insertBefore(rows[0], row.nextSibling);
 						}
 					}
+					function stowRow() {
+						var row = document.getElementById("dateRow");
+						var tbody = row.parentNode;
+						tbody.removeChild(row);
+						tbody.insertBefore(row, tbody.rows[0]);
+						row.style.display = "none";
+						addActive=0;
+						return ;
+					}
 					function newEventDate(id,title,start) {
+						if (addActive) {
+							stowRow();
+							return;
+							}
+						addActive = 1;
 						tTitle=title; tEv=id;
-						document.getElementById("change_date").style.display = "";
-						document.getElementById("cTitle").innerHTML = "Original - '" + title + "' on " + start;
-						setDateValue(document.getElementById("cEvent_date"),"");
+						var row = document.getElementById('dateRow');
+						var fRow = document.getElementById("rEvent-"+tEv);
+						var tbody = fRow.parentNode;
+						tbody.removeChild(row);
+						tbody.insertBefore(row, fRow.nextSibling);
+						row.style.display="";
+						setDateValue(document.getElementById("cEvent_date"),start);
 						return;
 					}
 					function deleteNewEvent(rVal) {
@@ -458,7 +475,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					}
 					function acceptEvent() {
 						var tDate = getDateValue(document.getElementById("cEvent_date"));
-						document.getElementById("change_date").style.display = "none";
+						stowRow();
 						if (tDate.length < 10 ) return ;
 						tHour = document.getElementById("cEvent_hour").value;
 						tMin = document.getElementById("cEvent_min").value;
@@ -466,17 +483,17 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						if (copies.find(tRow)) {   // No duplicates
 							alert('Important: Copies need unique start times.');
 							return;
-						} 
+						}
 						copies.push(tRow);
 						document.getElementById("eventCopies").value = copies.toString();
 						document.getElementById("tSubmit").style.visibility="visible";
-						var line = "<tr id='tR"+tRow+"'><td /><td>"+tDate+" "+tHour+":"+tMin+"</td><td colspan=2><a href=javascript:deleteNewEvent('"+tRow+"')><img src='<?php echo ENTRADA_URL; ?>/images/btn-unapprove.gif'></td><td>"+tTitle+"</td></a></tr>";
+						var line = "<tr id='tR"+tRow+"'><td align='center'><a href=javascript:deleteNewEvent('"+tRow+"')><img src='<?php echo ENTRADA_URL; ?>/images/action-delete.gif' width='12' height='12' alt='Remove this event copy' title='Remove this Event from copy list.' border='0' ></td><td>"+tDate+" "+tHour+":"+tMin+"</td><td style='font-size: 9px' colspan=2>to be copied (click '-' to remove)</td><td>"+tTitle+"</td></a></tr>";
 						appendTableRows(document.getElementById("rEvent-"+tEv), line);
 						return;
 					}
 					</script>
 					<form action="<?php echo ENTRADA_URL; ?>/admin/events?section=copy&amp;step=2" method="post">
-					<table class="tableList" cellspacing="0" summary="List of Events">
+					<table class="tableList" cellspacing="0" summary="List of Events" >
 					<colgroup>
 						<col class="modified" />
 						<col class="date" />
@@ -496,14 +513,6 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						</tr>
 					</thead>
 					<tfoot>
-						<?php
-						echo "<tr>";
-						echo "<td /><td colspan=5><div id=\"change_date\" style=\"background-color:#efe;display:none\">";
-						echo "<table><tr><td><div id=\"cTitle\" /></td><td>Click check mark to add.</td></tr>";
-						echo "<tr><td colspan=1><table>" . generate_calendar("cEvent", "Copy to Date & Time", true) . "</table></td>";
-						echo "	<td class=\"attachment\">".((true) ? "<a href=\"javascript:acceptEvent()\"><img src=\"".ENTRADA_URL."/images/btn-approve.gif\" width=\"16\" height=\"16\" alt=\"Approve\" title=\"Apporve\" border=\"0\" /></a>" : "<img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"16\" height=\"16\" alt=\"\" title=\"\" />")."</td>\n";
-						echo "<td /></tr></table></div></td></tr>";
-						?>
 						<tr id="tSubmit" style="visibility: hidden" >
 							<td></td>
 							<td style="padding-top: 10px">
@@ -516,6 +525,12 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					</tfoot>
 					<tbody>
 						<?php
+						echo "<tr id=\"dateRow\" style=\"background-color:#ffd;display:none\">";
+						echo "<td style=\"border: 0\" /><td style=\"border: 0\" colspan=5>";
+						echo "<table>";
+						echo "<tr><td colspan=1><table>" . generate_calendar("cEvent", "Set Copy's Date & Time", true) . "</table></td>";
+						echo "<td class=\"attachment\"><a href=\"javascript:acceptEvent()\">(Click here to Add)</a></td>\n";
+						echo "<td /></tr></table></td></tr>";
 						foreach($results as $result) {
 							$url			= "";
 							$accessible		= true;
@@ -528,14 +543,14 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							}
 			
 							if($administrator) {
-								$url	= "javascript:newEventDate(". $result["event_id"]. ", '". $result["event_title"]. "', '".date('D M d/y g:i', $result["event_start"])."')";
+								$url	= "javascript:newEventDate(". $result["event_id"]. ", '". $result["event_title"]. "', '".date('Y-m-d', $result["event_start"])."')";
 								echo "<tr id=\"rEvent-".$result["event_id"]."\" class=\"event".((!$url) ? " np" : ((!$accessible) ? " na" : ""))."\">\n";
-								echo "	<td class=\"modified\"><a href=\"javascript:newEventDate(". $result["event_id"]. ", '". $result["event_title"]. "', '".date('D M d/y g:i', $result["event_start"])."')\"><img src=\"".ENTRADA_URL."/images/btn_add.gif\" width=\"16\" height=\"16\" alt=\"Copy Event and Content\" title=\"Copy Event and Content\" border=\"0\" /></a></td>\n";
+								echo "	<td class=\"modified\"><a href=\"$url\"><img src=\"".ENTRADA_URL."/images/btn_add.gif\" alt=\"Copy Event and Content\" title=\"Copy Event and Content\" border=\"0\" /></a></td>\n";
 								echo "	<td class=\"date".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Event Date\">" : "").date(DEFAULT_DATE_FORMAT, $result["event_start"]).(($url) ? "</a>" : "")."</td>\n";
 								echo "	<td class=\"phase".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Intended For Phase ".html_encode($result["event_phase"])."\">" : "").html_encode($result["event_phase"]).(($url) ? "</a>" : "")."</td>\n";
 								echo "	<td class=\"teacher".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Primary Teacher: ".html_encode($result["fullname"])."\">" : "").html_encode($result["fullname"]).(($url) ? "</a>" : "")."</td>\n";
 								echo "	<td class=\"title".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Event Title: ".html_encode($result["event_title"])."\">" : "").html_encode($result["event_title"]).(($url) ? "</a>" : "")."</td>\n";
-								echo "	<td class=\"attachment\">".((false) ? "<a href=\"".ENTRADA_URL."/admin/events?section=content&amp;id=".$result["event_id"]."\"><img src=\"".ENTRADA_URL."/images/action-delete.gif\" width=\"16\" height=\"16\" alt=\"Copy Event and Content\" title=\"Copy Event and Content\" border=\"0\" /></a>" : "<img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"16\" height=\"16\" alt=\"\" title=\"\" />")."</td>\n";
+								echo "	<td class=\"attachment\">".((false) ? "<a href=\"".ENTRADA_URL."/admin/events?section=content&amp;id=".$result["event_id"]."\"><img src=\"".ENTRADA_URL."/images/action-delete.gif\" width=\"16\" height=\"16\" alt=\"Copy Event and Content\" title=\"Copy Event and Content\" border=\"0\" /></a>" : "<img src=\"".ENTRADA_URL."/images/pixel.gif\" alt=\"\" title=\"\" />")."</td>\n";
 								echo "</tr>\n";
 							}
 						}

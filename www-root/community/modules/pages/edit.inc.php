@@ -189,17 +189,8 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 				$query			= "SELECT * FROM `community_pages` WHERE `cpage_id` = ".$db->qstr($PAGE_ID)." AND `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `page_active` = '1'";
 				$page_details	= $db->GetRow($query);
 				if ($page_details) {
-					if ($PAGE_TYPE == "default") {
-						load_rte(	array(		1 => array("fullscreen", "styleprops", "|", "formatselect", "fontselect", "fontsizeselect", "|", "bold", "italic", "underline", "forecolor", "backcolor", "|", "justifyleft", "justifycenter", "justifyright", "justifyfull"),
-												2 => array("replace", "pasteword", "pastetext", "|", "undo", "redo", "|", "tablecontrols", "|", "insertlayer", "moveforward", "movebackward", "absolute", "|", "visualaid"),
-												3 => array("ltr", "rtl", "|", "outdent", "indent", "|", "bullist", "numlist", "|", "link", "unlink", "anchor", "image", "media", "|", "sub", "sup", "|", "charmap", "insertdate", "inserttime", "nonbreaking", "|", "cleanup", "code", "removeformat")),
-									array("preview", "inlinepopups", "style", "layer", "table", "advimage", "advlink", "insertdatetime", "media", "contextmenu", "paste", "directionality", "fullscreen", "noneditable", "visualchars", "nonbreaking", "xhtmlxtras"));
-					} else {
-						load_rte(	array(		1 => array("fullscreen", "styleprops", "|", "formatselect", "fontselect", "fontsizeselect", "|", "bold", "italic", "underline", "forecolor", "backcolor", "|", "justifyleft", "justifycenter", "justifyright", "justifyfull"),
-												2 => array("replace", "pasteword", "pastetext", "ltr", "rtl", "|", "outdent", "indent", "|", "bullist", "numlist", "|", "link", "unlink", "anchor", "image", "media", "|", "sub", "sup", "|", "charmap", "insertdate", "inserttime", "nonbreaking", "|", "cleanup", "code", "removeformat")),
-									array("preview", "inlinepopups", "style", "layer", "table", "advimage", "advlink", "insertdatetime", "media", "contextmenu", "paste", "directionality", "fullscreen", "noneditable", "visualchars", "nonbreaking", "xhtmlxtras"));
-					}
-					
+					load_rte((($PAGE_TYPE == "default") ? "communityadvanced" : "communitybasic"));
+				
 					$BREADCRUMB[]	= array("url" => "", "title" => "Edit Page");
 				
 					if (!isset($PAGE_TYPE) || $page_details["page_type"] == "course") {

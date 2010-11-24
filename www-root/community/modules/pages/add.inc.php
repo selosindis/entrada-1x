@@ -24,8 +24,9 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 
 	echo display_notice();
 } else {
+	$PAGE_TYPE = "default";
 	$PAGE_TYPES	= array();
-	$STEP		= 1;
+	$STEP = 1;
 
 	$query				= "	SELECT `module_shortname`, `module_title`
 							FROM `communities_modules`
@@ -73,16 +74,7 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 						AND `member_acl` = '1'";
 			$result	= $db->GetRow($query);
 			if ($result) {
-				if ($PAGE_TYPE == "default") {
-					load_rte(	array(		1 => array("fullscreen", "styleprops", "|", "formatselect", "fontselect", "fontsizeselect", "|", "bold", "italic", "underline", "forecolor", "backcolor", "|", "justifyleft", "justifycenter", "justifyright", "justifyfull"),
-											2 => array("replace", "pasteword", "pastetext", "|", "undo", "redo", "|", "tablecontrols", "|", "insertlayer", "moveforward", "movebackward", "absolute", "|", "visualaid"),
-											3 => array("ltr", "rtl", "|", "outdent", "indent", "|", "bullist", "numlist", "|", "link", "unlink", "anchor", "image", "media", "|", "sub", "sup", "|", "charmap", "insertdate", "inserttime", "nonbreaking", "|", "cleanup", "code", "removeformat")),
-								array("preview", "inlinepopups", "style", "layer", "table", "advimage", "advlink", "insertdatetime", "media", "contextmenu", "paste", "directionality", "fullscreen", "noneditable", "visualchars", "nonbreaking", "xhtmlxtras"));
-				} else {
-					load_rte(	array(		1 => array("fullscreen", "styleprops", "|", "formatselect", "fontselect", "fontsizeselect", "|", "bold", "italic", "underline", "forecolor", "backcolor", "|", "justifyleft", "justifycenter", "justifyright", "justifyfull"),
-											2 => array("replace", "pasteword", "pastetext", "ltr", "rtl", "|", "outdent", "indent", "|", "bullist", "numlist", "|", "link", "unlink", "anchor", "image", "media", "|", "sub", "sup", "|", "charmap", "insertdate", "inserttime", "nonbreaking", "|", "cleanup", "code", "removeformat")),
-								array("preview", "inlinepopups", "style", "layer", "table", "advimage", "advlink", "insertdatetime", "media", "contextmenu", "paste", "directionality", "fullscreen", "noneditable", "visualchars", "nonbreaking", "xhtmlxtras"));
-				}
+				load_rte((($PAGE_TYPE == "default") ? "communityadvanced" : "communitybasic"));
 				
 				$BREADCRUMB[]	= array("url" => "", "title" => "Add Page");
 				

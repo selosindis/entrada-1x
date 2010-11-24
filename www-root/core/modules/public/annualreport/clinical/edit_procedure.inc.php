@@ -42,7 +42,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 	$_SESSION["clinical_expand_grid"] = "procedures_grid";
 	
 	if($PROCEDURES_ID) {
-		$query	= "SELECT * FROM `ar_procedures` WHERE `procedures_id`=".$db->qstr($PROCEDURES_ID);
+		$query	= "SELECT * FROM `ar_procedures` WHERE `procedures_id`=".$db->qstr($PROCEDURES_ID)." AND `proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]['tmp']['proxy_id']);
 		$result	= $db->GetRow($query);
 		if($result) {
 			$BREADCRUMB[]	= array("url" => ENTRADA_URL."/annualreport/clinical?section=edit_procedure", "title" => "Edit Procedure");

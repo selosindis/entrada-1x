@@ -310,7 +310,7 @@ if($EVALUATION_ID) {
 												}
 											} else {
 												$PROCESSED = array();
-												$PROCESSED["community_id"]	= $EVALUATION_ID;
+												$PROCESSED["evaluation_id"]	= $EVALUATION_ID;
 												$PROCESSED["proxy_id"]		= $GUEST_PROXY_ID;
 												$PROCESSED["member_active"]	= 1;
 												$PROCESSED["member_joined"]	= time();
@@ -771,7 +771,7 @@ if($EVALUATION_ID) {
 									echo "	<td><input type=\"checkbox\" name=\"member_proxy_ids[]\" value=\"".(int) $result["evaluator_value"]."\" /></td>\n";
 									echo "	<td>".date(DEFAULT_DATE_FORMAT, $result["member_joined"])."</td>\n";
 									echo "	<td><a href=\"".ENTRADA_URL."/people?profile=".html_encode($result["username"])."\"".(($result["proxy_id"] == $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]) ? " style=\"font-weight: bold" : "")."\">".html_encode($result["firstname"]." ".$result["lastname"])."</a></td>\n";
-									echo "	<td>".date(DEFAULT_DATE_FORMAT, $result["evaluator_type"])."</td>\n";
+									echo "	<td>".$result["evaluator_type"]."</td>\n";
 									echo "	<td class=\"list-status\"><img src=\"images/".(($MAILING_LISTS["active"]) && $mail_list->users[($result["proxy_id"])]["member_active"] ? "list-status-online.gif" : "list-status-offline.gif")."\" /></td>\n";
 									echo "</tr>\n";
 								}
@@ -951,7 +951,9 @@ if($EVALUATION_ID) {
 																	sort($members[$key]['options']);
 																}
 															}
-
+                                                                                                                        var_export($member_categories);
+                                                                                                                        echo "<br>";
+                                                                                                                        var_export($members);
 															echo lp_multiple_select_inline('evaluator_members', $members, array(
 															'width'	=>'100%',
 															'ajax'=>true,
@@ -978,8 +980,279 @@ if($EVALUATION_ID) {
 			</table>
 		</form>
 	</div>
+	<div class="tab-page members">
+		<h2 class="tab">Add Evaluator Group</h2>
+		<h2 style="margin-top: 0px">Add Evaluator Group</h2>
+			<form action="<?php echo ENTRADA_URL; ?>/admin/evaluations/scheduler?section=members&amp;step=1" method="post" name="addEvaluationForm" id="addEvaluationForm">
+                                 <?php
+				switch (isset($_POST["action"]) && $_POST["action"]) {
+					case "results" :
+						?>
+						<div class="content-heading">Student Search Results</div>
+						<?php
+						if (trim($_GET["year"]) != "" || trim($_POST["year"]) != "") {
+							if (trim($_POST["year"]) != "") {
+								$query_year = trim($_POST["year"]);
+							} else {
+								$query_year = trim($_GET["year"]);
+							}
+
+                                                        $snd_stm= " FROM `".AUTH_DATABASE."`.`user_data`
+                                                            LEFT JOIN `".AUTH_DATABASE."`.`user_access` ON `".AUTH_DATABASE."`.`user_access`.`user_id`=`".AUTH_DATABASE."`.`user_data`.`id`
+                                                                WHERE `".AUTH_DATABASE."`.`user_access`.`app_id`='".AUTH_APP_ID."'
+                                                                    AND `role`=".$db->qstr(trim($query_year), get_magic_quotes_gpc())."
+                                                                        AND `group`='student'";
+							$query	= "SELECT `".AUTH_DATABASE."`.`user_data`.`id` AS `proxy_id`, CONCAT_WS(', ', `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname`) AS `fullname`, `".AUTH_DATABASE."`.`user_access`.`role` AS `gradyear`".$snd_stm;
+
+							if($_POST["qualifier"]== "randomly30"){
+                                                            $query_count = "SELECT count(*) AS `total_rows`".$snd_stm;
+                                                            $result_count = $db->GetRow($query_count);
+                                                            $i_total_rows= (int) $result_count["total_rows"];
+
+                                                            $random_count_30= round($i_total_rows*0.3);
+                                                            $query= $query." ORDER BY RAND() limit ".$random_count_30;
+
+                                                        }
+                                                        else
+                                                            $query= $query." ORDER BY `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname` ASC";
+
+
+							$results	= $db->GetAll($query);
+
+							if ($results) {
+								$counter	= 0;
+								$total	= count($results);
+								$split	= (round($total / 2) + 1);
+
+								echo "There are a total of <b>".$total."</b> student".(($total != "1") ? "s" : "")." in the class of <b>".checkslashes(trim($query_year))." (".$_POST["qualifier"].")"."</b>. Please choose a student you wish to work with by clicking on their name, or if you wish to add an event to multiple students simply check the checkbox beside their name and click the &quot;Add Mass Event&quot; button.";
+
+								echo "<form id=\"clerkship_form\" action=\"".ENTRADA_URL."/admin/clerkship/electives?section=add_core\" method=\"post\">\n";
+								echo "<table width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\">\n";
+								echo "<tr>\n";
+								echo "	<td style=\"vertical-align: top\">\n";
+								echo "		<ol start=\"1\">\n";
+								foreach ($results as $result) {
+
+									$elective_weeks = clerkship_get_elective_weeks($result["proxy_id"]);
+									$remaining_weeks = (int)$CLERKSHIP_REQUIRED_WEEKS - (int)$elective_weeks["approved"];
+
+									switch (htmlentities($_POST["qualifier"])) {
+										case "*":
+										default:
+											$show 			= true;
+											$weeksOutput 	= "";
+											$noResults		= "No Results";
+											break;
+									}
+
+									if ($show) {
+										$counter++;
+										if ($counter == $split) {
+											echo "		</ol>\n";
+											echo "	</td>\n";
+											echo "	<td style=\"vertical-align: top\">\n";
+											echo "		<ol start=\"".$split."\">\n";
+										}
+										echo "	<li><input type=\"checkbox\" name=\"ids[]\" value=\"".$result["proxy_id"]."\" />&nbsp;<a href=\"".ENTRADA_URL."/admin/clerkship/clerk?ids=".$result["proxy_id"]."\" style=\"font-weight: bold\">".$result["fullname"]."</a>".$weeksOutput."</li>\n";
+									}
+								}
+
+								if ($counter == 0) {
+									echo "	<li>".$noResults."</li>\n";
+								}
+								echo "		</ol>\n";
+								echo "	</td>\n";
+								echo "</tr>\n";
+								echo "<tr>\n";
+								echo "	<td colspan=\"3\" style=\"border-top: 1px #333333 dotted; padding-top: 5px\">\n";
+								echo "      <ul type=\"none\">\n";
+								echo "      <li><input type=\"checkbox\" name=\"selectall\" value=\"1\" onClick=\"selection(this.form['ids[]'])\" />&nbsp;Select All&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp";
+                                                                echo "      <input type=\"submit\" class=\"button\" value=\"Add Evaluators\" style=\"vertical-align: middle\" /></li>";
+								echo "      </ul>\n";
+								echo "	</td>\n";
+								echo "</tr>\n";
+								echo "</table>\n";
+								echo "</form>\n";
+							} else {
+								$ERROR++;
+								$ERRORSTR[] = "Unable to find students in the database with a graduating year of <b>".trim($query_year)."</b>. It's possible that these students are not yet added to this system, so please check the User Management module.";
+
+								echo "<br />";
+								echo display_error($ERRORSTR);
+							}
+						} elseif (trim($_GET["name"]) != "" || trim($_POST["name"]) != "") {
+							if (trim($_POST["name"]) != "") {
+								$query_name = trim($_POST["name"]);
+							} else {
+								$query_name = trim($_GET["name"]);
+							}
+							//$query	= "SELECT `".AUTH_DATABASE."`.`user_data`.`id` AS `proxy_id`, CONCAT_WS(', ', `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname`) AS `fullname`, `".AUTH_DATABASE."`.`user_access`.`role` AS `gradyear` FROM `".AUTH_DATABASE."`.`user_data` LEFT JOIN `".AUTH_DATABASE."`.`user_access` ON `".AUTH_DATABASE."`.`user_access`.`user_id`=`".AUTH_DATABASE."`.`user_data`.`id` WHERE `".AUTH_DATABASE."`.`user_access`.`app_id`='".AUTH_APP_ID."' AND CONCAT(`".AUTH_DATABASE."`.`user_data`.`firstname`, `".AUTH_DATABASE."`.`user_data`.`lastname`) LIKE '%".checkslashes(trim($query_name))."%' AND `group`='student' ORDER BY `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname` ASC";
+                                                        $snd_stm= " FROM `".AUTH_DATABASE."`.`user_data` LEFT JOIN `".AUTH_DATABASE."`.`user_access` ON `".AUTH_DATABASE."`.`user_access`.`user_id`=`".AUTH_DATABASE."`.`user_data`.`id` WHERE `".AUTH_DATABASE."`.`user_access`.`app_id`='".AUTH_APP_ID."' AND CONCAT(`".AUTH_DATABASE."`.`user_data`.`firstname`, `".AUTH_DATABASE."`.`user_data`.`lastname`) LIKE '%".checkslashes(trim($query_name))."%' AND `group`='student'";
+							$query	= "SELECT `".AUTH_DATABASE."`.`user_data`.`id` AS `proxy_id`, CONCAT_WS(', ', `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname`) AS `fullname`, `".AUTH_DATABASE."`.`user_access`.`role` AS `gradyear`".$snd_stm;
+
+							if($_POST["qualifier"]== "randomly30"){
+                                                            $query_count = "SELECT count(*) AS `total_rows`".$snd_stm;
+                                                            $result_count = $db->GetRow($query_count);
+                                                            $i_total_rows= (int) $result_count["total_rows"];
+
+                                                            $random_count_30= round($i_total_rows*0.3);
+                                                            $query= $query." ORDER BY RAND() limit ".$random_count_30;
+
+                                                        }
+                                                        else
+                                                            $query= $query." ORDER BY `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname` ASC";
+                                                        $results	= $db->GetAll($query);
+							if ($results) {
+								$counter	= 0;
+								$total	= count($results);
+								$split	= (round($total / 2) + 1);
+
+								echo "There are a total of <b>".$total."</b> student".(($total != "1") ? "s" : "")." that match the search term of <b>".checkslashes(trim($query_name), "display")."</b>. Please choose a student you wish to work with by clicking on their name, or if you wish to add an event to multiple students simply check the checkbox beside their name and click the &quot;Add Mass Event&quot; button.";
+
+								echo "<form id=\"clerkship_form\" action=\"".ENTRADA_URL."/admin/clerkship/electives?section=add_core\" method=\"post\">\n";
+								echo "<table width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\">\n";
+								echo "<tr>\n";
+								echo "	<td style=\"vertical-align: top\">\n";
+								echo "		<ol start=\"1\">\n";
+								foreach ($results as $result) {
+									$counter++;
+									if ($counter == $split) {
+										echo "		</ol>\n";
+										echo "	</td>\n";
+										echo "	<td style=\"vertical-align: top\">\n";
+										echo "		<ol start=\"".$split."\">\n";
+									}
+									echo "	<li><input type=\"checkbox\" name=\"ids[]\" value=\"".$result["proxy_id"]."\" />&nbsp;<a href=\"".ENTRADA_URL."/admin/clerkship/clerk?ids=".$result["proxy_id"]."\" style=\"font-weight: bold\">".$result["fullname"]."</a> <span class=\"content-small\">(Class of ".$result["gradyear"].")</span></li>\n";
+								}
+								echo "		</ol>\n";
+								echo "	</td>\n";
+								echo "</tr>\n";
+								echo "<tr>\n";
+								echo "	<td colspan=\"3\" style=\"border-top: 1px #333333 dotted; padding-top: 5px\">\n";
+								echo "		<ul type=\"none\">\n";
+								echo "		<li><input type=\"checkbox\" name=\"selectall\" value=\"1\" onClick=\"selection(this.form['ids[]'])\" />&nbsp; Select All";
+                                                                echo "  <input type=\"submit\" class=\"button\" value=\"Add Evaluator Group\" style=\"vertical-align: middle\" /></li>";
+								echo "		</ul>\n";
+								echo "	</td>\n";
+								echo "</tr>\n";
+								echo "</table>\n";
+								echo "</form>\n";
+							} else {
+								$ERROR++;
+								$ERRORSTR[] = "Unable to find any students in the database matching <b>".checkslashes(trim($query_name), "display")."</b>. It's possible that the student you're looking for is not yet added to this system, so please check the User Management module.";
+
+								echo "<br />";
+								echo display_error($ERRORSTR);
+							}
+						} else {
+							$ERROR++;
+							$ERRORSTR[] = "You must search either by graduating year or by students name at this time, please try again.";
+
+							echo "<br />";
+							echo display_error($ERRORSTR);
+						}
+					break;
+					default :
+						?>
+						<input type="hidden" name="action" value="results" />
+						<input type="hidden" name="evaluation_id" value="<?php echo $EVALUATION_ID;?>" />
+                                                <div>
+						<table cellspacing="0" cellpadding="0" border="0">
+						<tr>
+							<td colspan="3"><span class="content-subheading">Student Graduating Year</span></td>
+						</tr>
+						<tr>
+							<td>Select a random number:</td>
+							<td style="padding-left: 10px">
+								<select name="qualifier" style="width: 205px">
+									<option value="*">All</option>
+									<option value="randomly30">Randomly 30%</option>
+								</select>
+							</td>
+							<td style="padding-left: 10px">&nbsp;</td>
+						</tr>
+						<tr>
+							<td>Select the graduating year you wish to view students in:</td>
+							<td style="padding-left: 10px">
+								<select name="year" style="width: 205px">
+								<option value="">-- Select Graduating Year --</option>
+								<?php
+								for($year = (date("Y", time()) + 4); $year >= 2002; $year--) {
+									echo "<option value=\"".$year."\"".(($year == date("Y", time())) ? "" : "").">Class of ".$year."</option>\n";
+								}
+								?>
+								</select>
+                                                            <input type="button" value="Proceed" class="button" onclick="javascript:search_grad_year()" style="background-image: url('<?php echo ENTRADA_URL; ?>/images/btn_bg.gif');" />
+                                                        </td>
+
+						</tr>
+						</table>
+                                                <br><br>
+                                                </div>
+                                                <div>
+					<tr>
+						<td colspan="3">&nbsp;</td>
+					</tr>
+					<tr>
+						<td style="vertical-align: top"><input type="radio" name="event_audience_type" id="event_audience_type_grad_year" value="grad_year" onclick="selectEventAudienceOption('grad_year')" style="vertical-align: middle"<?php echo (($PROCESSED["event_audience_type"] == "grad_year") ? " checked=\"checked\"" : ""); ?> /></td>
+						<td colspan="2" style="padding-bottom: 15px">
+							<label for="event_audience_type_grad_year" class="radio-group-title">Entire Class Event</label>
+							<div class="content-small">This event is intended for an entire class.</div>
+						</td>
+					</tr>
+					<tr class="event_audience grad_year_audience">
+						<td></td>
+						<td><label for="associated_grad_year" class="form-required">Graduating Year</label></td>
+						<td>
+							<select id="associated_grad_year" name="associated_grad_year" style="width: 203px">
+							<?php
+							for($year = (date("Y", time()) + 4); $year >= (date("Y", time()) - 1); $year--) {
+								echo "<option value=\"".(int) $year."\"".(($PROCESSED["associated_grad_year"] == $year) ? " selected=\"selected\"" : "").">Class of ".html_encode($year)."</option>\n";
+							}
+							?>
+							</select>
+						</td>
+					</tr>
+					<tr>
+						<td colspan="3">&nbsp;</td>
+					</tr>
+					<tr>
+						<td style="vertical-align: top"><input type="radio" name="event_audience_type" id="event_audience_type_organisation_id" value="organisation_id" onclick="selectEventAudienceOption('organisation_id')" style="vertical-align: middle"<?php echo (($PROCESSED["event_audience_type"] == "organisation_id") ? " checked=\"checked\"" : ""); ?> /></td>
+						<td colspan="2" style="padding-bottom: 15px">
+							<label for="event_audience_type_organisation_id" class="radio-group-title">Entire Organisation Event</label>
+							<div class="content-small">This event is intended for every member of an organisation.</div>
+						</td>
+					</tr>
+					<tr class="event_audience organisation_id_audience">
+						<td></td>
+						<td><label for="associated_organisation_id" class="form-required">Organisation</label></td>
+						<td>
+							<select id="associated_organisation_id" name="associated_organisation_id" style="width: 203px">
+								<?php
+								if (is_array($organisation_categories) && count($organisation_categories)) {
+									foreach($organisation_categories as $organisation_id => $organisation_info) {
+										echo "<option value=\"".$organisation_id."\"".(($PROCESSED["associated_organisation_id"] == $year) ? " selected=\"selected\"" : "").">".$organisation_info['text']."</option>\n";
+									}
+								}
+								?>
+							</select>
+						</td>
+					</tr>
+                                        </div>
+						<?php
+					break;
+				}
+                                ?>
+                                        </form>
+                                </div>
+
 </div>
 <script type="text/javascript">
+        function search_grad_year(){
+            document.addEvaluationForm.action="<?php echo ENTRADA_URL; ?>/admin/evaluations/scheduler?section=members";
+            document.addEvaluationForm.submit();
+        }
+
 	setupAllTabs(true);
 
 	var people = [[]];

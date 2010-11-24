@@ -62,7 +62,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 
 				echo "<div class=\"no-printing\">\n";
 				echo "	<div style=\"float: right; margin-top: 8px\">\n";
-				echo "		<a href=\"".ENTRADA_URL."/admin/evaluations/scheduler?".replace_query(array("section" => "members", "id" => $EVALUATION_ID))."\"><img src=\"".ENTRADA_URL."/images/event-contents.gif\" width=\"16\" height=\"16\" alt=\"Manage evaluation content\" title=\"Manage evaluation content\" border=\"0\" style=\"vertical-align: middle\" /></a> <a href=\"".ENTRADA_URL."/admin/evaluations/scheduler?".replace_query(array("section" => "members", "id" => $EVALUATION_ID, "step" => false))."\" style=\"font-size: 10px; margin-right: 8px\">Manage evaluation content</a>\n";
+				echo "		<a href=\"".ENTRADA_URL."/admin/evaluations/scheduler?".replace_query(array("section" => "members", "evaluation" => $EVALUATION_ID))."\"><img src=\"".ENTRADA_URL."/images/event-contents.gif\" width=\"16\" height=\"16\" alt=\"Manage evaluation content\" title=\"Manage evaluation content\" border=\"0\" style=\"vertical-align: middle\" /></a> <a href=\"".ENTRADA_URL."/admin/evaluations/scheduler?".replace_query(array("section" => "members", "evaluation" => $EVALUATION_ID, "step" => false))."\" style=\"font-size: 10px; margin-right: 8px\">Manage evaluation content</a>\n";
 				echo "	</div>\n";
 				echo "</div>\n";
 
@@ -158,7 +158,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 						if(!$ERROR) {
 							$PROCESSED["updated_date"]	= time();
 							$PROCESSED["updated_by"]	= $_SESSION["details"]["id"];
-
+                                                        
+                                                        /**
 							$PROCESSED["event_finish"] = $PROCESSED["event_start"];
 							$PROCESSED["event_duration"] = 0;
 							foreach($PROCESSED["event_types"] as $event_type) {
@@ -167,8 +168,9 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 							}
 
 							$PROCESSED["eventtype_id"] = $PROCESSED["event_types"][0][0];
+                                                        **/
 
-							if($db->AutoExecute("events", $PROCESSED, "UPDATE", "`evaluation_id` = ".$db->qstr($EVALUATION_ID))) {
+							if($db->AutoExecute("evaluations", $PROCESSED, "UPDATE", "`evaluation_id` = ".$db->qstr($EVALUATION_ID))) {
                                                                     switch($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"]) {
 									case "member" :
 										$url	= ENTRADA_URL."/admin/evaluations/scheduler?section=members&id=".$EVALUATION_ID;
@@ -375,7 +377,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					<tr>
 						<td colspan="3">&nbsp;</td>
 					</tr>
-					<?php echo generate_calendars("evaluation", "Evaluation Date & Time", true, true, ((isset($PROCESSED["evaluation_start"])) ? $PROCESSED["evaluation_start"] : 0), true, true, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0)); ?>
+					<?php echo generate_calendars("evaluation", "Evaluation Date & Time", true, true, ((isset($PROCESSED["evaluation_start"])) ? $PROCESSED["evaluation_start"] : 0), true, true, ((isset($PROCESSED["evaluation_finish"])) ? $PROCESSED["evaluation_finish"] : 0)); ?>
 
 					<?php //echo generate_calendars("evaluation", "Evaluation Date & Time", true, true, ((isset($PROCESSED["evaluation_end"])) ? $PROCESSED["evaluation_end"] : 0)); ?>
 					<tr>

@@ -25,6 +25,65 @@ if (!defined("IN_EVALUATIONS")) {
 	application_log("error", "Group [".$GROUP."] and role [".$ROLE."] does not have access to this module [".$MODULE."]");
 } else {
 	?>
+	<style type="text/css">
+		ol.system-reports li {
+			width:			70%;
+			color:			#666666;
+			font-size:		12px;
+			padding:		0px 15px 15px 0px;
+			margin-left:	5px;
+		}
+		
+		ol.system-reports li a {
+			font-size:		13px;
+			font-weight:	bold;
+		}
+	</style>
 	<h1>Evaluation Reports</h1>
+	
+	<h2 style="color: #669900">Faculty Evaluations</h2>
+	<ol class="system-reports">
+		<li>
+			<a href="<?php echo ENTRADA_URL; ?>/admin/evaluations/reports?section=faculty-report-by-group">Faculty's Report of Students in Student Groups</a><br />
+			Reports that shows evaluation by faculty of students in teaching groups.
+		</li>
+		<li>
+			<a href="<?php echo ENTRADA_URL; ?>/admin/evaluations/reports?section=faculty-report-by-clinic">Faculty's Report of Students performance in Clinics.</a><br />
+			A report that shows evaluation by faculty of students in clinical groups.
+		</li>
+		
+	</ol>
+	
+	<h2 style="color: #669900">Student Evaluations</h2>
+	<ol class="system-reports">
+		<li>
+			<a href="<?php echo ENTRADA_URL; ?>/admin/evaluations/reports?section=course-review">Course Review</a><br />
+			A report showing the students' evaluation of their courses and teachers.
+		</li>
+		<li>
+			<a href="<?php echo ENTRADA_URL; ?>/admin/evaluations/reports?section=peer-review">Peer Review</a><br />
+			A report showing the students' evaluation of their peers.
+		</li>
+		<li>
+			<a href="<?php echo ENTRADA_URL; ?>/admin/evaluations/reports?section=student-group-review">Group Review</a><br />
+			A report showing the students' evaluation of their small groups and clinical groups.
+		</li>
+	</ol>
+	
+	<h2 style="color: #669900">Administrative Reports</h2>
+	<ol class="system-reports">
+		<li>
+			<a href="<?php echo ENTRADA_URL; ?>/admin/evaluations/reports?section=active">Active Evaluations Overview</a><br />
+			A report showing all open evaluations during the given time period.
+		</li>
+		<li>
+			<a href="<?php echo ENTRADA_URL; ?>/admin/evaluations/reports?section=flagged">Flagged Evaluations</a><br />
+			A report showing all evaluations that contain active flags during the given time period.
+		</li>
+		<li>
+			<a href="<?php echo ENTRADA_URL; ?>/admin/evaluations/reports?section=archive">Evaluations Archive</a><br />
+			A report showing all closed and expired evaluations during the given time period.
+		</li>
+	</ol>
 	<?php
 }

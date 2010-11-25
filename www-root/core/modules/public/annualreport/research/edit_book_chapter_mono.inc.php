@@ -42,7 +42,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 	$_SESSION["research_expand_grid"] = "book_chapter_mono_grid";
 	
 	if($BOOK_CHAPTER_MONO_ID) {
-		$query	= "SELECT * FROM `ar_book_chapter_mono` WHERE `book_chapter_mono_id`=".$db->qstr($BOOK_CHAPTER_MONO_ID);
+		$query	= "SELECT * FROM `ar_book_chapter_mono` WHERE `book_chapter_mono_id`=".$db->qstr($BOOK_CHAPTER_MONO_ID)." AND `proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]['tmp']['proxy_id']);
 		$result	= $db->GetRow($query);
 		if($result) {
 			$BREADCRUMB[]	= array("url" => ENTRADA_URL."/annualreport/research?section=edit_book_chapter_mono", "title" => "Edit Book / Chapter / Monograph / Editorial");

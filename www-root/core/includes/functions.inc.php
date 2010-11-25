@@ -3383,10 +3383,15 @@ function load_rte($buttons = array(), $plugins = array(), $other_options = array
 		$buttons = array();
 
 		switch ($rte_set) {
+			case "communityadvanced" :
 			case "advanced" :
 				$buttons[1]	= array ("fullscreen", "styleprops", "|", "formatselect", "fontselect", "fontsizeselect", "|", "bold", "italic", "underline", "forecolor", "backcolor", "|", "justifyleft", "justifycenter", "justifyright", "justifyfull");
 				$buttons[2]	= array ("replace", "pasteword", "pastetext", "|", "undo", "redo", "|", "tablecontrols", "|", "insertlayer", "moveforward", "movebackward", "absolute", "|", "visualaid");
 				$buttons[3]	= array ("ltr", "rtl", "|", "outdent", "indent", "|", "bullist", "numlist", "|", "link", "unlink", "anchor", "image", "media", "|", "sub", "sup", "|", "charmap", "insertdate", "inserttime", "nonbreaking", "|", "cleanup", "code", "removeformat");
+			break;
+			case "communitybasic" :
+				$buttons[1]	= array("fullscreen", "styleprops", "|", "formatselect", "fontselect", "fontsizeselect", "|", "bold", "italic", "underline", "forecolor", "backcolor", "|", "justifyleft", "justifycenter", "justifyright", "justifyfull");
+				$buttons[2]	= array("replace", "pasteword", "pastetext", "ltr", "rtl", "|", "outdent", "indent", "|", "bullist", "numlist", "|", "link", "unlink", "anchor", "image", "media", "|", "sub", "sup", "|", "charmap", "insertdate", "inserttime", "nonbreaking", "|", "cleanup", "code", "removeformat");
 			break;
 			case "community" :
 				$buttons[1] = array("bold", "italic", "underline", "strikethrough", "|", "link", "unlink", "anchor", "image", "media", "|", "numlist", "bullist", "|", "outdent", "indent", "blockquote", "|", "undo", "redo", "|", "pasteword", "cleanup", "removeformat", "code");
@@ -3407,6 +3412,8 @@ function load_rte($buttons = array(), $plugins = array(), $other_options = array
 	if ((!is_array($plugins)) || (!count($plugins))) {
 		switch ($rte_set) {
 			case "advanced" :
+			case "communityadvanced" :
+			case "communitybasic" :
 				$plugins = array("preview", "inlinepopups", "style", "layer", "table", "advimage", "advlink", "media", "insertdatetime", "contextmenu", "paste", "directionality", "fullscreen", "noneditable", "visualchars", "nonbreaking", "xhtmlxtras", "tabfocus");
 			break;
 			case "community" :
@@ -3428,6 +3435,8 @@ function load_rte($buttons = array(), $plugins = array(), $other_options = array
 
 		switch ($rte_set) {
 			case "advanced" :
+			case "communityadvanced" :
+			case "communitybasic" :
 			case "community" :
 			case "basic" :
 			default :
@@ -3459,6 +3468,7 @@ function load_rte($buttons = array(), $plugins = array(), $other_options = array
 	$tinymce .= "	force_p_newlines : false,\n";
 	$tinymce .= "	force_br_newlines : true,\n";
 	$tinymce .= "	forced_root_block : false,\n";
+	$tinymce .= "	document_base_url : '".ENTRADA_URL."/',\n";
 	$tinymce .= "	relative_urls : false,\n";
 	$tinymce .= "	remove_script_host : false,\n";
 	$tinymce .= "	paste_strip_class_attributes : 'all',\n";

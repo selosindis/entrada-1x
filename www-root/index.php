@@ -23,8 +23,6 @@
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
 */
-
-ini_set("display_errors", 1);
 @set_include_path(implode(PATH_SEPARATOR, array(
     dirname(__FILE__) . "/core",
     dirname(__FILE__) . "/core/includes",

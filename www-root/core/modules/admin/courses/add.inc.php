@@ -536,16 +536,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				</table>
 			</div>
 
-			<?php
-			
-				$sidebar_html  = "<div style=\"margin: 2px 0px 10px 3px; font-size: 10px\">\n";
-				$sidebar_html .= "	<div><img src=\"".ENTRADA_URL."/images/legend-primary-objective.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" style=\"vertical-align: middle\" /> Primary Objective</div>\n";
-				$sidebar_html .= "	<div><img src=\"".ENTRADA_URL."/images/legend-secondary-objective.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" style=\"vertical-align: middle\" /> Secondary Objective</div>\n";
-				$sidebar_html .= "	<div><img src=\"".ENTRADA_URL."/images/legend-tertiary-objective.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" style=\"vertical-align: middle\" /> Tertiary Objective</div>\n";
-				$sidebar_html .= "</div>\n";
-				
-				new_sidebar_item("Objective Importance", $sidebar_html, "objective-legend", "open");
-									
+			<?php				
 				$course_objectives = courses_fetch_objectives(array(0), 1, false, $posted_objectives);
 				$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/elementresizer.js\"></script>\n";
 			?>
@@ -738,7 +729,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						<td>&nbsp;</td>
 						<td colspan="2">
 							<div id="objectives_list">
-							<?php echo course_objectives_in_list($course_objectives["objectives"], 1, true); ?>
+							<?php echo course_objectives_in_list($course_objectives, 1, true); ?>
 							</div>
 						</td>
 					</tr>

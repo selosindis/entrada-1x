@@ -1037,68 +1037,57 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 										<?php
 									}
 								} elseif ($PAGE_TYPE == "course" && strpos($page_record["page_url"], "objectives") !== false) {
-									$sidebar_html  = "<div style=\"margin: 2px 0px 10px 3px; font-size: 10px\">\n";
-									$sidebar_html .= "	<div><img src=\"".ENTRADA_URL."/images/legend-primary-objective.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" style=\"vertical-align: middle\" /> Primary Objective</div>\n";
-									$sidebar_html .= "	<div><img src=\"".ENTRADA_URL."/images/legend-secondary-objective.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" style=\"vertical-align: middle\" /> Secondary Objective</div>\n";
-									$sidebar_html .= "	<div><img src=\"".ENTRADA_URL."/images/legend-tertiary-objective.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" style=\"vertical-align: middle\" /> Tertiary Objective</div>\n";
-									$sidebar_html .= "</div>\n";
-									
-									new_sidebar_item("Objective Importance", $sidebar_html, "objective-legend", "open");
 									if ((is_array($course_objectives["primary_ids"]) && count($course_objectives["primary_ids"])) || (is_array($course_objectives["secondary_ids"]) && count($course_objectives["secondary_ids"])) || (is_array($course_objectives["tertiary_ids"]) && count($course_objectives["tertiary_ids"]))) {
 										?>
 										<tr>
 											<td colspan="2">
-												<h2 title="Course Objectives Section">Curriculum Objectives</h2>
-												<div id="course-objectives-section">
-													<form action="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?<?php echo replace_query(); ?>" method="post">
-													<input type="hidden" name="type" value="objectives" />
-													<input type="hidden" id="objectives_head" name="course_objectives" value="" />
-													<?php
-													if (is_array($course_objectives["primary_ids"])) {
-														foreach ($course_objectives["primary_ids"] as $objective_id) {
-															echo "<input type=\"hidden\" class=\"primary_objectives\" id=\"primary_objective_".$objective_id."\" name=\"primary_objectives[]\" value=\"".$objective_id."\" />\n";
-														}
+												<br />
+												<h1 style="font-size: 17px;" title="Course Objectives Section">Curriculum Objectives</h1>
+												<form action="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?<?php echo replace_query(); ?>" method="post">
+												<input type="hidden" name="type" value="objectives" />
+												<input type="hidden" id="objectives_head" name="course_objectives" value="" />
+												<?php
+												if (is_array($course_objectives["primary_ids"])) {
+													foreach ($course_objectives["primary_ids"] as $objective_id) {
+														echo "<input type=\"hidden\" class=\"primary_objectives\" id=\"primary_objective_".$objective_id."\" name=\"primary_objectives[]\" value=\"".$objective_id."\" />\n";
 													}
-													if (is_array($course_objectives["secondary_ids"])) {
-														foreach ($course_objectives["secondary_ids"] as $objective_id) {
-															echo "<input type=\"hidden\" class=\"secondary_objectives\" id=\"secondary_objective_".$objective_id."\" name=\"secondary_objectives[]\" value=\"".$objective_id."\" />\n";
-														}
+												}
+												if (is_array($course_objectives["secondary_ids"])) {
+													foreach ($course_objectives["secondary_ids"] as $objective_id) {
+														echo "<input type=\"hidden\" class=\"secondary_objectives\" id=\"secondary_objective_".$objective_id."\" name=\"secondary_objectives[]\" value=\"".$objective_id."\" />\n";
 													}
-													if (is_array($course_objectives["tertiary_ids"])) {
-														foreach ($course_objectives["tertiary_ids"] as $objective_id) {
-															echo "<input type=\"hidden\" class=\"tertiary_objectives\" id=\"tertiary_objective_".$objective_id."\" name=\"tertiary_objectives[]\" value=\"".$objective_id."\" />\n";
-														}
+												}
+												if (is_array($course_objectives["tertiary_ids"])) {
+													foreach ($course_objectives["tertiary_ids"] as $objective_id) {
+														echo "<input type=\"hidden\" class=\"tertiary_objectives\" id=\"tertiary_objective_".$objective_id."\" name=\"tertiary_objectives[]\" value=\"".$objective_id."\" />\n";
 													}
-													?>
-													<table style="width: 100%" cellspacing="0" cellpadding="2" border="0">
-													<colgroup>
-														<col width="22%" />
-														<col width="78%" />
-													</colgroup>
-													<tbody>
-														<tr>
-															<td colspan="2">&nbsp;</td>
-														</tr>
-														<tr>
-															<td colspan="2">
-																<div id="objectives_list">
-																<?php echo event_objectives_in_list($course_objectives["objectives"], 1, true); ?>
-																</div>
-															</td>
-														</tr>
-													</tbody>
-													</table>
-													</form>
-													<?php
-													if ((@is_array($edit_ajax)) && (@count($edit_ajax))) {
-														echo "<script type=\"text/javascript\">\n";
-														foreach ($edit_ajax as $objective_id) {
-															echo "var editor_".$objective_id." = new Ajax.InPlaceEditor('objective_description_".$objective_id."', '".ENTRADA_RELATIVE."/api/objective-details.api.php', { rows: 7, cols: 62, okText: \"Save Changes\", cancelText: \"Cancel Changes\", externalControl: \"edit_mode_".$objective_id."\", submitOnBlur: \"true\", callback: function(form, value) { return 'id=".$objective_id."&cids=".$course_ids_string."&objective_details='+escape(value) } });\n";
-														}
-														echo "</script>\n";
+												}
+												?>
+												<table style="width: 100%" cellspacing="0" cellpadding="2" border="0">
+												<colgroup>
+													<col width="22%" />
+													<col width="78%" />
+												</colgroup>
+												<tbody>
+													<tr>
+														<td colspan="2">
+															<div id="objectives_list">
+															<?php echo event_objectives_in_list($course_objectives, 1, true); ?>
+															</div>
+														</td>
+													</tr>
+												</tbody>
+												</table>
+												</form>
+												<?php
+												if ((@is_array($edit_ajax)) && (@count($edit_ajax))) {
+													echo "<script type=\"text/javascript\">\n";
+													foreach ($edit_ajax as $objective_id) {
+														echo "var editor_".$objective_id." = new Ajax.InPlaceEditor('objective_description_".$objective_id."', '".ENTRADA_RELATIVE."/api/objective-details.api.php', { rows: 7, cols: 62, okText: \"Save Changes\", cancelText: \"Cancel Changes\", externalControl: \"edit_mode_".$objective_id."\", submitOnBlur: \"true\", callback: function(form, value) { return 'id=".$objective_id."&cids=".$course_ids_string."&objective_details='+escape(value) } });\n";
 													}
-													?>
-												</div>
+													echo "</script>\n";
+												}
+												?>
 											</td>
 										</tr>
 										<?php

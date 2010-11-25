@@ -284,7 +284,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 
 				<?php
 				$show_objectives = false;
-				$objectives = courses_fetch_objectives(array($COURSE_ID), 1, false);
+				$objectives = courses_fetch_objectives(array($COURSE_ID));
 				foreach ($objectives["objectives"] as $objective) {
 					if ((isset($objective["primary"]) && $objective["primary"]) || (isset($objective["secondary"]) && $objective["secondary"]) || (isset($objective["tertiary"]) && $objective["tertiary"])) {
 						$show_objectives = true;
@@ -332,11 +332,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 											</script>
 											<?php
 						echo "				<h3>Curriculum Objectives</h3>";
-						echo "				<div style=\"float: right;\">\n";
-						echo "					<label for=\"show_hierarchy\" class=\"content-small\" />Show objective hierarchy <input type=\"checkbox\" id=\"show_hierarcy\" onclick=\"renewList(this.checked)\" /></label>\n";
-						echo "				</div>\n";
 						echo "				<strong>The learner will be able to:</strong>";
-						echo "				<div id=\"objectives_list\">\n".course_objectives_in_list($objectives["objectives"], 1, false, false, 1, false)."\n</div>\n";
+						echo "				<div id=\"objectives_list\">\n".course_objectives_in_list($objectives, 1)."\n</div>\n";
 						echo "			</td>\n";
 						echo "		</tr>\n";
 						echo "		<tr>\n";
@@ -383,14 +380,6 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					echo "		</tbody>";
 					echo "	</table>";
 					echo "</div>";
-
-					$sidebar_html  = "<div style=\"margin: 2px 0px 10px 3px; font-size: 10px\">\n";
-					$sidebar_html .= "	<div><img src=\"".ENTRADA_URL."/images/legend-primary-objective.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" style=\"vertical-align: middle\" /> Primary Objective</div>\n";
-					$sidebar_html .= "	<div><img src=\"".ENTRADA_URL."/images/legend-secondary-objective.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" style=\"vertical-align: middle\" /> Secondary Objective</div>\n";
-					$sidebar_html .= "	<div><img src=\"".ENTRADA_URL."/images/legend-tertiary-objective.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" style=\"vertical-align: middle\" /> Tertiary Objective</div>\n";
-					$sidebar_html .= "</div>\n";
-
-					new_sidebar_item("Objective Importance", $sidebar_html, "objective-legend", "open");
 				}
 				?>
 

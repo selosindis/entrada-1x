@@ -55,7 +55,7 @@ if (!isset($ACTION) || !$ACTION || $ACTION == "-usage") {
 } elseif ($ACTION == "-remark") {
 	$RECORD_ID			= ((isset($_SERVER["argv"][2]) && ((int) $_SERVER["argv"][2])) ? (int) $_SERVER["argv"][2] : false);
 	if (isset($RECORD_ID) && $RECORD_ID) {
-		$query				= "	SELECT * FROM `event_quiz_progress`
+		$query				= "	SELECT * FROM `quiz_progress`
 								WHERE `quiz_id` = ".$db->qstr($RECORD_ID)."
 								ORDER BY `updated_date` ASC";
 		$progress_records	= $db->GetAll($query);
@@ -71,11 +71,11 @@ if (!isset($ACTION) || !$ACTION || $ACTION == "-usage") {
 								ORDER BY a.`question_order` ASC";
 				$questions	= $db->GetAll($query);
 				
-				$eqprogress_id		= $progress_record["eqprogress_id"];
+				$qprogress_id		= $progress_record["qprogress_id"];
 				$quiz_score			= 0;
 				$quiz_value			= 0;
 				
-				$PROCESSED = quiz_load_progress($eqprogress_id);
+				$PROCESSED = quiz_load_progress($qprogress_id);
 				
 				foreach ($questions as $question) {
 					$question_correct	= false;
@@ -114,34 +114,34 @@ if (!isset($ACTION) || !$ACTION || $ACTION == "-usage") {
 											"quiz_value" => $quiz_value
 										);
 				
-				if (!$db->AutoExecute("event_quiz_progress", $quiz_progress_array, "UPDATE", "eqprogress_id = ".$db->qstr($eqprogress_id))) {
+				if (!$db->AutoExecute("quiz_progress", $quiz_progress_array, "UPDATE", "qprogress_id = ".$db->qstr($qprogress_id))) {
 					echo "\nThere was an issue encountered while attempting to update this quiz progress for proxy id [".$db->qstr($progress_record["proxy_id"])."].\n";
 				} else {
 					echo "\nQuiz progress for proxy id [".$db->qstr($progress_record["proxy_id"])."] has been updated successfully.\n";
 				}
 			}
 		} else {
-			echo "\nThere were no event_quizzes found with that id, please ensure you have entered a valid equiz_id when attempting to remark a quiz.\n";
+			echo "\nThere were no attached_quizzes found with that id, please ensure you have entered a valid aquiz_id when attempting to remark a quiz.\n";
 		}
 	} else {
-		echo "\nPlease ensure you enter a valid equiz_id when attempting to remark a quiz.\n";
+		echo "\nPlease ensure you enter a valid aquiz_id when attempting to remark a quiz.\n";
 	}
 } elseif ($ACTION == "-delete") {
 	$QUIZ_ID			= ((isset($_SERVER["argv"][2]) && ((int) $_SERVER["argv"][2])) ? (int) $_SERVER["argv"][2] : false);
 	$QUESTION_ORDER			= ((isset($_SERVER["argv"][3]) && ((int) $_SERVER["argv"][3])) ? (int) $_SERVER["argv"][3] : false);
-	echo $query = "	SELECT * FROM `quiz_questions` 
+	$query = "	SELECT * FROM `quiz_questions` 
 				WHERE `quiz_id` = ".$db->qstr($QUIZ_ID)."
 				ORDER BY `question_order` ASC
 				LIMIT ".((int)($QUESTION_ORDER - 1)).", 1";
 	$quiz_question = $db->GetRow($query);
-	
+
 	$query = "DELETE FROM `quiz_question_responses` WHERE `qquestion_id` = ".$db->qstr($quiz_question["qquestion_id"]);
 	if ($db->Execute($query)) {
 		$query = "DELETE FROM `quiz_questions` WHERE `qquestion_id` = ".$db->qstr($quiz_question["qquestion_id"]);
 		if ($db->Execute($query)) {
-			$query = "DELETE FROM `event_quiz_responses` WHERE `qquestion_id` = ".$db->qstr($quiz_question["qquestion_id"]);
+			$query = "DELETE FROM `quiz_progress_responses` WHERE `qquestion_id` = ".$db->qstr($quiz_question["qquestion_id"]);
 			if ($db->Execute($query)) {
-				echo $query	= "	SELECT * FROM `event_quiz_progress`
+				$query	= "	SELECT * FROM `quiz_progress`
 							WHERE `quiz_id` = ".$db->qstr($quiz_question["quiz_id"])."
 							ORDER BY `updated_date` ASC";
 				$progress_records	= $db->GetAll($query);
@@ -157,11 +157,11 @@ if (!isset($ACTION) || !$ACTION || $ACTION == "-usage") {
 										ORDER BY a.`question_order` ASC";
 						$questions	= $db->GetAll($query);
 						
-						$eqprogress_id		= $progress_record["eqprogress_id"];
+						$qprogress_id		= $progress_record["qprogress_id"];
 						$quiz_score			= 0;
 						$quiz_value			= 0;
 						
-						$PROCESSED = quiz_load_progress($eqprogress_id);
+						$PROCESSED = quiz_load_progress($qprogress_id);
 						
 						foreach ($questions as $question) {
 							$question_correct	= false;
@@ -200,14 +200,14 @@ if (!isset($ACTION) || !$ACTION || $ACTION == "-usage") {
 													"quiz_value" => $quiz_value
 												);
 						
-						if (!$db->AutoExecute("event_quiz_progress", $quiz_progress_array, "UPDATE", "eqprogress_id = ".$db->qstr($eqprogress_id))) {
+						if (!$db->AutoExecute("quiz_progress", $quiz_progress_array, "UPDATE", "qprogress_id = ".$db->qstr($qprogress_id))) {
 							echo "\nThere was an issue encountered while attempting to update this quiz progress for proxy id [".$db->qstr($progress_record["proxy_id"])."].\n";
 						} else {
 							echo "\nQuiz progress for proxy id [".$db->qstr($progress_record["proxy_id"])."] has been updated successfully.\n";
 						}
 					}
 				} else {
-					echo "\nThere were no event_quizzes found with that id, please ensure you have entered a valid equiz_id when attempting to remark a quiz.\n";
+					echo "\nThere were no attached_quizzes found with that id, please ensure you have entered a valid aquiz_id when attempting to remark a quiz.\n";
 				}
 			}
 		}

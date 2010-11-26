@@ -42,7 +42,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 	$_SESSION["research_expand_grid"] = "peer_reviewed_grid";
 	
 	if($PEER_REVIEWED_PAPERS_ID) {
-		$query	= "SELECT * FROM `ar_peer_reviewed_papers` WHERE `peer_reviewed_papers_id`=".$db->qstr($PEER_REVIEWED_PAPERS_ID);
+		$query	= "SELECT * FROM `ar_peer_reviewed_papers` WHERE `peer_reviewed_papers_id`=".$db->qstr($PEER_REVIEWED_PAPERS_ID)." AND `proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]['tmp']['proxy_id']);
 		$result	= $db->GetRow($query);
 		if($result) {
 			$BREADCRUMB[]	= array("url" => ENTRADA_URL."/annualreport/research?section=edit_peer_reviewed", "title" => "Edit Peer-Reviewed Publication");

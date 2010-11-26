@@ -1254,17 +1254,14 @@ vertical-align: middle;
 }
 
 ul.objective-list li.primary {
-border-left:5px solid #5A9B36;
 background-color:#FFF;
 }
 
 ul.objective-list li.secondary {
-border-left:5px solid #E5C203;
 background-color:#FFF;
 }
 
 ul.objective-list li.tertiary {
-border-left:5px solid #D3490C;
 background-color:#FFF;
 }
 
@@ -2181,17 +2178,14 @@ z-index:1500;
 }
 
 td.objectives li.primary {
-border-left:5px solid #5A9B36;
 background-color:#FFF;
 }
 
 td.objectives li.secondary {
-border-left:5px solid #E5C203;
 background-color:#FFF;
 }
 
 td.objectives li.tertiary {
-border-left:5px solid #D3490C;
 background-color:#FFF;
 }
 
@@ -2429,17 +2423,6 @@ cursor:auto;
 
 table.select_multiple_table td.indent_1,table.select_multiple_table td.description {
 padding-left:20px;
-}
-
-table.select_multiple_table tr.primary {
-background-color:#5A9B36;
-}
-
-table.select_multiple_table tr.secondary {
-background-color:#E5C203;
-}
-table.select_multiple_table tr.tertiary {
-background-color:#D3490C;
 }
 
 div#associated_faculty_list ul.menu li.community,div#associated_student_list ul.menu li.community,div#associated_director_list ul.menu li.community,div#associated_coordinator_list ul.menu li.community {

@@ -41,7 +41,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 	$_SESSION["education_expand_grid"] = "undergraduate_nonmedical_grid";
 	
 	if($UNDERGRADUATE_NONMEDICAL_TEACHING_ID) {
-		$query	= "SELECT * FROM `ar_undergraduate_nonmedical_teaching` WHERE `undergraduate_nonmedical_teaching_id`=".$db->qstr($UNDERGRADUATE_NONMEDICAL_TEACHING_ID);
+		$query	= "SELECT * FROM `ar_undergraduate_nonmedical_teaching` WHERE `undergraduate_nonmedical_teaching_id`=".$db->qstr($UNDERGRADUATE_NONMEDICAL_TEACHING_ID)." AND `proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]['tmp']['proxy_id']);
 		$result	= $db->GetRow($query);
 		if($result) {
 			$BREADCRUMB[]	= array("url" => ENTRADA_URL."/annualreport/education?section=edit_undergaduate_nonmedical", "title" => "Edit Undergraduate Other Teaching");

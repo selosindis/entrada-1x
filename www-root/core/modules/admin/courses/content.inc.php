@@ -577,7 +577,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 										<div id="objectives_list">
 										<h3>Curriculum Objectives</h3>
 										<strong>The learner will be able to:</strong>
-										<?php echo event_objectives_in_list($course_objectives["objectives"], 1, true); ?>
+										<?php echo event_objectives_in_list($course_objectives, 1, true); ?>
 										</div>
 									</td>
 								</tr>
@@ -586,14 +586,6 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							</form>
 						</div>
 						<?php
-						$sidebar_html  = "<div style=\"margin: 2px 0px 10px 3px; font-size: 10px\">\n";
-						$sidebar_html .= "	<div><img src=\"".ENTRADA_URL."/images/legend-primary-objective.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" style=\"vertical-align: middle\" /> Primary Objective</div>\n";
-						$sidebar_html .= "	<div><img src=\"".ENTRADA_URL."/images/legend-secondary-objective.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" style=\"vertical-align: middle\" /> Secondary Objective</div>\n";
-						$sidebar_html .= "	<div><img src=\"".ENTRADA_URL."/images/legend-tertiary-objective.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" style=\"vertical-align: middle\" /> Tertiary Objective</div>\n";
-						$sidebar_html .= "</div>\n";
-
-						new_sidebar_item("Objective Importance", $sidebar_html, "objective-legend", "open");
-
 						if ((@is_array($edit_ajax)) && (@count($edit_ajax))) {
 							echo "<script type=\"text/javascript\">\n";
 							foreach ($edit_ajax as $objective_id) {

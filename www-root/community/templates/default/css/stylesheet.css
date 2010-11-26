@@ -1222,10 +1222,6 @@ div.select_multiple_container {
 z-index:1500;
 }
 
-table.select_multiple_table tr.secondary,li.secondary {
-background-color:#E9D9FE;
-}
-
 .pointer,table.select_multiple_table label {
 cursor:pointer;
 }
@@ -1236,10 +1232,6 @@ cursor:auto;
 
 table.select_multiple_table td.indent_1,table.select_multiple_table td.description {
 padding-left:20px;
-}
-
-table.select_multiple_table tr.primary,li.primary {
-background-color:#D9E9FE;
 }
 
 table.member-list tr td {
@@ -1462,4 +1454,24 @@ list-style-image: none;
 div.quiz-questions ul.responses li label {
 margin-left:5px;
 vertical-align:middle;
+}
+
+.collapsable {
+cursor:pointer;
+}
+
+.collapsable.expanded:before {
+float: right;
+content: url(../../../../images/minus.gif);
+clear: both;
+}
+
+.collapsable.collapsed {
+color: #CCC;
+}
+
+.collapsable.collapsed:before {
+float: right;
+content: url(../../../../images/plus.gif);
+clear: both;
 }

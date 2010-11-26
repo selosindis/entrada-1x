@@ -704,7 +704,7 @@ function isDisabled(element) {
  *  @return boolean
  */
 function hasConsole() {
-	return !Object.isUndefined(console) && Object.isFunction(console.log);
+	return (typeof console != "undefined") && (console.log) && (typeof console.log == "function");
 }
 
 /**

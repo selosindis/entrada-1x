@@ -44,3 +44,5 @@ SELECT `community_id`, 7, 1 FROM `communities` WHERE `community_active` = 1;
 UPDATE `settings` SET `value` = '1.2.0' WHERE `shortname` = 'version_db';
 
 ALTER TABLE `evaluation_evaluators` ADD COLUMN `member_joined` bigint(64) NOT NULL DEFAULT '0';
+ALTER TABLE `evaluation_evaluators` ADD COLUMN `updated_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP;
+ALTER TABLE `evaluation_evaluators` ADD COLUMN `updated_by` int(11) DEFAULT NULL;

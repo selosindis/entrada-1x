@@ -30,7 +30,7 @@ if (!defined("IN_EVALUATIONS")) {
 	application_log("error", "Group [".$GROUP."] and role [".$ROLE."] do not have access to this module [".$MODULE."]");
 } else {
         //echo "______log______4"."<br>";
-	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/evaluations/scheduler", "title" => "Manage Scheduler");
+	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/evaluations", "title" => "Manage Evaluation");
 
 	if (($router) && ($router->initRoute())) {
         //echo "______log______5"."<br>";

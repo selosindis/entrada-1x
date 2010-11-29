@@ -47,8 +47,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/tabpane/tabpane.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
 	$HEAD[] = "<link href=\"".ENTRADA_URL."/css/tabpane.css?release=".html_encode(APPLICATION_VERSION)."\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />\n";
 	echo "<script language=\"text/javascript\">var DELETE_IMAGE_URL = '".ENTRADA_URL."/images/action-delete.gif';</script>";
-	
-	$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/evaluations/scheduler?".replace_query(array("section" => "add")), "title" => "Adding Evaluation");
+
+	$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/evaluations?".replace_query(array("section" => "add")), "title" => "Adding Evaluation");
 
 	$PROCESSED["associated_faculty"]	= array();
 	$PROCESSED["event_audience_type"]	= "grad_year";
@@ -65,12 +65,12 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
         }
         unset($tmp_action_type);
 
-        
+
 	echo "<h1>Adding Evaluation</h1>\n";
-        
+
         //Added by Howard
-        
-        
+
+
 	// Error Checking
 	switch($STEP) {
 		case 2 :
@@ -124,7 +124,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
                         //echo "______log______evaluation_start: ".$PROCESSED["evaluation_start"]."<br>";
                         //echo "______log______evaluation_finish: ".$PROCESSED["evaluation_finish"]."<br>";
 
-					
+
 			/**
 			 * Non-required field "release_date" / Viewable Start (validated through validate_calendars function).
 			 * Non-required field "release_until" / Viewable Finish (validated through validate_calendars function).
@@ -173,16 +173,16 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
                                                 if($EVALUATION_ID = $db->Insert_Id()){
 						switch($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"]) {
 							case "content" :
-								$url	= ENTRADA_URL."/admin/evaluations/scheduler?section=content&id=".$EVALUATION_ID;
+								$url	= ENTRADA_URL."/admin/evaluations?section=content&id=".$EVALUATION_ID;
 								$msg	= "You will now be redirected to the evaluation content page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 								break;
 							case "new" :
-								$url	= ENTRADA_URL."/admin/evaluations/scheduler?section=add";
+								$url	= ENTRADA_URL."/admin/evaluations?section=add";
 								$msg	= "You will now be redirected to add another new evaluation; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 								break;
 							case "index" :
 							default :
-								$url	= ENTRADA_URL."/admin/evaluations/scheduler";
+								$url	= ENTRADA_URL."/admin/evaluations";
 								$msg	= "You will now be redirected to the evaluation index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 								break;
 						}
@@ -284,7 +284,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 				}
 			}
 			?>
-			<form action="<?php echo ENTRADA_URL; ?>/admin/evaluations/scheduler?section=add&amp;step=2" method="post" name="addEvaluationForm" id="addEvaluationForm">
+			<form action="<?php echo ENTRADA_URL; ?>/admin/evaluations?section=add&amp;step=2" method="post" name="addEvaluationForm" id="addEvaluationForm">
                                     <table cellspacing="0" cellpadding="0" border="0">
 					<colgroup>
 						<col style="width: 3%" />
@@ -409,7 +409,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 			<script type="text/javascript">
                                 function search_grad_year(){
                                     alert("Fly....");
-                                    //document.addEvaluationForm.action="<?php echo ENTRADA_URL; ?>/admin/evaluations/scheduler?section=add";
+                                    //document.addEvaluationForm.action="<?php echo ENTRADA_URL; ?>/admin/evaluations?section=add";
                                     //document.addEvaluationForm.submit();
                                 }
 

@@ -40,51 +40,75 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 	$BREADCRUMB[]	= array("url" => "", "title" => "Students' Course Evaluations" );
+
+	$query = "	SELECT distinct e.`evaluation_id`, e.`eform_id`, e.`evaluation_title`, e.`evaluation_description`, 
+				c.`course_name`, e.`evaluation_start`, e.`evaluation_finish`
+				FROM `evaluations` e 
+				INNER JOIN `evaluation_evaluators` ev ON e.`evaluation_id` = ev.`evaluation_id`
+				INNER JOIN `evaluation_targets` t ON e.`evaluation_id` = t.`evaluation_id`
+				INNER JOIN `evaluations_lu_targets` elt ON t.`target_id` = elt.`target_id`
+				INNER JOIN `courses` c ON t.`target_value` = c.`course_id`
+				INNER JOIN `".AUTH_DATABASE."`.`user_data` u ON ev.`evaluator_value` = u.`id`
+				INNER JOIN `".AUTH_DATABASE."`.`user_access` a ON u.`id` = a.`user_id`
+				WHERE elt.`target_shortname` = 'course' and elt.`target_active` = 1 
+				and (ev.`evaluator_type` = 'grad_year' or a.`group`= 'student' and ev.`evaluator_type` = 'proxy_id') ";
+	$results	= $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);			
 	?>
+
+	<h1>Students' Course Evaluations</h1>
+	
 	<div class="no-printing">
 		<form action="<?php echo ENTRADA_URL; ?>/admin/evaluations/reports?section=<?php echo $SECTION; ?>&step=2" method="post">
-		<table style="width: 100%" cellspacing="0" cellpadding="2" border="0">
-		<colgroup>
-			<col style="width: 3%" />
-			<col style="width: 20%" />
-			<col style="width: 77%" />
-		</colgroup>
-		<tbody>
-			<tr>
-				<td colspan="3"><h2>Students' Evaluation Listing</h2></td>
-			</tr>
-			<?php //echo generate_calendars("reporting", "Reporting Date", true, true, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_start"], true, true, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_finish"]);
-				//echo generate_organisation_select();?>
-				<td colspan="3" align=center><i>Selection List</i></td></tr>
-			<tr>
-				<td colspan="3" style="text-align: left; padding-top: 10px"><input type="submit" class="button" value="Clear all" /></td>
-			</tr>
+		<table class="tableList" cellspacing="0" cellpadding="1" summary="List of Events">
+			<colgroup>
+				<col style="width: 3%" />
+				<col style="width: 23%" />
+				<col style="width: 32%" />
+				<col style="width: 16%" />
+				<col style="width: 16%" />
+				<col style="width: 10%" />
+			</colgroup>
+			<thead>
+				<tr>
+					<td class="modified" />
+					<td class="title">Evaluation Title</td>
+					<td class="phase">Course</td>
+					<td class="date"><div class="noLink">Start Date</div></td>
+					<td class="date"><div class="noLink">Finish Date</div></td>
+					<td class="date"><div class="noLink">Completion</div></td>
+				</tr>
+			</thead>
+			<tbody>
+			<?php
+			foreach ($results as $result) {
+/*				$query = "	SELECT distinct e.`evaluation_id`, e.`eform_id`, e.`evaluation_title`, e.`evaluation_description`, 
+							c.`course_name`, e.`evaluation_start`, e.`evaluation_finish`
+							FROM `evaluations` e 
+							INNER JOIN `evaluation_evaluators` ev ON e.`evaluation_id` = ev.`evaluation_id`
+							INNER JOIN `evaluation_targets` t ON e.`evaluation_id` = t.`evaluation_id`
+							INNER JOIN `evaluations_lu_targets` elt ON t.`target_id` = elt.`target_id`
+							INNER JOIN `courses` c ON t.`target_value` = c.`course_id`
+							INNER JOIN `".AUTH_DATABASE."`.`user_data` u ON ev.`evaluator_value` = u.`id`
+							INNER JOIN `".AUTH_DATABASE."`.`user_access` a ON u.`id` = a.`user_id`
+							WHERE elt.`target_shortname` = 'course' and elt.`target_active` = 1 
+							and (ev.`evaluator_type` = 'grad_year' or a.`group`= 'student' and ev.`evaluator_type` = 'proxy_id') ";
+				$completion	= $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);			
+*/				$completion = '15%';
+				$url = "---";
+				echo "	<tr><td class=\"modified\" />";
+				echo "	<td class=\"title".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Evaluation Title: ".html_encode($result["evaluation_title"])."\">" : "").html_encode($result["evaluation_title"]).(($url) ? "</a>" : "")."</td>\n";
+				echo "	<td class=\"teacher".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Course: ".html_encode($result["course_name"])."\">" : "").html_encode($result["course_name"]).(($url) ? "</a>" : "")."</td>\n";
+				echo "	<td class=\"date".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Start Date\">" : "").date("M j, Y", $result["evaluation_start"]).(($url) ? "</a>" : "")."</td>\n";
+				echo "	<td class=\"date".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Finish Date\">" : "").date("M j, Y", $result["evaluation_finish"]).(($url) ? "</a>" : "")."</td>\n";
+				echo "	<td class=\"date".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Completion\">" : ""). $completion.(($url) ? "</a>" : "")."</td></tr>\n";
+			}
+			?>
 		</tbody>
 		</table>
 		</form>
-		<form action="<?php echo ENTRADA_URL; ?>/admin/evaluations/reports?section=<?php echo $SECTION; ?>&step=2" method="post">
-		<table style="width: 100%" cellspacing="0" cellpadding="2" border="0">
-		<colgroup>
-			<col style="width: 3%" />
-			<col style="width: 20%" />
-			<col style="width: 77%" />
-		</colgroup>
-		<tbody>
-			<tr>
-				<td colspan="3"><h2>Reporting Dates</h2></td>
-			</tr>
-			<?php echo generate_calendars("reporting", "Reporting Date", true, true, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_start"], true, true, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_finish"]);
-				echo generate_organisation_select();?>
-			<tr>
-				<td colspan="3" style="text-align: right; padding-top: 10px"><input type="submit" class="button" value="Build Reports" /></td>
-			</tr>
-		</tbody>
-		</table>
-		</form>
-	</div>
 	<?php
 	if ($STEP == 2) {
-		
+// To be changed		
 	$int_use_cache	= true;
 
 	$report_results	= array();

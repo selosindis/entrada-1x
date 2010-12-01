@@ -27,7 +27,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 	header("Location: ".ENTRADA_URL);
 	exit;
 } elseif (!$ENTRADA_ACL->amIAllowed('clerkship', 'read')) {
-	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/".$MODULE."\\'', 15000)";
+	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/".$MODULE."\\'', 15000)";
 
 	$ERROR++;
 	$ERRORSTR[]	= "You do not have the permissions required to use this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
@@ -68,7 +68,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 			$sidebar_html .= "	<li class=\"incorrect\"><strong>".$elective_weeks["trash"]."</strong> Weeks Rejected</li>\n";
 			$sidebar_html .= "	<br />";
 			if((int)$elective_weeks["approval"] + (int)$elective_weeks["approved"] > 0) {
-				$sidebar_html .= "	<li><a target=\"blank\" href=\"".ENTRADA_URL."/admin/clerkship/electives?section=disciplines&id=".$PROXY_ID."\">Discipline Breakdown</a></li>\n";
+				$sidebar_html .= "	<li><a target=\"blank\" href=\"".ENTRADA_URL."/clerkship/electives?section=disciplines&id=".$PROXY_ID."\">Discipline Breakdown</a></li>\n";
 			}
 			$sidebar_html .= "</ul>\n";
 		
@@ -113,16 +113,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 					}
 		
 					if ((bool) $result["manage_apartments"]) {
-						$aschedule_id = regionaled_apartment_check($result["event_id"], $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]);
-						$apartment_available = (($aschedule_id) ? true : false);
+						$apartment_id			= regionaled_apartment_check($result["event_id"], $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]);
+						$apartment_available	= (($apartment_id) ? true : false);
 					} else {
-						$apartment_available = false;
+						$apartment_available	= false;
 					}
 		
 					if ($apartment_available) {
-						$click_url = ENTRADA_URL."/clerkship?section=details&id=".$result["event_id"];
+						$click_url	= ENTRADA_URL."/clerkship?section=details&id=".$result["event_id"];
+					} elseif ($ENTRADA_ACL->amIAllowed('electives', 'update')) {
+						$click_url 	= ADMIN_URL."/admin/clerkship/electives?section=edit&id=".$result["event_id"];
+					} elseif ($_SESSION["details"]["group"] == "student") {
+						$click_url 	= ENTRADA_URL."/clerkship/electives?section=edit&id=".$result["event_id"];
 					} else {
-						$click_url = "";
+						$click_url 	= ENTRADA_URL."/clerkship/electives?section=view&id=".$result["event_id"];
 					}
 		
 					if (!isset($result["region_name"]) || $result["region_name"] == "") {
@@ -143,19 +147,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 							case "approval":
 								$elective_word = "Pending";
 								$cssclass 	= " class=\"in_draft\"";
-								$click_url 	= ENTRADA_URL."/admin/clerkship/electives?section=edit&id=".$result["event_id"];
 								$skip		= false;
 							break;
 							case "published":
 								$elective_word = "Approved";
 								$cssclass 	= " class=\"published\"";
-								$click_url 	= ENTRADA_URL."/admin/clerkship/electives?section=edit&id=".$result["event_id"];
 								$skip		= false;
 							break;
 							case "trash":
 								$elective_word = "Rejected";
 								$cssclass 	= " class=\"rejected\"";
-								$click_url 	= ENTRADA_URL."/admin/clerkship/electives?section=edit&id=".$result["event_id"];
 								$skip		= true;
 							break;
 							default:
@@ -169,18 +170,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 						$elective	= false;
 						$skip		= false;
 					}
-					if (!$click_url) {
-						$click_url 	= ENTRADA_URL."/admin/clerkship/electives?section=edit&id=".$result["event_id"];
-					}
 					if (!$skip) {
 						echo "<tr".(($is_here) && $cssclass != " class=\"in_draft\"" ? " class=\"current\"" : $cssclass).">\n";
-						echo "	<td class=\"modified\"><a href=\"".$click_url."\" style=\"font-size: 11px\"><img src=\"".ENTRADA_URL."/images/".(($apartment_available) ? "housing-icon-small.gif" : "pixel.gif")."\" width=\"16\" height=\"16\" alt=\"".(($apartment_available) ? "Detailed apartment information available." : "")."\" title=\"".(($apartment_available) ? "Detailed apartment information available." : "")."\" style=\"border: 0px\" /></a></td>\n";
-						echo "	<td class=\"type\"><a href=\"".$click_url."\" style=\"font-size: 11px\">".(($elective) ? "Elective".(($elective_word != "") ? " (".$elective_word.")" : "") : "Core Rotation")."</a>"."</td>\n";
-						echo "	<td class=\"date-smallest\"><a href=\"".$click_url."\" style=\"font-size: 11px\">".date("D M d/y", $result["event_start"])."</a></td>\n";
-						echo "	<td class=\"date-smallest\"><a href=\"".$click_url."\" style=\"font-size: 11px\">".date("D M d/y", $result["event_finish"])."</a></td>\n";
-						echo "	<td class=\"region\"><a href=\"".$click_url."\" style=\"font-size: 11px\">".html_encode((($result["city"] == "") ? limit_chars(($result["region_name"]), 30) : $result["city"]))."</a></td>\n";
+						echo "	<td class=\"modified\">".(!empty($click_url) ? "<a href=\"".$click_url."\" style=\"font-size: 11px\">" : "")."<img src=\"".ENTRADA_URL."/images/".(($apartment_available) ? "housing-icon-small.gif" : "pixel.gif")."\" width=\"16\" height=\"16\" alt=\"".(($apartment_available) ? "Detailed apartment information available." : "")."\" title=\"".(($apartment_available) ? "Detailed apartment information available." : "")."\" style=\"border: 0px\" />".(!empty($click_url) ? "</a>" : "")."</td>\n";
+						echo "	<td class=\"type\">".(!empty($click_url) ? "<a href=\"".$click_url."\" style=\"font-size: 11px\">" : "")."".(($elective) ? "Elective".(($elective_word != "") ? " (".$elective_word.")" : "") : "Core Rotation")."".(!empty($click_url) ? "</a>" : "").""."</td>\n";
+						echo "	<td class=\"date-smallest\">".(!empty($click_url) ? "<a href=\"".$click_url."\" style=\"font-size: 11px\">" : "")."".date("D M d/y", $result["event_start"])."".(!empty($click_url) ? "</a>" : "")."</td>\n";
+						echo "	<td class=\"date-smallest\">".(!empty($click_url) ? "<a href=\"".$click_url."\" style=\"font-size: 11px\">" : "")."".date("D M d/y", $result["event_finish"])."".(!empty($click_url) ? "</a>" : "")."</td>\n";
+						echo "	<td class=\"region\">".(!empty($click_url) ? "<a href=\"".$click_url."\" style=\"font-size: 11px\">" : "")."".html_encode((($result["city"] == "") ? limit_chars(($result["region_name"]), 30) : $result["city"]))."".(!empty($click_url) ? "</a>" : "")."</td>\n";
 						echo "	<td class=\"title\">";
-						echo "		<a href=\"".$click_url."\" style=\"font-size: 11px\"><span title=\"".$event_title."\">".limit_chars(html_decode($event_title), 55)."</span></a>";
+						echo "		".(!empty($click_url) ? "<a href=\"".$click_url."\" style=\"font-size: 11px\">" : "")."<span title=\"".$event_title."\">".limit_chars(html_decode($event_title), 55)."</span>".(!empty($click_url) ? "</a>" : "");
 						echo "	</td>\n";
 						echo "</tr>\n";
 					}
@@ -441,8 +439,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 							ON b.`rotation_id` = c.`rotation_id`
 							WHERE a.`etype_id` = ".$db->qstr($PROXY_ID)."
 							AND a.`econtact_type` = 'student'
-							AND b.`event_start` < ".$db->qstr(time())."
-							AND c.`rotation_id` < ".$db->qstr(MAX_ROTATION);
+							AND b.`event_start` < ".$db->qstr(time());
 				$rotations = $db->GetAll($query);
 				?>
 				<div style="clear: both"></div>
@@ -450,7 +447,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 				$summary_shown = false;
 				if ($rotations) {
 					?>
-					<form action="<?php echo ENTRADA_URL ?>/admin/clerkship/flag" method="post">
+					<form action="<?php echo ADMIN_URL; ?>/admin/clerkship/flag" method="post">
 						<table class="tableList" cellspacing="0" summary="Clerkship Progress Summary">
 							<colgroup>
 								<col class="modified" />
@@ -556,7 +553,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 				}
 			} else {
 				$NOTICE++;
-				$NOTICESTR[] = $student_name . " has no scheduled clerkship rotations / electives in the system at this time.  Click <a href = ".ENTRADA_URL."/admin/clerkship/electives?section=add_core&ids=".$PROXY_ID." class=\"strong-green\">here</a> to add a new core rotation.";
+				$NOTICESTR[] = $student_name . " has no scheduled clerkship rotations / electives in the system at this time.  Click <a href = ".ADMIN_URL."/admin/clerkship/electives?section=add_core&ids=".$PROXY_ID." class=\"strong-green\">here</a> to add a new core rotation.";
 	
 				echo display_notice();
 			}

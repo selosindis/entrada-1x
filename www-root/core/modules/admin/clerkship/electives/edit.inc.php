@@ -1297,6 +1297,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 							if(!$ERROR) {
 								$PROCESSED["modified_last"]	= time();
 								$PROCESSED["modified_by"]	= $_SESSION["details"]["id"];
+								if(!$db->AutoExecute("`".CLERKSHIP_DATABASE."`.`events`", $PROCESSED, "UPDATE", "`event_id` = ".$db->qstr($EVENT_ID))) {
+									$ERROR++;
+									$ERRORSTR[]	= "Failed to update this event in the database. Please contact a system administrator if this problem persists.";
+									application_log("error", "Error while editing clerkship event into database. Database server said: ".$db->ErrorMsg());
+									$STEP		= 1;
+								}
 								//Delete apartment schedule info for this student if the location has changed.
 								if ($PROCESSED["region_id"] != $event_info["region_id"] || ($event_info["event_start"] != $PROCESSED["event_start"]) ||  ($event_info["event_finish"] != $PROCESSED["event_finish"])) {
 									if(!notify_regional_education("change-critical", $EVENT_ID)) {
@@ -1305,12 +1311,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 									if (!$db->Execute("DELETE FROM `".CLERKSHIP_DATABASE."`.`apartment_schedule` WHERE `event_id` = ".$db->qstr($EVENT_ID))) {
 										application_log("error", "There was an issue while trying to remove the apartment schedule information for event [".$EVENT_ID."]. Database said: ".$db->ErrorMsg());
 									}
-								}
-								if(!$db->AutoExecute("`".CLERKSHIP_DATABASE."`.`events`", $PROCESSED, "UPDATE", "`event_id` = ".$db->qstr($EVENT_ID))) {
-									$ERROR++;
-									$ERRORSTR[]	= "Failed to update this event in the database. Please contact a system administrator if this problem persists.";
-									application_log("error", "Error while editing clerkship event into database. Database server said: ".$db->ErrorMsg());
-									$STEP		= 1;
 								}
 							} else {
 								$STEP = 1;

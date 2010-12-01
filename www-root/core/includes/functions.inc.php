@@ -11406,7 +11406,7 @@ function eval_sche_output_filter_controls($module_type = "") {
 				function setDateValue(field, date) {
 					timestamp = getMSFromDate(date);
 					if (field.value != timestamp) {
-						window.location = '<?php echo ENTRADA_URL.$module_type."/evaluations/scheduler?".(($_SERVER["QUERY_STRING"] != "") ? replace_query(array("dstamp" => false))."&" : ""); ?>dstamp='+timestamp;
+						window.location = '<?php echo ENTRADA_URL.$module_type."/evaluations?".(($_SERVER["QUERY_STRING"] != "") ? replace_query(array("dstamp" => false))."&" : ""); ?>dstamp='+timestamp;
 					}
 					return;
 				}
@@ -11504,13 +11504,13 @@ function eval_sche_output_calendar_controls($module_type = "") {
 			<td style="width: 53%; vertical-align: top; text-align: left">
 				<table style="width: 298px; height: 23px" cellspacing="0" cellpadding="0" border="0" summary="Display Duration Type">
 					<tr>
-						<td style="width: 22px; height: 23px"><a href="<?php echo ENTRADA_URL.$module_type."/evaluations/scheduler?".replace_query(array("dstamp" => ($scheduler_evaluations["duration_start"] - 2))); ?>" title="Previous <?php echo ucwords($_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["dtype"]); ?>"><img src="<?php echo ENTRADA_URL; ?>/images/cal-back.gif" border="0" width="22" height="23" alt="Previous <?php echo ucwords($_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["dtype"]); ?>" title="Previous <?php echo ucwords($_SESSION[APPLICATION_IDENTIFIER]["events"]["dtype"]); ?>" /></a></td>
-						<td style="width: 47px; height: 23px"><?php echo (($_SESSION[APPLICATION_IDENTIFIER]["events"]["dtype"] == "day") ? "<img src=\"".ENTRADA_URL."/images/cal-day-on.gif\" width=\"47\" height=\"23\" border=\"0\" alt=\"Day View\" title=\"Day View\" />" : "<a href=\"".ENTRADA_URL.$module_type."/evaluations/scheduler?".replace_query(array("dtype" => "day"))."\"><img src=\"".ENTRADA_URL."/images/cal-day-off.gif\" width=\"47\" height=\"23\" border=\"0\" alt=\"Day View\" title=\"Day View\" /></a>"); ?></td>
-						<td style="width: 47px; height: 23px"><?php echo (($_SESSION[APPLICATION_IDENTIFIER]["events"]["dtype"] == "week") ? "<img src=\"".ENTRADA_URL."/images/cal-week-on.gif\" width=\"47\" height=\"23\" border=\"0\" alt=\"Week View\" title=\"Week View\" />" : "<a href=\"".ENTRADA_URL.$module_type."/evaluations/scheduler?".replace_query(array("dtype" => "week"))."\"><img src=\"".ENTRADA_URL."/images/cal-week-off.gif\" width=\"47\" height=\"23\" border=\"0\" alt=\"Week View\" title=\"Week View\" /></a>"); ?></td>
-						<td style="width: 47px; height: 23px"><?php echo (($_SESSION[APPLICATION_IDENTIFIER]["events"]["dtype"] == "month") ? "<img src=\"".ENTRADA_URL."/images/cal-month-on.gif\" width=\"47\" height=\"23\" border=\"0\" alt=\"Month View\" title=\"Month View\" />" : "<a href=\"".ENTRADA_URL.$module_type."/evaluations/scheduler?".replace_query(array("dtype" => "month"))."\"><img src=\"".ENTRADA_URL."/images/cal-month-off.gif\" width=\"47\" height=\"23\" border=\"0\" alt=\"Month View\" title=\"Month View\" /></a>"); ?></td>
-						<td style="width: 47px; height: 23px"><?php echo (($_SESSION[APPLICATION_IDENTIFIER]["events"]["dtype"] == "year") ? "<img src=\"".ENTRADA_URL."/images/cal-year-on.gif\" width=\"47\" height=\"23\" border=\"0\" alt=\"Year View\" title=\"Year View\" />" : "<a href=\"".ENTRADA_URL.$module_type."/evaluations/scheduler?".replace_query(array("dtype" => "year"))."\"><img src=\"".ENTRADA_URL."/images/cal-year-off.gif\" width=\"47\" height=\"23\" border=\"0\" alt=\"Year View\" title=\"Year View\" /></a>"); ?></td>
-						<td style="width: 47px; height: 23px; border-left: 1px #9D9D9D solid"><a href="<?php echo ENTRADA_URL.$module_type."/evaluations/scheduler?".replace_query(array("dstamp" => ($scheduler_evaluations["duration_end"] + 1))); ?>" title="Following <?php echo ucwords($_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["dtype"]); ?>"><img src="<?php echo ENTRADA_URL; ?>/images/cal-next.gif" border="0" width="22" height="23" alt="Following <?php echo ucwords($_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["dtype"]); ?>" title="Following <?php echo ucwords($_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["dtype"]); ?>" /></a></td>
-						<td style="width: 33px; height: 23px; text-align: right"><a href="<?php echo ENTRADA_URL.$module_type; ?>/evaluations/scheduler?<?php echo replace_query(array("dstamp" => time())); ?>"><img src="<?php echo ENTRADA_URL; ?>/images/cal-home.gif" width="23" height="23" alt="Reset to display current calendar <?php echo $_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["dtype"]; ?>." title="Reset to display current calendar <?php echo $_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["dtype"]; ?>." border="0" /></a></td>
+						<td style="width: 22px; height: 23px"><a href="<?php echo ENTRADA_URL.$module_type."/evaluations?".replace_query(array("dstamp" => ($scheduler_evaluations["duration_start"] - 2))); ?>" title="Previous <?php echo ucwords($_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["dtype"]); ?>"><img src="<?php echo ENTRADA_URL; ?>/images/cal-back.gif" border="0" width="22" height="23" alt="Previous <?php echo ucwords($_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["dtype"]); ?>" title="Previous <?php echo ucwords($_SESSION[APPLICATION_IDENTIFIER]["events"]["dtype"]); ?>" /></a></td>
+						<td style="width: 47px; height: 23px"><?php echo (($_SESSION[APPLICATION_IDENTIFIER]["events"]["dtype"] == "day") ? "<img src=\"".ENTRADA_URL."/images/cal-day-on.gif\" width=\"47\" height=\"23\" border=\"0\" alt=\"Day View\" title=\"Day View\" />" : "<a href=\"".ENTRADA_URL.$module_type."/evaluations?".replace_query(array("dtype" => "day"))."\"><img src=\"".ENTRADA_URL."/images/cal-day-off.gif\" width=\"47\" height=\"23\" border=\"0\" alt=\"Day View\" title=\"Day View\" /></a>"); ?></td>
+						<td style="width: 47px; height: 23px"><?php echo (($_SESSION[APPLICATION_IDENTIFIER]["events"]["dtype"] == "week") ? "<img src=\"".ENTRADA_URL."/images/cal-week-on.gif\" width=\"47\" height=\"23\" border=\"0\" alt=\"Week View\" title=\"Week View\" />" : "<a href=\"".ENTRADA_URL.$module_type."/evaluations?".replace_query(array("dtype" => "week"))."\"><img src=\"".ENTRADA_URL."/images/cal-week-off.gif\" width=\"47\" height=\"23\" border=\"0\" alt=\"Week View\" title=\"Week View\" /></a>"); ?></td>
+						<td style="width: 47px; height: 23px"><?php echo (($_SESSION[APPLICATION_IDENTIFIER]["events"]["dtype"] == "month") ? "<img src=\"".ENTRADA_URL."/images/cal-month-on.gif\" width=\"47\" height=\"23\" border=\"0\" alt=\"Month View\" title=\"Month View\" />" : "<a href=\"".ENTRADA_URL.$module_type."/evaluations?".replace_query(array("dtype" => "month"))."\"><img src=\"".ENTRADA_URL."/images/cal-month-off.gif\" width=\"47\" height=\"23\" border=\"0\" alt=\"Month View\" title=\"Month View\" /></a>"); ?></td>
+						<td style="width: 47px; height: 23px"><?php echo (($_SESSION[APPLICATION_IDENTIFIER]["events"]["dtype"] == "year") ? "<img src=\"".ENTRADA_URL."/images/cal-year-on.gif\" width=\"47\" height=\"23\" border=\"0\" alt=\"Year View\" title=\"Year View\" />" : "<a href=\"".ENTRADA_URL.$module_type."/evaluations?".replace_query(array("dtype" => "year"))."\"><img src=\"".ENTRADA_URL."/images/cal-year-off.gif\" width=\"47\" height=\"23\" border=\"0\" alt=\"Year View\" title=\"Year View\" /></a>"); ?></td>
+						<td style="width: 47px; height: 23px; border-left: 1px #9D9D9D solid"><a href="<?php echo ENTRADA_URL.$module_type."/evaluations?".replace_query(array("dstamp" => ($scheduler_evaluations["duration_end"] + 1))); ?>" title="Following <?php echo ucwords($_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["dtype"]); ?>"><img src="<?php echo ENTRADA_URL; ?>/images/cal-next.gif" border="0" width="22" height="23" alt="Following <?php echo ucwords($_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["dtype"]); ?>" title="Following <?php echo ucwords($_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["dtype"]); ?>" /></a></td>
+						<td style="width: 33px; height: 23px; text-align: right"><a href="<?php echo ENTRADA_URL.$module_type; ?>/evaluations?<?php echo replace_query(array("dstamp" => time())); ?>"><img src="<?php echo ENTRADA_URL; ?>/images/cal-home.gif" width="23" height="23" alt="Reset to display current calendar <?php echo $_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["dtype"]; ?>." title="Reset to display current calendar <?php echo $_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["dtype"]; ?>." border="0" /></a></td>
 						<td style="width: 33px; height: 23px; text-align: right"><img src="<?php echo ENTRADA_URL; ?>/images/cal-calendar.gif" width="23" height="23" alt="Show Calendar" title="Show Calendar" onclick="showCalendar('', document.getElementById('dstamp'), document.getElementById('dstamp'), '<?php echo html_encode($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dstamp"]); ?>', 'calendar-holder', 8, 8, 1)" style="cursor: pointer" id="calendar-holder" /></td>
 					</tr>
 				</table>
@@ -11518,11 +11518,11 @@ function eval_sche_output_calendar_controls($module_type = "") {
 			<td style="width: 47%; vertical-align: top; text-align: right">
 				<?php
 				if ($scheduler_evaluations["total_pages"] > 1) {
-					echo "<form action=\"".ENTRADA_URL.$module_type."/evaluations/scheduler\" method=\"get\" id=\"pageSelector\">\n";
+					echo "<form action=\"".ENTRADA_URL.$module_type."/evaluations\" method=\"get\" id=\"pageSelector\">\n";
 					echo "<div style=\"white-space: nowrap\">\n";
 					echo "<span style=\"width: 20px; vertical-align: middle; margin-right: 3px; text-align: left\">\n";
 					if ($scheduler_evaluations["page_previous"]) {
-						echo "<a href=\"".ENTRADA_URL.$module_type."/evaluations/scheduler?".replace_query(array("pv" => $scheduler_evaluations["page_previous"]))."\"><img src=\"".ENTRADA_URL."/images/record-previous-on.gif\" border=\"0\" width=\"11\" height=\"11\" alt=\"Back to page ".$scheduler_evaluations["page_previous"].".\" title=\"Back to page ".$scheduler_evaluations["page_previous"].".\" style=\"vertical-align: middle\" /></a>\n";
+						echo "<a href=\"".ENTRADA_URL.$module_type."/evaluations?".replace_query(array("pv" => $scheduler_evaluations["page_previous"]))."\"><img src=\"".ENTRADA_URL."/images/record-previous-on.gif\" border=\"0\" width=\"11\" height=\"11\" alt=\"Back to page ".$scheduler_evaluations["page_previous"].".\" title=\"Back to page ".$scheduler_evaluations["page_previous"].".\" style=\"vertical-align: middle\" /></a>\n";
 					} else {
 						echo "<img src=\"".ENTRADA_URL."/images/record-previous-off.gif\" width=\"11\" height=\"11\" alt=\"\" title=\"\" style=\"vertical-align: middle\" />";
 					}
@@ -11536,7 +11536,7 @@ function eval_sche_output_calendar_controls($module_type = "") {
 					echo "</span>\n";
 					echo "<span style=\"width: 20px; vertical-align: middle; margin-left: 3px; text-align: right\">\n";
 					if ($scheduler_evaluations["page_current"] < $scheduler_evaluations["total_pages"]) {
-						echo "<a href=\"".ENTRADA_URL.$module_type."/evaluations/scheduler?".replace_query(array("pv" => $scheduler_evaluations["page_next"]))."\"><img src=\"".ENTRADA_URL."/images/record-next-on.gif\" border=\"0\" width=\"11\" height=\"11\" alt=\"Forward to page ".$scheduler_evaluations["page_next"].".\" title=\"Forward to page ".$learning_events["page_next"].".\" style=\"vertical-align: middle\" /></a>";
+						echo "<a href=\"".ENTRADA_URL.$module_type."/evaluations?".replace_query(array("pv" => $scheduler_evaluations["page_next"]))."\"><img src=\"".ENTRADA_URL."/images/record-next-on.gif\" border=\"0\" width=\"11\" height=\"11\" alt=\"Forward to page ".$scheduler_evaluations["page_next"].".\" title=\"Forward to page ".$learning_events["page_next"].".\" style=\"vertical-align: middle\" /></a>";
 					} else {
 						echo "<img src=\"".ENTRADA_URL."/images/record-next-off.gif\" width=\"11\" height=\"11\" alt=\"\" title=\"\" style=\"vertical-align: middle\" />";
 					}
@@ -11586,14 +11586,14 @@ function eval_sche_fetch_filtered_evals() {
 			$sort_by = "`fullname` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["so"]).", `evaluations`.`event_start` ASC";
 		break;
 		case "title" :
-			$sort_by = "`events`.`event_title` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["so"]).", `evaluations`.`event_start` ASC";
+			$sort_by = "`evaluation_title` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["so"]).", `evaluations`.`event_start` ASC";
 		break;
 		case "phase" :
 			$sort_by = "`events`.`event_phase` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["so"]).", `evaluations`.`event_start` ASC";
 		break;
 		case "date" :
 		default :
-			$sort_by = "`evaluations`.`evaluation_id` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["so"]);
+			$sort_by = "`evaluation_start` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["so"]);
 		break;
 	}
 
@@ -11771,20 +11771,27 @@ function eval_sche_fetch_filtered_evals() {
 	 	$query_count = str_replace("%CONTACT_JOIN%", $contact_sql, $query_count);
 		$query_events = str_replace("%CONTACT_JOIN%", $contact_sql, $query_events)." GROUP BY `events`.`event_id` ORDER BY %s LIMIT %s, %s";
 	} else {
-		$query_count = "	SELECT COUNT(DISTINCT `events`.`event_id`) AS `total_rows`
-							FROM `events`
-							LEFT JOIN `courses`
-							ON `events`.`course_id` = `courses`.`course_id`
-							WHERE `courses`.`organisation_id` = ".$db->qstr($ORGANISATION_ID)."
-							AND (`events`.`release_date` <= ".$db->qstr(time())." OR `events`.`release_date` = 0)
-							AND (`events`.`release_until` >= ".$db->qstr(time())." OR `events`.`release_until` = 0)
-							".(($display_duration) ? " AND `events`.`event_start` BETWEEN ".$db->qstr($display_duration["start"])." AND ".$db->qstr($display_duration["end"]) : "");
                 /**** Howard ***/
                 $query_count = "	SELECT COUNT(DISTINCT `evaluations`.`evaluation_id`) AS `total_rows`
                                                         FROM `evaluations`";
 		$query_evaluations = "	SELECT `evaluations`.`evaluation_id`, `eform_id`, `evaluation_title`, `evaluation_description`, `evaluation_active`,
                                             `evaluation_start`, `evaluation_finish`, `min_submittable`, `max_submittable`, `release_date`,
                                             `release_until`, `updated_date`, `updated_by` from `evaluations`
+                                            ORDER BY %s
+                                            LIMIT %s, %s";
+		$query_evaluations = "	SELECT a.`evaluation_id`, a.`eform_id`, a.`evaluation_title`, a.`evaluation_description`, a.`evaluation_active`,
+                                            a.`evaluation_start`, a.`evaluation_finish`, a.`min_submittable`, a.`max_submittable`, a.`release_date`,
+                                            a.`release_until`, a.`updated_date`, a.`updated_by`, evaluator_num, target_num from `evaluations` a
+                                            left join
+                                            (
+                                                select evaluation_id, COALESCE(count(*), 0) as evaluator_num from evaluation_evaluators
+                                            ) b
+                                                ON b.`evaluation_id` = a.`evaluation_id`
+                                            left join
+                                            (
+                                                select evaluation_id, COALESCE(count(*), 0) as target_num from evaluation_targets
+                                            ) c
+                                                ON c.`evaluation_id` = a.`evaluation_id`
                                             ORDER BY %s
                                             LIMIT %s, %s";
 	}
@@ -11854,6 +11861,7 @@ function eval_sche_fetch_filtered_evals() {
 	$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["evaluations"]["previous_query"]["total_rows"] = $output["total_rows"];
 
 	$query_evaluations = sprintf($query_evaluations, $sort_by, $limit_parameter, $_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["pp"]);
+        //var_export($query_evaluations);
 	$scheduler_evaluations = $db->GetAll($query_evaluations);
 
         //echo "______log______".'query_evaluations: '. $query_evaluations."<br>";

@@ -2308,7 +2308,7 @@ function readable_size($bytes) {
  * @return string
  */
 function useable_filename($filename) {
-	return strtolower(preg_replace("/[^a-z0-9_\-\.]/i", "_", $filename));
+	return strtolower(preg_replace(array("/(\.)\.+/", "/(\_)\_+/"), "$1", preg_replace(array("/[^a-z0-9_\-\.]/i"), "_", $filename)));
 }
 
 /**

@@ -449,6 +449,7 @@ $MODULES["observerships"] = array("title" => "Manage Observerships", "resource" 
 $MODULES["polls"] = array("title" => "Manage Polls", "resource" => "poll", "permission" => "update");
 $MODULES["quizzes"] = array("title" => "Manage Quizzes", "resource" => "quiz", "permission" => "update");
 $MODULES["users"] = array("title" => "Manage Users", "resource" => "user", "permission" => "update");
+$MODULES["evaluations"] = array("title" => "Manage Evaluations", "resource" => "evaluations", "permission" => "update");
 $MODULES["regionaled"] = array("title" => "Regional Education", "resource" => "regionaled", "permission" => "update");
 $MODULES["reports"] = array("title" => "System Reports", "resource" => "reportindex", "permission" => "read");
 $MODULES["annualreport"] = array("title" => "Annual Reports", "resource" => "annualreportadmin", "permission" => "read");
@@ -596,12 +597,27 @@ define("TASK_RECIPIENT_USER", "user");
 define("TASK_RECIPIENT_CLASS", "grad_year"); 
 define("TASK_RECIPIENT_ORGANISATION", "organisation"); 
 
-//Verification
-define("TASK_VERIFICATION_REQUIRED", true);
-define("TASK_VERIFICATION_NOT_REQUIRED",false);
+
+define("TASK_VERIFICATION_NONE", "none");
+define("TASK_VERIFICATION_FACULTY","faculty");
+define("TASK_VERIFICATION_OTHER","other");
+
+define("TASK_VERIFICATION_NOTIFICATION_OFF", "off");
+define("TASK_VERIFICATION_NOTIFICATION_EMAIL","email");
+
+define("TASK_COMPLETE_COMMENT_NONE", "no_comments");
+define("TASK_COMPLETE_COMMENT_ALLOW", "allow_comments");
+define("TASK_COMPLETE_COMMENT_REQUIRE", "require_comments");
+
+define("TASK_ALLOW_FACULTY_SELECTION",true);
+define("TASK_DISALLOW_FACULTY_SELECTION", false);
+
 
 //Defaults
 define("TASK_DEFAULT_RECIPIENT_TYPE",TASK_RECIPIENT_USER); //options are: user, grad_year, organisation
-define("TASK_DEFAULT_REQUIRE_VERIFICATION", TASK_VERIFICATION_NOT_REQUIRED); //Verification is not required by default
+define("TASK_DEFAULT_VERIFICATION_TYPE", TASK_VERIFICATION_NONE);
+define("TASK_DEFAULT_VERIFICATION_NOTIFICATION", TASK_VERIFICATION_NOTIFICATION_EMAIL);
+define("TASK_DEFAULT_COMPLETE_COMMENT", TASK_COMPLETE_COMMENT_ALLOW);
+define("TASK_DEFAULT_RESUBMIT_COMMENT", TASK_COMPLETE_COMMENT_ALLOW);
 
 define("PDF_PASSWORD","Mm7aeY");

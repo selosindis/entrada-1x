@@ -639,31 +639,37 @@ if (!defined("PARENT_INCLUDED")) {
 					
 					$temp_objectives = $curriculum_objectives["objectives"];
 					foreach ($temp_objectives as $objective_id => $objective) {
-						if (isset($objective["event_objective"]) && $objective["event_objective"]) {
-							if (!array_key_exists($objective_id, $curriculum_objectives["used_ids"])) {
-								$curriculum_objectives["objectives"][$objective_id][($curriculum_objectives["objectives"][$curriculum_objectives["objectives"][$objective_id]["parent"]]["primary"] ? "primary" : "secondary")] = true;
-								$curriculum_objectives[($curriculum_objectives["objectives"][$curriculum_objectives["objectives"][$objective_id]["parent"]]["primary"] ? "primary_ids" : "secondary_ids")][] = $objective_id;
-								$curriculum_objectives["used_ids"][] = $objective_id;
-								foreach ($objective["parent_ids"] as $parent_id) {
-									$curriculum_objectives["objectives"][$parent_id]["objective_children"]++;
-								}
+						unset($curriculum_objectives["used_ids"][$objective_id]);
+						$curriculum_objectives["objectives"][$objective_id]["objective_primary_children"] = 0;
+						$curriculum_objectives["objectives"][$objective_id]["objective_secondary_children"] = 0;
+						$curriculum_objectives["objectives"][$objective_id]["objective_tertiary_children"] = 0;
+					}
+					foreach ($curriculum_objectives["objectives"] as $objective_id => $objective) {
+						if ($objective["event_objective"]) {
+							foreach ($objective["parent_ids"] as $parent_id) {
+								$curriculum_objectives["objectives"][$parent_id]["objective_".($objective["primary"] ? "primary" : ($objective["secondary"] ? "secondary" : "tertiary"))."_children"]++;
+								if ($curriculum_objectives["objectives"][$parent_id]["primary"]) {
+									$curriculum_objectives["objectives"][$objective_id]["primary"] = true;
+								} elseif ($curriculum_objectives["objectives"][$parent_id]["secondary"]) {
+									$curriculum_objectives["objectives"][$objective_id]["secondary"] = true;
+								} elseif ($curriculum_objectives["objectives"][$parent_id]["tertiary"]) {
+									$curriculum_objectives["objectives"][$objective_id]["tertiary"] = true;
+								} 
 							}
 							$show_curriculum_objectives = true;
-						} elseif ((isset($objective["primary"]) && $objective["primary"]) || (isset($objective["secondary"]) && $objective["secondary"])) {
-							foreach ($objective["parent_ids"] as $parent_id) {
-								$curriculum_objectives["objectives"][$parent_id]["objective_children"]--;
-							}
-							unset($curriculum_objectives["used_ids"][$objective_id]);
+						}
+					}
+					foreach ($temp_objectives as $objective_id => $objective) {
+						if (!$objective["event_objective"]) {
 							if ($objective["primary"]) {
-								unset($curriculum_objectives["primary_ids"][$objective_id]);
 								$curriculum_objectives["objectives"][$objective_id]["primary"] = false;
 							} elseif ($objective["secondary"]) {
-								unset($curriculum_objectives["secondary_ids"][$objective_id]);
 								$curriculum_objectives["objectives"][$objective_id]["secondary"] = false;
+							} elseif ($objective["tertiary"]) {
+								$curriculum_objectives["objectives"][$objective_id]["tertiary"] = false;
 							}
 						}
 					}
-					
 					if ($show_event_objectives || $show_clinical_presentations || $show_curriculum_objectives) {
 						$include_objectives = true;
 
@@ -726,7 +732,7 @@ if (!defined("PARENT_INCLUDED")) {
 							echo "<div class=\"section-holder\">\n";
 							echo "	<h3>Curriculum Objectives</h3>\n";
 							echo "	<strong>The learner will be able to:</strong>";
-							echo	course_objectives_in_list($curriculum_objectives["objectives"], 1, false, false, 1, false, true)."\n";
+							echo	course_objectives_in_list($curriculum_objectives, 1, false, false, 1, true)."\n";
 							echo "</div>\n";
 						}
 						echo "</div>\n";

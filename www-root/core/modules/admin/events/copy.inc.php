@@ -449,11 +449,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						addActive=0;
 						return ;
 					}
-					function newEventDate(id,title,start) {
-						if (addActive) {
-							stowRow();
-							return;
-							}
+					function newEventDate(id,title,start,hour,min) {
+						if (addActive) { stowRow(); return; }
 						addActive = 1;
 						tTitle=title; tEv=id;
 						var row = document.getElementById('dateRow');
@@ -463,6 +460,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						tbody.insertBefore(row, fRow.nextSibling);
 						row.style.display="";
 						setDateValue(document.getElementById("cEvent_date"),start);
+						document.getElementById('cEvent_hour').value = hour;
+						document.getElementById('cEvent_min').value = min;
 						return;
 					}
 					function deleteNewEvent(rVal) {
@@ -487,7 +486,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						copies.push(tRow);
 						document.getElementById("eventCopies").value = copies.toString();
 						document.getElementById("tSubmit").style.visibility="visible";
-						var line = "<tr id='tR"+tRow+"'><td align='center'><a href=javascript:deleteNewEvent('"+tRow+"')><img src='<?php echo ENTRADA_URL; ?>/images/action-delete.gif' width='12' height='12' alt='Remove this event copy' title='Remove this Event from copy list.' border='0' ></td><td>"+tDate+" "+tHour+":"+tMin+"</td><td style='font-size: 9px' colspan=2>to be copied (click '-' to remove)</td><td>"+tTitle+"</td></a></tr>";
+						var line = "<tr id='tR"+tRow+"'><td align='center'><a href=javascript:deleteNewEvent('"+tRow+"')><img src='<?php echo ENTRADA_URL; ?>/images/action-delete.gif' width='12' height='12' alt='Remove this event copy' title='Remove this Event from copy list.' border='0' ></td><td>"+tDate+" "+tHour+":"+tMin+"</td><td style='font-size: 9px' colspan=2>to be copied (click '-' to remove)</td><td colspan=2>"+tTitle+"</td></a></tr>";
 						appendTableRows(document.getElementById("rEvent-"+tEv), line);
 						return;
 					}
@@ -513,24 +512,22 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						</tr>
 					</thead>
 					<tfoot>
-						<tr id="tSubmit" style="visibility: hidden" >
+						<tr id="tSubmit" style="visibility: hidden"  >
 							<td></td>
-							<td style="padding-top: 10px">
-								<input type="submit" class="button" value="Copy Events" />
-							</td>
 							<td colspan="3" style="padding-top: 10px">
 								<input type="button" name="Cancel" value="Cancel" onclick="history.go(-1)" />
+							</td>
+							<td style="padding-top: 10px">
+								<input type="submit" class="button" align="center" value="Copy Events" />
 							</td>
 						</tr>
 					</tfoot>
 					<tbody>
 						<?php
 						echo "<tr id=\"dateRow\" style=\"background-color:#ffd;display:none\">";
-						echo "<td style=\"border: 0\" /><td style=\"border: 0\" colspan=5>";
-						echo "<table>";
-						echo "<tr><td colspan=1><table>" . generate_calendar("cEvent", "Set Copy's Date & Time", true) . "</table></td>";
-						echo "<td class=\"attachment\"><a href=\"javascript:acceptEvent()\">(Click here to Add)</a></td>\n";
-						echo "<td /></tr></table></td></tr>";
+						echo "<td /><td colspan=5><table><tr><td style=\"border: 0\"><table>" . generate_calendar("cEvent", "Set Copy's Date & Time", true) . "</table></td>";
+						echo "<td style=\"border: 0\"><input type=\"button\" class=\"button-sm\" onclick=\"javascript:acceptEvent()\" value=\"Add\" style=\"vertical-align: middle\" /></td>";
+						echo "</tr></table></td></tr>";
 						foreach($results as $result) {
 							$url			= "";
 							$accessible		= true;
@@ -543,7 +540,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							}
 			
 							if($administrator) {
-								$url	= "javascript:newEventDate(". $result["event_id"]. ", '". $result["event_title"]. "', '".date('Y-m-d', $result["event_start"])."')";
+								$url	= "javascript:newEventDate(". $result["event_id"]. ", '". $result["event_title"]. "', '".date('Y-m-d', $result["event_start"]). "', '".date('H', $result["event_start"]). "', '".date('i', $result["event_start"])."')";
 								echo "<tr id=\"rEvent-".$result["event_id"]."\" class=\"event".((!$url) ? " np" : ((!$accessible) ? " na" : ""))."\">\n";
 								echo "	<td class=\"modified\"><a href=\"$url\"><img src=\"".ENTRADA_URL."/images/btn_add.gif\" alt=\"Copy Event and Content\" title=\"Copy Event and Content\" border=\"0\" /></a></td>\n";
 								echo "	<td class=\"date".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Event Date\">" : "").date(DEFAULT_DATE_FORMAT, $result["event_start"]).(($url) ? "</a>" : "")."</td>\n";

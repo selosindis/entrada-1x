@@ -104,16 +104,16 @@ if (!defined("IN_EVALUATIONS")) {
 	 * Fetch all of the events that apply to the current filter set.
 	 */
 	$scheduler_evaluations = eval_sche_fetch_filtered_evals();
-
-	echo "<h1>".$MODULES[strtolower($MODULE)]["title"]."</h1>";
+        //var_export($scheduler_evaluations);
 
 	/**
+        echo "<h1>".$MODULES[strtolower($MODULE)]["title"]."</h1>";
 	 * Output the filter HTML.
 	 */
 	//eval_sche_output_filter_controls("admin");
         //eval_sche_evaluators_filter_controls("admin");
 
-	if ($ENTRADA_ACL->amIAllowed("event", "create", false)) {
+	if ($ENTRADA_ACL->amIAllowed("evaluation", "create", false)) {
 		?>
 		<div style="float: right">
 			<ul class="page-action">

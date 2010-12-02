@@ -199,29 +199,62 @@ function removeObjective(element, primary) {
 }
 
 function moveObjective(objective_id, move_location) {
-	var move_from = '';
-	if ($('primary_objective_'+objective_id) != undefined) {
-		move_from = "primary";
-	} else if ($('secondary_objective_'+objective_id) != undefined) {
-		move_from = "secondary";
-	} else if ($('tertiary_objective_'+objective_id) != undefined) {
-		move_from = "tertiary";
-	}
-	$(move_from+'_objective_'+objective_id).className 	= move_location+'_objectives'; 
-	$(move_from+'_objective_'+objective_id).name		= move_location+'_objectives[]';
-	$(move_from+'_objective_'+objective_id).id			= move_location+'_objective_'+objective_id;
-	$('row_'+objective_id).removeClassName(move_from);
-	$('row_'+objective_id).addClassName(move_location);
-	if ($('objective_'+objective_id+'_list')) {
-		$$('#objective_'+objective_id+'_list li').each(
-			function (e) {
-				e.addClassName(move_location);
-				e.removeClassName(move_from);
+	var ids = new Array();
+	ids["primary"] = "";
+	ids["secondary"] = "";
+	ids["tertiary"] = "";
+	ids[move_location] = objective_id;
+
+	var alreadyAdded = true;
+	$$('input.primary_objectives').each(
+		function (e) {
+			if (e.value != objective_id) {
+				if (!ids["primary"]) {
+					ids["primary"] = e.value;
+				} else {
+					ids["primary"] += ','+e.value;
+				}
 			}
-		);
-	} else {
-		$('objective_'+objective_id+'_row').addClassName(move_location);
-		$('objective_'+objective_id+'_row').removeClassName(move_from);
-	}
+		}
+	);
+	$$('input.secondary_objectives').each(
+		function (e) {
+			if (e.value != objective_id) {
+				if (!ids["secondary"]) {
+					ids["secondary"] = e.value;
+				} else {
+					ids["secondary"] += ','+e.value;
+				}
+			}
+		}
+	);
+	$$('input.tertiary_objectives').each(
+		function (e) {
+			if (e.value != objective_id) {
+				if (!ids["tertiary"]) {
+					ids["tertiary"] = e.value;
+				} else {
+					ids["tertiary"] += ','+e.value;
+				}
+			}
+		}
+	);
+	
+	var attrs = {
+        type		: 'hidden',
+        className	: move_location+'_objectives',
+        id			: move_location+'_objective_'+objective_id,
+        value		: objective_id,
+        name		: move_location+'_objectives[]'
+	};
+
+    var newInput = new Element('input', attrs);
+	$('objectives_head').insert({after: newInput});
+	new Ajax.Updater('objectives_list', '<?php echo ENTRADA_URL; ?>/api/objectives.api.php', 
+		{
+			method:	'post',
+			parameters: 'course_ids=<?php echo $course_ids_string ?>&primary_ids='+ids["primary"]+"&secondary_ids="+ids["secondary"]+"&tertiary_ids="+ids["tertiary"]
+    	}
+    );
 }
 </script>

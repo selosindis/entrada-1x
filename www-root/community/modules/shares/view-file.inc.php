@@ -191,29 +191,33 @@ if ($RECORD_ID) {
 						}
 					);
 				}
-				<?php endif; ?>
-
-				function revisionDelete(id) {
-					Dialog.confirm('Do you really wish to deactivate the '+ $('file-version-' + id + '-title').innerHTML +' revision?<br /><br />If you confirm this action, you will no longer be able to download this version of the file.',
-						{
-							id:				'requestDialog',
-							width:			350,
-							height:			125,
-							title:			'Delete Confirmation',
-							className:		'medtech',
-							okLabel:		'Yes',
-							cancelLabel:	'No',
-							closable:		'true',
-							buttonClass:	'button small',
-							ok:				function(win) {
-												window.location = '<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=delete-revision&id='+id;
-												return true;
-											}
-						}
-					);
+				<?php 
+				endif; 
+				if (shares_file_module_access($RECORD_ID, "delete-revision")) {
+					?>
+	
+					function revisionDelete(id) {
+						Dialog.confirm('Do you really wish to deactivate the '+ $('file-version-' + id + '-title').innerHTML +' revision?<br /><br />If you confirm this action, you will no longer be able to download this version of the file.',
+							{
+								id:				'requestDialog',
+								width:			350,
+								height:			125,
+								title:			'Delete Confirmation',
+								className:		'medtech',
+								okLabel:		'Yes',
+								cancelLabel:	'No',
+								closable:		'true',
+								buttonClass:	'button small',
+								ok:				function(win) {
+													window.location = '<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=delete-revision&id='+id;
+													return true;
+												}
+							}
+						);
+					}
+					</script>
+					<?php
 				}
-				</script>
-				<?php
 				/**
 				 * If there is time release properties, display them to the browsing users.
 				 */

@@ -49,7 +49,7 @@ if (!defined("PARENT_INCLUDED")) {
 		 */
 		$sidebar_html  = "<ul class=\"menu\">";
 		//$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/evaluations\">Manage Evaluations</a></li>\n";
-		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/evaluations/scheduler\">Manage Scheduler</a></li>\n";
+		//$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/evaluations\">Manage Scheduler</a></li>\n";
 		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/evaluations/forms\">Manage Forms</a></li>\n";
 		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/evaluations/notifications\">Manage Notifications</a></li>\n";
 		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/evaluations/reports\">Evaluation Reports</a></li>\n";

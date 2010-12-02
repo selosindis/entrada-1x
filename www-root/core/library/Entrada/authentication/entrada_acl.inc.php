@@ -26,7 +26,11 @@ class Entrada_ACL extends ACL_Factory {
 					"eventcontent"
 				)
 			),
-			"evaluation",
+			"evaluation" => array (
+				"evaluationform" => array (
+					"evaluationformquestion"
+				),
+			),
 			"gradebook" => array(
 				"assessment"
 			),

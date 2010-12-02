@@ -11763,7 +11763,7 @@ function eval_sche_fetch_filtered_evals() {
                                             LIMIT %s, %s";
 		$query_evaluations = "	SELECT a.`evaluation_id`, a.`eform_id`, a.`evaluation_title`, a.`evaluation_description`, a.`evaluation_active`,
                                             a.`evaluation_start`, a.`evaluation_finish`, a.`min_submittable`, a.`max_submittable`, a.`release_date`,
-                                            a.`release_until`, a.`updated_date`, a.`updated_by`, evaluator_num, target_num from `evaluations` a
+                                            a.`release_until`, a.`updated_date`, a.`updated_by`, COALESCE(evaluator_num, 0) as evaluator_num, COALESCE(target_num, 0) as target_num from `evaluations` a
                                             left join
                                             (
                                                 select evaluation_id, COALESCE(count(*), 0) as evaluator_num from evaluation_evaluators

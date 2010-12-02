@@ -53,12 +53,6 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 		if($evaluation_info) {
 				$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/evaluations?".replace_query(array("section" => "edit", "id" => $EVALUATION_ID)), "title" => "Editing Evaluation");
 
-				$PROCESSED["associated_faculty"]	= array();
-				$PROCESSED["event_audience_type"]	= "grad_year";
-				$PROCESSED["associated_grad_year"]	= "";
-				$PROCESSED["associated_group_ids"]	= array();
-				$PROCESSED["associated_proxy_ids"]	= array();
-				$PROCESSED["event_types"]			= array();
 
 				echo "<div class=\"no-printing\">\n";
 				echo "	<div style=\"float: right; margin-top: 8px\">\n";
@@ -82,6 +76,9 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
                                                 }
                                                 if((isset($_POST["evaluation_description"])) && ($evaluation_description = clean_input($_POST["evaluation_description"], array("notags", "trim")))) {
                                                         $PROCESSED["evaluation_description"] = $evaluation_description;
+                                                }
+                                                if((isset($_POST["eform_id"])) && ($eform_id = clean_input($_POST["eform_id"], array("notags", "trim")))) {
+                                                        $PROCESSED["eform_id"] = $eform_id;
                                                 }
 
                                                 if((isset($_POST["evaluation_active"])) && ($evaluation_active = clean_input($_POST["evaluation_active"], array("notags", "trim")))) {
@@ -168,6 +165,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 							}
 
 							$PROCESSED["eventtype_id"] = $PROCESSED["event_types"][0][0];
+                                                        echo "eform_id: ".$$PROCESSED["eform_id"]."<br>";
                                                         **/
 
 							if($db->AutoExecute("evaluations", $PROCESSED, "UPDATE", "`evaluation_id` = ".$db->qstr($EVALUATION_ID))) {
@@ -208,63 +206,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					case 1 :
 					default :
 						$PROCESSED	= $evaluation_info;
-
-						/**
-						 * Add existing event type segments to the processed array.
-						 */
-						$query		= "	SELECT *
-										FROM `event_eventtypes` AS `types`
-										LEFT JOIN `events_lu_eventtypes` AS `lu_types`
-										ON `lu_types`.`eventtype_id` = `types`.`eventtype_id`
-										WHERE `event_id` = ".$db->qstr($EVALUATION_ID)."
-										ORDER BY `types`.`eeventtype_id` ASC";
-						$results	= $db->GetAll($query);
-						if ($results) {
-							foreach ($results as $contact_order => $result) {
-								$PROCESSED["event_types"][] = array($result["eventtype_id"], $result["duration"], $result["eventtype_title"]);
-							}
-						}
-
-						/**
-						 * Add any existing associated faculty from the event_contacts table
-						 * into the $PROCESSED["associated_faculty"] array.
-						 */
-						$query		= "SELECT * FROM `event_contacts` WHERE `event_id` = ".$db->qstr($EVALUATION_ID)." ORDER BY `contact_order` ASC";
-						$results	= $db->GetAll($query);
-						if($results) {
-							foreach($results as $contact_order => $result) {
-								$PROCESSED["associated_faculty"][(int) $contact_order] = $result["proxy_id"];
-							}
-						}
-
-						$query		= "SELECT * FROM `event_audience` WHERE `event_id` = ".$db->qstr($EVALUATION_ID);
-						$results	= $db->GetAll($query);
-						if($results) {
-						/**
-						 * Set the audience_type.
-						 */
-							$PROCESSED["event_audience_type"] = $results[0]["audience_type"];
-
-							foreach($results as $result) {
-								if($result["audience_type"] == $PROCESSED["event_audience_type"]) {
-									switch($result["audience_type"]) {
-										case "grad_year" :
-											$PROCESSED["associated_grad_year"]		= (int) $result["audience_value"];
-											break;
-										case "group_id" :
-											$PROCESSED["associated_group_ids"][]	= (int) $result["audience_value"];
-											break;
-										case "proxy_id" :
-											$PROCESSED["associated_proxy_ids"][]	= (int) $result["audience_value"];
-											break;
-										case "organisation_id" :
-											$PROCESSED["associated_organisation_id"]		= (int) $result["audience_value"];
-											break;
-
-									}
-								}
-							}
-						}
+					
 						break;
 				}
 
@@ -398,18 +340,19 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					</tr>
 					<tr>
 						<td></td>
-						<td style="vertical-align: top"><label for="eventtype_ids" class="form-required">Evaluation Form</label></td>
+						<td style="vertical-align: top"><label for="eform_ids" class="form-required">Evaluation Form</label></td>
 						<td>
-							<select id="eventtype_ids" name="eventtype_ids">
+							<select id="eform_id" name="eform_id">
 								<option id="-1"> -- Pick a type to add -- </option>
 								<?php
-								$query		= "SELECT * FROM `events_lu_eventtypes` WHERE `eventtype_active` = '1' ORDER BY `eventtype_order` ASC";
+								$query		= "SELECT * FROM `evaluation_forms` WHERE `form_active` = '1' ORDER BY `updated_date` ASC";
 								$results	= $db->GetAll($query);
 								if($results) {
-									$event_types = array();
 									foreach($results as $result) {
-										$title = html_encode($result["eventtype_title"]);
-										echo "<option value=\"".$result["eventtype_id"]."\">".$title."</option>";
+										$title = html_encode($result["form_title"]);
+										$eform_id = html_encode($result["eform_id"]);
+                                                                                //echo $eform_id."--";
+										echo "<option value=\"".$result["eform_id"].(($PROCESSED["eform_id"] == $result["eform_id"]) ? " selected=\"selected\"" : "")."\"> ".$title."</option>";
 									}
 								}
 								?>

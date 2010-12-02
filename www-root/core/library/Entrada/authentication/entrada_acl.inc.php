@@ -29,8 +29,8 @@ class Entrada_ACL extends ACL_Factory {
 			"evaluation" => array (
 				"evaluationform" => array (
 					"evaluationformquestion"
-				)
-			)
+				),
+			),
 			"gradebook" => array(
 				"assessment"
 			),

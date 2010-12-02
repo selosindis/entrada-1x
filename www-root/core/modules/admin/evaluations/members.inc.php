@@ -57,6 +57,11 @@ if((isset($_GET["type"])) && ($tmp_action_type = clean_input(trim($_GET["type"])
 }
 unset($tmp_action_type);
 
+if((isset($_GET["target_type_added"])) && ((int) trim($_GET["target_type_added"]))) {
+	$target_type_added	= (int) trim($_GET["target_type_added"]);
+} elseif((isset($_POST["target_type_added"])) && ((int) trim($_POST["target_type_added"]))) {
+	$target_type_added	= (int) trim($_POST["target_type_added"]);
+}
 /**
  * Ensure that the selected community is editable by you.
  */
@@ -85,14 +90,14 @@ if($EVALUATION_ID) {
 				case 2 :
 					switch($ACTION_TYPE) {
 						case "addgroup" :
-                                                    if (isset($_POST["event_audience_type"])) {
-                                                        $PROCESSED["event_audience_type"] = clean_input($_POST["event_audience_type"], array("page_url"));
+                                                    if (isset($_POST["eval_evaluator_type"])) {
+                                                        $PROCESSED["eval_evaluator_type"] = clean_input($_POST["eval_evaluator_type"], array("page_url"));
 
-                                                        switch($PROCESSED["event_audience_type"]) {
+                                                        switch($PROCESSED["eval_evaluator_type"]) {
                                                                 case "grad_year" :
                                                                         /**
                                                                          * Required field "associated_grad_year" / Graduating Year
-                                                                         * This data is inserted into the event_audience table as grad_year.
+                                                                         * This data is inserted into the eval_evaluator table as grad_year.
                                                                          */
                                                                         if ((isset($_POST["associated_grad_year"])) && ($associated_grad_year = clean_input($_POST["associated_grad_year"], array("trim", "int")))) {
                                                                                 $PROCESSED["associated_grad_year"] = $associated_grad_year;
@@ -125,22 +130,22 @@ if($EVALUATION_ID) {
                                                                         $ERROR++;
                                                                         $ERRORSTR[] = "Unable to proceed because the <strong>Event Audience</strong> type is unrecognized.";
 
-                                                                        application_log("error", "Unrecognized event_audience_type [".$_POST["event_audience_type"]."] encountered.");
+                                                                        application_log("error", "Unrecognized eval_evaluator_type [".$_POST["eval_evaluator_type"]."] encountered.");
                                                                 break;
                                                                 }
                                                             } else {
                                                                 $ERROR++;
                                                                 $ERRORSTR[] = "Unable to proceed because the <strong>Evaluation Group</strong> type is unrecognized.";
 
-                                                                application_log("error", "The event_audience_type field has not been set.");
+                                                                application_log("error", "The eval_evaluator_type field has not been set.");
                                                             }
                                                         $member_add_success	= 0;
 							$member_add_failure	= 0;
-                                                        switch($PROCESSED["event_audience_type"]) {
+                                                        switch($PROCESSED["eval_evaluator_type"]) {
                                                                 case "grad_year" :
                                                                         /**
                                                                          * If there are any graduating years associated with this event,
-                                                                         * add it to the event_audience table.
+                                                                         * add it to the eval_evaluator table.
                                                                          */
                                                                         if ($PROCESSED["associated_grad_year"]) {
                                                                             if ($PROCESSED["random_number"]==100){
@@ -194,15 +199,15 @@ if($EVALUATION_ID) {
                                                                 break;
                                                                 case "organisation_id":
                                                                         if (isset($PROCESSED["associated_organisation_id"])) {
-                                                                                if (!$db->AutoExecute("event_audience", array("event_id" => $EVENT_ID, "audience_type" => "organisation_id", "audience_value" => $PROCESSED["associated_organisation_id"], "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT")) {
+                                                                                if (!$db->AutoExecute("eval_evaluator", array("event_id" => $EVENT_ID, "audience_type" => "organisation_id", "audience_value" => $PROCESSED["associated_organisation_id"], "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT")) {
                                                                                         $ERROR++;
                                                                                         $ERRORSTR[] = "There was an error while trying to attach the selected <strong>Proxy ID</strong> to this event.<br /><br />The system administrator was informed of this error; please try again later.";
-                                                                                        application_log("error", "Unable to insert a new event_audience, proxy_id record while adding a new event. Database said: ".$db->ErrorMsg());
+                                                                                        application_log("error", "Unable to insert a new eval_evaluator, proxy_id record while adding a new event. Database said: ".$db->ErrorMsg());
                                                                                 }
                                                                         }
                                                                 break;
                                                                 default :
-                                                                        application_log("error", "Unrecognized event_audience_type [".$_POST["event_audience_type"]."] encountered, no audience added for event_id [".$EVENT_ID."].");
+                                                                        application_log("error", "Unrecognized eval_evaluator_type [".$_POST["eval_evaluator_type"]."] encountered, no audience added for event_id [".$EVENT_ID."].");
                                                                 break;
                                                         }
 							break;
@@ -240,6 +245,46 @@ if($EVALUATION_ID) {
 							if($member_add_failure) {
 								$NOTICE++;
 								$NOTICESTR[] = "Failed to add or update".$member_add_failure." member".(($member_add_failure != 1) ? "s" : "")." during this process. The MEdTech Unit has been informed of this error, please try again later.<br /><br />You will now be redirected back to the Manage Evaluators page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/evaluations?section=members&evaluation=".$EVALUATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
+							}
+							break;
+						case "addtarget" :
+							$member_add_success	= 0;
+							$member_add_failure	= 0;
+                                                        echo "target: ".$target_type_added."<br>";
+							if((isset($_POST["acc_target_members"])) && ($proxy_ids = explode(',', $_POST["acc_target_members"])) && (count($proxy_ids))) {
+								if ($MAILING_LISTS["active"]) {
+									$mail_list = new MailingList($EVALUATION_ID);
+								}
+
+								foreach($proxy_ids as $proxy_id) {
+									if(($proxy_id = (int) trim($proxy_id))) {
+												$PROCESSED = array();
+												$PROCESSED["evaluation_id"]	= $EVALUATION_ID;
+												$PROCESSED["target_id"]	= $target_type_added;
+												$PROCESSED["target_value"]	= $proxy_id;
+												$PROCESSED["target_active"]	= "1";
+                                                                                                $PROCESSED["updated_date"]	= time();
+                                                                                                $PROCESSED["updated_by"]	= $_SESSION["details"]["id"];
+
+												if(@$db->AutoExecute("evaluation_targets", $PROCESSED, "INSERT")) {
+													$member_add_success++;
+												} else {
+													$member_add_failure++;
+													application_error("error", "Unable to insert a new target. Database said: ".$db->ErrorMsg());
+												}
+									}
+								}
+							}
+
+							if($member_add_success) {
+								$SUCCESS++;
+								$SUCCESSSTR[] = "You have successfully added ".$member_add_success." new targets".(($member_add_success != 1) ? "s" : "")." to this evaluation.<br /><br />You will now be redirected back to the Manage Targets page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/evaluations?section=members&evaluation=".$EVALUATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
+
+								communities_log_history($EVALUATION_ID, 0, $member_add_success, "community_history_add_members", 1);
+							}
+							if($member_add_failure) {
+								$NOTICE++;
+								$NOTICESTR[] = "Failed to add or update".$member_add_failure." member".(($member_add_failure != 1) ? "s" : "")." during this process. The MEdTech Unit has been informed of this error, please try again later.<br /><br />You will now be redirected back to the Manage Targets page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/evaluations?section=members&evaluation=".$EVALUATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
 							}
 							break;
 						case "members" :
@@ -588,6 +633,174 @@ if($EVALUATION_ID) {
 							?>
 	</div>
 	<div class="tab-page members">
+		<h2 class="tab">Targets</h2>
+		<h2 style="margin-top: 0px">Targets</h2>
+							<?php
+							/**
+							 * Get the total number of results using the generated queries above and calculate the total number
+							 * of pages that are available based on the results per page preferences.
+							 */
+							$query	= "SELECT COUNT(*) AS `total_rows` FROM `evaluation_targets` WHERE `evaluation_id` = ".$db->qstr($EVALUATION_ID);
+							$result	= $db->GetRow($query);
+							if($result) {
+								$TOTAL_ROWS	= $result["total_rows"];
+
+								if($TOTAL_ROWS <= $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) {
+									$TOTAL_PAGES = 1;
+								} elseif (($TOTAL_ROWS % $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) == 0) {
+									$TOTAL_PAGES = (int) ($TOTAL_ROWS / $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]);
+								} else {
+									$TOTAL_PAGES = (int) ($TOTAL_ROWS / $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) + 1;
+								}
+
+								if(isset($_GET["mpv"])) {
+									$PAGE_CURRENT = (int) trim($_GET["mpv"]);
+
+									if(($PAGE_CURRENT < 1) || ($PAGE_CURRENT > $TOTAL_PAGES)) {
+										$PAGE_CURRENT = 1;
+									}
+								} else {
+									$PAGE_CURRENT = 1;
+								}
+
+								if($TOTAL_PAGES > 1) {
+									$member_pagination = new Pagination($PAGE_CURRENT, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"], $TOTAL_ROWS, ENTRADA_URL."/".$MODULE, replace_query(), "mpv");
+								} else {
+									$member_pagination = false;
+								}
+							} else {
+								$TOTAL_ROWS		= 0;
+								$TOTAL_PAGES	= 1;
+							}
+							if (!isset($PAGE_CURRENT) || !$PAGE_CURRENT) {
+								if(isset($_GET["mpv"])) {
+									$PAGE_CURRENT = (int) trim($_GET["mpv"]);
+
+									if(($PAGE_CURRENT < 1) || ($PAGE_CURRENT > $TOTAL_PAGES)) {
+										$PAGE_CURRENT = 1;
+									}
+								} else {
+									$PAGE_CURRENT = 1;
+								}
+							}
+
+							$PAGE_PREVIOUS	= (($PAGE_CURRENT > 1) ? ($PAGE_CURRENT - 1) : false);
+							$PAGE_NEXT		= (($PAGE_CURRENT < $TOTAL_PAGES) ? ($PAGE_CURRENT + 1) : false);
+
+							/**
+							 * Provides the first parameter of MySQLs LIMIT statement by calculating which row to start results from.
+							 */
+							$limit_parameter = (int) (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"] * $PAGE_CURRENT) - $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]);
+							$query		= "
+										SELECT a.*, b.`username`, b.`firstname`, b.`lastname`, b.`email`, c.`group`
+										FROM `evaluation_targets` AS a
+										LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
+										ON a.`evaluator_value` = b.`id`
+										LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS c
+										ON c.`user_id` = b.`id`
+										AND c.`app_id` IN (".AUTH_APP_IDS_STRING.")
+										WHERE a.`evaluation_id` = ".$db->qstr($EVALUATION_ID)."
+										GROUP BY b.`id`
+										ORDER BY %s
+										LIMIT %s, %s";
+
+                                                        $query1		= "
+                                                                          select * from (
+										(
+                                                                                SELECT a.updated_date, d.target_shortname as target_type, a.eevaluator_id, b.`username` as user_name, b.`firstname` as first_name, b.`lastname` as last_name, concat(concat(c.`group`,' > '),c.`role`) as group_role
+										FROM `entrada`.`evaluation_targets` AS a
+										LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
+										ON a.`target_value` = b.`id`
+										LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS c
+										ON c.`user_id` = b.`id`
+										AND c.`app_id` IN (".AUTH_APP_IDS_STRING.")
+										LEFT JOIN `".AUTH_DATABASE."`.`evaluations_lu_targets` AS d
+										ON a.`target_id` = d.`target_id`
+										WHERE a.`evaluation_id` = ".$db->qstr($EVALUATION_ID)."
+                                                                                AND target_id in ('2', '3', '6', 7', '8')
+										GROUP BY b.`id`
+                                                                                )
+                                                                                union
+										(
+                                                                                SELECT updated_date, 'course' target_type, eevaluator_id, `course_name` as user_name, `course_name` as first_name, '' as last_name,'course' as group_role
+										FROM `entrada`.`evaluation_evaluators` AS a
+										LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
+										ON a.`target_value` = b.`course_id`
+										WHERE a.`evaluation_id` = ".$db->qstr($EVALUATION_ID)."
+                                                                                AND target_id= '1'
+										)
+                                                                            ) as t
+										LIMIT %s, %s
+                                                                            ";
+
+							$query		= sprintf($query1, $limit_parameter, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]);
+                                                        $results	= $db->GetAll($query);
+                                                        //echo "______log______"."query1: ".$query1."<br>";
+                                                        //echo "______log______"."total_rows: ".$results["total_rows"]."<br>";
+
+							if($results) {
+								if(($TOTAL_PAGES > 1) && ($member_pagination)) {
+									echo "<div id=\"pagination-links\">\n";
+									echo "Pages: ".$member_pagination->GetPageLinks();
+									echo "</div>\n";
+								}
+								?>
+								<form action="<?php echo ENTRADA_URL."/admin/evaluations?".replace_query(array("section" => "members", "type" => "targets", "step" => 2)); ?>" method="post">
+								<table class="tableList" style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Community Members">
+								<colgroup>
+									<col class="modified" />
+									<col class="date" />
+									<col class="title" />
+									<col class="list-status" />
+									<col class="type" />
+									<col class="status" />
+								</colgroup>
+								<thead>
+									<tr>
+										<td class="modified">&nbsp;</td>
+										<td class="date<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "date") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo public_order_link("date", "Target Since"); ?></td>
+										<td class="title<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "name") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo public_order_link("name", "Target Name"); ?></td>
+										<td class="list-status<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "list-status") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>">Group & Role</td>
+                                                                                <td class="type<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "type") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo public_order_link("type", "Target Type"); ?></td>
+                                                                                <td class="status<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "type") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"> Status </td>
+
+									</tr>
+								</thead>
+								<tfoot>
+									<tr>
+										<td colspan="2" style="padding-top: 15px">&nbsp;</td>
+										<td style="padding-top: 15px; text-align: right" colspan="3">
+											<select id="member_action" name="member_action" style="vertical-align: middle; width: 200px">
+												<option value="">-- Select Evaluator Action --</option>
+												<option value="delete">1. Remove evaluators</option>
+											</select>
+											<input type="submit" class="button-sm" value="Proceed" style="vertical-align: middle" />
+										</td>
+									</tr>
+								</tfoot>
+								<tbody>
+								<?php
+								foreach($results as $result) {
+									echo "<tr>\n";
+									echo "	<td><input type=\"checkbox\" name=\"member_proxy_ids[]\" value=\"".(int) $result["eevaluator_id"]."\" /></td>\n";
+									echo "	<td>".date(DEFAULT_DATE_FORMAT, $result["updated_date"])."</td>\n";
+									echo "	<td><a href=\"".ENTRADA_URL."/people?profile=".html_encode($result["user_name"])."\"".(($result["proxy_id"] == $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]) ? " style=\"font-weight: bold" : "")."\">".html_encode($result["first_name"]." ".$result["last_name"])."</a></td>\n";
+									echo "	<td>".$result["group_role"]."</td>\n";
+									echo "	<td>".$result["target_type"]."</td>\n";
+									echo "	<td></td>\n";
+									echo "</tr>\n";
+								}
+								?>
+								</tbody>
+								</table>
+								</form>
+								<?php
+							} else {
+								echo display_notice(array("Your evaluation has no evaluators at this time, you should add some people by clicking the &quot;<strong>Add Evaluators</strong>&quot; tab."));
+							}
+							?>
+	</div>
+	<div class="tab-page members">
 		<h2 class="tab">Add Evaluators</h2>
 		<h2 style="margin-top: 0px">Add Evaluators</h2>
 		<form action="<?php echo ENTRADA_URL."/admin/evaluations?".replace_query(array("section" => "members", "type" => "add", "step" => 2)); ?>" method="post">
@@ -789,18 +1002,18 @@ if($EVALUATION_ID) {
 			<input type="hidden" name="evaluation_id" value="<?php echo $EVALUATION_ID;?>" />
 			<table cellspacing="0" cellpadding="0" border="0">
 					<tr>
-						<td style="vertical-align: top"><input type="radio" name="event_audience_type" id="event_audience_type_grad_year" value="grad_year" onclick="selectEventAudienceOption('grad_year')" style="vertical-align: middle" checked=checked/></td>
+						<td style="vertical-align: top"><input type="radio" name="eval_evaluator_type" id="eval_evaluator_type_grad_year" value="grad_year" onclick="selectEventAudienceOption('grad_year')" style="vertical-align: middle" checked=checked/></td>
 						<td colspan="2" style="padding-bottom: 15px">
-							<label for="event_audience_type_grad_year" class="radio-group-title">Entire Class Evaluation</label>
+							<label for="eval_evaluator_type_grad_year" class="radio-group-title">Entire Class Evaluation</label>
 							<div class="content-small">This evaluation is intended for an entire class.</div>
 						</td>
 					</tr>
-                                        <tr class="event_audience grad_year_audience">
+                                        <tr class="eval_evaluator grad_year_audience">
                                             <td></td>
-                                            <td><label for="random_number" class="form-required">Random Number</label></td>
-                                            <td><input type="text" id="random_number" name="random_number" value="100" maxlength="3" style="width: 60px" /></td>
+                                            <td><label for="random_number" class="form-required">Random Percentage Number</label></td>
+                                            <td><input type="text" id="random_number" name="random_number" value="100" maxlength="3" style="width: 60px" />%</td>
                                         </tr>
-					<tr class="event_audience grad_year_audience">
+					<tr class="eval_evaluator grad_year_audience">
 						<td></td>
 						<td><label for="associated_grad_year" class="form-required">Graduating Year</label></td>
 						<td>
@@ -816,14 +1029,15 @@ if($EVALUATION_ID) {
 					<tr>
 						<td colspan="3">&nbsp;</td>
 					</tr>
+                                        <!--
 					<tr>
-						<td style="vertical-align: top"><input type="radio" name="event_audience_type" id="event_audience_type_organisation_id" value="organisation_id" onclick="selectEventAudienceOption('organisation_id')" style="vertical-align: middle"<?php echo (($PROCESSED["event_audience_type"] == "organisation_id") ? " checked=\"checked\"" : ""); ?> /></td>
+						<td style="vertical-align: top"><input type="radio" name="eval_evaluator_type" id="eval_evaluator_type_organisation_id" value="organisation_id" onclick="selectEventAudienceOption('organisation_id')" style="vertical-align: middle"<?php echo (($PROCESSED["eval_evaluator_type"] == "organisation_id") ? " checked=\"checked\"" : ""); ?> /></td>
 						<td colspan="2" style="padding-bottom: 15px">
-							<label for="event_audience_type_organisation_id" class="radio-group-title">Entire Organisation Event</label>
+							<label for="eval_evaluator_type_organisation_id" class="radio-group-title">Entire Organisation Event</label>
 							<div class="content-small">This event is intended for every member of an organisation.</div>
 						</td>
 					</tr>
-					<tr class="event_audience organisation_id_audience">
+					<tr class="eval_evaluator organisation_id_audience">
 						<td></td>
 						<td><label for="associated_organisation_id" class="form-required">Organisation</label></td>
 						<td>
@@ -838,6 +1052,7 @@ if($EVALUATION_ID) {
 							</select>
 						</td>
 					</tr>
+                                        -->
                                         <tfoot>
                                                 <tr>
                                                         <td colspan="3" style="padding-top: 15px; text-align: right">
@@ -849,6 +1064,157 @@ if($EVALUATION_ID) {
                                         <br><br>
                                         </form>
                                 </div>
+	<div class="tab-page members">
+		<h2 class="tab">Add Targets</h2>
+		<h2 style="margin-top: 0px">Add Targets</h2>
+		<form action="<?php echo ENTRADA_URL."/admin/evaluations?".replace_query(array("section" => "members", "type" => "addtarget", "step" => 2)); ?>" method="post">
+			<table style="margin-top: 10px; width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Add Targets">
+				<colgroup>
+					<col style="width: 45%" />
+					<col style="width: 10%" />
+					<col style="width: 45%" />
+				</colgroup>
+				<tfoot>
+					<tr>
+						<td colspan="3" style="padding-top: 15px; text-align: right">
+							<input type="submit" class="button" value="Add Targets" style="vertical-align: middle" />
+						</td>
+					</tr>
+				</tfoot>
+				<tbody>
+					<tr>
+						<td colspan="3" style="vertical-align: top">
+								<p>
+									If you would like to add users that already exist in the system to this evaluation yourself, you can do so by clicking the checkbox beside their name from the list below.
+									Once you have reviewed the list at the bottom and are ready, click the <strong>Proceed</strong> button at the bottom to complete the process.
+								</p>
+						</td>
+					</tr>
+					<tr>
+						<td colspan="2" style="vertical-align: top">
+                                                    <div class="target-add-type" id="existing-target-add-type">
+							<?php
+							$nmembers_query			= "";
+							$nmembers_results		= false;
+							$sql_groupname		= "";
+
+                                                        $query		= "SELECT a.`eform_id`, `target_id`
+                                                                            FROM `evaluations` AS a
+                                                                            LEFT JOIN `evaluation_forms` AS b
+                                                                            ON a.eform_id= b.eform_id
+                                                                            WHERE a.`evaluation_id` = ".$db->qstr($EVALUATION_ID);
+                                                        $form_result	= $db->GetAll($query);
+                                                        //var_export ($form_result);
+                                                        if($form_result) {
+                                                            $target_id = (int) $form_result[0]["target_id"];
+                                                            $eform_id = (int) $form_result[0]["eform_id"];
+                                                        }
+                                                        //echo "<br>".$EVALUATION_ID."||".$form_result["target_id"]."||".$target_id."<br>";
+
+                                                        switch($target_id) {
+                                                                case 1 :
+                                                                case 2 :
+                                                                case 6 :
+                                                                    $sql_groupname = "faculty";
+                                                                break;
+                                                                case 3 :
+                                                                case 7 :
+                                                                case 8 :
+                                                                    $sql_groupname = "student";
+                                                                default :
+                                                                break;
+                                                        }
+
+							$nmembers_query	= " SELECT a.`id` AS `proxy_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, a.`username`, a.`organisation_id`, b.`group`, b.`role`
+                                                                            FROM `".AUTH_DATABASE."`.`user_data` AS a
+                                                                            LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+                                                                            ON a.`id` = b.`user_id`
+                                                                            WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
+                                                                            AND b.`account_active` = 'true'
+                                                                            AND b.`group` = '".$sql_groupname.
+                                                                            "' AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
+                                                                            AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
+                                                                            GROUP BY a.`id`
+                                                                            ORDER BY a.`lastname` ASC, a.`firstname` ASC";
+
+                                                        //var_export ($nmembers_query);
+                                                        //Fetch list of categories
+                                                        $query	= "SELECT `organisation_id`,`organisation_title` FROM `".AUTH_DATABASE."`.`organisations` ORDER BY `organisation_title` ASC";
+                                                        $organisation_results	= $db->GetAll($query);
+                                                        if($organisation_results) {
+                                                                $organisations = array();
+                                                                foreach($organisation_results as $result) {
+                                                                        if($ENTRADA_ACL->amIAllowed('resourceorganisation'.$result["organisation_id"], 'create')) {
+                                                                                $member_categories[$result["organisation_id"]] = array('text' => $result["organisation_title"], 'value' => 'organisation_'.$result["organisation_id"], 'category'=>true);
+                                                                        }
+                                                                }
+                                                        }
+
+                                                        $current_member_list	= array();
+                                                        $query		= "SELECT `proxy_id` FROM `evaluator_members` WHERE `community_id` = ".$db->qstr($EVALUATION_ID)." AND `member_active` = '1'";
+                                                        $results	= $db->GetAll($query);
+                                                        if($results) {
+                                                                foreach($results as $result) {
+                                                                        if($proxy_id = (int) $result["proxy_id"]) {
+                                                                                $current_member_list[] = $proxy_id;
+                                                                        }
+                                                                }
+                                                        }
+
+
+                                                        if($nmembers_query != "") {
+                                                                $nmembers_results = $db->GetAll($nmembers_query);
+                                                                if($nmembers_results) {
+                                                                        $members = $member_categories;
+
+                                                                        foreach($nmembers_results as $member) {
+
+                                                                                $organisation_id = $member['organisation_id'];
+                                                                                $group = $member['group'];
+                                                                                $role = $member['role'];
+
+                                                                                if($group == "student" && !isset($members[$organisation_id]['options'][$group.$role])) {
+                                                                                        $members[$organisation_id]['options'][$group.$role] = array('text' => $group. ' > '.$role, 'value' => $organisation_id.'|'.$group.'|'.$role);
+                                                                                } elseif ($group != "guest" && $group != "student" && !isset($members[$organisation_id]['options'][$group."all"])) {
+                                                                                        $members[$organisation_id]['options'][$group."all"] = array('text' => $group. ' > all', 'value' => $organisation_id.'|'.$group.'|all');
+                                                                                }
+                                                                        }
+
+                                                                        foreach($members as $key => $member) {
+                                                                                if(isset($member['options']) && is_array($member['options']) && !empty($member['options'])) {
+                                                                                        sort($members[$key]['options']);
+                                                                                }
+                                                                        }
+                                                                        //var_export($member_categories);
+                                                                        //echo "<br>";
+                                                                        //var_export($members);
+                                                                        echo lp_multiple_select_inline('target_members', $members, array(
+                                                                        'width'	=>'100%',
+                                                                        'ajax'=>true,
+                                                                        'selectboxname'=>'group and role',
+                                                                        'default-option'=>'-- Select Group & Role --',
+                                                                        'category_check_all'=>true));
+                                                                } else {
+                                                                        echo "No One Available [1]";
+                                                                }
+                                                        } else {
+                                                                echo "No One Available [2]";
+                                                        }
+                                                        ?>
+
+                                                        <input class="multi-picklist" id="target_members" name="target_members" style="display: none;">
+                                                        <input type="hidden" id="target_type_added"  id="target_type_added" value="<?php echo $target_id; ?>">
+                                                    </div>
+						</td>
+						<td style="vertical-align: top; padding-left: 20px;">
+							<input id="acc_target_members" style="display: none;" name="acc_target_members"/>
+							<h3>Targets to be Added on Submission</h3>
+							<div id="target_members_list"></div>
+						</td>
+				</tbody>
+			</table>
+		</form>
+	</div>
 
 </div>
 <script type="text/javascript">
@@ -856,16 +1222,11 @@ if($EVALUATION_ID) {
             document.addEvaluationForm.action="<?php echo ENTRADA_URL; ?>/admin/evaluations?section=members";
             document.addEvaluationForm.submit();
         }
-        function selectEventAudienceOption(type) {
-            $$('.event_audience').invoke('hide');
-            $$('.'+type+'_audience').invoke('show');
-	}
-
 	setupAllTabs(true);
 
 	var people = [[]];
 	var ids = [[]];
-	//Updates the People Being Added div with all the options
+	//Updates the Evaluators Being Added div with all the options
 	function updatePeopleList(newoptions, index) {
 		people[index] = newoptions;
 		table = people.flatten().inject(new Element('table', {'class':'member-list'}), function(table, option, i) {
@@ -931,6 +1292,81 @@ if($EVALUATION_ID) {
 							},
 							updateDiv: function(options, isnew) {
 								updatePeopleList(options, $('evaluator_members_category_select').selectedIndex);
+							}
+						});
+					}
+				}
+			});
+		}
+	});
+
+
+	//Updates the Targets Being Added div with all the options
+	function updateTargetList(newoptions, index) {
+		people[index] = newoptions;
+		table = people.flatten().inject(new Element('table', {'class':'member-list'}), function(table, option, i) {
+			if(i%2 == 0) {
+				row = new Element('tr');
+				table.appendChild(row);
+			}
+			row.appendChild(new Element('td').update(option));
+			return table;
+		});
+		$('target_members_list').update(table);
+		ids[index] = $F('target_members').split(',').compact();
+		$('acc_target_members').value = ids.flatten().join(',');
+	}
+
+
+	$('target_members_select_filter').observe('keypress', function(event){
+	    if(event.keyCode == Event.KEY_RETURN) {
+	        Event.stop(event);
+	    }
+	});
+
+	//Reload the multiselect every time the category select box changes
+	var multiselect;
+
+	$('target_members_category_select').observe('change', function(event) {
+		if ($('target_members_category_select').selectedIndex != 0) {
+			$('target_members_scroll').update(new Element('div', {'style':'width: 100%; height: 100%; background: transparent url(<?php echo ENTRADA_URL;?>/images/loading.gif) no-repeat center'}));
+
+			//Grab the new contents
+			var updater = new Ajax.Updater('target_members_scroll', '<?php echo ENTRADA_URL."/admin/evaluations?section=targetsadd&action=memberlist";?>',{
+				method:'post',
+				parameters: {
+					'ogr':$F('target_members_category_select'),
+					'evaluation_id':'<?php echo $EVALUATION_ID;?>'
+				},
+				onSuccess: function(transport) {
+					//onSuccess fires before the update actually takes place, so just set a flag for onComplete, which takes place after the update happens
+					this.makemultiselect = true;
+				},
+				onFailure: function(transport){
+					$('target_members_scroll').update(new Element('div', {'class':'display-error'}).update('There was a problem communicating with the server. An administrator has been notified, please try again later.'));
+				},
+				onComplete: function(transport) {
+					//Only if successful (the flag set above), regenerate the multiselect based on the new options
+					if(this.makemultiselect) {
+						if(multiselect) {
+							multiselect.destroy();
+						}
+						multiselect = new Control.SelectMultiple('target_members','target_members_options',{
+							labelSeparator: '; ',
+							checkboxSelector: 'table.select_multiple_table tr td.select_multiple_checkbox input[type=checkbox]',
+							categoryCheckboxSelector: 'table.select_multiple_table tr td.select_multiple_checkbox_category input[type=checkbox]',
+							nameSelector: 'table.select_multiple_table tr td.select_multiple_name label',
+							overflowLength: 70,
+							filter: 'target_members_select_filter',
+							afterCheck: function(element) {
+								var tr = $(element.parentNode.parentNode);
+								tr.removeClassName('selected');
+								if(element.checked) {
+									tr.addClassName('selected');
+								}
+							},
+							updateDiv: function(options, isnew) {
+								updateTargetList(options, $('target_members_category_select').selectedIndex);
 							}
 						});
 					}

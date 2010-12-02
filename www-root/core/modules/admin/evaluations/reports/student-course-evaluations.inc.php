@@ -41,73 +41,122 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 } else {
 	$BREADCRUMB[]	= array("url" => "", "title" => "Students' Course Evaluations" );
 
-	$query = "	SELECT distinct e.`evaluation_id`, e.`eform_id`, e.`evaluation_title`, e.`evaluation_description`, 
-				c.`course_name`, e.`evaluation_start`, e.`evaluation_finish`
-				FROM `evaluations` e 
-				INNER JOIN `evaluation_evaluators` ev ON e.`evaluation_id` = ev.`evaluation_id`
-				INNER JOIN `evaluation_targets` t ON e.`evaluation_id` = t.`evaluation_id`
-				INNER JOIN `evaluations_lu_targets` elt ON t.`target_id` = elt.`target_id`
-				INNER JOIN `courses` c ON t.`target_value` = c.`course_id`
-				INNER JOIN `".AUTH_DATABASE."`.`user_data` u ON ev.`evaluator_value` = u.`id`
-				INNER JOIN `".AUTH_DATABASE."`.`user_access` a ON u.`id` = a.`user_id`
-				WHERE elt.`target_shortname` = 'course' and elt.`target_active` = 1 
-				and (ev.`evaluator_type` = 'grad_year' or a.`group`= 'student' and ev.`evaluator_type` = 'proxy_id') ";
-	$results	= $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);			
+	if ($STEP == 1) {
+		$query = "	SELECT e.`evaluation_id`, e.`evaluation_title`, e.`evaluation_description`, 
+					 e.`evaluation_start`, e.`evaluation_finish`, e.`min_submittable`,  count(distinct(`course_id`)) `courses`
+					FROM `evaluations` e 
+					INNER JOIN `evaluation_evaluators` ev ON e.`evaluation_id` = ev.`evaluation_id`
+					INNER JOIN `evaluation_targets` t ON e.`evaluation_id` = t.`evaluation_id`
+					INNER JOIN `evaluations_lu_targets` elt ON t.`target_id` = elt.`target_id`
+					LEFT JOIN `courses` c ON t.`target_value` = c.`course_id`
+					INNER JOIN `".AUTH_DATABASE."`.`user_access` a ON ev.`evaluator_value` = a.`user_id`
+					WHERE elt.`target_shortname` = 'course' and elt.`target_active` = 1 
+					and (ev.`evaluator_type` = 'grad_year' or ev.`evaluator_type` = 'proxy_id' and a.`group`= 'student')
+					GROUP BY `evaluation_id`";
+		$results	= $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);			
 	?>
 
-	<h1>Students' Course Evaluations</h1>
-	
-	<div class="no-printing">
-		<form action="<?php echo ENTRADA_URL; ?>/admin/evaluations/reports?section=<?php echo $SECTION; ?>&step=2" method="post">
-		<table class="tableList" cellspacing="0" cellpadding="1" summary="List of Events">
-			<colgroup>
-				<col style="width: 3%" />
-				<col style="width: 23%" />
-				<col style="width: 32%" />
-				<col style="width: 16%" />
-				<col style="width: 16%" />
-				<col style="width: 10%" />
-			</colgroup>
-			<thead>
-				<tr>
-					<td class="modified" />
-					<td class="title">Evaluation Title</td>
-					<td class="phase">Course</td>
-					<td class="date"><div class="noLink">Start Date</div></td>
-					<td class="date"><div class="noLink">Finish Date</div></td>
-					<td class="date"><div class="noLink">Completion</div></td>
-				</tr>
-			</thead>
-			<tbody>
+		<h1>Students' Course Evaluations</h1>
+
+		<div class="no-printing">
+			<table class="tableList" cellspacing="0" cellpadding="1" summary="List of Events">
+				<colgroup>
+					<col style="width: 2%" />
+					<col style="width: 18%" />
+					<col style="width: 33%" />
+					<col style="width: 14%" />
+					<col style="width: 14%" />
+					<col style="width: 7%" />
+					<col style="width: 10%" />
+				</colgroup>
+				<thead>
+					<tr>
+						<td class="modified" />
+						<td class="title">Evaluation Title</td>
+						<td class="phase">Description</td>
+						<td class="date"><div class="noLink">Start Date</div></td>
+						<td class="date"><div class="noLink">Finish Date</div></td>
+						<td class="date"><div class="noLink">Courses</div></td>
+						<td class="date"><div class="noLink">Complete</div></td>
+					</tr>
+				</thead>
+				<tbody>
 			<?php
-			foreach ($results as $result) {
-/*				$query = "	SELECT distinct e.`evaluation_id`, e.`eform_id`, e.`evaluation_title`, e.`evaluation_description`, 
-							c.`course_name`, e.`evaluation_start`, e.`evaluation_finish`
-							FROM `evaluations` e 
-							INNER JOIN `evaluation_evaluators` ev ON e.`evaluation_id` = ev.`evaluation_id`
-							INNER JOIN `evaluation_targets` t ON e.`evaluation_id` = t.`evaluation_id`
-							INNER JOIN `evaluations_lu_targets` elt ON t.`target_id` = elt.`target_id`
-							INNER JOIN `courses` c ON t.`target_value` = c.`course_id`
-							INNER JOIN `".AUTH_DATABASE."`.`user_data` u ON ev.`evaluator_value` = u.`id`
-							INNER JOIN `".AUTH_DATABASE."`.`user_access` a ON u.`id` = a.`user_id`
-							WHERE elt.`target_shortname` = 'course' and elt.`target_active` = 1 
-							and (ev.`evaluator_type` = 'grad_year' or a.`group`= 'student' and ev.`evaluator_type` = 'proxy_id') ";
-				$completion	= $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);			
-*/				$completion = '15%';
-				$url = "---";
-				echo "	<tr><td class=\"modified\" />";
-				echo "	<td class=\"title".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Evaluation Title: ".html_encode($result["evaluation_title"])."\">" : "").html_encode($result["evaluation_title"]).(($url) ? "</a>" : "")."</td>\n";
-				echo "	<td class=\"teacher".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Course: ".html_encode($result["course_name"])."\">" : "").html_encode($result["course_name"]).(($url) ? "</a>" : "")."</td>\n";
-				echo "	<td class=\"date".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Start Date\">" : "").date("M j, Y", $result["evaluation_start"]).(($url) ? "</a>" : "")."</td>\n";
-				echo "	<td class=\"date".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Finish Date\">" : "").date("M j, Y", $result["evaluation_finish"]).(($url) ? "</a>" : "")."</td>\n";
-				echo "	<td class=\"date".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Completion\">" : ""). $completion.(($url) ? "</a>" : "")."</td></tr>\n";
-			}
-			?>
-		</tbody>
-		</table>
-		</form>
+				foreach ($results as $result) {
+					$query = "	SELECT COUNT(DISTINCT(`evaluator`)) FROM
+								(
+									SELECT ev.`evaluator_value` `evaluator`
+									FROM `evaluation_evaluators` ev
+									WHERE ev.`evaluator_type` = 'proxy_id'
+									AND ev.`evaluation_id` = ".$db->qstr($result["evaluation_id"])."
+									UNION
+									SELECT a.`user_id` `evaluator`
+									FROM `".AUTH_DATABASE."`.`user_access` a , `evaluation_evaluators` ev
+									WHERE ev.`evaluator_type` = 'grad_year' AND ev.`evaluator_value` = a.`role`
+									AND ev.`evaluation_id` = ".$db->qstr($result["evaluation_id"])."
+								) t";
+					$evaluators	= $db->GetOne($query);	
+
+					$query = "	SELECT COUNT(`eprogress_id`) FROM `evaluation_progress` 
+								WHERE `evaluation_id` = ".$db->qstr($result["evaluation_id"])."
+								AND `progress_value` = 'complete'";
+					$complete	= $db->GetOne($query) / $result["min_submittable"];	
+
+					$url = ENTRADA_URL."/admin/evaluations/reports?section=${SECTION}&amp;step=2&amp;id=".$result["evaluation_id"];
+					echo "	<tr><td class=\"modified\" />";
+					echo "	<td class=\"title".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Evaluation Title: ".html_encode($result["evaluation_title"])."\">" : "").html_encode($result["evaluation_title"]).(($url) ? "</a>" : "")."</td>\n";
+					echo "	<td class=\"teacher".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Course: ".html_encode($result["evaluation_description"])."\">" : "").html_encode($result["evaluation_description"]).(($url) ? "</a>" : "")."</td>\n";
+					echo "	<td class=\"date".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Start Date\">" : "").date("M j, Y", $result["evaluation_start"]).(($url) ? "</a>" : "")."</td>\n";
+					echo "	<td class=\"date".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Finish Date\">" : "").date("M j, Y", $result["evaluation_finish"]).(($url) ? "</a>" : "")."</td>\n";
+					echo "	<td class=\"date".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Completion\">" : ""). ($result["courses"]?$result["courses"]:"").(($url) ? "</a>" : "")."</td>\n";
+					echo "	<td class=\"date".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Completion\">" : ""). ($evaluators?round($complete/$evaluators*100)."% of $evaluators":"").(($url) ? "</a>" : "")."</td></tr>\n";
+				}
+				?>
+			</tbody>
+			</table>
+		</div>
 	<?php
+	}
 	if ($STEP == 2) {
+		if(isset($_GET["id"])) {
+			$evaluation_id = clean_input($_GET["id"], array("trim", "int")) ;
+		}
+
+		$query = "	SELECT e.*, c.`course_name`, c.`course_code` FROM `evaluations` e 
+					INNER JOIN `evaluation_targets` t ON e.`evaluation_id` = t.`evaluation_id`
+					INNER JOIN `evaluations_lu_targets` elt ON t.`target_id` = elt.`target_id`
+					LEFT JOIN `courses` c ON t.`target_value` = c.`course_id`
+					WHERE e.`evaluation_id` = ".$db->qstr($evaluation_id)."
+					AND elt.`target_shortname` = 'course' and elt.`target_active` = 1";
+		$results	= $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
+
+		echo "<h1>".$results[0]["evaluation_title"]."</h1>";
+	?>
+		<div class="no-printing">
+			<table class="tableList" cellspacing="0" cellpadding="1" summary="List of Events">
+				<colgroup>
+					<col style="width: 3%" />
+					<col style="width: 17%" />
+					<col style="width: 30%" />
+					<col style="width: 3%" />
+					<col style="width: 17%" />
+					<col style="width: 30%" />
+				</colgroup>
+				<tbody>
+					<tr><td /><td>Type:</td><td colspan="4">Student's Course Evaluations</td></tr>
+	<?php
+					echo "<tr><td /><td>Description:</td><td colspan='4'>".$results[0]["evaluation_description"]."; ?</td></tr>"
+	?>
+				</tbody>
+			</table>
+		</div>
+		
+	<?php
+		echo "<h1>Students' Course Evaluations  - ".$results[0]["evaluation_title"]."</h1>";
+
+		
+
+
 // To be changed		
 	$int_use_cache	= true;
 

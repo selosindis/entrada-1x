@@ -87,7 +87,7 @@ if($EVALUATION_ID) {
 						case "addgroup" :
                                                     if (isset($_POST["event_audience_type"])) {
                                                         $PROCESSED["event_audience_type"] = clean_input($_POST["event_audience_type"], array("page_url"));
-                                                        
+
                                                         switch($PROCESSED["event_audience_type"]) {
                                                                 case "grad_year" :
                                                                         /**
@@ -151,7 +151,7 @@ if($EVALUATION_ID) {
                                                                                     application_error("error", "Unable to insert a new evaluator. Database said: ".$db->ErrorMsg());
 										}
                                                                             }else{
-                                                                                
+
                                                                             }
                                                                             $snd_stm= " FROM `".AUTH_DATABASE."`.`user_data`
                                                                                 LEFT JOIN `".AUTH_DATABASE."`.`user_access` ON `".AUTH_DATABASE."`.`user_access`.`user_id`=`".AUTH_DATABASE."`.`user_data`.`id`
@@ -183,13 +183,13 @@ if($EVALUATION_ID) {
 
                                                                         if($member_add_success) {
                                                                                 $SUCCESS++;
-                                                                                $SUCCESSSTR[] = "You have successfully attached ".$member_add_success." Graduating Year".(($member_add_success != 1) ? "s" : "")." to this evaluation.<br /><br />You will now be redirected back to the Manage Evaluators page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/evaluations/scheduler?section=members&evaluation=".$EVALUATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
+                                                                                $SUCCESSSTR[] = "You have successfully attached ".$member_add_success." Graduating Year".(($member_add_success != 1) ? "s" : "")." to this evaluation.<br /><br />You will now be redirected back to the Manage Evaluators page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/evaluations?section=members&evaluation=".$EVALUATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
 
                                                                                 communities_log_history($EVALUATION_ID, 0, $member_add_success, "community_history_add_members", 1);
                                                                         }
                                                                         if($member_add_failure) {
                                                                                 $NOTICE++;
-                                                                                $NOTICESTR[] = "Failed to add or update".$member_add_failure." member".(($member_add_failure != 1) ? "s" : "")." during this process. The MEdTech Unit has been informed of this error, please try again later.<br /><br />You will now be redirected back to the Manage Evaluators page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/evaluations/scheduler?section=members&evaluation=".$EVALUATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
+                                                                                $NOTICESTR[] = "Failed to add or update".$member_add_failure." member".(($member_add_failure != 1) ? "s" : "")." during this process. The MEdTech Unit has been informed of this error, please try again later.<br /><br />You will now be redirected back to the Manage Evaluators page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/evaluations?section=members&evaluation=".$EVALUATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
                                                                         }
                                                                 break;
                                                                 case "organisation_id":
@@ -233,24 +233,24 @@ if($EVALUATION_ID) {
 
 							if($member_add_success) {
 								$SUCCESS++;
-								$SUCCESSSTR[] = "You have successfully added ".$member_add_success." new evaluators".(($member_add_success != 1) ? "s" : "")." to this evaluation.<br /><br />You will now be redirected back to the Manage Evaluators page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/evaluations/scheduler?section=members&evaluation=".$EVALUATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
+								$SUCCESSSTR[] = "You have successfully added ".$member_add_success." new evaluators".(($member_add_success != 1) ? "s" : "")." to this evaluation.<br /><br />You will now be redirected back to the Manage Evaluators page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/evaluations?section=members&evaluation=".$EVALUATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
 
 								communities_log_history($EVALUATION_ID, 0, $member_add_success, "community_history_add_members", 1);
 							}
 							if($member_add_failure) {
 								$NOTICE++;
-								$NOTICESTR[] = "Failed to add or update".$member_add_failure." member".(($member_add_failure != 1) ? "s" : "")." during this process. The MEdTech Unit has been informed of this error, please try again later.<br /><br />You will now be redirected back to the Manage Evaluators page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/evaluations/scheduler?section=members&evaluation=".$EVALUATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
+								$NOTICESTR[] = "Failed to add or update".$member_add_failure." member".(($member_add_failure != 1) ? "s" : "")." during this process. The MEdTech Unit has been informed of this error, please try again later.<br /><br />You will now be redirected back to the Manage Evaluators page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/evaluations?section=members&evaluation=".$EVALUATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
 							}
 							break;
 						case "members" :
-                              
+
 							if((isset($_POST["member_action"])) && (@in_array(strtolower($_POST["member_action"]), array("delete", "deactivate", "promote")))) {
 								if((isset($_POST["member_proxy_ids"])) && (is_array($_POST["member_proxy_ids"])) && (count($_POST["member_proxy_ids"]))) {
                                                                     /***
 									foreach($_POST["member_proxy_ids"] as $proxy_id) {
                                                                             if(strlen(trim($proxy_id))>7 && substr(trim($proxy_id),0,6)="student"){
                                                                                 echo "step 02<br>";
-                                                                                
+
                                                                             }else{
                                                                                 echo "step 01<br>";
 										if($proxy_id = (int) trim($proxy_id)) {
@@ -288,7 +288,7 @@ if($EVALUATION_ID) {
 													}
 												}
 												$SUCCESS++;
-												$SUCCESSSTR[] = "You have successfully removed <strong>".$total_deleted." evaluator".(($total_deleted != 1) ? "s" : "")."</strong> from the <strong>".html_encode($evaluation_details["community_title"])."</strong> evaluation.<br /><br />You will now be redirected back to the Manage Members page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/evaluations/scheduler?section=members&evaluation=".$EVALUATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
+												$SUCCESSSTR[] = "You have successfully removed <strong>".$total_deleted." evaluator".(($total_deleted != 1) ? "s" : "")."</strong> from the <strong>".html_encode($evaluation_details["community_title"])."</strong> evaluation.<br /><br />You will now be redirected back to the Manage Members page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/evaluations?section=members&evaluation=".$EVALUATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
 											} else {
 												$ERROR++;
 												$ERRORSTR[] = "There was a problem removing these evaluation evaluators from the system; the MEdTech Unit has been informed of this error, please try again later.";
@@ -338,7 +338,7 @@ if($EVALUATION_ID) {
 
 					break;
 				case 2 :
-					$ONLOAD[]		= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/evaluations/scheduler?section=members&evaluation=".$EVALUATION_ID."\\'', 5000)";
+					$ONLOAD[]		= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/evaluations?section=members&evaluation=".$EVALUATION_ID."\\'', 5000)";
 
 					if($SUCCESS) {
 						echo display_success();
@@ -532,7 +532,7 @@ if($EVALUATION_ID) {
 									echo "</div>\n";
 								}
 								?>
-								<form action="<?php echo ENTRADA_URL."/admin/evaluations/scheduler?".replace_query(array("section" => "members", "type" => "members", "step" => 2)); ?>" method="post">
+								<form action="<?php echo ENTRADA_URL."/admin/evaluations?".replace_query(array("section" => "members", "type" => "members", "step" => 2)); ?>" method="post">
 								<table class="tableList" style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Community Members">
 								<colgroup>
 									<col class="modified" />
@@ -590,7 +590,7 @@ if($EVALUATION_ID) {
 	<div class="tab-page members">
 		<h2 class="tab">Add Evaluators</h2>
 		<h2 style="margin-top: 0px">Add Evaluators</h2>
-		<form action="<?php echo ENTRADA_URL."/admin/evaluations/scheduler?".replace_query(array("section" => "members", "type" => "add", "step" => 2)); ?>" method="post">
+		<form action="<?php echo ENTRADA_URL."/admin/evaluations?".replace_query(array("section" => "members", "type" => "add", "step" => 2)); ?>" method="post">
 			<table style="margin-top: 10px; width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Add Evaluators">
 				<colgroup>
 					<col style="width: 45%" />
@@ -785,7 +785,7 @@ if($EVALUATION_ID) {
 	<div class="tab-page members">
 		<h2 class="tab">Add Evaluator Group</h2>
 		<h2 style="margin-top: 0px">Add Evaluator Group</h2>
-                        <form action="<?php echo ENTRADA_URL."/admin/evaluations/scheduler?".replace_query(array("section" => "members", "type" => "addgroup", "step" => 2)); ?>" method="post" name="addEvaluationForm" id="addEvaluationForm">
+                        <form action="<?php echo ENTRADA_URL."/admin/evaluations?".replace_query(array("section" => "members", "type" => "addgroup", "step" => 2)); ?>" method="post" name="addEvaluationForm" id="addEvaluationForm">
 			<input type="hidden" name="evaluation_id" value="<?php echo $EVALUATION_ID;?>" />
 			<table cellspacing="0" cellpadding="0" border="0">
 					<tr>
@@ -853,7 +853,7 @@ if($EVALUATION_ID) {
 </div>
 <script type="text/javascript">
         function search_grad_year(){
-            document.addEvaluationForm.action="<?php echo ENTRADA_URL; ?>/admin/evaluations/scheduler?section=members";
+            document.addEvaluationForm.action="<?php echo ENTRADA_URL; ?>/admin/evaluations?section=members";
             document.addEvaluationForm.submit();
         }
         function selectEventAudienceOption(type) {
@@ -896,7 +896,7 @@ if($EVALUATION_ID) {
 			$('evaluator_members_scroll').update(new Element('div', {'style':'width: 100%; height: 100%; background: transparent url(<?php echo ENTRADA_URL;?>/images/loading.gif) no-repeat center'}));
 
 			//Grab the new contents
-			var updater = new Ajax.Updater('evaluator_members_scroll', '<?php echo ENTRADA_URL."/admin/evaluations/scheduler?section=membersadd&action=memberlist";?>',{
+			var updater = new Ajax.Updater('evaluator_members_scroll', '<?php echo ENTRADA_URL."/admin/evaluations?section=membersadd&action=memberlist";?>',{
 				method:'post',
 				parameters: {
 					'ogr':$F('evaluator_members_category_select'),
@@ -954,7 +954,7 @@ if($EVALUATION_ID) {
 } else {
 	application_log("error", "User tried to manage members a evaluation without providing a evaluation_id.");
 
-	header("Location: ".ENTRADA_URL."/admin/evaluations/scheduler");
+	header("Location: ".ENTRADA_URL."/admin/evaluations");
 	exit;
 }
 ?>

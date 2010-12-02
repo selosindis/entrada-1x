@@ -1052,7 +1052,7 @@ function filter_name($filter_key) {
 			break;
 		case "objective":
 			return "Clinical Presentations Involved";
-			break;
+		break;
 		default :
 			return false;
 		break;

@@ -2019,7 +2019,7 @@ float:left;
 float:right;
 }
 
-.select_multiple_filter input {
+.select_multiple_filter input[type=text] {
 width:130px;
 background-color:#FFF;
 background-image:url(../images/delete.x.gif);

@@ -80,7 +80,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 		height: 200,
 		nomsg: 'No Results', 
 		buttons : [
-            {name: 'Generate Report', bclass: 'report_go', onpress : generateReport},
+            {name: 'Generate Report', bclass: 'report_go', onpress : generateReport}
             ]
 		}
 	);

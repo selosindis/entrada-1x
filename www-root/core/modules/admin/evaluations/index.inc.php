@@ -23,17 +23,11 @@ if (!defined("IN_EVALUATIONS")) {
 
 	application_log("error", "Group [".$GROUP."] and role [".$ROLE."] does not have access to this module [".$MODULE."]");
 } else {
-        //echo "______log______".$MODULE."<br>";
-        //echo "______log______SESSION[APPLICATION_IDENTIFIER][MODULE]: ".$_SESSION[APPLICATION_IDENTIFIER][$MODULE]."<br>";
-        //echo "______log______SESSION[APPLICATION_IDENTIFIER][MODULE][sb]: ".$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]."<br>";
-
 	/**
 	 * Update requested column to sort by.
 	 * Valid: director, name
 	 */
 
-    //echo "______log1_____".'[evaluations][sb]: '. $_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["sb"]."<br>";
-    //print_r($_GET);
     if (isset($_GET["sb"])) {
 		if (@in_array(trim($_GET["sb"]), array("type", "name", "date", "teacher", "director", "notices"))) {
 			$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]	= trim($_GET["sb"]);
@@ -45,7 +39,6 @@ if (!defined("IN_EVALUATIONS")) {
 			$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] = "name";
 		}
 	}
-        //echo "______log2_____".'[evaluations][sb]: '. $_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["sb"]."<br>";
 
 	/**
 	 * Update requested order to sort by.
@@ -94,14 +87,6 @@ if (!defined("IN_EVALUATIONS")) {
 	 * Fetch all of the evaluations that apply to the current filter set.
 	 */
 	$scheduler_evaluations = eval_sche_fetch_filtered_evals();
-        //var_export($scheduler_evaluations);
-
-	/**
-        echo "<h1>".$MODULES[strtolower($MODULE)]["title"]."</h1>";
-	 * Output the filter HTML.
-	 */
-	//eval_sche_output_filter_controls("admin");
-        //eval_sche_evaluators_filter_controls("admin");
 
 	if ($ENTRADA_ACL->amIAllowed("event", "create", false)) {
 		?>
@@ -114,13 +99,7 @@ if (!defined("IN_EVALUATIONS")) {
 		<?php
 	}
 
-	/**
-	 * Output the calendar controls and pagination.
-	 */
 	eval_sche_output_calendar_controls("admin");
-
-        //echo "______log______".'Count: '. count($scheduler_evaluations["evaluations"])."<br>";
-        //var_export ($scheduler_evaluations["evaluations"]);
 
 	if (count($scheduler_evaluations["evaluations"])) {
 		if ($ENTRADA_ACL->amIAllowed("event", "delete", false)) : ?>

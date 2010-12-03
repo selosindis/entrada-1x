@@ -127,8 +127,12 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 				$extracted_information = $tmp_information;
 				unset($tmp_information);
 			}
-
-			$message  = "Attention ".$AGENT_CONTACTS["administrator"]["name"]."\n";
+			
+			if(strpos($extracted_information["url"], "annualreport") === false) {
+				$message  = "Attention ".$AGENT_CONTACTS["administrator"]["name"]."\n";
+			} else {
+				$message  = "Attention ".$AGENT_CONTACTS["annualreport-support"]["name"]."\n";
+			}
 			$message .= "The following feedback information has been submitted:\n";
 			$message .= "=======================================================\n\n";
 			$message .= "Submitted At:\t\t".date("r", time())."\n";
@@ -168,7 +172,11 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 			$mail->Subject	= "New Feedback Submission - ".APPLICATION_NAME;
 			$mail->Body		= $message;
 			$mail->ClearAddresses();
-			$mail->AddAddress($AGENT_CONTACTS["agent-feedback"]["email"], $AGENT_CONTACTS["agent-feedback"]["name"]);
+			if(strpos($extracted_information["url"], "annualreport") === false) {
+				$mail->AddAddress($AGENT_CONTACTS["agent-feedback"]["email"], $AGENT_CONTACTS["agent-feedback"]["name"]);
+			} else {
+				$mail->AddAddress($AGENT_CONTACTS["annualreport-support"]["email"], $AGENT_CONTACTS["annualreport-support"]["name"]);
+			}
 			if($mail->Send()) {
 				$SUCCESS++;
 				$SUCCESSSTR[]	= "Thank-you for providing us with your valuable feedback. If we have questions regarding any of the information you provided, we will get in touch with you via e-mail.<br /><br />Once again, thank-you for using our automated feedback system and feel free to submit comments any time.";

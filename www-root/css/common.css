@@ -2019,7 +2019,7 @@ float:left;
 float:right;
 }
 
-.select_multiple_filter input {
+.select_multiple_filter input[type=text] {
 width:130px;
 background-color:#FFF;
 background-image:url(../images/delete.x.gif);
@@ -2640,7 +2640,7 @@ ul.objectives-list ul ul ul ul ul ul span.delete {
 ul.objectives-list ul ul ul ul ul ul ul span.delete {
 	padding-right: 175px;
 }
-ul.objectives-list ul ul ul ul ul ul ul  ul span.delete {
+ul.objectives-list ul ul ul ul ul ul ul ul span.delete {
 	padding-right: 200px;
 }
 div.course-spacer {

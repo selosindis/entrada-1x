@@ -173,7 +173,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
                                                 if($EVALUATION_ID = $db->Insert_Id()){
 						switch($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"]) {
 							case "content" :
-								$url	= ENTRADA_URL."/admin/evaluations?section=content&id=".$EVALUATION_ID;
+								$url	= ENTRADA_URL."/admin/evaluations?section=members&evaluation=".$EVALUATION_ID;
 								$msg	= "You will now be redirected to the evaluation content page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 								break;
 							case "new" :
@@ -339,23 +339,24 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					</tr>
 					<tr>
 						<td></td>
-						<td style="vertical-align: top"><label for="eventtype_ids" class="form-required">Evaluation Form</label></td>
+						<td style="vertical-align: top"><label for="eform_ids" class="form-required">Evaluation Form</label></td>
 						<td>
-							<select id="eventtype_ids" name="eventtype_ids">
+							<select id="eform_id" name="eform_id">
 								<option id="-1"> -- Pick a type to add -- </option>
 								<?php
-								$query		= "SELECT * FROM `events_lu_eventtypes` WHERE `eventtype_active` = '1' ORDER BY `eventtype_order` ASC";
+								$query		= "SELECT * FROM `evaluation_forms` WHERE `form_active` = '1' ORDER BY `updated_date` ASC";
 								$results	= $db->GetAll($query);
 								if($results) {
-									$event_types = array();
 									foreach($results as $result) {
-										$title = html_encode($result["eventtype_title"]);
-										echo "<option value=\"".$result["eventtype_id"]."\">".$title."</option>";
+										$title = html_encode($result["form_title"]);
+										$eform_id = html_encode($result["eform_id"]);
+                                                                                //echo $eform_id."--";
+										echo "<option value=\"".$result["eform_id"].(($PROCESSED["eform_id"] == $result["eform_id"]) ? " selected=\"selected\"" : "")."\"> ".$title."</option>";
 									}
 								}
 								?>
 							</select>
-							<div id="duration_notice" class="content-small" >Use the list above to select the different components of this event. When you select one, it will appear here and you can change the order and duration.</div>
+							<div id="duration_notice" class="content-small" >Use the list above to select the different components of this evaluation. When you select one, it will appear here and you can change the order and duration.</div>
 							<ol id="duration_container" class="sortableList" style="display: none;">
 								<?php
 								foreach($PROCESSED["event_types"] as $eventtype) {

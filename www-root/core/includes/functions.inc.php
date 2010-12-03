@@ -1052,7 +1052,7 @@ function filter_name($filter_key) {
 			break;
 		case "objective":
 			return "Clinical Presentations Involved";
-			break;
+		break;
 		default :
 			return false;
 		break;
@@ -2308,7 +2308,7 @@ function readable_size($bytes) {
  * @return string
  */
 function useable_filename($filename) {
-	return strtolower(preg_replace("/[^a-z0-9_\-\.]/i", "_", $filename));
+	return strtolower(preg_replace(array("/(\.)\.+/", "/(\_)\_+/"), "$1", preg_replace(array("/[^a-z0-9_\-\.]/i"), "_", $filename)));
 }
 
 /**
@@ -8538,8 +8538,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 						`event_audience`.`audience_type`,
 						`courses`.`organisation_id`,
 						`courses`.`course_name`,
-						CONCAT_WS(', ', `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname`) AS `fullname`,
-						MAX(`statistics`.`timestamp`) AS `last_visited`
+						CONCAT_WS(', ', `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname`) AS `fullname`
 						FROM `events`";
 
 	/**
@@ -8555,6 +8554,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 		$where_clinical_presentation = array();
 		$join_event_contacts = array();
 		$contact_sql = "";
+		$objective_sql = "";
 
 		$query_count = "	SELECT COUNT(DISTINCT `events`.`event_id`) AS `total_rows`
 							FROM `events`
@@ -8570,9 +8570,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 							ON `".AUTH_DATABASE."`.`user_data`.`id` = `primary_teacher`.`proxy_id`
 							LEFT JOIN `courses`
 							ON `courses`.`course_id` = `events`.`course_id`
-							LEFT JOIN `event_objectives`
-							ON `event_objectives`.`event_id` = `events`.`event_id`
-							AND `event_objectives`.`objective_type` = 'course'
+							%OBJECTIVE_JOIN%
 							WHERE `courses`.`course_active` = '1'
 							AND (`events`.`release_date` <= ".$db->qstr(time())." OR `events`.`release_date` = 0)
 							AND (`events`.`release_until` >= ".$db->qstr(time())." OR `events`.`release_until` = 0)
@@ -8590,15 +8588,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 							ON `".AUTH_DATABASE."`.`user_data`.`id` = `primary_teacher`.`proxy_id`
 							LEFT JOIN `courses`
 							ON  `courses`.`course_id` = `events`.`course_id`
-							LEFT JOIN `event_objectives`
-							ON `event_objectives`.`event_id` = `events`.`event_id`
-							AND `event_objectives`.`objective_type` = 'course'
-							LEFT JOIN `statistics`
-							ON `statistics`.`action_value` = `events`.`event_id`
-							AND `statistics`.`module` = 'events'
-							AND `statistics`.`proxy_id` = ".$db->qstr($proxy_id)."
-							AND `statistics`.`action` = 'view'
-							AND `statistics`.`action_field` = 'event_id'
+							%OBJECTIVE_JOIN%
 							WHERE `courses`.`course_active` = '1'
 							AND `courses`.`organisation_id` = ".$db->qstr($organisation_id);
 
@@ -8698,8 +8688,17 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 								AND (".implode(" OR ", $join_event_contacts).")";
 		}
 
+		if (isset($where_clinical_presentation) && count($where_clinical_presentation)) {
+			$objective_sql = "	LEFT JOIN `event_objectives`
+								ON `event_objectives`.`event_id` = `events`.`event_id`
+								AND `event_objectives`.`objective_type` = 'course'";
+		}
+
 	 	$query_count = str_replace("%CONTACT_JOIN%", $contact_sql, $query_count);
-		$query_events = str_replace("%CONTACT_JOIN%", $contact_sql, $query_events)." GROUP BY `events`.`event_id` ORDER BY %s".($pagination ? " LIMIT %s, %s" : "");
+		$query_events = str_replace("%CONTACT_JOIN%", $contact_sql, $query_events);
+
+	 	$query_count = str_replace("%OBJECTIVE_JOIN%", $objective_sql, $query_count);
+		$query_events = str_replace("%OBJECTIVE_JOIN%", $objective_sql, $query_events)." GROUP BY `events`.`event_id` ORDER BY %s".($pagination ? " LIMIT %s, %s" : "");
 	} else {
 		$query_count = "	SELECT COUNT(DISTINCT `events`.`event_id`) AS `total_rows`
 							FROM `events`
@@ -8719,12 +8718,6 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 							ON `".AUTH_DATABASE."`.`user_data`.`id` = `event_contacts`.`proxy_id`
 							LEFT JOIN `courses`
 							ON  (`courses`.`course_id` = `events`.`course_id`)
-							LEFT JOIN `statistics`
-							ON `statistics`.`action_value` = `events`.`event_id`
-							AND `statistics`.`module` = ".$db->qstr("events")."
-							AND `statistics`.`proxy_id` = ".$db->qstr($proxy_id)."
-							AND `statistics`.`action` = 'view'
-							AND `statistics`.`action_field` = 'event_id'
 							WHERE`courses`.`course_active` = '1'
 							AND `courses`.`organisation_id` = ".$db->qstr($organisation_id)."
 							".(($display_duration) ? "AND `events`.`event_start` BETWEEN ".$db->qstr($display_duration["start"])." AND ".$db->qstr($display_duration["end"]) : "")."
@@ -8797,6 +8790,31 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 	$learning_events = $db->GetAll($query_events);
 
 	if ($learning_events) {
+		if ($_SESSION["details"]["group"] == "student") {
+			$event_ids = array();
+			foreach ($learning_events as $event) {
+				$event_ids[] = $event["event_id"];
+			}
+			if (!empty($event_ids)) {
+				$query = "	SELECT `action_value` AS `event_id`, MAX(`statistics`.`timestamp`) AS `last_visited` FROM `statistics`
+							WHERE `action_value` IN (".implode(", ", $event_ids).")
+							AND `module` = 'events'
+							AND `proxy_id` = ".$db->qstr($proxy_id)."
+							AND `action` = 'view'
+							AND `action_field` = 'event_id'
+							GROUP BY `proxy_id`, `module`, `action_field`, `action`, `action_value`";
+				$last_visited_dates = $db->GetAll($query);
+				if (!empty($last_visited_dates)) {
+					$dates_array = array();
+					foreach ($last_visited_dates as $event_last_visited) {
+						$dates_array[$event_last_visited["event_id"]] = $event_last_visited["last_visited"];
+					}
+					foreach ($learning_events as &$event) {
+						$event["last_visited"] = $dates_array[$event["event_id"]];
+					}
+				}
+			}
+		}
 		$output["events"] = $learning_events;
 	}
 

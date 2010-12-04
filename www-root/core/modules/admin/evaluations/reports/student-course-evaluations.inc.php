@@ -39,11 +39,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
-	$BREADCRUMB[]	= array("url" => "", "title" => "Students' Course Evaluations" );
-
 	if ($STEP == 1) {
-		$query = "	SELECT e.`evaluation_id`, e.`evaluation_title`, e.`evaluation_description`, 
-					 e.`evaluation_start`, e.`evaluation_finish`, e.`min_submittable`,  count(distinct(`course_id`)) `courses`
+		$BREADCRUMB[]	= array("url" => "", "title" => "Students' Course Evaluations" );
+		$query = "	SELECT e.`evaluation_id`, e.`evaluation_title`, e.`evaluation_description`, e.`evaluation_start`,
+					e.`evaluation_finish`, e.`min_submittable`,  count(distinct(`course_id`)) `courses`
 					FROM `evaluations` e 
 					INNER JOIN `evaluation_evaluators` ev ON e.`evaluation_id` = ev.`evaluation_id`
 					INNER JOIN `evaluation_targets` t ON e.`evaluation_id` = t.`evaluation_id`
@@ -83,6 +82,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 				<tbody>
 			<?php
 				foreach ($results as $result) {
+					
 					$query = "	SELECT COUNT(DISTINCT(`evaluator`)) FROM
 								(
 									SELECT ev.`evaluator_value` `evaluator`
@@ -108,7 +108,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					echo "	<td class=\"teacher".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Course: ".html_encode($result["evaluation_description"])."\">" : "").html_encode($result["evaluation_description"]).(($url) ? "</a>" : "")."</td>\n";
 					echo "	<td class=\"date".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Start Date\">" : "").date("M j, Y", $result["evaluation_start"]).(($url) ? "</a>" : "")."</td>\n";
 					echo "	<td class=\"date".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Finish Date\">" : "").date("M j, Y", $result["evaluation_finish"]).(($url) ? "</a>" : "")."</td>\n";
-					echo "	<td class=\"date".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Completion\">" : ""). ($result["courses"]?$result["courses"]:"").(($url) ? "</a>" : "")."</td>\n";
+					echo "	<td class=\"date".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Courses\">" : ""). ($result["courses"]?$result["courses"]:"").(($url) ? "</a>" : "")."</td>\n";
 					echo "	<td class=\"date".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Completion\">" : ""). ($evaluators?round($complete/$evaluators*100)."% of $evaluators":"").(($url) ? "</a>" : "")."</td></tr>\n";
 				}
 				?>
@@ -118,11 +118,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 	<?php
 	}
 	if ($STEP == 2) {
+		$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/evaluations/reports?section=student-course-evaluations".replace_query(array("step" => 1)), "title" => "Students Course Evaluations" );
 		if(isset($_GET["id"])) {
 			$evaluation_id = clean_input($_GET["id"], array("trim", "int")) ;
 		}
 
-		$query = "	SELECT e.*, c.`course_id`, c.`course_name`, c.`course_code`, t.`etarget_id` FROM `evaluations` e 
+		$query = "	SELECT e.*, c.`course_id`, c.`organisation_id`, c.`course_name`, c.`course_code`, t.`etarget_id` FROM `evaluations` e 
 					INNER JOIN `evaluation_targets` t ON e.`evaluation_id` = t.`evaluation_id`
 					INNER JOIN `evaluations_lu_targets` elt ON t.`target_id` = elt.`target_id`
 					LEFT JOIN `courses` c ON t.`target_value` = c.`course_id`
@@ -200,31 +201,41 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 			<div style="float: left">
 			<a name="course-evaluation-section"></a>
 			<h2 title="Evaluated Courses Section">Evaluated Courses for this Evaluation</h2>
-				<div id="course-evaluation-section" class="section-holder">
-					<table class="tableList" cellspacing="0" cellpadding="1" summary="List of Evaluated Courses">
-						<colgroup>
-							<col style="width: 3%" />
-							<col style="width: 32&" />
-							<col style="width: 17%" />
-							<col style="width: 15%" />
-							<col style="width: 15%" />
-							<col style="width: 15%" />
-							<col style="width: 3%" />
-						</colgroup>
-						<thead>
-							<tr>
-								<td class="modified" />
-								<td class="general borderl">Name</td>
-								<td class="general">Code</td>
-								<td class="date"><div class="noLink">In Progress</div></td>
-								<td class="date"><div class="noLink">Complete</div></td>
-								<td class="title"><div class="noLink">Updated</div></td>
-								<td class="attachment">&nbsp;</td>
-							</tr>
-						</thead>
-						<tbody>
+				<form name="frmReport" action="<?php echo ENTRADA_URL; ?>/admin/evaluations/reports?section=reports" method="post">
+					<div id="course-evaluation-section" class="section-holder">
+						<table class="tableList" cellspacing="0" cellpadding="1" summary="List of Evaluated Courses">
+							<colgroup>
+								<col style="width: 3%" />
+								<col style="width: 32&" />
+								<col style="width: 17%" />
+								<col style="width: 15%" />
+								<col style="width: 15%" />
+								<col style="width: 15%" />
+								<col style="width: 3%" />
+							</colgroup>
+							<thead>
+								<tr>
+									<td class="modified" />
+									<td class="general borderl">Name</td>
+									<td class="general">Code</td>
+									<td class="date"><div class="noLink">In Progress</div></td>
+									<td class="date"><div class="noLink">Complete</div></td>
+									<td class="title"><div class="noLink">Updated</div></td>
+									<td class="attachment">&nbsp;</td>
+								</tr>
+							</thead>
+							<tfoot>
+								<tr>
+									<td></td>
+									<td colspan='6'style="padding-top: 10px">
+										<input type="submit" class="button" value="Create Reports" />
+									</td>
+								</tr>
+							</tfoot>
+							<tbody>
 	<?php						
 		foreach ($results as $result) {
+			$administrator = $ENTRADA_ACL->amIAllowed(new CourseContentResource($result["course_id"], $result["organisation_id"]), 'update');
 			$query = "	SELECT MAX(p.`updated_date`) FROM `evaluation_progress` p
 						INNER JOIN `evaluation_targets` t ON p.`etarget_id` = t.`etarget_id`
 						WHERE p.`evaluation_id` = ".$db->qstr($result["evaluation_id"])."
@@ -247,16 +258,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 			$completed	= $db->GetOne($query);
 
 			$url = ENTRADA_URL."/admin/evaluations/reports?section=${SECTION}&amp;step=2&amp;id=".$result["evaluation_id"];
-			echo "	<tr><td class=\"modified\" />";
-			echo "	<td class=\"general".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"name ".html_encode($result["course_name"])."\">" : "").html_encode($result["course_name"]).(($url) ? "</a>" : "")."</td>\n";
-			echo "	<td class=\"teacher".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Code: ".html_encode($result["course_code"])."\">" : "").html_encode($result["course_code"]).(($url) ? "</a>" : "")."</td>\n";
-			echo "	<td class=\"date".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Progress\">" : ""). ($evaluators?round($progress/$evaluators*100)."% of $evaluators":"").(($url) ? "</a>" : "")."</td>\n";
-			echo "	<td class=\"report-hours".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Completion\">" : ""). ($evaluators?round($completed/$evaluators*100)."% of $evaluators":"").(($url) ? "</a>" : "")."</td>\n";
-			echo "	<td class=\"date".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Updated\">" : "").($updated?date("M j, Y", $updated):"").(($url) ? "</a>" : "")."</td>\n";
-			echo "	<td class=\"attachment\" /></tr>\n";
+			echo "			<tr><td class=\"modified\">".(($administrator) ? "<input type=\"checkbox\" name=\"checked[]\" value=\"$result[evaluation_id]:$result[course_id]\" />" : "<img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"19\" height=\"19\" alt=\"\" title=\"\" />")."</td>\n";
+			echo "				<td class=\"general".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"name ".html_encode($result["course_name"])."\">" : "").html_encode($result["course_name"]).(($url) ? "</a>" : "")."</td>\n";
+			echo "				<td class=\"teacher".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Code: ".html_encode($result["course_code"])."\">" : "").html_encode($result["course_code"]).(($url) ? "</a>" : "")."</td>\n";
+			echo "				<td class=\"date".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Progress\">" : ""). ($evaluators?round($progress/$evaluators*100)."% of $evaluators":"").(($url) ? "</a>" : "")."</td>\n";
+			echo "				<td class=\"report-hours".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Completion\">" : ""). ($evaluators?round($completed/$evaluators*100)."% of $evaluators":"").(($url) ? "</a>" : "")."</td>\n";
+			echo "				<td class=\"date".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Updated\">" : "").($updated?date("M j, Y", $updated):"").(($url) ? "</a>" : "")."</td>\n";
+			echo "				<td class=\"attachment\" /></tr>\n";
 		}
+		echo "			</tbody>\n";
 		echo "		</table>\n";
 		echo "	</div>\n";
+		echo "  </form>";
 		echo "</div>\n";
 	}
 }

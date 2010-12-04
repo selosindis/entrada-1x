@@ -975,10 +975,10 @@ if($EVALUATION_ID) {
 															'default-option'=>'-- Select Group & Role --',
 															'category_check_all'=>true));
 														} else {
-															echo "No One Available [1]";
+															echo "No One Available for evaluators[1]";
 														}
 													} else {
-														echo "No One Available [2]";
+														echo "No One Available for evaluators[2]";
 													}
 													?>
 
@@ -1109,35 +1109,41 @@ if($EVALUATION_ID) {
                                                             $eform_id = (int) $form_result[0]["eform_id"];
                                                         }
                                                         //echo "<br>".$EVALUATION_ID."||".$form_result["target_id"]."||".$target_id."<br>";
-
-                                                        switch($target_id) {
-                                                                case 1 :
-                                                                case 2 :
-                                                                case 6 :
-                                                                    $sql_groupname = "faculty";
-                                                                break;
-                                                                case 3 :
-                                                                case 7 :
-                                                                case 8 :
-                                                                    $sql_groupname = "student";
-                                                                default :
-                                                                break;
-                                                        }
-
-							$nmembers_query	= " SELECT a.`id` AS `proxy_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, a.`username`, a.`organisation_id`, b.`group`, b.`role`
+                                                        $ppl_query_1st = " SELECT a.`id` AS `proxy_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, a.`username`, a.`organisation_id`, b.`group`, b.`role`
                                                                             FROM `".AUTH_DATABASE."`.`user_data` AS a
                                                                             LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
                                                                             ON a.`id` = b.`user_id`
                                                                             WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
                                                                             AND b.`account_active` = 'true'
-                                                                            AND b.`group` = '".$sql_groupname.
-                                                                            "' AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
+                                                                            AND b.`group` = '";
+                                                        $ppl_query_2nd = "' AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
                                                                             AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
                                                                             GROUP BY a.`id`
                                                                             ORDER BY a.`lastname` ASC, a.`firstname` ASC";
+                                                        $course_query = " SELECT `course_id` AS `proxy_id`, CONCAT_WS(', ', `course_name`, `course_code`) AS `fullname`, `course_name` as username, `organisation_id`, 'course' as `group`, 'course' as `role`
+                                                                            FROM `courses`";
+
+                                                        $default_option = '-- Select Group & Role --';
+
+                                                        switch($target_id) {
+                                                                case 1 :
+                                                                    $nmembers_query = $course_query;
+                                                                    $default_option = '-- Select Course --';
+                                                                break;
+                                                                case 2 :
+                                                                case 6 :
+                                                                    $nmembers_query = $ppl_query_1st."faculty".$ppl_query_2nd;
+                                                                break;
+                                                                case 3 :
+                                                                case 7 :
+                                                                case 8 :
+                                                                    $nmembers_query = $ppl_query_1st."student".$ppl_query_2nd;
+                                                                default :
+                                                                break;
+                                                        }
 
                                                         //var_export ($nmembers_query);
-                                                        //Fetch list of categories
+                                                        /**
                                                         $query	= "SELECT `organisation_id`,`organisation_title` FROM `".AUTH_DATABASE."`.`organisations` ORDER BY `organisation_title` ASC";
                                                         $organisation_results	= $db->GetAll($query);
                                                         if($organisation_results) {
@@ -1159,10 +1165,13 @@ if($EVALUATION_ID) {
                                                                         }
                                                                 }
                                                         }
+                                                         *
+                                                         */
 
 
                                                         if($nmembers_query != "") {
                                                                 $nmembers_results = $db->GetAll($nmembers_query);
+                                                                //var_export ($nmembers_results);
                                                                 if($nmembers_results) {
                                                                         $members = $member_categories;
 
@@ -1184,17 +1193,17 @@ if($EVALUATION_ID) {
                                                                                         sort($members[$key]['options']);
                                                                                 }
                                                                         }
-                                                                        //var_export($member_categories);
+                                                                        //var_export($nmembers_results);
                                                                         //echo "<br>";
                                                                         //var_export($members);
                                                                         echo lp_multiple_select_inline('target_members', $members, array(
                                                                         'width'	=>'100%',
                                                                         'ajax'=>true,
                                                                         'selectboxname'=>'group and role',
-                                                                        'default-option'=>'-- Select Group & Role --',
+                                                                        'default-option'=>$default_option,
                                                                         'category_check_all'=>true));
                                                                 } else {
-                                                                        echo "No One Available [1]";
+                                                                        echo "No One Available [11]";
                                                                 }
                                                         } else {
                                                                 echo "No One Available [2]";

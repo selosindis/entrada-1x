@@ -123,13 +123,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 			$evaluation_id = clean_input($_GET["id"], array("trim", "int")) ;
 		}
 
-		$query = "	SELECT e.*, c.`course_id`, c.`organisation_id`, c.`course_name`, c.`course_code`, t.`etarget_id` FROM `evaluations` e 
+		$query = "	SELECT e.*, c.`course_id`, c.`organisation_id`, c.`course_name`, c.`course_code`, t.`target_id`, t.`etarget_id` FROM `evaluations` e 
 					INNER JOIN `evaluation_targets` t ON e.`evaluation_id` = t.`evaluation_id`
 					INNER JOIN `evaluations_lu_targets` elt ON t.`target_id` = elt.`target_id`
 					LEFT JOIN `courses` c ON t.`target_value` = c.`course_id`
 					WHERE e.`evaluation_id` = ".$db->qstr($evaluation_id)."
 					AND elt.`target_shortname` = 'course' and elt.`target_active` = 1";
 		$results	= $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
+
+		$single = count($results)==1;
 
 		$query = "	SELECT COUNT(DISTINCT(`evaluator`)) FROM
 					(
@@ -227,8 +229,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 							<tfoot>
 								<tr>
 									<td></td>
-									<td colspan='6'style="padding-top: 10px">
-										<input type="submit" class="button" value="Create Reports" />
+									<td colspan='6'style="text-align: right; padding-top: 30px">
+										<input type="submit" class="button" value="Create Report<?php echo $single?"":"(s)"; ?>" />
 									</td>
 								</tr>
 							</tfoot>
@@ -257,10 +259,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 						AND p.`progress_value` = 'complete'";
 			$completed	= $db->GetOne($query);
 
-			$url = ENTRADA_URL."/admin/evaluations/reports?section=${SECTION}&amp;step=2&amp;id=".$result["evaluation_id"];
-			echo "			<tr><td class=\"modified\">".(($administrator) ? "<input type=\"checkbox\" name=\"checked[]\" value=\"$result[evaluation_id]:$result[course_id]\" />" : "<img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"19\" height=\"19\" alt=\"\" title=\"\" />")."</td>\n";
-			echo "				<td class=\"general".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"name ".html_encode($result["course_name"])."\">" : "").html_encode($result["course_name"]).(($url) ? "</a>" : "")."</td>\n";
-			echo "				<td class=\"teacher".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Code: ".html_encode($result["course_code"])."\">" : "").html_encode($result["course_code"]).(($url) ? "</a>" : "")."</td>\n";
+			$url = ENTRADA_URL."/admin/evaluations/reports?section=reports&amp;evaluation=$result[evaluation_id]:$result[target_id]:$result[course_id]";
+			echo "			<tr><td class=\"modified\">".(($administrator) ? "<input type=\"checkbox\" name=\"checked[]\" value=\"$result[evaluation_id]:$result[target_id]:$result[course_id]\"".($single?"checked=\"checked\"":"")." />" : "<img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"19\" height=\"19\" alt=\"\" title=\"\" />")."</td>\n";
+			echo "				<td class=\"general".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Course name \">" : "").html_encode($result["course_name"]).(($url) ? "</a>" : "")."</td>\n";
+			echo "				<td class=\"teacher".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Code code \">" : "").html_encode($result["course_code"]).(($url) ? "</a>" : "")."</td>\n";
 			echo "				<td class=\"date".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Progress\">" : ""). ($evaluators?round($progress/$evaluators*100)."% of $evaluators":"").(($url) ? "</a>" : "")."</td>\n";
 			echo "				<td class=\"report-hours".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Completion\">" : ""). ($evaluators?round($completed/$evaluators*100)."% of $evaluators":"").(($url) ? "</a>" : "")."</td>\n";
 			echo "				<td class=\"date".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Updated\">" : "").($updated?date("M j, Y", $updated):"").(($url) ? "</a>" : "")."</td>\n";

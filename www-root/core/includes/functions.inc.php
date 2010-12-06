@@ -441,6 +441,7 @@ function navigator_tabs() {
 	$PUBLIC_MODULES[] = array("name" => "tasks", "text" => "Tasks", "resource" => "tasktab", "permission" => "read");
 	$PUBLIC_MODULES[] = array("name" => "events", "text" => "Learning Events");
 	$PUBLIC_MODULES[] = array("name" => "clerkship", "text" => "Clerkship", "resource" => "clerkship", "permission" => "read");
+	$PUBLIC_MODULES[] = array("name" => "evaluations", "text" => "Evaluations", "resource" => "evaluations", "permission" => "read");
 	$PUBLIC_MODULES[] = array("name" => "objectives", "text" => "Curriculum Objectives", "resource" => "objectives", "permission" => "read");
 
 	if (in_array($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"], array("student", "resident"))) {
@@ -11872,3 +11873,190 @@ function eval_sche_fetch_filtered_evals() {
 	return $output;
 }
 
+function fetch_evaluation_target_title($evaluation_target = array()) {
+	global $db;
+	if (!empty($evaluation_target)) {
+		switch ($evaluation_target["target_shortname"]) {
+			case "course" :
+				$query = "SELECT `course_name` FROM `courses` WHERE `course_id` = ".$db->qstr($evaluation_target["target_value"]);
+				if ($course_name = $db->GetOne($query)) {
+					return $course_name;
+				}
+				break;
+			case "rotation_core" :
+			case "rotation_elective" :
+				$query = "SELECT `event_title` FROM `".CLERKSHIP_DATABASE."`.`events` WHERE `event_id` = ".$db->qstr($evaluation_target["target_value"]);
+				if ($event_name = $db->GetOne($query)) {
+					return $event_name;
+				}
+				break;
+			case "self" :
+					return "Yourself";
+				break;
+			case "teacher" :
+			case "student" :
+			case "preceptor" :
+			case "peer" :
+			default :
+				$query = "SELECT CONCAT_WS(' ', `firstname`, `lastname`) AS `fullname` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($evaluation_target["target_value"]);
+				if ($teacher_name = $db->GetOne($query)) {
+					return $teacher_name;
+				}
+				break;
+		}
+	}
+	return false;
+}
+
+
+/**
+ * This function returns the total number of attempts the user
+ * has made on the provided evaluation_id, completed, expired or otherwise.
+
+ * @param int $aquiz_id
+ * @return int
+ */
+function evaluations_fetch_attempts($evaluation_id = 0) {
+	global $db;
+
+	if ($evaluation_id = (int) $evaluation_id) {
+		$query		= "	SELECT COUNT(*) AS `total`
+						FROM `evaluations_progress`
+						WHERE `evaluation_id` = ".$db->qstr($evaluation_id)."
+						AND `proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
+						AND `progress_value` <> 'inprogress'";
+		$attempts	= $db->GetRow($query);
+		if ($attempts) {
+			return $attempts["total"];
+		}
+	}
+
+	return 0;
+}
+
+function evaluation_save_response($eprogress_id, $eform_id, $content_id, $evaluation_id, $efquestion_id, $efresponse_id, $evaluation_type = "course") {
+	global $db;
+
+	/**
+	 * Check to ensure that this response is associated with this question.
+	 */
+	$query	= "SELECT * FROM `evaluation_form_responses` WHERE `efresponse_id` = ".$db->qstr($efresponse_id)." AND `response_active` = '1' AND `efquestion_id` = ".$db->qstr($efquestion_id);
+	$result	= $db->GetRow($query);
+	if ($result) {
+	/**
+	 * See if they have already responded to this question or not as this
+	 * determines whether an INSERT or an UPDATE is required.
+	 */
+		$query = "	SELECT `qpresponse_id`, `efresponse_id`
+					FROM `evaluation_progress_responses`
+					WHERE `eprogress_id` = ".$db->qstr($eprogress_id)."
+					AND `eform_id` = ".$db->qstr($eform_id)."
+					AND `content_type` = ".$db->qstr($evaluation_type)."
+					AND `content_id` = ".$db->qstr($content_id)."
+					AND `evaluation_id` = ".$db->qstr($evaluation_id)."
+					AND `proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
+					AND `efquestion_id` = ".$db->qstr($efquestion_id);
+		$result	= $db->GetRow($query);
+		if ($result) {
+		/**
+		 * Checks to see if the response is different from what was previously
+		 * stored in the event_evaluation_responses table.
+		 */
+			if ($efresponse_id != $result["efresponse_id"]) {
+				$evaluation_response_array	= array (
+					"efresponse_id" => $efresponse_id,
+					"updated_date" => time(),
+					"updated_by" => $_SESSION["details"]["id"]
+				);
+
+				if ($db->AutoExecute("evaluation_progress_responses", $evaluation_response_array, "UPDATE", "`qpresponse_id` = ".$db->qstr($result["qpresponse_id"]))) {
+					return true;
+				} else {
+					application_log("error", "Unable to update a response to a question that has already been recorded. Database said: ".$db->ErrorMsg());
+				}
+			} else {
+				return true;
+			}
+		} else {
+			$evaluation_response_array	= array (
+				"eprogress_id" => $eprogress_id,
+				"eform_id" => $eform_id,
+				"content_type" => $evaluation_type,
+				"content_id" => $content_id,
+				"evaluation_id" => $evaluation_id,
+				"proxy_id" => $_SESSION["details"]["id"],
+				"efquestion_id" => $efquestion_id,
+				"efresponse_id" => $efresponse_id,
+				"updated_date" => time(),
+				"updated_by" => $_SESSION["details"]["id"]
+			);
+
+			if ($db->AutoExecute("evaluation_progress_responses", $evaluation_response_array, "INSERT")) {
+				return true;
+			} else {
+				application_log("error", "Unable to record a response to a question that was submitted. Database said: ".$db->ErrorMsg());
+			}
+		}
+	} else {
+		application_log("error", "A submitted efresponse_id was not a valid response for the efquestion_id that was provided when attempting to submit a response to a question.");
+	}
+
+	return false;
+}
+
+/**
+ * This function loads the current progress based on an eprogress_id.
+ *
+ * @global object $db
+ * @param int $eprogress_id
+ * @return array Returns the users currently progress or returns false if there
+ * is an error.
+ */
+function evaluation_load_progress($eprogress_id = 0) {
+	global $db;
+
+	$output = array();
+
+	if ($qprogress_id = (int) $qprogress_id) {
+	/**
+		 * Grab the specified progress identifier, but you better be sure this
+		 * is the correct one, and the results are being returned to the proper
+		 * user.
+	 */
+		$query		= "	SELECT *
+						FROM `quiz_progress`
+						WHERE `qprogress_id` = ".$db->qstr($qprogress_id);
+		$progress	= $db->GetRow($query);
+		if ($progress) {
+		/**
+		 * Add all of the qquestion_ids to the $output array so they're set.
+		 */
+			$query		= "SELECT * FROM `quiz_questions` WHERE `quiz_id` = ".$db->qstr($progress["quiz_id"])." AND `question_active` = '1' ORDER BY `question_order` ASC";
+			$questions	= $db->GetAll($query);
+			if ($questions) {
+				foreach ($questions as $question) {
+					$output[$question["qquestion_id"]] = 0;
+				}
+			} else {
+				return false;
+			}
+
+			/**
+			 * Update the $output array with any currently selected responses.
+			 */
+			$query		= "	SELECT *
+							FROM `quiz_progress_responses`
+							WHERE `qprogress_id` = ".$db->qstr($qprogress_id);
+			$responses	= $db->GetAll($query);
+			if ($responses) {
+				foreach ($responses as $response) {
+					$output[$response["qquestion_id"]] = $response["qqresponse_id"];
+				}
+			}
+		} else {
+			return false;
+		}
+	}
+
+	return $output;
+}

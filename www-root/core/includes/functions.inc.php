@@ -2309,7 +2309,7 @@ function readable_size($bytes) {
  * @return string
  */
 function useable_filename($filename) {
-	return strtolower(preg_replace("/[^a-z0-9_\-\.]/i", "_", $filename));
+	return strtolower(preg_replace(array("/(\.)\.+/", "/(\_)\_+/"), "$1", preg_replace(array("/[^a-z0-9_\-\.]/i"), "_", $filename)));
 }
 
 /**
@@ -11934,26 +11934,23 @@ function evaluations_fetch_attempts($evaluation_id = 0) {
 	return 0;
 }
 
-function evaluation_save_response($eprogress_id, $eform_id, $content_id, $evaluation_id, $efquestion_id, $efresponse_id, $evaluation_type = "course") {
+function evaluation_save_response($eprogress_id, $eform_id, $efquestion_id, $efresponse_id) {
 	global $db;
 
 	/**
 	 * Check to ensure that this response is associated with this question.
 	 */
-	$query	= "SELECT * FROM `evaluation_form_responses` WHERE `efresponse_id` = ".$db->qstr($efresponse_id)." AND `response_active` = '1' AND `efquestion_id` = ".$db->qstr($efquestion_id);
+	$query	= "SELECT * FROM `evaluation_form_responses` WHERE `efresponse_id` = ".$db->qstr($efresponse_id)." AND `efquestion_id` = ".$db->qstr($efquestion_id);
 	$result	= $db->GetRow($query);
 	if ($result) {
 	/**
 	 * See if they have already responded to this question or not as this
 	 * determines whether an INSERT or an UPDATE is required.
 	 */
-		$query = "	SELECT `qpresponse_id`, `efresponse_id`
-					FROM `evaluation_progress_responses`
+		$query = "	SELECT `eresponse_id`, `efresponse_id`
+					FROM `evaluation_responses`
 					WHERE `eprogress_id` = ".$db->qstr($eprogress_id)."
 					AND `eform_id` = ".$db->qstr($eform_id)."
-					AND `content_type` = ".$db->qstr($evaluation_type)."
-					AND `content_id` = ".$db->qstr($content_id)."
-					AND `evaluation_id` = ".$db->qstr($evaluation_id)."
 					AND `proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
 					AND `efquestion_id` = ".$db->qstr($efquestion_id);
 		$result	= $db->GetRow($query);
@@ -11969,7 +11966,7 @@ function evaluation_save_response($eprogress_id, $eform_id, $content_id, $evalua
 					"updated_by" => $_SESSION["details"]["id"]
 				);
 
-				if ($db->AutoExecute("evaluation_progress_responses", $evaluation_response_array, "UPDATE", "`qpresponse_id` = ".$db->qstr($result["qpresponse_id"]))) {
+				if ($db->AutoExecute("evaluation_responses", $evaluation_response_array, "UPDATE", "`eresponse_id` = ".$db->qstr($result["eresponse_id"]))) {
 					return true;
 				} else {
 					application_log("error", "Unable to update a response to a question that has already been recorded. Database said: ".$db->ErrorMsg());
@@ -11981,9 +11978,6 @@ function evaluation_save_response($eprogress_id, $eform_id, $content_id, $evalua
 			$evaluation_response_array	= array (
 				"eprogress_id" => $eprogress_id,
 				"eform_id" => $eform_id,
-				"content_type" => $evaluation_type,
-				"content_id" => $content_id,
-				"evaluation_id" => $evaluation_id,
 				"proxy_id" => $_SESSION["details"]["id"],
 				"efquestion_id" => $efquestion_id,
 				"efresponse_id" => $efresponse_id,
@@ -11991,7 +11985,7 @@ function evaluation_save_response($eprogress_id, $eform_id, $content_id, $evalua
 				"updated_by" => $_SESSION["details"]["id"]
 			);
 
-			if ($db->AutoExecute("evaluation_progress_responses", $evaluation_response_array, "INSERT")) {
+			if ($db->AutoExecute("evaluation_responses", $evaluation_response_array, "INSERT")) {
 				return true;
 			} else {
 				application_log("error", "Unable to record a response to a question that was submitted. Database said: ".$db->ErrorMsg());
@@ -12017,25 +12011,27 @@ function evaluation_load_progress($eprogress_id = 0) {
 
 	$output = array();
 
-	if ($qprogress_id = (int) $qprogress_id) {
+	if ($eprogress_id = (int) $eprogress_id) {
 	/**
 		 * Grab the specified progress identifier, but you better be sure this
 		 * is the correct one, and the results are being returned to the proper
 		 * user.
 	 */
 		$query		= "	SELECT *
-						FROM `quiz_progress`
-						WHERE `qprogress_id` = ".$db->qstr($qprogress_id);
+						FROM `evaluation_progress` AS a
+						JOIN `evaluations` AS b
+						ON a.`evaluation_id` = b.`evaluation_id`
+						WHERE a.`eprogress_id` = ".$db->qstr($eprogress_id);
 		$progress	= $db->GetRow($query);
 		if ($progress) {
 		/**
 		 * Add all of the qquestion_ids to the $output array so they're set.
 		 */
-			$query		= "SELECT * FROM `quiz_questions` WHERE `quiz_id` = ".$db->qstr($progress["quiz_id"])." AND `question_active` = '1' ORDER BY `question_order` ASC";
+			$query		= "SELECT * FROM `evaluation_form_questions` WHERE `eform_id` = ".$db->qstr($progress["eform_id"])." ORDER BY `question_order` ASC";
 			$questions	= $db->GetAll($query);
 			if ($questions) {
 				foreach ($questions as $question) {
-					$output[$question["qquestion_id"]] = 0;
+					$output[$question["efquestion_id"]] = 0;
 				}
 			} else {
 				return false;
@@ -12045,12 +12041,12 @@ function evaluation_load_progress($eprogress_id = 0) {
 			 * Update the $output array with any currently selected responses.
 			 */
 			$query		= "	SELECT *
-							FROM `quiz_progress_responses`
-							WHERE `qprogress_id` = ".$db->qstr($qprogress_id);
+							FROM `evaluation_responses`
+							WHERE `eprogress_id` = ".$db->qstr($eprogress_id);
 			$responses	= $db->GetAll($query);
 			if ($responses) {
 				foreach ($responses as $response) {
-					$output[$response["qquestion_id"]] = $response["qqresponse_id"];
+					$output[$response["efquestion_id"]] = $response["efresponse_id"];
 				}
 			}
 		} else {
@@ -12059,4 +12055,17 @@ function evaluation_load_progress($eprogress_id = 0) {
 	}
 
 	return $output;
+}
+
+function evaluation_generate_description($min_submittable = 0, $evaluation_questions = 1, $evaluation_attempts = 0, $evaluation_finish = 0) {
+	global $db;
+
+	$output	= "This is %s evaluation which is to be completed %s. You will have no time limitation and %s to answer the %s in this evaluation.";
+
+	$string_1 = (((int) $min_submittable) ? "a required" : "an optional");
+	$string_2 = ((isset($evaluation_finish) && ($evaluation_finish)) ? "by ".date(DEFAULT_DATE_FORMAT, $evaluation_finish) : "when you see fit");
+	$string_3 = (((int) $evaluation_attempts) ? $evaluation_attempts." attempt".(($evaluation_attempts != 1) ? "s" : "") : "unlimited attempts");
+	$string_4 = $evaluation_questions." question".(($evaluation_questions != 1) ? "s" : "");
+
+	return sprintf($output, $string_1, $string_2, $string_3, $string_4);
 }

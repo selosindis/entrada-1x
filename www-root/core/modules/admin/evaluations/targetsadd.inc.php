@@ -95,45 +95,13 @@ if(isset($COMMUNITY_ID) && isset($ACTION)) {
 
 
 						$nmembers_results		= false;
-						$nmembers_query	= "	SELECT a.`id` AS `proxy_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, a.`username`, a.`organisation_id`, b.`group`, b.`role`
-											FROM `".AUTH_DATABASE."`.`user_data` AS a
-											LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
-											ON a.`id` = b.`user_id`
-											WHERE
-											a.`organisation_id` = ".$db->qstr($ORGANISATION_ID)."
-											AND b.`group` = ".$db->qstr($GROUP)."
-											".($ROLE != 'all' ? "AND b.`role` = ".$db->qstr($ROLE) : "")."
-											AND b.`app_id` IN (".AUTH_APP_IDS_STRING.")
-											AND b.`account_active` = 'true'
-											AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
-											AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
-											GROUP BY a.`id`
-											ORDER BY a.`lastname` ASC, a.`firstname` ASC";
+                                                $nmembers_query = " SELECT `course_id` AS `proxy_id`, CONCAT_WS(', ', `course_name`, `course_code`) AS `fullname`, `course_name` as username, `organisation_id`, 'course' as `group`, 'course' as `role`
+                                                                            FROM `courses`";
+							
 
 						//Fetch list of current members
 						$current_member_list	= array();
-						$query		= "SELECT `proxy_id` FROM `community_members` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `member_active` = '1'";
-						$results	= $db->GetAll($query);
-						if($results) {
-							foreach($results as $result) {
-								if($proxy_id = (int) $result["proxy_id"]) {
-									$current_member_list[] = $proxy_id;
-								}
-							}
-						}
-
-						if ($TYPE == "polls" && $poll_id) {
-							$query = "	SELECT `proxy_id` FROM `community_polls_access`
-												WHERE `cpolls_id` = ".$db->qstr($poll_id);
-							$results	= $db->GetAll($query);
-							if ($results) {
-								foreach($results as $result) {
-									if($proxy_id = (int) $result["proxy_id"]) {
-										$poll_member_list[] = $proxy_id;
-									}
-								}
-							}
-						}
+						
 
 						//
 						if($nmembers_query != "") {

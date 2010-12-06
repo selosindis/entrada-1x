@@ -27,7 +27,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 } elseif((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	header("Location: ".ENTRADA_URL);
 	exit;
-} elseif(!$ENTRADA_ACL->amIAllowed('event', 'update', false)) {
+} elseif(!$ENTRADA_ACL->amIAllowed('evaluation', 'update', false)) {
 	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/".$MODULE."\\'', 15000)";
 
 	$ERROR++;
@@ -134,7 +134,6 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
                                                 } else {
                                                         $PROCESSED["release_until"] = 0;
                                                 }
-
                                                 if(isset($_POST["post_action"])) {
                                                         switch($_POST["post_action"]) {
                                                                 case "member" :
@@ -171,7 +170,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 							if($db->AutoExecute("evaluations", $PROCESSED, "UPDATE", "`evaluation_id` = ".$db->qstr($EVALUATION_ID))) {
                                                                     switch($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"]) {
 									case "member" :
-										$url	= ENTRADA_URL."/admin/evaluations?section=members&id=".$EVALUATION_ID;
+										$url	= ENTRADA_URL."/admin/evaluations?section=members&evaluation=".$EVALUATION_ID;
 										$msg	= "You will now be redirected to the evaluation content page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 										break;
 									case "new" :
@@ -377,7 +376,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 												<td style="width: 75%; text-align: right; vertical-align: middle">
 													<span class="content-small">After saving:</span>
 													<select id="post_action" name="post_action">
-														<option value="member"<?php echo (((!isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"])) || ($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "member")) ? " selected=\"selected\"" : ""); ?>>Add content to evaluation</option>
+														<option value="member"<?php echo (((!isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"])) || ($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "member")) ? " selected=\"selected\"" : ""); ?>>Manage evaluation content</option>
 														<option value="new"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "new") ? " selected=\"selected\"" : ""); ?>>Add another evaluation</option>
 														<option value="index"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "index") ? " selected=\"selected\"" : ""); ?>>Return to evaluation list</option>
 													</select>

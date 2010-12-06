@@ -81,14 +81,11 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 
 				if($evaluation_id = (int) $evaluation_id) {
 					$query	= "	SELECT a.`evaluation_id`, a.`course_id`, a.`evaluation_title`, b.`organisation_id`
-								FROM `evaluations` AS a
-								LEFT JOIN `courses` AS b
-								ON b.`course_id` = a.`course_id`
-								WHERE a.`evaluation_id` = ".$db->qstr($evaluation_id)."
-								AND b.`course_active` = '1'";
+								FROM `evaluations`
+								WHERE a.`evaluation_id` = ".$db->qstr($evaluation_id);
 					$result	= $db->GetRow($query);
 					if ($result) {
-						if($ENTRADA_ACL->amIAllowed(new EventResource($result["evaluation_id"], $result["course_id"], $result["organisation_id"]), 'delete')) {
+						if($ENTRADA_ACL->amIAllowed(new EvaluationResource($result["evaluation_id"]), 'delete')) {
 							/**
 							 * Check to see if any quizzes are attached to this evaluation.
 							 */

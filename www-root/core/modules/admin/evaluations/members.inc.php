@@ -57,11 +57,7 @@ if((isset($_GET["type"])) && ($tmp_action_type = clean_input(trim($_GET["type"])
 }
 unset($tmp_action_type);
 
-if((isset($_GET["target_type_added"])) && ((int) trim($_GET["target_type_added"]))) {
-	$target_type_added	= (int) trim($_GET["target_type_added"]);
-} elseif((isset($_POST["target_type_added"])) && ((int) trim($_POST["target_type_added"]))) {
-	$target_type_added	= (int) trim($_POST["target_type_added"]);
-}
+
 /**
  * Ensure that the selected community is editable by you.
  */
@@ -250,7 +246,12 @@ if($EVALUATION_ID) {
 						case "addtarget" :
 							$member_add_success	= 0;
 							$member_add_failure	= 0;
-                                                        echo "target: ".$target_type_added."<br>";
+                                                        if ((isset($_POST["target_type_added"])) && ($random_number = clean_input($_POST["target_type_added"], array("trim", "int")))) {
+                                                                $target_type_added = $random_number;
+                                                        } else {
+                                                                $ERROR++;
+                                                                $ERRORSTR[] = "Target type is invalid.";
+                                                        }
 							if((isset($_POST["acc_target_members"])) && ($proxy_ids = explode(',', $_POST["acc_target_members"])) && (count($proxy_ids))) {
 								if ($MAILING_LISTS["active"]) {
 									$mail_list = new MailingList($EVALUATION_ID);
@@ -707,27 +708,27 @@ if($EVALUATION_ID) {
                                                         $query1		= "
                                                                           select * from (
 										(
-                                                                                SELECT a.updated_date, d.target_shortname as target_type, a.eevaluator_id, b.`username` as user_name, b.`firstname` as first_name, b.`lastname` as last_name, concat(concat(c.`group`,' > '),c.`role`) as group_role
-										FROM `entrada`.`evaluation_targets` AS a
+                                                                                SELECT a.updated_date, d.target_shortname as target_type, a.etarget_id, b.`username` as user_name, b.`firstname` as first_name, b.`lastname` as last_name, concat(concat(c.`group`,' > '),c.`role`) as group_role
+										FROM `evaluation_targets` AS a
 										LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
 										ON a.`target_value` = b.`id`
 										LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS c
 										ON c.`user_id` = b.`id`
 										AND c.`app_id` IN (".AUTH_APP_IDS_STRING.")
-										LEFT JOIN `".AUTH_DATABASE."`.`evaluations_lu_targets` AS d
+										LEFT JOIN `evaluations_lu_targets` AS d
 										ON a.`target_id` = d.`target_id`
 										WHERE a.`evaluation_id` = ".$db->qstr($EVALUATION_ID)."
-                                                                                AND target_id in ('2', '3', '6', 7', '8')
+                                                                                AND a.target_id in (2, 3, 6, 7, 8)
 										GROUP BY b.`id`
                                                                                 )
                                                                                 union
 										(
-                                                                                SELECT updated_date, 'course' target_type, eevaluator_id, `course_name` as user_name, `course_name` as first_name, '' as last_name,'course' as group_role
-										FROM `entrada`.`evaluation_evaluators` AS a
-										LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
+                                                                                SELECT a.updated_date, 'course' target_type, a.etarget_id, `course_name` as user_name, `course_name` as first_name, '' as last_name,'course' as group_role
+										FROM `evaluation_targets` AS a
+										LEFT JOIN `courses` AS b
 										ON a.`target_value` = b.`course_id`
 										WHERE a.`evaluation_id` = ".$db->qstr($EVALUATION_ID)."
-                                                                                AND target_id= '1'
+                                                                                AND a.target_id= '1'
 										)
                                                                             ) as t
 										LIMIT %s, %s
@@ -735,8 +736,6 @@ if($EVALUATION_ID) {
 
 							$query		= sprintf($query1, $limit_parameter, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]);
                                                         $results	= $db->GetAll($query);
-                                                        //echo "______log______"."query1: ".$query1."<br>";
-                                                        //echo "______log______"."total_rows: ".$results["total_rows"]."<br>";
 
 							if($results) {
 								if(($TOTAL_PAGES > 1) && ($member_pagination)) {
@@ -976,10 +975,10 @@ if($EVALUATION_ID) {
 															'default-option'=>'-- Select Group & Role --',
 															'category_check_all'=>true));
 														} else {
-															echo "No One Available [1]";
+															echo "No One Available for evaluators[1]";
 														}
 													} else {
-														echo "No One Available [2]";
+														echo "No One Available for evaluators[2]";
 													}
 													?>
 
@@ -1110,35 +1109,41 @@ if($EVALUATION_ID) {
                                                             $eform_id = (int) $form_result[0]["eform_id"];
                                                         }
                                                         //echo "<br>".$EVALUATION_ID."||".$form_result["target_id"]."||".$target_id."<br>";
-
-                                                        switch($target_id) {
-                                                                case 1 :
-                                                                case 2 :
-                                                                case 6 :
-                                                                    $sql_groupname = "faculty";
-                                                                break;
-                                                                case 3 :
-                                                                case 7 :
-                                                                case 8 :
-                                                                    $sql_groupname = "student";
-                                                                default :
-                                                                break;
-                                                        }
-
-							$nmembers_query	= " SELECT a.`id` AS `proxy_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, a.`username`, a.`organisation_id`, b.`group`, b.`role`
+                                                        $ppl_query_1st = " SELECT a.`id` AS `proxy_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, a.`username`, a.`organisation_id`, b.`group`, b.`role`
                                                                             FROM `".AUTH_DATABASE."`.`user_data` AS a
                                                                             LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
                                                                             ON a.`id` = b.`user_id`
                                                                             WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
                                                                             AND b.`account_active` = 'true'
-                                                                            AND b.`group` = '".$sql_groupname.
-                                                                            "' AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
+                                                                            AND b.`group` = '";
+                                                        $ppl_query_2nd = "' AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
                                                                             AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
                                                                             GROUP BY a.`id`
                                                                             ORDER BY a.`lastname` ASC, a.`firstname` ASC";
+                                                        $course_query = " SELECT `course_id` AS `proxy_id`, CONCAT_WS(', ', `course_name`, `course_code`) AS `fullname`, `course_name` as username, `organisation_id`, 'course' as `group`, 'course' as `role`
+                                                                            FROM `courses`";
+
+                                                        $default_option = '-- Select Group & Role --';
+
+                                                        switch($target_id) {
+                                                                case 1 :
+                                                                    $nmembers_query = $course_query;
+                                                                    $default_option = '-- Select Course --';
+                                                                break;
+                                                                case 2 :
+                                                                case 6 :
+                                                                    $nmembers_query = $ppl_query_1st."faculty".$ppl_query_2nd;
+                                                                break;
+                                                                case 3 :
+                                                                case 7 :
+                                                                case 8 :
+                                                                    $nmembers_query = $ppl_query_1st."student".$ppl_query_2nd;
+                                                                default :
+                                                                break;
+                                                        }
 
                                                         //var_export ($nmembers_query);
-                                                        //Fetch list of categories
+                                                        /**
                                                         $query	= "SELECT `organisation_id`,`organisation_title` FROM `".AUTH_DATABASE."`.`organisations` ORDER BY `organisation_title` ASC";
                                                         $organisation_results	= $db->GetAll($query);
                                                         if($organisation_results) {
@@ -1160,10 +1165,13 @@ if($EVALUATION_ID) {
                                                                         }
                                                                 }
                                                         }
+                                                         *
+                                                         */
 
 
                                                         if($nmembers_query != "") {
                                                                 $nmembers_results = $db->GetAll($nmembers_query);
+                                                                //var_export ($nmembers_results);
                                                                 if($nmembers_results) {
                                                                         $members = $member_categories;
 
@@ -1185,17 +1193,17 @@ if($EVALUATION_ID) {
                                                                                         sort($members[$key]['options']);
                                                                                 }
                                                                         }
-                                                                        //var_export($member_categories);
+                                                                        //var_export($nmembers_results);
                                                                         //echo "<br>";
                                                                         //var_export($members);
                                                                         echo lp_multiple_select_inline('target_members', $members, array(
                                                                         'width'	=>'100%',
                                                                         'ajax'=>true,
                                                                         'selectboxname'=>'group and role',
-                                                                        'default-option'=>'-- Select Group & Role --',
+                                                                        'default-option'=>$default_option,
                                                                         'category_check_all'=>true));
                                                                 } else {
-                                                                        echo "No One Available [1]";
+                                                                        echo "No One Available [11]";
                                                                 }
                                                         } else {
                                                                 echo "No One Available [2]";
@@ -1203,7 +1211,7 @@ if($EVALUATION_ID) {
                                                         ?>
 
                                                         <input class="multi-picklist" id="target_members" name="target_members" style="display: none;">
-                                                        <input type="hidden" id="target_type_added"  id="target_type_added" value="<?php echo $target_id; ?>">
+                                                        <input type="hidden" id="target_type_added"  name="target_type_added" value="<?php echo $target_id; ?>"/>
                                                     </div>
 						</td>
 						<td style="vertical-align: top; padding-left: 20px;">

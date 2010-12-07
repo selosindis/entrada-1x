@@ -984,13 +984,15 @@ function community_public_order_link($field_id, $field_name, $url) {
  */
 function admin_order_link($field_id, $field_name, $submodule = null) {
 	global $MODULE;
-	if(isset($submodule)) {
+	
+	if (isset($submodule)) {
 		$module_url = $MODULE . "/" . $submodule;
 	} else {
 		$module_url = $MODULE;
 	}
-	if(strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) == strtolower($field_id)) {
-		if(strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) == "desc") {
+	
+	if (strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) == strtolower($field_id)) {
+		if (strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) == "desc") {
 			return "<a href=\"".ENTRADA_URL."/admin/".$module_url."?".replace_query(array("so" => "asc"))."\" title=\"Order by ".$field_name.", Sort Ascending\">".$field_name."</a>";
 		} else {
 			return "<a href=\"".ENTRADA_URL."/admin/".$module_url."?".replace_query(array("so" => "desc"))."\" title=\"Order by ".$field_name.", Sort Decending\">".$field_name."</a>";
@@ -10315,7 +10317,6 @@ function objectives_intable($identifier = 0, $indent = 0, $excluded_objectives =
 	return $output;
 }
 
-
 /**
  * Produces an option tag with the values filled in
  * @param unknown_type $value
@@ -10326,8 +10327,6 @@ function objectives_intable($identifier = 0, $indent = 0, $excluded_objectives =
 function build_option($value, $label, $selected = false) {
 	return "<option value='".$value."'". ($selected ? "selected='selected'" : "") .">".$label."</option>\n";
 }
-
-
 
 /**
  * routine to display standard status messages, Error, Notice, and Success

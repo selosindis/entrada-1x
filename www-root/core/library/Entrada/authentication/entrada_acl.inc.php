@@ -1808,6 +1808,43 @@ class QuizQuestionResource extends QuizResource {
 	}
 }
 
+class EvaluationResource extends EntradaAclResource {
+	var $evaluation_id;
+
+	function __construct($evaluation_id, $assert = null) {
+		$this->evaluation_id = $evaluation_id;
+	}
+
+	public function getResourceId() {
+		return "evaluation".($this->specific ? $this->evaluation_id : "");
+	}
+}
+
+class EvaluationResultResource extends EvaluationResource {
+	public function getResourceId() {
+		return "evaluationresult".($this->specific ? $this->evaluation_id : "");
+	}
+}
+
+class EvaluationFormResource extends EvaluationResource {
+	public function getResourceId() {
+		return "evaluationform".($this->specific ? $this->evaluation_id : "");
+	}
+}
+
+class EvaluationFormQuestionResource extends EvaluationResource {
+	var $evaluation_form_question_id;
+
+	function __construct($evaluation_form_question_id, $evaluation_id, $assert = null) {
+		$this->evaluation_form_question_id = $evaluation_form_question_id;
+		$this->evaluation_id = $evaluation_id;
+	}
+
+	public function getResourceId() {
+		return "evaluationformquestion".($this->specific ? $this->evaluation_id : "");
+	}
+}
+
 class CommunityResource extends EntradaAclResource {
 	/**
 	 * This community's ID

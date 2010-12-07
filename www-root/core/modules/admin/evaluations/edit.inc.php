@@ -308,7 +308,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					</tr>
 					<tr>
 						<td></td>
-						<td><label for="evaluation_description" class="form-nrequired">Evaluation Description</label></td>
+						<td><label for="evaluation_description" class="form-nrequired">Description</label></td>
 						<td><input type="text" id="evaluation_description" name="evaluation_description" value="<?php echo html_encode($PROCESSED["evaluation_description"]); ?>" maxlength="255" style="width: 95%" /></td>
 					</tr>
 					<tr>

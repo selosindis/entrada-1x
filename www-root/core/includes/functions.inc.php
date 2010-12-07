@@ -11604,211 +11604,36 @@ function eval_sche_fetch_filtered_evals() {
 	$output["duration_start"] = $display_duration["start"];
 	$output["duration_end"] = $display_duration["end"];
 
-	/**
-	 * If there are filters set by the user, build the SQL to reflect the filters.
-	 */
-	if ((isset($_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["filters"])) && (@count($_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["filters"]))) {
-		$tmp_query = array();
-		$where_teacher = array();
-		$where_course = array();
-		$where_grad_year = array();
-		$where_phase = array();
-		$where_type = array();
-		$where_clinical_presentation = array();
-		$join_event_contacts = array();
-		$contact_sql = "";
-
-		$query_count = "	SELECT COUNT(DISTINCT `events`.`event_id`) AS `total_rows`
-							FROM `events`
-							LEFT JOIN `event_contacts` AS `primary_teacher`
-							ON `primary_teacher`.`event_id` = `events`.`event_id`
-							AND `primary_teacher`.`contact_order` = '0'
-							LEFT JOIN `event_eventtypes` AS `types`
-							ON `types`.`event_id` = `events`.`event_id`
-							LEFT JOIN `event_audience`
-							ON `event_audience`.`event_id` = `events`.`event_id`
-							%CONTACT_JOIN%
-							LEFT JOIN `".AUTH_DATABASE."`.`user_data`
-							ON `".AUTH_DATABASE."`.`user_data`.`id` = `primary_teacher`.`proxy_id`
-							LEFT JOIN `courses`
-							ON `courses`.`course_id` = `events`.`course_id`
-							LEFT JOIN `event_objectives`
-							ON `event_objectives`.`event_id` = `events`.`event_id`
-							AND `event_objectives`.`objective_type` = 'course'
-							WHERE `courses`.`course_active` = '1'
-							AND (`events`.`release_date` <= ".$db->qstr(time())." OR `events`.`release_date` = 0)
-							AND (`events`.`release_until` >= ".$db->qstr(time())." OR `events`.`release_until` = 0)
-							AND `courses`.`organisation_id` = ".$db->qstr($ORGANISATION_ID);
-
-		$query_events = "	SELECT `events`.`event_id`,
-							`events`.`course_id`,
-							`events`.`event_title`,
-							`events`.`event_start`,
-							`events`.`event_phase`,
-							`events`.`release_date`,
-							`events`.`release_until`,
-							`events`.`updated_date`,
-							`event_audience`.`audience_type`,
-							`courses`.`organisation_id`,
-							CONCAT_WS(', ', `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname`) AS `fullname`,
-							MAX(`statistics`.`timestamp`) AS `last_visited`
-							FROM `events`
-							LEFT JOIN `event_contacts` AS `primary_teacher`
-							ON `primary_teacher`.`event_id` = `events`.`event_id`
-							AND `primary_teacher`.`contact_order` = '0'
-							LEFT JOIN `event_eventtypes` AS `types`
-							ON `types`.`event_id` = `events`.`event_id`
-							LEFT JOIN `event_audience`
-							ON `event_audience`.`event_id` = `events`.`event_id`
-							%CONTACT_JOIN%
-							LEFT JOIN `".AUTH_DATABASE."`.`user_data`
-							ON `".AUTH_DATABASE."`.`user_data`.`id` = `primary_teacher`.`proxy_id`
-							LEFT JOIN `courses`
-							ON  (`courses`.`course_id` = `events`.`course_id`)
-							LEFT JOIN `event_objectives`
-							ON `event_objectives`.`event_id` = `events`.`event_id`
-							AND `event_objectives`.`objective_type` = 'course'
-							LEFT JOIN `statistics`
-							ON `statistics`.`module` = ".$db->qstr("events")."
-							AND `statistics`.`action_value` = `events`.`event_id`
-							AND `statistics`.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
-							AND `statistics`.`action` = 'view'
-							AND `statistics`.`action_field` = 'event_id'
-							WHERE `courses`.`course_active` = '1'
-							AND `courses`.`organisation_id` = ".$db->qstr($ORGANISATION_ID);
-
-		if ($display_duration) {
-			$tmp_query[] = "(`events`.`event_start` BETWEEN ".$db->qstr($display_duration["start"])." AND ".$db->qstr($display_duration["end"]).")";
-		}
-
-		foreach ($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"] as $filter_type => $filter_contents) {
-			if ((is_array($filter_contents)) && (count($filter_contents))) {
-				foreach ($filter_contents as $filter_key => $filter_value) {
-					switch ($filter_type) {
-						case "teacher" :
-							$where_teacher[] = "(`primary_teacher`.`proxy_id` = ".$db->qstr($filter_value)." OR `event_contacts`.`proxy_id` = ".$db->qstr($filter_value).")";
-
-							$join_event_contacts[] = "(`event_contacts`.`proxy_id` = ".$db->qstr($filter_value).")";
-						break;
-						case "student" :
-							if (($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"] != "student") || ($filter_value == $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])) {
-								$student_grad_year = "";
-								$student_proxy_id = (int) $filter_value;
-
-								/**
-								 * Get the grad_year of the proxy_id.
-								 */
-								$query = "	SELECT `role` AS `grad_year`
-											FROM `".AUTH_DATABASE."`.`user_access`
-											WHERE `user_id` = ".$db->qstr($student_proxy_id)."
-											AND `app_id` = ".$db->qstr(AUTH_APP_ID)."
-											AND `group` = 'student'";
-								$result = $db->GetRow($query);
-								if (($result) && ($tmp_input = (int) $result["grad_year"])) {
-									$student_grad_year = "(`event_audience`.`audience_type` = 'grad_year' AND `event_audience`.`audience_value` = ".$db->qstr($tmp_input).") OR ";
-								}
-
-								$where_student[] = "(".$student_grad_year."(`event_audience`.`audience_type` = 'proxy_id' AND `event_audience`.`audience_value` = ".$db->qstr($student_proxy_id)."))";
-							}
-						break;
-						case "grad" :
-							$where_grad_year[] = "(`event_audience`.`audience_type` = 'grad_year' AND `event_audience`.`audience_value` = ".$db->qstr((int) $filter_value).")";
-						break;
-						case "course" :
-							$where_course[] = "(`events`.`course_id` = ".$db->qstr($filter_value).")";
-						break;
-						case "phase" :
-							$where_phase[] = "(`events`.`event_phase` LIKE ".$db->qstr($filter_value).")";
-						break;
-						case "eventtype" :
-							$where_type[] = "(`types`.`eventtype_id` = ".$db->qstr((int) $filter_value).")";
-						break;
-						case "objective" :
-							$where_clinical_presentation[] = "(`event_objectives`.`objective_id` = ".$db->qstr((int) $filter_value).")";
-						break;
-						default :
-							continue;
-						break;
-					}
-				}
-			}
-		}
-
-		if (isset($where_teacher) && count($where_teacher)) {
-			$tmp_query[] = implode(" OR ", $where_teacher);
-		}
-		if (isset($where_student) && count($where_student)) {
-			$tmp_query[] = implode(" OR ", $where_student);
-		}
-		if (isset($where_grad_year) && count($where_grad_year)) {
-			$tmp_query[] = implode(" OR ", $where_grad_year);
-		}
-		if (isset($where_course) && count($where_course)) {
-			$tmp_query[] = implode(" OR ", $where_course);
-		}
-		if (isset($where_phase) && count($where_phase)) {
-			$tmp_query[] = implode(" OR ", $where_phase);
-		}
-		if (isset($where_type) && count($where_type)) {
-			$tmp_query[] = implode(" OR ", $where_type);
-		}
-		if (isset($where_clinical_presentation) && count($where_clinical_presentation)) {
-			$tmp_query[] = implode(" OR ", $where_clinical_presentation);
-		}
-
-		if (isset($tmp_query) && count($tmp_query)) {
-			$query_count .= " AND (".implode(") AND (", $tmp_query).")";
-			$query_events .= " AND (".implode(") AND (", $tmp_query).")";
-		}
-
-		if (isset($join_event_contacts) && count($join_event_contacts)) {
-			$contact_sql = "	LEFT JOIN `event_contacts`
-								ON `event_contacts`.`event_id` = `events`.`event_id`
-								AND (".implode(" OR ", $join_event_contacts).")";
-		}
-
-	 	$query_count = str_replace("%CONTACT_JOIN%", $contact_sql, $query_count);
-		$query_events = str_replace("%CONTACT_JOIN%", $contact_sql, $query_events)." GROUP BY `events`.`event_id` ORDER BY %s LIMIT %s, %s";
-	} else {
-                /**** Howard ***/
-                $query_count = "	SELECT COUNT(DISTINCT `evaluations`.`evaluation_id`) AS `total_rows`
-                                                        FROM `evaluations`";
-		$query_evaluations = "	SELECT `evaluations`.`evaluation_id`, `eform_id`, `evaluation_title`, `evaluation_description`, `evaluation_active`,
-                                            `evaluation_start`, `evaluation_finish`, `min_submittable`, `max_submittable`, `release_date`,
-                                            `release_until`, `updated_date`, `updated_by` from `evaluations`
-                                            ORDER BY %s
-                                            LIMIT %s, %s";
-		$query_evaluations = "	SELECT a.`evaluation_id`, a.`eform_id`, a.`evaluation_title`, a.`evaluation_description`, a.`evaluation_active`,
-                                            a.`evaluation_start`, a.`evaluation_finish`, a.`min_submittable`, a.`max_submittable`, a.`release_date`,
-                                            a.`release_until`, a.`updated_date`, a.`updated_by`, COALESCE(evaluator_num, 0) as evaluator_num, COALESCE(target_num, 0) as target_num from `evaluations` a
-                                            left join
-                                            (
-                                                select evaluation_id, COALESCE(count(*), 0) as evaluator_num from evaluation_evaluators
-                                            ) b
-                                                ON b.`evaluation_id` = a.`evaluation_id`
-                                            left join
-                                            (
-                                                select evaluation_id, COALESCE(count(*), 0) as target_num from evaluation_targets
-                                            ) c
-                                                ON c.`evaluation_id` = a.`evaluation_id`
-                                            ORDER BY %s
-                                            LIMIT %s, %s";
-	}
+        /**** Query ***/
+        $query_count = "	SELECT COUNT(DISTINCT `evaluations`.`evaluation_id`) AS `total_rows`
+                                                FROM `evaluations`";
+        $query_evaluations = "	SELECT `evaluations`.`evaluation_id`, `eform_id`, `evaluation_title`, `evaluation_description`, `evaluation_active`,
+                                    `evaluation_start`, `evaluation_finish`, `min_submittable`, `max_submittable`, `release_date`,
+                                    `release_until`, `updated_date`, `updated_by` from `evaluations`
+                                    ORDER BY %s
+                                    LIMIT %s, %s";
+        $query_evaluations = "	SELECT a.`evaluation_id`, a.`eform_id`, a.`evaluation_title`, a.`evaluation_description`, a.`evaluation_active`,
+                                    a.`evaluation_start`, a.`evaluation_finish`, a.`min_submittable`, a.`max_submittable`, a.`release_date`,
+                                    a.`release_until`, a.`updated_date`, a.`updated_by`, COALESCE(evaluator_num, 0) as evaluator_num, COALESCE(target_num, 0) as target_num from `evaluations` a
+                                    left join
+                                    (
+                                        select evaluation_id, COALESCE(count(*), 0) as evaluator_num from evaluation_evaluators group by evaluation_id
+                                    ) b
+                                        ON b.`evaluation_id` = a.`evaluation_id`
+                                    left join
+                                    (
+                                        select evaluation_id, COALESCE(count(*), 0) as target_num from evaluation_targets  group by evaluation_id
+                                    ) c
+                                        ON c.`evaluation_id` = a.`evaluation_id`
+                                    ORDER BY %s
+                                    LIMIT %s, %s";
 
 	/**
 	 * Get the total number of results using the generated queries above and calculate the total number
 	 * of pages that are available based on the results per page preferences.
 	 */
 	$result_count = $db->GetRow($query_count);
-        //var_export ($_SESSION[APPLICATION_IDENTIFIER]);
-        //var_export ($_SESSION[APPLICATION_IDENTIFIER]);
-        //var_export ("_______________evaluation:_______________");
-        //var_export($_SESSION[APPLICATION_IDENTIFIER]["evaluations"]);
-        //print_r($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["evaluations"]);
-        //print_r($_SESSION[APPLICATION_IDENTIFIER][$modules]);
-        //        application_log("error", "$result_count=".$result_count);
-        //echo "______log______".'result_count[total_rows]: '. $result_count["total_rows"]."<br>";
-        //echo "______log______".'result_count: '.$result_count."<br>";
+
 	if ($result_count) {
 		$output["total_rows"] = (int) $result_count["total_rows"];
 
@@ -11867,7 +11692,7 @@ function eval_sche_fetch_filtered_evals() {
 	if ($scheduler_evaluations) {
 		$output["evaluations"] = $scheduler_evaluations;
 	}
-//echo "<br>";var_export ($output);
+        //echo "<br>";var_export ($output);
 	return $output;
 }
 

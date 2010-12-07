@@ -67,7 +67,6 @@ if ((isset($_GET["type"])) && ($tmp_type = clean_input(trim($_GET["type"]), "alp
 unset($tmp_action_type);
 unset($tmp_type);
 unset($tmp_poll);
-//echo "[".$EVALUATION_ID."]";
 if(isset($EVALUATION_ID) && isset($ACTION)) {
 	ob_clear_open_buffers();
 
@@ -87,8 +86,11 @@ if(isset($EVALUATION_ID) && isset($ACTION)) {
 				}
 			}
 
-
 						$nmembers_results		= false;
+                                                if($GROUP == 'course'){
+                                                $nmembers_query = " SELECT `course_id` AS `proxy_id`, CONCAT_WS(', ', `course_name`, `course_code`) AS `fullname`, `course_name` as username, `organisation_id`, 'course' as `group`, 'course' as `role`
+                                                                            FROM `courses`";
+                                                }else{
 						$nmembers_query	= "	SELECT a.`id` AS `proxy_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, a.`username`, a.`organisation_id`, b.`group`, b.`role`
 											FROM `".AUTH_DATABASE."`.`user_data` AS a
 											LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
@@ -104,17 +106,29 @@ if(isset($EVALUATION_ID) && isset($ACTION)) {
 											GROUP BY a.`id`
 											ORDER BY a.`lastname` ASC, a.`firstname` ASC";
 
+                                                }
+							
+
 						//Fetch list of current members
 						$current_member_list	= array();
-						$query		= "SELECT `evaluator_value` FROM `evaluation_evaluators` WHERE `evaluation_id` = ".$db->qstr($EVALUATION_ID)." AND `evaluator_type` = 'proxy_id'";
-						$results	= $db->GetAll($query);
+                                                switch ($GROUP) {
+                                                        case "course" :
+                                                            $query = "SELECT `target_value`, `target_id` FROM `evaluation_targets` WHERE `evaluation_id` = ".$db->qstr($EVALUATION_ID)." AND `target_id` = 1";
+                                                        break;
+                                                        default :
+                                                            $query = "SELECT `target_value`, `target_id` FROM `evaluation_targets` WHERE `evaluation_id` = ".$db->qstr($EVALUATION_ID)." AND `target_id` != 1";
+                                                        break;
+                                                }
+                                                
+                                                $results	= $db->GetAll($query);
 						if($results) {
 							foreach($results as $result) {
-								if($proxy_id = (int) $result["evaluator_value"]) {
+								if($proxy_id = (int) $result["target_value"]) {
 									$current_member_list[] = $proxy_id;
 								}
 							}
 						}
+						
 
 						//
 						if($nmembers_query != "") {

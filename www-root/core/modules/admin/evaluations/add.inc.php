@@ -87,12 +87,15 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 				$PROCESSED["evaluation_description"] = $evaluation_description;
 			}
 
-			if((isset($_POST["evaluation_active"])) && ($evaluation_active = clean_input($_POST["evaluation_active"], array("notags", "trim")))) {
+			/**
+                        if((isset($_POST["evaluation_active"])) && ($evaluation_active = clean_input($_POST["evaluation_active"], array("notags", "trim")))) {
 				$PROCESSED["evaluation_active"] = $evaluation_active;
 			} else {
 				$ERROR++;
 				$ERRORSTR[] = "The <strong>Evaluation Active</strong> field is required.";
 			}
+                         *
+                         */
 			if((isset($_POST["min_submittable"])) && ($min_submittable = clean_input($_POST["min_submittable"], array("notags", "trim")))) {
 				$PROCESSED["min_submittable"] = $min_submittable;
 			} else {
@@ -169,7 +172,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 				}
 				$PROCESSED["eventtype_id"] = $PROCESSED["event_types"][0][0];
 				//if($db->AutoExecute("evaluations", array("evaluation_title" => $_POST["evaluation_title"], "evaluation_description" => $_POST["evaluation_description"], "evaluation_active" => $PROCESSED["evaluation_active"], "evaluation_start" => $PROCESSED["evaluation_start"], "evaluation_finish" => $PROCESSED["evaluation_finish"], "min_submittable" => $_POST["min_submittable"], "max_submittable" => $_POST["max_submittable"], "release_date" => $PROCESSED["release_date"], "release_until" => $PROCESSED["release_until"]), "INSERT")) {
-                                if($db->AutoExecute("evaluations", array("evaluation_title" => $_POST["evaluation_title"], "evaluation_description" => $_POST["evaluation_description"], "evaluation_active" => $PROCESSED["evaluation_active"], "evaluation_start" => $PROCESSED["evaluation_start"], "evaluation_finish" => $PROCESSED["evaluation_finish"], "min_submittable" => $_POST["min_submittable"], "max_submittable" => $_POST["max_submittable"]), "INSERT")) {
+                                if($db->AutoExecute("evaluations", array("evaluation_title" => $_POST["evaluation_title"], "evaluation_description" => $_POST["evaluation_description"], "evaluation_active" => 1, "evaluation_start" => $PROCESSED["evaluation_start"], "evaluation_finish" => $PROCESSED["evaluation_finish"], "min_submittable" => $_POST["min_submittable"], "max_submittable" => $_POST["max_submittable"]), "INSERT")) {
                                                 if($EVALUATION_ID = $db->Insert_Id()){
 						switch($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"]) {
 							case "content" :
@@ -304,27 +307,22 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					</tr>
 					<tr>
 						<td></td>
-						<td><label for="evaluation_description" class="form-nrequired">Evaluation Description</label></td>
+						<td><label for="evaluation_description" class="form-nrequired">Description</label></td>
 						<td><input type="text" id="evaluation_description" name="evaluation_description" value="<?php echo html_encode($PROCESSED["evaluation_description"]); ?>" maxlength="255" style="width: 95%" /></td>
 					</tr>
 					<tr>
 						<td colspan="3">&nbsp;</td>
 					</tr>
 					<tr>
-						<td></td>
-						<td><label for="evaluation_active" class="form-required">Evaluation Active</label></td>
-						<td><input type="text" id="evaluation_active" name="evaluation_active" value="<?php echo html_encode($PROCESSED["evaluation_active"]); ?>" maxlength="255" style="width: 95%" /></td>
-					</tr>
-					<tr>
 						<td colspan="3">&nbsp;</td>
 					</tr>
-					<?php echo generate_calendars("evaluation", "Evaluation Date & Time", true, true, ((isset($PROCESSED["evaluation_start"])) ? $PROCESSED["evaluation_start"] : 0), true, true, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0)); ?>
+					<?php echo generate_calendars("evaluation", "Evaluation", true, true, ((isset($PROCESSED["evaluation_start"])) ? $PROCESSED["evaluation_start"] : 0), true, true, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0)); ?>
 
 					<?php //echo generate_calendars("evaluation", "Evaluation Date & Time", true, true, ((isset($PROCESSED["evaluation_end"])) ? $PROCESSED["evaluation_end"] : 0)); ?>
 					<tr>
 						<td></td>
 						<td><label for="min_submittable" class="form-required">Min Submittable</label></td>
-						<td><input type="text" id="min_submittable" name="min_submittable" value="<?php echo $PROCESSED["min_submittable"]; ?>" maxlength="255" style="width: 203px" /></td>
+						<td><input type="text" id="min_submittable" name="min_submittable" value="1" maxlength="25" style="width: 40px" />&nbsp;&nbsp;&nbsp;(Minimum number of times evaluator must complete the evaluation)</td>
 					</tr>
 					<tr>
 						<td colspan="3">&nbsp;</td>
@@ -332,7 +330,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					<tr>
 						<td></td>
 						<td><label for="max_submittable" class="form-required">Max Submittable</label></td>
-						<td><input type="text" id="max_submittable" name="max_submittable" value="<?php echo $PROCESSED["max_submittable"]; ?>" maxlength="255" style="width: 203px" /></td>
+						<td><input type="text" id="max_submittable" name="max_submittable" value="1" maxlength="25" style="width: 40px" />&nbsp;&nbsp;&nbsp;(Maximum number of times evaluator must complete the evaluation)</td>
 					</tr>
 					<tr>
 						<td colspan="3">&nbsp;</td>
@@ -356,23 +354,6 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 								}
 								?>
 							</select>
-							<div id="duration_notice" class="content-small" >Use the list above to select the different components of this evaluation. When you select one, it will appear here and you can change the order and duration.</div>
-							<ol id="duration_container" class="sortableList" style="display: none;">
-								<?php
-								foreach($PROCESSED["event_types"] as $eventtype) {
-									echo "<li id=\"type_".$eventtype[0]."\" class=\"\">".$eventtype[2]."
-										<a href=\"#\" onclick=\"$(this).up().remove(); cleanupList(); return false;\" class=\"remove\">
-											<img src=\"".ENTRADA_URL."/images/action-delete.gif\">
-										</a>
-										<span class=\"duration_segment_container\">
-											Duration: <input class=\"duration_segment\" name=\"duration_segment[]\" onchange=\"cleanupList();\" value=\"".$eventtype[1]."\"> minutes
-										</span>
-									</li>";
-								}
-								?>
-							</ol>
-							<div id="total_duration" class="content-small">Total time: 0 minutes.</div>
-							<input id="eventtype_duration_order" name="eventtype_duration_order" style="display: none;">
 						</td>
 					</tr>
 					<tr>

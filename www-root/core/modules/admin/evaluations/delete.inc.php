@@ -21,13 +21,12 @@
  * @copyright Copyright 2010 University of Calgary. All Rights Reserved.
  *
 */
-
 if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 	exit;
 } elseif((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	header("Location: ".ENTRADA_URL);
 	exit;
-} elseif(!$ENTRADA_ACL->amIAllowed('evaluation', 'delete', false)) {
+} elseif(!$ENTRADA_ACL->amIAllowed('event', 'delete', false)) {
 	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/".$MODULE."\\'', 15000)";
 
 	$ERROR++;
@@ -80,70 +79,62 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 				$allow_removal = false;
 
 				if($evaluation_id = (int) $evaluation_id) {
-					$query	= "	SELECT a.`evaluation_id`, a.`course_id`, a.`evaluation_title`, b.`organisation_id`
-								FROM `evaluations`
-								WHERE a.`evaluation_id` = ".$db->qstr($evaluation_id);
-					$result	= $db->GetRow($query);
-					if ($result) {
-						if($ENTRADA_ACL->amIAllowed(new EvaluationResource($result["evaluation_id"]), 'delete')) {
-							/**
-							 * Check to see if any quizzes are attached to this evaluation.
-							 */
-							$query		= "	SELECT * FROM `evaluations`
-											WHERE `evaluation_id` = ".$db->qstr($evaluation_id);
-							$rlt_detail	= $db->GetAll($query);
-							if (($rlt_detail) && (count($rlt_detail) <= 0)) {
-								$ERROR++;
-								$ERRORSTR[] = "You cannot delete <a href=\"".ENTRADA_URL."/admin/evaluations?section=content&amp;id=".$evaluation_id."\" style=\"font-weight: bold\">".html_encode($result["evaluation_title"])."</a> at this time because there are no evaluation.";
-							} else {
+                                    /**
+                                     * Check to see if this evaluation exist.
+                                     */
+                                    $query		= "	SELECT * FROM `evaluations`
+                                                                    WHERE `evaluation_id` = ".$db->qstr($evaluation_id);
+                                    $rlt_detail	= $db->GetAll($query);
+                                    if (($rlt_detail) && (count($rlt_detail) <= 0)) {
+                                            $ERROR++;
+                                            $ERRORSTR[] = "You cannot delete <a href=\"".ENTRADA_URL."/admin/evaluations?section=content&amp;id=".$evaluation_id."\" style=\"font-weight: bold\">".html_encode($result["evaluation_title"])."</a> at this time because there are no evaluation.";
+                                    } else {
 
 
-								/**
-								 * Remove all records from evaluation_objectives table.
-								 
-								$query		= "SELECT * FROM `evaluation_objectives` WHERE `evaluation_id` = ".$db->qstr($evaluation_id);
-								$results	= $db->GetAll($query);
-								if($results) {
-									foreach($results as $result) {
-										$removed[$evaluation_id]["objective_id"][] = $result["objective_id"];
-									}
+                                            /**
+                                             * Remove all records from evaluation_targets table.
+                                             */
 
-									$query = "DELETE FROM `evaluation_objectives` WHERE `evaluation_id` = ".$db->qstr($evaluation_id);
-									$db->Execute($query);
-								}
+                                            $query		= "SELECT * FROM `evaluation_targets` WHERE `evaluation_id` = ".$db->qstr($evaluation_id);
+                                            $results	= $db->GetAll($query);
+                                            if($results) {
+                                                    foreach($results as $result) {
+                                                            $removed[$evaluation_id]["etarget_id"][] = $result["etarget_id"];
+                                                    }
 
-								
-								 * 
-								 */
-								$query		= "SELECT * FROM `evaluation_related` WHERE `evaluation_id` = ".$db->qstr($evaluation_id)." OR (`related_type` = 'evaluation_id' AND `related_value` = ".$db->qstr($evaluation_id).")";
-								$results	= $db->GetAll($query);
-								if($results) {
-									foreach($results as $result) {
-										$removed[$evaluation_id]["evaluation_id"][] = $result["evaluation_id"];
-									}
+                                                    $query = "DELETE FROM `evaluation_targets` WHERE `evaluation_id` = ".$db->qstr($evaluation_id);
+                                                    $db->Execute($query);
+                                            }
 
-									$query = "DELETE FROM `evaluation_related` WHERE `evaluation_id` = ".$db->qstr($evaluation_id)." OR (`related_type` = 'evaluation_id' AND `related_value` = ".$db->qstr($evaluation_id).")";
-									$db->Execute($query);
-								}
 
-								/**
-								 * Remove evaluation_id record from evaluations table.
-								$query		= "SELECT * FROM `evaluations` WHERE `evaluation_id` = ".$db->qstr($evaluation_id);
-								$results	= $db->GetAll($query);
-								 */
-								if($results) {
-									foreach($results as $result) {
-										$removed[$evaluation_id]["evaluation_title"] = $result["evaluation_title"];
-									}
-									$query = "DELETE FROM `evaluations` WHERE `evaluation_id` = ".$db->qstr($evaluation_id);
-									$db->Execute($query);
-								}
-							}
-						} else {
-							$ERROR++;
-							$ERRORSTR[] = "You do not have the permissions required to delete <a href=\"".ENTRADA_URL."/admin/evaluations?section=content&amp;id=".$evaluation_id."\" style=\"font-weight: bold\">".html_encode($result["evaluation_title"])."</a>.<br /><br />If you believe you are receiving this message in error, please contact the administrator.";
-						}
-					}
+
+                                            /**
+                                             * Remove all records from evaluation_evaluators table.
+                                             */
+                                            $query		= "SELECT * FROM `evaluation_evaluators` WHERE `evaluation_id` = ".$db->qstr($evaluation_id);
+                                            $results	= $db->GetAll($query);
+                                            if($results) {
+                                                    foreach($results as $result) {
+                                                            $removed[$evaluation_id]["evaluation_id"][] = $result["evaluation_id"];
+                                                    }
+
+                                                    $query = "DELETE FROM `evaluation_evaluators` WHERE `evaluation_id` = ".$db->qstr($evaluation_id);
+                                                    $db->Execute($query);
+                                            }
+
+                                            /**
+                                             * Remove evaluation_id record from evaluations table.
+                                             */
+                                            $query		= "SELECT * FROM `evaluations` WHERE `evaluation_id` = ".$db->qstr($evaluation_id);
+                                            $results	= $db->GetAll($query);
+                                            if($results) {
+                                                    foreach($results as $result) {
+                                                            $removed[$evaluation_id]["evaluation_title"] = $result["evaluation_title"];
+                                                    }
+                                                    $query = "DELETE FROM `evaluations` WHERE `evaluation_id` = ".$db->qstr($evaluation_id);
+                                                    $db->Execute($query);
+                                            }
+                                    }
 				}
 			}
 
@@ -180,39 +171,30 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 			} else {
 				$total_evaluations	= count($EVALUATION_IDS);
 
-				$query		= "	SELECT a.`evaluation_id`, a.`evaluation_title`, a.`evaluation_start`, a.`evaluation_phase`, a.`release_date`, a.`release_until`, a.`updated_date`, CONCAT_WS(', ', c.`lastname`, c.`firstname`) AS `fullname`, d.organisation_id
-								FROM `evaluations` AS a
-								LEFT JOIN `evaluation_contacts` AS b
-								ON b.`evaluation_id` = a.`evaluation_id`
-								AND b.`contact_order` = '0'
-								LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS c
-								ON c.`id` = b.`proxy_id`
-								LEFT JOIN `courses` AS d
-								ON d.`course_id` = a.`course_id`
-								WHERE a.`evaluation_id` IN (".implode(", ", $EVALUATION_IDS).")
-								AND d.`course_active` = '1'
-								ORDER BY a.`evaluation_start` ASC";
-				$results	= $db->GetAll($query);
+				$query_evaluations = "	SELECT `evaluation_id`, `eform_id`, `evaluation_title`, `evaluation_description`, `evaluation_active`,
+                                                            `evaluation_start`, `evaluation_finish`, `min_submittable`, `max_submittable`, `release_date`,
+                                                            `release_until`, `updated_date`, `updated_by` from `evaluations`
+                                                            WHERE `evaluation_id` IN (".implode(", ", $EVALUATION_IDS).")
+                                                            ORDER BY `evaluation_start`";
+				$results	= $db->GetAll($query_evaluations);
 				if($results) {
-					echo display_notice(array("Please review the following evaluation".(($total_evaluations != 1) ? "s" : "")." to ensure that you wish to <strong>permanently delete</strong> ".(($total_evaluations != 1) ? "them" : "it").".<br /><br />This will also remove any attached resources, contacts, etc. and this action cannot be undone."));
+					echo display_notice(array("Please review the following evaluation".(($total_evaluations != 1) ? "s" : "")." to ensure that you wish to <strong>permanently delete</strong> ".(($total_evaluations != 1) ? "them" : "it").".<br /><br />This will also remove any related evaluators, targets, etc. and this action cannot be undone."));
 					?>
 					<form action="<?php echo ENTRADA_URL; ?>/admin/evaluations?section=delete&amp;step=2" method="post">
 					<table class="tableList" cellspacing="0" summary="List of Events">
 					<colgroup>
-						<col class="modified" />
-						<col class="date" />
-						<col class="phase" />
-						<col class="teacher" />
-						<col class="title" />
+                                                <col class="modified" />
+                                                <col class="title" />
+                                                <col class="start" />
+                                                <col class="finish" />
 						<col class="attachment" />
 					</colgroup>
 					<thead>
 						<tr>
-							<td class="modified" style="font-size: 12px">&nbsp;</td>
-							<td class="date sortedASC" style="font-size: 12px"><div class="noLink">Date &amp; Time</div></td>
-							<td class="phase" style="font-size: 12px">Phase</td>
-							<td class="teacher" style="font-size: 12px">Teacher</td>
-							<td class="title" style="font-size: 12px">Event Title</td>
+                                                        <td class="modified">&nbsp;</td>
+                                                        <td>Title</td>
+                                                        <td>Start</td>
+                                                        <td>Finish</td>
 							<td class="attachment" style="font-size: 12px">&nbsp;</td>
 						</tr>
 					</thead>
@@ -239,16 +221,17 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 								}
 							}
 
+                                                        $administrator = true; //Added before EvaluationResource is setup.
+
 							if($administrator) {
 								$url 	= ENTRADA_URL."/admin/evaluations?section=edit&amp;id=".$result["evaluation_id"];
 
-								echo "<tr id=\"evaluation-".$result["evaluation_id"]."\" class=\"evaluation".((!$url) ? " np" : ((!$accessible) ? " na" : ""))."\">\n";
-								echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"checked[]\" value=\"".$result["evaluation_id"]."\" checked=\"checked\" /></td>\n";
-								echo "	<td class=\"date".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Event Date\">" : "").date(DEFAULT_DATE_FORMAT, $result["evaluation_start"]).(($url) ? "</a>" : "")."</td>\n";
-								echo "	<td class=\"phase".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Intended For Phase ".html_encode($result["evaluation_phase"])."\">" : "").html_encode($result["evaluation_phase"]).(($url) ? "</a>" : "")."</td>\n";
-								echo "	<td class=\"teacher".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Primary Teacher: ".html_encode($result["fullname"])."\">" : "").html_encode($result["fullname"]).(($url) ? "</a>" : "")."</td>\n";
-								echo "	<td class=\"title".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Event Title: ".html_encode($result["evaluation_title"])."\">" : "").html_encode($result["evaluation_title"]).(($url) ? "</a>" : "")."</td>\n";
-								echo "	<td class=\"attachment\">".(($url) ? "<a href=\"".ENTRADA_URL."/admin/evaluations?section=content&amp;id=".$result["evaluation_id"]."\"><img src=\"".ENTRADA_URL."/images/evaluation-contents.gif\" width=\"16\" height=\"16\" alt=\"Manage Event Content\" title=\"Manage Event Content\" border=\"0\" /></a>" : "<img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"16\" height=\"16\" alt=\"\" title=\"\" />")."</td>\n";
+                                                                echo "<tr id=\"evaluation-".$result["evaluation_id"]."\" class=\"evaluation".((!$url) ? " np" : ((!$accessible) ? " na" : ""))."\">\n";
+                                                                echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"checked[]\" value=\"".$result["evaluation_id"]."\" checked=\"checked\" /></td>\n";
+                                                                echo "	<td class=\"title".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Evaluation Title: ".html_encode($result["evaluation_title"])."\">" : "").html_encode($result["evaluation_title"]).(($url) ? "</a>" : "")."</td>\n";
+                                                                echo "	<td class=\"start".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Evaluation Date\">" : "").date(DEFAULT_DATE_FORMAT, $result["evaluation_start"]).(($url) ? "</a>" : "")."</td>\n";
+                                                                echo "	<td class=\"finish".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Intended For Phase ".html_encode($result["evaluation_finish"])."\">" : "").date(DEFAULT_DATE_FORMAT, html_encode($result["evaluation_finish"])).(($url) ? "</a>" : "")."</td>\n";
+                                                                echo "	<td class=\"attachment\">".(($url) ? "<a href=\"".ENTRADA_URL."/admin/evaluations?section=members&evaluation=".$result["evaluation_id"]."\"><img src=\"".ENTRADA_URL."/images/event-contents.gif\" width=\"16\" height=\"16\" alt=\"Manage Event Content\" title=\"Manage Event Content\" border=\"0\" /></a>" : "<img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"16\" height=\"16\" alt=\"\" title=\"\" />")."</td>\n";
 								echo "</tr>\n";
 							}
 						}

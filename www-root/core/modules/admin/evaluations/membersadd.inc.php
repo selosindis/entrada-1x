@@ -41,12 +41,12 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 }
 
 ob_clear_open_buffers();
-$COMMUNITY_ID		= 0;
+$EVALUATION_ID		= 0;
 
-if((isset($_GET["community"])) && ((int) trim($_GET["community"]))) {
-	$COMMUNITY_ID	= (int) trim($_GET["community"]);
-} elseif((isset($_POST["community_id"])) && ((int) trim($_POST["community_id"]))) {
-	$COMMUNITY_ID	= (int) trim($_POST["community_id"]);
+if((isset($_GET["evaluation"])) && ((int) trim($_GET["evaluation"]))) {
+	$EVALUATION_ID	= (int) trim($_GET["evaluation"]);
+} elseif((isset($_POST["evaluation_id"])) && ((int) trim($_POST["evaluation_id"]))) {
+	$EVALUATION_ID	= (int) trim($_POST["evaluation_id"]);
 }
 
 if((isset($_GET["action"])) && ($tmp_action_type = clean_input(trim($_GET["action"]), "alphanumeric"))) {
@@ -63,18 +63,12 @@ if ((isset($_GET["type"])) && ($tmp_type = clean_input(trim($_GET["type"]), "alp
 	$TYPE	= "default";
 }
 
-if ((isset($_GET["poll_id"])) && ($tmp_poll = clean_input(trim($_GET["poll_id"]), "int"))) {
-	$poll_id	= $tmp_poll;
-} elseif((isset($_POST["poll_id"])) && ($tmp_poll = clean_input(trim($_POST["poll_id"]), "int"))) {
-	$poll_id	= $tmp_poll;
-} else {
-	$poll_id	= 0;
-}
 
 unset($tmp_action_type);
 unset($tmp_type);
 unset($tmp_poll);
-if(isset($COMMUNITY_ID) && isset($ACTION)) {
+//echo "[".$EVALUATION_ID."]";
+if(isset($EVALUATION_ID) && isset($ACTION)) {
 	ob_clear_open_buffers();
 
 	switch($ACTION) {
@@ -112,25 +106,12 @@ if(isset($COMMUNITY_ID) && isset($ACTION)) {
 
 						//Fetch list of current members
 						$current_member_list	= array();
-						$query		= "SELECT `proxy_id` FROM `community_members` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `member_active` = '1'";
+						$query		= "SELECT `evaluator_value` FROM `evaluation_evaluators` WHERE `evaluation_id` = ".$db->qstr($EVALUATION_ID)." AND `evaluator_type` = 'proxy_id'";
 						$results	= $db->GetAll($query);
 						if($results) {
 							foreach($results as $result) {
-								if($proxy_id = (int) $result["proxy_id"]) {
+								if($proxy_id = (int) $result["evaluator_value"]) {
 									$current_member_list[] = $proxy_id;
-								}
-							}
-						}
-
-						if ($TYPE == "polls" && $poll_id) {
-							$query = "	SELECT `proxy_id` FROM `community_polls_access`
-												WHERE `cpolls_id` = ".$db->qstr($poll_id);
-							$results	= $db->GetAll($query);
-							if ($results) {
-								foreach($results as $result) {
-									if($proxy_id = (int) $result["proxy_id"]) {
-										$poll_member_list[] = $proxy_id;
-									}
 								}
 							}
 						}
@@ -146,20 +127,11 @@ if(isset($COMMUNITY_ID) && isset($ACTION)) {
 									} else {
 										$registered = false;
 									}
-									if ($poll_member_list && is_array($poll_member_list) && count($poll_member_list)) {
-										if(in_array($member['proxy_id'], $poll_member_list)) {
-											$in_poll = true;
-										} else {
-											$in_poll = false;
-										}
-									}
-									if ($TYPE == "polls") {
-										if ($registered) {
-											$members[0]['options'][] = array('text' => $member['fullname'], 'value' => $member['proxy_id'], 'disabled' => false, 'checked' => ($in_poll ? "checked=\"checked\"" : ""));
-										}
-									} else {
-										$members[0]['options'][] = array('text' => $member['fullname'].($registered ? ' (already a member)' : ''), 'value' => $member['proxy_id'], 'disabled' => $registered);
-									}
+                                                                        if ($registered) {
+                                                                            $members[0]['options'][] = array('text' => $member['fullname'].($registered ? ' (already a member)' : ''), 'value' => $member['proxy_id'], 'disabled' => $registered);
+                                                                        } else {
+                                                                            $members[0]['options'][] = array('text' => $member['fullname'], 'value' => $member['proxy_id'], 'disabled' => false, 'checked' => ($in_poll ? "checked=\"checked\"" : ""));
+                                                                        }
 								}
 
 								foreach($members[0]['options'] as $key => $member) {

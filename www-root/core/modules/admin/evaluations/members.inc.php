@@ -234,7 +234,7 @@ if($EVALUATION_ID) {
 
 							if($member_add_success) {
 								$SUCCESS++;
-								$SUCCESSSTR[] = "You have successfully added ".$member_add_success." new evaluators".(($member_add_success != 1) ? "s" : "")." to this evaluation.<br /><br />You will now be redirected back to the Manage Evaluators page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/evaluations?section=members&evaluation=".$EVALUATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
+								$SUCCESSSTR[] = "You have successfully added ".$member_add_success." new evaluator".(($member_add_success != 1) ? "s" : "")." to this evaluation.<br /><br />You will now be redirected back to the Manage Evaluators page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/evaluations?section=members&evaluation=".$EVALUATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
 
 								communities_log_history($EVALUATION_ID, 0, $member_add_success, "community_history_add_members", 1);
 							}
@@ -334,7 +334,7 @@ if($EVALUATION_ID) {
 													}
 												}
 												$SUCCESS++;
-												$SUCCESSSTR[] = "You have successfully removed <strong>".$total_deleted." evaluator".(($total_deleted != 1) ? "s" : "")."</strong> from the <strong>".html_encode($evaluation_details["community_title"])."</strong> evaluation.<br /><br />You will now be redirected back to the Manage Members page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/evaluations?section=members&evaluation=".$EVALUATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
+												$SUCCESSSTR[] = "You have successfully removed <strong>".$total_deleted." evaluator".(($total_deleted != 1) ? "s" : "")."</strong> from the <strong>".html_encode($evaluation_details["evaluation_title"])."</strong> evaluation.<br /><br />You will now be redirected back to the Manage Members page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/evaluations?section=members&evaluation=".$EVALUATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
 											} else {
 												$ERROR++;
 												$ERRORSTR[] = "There was a problem removing these evaluation evaluators from the system; the MEdTech Unit has been informed of this error, please try again later.";
@@ -356,6 +356,53 @@ if($EVALUATION_ID) {
 							} else {
 								$ERROR++;
 								$ERRORSTR[] = "Unrecognized Evaluator Action error; the MEdTech Unit has been informed of this error. Please try again later.";
+
+								application_log("error", "The provided action_type [".$ACTION_TYPE."] is invalid.");
+							}
+							break;
+						case "targets" :
+							if((isset($_POST["target_action"])) && (@in_array(strtolower($_POST["target_action"]), array("delete", "deactivate", "promote")))) {
+								if((isset($_POST["member_proxy_ids"])) && (is_array($_POST["member_proxy_ids"])) && (count($_POST["member_proxy_ids"]))) {
+                                                                    foreach($_POST["member_proxy_ids"] as $proxy_id) {
+                                                                        $PROXY_IDS[] = (int) trim($proxy_id);
+                                                                    }
+								}
+
+								if((is_array($PROXY_IDS)) && (count($PROXY_IDS))) {
+									switch(strtolower($_POST["target_action"])) {
+										case "delete" :
+											$query	= "DELETE FROM `evaluation_targets` WHERE `evaluation_id` = ".$db->qstr($EVALUATION_ID)." AND `etarget_id` IN ('".implode("', '", $PROXY_IDS)."')";
+											$result	= $db->Execute($query);
+											if(($result) && ($total_deleted = $db->Affected_Rows())) {
+												if ($MAILING_LISTS["active"]) {
+													$mail_list = new MailingList($EVALUATION_ID);
+													foreach ($PROXY_IDS as $proxy_id) {
+														$mail_list->deactivate_member($proxy_id);
+													}
+												}
+												$SUCCESS++;
+												$SUCCESSSTR[] = "You have successfully removed <strong>".$total_deleted." target".(($total_deleted != 1) ? "s" : "")."</strong> from the <strong>".html_encode($evaluation_details["evaluation_title"])."</strong> evaluation.<br /><br />You will now be redirected back to the Manage Members page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/evaluations?section=members&evaluation=".$EVALUATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
+											} else {
+												$ERROR++;
+												$ERRORSTR[] = "There was a problem removing these evaluation targets from the system; the MEdTech Unit has been informed of this error, please try again later.";
+
+												application_log("error", "Unable to remove targets from evaluation_id [".$EVALUATION_ID."]. Database said: ".$db->ErrorMsg());
+											}
+											break;
+										default :
+										/**
+										 * This should never happen, as I'm checking the member_action above.
+										 */
+											continue;
+											break;
+									}
+								} else {
+									$ERROR++;
+									$ERRORSTR[] = "In order to complete this action, you will need to select at least 1 user from the list.";
+								}
+							} else {
+								$ERROR++;
+								$ERRORSTR[] = "Unrecognized Target Action error; the MEdTech Unit has been informed of this error. Please try again later.";
 
 								application_log("error", "The provided action_type [".$ACTION_TYPE."] is invalid.");
 							}
@@ -465,6 +512,16 @@ if($EVALUATION_ID) {
 					if($ERROR) {
 						echo display_error();
 					}
+
+                                            if ($ENTRADA_ACL->amIAllowed(new EventResource($evaluation_details["evaluation_id"]), 'update')) {
+                                            }
+                                                    echo "<div class=\"no-printing\">\n";
+                                                    echo "	<div style=\"float: right; margin-top: 8px\">\n";
+                                                    echo "		<a href=\"".ENTRADA_URL."/admin/evaluations?".replace_query(array("section" => "edit", "id" => $evaluation_details["evaluation_id"]))."\"><img src=\"".ENTRADA_URL."/images/event-details.gif\" width=\"16\" height=\"16\" alt=\"Edit evaluation details\" title=\"Edit evaluation details\" border=\"0\" style=\"vertical-align: middle\" /></a> <a href=\"".ENTRADA_URL."/admin/evaluations?".replace_query(array("section" => "edit", "id" => $evaluation_details["evaluation_id"]))."\" style=\"font-size: 10px; margin-right: 8px\">Edit evaluation details</a>\n";
+                                                    echo "	</div>\n";
+                                                    echo "</div>\n";
+
+                                            echo "<h1 class=\"evaluation-title\">".html_encode($evaluation_details["evaluation_title"])."</h1>\n";
 					?>
 <div class="tab-pane" id="evaluator_members_div">
 	<div class="tab-page members">
@@ -499,7 +556,7 @@ if($EVALUATION_ID) {
 								}
 
 								if($TOTAL_PAGES > 1) {
-									$member_pagination = new Pagination($PAGE_CURRENT, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"], $TOTAL_ROWS, ENTRADA_URL."/".$MODULE, replace_query(), "mpv");
+									$member_pagination = new Pagination($PAGE_CURRENT, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"], $TOTAL_ROWS, ENTRADA_URL."/admin/evaluations", replace_query(), "mpv");
 								} else {
 									$member_pagination = false;
 								}
@@ -551,7 +608,6 @@ if($EVALUATION_ID) {
 										AND c.`app_id` IN (".AUTH_APP_IDS_STRING.")
 										WHERE a.`evaluation_id` = ".$db->qstr($EVALUATION_ID)."
                                                                                 AND evaluator_type='proxy_id'
-										GROUP BY b.`id`
 										ORDER BY %s
                                                                                 )
                                                                                 union
@@ -579,7 +635,7 @@ if($EVALUATION_ID) {
 								}
 								?>
 								<form action="<?php echo ENTRADA_URL."/admin/evaluations?".replace_query(array("section" => "members", "type" => "members", "step" => 2)); ?>" method="post">
-								<table class="tableList" style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Community Members">
+								<table class="tableList" style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Evaluation Members">
 								<colgroup>
 									<col class="modified" />
 									<col class="date" />
@@ -665,7 +721,7 @@ if($EVALUATION_ID) {
 								}
 
 								if($TOTAL_PAGES > 1) {
-									$member_pagination = new Pagination($PAGE_CURRENT, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"], $TOTAL_ROWS, ENTRADA_URL."/".$MODULE, replace_query(), "mpv");
+									$member_pagination = new Pagination($PAGE_CURRENT, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"], $TOTAL_ROWS, ENTRADA_URL."/admin/evaluations", replace_query(), "mpv");
 								} else {
 									$member_pagination = false;
 								}
@@ -745,7 +801,7 @@ if($EVALUATION_ID) {
 								}
 								?>
 								<form action="<?php echo ENTRADA_URL."/admin/evaluations?".replace_query(array("section" => "members", "type" => "targets", "step" => 2)); ?>" method="post">
-								<table class="tableList" style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Community Members">
+								<table class="tableList" style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Evaluation Targets">
 								<colgroup>
 									<col class="modified" />
 									<col class="date" />
@@ -769,9 +825,9 @@ if($EVALUATION_ID) {
 									<tr>
 										<td colspan="2" style="padding-top: 15px">&nbsp;</td>
 										<td style="padding-top: 15px; text-align: right" colspan="3">
-											<select id="member_action" name="member_action" style="vertical-align: middle; width: 200px">
-												<option value="">-- Select Evaluator Action --</option>
-												<option value="delete">1. Remove evaluators</option>
+											<select id="target_action" name="target_action" style="vertical-align: middle; width: 200px">
+												<option value="ssss">-- Select Target Action --</option>
+												<option value="delete">1. Remove targets</option>
 											</select>
 											<input type="submit" class="button-sm" value="Proceed" style="vertical-align: middle" />
 										</td>
@@ -781,7 +837,7 @@ if($EVALUATION_ID) {
 								<?php
 								foreach($results as $result) {
 									echo "<tr>\n";
-									echo "	<td><input type=\"checkbox\" name=\"member_proxy_ids[]\" value=\"".(int) $result["eevaluator_id"]."\" /></td>\n";
+									echo "	<td><input type=\"checkbox\" name=\"member_proxy_ids[]\" value=\"".(int) $result["etarget_id"]."\" /></td>\n";
 									echo "	<td>".date(DEFAULT_DATE_FORMAT, $result["updated_date"])."</td>\n";
 									echo "	<td><a href=\"".ENTRADA_URL."/people?profile=".html_encode($result["user_name"])."\"".(($result["proxy_id"] == $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]) ? " style=\"font-weight: bold" : "")."\">".html_encode($result["first_name"]." ".$result["last_name"])."</a></td>\n";
 									echo "	<td>".$result["group_role"]."</td>\n";

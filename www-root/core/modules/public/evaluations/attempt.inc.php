@@ -156,7 +156,12 @@ if ($RECORD_ID) {
 											 * response $_POST, and if they've actually answered the question.
 											 */
 											if ((isset($_POST["responses"][$question["efquestion_id"]])) && ($efresponse_id = clean_input($_POST["responses"][$question["efquestion_id"]], "int"))) {
-												if (!evaluation_save_response($eprogress_id, $progress_record["eform_id"], $question["efquestion_id"], $efresponse_id)) {
+												if ((isset($_POST["comments"][$question["efquestion_id"]])) && clean_input($_POST["comments"][$question["efquestion_id"]], array("trim", "notags"))) {
+													$comments = clean_input($_POST["comments"][$question["efquestion_id"]], array("trim", "notags"));
+												} else {
+													$comments = NULL;
+												}
+												if (!evaluation_save_response($eprogress_id, $progress_record["eform_id"], $question["efquestion_id"], $efresponse_id, $comments)) {
 													$ERROR++;
 													$ERRORSTR[] = "A problem was found storing a question response, please verify your responses and try again.";
 

@@ -81,12 +81,15 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
                                                         $PROCESSED["eform_id"] = $eform_id;
                                                 }
 
+                                                /***
                                                 if((isset($_POST["evaluation_active"])) && ($evaluation_active = clean_input($_POST["evaluation_active"], array("notags", "trim")))) {
                                                         $PROCESSED["evaluation_active"] = $evaluation_active;
                                                 } else {
                                                         $ERROR++;
                                                         $ERRORSTR[] = "The <strong>Evaluation Active</strong> field is required.";
                                                 }
+                                                 * ****
+                                                 */
                                                 if((isset($_POST["min_submittable"])) && ($min_submittable = clean_input($_POST["min_submittable"], array("notags", "trim")))) {
                                                         $PROCESSED["min_submittable"] = $min_submittable;
                                                 } else {
@@ -154,6 +157,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 						if(!$ERROR) {
 							$PROCESSED["updated_date"]	= time();
 							$PROCESSED["updated_by"]	= $_SESSION["details"]["id"];
+                                                        $PROCESSED["evaluation_active"] = 1;
 
                                                         /**
 							$PROCESSED["event_finish"] = $PROCESSED["event_start"];
@@ -310,21 +314,22 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					<tr>
 						<td colspan="3">&nbsp;</td>
 					</tr>
+                                        <!--
 					<tr>
 						<td></td>
 						<td><label for="evaluation_active" class="form-required">Evaluation Active</label></td>
 						<td><input type="text" id="evaluation_active" name="evaluation_active" value="<?php echo html_encode($PROCESSED["evaluation_active"]); ?>" maxlength="255" style="width: 95%" /></td>
 					</tr>
+                                        -->
 					<tr>
 						<td colspan="3">&nbsp;</td>
 					</tr>
-					<?php echo generate_calendars("evaluation", "Evaluation Date & Time", true, true, ((isset($PROCESSED["evaluation_start"])) ? $PROCESSED["evaluation_start"] : 0), true, true, ((isset($PROCESSED["evaluation_finish"])) ? $PROCESSED["evaluation_finish"] : 0)); ?>
+					<?php echo generate_calendars("evaluation", "Evaluation", true, true, ((isset($PROCESSED["evaluation_start"])) ? $PROCESSED["evaluation_start"] : 0), true, true, ((isset($PROCESSED["evaluation_finish"])) ? $PROCESSED["evaluation_finish"] : 0)); ?>
 
-					<?php //echo generate_calendars("evaluation", "Evaluation Date & Time", true, true, ((isset($PROCESSED["evaluation_end"])) ? $PROCESSED["evaluation_end"] : 0)); ?>
 					<tr>
 						<td></td>
 						<td><label for="min_submittable" class="form-required">Min Submittable</label></td>
-						<td><input type="text" id="min_submittable" name="min_submittable" value="<?php echo $PROCESSED["min_submittable"]; ?>" maxlength="255" style="width: 203px" /></td>
+                                                <td><input type="text" id="min_submittable" name="min_submittable" value="<?php echo $PROCESSED["min_submittable"]; ?>" maxlength="25" style="width: 40px" />&nbsp;&nbsp;&nbsp;(Minimum number of times evaluator must complete the evaluation)</td>
 					</tr>
 					<tr>
 						<td colspan="3">&nbsp;</td>
@@ -332,7 +337,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					<tr>
 						<td></td>
 						<td><label for="max_submittable" class="form-required">Max Submittable</label></td>
-						<td><input type="text" id="max_submittable" name="max_submittable" value="<?php echo $PROCESSED["max_submittable"]; ?>" maxlength="255" style="width: 203px" /></td>
+						<td><input type="text" id="max_submittable" name="max_submittable" value="<?php echo $PROCESSED["max_submittable"]; ?>" maxlength="25" style="width: 40px" />&nbsp;&nbsp;&nbsp;(Maximum number of times evaluator must complete the evaluation)</td>
 					</tr>
 					<tr>
 						<td colspan="3">&nbsp;</td>

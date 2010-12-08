@@ -186,7 +186,7 @@ if (!defined("IN_EVALUATIONS")) {
 					$accessible = false;
 				}
 				 */
-                                $url = ENTRADA_URL."/admin/evaluations?section=process&evaluation=".$result["evaluation_id"];
+                                $url = ENTRADA_URL."/admin/evaluations?section=progress&evaluation=".$result["evaluation_id"];
 				echo "<tr id=\"evaluation-".$result["evaluation_id"]."\" class=\"evaluation".((!$url) ? " np" : ((!$accessible) ? " na" : (($result["audience_type"] == "proxy_id") ? " individual" : "")))."\">\n";
 				echo "	<td class=\"modified\">".(($administrator) ? "<input type=\"checkbox\" name=\"checked[]\" value=\"".$result["evaluation_id"]."\" />" : "<img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"19\" height=\"19\" alt=\"\" title=\"\" />")."</td>\n";
 				echo "	<td class=\"title".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Evaluation Title: ".html_encode($result["evaluation_title"])."\">" : "").html_encode($result["evaluation_title"]).(($url) ? "</a>" : "")."</td>\n";

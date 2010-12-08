@@ -41,8 +41,6 @@ VALUES (7, 'quizzes', '1.0.0', 'Quizzes', 'This module allows communities to cre
 INSERT INTO `community_modules` (`community_id`, `module_id`, `module_active`)
 SELECT `community_id`, 7, 1 FROM `communities` WHERE `community_active` = 1;
 
-UPDATE `settings` SET `value` = '1.2.0' WHERE `shortname` = 'version_db';
-
 CREATE TABLE IF NOT EXISTS `evaluations` (
   `evaluation_id` int(12) NOT NULL AUTO_INCREMENT,
   `eform_id` int(12) NOT NULL,
@@ -167,3 +165,5 @@ CREATE TABLE IF NOT EXISTS `evaluation_targets` (
   `updated_by` int(12) NOT NULL,
   PRIMARY KEY (`etarget_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+UPDATE `settings` SET `value` = '1.2.0' WHERE `shortname` = 'version_db';

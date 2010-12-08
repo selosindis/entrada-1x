@@ -27,7 +27,39 @@ if (!defined("IN_EVALUATIONS")) {
 } else {
 	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/evaluations/forms", "title" => "Manage Forms");
 
+	$FORM_ID = 0;
+	$ALLOW_QUESTION_MODIFICATIONS = false;
+	$EVALUATION_TARGETS = array();
+
+	if (isset($_GET["id"]) && ($tmp_input = clean_input($_GET["id"], array("trim", "int")))) {
+		$FORM_ID = $tmp_input;
+	} elseif (isset($_POST["id"]) && ($tmp_input = clean_input($_POST["id"], array("trim", "int")))) {
+		$FORM_ID = $tmp_input;
+	}
+
 	if (($router) && ($router->initRoute())) {
+		/**
+		 * Check to see if we can add / modify / delete questions from an evaluation form.
+		 */
+		if ((int) $FORM_ID) {
+			$query	= "SELECT COUNT(*) AS `total` FROM `evaluations` WHERE `eform_id` = ".$db->qstr($FORM_ID);
+			$result = $db->GetRow($query);
+			if ((!$result) || ((int) $result["total"] === 0)) {
+				$ALLOW_QUESTION_MODIFICATIONS = true;
+			}
+		}
+
+		/**
+		 * Fetch a list of available evaluation targets that can be used as Form Types.
+		 */
+		$query = "SELECT * FROM `evaluations_lu_targets` WHERE `target_active` = '1' ORDER BY `target_title` ASC";
+		$results = $db->GetAll($query);
+		if ($results) {
+			foreach ($results as $result) {
+				$EVALUATION_TARGETS[$result["target_id"]] = $result;
+			}
+		}
+
 		$module_file = $router->getRoute();
 		if ($module_file) {
 			require_once($module_file);

@@ -125,8 +125,13 @@ if ($RECORD_ID) {
 
 								if ((isset($_POST["rid"])) && ($tmp_input = clean_input($_POST["rid"], "int"))) {
 									$qqresponse_id = $tmp_input;
-
-								if (evaluation_save_response($progress_record["eprogress_id"], $progress_record["eform_id"], $qquestion_id, $qqresponse_id)) {
+									
+									if ((isset($_POST["comments"])) && clean_input($_POST["comments"], array("trim", "notags"))) {
+										$comments = clean_input($_POST["comments"], array("trim", "notags"));
+									} else {
+										$comments = NULL;
+									}
+									if (evaluation_save_response($progress_record["eprogress_id"], $progress_record["eform_id"], $qquestion_id, $qqresponse_id, $comments)) {
 										echo 200;
 										exit;
 									} else {

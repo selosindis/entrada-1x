@@ -1914,6 +1914,57 @@ margin-left:5px;
 vertical-align:middle;
 }
 
+#form-content-questions-holder {
+border:2px #EEE solid;
+padding:2px;
+}
+#form-questions-list {
+padding-left:25px;
+}
+
+#form-questions-list > li {
+display:list-item;
+vertical-align:top;
+background-color:#FFF;
+padding:8px 8px 15px 8px;
+}
+
+#form-questions-list > li.odd {
+background-color:#EEE;
+}
+
+#form-questions-list > li > div.controls {
+float:right;
+}
+
+#form-questions-list > li > div.controls img {
+border:0;
+}
+
+#form-questions-list > li > div.question {
+position:relative;
+width:90%;
+font-weight:700;
+margin-bottom:5px;
+}
+
+#form-questions-list > li > div.responses {
+position:relative;
+}
+
+#form-questions-list > li > div.responses > div {
+display:inline;
+float:left;
+width:20%;
+margin:0;
+padding:0;
+text-align:center;
+}
+
+#form-questions-list > li > div.comments {
+margin-top:5px;
+}
+
 #control_overlay {
 background-color:#000;
 }
@@ -1955,7 +2006,7 @@ margin:8px 0;
 }
 
 .modal-confirmation div.body {
-height:105px;
+height:100px;
 overflow:auto;
 margin:8px 0;
 }
@@ -2246,6 +2297,10 @@ font-weight:700;
 margin-top:0;
 }
 
+h1.form-title {
+margin:0 0 5px 0;
+}
+
 #tabs .first.current,#tabs .drop_options li.current {
 margin-left:0;
 }
@@ -2271,13 +2326,11 @@ a.ps:hover,.eventbg2_1 a.ps:hover,.eventbg2_2 a.ps:hover,.eventbg2_3 a.ps:hover 
 text-decoration:underline;
 }
 
-table.quiz-question,table.inner-content-box,table.member-list,
-table.evaluation-question,table.inner-content-box,table.member-list {
+table.form-question,table.quiz-question,table.inner-content-box,table.member-list {
 width:100%;
 }
 
-table.quiz-question tbody tr td,table.profile-card tr td,
-table.evaluation-question tbody tr td,table.profile-card tr td {
+table.form-question tbody tr td,table.quiz-question tbody tr td,table.profile-card tr td {
 vertical-align:top;
 }
 
@@ -2402,6 +2455,7 @@ ul.faculty-list,ul.page-action {
 list-style-type:none;
 white-space:nowrap;
 margin:0 0 10px 0;
+padding:0;
 }
 
 ul.page-action li.last {
@@ -2527,37 +2581,41 @@ font-weight: 700;
 ul.encounter-list {
 list-style:none;
 padding:0px;
-margin: 0px;
+margin:0px;
 }
- 
+ul.multiList, ol.multiList,
 ul.sortableList, ol.sortableList {
-	padding-left: 0px;
+padding-left:0;
+}
+.multiList li,
+.sortableList li {
+font-size:10px;
+padding:10px 0 5px 0;
+height:16px;
+list-style-type:none;
+width:380px;
+border-bottom:1px #CCC solid;
 }
 .sortableList li {
-	font-size: 10px;
-	padding: 10px 3px 5px 8px;
-	height: 16px;
-	list-style-type: none;
-	width: 380px;
-	border-bottom: 1px #CCC solid;
-	cursor: move;
+cursor:move;
 }
+.multiList li a.remove,
 .sortableList li a.remove {
-	float: right;
-	display: block;
+float:right;
+display:block;
 }
+.multiList li a.remove img,
 .sortableList li a.remove img {
-	border: 0px;
+border:0;
 }
 .duration_segment_container {
-	float: right;
-	margin-right: 20px;
-	margin-top: -6px;
+float:right;
+margin-right:20px;
+margin-top:-6px;
 }
 input.duration_segment {
-	width: 25px;
+width:25px;
 }
-
 #eventToolTip, #eventToolTip table tr td {
 color: #333;
 font-size: 11px;

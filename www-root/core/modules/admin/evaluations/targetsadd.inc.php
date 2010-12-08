@@ -87,7 +87,6 @@ if(isset($EVALUATION_ID) && isset($ACTION)) {
 			}
 
 						$nmembers_results		= false;
-
                                                 if($GROUP == 'course'){
                                                 $nmembers_query = " SELECT `course_id` AS `proxy_id`, CONCAT_WS(', ', `course_name`, `course_code`) AS `fullname`, `course_name` as username, `organisation_id`, 'course' as `group`, 'course' as `role`
                                                                             FROM `courses`";
@@ -112,7 +111,6 @@ if(isset($EVALUATION_ID) && isset($ACTION)) {
 
 						//Fetch list of current members
 						$current_member_list	= array();
-
                                                 switch ($GROUP) {
                                                         case "course" :
                                                             $query = "SELECT `target_value`, `target_id` FROM `evaluation_targets` WHERE `evaluation_id` = ".$db->qstr($EVALUATION_ID)." AND `target_id` = 1";

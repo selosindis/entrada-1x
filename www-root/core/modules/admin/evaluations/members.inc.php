@@ -851,7 +851,7 @@ if($EVALUATION_ID) {
 								</form>
 								<?php
 							} else {
-								echo display_notice(array("Your evaluation has no evaluators at this time, you should add some people by clicking the &quot;<strong>Add Evaluators</strong>&quot; tab."));
+								echo display_notice(array("Your evaluation has no targets at this time, you should add some targets by clicking the &quot;<strong>Add Targets</strong>&quot; tab."));
 							}
 							?>
 	</div>
@@ -1129,18 +1129,11 @@ if($EVALUATION_ID) {
 					<col style="width: 10%" />
 					<col style="width: 45%" />
 				</colgroup>
-				<tfoot>
-					<tr>
-						<td colspan="3" style="padding-top: 15px; text-align: right">
-							<input type="submit" class="button" value="Add Targets" style="vertical-align: middle" />
-						</td>
-					</tr>
-				</tfoot>
 				<tbody>
 					<tr>
 						<td colspan="3" style="vertical-align: top">
 								<p>
-									If you would like to add users that already exist in the system to this evaluation yourself, you can do so by clicking the checkbox beside their name from the list below.
+									If you would like to add targets that already exist in the system to this evaluation yourself, you can do so by clicking the checkbox beside their name from the list below.
 									Once you have reviewed the list at the bottom and are ready, click the <strong>Proceed</strong> button at the bottom to complete the process.
 								</p>
 						</td>
@@ -1152,6 +1145,7 @@ if($EVALUATION_ID) {
 							$nmembers_query			= "";
 							$nmembers_results		= false;
 							$sql_groupname		= "";
+                                                        $target_id = 0;
 
                                                         $query		= "SELECT a.`eform_id`, `target_id`
                                                                             FROM `evaluations` AS a
@@ -1164,6 +1158,7 @@ if($EVALUATION_ID) {
                                                             $target_id = (int) $form_result[0]["target_id"];
                                                             $eform_id = (int) $form_result[0]["eform_id"];
                                                         }
+                                                   if($target_id>0){
                                                         //echo "<br>".$EVALUATION_ID."||".$form_result["target_id"]."||".$target_id."<br>";
                                                         $ppl_query_1st = " SELECT a.`id` AS `proxy_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, a.`username`, a.`organisation_id`, b.`group`, b.`role`
                                                                             FROM `".AUTH_DATABASE."`.`user_data` AS a
@@ -1197,33 +1192,6 @@ if($EVALUATION_ID) {
                                                                 default :
                                                                 break;
                                                         }
-
-                                                        //var_export ($nmembers_query);
-                                                        /**
-                                                        $query	= "SELECT `organisation_id`,`organisation_title` FROM `".AUTH_DATABASE."`.`organisations` ORDER BY `organisation_title` ASC";
-                                                        $organisation_results	= $db->GetAll($query);
-                                                        if($organisation_results) {
-                                                                $organisations = array();
-                                                                foreach($organisation_results as $result) {
-                                                                        if($ENTRADA_ACL->amIAllowed('resourceorganisation'.$result["organisation_id"], 'create')) {
-                                                                                $member_categories[$result["organisation_id"]] = array('text' => $result["organisation_title"], 'value' => 'organisation_'.$result["organisation_id"], 'category'=>true);
-                                                                        }
-                                                                }
-                                                        }
-
-                                                        $current_member_list	= array();
-                                                        $query		= "SELECT `proxy_id` FROM `evaluator_members` WHERE `community_id` = ".$db->qstr($EVALUATION_ID)." AND `member_active` = '1'";
-                                                        $results	= $db->GetAll($query);
-                                                        if($results) {
-                                                                foreach($results as $result) {
-                                                                        if($proxy_id = (int) $result["proxy_id"]) {
-                                                                                $current_member_list[] = $proxy_id;
-                                                                        }
-                                                                }
-                                                        }
-                                                         *
-                                                         */
-
 
                                                         if($nmembers_query != "") {
                                                                 $nmembers_results = $db->GetAll($nmembers_query);
@@ -1265,19 +1233,201 @@ if($EVALUATION_ID) {
                                                                 echo "No One Available [2]";
                                                         }
                                                         ?>
-
                                                         <input class="multi-picklist" id="target_members" name="target_members" style="display: none;">
                                                         <input type="hidden" id="target_type_added"  name="target_type_added" value="<?php echo $target_id; ?>"/>
+
+                                                        <?php
+                                                    }else{
+							echo display_notice(array("Your evaluation has no form at this time, you should choose form in this evaluation before you add targets."));
+                                                    }
+                                                        ?>
+
                                                     </div>
 						</td>
+
 						<td style="vertical-align: top; padding-left: 20px;">
 							<input id="acc_target_members" style="display: none;" name="acc_target_members"/>
 							<h3>Targets to be Added on Submission</h3>
 							<div id="target_members_list"></div>
 						</td>
 				</tbody>
+                                                <?php if($target_id>0){?>
+				<tfoot>
+					<tr>
+						<td colspan="3" style="padding-top: 15px; text-align: right">
+							<input type="submit" class="button" value="Add Targets" style="vertical-align: middle" />
+						</td>
+					</tr>
+				</tfoot>
+                                                <?php } ?>
 			</table>
 		</form>
+	</div>
+	<div class="tab-page members">
+		<h2 class="tab">Progress</h2>
+		<h2 style="margin-top: 0px">Progress</h2>
+							<?php
+							/**
+							 * Get the total number of results using the generated queries above and calculate the total number
+							 * of pages that are available based on the results per page preferences.
+							 */
+							$query	= "SELECT COUNT(*) AS `total_rows` FROM `evaluation_evaluators` WHERE `evaluation_id` = ".$db->qstr($EVALUATION_ID);
+							$result	= $db->GetRow($query);
+							if($result) {
+								$TOTAL_ROWS	= $result["total_rows"];
+
+								if($TOTAL_ROWS <= $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) {
+									$TOTAL_PAGES = 1;
+								} elseif (($TOTAL_ROWS % $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) == 0) {
+									$TOTAL_PAGES = (int) ($TOTAL_ROWS / $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]);
+								} else {
+									$TOTAL_PAGES = (int) ($TOTAL_ROWS / $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) + 1;
+								}
+
+								if(isset($_GET["mpv"])) {
+									$PAGE_CURRENT = (int) trim($_GET["mpv"]);
+
+									if(($PAGE_CURRENT < 1) || ($PAGE_CURRENT > $TOTAL_PAGES)) {
+										$PAGE_CURRENT = 1;
+									}
+								} else {
+									$PAGE_CURRENT = 1;
+								}
+
+								if($TOTAL_PAGES > 1) {
+									$member_pagination = new Pagination($PAGE_CURRENT, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"], $TOTAL_ROWS, ENTRADA_URL."/admin/evaluations", replace_query(), "mpv");
+								} else {
+									$member_pagination = false;
+								}
+							} else {
+								$TOTAL_ROWS		= 0;
+								$TOTAL_PAGES	= 1;
+							}
+							if (!isset($PAGE_CURRENT) || !$PAGE_CURRENT) {
+								if(isset($_GET["mpv"])) {
+									$PAGE_CURRENT = (int) trim($_GET["mpv"]);
+
+									if(($PAGE_CURRENT < 1) || ($PAGE_CURRENT > $TOTAL_PAGES)) {
+										$PAGE_CURRENT = 1;
+									}
+								} else {
+									$PAGE_CURRENT = 1;
+								}
+							}
+
+							$PAGE_PREVIOUS	= (($PAGE_CURRENT > 1) ? ($PAGE_CURRENT - 1) : false);
+							$PAGE_NEXT		= (($PAGE_CURRENT < $TOTAL_PAGES) ? ($PAGE_CURRENT + 1) : false);
+
+							/**
+							 * Provides the first parameter of MySQLs LIMIT statement by calculating which row to start results from.
+							 */
+							$limit_parameter = (int) (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"] * $PAGE_CURRENT) - $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]);
+
+                                                        $query1		= "
+                                                                          select * from (
+										(
+                                                                                SELECT a.updated_date, a.evaluator_type, a.eevaluator_id, b.`username` as user_name, b.`firstname` as first_name, b.`lastname` as last_name, concat(concat(c.`group`,' > '),c.`role`) as group_role
+										FROM `entrada`.`evaluation_evaluators` AS a
+										LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
+										ON a.`evaluator_value` = b.`id`
+										LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS c
+										ON c.`user_id` = b.`id`
+										AND c.`app_id` IN (".AUTH_APP_IDS_STRING.")
+										WHERE a.`evaluation_id` = ".$db->qstr($EVALUATION_ID)."
+                                                                                AND evaluator_type='proxy_id'
+										ORDER BY %s
+                                                                                )
+                                                                                union
+										(
+                                                                                SELECT updated_date, evaluator_type, eevaluator_id, `evaluator_value` as user_name, `evaluator_value` as first_name, '' as last_name,'student' as group_role
+										FROM `entrada`.`evaluation_evaluators`
+										WHERE `evaluation_id` = ".$db->qstr($EVALUATION_ID)."
+                                                                                AND evaluator_type!='proxy_id'
+										ORDER BY updated_date
+										)
+                                                                            ) as t
+										LIMIT %s, %s
+                                                                            ";
+                                                        $query1		= "
+                                                                          select * from (
+										(
+                                                                                SELECT a.updated_date, a.evaluator_type, a.eevaluator_id, b.`username` as user_name, b.`firstname` as first_name, b.`lastname` as last_name, concat(concat(c.`group`,' > '),c.`role`) as group_role
+										FROM `entrada`.`evaluation_evaluators` AS a
+										LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
+										ON a.`evaluator_value` = b.`id`
+										LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS c
+										ON c.`user_id` = b.`id`
+										AND c.`app_id` IN (".AUTH_APP_IDS_STRING.")
+										WHERE a.`evaluation_id` = ".$db->qstr($EVALUATION_ID)."
+                                                                                AND evaluator_type='proxy_id'
+										ORDER BY %s
+                                                                                )
+                                                                                union
+										(
+                                                                                SELECT updated_date, evaluator_type, eevaluator_id, `evaluator_value` as user_name, `evaluator_value` as first_name, '' as last_name,'student' as group_role
+										FROM `entrada`.`evaluation_evaluators`
+										WHERE `evaluation_id` = ".$db->qstr($EVALUATION_ID)."
+                                                                                AND evaluator_type!='proxy_id'
+										ORDER BY updated_date
+										)
+                                                                            ) as t
+										LIMIT %s, %s
+                                                                            ";
+
+							$query		= sprintf($query, $SORT_BY, $limit_parameter, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]);
+                                                        $results	= $db->GetAll($query);
+                                                        //echo "______log______"."query1: ".$query1."<br>";
+                                                        //echo "______log______"."total_rows: ".$results["total_rows"]."<br>";
+
+							if($results) {
+								if(($TOTAL_PAGES > 1) && ($member_pagination)) {
+									echo "<div id=\"pagination-links\">\n";
+									echo "Pages: ".$member_pagination->GetPageLinks();
+									echo "</div>\n";
+								}
+								?>
+								<form action="<?php echo ENTRADA_URL."/admin/evaluations?".replace_query(array("section" => "members", "type" => "members", "step" => 2)); ?>" method="post">
+								<table class="tableList" style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Evaluation Members">
+								<colgroup>
+									<col class="date" />
+									<col class="title" />
+									<col class="list-status" />
+									<col class="type" />
+									<col class="status" />
+								</colgroup>
+								<thead>
+									<tr>
+										<td class="date<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "date") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo public_order_link("date", "Evaluator Since"); ?></td>
+										<td class="title<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "name") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo public_order_link("name", "Evaluator Name"); ?></td>
+										<td class="list-status<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "list-status") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>">Group & Role</td>
+                                                                                <td class="type<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "type") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo public_order_link("type", "Evaluator Type"); ?></td>
+                                                                                <td class="status<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "type") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"> Status </td>
+
+									</tr>
+								</thead>
+								<tbody>
+								<?php
+								foreach($results as $result) {
+									echo "<tr>\n";
+									echo "	<td>".date(DEFAULT_DATE_FORMAT, $result["updated_date"])."</td>\n";
+									echo "	<td><a href=\"".ENTRADA_URL."/people?profile=".html_encode($result["user_name"])."\"".(($result["proxy_id"] == $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]) ? " style=\"font-weight: bold" : "")."\">".html_encode($result["first_name"]." ".$result["last_name"])."</a></td>\n";
+									echo "	<td>".$result["group_role"]."</td>\n";
+									echo "	<td>".$result["evaluator_type"]."</td>\n";
+									echo "	<td></td>\n";
+									echo "</tr>\n";
+								}
+								?>
+								</tbody>
+                                                                <tfoot>
+                                                                    <tr><td>&nbsp;</td></tr>
+                                                                </tfoot>
+								</table>
+								</form>
+								<?php
+							} else {
+								echo display_notice(array("Your evaluation has no evaluators at this time, you should add some people by clicking the &quot;<strong>Add Evaluators</strong>&quot; tab."));
+							}
+							?>
 	</div>
 
 </div>

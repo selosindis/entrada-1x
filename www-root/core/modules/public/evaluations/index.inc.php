@@ -66,7 +66,7 @@ if ($results) {
 		<col class="general" />
 		<col class="date" />
 		<col class="title" />
-		<col class="responses" />
+		<col class="general" />
 	</colgroup>
 	<thead>
 		<tr>
@@ -75,7 +75,7 @@ if ($results) {
 			<td class="general">Evaluation Target</td>
 			<td class="date">Close Date</td>
 			<td class="title">Evaluation Title</td>
-			<td class="responses">Progress</td>
+			<td class="general">Evaluations Submitted</td>
 		</tr>
 	</thead>
 	<tbody>
@@ -100,6 +100,14 @@ if ($results) {
 					GROUP BY b.`eprogress_id`
 					ORDER BY `responses` ASC";
 		$evaluation_progress = $db->GetRow($query);
+		
+		$query = "	SELECT COUNT(`eprogress_id`) FROM `evaluation_progress`
+					WHERE `evaluation_id` = ".$db->qstr($result["evaluation_id"])."
+					AND `proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
+					AND `progress_value` = 'complete'";
+		$completed_attempts = $db->GetOne($query);
+		
+		
 	
 		$query = "	SELECT COUNT(`eresponse_id`) FROM `evaluation_responses` 
 					WHERE `eprogress_id` = ".$db->qstr($evaluation_progress["eprogress_id"])."
@@ -116,12 +124,16 @@ if ($results) {
 		echo "	<td><a href=\"".$click_url."\">".(!empty($evaluation_target["target_value"]) ? fetch_evaluation_target_title($evaluation_target) : "No Target")."</a></td>\n";
 		echo "	<td><a href=\"".$click_url."\">".date(DEFAULT_DATE_FORMAT, $result["evaluation_finish"])."</a></td>\n";
 		echo "	<td><a href=\"".$click_url."\">".html_encode($result["evaluation_title"])."</a></td>\n";
-		echo "	<td><a href=\"".$click_url."\">".($evaluation_progress["responses"] ? ((int)$evaluation_progress["responses"]) : "0")."/".($evaluation_questions ? ((int)$evaluation_questions) : "0")."</a></td>\n";
+		echo "	<td><a href=\"".$click_url."\">".($completed_attempts ? ((int)$completed_attempts) : "0")."/".($result["max_submittable"] ? ((int)$result["max_submittable"]) : "0")."</a></td>\n";
 		echo "</tr>\n";
 	}
 	?>
 	</tbody>
 	</table>
 	<?php
+} else {
+	$NOTICE++;
+	$NOTICESTR[] = "No available <strong>Evaluations</strong> were found in the system for your account.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
+	echo display_notice();
 }
 ?>

@@ -86,6 +86,9 @@ if ($results) {
 					ON a.`target_id` = b.`target_id`
 					WHERE a.`evaluation_id` = ".$result["evaluation_id"];
 		$evaluation_target = $db->GetRow($query);
+		
+		$evaluation_targets_count = $db->GetOne("SELECT COUNT(`etarget_id`) FROM `evaluation_targets` WHERE `evaluation_id` = ".$db->qstr($result["evaluation_id"]));
+		$evaluation_target_title = fetch_evaluation_target_title($evaluation_target, $evaluation_targets_count);
 
 		$query = "	SELECT COUNT(`efquestion_id`) FROM `evaluation_form_questions`
 					WHERE `eform_id` = ".$db->qstr($result["eform_id"])."
@@ -115,13 +118,12 @@ if ($results) {
 		$evaluation_responses = $db->GetOne($query);
 		
 		
-		
 		$click_url = ENTRADA_URL."/evaluations?section=attempt&id=".$result["evaluation_id"];
 		
 		echo "<tr>\n";
 		echo "	<td>&nbsp;</td>\n";
 		echo "	<td><a href=\"".$click_url."\">".(!empty($evaluation_target["target_title"]) ? $evaluation_target["target_title"] : "No Type Found")."</a></td>\n";
-		echo "	<td><a href=\"".$click_url."\">".(!empty($evaluation_target["target_value"]) ? fetch_evaluation_target_title($evaluation_target) : "No Target")."</a></td>\n";
+		echo "	<td><a href=\"".$click_url."\">".(!empty($evaluation_target_title) ? $evaluation_target_title : "No Target")."</a></td>\n";
 		echo "	<td><a href=\"".$click_url."\">".date(DEFAULT_DATE_FORMAT, $result["evaluation_finish"])."</a></td>\n";
 		echo "	<td><a href=\"".$click_url."\">".html_encode($result["evaluation_title"])."</a></td>\n";
 		echo "	<td><a href=\"".$click_url."\">".($completed_attempts ? ((int)$completed_attempts) : "0")."/".($result["max_submittable"] ? ((int)$result["max_submittable"]) : "0")."</a></td>\n";

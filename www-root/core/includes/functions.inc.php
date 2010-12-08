@@ -11697,36 +11697,59 @@ function eval_sche_fetch_filtered_evals() {
 	return $output;
 }
 
-function fetch_evaluation_target_title($evaluation_target = array()) {
+function fetch_evaluation_target_title($evaluation_target = array(), $number_of_targets = 1) {
 	global $db;
-	if (!empty($evaluation_target)) {
-		switch ($evaluation_target["target_shortname"]) {
-			case "course" :
-				$query = "SELECT `course_code` FROM `courses` WHERE `course_id` = ".$db->qstr($evaluation_target["target_value"]);
-				if ($course_code = $db->GetOne($query)) {
-					return $course_code;
-				}
-				break;
-			case "rotation_core" :
-			case "rotation_elective" :
-				$query = "SELECT `event_title` FROM `".CLERKSHIP_DATABASE."`.`events` WHERE `event_id` = ".$db->qstr($evaluation_target["target_value"]);
-				if ($event_name = $db->GetOne($query)) {
-					return $event_name;
-				}
-				break;
-			case "self" :
-					return "Yourself";
-				break;
-			case "teacher" :
-			case "student" :
-			case "preceptor" :
-			case "peer" :
-			default :
-				$query = "SELECT CONCAT_WS(' ', `firstname`, `lastname`) AS `fullname` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($evaluation_target["target_value"]);
-				if ($teacher_name = $db->GetOne($query)) {
-					return $teacher_name;
-				}
-				break;
+	if ($number_of_targets == 1) {
+		if (!empty($evaluation_target)) {
+			switch ($evaluation_target["target_shortname"]) {
+				case "course" :
+					$query = "SELECT `course_code` FROM `courses` WHERE `course_id` = ".$db->qstr($evaluation_target["target_value"]);
+					if ($course_code = $db->GetOne($query)) {
+						return $course_code;
+					}
+					break;
+				case "rotation_core" :
+				case "rotation_elective" :
+					$query = "SELECT `event_title` FROM `".CLERKSHIP_DATABASE."`.`events` WHERE `event_id` = ".$db->qstr($evaluation_target["target_value"]);
+					if ($event_name = $db->GetOne($query)) {
+						return $event_name;
+					}
+					break;
+				case "self" :
+						return "Yourself";
+					break;
+				case "teacher" :
+				case "student" :
+				case "preceptor" :
+				case "peer" :
+				default :
+					$query = "SELECT CONCAT_WS(' ', `firstname`, `lastname`) AS `fullname` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($evaluation_target["target_value"]);
+					if ($teacher_name = $db->GetOne($query)) {
+						return $teacher_name;
+					}
+					break;
+			}
+		}
+	} else {
+		if (!empty($evaluation_target)) {
+			switch ($evaluation_target["target_shortname"]) {
+				case "course" :
+					return $number_of_targets." Courses";
+					break;
+				case "student" :
+					return $number_of_targets." Students";
+					break;
+				case "preceptor" :
+					return $number_of_targets." Preceptors";
+					break;
+				case "peer" :
+					return $number_of_targets." Peers";
+					break;
+				case "teacher" :
+				default :
+					return $number_of_targets." Faculty Members";
+					break;
+			}
 		}
 	}
 	return false;

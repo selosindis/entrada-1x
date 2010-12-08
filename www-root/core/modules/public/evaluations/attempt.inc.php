@@ -326,7 +326,7 @@ if ($RECORD_ID) {
 													if (!isset($evaluation_target["eprogress_id"]) || !$evaluation_target["eprogress_id"]) {
 														$target_name = $db->GetOne("SELECT CONCAT_WS(' ', `firstname`, `lastname`) AS `fullname` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($evaluation_target["target_value"]));
 														if ($target_name) {
-															echo "<option value=\"".$evaluation_target["etarget_id"]."\">".$fullname."</option>\n";
+															echo "<option value=\"".$evaluation_target["etarget_id"]."\">".$target_name."</option>\n";
 														}
 													}
 												}

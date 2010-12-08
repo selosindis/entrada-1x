@@ -201,10 +201,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 		break;
 		case 1 :
 		default :
-			$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/elementresizer.js\"></script>\n";
-
-			if ($ERROR) {
-				echo display_error();
+			if (has_error() || has_notice()) {
+				echo display_status_messages();
 			}
 			?>
 			<form action="<?php echo ENTRADA_URL; ?>/admin/evaluations?section=add&amp;step=2" method="post" name="addEvaluationForm" id="addEvaluationForm">

@@ -364,7 +364,7 @@ if ($RECORD_ID) {
 											<div id="form-content-questions-holder">
 												<ol id="form-questions-list">
 												<?php
-												foreach ($questions as $question) {
+												foreach ($questions as $key => $question) {
 													$question_number = ($key + 1);
 		
 													echo "<li id=\"question_".$question["efquestion_id"]."\"".(($key % 2) ? " class=\"odd\"" : "").">";

@@ -96,6 +96,9 @@ if ($RECORD_ID) {
 						$problem_questions = array();
 	
 						echo "<h1>".html_encode($evaluation_record["evaluation_title"])."</h1>";
+						if (isset($evaluation_record["evaluation_description"]) && $evaluation_record["evaluation_description"]) {
+							echo "<div class=\"display-generic\">".$evaluation_record["evaluation_description"]."</div>";
+						}
 	
 						// Error checking
 						switch ($STEP) {
@@ -352,8 +355,10 @@ if ($RECORD_ID) {
 										<form name="evaluation-form" id="evaluation-form" action="<?php echo ENTRADA_URL."/".$MODULE; ?>?section=attempt&id=<?php echo $RECORD_ID; ?>" method="post">
 										<input type="hidden" name="step" value="2" />
 										<?php
-										$query				= "	SELECT a.*
+										$query				= "	SELECT a.*, b.`questiontype_shortname`
 																FROM `evaluation_form_questions` AS a
+																JOIN `evaluations_lu_questiontypes` AS b
+																ON a.`questiontype_id` = b.`questiontype_id`
 																WHERE a.`eform_id` = ".$db->qstr($evaluation_record["eform_id"])."
 																ORDER BY a.`question_order` ASC";
 										$questions			= $db->GetAll($query);
@@ -362,38 +367,48 @@ if ($RECORD_ID) {
 											$total_questions = count($questions);
 											?>
 											<div id="form-content-questions-holder">
-												<ol id="form-questions-list">
+												<div id="form-questions-list">
 												<?php
+												$question_number = 0;
 												foreach ($questions as $key => $question) {
-													$question_number = ($key + 1);
-		
-													echo "<li id=\"question_".$question["efquestion_id"]."\"".(($key % 2) ? " class=\"odd\"" : "").">";
-													echo "	<div id=\"question_text_".$question["efquestion_id"]."\" class=\"question\">\n";
-													echo "		".clean_input($question["question_text"], "specialchars");
-													echo "	</div>\n";
-													echo "	<div class=\"responses\">\n";
-													$query = "	SELECT a.*
-																FROM `evaluation_form_responses` AS a
-																WHERE a.`efquestion_id` = ".$db->qstr($question["efquestion_id"])."
-																ORDER BY a.`response_order` ASC";
-													$responses = $db->GetAll($query);
-													if ($responses) {
-														$response_width = floor(100 / count($responses));
-		
-														foreach ($responses as $response) {
-															echo "<div style=\"width: ".$response_width."%\">\n";
-															echo "	<label for=\"".$response["efquestion_id"]."_".$response["efresponse_id"]."\">".clean_input($response["response_text"], "specialchars")."</label><br />";
-															echo "	<input type=\"radio\" id=\"response_".$question["efquestion_id"]."_".$response["efresponse_id"]."\" name=\"responses[".$question["efquestion_id"]."]\" value=\"".$response["efresponse_id"]."\"".(($ajax_load_progress[$question["efquestion_id"]] == $response["efresponse_id"]) ? " checked=\"checked\"" : "")." onclick=\"((this.checked == true) ? storeResponse('".$question["efquestion_id"]."', '".$response["efresponse_id"]."', $('".$response["efquestion_id"]."_comment').value) : false)\" />";
-															echo "</div>\n";
-														}
+													switch ($question["questiontype_shortname"]) {
+														case "descriptive_text" :
+															echo "<div style=\"display: block; padding-top: 15px;\">".$question["question_text"]."</div>";
+															echo "<br/>\n";
+															break;
+														case "matrix_single" :
+														default :
+															$question_number++;
+															echo "<div value=\"".$question_number."\" id=\"question_".$question["efquestion_id"]."\"".(($question_number % 2) ? " class=\"odd\"" : "").">";
+															echo "	<span style=\"margin-left: -30px; position: absolute;\">".$question_number.".</span>";
+															echo "	<div id=\"question_text_".$question["efquestion_id"]."\" class=\"question\">\n";
+															echo "		".clean_input($question["question_text"], "specialchars");
+															echo "	</div>\n";
+															echo "	<div class=\"responses\">\n";
+															$query = "	SELECT a.*
+																		FROM `evaluation_form_responses` AS a
+																		WHERE a.`efquestion_id` = ".$db->qstr($question["efquestion_id"])."
+																		ORDER BY a.`response_order` ASC";
+															$responses = $db->GetAll($query);
+															if ($responses) {
+																$response_width = floor(100 / count($responses));
+				
+																foreach ($responses as $response) {
+																	echo "<div style=\"width: ".$response_width."%\">\n";
+																	echo "	<label for=\"".$response["efquestion_id"]."_".$response["efresponse_id"]."\">".clean_input($response["response_text"], "specialchars")."</label><br />";
+																	echo "	<input type=\"radio\" id=\"response_".$question["efquestion_id"]."_".$response["efresponse_id"]."\" name=\"responses[".$question["efquestion_id"]."]\" value=\"".$response["efresponse_id"]."\"".(($ajax_load_progress[$question["efquestion_id"]] == $response["efresponse_id"]) ? " checked=\"checked\"" : "")." onclick=\"((this.checked == true) ? storeResponse('".$question["efquestion_id"]."', '".$response["efresponse_id"]."', $('".$response["efquestion_id"]."_comment').value) : false)\" />";
+																	echo "</div>\n";
+																}
+															}
+															echo "	</div>\n";
+															echo "	<div class=\"clear\"></div>";
+															echo "	<div class=\"comments\">";
+															echo "	<label for=\"".$response["efquestion_id"]."_comment\" class=\"form-nrequired\">Comments:</label>";
+															echo "	<textarea id=\"".$response["efquestion_id"]."_comment\" class=\"expandable\" name=\"comments[".$question["efquestion_id"]."]\" style=\"width:95%; height:40px;\"  onblur=\"storeResponse('".$question["efquestion_id"]."', Form.getInputs('evaluation-form','radio','responses[".$question["efquestion_id"]."]').find(function(radio) { return radio.checked; }).value, $('".$response["efquestion_id"]."_comment').value)\">".clean_input($response["comments"], array("trim", "notags", "specialchars"))."</textarea>";
+															echo "	</div>";
+															echo "</div>";
+															break;
 													}
-													echo "	</div>\n";
-													echo "	<div class=\"clear\"></div>";
-													echo "	<div class=\"comments\">";
-													echo "	<label for=\"".$response["efquestion_id"]."_comment\" class=\"form-nrequired\">Comments:</label>";
-													echo "	<textarea id=\"".$response["efquestion_id"]."_comment\" class=\"expandable\" name=\"comments[".$question["efquestion_id"]."]\" style=\"width:95%; height:40px;\"  onblur=\"storeResponse('".$question["efquestion_id"]."', Form.getInputs('evaluation-form','radio','responses[".$question["efquestion_id"]."]').find(function(radio) { return radio.checked; }).value, $('".$response["efquestion_id"]."_comment').value)\">".clean_input($response["comments"], array("trim", "notags", "specialchars"))."</textarea>";
-													echo "	</div>";
-													echo "</li>\n";
 												}
 												?>
 												</ol>

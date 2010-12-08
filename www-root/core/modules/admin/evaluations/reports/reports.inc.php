@@ -61,7 +61,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 	}
 
 	foreach($EVALUATIONS as $evaluation){
-
         list($evaluator, $target) = explode(":",$evaluation);
 
 		$report = $db->GetRow("	SELECT t.`evaluation_id` `evaluation`, t.`target_value` `target`, f.`eform_id` form_id, f.`form_title`, f.`form_description`,

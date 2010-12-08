@@ -79,7 +79,6 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 				$allow_removal = false;
 
 				if($evaluation_id = (int) $evaluation_id) {
-
                                     /**
                                      * Check to see if this evaluation exist.
                                      */

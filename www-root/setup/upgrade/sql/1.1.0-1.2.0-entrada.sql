@@ -167,3 +167,4 @@ CREATE TABLE IF NOT EXISTS `evaluation_targets` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 UPDATE `settings` SET `value` = '1.2.0' WHERE `shortname` = 'version_db';
+

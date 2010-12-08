@@ -121,12 +121,12 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 					$EVENT_ID = $db->Insert_Id();
 						switch($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"]) {
 							case "new" :
-								$url 	= ENTRADA_URL."/annualreport/education&section=add_undergrad_sup";
+								$url	= ENTRADA_URL."/annualreport/education?section=add_undergrad_sup";
 								$msg	= "You will now be redirected to add another new record; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 							break;
 							case "index" :
 							default :
-								$url = ADMIN_URL."/education#supervision";
+								$url 	= ENTRADA_URL."/annualreport/education";
 								$msg	= "You will now be redirected to the education page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 							break;
 						}

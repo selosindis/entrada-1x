@@ -61,7 +61,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 		}
 	}
 	
-	if($_SESSION["details"]["clinical_member"]) {
+	if(!$_SESSION["details"]["clinical_member"]) {
 		// Error Checking
 		switch($STEP) {
 		case 2 :
@@ -71,8 +71,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			if((isset($_POST["percentage_education"])) && ($education = clean_input($_POST["percentage_education"], array("float", "trim")))) {				
 				$PROCESSED["education"] = $education;				
 			} else {
-				$ERROR++;
-				$ERRORSTR[] = "The <strong>% Education</strong> field is required.";
+				$PROCESSED["education"] = 0.00;
 			}
 			/**
 			 * Required field "research" / Scholarship / Research
@@ -80,8 +79,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			if((isset($_POST["percentage_research"])) && (($research = clean_input($_POST["percentage_research"], array("float", "trim"))))) {
 				$PROCESSED["research"] = $research;
 			} else {
-				$ERROR++;
-				$ERRORSTR[] = "The <strong>% Scholarship / Research</strong> field is required.";
+				$PROCESSED["research"] = 0.00;
 			}
 			/**
 			 * Required field "service" / Service / Administration
@@ -89,8 +87,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			if((isset($_POST["percentage_service"])) && ($service = clean_input($_POST["percentage_service"], array("float", "trim")))) {
 				$PROCESSED["service"] = $service;
 			} else {
-				$ERROR++;
-				$ERRORSTR[] = "The <strong>% Service / Administration</strong> field is required.";
+				$PROCESSED["service"] = 0.00;
 			}
 			/**
 			 * Required field "total" / Total
@@ -454,8 +451,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			if((isset($_POST["percentage_education"])) && ($education = clean_input($_POST["percentage_education"], array("float", "trim")))) {				
 				$PROCESSED["education"] = $education;				
 			} else {
-				$ERROR++;
-				$ERRORSTR[] = "The <strong>% Education Outside Clinical Setting</strong> field is required.";
+				$PROCESSED["education"] = 0.00;
 			}
 			/**
 			 * Required field "research" / Scholarship / Research
@@ -463,8 +459,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			if((isset($_POST["percentage_research"])) && (($research = clean_input($_POST["percentage_research"], array("float", "trim"))))) {
 				$PROCESSED["research"] = $research;
 			} else {
-				$ERROR++;
-				$ERRORSTR[] = "The <strong>% Scholarship / Research</strong> field is required.";
+				$PROCESSED["research"] = 0.00;
 			}
 			/**
 			 * Required field "clinical" / Non-Teaching Clinical Activity
@@ -472,8 +467,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			if((isset($_POST["percentage_clinical"])) && ($clinical = clean_input($_POST["percentage_clinical"], array("float", "trim")))) {
 				$PROCESSED["clinical"] = $clinical;
 			} else {
-				$ERROR++;
-				$ERRORSTR[] = "The <strong>% Non-Teaching Clinical Activity</strong> field is required.";
+				$PROCESSED["clinical"] = 0.00;
 			}
 			/**
 			 * Required field "combined" / Combined Clinical / Education Activity
@@ -481,8 +475,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			if((isset($_POST["percentage_combined"])) && ($combined = clean_input($_POST["percentage_combined"], array("float", "trim")))) {
 				$PROCESSED["combined"] = $combined;
 			} else {
-				$ERROR++;
-				$ERRORSTR[] = "The <strong>% Combined Clinical/Education Activity</strong> field is required.";
+				$PROCESSED["combined"] = 0.00;
 			}
 			/**
 			 * Required field "service" / Service / Administration
@@ -490,8 +483,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			if((isset($_POST["percentage_service"])) && ($service = clean_input($_POST["percentage_service"], array("float", "trim")))) {
 				$PROCESSED["service"] = $service;
 			} else {
-				$ERROR++;
-				$ERRORSTR[] = "The <strong>% Service / Administration</strong> field is required.";
+				$PROCESSED["service"] = 0.00;
 			}
 			/**
 			 * Required field "total" / Total

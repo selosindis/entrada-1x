@@ -75,8 +75,7 @@ if($EVALUATION_ID) {
 		$HEAD[]	= "<link href=\"".ENTRADA_URL."/css/tree.css?release=".html_encode(APPLICATION_VERSION)."\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />\n";
 		$HEAD[]	= "<style type=\"text/css\">.dynamic-tab-pane-control .tab-page {height:auto;}</style>\n";
 
-		$BREADCRUMB[]		= array("url" => ENTRADA_URL."/community".$evaluation_details["community_url"], "title" => limit_chars($evaluation_details["community_title"], 50));
-		$BREADCRUMB[]		= array("url" => ENTRADA_URL."/communities?".replace_query(), "title" => "Manage Members");
+		$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/evaluations?".replace_query(array("section" => "edit", "evaluation" => $EVALUATION_ID)), "title" => "Manage Members");
 
 			echo "<h1>".html_encode($evaluation_details["community_title"])."</h1>\n";
 
@@ -1193,7 +1192,6 @@ if($EVALUATION_ID) {
                                                                 break;
                                                         }
 
-
                                                         if($nmembers_query != "") {
                                                                 $nmembers_results = $db->GetAll($nmembers_query);
                                                                 //var_export ($nmembers_results);
@@ -1236,6 +1234,7 @@ if($EVALUATION_ID) {
                                                         ?>
                                                         <input class="multi-picklist" id="target_members" name="target_members" style="display: none;">
                                                         <input type="hidden" id="target_type_added"  name="target_type_added" value="<?php echo $target_id; ?>"/>
+
                                                         <?php
                                                     }else{
 							echo display_notice(array("Your evaluation has no form at this time, you should choose form in this evaluation before you add targets."));
@@ -1271,7 +1270,7 @@ if($EVALUATION_ID) {
 							 * Get the total number of results using the generated queries above and calculate the total number
 							 * of pages that are available based on the results per page preferences.
 							 */
-							$query	= "SELECT COUNT(*) AS `total_rows` FROM `evaluation_evaluators` WHERE `evaluation_id` = ".$db->qstr($EVALUATION_ID);
+							$query	= "SELECT COUNT(*) AS `total_rows` FROM `evaluation_progress` WHERE `evaluation_id` = ".$db->qstr($EVALUATION_ID);
 							$result	= $db->GetRow($query);
 							if($result) {
 								$TOTAL_ROWS	= $result["total_rows"];
@@ -1323,52 +1322,30 @@ if($EVALUATION_ID) {
 							 */
 							$limit_parameter = (int) (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"] * $PAGE_CURRENT) - $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]);
 
-                                                        $query1		= "
+                                                        $query		= "
                                                                           select * from (
 										(
-                                                                                SELECT a.updated_date, a.evaluator_type, a.eevaluator_id, b.`username` as user_name, b.`firstname` as first_name, b.`lastname` as last_name, concat(concat(c.`group`,' > '),c.`role`) as group_role
-										FROM `entrada`.`evaluation_evaluators` AS a
+                                                                                SELECT a.updated_date, a.progress_value, concat(concat(b.`firstname`,' '), b.`lastname`) as evaluator_name
+										FROM `entrada`.`evaluation_process` AS a
 										LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
-										ON a.`evaluator_value` = b.`id`
+										ON a.`proxy_id` = b.`id`
 										LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS c
 										ON c.`user_id` = b.`id`
 										AND c.`app_id` IN (".AUTH_APP_IDS_STRING.")
+                                                                                LEFT JOIN `evaluation_targets` as d
+                                                                                on d.`etarget_id` = a.`etarget_id`
 										WHERE a.`evaluation_id` = ".$db->qstr($EVALUATION_ID)."
-                                                                                AND evaluator_type='proxy_id'
+                                                                                AND d.`target_id` in ('2','3','6','7','8')
 										ORDER BY %s
                                                                                 )
                                                                                 union
 										(
-                                                                                SELECT updated_date, evaluator_type, eevaluator_id, `evaluator_value` as user_name, `evaluator_value` as first_name, '' as last_name,'student' as group_role
-										FROM `entrada`.`evaluation_evaluators`
-										WHERE `evaluation_id` = ".$db->qstr($EVALUATION_ID)."
-                                                                                AND evaluator_type!='proxy_id'
-										ORDER BY updated_date
-										)
-                                                                            ) as t
-										LIMIT %s, %s
-                                                                            ";
-                                                        $query1		= "
-                                                                          select * from (
-										(
-                                                                                SELECT a.updated_date, a.evaluator_type, a.eevaluator_id, b.`username` as user_name, b.`firstname` as first_name, b.`lastname` as last_name, concat(concat(c.`group`,' > '),c.`role`) as group_role
-										FROM `entrada`.`evaluation_evaluators` AS a
-										LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
-										ON a.`evaluator_value` = b.`id`
-										LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS c
-										ON c.`user_id` = b.`id`
-										AND c.`app_id` IN (".AUTH_APP_IDS_STRING.")
+                                                                                SELECT a.updated_date, 'course' target_type, a.etarget_id, `course_name` as user_name, `course_name` as first_name, '' as last_name,'course' as group_role
+										FROM `evaluation_targets` AS a
+										LEFT JOIN `courses` AS b
+										ON a.`target_value` = b.`course_id`
 										WHERE a.`evaluation_id` = ".$db->qstr($EVALUATION_ID)."
-                                                                                AND evaluator_type='proxy_id'
-										ORDER BY %s
-                                                                                )
-                                                                                union
-										(
-                                                                                SELECT updated_date, evaluator_type, eevaluator_id, `evaluator_value` as user_name, `evaluator_value` as first_name, '' as last_name,'student' as group_role
-										FROM `entrada`.`evaluation_evaluators`
-										WHERE `evaluation_id` = ".$db->qstr($EVALUATION_ID)."
-                                                                                AND evaluator_type!='proxy_id'
-										ORDER BY updated_date
+                                                                                AND a.target_id= '1'
 										)
                                                                             ) as t
 										LIMIT %s, %s

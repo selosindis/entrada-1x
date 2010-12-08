@@ -143,7 +143,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 		
 		
 //		echo "<br>$query<br>"; print_r($type);
-		
 	}
 }
 ?>

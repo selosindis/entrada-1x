@@ -1809,19 +1809,22 @@ cursor:pointer;
 clear:both;
 }
 
-div.quiz-questions ol.questions li {
+div.quiz-questions ol.questions li, 
+div.evaluation-questions ol.questions li {
 position:relative;
 margin-bottom:1px;
 }
 
-div.quiz-questions ol.questions li div.question {
+div.quiz-questions ol.questions li div.question, 
+div.evaluation-questions ol.questions li div.question {
 vertical-align:middle;
 cursor:move;
 border-top:1px #EEE solid;
 padding:8px;
 }
 
-div.quiz-questions ol.questions li div.question img.question-controls {
+div.quiz-questions ol.questions li div.question img.question-controls, 
+div.evaluation-questions ol.questions li div.question img.question-controls {
 border:0;
 width:16px;
 height:16px;
@@ -1829,24 +1832,29 @@ vertical-align:middle;
 cursor:pointer;
 }
 
-div.quiz-questions ol.questions li div.question span.question {
+div.quiz-questions ol.questions li div.question span.question, 
+div.evaluation-questions ol.questions li div.question span.question {
 margin-left:8px;
 vertical-align:middle;
 }
 
-div.quiz-questions ol.questions li.question {
+div.quiz-questions ol.questions li.question, 
+div.evaluation-questions ol.questions li.question {
 padding-bottom:5px;
 }
 
-div.quiz-questions ul.responses {
+div.quiz-questions ul.responses, 
+div.evaluation-questions ul.responses {
 margin:0 0 8px 25px;
 }
 
-div.quiz-questions li {
+div.quiz-questions li, 
+div.evaluation-questions li {
 vertical-align: top;
 }
 
-div.quiz-questions ul.responses li {
+div.quiz-questions ul.responses li, 
+div.evaluation-questions ul.responses li {
 border:0;
 margin-bottom:5px;
 list-style-type:none;
@@ -1864,7 +1872,8 @@ div.quiz-questions ul.responses li.incorrect {
 list-style-image:url(../images/question-incorrect.gif);
 }
 
-div.quiz-questions ul.responses li.selected {
+div.quiz-questions ul.responses li.selected,
+div.evaluation-questions ul.responses li.selected {
 font-weight:700;
 list-style-image:url(../images/record-next-on.gif);
 border-top:1px #CCC solid;
@@ -1884,7 +1893,8 @@ border-bottom:1px #C00 solid;
 background-color:#FFD9D0;
 }
 
-div.quiz-questions ul.responses li.selected img.question-response-indicator {
+div.quiz-questions ul.responses li.selected img.question-response-indicator,
+div.evaluation-questions ul.responses li.selected img.question-response-indicator {
 position:absolute;
 top:-7px;
 right:-3px;
@@ -1893,11 +1903,13 @@ height:27px;
 border:0;
 }
 
-div.quiz-questions ul.responses li input[type=radio] {
+div.quiz-questions ul.responses li input[type=radio],
+div.evaluation-questions ul.responses li input[type=radio] {
 vertical-align:middle;
 }
 
-div.quiz-questions ul.responses li label {
+div.quiz-questions ul.responses li label,
+div.evaluation-questions ul.responses li label {
 margin-left:5px;
 vertical-align:middle;
 }
@@ -1906,41 +1918,57 @@ vertical-align:middle;
 border:2px #EEE solid;
 padding:2px;
 }
+
 #form-questions-list {
 padding-left:25px;
 }
 
-#form-questions-list > li {
+#form-questions-list > li{
 display:list-item;
 vertical-align:top;
 background-color:#FFF;
 padding:8px 8px 15px 8px;
+margin-right: 25px;
 }
 
-#form-questions-list > li.odd {
+#form-questions-list > div {
+vertical-align:top;
+background-color:#FFF;
+padding:8px 8px 15px 8px;
+margin-right: 25px;
+}
+
+#form-questions-list > li.odd,
+#form-questions-list > div.odd {
 background-color:#EEE;
 }
 
-#form-questions-list > li > div.controls {
+#form-questions-list > li > div.controls,
+#form-questions-list > div > div.controls {
 float:right;
 }
 
-#form-questions-list > li > div.controls img {
+#form-questions-list > li > div.controls img,
+#form-questions-list > div > div.controls img {
 border:0;
 }
 
-#form-questions-list > li > div.question {
+#form-questions-list > li > div.question,
+#form-questions-list > div > div.question {
 position:relative;
 width:90%;
 font-weight:700;
 margin-bottom:5px;
+cursor:move;
 }
 
-#form-questions-list > li > div.responses {
+#form-questions-list > li > div.responses,
+#form-questions-list > div > div.responses {
 position:relative;
 }
 
-#form-questions-list > li > div.responses > div {
+#form-questions-list > li > div.responses > div,
+#form-questions-list > div > div.responses > div {
 display:inline;
 float:left;
 width:20%;
@@ -1949,7 +1977,8 @@ padding:0;
 text-align:center;
 }
 
-#form-questions-list > li > div.comments {
+#form-questions-list > li > div.comments,
+#form-questions-list > div > div.comments {
 margin-top:5px;
 }
 
@@ -2285,7 +2314,8 @@ font-weight:700;
 margin-top:0;
 }
 
-h1.form-title {
+h1.form-title,
+h1.evaluation-title {
 margin:0 0 5px 0;
 }
 
@@ -2410,7 +2440,8 @@ width:135px;
 border-left:none;
 }
 
-.usage-container.warning div,div.quiz-questions ol.questions li.notice,div.quiz-questions ol.questions li.marked {
+.usage-container.warning div,div.quiz-questions ol.questions li.notice,div.quiz-questions ol.questions li.marked,
+.usage-container.warning div,div.evaluation-questions ol.questions li.notice,div.evaluation-questions ol.questions li.marked {
 background-color:#FFC;
 }
 
@@ -2473,7 +2504,8 @@ content: url(../images/plus.gif);
 clear: both;
 }
 
-div.quiz-questions ol.questions li div.question.noneditable,table.select_multiple_table td.select_multiple_name_category label {
+div.quiz-questions ol.questions li div.question.noneditable,table.select_multiple_table td.select_multiple_name_category label,
+div.evaluation-questions ol.questions li div.question.noneditable,table.select_multiple_table td.select_multiple_name_category label {
 cursor:auto;
 }
 

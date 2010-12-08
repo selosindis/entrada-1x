@@ -1247,8 +1247,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 									$ERROR++;
 									$ERRORSTR[] = "You selected that you were adding a new region; however, you did not enter a name for this new region.";	
 								}
-							} elseif(trim($_POST["region_id"]) != "") {
-								$PROCESSED["region_id"] = (int) trim($_POST["region_id"]);
+							} elseif(trim($_POST["region_id"]) != "" && ($region_id = clean_input($_POST["region_id"], array("trim", "int")))) {
+								$query = "SELECT * FROM `".CLERKSHIP_DATABASE."`.`regions` WHERE `region_id` = ".$db->qstr($region_id);
+								$result	= $db->GetRow($query);
+								if ($result) {
+									$PROCESSED["region_id"] = (int) $result["region_id"];
+									if ((int) $result["manage_apartments"]) {
+										$PROCESSED["requires_apartment"] = 1;
+									} else {
+										$PROCESSED["requires_apartment"] = 0;
+									}
+								} else {
+									$ERROR++;
+									$ERRORSTR[] = "We were unable to locate the event location you selected. Please select a valid location or if your desired location is not in the list visit the <a href=\"".ENTRADA_URL."/admin/regionaled/regions\" target=\"_blank\">Manage Regions</a> section and locate the region in that list, click on it, and then select the &quot;Clerkship core rotations can take place in this region&quot; check box.";
+								}
 							} else {
 								$ERROR++;
 								$ERRORSTR[] = "You must select a region that this event resides in.";

@@ -54,6 +54,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 			switch ($STEP) {
 				case 2 :
 					/**
+					 * Required field "target_id" / Form Type.
+					 */
+					if (isset($_POST["target_id"]) && ($tmp_input = clean_input($_POST["target_id"], "int")) && array_key_exists($tmp_input, $EVALUATION_TARGETS)) {
+						$PROCESSED["target_id"] = $tmp_input;
+					} else {
+						$ERROR++;
+						$ERRORSTR[] = "The <strong>Form Type</strong> field is required.";
+					}
+
+					/**
 					 * Required field "form_title" / Form Title.
 					 */
 					if ((isset($_POST["form_title"])) && ($tmp_input = clean_input($_POST["form_title"], array("notags", "trim")))) {
@@ -76,7 +86,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 						$PROCESSED["updated_date"] = time();
 						$PROCESSED["updated_by"] = $_SESSION["details"]["id"];
 
-						if ($db->AutoExecute("evaluation_forms", $PROCESSED, "UPDATE", "`form_id` = ".$db->qstr($FORM_ID))) {
+						if ($db->AutoExecute("evaluation_forms", $PROCESSED, "UPDATE", "`eform_id` = ".$db->qstr($FORM_ID))) {
 							$SUCCESS++;
 							$SUCCESSSTR[] = "The <strong>Form Information</strong> section has been successfully updated.";
 
@@ -230,7 +240,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 											echo "<li id=\"question_".$question["efquestion_id"]."\"".(($key % 2) ? " class=\"odd\"" : "").">";
 											if ($ALLOW_QUESTION_MODIFICATIONS) {
 												echo "<div class=\"controls\">\n";
-												echo "	<a href=\"".ENTRADA_URL."/admin/evaluations/forms?id=".$FORM_ID."&amp;section=edit&amp;record=".$question["efquestion_id"]."\"><img class=\"question-controls\" src=\"".ENTRADA_URL."/images/action-edit.gif\" alt=\"Edit Question\" title=\"Edit Question\" /></a>";
+												echo "	<a href=\"".ENTRADA_URL."/admin/evaluations/forms/questions?id=".$FORM_ID."&amp;section=edit&amp;record=".$question["efquestion_id"]."\"><img class=\"question-controls\" src=\"".ENTRADA_URL."/images/action-edit.gif\" alt=\"Edit Question\" title=\"Edit Question\" /></a>";
 												echo "	<a id=\"question_delete_".$question["efquestion_id"]."\" class=\"question-controls-delete\" href=\"#delete-question-confirmation-box\" title=\"".$question["efquestion_id"]."\"><img class=\"question-controls\" src=\"".ENTRADA_URL."/images/action-delete.gif\" alt=\"Delete Question\" title=\"Delete Question\" /></a>";
 												echo "</div>\n";
 											}
@@ -305,8 +315,19 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 											function updateFormQuestionOrder() {
 												new Ajax.Request('<?php echo ENTRADA_URL; ?>/admin/evaluations/forms/questions', {
 													method: 'post',
-													parameters: { id : <?php echo $FORM_ID; ?>, section : 'order-question', result : Sortable.serialize('form-questions-list', { name : 'order' }) },
+													parameters: { id : <?php echo $FORM_ID; ?>, section : 'api-order', result : Sortable.serialize('form-questions-list', { name : 'order' }) },
 													onSuccess: function(transport) {
+														var count = 0;
+														$$('#form-questions-list li').each(function(obj) {
+															if (obj.hasClassName('odd')) {
+																obj.removeClassName('odd');
+															}
+
+															if (!(count % 2)) {
+																obj.addClassName('odd');
+															}
+															count++;
+														});
 														if (!transport.responseText.match(200)) {
 															new Effect.Highlight('form-content-questions-holder', { startcolor : '#FFD9D0' });
 														}
@@ -323,18 +344,19 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 
 												new Ajax.Request('<?php echo ENTRADA_URL; ?>/admin/evaluations/forms/questions', {
 													method: 'post',
-													parameters: { id: '<?php echo $FORM_ID; ?>', section: 'delete-question', record: efquestion_id },
+													parameters: { id: '<?php echo $FORM_ID; ?>', section: 'api-delete', record: efquestion_id },
 													onSuccess: function(transport) {
 														if (transport.responseText.match(200)) {
 															$('question_' + efquestion_id).remove();
 
-															if ($$('#form-questions-list li.question').length == 0) {
+															if ($$('#form-questions-list li').length == 0) {
+																$('form-content-questions-holder').hide();
 																$('display-no-question-message').show();
 															}
 														} else {
 															if ($$('#question_' + efquestion_id + ' .display-error').length == 0) {
-																var errorString	= 'Unable to delete this question at this time.<br /><br />The system administrator has been notified of this error, please try again later.';
-																var errorMsg	= new Element('div', { 'class': 'display-error' }).update(errorString);
+																var errorString = 'Unable to delete this question at this time.<br /><br />The system administrator has been notified of this error, please try again later.';
+																var errorMsg = new Element('div', { 'class': 'display-error' }).update(errorString);
 
 																$('question_' + efquestion_id).insert(errorMsg);
 															}
@@ -366,23 +388,27 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					</tbody>
 					</table>
 					<div id="disable-form-confirmation-box" class="modal-confirmation">
-						<h1>Disable <strong>Form</strong> Confirmation</h1>
-						Do you really wish to disable this evaluation form?
-						<div class="body">
-							<div id="disable-form-confirmation-content" class="content">
-								<strong><?php echo html_encode($PROCESSED["form_title"]); ?></strong>
+						<form action="<?php echo ENTRADA_URL; ?>/admin/evaluations/forms?section=delete" method="post" id="disableEvaluationFormForm">
+							<input type="hidden" name="delete[]" value="<?php echo $FORM_ID; ?>" />
+							<input type="hidden" name="confirmed" value="1" />
+							<h1>Disable <strong>Form</strong> Confirmation</h1>
+							Do you really wish to disable this evaluation form?
+							<div class="body">
+								<div id="disable-form-confirmation-content" class="content">
+									<strong><?php echo html_encode($PROCESSED["form_title"]); ?></strong>
+								</div>
 							</div>
-						</div>
-						If you confirm this action, this form will not be available for evaluations.
-						<div class="footer">
-							<input type="button" class="button" value="Close" onclick="Control.Modal.close()" style="float: left; margin: 8px 0px 4px 10px" />
-							<input type="button" class="button" value="Confirm" onclick="Control.Modal.close(); window.location = '<?php echo ENTRADA_URL."/admin/evaluations/forms/questions?id=".$FORM_ID."&amp;section=delete&amp;record=".$FORM_ID; ?>'" style="float: right; margin: 8px 10px 4px 0px" />
-						</div>
+							If you confirm this action, this form will not be available for evaluations.
+							<div class="footer">
+								<input type="button" value="Close" onclick="Control.Modal.close()" style="float: left; margin: 8px 0px 4px 10px" />
+								<input type="submit" value="Confirm" style="float: right; margin: 8px 10px 4px 0px" />
+							</div>
+						</form>
 					</div>
 					<div id="copy-form-confirmation-box" class="modal-confirmation">
-						<form action="<?php echo ENTRADA_URL; ?>/admin/evaluations/forms?section=copy&amp;id=<?php echo $FORM_ID; ?>" method="post" id="copyEvaluationFormForm">
+						<form action="<?php echo ENTRADA_URL; ?>/admin/evaluations/forms?section=copy&amp;id=<?php echo $FORM_ID; ?>" method="post" id="copyEvaluationForm">
 							<h1>Copy <strong>Form</strong> Confirmation</h1>
-							<div class="display-generic">If you would like to create a new form based on the existing questions in this form, please provide a new title and press <strong>Copy Form</strong>.</div>
+							<div id="copy-form-message-holder" class="display-generic">If you would like to create a new form based on the existing questions in this form, please provide a new title and press <strong>Copy Form</strong>.</div>
 							<div class="body">
 								<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Copying Form">
 									<colgroup>

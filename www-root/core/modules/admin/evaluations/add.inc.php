@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with Entrada.  If not, see <http://www.gnu.org/licenses/>.
  *
- * This file is used to add events to the entrada.events table.
+ * This file is used to create new evaluations in the entrada.evaluations table.
  *
  * @author Organisation: University of Calgary
  * @author Unit: School of Medicine
@@ -36,30 +36,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
-	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/eventtypes_list.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
-	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/AutoCompleteList.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
-	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/tabpane/tabpane.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
-	$HEAD[] = "<link href=\"".ENTRADA_URL."/css/tabpane.css?release=".html_encode(APPLICATION_VERSION)."\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />\n";
-	echo "<script language=\"text/javascript\">var DELETE_IMAGE_URL = '".ENTRADA_URL."/images/action-delete.gif';</script>";
+	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/evaluations?section=add", "title" => "Create Evaluation");
 
-	$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/evaluations?".replace_query(array("section" => "add")), "title" => "Adding Evaluation");
-
-	$PROCESSED["associated_faculty"] = array();
-	$PROCESSED["event_audience_type"] = "grad_year";
-	$PROCESSED["associated_grad_year"] = "";
-	$PROCESSED["associated_group_ids"] = array();
-	$PROCESSED["associated_proxy_ids"] = array();
-	$PROCESSED["event_types"] = array();
-
-
-	if ((isset($_GET["type"])) && ($tmp_action_type = clean_input(trim($_GET["type"]), "alphanumeric"))) {
-		$ACTION_TYPE = $tmp_action_type;
-	} elseif ((isset($_POST["type"])) && ($tmp_action_type = clean_input(trim($_POST["type"]), "alphanumeric"))) {
-		$ACTION_TYPE = $tmp_action_type;
-	}
-	unset($tmp_action_type);
-
-	echo "<h1>Adding Evaluation</h1>\n";
+	echo "<h1>Create Evaluation</h1>\n";
 
 	// Error Checking
 	switch($STEP) {

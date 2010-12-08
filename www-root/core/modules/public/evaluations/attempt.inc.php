@@ -32,7 +32,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_PUBLIC_EVALUATIONS"))) {
 }
 
 if ($RECORD_ID) {
-	$query			= "	SELECT a.*, c.`eprogress_id`
+	$query			= "	SELECT a.*, c.`eprogress_id`, e.`target_title`
 						FROM `evaluations` AS a
 						LEFT JOIN `evaluation_evaluators` AS b
 						ON a.`evaluation_id` = b.`evaluation_id`
@@ -44,6 +44,8 @@ if ($RECORD_ID) {
 						ON c.`eprogress_id` = cr.`eprogress_id`
 						LEFT JOIN `evaluation_targets` AS d
 						ON a.`evaluation_id` = d.`evaluation_id`
+						LEFT JOIN `evaluations_lu_targets` AS e
+						ON d.`target_id` = e.`target_id`
 						WHERE a.`evaluation_id` = ".$db->qstr($RECORD_ID)."
 						AND
 						(
@@ -95,7 +97,8 @@ if ($RECORD_ID) {
 					if (((int) $evaluation_record["max_submittable"] === 0) || ($completed_attempts < $evaluation_record["max_submittable"])) {
 						$problem_questions = array();
 	
-						echo "<h1>".html_encode($evaluation_record["evaluation_title"])."</h1>";
+						echo "<div class=\"content-small\">".clean_input($evaluation_record["target_title"], array("trim", "encode"))." Form</div>";
+						echo "<h1 class=\"evaluation-title\">".html_encode($evaluation_record["evaluation_title"])."</h1>";
 						if (isset($evaluation_record["evaluation_description"]) && $evaluation_record["evaluation_description"]) {
 							echo "<div class=\"display-generic\">".$evaluation_record["evaluation_description"]."</div>";
 						}
@@ -410,7 +413,7 @@ if ($RECORD_ID) {
 													}
 												}
 												?>
-												</ol>
+												</div>
 											</div>
 											<?php
 										} else {

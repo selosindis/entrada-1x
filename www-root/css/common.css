@@ -2314,7 +2314,8 @@ font-weight:700;
 margin-top:0;
 }
 
-h1.form-title {
+h1.form-title,
+h1.evaluation-title {
 margin:0 0 5px 0;
 }
 

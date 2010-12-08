@@ -1923,7 +1923,7 @@ padding:2px;
 padding-left:25px;
 }
 
-#form-questions-list > li {
+#form-questions-list > li{
 display:list-item;
 vertical-align:top;
 background-color:#FFF;
@@ -1931,19 +1931,30 @@ padding:8px 8px 15px 8px;
 margin-right: 25px;
 }
 
-#form-questions-list > li.odd {
+#form-questions-list > div {
+vertical-align:top;
+background-color:#FFF;
+padding:8px 8px 15px 8px;
+margin-right: 25px;
+}
+
+#form-questions-list > li.odd,
+#form-questions-list > div.odd {
 background-color:#EEE;
 }
 
-#form-questions-list > li > div.controls {
+#form-questions-list > li > div.controls,
+#form-questions-list > div > div.controls {
 float:right;
 }
 
-#form-questions-list > li > div.controls img {
+#form-questions-list > li > div.controls img,
+#form-questions-list > div > div.controls img {
 border:0;
 }
 
-#form-questions-list > li > div.question {
+#form-questions-list > li > div.question,
+#form-questions-list > div > div.question {
 position:relative;
 width:90%;
 font-weight:700;
@@ -1951,11 +1962,13 @@ margin-bottom:5px;
 cursor:move;
 }
 
-#form-questions-list > li > div.responses {
+#form-questions-list > li > div.responses,
+#form-questions-list > div > div.responses {
 position:relative;
 }
 
-#form-questions-list > li > div.responses > div {
+#form-questions-list > li > div.responses > div,
+#form-questions-list > div > div.responses > div {
 display:inline;
 float:left;
 width:20%;
@@ -1964,7 +1977,8 @@ padding:0;
 text-align:center;
 }
 
-#form-questions-list > li > div.comments {
+#form-questions-list > li > div.comments,
+#form-questions-list > div > div.comments {
 margin-top:5px;
 }
 
@@ -2300,7 +2314,8 @@ font-weight:700;
 margin-top:0;
 }
 
-h1.form-title {
+h1.form-title,
+h1.evaluation-title {
 margin:0 0 5px 0;
 }
 

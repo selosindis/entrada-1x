@@ -40,8 +40,8 @@ if (!defined("IN_EVALUATIONS")) {
 	if ($FORM_ID) {
 		$query = "	SELECT a.*
 					FROM `evaluation_forms` AS a
-					WHERE `eform_id` = ".$db->qstr($FORM_ID)."
-					AND `form_active` = '1'";
+					WHERE a.`eform_id` = ".$db->qstr($FORM_ID)."
+					AND a.`form_active` = '1'";
 		$FORM_RECORD = $db->GetRow($query);
 		if ($FORM_RECORD && $ENTRADA_ACL->amIAllowed(new EvaluationFormResource($FORM_ID), "update")) {
 			define("IN_QUESTION", true);

@@ -143,10 +143,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 	$page_previous = (($page_current > 1) ? ($page_current - 1) : false);
 	$page_next = (($page_current < $total_pages) ? ($page_current + 1) : false);
 	?>
-	
 	<h1>Manage Evaluation Forms</h1>
 	
-
 	<ul class="page-action fright">
 		<li><a href="<?php echo ENTRADA_URL; ?>/admin/evaluations/forms?section=add">Create New Evaluation Form</a></li>
 	</ul>

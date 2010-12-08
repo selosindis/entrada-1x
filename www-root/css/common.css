@@ -1906,6 +1906,7 @@ vertical-align:middle;
 border:2px #EEE solid;
 padding:2px;
 }
+
 #form-questions-list {
 padding-left:25px;
 }
@@ -1915,6 +1916,7 @@ display:list-item;
 vertical-align:top;
 background-color:#FFF;
 padding:8px 8px 15px 8px;
+margin-right: 25px;
 }
 
 #form-questions-list > li.odd {
@@ -1934,6 +1936,7 @@ position:relative;
 width:90%;
 font-weight:700;
 margin-bottom:5px;
+cursor:move;
 }
 
 #form-questions-list > li > div.responses {

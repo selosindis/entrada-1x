@@ -1192,7 +1192,6 @@ if($EVALUATION_ID) {
                                                                 break;
                                                         }
 
-
                                                         if($nmembers_query != "") {
                                                                 $nmembers_results = $db->GetAll($nmembers_query);
                                                                 //var_export ($nmembers_results);
@@ -1235,6 +1234,7 @@ if($EVALUATION_ID) {
                                                         ?>
                                                         <input class="multi-picklist" id="target_members" name="target_members" style="display: none;">
                                                         <input type="hidden" id="target_type_added"  name="target_type_added" value="<?php echo $target_id; ?>"/>
+
                                                         <?php
                                                     }else{
 							echo display_notice(array("Your evaluation has no form at this time, you should choose form in this evaluation before you add targets."));

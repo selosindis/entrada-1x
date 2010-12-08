@@ -61,24 +61,35 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 	}
 
 	foreach($EVALUATIONS as $evaluation){
-		list($evaluation_id, $target_id, $object_id) = explode(':',$evaluation);
+        list($evaluator, $target) = explode(":",$evaluation);
 
-		$target = $db->GetOne("SELECT `target_shortname` FROM `evaluations_lu_targets` WHERE `target_id` = ".$db->qstr($target_id));
+		$report = $db->GetRow("	SELECT t.`evaluation_id` `evaluation`, t.`target_value` `target`, f.`eform_id` form_id, f.`form_title`, f.`form_description`,
+								e.`evaluation_title`, e.`evaluation_description`, e.`evaluation_start`, e.`evaluation_finish`, e.`min_submittable`, e.`max_submittable`, e.`release_date`, e.`release_until`,
+								CONCAT(UPPER(SUBSTRING(`target_shortname`, 1, 1)), LOWER(SUBSTRING(`target_shortname` FROM 2))) as `type` FROM `evaluation_targets` t
+								INNER JOIN `evaluations` e ON t.`evaluation_id` = e.`evaluation_id`
+								LEFT JOIN `evaluation_forms` f ON e.`eform_id` = f.`eform_id`
+							  	INNER JOIN `evaluations_lu_targets` lt ON t.`target_id` = lt.`target_id`
+								WHERE t.`etarget_id` = ".$db->qstr($target));
 
-		switch($target) {
-			case "course" :
-				$query = "	SELECT e.*, f.`eform_id` form_id, f.`form_title`, f.`form_description`, c.`course_id`, c.`organisation_id`, c.`course_name`, c.`course_code` FROM `evaluations` e 
-							LEFT JOIN `evaluation_forms` f ON e.`eform_id` = f.`eform_id`
-							INNER JOIN `evaluation_targets` t ON e.`evaluation_id` = t.`evaluation_id`
-							LEFT JOIN `courses` c ON t.`target_value` = c.`course_id`
-							WHERE e.`evaluation_id` = ".$db->qstr($evaluation_id)."
-							AND t.`target_value` = ".$db->qstr($object_id)."
-							AND f.`form_active` = 1";
-				$results	= $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
-				/*echo "<br>$query<br>"; */print_r($results);
+		switch($report["type"]) {
+			case "Course" :
+				$type = $db->GetRow("	SELECT `course_name` `name`, `course_code` `code` FROM `courses` 
+							WHERE `course_id` = ".$db->qstr($report["target"]));
+				$title = ($evaluator=="s"?"Student ":"")."Course Evaluation ";
 			break;
-		
+			default:
+			break;
 		}
+
+		echo	"<table summary=\"Evaluation Reports\">";
+		echo	"	<colgroup>
+						<col style=\"width: 45%\" />
+						<col style=\"width: 65%\" />
+					</colgroup>";
+		echo 	"	<tr><td colspan=\"2\"><h2>$title - $report[evaluation_title]</h2></td></tr>\n";
+		echo	"	<tr><td><h3> $report[type]: '$type[name]' [$type[code]]</h3></td><td><h3> Evaluation period: ".date("M jS", $report["evaluation_start"])."  -  ".date("M jS Y", $report["evaluation_finish"])."</h3></td></tr>";
+		echo	"</table>";
+//		echo "<br>$query<br>"; print_r($type);
 	}
 }
 ?>

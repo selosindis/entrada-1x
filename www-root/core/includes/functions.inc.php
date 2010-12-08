@@ -441,6 +441,7 @@ function navigator_tabs() {
 	$PUBLIC_MODULES[] = array("name" => "tasks", "text" => "Tasks", "resource" => "tasktab", "permission" => "read");
 	$PUBLIC_MODULES[] = array("name" => "events", "text" => "Learning Events");
 	$PUBLIC_MODULES[] = array("name" => "clerkship", "text" => "Clerkship", "resource" => "clerkship", "permission" => "read");
+	$PUBLIC_MODULES[] = array("name" => "evaluations", "text" => "Evaluations", "resource" => "evaluations", "permission" => "read");
 	$PUBLIC_MODULES[] = array("name" => "objectives", "text" => "Curriculum Objectives", "resource" => "objectives", "permission" => "read");
 
 	if (in_array($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"], array("student", "resident"))) {
@@ -984,13 +985,15 @@ function community_public_order_link($field_id, $field_name, $url) {
  */
 function admin_order_link($field_id, $field_name, $submodule = null) {
 	global $MODULE;
-	if(isset($submodule)) {
+	
+	if (isset($submodule)) {
 		$module_url = $MODULE . "/" . $submodule;
 	} else {
 		$module_url = $MODULE;
 	}
-	if(strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) == strtolower($field_id)) {
-		if(strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) == "desc") {
+	
+	if (strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) == strtolower($field_id)) {
+		if (strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) == "desc") {
 			return "<a href=\"".ENTRADA_URL."/admin/".$module_url."?".replace_query(array("so" => "asc"))."\" title=\"Order by ".$field_name.", Sort Ascending\">".$field_name."</a>";
 		} else {
 			return "<a href=\"".ENTRADA_URL."/admin/".$module_url."?".replace_query(array("so" => "desc"))."\" title=\"Order by ".$field_name.", Sort Decending\">".$field_name."</a>";
@@ -10315,7 +10318,6 @@ function objectives_intable($identifier = 0, $indent = 0, $excluded_objectives =
 	return $output;
 }
 
-
 /**
  * Produces an option tag with the values filled in
  * @param unknown_type $value
@@ -10326,8 +10328,6 @@ function objectives_intable($identifier = 0, $indent = 0, $excluded_objectives =
 function build_option($value, $label, $selected = false) {
 	return "<option value='".$value."'". ($selected ? "selected='selected'" : "") .">".$label."</option>\n";
 }
-
-
 
 /**
  * routine to display standard status messages, Error, Notice, and Success
@@ -11697,3 +11697,222 @@ function eval_sche_fetch_filtered_evals() {
 	return $output;
 }
 
+function fetch_evaluation_target_title($evaluation_target = array(), $number_of_targets = 1) {
+	global $db;
+	if ($number_of_targets == 1) {
+		if (!empty($evaluation_target)) {
+			switch ($evaluation_target["target_shortname"]) {
+				case "course" :
+					$query = "SELECT `course_code` FROM `courses` WHERE `course_id` = ".$db->qstr($evaluation_target["target_value"]);
+					if ($course_code = $db->GetOne($query)) {
+						return $course_code;
+					}
+					break;
+				case "rotation_core" :
+				case "rotation_elective" :
+					$query = "SELECT `event_title` FROM `".CLERKSHIP_DATABASE."`.`events` WHERE `event_id` = ".$db->qstr($evaluation_target["target_value"]);
+					if ($event_name = $db->GetOne($query)) {
+						return $event_name;
+					}
+					break;
+				case "self" :
+						return "Yourself";
+					break;
+				case "teacher" :
+				case "student" :
+				case "preceptor" :
+				case "peer" :
+				default :
+					$query = "SELECT CONCAT_WS(' ', `firstname`, `lastname`) AS `fullname` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($evaluation_target["target_value"]);
+					if ($teacher_name = $db->GetOne($query)) {
+						return $teacher_name;
+					}
+					break;
+			}
+		}
+	} else {
+		if (!empty($evaluation_target)) {
+			switch ($evaluation_target["target_shortname"]) {
+				case "course" :
+					return $number_of_targets." Courses";
+					break;
+				case "student" :
+					return $number_of_targets." Students";
+					break;
+				case "preceptor" :
+					return $number_of_targets." Preceptors";
+					break;
+				case "peer" :
+					return $number_of_targets." Peers";
+					break;
+				case "teacher" :
+				default :
+					return $number_of_targets." Faculty Members";
+					break;
+			}
+		}
+	}
+	return false;
+}
+
+
+/**
+ * This function returns the total number of attempts the user
+ * has made on the provided evaluation_id, completed, expired or otherwise.
+
+ * @param int $aquiz_id
+ * @return int
+ */
+function evaluations_fetch_attempts($evaluation_id = 0) {
+	global $db;
+
+	if ($evaluation_id = (int) $evaluation_id) {
+		$query		= "	SELECT COUNT(*) AS `total`
+						FROM `evaluations_progress`
+						WHERE `evaluation_id` = ".$db->qstr($evaluation_id)."
+						AND `proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
+						AND `progress_value` <> 'inprogress'";
+		$attempts	= $db->GetRow($query);
+		if ($attempts) {
+			return $attempts["total"];
+		}
+	}
+
+	return 0;
+}
+
+function evaluation_save_response($eprogress_id, $eform_id, $efquestion_id, $efresponse_id, $comments) {
+	global $db;
+	/**
+	 * Check to ensure that this response is associated with this question.
+	 */
+	$query	= "SELECT * FROM `evaluation_form_responses` WHERE `efresponse_id` = ".$db->qstr($efresponse_id)." AND `efquestion_id` = ".$db->qstr($efquestion_id);
+	$result	= $db->GetRow($query);
+	if ($result) {
+	/**
+	 * See if they have already responded to this question or not as this
+	 * determines whether an INSERT or an UPDATE is required.
+	 */
+		$query = "	SELECT `eresponse_id`, `efresponse_id`, `comments`
+					FROM `evaluation_responses`
+					WHERE `eprogress_id` = ".$db->qstr($eprogress_id)."
+					AND `eform_id` = ".$db->qstr($eform_id)."
+					AND `proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
+					AND `efquestion_id` = ".$db->qstr($efquestion_id);
+		$result	= $db->GetRow($query);
+		if ($result) {
+		/**
+		 * Checks to see if the response is different from what was previously
+		 * stored in the event_evaluation_responses table.
+		 */
+			if ($efresponse_id != $result["efresponse_id"] || $comments != $result["comments"]) {
+				$evaluation_response_array	= array (
+					"efresponse_id" => $efresponse_id,
+					"comments" => $comments,
+					"updated_date" => time(),
+					"updated_by" => $_SESSION["details"]["id"]
+				);
+				if ($db->AutoExecute("evaluation_responses", $evaluation_response_array, "UPDATE", "`eresponse_id` = ".$db->qstr($result["eresponse_id"]))) {
+					return true;
+				} else {
+					application_log("error", "Unable to update a response to a question that has already been recorded. Database said: ".$db->ErrorMsg());
+				}
+			} else {
+				return true;
+			}
+		} else {
+			$evaluation_response_array	= array (
+				"eprogress_id" => $eprogress_id,
+				"eform_id" => $eform_id,
+				"proxy_id" => $_SESSION["details"]["id"],
+				"efquestion_id" => $efquestion_id,
+				"efresponse_id" => $efresponse_id,
+				"comments" => $comments,
+				"updated_date" => time(),
+				"updated_by" => $_SESSION["details"]["id"]
+			);
+
+			if ($db->AutoExecute("evaluation_responses", $evaluation_response_array, "INSERT")) {
+				return true;
+			} else {
+				application_log("error", "Unable to record a response to a question that was submitted. Database said: ".$db->ErrorMsg());
+			}
+		}
+	} else {
+		application_log("error", "A submitted efresponse_id was not a valid response for the efquestion_id that was provided when attempting to submit a response to a question.");
+	}
+
+	return false;
+}
+
+/**
+ * This function loads the current progress based on an eprogress_id.
+ *
+ * @global object $db
+ * @param int $eprogress_id
+ * @return array Returns the users currently progress or returns false if there
+ * is an error.
+ */
+function evaluation_load_progress($eprogress_id = 0) {
+	global $db;
+
+	$output = array();
+
+	if ($eprogress_id = (int) $eprogress_id) {
+	/**
+		 * Grab the specified progress identifier, but you better be sure this
+		 * is the correct one, and the results are being returned to the proper
+		 * user.
+	 */
+		$query		= "	SELECT *
+						FROM `evaluation_progress` AS a
+						JOIN `evaluations` AS b
+						ON a.`evaluation_id` = b.`evaluation_id`
+						WHERE a.`eprogress_id` = ".$db->qstr($eprogress_id);
+		$progress	= $db->GetRow($query);
+		if ($progress) {
+		/**
+		 * Add all of the qquestion_ids to the $output array so they're set.
+		 */
+			$query		= "SELECT * FROM `evaluation_form_questions` WHERE `eform_id` = ".$db->qstr($progress["eform_id"])." ORDER BY `question_order` ASC";
+			$questions	= $db->GetAll($query);
+			if ($questions) {
+				foreach ($questions as $question) {
+					$output[$question["efquestion_id"]] = 0;
+				}
+			} else {
+				return false;
+			}
+
+			/**
+			 * Update the $output array with any currently selected responses.
+			 */
+			$query		= "	SELECT *
+							FROM `evaluation_responses`
+							WHERE `eprogress_id` = ".$db->qstr($eprogress_id);
+			$responses	= $db->GetAll($query);
+			if ($responses) {
+				foreach ($responses as $response) {
+					$output[$response["efquestion_id"]] = $response["efresponse_id"];
+				}
+			}
+		} else {
+			return false;
+		}
+	}
+
+	return $output;
+}
+
+function evaluation_generate_description($min_submittable = 0, $evaluation_questions = 1, $evaluation_attempts = 0, $evaluation_finish = 0) {
+	global $db;
+
+	$output	= "This is %s evaluation which is to be completed %s. You will have no time limitation and %s to answer the %s in this evaluation.";
+
+	$string_1 = (((int) $min_submittable) ? "a required" : "an optional");
+	$string_2 = ((isset($evaluation_finish) && ($evaluation_finish)) ? "by ".date(DEFAULT_DATE_FORMAT, $evaluation_finish) : "when you see fit");
+	$string_3 = (((int) $evaluation_attempts) ? $evaluation_attempts." attempt".(($evaluation_attempts != 1) ? "s" : "") : "unlimited attempts");
+	$string_4 = $evaluation_questions." question".(($evaluation_questions != 1) ? "s" : "");
+
+	return sprintf($output, $string_1, $string_2, $string_3, $string_4);
+}

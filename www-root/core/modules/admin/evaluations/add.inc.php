@@ -337,7 +337,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					</tr>
 					<tr>
 						<td></td>
-						<td style="vertical-align: top"><label for="eform_ids" class="form-required">Evaluation Form</label></td>
+						<td style="vertical-align: top"><label for="eform_id" class="form-required">Evaluation Form</label></td>
 						<td>
 							<select id="eform_id" name="eform_id">
 								<option id="-1"> -- Pick a type to add -- </option>

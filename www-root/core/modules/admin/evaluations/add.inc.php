@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with Entrada.  If not, see <http://www.gnu.org/licenses/>.
  *
- * This file is used to add events to the entrada.events table.
+ * This file is used to create new evaluations in the entrada.evaluations table.
  *
  * @author Organisation: University of Calgary
  * @author Unit: School of Medicine
@@ -36,34 +36,28 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
-	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/eventtypes_list.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
-	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/AutoCompleteList.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
-	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/tabpane/tabpane.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
-	$HEAD[] = "<link href=\"".ENTRADA_URL."/css/tabpane.css?release=".html_encode(APPLICATION_VERSION)."\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />\n";
-	echo "<script language=\"text/javascript\">var DELETE_IMAGE_URL = '".ENTRADA_URL."/images/action-delete.gif';</script>";
+	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/evaluations?section=add", "title" => "Create Evaluation");
 
-	$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/evaluations?".replace_query(array("section" => "add")), "title" => "Adding Evaluation");
-
-	$PROCESSED["associated_faculty"] = array();
-	$PROCESSED["event_audience_type"] = "grad_year";
-	$PROCESSED["associated_grad_year"] = "";
-	$PROCESSED["associated_group_ids"] = array();
-	$PROCESSED["associated_proxy_ids"] = array();
-	$PROCESSED["event_types"] = array();
-
-
-	if ((isset($_GET["type"])) && ($tmp_action_type = clean_input(trim($_GET["type"]), "alphanumeric"))) {
-		$ACTION_TYPE = $tmp_action_type;
-	} elseif ((isset($_POST["type"])) && ($tmp_action_type = clean_input(trim($_POST["type"]), "alphanumeric"))) {
-		$ACTION_TYPE = $tmp_action_type;
-	}
-	unset($tmp_action_type);
-
-	echo "<h1>Adding Evaluation</h1>\n";
+	echo "<h1>Create Evaluation</h1>\n";
 
 	// Error Checking
 	switch($STEP) {
 		case 2 :
+			/**
+			 * Required field "eform_id" / Evaluation Form
+			 */
+			if (isset($_POST["eform_id"]) && ($eform_id = clean_input($_POST["eform_id"], "int"))) {
+				$query = "SELECT * FROM `evaluation_forms` WHERE `eform_id` = ".$db->qstr($eform_id)." AND `form_active` = '1'";
+				$result = $db->GetRow($query);
+				if ($result) {
+					$PROCESSED["eform_id"] = $eform_id;
+				} else {
+					add_error("The <strong>Evaluation Form</strong> that you selected is not currently available for use.");
+				}
+			} else {
+				add_error("You must select an <strong>Evaluation Form</strong> to use during this evaluation.");
+			}
+			
 			/**
 			 * Required field "evaluation_title" / Evaluation Title.
 			 */
@@ -127,21 +121,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 				$PROCESSED["max_submittable"] = $max_submittable;
 			} else {
 				add_error("The evaluation <strong>Max Submittable</strong> field is required and must be less than 99.");
-			}
-
-			/**
-			 * Required field "eform_id" / Evaluation Form
-			 */
-			if (isset($_POST["eform_id"]) && ($eform_id = clean_input($_POST["eform_id"], "int"))) {
-				$query = "SELECT * FROM `evaluation_forms` WHERE `eform_id` = ".$db->qstr($eform_id)." AND `form_active` = '1'";
-				$result = $db->GetRow($query);
-				if ($result) {
-					$PROCESSED["eform_id"] = $eform_id;
-				} else {
-					add_error("The <strong>Evaluation Form</strong> that you selected is not currently available for use.");
-				}
-			} else {
-				add_error("You must select an <strong>Evaluation Form</strong> to use during this evaluation.");
 			}
 
 			/**
@@ -222,10 +201,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 		break;
 		case 1 :
 		default :
-			$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/elementresizer.js\"></script>\n";
-
-			if ($ERROR) {
-				echo display_error();
+			if (has_error() || has_notice()) {
+				echo display_status_messages();
 			}
 			?>
 			<form action="<?php echo ENTRADA_URL; ?>/admin/evaluations?section=add&amp;step=2" method="post" name="addEvaluationForm" id="addEvaluationForm">
@@ -250,6 +227,43 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 						</tr>
 						<tr>
 							<td></td>
+							<td><label for="eform_id" class="form-required">Evaluation Form</label></td>
+							<td>
+								<select id="eform_id" name="eform_id" style="width:205px">
+								<option value="0"> -- Select Evaluation Form -- </option>
+								<?php
+								$query	= "	SELECT a.*, b.`target_shortname`, b.`target_title`
+											FROM `evaluation_forms` AS a
+											LEFT JOIN `evaluations_lu_targets` AS b
+											ON b.`target_id` = a.`target_id`
+											WHERE a.`form_active` = '1'
+											ORDER BY b.`target_title` ASC";
+								$results = $db->GetAll($query);
+								if ($results) {
+									$total_forms = count($results);
+									$optgroup_label = "";
+
+									foreach ($results as $key => $result) {
+										if ($result["target_title"] != $optgroup_label) {
+											$optgroup_label = $result["target_title"];
+											if ($key > 0) {
+												echo "</optgroup>";
+											}
+											echo "<optgroup label=\"".html_encode($optgroup_label)." Forms\">";
+										}
+										echo "<option value=\"".(int) $result["eform_id"].(($PROCESSED["eform_id"] == $result["eform_id"]) ? " selected=\"selected\"" : "")."\"> ".html_encode($result["form_title"])."</option>";
+									}
+									echo "</optgroup>";
+								}
+								?>
+								</select>
+							</td>
+						</tr>
+						<tr>
+							<td colspan="3">&nbsp;</td>
+						</tr>
+						<tr>
+							<td></td>
 							<td><label for="evaluation_title" class="form-required">Evaluation Title</label></td>
 							<td><input type="text" id="evaluation_title" name="evaluation_title" value="<?php echo html_encode($PROCESSED["evaluation_title"]); ?>" maxlength="255" style="width: 95%" /></td>
 						</tr>
@@ -269,7 +283,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 						<tr>
 							<td colspan="3">&nbsp;</td>
 						</tr>
-						<?php echo generate_calendars("evaluation", "Evaluation", true, true, ((isset($PROCESSED["evaluation_start"])) ? $PROCESSED["evaluation_start"] : 0), true, true, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0)); ?>
+						<?php echo generate_calendars("evaluation", "Evaluation", true, true, ((isset($PROCESSED["evaluation_start"])) ? $PROCESSED["evaluation_start"] : 0), true, true, ((isset($PROCESSED["evaluation_finish"])) ? $PROCESSED["evaluation_finish"] : 0)); ?>
 						<tr>
 							<td colspan="3">&nbsp;</td>
 						</tr>
@@ -287,27 +301,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 							<td>
 								<input type="text" id="max_submittable" name="max_submittable" value="<?php echo (isset($PROCESSED["max_submittable"]) ? $PROCESSED["max_submittable"] : 1); ?>" maxlength="2" style="width: 30px; margin-right: 10px" />
 								<span class="content-small"><strong>Tip:</strong> The maximum number of times evaluator is able complete this evaluation.</span>
-							</td>
-						</tr>
-						<tr>
-							<td colspan="3">&nbsp;</td>
-						</tr>
-						<tr>
-							<td></td>
-							<td><label for="eform_id" class="form-required">Evaluation Form</label></td>
-							<td>
-								<select id="eform_id" name="eform_id">
-								<option value="0"> -- Select Evaluation Form -- </option>
-								<?php
-								$query = "SELECT * FROM `evaluation_forms` WHERE `form_active` = '1' ORDER BY `updated_date` ASC";
-								$results = $db->GetAll($query);
-								if ($results) {
-									foreach ($results as $result) {
-										echo "<option value=\"".(int) $result["eform_id"].(($PROCESSED["eform_id"] == $result["eform_id"]) ? " selected=\"selected\"" : "")."\"> ".html_encode($result["form_title"])."</option>";
-									}
-								}
-								?>
-								</select>
 							</td>
 						</tr>
 						<tr>

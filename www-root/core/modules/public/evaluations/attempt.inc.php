@@ -373,13 +373,12 @@ if ($RECORD_ID) {
 												foreach ($questions as $key => $question) {
 													switch ($question["questiontype_shortname"]) {
 														case "descriptive_text" :
-															echo "<div style=\"display: block; padding-top: 15px;\">".$question["question_text"]."</div>";
-															echo "<br/>\n";
+															echo "<div style=\"display: block; padding-top: 15px;\"".(($key % 2) ? " class=\"odd\"" : "").">".$question["question_text"]."</div>";
 															break;
 														case "matrix_single" :
 														default :
 															$question_number++;
-															echo "<div value=\"".$question_number."\" id=\"question_".$question["efquestion_id"]."\"".(($question_number % 2) ? " class=\"odd\"" : "").">";
+															echo "<div value=\"".$question_number."\" id=\"question_".$question["efquestion_id"]."\"".(($key % 2) ? " class=\"odd\"" : "").">";
 															echo "	<span style=\"margin-left: -30px; position: absolute;\">".$question_number.".</span>";
 															echo "	<div id=\"question_text_".$question["efquestion_id"]."\" class=\"question\">\n";
 															echo "		".clean_input($question["question_text"], "specialchars");

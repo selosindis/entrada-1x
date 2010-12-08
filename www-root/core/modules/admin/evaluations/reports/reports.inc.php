@@ -62,7 +62,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 
 	foreach($EVALUATIONS as $evaluation){
         list($evaluator, $target) = explode(":",$evaluation);
-
+		$STUDENTS = $evaluator=="s";
+	
 		$report = $db->GetRow("	SELECT t.`evaluation_id` `evaluation`, t.`target_value` `target`, f.`eform_id` form_id, f.`form_title`, f.`form_description`,
 								e.`evaluation_title`, e.`evaluation_description`, e.`evaluation_start`, e.`evaluation_finish`, e.`min_submittable`, e.`max_submittable`, e.`release_date`, e.`release_until`,
 								CONCAT(UPPER(SUBSTRING(`target_shortname`, 1, 1)), LOWER(SUBSTRING(`target_shortname` FROM 2))) as `type` FROM `evaluation_targets` t
@@ -75,20 +76,72 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 			case "Course" :
 				$type = $db->GetRow("	SELECT `course_name` `name`, `course_code` `code` FROM `courses` 
 							WHERE `course_id` = ".$db->qstr($report["target"]));
-				$title = ($evaluator=="s"?"Student ":"")."Course Evaluation ";
+				$title = ($STUDENTS?"Student ":"")."Course Evaluation ";
 			break;
 			default:
 			break;
 		}
 
-		echo	"<table summary=\"Evaluation Reports\">";
+		echo	"<div class=\"no-printing\">";
+		echo	"<table width=\"100%\" summary=\"Evaluation Reports\">";
 		echo	"	<colgroup>
-						<col style=\"width: 45%\" />
-						<col style=\"width: 65%\" />
+						<col style=\"width: 18%\" />
+						<col style=\"width: 42%\" />
+						<col style=\"width: 12%\" />
+						<col style=\"width: 28%\" />
 					</colgroup>";
-		echo 	"	<tr><td colspan=\"2\"><h2>$title - $report[evaluation_title]</h2></td></tr>\n";
-		echo	"	<tr><td><h3> $report[type]: '$type[name]' [$type[code]]</h3></td><td><h3> Evaluation period: ".date("M jS", $report["evaluation_start"])."  -  ".date("M jS Y", $report["evaluation_finish"])."</h3></td></tr>";
+		echo 	"	<tr><td colspan=\"4\"><h2>$title - $report[evaluation_title]</h2></td></tr>\n";
+		echo	"	<tr><td><h3> $report[type]:</h3></td><td colspan=\"3\">'$type[name]' [$type[code]]</td></tr>";
+		echo	"	<tr><td><h3> Evaluation period:</h3></td><td>".date("M jS", $report["evaluation_start"])."  -  ".date("M jS Y", $report["evaluation_finish"])."</td>";
+		echo	"		<td><h3> Released:</h3></td><td>".date("M jS Y", $report["release_date"])."</td></tr>";
+
+		$query = "	SELECT COUNT(DISTINCT(`evaluator`)) FROM
+					(
+						SELECT ev.`evaluator_value` `evaluator`
+						FROM `evaluation_evaluators` ev
+						WHERE ev.`evaluator_type` = 'proxy_id'
+						AND ev.`evaluation_id` = ".$db->qstr($report["evaluation"])."
+						UNION
+						SELECT a.`user_id` `evaluator`
+						FROM `".AUTH_DATABASE."`.`user_access` a , `evaluation_evaluators` ev
+						WHERE ev.`evaluator_type` = 'grad_year' AND ev.`evaluator_value` = a.`role`
+						AND ev.`evaluation_id` = ".$db->qstr($report["evaluation"])."
+					) t";
+		$evaluators	= $db->GetOne($query);
+
+		if ($STUDENTS) {		
+			$query = "	SELECT COUNT(DISTINCT(a.`user_id`)) `total`,  a.`role` `year`
+						FROM `".AUTH_DATABASE."`.`user_access` a, `evaluation_evaluators` ev
+						WHERE ev.`evaluator_type` = 'grad_year' AND ev.`evaluator_value` = a.`role`
+						AND ev.`evaluation_id` = ".$db->qstr($report["evaluation"]);
+			$class	= $db->GetRow($query);	
+		}
+		
+		$updated = $db->GetOne("SELECT MAX(`updated_date`) FROM `evaluation_progress`
+								WHERE `etarget_id` = ".$db->qstr($target)." AND `progress_value` <> 'cancelled'");
+				
+		$cancelled = $db->GetOne("	SELECT COUNT(`eprogress_id`) FROM `evaluation_progress`
+									WHERE `etarget_id` = ".$db->qstr($target)." AND `progress_value` = 'cancelled'");
+				
+		$progress = $db->GetOne("	SELECT COUNT(`eprogress_id`) FROM `evaluation_progress`
+									WHERE `etarget_id` = ".$db->qstr($target)." AND `progress_value` = 'inprogress'");
+				
+		$completed = $db->GetOne("	SELECT COUNT(`eprogress_id`) FROM `evaluation_progress`
+									WHERE `etarget_id` = ".$db->qstr($target)." AND `progress_value` = 'complete'");
+
+		echo	"<tr><td><h3>Evaluators:</h3></td>";
+		if ($STUDENTS && ($class["total"]>0)) {
+			$indies = $evaluators-$class["total"];
+			echo "	<td>Class of $class[year] (#$class[total])".($indies?" plus $indies individual".($indies>1?"s":""):"")."</td>";
+		} else {
+			echo "	<td>$evaluators</td>";
+		}
+		echo	"<td><h3>Updated:</h3></td><td>".date("M jS", $updated)."</td></tr>";
+		echo	"<tr><td><h3> Progress:</h3></td><td colspan=\"3\">".($completed?"$completed - Completed ":"").($progress?"$progress - In progress ":"").($cancelled?"$cancelled - Cancelled ":"")."</td></tr>";
 		echo	"</table>";
+		echo	"</div>";
+		
+		
 //		echo "<br>$query<br>"; print_r($type);
 		
 	}

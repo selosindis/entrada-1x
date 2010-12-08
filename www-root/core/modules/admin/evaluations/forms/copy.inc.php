@@ -50,6 +50,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 			 * Required field "form_title" / Quiz Title.
 			 */
 			if ((isset($_POST["form_title"])) && ($tmp_input = clean_input($_POST["form_title"], array("notags", "trim")))) {
+				$PROCESSED["target_id"] = $form_record["target_id"];
 				$PROCESSED["form_title"] = $tmp_input;
 				$PROCESSED["form_description"] = $form_record["form_description"];
 				$PROCESSED["form_active"] = 1;
@@ -108,6 +109,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 
 							$ERROR++;
 							$ERRORSTR[] = "There was a problem creating the new evaluation form at this time. The system administrator was informed of this error; please try again later.";
+
+							application_log("error", "There was an error inserting a new copied evaluation form. Database said: ".$db->ErrorMsg());
 						}
 					}
 				} else {

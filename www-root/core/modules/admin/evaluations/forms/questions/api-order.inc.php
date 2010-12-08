@@ -60,12 +60,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 	exit;
 } else {
 	if ($FORM_ID) {
-		$query			= "	SELECT a.*
-							FROM `quizzes` AS a
-							WHERE a.`quiz_id` = ".$db->qstr($FORM_ID)."
-							AND a.`quiz_active` = '1'";
-		$quiz_record	= $db->GetRow($query);
-		if ($quiz_record && $ENTRADA_ACL->amIAllowed(new EvaluationFormResource($quiz_record['quiz_id']), 'update')) {
+		$query = "	SELECT a.*
+					FROM `evaluation_forms` AS a
+					WHERE a.`eform_id` = ".$db->qstr($FORM_ID)."
+					AND a.`form_active` = '1'";
+		$form_record = $db->GetRow($query);
+		if ($form_record && $ENTRADA_ACL->amIAllowed(new EvaluationFormResource($form_record["eform_id"]), "update")) {
 			if ($ALLOW_QUESTION_MODIFICATIONS) {
 				/**
 				 * Clears all open buffers so we can return a simple REST response.
@@ -80,29 +80,29 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					parse_str($tmp_input, $result);
 
 					if ((isset($result["order"])) && (is_array($result["order"]))) {
-						foreach ($result["order"] as $order => $qquestion_id) {
+						foreach ($result["order"] as $order => $efquestion_id) {
 							$order = ($order + 1);
-							if($ENTRADA_ACL->amIAllowed(new EvaluationFormQuestionResource($qquestion_id, $quiz_record["quiz_id"]), "update")) {
-								if(!$db->AutoExecute("quiz_questions", array("question_order" => (int) $order), "UPDATE", "`qquestion_id` = ".$db->qstr($qquestion_id))) {
+							if($ENTRADA_ACL->amIAllowed(new EvaluationFormQuestionResource($efquestion_id, $form_record["eform_id"]), "update")) {
+								if(!$db->AutoExecute("evaluation_form_questions", array("question_order" => (int) $order), "UPDATE", "`efquestion_id` = ".$db->qstr($efquestion_id))) {
 
 									$ERROR++;
-									application_log("error", "Unable to update quiz_id [".$FORM_ID."] question [".$qquestion_id."] order [".$order."]. Database said: ".$db->ErrorMsg());
+									application_log("error", "Unable to update eform_id [".$FORM_ID."] question [".$efquestion_id."] order [".$order."] when reordering evaluation form questions. Database said: ".$db->ErrorMsg());
 								}
 							} else {
 								$ERROR++;
-								application_log("error", "Unable to update quiz_id [".$FORM_ID."] question [".$qquestion_id."] order [".$order."] due to a lack of permissions");
+								application_log("error", "Unable to update eform_id [".$FORM_ID."] question [".$efquestion_id."] order [".$order."] when reordering evaluation form questions due to a lack of permissions.");
 							}
 						}
 
 						if ($ERROR) {
-							application_log("error", "Unable to update question order in quiz [".$quiz_record["quiz_id"]."]. Database said: ".$db->ErrorMsg());
+							application_log("error", "Unable to update question order in evaluation form [".$form_record["eform_id"]."]. Database said: ".$db->ErrorMsg());
 
 							/**
 							 * @exception 405: There were errors in the update SQL execution, check the error_log.
 							 */
 							echo 405;
 						} else {
-							application_log("success", "Questions for quiz [".$quiz_record["quiz_id"]."] were successfully reordered.");
+							application_log("success", "Questions for evaluation form [".$form_record["eform_id"]."] were successfully reordered.");
 
 							/**
 							 * @exception 200: There were no errors, everything was updated successfully.

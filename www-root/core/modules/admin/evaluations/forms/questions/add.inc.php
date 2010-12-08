@@ -64,8 +64,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 				if ((isset($_POST["question_text"])) && ($tmp_input = clean_input($_POST["question_text"], array("trim", "allowedtags")))) {
 					$PROCESSED["question_text"] = $tmp_input;
 				} else {
-					$ERROR++;
-					$ERRORSTR[] = "The <strong>Form Question</strong> field is required.";
+					add_error("The <strong>Form Question</strong> field is required.");
 				}
 
 				/**
@@ -77,8 +76,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 				if ((isset($_POST["response_text"])) && (is_array($_POST["response_text"]))) {
 					$i = 1;
 					foreach ($_POST["response_text"] as $response_key => $response_text) {
-						$response_key		= clean_input($response_key, "int");
-						$response_is_html	= 0;
+						$response_key = clean_input($response_key, "int");
+						$response_is_html = 0;
 
 						/**
 						 * Check if this is response is in HTML or just plain text.
@@ -88,14 +87,22 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 						}
 
 						if ($response_is_html) {
-							$response_text	= clean_input($response_text, array("trim", "allowedtags"));
+							$response_text = clean_input($response_text, array("trim", "allowedtags"));
 						} else {
-							$response_text	= clean_input($response_text, array("trim"));
+							$response_text = clean_input($response_text, array("trim"));
 						}
 
 						if (($response_key) && ($response_text != "")) {
-							$PROCESSED["evaluation_form_responses"][$i]["response_text"]	= $response_text;
-							$PROCESSED["evaluation_form_responses"][$i]["response_order"]	= $i;
+							if (is_array($PROCESSED["evaluation_form_responses"]) && !empty($PROCESSED["evaluation_form_responses"])) {
+								foreach ($PROCESSED["evaluation_form_responses"] as $value) {
+									if ($value["response_text"] == $response_text) {
+										add_error("You cannot have more than one <strong>identical response</strong> in a question.");
+									}
+								}
+							}
+
+							$PROCESSED["evaluation_form_responses"][$i]["response_text"] = $response_text;
+							$PROCESSED["evaluation_form_responses"][$i]["response_order"] = $i;
 
 							/**
 							 * Check if this is the selected minimum passing level or not.
@@ -118,16 +125,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 				 * There must be at least 2 possible responses to proceed.
 				 */
 				if (count($PROCESSED["evaluation_form_responses"]) < 4) {
-					$ERROR++;
-					$ERRORSTR[] = "You must provide 4 responses in the <strong>Available Responses</strong> section.";
+					add_error("You must provide 4 responses in the <strong>Available Responses</strong> section.");
 				}
 
 				/**
 				 * You must specify the minimum passing level
 				 */
 				if (!$minimum_passing_level_found) {
-					$ERROR++;
-					$ERRORSTR[] = "You must specify which of the responses is the <strong>minimum passing level</strong>.";
+					add_error("You must specify which of the responses is the <strong>minimum passing level</strong>.");
 				}
 
 				/**
@@ -158,7 +163,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] = "new";
 				}
 
-				if (!$ERROR) {
+				if (!has_error()) {
 					if($ENTRADA_ACL->amIAllowed(new EvaluationFormQuestionResource(null, $FORM_RECORD["eform_id"]), "create")) {
 						if ($db->AutoExecute("evaluation_form_questions", $PROCESSED, "INSERT") && ($efquestion_id = $db->Insert_Id())) {
 							/**
@@ -176,8 +181,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 													);
 
 									if (!$db->AutoExecute("evaluation_form_responses", $PROCESSED, "INSERT")) {
-										$ERROR++;
-										$ERRORSTR[] = "There was an error while trying to attach a <strong>Question Response</strong> to this form question.<br /><br />The system administrator was informed of this error; please try again later.";
+										add_error("There was an error while trying to attach a <strong>Question Response</strong> to this form question.<br /><br />The system administrator was informed of this error; please try again later.");
 
 										application_log("error", "Unable to insert a new evaluation_form_responses record while adding a new evaluation form question [".$efquestion_id."] to eform_id [".$FORM_ID."]. Database said: ".$db->ErrorMsg());
 									}
@@ -186,7 +190,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 
 							switch ($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"]) {
 								case "new" :
-									$url = ENTRADA_URL."/admin/evaluations/forms/questions?id=".$FORM_ID."&amp;section=add";
+									$url = ENTRADA_URL."/admin/evaluations/forms/questions?id=".$FORM_ID."&section=add";
 									$msg = "You will now be redirected to add another question to this evaluation form; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 								break;
 								case "index" :
@@ -195,7 +199,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 								break;
 								case "content" :
 								default :
-									$url = ENTRADA_URL."/admin/evaluations/forms?section=edit&amp;id=".$FORM_ID;
+									$url = ENTRADA_URL."/admin/evaluations/forms?section=edit&id=".$FORM_ID;
 									$msg = "You will now be redirected back to the evaluation form; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 								break;
 							}
@@ -211,14 +215,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 
 							application_log("success", "New evaluation form question [".$efquestion_id."] added to eform_id [".$FORM_ID."].");
 						} else {
-							$ERROR++;
-							$ERRORSTR[] = "There was a problem inserting this evaluation form question. The system administrator was informed of this error; please try again later.";
+							add_error("There was a problem inserting this evaluation form question. The system administrator was informed of this error; please try again later.");
 
 							application_log("error", "There was an error inserting an evaluation form question to eform_id [".$FORM_ID."]. Database said: ".$db->ErrorMsg());
 						}
 					} else {
-						$ERROR++;
-						$ERRORSTR[] = "You do not have permission to create this evaluation form question. The system administrator was informed of this error; please try again later.";
+						add_error("You do not have permission to create this evaluation form question. The system administrator was informed of this error; please try again later.");
 
 						application_log("error", "There was an error inserting an evaluation form question to eform_id [".$FORM_ID."] because the user [".$_SESSION["details"]["id"]."] didn't have permission to create a form question.");
 					}
@@ -266,7 +268,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 							<table style="width: 100%" cellspacing="0" cellpadding="0" border="0">
 							<tr>
 								<td style="width: 25%; text-align: left">
-									<input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=edit&amp;id=<?php echo $FORM_ID; ?>'" />
+									<input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/evaluations/forms?section=edit&id=<?php echo $FORM_ID; ?>'" />
 								</td>
 								<td style="width: 75%; text-align: right; vertical-align: middle">
 									<span class="content-small">After saving:</span>
@@ -312,7 +314,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 							<tbody>
 								<?php
 								foreach (range(1, 4) as $number) {
-									$minimum_passing_level = (((isset($PROCESSED["evaluation_form_responses"][$number]["minimum_passing_level"])) && ((int) $PROCESSED["evaluation_form_responses"][$number]["minimum_passing_level"])) ? true : false);
+									$minimum_passing_level = (((!isset($PROCESSED["evaluation_form_responses"][$number]["minimum_passing_level"]) && ($number == 1)) || (isset($PROCESSED["evaluation_form_responses"][$number]["minimum_passing_level"]) && (int) $PROCESSED["evaluation_form_responses"][$number]["minimum_passing_level"])) ? true : false);
 									?>
 									<tr>
 										<td style="padding-top: 13px">
@@ -349,8 +351,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 			break;
 		}
 	} else {
-		$ERROR++;
-		$ERRORSTR[] = "You cannot add a question to an evaluation form that has already been used. This precaution exists to protect the integrity of the data in the database.<br /><br />If you would like to add questions to this form you can <strong>copy the form</strong> from the <strong>Manage Forms</strong> index.";
+		add_error("You cannot add a question to an evaluation form that has already been used. This precaution exists to protect the integrity of the data in the database.<br /><br />If you would like to add questions to this form you can <strong>copy the form</strong> from the <strong>Manage Forms</strong> index.");
 
 		echo display_error();
 

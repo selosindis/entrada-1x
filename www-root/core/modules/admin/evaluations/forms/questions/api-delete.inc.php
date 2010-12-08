@@ -54,35 +54,39 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 	echo 0;
 	exit;
 } else {
-	if ($FORM_ID) {
-		$query			= "	SELECT a.`quiz_title`, a.`quiz_description`, c.*
-							FROM `quizzes` AS a
-							LEFT JOIN `quiz_contacts` AS b
-							ON a.`quiz_id` = b.`quiz_id`
-							LEFT JOIN `quiz_questions` AS c
-							ON a.`quiz_id` = c.`quiz_id`
-							AND c.`question_active` = '1'
-							WHERE c.`qquestion_id` = ".$db->qstr($FORM_ID)."
-							AND a.`quiz_active` = '1'";
-		$quiz_record	= $db->GetRow($query);
-		if ($quiz_record) {
-			if ($ENTRADA_ACL->amIAllowed(new EvaluationFormResource($quiz_record["quiz_id"]), "update")) {
+	$RECORD_ID = 0;
+
+	if (isset($_POST["record"]) && ($tmp_input = clean_input($_POST["record"], "int"))) {
+		$RECORD_ID = $tmp_input;
+	}
+
+	if ($FORM_ID && $RECORD_ID) {
+		$query = "	SELECT a.`form_title`, a.`form_description`, b.*
+					FROM `evaluation_forms` AS a
+					LEFT JOIN `evaluation_form_questions` AS b
+					ON b.`eform_id` = b.`eform_id`
+					WHERE a.`eform_id` = ".$db->qstr($FORM_ID)."
+					AND a.`form_active` = '1'
+					AND b.`efquestion_id` = ".$db->qstr($RECORD_ID);
+		$question_record = $db->GetRow($query);
+		if ($question_record) {
+			if ($ENTRADA_ACL->amIAllowed(new EvaluationFormResource($question_record["eform_id"]), "update")) {
 				if ($ALLOW_QUESTION_MODIFICATIONS) {
 					/**
 					 * Clears all open buffers so we can return a simple REST response.
 					 */
 					ob_clear_open_buffers();
-					if($ENTRADA_ACL->amIAllowed(new EvaluationFormQuestionResource($FORM_ID, $quiz_record["quiz_id"]), "delete")) {
-						$query	= "UPDATE `quiz_question_responses` SET `response_active` = '0' WHERE `qquestion_id` = ".$db->qstr($FORM_ID);
+					if($ENTRADA_ACL->amIAllowed(new EvaluationFormQuestionResource($FORM_ID, $question_record["efquestion_id"]), "delete")) {
+						$query	= "DELETE FROM `evaluation_form_responses` WHERE `efquestion_id` = ".$db->qstr($RECORD_ID);
 						if ($db->Execute($query)) {
-							$query	= "UPDATE `quiz_questions` SET `question_active` = '0' WHERE `qquestion_id` = ".$db->qstr($FORM_ID);
+							$query	= "DELETE FROM `evaluation_form_questions` WHERE `efquestion_id` = ".$db->qstr($RECORD_ID);
 							if ($db->Execute($query)) {
-								application_log("success", "Question id [".$FORM_ID."] was removed from quiz id [".$quiz_record["quiz_id"]."].");
+								application_log("success", "Question id [".$RECORD_ID."] was removed from evaluation form id [".$FORM_ID."].");
 
 								echo 200;
 								exit;
 							} else {
-								application_log("error", "Unable to delete question id [".$FORM_ID."] from quiz id [".$quiz_record["quiz_id"]."]. Database said: ".$db->ErrorMsg());
+								application_log("error", "Unable to delete question id [".$RECORD_ID."] from evaluation form id [".$FORM_ID."]. Database said: ".$db->ErrorMsg());
 
 								/**
 								 * @exception 403: Cannot delete question, because of an SQL error.
@@ -91,7 +95,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 								exit;
 							}
 						} else {
-							application_log("error", "Unable to delete question id [".$FORM_ID."] from quiz id [".$quiz_record["quiz_id"]."]. Database said: ".$db->ErrorMsg());
+							application_log("error", "Unable to delete question id [".$RECORD_ID."] from evaluation form id [".$FORM_ID."]. Database said: ".$db->ErrorMsg());
 
 							/**
 							 * @exception 403: Cannot delete question, because of an SQL error.
@@ -101,7 +105,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 						}
 					}
 				} else {
-					application_log("error", "Unable to delete question id [".$FORM_ID."] from quiz id [".$quiz_record["quiz_id"]."] because the question is in use.");
+					application_log("error", "Unable to delete question id [".$RECORD_ID."] from evaluation form id [".$FORM_ID."] because the question is in use.");
 
 					/**
 					 * Clears all open buffers so we can return a simple REST response.
@@ -115,7 +119,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					exit;
 				}
 			} else {
-				application_log("error", "Unable to delete question id [".$FORM_ID."] from quiz id [".$quiz_record["quiz_id"]."] because users does not have proper ACL to do so.");
+				application_log("error", "Unable to delete question id [".$RECORD_ID."] from evaluation form id [".$FORM_ID."] because users does not have proper ACL to do so.");
 
 				/**
 				 * Clears all open buffers so we can return a simple REST response.
@@ -129,7 +133,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 				exit;
 			}
 		} else {
-			application_log("error", "Unable to delete question id [".$FORM_ID."] from quiz id [".$quiz_record["quiz_id"]."] because the question_id could not be found. ".$query);
+			application_log("error", "Unable to delete question id [".$RECORD_ID."] from evaluation form id [".$FORM_ID."] because the question_id could not be found. ".$query);
 
 			/**
 			 * Clears all open buffers so we can return a simple REST response.
@@ -137,13 +141,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 			ob_clear_open_buffers();
 
 			/**
-			 * @exception 401: Cannot delete order because quiz could not be found.
+			 * @exception 401: Cannot delete order because evaluation form could not be found.
 			 */
 			echo 401;
 			exit;
 		}
 	} else {
-		application_log("error", "Unable to delete question id [".$FORM_ID."] from quiz id [".$quiz_record["quiz_id"]."] because the question_id was provided.");
+		application_log("error", "Unable to delete question id [".$RECORD_ID."] from evaluation form id [".$FORM_ID."] because the question_id was provided.");
 
 		/**
 		 * Clears all open buffers so we can return a simple REST response.

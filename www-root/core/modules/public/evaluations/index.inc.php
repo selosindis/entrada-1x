@@ -117,17 +117,32 @@ if ($results) {
 					GROUP BY `eprogress_id`";
 		$evaluation_responses = $db->GetOne($query);
 		
+		if (($result["release_date"] <= time() || !$result["release_date"]) && ($result["release_until"] > time() || !$result["release_until"])) {
+			$click_url = ENTRADA_URL."/evaluations?section=attempt&id=".$result["evaluation_id"];
+		} else {
+			$click_url = "";
+		}
 		
-		$click_url = ENTRADA_URL."/evaluations?section=attempt&id=".$result["evaluation_id"];
-		
-		echo "<tr>\n";
-		echo "	<td>&nbsp;</td>\n";
-		echo "	<td><a href=\"".$click_url."\">".(!empty($evaluation_target["target_title"]) ? $evaluation_target["target_title"] : "No Type Found")."</a></td>\n";
-		echo "	<td><a href=\"".$click_url."\">".(!empty($evaluation_target_title) ? $evaluation_target_title : "No Target")."</a></td>\n";
-		echo "	<td><a href=\"".$click_url."\">".date(DEFAULT_DATE_FORMAT, $result["evaluation_finish"])."</a></td>\n";
-		echo "	<td><a href=\"".$click_url."\">".html_encode($result["evaluation_title"])."</a></td>\n";
-		echo "	<td><a href=\"".$click_url."\">".($completed_attempts ? ((int)$completed_attempts) : "0")."/".($result["max_submittable"] ? ((int)$result["max_submittable"]) : "0")."</a></td>\n";
-		echo "</tr>\n";
+		if ($click_url) {
+			echo "<tr>\n";
+			echo "	<td>&nbsp;</td>\n";
+			echo "	<td><a href=\"".$click_url."\">".(!empty($evaluation_target["target_title"]) ? $evaluation_target["target_title"] : "No Type Found")."</a></td>\n";
+			echo "	<td><a href=\"".$click_url."\">".(!empty($evaluation_target_title) ? $evaluation_target_title : "No Target")."</a></td>\n";
+			echo "	<td><a href=\"".$click_url."\">".date(DEFAULT_DATE_FORMAT, $result["evaluation_finish"])."</a></td>\n";
+			echo "	<td><a href=\"".$click_url."\">".html_encode($result["evaluation_title"])."</a></td>\n";
+			echo "	<td><a href=\"".$click_url."\">".($completed_attempts ? ((int)$completed_attempts) : "0")."/".($result["max_submittable"] ? ((int)$result["max_submittable"]) : "0")."</a></td>\n";
+			echo "</tr>\n";
+		} else {
+			echo "<tr>\n";
+			echo "	<td class=\"content-small\">&nbsp;</td>\n";
+			echo "	<td class=\"content-small\">".(!empty($evaluation_target["target_title"]) ? $evaluation_target["target_title"] : "No Type Found")."</td>\n";
+			echo "	<td class=\"content-small\">".(!empty($evaluation_target_title) ? $evaluation_target_title : "No Target")."</td>\n";
+			echo "	<td class=\"content-small\">".date(DEFAULT_DATE_FORMAT, $result["evaluation_finish"])."</td>\n";
+			echo "	<td class=\"content-small\">".html_encode($result["evaluation_title"])."</td>\n";
+			echo "	<td class=\"content-small\">".($completed_attempts ? ((int)$completed_attempts) : "0")."/".($result["max_submittable"] ? ((int)$result["max_submittable"]) : "0")."</td>\n";
+			echo "</tr>\n";
+		}
+
 	}
 	?>
 	</tbody>

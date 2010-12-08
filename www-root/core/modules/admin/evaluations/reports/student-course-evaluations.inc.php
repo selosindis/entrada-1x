@@ -122,7 +122,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 		if(isset($_GET["id"])) {
 			$evaluation_id = clean_input($_GET["id"], array("trim", "int")) ;
 		}
-
+		
 		$query = "	SELECT e.*, c.`course_id`, c.`organisation_id`, c.`course_name`, c.`course_code`, t.`etarget_id` FROM `evaluations` e 
 					INNER JOIN `evaluation_targets` t ON e.`evaluation_id` = t.`evaluation_id`
 					INNER JOIN `evaluations_lu_targets` elt ON t.`target_id` = elt.`target_id`

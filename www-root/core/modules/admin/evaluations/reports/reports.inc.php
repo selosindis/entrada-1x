@@ -90,7 +90,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 		echo	"	<tr><td><h3> $report[type]: '$type[name]' [$type[code]]</h3></td><td><h3> Evaluation period: ".date("M jS", $report["evaluation_start"])."  -  ".date("M jS Y", $report["evaluation_finish"])."</h3></td></tr>";
 		echo	"</table>";
 //		echo "<br>$query<br>"; print_r($type);
-		
 	}
 }
 ?>

@@ -32,7 +32,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_PUBLIC_EVALUATIONS"))) {
 }
 
 if ($RECORD_ID) {
-	$query			= "	SELECT a.*, c.`eprogress_id`, e.`target_title`
+	$query			= "	SELECT a.*, c.`eprogress_id`, e.`target_title`, c.`etarget_id`
 						FROM `evaluations` AS a
 						LEFT JOIN `evaluation_evaluators` AS b
 						ON a.`evaluation_id` = b.`evaluation_id`
@@ -66,6 +66,7 @@ if ($RECORD_ID) {
 	$evaluation_record	= $db->GetRow($query);
 	if ($evaluation_record) {
 		
+		$PROCESSED = $evaluation_record;
 		$query = "	SELECT COUNT(`eprogress_id`) FROM `evaluation_progress`
 					WHERE `evaluation_id` = ".$db->qstr($evaluation_record["evaluation_id"])."
 					AND `proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
@@ -99,14 +100,11 @@ if ($RECORD_ID) {
 	
 						echo "<div class=\"content-small\">".clean_input($evaluation_record["target_title"], array("trim", "encode"))." Form</div>";
 						echo "<h1 class=\"evaluation-title\">".html_encode($evaluation_record["evaluation_title"])."</h1>";
-						if (isset($evaluation_record["evaluation_description"]) && $evaluation_record["evaluation_description"]) {
-							echo "<div class=\"display-generic\">".$evaluation_record["evaluation_description"]."</div>";
-						}
 	
 						// Error checking
 						switch ($STEP) {
 							case 2 :
-								if ((isset($_POST["etarget_id"])) && ($etarget_id = clean_input($_POST["etarget_id"], array("trim", "int")))) {
+								if ((isset($_POST["evaluation_target"])) && ($etarget_id = clean_input($_POST["evaluation_target"], array("trim", "int")))) {
 									$query = "	SELECT * FROM `evaluation_targets` AS a 
 												JOIN `evaluations_lu_targets` AS b 
 												ON a.`target_id` = b.`target_id` 
@@ -130,8 +128,11 @@ if ($RECORD_ID) {
 										}
 									} else {
 										$ERROR++;
-										$ERRRORSTR[] = "There was an issue with the target you have selected to evaluate. An administrator has ";
+										$ERRORSTR[] = "There was an issue with the target you have selected to evaluate. An administrator has been notified, please try again later.";
 									}
+								} else {
+									$ERROR++;
+									$ERRORSTR[] = "Please ensure you have selected a valid target to evaluate from the list.";
 								}
 								/**
 								 * Check to see if they currently have any evaluation attempts underway, if they do then
@@ -157,6 +158,7 @@ if ($RECORD_ID) {
 										$query		= "	SELECT a.*
 														FROM `evaluation_form_questions` AS a
 														WHERE a.`eform_id` = ".$db->qstr($evaluation_record["eform_id"])."
+														AND `questiontype_id` = '1'
 														ORDER BY a.`question_order` ASC";
 										$questions	= $db->GetAll($query);
 										if ($questions) {
@@ -184,7 +186,6 @@ if ($RECORD_ID) {
 													}
 												} else {
 													$ERROR++;
-													
 													$problem_questions[] = $question["efquestion_id"];
 												}
 											}
@@ -203,11 +204,10 @@ if ($RECORD_ID) {
 										 * and that we have stored those responses evaluation_responses table.
 										 */
 										if (!$ERROR) {
-											$PROCESSED = evaluation_load_progress($eprogress_id);
 											$evaluation_progress_array	= array (
 																		"progress_value" => "complete",
 																		"evaluation_id" => $evaluation_record["evaluation_id"],
-																		"etarget_id" => $evaluation_record["etarget_id"],
+																		"etarget_id" => ($PROCESSED["etarget_id"] ? $PROCESSED["etarget_id"] : 0),
 																		"updated_date" => time(),
 																		"updated_by" => $_SESSION["details"]["id"]
 																	);
@@ -234,6 +234,7 @@ if ($RECORD_ID) {
 	
 												echo display_error();
 											}
+											$PROCESSED = evaluation_load_progress($eprogress_id);
 										}
 									} else {
 										$ERROR++;
@@ -266,6 +267,9 @@ if ($RECORD_ID) {
 								break;
 								case 1 :
 								default :
+									if (isset($evaluation_record["evaluation_description"]) && $evaluation_record["evaluation_description"]) {
+										echo "<div class=\"display-generic\">".$evaluation_record["evaluation_description"]."</div>";
+									}
 									/**
 									 * Check to see if they currently have any evaluation attempts underway, if they do then
 									 * restart their session, otherwise start them a new session.
@@ -286,6 +290,7 @@ if ($RECORD_ID) {
 																	"evaluation_id" => $RECORD_ID,
 																	"proxy_id" => $_SESSION["details"]["id"],
 																	"progress_value" => "inprogress",
+																	"etarget_id" => ($PROCESSED["etarget_id"] ? $PROCESSED["etarget_id"] : 0),
 																	"updated_date" => $evaluation_start_time,
 																	"updated_by" => $_SESSION["details"]["id"]
 																);
@@ -300,11 +305,14 @@ if ($RECORD_ID) {
 									}
 	
 									if ($eprogress_id) {
+										?>
+										<form name="evaluation-form" id="evaluation-form" action="<?php echo ENTRADA_URL."/".$MODULE; ?>?section=attempt&id=<?php echo $RECORD_ID; ?>" method="post">
+										<?php
 										add_statistic("evaluation", "evaluation_view", "evaluation_id", $RECORD_ID);
 	
 										$ajax_load_progress		= evaluation_load_progress($eprogress_id);
 										
-										$query = "	SELECT * FROM `evaluation_targets` AS a
+										$query = "	SELECT a.*, b.* FROM `evaluation_targets` AS a
 													JOIN `evaluations_lu_targets` AS b
 													ON a.`target_id` = b.`target_id`
 													LEFT JOIN `evaluation_progress` AS c
@@ -315,7 +323,7 @@ if ($RECORD_ID) {
 													WHERE a.`evaluation_id` = ".$db->qstr($RECORD_ID);
 										$evaluation_targets = $db->GetAll($query);
 										if ($evaluation_targets) {
-											if (count($evaluation_targets) == 1 || $evaluation_targets[0]["target_shortname"] != "teacher") {
+											if (count($evaluation_targets) == 1) {
 												if ($evaluation_targets[0]["target_shortname"] == "teacher") {
 													$target_name = $db->GetOne("SELECT CONCAT_WS(' ', `firstname`, `lastname`) AS `fullname` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($evaluation_targets[0]["target_value"]));
 												} elseif ($evaluation_targets[0]["target_shortname"] == "course") {
@@ -324,7 +332,8 @@ if ($RECORD_ID) {
 												if ($target_name) {
 													echo "<div class=\"content-small\">Evaluating <strong>".$target_name."</strong>.</div>";
 												}
-											} else {
+												echo "<input type=\"hidden\" id=\"evaluation_target\" name=\"evaluation_target\" value=\"".$evaluation_targets[0]["etarget_id"]."\" />";
+											} elseif ($evaluation_targets[0]["target_shortname"] == "teacher") {
 												echo "<div class=\"content-small\">Please choose a teacher to evaluate: \n";
 												echo "<select id=\"evaluation_target\" name=\"evaluation_target\">";
 												echo "<option value=\"0\">-- Select a teacher --</option>\n";
@@ -332,7 +341,21 @@ if ($RECORD_ID) {
 													if (!isset($evaluation_target["eprogress_id"]) || !$evaluation_target["eprogress_id"]) {
 														$target_name = $db->GetOne("SELECT CONCAT_WS(' ', `firstname`, `lastname`) AS `fullname` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($evaluation_target["target_value"]));
 														if ($target_name) {
-															echo "<option value=\"".$evaluation_target["etarget_id"]."\">".$target_name."</option>\n";
+															echo "<option value=\"".$evaluation_target["etarget_id"]."\"".($PROCESSED["etarget_id"] == $evaluation_target["etarget_id"] ? " selected=\"selected\"" : "").">".$target_name."</option>\n";
+														}
+													}
+												}
+												echo "</select>";
+												echo "</div>";
+											} elseif ($evaluation_targets[0]["target_shortname"] == "course") {
+												echo "<div class=\"content-small\">Please choose a course to evaluate: \n";
+												echo "<select id=\"evaluation_target\" name=\"evaluation_target\">";
+												echo "<option value=\"0\">-- Select a course --</option>\n";
+												foreach ($evaluation_targets as $evaluation_target) {
+													if (!isset($evaluation_target["eprogress_id"]) || !$evaluation_target["eprogress_id"]) {
+														$target_name = $db->GetOne("SELECT `course_name` FROM `courses` WHERE `course_id` = ".$db->qstr($evaluation_target["target_value"]));
+														if ($target_name) {
+															echo "<option value=\"".$evaluation_target["etarget_id"]."\"".($PROCESSED["etarget_id"] == $evaluation_target["etarget_id"] ? " selected=\"selected\"" : "").">".$target_name."</option>\n";
 														}
 													}
 												}
@@ -355,7 +378,6 @@ if ($RECORD_ID) {
 											echo display_notice();
 										}
 										?>
-										<form name="evaluation-form" id="evaluation-form" action="<?php echo ENTRADA_URL."/".$MODULE; ?>?section=attempt&id=<?php echo $RECORD_ID; ?>" method="post">
 										<input type="hidden" name="step" value="2" />
 										<?php
 										$query				= "	SELECT a.*, b.`questiontype_shortname`

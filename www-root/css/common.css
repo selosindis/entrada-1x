@@ -1100,13 +1100,23 @@ table.tableList tr td.notices,table.tableList tr td.accesses,table.tableList tr 
 width:50px;
 border-left:none;
 }
+
 table.tableList tr td.grades {
 	width: 40px;
 	border-left: none;
 }
-table.tableList tr td.report-hours {
+
+table.tableList tr td.report-hours{
 overflow:hidden;
 width:90px;
+border-left:none;
+padding-left:5px;
+}
+
+table.tableList tr td.evaluators,
+table.tableList tr td.targets {
+overflow:hidden;
+width:120px;
 border-left:none;
 padding-left:5px;
 }

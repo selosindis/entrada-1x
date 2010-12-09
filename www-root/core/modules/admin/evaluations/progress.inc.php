@@ -303,7 +303,7 @@ if($EVALUATION_ID) {
                                     </table>
                                     <?php
                             } else {
-                                    echo display_notice(array("No evaluators in this evaluation has started at this time."));
+                                    echo display_notice(array("No evaluators have completed this evaluation at this time."));
                             }
                             ?>
         </div>

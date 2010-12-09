@@ -2,6 +2,19 @@
 /**
  * Entrada [ http://www.entrada-project.org ]
  *
+ * Entrada is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Entrada is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Entrada.  If not, see <http://www.gnu.org/licenses/>.
+ *
  * The default file that is loaded when /admin/evaluations is accessed.
  *
  * @author Organisation: Univeristy of Calgary
@@ -15,9 +28,8 @@ if (!defined("IN_EVALUATIONS")) {
 } elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	header("Location: ".ENTRADA_URL);
 	exit;
-} elseif (!$ENTRADA_ACL->amIAllowed("evaluations", "update", false)) {
-	$ERROR++;
-	$ERRORSTR[]	= "Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
+} elseif (!$ENTRADA_ACL->amIAllowed("evaluation", "update", false)) {
+	add_error("Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.");
 
 	echo display_error();
 
@@ -27,13 +39,12 @@ if (!defined("IN_EVALUATIONS")) {
 	 * Update requested column to sort by.
 	 * Valid: director, name
 	 */
-
     if (isset($_GET["sb"])) {
 		if (@in_array(trim($_GET["sb"]), array("type", "name", "date", "teacher", "director", "notices"))) {
 			$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]	= trim($_GET["sb"]);
 		}
 
-		$_SERVER["QUERY_STRING"]	= replace_query(array("sb" => false));
+		$_SERVER["QUERY_STRING"] = replace_query(array("sb" => false));
 	} else {
 		if (!isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"])) {
 			$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] = "name";
@@ -75,20 +86,12 @@ if (!defined("IN_EVALUATIONS")) {
 	?>
 	<h1>Manage Evaluations</h1>
 	<?php
-	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/calendar/script/xc2_timestamp.js\"></script>\n";
-	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/elementresizer.js\"></script>\n";
-
-	/**
-	 * Check if preferences need to be updated.
-	 */
-	preferences_update($MODULE, $PREFERENCES);
-
 	/**
 	 * Fetch all of the evaluations that apply to the current filter set.
 	 */
 	$scheduler_evaluations = eval_sche_fetch_filtered_evals();
 
-	if ($ENTRADA_ACL->amIAllowed("event", "create", false)) {
+	if ($ENTRADA_ACL->amIAllowed("evaluation", "create", false)) {
 		?>
 		<div style="float: right">
 			<ul class="page-action">
@@ -99,35 +102,10 @@ if (!defined("IN_EVALUATIONS")) {
 		<?php
 	}
 
-	eval_sche_output_calendar_controls("admin");
-
 	if (count($scheduler_evaluations["evaluations"])) {
-		if ($ENTRADA_ACL->amIAllowed("event", "delete", false)) : ?>
-		<form action="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=delete" method="post">
-		<?php endif;
-                echo "dtype: [".$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["dtype"]."]";
-                ?>
-		<div class="tableListTop">
-			<img src="<?php echo ENTRADA_URL; ?>/images/lecture-info.gif" width="15" height="15" alt="" title="" style="vertical-align: middle" />
-			<?php
-			switch ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["dtype"]) {
-				case "day" :
-					echo "Found ".$scheduler_evaluations["total_rows"]." evaluation".(($scheduler_evaluations["total_rows"] != 1) ? "s" : "")." that take place on <strong>".date("D, M jS, Y", $scheduler_evaluations["duration_start"])."</strong>.\n";
-				break;
-				case "month" :
-					echo "Found ".$scheduler_evaluations["total_rows"]." evaluation".(($scheduler_evaluations["total_rows"] != 1) ? "s" : "")." that take place during <strong>".date("F", $scheduler_evaluations["duration_start"])."</strong> of <strong>".date("Y", $scheduler_evaluations["duration_start"])."</strong>.\n";
-				break;
-				case "year" :
-					echo "Found ".$scheduler_evaluations["total_rows"]." evaluation".(($scheduler_evaluations["total_rows"] != 1) ? "s" : "")." that take place during <strong>".date("Y", $scheduler_evaluations["duration_start"])."</strong>.\n";
-				break;
-				default :
-				case "week" :
-					echo "Found ".$scheduler_evaluations["total_rows"]." evaluation".(($scheduler_evaluations["total_rows"] != 1) ? "s" : "")." from <strong>".date("D, M jS, Y", $scheduler_evaluations["duration_start"])."</strong> to <strong>".date("D, M jS, Y", $scheduler_evaluations["duration_end"])."</strong>.\n";
-				break;
-			}
-			?>
-		</div>
-
+		if ($ENTRADA_ACL->amIAllowed("evaluation", "delete", false)) : ?>
+		<form action="<?php echo ENTRADA_URL; ?>/admin/evaluations?section=delete" method="post">
+		<?php endif; ?>
 		<table class="tableList" cellspacing="0" cellpadding="1" summary="List of Evaluations">
 			<colgroup>
 				<col class="modified" />
@@ -141,15 +119,15 @@ if (!defined("IN_EVALUATIONS")) {
 			<thead>
 				<tr>
 					<td class="modified">&nbsp;</td>
-                                        <td>Title</td>
-                                        <td>Start</td>
-                                        <td>Finish</td>
-                                        <td>Evaluation Num</td>
-                                        <td class="attachment">&nbsp;</td>
-                                        <td class="attachment">&nbsp;</td>
+					<td>Title</td>
+					<td>Start</td>
+					<td>Finish</td>
+					<td>Evaluation Num</td>
+					<td class="attachment">&nbsp;</td>
+					<td class="attachment">&nbsp;</td>
 				</tr>
 			</thead>
-			<?php if ($ENTRADA_ACL->amIAllowed("event", "delete", false)) : ?>
+			<?php if ($ENTRADA_ACL->amIAllowed("evaluation", "delete", false)) : ?>
 			<tfoot>
 				<tr>
 					<td></td>
@@ -161,46 +139,23 @@ if (!defined("IN_EVALUATIONS")) {
 			<?php endif; ?>
 			<tbody>
 			<?php
-
-			$count_modified		= 0;
-			$count_grad_year	= 0;
-			$count_group		= 0;
-			$count_individual	= 0;
-
 			foreach ($scheduler_evaluations["evaluations"] as $result) {
-				$url = "";
-				$accessible = true;
-				$administrator = false;
-				$administrator = true;
-
-				/**
-				 *
-                                if ($ENTRADA_ACL->amIAllowed(new EventResource($result["event_id"], $result["course_id"], $result["organisation_id"]), "update")) {
-					$administrator = true;
-					$url = ENTRADA_URL."/admin/events?section=edit&amp;id=".$result["event_id"];
-				} else if ($ENTRADA_ACL->amIAllowed(new EventContentResource($result["event_id"], $result["course_id"], $result["organisation_id"]), "update")) {
-					$url = ENTRADA_URL."/admin/events?section=content&amp;id=".$result["event_id"];
-				}
-
-				if ((($result["release_date"]) && ($result["release_date"] > time())) || (($result["release_until"]) && ($result["release_until"] < time()))) {
-					$accessible = false;
-				}
-				 */
-                                $url = ENTRADA_URL."/admin/evaluations?section=progress&evaluation=".$result["evaluation_id"];
-				echo "<tr id=\"evaluation-".$result["evaluation_id"]."\" class=\"evaluation".((!$url) ? " np" : ((!$accessible) ? " na" : (($result["audience_type"] == "proxy_id") ? " individual" : "")))."\">\n";
-				echo "	<td class=\"modified\">".(($administrator) ? "<input type=\"checkbox\" name=\"checked[]\" value=\"".$result["evaluation_id"]."\" />" : "<img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"19\" height=\"19\" alt=\"\" title=\"\" />")."</td>\n";
-				echo "	<td class=\"title".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Evaluation Title: ".html_encode($result["evaluation_title"])."\">" : "").html_encode($result["evaluation_title"]).(($url) ? "</a>" : "")."</td>\n";
-				echo "	<td class=\"start".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Evaluation Date\">" : "").date(DEFAULT_DATE_FORMAT, $result["evaluation_start"]).(($url) ? "</a>" : "")."</td>\n";
-				echo "	<td class=\"finish".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Intended For Phase ".html_encode($result["evaluation_finish"])."\">" : "").date(DEFAULT_DATE_FORMAT, html_encode($result["evaluation_finish"])).(($url) ? "</a>" : "")."</td>\n";
-				echo "	<td class=\"EvaluatorsNum".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Evaluation Num: ".html_encode($result["evaluator_num"])."*".html_encode($result["target_num"])."\">" : "").html_encode($result["evaluator_num"])."*".html_encode($result["target_num"]).(($url) ? "</a>" : "")."</td>\n";
-				echo "	<td class=\"attachment\">".(($url) ? "<a href=\"".ENTRADA_URL."/admin/evaluations?section=edit&id=".$result["evaluation_id"]."\"><img src=\"".ENTRADA_URL."/images/action-edit.gif\" width=\"16\" height=\"16\" alt=\"Manage Evaluation Detail\" title=\"Manage Evaluation Detail\" border=\"0\" /></a>" : "<img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"16\" height=\"16\" alt=\"\" title=\"\" />")."</td>\n";
-				echo "	<td class=\"attachment\">".(($url) ? "<a href=\"".ENTRADA_URL."/admin/evaluations?section=members&evaluation=".$result["evaluation_id"]."\"><img src=\"".ENTRADA_URL."/images/event-contents.gif\" width=\"16\" height=\"16\" alt=\"Manage Evaluation Content\" title=\"Manage Evaluation Content\" border=\"0\" /></a>" : "<img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"16\" height=\"16\" alt=\"\" title=\"\" />")."</td>\n";
+				$url = ENTRADA_URL."/admin/evaluations?section=progress&evaluation=".$result["evaluation_id"];
+				
+				echo "<tr id=\"evaluation-".$result["evaluation_id"]."\" class=\"evaluation\">\n";
+				echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"checked[]\" value=\"".$result["evaluation_id"]."\" /></td>\n";
+				echo "	<td class=\"title\"><a href=\"".$url."\">".html_encode($result["evaluation_title"])."</a></td>\n";
+				echo "	<td class=\"start\"><a href=\"".$url."\">".date(DEFAULT_DATE_FORMAT, $result["evaluation_start"])."</a></td>\n";
+				echo "	<td class=\"finish\"><a href=\"".$url."\">".date(DEFAULT_DATE_FORMAT, html_encode($result["evaluation_finish"]))."</a></td>\n";
+				echo "	<td class=\"EvaluatorsNum\"><a href=\"".$url."\">".html_encode($result["evaluator_num"])."*".html_encode($result["target_num"])."</a></td>\n";
+				echo "	<td class=\"attachment\"><a href=\"".ENTRADA_URL."/admin/evaluations?section=edit&id=".$result["evaluation_id"]."\"><img src=\"".ENTRADA_URL."/images/action-edit.gif\" width=\"16\" height=\"16\" alt=\"Manage Evaluation Detail\" title=\"Manage Evaluation Detail\" border=\"0\" /></a></td>\n";
+				echo "	<td class=\"attachment\"><a href=\"".ENTRADA_URL."/admin/evaluations?section=members&evaluation=".$result["evaluation_id"]."\"><img src=\"".ENTRADA_URL."/images/event-contents.gif\" width=\"16\" height=\"16\" alt=\"Manage Evaluation Content\" title=\"Manage Evaluation Content\" border=\"0\" /></a></td>\n";
 				echo "</tr>\n";
 			}
 			?>
 			</tbody>
 		</table>
-		<?php if ($ENTRADA_ACL->amIAllowed("event", "delete", false)) : ?>
+		<?php if ($ENTRADA_ACL->amIAllowed("evaluation", "delete", false)) : ?>
 		</form>
 		<?php
 		endif;

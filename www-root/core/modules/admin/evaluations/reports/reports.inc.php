@@ -40,7 +40,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 	$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/", "title" => "Evaluation Reports");
-	
+
+	/**
+	 * Collect the course evaluation(s) to be reported.
+	 */
 	if(isset($_GET["evaluation"]))  {
 		$EVALUATIONS[] =  trim($_GET["evaluation"]);
 	} elseif((!isset($_POST["checked"])) || (!is_array($_POST["checked"])) || (!@count($_POST["checked"]))) {
@@ -55,15 +58,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 		}
 		if(!@count($EVALUATIONS)) {
 			$ERROR++;
-			$ERRORSTR[] = "There were no valid evaluation identifiers provided to copy. Please ensure that you access this section through the event index.";
+			$ERRORSTR[] = "There were no valid evaluation identifiers to report. Please ensure that you access this section through the event index.";
 			echo display_error();
 		}
 	}
-
+	/**
+	 * Produce a report for each course evaluation
+	 */
 	foreach($EVALUATIONS as $evaluation){
         list($evaluator, $target) = explode(":",$evaluation);
 		$STUDENTS = $evaluator=="s";
-	
+
+		/**
+		 * Get generic form and evaluation information for selected target
+		 */
 		$report = $db->GetRow("	SELECT t.`evaluation_id` `evaluation`, t.`target_value` `target`, f.`eform_id` form_id, f.`form_title`, f.`form_description`,
 								e.`evaluation_title`, e.`evaluation_description`, e.`evaluation_start`, e.`evaluation_finish`, e.`min_submittable`, e.`max_submittable`, e.`release_date`, e.`release_until`,
 								CONCAT(UPPER(SUBSTRING(`target_shortname`, 1, 1)), LOWER(SUBSTRING(`target_shortname` FROM 2))) as `type` FROM `evaluation_targets` t
@@ -95,6 +103,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 		echo	"	<tr><td><h3> Evaluation period:</h3></td><td>".date("M jS", $report["evaluation_start"])."  -  ".date("M jS Y", $report["evaluation_finish"])."</td>";
 		echo	"		<td><h3> Released:</h3></td><td>".date("M jS Y", $report["release_date"])."</td></tr>";
 
+		/**
+		 * Get number of evaluators: individual student(s) and whole class
+		 */
 		$query = "	SELECT COUNT(DISTINCT(`evaluator`)) FROM
 					(
 						SELECT ev.`evaluator_value` `evaluator`
@@ -130,6 +141,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 									WHERE `etarget_id` = ".$db->qstr($target)." AND `progress_value` = 'complete'");
 
 		echo	"<tr><td><h3>Evaluators:</h3></td>";
+
+		/**
+		 * Calculate number of evaluators, the class, and extra indviduals not in the class.
+		 */
 		if ($STUDENTS && ($class["total"]>0)) {
 			$indies = $evaluators-$class["total"];
 			echo "	<td>Class of $class[year] (#$class[total])".($indies?" plus $indies individual".($indies>1?"s":""):"")."</td>";
@@ -138,11 +153,72 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 		}
 		echo	"<td><h3>Updated:</h3></td><td>".date("M jS", $updated)."</td></tr>";
 		echo	"<tr><td><h3> Progress:</h3></td><td colspan=\"3\">".($completed?"$completed - Completed ":"").($progress?"$progress - In progress ":"").($cancelled?"$cancelled - Cancelled ":"")."</td></tr>";
+
+
+		echo	"<tr><td /><td colspan=\"2\"><hr></td><td /></tr>";
+		echo	"<tr><td /><td><h3>$report[form_title]</h3></td><td  colspan=\"2\"><h3>$report[form_description]</h3></td></tr>";
+
+		/**
+		 * Get the question information to process for this report
+		 */
+		$query = "	SELECT q.`efquestion_id` `id`, t.`questiontype_title`, q.`question_text`
+					FROM `evaluation_form_questions` q
+					INNER JOIN `evaluations_lu_questiontypes` t ON q.`questiontype_id` = t.`questiontype_id`
+					WHERE `eform_id` = ".$db->qstr($report["form_id"])."
+					ORDER BY q.`question_order`";
+		$questions = $db->GetAll($query);
+
+		/**
+		 * Process report by getting response statistics for each question
+		 */ 
+		$number = 0;		
+		foreach($questions as $question){
+			$number++;
+			echo	"<tr><td><h3>Question: $number</h3></td><td  colspan=\"2\"><h3>$question[question_text]</h3></td><td>$question[questiontype_title]</td></tr>";
+			
+			echo	"<tr><td  colspan=\"4\">&nbsp;</td></tr>";
+			echo	"<tr><td  colspan=\"4\">&nbsp;</td></tr>";
+			echo	"<tr><td  colspan=\"4\"><table>";
+			echo	"	<tr><td style=\"width: 22%\" />";
+			echo	"		<td style=\"width: 18%\">Frequency</td>";
+			echo	"		<td style=\"width: 20%\">Percent</td>";
+			echo	"		<td style=\"width: 20%\">Valid_%</td>";
+			echo	"		<td style=\"width: 20%\">Cumul_%</td></tr>";
+			
+			/**
+			 * Get available responses for each question
+			 */
+			$query = "	SELECT `efresponse_id` `id`, `response_order` `order` ,`response_text` `text`,  `response_is_html` `html`, `minimum_passing_level` `mpl`, 0 `freq`, 0 `percent`, 0 `valid`, 0 `cumul`
+						FROM `evaluation_form_responses`
+						WHERE `efquestion_id` = ".$db->qstr($question["id"])."
+						ORDER BY `response_order`";
+			$results = $db->GetAll($query);
+			
+			/**
+			 * Build response array
+			 */
+			foreach ($results as $result) {
+				$responses[array_shift($result)] = $result;
+			}	
+
+			/**
+			 * Tally all responses for each question
+			 */
+			$query = "	SELECT r.`eresponse_id`, r.`efresponse_id`, r.`comments`
+						FROM `evaluation_responses` r
+						INNER JOIN `evaluation_progress` p ON r.`eprogress_id` = r.`eprogress_id`
+						WHERE p.`progress_value` <> 'cancelled'
+						AND `r.eform_id` = ".$db->qstr($report["form_id"])."
+						AND `efquestion_id` = ".$db->qstr($question["id"]);
+			$result	= $db->GetRow($query);
+			if ($result) {
+			}
+
+		}
+		
 		echo	"</table>";
-		echo	"</div>";
-		
-		
-//		echo "<br>$query<br>"; print_r($type);
+		echo	"</div>";		
+//	echo "<br>$query<br>"; print_r($type);
 	}
 }
 ?>

@@ -240,26 +240,26 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 			$administrator = $ENTRADA_ACL->amIAllowed(new CourseContentResource($result["course_id"], $result["organisation_id"]), 'update');
 			$query = "	SELECT MAX(p.`updated_date`) FROM `evaluation_progress` p
 						INNER JOIN `evaluation_targets` t ON p.`etarget_id` = t.`etarget_id`
-						WHERE p.`evaluation_id` = ".$db->qstr($result["evaluation_id"])."
+						WHERE t.`evaluation_id` = ".$db->qstr($result["evaluation_id"])."
 						AND t.`target_value` = ".$db->qstr($result["course_id"])." AND t.`target_active` = 1
 						AND p.`progress_value` <> 'cancelled'";
 			$updated	= $db->GetOne($query);
 				
 			$query = "	SELECT COUNT(p.`eprogress_id`) FROM `evaluation_progress` p
 						INNER JOIN `evaluation_targets` t ON p.`etarget_id` = t.`etarget_id`
-						WHERE p.`evaluation_id` = ".$db->qstr($result["evaluation_id"])."
+						WHERE t.`evaluation_id` = ".$db->qstr($result["evaluation_id"])."
 						AND t.`target_value` = ".$db->qstr($result["course_id"])." AND t.`target_active` = 1
 						AND p.`progress_value` = 'inprogress'";
 			$progress	= $db->GetOne($query);
 				
 			$query = "	SELECT COUNT(p.`eprogress_id`) FROM `evaluation_progress` p
 						INNER JOIN `evaluation_targets` t ON p.`etarget_id` = t.`etarget_id`
-						WHERE p.`evaluation_id` = ".$db->qstr($result["evaluation_id"])."
+						WHERE t.`evaluation_id` = ".$db->qstr($result["evaluation_id"])."
 						AND t.`target_value` = ".$db->qstr($result["course_id"])." AND t.`target_active` = 1
 						AND p.`progress_value` = 'complete'";
 			$completed	= $db->GetOne($query);
 
-			$url = ENTRADA_URL."/admin/evaluations/reports?section=reports&amp;evaluation=s:$result[etarget_id]";
+			$url = $administrator ? ENTRADA_URL."/admin/evaluations/reports?section=reports&amp;evaluation=s:$result[etarget_id]" :"";
 			echo "			<tr><td class=\"modified\">".(($administrator) ? "<input type=\"checkbox\" name=\"checked[]\" value=\"s:$result[etarget_id]\"".($single?"checked=\"checked\"":"")." />" : "<img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"19\" height=\"19\" alt=\"\" title=\"\" />")."</td>\n";
 			echo "				<td class=\"general".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Course name \">" : "").html_encode($result["course_name"]).(($url) ? "</a>" : "")."</td>\n";
 			echo "				<td class=\"teacher".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Code code \">" : "").html_encode($result["course_code"]).(($url) ? "</a>" : "")."</td>\n";

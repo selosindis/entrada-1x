@@ -109,11 +109,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 						} else {
 							$undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['students']++;
 						}
-						if($eventID != $previousEventID && $previousEventID != "") {
-							$undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['hours'] = $undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['hours'] + ($result['event_duration'] / 60);
-							$undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['course_number'] = $currentCourseNum;
-							$undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['phase'] = $phase;
-						}
+						$undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['course_number'] = $currentCourseNum;
+						$undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['hours'] = ($result['event_duration'] / 60);
+						$undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['phase'] = $phase;
 						break;
 					case "grad_year":
 					default:

@@ -11681,7 +11681,9 @@ function evaluation_load_progress($eprogress_id = 0) {
 			$responses	= $db->GetAll($query);
 			if ($responses) {
 				foreach ($responses as $response) {
-					$output[$response["efquestion_id"]] = $response["efresponse_id"];
+					$output[$response["efquestion_id"]] = array();
+					$output[$response["efquestion_id"]]["efresponse_id"] = $response["efresponse_id"];
+					$output[$response["efquestion_id"]]["comments"] = $response["comments"];
 				}
 			}
 		} else {

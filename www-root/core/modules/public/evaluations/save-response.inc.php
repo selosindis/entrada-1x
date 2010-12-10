@@ -55,6 +55,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_PUBLIC_EVALUATIONS"))) {
 	echo 0;
 	exit;
 }
+ob_clear_open_buffers();
 
 if ($RECORD_ID) {
 	$query			= "	SELECT *

@@ -221,7 +221,6 @@ if ($RECORD_ID) {
 	
 												echo display_error();
 											}
-											$PROCESSED = evaluation_load_progress($eprogress_id);
 										}
 									} else {
 										$ERROR++;
@@ -407,15 +406,15 @@ if ($RECORD_ID) {
 																foreach ($responses as $response) {
 																	echo "<div style=\"width: ".$response_width."%\">\n";
 																	echo "	<label for=\"".$response["efquestion_id"]."_".$response["efresponse_id"]."\">".clean_input($response["response_text"], "specialchars")."</label><br />";
-																	echo "	<input type=\"radio\" id=\"response_".$question["efquestion_id"]."_".$response["efresponse_id"]."\" name=\"responses[".$question["efquestion_id"]."]\" value=\"".$response["efresponse_id"]."\"".(($ajax_load_progress[$question["efquestion_id"]] == $response["efresponse_id"]) ? " checked=\"checked\"" : "")." onclick=\"((this.checked == true) ? storeResponse('".$question["efquestion_id"]."', '".$response["efresponse_id"]."', $('".$response["efquestion_id"]."_comment').value) : false)\" />";
+																	echo "	<input type=\"radio\" id=\"response_".$question["efquestion_id"]."_".$response["efresponse_id"]."\" name=\"responses[".$question["efquestion_id"]."]\" value=\"".$response["efresponse_id"]."\"".(($ajax_load_progress[$question["efquestion_id"]]["efresponse_id"] == $response["efresponse_id"]) ? " checked=\"checked\"" : "")." onclick=\"((this.checked == true) ? storeResponse('".$question["efquestion_id"]."', '".$response["efresponse_id"]."', $('".$response["efquestion_id"]."_comment').value) : false)\" />";
 																	echo "</div>\n";
 																}
 															}
 															echo "	</div>\n";
 															echo "	<div class=\"clear\"></div>";
 															echo "	<div class=\"comments\">";
-															echo "	<label for=\"".$response["efquestion_id"]."_comment\" class=\"form-nrequired\">Comments:</label>";
-															echo "	<textarea id=\"".$response["efquestion_id"]."_comment\" class=\"expandable\" name=\"comments[".$question["efquestion_id"]."]\" style=\"width:95%; height:40px;\"  onblur=\"storeResponse('".$question["efquestion_id"]."', Form.getInputs('evaluation-form','radio','responses[".$question["efquestion_id"]."]').find(function(radio) { return radio.checked; }).value, $('".$response["efquestion_id"]."_comment').value)\">".clean_input($response["comments"], array("trim", "notags", "specialchars"))."</textarea>";
+															echo "	<label for=\"".$question["efquestion_id"]."_comment\" class=\"form-nrequired\">Comments:</label>";
+															echo "	<textarea id=\"".$question["efquestion_id"]."_comment\" class=\"expandable\" name=\"comments[".$question["efquestion_id"]."]\" style=\"width:95%; height:40px;\"  onblur=\"storeResponse('".$question["efquestion_id"]."', Form.getInputs('evaluation-form','radio','responses[".$question["efquestion_id"]."]').find(function(radio) { return radio.checked; }).value, $('".$question["efquestion_id"]."_comment').value)\">".clean_input($ajax_load_progress[$question["efquestion_id"]]["comments"], array("trim", "notags", "specialchars"))."</textarea>";
 															echo "	</div>";
 															echo "</div>";
 															break;

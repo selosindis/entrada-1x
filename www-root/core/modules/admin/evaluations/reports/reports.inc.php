@@ -41,6 +41,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 } else {
 	$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/", "title" => "Evaluation Reports");
 
+	$SEE_COMMENTS = false;
+	
 	/**
 	 * Collect the course evaluation(s) to be reported.
 	 */
@@ -154,7 +156,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 		echo	"<td><h3>Updated:</h3></td><td>".date("M jS", $updated)."</td></tr>";
 		echo	"<tr><td><h3> Progress:</h3></td><td colspan=\"3\">".($completed?"$completed - Completed ":"").($progress?"$progress - In progress ":"").($cancelled?"$cancelled - Cancelled ":"")."</td></tr>";
 
-
 		echo	"<tr><td /><td colspan=\"2\"><hr></td><td /></tr>";
 		echo	"<tr><td /><td><h3>$report[form_title]</h3></td><td  colspan=\"2\"><h3>$report[form_description]</h3></td></tr>";
 
@@ -172,50 +173,79 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 		 * Process report by getting response statistics for each question
 		 */ 
 		$number = 0;		
+		$comments = array();
+		
 		foreach($questions as $question){
 			$number++;
 			echo	"<tr><td><h3>Question: $number</h3></td><td  colspan=\"2\"><h3>$question[question_text]</h3></td><td>$question[questiontype_title]</td></tr>";
-			
 			echo	"<tr><td  colspan=\"4\">&nbsp;</td></tr>";
 			echo	"<tr><td  colspan=\"4\">&nbsp;</td></tr>";
-			echo	"<tr><td  colspan=\"4\"><table>";
-			echo	"	<tr><td style=\"width: 22%\" />";
-			echo	"		<td style=\"width: 18%\">Frequency</td>";
-			echo	"		<td style=\"width: 20%\">Percent</td>";
-			echo	"		<td style=\"width: 20%\">Valid_%</td>";
-			echo	"		<td style=\"width: 20%\">Cumul_%</td></tr>";
-			
-			/**
-			 * Get available responses for each question
-			 */
-			$query = "	SELECT `efresponse_id` `id`, `response_order` `order` ,`response_text` `text`,  `response_is_html` `html`, `minimum_passing_level` `mpl`, 0 `freq`, 0 `percent`, 0 `valid`, 0 `cumul`
-						FROM `evaluation_form_responses`
-						WHERE `efquestion_id` = ".$db->qstr($question["id"])."
-						ORDER BY `response_order`";
-			$results = $db->GetAll($query);
-			
-			/**
-			 * Build response array
-			 */
-			foreach ($results as $result) {
-				$responses[array_shift($result)] = $result;
-			}	
 
 			/**
-			 * Tally all responses for each question
+			 * Get all evaluator responses for each question
 			 */
-			$query = "	SELECT r.`eresponse_id`, r.`efresponse_id`, r.`comments`
+			$query = "	SELECT r.`efresponse_id`, r.`comments`
 						FROM `evaluation_responses` r
 						INNER JOIN `evaluation_progress` p ON r.`eprogress_id` = r.`eprogress_id`
 						WHERE p.`progress_value` <> 'cancelled'
-						AND `r.eform_id` = ".$db->qstr($report["form_id"])."
-						AND `efquestion_id` = ".$db->qstr($question["id"]);
-			$result	= $db->GetRow($query);
-			if ($result) {
-			}
+						AND r.`eform_id` = ".$db->qstr($report["form_id"])."
+						AND r.`efquestion_id` = ".$db->qstr($question["id"]);
+			$results	= $db->GetRow($query);
 
+			if ($results) {
+				echo	"<tr><td  colspan=\"4\"><table>";
+				echo	"	<tr><td style=\"width: 34%\" />";
+				echo	"		<td style=\"width: 22%\">Frequency</td>";
+				echo	"		<td style=\"width: 22%\">Percent</td>";
+				echo	"		<td style=\"width: 22%\">Cumul_%</td></tr>";
+			
+				/**
+				 * Get the available responses for each question and build the reponse profile array
+				 */
+				$query = "	SELECT `efresponse_id` `id`, `response_order` `order` ,`response_text` `text`,  `response_is_html` `html`, `minimum_passing_level` `mpl`, 0 `freq`, 0 `percent`, 0 `cumul`
+							FROM `evaluation_form_responses`
+							WHERE `efquestion_id` = ".$db->qstr($question["id"])."
+							ORDER BY `response_order`";
+				$responses = $db->GetAll($query);
+
+				$answers = count($reponses);
+				/**
+				 * Build profile array
+				 */
+				$profile = array();
+				$index = array();
+				foreach ($responses as $response) {
+					$i = array_shift($response);
+					$profile[$i] = $response;
+					$index[] = $i;
+				}	
+
+				$total = count($results);					
+				/**
+				 * Tally repsonses for each question
+				 */
+				foreach ($results as $result) {
+					$profile[$result["efresponse_id"]]["freq"]++;
+					if ($SEE_COMMENTS && $result["comments"] && strlen($result["comments"])) {
+						$comments[$number][] = $result["comments"];
+					}
+				}
+
+				$percent = 0;
+				for ($i = 0; $i < $answers; $i++) {
+					echo	"	<tr><td  colspan=\"4\">&nbsp;</td></tr>";
+					$profile[$index[$i]]["percent"] = $profile[$index[$i]]["freq"] / $total * 100;
+					$percent += $profile[$index[$i]]["percent"];
+					$profile[$index[$i]]["cumul"] = $percent;
+					echo	"	<tr><td>".$profile[$index[$i]]["title"]."</td><td>".$profile[$index[$i]]["freq"]."</td><td>".$profile[$index[$i]]["percent"]."</td><td>".$profile[$index[$i]]["cumul"]."</td>";
+				}
+				echo	"		<tr><td /><td>--------</td><td>--------</td><td /></tr>";
+				echo	"		<tr><td>Total:</td><td>$total</td><td>100.0</td><td /></tr>";
+				echo	"	</table>";
+			} else {	// No responses for this question
+				echo	"<tr><td /><td colspan=\"3\"><hr></td></tr>";  	
+			}
 		}
-		
 		echo	"</table>";
 		echo	"</div>";		
 //	echo "<br>$query<br>"; print_r($type);

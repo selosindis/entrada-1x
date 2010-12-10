@@ -61,8 +61,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 			<table class="tableList" cellspacing="0" cellpadding="1" summary="List of Events">
 				<colgroup>
 					<col style="width: 2%" />
-					<col style="width: 18%" />
-					<col style="width: 33%" />
+					<col style="width: 19%" />
+					<col style="width: 34%" />
 					<col style="width: 14%" />
 					<col style="width: 14%" />
 					<col style="width: 7%" />
@@ -72,7 +72,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					<tr>
 						<td class="modified" />
 						<td class="title">Evaluation Title</td>
-						<td class="phase">Description</td>
+						<td class="date">Description</td>
 						<td class="date"><div class="noLink">Start Date</div></td>
 						<td class="date"><div class="noLink">Finish Date</div></td>
 						<td class="date"><div class="noLink">Courses</div></td>
@@ -104,8 +104,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 
 					$url = ENTRADA_URL."/admin/evaluations/reports?section=${SECTION}&amp;step=2&amp;id=".$result["evaluation_id"];
 					echo "	<tr><td class=\"modified\" />";
-					echo "	<td class=\"title".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Evaluation Title: ".html_encode($result["evaluation_title"])."\">" : "").html_encode($result["evaluation_title"]).(($url) ? "</a>" : "")."</td>\n";
-					echo "	<td class=\"teacher".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Course: ".html_encode($result["evaluation_description"])."\">" : "").html_encode($result["evaluation_description"]).(($url) ? "</a>" : "")."</td>\n";
+					echo "	<td class=\"title".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Evaluation Title: ".html_encode($result["evaluation_title"])."\">" : "").html_encode(limit_chars($result["evaluation_title"],27)).(($url) ? "</a>" : "")."</td>\n";
+					echo "	<td class=\"teacher".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Course: ".html_encode($result["evaluation_description"])."\">" : "").html_encode(limit_chars($result["evaluation_description"],48)).(($url) ? "</a>" : "")."</td>\n";
 					echo "	<td class=\"date".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Start Date\">" : "").date("M j, Y", $result["evaluation_start"]).(($url) ? "</a>" : "")."</td>\n";
 					echo "	<td class=\"date".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Finish Date\">" : "").date("M j, Y", $result["evaluation_finish"]).(($url) ? "</a>" : "")."</td>\n";
 					echo "	<td class=\"date".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Courses\">" : ""). ($result["courses"]?$result["courses"]:"").(($url) ? "</a>" : "")."</td>\n";

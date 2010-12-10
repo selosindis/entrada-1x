@@ -151,33 +151,33 @@ if($EVALUATION_ID) {
                                                                                     application_error("error", "Unable to insert a new evaluator. Database said: ".$db->ErrorMsg());
 										}
                                                                             }else{
+										$snd_stm= " FROM `".AUTH_DATABASE."`.`user_data`
+										    LEFT JOIN `".AUTH_DATABASE."`.`user_access` ON `".AUTH_DATABASE."`.`user_access`.`user_id`=`".AUTH_DATABASE."`.`user_data`.`id`
+											WHERE `".AUTH_DATABASE."`.`user_access`.`app_id`='".AUTH_APP_ID."'
+											    AND `role`=".$db->qstr($PROCESSED["associated_grad_year"])."
+												AND `group`='student'";
+										$query	= "SELECT `".AUTH_DATABASE."`.`user_data`.`id` AS `proxy_id`".$snd_stm;
 
-                                                                            }
-                                                                            $snd_stm= " FROM `".AUTH_DATABASE."`.`user_data`
-                                                                                LEFT JOIN `".AUTH_DATABASE."`.`user_access` ON `".AUTH_DATABASE."`.`user_access`.`user_id`=`".AUTH_DATABASE."`.`user_data`.`id`
-                                                                                    WHERE `".AUTH_DATABASE."`.`user_access`.`app_id`='".AUTH_APP_ID."'
-                                                                                        AND `role`=".$db->qstr($PROCESSED["associated_grad_year"])."
-                                                                                            AND `group`='student'";
-                                                                            $query	= "SELECT `".AUTH_DATABASE."`.`user_data`.`id` AS `proxy_id`".$snd_stm;
+										$query_count = "SELECT count(*) AS `total_rows`".$snd_stm;
+										$result_count = $db->GetRow($query_count);
+										$i_total_rows= (int) $result_count["total_rows"];
+										$i_random_number= (int) $PROCESSED["random_number"];
 
-                                                                            $query_count = "SELECT count(*) AS `total_rows`".$snd_stm;
-                                                                            $result_count = $db->GetRow($query_count);
-                                                                            $i_total_rows= (int) $result_count["total_rows"];
-                                                                            $i_random_number= (int) $PROCESSED["random_number"];
+										$random_percentage= round($i_total_rows*$i_random_number/100);
+										$query= $query." ORDER BY RAND() limit ".$random_percentage;
 
-                                                                            $random_percentage= round($i_total_rows*$i_random_number/100);
-                                                                            $query= $query." ORDER BY RAND() limit ".$random_percentage;
+										$results = $db->GetAll($query);
+										foreach($results as $result) {
+										    if(($proxy_id = (int) trim($result["proxy_id"]))) {
+											    if ($db->AutoExecute("evaluation_evaluators", array("evaluation_id" => $EVALUATION_ID, "evaluator_type" => "proxy_id", "evaluator_value" => $proxy_id, "member_joined" => 1, "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT")) {
+												$member_add_success++;
+											    } else {
+												$member_add_failure++;
+												application_error("error", "Unable to insert a new evaluator. Database said: ".$db->ErrorMsg());
+											    }
+											}
+										}
 
-                                                                            $results = $db->GetAll($query);
-                                                                            foreach($results as $result) {
-                                                                                if(($proxy_id = (int) trim($result["proxy_id"]))) {
-                                                                                        if ($db->AutoExecute("evaluation_evaluators", array("evaluation_id" => $EVALUATION_ID, "evaluator_type" => "proxy_id", "evaluator_value" => $proxy_id, "member_joined" => 1, "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT")) {
-                                                                                            $member_add_success++;
-                                                                                        } else {
-                                                                                            $member_add_failure++;
-                                                                                            application_error("error", "Unable to insert a new evaluator. Database said: ".$db->ErrorMsg());
-                                                                                        }
-                                                                                    }
                                                                             }
                                                                         }
 
@@ -516,8 +516,9 @@ if($EVALUATION_ID) {
                                             }
                                                     echo "<div class=\"no-printing\">\n";
                                                     echo "	<div style=\"float: right; margin-top: 8px\">\n";
-                                                    echo "		<a href=\"".ENTRADA_URL."/admin/evaluations?".replace_query(array("section" => "edit", "id" => $evaluation_details["evaluation_id"]))."\"><img src=\"".ENTRADA_URL."/images/event-details.gif\" width=\"16\" height=\"16\" alt=\"Edit evaluation details\" title=\"Edit evaluation details\" border=\"0\" style=\"vertical-align: middle\" /></a> <a href=\"".ENTRADA_URL."/admin/evaluations?".replace_query(array("section" => "edit", "id" => $evaluation_details["evaluation_id"]))."\" style=\"font-size: 10px; margin-right: 8px\">Edit evaluation details</a>\n";
-                                                    echo "	</div>\n";
+                                                    echo "		<a href=\"".ENTRADA_URL."/admin/evaluations?".replace_query(array("section" => "edit", "id" => $evaluation_details["evaluation_id"]))."\"><img src=\"".ENTRADA_URL."/images/event-details.gif\" width=\"16\" height=\"16\" alt=\"Edit evaluation details\" title=\"Edit details\" border=\"0\" style=\"vertical-align: middle\" /></a> <a href=\"".ENTRADA_URL."/admin/evaluations?".replace_query(array("section" => "edit", "id" => $evaluation_details["evaluation_id"]))."\" style=\"font-size: 10px; margin-right: 8px\">Edit details</a>\n";
+                                                    echo "		<a href=\"".ENTRADA_URL."/admin/evaluations?".replace_query(array("section" => "progress", "evaluation" => $evaluation_details["evaluation_id"]))."\"><img src=\"".ENTRADA_URL."/images/event-details.gif\" width=\"16\" height=\"16\" alt=\"Show progress\" title=\"Show progress\" border=\"0\" style=\"vertical-align: middle\" /></a> <a href=\"".ENTRADA_URL."/admin/evaluations?".replace_query(array("section" => "progress", "evaluation" => $evaluation_details["evaluation_id"]))."\" style=\"font-size: 10px; margin-right: 8px\">Show progress</a>\n";
+						    echo "	</div>\n";
                                                     echo "</div>\n";
 
                                             echo "<h1 class=\"evaluation-title\">".html_encode($evaluation_details["evaluation_title"])."</h1>\n";

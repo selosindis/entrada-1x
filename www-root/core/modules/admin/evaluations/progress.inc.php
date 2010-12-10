@@ -153,7 +153,8 @@ if($EVALUATION_ID) {
                                     }
                                             echo "<div class=\"no-printing\">\n";
                                             echo "	<div style=\"float: right; margin-top: 8px\">\n";
-                                            echo "		<a href=\"".ENTRADA_URL."/admin/evaluations?".replace_query(array("section" => "edit", "id" => $evaluation_details["evaluation_id"]))."\"><img src=\"".ENTRADA_URL."/images/event-details.gif\" width=\"16\" height=\"16\" alt=\"Edit evaluation details\" title=\"Edit evaluation details\" border=\"0\" style=\"vertical-align: middle\" /></a> <a href=\"".ENTRADA_URL."/admin/evaluations?".replace_query(array("section" => "edit", "id" => $evaluation_details["evaluation_id"]))."\" style=\"font-size: 10px; margin-right: 8px\">Edit evaluation details</a>\n";
+                                            echo "		<a href=\"".ENTRADA_URL."/admin/evaluations?".replace_query(array("section" => "edit", "id" => $evaluation_details["evaluation_id"]))."\"><img src=\"".ENTRADA_URL."/images/event-details.gif\" width=\"16\" height=\"16\" alt=\"Edit details\" title=\"Edit evaluation details\" border=\"0\" style=\"vertical-align: middle\" /></a> <a href=\"".ENTRADA_URL."/admin/evaluations?".replace_query(array("section" => "edit", "id" => $evaluation_details["evaluation_id"]))."\" style=\"font-size: 10px; margin-right: 8px\">Edit details</a>\n";
+                                            echo "		<a href=\"".ENTRADA_URL."/admin/evaluations?".replace_query(array("section" => "edit", "id" => $evaluation_details["evaluation_id"]))."\"><img src=\"".ENTRADA_URL."/images/event-details.gif\" width=\"16\" height=\"16\" alt=\"Edit contents\" title=\"Edit evaluation contents\" border=\"0\" style=\"vertical-align: middle\" /></a> <a href=\"".ENTRADA_URL."/admin/evaluations?".replace_query(array("section" => "members", "id" => $evaluation_details["evaluation_id"]))."\" style=\"font-size: 10px; margin-right: 8px\">Edit contents</a>\n";
                                             echo "	</div>\n";
                                             echo "</div>\n";
 
@@ -166,7 +167,23 @@ if($EVALUATION_ID) {
                              * Get the total number of results using the generated queries above and calculate the total number
                              * of pages that are available based on the results per page preferences.
                              */
-                            $query	= "SELECT COUNT(*) AS `total_rows` FROM `evaluation_progress` WHERE `evaluation_id` = ".$db->qstr($EVALUATION_ID);
+                            $query	= "SELECT COUNT(*) AS `total_rows` FROM 
+						(
+						SELECT evaluation_id FROM `evaluation_evaluators`as ev
+						    JOIN `evaluation_targets` as d
+						    on ev.`evaluation_id` = d.`evaluation_id`
+						    WHERE `evaluation_id` = ".$db->qstr($EVALUATION_ID)." and evaluator_type = 'proxy_id'
+						)
+						union
+						(
+						SELECT evaluation_id FROM `evaluation_evaluators` as aas ev
+						    JOIN `evaluation_targets` as d
+						    on ev.`evaluation_id` = d.`evaluation_id`
+                                                    LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
+                                                    ON a.`evaluator_value` = b.`id`
+						    WHERE `evaluation_id` = ".$db->qstr($EVALUATION_ID)." and evaluator_type = 'proxy_id'
+						)
+						) as t";
                             $result	= $db->GetRow($query);
                             if($result) {
                                     $TOTAL_ROWS	= $result["total_rows"];
@@ -224,7 +241,9 @@ if($EVALUATION_ID) {
 						(
 						    (
 						    SELECT a.updated_date, a.progress_value, concat(concat(b.`firstname`,' '), b.`lastname`) as evaluator_name, concat(concat(e.`firstname`,' '), e.`lastname`) as target_name
-						    FROM `entrada`.`evaluation_progress` as a
+						    FROM `entrada`.`evaluation_evaluators` as ev
+						    LEFT JOIN `evaluation_progress` as a
+						    on d.`etarget_id` = a.`etarget_id`
 						    LEFT JOIN `evaluation_targets` as d
 						    on d.`etarget_id` = a.`etarget_id`
                                                     LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
@@ -256,6 +275,94 @@ if($EVALUATION_ID) {
 							WHERE a.`evaluation_id` = ".$db->qstr($EVALUATION_ID)."
 							AND d.`target_id` = '1'
 						    )
+						) as t
+						LIMIT %s, %s
+                                                ";
+
+			    $query		= "
+						SELECT * from
+						(
+						    (
+						    SELECT a.updated_date, IF(a.`progress_value` IS NULL, 'not-started', a.`progress_value`) AS `progress_value`, concat(concat(b.`firstname`,' '), b.`lastname`) as evaluator_name, concat(concat(e.`firstname`,' '), e.`lastname`) as target_name
+						    FROM `entrada`.`evaluation_evaluators` as ev
+						    JOIN `evaluation_targets` as d
+						    on ev.`evaluation_id` = d.`evaluation_id`
+						    LEFT JOIN `evaluation_progress` as a
+						    on ev.`evaluator_value` = a.`proxy_id`
+                                                    LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
+                                                    ON ev.`evaluator_value` = b.`id`
+                                                    LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS c
+                                                    ON c.`user_id` = b.`id`
+                                                    AND c.`app_id` IN (".AUTH_APP_IDS_STRING.")
+						    LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS e
+                                                    ON d.`target_value` = e.`id`
+                                                    LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS f
+                                                    ON f.`user_id` = e.`id`
+                                                    AND c.`app_id` IN (".AUTH_APP_IDS_STRING.")
+							WHERE ev.`evaluation_id` = ".$db->qstr($EVALUATION_ID)."
+							AND ev.`evaluator_type` = 'proxy_id'
+							AND d.`target_id` in ('2','3','6','7','8')
+						    )
+							UNION
+						    (
+						    SELECT a.updated_date, IF(a.`progress_value` IS NULL, 'not-started', a.`progress_value`) AS `progress_value`, concat(concat(b.`firstname`,' '), b.`lastname`) as evaluator_name, e.`course_name` as target_name
+						    FROM `entrada`.`evaluation_evaluators` as ev
+						    JOIN `evaluation_targets` as d
+						    on ev.`evaluation_id` = d.`evaluation_id`
+						    LEFT JOIN `evaluation_progress` as a
+						    on ev.`evaluator_value` = a.`proxy_id`
+                                                    LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
+                                                    ON ev.`evaluator_value` = b.`id`
+                                                    LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS c
+                                                    ON c.`user_id` = b.`id`
+                                                    AND c.`app_id` IN (".AUTH_APP_IDS_STRING.")
+						    LEFT JOIN `courses` AS e
+						    ON d.`target_value` = e.`course_id`
+							WHERE ev.`evaluation_id` = ".$db->qstr($EVALUATION_ID)."
+							AND ev.`evaluator_type` = 'proxy_id'
+							AND d.`target_id` = '1'
+						    )
+							UNION
+						    (
+						    SELECT a.updated_date, IF(a.`progress_value` IS NULL, 'not-started', a.`progress_value`) AS `progress_value`, concat(concat(b.`firstname`,' '), b.`lastname`) as evaluator_name, concat(concat(e.`firstname`,' '), e.`lastname`) as target_name
+						    FROM `entrada`.`evaluation_evaluators` as ev
+						    JOIN `evaluation_targets` as d
+						    on ev.`evaluation_id` = d.`evaluation_id`
+						    LEFT JOIN `evaluation_progress` as a
+						    on ev.`evaluator_value` = a.`proxy_id`
+                                                    LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS c
+                                                    ON ev.`evaluator_value` = c.`role`
+                                                    LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
+                                                    ON c.`user_id` = b.`id`
+                                                    AND c.`app_id` IN (".AUTH_APP_IDS_STRING.")
+						    LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS e
+                                                    ON d.`target_value` = e.`id`
+                                                    LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS f
+                                                    ON f.`user_id` = e.`id`
+                                                    AND c.`app_id` IN (".AUTH_APP_IDS_STRING.")
+							WHERE ev.`evaluation_id` = ".$db->qstr($EVALUATION_ID)."
+							AND ev.`evaluator_type` = 'grad_year'
+							AND d.`target_id` in ('2','3','6','7','8')
+						    )
+							UNION
+						    (
+						    SELECT a.updated_date, IF(a.`progress_value` IS NULL, 'not-started', a.`progress_value`) AS `progress_value`, concat(concat(b.`firstname`,' '), b.`lastname`) as evaluator_name, e.`course_name` as target_name
+						    FROM `entrada`.`evaluation_evaluators` as ev
+						    JOIN `evaluation_targets` as d
+						    on ev.`evaluation_id` = d.`evaluation_id`
+						    LEFT JOIN `evaluation_progress` as a
+						    on ev.`evaluator_value` = a.`proxy_id`
+                                                    LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS c
+                                                    ON ev.`evaluator_value` = c.`role`
+                                                    LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
+                                                    ON c.`user_id` = b.`id`
+                                                    AND c.`app_id` IN (".AUTH_APP_IDS_STRING.")
+						    LEFT JOIN `courses` AS e
+						    ON d.`target_value` = e.`course_id`
+							WHERE ev.`evaluation_id` = ".$db->qstr($EVALUATION_ID)."
+							AND ev.`evaluator_type` = 'grad_year'
+							AND d.`target_id` = '1'
+						    )
 						) as t_ppl
 						LIMIT %s, %s
                                                 ";
@@ -277,12 +384,14 @@ if($EVALUATION_ID) {
                                             <col class="target" />
                                             <col class="evaluator" />
                                             <col class="progress" />
+                                            <col class="update" />
                                     </colgroup>
                                     <thead>
                                             <tr>
                                                     <td class="target">Target</td>
                                                     <td class="evaluator">Evaluator</td>
                                                     <td class="progress">Progress</td>
+                                                    <td class="progress">Last Update</td>
 
                                             </tr>
                                     </thead>
@@ -293,6 +402,7 @@ if($EVALUATION_ID) {
                                             echo "	<td>".$result["target_name"]."</td>\n";
                                             echo "	<td>".$result["evaluator_name"]."</td>\n";
                                             echo "	<td>".$result["progress_value"]."</td>\n";
+                                            echo "	<td>".$result["update_date"]."</td>\n";
                                             echo "</tr>\n";
                                     }
                                     ?>

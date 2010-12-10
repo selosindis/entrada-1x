@@ -44,21 +44,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 	switch($STEP) {
 		case 2 :
 			/**
-			 * Required field "eform_id" / Evaluation Form
-			 */
-			if (isset($_POST["eform_id"]) && ($eform_id = clean_input($_POST["eform_id"], "int"))) {
-				$query = "SELECT * FROM `evaluation_forms` WHERE `eform_id` = ".$db->qstr($eform_id)." AND `form_active` = '1'";
-				$result = $db->GetRow($query);
-				if ($result) {
-					$PROCESSED["eform_id"] = $eform_id;
-				} else {
-					add_error("The <strong>Evaluation Form</strong> that you selected is not currently available for use.");
-				}
-			} else {
-				add_error("You must select an <strong>Evaluation Form</strong> to use during this evaluation.");
-			}
-			
-			/**
 			 * Required field "evaluation_title" / Evaluation Title.
 			 */
 			if ((isset($_POST["evaluation_title"])) && ($evaluation_title = clean_input($_POST["evaluation_title"], array("notags", "trim")))) {
@@ -74,6 +59,21 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 				$PROCESSED["evaluation_description"] = $evaluation_description;
 			} else {
 				$PROCESSED["evaluation_description"] = "";
+			}
+
+			/**
+			 * Required field "eform_id" / Evaluation Form
+			 */
+			if (isset($_POST["eform_id"]) && ($eform_id = clean_input($_POST["eform_id"], "int"))) {
+				$query = "SELECT * FROM `evaluation_forms` WHERE `eform_id` = ".$db->qstr($eform_id)." AND `form_active` = '1'";
+				$result = $db->GetRow($query);
+				if ($result) {
+					$PROCESSED["eform_id"] = $eform_id;
+				} else {
+					add_error("The <strong>Evaluation Form</strong> that you selected is not currently available for use.");
+				}
+			} else {
+				add_error("You must select an <strong>Evaluation Form</strong> to use during this evaluation.");
 			}
 
 			/**
@@ -161,6 +161,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 				$PROCESSED["updated_by"] = $_SESSION["details"]["id"];
 
 				if ($db->AutoExecute("evaluations", $PROCESSED, "INSERT") && ($evaluation_id = $db->Insert_Id())) {
+
 					switch($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"]) {
 						case "content" :
 							$url = ENTRADA_URL."/admin/evaluations?section=members&evaluation=".$evaluation_id;
@@ -201,6 +202,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 		break;
 		case 1 :
 		default :
+			$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/AutoCompleteList.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+			$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/picklist.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
+
 			if (has_error() || has_notice()) {
 				echo display_status_messages();
 			}
@@ -227,9 +231,30 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 						</tr>
 						<tr>
 							<td></td>
+							<td><label for="evaluation_title" class="form-required">Evaluation Title</label></td>
+							<td><input type="text" id="evaluation_title" name="evaluation_title" value="<?php echo html_encode($PROCESSED["evaluation_title"]); ?>" maxlength="255" style="width: 95%" /></td>
+						</tr>
+						<tr>
+							<td colspan="3">&nbsp;</td>
+						</tr>
+						<tr>
+							<td></td>
+							<td style="vertical-align: top">
+								<label for="evaluation_description" class="form-nrequired">Special Instructions</label>
+								<div class="content-small" style="margin-right:3px"><strong>Note:</strong> Special instructions will appear at the top of the evaluation form.</div>
+							</td>
+							<td>
+								<textarea id="evaluation_description" name="evaluation_description" class="expandable" style="width: 94%; height:50px" cols="50" rows="15"><?php echo html_encode($PROCESSED["evaluation_description"]); ?></textarea>
+							</td>
+						</tr>
+						<tr>
+							<td colspan="3"><h2>Evaluation Form Options</h2></td>
+						</tr>
+						<tr>
+							<td></td>
 							<td><label for="eform_id" class="form-required">Evaluation Form</label></td>
 							<td>
-								<select id="eform_id" name="eform_id" style="width:205px">
+								<select id="eform_id" name="eform_id" style="width:328px">
 								<option value="0"> -- Select Evaluation Form -- </option>
 								<?php
 								$query	= "	SELECT a.*, b.`target_shortname`, b.`target_title`
@@ -262,28 +287,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 						<tr>
 							<td colspan="3">&nbsp;</td>
 						</tr>
-						<tr>
-							<td></td>
-							<td><label for="evaluation_title" class="form-required">Evaluation Title</label></td>
-							<td><input type="text" id="evaluation_title" name="evaluation_title" value="<?php echo html_encode($PROCESSED["evaluation_title"]); ?>" maxlength="255" style="width: 95%" /></td>
-						</tr>
-						<tr>
-							<td colspan="3">&nbsp;</td>
-						</tr>
-						<tr>
-							<td></td>
-							<td style="vertical-align: top">
-								<label for="evaluation_description" class="form-nrequired">Special Instructions</label>
-								<div class="content-small" style="margin-right:3px"><strong>Note:</strong> Special instructions will appear at the top of the evaluation form.</div>
-							</td>
-							<td>
-								<textarea id="evaluation_description" name="evaluation_description" class="expandable" style="width: 94%; height:50px"><?php echo html_encode($PROCESSED["evaluation_description"]); ?></textarea>
-							</td>
-						</tr>
-						<tr>
-							<td colspan="3">&nbsp;</td>
-						</tr>
-						<?php echo generate_calendars("evaluation", "Evaluation", true, true, ((isset($PROCESSED["evaluation_start"])) ? $PROCESSED["evaluation_start"] : 0), true, true, ((isset($PROCESSED["evaluation_finish"])) ? $PROCESSED["evaluation_finish"] : 0)); ?>
+					</tbody>
+					<tbody id="evaluation_options" style="display: none">
+					</tbody>
+					<tbody>
 						<tr>
 							<td colspan="3">&nbsp;</td>
 						</tr>
@@ -306,6 +313,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 						<tr>
 							<td colspan="3">&nbsp;</td>
 						</tr>
+						<?php echo generate_calendars("evaluation", "Evaluation", true, true, ((isset($PROCESSED["evaluation_start"])) ? $PROCESSED["evaluation_start"] : 0), true, true, ((isset($PROCESSED["evaluation_finish"])) ? $PROCESSED["evaluation_finish"] : 0)); ?>
+						<tr>
+							<td colspan="3">&nbsp;</td>
+						</tr>
 						<tr>
 							<td colspan="3"><h2>Time Release Options</h2></td>
 						</tr>
@@ -313,6 +324,55 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					</tbody>
 				</table>
 			</form>
+			<script type="text/javascript">
+			$('addEvaluationForm').observe('submit', function() {
+				selIt();
+			});
+
+			var selectedFormType = '';
+			$('eform_id').observe('change', function() {
+				if ($F('eform_id') > 0)  {
+					var currentLabel = $('eform_id').options[$('eform_id').selectedIndex].up().readAttribute('label');
+
+					if (currentLabel != selectedFormType) {
+						selectedFormType = currentLabel;
+						
+						$('evaluation_options').show();
+						$('evaluation_options').update('<tr><td colspan="2">&nbsp;</td><td><div class="content-small" style="vertical-align: middle"><img src="<?php echo ENTRADA_RELATIVE; ?>/images/indicator.gif" width="16" height="16" alt="Please Wait" title="" style="vertical-align: middle" /> Please wait while <strong>evaluation options</strong> are loaded ... </div></td></tr>');
+
+						new Ajax.Updater('evaluation_options', '<?php echo ENTRADA_RELATIVE; ?>/admin/evaluations?section=api-targets', {
+							evalScripts : true,
+							parameters : {
+								form_id : $F('eform_id'),
+								evaluation_id : 0
+							},
+							onSuccess : function (response) {
+								if (response.responseText == "") {
+									$('evaluation_options').update('');
+									$('evaluation_options').hide();
+								}
+							},
+							onFailure : function (response) {
+								$('evaluation_options').update('');
+								$('evaluation_options').hide();
+							}
+						});
+					}
+				} else {
+					$('evaluation_options').update('');
+					$('evaluation_options').hide();
+				}
+			});
+
+			function selectTargetGroupOption(type) {
+				$$('input[type=radio][value=' + type + ']').each(function(el) {
+					$(el.id).checked = true;
+				});
+
+				$$('.target_group').invoke('hide');
+				$$('.' + type + '_audience').invoke('show');
+			}
+			</script>
 			<?php
 		break;
 	}

@@ -118,7 +118,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 						$studQuery = "SELECT COUNT(*) AS `num_studs`
 						FROM `".AUTH_DATABASE."`.`user_access` 
 						WHERE `app_id` = '".AUTH_APP_ID."' 
-						AND `role` = ".$db->qstr($audienceValue);
+						AND `role` = ".$db->qstr($audienceValue);	
 						
 						$studResult	= $db->GetRow($studQuery);
 						$undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['students'] = $studResult['num_studs'];
@@ -234,7 +234,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 						
 						$UNDERGRADUATE_TEACHING_ID = $checkResult['undergraduate_teaching_id'];
 						
-						$db->AutoExecute(DATABASE_NAME.".".TABLES_PREFIX."undergraduate_teaching", $PROCESSED, "UPDATE", "`undergraduate_teaching_id`=".$db->qstr($UNDERGRADUATE_TEACHING_ID));
+						$db->AutoExecute(DATABASE_NAME.".ar_undergraduate_teaching", $PROCESSED, "UPDATE", "`undergraduate_teaching_id`=".$db->qstr($UNDERGRADUATE_TEACHING_ID));
 					}
 				}
 			}

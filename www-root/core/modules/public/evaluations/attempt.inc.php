@@ -47,20 +47,7 @@ if ($RECORD_ID) {
 						LEFT JOIN `evaluations_lu_targets` AS e
 						ON d.`target_id` = e.`target_id`
 						WHERE a.`evaluation_id` = ".$db->qstr($RECORD_ID)."
-						AND
-						(
-							(
-								b.`evaluator_type` = 'proxy_id'
-								AND b.`evaluator_value` = ".$db->qstr($_SESSION["details"]["id"])."
-							)
-							".( $_SESSION["details"]["group"] == "student" ?
-							"OR
-							(
-								b.`evaluator_type` = 'grad_year'
-								AND b.`evaluator_value` = ".$db->qstr($_SESSION["details"]["role"])."
-							)"
-							: "")."
-						)
+						AND b.`proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
 						AND a.`evaluation_active` = '1'
 						GROUP BY cr.`eprogress_id`";
 	$evaluation_record	= $db->GetRow($query);

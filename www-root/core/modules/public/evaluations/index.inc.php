@@ -44,13 +44,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_PUBLIC_EVALUATIONS"))) {
 $query		= "	SELECT * FROM `evaluations` AS a
 				JOIN `evaluation_evaluators` AS b
 				ON a.`evaluation_id` = b.`evaluation_id`
-				WHERE (
-					b.`evaluator_type` = 'proxy_id'
-					AND b.`evaluator_value` = ".$db->qstr($_SESSION["details"]["id"])."
-				)".($_SESSION["details"]["group"] == "student" ? " OR (
-					b.`evaluator_type` = 'grad_year'
-					AND b.`evaluator_value` = ".$db->qstr($_SESSION["details"]["role"])."
-				)" : "")."
+				WHERE b.`proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
 				AND a.`evaluation_start` < ".$db->qstr(time())."
 				AND a.`evaluation_finish` > ".$db->qstr(time())."
 				GROUP BY a.`evaluation_id`

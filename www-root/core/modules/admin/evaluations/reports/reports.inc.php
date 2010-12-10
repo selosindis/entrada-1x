@@ -29,7 +29,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 } elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	header("Location: ".ENTRADA_URL);
 	exit;
-} elseif (!$ENTRADA_ACL->amIAllowed("evaluations", "update", false)) {
+} elseif (!$ENTRADA_ACL->amIAllowed("evaluations", "read", false)) {
 	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/".$MODULE."\\'', 15000)";
 
 	$ERROR++;
@@ -86,9 +86,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 			case "Course" :
 				$type = $db->GetRow("	SELECT `course_name` `name`, `course_code` `code` FROM `courses` 
 							WHERE `course_id` = ".$db->qstr($report["target"]));
-				$title = ($STUDENTS?"Student ":"")."Course Evaluation ";
+				$title = ($STUDENTS?"Students ":"")."Course Evaluation ";
 			break;
 			default:
+				$title = ($STUDENTS?"Students ":"")."Evaluation ";
 			break;
 		}
 
@@ -160,7 +161,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 		echo	"<tr><td /><td><h3>$report[form_title]</h3></td><td  colspan=\"2\"><h3>$report[form_description]</h3></td></tr>";
 
 		/**
-		 * Get the question information to process for this report
+		 * Get the questions for this form
 		 */
 		$query = "	SELECT q.`efquestion_id` `id`, t.`questiontype_title`, q.`question_text`
 					FROM `evaluation_form_questions` q
@@ -170,7 +171,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 		$questions = $db->GetAll($query);
 
 		/**
-		 * Process report by getting response statistics for each question
+		 * Get response statistics for each question
 		 */ 
 		$number = 0;		
 		$comments = array();
@@ -200,7 +201,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 				echo	"		<td style=\"width: 22%\">Cumul_%</td></tr>";
 			
 				/**
-				 * Get the available responses for each question and build the reponse profile array
+				 * Get the available responses for each question and build the response profile array
 				 */
 				$query = "	SELECT `efresponse_id` `id`, `response_order` `order` ,`response_text` `text`,  `response_is_html` `html`, `minimum_passing_level` `mpl`, 0 `freq`, 0 `percent`, 0 `cumul`
 							FROM `evaluation_form_responses`
@@ -221,6 +222,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 				}	
 
 				$total = count($results);					
+				$percent = 0;
 				/**
 				 * Tally repsonses for each question
 				 */
@@ -231,7 +233,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					}
 				}
 
-				$percent = 0;
 				for ($i = 0; $i < $answers; $i++) {
 					echo	"	<tr><td  colspan=\"4\">&nbsp;</td></tr>";
 					$profile[$index[$i]]["percent"] = $profile[$index[$i]]["freq"] / $total * 100;
@@ -242,13 +243,41 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 				echo	"		<tr><td /><td>--------</td><td>--------</td><td /></tr>";
 				echo	"		<tr><td>Total:</td><td>$total</td><td>100.0</td><td /></tr>";
 				echo	"	</table>";
+				
+				/**
+				 * Use this code to Show all comments at the end of each question
+				 */
+				if ($SEE_COMMENTS && isset($comments[$number]) && count($comments[$number])) {	// Show all comments at end of question
+					echo	"<tr><td  colspan=\"4\">&nbsp;</td></tr>";
+					echo	"<tr><td>Question $number Comments:</td><td colspan=\"3\" /></tr>";
+					for ($i=0; $i<$count($comments[$number]); $i++) {
+						echo "	<tr><td VALIGN=\"top\">".($j+1)."</td><td colspan=\"3\">".$comments[$number][$i]."</td></tr>";
+					}
+					echo	"	<tr><td  colspan=\"4\">&nbsp;</td></tr>";					
+				}
 			} else {	// No responses for this question
 				echo	"<tr><td /><td colspan=\"3\"><hr></td></tr>";  	
 			}
 		}
+		/**
+		 * Use this code to Show comments for all questions at the end of the report
+		 */
+		if ($SEE_COMMENTS && count($comments)) {
+			echo	"<tr><td  colspan=\"4\">&nbsp;</td></tr>";
+			echo	"<tr><td>Question Comments:</td><td colspan=\"3\" /></tr>";
+			for ($i=1; $i<=$number; $i++) {
+				if (isset($comments[$i]) && count($comments[$i])) {	
+					echo	"<tr><td  colspan=\"4\">&nbsp;</td></tr>";
+					echo	"<tr><td>Question $i:</td><td colspan=\"3\" /></tr>";
+					for ($j=0; $j<$count($comments[$i]); $j++) {
+						echo "	<tr><td VALIGN=\"top\">".($j+1)."</td><td colspan=\"3\">".$comments[$i][$j]."</td></tr>";
+					}
+				}
+			}
+			echo	"	<tr><td  colspan=\"4\">&nbsp;</td></tr>";					
+		}
 		echo	"</table>";
 		echo	"</div>";		
-//	echo "<br>$query<br>"; print_r($type);
 	}
 }
 ?>

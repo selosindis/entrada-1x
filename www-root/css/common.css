@@ -103,11 +103,14 @@ font-style:normal;
 padding:0 4px;
 }
 
+.percentage {
+padding-right: 7px;
+background: transparent url(../images/bg-percentage.gif) no-repeat center right;
+}
+
 .external {
-background-position: 0% 60%;
-background-repeat: no-repeat;
+background: transparent url(../images/external.gif) no-repeat 0% 60%;
 padding-left: 12px;
-background-image: url(../images/external.gif);
 }
 
 form {

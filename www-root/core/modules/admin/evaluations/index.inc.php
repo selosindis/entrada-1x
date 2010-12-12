@@ -265,9 +265,8 @@ if (!defined("IN_EVALUATIONS")) {
 				<col class="modified" />
 				<col class="title" />
 				<col class="date" />
-				<col class="evaluators" />
 				<col class="targets" />
-				<col class="attachment" />
+				<col class="evaluators" />
 				<col class="attachment" />
 			</colgroup>
 			<thead>
@@ -275,9 +274,8 @@ if (!defined("IN_EVALUATIONS")) {
 					<td class="modified">&nbsp;</td>
 					<td class="title<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "title") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("title", "Title"); ?></td>
 					<td class="date<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "evaluation_start") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("evaluation_start", "Evaluation Start"); ?></td>
-					<td class="evaluators<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "evaluators") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("evaluators", "Evaluators"); ?></td>
 					<td class="targets<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "targets") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("targets", "Evaluation Targets"); ?></td>
-					<td class="attachment">&nbsp;</td>
+					<td class="evaluators<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "evaluators") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("evaluators", "Evaluators"); ?></td>
 					<td class="attachment">&nbsp;</td>
 				</tr>
 			</thead>
@@ -300,10 +298,9 @@ if (!defined("IN_EVALUATIONS")) {
 				echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"checked[]\" value=\"".$result["evaluation_id"]."\" /></td>\n";
 				echo "	<td class=\"title\"><a href=\"".$url."\">".html_encode($result["evaluation_title"])."</a></td>\n";
 				echo "	<td class=\"date\"><a href=\"".$url."\">".date(DEFAULT_DATE_FORMAT, $result["evaluation_start"])."</a></td>\n";
-				echo "	<td class=\"evaluator\"><a href=\"".$url."\">".html_encode($result["evaluator_count"])."</a></td>\n";
 				echo "	<td class=\"target\"><a href=\"".$url."\">".html_encode($result["target_count"])."</a></td>\n";
+				echo "	<td class=\"evaluator\"><a href=\"".$url."\">".html_encode($result["evaluator_count"])."</a></td>\n";
 				echo "	<td class=\"attachment\"><a href=\"".ENTRADA_URL."/admin/evaluations?section=edit&id=".$result["evaluation_id"]."\"><img src=\"".ENTRADA_URL."/images/action-edit.gif\" width=\"16\" height=\"16\" alt=\"Manage Evaluation Detail\" title=\"Manage Evaluation Detail\" border=\"0\" /></a></td>\n";
-				echo "	<td class=\"attachment\"><a href=\"".ENTRADA_URL."/admin/evaluations?section=members&evaluation=".$result["evaluation_id"]."\"><img src=\"".ENTRADA_URL."/images/event-contents.gif\" width=\"16\" height=\"16\" alt=\"Manage Evaluation Content\" title=\"Manage Evaluation Content\" border=\"0\" /></a></td>\n";
 				echo "</tr>\n";
 			}
 			?>

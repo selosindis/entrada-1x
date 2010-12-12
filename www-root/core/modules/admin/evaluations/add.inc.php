@@ -282,6 +282,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 								}
 								
 								if (!empty($evaluator_values)) {
+									$evaluator_values = array_unique($evaluator_values);
+									
 									$query = "	SELECT a.`id` AS `proxy_id`
 												FROM `".AUTH_DATABASE."`.`user_data` AS a
 												LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
@@ -305,13 +307,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 				}
 
 				if (empty($PROCESSED["evaluation_evaluators"])) {
-					add_error("No evaluators were selected.");
+					add_error("Please select an appropriate type of evaluator (i.e. entire class, percentagge, etc).");
 				}
 			} else {
 				add_error("Please select an appropriate type of evaluator (i.e. entire class, percentage, etc).");
 			}
 
 			if (!$ERROR) {
+				$PROCESSED["evaluation_active"] = 1;
 				$PROCESSED["updated_date"] = time();
 				$PROCESSED["updated_by"] = $_SESSION["details"]["id"];
 
@@ -348,7 +351,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 							$record = array(
 								"evaluation_id" => $evaluation_id,
 								"evaluator_type" => $result["evaluator_type"],
-								"evaluator_value" => $target_value["evaluator_value"],
+								"evaluator_value" => $result["evaluator_value"],
 								"updated_date" => time(),
 								"updated_by" => $_SESSION["details"]["id"]
 							);
@@ -365,6 +368,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					add_success("You have successfully added <strong>".html_encode($PROCESSED["evaluation_title"])."</strong> to the system.<br /><br />You will now be redirected to the evaluation index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.");
 
 					application_log("success", "New evaluation [".$evaluation_id."] added to the system.");
+				} else {
+					add_error("Unable to create new evaluation record at this time. The system administrator has been notified of this error, please try again later.");
+
+					application_log("Unable to create new evaluation record. Database said: ".$db->ErrorMsg());
 				}
 
 				/**

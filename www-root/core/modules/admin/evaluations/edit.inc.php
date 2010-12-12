@@ -53,32 +53,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 		if ($evaluation_info) {
 			$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/evaluations?".replace_query(array("section" => "edit", "id" => $EVALUATION_ID)), "title" => "Editing Evaluation");
 
-			echo "<div class=\"no-printing\">\n";
-			echo "	<div style=\"float: right; margin-top: 8px\">\n";
-			echo "		<a href=\"".ENTRADA_URL."/admin/evaluations?".replace_query(array("section" => "members", "evaluation" => $EVALUATION_ID))."\"><img src=\"".ENTRADA_URL."/images/event-contents.gif\" width=\"16\" height=\"16\" alt=\"Manage evaluation content\" title=\"Manage evaluation content\" border=\"0\" style=\"vertical-align: middle\" /></a> <a href=\"".ENTRADA_URL."/admin/evaluations?".replace_query(array("section" => "members", "evaluation" => $EVALUATION_ID, "step" => false))."\" style=\"font-size: 10px; margin-right: 8px\">Manage evaluation content</a>\n";
-			echo "	</div>\n";
-			echo "</div>\n";
-
 			echo "<h1>Edit Evaluation</h1>\n";
+
+			$PROCESSED["evaluation_evaluators"] = array();
+			$PROCESSED["evaluation_targets"] = array();
 
 			// Error Checking
 			switch($STEP) {
 				case 2 :
 					/**
-					 * Required field "eform_id" / Evaluation Form
+					 * Processing for evaluations table.
 					 */
-					if (isset($_POST["eform_id"]) && ($eform_id = clean_input($_POST["eform_id"], "int"))) {
-						$query = "SELECT * FROM `evaluation_forms` WHERE `eform_id` = ".$db->qstr($eform_id)." AND `form_active` = '1'";
-						$result = $db->GetRow($query);
-						if ($result) {
-							$PROCESSED["eform_id"] = $eform_id;
-						} else {
-							add_error("The <strong>Evaluation Form</strong> that you selected is not currently available for use.");
-						}
-					} else {
-						add_error("You must select an <strong>Evaluation Form</strong> to use during this evaluation.");
-					}
-					
+
 					/**
 					 * Required field "evaluation_title" / Evaluation Title.
 					 */
@@ -95,6 +81,32 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 						$PROCESSED["evaluation_description"] = $evaluation_description;
 					} else {
 						$PROCESSED["evaluation_description"] = "";
+					}
+
+					$evaluation_target_id = 0;
+					$evaluation_target_type = "";
+
+					/**
+					 * Required field "eform_id" / Evaluation Form
+					 */
+					if (isset($_POST["eform_id"]) && ($eform_id = clean_input($_POST["eform_id"], "int"))) {
+						$query = "	SELECT a.*, b.`target_id`, b.`target_shortname`
+									FROM `evaluation_forms` AS a
+									LEFT JOIN `evaluations_lu_targets` AS b
+									ON b.`target_id` = a.`target_id`
+									WHERE a.`eform_id` = ".$db->qstr($eform_id)."
+									AND a.`form_active` = '1'";
+						$result = $db->GetRow($query);
+						if ($result) {
+							$evaluation_target_id = $result["target_id"];
+							$evaluation_target_type = $result["target_shortname"];
+
+							$PROCESSED["eform_id"] = $eform_id;
+						} else {
+							add_error("The <strong>Evaluation Form</strong> that you selected is not currently available for use.");
+						}
+					} else {
+						add_error("You must select an <strong>Evaluation Form</strong> to use during this evaluation.");
 					}
 
 					/**
@@ -160,46 +172,216 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 						$PROCESSED["release_until"] = 0;
 					}
 
-					if (isset($_POST["post_action"])) {
-						switch($_POST["post_action"]) {
-							case "content" :
-								$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] = "content";
-							break;
-							case "new" :
-								$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] = "new";
-							break;
-							case "index" :
-							default :
-								$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] = "index";
-							break;
-						}
-					} else {
-						$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] = "content";
+					/**
+					 * Processing for evaluation_targets table.
+					 */
+					switch ($evaluation_target_type) {
+						case "course" :
+							if (isset($_POST["course_ids"]) && is_array($_POST["course_ids"]) && !empty($_POST["course_ids"])) {
+								foreach ($_POST["course_ids"] as $course_id) {
+									$course_id = clean_input($course_id, "int");
+									if ($course_id) {
+										$query = "SELECT `course_id` FROM `courses` WHERE `course_id` = ".$db->qstr($course_id);
+										$result = $db->GetRow($query);
+										if ($result) {
+											$PROCESSED["evaluation_targets"][] = $result["course_id"];
+										}
+									}
+								}
+
+								if (empty($PROCESSED["evaluation_targets"])) {
+									add_error("You must select at least one <strong>course</strong> that you would like to have evaluated.");
+								}
+							} else {
+								add_error("You must select <strong>which courses</strong> you would like to have evaluated.");
+							}
+						break;
+						case "teacher" :
+							if (isset($_POST["teacher_ids"]) && is_array($_POST["teacher_ids"]) && !empty($_POST["teacher_ids"])) {
+								foreach ($_POST["teacher_ids"] as $proxy_id) {
+									$proxy_id = clean_input($proxy_id, "int");
+									if ($proxy_id) {
+										$query = "	SELECT a.`id` AS `proxy_id`
+													FROM `".AUTH_DATABASE."`.`user_data` AS a
+													LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+													ON b.`user_id` = a.`id`
+													WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+													AND b.`group` = 'faculty'
+													AND a.`id` = ".$db->qstr($proxy_id);
+										$result = $db->GetRow($query);
+										if ($result) {
+											$PROCESSED["evaluation_targets"][] = $result["proxy_id"];
+										}
+									}
+								}
+
+								if (empty($PROCESSED["evaluation_targets"])) {
+									add_error("You must select at least one <strong>teacher</strong> that you would like to have evaluated.");
+								}
+							} else {
+								add_error("You must select <strong>which teachers</strong> you would like to have evaluated.");
+							}
+						break;
+						default :
+							add_error("The form type you have selected is currently unavailable. The system administrator has been notified of this issue, please try again later.");
+
+							application_log("error", "Unaccounted for target_shortname [".$evaluation_target_type."] encountered. An update to add.inc.php is required.");
+						break;
 					}
 
+					/**
+					 * Processing for evaluation_evaluators table.
+					 */
+					if (isset($_POST["target_group_type"]) && in_array($_POST["target_group_type"], array("grad_year", "percentage", "proxy_id"))) {
+						switch ($_POST["target_group_type"]) {
+							case "grad_year" :
+								if (isset($_POST["grad_year"]) && ($grad_year = clean_input($_POST["grad_year"], array("alphanumeric")))) {
+									$PROCESSED["evaluation_evaluators"][] = array("evaluator_type" => "grad_year", "evaluator_value" => $grad_year);
+								} else {
+									add_error("Please provide a valid class to complete this evaluation.");
+								}
+							break;
+							case "percentage" :
+								if (isset($_POST["percentage_grad_year"]) && ($grad_year = clean_input($_POST["percentage_grad_year"], array("alphanumeric")))) {
+									$percentage = clean_input($_POST["percentage_percent"], "int");
+									if (($percentage >= 100) || ($percentage < 1)) {
+										$percentage = 100;
+
+										$PROCESSED["evaluation_evaluators"][] = array("evaluator_type" => "grad_year", "evaluator_value" => $grad_year);
+									} else {
+										$query = "	SELECT a.`id` AS `proxy_id`
+													FROM `".AUTH_DATABASE."`.`user_data` AS a
+													LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+													ON b.`user_id` = a.`id`
+													WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+													AND b.`account_active` = 'true'
+													AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
+													AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
+													AND b.`group` = 'student'
+													AND a.`grad_year` = ".$db->qstr($grad_year);
+										$results = $db->GetAll($query);
+										if ($results) {
+											$total_students = count($results);
+										}
+
+										$percentage = round($total_students * $percentage / 100);
+
+										$query .= "	ORDER BY RAND()
+													LIMIT 0, ".$percentage;
+
+										$results = $db->GetAll($query);
+										if ($results) {
+											foreach ($results as $result) {
+												$PROCESSED["evaluation_evaluators"][] = array("evaluator_type" => "proxy_id", "evaluator_value" => $result["proxy_id"]);
+											}
+										}
+									}
+								} else {
+									add_error("Please provide a valid class to complete this evaluation.");
+								}
+							break;
+							case "proxy_id" :
+								if ((isset($_POST["associated_student"]))) {
+									$evaluator_values = array();
+
+									$associated_student = explode(",", $_POST["associated_student"]);
+
+									if (is_array($associated_student) && !empty($associated_student)) {
+										foreach($associated_student as $proxy_id) {
+											$proxy_id = clean_input($proxy_id, "int");
+
+											if ($proxy_id) {
+												$evaluator_values[] = $proxy_id;
+											}
+										}
+									}
+
+									if (!empty($evaluator_values)) {
+										$evaluator_values = array_unique($evaluator_values);
+
+										$query = "	SELECT a.`id` AS `proxy_id`
+													FROM `".AUTH_DATABASE."`.`user_data` AS a
+													LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+													ON b.`user_id` = a.`id`
+													WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+													AND b.`account_active` = 'true'
+													AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
+													AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
+													AND a.`id` IN (".implode(", ", $evaluator_values).")";
+										$results = $db->GetAll($query);
+										if ($results) {
+											foreach ($results as $result) {
+												$PROCESSED["evaluation_evaluators"][] = array("evaluator_type" => "proxy_id", "evaluator_value" => $result["proxy_id"]);
+											}
+										}
+									}
+								} else {
+									add_error("You must select at least one individual to act as an evaluator.");
+								}
+							break;
+						}
+
+						if (empty($PROCESSED["evaluation_evaluators"])) {
+							add_error("No evaluators were selected.");
+						}
+					} else {
+						add_error("Please select an appropriate type of evaluator (i.e. entire class, percentage, etc).");
+					}
+					
 					if (!$ERROR) {
 						$PROCESSED["updated_date"] = time();
 						$PROCESSED["updated_by"] = $_SESSION["details"]["id"];
 
+						/**
+						 * Insert the evaluation record into the evalutions table.
+						 */
 						if ($db->AutoExecute("evaluations", $PROCESSED, "UPDATE", "`evaluation_id` = ".$db->qstr($EVALUATION_ID))) {
-							switch($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"]) {
-								case "content" :
-									$url = ENTRADA_URL."/admin/evaluations?section=members&evaluation=".$EVALUATION_ID;
-									$msg = "You will now be redirected to the evaluation content page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-								break;
-								case "new" :
-									$url = ENTRADA_URL."/admin/evaluations?section=add";
-									$msg = "You will now be redirected to add another new evaluation; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-								break;
-								case "index" :
-								default :
-									$url = ENTRADA_URL."/admin/evaluations";
-									$msg = "You will now be redirected to the evaluation index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-								break;
+							/**
+							 * Insert the target records into the evaluation_targets table.
+							 */
+							if (!empty($PROCESSED["evaluation_targets"])) {
+								$db->Execute("DELETE FROM `evaluation_targets` WHERE `evaluation_id` = ".$db->qstr($EVALUATION_ID));
+								foreach ($PROCESSED["evaluation_targets"] as $target_value) {
+									$record = array(
+										"evaluation_id" => $EVALUATION_ID,
+										"target_id" => $evaluation_target_id,
+										"target_value" => $target_value,
+										"target_active" => 1,
+										"updated_date" => time(),
+										"updated_by" => $_SESSION["details"]["id"]
+									);
+
+									if (!$db->AutoExecute("evaluation_targets", $record, "INSERT") || (!$etarget_id = $db->Insert_Id())) {
+										add_error("Unable to attach an evaluation target to this evaluation. The system administrator has been notified of this error, please try again later.");
+										application_log("Unable to attach target_id [".$evaluation_target_id."] / target_value [".$target_value."] to evaluation_id [".$EVALUATION_ID."]. Database said: ".$db->ErrorMsg());
+									}
+								}
 							}
 
+							/**
+							 * Insert the target records into the evaluation_targets table.
+							 */
+							if (!empty($PROCESSED["evaluation_evaluators"])) {
+								$db->Execute("DELETE FROM `evaluation_evaluators` WHERE `evaluation_id` = ".$db->qstr($EVALUATION_ID));
+								foreach ($PROCESSED["evaluation_evaluators"] as $result) {
+									$record = array(
+										"evaluation_id" => $EVALUATION_ID,
+										"evaluator_type" => $result["evaluator_type"],
+										"evaluator_value" => $result["evaluator_value"],
+										"updated_date" => time(),
+										"updated_by" => $_SESSION["details"]["id"]
+									);
+
+									if (!$db->AutoExecute("evaluation_evaluators", $record, "INSERT") || (!$eevaluator_id = $db->Insert_Id())) {
+										add_error("Unable to attach an evaluation target to this evaluation. The system administrator has been notified of this error, please try again later.");
+										application_log("Unable to attach target_id [".$evaluation_target_id."] / target_value [".$target_value."] to evaluation_id [".$EVALUATION_ID."]. Database said: ".$db->ErrorMsg());
+									}
+								}
+							}
+
+							$url = ENTRADA_URL."/admin/evaluations";
 							$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
-							add_success("You have successfully added <strong>".html_encode($PROCESSED["evaluation_title"])."</strong> to the system.<br /><br />".$msg);
+							add_success("You have successfully added <strong>".html_encode($PROCESSED["evaluation_title"])."</strong> to the system.<br /><br />You will now be redirected to the evaluation index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.");
 
 							application_log("success", "New evaluation [".$EVALUATION_ID."] added to the system.");
 						}
@@ -212,6 +394,22 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 				case 1 :
 				default :
 					$PROCESSED = $evaluation_info;
+
+					$query = "SELECT * FROM `evaluation_targets` WHERE `evaluation_id` = ".$db->qstr($EVALUATION_ID)." AND `target_active` = '1'";
+					$results = $db->GetAll($query);
+					if ($results) {
+						foreach ($results as $result) {
+							$PROCESSED["evaluation_targets"][] = $result["target_value"];
+						}
+					}
+
+					$query = "SELECT * FROM `evaluation_evaluators` WHERE `evaluation_id` = ".$db->qstr($EVALUATION_ID);
+					$results = $db->GetAll($query);
+					if ($results) {
+						foreach ($results as $result) {
+							$PROCESSED["evaluation_evaluators"][] = array("evaluator_type" => $result["evaluator_type"], "evaluator_value" => $result["evaluator_value"]);
+						}
+					}
 				break;
 			}
 
@@ -222,12 +420,61 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 				break;
 				case 1 :
 				default :
+					$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/AutoCompleteList.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+					$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/picklist.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
+
 					if (has_error() || has_notice()) {
 						echo display_status_messages();
 					}
 					?>
-					<form action="<?php echo ENTRADA_URL; ?>/admin/evaluations?section=edit&amp;id=<?php echo $EVALUATION_ID; ?>&amp;step=2" method="post" name="editEvaluationForm" id="editEvaluationForm">
-						<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Editing an Evaluation">
+					<script type="text/javascript">
+					function updateFormOptions() {
+						if ($F('eform_id') > 0)  {
+
+							var currentLabel = $('eform_id').options[$('eform_id').selectedIndex].up().readAttribute('label');
+
+							if (currentLabel != selectedFormType) {
+								selectedFormType = currentLabel;
+
+								$('evaluation_options').show();
+								$('evaluation_options').update('<tr><td colspan="2">&nbsp;</td><td><div class="content-small" style="vertical-align: middle"><img src="<?php echo ENTRADA_RELATIVE; ?>/images/indicator.gif" width="16" height="16" alt="Please Wait" title="" style="vertical-align: middle" /> Please wait while <strong>evaluation options</strong> are loaded ... </div></td></tr>');
+
+								new Ajax.Updater('evaluation_options', '<?php echo ENTRADA_RELATIVE; ?>/admin/evaluations?section=api-form-options', {
+									evalScripts : true,
+									parameters : {
+										ajax : 1,
+										form_id : $F('eform_id')
+									},
+									onSuccess : function (response) {
+										if (response.responseText == "") {
+											$('evaluation_options').update('');
+											$('evaluation_options').hide();
+										}
+									},
+									onFailure : function (response) {
+										$('evaluation_options').update('');
+										$('evaluation_options').hide();
+									}
+								});
+							}
+						} else {
+							$('evaluation_options').update('');
+							$('evaluation_options').hide();
+						}
+					}
+
+					function selectTargetGroupOption(type) {
+						$$('input[type=radio][value=' + type + ']').each(function(el) {
+							$(el.id).checked = true;
+						});
+
+						$$('.target_group').invoke('hide');
+						$$('.' + type + '_audience').invoke('show');
+					}
+					</script>
+					<form action="<?php echo ENTRADA_URL; ?>/admin/evaluations?section=edit&amp;step=2" method="post" name="editEvaluationForm" id="editEvaluationForm">
+						<input type="hidden" name="id" value="<?php echo (int) $EVALUATION_ID; ?>" />
+						<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Editing An Evaluation">
 							<colgroup>
 								<col style="width: 3%" />
 								<col style="width: 20%" />
@@ -237,7 +484,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 								<tr>
 									<td colspan="3" style="padding-top: 50px">
 										<input type="button" class="fleft" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/evaluations'" />
-										<input type="submit" class="fright" value="Save" />
+										<input type="submit" class="fright" value="Proceed" />
 										<div class="clear"></div>
 									</td>
 								</tr>
@@ -248,9 +495,31 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 								</tr>
 								<tr>
 									<td></td>
+									<td><label for="evaluation_title" class="form-required">Evaluation Title</label></td>
+									<td><input type="text" id="evaluation_title" name="evaluation_title" value="<?php echo html_encode($PROCESSED["evaluation_title"]); ?>" maxlength="255" style="width: 95%" /></td>
+								</tr>
+								<tr>
+									<td colspan="3">&nbsp;</td>
+								</tr>
+								<tr>
+									<td></td>
+									<td style="vertical-align: top">
+										<label for="evaluation_description" class="form-nrequired">Special Instructions</label>
+										<div class="content-small" style="margin-right:3px"><strong>Note:</strong> Special instructions will appear at the top of the evaluation form.</div>
+									</td>
+									<td>
+										<textarea id="evaluation_description" name="evaluation_description" class="expandable" style="width: 94%; height:50px" cols="50" rows="15"><?php echo html_encode($PROCESSED["evaluation_description"]); ?></textarea>
+									</td>
+								</tr>
+								<tr>
+									<td colspan="3"><h2>Evaluation Form Options</h2></td>
+								</tr>
+								<tr>
+									<td></td>
 									<td><label for="eform_id" class="form-required">Evaluation Form</label></td>
 									<td>
-										<select id="eform_id" name="eform_id" style="width:205px">
+										<select id="eform_id" name="eform_id" style="width:328px">
+										<option value="0"> -- Select Evaluation Form -- </option>
 										<?php
 										$query	= "	SELECT a.*, b.`target_shortname`, b.`target_title`
 													FROM `evaluation_forms` AS a
@@ -271,7 +540,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 													}
 													echo "<optgroup label=\"".html_encode($optgroup_label)." Forms\">";
 												}
-												echo "<option value=\"".(int) $result["eform_id"].(($PROCESSED["eform_id"] == $result["eform_id"]) ? " selected=\"selected\"" : "")."\"> ".html_encode($result["form_title"])."</option>";
+												echo "<option value=\"".(int) $result["eform_id"]."\"".(($PROCESSED["eform_id"] == $result["eform_id"]) ? " selected=\"selected\"" : "")."> ".html_encode($result["form_title"])."</option>";
 											}
 											echo "</optgroup>";
 										}
@@ -282,22 +551,32 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 								<tr>
 									<td colspan="3">&nbsp;</td>
 								</tr>
-								<tr>
-									<td></td>
-									<td><label for="evaluation_title" class="form-required">Evaluation Title</label></td>
-									<td><input type="text" id="evaluation_title" name="evaluation_title" value="<?php echo html_encode($PROCESSED["evaluation_title"]); ?>" maxlength="255" style="width: 95%" /></td>
-								</tr>
+							</tbody>
+							<tbody id="evaluation_options"<?php echo ((!$PROCESSED["eform_id"]) ? " style=\"display: none\"" : ""); ?>>
+							<?php
+							if ($PROCESSED["eform_id"]) {
+								require_once(ENTRADA_ABSOLUTE."/core/modules/admin/evaluations/api-form-options.inc.php");
+							}
+							?>
+							</tbody>
+							<tbody>
 								<tr>
 									<td colspan="3">&nbsp;</td>
 								</tr>
 								<tr>
 									<td></td>
-									<td style="vertical-align: top">
-										<label for="evaluation_description" class="form-nrequired">Special Instructions</label>
-										<div class="content-small" style="margin-right:3px"><strong>Note:</strong> Special instructions will appear at the top of the evaluation form.</div>
-									</td>
+									<td><label for="min_submittable" class="form-required">Min Submittable</label></td>
 									<td>
-										<textarea id="evaluation_description" name="evaluation_description" class="expandable" style="width: 94%; height:50px"><?php echo html_encode($PROCESSED["evaluation_description"]); ?></textarea>
+										<input type="text" id="min_submittable" name="min_submittable" value="<?php echo (isset($PROCESSED["min_submittable"]) ? $PROCESSED["min_submittable"] : 1); ?>" maxlength="2" style="width: 30px; margin-right: 10px" />
+										<span class="content-small"><strong>Tip:</strong> The minimum number of times each evaluator must complete this evaluation.</span>
+									</td>
+								</tr>
+								<tr>
+									<td></td>
+									<td><label for="max_submittable" class="form-required">Max Submittable</label></td>
+									<td>
+										<input type="text" id="max_submittable" name="max_submittable" value="<?php echo (isset($PROCESSED["max_submittable"]) ? $PROCESSED["max_submittable"] : 1); ?>" maxlength="2" style="width: 30px; margin-right: 10px" />
+										<span class="content-small"><strong>Tip:</strong> The maximum number of times each evaluator may complete this evaluation.</span>
 									</td>
 								</tr>
 								<tr>
@@ -308,31 +587,25 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 									<td colspan="3">&nbsp;</td>
 								</tr>
 								<tr>
-									<td></td>
-									<td><label for="min_submittable" class="form-required">Min Submittable</label></td>
-									<td>
-										<input type="text" id="min_submittable" name="min_submittable" value="<?php echo (isset($PROCESSED["min_submittable"]) ? $PROCESSED["min_submittable"] : 1); ?>" maxlength="2" style="width: 30px; margin-right: 10px" />
-										<span class="content-small"><strong>Tip:</strong> The minimum number of times an evaluator must complete this evaluation.</span>
-									</td>
-								</tr>
-								<tr>
-									<td></td>
-									<td><label for="max_submittable" class="form-required">Max Submittable</label></td>
-									<td>
-										<input type="text" id="max_submittable" name="max_submittable" value="<?php echo (isset($PROCESSED["max_submittable"]) ? $PROCESSED["max_submittable"] : 1); ?>" maxlength="2" style="width: 30px; margin-right: 10px" />
-										<span class="content-small"><strong>Tip:</strong> The maximum number of times evaluator is able complete this evaluation.</span>
-									</td>
-								</tr>
-								<tr>
-									<td colspan="3">&nbsp;</td>
-								</tr>
-								<tr>
 									<td colspan="3"><h2>Time Release Options</h2></td>
 								</tr>
 								<?php echo generate_calendars("viewable", "", true, false, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : 0), true, false, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0)); ?>
 							</tbody>
 						</table>
 					</form>
+					<script type="text/javascript">
+					document.observe("dom:loaded", function() {
+						$('eform_id').observe('change', function() {
+							updateFormOptions();
+						});
+
+						$('editEvaluationForm').observe('submit', function() {
+							selIt();
+						});
+
+						selectedFormType = (($('eform_id') && $('eform_id').selectedIndex) ? $('eform_id').options[$('eform_id').selectedIndex].up().readAttribute('label') : '');
+					});
+					</script>
 					<?php
 				break;
 			}

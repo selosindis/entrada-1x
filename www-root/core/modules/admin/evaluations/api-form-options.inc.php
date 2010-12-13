@@ -57,8 +57,6 @@ if (!defined("IN_EVALUATIONS")) {
 		if (isset($_POST["form_id"]) && ($tmp_input = clean_input($_POST["form_id"], "int"))) {
 			$PROCESSED["eform_id"] = $tmp_input;
 		}
-	} else {
-
 	}
 
 	if ($PROCESSED["eform_id"]) {

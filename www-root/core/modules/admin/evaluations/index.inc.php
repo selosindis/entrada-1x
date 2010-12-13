@@ -340,8 +340,8 @@ if (!defined("IN_EVALUATIONS")) {
 	$sidebar_html .= "<ul class=\"menu\">\n";
 	$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) == "title") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/evaluations?".replace_query(array("sb" => "title"))."\" title=\"Sort by Evaluation Title\">by evaluation title</a></li>\n";
 	$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) == "evaluation_start") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/evaluations?".replace_query(array("sb" => "evaluation_start"))."\" title=\"Sort by Date &amp; Time\">by date &amp; time</a></li>\n";
-	$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) == "evaluators") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/evaluations?".replace_query(array("sb" => "evaluators"))."\" title=\"Sort by Evaluators\">by evaluators</a></li>\n";
 	$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) == "targets") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/evaluations?".replace_query(array("sb" => "targets"))."\" title=\"Sort by Evaluation Targets\">by evaluation targets</a></li>\n";
+	$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) == "evaluators") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/evaluations?".replace_query(array("sb" => "evaluators"))."\" title=\"Sort by Evaluators\">by evaluators</a></li>\n";
 	$sidebar_html .= "</ul>\n";
 	$sidebar_html .= "Order columns:\n";
 	$sidebar_html .= "<ul class=\"menu\">\n";

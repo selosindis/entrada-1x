@@ -438,11 +438,8 @@ function navigator_tabs() {
 	$PUBLIC_MODULES[] = array("name" => "dashboard", "text" => "Dashboard");
 	$PUBLIC_MODULES[] = array("name" => "communities", "text" => "Communities");
 	$PUBLIC_MODULES[] = array("name" => "courses", "text" => "Courses");
-	$PUBLIC_MODULES[] = array("name" => "tasks", "text" => "Tasks", "resource" => "tasktab", "permission" => "read");
 	$PUBLIC_MODULES[] = array("name" => "events", "text" => "Learning Events");
 	$PUBLIC_MODULES[] = array("name" => "clerkship", "text" => "Clerkship", "resource" => "clerkship", "permission" => "read");
-	$PUBLIC_MODULES[] = array("name" => "evaluations", "text" => "Evaluations", "resource" => "evaluations", "permission" => "read");
-	$PUBLIC_MODULES[] = array("name" => "objectives", "text" => "Curriculum Objectives", "resource" => "objectives", "permission" => "read");
 
 	if (in_array($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"], array("student", "resident"))) {
 		$PUBLIC_MODULES[] = array("name" => "regionaled", "text" => "Accommodations", "resource" => "regionaled_tab", "permission" => "read");
@@ -453,6 +450,8 @@ function navigator_tabs() {
 
 	$PUBLIC_MODULES[] = array("name" => "annualreport", "text" => "Annual Report", "resource" => "annualreport", "permission" => "read");
 
+	$PUBLIC_MODULES[] = array("name" => "tasks", "text" => "My Tasks", "resource" => "tasktab", "permission" => "read");
+	$PUBLIC_MODULES[] = array("name" => "evaluations", "text" => "My Evaluations", "resource" => "evaluations", "permission" => "read");
     $PUBLIC_MODULES[] = array("name" => "profile", "text" => "My Profile");
 	$PUBLIC_MODULES[] = array("name" => "library", "text" => "Library", "target" => "_blank");
 	$PUBLIC_MODULES[] = array("name" => "help", "text" => "Help");

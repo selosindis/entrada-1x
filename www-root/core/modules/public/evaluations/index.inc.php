@@ -143,8 +143,9 @@ if ($results) {
 	</table>
 	<?php
 } else {
-	$NOTICE++;
-	$NOTICESTR[] = "No available <strong>Evaluations</strong> were found in the system for your account.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
-	echo display_notice();
+	?>
+	<div class="display-generic">
+		There are no evaluations or assessments <strong>assigned to you</strong> in the system at this time.
+	</div>
+	<?php
 }
-?>

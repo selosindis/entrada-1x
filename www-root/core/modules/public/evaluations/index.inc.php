@@ -35,16 +35,24 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_PUBLIC_EVALUATIONS"))) {
 <h1>My Evaluations</h1>
 <?php
 
-/**
- * @todo This should be a list of all of the quizzes the person was *supposed* to do
- * so it should go through each semester and each course and show all events that have
- * quizzes attached and then show what grade they got on the attempts they were
- * supposed to list.
- */
 $query		= "	SELECT * FROM `evaluations` AS a
 				JOIN `evaluation_evaluators` AS b
 				ON a.`evaluation_id` = b.`evaluation_id`
-				WHERE b.`proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
+				WHERE 
+				(
+					(
+						b.`evaluator_type` = 'proxy_id'
+						AND b.`evaluator_value` = ".$db->qstr($_SESSION["details"]["id"])."
+					)
+					OR
+					(
+						b.`evaluator_type` = 'organisation_id'
+						AND b.`evaluator_value` = ".$db->qstr($_SESSION["details"]["organisation_id"])."
+					)".($_SESSION["details"]["group"] == "student" ? " OR (
+						b.`evaluator_type` = 'grad_year'
+						AND b.`evaluator_value` = ".$db->qstr($_SESSION["details"]["role"])."
+					)" : "")."
+				)
 				AND a.`evaluation_start` < ".$db->qstr(time())."
 				AND a.`evaluation_finish` > ".$db->qstr(time())."
 				GROUP BY a.`evaluation_id`

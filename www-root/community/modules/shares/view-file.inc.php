@@ -171,7 +171,7 @@ if ($RECORD_ID) {
 					);
 				}
 
-				<?php if ($community_shares_select != "") : ?>
+				<?php if ($community_shares_select != "") { ?>
 				function fileMove(id) {
 					Dialog.confirm('Do you really wish to move the '+ $('file-' + id + '-title').innerHTML +' file?<br /><br />If you confirm this action, you will be moving the file and all comments to the selected folder.<br /><br /><?php echo $community_shares_select; ?>',
 						{
@@ -192,7 +192,7 @@ if ($RECORD_ID) {
 					);
 				}
 				<?php 
-				endif; 
+				}
 				if (shares_file_module_access($RECORD_ID, "delete-revision")) {
 					?>
 	
@@ -215,9 +215,11 @@ if ($RECORD_ID) {
 							}
 						);
 					}
-					</script>
 					<?php
 				}
+					?>
+					</script>
+					<?php
 				/**
 				 * If there is time release properties, display them to the browsing users.
 				 */

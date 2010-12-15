@@ -42,7 +42,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 	if ($STEP == 1) {
 		$BREADCRUMB[]	= array("url" => "", "title" => "Students' Teacher Evaluations" );
 		$query = "	SELECT e.`evaluation_id`, e.`evaluation_title`, e.`evaluation_description`, e.`evaluation_start`,
-					e.`evaluation_finish`, e.`min_submittable`,  count(distinct(u.`id`)) `teachers`
+					e.`evaluation_finish`, e.`min_submittable`,  count(distinct(u.`id`)) `evals`
 					FROM `evaluations` e 
 					INNER JOIN `evaluation_evaluators` ev ON e.`evaluation_id` = ev.`evaluation_id`
 					INNER JOIN `evaluation_targets` t ON e.`evaluation_id` = t.`evaluation_id`
@@ -108,8 +108,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					echo "	<td class=\"teacher".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Description: ".html_encode($result["evaluation_description"])."\">" : "").html_encode(limit_chars($result["evaluation_description"],48)).(($url) ? "</a>" : "")."</td>\n";
 					echo "	<td class=\"date".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Start Date\">" : "").date("M j, Y", $result["evaluation_start"]).(($url) ? "</a>" : "")."</td>\n";
 					echo "	<td class=\"date".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Finish Date\">" : "").date("M j, Y", $result["evaluation_finish"]).(($url) ? "</a>" : "")."</td>\n";
-					echo "	<td class=\"date".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Teachers\">" : ""). ($result["teachers"]?$result["teachers"]:"").(($url) ? "</a>" : "")."</td>\n";
-					echo "	<td class=\"date".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Completion\">" : ""). ($evaluators?round($complete/$evaluators*100)."% of $evaluators":"").(($url) ? "</a>" : "")."</td></tr>\n";
+					echo "	<td class=\"date".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Teachers\">" : ""). ($result["evals"]?$result["evals"]:"").(($url) ? "</a>" : "")."</td>\n";
+					echo "	<td class=\"date".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Completion\">" : ""). ($evaluators?round($complete/($evaluators*$result["evals"])*100)."% of $evaluators":"").(($url) ? "</a>" : "")."</td></tr>\n";
 				}
 				?>
 			</tbody>

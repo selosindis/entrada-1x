@@ -45,6 +45,29 @@ if(!defined("PARENT_INCLUDED")) {
 
 	if (($router) && ($router->initRoute())) {
 		$PREFERENCES = preferences_load($MODULE);
+	
+		$organisation_list = array();
+		$query = "SELECT `organisation_id`, `organisation_title` FROM `".AUTH_DATABASE."`.`organisations` ORDER BY `organisation_title` ASC";
+		$results = $db->GetAll($query);
+		if ($results) {
+			foreach ($results as $result) {
+				if ($ENTRADA_ACL->amIAllowed("resourceorganisation".$result["organisation_id"], "read")) {
+					$organisation_list[$result["organisation_id"]] = html_encode($result["organisation_title"]);
+				}
+			}
+		}
+		
+		if (isset($_GET["org"]) && ($organisation = ((int) $_GET["org"])) && array_key_exists($organisation, $organisation_list)) {
+			$ORGANISATION_ID = $organisation;
+			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["organisation_id"] = $ORGANISATION_ID;
+		} else {
+			if (isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["organisation_id"]) && $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["organisation_id"]) {
+				$ORGANISATION_ID = $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["organisation_id"];
+			} else {
+				$ORGANISATION_ID = $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"];
+				$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["organisation_id"] = $ORGANISATION_ID;
+			}
+		}
 
 		$NOTICE_TARGETS = array();
 		$NOTICE_TARGETS["all"] = "Visible to all students, faculty &amp; staff";

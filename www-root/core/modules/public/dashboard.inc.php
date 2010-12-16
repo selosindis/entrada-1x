@@ -209,6 +209,7 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 					WHERE ".(($notice_where_clause) ? $notice_where_clause." AND" : "")."
 					(a.`display_from`='0' OR a.`display_from` <= '".time()."')
 					AND (a.`display_until`='0' OR a.`display_until` >= '".time()."')
+					AND a.`organisation_id` = ".$db->qstr($_SESSION["details"]["organisation_id"])."
 					GROUP BY a.`notice_id`
 					ORDER BY a.`updated_date` DESC, a.`display_until` ASC";
 		$results = $db->GetAll($query);

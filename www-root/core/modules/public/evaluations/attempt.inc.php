@@ -47,7 +47,21 @@ if ($RECORD_ID) {
 						LEFT JOIN `evaluations_lu_targets` AS e
 						ON d.`target_id` = e.`target_id`
 						WHERE a.`evaluation_id` = ".$db->qstr($RECORD_ID)."
-						AND b.`proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
+						AND 
+						(
+							(
+								b.`evaluator_type` = 'proxy_id'
+								AND b.`evaluator_value` = ".$db->qstr($_SESSION["details"]["id"])."
+							)
+							OR
+							(
+								b.`evaluator_type` = 'organisation_id'
+								AND b.`evaluator_value` = ".$db->qstr($_SESSION["details"]["organisation_id"])."
+							)".($_SESSION["details"]["group"] == "student" ? " OR (
+								b.`evaluator_type` = 'grad_year'
+								AND b.`evaluator_value` = ".$db->qstr($_SESSION["details"]["role"])."
+							)" : "")."
+						)
 						AND a.`evaluation_active` = '1'
 						GROUP BY cr.`eprogress_id`";
 	$evaluation_record	= $db->GetRow($query);
@@ -263,7 +277,21 @@ if ($RECORD_ID) {
 									$query				= "	SELECT *
 															FROM `evaluation_progress`
 															WHERE `evaluation_id` = ".$db->qstr($RECORD_ID)."
-															AND `proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
+															AND 
+															(
+																(
+																	b.`evaluator_type` = 'proxy_id'
+																	AND b.`evaluator_value` = ".$db->qstr($_SESSION["details"]["id"])."
+																)
+																OR
+																(
+																	b.`evaluator_type` = 'organisation_id'
+																	AND b.`evaluator_value` = ".$db->qstr($_SESSION["details"]["organisation_id"])."
+																)".($_SESSION["details"]["group"] == "student" ? " OR (
+																	b.`evaluator_type` = 'grad_year'
+																	AND b.`evaluator_value` = ".$db->qstr($_SESSION["details"]["role"])."
+																)" : "")."
+															)
 															AND `progress_value` = 'inprogress'
 															ORDER BY `updated_date` ASC";
 									$progress_record	= $db->GetRow($query);

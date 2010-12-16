@@ -93,45 +93,40 @@ header("Pragma: no-cache" );
 header("Content-type: text/json");
 
 if($results = $db->GetAll($query)) {
-	$json = "";
-	$json .= "{\n";
-	$json .= "page: $page,\n";
-	$json .= "total: $total,\n";
-	$json .= "rows: [";
-	$rc = false;
+	$data['page'] = $page;
+	$data['total'] = $total;
 	foreach($results as $row) {
-		if ($rc) $json .= ",";
-		$json .= "\n{";
-		$json .= "id:'".$row[$args[1]]."',";
-		$json .= "cell:[";
 		for($i=2;$i<count($args);$i++) {
 			// Replace all line returns as to not break JSON output (grid will not load otherwise)
 			$row[$args[$i]] = str_replace("\r\n", " ", $row[$args[$i]]);
 			$row[$args[$i]] = str_replace("\n", " ", $row[$args[$i]]);
 			$row[$args[$i]] = str_replace("\r", " ", $row[$args[$i]]);
-			if($i > 2) {
-				if($row[$args[$i]] != "") {
-					$json .= ",'".addslashes($row[$args[$i]])."'";
-				} else {
-					$json .= ",'".addslashes("N/A")."'";
-				}
-			} else {
-				if($row[$args[$i]] != "") {
-					$json .= "'".addslashes($row[$args[$i]])."'";
-				} else {
-					$json .= "'".addslashes("N/A")."'";
-				}
+			
+			if($row[$args[$i]] == "") {
+				$row[$args[$i]] = addslashes("N/A");
 			}
 		}
 		
-		$json .= ",'edit'";
-		$json .= "]}";
-		$rc = true;
+		$rows[] = array(
+                "id" => $row[$args[1]],
+                "cell" => array(
+               	$row[$args[2]]
+                ,$row[$args[3]]
+                ,$row[$args[4]]
+                ,$row[$args[5]]
+                )
+        );
+		
 	}
-	$json .= "]\n";
-	$json .= "}";
-	echo $json;
+	$data['rows'] = $rows;
+	$data['params'] = $_POST;
+	
+	echo json_encode($data); 
 } else {
-	echo '({"total":"0", "rows":[]})';
+	$data['page'] = 1;
+	$data['total'] = 0;
+	$rows[] = array();
+	$data['rows'] = $rows;
+	echo json_encode($data);
 }
 ?>

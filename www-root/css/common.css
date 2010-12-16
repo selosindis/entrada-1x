@@ -2454,7 +2454,7 @@ border-left:none;
 }
 
 .usage-container.warning div,div.quiz-questions ol.questions li.notice,div.quiz-questions ol.questions li.marked,
-.usage-container.warning div,div.evaluation-questions ol.questions li.notice,div.evaluation-questions ol.questions li.marked {
+div.evaluation-questions ol.questions li.notice,div.evaluation-questions ol.questions li.marked {
 background-color:#FFC;
 }
 
@@ -2647,6 +2647,7 @@ margin-top:-6px;
 input.duration_segment {
 width:25px;
 }
+
 #eventToolTip, #eventToolTip table tr td {
 color: #333;
 font-size: 11px;

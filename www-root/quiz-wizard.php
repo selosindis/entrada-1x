@@ -999,7 +999,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 												<h2>Quiz Attached Successfully</h2>
 	
 												<div class="display-success">
-													You have successfully attached <strong><?php echo html_encode($PROCESSED["quiz_title"]); ?></strong> to this event.
+													You have successfully attached <strong><?php echo html_encode($PROCESSED["quiz_title"]); ?></strong> to this <?php echo (isset($QUIZ_TYPE) && $QUIZ_TYPE == "community_page" ? "community_page" : "event"); ?>.
 												</div>
 	
 												To <strong>attach another quiz</strong> or <strong>close this window</strong> please use the buttons below.

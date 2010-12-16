@@ -388,7 +388,7 @@ switch($ACTION) {
 		}
 		echo $rss->createFeed("PODCAST");
 
-		add_statistic("podcasts", "view", "proxy_id", $USER_PROXY_ID);
+		add_statistic("podcasts", "view", "proxy_id", $USER_PROXY_ID, $USER_PROXY_ID);
 	break;
 	default :
 		continue;

@@ -74,7 +74,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			$results	= $db->GetAll($query);
 			if ($results) {
 				foreach ($results as $result) {
+					if (!empty($clinical_presentations_list[$result["objective_id"]])) {
 					$clinical_presentations[$result["objective_id"]] = $clinical_presentations_list[$result["objective_id"]];
+					}
 				}
 			}
 		}

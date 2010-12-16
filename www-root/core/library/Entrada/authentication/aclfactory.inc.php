@@ -169,15 +169,14 @@ class ACL_Factory {
 			}
 
 			if($add) {
-				if(!$this->acl->has($resource)) {
+				if (!$this->acl->has($resource)) {
                     //Error! The tree builder should have added all the resources needed.
                     //This could happen if say two Entrada instances are using the same auth database,
                     //which may or may not have different ACL resource sets.
-                    if(DEVELOPMENT_MODE) {
+                    if (DEVELOPMENT_MODE) {
                         application_log("error", "Resource [".$resource."] isn't defined in the ACL resource tree. Please fix this in the entrada_acl.php.");
                     }
 				} else {
-				
                     if(isset($perm["assertion"])) {
                         $assertions = explode('&', $perm["assertion"]);
 

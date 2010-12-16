@@ -313,18 +313,8 @@ if (!defined("IN_EVALUATIONS")) {
 	} else {
 		?>
 		<div class="display-notice">
-			<h3>No Matching Evaluations</h3>
-			There are currently no active evaluations scheduled in the system.
-			<br /><br />
-			If this is unexpected there are a few things that you can check:
-			<ol>
-				<li style="padding: 3px">Make sure that you are browsing the intended time period. For example, if you trying to browse <?php echo date("F", time()); ?> of <?php echo date("Y", time()); ?>, make sure that the results bar above says &quot;... takes place in <strong><?php echo date("F", time()); ?></strong> of <strong><?php echo date("Y", time()); ?></strong>&quot;.</li>
-				<?php
-				if ($filters_applied) {
-					echo "<li style=\"padding: 3px\">You also have ".$filters_total." filter".(($filters_total != 1) ? "s" : "")." applied to the event list. you may wish to remove ".(($filters_total != 1) ? "one or more of these" : "it")." by clicking the link in the &quot;Showing Evaluations That Include&quot; box above.</li>";
-				}
-				?>
-			</ol>
+			<h3>No Available Evaluations</h3>
+			There are currently no available evaluations in the system. To begin click the <strong>Add New Evaluation</strong> link above.
 		</div>
 		<?php
 	}

@@ -28,7 +28,9 @@ INSERT INTO `acl_permissions` (`resource_type`, `resource_value`, `entity_type`,
 ('event', NULL, NULL, NULL, 1, NULL, 1, NULL, NULL, 'ResourceOrganisation&NotGuest'),
 ('resourceorganisation', 1, NULL, NULL, 1, NULL, 1, NULL, NULL, 'NotGuest'),
 ('coursecontent', NULL, 'role', 'pcoordinator', 1, NULL, NULL, 1, NULL, 'CourseOwner'),
-('evaluation', NULL, 'group:role', 'staff:admin', 1, 1, 1, 1, 1, ''),
+('evaluation', NULL, 'group:role', 'staff:admin', 1, 1, 1, 1, 1, NULL),
+('evaluationform', NULL, 'group:role', 'staff:admin', 1, 1, 1, 1, 1, NULL),
+('evaluationformquestion', NULL, 'group:role', 'staff:admin', 1, 1, 1, 1, 1, NULL),
 ('event', NULL, 'role', 'pcoordinator', 1, 1, NULL, NULL, NULL, 'CourseOwner'),
 ('event', NULL, 'role', 'pcoordinator', 1, NULL, NULL, 1, 1, 'EventOwner'),
 ('eventcontent', NULL, 'role', 'pcoordinator', 1, NULL, NULL, 1, NULL, 'EventOwner'),
@@ -110,7 +112,6 @@ INSERT INTO `acl_permissions` (`resource_type`, `resource_value`, `entity_type`,
 ('mydepartment', NULL, 'group', 'faculty', NULL, 1, 1, 1, 1, 'DepartmentHead'),
 ('myowndepartment', NULL, 'user', '1', NULL, 1, 1, 1, 1, NULL),
 ('annualreportadmin', NULL, 'group:role', 'medtech:admin', NULL, 1, 1, 1, 1, NULL);
-
 
 CREATE TABLE IF NOT EXISTS `departments` (
   `department_id` int(12) unsigned NOT NULL AUTO_INCREMENT,

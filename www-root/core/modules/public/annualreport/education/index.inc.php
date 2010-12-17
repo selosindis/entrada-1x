@@ -69,7 +69,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 	WHERE b.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
 	AND event_start > 1230785940
 	ORDER BY `event_start` DESC, `course_name` DESC, `course_code` DESC";
-	
+
 	$results	= $db->GetAll($query);
 	
 	$proxyID 	= $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"];
@@ -86,7 +86,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 	$defaultEnrollments = getDefaultEnrollment();
 	
 	foreach($results as $result) {
-		$eventID 			= trim($result['event_id']);
 		$currentYear 		= trim((date("Y", $result["event_start"])));
 		$currentCourse 		= trim($result['course_name']);
 		$currentCourseNum 	= trim($result['course_code']);
@@ -109,22 +108,26 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 						} else {
 							$undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['students']++;
 						}
-						$undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['course_number'] = $currentCourseNum;
-						$undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['hours'] = ($result['event_duration'] / 60);
-						$undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['phase'] = $phase;
+						if($eventID != $previousEventID) {
+							$undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['course_number'] = $currentCourseNum;
+							$undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['hours'] = $undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['hours'] + ($result['event_duration'] / 60);
+							$undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['phase'] = $phase;
+						}
 						break;
 					case "grad_year":
 					default:
-						$studQuery = "SELECT COUNT(*) AS `num_studs`
-						FROM `".AUTH_DATABASE."`.`user_access` 
-						WHERE `app_id` = '".AUTH_APP_ID."' 
-						AND `role` = ".$db->qstr($audienceValue);	
-						
-						$studResult	= $db->GetRow($studQuery);
-						$undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['students'] = $studResult['num_studs'];
-						$undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['hours'] = $undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['hours'] + ($result['event_duration'] / 60);
-						$undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['course_number'] = $currentCourseNum;
-						$undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['phase'] = $phase;
+						if($eventID != $previousEventID) {
+							$studQuery = "SELECT COUNT(*) AS `num_studs`
+							FROM `".AUTH_DATABASE."`.`user_access` 
+							WHERE `app_id` = '".AUTH_APP_ID."' 
+							AND `role` = ".$db->qstr($audienceValue);	
+							
+							$studResult	= $db->GetRow($studQuery);
+							$undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['students'] = $studResult['num_studs'];
+							$undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['hours'] = $undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['hours'] + ($result['event_duration'] / 60);
+							$undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['course_number'] = $currentCourseNum;
+							$undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['phase'] = $phase;
+						}
 						break;
 				}
 			}
@@ -240,6 +243,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			}
 		}
 	}
+	
 	$fields = "ar_undergraduate_teaching,undergraduate_teaching_id,course_number,course_name,lecture_phase,year_reported";
 	?>
 	<script type="text/javascript">

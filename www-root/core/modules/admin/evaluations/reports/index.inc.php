@@ -24,11 +24,6 @@ if (!defined("IN_EVALUATIONS")) {
 
 	application_log("error", "Group [".$GROUP."] and role [".$ROLE."] does not have access to this module [".$MODULE."]");
 } else {
-
-// Skip this selection page: Only Student's course evaluation available now 
-//	header("Location: ".ENTRADA_URL."/admin/evaluations/reports?section=student-course-evaluations");
-//	exit;
-//	
 	?>
 	<style type="text/css">
 		ol.system-reports li {

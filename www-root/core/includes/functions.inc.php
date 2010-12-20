@@ -59,6 +59,7 @@ function cas_credentials($cas_id = '') {
  * @return string buffer
  */
 function on_checkout($buffer) {
+	$buffer = check_ie($buffer);
 	$buffer = check_head($buffer);
 	$buffer = check_jquery($buffer);
 	$buffer = check_meta($buffer);
@@ -103,6 +104,24 @@ function check_script($buffer) {
 		$output .= implode("\n", $SCRIPT);
 	}
 	return str_replace("</body>", $output."\n</body>", $buffer);
+}
+
+/**
+ * Function is called by on_checkout. Adds any head elements that are required, specified in the $HEAD array.
+ *
+ * @param string $buffer
+ * @return string buffer
+ */
+function check_ie($buffer) {
+	global $IE7;
+
+	$output = "";
+
+	if ((isset($IE7)) && ($IE7)) {
+		$output = "<meta http-equiv=\"X-UA-Compatible\" content=\"IE=EmulateIE7\" />";
+	}
+
+	return str_replace("%IE7%", $output, $buffer);
 }
 
 /**
@@ -7611,7 +7630,6 @@ function courses_subnavigation($course_details) {
 	echo "<br/>";
 }
 
-
 function courses_fetch_objectives($course_ids, $parent_id = 1, $objectives = false, $objective_ids = false, $event_id = 0, $fetch_all_text = false) {
 	global $db;
 	
@@ -10322,6 +10340,7 @@ function objectives_intable($identifier = 0, $indent = 0, $excluded_objectives =
 	return $output;
 }
 
+
 /**
  * Produces an option tag with the values filled in
  * @param unknown_type $value
@@ -10332,6 +10351,8 @@ function objectives_intable($identifier = 0, $indent = 0, $excluded_objectives =
 function build_option($value, $label, $selected = false) {
 	return "<option value='".$value."'". ($selected ? "selected='selected'" : "") .">".$label."</option>\n";
 }
+
+
 
 /**
  * routine to display standard status messages, Error, Notice, and Success

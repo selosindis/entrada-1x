@@ -220,6 +220,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 					}
 					
 					/**
+					 * Non-required field "preceptor_prefix" / Preceptor Prefix.
+					 */
+					if ((isset($_POST["preceptor_prefix"])) && ($preceptor_prefix = clean_input($_POST["preceptor_prefix"], array("notags", "trim")))) {
+						$PROCESSED["preceptor_prefix"] = $preceptor_prefix;
+					}
+					
+					/**
 					 * Non-required field "preceptor_first_name" / Preceptor First Name.
 					 */
 					if ((isset($_POST["preceptor_first_name"])) && ($preceptor_first_name = clean_input($_POST["preceptor_first_name"], array("notags", "trim")))) {
@@ -397,6 +404,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 							$ELECTIVE["schools_id"]				= $PROCESSED["schools_id"];
 							$ELECTIVE["other_medical_school"]	= $PROCESSED["other_medical_school"];
 							$ELECTIVE["objective"]				= $PROCESSED["objective"];
+							$ELECTIVE["preceptor_prefix"]		= $PROCESSED["preceptor_prefix"];
 							$ELECTIVE["preceptor_first_name"]	= $PROCESSED["preceptor_first_name"];
 							$ELECTIVE["preceptor_last_name"]	= $PROCESSED["preceptor_last_name"];
 							$ELECTIVE["address"]				= $PROCESSED["address"];
@@ -516,7 +524,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 										$mail->ClearAddresses();
 										$mail->ClearReplyTos();
 										
-										$message  = "Attention ".(isset($PROCESSED["preceptor_first_name"]) && $PROCESSED["preceptor_first_name"] != "" ? $PROCESSED["preceptor_first_name"] . " " : "") . $PROCESSED["preceptor_last_name"].",\n\n";
+										$message  = "Attention ".(isset($PROCESSED["preceptor_prefix"]) && $PROCESSED["preceptor_prefix"] != "" ? $PROCESSED["preceptor_prefix"] . " " : "").(isset($PROCESSED["preceptor_first_name"]) && $PROCESSED["preceptor_first_name"] != "" ? $PROCESSED["preceptor_first_name"] . " " : "") . $PROCESSED["preceptor_last_name"].",\n\n";
 										$message .= "A Clerkship elective has been approved by Queen's University please review this:\n";
 										$message .= "=======================================================\n\n";
 										$message .= "Approved At:\t\t".date("r", time())."\n";
@@ -552,7 +560,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 										$mail->Subject	= "Electives Approval - ".APPLICATION_NAME;
 										$mail->Body		= $message;
 										
-										$mail->AddAddress($PROCESSED["email"], $PROCESSED["preceptor_first_name"] . " " . $PROCESSED["preceptor_last_name"]);
+										$mail->AddAddress($PROCESSED["email"], (isset($PROCESSED["preceptor_prefix"]) && $PROCESSED["preceptor_prefix"] != "" ? $PROCESSED["preceptor_prefix"] . " " : "").$PROCESSED["preceptor_first_name"] . " " . $PROCESSED["preceptor_last_name"]);
 										
 										if (!$mail->Send()) {
 											$BIGERROR++;
@@ -663,6 +671,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 					$PROCESSED["schools_id"]			= $event_info["schools_id"];
 					$PROCESSED["other_medical_school"]	= $event_info["other_medical_school"];
 					$PROCESSED["objective"]				= $event_info["objective"];
+					$PROCESSED["preceptor_prefix"]		= $event_info["preceptor_prefix"];
 					$PROCESSED["preceptor_first_name"] 	= $event_info["preceptor_first_name"];
 					$PROCESSED["preceptor_last_name"] 	= $event_info["preceptor_last_name"];
 					$PROCESSED["address"] 				= $event_info["address"];
@@ -1046,6 +1055,22 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 					</tr>
 					<tr>
 						<td colspan="3"><h2>Site Details</h2></td>
+					</tr>
+					<tr>
+						<td></td>
+						<td><label for="preceptor_prefix" class="form-nrequired">Preceptor Prefix</label></td>
+						<td>
+							<select id="preceptor_prefix" name="preceptor_prefix" style="width: 55px; vertical-align: middle; margin-right: 5px">
+								<option value=""<?php echo ((!$PROCESSED["preceptor_prefix"]) ? " selected=\"selected\"" : ""); ?>></option>
+								<?php
+								if ((@is_array($PROFILE_NAME_PREFIX)) && (@count($PROFILE_NAME_PREFIX))) {
+									foreach ($PROFILE_NAME_PREFIX as $key => $prefix) {
+										echo "<option value=\"".html_encode($prefix)."\"".(($PROCESSED["preceptor_prefix"] == $prefix) ? " selected=\"selected\"" : "").">".html_encode($prefix)."</option>\n";
+									}
+								}
+								?>
+							</select>
+						</td>
 					</tr>
 					<tr>
 						<td></td>

@@ -149,7 +149,7 @@ class ClerkshipElectivesCompleted extends ClerkshipRotations {
 		global $db;
 		$user_id = $user->getID();
 		$completed_cutoff = strtotime(CLERKSHIP_COMPLETED_CUTOFF.", ".date("Y"));
-		$query		= "	SELECT a.`event_title`, a.`event_start`, a.`event_finish`, c.`preceptor_first_name`, c.`preceptor_last_name`, c.`city`, c.`prov_state`, d.`category_name` AS `department_title`, c.`sub_discipline`, e.`discipline`, f.`school_title`
+		$query		= "	SELECT a.`event_title`, a.`event_start`, a.`event_finish`, c.`preceptor_prefix`, c.`preceptor_first_name`, c.`preceptor_last_name`, c.`city`, c.`prov_state`, d.`category_name` AS `department_title`, c.`sub_discipline`, e.`discipline`, f.`school_title`
 										FROM `".CLERKSHIP_DATABASE."`.`events` AS a
 										LEFT JOIN `".CLERKSHIP_DATABASE."`.`event_contacts` AS b
 										ON b.`event_id` = a.`event_id`
@@ -170,8 +170,8 @@ class ClerkshipElectivesCompleted extends ClerkshipRotations {
 		$results	= $db->GetAll($query);
 		$electives = array();
 		$ugly	= array();
-		$ugly[]	= "‰";
-		$ugly[]	= "Û";
+		$ugly[]	= "ï¿½";
+		$ugly[]	= "ï¿½";
 		$ugly[]	= "?";
 		
 		if($results) {
@@ -181,7 +181,7 @@ class ClerkshipElectivesCompleted extends ClerkshipRotations {
 				$prov_state = (($result["prov_state"]) ? $result["prov_state"] : "");
 				$location = $school_title.$city.$prov_state;
 				
-				$supervisor = trim((($result["preceptor_first_name"]) ? $result["preceptor_first_name"]." " : "").(($result["preceptor_last_name"]) ? $result["preceptor_last_name"]." " : ""));
+				$supervisor = trim((($result["preceptor_prefix"]) ? $result["preceptor_prefix"]." " : "").(($result["preceptor_first_name"]) ? $result["preceptor_first_name"]." " : "").(($result["preceptor_last_name"]) ? $result["preceptor_last_name"]." " : ""));
 				
 				if (preg_match("/\b[Dd][Rr]\./", $supervisor) == 0) {
 					$supervisor = "Dr. ".$supervisor;

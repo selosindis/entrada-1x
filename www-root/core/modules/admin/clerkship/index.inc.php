@@ -50,11 +50,13 @@ if (!defined("IN_CLERKSHIP")) {
 		<?php
 	}
 	
-	$query = "	SELECT *
-				FROM `".CLERKSHIP_DATABASE."`.`events`
-				WHERE `event_type`= 'elective'
-				AND `event_status` = 'approval'
-				ORDER BY `event_start` ASC";
+	$query = "	SELECT a.*
+				FROM `".CLERKSHIP_DATABASE."`.`events` AS a
+				JOIN `".CLERKSHIP_DATABASE."`.`electives` AS a
+				ON a.`event_id` = b.`event_id`
+				WHERE a.`event_type`= 'elective'
+				AND a.`event_status` = 'approval'
+				ORDER BY a.`event_start` ASC";
 	$results = $db->GetAll($query);
 	if ($results) {
 		if ($ERROR) {

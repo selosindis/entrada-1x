@@ -180,7 +180,7 @@ To activate your %GOOGLE_APPS_DOMAIN% account, please follow these instructions:
 
 1. Go to http://webmail.%GOOGLE_APPS_DOMAIN%
 
-2. Enter your %APPLICATION_NAME% username and passowrd:
+2. Enter your %APPLICATION_NAME% username and password:
 
    Username: %GOOGLE_ID%
    Password: - Enter Your %APPLICATION_NAME% Password -

@@ -108,7 +108,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 									 * Required field "associated_grad_year" / Graduating Year
 									 * This data is inserted into the event_audience table as grad_year.
 									 */
-									if ((isset($_POST["associated_grad_year"])) && ($associated_grad_year = clean_input($_POST["associated_grad_year"], array("trim", "int")))) {
+									if ((isset($_POST["associated_grad_year"])) && ($associated_grad_year = clean_input($_POST["associated_grad_year"], "alphanumeric"))) {
 										$PROCESSED["associated_grad_year"] = $associated_grad_year;
 									} else {
 										$ERROR++;
@@ -476,7 +476,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								if ($result["audience_type"] == $PROCESSED["event_audience_type"]) {
 									switch($result["audience_type"]) {
 										case "grad_year" :
-											$PROCESSED["associated_grad_year"] = (int) $result["audience_value"];
+											$PROCESSED["associated_grad_year"] = clean_input($result["audience_value"], "alphanumeric");
 										break;
 										case "group_id" :
 											$PROCESSED["associated_group_ids"][] = (int) $result["audience_value"];
@@ -714,11 +714,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 									<td><label for="associated_grad_year" class="form-required">Graduating Year</label></td>
 									<td>
 										<select id="associated_grad_year" name="associated_grad_year" style="width: 203px">
-											<?php
-											for($year = (date("Y", time()) + 4); $year >= (date("Y", time()) - 1); $year--) {
-												echo "<option value=\"".(int) $year."\"".(($PROCESSED["associated_grad_year"] == $year) ? " selected=\"selected\"" : "").">Class of ".html_encode($year)."</option>\n";
+										<?php
+										if (isset($SYSTEM_GROUPS["student"]) && !empty($SYSTEM_GROUPS["student"])) {
+											foreach ($SYSTEM_GROUPS["student"] as $class) {
+												echo "<option value=\"".$class."\"".(($PROCESSED["associated_grad_year"] == $class) ? " selected=\"selected\"" : "").">Class of ".html_encode($class)."</option>\n";
 											}
-											?>
+										}
+										?>
 										</select>
 									</td>
 								</tr>

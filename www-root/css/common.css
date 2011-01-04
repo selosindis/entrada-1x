@@ -583,6 +583,16 @@ filter:mask();
 width:0;
 }
 
+.vertical-text {
+-moz-transform:rotate(-90deg);
+-webkit-transform: rotate(-90deg);
+-o-transform: rotate(-90deg);
+writing-mode: tb-rl;
+filter: flipv fliph;
+overflow: visible;
+white-space: nowrap;
+}
+
 span.eventlocation {
 cursor:pointer;
 float:right;

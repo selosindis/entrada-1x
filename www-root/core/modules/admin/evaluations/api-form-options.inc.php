@@ -242,8 +242,13 @@ if (!defined("IN_EVALUATIONS")) {
 									<label for="grad_year" class="form-required">All students in</label>
 									<select id="grad_year" name="grad_year" style="width: 203px; vertical-align: middle">
 										<?php
-										for($year = (date("Y", time()) + 4); $year >= (date("Y", time()) - 1); $year--) {
-											echo "<option value=\"".(int) $year."\"".((($PROCESSED["evaluation_evaluators"][0]["evaluator_type"] == "grad_year") && ($PROCESSED["evaluation_evaluators"][0]["evaluator_value"] == $year)) ? " selected=\"selected\"" : "").">Class of ".html_encode($year)."</option>\n";
+										$cut_off_year = (fetch_first_year() - 3);
+										if (isset($SYSTEM_GROUPS["student"]) && !empty($SYSTEM_GROUPS["student"])) {
+											foreach ($SYSTEM_GROUPS["student"] as $class) {
+												if (clean_input($class, "numeric") >= $cut_off_year) {
+													echo "<option value=\"".$class."\"".((($PROCESSED["evaluation_evaluators"][0]["evaluator_type"] == "grad_year") && ($PROCESSED["evaluation_evaluators"][0]["evaluator_value"] == $class)) ? " selected=\"selected\"" : "").">Class of ".html_encode($class)."</option>\n";
+												}
+											}
 										}
 										?>
 									</select>
@@ -264,11 +269,16 @@ if (!defined("IN_EVALUATIONS")) {
 								<td style="vertical-align: middle" class="content-small">
 									<input type="text" class="percentage" id="percentage_percent" name="percentage_percent" style="width: 30px; vertical-align: middle" maxlength="3" value="100" /> <label for="percentage_grad_year" class="form-required">of the</label>
 									<select id="percentage_grad_year" name="percentage_grad_year" style="width: 203px; vertical-align: middle">
-										<?php
-										for($year = (date("Y", time()) + 4); $year >= (date("Y", time()) - 1); $year--) {
-											echo "<option value=\"".(int) $year."\">Class of ".html_encode($year)."</option>\n";
+									<?php
+									$cut_off_year = (fetch_first_year() - 3);
+									if (isset($SYSTEM_GROUPS["student"]) && !empty($SYSTEM_GROUPS["student"])) {
+										foreach ($SYSTEM_GROUPS["student"] as $class) {
+											if (clean_input($class, "numeric") >= $cut_off_year) {
+												echo "<option value=\"".$class."\">Class of ".html_encode($class)."</option>\n";
+											}
 										}
-										?>
+									}
+									?>
 									</select>
 								</td>
 							</tr>

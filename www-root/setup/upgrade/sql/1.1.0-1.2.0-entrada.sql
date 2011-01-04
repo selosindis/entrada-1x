@@ -166,5 +166,7 @@ CREATE TABLE IF NOT EXISTS `evaluation_targets` (
   PRIMARY KEY (`etarget_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
+ALTER TABLE `assessments` CHANGE `grad_year` `grad_year` varchar(35) NOT NULL DEFAULT '';
+
 UPDATE `settings` SET `value` = '1.2.0' WHERE `shortname` = 'version_db';
 

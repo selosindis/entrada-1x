@@ -238,7 +238,7 @@ if ($ACTION == "login") {
 			 */
 			switch ($_SESSION["details"]["group"]) {
 				case "student" :
-					if ((!isset($result["ROLE"])) || (!(int) $result["ROLE"])) {
+					if ((!isset($result["ROLE"])) || (!clean_input($result["ROLE"], "alphanumeric"))) {
 						$_SESSION["details"]["grad_year"] = fetch_first_year();
 					} else {
 						$_SESSION["details"]["grad_year"] = $result["ROLE"];

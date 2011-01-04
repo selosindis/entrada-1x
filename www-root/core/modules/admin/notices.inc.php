@@ -72,10 +72,16 @@ if(!defined("PARENT_INCLUDED")) {
 		$NOTICE_TARGETS = array();
 		$NOTICE_TARGETS["all"] = "Visible to all students, faculty &amp; staff";
 		$NOTICE_TARGETS["students"] = "Visible to all students";
-		$first_year	= fetch_first_year();
-		for($year = $first_year; $year >= ($first_year - 3); $year--) {
-			$NOTICE_TARGETS[$year] = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Visible to class of ".$year;
+		
+		$cut_off_year = (fetch_first_year() - 4);
+		if (isset($SYSTEM_GROUPS["student"]) && !empty($SYSTEM_GROUPS["student"])) {
+			foreach ($SYSTEM_GROUPS["student"] as $class) {
+				if (clean_input($class, "numeric") >= $cut_off_year) {
+					$NOTICE_TARGETS[$class] = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Visible to class of ".$class;
+				}
+			}
 		}
+
 		$NOTICE_TARGETS["faculty"] = "Visible to all faculty";
 		$NOTICE_TARGETS["staff"] = "Visible to all staff";
 	

@@ -114,10 +114,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 					 * This data is inserted into the task_recipient table as grad_year.
 					 */
 						if((isset($_POST["associated_grad_years"]))) {
-							$associated_grad_years = explode(',', $_POST["associated_grad_years"]);
+							$associated_grad_years = explode(",", $_POST["associated_grad_years"]);
 							if((isset($associated_grad_years)) && (is_array($associated_grad_years)) && (count($associated_grad_years))) {
 								foreach($associated_grad_years as $year) {
-									if($year = clean_input($year, array("trim", "int"))) {
+									if($year = clean_input($year, "alphanumeric")) {
 										$PROCESSED["associated_grad_years"][] = $year;
 									}
 								}
@@ -368,8 +368,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 					<td>
 						<select id="associated_grad_years" name="associated_grad_years" style="width: 203px">
 						<?php
-						for($year = (date("Y", time()) + 4); $year >= (date("Y", time()) - 1); $year--) {
-							echo "<option value=\"".(int) $year."\"".(($PROCESSED["associated_grad_year"] == $year) ? " selected=\"selected\"" : "").">Class of ".html_encode($year)."</option>\n";
+						$cut_off_year = (fetch_first_year() - 3);
+						if (isset($SYSTEM_GROUPS["student"]) && !empty($SYSTEM_GROUPS["student"])) {
+							foreach ($SYSTEM_GROUPS["student"] as $class) {
+								if (clean_input($class, "numeric") >= $cut_off_year) {
+									echo "<option value=\"".$class."\"".(($PROCESSED["associated_grad_years"] == $class) ? " selected=\"selected\"" : "").">Class of ".html_encode($class)."</option>\n";
+								}
+							}
 						}
 						?>
 						</select>

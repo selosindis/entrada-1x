@@ -70,7 +70,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				// Error Checking
 				switch($STEP) {
 					case 2 :
-						if((isset($_POST["grad_year"])) && ($grad_year = clean_input($_POST["grad_year"], array("trim", "int")))) {
+						if((isset($_POST["grad_year"])) && ($grad_year = clean_input($_POST["grad_year"], "credentials"))) {
 							$PROCESSED["grad_year"] = $grad_year;
 						} else {
 							$ERROR++;
@@ -240,8 +240,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							<td>
 								<select id="grad_year" name="grad_year" style="width: 250px">
 								<?php
-								for($year = (date("Y", time()) + 4); $year >= (date("Y", time()) - 1); $year--) {
-									echo "<option value=\"".(int) $year."\"".(($PROCESSED["grad_year"] == $year) ? " selected=\"selected\"" : "").">Class of ".html_encode($year)."</option>\n";
+								if (isset($SYSTEM_GROUPS["student"]) && !empty($SYSTEM_GROUPS["student"])) {
+									foreach ($SYSTEM_GROUPS["student"] as $class) {
+										echo "<option value=\"".$class."\"".(($PROCESSED["grad_year"] == $class) ? " selected=\"selected\"" : "").">Class of ".html_encode($class)."</option>\n";
+									}
 								}
 								?>
 								</select>							

@@ -132,7 +132,7 @@ if (!defined("PARENT_INCLUDED")) {
 					$PROCESSED["group"]	= $group;
 					$search_query_text	= html_encode(ucwords($group));
 
-					if (($PROCESSED["group"] == "student") && (isset($_POST["r"])) && ($role = clean_input($_POST["r"], "int"))) {
+					if (($PROCESSED["group"] == "student") && (isset($_POST["r"])) && ($role = clean_input($_POST["r"], "alphanumeric"))) {
 						$PROCESSED["role"] = $role;
 						
 						$search_query_text	.= " &rArr; ".html_encode(ucwords($role));
@@ -144,7 +144,7 @@ if (!defined("PARENT_INCLUDED")) {
 					$PROCESSED["group"]	= $group;
 					$search_query_text	= html_encode(ucwords($group));
 					
-					if (($PROCESSED["group"] == "student") && (isset($_GET["r"])) && ($role = clean_input($_GET["r"], "int"))) {
+					if (($PROCESSED["group"] == "student") && (isset($_GET["r"])) && ($role = clean_input($_GET["r"], "alphanumeric"))) {
 						$PROCESSED["role"] = $role;
 						
 						$search_query_text	.= " &rArr; ".html_encode(ucwords($role));
@@ -432,10 +432,15 @@ if (!defined("PARENT_INCLUDED")) {
 	preferences_update($MODULE, $PREFERENCES);
 
 	$student_classes = array();
-	for ($year = (date("Y", time()) - 1); $year <= (date("Y", time()) + 4); $year++) {
-		$student_classes[$year] = "Class of ".$year;
+	$cut_off_year = (fetch_first_year() - 3);
+	if (isset($SYSTEM_GROUPS["student"]) && !empty($SYSTEM_GROUPS["student"])) {
+		foreach ($SYSTEM_GROUPS["student"] as $class) {
+			if (clean_input($class, "numeric") >= $cut_off_year) {
+				$student_classes[$class] = "Class of ".$class;
+			}
+		}
 	}
-
+	
 	$browse_people		= array();
 	$browse_people[]	= array(
 							"value"		=> "student",

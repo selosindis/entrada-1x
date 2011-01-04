@@ -74,14 +74,14 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 							$ERROR++;
 							$ERRORSTR[] = "The <strong>Organisation Name</strong> field is required.";
 						}
-						if((isset($_POST["target"])) && ($target_audience = clean_input($_POST["target"], array("lower", "notags", "nows")))) {
+						if((isset($_POST["target"])) && ($target_audience = clean_input($_POST["target"], "alphanumeric"))) {
 							$PROCESSED["target"] = $target_audience;
 						} else {
 							$ERROR++;
 							$ERRORSTR[] = "You must select a valid target audience from the select box.";
 						}
 	
-						if((isset($_POST["notice_summary"])) && ($notice_summary = strip_tags(clean_input($_POST["notice_summary"], array("trim")), "<a><br><p>"))) {
+						if((isset($_POST["notice_summary"])) && ($notice_summary = strip_tags(clean_input($_POST["notice_summary"], "trim"), "<a><br><p>"))) {
 							$PROCESSED["notice_summary"] = $notice_summary;
 						} else {
 							$ERROR++;

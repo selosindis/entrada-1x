@@ -68,7 +68,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 		} elseif($recipient instanceof Organisation) {
 			$PROCESSED["associated_organisation_id"] = $recipient->getID();
 		}
-		
 	}
 	
 	switch($_POST['action']) {
@@ -416,8 +415,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 					<td>
 						<select id="associated_grad_years" name="associated_grad_years" style="width: 203px">
 						<?php
-						for($year = (date("Y", time()) + 4); $year >= (date("Y", time()) - 1); $year--) {
-							echo "<option value=\"".(int) $year."\"".(($PROCESSED["associated_grad_year"] == $year) ? " selected=\"selected\"" : "").">Class of ".html_encode($year)."</option>\n";
+						if (isset($SYSTEM_GROUPS["student"]) && !empty($SYSTEM_GROUPS["student"])) {
+							foreach ($SYSTEM_GROUPS["student"] as $class) {
+								echo "<option value=\"".$class."\"".(($PROCESSED["associated_grad_year"] == $class) ? " selected=\"selected\"" : "").">Class of ".html_encode($class)."</option>\n";
+							}
 						}
 						?>
 						</select>

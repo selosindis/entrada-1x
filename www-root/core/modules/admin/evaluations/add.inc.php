@@ -243,8 +243,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 											AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
 											AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
 											AND b.`group` = 'student'
-											AND a.`grad_year` = ".$db->qstr($grad_year);
+											AND b.`role` = ".$db->qstr($grad_year);
 								$results = $db->GetAll($query);
+
 								if ($results) {
 									$total_students = count($results);
 								}
@@ -307,7 +308,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 				}
 
 				if (empty($PROCESSED["evaluation_evaluators"])) {
-					add_error("Please select an appropriate type of evaluator (i.e. entire class, percentagge, etc).");
+					add_error("Please select an appropriate type of evaluator (i.e. entire class, percentage, etc).");
 				}
 			} else {
 				add_error("Please select an appropriate type of evaluator (i.e. entire class, percentage, etc).");

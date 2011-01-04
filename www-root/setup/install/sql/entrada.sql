@@ -920,7 +920,7 @@ CREATE TABLE IF NOT EXISTS `ar_ward_supervision` (
 CREATE TABLE IF NOT EXISTS `assessments` (
   `assessment_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `course_id` int(10) unsigned NOT NULL,
-  `grad_year` int(4) NOT NULL,
+  `grad_year` varchar(35) NOT NULL,
   `name` varchar(255) NOT NULL,
   `description` text NOT NULL,
   `type` varchar(255) NOT NULL,
@@ -1834,7 +1834,6 @@ CREATE TABLE IF NOT EXISTS `events` (
   PRIMARY KEY  (`event_id`),
   KEY `course_id` (`course_id`),
   KEY `region_id` (`region_id`),
-  KEY `eventtype_id` (`eventtype_id`),
   KEY `recurring_id` (`recurring_id`),
   KEY `release_date` (`release_date`,`release_until`),
   KEY `event_start` (`event_start`,`event_duration`),

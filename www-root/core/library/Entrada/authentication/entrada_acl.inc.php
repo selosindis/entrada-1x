@@ -1110,11 +1110,11 @@ class ClerkshipAssertion implements Zend_Acl_Assert_Interface {
 			if(isset($acl->_entrada_last_query_role)) {
 				$role = $acl->_entrada_last_query_role;
 				if(($role instanceof EntradaUser) || isset($role->details) || isset($role->details["grad_year"])) {
-					$GRAD_YEAR = $role->details["grad_year"];
+					$GRAD_YEAR = preg_replace("/[^0-9]+/i", "", $role->details["grad_year"]);
 				}
 			}
 		} else {
-			$GRAD_YEAR = $role->details["grad_year"];
+			$GRAD_YEAR = preg_replace("/[^0-9]+/i", "", $role->details["grad_year"]);
 		}
 
 		if(!isset($GRAD_YEAR)) {

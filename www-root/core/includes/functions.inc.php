@@ -225,7 +225,7 @@ function load_system_navigator() {
 	 * Important: Make sure Prototype is loaded, or this will error out.
 	 *
 	 */
-		$HEAD[] = "<link href=\"".ENTRADA_URL."/css/navigator.css?release=".html_encode(APPLICATION_VERSION)."\" rel=\"stylesheet\" type=\"text/css\" />";
+		$HEAD[] = "<link href=\"".ENTRADA_RELATIVE."/css/navigator.css?release=".html_encode(APPLICATION_VERSION)."\" rel=\"stylesheet\" type=\"text/css\" />";
 
 		$output .= "<div id=\"navigator-container\">\n";
 		$output .= "	<div id=\"navigator\" style=\"display: none\">\n";
@@ -8649,7 +8649,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 												AND `app_id` = ".$db->qstr(AUTH_APP_ID)."
 												AND `group` = 'student'";
 									$result = $db->GetRow($query);
-									if (($result) && ($tmp_input = (int) $result["grad_year"])) {
+									if (($result) && ($tmp_input = clean_input($result["grad_year"], "alphanumeric"))) {
 										$student_grad_year = "(`event_audience`.`audience_type` = 'grad_year' AND `event_audience`.`audience_value` = ".$db->qstr($tmp_input).") OR ";
 									}
 

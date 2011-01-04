@@ -354,8 +354,10 @@ if (!defined("IN_CLERKSHIP")) {
 								<select name="year" style="width: 205px">
 								<option value="">-- Select Graduating Year --</option>
 								<?php
-								for($year = (date("Y", time()) + 4); $year >= 2002; $year--) {
-									echo "<option value=\"".$year."\"".(($year == date("Y", time())) ? "" : "").">Class of ".$year."</option>\n";	
+								if (isset($SYSTEM_GROUPS["student"]) && !empty($SYSTEM_GROUPS["student"])) {
+									foreach ($SYSTEM_GROUPS["student"] as $class) {
+										echo "<option value=\"".$class."\">Class of ".html_encode($class)."</option>\n";
+									}
 								}
 								?>
 								</select>

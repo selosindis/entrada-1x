@@ -144,6 +144,10 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 						<td colspan="2" style="padding-top: 15px"><h2>Preceptor Details</h2></td>
 					</tr>
 					<tr>
+						<td style="width: 25%">Preceptor Prefix</td>
+						<td style="width: 75%"><?php echo (isset($PROCESSED["preceptor_prefix"]) && $PROCESSED["preceptor_prefix"] != "" ? $PROCESSED["preceptor_prefix"] : "N/A"); ?></td>
+					</tr>
+					<tr>
 						<td style="width: 25%">Preceptor First Name</td>
 						<td style="width: 75%"><?php echo (isset($PROCESSED["preceptor_first_name"]) && $PROCESSED["preceptor_first_name"] != "" ? $PROCESSED["preceptor_first_name"] : "N/A"); ?></td>
 					</tr>

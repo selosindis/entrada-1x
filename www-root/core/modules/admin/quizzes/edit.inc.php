@@ -581,20 +581,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 										</ul>
 									</div>
 									<?php
-									$query		= "	SELECT a.*, b.`course_id`, b.`eventtype_id`, b.`event_title`, b.`event_start`, b.`event_duration`, CONCAT_WS(', ', d.`lastname`, d.`firstname`) AS `fullname`, e.`course_name`, e.`course_code`
+									$query		= "	SELECT a.*, b.`course_id`, b.`eventtype_id`, b.`event_title`, b.`event_start`, b.`event_duration`, c.`course_name`, c.`course_code`
 													FROM `attached_quizzes` AS a
 													JOIN `events` AS b
 													ON a.`content_type` = 'event' 
 													AND	b.`event_id` = a.`content_id`
-													JOIN `event_contacts` AS c
-													ON a.`content_type` = 'event' 
-													AND c.`event_id` = a.`content_id`
-													LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS d
-													ON d.`id` = c.`proxy_id`
-													JOIN `courses` AS e
-													ON e.`course_id` = b.`course_id`
+													JOIN `courses` AS c
+													ON c.`course_id` = b.`course_id`
 													WHERE a.`quiz_id` = ".$db->qstr($RECORD_ID)."
-													AND e.`course_active` = '1'
+													AND c.`course_active` = '1'
 													ORDER BY b.`event_start` DESC";
 									$results	= $db->GetAll($query);
 									if($results) {
@@ -684,7 +679,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 										</ul>
 									</div>
 									<?php
-									$query		= "	SELECT a.*, b.`community_id`, b.`community_url`, b.`community_title`, CONCAT('[', b.`community_title`, '] ', bp.`menu_title`) AS `page_title`, bp.`page_url`, CONCAT_WS(', ', d.`lastname`, d.`firstname`) AS `fullname`
+									$query		= "	SELECT a.*, b.`community_id`, b.`community_url`, b.`community_title`, CONCAT('[', b.`community_title`, '] ', bp.`menu_title`) AS `page_title`, bp.`page_url`
 													FROM `attached_quizzes` AS a
 													JOIN `communities` AS b
 													ON a.`content_type` = 'community_page' 
@@ -692,12 +687,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 													ON a.`content_type` = 'community_page' 
 													AND	bp.`cpage_id` = a.`content_id`
 													AND bp.`community_id` = b.`community_id`
-													LEFT JOIN `community_members` AS c
-													ON c.`community_id` = b.`community_id`
-													AND c.`proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
-													AND c.`member_acl` = '1'
-													LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS d
-													ON d.`id` = c.`proxy_id`
 													WHERE a.`quiz_id` = ".$db->qstr($RECORD_ID)."
 													AND b.`community_active` = '1'
 													AND bp.`page_active` = '1'
@@ -733,7 +722,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 													echo "	<img src=\"".ENTRADA_URL."/images/view-stats-disabled.gif\" width=\"16\" height=\"16\" alt=\"No completed quizzes at this time.\" title=\"No completed quizzes at this time.\" style=\"vertical-align: middle\" border=\"0\" />\n";
 												}
 												echo "	</td>\n";
-												echo "	<td class=\"title\"><a href=\"".$url."\" title=\"Community Page: [".html_encode($result["community_title"])."] ".html_encode($result["page_title"])."\">[".html_encode($result["community_title"])."] ".html_encode($result["page_title"])."</a></td>\n";
+												echo "	<td class=\"title\"><a href=\"".$url."\" title=\"Community Page: ".html_encode($result["page_title"])."\">".html_encode($result["page_title"])."</a></td>\n";
 												echo "	<td class=\"title\"><a href=\"".$url."\" title=\"Quiz Title: ".html_encode($result["quiz_title"])."\">".html_encode($result["quiz_title"])."</a></td>\n";
 												echo "	<td class=\"completed\">".(int) $result["accesses"]."</td>\n";
 												echo "</tr>\n";

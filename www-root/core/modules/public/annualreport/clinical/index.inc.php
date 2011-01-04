@@ -53,7 +53,6 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 	<table id="flex6" style="display:none"></table>
 	<table id="flex7" style="display:none"></table>
 	<table id="flex8" style="display:none"></table>
-	<table id="flex9" style="display:none"></table>
 	
 	<script type="text/javascript">
 	
@@ -901,7 +900,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 		    		// a workaround for a flaw in the demo system (http://dev.jqueryui.com/ticket/4375), ignore!
 					jQuery("#dialog-confirm").dialog("destroy");
 					jQuery('.trSelected', grid).each(function() {  
-               			var reportYear = jQuery(this).find('div')[3].textContent;
+               			var reportYear = jQuery(this).find('div')[1].textContent;
 						if(reportYear < <?php echo $AR_CUR_YEAR;?>) {
 	               			// Do not allow the deletion of years that are prior to the current reporting year.
 	               			error = "true";

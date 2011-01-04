@@ -7871,12 +7871,12 @@ function course_objectives_in_list($objectives, $parent_id, $edit_importance = f
 		} else {
 			if (!empty($objectives["primary_ids"])) {
 				$active["primary"] = true;
-			} elseif ($display_importance == "primary") {
+			} elseif ($display_importance == "primary" && $active["secondary"]) {
 				$display_importance = "secondary";
 			}
 			if (!empty($objectives["secondary_ids"])) {
 				$active["secondary"] = true;
-			} elseif ($display_importance == "secondary") {
+			} elseif ($display_importance == "secondary" && $active["tertiary"]) {
 				$display_importance = "tertiary";
 			}
 			if (!empty($objectives["tertiary_ids"])) {
@@ -7884,6 +7884,9 @@ function course_objectives_in_list($objectives, $parent_id, $edit_importance = f
 			}
 		}
 		$objectives = $objectives["objectives"];
+		if ($display_importance == "primary" && !$active["primary"]) {
+			return;
+		}
 	}
 	if ((is_array($objectives)) && (count($objectives))) {
 		if (((isset($objectives[$parent_id]) && count($objectives[$parent_id]["parent_ids"])) || $hierarchical) && (!isset($objectives[$parent_id]["parent_ids"]) || count($objectives[$parent_id]["parent_ids"]) < 3)) {

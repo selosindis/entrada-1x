@@ -11846,3 +11846,107 @@ function eval_sche_fetch_filtered_evals() {
 	return $output;
 }
 
+/**
+ * Substitutes variables of the form %VAR NAME% in the string, with variables from the array, keys in the form of var name, Var Name, etc.
+ * 
+ * @param string $str 
+ * @param array $arr
+ * @return string
+ */
+function substitute_vars($str, array $arr) {
+	//first process the keys of arr
+	$n_arr = array();
+	foreach ($arr as $key=>$value) {
+		$n_arr["%".strtoupper($key)."%"] = $value;
+	} 
+	
+	return strtr($str,$n_arr);
+}
+
+
+/**
+ * Returns null if the $value is not in the array $arr; return the the $value otherwise. XXX NOTE, a bug prior to php 5.2.6 causes epic php failure if callbacks return false. null returned as workaround
+ * @param $value
+ * @param $arr
+ * @return mixed
+ */
+function validate_in_array($value, array $arr) {
+	if (in_array($value, $arr)){
+		return $value;
+	} else {
+		return;
+	}
+}
+
+/**
+ * Returns an array of valid user ids and null otherwise. XXX NOTE, a bug prior to php 5.2.6 causes epic php failure if callbacks return false. null returned as workaround
+ * @param $value
+ */
+function validate_user_ids($value) {
+	global $db;
+	$clean = filter_var($value,  FILTER_VALIDATE_REGEXP, array('options' => array('regexp' => '/^\d+$|^(\d+,)+\d+$/')));
+	if (false !== $clean) {
+		$query = "	SELECT a.id
+					FROM `".AUTH_DATABASE."`.`user_data` AS a
+					LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+					ON a.`id` = b.`user_id`
+					WHERE a.`id` IN ( " . $clean .  ")
+					AND b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+					AND b.`account_active` = 'true'
+					AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
+					AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")";
+		$results	= $db->GetCol($query);
+		if($results && (0 < count($results))) {
+			return $results; 
+		}
+	}
+}
+
+/**
+ * Returns null if $value is not a valid or existent course_id; returns the $value otheriwse. XXX NOTE, a bug prior to php 5.2.6 causes epic php failure if callbacks return false. null returned as workaround
+ * @param unknown_type $value
+ * @return mixed
+ */
+function validate_course_id($value) {
+	$course_id = filter_var($value, FILTER_VALIDATE_INT, array('min_range' => 1));
+	
+	if (false === $course_id || !Course::get($course_id)) {
+		return;
+	} else {
+		return $course_id;
+	}
+}
+
+/**
+ * Returns null if the $value provided is not a valid organisation_id; returns the $value otherwise. XXX NOTE, a bug prior to php 5.2.6 causes epic php failure if callbacks return false. null returned as workaround
+ * @param unknown_type $value
+ * @return mixed
+ */
+function validate_organisation_id($value) {
+	$organisation_id = filter_var($value, FILTER_VALIDATE_INT, array('min_range' => 1));
+	
+	if (false === $organisation_id || !Organisation::get($organisation_id)) {
+		return;
+	} else {
+		return $organisation_id;
+	}
+}
+
+/**
+ * Returns the binary OR of $val_a and $val_b -- convenince function for callbacks
+ * @param int $val_a
+ * @param int $val_b
+ * @return int
+ */
+function or_bin($val_a, $val_b) {
+	return $val_a | $val_b;
+}
+			
+/**
+ * Returns string after passing through the clean_input function for allowed_tags -- convenience method for callbacks. 
+ * @param string $value
+ * @return string
+ */
+function allowed_tags($value) {
+	return clean_input($value, array("allowedtags"));
+}

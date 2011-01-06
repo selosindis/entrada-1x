@@ -1,17 +1,11 @@
 <?php
 
-
-require_once("Models/users/User.class.php");
-require_once("Models/courses/Course.class.php");
-require_once("Models/events/Event.class.php");
-require_once("Models/organisations/Organisation.class.php");
-require_once("Models/utility/SimpleCache.class.php");
-require_once("Models/tasks/TaskOwners.class.php");
-require_once("Models/tasks/TaskRecipients.class.php");
-require_once("Models/tasks/TaskCompletions.class.php");
-require_once("TaskOwners.class.php");
-
 class Task {
+	//these are constants and not settings as they reflect database restrictions on the model.
+	const TITLE_MAX_LENGTH = 255;
+	const DURATION_MAX = 43200; //30 days in minutes. XXX: although the db limit is 0xFFFFFFFFFFFFFFFF max of 64-bit number, we use a more reasonable limit which is still likely to be excessive 
+	
+	
 	/**
 	 * @var int
 	 */
@@ -73,10 +67,69 @@ class Task {
 	private $organisation_id;
 	
 	/**
-	 * Boolean status of verfification requirement. True if required.
-	 * @var bool
+	 * 
+	 * @var string
 	 */
-	private $require_verification;
+	private $verification_type;
+	
+	/**
+	 * 
+	 * @var string
+	 */
+	private $faculty_selection_policy;
+	
+	/**
+	 * 
+	 * @var string
+	 */
+	private $comment_policy;
+
+	/**
+	 * 
+	 * @var string
+	 */
+	private $comment_policy_resubmit;
+	
+	/**
+	 * unlike the comment and faculty selection policy types, verification notification policies are not mutually exclusive. For this reason, a flag system is employed in which 0 is the absence of any verification, and beyond that the defines TASK_VERIFICATION_NOTIFICATION_* are used. 
+	 * @var int
+	 */
+	private $verification_notification_policy;
+
+	/**
+	 * @return string
+	 */
+	function getVerificationType() {
+		return $this->verification_type;
+	}
+	
+	/**
+	 * @return string
+	 */
+	function getFacultySelectionPolicy() {
+		return $this->faculty_selection_policy;
+	}
+	
+	/**
+	 * @return string
+	 */
+	function getCompletionCommentPolicy() {
+		return $this->comment_policy;
+	}
+	
+	/**
+	 * @return string
+	 */
+	function getResubmitCommentPolicy() {
+		return $this->comment_policy_resubmit;
+	}
+	
+	/**
+	 * @return int
+	 */
+	function getVerificationNotificationPolicy() {
+		return $this->verification_notification_policy;
+	}
 	
 	/**
 	 * Returns a User, Course, or Event depending on the owner type
@@ -179,7 +232,17 @@ class Task {
 	 * @return bool
 	 */
 	function addOwner($obj) {
-		TaskOwners::add($this,$obj);
+		return TaskOwners::add($this,$obj);
+	}
+	
+	/**
+	 * 
+	 * @param $obj
+	 * 
+	 * @return bool
+	 */
+	function addVerifier($obj) {
+		return TaskVerifiers::add($this,$obj);
 	}
 	
 	/**
@@ -246,8 +309,8 @@ class Task {
 	/**
 	 * @return bool
 	 */
-	function isVerificationRequired() {
-		return $this->require_verification;
+	function isFacultySelectionRequired() {
+		return $this->require_faculty_selection;
 	}
 		
 	/**
@@ -288,11 +351,12 @@ class Task {
 	 * 
 	 * @return int
 	 */
-	static function create($creator_id, $title, $deadline, $duration = 0, $description = "", $release_start = null, $release_finish = null, $organisation_id=null, $require_verification=0) {
+	static function create(array $inputs) {
+		extract($inputs);
 		global $db;
-		$query = "insert into `tasks` (`updated_by`, `updated_date`, `title`, `deadline`,`duration`,`description`, `release_start`, `release_finish`, `organisation_id`, `require_verification`) 
-				value (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-		if(!$db->Execute($query, array($creator_id, time(), $title, $deadline, $duration, $description, $release_start, $release_finish, $organisation_id, $require_verification))) {
+		$query = "insert into `tasks` (`updated_by`, `updated_date`, `title`, `deadline`,`duration`,`description`, `release_start`, `release_finish`, `organisation_id`, `verification_type`, `faculty_selection_policy`, `comment_policy`, `comment_policy_resubmit`, `verification_notification_policy`) 
+				value (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+		if(!$db->Execute($query, array($creator_id, time(), $title, $deadline, $duration, $description, $release_start, $release_finish, $organisation_id, $verification_type, $faculty_selection_policy, $comment_policy, $comment_policy_resubmit, $verification_notification_policy))) {
 			add_error("Failed to create Task".$db->ErrorMsg());
 			application_log("error", "Unable to update a tasks record. Database said: ".$db->ErrorMsg());
 		} else {
@@ -303,19 +367,14 @@ class Task {
 	
 	/**
 	 * 
-	 * @param int $updater_id
-	 * @param string $title
-	 * @param int $deadline
-	 * @param int $duration
-	 * @param string $description
-	 * @param int $release_start
-	 * @param int $release_finish
+	 * @param array $inputs
 	 */
-	function update($updater_id, $title, $deadline, $duration = 0, $description = "", $release_start = null, $release_finish = null, $organisation_id=null, $require_verification=0) {
+	function update(array $inputs) {
+		extract($inputs);
 		global $db;
-		$query = "UPDATE `tasks` set `updated_by`=?, `updated_date`=?, `title`=?, `deadline`=?, `duration`=?, `description`=?, `release_start`=?, `release_finish`=?, `organisation_id`=?, `require_verification`=? where `task_id`=?";
+		$query = "UPDATE `tasks` set `updated_by`=?, `updated_date`=?, `title`=?, `deadline`=?, `duration`=?, `description`=?, `release_start`=?, `release_finish`=?, `organisation_id`=?, `verification_type`=?, `faculty_selection_policy`=?, `comment_policy`=?, `comment_policy_resubmit`=?, `verification_notification_policy`=? where `task_id`=?";
 		
-		if(!$db->Execute($query, array($updater_id, time(), $title, $deadline, $duration, $description, $release_start, $release_finish, $organisation_id, $require_verification, $this->task_id))) {
+		if(!$db->Execute($query, array($updater_id, time(), $title, $deadline, $duration, $description, $release_start, $release_finish, $organisation_id, $verification_type, $faculty_selection_policy, $comment_policy, $comment_policy_resubmit, $verification_notification_policy, $this->task_id))) {
 			add_error("Failed to update Task");
 			application_log("error", "Unable to update a tasks record. Database said: ".$db->ErrorMsg());
 		} else {
@@ -375,9 +434,9 @@ class Task {
 	 * @param int $organisation_id
 	 * @param bool $require_verification
 	 */
-	function __construct($task_id, $last_updated_date, $last_updated_by, $title, $deadline, $duration = 0, $description = "", $release_start = null, $release_finish = null, $organisation_id=null, $require_verification=0) {
+	function __construct($task_id, $last_updated_date, $last_updated_by, $title, $deadline, $duration = 0, $description = "", $release_start = null, $release_finish = null, $organisation_id=null, $verification_type=null, $verification_notification_policy=null, $faculty_selection_policy=null,$comment_policy=null, $comment_policy_resubmit=null ) {
 		$this->task_id = $task_id;
-		$this->last_updated_date = $last_updated_date;
+		$this->last_updated = $last_updated_date;
 		$this->last_updated_by = $last_updated_by;
 		$this->title = $title;
 		$this->deadline = $deadline;
@@ -386,13 +445,17 @@ class Task {
 		$this->release_start = $release_start;
 		$this->release_finish = $release_finish;
 		$this->organisation_id = $organisation_id;
-		$this->require_verification = (bool) $require_verification;
+		$this->verification_type = $verification_type;
+		$this->comment_policy = $comment_policy;
+		$this->comment_policy_resubmit = $comment_policy_resubmit;
+		$this->faculty_selection_policy = $faculty_selection_policy;
+		$this->verification_notification_policy = $verification_notification_policy;
 		
 		$cache = SimpleCache::getCache();
 		$cache->set($this,"Task", $task_id);
 	}
 	
 	static public function fromArray($arr) {
-		return new Task($arr['task_id'], $arr['updated_date'], $arr['updated_by'], $arr['title'], $arr['deadline'], $arr['duration'], $arr['description'],$arr['release_start'], $arr['release_finish'], $arr['organisation_id'], $arr['require_verification']);
+		return new Task($arr['task_id'], $arr['updated_date'], $arr['updated_by'], $arr['title'], $arr['deadline'], $arr['duration'], $arr['description'],$arr['release_start'], $arr['release_finish'], $arr['organisation_id'], $arr['verification_type'], $arr['verification_notification_policy'], $arr['faculty_selection_policy'],  $arr['comment_policy'],  $arr['comment_policy_resubmit']);
 	}
 }

@@ -1,5 +1,4 @@
 <?php
-require_once("Models/utility/SimpleCache.class.php");
 
 class Organisation {
 	private	$organisation_id,

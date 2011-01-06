@@ -22,7 +22,6 @@
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
 */
-require_once("Models/utility/SimpleCache.class.php");
 
 /**
  * Course class with all information. Methods referring to other classes are not all complete.

@@ -22,11 +22,6 @@
  *
 */
 
-require_once("Models/utility/SimpleCache.class.php");
-require_once("Event.class.php");
-require_once("Models/utility/Collection.class.php");
-require_once("Models/users/User.class.php");
-
 /**
  * Utility Class for getting a list of Events
  * 

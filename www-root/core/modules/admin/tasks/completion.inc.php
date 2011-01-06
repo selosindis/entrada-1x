@@ -86,7 +86,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 			?>	
 			<h1><?php echo html_encode($task->getTitle());?>: Completion Information</h1>
 			<?php display_status_messages();
-			if ($task->isVerificationRequired()) {
 			?>
 			
 			<form id="completion_list" method="post">
@@ -180,84 +179,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 				});
 			</script>
 			<?
-			} else {
-			?>
-			<form id="completion_list" method="post">
-				<input type="hidden" name="task_id" value="<?php echo $task->getID(); ?>" />
-				<table class="tableList" cellspacing="0" cellpadding="1" summary="List of Events">
-					<colgroup>
-						<col class="general" width="3%" />
-						<col class="general" width="48%" />
-						<col class="general" width="49%" />
-						
-					</colgroup>
-					<tfoot>
-						<tr>
-						<td colspan="3">
-						<input type="submit" value="<?php echo $BULK_COMPLETE; ?>" name="action" />
-						</td>
-						</tr>
-					</tfoot>
-					<thead>
-						<tr>
-							<td><input type="checkbox" id="check_all" /></td>
-							<td>Recipient</td>
-							<td>Task Completion</td>
-						</tr>
-					</thead>
-					<tbody>
-						<?php 
-							foreach ($task_completions as $task_completion) {
-							$recipient = $task_completion->getRecipient();
-						?>
-						<tr>
-							<td>
-								<?php if ($task_completion->isCompleted()) { ?>
-								<img src="<?php echo ENTRADA_URL?>/images/task_completed.png" />
-								<?php } else { ?> 
-								<input type="checkbox" name="complete_verify[]" value="<?php echo $recipient->getID(); ?>" />
-								<?php } ?>
-							</td>
-							<td>
-								<a href="<?php echo ENTRADA_URL; ?>/admin/users/manage?id=<?php echo $recipient->getID(); ?>"><?php echo $recipient->getFullname(); ?></a> 
-							</td>
-							<td>
-								<?php echo ($task_completion->isCompleted())? date(DEFAULT_DATE_FORMAT, $task_completion->getCompletedDate()) : "&nbsp;"?>
-							</td>
-						</tr>
-						<?php 
-							} 
-						?>
-					</tbody>
-				</table>
-			</form>
-			<script type="text/javascript">
-			function checkAll(event) {
-				var state = Event.findElement(event).checked;
-				//var state = $$("#mspr-class-list thead input[type=checkbox]").pluck("checked").any();
-				$$("#completion_list tbody input[type=checkbox]").reject(isDisabled).each(function (el) { el.checked=state; });
-			}
-	
-			function areAllChecked() {
-				return $$("#completion_list tbody input[type=checkbox]").reject(isDisabled).pluck("checked").all();
-			}
-	
-			function isDisabled(el) {
-				return el.disabled;
-			}
-	
-			function setCheckAll() {
-				var state = areAllChecked();
-				$$("#completion_list thead input[type=checkbox]").each(function (el) { el.checked=state; });
-			}
-	
-			document.observe("dom:loaded",function() { 
-					$$("#completion_list tbody input[type=checkbox]").invoke("observe","click",setCheckAll);
-					$$("#completion_list thead input[type=checkbox]").invoke("observe","click",checkAll);
-				});
-			</script>
-			<?php
-			}
 		}
 	} else {
 		header( "refresh:15;url=".ENTRADA_URL."/admin/".$MODULE );

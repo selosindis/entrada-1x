@@ -2429,7 +2429,7 @@ div#associated_faculty_list ul.menu li.community,div#associated_student_list ul.
 cursor:move;
 }
 
-ul#faculty_list,ul#student_list,ul#director_list,ul#coordinator_list,ul#individual_list,ul#author_list {
+ul#faculty_list,ul#student_list,ul#director_list,ul#coordinator_list,ul#individual_list,ul#verifier_list,ul#author_list {
 width:250px;
 overflow:none;
 position:relative;
@@ -2952,4 +2952,8 @@ margin: 0 1em 0 0;
 .revision-list img, .display-notice img, .tableList img {
 	border:0;
 	vertical-align:middle;
+}
+
+table.task_form {
+	width: 100%;
 }

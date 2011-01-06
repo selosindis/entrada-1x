@@ -466,10 +466,9 @@ class TaskOwnerAssertion implements Zend_Acl_Assert_Interface {
 			$user_id	= preg_replace('/[^0-9]+/', "", $role_id);
 		}
 
-		require_once("Models/users/User.class.php");
+		require_once("Entrada/tasks/functions.inc.php");
 		$user = User::get($user_id);
 
-		require_once("Models/tasks/Task.class.php");
 		$task = Task::get($task_id);
 
 		if ($task && $user) {
@@ -522,10 +521,10 @@ class TaskRecipientAssertion implements Zend_Acl_Assert_Interface {
 			$user_id	= preg_replace('/[^0-9]+/', "", $role_id);
 		}
 
-		require_once("Models/users/User.class.php");
+		require_once("Entrada/tasks/functions.inc.php");
+		
 		$user = User::get($user_id);
 
-		require_once("Models/tasks/Task.class.php");
 		$task = Task::get($task_id);
 		if ($task && $user) {
 			return 	$task->isRecipient($user);
@@ -631,10 +630,9 @@ class ShowTaskTabAssertion implements Zend_Acl_Assert_Interface {
 			return false;
 		}
 
-		require_once("Models/users/User.class.php");
+		require_once("Entrada/tasks/functions.inc.php");
 		$user = User::get($user_id);
 
-		require_once("Models/tasks/TaskCompletion.class.php");
 		$tasks_completions = TaskCompletions::getByRecipient($user, array('where' => 'verified_date IS NULL'));
 		$has_completions = (count($tasks_completions) > 0);
 

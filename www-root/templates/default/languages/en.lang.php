@@ -136,7 +136,7 @@ return array (
 	"community_history_move_photo" => "The <a href=\"%SITE_COMMUNITY_URL%:%PAGE_URL%?action=view-photo&id=%RECORD_ID%\">%RECORD_TITLE%</a> photo was moved to a different <a href=\"%SITE_COMMUNITY_URL%:%PAGE_URL%?action=view-gallery&id=%PARENT_ID%\">gallery</a>.",
 	
 	/**
-	 * 
+	 * mspr messages
 	 */
 	"mspr_no_entity" => "No Entity ID provided.",
 	"mspr_invalid_entity" => "Item not found or invalid identifier provided",
@@ -153,6 +153,93 @@ return array (
 	"mspr_observership_preceptor_required" => "A faculty preceptor must be selected or a non-faculty preceptor name entered.",
 	"mspr_observership_invalid_dates" => "A valid start date is required.",
 	"mspr_too_many_critical_enquiry" => "Cannot have more than one Critical Enquiry on MSPR. Please edit the existing project or remove it before adding a new one.",
-	"mspr_too_many_community_based_project" => "Cannot have more than one Community-Based Project on MSPR. Please edit the existing project or remove it before adding a new one."
+	"mspr_too_many_community_based_project" => "Cannot have more than one Community-Based Project on MSPR. Please edit the existing project or remove it before adding a new one.",
+	
+	
+	/*****************
+	 * Tasks Module  *
+	 *****************/
+	
+	/** Heading labels **/
+	"task_heading_create" => "Create Task",
+	"task_heading_edit" => "Edit Task",
+	"task_heading_recipients" => "Task Recipients",
+	"task_heading_completion_options" => "Task Completion Options",
+	"task_heading_verification_options" => "Task Verification Options",
+	"task_heading_time_release_options" => "Time Release Options",
+	"task_heading_description" => "Task Description",
+	
+	/** field labels **/
+	"task_field_title" => "Task Title",
+	"task_field_deadline" => "Deadline",
+	"task_field_time_required" => "Estimated Time Required",
+	"task_field_course" => "Course",
+	"task_field_associated_faculty" => "Associated Faculty", 
+	"task_field_description" => "Task Description",
+	"task_field_recipients_class" => "Entire Class Task",
+	"task_field_graduating_class" => "Graduating Year",
+	"task_field_recipients_students" => "Individual Student Task",
+	"task_field_associated_students" => "Associated Students",
+	"task_field_recipients_organisation" => "Entire Organisation Task",
+	"task_field_organisation" => "Organisation",
+	"task_field_completion_comments" => "Completion Comments",
+	"task_field_resubmission_comments" => "Resubmission Comments",
+	"task_field_faculty_selection" => "Faculty Selection",
+	"task_field_verification_none" => "No Verification",
+	"task_field_verification_faculty" => "Selected Faculty Verification",
+	"task_field_verification_other" => "Other Specified Individual Verification",
+	"task_field_verification_other_names" => "Designated Verifier",
+	"task_field_notification_types" => "Notification Types", 
+	"task_field_verification_notification_dashboard" => "Dashboard Notification [disabled]",
+	"task_field_verification_notificaiton_email" => "Email Notification",
+	"task_field_after_saving_options" => "After Saving:",
+	 
+
+	/** button labels **/
+	"task_button_add" => "Add",
+	"task_button_save" => "Save",
+	"task_button_cancel" => "Cancel",
+
+	/** instructions **/
+	"task_instructions_recipients_class" => "This task is intended for an entire class",
+	"task_instructions_recipients_students" => "This task is intended for a specific student or students",
+	"task_instructions_recipients_organisation" => "This task is intended for every member of an organisation",
+	"task_instructions_faculty_name" => "(<strong>Example:</strong> %MY_FULLNAME%)",	
+	"task_instructions_associated_students" => "(<strong>Example:</strong> %MY_FULLNAME%)",
+	"task_instructions_verification_other_names" => "(<strong>Example:</strong> %MY_FULLNAME%)",
+	"task_instructions_verification_none" => "No external verification required. Task recipients assertion of completion functions as self-verification.",
+	"task_instructions_verification_other" => "The individual specified will receive all verification requests (if applicable) and will be granted verification authority where they might not otherwise have it.",
+	"task_instructions_verification_faculty" => "The selected associated faculty will receive verification requests (if applicable)",	
+
+	/** option labels **/
+	"task_option_complete_allow_comments" => "Allow comments",
+	"task_option_complete_no_comments" => "Disable comments",
+	"task_option_complete_require_comments" => "Require comments",
+	"task_option_course_none" => "None",
+	"task_option_faculty_selection_off" => "Off",
+	"task_option_faculty_selection_allow" => "Allowed",
+	"task_option_faculty_selection_require" => "Required",
+	
+	/** misc labels **/
+	"task_misc_minutes" => "minutes",
+	
+	/** errors **/
+	"task_title_too_short" => "The <strong>Task Title</strong> field is required.",
+	"task_course_invalid" => "The <strong>Course</strong> you selected does not exist.",
+	"task_course_permission_fail" => "You do not have permission to add a task for the course you selected. <br />Please re-select the course you would like to associate with this task.",
+	"task_recipient_type_invalid" => "Unable to proceed because the <strong>Task Recipients</strong> type is unrecognized.",
+	"task_verification_type_invalid" => "Unable to proceed because the <strong>Task Verification</strong> type is unrecognized.",
+	"task_time_required_invalid" => "Invalid <strong>Time Required</strong> entered. Time Required must be empty or a non-negative number of minutes.",
+	"task_time_required_too_long" => "Invalid <strong>Time Required</strong> entered. Time Required cannot be greater than %MAX_TIME_REQUIRED% minutes.",
+	"task_recipient_individual_empty" => "You have chosen <strong>Individual Task</strong> as <strong>Task Recipients</strong> type, but have not selected any individuals.",
+	"task_recipient_grad_year_missing" => "You have chosen <strong>Entire Clss Task</strong> as <strong Task Recipients</strong> type, but have not selected a valid <strong>Graduating Year</strong>.",
+	"task_no_faculty_and_faculty_verification" => "You have chosen <strong>Selected Faculty Verification</strong>, but have not designated any faculty in <strong>Associated Faculty</strong>.",
+	"task_organisation_permission_fail" => "You do not have permission to add a task for the selected organisation, please select a different one.",
+	"task_organisation_invalid" => "The <strong>Organisation</strong> you selected does not exist.",
+	"task_verification_no_verifier" => "You have chosen <strong>Other Specified Individual Verifiction</strong>, but have not selected an individual as <strong>Designated Verifier</strong>.",
+	
+	/** notices **/
+	"task_title_too_long" => "The <strong>Task Title</strong> field has a maximum length of %MAX_LENGTH% characters. The title was truncated to accomodate this." //note, the field has the same restriction, so the user is unlikely to receive this message
+	
 	);
 ?>

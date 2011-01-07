@@ -247,7 +247,26 @@ function moveObjective(objective_id, move_location) {
         value		: objective_id,
         name		: move_location+'_objectives[]'
 	};
-
+	
+	if (move_location == 'primary') {
+		if ($('secondary_objective_'+objective_id) != undefined) {
+			$('secondary_objective_'+objective_id).remove();
+		} else if ($('tertiary_objective_'+objective_id) != undefined) {
+			$('tertiary_objective_'+objective_id).remove();
+		}
+	} else if (move_location == 'secondary') {
+		if ($('primary_objective_'+objective_id) != undefined) {
+			$('primary_objective_'+objective_id).remove();
+		} else if ($('tertiary_objective_'+objective_id) != undefined) {
+			$('tertiary_objective_'+objective_id).remove();
+		}
+	} else if (move_location == 'tertiary') {
+		if ($('primary_objective_'+objective_id) != undefined) {
+			$('primary_objective_'+objective_id).remove();
+		} else if ($('secondary_objective_'+objective_id) != undefined) {
+			$('secondary_objective_'+objective_id).remove();
+		}
+	}
     var newInput = new Element('input', attrs);
 	$('objectives_head').insert({after: newInput});
 	new Ajax.Updater('objectives_list', '<?php echo ENTRADA_URL; ?>/api/objectives.api.php', 

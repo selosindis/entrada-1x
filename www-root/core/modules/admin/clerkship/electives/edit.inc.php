@@ -220,6 +220,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 					}
 					
 					/**
+					 * Non-required field "preceptor_prefix" / Preceptor Prefix.
+					 */
+					if ((isset($_POST["preceptor_prefix"])) && ($preceptor_prefix = clean_input($_POST["preceptor_prefix"], array("notags", "trim")))) {
+						$PROCESSED["preceptor_prefix"] = $preceptor_prefix;
+					}
+					
+					/**
 					 * Non-required field "preceptor_first_name" / Preceptor First Name.
 					 */
 					if ((isset($_POST["preceptor_first_name"])) && ($preceptor_first_name = clean_input($_POST["preceptor_first_name"], array("notags", "trim")))) {
@@ -397,6 +404,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 							$ELECTIVE["schools_id"]				= $PROCESSED["schools_id"];
 							$ELECTIVE["other_medical_school"]	= $PROCESSED["other_medical_school"];
 							$ELECTIVE["objective"]				= $PROCESSED["objective"];
+							$ELECTIVE["preceptor_prefix"]		= $PROCESSED["preceptor_prefix"];
 							$ELECTIVE["preceptor_first_name"]	= $PROCESSED["preceptor_first_name"];
 							$ELECTIVE["preceptor_last_name"]	= $PROCESSED["preceptor_last_name"];
 							$ELECTIVE["address"]				= $PROCESSED["address"];
@@ -516,7 +524,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 										$mail->ClearAddresses();
 										$mail->ClearReplyTos();
 										
-										$message  = "Attention ".(isset($PROCESSED["preceptor_first_name"]) && $PROCESSED["preceptor_first_name"] != "" ? $PROCESSED["preceptor_first_name"] . " " : "") . $PROCESSED["preceptor_last_name"].",\n\n";
+										$message  = "Attention ".(isset($PROCESSED["preceptor_prefix"]) && $PROCESSED["preceptor_prefix"] != "" ? $PROCESSED["preceptor_prefix"] . " " : "").(isset($PROCESSED["preceptor_first_name"]) && $PROCESSED["preceptor_first_name"] != "" ? $PROCESSED["preceptor_first_name"] . " " : "") . $PROCESSED["preceptor_last_name"].",\n\n";
 										$message .= "A Clerkship elective has been approved by Queen's University please review this:\n";
 										$message .= "=======================================================\n\n";
 										$message .= "Approved At:\t\t".date("r", time())."\n";
@@ -552,7 +560,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 										$mail->Subject	= "Electives Approval - ".APPLICATION_NAME;
 										$mail->Body		= $message;
 										
-										$mail->AddAddress($PROCESSED["email"], $PROCESSED["preceptor_first_name"] . " " . $PROCESSED["preceptor_last_name"]);
+										$mail->AddAddress($PROCESSED["email"], (isset($PROCESSED["preceptor_prefix"]) && $PROCESSED["preceptor_prefix"] != "" ? $PROCESSED["preceptor_prefix"] . " " : "").$PROCESSED["preceptor_first_name"] . " " . $PROCESSED["preceptor_last_name"]);
 										
 										if (!$mail->Send()) {
 											$BIGERROR++;
@@ -663,6 +671,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 					$PROCESSED["schools_id"]			= $event_info["schools_id"];
 					$PROCESSED["other_medical_school"]	= $event_info["other_medical_school"];
 					$PROCESSED["objective"]				= $event_info["objective"];
+					$PROCESSED["preceptor_prefix"]		= $event_info["preceptor_prefix"];
 					$PROCESSED["preceptor_first_name"] 	= $event_info["preceptor_first_name"];
 					$PROCESSED["preceptor_last_name"] 	= $event_info["preceptor_last_name"];
 					$PROCESSED["address"] 				= $event_info["address"];
@@ -1049,6 +1058,22 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 					</tr>
 					<tr>
 						<td></td>
+						<td><label for="preceptor_prefix" class="form-nrequired">Preceptor Prefix</label></td>
+						<td>
+							<select id="preceptor_prefix" name="preceptor_prefix" style="width: 55px; vertical-align: middle; margin-right: 5px">
+								<option value=""<?php echo ((!$PROCESSED["preceptor_prefix"]) ? " selected=\"selected\"" : ""); ?>></option>
+								<?php
+								if ((@is_array($PROFILE_NAME_PREFIX)) && (@count($PROFILE_NAME_PREFIX))) {
+									foreach ($PROFILE_NAME_PREFIX as $key => $prefix) {
+										echo "<option value=\"".html_encode($prefix)."\"".(($PROCESSED["preceptor_prefix"] == $prefix) ? " selected=\"selected\"" : "").">".html_encode($prefix)."</option>\n";
+									}
+								}
+								?>
+							</select>
+						</td>
+					</tr>
+					<tr>
+						<td></td>
 						<td><label for="preceptor_first_name" class="form-nrequired">Preceptor First Name</label></td>
 						<td>
 						<input type="text" id="preceptor_first_name" name="preceptor_first_name" value="<?php echo (isset($_POST["preceptor_first_name"]) ? html_encode($_POST["preceptor_first_name"]) : html_encode($PROCESSED["preceptor_first_name"])); ?>" maxlength="50" style="width: 250px"" />
@@ -1247,8 +1272,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 									$ERROR++;
 									$ERRORSTR[] = "You selected that you were adding a new region; however, you did not enter a name for this new region.";	
 								}
-							} elseif(trim($_POST["region_id"]) != "") {
-								$PROCESSED["region_id"] = (int) trim($_POST["region_id"]);
+							} elseif(trim($_POST["region_id"]) != "" && ($region_id = clean_input($_POST["region_id"], array("trim", "int")))) {
+								$query = "SELECT * FROM `".CLERKSHIP_DATABASE."`.`regions` WHERE `region_id` = ".$db->qstr($region_id);
+								$result	= $db->GetRow($query);
+								if ($result) {
+									$PROCESSED["region_id"] = (int) $result["region_id"];
+									if ((int) $result["manage_apartments"]) {
+										$PROCESSED["requires_apartment"] = 1;
+									} else {
+										$PROCESSED["requires_apartment"] = 0;
+									}
+								} else {
+									$ERROR++;
+									$ERRORSTR[] = "We were unable to locate the event location you selected. Please select a valid location or if your desired location is not in the list visit the <a href=\"".ENTRADA_URL."/admin/regionaled/regions\" target=\"_blank\">Manage Regions</a> section and locate the region in that list, click on it, and then select the &quot;Clerkship core rotations can take place in this region&quot; check box.";
+								}
 							} else {
 								$ERROR++;
 								$ERRORSTR[] = "You must select a region that this event resides in.";
@@ -1297,6 +1334,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 							if(!$ERROR) {
 								$PROCESSED["modified_last"]	= time();
 								$PROCESSED["modified_by"]	= $_SESSION["details"]["id"];
+								if(!$db->AutoExecute("`".CLERKSHIP_DATABASE."`.`events`", $PROCESSED, "UPDATE", "`event_id` = ".$db->qstr($EVENT_ID))) {
+									$ERROR++;
+									$ERRORSTR[]	= "Failed to update this event in the database. Please contact a system administrator if this problem persists.";
+									application_log("error", "Error while editing clerkship event into database. Database server said: ".$db->ErrorMsg());
+									$STEP		= 1;
+								}
 								//Delete apartment schedule info for this student if the location has changed.
 								if ($PROCESSED["region_id"] != $event_info["region_id"] || ($event_info["event_start"] != $PROCESSED["event_start"]) ||  ($event_info["event_finish"] != $PROCESSED["event_finish"])) {
 									if(!notify_regional_education("change-critical", $EVENT_ID)) {
@@ -1305,12 +1348,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 									if (!$db->Execute("DELETE FROM `".CLERKSHIP_DATABASE."`.`apartment_schedule` WHERE `event_id` = ".$db->qstr($EVENT_ID))) {
 										application_log("error", "There was an issue while trying to remove the apartment schedule information for event [".$EVENT_ID."]. Database said: ".$db->ErrorMsg());
 									}
-								}
-								if(!$db->AutoExecute("`".CLERKSHIP_DATABASE."`.`events`", $PROCESSED, "UPDATE", "`event_id` = ".$db->qstr($EVENT_ID))) {
-									$ERROR++;
-									$ERRORSTR[]	= "Failed to update this event in the database. Please contact a system administrator if this problem persists.";
-									application_log("error", "Error while editing clerkship event into database. Database server said: ".$db->ErrorMsg());
-									$STEP		= 1;
 								}
 							} else {
 								$STEP = 1;

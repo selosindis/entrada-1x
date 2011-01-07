@@ -48,10 +48,9 @@ if (!defined("PARENT_INCLUDED")) {
 		 * Add the Regional Education module secondary navigation.
 		 */
 		$sidebar_html  = "<ul class=\"menu\">";
-		//$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/evaluations\">Manage Evaluations</a></li>\n";
-		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/evaluations/scheduler\">Manage Scheduler</a></li>\n";
+		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/evaluations\">Manage Evaluations</a></li>\n";
 		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/evaluations/forms\">Manage Forms</a></li>\n";
-		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/evaluations/notifications\">Manage Notifications</a></li>\n";
+//		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/evaluations/notifications\">Manage Notifications</a></li>\n";
 		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/evaluations/reports\">Evaluation Reports</a></li>\n";
 		$sidebar_html .= "</ul>";
 		new_sidebar_item("Manage Evaluations", $sidebar_html, "evaluation-nav", "open");

@@ -50,11 +50,13 @@ if (!defined("IN_CLERKSHIP")) {
 		<?php
 	}
 	
-	$query = "	SELECT *
-				FROM `".CLERKSHIP_DATABASE."`.`events`
-				WHERE `event_type`= 'elective'
-				AND `event_status` = 'approval'
-				ORDER BY `event_start` ASC";
+	$query = "	SELECT a.*
+				FROM `".CLERKSHIP_DATABASE."`.`events` AS a
+				JOIN `".CLERKSHIP_DATABASE."`.`electives` AS a
+				ON a.`event_id` = b.`event_id`
+				WHERE a.`event_type`= 'elective'
+				AND a.`event_status` = 'approval'
+				ORDER BY a.`event_start` ASC";
 	$results = $db->GetAll($query);
 	if ($results) {
 		if ($ERROR) {
@@ -354,8 +356,10 @@ if (!defined("IN_CLERKSHIP")) {
 								<select name="year" style="width: 205px">
 								<option value="">-- Select Graduating Year --</option>
 								<?php
-								for($year = (date("Y", time()) + 4); $year >= 2002; $year--) {
-									echo "<option value=\"".$year."\"".(($year == date("Y", time())) ? "" : "").">Class of ".$year."</option>\n";	
+								if (isset($SYSTEM_GROUPS["student"]) && !empty($SYSTEM_GROUPS["student"])) {
+									foreach ($SYSTEM_GROUPS["student"] as $class) {
+										echo "<option value=\"".$class."\">Class of ".html_encode($class)."</option>\n";
+									}
 								}
 								?>
 								</select>

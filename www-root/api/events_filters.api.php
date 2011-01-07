@@ -180,6 +180,7 @@ if (($options_for) && (isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["i
             array('text'=>'Term 1', 'value'=>'phase_1', 'checked'=>''),
             array('text'=>'Term 2', 'value'=>'phase_2', 'checked'=>''),
             array('text'=>'Term 3', 'value'=>'phase_t3', 'checked'=>''),
+            array('text'=>'Term 4', 'value'=>'phase_t4', 'checked'=>''),
             array('text'=>'Phase 2A', 'value'=>'phase_2a', 'checked'=>''),
             array('text'=>'Phase 2B', 'value'=>'phase_2b', 'checked'=>''),
             array('text'=>'Phase 2C', 'value'=>'phase_2c', 'checked'=>''),

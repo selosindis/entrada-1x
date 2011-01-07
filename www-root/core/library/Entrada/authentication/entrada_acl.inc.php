@@ -26,6 +26,11 @@ class Entrada_ACL extends ACL_Factory {
 					"eventcontent"
 				)
 			),
+			"evaluation" => array (
+				"evaluationform" => array (
+					"evaluationformquestion"
+				),
+			),
 			"gradebook" => array(
 				"assessment"
 			),
@@ -1103,11 +1108,11 @@ class ClerkshipAssertion implements Zend_Acl_Assert_Interface {
 			if(isset($acl->_entrada_last_query_role)) {
 				$role = $acl->_entrada_last_query_role;
 				if(($role instanceof EntradaUser) || isset($role->details) || isset($role->details["grad_year"])) {
-					$GRAD_YEAR = $role->details["grad_year"];
+					$GRAD_YEAR = preg_replace("/[^0-9]+/i", "", $role->details["grad_year"]);
 				}
 			}
 		} else {
-			$GRAD_YEAR = $role->details["grad_year"];
+			$GRAD_YEAR = preg_replace("/[^0-9]+/i", "", $role->details["grad_year"]);
 		}
 
 		if(!isset($GRAD_YEAR)) {
@@ -1798,6 +1803,43 @@ class QuizQuestionResource extends QuizResource {
 
 	public function getResourceId() {
 		return "quizquestion".($this->specific ? $this->quiz_id : "");
+	}
+}
+
+class EvaluationResource extends EntradaAclResource {
+	var $evaluation_id;
+
+	function __construct($evaluation_id, $assert = null) {
+		$this->evaluation_id = $evaluation_id;
+	}
+
+	public function getResourceId() {
+		return "evaluation".($this->specific ? $this->evaluation_id : "");
+	}
+}
+
+class EvaluationResultResource extends EvaluationResource {
+	public function getResourceId() {
+		return "evaluationresult".($this->specific ? $this->evaluation_id : "");
+	}
+}
+
+class EvaluationFormResource extends EvaluationResource {
+	public function getResourceId() {
+		return "evaluationform".($this->specific ? $this->evaluation_id : "");
+	}
+}
+
+class EvaluationFormQuestionResource extends EvaluationResource {
+	var $evaluation_form_question_id;
+
+	function __construct($evaluation_form_question_id, $evaluation_id, $assert = null) {
+		$this->evaluation_form_question_id = $evaluation_form_question_id;
+		$this->evaluation_id = $evaluation_id;
+	}
+
+	public function getResourceId() {
+		return "evaluationformquestion".($this->specific ? $this->evaluation_id : "");
 	}
 }
 

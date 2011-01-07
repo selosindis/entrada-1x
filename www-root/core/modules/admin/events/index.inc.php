@@ -141,20 +141,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			<tfoot>
 				<tr>
 					<td></td>
-					<?php if ($ENTRADA_ACL->amIAllowed("event", "delete", false)) { ?>
-						<td style="padding-top: 10px">
+					<td style="padding-top: 10px" colspan="5">
+						<?php
+						if ($ENTRADA_ACL->amIAllowed("event", "delete", false)) {
+							?>
 							<input type="submit" class="button" value="Delete Selected" />
-						</td>
-					<?php } else {
-						echo "<td></td>";
-					}
-					if ($ENTRADA_ACL->amIAllowed("event", "create", false)) { ?>
-						<td colspan="3" style="padding-top: 10px">
-						<input type="submit" class="button" value="Copy Selected"  onClick="document.frmSelect.action ='<?php echo ENTRADA_URL; ?>/admin/events?section=copy'" />
+							<?php
+						}
+						if ($ENTRADA_ACL->amIAllowed("event", "create", false)) {
+							?>
+							<input type="submit" class="button" value="Copy Selected"  onClick="document.frmSelect.action ='<?php echo ENTRADA_URL; ?>/admin/events?section=copy'" />
+							<?php
+						}
+						?>
 					</td>
-					<?php } else {
-						echo '<td colspan="3" ></td>';
-					} ?>
 				</tr>
 			</tfoot>
 			<?php endif; ?>

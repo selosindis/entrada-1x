@@ -44,45 +44,12 @@ if (!defined("IN_EVALUATIONS")) {
 	<h2 style="color: #669900">Student Evaluations</h2>
 	<ol class="system-reports">
 		<li>
-			<a href="<?php echo ENTRADA_URL; ?>/admin/evaluations/reports?section=peer-review">Peer Evaluations</a><br />
-			Reports showing the students' evaluation of their peers.
+			<a href="<?php echo ENTRADA_URL; ?>/admin/evaluations/reports?section=student-course-evaluations">Course Evaluations</a><br />
+			Reports showing the students' evaluation of their pre-clerkship courses.
 		</li>
 		<li>
-			<a href="<?php echo ENTRADA_URL; ?>/admin/evaluations/reports?section=student-group-review">Group Evaluations</a><br />
-			Reports showing the students' evaluation of their small and clinical groups.
-		</li>
-		<li>
-			<a href="<?php echo ENTRADA_URL; ?>/admin/evaluations/reports?section=course-review">Course Evaluations</a><br />
-			Reports showing the students' evaluation of their courses and teachers.
-		</li>
-	</ol>
-	
-	<h2 style="color: #669900">Faculty Evaluations</h2>
-	<ol class="system-reports">
-		<li>
-			<a href="<?php echo ENTRADA_URL; ?>/admin/evaluations/reports?section=faculty-report-by-group">Faculty's Evaluations of Students in Student Groups</a><br />
-			Reports that show evaluations by faculty of students in teaching groups.
-		</li>
-		<li>
-			<a href="<?php echo ENTRADA_URL; ?>/admin/evaluations/reports?section=faculty-report-by-clinic">Faculty's Evaluations of Students performance in Clinical groups.</a><br />
-			Reports that show evaluation by faculty of students in clinical groups.
-		</li>
-		
-	</ol>
-	
-	<h2 style="color: #669900">Administrative Reports</h2>
-	<ol class="system-reports">
-		<li>
-			<a href="<?php echo ENTRADA_URL; ?>/admin/evaluations/reports?section=active">Active Evaluations Overview</a><br />
-			A report showing all open evaluations during the given time period.
-		</li>
-		<li>
-			<a href="<?php echo ENTRADA_URL; ?>/admin/evaluations/reports?section=flagged">Flagged Evaluations</a><br />
-			A report showing all evaluations that contain active flags during the given time period.
-		</li>
-		<li>
-			<a href="<?php echo ENTRADA_URL; ?>/admin/evaluations/reports?section=archive">Archive</a><br />
-			A report showing all closed and expired evaluations during the given time period.
+			<a href="<?php echo ENTRADA_URL; ?>/admin/evaluations/reports?section=student-teacher-evaluations">Teacher Evaluations</a><br />
+			Reports showing the students' evaluation of their pre-clerkship teachers.
 		</li>
 	</ol>
 	<?php

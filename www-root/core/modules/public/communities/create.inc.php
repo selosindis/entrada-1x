@@ -693,9 +693,9 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 								<div id="community_registration_show_groups" style="display: none; padding-left: 25px">
 												<?php
 												if((is_array($GROUP_TARGETS)) && ($total_sresults = count($GROUP_TARGETS))) {
-													$count			= 0;
-													$column			= 0;
-													$max_columns		= 2;
+													$count = 0;
+													$column = 0;
+													$max_columns = 2;
 
 													echo "<table style=\"width: 100%\" cellspacing=\"0\" cellpadding=\"1\" border=\"0\" summary=\"Available Groups\">\n";
 													echo "<colgroup>\n";

@@ -920,7 +920,7 @@ CREATE TABLE IF NOT EXISTS `ar_ward_supervision` (
 CREATE TABLE IF NOT EXISTS `assessments` (
   `assessment_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `course_id` int(10) unsigned NOT NULL,
-  `grad_year` int(4) NOT NULL,
+  `grad_year` varchar(35) NOT NULL,
   `name` varchar(255) NOT NULL,
   `description` text NOT NULL,
   `type` varchar(255) NOT NULL,
@@ -1687,6 +1687,131 @@ INSERT INTO `curriculum_lu_types` (`curriculum_type_id`, `parent_id`, `curriculu
 (7, 0, 'Term 7', NULL, 6, 1, 1250538588, 1),
 (8, 0, 'Term 8', NULL, 7, 1, 1250538588, 1);
 
+CREATE TABLE IF NOT EXISTS `evaluations` (
+  `evaluation_id` int(12) NOT NULL AUTO_INCREMENT,
+  `eform_id` int(12) NOT NULL,
+  `evaluation_title` varchar(128) NOT NULL,
+  `evaluation_description` text NOT NULL,
+  `evaluation_active` tinyint(1) NOT NULL,
+  `evaluation_start` bigint(64) NOT NULL,
+  `evaluation_finish` bigint(64) NOT NULL,
+  `min_submittable` tinyint(1) NOT NULL DEFAULT '1',
+  `max_submittable` tinyint(1) NOT NULL DEFAULT '1',
+  `release_date` bigint(64) NOT NULL,
+  `release_until` bigint(64) NOT NULL,
+  `updated_date` bigint(64) NOT NULL,
+  `updated_by` bigint(64) NOT NULL,
+  PRIMARY KEY (`evaluation_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `evaluations_lu_questiontypes` (
+  `questiontype_id` int(12) NOT NULL AUTO_INCREMENT,
+  `questiontype_shortname` varchar(32) NOT NULL,
+  `questiontype_title` varchar(64) NOT NULL,
+  `questiontype_description` text NOT NULL,
+  `questiontype_active` tinyint(1) NOT NULL DEFAULT '1',
+  PRIMARY KEY (`questiontype_id`)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+
+INSERT INTO `evaluations_lu_questiontypes` (`questiontype_id`, `questiontype_shortname`, `questiontype_title`, `questiontype_description`, `questiontype_active`) VALUES
+(1, 'matrix_single', 'Choice Matrix (single response)', 'The rating scale allows evaluators to rate each question based on the scale you provide (i.e. 1 = Not Demonstrated, 2 = Needs Improvement, 3 = Satisfactory, 4 = Above Average).', 1),
+(2, 'descriptive_text', 'Descriptive Text', 'Allows you to add descriptive text information to your evaluation form. This could be instructions or other details relevant to the question or series of questions.', 1);
+
+CREATE TABLE IF NOT EXISTS `evaluations_lu_targets` (
+  `target_id` int(11) NOT NULL AUTO_INCREMENT,
+  `target_shortname` varchar(32) NOT NULL,
+  `target_title` varchar(64) NOT NULL,
+  `target_description` text NOT NULL,
+  `target_active` tinyint(1) NOT NULL DEFAULT '1',
+  PRIMARY KEY (`target_id`)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+
+INSERT INTO `evaluations_lu_targets` (`target_id`, `target_shortname`, `target_title`, `target_description`, `target_active`) VALUES
+(1, 'course', 'Course Evaluation', '', 1),
+(2, 'teacher', 'Teacher Evaluation', '', 1),
+(3, 'student', 'Student Assessment', '', 0),
+(4, 'rotation_core', 'Clerkship Core Rotation Evaluation', '', 0),
+(5, 'rotation_elective', 'Clerkship Elective Rotation Evaluation', '', 0),
+(6, 'preceptor', 'Clerkship Preceptor Evaluation', '', 0),
+(7, 'peer', 'Peer Assessment', '', 0),
+(8, 'self', 'Self Assessment', '', 0);
+
+CREATE TABLE IF NOT EXISTS `evaluation_evaluators` (
+  `eevaluator_id` int(12) NOT NULL AUTO_INCREMENT,
+  `evaluation_id` int(12) NOT NULL,
+  `evaluator_type` enum('proxy_id','grad_year','organisation_id') NOT NULL,
+  `evaluator_value` int(12) NOT NULL,
+  `updated_date` bigint(64) NOT NULL,
+  `updated_by` int(12) NOT NULL,
+  PRIMARY KEY (`eevaluator_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `evaluation_forms` (
+  `eform_id` int(12) NOT NULL AUTO_INCREMENT,
+  `target_id` int(12) NOT NULL,
+  `form_parent` int(12) NOT NULL,
+  `form_title` varchar(64) NOT NULL,
+  `form_description` text NOT NULL,
+  `form_active` tinyint(1) NOT NULL,
+  `updated_date` bigint(64) NOT NULL,
+  `updated_by` int(12) NOT NULL,
+  PRIMARY KEY (`eform_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `evaluation_form_questions` (
+  `efquestion_id` int(12) NOT NULL AUTO_INCREMENT,
+  `eform_id` int(121) NOT NULL,
+  `questiontype_id` int(12) NOT NULL,
+  `question_text` longtext NOT NULL,
+  `question_order` tinyint(3) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`efquestion_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `evaluation_form_responses` (
+  `efresponse_id` int(12) NOT NULL AUTO_INCREMENT,
+  `efquestion_id` int(12) NOT NULL,
+  `response_text` longtext NOT NULL,
+  `response_order` tinyint(3) NOT NULL DEFAULT '0',
+  `response_is_html` tinyint(1) NOT NULL DEFAULT '0',
+  `minimum_passing_level` tinyint(1) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`efresponse_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `evaluation_progress` (
+  `eprogress_id` int(12) NOT NULL AUTO_INCREMENT,
+  `evaluation_id` int(12) NOT NULL,
+  `etarget_id` int(12) NOT NULL,
+  `proxy_id` int(12) NOT NULL,
+  `progress_value` enum('inprogress','complete','cancelled') NOT NULL DEFAULT 'inprogress',
+  `updated_date` int(11) NOT NULL,
+  `updated_by` int(11) NOT NULL,
+  PRIMARY KEY (`eprogress_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `evaluation_responses` (
+  `eresponse_id` int(12) NOT NULL AUTO_INCREMENT,
+  `eprogress_id` int(12) NOT NULL,
+  `eform_id` int(12) NOT NULL,
+  `proxy_id` int(12) NOT NULL,
+  `efquestion_id` int(12) NOT NULL,
+  `efresponse_id` int(12) NOT NULL,
+  `comments` text NULL,
+  `updated_date` bigint(64) NOT NULL,
+  `updated_by` int(12) NOT NULL,
+  PRIMARY KEY (`eresponse_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `evaluation_targets` (
+  `etarget_id` int(12) NOT NULL AUTO_INCREMENT,
+  `evaluation_id` int(12) NOT NULL,
+  `target_id` int(11) NOT NULL,
+  `target_value` int(12) NOT NULL,
+  `target_active` tinyint(1) NOT NULL DEFAULT '1',
+  `updated_date` bigint(64) NOT NULL,
+  `updated_by` int(12) NOT NULL,
+  PRIMARY KEY (`etarget_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
 CREATE TABLE IF NOT EXISTS `events` (
   `event_id` int(12) NOT NULL AUTO_INCREMENT,
   `recurring_id` int(12) DEFAULT '0',
@@ -1709,7 +1834,6 @@ CREATE TABLE IF NOT EXISTS `events` (
   PRIMARY KEY  (`event_id`),
   KEY `course_id` (`course_id`),
   KEY `region_id` (`region_id`),
-  KEY `eventtype_id` (`eventtype_id`),
   KEY `recurring_id` (`recurring_id`),
   KEY `release_date` (`release_date`,`release_until`),
   KEY `event_start` (`event_start`,`event_duration`),

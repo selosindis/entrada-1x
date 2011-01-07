@@ -110,13 +110,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 				$calculation_targets			= array();
 				$calculation_targets["all"]		= "all quiz respondents";
 				$calculation_targets["student"]	= "all students";
-				$fyear = fetch_first_year();
-				for ($year = $fyear; $year >= ($fyear - 3); $year--) {
-					$calculation_targets["student:".$year]	= "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;class of ".$year;
+
+				$cut_off_year = (fetch_first_year() - 3);
+				if (isset($SYSTEM_GROUPS["student"]) && !empty($SYSTEM_GROUPS["student"])) {
+					foreach ($SYSTEM_GROUPS["student"] as $class) {
+						if (clean_input($class, "numeric") >= $cut_off_year) {
+							$calculation_targets["student:".$class]	= "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;class of ".$class;
+						}
+					}
 				}
+
 				if (($event_grad_year) && (!array_key_exists("student:".$event_grad_year, $calculation_targets))) {
 					$calculation_targets["student:".$event_grad_year] = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;class of ".$event_grad_year;
 				}
+				
 				$calculation_targets["resident"]	= "all residents";
 				$calculation_targets["faculty"]		= "all faculty";
 				$calculation_targets["staff"]		= "all staff";

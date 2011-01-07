@@ -37,6 +37,20 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
+		
+	if ($organisation_list && count($organisation_list) > 1) {
+		$sidebar_html = "<ul class=\"menu\">\n";
+		foreach ($organisation_list as $key => $organisation_title) {
+			if ($key == $ORGANISATION_ID) {
+				$sidebar_html .= "<li class=\"on\"><a href=\"".ENTRADA_URL."/admin/notices?".replace_query(array("org" => $key))."\">".html_encode($organisation_title)."</a></li>\n";
+			} else {
+				$sidebar_html .= "<li class=\"off\"><a href=\"".ENTRADA_URL."/admin/notices?".replace_query(array("org" => $key))."\">".html_encode($organisation_title)."</a></li>\n";
+			}
+		}
+		$sidebar_html .= "</ul>\n";
+
+		new_sidebar_item("Organisations", $sidebar_html, "display-style", "open");
+	}
 	/**
 	 * This query will automatically remove notices that have expired more than 5 days ago.
 	 */
@@ -84,9 +98,6 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 	 * Provide the queries with the columns to order by.
 	 */
 	switch($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) {
-		case "organisation" :
-			$SORT_BY	= "`organisations`.`organisation_title` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]);
-		break;
 		case "date" :
 			$SORT_BY	= "`notices`.`display_until` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]);
 		break;
@@ -114,7 +125,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 	<div style="clear: both"></div>
 
 	<?php
-	$query	= "SELECT `notices`.*, `organisations`.`organisation_title` FROM `notices` LEFT JOIN `".AUTH_DATABASE."`.`organisations` ON `".AUTH_DATABASE."`.`organisations`.`organisation_id` = `notices`.`organisation_id` WHERE `target` NOT LIKE '%proxy_id:%' ORDER BY ".$SORT_BY;
+	$query	= "SELECT `notices`.*, `organisations`.`organisation_title` FROM `notices` LEFT JOIN `".AUTH_DATABASE."`.`organisations` ON `".AUTH_DATABASE."`.`organisations`.`organisation_id` = `notices`.`organisation_id` WHERE `target` NOT LIKE '%proxy_id:%' AND `notices`.`organisation_id` = ".$db->qstr($ORGANISATION_ID)." ORDER BY ".$SORT_BY;
 	$results	= ((USE_CACHE) ? $db->CacheGetAll(CACHE_TIMEOUT, $query) : $db->GetAll($query));
 	if($results) {
 		?>

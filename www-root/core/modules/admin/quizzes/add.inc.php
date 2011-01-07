@@ -194,7 +194,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 				<tr>
 					<td></td>
 					<td><label for="quiz_title" class="form-required">Quiz Title</label></td>
-					<td><input type="text" id="quiz_title" name="quiz_title" value="<?php echo html_encode($PROCESSED["quiz_title"]); ?>" maxlength="64" style="width: 96%" /></td>
+					<td><input type="text" id="quiz_title" name="quiz_title" value="<?php echo html_encode($PROCESSED["quiz_title"]); ?>" maxlength="64" style="width: 95%" /></td>
 				</tr>
 				<tr>
 					<td></td>

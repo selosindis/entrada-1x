@@ -88,13 +88,13 @@ if(isset($_GET["clinical"])) {
 
 function queryIt($proxy_id, $table, $startDate, $endDate, $db)
 {
-	$query = "SELECT * FROM `".$table."`, `lu_roles`, `lu_publication_type`
+	$query = "SELECT * FROM `".$table."`, `global_lu_roles`, `ar_lu_publication_type`
     WHERE `".$table."`.`proxy_id` = '$proxy_id'
-    AND `".$table."`.`type_id` = `lu_publication_type`.`type_id`
-    AND `".$table."`.`role_id` = `lu_roles`.`role_id`
+    AND `".$table."`.`type_id` = `ar_lu_publication_type`.`type_id`
+    AND `".$table."`.`role_id` = `global_lu_roles`.`role_id`
     AND `".$table."`.`year_reported` BETWEEN '$startDate' AND '$endDate'
     ORDER BY `status` ASC";
-    
+	
     $results = $db->GetAll($query);
     
     return $results;
@@ -225,8 +225,7 @@ $output_file	= ANNUALREPORT_STORAGE."/".$pdf_string;
 
 echo "<h1>Your Annual Report for ".$REPORT_YEAR."</h1>";
 
-echo "<a href=\"".ENTRADA_URL."/file-annualreport.php?file=".$pdf_string.".pdf\"><input type=\"button\" name=\"download\" value=\"Download Report\" /></a><h1></h1>";
-	
+echo "<form><input type=\"button\" value=\"Download Report\" onClick=\"window.location.href='".ENTRADA_URL."/file-annualreport.php?file=".$pdf_string.".pdf'\"></form><h1></h1>";	
 
 ob_end_flush();
 ob_start("on_checkout");
@@ -1460,7 +1459,7 @@ else
 	$startDate = $REPORT_YEAR;
 	$endDate = $REPORT_YEAR;
 
-	$table = TABLES_PREFIX."peer_reviewed_papers";
+	$table = "ar_peer_reviewed_papers";
 
 if($results = queryIt($proxy_id, $table, $startDate, $endDate, $db)) {
 	display($results, $db, $typeDesc = true);
@@ -1475,7 +1474,7 @@ if($results = queryIt($proxy_id, $table, $startDate, $endDate, $db)) {
 	$startDate = $REPORT_YEAR;
 	$endDate = $REPORT_YEAR;
 
-	$table = TABLES_PREFIX."non_peer_reviewed_papers";
+	$table = "ar_non_peer_reviewed_papers";
 
 if($results = queryIt($proxy_id, $table, $startDate, $endDate, $db)) {
 	display($results, $db, $typeDesc = true);
@@ -1490,7 +1489,7 @@ if($results = queryIt($proxy_id, $table, $startDate, $endDate, $db)) {
 	$startDate = $REPORT_YEAR;
 	$endDate = $REPORT_YEAR;
 
-	$table = TABLES_PREFIX."book_chapter_mono";
+	$table = "ar_book_chapter_mono";
 
 if($results = queryIt($proxy_id, $table, $startDate, $endDate, $db)) {
 	display($results, $db, $typeDesc = true);
@@ -1505,7 +1504,7 @@ if($results = queryIt($proxy_id, $table, $startDate, $endDate, $db)) {
 	$startDate = $REPORT_YEAR;
 	$endDate = $REPORT_YEAR;
 
-	$table = TABLES_PREFIX."poster_reports";
+	$table = "ar_poster_reports";
 
 if($results = queryIt($proxy_id, $table, $startDate, $endDate, $db)) {
 	display($results, $db, $typeDesc = true);

@@ -33,7 +33,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_PUBLIC_QUIZZES"))) {
 
 if ($RECORD_ID) {
 	if ($QUIZ_TYPE == "event") {
-		$query			= "	SELECT a.`quiz_score`, a.`quiz_value`, a.`proxy_id`, b.*, d.`event_title` AS `content_title`, d.`event_start`, d.`event_finish`, d.`release_date` AS `event_release_date`, d.`release_until` AS `event_release_until`, d.`course_id`, e.`organisation_id`, f.`quiztype_code`
+		$query			= "	SELECT a.`quiz_score`, a.`quiz_value`, a.`proxy_id`, b.*, d.`event_id`, d.`event_title` AS `content_title`, d.`event_start`, d.`event_finish`, d.`release_date` AS `event_release_date`, d.`release_until` AS `event_release_until`, d.`course_id`, e.`organisation_id`, f.`quiztype_code`
 							FROM `quiz_progress` AS a
 							LEFT JOIN `attached_quizzes` AS b
 							ON b.`aquiz_id` = a.`aquiz_id`
@@ -65,7 +65,7 @@ if ($RECORD_ID) {
 							WHERE a.`qprogress_id` = ".$db->qstr($RECORD_ID)."
 							AND c.`quiz_active` = '1'";
 	}
-	$quiz_record	= $db->GetRow($query); echo $db->ErrorMsg();
+	$quiz_record = $db->GetRow($query);
 	if ($quiz_record) {
 		$is_administrator = false;
 		if ($QUIZ_TYPE == "event") {

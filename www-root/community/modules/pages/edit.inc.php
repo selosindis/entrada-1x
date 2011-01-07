@@ -190,7 +190,7 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 				$page_details	= $db->GetRow($query);
 				if ($page_details) {
 					load_rte((($PAGE_TYPE == "default") ? "communityadvanced" : "communitybasic"));
-				
+					
 					$BREADCRUMB[]	= array("url" => "", "title" => "Edit Page");
 				
 					if (!isset($PAGE_TYPE) || $page_details["page_type"] == "course") {
@@ -1084,6 +1084,7 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 										<?php
 									}
 								} elseif ($PAGE_TYPE == "course" && strpos($page_record["page_url"], "mcc_presentations") !== false) {
+									$organisation_id = $db->GetOne("SELECT `organisation_id` FROM `courses` WHERE `course_id` = ".$db->qstr($course_ids[0]));
 									?>
 									<tr>
 										<td colspan="2">
@@ -1100,6 +1101,15 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 														ORDER BY b.`objective_order`";
 											$results = $db->GetAll($query);
 											if ($results) {
+												
+												if($ENTRADA_ACL->amIAllowed(new CourseResource($course_ids[0], $organisation_id), "update")) {
+													echo "<div class=\"no-printing\">\n";
+													echo "	<div style=\"float: right\">\n";
+													echo "<a href=\"".ENTRADA_URL."/admin/courses?section=edit&id=".$course_ids[0]."\"><img src=\"".ENTRADA_URL."/images/event-details.gif\" width=\"16\" height=\"16\" alt=\"Edit course details\" title=\"Edit course details\" border=\"0\" style=\"vertical-align: middle; margin-bottom: 2px;\" /></a> <a href=\"".ENTRADA_URL."/admin/courses?section=edit&id=".$course_ids[0]."\" style=\"font-size: 10px; margin-right: 8px\">Edit course details</a>\n";
+													echo "	</div>\n";
+													echo "</div>\n";
+													echo "<br/>";
+												}
 												echo "<ul class=\"objectives\">\n";
 												foreach ($results as $result) {
 													if ($result["objective_name"]) {
@@ -1108,7 +1118,11 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 												}
 												echo "</ul>\n";
 											} else {
-												echo "<div class=\"display-notice\">While medical presentations may be used to illustrate concepts in this course, there are no specific presentations from the Medical Council of Canada that have been selected.</div>";
+												if($ENTRADA_ACL->amIAllowed(new CourseResource($course_ids[0], $organisation_id), "update")) {
+													echo "<div class=\"display-notice\">While medical presentations may be used to illustrate concepts in this course, there are no specific presentations from the Medical Council of Canada that have been selected. If you would like to add a clinical presentation to this course, please click <a href=\"".ENTRADA_URL."/admin/courses?section=edit&id=".$course_ids[0]."\">here</a>. </div>\n";
+												} else {
+													echo "<div class=\"display-notice\">While medical presentations may be used to illustrate concepts in this course, there are no specific presentations from the Medical Council of Canada that have been selected. </div>";
+												}
 											}
 											?>
 										</td>

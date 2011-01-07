@@ -46,21 +46,23 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 		
 		if ($course_details && $ENTRADA_ACL->amIAllowed(new GradebookResource($course_details["course_id"], $course_details["organisation_id"]), "read")) {
 						
-			if (isset($_GET["year"]) && ($tmp_input = clean_input($_GET["year"], array("nows", "int")))) {
+			if (isset($_GET["year"]) && ($tmp_input = clean_input($_GET["year"], "credentials"))) {
 				$GRAD_YEAR = $tmp_input;
 			} else {
-				$GRAD_YEAR = (int)(date("Y"));
+				$GRAD_YEAR = (int) (date("Y"));
 			}			
 				
 			?>
 			<div id="toolbar" style="display: none;">
-			<select id="filter_grad_year" name="filter_grad_year" style="width: 203px, float: right;">
+				<select id="filter_grad_year" name="filter_grad_year" style="width: 203px; float: right;">
 				<?php
-				for($year = (date("Y", time()) + 4); $year >= (date("Y", time()) - 1); $year--) {
-					echo "<option value=\"".(int) $year."\"".(($GRAD_YEAR == $year) ? " selected=\"selected\"" : "").">Class of ".html_encode($year)."</option>\n";
+				if (isset($SYSTEM_GROUPS["student"]) && !empty($SYSTEM_GROUPS["student"])) {
+					foreach ($SYSTEM_GROUPS["student"] as $class) {
+						echo "<option value=\"".$class."\"".(($GRAD_YEAR == $class) ? " selected=\"selected\"" : "").">Class of ".html_encode($class)."</option>\n";
+					}
 				}
 				?>
-			</select>
+				</select>
 			</div>
 			<?php
 			$query = "	SELECT `assessments`.*,`assessment_marking_schemes`.`handler`

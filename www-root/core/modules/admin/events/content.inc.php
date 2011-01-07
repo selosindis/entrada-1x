@@ -105,13 +105,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						if ($result["audience_type"] == $event_audience_type) {
 							switch ($result["audience_type"]) {
 								case "grad_year" :
-									$associated_grad_year		= (int) $result["audience_value"];
+									$associated_grad_year = clean_input($result["audience_value"], "alphanumeric");
 								break;
 								case "group_id" :
-									$associated_group_ids[]		= (int) $result["audience_value"];
+									$associated_group_ids[] = (int) $result["audience_value"];
 								break;
 								case "proxy_id" :
-									$associated_proxy_ids[]		= (int) $result["audience_value"];
+									$associated_proxy_ids[] = (int) $result["audience_value"];
 								break;
 								case "organisation_id" :
 									$query = "SELECT `organisation_title` FROM `".AUTH_DATABASE."`.`organisations` WHERE `organisation_id` = ".$db->qstr($result["audience_value"]);

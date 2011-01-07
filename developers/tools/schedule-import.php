@@ -1,4 +1,4 @@
-#!/usr/bin/php
+#!/usr/local/zend/bin/php
 <?php
 /**
  * Entrada Tools [ http://www.entrada-project.org ]
@@ -76,6 +76,8 @@ $COPY_EVENT_FILES		= true;		// Copy event files from old events.
 $COPY_EVENT_LINKS		= true;		// Copy event links from old events.
 $COPY_EVENT_OBJECTIVES	= true;		// Copy event objectives from old events.
 
+$EVENT_TYPE_LOOKUP		= array();
+
 $ACTION					= ((isset($_SERVER["argv"][1])) ? trim($_SERVER["argv"][1]) : "-usage");
 $CSV_FILE				= (((isset($_SERVER["argv"][2])) && (trim($_SERVER["argv"][2]) != "")) ? trim($_SERVER["argv"][2]) : false);
 
@@ -105,6 +107,9 @@ switch ($ACTION) {
 				if ($row_count > 1) {
 					$event_ids			= array();
 					$proxy_ids			= array();
+					$event_duration		= 0;
+					$eventtype_ids		= array();
+					$eventtype_duration = array();
 		
 					$event_id			= ((isset($row[0])) ? clean_input($row[0]) : "");
 					$event_phase		= ((isset($row[1])) ? clean_input($row[1]) : "");
@@ -113,8 +118,8 @@ switch ($ACTION) {
 					$course_name		= ((isset($row[4])) ? clean_input($row[4]) : "");
 					$event_date			= ((isset($row[5])) ? clean_input($row[5]) : "");
 					$event_start_time	= ((isset($row[6])) ? clean_input($row[6]) : "");
-					$event_duration		= ((isset($row[7])) ? clean_input($row[7]) : 0);
-					$event_type			= ((isset($row[8])) ? clean_input($row[8]) : "");
+					$event_durations	= ((isset($row[7])) ? clean_input($row[7]) : 0);
+					$event_types		= ((isset($row[8])) ? clean_input($row[8]) : "");
 					$event_title		= ((isset($row[9])) ? clean_input($row[9]) : "");
 					$event_location		= ((isset($row[10]) && ($row[10] != "")) ? clean_input($row[10]) : "TBA");
 					$staff_numbers		= ((isset($row[11])) ? clean_input($row[11]) : "");
@@ -133,8 +138,47 @@ switch ($ACTION) {
 						}
 					}
 
-					if (trim($event_type) == "") {
-						$event_type = "Other";
+					/**
+					 * Validation for provided previous lecture ids.
+					 */
+					if ($event_durations) {
+						$pieces = explode(";", $event_durations);
+						if ((is_array($pieces)) && (count($pieces))) {
+							foreach ($pieces as $key => $tmp_event_duration) {
+								$tmp_event_duration = clean_input($tmp_event_duration, array("nows", "int"));
+								if ($tmp_event_duration) {
+									$event_duration += $tmp_event_duration;
+									$eventtype_duration[$key] = $tmp_event_duration;
+								}
+							}
+						}
+					}
+
+					/**
+					 * Check to see if any event types have been provided.
+					 */
+					if (trim($event_types) == "") {
+						$event_types = "Other";
+					}
+
+					/**
+					 * Validation for provided event types.
+					 */
+					if ($event_types) {
+						$pieces = explode(";", $event_types);
+						if ((is_array($pieces)) && (count($pieces))) {
+							foreach ($pieces as $key => $tmp_event_type) {
+								$tmp_event_type = clean_input($tmp_event_type, array("notags", "trim"));
+								if ($tmp_event_type) {
+									if (!isset($EVENT_TYPE_LOOKUP[$tmp_event_type]) || !$EVENT_TYPE_LOOKUP[$tmp_event_type]) {
+										$EVENT_TYPE_LOOKUP[$tmp_event_type] = get_eventtype_id($tmp_event_type);
+									}
+
+									$eventtype_id = $EVENT_TYPE_LOOKUP[$tmp_event_type];
+									$eventtype_ids[] = array("eventtype_id" => $eventtype_id, "duration" => $eventtype_duration[$key]);
+								}
+							}
+						}
 					}
 
 					if (trim($course_name) == "") {
@@ -161,7 +205,6 @@ switch ($ACTION) {
 	
 					$processed_event						= array();
 					$processed_event["recurring_id"]		= 0;
-					$processed_event["eventtype_id"]		= get_eventtype_id($event_type);
 					$processed_event["region_id"]			= ((isset($historical["region_id"])) ? $historical["region_id"] : 0);
 					$processed_event["course_id"]			= get_course_id($course_name);
 					$processed_event["course_num"]			= $course_num;
@@ -195,6 +238,18 @@ switch ($ACTION) {
 						
 						if ($db->AutoExecute("event_audience", $processed_audience, "INSERT")) {
 							output_success("[Row ".$row_count."]\tAttached event_id [".$new_event_id."] to class of ".$event_grad_year);
+
+							/**
+							 * Attach event types to new event.
+							 */
+							if (count($eventtype_ids)) {
+								foreach ($eventtype_ids as $key => $eventtype) {
+									$eventtype["event_id"] = $new_event_id;
+									if ($db->AutoExecute("event_eventtypes", $eventtype, "INSERT")) {
+										output_success("[Row ".$row_count."]\tAttached eventtype_id [".$eventtype["eventtype_id"]."] to event_id [".$new_event_id."].");
+									}
+								}
+							}
 
 							/**
 							 * Attach teachers to new event.
@@ -446,7 +501,10 @@ switch ($ACTION) {
 				if ($row_count > 1) {
 					$event_ids			= array();
 					$proxy_ids			= array();
-		
+					$event_duration		= 0;
+					$eventtype_ids		= array();
+					$eventtype_duration = array();
+
 					$event_id			= ((isset($row[0])) ? clean_input($row[0]) : "");
 					$event_phase		= ((isset($row[1])) ? clean_input($row[1]) : "");
 					$event_grad_year	= ((isset($row[2])) ? clean_input($row[2]) : "");
@@ -454,27 +512,78 @@ switch ($ACTION) {
 					$course_name		= ((isset($row[4])) ? clean_input($row[4]) : "");
 					$event_date			= ((isset($row[5])) ? clean_input($row[5]) : "");
 					$event_start_time	= ((isset($row[6])) ? clean_input($row[6]) : "");
-					$event_duration		= ((isset($row[7])) ? clean_input($row[7]) : 0);
-					$event_type			= ((isset($row[8])) ? clean_input($row[8]) : "");
+					$event_durations	= ((isset($row[7])) ? clean_input($row[7]) : 0);
+					$event_types		= ((isset($row[8])) ? clean_input($row[8]) : "");
 					$event_title		= ((isset($row[9])) ? clean_input($row[9]) : "");
 					$event_location		= ((isset($row[10]) && ($row[10] != "")) ? clean_input($row[10]) : "TBA");
 					$staff_numbers		= ((isset($row[11])) ? clean_input($row[11]) : "");
 
+					/**
+					 * Validation for provided previous lecture ids.
+					 */
 					if ($event_id) {
 						$pieces = explode(";", $event_id);
 						if ((is_array($pieces)) && (count($pieces))) {
 							foreach ($pieces as $tmp_event_id) {
-								if ($tmp_event_id = clean_input($tmp_event_id, array("nows", "int"))) {
-									if (!validate_event_id($tmp_event_id)) {
-										output_notice("[Row ".$row_count."]\tAn old event_id [".$tmp_event_id."] does not exist in the database.");
-									}
+								if (!$tmp_event_id = clean_input($tmp_event_id, array("nows", "int"))) {
+									output_error("Invalid event_id provided.");
 								}
 							}
 						}
 					}
 
-					if (trim($event_type) == "") {
-						$event_type = "Other";
+					/**
+					 * Validation for provided previous lecture ids.
+					 */
+					if ($event_durations) {
+						$pieces = explode(";", $event_durations);
+						if ((is_array($pieces)) && (count($pieces))) {
+							foreach ($pieces as $key => $tmp_event_duration) {
+								$tmp_event_duration = clean_input($tmp_event_duration, array("nows", "int"));
+								if ($tmp_event_duration) {
+									$event_duration += $tmp_event_duration;
+									$eventtype_duration[$key] = $tmp_event_duration;
+								} else {
+									output_error("Invalid event type duration found.");
+								}
+							}
+						}
+					}
+
+					/**
+					 * Check to see if any event types have been provided.
+					 */
+					if (trim($event_types) == "") {
+						$event_types = "Other";
+					}
+
+					/**
+					 * Validation for provided event types.
+					 */
+					if ($event_types) {
+						$pieces = explode(";", $event_types);
+						if ((is_array($pieces)) && (count($pieces))) {
+							foreach ($pieces as $key => $tmp_event_type) {
+								$tmp_event_type = clean_input($tmp_event_type, array("notags", "trim"));
+								if ($tmp_event_type) {
+									if (!isset($EVENT_TYPE_LOOKUP[$tmp_event_type]) || !$EVENT_TYPE_LOOKUP[$tmp_event_type]) {
+										if ($eventtype = get_eventtype_id($tmp_event_type)) {
+											$EVENT_TYPE_LOOKUP[$tmp_event_type] = $eventtype;
+										} else {
+											output_error("Unknown event type encountered [".$tmp_event_type."].");
+										}
+									}
+
+									$eventtype_id = $EVENT_TYPE_LOOKUP[$tmp_event_type];
+
+									if (!$eventtype_id) {
+										output_error("Eventtype ID was blank [".$eventtype_id."].");
+									} else {
+										$eventtype_ids[] = array("eventtype_id" => $eventtype_id, "duration" => $eventtype_duration[$key]);
+									}
+								}
+							}
+						}
 					}
 
 					if (trim($course_name) == "") {
@@ -487,10 +596,6 @@ switch ($ACTION) {
 
 					if (!(int) $event_grad_year) {
 						output_notice("[Row ".$row_count."]\tThe event grad year [".$event_grad_year."] appears to be missing or invalid.");
-					}
-
-					if (!get_eventtype_id($event_type)) {
-						output_notice("[Row ".$row_count."]\tUnable to locate an event type id match for event type [".$event_type."].");
 					}
 
 					if (!get_course_id($course_name)) {

@@ -38,15 +38,6 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 		.title {
 			vertical-align: bottom;
 		}
-		.vertical {
-			-moz-transform:rotate(-90deg); 
-			-webkit-transform: rotate(-90deg);
-			-o-transform: rotate(-90deg);
-			writing-mode: tb-rl;
-			filter: flipv fliph;
-			overflow: visible;
-			white-space: nowrap;
-		}
 		.term {
 			background-color: #EBEBEB;
 		}
@@ -73,11 +64,11 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 				<tr style="height: 200px;">
 					<td class="modified">&nbsp;</td>
 					<td class="title" style="padding-bottom: 20px; border-right: none;"><h3>Courses</h3></td>
-					<td class="title" style="padding: 0 0 80px 50px;"><h3 class="vertical">Competencies</h3></td>
+					<td class="title" style="padding: 0 0 80px 50px;"><h3 class="vertical-text">Competencies</h3></td>
 					<?php
 						foreach ($objectives["competencies"] as $competency_id => $competency) {
 							?>
-							<td class="title middle bottom"><div class="vertical"><?php echo "<a href=\"".ENTRADA_URL."/courses/objectives?section=competency-courses&id=".$competency_id."\" style=\"text-decoration: none;\">".$competency."</a>"; ?></div></td>
+							<td class="title middle bottom"><div class="vertical-text"><?php echo "<a href=\"".ENTRADA_URL."/courses/objectives?section=competency-courses&id=".$competency_id."\" style=\"text-decoration: none;\">".$competency."</a>"; ?></div></td>
 							<?php
 						}
 					?>
@@ -90,7 +81,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 						echo "<tr>";
 					}
 					if (isset($course["total_in_term"]) && $course["total_in_term"]) {
-						echo "<td class=\"term\" style=\"border-bottom: 5px solid white;\" rowspan=\"".$course["total_in_term"]."\"><div class=\"vertical\">".$course["term_name"]."</div></td>";
+						echo "<td class=\"term\" style=\"border-bottom: 5px solid white;\" rowspan=\"".$course["total_in_term"]."\"><div class=\"vertical-text\">".$course["term_name"]."</div></td>";
 					}
 					?>
 						<td class="objectives" colspan="2"><?php echo "<a href=\"".ENTRADA_URL."/courses/objectives?section=course-objectives&cid=".$course_id."\" style=\"text-decoration: none;\">".html_encode($course["course_name"])."</a>"; ?></td>

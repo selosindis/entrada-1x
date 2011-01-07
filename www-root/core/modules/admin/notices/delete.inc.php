@@ -57,7 +57,11 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 				foreach($_POST["delete"] as $notice_id) {
 					$notice_id = (int) trim($notice_id);
 					if($notice_id) {
-						$NOTICE_IDS[] = $notice_id;
+						$query = "SELECT `organisation_id` FROM `notices` WHERE `notice_id` = ".$db->qstr($notice_id);
+						$organisation_id = $db->GetOne($query);
+						if ($ENTRADA_ACL->amIAllowed(new NoticeResource($organisation_id), "create")) {
+							$NOTICE_IDS[] = $notice_id;
+						}
 					}
 				}
 

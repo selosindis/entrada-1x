@@ -38,22 +38,22 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/calendar/script/xc2_timestamp.js\"></script>\n";
-	
-	$query	= "SELECT * 
-	FROM `".CLERKSHIP_DATABASE."`.`events` 
-	WHERE `event_type`= \"elective\" 
-	AND `event_status` = \"approval\" 
+
+	$query	= "SELECT *
+	FROM `".CLERKSHIP_DATABASE."`.`events`
+	WHERE `event_type`= \"elective\"
+	AND `event_status` = \"approval\"
 	ORDER BY `event_start` ASC";
-	
+
 	$results	= $db->GetAll($query);
-		
+
 	if ($results) {
 		if ($ERROR) {
 			echo display_error();
 		}
 		?>
 			<div class="content-heading">Electives Pending</div>
-			<br />		
+			<br />
 			<table class="tableList" cellspacing="0" summary="List of Clerkship Rotations">
 			<colgroup>
 				<col class="modified" />
@@ -61,7 +61,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 				<col class="date" />
 				<col class="region" />
 				<col class="title" />
-			</colgroup>				
+			</colgroup>
 			<thead>
 				<tr>
 					<td class="modified">&nbsp;</td>
@@ -81,9 +81,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 					$bgcolour	= "#FFFFFF";
 					$is_here	= false;
 				}
-				
+
 				$click_url	= ENTRADA_URL."/admin/clerkship/electives?section=edit&id=".$result["event_id"];
-				
+
 				if (!isset($result["region_name"]) || $result["region_name"] == "") {
 					$result_region = clerkship_get_elective_location($result["event_id"]);
 					$result["region_name"] = $result_region["region_name"];
@@ -91,9 +91,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 				} else {
 					$result["city"] = "";
 				}
-				
+
 				$cssclass = "";
-				
+
 				if ($result["event_type"] == "elective") {
 					switch ($result["event_status"]) {
 						case "approval":
@@ -113,12 +113,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 				$getStudentsQuery	= "SELECT `etype_id`
 				FROM ".CLERKSHIP_DATABASE.".`event_contacts`
 				WHERE `event_id` = ".$db->qstr($result["event_id"]);
-				
+
 				$getStudentsResults = $db->GetAll($getStudentsQuery);
 				foreach ($getStudentsResults as $student) {
-					
+
 					$name	= get_account_data("firstlast", $student["etype_id"]);
-					
+
 					echo "<tr".(($is_here) ? " class=\"current\"" : $cssclass).">\n";
 					echo "	<td class=\"modified\">&nbsp</td>\n";
 					echo "	<td class=\"date\"><a href=\"".$click_url."\" style=\"font-size: 11px\">".$name."</a></td>\n";
@@ -134,10 +134,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 		<br /><br />
 		<?php
 	}
-	
+
 	// Setup internal variables.
-	$DISPLAY		= true;
-	
+	$DISPLAY = true;
+
 	if ($DISPLAY) {
 		if (($_GET["gradyear"]) || ($_GET["gradyear"] === "0")) {
 			$GRADYEAR	= trim($_GET["gradyear"]);
@@ -148,48 +148,41 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 		} elseif (isset($_COOKIE["student_search"]["gradyear"])) {
 			$GRADYEAR = $_COOKIE["student_search"]["gradyear"];
 		} else {
-			$GRADYEAR = 0;	
+			$GRADYEAR = 0;
 		}
-		
+
 		switch ($_POST["action"]) {
 			case "results" :
 				?>
 				<div class="content-heading">Student Search Results</div>
 				<?php
-				if (trim($_GET["year"]) != "" || trim($_POST["year"]) != "") {
-					if (trim($_POST["year"]) != "") {
-						$query_year = trim($_POST["year"]);
-					} else {
-						$query_year = trim($_GET["year"]);
-					}
-					
-					$query	= "SELECT `".AUTH_DATABASE."`.`user_data`.`id` AS `proxy_id`, CONCAT_WS(', ', `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname`) AS `fullname` 
-					FROM `".AUTH_DATABASE."`.`user_data` 
-					LEFT JOIN `".AUTH_DATABASE."`.`user_access` ON `".AUTH_DATABASE."`.`user_access`.`user_id`=`".AUTH_DATABASE."`.`user_data`.`id` 
-					WHERE `".AUTH_DATABASE."`.`user_access`.`app_id`='".AUTH_APP_ID."' 
-					AND `role`=".$db->qstr(trim($query_year), get_magic_quotes_gpc())." 
-					AND `group`='student' 
-					ORDER BY `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname` ASC";
-					
-					$results	= $db->GetAll($query);
-					
+				if ((isset($_GET["year"]) && ($query_year = clean_input($_GET["year"], "credentials"))) || (isset($_POST["year"]) && ($query_year = clean_input($_POST["year"], "credentials")))) {
+
+					$query = "	SELECT `".AUTH_DATABASE."`.`user_data`.`id` AS `proxy_id`, CONCAT_WS(', ', `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname`) AS `fullname`
+								FROM `".AUTH_DATABASE."`.`user_data`
+								LEFT JOIN `".AUTH_DATABASE."`.`user_access` ON `".AUTH_DATABASE."`.`user_access`.`user_id`=`".AUTH_DATABASE."`.`user_data`.`id`
+								WHERE `".AUTH_DATABASE."`.`user_access`.`app_id`='".AUTH_APP_ID."'
+								AND `role`=".$db->qstr(trim($query_year), get_magic_quotes_gpc())."
+								AND `group`='student'
+								ORDER BY `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname` ASC";
+					$results = $db->GetAll($query);
 					if ($results) {
-						$counter	= 0;
-						$total	= count($results);
-						$split	= (round($total / 2) + 1);
-						
+						$counter = 0;
+						$total = count($results);
+						$split = (round($total / 2) + 1);
+
 						echo "There are a total of <b>".$total."</b> student".(($total != "1") ? "s" : "")." in the class of <b>".checkslashes(trim($query_year))."</b>. Please choose a student you wish to work with by clicking on their name, or if you wish to add an event to multiple students simply check the checkbox beside their name and click the &quot;Add Mass Event&quot; button.";
-	
+
 						echo "<form id=\"clerkship_form\" action=\"".ENTRADA_URL."/admin/clerkship/electives?section=add_core\" method=\"post\">\n";
 						echo "<table width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\">\n";
 						echo "<tr>\n";
 						echo "	<td style=\"vertical-align: top\">\n";
 						echo "		<ol start=\"1\">\n";
 						foreach ($results as $result) {
-							
+
 							$elective_weeks = clerkship_get_elective_weeks($result["proxy_id"]);
 							$remaining_weeks = (int)$CLERKSHIP_REQUIRED_WEEKS - (int)$elective_weeks["approved"];
-							
+
 							switch (htmlentities($_POST["qualifier"])) {
 								case "*":
 								default:
@@ -200,7 +193,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 								case "deficient":
 									if ($remaining_weeks > 0) {
 										$show 			= true;
-										$weeksOutput 	= " <span class=\"content-small\">(".$remaining_weeks." weeks remaining)</span>";									
+										$weeksOutput 	= " <span class=\"content-small\">(".$remaining_weeks." weeks remaining)</span>";
 									} else {
 										$show 			= false;
 									}
@@ -216,7 +209,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 									$noResults		= "There are no students in the class of <b>".checkslashes(trim($query_year))."</b> that have 14 weeks of electives approved in the system.";
 									break;
 							}
-							
+
 							if ($show) {
 								$counter++;
 								if ($counter == $split) {
@@ -228,7 +221,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 								echo "	<li><input type=\"checkbox\" name=\"ids[]\" value=\"".$result["proxy_id"]."\" />&nbsp;<a href=\"".ENTRADA_URL."/admin/clerkship/electives?section=view&ids=".$result["proxy_id"]."\" style=\"font-weight: bold\">".$result["fullname"]."</a>".$weeksOutput."</li>\n";
 							}
 						}
-						
+
 						if ($counter == 0) {
 							echo "	<li>".$noResults."</li>\n";
 						}
@@ -249,7 +242,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 					} else {
 						$ERROR++;
 						$ERRORSTR[] = "Unable to find students in the database with a graduating year of <b>".trim($query_year)."</b>. It's possible that these students are not yet added to this system, so please check the User Management module.";
-	
+
 						echo "<br />";
 						echo display_error($ERRORSTR);
 					}
@@ -259,15 +252,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 					} else {
 						$query_name = trim($_GET["name"]);
 					}
-					$query	= "SELECT `".AUTH_DATABASE."`.`user_data`.`id` AS `proxy_id`, CONCAT_WS(', ', `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname`) AS `fullname`, `".AUTH_DATABASE."`.`user_access`.`role` AS `gradyear` FROM `".AUTH_DATABASE."`.`user_data` LEFT JOIN `".AUTH_DATABASE."`.`user_access` ON `".AUTH_DATABASE."`.`user_access`.`user_id`=`".AUTH_DATABASE."`.`user_data`.`id` WHERE `".AUTH_DATABASE."`.`user_access`.`app_id`='".AUTH_APP_ID."' AND CONCAT(`".AUTH_DATABASE."`.`user_data`.`firstname`, `".AUTH_DATABASE."`.`user_data`.`lastname`) LIKE '%".checkslashes(trim($query_name))."%' AND `group`='student' ORDER BY `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname` ASC";
-					$results	= $db->GetAll($query);
+					$query = "SELECT `".AUTH_DATABASE."`.`user_data`.`id` AS `proxy_id`, CONCAT_WS(', ', `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname`) AS `fullname`, `".AUTH_DATABASE."`.`user_access`.`role` AS `gradyear` FROM `".AUTH_DATABASE."`.`user_data` LEFT JOIN `".AUTH_DATABASE."`.`user_access` ON `".AUTH_DATABASE."`.`user_access`.`user_id`=`".AUTH_DATABASE."`.`user_data`.`id` WHERE `".AUTH_DATABASE."`.`user_access`.`app_id`='".AUTH_APP_ID."' AND CONCAT(`".AUTH_DATABASE."`.`user_data`.`firstname`, `".AUTH_DATABASE."`.`user_data`.`lastname`) LIKE '%".checkslashes(trim($query_name))."%' AND `group`='student' ORDER BY `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname` ASC";
+					$results = $db->GetAll($query);
 					if ($results) {
 						$counter	= 0;
 						$total	= count($results);
 						$split	= (round($total / 2) + 1);
-						
+
 						echo "There are a total of <b>".$total."</b> student".(($total != "1") ? "s" : "")." that match the search term of <b>".checkslashes(trim($query_name), "display")."</b>. Please choose a student you wish to work with by clicking on their name, or if you wish to add an event to multiple students simply check the checkbox beside their name and click the &quot;Add Mass Event&quot; button.";
-	
+
 						echo "<form id=\"clerkship_form\" action=\"".ENTRADA_URL."/admin/clerkship/electives?section=add_core\" method=\"post\">\n";
 						echo "<table width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\">\n";
 						echo "<tr>\n";
@@ -300,14 +293,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 					} else {
 						$ERROR++;
 						$ERRORSTR[] = "Unable to find any students in the database matching <b>".checkslashes(trim($query_name), "display")."</b>. It's possible that the student you're looking for is not yet added to this system, so please check the User Management module.";
-	
+
 						echo "<br />";
 						echo display_error($ERRORSTR);
 					}
 				} else {
 					$ERROR++;
 					$ERRORSTR[] = "You must search either by graduating year or by students name at this time, please try again.";
-					
+
 					echo "<br />";
 					echo display_error($ERRORSTR);
 				}
@@ -323,7 +316,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 					<td colspan="3"><span class="content-subheading">Graduating Year</span></td>
 				</tr>
 				<tr>
-					<td>Select an elective qualifier:</td>			
+					<td>Select an elective qualifier:</td>
 					<td style="padding-left: 10px">
 						<select name="qualifier" style="width: 205px">
 							<option value="*">All</option>
@@ -339,8 +332,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 						<select name="year" style="width: 205px">
 						<option value="">-- Select Graduating Year --</option>
 						<?php
-						for($year = (date("Y", time()) + 4); $year >= 2002; $year--) {
-							echo "<option value=\"".$year."\"".(($year == date("Y", time())) ? "" : "").">Class of ".$year."</option>\n";	
+						if (isset($SYSTEM_GROUPS["student"]) && !empty($SYSTEM_GROUPS["student"])) {
+							foreach ($SYSTEM_GROUPS["student"] as $class) {
+								echo "<option value=\"".$class."\">Class of ".html_encode($class)."</option>\n";
+							}
 						}
 						?>
 						</select>
@@ -358,7 +353,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 					<td colspan="3"><span class="content-subheading">Student Finder</span></td>
 				</tr>
 				<tr>
-					<td>Enter the first or lastname of the student:</td>			
+					<td>Enter the first or lastname of the student:</td>
 					<td style="padding-left: 10px">
 						<input type="text" name="name" value="" style="width: 200px" />
 					</td>

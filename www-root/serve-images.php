@@ -50,7 +50,7 @@ require_once("init.inc.php");
 
 require_once("Entrada/textimage.class.php");
 
-if((!isset($_SESSION["isAuthorized"])) || (!(bool) $_SESSION["isAuthorized"])) {
+if ((!isset($_SESSION["isAuthorized"])) || (!(bool) $_SESSION["isAuthorized"])) {
 	application_log("error", "Someone attempted to access the serve-images.php file without being authenticated.");
 	
 	header("HTTP/1.0 404 Not Found");

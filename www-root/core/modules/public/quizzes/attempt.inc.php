@@ -232,10 +232,15 @@ if ($RECORD_ID) {
 													header("Location: ".ENTRADA_URL."/quizzes?section=results".(isset($QUIZ_TYPE) && $QUIZ_TYPE == "community_page" ? "&community=true" : "")."&id=".$progress_record["qprogress_id"]);
 													exit;
 												} else {
-													$url = ENTRADA_URL."/events?id=".$quiz_record["content_id"];
-
-													$SUCCESS++;
-													$SUCCESSSTR[] = "Thank-you for completing the <strong>".html_encode($quiz_record["quiz_title"])."</strong> quiz. Your responses have been successfully recorded, and your grade and any feedback will be released <strong>".date(DEFAULT_DATE_FORMAT, $quiz_record["release_until"])."</strong>.<br /><br />You will now be redirected back to the learning event; this will happen <strong>automatically</strong> in 15 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+													if ($QUIZ_TYPE == "community_page") {
+														$url = ENTRADA_URL."/community".$quiz_record["community_url"].":".$quiz_record["page_url"];
+														$SUCCESS++;
+														$SUCCESSSTR[] = "Thank-you for completing the <strong>".html_encode($quiz_record["quiz_title"])."</strong> quiz. Your responses have been successfully recorded, and your grade and any feedback will be released <strong>".date(DEFAULT_DATE_FORMAT, $quiz_record["release_until"])."</strong>.<br /><br />You will now be redirected back to the learning event; this will happen <strong>automatically</strong> in 15 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+													} else {
+														$url = ENTRADA_URL."/events?id=".$quiz_record["content_id"];
+														$SUCCESS++;
+														$SUCCESSSTR[] = "Thank-you for completing the <strong>".html_encode($quiz_record["quiz_title"])."</strong> quiz. Your responses have been successfully recorded, and your grade and any feedback will be released <strong>".date(DEFAULT_DATE_FORMAT, $quiz_record["release_until"])."</strong>.<br /><br />You will now be redirected back to the learning event; this will happen <strong>automatically</strong> in 15 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+													}
 
 													$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 15000)";
 												}

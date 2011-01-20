@@ -193,7 +193,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 			/**
 			 * Get all evaluator responses for each question
 			 */
-			$query = "	SELECT r.`efresponse_id`, r.`comment`
+			$query = "	SELECT r.`efresponse_id`, r.`comments`
 						FROM `evaluation_responses` r
 						INNER JOIN `evaluation_progress` p ON r.`eprogress_id` = p.`eprogress_id`
 						WHERE p.`progress_value` <> 'cancelled'
@@ -237,8 +237,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 				 */
 				foreach ($results as $result) {
 					$profile[$result["efresponse_id"]]["freq"]++;
-					if (($QUESTION_COMMENTS||$END_COMMENTS) && $result["comment"] && strlen($result["comment"])) {
-						$comments[$number][] = $result["comment"];
+					if (($QUESTION_COMMENTS||$END_COMMENTS) && $result["comments"] && strlen($result["comments"])) {
+						$comments[$number][] = $result["comments"];
 					}
 				}
 

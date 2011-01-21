@@ -243,11 +243,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			}
 		}
 	}
-	
 	$fields = "ar_undergraduate_teaching,undergraduate_teaching_id,course_number,course_name,lecture_phase,year_reported";
 	?>
-	<script type="text/javascript">
-	
+	<script type="text/javascript" defer="defer">
 	var jQuerydialog = jQuery('<div></div>')
 		.html('<span class="ui-icon ui-icon-circle-check" style="float:left; margin:0 7px 50px 0;"></span>You must select at least one record in order to delete.')
 		.dialog({

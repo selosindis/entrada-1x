@@ -77,7 +77,7 @@ if($result = $db->GetRow($query)) {
 
 if(isset($_GET["clinical"])) {
 	$clinical_value = clean_input($_GET["clinical"], array("trim"));
-	if($clinical_value == "NO") {
+	if($clinical_value == "NO" || $clinical_value == 0) {
 		$clinical_value = true;
 	} else {
 		$clinical_value = false;
@@ -901,8 +901,8 @@ else
 				<col class="delete" />
 				<col class="student_name" />
 				<col class="small_numbers" />
-				<col class="course_name" />
-				<col class="course_name" />
+				<col class="student_name" />
+				<col class="student_name" />
 				<col class="full_description" />
 			</colgroup>
 			<thead>
@@ -910,8 +910,8 @@ else
 					<td class="delete" id="colDelete">#</td>
 					<td class="student_name" id="colstudent_name">Student Name</td>
 					<td class="small_numbers" id="coldegree">Degree</td>
-					<td class="course_name" id="coldepartment">Department</td>
-					<td class="course_name" id="coluniversity">University</td>
+					<td class="student_name" id="coldepartment">Department</td>
+					<td class="student_name" id="coluniversity">University</td>
 					<td class="full_description" id="colrole_description">Role / Description</td>		
 				</tr>
 			</thead>
@@ -924,8 +924,8 @@ else
 				echo "	<td class=\"delete\">".$ctr."&nbsp;</td>\n";					
 				echo "	<td class=\"student_name\">".html_encode($result['student_name'])."&nbsp;</td>\n";
 				echo "	<td class=\"small_numbers\">".html_encode($result['degree'])."&nbsp;</td>\n";
-				echo "	<td class=\"course_name\">".html_encode($result['department'])."&nbsp;</td>\n";				
-				echo "	<td class=\"course_name\">".html_encode($result['university'])."&nbsp;</td>\n";
+				echo "	<td class=\"student_name\">".html_encode($result['department'])."&nbsp;</td>\n";				
+				echo "	<td class=\"student_name\">".html_encode($result['university'])."&nbsp;</td>\n";
 				echo "	<td class=\"full_description\">".html_encode($result['role']);
 				if(isset($result['role_description']) && trim($result['role_description']) != '')
 				{

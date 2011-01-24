@@ -202,11 +202,13 @@ function display($results, $db)
 
 $NEXT_YEAR 					= (int)$REPORT_YEAR + 1;
 
-if(!$clinical_value) {
-	$DUE_DATE 				= "February 1, " . $NEXT_YEAR;
+$oncologyGroup = array(4664, 3722, 495, 3334, 737, 805);
+
+if(!$clinical_value && !in_array($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"], $oncologyGroup)) {
+	$DUE_DATE 				= "March 15, " . $NEXT_YEAR;
 }
 else {
-	$DUE_DATE 				= "March 15, " . $NEXT_YEAR;
+	$DUE_DATE 				= "February 1, " . $NEXT_YEAR;
 }
 
 $PAGE_META["title"]			= "Your Annual Report for " . $REPORT_YEAR;

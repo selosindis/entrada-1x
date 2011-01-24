@@ -77,7 +77,7 @@ if($result = $db->GetRow($query)) {
 
 if(isset($_GET["clinical"])) {
 	$clinical_value = clean_input($_GET["clinical"], array("trim"));
-	if($clinical_value == "NO" || $clinical_value == 0) {
+	if($clinical_value == "NO" || $clinical_value === 0) {
 		$clinical_value = true;
 	} else {
 		$clinical_value = false;

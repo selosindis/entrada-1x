@@ -68,7 +68,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 		}
 	});
 		
-	<?php $fields = "ar_internal_contributions,internal_contributions_id,time_commitment,description,organisation,year_reported"; ?>
+	<?php $fields = "ar_internal_contributions,internal_contributions_id,time_commitment,description,role,year_reported"; ?>
 	var internal_grid = jQuery("#flex1").flexigrid
 	(
 		{

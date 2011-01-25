@@ -638,13 +638,14 @@ function new_sidebar_item($title = "", $html = "", $id = "", $state = "open", $p
 	$output .= "</table>\n";
 	$output .= "<br />\n";
 
-	switch($position) {
+	switch ($position) {
 		case SIDEBAR_PREPEND:
 			array_unshift($SIDEBAR, $output);
-			break;
+		break;
 		case SIDEBAR_APPEND:
 		default:
 			array_push($SIDEBAR, $output);
+		break;
 	}
 	
 	return true;
@@ -735,24 +736,24 @@ function webservice_url($service = "", $options = array()) {
 
 // Function that checks to see if magic_quotes_gpc is enabled or not.
 function checkslashes($value="", $type = "insert") {
-	switch($type) {
+	switch ($type) {
 		case "insert" :
-			if(!ini_get("magic_quotes_gpc")) {
+			if (!ini_get("magic_quotes_gpc")) {
 				return addslashes($value);
 			} else {
 				return $value;
 			}
-			break;
+		break;
 		case "display" :
-			if(!ini_get("magic_quotes_gpc")) {
+			if (!ini_get("magic_quotes_gpc")) {
 				return htmlspecialchars($value);
 			} else {
 				return htmlspecialchars(stripslashes($value));
 			}
-			break;
+		break;
 		default :
 			return false;
-			break;
+		break;
 	}
 }
 

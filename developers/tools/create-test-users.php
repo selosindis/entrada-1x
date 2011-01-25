@@ -26,14 +26,14 @@
 $user_data		= array();
 $user_access	= array();
 
-$firstnames		= array("Steve", "Anne", "Robert", "Andrew", "Matt", "Amy", "James", "Larry", "Marta", "Suzanne");
-$lastnames		= array("Robertson", "Simpson", "Tomalty", "Summers", "Turcot", "Blueson", "Karington", "Allcock", "Jamieson", "Walters");
+$firstnames		= array("Steve", "Anne", "Robert", "Andrew", "Matt", "Amy", "James", "Larry", "Marta", "Suzanne", "Taylor", "Pat", "Doug", "Walter", "Judith", "Renee", "Trent", "Victor", "Dominic", "Dominique", "Cynthia", "Clair", "Howard", "Patrick", "Jenny", "Jennifer", "Susie");
+$lastnames		= array("Robertson", "Sampson", "Totannia", "Summers", "Turcot", "Blueson", "Karington", "Andrews", "Jamieson", "Walters", "Douglas", "Patterson", "Eldridge", "Meadows", "Cyr", "Ostapha", "Foriendie", "Wauters");
 
 $group			= "student";
-$role			= "2013";
+$role			= "2011";
 
-foreach	(range(10, 110) as $proxy_id) {
-	$user_data[]	= "(".$proxy_id.", 0, 'user".$proxy_id."', MD5('apple123'), 1, NULL, '', '".$firstnames[array_rand($firstnames)]."', '".$lastnames[array_rand($lastnames)]."', 'user".$proxy_id."@yourdomain.ca', '', NULL, '', '', '', '', '', '', '', '', NULL, 0, 0)";
+foreach	(range(5, 55) as $proxy_id) {
+	$user_data[]	= "(".$proxy_id.", 0, '".$group.$proxy_id."', MD5('apple123'), 1, NULL, '', '".$firstnames[array_rand($firstnames)]."', '".$lastnames[array_rand($lastnames)]."', '".$group.$proxy_id."@demo.entrada-project.org', '', NULL, '', '', '', '', '', '', '', '', NULL, 0, 0)";
 	$user_access[]	= "(NULL, ".$proxy_id.", 1, 'true', ".time().", 0, 0, '', NULL, NULL, '".$role."', '".$group."', '', '')";
 }
 

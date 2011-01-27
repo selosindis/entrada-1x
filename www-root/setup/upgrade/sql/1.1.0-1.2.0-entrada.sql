@@ -168,5 +168,66 @@ CREATE TABLE IF NOT EXISTS `evaluation_targets` (
 
 ALTER TABLE `assessments` CHANGE `grad_year` `grad_year` varchar(35) NOT NULL DEFAULT '';
 
-UPDATE `settings` SET `value` = '1.2.0' WHERE `shortname` = 'version_db';
+ALTER TABLE `community_pages` CHANGE `page_url` `page_url` varchar(329);
+ALTER TABLE `community_pages` ADD INDEX (`cpage_id`, `community_id`, `page_url`, `page_active`);
+ALTER TABLE `community_pages` ADD INDEX (`community_id`, `parent_id`, `page_url`, `page_active`);
+ALTER TABLE `community_pages` ADD INDEX (`page_order`);
+ALTER TABLE `community_pages` ADD INDEX (`community_id`, `page_url`);
+ALTER TABLE `community_pages` ADD INDEX (`community_id`, `page_type`);
+ALTER TABLE `community_page_options` ADD INDEX (`cpage_id`);
+ALTER TABLE `community_members` ADD INDEX (`community_id`, `proxy_id`, `member_active`);
 
+CREATE TABLE IF NOT EXISTS `events_lu_topics` (
+  `topic_id` int(12) NOT NULL AUTO_INCREMENT,
+  `ed10_id` int(12) NULL,
+  `ed11_id` int(12) NULL,
+  `topic_name` varchar(60) NOT NULL,
+  `topic_description` text,
+  `topic_type` enum('ed10','ed11','other') NOT NULL DEFAULT 'other',
+  `updated_date` bigint(64) NOT NULL,
+  `updated_by` int(12) NOT NULL,
+  PRIMARY KEY  (`topic_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+INSERT INTO `events_lu_topics` (`ed10_id`, `topic_name`, `topic_description`, `topic_type`, `updated_date`, `updated_by`)
+SELECT `ed10_id`, `topic_name`, `topic_description`, 'ed10', `updated_date`, `updated_by` FROM `events_lu_ed10` ORDER BY `ed10_id` ASC;
+
+INSERT INTO `events_lu_topics` (`ed11_id`, `topic_name`, `topic_description`, `topic_type`, `updated_date`, `updated_by`)
+SELECT `ed11_id`, `topic_name`, `topic_description`, 'ed11', `updated_date`, `updated_by` FROM `events_lu_ed11` ORDER BY `ed11_id` ASC;
+
+CREATE TABLE IF NOT EXISTS `event_topics` (
+  `etopic_id` int(12) NOT NULL AUTO_INCREMENT,
+  `event_id` int(12) NOT NULL DEFAULT '0',
+  `topic_id` tinyint(1) DEFAULT '0',
+  `topic_coverage`  enum('major','minor') NOT NULL,
+  `topic_time` varchar(25) DEFAULT NULL,
+  `updated_date` bigint(64) NOT NULL,
+  `updated_by` int(12) NOT NULL,
+  PRIMARY KEY  (`etopic_id`),
+  KEY `event_id` (`event_id`),
+  KEY `topic_id` (`topic_id`),
+  KEY `topic_coverage` (`topic_coverage`),
+  KEY `topic_time` (`topic_time`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+INSERT INTO `event_topics` (`event_id`, `topic_id`, `topic_coverage`, `topic_time`, `updated_date`, `updated_by`)
+SELECT a.`event_id`, b.`topic_id`, IF(a.`major_topic`, 'major', 'minor') AS `topic_coverage`, a.`minor_desc` AS `topic_time`, a.`updated_date`, a.`updated_by`
+FROM `event_ed10` AS a
+LEFT JOIN `events_lu_topics` AS b
+ON b.`ed10_id` = a.`ed10_id`;
+
+INSERT INTO `event_topics` (`event_id`, `topic_id`, `topic_coverage`, `topic_time`, `updated_date`, `updated_by`)
+SELECT a.`event_id`, b.`topic_id`, IF(a.`major_topic`, 'major', 'minor') AS `topic_coverage`, a.`minor_desc` AS `topic_time`, a.`updated_date`, a.`updated_by`
+FROM `event_ed11` AS a
+LEFT JOIN `events_lu_topics` AS b
+ON b.`ed11_id` = a.`ed11_id`;
+
+ALTER TABLE `events_lu_topics` DROP `ed10_id`;
+ALTER TABLE `events_lu_topics` DROP `ed11_id`;
+
+RENAME TABLE `events_lu_ed10` TO `backup_events_lu_ed10`;
+RENAME TABLE `events_lu_ed11` TO `backup_events_lu_ed11`;
+RENAME TABLE `event_ed10` TO `backup_event_ed10`;
+RENAME TABLE `event_ed11` TO `backup_event_ed11`;
+
+UPDATE `settings` SET `value` = '1.2.0' WHERE `shortname` = 'version_db';

@@ -245,7 +245,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 											AND b.`group` = 'student'
 											AND b.`role` = ".$db->qstr($grad_year);
 								$results = $db->GetAll($query);
-
 								if ($results) {
 									$total_students = count($results);
 								}

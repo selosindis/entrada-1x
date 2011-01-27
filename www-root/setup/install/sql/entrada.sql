@@ -1294,7 +1294,8 @@ CREATE TABLE IF NOT EXISTS `community_members` (
   `member_acl` int(1) NOT NULL DEFAULT '0',
   PRIMARY KEY  (`cmember_id`),
   KEY `community_id` (`community_id`,`proxy_id`,`member_joined`,`member_acl`),
-  KEY `member_active` (`member_active`)
+  KEY `member_active` (`member_active`),
+  KEY `community_id_2` (`community_id`,`proxy_id`,`member_active`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `community_modules` (
@@ -1337,7 +1338,7 @@ CREATE TABLE IF NOT EXISTS `community_pages` (
   `page_type` varchar(16) NOT NULL DEFAULT 'default',
   `menu_title` varchar(48) NOT NULL,
   `page_title` text NOT NULL,
-  `page_url` text NOT NULL,
+  `page_url` varchar(329) NOT NULL,
   `page_content` longtext NOT NULL,
   `page_active` int(1) NOT NULL DEFAULT '1',
   `page_visible` int(1) NOT NULL DEFAULT '1',
@@ -1346,7 +1347,11 @@ CREATE TABLE IF NOT EXISTS `community_pages` (
   `allow_public_view` int(1) NOT NULL DEFAULT '0',
   `updated_date` bigint(64) NOT NULL DEFAULT '0',
   `updated_by` int(12) NOT NULL DEFAULT '0',
-  PRIMARY KEY  (`cpage_id`)
+  KEY `cpage_id` (`cpage_id`,`community_id`,`page_url`,`page_active`),
+  KEY `community_id` (`community_id`,`parent_id`,`page_url`,`page_active`),
+  KEY `page_order` (`page_order`),
+  KEY `community_id_2` (`community_id`,`page_url`),
+  KEY `community_id_3` (`community_id`,`page_type`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `community_page_options` (
@@ -1357,7 +1362,8 @@ CREATE TABLE IF NOT EXISTS `community_page_options` (
   `option_value` int(12) NOT NULL DEFAULT '1',
   `proxy_id` int(12) NOT NULL DEFAULT '0',
   `updated_date` bigint(64) NOT NULL DEFAULT '0',
-  PRIMARY KEY  (`cpoption_id`,`community_id`,`cpage_id`)
+  PRIMARY KEY  (`cpoption_id`,`community_id`,`cpage_id`),
+  KEY `cpage_id` (`cpage_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `community_permissions` (
@@ -1853,66 +1859,56 @@ CREATE TABLE IF NOT EXISTS `events` (
   FULLTEXT KEY `event_title` (`event_title`,`event_description`,`event_goals`,`event_objectives`,`event_message`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `events_lu_ed10` (
-  `ed10_id` int(12) NOT NULL AUTO_INCREMENT,
+CREATE TABLE IF NOT EXISTS `events_lu_topics` (
+  `topic_id` int(12) NOT NULL AUTO_INCREMENT,
   `topic_name` varchar(60) NOT NULL,
   `topic_description` text,
+  `topic_type` enum('ed10','ed11','other') NOT NULL DEFAULT 'other',
   `updated_date` bigint(64) NOT NULL,
   `updated_by` int(12) NOT NULL,
-  PRIMARY KEY  (`ed10_id`)
+  PRIMARY KEY  (`topic_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-INSERT INTO `events_lu_ed10` (`ed10_id`, `topic_name`, `topic_description`, `updated_date`, `updated_by`) VALUES
-(1, 'Biostatistics', 'Biostatistics', 1215615910, 1),
-(2, 'Communication Skills', 'Communication Skills', 1215615910, 1),
-(3, 'Community Health', 'Community Health', 1215615910, 1),
-(4, 'End-of-Life Care', 'End-of-Life Care', 1215615910, 1),
-(5, 'Epidemiology', 'Epidemiology', 1215615910, 1),
-(6, 'Evidence-Based Medicine', 'Evidence-Based Medicine', 1215615910, 1),
-(7, 'Family Violence/Abuse', 'Family Violence/Abuse', 1215615910, 1),
-(8, 'Medical Genetics', 'Medical Genetics', 1215615910, 1),
-(9, 'Health Care Financing', 'Health Care Financing', 1215615910, 1),
-(10, 'Health Care Systems', 'Health Care Systems', 1215615910, 1),
-(11, 'Health Care Quality Review', 'Health Care Quality Review', 1215615910, 1),
-(12, 'Home Health Care', 'Home Health Care', 1215615910, 1),
-(13, 'Human Development/Life Cycle', 'Human Development/Life Cycle', 1215615910, 1),
-(14, 'Human Sexuality', 'Human Sexuality', 1215615910, 1),
-(15, 'Medical Ethics', 'Medical Ethics', 1215615910, 1),
-(16, 'Medical Humanities', 'Medical Humanities', 1215615910, 1),
-(17, 'Medical Informatics', 'Medical Informatics', 1215615910, 1),
-(18, 'Medical Jurisprudence', 'Medical Jurisprudence', 1215615910, 1),
-(19, 'Multicultural Medicine', 'Multicultural Medicine', 1215615910, 1),
-(20, 'Nutrition', 'Nutrition', 1215615910, 1),
-(21, 'Occupational Health/Medicine', 'Occupational Health/Medicine', 1215615910, 1),
-(22, 'Pain Management', 'Pain Management', 1215615910, 1),
-(23, 'Palliative Care', 'Palliative Care', 1215615910, 1),
-(24, 'Patient Health Education', 'Patient Health Education', 1215615910, 1),
-(25, 'Population-Based Medicine', 'Population-Based Medicine', 1215615910, 1),
-(26, 'Practice Management', 'Practice Management', 1215615910, 1),
-(27, 'Preventive Medicine', 'Preventive Medicine', 1215615910, 1),
-(28, 'Rehabilitation/Care of the Disabled', 'Rehabilitation/Care of the Disabled', 1215615910, 1),
-(29, 'Research Methods', 'Research Methods', 1215615910, 1),
-(30, 'Substance Abuse', 'Substance Abuse', 1215615910, 1),
-(31, 'Womens Health', 'Womens Health', 1215615910, 1);
-
-CREATE TABLE IF NOT EXISTS `events_lu_ed11` (
-  `ed11_id` int(12) NOT NULL AUTO_INCREMENT,
-  `topic_name` varchar(60) NOT NULL,
-  `topic_description` text,
-  `updated_date` bigint(64) NOT NULL,
-  `updated_by` int(12) NOT NULL,
-  PRIMARY KEY  (`ed11_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
-INSERT INTO `events_lu_ed11` (`ed11_id`, `topic_name`, `topic_description`, `updated_date`, `updated_by`) VALUES
-(1, 'Anatomy', 'Anatomy', 1215615910, 1),
-(2, 'Biochemistry', 'Biochemistry', 1215615910, 1),
-(3, 'Genetics', 'Genetics', 1215615910, 1),
-(4, 'Physiology', 'Physiology', 1215615910, 1),
-(5, 'Microbiology and Immunology', 'Microbiology and Immunology', 1215615910, 1),
-(6, 'Pathology', 'Pathology', 1215615910, 1),
-(7, 'Pharmacology Therapeutics', 'Pharmacology Therapeutics', 1215615910, 1),
-(8, 'Preventive Medicine', 'Preventive Medicine', 1215615910, 1);
+INSERT INTO `events_lu_topics` (`topic_id`, `topic_name`, `topic_description`, `topic_type`, `updated_date`, `updated_by`) VALUES
+(1, 'Biostatistics', 'Biostatistics', 'ed10', 1215615910, 1),
+(2, 'Communication Skills', 'Communication Skills', 'ed10', 1215615910, 1),
+(3, 'Community Health', 'Community Health', 'ed10', 1215615910, 1),
+(4, 'End-of-Life Care', 'End-of-Life Care', 'ed10', 1215615910, 1),
+(5, 'Epidemiology', 'Epidemiology', 'ed10', 1215615910, 1),
+(6, 'Evidence-Based Medicine', 'Evidence-Based Medicine', 'ed10', 1215615910, 1),
+(7, 'Family Violence/Abuse', 'Family Violence/Abuse', 'ed10', 1215615910, 1),
+(8, 'Medical Genetics', 'Medical Genetics', 'ed10', 1215615910, 1),
+(9, 'Health Care Financing', 'Health Care Financing', 'ed10', 1215615910, 1),
+(10, 'Health Care Systems', 'Health Care Systems', 'ed10', 1215615910, 1),
+(11, 'Health Care Quality Review', 'Health Care Quality Review', 'ed10', 1215615910, 1),
+(12, 'Home Health Care', 'Home Health Care', 'ed10', 1215615910, 1),
+(13, 'Human Development/Life Cycle', 'Human Development/Life Cycle', 'ed10', 1215615910, 1),
+(14, 'Human Sexuality', 'Human Sexuality', 'ed10', 1215615910, 1),
+(15, 'Medical Ethics', 'Medical Ethics', 'ed10', 1215615910, 1),
+(16, 'Medical Humanities', 'Medical Humanities', 'ed10', 1215615910, 1),
+(17, 'Medical Informatics', 'Medical Informatics', 'ed10', 1215615910, 1),
+(18, 'Medical Jurisprudence', 'Medical Jurisprudence', 'ed10', 1215615910, 1),
+(19, 'Multicultural Medicine', 'Multicultural Medicine', 'ed10', 1215615910, 1),
+(20, 'Nutrition', 'Nutrition', 'ed10', 1215615910, 1),
+(21, 'Occupational Health/Medicine', 'Occupational Health/Medicine', 'ed10', 1215615910, 1),
+(22, 'Pain Management', 'Pain Management', 'ed10', 1215615910, 1),
+(23, 'Palliative Care', 'Palliative Care', 'ed10', 1215615910, 1),
+(24, 'Patient Health Education', 'Patient Health Education', 'ed10', 1215615910, 1),
+(25, 'Population-Based Medicine', 'Population-Based Medicine', 'ed10', 1215615910, 1),
+(26, 'Practice Management', 'Practice Management', 'ed10', 1215615910, 1),
+(27, 'Preventive Medicine', 'Preventive Medicine', 'ed10', 1215615910, 1),
+(28, 'Rehabilitation/Care of the Disabled', 'Rehabilitation/Care of the Disabled', 'ed10', 1215615910, 1),
+(29, 'Research Methods', 'Research Methods', 'ed10', 1215615910, 1),
+(30, 'Substance Abuse', 'Substance Abuse', 'ed10', 1215615910, 1),
+(31, 'Womens Health', 'Womens Health', 'ed10', 1215615910, 1),
+(32, 'Anatomy', 'Anatomy', 'ed11', 1215615910, 1),
+(33, 'Biochemistry', 'Biochemistry', 'ed11', 1215615910, 1),
+(34, 'Genetics', 'Genetics', 'ed11', 1215615910, 1),
+(35, 'Physiology', 'Physiology', 'ed11', 1215615910, 1),
+(36, 'Microbiology and Immunology', 'Microbiology and Immunology', 'ed11', 1215615910, 1),
+(37, 'Pathology', 'Pathology', 'ed11', 1215615910, 1),
+(38, 'Pharmacology Therapeutics', 'Pharmacology Therapeutics', 'ed11', 1215615910, 1),
+(39, 'Preventive Medicine', 'Preventive Medicine', 'ed11', 1215615910, 1);
 
 CREATE TABLE IF NOT EXISTS `events_lu_eventtypes` (
   `eventtype_id` int(12) NOT NULL AUTO_INCREMENT,
@@ -2008,36 +2004,19 @@ CREATE TABLE IF NOT EXISTS `event_discussions` (
   FULLTEXT KEY `discussion_title` (`discussion_title`,`discussion_comment`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `event_ed10` (
-  `eed10_id` int(12) NOT NULL AUTO_INCREMENT,
+CREATE TABLE IF NOT EXISTS `event_topics` (
+  `etopic_id` int(12) NOT NULL AUTO_INCREMENT,
   `event_id` int(12) NOT NULL DEFAULT '0',
-  `ed10_id` int(12) NOT NULL DEFAULT '0',
-  `major_topic` tinyint(1) DEFAULT '0',
-  `minor_topic` tinyint(1) DEFAULT '0',
-  `minor_desc` varchar(32) DEFAULT NULL,
+  `topic_id` tinyint(1) DEFAULT '0',
+  `topic_coverage`  enum('major','minor') NOT NULL,
+  `topic_time` varchar(25) DEFAULT NULL,
   `updated_date` bigint(64) NOT NULL,
   `updated_by` int(12) NOT NULL,
-  PRIMARY KEY  (`eed10_id`),
+  PRIMARY KEY  (`etopic_id`),
   KEY `event_id` (`event_id`),
-  KEY `ed10_id` (`ed10_id`),
-  KEY `major_topic` (`major_topic`),
-  KEY `minor_topic` (`minor_topic`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
-CREATE TABLE IF NOT EXISTS `event_ed11` (
-  `eed11_id` int(12) NOT NULL AUTO_INCREMENT,
-  `event_id` int(12) NOT NULL DEFAULT '0',
-  `ed11_id` int(12) NOT NULL DEFAULT '0',
-  `major_topic` tinyint(1) DEFAULT '0',
-  `minor_topic` tinyint(1) DEFAULT '0',
-  `minor_desc` varchar(25) DEFAULT NULL,
-  `updated_date` bigint(64) NOT NULL,
-  `updated_by` int(12) NOT NULL,
-  PRIMARY KEY  (`eed11_id`),
-  KEY `event_id` (`event_id`),
-  KEY `ed11_id` (`ed11_id`),
-  KEY `major_topic` (`major_topic`),
-  KEY `minor_topic` (`minor_topic`)
+  KEY `topic_id` (`topic_id`),
+  KEY `topic_coverage` (`topic_coverage`),
+  KEY `topic_time` (`topic_time`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `event_eventtypes` (

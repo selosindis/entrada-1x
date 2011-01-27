@@ -220,7 +220,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 					}
 					echo "</select>";
 				?>
-				</td>				
+				</td>
 			</tr>
 			<tr>
 				<td></td>

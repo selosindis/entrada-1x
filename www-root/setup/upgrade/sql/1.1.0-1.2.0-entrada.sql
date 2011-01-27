@@ -168,5 +168,13 @@ CREATE TABLE IF NOT EXISTS `evaluation_targets` (
 
 ALTER TABLE `assessments` CHANGE `grad_year` `grad_year` varchar(35) NOT NULL DEFAULT '';
 
-UPDATE `settings` SET `value` = '1.2.0' WHERE `shortname` = 'version_db';
+ALTER TABLE `community_pages` CHANGE `page_url` `page_url` varchar(329);
+ALTER TABLE `community_pages` ADD INDEX (`cpage_id`, `community_id`, `page_url`, `page_active`);
+ALTER TABLE `community_pages` ADD INDEX (`community_id`, `parent_id`, `page_url`, `page_active`);
+ALTER TABLE `community_pages` ADD INDEX (`page_order`);
+ALTER TABLE `community_pages` ADD INDEX (`community_id`, `page_url`);
+ALTER TABLE `community_pages` ADD INDEX (`community_id`, `page_type`);
+ALTER TABLE `community_page_options` ADD INDEX (`cpage_id`);
+ALTER TABLE `community_members` ADD INDEX (`community_id`, `proxy_id`, `member_active`);
 
+UPDATE `settings` SET `value` = '1.2.0' WHERE `shortname` = 'version_db';

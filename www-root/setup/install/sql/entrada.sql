@@ -1283,7 +1283,8 @@ CREATE TABLE IF NOT EXISTS `community_members` (
   `member_acl` int(1) NOT NULL DEFAULT '0',
   PRIMARY KEY  (`cmember_id`),
   KEY `community_id` (`community_id`,`proxy_id`,`member_joined`,`member_acl`),
-  KEY `member_active` (`member_active`)
+  KEY `member_active` (`member_active`),
+  KEY `community_id_2` (`community_id`,`proxy_id`,`member_active`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `community_modules` (
@@ -1326,7 +1327,7 @@ CREATE TABLE IF NOT EXISTS `community_pages` (
   `page_type` varchar(16) NOT NULL DEFAULT 'default',
   `menu_title` varchar(48) NOT NULL,
   `page_title` text NOT NULL,
-  `page_url` text NOT NULL,
+  `page_url` varchar(329) NOT NULL,
   `page_content` longtext NOT NULL,
   `page_active` int(1) NOT NULL DEFAULT '1',
   `page_visible` int(1) NOT NULL DEFAULT '1',
@@ -1335,7 +1336,11 @@ CREATE TABLE IF NOT EXISTS `community_pages` (
   `allow_public_view` int(1) NOT NULL DEFAULT '0',
   `updated_date` bigint(64) NOT NULL DEFAULT '0',
   `updated_by` int(12) NOT NULL DEFAULT '0',
-  PRIMARY KEY  (`cpage_id`)
+  KEY `cpage_id` (`cpage_id`,`community_id`,`page_url`,`page_active`),
+  KEY `community_id` (`community_id`,`parent_id`,`page_url`,`page_active`),
+  KEY `page_order` (`page_order`),
+  KEY `community_id_2` (`community_id`,`page_url`),
+  KEY `community_id_3` (`community_id`,`page_type`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `community_page_options` (
@@ -1346,7 +1351,8 @@ CREATE TABLE IF NOT EXISTS `community_page_options` (
   `option_value` int(12) NOT NULL DEFAULT '1',
   `proxy_id` int(12) NOT NULL DEFAULT '0',
   `updated_date` bigint(64) NOT NULL DEFAULT '0',
-  PRIMARY KEY  (`cpoption_id`,`community_id`,`cpage_id`)
+  PRIMARY KEY  (`cpoption_id`,`community_id`,`cpage_id`),
+  KEY `cpage_id` (`cpage_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `community_permissions` (

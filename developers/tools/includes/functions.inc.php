@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Entrada Tools
  * @author Unit: Medical Education Technology Unit

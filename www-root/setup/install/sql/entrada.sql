@@ -926,7 +926,18 @@ CREATE TABLE IF NOT EXISTS `assessments` (
   `type` varchar(255) NOT NULL,
   `marking_scheme_id` int(10) unsigned NOT NULL,
   `numeric_grade_points_total` float unsigned DEFAULT NULL,
+  `grade_weighting` int(11) NOT NULL default '0',
   PRIMARY KEY (`assessment_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE `assessment_exceptions` (
+  `aexception_id` int(12) NOT NULL auto_increment,
+  `assessment_id` int(12) NOT NULL,
+  `proxy_id` int(12) NOT NULL,
+  `grade_weighting` int(11) NOT NULL default '0',
+  PRIMARY KEY  (`aexception_id`),
+  KEY `proxy_id` (`assessment_id`,`proxy_id`),
+  KEY `assessment_id` (`assessment_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `assessment_grades` (

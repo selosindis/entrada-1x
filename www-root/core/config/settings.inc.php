@@ -440,7 +440,7 @@ $MODULES["clerkship"] = array("title" => "Manage Clerkship", "resource" => "cler
 $MODULES["courses"] = array("title" => "Manage Courses", "resource"=> "coursecontent", "permission" => "update");
 $MODULES["evaluations"] = array("title" => "Manage Evaluations", "resource" => "evaluation", "permission" => "update");
 $MODULES["events"] = array("title" => "Manage Events", "resource" => "eventcontent", "permission" => "update");
-$MODULES["gradebook"] = array("title" => "Manage Gradebook", "resource" => "gradebook", "permission" => "read");
+$MODULES["gradebook"] = array("title" => "Manage Gradebook", "resource" => "gradebook", "permission" => "update");
 $MODULES["mspr"] = array("title" => "Manage MSPRs", "resource" => "mspr", "permission" => "create");
 $MODULES["tasks"] = array("title" => "Manage Tasks", "resource" => "task", "permission" => "create");
 $MODULES["notices"] = array("title" => "Manage Notices", "resource" => "notice", "permission" => "update");

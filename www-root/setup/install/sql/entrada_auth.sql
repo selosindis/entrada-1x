@@ -111,7 +111,8 @@ INSERT INTO `acl_permissions` (`resource_type`, `resource_value`, `entity_type`,
 ('tasktab', NULL, NULL, NULL, NULL, NULL, 1, NULL, NULL, 'ShowTaskTab'),
 ('mydepartment', NULL, 'group', 'faculty', NULL, 1, 1, 1, 1, 'DepartmentHead'),
 ('myowndepartment', NULL, 'user', '1', NULL, 1, 1, 1, 1, NULL),
-('annualreportadmin', NULL, 'group:role', 'medtech:admin', NULL, 1, 1, 1, 1, NULL);
+('annualreportadmin', NULL, 'group:role', 'medtech:admin', NULL, 1, 1, 1, 1, NULL),
+('gradebook', NULL, 'group', 'student', NULL, NULL, 1, NULL, NULL, NULL);
 
 CREATE TABLE IF NOT EXISTS `departments` (
   `department_id` int(12) unsigned NOT NULL AUTO_INCREMENT,

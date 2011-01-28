@@ -1089,7 +1089,7 @@ CREATE TABLE IF NOT EXISTS `community_discussions` (
   `cdiscussion_id` int(12) NOT NULL AUTO_INCREMENT,
   `community_id` int(12) NOT NULL DEFAULT '0',
   `cpage_id` int(12) NOT NULL DEFAULT '0',
-  `forum_title` varchar(64) NOT NULL,
+  `forum_title` varchar(64) NOT NULL DEFAULT '',
   `forum_description` text NOT NULL,
   `forum_order` int(6) NOT NULL DEFAULT '0',
   `forum_active` int(1) NOT NULL DEFAULT '1',
@@ -1119,7 +1119,9 @@ CREATE TABLE IF NOT EXISTS `community_discussions` (
   KEY `allow_public_post` (`allow_public_post`),
   KEY `allow_public_reply` (`allow_public_reply`),
   KEY `forum_active` (`forum_active`),
-  KEY `admin_notification` (`admin_notifications`)
+  KEY `admin_notification` (`admin_notifications`),
+  KEY `page_id` (`cdiscussion_id`,`cpage_id`,`community_id`),
+  KEY `community_id2` (`community_id`,`forum_active`,`cpage_id`,`forum_order`,`forum_title`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `community_discussion_topics` (
@@ -1128,7 +1130,7 @@ CREATE TABLE IF NOT EXISTS `community_discussion_topics` (
   `cdiscussion_id` int(12) NOT NULL DEFAULT '0',
   `community_id` int(12) NOT NULL DEFAULT '0',
   `proxy_id` int(12) NOT NULL DEFAULT '0',
-  `topic_title` varchar(128) NOT NULL,
+  `topic_title` varchar(128) NOT NULL DEFAULT '',
   `topic_description` text NOT NULL,
   `topic_active` int(1) NOT NULL DEFAULT '1',
   `release_date` bigint(64) NOT NULL DEFAULT '0',
@@ -1141,7 +1143,14 @@ CREATE TABLE IF NOT EXISTS `community_discussion_topics` (
   KEY `cdiscussion_id` (`cdiscussion_id`),
   KEY `topic_active` (`topic_active`),
   KEY `release_date` (`release_date`,`release_until`),
-  FULLTEXT KEY `discussion_title` (`topic_title`,`topic_description`)
+  KEY `community_id` (`cdtopic_id`,`community_id`),
+  KEY `cdtopic_parent` (`cdtopic_parent`,`community_id`),
+  KEY `user` (`cdiscussion_id`,`community_id`,`topic_active`,`cdtopic_parent`,`proxy_id`,`release_date`,`release_until`),
+  KEY `admin` (`cdiscussion_id`,`community_id`,`topic_active`,`cdtopic_parent`),
+  KEY `post` (`proxy_id`,`community_id`,`cdtopic_id`,`cdtopic_parent`,`topic_active`),
+  KEY `release` (`proxy_id`,`community_id`,`cdtopic_parent`,`topic_active`,`release_date`),
+  KEY `community` (`cdtopic_id`,`community_id`),
+  FULLTEXT KEY `topic_title` (`topic_title`,`topic_description`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `community_events` (

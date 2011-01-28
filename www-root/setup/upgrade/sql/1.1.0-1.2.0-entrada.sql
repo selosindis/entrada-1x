@@ -231,3 +231,6 @@ RENAME TABLE `event_ed10` TO `backup_event_ed10`;
 RENAME TABLE `event_ed11` TO `backup_event_ed11`;
 
 UPDATE `settings` SET `value` = '1.2.0' WHERE `shortname` = 'version_db';
+
+INSERT INTO `ar_lu_on_call_locations` (`id`,`on_call_location`)
+VALUES	('', 'Other (specify)');

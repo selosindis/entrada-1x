@@ -415,7 +415,8 @@ CREATE TABLE IF NOT EXISTS `ar_lu_on_call_locations` (
 INSERT INTO `ar_lu_on_call_locations` (`id`, `on_call_location`) VALUES
 (1, 'Hospital A'),
 (2, 'Hospital B'),
-(3, 'Hospital C');
+(3, 'Hospital C'),
+(4, 'Other (specify)');
 
 CREATE TABLE IF NOT EXISTS `ar_lu_other_locations` (
   `id` int(11) NOT NULL auto_increment,

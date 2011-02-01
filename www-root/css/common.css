@@ -1165,6 +1165,77 @@ text-align:center;
 border-left:none;
 }
 
+div.person-result {
+	width: 100%; 
+	padding: 5px 0px 5px 5px; 
+	line-height: 16px; 
+	text-align: left; 
+	border-bottom: 1px solid rgb(204, 204, 204);
+}
+
+div.person-result div.img-holder {
+	float:left;
+	margin-right:10px;
+}
+
+div.person-result div.person-data {
+	float:left;
+	margin-right:10px;
+	
+}
+
+div.person-result div.person-data {
+	float:left;
+	margin-right:10px;
+	width: 650px;
+}
+
+div.person-result div.person-data div.basic {
+	width: 200px;
+	float:left;
+}
+
+div.person-result div.person-data div.address {
+	float:left;
+		width: 200px;
+}
+
+div.person-result div.person-data div.assistant {
+		float:left;
+	width: 200px;
+}
+
+div.person-data span.person-name {
+	font-weight: bold; 
+	font-size: 1.1em;
+	color: #003366; 
+}
+
+div.person-data .person-email {
+	display:block;
+	font-size:0.9em;
+	font-weight:normal;
+}
+
+div.person-data .email-container {
+	margin-top:15px;
+}
+
+div.person-data .basic span {
+	display:block;
+}
+
+div.person-data span {
+	font-size:0.9em;
+	font-weight:normal;
+	color:#666;
+}
+
+div.person-data span.address-label {
+	display:inline-block;
+	width: 6em;
+}
+
 div.img-holder {
 position:relative;
 width:74px;
@@ -1181,7 +1252,7 @@ div.img-holder img.official {
 z-index:6;
 }
 
-div.img-holder img.uploaded {
+div.img-holder img.uploaded, div.img-holder img.upload {
 z-index:5;
 }
 
@@ -1224,6 +1295,10 @@ padding:0 2px;
 
 div.img-holder a.img-selector.two {
 left:19px;
+}
+
+div.img-holder a.img-selector + a.img-selector {
+	left:19px;
 }
 
 h1 {
@@ -1728,6 +1803,22 @@ background:transparent url(../images/btn_add.gif) no-repeat center left;
 padding:0 14px 0 16px;
 }
 
+.page-action li a {
+color:#693;
+font-weight:700;
+}
+
+.page-nav li {
+display:inline;
+background:transparent url(../images/btn_attention.gif) no-repeat center left;
+padding:0 14px 0 16px;
+}
+
+.page-nav li a {
+color:#693;
+font-weight:700;
+}
+
 .page-action-cancel li {
 display:inline;
 background:transparent url(../images/btn_cancel.gif) no-repeat center left;
@@ -1748,11 +1839,6 @@ padding:0 14px 0 16px;
 .page-action-edit li a {
 color:#333;
 padding-left:5px;
-font-weight:700;
-}
-
-.page-action li a {
-color:#693;
 font-weight:700;
 }
 
@@ -2449,6 +2535,10 @@ table.tableList tbody tr.na,.usage-container.over div,.stats-container div,table
 background-color:#FFD9D0;
 }
 
+table.tableList tbody tr.resubmit {
+	background-color:#FFFFAA;
+}
+
 table.tableList tbody tr.disabled td a,table.tableList tbody tr td.disabled a,table.tableList tbody tr td.disabled,table.tableList tr td.np a,table.tableList tr td.np {
 font-size:11px;
 color:#999;
@@ -3072,4 +3162,14 @@ margin: 0 1em 0 0;
 
 table.task_form {
 	width: 100%;
+}
+
+blockquote.completion_comment {
+	padding:1ex 1em;
+	background-color: #EEE;
+}
+
+blockquote.rejection_comment {
+	padding:1ex 1em;
+	background-color: #FFD9D0;
 }

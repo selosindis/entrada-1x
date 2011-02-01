@@ -609,12 +609,12 @@ if (!defined("PARENT_INCLUDED")) {
 									<td><input class="search_groups" id="staff" type="checkbox" <?php echo ((isset($_REQUEST["search_groups"]) && is_array(explode(',', $_REQUEST["search_groups"])) && array_search("staff", (explode(',', $_REQUEST["search_groups"]))) !== false) || (isset($_REQUEST["search_groups"]) && $_REQUEST["search_groups"] == "staff") || (!isset($_REQUEST["search_groups"]) && !isset($_REQUEST["search_classes"]) && !isset($_REQUEST["search_alumni"])) ? "checked=\"checked\" " : ""); ?>value="staff" onclick="addGroup()" /><label class="content-small" for="staff"> Staff</label></td>
 								</tr>
 								<tr>
-									<td><input class="search_classes" id="class_<?php echo (date("Y", time()) + $year_offset); ?>" type="checkbox" <?php echo ((isset($_REQUEST["search_classes"]) && is_array(explode(',', $_REQUEST["search_classes"])) && array_search((date("Y", time()) + $year_offset), (explode(',', $_REQUEST["search_classes"]))) !== false) || (isset($_REQUEST["search_classes"]) && $_REQUEST["search_classes"] == (date("Y", time()) + $year_offset)) || (!isset($_REQUEST["search_groups"]) && !isset($_REQUEST["search_classes"]) && !isset($_REQUEST["search_alumni"])) ? "checked=\"checked\" " : ""); ?>value="<?php echo (date("Y", time()) + $year_offset)."\" onclick=\"addClass()\" /><label class=\"content-small\" for=\"class_".(date("Y", time()) + $year_offset)."\"> Class of ".(date("Y", time()) + $year_offset); ?></label></td>
-									<td><input class="search_classes" id="class_<?php echo (date("Y", time()) + $year_offset + 1); ?>" type="checkbox" <?php echo ((isset($_REQUEST["search_classes"]) && is_array(explode(',', $_REQUEST["search_classes"])) && array_search((date("Y", time()) + $year_offset + 1), (explode(',', $_REQUEST["search_classes"]))) !== false) || (isset($_REQUEST["search_classes"]) && $_REQUEST["search_classes"] == (date("Y", time()) + $year_offset + 1)) || (!isset($_REQUEST["search_groups"]) && !isset($_REQUEST["search_classes"]) && !isset($_REQUEST["search_alumni"])) ? "checked=\"checked\" " : ""); ?>value="<?php echo (date("Y", time()) + $year_offset + 1)."\" onclick=\"addClass()\" /><label class=\"content-small\" for=\"class_".(date("Y", time()) + $year_offset + 1)."\"> Class of ".(date("Y", time()) + $year_offset + 1); ?></label></td>
+									<td><input class="search_classes" id="class_<?php echo (date("Y", time()) + $year_offset); ?>" type="checkbox" <?php echo ((isset($_REQUEST["search_classes"]) && is_array(explode(',', $_REQUEST["search_classes"])) && array_search((date("Y", time()) + $year_offset), (explode(',', $_REQUEST["search_classes"]))) !== false) || (isset($_REQUEST["search_classes"]) && $_REQUEST["search_classes"] == (date("Y", time()) + $year_offset)) || (!isset($_REQUEST["search_groups"]) && !isset($_REQUEST["search_classes"]) && !isset($_REQUEST["search_alumni"])) ? "checked=\"checked\" " : ""); ?>value="<?php echo (date("Y", time()) + $year_offset); ?>" onclick="addClass()" /><label class="content-small" for="class_<?php echo (date("Y", time()) + $year_offset); ?>"> Class of <?php echo (date("Y", time()) + $year_offset); ?></label></td>
+									<td><input class="search_classes" id="class_<?php echo (date("Y", time()) + $year_offset + 1); ?>" type="checkbox" <?php echo ((isset($_REQUEST["search_classes"]) && is_array(explode(',', $_REQUEST["search_classes"])) && array_search((date("Y", time()) + $year_offset + 1), (explode(',', $_REQUEST["search_classes"]))) !== false) || (isset($_REQUEST["search_classes"]) && $_REQUEST["search_classes"] == (date("Y", time()) + $year_offset + 1)) || (!isset($_REQUEST["search_groups"]) && !isset($_REQUEST["search_classes"]) && !isset($_REQUEST["search_alumni"])) ? "checked=\"checked\" " : ""); ?>value="<?php echo (date("Y", time()) + $year_offset + 1); ?>" onclick="addClass()" /><label class="content-small" for="class_<?php echo (date("Y", time()) + $year_offset + 1); ?>"> Class of <?php echo (date("Y", time()) + $year_offset + 1); ?></label></td>
 								</tr>
 								<tr>
-									<td><input class="search_classes" id="class_<?php echo (date("Y", time()) + $year_offset + 2); ?>" type="checkbox" <?php echo ((isset($_REQUEST["search_classes"]) && is_array(explode(',', $_REQUEST["search_classes"])) && array_search((date("Y", time()) + $year_offset + 2), (explode(',', $_REQUEST["search_classes"]))) !== false) || (isset($_REQUEST["search_classes"]) && $_REQUEST["search_classes"] == (date("Y", time()) + $year_offset + 2)) || (!isset($_REQUEST["search_groups"]) && !isset($_REQUEST["search_classes"]) && !isset($_REQUEST["search_alumni"])) ? "checked=\"checked\" " : ""); ?>value="<?php echo (date("Y", time()) + $year_offset + 2)."\" onclick=\"addClass()\" /><label class=\"content-small\" for=\"class_".(date("Y", time()) + $year_offset + 2)."\"> Class of ".(date("Y", time()) + $year_offset + 2); ?></label></td>
-									<td><input class="search_classes" id="class_<?php echo (date("Y", time()) + $year_offset + 3); ?>" type="checkbox" <?php echo ((isset($_REQUEST["search_classes"]) && is_array(explode(',', $_REQUEST["search_classes"])) && array_search((date("Y", time()) + $year_offset + 3), (explode(',', $_REQUEST["search_classes"]))) !== false) || (isset($_REQUEST["search_classes"]) && $_REQUEST["search_classes"] == (date("Y", time()) + $year_offset + 3)) || (!isset($_REQUEST["search_groups"]) && !isset($_REQUEST["search_classes"]) && !isset($_REQUEST["search_alumni"])) ? "checked=\"checked\" " : ""); ?>value="<?php echo (date("Y", time()) + $year_offset + 3)."\" onclick=\"addClass()\" /><label class=\"content-small\" for=\"class_".(date("Y", time()) + $year_offset + 3)."\"> Class of ".(date("Y", time()) + $year_offset + 3); ?></label></td>
+									<td><input class="search_classes" id="class_<?php echo (date("Y", time()) + $year_offset + 2); ?>" type="checkbox" <?php echo ((isset($_REQUEST["search_classes"]) && is_array(explode(',', $_REQUEST["search_classes"])) && array_search((date("Y", time()) + $year_offset + 2), (explode(',', $_REQUEST["search_classes"]))) !== false) || (isset($_REQUEST["search_classes"]) && $_REQUEST["search_classes"] == (date("Y", time()) + $year_offset + 2)) || (!isset($_REQUEST["search_groups"]) && !isset($_REQUEST["search_classes"]) && !isset($_REQUEST["search_alumni"])) ? "checked=\"checked\" " : ""); ?>value="<?php echo (date("Y", time()) + $year_offset + 2); ?>" onclick="addClass()" /><label class="content-small" for="class_<?php echo (date("Y", time()) + $year_offset + 2); ?>"> Class of <?php echo (date("Y", time()) + $year_offset + 2); ?></label></td>
+									<td><input class="search_classes" id="class_<?php echo (date("Y", time()) + $year_offset + 3); ?>" type="checkbox" <?php echo ((isset($_REQUEST["search_classes"]) && is_array(explode(',', $_REQUEST["search_classes"])) && array_search((date("Y", time()) + $year_offset + 3), (explode(',', $_REQUEST["search_classes"]))) !== false) || (isset($_REQUEST["search_classes"]) && $_REQUEST["search_classes"] == (date("Y", time()) + $year_offset + 3)) || (!isset($_REQUEST["search_groups"]) && !isset($_REQUEST["search_classes"]) && !isset($_REQUEST["search_alumni"])) ? "checked=\"checked\" " : ""); ?>value="<?php echo (date("Y", time()) + $year_offset + 3); ?>" onclick="addClass()" /><label class="content-small" for="class_<?php echo (date("Y", time()) + $year_offset + 3); ?>"> Class of <?php echo (date("Y", time()) + $year_offset + 3); ?></label></td>
 								</tr>
 							</table>
 						</div>
@@ -933,38 +933,40 @@ if (!defined("PARENT_INCLUDED")) {
 				echo "		<td style=\"padding-top: 1.3em;\">\n";
 				echo "			<div>\n";
 				echo "				<table class=\"address-info\" style=\"width: 100%;\">\n";
-				if ($result["telephone"] && ($result["privacy_level"] > 2 || $is_administrator)) {
-					echo "			<tr>\n";
-					echo "				<td style=\"width: 30%;\">Telephone: </td>\n";
-					echo "				<td>".html_encode($result["telephone"])."</td>\n";
-					echo "			</tr>\n";
-				}
-				if ($result["fax"] && ($result["privacy_level"] > 2 || $is_administrator)) {
-					echo "			<tr>\n";
-					echo "				<td>Fax: </td>\n";
-					echo "				<td>".html_encode($result["fax"])."</td>\n";
-					echo "			</tr>\n\n";
-				}
-				if ($result["address"] && $result["city"] && ($result["privacy_level"] > 2 || $is_administrator)) {
-					echo "			<tr>\n";
-					echo "				<td><br />Address: </td>\n";
-					echo "				<td><br />".html_encode($result["address"])."</td>\n";
-					echo "			</tr>\n";
-					echo "			<tr>\n";
-					echo "				<td>&nbsp;</td>\n";
-					echo "				<td>".html_encode($result["city"].($result["city"] && $result["province"] ? ", ".$result["province"] : ""))."</td>\n";
-					echo "			</tr>\n";
-					echo "			<tr>\n";
-					echo "				<td>&nbsp;</td>\n";
-					echo "				<td>".html_encode($result["country"].($result["country"] && $result["postcode"] ? ", ".$result["postcode"] : ""))."</td>\n";
-					echo "			</tr>\n";
-				}
-				if ($result["office_hours"] && ($result["privacy_level"] > 2 || $is_administrator)) {
-					echo "			<tr><td colspan=\"2\">&nbsp;</td></tr>";
-					echo "			<tr>\n";
-					echo "				<td>Office Hours: </td>\n";
-					echo "				<td>".nl2br(html_encode($result["office_hours"]))."</td>\n";
-					echo "			</tr>\n\n";
+				if (($result["privacy_level"] > 2 || $is_administrator)) {
+					if ($result["telephone"]) {
+						echo "			<tr>\n";
+						echo "				<td style=\"width: 30%;\">Telephone: </td>\n";
+						echo "				<td>".html_encode($result["telephone"])."</td>\n";
+						echo "			</tr>\n";
+					}
+					if ($result["fax"]) {
+						echo "			<tr>\n";
+						echo "				<td>Fax: </td>\n";
+						echo "				<td>".html_encode($result["fax"])."</td>\n";
+						echo "			</tr>\n\n";
+					}
+					if ($result["address"] && $result["city"]) {
+						echo "			<tr>\n";
+						echo "				<td><br />Address: </td>\n";
+						echo "				<td><br />".html_encode($result["address"])."</td>\n";
+						echo "			</tr>\n";
+						echo "			<tr>\n";
+						echo "				<td>&nbsp;</td>\n";
+						echo "				<td>".html_encode($result["city"].($result["city"] && $result["province"] ? ", ".$result["province"] : ""))."</td>\n";
+						echo "			</tr>\n";
+						echo "			<tr>\n";
+						echo "				<td>&nbsp;</td>\n";
+						echo "				<td>".html_encode($result["country"].($result["country"] && $result["postcode"] ? ", ".$result["postcode"] : ""))."</td>\n";
+						echo "			</tr>\n";
+					}
+					if ($result["office_hours"]) {
+						echo "			<tr><td colspan=\"2\">&nbsp;</td></tr>";
+						echo "			<tr>\n";
+						echo "				<td>Office Hours: </td>\n";
+						echo "				<td>".nl2br(html_encode($result["office_hours"]))."</td>\n";
+						echo "			</tr>\n\n";
+					}
 				}
 				echo "				</table>\n";
 				echo "			</div>\n";

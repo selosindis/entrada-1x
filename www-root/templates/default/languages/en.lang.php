@@ -183,7 +183,7 @@ return array (
 	"task_field_recipients_organisation" => "Entire Organisation Task",
 	"task_field_organisation" => "Organisation",
 	"task_field_completion_comments" => "Completion Comments",
-	"task_field_resubmission_comments" => "Resubmission Comments",
+	"task_field_rejection_comments" => "Rejection Comments",
 	"task_field_faculty_selection" => "Faculty Selection",
 	"task_field_verification_none" => "No Verification",
 	"task_field_verification_faculty" => "Selected Faculty Verification",
@@ -237,6 +237,8 @@ return array (
 	"task_organisation_permission_fail" => "You do not have permission to add a task for the selected organisation, please select a different one.",
 	"task_organisation_invalid" => "The <strong>Organisation</strong> you selected does not exist.",
 	"task_verification_no_verifier" => "You have chosen <strong>Other Specified Individual Verifiction</strong>, but have not selected an individual as <strong>Designated Verifier</strong>.",
+	"task_completion_comment_policy_invalid" => "Invalid completion comment policy provided. Please select one of the options from the list.",
+	"task_rejection_comment_policy_invalid" => "Invalid rejection comment policy provided. Please select one of the options from the list.", 
 	
 	/** notices **/
 	"task_title_too_long" => "The <strong>Task Title</strong> field has a maximum length of %MAX_LENGTH% characters. The title was truncated to accomodate this." //note, the field has the same restriction, so the user is unlikely to receive this message

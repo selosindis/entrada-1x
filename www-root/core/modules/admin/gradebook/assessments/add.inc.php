@@ -71,6 +71,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						$ERROR++;
 						$ERRORSTR[] = "You must supply a valid <strong>Name</strong> for this assessment.";
 					}
+						
+					if((isset($_POST["grade_weighting"])) && ($_POST["grade_weighting"] !== NULL)) {
+						$PROCESSED["grade_weighting"] = clean_input($_POST["grade_weighting"], "int");
+					} else {
+						$ERROR++;
+						$ERRORSTR[] = "You must supply a <strong>Grade Weighting</strong> for this assessment.";
+					}
 					
 					if((isset($_POST["description"])) && ($description = clean_input($_POST["description"], array("notags", "trim")))) {
 						$PROCESSED["description"] = $description;
@@ -243,6 +250,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							?>
 							</select>							
 						</td>
+					</tr>
+					<tr>
+						<td></td>
+						<td style="vertical-align: top"><label for="grade_weighting" class="form-required">Assessment Weighting</label></td>
+						<td><input type="text" id="grade_weighting" name="grade_weighting" value="<?php echo html_encode($PROCESSED["grade_weighting"]); ?>" maxlength="11" style="width: 243px" /></td>
 					</tr>
 					<tr>
 						<td colspan="3">&nbsp;</td>

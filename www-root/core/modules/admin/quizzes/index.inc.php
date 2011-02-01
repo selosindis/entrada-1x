@@ -106,7 +106,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 			$sort_by = "a.`quiz_title` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]);
 		break;
 		case "status" :
-		default :
 			$sort_by = "`quiz_status` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]);
 		break;
 	}

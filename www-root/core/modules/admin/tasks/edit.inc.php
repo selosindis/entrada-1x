@@ -26,7 +26,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 	
 	if ($TASK_ID && ($task = Task::get($TASK_ID))) {
 	
-		var_dump($task);
+		//var_dump($task);
 		$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/tasks?section=edit&id=".$TASK_ID, "title" => "Edit Task: " .  $task->getTitle());
 	
 		$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/AutoCompleteList.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
@@ -81,8 +81,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 			
 		}
 		
-		$PROCESSED["comment_policy"] = $task->getCompletionCommentPolicy();
-		$PROCESSED["comment_policy_resubmit"] = $task->getResubmitCommentPolicy();
+		$PROCESSED["completion_comment_policy"] = $task->getCompletionCommentPolicy();
+		$PROCESSED["rejection_comment_policy"] = $task->getRejectionCommentPolicy();
 		$PROCESSED["faculty_selection_policy"] = $task->getFacultySelectionPolicy();
 		$PROCESSED["task_verification_notification"] = $task->getVerificationNotificationPolicy();
 		$PROCESSED["task_verification_type"] = $task->getVerificationType();
@@ -104,7 +104,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 					$org_id = ($PROCESSED["associated_organisation_id"] ? $PROCESSED["associated_organisation_id"] : $ORGANISATION_ID); //default to associated organisation as user may have access to multiple
 					
 					$task_values = array(
-						"creator_id" => $PROXY_ID,
+						"updater_id" => $PROXY_ID,
 						"title" => $PROCESSED['title'],
 						"deadline" => $PROCESSED['deadline'],
 						"duration" => $PROCESSED['time_required'],
@@ -113,8 +113,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 						"release_finish" => $PROCESSED["release_finish"],
 						"organisation_id" => $org_id,
 						"faculty_selection_policy" => $PROCESSED["faculty_selection_policy"],
-						"comment_policy" => $PROCESSED["comment_policy"],
-						"comment_policy_resubmit" => $PROCESSED["comment_policy_resubmit"],
+						"completion_comment_policy" => $PROCESSED["completion_comment_policy"],
+						"rejection_comment_policy" => $PROCESSED["rejection_comment_policy"],
 						"verification_type" => $PROCESSED["task_verification_type"],
 						"verification_notification_policy" => array_reduce($PROCESSED["task_verification_notification"], 'or_bin', 0)
 					);
@@ -173,7 +173,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 						
 						TaskVerifiers::remove($TASK_ID);
 						if (TASK_VERIFICATION_OTHER == $PROCESSED["task_verification_type"]) {
-							TaskVerifiers::add($task_id, $PROCESSED['associated_verifier']);
+							TaskVerifiers::add($TASK_ID, $PROCESSED['associated_verifier']);
 						}
 						if (!has_error()) {
 							$url = ENTRADA_URL."/admin/tasks";
@@ -188,9 +188,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 				}
 			default:
 		
-				
 				load_rte(); //load the Rich Text Editor
 				$ONLOAD[]	= "selectTaskRecipientsOption('".$PROCESSED["task_recipient_type"]."')";
+				$ONLOAD[]	= "selectTaskVerificationOption('".$PROCESSED["task_verification_type"]."')";
 	?>
 	
 	<h1><?php echo $translate->translate("task_heading_edit"); ?></h1>
@@ -434,10 +434,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 				<tr>
 					<td>&nbsp;</td>
 					<td><?php echo $translate->translate("task_field_completion_comments"); ?></td>
-					<td><select id="comment_policy" name="comment_policy" style="width: 203px">
+					<td><select id="completion_comment_policy" name="completion_comment_policy" style="width: 203px">
 							<?php
-							foreach (array(TASK_COMPLETE_COMMENT_NONE, TASK_COMPLETE_COMMENT_ALLOW, TASK_COMPLETE_COMMENT_REQUIRE) as $policy) {
-								echo build_option($policy, $translate->translate("task_option_complete_".$policy), $PROCESSED["comment_policy"] == $policy);
+							foreach (array(TASK_COMMENT_NONE, TASK_COMMENT_ALLOW, TASK_COMMENT_REQUIRE) as $policy) {
+								echo build_option($policy, $translate->translate("task_option_complete_".$policy), $PROCESSED["completion_comment_policy"] == $policy);
 							}
 							?>
 						</select>
@@ -445,11 +445,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 				</tr>
 				<tr>
 					<td>&nbsp;</td>
-					<td><?php echo $translate->translate("task_field_resubmission_comments"); ?></td>
-					<td><select id="comment_policy_resubmit" name="comment_policy_resubmit" style="width: 203px">
+					<td><?php echo $translate->translate("task_field_rejection_comments"); ?></td>
+					<td><select id="rejection_comment_policy" name="rejection_comment_policy" style="width: 203px">
 							<?php
-							foreach (array(TASK_COMPLETE_COMMENT_NONE, TASK_COMPLETE_COMMENT_ALLOW, TASK_COMPLETE_COMMENT_REQUIRE) as $policy) {
-								echo build_option($policy, $translate->translate("task_option_complete_".$policy), $PROCESSED["comment_policy_resubmit"] == $policy);
+							foreach (array(TASK_COMMENT_NONE, TASK_COMMENT_ALLOW, TASK_COMMENT_REQUIRE) as $policy) {
+								echo build_option($policy, $translate->translate("task_option_complete_".$policy), $PROCESSED["rejection_comment_policy"] == $policy);
 							}
 							?>
 						</select>

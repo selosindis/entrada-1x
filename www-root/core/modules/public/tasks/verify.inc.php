@@ -28,37 +28,150 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 	
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/AutoCompleteList.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 	
-	require_once("Models/courses/Courses.class.php");
-	require_once("Models/organisations/Organisations.class.php");
-	require_once("Models/tasks/Tasks.class.php");
-	require_once("Models/tasks/TaskOwners.class.php");
-	require_once("Models/tasks/TaskRecipients.class.php");
-	require_once("Models/tasks/TaskCompletions.class.php");
-	require_once("Models/users/User.class.php");
-	require_once("Models/users/GraduatingClass.class.php");
-	
 	if ($TASK_ID && ($task = Task::get($TASK_ID))) {
 		if ($RECIPIENT_ID && ($recipient = User::get($RECIPIENT_ID))) {
 		
-			$BREADCRUMB[] = array("url" => ENTRADA_URL."/tasks?section=verification", "title" => "Task Verification");
 			$BREADCRUMB[] = array("url" => ENTRADA_URL."/tasks?section=verify&id=".$TASK_ID."&recipient=".$RECIPIENT_ID, "title" => "Verify Task Completion");
 			
 			$user = User::get($PROXY_ID);
 		
 			$course = $task->getCourse();
 			$completion = TaskCompletion::get($TASK_ID, $RECIPIENT_ID);
+			$faculty = $completion->getFaculty();
 			
+			$completion_comment = $completion->getCompletionComment();
+			$rejection_comment = $completion->getRejectionComment(); 
+			$verification_type = $task->getVerificationType();
+			
+			$rej_com_pol = $task->getRejectionCommentPolicy();
+
+			$facsecpol = $task->getFacultySelectionPolicy();
+			$assocfac = $task->getAssociatedFaculty();
+			
+			$PROCESSED['rejection_comment'] = $rejection_comment;
+			$PROCESSED['task_verify'] = 1;
+			
+			if ($faculty) {
+				$PROCESSED['associated_faculty'] = $faculty->getID();
+			}
+			
+			//now to determine if the user is an owner, or only an assoicated faculty
+			if (TASK_VERIFICATION_FACULTY == $verification_type ) {
+				$faculty_override = ($task->isOwner($user)); 
+			} else {
+				//or possibly there are no faculty to select
+				$faculty_override = (TASK_FACULTY_SELECTION_OFF != $facsecpol) && (count($assocfac) > 0);
+			}
+				
 			if ($completion) {
 				switch($_POST['action']) {
 					case "Submit":
-						if ($task->isVerificationRequired()) {
+						if (TASK_VERIFICATION_NONE !== $verification_type) {
 							if (isset($_POST['task_verify'])) {
 								switch ($_POST['task_verify']) {
 									case 1:
 										$mode = "verify";
-										$c_time = $completion->getCompletedDate();
-										$completion->update($c_time,$user->getID(), time());
-										task_verification_notification(	"confirm",
+										
+										//reset rejection status 
+										$rejection_comment = null;
+										$rejection_date = null;
+										
+										$verifier_id = $user->getID();
+										$verified_date = time();
+										
+										$completed_date = $completion->getCompletedDate();
+										$completion_comment = $completion->getCompletionComment();
+										
+										if ($faculty_override) {
+											if (isset($_POST['associated_faculty'])) {
+												$faculty_id = $_POST['associated_faculty'];
+											} else {
+												$faculty_id = 0;
+											}
+											
+											//is it required and is one set?
+											if ((TASK_FACULTY_SELECTION_REQUIRE == $facsecpol) && (!$faculty_id)) {
+												add_error("This task requires selection of the associated faculty. Please choose one of the faculty from the list and re-submit.");
+											} else {
+												$id_list = array(0);
+												foreach($assocfac as $faculty) {
+													$id_list[] = $faculty->getID();
+												}
+												//is the selected one set within the list?
+												if (in_array($faculty_id, $id_list)) {
+													$PROCESSED['associated_faculty'] = $faculty_id;
+												} else {
+													add_error("Provided Faculty ID not found in list. Please choose one of the faculty from the list and re-submit.");
+												}
+											}
+										} 
+										
+										$faculty_id = $PROCESSED['associated_faculty'];
+										
+										if (!has_error()) {
+										$update_data = array(
+											"verifier_id" => $verifier_id, 
+											"verified_date" => $verified_date, 
+											"completed_date" => $completed_date, 
+											"faculty_id" => $faculty_id, 
+											"completion_comment" => $completion_comment, 
+											"rejection_comment" => $rejection_comment, 
+											"rejection_date" => $rejection_date
+										);	
+										$completion->update($update_data);
+										
+										//Design decision: Disabled to cut down on volume of emails -- REMOVE when confirmed
+//										task_verification_notification(	"confirm",
+//																		array(
+//																			"firstname" => $recipient->getFirstname(),
+//																			"lastname" => $recipient->getLastname(),
+//																			"email" => $recipient->getEmail()),
+//																		array(
+//																			"to_fullname" => $recipient->getFirstname(). " " . $recipient->getLastname(),
+//																			"from_firstname" => $user->getFirstname(),
+//																			"from_lastname" => $user->getLastname(),
+//																			"task_title" => $task->getTitle(),
+//																			"application_name" => APPLICATION_NAME . " Task System"
+//																			));
+										}
+										break;
+									case 0:
+										$mode = "decline";
+										
+										$rejection_comment = filter_input(INPUT_POST,"reason", FILTER_SANITIZE_STRING);
+										
+										$rejection_date = time();
+										
+										//reset verification if any
+										$verifier_id = null;
+										$verified_date = null;
+										
+										$completed_date = $completion->getCompletedDate();
+										$completion_comment = $completion->getCompletionComment();
+										
+										$faculty = $completion->getFaculty();
+										if ($faculty) {
+											$faculty_id = $faculty->getID();
+										} else {
+											$faculty_id = null;
+										}
+										$update_data = array(
+											"verifier_id" => $verifier_id, 
+											"verified_date" => $verified_date, 
+											"completed_date" => $completed_date, 
+											"faculty_id" => $faculty_id, 
+											"completion_comment" => $completion_comment, 
+											"rejection_comment" => $rejection_comment, 
+											"rejection_date" => $rejection_date
+										);	
+										$completion->update($update_data);
+										
+										//check against policy
+										if (!$rejection_comment && (TASK_COMMENT_REQUIRE == $rej_com_pol)) {
+											add_error("A reason is required when declining verification for this task.");
+										}
+										
+										task_verification_notification(	"denial",
 																		array(
 																			"firstname" => $recipient->getFirstname(),
 																			"lastname" => $recipient->getLastname(),
@@ -68,29 +181,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 																			"from_firstname" => $user->getFirstname(),
 																			"from_lastname" => $user->getLastname(),
 																			"task_title" => $task->getTitle(),
-																			"application_name" => APPLICATION_NAME . " Task System"
+																			"application_name" => APPLICATION_NAME . " Task System",
+																			"reason" => $rejection_comment
 																			));
-										break;
-									case 0:
-										$mode = "decline";
-										if (isset($_POST['reason']) && ($reason = $_POST['reason'])) {
-											$completion->update(null,null,null);
-											task_verification_notification(	"denial",
-																			array(
-																				"firstname" => $recipient->getFirstname(),
-																				"lastname" => $recipient->getLastname(),
-																				"email" => $recipient->getEmail()),
-																			array(
-																				"to_fullname" => $recipient->getFirstname(). " " . $recipient->getLastname(),
-																				"from_firstname" => $user->getFirstname(),
-																				"from_lastname" => $user->getLastname(),
-																				"task_title" => $task->getTitle(),
-																				"application_name" => APPLICATION_NAME . " Task System",
-																				"reason" => $reason
-																				));
-										} else {
-											add_error("You must supply a reason for declining this verification request.");
-										}
 										break;
 									default:
 										add_error("Unknown verification type selected.");
@@ -132,9 +225,33 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 				<h1>Task Verification Request</h1>
 				
 				<?php display_status_messages(); ?>
-				
-				<p><a href="<?php echo ENTRADA_URL; ?>/people?id=<?php echo $recipient->getID(); ?>"><?php echo $recipient->getFirstname() . " " . $recipient->getLastname(); ?></a> has asked you to verify that he or she completed the task, <a href="<?php echo ENTRADA_URL; ?>/tasks?section=details&id=<?php echo $TASK_ID; ?>"><?php echo $task->getTitle(); ?></a>, on <?php echo date(DEFAULT_DATE_FORMAT,$completion->getCompletedDate()); ?>.</p>
-				<p>Don't remember <?php echo $recipient->getFirstname() . " " . $recipient->getLastname(); ?>? Click <a href="<?php echo ENTRADA_URL; ?>/people?id=<?php echo $recipient->getID(); ?>">here</a> to view their profile and picture (if available).</p>
+				<?php echo display_person($recipient); ?>
+				<p><a href="<?php echo ENTRADA_URL; ?>/people?id=<?php echo $recipient->getID(); ?>"><?php echo $recipient->getFirstname() . " " . $recipient->getLastname(); ?></a> has asked you to verify that he or she completed the task, <a href="<?php echo ENTRADA_URL; ?>/tasks?section=details&id=<?php echo $TASK_ID; ?>"><?php echo $task->getTitle(); ?></a>.</p>
+				<?php
+					if ($faculty_override) { 
+						if ($faculty) {
+				?> 
+				<p>The task recipient specified <?php echo $faculty->getName(); ?> as associated faculty. If this is not correct, please select a different faculty member from the list below.</p>
+				<?php
+						} else {
+				?>
+				<p>The task recipient did not specify any associated faculty. If this is not correct, please select a faculty member from the list below.</p>
+				<?php
+						}
+					}
+					if ($completion_comment) {
+				?>
+				<p>The task recipient included a comment in their request:</p>
+				<blockquote class="completion_comment"><?php echo nl2br(html_encode($completion_comment)); ?></blockquote>
+				<?php
+					}
+					if ($rejection_comment && ($task->isOwner($user) || $task->isVerifier($user))) {
+				?>
+				<p>A task verifier included a comment in their rejection:</p>
+				<blockquote class="rejection_comment"><?php echo nl2br(html_encode($rejection_comment)); ?></blockquote>
+				<?php
+					}
+				?>
 				<form method="post"  id="task_verify_form">
 					<input type="hidden" name="task_id" value="<?php echo $TASK_ID; ?>"/>
 					<input type="hidden" name="recipient_id" value="<?php echo $RECIPIENT_ID; ?>"/>
@@ -164,6 +281,29 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 							<tr>
 								<td colspan="3">&nbsp;</td>
 							</tr>
+							<?php if ($faculty_override) { ?>
+							<tr>
+								<td>
+									&nbsp;
+								</td>
+								<td>
+									<label for="associated_faculty" class="form-nrequired">Associated Faculty</label> 
+								</td>
+								<td>
+									<select class="associated_faculty_select" name="associated_faculty">
+									<?php
+									echo build_option("0","None");
+									foreach ($assocfac as $faculty) {
+										echo build_option($faculty->getID(), $faculty->getFullname(), $faculty->getID() == $PROCESSED['associated_faculty']);
+									}
+									?>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td colspan="3">&nbsp;</td>
+							</tr>
+							<?php } ?>
 						</tbody>
 						<tfoot>
 							<tr>
@@ -242,15 +382,26 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 						<input type="hidden" name="action" value="Submit" />
 					</form>
 			
-					<div id="reject-verify-box" class="modal-confirmation" style="height: 300px">
+					<div id="reject-verify-box" class="modal-confirmation" style="height: <?php echo (TASK_COMMENT_NONE != $rej_com_pol) ? "39" : "23"; ?>ex">
 						<h1>Decline <strong>Verification</strong> Request</h1>
 						<div class="display-notice">
 							Please confirm that you <strong>do not</strong> wish to verify the completion of this task by <?php echo $recipient->getFirstname() . " " . $recipient->getLastname(); ?>.
 						</div>
+						<?php
+							switch($rej_com_pol) {
+								case TASK_COMMENT_NONE:
+									break;
+								case TASK_COMMENT_REQUIRE:
+									$comment_required = true; //fall through
+								case TASK_COMMENT_ALLOW:	
+						?>
 						<p>
-							<label for="reject-verify-details" class="form-required">Please provide an explanation for this decision:</label><br />
+							<label for="reject-verify-details" class="form<?php echo ($comment_required) ? "-required": "";?>">Please provide an explanation for this decision<?php echo ($comment_required) ? " (required)": "";?>:</label><br />
 							<textarea id="reject-verify-details" name="reject_verify_details" style="width: 99%; height: 75px" cols="45" rows="5"></textarea>
 						</p>
+						<?php
+							}
+						?>
 						<div class="footer">
 							<button class="left" onclick="Control.Modal.close()">Close</button>
 							<button class="right" id="reject-verify-confirm">Submit</button>

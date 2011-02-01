@@ -4,6 +4,9 @@ class TaskAssociatedFaculty extends Collection {
 	
 	private $task_id;
 	
+	/*
+	 * @return TaskAssociatedFaculty
+	 */
 	public static function get($task_id) {
 		global $db;
 		

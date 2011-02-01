@@ -82,13 +82,13 @@ class Task {
 	 * 
 	 * @var string
 	 */
-	private $comment_policy;
+	private $completion_comment_policy;
 
 	/**
 	 * 
 	 * @var string
 	 */
-	private $comment_policy_resubmit;
+	private $rejection_comment_policy;
 	
 	/**
 	 * unlike the comment and faculty selection policy types, verification notification policies are not mutually exclusive. For this reason, a flag system is employed in which 0 is the absence of any verification, and beyond that the defines TASK_VERIFICATION_NOTIFICATION_* are used. 
@@ -114,14 +114,14 @@ class Task {
 	 * @return string
 	 */
 	function getCompletionCommentPolicy() {
-		return $this->comment_policy;
+		return $this->completion_comment_policy;
 	}
 	
 	/**
 	 * @return string
 	 */
-	function getResubmitCommentPolicy() {
-		return $this->comment_policy_resubmit;
+	function getRejectionCommentPolicy() {
+		return $this->rejection_comment_policy;
 	}
 	
 	/**
@@ -139,6 +139,14 @@ class Task {
 		return TaskOwners::get($this->task_id);
 	}
 	
+	/**
+	 * Returns a list of Users designated as faculty associated with this task
+	 * @return TaskAssociatedFaculty
+	 */
+	function getAssociatedFaculty() {
+		return TaskAssociatedFaculty::get($this->task_id);
+	}
+
 	/**
 	 * Returns the unique id of this task
 	 * @return int
@@ -245,6 +253,18 @@ class Task {
 		return TaskVerifiers::add($this,$obj);
 	}
 	
+	function getVerifiers() {
+		$verification_type = $this->getVerificationType();
+		switch($verification_type) {
+			case TASK_VERIFICATION_NONE:
+				return;
+			case TASK_VERIFICATION_FACULTY:
+				return TaskCompletions::getVerifiers($this->getID());
+			case TASK_VERIFICATION_OTHER:
+				return TaskVerifiers::get($this->getID());
+		}
+	}
+	
 	/**
 	 * 
 	 * @param User $user
@@ -297,13 +317,29 @@ class Task {
 	}
 	
 	/**
-	 * Returns true if the supplied user is a verifier for any of the recipients
+	 * Returns true if the supplied user is a verifier for any of the recipients however
+	 * if the $recipient parameter is supplied, it will check if they are a verifier for *that* recipient.
 	 * @param $user
-	 * 
+	 * @param $recipient
 	 * @return bool
 	 */
-	function isVerifier(User $user) {
-		return TaskCompletions::isVerifier($user->getID(), $this->task_id);
+	function isVerifier(User $user, User $recipient = null) {
+		$verification_type = $this->getVerificationType();
+		switch($verification_type) {
+			case TASK_VERIFICATION_NONE:
+				return false;
+			case TASK_VERIFICATION_FACULTY:
+				if ($recipient) {
+					$tc = TaskCompletion::get($this->getID(), $recipient->getID());
+					return $tc->isVerifier($user);
+				} else {
+					return TaskCompletions::isVerifier($user->getID(), $this->task_id);
+				}
+			case TASK_VERIFICATION_OTHER:
+				$user_id = $user->getID(); 
+				$verifiers = TaskVerifiers::get($this->getID());
+				return $verifiers->contains(User::get($user_id));
+		}
 	}
 	
 	/**
@@ -354,10 +390,10 @@ class Task {
 	static function create(array $inputs) {
 		extract($inputs);
 		global $db;
-		$query = "insert into `tasks` (`updated_by`, `updated_date`, `title`, `deadline`,`duration`,`description`, `release_start`, `release_finish`, `organisation_id`, `verification_type`, `faculty_selection_policy`, `comment_policy`, `comment_policy_resubmit`, `verification_notification_policy`) 
+		$query = "insert into `tasks` (`updated_by`, `updated_date`, `title`, `deadline`,`duration`,`description`, `release_start`, `release_finish`, `organisation_id`, `verification_type`, `faculty_selection_policy`, `completion_comment_policy`, `rejection_comment_policy`, `verification_notification_policy`) 
 				value (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-		if(!$db->Execute($query, array($creator_id, time(), $title, $deadline, $duration, $description, $release_start, $release_finish, $organisation_id, $verification_type, $faculty_selection_policy, $comment_policy, $comment_policy_resubmit, $verification_notification_policy))) {
-			add_error("Failed to create Task".$db->ErrorMsg());
+		if(!$db->Execute($query, array($creator_id, time(), $title, $deadline, $duration, $description, $release_start, $release_finish, $organisation_id, $verification_type, $faculty_selection_policy, $completion_comment_policy, $rejection_comment_policy, $verification_notification_policy))) {
+			add_error("Failed to create Task.");
 			application_log("error", "Unable to update a tasks record. Database said: ".$db->ErrorMsg());
 		} else {
 			add_success("Successfully created task.");
@@ -372,9 +408,9 @@ class Task {
 	function update(array $inputs) {
 		extract($inputs);
 		global $db;
-		$query = "UPDATE `tasks` set `updated_by`=?, `updated_date`=?, `title`=?, `deadline`=?, `duration`=?, `description`=?, `release_start`=?, `release_finish`=?, `organisation_id`=?, `verification_type`=?, `faculty_selection_policy`=?, `comment_policy`=?, `comment_policy_resubmit`=?, `verification_notification_policy`=? where `task_id`=?";
+		$query = "UPDATE `tasks` set `updated_by`=?, `updated_date`=?, `title`=?, `deadline`=?, `duration`=?, `description`=?, `release_start`=?, `release_finish`=?, `organisation_id`=?, `verification_type`=?, `faculty_selection_policy`=?, `completion_comment_policy`=?, `rejection_comment_policy`=?, `verification_notification_policy`=? where `task_id`=?";
 		
-		if(!$db->Execute($query, array($updater_id, time(), $title, $deadline, $duration, $description, $release_start, $release_finish, $organisation_id, $verification_type, $faculty_selection_policy, $comment_policy, $comment_policy_resubmit, $verification_notification_policy, $this->task_id))) {
+		if(!$db->Execute($query, array($updater_id, time(), $title, $deadline, $duration, $description, $release_start, $release_finish, $organisation_id, $verification_type, $faculty_selection_policy, $completion_comment_policy, $rejection_comment_policy, $verification_notification_policy, $this->task_id))) {
 			add_error("Failed to update Task");
 			application_log("error", "Unable to update a tasks record. Database said: ".$db->ErrorMsg());
 		} else {
@@ -392,6 +428,7 @@ class Task {
 					left join `task_owners` b on a.`task_id`=b.`task_id` 
 					left join `task_completion` c on a.`task_id`=c.`task_id`
 					left join `task_recipients` d on a.`task_id`=d.`task_id`
+					left join `task_verifiers` e on a.`task_id`=e.`task_id`
 					where a.`task_id` = ?";
 		if(!$db->Execute($query, array($this->task_id))) {
 			add_error("Failed to remove task from database.");
@@ -434,7 +471,7 @@ class Task {
 	 * @param int $organisation_id
 	 * @param bool $require_verification
 	 */
-	function __construct($task_id, $last_updated_date, $last_updated_by, $title, $deadline, $duration = 0, $description = "", $release_start = null, $release_finish = null, $organisation_id=null, $verification_type=null, $verification_notification_policy=null, $faculty_selection_policy=null,$comment_policy=null, $comment_policy_resubmit=null ) {
+	function __construct($task_id, $last_updated_date, $last_updated_by, $title, $deadline, $duration = 0, $description = "", $release_start = null, $release_finish = null, $organisation_id=null, $verification_type=null, $verification_notification_policy=null, $faculty_selection_policy=null,$completion_comment_policy=null, $rejection_comment_policy=null ) {
 		$this->task_id = $task_id;
 		$this->last_updated = $last_updated_date;
 		$this->last_updated_by = $last_updated_by;
@@ -446,8 +483,8 @@ class Task {
 		$this->release_finish = $release_finish;
 		$this->organisation_id = $organisation_id;
 		$this->verification_type = $verification_type;
-		$this->comment_policy = $comment_policy;
-		$this->comment_policy_resubmit = $comment_policy_resubmit;
+		$this->completion_comment_policy = $completion_comment_policy;
+		$this->rejection_comment_policy = $rejection_comment_policy;
 		$this->faculty_selection_policy = $faculty_selection_policy;
 		$this->verification_notification_policy = $verification_notification_policy;
 		
@@ -456,6 +493,6 @@ class Task {
 	}
 	
 	static public function fromArray($arr) {
-		return new Task($arr['task_id'], $arr['updated_date'], $arr['updated_by'], $arr['title'], $arr['deadline'], $arr['duration'], $arr['description'],$arr['release_start'], $arr['release_finish'], $arr['organisation_id'], $arr['verification_type'], $arr['verification_notification_policy'], $arr['faculty_selection_policy'],  $arr['comment_policy'],  $arr['comment_policy_resubmit']);
+		return new Task($arr['task_id'], $arr['updated_date'], $arr['updated_by'], $arr['title'], $arr['deadline'], $arr['duration'], $arr['description'],$arr['release_start'], $arr['release_finish'], $arr['organisation_id'], $arr['verification_type'], $arr['verification_notification_policy'], $arr['faculty_selection_policy'],  $arr['completion_comment_policy'],  $arr['rejection_comment_policy']);
 	}
 }

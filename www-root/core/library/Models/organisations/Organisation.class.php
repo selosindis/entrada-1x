@@ -29,7 +29,6 @@ class Organisation {
 							$organisation_url,
 							$organisation_desc) {
 
-							
 		$this->organisation_id = $organisation_id;
 		$this->organisation_title = $organisation_title;
 		$this->organisation_address1 = $organisation_address1;

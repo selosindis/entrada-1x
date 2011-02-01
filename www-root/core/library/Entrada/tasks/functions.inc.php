@@ -14,14 +14,23 @@ require_once("Models/utility/Collection.class.php");
 require_once("Models/utility/SimpleCache.class.php");
 
 require_once("Models/users/User.class.php");
+require_once("Models/users/Users.class.php");
+require_once("Models/users/Assistant.class.php");
+require_once("Models/users/UserPhoto.class.php");
+require_once("Models/users/UserPhotos.class.php");
 require_once("Models/users/GraduatingClass.class.php");
 require_once("Models/organisations/Organisation.class.php");
 require_once("Models/organisations/Organisations.class.php");
+require_once("Models/users/Department.class.php");
+require_once("Models/users/Departments.class.php");
 require_once("Models/events/EventContacts.class.php");
 require_once("Models/events/Event.class.php");
 require_once("Models/events/Events.class.php");
 require_once("Models/courses/Course.class.php");
 require_once("Models/courses/Courses.class.php");
+
+require_once("Models/regions/Region.class.php");
+require_once("Models/regions/Country.class.php");
 
 require_once("Models/tasks/Tasks.class.php");
 require_once("Models/tasks/Task.class.php");
@@ -107,7 +116,7 @@ function validate_recipient_type($value) {
  * @return mixed
  */
 function validate_comment_policy($value) {
-	return validate_in_array($value, array(TASK_COMPLETE_COMMENT_ALLOW, TASK_COMPLETE_COMMENT_NONE, TASK_COMPLETE_COMMENT_REQUIRE));
+	return validate_in_array($value, array(TASK_COMMENT_ALLOW, TASK_COMMENT_NONE, TASK_COMMENT_REQUIRE));
 }
 
 /**
@@ -156,8 +165,8 @@ function validate_task_details_inputs() {
 		'associated_verifier' => array('filter' => FILTER_CALLBACK, 'options' => 'validate_user_ids'),
 		'course_id' => array('filter'=> FILTER_VALIDATE_INT, 'options'=>array('min_range' => 0)),
 		'faculty_selection_policy' => array('filter' => FILTER_CALLBACK, 'options' => 'validate_faculty_selection_policy'),
-		'comment_policy' => array('filter' => FILTER_CALLBACK, 'options' => 'validate_comment_policy'),
-		'comment_policy_resubmit' => array('filter' => FILTER_CALLBACK, 'options' => 'validate_comment_policy'),
+		'completion_comment_policy' => array('filter' => FILTER_CALLBACK, 'options' => 'validate_comment_policy'),
+		'rejection_comment_policy' => array('filter' => FILTER_CALLBACK, 'options' => 'validate_comment_policy'),
 		'task_verification_type' => array('filter' => FILTER_CALLBACK, 'options' => 'validate_verification_type'),
 		'task_verification_notification' => array('filter'=> FILTER_VALIDATE_INT, 'flags' => FILTER_REQUIRE_ARRAY, 'options'=>array('min_range' => 0)),
 		'associated_grad_years' => FILTER_SANITIZE_INT, //could be more aggressive here but there's no permissionissues or db integrity issue particularly
@@ -240,12 +249,12 @@ function process_task_common_errors(array &$inputs) {
 	
 	/** Task Completion Options **/
 	
-	if (is_null($inputs['comment_policy'])) {
-		add_error($translate->translate("task_comment_policy_invalid"));
+	if (is_null($inputs['completion_comment_policy'])) {
+		add_error($translate->translate("task_completion_comment_policy_invalid"));
 	}
 	
-	if (is_null($inputs['comment_policy_resubmit'])) {
-		add_error($translate->translate("task_comment_policy_resubmit_invalid"));
+	if (is_null($inputs['rejection_comment_policy'])) {
+		add_error($translate->translate("task_rejection_comment_policy_invalid"));
 	}
 	
 	/** Veririfcation options **/

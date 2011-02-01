@@ -208,7 +208,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 								$verifier = $task_completion->getVerifier();
 								$v_date = $task_completion->getVerifiedDate();		
 								$faculty = $task_completion->getFaculty();	 
-						$rejected_date = $task_completion->getRejectionDate();
+								
+								$rejected_date = $task_completion->getRejectionDate();
 								$completed_date = $task_completion->getCompletedDate();
 								if ($rejected_date){
 									if ($rejected_date > $completed_date) {

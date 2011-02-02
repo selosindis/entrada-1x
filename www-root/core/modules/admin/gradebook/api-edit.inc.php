@@ -65,9 +65,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				</select>
 			</div>
 			<?php
-			$query = "	SELECT `assessments`.*,`assessment_marking_schemes`.`handler`
+			$query = "	SELECT `assessments`.*, `assessment_marking_schemes`.`handler`
 						FROM `assessments`
-						LEFT JOIN `assessment_marking_schemes` ON `assessment_marking_schemes`.`id` = `assessments`.`marking_scheme_id`
+						LEFT JOIN `assessment_marking_schemes` 
+						ON `assessment_marking_schemes`.`id` = `assessments`.`marking_scheme_id`
 						WHERE `assessments`.`course_id` = ".$db->qstr($COURSE_ID)."
 						AND `assessments`.`grad_year` = ".$db->qstr($GRAD_YEAR);
 			$assessments = $db->GetAll($query);

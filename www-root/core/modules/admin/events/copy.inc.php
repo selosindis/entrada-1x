@@ -511,9 +511,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						echo "<td style=\"border: 0\"><input type=\"button\" class=\"button-sm\" onclick=\"javascript:acceptEvent()\" value=\"Add\" style=\"vertical-align: middle\" /></td>";
 						echo "</tr></table></td></tr>";
 						foreach ($results as $result) {
-							$url			= "";
-							$accessible		= true;
-							$administrator	= false;
+							$url = "";
+							$accessible = true;
+							$administrator = false;
 
 							if ($ENTRADA_ACL->amIAllowed(new EventResource($result["event_id"], $result["course_id"], $result["organisation_id"]), 'update')) {
 								$administrator = true;

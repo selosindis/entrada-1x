@@ -65,6 +65,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 			echo display_error();
 		}
 	}
+	
 	/**
 	 * Produce a report for each evaluation
 	 */
@@ -114,8 +115,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 		} else {
 			echo "<td colspan=\"2\" /></tr>";
 		}
-		echo	"	<tr><td><h3> Evaluation period:</h3></td><td>".date("M jS", $report["evaluation_start"])."  -  ".date("M jS Y", $report["evaluation_finish"])."</td>";
-		echo	"		<td><h3> Released:</h3></td><td>".date("M jS Y", $report["release_date"])."</td></tr>";
+		echo "	<tr>\n";
+		echo "		<td><h3> Evaluation period:</h3></td>\n";
+		echo "		<td>".date("M jS", $report["evaluation_start"])."  -  ".date("M jS Y", $report["evaluation_finish"])."</td>";
+		if ((int) $report["release_date"]) {
+			echo "	<td><h3>Released:</h3></td>\n";
+			echo "	<td>".date("M jS Y", $report["release_date"])."</td>";
+		} else {
+			echo "	<td colspan=\"2\">&nbsp;</td>";
+		}
+		echo "	</tr>\n";
 
 		/**
 		 * Get number of evaluators: individual student(s) and whole class
@@ -129,7 +138,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 						UNION
 						SELECT a.`user_id` `evaluator`
 						FROM `".AUTH_DATABASE."`.`user_access` a , `evaluation_evaluators` ev
-						WHERE ev.`evaluator_type` = 'grad_year' AND ev.`evaluator_value` = a.`role`
+						WHERE ev.`evaluator_type` = 'grad_year'
+						AND ev.`evaluator_value` = a.`role`
+						AND a.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+						AND a.`account_active` = 'true'
 						AND ev.`evaluation_id` = ".$db->qstr($report["evaluation"])."
 					) t";
 		$evaluators	= $db->GetOne($query);
@@ -137,7 +149,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 		if ($STUDENTS) {		
 			$query = "	SELECT COUNT(DISTINCT(a.`user_id`)) `total`,  a.`role` `year`
 						FROM `".AUTH_DATABASE."`.`user_access` a, `evaluation_evaluators` ev
-						WHERE ev.`evaluator_type` = 'grad_year' AND ev.`evaluator_value` = a.`role`
+						WHERE ev.`evaluator_type` = 'grad_year'
+						AND ev.`evaluator_value` = a.`role`
+						AND a.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+						AND a.`account_active` = 'true'
 						AND ev.`evaluation_id` = ".$db->qstr($report["evaluation"]);
 			$class	= $db->GetRow($query);	
 		}
@@ -187,8 +202,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 		
 		foreach($questions as $question){
 			$number++;
-			echo	"<tr><td  colspan=\"4\">&nbsp;</td></tr>";
-			echo	"<tr><td><h3>Question: $number</h3></td><td  colspan=\"2\"><h3>$question[question_text]</h3></td><td>$question[questiontype_title]</td></tr>";
+			echo "<tr>\n";
+			echo "	<td colspan=\"4\">&nbsp;</td>\n";
+			echo "</tr>";
+			echo "<tr>\n";
+			echo "	<td colspan=\"4\"><h3 style=\"border-bottom: 1px #CCC solid\">".$number.". ".$question["question_text"]."</h3></td>\n";
+			echo "</tr>";
 
 			/**
 			 * Get all evaluator responses for each question
@@ -201,13 +220,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 						AND r.`eform_id` = ".$db->qstr($report["form_id"])."
 						AND r.`efquestion_id` = ".$db->qstr($question["id"]);
 			$results	= $db->GetAll($query);
-
 			if ($results) {
-				echo	"<tr><td  colspan=\"4\"><table width=\"80%\" summary=\"Question Statistics\">";
-				echo	"	<tr><td style=\"width: 34%\" />";
+				echo "<tr>\n";
+				echo "	<td colspan=\"4\">\n";
+				echo "		<table width=\"80%\" summary=\"Question Statistics\">";
+				echo "			<tr>\n";
+				echo "				<td style=\"width: 34%\"></td>";
 				echo	"		<th align=\"left\" style=\"width: 22%\">Frequency</td>";
 				echo	"		<th align=\"left\" style=\"width: 22%\">Percent</td>";
-				echo	"		<th align=\"left\" style=\"width: 22%\">Cumulative %</td></tr>";
+				echo "			</tr>";
 			
 				/**
 				 * Get the available responses for each question and build the response profile array
@@ -215,10 +236,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 				$query = "	SELECT `efresponse_id` `id`, `response_order` `order` ,`response_text` `text`,  `response_is_html` `html`, `minimum_passing_level` `mpl`, 0 `freq`, 0 `percent`, 0 `cumul`
 							FROM `evaluation_form_responses`
 							WHERE `efquestion_id` = ".$db->qstr($question["id"])."
-							ORDER BY `response_order`";
+							ORDER BY `response_order` ASC";
 				$responses = $db->GetAll($query);
-
 				$answers = count($responses);
+				
 				/**
 				 * Build profile array
 				 */
@@ -233,7 +254,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 				$percent = 0;
 
 				/**
-				 * Tally repsonses for each question
+				 * Tally responses for each question
 				 */
 				foreach ($results as $result) {
 					$profile[$result["efresponse_id"]]["freq"]++;
@@ -246,31 +267,51 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					$profile[$index[$i]]["percent"] = $profile[$index[$i]]["freq"] / $total * 100;
 					$percent += $profile[$index[$i]]["percent"];
 					$profile[$index[$i]]["cumul"] = $percent;
-					echo	"	<tr><td>".$profile[$index[$i]]["text"]."</td><td>".$profile[$index[$i]]["freq"]."</td><td>".round($profile[$index[$i]]["percent"],2)."</td><td>".round($profile[$index[$i]]["cumul"], 2)."</td>";
+					echo "		<tr>\n";
+					echo "			<td>".$profile[$index[$i]]["text"]."</td>\n";
+					echo "			<td>".$profile[$index[$i]]["freq"]."</td>\n";
+					echo "			<td>".round($profile[$index[$i]]["percent"],2)."</td>\n";
+					echo "		</tr>\n";
 				}
-				echo	"		<tr><td /><td>--------</td><td>--------</td><td /></tr>";
-				echo	"		<tr><td>Total:</td><td>$total</td><td>100.0</td><td /></tr>";
+				echo "			<tr>\n";
+				echo "				<td></td>\n";
+				echo "				<td>--------</td>\n";
+				echo "				<td>--------</td>\n";
+				echo "			</tr>";
+				echo "			<tr>\n";
+				echo "				<td>Total:</td>\n";
+				echo "				<td>$total</td>\n";
+				echo "				<td>100.0</td>\n";
+				echo "			</tr>";
 				echo	"	</table>";
 				
 				/**
 				 * Use this code to Show all comments at the end of each question
 				 */
-				if ($QUESTION_COMMENTS && isset($comments[$number]) && count($comments[$number])) {	// Show all comments at end of question
-					echo	"<tr><td  colspan=\"4\">&nbsp;</td></tr>";
-					for ($i=0; $i<count($comments[$number]); $i++) {
-						if ($i) {
-							echo "<tr><td />";
-						} else {
-							echo "<tr><td>Comments:</td>";
-						}
-						echo "	<td colspan=\"3\">".($i+1).") ".$comments[$number][$i]."</td></tr>";
+				if ($QUESTION_COMMENTS && isset($comments[$number]) && count($comments[$number])) {
+					echo "<tr>\n";
+					echo "	<td colspan=\"4\" style=\"padding-top: 15px\">";
+					echo "		<strong>Evaluator Comments</strong><br />";
+					echo "		<ol style=\"margin-top: 0\">";
+					foreach ($comments[$number] as $comment) {
+						echo "		<li style=\"margin-bottom: 5px\" class=\"content-small\">".html_encode($comment)."</li>";
 					}
-					echo	"	<tr><td  colspan=\"4\">&nbsp;</td></tr>";					
+					echo "		</ol>";
+					echo "	</td>";
+					echo "</tr>";
+
+					echo "<tr>\n";
+					echo "	<td colspan=\"4\">&nbsp;</td>\n";
+					echo "</tr>";					
 				}
 			} else {	// No responses for this question
-				echo	"<tr><td /><td colspan=\"3\"><hr></td></tr>";  	
+				echo "	<tr>\n";
+				echo "		<td></td>\n";
+				echo "		<td colspan=\"3\"><hr></td>\n";
+				echo "	</tr>";  	
 			}
 		}
+		
 		/**
 		 * Use this code to Show comments for all questions at the end of the report
 		 */

@@ -336,7 +336,6 @@ class MultipleAssertion implements Zend_Acl_Assert_Interface {
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  */
 class CourseOwnerAssertion implements Zend_Acl_Assert_Interface {
-
 /**
  * Asserts that the role references the director, coordinator, or secondary director of the course resource
  *
@@ -417,6 +416,86 @@ class CourseOwnerAssertion implements Zend_Acl_Assert_Interface {
 		}
 
 		return false;
+	}
+}
+
+/**
+ * Course Enrollment Assertion
+ *
+ * Used to assert that proxy_id is enrolled in a particular course based on their membership status
+ * in the corresponding course website (community).
+ *
+ * @author Organisation: Queen's University
+ * @author Unit: School of Medicine
+ * @author Developer: Matt Simpson <simpson@queensu.ca>
+ * @copyright Copyright 2010 Queen's University. All Rights Reserved.
+ */
+class CourseEnrollmentAssertion implements Zend_Acl_Assert_Interface {
+
+	public function assert(Zend_Acl $acl, Zend_Acl_Role_Interface $role = null, Zend_Acl_Resource_Interface $resource = null, $privilege = null) {
+		//If asserting is off then return true right away
+		if((isset($resource->assert) && $resource->assert == false) || (isset($acl->_entrada_last_query) && isset($acl->_entrada_last_query->assert) && $acl->_entrada_last_query->assert == false)) {
+			return true;
+		}
+
+		if (isset($resource->course_id)) {
+			$course_id = $resource->course_id;
+		} else if(isset($acl->_entrada_last_query->course_id)) {
+			$course_id = $acl->_entrada_last_query->course_id;
+		} else {
+			// Parse out the user ID and course ID
+			$resource_id = $resource->getResourceId();
+			$resource_type = preg_replace('/[0-9]+/', "", $resource_id);
+
+			if($resource_type !== "course" && $resource_type !== "coursecontent") {
+				// This only asserts for users on courses.
+				return false;
+			}
+
+			$course_id = preg_replace("/[^0-9]+/", "", $resource_id);
+		}
+
+		$role_id = $role->getRoleId();
+		$user_id = preg_replace("/[^0-9]+/", "", $role_id);
+
+		if ($user_id == "") {
+			$role_id = $acl->_entrada_last_query_role->getRoleId();
+			$user_id = preg_replace("/[^0-9]+/", "", $role_id);
+		}
+
+		return $this->_checkCourseEnrollment($user_id, $course_id);
+	}
+
+	/**
+	 * Checks if the $user_id is an active member of the corresponding
+	 * course website (community).
+	 *
+	 * @param string|integer $user_id The proxy_id to be checked
+	 * @param string|integer $course_id The course id to be checked
+	 * @return boolean
+	 */
+	static function _checkCourseEnrollment($user_id, $course_id) {
+		global $db;
+
+		$query = "SELECT * FROM `community_courses` WHERE `course_id` = ".$db->qstr($course_id);
+		$result = $db->GetRow($query);
+		if ($result) {
+			$query = "SELECT * FROM `community_members` WHERE `community_id` = ".$db->qstr($result["community_id"])." AND `proxy_id` = ".$db->qstr($user_id)." AND `member_active` = 1";
+			$result = $db->GetRow($query);
+			if ($result) {
+				return true;
+			} else {
+				return false;
+			}
+		} else {
+			/**
+			 * If there is no course website associated with this course, then
+			 * allow them access to the course because there is no enrollment
+			 * defined.
+			 */
+
+			return true;
+		}
 	}
 }
 

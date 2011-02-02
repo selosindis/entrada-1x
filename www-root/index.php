@@ -396,6 +396,15 @@ if ((!isset($_SESSION["isAuthorized"])) || (!(bool) $_SESSION["isAuthorized"])) 
 	}
 
 	/**
+	 * This section of code sets the $SUBMODULE variable.
+	 */
+	if ((isset($PATH_SEPARATED[2])) && (trim($PATH_SEPARATED[2]) != "")) {
+		$SUBMODULE = $PATH_SEPARATED[2]; // This is sanitized when $PATH_SEPARATED is created.
+	} else {
+		$SUBMODULE = false; // This is the default file that will be launched upon successful login.
+	}
+
+	/**
 	 * This is a simple re-direct to catch admin without slash on the end.
 	 */
 	if ($MODULE == "admin") {

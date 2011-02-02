@@ -65,362 +65,238 @@ if($EVALUATION_ID) {
 	$query				= "SELECT * FROM `evaluations` WHERE `evaluation_id` = ".$db->qstr($EVALUATION_ID);
 	$evaluation_details	= $db->GetRow($query);
 	if($evaluation_details) {
-		$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/picklist.js\"></script>\n";
-		$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/elementresizer.js\"></script>\n";
-		$HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/tabpane/tabpane.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
-		$HEAD[]	= "<link href=\"".ENTRADA_URL."/css/tabpane.css?release=".html_encode(APPLICATION_VERSION)."\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />\n";
-                $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/eventtypes_list.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
-                $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/AutoCompleteList.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
-
-		$HEAD[]	= "<link href=\"".ENTRADA_URL."/css/tree.css?release=".html_encode(APPLICATION_VERSION)."\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />\n";
-		$HEAD[]	= "<style type=\"text/css\">.dynamic-tab-pane-control .tab-page {height:auto;}</style>\n";
-
 		$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/evaluations?".replace_query(array("section" => "edit", "id" => $EVALUATION_ID)), "title" => "Show Progress");
 		
-                // Display Content
-                switch($STEP) {
-                        case 3 :
+        /**
+         * Update requested sort column.
+         * Valid: date, title
+         */
+/*
+        if((isset($_GET["attempts"]) && $_GET["attempts"] == 'true') || !isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["attempts"])) {
+           $view_individual_attempts = true;
+           $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["attempts"] = true;
+        } elseif ((isset($_GET["attempts"]) && $_GET["attempts"] == 'false')) {
+*/
+           $view_individual_attempts = false;
+           $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["attempts"] = false;
+//        }
+        
+        /**
+         * Update requested sort column.
+         * Valid: date, title
+         */
+        if(isset($_GET["sb"])) {
+                if(@in_array(trim($_GET["sb"]), array("date", "name", "type"))) {
+                        $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] = trim($_GET["sb"]);
+                }
 
-                                break;
-                        case 2 :
-                                $ONLOAD[]		= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/evaluations?section=members&evaluation=".$EVALUATION_ID."\\'', 5000)";
+                $_SERVER["QUERY_STRING"]	= replace_query(array("sb" => false));
+        } else {
+                if(!isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"])) {
+                        $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] = "date";
+                }
+        }
 
-                                if($SUCCESS) {
-                                        echo display_success();
-                                }
-                                if($NOTICE) {
-                                        echo display_notice();
-                                }
-                                break;
-                        case 1 :
-                        default :
-                        /**
-                         * Update requested sort column.
-                         * Valid: date, title
-                         */
-                                if(isset($_GET["sb"])) {
-                                        if(@in_array(trim($_GET["sb"]), array("date", "name", "type"))) {
-                                                $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] = trim($_GET["sb"]);
-                                        }
+        /**
+         * Update requested order to sort by.
+         * Valid: asc, desc
+         */
+        if(isset($_GET["so"])) {
+                $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"] = ((strtolower($_GET["so"]) == "desc") ? "desc" : "asc");
 
-                                        $_SERVER["QUERY_STRING"]	= replace_query(array("sb" => false));
-                                } else {
-                                        if(!isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"])) {
-                                                $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] = "date";
-                                        }
-                                }
+                $_SERVER["QUERY_STRING"]	= replace_query(array("so" => false));
+        } else {
+                if(!isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"])) {
+                        $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"] = "asc";
+                }
+        }
 
-                                /**
-                                 * Update requested order to sort by.
-                                 * Valid: asc, desc
-                                 */
-                                if(isset($_GET["so"])) {
-                                        $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"] = ((strtolower($_GET["so"]) == "desc") ? "desc" : "asc");
+        /**
+         * Update requsted number of rows per page.
+         * Valid: any integer really.
+         */
+        if((isset($_GET["pp"])) && ((int) trim($_GET["pp"]))) {
+                $integer = (int) trim($_GET["pp"]);
 
-                                        $_SERVER["QUERY_STRING"]	= replace_query(array("so" => false));
-                                } else {
-                                        if(!isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"])) {
-                                                $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"] = "asc";
-                                        }
-                                }
+                if(($integer > 0) && ($integer <= 250)) {
+                        $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"] = $integer;
+                }
 
-                                /**
-                                 * Update requsted number of rows per page.
-                                 * Valid: any integer really.
-                                 */
-                                if((isset($_GET["pp"])) && ((int) trim($_GET["pp"]))) {
-                                        $integer = (int) trim($_GET["pp"]);
+                $_SERVER["QUERY_STRING"] = replace_query(array("pp" => false));
+        } else {
+                if(!isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"])) {
+                        $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"] = 15;
+                }
+        }
 
-                                        if(($integer > 0) && ($integer <= 250)) {
-                                                $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"] = $integer;
-                                        }
-
-                                        $_SERVER["QUERY_STRING"] = replace_query(array("pp" => false));
-                                } else {
-                                        if(!isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"])) {
-                                                $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"] = 15;
-                                        }
-                                }
-
-                                if($NOTICE) {
-                                        echo display_notice();
-                                }
-                                if($ERROR) {
-                                        echo display_error();
-                                }
-
-                                    if ($ENTRADA_ACL->amIAllowed(new EventResource($evaluation_details["evaluation_id"]), 'update')) {
-                                    }
-                                            echo "<div class=\"no-printing\">\n";
-                                            echo "	<div style=\"float: right; margin-top: 8px\">\n";
-                                            echo "		<a href=\"".ENTRADA_URL."/admin/evaluations?".replace_query(array("section" => "edit", "id" => $evaluation_details["evaluation_id"]))."\"><img src=\"".ENTRADA_URL."/images/event-details.gif\" width=\"16\" height=\"16\" alt=\"Edit details\" title=\"Edit evaluation details\" border=\"0\" style=\"vertical-align: middle\" /></a> <a href=\"".ENTRADA_URL."/admin/evaluations?".replace_query(array("section" => "edit", "id" => $evaluation_details["evaluation_id"]))."\" style=\"font-size: 10px; margin-right: 8px\">Edit details</a>\n";
-                                            echo "		<a href=\"".ENTRADA_URL."/admin/evaluations?".replace_query(array("section" => "edit", "id" => $evaluation_details["evaluation_id"]))."\"><img src=\"".ENTRADA_URL."/images/event-details.gif\" width=\"16\" height=\"16\" alt=\"Edit contents\" title=\"Edit evaluation contents\" border=\"0\" style=\"vertical-align: middle\" /></a> <a href=\"".ENTRADA_URL."/admin/evaluations?".replace_query(array("section" => "members", "id" => $evaluation_details["evaluation_id"]))."\" style=\"font-size: 10px; margin-right: 8px\">Edit contents</a>\n";
-                                            echo "	</div>\n";
-                                            echo "</div>\n";
-
-                                    echo "<h1 class=\"evaluation-title\">".html_encode($evaluation_details["evaluation_title"])."</h1>\n";
-                                ?>
+        if($NOTICE) {
+                echo display_notice();
+        }
+        if($ERROR) {
+                echo display_error();
+        }
+        if ($ENTRADA_ACL->amIAllowed(new EventResource($evaluation_details["evaluation_id"]), 'update')) {
+            echo "<div class=\"no-printing\">\n";
+            echo "	<div style=\"float: right; margin-top: 8px\">\n";
+            echo "		<a href=\"".ENTRADA_URL."/admin/evaluations?".replace_query(array("section" => "edit", "id" => $evaluation_details["evaluation_id"]))."\"><img src=\"".ENTRADA_URL."/images/event-details.gif\" width=\"16\" height=\"16\" alt=\"Edit details\" title=\"Edit evaluation details\" border=\"0\" style=\"vertical-align: middle\" /></a> <a href=\"".ENTRADA_URL."/admin/evaluations?".replace_query(array("section" => "edit", "id" => $evaluation_details["evaluation_id"]))."\" style=\"font-size: 10px; margin-right: 8px\">Edit details</a>\n";
+            echo "	</div>\n";
+            echo "</div>\n";
+        }
+        echo "<h1 class=\"evaluation-title\">".html_encode($evaluation_details["evaluation_title"])."</h1>\n";
+        ?>
         <div class="tab-pane" id="progress_div">
-		<h2 style="margin-top: 0px">Progress</h2>
-                            <?php
-                            /**
-                             * Get the total number of results using the generated queries above and calculate the total number
-                             * of pages that are available based on the results per page preferences.
-                             */
-                            $query	= "SELECT COUNT(*) AS `total_rows` FROM 
-						(
-						SELECT evaluation_id FROM `evaluation_evaluators`as ev
-						    JOIN `evaluation_targets` as d
-						    on ev.`evaluation_id` = d.`evaluation_id`
-						    WHERE `evaluation_id` = ".$db->qstr($EVALUATION_ID)." and evaluator_type = 'proxy_id'
-						)
-						union
-						(
-						SELECT evaluation_id FROM `evaluation_evaluators` as aas ev
-						    JOIN `evaluation_targets` as d
-						    on ev.`evaluation_id` = d.`evaluation_id`
-                                                    LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
-                                                    ON a.`evaluator_value` = b.`id`
-						    WHERE `evaluation_id` = ".$db->qstr($EVALUATION_ID)." and evaluator_type = 'proxy_id'
-						)
-						) as t";
-                            $result	= $db->GetRow($query);
-                            if($result) {
-                                    $TOTAL_ROWS	= $result["total_rows"];
-
-                                    if($TOTAL_ROWS <= $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) {
-                                            $TOTAL_PAGES = 1;
-                                    } elseif (($TOTAL_ROWS % $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) == 0) {
-                                            $TOTAL_PAGES = (int) ($TOTAL_ROWS / $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]);
-                                    } else {
-                                            $TOTAL_PAGES = (int) ($TOTAL_ROWS / $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) + 1;
-                                    }
-
-                                    if(isset($_GET["mpv"])) {
-                                            $PAGE_CURRENT = (int) trim($_GET["mpv"]);
-
-                                            if(($PAGE_CURRENT < 1) || ($PAGE_CURRENT > $TOTAL_PAGES)) {
-                                                    $PAGE_CURRENT = 1;
-                                            }
-                                    } else {
-                                            $PAGE_CURRENT = 1;
-                                    }
-
-                                    if($TOTAL_PAGES > 1) {
-                                            $member_pagination = new Pagination($PAGE_CURRENT, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"], $TOTAL_ROWS, ENTRADA_URL."/admin/evaluations", replace_query(), "mpv");
-                                    } else {
-                                            $member_pagination = false;
-                                    }
-                            } else {
-                                    $TOTAL_ROWS		= 0;
-                                    $TOTAL_PAGES	= 1;
-                            }
-                            if (!isset($PAGE_CURRENT) || !$PAGE_CURRENT) {
-                                    if(isset($_GET["mpv"])) {
-                                            $PAGE_CURRENT = (int) trim($_GET["mpv"]);
-
-                                            if(($PAGE_CURRENT < 1) || ($PAGE_CURRENT > $TOTAL_PAGES)) {
-                                                    $PAGE_CURRENT = 1;
-                                            }
-                                    } else {
-                                            $PAGE_CURRENT = 1;
-                                    }
-                            }
-
-                            $PAGE_PREVIOUS	= (($PAGE_CURRENT > 1) ? ($PAGE_CURRENT - 1) : false);
-                            $PAGE_NEXT		= (($PAGE_CURRENT < $TOTAL_PAGES) ? ($PAGE_CURRENT + 1) : false);
-
-                            /**
-                             * Provides the first parameter of MySQLs LIMIT statement by calculating which row to start results from.
-                             */
-                            $limit_parameter = (int) (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"] * $PAGE_CURRENT) - $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]);
-
-
-			    $query		= "
-						SELECT * from
-						(
-						    (
-						    SELECT a.updated_date, a.progress_value, concat(concat(b.`firstname`,' '), b.`lastname`) as evaluator_name, concat(concat(e.`firstname`,' '), e.`lastname`) as target_name
-						    FROM `entrada`.`evaluation_evaluators` as ev
-						    LEFT JOIN `evaluation_progress` as a
-						    on d.`etarget_id` = a.`etarget_id`
-						    LEFT JOIN `evaluation_targets` as d
-						    on d.`etarget_id` = a.`etarget_id`
-                                                    LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
-                                                    ON a.`proxy_id` = b.`id`
-                                                    LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS c
-                                                    ON c.`user_id` = b.`id`
-                                                    AND c.`app_id` IN (".AUTH_APP_IDS_STRING.")
-						    LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS e
-                                                    ON d.`target_value` = e.`id`
-                                                    LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS f
-                                                    ON f.`user_id` = e.`id`
-                                                    AND c.`app_id` IN (".AUTH_APP_IDS_STRING.")
-							WHERE a.`evaluation_id` = ".$db->qstr($EVALUATION_ID)."
-							AND d.`target_id` in ('2','3','6','7','8')
-						    )
-							UNION
-						    (
-						    SELECT a.updated_date, a.progress_value, concat(concat(b.`firstname`,' '), b.`lastname`) as evaluator_name, e.`course_name` as target_name
-						    FROM `entrada`.`evaluation_progress` as a
-						    LEFT JOIN `evaluation_targets` as d
-						    on d.`etarget_id` = a.`etarget_id`
-                                                    LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
-                                                    ON a.`proxy_id` = b.`id`
-                                                    LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS c
-                                                    ON c.`user_id` = b.`id`
-                                                    AND c.`app_id` IN (".AUTH_APP_IDS_STRING.")
-						    LEFT JOIN `courses` AS e
-						    ON d.`target_value` = e.`course_id`
-							WHERE a.`evaluation_id` = ".$db->qstr($EVALUATION_ID)."
-							AND d.`target_id` = '1'
-						    )
-						) as t
-						LIMIT %s, %s
-                                                ";
-
-			    $query		= "
-						SELECT * from
-						(
-						    (
-						    SELECT a.updated_date, IF(a.`progress_value` IS NULL, 'not-started', a.`progress_value`) AS `progress_value`, concat(concat(b.`firstname`,' '), b.`lastname`) as evaluator_name, concat(concat(e.`firstname`,' '), e.`lastname`) as target_name
-						    FROM `entrada`.`evaluation_evaluators` as ev
-						    JOIN `evaluation_targets` as d
-						    on ev.`evaluation_id` = d.`evaluation_id`
-						    LEFT JOIN `evaluation_progress` as a
-						    on ev.`evaluator_value` = a.`proxy_id`
-                                                    LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
-                                                    ON ev.`evaluator_value` = b.`id`
-                                                    LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS c
-                                                    ON c.`user_id` = b.`id`
-                                                    AND c.`app_id` IN (".AUTH_APP_IDS_STRING.")
-						    LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS e
-                                                    ON d.`target_value` = e.`id`
-                                                    LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS f
-                                                    ON f.`user_id` = e.`id`
-                                                    AND c.`app_id` IN (".AUTH_APP_IDS_STRING.")
-							WHERE ev.`evaluation_id` = ".$db->qstr($EVALUATION_ID)."
-							AND ev.`evaluator_type` = 'proxy_id'
-							AND d.`target_id` in ('2','3','6','7','8')
-						    )
-							UNION
-						    (
-						    SELECT a.updated_date, IF(a.`progress_value` IS NULL, 'not-started', a.`progress_value`) AS `progress_value`, concat(concat(b.`firstname`,' '), b.`lastname`) as evaluator_name, e.`course_name` as target_name
-						    FROM `entrada`.`evaluation_evaluators` as ev
-						    JOIN `evaluation_targets` as d
-						    on ev.`evaluation_id` = d.`evaluation_id`
-						    LEFT JOIN `evaluation_progress` as a
-						    on ev.`evaluator_value` = a.`proxy_id`
-                                                    LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
-                                                    ON ev.`evaluator_value` = b.`id`
-                                                    LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS c
-                                                    ON c.`user_id` = b.`id`
-                                                    AND c.`app_id` IN (".AUTH_APP_IDS_STRING.")
-						    LEFT JOIN `courses` AS e
-						    ON d.`target_value` = e.`course_id`
-							WHERE ev.`evaluation_id` = ".$db->qstr($EVALUATION_ID)."
-							AND ev.`evaluator_type` = 'proxy_id'
-							AND d.`target_id` = '1'
-						    )
-							UNION
-						    (
-						    SELECT a.updated_date, IF(a.`progress_value` IS NULL, 'not-started', a.`progress_value`) AS `progress_value`, concat(concat(b.`firstname`,' '), b.`lastname`) as evaluator_name, concat(concat(e.`firstname`,' '), e.`lastname`) as target_name
-						    FROM `entrada`.`evaluation_evaluators` as ev
-						    JOIN `evaluation_targets` as d
-						    on ev.`evaluation_id` = d.`evaluation_id`
-						    LEFT JOIN `evaluation_progress` as a
-						    on ev.`evaluator_value` = a.`proxy_id`
-                                                    LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS c
-                                                    ON ev.`evaluator_value` = c.`role`
-                                                    LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
-                                                    ON c.`user_id` = b.`id`
-                                                    AND c.`app_id` IN (".AUTH_APP_IDS_STRING.")
-						    LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS e
-                                                    ON d.`target_value` = e.`id`
-                                                    LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS f
-                                                    ON f.`user_id` = e.`id`
-                                                    AND c.`app_id` IN (".AUTH_APP_IDS_STRING.")
-							WHERE ev.`evaluation_id` = ".$db->qstr($EVALUATION_ID)."
-							AND ev.`evaluator_type` = 'grad_year'
-							AND d.`target_id` in ('2','3','6','7','8')
-						    )
-							UNION
-						    (
-						    SELECT a.updated_date, IF(a.`progress_value` IS NULL, 'not-started', a.`progress_value`) AS `progress_value`, concat(concat(b.`firstname`,' '), b.`lastname`) as evaluator_name, e.`course_name` as target_name
-						    FROM `entrada`.`evaluation_evaluators` as ev
-						    JOIN `evaluation_targets` as d
-						    on ev.`evaluation_id` = d.`evaluation_id`
-						    LEFT JOIN `evaluation_progress` as a
-						    on ev.`evaluator_value` = a.`proxy_id`
-                                                    LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS c
-                                                    ON ev.`evaluator_value` = c.`role`
-                                                    LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
-                                                    ON c.`user_id` = b.`id`
-                                                    AND c.`app_id` IN (".AUTH_APP_IDS_STRING.")
-						    LEFT JOIN `courses` AS e
-						    ON d.`target_value` = e.`course_id`
-							WHERE ev.`evaluation_id` = ".$db->qstr($EVALUATION_ID)."
-							AND ev.`evaluator_type` = 'grad_year'
-							AND d.`target_id` = '1'
-						    )
-						) as t_ppl
-						LIMIT %s, %s
-                                                ";
-			    
-                            $query		= sprintf($query, $limit_parameter, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]);
-                            $results	= $db->GetAll($query);
-                            //echo "______log______"."query: ".$query."<br>";
-                            //echo "______log______"."total_rows: ".$results["total_rows"]."<br>";
-
-                            if($results) {
-                                    if(($TOTAL_PAGES > 1) && ($member_pagination)) {
-                                            echo "<div id=\"pagination-links\">\n";
-                                            echo "Pages: ".$member_pagination->GetPageLinks();
-                                            echo "</div>\n";
-                                    }
-                                    ?>
-                                    <table class="tableList" style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Evaluation Members">
-                                    <colgroup>
-                                            <col class="target" />
-                                            <col class="evaluator" />
-                                            <col class="progress" />
-                                            <col class="update" />
-                                    </colgroup>
-                                    <thead>
-                                            <tr>
-                                                    <td class="target">Target</td>
-                                                    <td class="evaluator">Evaluator</td>
-                                                    <td class="progress">Progress</td>
-                                                    <td class="progress">Last Update</td>
-
-                                            </tr>
-                                    </thead>
-                                    <tbody>
-                                    <?php
-                                    foreach($results as $result) {
-                                            echo "<tr>\n";
-                                            echo "	<td>".$result["target_name"]."</td>\n";
-                                            echo "	<td>".$result["evaluator_name"]."</td>\n";
-                                            echo "	<td>".$result["progress_value"]."</td>\n";
-                                            echo "	<td>".$result["update_date"]."</td>\n";
-                                            echo "</tr>\n";
-                                    }
-                                    ?>
-                                    </tbody>
-                                    <tfoot>
-                                        <tr><td>&nbsp;</td></tr>
-                                    </tfoot>
-                                    </table>
-                                    <?php
-                            } else {
-                                    echo display_notice(array("No evaluators have completed this evaluation at this time."));
-                            }
-                            ?>
-        </div>
-<br /><br />
-					<?php
-					break;
-			}
+			<h2 style="margin-top: 0px">Progress</h2>
+            <?php
+            if (!$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["attempts"]) {
+				$query = "	SELECT a.*, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`id` AS `proxy_id`
+	            			FROM `evaluation_evaluators` AS a
+                			LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS ba
+                			ON a.`evaluator_type` = 'grad_year'
+                			AND ba.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+                			AND a.`evaluator_value` = ba.`role`
+	            			JOIN `".AUTH_DATABASE."`.`user_data` AS b
+	            			ON ((
+		            			a.`evaluator_type` = 'proxy_id'
+		            			AND a.`evaluator_value` = b.`id`
+							) OR (
+								ba.`user_id` = b.`id`
+							))
+	            			WHERE a.`evaluation_id` = ".$db->qstr($EVALUATION_ID);
+	            $evalation_evaluators = $db->GetAll($query);
+	        	if ($evalation_evaluators) {
+	                ?>
+	                <table class="tableList" style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Evaluation Members">
+	                <colgroup>
+                        <col class="modified" />
+                        <col class="target" />
+                        <col class="date-small" />
+                        <col class="date-small" />
+                        <col class="date" />
+	                </colgroup>
+	                <thead>
+                        <tr>
+                            <td class="modified">&nbsp;</td>
+                            <td class="target">Evaluator</td>
+                            <td class="date-small">Current Attempt</td>
+                            <td class="date-small">Attempts Completed</td>
+                            <td class="date">Last Attempted</td>
+                        </tr>
+	                </thead>
+	                <tbody>
+	                <?php
+	                foreach($evalation_evaluators as $evalation_evaluator) {
+                		$query = "	SELECT * FROM `evaluation_progress`
+                					WHERE `evaluation_id` = ".$evalation_evaluator["evaluation_id"]."
+		                			AND `proxy_id` = ".$evalation_evaluator["proxy_id"]."
+		                			AND `progress_value` <> 'cancelled'
+                					ORDER BY `progress_value` ASC";
+                		$evaluator_progress_records = $db->GetAll($query);
+                		$count = 0;
+                		$inprogress = false;
+                		$last_completed = 0;
+                		foreach ($evaluator_progress_records as &$evaluator_progress) {
+                			if ($evaluator_progress["progress_value"] == "complete") {
+                				$count++;
+                			} else {
+                				$inprogress = true;
+                			}
+            				if ($last_completed < $evaluator_progress["updated_date"]) {
+            					$last_completed = $evaluator_progress["updated_date"];
+            				}
+                		}
+                        echo "<tr>\n";
+                        echo "	<td>&nbsp;</td>\n";
+                        echo "	<td>".$evalation_evaluator["fullname"]."</td>\n";
+                        echo "	<td>".($inprogress ? "In Progress" : ($last_completed ? "Completed" : "Not Started"))."</td>\n";
+                        echo "	<td>".$count." / ".$evaluation_details["max_submittable"]."</td>\n";
+                        echo "	<td>".(isset($last_completed) && $last_completed ? date(DEFAULT_DATE_FORMAT, $last_completed) : "Not Started")."</td>\n";
+                        echo "</tr>\n";
+	                }
+	                ?>
+	                </tbody>
+	                <tfoot>
+	                    <tr><td>&nbsp;</td></tr>
+	                </tfoot>
+	                </table>
+	                <?php
+	            } else {
+	                    echo display_notice(array("No evaluators have completed this evaluation at this time."));
+	            }
+            } else {
+	            /**
+	             * Get the total number of results using the generated queries above and calculate the total number
+	             * of pages that are available based on the results per page preferences.
+	             */
+	            $query = "	SELECT a.*, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, c.`progress_value`, c.`updated_date`, d.`target_value`, e.`target_shortname`, b.`id` AS `proxy_id`
+	            			FROM `evaluation_progress` AS c
+                			JOIN `evaluation_evaluators` AS a
+                			ON a.`evaluation_id` = c.`evaluation_id`
+                			LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS ba
+                			ON a.`evaluator_type` = 'grad_year'
+                			AND ba.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+                			AND a.`evaluator_value` = ba.`role`
+	            			JOIN `".AUTH_DATABASE."`.`user_data` AS b
+	            			ON ((
+		            			a.`evaluator_type` = 'proxy_id'
+		            			AND a.`evaluator_value` = b.`id`
+	                			AND c.`proxy_id` = a.`evaluator_value`
+							) OR (
+								ba.`user_id` = b.`id`
+	                			AND c.`proxy_id` = b.`id`
+							))
+                			AND `progress_value` <> 'cancelled'
+                			JOIN `evaluation_targets` AS d
+                			ON d.`etarget_id` = c.`etarget_id`
+                			JOIN `evaluations_lu_targets` AS e
+                			ON d.`target_id` = e.`target_id`
+	            			WHERE c.`evaluation_id` = ".$db->qstr($EVALUATION_ID);
+	            $evalation_evaluators = $db->GetAll($query);
+	        	if ($evalation_evaluators) {
+	                ?>
+	                <table class="tableList" style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Evaluation Members">
+	                <colgroup>
+                        <col class="modified" />
+                        <col class="title" />
+                        <col class="title" />
+                        <col class="date-small" />
+                        <col class="date" />
+	                </colgroup>
+	                <thead>
+                        <tr>
+                            <td class="modified">&nbsp;</td>
+                            <td class="title">Evaluator</td>
+                            <td class="title">Evaluation Target</td>
+                            <td class="date-small">Attempt Progress</td>
+                            <td class="date">Last Updated</td>
+                        </tr>
+	                </thead>
+	                <tbody>
+	                <?php
+	                foreach($evalation_evaluators as $evalation_evaluator) {
+	                	$target_name = fetch_evaluation_target_title($evalation_evaluator);
+                        echo "<tr>\n";
+                        echo "	<td>&nbsp;</td>\n";
+                        echo "	<td>".$evalation_evaluator["fullname"]."</td>\n";
+                        echo "	<td>".$target_name."</td>\n";
+                        echo "	<td>".($evalation_evaluator["progress_value"] == "inprogress" ? "In Progress" : "Completed")."</td>\n";
+                        echo "	<td>".date(DEFAULT_DATE_FORMAT, $evalation_evaluator["updated_date"])."</td>\n";
+                        echo "</tr>\n";
+	                }
+	                ?>
+	                </tbody>
+	                <tfoot>
+	                    <tr><td>&nbsp;</td></tr>
+	                </tfoot>
+	                </table>
+	                <?php
+	            } else {
+	                    echo display_notice(array("No evaluators have completed this evaluation at this time."));
+	            }
+            }
+            ?>
+		</div>
+		<br /><br />
+		<?php
 	} else {
 		application_log("error", "User tried to manage progress of a evaluation id [".$EVALUATION_ID."] that does not exist or is not active in the system.");
 

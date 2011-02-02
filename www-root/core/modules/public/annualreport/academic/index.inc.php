@@ -38,7 +38,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 	<table id="flex1" style="display:none"></table>
 	<table id="flex2" style="display:none"></table>
 	
-	<script type="text/javascript">
+	<script type="text/javascript" defer="defer">
 	
 	var jQuerydialog = jQuery('<div></div>')
 		.html('<span class="ui-icon ui-icon-circle-check" style="float:left; margin:0 7px 50px 0;"></span>You must select at least one record in order to delete.')
@@ -68,7 +68,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 		}
 	});
 		
-	<?php $fields = "ar_internal_contributions,internal_contributions_id,time_commitment,description,organisation,year_reported"; ?>
+	<?php $fields = "ar_internal_contributions,internal_contributions_id,time_commitment,description,role,year_reported"; ?>
 	var internal_grid = jQuery("#flex1").flexigrid
 	(
 		{

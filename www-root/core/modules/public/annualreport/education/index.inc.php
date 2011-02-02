@@ -243,11 +243,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			}
 		}
 	}
-	
 	$fields = "ar_undergraduate_teaching,undergraduate_teaching_id,course_number,course_name,lecture_phase,year_reported";
 	?>
-	<script type="text/javascript">
-	
+	<script type="text/javascript" defer="defer">
 	var jQuerydialog = jQuery('<div></div>')
 		.html('<span class="ui-icon ui-icon-circle-check" style="float:left; margin:0 7px 50px 0;"></span>You must select at least one record in order to delete.')
 		.dialog({
@@ -288,7 +286,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			{display: 'Course', name : 'course_name', width : 405, sortable : true, align: 'left'},
 			{display: 'Phase', name : 'lecture_phase', width : 59, sortable : true, align: 'left'},
 			{display: 'Year', name : 'year_reported', width : 50, sortable : true, align: 'left'},
-			{display: 'Edit', name : 'ctled', width : 25,  sortable : false, align: 'center', process:editUndergradMedicalTeaching}
+			{display: 'Edit / View', name : 'ctled', width : 50,  sortable : false, align: 'center', process:editUndergradMedicalTeaching}
 			],
 		searchitems : [
 			{display: 'Course Code', name : 'course_number'},

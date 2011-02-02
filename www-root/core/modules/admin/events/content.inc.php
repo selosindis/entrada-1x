@@ -392,61 +392,29 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								}
 
 								/**
-								 * Update ED10 information.
+								 * Update Event Topics information.
 								 */
-								$query = "DELETE FROM `event_ed10` WHERE `event_id` = ".$db->qstr($EVENT_ID);
+								$query = "DELETE FROM `event_topics` WHERE `event_id` = ".$db->qstr($EVENT_ID);
 								if ($db->Execute($query)) {
-									if ((isset($_POST["event_ed10"])) && (is_array($_POST["event_ed10"])) && (count($_POST["event_ed10"]))) {
-										foreach ($_POST["event_ed10"] as $ed10_id => $value) {
-											if ($ed10_id = clean_input($ed10_id, array("trim", "int"))) {
-												$squery		= "SELECT * FROM `events_lu_ed10` WHERE `ed10_id` = ".$db->qstr($ed10_id);
+									if ((isset($_POST["event_topic"])) && (is_array($_POST["event_topic"])) && (count($_POST["event_topic"]))) {
+										foreach ($_POST["event_topic"] as $topic_id => $value) {
+											if ($topic_id = clean_input($topic_id, array("trim", "int"))) {
+												$squery		= "SELECT * FROM `events_lu_topics` WHERE `topic_id` = ".$db->qstr($topic_id);
 												$sresult	= $db->GetRow($squery);
 												if ($sresult) {
 													if ((isset($value["major_topic"])) && ($value["major_topic"] == "major")) {
-														if (!$db->AutoExecute("event_ed10", array("event_id" => $EVENT_ID, "ed10_id" => $ed10_id, "major_topic" => "1", "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT")) {
+														if (!$db->AutoExecute("event_topics", array("event_id" => $EVENT_ID, "topic_id" => $topic_id, "topic_coverage" => "major", "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT")) {
 															$ERROR++;
-															$ERRORSTR[] = "There was an error when trying to insert an ED10 response into the system. System administrators have been informed of this error; please try again later.";
+															$ERRORSTR[] = "There was an error when trying to insert an Event Topic response into the system. System administrators have been informed of this error; please try again later.";
 
-															application_log("error", "Unable to insert a new event_ed10 entry into the database while modifying event contents. Database said: ".$db->ErrorMsg());
+															application_log("error", "Unable to insert a new event_topic entry into the database while modifying event contents. Database said: ".$db->ErrorMsg());
 														}
 													} elseif ((isset($value["minor_topic"])) && ($value["minor_topic"] == "minor")) {
-														if (!$db->AutoExecute("event_ed10", array("event_id" => $EVENT_ID, "ed10_id" => $ed10_id, "minor_topic" => "1", "minor_desc" => ((isset($value["minor_desc"])) ? (int) trim($value["minor_desc"]) : ""), "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT")) {
+														if (!$db->AutoExecute("event_topics", array("event_id" => $EVENT_ID, "topic_id" => $topic_id, "topic_coverage" => "minor", "topic_time" => ((isset($value["minor_desc"])) ? (int) trim($value["minor_desc"]) : ""), "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT")) {
 															$ERROR++;
-															$ERRORSTR[] = "There was an error when trying to insert an ED10 response into the system. System administrators have been informed of this error; please try again later.";
+															$ERRORSTR[] = "There was an error when trying to insert an Event Topic response into the system. System administrators have been informed of this error; please try again later.";
 
-															application_log("error", "Unable to insert a new event_ed10 response to the database while modifying event contents. Database said: ".$db->ErrorMsg());
-														}
-													}
-												}
-											}
-										}
-									}
-								}
-
-								/**
-								 * Update ED11 information.
-								 */
-								$query = "DELETE FROM `event_ed11` WHERE `event_id` = ".$db->qstr($EVENT_ID);
-								if ($db->Execute($query)) {
-									if ((isset($_POST["event_ed11"])) && (is_array($_POST["event_ed11"])) && (count($_POST["event_ed11"]))) {
-										foreach ($_POST["event_ed11"] as $ed11_id => $value) {
-											if ($ed11_id = clean_input($ed11_id, array("trim", "int"))) {
-												$squery		= "SELECT * FROM `events_lu_ed11` WHERE `ed11_id` = ".$db->qstr($ed11_id);
-												$sresult	= $db->GetRow($squery);
-												if ($sresult) {
-													if ((isset($value["major_topic"])) && ($value["major_topic"] == "major")) {
-														if (!$db->AutoExecute("event_ed11", array("event_id" => $EVENT_ID, "ed11_id" => $ed11_id, "major_topic" => "1", "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT")) {
-															$ERROR++;
-															$ERRORSTR[] = "There was an error when trying to insert an ED11 response into the system. System administrators have been informed of this error; please try again later.";
-
-															application_log("error", "Unable to insert a new event_ed11 entry into the database while modifying event contents. Database said: ".$db->ErrorMsg());
-														}
-													} elseif ((isset($value["minor_topic"])) && ($value["minor_topic"] == "minor")) {
-														if (!$db->AutoExecute("event_ed11", array("event_id" => $EVENT_ID, "ed11_id" => $ed11_id, "minor_topic" => "1", "minor_desc" => ((isset($value["minor_desc"])) ? (int) trim($value["minor_desc"]) : ""), "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT")) {
-															$ERROR++;
-															$ERRORSTR[] = "There was an error when trying to insert an ED11 response into the system. System administrators have been informed of this error; please try again later.";
-
-															application_log("error", "Unable to insert a new event_ed11 response to the database while modifying event contents. Database said: ".$db->ErrorMsg());
+															application_log("error", "Unable to insert a new event_topic response to the database while modifying event contents. Database said: ".$db->ErrorMsg());
 														}
 													}
 												}
@@ -1131,143 +1099,71 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							<tr>
 								<td colspan="2">&nbsp;</td>
 							</tr>
-							<tr style="display: none">
+							<tr>
 								<td colspan="2">
-									<table style="width: 100%" cellspacing="0" summary="List ED10 &amp; ED11">
-									<colgroup>
-										<col style="width: 50%" />
-										<col style="width: 50%" />
-									</colgroup>
-									<tr>
-										<td style="vertical-align: top">
-											<table style="width: 100%" cellspacing="0" summary="List of ED10">
-											<colgroup>
-												<col style="width: 55%" />
-												<col style="width: 15%" />
-												<col style="width: 15%" />
-												<col style="width: 15%" />
-											</colgroup>
-											<tr>
-												<td colspan="4">
-													<h2>ED10</h2>
-													<div class="content-small" style="padding-bottom: 10px">Please select the topics that will be covered in your learning event and indicate if the amount of time that will be devoted.</div>
-												</td>
-											</tr>
-											<tr>
-												<td><span style="font-weight: bold; color: #003366;">Hot Topic</span></td>
-												<td><span style="font-weight: bold; color: #003366;">Major</span></td>
-												<td><span style="font-weight: bold; color: #003366;">Minor</span></td>
-												<td><span style="font-weight: bold; color: #003366;">Time</span></td>
-											</tr>
-											<?php
-											$query			= "	SELECT a.`ed10_id`, a.`topic_name`, b.`major_topic`, b.`minor_topic`, b.`minor_desc`
-																FROM `events_lu_ed10` AS a
-																LEFT JOIN `event_ed10` AS b
-																ON a.`ed10_id` = b.`ed10_id`
-																AND b.`event_id` = ".$db->qstr($EVENT_ID)."
-																ORDER BY a.`topic_name` ASC";
-											$ed10_results	= $db->GetAll($query);
-											if ($ed10_results) {
-												foreach ($ed10_results as $ed10_result) {
-													echo "<tr>\n";
-													echo "	<td>".html_encode($ed10_result["topic_name"])."</td>\n";
-													echo "	<td>";
-													echo "		<input type=\"checkbox\" id=\"ed10_".$ed10_result["ed10_id"]."_major\" name=\"event_ed10[".$ed10_result["ed10_id"]."][major_topic]\" value=\"major\" onclick=\"updateEdChecks(this)\"".(($ed10_result["major_topic"] == 1) ? " checked=\"checked\"" : "")." />";
-													echo "	</td>\n";
-													echo "	<td>";
-													echo "		<input type=\"checkbox\" id=\"ed10_".$ed10_result["ed10_id"]."_minor\" name=\"event_ed10[".$ed10_result["ed10_id"]."][minor_topic]\" value=\"minor\" onclick=\"updateEdChecks(this)\"".(($ed10_result["minor_topic"] == 1) ? " checked=\"checked\"" : "")." />";
-													echo "	</td>\n";
-													echo "	<td>\n";
-													echo "		<select id=\"ed10_".$ed10_result["ed10_id"]."_minor_desc\" name=\"event_ed10[".$ed10_result["ed10_id"]."][minor_desc]\" class=\"ed_select_".(($ed10_result["minor_topic"] == 1) ? "on" : "off")."\">" ;
-													echo "			<option value=\"0\"".((!(int) $ed10_result["minor_desc"]) ? " selected=\"selected\"" : "").">0</option>";
-													echo "			<option value=\"5\"".(($ed10_result["minor_desc"] == "5") ? " selected=\"selected\"" : "").">5</option>";
-													echo "			<option value=\"10\"".(($ed10_result["minor_desc"] == "10") ? " selected=\"selected\"" : "").">10</option>";
-													echo "			<option value=\"15\"".(($ed10_result["minor_desc"] == "15") ? " selected=\"selected\"" : "").">15</option>";
-													echo "			<option value=\"20\"".(($ed10_result["minor_desc"] == "20") ? " selected=\"selected\"" : "").">20</option>";
-													echo "			<option value=\"25\"".(($ed10_result["minor_desc"] == "25") ? " selected=\"selected\"" : "").">25</option>";
-													echo "			<option value=\"30\"".(($ed10_result["minor_desc"] == "30") ? " selected=\"selected\"" : "").">30</option>";
-													echo "			<option value=\"35\"".(($ed10_result["minor_desc"] == "35") ? " selected=\"selected\"" : "").">35</option>";
-													echo "			<option value=\"40\"".(($ed10_result["minor_desc"] == "40") ? " selected=\"selected\"" : "").">40</option>";
-													echo "			<option value=\"45\"".(($ed10_result["minor_desc"] == "45") ? " selected=\"selected\"" : "").">45</option>";
-													echo "			<option value=\"50\"".(($ed10_result["minor_desc"] == "50") ? " selected=\"selected\"" : "").">50</option>";
-													echo "			<option value=\"55\"".(($ed10_result["minor_desc"] == "55") ? " selected=\"selected\"" : "").">55</option>";
-													echo "			<option value=\"60\"".(($ed10_result["minor_desc"] == "60") ? " selected=\"selected\"" : "").">60</option>";
-													echo "		</select>";
-													echo "	</td>\n";
-													echo "</tr>\n";
-												}
+									<table style="width: 100%" cellspacing="0" summary="List of ED10">
+										<colgroup>
+											<col style="width: 55%" />
+											<col style="width: 15%" />
+											<col style="width: 15%" />
+											<col style="width: 15%" />
+										</colgroup>
+										<tr>
+											<td colspan="4">
+												<h2>Event Topics</h2>
+												<div class="content-small" style="padding-bottom: 10px">Please select the topics that will be covered in your learning event and indicate if the amount of time that will be devoted.</div>
+											</td>
+										</tr>
+										<tr>
+											<td><span style="font-weight: bold; color: #003366;">Hot Topic</span></td>
+											<td><span style="font-weight: bold; color: #003366;">Major</span></td>
+											<td><span style="font-weight: bold; color: #003366;">Minor</span></td>
+											<td><span style="font-weight: bold; color: #003366;">Time</span></td>
+										</tr>
+										<?php
+										$query			= "	SELECT a.`topic_id`, a.`topic_name`, b.`topic_coverage`, b.`topic_time`
+															FROM `events_lu_topics` AS a
+															LEFT JOIN `event_topics` AS b
+															ON a.`topic_id` = b.`topic_id`
+															AND b.`event_id` = ".$db->qstr($EVENT_ID)."
+															ORDER BY a.`topic_name` ASC";
+										$topic_results	= $db->GetAll($query);
+										if ($topic_results) {
+											foreach ($topic_results as $topic_result) {
+												echo "<tr>\n";
+												echo "	<td>".html_encode($topic_result["topic_name"])."</td>\n";
+												echo "	<td>";
+												echo "		<input type=\"checkbox\" id=\"topic_".$topic_result["topic_id"]."_major\" name=\"event_topic[".$topic_result["topic_id"]."][major_topic]\" value=\"major\" onclick=\"updateEdChecks(this)\"".(($topic_result["topic_coverage"] == "major") ? " checked=\"checked\"" : "")." />";
+												echo "	</td>\n";
+												echo "	<td>";
+												echo "		<input type=\"checkbox\" id=\"topic_".$topic_result["topic_id"]."_minor\" name=\"event_topic[".$topic_result["topic_id"]."][minor_topic]\" value=\"minor\" onclick=\"updateEdChecks(this)\"".(($topic_result["topic_coverage"] == "minor") ? " checked=\"checked\"" : "")." />";
+												echo "	</td>\n";
+												echo "	<td>\n";
+												echo "		<select id=\"topic_".$topic_result["topic_id"]."_minor_desc\" name=\"event_topic[".$topic_result["topic_id"]."][minor_desc]\" class=\"ed_select_".(($topic_result["topic_coverage"] == "minor") ? "on" : "off")."\">" ;
+												echo "			<option value=\"0\"".((!(int) $topic_result["topic_time"]) ? " selected=\"selected\"" : "").">0</option>";
+												echo "			<option value=\"5\"".(($topic_result["topic_time"] == "5") ? " selected=\"selected\"" : "").">5</option>";
+												echo "			<option value=\"10\"".(($topic_result["topic_time"] == "10") ? " selected=\"selected\"" : "").">10</option>";
+												echo "			<option value=\"15\"".(($topic_result["topic_time"] == "15") ? " selected=\"selected\"" : "").">15</option>";
+												echo "			<option value=\"20\"".(($topic_result["topic_time"] == "20") ? " selected=\"selected\"" : "").">20</option>";
+												echo "			<option value=\"25\"".(($topic_result["topic_time"] == "25") ? " selected=\"selected\"" : "").">25</option>";
+												echo "			<option value=\"30\"".(($topic_result["topic_time"] == "30") ? " selected=\"selected\"" : "").">30</option>";
+												echo "			<option value=\"35\"".(($topic_result["topic_time"] == "35") ? " selected=\"selected\"" : "").">35</option>";
+												echo "			<option value=\"40\"".(($topic_result["topic_time"] == "40") ? " selected=\"selected\"" : "").">40</option>";
+												echo "			<option value=\"45\"".(($topic_result["topic_time"] == "45") ? " selected=\"selected\"" : "").">45</option>";
+												echo "			<option value=\"50\"".(($topic_result["topic_time"] == "50") ? " selected=\"selected\"" : "").">50</option>";
+												echo "			<option value=\"55\"".(($topic_result["topic_time"] == "55") ? " selected=\"selected\"" : "").">55</option>";
+												echo "			<option value=\"60\"".(($topic_result["topic_time"] == "60") ? " selected=\"selected\"" : "").">60</option>";
+												echo "		</select>";
+												echo "	</td>\n";
+												echo "</tr>\n";
 											}
-											?>
-											</table>
-										</td>
-										<td style="vertical-align: top">
-											<table style="width: 100%" cellspacing="0" summary="List of ED11">
-											<colgroup>
-												<col style="width: 55%" />
-												<col style="width: 15%" />
-												<col style="width: 15%" />
-												<col style="width: 15%" />
-											</colgroup>
-											<tr>
-												<td colspan="4">
-													<h2>ED11</h2>
-													<div class="content-small" style="padding-bottom: 10px">Please select the topics that will be covered in your learning event and indicate if the amount of time that will be devoted.</div>
-												</td>
-											</tr>
-											<tr>
-												<td><span style="font-weight: bold; color: #003366;">Hot Topic</span></td>
-												<td><span style="font-weight: bold; color: #003366;">Major</span></td>
-												<td><span style="font-weight: bold; color: #003366;">Minor</span></td>
-												<td><span style="font-weight: bold; color: #003366;">Time</span></td>
-											</tr>
-											<?php
-											$query			= "	SELECT a.`ed11_id`, a.`topic_name`, b.`major_topic`, b.`minor_topic`, b.`minor_desc`
-																FROM `events_lu_ed11` AS a
-																LEFT JOIN `event_ed11` AS b
-																ON a.`ed11_id` = b.`ed11_id`
-																AND b.`event_id` = ".$db->qstr($EVENT_ID)."
-																ORDER BY a.`topic_name` ASC";
-											$ed11_results	= $db->GetAll($query);
-											if ($ed11_results) {
-												foreach ($ed11_results as $ed11_result) {
-													echo "<tr>\n";
-													echo "	<td>".html_encode($ed11_result["topic_name"])."</td>\n";
-													echo "	<td>";
-													echo "		<input type=\"checkbox\" id=\"ed11_".$ed11_result["ed11_id"]."_major\" name=\"event_ed11[".$ed11_result["ed11_id"]."][major_topic]\" value=\"major\" onclick=\"updateEdChecks(this)\"".(($ed11_result["major_topic"] == 1) ? " checked=\"checked\"" : "")." />";
-													echo "	</td>\n";
-													echo "	<td>";
-													echo "		<input type=\"checkbox\" id=\"ed11_".$ed11_result["ed11_id"]."_minor\" name=\"event_ed11[".$ed11_result["ed11_id"]."][minor_topic]\" value=\"minor\" onclick=\"updateEdChecks(this)\"".(($ed11_result["minor_topic"] == 1) ? " checked=\"checked\"" : "")." />";
-													echo "	</td>\n";
-													echo "	<td>\n";
-													echo "		<select id=\"ed11_".$ed11_result["ed11_id"]."_minor_desc\" name=\"event_ed11[".$ed11_result["ed11_id"]."][minor_desc]\" class=\"ed_select_".(($ed11_result["minor_topic"] == 1) ? "on" : "off")."\">" ;
-													echo "			<option value=\"0\"".((!(int) $ed11_result["minor_desc"]) ? " selected=\"selected\"" : "").">0</option>";
-													echo "			<option value=\"5\"".(($ed11_result["minor_desc"] == "5") ? " selected=\"selected\"" : "").">5</option>";
-													echo "			<option value=\"10\"".(($ed11_result["minor_desc"] == "10") ? " selected=\"selected\"" : "").">10</option>";
-													echo "			<option value=\"15\"".(($ed11_result["minor_desc"] == "15") ? " selected=\"selected\"" : "").">15</option>";
-													echo "			<option value=\"20\"".(($ed11_result["minor_desc"] == "20") ? " selected=\"selected\"" : "").">20</option>";
-													echo "			<option value=\"25\"".(($ed11_result["minor_desc"] == "25") ? " selected=\"selected\"" : "").">25</option>";
-													echo "			<option value=\"30\"".(($ed11_result["minor_desc"] == "30") ? " selected=\"selected\"" : "").">30</option>";
-													echo "			<option value=\"35\"".(($ed11_result["minor_desc"] == "35") ? " selected=\"selected\"" : "").">35</option>";
-													echo "			<option value=\"40\"".(($ed11_result["minor_desc"] == "40") ? " selected=\"selected\"" : "").">40</option>";
-													echo "			<option value=\"45\"".(($ed11_result["minor_desc"] == "45") ? " selected=\"selected\"" : "").">45</option>";
-													echo "			<option value=\"50\"".(($ed11_result["minor_desc"] == "50") ? " selected=\"selected\"" : "").">50</option>";
-													echo "			<option value=\"55\"".(($ed11_result["minor_desc"] == "55") ? " selected=\"selected\"" : "").">55</option>";
-													echo "			<option value=\"60\"".(($ed11_result["minor_desc"] == "60") ? " selected=\"selected\"" : "").">60</option>";
-													echo "		</select>";
-													echo "	</td>\n";
-													echo "</tr>\n";
-												}
-											}
-											?>
-											</table>
-										</td>
-									</tr>
-									</table>
-								</td>
-							</tr>
+										}
+										?>
+										</table>
+									</td></tr>
 						</tbody>
-					</table>
-				</div>
+	  </table>
+			</div>
 				</form>
 
 				<a name="event-resources-section"></a>

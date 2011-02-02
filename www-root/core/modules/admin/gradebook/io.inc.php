@@ -104,8 +104,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				foreach ($assessments as $key => $assessment) {
 					echo ",\"".trim($assessment["name"])." (".trim($assessment["type"]).")\"";
 				}
+				echo ",\"Weighted Total\"";
 				echo "\n";
-				
 				if (count($students) >= 1) {
 					foreach ($students as $student) {
 						$proxy_id	= $student["proxy_id"];
@@ -113,10 +113,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						$cols = array();
 						$cols[]	= trim((($student["group"] == "student") ? $student["number"] : 0));
 						$cols[]	= trim($student["fullname"]);
-						
+						$weighted_total = 0;
+						$weighted_total_max = 0;
 						foreach ($assessments as $key => $assessment) {
 							$cols[] = trim(format_retrieved_grade($student[$key."_grade_value"], $assessment) . assessment_suffix($assessment));
+							$weighted_total_max += $assessment["grade_weighting"];
+							$weighted_total += (($assessment["handler"] == "Numeric" ? ($student[$key."_grade_value"] / $assessment["numeric_grade_points_total"]) : (($assessment["handler"] == "Percentage" ? ((float)$student[$key."_grade_value"] / 100.0) : $student[$key."_grade_value"])))) * $assessment["grade_weighting"];
 						}
+						$cols[] = number_format($weighted_total, 2)." / ".$weighted_total_max;
 						
 						echo "\"".implode("\",\"", $cols)."\"", "\n";
 					}

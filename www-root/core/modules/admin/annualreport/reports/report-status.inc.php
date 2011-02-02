@@ -119,7 +119,6 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 					<?php
 						echo "<option value=\"Completed\"".(($PROCESSED["report_completed"] == "Completed") ? " selected=\"selected\"" : "").">Completed</option>\n";
 						echo "<option value=\"Pending\"".(($PROCESSED["report_completed"] == "Pending") ? " selected=\"selected\"" : "").">Started</option>\n";
-						echo "<option value=\"Missing\"".(($PROCESSED["report_completed"] == "Missing") ? " selected=\"selected\"" : "").">Not Yet Started</option>\n";
 						echo "</select>";
 					?>
 					</td>
@@ -157,22 +156,6 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 								AND `report_completed` = \"no\"
 								AND `".DATABASE_NAME."`.`ar_profile`.`proxy_id` = `".AUTH_DATABASE."`.`user_data`.`id` 
 								AND `".AUTH_DATABASE."`.`user_data`.`id` = `".AUTH_DATABASE."`.`user_departments`.`user_id`
-								AND `dep_id` = `department_id`
-								ORDER BY `lastname` ASC";
-					break;
-				case "Missing":
-					// Not only does this query need to look for those that are set to "no" as completed,
-					// but it also needs to find all those that are still active in their departments but
-					// do not have a record in the profile table
-					$query = 	"SELECT `firstname`, `lastname`, `year_reported`, `report_completed`, `".AUTH_DATABASE."`.`user_data`.`clinical`, `department_title`
-								FROM `".DATABASE_NAME."`.`ar_profile` RIGHT JOIN `".AUTH_DATABASE."`.`user_departments`
-								ON `".DATABASE_NAME."`.`ar_profile`.`proxy_id` = `".AUTH_DATABASE."`.`user_departments`.`user_id`
-								LEFT JOIN `".AUTH_DATABASE."`.`user_data`
-								ON `".AUTH_DATABASE."`.`user_departments`.`user_id` = `".AUTH_DATABASE."`.`user_data`.`id`
-								LEFT JOIN `".AUTH_DATABASE."`.`departments`
-								ON `".AUTH_DATABASE."`.`departments`.`department_id` = `".AUTH_DATABASE."`.`user_departments`.`dep_id`
-								WHERE `".DATABASE_NAME."`.`ar_profile`.`proxy_id` IS NULL
-								".$type_where."
 								AND `dep_id` = `department_id`
 								ORDER BY `lastname` ASC";
 					break;

@@ -638,10 +638,10 @@ function new_sidebar_item($title = "", $html = "", $id = "", $state = "open", $p
 	$output .= "</table>\n";
 	$output .= "<br />\n";
 
-	switch($position) {
+	switch ($position) {
 		case SIDEBAR_PREPEND:
 			array_unshift($SIDEBAR, $output);
-			break;
+		break;
 		case SIDEBAR_APPEND:
 		default:
 			array_push($SIDEBAR, $output);
@@ -735,24 +735,24 @@ function webservice_url($service = "", $options = array()) {
 
 // Function that checks to see if magic_quotes_gpc is enabled or not.
 function checkslashes($value="", $type = "insert") {
-	switch($type) {
+	switch ($type) {
 		case "insert" :
-			if(!ini_get("magic_quotes_gpc")) {
+			if (!ini_get("magic_quotes_gpc")) {
 				return addslashes($value);
 			} else {
 				return $value;
 			}
-			break;
+		break;
 		case "display" :
-			if(!ini_get("magic_quotes_gpc")) {
+			if (!ini_get("magic_quotes_gpc")) {
 				return htmlspecialchars($value);
 			} else {
 				return htmlspecialchars(stripslashes($value));
 			}
-			break;
+		break;
 		default :
 			return false;
-			break;
+		break;
 	}
 }
 
@@ -962,14 +962,14 @@ function order_link($field, $name, $order, $sort, $location = "public") {
 function public_order_link($field_id, $field_name) {
 	global $MODULE;
 
-	if(strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) == strtolower($field_id)) {
+	if(isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) && strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) == strtolower($field_id)) {
 		if(strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) == "desc") {
-			return "<a href=\"".ENTRADA_URL."/".$MODULE."?".replace_query(array("so" => "asc"))."\" title=\"Order by ".$field_name.", Sort Ascending\">".$field_name."</a>";
+			return "<a href=\"".ENTRADA_URL."/".$MODULE.(isset($SUBMODULE) && $SUBMODULE ? "/".$SUBMODULE : "")."?".replace_query(array("so" => "asc"))."\" title=\"Order by ".$field_name.", Sort Ascending\">".$field_name."</a>";
 		} else {
-			return "<a href=\"".ENTRADA_URL."/".$MODULE."?".replace_query(array("so" => "desc"))."\" title=\"Order by ".$field_name.", Sort Decending\">".$field_name."</a>";
+			return "<a href=\"".ENTRADA_URL."/".$MODULE.(isset($SUBMODULE) && $SUBMODULE ? "/".$SUBMODULE : "")."?".replace_query(array("so" => "desc"))."\" title=\"Order by ".$field_name.", Sort Decending\">".$field_name."</a>";
 		}
 	} else {
-		return "<a href=\"".ENTRADA_URL."/".$MODULE."?".replace_query(array("sb" => $field_id))."\" title=\"Order by ".$field_name."\">".$field_name."</a>";
+		return "<a href=\"".ENTRADA_URL."/".$MODULE.(isset($SUBMODULE) && $SUBMODULE ? "/".$SUBMODULE : "")."?".replace_query(array("sb" => $field_id))."\" title=\"Order by ".$field_name."\">".$field_name."</a>";
 	}
 }
 
@@ -1009,7 +1009,7 @@ function admin_order_link($field_id, $field_name, $submodule = null) {
 		$module_url = $MODULE;
 	}
 	
-	if (strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) == strtolower($field_id)) {
+	if (isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) && strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) == strtolower($field_id)) {
 		if (strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) == "desc") {
 			return "<a href=\"".ENTRADA_URL."/admin/".$module_url."?".replace_query(array("so" => "asc"))."\" title=\"Order by ".$field_name.", Sort Ascending\">".$field_name."</a>";
 		} else {
@@ -11390,6 +11390,60 @@ function evaluation_generate_description($min_submittable = 0, $evaluation_quest
 	$string_4 = $evaluation_questions." question".(($evaluation_questions != 1) ? "s" : "");
 
 	return sprintf($output, $string_1, $string_2, $string_3, $string_4);
+}
+
+function gradebook_get_weighted_grades($course_id, $grad_year, $proxy_id) {
+	global $db;
+	$weighted_grade = 0;
+	$weighted_total = 0;
+	$weighted_percent = 0;
+	$query = "	SELECT `assessments`.*,`assessment_marking_schemes`.`handler`
+				FROM `assessments`
+				LEFT JOIN `assessment_marking_schemes` ON `assessment_marking_schemes`.`id` = `assessments`.`marking_scheme_id`
+				WHERE `assessments`.`course_id` = ".$db->qstr($course_id)."
+				AND `assessments`.`grad_year` = ".$db->qstr($grad_year);
+	$assessments = $db->GetAll($query);
+	if($assessments) {
+		$query	= 	"SELECT b.`id` AS `proxy_id`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, b.`number`, c.`role`";
+		foreach($assessments as $key => $assessment) {
+			$query 	.= ", g$key.`grade_id` AS `grade_".$key."_id`, g$key.`value` AS `grade_".$key."_value`, h$key.`grade_weighting` AS `grade_".$key."_weighting`";
+		}
+		$query 	.=" FROM `".AUTH_DATABASE."`.`user_data` AS b
+					LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS c
+					ON c.`user_id` = b.`id` AND c.`app_id`=".$db->qstr(AUTH_APP_ID)."
+					AND c.`account_active`='true'
+					AND (c.`access_starts`='0' OR c.`access_starts`<=".$db->qstr(time()).")
+					AND (c.`access_expires`='0' OR c.`access_expires`>=".$db->qstr(time()).") ";
+		foreach($assessments as $key => $assessment) {
+			$query .= "LEFT JOIN `".DATABASE_NAME."`.`assessment_grades` AS g$key ON b.`id` = g$key.`proxy_id` AND g$key.`assessment_id` = ".$db->qstr($assessment["assessment_id"])."\n";
+			$query .= "LEFT JOIN `".DATABASE_NAME."`.`assessment_exceptions` AS h$key ON b.`id` = h$key.`proxy_id` AND h$key.`assessment_id` = ".$db->qstr($assessment["assessment_id"])."\n";
+		}
+		
+		$query .= 	" WHERE b.`id` = ".$db->qstr($proxy_id);
+		$query .=	" GROUP BY b.`id`";
+		
+		$student = $db->GetRow($query); 
+		
+		if ($student) {
+			foreach($assessments as $key2 => $assessment) {
+				if ($student["grade_".$key2."_weighting"] !== NULL) {
+					$grade_weighting = $student["grade_".$key2."_weighting"];
+				} else {
+					$grade_weighting = $assessment["grade_weighting"];
+				}
+				if(isset($student["grade_".$key2."_value"])) {
+					$weighted_total += $grade_weighting;
+					$weighted_grade += (($assessment["handler"] == "Numeric" ? ($student["grade_".$key2."_value"] / $assessment["numeric_grade_points_total"]) : (($assessment["handler"] == "Percentage" ? ((float)$student["grade_".$key2."_value"] / 100.0) : $student["grade_".$key2."_value"])))) * $grade_weighting;
+				}
+			}
+		}
+	}
+	if ($weighted_grade && $weighted_total) {
+		$weighted_percent = number_format(($weighted_grade / $weighted_total) * 100, 2);
+	}
+	return Array(	"total" => $weighted_total,
+					"grade" => $weighted_grade,
+					"percent" => $weighted_percent);
 }
 
 /**

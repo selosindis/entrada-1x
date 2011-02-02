@@ -6,7 +6,7 @@
  * @copyright Copyright 2010 Queen's University, MEdTech Unit
  *
  * $Id: functions.inc.php 1080 2010-03-26 17:33:23Z simpson $
-*/
+ */
 
 /**
  * Outputs an error message, and logs it.
@@ -16,19 +16,19 @@
  */
 function output_error($message = "") {
 	global $ERROR;
-	
-	if(isset($ERROR)) {
+
+	if (isset($ERROR)) {
 		$ERROR++;
 	}
-	
-	if($message = clean_input($message)) {
-		$message = "[ERROR]   ".$message;
+
+	if ($message = clean_input($message)) {
+		$message = "[ERROR]   " . $message;
 
 		log_message($message);
 
-		echo "\n".$message;
+		echo "\n" . $message;
 	}
-	
+
 	@flush();
 }
 
@@ -40,17 +40,17 @@ function output_error($message = "") {
  */
 function output_notice($message = "") {
 	global $NOTICE;
-	
-	if(isset($NOTICE)) {
+
+	if (isset($NOTICE)) {
 		$NOTICE++;
 	}
 
-	if($message = clean_input($message)) {
-		$message = "[NOTICE]  ".$message;
+	if ($message = clean_input($message)) {
+		$message = "[NOTICE]  " . $message;
 
 		log_message($message);
 
-		echo "\n".$message;
+		echo "\n" . $message;
 	}
 
 	@flush();
@@ -64,19 +64,19 @@ function output_notice($message = "") {
  */
 function output_success($message = "") {
 	global $SUCCESS;
-	
-	if(isset($SUCCESS)) {
+
+	if (isset($SUCCESS)) {
 		$SUCCESS++;
 	}
-	
-	if($message = clean_input($message)) {
-		$message = "[SUCCESS] ".$message;
+
+	if ($message = clean_input($message)) {
+		$message = "[SUCCESS] " . $message;
 
 		log_message($message);
-		
-		echo "\n".$message;
+
+		echo "\n" . $message;
 	}
-	
+
 	@flush();
 }
 
@@ -91,12 +91,12 @@ function output_success($message = "") {
 function log_message($message = "") {
 	global $ENABLE_LOGGING, $LOG_FILENAME;
 
-	if((isset($ENABLE_LOGGING)) && ((bool) $ENABLE_LOGGING) && (isset($LOG_FILENAME)) && ($LOG_FILENAME != "") && ((is_writable(dirname($LOG_FILENAME))) || (is_writable($LOG_FILENAME)))) {
-		if(file_put_contents($LOG_FILENAME, $message."\n", FILE_APPEND)) {
+	if ((isset($ENABLE_LOGGING)) && ((bool) $ENABLE_LOGGING) && (isset($LOG_FILENAME)) && ($LOG_FILENAME != "") && ((is_writable(dirname($LOG_FILENAME))) || (is_writable($LOG_FILENAME)))) {
+		if (file_put_contents($LOG_FILENAME, $message . "\n", FILE_APPEND)) {
 			return true;
 		}
 	}
-	
+
 	return false;
 }
 
@@ -108,7 +108,7 @@ function log_message($message = "") {
  * @return string
  */
 function generate_hash($num_chars = 32) {
-	if(!$num_chars = (int) $num_chars) {
+	if (!$num_chars = (int) $num_chars) {
 		$num_chars = 32;
 	}
 
@@ -126,7 +126,7 @@ function generate_hash($num_chars = 32) {
  * return int
  */
 function offset_validity($old_event_date, $new_event_date, $old_release_date) {
-	if((int) $old_event_date && (int) $new_event_date && (int) $old_release_date) {
+	if ((int) $old_event_date && (int) $new_event_date && (int) $old_release_date) {
 		return ($new_event_date + ($old_release_date - $old_event_date));
 	}
 
@@ -143,10 +143,10 @@ function offset_validity($old_event_date, $new_event_date, $old_release_date) {
 function generate_password($length = 8) {
 	$length = (int) $length;
 
-	if(($length < 6) || ($length > 32)) {
+	if (($length < 6) || ($length > 32)) {
 		$length = 8;
 	}
-	
+
 	return substr(md5(uniqid(rand(), true)), 0, $length);
 }
 
@@ -163,17 +163,17 @@ function get_event_data($event_id = 0) {
 
 	/**
 	 * If we pass this function an array of events, use the first one.
-	 */	
-	if(is_array($event_id)) {
+	 */
+	if (is_array($event_id)) {
 		$event_id = $event_id[0];
 	}
-	
-	if($event_id = (int) $event_id) {
-		$query	= "SELECT * FROM `events` WHERE `event_id` = ".$db->qstr($event_id);
-		
+
+	if ($event_id = (int) $event_id) {
+		$query = "SELECT * FROM `events` WHERE `event_id` = " . $db->qstr($event_id);
+
 		return $db->GetRow($query);
 	}
-	
+
 	return false;
 }
 
@@ -188,15 +188,15 @@ function get_event_data($event_id = 0) {
 function validate_event_id($event_id = 0) {
 	global $db;
 
-	if($event_id = (int) $event_id) {
-		$query	= "SELECT `event_id` FROM `events` WHERE `event_id` = ".$db->qstr($event_id);
-		$result	= $db->GetRow($query);
-		
-		if($result) {
-			return true;	
+	if ($event_id = (int) $event_id) {
+		$query = "SELECT `event_id` FROM `events` WHERE `event_id` = " . $db->qstr($event_id);
+		$result = $db->GetRow($query);
+
+		if ($result) {
+			return true;
 		}
 	}
-	
+
 	return false;
 }
 
@@ -210,10 +210,10 @@ function validate_event_id($event_id = 0) {
 function get_user_info($proxy_id = 0) {
 	global $db;
 
-	if($proxy_id = (int) $proxy_id) {
-		$query	= "SELECT `number`, `firstname`, `lastname` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($proxy_id);
-		$result	= $db->GetRow($query);
-		if($result) {
+	if ($proxy_id = (int) $proxy_id) {
+		$query = "SELECT `number`, `firstname`, `lastname` FROM `" . AUTH_DATABASE . "`.`user_data` WHERE `id` = " . $db->qstr($proxy_id);
+		$result = $db->GetRow($query);
+		if ($result) {
 			return $result;
 		}
 	}
@@ -231,14 +231,14 @@ function get_user_info($proxy_id = 0) {
 function get_course_id($course_name = "") {
 	global $db;
 
-	if(trim($course_name) != "") {
-		$query	= "SELECT `course_id` FROM `courses` WHERE `course_name` LIKE ".$db->qstr($course_name);
-		$result	= $db->GetRow($query);
-		if($result) {
+	if (trim($course_name) != "") {
+		$query = "SELECT `course_id` FROM `courses` WHERE `course_name` LIKE " . $db->qstr($course_name);
+		$result = $db->GetRow($query);
+		if ($result) {
 			return $result["course_id"];
 		}
 	}
-	
+
 	return 0;
 }
 
@@ -252,10 +252,10 @@ function get_course_id($course_name = "") {
 function get_eventtype_id($eventtype_title = "") {
 	global $db;
 
-	if(trim($eventtype_title) != "") {
-		$query	= "SELECT `eventtype_id` FROM `events_lu_eventtypes` WHERE `eventtype_title` LIKE ".$db->qstr($eventtype_title);
-		$result	= $db->GetRow($query);
-		if($result) {
+	if (trim($eventtype_title) != "") {
+		$query = "SELECT `eventtype_id` FROM `events_lu_eventtypes` WHERE `eventtype_title` LIKE " . $db->qstr($eventtype_title);
+		$result = $db->GetRow($query);
+		if ($result) {
 			return $result["eventtype_id"];
 		}
 	}
@@ -274,19 +274,19 @@ function get_eventtype_id($eventtype_title = "") {
 function get_proxy_id($staff_number = 0) {
 	global $db;
 
-	if($staff_number = (int) $staff_number) {
-		$query	= "
+	if ($staff_number = (int) $staff_number) {
+		$query = "
 				SELECT a.`id` AS `proxy_id`
-				FROM `".AUTH_DATABASE."`.`user_data` AS a
-				LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+				FROM `" . AUTH_DATABASE . "`.`user_data` AS a
+				LEFT JOIN `" . AUTH_DATABASE . "`.`user_access` AS b
 				ON b.`user_id` = a.`id`
-				WHERE a.`number` = ".$db->qstr($staff_number);
-		$result	= $db->GetRow($query);
-		if($result) {
+				WHERE a.`number` = " . $db->qstr($staff_number);
+		$result = $db->GetRow($query);
+		if ($result) {
 			return $result["proxy_id"];
 		}
 	}
-	
+
 	return 0;
 }
 
@@ -300,7 +300,7 @@ function get_proxy_id($staff_number = 0) {
 function clean_data($string = "", $rules = array()) {
 	return clean_input($string, $rules);
 }
-	
+
 /**
  * This function cleans a string with any valid rules that have been provided in the $rules array.
  * Note that $rules can also be a string if you only want to apply a single rule.
@@ -322,102 +322,102 @@ function clean_input($string, $rules = array()) {
 	if (count($rules) > 0) {
 		foreach ($rules as $rule) {
 			switch ($rule) {
-				case "page_url" :		// Acceptable characters for community page urls.
+				case "page_url" :  // Acceptable characters for community page urls.
 				case "module" :
 					$string = preg_replace("/[^a-z0-9_\-]/i", "", $string);
-				break;
-				case "url" :			// Allows only a minimal number of characters
+					break;
+				case "url" :   // Allows only a minimal number of characters
 					$string = preg_replace(array("/[^a-z0-9_\-\.\/\~\?\&\:\#\=\+]/i", "/(\.)\.+/", "/(\/)\/+/"), "$1", $string);
-				break;
+					break;
 				case "file" :
-				case "dir" :			// Allows only a minimal number of characters
+				case "dir" :   // Allows only a minimal number of characters
 					$string = preg_replace(array("/[^a-z0-9_\-\.\/]/i", "/(\.)\.+/", "/(\/)\/+/"), "$1", $string);
-				break;
-				case "int" :			// Change string to an integer.
+					break;
+				case "int" :   // Change string to an integer.
 					$string = (int) $string;
-				break;
-				case "float" :			// Change string to a float.
+					break;
+				case "float" :   // Change string to a float.
 					$string = (float) $string;
-				break;
-				case "bool" :			// Change string to a boolean.
+					break;
+				case "bool" :   // Change string to a boolean.
 					$string = (bool) $string;
-				break;
-				case "nows" :			// Trim all whitespace anywhere in the string.
+					break;
+				case "nows" :   // Trim all whitespace anywhere in the string.
 					$string = str_replace(array(" ", "\t", "\n", "\r", "\0", "\x0B", "&nbsp;"), "", $string);
-				break;
-				case "trim" :			// Trim whitespace from ends of string.
+					break;
+				case "trim" :   // Trim whitespace from ends of string.
 					$string = trim($string);
-				break;
-				case "trimds" :			// Removes double spaces.
+					break;
+				case "trimds" :   // Removes double spaces.
 					$string = str_replace(array(" ", "\t", "\n", "\r", "\0", "\x0B", "&nbsp;", "\x7f", "\xff", "\x0", "\x1f"), " ", $string);
 					$string = html_decode(str_replace("&nbsp;", "", html_encode($string)));
-				break;
+					break;
 				case "nl2br" :
 					$string = nl2br($string);
-				break;
-				case "underscores" :	// Trim all whitespace anywhere in the string.
+					break;
+				case "underscores" : // Trim all whitespace anywhere in the string.
 					$string = str_replace(array(" ", "\t", "\n", "\r", "\0", "\x0B", "&nbsp;"), "_", $string);
-				break;
-				case "lower" :			// Change string to all lower case.
+					break;
+				case "lower" :   // Change string to all lower case.
 				case "lowercase" :
 					$string = strtolower($string);
-				break;
-				case "upper" :			// Change string to all upper case.
+					break;
+				case "upper" :   // Change string to all upper case.
 				case "uppercase" :
 					$string = strtoupper($string);
-				break;
-				case "ucwords" :		// Change string to correct word case.
+					break;
+				case "ucwords" :  // Change string to correct word case.
 					$string = ucwords(strtolower($string));
-				break;
-				case "boolops" :		// Removed recognized boolean operators.
+					break;
+				case "boolops" :  // Removed recognized boolean operators.
 					$string = str_replace(array("\"", "+", "-", "AND", "OR", "NOT", "(", ")", ",", "-"), "", $string);
-				break;
-				case "quotemeta" :		// Quote's meta characters
+					break;
+				case "quotemeta" :  // Quote's meta characters
 					$string = quotemeta($string);
-				break;
-				case "credentials" :	// Acceptable characters for login credentials.
+					break;
+				case "credentials" : // Acceptable characters for login credentials.
 					$string = preg_replace("/[^a-z0-9_\-\.]/i", "", $string);
-				break;
-				case "alphanumeric" :	// Remove anything that is not alphanumeric.
+					break;
+				case "alphanumeric" : // Remove anything that is not alphanumeric.
 					$string = preg_replace("/[^a-z0-9]+/i", "", $string);
-				break;
-				case "alpha" :			// Remove anything that is not an alpha.
+					break;
+				case "alpha" :   // Remove anything that is not an alpha.
 					$string = preg_replace("/[^a-z]+/i", "", $string);
-				break;
-				case "numeric" :		// Remove everything but numbers 0 - 9 for when int won't do.
+					break;
+				case "numeric" :  // Remove everything but numbers 0 - 9 for when int won't do.
 					$string = preg_replace("/[^0-9]+/i", "", $string);
-				break;
-				case "name" :			// @todo jellis ?
+					break;
+				case "name" :   // @todo jellis ?
 					$string = preg_replace("/^([a-z]+(\'|-|\.\s|\s)?[a-z]*){1,2}$/i", "", $string);
-				break;
-				case "emailcontent" :	// Check for evil tags that could be used to spam.
-					$string = str_ireplace(array("content-type:", "bcc:","to:", "cc:"), "", $string);
-				break;
-				case "postclean" :		// @todo jellis ?
+					break;
+				case "emailcontent" : // Check for evil tags that could be used to spam.
+					$string = str_ireplace(array("content-type:", "bcc:", "to:", "cc:"), "", $string);
+					break;
+				case "postclean" :  // @todo jellis ?
 					$string = preg_replace('/\<br\s*\/?\>/i', "\n", $string);
 					$string = str_replace("&nbsp;", " ", $string);
-				break;
-				case "decode" :			// Returns the output of the html_decode() function.
+					break;
+				case "decode" :   // Returns the output of the html_decode() function.
 					$string = html_decode($string);
-				break;
-				case "encode" :			// Returns the output of the html_encode() function.
+					break;
+				case "encode" :   // Returns the output of the html_encode() function.
 					$string = html_encode($string);
-				break;
+					break;
 				case "htmlspecialchars" : // Returns the output of the htmlspecialchars() function.
 				case "specialchars" :
 					$string = htmlspecialchars($string, ENT_QUOTES, DEFAULT_CHARSET);
-				break;
-				case "htmlbrackets" :	// Converts only brackets into entities.
+					break;
+				case "htmlbrackets" : // Converts only brackets into entities.
 					$string = str_replace(array("<", ">"), array("&lt;", "&gt;"), $string);
-				break;
-				case "notags" :			// Strips tags from the string.
+					break;
+				case "notags" :   // Strips tags from the string.
 				case "nohtml" :
 				case "striptags" :
 					$string = strip_tags($string);
-				break;
-				default :				// Unknown rule, log notice.
-					application_log("notice", "Unknown clean_input function rule [".$rule."]");
-				break;
+					break;
+				default :	// Unknown rule, log notice.
+					application_log("notice", "Unknown clean_input function rule [" . $rule . "]");
+					break;
 			}
 		}
 
@@ -425,6 +425,49 @@ function clean_input($string, $rules = array()) {
 	} else {
 		return trim($string);
 	}
+}
+
+/**
+ * Activates speficied module for the specified community
+ *
+ * @param int $community_id
+ * @param int $module_id
+ * @return bool
+ */
+function communities_module_activate($community_id = 0, $module_id = 0) {
+	global $db;
+
+	if (($community_id = (int) $community_id) && ($module_id = (int) $module_id)) {
+		/**
+		 * Check that the requested module is present and active.
+		 */
+		$query = "SELECT * FROM `communities_modules` WHERE `module_id` = " . $db->qstr($module_id) . " AND `module_active` = '1'";
+		$module_info = $db->GetRow($query);
+		if ($module_info) {
+			$query = "SELECT * FROM `community_modules` WHERE `community_id` = " . $db->qstr($community_id) . " AND `module_id` = " . $db->qstr($module_id);
+			$result = $db->GetRow($query);
+			if ($result) {
+				/**
+				 * If it is not already active, active it.
+				 */
+				if (!(int) $result["module_active"]) {
+					if (!$db->AutoExecute("community_modules", array("module_active" => 1), "UPDATE", "`community_id` = " . $db->qstr($community_id) . " AND `module_id` = " . $db->qstr($module_id))) {
+						echo("Unable to active module ".(int) $module_id." (updating existing record) for updated community id ".(int) $COMMUNITY_ID.". Database said: ".$db->ErrorMsg());
+					}
+				}
+			} else {
+				if (!$db->AutoExecute("community_modules", array("community_id" => $community_id, "module_id" => $module_id, "module_active" => 1), "INSERT")) {
+					echo("Unable to active module ".(int) $module_id." (inserting new record) for updated community id ".(int) $COMMUNITY_ID.". Database said: ".$db->ErrorMsg());
+				}
+			}
+		} else {
+			echo("Module_id [".$module_id."] requested activation in community_id [".$community_id."] but the module is either missing or inactive.");
+		}
+	} else {
+		echo("There was no community_id [".$community_id."] or module_id [".$module_id."] provided to active a module.");
+	}
+
+	return true;
 }
 
 /**
@@ -438,102 +481,102 @@ function clean_input($string, $rules = array()) {
 function process_user_photo_official($original_file, $proxy_id = 0) {
 	global $VALID_MAX_DIMENSIONS;
 
-	if(!@function_exists("gd_info")) {
-		echo "Error: ".__LINE__;
+	if (!@function_exists("gd_info")) {
+		echo "Error: " . __LINE__;
 
 		return false;
 	}
 
-	if((!@file_exists($original_file)) || (!@is_readable($original_file))) {
-		echo "Error: ".__LINE__;
+	if ((!@file_exists($original_file)) || (!@is_readable($original_file))) {
+		echo "Error: " . __LINE__;
 
 		return false;
 	}
 
-	if(!$proxy_id = (int) $proxy_id) {
-		echo "Error: ".__LINE__;
+	if (!$proxy_id = (int) $proxy_id) {
+		echo "Error: " . __LINE__;
 
 		return false;
 	}
 
-	$new_file		= STORAGE_USER_PHOTOS."/".$proxy_id."-official";
-	$img_quality	= 85;
+	$new_file = STORAGE_USER_PHOTOS . "/" . $proxy_id . "-official";
+	$img_quality = 85;
 
-	if($original_file_details = @getimagesize($original_file)) {
-		$original_file_width	= $original_file_details[0];
-		$original_file_height	= $original_file_details[1];
+	if ($original_file_details = @getimagesize($original_file)) {
+		$original_file_width = $original_file_details[0];
+		$original_file_height = $original_file_details[1];
 
 		/**
 		 * Check if the original_file needs to be resized or not.
 		 */
-		if(($original_file_width > $VALID_MAX_DIMENSIONS["photo-width"]) || ($original_file_height > $VALID_MAX_DIMENSIONS["photo-height"])) {
-			switch($original_file_details["mime"]) {
+		if (($original_file_width > $VALID_MAX_DIMENSIONS["photo-width"]) || ($original_file_height > $VALID_MAX_DIMENSIONS["photo-height"])) {
+			switch ($original_file_details["mime"]) {
 				case "image/pjpeg":
 				case "image/jpeg":
 				case "image/jpg":
 					$original_img_resource = @imagecreatefromjpeg($original_file);
-				break;
+					break;
 				case "image/png":
 					$original_img_resource = @imagecreatefrompng($original_file);
-				break;
+					break;
 				case "image/gif":
 					$original_img_resource = @imagecreatefromgif($original_file);
-				break;
+					break;
 				default :
-					echo "Error: ".__LINE__;
+					echo "Error: " . __LINE__;
 
 					return false;
-				break;
+					break;
 			}
-			if($original_img_resource) {
+			if ($original_img_resource) {
 				/**
 				 * Determine whether it's a horizontal / vertical image and calculate the new smaller size.
 				 */
-				if($original_file_width > $original_file_height) {
-					$new_file_width		= $VALID_MAX_DIMENSIONS["photo-width"];
-					$new_file_height	= (int) (($VALID_MAX_DIMENSIONS["photo-width"] * $original_file_height) / $original_file_width);
+				if ($original_file_width > $original_file_height) {
+					$new_file_width = $VALID_MAX_DIMENSIONS["photo-width"];
+					$new_file_height = (int) (($VALID_MAX_DIMENSIONS["photo-width"] * $original_file_height) / $original_file_width);
 				} else {
-					$new_file_width		= (int) (($VALID_MAX_DIMENSIONS["photo-height"] * $original_file_width) / $original_file_height);
-					$new_file_height	= $VALID_MAX_DIMENSIONS["photo-height"];
+					$new_file_width = (int) (($VALID_MAX_DIMENSIONS["photo-height"] * $original_file_width) / $original_file_height);
+					$new_file_height = $VALID_MAX_DIMENSIONS["photo-height"];
 				}
 
-				if($original_file_details["mime"] == "image/gif") {
+				if ($original_file_details["mime"] == "image/gif") {
 					$new_img_resource = @imagecreate($new_file_width, $new_file_height);
 				} else {
 					$new_img_resource = @imagecreatetruecolor($new_file_width, $new_file_height);
 				}
 
-				if($new_img_resource) {
-					if(@imagecopyresampled($new_img_resource, $original_img_resource, 0, 0, 0, 0, $new_file_width, $new_file_height, $original_file_width, $original_file_height)) {
-						switch($original_file_details["mime"]) {
+				if ($new_img_resource) {
+					if (@imagecopyresampled($new_img_resource, $original_img_resource, 0, 0, 0, 0, $new_file_width, $new_file_height, $original_file_width, $original_file_height)) {
+						switch ($original_file_details["mime"]) {
 							case "image/pjpeg":
 							case "image/jpeg":
 							case "image/jpg":
-								if(!imagejpeg($new_img_resource, $new_file, $img_quality)) {
-									echo "Error: ".__LINE__;
+								if (!imagejpeg($new_img_resource, $new_file, $img_quality)) {
+									echo "Error: " . __LINE__;
 
 									return false;
 								}
-							break;
+								break;
 							case "image/png":
-								if(!@imagepng($new_img_resource, $new_file)) {
-									echo "Error: ".__LINE__;
+								if (!@imagepng($new_img_resource, $new_file)) {
+									echo "Error: " . __LINE__;
 
 									return false;
 								}
-							break;
+								break;
 							case "image/gif":
-								if(!@imagegif($new_img_resource, $new_file)) {
-									echo "Error: ".__LINE__;
+								if (!@imagegif($new_img_resource, $new_file)) {
+									echo "Error: " . __LINE__;
 
 									return false;
 								}
-							break;
+								break;
 							default :
-								echo "Error: ".__LINE__;
+								echo "Error: " . __LINE__;
 
 								return false;
-							break;
+								break;
 						}
 
 						@chmod($new_file, 0644);
@@ -544,32 +587,32 @@ function process_user_photo_official($original_file, $proxy_id = 0) {
 						@imagedestroy($original_img_resource);
 						@imagedestroy($new_img_resource);
 					} else {
-						echo "Error: ".__LINE__;
+						echo "Error: " . __LINE__;
 
 						return false;
 					}
 				} else {
-					echo "Error: ".__LINE__;
+					echo "Error: " . __LINE__;
 
 					return false;
 				}
 			} else {
-				echo "Error: ".__LINE__;
+				echo "Error: " . __LINE__;
 
 				return false;
 			}
 		} else {
-			if(@move_uploaded_file($original_file, $new_file)) {
+			if (@move_uploaded_file($original_file, $new_file)) {
 				@chmod($new_file, 0644);
 
 				/**
 				 * Create the new width / height so we can use the same variables
 				 * below for thumbnail generation.
 				 */
-				$new_file_width		= $original_file_width;
-				$new_file_height	= $original_file_height;
+				$new_file_width = $original_file_width;
+				$new_file_height = $original_file_height;
 			} else {
-				echo "Error: ".__LINE__;
+				echo "Error: " . __LINE__;
 
 				return false;
 			}
@@ -579,87 +622,87 @@ function process_user_photo_official($original_file, $proxy_id = 0) {
 		 * Check that the new_file exists, and can be used, then proceed
 		 * with Thumbnail generation ($new_file-thumbnail).
 		 */
-		if((@file_exists($new_file)) && (@is_readable($new_file))) {
+		if ((@file_exists($new_file)) && (@is_readable($new_file))) {
 
-			switch($original_file_details["mime"]) {
+			switch ($original_file_details["mime"]) {
 				case "image/pjpeg":
 				case "image/jpeg":
 				case "image/jpg":
 					$original_img_resource = @imagecreatefromjpeg($new_file);
-				break;
+					break;
 				case "image/png":
 					$original_img_resource = @imagecreatefrompng($new_file);
-				break;
+					break;
 				case "image/gif":
 					$original_img_resource = @imagecreatefromgif($new_file);
-				break;
+					break;
 				default :
-					echo "Error: ".__LINE__;
+					echo "Error: " . __LINE__;
 
 					return false;
-				break;
+					break;
 			}
 
-			if(($new_file_width > $VALID_MAX_DIMENSIONS["thumb-width"]) || ($new_file_height > $VALID_MAX_DIMENSIONS["thumb-height"])) {
-				$dest_x			= 0;
-				$dest_y			= 0;
-				$ratio_orig		= ($new_file_width / $new_file_height);
-				$cropped_width	= $VALID_MAX_DIMENSIONS["thumb-width"];
-				$cropped_height	= $VALID_MAX_DIMENSIONS["thumb-height"];
+			if (($new_file_width > $VALID_MAX_DIMENSIONS["thumb-width"]) || ($new_file_height > $VALID_MAX_DIMENSIONS["thumb-height"])) {
+				$dest_x = 0;
+				$dest_y = 0;
+				$ratio_orig = ($new_file_width / $new_file_height);
+				$cropped_width = $VALID_MAX_DIMENSIONS["thumb-width"];
+				$cropped_height = $VALID_MAX_DIMENSIONS["thumb-height"];
 
-				if($ratio_orig > 1) {
-				   $cropped_width	= ($cropped_height * $ratio_orig);
+				if ($ratio_orig > 1) {
+					$cropped_width = ($cropped_height * $ratio_orig);
 				} else {
-				   $cropped_height	= ($cropped_width / $ratio_orig);
+					$cropped_height = ($cropped_width / $ratio_orig);
 				}
 			} else {
-				$cropped_width	= $new_file_width;
-				$cropped_height	= $new_file_height;
+				$cropped_width = $new_file_width;
+				$cropped_height = $new_file_height;
 
-				$dest_x			= ($VALID_MAX_DIMENSIONS["thumb-width"] / 2) - ($cropped_width / 2);
-				$dest_y			= ($VALID_MAX_DIMENSIONS["thumb-height"] / 2) - ($cropped_height / 2 );
+				$dest_x = ($VALID_MAX_DIMENSIONS["thumb-width"] / 2) - ($cropped_width / 2);
+				$dest_y = ($VALID_MAX_DIMENSIONS["thumb-height"] / 2) - ($cropped_height / 2 );
 			}
 
-			if($original_file_details["mime"] == "image/gif") {
+			if ($original_file_details["mime"] == "image/gif") {
 				$new_img_resource = @imagecreate($VALID_MAX_DIMENSIONS["thumb-width"], $VALID_MAX_DIMENSIONS["thumb-height"]);
 			} else {
 				$new_img_resource = @imagecreatetruecolor($VALID_MAX_DIMENSIONS["thumb-width"], $VALID_MAX_DIMENSIONS["thumb-height"]);
 			}
 
-			if($new_img_resource) {
-				if(@imagecopyresampled($new_img_resource, $original_img_resource, $dest_x, $dest_y, 0, 0, $cropped_width, $cropped_height, $new_file_width, $new_file_height)) {
-					switch($original_file_details["mime"]) {
+			if ($new_img_resource) {
+				if (@imagecopyresampled($new_img_resource, $original_img_resource, $dest_x, $dest_y, 0, 0, $cropped_width, $cropped_height, $new_file_width, $new_file_height)) {
+					switch ($original_file_details["mime"]) {
 						case "image/pjpeg":
 						case "image/jpeg":
 						case "image/jpg":
-							if(!@imagejpeg($new_img_resource, $new_file."-thumbnail", $img_quality)) {
-								echo "Error: ".__LINE__;
+							if (!@imagejpeg($new_img_resource, $new_file . "-thumbnail", $img_quality)) {
+								echo "Error: " . __LINE__;
 
 								return false;
 							}
-						break;
+							break;
 						case "image/png":
-							if(!@imagepng($new_img_resource, $new_file."-thumbnail")) {
-								echo "Error: ".__LINE__;
+							if (!@imagepng($new_img_resource, $new_file . "-thumbnail")) {
+								echo "Error: " . __LINE__;
 
 								return false;
 							}
-						break;
+							break;
 						case "image/gif":
-							if(!@imagegif($new_img_resource, $new_file."-thumbnail")) {
-								echo "Error: ".__LINE__;
+							if (!@imagegif($new_img_resource, $new_file . "-thumbnail")) {
+								echo "Error: " . __LINE__;
 
 								return false;
 							}
-						break;
+							break;
 						default :
-							echo "Error: ".__LINE__;
+							echo "Error: " . __LINE__;
 
 							return false;
-						break;
+							break;
 					}
 
-					@chmod($new_file."-thumbnail", 0644);
+					@chmod($new_file . "-thumbnail", 0644);
 
 					/**
 					 * Frees the memory this used, so it can be used again.
@@ -670,24 +713,24 @@ function process_user_photo_official($original_file, $proxy_id = 0) {
 					/**
 					 * Keep a copy of the original file, just in case it is needed.
 					 */
-					if(@copy($original_file, $new_file."-original")) {
-						@chmod($new_file."-original", 0644);
+					if (@copy($original_file, $new_file . "-original")) {
+						@chmod($new_file . "-original", 0644);
 					}
 
 					return true;
 				}
 			} else {
-				echo "Error: ".__LINE__;
+				echo "Error: " . __LINE__;
 
 				return false;
 			}
 		} else {
-			echo "Error: ".__LINE__;
+			echo "Error: " . __LINE__;
 
 			return false;
 		}
 	} else {
-		echo "Error: ".__LINE__;
+		echo "Error: " . __LINE__;
 
 		return false;
 	}
@@ -724,12 +767,12 @@ function get_event_rotation_ids() {
 	$categories = $db->GetAll($query);
 	if ($categories) {
 		foreach ($categories as $category) {
-			$query = "SELECT `event_id` FROM `events` WHERE `category_id` = ".$db->qstr($category["category_id"]);
+			$query = "SELECT `event_id` FROM `events` WHERE `category_id` = " . $db->qstr($category["category_id"]);
 			$event_ids = $db->GetAll($query);
 			if ($event_ids) {
 				foreach ($event_ids as $event_id) {
-					$events[] = array(	"event_id" => $event_id["event_id"],
-										"rotation_id" => $category["rotation_id"]);
+					$events[] = array("event_id" => $event_id["event_id"],
+						"rotation_id" => $category["rotation_id"]);
 				}
 			}
 		}
@@ -751,21 +794,21 @@ function quiz_load_progress($qprogress_id = 0) {
 	$output = array();
 
 	if ($qprogress_id = (int) $qprogress_id) {
-	/**
+		/**
 		 * Grab the specified progress identifier, but you better be sure this
 		 * is the correct one, and the results are being returned to the proper
 		 * user.
-	 */
-		$query		= "	SELECT *
-						FROM `quiz_progress`
-						WHERE `qprogress_id` = ".$db->qstr($qprogress_id);
-		$progress	= $db->GetRow($query);
-		if ($progress) {
-		/**
-		 * Add all of the qquestion_ids to the $output array so they're set.
 		 */
-			$query		= "SELECT * FROM `quiz_questions` WHERE `quiz_id` = ".$db->qstr($progress["quiz_id"])." ORDER BY `question_order` ASC";
-			$questions	= $db->GetAll($query);
+		$query = "	SELECT *
+						FROM `quiz_progress`
+						WHERE `qprogress_id` = " . $db->qstr($qprogress_id);
+		$progress = $db->GetRow($query);
+		if ($progress) {
+			/**
+			 * Add all of the qquestion_ids to the $output array so they're set.
+			 */
+			$query = "SELECT * FROM `quiz_questions` WHERE `quiz_id` = " . $db->qstr($progress["quiz_id"]) . " ORDER BY `question_order` ASC";
+			$questions = $db->GetAll($query);
 			if ($questions) {
 				foreach ($questions as $question) {
 					$output[$question["qquestion_id"]] = 0;
@@ -777,10 +820,10 @@ function quiz_load_progress($qprogress_id = 0) {
 			/**
 			 * Update the $output array with any currently selected responses.
 			 */
-			$query		= "	SELECT *
+			$query = "	SELECT *
 							FROM `quiz_progress_responses`
-							WHERE `qprogress_id` = ".$db->qstr($qprogress_id);
-			$responses	= $db->GetAll($query);
+							WHERE `qprogress_id` = " . $db->qstr($qprogress_id);
+			$responses = $db->GetAll($query);
 			if ($responses) {
 				foreach ($responses as $response) {
 					$output[$response["qquestion_id"]] = $response["qqresponse_id"];
@@ -793,4 +836,5 @@ function quiz_load_progress($qprogress_id = 0) {
 
 	return $output;
 }
+
 ?>

@@ -74,7 +74,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 								UNION
 								SELECT a.`user_id` `evaluator`
 								FROM `".AUTH_DATABASE."`.`user_access` a , `evaluation_evaluators` ev
-								WHERE ev.`evaluator_type` = 'grad_year' AND ev.`evaluator_value` = a.`role`
+								WHERE ev.`evaluator_type` = 'grad_year'
+								AND ev.`evaluator_value` = a.`role`
+								AND a.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+								AND a.`account_active` = 'true'
 								AND ev.`evaluation_id` = ".$db->qstr($evaluation_id)."
 							) t";
 				$evaluators	= $db->GetOne($query);
@@ -168,10 +171,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 												AND p.`progress_value` = 'inprogress'";
 									$progress = $db->GetOne($query);
 
-									$query = "	SELECT COUNT(p.`eprogress_id`) FROM `evaluation_progress` p
-												INNER JOIN `evaluation_targets` t ON p.`etarget_id` = t.`etarget_id`
+									$query = "	SELECT COUNT(p.`eprogress_id`)
+												FROM `evaluation_progress` p
+												INNER JOIN `evaluation_targets` t
+												ON p.`etarget_id` = t.`etarget_id`
 												WHERE t.`evaluation_id` = ".$db->qstr($result["evaluation_id"])."
-												AND t.`target_value` = ".$db->qstr($result["course_id"])." AND t.`target_active` = 1
+												AND t.`target_value` = ".$db->qstr($result["course_id"])."
+												AND t.`target_active` = 1
 												AND p.`progress_value` = 'complete'";
 									$completed = $db->GetOne($query);
 
@@ -316,9 +322,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 						INNER JOIN `evaluation_targets` t ON e.`evaluation_id` = t.`evaluation_id`
 						INNER JOIN `evaluations_lu_targets` elt ON t.`target_id` = elt.`target_id`
 						LEFT JOIN `courses` c ON t.`target_value` = c.`course_id`
-						INNER JOIN `".AUTH_DATABASE."`.`user_access` a ON ev.`evaluator_value` = a.`user_id`
-						WHERE elt.`target_shortname` = 'course' and elt.`target_active` = 1
-						and (ev.`evaluator_type` = 'grad_year' or ev.`evaluator_type` = 'proxy_id' and a.`group`= 'student')
+						INNER JOIN `".AUTH_DATABASE."`.`user_access` a
+						ON ev.`evaluator_value` = a.`user_id`
+						WHERE elt.`target_shortname` = 'course'
+						AND elt.`target_active` = 1
+						AND a.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+						AND a.`account_active` = 'true'
+						AND (ev.`evaluator_type` = 'grad_year'
+						OR ev.`evaluator_type` = 'proxy_id'
+						AND a.`group`= 'student')
 						GROUP BY `evaluation_id`";
 			$results = $db->GetAll($query);
 				
@@ -329,9 +341,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 									INNER JOIN `evaluation_targets` t ON e.`evaluation_id` = t.`evaluation_id`
 									INNER JOIN `evaluations_lu_targets` elt ON t.`target_id` = elt.`target_id`
 									LEFT JOIN `courses` c ON t.`target_value` = c.`course_id`
-									INNER JOIN `".AUTH_DATABASE."`.`user_access` a ON ev.`evaluator_value` = a.`user_id`
-									WHERE elt.`target_shortname` = 'course' and elt.`target_active` = 1 
-									and (ev.`evaluator_type` = 'grad_year' or ev.`evaluator_type` = 'proxy_id' and a.`group`= 'student')
+									INNER JOIN `".AUTH_DATABASE."`.`user_access` a
+									ON ev.`evaluator_value` = a.`user_id`
+									WHERE elt.`target_shortname` = 'course'
+									AND elt.`target_active` = 1 
+									AND a.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+									AND a.`account_active` = 'true'
+									AND (ev.`evaluator_type` = 'grad_year' OR ev.`evaluator_type` = 'proxy_id' AND a.`group`= 'student')
 				                    GROUP BY e.`evaluation_id`
 				                    ORDER BY %s
 				                    LIMIT %s, %s";
@@ -446,7 +462,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 										UNION
 										SELECT a.`user_id` `evaluator`
 										FROM `".AUTH_DATABASE."`.`user_access` a , `evaluation_evaluators` ev
-										WHERE ev.`evaluator_type` = 'grad_year' AND ev.`evaluator_value` = a.`role`
+										WHERE ev.`evaluator_type` = 'grad_year'
+										AND ev.`evaluator_value` = a.`role`
+										AND a.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+										AND a.`account_active` = 'true'
 										AND ev.`evaluation_id` = ".$db->qstr($result["evaluation_id"])."
 									) t";
 						$evaluators	= $db->GetOne($query);

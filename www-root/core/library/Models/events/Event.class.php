@@ -24,9 +24,6 @@
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
 */
-require_once("Models/utility/SimpleCache.class.php");
-require_once("Models/courses/Course.class.php");
-require_once("Models/events/EventContacts.class.php");
 
 /**
  * Simple User class with basic information

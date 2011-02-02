@@ -14,7 +14,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 } elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	header("Location: ".ENTRADA_URL);
 	exit;
-} elseif (!$ENTRADA_ACL->amIAllowed(new TaskResource($TASK_ID, null, $ORGANISATION_ID), "update")) {
+} elseif (!$ENTRADA_ACL->amIAllowed(new TaskVerificationResource($TASK_ID, null, $PROXY_ID,$ORGANISATION_ID), "update")) {
 	add_error("Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.");
 
 	echo display_error();
@@ -27,7 +27,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 	
 	if ($TASK_ID && ($task = Task::get($TASK_ID))) {
 		
-		$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/tasks?section=completion&id=".$TASK_ID, "title" => "Task Completion Information");
+		$BREADCRUMB[] = array("url" => ENTRADA_URL."/tasks?section=verification_designated", "title" => "Designated Task Verification");
+		$BREADCRUMB[] = array("url" => ENTRADA_URL."/tasks?section=completion&id=".$TASK_ID, "title" => "Task Completion Information");
 		
 		$task_completions = TaskCompletions::getByTask($TASK_ID, array("order_by" => array(array("lastname","asc"), array("firstname", "asc") ) ));
 		
@@ -62,10 +63,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 					$recipient_id = $recipient->getID();
 					$verifier = $task_completion->getVerifier();
 					if ($verifier) {
-						$verification_date = $task_completion->getVerifiedDate();
+						$verified_date = $task_completion->getVerifiedDate();
 						$verifier_id = $verifier->getID();
 					} else {
-						$verification_date = null;
+						$verified_date = null;
 						$verifier_id = null;
 					}
 					$completed_date = $task_completion->getCompletedDate(); 
@@ -131,8 +132,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 						$recipient = User::get($recipient_id);
 						$completion = TaskCompletion::get($TASK_ID,$recipient_id);
 						$completion->update($update);
-						
-						
 					
 						//design decision: disabled as students should no longer be aware of verification processes. only when something gets rejected
 						//$verification_date = $task_completion->getVerifiedDate();
@@ -155,7 +154,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 				}
 				
 				$page_title = html_encode($task->getTitle()). " Completion Information";
-				$url = ENTRADA_URL."/admin/tasks?section=completion&id=".$TASK_ID;
+				$url = ENTRADA_URL."/tasks?section=completion&id=".$TASK_ID;
 				
 				if (count($task_successes[$task->getTitle()]) == 0) {
 					error_redirect($url, $page_title, "<p>No changes were made; nothing to do.</p>");
@@ -234,7 +233,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 								<a href="<?php echo ENTRADA_URL; ?>/tasks?section=verify&id=<?php echo $task->getID(); ?>&recipient=<?php echo $recipient->getID(); ?>"><?php echo $recipient->getFullname(); ?></a> 
 							</td>
 							<td>
-								<?php echo ($task_completion->isCompleted())? date(DEFAULT_DATE_FORMAT, $completed_date) : "&nbsp;"?>
+								<?php echo ($task_completion->isCompleted())? date(DEFAULT_DATE_FORMAT, $task_completion->getCompletedDate()) : "&nbsp;"?>
 							</td>
 							<td>
 								<?php 
@@ -251,6 +250,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 										<?php 
 									}
 								?>
+							</td>
+							<td>
+								<a href="#" class="reject_button <?php echo ($task_completion->isVerified())? "verified": ($task_completion->isRejected()) ? "rejected": "" ; ?>">Reject</a> 
 							</td>
 						</tr>
 						<?php 

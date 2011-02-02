@@ -645,7 +645,6 @@ function new_sidebar_item($title = "", $html = "", $id = "", $state = "open", $p
 		case SIDEBAR_APPEND:
 		default:
 			array_push($SIDEBAR, $output);
-		break;
 	}
 	
 	return true;
@@ -2853,13 +2852,13 @@ function poll_results($poll_id = 0) {
  * @param string $string
  * @return string
  */
-function html_encode($string = "") {
+function html_encode($string = "", $double_encode=true) {
 	if (!defined("DEFAULT_CHARSET")) {
 		define("DEFAULT_CHARSET", "UTF-8");
 	}
 
 	if ($string) {
-		return htmlentities($string, ENT_QUOTES, DEFAULT_CHARSET);
+		return htmlentities($string, ENT_QUOTES, DEFAULT_CHARSET, $double_encode);
 	}
 
 	return "";
@@ -11464,4 +11463,308 @@ function gradebook_get_weighted_grades($course_id, $grad_year, $proxy_id, $asses
 	return Array(	"total" => $weighted_total,
 					"grade" => $weighted_grade,
 					"percent" => $weighted_percent);
+}
+
+/**
+ * Substitutes variables of the form %VAR NAME% in the string, with variables from the array, keys in the form of var name, Var Name, etc.
+ * 
+ * @param string $str 
+ * @param array $arr
+ * @return string
+ */
+function substitute_vars($str, array $arr) {
+	//first process the keys of arr
+	$n_arr = array();
+	foreach ($arr as $key=>$value) {
+		$n_arr["%".strtoupper($key)."%"] = $value;
+	} 
+	
+	return strtr($str,$n_arr);
+}
+
+
+/**
+ * Returns null if the $value is not in the array $arr; return the the $value otherwise. XXX NOTE, a bug prior to php 5.2.6 causes epic php failure if callbacks return false. null returned as workaround
+ * @param $value
+ * @param $arr
+ * @return mixed
+ */
+function validate_in_array($value, array $arr) {
+	if (in_array($value, $arr)){
+		return $value;
+	} else {
+		return;
+	}
+}
+
+/**
+ * Returns an array of valid user ids and null otherwise. XXX NOTE, a bug prior to php 5.2.6 causes epic php failure if callbacks return false. null returned as workaround
+ * @param $value
+ */
+function validate_user_ids($value) {
+	global $db;
+	$clean = filter_var($value,  FILTER_VALIDATE_REGEXP, array('options' => array('regexp' => '/^\d+$|^(\d+,)+\d+$/')));
+	if (false !== $clean) {
+		$query = "	SELECT a.id
+					FROM `".AUTH_DATABASE."`.`user_data` AS a
+					LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+					ON a.`id` = b.`user_id`
+					WHERE a.`id` IN ( " . $clean .  ")
+					AND b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+					AND b.`account_active` = 'true'
+					AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
+					AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")";
+		$results	= $db->GetCol($query);
+		if($results && (0 < count($results))) {
+			return $results; 
+		}
+	}
+}
+
+/**
+ * Returns null if $value is not a valid or existent course_id; returns the $value otheriwse. XXX NOTE, a bug prior to php 5.2.6 causes epic php failure if callbacks return false. null returned as workaround
+ * @param unknown_type $value
+ * @return mixed
+ */
+function validate_course_id($value) {
+	$course_id = filter_var($value, FILTER_VALIDATE_INT, array('min_range' => 1));
+	
+	if (false === $course_id || !Course::get($course_id)) {
+		return;
+	} else {
+		return $course_id;
+	}
+}
+
+/**
+ * Returns null if the $value provided is not a valid organisation_id; returns the $value otherwise. XXX NOTE, a bug prior to php 5.2.6 causes epic php failure if callbacks return false. null returned as workaround
+ * @param unknown_type $value
+ * @return mixed
+ */
+function validate_organisation_id($value) {
+	$organisation_id = filter_var($value, FILTER_VALIDATE_INT, array('min_range' => 1));
+	
+	if (false === $organisation_id || !Organisation::get($organisation_id)) {
+		return;
+	} else {
+		return $organisation_id;
+	}
+}
+
+/**
+ * Returns the binary OR of $val_a and $val_b -- convenince function for callbacks
+ * @param int $val_a
+ * @param int $val_b
+ * @return int
+ */
+function or_bin($val_a, $val_b) {
+	return $val_a | $val_b;
+}
+			
+/**
+ * Returns string after passing through the clean_input function for allowed_tags -- convenience method for callbacks. 
+ * @param string $value
+ * @return string
+ */
+function allowed_tags($value) {
+	return clean_input($value, array("allowedtags"));
+}
+
+function display_person(User $user) {
+	global $ENTRADA_ACL;
+	$photos = $user->getPhotos();
+	$user_id = $user->getID();
+
+	$is_administrator = $ENTRADA_ACL->amIallowed('user', 'update');
+	
+	$prefix = $user->getPrefix();
+	$firstname = $user->getFirstname();
+	$lastname = $user->getLastname();
+	$fullname = trim(implode(" " , array($prefix, $firstname, $lastname)));
+	
+	$departments = $user->getDepartments();
+	
+	if (0 < count($departments)) {
+		$dep_titles = array();
+		foreach ($departments as $department) {
+			$dep_titles[] = ucwords($department->getTitle()); 
+		}
+		$group_line = implode("<br />", $dep_titles);
+	} else {
+		$group = $user->getGroup();
+		$role = $user->getRole();
+		$group_line =  ucwords($group. " > " . (($group == "student") ? "Class of " : "") . $role); 
+	}
+	
+	$privacy_level = $user->getPrivacyLevel();
+	
+	$organisation = $user->getOrganisation();
+	$org_name = ($organisation) ? $organisation->getTitle() : "" ;
+	
+	$email = ((1 < $privacy_level) || $is_administrator) ? $user->getEmail() : "";
+	$email_alt = $user->getAlternateEmail();
+	
+	if ((2 < $privacy_level) || $is_administrator) {
+		$show_address = true;
+		$city = $user->getCity();
+		$province = $user->getProvince();
+		$prov_name = $province->getName();
+		$country = $user->getCountry();
+		$country_name = $country->getName();
+		$phone = $user->getTelephone();
+		$fax = $user->getFax();
+		$address = $user->getAddress();
+		$postcode = $user->getPostalCode();
+		$office_hours = $user->getOfficeHours();
+	}
+	
+	$assistants = $user->getAssistants();
+	//there are 4 photo cases (at time of writing): no photos, official only, uploaded only, or both.
+	//privacy options also need to be considered here. 
+	ob_start();
+	?>
+	<div id="result-<?php echo $user_id; ?>" class="person-result">
+		<div id="img-holder-<?php echo $user_id; ?>" class="img-holder">
+		<?php
+		$num_photos = count($photos);
+		if (0===$num_photos) {
+			echo display_photo_placeholder();
+		} else {
+			foreach($photos as $photo) {
+				echo display_photo($photo);
+			}
+			if (2 <= $num_photos) {
+				$label = 0;
+				foreach($photos as $photo) {
+					echo display_photo_link($photo, ++$label);
+				}
+			}
+			echo display_zoom_controls($user_id);
+		}
+		?>
+		</div>
+		<div class="person-data">
+			<div class="basic">
+				<span class="person-name"><?php echo html_encode($fullname); ?></span>
+				<span class="person-group"><?php echo html_encode($group_line); ?></span>
+				<span class="person-organisation"><?php echo html_encode($org_name); ?></span>
+				<div class="email-container">
+				<?php 
+					if ($email) {
+						echo display_person_email($email);
+						if($email_alt) {
+							echo display_person_email($email_alt);
+						}
+					}
+				?>
+				</div>
+			</div>
+			<div class="address">
+			<?php 
+				if ($show_address) {
+					if ($phone) {
+						?>
+						<div>
+							<span class="address-label">Telephone:</span>
+							<span class="address-value"><?php echo html_encode($phone); ?></span>
+						</div>
+						<?php
+					}
+					if ($fax) {
+						?>
+						<div>
+							<span class="address-label">Fax:</span>
+							<span class="address-value"><?php echo html_encode($fax); ?></span>
+						</div>
+						<?php
+					}
+					if ($address && $city) {
+						?>
+						<div>
+							<span class="address-label">Address:</span><br/>
+							<span class="address-value">
+							<?php
+								echo html_encode($address)."<br/>".html_encode($city);
+								if ($prov_name) echo ", ".html_encode($prov_name);
+								echo "<br />";
+								echo html_encode($country_name);
+								if ($postcode) echo ", ".html_encode($postcode);
+								
+							?>
+							</span>
+						</div>
+						<?php
+					}
+					if ($office_hours) {
+						?>
+						<div>
+							<span class="address-label">Office Hours:</span>
+							<span class="address-value"><?php echo html_encode($office_hours); ?></span>
+						</div>
+						<?php
+					}
+					
+				}
+			?>
+			</div>
+			<div class="assistant"><?php if (count($assistants) > 0) { ?>
+				<span class="content-small">Administrative Assistants:</span>
+				<ul class="assistant-list">
+					<?php
+					foreach ($assistants as $assistant) {
+						echo "<li>".display_person_email($assistant->getEmail(),$assistant->getName("%f %l"))."</li>";
+						
+					}
+					?>
+				</ul><?php } ?>
+			</div>
+		</div>
+		<div></div>
+		<div class="clearfix">&nbsp;</div>
+	</div>
+	
+	<?php
+	return ob_get_clean();
+}
+
+function display_person_email($email,$label=null) {
+	if (!trim($label)) $label = $email;
+	return "<a class='person-email' href='mailto:".html_encode($email)."'>".html_encode($label)."</a>";
+}
+
+function display_photo(UserPhoto $photo) {
+	$user_id = $photo->getUserID();
+	$user = User::get($user_id); //should be cached anyways so this is close to free
+	$titled_name = implode(" ", array($user->getPrefix(),$user->getFirstname(), $user->getLastname()));
+	$name = implode(" ", array($user->getFirstname(), $user->getLastname()));
+	$type = $photo->getPhotoType();
+	ob_start();
+	?>
+	<img id="<?php echo $type; ?>_photo_<?php echo $user_id; ?>" class="<?php echo $type; ?>" src="<?php echo $photo->getFilename(); ?>" width="72" height="100" alt="<?php echo html_encode($titled_name); ?>" title="<?php echo html_encode($titled_name); ?>" />
+	<?php
+	return ob_get_clean();
+}
+
+function display_photo_link(UserPhoto $photo, $label) {
+	$user_id = $photo->getUserID();
+	$type = $photo->getPhotoType();
+	ob_start();
+	?>
+		<a id="<?php echo $type; ?>_link_<?php echo $user_id; ?>" class="img-selector" onclick="<?php echo ($type == UserPhoto::OFFICIAL) ? "show" : "hide"; ?>Official($('official_photo_<?php echo $user_id; ?>'), $('official_link_<?php echo $user_id; ?>'), $('upload_link_<?php echo $user_id; ?>'));" href="javascript:void(0);"><?php echo $label; ?></a>
+	<?php
+	return ob_get_clean();
+}
+
+function display_photo_placeholder() {
+	return "<img src=\"".ENTRADA_URL."/images/headshot-male.gif\" width=\"72\" height=\"100\" alt=\"No Photo Available\" title=\"No Photo Available\" />";
+}
+
+function display_zoom_controls($user_id) {
+	ob_start();
+	$params = "$('official_photo_".$user_id."'), $('upload_photo_".$user_id."'), $('official_link_".$user_id."'), $('upload_link_".$user_id."'), $('zoomout_photo_".$user_id."'";
+	?>
+	<a id="zoomin_photo_<?php echo $user_id; ?>" class="zoomin" onclick="growPic(<?php echo $params; ?>));">+</a>
+	<a id="zoomout_photo_<?php echo $user_id; ?>" class="zoomout" onclick="shrinkPic(<?php echo $params; ?>));"></a>
+	<?php
+	return ob_get_clean();
 }

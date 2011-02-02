@@ -11,13 +11,15 @@ var AutoCompleteList = function() {
 		var onUnderLimit = options.onUnderLimit;
 		
 		var self = this;
-
+		
 		if (!onOverLimit) {
 			var onOverLimit = function() {
 				//hide the input box/add button
 				$(type + '_name').hide();
 				$('add_associated_'+type).hide();
-				$(type + "_example").hide();
+				var example = $(type + "_example");
+				if (example)
+					example.hide();
 				
 			}
 		}
@@ -27,8 +29,9 @@ var AutoCompleteList = function() {
 				//hide the input box/add button
 				$(type + '_name').show();
 				$('add_associated_'+type).show();
-				$(type + "_example").show();
-				
+				var example = $(type + "_example");
+				if (example)
+					example.show();
 			}
 		}
 		

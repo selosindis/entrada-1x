@@ -41,18 +41,34 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 	$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"] = $sort_order;
 	
 	//$tasks = Tasks::getByRecipient($user,array('order_by' => $sort_by, 'dir' => $sort_order/*, 'limit' => 25, 'offset'=>0*/ )); //no limit for now. TODO work on pagination later.
+	
+	//this gets the verification requests in cases where the task has faculty verification and this user is faculty.
 	$task_verifications = TaskCompletions::getByVerifier($user->getID(), array("where" => "`verified_date` IS NULL" ));
 	$has_verification_requests = (count($task_verifications) > 0);
+	
+	//this gets the tasks for which this user is a specified verifier
+	$tasks = TaskVerifiers::getTasksByVerifier($user->getID(), array("dir"=>"desc", "order_by"=>"deadline"));
+    $has_verification_auth = (count($tasks) >  0);
+	
 	$task_completions = TaskCompletions::getByRecipient($user, array('order_by'=>array(array($sort_by, $sort_order))));
 	$has_completions = (count($task_completions) > 0);
 	?>
 	
 	<h1>My Tasks</h1>
-	
-	<?php 
+	<?php
+	if ($has_verification_auth) {
+	?>
+	<div id="verification_auth" style="float: right;">
+		<ul class="page-nav">
+			<li><a href="?section=verification_designated" class="strong-green">Designated Verification Tasks</a></li>
+		</ul>
+	</div>
+	<div class="clearfix">&nbsp;</div>
+	<?php
+	} 
 	if ($has_verification_requests) {
 	?>
-	<div class="display-notice"><h3>Outstanding Verifications</h3>You have outstanding task verification requests. Please go to the <a href="<?php echo ENTRADA_URL;?>/tasks?section=verification">Task Verification</a> page to manage them.</div>
+	<div class="display-notice"><h3>Outstanding Verifications</h3>You have outstanding task verification requests. Please go to the <a href="<?php echo ENTRADA_URL;?>/tasks?section=verification_requests">Task Verification Requests</a> page to manage them.</div>
 	<?php 
 	} 
 	if ($has_completions) {

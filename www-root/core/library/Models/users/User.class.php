@@ -27,7 +27,7 @@ require_once("Models/organisations/Organisation.class.php");
 require_once("Models/users/GraduatingClass.class.php");
 
 /**
- * Simple User class with basic information
+ * User class with basic information and access to user related info
  * 
  * @author Organisation: Queen's University
  * @author Unit: School of Medicine
@@ -58,74 +58,23 @@ class User {
 			$country,
 			$country_id,
 			$province_id,
+			$cached_country,
+			$cached_province,
 			$notes,
 			$privacy_level,
 			$notifications,
 			$office_hours,
 			$clinical;
 	
+	private $group, $role;
+
+	private static $format_keys = array(
+									"f" => "firstname",
+									"l" => "lastname",
+									"p" => "prefix"
+									);
 	
-	function __construct(	$id,
-							$username,
-							$firstname,
-							$lastname,
-							$number,
-							$grad_year,
-							$entry_year,
-							$password,
-							$organisation_id,
-							$department,
-							$prefix,
-							$email,
-							$email_alt,
-							$google_id,
-							$telephone,
-							$fax,
-							$address,
-							$city,
-							$province,
-							$postcode,
-							$country,
-							$country_id,
-							$province_id,
-							$notes,
-							$privacy_level,
-							$notifications,
-							$office_hours,
-							$clinical) {
-		$this->id = $id;
-		$this->username = $username;
-		$this->firstname = $firstname;
-		$this->lastname = $lastname;
-		$this->number = $number;
-		$this->grad_year = $grad_year;
-		$this->entry_year = $entry_year;
-		$this->password = $password;
-		$this->organisation_id = $organisation_id;
-		$this->department = $department;
-		$this->prefix = $prefix;
-		$this->email = $email;
-		$this->email_alt = $email_alt;
-		$this->google_id = $google_id;
-		$this->telephone = $telephone;
-		$this->fax = $fax;
-		$this->address = $address;
-		$this->city = $city;
-		$this->province = $province;
-		$this->postcode = $postcode;
-		$this->country = $country;
-		$this->country_id = $country_id;
-		$this->province_id = $province_id;
-		$this->notes = $notes;
-		$this->privacy_level = $privacy_level;
-		$this->notifications = $notifications;
-		$this->office_hours = $office_hours;
-		$this->clinical = $clinical;
-		
-		//be sure to cache this whenever created.
-		$cache = SimpleCache::getCache();
-		$cache->set($this,"User",$this->id);
-	}
+	function __construct() {}
 	
 	/**
 	 * Returns the id of the user
@@ -185,9 +134,29 @@ class User {
 	 * Returns the Last and First names formatted as "lastname, firstname"
 	 * @return string
 	 */
-	function getFullname() {
-		return $this->lastname . ", " . $this->firstname;
+	function getFullname($reverse = true) {
+		if ($reverse) {
+			return $this->getName("%l, %f");
+		} else {
+			return $this->getName("%f %l");
+		}
 	}
+	
+	function getName($format = "%f %l") {
+		foreach(self::$format_keys as $key => $var) {
+			$pattern = "/([^%])%".$key."|^%".$key."|(%%)%".$key."/";
+			$format = preg_replace($pattern, "$1$2".$this->{$var}, $format);
+		}
+		$format = preg_replace("/%%/", "%", $format);
+		return $format;
+	}
+	
+	/**
+	 * @return string
+	 */
+	function getPrefix() {
+		return $this->prefix;
+	} 
 	
 	/**
 	 * Returns the user's email address, if available
@@ -210,6 +179,14 @@ class User {
 	 */
 	function getOrganisation() {
 		return Organisation::get($this->organisation_id);
+	}
+	
+	/**
+	 * Returns a collection of photos belonging to the user. 
+	 * @return UserPhotos
+	 */
+	function getPhotos() {
+		return UserPhotos::get($this->getID());
 	}
 	
 	/**
@@ -236,7 +213,202 @@ class User {
 	 * @param array $arr
 	 * @return User
 	 */
-	public static function fromArray(array $arr) {
-		return new User($arr['id'],$arr['username'],$arr['firstname'],$arr['lastname'],$arr['number'],$arr['grad_year'],$arr['entry_year'],$arr['password'],$arr['organisation_id'],$arr['department'],$arr['prefix'],$arr['email'],$arr['email_alt'],$arr['google_id'],$arr['telephone'],$arr['fax'],$arr['address'],$arr['city'],$arr['province'],$arr['postcode'],$arr['country'],$arr['country_id'],$arr['province_id'],$arr['notes'],$arr['privacy_level'],$arr['notifications'],$arr['office_hours'],$arr['clinical']);	
+	public static function fromArray(array $arr, User $user = null) {
+		if (is_null($user)) {
+			$user = new User();
+		}
+		$user->id = $arr['id'];
+		$user->username = $arr['username'];
+		$user->firstname = $arr['firstname'];
+		$user->lastname = $arr['lastname'];
+		$user->number = $arr['number'];
+		$user->grad_year = $arr['grad_year'];
+		$user->entry_year = $arr['entry_year'];
+		$user->password = $arr['password'];
+		$user->organisation_id = $arr['organisation_id'];
+		$user->department = $arr['department'];
+		$user->prefix = $arr['prefix'];
+		$user->email = $arr['email'];
+		$user->email_alt = $arr['email_alt'];
+		$user->google_id = $arr['google_id'];
+		$user->telephone = $arr['telephone'];
+		$user->fax = $arr['fax'];
+		$user->address = $arr['address'];
+		$user->city = $arr['city'];
+		$user->province = $arr['province'];
+		$user->postcode = $arr['postcode'];
+		$user->country = $arr['country'];
+		$user->country_id = $arr['country_id'];
+		$user->province_id = $arr['province_id'];
+		$user->notes = $arr['notes'];
+		$user->privacy_level = $arr['privacy_level'];
+		$user->notifications = $arr['notifications'];
+		$user->office_hours = $arr['office_hours'];
+		$user->clinical = $arr['clinical'];
+		
+		//be sure to cache this whenever created.
+		$cache = SimpleCache::getCache();
+		$cache->set($user,"User",$user->id);
+		return $user;
+	}
+	
+	/**
+	 * @return Departments
+	 */
+	public function getDepartments() {
+		return Departments::getByUser($this->user_id);
+	}
+	
+	/**
+	 * @return string
+	 */
+	public function getGroup() {
+		if (is_null($this->group) && !$this->getAccess()) {
+				return;
+		}
+		return $this->group; 
+	}
+	
+	/**
+	 * @return string
+	 */
+	public function getRole() {
+		if (is_null($this->role) && !$this->getAccess()) {
+				return;
+		}
+		return $this->role; 
+	}
+	
+	/**
+	 * @return bool
+	 */
+	private function getAccess() {
+		global $db;
+		$query = "SELECT * FROM `".AUTH_DATABASE."`.`user_access` WHERE `user_id` = ? AND `account_active` = 'true'
+				  AND (`access_starts` = '0' OR `access_starts` < ?) AND (`access_expires` = '0' OR `access_expires` >=  ?)";
+		$result = $db->getRow($query, array($this->getID(), time(), time()));
+		if ($result) {
+			$this->group = $result['group'];
+			$this->role = $result['role'];
+			return true;
+		}			
+	}
+	
+	/**
+	 * @return int
+	 */
+	public function getPrivacyLevel(){
+		return $this->privacy_level;
+	}
+	
+	/**
+	 * @return string
+	 */
+	public function getAlternateEmail() {
+		return $this->email_alt;
+	}
+	
+	/**
+	 * @return string
+	 */
+	public function getCity() {
+		return $this->city;
+	}
+		
+	/**
+	 * NOTE: also used for zip codes and the like
+	 * @return string
+	 */
+	public function getPostalCode() {
+		return $this->postcode;
+	}
+	
+	/**
+	 * @return Region
+	 */
+	public function getProvince() {
+		if (is_null($this->cached_province)) {
+			if ($this->province_id && $this->country_id) {
+				if ($prov) {
+					$c_id = $prov->getParentID();
+					if ($c_id == $this->country_id) {
+						$this->cached_province = $prov;
+					}
+				} else {
+					$this->cached_province = new Region($this->province);
+				}
+			} else {
+				$this->cached_province = new Region($this->province);
+			}
+		}
+		return $this->cached_province;
+	}
+	
+	/**
+	 * @return Country
+	 */
+	public function getCountry() {
+		if (is_null($this->cached_country)) {
+			if ($this->country_id && ($country = Country::get($this->country_id))) {
+				$this->cached_country = $country;
+			} else {
+				$this->cached_country = new Country($this->country);
+			}
+		}
+		return $this->cached_country;
+	}
+	
+	/**
+	 * @return string
+	 */
+	public function getAddress() {
+		return $this->address;
+	}
+	
+	/**
+	 * @return string
+	 */
+	public function getTelephone() {
+		return $this->telephone;
+	}
+	
+	/**
+	 * @return string
+	 */
+	public function getFax() {
+		return $this->fax;
+	}
+	
+	/**
+	 * @return string
+	 */
+	public function getOfficeHours() {
+		return $this->office_hours;
+	}
+	
+	/**
+	 * @return Users
+	 */
+	public function getAssistants() {
+		global $db;
+		
+		$query		= "	SELECT b.*, a.*
+								FROM `permissions` AS a
+								LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
+								ON b.`id` = a.`assigned_to`
+								WHERE a.`assigned_by`=?
+								AND (a.`valid_from` = '0' OR a.`valid_from` <= ?) AND (a.`valid_until` = '0' OR a.`valid_until` > ?)
+								ORDER BY `valid_until` ASC";
+		
+		$time = time();
+		$results = $db->getAll($query, array($this->getID(), $time, $time));
+		$users = array();
+		if ($results) {
+			foreach ($results as $result) {
+				$user =  Assistant::fromArray($result);
+				$users[] = $user;
+			}
+		}
+		return new Users($users);
 	}
 }

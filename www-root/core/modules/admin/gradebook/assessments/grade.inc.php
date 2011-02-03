@@ -80,6 +80,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				}
 				echo "</div>\n";
 				?>
+				<style type="text/css">
+				.sortableList li {
+					width: 100%;
+				}	
+				</style>
 				<h1 class="event-title"><?php echo $assessment["name"]; ?> (Class of <?php echo $assessment["grad_year"]; ?>)</h1>
 				
 				<div style="float: right; text-align: right;">

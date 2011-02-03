@@ -550,10 +550,9 @@ class TaskOwnerAssertion implements Zend_Acl_Assert_Interface {
 			$user_id	= preg_replace('/[^0-9]+/', "", $role_id);
 		}
 
-		require_once("Models/users/User.class.php");
+		require_once("Entrada/tasks/functions.inc.php");
 		$user = User::get($user_id);
 
-		require_once("Models/tasks/Task.class.php");
 		$task = Task::get($task_id);
 
 		if ($task && $user) {
@@ -577,6 +576,7 @@ class TaskRecipientAssertion implements Zend_Acl_Assert_Interface {
  * @return boolean
  */
 	public function assert(Zend_Acl $acl, Zend_Acl_Role_Interface $role = null, Zend_Acl_Resource_Interface $resource = null, $privilege = null) {
+		
 		//If asserting is off then return true right away
 		if((isset($resource->assert) && $resource->assert == false) || (isset($acl->_entrada_last_query) && isset($acl->_entrada_last_query->assert) && $acl->_entrada_last_query->assert == false)) {
 			return true;
@@ -606,10 +606,10 @@ class TaskRecipientAssertion implements Zend_Acl_Assert_Interface {
 			$user_id	= preg_replace('/[^0-9]+/', "", $role_id);
 		}
 
-		require_once("Models/users/User.class.php");
+		require_once("Entrada/tasks/functions.inc.php");
+		
 		$user = User::get($user_id);
 
-		require_once("Models/tasks/Task.class.php");
 		$task = Task::get($task_id);
 		if ($task && $user) {
 			return 	$task->isRecipient($user);
@@ -635,7 +635,7 @@ class TaskVerifierAssertion implements Zend_Acl_Assert_Interface {
 		if((isset($resource->assert) && $resource->assert == false) || (isset($acl->_entrada_last_query) && isset($acl->_entrada_last_query->assert) && $acl->_entrada_last_query->assert == false)) {
 			return true;
 		}
-
+		
 		if(isset($resource->task_id)) {
 			$task_id = $resource->task_id;
 		} else if(isset($acl->_entrada_last_query->task_id)) {
@@ -645,7 +645,9 @@ class TaskVerifierAssertion implements Zend_Acl_Assert_Interface {
 			return false;
 			// TODO implement parsing of task_id, and recipient_id.
 		}
-
+		require_once("Models/tasks/Task.class.php");
+		$task = Task::get($task_id);
+		
 		$verifier_id = $resource->verifier_id;
 
 		if (!$verifier_id) {
@@ -662,27 +664,17 @@ class TaskVerifierAssertion implements Zend_Acl_Assert_Interface {
 		$verifier = User::get($verifier_id);
 
 		$recipient_id = $resource->recipient_id;
-
+		
 		if ($recipient_id) {
-			require_once("Models/tasks/TaskCompletion.class.php");
-			$task = TaskCompletion::get($task_id, $recipient_id);
+			$recipient = User::get($recipient_id);
 		} else {
 			//might be a verifier checking the task
 			$resource_id = $resource->getResourceId();
 			$resource_type = preg_replace('/[0-9]+/', "", $resource_id);
-			if ($resource_type == "task") {
-				require_once("Models/tasks/Task.class.php");
-				$task = Task::get($task_id);
-			} else {
-				return false;
-			}
 		}
-
 		if ($task && $verifier) {
-			return 	$task->isVerifier($verifier);
-		} else {
-			return false;
-		}
+			if ($task->isVerifier($verifier, $recipient)) return true;
+		}  
 	}
 }
 
@@ -715,10 +707,9 @@ class ShowTaskTabAssertion implements Zend_Acl_Assert_Interface {
 			return false;
 		}
 
-		require_once("Models/users/User.class.php");
+		require_once("Entrada/tasks/functions.inc.php");
 		$user = User::get($user_id);
 
-		require_once("Models/tasks/TaskCompletion.class.php");
 		$tasks_completions = TaskCompletions::getByRecipient($user, array('where' => 'verified_date IS NULL'));
 		$has_completions = (count($tasks_completions) > 0);
 
@@ -726,6 +717,13 @@ class ShowTaskTabAssertion implements Zend_Acl_Assert_Interface {
 			return true;
 		}
 
+		$tasks = TaskVerifiers::getTasksByVerifier($user->getID(), array("dir"=>"desc", "order_by"=>"deadline"));
+    	$has_verification_auth = (count($tasks) >  0);
+	
+		if ($has_verification_auth) {
+			return true;
+		}
+    	
 		$task_verifications = TaskCompletions::getByVerifier($user->getID(), array("where" => "`verified_date` IS NULL" ));
 		$has_verification_requests = (count($task_verifications) > 0);
 

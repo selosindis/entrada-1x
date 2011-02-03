@@ -57,7 +57,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 	// Had to hardcode 1230785940 as the event start time due to the change in the event types from 2008 to 2009.
 	// Need to get this done before April 1st so this stays for now until I can revisit it.
 	$query	= "SELECT a.`event_id`, a.`event_title`, a.`course_id`, a.`event_duration`, 
-	a.`event_start`, c.`course_name`, c.`course_code`, a.`event_phase`, d.`audience_type`, d.`audience_value`, a.`eventtype_id`
+	a.`event_start`, c.`course_name`, c.`course_code`, a.`event_phase`, d.`audience_type`, d.`audience_value`, e.`eventtype_id`
 	FROM `events` AS a
 	LEFT JOIN `event_contacts` AS b
 	ON b.`event_id` = a.`event_id`
@@ -66,6 +66,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 	ON a.`course_id` = c.`course_id`
 	LEFT JOIN `event_audience` AS d
 	ON a.`event_id` = d.`event_id`
+	LEFT JOIN `event_eventtypes` AS e
+	ON a.`event_id` = e.`event_id`
 	WHERE b.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
 	AND event_start > 1230785940
 	ORDER BY `event_start` DESC, `course_name` DESC, `course_code` DESC";
@@ -159,7 +161,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 				$PROCESSED["other_hours"] 								= 0;
 				$PROCESSED["coord_enrollment"] 							= 0;
 				unset($PROCESSED["comments"]);
-				
+
 				foreach($nextNextValue as $phaseValue => $eventType) {
 					foreach($eventType as $eventTypeValue => $amounts) {
 						switch ($eventTypeValue) {

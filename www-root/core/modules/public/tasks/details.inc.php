@@ -16,7 +16,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 } elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	header("Location: ".ENTRADA_URL);
 	exit;
-} elseif (!$ENTRADA_ACL->amIAllowed(new TaskResource($TASK_ID, null, $ORGANISATION_ID), "read")) {
+} elseif (!$ENTRADA_ACL->amIAllowed(new TaskResource($TASK_ID, null, $ORGANISATION_ID), "read") && (!$ENTRADA_ACL->amIAllowed(new TaskVerificationResource($TASK_ID, null, $PROXY_ID, $ORGANISATION_ID), "update"))) {
 	add_error("Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.");
 
 	echo display_error();
@@ -27,15 +27,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 	
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/AutoCompleteList.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 	
-	require_once("Models/courses/Courses.class.php");
-	require_once("Models/organisations/Organisations.class.php");
-	require_once("Models/tasks/Tasks.class.php");
-	require_once("Models/tasks/TaskOwners.class.php");
-	require_once("Models/tasks/TaskRecipients.class.php");
-	require_once("Models/tasks/TaskCompletion.class.php");
-	require_once("Models/users/User.class.php");
-	require_once("Models/users/GraduatingClass.class.php");
-	
 	if ($TASK_ID && ($task = Task::get($TASK_ID))) {
 		
 		$BREADCRUMB[] = array("url" => ENTRADA_URL."/tasks?section=details&id=".$TASK_ID, "title" => "Task Details");
@@ -45,6 +36,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 		$course = $task->getCourse();
 		$completion = TaskCompletion::get($task->getID(), $user->getID());
 		
+		$PROCESSED['associated_faculty'] = 0;
+		
 		switch($_POST['action']) {
 			case "Submit":
 				if (!isset($_POST['task_completed']) || $_POST['task_completed'] != "completed") {
@@ -52,24 +45,92 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 				} else {
 					$PROCESSED['task_completed'] = "completed";
 				}
-				if ($task->isVerificationRequired()) {
-					if (isset($_POST['associated_individual']) && $_POST['associated_individual']) {
-						$verifier = User::get($_POST['associated_individual']);
-						if ($verifier) {
-							$PROCESSED['associated_individual'] = $_POST['associated_individual'];
-						} else {
-							add_error("Supplied verifier not found or not permitted to verify completion of this task.");
-						}
+				
+				$facsecpol = $task->getFacultySelectionPolicy();
+				$assocfac = $task->getAssociatedFaculty();
+				if ((0 < count($assocfac)) && (TASK_FACULTY_SELECTION_OFF != $facsecpol)) { //first determine if faculty selection is possible
+					if (isset($_POST['associated_faculty'])) {
+						$faculty_id = $_POST['associated_faculty'];
 					} else {
-						add_error("This task requires verification of completion. Please enter and select your verifier below.");
+						$faculty_id = 0;
 					}
+					
+					//is it required and is one set?
+					if ((TASK_FACULTY_SELECTION_REQUIRE == $facsecpol) && (!$faculty_id)) {
+						add_error("This task requires selection of the associated faculty. Please choose one of the faculty from the list and re-submit.");
+					} else {
+						$id_list = array(0);
+						foreach($assocfac as $faculty) {
+							$id_list[] = $faculty->getID();
+						}
+						//is the selected one set within the list?
+						if (in_array($faculty_id, $id_list)) {
+							$PROCESSED['associated_faculty'] = $faculty_id;
+						} else {
+							add_error("Provided Faculty ID not found in list. Please choose one of the faculty from the list and re-submit.");
+						}
+					}
+					
 				} else {
-					$verifier = $user; //self-verification
-					$verification_date = time();
+					$PROCESSED['associated_faculty'] = 0;
 				}
-				if (!has_error()) {
-					$completion->update(time(),$verifier->getID(), $verification_date);
-					if ($task->isVerificationRequired()) { //don't email if verification isn't required
+				
+				$verification_type = $task->getVerificationType();
+				switch ($verification_type) {
+					case TASK_VERIFICATION_NONE:
+						//self verification
+						$verifier_id = $user->getID();
+						$verification_date = time();
+						break;
+					case TASK_VERIFICATION_FACULTY:
+						$verifier_id = $PROCESSED['associated_faculty'];
+						$verifier = User::get($verifier_id);
+						if (!$verifier) add_error("Provided Faculty ID not found in list. Please choose one of the faculty from the list and re-submit.");
+						$verification_date = null;
+						break;
+					case TASK_VERIFICATION_OTHER:
+						$verifiers = TaskVerifiers::get($TASK_ID);
+						$verifier = $verifiers[0];
+						$verifier_id = $verifier->getID();
+						$verification_date = null;
+						break;
+				}
+				
+				$comment_pol = $task->getCompletionCommentPolicy();
+				$comment = filter_input(INPUT_POST,"completion_comment", FILTER_SANITIZE_STRING);
+				switch($comment_pol) {
+					case TASK_COMMENT_NONE:
+						$completion_comment = null;
+						break;
+					case TASK_COMMENT_REQUIRE:
+						if (!$comment) {
+							add_error("A comment is required for the completion of this task.");
+						}
+					case TASK_COMMENT_ALLOW:
+						$completion_comment = $comment;
+						$PROCESSED["completion_comment"] = $completion_comment; 
+				}
+				
+				
+				if (!has_error()) { 
+					
+					$rejection_comment = $completion->getRejectionComment();
+					$rejection_date = $completion->getRejectionDate();
+					
+					$update_data = array(
+						"verifier_id" => $verifier_id, 
+						"verified_date" => $verified_date, 
+						"completed_date" => time(), 
+						"faculty_id" => $PROCESSED['associated_faculty'], 
+						"completion_comment" => $completion_comment, 
+						"rejection_comment" => $rejection_comment, 
+						"rejection_date" => $rejection_date
+					);	
+					$completion->update($update_data);
+					
+					$notification_types = $task->getVerificationNotificationPolicy();
+					if ((TASK_VERIFICATION_NOTIFICATION_EMAIL & $notification_types)&&(TASK_VERIFICATION_NONE != $verification_type)) {
+						
 						task_verification_notification(	"request",
 														array(
 															"firstname" => $verifier->getFirstname(),
@@ -90,13 +151,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 					clear_success();
 					$page_title = "Task Details";
 					$url = ENTRADA_URL."/tasks?section=details&id=".$TASK_ID;
-					if (!$task->isVerificationRequired()) {
-						add_success("<p>You have successfully submitted <strong>completion</strong> of the <strong>".html_encode($task->getTitle())."</strong> task.</p><p>You will now be redirected to the <strong>".$page_title."</strong> page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\">click here</a> to continue.</p>");
-					} else {
-						add_success("<p>You have successfully <strong>requested verification</strong> from <strong>".$verifier->getFirstname() . " " . $verifier->getLastname()."</strong> for completion the <strong>".html_encode($task->getTitle())."</strong> task.</p><p>You will now be redirected to the <strong>".$page_title."</strong> page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\">click here</a> to continue.</p>");
-					}
-						header( "refresh:5;url=".$url );
-						display_status_messages();
+					add_success("<p>You have successfully submitted <strong>completion</strong> of the <strong>".html_encode($task->getTitle())."</strong> task.</p><p>You will now be redirected to the <strong>".$page_title."</strong> page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\">click here</a> to continue.</p>");
+					header( "refresh:5;url=".$url );
+					display_status_messages();
 					break;
 				}
 				
@@ -172,82 +229,79 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 						<td>Task Completed</td>
 						<td><?php echo date(DEFAULT_DATE_FORMAT,$completion->getCompletedDate()); ?></td>
 					</tr>
-					<?php 
-						if ($task->isVerificationRequired()) {
-							$verifier = $completion->getVerifier();
-							if ($completion->isVerified()) {
-								$v_date = $completion->getVerifiedDate();
-					?>
-					<tr>
-						<td>&nbsp;</td>
-						<td>Verified By</td>
-						<td><?php echo $verifier->getFullname(); ?></td>
-					</tr>
-					<tr>
-						<td>&nbsp;</td>
-						<td>Verified On</td>
-						<td><?php echo date(DEFAULT_DATE_FORMAT,$v_date); ?></td>
-					</tr>
-					<?php 
-							} else {
-					?>
-					<tr>
-						<td>&nbsp;</td>
-						<td>Verification Request</td>
-						<td><?php echo $verifier->getFullname(); ?></td>
-					</tr>
 					<?php
-							}
+						$facsecpol = $task->getFacultySelectionPolicy();
+						$faculty = $completion->getFaculty();
+						if (($faculty) && (TASK_FACULTY_SELECTION_OFF != $facsecpol)) {
+							?>
+					<tr>
+						<td>&nbsp;</td>
+						<td>Associated Faculty</td>
+						<td>
+							<?php
+								echo $faculty->getFullname();
+							?>
+						</td>
+					</tr>	
+					<tr>
+						<td colspan="3">&nbsp;</td>
+					</tr>
+							<?
 						}
+					
 					} else {
 					?> 
+					<?php
+						$facsecpol = $task->getFacultySelectionPolicy();
+						$assocfac = $task->getAssociatedFaculty();
+						if ((0 < count($assocfac)) && (TASK_FACULTY_SELECTION_OFF != $facsecpol)) {
+							?>
+					<tr>
+						<td>&nbsp;</td>
+						<td>Associated Faculty</td>
+						<td>
+							<select name="associated_faculty">
+							<?php
+							echo build_option("0","None");
+							foreach ($assocfac as $faculty) {
+								echo build_option($faculty->getID(), $faculty->getFullname(), $faculty->getID() == $PROCESSED['associated_faculty']);
+							}
+							?>
+							</select>			
+						</td>
+					</tr>	
+					<tr>
+						<td colspan="3">&nbsp;</td>
+					</tr>
+					<?
+						}
+
+						$comment_policy = $task->getCompletionCommentPolicy();
+						if (TASK_COMMENT_NONE != $comment_policy) {
+							
+						?>
+					<tr>
+						<td>&nbsp;</td>
+						<td valign="top"><label for="completion_comment">Additional Comments</label></td>
+						<td>
+							<textarea name="completion_comment" style="width: 30em; height: 15ex;" maxlength="500"><?php echo $PROCESSED['completion_commens']; ?></textarea>		
+						</td>
+					</tr>	
+					<tr>
+						<td colspan="3">&nbsp;</td>
+					</tr>
+							<?
+						}
+					?>
 					<tr>
 						<td>
 							<input type="checkbox" name="task_completed" id="task_completed" value="completed" <?php echo ($PROCESSED['task_completed'] == 'completed') ? "checked=\"checked\"" : "" ; ?> />
 						</td>
-						<td colspan="2"><label for="task_completed">I have completed this task</label></td>
+						<td colspan="2"><label for="task_completed">I confirm that I have completed the objectives of this task</label></td>
 					</tr>
 					<tr>
 						<td colspan="3">&nbsp;</td>
 					</tr>
-					<?php if ($task->isVerificationRequired()) { ?>
-					<tr>
-						<td>&nbsp;</td>
-						<td colspan="2">This task requires verification of completion. In the space provided below, please enter the name of the individual that can confirm completion of this task.</td>
-					</tr>
-					<tr>
-						<td>&nbsp;</td>
-						<td  style="vertical-align: top"><label class="form-required" for="fullname">Verifier Name</label></td>
-						<td>
-						
-							<input type="text" id="individual_name" name="fullname" size="30" autocomplete="off" style="width: 203px; vertical-align: middle:margin-bottom:15px;" />
-							<?php
-								$ONLOAD[] = "individual_list = new AutoCompleteList({ type: 'individual', url: '". ENTRADA_RELATIVE ."/api/personnel.api.php?type=facultyorstaff', remove_image: '". ENTRADA_RELATIVE ."/images/action-delete.gif', limit: 1})";
-							?>
-							<div class="autocomplete" id="individual_name_auto_complete"></div><script type="text/javascript"></script>
-							<input type="hidden" id="associated_individual" name="associated_individual" />
-							<input type="button" class="button-sm" id="add_associated_individual" value="Add" style="vertical-align: middle" />
-							<span id="individual_example" class="content-small">(<strong>Example:</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?>)</span>
-							<ul id="individual_list" class="menu">
-								<?php
-								if ($proxy_id = $PROCESSED['associated_individual']) {
-									if ($individual = User::get($proxy_id)) {
-										?>
-										<li class="community" id="individual_<?php echo $individual->getID(); ?>" style="cursor: move;"><?php echo $individual->getFullname(); ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="individual_list.removeItem('<?php echo $individual->getID(); ?>');" class="list-cancel-image"/></li>
-										<?php
-									}
-								}
-								?>
-							</ul>
-							<input type="hidden" id="individual_ref" name="individual_ref" value="" />
-							<input type="hidden" id="individual_id" name="individual_id" value="" />
-						
-						</td>
-					</tr>
-					<tr>
-						<td colspan="3">&nbsp;</td>
-					</tr>
-					<?php } ?>
 				</tbody>
 				<tfoot>
 					<tr>

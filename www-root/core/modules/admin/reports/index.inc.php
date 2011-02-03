@@ -55,8 +55,16 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 		}
 	</style>
 	<h1><?php echo $MODULES[strtolower($MODULE)]["title"]; ?></h1>
-	
-	<h2 style="color: #669900">Teaching Reports</h2>
+
+	<h2 style="color: #669900">Learning Event Reports</h2>
+	<ol class="system-reports">
+		<li>
+			<a href="<?php echo ENTRADA_URL; ?>/admin/reports?section=event-types-by-course">Learning Event Types by Course</a><br />
+			A detailed report containing a learning event type breakdown by Course.
+		</li>
+	</ol>
+
+	<h2 style="color: #669900">Teaching Event Reports</h2>
 	<ol class="system-reports">
 		<li>
 			<a href="<?php echo ENTRADA_URL; ?>/admin/reports?section=teaching-report-by-course">Teaching Report By Course (hourly)</a><br />
@@ -74,10 +82,9 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 			<a href="<?php echo ENTRADA_URL; ?>/admin/reports?section=teaching-faculty-contact-details">Teaching Faculty Contact Details</a><br />
 			Contact information for teachers who have taught between the selected time period.
 		</li>
-		
 	</ol>
-	
-	<h2 style="color: #669900">Elective Reports</h2>
+
+	<h2 style="color: #669900">Clerkship Elective Reports</h2>
 	<ol class="system-reports">
 		<li>
 			<a href="<?php echo ENTRADA_URL; ?>/admin/reports?section=electives-grant-eligible">Grant Eligible</a><br />
@@ -89,7 +96,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 		</li>
 	</ol>
 	
-	<h2 style="color: #669900">Incident Reports</h2>
+	<h2 style="color: #669900">Learner Incident Reports</h2>
 	<ol class="system-reports">
 		<li>
 			<a href="<?php echo ENTRADA_URL; ?>/admin/reports?section=incident-report-by-follow-up">Open Incidents By Follow-Up Date</a><br />
@@ -100,9 +107,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 			A report showing all open incidents that were entered / started during the given time period.
 		</li>
 	</ol>
-	
 
-	<h2 style="color: #669900">Other Reports</h2>
+	<h2 style="color: #669900">Usage Reports</h2>
 	<ol class="system-reports">
 		<li>
 			<a href="<?php echo ENTRADA_URL; ?>/admin/reports?section=report-on-podcasting">Podcast Usage Report</a><br />

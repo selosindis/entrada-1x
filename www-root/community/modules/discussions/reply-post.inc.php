@@ -141,7 +141,7 @@ if ($RECORD_ID) {
 					if ($SUCCESS) {
 						echo display_success();
 							if (COMMUNITY_NOTIFICATIONS_ACTIVE) {
-								community_notify($COMMUNITY_ID, $RECORD_ID, "reply", COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-post&id=".$RECORD_ID, $RECORD_ID);
+								community_notify($COMMUNITY_ID, $TOPIC_ID, "reply", COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-post&id=".$RECORD_ID, $RECORD_ID);
 							}
 					}
 				break;

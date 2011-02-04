@@ -1,4 +1,5 @@
 00,10,20,30,40,50 * * * * /usr/bin/curl -s ENTRADA_URL/cron/community-quota.php > /dev/null 2>&1
+03,13,23,33,43,53 * * * * /usr/bin/php -f ENTRADA_URL/cron/community-notifications.php > /dev/null 2>&1
 15 * * * * /usr/bin/curl -s ENTRADA_URL/cron/community-activities.php > /dev/null 2>&1
 30 * * * * /usr/bin/curl -s ENTRADA_URL/cron/weather.php > /dev/null 2>&1
 30 * * * * /usr/bin/curl -s ENTRADA_URL/cron/calendars.php > /dev/null 2>&1

@@ -320,8 +320,7 @@ function load_system_navigator() {
 								FROM `community_announcements` as a
 								LEFT JOIN `community_pages` as b
 								ON a.`cpage_id` = b.`cpage_id`
-								WHERE a.`community_id` IN ('".implode("', '", @array_keys($community_ids))."')
-								AND a.`cpage_id` IN ('".implode("', '", $page_ids)."')
+								WHERE a.`cpage_id` IN ('".implode("', '", $page_ids)."')
 								AND a.`announcement_active` = '1'
 								AND b.`page_active` = '1'
 								AND (a.`release_date` = '0' OR a.`release_date` <= '".time()."')

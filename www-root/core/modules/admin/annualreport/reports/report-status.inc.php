@@ -157,7 +157,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 								AND `".DATABASE_NAME."`.`ar_profile`.`proxy_id` = `".AUTH_DATABASE."`.`user_data`.`id` 
 								AND `".AUTH_DATABASE."`.`user_data`.`id` = `".AUTH_DATABASE."`.`user_departments`.`user_id`
 								AND `dep_id` = `department_id`
-								ORDER BY `lastname` ASC";
+								ORDER BY `department_title` ASC, `lastname` ASC, `firstname` ASC";
 					break;
 				case "Completed":
 				default:
@@ -168,7 +168,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 								AND `".DATABASE_NAME."`.`ar_profile`.`proxy_id` = `".AUTH_DATABASE."`.`user_data`.`id` 
 								AND `".AUTH_DATABASE."`.`user_data`.`id` = `".AUTH_DATABASE."`.`user_departments`.`user_id`
 								AND `dep_id` = `department_id`
-								ORDER BY `lastname` ASC";
+								ORDER BY `department_title` ASC, `lastname` ASC, `firstname` ASC";
 					break;
 			}
 			

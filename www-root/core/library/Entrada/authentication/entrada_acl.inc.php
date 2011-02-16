@@ -70,7 +70,8 @@ class Entrada_ACL extends ACL_Factory {
 				"quizresult"
 			),
 			"user" => array (
-				"incident"
+				"incident",
+				"metadata"
 			),
 			"assistant_support",
 			"resourceorganisation",

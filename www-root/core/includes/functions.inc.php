@@ -11749,3 +11749,50 @@ function display_zoom_controls($user_id) {
 	<?php
 	return ob_get_clean();
 }
+
+function generateMasks($organisation, $group, $role, $user) {
+	$masks = array();
+	$masks["organisation"] = $organisation;
+	$masks["organisation:group"] = $organisation.":".$group;
+	$masks["organisation:group:role"] = $organisation.":".$group.":".$role;
+	$masks["group"] = $group;
+	$masks["group:role"] = $group.":".$role;
+	$masks["user"] = $user;
+	$masks["organisation:user"] = $organisation .":".$user;
+	
+	//we want to filter out any entries that are empty, begin or terminate with a colon, or have two colons together
+	$pattern = "/^$|^:|:$|::/";
+	
+	$masks = preg_grep($pattern, $masks, PREG_GREP_INVERT);
+	return $masks;
+}
+
+function generateMaskConditions($organisation, $group, $role, $user) {
+	global $db;
+	$masks = generateMasks($organisation, $group, $role, $user);
+	$mask_strs = array();
+	foreach($masks as $condition=>$value) {
+		$mask_strs[] = "(`entity_type` = ".$db->qstr($condition)." AND `entity_value` = " . $db->qstr($value) ." )\n";
+	}
+	return implode(" OR ", $mask_strs);
+}
+
+function generateAccessConditions($organisation, $group, $role, $proxy_id) {
+	global $db;
+	$masks = array();
+	$masks['`organisation_id`'] = $organisation;
+	$masks['`group`'] = $group;
+	$masks['`role`'] = $role;
+	$masks['a.`id`'] = $proxy_id;
+	
+	$masks = array_filter($masks);
+	
+	$mask_strs = array();
+	
+	foreach ($masks as $field=>$condition) {
+		$mask_strs[] = $field."=".$db->qstr($condition);
+	}
+	if ($mask_strs) {
+		return implode(" AND ",$mask_strs);
+	}
+}

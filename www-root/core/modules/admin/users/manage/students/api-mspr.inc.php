@@ -9,18 +9,6 @@
  *
 */
 
-@set_include_path(implode(PATH_SEPARATOR, array(
-dirname(__FILE__) . "/../core",
-dirname(__FILE__) . "/../core/includes",
-dirname(__FILE__) . "/../core/library",
-get_include_path(),
-)));
-
-/**
- * Include the Entrada init code.
- */
-require_once("init.inc.php");
-
 if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 	if ($ENTRADA_ACL->amIAllowed("mspr", "create", false)) {
 

@@ -42,11 +42,16 @@ class Users extends Collection {
 	 * @param array
 	 * @return Users
 	 */
-	static public function get() {
+	static public function get($organisation=null, $group=null, $role=null, $proxy_id=null) {
 		global $db;
-		$query = "SELECT * from `".AUTH_DATABASE."`.`user_data`";
-		
-		$results = $db->getAll($query);
+		$query = "SELECT a.*, b.`group`, b.`role` from `".AUTH_DATABASE."`.`user_data` a LEFT JOIN `".AUTH_DATABASE."`.`user_access` b on a.`id`=b.`user_id` and b.`app_id`=?";
+		$conditions = generateAccessConditions($organisation, $group, $role, $proxy_id);
+		if ($conditions) {
+			$query .= " WHERE " . $conditions;
+		}
+		$query.=" ORDER BY lastname, firstname";
+		//note to self. check use index page for user access components of display
+		$results = $db->getAll($query, array(AUTH_APP_ID));
 		$users = array();
 		if ($results) {
 			foreach ($results as $result) {

@@ -99,19 +99,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 				<td>
 					<?php
 					if ($task_completion->isCompleted()) { 
-						if ($task->isVerificationRequired()) {
-							if ($task_completion->isVerified()) {
-								?>
-								<img src="<?php echo ENTRADA_URL?>/images/task_completed.png" alt="Task Completed" title="Task Completed" />
-								<?php
-							} else {
-								?>
-								<img src="<?php echo ENTRADA_URL?>/images/task_pending.png" alt="Pending Verification" title="Pending Verification" />
-								<?php
-							}
-						} else {
+						if ($task_completion->isVerified()) {
 							?>
 							<img src="<?php echo ENTRADA_URL?>/images/task_completed.png" alt="Task Completed" title="Task Completed" />
+							<?php
+						} else {
+							?>
+							<img src="<?php echo ENTRADA_URL?>/images/task_pending.png" alt="Pending Verification" title="Pending Verification" />
 							<?php
 						}
 					} else { 

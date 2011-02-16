@@ -320,8 +320,7 @@ function load_system_navigator() {
 								FROM `community_announcements` as a
 								LEFT JOIN `community_pages` as b
 								ON a.`cpage_id` = b.`cpage_id`
-								WHERE a.`community_id` IN ('".implode("', '", @array_keys($community_ids))."')
-								AND a.`cpage_id` IN ('".implode("', '", $page_ids)."')
+								WHERE a.`cpage_id` IN ('".implode("', '", $page_ids)."')
 								AND a.`announcement_active` = '1'
 								AND b.`page_active` = '1'
 								AND (a.`release_date` = '0' OR a.`release_date` <= '".time()."')
@@ -6486,12 +6485,26 @@ function community_notify($community_id, $record_id, $content_type, $url, $permi
 			}
 			break;
 		case "post" :
-		case "reply" :
 			$query = "	SELECT a.`allow_member_read`, b.`allow_member_view`
 						FROM `community_discussions` AS a
 						LEFT JOIN `community_pages` AS b
 						ON a.`cpage_id` = b.`cpage_id`
 						WHERE a.`cdiscussion_id` = ".$db->qstr($record_id);
+			$result = $db->GetRow($query);
+			if ($result["allow_member_read"] && $result["allow_member_view"]) {
+				$permission_required = 0;
+			} else {
+				$permission_required = 1;
+			}
+			break;
+		case "reply" :
+			$query = "	SELECT a.`allow_member_read`, b.`allow_member_view`
+						FROM `community_discussions` AS a
+						LEFT JOIN `community_pages` AS b
+						ON a.`cpage_id` = b.`cpage_id`
+						JOIN `community_discussion_topics` AS c
+						ON a.`cdiscussion_id` = c.`cdiscussion_id`
+						WHERE c.`cdtopic_id` = ".$db->qstr($record_id);
 			$result = $db->GetRow($query);
 			if ($result["allow_member_read"] && $result["allow_member_view"]) {
 				$permission_required = 0;
@@ -6582,25 +6595,25 @@ function community_notify($community_id, $record_id, $content_type, $url, $permi
 						AND a.`community_id` = ".$db->qstr($community_id);
 			break;
 		case "reply" :
-			$query = "	SELECT DISTINCT(`proxy_id`) FROM `community_members` AS a
-						LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
+			$query = "	SELECT DISTINCT(a.`proxy_id`) FROM `community_members` AS a
+						LEFT JOIN `medtech_auth`.`user_data` AS b
 						ON a.`proxy_id` = b.`id`
-						WHERE a.`proxy_id` IN (
-												SELECT `proxy_id` FROM `community_notify_members` 
-												WHERE `community_id` = ".$db->qstr($community_id)." 
-												AND `record_id` = ".$db->qstr($permission_id)." 
-												AND `notify_type` = ".$db->qstr($content_type)." 
-												AND `notify_active` = '1'
-											) 
-						OR a.`proxy_id` IN (
-													SELECT a.`proxy_id` FROM `community_notify_members` AS a
-													LEFT JOIN `community_discussion_topics` AS b
-													ON b.`cdiscussion_id` = a.`record_id`
-													WHERE a.`community_id` = ".$db->qstr($community_id)." 
-													AND a.`notify_type` = 'post' 
-													AND a.`notify_active` = '1'
-													AND b.`cdtopic_id` = ".$db->qstr($permission_id)." 
-												)
+						LEFT JOIN `community_notify_members` AS c
+						ON c.`community_id` = ".$db->qstr($community_id)."
+						AND c.`record_id` = ".$db->qstr($permission_id)."
+						AND c.`notify_type` = ".$db->qstr($content_type)." 
+						AND c.`proxy_id` = a.`proxy_id`
+						LEFT JOIN `community_notify_members` AS d
+						ON d.`community_id` = ".$db->qstr($community_id)."
+						AND d.`notify_type` = 'post'
+						AND d.`proxy_id` = a.`proxy_id`
+						LEFT JOIN `community_discussion_topics` AS e
+						ON e.`cdiscussion_id` = d.`record_id`
+						AND e.`cdtopic_id` = ".$db->qstr($permission_id)."
+						WHERE (
+							d.`notify_active` = '1' 
+							OR c.`notify_active` = '1'
+						)
 						AND a.`community_id` = ".$db->qstr($community_id)."
 						AND b.`notifications` = '1'
 						AND a.`member_acl` >= ".$db->qstr($permission_required);
@@ -6610,13 +6623,12 @@ function community_notify($community_id, $record_id, $content_type, $url, $permi
 			$query = "	SELECT `proxy_id` FROM `community_members` AS a
 						LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
 						ON a.`proxy_id` = b.`id`
-						WHERE a.`proxy_id` IN (
-												SELECT `proxy_id` FROM `community_notify_members` 
-												WHERE `community_id` = ".$db->qstr($community_id)." 
-												AND `record_id` = ".$db->qstr($permission_id)." 
-												AND `notify_type` = 'file-notify' 
-												AND `notify_active` = '1'
-											) 
+						LEFT JOIN `community_notify_members` AS c
+						ON c.`community_id` = ".$db->qstr($community_id)." 
+						AND c.`record_id` = ".$db->qstr($permission_id)." 
+						AND c.`notify_type` = 'file-notify' 
+						AND c.`proxy_id` = b.`id`
+						WHERE c.`notify_active` = '1'
 						AND a.`community_id` = ".$db->qstr($community_id)."
 						AND b.`notifications` = '1'
 						AND a.`member_acl` >= ".$db->qstr($permission_required);
@@ -10538,10 +10550,14 @@ function formatDateRange($start_date, $end_date) {
 function get_user_departments($user_id) {
 	global $db;
 	
-	$query = "	SELECT `department_title`, `department_id` 
-				FROM `".AUTH_DATABASE."`.`user_departments`, `".AUTH_DATABASE."`.`departments` 
-				WHERE `user_id`=".$db->qstr($user_id)."
-				AND `dep_id` = `department_id`";
+	$query = "	SELECT c.`department_title`, c.`department_id` 
+				FROM `".AUTH_DATABASE."`.`user_departments` AS a
+				JOIN `".AUTH_DATABASE."`.`user_data` AS b
+				ON a.`user_id` = b.`id`
+				JOIN `".AUTH_DATABASE."`.`departments` AS c
+				ON a.`dep_id` = c.`department_id`
+				AND b.`organisation_id` = c.`organisation_id`
+				WHERE a.`user_id` = ".$db->qstr($user_id);
 	
 	$results = $db->GetAll($query);
 	
@@ -11392,7 +11408,7 @@ function evaluation_generate_description($min_submittable = 0, $evaluation_quest
 	return sprintf($output, $string_1, $string_2, $string_3, $string_4);
 }
 
-function gradebook_get_weighted_grades($course_id, $grad_year, $proxy_id) {
+function gradebook_get_weighted_grades($course_id, $grad_year, $proxy_id, $assessment_id = false) {
 	global $db;
 	$weighted_grade = 0;
 	$weighted_total = 0;
@@ -11401,7 +11417,8 @@ function gradebook_get_weighted_grades($course_id, $grad_year, $proxy_id) {
 				FROM `assessments`
 				LEFT JOIN `assessment_marking_schemes` ON `assessment_marking_schemes`.`id` = `assessments`.`marking_scheme_id`
 				WHERE `assessments`.`course_id` = ".$db->qstr($course_id)."
-				AND `assessments`.`grad_year` = ".$db->qstr($grad_year);
+				AND `assessments`.`grad_year` = ".$db->qstr($grad_year).
+				($assessment_id ? " AND `assessments`.`assessment_id` = ".$db->qstr($assessment_id) : "");
 	$assessments = $db->GetAll($query);
 	if($assessments) {
 		$query	= 	"SELECT b.`id` AS `proxy_id`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, b.`number`, c.`role`";
@@ -11432,8 +11449,9 @@ function gradebook_get_weighted_grades($course_id, $grad_year, $proxy_id) {
 					$grade_weighting = $assessment["grade_weighting"];
 				}
 				if(isset($student["grade_".$key2."_value"])) {
+					$grade_value = format_retrieved_grade($student["grade_".$key2."_value"], $assessment);
 					$weighted_total += $grade_weighting;
-					$weighted_grade += (($assessment["handler"] == "Numeric" ? ($student["grade_".$key2."_value"] / $assessment["numeric_grade_points_total"]) : (($assessment["handler"] == "Percentage" ? ((float)$student["grade_".$key2."_value"] / 100.0) : $student["grade_".$key2."_value"])))) * $grade_weighting;
+					$weighted_grade += (($assessment["handler"] == "Numeric" ? ($grade_value / $assessment["numeric_grade_points_total"]) : (($assessment["handler"] == "Percentage" ? ((float)$grade_value / 100.0) : $grade_value)))) * $grade_weighting;
 				}
 			}
 		}

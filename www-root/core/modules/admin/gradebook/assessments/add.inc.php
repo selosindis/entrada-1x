@@ -27,7 +27,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 } elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	header("Location: ".ENTRADA_URL);
 	exit;
-} elseif (!$ENTRADA_ACL->amIAllowed("assessment", "create", false)) {
+} elseif (!$ENTRADA_ACL->amIAllowed("gradebook", "create", false)) {
 	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/".$MODULE."\\'', 15000)";
 
 	$ERROR++;
@@ -151,20 +151,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								case "grade" :
 									$url = ENTRADA_URL."/admin/gradebook/assessments?".replace_query(array("step" => false, "section" => "grade", "assessment_id" => $ASSESSMENT_ID));
 									$msg = "You will now be redirected to the <strong>Grade Assessment</strong> page for \"<strong>".$PROCESSED["name"] . "</strong>\"; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-									break;
+								break;
 								case "new" :
 									$url = ENTRADA_URL."/admin/gradebook/assessments?".replace_query(array("step" => false, "section" => "add"));
 									$msg = "You will now be redirected to another <strong>Add Assessment</strong> page for the ". $course_details["course_name"] . " gradebook; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-									break;
+								break;
 								case "parent" :
 									$url = ENTRADA_URL."/admin/".$MODULE;
 									$msg = "You will now be redirected to the <strong>Gradebook</strong> index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-									break;
+								break;
 								case "index" :
 								default :
-										$url = ENTRADA_URL."/admin/gradebook?".replace_query(array("step" => false, "section" => "view", "assessment_id" => false));
+									$url = ENTRADA_URL."/admin/gradebook?".replace_query(array("step" => false, "section" => "view", "assessment_id" => false));
 									$msg = "You will now be redirected to the <strong>assessment index</strong> page for ". $course_details["course_name"] . "; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-									break;
+								break;
 							}
 							
 							$SUCCESS++;
@@ -188,6 +188,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					continue;
 				break;
 			}
+
 			// Display Content
 			switch($STEP) {
 				case 2 :
@@ -220,18 +221,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				<tbody>
 					<tr>
 						<td></td>
-						<td><label class="form-required">Course Name</label></td>
+						<td><label class="form-nrequired">Course Name</label></td>
 						<td>
 							<a href="<?php echo ENTRADA_URL; ?>/admin/gradebook?<?php echo replace_query(array("step" => false, "section" => "view")); ?>"><?php echo html_encode($course_details["course_name"]); ?></a>
 						</td>
 					</tr>
 					<tr>
 						<td colspan="3">&nbsp;</td>
-					</tr>
-					<tr>
-						<td></td>
-						<td style="vertical-align: top"><label for="name" class="form-required">Assessment Name</label></td>
-						<td><input type="text" id="name" name="name" value="<?php echo html_encode($PROCESSED["name"]); ?>" maxlength="64" style="width: 243px" /></td>
 					</tr>
 					<tr>
 						<td></td>
@@ -252,24 +248,38 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						</td>
 					</tr>
 					<tr>
+						<td colspan="3">&nbsp;</td>
+					</tr>
+					<tr>
 						<td></td>
-						<td style="vertical-align: top"><label for="grade_weighting" class="form-required">Assessment Weighting</label></td>
-						<td><input type="text" id="grade_weighting" name="grade_weighting" value="<?php echo html_encode($PROCESSED["grade_weighting"]); ?>" maxlength="11" style="width: 243px" /></td>
+						<td><label for="name" class="form-required">Assessment Name</label></td>
+						<td><input type="text" id="name" name="name" value="<?php echo html_encode($PROCESSED["name"]); ?>" maxlength="64" style="width: 243px" /></td>
+					</tr>
+					<tr>
+						<td>&nbsp;</td>
+						<td style="vertical-align: top"><label for="description" class="form-nrequired">Assessment Description</label></td>
+						<td><textarea id="description" name="description" style="width: 99%; height: 50px"><?php echo html_encode($PROCESSED["description"]); ?></textarea></td>
 					</tr>
 					<tr>
 						<td colspan="3">&nbsp;</td>
 					</tr>
 					<tr>
 						<td></td>
-						<td style="vertical-align: top"><label for="description" class="form-nrequired">Assessment Description</label></td>
-						<td><textarea id="description" name="description" style="width: 99%; height: 50px"><?php echo html_encode($PROCESSED["description"]); ?></textarea></td>
+						<td><label for="grade_weighting" class="form-nrequired">Assessment Weighting</label></td>
+						<td>
+							<input type="text" id="grade_weighting" name="grade_weighting" value="<?php echo (int) html_encode($PROCESSED["grade_weighting"]); ?>" maxlength="3" style="width: 30px" />
+							<span class="content-small"><strong>Tip:</strong> The percentage or numeric value of the final grade this assessment worth.</span>
+						</td>
+					</tr>
+					<tr>
+						<td colspan="3">&nbsp;</td>
 					</tr>
 					<tr>
 						<td colspan="3"><h2>Assessment Strategy</h2></td>
 					</tr>
 					<tr>
 						<td></td>
-						<td><label for="type" class="form-required">Type</label></td>
+						<td><label for="type" class="form-required">Assessment Type</label></td>
 						<td>
 							<select id="type" name="type" style="width: 203px">
 							<?php
@@ -296,7 +306,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					</tr>
 					<tr id="numeric_marking_scheme_details" style="display: none;">
 						<td></td>
-						<td style="vertical-align: top"><label for="numeric_grade_points_total" class="form-required">Maximum Points</label></td>
+						<td><label for="numeric_grade_points_total" class="form-required">Maximum Points</label></td>
 						<td>
 							<input type="text" id="numeric_grade_points_total" name="numeric_grade_points_total" value="<?php echo html_encode($PROCESSED["numeric_grade_points_total"]); ?>" maxlength="5" style="width: 50px" />
 							<span class="content-small"><strong>Tip:</strong> Maximum points possible for this assessment (i.e. <strong>20</strong> for &quot;X out of 20).</span>
@@ -324,10 +334,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						<td style="width: 75%; text-align: right; vertical-align: middle">
 							<span class="content-small">After saving:</span>
 							<select id="post_action" name="post_action">
-							<option value="grade"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "grade") ? " selected=\"selected\"" : ""); ?>>Grade assessment</option>
-							<option value="new"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "new") ? " selected=\"selected\"" : ""); ?>>Add another assessment</option>
-							<option value="index"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "index") ? " selected=\"selected\"" : ""); ?>>Return to assessment list</option>
-							<option value="parent"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "parent") ? " selected=\"selected\"" : ""); ?>>Return to all gradebooks list</option>
+								<option value="grade"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "grade") ? " selected=\"selected\"" : ""); ?>>Grade assessment</option>
+								<option value="new"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "new") ? " selected=\"selected\"" : ""); ?>>Add another assessment</option>
+								<option value="index"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "index") ? " selected=\"selected\"" : ""); ?>>Return to assessment list</option>
+								<option value="parent"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "parent") ? " selected=\"selected\"" : ""); ?>>Return to all gradebooks list</option>
 							</select>
 							<input type="submit" class="button" value="Save" />
 						</td>

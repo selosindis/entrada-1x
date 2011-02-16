@@ -104,6 +104,13 @@ if ($results) {
 				<td class="date-small<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "code") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo public_order_link("code", "Course Code"); ?></td>
 				<td class="title<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "title") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo public_order_link("title", "Course Title"); ?></td>
 				<td class="general<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "assessments") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo public_order_link("assessments", "Assessments"); ?></td>
+				<?php
+				if (defined("GRADEBOOK_DISPLAY_WEIGHTED_TOTAL") && GRADEBOOK_DISPLAY_WEIGHTED_TOTAL) {
+					?>
+					<td class="general">Weighted Total</td>
+					<?php
+				}
+				?>
 			</tr>
 		</thead>
 		<tbody>
@@ -114,6 +121,10 @@ if ($results) {
 			echo "	<td".((!$result["course_active"]) ? " class=\"disabled\"" : "")."><a href=\"".ENTRADA_URL."/".$MODULE."/gradebook?section=view&amp;id=".$result["course_id"]."\">".html_encode($result["course_code"])."</a></td>\n";
 			echo "	<td".((!$result["course_active"]) ? " class=\"disabled\"" : "")."><a href=\"".ENTRADA_URL."/".$MODULE."/gradebook?section=view&amp;id=".$result["course_id"]."\">".html_encode($result["course_name"])."</a></td>\n";
 			echo "	<td".((!$result["course_active"]) ? " class=\"disabled\"" : "")."><a href=\"".ENTRADA_URL."/".$MODULE."/gradebook?section=view&amp;id=".$result["course_id"]."\">".($result["assessments"])."</a></td>\n";
+			if (defined("GRADEBOOK_DISPLAY_WEIGHTED_TOTAL") && GRADEBOOK_DISPLAY_WEIGHTED_TOTAL) {
+				$gradebook = gradebook_get_weighted_grades($result["course_id"], $_SESSION["details"]["role"], $_SESSION["details"]["id"]);
+				echo "	<td>".trim($gradebook["grade"])." / ".trim($gradebook["total"])."</td>\n";
+			}
 			echo "</tr>\n";
 		}
 		?>

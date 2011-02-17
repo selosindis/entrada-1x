@@ -62,6 +62,8 @@ class MetaDataValues extends Collection {
 				$types = MetaDataTypes::get($organisation, $group, $role, $proxy_id);
 				$desc_type_ids = getUniqueDescendantTypeIDs($types, $type);
 				if ($desc_type_ids) {
+					//includes values from the specified type as well as sub types
+					$desc_type_ids[] = $type_id;
 					$conditions[] = "`meta_type_id` IN (".implode(",", $desc_type_ids) .")";
 				} else {
 					$conditions[] = "`meta_type_id`=".$db->qstr($type_id);

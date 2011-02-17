@@ -194,7 +194,7 @@ function build_post($post) {
 								"%APPLICATION_NAME%",
 								"%WEBSITE_URL%"
 							);
-			$query 		= "	SELECT a.*, CONCAT_WS(' ', b.firstname, b.lastname) as `fullname`, c.`community_title`, c.`community_url`, e.`page_url`, f.`forum_title`
+			$query 		= "	SELECT a.*, CONCAT_WS(' ', b.firstname, b.lastname) as `fullname`, b.`organisation_id`, c.`community_title`, c.`community_url`, e.`page_url`, f.`forum_title`, ".($post["type"] == "reply" ? "g" : "a").".`topic_title` AS `record_title`
 							FROM `".TABLES_PREFIX."community_discussion_topics` AS a
 							LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
 							ON b.`id` = ".$db->qstr($post["author_id"])."
@@ -206,12 +206,14 @@ function build_post($post) {
 							ON d.`cpage_id` = e.`cpage_id`
 							LEFT JOIN `".TABLES_PREFIX."community_discussions` AS f
 							ON a.`cdiscussion_id` = f.`cdiscussion_id`
+							".($post["type"] == "reply" ? "LEFT JOIN `community_discussion_topics` AS g
+							ON a.`cdtopic_parent` = g.`cdtopic_id`" : "")."
 							WHERE a.`cdtopic_id` = ".$db->qstr($post["record_id"]);
 			$result		= $db->GetRow($query);
 			if ($result) {
 				$replace	= array(
 									$result["fullname"],
-									$result["topic_title"],
+									$result["record_title"],
 									$result["forum_title"],
 									clean_input($result["topic_description"],array("notags", "encode")),
 									COMMUNITY_URL.$result["community_url"].":".$result["page_url"]."?action=view-post&id=".$post["record_id"],

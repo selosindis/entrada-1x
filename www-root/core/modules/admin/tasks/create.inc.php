@@ -327,7 +327,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 				<tr>
 					<td colspan="3">&nbsp;</td>
 				</tr>
-				<?php if ($ENTRADA_ACL->amIAllowed(new TaskResource(null, null, $ORGANISATION_ID), 'create')) { ?>
+				<?php if (/*disabled*/false && $ENTRADA_ACL->amIAllowed(new TaskResource(null, null, $ORGANISATION_ID), 'create')) { ?>
 				<tr>
 					<td style="vertical-align: top"><input type="radio" name="task_recipient_type" id="task_recipient_type_<?php echo TASK_RECIPIENT_ORGANISATION; ?>" value="<?php echo TASK_RECIPIENT_ORGANISATION; ?>" onclick="selectTaskRecipientsOption('<?php echo TASK_RECIPIENT_ORGANISATION; ?>')" style="vertical-align: middle"<?php echo (($PROCESSED["task_recipient_type"] == TASK_RECIPIENT_ORGANISATION) ? " checked=\"checked\"" : ""); ?> /></td>
 					<td colspan="2" style="padding-bottom: 15px">
@@ -360,8 +360,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 				</tr>
 				<?php } ?>
 				<tr>
-					<td colspan="3"><h2><?php echo $translate->translate("task_heading_completion_options"); ?></h2></td>
+					<td colspan="3"><h2 class="collapsed" title="<?php echo $translate->translate("task_heading_completion_options"); ?>"><?php echo $translate->translate("task_heading_completion_options"); ?></h2></td>
 				</tr>
+			</tbody>
+			<tbody id="<?php echo strtolower(str_replace(" ", "-",$translate->translate("task_heading_completion_options"))); ?>">
 				<tr>
 					<td>&nbsp;</td>
 					<td><?php echo $translate->translate("task_field_faculty_selection"); ?></td>
@@ -401,9 +403,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 						</select>
 					</td>
 				</tr>
+			</tbody>
+			<tbody>
 				<tr>
-					<td colspan="3"><h2><?php echo $translate->translate("task_heading_verification_options"); ?></h2></td>
+					<td colspan="3"><h2 class="collapsed" title="<?php echo $translate->translate("task_heading_verification_options"); ?>"><?php echo $translate->translate("task_heading_verification_options"); ?></h2></td>
 				</tr>
+			</tbody>
+			<tbody id="<?php echo strtolower(str_replace(" ", "-",$translate->translate("task_heading_verification_options"))); ?>">
 				<tr>
 					<td style="vertical-align: top"><input type="radio" name="task_verification_type" id="task_verification_type_<?php echo TASK_VERIFICATION_NONE; ?>" value="<?php echo TASK_VERIFICATION_NONE; ?>" onclick="selectTaskVerificationOption('<?php echo TASK_VERIFICATION_NONE; ?>', event)" style="vertical-align: middle"<?php echo (($PROCESSED["task_verification_type"] == TASK_VERIFICATION_NONE) ? " checked=\"checked\"" : ""); ?> /></td>
 					<td colspan="2" style="padding-bottom: 15px">
@@ -477,7 +483,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 						</table>
 					</td>
 				</tr>
-				
+			</tbody>
+			<tbody>
 				<tr>
 					<td colspan="3"><h2><?php echo $translate->translate("task_heading_time_release_options"); ?></h2></td>
 				</tr>

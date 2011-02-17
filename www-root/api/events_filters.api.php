@@ -62,14 +62,14 @@ if (($options_for) && (isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["i
         // Get the possible teacher filters
         $query = "	SELECT a.`id` AS `proxy_id`, a.`organisation_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`
             FROM `".AUTH_DATABASE."`.`user_data` AS a
-            LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+            JOIN `".AUTH_DATABASE."`.`user_access` AS b
             ON b.`user_id` = a.`id`
-            LEFT JOIN `".DATABASE_NAME."`.`event_contacts` AS c
+            JOIN `".DATABASE_NAME."`.`event_contacts` AS c
             ON c.`proxy_id` = a.`id`
             WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
             AND a.`organisation_id` IN (".$organisation_ids_string.")
             AND (b.`group` = 'faculty' OR (b.`group` = 'resident' AND b.`role` = 'lecturer'))
-            AND c.`econtact_id` IS NOT NULL
+            AND a.`id` IN (SELECT `proxy_id` FROM `event_contacts`)
             GROUP BY a.`id`
             ORDER BY `fullname` ASC";
         $teacher_results = $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);

@@ -51,6 +51,7 @@ if ((defined("ADODB_SESSION")) && (defined("DATABASE_SESSIONS")) && (DATABASE_SE
 	ADODB_Session::open(false, false, false);
 	ADODB_Session::optimize(true);
 	ADODB_Session::expireNotify(array("PROXY_ID", "expired_session"));
+	session_start();
 } else {
 	session_start();
 }

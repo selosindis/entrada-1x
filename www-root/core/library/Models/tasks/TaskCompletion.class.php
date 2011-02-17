@@ -155,26 +155,16 @@ class TaskCompletion {
 		if (!$task_v) {
 			global $db;
 			
-			$query = "	SELECT DISTINCT * from (
-						SELECT a.*, b.`task_id`, c.`verifier_id`, c.`verified_date`, a.`id` as `recipient_id`, c.`completed_date`, c.`faculty_id`, c.`completion_comment`, c.`rejection_comment`, c.`rejection_date`
-						from `".AUTH_DATABASE."`.`user_data` a 
-						inner join `task_recipients` b on a.`grad_year`=b.`recipient_id` 
+			$query = "	SELECT a.*, b.`task_id`, c.`verifier_id`, c.`verified_date`, a.`id` as `recipient_id`, c.`completed_date`, c.`faculty_id`, c.`completion_comment`, c.`rejection_comment`, c.`rejection_date`
+						from `".AUTH_DATABASE."`.`user_data` a
+						inner join `task_recipients` b on 
+						(b.`recipient_type`='grad_year' and a.`grad_year`=b.`recipient_id`) 
+						or (b.`recipient_type`='user' and a.`id` = b.`recipient_id`) 
+						or (b.`recipient_type`='organisation' and b.`recipient_id`=a.`organisation_id`) 
 						left join `task_completion` c on c.`task_id`=b.`task_id` and c.`recipient_id` = a.`id`
-						where b.`recipient_type`='grad_year' and b.`task_id`=? and a.`id`=?
-						UNION
-						SELECT w.*, z.`task_id`, y.`verifier_id`, y.`verified_date`, z.`recipient_id`, y.`completed_date` , y.`faculty_id`, y.`completion_comment`, y.`rejection_comment`, y.`rejection_date`
-						from `task_recipients` z 
-						left join `task_completion` y on z.`recipient_id`=y.`recipient_id` and y.`task_id`=z.`task_id`  
-						inner join `".AUTH_DATABASE."`.`user_data` w on z.`recipient_id`=w.`id`
-						where z.`recipient_type`='user' and z.`task_id`=? and w.`id`=?
-						UNION
-						SELECT i.*, j.`task_id`, k.`verifier_id`, k.`verified_date`, i.`id` as `recipient_id`, k.`completed_date` , k.`faculty_id`, k.`completion_comment`, k.`rejection_comment`, k.`rejection_date`
-						from `task_recipients` j
-						inner join `".AUTH_DATABASE."`.`user_data` i on j.`recipient_id`=i.`organisation_id` 
-						left join `task_completion` k on i.`id`=k.`recipient_id` and j.`task_id`=k.`task_id`
-						where j.`recipient_type` = 'organisation' and j.`task_id`=? and i.`id`=?) m";			
+						where b.`task_id`=? and a.`id`=?";
+			$result = $db->GetRow($query, array($task_id,$recipient_id));
 			
-			$result = $db->GetRow($query, array($task_id,$recipient_id, $task_id,$recipient_id, $task_id,$recipient_id));
 			if ($result) {
 				$task_v = self::fromArray($result);
 			} 

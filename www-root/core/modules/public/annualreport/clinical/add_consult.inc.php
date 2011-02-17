@@ -143,7 +143,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 
 						$SUCCESS++;
 						$SUCCESSSTR[]  = "You have successfully added information pertaining to <strong>".html_encode($PROCESSED["activity"])."</strong> to the system.<br /><br />".$msg;
-						$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000);";
+						$ONLOAD[]	   = "setTimeout('window.location=\\'".$url."\\'', 5000);";
 
 						application_log("success", "In-Hospital Consultations [".$EVENT_ID."] added to the system.");					
 

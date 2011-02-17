@@ -16,10 +16,10 @@ class MSPRs extends Collection {
 		$query		= "select * from `student_mspr` a 
 						left join `".AUTH_DATABASE."`.`user_data` b 
 						on a.user_id = b.id
-						where `organisation_id`=".$db->qstr($ORGANISATION_ID)."
+						where `organisation_id`=?
 						order by lastname, firstname";
 		
-		$results	= $db->GetAll($query);
+		$results	= $db->GetAll($query, array($ORGANISATION_ID));
 		$msprs = array();
 		if ($results) {
 			foreach ($results as $result) {

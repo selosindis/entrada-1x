@@ -182,6 +182,13 @@ class User {
 	}
 	
 	/**
+	 * @return int
+	 */
+	function getOrganisationID() {
+		return $this->organisation_id;
+	}
+	
+	/**
 	 * Returns a collection of photos belonging to the user. 
 	 * @return UserPhotos
 	 */
@@ -194,13 +201,13 @@ class User {
 	 * @param int $user_id
 	 * @return User
 	 */
-	public static function get($user_id) {
+	public static function get($proxy_id) {
 		$cache = SimpleCache::getCache();
 		$user = $cache->get("User",$user_id);
 		if (!$user) {
 			global $db;
-			$query = "SELECT * FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($user_id);
-			$result = $db->getRow($query);
+			$query = "SELECT a.*, b.`group`, b.`role` FROM `".AUTH_DATABASE."`.`user_data` a LEFT JOIN `".AUTH_DATABASE."`.`user_access` b on a.`id`=b.`user_id` and b.`app_id`=? WHERE a.`id` = ?";
+			$result = $db->getRow($query, array(AUTH_APP_ID,$proxy_id));
 			if ($result) {
 				$user = self::fromArray($result);  			
 			}		
@@ -214,8 +221,12 @@ class User {
 	 * @return User
 	 */
 	public static function fromArray(array $arr, User $user = null) {
+		$cache = SimpleCache::getCache();
 		if (is_null($user)) {
-			$user = new User();
+			$user = $cache->get("User", $arr['id']); //re-use a cached copy if we can. helps prevent inconsistent objects 
+			if (!$user) {
+				$user = new User();
+			}
 		}
 		$user->id = $arr['id'];
 		$user->username = $arr['username'];
@@ -245,9 +256,11 @@ class User {
 		$user->notifications = $arr['notifications'];
 		$user->office_hours = $arr['office_hours'];
 		$user->clinical = $arr['clinical'];
+		$user->group = $arr['group'];
+		$user->role = $arr['role'];
+		
 		
 		//be sure to cache this whenever created.
-		$cache = SimpleCache::getCache();
 		$cache->set($user,"User",$user->id);
 		return $user;
 	}

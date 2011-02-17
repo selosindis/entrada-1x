@@ -21,12 +21,20 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 		$request = filter_input(INPUT_POST, "request", FILTER_SANITIZE_STRING );
 		switch($request) {
 			case 'update':
+				var_dump($_POST);
+				$user = User::get($PROXY_ID);
+					
+				//first go through the values array and verify that all of the indices are correct 
+				//then check each value array to ensure either delete=1 or the other values are valid
+				//if there are any problems, note the error and carry on looking.
+				//if all is good, delete the values marked for deletion, then update the other values
+				//if there were any errors, return a 500 and display errors
 				
-				//first we need to get the list of all value ids being updated
-				$value_ids = filter_input(INPUT_POST, "meta_values", array('filter' => FILTER_VALIDATE_INT, 'flags' => FILTER_REQUIRE_ARRAY) );
-				
-				if (in_array(false, $value_ids, true)) {
-					add_error("");
+				if (!has_error()) {
+					echo editMetaDataTable_User($user);
+				} else {
+					header("HTTP/1.0 500 Internal Error");
+					echo display_status_messages(false);
 				}
 				
 				break;

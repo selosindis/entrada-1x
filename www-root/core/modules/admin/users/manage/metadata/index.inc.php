@@ -30,68 +30,11 @@ require_once("Entrada/metadata/functions.inc.php");
 
 $user = User::get($PROXY_ID);
 //var_dump($user);
-$org_id = $user->getOrganisationID();
-$group = $user->getGroup();
-$role = $user->getRole();
 
-$types = MetaDataTypes::get($org_id, $group, $role, $PROXY_ID);
-
-$categories = array();
-//For each of the applicable types without a parent (top-level types), create a section to help organize    
-foreach ($types as $type) {
-	$top_p = getTopParentType($type);
-	if (!in_array($top_p, $categories, true)) {
-		$categories[] = $top_p;
-	}
-}
-//var_dump($categories);
 ?>
-<table class="DataTable" callpadding="0" cellspacing="0">
-<colgroup>
-<col width="4%" />
-<col width="18%" />
-<col width="15%" />
-<col width="33%" />
-<col width="15%" />
-<col width="15%" />
-</colgroup>
-<thead>
-	<tr>
-		<th></th>
-		<th>Sub-type</th>
-		<th>Value</th>
-		<th>Notes</th>
-		<th>Effective Date</th>
-		<th>Expiry Date</th>
-	</tr>
-</thead>
-<tfoot>
-<tr>
-<td></td>
-<td colspan="5" class="control">
-<a href=""><img src="<?php echo ENTRADA_URL; ?>/images/disk.png" alt="Save Icon" /> Save</a> 
-</td>
-</tr>
-</tfoot>
-<?php foreach ($categories as $category) { 
-	$values = MetaDataValues::get($org_id, $group, $role,$PROXY_ID, $category);
-	//var_dump($values);
-	$descendant_type_sets = getDescendentTypesArray($types, $category); 
-	$label = html_encode($category->getLabel());
-?>
-<tbody id="cat_<?php echo $category->getID(); ?>">
-	<tr class="cat_head" id="cat_head_<?php echo $category->getID(); ?>">
-		<td></td>
-		<th colspan="2"><?php echo $label; ?></th>
-		<td class="control" colspan="3"><ul class="page-action"><li><a href="#" class="add_btn" id="add_btn_<?php echo $category->getID(); ?>">Add <?php echo $label; ?></a></li></ul></td>
-	</tr>
-	<?php
-		foreach ($values as $value) {
-			echo editMetaDataRow_User($value, $category, $descendant_type_sets);
-		} ?>
-</tbody>
-<?php } ?>
-</table>
+<form id="meta_data_form" method="post">
+<?php echo editMetaDataTable_User($user); ?>
+</form>
 <script type="text/javascript">
 
 function addRow(category_id, event) {
@@ -160,22 +103,47 @@ function addDeleteListeners() {
 }
 
 function removeListeners() {
-	$$('.DataTable .add_btn, .DataTable .delete_btn').invoke("stopObserving");
+	$$('.DataTable .add_btn, .DataTable .delete_btn, #save_btn').invoke("stopObserving");
 }
 
-function meta_user_init() {
+function addSaveListener() {
+	$('save_btn').observe("click", updateValues);
+}
+
+function updateValues(event) {
+	Event.stop(event);
+	new Ajax.Request("<?php echo ENTRADA_URL; ?>/admin/users/manage/metadata?section=api-metadata&id=<?php echo $PROXY_ID; ?>",
+			{
+				method:'post',
+				parameters: $('meta_data_form').serialize(true),
+				evalScripts:true,
+				onSuccess: function (response) {
+					removeListeners();
+					$('meta_data_form').update(response.responseText);
+					table_init();
+					
+				},
+				onError: function (response) {
+					alert(response.responseText);
+				}
+			});
+	document.fire('MetaData:onBeforeUpdate');
+}
+
+function page_init() {
+	table_init();
+}
+
+function table_init() {
 	addCategoryListeners();
 	addDeleteListeners();
 	document.observe('MetaData:onAfterRowInsert', function(event) {
 		addDeleteListener(event.memo);
 	});
+	addSaveListener();
 }
 
-function meta_user_clean() {
-	removeListeners();
-}
-
-meta_user_init();
+page_init();
 </script>
 <?php
 

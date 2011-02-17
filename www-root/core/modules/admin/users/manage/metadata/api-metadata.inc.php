@@ -21,6 +21,14 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 		$request = filter_input(INPUT_POST, "request", FILTER_SANITIZE_STRING );
 		switch($request) {
 			case 'update':
+				
+				//first we need to get the list of all value ids being updated
+				$value_ids = filter_input(INPUT_POST, "meta_values", array('filter' => FILTER_VALIDATE_INT, 'flags' => FILTER_REQUIRE_ARRAY) );
+				
+				if (in_array(false, $value_ids, true)) {
+					add_error("");
+				}
+				
 				break;
 			case 'new_value':
 				$cat_id = filter_input(INPUT_POST, "type", FILTER_SANITIZE_NUMBER_INT );
@@ -36,7 +44,7 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 					$value_id = MetaDataValue::create($cat_id, $PROXY_ID);
 					$value = MetaDataValue::get($value_id);
 					$descendant_type_sets = getDescendentTypesArray($types, $type);
-					
+					header("Content-Type: application/xml");
 					echo editMetaDataRow_User($value, $type, $descendant_type_sets);
 				} else {
 					header("HTTP/1.0 500 Internal Error");

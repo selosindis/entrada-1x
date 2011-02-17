@@ -125,15 +125,17 @@ function displayMetaDataRow_User(MetaDataValue $value, MetaDataType $category) {
 
 function editMetaDataRow_User(MetaDataValue $value, MetaDataType $category, array $descendant_type_sets = array()) {
 	$vid = $value->getID();
-	ob_start();
+	ob_start();	
 	?>
 	<tr class="value_edit" id="value_edit_<?php echo $vid; ?>">
-		<td class="control"><input type="hidden" name="delete_<?php echo $micro; ?>" value="0" /><a href="#"><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" /></a></td>
+		<td class="control"><input type="hidden" name="meta_values[]" value="<?php echo $vid; ?>" /><input type="checkbox" class="delete_btn" id="delete_<?php echo $vid; ?>" name="delete_<?php echo $vid; ?>" value="0" /></td>
 		<td><?php if ($descendant_type_sets) { ?>
 			<select name="type_edit_<?php echo $vid; ?>">
 				<?php 
 				foreach ($descendant_type_sets as $type_set){
-					echo build_option(end($type_set)->getID(), html_encode(implode(" > ", $type_set), end($type_set) === $value->getType()));
+					$type = end($type_set);
+					$selected = $type === $value->getType();
+					echo build_option($type->getID(), html_encode(implode(" > ", $type_set)), $selected);
 				} 
 				?>
 			</select>

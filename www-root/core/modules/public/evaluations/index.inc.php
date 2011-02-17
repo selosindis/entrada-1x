@@ -35,31 +35,37 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_PUBLIC_EVALUATIONS"))) {
 <h1>My Evaluations</h1>
 <?php
 
-$query		= "	SELECT * FROM `evaluations` AS a
-				JOIN `evaluation_evaluators` AS b
-				ON a.`evaluation_id` = b.`evaluation_id`
-				WHERE 
+ob_start();
+clerkship_display_available_evaluations();
+$clerkship_evaluations = trim(ob_get_clean());
+
+echo $clerkship_evaluations;
+
+$query = "	SELECT * FROM `evaluations` AS a
+			JOIN `evaluation_evaluators` AS b
+			ON a.`evaluation_id` = b.`evaluation_id`
+			WHERE
+			(
 				(
-					(
-						b.`evaluator_type` = 'proxy_id'
-						AND b.`evaluator_value` = ".$db->qstr($_SESSION["details"]["id"])."
-					)
-					OR
-					(
-						b.`evaluator_type` = 'organisation_id'
-						AND b.`evaluator_value` = ".$db->qstr($_SESSION["details"]["organisation_id"])."
-					)".($_SESSION["details"]["group"] == "student" ? " OR (
-						b.`evaluator_type` = 'grad_year'
-						AND b.`evaluator_value` = ".$db->qstr($_SESSION["details"]["role"])."
-					)" : "")."
+					b.`evaluator_type` = 'proxy_id'
+					AND b.`evaluator_value` = ".$db->qstr($_SESSION["details"]["id"])."
 				)
-				AND a.`evaluation_start` < ".$db->qstr(time())."
-				AND a.`evaluation_finish` > ".$db->qstr(time())."
-				GROUP BY a.`evaluation_id`
-				ORDER BY a.`evaluation_finish` ASC";
-$results	= $db->GetAll($query);
+				OR
+				(
+					b.`evaluator_type` = 'organisation_id'
+					AND b.`evaluator_value` = ".$db->qstr($_SESSION["details"]["organisation_id"])."
+				)".($_SESSION["details"]["group"] == "student" ? " OR (
+					b.`evaluator_type` = 'grad_year'
+					AND b.`evaluator_value` = ".$db->qstr($_SESSION["details"]["role"])."
+				)" : "")."
+			)
+			AND a.`evaluation_start` < ".$db->qstr(time())."
+			AND a.`evaluation_finish` > ".$db->qstr(time())."
+			GROUP BY a.`evaluation_id`
+			ORDER BY a.`evaluation_finish` ASC";
+$results = $db->GetAll($query);
 if ($results) {
-	$evaluation_id			= 0;
+	$evaluation_id = 0;
 	?>
 	<table class="tableList" cellspacing="0" summary="List of Evaluations">
 	<colgroup>
@@ -151,9 +157,11 @@ if ($results) {
 	</table>
 	<?php
 } else {
-	?>
-	<div class="display-generic">
-		There are no evaluations or assessments <strong>assigned to you</strong> in the system at this time.
-	</div>
-	<?php
+	if (!$clerkship_evaluations) {
+		?>
+		<div class="display-generic">
+			There are no evaluations or assessments <strong>assigned to you</strong> in the system at this time.
+		</div>
+		<?php
+	}
 }

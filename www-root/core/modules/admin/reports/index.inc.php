@@ -84,18 +84,6 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 		</li>
 	</ol>
 
-	<h2 style="color: #669900">Clerkship Elective Reports</h2>
-	<ol class="system-reports">
-		<li>
-			<a href="<?php echo ENTRADA_URL; ?>/admin/reports?section=electives-grant-eligible">Grant Eligible</a><br />
-			A report showing the number of students doing electives outside of Ontario during the given time period.
-		</li>
-		<li>
-			<a href="<?php echo ENTRADA_URL; ?>/admin/reports?section=electives-total-hours">Total Hours</a><br />
-			A report showing the number of elective hours outside of Ontario during the given time period.
-		</li>
-	</ol>
-	
 	<h2 style="color: #669900">Learner Incident Reports</h2>
 	<ol class="system-reports">
 		<li>

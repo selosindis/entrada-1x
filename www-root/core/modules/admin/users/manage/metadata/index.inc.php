@@ -57,7 +57,7 @@ foreach ($types as $type) {
 </colgroup>
 <thead>
 	<tr>
-		<td></td>
+		<th></th>
 		<th>Sub-type</th>
 		<th>Value</th>
 		<th>Notes</th>
@@ -80,9 +80,10 @@ foreach ($types as $type) {
 	$label = html_encode($category->getLabel());
 ?>
 <tbody id="cat_<?php echo $category->getID(); ?>">
-	<tr id="cat_head_<?php echo $category->getID(); ?>">
-		<td class="control"><a href="#" class="add_btn" id="add_btn_<?php echo $category->getID(); ?>"><img src="<?php echo ENTRADA_URL; ?>/images/add.png" alt="Add <?php echo $label; ?>" title="Add <?php echo $label; ?>" /></a></td>
-		<th colspan="5"><?php echo $label; ?></th>
+	<tr class="cat_head" id="cat_head_<?php echo $category->getID(); ?>">
+		<td></td>
+		<th colspan="2"><?php echo $label; ?></th>
+		<td class="control" colspan="3"><ul class="page-action"><li><a href="#" class="add_btn" id="add_btn_<?php echo $category->getID(); ?>">Add <?php echo $label; ?></a></li></ul></td>
 	</tr>
 	<?php
 		foreach ($values as $value) {
@@ -90,12 +91,11 @@ foreach ($types as $type) {
 		} ?>
 </tbody>
 <?php } ?>
-<tfoot></tfoot>
-<tr>
 </table>
 <script type="text/javascript">
 
-function addRow(category_id) {
+function addRow(category_id, event) {
+	Event.stop(event);
 	new Ajax.Request("<?php echo ENTRADA_URL; ?>/admin/users/manage/metadata?section=api-metadata&id=<?php echo $PROXY_ID; ?>",
 		{
 			method:'post',
@@ -103,61 +103,72 @@ function addRow(category_id) {
 			evalScripts:true,
 			onSuccess: function (response) {
 				var head = $('cat_head_' + category_id);
-				head.insert({after: response.responseText});
-				document.fire('MetaData:onAfterUpdate');
+				var xml = response.responseXML;
+				var value_id = xml.firstChild.getAttribute("id");
+				if (value_id) {
+					var value_parts = /value_edit_(\d+)/.exec(value_id);
+					if (value_parts && value_parts[1]) {
+						head.insert({after: response.responseText});
+						document.fire('MetaData:onAfterRowInsert', value_parts[1]);
+					}
+				}
 			},
 			onError: function (response) {
 				alert(response.responseText);
 			}
 		});
-	document.fire('MetaData:onBeforeUpdate');
-}
-
-function addRowReq(event) {
-	Event.stop(event);
-	var element = Event.findElement(event);
-	var tbody = element.up('tbody');
-	var id = tbody.getAttribute('id');
-	var regex = /^cat_(\d+)$/;
-	var res = regex.exec(id);
-	if (res && res[1]) {
-		var cat_id = res[1];
-		addRow(cat_id);
-	}
-	return false;
-}
-
-function addCategoryListeners() {
-	$$('.DataTable .add_btn').each(function (e) {
-		clog("adding");
-		e.observe("click", addRowReq);
-	});
+	document.fire('MetaData:onBeforeRowInsert', category_id);
 }
 
 function deleteRow(value_id) {
-	
+	var tr = $('value_edit_'+value_id);
+	tr.setAttribute("class", "value_delete");
+	var checkbox = $('delete_'+value_id);
+	var opts = [ "enable", "disable" ];
+	tr.select('input:not([type=checkbox]), select').invoke(opts[Number(checkbox.checked)]);
 }
 
-function undeleteRow(value_id) {
-	
+function mkEvtReq(regex, func) {
+	return function(event) {
+		var element = Event.findElement(event);
+		var tr = element.up('tr');
+		var id = tr.getAttribute('id');
+		var res = regex.exec(id);
+		if (res && res[1]) {
+			var target_id = res[1];
+			func(target_id, event);
+		}
+		return false;
+	}
 }
+
+var addRowReq = mkEvtReq(/^cat_head_(\d+)$/,addRow);
+var deleteRowReq = mkEvtReq(/^value_edit_(\d+)$/, deleteRow);
 
 function addDeleteListener(value_id) {
-	
+	var btn = $('delete_btn_'+value_id);
+	btn.observe('click', deleteRowReq);
+}
+
+
+function addCategoryListeners() {
+	$$('.DataTable .add_btn').invoke("observe", "click", addRowReq);
 }
 
 function addDeleteListeners() {
-	
+	$$('.DataTable .delete_btn').invoke("observe", "click", deleteRowReq);
 }
 
 function removeListeners() {
-	
+	$$('.DataTable .add_btn, .DataTable .delete_btn').invoke("stopObserving");
 }
 
 function meta_user_init() {
-	clog("testing");
 	addCategoryListeners();
 	addDeleteListeners();
+	document.observe('MetaData:onAfterRowInsert', function(event) {
+		addDeleteListener(event.memo);
+	});
 }
 
 function meta_user_clean() {

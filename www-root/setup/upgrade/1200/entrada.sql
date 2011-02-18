@@ -177,6 +177,36 @@ ALTER TABLE `community_pages` ADD INDEX (`community_id`, `page_type`);
 ALTER TABLE `community_page_options` ADD INDEX (`cpage_id`);
 ALTER TABLE `community_members` ADD INDEX (`community_id`, `proxy_id`, `member_active`);
 
+CREATE TABLE IF NOT EXISTS `events` (
+  `event_id` int(12) NOT NULL AUTO_INCREMENT,
+  `recurring_id` int(12) DEFAULT '0',
+  `region_id` int(12) DEFAULT '0',
+  `course_id` int(12) NOT NULL DEFAULT '0',
+  `event_phase` varchar(12) DEFAULT NULL,
+  `event_title` varchar(255) NOT NULL,
+  `event_description` text,
+  `event_goals` text,
+  `event_objectives` text,
+  `event_message` text,
+  `event_location` varchar(64) DEFAULT NULL,
+  `event_start` bigint(64) NOT NULL,
+  `event_finish` bigint(64) NOT NULL,
+  `event_duration` int(64) NOT NULL,
+  `release_date` bigint(64) NOT NULL,
+  `release_until` bigint(64) NOT NULL,
+  `updated_date` bigint(64) NOT NULL,
+  `updated_by` int(12) NOT NULL,
+  PRIMARY KEY  (`event_id`),
+  KEY `course_id` (`course_id`),
+  KEY `region_id` (`region_id`),
+  KEY `recurring_id` (`recurring_id`),
+  KEY `release_date` (`release_date`,`release_until`),
+  KEY `event_start` (`event_start`,`event_duration`),
+  KEY `event_start_2` (`event_start`,`event_finish`),
+  KEY `event_phase` (`event_phase`),
+  FULLTEXT KEY `event_title` (`event_title`,`event_description`,`event_goals`,`event_objectives`,`event_message`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
 CREATE TABLE IF NOT EXISTS `events_lu_topics` (
   `topic_id` int(12) NOT NULL AUTO_INCREMENT,
   `ed10_id` int(12) NULL,
@@ -230,7 +260,65 @@ RENAME TABLE `events_lu_ed11` TO `backup_events_lu_ed11`;
 RENAME TABLE `event_ed10` TO `backup_event_ed10`;
 RENAME TABLE `event_ed11` TO `backup_event_ed11`;
 
-UPDATE `settings` SET `value` = '1.2.0' WHERE `shortname` = 'version_db';
+INSERT INTO `ar_lu_on_call_locations` (`id`,`on_call_location`) VALUES ('', 'Other (specify)');
 
-INSERT INTO `ar_lu_on_call_locations` (`id`,`on_call_location`)
-VALUES	('', 'Other (specify)');
+ALTER TABLE `assessments` ADD COLUMN `grade_weighting` int(11) NOT NULL default '0' AFTER `numeric_grade_points_total`;
+
+CREATE TABLE `assessment_exceptions` (
+  `aexception_id` int(12) NOT NULL auto_increment,
+  `assessment_id` int(12) NOT NULL,
+  `proxy_id` int(12) NOT NULL,
+  `grade_weighting` int(11) NOT NULL default '0',
+  PRIMARY KEY  (`aexception_id`),
+  KEY `proxy_id` (`assessment_id`,`proxy_id`),
+  KEY `assessment_id` (`assessment_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+ALTER TABLE `community_discussions` ADD KEY `page_id` (`cdiscussion_id`,`cpage_id`,`community_id`);
+ALTER TABLE `community_discussions` ADD KEY `community_id2` (`community_id`,`forum_active`,`cpage_id`,`forum_order`,`forum_title`);
+
+ALTER TABLE `community_discussion_topics` ADD KEY `community_id` (`cdtopic_id`,`community_id`);
+ALTER TABLE `community_discussion_topics` ADD KEY `cdtopic_parent` (`cdtopic_parent`,`community_id`);
+ALTER TABLE `community_discussion_topics` ADD KEY `user` (`cdiscussion_id`,`community_id`,`topic_active`,`cdtopic_parent`,`proxy_id`,`release_date`,`release_until`);
+ALTER TABLE `community_discussion_topics` ADD KEY `admin` (`cdiscussion_id`,`community_id`,`topic_active`,`cdtopic_parent`);
+ALTER TABLE `community_discussion_topics` ADD KEY `post` (`proxy_id`,`community_id`,`cdtopic_id`,`cdtopic_parent`,`topic_active`);
+ALTER TABLE `community_discussion_topics` ADD KEY `release` (`proxy_id`,`community_id`,`cdtopic_parent`,`topic_active`,`release_date`);
+ALTER TABLE `community_discussion_topics` ADD KEY `community` (`cdtopic_id`,`community_id`);
+
+ALTER TABLE `tasks`
+ ADD COLUMN `verification_type` enum('faculty','other','none') NOT NULL default 'none',
+ ADD COLUMN `faculty_selection_policy` enum('off','allow','require') NOT NULL default 'allow',
+ ADD COLUMN `completion_comment_policy` enum('no_comments','require_comments','allow_comments') NOT NULL default 'allow_comments',
+ ADD COLUMN `rejection_comment_policy` enum('no_comments','require_comments','allow_comments') NOT NULL default 'allow_comments',
+ ADD COLUMN `verification_notification_policy` smallint(5) unsigned NOT NULL default '0';
+
+UPDATE `tasks` SET
+ `verification_type`='faculty'
+ WHERE `require_verification`=1;
+
+UPDATE `tasks` SET
+ `verification_notification_policy`=1;
+
+ALTER TABLE `tasks`
+ DROP COLUMN `require_verification`;
+
+CREATE TABLE IF NOT EXISTS `task_associated_faculty` (
+  `task_id` int(12) unsigned NOT NULL,
+  `faculty_id` int(12) unsigned NOT NULL,
+  PRIMARY KEY  (`task_id`,`faculty_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+ALTER TABLE `task_completion`
+ ADD COLUMN `faculty_id` int(12) unsigned default NULL,
+ ADD COLUMN `completion_comment` text,
+ ADD COLUMN `rejection_comment` text,
+ ADD COLUMN `rejection_date` bigint(64) default NULL;
+
+CREATE TABLE IF NOT EXISTS `task_verifiers` (
+  `task_id` int(12) unsigned NOT NULL,
+  `verifier_id` int(12) unsigned NOT NULL,
+  PRIMARY KEY  (`task_id`,`verifier_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+INSERT INTO `settings` (`shortname`, `value`) VALUES ('version_entrada', '1.2.0');
+UPDATE `settings` SET `value` = '1200' WHERE `shortname` = 'version_db';

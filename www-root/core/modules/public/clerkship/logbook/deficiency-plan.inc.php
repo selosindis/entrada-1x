@@ -116,9 +116,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 	$ROTATION_TITLE = $db->GetOne("	SELECT `rotation_title` FROM `".CLERKSHIP_DATABASE."`.`global_lu_rotations`
 									WHERE `rotation_id` = ".$db->qstr($ROTATION_ID));
 	
-	$BREADCRUMB[]	= array("url" => ENTRADA_URL."/clerkship/logbook?section=add", "title" => "Phase III Log deficiency plan");
+	$BREADCRUMB[]	= array("url" => ENTRADA_URL."/clerkship/logbook?section=add", "title" => "Clerkship Log deficiency plan");
 
-	echo "<h1>Phase III Log deficiency plan</h1>\n";
+	echo "<h1>Clerkship Log deficiency plan</h1>\n";
 	if ((isset($ROTATION_ID)) && ($ROTATION_ID)) {
 		$PROCESSED["rotation_id"] = $ROTATION_ID;
 	}

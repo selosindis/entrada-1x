@@ -1,0 +1,15 @@
+This email is meant to be a reminder for you to continue logging your clerkship encounters in the clerkship logbook system. According to the encounters entered currently, the following clinical procedures have not yet been tracked:
+
+%ROTATION_DEFICIENCIES%
+
+
+An overview of your progress in this rotation can be found here:
+%ROTATION_OVERVIEW_URL%
+
+And a list of your logbook entries by rotation can be found here:
+%ENTRY_MANAGEMENT_URL%
+
+Regards,
+
+The %APPLICATION_NAME% team,
+%ENTRADA_URL%

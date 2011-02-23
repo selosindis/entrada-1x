@@ -441,8 +441,8 @@ $MODULES["courses"] = array("title" => "Manage Courses", "resource"=> "coursecon
 $MODULES["evaluations"] = array("title" => "Manage Evaluations", "resource" => "evaluation", "permission" => "update");
 $MODULES["events"] = array("title" => "Manage Events", "resource" => "eventcontent", "permission" => "update");
 $MODULES["gradebook"] = array("title" => "Manage Gradebook", "resource" => "gradebook", "permission" => "update");
-$MODULES["mspr"] = array("title" => "Manage MSPRs", "resource" => "mspr", "permission" => "create");
-$MODULES["tasks"] = array("title" => "Manage Tasks", "resource" => "task", "permission" => "create");
+//$MODULES["mspr"] = array("title" => "Manage MSPRs", "resource" => "mspr", "permission" => "create"); //removed as it is now under manage users
+$MODULES["tasks"] = array("title" => "Manage Tasks", "resource" => "task", "permission" => "create"); 
 $MODULES["notices"] = array("title" => "Manage Notices", "resource" => "notice", "permission" => "update");
 $MODULES["objectives"]	= array("title" => "Manage Objectives", "resource" => "objective", "permission" => "update");
 $MODULES["observerships"] = array("title" => "Manage Observerships", "resource" => "observerships", "permission" => "update");

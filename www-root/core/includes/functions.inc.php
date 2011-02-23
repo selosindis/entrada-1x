@@ -10436,7 +10436,7 @@ function objectives_intable($identifier = 0, $indent = 0, $excluded_objectives =
  * @return String Returns an html string for an option tag.
  */
 function build_option($value, $label, $selected = false) {
-	return "<option value=\"".$value."\"". ($selected ? "selected=\"selected\"" : "") .">".$label."</option>\n";
+	return "<option value=\"".$value."\"". ($selected ? "selected=\"selected\"" : "") .">".$label."</option>";
 }
 
 

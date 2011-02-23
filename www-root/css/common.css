@@ -1081,11 +1081,11 @@ table.tableList tbody tr td {
 border-bottom:1px solid #EBEBEB;
 }
 
-table.DataTable tbody tr.cat_head td.control {
+table.DataTable tbody tr.cat_head td.control, table.DataTable tbody tr.user_head td.control {
 	text-align:right;
 }
 
-table.DataTable tbody tr.cat_head td.control ul.page-action {
+table.DataTable tbody tr.cat_head td.control ul.page-action, table.DataTable tbody tr.user_head td.control ul.page-action {
 	margin: 0;
 }
 
@@ -1099,6 +1099,7 @@ table.DataTable tbody tr th {
 
 table.DataTable tfoot td.control {
 	padding-top:5ex;	
+	text-align:right;
 }
 	
 table.DataTable td a {
@@ -2226,13 +2227,17 @@ background-color:#FFF;
 -webkit-border-radius:0 0 10px 10px;
 }
 
-.modal-confirmation div.footer button.left {
+.modal-confirmation div.footer button.left, .modal-description div.footer button.left {
 position:absolute;
 top: 8px;
 left: 10px;
 }
 
-.modal-confirmation div.footer button.right {
+.modal-description div.status {
+	margin-bottom:35px;
+}
+
+.modal-confirmation div.footer button.right, .modal-description div.footer button.right {
 position:absolute;
 top: 8px;
 right: 10px;
@@ -3238,4 +3243,19 @@ blockquote.completion_comment {
 blockquote.rejection_comment {
 	padding:1ex 1em;
 	background-color: #FFD9D0;
+}
+
+form#table_selector {
+	display:block;
+	margin-bottom:20px;
+}
+
+form#meta_data_form {
+	display:block;
+}
+
+#loadingModal {
+	padding:15px;
+	height:auto;
+	width:auto;
 }

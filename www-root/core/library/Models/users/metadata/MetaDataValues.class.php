@@ -26,9 +26,10 @@ class MetaDataValues extends Collection {
 	public static function get($organisation=null, $group=null, $role=null, $proxy_id=null, MetaDataType $type=null, $include_sub_types=true, $options=array()) {
 		global $db;
 		$conditions = array();
-		if (isset($options['order_by'])) {
-			if (is_array($options['order_by'])) {
-				foreach ($options['order_by'] as $orders) {
+		if (key_exists('order by', $options)) {
+			$order = array();
+			if (is_array($options['order by'])) {
+				foreach ($options['order by'] as $orders) {
 					$order[] = "`".$orders[0]."` ". (isset($orders[1]) ? $orders[1] : "asc"); 
 				}	
 			}

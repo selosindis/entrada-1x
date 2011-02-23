@@ -25,7 +25,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MANAGE_USER"))) {
 
 	application_log("error", "Group [".$GROUP."] and role [".$ROLE."] do not have access to this module [".$MODULE."]");
 } else {
-	define("IN_MANAGE_USER_INCIDENTS", true);
+	define("IN_MANAGE_USER_DATA", true);
 
 	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/users/manage/metadata?id=".$PROXY_ID, "title" => "Manage User Data");
 

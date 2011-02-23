@@ -24,7 +24,11 @@ class MetaDataValue {
 	}
 	
 	public static function fromArray(array $arr) {
-		$value=new self();
+		$cache = SimpleCache::getCache();
+		$value = $cache->get("MetaValue",$arr['meta_value_id']);
+		if (!$value) {
+			$value=new self();
+		}		
 		$value->meta_value_id = $arr['meta_value_id'];
 		$value->meta_type_id = $arr['meta_type_id'];
 		$value->proxy_id = $arr['proxy_id'];
@@ -32,6 +36,7 @@ class MetaDataValue {
 		$value->notes = $arr['value_notes'];
 		$value->effective_date = $arr['effective_date'];
 		$value->expiry_date = $arr['expiry_date'];
+		$cache->set($value, "MetaValue", $arr['meta_value_id']);
 		return $value;
 	}
 	
@@ -86,7 +91,28 @@ class MetaDataValue {
 		}
 	}
 	
-	public static function update() {
+	public function update(array $inputs) {
+		extract($inputs);
+		$cache = SimpleCache::getCache();
+		$cache->remove("MetaValue", $this->meta_value_id);
 		
+		global $db;
+		$query = "UPDATE `meta_values` SET `meta_type_id`=?, `data_value`=?, `value_notes`=?, `effective_date`=?, `expiry_date`=? WHERE `meta_value_id`=?";
+		if(!$db->Execute($query, array($type, $value, $notes, $effective_date, $expiry_date, $this->meta_value_id))) {
+			add_error("Failed to update meta data");
+			application_log("error", "Unable to update a meta_values record. Database said: ".$db->ErrorMsg());
+		}
+	} 
+	
+	public function delete() {
+		$cache = SimpleCache::getCache();
+		$cache->remove("MetaValue", $this->meta_value_id);
+		
+		global $db;
+		$query="DELETE FROM `meta_values` where `meta_value_id`=?";
+		if(!$db->Execute($query, array($this->meta_value_id))) {
+			add_error("Failed to remove meta data from database.");
+			application_log("error", "Unable to delete a meta_values record. Database said: ".$db->ErrorMsg());
+		} 	
 	} 
 }

@@ -7,4 +7,5 @@ INSERT INTO `acl_permissions` (`resource_type`, `resource_value`, `entity_type`,
 ('evaluation', NULL, 'group:role', 'staff:admin', 1, 1, 1, 1, 1, NULL),
 ('evaluationform', NULL, 'group:role', 'staff:admin', 1, 1, 1, 1, 1, NULL),
 ('evaluationformquestion', NULL, 'group:role', 'staff:admin', 1, 1, 1, 1, 1, NULL),
-('gradebook', NULL, 'group', 'student', NULL, NULL, 1, NULL, NULL, NULL);
+('gradebook', NULL, 'group', 'student', NULL, NULL, 1, NULL, NULL, NULL),
+('metadata', NULL, 'group:role', 'staff:admin', 1, 1, 1, 1, 1, NULL);

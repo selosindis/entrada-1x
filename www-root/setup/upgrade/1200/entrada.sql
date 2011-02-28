@@ -320,5 +320,76 @@ CREATE TABLE IF NOT EXISTS `task_verifiers` (
   PRIMARY KEY  (`task_id`,`verifier_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
+CREATE TABLE IF NOT EXISTS `meta_types` (
+  `meta_type_id` int(10) unsigned NOT NULL auto_increment,
+  `label` varchar(255) NOT NULL,
+  `description` text NOT NULL,
+  `parent_type_id` int(10) unsigned default NULL,
+  PRIMARY KEY  (`meta_type_id`)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+
+INSERT INTO `meta_types` (`meta_type_id`, `label`, `description`, `parent_type_id`) VALUES
+(1, 'N95 Mask Fit', 'Make, Model, and size definition of required N95 masks.', NULL),
+(2, 'Police Record Check', 'Police Record Checks to verify background as clear of events which could prevent placement in hospitals or clinics.', NULL),
+(3, 'Full', 'Full record check. Due to differences in how police departments handle reporting of background checks, vulnerable sector screening (VSS) is a separate type of record', 2),
+(4, 'Vulnerable Sector Screening', 'Required for placement in hospitals or clinics. May be included in full police record checks or may be a separate document.', 2),
+(5, 'Assertion', 'Yearly or bi-yearly assertion that prior police background checks remain valid.', 2),
+(6, 'Immunization/Health Check', '', NULL),
+(7, 'Hepatitis B', '', 6),
+(8, 'Tuberculosis', '', 6),
+(9, 'Measles', '', 6),
+(10, 'Mumps', '', 6),
+(11, 'Rubella', '', 6),
+(12, 'Tetanus/Diptheria', '', 6),
+(13, 'Polio', '', 6),
+(14, 'Varicella', '', 6),
+(15, 'Pertussis', '', 6),
+(16, 'Influenza', 'Each student is required to obtain an annual influenza immunization. The Ontario government provides the influenza vaccine free to all citizens during the flu season. Students will be required to follow Public Health guidelines put forward for health care professionals. Thia immunization must be received by December 1st each academic year and documentation forwarded to the UGME office by the student', 6),
+(17, 'Hepatitis C', '', 6),
+(18, 'HIV', '', 6),
+(19, 'Cardiac Life Support', '', NULL),
+(20, 'Basic', '', 19),
+(21, 'Advanced', '', 19);
+
+CREATE TABLE IF NOT EXISTS `meta_type_relations` (
+  `meta_data_relation_id` int(11) NOT NULL auto_increment,
+  `meta_type_id` int(10) unsigned default NULL,
+  `entity_type` varchar(63) NOT NULL,
+  `entity_value` varchar(63) NOT NULL,
+  PRIMARY KEY  (`meta_data_relation_id`),
+  UNIQUE KEY `meta_type_id` (`meta_type_id`,`entity_type`,`entity_value`)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+
+INSERT INTO `meta_type_relations` (`meta_data_relation_id`, `meta_type_id`, `entity_type`, `entity_value`) VALUES
+(1, 1, 'organisation:group', '1:student'),
+(2, 7, 'organisation:group', '1:student'),
+(3, 3, 'organisation:group', '1:student'),
+(4, 4, 'organisation:group', '1:student'),
+(5, 5, 'organisation:group', '1:student'),
+(6, 8, 'organisation:group', '1:student'),
+(7, 9, 'organisation:group', '1:student'),
+(8, 10, 'organisation:group', '1:student'),
+(9, 11, 'organisation:group', '1:student'),
+(10, 12, 'organisation:group', '1:student'),
+(11, 13, 'organisation:group', '1:student'),
+(12, 14, 'organisation:group', '1:student'),
+(13, 15, 'organisation:group', '1:student'),
+(14, 16, 'organisation:group', '1:student'),
+(15, 17, 'organisation:group', '1:student'),
+(16, 18, 'organisation:group', '1:student'),
+(17, 20, 'organisation:group', '1:student'),
+(18, 21, 'organisation:group', '1:student');
+
+CREATE TABLE IF NOT EXISTS `meta_values` (
+  `meta_value_id` int(10) unsigned NOT NULL auto_increment,
+  `meta_type_id` int(10) unsigned NOT NULL,
+  `proxy_id` int(10) unsigned NOT NULL,
+  `data_value` varchar(255) NOT NULL,
+  `value_notes` text NOT NULL,
+  `effective_date` bigint(20) default NULL,
+  `expiry_date` bigint(20) default NULL,
+  PRIMARY KEY  (`meta_value_id`)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+
 INSERT INTO `settings` (`shortname`, `value`) VALUES ('version_entrada', '1.2.0');
 UPDATE `settings` SET `value` = '1200' WHERE `shortname` = 'version_db';

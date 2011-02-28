@@ -22,13 +22,14 @@
  * Include the Entrada init code.
  */
 require_once("init.inc.php");
-
-$query 	= "SELECT * FROM `".CLERKSHIP_DATABASE."`.`global_lu_rotations`
-		WHERE `rotation_id` < ".$db->qstr(MAX_ROTATION);
+$query 	= "SELECT * FROM `".CLERKSHIP_DATABASE."`.`global_lu_rotations` AS a
+		LEFT JOIN `courses` AS b
+		ON a.`course_id` = b.`course_id`
+		WHERE a.`rotation_id` < ".$db->qstr(MAX_ROTATION);
 $rotations = $db->GetAll($query);
 if ($rotations) {
 	foreach ($rotations as $rotation) {
-		$query		= "SELECT a.*, b.`etype_id` as `proxy_id`, c.*, CONCAT_WS(' ', e.`firstname`, e.`lastname`) as `fullname`, MIN(a.`event_start`) as `start`, MAX(a.`event_finish`) AS `finish`
+		$query		= "SELECT a.*, b.`etype_id` as `proxy_id`, c.*, CONCAT_WS(' ', e.`firstname`, e.`lastname`) as `fullname`, e.`email`, MIN(a.`event_start`) as `start`, MAX(a.`event_finish`) AS `finish`
 					FROM `".CLERKSHIP_DATABASE."`.`events` AS a
 					JOIN `".CLERKSHIP_DATABASE."`.`event_contacts` AS b
 					ON b.`event_id` = a.`event_id`
@@ -47,19 +48,27 @@ if ($rotations) {
 					ORDER BY `fullname` ASC";
 		$results = $db->GetAll($query);
 		if ($results) {
+			$query = "DELETE FROM `".CLERKSHIP_DATABASE."`.`logbook_overdue` WHERE `rotation_id` = ".$db->qstr($rotation["rotation_id"]);
+			$db->Execute($query);
+			$count = 0;
 			foreach ($results as $clerk) {
-				if ($clerk["start"] < time()) {
-					if (time() >= ($clerk["finish"] + ONE_WEEK)) {
-						clerkship_progress_send_notice(ONE_WEEK_PAST, $rotation, $clerk);
-					} elseif (time() >= $clerk["finish"]) {
-						clerkship_progress_send_notice(ROTATION_ENDED, $rotation, $clerk);
-					} elseif ((time() - $clerk["start"]) >= (($clerk["finish"] - $clerk["start"]) - ONE_WEEK)) {
-						clerkship_progress_send_notice(ONE_WEEK_PRIOR, $rotation, $clerk);
-					} elseif ((time() - $clerk["start"]) >= (($clerk["finish"] - $clerk["start"]) / $rotation["percent_period_complete"] * 100)) {
-						clerkship_progress_send_notice(ROTATION_PERIOD, $rotation, $clerk);
+				if (((int)$clerk["proxy_id"]) != 1788 && ((int)$clerk["proxy_id"]) != 1738 && ((int)$clerk["proxy_id"]) != 1760 && ((int)$clerk["proxy_id"]) != 1739 && ((int)$clerk["proxy_id"]) != 1543) { 
+					if ($clerk["rotation_id"] && ($clerk["start"] > strtotime("February 14th, 2010") || ((array_search($clerk["rotation_id"], array("3", "9")) !== false))) && (!array_search(((int)$clerk["proxy_id"]), $excused) || $clerk["rotation_id"] != 3)) {
+						if ($clerk["start"] < time()) {
+							if (time() >= ($clerk["finish"] + ONE_WEEK)) {
+								clerkship_progress_send_notice(CLERKSHIP_ONE_WEEK_PAST, $rotation, $clerk);
+							} elseif (time() >= $clerk["finish"]) {
+								clerkship_progress_send_notice(CLERKSHIP_ROTATION_ENDED, $rotation, $clerk);
+							} elseif ((time() - $clerk["start"]) >= (($clerk["finish"] - $clerk["start"]) - ONE_WEEK)) {
+								clerkship_progress_send_notice(CLERKSHIP_ONE_WEEK_PRIOR, $rotation, $clerk);
+							} elseif ((time() - $clerk["start"]) >= (($clerk["finish"] - $clerk["start"]) * $rotation["percent_period_complete"] / 100)) {
+								clerkship_progress_send_notice(CLERKSHIP_ROTATION_PERIOD, $rotation, $clerk);
+							}
+						}
 					}
 				}
 			}
 		}
+		clerkship_send_queued_notifications($rotation["rotation_id"], $rotation["rotation_title"], $rotation["pcoord_id"]);
 	}
 }

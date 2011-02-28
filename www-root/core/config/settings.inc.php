@@ -73,6 +73,7 @@ define("CLERKSHIP_LOTTERY_START", strtotime("March 1st, 2010"));
 define("CLERKSHIP_LOTTERY_FINISH", strtotime("March 14th, 2010"));
 define("CLERKSHIP_LOTTERY_MAX", 6);
 define("CLERKSHIP_FIRST_CLASS", 2011);
+define("ONE_WEEK", 604800);
 define("CLERKSHIP_ONE_WEEK_PAST", 4);
 define("CLERKSHIP_ROTATION_ENDED", 3);
 define("CLERKSHIP_ONE_WEEK_PRIOR", 2);

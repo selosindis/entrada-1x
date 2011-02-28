@@ -44,7 +44,7 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 	$summary_shown = false;
 	if ($rotations) {
 		?>
-		<form action="<?php echo WEBSITE_URL ?>/admin/clerkship/flag" method="post">
+		<form action="<?php echo ENTRADA_URL ?>/admin/clerkship/flag" method="post">
 			<table class="tableList" cellspacing="0" summary="Clerkship Progress Summary">
 				<colgroup>
 					<col class="modified" />
@@ -123,7 +123,7 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 								}
 							}
 						}
-						$url = WEBSITE_URL."/clerkship/logbook?section=view&type=missing&core=".$rotation["rotation_id"]."&id=".$PROXY_ID;
+						$url = ENTRADA_URL."/clerkship/logbook?section=view&type=missing&core=".$rotation["rotation_id"]."&id=".$PROXY_ID;
 						$summary_shown = true;
 						?>
 						<tr class="entry-log">

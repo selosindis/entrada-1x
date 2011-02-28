@@ -786,14 +786,14 @@ $storage_path = implode(DIRECTORY_SEPARATOR, array_slice(explode(DIRECTORY_SEPAR
 									</td>
 									<td>
 										<div class="valign">
-											<input type="text" id="database_password" name="database_password" value="<?php echo (isset($PROCESSED["database_password"]) && $PROCESSED["database_password"] ? $PROCESSED["database_password"] : ""); ?>" />
+											<input type="password" id="database_password" name="database_password" value="<?php echo (isset($PROCESSED["database_password"]) && $PROCESSED["database_password"] ? $PROCESSED["database_password"] : ""); ?>" />
 										</div>
 									</td>
 								</tr>
 								<tr>
 									<td>&nbsp;</td>
 									<td class="content-small" style="padding-bottom: 15px">
-										The password of your new MySQL user.
+										The password of the MySQL user listed above.
 									</td>
 								</tr>
 								<tr>
@@ -967,7 +967,7 @@ $storage_path = implode(DIRECTORY_SEPARATOR, array_slice(explode(DIRECTORY_SEPAR
 
 			<div style="margin: 15px 25px 10px 0; padding-right: 40px; text-align: right">
 				<input type="submit" value="Continue" name="continue"<?php echo ($STEP > 5 ? " style=\"display: none;\"" : "");?> />
-				<input type="button" value="View Site" onclick="window.location= '<?php echo (isset($PROCESSED["entrada_url"]) && $PROCESSED["entrada_url"] ? $PROCESSED["entrada_url"] : "../.."); ?>';" name="view"<?php echo ($STEP != 6 || $ERROR ? " style=\"display: none;\"" : "");?> />
+				<input type="button" value="View Site" onclick="window.location= '<?php echo (isset($PROCESSED["entrada_url"]) && $PROCESSED["entrada_url"] ? $PROCESSED["entrada_url"] : "../.."); ?>';" name="view"<?php echo ($STEP != 6 || $ERROR ? " style=\"display: none;\"" : ""); ?> />
 				<input type="submit" value="Refresh" name="refresh"<?php echo ($STEP != 6 || !$ERROR ? " style=\"display: none;\"" : "");?> />
 			</div>
 		</form>

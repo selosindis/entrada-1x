@@ -993,7 +993,7 @@ div.userProfile div.body {
 padding: 5px;
 }
 
-table.tableList {
+table.tableList, table.DataTable {
 width:100%;
 border-collapse:collapse;
 }
@@ -1007,6 +1007,36 @@ font-size:11px;
 font-weight:700;
 background:#EBEBEB url(../images/list-header.gif);
 padding:0 4px 0 2px;
+}
+
+table.DataTable thead tr th {
+height:20px;
+vertical-align:middle;
+border:1px solid #999;
+color:#333;
+font-size:11px;
+font-weight:700;
+background:#EBEBEB url(../images/list-header.gif);
+padding:0 4px 0 2px;
+}
+
+table.DataTable tbody tr th {
+	text-align:left;
+	color: #003366;
+	font-family: 'Century Gothic',Helvetica,Arial,sans-serif;
+}
+
+table.DataTable tbody tr.value_edit td, table.DataTable tbody tr.value_delete td {
+	border: 1px solid black;
+}
+
+table.DataTable tbody .value_edit input, table.DataTable tbody .value_edit select,
+table.DataTable tbody .value_delete input, table.DataTable tbody .value_delete select {
+	width:100%;
+}
+
+table.DataTable tbody .value_edit input, table.DataTable tbody .value_delete input {
+	border:0;
 }
 
 table.tableList thead tr td.borderl {
@@ -1038,14 +1068,51 @@ table.tableList thead tr td {
 padding: 0px 2px 0px 3px;
 }
 
-table.tableList tbody tr td {
+table.tableList tbody tr td, table.DataTable tbody tr td {
 height:24px;
 font-size:11px;
 overflow:hidden;
 white-space:nowrap;
 text-overflow:ellipsis;
-border-bottom:1px solid #EBEBEB;
 padding:2px 4px 2px 2px;
+}
+
+table.tableList tbody tr td {
+border-bottom:1px solid #EBEBEB;
+}
+
+table.DataTable tbody tr.cat_head td.control, table.DataTable tbody tr.user_head td.control {
+	text-align:right;
+}
+
+table.DataTable tbody tr.cat_head td.control ul.page-action, table.DataTable tbody tr.user_head td.control ul.page-action {
+	margin: 0;
+}
+
+table.DataTable tbody tr td.flex {
+overflow:visible;
+white-space:normal;
+}
+table.DataTable tbody tr th {
+	padding: 2ex 0ex 2ex 0ex;
+}
+
+table.DataTable tfoot td.control {
+	padding-top:5ex;	
+	text-align:right;
+}
+	
+table.DataTable td a {
+	text-decoration:none;
+	}
+table.DataTable img {
+	vertical-align: middle;
+	border:0;
+} 
+
+table.DataTable tbody tr.value_edit td.control,
+table.DataTable tbody tr.value_delete td.control {
+	border:0;
 }
 
 table.tableList tbody tr td a {
@@ -2160,13 +2227,17 @@ background-color:#FFF;
 -webkit-border-radius:0 0 10px 10px;
 }
 
-.modal-confirmation div.footer button.left {
+.modal-confirmation div.footer button.left, .modal-description div.footer button.left {
 position:absolute;
 top: 8px;
 left: 10px;
 }
 
-.modal-confirmation div.footer button.right {
+.modal-description div.status {
+	margin-bottom:35px;
+}
+
+.modal-confirmation div.footer button.right, .modal-description div.footer button.right {
 position:absolute;
 top: 8px;
 right: 10px;
@@ -3172,4 +3243,19 @@ blockquote.completion_comment {
 blockquote.rejection_comment {
 	padding:1ex 1em;
 	background-color: #FFD9D0;
+}
+
+form#table_selector {
+	display:block;
+	margin-bottom:20px;
+}
+
+form#meta_data_form {
+	display:block;
+}
+
+#loadingModal {
+	padding:15px;
+	height:auto;
+	width:auto;
 }

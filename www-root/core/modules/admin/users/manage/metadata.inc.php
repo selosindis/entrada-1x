@@ -1,15 +1,16 @@
 <?php
 /**
  * Entrada [ http://www.entrada-project.org ]
+ * 
  *
- * Allows administrators to edit user incidents in the entrada_auth.user_incidents table.
- *
+ * 
  * @author Organisation: Queen's University
  * @author Unit: School of Medicine
  * @author Developer: Jonathan Fingland <jonathan.fingland@queensu.ca>
- * @copyright Copyright 2010 Queen's University. All Rights Reserved.
- *
+ * @copyright Copyright 2011 Queen's University. All Rights Reserved.
 */
+
+ 
 
 if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MANAGE_USER"))) {
 	exit;
@@ -24,9 +25,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MANAGE_USER"))) {
 
 	application_log("error", "Group [".$GROUP."] and role [".$ROLE."] do not have access to this module [".$MODULE."]");
 } else {
-	define("IN_MANAGE_USER_INCIDENTS", true);
+	define("IN_MANAGE_USER_DATA", true);
 
-	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/users/manage/incidents?id=".$PROXY_ID, "title" => "Manage Incidents");
+	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/users/manage/metadata?id=".$PROXY_ID, "title" => "Manage User Data");
 
 	if (($router) && ($router->initRoute())) {
 		$module_file = $router->getRoute();

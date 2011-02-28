@@ -1521,6 +1521,78 @@ function fetch_specific_country($countries_id) {
 }
 
 /**
+ * Output any available Clerkship evaluations the learner may have to complete.
+ * 
+ * @global object $db
+ */
+function clerkship_display_available_evaluations() {
+	global $db;
+
+	/**
+	 * Display Clerkship Evaluation Information to Student.
+	 */
+	$query = "	SELECT a.*, b.`event_title`, b.`event_finish`, d.`form_title`, d.`form_type`
+				FROM `".CLERKSHIP_DATABASE."`.`notifications` AS a
+				LEFT JOIN `".CLERKSHIP_DATABASE."`.`events` AS b
+				ON b.`event_id` = a.`event_id`
+				LEFT JOIN `".CLERKSHIP_DATABASE."`.`evaluations` AS c
+				ON c.`item_id` = a.`item_id`
+				LEFT JOIN `".CLERKSHIP_DATABASE."`.`eval_forms` AS d
+				ON d.`form_id` = c.`form_id`
+				WHERE a.`user_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+				AND a.`item_maxinstances` > '0'
+				AND (
+					a.`notification_status` <> 'complete'
+					OR a.`notification_status` <> 'cancelled'
+				)
+				AND b.`event_finish` < ".$db->qstr(strtotime("-1 day 00:00:00"))."
+				AND b.`event_status` = 'published'
+				AND c.`item_status` = 'published'
+				AND d.`form_status` = 'published'
+				ORDER BY a.`notified_last` DESC";
+	$results = $db->GetAll($query);
+	if($results) {
+		?>
+		<div class="display-notice" style="color: #333333">
+			<h2>Clerkship Evaluation<?php echo ((@count($results) != 1) ? "s" : ""); ?> To Complete</h2>
+			<form action="<?php echo ENTRADA_URL; ?>/clerkship?action=remove" method="post">
+			<table style="width: 97%" cellspacing="2" cellpadding="2" border="0" summary="Available Clerkship Evaluations">
+			<colgroup>
+				<col style="width: 25%" />
+				<col style="width: 75%" />
+			</colgroup>
+			<tfoot>
+				<tr>
+					<td colspan="2" style="text-align: right; padding-right: 15px">
+						<input type="submit" class="button" value="Remove From List" />
+					</td>
+				</tr>
+			</tfoot>
+			<tbody>
+			<?php
+			foreach($results as $result) {
+				echo "<tr>\n";
+				echo "	<td style=\"vertical-align: top; white-space: nowrap; font-size: 12px\">\n";
+				echo "		<input type=\"checkbox\" name=\"mark_done[]\" id=\"notification_".(int) $result["notification_id"]."\" value=\"".(int) $result["notification_id"]."\" style=\"vertical-align: middle\" /> ";
+				echo "		<label for=\"notification_".(int) $result["notification_id"]."\">".date(DEFAULT_DATE_FORMAT, $result["event_finish"])."</label>\n";
+				echo "	</td>\n";
+				echo "	<td style=\"padding-top: 3px; vertical-align: top; white-space: normal; font-size: 12px\">\n";
+				echo "		<a href=\"".ENTRADA_URL."/clerkship?section=evaluate&amp;nid=".(int) $result["notification_id"]."\">".ucwords($result["form_type"])." Evaluation".(($result["item_maxinstances"] != 1) ? "s" : "")." Available</a> <span class=\"content-small\">(".$result["item_maxinstances"]." available)</span>\n";
+				echo "		<div class=\"content-small\">\n";
+				echo "			<strong>For</strong> ".$result["event_title"]."\n";
+				echo "		</div>\n";
+				echo "</tr>\n";
+			}
+			?>
+			</tbody>
+			</table>
+			</form>
+		</div>
+		<?php
+	}
+}
+
+/**
  * Function will return the number of sub-categories under the ID you specify..
  * @param $category_parent
  * @return total number of children under category parent
@@ -10811,7 +10883,7 @@ function objectives_intable($identifier = 0, $indent = 0, $excluded_objectives =
  * @return String Returns an html string for an option tag.
  */
 function build_option($value, $label, $selected = false) {
-	return "<option value='".$value."'". ($selected ? "selected='selected'" : "") .">".$label."</option>\n";
+	return "<option value=\"".$value."\"". ($selected ? "selected=\"selected\"" : "") .">".$label."</option>";
 }
 
 
@@ -12213,4 +12285,51 @@ function display_zoom_controls($user_id) {
 	<a id="zoomout_photo_<?php echo $user_id; ?>" class="zoomout" onclick="shrinkPic(<?php echo $params; ?>));"></a>
 	<?php
 	return ob_get_clean();
+}
+
+function generateMasks($organisation, $group, $role, $user) {
+	$masks = array();
+	$masks["organisation"] = $organisation;
+	$masks["organisation:group"] = $organisation.":".$group;
+	$masks["organisation:group:role"] = $organisation.":".$group.":".$role;
+	$masks["group"] = $group;
+	$masks["group:role"] = $group.":".$role;
+	$masks["user"] = $user;
+	$masks["organisation:user"] = $organisation .":".$user;
+	
+	//we want to filter out any entries that are empty, begin or terminate with a colon, or have two colons together
+	$pattern = "/^$|^:|:$|::/";
+	
+	$masks = preg_grep($pattern, $masks, PREG_GREP_INVERT);
+	return $masks;
+}
+
+function generateMaskConditions($organisation, $group, $role, $user) {
+	global $db;
+	$masks = generateMasks($organisation, $group, $role, $user);
+	$mask_strs = array();
+	foreach($masks as $condition=>$value) {
+		$mask_strs[] = "(`entity_type` = ".$db->qstr($condition)." AND `entity_value` = " . $db->qstr($value) ." )\n";
+	}
+	return implode(" OR ", $mask_strs);
+}
+
+function generateAccessConditions($organisation, $group, $role, $proxy_id) {
+	global $db;
+	$masks = array();
+	$masks['`organisation_id`'] = $organisation;
+	$masks['`group`'] = $group;
+	$masks['`role`'] = $role;
+	$masks['a.`id`'] = $proxy_id;
+	
+	$masks = array_filter($masks);
+	
+	$mask_strs = array();
+	
+	foreach ($masks as $field=>$condition) {
+		$mask_strs[] = $field."=".$db->qstr($condition);
+	}
+	if ($mask_strs) {
+		return implode(" AND ",$mask_strs);
+	}
 }

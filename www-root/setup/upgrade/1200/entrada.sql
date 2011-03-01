@@ -3,6 +3,8 @@ ALTER TABLE `event_quizzes` CHANGE `equiz_id` `aquiz_id` int(12) NOT NULL AUTO_I
 ALTER TABLE `event_quizzes` CHANGE `event_id` `content_id` int(12) NOT NULL DEFAULT '0';
 RENAME TABLE `event_quizzes` TO `attached_quizzes`;
 
+ALTER TABLE  `attached_quizzes` ADD INDEX (`content_id`, `release_date`, `release_until`);
+
 ALTER TABLE `event_quiz_progress` ADD COLUMN `content_type` enum('event','community_page') NOT NULL DEFAULT 'event' AFTER `equiz_id`;
 ALTER TABLE `event_quiz_progress` CHANGE `equiz_id` `aquiz_id` int(12) unsigned NOT NULL;
 ALTER TABLE `event_quiz_progress` CHANGE `event_id` `content_id` int(12) NOT NULL DEFAULT '0';
@@ -168,7 +170,7 @@ CREATE TABLE IF NOT EXISTS `evaluation_targets` (
 
 ALTER TABLE `assessments` CHANGE `grad_year` `grad_year` varchar(35) NOT NULL DEFAULT '';
 
-ALTER TABLE `community_pages` CHANGE `page_url` `page_url` varchar(329);
+ALTER TABLE `community_pages` CHANGE `page_url` `page_url` varchar(329) NOT NULL;
 ALTER TABLE `community_pages` ADD INDEX (`cpage_id`, `community_id`, `page_url`, `page_active`);
 ALTER TABLE `community_pages` ADD INDEX (`community_id`, `parent_id`, `page_url`, `page_active`);
 ALTER TABLE `community_pages` ADD INDEX (`page_order`);

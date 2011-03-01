@@ -35,7 +35,9 @@ ALTER TABLE `student_observerships` add column (
   `preceptor_lastname` varchar(256) default NULL,
   `preceptor_proxy_id` int(12) unsigned default NULL);
   
-ALTER TABLE `student_mspr` ADD COLUMN  `carms_number` int(10) unsigned default NULL;
+ALTER TABLE `student_mspr` ADD COLUMN `carms_number` int(10) unsigned default NULL;
+ALTER TABLE `student_mspr` CHANGE `generated` `generated` BIGINT(64) NULL DEFAULT NULL;
+ALTER TABLE `student_mspr` CHANGE `closed` `closed` BIGINT(64) NULL DEFAULT NULL;
 
 INSERT INTO `communities_modules` (`module_id`,`module_shortname`,`module_version`,`module_title`,`module_description`,`module_active`,`module_permissions`,`updated_date`,`updated_by`)
 VALUES (7, 'quizzes', '1.0.0', 'Quizzes', 'This module allows communities to create their own quizzes for summative or formative evaluation.', 1, 'a:1:{s:5:\"index\";i:0;}', 1216256830, 3499);
@@ -286,6 +288,8 @@ ALTER TABLE `community_discussion_topics` ADD KEY `admin` (`cdiscussion_id`,`com
 ALTER TABLE `community_discussion_topics` ADD KEY `post` (`proxy_id`,`community_id`,`cdtopic_id`,`cdtopic_parent`,`topic_active`);
 ALTER TABLE `community_discussion_topics` ADD KEY `release` (`proxy_id`,`community_id`,`cdtopic_parent`,`topic_active`,`release_date`);
 ALTER TABLE `community_discussion_topics` ADD KEY `community` (`cdtopic_id`,`community_id`);
+
+ALTER TABLE  `global_lu_objectives` ADD INDEX (`objective_code`);
 
 ALTER TABLE `tasks`
  ADD COLUMN `verification_type` enum('faculty','other','none') NOT NULL default 'none',

@@ -14,22 +14,27 @@
 
 require_once("Models/utility/Approvable.interface.php");
 require_once("Models/utility/AttentionRequirable.interface.php");
+require_once("Models/utility/Editable.interface.php");
 
-class ResearchCitation implements Approvable, AttentionRequirable {
+class ResearchCitation implements Approvable, AttentionRequirable, Editable {
 	private $id;
 	private $user_id;
 	private $citation;
 	private $priority;
-	private $approved;
-	private $rejected;
+	private $status;
+	private $comment;
 	
-	function __construct($id, $user_id, $citation, $priority, $approved = false, $rejected = false) {
+	function __construct($id, $user_id, $citation, $priority, $comment, $status=0) {
 		$this->id = $id;
 		$this->user_id = $user_id;
 		$this->citation = $citation;
 		$this->priority = $priority;
-		$this->approved = (bool) $approved;
-		$this->rejected = (bool) $rejected;
+		$this->comment = $comment;
+		$this->status = $status;
+	}
+	
+	public static function fromArray(array $arr) {
+		return new self($arr['id'], $arr['user_id'], $arr['citation'], $arr['priority'], $arr['comment'], $arr['status']);
 	}
 	
 	public function getID() {
@@ -38,6 +43,10 @@ class ResearchCitation implements Approvable, AttentionRequirable {
 	
 	public function getUserID() {
 		return $this->user_id;	
+	}
+	
+	public function getUser() {
+		return User::get($this->user_id);	
 	}
 	
 	/**
@@ -60,11 +69,15 @@ class ResearchCitation implements Approvable, AttentionRequirable {
 	}
 	
 	public function isApproved() {
-		return (bool)($this->approved);
+		return ($this->status == 1);
 	}
 	
 	public function isRejected() {
-		return (bool)($this->rejected);
+		return ($this->status == -1);
+	}
+	
+	public function getComment() {
+		return $this->comment;
 	}
 	
 		
@@ -78,10 +91,8 @@ class ResearchCitation implements Approvable, AttentionRequirable {
 		$query		= "SELECT * FROM `student_research` WHERE `id` = ".$db->qstr($id);
 		$result = $db->getRow($query);
 		if ($result) {
-			$rejected=($result['status'] == -1);
-			$approved = ($result['status'] == 1);
 			
-			$citation =  new self($result['id'], $result['user_id'], $result['citation'], $result['priority'], $approved, $rejected);
+			$citation = self::fromArray($result);
 			return $citation;
 		}
 	} 
@@ -108,13 +119,12 @@ class ResearchCitation implements Approvable, AttentionRequirable {
 	 * @param $citation
 	 * @param $approved
 	 */
-	public static function create($user_id, $citation, $approved = false, $rejected = false) {
-		
+	public static function create(array $input_arr) {
+		extract($input_arr);
 		global $db;
-		$approved = (int) $approved;
 		$priority = self::getNewPriority($user_id);
-		$query = "insert into `student_research` (`user_id`, `citation`, `priority`, `status`) value (".$db->qstr($user_id).", ".$db->qstr($citation).", ".$db->qstr($priority).", ". $db->qstr($approved ? 1 : 0).")";
-		if(!$db->Execute($query)) {
+		$query = "insert into `student_research` (`user_id`, `citation`, `priority`, `status`) value (?,?,?,IFNULL(?,0))";
+		if(!$db->Execute($query, array($user_id, $details, $priority, $status))) {
 			add_error("Failed to create new Research Citation.");
 			application_log("error", "Unable to create a student_research record. Database said: ".$db->ErrorMsg());
 		} else {
@@ -143,13 +153,13 @@ class ResearchCitation implements Approvable, AttentionRequirable {
 				
 	}
 	
-	public function setStatus($status_code) {
+	public function setStatus($status_code, $comment=null) {
 		global $db;
 		$query = "update `student_research` set
-				 `status`=".$db->qstr($status_code)."
-				 where `id`=".$db->qstr($this->id);
+				 `status`=?, `comment`=? 
+				 where `id`=?";
 		
-		if(!$db->Execute($query)) {
+		if(!$db->Execute($query, array($status_code, $comment, $this->id))) {
 			add_error("Failed to update Research Citation.");
 			application_log("error", "Unable to update a student_research record. Database said: ".$db->ErrorMsg());
 		} else {
@@ -166,8 +176,8 @@ class ResearchCitation implements Approvable, AttentionRequirable {
 	}
 	
 	
-	public function reject() {
-		$this->setStatus(-1);
+	public function reject($comment) {
+		$this->setStatus(-1, $comment);
 	}
 	
 	/**
@@ -175,12 +185,25 @@ class ResearchCitation implements Approvable, AttentionRequirable {
 	 * @param int $priority
 	 */
 	public function setPriority($priority) {
+		global $db;
 		$query = "update `student_research` set
 				 `priority`=0 
 				 where `id`=".$db->qstr($this->id);
 		
 		if($db->Execute($query)) {
 			$this->priority = $priority;
+		}
+	}
+	
+	public function update(array $input_arr) {
+		extract($input_arr);
+		global $db;
+		$query = "update `student_research` set `citation`=?, `status`=?, `comment`=? where `id`=?";
+		if(!$db->Execute($query, array($details, $status, $comment, $this->id))) {
+			add_error("Failed to update Research Citation.");
+			application_log("error", "Unable to update a student_research record. Database said: ".$db->ErrorMsg());
+		} else {
+			add_success("Successfully updated Research Citation.");
 		}
 	}
 }

@@ -4,8 +4,8 @@ require_once("AbstractStudentDetails.class.php");
 
 class LeaveOfAbsence extends AbstractStudentDetails {
 	
-	function __construct($user, $id, $details) {
-		$this->user = $user;
+	function __construct($user_id, $id, $details) {
+		$this->user_id = $user_id;
 		$this->id = $id;
 		$this->details = $details;
 	}
@@ -15,18 +15,18 @@ class LeaveOfAbsence extends AbstractStudentDetails {
 		$query		= "SELECT * FROM `student_leaves_of_absence` where `id`=".$db->qstr($id);
 		$result	= $db->GetRow($query);
 		if ($result) {
-			$user = User::get($result['user_id']);
-			if ($user) {
-				$fr = new LeaveOfAbsence($user, $result['id'], $result['absence_details']);
-				return $fr;
-			}
+			$fr = LeaveOfAbsence::fromArray($result);
+			return $fr;
 		}
 	}
 	
-	public static function create($user, $details) {
+	public static function fromArray(array $arr) {
+		return new LeaveOfAbsence($arr['user_id'], $arr['id'], $arr['absence_details']);
+	}
+	
+	public static function create($user_id, $details) {
 		global $db;
 
-		$user_id = $user->getID();
 		$query = "insert into `student_leaves_of_absence` (`user_id`, `absence_details`) value (".$db->qstr($user_id).", ".$db->qstr($details).")";
 		
 		if(!$db->Execute($query)) {

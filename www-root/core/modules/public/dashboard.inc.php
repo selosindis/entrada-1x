@@ -108,18 +108,19 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 
 	switch ($ACTION) {
 		case "read" :
-			if ((isset($_POST["mark_read"])) && (@is_array($_POST["mark_read"]))) {
+			if ((isset($_POST["mark_read"])) && (is_array($_POST["mark_read"]))) {
 				foreach ($_POST["mark_read"] as $notice_id) {
 					if ($notice_id = (int) $notice_id) {
 						add_statistic("notices", "read", "notice_id", $notice_id);
 					}
 				}
 			}
+			
 			$_SERVER["QUERY_STRING"] = replace_query(array("action" => false));
-			break;
+		break;
 		default :
 			continue;
-			break;
+		break;
 	}
 
 	switch ($_SESSION["details"]["group"]) {
@@ -150,9 +151,9 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 		break;
 		case "student" :
 		default :
-			$rss_feed_name = (((int) $_SESSION["details"]["grad_year"]) ? (int) $_SESSION["details"]["grad_year"] : "student");
-			$notice_where_clause = "(".(((int) $_SESSION["details"]["grad_year"]) ? "a.`target`='".(int) $_SESSION["details"]["grad_year"]."' OR " : "")."a.`target` = 'all' OR a.`target` = 'students' OR a.`target` = ".$db->qstr("proxy_id:".((int) $_SESSION["details"]["id"])).")";
-			$poll_where_clause = "(".(((int) $_SESSION["details"]["grad_year"]) ? "a.`poll_target`='".(int) $_SESSION["details"]["grad_year"]."' OR " : "")."a.`poll_target` = 'all' OR a.`poll_target` = 'students')";
+			$rss_feed_name = clean_input($_SESSION["details"]["grad_year"], "alphanumeric");
+			$notice_where_clause = "(a.`target`='".clean_input($_SESSION["details"]["grad_year"], "alphanumeric")."' OR a.`target` = 'all' OR a.`target` = 'students' OR a.`target` = ".$db->qstr("proxy_id:".((int) $_SESSION["details"]["id"])).")";
+			$poll_where_clause = "(a.`poll_target`='".clean_input($_SESSION["details"]["grad_year"], "alphanumeric")."' OR a.`poll_target` = 'all' OR a.`poll_target` = 'students')";
 		break;
 	}
 	$notice_where_clause .= "AND (a.`organisation_id` IS NULL OR a.`organisation_id` = ".$_SESSION["details"]["organisation_id"].")";
@@ -208,6 +209,7 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 					WHERE ".(($notice_where_clause) ? $notice_where_clause." AND" : "")."
 					(a.`display_from`='0' OR a.`display_from` <= '".time()."')
 					AND (a.`display_until`='0' OR a.`display_until` >= '".time()."')
+					AND a.`organisation_id` = ".$db->qstr($_SESSION["details"]["organisation_id"])."
 					GROUP BY a.`notice_id`
 					ORDER BY a.`updated_date` DESC, a.`display_until` ASC";
 		$results = $db->GetAll($query);
@@ -226,7 +228,7 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 				<div style="float: right"><a href="<?php echo ENTRADA_URL; ?>/rss/<?php echo $_SESSION["details"]["username"]; ?>.rss" target="_blank" style="color: #666666; font-size: 10px; text-decoration: none">RSS feed available</a> <a href="<?php echo ENTRADA_URL; ?>/notices/<?php echo $rss_feed_name; ?>" target="_blank"><img src="<?php echo ENTRADA_URL; ?>/images/rss-enabled.gif" width="11" height="11" alt="RSS Icon" title="Notices are RSS enabled" border="0" /></a></div>
 				<h2>New <?php echo APPLICATION_NAME; ?> Notice<?php echo (($total_notices != 1) ? "s" : ""); ?></h2>
 				<form action="<?php echo ENTRADA_URL; ?>/dashboard?action=read" method="post">
-					<table style="width: 97%" cellspacing="2" cellpadding="2" border="0" summary="New Undergrad Notice<?php echo (($total_notices != 1) ? "s" : ""); ?>">
+					<table style="width: 97%" cellspacing="2" cellpadding="2" border="0" summary="New Notice<?php echo (($total_notices != 1) ? "s" : ""); ?>">
 						<colgroup>
 							<col style="width: 25%" />
 							<col style="width: 75%" />
@@ -263,7 +265,7 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 		case "student" :
 			$BREADCRUMB[] = array("url" => ENTRADA_URL, "title" => "Student Dashboard");
 
-			$HEAD[]	= "<link rel=\"alternate\" type=\"application/rss+xml\" title=\"Class of ".$_SESSION["details"]["grad_year"].", Undergrad Notices\" href=\"".ENTRADA_URL."/notices/".$_SESSION["details"]["grad_year"]."\" />";
+			$HEAD[]	= "<link rel=\"alternate\" type=\"application/rss+xml\" title=\"Class of ".$_SESSION["details"]["grad_year"].", Notices\" href=\"".ENTRADA_URL."/notices/".$_SESSION["details"]["grad_year"]."\" />";
 
 			if (!isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dstamp"])) {
 				$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dstamp"] = time();
@@ -273,7 +275,7 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 			 * How did this person not get assigned this already? Mak'em new.
 			 */
 			if (!isset($_SESSION["details"]["grad_year"])) {
-				$_SESSION["details"]["grad_year"] = (date("Y", time()) + ((date("m", time()) < 7) ?  3 : 4));
+				$_SESSION["details"]["grad_year"] = fetch_first_year();
 			}
 
 			$display_schedule_tabs	= false;
@@ -470,7 +472,7 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 						timeslotHeight: 19,
 						buttons: false,
 						readonly: true,
-						businessHours : { start: 8, end: 19, limitDisplay : true },
+						businessHours : { start: 8, end: 18, limitDisplay : false },
 						eventRender : function(calEvent, $event) {
 							switch (calEvent.type) {
 								case 3 :
@@ -492,9 +494,9 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 							$event.find('.wc-time,.wc-title').qtip({
 								content: {
 									text: '<img class="throbber" src="<?php echo ENTRADA_RELATIVE; ?>/images/throbber.gif" alt="Loading..." />',
-									url: '<?php echo ENTRADA_RELATIVE; ?>/api/events.api.php?id=' + calEvent.id,
+									url: '<?php echo ENTRADA_RELATIVE; ?>/api/events.api.php?id=' + calEvent.id + (calEvent.drid != 'undefined' ? '&drid=' + calEvent.drid : ''),
 									title: {
-										text: '<a href="<?php echo ENTRADA_RELATIVE; ?>/events?id=' + calEvent.id + '">' + calEvent.title + '</a>',
+										text: '<a href="<?php echo ENTRADA_RELATIVE; ?>/events?' + (calEvent.drid != 'undefined' ? 'drid=' + calEvent.drid : 'id=' + calEvent.id) + '">' + calEvent.title + '</a>',
 										button: 'Close'
 									}
 								},
@@ -567,7 +569,7 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 				</table>
 				<div id="dashboardCalendar"></div>
 				<div style="text-align: right; margin-top: 5px">
-					<a href="<?php echo ENTRADA_URL; ?>/calendars<?php echo ((isset($_SESSION["details"]["private_hash"])) ? "/private-".html_encode($_SESSION["details"]["private_hash"]) : ""); ?>/<?php echo html_encode($_SESSION["details"]["username"]); ?>.ics" class="feeds ics">Subscribe to Calendar</a>
+					<a href="<?php echo str_ireplace(array("https://", "http://"), "webcal://", ENTRADA_URL); ?>/calendars<?php echo ((isset($_SESSION["details"]["private_hash"])) ? "/private-".html_encode($_SESSION["details"]["private_hash"]) : ""); ?>/<?php echo html_encode($_SESSION["details"]["username"]); ?>.ics" class="feeds ics">Subscribe to Calendar</a>
 				</div>
 				<?php
 			}
@@ -739,17 +741,17 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 					switch ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["dlength"]) {
 						case 1 :
 							echo "<strong>last term</strong>.";
-							break;
+						break;
 						case 3 :
 							echo "<strong>this month</strong>.";
-							break;
+						break;
 						case 4 :
 							echo "<strong>next term</strong>.";
-							break;
+						break;
 						case 2 :
 						default :
 							echo "<strong>this term</strong>.";
-							break;
+						break;
 					}
 					?>
 					<br /><br />
@@ -757,7 +759,12 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 				</div>
 				<?php
 			}
-			break;
+			?>
+			<div style="text-align: right; margin-top: 5px">
+				<a href="<?php echo str_ireplace(array("https://", "http://"), "webcal://", ENTRADA_URL); ?>/calendars<?php echo ((isset($_SESSION["details"]["private_hash"])) ? "/private-".html_encode($_SESSION["details"]["private_hash"]) : ""); ?>/<?php echo html_encode($_SESSION["details"]["username"]); ?>.ics" class="feeds ics">Subscribe to Calendar</a>
+			</div>
+			<?php
+		break;
 		case "staff" :
 		default :
 			continue;

@@ -1,15 +1,17 @@
 	function PriorityList(options) {
+		try {
 		var section = options.section;
 		var url = options.url;
 		var data_destination = options.data_destination;
 		var messages = options.messages;
 		var handle = options.handle;
 		var element = options.element;
+		var parambase = (options.params) ? "&" + Object.toQueryString(options.params): "";
 		
 		
 		function resequence() {
 			var params = Sortable.serialize(element,{name:section});
-			params += ((params)?'&':'') + "action=resequence";
+			params += ((params)?'&':'') + "action=resequence" + parambase;
 			new Ajax.Updater(data_destination, url,
 				{
 					method:'post',
@@ -34,11 +36,6 @@
 		}
 		
 
-		options.onUpdate = onUpdate.curry(options.onUpdate); 
-		document.observe(section+':onAfterUpdate', onAfterUpdate);
-		document.observe(section+':onBeforeUpdate', onBeforeUpdate);
-		
-		
 		function onBeforeUpdate() {
 			if(options.onBeforeUpdate) {
 				options.onBeforeUpdate();
@@ -55,15 +52,13 @@
 		
 		function init() {
 			try {
-			Sortable.create(element, options);
-			} catch (e) {console.log(e);}
+				Sortable.create(element, options);
+			} catch (e) {clog(e);}
 		}
+		options.onUpdate = onUpdate.curry(options.onUpdate); 
+		document.observe(section+':onAfterUpdate', onAfterUpdate);
+		document.observe(section+':onBeforeUpdate', onBeforeUpdate);
 		
-		if (document.loaded) {
-			init();
-		} else {
-			document.observe('dom:loaded', function () { 
-				init();
-			});
-		}
+		init();
+		} catch (e) {clog(e);}
 	}

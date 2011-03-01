@@ -191,6 +191,7 @@ CREATE TABLE IF NOT EXISTS `electives` (
   `schools_id` int(11) NOT NULL,
   `other_medical_school` varchar(150) DEFAULT NULL,
   `objective` text NOT NULL,
+  `preceptor_prefix` varchar(10) DEFAULT NULL,
   `preceptor_first_name` varchar(50) DEFAULT NULL,
   `preceptor_last_name` varchar(50) NOT NULL,
   `address` varchar(250) NOT NULL,

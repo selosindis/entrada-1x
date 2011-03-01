@@ -37,6 +37,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
+	add_manage_user_sidebar();
 	/**
 	 * Add this for the tabs.
 	 */

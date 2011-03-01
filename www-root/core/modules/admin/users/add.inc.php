@@ -209,7 +209,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 							$entry_year = clean_input($_POST["entry_year"],"int");
 							$grad_year = clean_input($_POST["grad_year"],"int");
 							$sanity_start = 1995;
-							$sanity_end = date("Y", time()) + ((date("m", time()) < 7) ?  3 : 4);
+							$sanity_end = fetch_first_year();
 							if ($grad_year <= $sanity_end && $grad_year >= $sanity_start) {
 								$PROCESSED["grad_year"] = $grad_year;
 							} else {
@@ -769,16 +769,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 			</tr>
 			<tr>
 				<td>&nbsp;</td>
-				<td><label for="username" class="form-required">MEdTech Username:</label></td>
+				<td><label for="username" class="form-required"><?php echo APPLICATION_NAME; ?> Username:</label></td>
 				<td>
 						<input type="text" id="username" name="username" value="<?php echo ((isset($PROCESSED["username"])) ? html_encode($PROCESSED["username"]) : ""); ?>" style="width: 250px" maxlength="25" onblur="findExistingUser('username', this.value)" onkeypress="if (event.which == 13) { findExistingUser('username', this.value); return false; }" />
 						<span id="username-searching" class="content-small" style="display: none;"><img src="<?php echo ENTRADA_RELATIVE ?>/images/indicator.gif" /> Searching system for this username... </span>
-						<span id="username-default" class="content-small">(<strong>Important:</strong> Should be the Queen's NetID)</span>
 				</td>
 			</tr>
 			<tr>
 				<td>&nbsp;</td>
-				<td><label for="password" class="form-required">MEdTech Password:</label></td>
+				<td><label for="password" class="form-required"><?php echo APPLICATION_NAME; ?> Password:</label></td>
 				<td><input type="text" id="password" name="password" value="<?php echo ((isset($PROCESSED["password"])) ? html_encode($PROCESSED["password"]) : generate_password(8)); ?>" style="width: 250px" maxlength="25" /></td>
 			</tr>
 			<tr>
@@ -799,7 +798,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 					<select id="entry_year" name="entry_year" style="width: 209px">
 					<?php
 					$selected_year = (isset($PROCESSED["entry_year"])) ? $PROCESSED["entry_year"] : (date("Y", time()) - ((date("m", time()) < 7) ?  1 : 0));
-					for($i = (date("Y", time()) + ((date("m", time()) < 7) ?  3 : 4)); $i >= 1995; $i--) {
+					for($i = fetch_first_year(); $i >= 1995; $i--) {
 						$selected = $selected_year == $i;
 						echo build_option($i, $i, $selected);
 					} 
@@ -813,7 +812,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 				<td>
 					<select id="grad_year" name="grad_year" style="width: 209px; margin-top: 5px">
 					<?php
-					for($i = (date("Y", time()) + ((date("m", time()) < 7) ?  3 : 4)); $i >= 1995; $i--) {
+					for($i = fetch_first_year(); $i >= 1995; $i--) {
 						$selected = (isset($PROCESSED["grad_year"]) && $PROCESSED["grad_year"] == $i);
 						echo build_option($i, $i, $selected);
 					} 

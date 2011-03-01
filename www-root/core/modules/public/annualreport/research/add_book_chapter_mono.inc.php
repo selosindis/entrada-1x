@@ -211,7 +211,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 				if((isset($_POST["pages"])) && ($pages = clean_input($_POST["pages"], array("notags", "trim", "utf8")))) {
 					$PROCESSED["pages"] = $pages;
 				} else {
-					$PROCESSED["edition"] = "";
+					$PROCESSED["pages"] = "";
 				}
 			}
 			/**

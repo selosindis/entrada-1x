@@ -1,6 +1,18 @@
 <?php
 
-class Observership {
+/**
+ * 
+ * Entrada [ http://www.entrada-project.org ]
+ * 
+ * Simple class for data-entry of observerships. XXX Replace when policy and plan in place for observserships going forward.
+ * 
+ * @author Organisation: Queen's University
+ * @author Unit: School of Medicine
+ * @author Developer: Jonathan Fingland <jonathan.fingland@queensu.ca>
+ * @copyright Copyright 2010 Queen's University. All Rights Reserved.
+ *
+ */
+class Observership implements Editable {
 	private $id;
 	private $student_id;
 	private $title;
@@ -8,8 +20,11 @@ class Observership {
 	private $start;
 	private $end;
 	private $location;
+	private $preceptor_firstname;
+	private $preceptor_lastname;
+	private $preceptor_proxy_id;
 	
-	function __construct($id, $student_id, $title, $site, $location, $start, $end) {
+	function __construct($id, $student_id, $title, $site, $location, $preceptor_proxy_id, $preceptor_firstname, $preceptor_lastname, $start, $end) {
 		$this->id = $id;
 		$this->student_id = $student_id;
 		$this->title = $title;
@@ -17,6 +32,13 @@ class Observership {
 		$this->location = $location;
 		$this->start = $start;
 		$this->end = $end;
+		$this->preceptor_firstname = $preceptor_firstname;
+		$this->preceptor_lastname = $preceptor_lastname;
+		$this->preceptor_proxy_id = $preceptor_proxy_id;
+	}
+	
+	public static function fromArray(array $arr) {
+		return new Observership($arr['id'], $arr['student_id'], $arr['title'], $arr['site'], $arr['location'], $arr['preceptor_proxy_id'], $arr['preceptor_firstname'], $arr['preceptor_lastname'], $arr['start'], $arr['end']);
 	}
 	
 	public function getID() {
@@ -25,6 +47,10 @@ class Observership {
 	
 	public function getStudentID() {
 		return $this->student_id;	
+	}
+	
+	public function getUser() {
+		return User::get($this->student_id);
 	}
 
 	public function getSite() {
@@ -39,10 +65,45 @@ class Observership {
 		return $this->title;
 	}
 	
+	public function getPreceptorFirstname() {
+		if ($this->preceptor_proxy_id) {
+			$preceptor = $this->getPreceptor();
+			if ($preceptor) {
+				return $preceptor->getFirstname();
+			}
+		} else {
+			return $this->preceptor_firstname;	
+		}
+	}
+	
+	public function getPreceptorLastname() {
+		if ($this->preceptor_proxy_id) {
+			$preceptor = $this->getPreceptor();
+			if ($preceptor) {
+				return $preceptor->getLastname();
+			}
+		} else {
+			return $this->preceptor_lastname;
+		}
+	}
+	
+	public function getPreceptor() {
+		if ($this->preceptor_proxy_id) {
+			return User::get($this->preceptor_proxy_id);
+		}
+	}
+	
 	public function getDetails() {
+		$preceptor = trim($this->getPreceptorFirstname() . " " . $this->getPreceptorLastname());
+		if (preg_match("/\b[Dd][Rr]\./", $preceptor) == 0) {
+			$preceptor = "Dr. ".$preceptor;
+		}
+		
+		
 		$elements = array();
 		$elements[] = $this->title;
 		$elements[] = $this->site . ", " . $this->location;
+		$elements[] = $preceptor;
 		$details = implode("\n", $elements);
 		return $details;
 	}
@@ -52,7 +113,11 @@ class Observership {
 	}
 	
 	public function getEnd() {
-		return $this->end;
+		if ($this->end) {
+			return $this->end;
+		} else {
+			return $this->start;
+		}
 	}
 	
 	public function getStartDate() {
@@ -64,11 +129,15 @@ class Observership {
 	}
 	
 	public function getEndDate() {
-		return array(
-			"d" => date("j", $this->end),
-			"m" => date("n", $this->end),
-			"y" => date("Y", $this->end)
-		);
+		if (!$this->end) {
+			return $this->getStartDate();
+		} else {
+			return array(
+				"d" => date("j", $this->end),
+				"m" => date("n", $this->end),
+				"y" => date("Y", $this->end)
+			);
+		}
 	}
 	
 	public function getPeriod() {
@@ -81,16 +150,16 @@ class Observership {
 		$result = $db->getRow($query);
 		if ($result) {
 			
-			$obs =  new Observership($result['id'], $result['student_id'], $result['title'], $result['site'], $result['location'], $result['start'], $result['end']);
+			$obs = Observership::fromArray($result);
 			return $obs;
 		}
 	} 
 
-	public static function create($user, $title, $site, $location, $start, $end) {
+	public static function create(array $input_arr) {
+		extract($input_arr);
 		global $db;
-		$student_id = $user->getID();
-		$query = "insert into `student_observerships` (`student_id`, `title`,`site`,`location`,`start`, `end`) value (".$db->qstr($student_id).", ".$db->qstr($title).", ".$db->qstr($site).", ".$db->qstr($location).", ".$db->qstr($start).", ".$db->qstr($end).")";
-		if(!$db->Execute($query)) {
+		$query = "insert into `student_observerships` (`student_id`, `title`,`site`,`location`,`preceptor_proxy_id`,`preceptor_firstname`, `preceptor_lastname`, `start`, `end`) value (?,?,?,?,?,?,?,?,?)";
+		if(!$db->Execute($query, array($user_id, $title, $site, $location, $preceptor_proxy_id, $preceptor_firstname, $preceptor_lastname, $start, $end))) {
 			add_error("Failed to create new Observership.");
 			application_log("error", "Unable to update a student_observerships record. Database said: ".$db->ErrorMsg());
 		} else {
@@ -109,5 +178,30 @@ class Observership {
 		} else {
 			add_success("Successfully removed Observership.");
 		}		
+	}
+	
+	public function update(array $input_arr) {
+		extract($input_arr);
+		global $db;
+		$query = "update `student_observerships` set `title`=?, `site`=?,`location`=?,`preceptor_proxy_id`=?,`preceptor_firstname`=?, `preceptor_lastname`=?, `start`=?, `end`=? where `id`=?";
+		if(!$db->Execute($query, array($title, $site, $location, $preceptor_proxy_id, $preceptor_firstname, $preceptor_lastname, $start, $end, $this->id))) {
+			add_error("Failed to update Observership.");
+			application_log("error", "Unable to update a student_observerships record. Database said: ".$db->ErrorMsg());
+		} else {
+			add_success("Successfully updated Observership.");
+			$insert_id = $db->Insert_ID();
+			return self::get($insert_id); 
+		}
+	}
+	
+	public function compare($obs, $compare_by='start') {
+		switch($compare_by) {
+			case 'start':
+			case 'end':
+				return $this->$compare_by == $obs->$compare_by ? 0 : ( $this->$compare_by > $obs->$compare_by ? 1 : -1 );
+				break;
+			case 'title':
+				return strcasecmp($this->$compare_by, $obs->$compare_by);
+		}
 	}
 }

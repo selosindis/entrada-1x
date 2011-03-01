@@ -38,7 +38,7 @@ if (!defined("PARENT_INCLUDED")) {
 	application_log("error", "Group [".$GROUP."] and role [".$ROLE."] does not have access to this module [".$MODULE."]");
 } else {
 	define("IN_EVALUATIONS", true);
-	
+
 	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/evaluations", "title" => "Manage Evaluations");
 
 	if (($router) && ($router->initRoute())) {
@@ -50,7 +50,7 @@ if (!defined("PARENT_INCLUDED")) {
 		$sidebar_html  = "<ul class=\"menu\">";
 		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/evaluations\">Manage Evaluations</a></li>\n";
 		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/evaluations/forms\">Manage Forms</a></li>\n";
-		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/evaluations/notifications\">Manage Notifications</a></li>\n";
+//		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/evaluations/notifications\">Manage Notifications</a></li>\n";
 		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/evaluations/reports\">Evaluation Reports</a></li>\n";
 		$sidebar_html .= "</ul>";
 		new_sidebar_item("Manage Evaluations", $sidebar_html, "evaluation-nav", "open");

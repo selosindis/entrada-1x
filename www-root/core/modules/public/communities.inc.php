@@ -43,17 +43,21 @@ if (($router) && ($router->initRoute())) {
 		$COMMUNITY_ID = 0;
 	}
 
-	$year_start		= (date("Y", time()) + ((date("m", time()) < 7) ?  3 : 4));
-	$year_end		= ($year_start - 4);
+	$GROUP_TARGETS = array();
 
-	$GROUP_TARGETS						= array();
-	for($i = $year_start; $i > $year_end; $i--) {
-		$GROUP_TARGETS["student_".$i]		= "Students, Class of ".$i;
+	$cut_off_year = (fetch_first_year() - 3);
+	if (isset($SYSTEM_GROUPS["student"]) && !empty($SYSTEM_GROUPS["student"])) {
+		foreach ($SYSTEM_GROUPS["student"] as $class) {
+			if (clean_input($class, "numeric") >= $cut_off_year) {
+				$GROUP_TARGETS["student_".$class] = "Students, Class of ".$class;
+			}
+		}
 	}
-	$GROUP_TARGETS["alumni"]				= "Student Alumni";
-	$GROUP_TARGETS["faculty"]				= "Faculty Members";
-	$GROUP_TARGETS["resident"]				= "Student Residents";
-	$GROUP_TARGETS["staff"]					= "Staff Members";
+
+	$GROUP_TARGETS["alumni"] = "Student Alumni";
+	$GROUP_TARGETS["faculty"] = "Faculty Members";
+	$GROUP_TARGETS["resident"] = "Student Residents";
+	$GROUP_TARGETS["staff"] = "Staff Members";
 
 	asort($GROUP_TARGETS);
 

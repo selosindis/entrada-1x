@@ -50,8 +50,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 						FROM `".CLERKSHIP_DATABASE."`.`events`, `".CLERKSHIP_DATABASE."`.`electives`, `".CLERKSHIP_DATABASE."`.`event_contacts`
 						WHERE `".CLERKSHIP_DATABASE."`.`events`.`event_id` = ".$db->qstr($EVENT_ID)."
 						AND `".CLERKSHIP_DATABASE."`.`events`.`event_id` = `".CLERKSHIP_DATABASE."`.`electives`.`event_id`
-						AND `".CLERKSHIP_DATABASE."`.`events`.`event_id` = `".CLERKSHIP_DATABASE."`.`event_contacts`.`event_id`
-						AND `".CLERKSHIP_DATABASE."`.`event_contacts`.`etype_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]['tmp']['proxy_id']);
+						AND `".CLERKSHIP_DATABASE."`.`events`.`event_id` = `".CLERKSHIP_DATABASE."`.`event_contacts`.`event_id`";
 		$event_info	= $db->GetRow($query);
 		
 		if($event_info) {
@@ -65,7 +64,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 					<tfoot>
 						<tr>
 							<td style="width: 25%; text-align: left">
-								<input type="button" class="button" value="Back" onclick="window.location='<?php echo ENTRADA_URL; ?>/clerkship'" />
+								<input type="button" class="button" value="Back" onclick="window.location='<?php echo ENTRADA_URL; ?>/clerkship?section=clerk&ids=<?php echo $event_info["etype_id"]; ?>'" />
 							</td>
 							<td style="width: 75%; text-align: right">&nbsp;</td>
 						</tr>
@@ -145,6 +144,10 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 						<td colspan="2" style="padding-top: 15px"><h2>Preceptor Details</h2></td>
 					</tr>
 					<tr>
+						<td style="width: 25%">Preceptor Prefix</td>
+						<td style="width: 75%"><?php echo (isset($PROCESSED["preceptor_prefix"]) && $PROCESSED["preceptor_prefix"] != "" ? $PROCESSED["preceptor_prefix"] : "N/A"); ?></td>
+					</tr>
+					<tr>
 						<td style="width: 25%">Preceptor First Name</td>
 						<td style="width: 75%"><?php echo (isset($PROCESSED["preceptor_first_name"]) && $PROCESSED["preceptor_first_name"] != "" ? $PROCESSED["preceptor_first_name"] : "N/A"); ?></td>
 					</tr>
@@ -198,14 +201,112 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 			</table>
 			<?php
 		} else {
-			$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/".$MODULE."\\'', 15000)";
-
-			$ERROR++;
-			$ERRORSTR[]	= "This Event ID is not valid<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
-		
-			echo display_error();
-		
-			application_log("error", "Error, invalid Event ID [".$EVENT_ID."] supplied for viewing a clerkship elective in module [".$MODULE."].");
+			$query		= "	SELECT * FROM `".CLERKSHIP_DATABASE."`.`events` AS a
+							JOIN `".CLERKSHIP_DATABASE."`.`event_contacts` AS b
+							ON a.`event_id` = b.`event_id`
+							JOIN `".CLERKSHIP_DATABASE."`.`regions` AS c
+							ON a.`region_id` = c.`region_id`
+							JOIN `".CLERKSHIP_DATABASE."`.`global_lu_rotations` AS d
+							ON a.`rotation_id` = d.`rotation_id`
+							WHERE a.`event_id` = ".$db->qstr($EVENT_ID);
+			$event_info	= $db->GetRow($query);
+			if ($event_info) {
+				$category_string = "";
+				$category_id = clean_input($event_info["category_id"], array("int"));
+				if ($category_id) {
+					$query = "	SELECT * FROM `".CLERKSHIP_DATABASE."`.`categories`
+								WHERE `category_id` = ".$db->qstr($category_id);
+					$category = $db->GetRow($query);
+					if ($category) {
+						$parent_id 						= $category["category_parent"];
+						$category_selected_reverse[]	= $category["category_name"];
+						while ($parent_id != 49) {
+							$query = "	SELECT * FROM `".CLERKSHIP_DATABASE."`.`categories`
+										WHERE `category_id` = ".$db->qstr($parent_id);
+							$parent_category = $db->GetRow($query);
+							$category_selected_reverse[]	= $parent_category["category_name"];
+							$parent_id 						= $parent_category["category_parent"];
+						}
+						$category_selected = array_reverse($category_selected_reverse);
+						for ($i = 0; $i <= count($category_selected)-1; $i++) {
+							$category_string .= $category_selected[$i].($i != count($category_selected)-1 ? " > " : "");
+						}
+					}
+				}
+				$PROCESSED = $event_info;
+				?>
+				<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Viewing Elective">
+						<colgroup>
+							<col style="width: 25%" />
+							<col style="width: 75%" />
+						</colgroup>
+						<tfoot>
+							<tr>
+								<td style="width: 25%; text-align: left">
+									<input type="button" class="button" value="Back" onclick="window.location='<?php echo ENTRADA_URL; ?>/clerkship?section=clerk&ids=<?php echo $event_info["etype_id"]; ?>'" />
+								</td>
+								<td style="width: 75%; text-align: right">&nbsp;</td>
+							</tr>
+						</tfoot>
+						<tbody>
+						<tr>
+							<td colspan="2"><h2>Event Details</h2></td>
+						</tr>
+						<tr>
+							<td style="width: 25%">Event Region</td>
+							<td style="width: 75%"><?php echo $PROCESSED["region_name"]; ?></td>
+						</tr>
+						<tr>
+							<td style="width: 25%">Event Title</td>
+							<td style="width: 75%"><?php echo $PROCESSED["event_title"]; ?></td>
+						</tr>
+						<tr>
+							<td colspan="2">&nbsp;</td>
+						</tr>
+						<tr>
+							<td style="width: 25%">Event Rotation</td>
+							<td style="width: 75%"><?php echo $PROCESSED["rotation_title"]; ?></td>
+						</tr>
+						<tr>
+							<td style="width: 25%">Event Takes Place In:</td>
+							<td style="width: 75%"><?php echo $category_string; ?></td>
+						</tr>
+						<tr>
+							<td colspan="2">
+								&nbsp;
+							</td>
+						</tr>
+						<tr>
+							<td style="width: 25%">Start Date</td>
+							<td style="width: 75%"><?php echo date("Y-m-d", $PROCESSED["event_start"]); ?></td>
+						</tr>
+						<tr>
+							<td style="width: 25%">End Date</td>
+							<td style="width: 75%"><?php echo date("Y-m-d", $PROCESSED["event_finish"]); ?></td>
+						</tr>
+						<tr>
+							<td colspan="2">&nbsp;</td>
+						</tr>
+						<tr>
+							<td style="width: 25%">Save State: </td>
+							<td style="width: 75%"><?php echo ucfirst($PROCESSED["event_status"]); ?></td>
+						</tr>
+						<tr>
+							<td colspan="2">&nbsp;</td>
+						</tr>
+				</tbody>
+				</table>
+				<?php
+			} else {
+				$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/".$MODULE."\\'', 15000)";
+	
+				$ERROR++;
+				$ERRORSTR[]	= "This Event ID is not valid<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
+			
+				echo display_error();
+			
+				application_log("error", "Error, invalid Event ID [".$EVENT_ID."] supplied for viewing a clerkship elective in module [".$MODULE."].");
+			}
 		}
 	} else {		
 		$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/clerkship/electives?section=view", "title" => "Viewing Electives");

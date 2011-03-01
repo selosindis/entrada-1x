@@ -48,10 +48,16 @@ if (!defined("PARENT_INCLUDED")) {
 		$POLL_TARGETS = array();
 		$POLL_TARGETS["all"] = "Poll all students, faculty &amp; staff";
 		$POLL_TARGETS["students"] = "Poll all students";
-		$first_year	= (date("Y", time()) + ((date("m", time()) < 7) ?  3 : 4));
-		for ($year = $first_year; $year >= ($first_year - 3); $year--) {
-			$POLL_TARGETS[$year]	= "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Poll class of ".$year;
+
+		$cut_off_year = (fetch_first_year() - 3);
+		if (isset($SYSTEM_GROUPS["student"]) && !empty($SYSTEM_GROUPS["student"])) {
+			foreach ($SYSTEM_GROUPS["student"] as $class) {
+				if (clean_input($class, "numeric") >= $cut_off_year) {
+					$POLL_TARGETS[$class] = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Poll class of ".$class;
+				}
+			}
 		}
+
 		$POLL_TARGETS["faculty"] = "Poll all faculty";
 		$POLL_TARGETS["staff"] = "Poll all staff";
 

@@ -694,49 +694,30 @@ if ($community_courses) {
 				break;
 			}
 
-			$query 		= "SELECT 	`events`.`event_id`,
-									`events`.`event_title`,
-									`events`.`event_start`,
-									`events`.`event_phase`,
-									`events`.`release_date`,
-									`events`.`release_until`,
-									`events`.`updated_date`,
-									`event_audience`.`audience_type`,
-									CONCAT_WS(', ', `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname`) AS `fullname`,
-									MAX(`statistics`.`timestamp`) AS `last_visited`
-									FROM `events`
-									LEFT JOIN `event_contacts` AS `primary_teacher`
-									ON `primary_teacher`.`event_id` = `events`.`event_id`
-									AND `primary_teacher`.`contact_order` = '0'
-									LEFT JOIN `event_audience`
-									ON `event_audience`.`event_id` = `events`.`event_id`
-									LEFT JOIN `".AUTH_DATABASE."`.`user_data`
-									ON `".AUTH_DATABASE."`.`user_data`.`id` = `primary_teacher`.`proxy_id`
-									LEFT JOIN `statistics`
-									ON `statistics`.`module` = 'events'
-									AND `statistics`.`proxy_id` = '1'
-									AND `statistics`.`action` = 'view'
-									AND `statistics`.`action_field` = 'event_id'
-									AND `statistics`.`action_value` = `events`.`event_id`
-									WHERE ".(($DISPLAY_DURATION) ? "`events`.`event_start` BETWEEN ".$db->qstr($DISPLAY_DURATION["start"])." AND ".$db->qstr($DISPLAY_DURATION["end"])."
-									AND " : "")." (`events`.`course_id` IN (".implode(", ",$course_ids)."))
-									GROUP BY `events`.`event_id`
-									ORDER BY %s LIMIT %s, %s";
-
 			/**
 			 * Provides the first parameter of MySQLs LIMIT statement by calculating which row to start results from.
 			 */
 			$limit_parameter = (int) (($_SESSION[APPLICATION_IDENTIFIER]["community_page"]["pp"] * $PAGE_CURRENT) - $_SESSION[APPLICATION_IDENTIFIER]["community_page"]["pp"]);
-
-			/**
-			 * Provide the previous query so we can have previous / next event links on the details page.
-			 */
-			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["query"]		= $query;
-			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["total_rows"]	= $TOTAL_ROWS;
-
-			$query		= sprintf($query, $SORT_BY, $limit_parameter, $_SESSION[APPLICATION_IDENTIFIER]["community_page"]["pp"]);
-			$results	= $db->GetAll($query);
-			if($results) {
+			foreach ($course_ids as $course_id) {
+				$filters["course"][] = (int) trim($course_id, '\'');
+			}
+			
+			$results = events_fetch_filtered_events(
+					$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"],
+					$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"],
+					$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"],
+					$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"],
+					$_SESSION[APPLICATION_IDENTIFIER]["community_page"]["sb"],
+					$_SESSION[APPLICATION_IDENTIFIER]["community_page"]["so"],
+					$_SESSION[APPLICATION_IDENTIFIER]["community_page"]["dtype"],
+					
+					$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dstamp"],
+					0,
+					$filters,
+					true,
+					(isset($_GET["pv"]) ? (int) trim($_GET["pv"]) : 1),
+					$_SESSION[APPLICATION_IDENTIFIER]["community_page"]["pp"]);
+			if($results["events"]) {
 				?>
 				<div class="tableListTop">
 					<img src="<?php echo ENTRADA_URL; ?>/images/lecture-info.gif" width="15" height="15" alt="" title="" style="vertical-align: middle" />
@@ -786,7 +767,8 @@ if ($community_courses) {
 					$count_group		= 0;
 					$count_individual	= 0;
 
-					foreach($results as $result) {
+
+					foreach($results["events"] as $result) {
 						if(((!$result["release_date"]) || ($result["release_date"] <= time())) && ((!$result["release_until"]) || ($result["release_until"] >= time()))) {
 							$attachments	= attachment_check($result["event_id"]);
 							$url			= ENTRADA_URL."/events?rid=".$rid;
@@ -942,14 +924,6 @@ if ($community_courses) {
 				}
 			}
 
-			$sidebar_html  = "<div style=\"margin: 2px 0px 10px 3px; font-size: 10px\">\n";
-			$sidebar_html .= "	<div><img src=\"".ENTRADA_URL."/images/legend-primary-objective.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" style=\"vertical-align: middle\" /> Primary Objective</div>\n";
-			$sidebar_html .= "	<div><img src=\"".ENTRADA_URL."/images/legend-secondary-objective.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" style=\"vertical-align: middle\" /> Secondary Objective</div>\n";
-			$sidebar_html .= "	<div><img src=\"".ENTRADA_URL."/images/legend-tertiary-objective.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" style=\"vertical-align: middle\" /> Tertiary Objective</div>\n";
-			$sidebar_html .= "</div>\n";
-
-			new_sidebar_item("Objective Importance", $sidebar_html, "objective-legend", "open");
-
 			$show_objectives = false;
 			$objectives = courses_fetch_objectives($course_ids, 1, false);
 
@@ -970,9 +944,8 @@ if ($community_courses) {
 			}
     		</script>
 			<?php
-			echo "<div style=\"text-align: right; padding-right: 20px;\"><label for=\"show_hierarchy\" class=\"content-small\" style=\"vertical-align: middle;\"/>Display Hierarchy For These Objectives</label><input type=\"checkbox\" id=\"show_hierarcy\" onclick=\"renewList(this.checked)\" /></div>\n";
 			echo "<strong>The learner will be able to:</strong>";
-			echo "<div id=\"objectives_list\">\n".course_objectives_in_list($objectives["objectives"], 1, false, false, 1, false)."\n</div>\n";
+			echo "<div id=\"objectives_list\">\n".course_objectives_in_list($objectives, 1, false, false, 1, false)."\n</div>\n";
 		break;
 		case (strpos($PAGE_URL, "mcc_presentations") !== false) :
 			$query = "	SELECT b.*
@@ -987,25 +960,11 @@ if ($community_courses) {
 			$results = $db->GetAll($query);
 			if ($results) {
 				echo "<ul class=\"objectives\">\n";
-				$HEAD[] = "
-					<script type=\"text/javascript\" defer=\"defer\">
-					Event.observe(window, 'load', function() {";
 				foreach ($results as $result) {
-					$HEAD[] = "
-						new Control.Modal($('objective-".$result["objective_id"]."-details'), {
-							overlayOpacity:	0.75,
-							closeOnClick:	'overlay',
-							className:		'modal-description',
-							fade:			true,
-							fadeDuration:	0.30
-						});";
 					if ($result["objective_name"]) {
-						echo "<li><a id=\"objective-".$result["objective_id"]."-details\" style=\"text-decoration: none;\" href=\"".ENTRADA_URL."/objectives?section=objective-details&api=true&oid=".$result["objective_id"]."&cid=".$COURSE_ID."\">".$result["objective_name"]."</a></li>\n";
+						echo "<li>".$result["objective_name"]."</li>\n";
 					}
 				}
-				$HEAD[] = "
-					});
-					</script>";
 				echo "</ul>\n";
 			}
 		break;

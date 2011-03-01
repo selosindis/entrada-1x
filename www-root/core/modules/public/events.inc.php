@@ -165,18 +165,18 @@ if (!defined("PARENT_INCLUDED")) {
 		new_sidebar_item("Display Style", $sidebar_html, "display-style", "open");
 	}
 	
-	$ORGANISATION_LIST	= array();
-	$query		= "SELECT `organisation_id`, `organisation_title` FROM `".AUTH_DATABASE."`.`organisations` ORDER BY `organisation_title` ASC";
-	$results	= $db->GetAll($query);
+	$organisation_list = array();
+	$query = "SELECT `organisation_id`, `organisation_title` FROM `".AUTH_DATABASE."`.`organisations` ORDER BY `organisation_title` ASC";
+	$results = $db->GetAll($query);
 	if ($results) {
 		foreach ($results as $result) {
 			if ($ENTRADA_ACL->amIAllowed("resourceorganisation".$result["organisation_id"], "read")) {
-				$ORGANISATION_LIST[$result["organisation_id"]] = html_encode($result["organisation_title"]);
+				$organisation_list[$result["organisation_id"]] = html_encode($result["organisation_title"]);
 			}
 		}
 	}
 	
-	if (isset($_GET["org"]) && ($organisation = ((int)$_GET["org"])) && array_key_exists($organisation, $ORGANISATION_LIST)) {
+	if (isset($_GET["org"]) && ($organisation = ((int) $_GET["org"])) && array_key_exists($organisation, $organisation_list)) {
 		$ORGANISATION_ID = $organisation;
 		$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["organisation_id"] = $ORGANISATION_ID;
 	} else {
@@ -188,11 +188,11 @@ if (!defined("PARENT_INCLUDED")) {
 		}
 	}
 	
-	if ($ORGANISATION_LIST && count($ORGANISATION_LIST) > 1) {
-		$sidebar_html  = "<ul class=\"menu\">\n";
-		foreach ($ORGANISATION_LIST as $key => $organisation_title) {
+	if ($organisation_list && count($organisation_list) > 1) {
+		$sidebar_html = "<ul class=\"menu\">\n";
+		foreach ($organisation_list as $key => $organisation_title) {
 			if ($key == $ORGANISATION_ID) {
-				$sidebar_html .= "	<li class=\"on\"><a href=\"".ENTRADA_URL."/events?".replace_query(array("org" => $key))."\">".html_encode($organisation_title)."</a></li>\n";
+				$sidebar_html .= "<li class=\"on\"><a href=\"".ENTRADA_URL."/events?".replace_query(array("org" => $key))."\">".html_encode($organisation_title)."</a></li>\n";
 			} else {
 				$sidebar_html .= "<li class=\"off\"><a href=\"".ENTRADA_URL."/events?".replace_query(array("org" => $key))."\">".html_encode($organisation_title)."</a></li>\n";
 			}
@@ -270,13 +270,13 @@ if (!defined("PARENT_INCLUDED")) {
 							if ($result["audience_type"] == $event_audience_type) {
 								switch ($result["audience_type"]) {
 									case "grad_year" :
-										$associated_grad_year	= (int) $result["audience_value"];
+										$associated_grad_year = clean_input($result["audience_value"], "alphanumeric");
 									break;
 									case "group_id" :
-										$associated_group_ids[]	= (int) $result["audience_value"];
+										$associated_group_ids[] = (int) $result["audience_value"];
 									break;
 									case "proxy_id" :
-										$associated_proxy_ids[]	= (int) $result["audience_value"];
+										$associated_proxy_ids[] = (int) $result["audience_value"];
 									break;
 								}
 							}
@@ -639,31 +639,37 @@ if (!defined("PARENT_INCLUDED")) {
 					
 					$temp_objectives = $curriculum_objectives["objectives"];
 					foreach ($temp_objectives as $objective_id => $objective) {
-						if (isset($objective["event_objective"]) && $objective["event_objective"]) {
-							if (!array_key_exists($objective_id, $curriculum_objectives["used_ids"])) {
-								$curriculum_objectives["objectives"][$objective_id][($curriculum_objectives["objectives"][$curriculum_objectives["objectives"][$objective_id]["parent"]]["primary"] ? "primary" : "secondary")] = true;
-								$curriculum_objectives[($curriculum_objectives["objectives"][$curriculum_objectives["objectives"][$objective_id]["parent"]]["primary"] ? "primary_ids" : "secondary_ids")][] = $objective_id;
-								$curriculum_objectives["used_ids"][] = $objective_id;
-								foreach ($objective["parent_ids"] as $parent_id) {
-									$curriculum_objectives["objectives"][$parent_id]["objective_children"]++;
-								}
+						unset($curriculum_objectives["used_ids"][$objective_id]);
+						$curriculum_objectives["objectives"][$objective_id]["objective_primary_children"] = 0;
+						$curriculum_objectives["objectives"][$objective_id]["objective_secondary_children"] = 0;
+						$curriculum_objectives["objectives"][$objective_id]["objective_tertiary_children"] = 0;
+					}
+					foreach ($curriculum_objectives["objectives"] as $objective_id => $objective) {
+						if ($objective["event_objective"]) {
+							foreach ($objective["parent_ids"] as $parent_id) {
+								$curriculum_objectives["objectives"][$parent_id]["objective_".($objective["primary"] ? "primary" : ($objective["secondary"] ? "secondary" : "tertiary"))."_children"]++;
+								if ($curriculum_objectives["objectives"][$parent_id]["primary"]) {
+									$curriculum_objectives["objectives"][$objective_id]["primary"] = true;
+								} elseif ($curriculum_objectives["objectives"][$parent_id]["secondary"]) {
+									$curriculum_objectives["objectives"][$objective_id]["secondary"] = true;
+								} elseif ($curriculum_objectives["objectives"][$parent_id]["tertiary"]) {
+									$curriculum_objectives["objectives"][$objective_id]["tertiary"] = true;
+								} 
 							}
 							$show_curriculum_objectives = true;
-						} elseif ((isset($objective["primary"]) && $objective["primary"]) || (isset($objective["secondary"]) && $objective["secondary"])) {
-							foreach ($objective["parent_ids"] as $parent_id) {
-								$curriculum_objectives["objectives"][$parent_id]["objective_children"]--;
-							}
-							unset($curriculum_objectives["used_ids"][$objective_id]);
+						}
+					}
+					foreach ($temp_objectives as $objective_id => $objective) {
+						if (!$objective["event_objective"]) {
 							if ($objective["primary"]) {
-								unset($curriculum_objectives["primary_ids"][$objective_id]);
 								$curriculum_objectives["objectives"][$objective_id]["primary"] = false;
 							} elseif ($objective["secondary"]) {
-								unset($curriculum_objectives["secondary_ids"][$objective_id]);
 								$curriculum_objectives["objectives"][$objective_id]["secondary"] = false;
+							} elseif ($objective["tertiary"]) {
+								$curriculum_objectives["objectives"][$objective_id]["tertiary"] = false;
 							}
 						}
 					}
-					
 					if ($show_event_objectives || $show_clinical_presentations || $show_curriculum_objectives) {
 						$include_objectives = true;
 
@@ -726,7 +732,7 @@ if (!defined("PARENT_INCLUDED")) {
 							echo "<div class=\"section-holder\">\n";
 							echo "	<h3>Curriculum Objectives</h3>\n";
 							echo "	<strong>The learner will be able to:</strong>";
-							echo	course_objectives_in_list($curriculum_objectives["objectives"], 1, false, false, 1, false, true)."\n";
+							echo	course_objectives_in_list($curriculum_objectives, 1, false, false, 1, true)."\n";
 							echo "</div>\n";
 						}
 						echo "</div>\n";
@@ -874,8 +880,8 @@ if (!defined("PARENT_INCLUDED")) {
 							$total_questions	= quiz_count_questions($quiz_record["quiz_id"]);
 
 							$query				= "	SELECT *
-											FROM `event_quiz_progress`
-											WHERE `equiz_id` = ".$db->qstr($quiz_record["equiz_id"])."
+											FROM `quiz_progress`
+											WHERE `aquiz_id` = ".$db->qstr($quiz_record["aquiz_id"])."
 											AND `proxy_id` = ".$db->qstr($_SESSION["details"]["id"]);
 							$progress_record	= $db->GetAll($query);
 							if ($progress_record) {
@@ -890,11 +896,11 @@ if (!defined("PARENT_INCLUDED")) {
 								$allow_attempt = false;
 							}
 
-							echo "	<tr id=\"quiz-".$quiz_record["equiz_id"]."\">\n";
+							echo "	<tr id=\"quiz-".$quiz_record["aquiz_id"]."\">\n";
 							echo "		<td class=\"modified\" style=\"vertical-align: top\">".(((int) $quiz_record["last_visited"]) ? (((int) $quiz_record["last_visited"] >= (int) $quiz_record["updated_date"]) ? "<img src=\"".ENTRADA_URL."/images/checkmark.gif\" width=\"20\" height=\"20\" alt=\"You have previously completed this quiz.\" title=\"You have previously completed this quiz.\" style=\"vertical-align: middle\" />" : "<img src=\"".ENTRADA_URL."/images/exclamation.gif\" width=\"20\" height=\"20\" alt=\"This attached quiz has been updated since you last completed it.\" title=\"This attached quiz has been updated since you last completed it.\" style=\"vertical-align: middle\" />") : "")."</td>\n";
 							echo "		<td class=\"title\" style=\"vertical-align: top; white-space: normal; overflow: visible\">\n";
 							if ($allow_attempt) {
-								echo "		<a href=\"".ENTRADA_URL."/quizzes?section=attempt&amp;id=".$quiz_record["equiz_id"]."\" title=\"Take ".html_encode($quiz_record["quiz_title"])."\" style=\"font-weight: bold\">".html_encode($quiz_record["quiz_title"])."</a>";
+								echo "		<a href=\"".ENTRADA_URL."/quizzes?section=attempt&amp;id=".$quiz_record["aquiz_id"]."\" title=\"Take ".html_encode($quiz_record["quiz_title"])."\" style=\"font-weight: bold\">".html_encode($quiz_record["quiz_title"])."</a>";
 							} else {
 								echo "		<span style=\"color: #666666; font-weight: bold\">".html_encode($quiz_record["quiz_title"])."</span>";
 							}
@@ -927,8 +933,8 @@ if (!defined("PARENT_INCLUDED")) {
 											"updated_date" => time(),
 											"updated_by" => $_SESSION["details"]["id"]
 										);
-										if (!$db->AutoExecute("event_quiz_progress", $quiz_progress_array, "UPDATE", "eqprogress_id = ".$db->qstr($entry["eqprogress_id"]))) {
-											application_log("error", "Unable to update the eqprogress_id [".$eqprogress_id."] to expired. Database said: ".$db->ErrorMsg());
+										if (!$db->AutoExecute("quiz_progress", $quiz_progress_array, "UPDATE", "qprogress_id = ".$db->qstr($entry["qprogress_id"]))) {
+											application_log("error", "Unable to update the qprogress_id [".$qprogress_id."] to expired. Database said: ".$db->ErrorMsg());
 										}
 										$entry["progress_value"] = "expired";
 									}
@@ -939,7 +945,7 @@ if (!defined("PARENT_INCLUDED")) {
 												$percentage = ((round(($entry["quiz_score"] / $entry["quiz_value"]), 2)) * 100);
 												echo "<li class=\"".(($percentage >= 60) ? "correct" : "incorrect")."\">";
 												echo	date(DEFAULT_DATE_FORMAT, $entry["updated_date"])." <strong>Score:</strong> ".$entry["quiz_score"]."/".$entry["quiz_value"]." (".$percentage."%)";
-												echo "	( <a href=\"".ENTRADA_URL."/quizzes?section=results&amp;id=".$entry["eqprogress_id"]."\">review quiz</a> )";
+												echo "	( <a href=\"".ENTRADA_URL."/quizzes?section=results&amp;id=".$entry["qprogress_id"]."\">review quiz</a> )";
 												echo "</li>";
 											} else {
 												echo "<li>".date(DEFAULT_DATE_FORMAT, $entry["updated_date"])." <strong>Score:</strong> To Be Released ".date(DEFAULT_DATE_FORMAT, $quiz_record["release_until"])."</li>";
@@ -949,7 +955,7 @@ if (!defined("PARENT_INCLUDED")) {
 											echo "<li class=\"incorrect\">".date(DEFAULT_DATE_FORMAT, $entry["updated_date"])." <strong>Expired Attempt</strong>: not completed.</li>";
 										break;
 										case "inprogress" :
-											echo "<li>".date(DEFAULT_DATE_FORMAT, $entry["updated_date"])." <strong>Attempt In Progress</strong> ( <a href=\"".ENTRADA_URL."/quizzes?section=attempt&amp;id=".$quiz_record["equiz_id"]."\">continue quiz</a> )</li>";
+											echo "<li>".date(DEFAULT_DATE_FORMAT, $entry["updated_date"])." <strong>Attempt In Progress</strong> ( <a href=\"".ENTRADA_URL."/quizzes?section=attempt&amp;id=".$quiz_record["aquiz_id"]."\">continue quiz</a> )</li>";
 										break;
 										default :
 											continue;
@@ -1078,7 +1084,20 @@ if (!defined("PARENT_INCLUDED")) {
 		/**
 		 * Fetch all of the events that apply to the current filter set.
 		 */
-		$learning_events = events_fetch_filtered_events();
+		$learning_events = events_fetch_filtered_events(
+				$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"],
+				$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"],
+				$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"],
+				$ORGANISATION_ID,
+				$_SESSION[APPLICATION_IDENTIFIER]["events"]["sb"],
+				$_SESSION[APPLICATION_IDENTIFIER]["events"]["so"],
+				$_SESSION[APPLICATION_IDENTIFIER]["events"]["dtype"],
+				$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dstamp"],
+				0,
+				$_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"],
+				true,
+				(isset($_GET["pv"]) ? (int) trim($_GET["pv"]) : 1),
+				$_SESSION[APPLICATION_IDENTIFIER]["events"]["pp"]);
 
 		echo "<h1>View Events</h1>";
 
@@ -1092,7 +1111,7 @@ if (!defined("PARENT_INCLUDED")) {
 		 */
 		events_output_calendar_controls();
 
-		if (count($learning_events["events"])) {
+		if (!empty($learning_events["events"])) {
 			?>
 			<div class="tableListTop">
 				<img src="<?php echo ENTRADA_URL; ?>/images/lecture-info.gif" width="15" height="15" alt="" title="" style="vertical-align: middle" />

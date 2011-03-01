@@ -12,7 +12,7 @@ class FormalRemediations extends Collection {
 		if ($results) {
 			$frs = array();
 			foreach ($results as $result) {
-				$fr =  new FormalRemediation($user, $result['id'], $result['remediation_details']);
+				$fr = FormalRemediation::fromArray($result);
 				$frs[] = $fr;
 			}
 		}

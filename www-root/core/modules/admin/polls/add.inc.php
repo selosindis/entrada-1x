@@ -45,7 +45,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_POLLS"))) {
 	// Error Checking
 	switch($STEP) {
 		case 2 :
-			if((isset($_POST["poll_target"])) && ($poll_target = clean_input($_POST["poll_target"], array("lower", "notags", "nows")))) {
+			if((isset($_POST["poll_target"])) && ($poll_target = clean_input($_POST["poll_target"], "alphanumeric"))) {
 				$PROCESSED["poll_target"] = $poll_target;
 			} else {
 				$ERROR++;

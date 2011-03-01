@@ -2,24 +2,24 @@
 
 require_once("Models/utility/Approvable.interface.php");
 require_once("Models/utility/AttentionRequirable.interface.php");
+require_once("Models/utility/Editable.interface.php");
 
-abstract class SupervisedProject implements Approvable,AttentionRequirable {
+abstract class SupervisedProject implements Approvable,AttentionRequirable, Editable {
 	private $user_id;
 	private $location;
 	private $organization;
 	private $title;
 	private $supervisor;
-	private $approved;
-	private $rejected;
+	private $comment;
 	
-	function __construct($user_id, $title, $organization, $location, $supervisor, $approved = false, $rejected = false) {
+	function __construct($user_id, $title, $organization, $location, $supervisor, $comment, $status=0) {
 		$this->user_id = $user_id;
 		$this->location = $location;
 		$this->title = $title;
 		$this->organization = $organization;
 		$this->supervisor = $supervisor;
-		$this->approved  = (bool)$approved;
-		$this->rejected = (bool)$rejected;
+		$this->comment = $comment;
+		$this->status = $status;
 	}
 	
 	public function getID() {
@@ -28,6 +28,10 @@ abstract class SupervisedProject implements Approvable,AttentionRequirable {
 	
 	public function getUserID() {
 		return $this->user_id;	
+	}
+	
+	public function getUser() {
+		return User::get($this->user_id);	
 	}
 
 	public function getLocation () {
@@ -58,7 +62,7 @@ abstract class SupervisedProject implements Approvable,AttentionRequirable {
 	}
 	
 	public function isApproved() {
-		return (bool)($this->approved);
+		return ($this->status == 1);
 	}	
 	
 	/**
@@ -70,7 +74,10 @@ abstract class SupervisedProject implements Approvable,AttentionRequirable {
 	}
 	
 	public function isRejected() {
-		return (bool)($this->rejected);
+		return ($this->status == -1);
 	}
 	
+	public function getComment() {
+		return $this->comment;
+	}
 }

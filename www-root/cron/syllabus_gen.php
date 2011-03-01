@@ -150,15 +150,15 @@ function syllabus_display_learning_event() {
 /**
  * 	List of valid phases that can be requested.
  */
-$EVENT_PHASES = array("1", "2A", "2B", "2C", "2E", "3A", "3B", "3C", "3D");
+$EVENT_PHASES = array("1", "2", "T3", "T4", "2A", "2B", "2C", "2E", "3");
 
 /**
  * The grad year that is being requested.
  */
 if((isset($_GET["grad"])) && ((int) trim($_GET["grad"]))) {
-	$EVENT_GRAD_YEAR	= (int) trim($_GET["grad"]);
+	$EVENT_GRAD_YEAR = (int) trim($_GET["grad"]);
 } else {
-	$EVENT_GRAD_YEAR	= (date("Y", time()) + ((date("m", time()) < 7) ?  3 : 4));
+	$EVENT_GRAD_YEAR = fetch_first_year();
 }
 
 /**

@@ -238,8 +238,8 @@ if ($ACTION == "login") {
 			 */
 			switch ($_SESSION["details"]["group"]) {
 				case "student" :
-					if ((!isset($result["ROLE"])) || (!(int) $result["ROLE"])) {
-						$_SESSION["details"]["grad_year"] = (date("Y", time()) + ((date("m", time()) < 7) ?  3 : 4));
+					if ((!isset($result["ROLE"])) || (!clean_input($result["ROLE"], "alphanumeric"))) {
+						$_SESSION["details"]["grad_year"] = fetch_first_year();
 					} else {
 						$_SESSION["details"]["grad_year"] = $result["ROLE"];
 					}
@@ -249,7 +249,7 @@ if ($ACTION == "login") {
 					 * If you're in MEdTech, always assign a graduating year,
 					 * because we normally see more than normal users.
 					 */
-					$_SESSION["details"]["grad_year"] = (date("Y", time()) + ((date("m", time()) < 7) ?  3 : 4));
+					$_SESSION["details"]["grad_year"] = fetch_first_year();
 				break;
 				case "staff" :
 				case "faculty" :
@@ -396,6 +396,15 @@ if ((!isset($_SESSION["isAuthorized"])) || (!(bool) $_SESSION["isAuthorized"])) 
 	}
 
 	/**
+	 * This section of code sets the $SUBMODULE variable.
+	 */
+	if ((isset($PATH_SEPARATED[2])) && (trim($PATH_SEPARATED[2]) != "")) {
+		$SUBMODULE = $PATH_SEPARATED[2]; // This is sanitized when $PATH_SEPARATED is created.
+	} else {
+		$SUBMODULE = false; // This is the default file that will be launched upon successful login.
+	}
+
+	/**
 	 * This is a simple re-direct to catch admin without slash on the end.
 	 */
 	if ($MODULE == "admin") {
@@ -518,6 +527,5 @@ if ((isset($_SESSION["isAuthorized"])) && ($_SESSION["isAuthorized"])) {
 	
 	$sidebar_html  = "<a href=\"javascript: sendFeedback('".ENTRADA_URL."/agent-feedback.php?enc=".feedback_enc()."')\"><img src=\"".ENTRADA_URL."/images/feedback.gif\" width=\"48\" height=\"48\" alt=\"Give Feedback\" border=\"0\" align=\"right\" hspace=\"3\" vspace=\"5\" /></a>";
 	$sidebar_html .= "Giving feedback is a very important part of application development. Please <a href=\"javascript: sendFeedback('".ENTRADA_URL."/agent-feedback.php?enc=".feedback_enc()."')\" style=\"font-size: 11px; font-weight: bold\">click here</a> to send us any feedback you may have about <u>this</u> page.<br /><br />\n";
-
-	new_sidebar_item("Page Feedback", $sidebar_html, "page-feedback", "open");
+	new_sidebar_item("Feedback", $sidebar_html, "page-feedback", "open");
 }

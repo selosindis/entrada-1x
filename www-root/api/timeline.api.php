@@ -37,15 +37,15 @@ if((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 	/**
 	 * The class of that will be outputted.
 	 */
-	if((isset($_GET["c"])) && ((int) trim($_GET["c"]))) {
-		$SEARCH_CLASS	= (int) trim($_GET["c"]);
+	if ((isset($_GET["c"])) && ($tmp_input = clean_input($_GET["c"], "alphanumeric"))) {
+		$SEARCH_CLASS = $tmp_input;
 	}
 	
 	/**
 	 * Check if y variable is set for Academic year.
 	 */
 	if(isset($_GET["y"])) {
-		$SEARCH_YEAR				= (int) trim($_GET["y"]);
+		$SEARCH_YEAR = (int) trim($_GET["y"]);
 	
 		$SEARCH_DURATION["start"]	= mktime(0, 0, 0, 9, 1, $SEARCH_YEAR);
 		$SEARCH_DURATION["end"]		= strtotime("+1 year", $SEARCH_DURATION["start"]);
@@ -56,17 +56,16 @@ if((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 	
 	echo "<data>\n";
 	if((isset($_SESSION["isAuthorized"])) && ($_SESSION["isAuthorized"]) && ($SEARCH_QUERY)) {
-		$query	= "
-				SELECT a.`event_id`, a.`event_title`, a.`event_goals`, a.`event_objectives`, a.`event_start`
-				FROM `events` AS a
-				LEFT JOIN `event_audience` AS b
-				ON b.`event_id` = a.`event_id`
-				WHERE b.`audience_type` = 'grad_year'
-				AND b.`audience_value` = ".$db->qstr($SEARCH_CLASS)."
-				AND".(($SEARCH_YEAR) ? " (a.`event_start` BETWEEN ".$db->qstr($SEARCH_DURATION["start"])." AND ".$db->qstr($SEARCH_DURATION["end"]).") AND" : "")."
-				MATCH (a.`event_title`, a.`event_description`, a.`event_goals`, a.`event_objectives`, a.`event_message`) AGAINST (".$db->qstr(str_replace(array("%", " AND ", " NOT "), array("%%", " +", " -"), $SEARCH_QUERY))." IN BOOLEAN MODE)
-				ORDER BY a.`event_start` ASC, a.`event_title` ASC";
-		$results	= $db->GetAll($query);
+		$query = "	SELECT a.`event_id`, a.`event_title`, a.`event_goals`, a.`event_objectives`, a.`event_start`
+					FROM `events` AS a
+					LEFT JOIN `event_audience` AS b
+					ON b.`event_id` = a.`event_id`
+					WHERE b.`audience_type` = 'grad_year'
+					AND b.`audience_value` = ".$db->qstr($SEARCH_CLASS)."
+					AND".(($SEARCH_YEAR) ? " (a.`event_start` BETWEEN ".$db->qstr($SEARCH_DURATION["start"])." AND ".$db->qstr($SEARCH_DURATION["end"]).") AND" : "")."
+					MATCH (a.`event_title`, a.`event_description`, a.`event_goals`, a.`event_objectives`, a.`event_message`) AGAINST (".$db->qstr(str_replace(array("%", " AND ", " NOT "), array("%%", " +", " -"), $SEARCH_QUERY))." IN BOOLEAN MODE)
+					ORDER BY a.`event_start` ASC, a.`event_title` ASC";
+		$results = $db->GetAll($query);
 		if($results) {
 			foreach($results as $key => $result) {
 				echo "\t<event start=\"".date("M j Y H:i:s \G\M\T", $result["event_start"])."\" title=\"".html_encode($result["event_title"])."\">\n";

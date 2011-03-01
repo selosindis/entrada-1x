@@ -26,9 +26,14 @@
 require_once("init.inc.php");
 
 $event_id = 0;
+$dashboard_result_id = false;
 
 if ((isset($_GET["id"])) && ($tmp_input = clean_input($_GET["id"], array("trim", "int")))) {
 	$event_id = $tmp_input;
+}
+
+if (isset($_GET["drid"])) {
+	$dashboard_result_id = clean_input($_GET["drid"], array("trim", "int"));
 }
 
 if (($event_id) && (isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
@@ -113,7 +118,7 @@ if (($event_id) && (isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAu
 						</ul>
 					</div>
 					<div style="clear: both; text-align: center; padding-top: 15px">
-						<a href="<?php echo ENTRADA_URL; ?>/events?id=<?php echo $event_id; ?>" style="font-weight: bold; font-size: 12px">Review Learning Event</a>
+						<a href="<?php echo ENTRADA_URL; ?>/events?<?php echo (($dashboard_result_id === 0 || $dashboard_result_id >= 1) ? "drid=" . $dashboard_result_id : "id=" . $event_id); ?>" style="font-weight: bold; font-size: 12px">Review Learning Event</a>
 					</div>
 				</div>
 				<?php

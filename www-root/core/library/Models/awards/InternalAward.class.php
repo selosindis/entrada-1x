@@ -44,7 +44,7 @@ class InternalAward extends Award{
 		
 		$query = "insert into `student_awards_internal_types` (`title`,`award_terms`) value (".$db->qstr($title).", ".$db->qstr($terms).")";
 		if(!$db->Execute($query)) {
-			add_error("Failed to create new award .");
+			add_error("Failed to create new award.");
 			application_log("error", "Unable to update a student_awards_internal_types record. Database said: ".$db->ErrorMsg());
 		} else {
 			add_success("Successfully added new award.");
@@ -59,10 +59,19 @@ class InternalAward extends Award{
 	
 	static function get($award_id) {
 		global $db;
-		$query		= "SELECT * FROM `student_awards_internal_types` where `id`=".$db->qstr($award_id);
+		$query		= "SELECT *, `id` as award_id FROM `student_awards_internal_types` where `id`=".$db->qstr($award_id);
 		$result	= $db->GetRow($query);
-		$award = new InternalAward($result['id'], $result['title'], $result['award_terms'], $result['disabled']);
-		return $award;
+		if ($result) {
+			$award = self::fromArray($result);
+			return $award;
+		} else {
+			add_error("Error Retrieving Internal Award");
+			application_log("error", "Unable to retrieve a student_awards_internal_types record. Database said: ".$db->ErrorMsg());
+		}
+	}
+	
+	public static function fromArray(array $arr) {
+		return new self($arr['award_id'], $arr['title'], $arr['award_terms'], $arr['disabled']);
 	}
 	
 	public function isDisabled() {

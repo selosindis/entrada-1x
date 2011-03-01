@@ -35,8 +35,12 @@ abstract class Award {
 		$this->awarding_body = $awarding_body; 
 	}
 	
-	function compare ($award) {
-		return strcasecmp($this->title,  $award->title);
+	function compare ($award, $compare_by="title") {
+		switch($compare_by) {
+			case 'title':
+				return strcasecmp($this->title,  $award->title);
+				break;
+		}
 	}
 	
 	static function compare_awards(Award $award_1, Award $award_2) {

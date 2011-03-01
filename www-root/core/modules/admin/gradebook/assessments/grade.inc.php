@@ -27,7 +27,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 } elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	header("Location: ".ENTRADA_URL);
 	exit;
-} elseif (!$ENTRADA_ACL->amIAllowed("gradebook", "read", false)) {
+} elseif (!$ENTRADA_ACL->amIAllowed("gradebook", "update", false)) {
 	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/".$MODULE."\\'', 15000)";
 
 	$ERROR++;
@@ -80,6 +80,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				}
 				echo "</div>\n";
 				?>
+				<style type="text/css">
+				.sortableList li {
+					width: 100%;
+				}	
+				</style>
 				<h1 class="event-title"><?php echo $assessment["name"]; ?> (Class of <?php echo $assessment["grad_year"]; ?>)</h1>
 				
 				<div style="float: right; text-align: right;">
@@ -90,21 +95,26 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				<div style="clear: both"><br /></div>
 			
 				<?php
-				$query = "	SELECT b.`id` AS `proxy_id`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, b.`number`, g.`grade_id` AS `grade_id`, g.`value` AS `grade_value`
+				$query = "	SELECT b.`id` AS `proxy_id`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, b.`number`, g.`grade_id` AS `grade_id`, g.`value` AS `grade_value`, h.`grade_weighting`
 							FROM `".AUTH_DATABASE."`.`user_data` AS b
 							LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS c
-							ON c.`user_id` = b.`id` AND c.`app_id`=".$db->qstr(AUTH_APP_ID)."
-							AND c.`account_active`='true'
-							AND (c.`access_starts`='0' OR c.`access_starts`<=".$db->qstr(time()).")
-							AND (c.`access_expires`='0' OR c.`access_expires`>=".$db->qstr(time()).")
-							LEFT JOIN `".DATABASE_NAME."`.`assessment_grades` AS g ON b.`id` = g.`proxy_id` AND g.`assessment_id` = ".$db->qstr($assessment["assessment_id"])."
+							ON c.`user_id` = b.`id` 
+							AND c.`app_id`=".$db->qstr(AUTH_APP_ID)."
+							AND c.`account_active` = 'true'
+							AND (c.`access_starts` = '0' OR c.`access_starts`<=".$db->qstr(time()).")
+							AND (c.`access_expires` = '0' OR c.`access_expires`>=".$db->qstr(time()).")
+							LEFT JOIN `".DATABASE_NAME."`.`assessment_grades` AS g 
+							ON b.`id` = g.`proxy_id` 
+							AND g.`assessment_id` = ".$db->qstr($assessment["assessment_id"])."
+							LEFT JOIN `assessment_exceptions` AS h
+							ON b.`id` = h.`proxy_id`
+							AND g.`assessment_id` = h.`assessment_id`
 							WHERE c.`group` = 'student'
 							AND c.`role` = ".$db->qstr($GRAD_YEAR)."
 							ORDER BY b.`lastname` ASC, b.`firstname` ASC";
-				
 				$students = $db->GetAll($query);
 				$editable = $ENTRADA_ACL->amIAllowed(new GradebookResource($course_details["course_id"], $course_details["organisation_id"]), "update") ? "gradebook_editable" : "gradebook_not_editable";
-				if (count($students) >= 1): ?>
+				if ($students && count($students) >= 1): ?>
 					<span id="assessment_name" style="display: none;"><?php echo $assessment["name"]; ?></span>
 					<div id="gradebook_grades">
 						<h2>Grades</h2>
@@ -122,6 +132,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 										$grade_value = format_retrieved_grade($student["grade_value"], $assessment);
 									} else {
 										$grade_value = "-";
+									}
+									if (isset($student["grade_weighting"]) && $student["grade_weighting"]) {
+										$grade_weighting = $student["grade_weighting"];
+									} else {
+										$grade_weighting = $assessment["grade_weighting"];
 									}
 									?>
 									<tr id="grades<?php echo $student["proxy_id"]; ?>">
@@ -251,6 +266,88 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						?>
 						<button onclick="window.location='<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "io", "download" => "csv", "assessment_ids" => $ASSESSMENT_ID)); ?>'">Download CSV</button>
 						<button onclick="location.reload(true)">Refresh</button>
+						<div style="margin-top: 40px;">
+							<h2>Grade Calculation Exceptions</h2>
+							<p>
+								You can use the following exception creator to modify the calculations used to create the students final grade in this course. 
+							</p>
+							
+							<label for="student_exceptions" class="form-required">Student Name</label>
+							<select name="student_exceptions" id="student_exceptions" style="width: 210px;" onchange="add_exception(this.options[this.selectedIndex].value, '<?php echo $assessment["assessment_id"]; ?>')">
+							<option value="0">-- Select A Student --</option>
+								<?php
+								foreach ($students as $student) {
+									if (!isset($student["grade_weighting"]) || $student["grade_weighting"] == NULL) {
+										echo "<option value=\"".$student["proxy_id"]."\">".$student["fullname"]."</option>";
+									}
+								}
+								?>
+							</select>
+							<br /><br /><br />
+							<script type="text/javascript">
+							function delete_exception (proxy_id, assessment_id) {
+								
+								var anOption = document.createElement('option');
+								anOption.value = proxy_id;
+								anOption.innerHTML = $(proxy_id+'_name').innerHTML;
+								$('student_exceptions').appendChild(anOption);
+								
+								new Ajax.Updater('exception_container', '<?php echo ENTRADA_URL; ?>/api/assessment-weighting-exception.api.php', 
+									{
+										method:	'post',
+										parameters: 'remove=1&assessment_id='+assessment_id+'&proxy_id='+proxy_id
+							    	}
+							    );
+							}
+							function modify_exception (proxy_id, assessment_id, grade_weighting) {
+								new Ajax.Updater('exception_container', '<?php echo ENTRADA_URL; ?>/api/assessment-weighting-exception.api.php', 
+									{
+										method:	'post',
+										parameters: 'assessment_id='+assessment_id+'&proxy_id='+proxy_id+'&grade_weighting='+grade_weighting
+							    	}
+							    );
+							}
+							function add_exception (proxy_id, assessment_id) {
+								new Ajax.Updater('exception_container', '<?php echo ENTRADA_URL; ?>/api/assessment-weighting-exception.api.php', 
+									{
+										method:	'post',
+										parameters: 'assessment_id='+assessment_id+'&proxy_id='+proxy_id+'&grade_weighting=0'
+							    	}
+							    );
+							    var children = $('student_exceptions').childNodes;
+							    var numchildren = children.length;
+							    
+								for (var i = 0; i < numchildren; i++) {
+									if (children[i].value == proxy_id) {
+										$('student_exceptions').removeChild(children[i]);
+										break;
+									}
+								}
+							}
+							</script>
+							<h3>Students with modified weighting:</h3>
+							<ol id="exception_container" class="sortableList">
+								<?php
+								$exceptions_exist = false;
+								foreach ($students as $student) {
+									if (isset($student["grade_weighting"]) && $student["grade_weighting"] !== NULL) {
+										$exceptions_exist = true;
+										echo "<li id=\"proxy_".$student["proxy_id"]."\"><span id=\"".$student["proxy_id"]."_name\">".$student["fullname"]."</span>
+											<a style=\"cursor: pointer;\" onclick=\"delete_exception('".$student["proxy_id"]."', '".$assessment["assessment_id"]."');\" class=\"remove\">
+												<img src=\"".ENTRADA_URL."/images/action-delete.gif\">
+											</a>
+											<span class=\"duration_segment_container\">
+												Weighting: <input class=\"duration_segment\" name=\"duration_segment[]\" onchange=\"modify_exception('".$student["proxy_id"]."', '".$assessment["assessment_id"]."', this.value);\" value=\"".$student["grade_weighting"]."\">
+											</span>
+										</li>";
+									}
+								}
+								if (!$exceptions_exist) {
+									echo "<div class=\"display-notice\">There are currently no students with custom grade weighting in the system for this assessment.</div>";
+								}
+								?>
+							</ol>
+						</div>
 					</div>
 				<?php
 				else:

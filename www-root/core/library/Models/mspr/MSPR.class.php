@@ -1,13 +1,23 @@
 <?php
 
-require_once("Models/users/User.class.php");
-require_mspr_models();
-
+/**
+ * 
+ * Entrada [ http://www.entrada-project.org ]
+ * 
+ * 
+ * @author Organisation: Queen's University
+ * @author Unit: School of Medicine
+ * @author Developer: Jonathan Fingland <jonathan.fingland@queensu.ca>
+ * @copyright Copyright 2010 Queen's University. All Rights Reserved.
+ *
+ */
 class MSPR implements ArrayAccess, AttentionRequirable {
 	private $closed;
 	private $generated;
 	private $last_update;
 	private $user_id;
+	private $carms_number;
+	
 	private $models = array ( // Title => Class
 							"Internal Awards" => "InternalAwardReceipts",
 							"External Awards" => "ExternalAwardReceipts",
@@ -21,18 +31,23 @@ class MSPR implements ArrayAccess, AttentionRequirable {
 							"Observerships" => "Observerships",
 							"International Activities" => "InternationalActivities",
 							"Critical Enquiry" => "CriticalEnquiry",
-							"Community Health and Epidemiology" => "CommunityHealthAndEpidemiology",
+							"Community Based Project" => "CommunityBasedProject",
 							"Research" => "ResearchCitations",
 							"Clerkship Core Completed" => "ClerkshipCoreCompleted",
 							"Clerkship Core Pending" => "ClerkshipCorePending",
 							"Clerkship Electives Completed" => "ClerkshipElectivesCompleted"
 							);
 	
-	function __construct($user_id, $last_update, $closed = NULL, $generated = NULL) {
+	function __construct($user_id, $last_update, $carms_number = NULL,$closed = NULL, $generated = NULL) {
 		$this->user_id = $user_id;
 		$this->last_update = $last_update;
+		$this->carms_number = $carms_number;
 		$this->closed = $closed;
 		$this->generated = $generated;
+	}
+	
+	public static function fromArray($arr) {
+		return new self($arr['user_id'], $arr['last_update'], $arr['carms_number'],$arr['closed'], $arr['generated']);
 	}
 	
 	/**
@@ -106,7 +121,7 @@ class MSPR implements ArrayAccess, AttentionRequirable {
 		$att_reqs[] = CriticalEnquiry::get($user);
 		$att_reqs[] = ExternalAwardReceipts::get($user);
 		$att_reqs[] = Contributions::get($user);
-		$att_reqs[] = CommunityHealthAndEpidemiology::get($user);
+		$att_reqs[] = CommunityBasedProject::get($user);
 		$att_reqs[] = ResearchCitations::get($user);
 		foreach ($att_reqs as $att_req) {
 			if ($att_req && $att_req->isAttentionRequired()) return true;
@@ -138,7 +153,7 @@ class MSPR implements ArrayAccess, AttentionRequirable {
 		$query		= "SELECT * FROM `student_mspr` WHERE `user_id` = ".$db->qstr($user_id);
 		$result = $db->getRow($query);
 		if ($result) {
-			$mspr =  new self($result['user_id'], $result['last_update'], $result['closed'], $result['generated']);
+			$mspr =  self::fromArray($result);
 			return $mspr;
 		}    	
     }
@@ -191,7 +206,7 @@ class MSPR implements ArrayAccess, AttentionRequirable {
 	 * @param unknown_type $html
 	 * @return string
 	 */
-	private function generatePDF($html) {
+	public function generatePDF($html) {
 		return generatePDF($html);
 	}
 	
@@ -219,21 +234,25 @@ class MSPR implements ArrayAccess, AttentionRequirable {
 		$html = $this->generateHTML($timestamp);
 		$pdf = $this->generatePDF($html);
 
-		//prepare filename
-		$user = $this->getUser();
-		$number = $user->getNumber();
-		
-		$filebase = $number."-".$timestamp;
-		
-		//now write the files and return success/fail (true/false)
-		$wroteHTML = writeFile($location."/".$filebase.".html",$html);
-		$wrotePDF = writeFile($location."/".$filebase.".pdf",$pdf);
-		
-		if ($wroteHTML && $wrotePDF) {
+		if ($this->saveMSPRFile("html", $html, $timestamp, $location) && $this->saveMSPRFile("pdf", $pdf, $timestamp, $location)) {
 			$this->setGeneratedTimestamp($timestamp);
 			return true;
 		}	
 		return false;
+	}
+	
+	public function saveMSPRFile($type, $content, $timestamp=null, $location=null) {
+	if (!$location) {
+			$location = MSPR_STORAGE; //use default
+		}
+		if (!$timestamp) {
+			$timestamp = time();
+		}	
+		$user = $this->getUser();
+		$number = $user->getNumber();
+		
+		$filebase = $number."-".$timestamp;
+		return writeFile($location."/".$filebase.".".$type,$content);
 	}
 	
 	public function getMSPRFile($type = "pdf", $timestamp = null, $location = null) {

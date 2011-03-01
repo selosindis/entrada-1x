@@ -1,6 +1,7 @@
 <?php
+require_once("Models/utility/Editable.interface.php");
 
-class StudentRunElective {
+class StudentRunElective implements Editable {
 	private $id;
 	private $user_id;
 	private $group_name;
@@ -29,6 +30,10 @@ class StudentRunElective {
 	
 	public function getUserID() {
 		return $this->user_id;	
+	}
+	
+	public function getUser() {
+		return User::get($this->user_id);
 	}
 
 	public function getUniversity() {
@@ -102,13 +107,14 @@ class StudentRunElective {
 		}
 	} 
 
-	public static function create($user, $group_name, $university, $location, $start_month, $start_year, $end_month, $end_year) {
+	public static function create(array $input_arr) {
+		extract($input_arr);
 		global $db;
-		$user_id = $user->getID();
-		$query = "insert into `student_student_run_electives` (`user_id`, `group_name`,`university`,`location`,`start_month`, `start_year`, `end_month`, `end_year`) value (".$db->qstr($user_id).", ".$db->qstr($group_name).", ".$db->qstr($university).", ".$db->qstr($location).", ".$db->qstr($start_month).", ".$db->qstr($start_year).", ".$db->qstr($end_month).", ".$db->qstr($end_year).")";
-		if(!$db->Execute($query)) {
+		$query = "insert into `student_student_run_electives` (`user_id`, `group_name`,`university`,`location`,`start_month`, `start_year`, `end_month`, `end_year`) 
+					value (?,?,?,?,?,?,?,?)";
+		if(!$db->Execute($query, array($user_id, $group_name, $university, $location, $start_month, $start_year, $end_month, $end_year))) {
 			add_error("Failed to create new Student-Run Elective.");
-			application_log("error", "Unable to update a student_student_run_electives record. Database said: ".$db->ErrorMsg());
+			application_log("error", "Unable to create a student_student_run_electives record. Database said: ".$db->ErrorMsg());
 		} else {
 			add_success("Successfully added new Student-Run Elective.");
 			$insert_id = $db->Insert_ID();
@@ -120,10 +126,25 @@ class StudentRunElective {
 		global $db;
 		$query = "DELETE FROM `student_student_run_electives` where `id`=".$db->qstr($this->id);
 		if(!$db->Execute($query)) {
-			add_error("Failed to remove Student-run Elective from database.");
+			add_error("Failed to remove Student-run Elective.");
 			application_log("error", "Unable to delete a student_student_run_electives record. Database said: ".$db->ErrorMsg());
 		} else {
 			add_success("Successfully removed Student-Run Elective.");
 		}		
+	}
+	
+	public function update(array $input_arr) {
+		extract($input_arr);
+		global $db;
+		$query = "update `student_student_run_electives` set
+				 `group_name`=?,`university`=?,`location`=?,`start_month`=?, `start_year`=?, `end_month`=?, `end_year`=?
+				 where `id`=?";
+		
+		if(!$db->Execute($query, array($group_name, $university, $location, $start_month, $start_year, $end_month, $end_year, $this->id))) {
+			add_error("Failed to update Student-run Elective.");
+			application_log("error", "Unable to update a student_student_run_electives record. Database said: ".$db->ErrorMsg());
+		} else {
+			add_success("Successfully updated Student-run Elective.");
+		}	
 	}
 }

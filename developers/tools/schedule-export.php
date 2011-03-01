@@ -39,6 +39,12 @@
  *
  */
 
+echo "\n\n";
+echo "@todo\n\n";
+echo "Before you run this to you have to change event_duration\n\n";
+echo "and eventtype_title to a semi-colon delimited list.\n\n";
+exit;
+
 set_include_path(get_include_path().PATH_SEPARATOR.dirname(__FILE__)."/includes");
 
 @ini_set("auto_detect_line_endings", 1);
@@ -112,7 +118,7 @@ if($results) {
 			$row[]	= stripslashes($result["event_grad_year"]);		// Grad Class
 			$row[]	= stripslashes($result["course_num"]);			// Course Num
 			$row[]	= stripslashes($result["course_name"]);			// Course / Unit Name
-			$row[]	= date("m/d/Y", $result["event_start"]);		// Date
+			$row[]	= date("Y-m-d", $result["event_start"]);		// Date
 			$row[]	= date("H:i", $result["event_start"]);			// Start Time
 			$row[]	= stripslashes($result["event_duration"]);		// Duration
 			$row[]	= stripslashes($result["eventtype_title"]);		// Event Type Title

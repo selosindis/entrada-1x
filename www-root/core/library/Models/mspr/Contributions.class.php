@@ -7,15 +7,12 @@ class Contributions extends Collection implements AttentionRequirable {
 	public static function get(User $user) {
 		global $db;
 		$user_id = $user->getID();
-		$query		= "SELECT * FROM `student_contributions` WHERE `user_id` = ".$db->qstr($user_id)." ORDER BY `id` ASC";
+		$query		= "SELECT * FROM `student_contributions` WHERE `user_id` = ".$db->qstr($user_id)." ORDER BY `start_year` DESC, `start_month` DESC";
 		$results = $db->getAll($query);
 		$contributions = array();
 		if ($results) {
 			foreach ($results as $result) {
-				$rejected=($result['status'] == -1);
-				$approved = ($result['status'] == 1);
-			
-				$contribution =  new Contribution($result['id'], $result['user_id'], $result['role'], $result['org_event'], $result['start_month'], $result['start_year'], $result['end_month'], $result['end_year'], $approved, $rejected);
+				$contribution =  Contribution::fromArray($result);
 				$contributions[] = $contribution;
 			}
 		}

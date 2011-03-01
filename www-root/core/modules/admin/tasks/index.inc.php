@@ -24,7 +24,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 
-	require_once("Models/tasks/Tasks.class.php");
 	$user = User::get($PROXY_ID);
 	
 	$sort_by = 'title';
@@ -38,7 +37,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 	} 
 	$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] = $sort_by;
 	$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"] = $sort_order;
-	$tasks = Tasks::getAll(array('order_by' => $sort_by, 'dir' => $sort_order/*, 'limit' => 25, 'offset'=>0*/ )); //no limit for now. TODO work on pagination later.
+	$temp_tasks = Tasks::getAll(array('order_by' => $sort_by, 'dir' => $sort_order/*, 'limit' => 25, 'offset'=>0*/ )); //no limit for now. TODO work on pagination later.
+	
+	//now to trim the list down to ones we can access to update
+	$tasks = new Tasks();
+	foreach ($temp_tasks as $task) {
+		if ($ENTRADA_ACL->amIAllowed(new TaskResource($task->getID(),null,$ORGANISATION_ID), "update")) {
+			$tasks->push($task);
+		}
+	}
 	
 	?>
 	
@@ -86,10 +93,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 			<?php endif; ?>
 			
 			<tbody>
-			<?php foreach ($tasks as $task) { ?>
+			<?php foreach ($tasks as $task) { 
+				
+				?>
 				<tr>
 					<td>
+						<?php if ($ENTRADA_ACL->amIAllowed(new TaskResource($task->getID(),null,$ORGANISATION_ID), "delete",true)) { ?>
 						<input type="checkbox" name="tasks[]" value="<?php echo $task->getID(); ?>" />
+						<?php } ?>
 					</td>
 					<td><a href="<?php echo ENTRADA_URL; ?>/admin/tasks?section=edit&id=<?php echo $task->getID(); ?>"><?php echo ($task->getDeadline()) ? date(DEFAULT_DATE_FORMAT,$task->getDeadline()) : ""; ?></a></td>
 					<td><?php 

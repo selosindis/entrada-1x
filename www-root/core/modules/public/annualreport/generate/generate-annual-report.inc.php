@@ -42,6 +42,8 @@ $PAGE_META["category"]	= "Generate a PDF version of your Annual Report";
 $PAGE_META["keywords"]	= "";
 
 $BREADCRUMB[]	= array("url" => ENTRADA_URL."/annualreport/generate?section=generate-annual-report", "title" => "Annual Report Generation");
+define("QUFA_DISCLAIMER",		"The personal information collected on this form is collected under the legal authority of the Royal Charter of 1841, as amended.  The information collected is used for academic purposes.  Any questions may be directed to the Associate Dean for the Faculty of Health Sciences.
+In accordance with Article 28.2.2, this standardized form for evaluation of members has been approved by the parties, Queen's University and QUFA, effective June 19, 2008.");						// Static QUFA Messages
 
 // This grid should be expanded upon redirecting back to the prizes index.
 $_SESSION["reports_expand_grid"] = "reports_grid";
@@ -77,24 +79,22 @@ if($result = $db->GetRow($query)) {
 
 if(isset($_GET["clinical"])) {
 	$clinical_value = clean_input($_GET["clinical"], array("trim"));
-	if($clinical_value == "NO") {
-		$clinical_value = true;
-	} else {
+	if($clinical_value == "NO" || $clinical_value == '0') {
 		$clinical_value = false;
+	} else {
+		$clinical_value = true;
 	}
-} else {
-	$clinical_value = $faculty_member_info['clinical_member'];
 }
 
 function queryIt($proxy_id, $table, $startDate, $endDate, $db)
 {
-	$query = "SELECT * FROM `".$table."`, `lu_roles`, `lu_publication_type`
+	$query = "SELECT * FROM `".$table."`, `global_lu_roles`, `ar_lu_publication_type`
     WHERE `".$table."`.`proxy_id` = '$proxy_id'
-    AND `".$table."`.`type_id` = `lu_publication_type`.`type_id`
-    AND `".$table."`.`role_id` = `lu_roles`.`role_id`
+    AND `".$table."`.`type_id` = `ar_lu_publication_type`.`type_id`
+    AND `".$table."`.`role_id` = `global_lu_roles`.`role_id`
     AND `".$table."`.`year_reported` BETWEEN '$startDate' AND '$endDate'
     ORDER BY `status` ASC";
-    
+	
     $results = $db->GetAll($query);
     
     return $results;
@@ -202,10 +202,11 @@ function display($results, $db)
 
 $NEXT_YEAR 					= (int)$REPORT_YEAR + 1;
 
-if(!$clinical_value) {
+$oncologyGroup = array(4664, 3722, 495, 3334, 737, 805);
+	
+if($clinical_value == false || in_array($proxy_id, $oncologyGroup)) {
 	$DUE_DATE 				= "February 1, " . $NEXT_YEAR;
-}
-else {
+} else {
 	$DUE_DATE 				= "March 15, " . $NEXT_YEAR;
 }
 
@@ -217,20 +218,20 @@ $ERRORSTR				= array();
 
 $STEP					= 1;
 
-$pdf_string 	= str_replace("'", "", $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["lastname"] ) . "_" .$REPORT_YEAR;
+$lastname = get_account_data("lastname", $proxy_id);
+$pdf_string 	= str_replace("'", "", $lastname) . "_" .$REPORT_YEAR;
 $pdf_string 	= str_replace(" ", "_", $pdf_string);
 $pdf_string 	= strtolower($pdf_string);
 $output_file	= ANNUALREPORT_STORAGE."/".$pdf_string;
 
 echo "<h1>Your Annual Report for ".$REPORT_YEAR."</h1>";
 
-echo "<a href=\"".ENTRADA_URL."/file-annualreport.php?file=".$pdf_string.".pdf\"><input type=\"button\" name=\"download\" value=\"Download Report\" /></a><h1></h1>";
-	
+echo "<form><input type=\"button\" value=\"Download Report\" onClick=\"window.location.href='".ENTRADA_URL."/file-annualreport.php?file=".$pdf_string.".pdf'\"></form><h1></h1>";	
 
 ob_end_flush();
 ob_start("on_checkout");
 
-if(!$clinical_value)
+if($clinical_value == true)
 {
 ?>
 <h1><center>Annual Report of Clinical Faculty Members</center></h1>
@@ -268,8 +269,9 @@ The Annual Report by Clinical Faculty aligns two distinct evaluative processes:<
 		if($result = $db->GetRow($query))
 		{
 			$department = $result["department"];
+			$fullname = get_account_data("fullname", $proxy_id);
 			echo "<tr>\n";
-			echo "	<td class=\"student_name\" width=\"25%\"><b>Name: </b>".html_encode($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["firstname"]). " " . html_encode($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["lastname"])."&nbsp;</td>\n";
+			echo "	<td class=\"student_name\" width=\"25%\"><b>Name: </b>".$fullname."&nbsp;</td>\n";
 			echo "	<td class=\"department\" width=\"75%\"><b>Department: </b>".$department."&nbsp;</td>\n";
 			echo "</tr>";
 			echo "<tr>\n";
@@ -289,7 +291,7 @@ The Annual Report by Clinical Faculty aligns two distinct evaluative processes:<
 	</table>
 	<br />	
 	<?php
-	if(!$clinical_value)
+	if($clinical_value == true)
 	{
 		?>				
 		<table class="tableListReport" border="1" border = "1" cellspacing="0" summary="Role Definitions">
@@ -383,7 +385,7 @@ if(!$undergraduateTeachingResults = $db->GetAll($undergraduateTeachingQuery))
 				$hoursArray[$ctr]["examination_hours"] = $result['examination_hours'];
 				$hoursArray[$ctr]["clerkship_seminar_hours"] = $result['clerkship_seminar_hours'];
 				$hoursArray[$ctr]["other_hours"] = $result['other_hours'];
-				if(!$clinical_value) {
+				if($clinical_value == true) {
 					$hoursArray[$ctr]["coord_enrollment"] = $result['coord_enrollment'];
 				}
 				
@@ -419,7 +421,7 @@ if(!$undergraduateTeachingResults = $db->GetAll($undergraduateTeachingQuery))
 				<col class="small_numbers" />
 				<col class="small_numbers" />
 				<col class="small_numbers" />
-				<?php if(!$clinical_value) { ?>
+				<?php if($clinical_value == true) { ?>
 					<col class="small_numbers" />
 				<?php } ?>
 			</colgroup>
@@ -435,7 +437,7 @@ if(!$undergraduateTeachingResults = $db->GetAll($undergraduateTeachingQuery))
 					<td class="small_numbers" id="colexam">Exam</td>
 					<td class="small_numbers" id="colsem">Clerkship Seminar</td>
 					<td class="small_numbers" id="coloth">Other</td>
-					<?php if(!$clinical_value) { ?>
+					<?php if($clinical_value == true) { ?>
 						<td class="small_numbers" id="colcoord_enrollment">Co-Ord Enrol</td>
 					<?php } ?>
 				</tr>
@@ -456,7 +458,7 @@ if(!$undergraduateTeachingResults = $db->GetAll($undergraduateTeachingQuery))
 						echo "	<td class=\"small_numbers\">".html_encode($hoursArray[$i]['examination_hours'])."&nbsp;</td>\n";
 						echo "	<td class=\"small_numbers\">".html_encode($hoursArray[$i]['clerkship_seminar_hours'])."&nbsp;</td>\n";
 						echo "	<td class=\"small_numbers\">".html_encode($hoursArray[$i]['other_hours'])."&nbsp;</td>\n";
-						if(!$clinical_value) {
+						if($clinical_value == true) {
 							echo "	<td class=\"small_numbers\">".html_encode($hoursArray[$i]['coord_enrollment'])."&nbsp;</td>\n";
 						}
 					echo "</tr>\n";
@@ -523,7 +525,7 @@ else {
 			<col class="small_numbers" />
 			<col class="small_numbers" />
 			<col class="small_numbers" />
-			<?php if(!$clinical_value) { ?>
+			<?php if($clinical_value == true) { ?>
 				<col class="small_numbers" />
 			<?php } ?>
 			<col class="small_numbers" />
@@ -542,7 +544,7 @@ else {
 				<td class="small_numbers" id="coltut_hours">Tut Hrs</td>				
 				<td class="small_numbers" id="colsem_enrollment">Sem Enrol</td>				
 				<td class="small_numbers" id="colsem_hours">Sem Hrs</td>
-				<?php if(!$clinical_value) { ?>
+				<?php if($clinical_value == true) { ?>
 					<td class="small_numbers" id="colcoord_enrollment">Co-Ord Enrol</td>
 				<?php } ?>
 				<td class="small_numbers" id="colpbl_hours">PBL Hrs</td>				
@@ -579,7 +581,7 @@ else {
 				echo "	<td class=\"small_numbers\">".html_encode($result['tut_hours'])."&nbsp;</td>\n";					
 				echo "	<td class=\"small_numbers\">".html_encode($result['sem_enrollment'])."&nbsp;</td>\n";					
 				echo "	<td class=\"small_numbers\">".html_encode($result['sem_hours'])."&nbsp;</td>\n";					
-				if(!$clinical_value) {
+				if($clinical_value == true) {
 					echo "	<td class=\"small_numbers\">".html_encode($result['coord_enrollment'])."&nbsp;</td>\n";
 				}
 				echo "	<td class=\"small_numbers\">".html_encode($result['pbl_hours'])."&nbsp;</td>\n";					
@@ -649,7 +651,7 @@ else
 			<col class="small_numbers" />
 			<col class="small_numbers" />
 			<col class="small_numbers" />
-			<?php if(!$clinical_value) { ?>
+			<?php if($clinical_value == true) { ?>
 				<col class="small_numbers" />
 			<?php } ?>
 			<col class="small_numbers" />
@@ -668,7 +670,7 @@ else
 				<td class="small_numbers" id="coltut_hours">Tut Hrs</td>				
 				<td class="small_numbers" id="colsem_enrollment">Sem Enrol</td>				
 				<td class="small_numbers" id="colsem_hours">Sem Hrs</td>
-				<?php if(!$clinical_value) { ?>
+				<?php if($clinical_value == true) { ?>
 					<td class="small_numbers" id="colcoord_enrollment">Co-Ord Enrol</td>
 				<?php } ?>
 				<td class="small_numbers" id="colpbl_hours">PBL Hrs</td>				
@@ -714,7 +716,7 @@ else
 				echo "	<td class=\"small_numbers\">".html_encode($result['tut_hours'])."&nbsp;</td>\n";					
 				echo "	<td class=\"small_numbers\">".html_encode($result['sem_enrollment'])."&nbsp;</td>\n";					
 				echo "	<td class=\"small_numbers\">".html_encode($result['sem_hours'])."&nbsp;</td>\n";					
-				if(!$clinical_value) {
+				if($clinical_value == true) {
 					echo "	<td class=\"small_numbers\">".html_encode($result['coord_enrollment'])."&nbsp;</td>\n";
 				}
 				echo "	<td class=\"small_numbers\">".html_encode($result['pbl_hours'])."&nbsp;</td>\n";					
@@ -900,8 +902,8 @@ else
 				<col class="delete" />
 				<col class="student_name" />
 				<col class="small_numbers" />
-				<col class="course_name" />
-				<col class="course_name" />
+				<col class="student_name" />
+				<col class="student_name" />
 				<col class="full_description" />
 			</colgroup>
 			<thead>
@@ -909,8 +911,8 @@ else
 					<td class="delete" id="colDelete">#</td>
 					<td class="student_name" id="colstudent_name">Student Name</td>
 					<td class="small_numbers" id="coldegree">Degree</td>
-					<td class="course_name" id="coldepartment">Department</td>
-					<td class="course_name" id="coluniversity">University</td>
+					<td class="student_name" id="coldepartment">Department</td>
+					<td class="student_name" id="coluniversity">University</td>
 					<td class="full_description" id="colrole_description">Role / Description</td>		
 				</tr>
 			</thead>
@@ -923,8 +925,8 @@ else
 				echo "	<td class=\"delete\">".$ctr."&nbsp;</td>\n";					
 				echo "	<td class=\"student_name\">".html_encode($result['student_name'])."&nbsp;</td>\n";
 				echo "	<td class=\"small_numbers\">".html_encode($result['degree'])."&nbsp;</td>\n";
-				echo "	<td class=\"course_name\">".html_encode($result['department'])."&nbsp;</td>\n";				
-				echo "	<td class=\"course_name\">".html_encode($result['university'])."&nbsp;</td>\n";
+				echo "	<td class=\"student_name\">".html_encode($result['department'])."&nbsp;</td>\n";				
+				echo "	<td class=\"student_name\">".html_encode($result['university'])."&nbsp;</td>\n";
 				echo "	<td class=\"full_description\">".html_encode($result['role']);
 				if(isset($result['role_description']) && trim($result['role_description']) != '')
 				{
@@ -939,7 +941,7 @@ else
 		</table>
 		<?php 
 			}
-			if(!$clinical_value)
+			if($clinical_value == true)
 			{
 			?>
 			<br />
@@ -1069,7 +1071,7 @@ else
 			}
 			?>
 			<br />
-			<h2><?php echo (!$clinical_value ? "E" : "C"); ?>. Innovation in Education</h2>
+			<h2><?php echo ($clinical_value == true ? "E" : "C"); ?>. Innovation in Education</h2>
 			<?php
 			// Check the database for education
 			$query 	= "SELECT * 
@@ -1123,7 +1125,7 @@ else
 			}
 		?>
 		<br />
-		<h2><?php echo (!$clinical_value ? "F" : "D"); ?>. Other Education</h2>
+		<h2><?php echo ($clinical_value == true ? "F" : "D"); ?>. Other Education</h2>
 		<?php 
 		// Check the database for education
 		$query 	= "SELECT * 
@@ -1458,7 +1460,7 @@ else
 	$startDate = $REPORT_YEAR;
 	$endDate = $REPORT_YEAR;
 
-	$table = TABLES_PREFIX."peer_reviewed_papers";
+	$table = "ar_peer_reviewed_papers";
 
 if($results = queryIt($proxy_id, $table, $startDate, $endDate, $db)) {
 	display($results, $db, $typeDesc = true);
@@ -1473,7 +1475,7 @@ if($results = queryIt($proxy_id, $table, $startDate, $endDate, $db)) {
 	$startDate = $REPORT_YEAR;
 	$endDate = $REPORT_YEAR;
 
-	$table = TABLES_PREFIX."non_peer_reviewed_papers";
+	$table = "ar_non_peer_reviewed_papers";
 
 if($results = queryIt($proxy_id, $table, $startDate, $endDate, $db)) {
 	display($results, $db, $typeDesc = true);
@@ -1488,7 +1490,7 @@ if($results = queryIt($proxy_id, $table, $startDate, $endDate, $db)) {
 	$startDate = $REPORT_YEAR;
 	$endDate = $REPORT_YEAR;
 
-	$table = TABLES_PREFIX."book_chapter_mono";
+	$table = "ar_book_chapter_mono";
 
 if($results = queryIt($proxy_id, $table, $startDate, $endDate, $db)) {
 	display($results, $db, $typeDesc = true);
@@ -1503,7 +1505,7 @@ if($results = queryIt($proxy_id, $table, $startDate, $endDate, $db)) {
 	$startDate = $REPORT_YEAR;
 	$endDate = $REPORT_YEAR;
 
-	$table = TABLES_PREFIX."poster_reports";
+	$table = "ar_poster_reports";
 
 if($results = queryIt($proxy_id, $table, $startDate, $endDate, $db)) {
 	display($results, $db, $typeDesc = true);
@@ -1672,7 +1674,7 @@ else
 	<?php 
 		}
 		echo '<!-- FOOTER LEFT "$CHAPTER" --> <!-- FOOTER CENTER "" --> <!-- FOOTER RIGHT "$PAGE" --><!-- PAGE BREAK --><br><br>';
-	if(!$clinical_value)
+	if($clinical_value == true)
 	{
 		?>
 		<h1>Section III - Clinical</h1>
@@ -2122,7 +2124,7 @@ else
 			echo '<!-- FOOTER LEFT "$CHAPTER" --> <!-- FOOTER CENTER "" --> <!-- FOOTER RIGHT "$PAGE" --><!-- PAGE BREAK --><br><br>';
 	}
 	?>
-	<h1>Section <?php echo (!$clinical_value ? "IV" : "III"); ?> - Service</h1>
+	<h1>Section <?php echo ($clinical_value == true ? "IV" : "III"); ?> - Service</h1>
 	<h2>A. Service Internal to Queen's University</h2>
 	<?php 
 	// Check the database for academic
@@ -2176,7 +2178,7 @@ else
 							<td class="student_name" id="colrole" width="20%">Role / Description</td>
 							<td class="full_description" id="coldescription" width="30%">Description of Involvment</td>	
 							<td class="average_hours" id="coltime_commitment" width="12%">Commitment</td>	
-							<td class="student_name" id="<?php echo (!$clinical_value ? "colduration" : "colmeetings"); ?>" width="13%"><?php echo (!$clinical_value ? "Duration" : "% Meetings Attended"); ?></td>
+							<td class="student_name" id="<?php echo ($clinical_value == true ? "colduration" : "colmeetings"); ?>" width="13%"><?php echo ($clinical_value == true ? "Duration" : "% Meetings Attended"); ?></td>
 						</tr>
 					</thead>
 				<tbody>	
@@ -2199,7 +2201,7 @@ else
 			echo "	<td class=\"full_description\" width=\"30%\">".html_encode($result['description'])."&nbsp;</td>\n";
 			echo "	<td class=\"average_hours\" width=\"12%\">".(html_encode($result['commitment_type']) != "variable" ? html_encode($result['time_commitment'])." Hours / " .html_encode($result['commitment_type']) : "")."&nbsp;</td>\n";
 			echo "  <td class=\"student_name\" width=\"13%\">";
-			if(!$clinical_value) {
+			if($clinical_value == true) {
 				echo html_encode($result['start_month']) ."-".html_encode($result['start_year']) . " / "
 				.((html_encode($result['end_month']) == 0 ? "N/A" : html_encode($result['end_month']) ."-".html_encode($result['end_year'])));
 			} else {
@@ -2272,7 +2274,7 @@ else
 		echo '<!-- FOOTER LEFT "$CHAPTER" --> <!-- FOOTER CENTER "" --> <!-- FOOTER RIGHT "$PAGE" --><!-- PAGE BREAK --><br><br>';
 	?>
 	<br />
-	<h1>Section <?php echo (!$clinical_value ? "V" : "IV"); ?> - Self Education/Faculty Development</h1>
+	<h1>Section <?php echo ($clinical_value == true ? "V" : "IV"); ?> - Self Education/Faculty Development</h1>
 	<h2>A. Scientific Meetings/Courses Attended and Other Self-Education Activities</h2>
 	<?php 
 	// Check the database for academic
@@ -2329,7 +2331,7 @@ else
 		echo '<!-- FOOTER LEFT "$CHAPTER" --> <!-- FOOTER CENTER "" --> <!-- FOOTER RIGHT "$PAGE" --><!-- PAGE BREAK --><br><br>';
 	?>
 	<br />
-	<h1>Section <?php echo (!$clinical_value ? "VI" : "V"); ?> - Prizes, Honours and Awards</h1>
+	<h1>Section <?php echo ($clinical_value == true ? "VI" : "V"); ?> - Prizes, Honours and Awards</h1>
 	<h2>A. Prizes, Honours and Awards</h2>
 	<?php 
 	// Check the database for academic
@@ -2382,7 +2384,7 @@ else
 		echo '<!-- FOOTER LEFT "$CHAPTER" --> <!-- FOOTER CENTER "" --> <!-- FOOTER RIGHT "$PAGE" --><!-- PAGE BREAK --><br><br>';
 	?>
 	<br />
-	<h1>Section <?php echo (!$clinical_value ? "VII" : "VI"); ?> - Activity Profile</h1>
+	<h1>Section <?php echo ($clinical_value == true ? "VII" : "VI"); ?> - Activity Profile</h1>
 	<h2>1.A. Percentage of your total professional time spent on the following activities during this reporting period.</h2>
 	<?php
 	// Check the database for profile information
@@ -2397,7 +2399,7 @@ else
 	}
 	else 
 	{
-		if(!$clinical_value)
+		if($clinical_value == true)
 		{	
 			?>
 			<table class="tableListReport" border="1" cellspacing="0" summary="Activity Profile">
@@ -2478,7 +2480,7 @@ else
 		<?php
 		}
 	}
-	if(!$clinical_value)
+	if($clinical_value == true)
 	{
 	?>
 		<br />
@@ -2552,7 +2554,7 @@ else
 		</tbody>
 		</table>
 		<?php
-		if(!$clinical_value)
+		if($clinical_value == true)
 		{
 		?>
 			<br />
@@ -2584,7 +2586,7 @@ else
 		}
 		?>
 	<br />
-	<h2><?php echo (!$clinical_value ? "4" : "3"); ?>. Additional Comments</h2>						
+	<h2><?php echo ($clinical_value == true ? "4" : "3"); ?>. Additional Comments</h2>						
 	<table class="tableListReport" border="1" cellspacing="0" summary="Activity Profile">
 				<colgroup>
 					<col class="full_description" />
@@ -2616,7 +2618,7 @@ else
 <br />
 <?php 
 
-if(!$clinical_value) {
+if($clinical_value == true) {
 	?>
 	<h2>Department Head's Assessment of Annual Performance (Based on Role Definition and Expectations)</h2>						
 	<table class="tableListReport" border="1" cellspacing="0" summary="Department Head">
@@ -2796,7 +2798,7 @@ if(!$clinical_value) {
 		<table class="tableListReport" border="0" cellspacing="0" summary="Department Head">
 		<tbody>	
 			<tr>
-				<td width="100%"><?php echo ($clinical_value ? "<font size=\"1\">".QUFA_DISCLAIMER."</font>" : ""); ?></td>
+				<td width="100%"><?php echo ($clinical_value == false ? "<font size=\"1\">".QUFA_DISCLAIMER."</font>" : ""); ?></td>
 			</tr>
 			</tbody>
 		</table>

@@ -32,31 +32,52 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_PUBLIC_QUIZZES"))) {
 }
 
 if ($RECORD_ID) {
-	$query			= "	SELECT a.*, c.`event_title`, c.`event_start`, c.`event_finish`, c.`release_date` AS `event_release_date`, c.`release_until` AS `event_release_until`, d.`quiztype_code`, d.`quiztype_title`
-						FROM `event_quizzes` AS a
-						LEFT JOIN `quizzes` AS b
-						ON a.`quiz_id` = b.`quiz_id`
-						LEFT JOIN `events` AS c
-						ON a.`event_id` = c.`event_id`
-						LEFT JOIN `quizzes_lu_quiztypes` AS d
-						ON d.`quiztype_id` = a.`quiztype_id`
-						WHERE a.`equiz_id` = ".$db->qstr($RECORD_ID)."
-						AND b.`quiz_active` = '1'";
+	if ($QUIZ_TYPE == "event") {
+		$query			= "	SELECT a.*, c.`event_title` AS `content_title`, c.`event_start`, c.`event_finish`, c.`release_date` AS `event_release_date`, c.`release_until` AS `event_release_until`, d.`quiztype_code`, d.`quiztype_title`
+							FROM `attached_quizzes` AS a
+							LEFT JOIN `quizzes` AS b
+							ON a.`quiz_id` = b.`quiz_id`
+							LEFT JOIN `events` AS c
+							ON a.`content_type` = 'event' 
+							AND a.`content_id` = c.`event_id`
+							LEFT JOIN `quizzes_lu_quiztypes` AS d
+							ON d.`quiztype_id` = a.`quiztype_id`
+							WHERE a.`aquiz_id` = ".$db->qstr($RECORD_ID)."
+							AND b.`quiz_active` = '1'";
+	} else {
+		$query			= "	SELECT a.*, c.`community_title` AS `content_title`, c.`community_url`, cp.`page_url`, d.`quiztype_code`, d.`quiztype_title`
+							FROM `attached_quizzes` AS a
+							LEFT JOIN `quizzes` AS b
+							ON a.`quiz_id` = b.`quiz_id`
+							LEFT JOIN `community_pages` AS cp
+							ON a.`content_type` = 'community_page' 
+							AND a.`content_id` = cp.`cpage_id`
+							LEFT JOIN `communities` AS c
+							ON cp.`community_id` = c.`community_id`
+							LEFT JOIN `quizzes_lu_quiztypes` AS d
+							ON d.`quiztype_id` = a.`quiztype_id`
+							WHERE a.`aquiz_id` = ".$db->qstr($RECORD_ID)."
+							AND b.`quiz_active` = '1'";
+	}
 	$quiz_record	= $db->GetRow($query);
 	if ($quiz_record) {
-		$BREADCRUMB[]	= array("url" => ENTRADA_URL."/events?id=".$quiz_record["event_id"], "title" => limit_chars($quiz_record["event_title"], 32));
-		$BREADCRUMB[]	= array("url" => ENTRADA_URL."/".$MODULE."?section=attempt&id=".$RECORD_ID, "title" => limit_chars($quiz_record["quiz_title"], 32));
+		if ($QUIZ_TYPE == "event") {
+			$BREADCRUMB[]	= array("url" => ENTRADA_URL."/events?id=".$quiz_record["content_id"], "title" => limit_chars($quiz_record["content_title"], 32));
+		} else {
+			$BREADCRUMB[]	= array("url" => ENTRADA_URL."/community".$quiz_record["community_url"].":".$quiz_record["page_url"], "title" => limit_chars($quiz_record["content_title"], 32));
+		}
+		$BREADCRUMB[]	= array("url" => ENTRADA_URL."/".$MODULE."?section=attempt".(isset($QUIZ_TYPE) && $QUIZ_TYPE == "community_page" ? "&community=true" : "")."&id=".$RECORD_ID, "title" => limit_chars($quiz_record["quiz_title"], 32));
 
 		/**
 		 * Providing there is no release date, or the release date is in the past
 		 * on both the quiz and the event, allow them to continue.
 		 */
-		if ((((int) $quiz_record["release_date"] === 0) || ($quiz_record["release_date"] <= time())) && (((int) $quiz_record["event_release_date"] === 0) || ($quiz_record["event_release_date"] <= time()))) {
+		if ((((int) $quiz_record["release_date"] === 0) || ($quiz_record["release_date"] <= time())) && ($QUIZ_TYPE == "community_page" || (((int) $quiz_record["event_release_date"] === 0) || ($quiz_record["event_release_date"] <= time())))) {
 			/**
 			 * Providing there is no expiry date, or the expiry date is in the
 			 * future on both the quiz and the event, allow them to continue.
 			 */
-			if ((((int) $quiz_record["release_until"] === 0) || ($quiz_record["release_until"] > time())) && (((int) $quiz_record["event_release_until"] === 0) || ($quiz_record["event_release_until"] > time()))) {
+			if ((((int) $quiz_record["release_until"] === 0) || ($quiz_record["release_until"] > time())) && ($QUIZ_TYPE == "community_page" || (((int) $quiz_record["event_release_until"] === 0) || ($quiz_record["event_release_until"] > time())))) {
 				/**
 				 * Get the number of completed attempts this user has made.
 				 */
@@ -78,14 +99,14 @@ if ($RECORD_ID) {
 							 * restart their session, otherwise start them a new session.
 							 */
 							$query				= "	SELECT *
-													FROM `event_quiz_progress`
-													WHERE `equiz_id` = ".$db->qstr($RECORD_ID)."
+													FROM `quiz_progress`
+													WHERE `aquiz_id` = ".$db->qstr($RECORD_ID)."
 													AND `proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
 													AND `progress_value` = 'inprogress'
 													ORDER BY `updated_date` ASC";
 							$progress_record	= $db->GetRow($query);
 							if ($progress_record) {
-								$eqprogress_id		= $progress_record["eqprogress_id"];
+								$qprogress_id		= $progress_record["qprogress_id"];
 								$quiz_start_time	= $progress_record["updated_date"];
 								$quiz_end_time		= (((int) $quiz_record["quiz_timeout"]) ? ($quiz_start_time + ($quiz_record["quiz_timeout"] * 60)) : 0);
 								$quiz_score			= 0;
@@ -103,6 +124,7 @@ if ($RECORD_ID) {
 										$query		= "	SELECT a.*
 														FROM `quiz_questions` AS a
 														WHERE a.`quiz_id` = ".$db->qstr($progress_record["quiz_id"])."
+														AND a.`question_active` = '1'
 														ORDER BY a.`question_order` ASC";
 										$questions	= $db->GetAll($query);
 										if ($questions) {
@@ -117,7 +139,7 @@ if ($RECORD_ID) {
 												 * response $_POST, and if they've actually answered the question.
 												 */
 												if ((isset($_POST["responses"][$question["qquestion_id"]])) && ($qqresponse_id = clean_input($_POST["responses"][$question["qquestion_id"]], "int"))) {
-													if (!quiz_save_response($eqprogress_id, $progress_record["equiz_id"], $progress_record["event_id"], $progress_record["quiz_id"], $question["qquestion_id"], $qqresponse_id)) {
+													if (!quiz_save_response($qprogress_id, $progress_record["aquiz_id"], $progress_record["content_id"], $progress_record["quiz_id"], $question["qquestion_id"], $qqresponse_id, $QUIZ_TYPE)) {
 														$ERROR++;
 														$ERRORSTR[] = "A problem was found storing a question response, please verify your responses and try again.";
 
@@ -138,10 +160,10 @@ if ($RECORD_ID) {
 
 										/**
 										 * We can now safely say that all questions have valid responses
-										 * and that we have stored those responses event_quiz_responses table.
+										 * and that we have stored those responses quiz_progress_responses table.
 										 */
 										if (!$ERROR) {
-											$PROCESSED = quiz_load_progress($eqprogress_id);
+											$PROCESSED = quiz_load_progress($qprogress_id);
 
 											foreach ($questions as $question) {
 												$question_correct	= false;
@@ -150,6 +172,7 @@ if ($RECORD_ID) {
 												$query		= "	SELECT a.*
 																FROM `quiz_question_responses` AS a
 																WHERE a.`qquestion_id` = ".$db->qstr($question["qquestion_id"])."
+																AND a.`response_active` = '1'
 																ORDER BY ".(($question["randomize_responses"] == 1) ? "RAND()" : "a.`response_order` ASC");
 												$responses	= $db->GetAll($query);
 												if ($responses) {
@@ -177,26 +200,28 @@ if ($RECORD_ID) {
 
 											$quiz_progress_array	= array (
 																		"progress_value" => "complete",
+																		"content_id" => $quiz_record["content_id"],
+																		"content_type" => $QUIZ_TYPE,
 																		"quiz_score" => $quiz_score,
 																		"quiz_value" => $quiz_value,
 																		"updated_date" => time(),
 																		"updated_by" => $_SESSION["details"]["id"]
 																	);
 
-											if ($db->AutoExecute("event_quiz_progress", $quiz_progress_array, "UPDATE", "eqprogress_id = ".$db->qstr($eqprogress_id))) {
+											if ($db->AutoExecute("quiz_progress", $quiz_progress_array, "UPDATE", "qprogress_id = ".$db->qstr($qprogress_id))) {
 												/**
 												 * Add a completed quiz statistic.
 												 */
-												add_statistic("events", "quiz_complete", "equiz_id", $RECORD_ID);
+												add_statistic("events", "quiz_complete", "aquiz_id", $RECORD_ID);
 
 												/**
 												 * Increase the number of completed attempts this quiz has had.
 												 */
-												if (!$db->AutoExecute("event_quizzes", array("accesses" => ($quiz_record["accesses"] + 1)), "UPDATE", "equiz_id = ".$db->qstr($RECORD_ID))) {
-													application_log("error", "Unable to increment the total number of accesses (the number of completed quizzes) of equiz_id [".$RECORD_ID."].");
+												if (!$db->AutoExecute("attached_quizzes", array("accesses" => ($quiz_record["accesses"] + 1)), "UPDATE", "aquiz_id = ".$db->qstr($RECORD_ID))) {
+													application_log("error", "Unable to increment the total number of accesses (the number of completed quizzes) of aquiz_id [".$RECORD_ID."].");
 												}
 
-												application_log("success", "Proxy_id [".$_SESSION["details"]["id"]."] has completed equiz_id [".$RECORD_ID."].");
+												application_log("success", "Proxy_id [".$_SESSION["details"]["id"]."] has completed aquiz_id [".$RECORD_ID."].");
 												
 												/**
 												 * Check if this is a formative quiz, or a summative quiz that has passed it's release date (not likely)
@@ -204,18 +229,23 @@ if ($RECORD_ID) {
 												 * has been accepted and return them to the event page.
 												 */
 												if (($quiz_record["quiztype_code"] == "immediate") || (($quiz_record["quiztype_code"] == "delayed") && (((int) $quiz_record["release_until"] === 0) || ($quiz_record["release_until"] <= time())))) {
-													header("Location: ".ENTRADA_URL."/quizzes?section=results&id=".$progress_record["eqprogress_id"]);
+													header("Location: ".ENTRADA_URL."/quizzes?section=results".(isset($QUIZ_TYPE) && $QUIZ_TYPE == "community_page" ? "&community=true" : "")."&id=".$progress_record["qprogress_id"]);
 													exit;
 												} else {
-													$url = ENTRADA_URL."/events?id=".$quiz_record["event_id"];
-
-													$SUCCESS++;
-													$SUCCESSSTR[] = "Thank-you for completing the <strong>".html_encode($quiz_record["quiz_title"])."</strong> quiz. Your responses have been successfully recorded, and your grade and any feedback will be released <strong>".date(DEFAULT_DATE_FORMAT, $quiz_record["release_until"])."</strong>.<br /><br />You will now be redirected back to the learning event; this will happen <strong>automatically</strong> in 15 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+													if ($QUIZ_TYPE == "community_page") {
+														$url = ENTRADA_URL."/community".$quiz_record["community_url"].":".$quiz_record["page_url"];
+														$SUCCESS++;
+														$SUCCESSSTR[] = "Thank-you for completing the <strong>".html_encode($quiz_record["quiz_title"])."</strong> quiz. Your responses have been successfully recorded, and your grade and any feedback will be released <strong>".date(DEFAULT_DATE_FORMAT, $quiz_record["release_until"])."</strong>.<br /><br />You will now be redirected back to the learning event; this will happen <strong>automatically</strong> in 15 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+													} else {
+														$url = ENTRADA_URL."/events?id=".$quiz_record["content_id"];
+														$SUCCESS++;
+														$SUCCESSSTR[] = "Thank-you for completing the <strong>".html_encode($quiz_record["quiz_title"])."</strong> quiz. Your responses have been successfully recorded, and your grade and any feedback will be released <strong>".date(DEFAULT_DATE_FORMAT, $quiz_record["release_until"])."</strong>.<br /><br />You will now be redirected back to the learning event; this will happen <strong>automatically</strong> in 15 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+													}
 
 													$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 15000)";
 												}
 											} else {
-												application_log("error", "Unable to record the final quiz results for equiz_id [".$RECORD_ID."] in the event_quiz_progress table. Database said: ".$db->ErrorMsg());
+												application_log("error", "Unable to record the final quiz results for aquiz_id [".$RECORD_ID."] in the quiz_progress table. Database said: ".$db->ErrorMsg());
 
 												$ERROR++;
 												$ERRORSTR[] = "We were unable to record the final results for this quiz at this time. Please be assured that your responses are saved, but you will need to come back to this quiz to re-submit it. This problem has been reported to a system administrator; please try again later.";
@@ -230,14 +260,16 @@ if ($RECORD_ID) {
 								} else {
 									$quiz_progress_array	= array (
 																"progress_value" => "expired",
+																"content_id" => $quiz_record["content_id"],
+																"content_type" => $QUIZ_TYPE,
 																"quiz_score" => "0",
 																"quiz_value" => "0",
 																"updated_date" => time(),
 																"updated_by" => $_SESSION["details"]["id"]
 															);
 
-									if (!$db->AutoExecute("event_quiz_progress", $quiz_progress_array, "UPDATE", "eqprogress_id = ".$db->qstr($eqprogress_id))) {
-										application_log("error", "Unable to update the eqprogress_id [".$eqprogress_id."] to expired. Database said: ".$db->ErrorMsg());
+									if (!$db->AutoExecute("quiz_progress", $quiz_progress_array, "UPDATE", "qprogress_id = ".$db->qstr($qprogress_id))) {
+										application_log("error", "Unable to update the qprogress_id [".$qprogress_id."] to expired. Database said: ".$db->ErrorMsg());
 									}
 
 									$completed_attempts += 1;
@@ -245,7 +277,7 @@ if ($RECORD_ID) {
 									$ERROR++;
 									$ERRORSTR[] = "We were unable to save your previous quiz attempt because your time limit expired <strong>".date(DEFAULT_DATE_FORMAT, $quiz_end_time)."</strong>, and you submitted your quiz <strong>".date(DEFAULT_DATE_FORMAT)."</strong>.";
 
-									application_log("notice", "Unable to save eqprogress_id [".$eqprogress_id."] because it expired.");
+									application_log("notice", "Unable to save qprogress_id [".$qprogress_id."] because it expired.");
 								}
 							} else {
 								$ERROR++;
@@ -279,20 +311,21 @@ if ($RECORD_ID) {
 								 * restart their session, otherwise start them a new session.
 								 */
 								$query				= "	SELECT *
-														FROM `event_quiz_progress`
-														WHERE `equiz_id` = ".$db->qstr($RECORD_ID)."
+														FROM `quiz_progress`
+														WHERE `aquiz_id` = ".$db->qstr($RECORD_ID)."
 														AND `proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
 														AND `progress_value` = 'inprogress'
 														ORDER BY `updated_date` ASC";
 								$progress_record	= $db->GetRow($query);
 								if ($progress_record) {
-									$eqprogress_id		= $progress_record["eqprogress_id"];
+									$qprogress_id		= $progress_record["qprogress_id"];
 									$quiz_start_time	= $progress_record["updated_date"];
 								} else {
 									$quiz_start_time		= time();
 									$quiz_progress_array	= array (
-																"equiz_id" => $RECORD_ID,
-																"event_id" => $quiz_record["event_id"],
+																"aquiz_id" => $RECORD_ID,
+																"content_id" => $quiz_record["content_id"],
+																"content_type" => $QUIZ_TYPE,
 																"quiz_id" => $quiz_record["quiz_id"],
 																"proxy_id" => $_SESSION["details"]["id"],
 																"progress_value" => "inprogress",
@@ -301,8 +334,8 @@ if ($RECORD_ID) {
 																"updated_date" => $quiz_start_time,
 																"updated_by" => $_SESSION["details"]["id"]
 															);
-									if ($db->AutoExecute("event_quiz_progress", $quiz_progress_array, "INSERT"))  {
-										$eqprogress_id = $db->Insert_Id();
+									if ($db->AutoExecute("quiz_progress", $quiz_progress_array, "INSERT"))  {
+										$qprogress_id = $db->Insert_Id();
 									} else {
 										$ERROR++;
 										$ERRORSTR[] = "Unable to create a progress entry for this quiz, it is not advisable to continue at this time. The system administrator was notified of this error; please try again later.";
@@ -311,8 +344,8 @@ if ($RECORD_ID) {
 									}
 								}
 
-								if ($eqprogress_id) {
-									add_statistic("events", "quiz_view", "equiz_id", $RECORD_ID);
+								if ($qprogress_id) {
+									add_statistic("events", "quiz_view", "aquiz_id", $RECORD_ID);
 
 									$quiz_timeout			= (((int) $quiz_record["quiz_timeout"]) ? ($quiz_record["quiz_timeout"] * 60) : 0);
 									$quiz_end_time			= (($quiz_timeout) ? ($quiz_start_time + $quiz_timeout) : 0);
@@ -326,7 +359,7 @@ if ($RECORD_ID) {
 									}
 
 									$quiz_time_remaining	= ($quiz_end_time - time());
-									$ajax_load_progress		= quiz_load_progress($eqprogress_id);
+									$ajax_load_progress		= quiz_load_progress($qprogress_id);
 
 									if ($quiz_end_time) {
 										?>
@@ -415,12 +448,13 @@ if ($RECORD_ID) {
 										echo clean_input($quiz_record["quiz_notes"], "allowedtags");
 									}
 									?>
-									<form action="<?php echo ENTRADA_URL."/".$MODULE; ?>?section=attempt&amp;id=<?php echo $RECORD_ID; ?>" method="post">
+									<form action="<?php echo ENTRADA_URL."/".$MODULE; ?>?section=attempt<?php echo (isset($QUIZ_TYPE) && $QUIZ_TYPE == "community_page" ? "&amp;community=true" : ""); ?>&amp;id=<?php echo $RECORD_ID; ?>" method="post">
 									<input type="hidden" name="step" value="2" />
 									<?php
 									$query				= "	SELECT a.*
 															FROM `quiz_questions` AS a
 															WHERE a.`quiz_id` = ".$db->qstr($quiz_record["quiz_id"])."
+															AND a.`question_active` = '1'
 															ORDER BY a.`question_order` ASC";
 									$questions			= $db->GetAll($query);
 									$total_questions	= 0;
@@ -439,6 +473,7 @@ if ($RECORD_ID) {
 												$query		= "	SELECT a.*
 																FROM `quiz_question_responses` AS a
 																WHERE a.`qquestion_id` = ".$db->qstr($question["qquestion_id"])."
+																AND a.`response_active` = '1'
 																ORDER BY ".(($question["randomize_responses"] == 1) ? "RAND()" : "a.`response_order` ASC");
 												$responses	= $db->GetAll($query);
 												if ($responses) {
@@ -464,7 +499,7 @@ if ($RECORD_ID) {
 									}
 									?>
 									<div style="border-top: 2px #CCCCCC solid; margin-top: 10px; padding-top: 10px">
-										<input type="button" style="float: left; margin-right: 10px" onclick="window.location = '<?php echo ENTRADA_URL; ?>/events?id=<?php echo $quiz_record["event_id"]; ?>'" value="Exit Quiz" />
+										<input type="button" style="float: left; margin-right: 10px" onclick="window.location = '<?php echo ENTRADA_URL; ?>/events?id=<?php echo $quiz_record["content_id"]; ?>'" value="Exit Quiz" />
 										<input type="submit" style="float: right" value="Submit Quiz" />
 									</div>
 									<div class="clear"></div>
@@ -473,7 +508,7 @@ if ($RECORD_ID) {
 									function storeResponse(qid, rid) {
 										new Ajax.Request('<?php echo ENTRADA_URL."/".$MODULE; ?>', {
 											method: 'post',
-											parameters: { 'section' : 'save-response', 'id' : '<?php echo $RECORD_ID; ?>', 'qid' : qid, 'rid' : rid },
+											parameters: { 'section' : 'save-response', 'id' : '<?php echo $RECORD_ID; ?>', 'qid' : qid, 'rid' : rid<?php echo ($QUIZ_TYPE == "community_page" ? ", 'community' : 'true'" : ""); ?> },
 											onSuccess: function(transport) {
 												if (transport.responseText.match(200)) {
 													$('question_' + qid).removeClassName('notice');
@@ -508,7 +543,7 @@ if ($RECORD_ID) {
 
 									echo display_error();
 
-									application_log("error", "Failed to locate a eqprogress_id [".$eqprogress_id."] (either existing or created) when attempting to complete equiz_id [".$RECORD_ID."] (quiz_id [".$quiz_record["quiz_id"]."] / event_id [".$quiz_record["event_id"]."]).");
+									application_log("error", "Failed to locate a qprogress_id [".$qprogress_id."] (either existing or created) when attempting to complete aquiz_id [".$RECORD_ID."] (quiz_id [".$quiz_record["quiz_id"]."] / event_id [".$quiz_record["content_id"]."]).");
 								}
 							break;
 						}
@@ -518,7 +553,7 @@ if ($RECORD_ID) {
 
 						echo display_error();
 
-						application_log("notice", "Someone attempted to complete equiz_id [".$RECORD_ID."] (quiz_id [".$quiz_record["quiz_id"]."] / event_id [".$quiz_record["event_id"]."]) more than the total number of possible attempts [".$quiz_record["quiz_attempts"]."] after their final attempt expired.");
+						application_log("notice", "Someone attempted to complete aquiz_id [".$RECORD_ID."] (quiz_id [".$quiz_record["quiz_id"]."] / event_id [".$quiz_record["content_id"]."]) more than the total number of possible attempts [".$quiz_record["quiz_attempts"]."] after their final attempt expired.");
 					}
 				} else {
 					$NOTICE++;
@@ -526,7 +561,7 @@ if ($RECORD_ID) {
 
 					echo display_notice();
 
-					application_log("notice", "Someone attempted to complete equiz_id [".$RECORD_ID."] (quiz_id [".$quiz_record["quiz_id"]."] / event_id [".$quiz_record["event_id"]."]) more than the total number of possible attempts [".$quiz_record["quiz_attempts"]."].");
+					application_log("notice", "Someone attempted to complete aquiz_id [".$RECORD_ID."] (quiz_id [".$quiz_record["quiz_id"]."] / event_id [".$quiz_record["content_id"]."]) more than the total number of possible attempts [".$quiz_record["quiz_attempts"]."].");
 				}
 			} else {
 				$NOTICE++;
@@ -534,7 +569,7 @@ if ($RECORD_ID) {
 
 				echo display_notice();
 
-				application_log("error", "Someone attempted to complete equiz_id [".$RECORD_ID."] (quiz_id [".$quiz_record["quiz_id"]."] / event_id [".$quiz_record["event_id"]."] after the release date.");
+				application_log("error", "Someone attempted to complete aquiz_id [".$RECORD_ID."] (quiz_id [".$quiz_record["quiz_id"]."] / event_id [".$quiz_record["content_id"]."] after the release date.");
 			}
 		} else {
 			$NOTICE++;
@@ -542,7 +577,7 @@ if ($RECORD_ID) {
 
 			echo display_notice();
 
-			application_log("error", "Someone attempted to complete equiz_id [".$RECORD_ID."] (quiz_id [".$quiz_record["quiz_id"]."] / event_id [".$quiz_record["event_id"]."] prior to the release date.");
+			application_log("error", "Someone attempted to complete aquiz_id [".$RECORD_ID."] (quiz_id [".$quiz_record["quiz_id"]."] / event_id [".$quiz_record["content_id"]."] prior to the release date.");
 		}
 	} else {
 		$ERROR++;
@@ -550,7 +585,7 @@ if ($RECORD_ID) {
 
 		echo display_error();
 
-		application_log("error", "Failed to provide a valid equiz_id identifer [".$RECORD_ID."] when attempting to take a quiz.");
+		application_log("error", "Failed to provide a valid aquiz_id identifer [".$RECORD_ID."] when attempting to take a quiz.");
 	}
 } else {
 	$ERROR++;
@@ -558,5 +593,5 @@ if ($RECORD_ID) {
 
 	echo display_error();
 
-	application_log("error", "Failed to provide an equiz_id identifier when attempting to take a quiz.");
+	application_log("error", "Failed to provide an aquiz_id identifier when attempting to take a quiz.");
 }

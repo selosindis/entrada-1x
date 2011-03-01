@@ -40,7 +40,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 	// This grid should be expanded upon redirecting back to the education index.
 	$_SESSION["education_expand_grid"] = "memberships_grid";
 	if($MEMBERSHIPS_ID) {
-		$query	= "SELECT * FROM `ar_memberships` WHERE `memberships_id`=".$db->qstr($MEMBERSHIPS_ID);
+		$query	= "SELECT * FROM `ar_memberships` WHERE `memberships_id`=".$db->qstr($MEMBERSHIPS_ID)." AND `proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]['tmp']['proxy_id']);
 		$result	= $db->GetRow($query);
 		if($result) {
 			$BREADCRUMB[]	= array("url" => ENTRADA_URL."/annualreport/education?section=edit_membership", "title" => "Edit Membership on Graduate Committees");
@@ -278,7 +278,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 							<table style="width: 100%" cellspacing="0" cellpadding="0" border="0">
 							<tr>
 								<td style="width: 25%; text-align: left">
-									<input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/annualreport?submodule=education'" />
+									<input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/annualreport/education'" />
 								</td>
 								<td style="width: 75%; text-align: right; vertical-align: middle">
 									<span class="content-small">After saving:</span>

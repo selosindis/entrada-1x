@@ -45,14 +45,43 @@ if(!defined("PARENT_INCLUDED")) {
 
 	if (($router) && ($router->initRoute())) {
 		$PREFERENCES = preferences_load($MODULE);
+	
+		$organisation_list = array();
+		$query = "SELECT `organisation_id`, `organisation_title` FROM `".AUTH_DATABASE."`.`organisations` ORDER BY `organisation_title` ASC";
+		$results = $db->GetAll($query);
+		if ($results) {
+			foreach ($results as $result) {
+				if ($ENTRADA_ACL->amIAllowed("resourceorganisation".$result["organisation_id"], "read")) {
+					$organisation_list[$result["organisation_id"]] = html_encode($result["organisation_title"]);
+				}
+			}
+		}
+		
+		if (isset($_GET["org"]) && ($organisation = ((int) $_GET["org"])) && array_key_exists($organisation, $organisation_list)) {
+			$ORGANISATION_ID = $organisation;
+			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["organisation_id"] = $ORGANISATION_ID;
+		} else {
+			if (isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["organisation_id"]) && $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["organisation_id"]) {
+				$ORGANISATION_ID = $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["organisation_id"];
+			} else {
+				$ORGANISATION_ID = $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"];
+				$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["organisation_id"] = $ORGANISATION_ID;
+			}
+		}
 
 		$NOTICE_TARGETS = array();
 		$NOTICE_TARGETS["all"] = "Visible to all students, faculty &amp; staff";
 		$NOTICE_TARGETS["students"] = "Visible to all students";
-		$first_year	= (date("Y", time()) + ((date("m", time()) < 7) ?  3 : 4));
-		for($year = $first_year; $year >= ($first_year - 3); $year--) {
-			$NOTICE_TARGETS[$year] = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Visible to class of ".$year;
+		
+		$cut_off_year = (fetch_first_year() - 4);
+		if (isset($SYSTEM_GROUPS["student"]) && !empty($SYSTEM_GROUPS["student"])) {
+			foreach ($SYSTEM_GROUPS["student"] as $class) {
+				if (clean_input($class, "numeric") >= $cut_off_year) {
+					$NOTICE_TARGETS[$class] = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Visible to class of ".$class;
+				}
+			}
 		}
+
 		$NOTICE_TARGETS["faculty"] = "Visible to all faculty";
 		$NOTICE_TARGETS["staff"] = "Visible to all staff";
 	

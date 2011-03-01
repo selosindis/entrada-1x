@@ -64,6 +64,8 @@ define("DATABASE_NAME", $config->database->entrada_database);					// The name of
 define("DATABASE_USER", $config->database->username);							// A username that can access this database.
 define("DATABASE_PASS", $config->database->password);							// The password for the username to connect to the database.
 
+define("ADODB_DIR", ENTRADA_ABSOLUTE."/core/library/Entrada/adodb");
+
 define("CLERKSHIP_DATABASE", $config->database->clerkship_database);			// The name of the database that stores the clerkship schedule information.
 define("CLERKSHIP_SITE_TYPE", 1);												// The value this application will use for site types in the clerkship logbook module. This will be removed/replaced by functional logic to decide which site type to use in the future - for now, leave this as 1.
 define("CLERKSHIP_EMAIL_NOTIFICATIONS", true);									// Whether email notifications will be sent out to the Program Coordinator of the Rotation's related course
@@ -97,7 +99,7 @@ define("AUTH_LOCKOUT_TIMEOUT", 900);											// The amount of time in seconds 
 define("AUTH_FORCE_SSL", false);												// If you want to force all login attempts to use SSL, set this to true, otherwise false.
 
 define("AUTH_ALLOW_CAS", false);												// Whether or not you wish to allow CAS authorisation.
-define("AUTH_CAS_HOSTNAME", "cas.choolu.ca");									// Hostname of your CAS server.
+define("AUTH_CAS_HOSTNAME", "cas.schoolu.ca");									// Hostname of your CAS server.
 define("AUTH_CAS_PORT", 443);													// Port that CAS is running on.
 define("AUTH_CAS_URI", "cas");													// The URI where CAS is located on the CAS host.
 
@@ -178,7 +180,7 @@ To activate your %GOOGLE_APPS_DOMAIN% account, please follow these instructions:
 
 1. Go to http://webmail.%GOOGLE_APPS_DOMAIN%
 
-2. Enter your %APPLICATION_NAME% username and passowrd:
+2. Enter your %APPLICATION_NAME% username and password:
 
    Username: %GOOGLE_ID%
    Password: - Enter Your %APPLICATION_NAME% Password -
@@ -251,7 +253,7 @@ define("DEBUG_MODE", true);														// Some places have extra debug code to
 define("SHOW_LOAD_STATS", true);												// Do you want to see the time it takes to load each page?
 
 define("APPLICATION_NAME", "Entrada");											// The name of this application in your school (i.e. MedCentral, Osler, etc.)
-define("APPLICATION_VERSION", "1.1.0");											// The current version of this application.
+define("APPLICATION_VERSION", "1.2.0");											// The current filesystem version of Entrada.
 define("APPLICATION_IDENTIFIER", "app-".AUTH_APP_ID);							// PHP does not allow session key's to be integers (sometimes), so we have to make it a string.
 
 $DEFAULT_META["title"] = "Entrada: An eLearning Community";
@@ -436,10 +438,11 @@ $MODULES = array();
 $MODULES["awards"] = array("title" => "Manage Awards", "resource" => "awards", "permission" => "update");
 $MODULES["clerkship"] = array("title" => "Manage Clerkship", "resource" => "clerkship", "permission" => "update");
 $MODULES["courses"] = array("title" => "Manage Courses", "resource"=> "coursecontent", "permission" => "update");
+$MODULES["evaluations"] = array("title" => "Manage Evaluations", "resource" => "evaluation", "permission" => "update");
 $MODULES["events"] = array("title" => "Manage Events", "resource" => "eventcontent", "permission" => "update");
-$MODULES["gradebook"] = array("title" => "Manage Gradebook", "resource" => "gradebook", "permission" => "read");
-$MODULES["mspr"] = array("title" => "Manage MSPRs", "resource" => "mspr", "permission" => "create");
-$MODULES["tasks"] = array("title" => "Manage Tasks", "resource" => "task", "permission" => "create");
+$MODULES["gradebook"] = array("title" => "Manage Gradebook", "resource" => "gradebook", "permission" => "update");
+//$MODULES["mspr"] = array("title" => "Manage MSPRs", "resource" => "mspr", "permission" => "create"); //removed as it is now under manage users
+$MODULES["tasks"] = array("title" => "Manage Tasks", "resource" => "task", "permission" => "create"); 
 $MODULES["notices"] = array("title" => "Manage Notices", "resource" => "notice", "permission" => "update");
 $MODULES["objectives"]	= array("title" => "Manage Objectives", "resource" => "objective", "permission" => "update");
 $MODULES["observerships"] = array("title" => "Manage Observerships", "resource" => "observerships", "permission" => "update");
@@ -455,10 +458,10 @@ $MODULES["annualreport"] = array("title" => "Annual Reports", "resource" => "ann
  * access this system. Note the student and alumni groups have many roles.
  */
 $SYSTEM_GROUPS = array();
-for($i = (date("Y", time()) + ((date("m", time()) < 7) ?  3 : 4)); $i >= 2004; $i--) {
+for($i = (date("Y") + (date("m") < 7 ? 3 : 4)); $i >= 2004; $i--) {
 	$SYSTEM_GROUPS["student"][] = $i;
 }
-for($i = (date("Y", time()) + ((date("m", time()) < 7) ?  3 : 4)); $i >= 1997; $i--) {
+for($i = (date("Y") + (date("m") < 7 ? 3 : 4)); $i >= 1997; $i--) {
 	$SYSTEM_GROUPS["alumni"][] = $i;
 }
 $SYSTEM_GROUPS["faculty"] = array("faculty", "lecturer", "director", "admin");
@@ -525,7 +528,7 @@ $ADMINISTRATION["staff"]["pcoordinator"] = array(
 
 $ADMINISTRATION["staff"]["staff"] = array(
 										"start_file" => "dashboard",
-										"registered" => array("dashboard"),
+										"registered" => array("dashboard", "quizzes"),
 										"assistant_support"	=> false
 										);
 
@@ -569,6 +572,14 @@ $AR_FUTURE_YEARS = $AR_CUR_YEAR + 10;
 define("INTERNAL_AWARD_AWARDING_BODY","Queen's University");
 define("CLERKSHIP_COMPLETED_CUTOFF", "October 26");
 
+define("MSPR_REJECTION_REASON_REQUIRED",true);	//defines whether a reason is required when rejecting a submission 
+define("MSPR_REJECTION_SEND_EMAIL",true);	//defines whether an email should be send on rejection of a student submission to their mspr
+
+define("MSPR_CLERKSHIP_MERGE_NEAR", true); //defines whether or not clerkship rotation with the same title should be merged if they are near in time.
+define("MSPR_CLERKSHIP_MERGE_DISTANCE", "+1 week"); //defines how close together clerkship rotations with the SAME title need to be in order to be merged on the mspr display
+
+define("AUTO_APPROVE_ADMIN_MSPR_EDITS",true); //if true, the comment will be cleared, and the entry approved.
+define("AUTO_APPROVE_ADMIN_MSPR_SUBMISSIONS", true); //when adding to student submissions, admin contributions in these areas are automatically approved, if true. 
 
 /**
  * Defines for Tasks Module
@@ -585,11 +596,33 @@ define("TASK_RECIPIENT_USER", "user");
 define("TASK_RECIPIENT_CLASS", "grad_year"); 
 define("TASK_RECIPIENT_ORGANISATION", "organisation"); 
 
-//Verification
-define("TASK_VERIFICATION_REQUIRED", true);
-define("TASK_VERIFICATION_NOT_REQUIRED",false);
+
+define("TASK_VERIFICATION_NONE", "none");
+define("TASK_VERIFICATION_FACULTY","faculty");
+define("TASK_VERIFICATION_OTHER","other");
+
+define("TASK_VERIFICATION_NOTIFICATION_OFF", 0);
+define("TASK_VERIFICATION_NOTIFICATION_EMAIL", 1);
+define("TASK_VERIFICATION_NOTIFICATION_DASHBOARD", 2);
+
+define("TASK_COMMENT_NONE", "no_comments");
+define("TASK_COMMENT_ALLOW", "allow_comments");
+define("TASK_COMMENT_REQUIRE", "require_comments");
+
+
+define("TASK_FACULTY_SELECTION_ALLOW","allow");
+define("TASK_FACULTY_SELECTION_REQUIRE", "require");
+define("TASK_FACULTY_SELECTION_OFF", "off");
+
 
 //Defaults
 define("TASK_DEFAULT_RECIPIENT_TYPE",TASK_RECIPIENT_USER); //options are: user, grad_year, organisation
-define("TASK_DEFAULT_REQUIRE_VERIFICATION", TASK_VERIFICATION_NOT_REQUIRED); //Verification is not required by default
+define("TASK_DEFAULT_VERIFICATION_TYPE", TASK_VERIFICATION_NONE);
+define("TASK_DEFAULT_VERIFICATION_NOTIFICATION", TASK_VERIFICATION_NOTIFICATION_OFF);
+define("TASK_DEFAULT_COMPLETE_COMMENT", TASK_COMMENT_ALLOW);
+define("TASK_DEFAULT_REJECT_COMMENT", TASK_COMMENT_ALLOW);
+define("TASK_DEFAULT_FACULTY_SELECTION",TASK_FACULTY_SELECTION_ALLOW);
 
+define("PDF_PASSWORD","Mm7aeY");
+
+define("GRADEBOOK_DISPLAY_WEIGHTED_TOTAL", 0);

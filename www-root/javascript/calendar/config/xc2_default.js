@@ -78,7 +78,7 @@ xcFootButtonLinks=[];
 xcGridWidth=0;         // used as cellspacing
 
 // others
-xcBaseZIndex=100;      // z-index for calendar layers
+xcBaseZIndex=20001;      // z-index for calendar layers
 xcMultiCalendar=0;     // 1:multi-calendar, 0:single-calendar
 xcShowCurrentDate=1;   // 1:highlight current date/today, 0:no highlight
 xcWeekStart=1;         // 0:Sunday, 1:Monday
@@ -112,7 +112,7 @@ xcCSSMonthYearList="list";
 xcMonthListFormat="Month"; // Month, MONTH, Mon, Mon, mm
 xcYearListRange=5;
 xcYearListPrevRange="&#171;&nbsp;";
-xcYearListNextRange="&nbsp;&#187;"
+xcYearListNextRange="&nbsp;&#187;";
 
 // Date Link Mod & Journal Mod
 xcLinkBasePath="";
@@ -162,7 +162,7 @@ xcCSSTimeList="time_list"; // CSS class for the select list
 // Popup-Window Version
 xcWindowWidth=215;
 xcWindowHeight=195;
-xcWindowTemplate="../script/xc2_template.html"
+xcWindowTemplate="../script/xc2_template.html";
 
 
 // tooltips

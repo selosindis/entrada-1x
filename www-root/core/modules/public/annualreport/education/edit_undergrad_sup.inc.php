@@ -40,7 +40,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 	// This grid should be expanded upon redirecting back to the education index.
 	$_SESSION["education_expand_grid"] = "undergraduate_supervision_grid";
 	if($UNDERGRADUATE_SUPERVISION_ID) {
-		$query	= "SELECT * FROM `ar_undergraduate_supervision` WHERE `undergraduate_supervision_id`=".$db->qstr($UNDERGRADUATE_SUPERVISION_ID);
+		$query	= "SELECT * FROM `ar_undergraduate_supervision` WHERE `undergraduate_supervision_id`=".$db->qstr($UNDERGRADUATE_SUPERVISION_ID)." AND `proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]['tmp']['proxy_id']);
 		$result	= $db->GetRow($query);
 		if($result) {
 			$BREADCRUMB[]	= array("url" => ENTRADA_URL."/annualreport/education?section=edit_undergrad_sup", "title" => "Edit Undergraduate Supervision");
@@ -129,7 +129,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 									break;
 									case "index" :
 									default :
-										$url 	= ENTRADA_URL."/annualreport?submodule=education";
+										$url 	= ENTRADA_URL."/annualreport/education";
 										$msg	= "You will now be redirected to the education page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 									break;
 								}
@@ -253,7 +253,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 							<table style="width: 100%" cellspacing="0" cellpadding="0" border="0">
 							<tr>
 								<td style="width: 25%; text-align: left">
-									<input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/annualreport?submodule=education'" />
+									<input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/annualreport/education'" />
 								</td>
 								<td style="width: 75%; text-align: right; vertical-align: middle">
 									<span class="content-small">After saving:</span>

@@ -1,189 +1,211 @@
 <?php
 
-/**
- * Processes the various sections of the MSPR module. Retrieves section specifiction from $_GET. 
- */
-function process_mspr_profile($user) {
-	if (isset($_GET['mspr-section']) && $section = $_GET['mspr-section']) {
+require_once("Entrada/mspr/functions.inc.php");
+
+class MSPRPublicController {
 	
-		switch($section) {
-			
-			case 'external_awards':
-				process_external_awards_profile($user);
-				display_status_messages();
-				$external_awards = ExternalAwardReceipts::get($user);
-				echo display_external_awards_profile($external_awards);
-			break;
-			
-			case 'contributions':
-				process_contributions_profile($user);
-				display_status_messages();
-				$contributions = Contributions::get($user);
-				echo display_contributions_profile($contributions);
-			break;
-			
-			case 'critical_enquiry':
-				process_critical_enquiry_profile($user);
-				display_status_messages();
-				$critical_enquiry = CriticalEnquiry::get($user);
-				echo display_supervised_project_profile($critical_enquiry);
-			break;
-			
-			case 'community_health_and_epidemiology':
-				process_community_health_and_epidemiology_profile($user);
-				display_status_messages();
-				$community_health_and_epidemiology = CommunityHealthAndEpidemiology::get($user);
-				echo display_supervised_project_profile($community_health_and_epidemiology);
-			break;
-			
-			case 'research_citations':
-				process_research_citations_profile($user);
-				display_status_messages();
-				$research_citations = ResearchCitations::get($user);
-				echo display_research_citations_profile($research_citations);
-			break;
-		}
+	private $_translator;
+	
+	private $_user;
+	
+	private $type;
+	
+	function __construct($translator, User $forUser) {
+		$this->_translator = $translator;
+		$this->_user = $forUser;
+		$this->type="public";
 	}
-}
+	
+	public function process() {
+		$user = $this->_user;
+		$translator = $this->_translator;
+		$type = $this->type;
 
-/**
- * Processes the external awards commands from $_POST for $user. NOTE: Does NOT do auth check. Do so prior to caling this.
- * @param User $user
- */
-function process_external_awards_profile(User $user) {
-	if (isset($_POST['action'])) {
-		if ($_POST['action'] == "Add") {
-			$user_id = (isset($_POST['user_id']) ? $_POST['user_id'] : 0);
-			
-			$title = (isset($_POST['title']) ? $_POST['title'] : '');
-			$body = (isset($_POST['body']) ? $_POST['body'] : '');
-			$terms = (isset($_POST['terms']) ? $_POST['terms'] : '');
-			$year = (isset($_POST['year']) ? $_POST['year'] : '');
-			$user_id = (isset($_POST['user_id']) ? $_POST['user_id'] : 0);
-			if ($user_id && $title && $terms && $year && $body && ($user->getID() == $user_id)) {
-				ExternalAwardReceipt::create($user_id,$title, $terms, $body, $year);
-			}
+		static $valid = array(
+								"external_awards" => array("add","remove", "edit"),
+								"contributions" => array("add","remove", "edit"),
+								"critical_enquiry" => array("add","remove", "edit"),
+								"community_based_project" => array("add","remove", "edit"),
+								"research_citations" => array("add","remove","edit", "resequence")
+								);
+								
+		$section = filter_input(INPUT_GET, 'mspr-section', FILTER_CALLBACK, array('options'=>'strtolower'));
 		
-		} elseif ($_POST['action'] == "Remove") {
-			$id = (isset($_POST['entity_id']) ? $_POST['entity_id'] : 0);
+		if ($section) {
 			
-			if ($id) {
-				$recipient = ExternalAwardReceipt::get($id);
-				if ($recipient) {
-					$recipient->delete();
+			$params = array(
+				'entity_id'	=> FILTER_VALIDATE_INT,
+				'action'	=> array('filter' => FILTER_CALLBACK, 'options' => 'strtolower'),
+				'user_id'	=> FILTER_VALIDATE_INT
+			);
+			
+			$inputs = filter_input_array(INPUT_POST,$params);
+			extract($inputs);
+			
+			if (!$action) {
+				add_error($translator->translate("mspr_no_action"));
+			}
+			if (!array_key_exists($section, $valid)) {
+				add_error($translator->translate("mspr_invalid_section"));	
+			} else {
+				if (!in_array($action, $valid[$section])){
+					add_error($translator->translate("mspr_invalid_action"));
 				}
 			}
-		}
-	}
-}
-
-/**
- * Processes the contributions to medical school commands from $_POST for $user. NOTE: Does NOT do auth check. Do so prior to caling this.
- * @param User $user
- */
-function process_contributions_profile(User $user) {
-	$action = $_POST['action'];
-	if (isset($_POST['action'])) {
-		if ($action == "Add") {
-			$user_id = (isset($_POST['user_id']) ? $_POST['user_id'] : 0);
 			
-			$role = (isset($_POST['role']) ? $_POST['role'] : '');
-			$org_event = (isset($_POST['org_event']) ? $_POST['org_event'] : '');
-			$date = (isset($_POST['date']) ? $_POST['date'] : '');
-			$start_year = $_POST['start_year'];
+			if (!has_error() && (in_array($action, array("add","edit","resequence")))) {
+				$inputs = get_mspr_inputs($section);
+				process_mspr_inputs($section, $inputs, $translator); //modifies inputs/adds errors
+			}
+			
+			if (!has_error()) {
+				$inputs['user_id'] = $user_id;
+				if ($action == "add") {
+					switch($section) {
+						case 'external_awards':
+							ExternalAwardReceipt::create($inputs);
+							break;
+						case 'contributions':
+							Contribution::create($inputs);
+							break;
+						case 'critical_enquiry':
+							if (CriticalEnquiry::get($user_id)) {
+								add_error($translator->translate("mspr_too_many_critical_enquiry"));  
+							} else {
+								CriticalEnquiry::create($inputs);
+							}
+							break;
+						case 'community_based_project':
+							if (CommunityBasedProject::get($user_id)) {
+								add_error($translator->translate("mspr_too_many_community_based_project"));  
+							} else {
+								CommunityBasedProject::create($inputs);
+							}
+							break;
+						case 'research_citations':
+							ResearchCitation::create($inputs);
+							break;
+					}
+				} elseif ( $action == "resequence") {
+					switch($section) {
+						case 'research_citations':
+							ResearchCitations::setSequence($user_id, $inputs['research_citations']);
+							break; 
+					}
+				} else { //everything else requires an entity
+					if ($entity_id) {
+						$entity = get_mspr_entity($section, $entity_id);
+						if ($entity) {
+							switch($action) {
+								case "remove":
+									$entity->delete();
+									break;
+								case "edit":
+									if ($entity instanceof Approvable) {
+										$inputs['comment'] = "";
+										$inputs['status'] = 0; //set to unapproved.
+									}
+									$entity->update($inputs);//inputs processed above
+									break;
+							}
+						} else {
+							add_error($translator->translate("mspr_invalid_entity"));
+						} 
+					} else {
+						add_error($translator->translate("mspr_no_entity"));
+					}
+				}
+			}
+			
+			switch($section) {
+				case 'external_awards':
+					$external_awards = ExternalAwardReceipts::get($user);
+					display_status_messages();
+					echo display_external_awards($external_awards, $type);
+				break;
 				
-			if (($user_id == $user->getID()) && $role && $org_event && $start_year) {
-				$end_year = $_POST['end_year'];
-				$start_month = $_POST['start_month'];
-				$end_month = $_POST['end_month'];
-
-				Contribution::create($user,$role, $org_event, $start_month, $start_year, $end_month, $end_year);
-			}
-		
-		} elseif ($action == "Remove") {
-			$id = (isset($_POST['entity_id']) ? $_POST['entity_id'] : 0);
-			
-			if ($id) {
-				$contribution = Contribution::get($id);
-				if ($contribution) {
-					$contribution->delete();
-				}
-			}
-		} 
-	}
-}
-
-/**
- * Processes the critical enquiry commands from $_POST for $user. NOTE: Does NOT do auth check. Do so prior to caling this.
- * @param User $user
- */
-function process_critical_enquiry_profile(User $user) {
-	$section = 'critical_enquiry';
-	if (isset($_POST['action'])) {
-		if ($_POST['action'] == "Update") {
-			$user_id = (isset($_POST['user_id']) ? $_POST['user_id'] : 0);
-			
-			$title = (isset($_POST['title']) ? $_POST['title'] : '');
-			$organization = (isset($_POST['organization']) ? $_POST['organization'] : '');
-			$location = (isset($_POST['location']) ? $_POST['location'] : '');
-			$supervisor = (isset($_POST['supervisor']) ? $_POST['supervisor'] : '');
-			$user_id = (isset($_POST['user_id']) ? $_POST['user_id'] : 0);
-			if ($user_id && $title && $organization && $supervisor && $location) {
-				CriticalEnquiry::create($user_id,$title, $organization, $location, $supervisor);
-			}
-		
-		}
-	}
-}
-
-/** 
- * Processes the critical enquiry commands from $_POST for $user. NOTE: Does NOT do auth check. Do so prior to caling this.
- * @param User $user
- */
-function process_community_health_and_epidemiology_profile(User $user) {
-	if (isset($_POST['action'])) {
-		if ($_POST['action'] == "Update") {
-			$user_id = (isset($_POST['user_id']) ? $_POST['user_id'] : 0);
-			
-			$title = (isset($_POST['title']) ? $_POST['title'] : '');
-			$organization = (isset($_POST['organization']) ? $_POST['organization'] : '');
-			$location = (isset($_POST['location']) ? $_POST['location'] : '');
-			$supervisor = (isset($_POST['supervisor']) ? $_POST['supervisor'] : '');
-			$user_id = (isset($_POST['user_id']) ? $_POST['user_id'] : 0);
-			if ($user_id && $title && $organization && $supervisor && $location) {
-				CommunityHealthAndEpidemiology::create($user_id,$title, $organization, $location, $supervisor);
-			}
-		
-		}
-	}
-}
-
-function process_research_citations_profile(User $user) {
-	$action = $_POST['action'];
-	if (isset($_POST['action'])) {
-		if ($_POST['action'] == "Add") {
-			$user_id = (isset($_POST['user_id']) ? $_POST['user_id'] : 0);
-			
-			$citation = (isset($_POST['details']) ? $_POST['details'] : '');
+				case 'contributions':
+					$contributions = Contributions::get($user);
+					display_status_messages();
+					echo display_contributions($contributions, $type);
+				break;
 				
-			if (($user_id == $user->getID()) && $citation ) {
-				ResearchCitation::create($user_id,$citation);
+				case 'critical_enquiry':
+					$critical_enquiry = CriticalEnquiry::get($user);
+					display_status_messages();
+					echo display_critical_enquiry($critical_enquiry, $type);
+				break;
+	
+				case 'community_based_project':
+					$community_based_project = CommunityBasedProject::get($user);
+					display_status_messages();
+					echo display_community_based_project($community_based_project, $type);
+				break;
+	
+				case 'research_citations':
+					$research_citations = ResearchCitations::get($user);
+					display_status_messages();
+					echo display_research_citations($research_citations, $type);
+				break;
 			}
+		}
+	}
+	
+	private function add_research($user_id) {
+		$translator = $this->_translator;
+
+		$params = array(
+			'details'		=> FILTER_SANITIZE_STRING
+		);
 		
-		} elseif ($_POST['action'] == "Remove") {
-			$id = (isset($_POST['entity_id']) ? $_POST['entity_id'] : 0);
-			
-			if ($id) {
-				$citation = ResearchCitation::get($id);
-				if ($citation) {
-					$citation->delete();
-				}
+		$inputs = filter_input_array(INPUT_POST,$params);
+		extract($inputs);
+		
+		if (!has_error()) {
+			if ($user_id && $details) {
+				ResearchCitation::create($user_id,$details);
+			} else {
+				add_error($translator->translate("mspr_insufficient_info"));
 			}
-		} elseif ($action == "resequence") {
-			$ids = (isset($_POST['research_citations']) ? $_POST['research_citations'] : null);
-			if ($ids) {
-				ResearchCitations::Resequence($user,$ids);
-			}
+		}
+	}
+	
+	private function edit_research(ResearchCitation $entity) {
+		$translator = $this->_translator;
+		
+		$params = array(
+			'details'		=> FILTER_SANITIZE_STRING
+		);
+		
+		$inputs = filter_input_array(INPUT_POST,$params);
+		extract($inputs);
+		
+		if ($entity && $details) {
+			$entity->update($details);
+		}  else {
+			add_error($translator->translate("mspr_insufficient_info"));
+		}
+	}
+	
+	private function resequence_research($user_id) {
+		$translator = $this->_translator;
+		
+		$params = array(
+			'research_citations'	=> array(
+											'filter' => FILTER_VALIDATE_INT,
+											'flags' => FILTER_REQUIRE_ARRAY
+											)
+		);
+		
+		$inputs = filter_input_array(INPUT_POST,$params);
+		extract($inputs);
+		
+		$user = User::get($user_id);
+		
+		if ($user && $research_citations && is_array($research_citations)) {
+			ResearchCitations::setSequence($user,$research_citations);
+		} else {
+			add_error($translator->translate("mspr_insufficient_info"));
 		}
 	}
 }
@@ -193,41 +215,8 @@ function process_research_citations_profile(User $user) {
  * @param InternalAwardReceipts $received_awards
  * @return string 
  */
-function display_internal_awards(InternalAwardReceipts $receipts = null) {
-	ob_start();
-	?>
-	<ul class="mspr-list">
-	<?php 
-	if ($receipts && $receipts->count() > 0) {
-		foreach($receipts as $receipt) {
-			$award = $receipt->getAward();
-			$user = $receipt->getUser();
-			?>
-		<li class="entry">
-			<span class="label">
-				Award Title: 
-			</span>
-			<span class="heading">
-				<?php echo clean_input($award->getTitle(), array("notags", "specialchars")) ?>
-			</span>
-			<span class="label">
-				Year Awarded: 
-			</span>
-			<span class="data">
-				<?php echo clean_input($receipt->getAwardYear(), array("notags", "specialchars")) ?>
-			</span>
-		</li>
-		<?php 
-		}
-	} else {
-	?>
-		<li>None</li>
-	<?php
-	}
-	?>
-	</ul>
-	<?php
-	return ob_get_clean();
+function display_internal_awards_profile(InternalAwardReceipts $receipts = null) {
+	return display_internal_awards($receipts,"public");
 }
 
 /**
@@ -235,41 +224,8 @@ function display_internal_awards(InternalAwardReceipts $receipts = null) {
  * @param Studentships $studentships
  * @return string
  */
-function display_studentships(Studentships $studentships = null) {
-	ob_start();
-	?>
-
-	<ul class="mspr-list">
-	<?php 
-	if ($studentships && $studentships->count() > 0) {
-		
-		foreach($studentships as $studentship) {
-		?>
-		<li class="entry">
-			<span class="label">
-				Title:
-			</span>
-			<span class="heading">
-				<?php echo clean_input($studentship->getTitle(), array("notags", "specialchars")) ?>
-			</span>
-			<span class="label">
-				Year Awarded:
-			</span>
-			<span class="data">
-				<?php echo clean_input($studentship->getYear(), array("notags", "specialchars")) ?>
-			</span>
-		</li>
-		<?php 
-		}
-	} else {
-	?>
-		<li>None</li>
-	<?php
-	}
-	?>
-	</ul>
-	<?php
-	return ob_get_clean();
+function display_studentships_profile(Studentships $studentships = null) {
+	return display_studentships($studentships,"public");
 }
 
 /**
@@ -278,67 +234,7 @@ function display_studentships(Studentships $studentships = null) {
  * @return string
  */
 function display_external_awards_profile(ExternalAwardReceipts $receipts, $view_mode = false) {
-	ob_start();
-	?>
-		<ul class="mspr-list">
-	<?php 
-	if ($receipts && $receipts->count() > 0) {
-		
-		foreach($receipts as $receipt) {
-			if ($view_mode && $receipt->isRejected()) continue;
-			
-			$award = $receipt->getAward();
-			$mode =  ($receipt->isApproved())? "Unapprove" : "Approve";
-			$user = $receipt->getUser();
-			$class = ($receipt->isRejected() ? "rejected" : ($receipt->isApproved()? "approved" : "unapproved")); 
-		?>
-		<li class="entry <?php echo $class; ?>">
-			<span class="label">
-			Title: 
-			</span>
-			<span class="heading">
-			<?php echo clean_input($award->getTitle(), array("notags", "specialchars")) ?>
-			</span>
-			<span class="label">
-				Terms:
-			</span>
-			<p class="data">
-				<?php echo clean_input($award->getTerms(), array("notags", "specialchars")) ?>
-			</p>
-			<span class="label">
-				Awarding Body:
-			</span>
-			<span class="data">
-				<?php echo clean_input($award->getAwardingBody(), array("notags", "specialchars")) ?>	
-			</span>
-			<span class="label">
-				Year Awarded:	
-			</span>
-			<span class="data">
-				<?php echo clean_input($receipt->getAwardYear(), array("notags", "specialchars")) ?>	
-			</span>
-			<?php if (!$view_mode) { ?>
-			<div class="controls">
-				<form class="remove_external_award_form" action="<?php echo ENTRADA_URL; ?>/profile?section=mspr&id=<?php echo $user->getID(); ?>" method="post" >
-					<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
-					<input type="hidden" name="entity_id" value="<?php echo $receipt->getID(); ?>"></input>
-					<input type="submit" name="action" value="Remove"></input> 
-				</form>
-			</div>
-			<?php } ?>
-
-		</li>
-		<?php 
-		}
-	} else {
-	?>
-		<li>None</li>
-	<?php
-	}
-	?>
-	</ul>
-	<?php
-	return ob_get_clean();
+	return display_external_awards($receipts, "public", $view_mode);
 }
 
 /**
@@ -347,99 +243,7 @@ function display_external_awards_profile(ExternalAwardReceipts $receipts, $view_
  * @return string
  */
 function display_contributions_profile(Contributions $contributions,$view_mode=false) {
-	ob_start();
-	?>
-	
-	<ul class="mspr-list">
-	<?php 
-	if ($contributions && $contributions->count() > 0) {
-		foreach($contributions as $contribution) {
-			if ($view_mode && $contribution->isRejected()) continue;
-			
-			$mode =  ($contribution->isApproved())? "Unapprove" : "Approve";
-			$class = ($contribution->isRejected() ? "rejected" : ($contribution->isApproved()? "approved" : "unapproved")); 
-			?>
-		<li class="entry <?php echo $class; ?>">
-
-			<span class="label">
-				Role:
-			</span>
-			<span class="heading">
-				<?php echo clean_input($contribution->getRole(), array("notags", "specialchars")) ?>
-			</span>
-			<span class="label">
-				Organization/Event:
-			</span>
-			<span class="data">
-				<?php echo clean_input($contribution->getOrgEvent(), array("notags", "specialchars")) ?>
-			</span>
-			<span class="label">
-				Period:
-			</span>
-			<span class="data">
-				<?php echo clean_input($contribution->getPeriod() , array("notags", "specialchars")) ?>
-			</span>
-			<?php if (!$view_mode) { ?>
-			<div class="controls">
-				<form action="<?php echo ENTRADA_URL; ?>/profile?section=mspr&id=<?php echo $contribution->getUserID(); ?>" method="post" >
-					<input type="hidden" name="user_id" value="<?php echo $contribution->getUserID(); ?>"></input>
-					<input type="hidden" name="entity_id" value="<?php echo $contribution->getID(); ?>"></input>
-					<input type="submit" name="action" value="Remove"></input> 
-				</form>
-			</div>
-			<?php } ?>			
-		</li>
-		<?php 
-		}
-	} else {
-	?>
-		<li>None</li>
-	<?php
-	}
-	?>
-	</ul>
-	<?php
-	return ob_get_clean();
-}
-
-/**
- * Returns a table containing clerkship details. Note that this can be used for any of the clerkship types
- * @param ClerkShipRotations $rotations
- * @return string
- */
-function display_clerkship_details(ClerkShipRotations $rotations = null) {
-	ob_start();
-	?>
-	<ul class="mspr-list">
-	<?php 
-	if ($rotations && $rotations->count() > 0) {
-		foreach($rotations as $rotation) {
-		?>
-		<li class="entry">
-			<span class="label">
-				Details: 
-			</span>
-			<p class="data">
-				<?php echo clean_input($rotation->getDetails(), array("notags", "specialchars", "nl2br")) ?>
-			</p>
-			<span class="label">
-				Period: 
-			</span>
-			<span class="data">
-				<?php echo clean_input($rotation->getPeriod(), array("notags", "specialchars")) ?>
-			</span>
-		</li>
-		<?php 
-		}
-	} else {
-	?>
-		<li>None</li>
-	<?php
-	}
-	?>
-	</ul>
-	<?php	
-	return ob_get_clean();
+	return display_contributions($contributions,"public",$view_mode);
 }
 
 /**
@@ -448,38 +252,7 @@ function display_clerkship_details(ClerkShipRotations $rotations = null) {
  * @return string
  */
 function display_clineval_profile(ClinicalPerformanceEvaluations $clinevals = null) {
-	ob_start();	
-	?>
-	<ul class="mspr-list">
-	<?php 
-	if ($clinevals && $clinevals->count() > 0) {
-		foreach($clinevals as $clineval) {
-		?>
-		<li class="entry">
-			<span class="label">
-				Comment: 
-			</span>
-			<p class="data">
-				<?php echo clean_input($clineval->getComment(), array("notags", "specialchars", "nl2br")) ?>
-			</p>
-			<span class="label">
-				Source: 
-			</span>
-			<span class="data">
-				<?php echo clean_input($clineval->getSource(), array("notags", "specialchars")) ?>
-			</span>
-		</li>
-		<?php 
-		}
-	} else {
-	?>
-		<li>None</li>
-	<?php
-	}
-	?>
-	</ul>
-	<?php
-	return ob_get_clean();
+	return display_clineval($clinevals,"public");
 }
 
 /**
@@ -487,39 +260,8 @@ function display_clineval_profile(ClinicalPerformanceEvaluations $clinevals = nu
  * @param StudentRunElectives $sres
  * @return string
  */
-function display_student_run_electives_public(StudentRunElectives $sres=null) {
-	ob_start();
-	?>
-	<ul class="mspr-list">
-	<?php 
-	if ($sres && ($sres->count() > 0)) {
-		foreach($sres as $sre) {
-		?>
-		<li class="entry">
-			<span class="label">
-				Details: 
-			</span>
-			<p class="data">
-				<?php echo clean_input($sre->getDetails(), array("notags", "specialchars", "nl2br")); ?>
-			</p>
-			<span class="label">
-				Period: 
-			</span>
-			<span class="data">
-				<?php echo clean_input($sre->getPeriod(), array("notags", "specialchars")); ?>
-			</span>
-		</li>
-		<?php 
-		}
-	} else {
-	?>
-		<li>None</li>
-	<?php
-	}
-	?>
-	</ul>
-	<?php
-	return ob_get_clean();
+function display_student_run_electives_profile(StudentRunElectives $sres=null) {
+	return display_student_run_electives($sres,"public");
 }
 
 /**
@@ -527,39 +269,8 @@ function display_student_run_electives_public(StudentRunElectives $sres=null) {
  * @param Observerships $obss
  * @return string
  */
-function display_observerships_public(Observerships $obss=null) {
-	ob_start();
-	?>
-	<ul class="mspr-list">
-	<?php 
-	if ($obss && ($obss->count() > 0)) {
-		foreach($obss as $obs) {
-		?>
-		<li class="entry">
-			<span class="label">
-				Details: 
-			</span>
-			<p class="data">
-				<?php echo clean_input($obs->getDetails(), array("notags", "specialchars", "nl2br")) ?>
-			</p>
-			<span class="label">
-				Period: 
-			</span>
-			<span class="data">
-				<?php echo clean_input($obs->getPeriod(), array("notags", "specialchars")) ?>
-			</span>
-		</li>
-		<?php 
-		}
-	} else {
-	?>
-		<li>None</li>
-	<?php
-	}
-	?>
-	</ul>
-	<?php
-	return ob_get_clean();
+function display_observerships_profile(Observerships $obss=null) {
+	return display_observerships($obss,"public");
 }
 
 /**
@@ -567,39 +278,8 @@ function display_observerships_public(Observerships $obss=null) {
  * @param Observerships $obss
  * @return string
  */
-function display_international_activities(InternationalActivities $int_acts) {
-	ob_start();
-	?>
-	<ul class="mspr-list">
-	<?php 
-	if ($int_acts && $int_acts->count() > 0) {
-		foreach($int_acts as $int_act) {
-		?>
-		<li class="entry">
-			<span class="label">
-				Details: 
-			</span>
-			<p class="data">
-				<?php echo clean_input($int_act->getDetails(), array("notags", "specialchars", "nl2br")) ?>
-			</p>
-			<span class="label">
-				Period: 
-			</span>
-			<span class="data">
-				<?php echo clean_input($int_act->getPeriod(), array("notags", "specialchars")) ?>
-			</span>
-		</li>
-		<?php 
-		}
-	} else {
-	?>
-		<li>None</li>
-	<?php
-	}
-	?>
-	</ul>
-	<?php
-	return ob_get_clean();
+function display_international_activities_profile(InternationalActivities $int_acts) {
+	return display_international_activities($int_acts,"public");
 }
 
 /**
@@ -608,91 +288,9 @@ function display_international_activities(InternationalActivities $int_acts) {
  * @return string
  */
 function display_supervised_project_profile(SupervisedProject $project = null) {
-	ob_start();
-	?>
-	<ul class="mspr-list">
-	<?php 
-	if ($project) {
-		$class = ($project->isRejected() ? "rejected" : ($project->isApproved()? "approved" : "unapproved"));
-	?>
-		<li class="entry <?php echo $class; ?>">
-			<span class="label">
-				Title: 
-			</span>
-			<span class="heading">
-				<?php echo clean_input($project->getTitle(), array("notags", "specialchars")); ?>
-			</span>
-			<span class="label">
-				Organization:
-			</span>
-			<span class="data">
-				<?php echo clean_input($project->getOrganization(), array("notags", "specialchars")); ?>
-			</span>
-			<span class="label">
-				Location:
-			</span>
-			<span class="data">
-				<?php echo clean_input($project->getLocation(), array("notags", "specialchars")); ?>
-			</span>
-			<span class="label">
-				Supervisor:
-			</span>
-			<span class="data">
-				<?php echo clean_input($project->getSupervisor(), array("notags", "specialchars")); ?>
-			</span>
-		</li>
-		<?php 
-	} else {
-	?>
-		<li>Not yet entered</li>
-	<?php
-	}
-	?>
-	</ul>
-	<?php
-	return ob_get_clean();
+	return display_supervised_project($project,"public");
 }
 
 function display_research_citations_profile(ResearchCitations $research_citations, $view_mode=false) {
-	ob_start();
-	?>
-	
-	<ul class="mspr-list<?php echo ($view_mode) ? "" : " priority-list"; ?>" id="citations_list">
-	<?php 
-	if ($research_citations && $research_citations->count() > 0) {
-		foreach($research_citations as $research_citation) {
-			if ($view_mode && $research_citation->isRejected()) continue;
-			$class = ($research_citation->isRejected() ? "rejected" : ($research_citation->isApproved()? "approved" : "unapproved"));
-		?>
-		<li class="entry <?php echo $class; ?>" id="research_citation_<?php echo $research_citation->getID(); ?>">
-			<?php if (!$view_mode) { ?> <span class="handle"><img src="<?php echo ENTRADA_URL; ?>/images/arrow_up_down.png" /></span><?php } ?> 
-			<span class="label">
-				Citation: 
-			</span>
-			<p class="data">
-				<?php echo clean_input($research_citation->getText(), array("notags", "specialchars", "nl2br")) ?>
-			</p>
-			<?php if (!$view_mode) { ?>
-			<div class="controls">
-				<form action="<?php echo ENTRADA_URL; ?>/profile?section=mspr&id=<?php echo $research_citation->getUserID(); ?>" method="post" >
-					<input type="hidden" name="user_id" value="<?php echo $research_citation->getUserID(); ?>"></input>
-					<input type="hidden" name="entity_id" value="<?php echo $research_citation->getID(); ?>"></input>
-					
-					<input type="submit" name="action" value="Remove" ></input> 
-				</form>
-			</div>
-			<?php } ?>
-
-		</li>
-		<?php 
-		}
-	} else {
-	?>
-		<li>None</li>
-	<?php
-	}
-	?>
-	</ul>
-	<?php
-	return ob_get_clean();
+	return display_research_citations($research_citations,"public",$view_mode);
 }

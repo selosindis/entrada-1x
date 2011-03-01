@@ -27,7 +27,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 } elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	header("Location: ".ENTRADA_URL);
 	exit;
-} elseif (!$ENTRADA_ACL->amIAllowed("gradebook", "read", false) || !$ENTRADA_ACL->amIAllowed("assessment", "read", false)) {
+} elseif (!$ENTRADA_ACL->amIAllowed("gradebook", "update", false)) {
 	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/".$MODULE."\\'', 15000)";
 
 	$ERROR++;
@@ -165,7 +165,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				echo "<h1>" . implode(": ", $curriculum_path) . " Gradebook </h1>";
 			}
 			
-			 if ($ENTRADA_ACL->amIAllowed("assessment", "create", false)) { ?>
+			 if ($ENTRADA_ACL->amIAllowed("gradebook", "create", false)) { ?>
 				<div style="float: right">
 					<ul class="page-action">
 						<li><a id="gradebook_assessment_add" href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE . "/assessments/?" . replace_query(array("section" => "add", "step" => false)); ?>" class="strong-green">Add New Assessment</a></li>
@@ -191,7 +191,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					echo "Pages: ".$pagination->GetPageLinks();
 					echo "</div>\n";
 				}
-				if ($ENTRADA_ACL->amIAllowed("assessment", "delete", false)) {
+				if ($ENTRADA_ACL->amIAllowed("gradebook", "delete", false)) {
 					echo "<form action=\"".ENTRADA_URL . "/admin/gradebook/assessments?".replace_query(array("section" => "delete", "step"=>1))."\" method=\"post\">";
 				}
 				?>
@@ -242,7 +242,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						$url = ENTRADA_URL."/admin/gradebook/assessments?section=grade&amp;id=".$COURSE_ID."&amp;assessment_id=".$assessment["assessment_id"];
 						
 						echo "<tr id=\"assessment-".$assessment["assessment_id"]."\">";
-						if ($ENTRADA_ACL->amIAllowed("assessment", "delete", false)) {
+						if ($ENTRADA_ACL->amIAllowed("gradebook", "delete", false)) {
 							echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"delete[]\" value=\"".$assessment["assessment_id"]."\" /></td>\n";
 						} else {
 							echo "	<td class=\"modified\"><img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"19\" height=\"19\" alt=\"\" title=\"\" /></td>";
@@ -258,7 +258,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 			</table>
 			<div class="gradebook_edit" style="display: none;"></div>
 				<?php
-				if ($ENTRADA_ACL->amIAllowed("assessment", "delete", false)) {
+				if ($ENTRADA_ACL->amIAllowed("gradebook", "delete", false)) {
 					echo "</form>";
 				}
 			} else {

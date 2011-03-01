@@ -9,29 +9,16 @@
  *
 */
 
-@set_include_path(implode(PATH_SEPARATOR, array(
-dirname(__FILE__) . "/../core",
-dirname(__FILE__) . "/../core/includes",
-dirname(__FILE__) . "/../core/library",
-get_include_path(),
-)));
-
-/**
- * Include the Entrada init code.
- */
-require_once("init.inc.php");
-
 if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 	if ($ENTRADA_ACL->amIAllowed("mspr", "create", false)) {
 
 		ob_clear_open_buffers();
 	
-		require_mspr_models();
-		
+		require_once(dirname(__FILE__)."/includes/functions.inc.php");
 		
 		$user = User::get($user_record["id"]);
-		process_mspr_admin($user);		
-		
+		$controller = new MSPRAdminController($translate, $user);
+		$controller->process();		
 	}
 	exit;
 }

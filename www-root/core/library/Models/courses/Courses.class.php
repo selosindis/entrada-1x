@@ -22,10 +22,6 @@
  *
 */
 
-require_once("Models/utility/SimpleCache.class.php");
-require_once("Course.class.php");
-require_once("Models/utility/Collection.class.php");
-
 /**
  * Utility Class for getting a list of Courses
  * 
@@ -42,9 +38,12 @@ class Courses extends Collection {
 	 * @param array
 	 * @return Courses
 	 */
-	static public function get( ) {
+	static public function get($active_only=false) {
 		global $db;
 		$query = "SELECT * from `courses`";
+		if ($active) {
+			$query .= " where `active`=1";
+		}
 		
 		$results = $db->getAll($query);
 		$courses = array();
@@ -57,11 +56,14 @@ class Courses extends Collection {
 		return new self($courses);
 	}
 	
-	static public function getByOwner(User $user ) {
+	static public function getByOwner(User $user, $active_only=false ) {
 		global $db;
 		$user_id = $user->getID();
 		
-		$query = "SELECT * from `courses` where `director_id`=".$db->qstr($user_id) ." OR `pcoord_id`=".$db->qstr($user_id);
+		$query = "SELECT * from `courses` where (`director_id`=".$db->qstr($user_id) ." OR `pcoord_id`=".$db->qstr($user_id).")";
+		if ($active) {
+			$query .= " and `active`=1";
+		}
 		$results = $db->getAll($query);
 		$courses = array();
 		if ($results) {

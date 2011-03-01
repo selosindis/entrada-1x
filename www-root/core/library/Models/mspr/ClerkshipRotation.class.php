@@ -6,9 +6,10 @@ class ClerkshipRotation {
 	protected $event_start;
 	protected $event_finish;
 	protected $title;
+	protected $user_id;
 	
-	
-	function __construct($title, $event_start, $event_finish, $completed = false) {
+	function __construct($user_id, $title, $event_start, $event_finish, $completed = false) {
+		$this->user_id = $user_id;
 		$this->title = $title;
 		$this->event_start = $event_start;
 		$this->event_finish = $event_finish;
@@ -37,5 +38,9 @@ class ClerkshipRotation {
 	
 	public function getPeriod() {
 		return date("F j, Y", $this->event_start) . " - " . date("F j, Y", $this->event_finish); 
+	}
+	
+	public function getUser() {
+		return User::get($this->user_id);
 	}
 }

@@ -44,6 +44,8 @@ require_once("Entrada/router/router.class.php");
 require_once("cache.inc.php");
 require_once("acl.inc.php");
 
+ini_set("filter.default_flags", FILTER_FLAG_NO_ENCODE_QUOTES);
+
 /**
  * If Entrada is in development mode and the user is not a developer send them to the
  * notavailable.html file.

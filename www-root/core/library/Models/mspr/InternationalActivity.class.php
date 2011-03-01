@@ -1,6 +1,7 @@
 <?php
+require_once("Models/utility/Editable.interface.php");
 
-class InternationalActivity {
+class InternationalActivity implements Editable {
 	private $id;
 	private $student_id;
 	private $title;
@@ -25,6 +26,10 @@ class InternationalActivity {
 	
 	public function getStudentID() {
 		return $this->student_id;	
+	}
+	
+	public function getUser() {
+		return User::get($this->student_id);
 	}
 
 	public function getSite() {
@@ -86,11 +91,11 @@ class InternationalActivity {
 		}
 	} 
 
-	public static function create($user, $title, $site, $location, $start, $end) {
-		global $db;
-		$student_id = $user->getID();
-		$query = "insert into `student_international_activities` (`student_id`, `title`,`site`,`location`,`start`, `end`) value (".$db->qstr($student_id).", ".$db->qstr($title).", ".$db->qstr($site).", ".$db->qstr($location).", ".$db->qstr($start).", ".$db->qstr($end).")";
-		if(!$db->Execute($query)) {
+	public static function create(array $input_arr) {
+		extract($input_arr);
+		global $db;;
+		$query = "insert into `student_international_activities` (`student_id`, `title`,`site`,`location`,`start`, `end`) value (?,?,?,?,?,?)";
+		if(!$db->Execute($query, array($user_id, $title, $site, $location, $start, $end))) {
 			add_error("Failed to create new International Activity.");
 			application_log("error", "Unable to update a student_international_activity record. Database said: ".$db->ErrorMsg());
 		} else {
@@ -109,5 +114,20 @@ class InternationalActivity {
 		} else {
 			add_success("Successfully removed International Activity.");
 		}		
+	}
+	
+	public function update(array $input_arr) {
+		extract($input_arr);
+		global $db;
+		$query = "update `student_international_activities` set
+				 `title`=?, `site`=?,`location`=?, `start`=?, `end`=?
+				 where `id`=?";
+		
+		if(!$db->Execute($query, array($title, $site, $location, $start, $end, $this->id))) {
+			add_error("Failed to update International Activity.");
+			application_log("error", "Unable to update a student_international_activities record. Database said: ".$db->ErrorMsg());
+		} else {
+			add_success("Successfully updated International Activity.");
+		}	
 	}
 }

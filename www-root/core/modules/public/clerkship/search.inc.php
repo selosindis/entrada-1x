@@ -44,7 +44,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 
 if ($DISPLAY) {
 	if (($_GET["gradyear"]) || ($_GET["gradyear"] === "0")) {
-		$GRADYEAR	= trim($_GET["gradyear"]);
+		$GRADYEAR = trim($_GET["gradyear"]);
 		@app_setcookie("search[gradyear]", trim($_GET["gradyear"]));
 	} elseif (($_POST["gradyear"]) || ($_POST["gradyear"] === "0")) {
 		$GRADYEAR	= trim($_POST["gradyear"]);
@@ -55,7 +55,9 @@ if ($DISPLAY) {
 		$GRADYEAR = 0;	
 	}
 	
-	$BREADCRUMB[]	= array("url" => ENTRADA_URL."/clerkship?".replace_query(array("section" => "search")), "title" => "Student Search");
+	$GRADYEAR = clean_input($GRADYEAR, "credentials");
+	
+	$BREADCRUMB[] = array("url" => ENTRADA_URL."/clerkship?".replace_query(array("section" => "search")), "title" => "Student Search");
 	
 	switch ($_POST["action"]) {
 		case "results" :
@@ -214,13 +216,15 @@ if ($DISPLAY) {
 					<select name="year" style="width: 205px">
 					<option value="">-- Select Graduating Year --</option>
 					<?php
-					for($year = (date("Y", time()) + 4); $year >= 2002; $year--) {
-						echo "<option value=\"".$year."\"".(($year == date("Y", time())) ? "" : "").">Class of ".$year."</option>\n";	
+					if (isset($SYSTEM_GROUPS["student"]) && !empty($SYSTEM_GROUPS["student"])) {
+						foreach ($SYSTEM_GROUPS["student"] as $class) {
+							echo "<option value=\"".$class."\">Class of ".html_encode($class)."</option>\n";
+						}
 					}
 					?>
 					</select>
 				</td>
-				<td style="padding-left: 10px"><input type="submit" value="Proceed" class="button" style="background-image: url('<?php echo ENTRADA_URL; ?>/images/btn_bg.gif');" /></td>
+				<td style="padding-left: 10px"><input type="submit" value="Proceed" /></td>
 			</tr>
 			<tr>
 				<td colspan="3">
@@ -230,14 +234,14 @@ if ($DISPLAY) {
 				</td>
 			</tr>
 			<tr>
-				<td colspan="3"><span class="content-subheading">Student F inder</span></td>
+				<td colspan="3"><span class="content-subheading">Student Finder</span></td>
 			</tr>
 			<tr>
 				<td>Enter the first or lastname of the student:</td>			
 				<td style="padding-left: 10px">
 					<input type="text" name="name" value="" style="width: 200px" />
 				</td>
-				<td style="padding-left: 10px"><input type="submit" value="Search" class="button" style="background-image: url('<?php echo ENTRADA_URL; ?>/images/btn_bg.gif');" /></td>
+				<td style="padding-left: 10px"><input type="submit" value="Search" /></td>
 			</tr>
 			</table>
 			</form>

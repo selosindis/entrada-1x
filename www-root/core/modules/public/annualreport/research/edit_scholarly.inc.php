@@ -42,7 +42,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 	$_SESSION["research_expand_grid"] = "scholarly_grid";
 	
 	if($RESEARCH_ID) {
-		$query	= "SELECT * FROM `ar_scholarly_activity` WHERE `scholarly_activity_id`=".$db->qstr($RESEARCH_ID);
+		$query	= "SELECT * FROM `ar_scholarly_activity` WHERE `scholarly_activity_id`=".$db->qstr($RESEARCH_ID)." AND `proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]['tmp']['proxy_id']);
 		$result	= $db->GetRow($query);
 		if($result) {
 			$BREADCRUMB[]	= array("url" => ENTRADA_URL."/annualreport/research?section=edit_scholarly", "title" => "Edit Scholarly Activity");

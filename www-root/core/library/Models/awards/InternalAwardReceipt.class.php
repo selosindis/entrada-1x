@@ -28,6 +28,8 @@ require_once("Models/utility/SimpleCache.class.php");
 require_once("Models/users/User.class.php");
 require_once("InternalAward.class.php");
 
+require_once("Models/utility/Editable.interface.php");
+
 /**
  * 
  * 
@@ -36,15 +38,15 @@ require_once("InternalAward.class.php");
  * @author Developer: Jonathan Fingland <jonathan.fingland@quensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  */
-class InternalAwardReceipt {
+class InternalAwardReceipt implements Editable {
 	private $award_receipt_id;
-	private $award;
+	private $award_id;
 	private $user_id;
 	private $year;
 	
-	function __construct($user_id, Award $award, $award_receipt_id, $year){
+	function __construct($user_id, $award_id, $award_receipt_id, $year){
 		$this->user_id = $user_id;
-		$this->award = $award;
+		$this->award_id = $award_id;
 		$this->award_receipt_id = $award_receipt_id;
 		$this->year = $year;
 	}
@@ -62,14 +64,14 @@ class InternalAwardReceipt {
 	}
 	
 	public function getAward() {
-		return $this->award;
+		return InternalAward::get($this->award_id);
 	}
 	
-	static public function create($award_id, $user_id, $year) {
+	static public function create(array $input_arr) {
+		extract($input_arr);
 		global $db;
-	
-		$query = "INSERT INTO `student_awards_internal` (`user_id`,`award_id`, `year`) VALUES (".$db->qstr($user_id).", ".$db->qstr($award_id).", ".$db->qstr($year).")";
-		if(!$db->Execute($query)) {
+		$query = "INSERT INTO `student_awards_internal` (`user_id`,`award_id`, `year`) VALUES (?,?,?)";
+		if(!$db->Execute($query, array($user_id, $award_id, $year))) {
 			add_error("Failed to add award recipient to database. Please check your values and try again.");
 			application_log("error", "Unable to insert a student_awards_internal record. Database said: ".$db->ErrorMsg());
 		} else {
@@ -84,7 +86,7 @@ class InternalAwardReceipt {
 	 */
 	static public function get($award_receipt_id) {
 		global $db;
-		$query		= "SELECT a.id as `award_receipt_id`, user_id, award_id, c.title, c.award_terms, c.disabled, lastname, firstname, a.year 
+		$query		= "SELECT a.id as award_receipt_id, user_id, award_id, c.title, c.award_terms, c.disabled, a.year 
 				FROM `". DATABASE_NAME ."`.`student_awards_internal` a 
 				left join `". DATABASE_NAME ."`.`student_awards_internal_types` c on c.id = a.award_id 
 				WHERE a.id = ".$db->qstr($award_receipt_id);
@@ -92,14 +94,18 @@ class InternalAwardReceipt {
 		$result	= $db->GetRow($query);
 			
 		if ($result) {
-			$award = new InternalAward($result['award_id'], $result['title'], $result['award_terms'], $result['disabled']);
-			return new InternalAwardReceipt( $result['user_id'], $award, $result['award_receipt_id'], $result['year']);
+			$award = InternalAward::fromArray($result);
+			return InternalAwardReceipt::fromArray( $result);
 		} else {
 			add_error("Failed to retreive award receipt from database.");
 			application_log("error", "Unable to retrieve a student_awards_internal record. Database said: ".$db->ErrorMsg());
 		}
 			 
 	} 
+	
+	public static function fromArray(array $arr) {
+		return new self($arr['user_id'], $arr['award_id'], $arr['award_receipt_id'], $arr['year']);
+	}
 	
 	public function delete() {
 		global $db;
@@ -111,5 +117,36 @@ class InternalAwardReceipt {
 		} else {
 			add_success("Successfully removed award receipt.");
 		}
+	}
+	
+	public function compare($ar, $compare_by="year") {
+		switch($compare_by) {
+			case 'year':
+				return $this->year == $ar->year ? 0 : ( $this->year > $ar->year ? 1 : -1 );
+				break;
+			case 'title':
+				$award = $this->getAward();
+				$other_award = $ar->getAward();
+				return $award->compare($other_award);
+				break;
+		}
+	}
+	
+	public function update (array $input_arr) {
+		extract($input_arr);
+		if (is_null($user_id)) {
+			$user_id = $this->user_id;
+		}
+		global $db;
+		$query = "update `student_awards_internal` set
+				 `award_id`=?, `year`=?, `user_id`=?  
+				 where `id`=?";
+		if(!$db->Execute($query, array($award_id, $year, $user_id, $this->getID()))) {
+			add_error("Failed to update award receipt.");
+			application_log("error", "Unable to update a student_awards_internal record. Database said: ".$db->ErrorMsg());
+		} else {
+			add_success("Successfully updated award receipt.");
+		}	
+		
 	}
 }

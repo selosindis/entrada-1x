@@ -42,7 +42,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 	$_SESSION["research_expand_grid"] = "peer_reviewed_grid";
 	
 	if($PEER_REVIEWED_PAPERS_ID) {
-		$query	= "SELECT * FROM `ar_peer_reviewed_papers` WHERE `peer_reviewed_papers_id`=".$db->qstr($PEER_REVIEWED_PAPERS_ID);
+		$query	= "SELECT * FROM `ar_peer_reviewed_papers` WHERE `peer_reviewed_papers_id`=".$db->qstr($PEER_REVIEWED_PAPERS_ID)." AND `proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]['tmp']['proxy_id']);
 		$result	= $db->GetRow($query);
 		if($result) {
 			$BREADCRUMB[]	= array("url" => ENTRADA_URL."/annualreport/research?section=edit_peer_reviewed", "title" => "Edit Peer-Reviewed Publication");
@@ -111,7 +111,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 					} else {
 						$PROCESSED["eyear"] = "";	
 					}
-					// If this was epublished then allow blanks for volume, pages and edition
+					// If this was epublished then allow blanks for volume and pages
 					if(isset($emonth) && isset ($eyear) && $emonth != "" && $eyear != "") {
 						$PROCESSED["epub_date"]	= $emonth.$eyear;
 					} else {
@@ -160,15 +160,6 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 							$ERRORSTR[] = "The <strong>Volume</strong> field is required.";
 						}
 						/**
-						 * Required field "edition" / Edition
-						 */
-						if((isset($_POST["edition"])) && ($edition = clean_input($_POST["edition"], array("notags", "trim", "utf8")))) {
-							$PROCESSED["edition"] = $edition;
-						} else {
-							$ERROR++;
-							$ERRORSTR[] = "The <strong>Edition</strong> field is required.";
-						}
-						/**
 						 * Required field "pages" / Pages
 						 */
 						if((isset($_POST["pages"])) && ($pages = clean_input($_POST["pages"], array("notags", "trim", "utf8")))) {
@@ -203,21 +194,21 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 							$PROCESSED["volume"] = "";
 						}
 						/**
-						 * Required field "edition" / Edition
-						 */
-						if((isset($_POST["edition"])) && ($edition = clean_input($_POST["edition"], array("notags", "trim", "utf8")))) {
-							$PROCESSED["edition"] = $edition;
-						} else {
-							$PROCESSED["edition"] = "";
-						}
-						/**
 						 * Required field "pages" / Pages
 						 */
 						if((isset($_POST["pages"])) && ($pages = clean_input($_POST["pages"], array("notags", "trim", "utf8")))) {
 							$PROCESSED["pages"] = $pages;
 						} else {
-							$PROCESSED["edition"] = "";
+							$PROCESSED["pages"] = "";
 						}
+					}
+					/**
+					 * Non-Required field "edition" / Edition
+					 */
+					if((isset($_POST["edition"])) && ($edition = clean_input($_POST["edition"], array("notags", "trim", "utf8")))) {
+						$PROCESSED["edition"] = $edition;
+					} else {
+						$PROCESSED["edition"] = "";
 					}
 					/**
 					 * Required field "role" / Role
@@ -455,7 +446,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 					</tr>
 					<tr>
 						<td></td>
-						<td style="vertical-align: top"><label for="edition" class="form-required">Edition</label></td>
+						<td style="vertical-align: top"><label for="edition" class="form-nrequired">Edition</label></td>
 						<td><input type="text" id="edition" name="edition" value="<?php echo (isset($PROCESSED["edition"]) ? utf8_decode($PROCESSED["edition"]) : ""); ?>" maxlength="10" style="width: 15%" /></td>
 					</tr>
 					<tr>

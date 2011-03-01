@@ -24,7 +24,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MSPR_ADMIN"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 
-	require_once("Models/mspr/MSPRs.class.php");
+	require_once("Entrada/mspr/functions.inc.php");
 	
 	if (isset($_GET['mode'])) {
 		$mode = $_GET['mode'];
@@ -54,6 +54,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MSPR_ADMIN"))) {
 			if (count($att_reqs) > 0) {
 			?>
 			<table id="mspr-class-list" class="tableList">
+				<col width="36%" />
+				<col width="10%" />
+				<col width="25%" />
+				<col width="25%" />
+				<col width="4%" />
 				<thead>
 					<tr>
 						<td class="general">
@@ -67,6 +72,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MSPR_ADMIN"))) {
 						</td>
 						<td class="general">
 							Documents
+						</td>
+						<td class="general">
+							Edit
 						</td>
 						
 					</tr>
@@ -94,25 +102,29 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MSPR_ADMIN"))) {
 							}
 							?>
 						</td>
-						<td>
-							<?php
-								$revision = $mspr->getGeneratedTimestamp();
-								if (!$revision) {
-									$revisions = $mspr->getMSPRRevisions();
-									if ($revisions) {
-										$revision = array_shift($revisions);
-									}
+						<?php
+							$revision = $mspr->getGeneratedTimestamp();
+							if (!$revision) {
+								$revisions = $mspr->getMSPRRevisions();
+								if ($revisions) {
+									$revision = array_shift($revisions);
 								}
-		
-								if ($revision) {
-								?>
-									<a href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr-revisions&id=<?php echo $user_id; ?>&get=html&revision=<?php echo $revision; ?>"><img src="<?php echo ENTRADA_URL; ?>/serve-icon.php?ext=html" /> HTML</a> <a href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr-revisions&id=<?php echo $user_id; ?>&get=pdf&revision=<?php echo $revision; ?>"><img src="<?php echo ENTRADA_URL; ?>/serve-icon.php?ext=pdf" /> PDF</a> (<a href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr-revisions&id=<?php echo $user_id; ?>">revisions</a>)		
-								<?php
-								} else {
-									echo "None";
-								} 						
+							}
+	
+							if ($revision) {
 							?>
-						</td>
+							<td>
+								<a href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr-revisions&id=<?php echo $user_id; ?>&get=html&revision=<?php echo $revision; ?>"><img src="<?php echo ENTRADA_URL; ?>/serve-icon.php?ext=html" /> HTML</a> <a href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr-revisions&id=<?php echo $user_id; ?>&get=pdf&revision=<?php echo $revision; ?>"><img src="<?php echo ENTRADA_URL; ?>/serve-icon.php?ext=pdf" /> PDF</a> (<a href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr-revisions&id=<?php echo $user_id; ?>">revisions</a>)		
+							</td>
+							<td><?php if ($mspr->isClosed()) {?>
+								<a href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr-edit&id=<?php echo $user_id; ?>&from=attention"><img src="<?php echo ENTRADA_URL; ?>/images/btn-edit.gif" alt="Edit icon" title="Manual Edit" /></a>
+								<?php } ?>
+							</td>
+						<?php
+							} else {
+								echo "<td>None</td><td>&nbsp;</td>";
+							} 						
+						?>				
 					</tr>
 					<?php 
 					} 
@@ -242,10 +254,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MSPR_ADMIN"))) {
 					<input type="hidden" name="year" value="<?php echo $year; ?>" />  
 					<table id="mspr-class-list" class="tableList">
 						<col width="3%"  />
-						<col width="37%" />
+						<col width="33%" />
 						<col width="10%" />
 						<col width="25%" />
 						<col width="25%" />
+						<col width="4%" />
 						<thead>
 							<tr>
 								<td class="general">
@@ -263,7 +276,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MSPR_ADMIN"))) {
 								<td class="general">
 									Documents
 								</td>
-								
+								<td class="general">
+									Edit
+								</td>
 							</tr>
 						</thead>
 						<tbody>
@@ -292,8 +307,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MSPR_ADMIN"))) {
 									}
 									?>
 								</td>
-								<td>
-									<?php
+								<?php
 									$revision = $mspr->getGeneratedTimestamp();
 									if (!$revision) {
 										$revisions = $mspr->getMSPRRevisions();
@@ -304,13 +318,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MSPR_ADMIN"))) {
 			
 									if ($revision) {
 									?>
+									<td>
 										<a href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr-revisions&id=<?php echo $user_id; ?>&get=html&revision=<?php echo $revision; ?>"><img src="<?php echo ENTRADA_URL; ?>/serve-icon.php?ext=html" /> HTML</a> <a href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr-revisions&id=<?php echo $user_id; ?>&get=pdf&revision=<?php echo $revision; ?>"><img src="<?php echo ENTRADA_URL; ?>/serve-icon.php?ext=pdf" /> PDF</a> (<a href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr-revisions&id=<?php echo $user_id; ?>">revisions</a>)		
-									<?php
+									</td>
+									<td><?php if ($mspr->isClosed()) {?>
+										<a href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr-edit&id=<?php echo $user_id; ?>&from=class"><img src="<?php echo ENTRADA_URL; ?>/images/btn-edit.gif" alt="Edit icon" title="Manual Edit" /></a>
+										<?php } ?>
+									</td>
+								<?php
 									} else {
-										echo "None";
+										echo "<td>None</td><td>&nbsp;</td>";
 									} 						
-									?>
-								</td>
+								?>
 							</tr>
 							<?php } ?>
 						</tbody>

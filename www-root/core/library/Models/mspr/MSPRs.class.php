@@ -16,18 +16,18 @@ class MSPRs extends Collection {
 		$query		= "select * from `student_mspr` a 
 						left join `".AUTH_DATABASE."`.`user_data` b 
 						on a.user_id = b.id
-						where `organisation_id`=".$db->qstr($ORGANISATION_ID)."
+						where `organisation_id`=?
 						order by lastname, firstname";
 		
-		$results	= $db->GetAll($query);
+		$results	= $db->GetAll($query, array($ORGANISATION_ID));
 		$msprs = array();
 		if ($results) {
 			foreach ($results as $result) {
 				
 				//unfortunate but cuts down on db requests by including this in the main query
-				$user =  new User($result['id'],$result['username'],$result['firstname'],$result['lastname'],$result['number'],$result['grad_year'],$result['entry_year'],$result['password'],$result['organization_id'],$result['department'],$result['prefix'],$result['email'],$result['email_alt'],$result['google_id'],$result['telephone'],$result['fax'],$result['address'],$result['city'],$result['province'],$result['postcode'],$result['country'],$result['country_id'],$result['province_id'],$result['notes'],$result['privacy_level'],$result['notifications'],$result['office_hours'],$result['clinical']);
+				$user =  User::fromArray($result);
 				
-				$mspr = new MSPR( $result['id'], $result['last_update'], $result['closed'], $result['generated']);
+				$mspr = MSPR::fromArray($result);
 				$msprs[] = $mspr;
 			}
 		}
@@ -52,9 +52,9 @@ class MSPRs extends Collection {
 		if ($results) {
 			foreach ($results as $result) {
 				
-				$user =  new User($result['id'],$result['username'],$result['firstname'],$result['lastname'],$result['number'],$result['grad_year'],$result['entry_year'],$result['password'],$result['organization_id'],$result['department'],$result['prefix'],$result['email'],$result['email_alt'],$result['google_id'],$result['telephone'],$result['fax'],$result['address'],$result['city'],$result['province'],$result['postcode'],$result['country'],$result['country_id'],$result['province_id'],$result['notes'],$result['privacy_level'],$result['notifications'],$result['office_hours'],$result['clinical']);
+				$user =  User::fromArray($result);
 				
-				$mspr = new MSPR( $result['id'], $result['last_update'], $result['closed'], $result['generated']);
+				$mspr = MSPR::fromArray($result);
 				$msprs[] = $mspr;
 			}
 		}

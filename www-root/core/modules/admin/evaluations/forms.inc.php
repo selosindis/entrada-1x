@@ -2,6 +2,19 @@
 /**
  * Entrada [ http://www.entrada-project.org ]
  *
+ * Entrada is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Entrada is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Entrada.  If not, see <http://www.gnu.org/licenses/>.
+ *
  * Secondary controller file used by the forms module within the evaluations module.
  * /admin/evaluations/forms
  *
@@ -17,9 +30,8 @@ if (!defined("IN_EVALUATIONS")) {
 } elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	header("Location: ".ENTRADA_URL);
 	exit;
-} elseif (!$ENTRADA_ACL->amIAllowed("evaluations", "update")) {
-	$ERROR++;
-	$ERRORSTR[]	= "You do not have the permissions required to use this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
+} elseif (!$ENTRADA_ACL->amIAllowed("evaluationform", "read")) {
+	add_error("You do not have the permissions required to use this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.");
 
 	echo display_error();
 
@@ -27,7 +39,39 @@ if (!defined("IN_EVALUATIONS")) {
 } else {
 	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/evaluations/forms", "title" => "Manage Forms");
 
+	$FORM_ID = 0;
+	$ALLOW_QUESTION_MODIFICATIONS = false;
+	$EVALUATION_TARGETS = array();
+
+	if (isset($_GET["id"]) && ($tmp_input = clean_input($_GET["id"], array("trim", "int")))) {
+		$FORM_ID = $tmp_input;
+	} elseif (isset($_POST["id"]) && ($tmp_input = clean_input($_POST["id"], array("trim", "int")))) {
+		$FORM_ID = $tmp_input;
+	}
+
 	if (($router) && ($router->initRoute())) {
+		/**
+		 * Check to see if we can add / modify / delete questions from an evaluation form.
+		 */
+		if ((int) $FORM_ID) {
+			$query	= "SELECT COUNT(*) AS `total` FROM `evaluations` WHERE `eform_id` = ".$db->qstr($FORM_ID);
+			$result = $db->GetRow($query);
+			if ((!$result) || ((int) $result["total"] === 0)) {
+				$ALLOW_QUESTION_MODIFICATIONS = true;
+			}
+		}
+
+		/**
+		 * Fetch a list of available evaluation targets that can be used as Form Types.
+		 */
+		$query = "SELECT * FROM `evaluations_lu_targets` WHERE `target_active` = '1' ORDER BY `target_title` ASC";
+		$results = $db->GetAll($query);
+		if ($results) {
+			foreach ($results as $result) {
+				$EVALUATION_TARGETS[$result["target_id"]] = $result;
+			}
+		}
+
 		$module_file = $router->getRoute();
 		if ($module_file) {
 			require_once($module_file);

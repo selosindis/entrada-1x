@@ -136,6 +136,7 @@ if (!defined("IN_REGIONALED")) {
 				ON e.`user_id` = d.`id`
 				AND e.`app_id` = ".$db->qstr(AUTH_APP_ID)."
 				WHERE a.`confirmed` = '0'
+				AND a.`inhabiting_finish` > UNIX_TIMESTAMP()
 				ORDER BY a.`inhabiting_start` ASC";
 	$results = $db->GetAll($query);
 	if ($results) {

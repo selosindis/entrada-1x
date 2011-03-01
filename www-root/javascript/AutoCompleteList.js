@@ -11,13 +11,15 @@ var AutoCompleteList = function() {
 		var onUnderLimit = options.onUnderLimit;
 		
 		var self = this;
-
+		
 		if (!onOverLimit) {
 			var onOverLimit = function() {
 				//hide the input box/add button
 				$(type + '_name').hide();
 				$('add_associated_'+type).hide();
-				$(type + "_example").hide();
+				var example = $(type + "_example");
+				if (example)
+					example.hide();
 				
 			}
 		}
@@ -27,8 +29,9 @@ var AutoCompleteList = function() {
 				//hide the input box/add button
 				$(type + '_name').show();
 				$('add_associated_'+type).show();
-				$(type + "_example").show();
-				
+				var example = $(type + "_example");
+				if (example)
+					example.show();
 			}
 		}
 		
@@ -42,9 +45,9 @@ var AutoCompleteList = function() {
 		
 		this.addItem = function () {
 			if (($(type+'_id') != null) && ($(type+'_id').value != '') && ($(type+'_'+$(type+'_id').value) == null)) {
-				var li = new Element('li', {'class':'community', 'id':type+'_'+$(type+'_id').value, 'style':'cursor: move;'}).update($(type+'_name').value);
-				var img = new Element('img', {'class' : 'list-cancel-image', 'src':remove_image} );
 				var id = $(type+'_id').value;
+				var li = new Element('li', {'id':type+'_'+id, 'style':'cursor: move;'}).update($(type+'_name').value).addClassName('community');
+				var img = new Element('img', {'src':remove_image} ).addClassName('list-cancel-image');
 				$(type+'_name').value = '';
 				li.insert({bottom:img});
 				$(type+'_id').value	= '';

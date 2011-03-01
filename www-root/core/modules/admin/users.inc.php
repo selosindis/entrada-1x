@@ -66,3 +66,14 @@ if (!defined("PARENT_INCLUDED")) {
 		preferences_update($MODULE, $PREFERENCES);
 	}
 }
+
+function add_manage_user_sidebar(){
+	global $ENTRADA_ACL, $PROXY_ID;
+	$baseurl = ENTRADA_URL."/admin/users";
+	$sidebar_html  = "<ul class=\"menu\">";
+	$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/users/metadata\">Manage User Meta Data</a></li>\n";
+	$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/mspr\">Manage MSPRs</a></li>\n";
+	$sidebar_html .= "</ul>";
+	
+	new_sidebar_item("User Management", $sidebar_html, "user-management-nav", "open");
+}

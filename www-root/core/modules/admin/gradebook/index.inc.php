@@ -27,7 +27,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 } elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	header("Location: ".ENTRADA_URL);
 	exit;
-} elseif(!$ENTRADA_ACL->amIAllowed("gradebook", "read", false)) {
+} elseif(!$ENTRADA_ACL->amIAllowed("gradebook", "update", false)) {
 	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/".$MODULE."\\'', 15000)";
 
 	$ERROR++;

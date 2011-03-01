@@ -48,7 +48,20 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 	
 	echo "<h1>Add Activity Profile</h1>";
 	
-	if($_SESSION["details"]["clinical_member"]) {
+	$departments = get_user_departments($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]);
+	foreach($departments as $department) {
+		if($parent = fetch_department_parent($department["department_id"])) {
+			$department["department_title"] = fetch_department_title($parent);
+		}
+		
+		if(isset($departmentString)) {
+			$departmentString = $departmentString . ", " . $department["department_title"];
+		} else {
+			$departmentString = $department["department_title"];
+		}
+	}
+	
+	if(!$_SESSION["details"]["clinical_member"]) {
 		// Error Checking
 		switch($STEP) {
 		case 2 :
@@ -58,8 +71,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			if((isset($_POST["percentage_education"])) && ($education = clean_input($_POST["percentage_education"], array("float", "trim")))) {				
 				$PROCESSED["education"] = $education;				
 			} else {
-				$ERROR++;
-				$ERRORSTR[] = "The <strong>% Education</strong> field is required.";
+				$PROCESSED["education"] = 0.00;
 			}
 			/**
 			 * Required field "research" / Scholarship / Research
@@ -67,8 +79,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			if((isset($_POST["percentage_research"])) && (($research = clean_input($_POST["percentage_research"], array("float", "trim"))))) {
 				$PROCESSED["research"] = $research;
 			} else {
-				$ERROR++;
-				$ERRORSTR[] = "The <strong>% Scholarship / Research</strong> field is required.";
+				$PROCESSED["research"] = 0.00;
 			}
 			/**
 			 * Required field "service" / Service / Administration
@@ -76,8 +87,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			if((isset($_POST["percentage_service"])) && ($service = clean_input($_POST["percentage_service"], array("float", "trim")))) {
 				$PROCESSED["service"] = $service;
 			} else {
-				$ERROR++;
-				$ERRORSTR[] = "The <strong>% Service / Administration</strong> field is required.";
+				$PROCESSED["service"] = 0.00;
 			}
 			/**
 			 * Required field "total" / Total
@@ -352,14 +362,14 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 				<td></td>
 				<td style="vertical-align: top"><label for="department" class="form-required">Departmental Association</label></td>
 				<td><input type="text" id="department" name="department" 
-				value="<?php echo (html_encode($PROCESSED["department"]) != "" ? $PROCESSED["department"] : $department); ?>" style="width: 500px" /></td>
+				value="<?php echo (html_encode($PROCESSED["department"]) != "" ? $PROCESSED["department"] : $departmentString); ?>" style="width: 500px" /></td>
 			</tr>
 			<tr>
 				<td></td>
 				<td style="vertical-align: top"><label for="cross_department" class="form-nrequired">Cross Department(s)</label></td>
 				<td><input type="text" id="cross_department" name="cross_department" 
-				value="<?php echo (html_encode($PROCESSED["cross_department"]) != "" ? $PROCESSED["cross_department"] : $crossAppointments); ?>" style="width: 500px" />
-				<div class="content-small" style="width: 95%"><strong>Note:</strong> The department fields have been populated for you, you can change these if you so desire.</div></td>
+				value="<?php echo (html_encode($PROCESSED["cross_department"]) != "" ? $PROCESSED["cross_department"] : ""); ?>" style="width: 500px" />
+				<div class="content-small" style="width: 95%"><strong>Note:</strong> The department field has been populated for you, you can edit it if you so desire. This is what will appear on the cover of your annual report.</div></td>
 			</tr>
 			<tr>
 				<td colspan="3">&nbsp;</td>
@@ -441,8 +451,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			if((isset($_POST["percentage_education"])) && ($education = clean_input($_POST["percentage_education"], array("float", "trim")))) {				
 				$PROCESSED["education"] = $education;				
 			} else {
-				$ERROR++;
-				$ERRORSTR[] = "The <strong>% Education Outside Clinical Setting</strong> field is required.";
+				$PROCESSED["education"] = 0.00;
 			}
 			/**
 			 * Required field "research" / Scholarship / Research
@@ -450,8 +459,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			if((isset($_POST["percentage_research"])) && (($research = clean_input($_POST["percentage_research"], array("float", "trim"))))) {
 				$PROCESSED["research"] = $research;
 			} else {
-				$ERROR++;
-				$ERRORSTR[] = "The <strong>% Scholarship / Research</strong> field is required.";
+				$PROCESSED["research"] = 0.00;
 			}
 			/**
 			 * Required field "clinical" / Non-Teaching Clinical Activity
@@ -459,8 +467,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			if((isset($_POST["percentage_clinical"])) && ($clinical = clean_input($_POST["percentage_clinical"], array("float", "trim")))) {
 				$PROCESSED["clinical"] = $clinical;
 			} else {
-				$ERROR++;
-				$ERRORSTR[] = "The <strong>% Non-Teaching Clinical Activity</strong> field is required.";
+				$PROCESSED["clinical"] = 0.00;
 			}
 			/**
 			 * Required field "combined" / Combined Clinical / Education Activity
@@ -468,8 +475,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			if((isset($_POST["percentage_combined"])) && ($combined = clean_input($_POST["percentage_combined"], array("float", "trim")))) {
 				$PROCESSED["combined"] = $combined;
 			} else {
-				$ERROR++;
-				$ERRORSTR[] = "The <strong>% Combined Clinical/Education Activity</strong> field is required.";
+				$PROCESSED["combined"] = 0.00;
 			}
 			/**
 			 * Required field "service" / Service / Administration
@@ -477,8 +483,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			if((isset($_POST["percentage_service"])) && ($service = clean_input($_POST["percentage_service"], array("float", "trim")))) {
 				$PROCESSED["service"] = $service;
 			} else {
-				$ERROR++;
-				$ERRORSTR[] = "The <strong>% Service / Administration</strong> field is required.";
+				$PROCESSED["service"] = 0.00;
 			}
 			/**
 			 * Required field "total" / Total
@@ -979,14 +984,14 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 				<td></td>
 				<td style="vertical-align: top"><label for="department" class="form-required">Departmental Association</label></td>
 				<td><input type="text" id="department" name="department" 
-				value="<?php echo (html_encode($PROCESSED["department"]) != "" ? $PROCESSED["department"] : $department); ?>" style="width: 500px" /></td>
+				value="<?php echo (html_encode($PROCESSED["department"]) != "" ? $PROCESSED["department"] : $departmentString); ?>" style="width: 500px" /></td>
 			</tr>
 			<tr>
 				<td></td>
 				<td style="vertical-align: top"><label for="cross_department" class="form-nrequired">Cross Department(s)</label></td>
 				<td><input type="text" id="cross_department" name="cross_department" 
-				value="<?php echo (html_encode($PROCESSED["cross_department"]) != "" ? $PROCESSED["cross_department"] : $crossAppointments); ?>" style="width: 500px" />
-				<div class="content-small" style="width: 95%"><strong>Note:</strong> The department fields have been populated for you, you can change these if you so desire. This is what will appear on the cover of your annual report.</div></td>
+				value="<?php echo (html_encode($PROCESSED["cross_department"]) != "" ? $PROCESSED["cross_department"] : ""); ?>" style="width: 500px" />
+				<div class="content-small" style="width: 95%"><strong>Note:</strong> The department field has been populated for you, you can edit it if you so desire. This is what will appear on the cover of your annual report.</div></td>
 			</tr>
 			<tr>
 				<td colspan="3">&nbsp;</td>

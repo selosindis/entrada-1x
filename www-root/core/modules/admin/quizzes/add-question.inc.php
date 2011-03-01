@@ -168,7 +168,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						/**
 						 * Get the next order of this question from the quiz_questions table.
 						 */
-						$query	= "SELECT MAX(`question_order`) AS `next_order` FROM `quiz_questions` WHERE `quiz_id` = ".$db->qstr($RECORD_ID);
+						$query	= "SELECT MAX(`question_order`) AS `next_order` FROM `quiz_questions` WHERE `quiz_id` = ".$db->qstr($RECORD_ID)." AND `question_active` = '1'";
 						$result = $db->GetRow($query);
 						if ($result) {
 							$PROCESSED["question_order"] = ($result["next_order"] + 1);
@@ -232,7 +232,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 
 										switch ($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"]) {
 											case "new" :
-												$url	= ENTRADA_URL."/admin/".$MODULE."?section=add-question&amp;id=".$RECORD_ID;
+												$url	= ENTRADA_URL."/admin/".$MODULE."?section=add-question&id=".$RECORD_ID;
 												$msg	= "You will now be redirected to add another quiz question to this quiz; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 											break;
 											case "index" :

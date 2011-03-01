@@ -12,7 +12,7 @@ class LeavesOfAbsence extends Collection {
 		if ($results) {
 			$frs = array();
 			foreach ($results as $result) {
-				$fr =  new LeaveOfAbsence($user, $result['id'], $result['absence_details']);
+				$fr =  LeaveOfAbsence::fromArray($result);
 				$frs[] = $fr;
 			}
 			return new self($frs);

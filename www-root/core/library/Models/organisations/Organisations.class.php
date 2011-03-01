@@ -22,10 +22,6 @@
  *
 */
 
-require_once("Models/utility/SimpleCache.class.php");
-require_once("Organisation.class.php");
-require_once("Models/utility/Collection.class.php");
-
 /**
  * Utility Class for getting a list of Users
  * 

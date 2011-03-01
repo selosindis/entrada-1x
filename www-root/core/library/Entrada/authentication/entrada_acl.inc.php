@@ -2,16 +2,6 @@
 /**
  * Entrada [ http://www.entrada-project.org ]
  *
- * This is the main controller file for Entrada.
- *
- * @author Organisation: Queen's University
- * @author Unit: School of Medicine
- * @author Developer: Harry Brundage <hbrundage@qmed.ca>
- * @copyright Copyright 2010 Queen's University. All Rights Reserved.
- *
-*/
-
-/**
  * Entrada Resource Tree Builder
  *
  * Used to create an ACL tree of Zend_ACL resources for application of permissions after.
@@ -19,6 +9,7 @@
  * @author Organisation: Queen's University
  * @author Unit: School of Medicine
  * @author Developer: Harry Brundage <hbrundage@qmed.ca>
+ * @author Developer: James Ellis <james.ellis@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  */
 class Entrada_ACL extends ACL_Factory {
@@ -35,6 +26,11 @@ class Entrada_ACL extends ACL_Factory {
 					"eventcontent"
 				)
 			),
+			"evaluation" => array (
+				"evaluationform" => array (
+					"evaluationformquestion"
+				),
+			),
 			"gradebook" => array(
 				"assessment"
 			),
@@ -50,6 +46,7 @@ class Entrada_ACL extends ACL_Factory {
 				"logbook",
 				"lottery"
 			),
+			"term",
 			"objective",
 			"clerkshipschedules",
 			"discussion",
@@ -73,7 +70,8 @@ class Entrada_ACL extends ACL_Factory {
 				"quizresult"
 			),
 			"user" => array (
-				"incident"
+				"incident",
+				"metadata"
 			),
 			"assistant_support",
 			"resourceorganisation",
@@ -83,13 +81,14 @@ class Entrada_ACL extends ACL_Factory {
 									"reports"
 									),
 			"annualreport",
+			"annualreportadmin",
+			"anonymous-feedback",
 			"task" => array(
 				"taskverification",
 				"tasktab"
 			),
 			"mydepartment",
-			"myowndepartment",
-			"annualreportadmin"
+			"myowndepartment"
 		)
 	);
 	/**
@@ -179,11 +178,13 @@ class Entrada_ACL extends ACL_Factory {
 		if($resource instanceof Zend_Acl_Resource_Interface) {
 			$resource->assert = $assert;
 		} else {
-			$resource = new EntradaAclResource($resource, $assert);
+		 	$resource = new EntradaAclResource($resource, $assert);
 		}
+
 		if(!($user instanceof Zend_Acl_Role_Interface)) {
 			$user = new EntradaUser($user);
 		}
+
 		return $this->acl->isAllowed($user, $resource, $action);
 	}
 
@@ -214,6 +215,7 @@ class Entrada_ACL extends ACL_Factory {
 		$user->details = $_SESSION["details"];
 		return $this->isAllowed($user, $resource, $action, $assert);
 	}
+
 	/**
 	 * Constructs and populates Zend_Acl_Interface
 	 * with all the resources referenced by the role-resource permissions generated in _fetchPermissions().
@@ -279,19 +281,22 @@ class Entrada_ACL extends ACL_Factory {
 		foreach($permission_masks as $proxy_id => $permission_mask) {
 		//Initialize variables for use throughout creation
 			$cur_proxy_id			= $proxy_id;
-			$cur_role           		= $permission_mask["role"];
+			$cur_role           	= $permission_mask["role"];
 			$cur_group  			= $permission_mask["group"];
-			$cur_organisation_id                = $permission_mask["organisation_id"];
+			$cur_organisation_id    = $permission_mask["organisation_id"];
 
 			$query[] = "($table.`entity_value` = '".$cur_proxy_id."' AND $table.`entity_type` = 'user') OR
 								($table.`entity_value` = '".$cur_role."' AND $table.`entity_type` = 'role') OR
 								($table.`entity_value` = '".$cur_group."' AND $table.`entity_type` = 'group') OR
 								($table.`entity_value` = '".$cur_organisation_id."' AND $table.`entity_type` = 'organisation') OR
 								($table.`entity_value` = '".$cur_group.":".$cur_role."' AND $table.`entity_type` = 'group:role') OR
+								($table.`entity_value` = '".$cur_organisation_id.":".$cur_group."' AND $table.`entity_type` = 'organisation:group') OR
 								($table.`entity_value` = '".$cur_organisation_id.":".$cur_group.":".$cur_role."' AND $table.`entity_type` = 'organisation:group:role') OR ";
 		}
 
 		$query[] = "($table.`entity_value` IS NULL AND $table.`entity_type` IS NULL)\n";
+		$query[] = "AND ($table.`app_id` IS NULL OR $table.`app_id` = '".AUTH_APP_ID."')\n";
+
 		$query[] = "ORDER BY $table.`resource_value` ASC, $table.`entity_value` ASC;";
 
 		$complete_query = "";
@@ -332,7 +337,6 @@ class MultipleAssertion implements Zend_Acl_Assert_Interface {
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  */
 class CourseOwnerAssertion implements Zend_Acl_Assert_Interface {
-
 /**
  * Asserts that the role references the director, coordinator, or secondary director of the course resource
  *
@@ -401,22 +405,100 @@ class CourseOwnerAssertion implements Zend_Acl_Assert_Interface {
 						OR b.`proxy_id` = ".$db->qstr($user_id)."
 						OR d.`proxy_id` = ".$db->qstr($user_id)."
 					)
-					AND a.`course_active` = '1'";
-		
-		$results = $db->GetRow($query);
-		if($results) {
-			foreach($results as $result) {
-				foreach(array("director_id", "coordinator", "admin_id") as $owner) {
-					if($result[$owner] == $user_id) {
-						return true;
-					}
+					AND a.`course_active` = '1'
+					LIMIT 0, 1";
+		$result = $db->GetRow($query);
+		if($result) {
+			foreach(array("director_id", "coordinator", "admin_id") as $owner) {
+				if($result[$owner] == $user_id) {
+					return true;
 				}
 			}
 		}
+
 		return false;
 	}
 }
 
+/**
+ * Course Enrollment Assertion
+ *
+ * Used to assert that proxy_id is enrolled in a particular course based on their membership status
+ * in the corresponding course website (community).
+ *
+ * @author Organisation: Queen's University
+ * @author Unit: School of Medicine
+ * @author Developer: Matt Simpson <simpson@queensu.ca>
+ * @copyright Copyright 2010 Queen's University. All Rights Reserved.
+ */
+class CourseEnrollmentAssertion implements Zend_Acl_Assert_Interface {
+
+	public function assert(Zend_Acl $acl, Zend_Acl_Role_Interface $role = null, Zend_Acl_Resource_Interface $resource = null, $privilege = null) {
+		//If asserting is off then return true right away
+		if((isset($resource->assert) && $resource->assert == false) || (isset($acl->_entrada_last_query) && isset($acl->_entrada_last_query->assert) && $acl->_entrada_last_query->assert == false)) {
+			return true;
+		}
+
+		if (isset($resource->course_id)) {
+			$course_id = $resource->course_id;
+		} else if(isset($acl->_entrada_last_query->course_id)) {
+			$course_id = $acl->_entrada_last_query->course_id;
+		} else {
+			// Parse out the user ID and course ID
+			$resource_id = $resource->getResourceId();
+			$resource_type = preg_replace('/[0-9]+/', "", $resource_id);
+
+			if($resource_type !== "course" && $resource_type !== "coursecontent") {
+				// This only asserts for users on courses.
+				return false;
+			}
+
+			$course_id = preg_replace("/[^0-9]+/", "", $resource_id);
+		}
+
+		$role_id = $role->getRoleId();
+		$user_id = preg_replace("/[^0-9]+/", "", $role_id);
+
+		if ($user_id == "") {
+			$role_id = $acl->_entrada_last_query_role->getRoleId();
+			$user_id = preg_replace("/[^0-9]+/", "", $role_id);
+		}
+
+		return $this->_checkCourseEnrollment($user_id, $course_id);
+	}
+
+	/**
+	 * Checks if the $user_id is an active member of the corresponding
+	 * course website (community).
+	 *
+	 * @param string|integer $user_id The proxy_id to be checked
+	 * @param string|integer $course_id The course id to be checked
+	 * @return boolean
+	 */
+	static function _checkCourseEnrollment($user_id, $course_id) {
+		global $db;
+
+		$query = "SELECT * FROM `community_courses` WHERE `course_id` = ".$db->qstr($course_id);
+		$result = $db->GetRow($query);
+		if ($result) {
+			$query = "SELECT * FROM `community_members` WHERE `community_id` = ".$db->qstr($result["community_id"])." AND `proxy_id` = ".$db->qstr($user_id)." AND `member_active` = 1";
+			$result = $db->GetRow($query);
+			if ($result) {
+				return true;
+			} else {
+				return false;
+			}
+		} else {
+			/**
+			 * If there is no course website associated with this course, then
+			 * allow them access to the course because there is no enrollment
+			 * defined.
+			 */
+
+			return true;
+		}
+	}
+}
 
 /**
  * Task Owner Assertion
@@ -468,13 +550,12 @@ class TaskOwnerAssertion implements Zend_Acl_Assert_Interface {
 			$role_id = $acl->_entrada_last_query_role->getRoleId();
 			$user_id	= preg_replace('/[^0-9]+/', "", $role_id);
 		}
-		
-		require_once("Models/users/User.class.php");
+
+		require_once("Entrada/tasks/functions.inc.php");
 		$user = User::get($user_id);
-		
-		require_once("Models/tasks/Task.class.php");
+
 		$task = Task::get($task_id);
-		
+
 		if ($task && $user) {
 			return 	$task->isOwner($user);
 		} else {
@@ -496,6 +577,7 @@ class TaskRecipientAssertion implements Zend_Acl_Assert_Interface {
  * @return boolean
  */
 	public function assert(Zend_Acl $acl, Zend_Acl_Role_Interface $role = null, Zend_Acl_Resource_Interface $resource = null, $privilege = null) {
+		
 		//If asserting is off then return true right away
 		if((isset($resource->assert) && $resource->assert == false) || (isset($acl->_entrada_last_query) && isset($acl->_entrada_last_query->assert) && $acl->_entrada_last_query->assert == false)) {
 			return true;
@@ -524,11 +606,11 @@ class TaskRecipientAssertion implements Zend_Acl_Assert_Interface {
 			$role_id = $acl->_entrada_last_query_role->getRoleId();
 			$user_id	= preg_replace('/[^0-9]+/', "", $role_id);
 		}
+
+		require_once("Entrada/tasks/functions.inc.php");
 		
-		require_once("Models/users/User.class.php");
 		$user = User::get($user_id);
-		
-		require_once("Models/tasks/Task.class.php");
+
 		$task = Task::get($task_id);
 		if ($task && $user) {
 			return 	$task->isRecipient($user);
@@ -554,17 +636,19 @@ class TaskVerifierAssertion implements Zend_Acl_Assert_Interface {
 		if((isset($resource->assert) && $resource->assert == false) || (isset($acl->_entrada_last_query) && isset($acl->_entrada_last_query->assert) && $acl->_entrada_last_query->assert == false)) {
 			return true;
 		}
-
+		
 		if(isset($resource->task_id)) {
 			$task_id = $resource->task_id;
 		} else if(isset($acl->_entrada_last_query->task_id)) {
 			$task_id = $acl->_entrada_last_query->task_id;
 		} else {
-			
+
 			return false;
 			// TODO implement parsing of task_id, and recipient_id.
 		}
-
+		require_once("Models/tasks/Task.class.php");
+		$task = Task::get($task_id);
+		
 		$verifier_id = $resource->verifier_id;
 
 		if (!$verifier_id) {
@@ -576,32 +660,22 @@ class TaskVerifierAssertion implements Zend_Acl_Assert_Interface {
 			$role_id = $acl->_entrada_last_query_role->getRoleId();
 			$verifier_id	= preg_replace('/[^0-9]+/', "", $role_id);
 		}
-		
+
 		require_once("Models/users/User.class.php");
 		$verifier = User::get($verifier_id);
-		
+
 		$recipient_id = $resource->recipient_id;
 		
 		if ($recipient_id) {
-			require_once("Models/tasks/TaskCompletion.class.php");
-			$task = TaskCompletion::get($task_id, $recipient_id);
+			$recipient = User::get($recipient_id);
 		} else {
-			//might be a verifier checking the task 
+			//might be a verifier checking the task
 			$resource_id = $resource->getResourceId();
 			$resource_type = preg_replace('/[0-9]+/', "", $resource_id);
-			if ($resource_type == "task") {
-				require_once("Models/tasks/Task.class.php");
-				$task = Task::get($task_id);
-			} else {
-				return false;
-			}	
 		}
-		
 		if ($task && $verifier) {
-			return 	$task->isVerifier($verifier);
-		} else {
-			return false;
-		}
+			if ($task->isVerifier($verifier, $recipient)) return true;
+		}  
 	}
 }
 
@@ -624,27 +698,33 @@ class ShowTaskTabAssertion implements Zend_Acl_Assert_Interface {
 
 		$role_id = $role->getRoleId();
 		$user_id	= preg_replace('/[^0-9]+/', "", $role_id);
-		
+
 		if($user_id == "") {
 			$role_id = $acl->_entrada_last_query_role->getRoleId();
 			$user_id	= preg_replace('/[^0-9]+/', "", $role_id);
 		}
-		
+
 		if (!$user_id) {
 			return false;
 		}
-		
-		require_once("Models/users/User.class.php");
+
+		require_once("Entrada/tasks/functions.inc.php");
 		$user = User::get($user_id);
-		
-		require_once("Models/tasks/TaskCompletion.class.php");
+
 		$tasks_completions = TaskCompletions::getByRecipient($user, array('where' => 'verified_date IS NULL'));
 		$has_completions = (count($tasks_completions) > 0);
 
 		if ($has_completions) {
 			return true;
 		}
-		
+
+		$tasks = TaskVerifiers::getTasksByVerifier($user->getID(), array("dir"=>"desc", "order_by"=>"deadline"));
+    	$has_verification_auth = (count($tasks) >  0);
+	
+		if ($has_verification_auth) {
+			return true;
+		}
+    	
 		$task_verifications = TaskCompletions::getByVerifier($user->getID(), array("where" => "`verified_date` IS NULL" ));
 		$has_verification_requests = (count($task_verifications) > 0);
 
@@ -704,7 +784,7 @@ class GradebookOwnerAssertion extends CourseOwnerAssertion {
 
 		if($user_id == "") {
 			$role_id = $acl->_entrada_last_query_role->getRoleId();
-			$user_id	= preg_replace('/[^0-9]+/', "", $role_id);
+			$user_id = preg_replace('/[^0-9]+/', "", $role_id);
 		}
 		// Inherited from course owner assertion
 		return $this->_checkCourseOwner($user_id, $course_id);
@@ -741,7 +821,7 @@ class EventOwnerAssertion implements Zend_Acl_Assert_Interface {
 			$event_id = $acl->_entrada_last_query->event_id;
 		} else {
 			return false;
-			
+
 			$resource_id = $resource->getResourceId();
 			$resource_type = preg_replace('/[0-9]+/', "", $resource_id);
 
@@ -758,7 +838,7 @@ class EventOwnerAssertion implements Zend_Acl_Assert_Interface {
 
 		if($user_id == "") {
 			$role_id = $acl->_entrada_last_query_role->getRoleId();
-			$user_id = preg_replace('/[^0-9]+/', "", $role_id);
+			$user_id	= preg_replace('/[^0-9]+/', "", $role_id);
 		}
 
 		return $this->_checkEventOwner($user_id, $event_id);
@@ -773,7 +853,7 @@ class EventOwnerAssertion implements Zend_Acl_Assert_Interface {
 	 */
 	static function _checkEventOwner($user_id, $event_id) {
 		global $db;
-		
+
 		$query		= "	SELECT a.`event_id`, b.`proxy_id` AS `teacher`, c.`pcoord_id` AS `coordinator`, d.`proxy_id` AS `director_id`
 						FROM `events` AS a
 						LEFT JOIN `event_contacts` AS b
@@ -795,8 +875,40 @@ class EventOwnerAssertion implements Zend_Acl_Assert_Interface {
 				}
 			}
 		}
-		
+
 		return false;
+	}
+}
+
+/**
+ * Is Student Assertion
+ *
+ * Used to assert that the user referenced is a student
+ *
+ * @author Organisation: Queen's University
+ * @author Unit: School of Medicine
+ * @author Developer: Jonathan Fingland <jonathan.fingland@queensu.ca>
+ * @copyright Copyright 2010 Queen's University. All Rights Reserved.
+ */
+class IsStudentAssertion implements Zend_Acl_Assert_Interface {
+/**
+ * Asserts that the user group is student
+ *
+ * @param Zend_Acl $acl The ACL object isself (the one calling the assertion)
+ * @param Zend_Acl_Role_Interface $role The role being queried
+ * @param Zend_Acl_Resource_Interface $resource The resource being queried
+ * @param string $privilege The privilege being queried
+ * @return boolean
+ */
+	public function assert(Zend_Acl $acl, Zend_Acl_Role_Interface $role = null, Zend_Acl_Resource_Interface $resource = null, $privilege = null) {
+
+		if((isset($resource->assert) && $resource->assert == false) || (isset($acl->_entrada_last_query) && isset($acl->_entrada_last_query->assert) && $acl->_entrada_last_query->assert == false)) {
+			return true;
+		}
+
+		echo "Assertion required<br />";
+
+		return ($acl && $acl->_entrada_last_query_role && $acl->_entrada_last_query_role->details && $acl->_entrada_last_query_role->details->group == "student");
 	}
 }
 
@@ -822,11 +934,11 @@ class ResourceOrganisationAssertion implements Zend_Acl_Assert_Interface {
  */
 	public function assert(Zend_Acl $acl, Zend_Acl_Role_Interface $role = null, Zend_Acl_Resource_Interface $resource = null, $privilege = null) {
 		//Return true right away if asserting is off.
-		
+
 		if(((isset($resource->assert) && $resource->assert == false) || (isset($acl->_entrada_last_query) && isset($acl->_entrada_last_query->assert) && $acl->_entrada_last_query->assert == false)) || (isset($acl->_entrada_last_query) && isset($acl->_entrada_last_query->assert) && $acl->_entrada_last_query->assert == false)) {
 			return true;
 		}
-		
+
 		//If the organisation_id has been supplied then go right ahead and check to see if this organisation has this privledge
 		if(isset($resource->organisation_id) && $acl->has("resourceorganisation".$resource->organisation_id)) {
 			return $acl->isAllowed($role, "resourceorganisation".$resource->organisation_id, $privilege);
@@ -840,7 +952,7 @@ class ResourceOrganisationAssertion implements Zend_Acl_Assert_Interface {
 					global $db;
 					//Use the course ID if nessecary
 					if(isset($acl->_entrada_last_query->course_id) && $coourse_id != 0) {
-						$query	= "	SELECT `organisation_id` FROM `courses` 
+						$query	= "	SELECT `organisation_id` FROM `courses`
 									WHERE `course_id` = ".$db->qstr($acl->_entrada_last_query->course_id)."
 									AND `course_active` = '1'";
 						$result = $db->GetRow($query);
@@ -868,10 +980,12 @@ class ResourceOrganisationAssertion implements Zend_Acl_Assert_Interface {
 							}
 						}
 				}
-				
+
 				if(isset($organisation_id) && $acl->has("resourceorganisation".$organisation_id)) {
-				//Return this role's ability to preform this privilege on this organisation.
+					//Return this role's ability to preform this privilege on this organisation.
 					return $acl->isAllowed($role, "resourceorganisation".$organisation_id, $privilege);
+				} elseif (!isset($organisation_id) || !$organisation_id) {
+					return true;
 				}
 			}
 		}
@@ -989,6 +1103,7 @@ class CommunityMemberAssertion extends CommunityAssertion {
 		return false;
 	}
 }
+
 /**
  * Not Guest assertion class
  *
@@ -1026,6 +1141,42 @@ class NotGuestAssertion implements Zend_Acl_Assert_Interface {
 }
 
 /**
+ * Not Student assertion class
+ *
+ * Asserts that a role is not a student
+ */
+class NotStudentAssertion implements Zend_Acl_Assert_Interface {
+	public function assert(Zend_Acl $acl, Zend_Acl_Role_Interface $role = null, Zend_Acl_Resource_Interface $resource = null, $privilege = null) {
+		$role = $acl->_entrada_last_query_role;
+		if(isset($role->details) && isset($role->details["group"])) {
+			$GROUP = $role->details["group"];
+		} else {
+/**
+ * @todo This needs to be fixed, or perhaps this would never even happen? The user_data table doesn't contain group or role fields, that's in user_access.
+ */
+			$role_id = $role->getRoleId();
+			$user_id = preg_replace('/[^0-9]+/', "", $role_id);
+			$query = "SELECT `group`, `role` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($user_id);
+			$result = $db->GetRow($query);
+			if($result) {
+				$GROUP = $result["group"];
+			} else {
+			//Return false cause this person could be a guest.
+				return false;
+			}
+
+		}
+		if($GROUP == "student") {
+			return false;
+		}	 else {
+			return true;
+		}
+
+	}
+
+}
+
+/**
  * Clerkship Assertion Class
  *
  * Asserts that a role's graduating year makes it eligble for clerkship
@@ -1037,17 +1188,17 @@ class ClerkshipAssertion implements Zend_Acl_Assert_Interface {
 			if(isset($acl->_entrada_last_query_role)) {
 				$role = $acl->_entrada_last_query_role;
 				if(($role instanceof EntradaUser) || isset($role->details) || isset($role->details["grad_year"])) {
-					$GRAD_YEAR = $role->details["grad_year"];
+					$GRAD_YEAR = preg_replace("/[^0-9]+/i", "", $role->details["grad_year"]);
 				}
 			}
 		} else {
-			$GRAD_YEAR = $role->details["grad_year"];
+			$GRAD_YEAR = preg_replace("/[^0-9]+/i", "", $role->details["grad_year"]);
 		}
 
 		if(!isset($GRAD_YEAR)) {
 			return false;
 		}
-		
+
 		if((time() < $end_timestamp = mktime(0, 0, 0, 7, 13, $GRAD_YEAR)) && (time() >= strtotime("-23 months", $end_timestamp))) {
 			return true;
 		} else {
@@ -1078,7 +1229,7 @@ class ClerkshipLotteryAssertion implements Zend_Acl_Assert_Interface {
 		if(!isset($GRAD_YEAR)) {
 			return false;
 		}
-		
+
 		if((date("Y",strtotime("+2 Years")) == $GRAD_YEAR) && (time() >= CLERKSHIP_LOTTERY_START && time() <= CLERKSHIP_LOTTERY_FINISH)) {
 			return true;
 		} else {
@@ -1111,13 +1262,13 @@ class ClerkshipDirectorAssertion implements Zend_Acl_Assert_Interface {
 		if ((isset($proxy_id)) && ((int) $proxy_id)) {
 			if ((isset($AGENT_CONTACTS)) && (is_array($AGENT_CONTACTS)) && (isset($AGENT_CONTACTS["agent-clerkship"]["director_ids"]))) {
 				$director_ids = array();
-				
+
 				foreach ((array) $AGENT_CONTACTS["agent-clerkship"]["director_ids"] as $director_id) {
 					if ((int) $director_id) {
 						$director_ids[] = $director_id;
 					}
 				}
-				
+
 				if (count($director_ids)) {
 					if (in_array($proxy_id, $director_ids)) {
 						return true;
@@ -1125,7 +1276,7 @@ class ClerkshipDirectorAssertion implements Zend_Acl_Assert_Interface {
 				}
 			}
 		}
-		
+
 		return false;
 	}
 }
@@ -1188,7 +1339,7 @@ class QuizOwnerAssertion implements Zend_Acl_Assert_Interface {
 
 			$quiz_id = preg_replace('/[^0-9]+/', "", $resource_id);
 		}
-		
+
 		$role_id = $role->getRoleId();
 		$user_id	= preg_replace('/[^0-9]+/', "", $role_id);
 
@@ -1202,7 +1353,7 @@ class QuizOwnerAssertion implements Zend_Acl_Assert_Interface {
 
 	static function _checkQuizOwner($user_id, $quiz_id) {
 		global $db;
-		
+
 		$query		= "	SELECT a.`proxy_id`
 						FROM `quiz_contacts` AS a
 						WHERE a.`quiz_id` = ".$db->qstr($quiz_id);
@@ -1214,7 +1365,7 @@ class QuizOwnerAssertion implements Zend_Acl_Assert_Interface {
 				}
 			}
 		}
-		
+
 		return false;
 	}
 }
@@ -1235,13 +1386,13 @@ class EntradaAclResource implements Zend_Acl_Resource_Interface {
  * @var boolean
  */
 	var $assert = true;
-	
+
 	/**
 	 * Wheather or not this resource references as specific instance of it's resource type or the resource type. Used to drop down to blanket rules once is assured no rules concerning this instance have been defined
 	 * @var boolean
 	 */
 	var $specific = true;
-	
+
 	/**
 	 * The unique resource identifier of this object
 	 * @var string
@@ -1323,7 +1474,7 @@ class CourseResource extends EntradaAclResource {
  * @var integer
  */
 	var $course_id;
-	
+
 	/**
 	 * This course's organisation ID, used for ResourceOrganisationAssertion.
 	 * @see ResourceOrganisationAssertion()
@@ -1414,7 +1565,7 @@ class PhotoAssertion implements Zend_Acl_Assert_Interface {
 		if(($resource->proxy_id == $role->details["id"]) || ((($resource->photo_type == "official") && ((int) $resource->privacy_level >= 2)) || (($resource->photo_type == "upload") && ((int) $resource->privacy_level >= 2)))){
 			return true;
 		}
-		
+
 		return false;
 	}
 }
@@ -1478,7 +1629,7 @@ class EventResource extends EntradaAclResource {
 	 * @var integer
 	 */
 	var $course_id;
-	
+
 	/**
 	 * This event's parent course's organisation ID, used for ResourceOrganisationAssertion.
 	 * @see ResourceOrganisationAssertion()
@@ -1532,14 +1683,14 @@ class TaskResource extends EntradaAclResource {
 	 * @var integer
 	 */
 	var $course_id;
-	
+
 	/**
 	 * This event's parent course's organisation ID, used for ResourceOrganisationAssertion.
 	 * @see ResourceOrganisationAssertion()
 	 * @var integer
 	 */
 	var $organisation_id;
-	
+
 	/**
 	 * Creates this event resource with the supplied information
 	 * @param integer $event_id This event's ID
@@ -1587,11 +1738,11 @@ class TaskVerificationResource extends EntradaAclResource {
 	 * @var integer
 	 */
 	var $organisation_id;
-	
+
 	var $recipient_id;
-	
+
 	var $verifier_id;
-	
+
 	/**
 	 * Creates this event resource with the supplied information
 	 * @param integer $event_id This event's ID
@@ -1735,6 +1886,43 @@ class QuizQuestionResource extends QuizResource {
 	}
 }
 
+class EvaluationResource extends EntradaAclResource {
+	var $evaluation_id;
+
+	function __construct($evaluation_id, $assert = null) {
+		$this->evaluation_id = $evaluation_id;
+	}
+
+	public function getResourceId() {
+		return "evaluation".($this->specific ? $this->evaluation_id : "");
+	}
+}
+
+class EvaluationResultResource extends EvaluationResource {
+	public function getResourceId() {
+		return "evaluationresult".($this->specific ? $this->evaluation_id : "");
+	}
+}
+
+class EvaluationFormResource extends EvaluationResource {
+	public function getResourceId() {
+		return "evaluationform".($this->specific ? $this->evaluation_id : "");
+	}
+}
+
+class EvaluationFormQuestionResource extends EvaluationResource {
+	var $evaluation_form_question_id;
+
+	function __construct($evaluation_form_question_id, $evaluation_id, $assert = null) {
+		$this->evaluation_form_question_id = $evaluation_form_question_id;
+		$this->evaluation_id = $evaluation_id;
+	}
+
+	public function getResourceId() {
+		return "evaluationformquestion".($this->specific ? $this->evaluation_id : "");
+	}
+}
+
 class CommunityResource extends EntradaAclResource {
 	/**
 	 * This community's ID
@@ -1785,7 +1973,7 @@ class EntradaUser implements Zend_Acl_Role_Interface {
 class DepartmentHeadAssertion implements Zend_Acl_Assert_Interface {
 	public function assert(Zend_Acl $acl, Zend_Acl_Role_Interface $role = null, Zend_Acl_Resource_Interface $resource = null, $privilege = null) {
 		global $db;
-		
+
 		// This was done so that the correct proxy_id was being used as $role->details["id"] was not using the "masked" id.
 		// I'm sure there is a way to get this ID without using the SESSION but I needed to get this into production ASAP.
 		// I will fix this as soon as I find out how to access the masked ID without going through the session.
@@ -1794,7 +1982,7 @@ class DepartmentHeadAssertion implements Zend_Acl_Assert_Interface {
 		} else {
 			return true;
 		}
-		
+
 		return false;
 	}
 }

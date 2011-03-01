@@ -1,9 +1,4 @@
 <?php
-require_once("Models/utility/Collection.class.php");
-require_once("Task.class.php");
-require_once("Models/users/User.class.php");
-require_once("Models/courses/Course.class.php");
-require_once("Models/events/Event.class.php");
 
 class TaskOwners extends Collection {
 	

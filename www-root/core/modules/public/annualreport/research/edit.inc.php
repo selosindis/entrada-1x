@@ -42,7 +42,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 	$_SESSION["research_expand_grid"] = "research_grid";
 	
 	if($RESEARCH_ID) {
-		$query	= "SELECT * FROM `ar_research` WHERE `research_id`=".$db->qstr($RESEARCH_ID);
+		$query	= "SELECT * FROM `ar_research` WHERE `research_id`=".$db->qstr($RESEARCH_ID)." AND `proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]['tmp']['proxy_id']);
 		
 		$result	= $db->GetRow($query);
 		if($result) {

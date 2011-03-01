@@ -48,13 +48,14 @@ $PODCAST_OUTPUT		= array();
 
 $ACTION				= "notices";
 
+$USER_PROXY_ID		= 0;
 $USER_FIRSTNAME		= "";
 $USER_LASTNAME		= "";
 $USER_EMAIL			= "";
 $USER_ROLE			= "";
 $USER_GROUP			= "";
 
-if(!isset($_SERVER["PHP_AUTH_USER"])) {
+if (!isset($_SERVER["PHP_AUTH_USER"])) {
 	http_authenticate();
 } else {
 	require_once("Entrada/authentication/authentication.class.php");
@@ -68,11 +69,11 @@ if(!isset($_SERVER["PHP_AUTH_USER"])) {
 	$result = $auth->Authenticate(array("id", "firstname", "lastname", "email", "role", "group", "organisation_id"));
 
 	$ERROR = 0;
-	if($result["STATUS"] == "success") {
-		if(($result["ACCESS_STARTS"]) && ($result["ACCESS_STARTS"] > time())) {
+	if ($result["STATUS"] == "success") {
+		if (($result["ACCESS_STARTS"]) && ($result["ACCESS_STARTS"] > time())) {
 			$ERROR++;
 			application_log("error", "User[".$username."] tried to access account prior to activation date.");
-		} elseif(($result["ACCESS_EXPIRES"]) && ($result["ACCESS_EXPIRES"] < time())) {
+		} elseif (($result["ACCESS_EXPIRES"]) && ($result["ACCESS_EXPIRES"] < time())) {
 			$ERROR++;
 			application_log("error", "User[".$username."] tried to access account after expiration date.");
 		} else {
@@ -89,23 +90,23 @@ if(!isset($_SERVER["PHP_AUTH_USER"])) {
 		application_log("access", $result["MESSAGE"]);
 	}
 
-	if($ERROR) {
+	if ($ERROR) {
 		http_authenticate();
 	}
 
 	unset($username, $password);
 }
 
-if(isset($_GET['c']) && (trim($_GET["c"]))) {
-	$ACTION = 'channel';
-	$CHANNEL_ID = clean_input($_GET["c"], array('int'));
+if (isset($_GET["c"]) && (trim($_GET["c"]))) {
+	$ACTION = "channel";
+	$CHANNEL_ID = clean_input($_GET["c"], array("int"));
 }
 
-switch($ACTION) {
-	case 'channel':
+switch ($ACTION) {
+	case "channel":
 		continue;
 	break;
-	case 'notices':
+	case "notices":
 		$organisation = $db->GetRow("SELECT organisation_title FROM ".AUTH_DATABASE.".organisations WHERE organisation_id = ".$USER_ORGANISATION_ID);
 		$rss = new UniversalFeedCreator();
 		$rss->useCached();
@@ -115,48 +116,51 @@ switch($ACTION) {
 		$rss->link				= ENTRADA_URL."/dashboard";
 		$rss->syndicationURL	= ENTRADA_URL."/rss/";
 		
-		switch($USER_GROUP) {
+		switch ($USER_GROUP) {
 			case "alumni" :
 				$notice_where_clause	= "(a.`target` = 'all' OR a.`target` = 'alumni' OR a.`target` = ".$db->qstr("proxy_id:".((int) $USER_PROXY_ID)).")";
-				break;
+			break;
 			case "faculty" :
 				$notice_where_clause	= "(a.`target` = 'all' OR a.`target` = 'faculty' OR a.`target` = ".$db->qstr("proxy_id:".((int) $USER_PROXY_ID)).")";
-				break;
+			break;
 			case "medtech" :
 				$notice_where_clause	= "(a.`target` NOT LIKE 'proxy_id:%' OR a.`target` = ".$db->qstr("proxy_id:".((int) $USER_PROXY_ID)).")";
-				break;
+			break;
 			case "resident" :
 				$notice_where_clause	= "(a.`target` = 'all' OR a.`target` = 'resident' OR a.`target` = ".$db->qstr("proxy_id:".((int) $USER_PROXY_ID)).")";
-				break;
+			break;
 			case "staff" :
 				$notice_where_clause	= "(a.`target` = 'all' OR a.`target` = 'staff' OR a.`target` = ".$db->qstr("proxy_id:".((int) $USER_PROXY_ID)).")";
-				break;
+			break;
 			case "student" :
 			default :
 				$notice_where_clause	= "(".(((int) $_SESSION["details"]["grad_year"]) ? "a.`target`='".(int) $_SESSION["details"]["grad_year"]."' OR " : "")."a.`target` = 'all' OR a.`target` = 'students' OR a.`target` = ".$db->qstr("proxy_id:".((int) $USER_PROXY_ID)).")";
-				break;
+			break;
 		}
 		$notice_where_clause .= 'AND (a.`organisation_id` IS NULL OR a.`organisation_id` = '.$USER_ORGANISATION_ID.')';
-		$organisation = $db->GetRow("SELECT organisation_title FROM ".AUTH_DATABASE.".organisations WHERE organisation_id = ".$USER_ORGANISATION_ID);
-		$query	= "	SELECT a.*
+		$organisation = $db->GetRow("SELECT `organisation_title` FROM ".AUTH_DATABASE.".`organisations` WHERE `organisation_id` = ".$USER_ORGANISATION_ID);
+		$query = "	SELECT a.*
 					FROM `notices` AS a
 					WHERE ".(($notice_where_clause) ? $notice_where_clause." AND" : "")."
 					(a.`display_from`='0' OR a.`display_from` <= '".time()."')
 					ORDER BY a.`updated_date` DESC, a.`display_from` DESC";
-		$results	= ((USE_CACHE) ? $db->CacheGetAll(CACHE_TIMEOUT, $query) : $db->GetAll($query));
-		if($results) {
-			foreach($results as $result) {
+		$results = ((USE_CACHE) ? $db->CacheGetAll(CACHE_TIMEOUT, $query) : $db->GetAll($query));
+		if ($results) {
+			foreach ($results as $result) {
 				$item = new FeedItem();
-				$item->title		= "New Notice: ".date(DEFAULT_DATE_FORMAT, (int) $result["display_from"]);
-				$item->link			= ENTRADA_URL."/dashboard";
-				$item->description	= html_decode($result["notice_summary"]);
+				$item->title = "New Notice: ".date(DEFAULT_DATE_FORMAT, (int) $result["display_from"]);
+				$item->link = ENTRADA_URL."/dashboard";
+				$item->description = html_decode($result["notice_summary"]);
 				$item->descriptionHtmlSyndicated = true;
-				$item->date			= unixstamp_to_iso8601(((int) $result["display_from"]) ? $result["display_from"] : time());
-				$item->source		= ENTRADA_URL."/dashboard";
-				$item->author		= isset($organisation['title']) ? $organisation['title'] : 'Undergraduate Medical Office';
+				$item->date = unixstamp_to_iso8601(((int) $result["display_from"]) ? $result["display_from"] : time());
+				$item->source = ENTRADA_URL."/dashboard";
+				$item->author = isset($organisation["title"]) ? $organisation["title"] : APPLICATION_NAME;
 				$rss->addItem($item);
 			}
 		}
+		
 		echo $rss->createFeed();
-		break;
+
+		add_statistic("rss", "view", "proxy_id", $USER_PROXY_ID);
+	break;
 }

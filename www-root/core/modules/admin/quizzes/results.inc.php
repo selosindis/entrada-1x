@@ -41,35 +41,67 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 	if ($RECORD_ID) {
-		$query			= "	SELECT a.*, b.`course_id`, b.`event_title`, d.`audience_type`, d.`audience_value` AS `event_grad_year`, e.`quiz_title` AS `default_quiz_title`, e.`quiz_description` AS `default_quiz_description`, f.`quiztype_code`, g.`organisation_id`
-							FROM `event_quizzes` AS a
+		if ($QUIZ_TYPE == "event") {
+			$query		= "	SELECT a.*, b.`course_id`, b.`event_title` AS `content_title`, d.`audience_type`, d.`audience_value` AS `event_grad_year`, e.`quiz_title` AS `default_quiz_title`, e.`quiz_description` AS `default_quiz_description`, f.`quiztype_code`, g.`organisation_id`
+							FROM `attached_quizzes` AS a
 							LEFT JOIN `events` AS b
-							ON b.`event_id` = a.`event_id`
+							ON a.`content_type` = 'event' 
+							AND b.`event_id` = a.`content_id`
 							LEFT JOIN `event_audience` AS d
-							ON d.`event_id` = a.`event_id`
+							ON a.`content_type` = 'event' 
+							AND d.`event_id` = a.`content_id`
 							LEFT JOIN `quizzes` AS e
 							ON e.`quiz_id` = a.`quiz_id`
 							LEFT JOIN `quizzes_lu_quiztypes` AS f
 							ON f.`quiztype_id` = a.`quiztype_id`
 							LEFT JOIN `courses` AS g
 							ON g.`course_id` = b.`course_id`
-							WHERE a.`equiz_id` = ".$db->qstr($RECORD_ID)."
+							WHERE a.`aquiz_id` = ".$db->qstr($RECORD_ID)."
 							AND g.`course_active` = '1'";
+		} else {
+			$query		= "	SELECT a.*, b.`community_url`, b.`community_id`, bp.`page_title` AS `content_title`, bp.`page_url`, c.`quiz_title` AS `default_quiz_title`, c.`quiz_description` AS `default_quiz_description`, d.`quiztype_code`
+							FROM `attached_quizzes` AS a
+							LEFT JOIN `community_pages` AS bp
+							ON a.`content_type` = 'community_page' 
+							AND bp.`cpage_id` = a.`content_id`
+							LEFT JOIN `communities` AS b
+							ON b.`community_id` = bp.`community_id`
+							LEFT JOIN `quizzes` AS c
+							ON c.`quiz_id` = a.`quiz_id`
+							LEFT JOIN `quizzes_lu_quiztypes` AS d
+							ON d.`quiztype_id` = a.`quiztype_id`
+							WHERE a.`aquiz_id` = ".$db->qstr($RECORD_ID);
+		}
 		$quiz_record	= $db->GetRow($query);
 		if ($quiz_record) {
-			if (!$ENTRADA_ACL->amIAllowed(new EventContentResource($quiz_record["event_id"], $quiz_record["course_id"], $quiz_record["organisation_id"]), "update")) {
-				application_log("error", "Someone attempted to view the results of an equiz_id [".$RECORD_ID."] that they were not entitled to view.");
+			$community_access_query = "	SELECT * FROM `community_members`
+										WHERE `community_id` = ".$db->qstr($quiz_record["community_id"])."
+										AND `proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
+										AND `member_active` = '1'
+										AND `member_acl` = '1'";
+			if ($QUIZ_TYPE == "event" && !$ENTRADA_ACL->amIAllowed(new EventContentResource($quiz_record["content_id"], $quiz_record["course_id"], $quiz_record["organisation_id"]), "update")) {
+				application_log("error", "Someone attempted to view the results of an aquiz_id [".$RECORD_ID."] that they were not entitled to view.");
 
-				header("Location: ".ENTRADA_URL."/admin/events?section=content&id=".$quiz_record["event_id"]);
+				header("Location: ".ENTRADA_URL."/admin/events?section=content&id=".$quiz_record["content_id"]);
+				exit;
+			} elseif ($QUIZ_TYPE == "community_page" && !($db->GetRow($community_access_query))) {
+				application_log("error", "Someone attempted to view the results of an aquiz_id [".$RECORD_ID."] that they were not entitled to view.");
+
+				header("Location: ".ENTRADA_URL."/community/".$quiz_record["community_url"].":".$quiz_record["page_url"]);
 				exit;
 			} else {
 				$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/livepipe/progressbar.js?release=".APPLICATION_VERSION."\"></script>";
-
-				$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/events?section=content&id=".$quiz_record["event_id"], "title" => limit_chars($quiz_record["event_title"], 32));
-				$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/".$MODULE."?section=edit&id=".$quiz_record["quiz_id"], "title" => limit_chars($quiz_record["quiz_title"], 32));
+				if ($QUIZ_TYPE == "event") {
+					$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/events?section=content&id=".$quiz_record["content_id"], "title" => limit_chars($quiz_record["content_title"], 32));	
+				} else {
+					$BREADCRUMB[] = array("url" => ENTRADA_URL."/community".$quiz_record["community_url"].":".$quiz_record["page_url"], "title" => limit_chars($quiz_record["content_title"], 32));
+				}
+				if ($ENTRADA_ACL->amIAllowed(new EventContentResource($quiz_record["content_id"], $quiz_record["course_id"], $quiz_record["organisation_id"]), "update")) {
+					$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/".$MODULE."?section=edit&id=".$quiz_record["quiz_id"], "title" => limit_chars($quiz_record["quiz_title"], 32));
+				}
 				$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/".$MODULE."?section=results&id=".$RECORD_ID, "title" => "Quiz Results");
 
-				if ($quiz_record["audience_type"] == "grad_year") {
+				if ($QUIZ_TYPE == "event" && $quiz_record["audience_type"] == "grad_year") {
 					$event_grad_year = $quiz_record["event_grad_year"];
 				} else {
 					$event_grad_year = 0;
@@ -78,13 +110,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 				$calculation_targets			= array();
 				$calculation_targets["all"]		= "all quiz respondents";
 				$calculation_targets["student"]	= "all students";
-				$fyear = (date("Y", time()) + ((date("m", time()) < 7) ?  3 : 4));
-				for ($year = $fyear; $year >= ($fyear - 3); $year--) {
-					$calculation_targets["student:".$year]	= "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;class of ".$year;
+
+				$cut_off_year = (fetch_first_year() - 3);
+				if (isset($SYSTEM_GROUPS["student"]) && !empty($SYSTEM_GROUPS["student"])) {
+					foreach ($SYSTEM_GROUPS["student"] as $class) {
+						if (clean_input($class, "numeric") >= $cut_off_year) {
+							$calculation_targets["student:".$class]	= "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;class of ".$class;
+						}
+					}
 				}
+
 				if (($event_grad_year) && (!array_key_exists("student:".$event_grad_year, $calculation_targets))) {
 					$calculation_targets["student:".$event_grad_year] = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;class of ".$event_grad_year;
 				}
+				
 				$calculation_targets["resident"]	= "all residents";
 				$calculation_targets["faculty"]		= "all faculty";
 				$calculation_targets["staff"]		= "all staff";
@@ -142,7 +181,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 				} else {
 					echo "No Associated Course";
 				}
-				echo " &gt; ".html_encode($quiz_record["event_title"]);
+				echo " &gt; ".html_encode($quiz_record["content_title"]);
 				echo "</div>\n";
 				echo "<h1 class=\"event-title\">".html_encode($quiz_record["quiz_title"])."</h1>\n";
 
@@ -159,6 +198,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 					$query		= "	SELECT a.*
 									FROM `quiz_questions` AS a
 									WHERE a.`quiz_id` = ".$db->qstr($quiz_record["quiz_id"])."
+									AND a.`question_active` = '1'
 									ORDER BY a.`question_order` ASC";
 					$results	= $db->GetAll($query);
 					if ($results) {
@@ -171,6 +211,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 							$query		= "	SELECT a.*
 											FROM `quiz_question_responses` AS a
 											WHERE a.`qquestion_id` = ".$db->qstr($question["qquestion_id"])."
+											AND `response_active` = '1'
 											ORDER BY a.`response_order` ASC";
 							$responses	= $db->GetAll($query);
 							if ($responses) {
@@ -194,12 +235,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						$respondents	= $db->GetAll($query);
 					} else {
 						$query			= "	SELECT a.`proxy_id`, b.`number`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, c.`group`
-											FROM `event_quiz_progress` AS a
+											FROM `quiz_progress` AS a
 											LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
 											ON b.`id` = a.`proxy_id`
 											LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS c
 											ON c.`user_id` = a.`proxy_id`
-											WHERE a.`equiz_id` = ".$db->qstr($RECORD_ID)."
+											WHERE a.`aquiz_id` = ".$db->qstr($RECORD_ID)."
 											AND a.`progress_value` = 'complete'
 											".((($target_group != "all") && ($target_group)) ? " AND c.`group` = ".$db->qstr($target_group) : "")."
 											".((($target_group != "all") && ($target_role)) ? " AND c.`role` = ".$db->qstr($target_role) : "")."
@@ -211,10 +252,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 					if ($respondents) {
 						foreach ($respondents as $respondent) {
 							$query		= "	SELECT a.*
-											FROM `event_quiz_progress` AS a
-											WHERE a.`equiz_id` = ".$db->qstr($RECORD_ID)."
+											FROM `quiz_progress` AS a
+											WHERE a.`aquiz_id` = ".$db->qstr($RECORD_ID)."
 											AND a.`proxy_id` = ".$db->qstr($respondent["proxy_id"])."
-											AND a.`progress_value` = 'complete'";
+											AND a.`progress_value` = 'complete'
+											AND a.`content_type` = ".$db->qstr($QUIZ_TYPE);
 							switch ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["attempt"]) {
 								case "last" :
 									$query .= "	ORDER BY a.`updated_date` DESC
@@ -237,8 +279,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 									$attempts[$respondent["proxy_id"]][] = $result;
 
 									$query		= "	SELECT a.*
-													FROM `event_quiz_responses` AS a
-													WHERE a.`eqprogress_id` = ".$db->qstr($result["eqprogress_id"]);
+													FROM `quiz_progress_responses` AS a
+													JOIN `quiz_question_responses` AS b
+													ON a.`qqresponse_id` = b.`qqresponse_id`
+													WHERE a.`qprogress_id` = ".$db->qstr($result["qprogress_id"])."
+													AND a.`content_type` = ".$db->qstr($QUIZ_TYPE)."
+													AND b.`response_active` = '1'";
 									$responses = $db->GetAll($query);
 									if ($responses) {
 										foreach ($responses as $response) {
@@ -298,7 +344,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 							header("Content-Type: application/force-download");
 							header("Content-Type: application/octet-stream");
 							header("Content-Type: text/csv");
-							header("Content-Disposition: attachment; filename=\"".date("Y-m-d")."_".useable_filename($quiz_record["event_title"]."_".$quiz_record["quiz_title"]).".csv\"");
+							header("Content-Disposition: attachment; filename=\"".date("Y-m-d")."_".useable_filename($quiz_record["content_title"]."_".$quiz_record["quiz_title"]).".csv\"");
 							header("Content-Length: ".strlen($contents));
 							header("Content-Transfer-Encoding: binary\n");
 
@@ -420,9 +466,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 
 											echo "<tr>\n";
 											echo "	<td><img src=\"".ENTRADA_URL."/images/question-".((($quiz_percent > 60)) ? "correct" : "incorrect").".gif\" width=\"16\" height=\"16\" /></td>";
-											echo "	<td><a href=\"".ENTRADA_URL."/quizzes?section=results&amp;id=".$attempt["eqprogress_id"]."\">".html_encode((($respondent["group"] == "student") ? $respondent["number"] : 0))."</a></td>\n";
-											echo "	<td><a href=\"".ENTRADA_URL."/quizzes?section=results&amp;id=".$attempt["eqprogress_id"]."\">".html_encode($respondent["fullname"])."</a></td>\n";
-											echo "	<td><a href=\"".ENTRADA_URL."/quizzes?section=results&amp;id=".$attempt["eqprogress_id"]."\">".(((int) $attempt["updated_date"]) ? date(DEFAULT_DATE_FORMAT, $attempt["updated_date"]) : "Unknown")."</a></td>\n";
+											echo "	<td><a href=\"".ENTRADA_URL."/quizzes?section=results&amp;id=".$attempt["qprogress_id"]."\">".html_encode((($respondent["group"] == "student") ? $respondent["number"] : 0))."</a></td>\n";
+											echo "	<td><a href=\"".ENTRADA_URL."/quizzes?section=results&amp;id=".$attempt["qprogress_id"]."\">".html_encode($respondent["fullname"])."</a></td>\n";
+											echo "	<td><a href=\"".ENTRADA_URL."/quizzes?section=results&amp;id=".$attempt["qprogress_id"]."\">".(((int) $attempt["updated_date"]) ? date(DEFAULT_DATE_FORMAT, $attempt["updated_date"]) : "Unknown")."</a></td>\n";
 											echo "	<td class=\"right\">".$quiz_score."</td>\n";
 											echo "	<td class=\"center\">/</td>\n";
 											echo "	<td class=\"left\">".$quiz_value."</td>\n";
@@ -513,7 +559,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 					echo display_notice();
 				}
 			}
-		} else {
+		}  else {
 			$ERROR++;
 			$ERRORSTR[] = "In order to view the results of a quiz, you must provide a quiz identifier.";
 

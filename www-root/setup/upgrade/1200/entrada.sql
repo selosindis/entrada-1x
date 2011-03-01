@@ -393,3 +393,26 @@ CREATE TABLE IF NOT EXISTS `meta_values` (
 
 INSERT INTO `settings` (`shortname`, `value`) VALUES ('version_entrada', '1.2.0');
 UPDATE `settings` SET `value` = '1200' WHERE `shortname` = 'version_db';
+
+CREATE TABLE IF NOT EXISTS `ar_undergraduate_nonmedical_teaching` (
+  `undergraduate_nonmedical_teaching_id` int(11) NOT NULL auto_increment,
+  `course_number` varchar(25) NOT NULL DEFAULT '',
+  `course_name` text NOT NULL,
+  `assigned` char(3) NOT NULL DEFAULT '',
+  `lec_enrollment` int(11) NOT NULL DEFAULT '0',
+  `lec_hours` int(11) NOT NULL DEFAULT '0',
+  `lab_enrollment` int(11) NOT NULL DEFAULT '0',
+  `lab_hours` int(11) NOT NULL DEFAULT '0',
+  `tut_enrollment` int(11) NOT NULL DEFAULT '0',
+  `tut_hours` int(11) NOT NULL DEFAULT '0',
+  `sem_enrollment` int(11) NOT NULL DEFAULT '0',
+  `sem_hours` int(11) NOT NULL DEFAULT '0',
+  `coord_enrollment` int(11) NOT NULL DEFAULT '0',
+  `pbl_hours` int(11) NOT NULL DEFAULT '0',
+  `comments` text,
+  `year_reported` int(4) NOT NULL DEFAULT '0',
+  `proxy_id` int(11) DEFAULT NULL,
+  `updated_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
+  `updated_by` int(11) DEFAULT NULL,
+  PRIMARY KEY  (`undergraduate_nonmedical_teaching_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;

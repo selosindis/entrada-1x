@@ -68,7 +68,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 		});
 		
 		<?php $fields = "ar_prizes,prizes_id,category,description,prize_type,year_reported"; ?>
-		var prizes_grid = jQuery("#flex1").flexigrid
+		prizes_grid = jQuery("#flex1").flexigrid
 		(
 			{
 			url: '<?php echo ENTRADA_URL; ?>/api/ar_loadgrid.api.php?id=<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>&t=<?php echo $fields; ?>',

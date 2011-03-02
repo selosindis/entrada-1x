@@ -69,7 +69,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 		});
 			
 		<?php $fields = "ar_internal_contributions,internal_contributions_id,time_commitment,description,role,year_reported"; ?>
-		var internal_grid = jQuery("#flex1").flexigrid
+		internal_grid = jQuery("#flex1").flexigrid
 		(
 			{
 			url: '<?php echo ENTRADA_URL; ?>/api/ar_loadgrid.api.php?id=<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>&t=<?php echo $fields; ?>',
@@ -178,7 +178,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 		}
 		 
 		<?php $fields = "ar_external_contributions,external_contributions_id,days_of_year,description,organisation,year_reported"; ?>
-		var external_grid = jQuery("#flex2").flexigrid
+		external_grid = jQuery("#flex2").flexigrid
 		(
 			{
 			url: '<?php echo ENTRADA_URL; ?>/api/ar_loadgrid.api.php?id=<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>&t=<?php echo $fields; ?>',

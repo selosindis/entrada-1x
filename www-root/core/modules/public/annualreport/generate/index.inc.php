@@ -47,7 +47,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 	
 	<script type="text/javascript" defer="defer">
 	jQuery(document).ready(function() {
-		var reports_grid = jQuery("#flex1").flexigrid
+		reports_grid = jQuery("#flex1").flexigrid
 		(
 			{
 			url: '<?php echo ENTRADA_URL; ?>/api/ar_loadgrid.api.php?id=<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>&t=<?php echo $fields; ?>',

@@ -253,7 +253,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 	?>
 	<script type="text/javascript" defer="defer">
 	jQuery(document).ready(function() {
-		var jQuerydialog = jQuery('<div></div>')
+		jQuerydialog = jQuery('<div></div>')
 			.html('<span class="ui-icon ui-icon-circle-check" style="float:left; margin:0 7px 50px 0;"></span>You must select at least one record in order to delete.')
 			.dialog({
 				autoOpen: false,
@@ -265,7 +265,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 				}
 			});
 		
-		var jQueryError = jQuery('<div></div>')
+		jQueryError = jQuery('<div></div>')
 		.html('<span class="ui-icon ui-icon-locked" style="float:left; margin:0 7px 50px 0;"></span>Error: You cannot delete records from previous years. Contact support if you need one deleted.')
 		.dialog({
 			autoOpen: false,

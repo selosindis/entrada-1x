@@ -1,11 +1,5 @@
 <?php
 
-require_once("Models/utility/Collection.class.php");
-require_once("Task.class.php");
-require_once("Models/users/User.class.php");
-require_once("Models/users/GraduatingClass.class.php");
-require_once("Models/organisations/Organisation.class.php");
-
 class TaskRecipients extends Collection {
 	
 	private $task_id;
@@ -85,31 +79,36 @@ class TaskRecipients extends Collection {
 		}
 	}
 	
-	public static function remove($task_id, $recipients) {
+	public static function remove($task_id, $recipients=null) {
 		global $db;
-		$query = "delete from `task_recipients` where `task_id`=? and (";
-		$q_task_id = $db->qstr($task_id);
-		$records = array();
-		foreach($recipients as $recipient) {
-			if ($recipient instanceof User) {
-				$recipient_type = TASK_RECIPIENT_USER;
-				$recipient_id = $recipient->getID();
-			} elseif ($recipient instanceof GraduatingClass) {
-				$recipient_type = TASK_RECIPIENT_CLASS;
-				$recipient_id = $recipient->getGradYear();
-			} elseif ($recipient instanceof Organisation) {
-				$recipient_type = TASK_RECIPIENT_ORGANISATION;
-				$recipient_id = $recipient->getID();
-			} elseif (is_array($recipient)) {
-				//manually passing type and id
-				$recipient_type = $recipient['type'];
-				$recipient_id = $recipient['id'];
-			} else {
-				continue;
+		
+		if (is_null($verifiers)) {
+			$query = "delete from `task_recipients` where `task_id`=?";
+		} else {
+			$query = "delete from `task_recipients` where `task_id`=? and (";
+			$q_task_id = $db->qstr($task_id);
+			$records = array();
+			foreach($recipients as $recipient) {
+				if ($recipient instanceof User) {
+					$recipient_type = TASK_RECIPIENT_USER;
+					$recipient_id = $recipient->getID();
+				} elseif ($recipient instanceof GraduatingClass) {
+					$recipient_type = TASK_RECIPIENT_CLASS;
+					$recipient_id = $recipient->getGradYear();
+				} elseif ($recipient instanceof Organisation) {
+					$recipient_type = TASK_RECIPIENT_ORGANISATION;
+					$recipient_id = $recipient->getID();
+				} elseif (is_array($recipient)) {
+					//manually passing type and id
+					$recipient_type = $recipient['type'];
+					$recipient_id = $recipient['id'];
+				} else {
+					continue;
+				}
+				$records[] = "(`recipient_id`=".$db->qstr($recipient_id)." AND `recipient_type`=" . $db->qstr($recipient_type) . ")";
 			}
-			$records[] = "(`recipient_id`=".$db->qstr($recipient_id)." AND `recipient_type`=" . $db->qstr($recipient_type) . ")";
+			$query .= implode(" OR ",$records) . ")";
 		}
-		$query .= implode(" OR ",$records) . ")";
 		if(!$db->Execute($query, array($task_id))) {
 			add_error("Failed to remove recipients from task");
 			application_log("error", "Unable to remove from task_recipients records. Database said: ".$db->ErrorMsg());

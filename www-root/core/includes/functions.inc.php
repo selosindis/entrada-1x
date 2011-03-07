@@ -320,8 +320,7 @@ function load_system_navigator() {
 								FROM `community_announcements` as a
 								LEFT JOIN `community_pages` as b
 								ON a.`cpage_id` = b.`cpage_id`
-								WHERE a.`community_id` IN ('".implode("', '", @array_keys($community_ids))."')
-								AND a.`cpage_id` IN ('".implode("', '", $page_ids)."')
+								WHERE a.`cpage_id` IN ('".implode("', '", $page_ids)."')
 								AND a.`announcement_active` = '1'
 								AND b.`page_active` = '1'
 								AND (a.`release_date` = '0' OR a.`release_date` <= '".time()."')
@@ -645,7 +644,6 @@ function new_sidebar_item($title = "", $html = "", $id = "", $state = "open", $p
 		case SIDEBAR_APPEND:
 		default:
 			array_push($SIDEBAR, $output);
-		break;
 	}
 	
 	return true;
@@ -1519,6 +1517,78 @@ function fetch_specific_country($countries_id) {
 		return $result["country"];
 	} else {
 		return false;
+	}
+}
+
+/**
+ * Output any available Clerkship evaluations the learner may have to complete.
+ * 
+ * @global object $db
+ */
+function clerkship_display_available_evaluations() {
+	global $db;
+
+	/**
+	 * Display Clerkship Evaluation Information to Student.
+	 */
+	$query = "	SELECT a.*, b.`event_title`, b.`event_finish`, d.`form_title`, d.`form_type`
+				FROM `".CLERKSHIP_DATABASE."`.`notifications` AS a
+				LEFT JOIN `".CLERKSHIP_DATABASE."`.`events` AS b
+				ON b.`event_id` = a.`event_id`
+				LEFT JOIN `".CLERKSHIP_DATABASE."`.`evaluations` AS c
+				ON c.`item_id` = a.`item_id`
+				LEFT JOIN `".CLERKSHIP_DATABASE."`.`eval_forms` AS d
+				ON d.`form_id` = c.`form_id`
+				WHERE a.`user_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+				AND a.`item_maxinstances` > '0'
+				AND (
+					a.`notification_status` <> 'complete'
+					OR a.`notification_status` <> 'cancelled'
+				)
+				AND b.`event_finish` < ".$db->qstr(strtotime("-1 day 00:00:00"))."
+				AND b.`event_status` = 'published'
+				AND c.`item_status` = 'published'
+				AND d.`form_status` = 'published'
+				ORDER BY a.`notified_last` DESC";
+	$results = $db->GetAll($query);
+	if($results) {
+		?>
+		<div class="display-notice" style="color: #333333">
+			<h2>Clerkship Evaluation<?php echo ((@count($results) != 1) ? "s" : ""); ?> To Complete</h2>
+			<form action="<?php echo ENTRADA_URL; ?>/clerkship?action=remove" method="post">
+			<table style="width: 97%" cellspacing="2" cellpadding="2" border="0" summary="Available Clerkship Evaluations">
+			<colgroup>
+				<col style="width: 25%" />
+				<col style="width: 75%" />
+			</colgroup>
+			<tfoot>
+				<tr>
+					<td colspan="2" style="text-align: right; padding-right: 15px">
+						<input type="submit" class="button" value="Remove From List" />
+					</td>
+				</tr>
+			</tfoot>
+			<tbody>
+			<?php
+			foreach($results as $result) {
+				echo "<tr>\n";
+				echo "	<td style=\"vertical-align: top; white-space: nowrap; font-size: 12px\">\n";
+				echo "		<input type=\"checkbox\" name=\"mark_done[]\" id=\"notification_".(int) $result["notification_id"]."\" value=\"".(int) $result["notification_id"]."\" style=\"vertical-align: middle\" /> ";
+				echo "		<label for=\"notification_".(int) $result["notification_id"]."\">".date(DEFAULT_DATE_FORMAT, $result["event_finish"])."</label>\n";
+				echo "	</td>\n";
+				echo "	<td style=\"padding-top: 3px; vertical-align: top; white-space: normal; font-size: 12px\">\n";
+				echo "		<a href=\"".ENTRADA_URL."/clerkship?section=evaluate&amp;nid=".(int) $result["notification_id"]."\">".ucwords($result["form_type"])." Evaluation".(($result["item_maxinstances"] != 1) ? "s" : "")." Available</a> <span class=\"content-small\">(".$result["item_maxinstances"]." available)</span>\n";
+				echo "		<div class=\"content-small\">\n";
+				echo "			<strong>For</strong> ".$result["event_title"]."\n";
+				echo "		</div>\n";
+				echo "</tr>\n";
+			}
+			?>
+			</tbody>
+			</table>
+			</form>
+		</div>
+		<?php
 	}
 }
 
@@ -2853,13 +2923,13 @@ function poll_results($poll_id = 0) {
  * @param string $string
  * @return string
  */
-function html_encode($string = "") {
+function html_encode($string = "", $double_encode=true) {
 	if (!defined("DEFAULT_CHARSET")) {
 		define("DEFAULT_CHARSET", "UTF-8");
 	}
 
 	if ($string) {
-		return htmlentities($string, ENT_QUOTES, DEFAULT_CHARSET);
+		return htmlentities($string, ENT_QUOTES, DEFAULT_CHARSET, $double_encode);
 	}
 
 	return "";
@@ -6487,12 +6557,26 @@ function community_notify($community_id, $record_id, $content_type, $url, $permi
 			}
 			break;
 		case "post" :
-		case "reply" :
 			$query = "	SELECT a.`allow_member_read`, b.`allow_member_view`
 						FROM `community_discussions` AS a
 						LEFT JOIN `community_pages` AS b
 						ON a.`cpage_id` = b.`cpage_id`
 						WHERE a.`cdiscussion_id` = ".$db->qstr($record_id);
+			$result = $db->GetRow($query);
+			if ($result["allow_member_read"] && $result["allow_member_view"]) {
+				$permission_required = 0;
+			} else {
+				$permission_required = 1;
+			}
+			break;
+		case "reply" :
+			$query = "	SELECT a.`allow_member_read`, b.`allow_member_view`
+						FROM `community_discussions` AS a
+						LEFT JOIN `community_pages` AS b
+						ON a.`cpage_id` = b.`cpage_id`
+						JOIN `community_discussion_topics` AS c
+						ON a.`cdiscussion_id` = c.`cdiscussion_id`
+						WHERE c.`cdtopic_id` = ".$db->qstr($record_id);
 			$result = $db->GetRow($query);
 			if ($result["allow_member_read"] && $result["allow_member_view"]) {
 				$permission_required = 0;
@@ -6583,25 +6667,25 @@ function community_notify($community_id, $record_id, $content_type, $url, $permi
 						AND a.`community_id` = ".$db->qstr($community_id);
 			break;
 		case "reply" :
-			$query = "	SELECT DISTINCT(`proxy_id`) FROM `community_members` AS a
-						LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
+			$query = "	SELECT DISTINCT(a.`proxy_id`) FROM `community_members` AS a
+						LEFT JOIN `medtech_auth`.`user_data` AS b
 						ON a.`proxy_id` = b.`id`
-						WHERE a.`proxy_id` IN (
-												SELECT `proxy_id` FROM `community_notify_members` 
-												WHERE `community_id` = ".$db->qstr($community_id)." 
-												AND `record_id` = ".$db->qstr($permission_id)." 
-												AND `notify_type` = ".$db->qstr($content_type)." 
-												AND `notify_active` = '1'
-											) 
-						OR a.`proxy_id` IN (
-													SELECT a.`proxy_id` FROM `community_notify_members` AS a
-													LEFT JOIN `community_discussion_topics` AS b
-													ON b.`cdiscussion_id` = a.`record_id`
-													WHERE a.`community_id` = ".$db->qstr($community_id)." 
-													AND a.`notify_type` = 'post' 
-													AND a.`notify_active` = '1'
-													AND b.`cdtopic_id` = ".$db->qstr($permission_id)." 
-												)
+						LEFT JOIN `community_notify_members` AS c
+						ON c.`community_id` = ".$db->qstr($community_id)."
+						AND c.`record_id` = ".$db->qstr($permission_id)."
+						AND c.`notify_type` = ".$db->qstr($content_type)." 
+						AND c.`proxy_id` = a.`proxy_id`
+						LEFT JOIN `community_notify_members` AS d
+						ON d.`community_id` = ".$db->qstr($community_id)."
+						AND d.`notify_type` = 'post'
+						AND d.`proxy_id` = a.`proxy_id`
+						LEFT JOIN `community_discussion_topics` AS e
+						ON e.`cdiscussion_id` = d.`record_id`
+						AND e.`cdtopic_id` = ".$db->qstr($permission_id)."
+						WHERE (
+							d.`notify_active` = '1' 
+							OR c.`notify_active` = '1'
+						)
 						AND a.`community_id` = ".$db->qstr($community_id)."
 						AND b.`notifications` = '1'
 						AND a.`member_acl` >= ".$db->qstr($permission_required);
@@ -6611,13 +6695,12 @@ function community_notify($community_id, $record_id, $content_type, $url, $permi
 			$query = "	SELECT `proxy_id` FROM `community_members` AS a
 						LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
 						ON a.`proxy_id` = b.`id`
-						WHERE a.`proxy_id` IN (
-												SELECT `proxy_id` FROM `community_notify_members` 
-												WHERE `community_id` = ".$db->qstr($community_id)." 
-												AND `record_id` = ".$db->qstr($permission_id)." 
-												AND `notify_type` = 'file-notify' 
-												AND `notify_active` = '1'
-											) 
+						LEFT JOIN `community_notify_members` AS c
+						ON c.`community_id` = ".$db->qstr($community_id)." 
+						AND c.`record_id` = ".$db->qstr($permission_id)." 
+						AND c.`notify_type` = 'file-notify' 
+						AND c.`proxy_id` = b.`id`
+						WHERE c.`notify_active` = '1'
 						AND a.`community_id` = ".$db->qstr($community_id)."
 						AND b.`notifications` = '1'
 						AND a.`member_acl` >= ".$db->qstr($permission_required);
@@ -10353,7 +10436,7 @@ function objectives_intable($identifier = 0, $indent = 0, $excluded_objectives =
  * @return String Returns an html string for an option tag.
  */
 function build_option($value, $label, $selected = false) {
-	return "<option value='".$value."'". ($selected ? "selected='selected'" : "") .">".$label."</option>\n";
+	return "<option value=\"".$value."\"". ($selected ? "selected=\"selected\"" : "") .">".$label."</option>";
 }
 
 
@@ -10539,10 +10622,14 @@ function formatDateRange($start_date, $end_date) {
 function get_user_departments($user_id) {
 	global $db;
 	
-	$query = "	SELECT `department_title`, `department_id` 
-				FROM `".AUTH_DATABASE."`.`user_departments`, `".AUTH_DATABASE."`.`departments` 
-				WHERE `user_id`=".$db->qstr($user_id)."
-				AND `dep_id` = `department_id`";
+	$query = "	SELECT c.`department_title`, c.`department_id` 
+				FROM `".AUTH_DATABASE."`.`user_departments` AS a
+				JOIN `".AUTH_DATABASE."`.`user_data` AS b
+				ON a.`user_id` = b.`id`
+				JOIN `".AUTH_DATABASE."`.`departments` AS c
+				ON a.`dep_id` = c.`department_id`
+				AND b.`organisation_id` = c.`organisation_id`
+				WHERE a.`user_id` = ".$db->qstr($user_id);
 	
 	$results = $db->GetAll($query);
 	
@@ -11393,7 +11480,7 @@ function evaluation_generate_description($min_submittable = 0, $evaluation_quest
 	return sprintf($output, $string_1, $string_2, $string_3, $string_4);
 }
 
-function gradebook_get_weighted_grades($course_id, $grad_year, $proxy_id) {
+function gradebook_get_weighted_grades($course_id, $grad_year, $proxy_id, $assessment_id = false) {
 	global $db;
 	$weighted_grade = 0;
 	$weighted_total = 0;
@@ -11402,7 +11489,8 @@ function gradebook_get_weighted_grades($course_id, $grad_year, $proxy_id) {
 				FROM `assessments`
 				LEFT JOIN `assessment_marking_schemes` ON `assessment_marking_schemes`.`id` = `assessments`.`marking_scheme_id`
 				WHERE `assessments`.`course_id` = ".$db->qstr($course_id)."
-				AND `assessments`.`grad_year` = ".$db->qstr($grad_year);
+				AND `assessments`.`grad_year` = ".$db->qstr($grad_year).
+				($assessment_id ? " AND `assessments`.`assessment_id` = ".$db->qstr($assessment_id) : "");
 	$assessments = $db->GetAll($query);
 	if($assessments) {
 		$query	= 	"SELECT b.`id` AS `proxy_id`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, b.`number`, c.`role`";
@@ -11433,8 +11521,9 @@ function gradebook_get_weighted_grades($course_id, $grad_year, $proxy_id) {
 					$grade_weighting = $assessment["grade_weighting"];
 				}
 				if(isset($student["grade_".$key2."_value"])) {
+					$grade_value = format_retrieved_grade($student["grade_".$key2."_value"], $assessment);
 					$weighted_total += $grade_weighting;
-					$weighted_grade += (($assessment["handler"] == "Numeric" ? ($student["grade_".$key2."_value"] / $assessment["numeric_grade_points_total"]) : (($assessment["handler"] == "Percentage" ? ((float)$student["grade_".$key2."_value"] / 100.0) : $student["grade_".$key2."_value"])))) * $grade_weighting;
+					$weighted_grade += (($assessment["handler"] == "Numeric" ? ($grade_value / $assessment["numeric_grade_points_total"]) : (($assessment["handler"] == "Percentage" ? ((float)$grade_value / 100.0) : $grade_value)))) * $grade_weighting;
 				}
 			}
 		}
@@ -11445,4 +11534,355 @@ function gradebook_get_weighted_grades($course_id, $grad_year, $proxy_id) {
 	return Array(	"total" => $weighted_total,
 					"grade" => $weighted_grade,
 					"percent" => $weighted_percent);
+}
+
+/**
+ * Substitutes variables of the form %VAR NAME% in the string, with variables from the array, keys in the form of var name, Var Name, etc.
+ * 
+ * @param string $str 
+ * @param array $arr
+ * @return string
+ */
+function substitute_vars($str, array $arr) {
+	//first process the keys of arr
+	$n_arr = array();
+	foreach ($arr as $key=>$value) {
+		$n_arr["%".strtoupper($key)."%"] = $value;
+	} 
+	
+	return strtr($str,$n_arr);
+}
+
+
+/**
+ * Returns null if the $value is not in the array $arr; return the the $value otherwise. XXX NOTE, a bug prior to php 5.2.6 causes epic php failure if callbacks return false. null returned as workaround
+ * @param $value
+ * @param $arr
+ * @return mixed
+ */
+function validate_in_array($value, array $arr) {
+	if (in_array($value, $arr)){
+		return $value;
+	} else {
+		return;
+	}
+}
+
+/**
+ * Returns an array of valid user ids and null otherwise. XXX NOTE, a bug prior to php 5.2.6 causes epic php failure if callbacks return false. null returned as workaround
+ * @param $value
+ */
+function validate_user_ids($value) {
+	global $db;
+	$clean = filter_var($value,  FILTER_VALIDATE_REGEXP, array('options' => array('regexp' => '/^\d+$|^(\d+,)+\d+$/')));
+	if (false !== $clean) {
+		$query = "	SELECT a.id
+					FROM `".AUTH_DATABASE."`.`user_data` AS a
+					LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+					ON a.`id` = b.`user_id`
+					WHERE a.`id` IN ( " . $clean .  ")
+					AND b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+					AND b.`account_active` = 'true'
+					AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
+					AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")";
+		$results	= $db->GetCol($query);
+		if($results && (0 < count($results))) {
+			return $results; 
+		}
+	}
+}
+
+/**
+ * Returns null if $value is not a valid or existent course_id; returns the $value otheriwse. XXX NOTE, a bug prior to php 5.2.6 causes epic php failure if callbacks return false. null returned as workaround
+ * @param unknown_type $value
+ * @return mixed
+ */
+function validate_course_id($value) {
+	$course_id = filter_var($value, FILTER_VALIDATE_INT, array('min_range' => 1));
+	
+	if (false === $course_id || !Course::get($course_id)) {
+		return;
+	} else {
+		return $course_id;
+	}
+}
+
+/**
+ * Returns null if the $value provided is not a valid organisation_id; returns the $value otherwise. XXX NOTE, a bug prior to php 5.2.6 causes epic php failure if callbacks return false. null returned as workaround
+ * @param unknown_type $value
+ * @return mixed
+ */
+function validate_organisation_id($value) {
+	$organisation_id = filter_var($value, FILTER_VALIDATE_INT, array('min_range' => 1));
+	
+	if (false === $organisation_id || !Organisation::get($organisation_id)) {
+		return;
+	} else {
+		return $organisation_id;
+	}
+}
+
+/**
+ * Returns the binary OR of $val_a and $val_b -- convenince function for callbacks
+ * @param int $val_a
+ * @param int $val_b
+ * @return int
+ */
+function or_bin($val_a, $val_b) {
+	return $val_a | $val_b;
+}
+			
+/**
+ * Returns string after passing through the clean_input function for allowed_tags -- convenience method for callbacks. 
+ * @param string $value
+ * @return string
+ */
+function allowed_tags($value) {
+	return clean_input($value, array("allowedtags"));
+}
+
+function display_person(User $user) {
+	global $ENTRADA_ACL;
+	$photos = $user->getPhotos();
+	$user_id = $user->getID();
+
+	$is_administrator = $ENTRADA_ACL->amIallowed('user', 'update');
+	
+	$prefix = $user->getPrefix();
+	$firstname = $user->getFirstname();
+	$lastname = $user->getLastname();
+	$fullname = trim(implode(" " , array($prefix, $firstname, $lastname)));
+	
+	$departments = $user->getDepartments();
+	
+	if (0 < count($departments)) {
+		$dep_titles = array();
+		foreach ($departments as $department) {
+			$dep_titles[] = ucwords($department->getTitle()); 
+		}
+		$group_line = implode("<br />", $dep_titles);
+	} else {
+		$group = $user->getGroup();
+		$role = $user->getRole();
+		$group_line =  ucwords($group. " > " . (($group == "student") ? "Class of " : "") . $role); 
+	}
+	
+	$privacy_level = $user->getPrivacyLevel();
+	
+	$organisation = $user->getOrganisation();
+	$org_name = ($organisation) ? $organisation->getTitle() : "" ;
+	
+	$email = ((1 < $privacy_level) || $is_administrator) ? $user->getEmail() : "";
+	$email_alt = $user->getAlternateEmail();
+	
+	if ((2 < $privacy_level) || $is_administrator) {
+		$show_address = true;
+		$city = $user->getCity();
+		$province = $user->getProvince();
+		$prov_name = $province->getName();
+		$country = $user->getCountry();
+		$country_name = $country->getName();
+		$phone = $user->getTelephone();
+		$fax = $user->getFax();
+		$address = $user->getAddress();
+		$postcode = $user->getPostalCode();
+		$office_hours = $user->getOfficeHours();
+	}
+	
+	$assistants = $user->getAssistants();
+	//there are 4 photo cases (at time of writing): no photos, official only, uploaded only, or both.
+	//privacy options also need to be considered here. 
+	ob_start();
+	?>
+	<div id="result-<?php echo $user_id; ?>" class="person-result">
+		<div id="img-holder-<?php echo $user_id; ?>" class="img-holder">
+		<?php
+		$num_photos = count($photos);
+		if (0===$num_photos) {
+			echo display_photo_placeholder();
+		} else {
+			foreach($photos as $photo) {
+				echo display_photo($photo);
+			}
+			if (2 <= $num_photos) {
+				$label = 0;
+				foreach($photos as $photo) {
+					echo display_photo_link($photo, ++$label);
+				}
+			}
+			echo display_zoom_controls($user_id);
+		}
+		?>
+		</div>
+		<div class="person-data">
+			<div class="basic">
+				<span class="person-name"><?php echo html_encode($fullname); ?></span>
+				<span class="person-group"><?php echo html_encode($group_line); ?></span>
+				<span class="person-organisation"><?php echo html_encode($org_name); ?></span>
+				<div class="email-container">
+				<?php 
+					if ($email) {
+						echo display_person_email($email);
+						if($email_alt) {
+							echo display_person_email($email_alt);
+						}
+					}
+				?>
+				</div>
+			</div>
+			<div class="address">
+			<?php 
+				if ($show_address) {
+					if ($phone) {
+						?>
+						<div>
+							<span class="address-label">Telephone:</span>
+							<span class="address-value"><?php echo html_encode($phone); ?></span>
+						</div>
+						<?php
+					}
+					if ($fax) {
+						?>
+						<div>
+							<span class="address-label">Fax:</span>
+							<span class="address-value"><?php echo html_encode($fax); ?></span>
+						</div>
+						<?php
+					}
+					if ($address && $city) {
+						?>
+						<div>
+							<span class="address-label">Address:</span><br/>
+							<span class="address-value">
+							<?php
+								echo html_encode($address)."<br/>".html_encode($city);
+								if ($prov_name) echo ", ".html_encode($prov_name);
+								echo "<br />";
+								echo html_encode($country_name);
+								if ($postcode) echo ", ".html_encode($postcode);
+								
+							?>
+							</span>
+						</div>
+						<?php
+					}
+					if ($office_hours) {
+						?>
+						<div>
+							<span class="address-label">Office Hours:</span>
+							<span class="address-value"><?php echo html_encode($office_hours); ?></span>
+						</div>
+						<?php
+					}
+					
+				}
+			?>
+			</div>
+			<div class="assistant"><?php if (count($assistants) > 0) { ?>
+				<span class="content-small">Administrative Assistants:</span>
+				<ul class="assistant-list">
+					<?php
+					foreach ($assistants as $assistant) {
+						echo "<li>".display_person_email($assistant->getEmail(),$assistant->getName("%f %l"))."</li>";
+						
+					}
+					?>
+				</ul><?php } ?>
+			</div>
+		</div>
+		<div></div>
+		<div class="clearfix">&nbsp;</div>
+	</div>
+	
+	<?php
+	return ob_get_clean();
+}
+
+function display_person_email($email,$label=null) {
+	if (!trim($label)) $label = $email;
+	return "<a class='person-email' href='mailto:".html_encode($email)."'>".html_encode($label)."</a>";
+}
+
+function display_photo(UserPhoto $photo) {
+	$user_id = $photo->getUserID();
+	$user = User::get($user_id); //should be cached anyways so this is close to free
+	$titled_name = implode(" ", array($user->getPrefix(),$user->getFirstname(), $user->getLastname()));
+	$name = implode(" ", array($user->getFirstname(), $user->getLastname()));
+	$type = $photo->getPhotoType();
+	ob_start();
+	?>
+	<img id="<?php echo $type; ?>_photo_<?php echo $user_id; ?>" class="<?php echo $type; ?>" src="<?php echo $photo->getFilename(); ?>" width="72" height="100" alt="<?php echo html_encode($titled_name); ?>" title="<?php echo html_encode($titled_name); ?>" />
+	<?php
+	return ob_get_clean();
+}
+
+function display_photo_link(UserPhoto $photo, $label) {
+	$user_id = $photo->getUserID();
+	$type = $photo->getPhotoType();
+	ob_start();
+	?>
+		<a id="<?php echo $type; ?>_link_<?php echo $user_id; ?>" class="img-selector" onclick="<?php echo ($type == UserPhoto::OFFICIAL) ? "show" : "hide"; ?>Official($('official_photo_<?php echo $user_id; ?>'), $('official_link_<?php echo $user_id; ?>'), $('upload_link_<?php echo $user_id; ?>'));" href="javascript:void(0);"><?php echo $label; ?></a>
+	<?php
+	return ob_get_clean();
+}
+
+function display_photo_placeholder() {
+	return "<img src=\"".ENTRADA_URL."/images/headshot-male.gif\" width=\"72\" height=\"100\" alt=\"No Photo Available\" title=\"No Photo Available\" />";
+}
+
+function display_zoom_controls($user_id) {
+	ob_start();
+	$params = "$('official_photo_".$user_id."'), $('upload_photo_".$user_id."'), $('official_link_".$user_id."'), $('upload_link_".$user_id."'), $('zoomout_photo_".$user_id."'";
+	?>
+	<a id="zoomin_photo_<?php echo $user_id; ?>" class="zoomin" onclick="growPic(<?php echo $params; ?>));">+</a>
+	<a id="zoomout_photo_<?php echo $user_id; ?>" class="zoomout" onclick="shrinkPic(<?php echo $params; ?>));"></a>
+	<?php
+	return ob_get_clean();
+}
+
+function generateMasks($organisation, $group, $role, $user) {
+	$masks = array();
+	$masks["organisation"] = $organisation;
+	$masks["organisation:group"] = $organisation.":".$group;
+	$masks["organisation:group:role"] = $organisation.":".$group.":".$role;
+	$masks["group"] = $group;
+	$masks["group:role"] = $group.":".$role;
+	$masks["user"] = $user;
+	$masks["organisation:user"] = $organisation .":".$user;
+	
+	//we want to filter out any entries that are empty, begin or terminate with a colon, or have two colons together
+	$pattern = "/^$|^:|:$|::/";
+	
+	$masks = preg_grep($pattern, $masks, PREG_GREP_INVERT);
+	return $masks;
+}
+
+function generateMaskConditions($organisation, $group, $role, $user) {
+	global $db;
+	$masks = generateMasks($organisation, $group, $role, $user);
+	$mask_strs = array();
+	foreach($masks as $condition=>$value) {
+		$mask_strs[] = "(`entity_type` = ".$db->qstr($condition)." AND `entity_value` = " . $db->qstr($value) ." )\n";
+	}
+	return implode(" OR ", $mask_strs);
+}
+
+function generateAccessConditions($organisation, $group, $role, $proxy_id) {
+	global $db;
+	$masks = array();
+	$masks['`organisation_id`'] = $organisation;
+	$masks['`group`'] = $group;
+	$masks['`role`'] = $role;
+	$masks['a.`id`'] = $proxy_id;
+	
+	$masks = array_filter($masks);
+	
+	$mask_strs = array();
+	
+	foreach ($masks as $field=>$condition) {
+		$mask_strs[] = $field."=".$db->qstr($condition);
+	}
+	if ($mask_strs) {
+		return implode(" AND ",$mask_strs);
+	}
 }

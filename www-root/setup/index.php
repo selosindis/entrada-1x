@@ -221,6 +221,27 @@ switch ($STEP) {
 
 		if (isset($_POST["entrada_storage"]) && ($entrada_storage = clean_input($_POST["entrada_storage"], "dir")) && (@is_dir($entrada_storage))) {
 			$PROCESSED["entrada_storage"] = $entrada_storage;
+
+			if (!@is_writable($entrada_storage."/annualreports") ||
+				!@is_writable($entrada_storage."/cache") ||
+				!@is_writable($entrada_storage."/community-galleries") ||
+				!@is_writable($entrada_storage."/community-shares") ||
+				!@is_writable($entrada_storage."/event-files") ||
+				!@is_writable($entrada_storage."/user-photos")) {
+
+				$ERROR++;
+				$i = count($ERROR);
+
+				$ERRORSTR[$i]  = "At least one of the directories in your stoage directory is not writable, please run the following commands:";
+				$ERRORSTR[$i] .= "<div style=\"font-family: monospace; font-size: 9px\">\n";
+				$ERRORSTR[$i] .= "chmod 777 ".$entrada_storage."/annualreports<br />\n";
+				$ERRORSTR[$i] .= "chmod 777 ".$entrada_storage."/cache<br />\n";
+				$ERRORSTR[$i] .= "chmod 777 ".$entrada_storage."/community-galleries<br />\n";
+				$ERRORSTR[$i] .= "chmod 777 ".$entrada_storage."/community-shares<br />\n";
+				$ERRORSTR[$i] .= "chmod 777 ".$entrada_storage."/event-files<br />\n";
+				$ERRORSTR[$i] .= "chmod 777 ".$entrada_storage."/user-photos<br />\n";
+				$ERRORSTR[$i] .= "</div>\n";
+			}
 		} elseif (!@is_dir($entrada_storage)) {
 			$ERROR++;
 			$ERRORSTR[] = "The absolute path you have provided for the <strong>Entrada Storage Path</strong> does not not exist. Please ensure this directory exists and that all folders within it can be written to by PHP.";
@@ -495,6 +516,17 @@ $storage_path = implode(DIRECTORY_SEPARATOR, array_slice(explode(DIRECTORY_SEPAR
 			font-style:normal;
 			color:#666;
 		}
+		#db-import-progress {
+			position:fixed;
+			top:0;
+			left:0;
+			background-color:#FFF;
+			color:#000;
+			opacity:.85;
+			filter:alpha(opacity=85);
+			-moz-opacity:0.85;
+			z-index:10000;
+		}
 	</style>
 </head>
 <body>
@@ -575,6 +607,31 @@ $storage_path = implode(DIRECTORY_SEPARATOR, array_slice(explode(DIRECTORY_SEPAR
 						}
 						?>
 					</div>
+					<div id="db-import-progress" style="display: none">
+						<div style="display: table; width: 100%; height: 100%; _position: relative; overflow: hidden">
+							<div style=" _position: absolute; _top: 50%; display: table-cell; vertical-align: middle;">
+								<div style="_position: relative; _top: -50%; width: 100%; text-align: center">
+									<span style="font-size: 18px; font-weight: bold">
+										<img src="../images/loading.gif" width="32" height="32" alt="Importing Database" title="Please wait while Entrada installs the databases." style="vertical-align: middle" /> Please wait while Entrada installs the databases.
+									</span>
+									<br /><br />
+									This can take a few moments depending on the speed of your server.
+								</div>
+							</div>
+						</div>
+					</div>
+					<script type="text/javascript">
+						$('db-import-progress').setStyle({
+							width: document.viewport.getWidth() + 'px',
+							height: document.viewport.getHeight() + 'px'
+						});
+
+						Event.observe(window, 'load', function() {
+							Event.observe('continue-button', 'click', function() {
+								$('db-import-progress').show();
+							});
+						});
+					</script>
 					<?php
 				break;
 				case 4 :
@@ -786,14 +843,14 @@ $storage_path = implode(DIRECTORY_SEPARATOR, array_slice(explode(DIRECTORY_SEPAR
 									</td>
 									<td>
 										<div class="valign">
-											<input type="text" id="database_password" name="database_password" value="<?php echo (isset($PROCESSED["database_password"]) && $PROCESSED["database_password"] ? $PROCESSED["database_password"] : ""); ?>" />
+											<input type="password" id="database_password" name="database_password" value="<?php echo (isset($PROCESSED["database_password"]) && $PROCESSED["database_password"] ? $PROCESSED["database_password"] : ""); ?>" />
 										</div>
 									</td>
 								</tr>
 								<tr>
 									<td>&nbsp;</td>
 									<td class="content-small" style="padding-bottom: 15px">
-										The password of your new MySQL user.
+										The password of the MySQL user listed above.
 									</td>
 								</tr>
 								<tr>
@@ -966,8 +1023,8 @@ $storage_path = implode(DIRECTORY_SEPARATOR, array_slice(explode(DIRECTORY_SEPAR
 			?>
 
 			<div style="margin: 15px 25px 10px 0; padding-right: 40px; text-align: right">
-				<input type="submit" value="Continue" name="continue"<?php echo ($STEP > 5 ? " style=\"display: none;\"" : "");?> />
-				<input type="button" value="View Site" onclick="window.location= '<?php echo (isset($PROCESSED["entrada_url"]) && $PROCESSED["entrada_url"] ? $PROCESSED["entrada_url"] : "../.."); ?>';" name="view"<?php echo ($STEP != 6 || $ERROR ? " style=\"display: none;\"" : "");?> />
+				<input type="submit" value="Continue" id="continue-button" name="continue"<?php echo ($STEP > 5 ? " style=\"display: none;\"" : "");?> />
+				<input type="button" value="View Site" onclick="window.location= '<?php echo (isset($PROCESSED["entrada_url"]) && $PROCESSED["entrada_url"] ? $PROCESSED["entrada_url"] : "../.."); ?>';" name="view"<?php echo ($STEP != 6 || $ERROR ? " style=\"display: none;\"" : ""); ?> />
 				<input type="submit" value="Refresh" name="refresh"<?php echo ($STEP != 6 || !$ERROR ? " style=\"display: none;\"" : "");?> />
 			</div>
 		</form>

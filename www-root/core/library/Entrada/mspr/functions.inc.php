@@ -53,7 +53,7 @@ function item_wrap_content($type, $entity, $content, $hide_controls = false, $co
 	
 		
 			
-	return $status_template->getResult(DEFAULT_LANGUAGE, $status_bind, array("status"=>$status));	
+	return $status_template->getResult($status_bind, array("lang" => DEFAULT_LANGUAGE, "status"=>$status));	
 }
 
 function list_wrap_content($content, $class="", $id="") {
@@ -66,7 +66,7 @@ function list_wrap_content($content, $class="", $id="") {
 				"content"	=> $content
 	);
 			
-	return $list_template->getResult(DEFAULT_LANGUAGE, $list_bind);	
+	return $list_template->getResult($list_bind, array("lang" => DEFAULT_LANGUAGE));	
 }
 
 function getControls($entity, $type) {
@@ -89,22 +89,22 @@ function getControls($entity, $type) {
 				$status = getStatus($entity);
 				switch($status){
 					case 'approved':
-						$controls[] = $control_template->getResult(DEFAULT_LANGUAGE, $control_bind, array("type" => "unapprove")); 
+						$controls[] = $control_template->getResult($control_bind, array("lang" => DEFAULT_LANGUAGE, "type" => "unapprove")); 
 						break;
 					case 'unapproved':
-						$controls[] = $control_template->getResult(DEFAULT_LANGUAGE, $control_bind, array("type" => "reject"));
-						$controls[] = $control_template->getResult(DEFAULT_LANGUAGE, $control_bind, array("type" => "approve")); 
+						$controls[] = $control_template->getResult($control_bind, array("lang" => DEFAULT_LANGUAGE, "type" => "reject"));
+						$controls[] = $control_template->getResult($control_bind, array("lang" => DEFAULT_LANGUAGE, "type" => "approve")); 
 						break;
 					case 'rejected':
 					case 'rejected_reason':
-						$controls[] = $control_template->getResult(DEFAULT_LANGUAGE, $control_bind, array("type" => "approve")); 
+						$controls[] = $control_template->getResult($control_bind, array("lang" => DEFAULT_LANGUAGE, "type" => "approve")); 
 						break;
 				}
 			} else {
-				$controls[] = $control_template->getResult(DEFAULT_LANGUAGE, $control_bind, array("type" => "remove")); 
+				$controls[] = $control_template->getResult($control_bind, array("lang" => DEFAULT_LANGUAGE, "type" => "remove")); 
 			}
 			if ($entity instanceof Editable) {
-				$controls[] = $control_template->getResult(DEFAULT_LANGUAGE, $control_bind, array("type" => "edit")); 
+				$controls[] = $control_template->getResult($control_bind, array("lang" => DEFAULT_LANGUAGE, "type" => "edit")); 
 			}	
 			
 			
@@ -113,9 +113,9 @@ function getControls($entity, $type) {
 		default:
 			if ($entity instanceof Approvable) {
 				if ($entity instanceof Editable) {
-					$controls[] = $control_template->getResult(DEFAULT_LANGUAGE, $control_bind, array("type" => "edit")); 
+					$controls[] = $control_template->getResult($control_bind, array("lang" => DEFAULT_LANGUAGE, "type" => "edit")); 
 				}
-				$controls[] = $control_template->getResult(DEFAULT_LANGUAGE, $control_bind, array("type" => "remove")); 
+				$controls[] = $control_template->getResult($control_bind, array("lang" => DEFAULT_LANGUAGE, "type" => "remove")); 
 			}
 			break;
 	}
@@ -127,7 +127,7 @@ function getControls($entity, $type) {
 		$control_set_bind = array(
 				"controls"	=> $control_content
 		);
-		return $control_set_template->getResult(DEFAULT_LANGUAGE, $control_set_bind);
+		return $control_set_template->getResult($control_set_bind, array("lang" => DEFAULT_LANGUAGE));
 	}
 }
 
@@ -155,7 +155,7 @@ function display_studentships(Studentships $studentships, $type, $hide_controls 
 				"year"	=> clean_input($studentship->getYear(), array("notags", "specialchars"))
 			);
 			
-			$content = $content_template->getResult(DEFAULT_LANGUAGE, $content_bind);
+			$content = $content_template->getResult($content_bind, array("lang" => DEFAULT_LANGUAGE));
 			$contents .= item_wrap_content($type, $studentship,$content, $hide_controls);
 		}		
 	} else {
@@ -179,7 +179,7 @@ function display_clineval(ClinicalPerformanceEvaluations $clinevals,$type, $hide
 				"source"	=> clean_input($clineval->getSource(), array("notags", "specialchars"))
 			);
 			
-			$content = $content_template->getResult(DEFAULT_LANGUAGE, $content_bind);
+			$content = $content_template->getResult($content_bind, array("lang" => DEFAULT_LANGUAGE));
 			$contents .= item_wrap_content($type, $clineval, $content, $hide_controls);
 		}		
 	} else {
@@ -205,7 +205,7 @@ function display_internal_awards(InternalAwardReceipts $receipts,$type, $hide_co
 				"year"	=> clean_input($receipt->getAwardYear(), array("notags", "specialchars"))
 			);
 			
-			$content = $content_template->getResult(DEFAULT_LANGUAGE, $content_bind);
+			$content = $content_template->getResult($content_bind, array("lang" => DEFAULT_LANGUAGE));
 			$contents .= item_wrap_content($type, $receipt, $content, $hide_controls);
 		}		
 	} else {
@@ -231,7 +231,7 @@ function display_external_awards(ExternalAwardReceipts $receipts,$type, $hide_co
 				"year"	=> clean_input($receipt->getAwardYear(), array("notags", "specialchars"))
 			);
 			
-			$content = $content_template->getResult(DEFAULT_LANGUAGE, $content_bind);
+			$content = $content_template->getResult($content_bind, array("lang" => DEFAULT_LANGUAGE));
 			$contents .= item_wrap_content($type,$receipt, $content, $hide_controls, $receipt->getComment());
 		}		
 	} else {
@@ -260,7 +260,7 @@ function display_contributions(Contributions $contributions,$type, $hide_control
 				"period"	=> clean_input($contribution->getPeriod() , array("notags", "specialchars"))
 			);
 				
-			$content = $content_template->getResult(DEFAULT_LANGUAGE, $content_bind);
+			$content = $content_template->getResult($content_bind, array("lang" => DEFAULT_LANGUAGE));
 			
 			$contents .= item_wrap_content($type,$contribution, $content, $hide_controls, $contribution->getComment());		
 		}
@@ -285,7 +285,7 @@ function display_clerkship_details(ClerkshipRotations $rotations) {
 				"period" 	=> clean_input($rotation->getPeriod() , array("notags", "specialchars"))
 			);
 			
-			$contents .= $content_template->getResult(DEFAULT_LANGUAGE, $content_bind);			
+			$contents .= $content_template->getResult($content_bind, array("lang" => DEFAULT_LANGUAGE));			
 		}
 	} else {
 		$contents = "<li>None</li>";
@@ -310,7 +310,7 @@ function display_clerkship_elective_details(ClerkshipElectivesCompleted $rotatio
 				"supervisor" => clean_input($rotation->getSupervisor() , array("notags", "specialchars"))
 			);
 			
-			$contents .= $content_template->getResult(DEFAULT_LANGUAGE, $content_bind);			
+			$contents .= $content_template->getResult($content_bind, array("lang" => DEFAULT_LANGUAGE));			
 		}
 	} else {
 		$contents = "<li>None</li>";
@@ -352,7 +352,7 @@ function display_student_run_electives(StudentRunElectives $sres,$type, $hide_co
 				"period" 		=> clean_input($sre->getPeriod() , array("notags", "specialchars"))
 			);
 			
-			$content = $content_template->getResult(DEFAULT_LANGUAGE, $content_bind);
+			$content = $content_template->getResult($content_bind, array("lang" => DEFAULT_LANGUAGE));
 			
 			$contents .= item_wrap_content($type, $sre, $content, $hide_controls);		
 		}
@@ -375,7 +375,7 @@ function display_supervised_project(SupervisedProject $project = null, $type, $h
 			"supervisor"	=> clean_input($project->getSupervisor(), array("notags", "specialchars"))
 		);
 		
-		$content = $content_template->getResult(DEFAULT_LANGUAGE, $content_bind);
+		$content = $content_template->getResult($content_bind, array("lang" => DEFAULT_LANGUAGE));
 
 		$contents = item_wrap_content($type, $project, $content, $hide_controls, $project->getComment());
 	} else {
@@ -412,7 +412,7 @@ function display_research_citations(ResearchCitations $research_citations, $type
 				"details" => clean_input($research_citation->getText(), array("notags", "specialchars"))
 			);
 			
-			$content = $content_template->getResult(DEFAULT_LANGUAGE, $content_bind);
+			$content = $content_template->getResult($content_bind, array("lang" => DEFAULT_LANGUAGE));
 			$id_string = "research_citation_".$research_citation->getID();
 			$contents .= item_wrap_content($type,$research_citation, $content, $hide_controls, $research_citation->getComment(), $id_string);		
 		}
@@ -472,7 +472,7 @@ function display_observerships(Observerships $observerships,$type, $hide_control
 				"end" => $end
 			); 
 			
-			$content = $content_template->getResult(DEFAULT_LANGUAGE, $content_bind);
+			$content = $content_template->getResult($content_bind, array("lang" => DEFAULT_LANGUAGE));
 			
 			$contents .= item_wrap_content($type, $entity, $content, $hide_controls);		 
 		}
@@ -507,7 +507,7 @@ function display_international_activities(InternationalActivities $int_acts,$typ
 				"period" 	=> clean_input($entity->getPeriod() , array("notags", "specialchars"))
 			);
 			
-			$content = $content_template->getResult(DEFAULT_LANGUAGE, $content_bind);
+			$content = $content_template->getResult($content_bind, array("lang" => DEFAULT_LANGUAGE));
 			
 			$contents .= item_wrap_content($type,$entity, $content, $hide_controls);		 
 		}

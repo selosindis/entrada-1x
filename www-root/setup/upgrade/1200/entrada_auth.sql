@@ -6,4 +6,6 @@ UPDATE `acl_permissions` SET `create`=1, `read`=null, `update`=null, `delete`=nu
 INSERT INTO `acl_permissions` (`resource_type`, `resource_value`, `entity_type`, `entity_value`, `app_id`, `create`, `read`, `update`, `delete`, `assertion`) VALUES
 ('evaluation', NULL, 'group:role', 'staff:admin', 1, 1, 1, 1, 1, NULL),
 ('evaluationform', NULL, 'group:role', 'staff:admin', 1, 1, 1, 1, 1, NULL),
-('evaluationformquestion', NULL, 'group:role', 'staff:admin', 1, 1, 1, 1, 1, NULL);
+('evaluationformquestion', NULL, 'group:role', 'staff:admin', 1, 1, 1, 1, 1, NULL),
+('gradebook', NULL, 'group', 'student', NULL, NULL, 1, NULL, NULL, NULL),
+('metadata', NULL, 'group:role', 'staff:admin', 1, 1, 1, 1, 1, NULL);

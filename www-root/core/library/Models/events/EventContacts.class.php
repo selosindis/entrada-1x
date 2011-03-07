@@ -1,6 +1,4 @@
 <?php
-require_once("Models/utility/Collection.class.php");
-require_once("Models/users/User.class.php");
 
 class EventContacts extends Collection {
 	

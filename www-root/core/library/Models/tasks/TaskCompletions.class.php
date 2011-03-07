@@ -33,27 +33,17 @@ class TaskCompletions extends Collection {
 		}
 		
 		global $db;
-		
-		$query = "	SELECT DISTINCT * from (
-					SELECT a.*, b.`task_id`, c.`verifier_id`, c.`verified_date`, a.`id` as `recipient_id`, c.`completed_date` 
-					from `".AUTH_DATABASE."`.`user_data` a 
-					inner join `task_recipients` b on a.`grad_year`=b.`recipient_id` 
+		$query = "	SELECT a.*, b.`task_id`, c.`verifier_id`, c.`verified_date`, a.`id` as `recipient_id`, c.`completed_date`, c.`faculty_id`, c.`completion_comment`, c.`rejection_comment`, c.`rejection_date`
+					from `".AUTH_DATABASE."`.`user_data` a
+					inner join `task_recipients` b on 
+					(b.`recipient_type`='grad_year' and a.`grad_year`=b.`recipient_id`) 
+					or (b.`recipient_type`='user' and a.`id` = b.`recipient_id`) 
+					or (b.`recipient_type`='organisation' and b.`recipient_id`=a.`organisation_id`) 
 					left join `task_completion` c on c.`task_id`=b.`task_id` and c.`recipient_id` = a.`id`
-					where b.`recipient_type`='grad_year' and b.`task_id`=?
-					UNION
-					SELECT w.*, z.`task_id`, y.`verifier_id`, y.`verified_date`, z.`recipient_id`, y.`completed_date` 
-					from `task_recipients` z 
-					left join `task_completion` y on z.`recipient_id`=y.`recipient_id` and y.`task_id`=z.`task_id`
-					inner join `".AUTH_DATABASE."`.`user_data` w on z.`recipient_id`=w.`id`
-					where z.`recipient_type`='user' and z.`task_id`=?
-					UNION
-					SELECT i.*, j.`task_id`, k.`verifier_id`, k.`verified_date`, i.`id` as `recipient_id`, k.`completed_date` 
-					from `task_recipients` j
-					inner join `".AUTH_DATABASE."`.`user_data` i on j.`recipient_id`=i.`organisation_id` 
-					left join `task_completion` k on i.`id`=k.`recipient_id` and j.`task_id`=k.`task_id`
-					where j.`recipient_type` = 'organisation' and j.`task_id`=?) m".$order_by;
+					where b.`task_id`=?";
 		
-		$results = $db->SelectLimit($query,$limit, $offset, array($task_id,$task_id, $task_id));
+		$results = $db->SelectLimit($query,$limit, $offset, array($task_id));
+		
 		$completions = array();
 		if ($results) {
 			foreach ($results as $result) {
@@ -118,6 +108,24 @@ class TaskCompletions extends Collection {
 		return (!!$result);
 	}
 	
+	public static function getVerifiers($task_id) {
+		global $db;
+
+		$query = "SELECT  b.* from `task_completions` a left join `".AUTH_DATABASE."`.`user_data` b on a.`verifier_id`=b.`id` where a.`task_id`=?";
+		
+		$result = $db->getAll($query, array($task_id));
+		$verifiers = array();
+		if ($results) {
+			foreach ($results as $result) {
+				$verifier = User::fromArray($result);
+				if ($verifier) {
+					$verifiers[] = $verifier;
+				}
+			}
+		}
+		return new TaskVerifiers($verifiers);
+	}
+	
 	public static function getByRecipient(User $recipient, $options=null) {
 		if (isset($options['order_by'])) {
 			if (is_array($options['order_by'])) {
@@ -146,35 +154,21 @@ class TaskCompletions extends Collection {
 			$where = ' and ' . $options['where'] . " ";
 		}		
 		
-		
 		global $db;
 		
 		$proxy_id = $recipient->getID();
 		
-		$query = "	SELECT DISTINCT * from (
-					SELECT a.id, d.*, c.`verifier_id`, c.`verified_date`, a.`id` as `recipient_id`, c.`completed_date` 
-					from `".AUTH_DATABASE."`.`user_data` a 
-					inner join `task_recipients` b on a.`grad_year`=b.`recipient_id` 
+		$query = "	SELECT a.id, d.*, c.`verifier_id`, c.`verified_date`, a.`id` as `recipient_id`, c.`completed_date`, c.`faculty_id`, c.`completion_comment`, c.`rejection_comment`, c.`rejection_date`
+					from `".AUTH_DATABASE."`.`user_data` a
+					inner join `task_recipients` b on 
+					(b.`recipient_type`='grad_year' and a.`grad_year`=b.`recipient_id`) 
+					or (b.`recipient_type`='user' and a.`id` = b.`recipient_id`) 
+					or (b.`recipient_type`='organisation' and b.`recipient_id`=a.`organisation_id`) 
 					left join `task_completion` c on c.`task_id`=b.`task_id` and c.`recipient_id` = a.`id`
 					left join `tasks` d on b.`task_id`=d.`task_id`
-					where b.`recipient_type`='grad_year'
-					UNION
-					SELECT w.id, x.*, y.`verifier_id`, y.`verified_date`, z.`recipient_id`, y.`completed_date` 
-					from `task_recipients` z 
-					left join `task_completion` y on z.`recipient_id`=y.`recipient_id` and y.`task_id`=z.`task_id`
-					inner join `".AUTH_DATABASE."`.`user_data` w on z.`recipient_id`=w.`id`
-					left join `tasks` x on x.`task_id`=z.`task_id`
-					where z.`recipient_type`='user'
-					UNION
-					SELECT i.id, l.*, k.`verifier_id`, k.`verified_date`, i.`id` as `recipient_id`, k.`completed_date` 
-					from `task_recipients` j
-					inner join `".AUTH_DATABASE."`.`user_data` i on j.`recipient_id`=i.`organisation_id` 
-					left join `task_completion` k on i.`id`=k.`recipient_id` and j.`task_id`=k.`task_id`
-					left join `tasks` l on l.`task_id`=j.`task_id`
-					where j.`recipient_type` = 'organisation') m where id=?";
-		
+					where a.id=?";
+
 		$results = $db->SelectLimit($query.$where.$order_by, $limit, $offset,array($proxy_id));
-		
 		
 		$completions = array();
 		if ($results) {

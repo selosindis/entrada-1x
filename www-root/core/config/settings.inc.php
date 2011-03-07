@@ -441,8 +441,8 @@ $MODULES["courses"] = array("title" => "Manage Courses", "resource"=> "coursecon
 $MODULES["evaluations"] = array("title" => "Manage Evaluations", "resource" => "evaluation", "permission" => "update");
 $MODULES["events"] = array("title" => "Manage Events", "resource" => "eventcontent", "permission" => "update");
 $MODULES["gradebook"] = array("title" => "Manage Gradebook", "resource" => "gradebook", "permission" => "update");
-$MODULES["mspr"] = array("title" => "Manage MSPRs", "resource" => "mspr", "permission" => "create");
-$MODULES["tasks"] = array("title" => "Manage Tasks", "resource" => "task", "permission" => "create");
+//$MODULES["mspr"] = array("title" => "Manage MSPRs", "resource" => "mspr", "permission" => "create"); //removed as it is now under manage users
+$MODULES["tasks"] = array("title" => "Manage Tasks", "resource" => "task", "permission" => "create"); 
 $MODULES["notices"] = array("title" => "Manage Notices", "resource" => "notice", "permission" => "update");
 $MODULES["objectives"]	= array("title" => "Manage Objectives", "resource" => "objective", "permission" => "update");
 $MODULES["observerships"] = array("title" => "Manage Observerships", "resource" => "observerships", "permission" => "update");
@@ -601,22 +601,28 @@ define("TASK_VERIFICATION_NONE", "none");
 define("TASK_VERIFICATION_FACULTY","faculty");
 define("TASK_VERIFICATION_OTHER","other");
 
-define("TASK_VERIFICATION_NOTIFICATION_OFF", "off");
-define("TASK_VERIFICATION_NOTIFICATION_EMAIL","email");
+define("TASK_VERIFICATION_NOTIFICATION_OFF", 0);
+define("TASK_VERIFICATION_NOTIFICATION_EMAIL", 1);
+define("TASK_VERIFICATION_NOTIFICATION_DASHBOARD", 2);
 
-define("TASK_COMPLETE_COMMENT_NONE", "no_comments");
-define("TASK_COMPLETE_COMMENT_ALLOW", "allow_comments");
-define("TASK_COMPLETE_COMMENT_REQUIRE", "require_comments");
+define("TASK_COMMENT_NONE", "no_comments");
+define("TASK_COMMENT_ALLOW", "allow_comments");
+define("TASK_COMMENT_REQUIRE", "require_comments");
 
-define("TASK_ALLOW_FACULTY_SELECTION",true);
-define("TASK_DISALLOW_FACULTY_SELECTION", false);
+
+define("TASK_FACULTY_SELECTION_ALLOW","allow");
+define("TASK_FACULTY_SELECTION_REQUIRE", "require");
+define("TASK_FACULTY_SELECTION_OFF", "off");
 
 
 //Defaults
 define("TASK_DEFAULT_RECIPIENT_TYPE",TASK_RECIPIENT_USER); //options are: user, grad_year, organisation
 define("TASK_DEFAULT_VERIFICATION_TYPE", TASK_VERIFICATION_NONE);
-define("TASK_DEFAULT_VERIFICATION_NOTIFICATION", TASK_VERIFICATION_NOTIFICATION_EMAIL);
-define("TASK_DEFAULT_COMPLETE_COMMENT", TASK_COMPLETE_COMMENT_ALLOW);
-define("TASK_DEFAULT_RESUBMIT_COMMENT", TASK_COMPLETE_COMMENT_ALLOW);
+define("TASK_DEFAULT_VERIFICATION_NOTIFICATION", TASK_VERIFICATION_NOTIFICATION_OFF);
+define("TASK_DEFAULT_COMPLETE_COMMENT", TASK_COMMENT_ALLOW);
+define("TASK_DEFAULT_REJECT_COMMENT", TASK_COMMENT_ALLOW);
+define("TASK_DEFAULT_FACULTY_SELECTION",TASK_FACULTY_SELECTION_ALLOW);
 
 define("PDF_PASSWORD","Mm7aeY");
+
+define("GRADEBOOK_DISPLAY_WEIGHTED_TOTAL", 0);

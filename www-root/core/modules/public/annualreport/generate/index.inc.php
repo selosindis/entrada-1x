@@ -45,63 +45,65 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 	
 	<?php $fields = "ar_profile,profile_id,report_completed,career_goals,consistent,year_reported"; ?>
 	
-	<script type="text/javascript">
-	var reports_grid = jQuery("#flex1").flexigrid
-	(
-		{
-		url: '<?php echo ENTRADA_URL; ?>/api/ar_loadgrid.api.php?id=<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>&t=<?php echo $fields; ?>',
-		dataType: 'json',
-		method: 'POST',
-		colModel : [
-			{display: 'Report Completed', name : 'report_completed', width : 188, sortable : true, align: 'left'},
-			{display: 'In Keeping With Career Goals', name : 'career_goals', width : 188, sortable : true, align: 'left'},
-			{display: 'Consistent', name : 'consistent', width : 163, sortable : true, align: 'left'},
-			{display: 'Year', name : 'year_reported', width : 50, sortable : true, align: 'left'},
-			{display: 'Generate', name : 'ctlgo', width : 50,  sortable : false, align: 'center', process:reportGo}
-			],
-		searchitems : [
-			{display: 'Report Completed', name : 'report_completed'},
-			{display: 'In Keeping With Career Goals', name : 'career_goals'},
-			{display: 'Consistent', name : 'consistent'},
-			{display: 'Year', name : 'year_reported', isdefault: true}
-			],
-		sortname: "year_reported",
-		sortorder: "desc",
-		resizable: false, 
-		usepager: true,
-		showToggleBtn: false,
-		singleSelect: true,
-		collapseTable: <?php echo ($_SESSION["reports_expand_grid"] == "reports_grid" ? "false" : "true"); ?>,
-		title: 'A. Generate Annual Report',
-		useRp: true,
-		rp: 15,
-		showTableToggleBtn: true,
-		width: 732,
-		height: 200,
-		nomsg: 'No Results', 
-		buttons : [
-            {name: 'Generate Report', bclass: 'report_go', onpress : generateReport}
-            ]
-		}
-	);
-    
-    function generateReport(com,grid) {
-        if (com=='Generate Report') {
-        	jQuery(function() {
-				if(jQuery('.trSelected',grid).length>0) {
-					jQuery('.trSelected', grid).each(function() {
-						var id = jQuery(this).attr('id');
-						id = id.substring(id.lastIndexOf('row')+3);
-						window.location='<?php echo ENTRADA_URL; ?>/annualreport/generate?section=generate-annual-report&amp;rid='+id+'&amp;proxy_id='+<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>+'&amp;clinical=<?php echo $clinical_member; ?>';
-					});
-		    	} 
-			});
-        }            
-    }
-     
-    function reportGo(celDiv,id) {
-    	celDiv.innerHTML = "<a href='<?php echo ENTRADA_URL; ?>/annualreport/generate?section=generate-annual-report&amp;rid="+id+"&amp;proxy_id="+<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>+"&amp;clinical=<?php echo $clinical_member; ?>' style=\"cursor: pointer; cursor: hand\" text-decoration: none><img src=\"<?php echo ENTRADA_RELATIVE; ?>/css/jquery/images/report_go.gif\" style=\"border: none\"/></a>";
-    } 
+	<script type="text/javascript" defer="defer">
+	jQuery(document).ready(function() {
+		reports_grid = jQuery("#flex1").flexigrid
+		(
+			{
+			url: '<?php echo ENTRADA_URL; ?>/api/ar_loadgrid.api.php?id=<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>&t=<?php echo $fields; ?>',
+			dataType: 'json',
+			method: 'POST',
+			colModel : [
+				{display: 'Report Completed', name : 'report_completed', width : 188, sortable : true, align: 'left'},
+				{display: 'In Keeping With Career Goals', name : 'career_goals', width : 188, sortable : true, align: 'left'},
+				{display: 'Consistent', name : 'consistent', width : 163, sortable : true, align: 'left'},
+				{display: 'Year', name : 'year_reported', width : 50, sortable : true, align: 'left'},
+				{display: 'Generate', name : 'ctlgo', width : 50,  sortable : false, align: 'center', process:reportGo}
+				],
+			searchitems : [
+				{display: 'Report Completed', name : 'report_completed'},
+				{display: 'In Keeping With Career Goals', name : 'career_goals'},
+				{display: 'Consistent', name : 'consistent'},
+				{display: 'Year', name : 'year_reported', isdefault: true}
+				],
+			sortname: "year_reported",
+			sortorder: "desc",
+			resizable: false, 
+			usepager: true,
+			showToggleBtn: false,
+			singleSelect: true,
+			collapseTable: <?php echo ($_SESSION["reports_expand_grid"] == "reports_grid" ? "false" : "true"); ?>,
+			title: 'A. Generate Annual Report',
+			useRp: true,
+			rp: 15,
+			showTableToggleBtn: true,
+			width: 732,
+			height: 200,
+			nomsg: 'No Results', 
+			buttons : [
+	            {name: 'Generate Report', bclass: 'report_go', onpress : generateReport}
+	            ]
+			}
+		);
+	    
+	    function generateReport(com,grid) {
+	        if (com=='Generate Report') {
+	        	jQuery(function() {
+					if(jQuery('.trSelected',grid).length>0) {
+						jQuery('.trSelected', grid).each(function() {
+							var id = jQuery(this).attr('id');
+							id = id.substring(id.lastIndexOf('row')+3);
+							window.location='<?php echo ENTRADA_URL; ?>/annualreport/generate?section=generate-annual-report&amp;rid='+id+'&amp;proxy_id='+<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>+'&amp;clinical=<?php echo $clinical_member; ?>';
+						});
+			    	} 
+				});
+	        }            
+	    }
+	     
+	    function reportGo(celDiv,id) {
+	    	celDiv.innerHTML = "<a href='<?php echo ENTRADA_URL; ?>/annualreport/generate?section=generate-annual-report&amp;rid="+id+"&amp;proxy_id="+<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>+"&amp;clinical=<?php echo $clinical_member; ?>' style=\"cursor: pointer; cursor: hand\" text-decoration: none><img src=\"<?php echo ENTRADA_RELATIVE; ?>/css/jquery/images/report_go.gif\" style=\"border: none\"/></a>";
+	    }
+	});
 	</script>
 	<?php
 }

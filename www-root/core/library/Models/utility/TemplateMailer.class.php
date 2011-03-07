@@ -45,7 +45,7 @@ class TemplateMailer {
 	
  	public function send(Template $template, array $to, array $from, $language, array $bind_array = array()) {
  		
- 		$result = $template->getResult($language,$bind_array);
+ 		$result = $template->getResult($bind_array, array("lang" => $language ));
 	
 		$mail = $this->_mail_handler;
 		

@@ -105,6 +105,13 @@ if ($COURSE_ID) {
 					<td class="title<?php echo (isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) && ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "title") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo public_order_link("title", "Assessment Title"); ?></td>
 					<td class="general<?php echo (isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) && ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "type") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo public_order_link("type", "Assessment Type"); ?></td>
 					<td class="date-small">Assessment Mark</td>
+					<?php
+					if (defined("GRADEBOOK_DISPLAY_WEIGHTED_TOTAL") && GRADEBOOK_DISPLAY_WEIGHTED_TOTAL) {
+						?>
+						<td class="date-small">Weighted Mark</td>
+						<?php
+					}
+					?>
 					<td class="gradebook">Percent Mark</td>
 				</tr>
 			</thead>
@@ -116,13 +123,16 @@ if ($COURSE_ID) {
 				} else {
 					$grade_value = "-";
 				}
-				$gradebook = gradebook_get_weighted_grades($result["course_id"], $_SESSION["details"]["role"], $_SESSION["details"]["id"]);
 				echo "<tr id=\"gradebook-".$result["course_id"]."\">\n";
 				echo "	<td>&nbsp;</td>\n";
 				echo "	<td>".html_encode($result["name"])."</td>\n";
 				echo "	<td>".($result["type"])."</td>\n";
 				echo "	<td>".trim($grade_value).assessment_suffix($result)."</td>\n";
-				echo "	<td>".(($grade_value === "-") ? "-" : (($result["handler"] == "Numeric" ? number_format(($grade_value / $result["numeric_grade_points_total"] * 100), 2)."%" : (($result["handler"] == "Percentage" ? ("N/A") : $grade_value)))))."</td>\n";
+				if (defined("GRADEBOOK_DISPLAY_WEIGHTED_TOTAL") && GRADEBOOK_DISPLAY_WEIGHTED_TOTAL) {
+					$gradebook = gradebook_get_weighted_grades($result["course_id"], $_SESSION["details"]["role"], $_SESSION["details"]["id"], $result["assessment_id"]);
+					echo "	<td>".trim($gradebook["grade"])." / ".trim($gradebook["total"])."</td>\n";
+				}
+				echo "	<td style=\"text-align: right;\">".(($grade_value === "-") ? "-" : (($result["handler"] == "Numeric" ? ($result["value"] === "0" ? "0" : trim(trim(number_format(($grade_value / $result["numeric_grade_points_total"] * 100), 2), "0"), "."))."%" : (($result["handler"] == "Percentage" ? ("N/A") : $grade_value)))))."</td>\n";
 				echo "</tr>\n";
 			}
 			?>

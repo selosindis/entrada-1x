@@ -659,7 +659,7 @@ function new_sidebar_item($title = "", $html = "", $id = "", $state = "open", $p
 function ob_clear_open_buffers() {
 	$level = @ob_get_level();
 
-	for ($i = 0; $i <= $level; $i++) {
+	for ($i = 1; $i <= $level; $i++) {
 		@ob_end_clean();
 	}
 

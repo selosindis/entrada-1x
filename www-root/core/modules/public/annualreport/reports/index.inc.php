@@ -60,7 +60,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 	<ol class="system-reports">
 		<li>
 			<a href="<?php echo ENTRADA_URL; ?>/annualreport/reports?section=my_publications">My Publications</a><br />
-			A report that shows all of the publications you've for a specific date range.
+			A report that shows publications for a specific date range.
 		</li>
 	</ol>
 	<?php 
@@ -69,7 +69,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 	<ol class="system-reports">
 		<li>
 			<a href="<?php echo ENTRADA_URL; ?>/annualreport/reports?section=my_departmental_publications">Publications</a><br />
-			A report that shows all of the publications in your department for a specific date range.
+			A report that shows publications in your department for a specific date range.
 		</li>
 	</ol>
 	<?php } ?>

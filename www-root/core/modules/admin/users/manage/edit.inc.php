@@ -556,15 +556,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 								</tr>
 								<tr>
 									<td>&nbsp;</td>
-									<td><label for="username" class="form-required">MEdTech Username:</label></td>
+									<td><label for="username" class="form-required"><?php echo APPLICATION_NAME; ?> Username:</label></td>
 									<td>
 										<input type="text" id="username" name="username" value="<?php echo ((isset($PROCESSED["username"])) ? html_encode($PROCESSED["username"]) : ""); ?>" style="width: 250px" maxlength="25" />
-										<span class="content-small">(<strong>Important:</strong> Should be the Queen's NetID)</span>
 									</td>
 								</tr>
 								<tr>
 									<td>&nbsp;</td>
-									<td style="vertical-align: top"><label for="password" class="form-required">MEdTech Password:</label></td>
+									<td style="vertical-align: top"><label for="password" class="form-required"><?php echo APPLICATION_NAME; ?> Password:</label></td>
 									<td>
 										<input type="text" id="password" name="password" value="" style="width: 250px" maxlength="25" />
 										<div class="content-small" style="margin-top: 5px">

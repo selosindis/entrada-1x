@@ -56,7 +56,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 	
 	<script type="text/javascript" defer="defer">
 	jQuery(document).ready(function() {
-		var jQuerydialog = jQuery('<div></div>')
+		jQuerydialog = jQuery('<div></div>')
 			.html('<span class="ui-icon ui-icon-circle-check" style="float:left; margin:0 7px 50px 0;"></span>You must select at least one record in order to delete.')
 			.dialog({
 				autoOpen: false,
@@ -68,7 +68,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 				}
 			});
 			
-		var jQueryError = jQuery('<div></div>')
+		jQueryError = jQuery('<div></div>')
 		.html('<span class="ui-icon ui-icon-locked" style="float:left; margin:0 7px 50px 0;"></span>Error: You cannot delete records from previous years. Contact support if you need one deleted.')
 		.dialog({
 			autoOpen: false,
@@ -85,7 +85,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 		});
 		
 		<?php $fields = "ar_clinical_activity,clinical_activity_id,average_hours,site,description,year_reported"; ?>
-		var clinical_grid = jQuery("#flex1").flexigrid
+		clinical_grid = jQuery("#flex1").flexigrid
 		(
 			{
 			url: '<?php echo ENTRADA_URL; ?>/api/ar_loadgrid.api.php?id=<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>&t=<?php echo $fields; ?>',
@@ -193,7 +193,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 		    }
 		}
 		<?php $fields = "ar_ward_supervision,ward_supervision_id,average_clerks,average_patients,service,year_reported"; ?>
-		var ward_grid = jQuery("#flex2").flexigrid
+		ward_grid = jQuery("#flex2").flexigrid
 		(
 			{
 			url: '<?php echo ENTRADA_URL; ?>/api/ar_loadgrid.api.php?id=<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>&t=<?php echo $fields; ?>',
@@ -301,7 +301,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 		    }
 		}
 		<?php $fields = "ar_clinics,clinics_id,average_clerks,patients,clinic,year_reported"; ?>
-		var clinic_grid = jQuery("#flex3").flexigrid
+		clinic_grid = jQuery("#flex3").flexigrid
 		(
 			{
 			url: '<?php echo ENTRADA_URL; ?>/api/ar_loadgrid.api.php?id=<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>&t=<?php echo $fields; ?>',
@@ -410,7 +410,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 		}
 		
 		<?php $fields = "ar_consults,consults_id,months,average_consults,activity,year_reported"; ?>
-		var consults_grid = jQuery("#flex4").flexigrid
+		consults_grid = jQuery("#flex4").flexigrid
 		(
 			{
 			url: '<?php echo ENTRADA_URL; ?>/api/ar_loadgrid.api.php?id=<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>&t=<?php echo $fields; ?>',
@@ -519,7 +519,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 		}
 		
 		<?php $fields = "ar_on_call,on_call_id,frequency,site,special_features,year_reported"; ?>
-		var on_call_grid = jQuery("#flex5").flexigrid
+		on_call_grid = jQuery("#flex5").flexigrid
 		(
 			{
 			url: '<?php echo ENTRADA_URL; ?>/api/ar_loadgrid.api.php?id=<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>&t=<?php echo $fields; ?>',
@@ -628,7 +628,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 		}
 		
 		<?php $fields = "ar_procedures,procedures_id,average_hours,site,special_features,year_reported"; ?>
-		var procedures_grid = jQuery("#flex6").flexigrid
+		procedures_grid = jQuery("#flex6").flexigrid
 		(
 			{
 			url: '<?php echo ENTRADA_URL; ?>/api/ar_loadgrid.api.php?id=<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>&t=<?php echo $fields; ?>',
@@ -737,7 +737,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 		}
 		
 		<?php $fields = "ar_other_activity,other_activity_id,average_hours,site,special_features,year_reported"; ?>
-		var other_grid = jQuery("#flex7").flexigrid
+		other_grid = jQuery("#flex7").flexigrid
 		(
 			{
 			url: '<?php echo ENTRADA_URL; ?>/api/ar_loadgrid.api.php?id=<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>&t=<?php echo $fields; ?>',
@@ -846,7 +846,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 		}
 		
 		<?php $fields = "ar_clinical_innovation,clinical_innovation_id,description,year_reported"; ?>
-		var innovation_grid = jQuery("#flex8").flexigrid
+		innovation_grid = jQuery("#flex8").flexigrid
 		(
 			{
 			url: '<?php echo ENTRADA_URL; ?>/api/ar_loadgrid.api.php?id=<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>&t=<?php echo $fields; ?>',

@@ -253,7 +253,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 	?>
 	<script type="text/javascript" defer="defer">
 	jQuery(document).ready(function() {
-		var jQuerydialog = jQuery('<div></div>')
+		jQuerydialog = jQuery('<div></div>')
 			.html('<span class="ui-icon ui-icon-circle-check" style="float:left; margin:0 7px 50px 0;"></span>You must select at least one record in order to delete.')
 			.dialog({
 				autoOpen: false,
@@ -265,7 +265,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 				}
 			});
 		
-		var jQueryError = jQuery('<div></div>')
+		jQueryError = jQuery('<div></div>')
 		.html('<span class="ui-icon ui-icon-locked" style="float:left; margin:0 7px 50px 0;"></span>Error: You cannot delete records from previous years. Contact support if you need one deleted.')
 		.dialog({
 			autoOpen: false,
@@ -281,7 +281,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			}
 		});
 		
-		var undergraduate_medical_teaching_grid = jQuery("#flex1").flexigrid
+		undergraduate_medical_teaching_grid = jQuery("#flex1").flexigrid
 		(
 			{
 			url: '<?php echo ENTRADA_URL; ?>/api/ar_loadgrid.api.php?id=<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>&t=<?php echo $fields; ?>',
@@ -330,7 +330,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 	    	jQuery(celDiv).html("<a href='<?php echo ENTRADA_URL; ?>/annualreport/education?section=edit_undergraduate&amp;rid="+id+"' style=\"cursor: pointer; cursor: hand\" text-decoration: none><img src=\"<?php echo ENTRADA_RELATIVE; ?>/images/action-edit.gif\" style=\"border: none\"/></a>");
 	    }
 		<?php $fields = "ar_undergraduate_nonmedical_teaching,undergraduate_nonmedical_teaching_id,course_number,course_name,assigned,year_reported"; ?>
-		var undergraduate_nonmedical_grid = jQuery("#flex2").flexigrid
+		undergraduate_nonmedical_grid = jQuery("#flex2").flexigrid
 		(
 			{
 			url: '<?php echo ENTRADA_URL; ?>/api/ar_loadgrid.api.php?id=<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>&t=<?php echo $fields; ?>',
@@ -439,7 +439,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 		}
 		
 		<?php $fields = "ar_graduate_teaching,graduate_teaching_id,course_number,course_name,assigned,year_reported"; ?>
-		var graduate_grid = jQuery("#flex3").flexigrid
+		graduate_grid = jQuery("#flex3").flexigrid
 		(
 			{
 			url: '<?php echo ENTRADA_URL; ?>/api/ar_loadgrid.api.php?id=<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>&t=<?php echo $fields; ?>',
@@ -548,7 +548,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 		}
 		
 		<?php $fields = "ar_undergraduate_supervision,undergraduate_supervision_id,course_number,student_name,degree,year_reported"; ?>
-		var undergraduate_supervision_grid = jQuery("#flex4").flexigrid
+		undergraduate_supervision_grid = jQuery("#flex4").flexigrid
 		(
 			{
 			url: '<?php echo ENTRADA_URL; ?>/api/ar_loadgrid.api.php?id=<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>&t=<?php echo $fields; ?>',
@@ -657,7 +657,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 		}
 		
 		<?php 	$fields = "ar_graduate_supervision,graduate_supervision_id,supervision,student_name,degree,year_reported"; ?>
-		var graduate_supervision_grid = jQuery("#flex5").flexigrid
+		graduate_supervision_grid = jQuery("#flex5").flexigrid
 		(
 			{
 			url: '<?php echo ENTRADA_URL; ?>/api/ar_loadgrid.api.php?id=<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>&t=<?php echo $fields; ?>',
@@ -766,7 +766,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 		}
 		
 		<?php $fields = "ar_memberships,memberships_id,student_name,department,degree,year_reported"; ?>
-		var memberships_grid = jQuery("#flex6").flexigrid
+		memberships_grid = jQuery("#flex6").flexigrid
 		(
 			{
 			url: '<?php echo ENTRADA_URL; ?>/api/ar_loadgrid.api.php?id=<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>&t=<?php echo $fields; ?>',
@@ -877,7 +877,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 		<?php 
 		if($_SESSION["details"]["clinical_member"]) {
 			$fields = "ar_clinical_education,clinical_education_id,level,description,location,year_reported";?>
-			var clinical_education_grid = jQuery("#flex7").flexigrid
+			clinical_education_grid = jQuery("#flex7").flexigrid
 			(
 				{
 				url: '<?php echo ENTRADA_URL; ?>/api/ar_loadgrid.api.php?id=<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>&t=<?php echo $fields; ?>',
@@ -988,7 +988,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 		<?php 
 		}
 		$fields = "ar_continuing_education,continuing_education_id,unit,description,location,year_reported"; ?>
-		var continuing_education_grid = jQuery("#flex8").flexigrid
+		continuing_education_grid = jQuery("#flex8").flexigrid
 		(
 			{
 			url: '<?php echo ENTRADA_URL; ?>/api/ar_loadgrid.api.php?id=<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>&t=<?php echo $fields; ?>',
@@ -1097,7 +1097,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 		}
 		
 		<?php $fields = "ar_innovation,innovation_id,course_number,course_name,type,year_reported"; ?>
-		var innovation_grid = jQuery("#flex9").flexigrid
+		innovation_grid = jQuery("#flex9").flexigrid
 		(
 			{
 			url: '<?php echo ENTRADA_URL; ?>/api/ar_loadgrid.api.php?id=<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>&t=<?php echo $fields; ?>',
@@ -1206,7 +1206,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 		}
 		
 		<?php $fields = "ar_other,other_id,description,course_name,type,year_reported"; ?>
-		var other_grid = jQuery("#flex10").flexigrid
+		other_grid = jQuery("#flex10").flexigrid
 		(
 			{
 			url: '<?php echo ENTRADA_URL; ?>/api/ar_loadgrid.api.php?id=<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>&t=<?php echo $fields; ?>',

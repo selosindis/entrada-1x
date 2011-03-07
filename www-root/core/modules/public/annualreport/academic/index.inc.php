@@ -40,7 +40,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 	
 	<script type="text/javascript" defer="defer">
 	jQuery(document).ready(function() {
-		var jQuerydialog = jQuery('<div></div>')
+		jQuerydialog = jQuery('<div></div>')
 			.html('<span class="ui-icon ui-icon-circle-check" style="float:left; margin:0 7px 50px 0;"></span>You must select at least one record in order to delete.')
 			.dialog({
 				autoOpen: false,
@@ -52,7 +52,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 				}
 			});
 			
-		var jQueryError = jQuery('<div></div>')
+		jQueryError = jQuery('<div></div>')
 		.html('<span class="ui-icon ui-icon-locked" style="float:left; margin:0 7px 50px 0;"></span>Error: You cannot delete records from previous years. Contact support if you need one deleted.')
 		.dialog({
 			autoOpen: false,
@@ -69,7 +69,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 		});
 			
 		<?php $fields = "ar_internal_contributions,internal_contributions_id,time_commitment,description,role,year_reported"; ?>
-		var internal_grid = jQuery("#flex1").flexigrid
+		internal_grid = jQuery("#flex1").flexigrid
 		(
 			{
 			url: '<?php echo ENTRADA_URL; ?>/api/ar_loadgrid.api.php?id=<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>&t=<?php echo $fields; ?>',
@@ -178,7 +178,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 		}
 		 
 		<?php $fields = "ar_external_contributions,external_contributions_id,days_of_year,description,organisation,year_reported"; ?>
-		var external_grid = jQuery("#flex2").flexigrid
+		external_grid = jQuery("#flex2").flexigrid
 		(
 			{
 			url: '<?php echo ENTRADA_URL; ?>/api/ar_loadgrid.api.php?id=<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>&t=<?php echo $fields; ?>',

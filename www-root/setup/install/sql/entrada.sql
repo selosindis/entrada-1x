@@ -1357,6 +1357,7 @@ CREATE TABLE IF NOT EXISTS `community_pages` (
   `allow_public_view` int(1) NOT NULL DEFAULT '0',
   `updated_date` bigint(64) NOT NULL DEFAULT '0',
   `updated_by` int(12) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`cpage_id`),
   KEY `cpage_id` (`cpage_id`,`community_id`,`page_url`,`page_active`),
   KEY `community_id` (`community_id`,`parent_id`,`page_url`,`page_active`),
   KEY `page_order` (`page_order`),
@@ -3333,6 +3334,7 @@ CREATE TABLE IF NOT EXISTS `quiz_questions` (
   `question_text` longtext NOT NULL,
   `question_points` int(6) NOT NULL DEFAULT '0',
   `question_order` int(6) NOT NULL DEFAULT '0',
+  `question_active` int(1) NOT NULL DEFAULT '1',
   `randomize_responses` int(1) NOT NULL,
   PRIMARY KEY  (`qquestion_id`),
   KEY `quiz_id` (`quiz_id`,`questiontype_id`,`question_order`)
@@ -3346,6 +3348,7 @@ CREATE TABLE IF NOT EXISTS `quiz_question_responses` (
   `response_correct` enum('0','1') NOT NULL DEFAULT '0',
   `response_is_html` enum('0','1') NOT NULL,
   `response_feedback` text NOT NULL,
+  `response_active` int(1) NOT NULL DEFAULT '1',
   PRIMARY KEY  (`qqresponse_id`),
   KEY `qquestion_id` (`qquestion_id`,`response_order`,`response_correct`),
   KEY `response_is_html` (`response_is_html`)
@@ -3357,7 +3360,9 @@ CREATE TABLE IF NOT EXISTS `settings` (
   PRIMARY KEY (`shortname`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-INSERT INTO `settings` (`shortname`, `value`) VALUES ('version_db', '1.2.0');
+INSERT INTO `settings` (`shortname`, `value`) VALUES
+('version_db', '1200'),
+('version_entrada', '1.2.0');
 
 CREATE TABLE IF NOT EXISTS `statistics` (
   `statistic_id` int(12) NOT NULL AUTO_INCREMENT,

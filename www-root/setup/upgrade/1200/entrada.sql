@@ -3,6 +3,8 @@ ALTER TABLE `event_quizzes` CHANGE `equiz_id` `aquiz_id` int(12) NOT NULL AUTO_I
 ALTER TABLE `event_quizzes` CHANGE `event_id` `content_id` int(12) NOT NULL DEFAULT '0';
 RENAME TABLE `event_quizzes` TO `attached_quizzes`;
 
+ALTER TABLE  `attached_quizzes` ADD INDEX (`content_id`, `release_date`, `release_until`);
+
 ALTER TABLE `event_quiz_progress` ADD COLUMN `content_type` enum('event','community_page') NOT NULL DEFAULT 'event' AFTER `equiz_id`;
 ALTER TABLE `event_quiz_progress` CHANGE `equiz_id` `aquiz_id` int(12) unsigned NOT NULL;
 ALTER TABLE `event_quiz_progress` CHANGE `event_id` `content_id` int(12) NOT NULL DEFAULT '0';
@@ -33,7 +35,9 @@ ALTER TABLE `student_observerships` add column (
   `preceptor_lastname` varchar(256) default NULL,
   `preceptor_proxy_id` int(12) unsigned default NULL);
   
-ALTER TABLE `student_mspr` ADD COLUMN  `carms_number` int(10) unsigned default NULL;
+ALTER TABLE `student_mspr` ADD COLUMN `carms_number` int(10) unsigned default NULL;
+ALTER TABLE `student_mspr` CHANGE `generated` `generated` BIGINT(64) NULL DEFAULT NULL;
+ALTER TABLE `student_mspr` CHANGE `closed` `closed` BIGINT(64) NULL DEFAULT NULL;
 
 INSERT INTO `communities_modules` (`module_id`,`module_shortname`,`module_version`,`module_title`,`module_description`,`module_active`,`module_permissions`,`updated_date`,`updated_by`)
 VALUES (7, 'quizzes', '1.0.0', 'Quizzes', 'This module allows communities to create their own quizzes for summative or formative evaluation.', 1, 'a:1:{s:5:\"index\";i:0;}', 1216256830, 3499);
@@ -168,7 +172,7 @@ CREATE TABLE IF NOT EXISTS `evaluation_targets` (
 
 ALTER TABLE `assessments` CHANGE `grad_year` `grad_year` varchar(35) NOT NULL DEFAULT '';
 
-ALTER TABLE `community_pages` CHANGE `page_url` `page_url` varchar(329);
+ALTER TABLE `community_pages` CHANGE `page_url` `page_url` varchar(329) NOT NULL;
 ALTER TABLE `community_pages` ADD INDEX (`cpage_id`, `community_id`, `page_url`, `page_active`);
 ALTER TABLE `community_pages` ADD INDEX (`community_id`, `parent_id`, `page_url`, `page_active`);
 ALTER TABLE `community_pages` ADD INDEX (`page_order`);
@@ -285,6 +289,8 @@ ALTER TABLE `community_discussion_topics` ADD KEY `post` (`proxy_id`,`community_
 ALTER TABLE `community_discussion_topics` ADD KEY `release` (`proxy_id`,`community_id`,`cdtopic_parent`,`topic_active`,`release_date`);
 ALTER TABLE `community_discussion_topics` ADD KEY `community` (`cdtopic_id`,`community_id`);
 
+ALTER TABLE  `global_lu_objectives` ADD INDEX (`objective_code`);
+
 ALTER TABLE `tasks`
  ADD COLUMN `verification_type` enum('faculty','other','none') NOT NULL default 'none',
  ADD COLUMN `faculty_selection_policy` enum('off','allow','require') NOT NULL default 'allow',
@@ -393,3 +399,26 @@ CREATE TABLE IF NOT EXISTS `meta_values` (
 
 INSERT INTO `settings` (`shortname`, `value`) VALUES ('version_entrada', '1.2.0');
 UPDATE `settings` SET `value` = '1200' WHERE `shortname` = 'version_db';
+
+CREATE TABLE IF NOT EXISTS `ar_undergraduate_nonmedical_teaching` (
+  `undergraduate_nonmedical_teaching_id` int(11) NOT NULL auto_increment,
+  `course_number` varchar(25) NOT NULL DEFAULT '',
+  `course_name` text NOT NULL,
+  `assigned` char(3) NOT NULL DEFAULT '',
+  `lec_enrollment` int(11) NOT NULL DEFAULT '0',
+  `lec_hours` int(11) NOT NULL DEFAULT '0',
+  `lab_enrollment` int(11) NOT NULL DEFAULT '0',
+  `lab_hours` int(11) NOT NULL DEFAULT '0',
+  `tut_enrollment` int(11) NOT NULL DEFAULT '0',
+  `tut_hours` int(11) NOT NULL DEFAULT '0',
+  `sem_enrollment` int(11) NOT NULL DEFAULT '0',
+  `sem_hours` int(11) NOT NULL DEFAULT '0',
+  `coord_enrollment` int(11) NOT NULL DEFAULT '0',
+  `pbl_hours` int(11) NOT NULL DEFAULT '0',
+  `comments` text,
+  `year_reported` int(4) NOT NULL DEFAULT '0',
+  `proxy_id` int(11) DEFAULT NULL,
+  `updated_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
+  `updated_by` int(11) DEFAULT NULL,
+  PRIMARY KEY  (`undergraduate_nonmedical_teaching_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;

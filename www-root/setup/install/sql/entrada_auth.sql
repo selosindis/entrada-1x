@@ -289,7 +289,8 @@ CREATE TABLE IF NOT EXISTS `user_access` (
   KEY `access_starts` (`access_starts`),
   KEY `access_expires` (`access_expires`),
   KEY `role` (`role`),
-  KEY `group` (`group`)
+  KEY `group` (`group`),
+  KEY `user_app_id` (`user_id`,`app_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `user_access` (`id`, `user_id`, `app_id`, `account_active`, `access_starts`, `access_expires`, `last_login`, `last_ip`, `login_attempts`, `locked_out_until`, `role`, `group`, `extras`, `private_hash`, `notes`) VALUES
@@ -335,11 +336,11 @@ CREATE TABLE IF NOT EXISTS `user_data` (
   KEY `lastname` (`lastname`),
   KEY `privacy_level` (`privacy_level`),
   KEY `google_id` (`google_id`),
+  KEY `clinical` (`clinical`),
   KEY `organisation_id` (`organisation_id`),
   KEY `gender` (`gender`),
   KEY `country_id` (`country_id`),
-  KEY `province_id` (`province_id`),
-  KEY `clinical` (`clinical`),
+  KEY `province_id` (`province_id`)
   FULLTEXT KEY `firstname_2` (`firstname`,`lastname`,`email`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 

@@ -71,6 +71,10 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			<a href="<?php echo ENTRADA_URL; ?>/annualreport/reports?section=my_departmental_publications">Publications</a><br />
 			A report that shows publications in your department for a specific date range.
 		</li>
+		<li>
+			<a href="<?php echo ENTRADA_URL; ?>/annualreport/reports?section=my_departmental_grants">Research Grants</a><br />
+			A report that shows Research Grants in your department for a specific date range.
+		</li>
 	</ol>
 	<?php } ?>
 	<h2 style="color: #669900">Blank ART Form</h2>

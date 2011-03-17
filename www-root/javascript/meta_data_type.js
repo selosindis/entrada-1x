@@ -1,6 +1,6 @@
 function addRow(user_id, event) {
 	Event.stop(event);
-	var category_id = $('cat_id').getAttribute("id");
+	var category_id = $('cat_id').getValue();
 	new Ajax.Request(api_url,
 		{
 			method:'post',

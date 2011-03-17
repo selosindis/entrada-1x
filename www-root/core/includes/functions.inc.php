@@ -10637,6 +10637,26 @@ function get_user_departments($user_id) {
 }
 
 /**
+ * This function gets all of the departments in the user_departments table
+ * @param string $user_id
+ * @return array $results
+ */
+function get_distinct_user_departments() {
+	global $db;
+	
+	$query = "	SELECT DISTINCT b.`department_title`, b.`department_id` 
+				FROM `".AUTH_DATABASE."`.`user_departments` AS a
+				JOIN `".AUTH_DATABASE."`.`departments` AS b
+				ON a.`dep_id` = b.`department_id`
+				WHERE (b.`department_active` = '1' OR b.`department_active` = '3') AND b.`parent_id`='0'
+				ORDER BY b.`department_title`";
+	
+	$results = $db->GetAll($query);
+	
+	return $results;
+}
+
+/**
  * This function gets determines if a user is a department head
  * @param int $user_id
  * @return int $department_id, bool returns false otherwise

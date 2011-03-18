@@ -39,7 +39,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
 } else {	
-	$BREADCRUMB[]	= array("url" => "", "title" => "Research Grants" );
+	$BREADCRUMB[]	= array("url" => "", "title" => "Peer Reviewed Publications" );
 	
 	$years = getMinMaxARYears();
 	
@@ -171,16 +171,15 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			$divisionPi = 0;			
 			$totalsCo = 0;
 			$totalsPi = 0;
-			$piAmount = 0.00;
-			$divisionAmount = 0.00;
-			$totalAmount = 0.00;
+			$citationArray = array();
+			
 			$controlBreak = false;
 			$firstTotalOutput = true;
 
 			$query = "SELECT DISTINCT `proxy_id`, `firstname`, `lastname`, `department_title`, `dep_id`
-			FROM `".DATABASE_NAME."`.`ar_research`, `".AUTH_DATABASE."`.`user_data`, `".AUTH_DATABASE."`.`user_departments`, `".AUTH_DATABASE."`.`departments`
+			FROM `".DATABASE_NAME."`.`ar_peer_reviewed_papers`, `".AUTH_DATABASE."`.`user_data`, `".AUTH_DATABASE."`.`user_departments`, `".AUTH_DATABASE."`.`departments`
 			WHERE `year_reported` = ".$db->qstr($PROCESSED["year_reported"]).$type_where."
-			AND `".DATABASE_NAME."`.`ar_research`.`proxy_id` = `".AUTH_DATABASE."`.`user_data`.`id` 
+			AND `".DATABASE_NAME."`.`ar_peer_reviewed_papers`.`proxy_id` = `".AUTH_DATABASE."`.`user_data`.`id` 
 			AND `".AUTH_DATABASE."`.`user_data`.`id` = `".AUTH_DATABASE."`.`user_departments`.`user_id`
 			AND `".AUTH_DATABASE."`.`user_departments`.`dep_id` = `".AUTH_DATABASE."`.`departments`.`department_id`
 			AND `dep_id` IN(".$divisions.")
@@ -199,9 +198,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 						$divisionString = fetch_department_title($result["dep_id"]);
 						if($prevDepartment != "") {
 							echo "	<tr><td style=\"width: 50%; font-weight: bold; font-weight: bold\" colspan=\"2\">Division Totals: PI - Co-Investigator Grants:</td>\n";
-							echo "	<td style=\"width: 30%; font-weight: bold\">".$divisionPi." - ".$divisionCo."</td>\n";
-							echo "	<td style=\"width: 20%; font-weight: bold\">$".number_format($divisionAmount, 2)."</td></tr>";
-							$divisionAmount = 0.00;
+							echo "	<td style=\"width: 50%; font-weight: bold; font-weight: bold\" colspan=\"2\">".$divisionPi." - ".$divisionCo."</td></tr>";
 							$divisionCo = 0;
 							$divisionPi = 0;
 							echo "</tbody></table><br />";
@@ -220,8 +217,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 								<tr>
 									<td style="width: 20%">Name</td>
 									<td style="width: 30%" >Grant Title</td>
-									<td style="width: 30%" >Agency</td>
-									<td style="width: 20%" >Amount</td>
+									<td style="width: 30%" >Source</td>
+									<td style="width: 20%" >Role</td>
 								</tr>
 							</thead>
 							<tbody>
@@ -241,53 +238,55 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 							<tr>
 								<td style="width: 20%">Name</td>
 								<td style="width: 30%" >Grant Title</td>
-								<td style="width: 30%" >Agency</td>
-								<td style="width: 20%" >Amount</td>
+								<td style="width: 30%" >Source</td>
+								<td style="width: 20%" >Role</td>
 							</tr>
 						</thead>
 						<tbody>
 						<?php
 					}
 					
-					$query = "SELECT `grant_title`, `agency`, `amount_received`
-					FROM `ar_research` 
+					$query = "SELECT `title`, `source`, `role_description`
+					FROM `ar_peer_reviewed_papers`, `global_lu_roles`
 					WHERE `proxy_id` = ".$db->qstr($result["proxy_id"])."
-					AND `role` = \"Principal Investigator\"
-					AND `funding_status` = \"funded\"
-					AND `year_reported` = ".$db->qstr($PROCESSED["year_reported"]);
-					
+					AND `ar_peer_reviewed_papers`.`role_id` IN(1,5) 
+					AND `ar_peer_reviewed_papers`.`role_id` =`global_lu_roles`.`role_id` 
+					AND `type_id` = '1'
+					AND `year_reported` = ".$db->qstr($PROCESSED["year_reported"])."
+					ORDER BY `title` ASC, `source` ASC";
 					
 					if($researchResults	= $db->GetAll($query)) {
 						foreach($researchResults as $researchResult) {
-							if($controlBreak == false) {
-								echo "	<tr><td style=\"width: 5%\">".$result["lastname"]. ", " .$result["firstname"]."</td>\n";
-								$controlBreak = true;
-							} else {
-								echo "	<tr><td style=\"width: 5%\">&nbsp;</td>\n";
+							$key = $researchResult["title"].$researchResult["source"].$researchResult["role_description"];
+							if(!in_array($key, $citationArray)) {
+								$citationArray[] = $key;
+								if($controlBreak == false) {
+									echo "	<tr><td style=\"width: 5%\">".$result["lastname"]. ", " .$result["firstname"]."</td>\n";
+									$controlBreak = true;
+								} else {
+									echo "	<tr><td style=\"width: 5%\">&nbsp;</td>\n";
+								}
+								echo "	<td style=\"width: 1%\">".(strlen($researchResult["title"]) > 35 ? substr($researchResult["title"], 0, 31)."..." : $researchResult["title"])."</td>\n";
+								echo "	<td style=\"width: 1%\">".(strlen($researchResult["source"]) > 35 ? substr($researchResult["source"], 0, 31)."..." : $researchResult["source"])."</td>\n";
+								echo "	<td style=\"width: 1%\">".$researchResult["role_description"]."</td></tr>";
+								$pi++;
+								$divisionPi++;
+								$totalsPi++;
 							}
-							echo "	<td style=\"width: 1%\">".(strlen($researchResult["grant_title"]) > 35 ? substr($researchResult["grant_title"], 0, 31)."..." : $researchResult["grant_title"])."</td>\n";
-							echo "	<td style=\"width: 1%\">".(strlen($researchResult["agency"]) > 35 ? substr($researchResult["agency"], 0, 31)."..." : $researchResult["agency"])."</td>\n";
-							echo "	<td style=\"width: 1%\">$".number_format($researchResult["amount_received"], 2)."</td></tr>";
-							$pi++;
-							if($researchResult["amount_received"] > 0.00) {
-								$piAmount = $piAmount + $researchResult["amount_received"];
-							}
-							$divisionPi++;
-							$totalsPi++;
 						}
-						$divisionAmount = $divisionAmount + $piAmount;
-						$totalAmount = $totalAmount + $piAmount;
 						$controlBreak = false;
 					}
 					
-					$query = "SELECT count(proxy_id) AS `grants`
-					FROM `ar_research` 
+					$query = "SELECT count(proxy_id) AS `co-titles`
+					FROM `ar_peer_reviewed_papers`, `global_lu_roles`
 					WHERE `proxy_id` = ".$db->qstr($result["proxy_id"])."
-					AND `role` = \"Co-Investigator\" AND `funding` != '0.00'
+					AND `ar_peer_reviewed_papers`.`role_id` IN(2,6) 
+					AND `ar_peer_reviewed_papers`.`role_id` =`global_lu_roles`.`role_id` 
+					AND `type_id` = '1'
 					AND `year_reported` = ".$db->qstr($PROCESSED["year_reported"]);
 					
 					if($researchResult	= $db->GetRow($query)) {
-						$co = $researchResult["grants"];
+						$co = $researchResult["co-titles"];
 						$divisionCo = $divisionCo + $co;
 						$totalsCo = $totalsCo + $co;
 					} else {
@@ -295,35 +294,29 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 					}
 					if($pi != 0 || $co != 0) {
 						if($pi != 0) {
-							echo "	<tr><td style=\"width: 50%; font-weight: bold\" colspan=\"2\">Individual Totals: PI - Co-Investigator Grants</td>\n";
-							echo "	<td style=\"width: 30%; font-weight: bold\">".$pi." - ".$co."</td>\n";
-							echo "	<td style=\"width: 20%; font-weight: bold\">$".number_format($piAmount, 2)."</td></tr>";
+							echo "	<tr><td style=\"width: 50%; font-weight: bold\" colspan=\"2\">Individual Totals: Lead - Co-Lead</td>\n";
+							echo "	<td style=\"width: 50%; font-weight: bold\" colspan=\"2\">".$pi." - ".$co."</td></tr>";
 						} else {
-							echo "	<tr><td style=\"width: 50%\" colspan=\"2\">".$result["lastname"]. ", " .$result["firstname"]."</td>\n";
+							echo "	<tr><td style=\"width: 20%\">".$result["lastname"]. ", " .$result["firstname"]."</td>\n";
 							echo "	<td style=\"width: 30%; font-weight: bold\">&nbsp;</td>\n";
-							echo "	<td style=\"width: 50%; font-weight: bold\">&nbsp;</td></tr>";
-							echo "	<tr><td style=\"width: 50%; font-weight: bold\" colspan=\"2\">Individual Totals: PI - Co-Investigator Grants</td>\n";
-							echo "	<td style=\"width: 30%; font-weight: bold\">".$pi." - ".$co."</td>\n";
-							echo "	<td style=\"width: 20%; font-weight: bold\">&nbsp;</td></tr>";
+							echo "	<td style=\"width: 50%; font-weight: bold\" colspan=\"2\">&nbsp;</td></tr>";
+							echo "	<tr><td style=\"width: 50%; font-weight: bold\" colspan=\"2\">Individual Totals: Lead - Co-Lead</td>\n";
+							echo "	<td style=\"width: 50%; font-weight: bold\" colspan=\"2\">".$pi." - ".$co."</td></tr>";
 						}
 					}
-					$piAmount = 0.00;
 					$co = 0;
 					$pi = 0;
 				}
 				
 				if($multipleDivisions) {
-					echo "	<tr><td style=\"width: 50%; font-weight: bold; font-weight: bold\" colspan=\"2\">Division Totals: PI - Co-Investigator Grants:</td>\n";
-					echo "	<td style=\"width: 30%; font-weight: bold\">".$divisionPi." - ".$divisionCo."</td>\n";
-					echo "	<td style=\"width: 20%; font-weight: bold\">$".number_format($divisionAmount, 2)."</td></tr>";
-					$divisionAmount = 0.00;
+					echo "	<tr><td style=\"width: 50%; font-weight: bold; font-weight: bold\" colspan=\"2\">Division Totals: Lead - Co-Lead:</td>\n";
+					echo "	<td style=\"width: 50%; font-weight: bold; font-weight: bold\" colspan=\"2\">".$divisionPi." - ".$divisionCo."</td></tr>";
 				}
 				?>
 				</tbody></table>
 				<?php
-				echo "<br /><h3>PI Grants in ".$departmentString.": ".$totalsPi."</h3>";
-				echo "<h3>Co-Investigator Grants in ".$departmentString.": ".$totalsCo."</h3>";
-				echo "<h3>Total Funding = $".number_format($totalAmount, 2)."</h3>";
+				echo "<br /><h3>Lead publishers in ".$departmentString.": ".$totalsPi."</h3>";
+				echo "<h3>Co-Lead publishers in ".$departmentString.": ".$totalsCo."</h3>";
 			} else {
 				echo display_notice(array("There are no records in the system for the qualifiers you have selected."));
 			}

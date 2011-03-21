@@ -133,6 +133,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 							$undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['hours'] = $undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['hours'] + ($result['duration'] / 60);
 							$undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['course_number'] = $currentCourseNum;
 							$undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['phase'] = $phase;
+						} else {
+							$undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['course_number'] = $currentCourseNum;
+							$undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['phase'] = $phase;
+							$undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['hours'] = $undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['hours'] + ($result['duration'] / 60);
 						}
 						break;
 				}

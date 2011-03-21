@@ -74,6 +74,10 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			A break down of undergraduate medical teaching per department per facutly member.
 		</li>
 		<li>
+			<a href="<?php echo ENTRADA_URL; ?>/admin/annualreport/reports?section=pg-teaching">Graduate Teaching</a><br />
+			A break down of graduate teaching per department per facutly member.
+		</li>
+		<li>
 			<a href="<?php echo ENTRADA_URL; ?>/admin/annualreport/reports?section=ug-supervision">Undergraduate Supervision</a><br />
 			A report outlining undergraduate supervision in a department per facutly member.
 		</li>

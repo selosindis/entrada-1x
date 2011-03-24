@@ -86,7 +86,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 					application_log("error", "An error was encountered while attempting to delete an assessment [".$assessment_id."] exception for user [".$proxy_id."]. Database said: ".$db->ErrorMsg());
 				}
 			} elseif (isset($grade_weighting) && (($grade_weighting != $result["grade_weighting"] && $grade_weighting != $result["custom_weighting"]) || $grade_weighting === 0)) {
-				if (isset($result["custom_weighting"]) && $result["custom_weighting"]) {
+				if (isset($result["custom_weighting"]) && ($result["custom_weighting"] === "0" || $result["custom_weighting"])) {
 					$query = "	UPDATE `assessment_exceptions` 
 								SET `grade_weighting` = ".$db->qstr($grade_weighting)."
 								WHERE `assessment_id` = ".$db->qstr($assessment_id)."
@@ -120,7 +120,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 								<img src=\"".ENTRADA_URL."/images/action-delete.gif\">
 								</a>
 								<span class=\"duration_segment_container\">
-									Weighting: <input class=\"duration_segment\" name=\"duration_segment[]\" onchange=\"cleanupList();\" value=\"".$student["grade_weighting"]."\">
+									Weighting: <input class=\"duration_segment\" id=\"student_exception_".$student["proxy_id"]."\" name=\"student_exception[]\" onkeyup=\"modify_exception('".$student["proxy_id"]."', '".$assessment_id."', this.value);\" value=\"".$student["grade_weighting"]."\">
 								</span>
 							</li>";
 				}

@@ -285,6 +285,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							</select>
 							<br /><br /><br />
 							<script type="text/javascript">
+							var updating = false;
 							function delete_exception (proxy_id, assessment_id) {
 								
 								var anOption = document.createElement('option');
@@ -299,14 +300,28 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							    	}
 							    );
 							}
-							function modify_exception (proxy_id, assessment_id, grade_weighting) {
+							function modify_exception (proxy_id, assessment_id) {
+								if (!updating) {
+									updating = true;
+									setTimeout('modify_exception_ajax('+proxy_id+', '+assessment_id+')', 2000);
+								}
+							    
+							}
+							
+							function modify_exception_ajax(proxy_id, assessment_id) {
+								var grade_weighting = $('student_exception_'+proxy_id).value;
 								new Ajax.Updater('exception_container', '<?php echo ENTRADA_URL; ?>/api/assessment-weighting-exception.api.php', 
 									{
 										method:	'post',
-										parameters: 'assessment_id='+assessment_id+'&proxy_id='+proxy_id+'&grade_weighting='+grade_weighting
+										parameters: 'assessment_id='+assessment_id+'&proxy_id='+proxy_id+'&grade_weighting='+grade_weighting,
+										onComplete: function () {
+											$('student_exception_'+proxy_id).focus();
+											updating = false;
+										}
 							    	}
-							    );
+							    )
 							}
+							
 							function add_exception (proxy_id, assessment_id) {
 								new Ajax.Updater('exception_container', '<?php echo ENTRADA_URL; ?>/api/assessment-weighting-exception.api.php', 
 									{
@@ -337,7 +352,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 												<img src=\"".ENTRADA_URL."/images/action-delete.gif\">
 											</a>
 											<span class=\"duration_segment_container\">
-												Weighting: <input class=\"duration_segment\" name=\"duration_segment[]\" onchange=\"modify_exception('".$student["proxy_id"]."', '".$assessment["assessment_id"]."', this.value);\" value=\"".$student["grade_weighting"]."\">
+												Weighting: <input class=\"duration_segment\" id=\"student_exception_".$student["proxy_id"]."\" name=\"student_exception[]\" onkeyup=\"modify_exception('".$student["proxy_id"]."', '".$assessment["assessment_id"]."', this.value);\" value=\"".$student["grade_weighting"]."\">
 											</span>
 										</li>";
 									}

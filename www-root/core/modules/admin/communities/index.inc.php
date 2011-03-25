@@ -321,7 +321,7 @@ if (!defined("IN_COMMUNITIES")) {
 				<tr>
 					<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
 						<input type="submit" class="button" value="Search" />
-						<input type="button" class="button" value="Search All"  onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/communities'"/>
+						<input type="button" class="button" value="Browse All"  onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/communities'"/>
 					</td>
 				</tr>
 			</tfoot>
@@ -381,7 +381,6 @@ if (!defined("IN_COMMUNITIES")) {
 			<colgroup>
 				<col class="modified" />
 				<col class="community_title" />
-				<col class="community_shortname" />
 				<col class="community_opened" />
 				<col class="targets" />
 				<col class="attachment" />
@@ -390,10 +389,9 @@ if (!defined("IN_COMMUNITIES")) {
 			<thead>
 				<tr>
 					<td class="modified">&nbsp;</td>
-					<td class="community_title<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "community_title") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("community_title", "community_title"); ?></td>
-					<td class="community_shortname<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "community_shortname") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("community_shortname", "community_shortname"); ?></td>
-					<td class="date<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "community_opened") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("community_opened", "community_opened"); ?></td>
-					<td class="evaluators<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "category_title") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("category_title", "category_title"); ?></td>
+					<td class="community_title<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "community_title") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("community_title", "Community Title"); ?></td>
+					<td class="date<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "community_opened") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("community_opened", "Creation Date"); ?></td>
+					<td class="evaluators<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "category_title") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("category_title", "Category"); ?></td>
 					<td class="attachment">&nbsp;</td>
 					<td class="attachment">&nbsp;</td>
 				</tr>
@@ -418,7 +416,6 @@ if (!defined("IN_COMMUNITIES")) {
 				echo "<tr id=\"evaluation-".$result["evaluation_id"]."\" class=\"evaluation\">\n";
 				echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"checked[]\" value=\"".$result["evaluation_id"]."\" /></td>\n";
 				echo "	<td class=\"community_title\"><a href=\"".$url."\">".html_encode($result["community_title"])."</a></td>\n";
-				echo "	<td class=\"community_shortname\"><a href=\"".$url."\">".html_encode($result["community_shortname"])."</a></td>\n";
 				echo "	<td class=\"date\"><a href=\"".$url."\">".date(DEFAULT_DATE_FORMAT, $result["community_opened"])."</a></td>\n";
 				echo "	<td class=\"category_title\"><a href=\"".$url."\">".html_encode($result["category_title"])."</a></td>\n";
 				echo "	<td class=\"attachment\"><a href=\"".ENTRADA_URL."/admin/communities?section=members&community=".$result["community_id"]."\"><img src=\"".ENTRADA_URL."/images/headshot-male.gif\" width=\"16\" height=\"16\" alt=\"Manage Community Members\" title=\"Manage Community Members\" border=\"0\" /></a></td>\n";

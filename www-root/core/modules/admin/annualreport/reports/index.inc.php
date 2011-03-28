@@ -74,6 +74,10 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			A break down of undergraduate medical teaching per department per facutly member.
 		</li>
 		<li>
+			<a href="<?php echo ENTRADA_URL; ?>/admin/annualreport/reports?section=ug-nonmedical-teaching">Undergraduate Non-Medical Teaching</a><br />
+			A break down of undergraduate nonmedical teaching per department per facutly member.
+		</li>
+		<li>
 			<a href="<?php echo ENTRADA_URL; ?>/admin/annualreport/reports?section=pg-teaching">Graduate Teaching</a><br />
 			A break down of graduate teaching per department per facutly member.
 		</li>

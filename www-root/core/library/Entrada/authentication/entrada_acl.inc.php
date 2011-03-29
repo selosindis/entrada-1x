@@ -305,7 +305,6 @@ class Entrada_ACL extends ACL_Factory {
 		foreach ($query as $part) {
 			$complete_query .= $part;
 		}
-		echo $complete_query; exit;
 		return $db->GetAll($complete_query);
 	}
 }

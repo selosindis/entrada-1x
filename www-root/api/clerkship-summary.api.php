@@ -128,11 +128,11 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 						?>
 						<tr class="entry-log">
 							<td class="modified">&nbsp;</td>
-							<td class="region-large"><a href="<?php echo $url."\">".$rotation["rotation_title"]; ?></a></td>
-							<td class="date-smallest"><a href="<?php echo $url."\">".$objectives_recorded; ?></a></td>
-							<td class="date-smallest"><a href="<?php echo $url."\">".$objectives_required; ?></a></td>
-							<td class="date-smallest"><a href="<?php echo $url."\">".$procedures_recorded; ?></a></td>
-							<td class="date-smallest"><a href="<?php echo $url."\">".$procedures_required; ?></a></td>
+							<td class="region-large"><a href="<?php echo $url; ?>"><?php echo $rotation["rotation_title"]; ?></a></td>
+							<td class="date-smallest"><a href="<?php echo $url; ?>"><?php echo $objectives_recorded; ?></a></td>
+							<td class="date-smallest"><a href="<?php echo $url; ?>"><?php echo $objectives_required; ?></a></td>
+							<td class="date-smallest"><a href="<?php echo $url; ?>"><?php echo $procedures_recorded; ?></a></td>
+							<td class="date-smallest"><a href="<?php echo $url; ?>"><?php echo $procedures_required; ?></a></td>
 						</tr>
 						<?php
 					}

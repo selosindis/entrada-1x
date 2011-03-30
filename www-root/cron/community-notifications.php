@@ -52,7 +52,7 @@ function build_post($post) {
 								"%URL%",
 								"%UNSUBSCRIBE_URL%",
 								"%APPLICATION_NAME%",
-								"%WEBSITE_URL%"
+								"%ENTRADA_URL%"
 							);
 			$query 		= "	SELECT a.*, CONCAT_WS(' ', b.firstname, b.lastname) as `fullname`, c.`community_title`, c.`community_url`, d.`page_url`
 							FROM `".TABLES_PREFIX."community_".$post["type"]."s` AS a
@@ -73,7 +73,7 @@ function build_post($post) {
 									COMMUNITY_URL.$result["community_url"].":".$result["page_url"]."?id=".$post["record_id"],
 									COMMUNITY_URL.$result["community_url"].":".$result["page_url"],
 									APPLICATION_NAME,
-									WEBSITE_URL
+									ENTRADA_URL
 								);
 			}
 			break;
@@ -86,7 +86,7 @@ function build_post($post) {
 								"%URL%",
 								"%UNSUBSCRIBE_URL%",
 								"%APPLICATION_NAME%",
-								"%WEBSITE_URL%"
+								"%ENTRADA_URL%"
 							);
 			$query 		= "	SELECT a.*, CONCAT_WS(' ', b.firstname, b.lastname) as `fullname`, c.`community_title`, c.`community_url`, d.`page_url`
 							FROM `".TABLES_PREFIX."community_polls` AS a
@@ -107,7 +107,7 @@ function build_post($post) {
 									COMMUNITY_URL.$result["community_url"].":".$result["page_url"]."?action=vote-poll&id=".$post["record_id"],
 									COMMUNITY_URL.$result["community_url"].":".$result["page_url"],
 									APPLICATION_NAME,
-									WEBSITE_URL
+									ENTRADA_URL
 								);
 			}
 			break;
@@ -121,7 +121,7 @@ function build_post($post) {
 								"%URL%",
 								"%UNSUBSCRIBE_URL%",
 								"%APPLICATION_NAME%",
-								"%WEBSITE_URL%"
+								"%ENTRADA_URL%"
 							);
 			$query 		= "	SELECT a.*, CONCAT_WS(' ', b.firstname, b.lastname) as `fullname`, c.`community_title`, c.`community_url`, d.`page_url`, e.`folder_title`
 							FROM `".TABLES_PREFIX."community_share_files` AS a
@@ -143,7 +143,7 @@ function build_post($post) {
 									COMMUNITY_URL.$result["community_url"].":".$result["page_url"]."?action=view-file&id=".$post["record_id"],
 									($post["type"] == "file" ? COMMUNITY_URL.$result["community_url"].":".$result["page_url"]."?action=view-folder&id=".$result["cshare_id"] : COMMUNITY_URL.$result["community_url"].":".$result["page_url"]."?action=view-file&id=".$post["record_id"] ),
 									APPLICATION_NAME,
-									WEBSITE_URL
+									ENTRADA_URL
 								);
 			}
 			break;
@@ -156,7 +156,7 @@ function build_post($post) {
 								"%URL%",
 								"%UNSUBSCRIBE_URL%",
 								"%APPLICATION_NAME%",
-								"%WEBSITE_URL%"
+								"%ENTRADA_URL%"
 							);
 			$query 		= "	SELECT a.*, CONCAT_WS(' ', b.firstname, b.lastname) as `fullname`, c.`community_title`, c.`community_url`, d.`page_url`, e.`gallery_title`
 							FROM `".TABLES_PREFIX."community_gallery_photos` AS a
@@ -178,7 +178,7 @@ function build_post($post) {
 									COMMUNITY_URL.$result["community_url"].":".$result["page_url"]."?action=view-photo&id=".$post["record_id"],
 									($post["type"] == "photo" ? COMMUNITY_URL.$result["community_url"].":".$result["page_url"]."?action=view-gallery&id=".$result["cgallery_id"] : COMMUNITY_URL.$result["community_url"].":".$result["page_url"]."?action=view-photo&id=".$post["record_id"]),
 									APPLICATION_NAME,
-									WEBSITE_URL
+									ENTRADA_URL
 								);
 			}
 			break;
@@ -192,7 +192,7 @@ function build_post($post) {
 								"%URL%",
 								"%UNSUBSCRIBE_URL%",
 								"%APPLICATION_NAME%",
-								"%WEBSITE_URL%"
+								"%ENTRADA_URL%"
 							);
 			$query 		= "	SELECT a.*, CONCAT_WS(' ', b.firstname, b.lastname) as `fullname`, b.`organisation_id`, c.`community_title`, c.`community_url`, e.`page_url`, f.`forum_title`, ".($post["type"] == "reply" ? "g" : "a").".`topic_title` AS `record_title`
 							FROM `".TABLES_PREFIX."community_discussion_topics` AS a
@@ -219,7 +219,7 @@ function build_post($post) {
 									COMMUNITY_URL.$result["community_url"].":".$result["page_url"]."?action=view-post&id=".$post["record_id"],
 									($post["type"] == "post" ? COMMUNITY_URL.$result["community_url"].":".$result["page_url"]."?action=view-forum&id=".$result["cdiscussion_id"] : COMMUNITY_URL.$result["community_url"].":".$result["page_url"]."?action=view-post&id=".$post["record_id"]),
 									APPLICATION_NAME,
-									WEBSITE_URL
+									ENTRADA_URL
 								);
 			}
 			break;
@@ -231,7 +231,7 @@ function build_post($post) {
 								"%URL%",
 								"%UNSUBSCRIBE_URL%",
 								"%APPLICATION_NAME%",
-								"%WEBSITE_URL%"
+								"%ENTRADA_URL%"
 							);
 			$query 		= "	SELECT CONCAT_WS(a.firstname, a.lastname) as `fullname`, b.`community_title`, b.`community_url`, b.`community_title`
 							FROM `".AUTH_DATABASE."`.`user_data` AS a
@@ -243,10 +243,10 @@ function build_post($post) {
 				$replace	= array(
 									$result["fullname"],
 									$result["community_title"],
-									WEBSITE_URL."/people?id=".$post["author_id"],
-									WEBSITE_URL."/profile",
+									ENTRADA_URL."/people?id=".$post["author_id"],
+									ENTRADA_URL."/profile",
 									APPLICATION_NAME,
-									WEBSITE_URL
+									ENTRADA_URL
 								);
 			}
 			break;

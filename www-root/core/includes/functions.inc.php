@@ -7562,7 +7562,6 @@ function clerkship_get_rotation_schedule ($rotation, $proxy_id = 0) {
  * @param int $rotation_id
  * @return string
  */
-
 function clerkship_get_agerange ($agerange_id, $rotation_id) {
     global $db;
 
@@ -7570,6 +7569,454 @@ function clerkship_get_agerange ($agerange_id, $rotation_id) {
 		where `agerange_id` = ".$db->qstr($agerange_id)." and (`rotation_id` = ".$db->qstr($rotation_id)." or `rotation_id` = 0)
 		order by `rotation_id` desc limit 1";
     return $db->GetOne($query);
+}
+
+
+/**
+ * Function takes a period index value, a rotation row, and a clerk/rotation row
+ * and determines whether the clerk should be notified of their progress in the rotation.
+ * If they do require to be notified, whether due to completion or delinquency, then the
+ * function to send such notices is called also.
+ *
+ * @param int $rotation_period_index
+ * @param array $rotation
+ * @param array $clerk
+ * @return boolean
+ */
+function clerkship_progress_send_notice($rotation_period_index, $rotation, $clerk) {
+	global $db;
+	$query 	= "SELECT * FROM `".CLERKSHIP_DATABASE."`.`logbook_notification_history`
+			WHERE `rotation_id` = ".$db->qstr($rotation["rotation_id"])."
+			AND `clerk_id` = ".$db->qstr($clerk["proxy_id"])."
+			AND `proxy_id` = ".$db->qstr($clerk["proxy_id"])."
+			AND `notified_date` < ".$db->qstr((time() - ONE_WEEK));
+	$notified = $db->GetRow($query);
+	if (!$notified) {
+		$objective_progress = clerkship_rotation_objectives_progress($clerk["proxy_id"], $rotation["rotation_id"]);
+		switch ($rotation_period_index) {
+			case CLERKSHIP_ONE_WEEK_PAST :
+				if ($objective_progress["required"] > $objective_progress["logged"]) {
+					$overdue_logging = array(
+												"proxy_id" => $clerk["proxy_id"],
+												"rotation_id" => $rotation["rotation_id"],
+												"event_id" => $clerk["event_id"],
+												"logged_required" => $objective_progress["required"],
+												"logged_completed" => $objective_progress["logged"]
+											);
+					$db->AutoExecute(CLERKSHIP_DATABASE.".logbook_overdue", $overdue_logging, "INSERT");
+					clerkship_notify_clerk($rotation_period_index, $clerk, $rotation, $objective_progress);
+				}
+				break;
+			case CLERKSHIP_ROTATION_ENDED :
+				if ($objective_progress["required"] > $objective_progress["logged"]) {
+					$overdue_logging = array(
+												"proxy_id" => $clerk["proxy_id"],
+												"rotation_id" => $rotation["rotation_id"],
+												"event_id" => $clerk["event_id"],
+												"logged_required" => $objective_progress["required"],
+												"logged_completed" => $objective_progress["logged"]
+											);
+					$db->AutoExecute(CLERKSHIP_DATABASE.".logbook_overdue", $overdue_logging, "INSERT");
+					clerkship_notify_clerk($rotation_period_index, $clerk, $rotation, $objective_progress);
+				}
+				break;
+			case CLERKSHIP_ONE_WEEK_PRIOR :
+			case CLERKSHIP_ROTATION_PERIOD :
+				if ((($objective_progress["logged"] / $objective_progress["required"]) * 100) < ($rotation["percent_required"])) {
+					$overdue_logging = array(
+												"proxy_id" => $clerk["proxy_id"],
+												"rotation_id" => $rotation["rotation_id"],
+												"event_id" => $clerk["event_id"],
+												"logged_required" => $objective_progress["required"],
+												"logged_completed" => $objective_progress["logged"]
+											);
+					$db->AutoExecute(CLERKSHIP_DATABASE.".logbook_overdue", $overdue_logging, "INSERT");
+					clerkship_notify_clerk($rotation_period_index, $clerk, $rotation, $objective_progress);
+				}
+				break;
+		}
+	}
+}
+
+/**
+ * Function takes a period index value, a rotation row, and a clerk/rotation row
+ * and sends notices to let them know that they are deficient/delinquent in their
+ * logging.
+ *
+ * @param int $rotation_period_index
+ * @param array $rotation
+ * @param array $clerk
+ * @return array
+ */
+function clerkship_notify_clerk($rotation_period_index, $clerk, $rotation, $objective_progress) {
+	global $db, $AGENT_CONTACTS;
+	if (defined("CLERKSHIP_EMAIL_NOTIFICATIONS") && CLERKSHIP_EMAIL_NOTIFICATIONS) {
+		$mail = new Zend_Mail();
+		$mail->addHeader("X-Originating-IP", $_SERVER["REMOTE_ADDR"]);
+		$mail->addHeader("X-Section", "Clerkship Notification System",true);
+		$mail->clearFrom();
+		$mail->clearSubject();
+		$mail->setFrom($AGENT_CONTACTS["agent-notifications"]["email"], APPLICATION_NAME.' Clerkship System');
+		switch ($rotation_period_index) {
+			case CLERKSHIP_ONE_WEEK_PAST :
+				$mail->setSubject("Clerkship Logbook Deficiency Notification");
+				break;
+			case CLERKSHIP_ROTATION_ENDED :
+			case CLERKSHIP_ONE_WEEK_PRIOR :
+			case CLERKSHIP_ROTATION_PERIOD :
+				$mail->setSubject("Clerkship Logbook Progress Notification");
+				break;
+		}
+		$NOTIFICATION_MESSAGE		 	 = array();
+		switch ($rotation_period_index) {
+			case CLERKSHIP_ONE_WEEK_PAST :
+				$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".DEFAULT_TEMPLATE."/email/clerkship-deficiency-clerk-notification.txt");
+				break;
+			case CLERKSHIP_ROTATION_ENDED :
+				$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".DEFAULT_TEMPLATE."/email/clerkship-rotation-incomplete-clerk-notification.txt");
+				break;
+			case CLERKSHIP_ONE_WEEK_PRIOR :
+			case CLERKSHIP_ROTATION_PERIOD :
+			default :
+				$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".DEFAULT_TEMPLATE."/email/clerkship-delinquency-clerk-notification.txt");
+				break;
+		}
+								
+		if ($rotation) {
+			$query 	= " SELECT `notified_date` FROM `".CLERKSHIP_DATABASE."`.`logbook_notification_history`
+					WHERE `clerk_id` = ".$db->qstr($clerk["proxy_id"])."
+					AND `proxy_id` = ".$db->qstr($clerk["proxy_id"])."
+					AND `rotation_id` = ".$db->quote($clerk["rotation_id"])."
+					ORDER BY `notified_date` DESC
+					LIMIT 0,1";
+			$last_notified = $db->GetOne($query);
+			if ($last_notified <= (strtotime("-1 week"))) {
+				
+				clerkship_add_queued_notification($rotation_period_index, $clerk, $rotation, $objective_progress);
+												
+				$search		= array(
+									"%CLERK_FULLNAME%",
+									"%ROTATION_TITLE%",
+									"%PROFILE_URL%",
+									"%ROTATION_OVERVIEW_URL%",
+									"%ROTATION_DEFICIENCIES%",
+									"%ROTATION_DEFICIENCY_URL%",
+									"%ENTRY_MANAGEMENT_URL%",
+									"%APPLICATION_NAME%",
+									"%ENTRADA_URL%"
+								);
+				$replace	= array(
+									$clerk["fullname"],
+									$rotation["rotation_title"],
+									ENTRADA_URL."/people?id=".$clerk["proxy_id"],
+									ENTRADA_URL."/clerkship/logbook?section=view&core=".$clerk["rotation_id"],
+									implode(" \n", $objective_progress["required_list"]),
+									ENTRADA_URL."/clerkship/logbook?section=deficiency-plan&rotation=".$clerk["rotation_id"],
+									ENTRADA_URL."/clerkship/logbook?id=".$clerk["proxy_id"]."&sb=rotation&rotation=".$clerk["rotation_id"],
+									APPLICATION_NAME,
+									$last_notified
+							);
+				$mail->setBodyText(clean_input(str_replace($search, $replace, $NOTIFICATION_MESSAGE["textbody"]), array("postclean")));
+				
+				if ($clerk["proxy_id"]) {
+					$NOTICE 	= Array(
+										"target" => "proxy_id:".$clerk["proxy_id"],
+										"notice_summary" => clean_input(str_replace($search, $replace, "It has come to our attention that you have not met the logging requirements for the [%ROTATION_TITLE%] rotation after the allotted time. Please review your logbook entries and progress, and make note of how you plan to solve this problem via the <a href=\"%ROTATION_OVERVIEW_URL%\">Rotation progress</a> section."), array("postclean")),
+										"display_from" => time(),
+										"display_until" => strtotime("+1 week"),
+										"updated_date" => time(),
+										"updated_by" => 3499,
+										"organisation_id" => 1
+								);
+					if($db->AutoExecute("notices", $NOTICE, "INSERT")) {
+						if($NOTICE_ID = $db->Insert_Id()) {
+							application_log("success", "Successfully added notice ID [".$NOTICE_ID."]");
+						} else {
+							application_log("error", "Unable to fetch the newly inserted notice identifier for this notice.");
+						}
+					} else {
+						application_log("error", "Unable to insert new notice into the system. Database said: ".$db->ErrorMsg());
+					}
+				}
+				
+				$mail->clearRecipients();
+				if (strlen($clerk["email"])) {
+					$mail->addTo($clerk["email"], $clerk["fullname"]);
+					$sent = true;
+					try {
+						$mail->send();
+					}
+					catch (Exception $e) {
+						$sent = false;
+					}
+					if($sent) {
+						application_log("success", "Sent overdue logging notification to Clerk [".$clerk["proxy_id"]."].");
+					} else {
+						application_log("error", "Unable to send overdue logging notification to Clerk [".$clerk["proxy_id"]."].");
+					}
+					$NOTICE_HISTORY = Array(
+											"clerk_id" => $clerk["proxy_id"],
+											"proxy_id" => $clerk["proxy_id"],
+											"rotation_id" => $clerk["rotation_id"],
+											"notified_date" => time()
+											);
+					if($db->AutoExecute(CLERKSHIP_DATABASE.".logbook_notification_history", $NOTICE_HISTORY, "INSERT")) {
+						if($HISTORY_ID = $db->Insert_Id()) {
+							application_log("success", "Successfully added notification history ID [".$HISTORY_ID."]");
+						} else {
+							application_log("error", "Unable to fetch the newly inserted notification history identifier for this notice.");
+						}
+					} else {
+						application_log("error", "Unable to insert new notification history record into the system. Database said: ".$db->ErrorMsg());
+					}
+				}
+			}
+		}
+	}
+}
+
+/**
+ * Function takes a period index value, a rotation row, and a clerk/rotation row
+ * and adds notices to be sent to the program coordinator of the clerkship course
+ * in batches to let them know which clerks are deficient/delinquent in their logging.
+ *
+ * @param int $rotation_period_index
+ * @param array $rotation
+ * @param array $clerk
+ * @return array
+ */
+function clerkship_add_queued_notification($rotation_period_index, $clerk, $rotation, $objective_progress) {
+	global $db, $AGENT_CONTACTS;
+						
+	if ($rotation) {
+		$query 	= "SELECT `notified_date` FROM `".CLERKSHIP_DATABASE."`.`logbook_notification_history`
+				WHERE `clerk_id` = ".$db->qstr($clerk["proxy_id"])."
+				AND `proxy_id` = ".$db->qstr($rotation["pcoord_id"])."
+				AND `rotation_id` = ".$db->quote($clerk["rotation_id"])."
+				ORDER BY `notified_date` DESC
+				LIMIT 1";
+		$last_notified = $db->GetOne($query);
+		
+		if ($last_notified <= (strtotime("-1 week"))) {
+			if ($clerk["proxy_id"]) {
+				$coordinator_notification = array(
+														"clerk_id" => $clerk["proxy_id"], 
+														"proxy_id" => $rotation["pcoord_id"], 
+														"rotation_id" => $clerk["rotation_id"], 
+														"timeframe" => $rotation_period_index, 
+														"updated_date" => time(), 
+														"notification_sent" => false
+												);
+				if (!$db->AutoExecute(CLERKSHIP_DATABASE.".clerkship_queued_notifications", $coordinator_notification, "INSERT")) {
+					application_log("error", "Unable to save clerkship coordinator notification to the queue for clerk [".$clerk["proxu_id"]."]. Database said: ".$db->ErrorMsg());
+				}
+			}
+		}
+	}
+}
+/**
+ * Function takes a rotation_id and sends all the pending emails
+ * in the clerkship_queue_notifications table for that rotation
+ * to the clerkship coordinators.
+ *
+ * @param int $rotation_id
+ * @return boolean
+ */
+function clerkship_send_queued_notifications($rotation_id, $rotation_title, $proxy_id) {
+	global $db, $AGENT_CONTACTS;
+	$query 	= "SELECT * FROM `".CLERKSHIP_DATABASE."`.`clerkship_queued_notifications`
+			WHERE `rotation_id` = ".$db->qstr($rotation_id)."
+			AND `clerk_id` NOT IN (
+				SELECT `clerk_id` FROM `".CLERKSHIP_DATABASE."`.`logbook_notification_history` 
+				WHERE `notified_date` > ".$db->qstr(strtotime("-1 week"))."
+				AND `rotation_id` = ".$db->qstr($rotation_id)."
+				AND `proxy_id` = ".$db->qstr($proxy_id)."
+			)
+			AND `notification_sent` = '0'";
+	$clerk_notifications = $db->GetAll($query);
+	if ($clerk_notifications) {
+		$clerks = array();
+		$clerk_ids_string = "";
+		foreach ($clerk_notifications as $clerk_notification) {
+			$clerks[$clerk_notification["clerk_id"]] = get_account_data("fullname", $clerk_notification["clerk_id"]).($clerk_notification["timeframe"] == CLERKSHIP_ROTATION_ENDED ? "*" : ($clerk_notification["timeframe"] == CLERKSHIP_ONE_WEEK_PAST ? "**" : ""))." - ".ENTRADA_URL."/clerkship/logbook?section=view&type=missing&id=".$clerk_notification["clerk_id"]."&core=".$clerk_notification["rotation_id"];
+			if ($clerk_ids_string) {
+				$clerk_ids_string .= ", ".$db->qstr($clerk_notification["clerk_id"]);
+			} else {
+				$clerk_ids_string = $db->qstr($clerk_notification["clerk_id"]);
+			}
+		}
+		if (isset($proxy_id) && $proxy_id && ($email = get_account_data("email", $proxy_id)) && ($fullname = get_account_data("fullname", $proxy_id))) {
+			if (defined("CLERKSHIP_EMAIL_NOTIFICATIONS") && CLERKSHIP_EMAIL_NOTIFICATIONS) {
+				$mail = new Zend_Mail();
+				$mail->addHeader("X-Originating-IP", $_SERVER["REMOTE_ADDR"]);
+				$mail->addHeader("X-Section", "Clerkship Notification System",true);
+				$mail->clearFrom();
+				$mail->clearSubject();
+				$mail->setFrom($AGENT_CONTACTS["agent-notifications"]["email"], APPLICATION_NAME.' Clerkship System');
+				$mail->setSubject("Clerkship Logbook Progress Notification");
+				
+				$NOTIFICATION_MESSAGE		 	 = array();
+				$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".DEFAULT_TEMPLATE."/email/clerkship-coordinator-notification.txt");
+								
+		
+				$search		= array(
+									"%ROTATION_TITLE%",
+									"%CLERK_LIST%",
+									"%APPLICATION_NAME%",
+									"%ENTRADA_URL%"
+								);
+				$replace	= array(
+									$rotation_title,
+									implode("<br/>\n", $clerks),
+									APPLICATION_NAME,
+									ENTRADA_URL
+							);
+				$mail->setBodyText(clean_input(str_replace($search, $replace, $NOTIFICATION_MESSAGE["textbody"]), array("postclean")));
+				
+				if (strlen($email)) {
+					$mail->clearRecipients();
+					$mail->addTo($email, $fullname);
+					$sent = true;
+					try {
+						$mail->send();
+					}
+					catch (Exception $e) {
+						$sent = false;
+					}
+					if($sent) {
+						application_log("success", "Sent overdue logging notification to Program Coordinator [".$proxy_id."].");
+					} else {
+						application_log("error", "Unable to send overdue logging notification to Program Coordinator [".$proxy_id."].");
+					}
+					foreach ($clerks as $clerk_id => $clerk) {
+						$NOTICE_HISTORY = Array(
+												"clerk_id" => $clerk_id,
+												"proxy_id" => $proxy_id,
+												"rotation_id" => $rotation_id,
+												"notified_date" => time()
+												);
+						if($db->AutoExecute(CLERKSHIP_DATABASE.".logbook_notification_history", $NOTICE_HISTORY, "INSERT")) {
+							if($HISTORY_ID = $db->Insert_Id()) {
+								application_log("success", "Successfully added notification history ID [".$HISTORY_ID."]");
+							} else {
+								application_log("error", "Unable to fetch the newly inserted notification history identifier for this notice.");
+							}
+						} else {
+							application_log("error", "Unable to insert new notification history record into the system. Database said: ".$db->ErrorMsg());
+						}
+					}
+					$db->AutoExecute(CLERKSHIP_DATABASE.".clerkship_queued_notifications", array("notification_sent" => 1), "UPDATE", "`clerk_id` IN (".$clerk_ids_string.")");
+				}
+			}
+		}
+	}
+}
+
+/**
+ * Function takes a clerk proxy id and a rotation id and returns the progress for the
+ * rotation; based on the number of required clinical procedures that have been logged.
+ *
+ * @param int $proxy_id
+ * @param int $rotation_id
+ * @return array
+ */
+function clerkship_rotation_objectives_progress($proxy_id, $rotation_id) {
+	global $db;
+	$query 	= "SELECT a.*, b.* FROM `".CLERKSHIP_DATABASE."`.`logbook_mandatory_objectives` AS a
+			JOIN `global_lu_objectives` AS b
+			ON a.`objective_id` = b.`objective_id`
+			WHERE `rotation_id` = ".$db->qstr($rotation_id);
+	$oresults = $db->GetAll($query);
+	if ($oresults) {
+		$total_required = 0;
+		$total_logged = 0;
+		$required_list = array();
+		$missing_list = array();
+		$logged_list = array();
+		$objective_string = "";
+		foreach ($oresults as $objective) {
+			if ($objective_string) {
+				$objective_string .= ",".$db->qstr($objective["objective_id"]);
+			} else {
+				$objective_string = $db->qstr($objective["objective_id"]);
+			}
+			$objectives[$objective["objective_id"]] = $objective["number_required"];
+			$total_required += $objective["number_required"];
+			$required_list[$objective["objective_id"]] = $objective["objective_name"];
+		}
+		if ($objective_string) {
+			$query 	= "SELECT COUNT(a.`objective_id`) as number_logged, a.`objective_id` FROM `".CLERKSHIP_DATABASE."`.`logbook_entry_objectives` AS a
+					LEFT JOIN `".CLERKSHIP_DATABASE."`.`logbook_entries` AS b
+					ON a.`lentry_id` = b.`lentry_id`
+					WHERE a.`objective_id` IN  (".$objective_string.")
+					AND b.`proxy_id` = ".$db->qstr($proxy_id)."
+					AND b.`entry_active` = 1
+					GROUP BY a.`objective_id`";
+			$numbers_logged = $db->GetAll($query);
+			if ($numbers_logged) {
+				foreach ($numbers_logged as $number_logged) {
+					if ($number_logged > $objectives[$number_logged["objective_id"]]) {
+						$total_logged += $objectives[$number_logged["objective_id"]];
+					} else {
+						$total_logged += $number_logged["number_logged"];
+					}
+					$logged_list[$number_logged["objective_id"]] = $required_list[$number_logged["objective_id"]];
+					unset($required_list[$number_logged["objective_id"]]);
+				}
+			}
+		}
+		return array("required" => $total_required, "logged" => $total_logged, "required_list" => $required_list, "logged_list" => $logged_list);
+	}
+	return false;
+}
+
+/**
+ * Function takes a clerk proxy id and a rotation id and returns the progress for the
+ * rotation; based on the number of required clinical tasks that have been logged.
+ *
+ * @param int $proxy_id
+ * @param int $rotation_id
+ * @return array
+ */
+function clerkship_rotation_tasks_progress($proxy_id, $rotation_id) {
+	$query 	= "SELECT * FROM `".CLERKSHIP_DATABASE."`.`logbook_preferred_procedures`
+			WHERE `rotation_id` = ".$db->qstr($rotation_id);
+	$oresults = $db->GetAll($query);
+	if ($tresults) {
+		$total_required = 0;
+		$total_logged = 0;
+		$task_string = "";
+		foreach ($tresults as $task) {
+			if ($task_string) {
+				$task_string .= ",".$db->qstr($task["lprocedure_id"]);
+			} else {
+				$task_string = $db->qstr($task["lprocedure_id"]);
+			}
+			$tasks[$task["lprocedure_id"]] = $task["number_required"];
+			$total_required += $task["number_required"];
+		}
+		if ($task_string) {
+			$query 	= "SELECT COUNT(a.`lprocedure_id`) as number_logged, a.`lprocedure_id` FROM `".CLERKSHIP_DATABASE."`.`logbook_entry_procedures` AS a
+					LEFT JOIN `".CLERKSHIP_DATABASE."`.`logbook_entries` AS b
+					ON a.`lentry_id` = b.`lentry_id`
+					WHERE a.`lprocedure_id` IN  (".$task_string.")
+					AND b.`proxy_id` = ".$db->qstr($proxy_id)."
+					AND b.`entry_active` = 1
+					GROUP BY a.`lprocedure_id`";
+			$numbers_logged = $db->GetAll($query);
+			if ($numbers_logged) {
+				foreach ($numbers_logged as $number_logged) {
+					if ($number_logged > $tasks[$number_logged["lprocedure_id"]]) {
+						$total_logged += $tasks[$number_logged["lprocedure_id"]];
+					} else {
+						$total_logged += $number_logged["number_logged"];
+					}
+				}
+			}
+		}
+		return array("required" => $total_required, "logged" => $total_logged);
+	}
+	return false;
 }
 
 function clerkship_deficiency_notifications($clerk_id, $rotation_id, $administrator = false, $completed = false, $comments = false) {

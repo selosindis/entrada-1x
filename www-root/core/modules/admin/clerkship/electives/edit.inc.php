@@ -47,8 +47,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 		
 		$nameArray 	= clerkship_student_name($EVENT_ID);
 		
-		$query		= "SELECT *
-					FROM `".CLERKSHIP_DATABASE."`.`events`, `".CLERKSHIP_DATABASE."`.`electives`, `".CLERKSHIP_DATABASE."`.`event_contacts`
+		$query		= "SELECT * FROM `".CLERKSHIP_DATABASE."`.`events`, `".CLERKSHIP_DATABASE."`.`electives`, `".CLERKSHIP_DATABASE."`.`event_contacts`
 					WHERE `".CLERKSHIP_DATABASE."`.`events`.`event_id` = ".$db->qstr($EVENT_ID)."
 					AND `".CLERKSHIP_DATABASE."`.`events`.`event_id` = `".CLERKSHIP_DATABASE."`.`electives`.`event_id`
 					AND `".CLERKSHIP_DATABASE."`.`events`.`event_id` = `".CLERKSHIP_DATABASE."`.`event_contacts`.`event_id`";
@@ -272,11 +271,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 					/**
 					 * Required field "city" / City.
 					 */
-					if ((isset($_POST["city"])) && ($city = clean_input($_POST["city"], array("notags", "trim")))) {
+					if ((isset($_POST["city"])) && ($city = clean_input($_POST["city"], array("notags", "trim"))) && strpos($city, ",") !== false) {
 						$PROCESSED["city"] = $city;
 					} else {
 						$ERROR++;
-						$ERRORSTR[] = "The <strong>City</strong> field is required.";
+						$ERRORSTR[] = "The <strong>City</strong> field is required, and should not contain either the province/state or any commas.";
 					}
 					
 					
@@ -358,9 +357,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 						
 						$EVENT["category_id"]				= $PROCESSED["category_id"];
 						$query = "	SELECT `region_id` FROM `".CLERKSHIP_DATABASE."`.`regions`
-									WHERE `countries_id` = ".$db->qstr($PROCESSED["countries_id"])."
-									AND `prov_state` = ".$db->qstr($PROCESSED["prov_state"])."
-									AND `region_name` LIKE ".$db->qstr($PROCESSED["city"])."
+									WHERE `region_name` LIKE ".$db->qstr($PROCESSED["city"])."
+									".(isset($PROCESSED["prov_state"]) && $PROCESSED["prov_state"] ? "AND `prov_state` = ".$db->qstr($PROCESSED["prov_state"]) : "")."
+									".(isset($PROCESSED["countries_id"]) && $PROCESSED["countries_id"] ? "AND `countries_id` = ".$db->qstr($PROCESSED["countries_id"]) : "")."
 									AND `region_active` = 1";
 						$region_id = $db->GetOne($query);
 						
@@ -425,8 +424,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 									$international_msg 	= "";
 									if ($PROCESSED["event_status"] == "published") {
 										// Check if international elective, if so email international rep in UGE
-										if ($PROCESSED["geo_location"] == "International")
-										{
+										if ($PROCESSED["geo_location"] == "International") {
 											$international_msg	= "The completion of the documentation for international activity is mandatory. Academic credit will not be granted unless all steps have been completed and approval granted prior to departure. Please go to the following link and ensure you have completed the necessary steps:\n\n";
 											$international_msg .= $CLERKSHIP_INTERNATIONAL_LINK."\n\n";
 											
@@ -1332,6 +1330,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 								}
 							}
 							if(!$ERROR) {
+								$PROCESSED["rotation_id"] = $db->GetOne("SELECT `rotation_id` FROM `".CLERKSHIP_DATABASE."`.`categories` WHERE `category_id` = ".$db->qstr($PROCESSED["category_id"]));
 								$PROCESSED["modified_last"]	= time();
 								$PROCESSED["modified_by"]	= $_SESSION["details"]["id"];
 								if(!$db->AutoExecute("`".CLERKSHIP_DATABASE."`.`events`", $PROCESSED, "UPDATE", "`event_id` = ".$db->qstr($EVENT_ID))) {
@@ -1341,7 +1340,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 									$STEP		= 1;
 								}
 								//Delete apartment schedule info for this student if the location has changed.
-								if ($PROCESSED["region_id"] != $event_info["region_id"] || ($event_info["event_start"] != $PROCESSED["event_start"]) ||  ($event_info["event_finish"] != $PROCESSED["event_finish"])) {
+								if (($PROCESSED["region_id"] != $event_info["region_id"]) || ($event_info["event_start"] != $PROCESSED["event_start"]) ||  ($event_info["event_finish"] != $PROCESSED["event_finish"])) {
+									
 									if(!notify_regional_education("change-critical", $EVENT_ID)) {
 										system_log_data("error", "Unable to notify the regional education office that event_id [".$EVENT_ID."] endured a critical change.");
 									}
@@ -1409,7 +1409,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 							<col style="width: 77%" />
 						</colgroup>
 						<tr>
-							<td style="vertical-align: top; border-right: 10px #CCCCCC solid" colspan="2"><span class="form-nrequired">Student Name<?= ((@count($user_ids) != 1) ? "s" : "") ?>:</span></td>
+							<td style="vertical-align: top; border-right: 10px #CCCCCC solid" colspan="2"><span class="form-nrequired">Student Name<?php echo ((@count($user_ids) != 1) ? "s" : ""); ?>:</span></td>
 							<td style="width: 75%; padding-left: 5px">
 								<?php
 								foreach($user_ids as $user_id) {
@@ -1441,14 +1441,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 								}
 								?>
 								<option value="">----</option>
-								<option value="new"<?= (($PROCESSED["region_id"] == "new") ? " SELECTED" : "") ?>>New Region</option>
+								<option value="new"<?php echo (($PROCESSED["region_id"] == "new") ? " SELECTED" : ""); ?>>New Region</option>
 								</select>
 							</td>
 						</tr>
 						<tbody id="new_region_layer" style="display: none">
 						<tr>
 							<td colspan="2"><label for="new_region" class="form-required">New Region Name:</label></td>
-							<td><input type="text" id="new_region" name="new_region" style="width: 75%" value="<?= html_encode(trim($_POST["new_region"])) ?>" /></td>
+							<td><input type="text" id="new_region" name="new_region" style="width: 75%" value="<?php echo html_encode(trim($_POST["new_region"])); ?>" /></td>
 						</tr>
 						</tbody>
 						<tr>
@@ -1474,7 +1474,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 							<td colspan="3" style="vertical-align: top"><label for="event_desc" class="form-nrequired">Private notes on this student:</label></td>
 						</tr>
 						<tr>
-							<td colspan="3"><textarea id="event_desc" name="event_desc" style="width: 82%; height: 75px"><?= trim(checkslashes($PROCESSED["event_desc"], "display")) ?></textarea></td>
+							<td colspan="3"><textarea id="event_desc" name="event_desc" style="width: 82%; height: 75px"><?php echo trim(checkslashes($PROCESSED["event_desc"], "display")); ?></textarea></td>
 						</tr>
 						<tr>
 							<td colspan="3">&nbsp;</td>
@@ -1508,7 +1508,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 						</tr>
 						<tr>
 							<td colspan="3" style="text-align: right">
-								<input type="button" value="Cancel" class="button" style="background-image: url('<?php echo ENTRADA_URL; ?>/images/btn_bg.gif');" onClick="window.location='<?php echo ENTRADA_URL; ?>/admin/clerkship/clerk?ids=<?= $user_ids[0] ?>'" />
+								<input type="button" value="Cancel" class="button" style="background-image: url('<?php echo ENTRADA_URL; ?>/images/btn_bg.gif');" onClick="window.location='<?php echo ENTRADA_URL; ?>/admin/clerkship/clerk?ids=<?php echo $user_ids[0]; ?>'" />
 								<input type="submit" value="Save" class="button" style="background-image: url('<?php echo ENTRADA_URL; ?>/images/btn_bg.gif');" />
 							</td>
 						</tr>

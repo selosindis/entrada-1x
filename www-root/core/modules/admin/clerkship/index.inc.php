@@ -392,14 +392,13 @@ if (!defined("IN_CLERKSHIP")) {
 					break;
 				}
 						
-				$query		= "	SELECT a.*, CONCAT_WS(' ', b.`firstname`, b.`lastname`) as `fullname`, c.`rotation_title`
+				$query		= "SELECT a.*, CONCAT_WS(' ', b.`firstname`, b.`lastname`) as `fullname`, c.`rotation_title`
 								FROM `".CLERKSHIP_DATABASE."`.`logbook_overdue` AS a
 								LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
 								ON a.`proxy_id` = b.`id`
 								LEFT JOIN `".CLERKSHIP_DATABASE."`.`global_lu_rotations` AS c
 								ON a.`rotation_id` = c.`rotation_id`
-								ORDER BY `logged_completed` DESC, `fullname` ASC
-								LIMIT 0, 20";
+								ORDER BY `logged_completed` DESC, `fullname` ASC";
 				
 				$results = $db->GetAll($query);
 				

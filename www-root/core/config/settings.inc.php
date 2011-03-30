@@ -73,6 +73,11 @@ define("CLERKSHIP_LOTTERY_START", strtotime("March 1st, 2010"));
 define("CLERKSHIP_LOTTERY_FINISH", strtotime("March 14th, 2010"));
 define("CLERKSHIP_LOTTERY_MAX", 6);
 define("CLERKSHIP_FIRST_CLASS", 2011);
+define("ONE_WEEK", 604800);
+define("CLERKSHIP_ONE_WEEK_PAST", 4);
+define("CLERKSHIP_ROTATION_ENDED", 3);
+define("CLERKSHIP_ONE_WEEK_PRIOR", 2);
+define("CLERKSHIP_ROTATION_PERIOD", 1);
 $CLERKSHIP_REQUIRED_WEEKS = 14;
 $CLERKSHIP_CATEGORY_TYPE_ID = 13;
 $CLERKSHIP_EVALUATION_FORM = "http://url_of_your_schools_precptor_evaluation_of_clerk_form.pdf";
@@ -439,6 +444,7 @@ $MODULES["awards"] = array("title" => "Manage Awards", "resource" => "awards", "
 $MODULES["clerkship"] = array("title" => "Manage Clerkship", "resource" => "clerkship", "permission" => "update");
 $MODULES["courses"] = array("title" => "Manage Courses", "resource"=> "coursecontent", "permission" => "update");
 $MODULES["evaluations"] = array("title" => "Manage Evaluations", "resource" => "evaluation", "permission" => "update");
+$MODULES["communities"] = array("title" => "Manage Communities", "resource" => "community", "permission" => "update");
 $MODULES["events"] = array("title" => "Manage Events", "resource" => "eventcontent", "permission" => "update");
 $MODULES["gradebook"] = array("title" => "Manage Gradebook", "resource" => "gradebook", "permission" => "update");
 //$MODULES["mspr"] = array("title" => "Manage MSPRs", "resource" => "mspr", "permission" => "create"); //removed as it is now under manage users

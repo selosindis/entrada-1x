@@ -841,7 +841,7 @@ if($COMMUNITY_ID) {
 									echo "	<td>".date(DEFAULT_DATE_FORMAT, $result["member_joined"])."</td>\n";
 									echo "	<td><a href=\"".ENTRADA_URL."/people?profile=".html_encode($result["username"])."\"".(($result["proxy_id"] == $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]) ? " style=\"font-weight: bold" : "")."\">".html_encode($result["firstname"]." ".$result["lastname"])."</a></td>\n";
 									echo "	<td>".($result["group"] == "guest" ? "Guest" : "Member" )."</td>\n";
-									echo "	<td class=\"list-status\"><img src=\"images/".(($MAILING_LISTS["active"]) && $mail_list->users[($result["proxy_id"])]["member_active"] ? "list-status-online.gif" : "list-status-offline.gif")."\" /></td>\n";
+									echo "	<td class=\"list-status\"><img src=\"".ENTRADA_RELATIVE."/images/".(($MAILING_LISTS["active"]) && $mail_list->users[($result["proxy_id"])]["member_active"] ? "list-status-online.gif" : "list-status-offline.gif")."\" /></td>\n";
 									echo "</tr>\n";
 								}
 								?>

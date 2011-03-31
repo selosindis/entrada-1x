@@ -68,19 +68,17 @@ if($EVALUATION_ID) {
 		$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/evaluations?".replace_query(array("section" => "edit", "id" => $EVALUATION_ID)), "title" => "Show Progress");
 		
         /**
-         * Update requested sort column.
-         * Valid: date, title
+         * Update whether individual attempts are displayed or not.
+         * Valid: true, false
          */
-/*
-        if((isset($_GET["attempts"]) && $_GET["attempts"] == 'true') || !isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["attempts"])) {
+        if((isset($_GET["display"]) && $_GET["display"] == "complete_list") || !isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["display"])) {
            $view_individual_attempts = true;
-           $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["attempts"] = true;
-        } elseif ((isset($_GET["attempts"]) && $_GET["attempts"] == 'false')) {
-*/
+           $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["display"] = true;
+        } elseif ((isset($_GET["attempts"]) && $_GET["display"] == "summary")) {
            $view_individual_attempts = false;
-           $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["attempts"] = false;
-//        }
-        
+           $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["display"] = false;
+        }
+                
         /**
          * Update requested sort column.
          * Valid: date, title
@@ -142,12 +140,11 @@ if($EVALUATION_ID) {
             echo "	</div>\n";
             echo "</div>\n";
         }
-        echo "<h1 class=\"evaluation-title\">".html_encode($evaluation_details["evaluation_title"])."</h1>\n";
+        echo "<h1 class=\"evaluation-title\">".html_encode($evaluation_details["evaluation_title"])." Progress</h1>\n";
         ?>
         <div class="tab-pane" id="progress_div">
-			<h2 style="margin-top: 0px">Progress</h2>
             <?php
-            if (!$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["attempts"]) {
+            if (!$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["display"]) {
 				$query = "	SELECT a.*, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`id` AS `proxy_id`
 	            			FROM `evaluation_evaluators` AS a
                 			LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS ba
@@ -162,8 +159,8 @@ if($EVALUATION_ID) {
 								ba.`user_id` = b.`id`
 							))
 	            			WHERE a.`evaluation_id` = ".$db->qstr($EVALUATION_ID);
-	            $evalation_evaluators = $db->GetAll($query);
-	        	if ($evalation_evaluators) {
+	            $evaluation_evaluators = $db->GetAll($query);
+	        	if ($evaluation_evaluators) {
 	                ?>
 	                <table class="tableList" style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Evaluation Members">
 	                <colgroup>
@@ -184,29 +181,39 @@ if($EVALUATION_ID) {
 	                </thead>
 	                <tbody>
 	                <?php
-	                foreach($evalation_evaluators as $evalation_evaluator) {
+	                foreach($evaluation_evaluators as $evaluation_evaluator) {
                 		$query = "	SELECT * FROM `evaluation_progress`
-                					WHERE `evaluation_id` = ".$evalation_evaluator["evaluation_id"]."
-		                			AND `proxy_id` = ".$evalation_evaluator["proxy_id"]."
+                					WHERE `evaluation_id` = ".$evaluation_evaluator["evaluation_id"]."
+		                			AND `proxy_id` = ".$evaluation_evaluator["proxy_id"]."
 		                			AND `progress_value` <> 'cancelled'
                 					ORDER BY `progress_value` ASC";
                 		$evaluator_progress_records = $db->GetAll($query);
                 		$count = 0;
-                		$inprogress = false;
+                		$inprogress = true;
                 		$last_completed = 0;
-                		foreach ($evaluator_progress_records as &$evaluator_progress) {
-                			if ($evaluator_progress["progress_value"] == "complete") {
-                				$count++;
-                			} else {
-                				$inprogress = true;
-                			}
-            				if ($last_completed < $evaluator_progress["updated_date"]) {
-            					$last_completed = $evaluator_progress["updated_date"];
+                		$last_updated = 0;
+              			if ($evaluator_progress_records) {
+	                		foreach ($evaluator_progress_records as &$evaluator_progress) {
+	                			if ($evaluator_progress["progress_value"] == "complete") {
+	                				$count++;
+	                				$inprogress = false;
+		            				if ($last_completed < $evaluator_progress["updated_date"]) {
+		            					$last_completed = $evaluator_progress["updated_date"];
+		            				}
+		                		}
+	            				if ($last_updated < $evaluator_progress["updated_date"]) {
+	            					$last_updated = $evaluator_progress["updated_date"];
+	            				}
             				}
-                		}
+	            			if ($inprogress == true && $last_completed < $last_updated) {
+	            				$last_completed = $last_updated;
+	            			}
+              			} else  {
+              				$inprogress = false;
+              			}
                         echo "<tr>\n";
                         echo "	<td>&nbsp;</td>\n";
-                        echo "	<td>".$evalation_evaluator["fullname"]."</td>\n";
+                        echo "	<td>".$evaluation_evaluator["fullname"]."</td>\n";
                         echo "	<td>".($inprogress ? "In Progress" : ($last_completed ? "Completed" : "Not Started"))."</td>\n";
                         echo "	<td>".$count." / ".$evaluation_details["max_submittable"]."</td>\n";
                         echo "	<td>".(isset($last_completed) && $last_completed ? date(DEFAULT_DATE_FORMAT, $last_completed) : "Not Started")."</td>\n";
@@ -223,6 +230,11 @@ if($EVALUATION_ID) {
 	                    echo display_notice(array("No evaluators have completed this evaluation at this time."));
 	            }
             } else {
+            	
+            	?>
+            	<br/>
+            	<h2 style="margin-top: 0px">Complete Attempts</h2>
+            	<?php
 	            /**
 	             * Get the total number of results using the generated queries above and calculate the total number
 	             * of pages that are available based on the results per page preferences.
@@ -244,14 +256,16 @@ if($EVALUATION_ID) {
 								ba.`user_id` = b.`id`
 	                			AND c.`proxy_id` = b.`id`
 							))
-                			AND `progress_value` <> 'cancelled'
-                			JOIN `evaluation_targets` AS d
+                			AND `progress_value` = 'complete'
+                			LEFT JOIN `evaluation_targets` AS d
                 			ON d.`etarget_id` = c.`etarget_id`
-                			JOIN `evaluations_lu_targets` AS e
+                			LEFT JOIN `evaluations_lu_targets` AS e
                 			ON d.`target_id` = e.`target_id`
-	            			WHERE c.`evaluation_id` = ".$db->qstr($EVALUATION_ID);
-	            $evalation_evaluators = $db->GetAll($query);
-	        	if ($evalation_evaluators) {
+	            			WHERE c.`evaluation_id` = ".$db->qstr($EVALUATION_ID)."
+	            			ORDER BY b.`lastname`, b.`firstname`, a.`updated_date`";
+	            $evaluation_evaluators = $db->GetAll($query);
+	            
+	        	if ($evaluation_evaluators) {
 	                ?>
 	                <table class="tableList" style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Evaluation Members">
 	                <colgroup>
@@ -272,14 +286,14 @@ if($EVALUATION_ID) {
 	                </thead>
 	                <tbody>
 	                <?php
-	                foreach($evalation_evaluators as $evalation_evaluator) {
-	                	$target_name = fetch_evaluation_target_title($evalation_evaluator);
+	                foreach($evaluation_evaluators as $evaluation_evaluator) {
+	                	$target_name = fetch_evaluation_target_title($evaluation_evaluator);
                         echo "<tr>\n";
                         echo "	<td>&nbsp;</td>\n";
-                        echo "	<td>".$evalation_evaluator["fullname"]."</td>\n";
+                        echo "	<td>".$evaluation_evaluator["fullname"]."</td>\n";
                         echo "	<td>".$target_name."</td>\n";
-                        echo "	<td>".($evalation_evaluator["progress_value"] == "inprogress" ? "In Progress" : "Completed")."</td>\n";
-                        echo "	<td>".date(DEFAULT_DATE_FORMAT, $evalation_evaluator["updated_date"])."</td>\n";
+                        echo "	<td>".($evaluation_evaluator["progress_value"] == "inprogress" ? "In Progress" : "Completed")."</td>\n";
+                        echo "	<td>".date(DEFAULT_DATE_FORMAT, $evaluation_evaluator["updated_date"])."</td>\n";
                         echo "</tr>\n";
 	                }
 	                ?>
@@ -292,11 +306,165 @@ if($EVALUATION_ID) {
 	            } else {
 	                    echo display_notice(array("No evaluators have completed this evaluation at this time."));
 	            }
+            	?>
+            	<br/>
+            	<h2 style="margin-top: 0px">Incomplete Attempts</h2>
+            	<?php
+	            /**
+	             * Get the total number of results using the generated queries above and calculate the total number
+	             * of pages that are available based on the results per page preferences.
+	             */
+	            $query = "	SELECT a.*, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, c.`progress_value`, c.`updated_date`, d.`target_value`, e.`target_shortname`, b.`id` AS `proxy_id`
+	            			FROM `evaluation_progress` AS c
+                			JOIN `evaluation_evaluators` AS a
+                			ON a.`evaluation_id` = c.`evaluation_id`
+                			LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS ba
+                			ON a.`evaluator_type` = 'grad_year'
+                			AND ba.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+                			AND a.`evaluator_value` = ba.`role`
+	            			JOIN `".AUTH_DATABASE."`.`user_data` AS b
+	            			ON ((
+		            			a.`evaluator_type` = 'proxy_id'
+		            			AND a.`evaluator_value` = b.`id`
+	                			AND c.`proxy_id` = a.`evaluator_value`
+							) OR (
+								ba.`user_id` = b.`id`
+	                			AND c.`proxy_id` = b.`id`
+							))
+                			AND `progress_value` = 'inprogress'
+                			LEFT JOIN `evaluation_targets` AS d
+                			ON d.`etarget_id` = c.`etarget_id`
+                			LEFT JOIN `evaluations_lu_targets` AS e
+                			ON d.`target_id` = e.`target_id`
+	            			WHERE c.`evaluation_id` = ".$db->qstr($EVALUATION_ID)."
+	            			ORDER BY b.`lastname`, b.`firstname`, a.`updated_date`";
+	            $evaluation_evaluators = $db->GetAll($query);
+	            
+	        	if ($evaluation_evaluators) {
+	                ?>
+	                <table class="tableList" style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Evaluation Members">
+	                <colgroup>
+                        <col class="modified" />
+                        <col class="title" />
+                        <col class="title" />
+                        <col class="date-small" />
+                        <col class="date" />
+	                </colgroup>
+	                <thead>
+                        <tr>
+                            <td class="modified">&nbsp;</td>
+                            <td class="title">Evaluator</td>
+                            <td class="title">Evaluation Target</td>
+                            <td class="date-small">Attempt Progress</td>
+                            <td class="date">Last Updated</td>
+                        </tr>
+	                </thead>
+	                <tbody>
+	                <?php
+	                foreach($evaluation_evaluators as $evaluation_evaluator) {
+	                	$target_name = fetch_evaluation_target_title($evaluation_evaluator);
+                        echo "<tr>\n";
+                        echo "	<td>&nbsp;</td>\n";
+                        echo "	<td>".$evaluation_evaluator["fullname"]."</td>\n";
+                        echo "	<td>".$target_name."</td>\n";
+                        echo "	<td>".($evaluation_evaluator["progress_value"] == "inprogress" ? "In Progress" : "Completed")."</td>\n";
+                        echo "	<td>".date(DEFAULT_DATE_FORMAT, $evaluation_evaluator["updated_date"])."</td>\n";
+                        echo "</tr>\n";
+	                }
+	                ?>
+	                </tbody>
+	                <tfoot>
+	                    <tr><td>&nbsp;</td></tr>
+	                </tfoot>
+	                </table>
+	                <?php
+	            } else {
+	                    echo display_notice(array("No evaluators have a current attempt in progress for this evaluation."));
+	            }
+	            ?>
+            	<br/>
+            	<h2 style="margin-top: 0px">Evaluators With No Attempts</h2>
+            	<?php
+	            /**
+	             * Get the total number of results using the generated queries above and calculate the total number
+	             * of pages that are available based on the results per page preferences.
+	             */
+	            $query = "	SELECT a.*, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`id` AS `proxy_id`
+	            			FROM `evaluation_evaluators` AS a
+                			LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS ba
+                			ON a.`evaluator_type` = 'grad_year'
+                			AND ba.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+                			AND a.`evaluator_value` = ba.`role`
+	            			JOIN `".AUTH_DATABASE."`.`user_data` AS b
+	            			ON ba.`user_id` = b.`id`
+	            			WHERE a.`evaluation_id` = ".$db->qstr($EVALUATION_ID)."
+	            			ORDER BY b.`lastname`, b.`firstname`";
+	            $evaluation_evaluators = $db->GetAll($query);
+	            
+	        	if ($evaluation_evaluators) {
+	        		$query = "SELECT `proxy_id` FROM `evaluation_progress` WHERE `evaluation_id` = ".$db->qstr($EVALUATION_ID);
+	        		$ignorable_evaluators = $db->GetAll($query);
+	        		$ignore_list = array();
+	        		foreach ($ignorable_evaluators as $ignorable_evaluator) {
+	        			$ignore_list[] = $ignorable_evaluator["proxy_id"];
+	        		}
+	                ?>
+	                <table class="tableList" style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Evaluation Members">
+	                <colgroup>
+                        <col class="modified" />
+                        <col class="title" />
+                        <col class="title" />
+                        <col class="date-small" />
+                        <col class="date" />
+	                </colgroup>
+	                <thead>
+                        <tr>
+                            <td class="modified">&nbsp;</td>
+                            <td class="title">Evaluator</td>
+                            <td class="title">Evaluation Target</td>
+                            <td class="date-small">Attempt Progress</td>
+                            <td class="date">Last Updated</td>
+                        </tr>
+	                </thead>
+	                <tbody>
+	                <?php
+	                foreach($evaluation_evaluators as $evaluation_evaluator) {
+	                	if (array_search($evaluation_evaluator["proxy_id"], $ignore_list) === false) {
+		                	$target_name = fetch_evaluation_target_title($evaluation_evaluator);
+	                        echo "<tr>\n";
+	                        echo "	<td>&nbsp;</td>\n";
+	                        echo "	<td>".$evaluation_evaluator["fullname"]."</td>\n";
+	                        echo "	<td>".$target_name."</td>\n";
+	                        echo "	<td>Not yet begun</td>\n";
+	                        echo "	<td>".date(DEFAULT_DATE_FORMAT, $evaluation_evaluator["updated_date"])."</td>\n";
+	                        echo "</tr>\n";
+	                	}
+	                }
+	                ?>
+	                </tbody>
+	                <tfoot>
+	                    <tr><td>&nbsp;</td></tr>
+	                </tfoot>
+	                </table>
+	                <?php
+	            } else {
+	                    echo display_notice(array("There are no evaluators who have not started this evaluation."));
+	            }
             }
             ?>
 		</div>
 		<br /><br />
 		<?php
+		/**
+		 * Sidebar item that will provide a method for choosing which results to display.
+		 */
+		$sidebar_html  = "Display progress as a:\n";
+		$sidebar_html .= "<ul class=\"menu\">\n";
+		$sidebar_html .= "	<li class=\"".(($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["display"] == false) ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("display" => "summary"))."\" title=\"Summary\">summary</a></li>\n";
+		$sidebar_html .= "	<li class=\"".(($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["display"] == true) ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("display" => "complete_list"))."\" title=\"Complete list\">complete list of attempts</a></li>\n";
+		$sidebar_html .= "</ul>\n";
+
+		new_sidebar_item("Progress Display", $sidebar_html, "sort-results", "open");
 	} else {
 		application_log("error", "User tried to manage progress of a evaluation id [".$EVALUATION_ID."] that does not exist or is not active in the system.");
 

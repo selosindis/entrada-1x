@@ -406,7 +406,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 							height:180,
 							modal: true,
 							buttons: {
-								'Delete all items': function() {
+								'Delete': function() {
 									var ids = "";
 				               		jQuery('.trSelected', grid).each(function() {  
 				               			var id = jQuery(this).attr('id');
@@ -515,7 +515,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 							height:180,
 							modal: true,
 							buttons: {
-								'Delete all items': function() {
+								'Delete': function() {
 									var ids = "";
 				               		jQuery('.trSelected', grid).each(function() {  
 				               			var id = jQuery(this).attr('id');
@@ -624,7 +624,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 							height:180,
 							modal: true,
 							buttons: {
-								'Delete all items': function() {
+								'Delete': function() {
 									var ids = "";
 				               		jQuery('.trSelected', grid).each(function() {  
 				               			var id = jQuery(this).attr('id');
@@ -733,7 +733,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 							height:180,
 							modal: true,
 							buttons: {
-								'Delete all items': function() {
+								'Delete': function() {
 									var ids = "";
 				               		jQuery('.trSelected', grid).each(function() {  
 				               			var id = jQuery(this).attr('id');
@@ -842,7 +842,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 							height:180,
 							modal: true,
 							buttons: {
-								'Delete all items': function() {
+								'Delete': function() {
 									var ids = "";
 				               		jQuery('.trSelected', grid).each(function() {  
 				               			var id = jQuery(this).attr('id');
@@ -953,7 +953,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 								height:180,
 								modal: true,
 								buttons: {
-									'Delete all items': function() {
+									'Delete': function() {
 										var ids = "";
 					               		jQuery('.trSelected', grid).each(function() {  
 					               			var id = jQuery(this).attr('id');
@@ -1064,7 +1064,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 							height:180,
 							modal: true,
 							buttons: {
-								'Delete all items': function() {
+								'Delete': function() {
 									var ids = "";
 				               		jQuery('.trSelected', grid).each(function() {  
 				               			var id = jQuery(this).attr('id');
@@ -1173,7 +1173,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 							height:180,
 							modal: true,
 							buttons: {
-								'Delete all items': function() {
+								'Delete': function() {
 									var ids = "";
 				               		jQuery('.trSelected', grid).each(function() {  
 				               			var id = jQuery(this).attr('id');
@@ -1282,7 +1282,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 							height:180,
 							modal: true,
 							buttons: {
-								'Delete all items': function() {
+								'Delete': function() {
 									var ids = "";
 				               		jQuery('.trSelected', grid).each(function() {  
 				               			var id = jQuery(this).attr('id');

@@ -65,14 +65,14 @@ $query = "	SELECT *
 $user_data = $auth_db->GetRow($query);
 
 while (!$user_data) {
-	print "\nDatabase error: " . $db->ErrorMsg();
+	print "\nDatabase error: " . $auth_db->ErrorMsg();
 	print "\nPlease ensure you enter a valid username: ";
 	fscanf(STDIN, "%d\n", $user_name);
 	$query = "	SELECT *
 				FROM `medtech_auth`.`user_data`
 				WHERE `username` = '" . $user_name . "'";
 
-	$user_data = $db->GetRow($query);
+	$user_data = $auth_db->GetRow($query);
 }
 
 output_notice("The proxy id for the entered username is: " . $user_data["id"]);
@@ -96,7 +96,7 @@ $site_names = array("Aboriginal Health - Family Medicine",
 "Anesthesiology",
 "Cardiology",
 "Care of the Elderly - Family Medicine",
-"Community Medicine",
+"Public Health and Preventative Medicine",
 "Critical Care Medicine",
 "Developmental Disabilities - Family Medicine",
 "Diagnostic Radiology",

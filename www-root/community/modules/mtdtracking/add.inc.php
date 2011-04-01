@@ -5,18 +5,16 @@
  *
  * @author Don Zuiker <don.zuiker@queensu.ca>
  */
-
 @set_include_path(implode(PATH_SEPARATOR, array(
-    dirname(__FILE__) . "/../../../core/includes",
-    get_include_path(),
-)));
+					dirname(__FILE__) . "/../../../core/includes",
+					get_include_path(),
+				)));
 
 require_once("functions.inc.php");
 
 if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
-	//header("Location: " . COMMUNITY_URL);
-	//exit;
-	echo "Not in right locale";
+	header("Location: " . COMMUNITY_URL);
+	exit;
 } else {
 	$PROCESSED["creator_id"] = $_SESSION["details"]["id"];
 

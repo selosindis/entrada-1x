@@ -5,26 +5,25 @@
  *
  * @author Don Zuiker <don.zuiker@queensu.ca>
  */
-
-@set_include_path(implode(PATH_SEPARATOR, array(
-    dirname(__FILE__) . "/../../../core/includes",
-    get_include_path(),
-)));
-
-require_once("functions.inc.php");
-
 if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
-	//header("Location: " . COMMUNITY_URL);
-	//exit;
-	echo "Not in right locale";
+	header("Location: " . COMMUNITY_URL);
+	exit;
+} elseif (!$COMMUNITY_LOAD) {
+	exit;
 } else {
+	@set_include_path(implode(PATH_SEPARATOR, array(
+						dirname(__FILE__) . "/../../../core/includes",
+						get_include_path(),
+					)));
+
+	require_once("functions.inc.php");
+
 	$PROCESSED["userId"] = $_SESSION["details"]["id"];
 	$resident_id = $_GET["resident_id"];
 	//if there is no match on non-numberic characters anywhere in the string then process the number.
 	if (validate_integer_field($resident_id)) {
 		$PROCESSED["resident_id"] = clean_input($_GET["resident_id"], array("trim", "int"));
-	}
-	else {
+	} else {
 		$PROCESSED["resident_id"] = 0;
 	}
 
@@ -37,19 +36,18 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 		$resident = $db->GetRow($query);
 		if ($resident) {
 			$SUCCESS++;
-			$SUCCESSSTR[] = "<p>You have successfully entered a new MTD event.</p>". $query;
+			$SUCCESSSTR[] = "<p>You have successfully entered a new MTD event.</p>";
 
-			application_log("success", "Successfully entered an MTD for CMPA No: " . $PROCESSED["resident_id"] . "by [" . $PROCESSED["userId"] . "].");
+			application_log("success", "Successfully entered an MTD for Resident ID " . $PROCESSED["resident_id"] . "by [" . $PROCESSED["userId"] . "].");
 		} else {
 			$resident_found = 0;
-			echo "<div id=\"resident_not_found\">Resident Not Found. " . $query . "</div>";
+			echo "<div id=\"resident_not_found\">Resident Not Found.</div>" . $query;
 			$ERROR++;
 			$ERRORSTR[] = "Failed to add new MTD event." . $db->ErrorMsg();
 
-			application_log("error", "Failed to enter an MTD for CMPA No: " . $PROCESSED["resident_id"] . "by [" . $PROCESSED["userId"] . "]. Database said: " . $db->ErrorMsg());
+			application_log("error", "Failed to enter an MTD Resident ID: " . $PROCESSED["resident_id"] . "by [" . $PROCESSED["userId"] . "]. Database said: " . $db->ErrorMsg());
 		}
-	}
-	else {
+	} else {
 		$ERROR++;
 		$ERRORSTR[] = "Resident not found. (Error)";
 	}
@@ -90,7 +88,7 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 			 </div>";
 	}
 	if ($NOTICE) {
-		echo "<div id=\"responseMsg\"><div id=\"resident_not_found\">Resident not found. " . $query . "</div>" . display_notice() . "</div>";
+		echo "<div id=\"responseMsg\"><div id=\"resident_not_found\">Resident not found.</div>" . display_notice() . "</div>";
 	}
 	if ($ERROR) {
 		echo "<div id=\"responseMsg\"><div id=\"resident_not_found\">Resident not found. (ERROR) </div>" . display_error() . "</div>";

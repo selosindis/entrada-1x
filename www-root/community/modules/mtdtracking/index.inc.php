@@ -11,6 +11,13 @@
  * @copyright Copyright 2011 Queen's University. All Rights Reserved.
  *
  */
+if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
+	header("Location: " . COMMUNITY_URL);
+	exit;
+} elseif (!$COMMUNITY_LOAD) {
+	exit;
+} else {
+
 ini_set('display_errors', 1);
 
 @set_include_path(implode(PATH_SEPARATOR, array(
@@ -26,15 +33,29 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 	exit;
 }
 $community_title = $community_details["community_title"];
+
+//Get the MOH Service Name for this Queen's Program
+$query = "SELECT *
+		  FROM  `pgme_moh_programs`
+		  WHERE `pgme_program_name` like " . $db->qstr(trim($community_title) . "%");
+
+$result = $db->GetRow($query);
+
 // Get the service code
 $query = "SELECT *
 		  FROM  `mtd_moh_service_codes`
-		  WHERE service_description = " . $db->qstr($community_title);
+		  WHERE `service_description` = " . $db->qstr($result["moh_service_name"]);
 
 $result = $db->GetRow($query);
-$mtd_service_id = $result["id"];
-$mtd_service_code = $result["service_code"];
-$mtd_service_description = $result["service_description"];
+$mtd_service_id = 0;
+$mtd_service_code = "";
+$mtd_service_description = "";
+
+if ($result) {
+	$mtd_service_id = $result["id"];
+	$mtd_service_code = $result["service_code"];
+	$mtd_service_description = $result["service_description"];
+}
 
 $query = "SELECT *
 		  FROM  `mtd_facilities`
@@ -171,9 +192,10 @@ echo "<script language=\"text/javascript\">var DELETE_IMAGE_URL = '".ENTRADA_URL
 					   instance.settings.dateFormat ||
 					   jQuery.datepicker._defaults.dateFormat,
 					   selectedDate, instance.settings );
-			    var end_date = new Date(date);
-				end_date.addWeeks(4);
-				jQuery("#end_date").datepicker( 'setDate', end_date );
+			    var start_date = new Date(date);
+				var default_end_date = start_date.addWeeks(4);
+				jQuery("#end_date").datepicker( 'setDate', default_end_date )
+				jQuery("#end_date").datepicker( "option", "minDate", date );
 			}
 		}).datepicker('setDate', Date.today());
 
@@ -182,7 +204,7 @@ echo "<script language=\"text/javascript\">var DELETE_IMAGE_URL = '".ENTRADA_URL
 		mtd_schedule = jQuery("#mtd_schedule").flexigrid
 		(
 			{
-			url: '<?php echo ENTRADA_URL; ?>/api/mtd-load-schedule.api.php?id=<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>&service_id=<?php echo $mtd_service_id ?>',
+			url: '<?php echo COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL . "?section=api-mtd-load-schedule&service_id=" . $mtd_service_id; ?>',
 			dataType: 'json',
 			method: 'POST',
 			colModel : [
@@ -206,7 +228,7 @@ echo "<script language=\"text/javascript\">var DELETE_IMAGE_URL = '".ENTRADA_URL
 			showToggleBtn: false,
 			title: 'Medical Training Days',
 			useRp: true,
-			rp: 10,
+			rp: 20,
 			showTableToggleBtn: true,
 			width: 750,
 			height: 400,
@@ -239,7 +261,7 @@ echo "<script language=\"text/javascript\">var DELETE_IMAGE_URL = '".ENTRADA_URL
 							height:180,
 							modal: true,
 							buttons: {
-								'Delete all items': function() {
+								'Delete': function() {
 									var ids = "";
 				               		jQuery('.trSelected', grid).each(function() {
 				               			var id = jQuery(this).attr('id');
@@ -254,7 +276,7 @@ echo "<script language=\"text/javascript\">var DELETE_IMAGE_URL = '".ENTRADA_URL
 						            ({
 						               type: "POST",
 						               dataType: "json",
-						               url: '<?php echo ENTRADA_URL; ?>/api/mtd-delete.api.php?id=<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>&rid='+ids
+						               url: '<?php echo COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL; ?>?section=api-mtd-delete&rid='+ids
 						             });
 
 							       	window.setTimeout('mtd_schedule.flexReload()', 1000);
@@ -424,3 +446,4 @@ function clearForm() {
 	<table id="mtd_schedule" class="" style="display:none"></table>
 </div>
 
+<?php } ?>

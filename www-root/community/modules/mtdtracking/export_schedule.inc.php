@@ -24,7 +24,12 @@
  * @copyright Copyright 2011 Queen's University. All Rights Reserved.
  *
  */
-
+if (!defined("IN_MTDTRACKING")) {
+	exit;
+} elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
+	header("Location: " . ENTRADA_URL);
+	exit;
+} else {
 @set_include_path(implode(PATH_SEPARATOR, array(
     dirname(__FILE__) . "/../../../core/includes",
     get_include_path(),
@@ -91,3 +96,5 @@ if ($results) {
 	echo "No results";
 }
 exit();
+}
+?>

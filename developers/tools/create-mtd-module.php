@@ -53,69 +53,94 @@ $ERROR = false;
 
 output_notice("This script is used to add the Medical Training Days application as a page in each Postgrad Community.");
 
-$site_names = array("Aboriginal Health - Family Medicine",
-"Anatomic Pathology",
-"Anesthesia - Family Medicine",
-"Anesthesiology",
-"Cardiology",
-"Care of the Elderly - Family Medicine",
-"Public Health and Preventative Medicine",
-"Critical Care Medicine",
-"Developmental Disabilities - Family Medicine",
-"Diagnostic Radiology",
-"Emergency Medicine",
-"Emergency Medicine - Family Medicine",
-"Family Medicine",
-"Gastroenterology",
-"General Surgery",
-"Hematology",
-"Internal Medicine",
-"Medical Oncology",
-"Nephrology",
-"Neurology",
-"Obstetrics and Gynecology",
-"Ophthalmology",
-"Orthopedic Surgery",
-"Palliative Care - Family Medicine",
-"Palliative Care Medicine",
-"Pediatrics",
-"Physical Medicine and Rehabilitation",
-"Psychiatry",
-"Radiation Oncology",
-"Respirology",
-"Rheumatology",
-"Rural Skills - Family Medicine",
-"Surgical Foundations",
-"Urology",
-"Women's Health - Family Medicine",
-"Accreditation Standards");
+/*
+ * Removed while testing: "Cardiology","Anesthesiology","Aboriginal Health - Family Medicine","Public Health",
+ */
+
+$site_names = array(
+	"Anatomic Pathology",
+	"Anesthesia - Family Medicine",
+	"Care of the Elderly - Family Medicine",
+	"Critical Care Medicine",
+	"Developmental Disabilities - Family Medicine",
+	"Diagnostic Radiology",
+	"Emergency Medicine",
+	"Emergency Medicine - Family Medicine",
+	"Family Medicine",
+	"Gastroenterology",
+	"General Surgery",
+	"Hematology",
+	"Internal Medicine",
+	"Medical Oncology",
+	"Nephrology",
+	"Neurology",
+	"Obstetrics and Gynecology",
+	"Ophthalmology",
+	"Orthopedic Surgery",
+	"Palliative Care - Family Medicine",
+	"Palliative Care Medicine",
+	"Pediatrics",
+	"Physical Medicine and Rehabilitation",
+	"Psychiatry",
+	"Radiation Oncology",
+	"Respirology",
+	"Rheumatology",
+	"Rural Skills - Family Medicine",
+	"Surgical Foundations",
+	"Urology",
+	"Women's Health - Family Medicine",
+	"Accreditation Standards");
 
 $site_name_prefix = "pgme";
-$template = $community["community_template"];
-$theme = $community["community_theme"];
 
 output_notice("Step 2: The pages from the given Community ID are inserted as pages for the new Community Site.");
 
 foreach ($site_names as $s_name) {
 
+	$s_name_arr = explode("-", $s_name);
+	$s_name = trim($s_name_arr[0]);
+
 	//format the program name for use as an URL and community short name
 	$s_name_url = clean_input($s_name, array("page_url", "lowercase"));
+	$community_url = "/" . $site_name_prefix . "_" . $s_name_url;
 	$community_shortname = $site_name_prefix . "_" . $s_name_url;
 
 	//Get the community id
 	$query = "SELECT *
 			  FROM communities
-			  WHERE community_shortname = " . $db->qstr($community_shortname);
+			  WHERE community_url like " . $db->qstr($community_url . "%");
 	$result = $db->GetRow($query);
 	if (!$result) {
-		output_error("Could not find the community: " . $community_shortname);
-		exit();
+		output_error("Could not find the community URL: " . $community_url);
+	} else {
+		//MTD Module = 8
+		communities_module_activate_and_page_create($result["community_id"], 8);
+
+		set_module_page_permissions($db, $result["community_id"], 8, 0, 0, 0);
+
+		output_notice("\n\nThe MTD Page has been added to " . $s_name . ".");
 	}
+}
 
-	//MTD Module = 8
-	communities_module_activate($result["community_id"], 8);
+function set_module_page_permissions($db, $community_id, $module_id, $allow_member_view, $allow_public_view, $allow_troll_view) {
+	$query = "SELECT * FROM `communities_modules` WHERE `module_id` = " . $db->qstr($module_id) . " AND `module_active` = '1'";
+	$module_info = $db->GetRow($query);
+	$module_shortname = "";
 
-	output_notice("\n\nThe MTD Page has been added to all Postgrad Communities.");
+	if ($module_info) {
+		$module_shortname = $module_info["module_shortname"];
 
-} //END OF MAIN SCRIPT
+		if ($db->AutoExecute("community_pages",
+						array("allow_member_view" => 0, "allow_public_view" => 0, "allow_troll_view" => 0,
+							"updated_date" => time(), "updated_by" => 5440), "UPDATE",
+						"`community_id` = " . $db->qstr($community_id) . " AND page_type = " . $db->qstr($module_shortname))) {
+
+			output_success("Permission set to allow Admin access only.");
+		} else {
+			output_error("Failed to create the module page.");
+		}
+	} else {
+		output_error("Module does not exist.");
+	}
+}
 ?>

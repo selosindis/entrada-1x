@@ -10,3 +10,5 @@ www-root/syllabi/*
 *.buildpath
 *.eclipse.*.prefs
 *.swp
+
+/.settings/

@@ -53,18 +53,33 @@ $ERROR = false;
 
 output_notice("This script is used to add the Medical Training Days application as a page in each Postgrad Community.");
 
+/*
+ * Programs that do not need an instance of the MTD Tracking application:
+ *
+ * "Surgical Foundations" (will be tracked under General or Orthopedic Surgery)
+ * "Accreditation Standards" Not a Program that is tracked at MOH.
+ * 
+ * All of these are simply Family Medicine:
+ *
+ * "Anesthesia - Family Medicine",
+ * "Care of the Elderly - Family Medicine",
+ * "Developmental Disabilities - Family Medicine",
+ * "Emergency Medicine - Family Medicine",
+ * "Palliative Care - Family Medicine",
+ * "Rural Skills - Family Medicine",
+ * "Women's Health - Family Medicine"
+ * 
+ * 
+ */
+
 $site_names = array(
 	"Aboriginal Health - Family Medicine",
 	"Anatomic Pathology",
 	"Anesthesiology",
-	"Anesthesia - Family Medicine",
 	"Cardiology",
-	"Care of the Elderly - Family Medicine",
-	"Critical Care Medicine",
-	"Developmental Disabilities - Family Medicine",
+	"Critical Care Medicine",	
 	"Diagnostic Radiology",
 	"Emergency Medicine",
-	"Emergency Medicine - Family Medicine",
 	"Family Medicine",
 	"Gastroenterology",
 	"General Surgery",
@@ -76,7 +91,6 @@ $site_names = array(
 	"Obstetrics and Gynecology",
 	"Ophthalmology",
 	"Orthopedic Surgery",
-	"Palliative Care - Family Medicine",
 	"Palliative Care Medicine",
 	"Pediatrics",
 	"Physical Medicine and Rehabilitation",
@@ -85,11 +99,8 @@ $site_names = array(
 	"Radiation Oncology",
 	"Respirology",
 	"Rheumatology",
-	"Rural Skills - Family Medicine",
-	"Surgical Foundations",
 	"Urology",
-	"Women's Health - Family Medicine",
-	"Accreditation Standards");
+	);
 
 $site_name_prefix = "pgme";
 

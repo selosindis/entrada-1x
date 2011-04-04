@@ -10,7 +10,12 @@
  * @copyright Copyright 2011 Queen's University. All Rights Reserved.
 */
 
- 
+/**
+ * 
+ * Class to model data values about users. One requirement here was that data also had to support effective dates and expiration dates 
+ * @author Jonathan Fingland
+ *
+ */
 class MetaDataValue {
 	private $meta_value_id,
 			$meta_type_id,
@@ -23,6 +28,11 @@ class MetaDataValue {
 	function __construct() {
 	}
 	
+	/**
+	 * Returns MetaDataValue constructed from elements in the supplied array. 
+	 * @param array $arr
+	 * @return MetaDataValue
+	 */
 	public static function fromArray(array $arr) {
 		$cache = SimpleCache::getCache();
 		$value = $cache->get("MetaValue",$arr['meta_value_id']);
@@ -40,34 +50,67 @@ class MetaDataValue {
 		return $value;
 	}
 	
+	/**
+	 * Returns the associated MetaDataType 
+	 * @return MetaDataType
+	 */
 	public function getType() {
 		return MetaDataType::get($this->meta_type_id);
 	}
 	
+	/**
+	 * Returns the associated User
+	 * @return User
+	 */
 	public function getUser() {
 		return User::get($this->proxy_id);
 	}
 	
+	/**
+	 * Returns the value data point
+	 * @return string
+	 */
 	public function getValue() {
 		return $this->data_value;
 	}
 	
+	/**
+	 * Returns the notes associated with the value
+	 * @return string
+	 */
 	public function getNotes() {
 		return $this->notes;
 	}
 	
+	/**
+	 * Returns the timestamp from which this value becomes effective
+	 * @return int
+	 */
 	public function getEffectiveDate() {
 		return $this->effective_date;
 	}
 	
+	/**
+	 * Returns the timestamp on which this value expires
+	 * @return int
+	 */
 	public function getExpiryDate() {
 		return $this->expiry_date;
 	}
 	
+	/**
+	 * Returns the internal ID
+	 * @return int
+	 */
 	public function getID() {
 		return $this->meta_value_id;
 	}
 	
+	/**
+	 * Returns the MetaDataValue corresponding to the provided ID
+	 * @param int $meta_value_id
+	 * @return MetaDataValue
+	 */
 	public static function get($meta_value_id) {
 		$cache = SimpleCache::getCache();
 		$value = $cache->get("MetaValue",$meta_value_id);
@@ -82,6 +125,11 @@ class MetaDataValue {
 		return $value;
 	}
 	
+	/**
+	 * Returns the new value ID if succesful in creating a new MetaDataValue of the provided type (ID) for the provided user (ID)
+	 * @param int $type_id
+	 * @param int $proxy_id
+	 */
 	public static function create($type_id, $proxy_id) {
 		global $db;
 		$query = "INSERT INTO `meta_values` (`meta_type_id`, `proxy_id`) value (?,?)";
@@ -91,6 +139,10 @@ class MetaDataValue {
 		}
 	}
 	
+	/**
+	 * Updates this entry with the data supplied in the array. Can add an error if the DB fails the update.
+	 * @param array $inputs
+	 */
 	public function update(array $inputs) {
 		extract($inputs);
 		$cache = SimpleCache::getCache();
@@ -104,6 +156,9 @@ class MetaDataValue {
 		}
 	} 
 	
+	/**
+	 * Removes this Value from the dabatase
+	 */
 	public function delete() {
 		$cache = SimpleCache::getCache();
 		$cache->remove("MetaValue", $this->meta_value_id);

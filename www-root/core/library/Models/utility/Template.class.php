@@ -10,6 +10,11 @@
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
 */
 
+/**
+ * template system for handling xml based complex strings/structures
+ * @author Jonathan Fingland
+ *
+ */
 class Template {
 	
 	/**

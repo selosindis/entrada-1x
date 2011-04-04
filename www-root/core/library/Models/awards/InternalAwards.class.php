@@ -28,12 +28,11 @@ require_once("Award.class.php");
 require_once("InternalAward.class.php");
 
 /**
+ * Model for retrieving and modifying awards list
  * 
  * @author jonathan fingland
- * Model for retrieving and modifying awards list
- *  
  */
-class InternalAwards {
+class InternalAwards extends Collection {
 	
 	/**
 	 * array of Awards objects
@@ -59,7 +58,7 @@ class InternalAwards {
 	}
 	
 	/**
-	 * 
+	 * Sorts the collection by award title 
 	 * @param int $direction
 	 */
 	public function sort($direction) {
@@ -80,17 +79,22 @@ class InternalAwards {
 		}
 	}
 	
+	/**
+	 * 
+	 * @param bool $refresh
+	 * @return array:
+	 */
 	static function get($refresh = false) {
 		global $db;
 		if (! self::$initialized || $refresh) {
 			self::$awards = array();
-			$query		= "SELECT * FROM `student_awards_internal_types` order by title asc";
+			$query		= "SELECT *, `id` as award_id FROM `student_awards_internal_types` order by title asc";
 			$results	= $db->GetAll($query);
 			foreach ($results as $result) {
 				array_push(self::$awards, InternalAward::fromArray($result));
 			}
 			self::$initialized = true;
 		}
-		return self::$awards;
+		return new self(self::$awards);
 	}
 }

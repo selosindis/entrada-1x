@@ -26,7 +26,7 @@
 */
 
 /**
- * Simple User class with basic information
+ * Class to model Event instances including basic data and relationships to users/courses 
  * 
  * @author Organisation: Queen's University
  * @author Unit: School of Medicine
@@ -128,30 +128,47 @@ class Event {
 		return Course::get($course_id);
 	}
 	
+	/**
+	 * Returns the phase in which this event takes place
+	 * @return string
+	 */
 	public function getPhase() {
 		return $this->getPhase();	
 	}
 	
 	/**
+	 * Returns the event title
 	 * @return string
 	 */
 	public function getTitle() {
 		return $this->event_title;
 	}
 	
+	/**
+	 * Returns the event description
+	 * @return string
+	 */
 	public function getDescription() {
 		return $this->event_description;
 	}
 	
+	/**
+	 * Returns the stated goals of this event 
+	 * @return string
+	 */
 	public function getGoals() {
 		return $this->event_goals;
 	}
 	
+	/**
+	 * Returns the objectives provided for this event
+	 */
 	public function getObjectives() {
 		return $this->event_objectives;
 	}
 	
 	/**
+	 * Returns a collection of contacts (users) provided for this event
 	 * @return EventContacts
 	 */
 	public function getContacts() {
@@ -160,6 +177,11 @@ class Event {
 	
 	//TODO Complete creation of getters, update, etc
 	
+	/**
+	 * Returns true if the user is an owner of the associated course or if they are one of the specified event contacts; false, otherwise
+	 * @param User $user
+	 * @return boolean
+	 */
 	public function isOwner(User $user) {
 		//check first if they are course owner, then check the event contacts.
 		$course = $this->getCourse();
@@ -171,6 +193,11 @@ class Event {
 		}
 	}
 	
+	/**
+	 * Returns an Event specified by the provided ID 
+	 * @param unknown_type $event_id
+	 * @return unknown
+	 */
 	public static function get($event_id) {
 		$cache = SimpleCache::getCache();
 		$event = $cache->get("Event",$event_id);

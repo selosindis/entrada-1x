@@ -31,7 +31,7 @@ require_once("InternalAward.class.php");
 require_once("Models/utility/Editable.interface.php");
 
 /**
- * 
+ * Class for modelling the receipt of an internal award. Each issuance/receipt is a unique object.  
  * 
  * @author Organisation: Queen's University
  * @author Unit: School of Medicine
@@ -39,11 +39,34 @@ require_once("Models/utility/Editable.interface.php");
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  */
 class InternalAwardReceipt implements Editable {
+	/**
+	 * Internal ID of this award receipt
+	 * @var int
+	 */
 	private $award_receipt_id;
+	/**
+	 * Internal ID of the related award 
+	 * @var int
+	 */
 	private $award_id;
+	/**
+	 * Proxy ID/User ID of the related user  
+	 * @var int
+	 */
 	private $user_id;
+	/**
+	 * Year the award was received
+	 * @var int
+	 */
 	private $year;
 	
+	/**
+	 * Constructs new awards
+	 * @param int $user_id
+	 * @param int $award_id
+	 * @param int $award_receipt_id
+	 * @param int $year
+	 */
 	function __construct($user_id, $award_id, $award_receipt_id, $year){
 		$this->user_id = $user_id;
 		$this->award_id = $award_id;
@@ -51,22 +74,42 @@ class InternalAwardReceipt implements Editable {
 		$this->year = $year;
 	}
 	
+	/**
+	 * Returns the internal ID of this award receipt
+	 * @return int
+	 */
 	public function getID() {
 		return $this->award_receipt_id;
 	}
 	
+	/**
+	 * Returns the year the award was issued/received
+	 * @return number
+	 */
 	public function getAwardYear() {
 		return $this->year;
 	}
 	
+	/**
+	 * Returns the User object of the related user
+	 * @return User
+	 */
 	public function getUser() {
 		return User::get($this->user_id);
 	}
 	
+	/**
+	 * Returns the InternalAward object of the related award
+	 * @return InternalAward
+	 */
 	public function getAward() {
 		return InternalAward::get($this->award_id);
 	}
 	
+	/**
+	 * Creates a new InternalAwardReceipt in the database. Input retrieves values from an array with elements: 'user_id', 'award_id', and 'year'. 
+	 * @param array $input_arr
+	 */
 	static public function create(array $input_arr) {
 		extract($input_arr);
 		global $db;
@@ -103,10 +146,18 @@ class InternalAwardReceipt implements Editable {
 			 
 	} 
 	
+	/**
+	 * Returns an InternalAwardReceipt constructed from an array with elements: 'user_id', 'award_id', 'award_receipt_id', 'year'
+	 * @param array $arr
+	 * @return InternalAwardReceipt
+	 */
 	public static function fromArray(array $arr) {
 		return new self($arr['user_id'], $arr['award_id'], $arr['award_receipt_id'], $arr['year']);
 	}
 	
+	/**
+	 * Deletes this award receipt from the database
+	 */
 	public function delete() {
 		global $db;
 	
@@ -119,6 +170,12 @@ class InternalAwardReceipt implements Editable {
 		}
 	}
 	
+	/**
+	 * Compares award receipts by 'year' received, or by award 'title'
+	 * @param InternalAwardReceipt $ar
+	 * @param unknown_type $compare_by
+	 * @return number
+	 */
 	public function compare($ar, $compare_by="year") {
 		switch($compare_by) {
 			case 'year':
@@ -132,6 +189,10 @@ class InternalAwardReceipt implements Editable {
 		}
 	}
 	
+	/**
+	 * Updates the award receipt information with array inputs. See create() documents for element list  
+	 * @param array $input_arr
+	 */
 	public function update (array $input_arr) {
 		extract($input_arr);
 		if (is_null($user_id)) {

@@ -26,7 +26,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MANAGE_USER_DATA"))) {
 
 require_once("Entrada/metadata/functions.inc.php");
 
-$SCRIPT[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/meta_data_type.js\"></script>";
+$SCRIPT[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/meta_data.js\"></script>";
 $ONLOAD[] = "api_url = \"".ENTRADA_URL."/admin/users/metadata?section=api-metadata\";page_init();";
 ?>
 <h1><?php echo $translate->translate("Manage User Meta Data"); ?></h1>
@@ -106,6 +106,47 @@ foreach ($SYSTEM_GROUPS as $group=>$roles) {
 	echo "user_groups[\"".$group."\"] = [\"".implode("\",\"",$roles)."\",\"All\"];";
 }
 ?>
+
+/**
+ * Sets up resources needed by the page
+ */
+function page_init() {
+	
+	var errModal = new Control.Modal('errModal', {
+		overlayOpacity:	0.75,
+		closeOnClick:	'overlay',
+		className:		'modal-description',
+		fade:			true,
+		fadeDuration:	0.30
+	});
+	display_error = ErrorHandler(errModal);
+	
+	var loadingModal = new Control.Modal('loadingModal', {
+		overlayOpacity:	0.75,
+		closeOnClick:	false,
+		className:		'modal-description',
+		fade:			true,
+		fadeDuration:	0.30
+	});
+	
+	
+	document.observe('MetaData:onBeforeUpdate', function () {loadingModal.open();});
+	document.observe('MetaData:onAfterUpdate', function () {loadingModal.close();});
+	
+	document.observe("click", clickHandler);
+	
+	window.addRowReq = mkEvtReq(/^user_head_(\d+)$/,addUserRow);
+	window.deleteRowReq = mkEvtReq(/^value_edit_(\d+)$/, deleteRow);
+
+	$('associated_group').observe('change', setRoleList);
+	$('associated_group').observe('change', getCategories);
+	$('associated_organisation_id').observe('change', getCategories);
+	$('associated_role').observe('change', getCategories);
+	setRoleList();
+	getCategories();
+	
+	$('table_selector').observe('submit', getTable);
+}
 </script>
 
 <div id="errModal" class="modal-description">

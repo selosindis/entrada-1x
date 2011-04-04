@@ -97,6 +97,12 @@ class Tasks extends Collection {
 		return $tasks;
 	}
 	
+	/**
+	 * Returns a collection of Task objects for which the provided user is a recipient 
+	 * @param User $user
+	 * @param array $options Options array for limiting and sorting.
+	 * @return Tasks
+	 */
 	static public function getByRecipient(User $user, $options=null) {
 		$org = $user->getOrganisation();
 		
@@ -148,18 +154,43 @@ class Tasks extends Collection {
 		 
 	}
 	
+	/**
+	 * Returns a collection of Task objects for which the provided user is an owner (user) 
+	 * @param User $user
+	 * @param array $options
+	 * @return Tasks
+	 */
 	static public function getByOwner(User $user, $options=null) {
 		return self::getByOwnerType(TASK_OWNER_USER,$user->getID(), $options);
 	}
 	
+	/**
+	 * Returns a collection of Task objects for which the provided course is associated
+	 * @param Course $course
+	 * @param array $options
+	 * @return Tasks
+	 */
 	static public function getByCourse(Course $course, $options=null) {
 		return self::getByOwnerType(TASK_OWNER_COURSE, $course->getID(), $options);
 	}
 	
+	/**
+	 * Returns a collection of Task objects for which the provided Event is associated
+	 * @param Event $event
+	 * @param array $options
+	 * @return Tasks
+	 */
 	static public function getByEvent(Event $event, $options=null) {
 		return self::getByOwnerType(TASK_OWNER_EVENT,$event->getID(), $options);
 	}
 	
+	/**
+	 * Returns a collection of Task objects for which the provided owner_type and corresponding owner_id are owners/associated
+	 * @param string $owner_type
+	 * @param int $owner_id
+	 * @param array $options
+	 * @return Tasks
+	 */
 	static private function getByOwnerType($owner_type, $owner_id, $options=null) {
 		global $db;
 		
@@ -191,7 +222,6 @@ class Tasks extends Collection {
 			$results = $rs->getIterator();	
 			foreach ($results as $result) {
 				$task = Task::fromArray($result);
-				//$task = new Task($result['task_id'], $result['last_updated_date'], $result['last_updated_by'], $result['title'], $result['deadline'], $result['duration'], $result['description'],$result['release_start'], $result['release_finish'], $result['organisation_id']);
 				$tasks[] = $task;
 			}
 		}

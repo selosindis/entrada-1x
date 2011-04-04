@@ -26,22 +26,41 @@ class MetaDataRelation {
 			$role,
 			$user;
 			
+	/**
+	 * Returns the Organisation ID for this relationship
+	 * @return int
+	 */
 	public function getOrganisationRestriction() {
 		return $this->organisation;
 	}
 	
+	/**
+	 * @return string 
+	 */
 	public function getGroupRestriction() {
 		return $this->group;
 	}
 	
+	/**
+	 * @return string
+	 */
 	public function getRoleRestriction() {
 		return $this->role;
 	}
 	
+	/**
+	 * Returns the Proxy ID for this relationship
+	 * @return int
+	 */
 	public function getUserRestriction() {
 		return $this->user;
 	}
 	
+	/**
+	 * Returns true if this relationship is applicable to the supplied user
+	 * @param User $user
+	 * @return boolean
+	 */
 	public function isRelated(User $user) {
 		if ((($this->organisation) && ($user->getOrganisationID() != $this->organisation))
 		|| (($this->group) && ($user->getGroup() != $this->group))
@@ -52,6 +71,10 @@ class MetaDataRelation {
 		return true;
 	}
 	
+	/**
+	 * Parses out the rtelationship restriction componenets from a string of the fromat "organistion:group:role:user". Internal use only. 
+	 * @throws Exception 
+	 */
 	private function parseParts() {
 		$type_parts = explode(self::SEPARATOR, $this->entity_type);
 		$value_parts = explode(self::SEPARATOR, $this->entity_value);
@@ -64,6 +87,11 @@ class MetaDataRelation {
 		}
 	}
 	
+	/**
+	 * Returns a MetaDataRelation object belonging to the specified id, if one exists.
+	 * @param int $meta_data_relation_id
+	 * @return MetaDataRelation
+	 */
 	public function get($meta_data_relation_id) {
 		$cache = SimpleCache::getCache();
 		$relation = $cache->get("MetaDataRelation",$meta_data_relation_id);

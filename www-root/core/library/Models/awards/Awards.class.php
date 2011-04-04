@@ -26,10 +26,8 @@
 require_once("Award.class.php");
 
 /**
- * 
- * @author jonathan fingland
  * Model for retrieving and modifying awards list
- *  
+ * @author jonathan fingland
  */
 class Awards {
 	

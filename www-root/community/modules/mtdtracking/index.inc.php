@@ -306,12 +306,8 @@ jQuery.get( url, {resident_id: id},
 function( data ) {
 	if (jQuery( data ).find( '#resident_not_found' ).html().toString() == "") {
 		jQuery("#resident_not_found").html("");
-		jQuery("#school_id").val(jQuery( data ).find( '#school_id' ).html().toString());
 		jQuery("#school_description").html(jQuery( data ).find( '#school_description' ).html().toString());
-		jQuery("#program_id").val(jQuery( data ).find( '#program_id' ).html().toString());
-		jQuery("#category_id").val(jQuery( data ).find( '#category_id' ).html().toString());
 		jQuery("#full_name").html(jQuery( data ).find( '#full_name' ).html().toString());
-		jQuery("#student_no").val(jQuery( data ).find( '#student_no' ).html().toString());
 		jQuery("#program_description").html(jQuery( data ).find( '#program_description' ).html());
 		jQuery("#category_description").html(jQuery( data ).find( '#category_description' ).html());
 		//Remove program name from resident name
@@ -374,7 +370,7 @@ function clearForm() {
 				<input id="resident_name" name="resident_name" type="text" class="required" size="50"/><em>*</em>
 				<div class="autocomplete" id="resident_name_auto_complete"></div>
 				<script type="text/javascript">
-					new Ajax.Autocompleter('resident_name', 'resident_name_auto_complete', '<?php echo ENTRADA_RELATIVE; ?>/api/resident_search.api.php', {frequency: 0.2, minChars: 2, afterUpdateElement: function (text, li) {getResident(li.id);}});</script>
+					new Ajax.Autocompleter('resident_name', 'resident_name_auto_complete', '<?php echo COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL; ?>?section=api-resident-search', {frequency: 0.2, minChars: 2, afterUpdateElement: function (text, li) {getResident(li.id);}});</script>
 		
 			<input id="find_resident_url" type="hidden" value="<?php echo COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL; ?>?section=find_resident" />
 			<p><label for="start_date">Start Date:</label><br />
@@ -402,11 +398,6 @@ function clearForm() {
 			<div id="total_duration" class="content-small">Total percent time: 0 %.</div>
 			<input id="mtdlocation_duration_order" name="mtdlocation_duration_order" style="display: none;">
 			<div id="duration_notice" class="content-small">Use the list above to select the different components of this event. When you select one, it will appear here and you can change the order and duration.</div>
-
-			<input type="hidden" id="program_id" name="program_id" />
-			<input type="hidden" id="school_id" name="school_id" />
-			<input type="hidden" id="student_no" type="text" />
-			<input type="hidden" id="category_id" name="category_id" />
 
 <?php echo "<label>Service Code: </label>" . $mtd_service_code . " (" . $mtd_service_description . ")"; ?>
 			<input type="hidden" id ="service_id" name="service_id" value="<?php echo $mtd_service_id ?>" />

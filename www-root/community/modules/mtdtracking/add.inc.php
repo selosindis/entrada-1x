@@ -104,14 +104,11 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 		$ERRORSTR[] = "Start date cannot be after the end date.";
 	}
 
-//	$PROCESSED["location_id"] = validate_integer_field($_POST["mtdlocation"]);
-//	if (!$PROCESSED["location_id"]) {
-//		$ERROR++;
-//		$ERRORSTR[] = "Location is not valid.";
-//	}
 	$PROCESSED["service_id"] = validate_integer_field($_POST["service_id"]);
-
-	//Validate overlapping dates for this resident.
+	if (!$PROCESSED["service_id"]) {
+		$ERROR++;
+		$ERRORSTR[] = "No service code found.";
+	}
 
 	if (!$ERROR) {
 		//Add this MTD to the schedule.

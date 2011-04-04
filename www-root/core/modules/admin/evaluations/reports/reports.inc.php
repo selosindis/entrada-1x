@@ -100,7 +100,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 			break;
 		}
 
-		echo	"<div class=\"no-printing\">";
+		echo	"<div>";
 		echo	"<table width=\"100%\" summary=\"Evaluation Reports\">";
 		echo	"	<colgroup>
 						<col style=\"width: 18%\" />

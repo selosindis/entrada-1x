@@ -53,13 +53,12 @@ $ERROR = false;
 
 output_notice("This script is used to add the Medical Training Days application as a page in each Postgrad Community.");
 
-/*
- * Removed while testing: "Cardiology","Anesthesiology","Aboriginal Health - Family Medicine","Public Health",
- */
-
 $site_names = array(
+	"Aboriginal Health - Family Medicine",
 	"Anatomic Pathology",
+	"Anesthesiology",
 	"Anesthesia - Family Medicine",
+	"Cardiology",
 	"Care of the Elderly - Family Medicine",
 	"Critical Care Medicine",
 	"Developmental Disabilities - Family Medicine",
@@ -82,6 +81,7 @@ $site_names = array(
 	"Pediatrics",
 	"Physical Medicine and Rehabilitation",
 	"Psychiatry",
+	"Public Health",
 	"Radiation Oncology",
 	"Respirology",
 	"Rheumatology",

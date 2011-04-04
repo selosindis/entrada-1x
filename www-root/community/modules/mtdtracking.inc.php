@@ -26,11 +26,24 @@ $ALLOWED_HTML_TAGS = "<span><a><ol><ul><li><strike><br><p><div><strong><em><h1><
 
 if (communities_module_access($COMMUNITY_ID, $MODULE_ID, $SECTION)) {
 	if ((@file_exists($section_to_load = COMMUNITY_ABSOLUTE . DIRECTORY_SEPARATOR . "modules" . DIRECTORY_SEPARATOR . $COMMUNITY_MODULE . DIRECTORY_SEPARATOR . $SECTION . ".inc.php")) && (@is_readable($section_to_load))) {
+
 		/**
-		 * Add the RSS feed version of the page to the <head></head> tags.
+		 * Prepend jQuery to the $HEAD stack.
 		 */
-		$HEAD[] = "<link rel=\"alternate\" type=\"application/rss+xml\" title=\"%TITLE% " . $MENU_TITLE . " RSS 2.0\" href=\"" . COMMUNITY_URL . "/feeds" . $COMMUNITY_URL . ":" . $PAGE_URL . "/rss20\" />";
-		$HEAD[] = "<link rel=\"alternate\" type=\"text/xml\" title=\"%TITLE% " . $MENU_TITLE . " RSS 0.91\" href=\"" . COMMUNITY_URL . "/feeds" . $COMMUNITY_URL . ":" . $PAGE_URL . "/rss\" />";
+		array_unshift($HEAD,
+			"<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/location_plus.js\"></script>",
+			"<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery.min.js?release=".html_encode(APPLICATION_VERSION)."\"></script>",
+			"<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery-ui.min.js?release=".html_encode(APPLICATION_VERSION)."\"></script>",
+			"<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/date.js\"></script>",
+			"<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/flexigrid.js\"></script>",
+			"<script type=\"text/javascript\">jQuery.noConflict();</script>",
+			"<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery.validate.min.js\"></script>"
+		);
+
+		$HEAD[] = "<link href=\"".ENTRADA_URL."/css/common.css\" rel=\"stylesheet\" type=\"text/css\" />";
+		$HEAD[] = "<link href=\"".ENTRADA_URL."/css/mtd.css\" rel=\"stylesheet\" type=\"text/css\" />";
+		$HEAD[] = "<link href=\"".ENTRADA_URL."/css/jquery/jquery-ui.css\" rel=\"stylesheet\" type=\"text/css\" />";
+		$HEAD[] = "<link href=\"".ENTRADA_URL."/css/jquery/flexigrid.css\" rel=\"stylesheet\" type=\"text/css\" />";
 
 		require_once($section_to_load);
 	} else {

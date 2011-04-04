@@ -1,9 +1,23 @@
 <?php
 
+/**
+ * Collection of TaskRecipient objects. tracks only recipients of a single task.
+ * @author Jonathan Fingland
+ *
+ */
 class TaskRecipients extends Collection {
 	
+	/**
+	 * Internal ID of the related Task
+	 * @var int
+	 */
 	private $task_id;
 	
+	/**
+	 * Returns Colleciton of Task Recipients including User, GraduatingClass, or Organisation objects
+	 * @param int $task_id
+	 * @return TaskRecipients
+	 */
 	public static function get($task_id) {
 		global $db;
 		
@@ -79,10 +93,15 @@ class TaskRecipients extends Collection {
 		}
 	}
 	
+	/**
+	 * Removes provided TaskRecipients from recipient list. If the $recipients array is null, it will remove all recipients (an empty array will cause an error)   
+	 * @param int $task_id
+	 * @param array $recipients
+	 */
 	public static function remove($task_id, $recipients=null) {
 		global $db;
 		
-		if (is_null($verifiers)) {
+		if (is_null($recipients)) {
 			$query = "delete from `task_recipients` where `task_id`=?";
 		} else {
 			$query = "delete from `task_recipients` where `task_id`=? and (";

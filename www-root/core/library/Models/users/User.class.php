@@ -68,6 +68,24 @@ class User {
 	
 	private $group, $role;
 
+	/**
+	 * lookup array for formatting user information
+	 * <code>
+	 * $format_keys = array(
+	 *								"f" => "firstname",
+	 *								"l" => "lastname",
+	 *								"p" => "prefix"
+	 *								);
+	 *
+	 * //Usage:
+	 * if ($user->getPrefix()) {
+	 *   echo $user->getName("%p. %f %l"); //i.e. Dr. John Smith
+	 * } else {
+	 *   echo $user->getName("%f %l"); //i.e. John Smith
+	 * }
+	 * </code>
+	 * @var array
+	 */
 	private static $format_keys = array(
 									"f" => "firstname",
 									"l" => "lastname",
@@ -100,6 +118,10 @@ class User {
 		return $this->grad_year;
 	}
 	
+	/**
+	 * Returns the entire class of the same grad year
+	 * @return GraduatingClass
+	 */
 	function getGraduatingClass() {
 		if ($this->grad_year) {
 			return GraduatingClass::get($this->grad_year);
@@ -142,6 +164,19 @@ class User {
 		}
 	}
 	
+	/**
+	 * Returns the user's name formatted according to the format string supplied. Default format is "%f %l" (firstname, lastname)
+	 * <code>
+	 * if ($user->getPrefix()) {
+	 *   echo $user->getName("%p. %f %l"); //i.e. Dr. John Smith
+	 * } else {
+	 *   echo $user->getName("%f %l"); //i.e. John Smith
+	 * }
+	 * </code> 
+	 * @see User::$format_keys
+	 * @param string $format
+	 * @return string
+	 */
 	function getName($format = "%f %l") {
 		foreach(self::$format_keys as $key => $var) {
 			$pattern = "/([^%])%".$key."|^%".$key."|(%%)%".$key."/";
@@ -152,6 +187,7 @@ class User {
 	}
 	
 	/**
+	 * Returns the User's specified prefix, if any. e.g. Mr, Mrs, Dr,...
 	 * @return string
 	 */
 	function getPrefix() {
@@ -164,6 +200,14 @@ class User {
 	 */
 	function getEmail() {
 		return $this->email;
+	}
+	
+	/**
+	 * Returns the user's alternate email address, if available
+	 * @return string
+	 */
+	function getEmailAlternate() {
+		return $this->email_alt;
 	}
 	
 	/**
@@ -182,6 +226,7 @@ class User {
 	}
 	
 	/**
+	 * Returns the ID of the organisation to which the user belongs
 	 * @return int
 	 */
 	function getOrganisationID() {
@@ -198,12 +243,12 @@ class User {
 	
 	/**
 	 * 
-	 * @param int $user_id
+	 * @param int proxy_id
 	 * @return User
 	 */
 	public static function get($proxy_id) {
 		$cache = SimpleCache::getCache();
-		$user = $cache->get("User",$user_id);
+		$user = $cache->get("User",$proxy_id);
 		if (!$user) {
 			global $db;
 			$query = "SELECT a.*, b.`group`, b.`role` FROM `".AUTH_DATABASE."`.`user_data` a LEFT JOIN `".AUTH_DATABASE."`.`user_access` b on a.`id`=b.`user_id` and b.`app_id`=? WHERE a.`id` = ?";
@@ -216,7 +261,7 @@ class User {
 	}
 	
 	/**
-	 * 
+	 * Returns a User object created using the array inputs supplied
 	 * @param array $arr
 	 * @return User
 	 */
@@ -273,33 +318,37 @@ class User {
 	}
 	
 	/**
+	 * Returns the access group to which this user belongs e.g. student, faculty, ... 
 	 * @return string
 	 */
 	public function getGroup() {
 		if (is_null($this->group) && !$this->getAccess()) {
-				return;
+			return;
 		}
 		return $this->group; 
 	}
 	
 	/**
+	 * Returns the access role to which the user belongs
 	 * @return string
 	 */
 	public function getRole() {
 		if (is_null($this->role) && !$this->getAccess()) {
-				return;
+			return;
 		}
 		return $this->role; 
 	}
 	
 	/**
+	 * Internal function for getting access information for a user
 	 * @return bool
 	 */
 	private function getAccess() {
 		global $db;
 		$query = "SELECT * FROM `".AUTH_DATABASE."`.`user_access` WHERE `user_id` = ? AND `account_active` = 'true'
-				  AND (`access_starts` = '0' OR `access_starts` < ?) AND (`access_expires` = '0' OR `access_expires` >=  ?)";
-		$result = $db->getRow($query, array($this->getID(), time(), time()));
+				  AND (`access_starts` = '0' OR `access_starts` < ?) AND (`access_expires` = '0' OR `access_expires` >=  ?)
+				  AND `app_id` = ?";
+		$result = $db->getRow($query, array($this->getID(), time(), time(), AUTH_APP_ID));
 		if ($result) {
 			$this->group = $result['group'];
 			$this->role = $result['role'];
@@ -308,6 +357,7 @@ class User {
 	}
 	
 	/**
+	 * Returns the user-specified (numeric) privacy level
 	 * @return int
 	 */
 	public function getPrivacyLevel(){
@@ -358,6 +408,7 @@ class User {
 	}
 	
 	/**
+	 * Returns a Country object for the user's specified country. Legacy Support: Note that some users may not have country_id specified and rely on older country names. In those cases a new object is returned and can be operated in the same manner as newer country data 
 	 * @return Country
 	 */
 	public function getCountry() {
@@ -372,6 +423,7 @@ class User {
 	}
 	
 	/**
+	 * Returns the street address portion of a user's provided address. For excample: 123 Fourth Street
 	 * @return string
 	 */
 	public function getAddress() {

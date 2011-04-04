@@ -11,16 +11,11 @@
 */
 
 /**
- * Entrada [ http://www.entrada-project.org ]
  * 
- * 
- * @author Organisation: Queen's University
- * @author Unit: School of Medicine
- * @author Developer: Jonathan Fingland <jonathan.fingland@queensu.ca>
- * @copyright Copyright 2011 Queen's University. All Rights Reserved.
- * 
-*/
-
+ * Class to manage information related to a department such as dept. title, address, and structure in a hierarchy
+ * @author Jonathan Fingland
+ *
+ */
 class Department {
 	private  $department_id,
 			 $organisation_id,
@@ -102,42 +97,76 @@ class Department {
 		}
 	}
 	
+	/**
+	 * Returns the internal ID
+	 * @return int
+	 */
 	public function getID() {
 		return $this->department_id;
 	}
 	
+	/**
+	 * Returns the Title of the department
+	 * @return string
+	 */
 	public function getTitle() {
 		return $this->department_title;
 	}
 	
+	/**
+	 * Returns true if the department is flagged as active.
+	 * @return boolean
+	 */
 	public function isActive() {
 		return !!$this->deaprtment_active;
 	}	
 	
+	/**
+	 * @return string
+	 */
 	public function getAddress1() {
 		return $this->department_address1;
 	}
 
+	/**
+	 * @return string
+	 */
 	public function getAddress2() {
 		return $this->department_address2;
 	}
 	
+	/**
+	 * @return string
+	 */
 	public function getCity(){
 		return $this->department_city();
 	}
 	
+	/**
+	 * @return string
+	 */
 	public function getProvince() {
 		return $this->department_province;
 	}
 	
+	/**
+	 * @return string
+	 */
 	public function getCountry() {
 		return $this->department_country;
 	}
 	
+	/**
+	 * @return string;
+	 */
 	public function getPostalCode() {
 		return $this->department_postcode;
 	}
 	
+	/**
+	 * Returns a formatted composite of all address parts
+	 * @return string
+	 */
 	public function getAddress() {
 		$address_parts = array (
 			$this->getAddress1(), 
@@ -149,31 +178,55 @@ class Department {
 		return trim(implode("\n",$address_parts));
 	}
 
+	/**
+	 * @return string
+	 */
 	public function getTelephone() {
 		return $this->department_telephone;
 	}
 	
+	/**
+	 * @return string
+	 */
 	public function getFax() {
 		return $this->department_fax;	
 	}
 	
+	/**
+	 * @return string
+	 */
 	public function getEmail() {
 		return $this->department_email;
 	}
 	
+	/**
+	 * Returns the Description for this department
+	 * @return string 
+	 */
 	public function getDescription() {
 		return $this->department_desc;
 	}
 	
+	/**
+	 * Returns the entity id for this department
+	 * @return int
+	 */
 	public function getEntityID() {
 		return $this->entity_id;
 	}
 	
-	
+	/**
+	 * Returns the Organisation to which this department belongs
+	 * @return Organisation
+	 */
 	public function getOrganisation() {
 		return Organisation::get($this->organisation_id);
 	}
 	
+	/**
+	 * Returns the parent Department, if any 
+	 * @return Department
+	 */
 	public function getParent() {
 		if ($this->parent_id) {
 			return self::get($this->parent_id);

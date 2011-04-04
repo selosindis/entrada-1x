@@ -10,6 +10,12 @@
  * @copyright Copyright 2011 Queen's University. All Rights Reserved.
 */
 
+/**
+ * Simple Collection for managing a user's photos (not the photos of multiple users)
+ * 
+ * @author Jonathan Fingland
+ *
+ */
 class UserPhotos extends Collection {
 	
 	/**

@@ -10,6 +10,12 @@
  * @copyright Copyright 2011 Queen's University. All Rights Reserved.
 */
 
+/**
+ * 
+ * Generic Region class. Uses provinces in database for datasource. Could be modified for more general case.
+ * @author Jonathan Fingland
+ *
+ */
 class Region {
 	private $name;
 	private $abbreviation;

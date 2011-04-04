@@ -1,8 +1,15 @@
 <?php
 
-class EventContacts extends Collection {
+/**
+ * Special Collection of Users in which all elements are contacts for a specific event
+ * @author Jonathan Fingland
+ *
+ */
+class EventContacts extends Users {
 	
 	/**
+	 * Returns a Collection of User objects which are specified as contacts for the provided event ID
+	 * @param int $event_id
 	 * @return EventContacts
 	 */
 	static function get($event_id) {

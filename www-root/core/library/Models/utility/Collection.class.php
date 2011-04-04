@@ -1,10 +1,19 @@
 <?php
 
+/**
+ * Collection is an Array like structure used for abstracting many common methods required on arrays or similar structures
+ * @author Jonathan Fingland
+ *
+ */
 class Collection implements Iterator, ArrayAccess, Countable {
     private $position = 0;
     protected $container = array();  
 
-    public function __construct($array=array()) {
+    /**
+     * Constructor with optional array parameter to initialize the collection 
+     * @param array $array
+     */
+    public function __construct(array $array=array()) {
         $this->position = 0;
         if (is_array($array)) {
         	$this->container = $array; 
@@ -80,6 +89,11 @@ class Collection implements Iterator, ArrayAccess, Countable {
     	return in_array($element, $this->container, $strict);
     }
     
+    /**
+     * Sorts the internal collection by the specified field. 
+     * @param string $direction 'asc' or 'desc'
+     * @param string $sort_by field name to sort by. internal object dependent
+     */
     public function sort ($direction = 'asc', $sort_by='') {
 		$this->_sort($sort_by);    	
     	

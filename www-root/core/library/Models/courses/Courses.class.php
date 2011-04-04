@@ -56,6 +56,12 @@ class Courses extends Collection {
 		return new self($courses);
 	}
 	
+	/**
+	 * Returns courses for which the supplied user is an owner (director or program coordinator)
+	 * @param User $user
+	 * @param boolean $active_only flag to determine if only active courses should be included
+	 * @return Courses
+	 */
 	static public function getByOwner(User $user, $active_only=false ) {
 		global $db;
 		$user_id = $user->getID();

@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * TaskOwners are Users, Courses, or Events associated with a task. Note that Events are not currently enabled elsewhere, however this class supports them
+ * @author Jonathan Fingland
+ *
+ */
 class TaskOwners extends Collection {
 	
 	/**
@@ -36,6 +41,11 @@ class TaskOwners extends Collection {
 		return new self($owners);
 	}
 	
+	/**
+	 * Returns the associated Course
+	 * @param int $task_id
+	 * @return Course
+	 */
 	static function getCourse($task_id) {
 		global $db;
 		$query = "SELECT `owner_id` from `task_owners` where `task_id`=".$db->qstr($task_id) ." and `owner_type`=".$db->qstr(TASK_OWNER_COURSE);
@@ -45,6 +55,11 @@ class TaskOwners extends Collection {
 		}
 	}
 	
+	/**
+	 * Adds Users/Courses/Events as Task Owners
+	 * @param unknown_type $task_id
+	 * @param unknown_type $owners
+	 */
 	static public function add($task_id,$owners) {
 		global $db;
 		$query = "insert ignore into `task_owners` (`task_id`,`owner_id`, `owner_type` ) values ";
@@ -80,7 +95,12 @@ class TaskOwners extends Collection {
 		}
 	}
 	
-	static public function remove($task_id,$owners) {
+	/**
+	 * Removes the provided Users/Courses/Events from Task Owner list
+	 * @param int $task_id
+	 * @param array $owners
+	 */
+	static public function remove($task_id, array $owners) {
 		global $db;
 		$query = "DELETE FROM `task_owners`  where `task_id`=? AND (";
 		$q_task_id = $db->qstr($task_id);

@@ -10,5 +10,10 @@
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
 */
 
- 
-interface Editable { } //empty as the update function signature may vary. used as a marker of ability
+ /**
+  * Empty interface as the update function signature may vary. used as a marker of ability 
+  * 
+  * @author Jonathan Fingland
+  *
+  */
+interface Editable { } 

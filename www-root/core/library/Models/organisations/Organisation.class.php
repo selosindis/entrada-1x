@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * Class providing a model of an Organisation and its related data
+ * @author Jonathan Fingland
+ *
+ */
 class Organisation {
 	private	$organisation_id,
 			$organisation_title,
@@ -49,59 +54,116 @@ class Organisation {
 		
 	}
 	
+	/**
+	 * returns the internal ID of this organisation
+	 * @return int
+	 */
 	function getID() {
 		return $this->organisation_id;
 	}
 	
+	/**
+	 * Returns the title of the orgnisation
+	 * @return string
+	 */
 	function getTitle() {
 		return $this->organisation_title;
 	}
 	
-	//XXX should address info be formatted differently or remain atomic by address lines? 
+	//XXX should address info be formatted differently or remain atomic by address lines?
+	/**
+	 * Returns the first address line of the organisation
+	 * @return string
+	 */ 
 	function getAddress1() {
 		return $this->organisation_address1;
 	}
 	
+	/**
+	 * Returns the second address line of the organisation
+	 * @return string
+	 */
 	function getAddress2() {
 		return $this->organisation_address2;
 	}
 	
+	/**
+	 * Returns the city portion of the Organisation's address
+	 * @return string
+	 */
 	function getCity() {
 		return $this->organisation_city;
 	}
 	
+	/**
+	 * Returns the state/province portion of the Organisation's address
+	 * @return string
+	 */
 	function getProvince() {
 		return $this->organisation_province;
 	}
 	
+	/**
+	 * Returns the country portion of the Organisation's address
+	 * @return string
+	 */
 	function getCountry() {
 		return $this->organisation_country;
 	}
 	
+	/**
+	 * Returns the postal code/zip code portion of the Organisation's address
+	 * @return string
+	 */
 	function getPostCode() {
 		return $this->organisation_postcode;
 	}
 	
+	/**
+	 * Returns the telephone number for the organisation
+	 * @return string
+	 */
 	function getTelephone() {
 		return $this->organisation_telephone;
 	}
 	
+	/**
+	 * Returns the fax number for the organistion
+	 * @return string
+	 */
 	function getFax() {
 		return $this->organisation_fax;
 	}
 	
+	/**
+	 * Returns the email address for the organisation
+	 * @return string
+	 */
 	function getEmail() {
 		return $this->organisation_email;
 	}
 	
+	/**
+	 * Returns the web page URL for the organisation 
+	 * @return string
+	 */
 	function getURL() {
 		return $this->organisation_url;
 	}
 	
+	/**
+	 * Returns the description of the organistion
+	 * @return string
+	 */
 	function getDescription() {
 		return $this->organisation_desc;
 	}
 	
+	/**
+	 * Returns the Organisation corresponding to the supplied ID
+	 * @param int $organisation_id
+	 * @return Organisation
+	 */
 	static function get($organisation_id) {
 		$cache = SimpleCache::getCache();
 		$organisation = $cache->get("Organisation",$organisation_id);

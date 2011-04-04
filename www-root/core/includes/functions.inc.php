@@ -11569,6 +11569,10 @@ function allowed_tags($value) {
 	return clean_input($value, array("allowedtags"));
 }
 
+/**
+ * This displays a person's name, picture etc. including basic biographical information and assistant info if relevant
+ * @param User $user
+ */
 function display_person(User $user) {
 	global $ENTRADA_ACL;
 	$photos = $user->getPhotos();
@@ -11579,7 +11583,7 @@ function display_person(User $user) {
 	$prefix = $user->getPrefix();
 	$firstname = $user->getFirstname();
 	$lastname = $user->getLastname();
-	$fullname = trim(implode(" " , array($prefix, $firstname, $lastname)));
+	$fullname = $user->getName("%f %l");
 	
 	$departments = $user->getDepartments();
 	

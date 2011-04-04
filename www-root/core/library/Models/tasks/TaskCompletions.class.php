@@ -4,12 +4,19 @@ require_once("Models/utility/Collection.class.php");
 require_once("TaskCompletion.class.php");
 require_once("Models/users/User.class.php");
 
+/**
+ * Collection of TaskCompletions and methods for retrieving completion data from the database
+ * @author Jonathan Fingland
+ *
+ */
 class TaskCompletions extends Collection {
 	
 	/**
-	 * Returns a collectionof TaskVerification objects. One for each user requiring verification. 
+	 * Returns a collection of TaskCompletion objects. One for each user requiring verification. 
 	 * 
-	 * @return TasVerifications
+	 * @param int $task_id
+	 * @param array $options Sorting and limiting result options
+	 * @return TaskCompletions
 	 */
 	public static function getByTask($task_id, $options=null) {
 		
@@ -55,6 +62,13 @@ class TaskCompletions extends Collection {
 		return new self($completions);
 	}
 	
+	/**
+	 * Returns a collection of TaskCompletion objects. One for each task for which the provided user is a verifier 
+	 * 
+	 * @param int $task_id
+	 * @param array $options Sorting and limiting result options
+	 * @return TaskCompletions
+	 */
 	public static function getByVerifier($proxy_id, $options=null) {
 		
 		if (isset($options['order_by'])) {
@@ -98,6 +112,12 @@ class TaskCompletions extends Collection {
 		return new self($completions);
 	}
 	
+	/**
+	 * Returns true if the provided user (ID) is a verifier for the provided task (ID) 
+	 * @param int $proxy_id
+	 * @param int $task_id
+	 * @return boolean
+	 */
 	public static function isVerifier($proxy_id, $task_id) {
 		global $db;
 
@@ -108,6 +128,11 @@ class TaskCompletions extends Collection {
 		return (!!$result);
 	}
 	
+	/**
+	 * Returns a collection of Users that are verifiers of the specified task
+	 * @param int $task_id
+	 * @return TaskVerifiers
+	 */
 	public static function getVerifiers($task_id) {
 		global $db;
 
@@ -126,6 +151,12 @@ class TaskCompletions extends Collection {
 		return new TaskVerifiers($verifiers);
 	}
 	
+	/**
+	 * Returns a collection of TaskCompletion objects. One for each task for which the provided user is a recipient
+	 * @param User $recipient
+	 * @param unknown_type $options
+	 * @return TaskCompletions
+	 */
 	public static function getByRecipient(User $recipient, $options=null) {
 		if (isset($options['order_by'])) {
 			if (is_array($options['order_by'])) {

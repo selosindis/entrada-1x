@@ -2,6 +2,12 @@
 
 require_once("Models/tasks/Task.class.php");
 
+/**
+ * 
+ * 
+ * @author Jonathan Fingland
+ *
+ */
 class TaskCompletion {
 	/**
 	 * ID of the task we're working with
@@ -33,37 +39,74 @@ class TaskCompletion {
 	 */
 	private $completed_date;
 	
+	/**
+	 * Proxy ID of the specific faculty associated with this task completion 
+	 * @var int
+	 */
 	private $faculty_id;
 	
+	/**
+	 * Comment provided on completion of this task
+	 * @var string
+	 */
 	private $completion_comment;
 	
+	/**
+	 * Comment provided on rejection of this task completion information
+	 * @var string
+	 */
 	private $rejection_comment;
 	
+	/**
+	 * timestamp of the rejection date
+	 * @var int
+	 */
 	private $rejection_date;
 	
+	/**
+	 * Returns the User obhect for the specific faculty associated with this task
+	 * @return User
+	 */
 	public function getFaculty() {
 		if ($this->faculty_id) {
 			return User::get($this->faculty_id);
 		}
 	}
 	
+	/**
+	 * Returns the comment entered by the task recipient when completing the task
+	 * @return string
+	 */
 	public function getCompletionComment() {
 		return $this->completion_comment;
 	}
 	
+	/**
+	 * Returns the comment entered by the task verifier when rejecting the claim of completion
+	 * @return string
+	 */
 	public function getRejectionComment() {
 		return $this->rejection_comment;
 	}
 	
+	/**
+	 * Returns the timestamp for the date of rejection
+	 * @return number
+	 */
 	public function getRejectionDate() {
 		return $this->rejection_date;
 	}
 	
+	/**
+	 * Returns true if the completion claim has been rejected
+	 * @return boolean
+	 */
 	public function isRejected() {
 		return $this->rejection_date > 0;
 	}
 	
 	/**
+	 * Returns the Task receipient (User) associated with this completion information
 	 * @return User
 	 */
 	public function getRecipient() {
@@ -71,6 +114,7 @@ class TaskCompletion {
 	}
 	
 	/**
+	 * Returns the User that verified completion of this task
 	 * @return User
 	 */
 	public function getVerifier() {
@@ -78,7 +122,7 @@ class TaskCompletion {
 	}
 	
 	/**
-	 * 
+	 * Returns true if the supplied User is a valid verifier for this task
 	 * @param User $user
 	 * 
 	 * @return bool
@@ -88,6 +132,7 @@ class TaskCompletion {
 	}
 	
 	/**
+	 * Returns true if the task completion has been verified
 	 * @return bool
 	 */
 	public function isVerified() {
@@ -95,6 +140,7 @@ class TaskCompletion {
 	}
 	
 	/**
+	 * Returns the timestamp for the date task completion was claimed 
 	 * @return int
 	 */
 	public function getVerifiedDate() {
@@ -102,6 +148,7 @@ class TaskCompletion {
 	}
 	
 	/**
+	 * Returns true if the task has been completed as claimed (irrespective of verification)
 	 * @return bool
 	 */
 	public function isCompleted() {
@@ -109,6 +156,7 @@ class TaskCompletion {
 	}
 	
 	/**
+	 * Returns the timestamp for the date for which completionwas claimed 
 	 * @return int
 	 */
 	public function getCompletedDate() {
@@ -116,13 +164,18 @@ class TaskCompletion {
 	}
 	
 	/**
+	 * Returns the task associated with this completion information
 	 * @return Task
 	 */
 	public function getTask() {
 		return Task::get($this->task_id);
 	}
 	
-	public function update($update_data) {
+	/**
+	 * Updates the data in the database for this completion information using the supplied array as inputs 
+	 * @param unknown_type $update_data
+	 */
+	public function update(array $update_data) {
 		extract($update_data);
 		global $db;
 		
@@ -142,7 +195,7 @@ class TaskCompletion {
 	}
 	
 	/**
-	 * 
+	 * Returns the TaskCompletion for the provided task-recipient pair
 	 * @param int $task_id
 	 * @param int $recipient_id
 	 * 
@@ -187,7 +240,12 @@ class TaskCompletion {
 		$cache->set($this,"TaskCompletion",$task_id);
 	}
 	
-	public static function fromArray($arr) {
+	/**
+	 * Returns a TaskCompletion object built using the supplied array inputs  
+	 * @param unknown_type $arr
+	 * @return TaskCompletion
+	 */
+	public static function fromArray(array $arr) {
 		return new self($arr['task_id'],$arr['recipient_id'],$arr['verifier_id'],$arr['verified_date'], $arr['completed_date'], $arr['faculty_id'], $arr['completion_comment'], $arr['rejection_comment'], $arr['rejection_date']);  
 	}
 }

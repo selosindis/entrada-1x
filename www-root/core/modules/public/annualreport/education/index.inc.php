@@ -133,6 +133,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 							$undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['hours'] = $undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['hours'] + ($result['duration'] / 60);
 							$undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['course_number'] = $currentCourseNum;
 							$undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['phase'] = $phase;
+						} else {
+							$undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['course_number'] = $currentCourseNum;
+							$undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['phase'] = $phase;
+							$undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['hours'] = $undergraduateArray[$currentYear][$currentCourse][$currentCourseNum][$phase][$eventtype_id]['hours'] + ($result['duration'] / 60);
 						}
 						break;
 				}
@@ -402,7 +406,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 							height:180,
 							modal: true,
 							buttons: {
-								'Delete all items': function() {
+								'Delete': function() {
 									var ids = "";
 				               		jQuery('.trSelected', grid).each(function() {  
 				               			var id = jQuery(this).attr('id');
@@ -511,7 +515,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 							height:180,
 							modal: true,
 							buttons: {
-								'Delete all items': function() {
+								'Delete': function() {
 									var ids = "";
 				               		jQuery('.trSelected', grid).each(function() {  
 				               			var id = jQuery(this).attr('id');
@@ -620,7 +624,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 							height:180,
 							modal: true,
 							buttons: {
-								'Delete all items': function() {
+								'Delete': function() {
 									var ids = "";
 				               		jQuery('.trSelected', grid).each(function() {  
 				               			var id = jQuery(this).attr('id');
@@ -729,7 +733,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 							height:180,
 							modal: true,
 							buttons: {
-								'Delete all items': function() {
+								'Delete': function() {
 									var ids = "";
 				               		jQuery('.trSelected', grid).each(function() {  
 				               			var id = jQuery(this).attr('id');
@@ -838,7 +842,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 							height:180,
 							modal: true,
 							buttons: {
-								'Delete all items': function() {
+								'Delete': function() {
 									var ids = "";
 				               		jQuery('.trSelected', grid).each(function() {  
 				               			var id = jQuery(this).attr('id');
@@ -949,7 +953,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 								height:180,
 								modal: true,
 								buttons: {
-									'Delete all items': function() {
+									'Delete': function() {
 										var ids = "";
 					               		jQuery('.trSelected', grid).each(function() {  
 					               			var id = jQuery(this).attr('id');
@@ -1060,7 +1064,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 							height:180,
 							modal: true,
 							buttons: {
-								'Delete all items': function() {
+								'Delete': function() {
 									var ids = "";
 				               		jQuery('.trSelected', grid).each(function() {  
 				               			var id = jQuery(this).attr('id');
@@ -1169,7 +1173,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 							height:180,
 							modal: true,
 							buttons: {
-								'Delete all items': function() {
+								'Delete': function() {
 									var ids = "";
 				               		jQuery('.trSelected', grid).each(function() {  
 				               			var id = jQuery(this).attr('id');
@@ -1278,7 +1282,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 							height:180,
 							modal: true,
 							buttons: {
-								'Delete all items': function() {
+								'Delete': function() {
 									var ids = "";
 				               		jQuery('.trSelected', grid).each(function() {  
 				               			var id = jQuery(this).attr('id');

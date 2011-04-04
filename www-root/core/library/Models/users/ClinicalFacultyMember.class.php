@@ -37,15 +37,34 @@
 
 require_once("User.class.php");
 
+/**
+ * Minor Extension of User class specific to faculty members who have the clinical flag set to 1
+ * @author Jonathan Fingland
+ *
+ */
 class ClinicalFacultyMember extends User{
 	
+	/**
+	 * Alias for User::fromArray()
+	 * @see User::fromArray()
+	 * @param array $arr
+	 * @return ClinicalFacultyMember
+	 */
 	public static function fromArray(array $arr) {
-		$user = parent::fromArray($arr);
+		$user = new self(); //to ensure the object is of the correct type
+		$user = parent::fromArray($arr, $user);
 		return $user;
 	}
 		
-	public static function get($user_id) {
-		return parent::get($user_id);
+	/**
+	 * Alias for User::get()
+	 * @todo Modify to use actual db query to enforce clinical flag validity
+	 * 
+	 * @param int $proxy_id
+	 * @return User
+	 */
+	public static function get($proxy_id) {
+		return parent::get($proxy_id);
 	
 	}
 }

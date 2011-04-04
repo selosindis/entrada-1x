@@ -278,6 +278,7 @@ class Entrada_ACL extends ACL_Factory {
 		//Next, fetch all the role-resource permissions related to all these users.
 		$table = $this->default_ptable;
 		$query[] = "SELECT * FROM $table WHERE \n";
+		$count = 0;
 		foreach($permission_masks as $proxy_id => $permission_mask) {
 		//Initialize variables for use throughout creation
 			$cur_proxy_id			= $proxy_id;
@@ -285,16 +286,17 @@ class Entrada_ACL extends ACL_Factory {
 			$cur_group  			= $permission_mask["group"];
 			$cur_organisation_id    = $permission_mask["organisation_id"];
 
-			$query[] = "($table.`entity_value` = '".$cur_proxy_id."' AND $table.`entity_type` = 'user') OR
+			$query[] = ($count && $count > 0 ? "OR " : "(")."($table.`entity_value` = '".$cur_proxy_id."' AND $table.`entity_type` = 'user') OR
 								($table.`entity_value` = '".$cur_role."' AND $table.`entity_type` = 'role') OR
 								($table.`entity_value` = '".$cur_group."' AND $table.`entity_type` = 'group') OR
 								($table.`entity_value` = '".$cur_organisation_id."' AND $table.`entity_type` = 'organisation') OR
 								($table.`entity_value` = '".$cur_group.":".$cur_role."' AND $table.`entity_type` = 'group:role') OR
 								($table.`entity_value` = '".$cur_organisation_id.":".$cur_group."' AND $table.`entity_type` = 'organisation:group') OR
-								($table.`entity_value` = '".$cur_organisation_id.":".$cur_group.":".$cur_role."' AND $table.`entity_type` = 'organisation:group:role') OR ";
+								($table.`entity_value` = '".$cur_organisation_id.":".$cur_group.":".$cur_role."' AND $table.`entity_type` = 'organisation:group:role') ";
+			$count++;
 		}
 
-		$query[] = "($table.`entity_value` IS NULL AND $table.`entity_type` IS NULL)\n";
+		$query[] = "OR ($table.`entity_value` IS NULL AND $table.`entity_type` IS NULL))\n";
 		$query[] = "AND ($table.`app_id` IS NULL OR $table.`app_id` = '".AUTH_APP_ID."')\n";
 
 		$query[] = "ORDER BY $table.`resource_value` ASC, $table.`entity_value` ASC;";
@@ -303,7 +305,6 @@ class Entrada_ACL extends ACL_Factory {
 		foreach ($query as $part) {
 			$complete_query .= $part;
 		}
-
 		return $db->GetAll($complete_query);
 	}
 }

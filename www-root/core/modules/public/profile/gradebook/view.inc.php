@@ -88,7 +88,7 @@ if ($COURSE_ID) {
 				WHERE a.`course_id` = ".$db->qstr($COURSE_ID)."
 				ORDER BY ".$sort_by;
 	$results = $db->GetAll($query);
-	if ($results) { ini_set("display_errors", 1);
+	if ($results) {
 		?>
 		<h1><?php echo course_name($COURSE_ID); ?> Gradebook</h1>
 		<table class="tableList" cellspacing="0" summary="List of Assessments">

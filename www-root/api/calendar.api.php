@@ -190,6 +190,37 @@ if ($user_proxy_id) {
 			true,
 			1,
 			1750);
+	
+	if ($ENTRADA_ACL->amIAllowed("clerkship", "read")) {
+		$query = "	SELECT c.*
+					FROM `".CLERKSHIP_DATABASE."`.`events` AS a
+					LEFT JOIN `".CLERKSHIP_DATABASE."`.`event_contacts` AS b
+					ON b.`event_id` = a.`event_id`
+					LEFT JOIN `".CLERKSHIP_DATABASE."`.`global_lu_rotations` AS c
+					ON c.`rotation_id` = a.`rotation_id`
+					WHERE a.`event_finish` >= ".$db->qstr(strtotime("00:00:00"))."
+					AND (a.`event_status` = 'published' OR a.`event_status` = 'approval')
+					AND b.`econtact_type` = 'student'
+					AND b.`etype_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+					ORDER BY a.`event_start` ASC";
+		$clerkship_schedule	= $db->GetRow($query);
+		if (isset($clerkship_schedule) && $clerkship_schedule && $clerkship_schedule["rotation_id"] < MAX_ROTATION) {
+			$course_id = $clerkship_schedule["course_id"];
+			$course_ids = array();
+			$query 	= "SELECT `course_id` FROM `".CLERKSHIP_DATABASE."`.`global_lu_rotations` 
+					WHERE `course_id` <> ".$db->qstr($course_id)." 
+					AND `course_id` <> 0";
+			$course_ids_array = $db->GetAll($query);
+			foreach ($course_ids_array as $id) {
+					$course_ids[] = $id;
+			}
+			foreach ($learning_events["events"] as $key => $event) {
+				if (array_search($event["course_id"], $course_ids) !== false) {
+					unset($learning_events["events"][$key]);
+				}
+			}
+		}
+	}
 
 	switch ($calendar_type) {
 		case "ics" :

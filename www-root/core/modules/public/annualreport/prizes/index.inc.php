@@ -140,7 +140,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 							height:180,
 							modal: true,
 							buttons: {
-								'Delete all items': function() {
+								'Delete': function() {
 									var ids = "";
 				               		jQuery('.trSelected', grid).each(function() {  
 				               			var id = jQuery(this).attr('id');

@@ -508,6 +508,7 @@ switch($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_
 					)
 					AND c.`econtact_type` = 'student'
 					AND f.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+					GROUP BY b.`event_id`
 					ORDER BY b.`event_start` ASC, b.`event_finish` ASC, `fullname` ASC";
 			$results = $db->CacheGetAll(CACHE_TIMEOUT, $query);
 			if($results) {

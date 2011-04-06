@@ -1,3 +1,79 @@
+CREATE TABLE IF NOT EXISTS `mtd_categories` (
+  `id` int(11) NOT NULL ;
+  `category_code` varchar(3) NOT NULL,
+  `category_description` varchar(100) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM  DEFAULT CHARSET=latin1 ;
+
+CREATE TABLE IF NOT EXISTS `mtd_facilities` (
+  `id` int(11) NOT NULL ;
+  `facility_code` int(3) NOT NULL,
+  `facility_name` varchar(50) NOT NULL,
+  `kingston` int(1) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM  DEFAULT CHARSET=latin1 ;
+
+CREATE TABLE IF NOT EXISTS `mtd_locale_duration` (
+  `id` int(11) NOT NULL ;
+  `location_id` int(3) NOT NULL,
+  `percent_time` int(3) NOT NULL,
+  `schedule_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM  DEFAULT CHARSET=latin1 ;
+
+CREATE TABLE IF NOT EXISTS `mtd_moh_program_codes` (
+  `id` int(11) NOT NULL ;
+  `program_code` varchar(3) NOT NULL,
+  `program_description` varchar(100) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM  DEFAULT CHARSET=latin1 ;
+
+CREATE TABLE IF NOT EXISTS `mtd_moh_service_codes` (
+  `id` int(11) NOT NULL ;
+  `service_code` varchar(3) NOT NULL,
+  `service_description` varchar(50) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM  DEFAULT CHARSET=latin1 ;
+
+CREATE TABLE IF NOT EXISTS `mtd_residents` (
+  `id` int(11) NOT NULL ;
+  `cmpa_no` int(11) NOT NULL,
+  `cpso_no` int(11) NOT NULL,
+  `school_id` int(11) NOT NULL,
+  `program_id` int(11) NOT NULL,
+  `student_no` int(11) NOT NULL,
+  `last_name` varchar(50) NOT NULL,
+  `first_name` varchar(50) NOT NULL,
+  `category_id` int(11) NOT NULL,
+  `assess_prog_img` varchar(1) NOT NULL,
+  `assess_prog_non_img` varchar(1) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM  DEFAULT CHARSET=latin1 ;
+
+CREATE TABLE IF NOT EXISTS `mtd_schedule` (
+  `id` int(11) NOT NULL ;
+  `start_date` date NOT NULL,
+  `end_date` date NOT NULL,
+  `service_id` int(3) NOT NULL,
+  `resident_id` int(11) NOT NULL,
+  `creator_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM  DEFAULT CHARSET=latin1 ;
+
+CREATE TABLE IF NOT EXISTS `mtd_schools` (
+  `id` int(11) NOT NULL ;
+  `school_code` varchar(3) NOT NULL,
+  `school_description` varchar(100) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM  DEFAULT CHARSET=latin1 ;
+
+CREATE TABLE IF NOT EXISTS `pgme_moh_programs` (
+  `id` int(11) NOT NULL ;
+  `pgme_program_name` varchar(100) NOT NULL,
+  `moh_service_name` varchar(100) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM  DEFAULT CHARSET=latin1 ;
+
 INSERT INTO `communities_modules` (`module_id`, `module_shortname`, `module_version`, `module_title`, `module_description`, `module_active`, `module_permissions`, `updated_date`, `updated_by`) VALUES
 (8, 'mtdtracking', '1.0.0', 'MTD Tracking', 'The MTD Tracking module allows Program Assistants to enter the weekly schedule for each of their Residents.', 0, 'a:2:{s:4:"edit";i:1;s:5:"index";i:0;}', 1216256830, 5440);
 

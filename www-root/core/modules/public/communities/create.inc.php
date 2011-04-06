@@ -591,7 +591,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 			<td style="vertical-align: top"><span class="form-required">Available Modules</span></td>
 			<td>
 							<?php
-							$query	= "SELECT * FROM `communities_modules` WHERE `module_active` = '1' ORDER BY `module_title` ASC";
+							$query	= "SELECT * FROM `communities_modules` WHERE `module_active` = '1' AND `module_visible` = '1' ORDER BY `module_title` ASC";
 							$results	= $db->GetAll($query);
 							if($results) {
 								?>

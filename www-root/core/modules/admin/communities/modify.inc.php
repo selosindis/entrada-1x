@@ -265,6 +265,17 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 									}
 								}
 
+								//Get all invisible modules and do not deactivate them
+								$query	= "SELECT * FROM `communities_modules` WHERE `module_id` = ".$db->qstr($module_id)." AND `module_active` = '1' AND `module_visible` = '0'";
+								$result	= $db->GetAll($query);
+								$community_modules_invisible = array();
+								foreach($results as $result) {
+									$community_modules_invisible[] = (int) $result["module_id"];
+								}
+
+								//Add the invisible modules to the selected modules array
+								$community_modules_selected = $community_modules_selected + $community_modules_invisible;
+
 								/**
 								 * Check for modules to activate / deactivate.
 								 */
@@ -884,7 +895,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 					<td style="vertical-align: top"><span class="form-required">Available Modules</span></td>
 					<td style="padding-bottom: 15px">
 												<?php
-												$query		= "SELECT * FROM `communities_modules` WHERE `module_active` = '1' ORDER BY `module_title` ASC";
+												$query		= "SELECT * FROM `communities_modules` WHERE `module_active` = '1' AND `module_visible` = '1' ORDER BY `module_title` ASC";
 												$results	= $db->GetAll($query);
 												if($results) {
 													?>

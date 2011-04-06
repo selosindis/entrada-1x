@@ -1035,6 +1035,7 @@ CREATE TABLE IF NOT EXISTS `communities_modules` (
   `module_title` varchar(64) NOT NULL,
   `module_description` text NOT NULL,
   `module_active` int(1) NOT NULL DEFAULT '1',
+  `module_visible` int(1) NOT NULL DEFAULT '1',
   `module_permissions` text NOT NULL,
   `updated_date` bigint(64) NOT NULL DEFAULT '0',
   `updated_by` int(12) NOT NULL DEFAULT '0',

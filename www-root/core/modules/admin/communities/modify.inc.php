@@ -253,28 +253,18 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 							}
 
 							if(count($community_modules_selected)) {
-								$query		= "SELECT * FROM `community_modules` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `module_active` = '1'";
+								$query		= "SELECT * FROM `community_modules` a
+											   WHERE a.`community_id` = ".$db->qstr($COMMUNITY_ID) . " AND a.`module_active` = '1'";
 								$results	= $db->GetAll($query);
 								if($results) {
 									foreach($results as $result) {
-										$query = "SELECT `module_shortname` FROM `communities_modules` WHERE `module_id` = ".$db->qstr($result["module_id"]);
-										$module_name = $db->GetOne($query);
-										if ($module_name != "default") {
+										$query = "SELECT * FROM `communities_modules` WHERE `module_id` = ".$db->qstr($result["module_id"]);
+										$module = $db->GetRow($query);
+										if ($module["module_shortname"] != "default" && $module["module_visible"] != 0) {
 											$community_modules_current[] = (int) $result["module_id"];
 										}
 									}
 								}
-
-								//Get all invisible modules and do not deactivate them
-								$query	= "SELECT * FROM `communities_modules` WHERE `module_id` = ".$db->qstr($module_id)." AND `module_active` = '1' AND `module_visible` = '0'";
-								$result	= $db->GetAll($query);
-								$community_modules_invisible = array();
-								foreach($results as $result) {
-									$community_modules_invisible[] = (int) $result["module_id"];
-								}
-
-								//Add the invisible modules to the selected modules array
-								$community_modules_selected = $community_modules_selected + $community_modules_invisible;
 
 								/**
 								 * Check for modules to activate / deactivate.

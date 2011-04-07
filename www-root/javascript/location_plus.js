@@ -1,6 +1,5 @@
 var events_sortable;
 var initial_total_duration;
-var DELETE_IMAGE_URL = 'http://localhost/entrada/www-root/images/action-delete.gif';
 
 function cleanupList() {
 	ol = $('duration_container');
@@ -44,8 +43,7 @@ function writeOrder(container) {
 	$('mtdlocation_duration_order').value = Sortable.sequence('duration_container').join(',');
 }
 
-document.observe("dom:loaded", function() {
-        console.log("DOM loaded.")
+Event.observe(window, 'load', function() {
 	if(typeof EVENT_LIST_STATIC_TOTAL_DURATION == "undefined") {
 		EVENT_LIST_STATIC_TOTAL_DURATION = false;
 	}
@@ -64,15 +62,16 @@ document.observe("dom:loaded", function() {
 		select = $('mtdlocation');
 		option = select.options[select.selectedIndex];
 		li = new Element('li', {id: 'mtdlocation_'+option.value, 'class': 'location_duration'});
-		li.insert(option.text+"  ");
-		li.insert(new Element('a', {href: '#', onclick: '$(this).up().remove(); cleanupList(); return false;', 'class': 'remove'}).insert(new Element('img', {src: DELETE_IMAGE_URL})));
-		span = new Element('span', {'class': 'duration_segment_container'});
-		span.insert('Time Spent Here: ');
-		name = 'duration_segment[]';                
-		span.insert(new Element('input', {'class': 'duration_segment', name: 'duration_segment[]', onchange: 'cleanupList();', 'value': percent_val}));
-		span.insert(' %');
+		li.insert(option.text+"");
+		span = new Element('span', {'class': 'duration_segment_container', 'style': 'margin-left:5px;'});
+		span.insert('Time:');
+		name = 'duration_segment[]';
+		span.insert(new Element('input', {'style': 'width:25px;', 'class': 'duration_segment', name: 'duration_segment[]', onchange: 'cleanupList();', 'value': percent_val}));
+		span.insert(' %&nbsp&nbsp');
+                span.insert(new Element('a', {href: '#', onclick: '$(parentNode).up().remove(); cleanupList(); return false;', 'class': 'remove'}).insert(new Element('img', {src: DELETE_IMAGE_URL})));
 		li.insert(span);
-		$('duration_container').insert(li);
+
+                $('duration_container').insert(li);
 		cleanupList();
 		select.selectedIndex = 0;
 

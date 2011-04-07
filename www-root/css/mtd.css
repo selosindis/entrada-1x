@@ -62,9 +62,12 @@ table.resident_data td{
     font-weight: normal;
 }
 
+table.resident_data tr td span {
+    font-weight: normal;
+}
+
 #MTD_form_container label {
     font-weight: bold;
-    margin-right: 20px;
 }
 
 table.mtd_table caption {

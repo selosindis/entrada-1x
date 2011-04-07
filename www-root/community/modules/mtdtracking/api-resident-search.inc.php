@@ -51,7 +51,7 @@ if ((!defined("COMMUNITY_INCLUDED")) || !defined("IN_MTDTRACKING")) {
 		$results = $db->GetAll($query);
 		if ($results) {
 			foreach ($results as $result) {
-				echo "\t<li id=\"" . (int) $result["id"] . "\">" . html_encode($result["resident_name"]) . " -- " . html_encode($result["program_description"]) . "</li>\n";
+				echo "\t<li id=\"" . (int) $result["id"] . "\">" . html_encode($result["resident_name"]) . "<span class=\"informal content-small\"><br />" . html_encode($result["program_description"]) . "</span></li>\n";
 			}
 		} else {
 			echo "\t<li id=\"0\"><span class=\"informal\">&quot;<strong>" . html_encode($resident_name) . "&quot;</strong> was not found</span></li>";

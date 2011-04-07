@@ -281,8 +281,7 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 					jQuery("#category_description").html(jQuery( data ).find( '#category_description' ).html());
 					//Remove program name from resident name
 					var resident_name = jQuery("#resident_name").val().toString();
-					var resident_name_arr = resident_name.split("--");
-					jQuery("#resident_name").val(resident_name_arr[0].toString().strip());
+					jQuery("#resident_name").val(resident_name.strip());
 				}
 			});
 		}

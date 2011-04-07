@@ -233,7 +233,7 @@ if($COMMUNITY_ID) {
 												$message .= str_replace("http://", "https://", PASSWORD_RESET_URL)."?hash=".rawurlencode($PROCESSED_ACCESS["user_id"].":".$HASH)."\n\n";
 												$message .= "Please Note:\n";
 												$message .= "This password link will be valid for the next 3 days. If you do set your\n";
-												$message .= "password within this time period, you will need to receive another invitiation to restart this process.\n\n";
+												$message .= "password within this time period, you will need to receive another invitation to restart this process.\n\n";
 												$message .= "If you did not request a password for this account and you believe\n";
 												$message .= "there has been a mistake, DO NOT click the above link. Please forward this\n";
 												$message .= "message along with a description of the problem to: ".$AGENT_CONTACTS["administrator"]["email"]."\n\n";
@@ -1106,9 +1106,7 @@ if($COMMUNITY_ID) {
 													if($organisation_results) {
 														$organisations = array();
 														foreach($organisation_results as $result) {
-															if($ENTRADA_ACL->amIAllowed('resourceorganisation'.$result["organisation_id"], 'create')) {
-																$member_categories[$result["organisation_id"]] = array('text' => $result["organisation_title"], 'value' => 'organisation_'.$result["organisation_id"], 'category'=>true);
-															}
+															$member_categories[$result["organisation_id"]] = array('text' => $result["organisation_title"], 'value' => 'organisation_'.$result["organisation_id"], 'category'=>true);
 														}
 													}
 

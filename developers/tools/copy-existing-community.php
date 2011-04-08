@@ -65,14 +65,14 @@ $query = "	SELECT *
 $user_data = $auth_db->GetRow($query);
 
 while (!$user_data) {
-	print "\nDatabase error: " . $db->ErrorMsg();
+	print "\nDatabase error: " . $auth_db->ErrorMsg();
 	print "\nPlease ensure you enter a valid username: ";
 	fscanf(STDIN, "%d\n", $user_name);
 	$query = "	SELECT *
 				FROM `medtech_auth`.`user_data`
 				WHERE `username` = '" . $user_name . "'";
 
-	$user_data = $db->GetRow($query);
+	$user_data = $auth_db->GetRow($query);
 }
 
 output_notice("The proxy id for the entered username is: " . $user_data["id"]);
@@ -90,18 +90,18 @@ while (!$community) {
 
 //Rheumatology removed from list since it has already been created.
 
-$site_names = array("Aboriginal Health – Family Medicine",
+$site_names = array("Aboriginal Health - Family Medicine",
 "Anatomic Pathology",
-"Anesthesia – Family Medicine",
+"Anesthesia - Family Medicine",
 "Anesthesiology",
 "Cardiology",
-"Care of the Elderly – Family Medicine",
-"Community Medicine",
+"Care of the Elderly - Family Medicine",
+"Public Health and Preventative Medicine",
 "Critical Care Medicine",
-"Developmental Disabilities – Family Medicine",
+"Developmental Disabilities - Family Medicine",
 "Diagnostic Radiology",
 "Emergency Medicine",
-"Emergency Medicine – Family Medicine",
+"Emergency Medicine - Family Medicine",
 "Family Medicine",
 "Gastroenterology",
 "General Surgery",
@@ -113,17 +113,17 @@ $site_names = array("Aboriginal Health – Family Medicine",
 "Obstetrics and Gynecology",
 "Ophthalmology",
 "Orthopedic Surgery",
-"Palliative Care – Family Medicine",
+"Palliative Care - Family Medicine",
 "Palliative Care Medicine",
 "Pediatrics",
 "Physical Medicine and Rehabilitation",
 "Psychiatry",
 "Radiation Oncology",
 "Respirology",
-"Rural Skills – Family Medicine",
+"Rural Skills - Family Medicine",
 "Surgical Foundations",
 "Urology",
-"Women\'s Health – Family Medicine",
+"Women's Health - Family Medicine",
 "Accreditation Standards");
 
 $site_name_prefix = "pgme";

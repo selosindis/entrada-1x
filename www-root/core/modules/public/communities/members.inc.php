@@ -1106,9 +1106,10 @@ if($COMMUNITY_ID) {
 													if($organisation_results) {
 														$organisations = array();
 														foreach($organisation_results as $result) {
-																$member_categories[$result["organisation_id"]] = array('text' => $result["organisation_title"], 'value' => 'organisation_'.$result["organisation_id"], 'category'=>true);
-															}
+															$member_categories[$result["organisation_id"]] = array("text" => $result["organisation_title"], "value" => "organisation_".$result["organisation_id"], "category"=>true);
 														}
+
+													}
 
 													$current_member_list	= array();
 													$query		= "SELECT `proxy_id` FROM `community_members` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `member_active` = '1'";

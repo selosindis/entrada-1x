@@ -659,7 +659,7 @@ function new_sidebar_item($title = "", $html = "", $id = "", $state = "open", $p
 function ob_clear_open_buffers() {
 	$level = @ob_get_level();
 
-	for ($i = 1; $i <= $level; $i++) {
+	for ($i = 0; $i < $level; $i++) {
 		@ob_end_clean();
 	}
 
@@ -2097,7 +2097,7 @@ function clean_input($string, $rules = array()) {
 					$string = preg_replace(array("/[^a-z0-9_\-\.\/]/i", "/(\.)\.+/", "/(\/)\/+/"), "$1", $string);
 				break;
 				case "int" :			// Change string to an integer.
-					$string = (int) $string;
+					$string =  (int) $string;
 				break;
 				case "float" :			// Change string to a float.
 					$string = (float) $string;
@@ -12401,5 +12401,23 @@ function generateAccessConditions($organisation, $group, $role, $proxy_id) {
 	}
 	if ($mask_strs) {
 		return implode(" AND ",$mask_strs);
+	}
+}
+
+/*
+ * This function validates the input variable by first trimming it and then checking to
+ * see that it contains integers only and that it is not blank or null.
+ *
+ * @return the input integer on successful validation, 0 on failed validation.
+ */
+function validate_integer_field($input){
+	$input = trim($input);
+	$int_test = preg_match("/[^\d+]/", $input);
+	if (!$int_test  && $input != ""  && !is_null($input)) {
+		$output = $input;
+		return $output;
+	}
+	else {
+		return 0;
 	}
 }

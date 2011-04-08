@@ -471,6 +471,69 @@ function communities_module_activate($community_id = 0, $module_id = 0) {
 }
 
 /**
+ * Activates speficied module for the specified community
+ *
+ * @param int $community_id
+ * @param int $module_id
+ * @return bool
+ */
+function communities_module_activate_and_page_create($community_id = 0, $module_id = 0) {
+	global $db;
+
+	if(($community_id = (int) $community_id) && ($module_id = (int) $module_id)) {
+	/**
+	 * Check that the requested module is present and active.
+	 */
+		$query			= "SELECT * FROM `communities_modules` WHERE `module_id` = ".$db->qstr($module_id)." AND `module_active` = '1'";
+		$module_info	= $db->GetRow($query);
+		if($module_info) {
+			$query	= "SELECT * FROM `community_modules` WHERE `community_id` = ".$db->qstr($community_id)." AND `module_id` = ".$db->qstr($module_id);
+			$result	= $db->GetRow($query);
+			if($result) {
+			/**
+			 * If it is not already active, active it.
+			 */
+				if(!(int) $result["module_active"]) {
+					if(!$db->AutoExecute("community_modules", array("module_active" => 1), "UPDATE", "`community_id` = ".$db->qstr($community_id)." AND `module_id` = ".$db->qstr($module_id))) {
+						application_log("error", "Unable to active module ".(int) $module_id." (updating existing record) for updated community id ".(int) $COMMUNITY_ID.". Database said: ".$db->ErrorMsg());
+					}
+				}
+			} else {
+				if(!$db->AutoExecute("community_modules", array("community_id" => $community_id, "module_id" => $module_id, "module_active" => 1), "INSERT")) {
+					application_log("error", "Unable to active module ".(int) $module_id." (inserting new record) for updated community id ".(int) $COMMUNITY_ID.". Database said: ".$db->ErrorMsg());
+				}
+			}
+
+			$query	= "SELECT * FROM `community_pages` WHERE `community_id` = ".$db->qstr($community_id)." AND `page_active` = '1' AND `page_type` = ".$db->qstr($module_info["module_shortname"]);
+			$result	= $db->GetRow($query);
+			if(!$result) {
+				$query		= "SELECT (MAX(`page_order`) + 1) as `order` FROM `community_pages` WHERE `community_id` = ".$db->qstr($community_id)." AND `page_active` = '1' AND `parent_id` = '0' AND `page_url` != ''";
+				$result		= $db->GetRow($query);
+				if($result) {
+					$page_order = (int) $result["order"];
+				} else {
+					$page_order = 0;
+				}
+
+				if(($db->AutoExecute("community_pages", array("community_id" => $community_id, "page_order" => $page_order, "page_type" => $module_info["module_shortname"], "menu_title" => $module_info["module_title"], "page_title" => $module_info["module_title"], "page_url" => $module_info["module_shortname"], "page_content" => "", "updated_date" => time(), "updated_by" => "MedTech"), "INSERT")) && ($cpage_id = $db->Insert_Id())) {
+
+					//communities_log_history($community_id, $cpage_id, 0, "community_history_add_page", 1);
+
+				} else {
+					application_log("error", "Unable to create page for module ".(int) $module_id." for new community id ".(int) $community_id.". Database said: ".$db->ErrorMsg());
+				}
+			}
+		} else {
+			application_log("error", "Module_id [".$module_id."] requested activation in community_id [".$community_id."] but the module is either missing or inactive.");
+		}
+	} else {
+		application_log("error", "There was no community_id [".$community_id."] or module_id [".$module_id."] provided to active a module.");
+	}
+
+	return true;
+}
+
+/**
  * Processes / resizes and creates properly sized image and thumbnail image
  * for images uploaded to the galleries module.
  *

@@ -347,7 +347,7 @@ if ($COMMUNITY_URL) {
 				$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/windows/window.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 				$HEAD[] = "<link href=\"".ENTRADA_URL."/css/windows/default.css\" rel=\"stylesheet\" type=\"text/css\" />";
 				$HEAD[] = "<link href=\"".ENTRADA_URL."/css/windows/medtech.css\" rel=\"stylesheet\" type=\"text/css\" />";
-				
+
 				/**
 				 * Start another output buffer to collect the page contents.
 				 */
@@ -548,7 +548,7 @@ if ($COMMUNITY_URL) {
 							}
 							
 							$MODULE_TITLE	= (isset($COMMUNITY_PAGES["details"][$PAGE_URL]) ? $COMMUNITY_PAGES["details"][$PAGE_URL]["menu_title"] : "Pages");
-							
+
 							if ((@file_exists($module_file = COMMUNITY_ABSOLUTE.DIRECTORY_SEPARATOR."modules".DIRECTORY_SEPARATOR.$COMMUNITY_MODULE.".inc.php")) && (@is_readable($module_file))) {
 								require_once($module_file);
 							} else {

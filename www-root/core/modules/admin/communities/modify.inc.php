@@ -253,13 +253,14 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 							}
 
 							if(count($community_modules_selected)) {
-								$query		= "SELECT * FROM `community_modules` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `module_active` = '1'";
+								$query		= "SELECT * FROM `community_modules` a
+											   WHERE a.`community_id` = ".$db->qstr($COMMUNITY_ID) . " AND a.`module_active` = '1'";
 								$results	= $db->GetAll($query);
 								if($results) {
 									foreach($results as $result) {
-										$query = "SELECT `module_shortname` FROM `communities_modules` WHERE `module_id` = ".$db->qstr($result["module_id"]);
-										$module_name = $db->GetOne($query);
-										if ($module_name != "default") {
+										$query = "SELECT * FROM `communities_modules` WHERE `module_id` = ".$db->qstr($result["module_id"]);
+										$module = $db->GetRow($query);
+										if ($module["module_shortname"] != "default" && $module["module_visible"] != 0) {
 											$community_modules_current[] = (int) $result["module_id"];
 										}
 									}
@@ -884,7 +885,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 					<td style="vertical-align: top"><span class="form-required">Available Modules</span></td>
 					<td style="padding-bottom: 15px">
 												<?php
-												$query		= "SELECT * FROM `communities_modules` WHERE `module_active` = '1' ORDER BY `module_title` ASC";
+												$query		= "SELECT * FROM `communities_modules` WHERE `module_active` = '1' AND `module_visible` = '1' ORDER BY `module_title` ASC";
 												$results	= $db->GetAll($query);
 												if($results) {
 													?>

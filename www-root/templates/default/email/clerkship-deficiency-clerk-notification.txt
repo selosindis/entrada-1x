@@ -1,4 +1,4 @@
-It has come to our attention that you have not met the logging requirements for the [%ROTATION_TITLE%] rotation which ended recently. To ensure that all students are able to meet the logging requirements for their clerkship, we ask that you submit a plan for how to attain the missing requirements for this rotation.
+It has come to our attention that you have not met the logging requirements for the [%ROTATION_TITLE%] rotation which ended over a month ago. To ensure that you are able to meet the logging requirements for clerkship, we ask that you contact the program coordinator [%PROGRAM_COORDINATOR%] for this rotation and work with them to plan a way to attain all deficient objectives.
 
 The form used to submit your plan to the coordinator for this rotation can be found here:
 %ROTATION_DEFICIENCY_URL%

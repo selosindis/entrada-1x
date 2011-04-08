@@ -5,6 +5,7 @@
  *
  * @author Don Zuiker <don.zuiker@queensu.ca>
  */
+
 @set_include_path(implode(PATH_SEPARATOR, array(
 					dirname(__FILE__) . "/../../../core/includes",
 					get_include_path(),
@@ -80,12 +81,12 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 
 
 	$start_date = clean_input($_POST["start_date"], array("notags", "trim"));
-	$start_date = new DateTime($start_date);
-	$start_date = $db->qstr($start_date->format('Y-m-d'));
+	$start_date_time = new DateTime($start_date);
+	$start_date = $db->qstr($start_date_time->format('Y-m-d'));
 
 	$end_date = clean_input($_POST["end_date"], array("notags", "trim"));
-	$end_date = new DateTime($end_date);
-	$end_date = $db->qstr($end_date->format('Y-m-d'));
+	$end_date_time = new DateTime($end_date);
+	$end_date = $db->qstr($end_date_time->format('Y-m-d'));
 
 	if (is_null($start_date) && is_null($end_date) && $start_date == "" && $end_date == "") {
 		$PROCESSED["start_date"] = 0;
@@ -108,6 +109,35 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 	if (!$PROCESSED["service_id"]) {
 		$ERROR++;
 		$ERRORSTR[] = "No service code found.";
+	}
+
+	if (!$ERROR) {
+		//Validate that there is no overlapp of dates for this resident
+		$query = "SELECT *
+				  FROM  `mtd_schedule`
+				  WHERE `resident_id` = " . $db->qstr($resident["id"]);
+
+		$results = $db->GetAll($query);
+
+		foreach ($results as $result) {
+			$temp_start_date = new DateTime($result["start_date"]);
+			$temp_end_date = new DateTime($result["end_date"]);
+
+			if ($start_date_time >= $temp_start_date && $start_date_time <= $temp_end_date) {
+				$query = "SELECT service_description
+				  FROM  `mtd_moh_service_codes`
+				  WHERE `id` = " . $db->qstr($result["service_id"]);
+
+			    $service_program = $db->GetOne($query);
+				$ERROR++;
+				$ERRORSTR[] = "The selected start date overlapps with an existing entry for the " . $service_program . " program.";
+			}
+			if ($end_date_time >= $temp_start_date && $end_date_time <= $temp_end_date) {
+				$ERROR++;
+				$ERRORSTR[] = "The selected end date overlapps with an existing entry for the " . $service_program . " program.";
+			}
+		}
+
 	}
 
 	if (!$ERROR) {

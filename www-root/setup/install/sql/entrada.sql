@@ -2212,7 +2212,7 @@ CREATE TABLE IF NOT EXISTS `global_lu_countries` (
 
 INSERT INTO `global_lu_countries` (`countries_id`, `country`) VALUES
 (1, 'Afghanistan'),
-(2, 'Åland Islands'),
+(2, 'Aland Islands'),
 (3, 'Albania'),
 (4, 'Algeria'),
 (5, 'American Samoa'),
@@ -2265,7 +2265,7 @@ INSERT INTO `global_lu_countries` (`countries_id`, `country`) VALUES
 (52, 'Democratic Republic'),
 (53, 'Cook Islands'),
 (54, 'Costa Rica'),
-(55, 'Côte d''Ivoire (Ivory Coast)'),
+(55, 'Cote D''Ivoire (Ivory Coast)'),
 (56, 'Croatia (Hrvatska)'),
 (57, 'Cuba'),
 (58, 'Cyprus'),
@@ -2387,7 +2387,7 @@ INSERT INTO `global_lu_countries` (`countries_id`, `country`) VALUES
 (174, 'Portugal'),
 (175, 'Puerto Rico'),
 (176, 'Qatar'),
-(177, 'Réunion'),
+(177, 'Reunion'),
 (178, 'Romania'),
 (179, 'Russian Federation'),
 (180, 'Rwanda'),

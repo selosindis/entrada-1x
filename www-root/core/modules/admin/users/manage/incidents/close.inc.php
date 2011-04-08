@@ -34,10 +34,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 					$query = "UPDATE `".AUTH_DATABASE."`.`user_incidents` SET `incident_status` = '0' WHERE `incident_id` = ".$db->qstr($incident_id);
 					if ($db->Execute($query)) {
 						$SUCCESS++;
-						$SUCCESSSTR[] = "You have successfully closed the incident [".$incident_id."] titled \"".$incident_record["incident_title"]."\" for the user [".$incident_record["proxy_id"]."].";
+						$SUCCESSSTR[] = "Successfully closed incident #".$incident_id." titled <strong>".$incident_record["incident_title"]."</strong>.";
 					} else {
 						$ERROR++;
-						$ERRORSTR[] = "There was an issue closing the incident [".$incident_id."] titled \"".$incident_record["incident_title"]."\" for the user [".$incident_record["proxy_id"]."].";
+						$ERRORSTR[] = "Unable to close incident #".$incident_id." titled <strong>".$incident_record["incident_title"]."</strong>.";
 					}
 				} else {
 					$ERROR++;
@@ -48,10 +48,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 		}
 		
 		if ($SUCCESS) {
-			$url = ENTRADA_URL."/admin/users?section=edit&id=".$incident_record["proxy_id"];
+			$url = ENTRADA_URL."/admin/users/manage/incidents?id=".$incident_record["proxy_id"];
 
 			$SUCCESS++;
-			$SUCCESSSTR[] = "You have successfully updated the incidents in the system.<br /><br />You will now be redirected to the user edit page for user id [".$incident_record["proxy_id"]."]; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+			$SUCCESSSTR[] = "The above incidents are now marked as closed.<br /><br />You will now be redirected to the user edit page for user id [".$incident_record["proxy_id"]."]; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 			
 			$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
 

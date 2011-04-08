@@ -38,7 +38,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/users?".replace_query(array("section" => "add")), "title" => "Adding User");
-	
+
 	$PROCESSED_ACCESS = array();
 	$PROCESSED_ACCESS["app_id"] = AUTH_APP_ID;
 	$PROCESSED_ACCESS["private_hash"] = generate_hash(32);
@@ -69,7 +69,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 				$ERROR++;
 				$ERRORSTR[] = "You must provide a valid	Account Type &gt; Group which this persons account will live under.";
 			}
-			
+
 			/*
 			 * Non-Required field "clinical" / Clinical.
 			 */
@@ -78,7 +78,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 			} else {
 				$PROCESSED["clinical"] = 1;
 			}
-			
+
 			/*
 			 * Required field "account_active" / Account Status.
 			 */
@@ -203,7 +203,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 						$ERROR++;
 						$ERRORSTR[] = "You must provide a valid password for this user to login with.";
 					}
-					
+
 					if ($PROCESSED_ACCESS["group"] == "student") {
 						if (isset($_POST["entry_year"]) && isset($_POST["grad_year"])) {
 							$entry_year = clean_input($_POST["entry_year"],"int");
@@ -215,7 +215,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 							} else {
 								$ERROR++;
 								$ERRORSTR[] = "You must provide a valid graduation year";
-							}			
+							}
 							if ($entry_year <= $sanity_end && $entry_year >= $sanity_start) {
 								$PROCESSED["entry_year"] = $entry_year;
 							} else {
@@ -223,7 +223,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 								$ERRORSTR[] = "You must provide a valid program entry year";
 							}
 						}
-					} 
+					}
 
 					/**
 					 * Non-required field "prefix" / Prefix.
@@ -242,7 +242,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 					} else {
 						$PROCESSED["office_hours"] = "";
 					}
-						
+
 					/**
 					 * Required field "firstname" / Firstname.
 					 */
@@ -335,7 +335,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 						$PROCESSED["city"] = "";
 					}
 
-		
+
 
 					/**
 					 * Non-required field "postcode" / Postal Code.
@@ -354,18 +354,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 						} else {
 							$ERROR++;
 							$ERRORSTR[] = "The selected country does not exist in our countries database. Please select a valid country.";
-		
+
 							application_log("error", "Unknown countries_id [".$tmp_input."] was selected. Database said: ".$db->ErrorMsg());
 						}
 					} else {
 						$ERROR++;
 						$ERRORSTR[]	= "You must select a country.";
 					}
-		
+
 					if ((isset($_POST["prov_state"])) && ($tmp_input = clean_input($_POST["prov_state"], array("trim", "notags")))) {
 						$PROCESSED["province_id"] = 0;
 						$PROCESSED["province"] = "";
-		
+
 						if (ctype_digit($tmp_input) && ($tmp_input = (int) $tmp_input)) {
 							if ($PROCESSED["country_id"]) {
 								$query = "SELECT * FROM `global_lu_provinces` WHERE `province_id` = ".$db->qstr($tmp_input)." AND `country_id` = ".$db->qstr($PROCESSED["country_id"]);
@@ -375,15 +375,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 									$ERRORSTR[] = "The province / state you have selected does not appear to exist in our database. Please selected a valid province / state.";
 								}
 							}
-		
+
 							$PROCESSED["province_id"] = $tmp_input;
 						} else {
 							$PROCESSED["province"] = $tmp_input;
 						}
-		
+
 						$PROCESSED["prov_state"] = ($PROCESSED["province_id"] ? $PROCESSED["province_id"] : ($PROCESSED["province"] ? $PROCESSED["province"] : ""));
 					}
-					
+
 					/**
 					 * Non-required field "notes" / General Comments.
 					 */
@@ -487,7 +487,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 											}
 										}
 									}
-								
+
 									if (@count($PROCESSED_DEPARTMENTS)) {
 										foreach($PROCESSED_DEPARTMENTS as $department_id) {
 											if (!$db->AutoExecute(AUTH_DATABASE.".user_departments", array("user_id" => $PROCESSED_ACCESS["user_id"], "dep_id" => $department_id), "INSERT")) {
@@ -554,7 +554,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 					} while($db->GetRow("SELECT `id` FROM `".AUTH_DATABASE."`.`password_reset` WHERE `hash` = ".$db->qstr($HASH)));
 
 					if ($db->AutoExecute(AUTH_DATABASE.".password_reset", array("ip" => $_SERVER["REMOTE_ADDR"], "date" => time(), "user_id" => $PROXY_ID, "hash" => $HASH, "complete" => 0), "INSERT")) {
-					// Send welcome & password reset e-mail.
+						// Send welcome & password reset e-mail.
 						$notification_search	= array("%firstname%", "%lastname%", "%username%", "%password_reset_url%", "%application_url%", "%application_name%");
 						$notification_replace	= array($PROCESSED["firstname"], $PROCESSED["lastname"], $PROCESSED["username"], PASSWORD_RESET_URL."?hash=".rawurlencode($PROXY_ID.":".$HASH), ENTRADA_URL, APPLICATION_NAME);
 
@@ -613,73 +613,28 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 				}
 			}
 			$HEAD[$i] .= "</script>\n";
-			$js_text  = "<script type=\"text/javascript\">\n";
-			$js_text .= "var glob_type = null;\n";
-			$js_text .= "function findExistingUser(type, value) {\n";
-			$js_text .= "\tvar url = '".ENTRADA_URL."/admin/".$MODULE."?section=search&'+type + '=' + value;\n";
-			$js_text .= "\tif (type == 'id') {\n";
-			$js_text .= "\ttype = 'number';\n";
-			$js_text .= "\t}\n";
-			$js_text .= "\t$(type+'-default').hide();\n";
-			$js_text .= "\t$(type+'-searching').show();\n";
-			$js_text .= "\tglob_type = type;\n";
-			$js_text .= "\tnew Ajax.Request(url, {method: 'get', onComplete: getResponse});\n";
-			$js_text .= "}\n";
-			$js_text .= "function getResponse(request) {\n";
-			$js_text .= "\t$(glob_type+'-default').show();\n";
-			$js_text .= "\t$(glob_type+'-searching').hide();\n";
-			$js_text .= "\tvar data = request.responseJSON;\n";
-			$js_text .= "\tif (data) {\n";
-			$js_text .= "\t\t$('username').disable().value = data.username;\n";
-			$js_text .= "\t\t$('firstname').disable().value = data.firstname;\n";
-			$js_text .= "\t\t$('lastname').disable().value = data.lastname;\n";
-			$js_text .= "\t\t$('email').disable().value = data.email;\n";
-			$js_text .= "\t\t$('number').disable().value = data.number;\n";
-			$js_text .= "\t\t$('password').disable().value = '********';\n";
-			$js_text .= "\t\t$('prefix').disable().value = data.prefix;\n";
-			$js_text .= "\t\t$('email_alt').disable().value = data.email_alt;\n";
-			$js_text .= "\t\t$('telephone').disable().value = data.telephone;\n";
-			$js_text .= "\t\t$('fax').disable().value = data.fax;\n";
-			$js_text .= "\t\t$('address').disable().value = data.address;\n";
-			$js_text .= "\t\t$('city').disable().value = data.city;\n";
-			$js_text .= "\t\t$('province').disable().value = data.province;\n";
-			$js_text .= "\t\t$('postcode').disable().value = data.postcode;\n";
-			$js_text .= "\t\t$('country').disable().value = data.country;\n";
-			$js_text .= "\t\t$('notes').disable().value = data.notes;\n";
-			$js_text .= "\t\t$('send_notification_msg').hide();\n";
-			$js_text .= "\t\t$('send_notification').disable().checked = false;\n";
-			$js_text .= "\t\t$$('.departments').each( function (e) { e.hide(); });\n";
-			$js_text .= "\t\tvar notice = document.createElement('div');\n";
-			$js_text .= "\t\tnotice.id = 'display-notice';\n";
-			$js_text .= "\t\tnotice.addClassName('display-notice');\n";
-			$js_text .= "\t\tnotice.innerHTML = data.message;\n";
-			$js_text .= "\t\t$('addUser').insert({'before' : notice});\n";
-			$js_text .= "\t}\n";
-			$js_text .= "}\n";
-			$js_text .= "</script>\n";
-			$HEAD[] = $js_text;
+
 			$ONLOAD[] = "initListGroup('account_type', document.getElementById('group'), document.getElementById('role'))";
 			$ONLOAD[] = "setMaxLength()";
 			if (isset($_GET["id"]) && $_GET["id"] && ($proxy_id = clean_input($_GET["id"], array("int")))) {
 				$ONLOAD[] = "findExistingUser('id', '".$proxy_id."')";
 			}
+			$ONLOAD[] = "toggle_visibility_checkbox($('send_notification'), 'send_notification_msg')";
+			$ONLOAD[] = "provStateFunction()";
+
 			$DEPARTMENT_LIST = array();
-			$query		= "
-						SELECT a.`department_id`, a.`department_title`, a.`organisation_id`, b.`entity_title`
+			$query = "	SELECT a.`department_id`, a.`department_title`, a.`organisation_id`, b.`entity_title`
 						FROM `".AUTH_DATABASE."`.`departments` AS a
 						LEFT JOIN `".AUTH_DATABASE."`.`entity_type` AS b
 						ON a.`entity_id` = b.`entity_id`
 						ORDER BY a.`department_title`";
-			$results	= $db->GetAll($query);
+			$results = $db->GetAll($query);
 			if ($results) {
 				foreach($results as $key => $result) {
 					$DEPARTMENT_LIST[$result["organisation_id"]][] = array("department_id"=>$result['department_id'], "department_title" => $result["department_title"], "entity_title" => $result["entity_title"]);
 				}
 			}
 
-
-			$ONLOAD[] = "toggle_visibility_checkbox($('send_notification'), 'send_notification_msg')";
-			
 			if ($ERROR) {
 				echo display_error();
 			}
@@ -687,176 +642,241 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 			if ($NOTICE) {
 				echo display_notice();
 			}
-			
-			$ONLOAD[] = "provStateFunction(\$F($('addUser')['country_id']))";
 			?>
-			
 			<script type="text/javascript">
+			var glob_type = null;
+			function findExistingUser(type, value) {
+				if (type && value) {
+					var url = '<?php echo ENTRADA_RELATIVE; ?>/admin/<?php echo $MODULE; ?>?section=search&' + type + '=' + value;
+					if (type == 'id') {
+						type = 'number';
+					}
 
-			function provStateFunction(country_id) {
-				var url='<?php echo webservice_url("province"); ?>';
-				<?php
-					$source_arr = $PROCESSED;
+					if ($(type + '-default')) {
+						$(type + '-default').hide();
+					}
 
-				    $province = $source_arr["province"];
-				    $province_id = $source_arr["province_id"];
-				    $prov_state = ($province) ? $province : $province_id;
-				?>
-				
-				url = url + '?countries_id=' + country_id + '&prov_state=<?php echo $prov_state; ?>';
-				new Ajax.Updater($('prov_state_div'), url,
-					{
-						method:'get',
-						onComplete: function (init_run) {
-							
-							if ($('prov_state').type == 'select-one') {
-								$('prov_state_label').removeClassName('form-nrequired');
-								$('prov_state_label').addClassName('form-required');
-								if (!init_run) 
-									$("prov_state").selectedIndex = 0;
-								
-								
-							} else {
-								
-								$('prov_state_label').removeClassName('form-required');
-								$('prov_state_label').addClassName('form-nrequired');
-								if (!init_run) 
-									$("prov_state").clear();
-								
-								
-							}
-						}.curry(!provStateFunction.initialzed)
-					});
-				provStateFunction.initialzed = true;
-				
+					if ($(type + '-searching')) {
+						$(type + '-searching').show();
+					}
+
+					glob_type = type;
+
+					new Ajax.Request(url, {method: 'get', onComplete: getResponse});
+				}
 			}
-			provStateFunction.initialzed = false;
 
+			function getResponse(request) {
+				if ($(glob_type + '-default')) {
+					$(glob_type + '-default').show();
+				}
+
+				if ($(glob_type + '-searching')) {
+					$(glob_type + '-searching').hide();
+				}
+
+				var data = request.responseJSON;
+
+				if (data) {
+					$('username').disable().setValue(data.username);
+					$('firstname').disable().setValue(data.firstname);
+					$('lastname').disable().setValue(data.lastname);
+					$('email').disable().setValue(data.email);
+					$('number').disable().setValue(data.number);
+					$('password').disable().setValue('********');
+					$('prefix').disable().setValue(data.prefix);
+					$('email_alt').disable().setValue(data.email_alt);
+					$('telephone').disable().setValue(data.telephone);
+					$('fax').disable().setValue(data.fax);
+					$('address').disable().setValue(data.address);
+					$('city').disable().setValue(data.city);
+
+					if ($('country')) {
+						$('country').disable().setValue(data.country);
+					} else if($('country_id')) {
+						$('country_id').disable().setValue(data.country_id);
+
+						provStateFunction(data.country_id, data.province_id);
+					}
+
+					$('postcode').disable().setValue(data.postcode);
+					$('notes').disable().setValue(data.notes);
+
+					$('send_notification_msg').hide();
+					$('send_notification').checked = false;
+
+					var notice = document.createElement('div');
+					notice.id = 'display-notice';
+					notice.addClassName('display-notice');
+					notice.innerHTML = data.message;
+
+					$('addUser').insert({'before' : notice});
+				}
+			}
+
+			function provStateFunction(country_id, province_id) {
+				var url_country_id = '<?php echo ((!isset($PROCESSED["country_id"]) && defined("DEFAULT_COUNTRY_ID") && DEFAULT_COUNTRY_ID) ? DEFAULT_COUNTRY_ID : 0); ?>';
+				var url_province_id = '<?php echo ((!isset($PROCESSED["province_id"]) && defined("DEFAULT_PROVINCE_ID") && DEFAULT_PROVINCE_ID) ? DEFAULT_PROVINCE_ID : 0); ?>';
+
+				if (country_id != undefined) {
+					url_country_id = country_id;
+				} else if ($('country_id')) {
+					url_country_id = $('country_id').getValue();
+				}
+
+				if (province_id != undefined) {
+					url_province_id = province_id;
+				} else if ($('province_id')) {
+					url_province_id = $('province_id').getValue();
+				}
+
+				var url = '<?php echo webservice_url("province"); ?>?countries_id=' + url_country_id + '&prov_state=' + url_province_id;
+
+				new Ajax.Updater($('prov_state_div'), url, {
+					method:'get',
+					onComplete: function (init_run) {
+
+						if ($('prov_state').type == 'select-one') {
+							$('prov_state_label').removeClassName('form-nrequired');
+							$('prov_state_label').addClassName('form-required');
+							if (!init_run) {
+								$("prov_state").selectedIndex = 0;
+							}
+						} else {
+							$('prov_state_label').removeClassName('form-required');
+							$('prov_state_label').addClassName('form-nrequired');
+							if (!init_run) {
+								$("prov_state").clear();
+							}
+						}
+					}
+				});
+			}
 			</script>
 
 
 			<form id="addUser" action="<?php echo ENTRADA_URL; ?>/admin/users?section=add&amp;step=2" method="post" onsubmit="$('number').enable()">
-	<table style="width: 100%" cellspacing="1" cellpadding="1" border="0" summary="New MEdTech Profile">
-		<colgroup>
-			<col style="width: 3%" />
-			<col style="width: 25%" />
-			<col style="width: 72%" />
-		</colgroup>
-		<tfoot>
-			<tr>
-				<td colspan="3">&nbsp;</td>
-			</tr>
-			<tr>
-				<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
-					<input type="submit" class="button" value="Add User" />
-				</td>
-			</tr>
-		</tfoot>
-		<tbody>
-			<tr>
-				<td colspan="3">
-					<h2>Account Details</h2>
-				</td>
-			</tr>
-			<tr>
-				<td>&nbsp;</td>
-				<td><label for="number" class="form-nrequired">Staff / Student Number:</label></td>
-				<td>
-						<input type="text" id="number" name="number" value="<?php echo ((isset($PROCESSED["number"])) ? html_encode($PROCESSED["number"]) : ""); ?>" style="width: 250px" maxlength="25" onblur="findExistingUser('number', this.value)" onkeypress="if (event.which == 13) { findExistingUser('number', this.value); return false; }" />
-						<span id="number-searching" class="content-small" style="display: none;"><img src="<?php echo ENTRADA_RELATIVE ?>/images/indicator.gif" /> Searching system for this number... </span>
-						<span id="number-default" class="content-small">(<strong>Important:</strong> Required when ever possible)</span>
-				</td>
-			</tr>
-			<tr>
-				<td>&nbsp;</td>
-				<td><label for="username" class="form-required"><?php echo APPLICATION_NAME; ?> Username:</label></td>
-				<td>
-						<input type="text" id="username" name="username" value="<?php echo ((isset($PROCESSED["username"])) ? html_encode($PROCESSED["username"]) : ""); ?>" style="width: 250px" maxlength="25" onblur="findExistingUser('username', this.value)" onkeypress="if (event.which == 13) { findExistingUser('username', this.value); return false; }" />
-						<span id="username-searching" class="content-small" style="display: none;"><img src="<?php echo ENTRADA_RELATIVE ?>/images/indicator.gif" /> Searching system for this username... </span>
-				</td>
-			</tr>
-			<tr>
-				<td>&nbsp;</td>
-				<td><label for="password" class="form-required"><?php echo APPLICATION_NAME; ?> Password:</label></td>
-				<td><input type="text" id="password" name="password" value="<?php echo ((isset($PROCESSED["password"])) ? html_encode($PROCESSED["password"]) : generate_password(8)); ?>" style="width: 250px" maxlength="25" /></td>
-			</tr>
-			<tr>
-				<td colspan="3">&nbsp;</td>
-			</tr>
-			<tr>
-				<td>&nbsp;</td>
-				<td style="vertical-align: top"><label for="group" class="form-required">Account Type:</label></td>
-				<td>
-					<select id="group" name="group" style="width: 209px"></select> <span class="content-small"><strong>Account Group</strong></span><br />
-					<select id="role" name="role" style="width: 209px; margin-top: 5px"></select> <span class="content-small"><strong>Account Role</strong></span>
-				</td>
-			</tr>
-			<tr style="<?php echo $PROCESSED_ACCESS["group"]=="student" ? "" : "display:none;"; ?>" id="entry_year_data">
-				<td>&nbsp;</td>
-				<td style="padding-top: 15px"><label for="group" class="form-required">Year of Program Entry</label></td>
-				<td style="padding-top: 15px">
-					<select id="entry_year" name="entry_year" style="width: 209px">
-					<?php
-					$selected_year = (isset($PROCESSED["entry_year"])) ? $PROCESSED["entry_year"] : (date("Y", time()) - ((date("m", time()) < 7) ?  1 : 0));
-					for($i = fetch_first_year(); $i >= 1995; $i--) {
-						$selected = $selected_year == $i;
-						echo build_option($i, $i, $selected);
-					} 
-					?>
-					</select>
-				</td>
-			</tr>
-			<tr style="<?php echo $PROCESSED_ACCESS["group"]=="student" ? "" : "display:none;"; ?>" id="grad_year_data">
-				<td>&nbsp;</td>
-				<td><label for="group" class="form-required">Expected Graduation Year</label></td>
-				<td>
-					<select id="grad_year" name="grad_year" style="width: 209px; margin-top: 5px">
-					<?php
-					for($i = fetch_first_year(); $i >= 1995; $i--) {
-						$selected = (isset($PROCESSED["grad_year"]) && $PROCESSED["grad_year"] == $i);
-						echo build_option($i, $i, $selected);
-					} 
-					?>
-					</select>
-				</td>
-			</tr>
-			<tr style="<?php echo $PROCESSED_ACCESS["group"]!="faculty" ? "" : "display:none;" ?>" id="clinical_area">
-				<td colspan="2">&nbsp;</td>
-				<td style="padding-top: 15px">
-					<input type="checkbox" id="clinical" name="clinical" value="1"<?php echo (((empty($_POST)) || ((isset($_POST["clinical"])) && ((int) $_POST["clinical"]))) ? " checked=\"checked\"" : ""); ?> style="vertical-align: middle;" />
-					<label for="clinical" class="form-nrequired">This new user is a <strong>clinical</strong> faculty member.</label>
-				</td>
-			</tr>
-			<tr>
-				<td colspan="3">&nbsp;</td>
-			</tr>
-			<tr>
-				<td colspan="3">
-					<h2>Account Options</h2>
-				</td>
-			</tr>
-			<tr>
-				<td>&nbsp;</td>
-				<td style="vertical-align: top"><label for="account_active" class="form-required">Account Status:</label></td>
-				<td>
-					<select id="account_active" name="account_active" style="width: 209px">
-						<option value="true"<?php echo (((!isset($PROCESSED_ACCESS["account_active"])) || ($PROCESSED_ACCESS["account_active"] == "true")) ? " selected=\"selected\"" : ""); ?>>Active</option>
-						<option value="false"<?php echo (($PROCESSED_ACCESS["account_active"] == "false") ? " selected=\"selected\"" : ""); ?>>Disabled</option>
-					</select>
-				</td>
-			</tr>
-						<?php echo generate_calendars("access", "Access", true, true, ((isset($PROCESSED["access_starts"])) ? $PROCESSED["access_starts"] : time()), true, false, 0); ?>
-			<tr>
-				<td colspan="3">
-					<h2>Personal Information</h2>
-				</td>
-			</tr>
-			<tr>
-				<td>&nbsp;</td>
-				<td><label for="prefix" class="form-nrequired">Prefix:</label></td>
-				<td>
-					<select id="prefix" name="prefix" style="width: 55px; vertical-align: middle; margin-right: 5px">
-						<option value=""<?php echo ((!$result["prefix"]) ? " selected=\"selected\"" : ""); ?>></option>
+				<table style="width: 100%" cellspacing="1" cellpadding="1" border="0" summary="New Profile">
+					<colgroup>
+						<col style="width: 3%" />
+						<col style="width: 25%" />
+						<col style="width: 72%" />
+					</colgroup>
+					<tfoot>
+						<tr>
+							<td colspan="3">&nbsp;</td>
+						</tr>
+						<tr>
+							<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
+								<input type="submit" class="button" value="Add User" />
+							</td>
+						</tr>
+					</tfoot>
+					<tbody>
+						<tr>
+							<td colspan="3">
+								<h2>Account Details</h2>
+							</td>
+						</tr>
+						<tr>
+							<td>&nbsp;</td>
+							<td><label for="number" class="form-nrequired">Staff / Student Number</label></td>
+							<td>
+								<input type="text" id="number" name="number" value="<?php echo ((isset($PROCESSED["number"])) ? html_encode($PROCESSED["number"]) : ""); ?>" style="width: 250px" maxlength="25" onblur="findExistingUser('number', this.value)" />
+								<span id="number-searching" class="content-small" style="display: none;"><img src="<?php echo ENTRADA_RELATIVE ?>/images/indicator.gif" /> Searching system for this number... </span>
+								<span id="number-default" class="content-small">(<strong>Important:</strong> Required when ever possible)</span>
+							</td>
+						</tr>
+						<tr>
+							<td>&nbsp;</td>
+							<td><label for="username" class="form-required">Username</label></td>
+							<td>
+								<input type="text" id="username" name="username" value="<?php echo ((isset($PROCESSED["username"])) ? html_encode($PROCESSED["username"]) : ""); ?>" style="width: 250px" maxlength="25" onblur="findExistingUser('username', this.value)" />
+								<span id="username-searching" class="content-small" style="display: none;"><img src="<?php echo ENTRADA_RELATIVE ?>/images/indicator.gif" /> Searching system for this username... </span>
+							</td>
+						</tr>
+						<tr>
+							<td>&nbsp;</td>
+							<td><label for="password" class="form-required">Password</label></td>
+							<td><input type="text" id="password" name="password" value="<?php echo ((isset($PROCESSED["password"])) ? html_encode($PROCESSED["password"]) : generate_password(8)); ?>" style="width: 250px" maxlength="25" /></td>
+						</tr>
+						<tr>
+							<td colspan="3">&nbsp;</td>
+						</tr>
+						<tr>
+							<td>&nbsp;</td>
+							<td style="vertical-align: top"><label for="group" class="form-required">Account Type</label></td>
+							<td>
+								<select id="group" name="group" style="width: 209px"></select> <span class="content-small"><strong>Account Group</strong></span><br />
+								<select id="role" name="role" style="width: 209px; margin-top: 5px"></select> <span class="content-small"><strong>Account Role</strong></span>
+							</td>
+						</tr>
+						<tr style="<?php echo $PROCESSED_ACCESS["group"]=="student" ? "" : "display:none;"; ?>" id="entry_year_data">
+							<td>&nbsp;</td>
+							<td style="padding-top: 15px"><label for="group" class="form-required">Year of Program Entry</label></td>
+							<td style="padding-top: 15px">
+								<select id="entry_year" name="entry_year" style="width: 209px">
+								<?php
+								$selected_year = (isset($PROCESSED["entry_year"])) ? $PROCESSED["entry_year"] : (date("Y", time()) - ((date("m", time()) < 7) ?  1 : 0));
+								for($i = fetch_first_year(); $i >= 1995; $i--) {
+									$selected = $selected_year == $i;
+									echo build_option($i, $i, $selected);
+								}
+								?>
+								</select>
+							</td>
+						</tr>
+						<tr style="<?php echo $PROCESSED_ACCESS["group"]=="student" ? "" : "display:none;"; ?>" id="grad_year_data">
+							<td>&nbsp;</td>
+							<td><label for="group" class="form-required">Expected Graduation Year</label></td>
+							<td>
+								<select id="grad_year" name="grad_year" style="width: 209px; margin-top: 5px">
+								<?php
+								for($i = fetch_first_year(); $i >= 1995; $i--) {
+									$selected = (isset($PROCESSED["grad_year"]) && $PROCESSED["grad_year"] == $i);
+									echo build_option($i, $i, $selected);
+								}
+								?>
+								</select>
+							</td>
+						</tr>
+						<tr style="<?php echo $PROCESSED_ACCESS["group"]!="faculty" ? "" : "display:none;" ?>" id="clinical_area">
+							<td colspan="2">&nbsp;</td>
+							<td style="padding-top: 15px">
+								<input type="checkbox" id="clinical" name="clinical" value="1"<?php echo (((empty($_POST)) || ((isset($_POST["clinical"])) && ((int) $_POST["clinical"]))) ? " checked=\"checked\"" : ""); ?> style="vertical-align: middle;" />
+								<label for="clinical" class="form-nrequired">This new user is a <strong>clinical</strong> faculty member.</label>
+							</td>
+						</tr>
+						<tr>
+							<td colspan="3">&nbsp;</td>
+						</tr>
+						<tr>
+							<td colspan="3">
+								<h2>Account Options</h2>
+							</td>
+						</tr>
+						<tr>
+							<td>&nbsp;</td>
+							<td style="vertical-align: top"><label for="account_active" class="form-required">Account Status</label></td>
+							<td>
+								<select id="account_active" name="account_active" style="width: 209px">
+									<option value="true"<?php echo (((!isset($PROCESSED_ACCESS["account_active"])) || ($PROCESSED_ACCESS["account_active"] == "true")) ? " selected=\"selected\"" : ""); ?>>Active</option>
+									<option value="false"<?php echo (($PROCESSED_ACCESS["account_active"] == "false") ? " selected=\"selected\"" : ""); ?>>Disabled</option>
+								</select>
+							</td>
+						</tr>
+									<?php echo generate_calendars("access", "Access", true, true, ((isset($PROCESSED["access_starts"])) ? $PROCESSED["access_starts"] : time()), true, false, 0); ?>
+						<tr>
+							<td colspan="3">
+								<h2>Personal Information</h2>
+							</td>
+						</tr>
+						<tr>
+							<td>&nbsp;</td>
+							<td><label for="prefix" class="form-nrequired">Prefix</label></td>
+							<td>
+								<select id="prefix" name="prefix" style="width: 55px; vertical-align: middle; margin-right: 5px">
+									<option value=""<?php echo ((!$result["prefix"]) ? " selected=\"selected\"" : ""); ?>></option>
 									<?php
 									if ((@is_array($PROFILE_NAME_PREFIX)) && (@count($PROFILE_NAME_PREFIX))) {
 										foreach($PROFILE_NAME_PREFIX as $key => $prefix) {
@@ -864,160 +884,160 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 										}
 									}
 									?>
-					</select>
-				</td>
-			</tr>
-			<tr>
-				<td>&nbsp;</td>
-				<td><label for="firstname" class="form-required">Firstname:</label></td>
-				<td><input type="text" id="firstname" name="firstname" value="<?php echo ((isset($PROCESSED["firstname"])) ? html_encode($PROCESSED["firstname"]) : ""); ?>" style="width: 250px; vertical-align: middle" maxlength="35" /></td>
-			</tr>
-			<tr>
-				<td>&nbsp;</td>
-				<td><label for="lastname" class="form-required">Lastname:</label></td>
-				<td><input type="text" id="lastname" name="lastname" value="<?php echo ((isset($PROCESSED["lastname"])) ? html_encode($PROCESSED["lastname"]) : ""); ?>" style="width: 250px; vertical-align: middle" maxlength="35" /></td>
-			</tr>
-			<tr>
-				<td colspan="3">&nbsp;</td>
-			</tr>
-			<tr>
-				<td>&nbsp;</td>
-				<td><label for="email" class="form-required">Primary E-Mail:</label></td>
-				<td>
-					<input type="text" id="email" name="email" value="<?php echo ((isset($PROCESSED["email"])) ? html_encode($PROCESSED["email"]) : ""); ?>" style="width: 250px; vertical-align: middle" maxlength="128" />
-					<span class="content-small">(<strong>Important:</strong> Official e-mail accounts only)</span>
-				</td>
-			</tr>
-			<tr>
-				<td>&nbsp;</td>
-				<td><label for="email_alt" class="form-nrequired">Alternative E-Mail:</label></td>
-				<td><input type="text" id="email_alt" name="email_alt" value="<?php echo ((isset($PROCESSED["email_alt"])) ? html_encode($PROCESSED["email_alt"]) : ""); ?>" style="width: 250px; vertical-align: middle" maxlength="128" /></td>
-			</tr>
-			<tr>
-				<td colspan="2">&nbsp;</td>
-			</tr>
-			<tr>
-				<td>&nbsp;</td>
-				<td><label for="telephone" class="form-nrequired">Telephone Number:</label></td>
-				<td>
-					<input type="text" id="telephone" name="telephone" value="<?php echo ((isset($PROCESSED["telephone"])) ? html_encode($PROCESSED["telephone"]) : ""); ?>" style="width: 250px; vertical-align: middle" maxlength="25" />
-					<span class="content-small">(<strong>Example:</strong> 613-533-6000 x74918)</span>
-				</td>
-			</tr>
-			<tr>
-				<td>&nbsp;</td>
-				<td><label for="fax" class="form-nrequired">Fax Number:</label></td>
-				<td>
-					<input type="text" id="fax" name="fax" value="<?php echo ((isset($PROCESSED["fax"])) ? html_encode($PROCESSED["fax"]) : ""); ?>" style="width: 250px; vertical-align: middle" maxlength="25" />
-					<span class="content-small">(<strong>Example:</strong> 613-533-3204)</span>
-				</td>
-			</tr>
-			<tr>
-				<td colspan="3">&nbsp;</td>
-			</tr>
-			
-			<tr>
-				<td>&nbsp;</td>
-				<td><label for="country_id" class="form-required">Country</label></td>
-				<td>
-					<?php
-					$countries = fetch_countries();
-					if ((is_array($countries)) && (count($countries))) {
-						echo "<select id=\"country_id\" name=\"country_id\" style=\"width: 256px\" onchange=\"provStateFunction(this.value);\">\n";
-						echo "<option value=\"0\"".((!$PROCESSED["country_id"]) ? " selected=\"selected\"" : "").">-- Select Country --</option>\n";
-						foreach ($countries as $country) {
-							echo "<option value=\"".(int) $country["countries_id"]."\"".(($PROCESSED["country_id"] == $country["countries_id"]) ? " selected=\"selected\"" : "").">".html_encode($country["country"])."</option>\n";
-						}
-						echo "</select>\n";
-					} else {
-						echo "<input type=\"hidden\" id=\"countries_id\" name=\"countries_id\" value=\"0\" />\n";
-						echo "Country information not currently available.\n";
-					}
-					?>
-				</td>
-			</tr>
-			<tr>
-				<td>&nbsp;</td>
-				<td><label id="prov_state_label" for="prov_state_div" class="form-nrequired">Province / State</label></td>
-				<td>
-					<div id="prov_state_div">Please select a <strong>Country</strong> from above first.</div>
-				</td>
-			</tr>
-			<tr>
-				<td>&nbsp;</td>
-				<td><label for="city" class="form-nrequired">City:</label></td>
-				<td>
-					<input type="text" id="city" name="city" value="<?php echo ((isset($PROCESSED["city"])) ? html_encode($PROCESSED["city"]) : "Kingston"); ?>" style="width: 250px; vertical-align: middle" maxlength="35" />
-				</td>
-			</tr>
-			<tr>
-				<td>&nbsp;</td>
-				<td><label for="address" class="form-nrequired">Address:</label></td>
-				<td>
-					<input type="text" id="address" name="address" value="<?php echo ((isset($PROCESSED["address"])) ? html_encode($PROCESSED["address"]) : ""); ?>" style="width: 250px; vertical-align: middle" maxlength="255" />
-				</td>
-			</tr>
+								</select>
+							</td>
+						</tr>
+						<tr>
+							<td>&nbsp;</td>
+							<td><label for="firstname" class="form-required">Firstname</label></td>
+							<td><input type="text" id="firstname" name="firstname" value="<?php echo ((isset($PROCESSED["firstname"])) ? html_encode($PROCESSED["firstname"]) : ""); ?>" style="width: 250px; vertical-align: middle" maxlength="35" /></td>
+						</tr>
+						<tr>
+							<td>&nbsp;</td>
+							<td><label for="lastname" class="form-required">Lastname</label></td>
+							<td><input type="text" id="lastname" name="lastname" value="<?php echo ((isset($PROCESSED["lastname"])) ? html_encode($PROCESSED["lastname"]) : ""); ?>" style="width: 250px; vertical-align: middle" maxlength="35" /></td>
+						</tr>
+						<tr>
+							<td colspan="3">&nbsp;</td>
+						</tr>
+						<tr>
+							<td>&nbsp;</td>
+							<td><label for="email" class="form-required">Primary E-Mail</label></td>
+							<td>
+								<input type="text" id="email" name="email" value="<?php echo ((isset($PROCESSED["email"])) ? html_encode($PROCESSED["email"]) : ""); ?>" style="width: 250px; vertical-align: middle" maxlength="128" />
+								<span class="content-small">(<strong>Important:</strong> Official e-mail accounts only)</span>
+							</td>
+						</tr>
+						<tr>
+							<td>&nbsp;</td>
+							<td><label for="email_alt" class="form-nrequired">Alternative E-Mail</label></td>
+							<td><input type="text" id="email_alt" name="email_alt" value="<?php echo ((isset($PROCESSED["email_alt"])) ? html_encode($PROCESSED["email_alt"]) : ""); ?>" style="width: 250px; vertical-align: middle" maxlength="128" /></td>
+						</tr>
+						<tr>
+							<td colspan="2">&nbsp;</td>
+						</tr>
+						<tr>
+							<td>&nbsp;</td>
+							<td><label for="telephone" class="form-nrequired">Telephone Number</label></td>
+							<td>
+								<input type="text" id="telephone" name="telephone" value="<?php echo ((isset($PROCESSED["telephone"])) ? html_encode($PROCESSED["telephone"]) : ""); ?>" style="width: 250px; vertical-align: middle" maxlength="25" />
+								<span class="content-small">(<strong>Example:</strong> 613-533-6000 x74918)</span>
+							</td>
+						</tr>
+						<tr>
+							<td>&nbsp;</td>
+							<td><label for="fax" class="form-nrequired">Fax Number</label></td>
+							<td>
+								<input type="text" id="fax" name="fax" value="<?php echo ((isset($PROCESSED["fax"])) ? html_encode($PROCESSED["fax"]) : ""); ?>" style="width: 250px; vertical-align: middle" maxlength="25" />
+								<span class="content-small">(<strong>Example:</strong> 613-533-3204)</span>
+							</td>
+						</tr>
+						<tr>
+							<td colspan="3">&nbsp;</td>
+						</tr>
+
+						<tr>
+							<td>&nbsp;</td>
+							<td><label for="country_id" class="form-required">Country</label></td>
+							<td>
+								<?php
+								$countries = fetch_countries();
+								if ((is_array($countries)) && (count($countries))) {
+									echo "<select id=\"country_id\" name=\"country_id\" style=\"width: 256px\" onchange=\"provStateFunction();\">\n";
+									echo "<option value=\"0\">-- Select Country --</option>\n";
+									foreach ($countries as $country) {
+										echo "<option value=\"".(int) $country["countries_id"]."\"".(((!isset($PROCESSED["country_id"]) && ($country["countries_id"] == DEFAULT_COUNTRY_ID)) || ($PROCESSED["country_id"] == $country["countries_id"])) ? " selected=\"selected\"" : "").">".html_encode($country["country"])."</option>\n";
+									}
+									echo "</select>\n";
+								} else {
+									echo "<input type=\"hidden\" id=\"countries_id\" name=\"countries_id\" value=\"0\" />\n";
+									echo "Country information not currently available.\n";
+								}
+								?>
+							</td>
+						</tr>
+						<tr>
+							<td>&nbsp;</td>
+							<td><label id="prov_state_label" for="prov_state_div" class="form-nrequired">Province / State</label></td>
+							<td>
+								<div id="prov_state_div">Please select a <strong>Country</strong> from above first.</div>
+							</td>
+						</tr>
+						<tr>
+							<td>&nbsp;</td>
+							<td><label for="city" class="form-nrequired">City</label></td>
+							<td>
+								<input type="text" id="city" name="city" value="<?php echo ((isset($PROCESSED["city"])) ? html_encode($PROCESSED["city"]) : "Kingston"); ?>" style="width: 250px; vertical-align: middle" maxlength="35" />
+							</td>
+						</tr>
+						<tr>
+							<td>&nbsp;</td>
+							<td><label for="address" class="form-nrequired">Address</label></td>
+							<td>
+								<input type="text" id="address" name="address" value="<?php echo ((isset($PROCESSED["address"])) ? html_encode($PROCESSED["address"]) : ""); ?>" style="width: 250px; vertical-align: middle" maxlength="255" />
+							</td>
+						</tr>
 
 
-			<tr>
-				<td>&nbsp;</td>
-				<td><label for="postcode" class="form-nrequired">Postal Code:</label></td>
-				<td>
-					<input type="text" id="postcode" name="postcode" value="<?php echo ((isset($PROCESSED["postcode"])) ? html_encode($PROCESSED["postcode"]) : "K7L 3N6"); ?>" style="width: 250px; vertical-align: middle" maxlength="7" />
-					<span class="content-small">(<strong>Example:</strong> K7L 3N6)</span>
-				</td>
-			</tr>
+						<tr>
+							<td>&nbsp;</td>
+							<td><label for="postcode" class="form-nrequired">Postal Code</label></td>
+							<td>
+								<input type="text" id="postcode" name="postcode" value="<?php echo ((isset($PROCESSED["postcode"])) ? html_encode($PROCESSED["postcode"]) : "K7L 3N6"); ?>" style="width: 250px; vertical-align: middle" maxlength="7" />
+								<span class="content-small">(<strong>Example:</strong> K7L 3N6)</span>
+							</td>
+						</tr>
 
-			<tr>
-				<td colspan="3">&nbsp;</td>
-			</tr>
-			<tr>
-				<td>&nbsp;</td>
-				<td style="vertical-align: top"><label for="office_hours">Office Hours:</label></td>
-				<td>
-					<textarea id="office_hours" name="office_hours" style="width: 254px; height: 40px;" maxlength="100"><?php echo (isset($PROCESSED["office_hours"]) && $PROCESSED["office_hours"] ? html_encode($PROCESSED["office_hours"]) : ""); ?></textarea>
-				</td>
-			</tr>
-			<tr>
-				<td colspan="3">&nbsp;</td>
-			</tr>
-			<tr>
-				<td>&nbsp;</td>
-				<td style="vertical-align: top"><label for="notes" class="form-nrequired">General Comments:</label></td>
-				<td>
-					<textarea id="notes" class="expandable" name="notes" style="width: 246px; height: 75px"><?php echo ((isset($PROCESSED["notes"])) ? html_encode($PROCESSED["notes"]) : ""); ?></textarea>
-				</td>
-			</tr>
-			<tr>
-				<td colspan="3">
-					<h2>Departmental Options</h2>
-				</td>
-			</tr>
-			<tr>
-				<td>&nbsp;</td>
-				<td><label for="organisation_id" class="form-required">Organisation</label></td>
-				<td><select id="organisation_id" name="organisation_id" style="width: 250px" onchange="organisationChange();">
-									<?php
-									$query		= "SELECT `organisation_id`, `organisation_title` FROM `".AUTH_DATABASE."`.`organisations`";
-									$results	= $db->GetAll($query);
-									if ($results) {
-										foreach($results as $result) {
-											if ($ENTRADA_ACL->amIAllowed(new CourseResource(null, $result['organisation_id']), 'create')) {
-												$organisation_categories[$result["organisation_id"]] = array($result["organisation_title"]);
-												echo "<option value=\"".(int) $result["organisation_id"]."\"".(((isset($PROCESSED["organisation_id"])) && ($PROCESSED["organisation_id"] == $result["organisation_id"])) ? " selected=\"selected\"" : "").">".html_encode($result["organisation_title"])."</option>\n";
-											}
+						<tr>
+							<td colspan="3">&nbsp;</td>
+						</tr>
+						<tr>
+							<td>&nbsp;</td>
+							<td style="vertical-align: top"><label for="office_hours">Office Hours</label></td>
+							<td>
+								<textarea id="office_hours" name="office_hours" style="width: 254px; height: 40px;" maxlength="100"><?php echo (isset($PROCESSED["office_hours"]) && $PROCESSED["office_hours"] ? html_encode($PROCESSED["office_hours"]) : ""); ?></textarea>
+							</td>
+						</tr>
+						<tr>
+							<td colspan="3">&nbsp;</td>
+						</tr>
+						<tr>
+							<td>&nbsp;</td>
+							<td style="vertical-align: top"><label for="notes" class="form-nrequired">General Comments</label></td>
+							<td>
+								<textarea id="notes" class="expandable" name="notes" style="width: 246px; height: 75px"><?php echo ((isset($PROCESSED["notes"])) ? html_encode($PROCESSED["notes"]) : ""); ?></textarea>
+							</td>
+						</tr>
+						<tr>
+							<td colspan="3">
+								<h2>Departmental Options</h2>
+							</td>
+						</tr>
+						<tr>
+							<td>&nbsp;</td>
+							<td><label for="organisation_id" class="form-required">Organisation</label></td>
+							<td>
+								<select id="organisation_id" name="organisation_id" style="width: 250px" onchange="organisationChange();">
+								<?php
+								$query		= "SELECT `organisation_id`, `organisation_title` FROM `".AUTH_DATABASE."`.`organisations`";
+								$results	= $db->GetAll($query);
+								if ($results) {
+									foreach($results as $result) {
+										if ($ENTRADA_ACL->amIAllowed(new CourseResource(null, $result['organisation_id']), 'create')) {
+											$organisation_categories[$result["organisation_id"]] = array($result["organisation_title"]);
+											echo "<option value=\"".(int) $result["organisation_id"]."\"".(((isset($PROCESSED["organisation_id"])) && ($PROCESSED["organisation_id"] == $result["organisation_id"])) ? " selected=\"selected\"" : "").">".html_encode($result["organisation_title"])."</option>\n";
 										}
 									}
-									?>
-					</select>
-				</td>
-			</tr>
-			<tr>
-				<td>&nbsp;</td>
-				<td>Departments</td>
-				<td>
-					<div style="position: relative;">
-
+								}
+								?>
+								</select>
+							</td>
+						</tr>
+						<tr>
+							<td>&nbsp;</td>
+							<td>Departments</td>
+							<td>
+								<div style="position: relative;">
 									<?php
 									if (isset($DEPARTMENT_LIST) && is_array($DEPARTMENT_LIST) && !empty($DEPARTMENT_LIST)) {
 										$departments = array();
@@ -1041,121 +1061,120 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 										}
 									}
 									?>
-					</div>
-					<input class="multi-picklist" id="in_departments" name="in_departments" style="display: none;">
-					<div id="in_departments_list"></div>
-					<input type="button" onclick="$('departments_'+$F('organisation_id')+'_options').show();" value="Select Multiple" >
-					<script type="text/javascript">
-						var multiselect = new Array();
-						function organisationChange() {
-							$$('.department_multi').invoke('hide');
-							$('in_departments').value = "";
-							if (multiselect[$F('organisation_id')]) {
-								multiselect[$F('organisation_id')].scanCheckBoxes();
-							} else {
-								$('in_departments_list').immediateDescendants().invoke('remove');
-							}
-						}
+								</div>
+								<input class="multi-picklist" id="in_departments" name="in_departments" style="display: none;">
+								<div id="in_departments_list"></div>
+								<input type="button" onclick="$('departments_'+$F('organisation_id')+'_options').show();" value="Select Multiple" >
+								<script type="text/javascript">
+									var multiselect = new Array();
+									function organisationChange() {
+										$$('.department_multi').invoke('hide');
+										$('in_departments').value = "";
+										if (multiselect[$F('organisation_id')]) {
+											multiselect[$F('organisation_id')].scanCheckBoxes();
+										} else {
+											$('in_departments_list').immediateDescendants().invoke('remove');
+										}
+									}
 
-						$$('.department_multi').each(function(element) {
-							var id = element.id;
-							numeric_id = id.substring(12,13);
-							generic = element.id.substring(0, element.id.length - 8);
-							this[numeric_id] = new Control.SelectMultiple('in_departments',id,{
-								labelSeparator: '; ',
-								checkboxSelector: 'table.select_multiple_table tr td input[type=checkbox]',
-								nameSelector: 'table.select_multiple_table tr td.select_multiple_name label',
-								overflowLength: 70,
-								filter: generic+'_select_filter',
-								resize: generic+'_scroll',
-								afterCheck: apresCheck,
-								updateDiv: updateDepartmentList
-							});
+									$$('.department_multi').each(function(element) {
+										var id = element.id;
+										numeric_id = id.substring(12,13);
+										generic = element.id.substring(0, element.id.length - 8);
+										this[numeric_id] = new Control.SelectMultiple('in_departments',id,{
+											labelSeparator: '; ',
+											checkboxSelector: 'table.select_multiple_table tr td input[type=checkbox]',
+											nameSelector: 'table.select_multiple_table tr td.select_multiple_name label',
+											overflowLength: 70,
+											filter: generic+'_select_filter',
+											resize: generic+'_scroll',
+											afterCheck: apresCheck,
+											updateDiv: updateDepartmentList
+										});
 
-							$(generic+'_close').observe('click',function(event){
-								this.container.hide();
-								return false;
-							}.bindAsEventListener(this[numeric_id]));
-						}, multiselect);
+										$(generic+'_close').observe('click',function(event){
+											this.container.hide();
+											return false;
+										}.bindAsEventListener(this[numeric_id]));
+									}, multiselect);
 
-						function apresCheck(element) {
-							var tr = $(element.parentNode.parentNode);
-							tr.removeClassName('selected');
-							if (element.checked) {
-								tr.addClassName('selected');
-							}
-						}
+									function apresCheck(element) {
+										var tr = $(element.parentNode.parentNode);
+										tr.removeClassName('selected');
+										if (element.checked) {
+											tr.addClassName('selected');
+										}
+									}
 
-						function updateDepartmentList(options) {
-							ul = options.inject(new Element('ul', {'class':'associated_list'}), function(list, option) {
-								list.appendChild(new Element('li').update(option));
-								return list;
-							});
-							$('in_departments_list').update(ul);
-						}
+									function updateDepartmentList(options) {
+										ul = options.inject(new Element('ul', {'class':'associated_list'}), function(list, option) {
+											list.appendChild(new Element('li').update(option));
+											return list;
+										});
+										$('in_departments_list').update(ul);
+									}
 
-						var grad_year, entry_year;
+									var grad_year, entry_year;
 
-						function onGroupChange() {
-							if ($F('group') == "student") {
-								grad_year.show();
-								entry_year.show();
-								clinical.hide();
-							} else {
-								grad_year.hide();
-								entry_year.hide();	
-								if($F('group') == "faculty") {
-									clinical.show();
-								} else {
-									clinical.hide();
-								}
-							}
-							
-						}
-						document.observe("dom:loaded",function() {
-							grad_year = $('grad_year_data');
-							entry_year = $('entry_year_data');
-							clinical = $('clinical_area');
-							var group_observer = new Form.Element.Observer($('group'),0.1,function() {
-								group_observer.stop();
-								onGroupChange();
-									
-							});
-							$('group').observe("change",onGroupChange);
-						});
-					</script>
-				</td>
-			</tr>
-			<tr>
-				<td colspan="3">&nbsp;</td>
-			</tr>
-			<tr>
-				<td colspan="3">
-					<h2>Notification Options</h2>
-				</td>
-			</tr>
-			<tr>
-				<td><input type="checkbox" id="send_notification" name="send_notification" value="1"<?php echo (((empty($_POST)) || ((isset($_POST["send_notification"])) && ((int) $_POST["send_notification"]))) ? " checked=\"checked\"" : ""); ?> style="vertical-align: middle" onclick="toggle_visibility_checkbox(this, 'send_notification_msg')" /></td>
-				<td colspan="2"><label for="send_notification" class="form-nrequired">Send this new user a password reset e-mail after adding them.</label></td>
-			</tr>
-			<tr>
-				<td>&nbsp;</td>
-				<td colspan="2">
-					<div id="send_notification_msg" style="display: block">
-						<label for="notification_message" class="form-required">Notification Message:</label><br />
-						<textarea id="notification_message" name="notification_message" rows="10" cols="65" style="width: 100%; height: 200px"><?php echo ((isset($_POST["notification_message"])) ? html_encode($_POST["notification_message"]) : $DEFAULT_NEW_USER_NOTIFICATION); ?></textarea>
-						<span class="content-small"><strong>Available Variables:</strong> %firstname%, %lastname%, %username%, %password_reset_url%, %application_url%, %application_name%</span>
-					</div>
-				</td>
-			</tr>
-			<tr>
-				<td colspan="3">&nbsp;</td>
-			</tr>
-		</tbody>
-	</table>
-</form>
+									function onGroupChange() {
+										if ($F('group') == "student") {
+											grad_year.show();
+											entry_year.show();
+											clinical.hide();
+										} else {
+											grad_year.hide();
+											entry_year.hide();
+											if($F('group') == "faculty") {
+												clinical.show();
+											} else {
+												clinical.hide();
+											}
+										}
+
+									}
+									document.observe("dom:loaded",function() {
+										grad_year = $('grad_year_data');
+										entry_year = $('entry_year_data');
+										clinical = $('clinical_area');
+										var group_observer = new Form.Element.Observer($('group'),0.1,function() {
+											group_observer.stop();
+											onGroupChange();
+
+										});
+										$('group').observe("change",onGroupChange);
+									});
+								</script>
+							</td>
+						</tr>
+						<tr>
+							<td colspan="3">&nbsp;</td>
+						</tr>
+						<tr>
+							<td colspan="3">
+								<h2>Notification Options</h2>
+							</td>
+						</tr>
+						<tr>
+							<td><input type="checkbox" id="send_notification" name="send_notification" value="1"<?php echo (((empty($_POST)) || ((isset($_POST["send_notification"])) && ((int) $_POST["send_notification"]))) ? " checked=\"checked\"" : ""); ?> style="vertical-align: middle" onclick="toggle_visibility_checkbox(this, 'send_notification_msg')" /></td>
+							<td colspan="2"><label for="send_notification" class="form-nrequired">Send this new user a password reset e-mail after adding them.</label></td>
+						</tr>
+						<tr>
+							<td>&nbsp;</td>
+							<td colspan="2">
+								<div id="send_notification_msg" style="display: block">
+									<label for="notification_message" class="form-required">Notification Message</label><br />
+									<textarea id="notification_message" name="notification_message" rows="10" cols="65" style="width: 100%; height: 200px"><?php echo ((isset($_POST["notification_message"])) ? html_encode($_POST["notification_message"]) : $DEFAULT_NEW_USER_NOTIFICATION); ?></textarea>
+									<span class="content-small"><strong>Available Variables:</strong> %firstname%, %lastname%, %username%, %password_reset_url%, %application_url%, %application_name%</span>
+								</div>
+							</td>
+						</tr>
+						<tr>
+							<td colspan="3">&nbsp;</td>
+						</tr>
+					</tbody>
+				</table>
+			</form>
 			<?php
-			break;
+		break;
 	}
 }
-?>

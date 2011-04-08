@@ -28,7 +28,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 		$query = "SELECT * FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($PROXY_ID);
 		$user_record = $db->GetRow($query);
 		if ($user_record) {
-			$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/users?section=edit&id=".$PROXY_ID, "title" => html_encode($user_record["firstname"]." ".$user_record["lastname"]));
 			$BREADCRUMB[] = array("url" => "", "title" => "Adding Incident");
 			
 			echo "<h1>Adding Incident</h1>\n";
@@ -97,7 +96,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 						$PROCESSED["proxy_id"] = $PROXY_ID;
 						$PROCESSED["incident_author_id"] = $_SESSION["details"]["id"];
 						if ($db->AutoExecute(AUTH_DATABASE.".user_incidents", $PROCESSED, "INSERT")) {
-							$url = ENTRADA_URL."/admin/users?section=edit&id=".$PROXY_ID;
+							$url = ENTRADA_URL."/admin/users/manage/incidents?id=".$PROXY_ID;
 
 							$SUCCESS++;
 							$SUCCESSSTR[] = "You have successfully updated the incident in the system.<br /><br />You will now be redirected to the user edit page for user id [".$PROXY_ID."]; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
@@ -181,7 +180,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 							<td>&nbsp;</td>
 							<td><label for="incident_severity" class="form-nrequired">Severity</label></td>
 							<td>
-								<select id="incident_severity" name="incident_severity" style="width: 65px">
+								<select id="incident_severity" name="incident_severity" style="width: 85px">
 								<?php 
 								for ($i = 1; $i <= 5; $i++) { 
 									echo "<option value=\"".$i."\"".(isset($PROCESSED["incident_severity"]) && ((int) $PROCESSED["incident_severity"]) == $i ? " selected=\"selected\"" : (((!isset($PROCESSED["incident_severity"])) && ($i == 3)) ? " selected=\"selected\"" : "")).">".$i."</option>";
@@ -194,7 +193,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 							<td>&nbsp;</td>
 							<td><label for="incident_status" class="form-nrequired">Status</label></td>
 							<td>
-								<select id="incident_status" name="incident_status" style="width: 65px">
+								<select id="incident_status" name="incident_status" style="width: 85px">
 									<option value="1"<?php echo (isset($PROCESSED["incident_status"]) && ((int) $PROCESSED["incident_status"]) == 1 ? " selected=\"selected\" " : ""); ?>>Open</option>
 									<option value="0"<?php echo (isset($PROCESSED["incident_status"]) && ((int) $PROCESSED["incident_status"]) == 0 ? " selected=\"selected\" " : ""); ?>>Closed</option>
 								</select>

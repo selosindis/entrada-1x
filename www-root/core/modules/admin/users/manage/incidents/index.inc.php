@@ -25,11 +25,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 	if ($PROXY_ID && $user_record) {
-			$BREADCRUMB[] = array("url" => "", "title" => html_encode($user_record["firstname"]." ".$user_record["lastname"]));
-							?>
-
-
-<h1 style="margin-top: 0px">Manage Incidents</h1>
+		?>
+				<h1 style="margin-top: 0px">Manage Incidents</h1>
 
 							<ul class="page-action">
 								<li><a href="<?php echo ENTRADA_URL."/admin/users/manage/incidents?section=add&id=".$PROXY_ID; ?>">Add New Incident</a></li>
@@ -46,7 +43,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 							if ($results) {
 								?>
 								<div style="padding-top: 10px; clear: both">
-									<form action="<?php echo ENTRADA_URL; ?>/admin/users/manage/incidents?section=close" method="post">
+									<form action="<?php echo ENTRADA_URL; ?>/admin/users/manage/incidents?section=close&amp;id=<?php echo $PROXY_ID; ?>" method="post">
 										<table class="tableList" cellspacing="0" summary="List of Incidents">
 											<colgroup>
 												<col class="modified" />
@@ -69,7 +66,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 													<td colspan="5">&nbsp;</td>
 												</tr>
 												<tr>
-													<td colspan="5" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
+													<td>&nbsp;</td>
+													<td colspan="4">
 														<input type="submit" class="button" value="Close Selected" />
 													</td>
 												</tr>

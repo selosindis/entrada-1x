@@ -18,8 +18,6 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 	exit;
 } else {
 
-	ini_set('display_errors', 1);
-
 	@set_include_path(implode(PATH_SEPARATOR, array(
 						dirname(__FILE__) . "../../../core/includes",
 						get_include_path(),

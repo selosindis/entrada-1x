@@ -74,7 +74,7 @@ define("CLERKSHIP_LOTTERY_FINISH", strtotime("March 14th, 2010"));
 define("CLERKSHIP_LOTTERY_MAX", 6);
 define("CLERKSHIP_FIRST_CLASS", 2011);
 define("ONE_WEEK", 604800);
-define("CLERKSHIP_ONE_WEEK_PAST", 4);
+define("CLERKSHIP_SIX_WEEKS_PAST", 4);
 define("CLERKSHIP_ROTATION_ENDED", 3);
 define("CLERKSHIP_ONE_WEEK_PRIOR", 2);
 define("CLERKSHIP_ROTATION_PERIOD", 1);
@@ -129,6 +129,7 @@ define("DEFAULT_TEMPLATE", "default");											// This is the system template 
 define("DEFAULT_LANGUAGE", "en");												// This is the default language file that will be loaded. Language files must be placed in your DEFAULT_TEMPLATE."/languages directory. (i.e. en.lang.php)
 define("DEFAULT_CHARSET", "UTF-8");												// The character encoding which will be used on the website & in e-mails.
 define("DEFAULT_COUNTRY_ID", 39);												// The default contry id used to determine provinces / states, etc.
+define("DEFAULT_PROVINCE_ID", 9);												// The default provice id that is selected (use 0 for none).
 
 define("DEFAULT_DATE_FORMAT", "D M d/y g:ia");
 define("DEFAULT_ROWS_PER_PAGE", 25);

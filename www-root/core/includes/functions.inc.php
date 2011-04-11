@@ -829,8 +829,7 @@ function get_online_status($proxy_id = 0, $output_type = "text") {
 	$output = 0;
 
 	if($proxy_id = (int) trim($proxy_id)) {
-		$query	= "
-				SELECT MAX(`timestamp`) AS `timestamp`
+		$query	= "SELECT MAX(`timestamp`) AS `timestamp`
 				FROM `users_online`
 				WHERE `proxy_id` = ".$db->qstr($proxy_id)."
 				GROUP BY `proxy_id`";
@@ -1545,7 +1544,7 @@ function clerkship_display_available_evaluations() {
 					a.`notification_status` <> 'complete'
 					OR a.`notification_status` <> 'cancelled'
 				)
-				AND b.`event_finish` < ".$db->qstr(strtotime("-1 day 00:00:00"))."
+					AND b.`event_finish` < ".$db->qstr(strtotime("00:00:01"))."
 				AND b.`event_status` = 'published'
 				AND c.`item_status` = 'published'
 				AND d.`form_status` = 'published'
@@ -1719,8 +1718,7 @@ function permissions_load() {
 	global $db;
 	$permissions	= array();
 	$permissions[$_SESSION["details"]["id"]] = array("permission_id" => 0, "group" => $_SESSION["details"]["group"], "role" => $_SESSION["details"]["role"], "organisation_id"=>$_SESSION["details"]["organisation_id"], "starts" => $_SESSION["details"]["access_starts"], "expires" => $_SESSION["details"]["access_expires"], "fullname" => ($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]), "firstname" => $_SESSION["details"]["firstname"], "lastname" => $_SESSION["details"]["lastname"]);
-	$query		= "
-				SELECT a.*, b.`id` AS `proxy_id`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, b.`firstname`, b.`lastname`, b.`organisation_id`, c.`role`, c.`group`
+	$query		= "SELECT a.*, b.`id` AS `proxy_id`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, b.`firstname`, b.`lastname`, b.`organisation_id`, c.`role`, c.`group`
 				FROM `permissions` AS a
 				LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
 				ON b.`id` = a.`assigned_by`
@@ -2051,8 +2049,7 @@ function count_notice_reads($notice_id = 0) {
 	global $db;
 
 	if($notice_id = (int) $notice_id) {
-		$query	= "
-				SELECT COUNT(*) AS `total_reads`
+		$query	= "SELECT COUNT(*) AS `total_reads`
 				FROM `statistics`
 				WHERE `module` = 'notices'
 				AND `action` = 'read'
@@ -2761,8 +2758,7 @@ function poll_answer_responses($poll_id = 0, $answer_id = 0) {
 	global $db;
 
 	if(($poll_id = (int) $poll_id) && ($answer_id = (int) $answer_id)) {
-		$query	= "
-				SELECT COUNT(*) AS `responses`
+		$query	= "SELECT COUNT(*) AS `responses`
 				FROM `poll_results`
 				WHERE `poll_id` = ".$db->qstr($poll_id)."
 				AND `answer_id` = ".$db->qstr($answer_id);
@@ -2785,8 +2781,7 @@ function poll_prevote_check($poll_id = 0) {
 	global $db;
 
 	if($poll_id = (int) $poll_id) {
-		$query	= "
-				SELECT *
+		$query	= "SELECT *
 				FROM `poll_results`
 				WHERE `poll_id` = ".$db->qstr($poll_id)."
 				AND `proxy_id` = ".$db->qstr($_SESSION["details"]["id"]);
@@ -4131,8 +4126,7 @@ function communities_fetch_children($community_id = 0, $requested_fields = false
 	}
 
 	$fetched	= array();
-	$query		= "
-				SELECT `".implode("`, `", $requested_fields)."`
+	$query		= "SELECT `".implode("`, `", $requested_fields)."`
 				FROM `communities`
 				WHERE `community_parent` = ".$db->qstr((int) $community_id)."
 				".((!(bool) $show_inactive) ? " AND `community_active` = '1'" : "")."
@@ -4699,8 +4693,7 @@ function communities_discussions_latest($cdiscussion_id = 0) {
 	$output["replies"]	= 0;
 
 	if($cdiscussion_id = (int) $cdiscussion_id) {
-		$query	= "
-				SELECT IF(a.`cdtopic_parent` = '0', a.`cdtopic_id`, b.`cdtopic_id`) AS `cdtopic_id`, IF(a.`cdtopic_parent` = '0', a.`topic_title`, b.`topic_title`) AS `topic_title`, a.`updated_date`, a.`proxy_id`, c.`username`, CONCAT_WS(' ', c.`firstname`, c.`lastname`) AS `poster_fullname`
+		$query	= "SELECT IF(a.`cdtopic_parent` = '0', a.`cdtopic_id`, b.`cdtopic_id`) AS `cdtopic_id`, IF(a.`cdtopic_parent` = '0', a.`topic_title`, b.`topic_title`) AS `topic_title`, a.`updated_date`, a.`proxy_id`, c.`username`, CONCAT_WS(' ', c.`firstname`, c.`lastname`) AS `poster_fullname`
 				FROM `community_discussion_topics` AS a
 				LEFT JOIN `community_discussion_topics` AS b
 				ON a.`cdtopic_parent` = b.`cdtopic_id`
@@ -4760,8 +4753,7 @@ function communities_shares_latest($cshare_id = 0) {
 	$output["total_bytes"]	= 0;
 
 	if($cshare_id = (int) $cshare_id) {
-		$query	= "
-				SELECT COUNT(*) AS `total_files`
+		$query	= "SELECT COUNT(*) AS `total_files`
 				FROM `community_share_files` AS a
 				WHERE a.`cshare_id` = ".$db->qstr($cshare_id)."
 				AND a.`community_id` = ".$db->qstr((int) $COMMUNITY_ID)."
@@ -7594,7 +7586,7 @@ function clerkship_progress_send_notice($rotation_period_index, $rotation, $cler
 	if (!$notified) {
 		$objective_progress = clerkship_rotation_objectives_progress($clerk["proxy_id"], $rotation["rotation_id"]);
 		switch ($rotation_period_index) {
-			case CLERKSHIP_ONE_WEEK_PAST :
+			case CLERKSHIP_SIX_WEEKS_PAST :
 				if ($objective_progress["required"] > $objective_progress["logged"]) {
 					$overdue_logging = array(
 												"proxy_id" => $clerk["proxy_id"],
@@ -7658,7 +7650,7 @@ function clerkship_notify_clerk($rotation_period_index, $clerk, $rotation, $obje
 		$mail->clearSubject();
 		$mail->setFrom($AGENT_CONTACTS["agent-notifications"]["email"], APPLICATION_NAME.' Clerkship System');
 		switch ($rotation_period_index) {
-			case CLERKSHIP_ONE_WEEK_PAST :
+			case CLERKSHIP_SIX_WEEKS_PAST :
 				$mail->setSubject("Clerkship Logbook Deficiency Notification");
 				break;
 			case CLERKSHIP_ROTATION_ENDED :
@@ -7669,7 +7661,7 @@ function clerkship_notify_clerk($rotation_period_index, $clerk, $rotation, $obje
 		}
 		$NOTIFICATION_MESSAGE		 	 = array();
 		switch ($rotation_period_index) {
-			case CLERKSHIP_ONE_WEEK_PAST :
+			case CLERKSHIP_SIX_WEEKS_PAST :
 				$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".DEFAULT_TEMPLATE."/email/clerkship-deficiency-clerk-notification.txt");
 				break;
 			case CLERKSHIP_ROTATION_ENDED :
@@ -7698,6 +7690,7 @@ function clerkship_notify_clerk($rotation_period_index, $clerk, $rotation, $obje
 									"%CLERK_FULLNAME%",
 									"%ROTATION_TITLE%",
 									"%PROFILE_URL%",
+									"%PROGRAM_COORDINATOR%",
 									"%ROTATION_OVERVIEW_URL%",
 									"%ROTATION_DEFICIENCIES%",
 									"%ROTATION_DEFICIENCY_URL%",
@@ -7709,6 +7702,7 @@ function clerkship_notify_clerk($rotation_period_index, $clerk, $rotation, $obje
 									$clerk["fullname"],
 									$rotation["rotation_title"],
 									ENTRADA_URL."/people?id=".$clerk["proxy_id"],
+									"<a href=\"".get_account_data("email", $rotation["pcoord_id"])."\">".get_account_data("wholename", $rotation["pcoord_id"])."</a>",
 									ENTRADA_URL."/clerkship/logbook?section=view&core=".$clerk["rotation_id"],
 									implode(" \n", $objective_progress["required_list"]),
 									ENTRADA_URL."/clerkship/logbook?section=deficiency-plan&rotation=".$clerk["rotation_id"],
@@ -7838,7 +7832,7 @@ function clerkship_send_queued_notifications($rotation_id, $rotation_title, $pro
 		$clerks = array();
 		$clerk_ids_string = "";
 		foreach ($clerk_notifications as $clerk_notification) {
-			$clerks[$clerk_notification["clerk_id"]] = get_account_data("fullname", $clerk_notification["clerk_id"]).($clerk_notification["timeframe"] == CLERKSHIP_ROTATION_ENDED ? "*" : ($clerk_notification["timeframe"] == CLERKSHIP_ONE_WEEK_PAST ? "**" : ""))." - ".ENTRADA_URL."/clerkship/logbook?section=view&type=missing&id=".$clerk_notification["clerk_id"]."&core=".$clerk_notification["rotation_id"];
+			$clerks[$clerk_notification["clerk_id"]] = get_account_data("fullname", $clerk_notification["clerk_id"]).($clerk_notification["timeframe"] == CLERKSHIP_ROTATION_ENDED ? "*" : ($clerk_notification["timeframe"] == CLERKSHIP_SIX_WEEKS_PAST ? "**" : ""))." - ".ENTRADA_URL."/clerkship/logbook?section=view&type=missing&id=".$clerk_notification["clerk_id"]."&core=".$clerk_notification["rotation_id"];
 			if ($clerk_ids_string) {
 				$clerk_ids_string .= ", ".$db->qstr($clerk_notification["clerk_id"]);
 			} else {
@@ -9007,9 +9001,56 @@ function events_process_filters($action = "", $module_type = "") {
  * Function used by public events and admin events index to generate the SQL queries based on the users
  * filter settings and results that can be iterated through by these views.
  */
-function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_role = "", $organisation_id = 0, $sort_by = "", $sort_order = "", $date_type = "", $timestamp_start = 0, $timestamp_finish = 0, $filters = array(), $pagination = true, $current_page = 1, $results_per_page = 15) {
-	global $db;
+function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_role = "", $organisation_id = 0, $sort_by = "", $sort_order = "", $date_type = "", $timestamp_start = 0, $timestamp_finish = 0, $filters = array(), $pagination = true, $current_page = 1, $results_per_page = 15, $community_id = false) {
+	global $db, $ENTRADA_ACL;
 
+	$filter_clerkship_events = false;
+	if ($_SESSION["details"]["group"] == "student" && $ENTRADA_ACL->amIAllowed("clerkship", "read")) {
+		$query = "	SELECT a.*, c.*
+					FROM `".CLERKSHIP_DATABASE."`.`events` AS a
+					LEFT JOIN `".CLERKSHIP_DATABASE."`.`event_contacts` AS b
+					ON b.`event_id` = a.`event_id`
+					LEFT JOIN `".CLERKSHIP_DATABASE."`.`global_lu_rotations` AS c
+					ON c.`rotation_id` = a.`rotation_id`
+					WHERE (a.`event_status` = 'published' OR a.`event_status` = 'approval')
+					AND b.`econtact_type` = 'student'
+					AND b.`etype_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+					ORDER BY a.`event_start` ASC";
+		$clerkship_events = $db->GetAll($query);
+		if (isset($clerkship_events) && $clerkship_events) {
+			$course_ids_string = "";
+			$course_ids = array();
+			$clerkship_start = $clerkship_events[0]["event_start"];
+			$clerkship_finish = $clerkship_events[0]["event_finish"];
+			$time_periods = array();
+			foreach ($clerkship_events as $clerkship_event) {
+				if ($clerkship_event["event_start"] < $clerkship_start) {
+					$clerkship_start = $clerkship_event["event_start"];
+				}
+				if ($clerkship_event["event_finish"] > $clerkship_finish) {
+					$clerkship_finish = $clerkship_event["event_finish"];
+				}
+				$filter_clerkship_events = true;
+				if ($clerkship_event["course_id"] && $clerkship_event["rotation_id"] < MAX_ROTATION) {
+					if (array_search($clerkship_event["course_id"], $course_ids) === false) {
+						if ($course_ids_string) {
+							$course_ids_string .= ", ".$db->qstr($clerkship_event["course_id"]);
+						} else {
+							$course_ids_string = $db->qstr($clerkship_event["course_id"]);
+						}
+						$course_ids[] = $clerkship_event["course_id"];
+					}
+					if (count($time_periods)) {
+						$time_periods[] = "OR (`courses`.`course_id` = ".$db->qstr($clerkship_event["course_id"])." AND ((`events`.`event_start` >= ".$db->qstr($clerkship_event["event_start"])." AND `events`.`event_start` <= ".$db->qstr($clerkship_event["event_finish"]).") OR (`events`.`event_finish` <= ".$db->qstr($clerkship_event["event_finish"])." AND `events`.`event_finish` >= ".$db->qstr($clerkship_event["event_start"]).") OR (`events`.`event_start` <= ".$db->qstr($clerkship_event["event_start"])." AND `events`.`event_finish` >= ".$db->qstr($clerkship_event["event_start"]).")))";
+					} else {
+						$time_periods[] = "(`courses`.`course_id` = ".$db->qstr($clerkship_event["course_id"])." AND ((`events`.`event_start` >= ".$db->qstr($clerkship_event["event_start"])." AND `events`.`event_start` <= ".$db->qstr($clerkship_event["event_finish"]).") OR (`events`.`event_finish` <= ".$db->qstr($clerkship_event["event_finish"])." AND `events`.`event_finish` >= ".$db->qstr($clerkship_event["event_start"]).") OR (`events`.`event_start` <= ".$db->qstr($clerkship_event["event_start"])." AND `events`.`event_finish` >= ".$db->qstr($clerkship_event["event_start"]).")))";
+					}
+				}
+			}
+			$time_periods[] = "OR (`events`.`event_start` < ".$db->qstr($clerkship_start).")";
+			$time_periods[] = "OR (`events`.`event_finish` > ".$db->qstr($clerkship_finish).")";
+		}
+	}
 	$output = array(
 				"duration_start" => 0,
 				"duration_end" => 0,
@@ -9131,6 +9172,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 							ON `courses`.`course_id` = `events`.`course_id`
 							%OBJECTIVE_JOIN%
 							WHERE `courses`.`course_active` = '1'
+							".($filter_clerkship_events && $course_ids_string ? "AND (`courses`.`course_id` NOT IN (".$course_ids_string.")\n OR (".implode("\n", $time_periods)."))" : "")."
 							AND (`events`.`release_date` <= ".$db->qstr(time())." OR `events`.`release_date` = 0)
 							AND (`events`.`release_until` >= ".$db->qstr(time())." OR `events`.`release_until` = 0)
 							AND `courses`.`organisation_id` = ".$db->qstr($organisation_id);
@@ -9149,6 +9191,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 							ON  `courses`.`course_id` = `events`.`course_id`
 							%OBJECTIVE_JOIN%
 							WHERE `courses`.`course_active` = '1'
+							".($filter_clerkship_events && $course_ids_string ? "AND (`courses`.`course_id` NOT IN (".$course_ids_string.")\n OR (".implode("\n", $time_periods)."))" : "")."
 							AND `courses`.`organisation_id` = ".$db->qstr($organisation_id);
 
 		if ($display_duration) {
@@ -9250,20 +9293,21 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 		if (isset($where_clinical_presentation) && count($where_clinical_presentation)) {
 			$objective_sql = "	LEFT JOIN `event_objectives`
 								ON `event_objectives`.`event_id` = `events`.`event_id`
-								AND `event_objectives`.`objective_type` = 'course'";
+								AND `event_objectives`.`objective_type` = 'event'";
 		}
 
 	 	$query_count = str_replace("%CONTACT_JOIN%", $contact_sql, $query_count);
 		$query_events = str_replace("%CONTACT_JOIN%", $contact_sql, $query_events);
 
 	 	$query_count = str_replace("%OBJECTIVE_JOIN%", $objective_sql, $query_count);
-		$query_events = str_replace("%OBJECTIVE_JOIN%", $objective_sql, $query_events)." GROUP BY `events`.`event_id` ORDER BY %s".($pagination ? " LIMIT %s, %s" : "");
+		$query_events = str_replace("%OBJECTIVE_JOIN%", $objective_sql, $query_events)." GROUP BY `events`.`event_id` ";
 	} else {
 		$query_count = "	SELECT COUNT(DISTINCT `events`.`event_id`) AS `total_rows`
 							FROM `events`
 							LEFT JOIN `courses`
 							ON `events`.`course_id` = `courses`.`course_id`
 							WHERE `courses`.`organisation_id` = ".$db->qstr($organisation_id)."
+							".($filter_clerkship_events && $course_ids_string ? "AND (`courses`.`course_id` NOT IN (".$course_ids_string.")\n OR (".implode("\n", $time_periods)."))" : "")."
 							AND (`events`.`release_date` <= ".$db->qstr(time())." OR `events`.`release_date` = 0)
 							AND (`events`.`release_until` >= ".$db->qstr(time())." OR `events`.`release_until` = 0)
 							".(($display_duration) ? " AND `events`.`event_start` BETWEEN ".$db->qstr($display_duration["start"])." AND ".$db->qstr($display_duration["end"]) : "");
@@ -9278,11 +9322,13 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 							LEFT JOIN `courses`
 							ON  (`courses`.`course_id` = `events`.`course_id`)
 							WHERE`courses`.`course_active` = '1'
+							".($filter_clerkship_events && $course_ids_string ? "AND (`courses`.`course_id` NOT IN (".$course_ids_string.")\n OR (".implode("\n", $time_periods)."))" : "")."
 							AND `courses`.`organisation_id` = ".$db->qstr($organisation_id)."
 							".(($display_duration) ? "AND `events`.`event_start` BETWEEN ".$db->qstr($display_duration["start"])." AND ".$db->qstr($display_duration["end"]) : "")."
-							GROUP BY `events`.`event_id`
-							ORDER BY %s".($pagination ? " LIMIT %s, %s" : "");
+							GROUP BY `events`.`event_id`";
 	}
+
+		$query_events .= "\n ORDER BY %s".($pagination ? " LIMIT %s, %s" : "");
 
 	/**
 	 * Get the total number of results using the generated queries above and calculate the total number
@@ -9338,16 +9384,20 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 	 * Provide the previous query so we can have previous / next event links on the details page.
 	 */
 	if (session_id()) {
+		if ($community_id == false) {
 		$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dashboard"]["previous_query"]["query"] = $query_events;
 		$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dashboard"]["previous_query"]["total_rows"] = $output["total_rows"];
 
 		$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["query"] = $query_events;
 		$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["total_rows"] = $output["total_rows"];
+		} else {
+			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["community_page"][$community_id]["previous_query"]["query"] = $query_events;
+			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["community_page"][$community_id]["previous_query"]["total_rows"] = $output["total_rows"];
+		}
 	}
 
 	$query_events = sprintf($query_events, $sort_by, $limit_parameter, $results_per_page);
 	$learning_events = $db->GetAll($query_events);
-
 	if ($learning_events) {
 		if ($_SESSION["details"]["group"] == "student") {
 			$event_ids = array();
@@ -9847,7 +9897,6 @@ function notify_regional_education($action, $event_id) {
 				WHERE a.`event_id` = ".$db->qstr($event_id);
 	$result	= $db->GetRow($query);
 	if($result) {
-		if (isset($result["manage_apartments"]) && ((int)$result["manage_apartments"]) == 1) {
 			/**
 			 * Don't process this if the event has already ended as there's not need for notifications.
 			 */
@@ -9953,7 +10002,6 @@ function notify_regional_education($action, $event_id) {
 							$message .= "Update By:\t".$_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]." (".$_SESSION["details"]["id"].")\n";
 						break;
 					}
-		
 					$mail = new Zend_Mail();
 					$mail->addHeader("X-Originating-IP", $_SERVER["REMOTE_ADDR"]);
 					$mail->addHeader("X-Section", "Clerkship Notify System",true);
@@ -9972,6 +10020,7 @@ function notify_regional_education($action, $event_id) {
 						$sent = false;
 					}
 					if($sent) {
+					application_log("success", "An event change notification has been sent to regional education to notify them of the changes to the event [".$event_info["event_id"]."] which will affect the apartment schedule.");
 						return true;
 					} else {
 						system_log_data("error", "Unable to send ".$action." notification to regional education. PHPMailer said: ".$mail->ErrorInfo);
@@ -9986,9 +10035,6 @@ function notify_regional_education($action, $event_id) {
 				return true;
 			}
 		} else {
-			return true;
-		}
-	} else {
 		system_log_data("error", "The notify_regional_education() function returned false with no results from the database query. Database said: ".$db->ErrorMsg());
 
 		return false;

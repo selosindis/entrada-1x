@@ -38,7 +38,9 @@ if (isset($_POST["cid"]) && $_SESSION["isAuthorized"]) {
 				$query = "	SELECT * FROM `".CLERKSHIP_DATABASE."`.`categories`
 							WHERE `category_id` = ".$db->qstr($parent_id);
 				$parent_category = $db->GetRow($query);
-				$category_selected_reverse[]	= $parent_category["category_name"];
+				if ($parent_category["category_type"] == 32) {
+					$category_selected_reverse[]	= $parent_category["category_name"];
+				}
 				$parent_id 						= $parent_category["category_parent"];
 			}
 			$category_selected = array_reverse($category_selected_reverse);

@@ -29,7 +29,7 @@ $query 	= "SELECT * FROM `".CLERKSHIP_DATABASE."`.`global_lu_rotations` AS a
 $rotations = $db->GetAll($query);
 if ($rotations) {
 	foreach ($rotations as $rotation) {
-		$query		= "SELECT a.*, b.`etype_id` as `proxy_id`, c.*, CONCAT_WS(' ', e.`firstname`, e.`lastname`) as `fullname`, e.`email`, MIN(a.`event_start`) as `start`, MAX(a.`event_finish`) AS `finish`
+		$query		= "SELECT a.*, b.`etype_id` as `proxy_id`, c.*, CONCAT_WS(' ', e.`firstname`, e.`lastname`) as `fullname`, e.`email`, MIN(a.`event_start`) as `start`, MAX(a.`event_finish`) AS `finish`, g.`clerk_accepted`, g.`administrator_accepted`
 					FROM `".CLERKSHIP_DATABASE."`.`events` AS a
 					JOIN `".CLERKSHIP_DATABASE."`.`event_contacts` AS b
 					ON b.`event_id` = a.`event_id`
@@ -40,6 +40,9 @@ if ($rotations) {
 					JOIN `".AUTH_DATABASE."`.`user_access` AS f
 					ON e.`id` = f.`user_id`
 					AND f.`app_id` = '".AUTH_APP_ID."'
+					LEFT JOIN `".CLERKSHIP_DATABASE."`.`logbook_deficiency_plans` AS g
+					ON b.`etype_id` = g.`proxy_id`
+					AND a.`rotation_id` = g.`rotation_id`
 					WHERE b.`econtact_type` = 'student'
 					AND f.`group` >= 'student'
 					AND f.`role` >= ".$db->qstr(CLERKSHIP_FIRST_CLASS)."
@@ -53,10 +56,10 @@ if ($rotations) {
 			$count = 0;
 			foreach ($results as $clerk) {
 				if (((int)$clerk["proxy_id"]) != 1788 && ((int)$clerk["proxy_id"]) != 1738 && ((int)$clerk["proxy_id"]) != 1760 && ((int)$clerk["proxy_id"]) != 1739 && ((int)$clerk["proxy_id"]) != 1543) { 
-					if ($clerk["rotation_id"] && ($clerk["start"] > strtotime("February 14th, 2010") || ((array_search($clerk["rotation_id"], array("3", "9")) !== false))) && (!array_search(((int)$clerk["proxy_id"]), $excused) || $clerk["rotation_id"] != 3)) {
+					if ($clerk["rotation_id"] && ($clerk["start"] > strtotime("February 14th, 2010") || ((array_search($clerk["rotation_id"], array("3", "9")) !== false))) && (!array_search(((int)$clerk["proxy_id"]), $excused) || $clerk["rotation_id"] != 3) && ($clerk["clerk_accepted"] !== 1 || $clerk["administrator_accepted"] !== 1)) {
 						if ($clerk["start"] < time()) {
-							if (time() >= ($clerk["finish"] + ONE_WEEK)) {
-								clerkship_progress_send_notice(CLERKSHIP_ONE_WEEK_PAST, $rotation, $clerk);
+							if (time() >= ($clerk["finish"] + (ONE_WEEK * 6))) {
+								clerkship_progress_send_notice(CLERKSHIP_SIX_WEEKS_PAST, $rotation, $clerk);
 							} elseif (time() >= $clerk["finish"]) {
 								clerkship_progress_send_notice(CLERKSHIP_ROTATION_ENDED, $rotation, $clerk);
 							} elseif ((time() - $clerk["start"]) >= (($clerk["finish"] - $clerk["start"]) - ONE_WEEK)) {

@@ -157,8 +157,16 @@ if ($RECORD_ID) {
 							exit;
 						}
 					} else {
-						application_log("error", "Unable to locate a current quiz_progress record when attempting to submit a question response to aquiz_id [".$RECORD_ID."] (quiz_id [".$quiz_record["quiz_id"]."] / event_id [".$quiz_record["event_id"]."]).");
-
+						$query	= "	SELECT *
+									FROM `quiz_progress`
+									WHERE `aquiz_id` = ".$db->qstr($RECORD_ID)."
+									AND `proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
+									AND `updated_date` >= ".$db->qstr(strtotime("-30 minutes"))."
+									AND `progress_value` = 'complete'";
+						$progress_record = $db->GetRow($query);
+						if (!$progress_record) {
+							application_log("error", "Unable to locate a current quiz_progress record when attempting to submit a question response to aquiz_id [".$RECORD_ID."] (quiz_id [".$quiz_record["quiz_id"]."] / event_id [".$quiz_record["content_id"]."]).");
+						}
 						/**
 						 * @exception 405: Unable to locate a current progress record.
 						 */

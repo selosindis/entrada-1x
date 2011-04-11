@@ -118,6 +118,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 	
 	$BREADCRUMB[]	= array("url" => ENTRADA_URL."/clerkship/logbook?section=add", "title" => "Clerkship Log deficiency plan");
 
+	$query = 	"SELECT `lentry_id` 
+				FROM `".CLERKSHIP_DATABASE."`.`logbook_entries` 
+				WHERE `proxy_id` = ".$db->qstr($PROXY_ID)." 
+				AND `entry_active` = '1'";
+	$entry_ids = $db->GetAll($query);
+	$entry_ids_string = "";
+	foreach ($entry_ids as $entry_id) {
+		if ($entry_ids_string) {
+			$entry_ids_string .= ", ".$db->qstr($entry_id["lentry_id"]);
+		} else {
+			$entry_ids_string = $db->qstr($entry_id["lentry_id"]);
+		}
+	}
+	
 	echo "<h1>Clerkship Log deficiency plan</h1>\n";
 	if ((isset($ROTATION_ID)) && ($ROTATION_ID)) {
 		$PROCESSED["rotation_id"] = $ROTATION_ID;
@@ -324,12 +338,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 										SELECT `objective_id` 
 										FROM `".CLERKSHIP_DATABASE."`.`logbook_entry_objectives`
 										WHERE `lentry_id` IN 
-										(
-											SELECT `lentry_id` 
-											FROM `".CLERKSHIP_DATABASE."`.`logbook_entries` 
-											WHERE `proxy_id` = ".$db->qstr($PROXY_ID)." 
-											AND `entry_active` = '1'
-										)
+										(".$entry_ids_string.")
 									)
 									AND `objective_id` IN
 									(
@@ -339,7 +348,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 									)
 									AND `objective_parent` = '200'
 									AND `objective_active` = '1'";
-						$objectives = $db->GetAll($query);
+						$objectives = $db->CacheGetAll($query);
 						if ($objectives && count($objectives)) {
 							?>
 							<tr>
@@ -364,12 +373,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 										SELECT `lprocedure_id` 
 										FROM `".CLERKSHIP_DATABASE."`.`logbook_entry_procedures`
 										WHERE `lentry_id` IN 
-										(
-											SELECT `lentry_id` 
-											FROM `".CLERKSHIP_DATABASE."`.`logbook_entries` 
-											WHERE `proxy_id` = ".$db->qstr($PROXY_ID)." 
-											AND `entry_active` = '1'
-										)
+										(".$entry_ids_string.")
 									)
 									AND `lprocedure_id` IN
 									(
@@ -377,7 +381,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 										FROM `".CLERKSHIP_DATABASE."`.`logbook_preferred_procedures`
 										WHERE `rotation_id` = ".$db->qstr($ROTATION_ID)."
 									)";
-						$procedures = $db->GetAll($query);
+						$procedures = $db->CacheGetAll($query);
 						if ($procedures && count($procedures)) {
 						?>
 							<tr>
@@ -397,6 +401,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 								<td colspan="3">&nbsp;</td>
 							</tr>
 						<?php 
+						}
+						if (isset($PROCESSED["administrator_comments"]) && $PROCESSED["administrator_comments"]) {
+						?>
+							<tr>
+								<td></td>
+								<td style="vertical-align: top"><label for="administrator_comments" class="form-required">Administrator comments </label></td>
+								<td>
+									<div id="administrator_comments" name="administrator_comments" style="width: 95%"><?php echo ((isset($PROCESSED["administrator_comments"])) ? html_encode($PROCESSED["administrator_comments"]) : ""); ?></div>
+								</td>
+							</tr>
+							<tr>
+								<td colspan="3">&nbsp;</td>
+							</tr>
+						<?php
 						}
 						if (!isset($PROCESSED["clerk_accepted"]) || !$PROCESSED["clerk_accepted"]) { 
 							?>
@@ -520,12 +538,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 										SELECT `objective_id` 
 										FROM `".CLERKSHIP_DATABASE."`.`logbook_entry_objectives`
 										WHERE `lentry_id` IN 
-										(
-											SELECT `lentry_id` 
-											FROM `".CLERKSHIP_DATABASE."`.`logbook_entries` 
-											WHERE `proxy_id` = ".$db->qstr($PROXY_ID)." 
-											AND `entry_active` = '1'
-										)
+										(".$entry_ids_string.")
 									)
 									AND `objective_id` IN
 									(
@@ -560,12 +573,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 										SELECT `lprocedure_id` 
 										FROM `".CLERKSHIP_DATABASE."`.`logbook_entry_procedures`
 										WHERE `lentry_id` IN 
-										(
-											SELECT `lentry_id` 
-											FROM `".CLERKSHIP_DATABASE."`.`logbook_entries` 
-											WHERE `proxy_id` = ".$db->qstr($PROXY_ID)." 
-											AND `entry_active` = '1'
-										)
+										(".$entry_ids_string.")
 									)
 									AND `lprocedure_id` IN
 									(

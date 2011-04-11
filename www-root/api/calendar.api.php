@@ -24,7 +24,7 @@
  */
 require_once("init.inc.php");
 
-$request = explode("/", ((isset( $_GET["request"])) ? clean_input($_GET["request"], array("url", "nows")) : ""));
+$request = explode("/", ((isset( $_GET["request"])) ? clean_input($_GET["request"], array("url", "lowercase", "nows")) : ""));
 
 $user_proxy_id = 0;
 $user_username = "";

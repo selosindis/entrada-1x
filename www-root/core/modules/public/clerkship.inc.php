@@ -34,7 +34,7 @@ if(!defined("PARENT_INCLUDED")) {
 	header("Location: ".ENTRADA_URL);
 	exit;
 } elseif (!$ENTRADA_ACL->amIAllowed('clerkship', 'read')) {
-	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/".$MODULE."\\'', 15000)";
+	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."\\'', 15000)";
 
 	$ERROR++;
 	$ERRORSTR[]	= "You do not have the permissions required to use this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
@@ -206,80 +206,94 @@ if(!defined("PARENT_INCLUDED")) {
 								LEFT JOIN `".CLERKSHIP_DATABASE."`.`regions` AS c
 								ON c.`region_id` = a.`region_id`
 								WHERE a.`event_finish` >= ".$db->qstr(strtotime("00:00:00", time()))."
-								AND a.`event_type` = 'clinical'
 								AND (a.`event_status` = 'published' OR a.`event_status` = 'approval')
 								AND b.`econtact_type` = 'student'
 								AND b.`etype_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
 								ORDER BY a.`event_start` ASC";
+		
 		$clerkship_schedule	= $db->GetAll($query);
-		$query = "	SELECT `rotation_id` 
-					FROM `".CLERKSHIP_DATABASE."`.`events`
-					WHERE `event_id` = ".$db->qstr($clerkship_schedule[0]["event_id"]);
-		$ROTATION_ID = $db->GetOne($query); 
+		$query						= "	SELECT *
+										FROM `".CLERKSHIP_DATABASE."`.`events` AS a
+										LEFT JOIN `".CLERKSHIP_DATABASE."`.`event_contacts` AS b
+										ON b.`event_id` = a.`event_id`
+										LEFT JOIN `".CLERKSHIP_DATABASE."`.`regions` AS c
+										ON c.`region_id` = a.`region_id`
+										WHERE a.`event_finish` <= ".$db->qstr(strtotime("00:00:00", time()))."
+										AND (a.`event_status` = 'published' OR a.`event_status` = 'approval')
+										AND b.`econtact_type` = 'student'
+										AND b.`etype_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+										ORDER BY a.`event_start` ASC";
+		$clerkship_past_schedule	= $db->GetAll($query);
 		
-		$clinical_rotation	 	= clerkship_get_rotation(($rotation ? $rotation : ($ROTATION_ID ? $ROTATION_ID : 0)));
-		$rotation				= $clinical_rotation["id"];
-		$clinical_encounters	= clerkship_get_rotation_overview($rotation);
+		if ($clerkship_schedule[0]["event_start"] <= time() || isset($clerkship_past_schedule) && $clerkship_past_schedule) {
+			$ROTATION_ID = $clerkship_schedule[0]["rotation_id"]; 
+			$SHOW_LOGBOOK = ((((int)$_SESSION["details"]["role"]) <= date("Y", strtotime("+1 year"))) ? true : false);
 		
-		$objectives_required = 0;
-	    $objectives_recorded = 0;
-	    
-		$query = "	SELECT `objective_id`, MAX(`number_required`) AS `required`
-					FROM `".CLERKSHIP_DATABASE."`.`logbook_mandatory_objectives`
-					WHERE `rotation_id` = ".$db->qstr($ROTATION_ID)."
-					GROUP BY `objective_id`";
-		$required_objectives = $db->GetAll($query);
-		if ($required_objectives) {
-			foreach ($required_objectives as $required_objective) {
-				$objectives_required += $required_objective["required"];
-				$number_required[$required_objective["objective_id"]] = $required_objective["required"];
-				$query = "SELECT COUNT(`objective_id`) AS `recorded`
-						FROM `".CLERKSHIP_DATABASE."`.`logbook_entry_objectives`
-						WHERE `lentry_id` IN
-						(
-							SELECT `lentry_id` FROM `".CLERKSHIP_DATABASE."`.`logbook_entries`
-							WHERE `entry_active` = '1' 
-							AND `proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
-						)
-						AND `objective_id` = ".$db->qstr($required_objective["objective_id"])."
-						GROUP BY `objective_id`";
-				$recorded = $db->GetOne($query);
-				
-				if ($recorded) {
-					if ($required_objective["required"] > $recorded) {
-						if ($objective_ids) {
-							$objective_ids .= ",".$db->qstr($required_objective["objective_id"]);
+			$clinical_rotation	 	= clerkship_get_rotation(($rotation ? $rotation : ($ROTATION_ID ? $ROTATION_ID : 0)));
+			$rotation				= $clinical_rotation["id"];
+			$clinical_encounters	= clerkship_get_rotation_overview($rotation);
+			
+			$objectives_required = 0;
+		    $objectives_recorded = 0;
+		    if ($rotation < 10) {
+				$query = "	SELECT `objective_id`, MAX(`number_required`) AS `required`
+							FROM `".CLERKSHIP_DATABASE."`.`logbook_mandatory_objectives`
+							WHERE `rotation_id` = ".$db->qstr($ROTATION_ID)."
+							GROUP BY `objective_id`";
+				$required_objectives = $db->GetAll($query);
+				if ($required_objectives) {
+					foreach ($required_objectives as $required_objective) {
+						$objectives_required += $required_objective["required"];
+						$number_required[$required_objective["objective_id"]] = $required_objective["required"];
+								$query = "SELECT COUNT(a.`objective_id`) AS `recorded`
+										FROM `".CLERKSHIP_DATABASE."`.`logbook_entry_objectives` AS a
+										JOIN `".CLERKSHIP_DATABASE."`.`logbook_entries` AS b
+										ON a.`lentry_id` = b.`lentry_id`
+										AND b.`entry_active` = '1'
+										AND b.`proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
+										WHERE a.`objective_id` = ".$db->qstr($required_objective["objective_id"])."
+										GROUP BY a.`objective_id`";
+						$recorded = $db->GetOne($query);
+						
+						if ($recorded) {
+							if ($required_objective["required"] > $recorded) {
+								if ($objective_ids) {
+									$objective_ids .= ",".$db->qstr($required_objective["objective_id"]);
+								} else {
+									$objective_ids = $db->qstr($required_objective["objective_id"]);
+								}
+								$number_required[$required_objective["objective_id"]] -= $recorded;
+							}
+							$objectives_recorded += ($recorded <= $required_objective["required"] ? $recorded : $required_objective["required"]);
 						} else {
-							$objective_ids = $db->qstr($required_objective["objective_id"]);
+							if ($objective_ids) {
+								$objective_ids .= ",".$db->qstr($required_objective["objective_id"]);
+							} else {
+								$objective_ids = $db->qstr($required_objective["objective_id"]);
+							}
 						}
-						$number_required[$required_objective["objective_id"]] -= $recorded;
-					}
-					$objectives_recorded += ($recorded <= $required_objective["required"] ? $recorded : $required_objective["required"]);
-				} else {
-					if ($objective_ids) {
-						$objective_ids .= ",".$db->qstr($required_objective["objective_id"]);
-					} else {
-						$objective_ids = $db->qstr($required_objective["objective_id"]);
 					}
 				}
+		    }
+			$remaining_weeks	 	= clerkship_get_rotation_schedule($rotation);
+			$sidebar_html  			= "<center><a href=\"".ENTRADA_URL."/clerkship/logbook?section=select\"><strong>$clinical_rotation[title]</strong></a></center><br>";
+			$sidebar_html 			.= "<ul class=\"menu\">\n";
+			$sidebar_html 			.= "	<li class=\"incorrect\"><a href=\"".ENTRADA_URL."/clerkship/logbook?section=view&type=missing&core=$rotation\"><strong>".($objectives_required-$objectives_recorded)."</strong>  CPs Not Seen</a></li>\n";
+			$sidebar_html 			.= "	<li class=\"checkmark\"><a href=\"".ENTRADA_URL."/clerkship/logbook?section=view&type=mandatories&core=$rotation\"><strong>".($objectives_recorded)."</strong>  CPs Seen</a></li>\n";
+			$sidebar_html 			.= "	<li><a href=\"".ENTRADA_URL."/clerkship/logbook?section=view&type=procedures&core=$rotation\"><strong>".$clinical_encounters["procedures"]."</strong> Procedures</a></li>\n";
+			$sidebar_html 			.= "</ul>\n";
+			$sidebar_html .= "	<a href=\"".ENTRADA_URL."/clerkship/logbook?section=add&event=".$clerkship_schedule[0]["event_id"]."\">Log encounter</a>\n";
+			if((int)$clinical_encounters["entries"] > 0) {
+				$sidebar_html .= "	<br/><br/><a href=\"".ENTRADA_URL."/clerkship/logbook?sb=rotation&rotation=".$rotation."\">View ".($clinical_encounters["entries"]==1?"entry":"entries - $clinical_encounters[entries]")."</a>\n";
 			}
-		}
-		$remaining_weeks	 	= clerkship_get_rotation_schedule($rotation);
-		$sidebar_html  			= "<center><a href=\"".ENTRADA_URL."/clerkship/logbook?section=select\"><strong>$clinical_rotation[title]</strong></a></center><br>";
-		$sidebar_html 			.= "<ul class=\"menu\">\n";
-		$sidebar_html 			.= "	<li class=\"incorrect\"><a href=\"".ENTRADA_URL."/clerkship/logbook?section=view&type=missing&core=$rotation\"><strong>".($objectives_required-$objectives_recorded)."</strong>  CPs Not Seen</a></li>\n";
-		$sidebar_html 			.= "	<li class=\"checkmark\"><a href=\"".ENTRADA_URL."/clerkship/logbook?section=view&type=mandatories&core=$rotation\"><strong>".($objectives_recorded)."</strong>  CPs Seen</a></li>\n";
-		$sidebar_html 			.= "	<li><a href=\"".ENTRADA_URL."/clerkship/logbook?section=view&type=procedures&core=$rotation\"><strong>".$clinical_encounters["procedures"]."</strong> Procedures</a></li>\n";
-		$sidebar_html 			.= "</ul>\n";
-		$sidebar_html .= "	<a href=\"".ENTRADA_URL."/clerkship/logbook?section=add&event=".$clerkship_schedule[0]["event_id"]."\">Log encounter</a>\n";
-		if((int)$clinical_encounters["entries"] > 0) {
-		    $sidebar_html .= "	<br/><br/><a href=\"".ENTRADA_URL."/clerkship/logbook?sb=rotation&rotation=".$rotation."\">View ".($clinical_encounters["entries"]==1?"entry":"entries - ".$clinical_encounters["entries"])."</a>\n";
-		}
-		if ($rotation) {
-			$sidebar_html .= "<div style=\"margin-top: 10px\">\n";
-			$sidebar_html .= "	You have ".$remaining_weeks["yet"]." weeks remaining in this ".$remaining_weeks["total"]." week clerkship.<br /> To change rotations, <a href=\"".ENTRADA_URL."/clerkship/logbook?section=select\">click here</a>.";
-			$sidebar_html .= "</div>\n";
-			new_sidebar_item("Logbook Entries", $sidebar_html, "page-clerkship", "open");
+			if ($rotation) {
+				$sidebar_html .= "<div style=\"margin-top: 10px\">\n";
+				$sidebar_html .= "	You have ".$remaining_weeks["yet"]." weeks remaining in this ".$remaining_weeks["total"]." week clerkship.<br /> To change rotations, <a href=\"".ENTRADA_URL."/clerkship/logbook?section=select\">click here</a>.";
+				$sidebar_html .= "</div>\n";
+				if ($SHOW_LOGBOOK) {
+					new_sidebar_item("Logbook Entries", $sidebar_html, "page-clerkship", "open");
+				}
+			}
 		}
 	}
 

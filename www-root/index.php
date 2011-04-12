@@ -278,14 +278,6 @@ if ($ACTION == "login") {
 			
 			if(!isset($result["email_updated"]) || $result["email_updated"] == "" || (($result["email_updated"] - mktime()) / 86400 >= 365)) {
 				$_SESSION["details"]["email_updated"] = false;
-				
-				/**
-				 * Include required js files and css files for use with jquery and flexigrid.
-				 */
-				/*$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery.min.js\"></script>\n";
-				$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery-ui.min.js\"></script>\n";
-				$JQUERY[] = "<link href=\"".ENTRADA_URL."/css/jquery/jquery-ui.css\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />\n";
-				$JQUERY[] = "<script type=\"text/javascript\">jQuery.noConflict();</script>";*/
 			} else {
 				$_SESSION["details"]["email_updated"] = true;
 			}

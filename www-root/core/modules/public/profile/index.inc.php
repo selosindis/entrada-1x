@@ -145,6 +145,7 @@ if (!defined("IN_PROFILE")) {
 				<tfoot>
 					<tr>
 						<td colspan="2" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
+							<input type="submit" class="button" value="Update Profile" />
 						</td>
 					</tr>
 				</tfoot>
@@ -212,8 +213,10 @@ if (!defined("IN_PROFILE")) {
 						<td colspan="2">&nbsp;</td>
 					</tr>
 					<tr>
-						<td><strong>Primary E-Mail:</strong></td>
-						<td><a href="mailto:<?php echo html_encode($result["email"]); ?>"><?php echo html_encode($result["email"]); ?></a></td>
+						<td><label for="email" class="form-required"><strong>Primary E-Mail:</strong></label></td>
+						<td>	
+							<input type="text" id="email" name="email" value="<?php echo html_encode($result["email"]); ?>" style="width: 250px; vertical-align: middle" maxlength="128" />
+						</td>
 					</tr>
 					<tr>
 						<td><label for="email_alt"><strong>Secondary E-Mail:</strong></label></td>
@@ -277,7 +280,7 @@ if (!defined("IN_PROFILE")) {
 					</tr>
 
 					<tr>
-						<td><label for="country_id" class="form-required">Country</label></td>
+						<td><label for="country_id" class="form-required"><strong>Country</strong></label></td>
 						<td>
 							<?php
 							$countries = fetch_countries();
@@ -299,7 +302,7 @@ if (!defined("IN_PROFILE")) {
 						</td>
 					</tr>
 					<tr>
-						<td><label id="prov_state_label" for="prov_state_div" class="form-nrequired">Province / State</label></td>
+						<td><label id="prov_state_label" for="prov_state_div" class="form-nrequired"><strong>Province / State</strong></label></td>
 						<td>
 							<div id="prov_state_div">Please select a <strong>Country</strong> from above first.</div>
 						</td>

@@ -116,28 +116,27 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 		$query = "SELECT *
 				  FROM  `mtd_schedule`
 				  WHERE `resident_id` = " . $db->qstr($resident["id"]);
-
 		$results = $db->GetAll($query);
+		if ($results) {
+			foreach ($results as $result) {
+				$temp_start_date = new DateTime($result["start_date"]);
+				$temp_end_date = new DateTime($result["end_date"]);
 
-		foreach ($results as $result) {
-			$temp_start_date = new DateTime($result["start_date"]);
-			$temp_end_date = new DateTime($result["end_date"]);
+				if ($start_date_time >= $temp_start_date && $start_date_time <= $temp_end_date) {
+					$query = "SELECT service_description
+							  FROM  `mtd_moh_service_codes`
+							  WHERE `id` = " . $db->qstr($result["service_id"]);
 
-			if ($start_date_time >= $temp_start_date && $start_date_time <= $temp_end_date) {
-				$query = "SELECT service_description
-				  FROM  `mtd_moh_service_codes`
-				  WHERE `id` = " . $db->qstr($result["service_id"]);
-
-			    $service_program = $db->GetOne($query);
-				$ERROR++;
-				$ERRORSTR[] = "The selected start date overlapps with an existing entry for the " . $service_program . " program.";
-			}
-			if ($end_date_time >= $temp_start_date && $end_date_time <= $temp_end_date) {
-				$ERROR++;
-				$ERRORSTR[] = "The selected end date overlapps with an existing entry for the " . $service_program . " program.";
+				    $service_program = $db->GetOne($query);
+					$ERROR++;
+					$ERRORSTR[] = "The selected start date overlapps with an existing entry for the " . $service_program . " program.";
+				}
+				if ($end_date_time >= $temp_start_date && $end_date_time <= $temp_end_date) {
+					$ERROR++;
+					$ERRORSTR[] = "The selected end date overlapps with an existing entry for the " . $service_program . " program.";
+				}
 			}
 		}
-
 	}
 
 	if (!$ERROR) {
@@ -185,7 +184,6 @@ function validate_start_end_dates($start_date, $end_date) {
 	if ($start_date > $end_date) {
 		return false;
 	}
+	
 	return true;
 }
-
-?>

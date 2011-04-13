@@ -125,9 +125,23 @@ switch ($ACTION) {
 						$resident["category_id"] = $result["id"];
 					}
 
-					if ($db->AutoExecute(DATABASE_NAME . ".mtd_residents", $resident, "INSERT")) {
+					$query = "SELECT a.`id` FROM `" . AUTH_DATABASE . "`.`user_data` a, `" . AUTH_DATABASE . "`.`user_access` b
+						      WHERE a.`number` = " . $db->qstr($resident["student_no"]) .
+							" AND b.`app_id` = 1
+							  AND b.`group` = 'resident'
+							  AND a.id = b.user_id";
+					
+					$result = $db->GetRow($query);
 
+					if ($result) {
+						$resident["proxy_id"] = $result["id"];
+						if ($db->AutoExecute(AUTH_DATABASE . ".user_data_resident", $resident, "INSERT")) {
+
+						}
 					}
+					else {
+						echo "\nResident not found: " . $resident["student_no"];						
+					}					
 				}
 			}
 			fclose($handle);

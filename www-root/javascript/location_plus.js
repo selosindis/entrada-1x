@@ -5,10 +5,14 @@ function cleanupList() {
 	ol = $('duration_container');
 	if(ol.immediateDescendants().length > 0) {
 		ol.show();
-		$('duration_notice').hide();
+		if ($('duration_notice')) {
+			$('duration_notice').hide();
+		}
 	} else {
 		ol.hide();
-		$('duration_notice').show();
+		if ($('duration_notice')) {
+			$('duration_notice').show();
+		}
 	}
 	var some_too_low = false;
 	total = $$('input.duration_segment').inject(0, function(acc, e) {

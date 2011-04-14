@@ -30,7 +30,7 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 	$first_name = trim($full_name[1]);
 
 	$query = "SELECT *
-				  FROM  `mtd_residents`
+				  FROM `" . AUTH_DATABASE . "`.`user_data_resident`
 				  WHERE `last_name` = " . $db->qstr($last_name) . "
 				  AND `first_name` = " . $db->qstr($first_name);
 
@@ -38,7 +38,7 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 
 	if (!$ERROR) {
 		if ($resident) {
-			$PROCESSED["resident_id"] = $resident["id"];
+			$PROCESSED["resident_id"] = $resident["proxy_id"];
 		} else {
 			$ERROR++;
 			$ERRORSTR[] = "Resident not found.";
@@ -105,6 +105,12 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 		$ERRORSTR[] = "Start date cannot be after the end date.";
 	}
 
+	$PROCESSED["type_code"] = clean_input($_POST["type_code"], array("notags", "trim"));
+	if (!$PROCESSED["type_code"]) {
+		$ERROR++;
+		$ERRORSTR[] = "Type is required.";
+	}
+
 	$PROCESSED["service_id"] = validate_integer_field($_POST["service_id"]);
 	if (!$PROCESSED["service_id"]) {
 		$ERROR++;
@@ -115,7 +121,7 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 		//Validate that there is no overlapp of dates for this resident
 		$query = "SELECT *
 				  FROM  `mtd_schedule`
-				  WHERE `resident_id` = " . $db->qstr($resident["id"]);
+				  WHERE `resident_id` = " . $db->qstr($resident["proxy_id"]);
 
 		$results = $db->GetAll($query);
 

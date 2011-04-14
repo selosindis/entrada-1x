@@ -41,8 +41,8 @@ if ((!defined("COMMUNITY_INCLUDED")) || !defined("IN_MTDTRACKING")) {
 	}
 
 	if ($resident_name) {
-		$query = "	SELECT a.`id`, CONCAT_WS(', ', a.`last_name`, a.`first_name`) AS `resident_name`, b.program_description
-					FROM `" . DATABASE_NAME . "`.`mtd_residents` a,
+		$query = "	SELECT a.`proxy_id`, CONCAT_WS(', ', a.`last_name`, a.`first_name`) AS `resident_name`, b.program_description
+					FROM `" . AUTH_DATABASE . "`.`user_data_resident` a,
 						 `" . DATABASE_NAME . "`.`mtd_moh_program_codes` b
 				    WHERE CONCAT_WS(', ', a.`last_name`, a.`first_name`) LIKE " . $db->qstr("%" . $resident_name . "%") . "
 						  AND b.id = a.program_id
@@ -51,7 +51,7 @@ if ((!defined("COMMUNITY_INCLUDED")) || !defined("IN_MTDTRACKING")) {
 		$results = $db->GetAll($query);
 		if ($results) {
 			foreach ($results as $result) {
-				echo "\t<li id=\"" . (int) $result["id"] . "\">" . html_encode($result["resident_name"]) . "<span class=\"informal content-small\"><br />" . html_encode($result["program_description"]) . "</span></li>\n";
+				echo "\t<li id=\"" . (int) $result["proxy_id"] . "\">" . html_encode($result["resident_name"]) . "<span class=\"informal content-small\"><br />" . html_encode($result["program_description"]) . "</span></li>\n";
 			}
 		} else {
 			echo "\t<li id=\"0\"><span class=\"informal\">&quot;<strong>" . html_encode($resident_name) . "&quot;</strong> was not found</span></li>";

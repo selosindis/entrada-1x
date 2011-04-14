@@ -34,7 +34,7 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 
 //Get the MOH Service Name for this Queen's Program
 	$query = "SELECT *
-		  FROM  `pgme_moh_programs`
+		  FROM  `mtd_pgme_moh_programs`
 		  WHERE `pgme_program_name` like " . $db->qstr(trim($community_title) . "%");
 
 	$result = $db->GetRow($query);
@@ -53,6 +53,10 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 		$mtd_service_id = $result["id"];
 		$mtd_service_code = $result["service_code"];
 		$mtd_service_description = $result["service_description"];
+	}
+	else {
+		$ERROR++;
+		$ERRORSTR[] = "Could not determine the service code.";
 	}
 
 	$query = "SELECT *
@@ -85,15 +89,18 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 
 	$mtd_categories = $db->GetAll($query);
 
-	$query = "SELECT `mtd_schedule`.`id`, `mtd_facilities`.`facility_name`, `mtd_residents`.`first_name`,
-				 `mtd_residents`.`last_name`, `mtd_schedule`.`start_date`, `mtd_schedule`.`end_date`, `mtd_schedule`.`percent_time`
-		  FROM  `mtd_schedule`, `mtd_facilities`, `mtd_moh_program_codes`,
-				`mtd_schools`, `mtd_residents`
+	$query = "SELECT `mtd_schedule`.`id`, `mtd_facilities`.`facility_name`, `user_data_resident`.`first_name`,
+				 `user_data_resident`.`last_name`, `mtd_schedule`.`start_date`, `mtd_schedule`.`end_date`, `mtd_schedule`.`percent_time`
+		  FROM  `" . DATABASE_NAME . "`.`mtd_schedule`,
+				`" . DATABASE_NAME . "`.`mtd_facilities`,
+				`" . DATABASE_NAME . "`.`mtd_moh_program_codes`,
+				`" . DATABASE_NAME . "`.`mtd_schools`,
+				`" . AUTH_DATABASE . "`.`user_data_resident`
 	      WHERE `mtd_schedule`.`location_id` = `mtd_facilities`.`id`
 		  AND `mtd_schedule`.`program_id` = `mtd_moh_program_codes`.`id`
 		  AND `mtd_schedule`.`service_id` = '" . $mtd_service_id . "'
 		  AND `mtd_schedule`.`school_id` = `mtd_schools`.`id`
-		  AND `mtd_schedule`.`resident_id` = `mtd_residents`.`id`
+		  AND `mtd_schedule`.`resident_id` = `user_data_resident`.`proxy_id`
 		  ORDER BY `mtd_schedule`.`id` DESC";
 
 	$mtd_schedule = $db->GetAll($query);
@@ -141,7 +148,9 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 				]
 			}
 		);
+			
 
+			
 			jQuery("#add_MTD_form").submit(function(e) {
 				//Cancel the default submit behaviour
 				e.preventDefault();
@@ -149,6 +158,7 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 				var resident_name = form.find( 'input[name="resident_name"]' ).val();
 				var start_date = form.find( 'input[name="start_date"]' ).val();
 				var end_date = form.find( 'input[name="end_date"]' ).val();
+				var type_code = form.find( 'input[name="type_code"]:checked' ).val();
 				var mtdlocation = form.find( 'select[name="mtdlocation"]' ).val();
 				var service_id =  form.find( 'input[name="service_id"]' ).val();
 				var program_id =  form.find( 'select[name="program_id"]' ).val();
@@ -160,12 +170,13 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 				// Send the data using post and put the results in a div
 				jQuery.post( url, { resident_name: resident_name, start_date: start_date, end_date: end_date, mtdlocation: mtdlocation,
 					service_id: service_id, program_id: program_id, school_id: school_id, mtdlocation_duration_order: mtdlocation_duration_order,
-					duration_segment: duration_segment} ,
+					duration_segment: duration_segment, type_code: type_code} ,
 				function( data ) {
 					var content = jQuery( data ).find( '#responseMsg' );
 					jQuery( "#submitResponse" ).html( content );
 					var options = {};
-					jQuery("#submitResponse").delay(5000).hide("blind", options, 1000);
+					jQuery("#submitResponse").show("fade", options, 1000);
+					jQuery("#submitResponse").delay(5000).hide("fade", options, 1000);
 				});
 				window.setTimeout('schedule.flexReload()', 1000);
 			});
@@ -214,16 +225,10 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 		function deleteRecord(com,grid) {
 			if (com=='Delete Selected') {
 				jQuery(function() {
-					var error = "false";
 					if(jQuery('.trSelected',grid).length>0) {
 						// a workaround for a flaw in the demo system (http://dev.jqueryui.com/ticket/4375), ignore!
 						jQuery("#delete-confirm").dialog("destroy");
-						jQuery('.trSelected', grid).each(function() {
 
-						});
-
-						if(error == "false") {
-							// allow deletion
 							jQuery("#delete-confirm").dialog({
 								resizable: false,
 								height:180,
@@ -255,16 +260,24 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 									}
 								}
 							});
-						} else {
-							jQueryError.dialog('open');
-						}
 					} else {
-						jQuerydialog.dialog('open');
+						jQueryDialog.dialog('open');
 					}
 				});
 			}
 		}
 
+		jQueryDialog = jQuery('<div></div>')
+			.html('<span class="ui-icon ui-icon-circle-check" style="float:left; margin:0 7px 50px 0;"></span>You must select at least one record in order to delete.')
+			.dialog({
+				autoOpen: false,
+				title: 'Please Select a Record',
+				buttons: {
+					Ok: function() {
+						jQuery(this).dialog('close');
+					}
+				}
+			});
 
 		function getResident(id) {
 			var url = jQuery("#find_resident_url").val();
@@ -285,17 +298,16 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 		}
 
 		function clearForm() {
-			jQuery("#school_id").val(null);
+			//Clear the resident profile section
 			jQuery("#school_description").html("");
-			jQuery("#program_id").val(null);
-			jQuery("#category_id").val(null);
-			jQuery("#full_name").html("");
-			jQuery("#resident_name").val(null);
 			jQuery("#program_description").html("");
 			jQuery("#category_description").html("");
-			jQuery("#start_date").val(null);
-			jQuery("#end_date").val(null);
-			jQuery("#student_no").val(null);
+			jQuery("#full_name").html("");
+			//Clear the form fields
+			jQuery("#resident_name").val("");
+			jQuery("#start_date").val("");
+			jQuery("#end_date").val("");
+			jQuery('input[name="type_code"]').attr('checked', false);
 			//remove the locations
 			jQuery('.location_duration').remove();
 		}
@@ -327,7 +339,7 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 	</style>
 
 	<!-- will be replaced with result of ajax post -->
-	<div id="submitResponse"></div>
+	<div id="submitResponse" style="display:none"></div>
 	<div id="delete-confirm" style="display:none"><p><span class="ui-icon ui-icon-alert" style="float:left; margin:0 7px 20px 0;"></span>All selected rows will be deleted. Are you sure?</p></div>
 
 	<div id ="MTD_form_container" class="mtd-form">
@@ -343,6 +355,8 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 			<input id="start_date" name="start_date" type="text" /></p>
 		<p><label for="end_date">End Date:</label><br />
 			<input id="end_date" name="end_date" type="text" /></p>
+		<p><label for="type_code">Type:</label><br />
+			<input name="type_code" type="radio" value="I"/>in-patient/emergency&nbsp;<input name="type_code" type="radio" value="O"/>out-patient</p>
 		<p><label for="location">Location:</label><br />
 			<select id="mtdlocation" name="mtdlocation">
 				<option value="">Choose a Location</option>

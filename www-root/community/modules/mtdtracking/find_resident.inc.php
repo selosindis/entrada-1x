@@ -30,8 +30,8 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 	if ($PROCESSED["resident_id"]) {
 		//Add this MTD to the schedule.
 		$query = $queryResident = "SELECT *
-		  FROM `mtd_residents`
-	      WHERE `mtd_residents`.`id` = " . $PROCESSED["resident_id"];
+		  FROM `" . AUTH_DATABASE . "`.`user_data_resident`
+	      WHERE `user_data_resident`.`proxy_id` = " . $PROCESSED["resident_id"];
 
 		$resident = $db->GetRow($query);
 		if ($resident) {

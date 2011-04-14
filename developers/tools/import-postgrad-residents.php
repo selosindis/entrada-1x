@@ -16,20 +16,19 @@
  * You should have received a copy of the GNU General Public License
  * along with Entrada.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Guest User Import Utilitiy
+ * Import of resident data.
  *
- * This is a script that you can use to import guest users into a specific community.
- * It also gives them the correct permissions in the entrada_auth.user_access table.
+ * This is a script that imports resident data into the Medtech Auth database
+ * into the user_data_resident table.  It first checks to see if the resident
+ * already has an entry in the user_data table and is allowed to access
+ * Medtech Central and is a member of the resident group.
  *
  * Instructions:
  * 0. Backup the databases *always* before importing new users.
  *
- * 1. Run "./import-community-guests.php -validate path/to/file.csv" to import all of
- *    the data in the rows of your CSV file.
- *
  * @author Unit: Medical Education Technology Unit
- * @author Developer: Matt Simpson <matt.simpson@queensu.ca>
- * @copyright Copyright 2010 Queen's University. All Rights Reserved.
+ * @author Developer: Don Zuiker <don.zuiker@queensu.ca>
+ * @copyright Copyright 2011 Queen's University. All Rights Reserved.
  *
  */
 set_include_path(get_include_path() . PATH_SEPARATOR . dirname(__FILE__) . "/includes");

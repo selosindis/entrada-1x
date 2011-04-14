@@ -308,6 +308,7 @@ CREATE TABLE IF NOT EXISTS `user_data` (
   `lastname` varchar(35) NOT NULL DEFAULT '',
   `email` varchar(255) NOT NULL DEFAULT '',
   `email_alt` varchar(255) NOT NULL DEFAULT '',
+  `email_updated` bigint(64) DEFAULT NULL,
   `google_id` varchar(128) DEFAULT NULL,
   `telephone` varchar(25) NOT NULL DEFAULT '',
   `fax` varchar(25) NOT NULL DEFAULT '',

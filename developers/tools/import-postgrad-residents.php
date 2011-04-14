@@ -140,7 +140,7 @@ switch ($ACTION) {
 						}
 					}
 					else {
-						echo "\nResident not found: " . $resident["student_no"];						
+						echo "\nResident not found. Student No.: " . $resident["student_no"];
 					}					
 				}
 			}

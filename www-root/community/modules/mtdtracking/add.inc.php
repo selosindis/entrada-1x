@@ -42,8 +42,6 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 		$location_ids = explode(",", trim($_POST["mtdlocation_duration_order"]));
 		$mtdlocation_durations = ((isset($_POST["duration_segment"]) && is_array($_POST["duration_segment"])) ? $_POST["duration_segment"] : array());
 
-Zend_Debug::dump($mtdlocation_durations);
-
 		if ((is_array($location_ids)) && (count($location_ids))) {
 			$count = 0;
 			$total_time = 0;
@@ -65,12 +63,9 @@ Zend_Debug::dump($mtdlocation_durations);
 				}
 			}
 			
-Zend_Debug::dump($total_time);
-exit;
-			
-			if ($total_time > 100) {
+			if ($total_time > 100 || $total_time == 0) {
 				$ERROR++;
-				$ERRORSTR[] = "The total time spent cannot be greater than 100%.";
+				$ERRORSTR[] = "The total time spent cannot be greater than 100% or equal to 0%.";
 			}
 		}
 	} else {

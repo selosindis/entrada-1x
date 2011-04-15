@@ -126,24 +126,10 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 				//Cancel the default submit behaviour
 				e.preventDefault();
 				var form = jQuery(this);
-				var resident_name = form.find( 'input[name="resident_name"]' ).val();
-				var start_date = form.find( 'input[name="start_date"]' ).val();
-				var end_date = form.find( 'input[name="end_date"]' ).val();
-				var type_code = form.find( 'input[name="type_code"]:checked' ).val();
-				var mtdlocation = form.find( 'select[name="mtdlocation"]' ).val();
-				var service_id =  form.find( 'input[name="service_id"]' ).val();
-				var program_id =  form.find( 'select[name="program_id"]' ).val();
-				var school_id =  form.find( 'select[name="school_id"]' ).val();
-				var mtdlocation_duration_order =  form.find( 'input[name="mtdlocation_duration_order"]' ).val();
-				var duration_segment =  form.find( 'input[name="duration_segment[]"]' ).val();
-
-console.log(form.find( 'input[name="duration_segment[]"]' ));				
 
 				var url = form.attr( 'action' );
 				// Send the data using post and put the results in a div
-				jQuery.post( url, { resident_name: resident_name, start_date: start_date, end_date: end_date, mtdlocation: mtdlocation,
-					service_id: service_id, program_id: program_id, school_id: school_id, mtdlocation_duration_order: mtdlocation_duration_order,
-					duration_segment: duration_segment, type_code: type_code} ,
+				jQuery.post( url, form.serialize() ,
 				function( data ) {
 					var content = jQuery( data ).find( '#responseMsg' );
 					jQuery("#submitResponse").html( content );

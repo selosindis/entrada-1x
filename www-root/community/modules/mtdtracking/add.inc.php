@@ -6,13 +6,6 @@
  * @author Don Zuiker <don.zuiker@queensu.ca>
  */
 
-@set_include_path(implode(PATH_SEPARATOR, array(
-					dirname(__FILE__) . "/../../../core/includes",
-					get_include_path(),
-				)));
-
-require_once("functions.inc.php");
-
 if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 	header("Location: " . COMMUNITY_URL);
 	exit;
@@ -47,13 +40,15 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 
 	if (isset($_POST["mtdlocation_duration_order"])) {
 		$location_ids = explode(",", trim($_POST["mtdlocation_duration_order"]));
-		$mtdlocation_durations = $_POST["duration_segment"];
+		$mtdlocation_durations = ((isset($_POST["duration_segment"]) && is_array($_POST["duration_segment"])) ? $_POST["duration_segment"] : array());
+
+Zend_Debug::dump($mtdlocation_durations);
 
 		if ((is_array($location_ids)) && (count($location_ids))) {
 			$count = 0;
 			$total_time = 0;
 			foreach ($location_ids as $order => $mtdlocation_id) {
-				if (($mtdlocation_id = clean_input($mtdlocation_id, array("trim", "int"))) && ($duration = clean_input($mtdlocation_durations, array("trim")))) {
+				if (($mtdlocation_id = clean_input($mtdlocation_id, array("trim", "int"))) && ($duration = clean_input($mtdlocation_durations[$order], array("trim")))) {
 					$query = "SELECT `facility_name` FROM `mtd_facilities` WHERE `id` = " . $db->qstr($mtdlocation_id);
 					$result = $db->GetRow($query);
 					if ($result) {
@@ -69,6 +64,10 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 					$ERRORSTR[] = "One of the <strong>locations</strong> you specified is invalid.";
 				}
 			}
+			
+Zend_Debug::dump($total_time);
+exit;
+			
 			if ($total_time > 100) {
 				$ERROR++;
 				$ERRORSTR[] = "The total time spent cannot be greater than 100%.";

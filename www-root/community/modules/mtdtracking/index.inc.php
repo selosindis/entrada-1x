@@ -137,6 +137,8 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 				var mtdlocation_duration_order =  form.find( 'input[name="mtdlocation_duration_order"]' ).val();
 				var duration_segment =  form.find( 'input[name="duration_segment[]"]' ).val();
 
+console.log(form.find( 'input[name="duration_segment[]"]' ));				
+
 				var url = form.attr( 'action' );
 				// Send the data using post and put the results in a div
 				jQuery.post( url, { resident_name: resident_name, start_date: start_date, end_date: end_date, mtdlocation: mtdlocation,
@@ -354,7 +356,7 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 			</p>
 			<ol id="duration_container" class="sortableList" style="display: none"></ol>
 			<div id="total_duration" class="content-small" style="margin-bottom: 10px">Total percent time: 0 %.</div>
-			<input id="mtdlocation_duration_order" name="mtdlocation_duration_order" style="display: none;">
+			<input type="hidden" id="mtdlocation_duration_order" name="mtdlocation_duration_order" value="" />
 
 			<?php echo "<label>Service Code: </label>" . $mtd_service_code . " (" . $mtd_service_description . ")"; ?>
 			<input type="hidden" id ="service_id" name="service_id" value="<?php echo $mtd_service_id ?>" />

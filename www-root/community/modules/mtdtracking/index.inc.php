@@ -141,11 +141,11 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 			});
 
 			jQuery.datepicker.setDefaults({
-				showOn: 'focus',	
-				buttonImageOnly: false,	
-				buttonImage: 'calendar.gif',	
+				showOn: 'button',
+				buttonImageOnly: true,
+				buttonImage: "<?php echo ENTRADA_URL . '/images/jquery-calendar.gif'; ?>",
 				buttonText: 'Calendar',	
-				dateFormat: 'yy-mm-dd',	
+				dateFormat: 'yy-mm-dd',
 				numberOfMonths: 2,	
 				showButtonPanel: true,	
 				closeOnSelect:false	
@@ -320,7 +320,7 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 			</p>
 			<p>
 				<label>Type:</label><br />
-				<input id="type_code_i" name="type_code" type="radio" value="I"/> <label for="type_code_i" style="font-weight: normal">in-patient/emergency</label>&nbsp;<input id="type_code_o" name="type_code" type="radio" value="O"/> <label for="type_code_o" style="font-weight: normal">out-patient</label>
+				<input id="type_code_i" name="type_code" type="radio" value="I" CHECKED/> <label for="type_code_i" style="font-weight: normal">in-patient/emergency</label>&nbsp;<input id="type_code_o" name="type_code" type="radio" value="O"/> <label for="type_code_o" style="font-weight: normal">out-patient</label>
 			</p>
 			<p>
 				<label for="mtdlocation">Location:</label><br />

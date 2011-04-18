@@ -60,6 +60,13 @@ if (!defined("IN_MTDTRACKING")) {
 		$limit = '10';
 	}
 
+	$query = "SELECT COUNT(*) AS total
+				FROM `mtd_schedule` a
+				WHERE a.`service_id` = " . $PROCESSED["service_id"];
+
+	$result = $db->GetRow($query);
+	$total = $result["total"];
+
 	if (isset($_POST["page"]) && $_POST["page"] != '') {
 		$page = $_POST['page'];
 		if ($page == 1) {
@@ -101,7 +108,6 @@ if (!defined("IN_MTDTRACKING")) {
 	header("Content-type: text/json");
 
 	if ($results) {
-		$total = count($results);
 		$data['page'] = $page;
 		$data['total'] = $total;
 		foreach ($results as $row) {

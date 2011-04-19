@@ -6374,7 +6374,7 @@ function plotkit_statistics_lables($labels = array()) {
 
 	if(is_array($labels)) {
 		foreach ($labels as $key => $label) {
-			$output[] = "{label: '".$label."', v: ".(int) $key."}";
+			$output[] = "{label: '".$label."', v: ".$key."}";
 		}
 	}
 
@@ -6392,7 +6392,7 @@ function plotkit_statistics_values($values = array()) {
 
 	if(is_array($values)) {
 		foreach ($values as $key => $value) {
-			$output[] = "[".(int) $key.", ".(int) $value."]";
+			$output[] = "[".(int) $key.", ".$value."]";
 		}
 	}
 

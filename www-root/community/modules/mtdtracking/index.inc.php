@@ -265,7 +265,7 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 			jQuery("#resident_name").val("");
 			jQuery("#start_date").val("");
 			jQuery("#end_date").val("");
-			jQuery('input[name="type_code"]').attr('checked', false);
+			jQuery('#type_code_i').attr('checked', true);
 			//remove the locations
 			jQuery('.location_duration').remove();
 		}

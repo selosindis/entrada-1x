@@ -279,7 +279,7 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 			border:1px black solid;
 			margin:15px 0;
 			padding:5px;
-			width: 70%;
+			width: 60%;
 			float: left;
 		}
 		.mtd-resident-profile{
@@ -287,7 +287,7 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 			border:1px black solid;
 			margin:15px 0;
 			padding:5px;
-			width: 25%;
+			width: 35%;
 			float: right;
 		}
 		#resident_not_found {
@@ -296,8 +296,6 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 
 	</style>
 
-	<!-- will be replaced with result of ajax post -->
-	<div id="submitResponse" style="display:none"></div>
 	<div id="delete-confirm" style="display:none"><p><span class="ui-icon ui-icon-alert" style="float:left; margin:0 7px 20px 0;"></span>All selected rows will be deleted. Are you sure?</p></div>
 
 	<div id ="MTD_form_container" class="mtd-form">
@@ -311,15 +309,13 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 
 			<input id="find_resident_url" type="hidden" value="<?php echo COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL; ?>?section=find_resident" />
 			<p>
-				<label for="start_date">Start Date:</label><br />
-				<input id="start_date" name="start_date" type="text" />
+				<label for="start_date">Start Date:</label>	<input id="start_date" name="start_date" type="text" />
+				<br />
+				<br />
+				<label for="end_date">End Date:</label>	<input id="end_date" name="end_date" type="text" />
 			</p>
 			<p>
-				<label for="end_date">End Date:</label><br />
-				<input id="end_date" name="end_date" type="text" />
-			</p>
-			<p>
-				<label>Type:</label><br />
+				<label>Type:</label>&nbsp;
 				<input id="type_code_i" name="type_code" type="radio" value="I" CHECKED/> <label for="type_code_i" style="font-weight: normal">in-patient/emergency</label>&nbsp;<input id="type_code_o" name="type_code" type="radio" value="O"/> <label for="type_code_o" style="font-weight: normal">out-patient</label>
 			</p>
 			<p>
@@ -372,6 +368,8 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 			</tbody>
 		</table>
 	</div>
+
+	<div id="submitResponse" style="display:none; float:right; width:35%"></div>
 	
 	<br class="clearboth">
 	

@@ -135,7 +135,10 @@ switch ($ACTION) {
 					if ($result) {
 						$resident["proxy_id"] = $result["id"];
 						if ($db->AutoExecute(AUTH_DATABASE . ".user_data_resident", $resident, "INSERT")) {
-
+							output_success("ROW: " .$row_count . " - Insert of resident proxy_id[" . $resident["proxy_id"] .  "] succeeded");
+						}
+						else {
+							output_error("ROW: " .$row_count . " - Insert of resident proxy_id[" . $resident["proxy_id"] .  "] failed.  DB said: " . $db->ErrorMsg());
 						}
 					}
 					else {

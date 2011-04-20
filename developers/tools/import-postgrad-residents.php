@@ -144,6 +144,7 @@ switch ($ACTION) {
 				}
 			}
 			fclose($handle);
+			echo "Finished import\n";
 		} else {
 			output_error("Unable to open the provided CSV file [" . $CSV_FILE . "].");
 		}

@@ -3364,6 +3364,7 @@ CREATE TABLE IF NOT EXISTS `settings` (
 INSERT INTO `settings` (`shortname`, `value`) VALUES
 ('version_db', '1200'),
 ('version_entrada', '1.2.0');
+
 CREATE TABLE `small_groups` (
   `sgroup_id` int(11) NOT NULL AUTO_INCREMENT,
   `sgcategory_id` int(11) NOT NULL,

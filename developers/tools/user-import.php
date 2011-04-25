@@ -52,6 +52,13 @@ if ((!isset($_SERVER["argv"])) || (@count($_SERVER["argv"]) < 1)) {
 	exit;
 }
 
+$ERROR = 0;
+$ERRORSTR = array();
+$NOTICE = 0;
+$NOTICESTR = array();
+$SUCCESS = 0;
+$SUCCESSSTR = array();
+
 require_once("classes/adodb/adodb.inc.php");
 require_once("config.inc.php");
 require_once("dbconnection.inc.php");
@@ -62,7 +69,7 @@ ini_set("sendmail_from", $AGENT_CONTACTS["administrator"]["email"]);
 $ACTION = ((isset($_SERVER["argv"][1])) ? trim($_SERVER["argv"][1]) : "-usage");
 $CSV_FILE = (((isset($_SERVER["argv"][2])) && (trim($_SERVER["argv"][2]) != "")) ? trim($_SERVER["argv"][2]) : false);
 
-$SKIP_EMAIL_NOTIFICATION	= false;
+$SKIP_EMAIL_NOTIFICATION	= true;
 $SEND_ADMIN_NOTIFICATION	= false;
 
 switch($ACTION) {

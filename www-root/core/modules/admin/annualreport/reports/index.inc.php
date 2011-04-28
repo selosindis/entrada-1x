@@ -105,6 +105,14 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			A report containing invited lectures listed and counted for a department.
 		</li>
 	</ol>
+	<h2 style="color: #669900">Combined Departmental Reports</h2>
+	<ol class="system-reports">
+		<li>
+			<a href="<?php echo ENTRADA_URL; ?>/admin/annualreport/reports?section=opth-report">Publiatons, Posters, Awards and Grants</a><br />
+			A report containing all peer and non peer-reviewed publications, poster presentations / invited lectures, awards and research grants for a department.
+		</li>
+		
+	</ol>
 	<?php
 }
 ?>

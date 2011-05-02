@@ -5,37 +5,26 @@
  *
  * @author Don Zuiker <don.zuiker@queensu.ca>
  */
-
 if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 	header("Location: " . COMMUNITY_URL);
 	exit;
 } else {
 	$PROCESSED["creator_id"] = $_SESSION["details"]["id"];
 
-	$PROCESSED["resident_name"] = clean_input($_POST["resident_name"], array("notags", "trim"));
-	if (!$PROCESSED["resident_name"]) {
-		$ERROR++;
-		$ERRORSTR[] = "Invalid resident name entered.";
-	}
+	$PROCESSED["resident_proxy_id"] = clean_input($_POST["resident_proxy_id"], array("notags", "trim", "int"));
 
-	$full_name = explode(",", $PROCESSED["resident_name"]);
-	$last_name = trim($full_name[0]);
-	$first_name = trim($full_name[1]);
-
+	//double check that the resident exists
 	$query = "SELECT *
 				  FROM `" . AUTH_DATABASE . "`.`user_data_resident`
-				  WHERE `last_name` = " . $db->qstr($last_name) . "
-				  AND `first_name` = " . $db->qstr($first_name);
+				  WHERE `proxy_id` = " . $PROCESSED["resident_proxy_id"];
 
 	$resident = $db->GetRow($query);
 
-	if (!$ERROR) {
-		if ($resident) {
-			$PROCESSED["resident_id"] = $resident["proxy_id"];
-		} else {
-			$ERROR++;
-			$ERRORSTR[] = "Resident not found.";
-		}
+	if ($resident) {
+		$PROCESSED["resident_id"] = $resident["proxy_id"];
+	} else {
+		$ERROR++;
+		$ERRORSTR[] = "Resident not found.";
 	}
 
 	if (isset($_POST["mtdlocation_duration_order"])) {
@@ -59,13 +48,17 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 					}
 				} else {
 					$ERROR++;
-					$ERRORSTR[] = "One of the <strong>locations</strong> you specified is invalid.";
+					$ERRORSTR[] = "Both a location and a duration of greater than 0 must be specified for every location entry.";
 				}
 			}
-			
-			if ($total_time > 100 || $total_time == 0) {
+
+			if ($total_time > 100) {
 				$ERROR++;
-				$ERRORSTR[] = "The total time spent cannot be greater than 100% or equal to 0%.";
+				$ERRORSTR[] = "The total time spent cannot be greater than 100%.";
+			}
+			else if ($total_time == 0) {
+				$ERROR++;
+				$ERRORSTR[] = "The total time spent cannot be 0%.";
 			}
 		}
 	} else {
@@ -128,7 +121,7 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 							  FROM  `mtd_moh_service_codes`
 							  WHERE `id` = " . $db->qstr($result["service_id"]);
 
-				    $service_program = $db->GetOne($query);
+					$service_program = $db->GetOne($query);
 					$ERROR++;
 					$ERRORSTR[] = "The selected start date overlapps with an existing entry for the " . $service_program . " program.";
 				}
@@ -185,6 +178,6 @@ function validate_start_end_dates($start_date, $end_date) {
 	if ($start_date > $end_date) {
 		return false;
 	}
-	
+
 	return true;
 }

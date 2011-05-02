@@ -238,6 +238,7 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 			});
 
 		function getResident(id) {
+			jQuery("#resident_proxy_id").val(id);
 			var url = jQuery("#find_resident_url").val();
 			// Send the data using post and put the results in a div
 			jQuery.get( url, {resident_id: id},
@@ -302,6 +303,7 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 		<form id="add_MTD_form" action="<?php echo COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL; ?>?section=add" method="post">
 			<label for="resident_name">Resident Name:</label><br />
 			<input id="resident_name" name="resident_name" type="text" class="required" size="50"/><em>*</em>
+			<input id="resident_proxy_id" name="resident_proxy_id" type="hidden" />
 			<div class="autocomplete" id="resident_name_auto_complete"></div>
 			<script type="text/javascript">
 				new Ajax.Autocompleter('resident_name', 'resident_name_auto_complete', '<?php echo COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL; ?>?section=api-resident-search', {frequency: 0.2, minChars: 2, afterUpdateElement: function (text, li) {getResident(li.id);}});

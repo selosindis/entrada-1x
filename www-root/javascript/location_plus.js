@@ -67,14 +67,22 @@ Event.observe(window, 'load', function() {
 		option = select.options[select.selectedIndex];
 		li = new Element('li', {id: 'mtdlocation_'+option.value, 'class': 'location_duration'});
 		li.insert(option.text+"");
+                Prototype.Browser.IE7 = Prototype.Browser.IE && parseInt(navigator.userAgent.substring(navigator.userAgent.indexOf("MSIE")+5)) == 7;
+                Prototype.Browser.IE8 = Prototype.Browser.IE && parseInt(navigator.userAgent.substring(navigator.userAgent.indexOf("MSIE")+5)) == 8;
+                if (!Prototype.Browser.IE7  && !Prototype.Browser.IE8) {
+                    li.insert(new Element('a', {href: '#', onclick: '$(this).up().remove(); cleanupList(); return false;', 'class': 'remove'}).insert(new Element('img', {src: DELETE_IMAGE_URL})));
+                }
 		span = new Element('span', {'class': 'duration_segment_container', 'style': 'margin-left:5px;'});
 		span.insert('Time:');
 		name = 'duration_segment[]';
 		span.insert(new Element('input', {'style': 'width:25px;', 'class': 'duration_segment', name: 'duration_segment[]', onchange: 'cleanupList();', 'value': percent_val}));
 		span.insert(' %&nbsp&nbsp');
-                span.insert(new Element('a', {href: '#', onclick: '$(parentNode).up().remove(); cleanupList(); return false;', 'class': 'remove'}).insert(new Element('img', {src: DELETE_IMAGE_URL})));
+                
 		li.insert(span);
 
+                if (Prototype.Browser.IE7  || Prototype.Browser.IE8) {
+                    li.insert(new Element('a', {href: '#', onclick: '$(this).up().remove(); cleanupList(); return false;', 'class': 'remove'}).insert(new Element('img', {src: DELETE_IMAGE_URL})));
+                }
                 $('duration_container').insert(li);
 		cleanupList();
 		select.selectedIndex = 0;

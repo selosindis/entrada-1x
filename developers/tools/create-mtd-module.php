@@ -1,4 +1,4 @@
-#!/usr/local/zend/bin/php
+#!/export/home/ccs/qlib/apps/php/bin/php
 <?php
 /**
  * Entrada Tools [ http://www.entrada-project.org ]
@@ -59,7 +59,8 @@ $site_names = array("Otolaryngology",
 	"Thoracic Surgery",
 	"Neurosurgery",
 	"Plastic Surgery",
-	"Vascular Surgery");
+	"Vascular Surgery",
+	"Geriatrics");
 
 $site_name_prefix = "pgme";
 

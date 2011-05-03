@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU General Public License
  * along with Entrada.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Run this script to copy a community (specified by community id) to a new
- * community.
+ * Run this script to create the MTD Tracking page on each of the specified
+ * Communities in the site_names array.
  *
  * @author Unit: Medical Education Technology Unit
  * @author Developer: Don Zuiker <don.zuiker@queensu.ca>
@@ -53,54 +53,13 @@ $ERROR = false;
 
 output_notice("This script is used to add the Medical Training Days application as a page in each Postgrad Community.");
 
-/*
- * Programs that do not need an instance of the MTD Tracking application:
- *
- * "Surgical Foundations" (will be tracked under General or Orthopedic Surgery)
- * "Accreditation Standards" Not a Program that is tracked at MOH.
- * 
- * All of these are simply Family Medicine:
- *
- * "Anesthesia - Family Medicine",
- * "Care of the Elderly - Family Medicine",
- * "Developmental Disabilities - Family Medicine",
- * "Emergency Medicine - Family Medicine",
- * "Palliative Care - Family Medicine",
- * "Rural Skills - Family Medicine",
- * "Women's Health - Family Medicine"
- * 
- * 
- */
-
-$site_names = array(
-	"Aboriginal Health - Family Medicine",
-	"Anatomic Pathology",
-	"Anesthesiology",
-	"Cardiology",
-	"Critical Care Medicine",	
-	"Diagnostic Radiology",
-	"Emergency Medicine",
-	"Family Medicine",
-	"Gastroenterology",
-	"General Surgery",
-	"Hematology",
-	"Internal Medicine",
-	"Medical Oncology",
-	"Nephrology",
-	"Neurology",
-	"Obstetrics and Gynecology",
-	"Ophthalmology",
-	"Orthopedic Surgery",
-	"Palliative Care Medicine",
-	"Pediatrics",
-	"Physical Medicine and Rehabilitation",
-	"Psychiatry",
-	"Public Health",
-	"Radiation Oncology",
-	"Respirology",
-	"Rheumatology",
-	"Urology",
-	);
+$site_names = array("Otolaryngology",
+	"Endocrinology",
+	"Cardiac Surgery",
+	"Thoracic Surgery",
+	"Neurosurgery",
+	"Plastic Surgery",
+	"Vascular Surgery");
 
 $site_name_prefix = "pgme";
 
@@ -124,12 +83,13 @@ foreach ($site_names as $s_name) {
 	if (!$result) {
 		output_error("Could not find the community URL: " . $community_url);
 	} else {
+		output_notice("Creating page...");
 		//MTD Module = 8
 		communities_module_activate_and_page_create($result["community_id"], 8);
 
 		set_module_page_permissions($db, $result["community_id"], 8, 0, 0, 0);
 
-		output_notice("\n\nThe MTD Page has been added to " . $s_name . ".");
+		output_notice("The MTD Page has been added to " . $s_name . ".");
 	}
 }
 

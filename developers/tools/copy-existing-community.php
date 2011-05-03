@@ -88,43 +88,14 @@ while (!$community) {
 	$community = $db->GetRow("SELECT * FROM `communities` WHERE `community_id` = " . $db->qstr($COMMUNITY_ID));
 }
 
-//Rheumatology removed from list since it has already been created.
-
-$site_names = array("Aboriginal Health - Family Medicine",
-"Anatomic Pathology",
-"Anesthesia - Family Medicine",
-"Anesthesiology",
-"Cardiology",
-"Care of the Elderly - Family Medicine",
-"Public Health and Preventative Medicine",
-"Critical Care Medicine",
-"Developmental Disabilities - Family Medicine",
-"Diagnostic Radiology",
-"Emergency Medicine",
-"Emergency Medicine - Family Medicine",
-"Family Medicine",
-"Gastroenterology",
-"General Surgery",
-"Hematology",
-"Internal Medicine",
-"Medical Oncology",
-"Nephrology",
-"Neurology",
-"Obstetrics and Gynecology",
-"Ophthalmology",
-"Orthopedic Surgery",
-"Palliative Care - Family Medicine",
-"Palliative Care Medicine",
-"Pediatrics",
-"Physical Medicine and Rehabilitation",
-"Psychiatry",
-"Radiation Oncology",
-"Respirology",
-"Rural Skills - Family Medicine",
-"Surgical Foundations",
-"Urology",
-"Women's Health - Family Medicine",
-"Accreditation Standards");
+//Create sites for non-programs
+$site_names = array("Otolaryngology",
+	"Endocrinology",
+	"Cardiac Surgery",
+	"Thoracic Surgery",
+	"Neurosurgery",
+	"Plastic Surgery",
+	"Vascular Surgery");
 
 $site_name_prefix = "pgme";
 $template = $community["community_template"];

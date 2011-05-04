@@ -166,6 +166,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 					$divisions[] = $division_id["department_id"];
 				}
 				$divisions = implode(",", $divisions);
+				$divisions.=",".$PROCESSED["department_id"];
 				$multipleDivisions = true;
 			}
 			$divisionJoint = 0;

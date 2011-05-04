@@ -1,4 +1,4 @@
-#!/export/home/ccs/qlib/apps/php/bin/php
+#!/usr/local/zend/bin/php
 <?php
 /**
  * Entrada Tools [ http://www.entrada-project.org ]
@@ -78,11 +78,11 @@ foreach ($site_names as $s_name) {
 
 	//Get the community id
 	$query = "SELECT *
-			  FROM communities
-			  WHERE community_url like " . $db->qstr($community_url . "%");
+			  FROM " . DATABASE_NAME . ".`communities`
+			  WHERE community_url = " . $db->qstr($community_url);
 	$result = $db->GetRow($query);
 	if (!$result) {
-		output_error("Could not find the community URL: " . $community_url);
+		output_error("Could not find the community URL: " . $community_url . " " . $query);
 	} else {
 		output_notice("Creating page...");
 		//MTD Module = 8
@@ -95,14 +95,14 @@ foreach ($site_names as $s_name) {
 }
 
 function set_module_page_permissions($db, $community_id, $module_id, $allow_member_view, $allow_public_view, $allow_troll_view) {
-	$query = "SELECT * FROM `communities_modules` WHERE `module_id` = " . $db->qstr($module_id) . " AND `module_active` = '1'";
+	$query = "SELECT * FROM " . DATABASE_NAME . ".`communities_modules` WHERE `module_id` = " . $db->qstr($module_id) . " AND `module_active` = '1'";
 	$module_info = $db->GetRow($query);
 	$module_shortname = "";
 
 	if ($module_info) {
 		$module_shortname = $module_info["module_shortname"];
 
-		if ($db->AutoExecute("community_pages",
+		if ($db->AutoExecute("" . DATABASE_NAME . ".`community_pages`",
 						array("allow_member_view" => 0, "allow_public_view" => 0, "allow_troll_view" => 0,
 							"updated_date" => time(), "updated_by" => 5440), "UPDATE",
 						"`community_id` = " . $db->qstr($community_id) . " AND page_type = " . $db->qstr($module_shortname))) {

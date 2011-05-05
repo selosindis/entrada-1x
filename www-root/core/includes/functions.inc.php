@@ -10583,10 +10583,15 @@ function getUndergraduateSupervisionCourses() {
 function getDefaultEnrollment() {
     global $db;
 
-    $query = "SELECT `eventtype_id`, `eventtype_title`, `eventtype_default_enrollment`
-	FROM `events_lu_eventtypes`
-	WHERE `eventtype_default_enrollment` IS NOT NULL
-	ORDER BY `eventtype_default_enrollment` DESC";
+    $query = "	SELECT `t`.`eventtype_id`,`t`. `eventtype_title`,`t`. `eventtype_default_enrollment` 
+				FROM `events_lu_eventtypes` AS `t`
+				LEFT JOIN  `eventtype_organisation` AS `e_o`
+				ON `t`.`eventtype_id` = `e_o`.`eventtype_id` 
+				LEFT JOIN  `entrada_auth`.`organisations` AS `o` 
+				ON `o`.`organisation_id` = `e_o`.`organisation_id` 
+				WHERE `t`.`eventtype_default_enrollment` IS NOT NULL 
+				AND `o`.`organisation_id` = ".$db->qstr($_SESSION["details"]["organisation_id"])." 
+				ORDER BY `t`.`eventtype_default_enrollment` DESC";
     
     $results = $db->GetAll($query);
     
@@ -10640,7 +10645,14 @@ function display_default_enrollment($reportMode = false) {
 
 	$output_html = "";
 	
-	$query = "SELECT `eventtype_title`, `eventtype_default_enrollment` FROM `events_lu_eventtypes` WHERE `eventtype_active` = '1' ORDER BY `eventtype_default_enrollment`";	
+	$query = "	SELECT `eventtype_title`, `eventtype_default_enrollment` FROM `events_lu_eventtypes` AS `e` 
+				LEFT JOIN `eventtype_organisation` AS `e_o` 
+				ON `e`.`eventtype_id` = `e_o`.`eventtype_id` 
+				LEFT JOIN `entrada_auth`.`organisations` as `o` 
+				ON `o`.`organisation_id` = `e_o`. `organisation_id` 
+				WHERE `e`.`eventtype_active` = '1'  
+				AND `o`.`organisation_id` = ".$db->qstr($_SESSION["details"]["organisation_id"])." 
+				ORDER BY `e`.`eventtype_default_enrollment`";	
 	
 	if($results = $db->GetAll($query)) {
 		$previous = "";

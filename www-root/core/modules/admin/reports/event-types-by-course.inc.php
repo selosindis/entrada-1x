@@ -239,7 +239,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 			$organisation_where = "";
 		}
 		
-		$query = "SELECT * FROM `events_lu_eventtypes` ORDER BY `eventtype_order` ASC";
+		$query = "	SELECT a.* FROM `entrada`.`events_lu_eventtypes` AS a 
+					LEFT JOIN `entrada`.`eventtype_organisation` AS c 
+					ON a.eventtype_id = c.eventtype_id 
+					LEFT JOIN `entrada_auth`.`organisations` AS b
+					ON b.organisation_id = c.organisation_id 
+					WHERE b.organisation_id = ".$db->qstr($_SESSION["details"]["organisation_id"])."
+					AND a.eventtype_active = '1' 
+					ORDER BY a.eventtype_order
+			";
 		$event_types = $db->GetAll($query);
 		if ($event_types) {
 			foreach ($event_types as $event_type) {

@@ -353,7 +353,6 @@ if (!defined("IN_MANAGE")) {
 				echo display_error();
 			}
 			?>
-			<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
 			<script type="text/javascript">
 				var googleMap = null;
 				var updater = null;

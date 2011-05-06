@@ -23,26 +23,25 @@
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
  */
-
 if (!defined("IN_MANAGE")) {
 	exit;
 } elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
-	header("Location: ".ENTRADA_URL);
+	header("Location: " . ENTRADA_URL);
 	exit;
 } elseif (!$ENTRADA_ACL->amIAllowed("regionaled", "update", false)) {
 	$ERROR++;
-	$ERRORSTR[]	= "Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
+	$ERRORSTR[] = "Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:" . html_encode($AGENT_CONTACTS["administrator"]["email"]) . "\">" . html_encode($AGENT_CONTACTS["administrator"]["name"]) . "</a> for assistance.";
 
 	echo display_error();
 
-	application_log("error", "Group [".$GROUP."] and role [".$ROLE."] does not have access to this module [".$MODULE."]");
+	application_log("error", "Group [" . $GROUP . "] and role [" . $ROLE . "] does not have access to this module [" . $MODULE . "]");
 } else {
-	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/regionaled/apartments/manage?id=".$APARTMENT_ID, "title" => "Edit Apartment");
-	
+	$BREADCRUMB[] = array("url" => ENTRADA_URL . "/admin/regionaled/apartments/manage?id=" . $APARTMENT_ID, "title" => "Edit Apartment");
+
 	switch ($STEP) {
 		case 2 :
 			if ((isset($_POST["countries_id"])) && ($tmp_input = clean_input($_POST["countries_id"], "int"))) {
-				$query = "SELECT * FROM `global_lu_countries` WHERE `countries_id` = ".$db->qstr($tmp_input);
+				$query = "SELECT * FROM `global_lu_countries` WHERE `countries_id` = " . $db->qstr($tmp_input);
 				$result = $db->GetRow($query);
 				if ($result) {
 					$PROCESSED["countries_id"] = $tmp_input;
@@ -52,7 +51,7 @@ if (!defined("IN_MANAGE")) {
 						$PROCESSED["apartment_province"] = "";
 
 						if (ctype_digit($tmp_input) && ($tmp_input = (int) $tmp_input)) {
-							$query = "SELECT * FROM `global_lu_provinces` WHERE `province_id` = ".$db->qstr($tmp_input)." AND `country_id` = ".$db->qstr($PROCESSED["countries_id"]);
+							$query = "SELECT * FROM `global_lu_provinces` WHERE `province_id` = " . $db->qstr($tmp_input) . " AND `country_id` = " . $db->qstr($PROCESSED["countries_id"]);
 							$result = $db->GetRow($query);
 							if ($result) {
 								$PROCESSED["province_id"] = $tmp_input;
@@ -68,12 +67,12 @@ if (!defined("IN_MANAGE")) {
 							$PROCESSED["city"] = $tmp_input;
 
 							$query = "	SELECT *
-										FROM `".CLERKSHIP_DATABASE."`.`regions`
-										WHERE UPPER(`region_name`) = ".$db->qstr(strtoupper($PROCESSED["city"])).
-										((int) $PROCESSED["province_id"] ? " AND `province_id` = ".$db->qstr($PROCESSED["province_id"]) : ($PROCESSED["apartment_province"] ? " AND `prov_state` = ".$db->qstr($PROCESSED["apartment_province"]) : ""))."
-										AND `countries_id` = ".$db->qstr($PROCESSED["countries_id"])."
+										FROM `" . CLERKSHIP_DATABASE . "`.`regions`
+										WHERE UPPER(`region_name`) = " . $db->qstr(strtoupper($PROCESSED["city"])) .
+									((int) $PROCESSED["province_id"] ? " AND `province_id` = " . $db->qstr($PROCESSED["province_id"]) : ($PROCESSED["apartment_province"] ? " AND `prov_state` = " . $db->qstr($PROCESSED["apartment_province"]) : "")) . "
+										AND `countries_id` = " . $db->qstr($PROCESSED["countries_id"]) . "
 										AND `region_active` = '1'";
-							$result	= $db->GetRow($query);
+							$result = $db->GetRow($query);
 							if ($result) {
 								if ($result["manage_apartments"] != 1) {
 
@@ -82,8 +81,8 @@ if (!defined("IN_MANAGE")) {
 									$region["updated_date"] = time();
 									$region["updated_by"] = $PROXY_ID;
 
-									if (!$db->AutoExecute(CLERKSHIP_DATABASE.".regions", $region, "UPDATE", "region_id = ".$db->qstr($result["region_id"]))) {
-										application_log("error", "Unable to update region_id [".$result["region_id"]."] and set manage_apartments to 1. Database said: ".$db->ErrorMsg());
+									if (!$db->AutoExecute(CLERKSHIP_DATABASE . ".regions", $region, "UPDATE", "region_id = " . $db->qstr($result["region_id"]))) {
+										application_log("error", "Unable to update region_id [" . $result["region_id"] . "] and set manage_apartments to 1. Database said: " . $db->ErrorMsg());
 									}
 								}
 
@@ -100,13 +99,13 @@ if (!defined("IN_MANAGE")) {
 								$region["updated_date"] = time();
 								$region["updated_by"] = $PROXY_ID;
 
-								if (($db->AutoExecute(CLERKSHIP_DATABASE.".regions", $region, "INSERT")) && ($region_id = (int) $db->Insert_Id())) {
+								if (($db->AutoExecute(CLERKSHIP_DATABASE . ".regions", $region, "INSERT")) && ($region_id = (int) $db->Insert_Id())) {
 									$PROCESSED["region_id"] = $region_id;
 								} else {
 									$ERROR++;
 									$ERRORSTR[] = "Unable to create a new city / region at this time. Please try again later.";
 
-									application_log("error", "Unable to create a new region when adding an apartment. Database said: ".$db->ErrorMsg());
+									application_log("error", "Unable to create a new region when adding an apartment. Database said: " . $db->ErrorMsg());
 								}
 							}
 						} else {
@@ -118,18 +117,18 @@ if (!defined("IN_MANAGE")) {
 					$ERROR++;
 					$ERRORSTR[] = "The selected country does not exist in our countries database. Please select a valid country.";
 
-					application_log("error", "Unknown countries_id [".$tmp_input."] was selected. Database said: ".$db->ErrorMsg());
+					application_log("error", "Unknown countries_id [" . $tmp_input . "] was selected. Database said: " . $db->ErrorMsg());
 				}
 			} else {
 				$ERROR++;
-				$ERRORSTR[]	= "You must select the country that this apartment is in.";
+				$ERRORSTR[] = "You must select the country that this apartment is in.";
 			}
 
 			if (isset($_POST["apartment_title"]) && ($tmp_input = clean_input($_POST["apartment_title"], array("trim", "notags")))) {
 				$PROCESSED["apartment_title"] = $tmp_input;
 			} else {
 				$ERROR++;
-				$ERRORSTR[]	= "You must provide a title of this apartment. It can simply be the address or a custom title.";
+				$ERRORSTR[] = "You must provide a title of this apartment. It can simply be the address or a custom title.";
 			}
 
 			if (isset($_POST["apartment_number"]) && ($tmp_input = clean_input($_POST["apartment_number"], array("trim", "notags")))) {
@@ -142,14 +141,14 @@ if (!defined("IN_MANAGE")) {
 				$PROCESSED["apartment_address"] = $tmp_input;
 			} else {
 				$ERROR++;
-				$ERRORSTR[]	= "You must provide the physical address of this apartment.";
+				$ERRORSTR[] = "You must provide the physical address of this apartment.";
 			}
 
 			if (isset($_POST["apartment_postcode"]) && ($tmp_input = clean_input($_POST["apartment_postcode"], array("trim", "notags")))) {
 				$PROCESSED["apartment_postcode"] = $tmp_input;
 			} else {
 				$ERROR++;
-				$ERRORSTR[]	= "You must provide the postal / zip code of this apartment.";
+				$ERRORSTR[] = "You must provide the postal / zip code of this apartment.";
 			}
 
 			if (isset($_POST["apartment_phone"]) && ($tmp_input = clean_input($_POST["apartment_phone"], array("trim", "notags")))) {
@@ -173,7 +172,7 @@ if (!defined("IN_MANAGE")) {
 				$PROCESSED["max_occupants"] = $tmp_input;
 			} else {
 				$ERROR++;
-				$ERRORSTR[]	= "Please select the maximum number of occupants in your apartment.";
+				$ERRORSTR[] = "Please select the maximum number of occupants in your apartment.";
 			}
 
 			if (isset($_POST["apartment_latitude"]) && ($tmp_input = clean_input($_POST["apartment_latitude"], array("trim", "notags")))) {
@@ -198,28 +197,64 @@ if (!defined("IN_MANAGE")) {
 				$PROCESSED["super_firstname"] = $tmp_input;
 			} else {
 				$ERROR++;
-				$ERRORSTR[]	= "You must provide the firstname of the apartment's superintendent.";
+				$ERRORSTR[] = "You must provide the firstname of the apartment's superintendent.";
 			}
 
 			if (isset($_POST["super_lastname"]) && ($tmp_input = clean_input($_POST["super_lastname"], array("trim", "notags")))) {
 				$PROCESSED["super_lastname"] = $tmp_input;
 			} else {
 				$ERROR++;
-				$ERRORSTR[]	= "You must provide the lastname of the apartment's superintendent.";
+				$ERRORSTR[] = "You must provide the lastname of the apartment's superintendent.";
 			}
 
 			if (isset($_POST["super_phone"]) && ($tmp_input = clean_input($_POST["super_phone"], array("trim", "notags")))) {
 				$PROCESSED["super_phone"] = $tmp_input;
 			} else {
 				$ERROR++;
-				$ERRORSTR[]	= "You must provide the telephone number of the apartment's superintendent.";
+				$ERRORSTR[] = "You must provide the telephone number of the apartment's superintendent.";
 			}
 
 			if (isset($_POST["super_email"]) && ($tmp_input = clean_input($_POST["super_email"], array("trim", "notags"))) && valid_address($tmp_input)) {
 				$PROCESSED["super_email"] = $tmp_input;
 			} else {
 				$ERROR++;
-				$ERRORSTR[]	= "You must provide a valid e-mail address for the apartment's superintendent.";
+				$ERRORSTR[] = "You must provide a valid e-mail address for the apartment's superintendent.";
+			}
+
+
+			if (isset($_POST['keys_from_super']) && $_POST['keys_from_super'] == true) {
+				$PROCESSED['keys_firstname'] = $PROCESSED['super_firstname'];
+				$PROCESSED['keys_lastname'] = $PROCESSED['super_lastname'];
+				$PROCESSED['keys_phone'] = $PROCESSED['super_phone'];
+				$PROCESSED['keys_email'] = $PROCESSED['super_email'];
+			} else {
+				if (isset($_POST["keys_firstname"]) && ($tmp_input = clean_input($_POST["keys_firstname"], array("trim", "notags")))) {
+					$PROCESSED["keys_firstname"] = $tmp_input;
+				} else {
+					$ERROR++;
+					$ERRORSTR[] = "You must provide the firstname of the key contact.";
+				}
+
+				if (isset($_POST["keys_lastname"]) && ($tmp_input = clean_input($_POST["keys_lastname"], array("trim", "notags")))) {
+					$PROCESSED["keys_lastname"] = $tmp_input;
+				} else {
+					$ERROR++;
+					$ERRORSTR[] = "You must provide the lastname of the key contact.";
+				}
+
+				if (isset($_POST["keys_phone"]) && ($tmp_input = clean_input($_POST["keys_phone"], array("trim", "notags")))) {
+					$PROCESSED["keys_phone"] = $tmp_input;
+				} else {
+					$ERROR++;
+					$ERRORSTR[] = "You must provide the telephone number of the key contact.";
+				}
+
+				if (isset($_POST["keys_email"]) && ($tmp_input = clean_input($_POST["keys_email"], array("trim", "notags"))) && valid_address($tmp_input)) {
+					$PROCESSED["keys_email"] = $tmp_input;
+				} else {
+					$ERROR++;
+					$ERRORSTR[] = "You must provide a valid e-mail address for the key contact.";
+				}
 			}
 
 			/**
@@ -243,33 +278,41 @@ if (!defined("IN_MANAGE")) {
 				$PROCESSED["updated_last"] = time();
 				$PROCESSED["updated_by"] = $_SESSION["details"]["id"];
 
-				if ($db->AutoExecute(CLERKSHIP_DATABASE.".apartments", $PROCESSED, "UPDATE", "apartment_id = ".$db->qstr($APARTMENT_ID))) {
+				if ($db->AutoExecute(CLERKSHIP_DATABASE . ".apartments", $PROCESSED, "UPDATE", "apartment_id = " . $db->qstr($APARTMENT_ID))) {
 					$SUCCESS++;
-					$SUCCESSSTR[] = "You have successfully updated <strong>".html_encode($PROCESSED["apartment_title"])."</strong>.<br /><br />You will now be redirected to the apartment index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/regionaled/apartments/manage?id=".$APARTMENT_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
+					$SUCCESSSTR[] = "You have successfully updated <strong>" . html_encode($PROCESSED["apartment_title"]) . "</strong>.<br /><br />You will now be redirected to the apartment index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"" . ENTRADA_URL . "/admin/regionaled/apartments/manage?id=" . $APARTMENT_ID . "\" style=\"font-weight: bold\">click here</a> to continue.";
 
-					$ONLOAD[] = "setTimeout('window.location=\\'".ENTRADA_URL."/admin/regionaled/apartments/manage?id=".$APARTMENT_ID."\\'', 5000)";
+					$ONLOAD[] = "setTimeout('window.location=\\'" . ENTRADA_URL . "/admin/regionaled/apartments/manage?id=" . $APARTMENT_ID . "\\'', 5000)";
 
-					application_log("success", "Apartment_id [".$APARTMENT_ID."] was updated.");
+					application_log("success", "Apartment_id [" . $APARTMENT_ID . "] was updated.");
 				} else {
 					$ERROR++;
-					$ERRORSTR[]	= "We were unable to updated this apartment at this time.<br /><br />The system administrator has been notified of this issue, please try again later.";
+					$ERRORSTR[] = "We were unable to updated this apartment at this time.<br /><br />The system administrator has been notified of this issue, please try again later.";
 
-					application_log("error", "Failed to update apartment_id [".$APARTMENT_ID."]. Database said: ".$db->ErrorMsg());
+					application_log("error", "Failed to update apartment_id [" . $APARTMENT_ID . "]. Database said: " . $db->ErrorMsg());
 				}
 			}
 
 			if ($ERROR) {
 				$STEP = 1;
 			}
-		break;
+			break;
 		case 1 :
 		default :
+
+			if (!isset($APARTMENT_INFO['keys_firstname']) || $APARTMENT_INFO['keys_firstname'] == '') {
+				$APARTMENT_INFO['keys_firstname'] = $APARTMENT_INFO['super_firstname'];
+				$APARTMENT_INFO['keys_lastname'] = $APARTMENT_INFO['super_lastname'];
+				$APARTMENT_INFO['keys_phone'] = $APARTMENT_INFO['super_phone'];
+				$APARTMENT_INFO['keys_email'] = $APARTMENT_INFO['super_email'];
+			}
+
 			$PROCESSED = $APARTMENT_INFO;
 
 			if (isset($APARTMENT_INFO["region_id"])) {
 				$PROCESSED["city"] = get_region_name($APARTMENT_INFO["region_id"]);
 			}
-		break;
+			break;
 	}
 
 	switch ($STEP) {
@@ -285,7 +328,7 @@ if (!defined("IN_MANAGE")) {
 			if ($SUCCESS) {
 				echo display_success();
 			}
-		break;
+			break;
 		case 1 :
 		default :
 			$PROCESSED["prov_state"] = ((isset($PROCESSED["province_id"]) && $PROCESSED["province_id"]) ? (int) $PROCESSED["province_id"] : ((isset($PROCESSED["apartment_province"]) && $PROCESSED["apartment_province"]) ? $PROCESSED["apartment_province"] : ""));
@@ -296,11 +339,11 @@ if (!defined("IN_MANAGE")) {
 			 * Determine whether the Google Maps can be shown.
 			 */
 			if ((defined("GOOGLE_MAPS_API")) && (GOOGLE_MAPS_API != "")) {
-				$HEAD[] = "<script type=\"text/javascript\" src=\"".GOOGLE_MAPS_API."\"></script>";
+				$HEAD[] = "<script type=\"text/javascript\" src=\"" . GOOGLE_MAPS_API . "\"></script>";
 				$ONLOAD[] = "initialize()";
 
 				if (isset($PROCESSED["apartment_latitude"]) && $PROCESSED["apartment_latitude"] && isset($PROCESSED["apartment_longitude"]) && $PROCESSED["apartment_longitude"]) {
-					$ONLOAD[] = "addPointToMap('".$PROCESSED["apartment_latitude"]."', '".$PROCESSED["apartment_longitude"]."')";
+					$ONLOAD[] = "addPointToMap('" . $PROCESSED["apartment_latitude"] . "', '" . $PROCESSED["apartment_longitude"] . "')";
 				}
 			}
 
@@ -310,18 +353,30 @@ if (!defined("IN_MANAGE")) {
 				echo display_error();
 			}
 			?>
+			<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
 			<script type="text/javascript">
-			var googleMap = null;
-			var updater = null;
+				var googleMap = null;
+				var updater = null;
 
-			function initialize() {
-				googleMap = new GMap2($('mapData'));
-			}
+		        function showHide(){
+					if(!document.getElementById('keys_from_super').checked){
+						document.getElementById('keys_division').style.visibility = 'visible';
+					}
+					else{
+						document.getElementById('keys_division').style.visibility = 'hidden';
+					}
+				}
 
-			function provStateFunction(countries_id) {
-				var url='<?php echo webservice_url("province"); ?>';
-				url = url + '?countries_id=' + countries_id + '&prov_state=<?php echo rawurlencode((isset($_POST["prov_state"]) ? clean_input($_POST["prov_state"], array("notags", "trim")) : $PROCESSED["prov_state"])); ?>';
-				new Ajax.Updater($('prov_state_div'), url,
+
+
+				function initialize() {
+					googleMap = new GMap2($('mapData'));
+				}
+
+				function provStateFunction(countries_id) {
+					var url='<?php echo webservice_url("province"); ?>';
+					url = url + '?countries_id=' + countries_id + '&prov_state=<?php echo rawurlencode((isset($_POST["prov_state"]) ? clean_input($_POST["prov_state"], array("notags", "trim")) : $PROCESSED["prov_state"])); ?>';
+					new Ajax.Updater($('prov_state_div'), url,
 					{
 						method:'get',
 						onComplete: function () {
@@ -340,90 +395,90 @@ if (!defined("IN_MANAGE")) {
 							}
 						}
 					});
-			}
+				}
 
-			function generateAutocomplete() {
-				if (updater != null) {
-					updater.url = '<?php echo ENTRADA_URL; ?>/api/cities-by-country.api.php?countries_id=' + $F('countries_id');
-				} else {
-					updater = new Ajax.Autocompleter('city', 'city_auto_complete',
+				function generateAutocomplete() {
+					if (updater != null) {
+						updater.url = '<?php echo ENTRADA_URL; ?>/api/cities-by-country.api.php?countries_id=' + $F('countries_id');
+					} else {
+						updater = new Ajax.Autocompleter('city', 'city_auto_complete',
 						'<?php echo ENTRADA_URL; ?>/api/cities-by-country.api.php?countries_id=' + $F('countries_id'),
 						{
 							frequency: 0.2,
 							minChars: 2,
 							afterUpdateElement : getRegionId
 						});
+					}
 				}
-			}
 
-			function getRegionId(text, li) {
-				if (li.id) {
-					$('region_id').setValue(li.id);
+				function getRegionId(text, li) {
+					if (li.id) {
+						$('region_id').setValue(li.id);
+					}
 				}
-			}
 
-			function addPointToMap(lat, lng) {
-				if (googleMap && lat != '' && lng != '' && GBrowserIsCompatible()) {
-					point = new GLatLng(lat, lng);
+				function addPointToMap(lat, lng) {
+					if (googleMap && lat != '' && lng != '' && GBrowserIsCompatible()) {
+						point = new GLatLng(lat, lng);
 
-					addMarker(point, lat, lng);
+						addMarker(point, lat, lng);
+					}
 				}
-			}
 
-			function addAddressToMap(response) {
-				if (googleMap && GBrowserIsCompatible()) {
-					if (!response || response.Status.code != 200) {
-//						alert("Sorry, we were unable to geocode that address");
+				function addAddressToMap(response) {
+					if (googleMap && GBrowserIsCompatible()) {
+						if (!response || response.Status.code != 200) {
+							//						alert("Sorry, we were unable to geocode that address");
+						} else {
+							place = response.Placemark[0];
+							point = new GLatLng(place.Point.coordinates[1], place.Point.coordinates[0]);
+
+							addMarker(point, place.Point.coordinates[1], place.Point.coordinates[0]);
+						}
+					}
+				}
+
+				function addMarker(point, lat, lng) {
+					if (googleMap && point && lat && lng) {
+						if (!$('mapContainer').visible()) {
+							$('mapContainer').show();
+						}
+
+						googleMap = new GMap2($('mapData'));
+						googleMap.setUIToDefault();
+						googleMap.setCenter(point, 15);
+						googleMap.clearOverlays();
+
+						var icon = new GIcon();
+						icon.image = '<?php echo ENTRADA_URL; ?>/images/icon-apartment.gif';
+						icon.shadow = '<?php echo ENTRADA_URL; ?>/images/icon-apartment-shadow.png';
+						icon.iconSize = new GSize(25, 34);
+						icon.shadowSize = new GSize(35, 34);
+						icon.iconAnchor = new GPoint(25, 34);
+						icon.infoWindowAnchor = new GPoint(15, 5);
+
+						var marker = new GMarker(point, icon);
+						googleMap.addOverlay(marker);
+
+						$('apartment_latitude').setValue(lat);
+						$('apartment_longitude').setValue(lng);
+					}
+				}
+
+				function updateAptData() {
+					var address = ($('apartment_address') ? $F('apartment_address') : false);
+					var country = ($F('countries_id') ? $('countries_id')[$('countries_id').selectedIndex].text : false);
+					var city = ($F('city') ? $F('city') : false);
+
+					if ($('prov_state').type == 'select-one' && ($F('prov_state') > 0)) {
+						var province = $('prov_state')[$F('prov_state')].text;
+					} else if ($('prov_state').type == 'text' && $F('prov_state') != '') {
+						var province = $F('prov_state');
 					} else {
-						place = response.Placemark[0];
-						point = new GLatLng(place.Point.coordinates[1], place.Point.coordinates[0]);
-
-						addMarker(point, place.Point.coordinates[1], place.Point.coordinates[0]);
-					}
-				}
-			}
-
-			function addMarker(point, lat, lng) {
-				if (googleMap && point && lat && lng) {
-					if (!$('mapContainer').visible()) {
-						$('mapContainer').show();
+						var province = false;
 					}
 
-					googleMap = new GMap2($('mapData'));
-					googleMap.setUIToDefault();
-					googleMap.setCenter(point, 15);
-					googleMap.clearOverlays();
-
-					var icon = new GIcon();
-					icon.image = '<?php echo ENTRADA_URL; ?>/images/icon-apartment.gif';
-					icon.shadow = '<?php echo ENTRADA_URL; ?>/images/icon-apartment-shadow.png';
-					icon.iconSize = new GSize(25, 34);
-					icon.shadowSize = new GSize(35, 34);
-					icon.iconAnchor = new GPoint(25, 34);
-					icon.infoWindowAnchor = new GPoint(15, 5);
-
-					var marker = new GMarker(point, icon);
-					googleMap.addOverlay(marker);
-
-					$('apartment_latitude').setValue(lat);
-					$('apartment_longitude').setValue(lng);
-				}
-			}
-
-			function updateAptData() {
-				var address = ($('apartment_address') ? $F('apartment_address') : false);
-				var country = ($F('countries_id') ? $('countries_id')[$('countries_id').selectedIndex].text : false);
-				var city = ($F('city') ? $F('city') : false);
-
-				if ($('prov_state').type == 'select-one' && ($F('prov_state') > 0)) {
-					var province = $('prov_state')[$F('prov_state')].text;
-				} else if ($('prov_state').type == 'text' && $F('prov_state') != '') {
-					var province = $F('prov_state');
-				} else {
-					var province = false;
-				}
-
-				if (googleMap && address && city && country && GBrowserIsCompatible()) {
+					if (googleMap && address && city && country && GBrowserIsCompatible()) {
 						var geocoder = new GClientGeocoder();
 
 						var search = [address, city];
@@ -435,14 +490,14 @@ if (!defined("IN_MANAGE")) {
 						searchFor = search.join(', ');
 
 						geocoder.getLocations(searchFor, addAddressToMap);
-				}
+					}
 
-				if ((address) && ($F('apartment_title') == '')) {
-					$('apartment_title').setValue(($F('apartment_number').length > 0 ? $F('apartment_number') + ' - ' : '') + address);
-				}
+					if ((address) && ($F('apartment_title') == '')) {
+						$('apartment_title').setValue(($F('apartment_number').length > 0 ? $F('apartment_number') + ' - ' : '') + address);
+					}
 
-				return false;
-			}
+					return false;
+				}
 			</script>
 
 			<form action="<?php echo ENTRADA_URL; ?>/admin/regionaled/apartments/manage?id=<?php echo $APARTMENT_ID; ?>&section=edit" method="post" id="editApartmentForm">
@@ -474,19 +529,19 @@ if (!defined("IN_MANAGE")) {
 							<td>&nbsp;</td>
 							<td><label for="countries_id" class="form-required">Country</label></td>
 							<td>
-								<?php
-								$countries = fetch_countries();
-								if ((is_array($countries)) && (count($countries))) {
-									echo "<select id=\"countries_id\" name=\"countries_id\" style=\"width: 256px\" onchange=\"provStateFunction(this.value); updateAptData();\">\n";
-									foreach ($countries as $country) {
-										echo "<option value=\"".(int) $country["countries_id"]."\"".(($PROCESSED["countries_id"] == $country["countries_id"]) ? " selected=\"selected\"" : (!isset($PROCESSED["countries_id"]) && $country["countries_id"] == DEFAULT_COUNTRY_ID) ? " selected=\"selected\"" : "").">".html_encode($country["country"])."</option>\n";
-									}
-									echo "</select>\n";
-								} else {
-									echo "<input type=\"hidden\" id=\"countries_id\" name=\"countries_id\" value=\"0\" />\n";
-									echo "Country information not currently available.\n";
-								}
-								?>
+			<?php
+			$countries = fetch_countries();
+			if ((is_array($countries)) && (count($countries))) {
+				echo "<select id=\"countries_id\" name=\"countries_id\" style=\"width: 256px\" onchange=\"provStateFunction(this.value); updateAptData();\">\n";
+				foreach ($countries as $country) {
+					echo "<option value=\"" . (int) $country["countries_id"] . "\"" . (($PROCESSED["countries_id"] == $country["countries_id"]) ? " selected=\"selected\"" : (!isset($PROCESSED["countries_id"]) && $country["countries_id"] == DEFAULT_COUNTRY_ID) ? " selected=\"selected\"" : "") . ">" . html_encode($country["country"]) . "</option>\n";
+				}
+				echo "</select>\n";
+			} else {
+				echo "<input type=\"hidden\" id=\"countries_id\" name=\"countries_id\" value=\"0\" />\n";
+				echo "Country information not currently available.\n";
+			}
+			?>
 							</td>
 							<td rowspan="10">
 								<div id="mapContainer" style="display: none;">
@@ -614,6 +669,47 @@ if (!defined("IN_MANAGE")) {
 								<input type="text" id="super_email" name="super_email" value="<?php echo html_encode($PROCESSED["super_email"]); ?>" maxlength="32" style="width: 250px" />
 							</td>
 						</tr>
+
+
+						<tr>
+							<td colspan="4"><h2>Contact for Keys</h2>
+								<input type="checkbox"name ="keys_from_super" id="keys_from_super" value="true" onclick="showHide();" checked="checked">Same as Superintendent</input>
+							</td>
+						</tr>
+					</tbody>
+					<tbody id ="keys_division" style="visibility:hidden;">
+						<tr>
+							<td>&nbsp;</td>
+							<td><label for="keys_firstname" class="form-required">Firstname</label></td>
+							<td colspan="2">
+								<input type="text" id="keys_firstname" name="keys_firstname" value="<?php echo html_encode($PROCESSED["keys_firstname"]); ?>" maxlength="32" style="width: 250px" />
+							</td>
+						</tr>
+						<tr>
+							<td>&nbsp;</td>
+							<td><label for="keys_lastname" class="form-required">Lastname</label></td>
+							<td colspan="2">
+								<input type="text" id="keys_lastname" name="keys_lastname" value="<?php echo html_encode($PROCESSED["keys_lastname"]); ?>" maxlength="32" style="width: 250px" />
+							</td>
+						</tr>
+						<tr>
+							<td>&nbsp;</td>
+							<td><label for="keys_phone" class="form-required">Telephone Number</label></td>
+							<td colspan="2">
+								<input type="text" id="keys_phone" name="keys_phone" value="<?php echo html_encode($PROCESSED["keys_phone"]); ?>" maxlength="32" style="width: 250px" />
+							</td>
+						</tr>
+						<tr>
+							<td>&nbsp;</td>
+							<td><label for="keys_email" class="form-required">E-Mail Address</label></td>
+							<td colspan="2">
+								<input type="text" id="keys_email" name="keys_email" value="<?php echo html_encode($PROCESSED["keys_email"]); ?>" maxlength="32" style="width: 250px" />
+							</td>
+						</tr>
+
+					</tbody>
+					<tbody>
+
 						<tr>
 							<td colspan="4"><h2>Apartment Availability</h2></td>
 						</tr>
@@ -621,16 +717,16 @@ if (!defined("IN_MANAGE")) {
 							<td colspan="3"></td>
 							<td rowspan="3"></td>
 						</tr>
-						<?php
-						$available_start = ((isset($PROCESSED["available_start"])) ? (int) $PROCESSED["available_start"] : time());
-						$available_finish = ((isset($PROCESSED["available_finish"])) ? (int) $PROCESSED["available_finish"] : 0);
+			<?php
+			$available_start = ((isset($PROCESSED["available_start"])) ? (int) $PROCESSED["available_start"] : time());
+			$available_finish = ((isset($PROCESSED["available_finish"])) ? (int) $PROCESSED["available_finish"] : 0);
 
-						echo generate_calendars("available", "", true, true, $available_start, true, false, $available_finish, false);
-						?>
+			echo generate_calendars("available", "", true, true, $available_start, true, false, $available_finish, false);
+			?>
 					</tbody>
 				</table>
 			</form>
-			<?php
-		break;
-	}
-}
+						<?php
+						break;
+				}
+			}

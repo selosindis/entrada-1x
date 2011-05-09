@@ -299,14 +299,17 @@ if (!defined("IN_MANAGE")) {
 			break;
 		case 1 :
 		default :
-
+			
 			if (!isset($APARTMENT_INFO['keys_firstname']) || $APARTMENT_INFO['keys_firstname'] == '') {
 				$APARTMENT_INFO['keys_firstname'] = $APARTMENT_INFO['super_firstname'];
 				$APARTMENT_INFO['keys_lastname'] = $APARTMENT_INFO['super_lastname'];
 				$APARTMENT_INFO['keys_phone'] = $APARTMENT_INFO['super_phone'];
 				$APARTMENT_INFO['keys_email'] = $APARTMENT_INFO['super_email'];
 			}
-
+			$hide_key_info = ($APARTMENT_INFO['keys_firstname']==$APARTMENT_INFO['super_firstname'])&&
+								($APARTMENT_INFO['keys_lastname']==$APARTMENT_INFO['super_lastname'])&&
+									($APARTMENT_INFO['keys_phone']==$APARTMENT_INFO['super_phone']) &&
+										($APARTMENT_INFO['keys_email']==$APARTMENT_INFO['super_email'])?'true':'false';
 			$PROCESSED = $APARTMENT_INFO;
 
 			if (isset($APARTMENT_INFO["region_id"])) {
@@ -356,6 +359,8 @@ if (!defined("IN_MANAGE")) {
 			<script type="text/javascript">
 				var googleMap = null;
 				var updater = null;
+
+				
 
 		        function showHide(){
 					if(!document.getElementById('keys_from_super').checked){
@@ -676,7 +681,7 @@ if (!defined("IN_MANAGE")) {
 							</td>
 						</tr>
 					</tbody>
-					<tbody id ="keys_division" style="visibility:hidden;">
+					<tbody id ="keys_division">
 						<tr>
 							<td>&nbsp;</td>
 							<td><label for="keys_firstname" class="form-required">Firstname</label></td>
@@ -725,6 +730,20 @@ if (!defined("IN_MANAGE")) {
 					</tbody>
 				</table>
 			</form>
+			<script type="text/javascript">
+				
+					if(<?php echo $hide_key_info;?>){
+						document.getElementById('keys_division').style.visibility = 'hidden';
+					}
+					else{
+						document.getElementById('keys_from_super').checked = false;
+						document.getElementById('keys_division').style.visibility = 'visible';
+					}
+								
+			
+			</script>
+			
+			
 						<?php
 						break;
 				}

@@ -39,7 +39,7 @@ $query = "	SELECT apartment_id,
 					super_email, 
 					CONCAT_WS(' ',keys_firstname,keys_lastname) AS keys_full, 
 					keys_email 
-				FROM entrada_clerkship.apartments";
+				FROM ".CLERKSHIP_DATABASE.".apartments";
 
 
 $apartments = $db->GetAll($query);
@@ -50,13 +50,13 @@ foreach ($apartments as $apartment) {
 	$query = "	SELECT CONCAT_WS(' ', b.firstname, b.lastname) as occupant_full, 
 					b.email as occupant_email, 
 					a.occupant_title, 
-					a.inhabiting_start, 
-					a.inhabiting_finish 
-				FROM entrada_clerkship.apartment_schedule as a 
-				LEFT JOIN entrada_auth.user_data as b 
+					FROM_UNIXTIME(a.inhabiting_start) AS inhabiting_start, 
+					FROM_UNIXTIME(a.inhabiting_finish) AS inhabiting_finish 
+				FROM ".CLERKSHIP_DATABASE.".apartment_schedule as a 
+				LEFT JOIN ".AUTH_DATABASE.".user_data as b 
 				ON a.proxy_id = b.id 
-				WHERE a.apartment_id = " . $apartment['apartment_id'] .
-			" AND a.inhabiting_start > NOW()";
+				WHERE a.apartment_id = ".$apartment['apartment_id']."
+				AND MONTH(FROM_UNIXTIME(a.inhabiting_start)) = MONTH(NOW());";
 
 	$occupants = $db->GetAll($query);
 
@@ -65,12 +65,12 @@ foreach ($apartments as $apartment) {
 		$occupants_list = "";
 		foreach ($occupants as $occupant) {
 			if ($occupant['occupant_title'] != null && $occupant['occupant_title'] != '') {
-				$occupant = $occupant['occupant_title'];
+				$occupant_name = $occupant['occupant_title'];
 			} else {
-				$occupant = $occupant['occupant_full'];
+				$occupant_name = $occupant['occupant_full'];
 			}
 
-			$occupants_list .= "{$occupant} will be staying from {$occupant['inhabiting_start']} to {$occupant['inhabiting_finish']}.\n";
+			$occupants_list .= "{$occupant_name} will be staying from ".date("l F j Y @ g:i A",  strtotime($occupant['inhabiting_start']))." to ".date("l F j Y @ g:i A",  strtotime($occupant['inhabiting_finish'])).".\n";
 		}
 		if (!isset($occupants_email)) {
 			$occupants_email = file_get_contents(ENTRADA_ABSOLUTE . "/templates/" . DEFAULT_TEMPLATE . "/email/regionaled-apartment-occupants-monthly-notification.txt");

@@ -755,6 +755,16 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					$sidebar_html .= "</ul>\n";
 		
 					new_sidebar_item("Page Anchors", $sidebar_html, "page-anchors", "open", "1.9");
+					
+					/**
+					 * Sidebar item that will provide link to reports.
+					 */
+					$sidebar_html  = "<ul class=\"menu\">\n";
+					$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/courses?id=".$COURSE_ID."&section=course-eventtype-report\" title=\"Event Types Report\">Event Types Report</a></li>\n";
+					$sidebar_html .= "</ul>\n";
+		
+					new_sidebar_item("Reports", $sidebar_html, "reports", "open", "1.9");
+					
 				}
 			}
 		} else {

@@ -3814,3 +3814,10 @@ CREATE TABLE IF NOT EXISTS `pgme_moh_programs` (
   `moh_service_name` varchar(100) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=latin1 ;
+
+CREATE TABLE IF NOT EXISTS `eventtype_organisation`(
+`eventtype_id` INT(12) NOT NULL, 
+`organisation_id` INT(12) NOT NULL, 
+KEY `eventtype_id` (`eventtype_id`),
+KEY `organisation_id` (`organisation_id`)
+) ENGINE = MyISAM DEFAULT CHARSET=utf8;

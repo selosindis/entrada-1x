@@ -673,15 +673,18 @@ if (!defined("IN_MANAGE")) {
 								<input type="text" id="super_email" name="super_email" value="<?php echo html_encode($PROCESSED["super_email"]); ?>" maxlength="32" style="width: 250px" />
 							</td>
 						</tr>
-
+						<tr>
+							<td>&nbsp;</td>
+							<td>&nbsp;</td>
+							<td><input type="checkbox"name ="keys_from_super" id="keys_from_super" value="true" onclick="showHide();" checked="checked">Contact Superintendent for keys</input></td>
+						</tr>
+						</tbody>
+						<tbody id ="keys_division" style="visibility:hidden;">	
 
 						<tr>
-							<td colspan="4"><h2>Contact for Keys</h2>
-								<input type="checkbox"name ="keys_from_super" id="keys_from_super" value="true" onclick="showHide();" checked="checked">Same as Superintendent</input>
-							</td>
+							<td colspan="4"><h2>Contact for Keys</h2></td>
 						</tr>
-					</tbody>
-					<tbody id ="keys_division">
+
 						<tr>
 							<td>&nbsp;</td>
 							<td><label for="keys_firstname" class="form-required">Firstname</label></td>

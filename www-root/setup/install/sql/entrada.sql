@@ -3362,7 +3362,7 @@ CREATE TABLE IF NOT EXISTS `settings` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `settings` (`shortname`, `value`) VALUES
-('version_db', '1200'),
+('version_db', '1203'),
 ('version_entrada', '1.2.0');
 
 CREATE TABLE `small_groups` (
@@ -3815,3 +3815,10 @@ CREATE TABLE IF NOT EXISTS `pgme_moh_programs` (
   `moh_service_name` varchar(100) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=latin1 ;
+
+CREATE TABLE IF NOT EXISTS `eventtype_organisation`(
+`eventtype_id` INT(12) NOT NULL, 
+`organisation_id` INT(12) NOT NULL, 
+KEY `eventtype_id` (`eventtype_id`),
+KEY `organisation_id` (`organisation_id`)
+) ENGINE = MyISAM DEFAULT CHARSET=utf8;

@@ -198,7 +198,7 @@ function updateValues(event) {
 					}
 				}
 			});
-	document.fire('MetaData:onBeforeUpdate');
+	//document.fire('MetaData:onBeforeUpdate');
 }
 
 /**
@@ -229,7 +229,7 @@ function getTable(event) {
 						}
 					}
 				});
-		document.fire('MetaData:onBeforeUpdate');
+		//document.fire('MetaData:onBeforeUpdate');
 	}
 }
 

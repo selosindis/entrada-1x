@@ -24,9 +24,9 @@
  *
 */
 
-if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
+if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 	exit;
-} elseif((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
+} elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	header("Location: ".ENTRADA_URL);
 	exit;
 }
@@ -42,15 +42,15 @@ $PROXY_IDS			= array();
 /**
  * Check for a community category to proceed.
  */
-if((isset($_GET["community"])) && ((int) trim($_GET["community"]))) {
+if ((isset($_GET["community"])) && ((int) trim($_GET["community"]))) {
 	$COMMUNITY_ID	= (int) trim($_GET["community"]);
-} elseif((isset($_POST["community_id"])) && ((int) trim($_POST["community_id"]))) {
+} elseif ((isset($_POST["community_id"])) && ((int) trim($_POST["community_id"]))) {
 	$COMMUNITY_ID	= (int) trim($_POST["community_id"]);
 }
 
-if((isset($_GET["type"])) && ($tmp_action_type = clean_input(trim($_GET["type"]), "alphanumeric"))) {
+if ((isset($_GET["type"])) && ($tmp_action_type = clean_input(trim($_GET["type"]), "alphanumeric"))) {
 	$ACTION_TYPE	= $tmp_action_type;
-} elseif((isset($_POST["type"])) && ($tmp_action_type = clean_input(trim($_POST["type"]), "alphanumeric"))) {
+} elseif ((isset($_POST["type"])) && ($tmp_action_type = clean_input(trim($_POST["type"]), "alphanumeric"))) {
 	$ACTION_TYPE	= $tmp_action_type;
 }
 unset($tmp_action_type);
@@ -58,23 +58,23 @@ unset($tmp_action_type);
 /**
  * Ensure that the selected community is editable by you.
  */
-if($COMMUNITY_ID) {
+if ($COMMUNITY_ID) {
 	$query				= "SELECT * FROM `communities` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `community_active` = '1'";
 	$community_details	= $db->GetRow($query);
-	if($community_details) {
+	if ($community_details) {
 		$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/picklist.js\"></script>\n";
 		$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/elementresizer.js\"></script>\n";
 
 		$BREADCRUMB[]		= array("url" => ENTRADA_URL."/community".$community_details["community_url"], "title" => limit_chars($community_details["community_title"], 50));
 		$BREADCRUMB[]		= array("url" => ENTRADA_URL."/communities?".replace_query(), "title" => "Manage Members");
-		if($ENTRADA_ACL->amIAllowed(new CommunityResource($COMMUNITY_ID), 'update')) {
+		if ($ENTRADA_ACL->amIAllowed(new CommunityResource($COMMUNITY_ID), 'update')) {
 			echo "<h1>".html_encode($community_details["community_title"])."</h1>\n";
 
 			// Error Checking
-			switch($STEP) {
+			switch ($STEP) {
 				case 3 :
 				case 2 :
-					switch($ACTION_TYPE) {
+					switch ($ACTION_TYPE) {
 						case "addguest":
 							$PROCESSED = array();
 							$GUEST_PROXY_ID = 0;
@@ -85,7 +85,7 @@ if($COMMUNITY_ID) {
 							/**
 							 * Required field "firstname" / Firstname.
 							 */
-							if((isset($_POST["firstname"])) && ($firstname = clean_input($_POST["firstname"], "trim"))) {
+							if ((isset($_POST["firstname"])) && ($firstname = clean_input($_POST["firstname"], "trim"))) {
 								$PROCESSED["firstname"] = $firstname;
 							} else {
 								$ERROR++;
@@ -95,7 +95,7 @@ if($COMMUNITY_ID) {
 							/**
 							 * Required field "lastname" / Lastname.
 							 */
-							if((isset($_POST["lastname"])) && ($lastname = clean_input($_POST["lastname"], "trim"))) {
+							if ((isset($_POST["lastname"])) && ($lastname = clean_input($_POST["lastname"], "trim"))) {
 								$PROCESSED["lastname"] = $lastname;
 							} else {
 								$ERROR++;
@@ -105,14 +105,14 @@ if($COMMUNITY_ID) {
 							/**
 							 * Required field "email" / Primary E-Mail.
 							 */
-							if((isset($_POST["email"])) && ($email = clean_input($_POST["email"], "trim", "lower"))) {
-								if(@valid_address($email)) {
+							if ((isset($_POST["email"])) && ($email = clean_input($_POST["email"], "trim", "lower"))) {
+								if (@valid_address($email)) {
 									$query	= "SELECT * FROM `".AUTH_DATABASE."`.`user_data`
 												LEFT JOIN `".AUTH_DATABASE."`.`user_access` ON `user_access`.`user_id` = `user_data`.`id`
 												WHERE `user_data`.`email` = ".$db->qstr($email)."
 												AND (`user_access`.`group` != 'guest' && `user_access`.`role` != 'communityinvite');";
 									$result	= $db->GetRow($query);
-									if($result) {
+									if ($result) {
 										$ERROR++;
 										$ERRORSTR[] = "The e-mail address <strong>".html_encode($email)."</strong> already exists in the system for username <strong>".html_encode($result["username"])."</strong>. Please provide a unique e-mail address for this user or select the existing user on the <strong>Add Members</strong> tab.";
 									} else {
@@ -127,44 +127,47 @@ if($COMMUNITY_ID) {
 								$ERRORSTR[] = "The primary e-mail address is a required field.";
 							}
 							
-							if(!$ERROR) {
+							if (!$ERROR) {
 							//Check to see if this user is already in the system.
 
-								$query	= "SELECT `user_data`.`id` as `proxy_id`, `user_data`.`username` FROM `".AUTH_DATABASE."`.`user_data`
-										LEFT JOIN `".AUTH_DATABASE."`.`user_access` ON `user_access`.`user_id` = `user_data`.`id`
-										WHERE `user_data`.`email` = ".$db->qstr($PROCESSED["email"]);
+								$query = "	SELECT `user_data`.`id` as `proxy_id`, `user_data`.`username`
+											FROM `".AUTH_DATABASE."`.`user_data`
+											LEFT JOIN `".AUTH_DATABASE."`.`user_access`
+											ON `user_access`.`user_id` = `user_data`.`id`
+											WHERE `user_data`.`email` = ".$db->qstr($PROCESSED["email"]);
 								$result	= $db->GetRow($query);
-
-								if($result) {
-								//User exists already, just grant them access to the community
-									$GUEST_PROXY_ID = $result['proxy_id'];
-									$username = $result['username'];
+								if ($result) {
+									//User exists already, just grant them access to the community
+									$GUEST_PROXY_ID = $result["proxy_id"];
+									$username = $result["username"];
 								} else {
-									$pieces = explode('@', $PROCESSED['email']);
-									$username = $pieces[0];
-									$i = '';
+									$pieces = explode("@", $PROCESSED["email"]);
+									
+									$original = "guest.".substr(clean_input($pieces[0], "credentials"), 0, 16);
+									$username = $original;
+									$i = "";
 									do {
-										$username = $pieces[0].$i;
+										$username = $original.$i;
 										$i++;
 									} while($db->GetRow("SELECT `username` FROM `".AUTH_DATABASE."`.`user_data` WHERE `username` = ".$db->qstr($username)));
 
 
-									$PROCESSED['username']			= $username;
-									$PROCESSED['number']			= 0;
-									$PROCESSED['password']			= '';
-									$PROCESSED['organisation_id']	= $_SESSION['details']['organisation_id'];
-									$PROCESSED['prefix']			= '';
-									$PROCESSED['email_alt']			= '';
-									$PROCESSED['telephone']			= '';
-									$PROCESSED['fax']				= '';
-									$PROCESSED['address']			= '';
-									$PROCESSED['city']				= '';
-									$PROCESSED['province']			= '';
-									$PROCESSED['postcode']			= '';
-									$PROCESSED['country']			= '';
-									$PROCESSED['notes']				= 'Guest created by proxy id '.$_SESSION['details']['id'];
+									$PROCESSED["username"]			= $username;
+									$PROCESSED["number"]			= 0;
+									$PROCESSED["password"]			= "";
+									$PROCESSED["organisation_id"]	= $_SESSION["details"]["organisation_id"];
+									$PROCESSED["prefix"]			= "";
+									$PROCESSED["email_alt"]			= "";
+									$PROCESSED["telephone"]			= "";
+									$PROCESSED["fax"]				= "";
+									$PROCESSED["address"]			= "";
+									$PROCESSED["city"]				= "";
+									$PROCESSED["province"]			= "";
+									$PROCESSED["postcode"]			= "";
+									$PROCESSED["country"]			= "";
+									$PROCESSED["notes"]				= "Guest created by proxy id ".$_SESSION["details"]["id"];
 
-									if(($db->AutoExecute(AUTH_DATABASE.".user_data", $PROCESSED, "INSERT")) && ($PROCESSED_ACCESS["user_id"] = $db->Insert_Id())) {
+									if (($db->AutoExecute(AUTH_DATABASE.".user_data", $PROCESSED, "INSERT")) && ($PROCESSED_ACCESS["user_id"] = $db->Insert_Id())) {
 										$GUEST_PROXY_ID = $PROCESSED_ACCESS["user_id"];
 									} else {
 										$ERROR++;
@@ -173,17 +176,17 @@ if($COMMUNITY_ID) {
 										application_log("error", "Unable to create new user account. Database said: ".$db->ErrorMsg());
 									}
 								}
-								if($GUEST_PROXY_ID > 0) {
+								if ($GUEST_PROXY_ID > 0) {
 									$query = "SELECT `account_active`, `access_starts`, `access_expires` FROM `".AUTH_DATABASE."`.`user_access` WHERE `user_id` = ".$db->qstr($GUEST_PROXY_ID)." AND `app_id` IN (".AUTH_APP_IDS_STRING.")";
 									$result = $db->GetRow($query);
-									if($result) {
-										if($result['account_active'] == 'false') {
+									if ($result) {
+										if ($result["account_active"] == "false") {
 											$ERROR++;
 											$ERRORSTR[] = "Unable to create a new user account at this time because the account you are trying to create already exists and is deactivated. Contact an administrator for more information.";
-										} else if($result['access_starts'] > time()) {
+										} else if ($result["access_starts"] > time()) {
 												$ERROR++;
 												$ERRORSTR[] = "Unable to create a new user account at this time because the account you are trying to create already exists but it's access hasn't started yet. Contact an administrator for more information.";
-											} else if($result['access_expires'] != 0 && $result['access_expires'] < time()) {
+											} else if ($result["access_expires"] != 0 && $result["access_expires"] < time()) {
 													$ERROR++;
 													$ERRORSTR[] = "Unable to create a new user account at this time because the account you are trying to create already exists but it's access has expired. Contact an administrator for more information.";
 												} else {
@@ -192,18 +195,18 @@ if($COMMUNITY_ID) {
 									} else {
 									//User needs access
 										$GUEST_NEW_ACCESS = true;
-										$PROCESSED_ACCESS['app_id']				= AUTH_APP_ID;
-										$PROCESSED_ACCESS['acount_active']		= 'true';
-										$PROCESSED_ACCESS['access_starts']		= time();
-										$PROCESSED_ACCESS['access_expires']		= 0;
-										$PROCESSED_ACCESS['last_login']			= 0;
-										$PROCESSED_ACCESS['last_ip']			= 0;
-										$PROCESSED_ACCESS['role']				= 'communityinvite';
-										$PROCESSED_ACCESS['group']				= 'guest';
-										$PROCESSED_ACCESS['extras']				= '';
-										$PROCESSED_ACCESS['notes']				= 'Guest created by proxy id '.$_SESSION['details']['id'];
+										$PROCESSED_ACCESS["app_id"]				= AUTH_APP_ID;
+										$PROCESSED_ACCESS["acount_active"]		= "true";
+										$PROCESSED_ACCESS["access_starts"]		= time();
+										$PROCESSED_ACCESS["access_expires"]		= 0;
+										$PROCESSED_ACCESS["last_login"]			= 0;
+										$PROCESSED_ACCESS["last_ip"]			= 0;
+										$PROCESSED_ACCESS["role"]				= "communityinvite";
+										$PROCESSED_ACCESS["group"]				= "guest";
+										$PROCESSED_ACCESS["extras"]				= "";
+										$PROCESSED_ACCESS["notes"]				= "Guest created by proxy id ".$_SESSION["details"]["id"];
 
-										if($db->AutoExecute(AUTH_DATABASE.".user_access", $PROCESSED_ACCESS, "INSERT")) {
+										if ($db->AutoExecute(AUTH_DATABASE.".user_access", $PROCESSED_ACCESS, "INSERT")) {
 											$GUEST_ACCESS = true;
 										} else {
 											$ERROR++;
@@ -212,88 +215,76 @@ if($COMMUNITY_ID) {
 										}
 									}
 
-									if($GUEST_ACCESS) {
-										if($GUEST_NEW_ACCESS) {
-										//Mail the user
-											$PROCESSED_EMAIL				= array();
-											$PROCESSED_EMAIL["ip"]		= $_SERVER["REMOTE_ADDR"];
-											$PROCESSED_EMAIL["date"]		= time();
-											$PROCESSED_EMAIL["user_id"]	= $GUEST_PROXY_ID;
-											$HASH			= get_hash();
-											$PROCESSED_EMAIL["hash"]		= $HASH;
-											$PROCESSED_EMAIL["complete"]	= 0;
-											if($db->AutoExecute("`".AUTH_DATABASE."`.`password_reset`", $PROCESSED_EMAIL, "INSERT")) {
+									require_once("Models/utility/Template.class.php");
+									require_once("Models/utility/TemplateMailer.class.php");
+									
+									if ($GUEST_ACCESS) {
+										$hash = get_hash();
+										
+										if ($GUEST_NEW_ACCESS) {
+											$PROCESSED_EMAIL = array();
+											$PROCESSED_EMAIL["ip"] = $_SERVER["REMOTE_ADDR"];
+											$PROCESSED_EMAIL["date"] = time();
+											$PROCESSED_EMAIL["user_id"] = $GUEST_PROXY_ID;
+											$PROCESSED_EMAIL["hash"] = $hash;
+											$PROCESSED_EMAIL["complete"] = 0;
 
-												$message  = "Hello ".$PROCESSED['firstname']." ".$PROCESSED['lastname'].",\n\n";
-												$message .= $_SESSION['details']['firstname'].' '.$_SESSION['details']['lastname']." has invited you to join their community: ".$community_details['community_title']."!\n\n";
-												$message .= "This is an automated e-mail informing you that you have been invited to join ".$community_details['community_title']." at ".APPLICATION_NAME.".\n";
-												$message .= "An account has been created for you within ".APPLICATION_NAME." however you must activate it by resetting your password before you can use it.\n\n";
-												$message .= "Your ".APPLICATION_NAME." Username is: ".$username."\n\n";
-												$message .= "Please visit the following link to assign a new password to your account:\n";
-												$message .= str_replace("http://", "https://", PASSWORD_RESET_URL)."?hash=".rawurlencode($PROCESSED_ACCESS["user_id"].":".$HASH)."\n\n";
-												$message .= "Please Note:\n";
-												$message .= "This password link will be valid for the next 3 days. If you do set your\n";
-												$message .= "password within this time period, you will need to receive another invitation to restart this process.\n\n";
-												$message .= "If you did not request a password for this account and you believe\n";
-												$message .= "there has been a mistake, DO NOT click the above link. Please forward this\n";
-												$message .= "message along with a description of the problem to: ".$AGENT_CONTACTS["administrator"]["email"]."\n\n";
-												$message .= "Best Regards,\n";
-												$message .= $AGENT_CONTACTS["administrator"]["name"]."\n";
-												$message .= $AGENT_CONTACTS["administrator"]["email"]."\n";
-												$message .= ENTRADA_URL."\n\n";
-												$message .= "Requested By:\t".$_SERVER["REMOTE_ADDR"]."\n";
-												$message .= "Requested At:\t".date("r", time())."\n";
-
+											if ($db->AutoExecute("`".AUTH_DATABASE."`.`password_reset`", $PROCESSED_EMAIL, "INSERT")) {
+												$xml_file = TEMPLATE_ABSOLUTE."/email/community-new-user.xml";
 											} else {
-												$ERROR++;
-												$ERRORSTR[]	= "Unable to give this new user a password. An administrator has been notified, so please try again later.";
+												$xml_file = "";
 
-												application_log("error", "Error inserting new password_reset. Database said: ".$db->ErrorMsg());
-
+												application_log("error", "Error inserting new password_reset into database from Communities > Manage Members. Database said: ".$db->ErrorMsg());
 											}
 										} else {
-												$message  = "Hello ".$PROCESSED['firstname']." ".$PROCESSED['lastname'].",\n\n";
-												$message .= $_SESSION['details']['firstname'].' '.$_SESSION['details']['lastname']." has invited you to join their community: ".$community_details['community_title']."!\n\n";
-												$message .= "This is an automated e-mail informing you that you have been invited to join ".$community_details['community_title']." at ".APPLICATION_NAME.".\n";
-												$message .= "Your account within ".APPLICATION_NAME." is already active and you can log in whenever you like.\n\n";
-												$message .= "Your ".APPLICATION_NAME." Username is: ".$username."\n\n";
-												$message .= "If you do not know about this application or the community and you believe\n";
-												$message .= "there has been a mistake, DO NOT log in to the application. Please forward this\n";
-												$message .= "message along with a description of the problem to: ".$AGENT_CONTACTS["administrator"]["email"]."\n\n";
-												$message .= "Best Regards,\n";
-												$message .= $AGENT_CONTACTS["administrator"]["name"]."\n";
-												$message .= $AGENT_CONTACTS["administrator"]["email"]."\n";
-												$message .= ENTRADA_URL."\n\n";
-												$message .= "Requested By:\t".$_SERVER["REMOTE_ADDR"]."\n";
-												$message .= "Requested At:\t".date("r", time())."\n";
-										}
-
-										if(@mail($PROCESSED['email'], APPLICATION_NAME." Community Invitation from ".$PROCESSED['firstname']." ".$PROCESSED['lastname'], $message, "From: \"".$AGENT_CONTACTS["administrator"]["name"]."\" <".$AGENT_CONTACTS["administrator"]["email"].">\nReply-To: \"".$AGENT_CONTACTS["administrator"]["name"]."\" <".$AGENT_CONTACTS["administrator"]["email"].">")) {
-											if ($MAILING_LISTS["active"]) {
-												$mail_list = new MailingList($COMMUNITY_ID);
-											}
-										} else {
-											$ERROR++;
-											$ERRORSTR[] = "We were unable to send an invitation e-mail to the guest at this time due to an unrecoverable error. The administrator has been notified of this error and will investigate the issue shortly.<br /><br />Please try again later, we apologize for any inconvenience this may have caused.";
-
-											application_log("error", "Unable to send password reset notice as PHP's mail() function failed to initialize.");
+											$xml_file = TEMPLATE_ABSOLUTE."/email/community-new-access.xml";
 										}
 										
-										$query	= "
-												SELECT a.`id` AS `proxy_id`, c.`cmember_id`, c.`member_acl`
-												FROM `".AUTH_DATABASE."`.`user_data` AS a
-												LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
-												ON b.`user_id` = ".$db->qstr($GUEST_PROXY_ID)."
-												AND b.`app_id` IN (".AUTH_APP_IDS_STRING.")
-												LEFT JOIN `community_members` AS c
-												ON c.`proxy_id` = ".$db->qstr($GUEST_PROXY_ID)."
-												AND c.`community_id` = ".$db->qstr($COMMUNITY_ID)."
-												WHERE a.`id` = ".$db->qstr($GUEST_PROXY_ID);
-										$result	= $db->GetRow($query);
+										try {
+											$template = new Template($xml_file);
+											$mail = new TemplateMailer(new Zend_Mail());
+											$mail->addHeader("X-Section", "Communities / Manage Members", true);
+											$from = array("email" => $_SESSION["details"]["email"], "firstname" => $_SESSION["details"]["firstname"], "lastname" => $_SESSION["details"]["lastname"]);
+											$to = array("email" => $PROCESSED["email"], "firstname" => $PROCESSED["firstname"], "lastname" => $PROCESSED["lastname"]);
+											$keywords = array(
+												"application_name" => APPLICATION_NAME,
+												"from_firstname" => $_SESSION["details"]["firstname"],
+												"from_lastname" => $_SESSION["details"]["lastname"],
+												"to_fullname" => ($PROCESSED["firstname"]." ".$PROCESSED["lastname"]),
+												"community_title" => $community_details["community_title"],
+												"community_url" => ENTRADA_URL."/community".$community_details["community_url"],
+												"username" => $username,
+												"password_url" => PASSWORD_RESET_URL."?hash=".rawurlencode($PROCESSED_ACCESS["user_id"].":".$hash)
+											);
 
-										if($result) {
-											if((int) $result["cmember_id"]) {
-												if(@$db->AutoExecute("community_members", array("member_active" => 1), "UPDATE", "`cmember_id` = ".$db->qstr((int) $result["cmember_id"]))) {
+											if ($mail->send($template, $to, $from, DEFAULT_LANGUAGE, $keywords)) {
+												if ($MAILING_LISTS["active"]) {
+													$mail_list = new MailingList($COMMUNITY_ID);
+												}
+											} else {
+												add_error("We were unable to send an invitation e-mail to the guest at this time.<br /><br />A system administrator was notified of this issue, but you may wish to contact this individual manually and let them know they have been added.");
+												
+												application_log("error", "Unable to send community guest notification to [".$to["email"]."]. Zend_Mail said: ".$mail->ErrorInfo);
+											}
+										} catch (Exception $e) {
+											add_error("We were unable to send an invitation e-mail to the guest at this time.<br /><br />A system administrator was notified of this issue, but you may wish to contact this individual manually and let them know they have been added.");
+											
+											application_log("error", "Unable to load the XML file [".$xml_file."] or the XML file did not contain the language requested [".DEFAULT_LANGUAGE."], when attempting to send a community guest notification.");
+										}
+
+										$query = "	SELECT a.`id` AS `proxy_id`, c.`cmember_id`, c.`member_acl`
+													FROM `".AUTH_DATABASE."`.`user_data` AS a
+													LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+													ON b.`user_id` = ".$db->qstr($GUEST_PROXY_ID)."
+													AND b.`app_id` IN (".AUTH_APP_IDS_STRING.")
+													LEFT JOIN `community_members` AS c
+													ON c.`proxy_id` = ".$db->qstr($GUEST_PROXY_ID)."
+													AND c.`community_id` = ".$db->qstr($COMMUNITY_ID)."
+													WHERE a.`id` = ".$db->qstr($GUEST_PROXY_ID);
+										$result	= $db->GetRow($query);
+										if ($result) {
+											if ((int) $result["cmember_id"]) {
+												if (@$db->AutoExecute("community_members", array("member_active" => 1), "UPDATE", "`cmember_id` = ".$db->qstr((int) $result["cmember_id"]))) {
 													if ($MAILING_LISTS["active"]) {
 														$mail_list->add_member($GUEST_PROXY_ID, ((bool)$result["member_acl"]));
 													}
@@ -310,7 +301,7 @@ if($COMMUNITY_ID) {
 												$PROCESSED["member_joined"]	= time();
 												$PROCESSED["member_acl"]	= 0;
 
-												if(@$db->AutoExecute("community_members", $PROCESSED, "INSERT")) {
+												if (@$db->AutoExecute("community_members", $PROCESSED, "INSERT")) {
 													if ($MAILING_LISTS["active"]) {
 														$mail_list->add_member($GUEST_PROXY_ID);
 													}
@@ -323,15 +314,16 @@ if($COMMUNITY_ID) {
 										}
 
 
-										if($member_add_success) {
+										if ($member_add_success) {
 											$url = ENTRADA_URL."/communities?section=members&community=".$COMMUNITY_ID;
 											$SUCCESS++;
-											if($GUEST_NEW_ACCESS) {
-												$SUCCESSSTR[]	= "You have successfully created a new guest user in system, and have given them access to this community.<br /><br />You will now be redirected back to the user manager; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+											if ($GUEST_NEW_ACCESS) {
+												$SUCCESSSTR[] = "You have successfully created a new guest user in system, and have given them access to this community.<br /><br />You will now be redirected back to the user manager; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 											} else {
-												$SUCCESSSTR[]	= "You have successfully given a guest access to this community.<br /><br />You will now be redirected back to the user manager; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+												$SUCCESSSTR[] = "You have successfully given a guest access to this community.<br /><br />You will now be redirected back to the user manager; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 											}
-											$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
+											
+											$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
 											communities_log_history($COMMUNITY_ID, 0, $member_add_success, "community_history_add_members", 1);
 											application_log("success", "Gave [".$PROCESSED_ACCESS["group"]." / ".$PROCESSED_ACCESS["role"]."] permissions to user id [".$PROCESSED_ACCESS["user_id"]."] as a guest for community $COMMUNITY_ID.");
 										} else {
@@ -349,17 +341,17 @@ if($COMMUNITY_ID) {
 
 								}
 							}
-							break;
+						break;
 						case "add" :
 							$member_add_success	= 0;
 							$member_add_failure	= 0;
-							if((isset($_POST["acc_community_members"])) && ($proxy_ids = explode(',', $_POST["acc_community_members"])) && (count($proxy_ids))) {
+							if ((isset($_POST["acc_community_members"])) && ($proxy_ids = explode(',', $_POST["acc_community_members"])) && (count($proxy_ids))) {
 								if ($MAILING_LISTS["active"]) {
 									$mail_list = new MailingList($COMMUNITY_ID);
 								}
 
-								foreach($proxy_ids as $proxy_id) {
-									if(($proxy_id = (int) trim($proxy_id))) {
+								foreach ($proxy_ids as $proxy_id) {
+									if (($proxy_id = (int) trim($proxy_id))) {
 										$query	= "
 												SELECT a.`id` AS `proxy_id`, c.`cmember_id`, c.`member_acl`
 												FROM `".AUTH_DATABASE."`.`user_data` AS a
@@ -371,9 +363,9 @@ if($COMMUNITY_ID) {
 												AND c.`community_id` = ".$db->qstr($COMMUNITY_ID)."
 												WHERE a.`id` = ".$db->qstr($proxy_id);
 										$result	= $db->GetRow($query);
-										if($result) {
-											if((int) $result["cmember_id"]) {
-												if(@$db->AutoExecute("community_members", array("member_active" => 1), "UPDATE", "`cmember_id` = ".$db->qstr((int) $result["cmember_id"]))) {
+										if ($result) {
+											if ((int) $result["cmember_id"]) {
+												if (@$db->AutoExecute("community_members", array("member_active" => 1), "UPDATE", "`cmember_id` = ".$db->qstr((int) $result["cmember_id"]))) {
 													if ($MAILING_LISTS["active"]) {
 														$mail_list->add_member($proxy_id, ((bool)$result["member_acl"]));
 													}
@@ -390,7 +382,7 @@ if($COMMUNITY_ID) {
 												$PROCESSED["member_joined"]	= time();
 												$PROCESSED["member_acl"]	= 0;
 
-												if(@$db->AutoExecute("community_members", $PROCESSED, "INSERT")) {
+												if (@$db->AutoExecute("community_members", $PROCESSED, "INSERT")) {
 													if ($MAILING_LISTS["active"]) {
 														$mail_list->add_member($proxy_id);
 													}
@@ -406,22 +398,22 @@ if($COMMUNITY_ID) {
 								}
 							}
 
-							if($member_add_success) {
+							if ($member_add_success) {
 								$SUCCESS++;
 								$SUCCESSSTR[] = "You have successfully added ".$member_add_success." new member".(($member_add_success != 1) ? "s" : "")." to this community.<br /><br />You will now be redirected back to the Manage Members page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/".$MODULE."?section=members&community=".$COMMUNITY_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
 
 								communities_log_history($COMMUNITY_ID, 0, $member_add_success, "community_history_add_members", 1);
 							}
-							if($member_add_failure) {
+							if ($member_add_failure) {
 								$NOTICE++;
 								$NOTICESTR[] = "Failed to add or update".$member_add_failure." member".(($member_add_failure != 1) ? "s" : "")." during this process. The MEdTech Unit has been informed of this error, please try again later.<br /><br />You will now be redirected back to the Manage Members page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/".$MODULE."?section=members&community=".$COMMUNITY_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
 							}
 							break;
 						case "admins" :
-							if((isset($_POST["admin_action"])) && (@in_array(strtolower($_POST["admin_action"]), array("delete", "deactivate", "demote")))) {
-								if((isset($_POST["admin_proxy_ids"])) && (is_array($_POST["admin_proxy_ids"])) && (count($_POST["admin_proxy_ids"]))) {
-									foreach($_POST["admin_proxy_ids"] as $proxy_id) {
-										if($proxy_id = (int) trim($proxy_id)) {
+							if ((isset($_POST["admin_action"])) && (@in_array(strtolower($_POST["admin_action"]), array("delete", "deactivate", "demote")))) {
+								if ((isset($_POST["admin_proxy_ids"])) && (is_array($_POST["admin_proxy_ids"])) && (count($_POST["admin_proxy_ids"]))) {
+									foreach ($_POST["admin_proxy_ids"] as $proxy_id) {
+										if ($proxy_id = (int) trim($proxy_id)) {
 											$query	= "
 													SELECT a.*
 													FROM `".AUTH_DATABASE."`.`user_data` AS a
@@ -430,19 +422,19 @@ if($COMMUNITY_ID) {
 													AND b.`app_id` IN (".AUTH_APP_IDS_STRING.")
 													WHERE a.`id` = ".$db->qstr($proxy_id);
 											$result	= $db->GetRow($query);
-											if($result) {
+											if ($result) {
 												$PROXY_IDS[] = $proxy_id;
 											}
 										}
 									}
 								}
 
-								if((is_array($PROXY_IDS)) && (count($PROXY_IDS))) {
-									switch(strtolower($_POST["admin_action"])) {
+								if ((is_array($PROXY_IDS)) && (count($PROXY_IDS))) {
+									switch (strtolower($_POST["admin_action"])) {
 										case "delete" :
 											$query	= "DELETE FROM `community_members` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `proxy_id` IN ('".implode("', '", $PROXY_IDS)."') AND `member_acl` = '1'";
 											$result	= $db->Execute($query);
-											if(($result) && ($total_deleted = $db->Affected_Rows())) {
+											if (($result) && ($total_deleted = $db->Affected_Rows())) {
 												if ($MAILING_LISTS["active"]) {
 													$mail_list = new MailingList($COMMUNITY_ID);
 													foreach ($PROXY_IDS as $proxy_id) {
@@ -459,7 +451,7 @@ if($COMMUNITY_ID) {
 											}
 											break;
 										case "deactivate" :
-											if(($db->AutoExecute("community_members", array("member_active" => 0, "member_acl" => 0), "UPDATE", "`community_id` = ".$db->qstr($COMMUNITY_ID)." AND `proxy_id` IN ('".implode("', '", $PROXY_IDS)."') AND `member_active` = '1' AND `member_acl` = '1'")) && ($total_updated = $db->Affected_Rows())) {
+											if (($db->AutoExecute("community_members", array("member_active" => 0, "member_acl" => 0), "UPDATE", "`community_id` = ".$db->qstr($COMMUNITY_ID)." AND `proxy_id` IN ('".implode("', '", $PROXY_IDS)."') AND `member_active` = '1' AND `member_acl` = '1'")) && ($total_updated = $db->Affected_Rows())) {
 												if ($MAILING_LISTS["active"]) {
 													$mail_list = new MailingList($COMMUNITY_ID);
 													foreach ($PROXY_IDS as $proxy_id) {
@@ -476,7 +468,7 @@ if($COMMUNITY_ID) {
 											}
 											break;
 										case "demote" :
-											if(($db->AutoExecute("community_members", array("member_acl" => 0), "UPDATE", "`community_id` = ".$db->qstr($COMMUNITY_ID)." AND `proxy_id` IN ('".implode("', '", $PROXY_IDS)."') AND `member_active` = '1' AND `member_acl` = '1'")) && ($total_updated = $db->Affected_Rows())) {
+											if (($db->AutoExecute("community_members", array("member_acl" => 0), "UPDATE", "`community_id` = ".$db->qstr($COMMUNITY_ID)." AND `proxy_id` IN ('".implode("', '", $PROXY_IDS)."') AND `member_active` = '1' AND `member_acl` = '1'")) && ($total_updated = $db->Affected_Rows())) {
 												if ($MAILING_LISTS["active"]) {
 													$mail_list = new MailingList($COMMUNITY_ID);
 													foreach ($PROXY_IDS as $proxy_id) {
@@ -511,10 +503,10 @@ if($COMMUNITY_ID) {
 							}
 							break;
 						case "members" :
-							if((isset($_POST["member_action"])) && (@in_array(strtolower($_POST["member_action"]), array("delete", "deactivate", "promote")))) {
-								if((isset($_POST["member_proxy_ids"])) && (is_array($_POST["member_proxy_ids"])) && (count($_POST["member_proxy_ids"]))) {
-									foreach($_POST["member_proxy_ids"] as $proxy_id) {
-										if($proxy_id = (int) trim($proxy_id)) {
+							if ((isset($_POST["member_action"])) && (@in_array(strtolower($_POST["member_action"]), array("delete", "deactivate", "promote")))) {
+								if ((isset($_POST["member_proxy_ids"])) && (is_array($_POST["member_proxy_ids"])) && (count($_POST["member_proxy_ids"]))) {
+									foreach ($_POST["member_proxy_ids"] as $proxy_id) {
+										if ($proxy_id = (int) trim($proxy_id)) {
 											$query	= "
 													SELECT a.*
 													FROM `".AUTH_DATABASE."`.`user_data` AS a
@@ -523,19 +515,19 @@ if($COMMUNITY_ID) {
 													AND b.`app_id` IN (".AUTH_APP_IDS_STRING.")
 													WHERE a.`id` = ".$db->qstr($proxy_id);
 											$result	= $db->GetRow($query);
-											if($result) {
+											if ($result) {
 												$PROXY_IDS[] = $proxy_id;
 											}
 										}
 									}
 								}
 
-								if((is_array($PROXY_IDS)) && (count($PROXY_IDS))) {
-									switch(strtolower($_POST["member_action"])) {
+								if ((is_array($PROXY_IDS)) && (count($PROXY_IDS))) {
+									switch (strtolower($_POST["member_action"])) {
 										case "delete" :
 											$query	= "DELETE FROM `community_members` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `proxy_id` IN ('".implode("', '", $PROXY_IDS)."') AND `member_acl` = '0'";
 											$result	= $db->Execute($query);
-											if(($result) && ($total_deleted = $db->Affected_Rows())) {
+											if (($result) && ($total_deleted = $db->Affected_Rows())) {
 												if ($MAILING_LISTS["active"]) {
 													$mail_list = new MailingList($COMMUNITY_ID);
 													foreach ($PROXY_IDS as $proxy_id) {
@@ -552,7 +544,7 @@ if($COMMUNITY_ID) {
 											}
 											break;
 										case "deactivate" :
-											if(($db->AutoExecute("community_members", array("member_active" => 0), "UPDATE", "`community_id` = ".$db->qstr($COMMUNITY_ID)." AND `proxy_id` IN ('".implode("', '", $PROXY_IDS)."') AND `member_active` = '1' AND `member_acl` = '0'")) && ($total_updated = $db->Affected_Rows())) {
+											if (($db->AutoExecute("community_members", array("member_active" => 0), "UPDATE", "`community_id` = ".$db->qstr($COMMUNITY_ID)." AND `proxy_id` IN ('".implode("', '", $PROXY_IDS)."') AND `member_active` = '1' AND `member_acl` = '0'")) && ($total_updated = $db->Affected_Rows())) {
 												if ($MAILING_LISTS["active"]) {
 													$mail_list = new MailingList($COMMUNITY_ID);
 													foreach ($PROXY_IDS as $proxy_id) {
@@ -569,7 +561,7 @@ if($COMMUNITY_ID) {
 											}
 											break;
 										case "promote" :
-											if(($db->AutoExecute("community_members", array("member_acl" => 1), "UPDATE", "`community_id` = ".$db->qstr($COMMUNITY_ID)." AND `proxy_id` IN ('".implode("', '", $PROXY_IDS)."') AND `member_active` = '1' AND `member_acl` = '0'")) && ($total_updated = $db->Affected_Rows())) {
+											if (($db->AutoExecute("community_members", array("member_acl" => 1), "UPDATE", "`community_id` = ".$db->qstr($COMMUNITY_ID)." AND `proxy_id` IN ('".implode("', '", $PROXY_IDS)."') AND `member_active` = '1' AND `member_acl` = '0'")) && ($total_updated = $db->Affected_Rows())) {
 												if ($MAILING_LISTS["active"]) {
 													$mail_list = new MailingList($COMMUNITY_ID);
 													if ($mail_list) {
@@ -613,7 +605,7 @@ if($COMMUNITY_ID) {
 							break;
 					}
 
-					if($ERROR) {
+					if ($ERROR) {
 						$STEP = 1;
 					}
 					break;
@@ -624,17 +616,17 @@ if($COMMUNITY_ID) {
 			}
 
 			// Display Content
-			switch($STEP) {
+			switch ($STEP) {
 				case 3 :
 
 					break;
 				case 2 :
 					$ONLOAD[]		= "setTimeout('window.location=\\'".ENTRADA_URL."/".$MODULE."?section=members&community=".$COMMUNITY_ID."\\'', 5000)";
 
-					if($SUCCESS) {
+					if ($SUCCESS) {
 						echo display_success();
 					}
-					if($NOTICE) {
+					if ($NOTICE) {
 						echo display_notice();
 					}
 					break;
@@ -644,14 +636,14 @@ if($COMMUNITY_ID) {
 				 * Update requested sort column.
 				 * Valid: date, title
 				 */
-					if(isset($_GET["sb"])) {
-						if(@in_array(trim($_GET["sb"]), array("date", "name", "type"))) {
+					if (isset($_GET["sb"])) {
+						if (@in_array(trim($_GET["sb"]), array("date", "name", "type"))) {
 							$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] = trim($_GET["sb"]);
 						}
 
 						$_SERVER["QUERY_STRING"]	= replace_query(array("sb" => false));
 					} else {
-						if(!isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"])) {
+						if (!isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"])) {
 							$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] = "date";
 						}
 					}
@@ -660,12 +652,12 @@ if($COMMUNITY_ID) {
 					 * Update requested order to sort by.
 					 * Valid: asc, desc
 					 */
-					if(isset($_GET["so"])) {
+					if (isset($_GET["so"])) {
 						$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"] = ((strtolower($_GET["so"]) == "desc") ? "desc" : "asc");
 
 						$_SERVER["QUERY_STRING"]	= replace_query(array("so" => false));
 					} else {
-						if(!isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"])) {
+						if (!isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"])) {
 							$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"] = "asc";
 						}
 					}
@@ -674,16 +666,16 @@ if($COMMUNITY_ID) {
 					 * Update requsted number of rows per page.
 					 * Valid: any integer really.
 					 */
-					if((isset($_GET["pp"])) && ((int) trim($_GET["pp"]))) {
+					if ((isset($_GET["pp"])) && ((int) trim($_GET["pp"]))) {
 						$integer = (int) trim($_GET["pp"]);
 
-						if(($integer > 0) && ($integer <= 250)) {
+						if (($integer > 0) && ($integer <= 250)) {
 							$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"] = $integer;
 						}
 
 						$_SERVER["QUERY_STRING"] = replace_query(array("pp" => false));
 					} else {
-						if(!isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"])) {
+						if (!isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"])) {
 							$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"] = 15;
 						}
 					}
@@ -691,7 +683,7 @@ if($COMMUNITY_ID) {
 					/**
 					 * Provide the queries with the columns to order by.
 					 */
-					switch($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) {
+					switch ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) {
 						case "name" :
 							$SORT_BY	= "CONCAT_WS(', ', b.`lastname`, b.`firstname`) ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]);
 							break;
@@ -704,10 +696,10 @@ if($COMMUNITY_ID) {
 							break;
 					}
 
-					if($NOTICE) {
+					if ($NOTICE) {
 						echo display_notice();
 					}
-					if($ERROR) {
+					if ($ERROR) {
 						echo display_error();
 					}
 					?>
@@ -722,10 +714,10 @@ if($COMMUNITY_ID) {
 							 */
 							$query	= "SELECT COUNT(*) AS `total_rows` FROM `community_members` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `member_active` = '1' AND `member_acl` = '0'";
 							$result	= $db->GetRow($query);
-							if($result) {
+							if ($result) {
 								$TOTAL_ROWS	= $result["total_rows"];
 
-								if($TOTAL_ROWS <= $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) {
+								if ($TOTAL_ROWS <= $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) {
 									$TOTAL_PAGES = 1;
 								} elseif (($TOTAL_ROWS % $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) == 0) {
 									$TOTAL_PAGES = (int) ($TOTAL_ROWS / $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]);
@@ -733,17 +725,17 @@ if($COMMUNITY_ID) {
 									$TOTAL_PAGES = (int) ($TOTAL_ROWS / $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) + 1;
 								}
 								
-								if(isset($_GET["mpv"])) {
+								if (isset($_GET["mpv"])) {
 									$PAGE_CURRENT = (int) trim($_GET["mpv"]);
 	
-									if(($PAGE_CURRENT < 1) || ($PAGE_CURRENT > $TOTAL_PAGES)) {
+									if (($PAGE_CURRENT < 1) || ($PAGE_CURRENT > $TOTAL_PAGES)) {
 										$PAGE_CURRENT = 1;
 									}
 								} else {
 									$PAGE_CURRENT = 1;
 								}
 
-								if($TOTAL_PAGES > 1) {
+								if ($TOTAL_PAGES > 1) {
 									$member_pagination = new Pagination($PAGE_CURRENT, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"], $TOTAL_ROWS, ENTRADA_URL."/".$MODULE, replace_query(), "mpv");
 								} else {
 									$member_pagination = false;
@@ -753,10 +745,10 @@ if($COMMUNITY_ID) {
 								$TOTAL_PAGES	= 1;
 							}
 							if (!isset($PAGE_CURRENT) || !$PAGE_CURRENT) {
-								if(isset($_GET["mpv"])) {
+								if (isset($_GET["mpv"])) {
 									$PAGE_CURRENT = (int) trim($_GET["mpv"]);
 	
-									if(($PAGE_CURRENT < 1) || ($PAGE_CURRENT > $TOTAL_PAGES)) {
+									if (($PAGE_CURRENT < 1) || ($PAGE_CURRENT > $TOTAL_PAGES)) {
 										$PAGE_CURRENT = 1;
 									}
 								} else {
@@ -792,8 +784,8 @@ if($COMMUNITY_ID) {
 							$query		= sprintf($query, $SORT_BY, $limit_parameter, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]);
 							$results	= $db->GetAll($query);
 							
-							if($results) {
-								if(($TOTAL_PAGES > 1) && ($member_pagination)) {
+							if ($results) {
+								if (($TOTAL_PAGES > 1) && ($member_pagination)) {
 									echo "<div id=\"pagination-links\">\n";
 									echo "Pages: ".$member_pagination->GetPageLinks();
 									echo "</div>\n";
@@ -833,7 +825,7 @@ if($COMMUNITY_ID) {
 								</tfoot>
 								<tbody>
 								<?php
-								foreach($results as $result) {
+								foreach ($results as $result) {
 									echo "<tr>\n";
 									echo "	<td><input type=\"checkbox\" name=\"member_proxy_ids[]\" value=\"".(int) $result["proxy_id"]."\" /></td>\n";
 									echo "	<td>".date(DEFAULT_DATE_FORMAT, $result["member_joined"])."</td>\n";
@@ -862,10 +854,10 @@ if($COMMUNITY_ID) {
 							 */
 							$query	= "SELECT COUNT(*) AS `total_rows` FROM `community_members` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `member_active` = '1' AND `member_acl` = '1'";
 							$result	= $db->GetRow($query);
-							if($result) {
+							if ($result) {
 								$TOTAL_ROWS	= $result["total_rows"];
 
-								if($TOTAL_ROWS <= $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) {
+								if ($TOTAL_ROWS <= $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) {
 									$TOTAL_PAGES = 1;
 								} elseif (($TOTAL_ROWS % $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) == 0) {
 									$TOTAL_PAGES = (int) ($TOTAL_ROWS / $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]);
@@ -873,7 +865,7 @@ if($COMMUNITY_ID) {
 									$TOTAL_PAGES = (int) ($TOTAL_ROWS / $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) + 1;
 								}
 
-								if($TOTAL_PAGES > 1) {
+								if ($TOTAL_PAGES > 1) {
 									$admin_pagination = new Pagination($PAGE_CURRENT, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"], $TOTAL_ROWS, ENTRADA_URL."/".$MODULE, replace_query(), "apv");
 								} else {
 									$admin_pagination = false;
@@ -887,10 +879,10 @@ if($COMMUNITY_ID) {
 							/**
 							 * Check if pv variable is set and see if it's a valid page, other wise page 1 it is.
 							 */
-							if(isset($_GET["apv"])) {
+							if (isset($_GET["apv"])) {
 								$PAGE_CURRENT = (int) trim($_GET["apv"]);
 
-								if(($PAGE_CURRENT < 1) || ($PAGE_CURRENT > $TOTAL_PAGES)) {
+								if (($PAGE_CURRENT < 1) || ($PAGE_CURRENT > $TOTAL_PAGES)) {
 									$PAGE_CURRENT = 1;
 								}
 							} else {
@@ -921,8 +913,8 @@ if($COMMUNITY_ID) {
 							
 							$query		= sprintf($query, $SORT_BY, $limit_parameter, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]);
 							$results	= $db->GetAll($query);
-							if($results) {
-								if(($TOTAL_PAGES > 1) && ($admin_pagination)) {
+							if ($results) {
+								if (($TOTAL_PAGES > 1) && ($admin_pagination)) {
 									echo "<div id=\"pagination-links\">\n";
 									echo "Pages: ".$admin_pagination->GetPageLinks();
 									echo "</div>\n";
@@ -960,7 +952,7 @@ if($COMMUNITY_ID) {
 				</tfoot>
 				<tbody>
 											<?php
-											foreach($results as $result) {
+											foreach ($results as $result) {
 												echo "<tr>\n";
 												echo "	<td><input type=\"checkbox\" name=\"admin_proxy_ids[]\" value=\"".(int) $result["proxy_id"]."\"".(($result["proxy_id"] == $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]) ? " onclick=\"this.checked = false\" disabled=\"disabled\"" : "")." /></td>\n";
 												echo "	<td>".date(DEFAULT_DATE_FORMAT, $result["member_joined"])."</td>\n";
@@ -1016,30 +1008,30 @@ if($COMMUNITY_ID) {
 													/**
 													 * Check registration requirements for this community.
 													 */
-													switch($community_details["community_registration"]) {
+													switch ($community_details["community_registration"]) {
 														case 2 :	// Selected Group Registration
 														/**
 														 * List everyone in the specific groups with the specific role combination. What a PITA.
 														 */
-															if(($community_details["community_members"] != "") && ($community_members = @unserialize($community_details["community_members"])) && (is_array($community_members)) && (count($community_members))) {
+															if (($community_details["community_members"] != "") && ($community_members = @unserialize($community_details["community_members"])) && (is_array($community_members)) && (count($community_members))) {
 																$role_group_combinations = array();
-																foreach($community_members as $member_group) {
-																	if($member_group != "") {
+																foreach ($community_members as $member_group) {
+																	if ($member_group != "") {
 																		$tmp_build	= array();
 																		$role	= "";
 																		$pieces = explode("_", $member_group);
 
-																		if(isset($pieces[1]) && (isset($pieces[0]) && $pieces[0] == "student")) {
+																		if (isset($pieces[1]) && (isset($pieces[0]) && $pieces[0] == "student")) {
 																			$tmp_build["role"]	= "b.`role` = ".$db->qstr(clean_input($pieces[1], "alphanumeric"));
 																		}
-																		if(isset($pieces[0])) {
+																		if (isset($pieces[0])) {
 																			$tmp_build["group"]	= "b.`group` = ".$db->qstr(clean_input($pieces[0], "alphanumeric"));
 																		}
 
 																		$role_group_combinations[] = "(".implode(" AND ", $tmp_build).")";
 																	}
 																}
-																if(@count($role_group_combinations)) {
+																if (@count($role_group_combinations)) {
 																	$nmembers_query	= "
 																		SELECT a.`id` AS `proxy_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, a.`username`, a.`organisation_id`, b.`group`, b.`role`
 																		FROM `".AUTH_DATABASE."`.`user_data` AS a
@@ -1056,18 +1048,18 @@ if($COMMUNITY_ID) {
 															}
 															break;
 														case 3 :	// Selected Community Registration
-															if(($community_details["community_members"] != "") && ($community_members = @unserialize($community_details["community_members"])) && (is_array($community_members)) && (count($community_members))) {
+															if (($community_details["community_members"] != "") && ($community_members = @unserialize($community_details["community_members"])) && (is_array($community_members)) && (count($community_members))) {
 																$tmp_community_member_list = array();
 																$query		= "SELECT `proxy_id` FROM `community_members` WHERE `member_active` = '1' AND `community_id` IN ('".implode("', '", $community_members)."')";
 																$results	= $db->GetAll($query);
-																if($results) {
-																	foreach($results as $result) {
-																		if($proxy_id = (int) $result["proxy_id"]) {
+																if ($results) {
+																	foreach ($results as $result) {
+																		if ($proxy_id = (int) $result["proxy_id"]) {
 																			$tmp_community_member_list[] = $proxy_id;
 																		}
 																	}
 																}
-																if(@count($tmp_community_member_list)) {
+																if (@count($tmp_community_member_list)) {
 																	$nmembers_query	= "
 																		SELECT a.`id` AS `proxy_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, a.`username`, a.`organisation_id`, b.`group`, b.`role`
 																		FROM `".AUTH_DATABASE."`.`user_data` AS a
@@ -1103,9 +1095,9 @@ if($COMMUNITY_ID) {
 													//Fetch list of categories
 													$query	= "SELECT `organisation_id`,`organisation_title` FROM `".AUTH_DATABASE."`.`organisations` ORDER BY `organisation_title` ASC";
 													$organisation_results	= $db->GetAll($query);
-													if($organisation_results) {
+													if ($organisation_results) {
 														$organisations = array();
-														foreach($organisation_results as $result) {
+														foreach ($organisation_results as $result) {
 															$member_categories[$result["organisation_id"]] = array("text" => $result["organisation_title"], "value" => "organisation_".$result["organisation_id"], "category"=>true);
 														}
 
@@ -1114,34 +1106,34 @@ if($COMMUNITY_ID) {
 													$current_member_list	= array();
 													$query		= "SELECT `proxy_id` FROM `community_members` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `member_active` = '1'";
 													$results	= $db->GetAll($query);
-													if($results) {
-														foreach($results as $result) {
-															if($proxy_id = (int) $result["proxy_id"]) {
+													if ($results) {
+														foreach ($results as $result) {
+															if ($proxy_id = (int) $result["proxy_id"]) {
 																$current_member_list[] = $proxy_id;
 															}
 														}
 													}
 
-													if($nmembers_query != "") {
+													if ($nmembers_query != "") {
 														$nmembers_results = $db->GetAll($nmembers_query);
-														if($nmembers_results) {
+														if ($nmembers_results) {
 															$members = $member_categories;
 
-															foreach($nmembers_results as $member) {
+															foreach ($nmembers_results as $member) {
 
 																$organisation_id = $member['organisation_id'];
 																$group = $member['group'];
 																$role = $member['role'];
 
-																if($group == "student" && !isset($members[$organisation_id]['options'][$group.$role])) {
+																if ($group == "student" && !isset($members[$organisation_id]['options'][$group.$role])) {
 																	$members[$organisation_id]['options'][$group.$role] = array('text' => $group. ' > '.$role, 'value' => $organisation_id.'|'.$group.'|'.$role);
 																} elseif ($group != "guest" && $group != "student" && !isset($members[$organisation_id]['options'][$group."all"])) {
 																	$members[$organisation_id]['options'][$group."all"] = array('text' => $group. ' > all', 'value' => $organisation_id.'|'.$group.'|all');
 																}
 															}
 
-															foreach($members as $key => $member) {
-																if(isset($member['options']) && is_array($member['options']) && !empty($member['options'])) {
+															foreach ($members as $key => $member) {
+																if (isset($member['options']) && is_array($member['options']) && !empty($member['options'])) {
 																	sort($members[$key]['options']);
 																}
 															}
@@ -1214,7 +1206,7 @@ if($COMMUNITY_ID) {
 	function updatePeopleList(newoptions, index) {
 		people[index] = newoptions;
 		table = people.flatten().inject(new Element('table', {'class':'member-list'}), function(table, option, i) {
-			if(i%2 == 0) {
+			if (i%2 == 0) {
 				row = new Element('tr');
 				table.appendChild(row);
 			}
@@ -1228,7 +1220,7 @@ if($COMMUNITY_ID) {
 
 
 	$('community_members_select_filter').observe('keypress', function(event){
-	    if(event.keyCode == Event.KEY_RETURN) {
+	    if (event.keyCode == Event.KEY_RETURN) {
 	        Event.stop(event);
 	    }
 	});
@@ -1256,8 +1248,8 @@ if($COMMUNITY_ID) {
 				},
 				onComplete: function(transport) {
 					//Only if successful (the flag set above), regenerate the multiselect based on the new options
-					if(this.makemultiselect) {
-						if(multiselect) {
+					if (this.makemultiselect) {
+						if (multiselect) {
 							multiselect.destroy();
 						}
 						multiselect = new Control.SelectMultiple('community_members','community_members_options',{
@@ -1270,7 +1262,7 @@ if($COMMUNITY_ID) {
 							afterCheck: function(element) {
 								var tr = $(element.parentNode.parentNode);
 								tr.removeClassName('selected');
-								if(element.checked) {
+								if (element.checked) {
 									tr.addClassName('selected');
 								}
 							},

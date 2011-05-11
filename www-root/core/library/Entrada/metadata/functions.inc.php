@@ -203,7 +203,7 @@ function editMetaDataTable($contents, $prepend=null) {
 		</colgroup>
 		<thead>
 			<tr>
-				<th></th>
+				<th>Remove</th>
 				<th>Sub-type</th>
 				<th>Value</th>
 				<th>Notes</th>

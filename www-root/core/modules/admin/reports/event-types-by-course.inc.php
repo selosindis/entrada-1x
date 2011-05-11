@@ -1,15 +1,25 @@
 <?php
 /**
- * Online Course Resources [Pre-Clerkship]
- * Module:	Reports
- * Area:		Admin
- * @author Unit: Medical Education Technology Unit
- * @author Director: Dr. Benjamin Chen <bhc@post.queensu.ca>
- * @author Developer: Matt Simpson <simpson@post.queensu.ca>
- * @version 3.0
- * @copyright Copyright 2007 Queen's University, MEdTech Unit
+ * Entrada [ http://www.entrada-project.org ]
  *
- * $Id: report-by-event-types.inc.php 992 2009-12-22 16:26:26Z simpson $
+ * Entrada is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Entrada is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Entrada.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * @author Organisation: Queen's University
+ * @author Unit: School of Medicine
+ * @author Developer: Matt Simpson <simpson@queensu.ca>
+ * @copyright Copyright 2010 Queen's University. All Rights Reserved.
+ *
  */
 
 if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
@@ -25,7 +35,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]." and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 	$BREADCRUMB[]	= array("url" => "", "title" => "Learning Event Types by Course");
-	
+
 	/**
 	 * Add PlotKit to the beginning of the $HEAD array.
 	 */
@@ -37,12 +47,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 		"<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/PlotKit/Canvas.js\"></script>",
 		"<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/PlotKit/SweetCanvas.js\"></script>"
 		);
-	
+
 	$HEAD[]		= "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/picklist.js\"></script>\n";
 	$ONLOAD[]	= "$('courses_list').style.display = 'none'";
 
 	$organisation_id_changed = false;
-	
+
 	/**
 	 * Fetch the organisation_id that has been selected.
 	 */
@@ -54,7 +64,34 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 	} else {
 		$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["organisation_id"] = (int) $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["organisation_id"];
 	}
-		
+
+	/**
+	 * Preference: Include Event Type Graph
+	 */
+	if (!isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["event_type_graph"]) || (!in_array($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["event_type_graph"], array(0, 1)))) {
+		$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["event_type_graph"] = 1;
+	} elseif (isset($_POST["event_type_graph"])) {
+		$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["event_type_graph"] = (($_POST["event_type_graph"] == 0) ? 0 : 1);
+	}
+
+	/**
+	 * Preference: Include Event Type Chart
+	 */
+	if (!isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["event_type_chart"]) || (!in_array($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["event_type_chart"], array(0, 1)))) {
+		$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["event_type_chart"] = 1;
+	} elseif (isset($_POST["event_type_chart"])) {
+		$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["event_type_chart"] = (($_POST["event_type_chart"] == 0) ? 0 : 1);
+	}
+
+	/**
+	 * Preference: Include Appendix Data
+	 */
+	if (!isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["event_appendix"]) || (!in_array($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["event_appendix"], array(0, 1, 2)))) {
+		$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["event_appendix"] = 1;
+	} elseif (isset($_POST["event_appendix"]) && in_array((int) $_POST["event_appendix"], array(0, 1, 2))) {
+		$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["event_appendix"] = (int) $_POST["event_appendix"];
+	}
+
 	/**
 	 * Fetch all courses into an array that will be used.
 	 */
@@ -71,13 +108,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 	 */
 	if ((isset($_POST["course_ids"])) && (is_array($_POST["course_ids"]))) {
 		$course_ids = array();
-		
+
 		foreach ($_POST["course_ids"] as $course_id) {
 			if ($course_id = (int) $course_id) {
 				$course_ids[] = $course_id;
 			}
 		}
-		
+
 		if (count($course_ids)) {
 			$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["course_ids"] = $course_ids;
 		} else {
@@ -86,7 +123,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 	} elseif (($organisation_id_changed) || (!isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["course_ids"]))) {
 		$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["course_ids"] = array_keys($course_list);
 	}
-	
+
 	if (isset($_POST["event_title_search"]) && $_POST["event_title_search"]) {
 		$event_title_search = clean_input($_POST["event_title_search"], "notags");
 	}
@@ -97,17 +134,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 		border-bottom:		2px #CCCCCC solid;
 		font-size:			24px;
 	}
-	
+
 	h2 {
 		font-weight:		normal;
 		border:				0px;
 		font-size:			18px;
 	}
-	
+
 	div.top-link {
 		float: right;
 	}
-	</style>	
+	</style>
 	<div class="no-printing">
 		<form action="<?php echo ENTRADA_RELATIVE; ?>/admin/reports?section=<?php echo $SECTION; ?>&step=2" method="post" onsubmit="selIt()">
 			<table style="width: 100%" cellspacing="0" cellpadding="2" border="0">
@@ -128,7 +165,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 						<td style="vertical-align: top;"><input id="organisation_checkbox" type="checkbox" disabled="disabled" checked="checked"></td>
 						<td style="vertical-align: top;"><label for="organisation_id" class="form-required">Organisation</label></td>
 						<td style="vertical-align: top;">
-							<select id="organisation_id" name="organisation_id" style="width: 177px" onchange="window.location = '<?php echo ENTRADA_RELATIVE; ?>/admin/reports?section=<?php echo $SECTION; ?>&org_id=' + $F('organisation_id')">
+							<select id="organisation_id" name="organisation_id" style="width: 215px" onchange="window.location = '<?php echo ENTRADA_RELATIVE; ?>/admin/reports?section=<?php echo $SECTION; ?>&org_id=' + $F('organisation_id')">
 							<?php
 							$query = "SELECT `organisation_id`, `organisation_title` FROM `".AUTH_DATABASE."`.`organisations`";
 							$results = $db->GetAll($query);
@@ -204,6 +241,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 					</tr>
 					<tr>
 						<td>&nbsp;</td>
+						<td><label for="event_appendix" class="form-nrequired">Include <strong>Appendix</strong> Data</label></td>
+						<td>
+							<select id="event_appendix" name="event_appendix" style="width: 215px">
+								<option value="0"<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["event_appendix"] == 0) ? " selected=\"selected\"" : ""); ?>>No, do not display this data.</option>
+								<option value="1"<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["event_appendix"] == 1) ? " selected=\"selected\"" : ""); ?>>Yes, after each course.</option>
+								<option value="2"<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["event_appendix"] == 2) ? " selected=\"selected\"" : ""); ?>>Yes, at the end of the report.</option>
+							</select>
+						</td>
+					</tr>
+					<tr>
+						<td>&nbsp;</td>
 						<td style="vertical-align: top; padding-top: 6px"><label for="event_title_search" class="form-nrequired">Search <strong>Event Titles</strong> for</label></td>
 						<td style="vertical-align: top;">
 							<input type="text" value="<?php echo (isset($event_title_search) && $event_title_search ? $event_title_search : ""); ?>" name="event_title_search" id="event_title_search" style="width: 70%" />
@@ -222,29 +270,33 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 	</div>
 	<?php
 	if ($STEP == 2) {
-		$output		= array();
-		$appendix	= array();
+		$statistics = array();
 		
-		$courses_included	= array();
-		$eventtype_legend	= array();
-		
-		echo "<h1 style=\"page-break-before: avoid\">Learning Event Types by Course</h1>";
-		echo "<div class=\"content-small\" style=\"margin-bottom: 10px\">\n";
-		echo "	<strong>Date Range:</strong> ".date(DEFAULT_DATE_FORMAT, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_start"])." <strong>to</strong> ".date(DEFAULT_DATE_FORMAT, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_finish"]).".";
-		echo "</div>\n";
+		$summary = array();
+
+		$courses_included = array();
+		$eventtype_legend = array();
 
 		if ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["organisation_id"] != -1) {
 			$organisation_where = " AND (b.`organisation_id` = ".$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["organisation_id"].") ";
 		} else {
 			$organisation_where = "";
 		}
-		
-		$query = "SELECT * FROM `events_lu_eventtypes` ORDER BY `eventtype_order` ASC";
+
+		$query = "	SELECT a.*
+					FROM `events_lu_eventtypes` AS a 
+					LEFT JOIN `eventtype_organisation` AS b
+					ON a.`eventtype_id` = b.`eventtype_id`
+					LEFT JOIN `".ENTRADA_AUTH."`.`organisations` AS c
+					ON c.`organisation_id` = b.`organisation_id` 
+					WHERE c.`organisation_id` = ".$db->qstr($_SESSION["details"]["organisation_id"])."
+					AND a.`eventtype_active` = '1'
+					ORDER BY a.`eventtype_order` ASC";
 		$event_types = $db->GetAll($query);
 		if ($event_types) {
 			foreach ($event_types as $event_type) {
 				$eventtype_legend[$event_type["eventtype_id"]] = $event_type["eventtype_title"];
-				
+
 				foreach ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["course_ids"] as $course_id) {
 					$query = "	SELECT a.`event_id`, b.`course_name`, a.`event_title`, a.`event_start`, c.`duration`, d.`eventtype_title`
 								FROM `events` AS a
@@ -259,167 +311,246 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 								".(isset($event_title_search) && $event_title_search ? "AND a.`event_title` LIKE ".$db->qstr("%".$event_title_search."%") : "")."
 								AND a.`course_id` = ".$db->qstr($course_id).
 								$organisation_where."
+								AND (a.`parent_id` = '0' OR a.`parent_id` IS NULL)
 								ORDER BY d.`eventtype_order` ASC, b.`course_name` ASC, a.`event_start` ASC";
 					$results = $db->GetAll($query);
 					if ($results) {
 						$courses_included[$course_id] = $course_list[$course_id]["code"] . " - " . $course_list[$course_id]["name"];
-						
+
 						foreach ($results as $result) {
-							$output[$course_id]["events"][$event_type["eventtype_id"]]["duration"] += $result["duration"];
-							$output[$course_id]["events"][$event_type["eventtype_id"]]["events"] += 1;
-							
-							$appendix[$course_id][$result["event_id"]][] = $result;
+							$statistics[$course_id]["event_types"][$event_type["eventtype_id"]]["duration"] += $result["duration"];
+							$statistics[$course_id]["event_types"][$event_type["eventtype_id"]]["events"] += 1;
+
+							// Increment total number of unique events in this course.
+							if (!array_key_exists($result["event_id"], $statistics[$course_id]["event_appendix"])) {
+								$statistics[$course_id]["totals"]["unique_events"] += 1;
+								$summary["unique_events"] += 1;
+							}
+
+							$statistics[$course_id]["event_appendix"][$result["event_id"]][] = $result;
 						}
-						
-						$output[$course_id]["total_duration"] += $output[$course_id]["events"][$event_type["eventtype_id"]]["duration"];
-						$output[$course_id]["total_events"] += $output[$course_id]["events"][$event_type["eventtype_id"]]["events"];
+
+						$statistics[$course_id]["totals"]["duration"] += $statistics[$course_id]["event_types"][$event_type["eventtype_id"]]["duration"];
+						$statistics[$course_id]["totals"]["events"] += $statistics[$course_id]["event_types"][$event_type["eventtype_id"]]["events"];
+
+						$summary["duration"] += $statistics[$course_id]["event_types"][$event_type["eventtype_id"]]["duration"];
+						$summary["events"] += $statistics[$course_id]["event_types"][$event_type["eventtype_id"]]["events"];
 					}
 				}
 			}
 		}
-		
-		if (count($output)) {
-			foreach ($output as $course_id => $result) {
-				?>
-				<h1><?php echo html_encode($courses_included[$course_id]); ?></h1>
-				<?php
-				$STATISTICS					= array();
-				$STATISTICS["labels"]		= array();
-				$STATISTICS["legend"]		= array();
-				$STATISTICS["results"]		= array();
-				?>				
-				<div style="text-align: center">
-					<canvas id="graph_1_<?php echo $course_id; ?>" width="750" height="450"></canvas>
-				</div>
-				<table id="data_table_<?php echo $course_id; ?>" class="tableList" style="width: 750px" cellspacing="0" summary="Event Types of <?php echo html_encode($courses_included[$course_id]); ?>">
-				<colgroup>
-					<col class="modified" />
-					<col class="title" />
-					<col class="report-hours" style="background-color: #F3F3F3" />
-					<col class="report-hours" />
-				</colgroup>
-				<thead>
-					<tr>
-						<td class="modified">&nbsp;</td>
-						<td class="title">Event Type</td>
-						<td class="report-hours large">Event Count</td>
-						<td class="report-hours large">Hour Count</td>
-					</tr>
-				</thead>
+
+		echo "<h1 style=\"page-break-before: avoid\">Learning Event Types by Course</h1>";
+		echo "<div class=\"content-small\" style=\"margin-bottom: 10px\">\n";
+		echo "	<strong>Date Range:</strong> ".date(DEFAULT_DATE_FORMAT, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_start"])." <strong>to</strong> ".date(DEFAULT_DATE_FORMAT, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_finish"]).".";
+		echo "</div>\n";
+
+		if (count($statistics)) {
+			echo "<h2>Table Of Contents</h2>\n";
+			?>
+			<table id="table_of_contents" class="tableList" cellspacing="0" summary="Table of Contents">
+			<colgroup>
+				<col class="title" />
+				<col class="report-hours large" style="background-color: #F3F3F3" />
+				<col class="report-hours large" />
+			</colgroup>
+			<thead>
+				<tr>
+					<td class="title borderl">Course Title</td>
+					<td class="report-hours large">Total Events</td>
+					<td class="report-hours large">Total Hours</td>
+				</tr>
+			</thead>
 				<tbody>
-				<?php				
-				foreach ($result["events"] as $eventtype_id => $event) {
-					$STATISTICS["labels"][$eventtype_id] = $eventtype_legend[$eventtype_id];
-					$STATISTICS["legend"][$eventtype_id] = $eventtype_legend[$eventtype_id];
-					$STATISTICS["display"][$eventtype_id] = $event["events"];
-
-					if ($result["total_events"] > 0) {
-						$percent_events = round((($event["events"] / $result["total_events"]) * 100));
-					} else {
-						$percent_events = 0;
-					}
-
-					if ($result["total_duration"] > 0) {
-						$percent_duration = round((($event["duration"] / $result["total_duration"]) * 100));
-					} else {
-						$percent_duration = 0;
-					}
-					
+				<?php
+				foreach ($statistics as $course_id => $course) {
 					echo "<tr>\n";
-					echo "	<td>&nbsp;</td>\n";
-					echo "	<td>".html_encode($eventtype_legend[$eventtype_id])."</td>\n";
-					echo "	<td class=\"report-hours large\" style=\"text-align: left\">".$event["events"]." (~ ".$percent_events."%)</td>\n";
-					echo "	<td class=\"report-hours large\" style=\"text-align: left\">".display_hours($event["duration"])." hrs (~ ".$percent_duration."%)</td>\n";
+					echo "	<td class=\"title\"><a href=\"#section_".$course_id."\" style=\"font-weight: strong\">".html_encode($courses_included[$course_id])."</a></td>\n";
+					echo "	<td class=\"report-hours large\">".$events = $course["totals"]["unique_events"]." event".(($events != 1) ? "s" : "")."</td>\n";
+					echo "	<td class=\"report-hours large\">".$hours = display_hours($course["totals"]["duration"])." hr".(($hours != 1) ? "s" : "")."</td>\n";
 					echo "</tr>\n";
 				}
 				?>
 				</tbody>
 				<tbody>
 					<tr class="na">
-						<td>&nbsp;</td>
-						<td>Event Type Totals</td>
-						<td class="report-hours large"><?php echo $result["total_events"]; ?></td>
-						<td class="report-hours large"><?php echo display_hours($result["total_duration"]); ?> hrs</td>
+						<td>Course Totals</td>
+						<td class="report-hours large"><?php echo $summary["unique_events"]; ?></td>
+						<td class="report-hours large"><?php echo display_hours($summary["duration"]); ?> hrs</td>
 					</tr>
 				</tbody>
-				</table>
-				<script type="text/javascript">
-				var options = {
-				   'IECanvasHTC':		'<?php echo ENTRADA_RELATIVE; ?>/javascript/plotkit/iecanvas.htc',
-				   'yTickPrecision':	1,
-				   'xTicks':			[<?php echo plotkit_statistics_lables($STATISTICS["legend"]); ?>]
-				};
-				
-			    var layout	= new PlotKit.Layout('pie', options);
-			    layout.addDataset('results', [<?php echo plotkit_statistics_values($STATISTICS["display"]); ?>]);
-			    layout.evaluate();
-			    
-			    var canvas	= MochiKit.DOM.getElement('graph_1_<?php echo $course_id; ?>');
-			    var plotter	= new PlotKit.SweetCanvasRenderer(canvas, layout, options);
-			    plotter.render();
-			    
-			    var canvas	= MochiKit.DOM.getElement('graph_2_<?php echo $course_id; ?>');
-			    var plotter	= new PlotKit.SweetCanvasRenderer(canvas, layout, options);
-			    plotter.render();
-				</script>
-				<?php
-			}
-		} else {
-			echo display_notice(array("There are no learning events in the system during the timeframe you have selected."));	
-		}
-		
-		if (count($output)) {
-			foreach ($output as $course_id => $result) {
-				$total_duration = 0;
+			</table>
+
+			<?php
+			foreach ($statistics as $course_id => $course) {
 				?>
-				<h1>Appendix: <?php echo html_encode($courses_included[$course_id]); ?> Data</h1>
+				<a name="section_<?php echo $course_id; ?>"></a>
+				<h1><?php echo html_encode($courses_included[$course_id]); ?></h1>
 				<?php
-				if ($appendix[$course_id]) {
-					?>
-					<table class="tableList" cellspacing="0" summary="Appendix: <?php echo html_encode($courses_included[$course_id]); ?> Data">
+				$plotkit = array();
+				$plotkit["labels"] = array();
+				$plotkit["legend"] = array();
+				$plotkit["results"] = array();
+				?>
+				<h2>Learning Event Type Breakdown</h2>
+
+				<div style="text-align: center">
+					<canvas id="graph_1_<?php echo $course_id; ?>" width="750" height="450"></canvas>
+				</div>
+				<table id="data_table_<?php echo $course_id; ?>" class="tableList" style="width: 750px" cellspacing="0" summary="Event Types of <?php echo html_encode($courses_included[$course_id]); ?>">
 					<colgroup>
+						<col class="modified" />
 						<col class="title" />
-						<col class="date" />
-						<col class="date" style="background-color: #F3F3F3" />
+						<col class="report-hours" style="background-color: #F3F3F3" />
 						<col class="report-hours" />
 					</colgroup>
 					<thead>
 						<tr>
-							<td class="title" style="border-left: 1px #666 solid">Event Title</td>
-							<td class="date">Event Type</td>
-							<td class="date">Date</td>
-							<td class="report-hours">Duration</td>
+							<td class="modified">&nbsp;</td>
+							<td class="title">Event Type</td>
+							<td class="report-hours large">Event Type Count</td>
+							<td class="report-hours large">Hour Count</td>
 						</tr>
 					</thead>
 					<tbody>
 					<?php
-					foreach ($appendix[$course_id] as $event_id => $segments) {
-						foreach ($segments as $event) {
-							$total_duration += $event["duration"];
-							$hours = display_hours($event["duration"]);
-							echo "<tr>\n";
-							echo "	<td class=\"title\"><a href=\"".ENTRADA_URL."/events?id=".$event["event_id"]."\" target=\"_blank\">".html_encode($event["event_title"])."</a></td>\n";
-							echo "	<td class=\"date\">".html_encode($event["eventtype_title"])."</td>\n";
-							echo "	<td class=\"date\">".date(DEFAULT_DATE_FORMAT, $event["event_start"])."</td>\n";
-							echo "	<td class=\"report-hours\">".$hours." hr".(($hours != 1) ? "s" : "")."</td>\n";
-							echo "</tr>\n";
-						}
-					}
+					foreach ($course["event_types"] as $eventtype_id => $event) {
+						$plotkit["labels"][$eventtype_id] = $eventtype_legend[$eventtype_id];
+						$plotkit["legend"][$eventtype_id] = $eventtype_legend[$eventtype_id];
+						$plotkit["display"][$eventtype_id] = display_hours($event["duration"]);
 
-					echo "<tr class=\"na\" style=\"font-weight: bold\">\n";
-					echo "	<td colspan=\"2\" style=\"padding-left: 10px\">Total of ".count($appendix[$course_id])." events with ".$result["total_events"]." event type segments.</td>\n";
-					echo "	<td class=\"date\" style=\"text-align: right\">Total Hours:</td>\n";
-					echo "	<td class=\"report-hours\">".display_hours($total_duration)." hr".(($total_duration != 1) ? "s" : "")."</td>\n";
-					echo "</tr>\n";
+						if ($course["totals"]["events"] > 0) {
+							$percent_events = round((($event["events"] / $course["totals"]["events"]) * 100));
+						} else {
+							$percent_events = 0;
+						}
+
+						if ($course["totals"]["duration"] > 0) {
+							$percent_duration = round((($event["duration"] / $course["totals"]["duration"]) * 100));
+						} else {
+							$percent_duration = 0;
+						}
+
+						echo "<tr>\n";
+						echo "	<td>&nbsp;</td>\n";
+						echo "	<td>".html_encode($eventtype_legend[$eventtype_id])."</td>\n";
+						echo "	<td class=\"report-hours large\" style=\"text-align: left\">".$event["events"]." (~ ".$percent_events."%)</td>\n";
+						echo "	<td class=\"report-hours large\" style=\"text-align: left\">".display_hours($event["duration"])." hrs (~ ".$percent_duration."%)</td>\n";
+						echo "</tr>\n";
+					}
 					?>
 					</tbody>
-					</table>
-					<?php
-				} else {
-					echo display_notice(array("There are no learning events in this course during the selected duration."));
+					<tbody>
+						<tr class="na">
+							<td>&nbsp;</td>
+							<td>Event Type Totals</td>
+							<td class="report-hours large"><?php echo $course["totals"]["events"]; ?></td>
+							<td class="report-hours large"><?php echo display_hours($course["totals"]["duration"]); ?> hrs</td>
+						</tr>
+						<?php if ($course["totals"]["events"] != $course["totals"]["unique_events"]) : ?>
+						<tr class="resubmit">
+							<td>&nbsp;</td>
+							<td colspan="3">Total of <strong><?php echo $course["totals"]["unique_events"]; ?></strong> events with <strong><?php echo $course["totals"]["events"]; ?></strong> event type segments.</td>
+						</tr>
+						<?php endif; ?>
+					</tbody>
+				</table>
+				<script type="text/javascript">
+				var options = {
+				   'IECanvasHTC': '<?php echo ENTRADA_RELATIVE; ?>/javascript/plotkit/iecanvas.htc',
+				   'yTickPrecision': 1,
+				   'xTicks': [<?php echo plotkit_statistics_lables($plotkit["legend"]); ?>]
+				};
+
+			    var layout	= new PlotKit.Layout('pie', options);
+			    layout.addDataset('results', [<?php echo plotkit_statistics_values($plotkit["display"]); ?>]);
+			    layout.evaluate();
+
+			    var canvas	= MochiKit.DOM.getElement('graph_1_<?php echo $course_id; ?>');
+			    var plotter	= new PlotKit.SweetCanvasRenderer(canvas, layout, options);
+			    plotter.render();
+
+			    var canvas	= MochiKit.DOM.getElement('graph_2_<?php echo $course_id; ?>');
+			    var plotter	= new PlotKit.SweetCanvasRenderer(canvas, layout, options);
+			    plotter.render();
+				</script>
+
+				<?php
+				// If the appendix is set to display after each course.
+				if ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["event_appendix"] == 1) {
+					echo "<a name=\"section_\"".$course_id."_appendix\"></a>\n";
+					echo "<h2>Learning Event Appendix Data</h2>\n";
+					$appendix_data = display_appendix_data($course);
+					if ($appendix_data) {
+						echo $appendix_data;
+					} else {
+						echo display_notice(array("There is no appendix information available for this course."));
+					}
 				}
 			}
+
+			// If the appendix is set to display at the end of the document.
+			if ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["event_appendix"] == 2) {
+				foreach ($statistics as $course_id => $course) {
+					echo "<a name=\"section_\"".$course_id."_appendix\"></a>\n";
+					echo "<h1>Appendix: ".html_encode($courses_included[$course_id])." Data</h1>\n";
+					$appendix_data = display_appendix_data($course);
+					if ($appendix_data) {
+						echo $appendix_data;
+					} else {
+						echo display_notice(array("There is no appendix information available for this course."));
+					}
+				}
+			}
+		} else {
+			echo display_notice(array("There are no learning events in the system during the timeframe you have selected."));
 		}
 	}
 }
-?>
+
+function display_appendix_data(&$course = array()) {
+	global $courses_included;
+
+	ob_start();
+	?>
+	<table class="tableList" cellspacing="0" summary="Appendix: <?php echo html_encode($courses_included[$course_id]); ?> Data">
+		<colgroup>
+			<col class="title" />
+			<col class="date" />
+			<col class="date" style="background-color: #F3F3F3" />
+			<col class="report-hours" />
+		</colgroup>
+		<thead>
+			<tr>
+				<td class="title" style="border-left: 1px #666 solid">Event Title</td>
+				<td class="date">Event Type</td>
+				<td class="date">Date</td>
+				<td class="report-hours">Duration</td>
+			</tr>
+		</thead>
+		<tbody>
+		<?php
+		foreach ($course["event_appendix"] as $event_id => $events) {
+			foreach ($events as $event) {
+				$total_duration += $event["duration"];
+
+				echo "<tr>\n";
+				echo "	<td class=\"title\"><a href=\"".ENTRADA_URL."/events?id=".$event["event_id"]."\" target=\"_blank\">".html_encode($event["event_title"])."</a></td>\n";
+				echo "	<td class=\"date\">".html_encode($event["eventtype_title"])."</td>\n";
+				echo "	<td class=\"date\">".date(DEFAULT_DATE_FORMAT, $event["event_start"])."</td>\n";
+				echo "	<td class=\"report-hours\">".$hours = display_hours($event["duration"])." hr".(($hours != 1) ? "s" : "")."</td>\n";
+				echo "</tr>\n";
+			}
+		}
+
+		echo "<tr class=\"na\" style=\"font-weight: bold\">\n";
+		echo "	<td colspan=\"2\" style=\"padding-left: 10px\">Total of ".$course["totals"]["unique_events"]." events with ".$course["totals"]["events"]." event type segments.</td>\n";
+		echo "	<td class=\"date\" style=\"text-align: right\">Total Hours:</td>\n";
+		echo "	<td class=\"report-hours\">".$hours = display_hours($course["totals"]["duration"])." hr".(($hours != 1) ? "s" : "")."</td>\n";
+		echo "</tr>\n";
+		?>
+		</tbody>
+	</table>
+	<?php
+	return ob_get_clean();
+}

@@ -263,6 +263,28 @@ if (!defined("IN_REGIONALED_VIEW")) {
 					echo "	</tr>\n";
 				}
 			}
+			if (trim($APARTMENT_INFO["keys_firstname"])) {
+				echo "		<tr>\n";
+				echo "			<td colspan=\"2\">&nbsp;</td>\n";
+				echo "		</tr>\n";
+				echo "		<tr>\n";
+				echo "			<td style=\"vertical-align: top\">Key Contact:</td>\n";
+				echo "			<td>".html_encode($APARTMENT_INFO["keys_firstname"]." ".$APARTMENT_INFO["keys_lastname"])."</td>\n";
+				echo "		</tr>\n";
+				if (trim($APARTMENT_INFO["keys_phone"])) {
+					echo "	<tr>\n";
+					echo "		<td>Contact Number:</td>\n";
+					echo "		<td>".html_encode($APARTMENT_INFO["keys_phone"])."</td>\n";
+					echo "	</tr>\n";
+				}
+				if (trim($APARTMENT_INFO["keys_email"])) {
+					echo "	<tr>\n";
+					echo "		<td>Contact E-Mail:</td>\n";
+					echo "		<td><a href=\"mailto:".html_encode($APARTMENT_INFO["keys_email"])."\">".html_encode(limit_chars($APARTMENT_INFO["keys_email"], 30))."</a></td>\n";
+					echo "	</tr>\n";
+				}
+			}
+			
 			echo "	</tbody>\n";
 			echo "</table>\n";
 			?>

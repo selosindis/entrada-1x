@@ -149,7 +149,8 @@ if (($options_for) && (isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["i
 					ON b.`organisation_id` = c.`organisation_id` 
 					WHERE b.`organisation_id` = ".$db->qstr($_SESSION["details"]["organisation_id"])."
 					AND a.`eventtype_active` = '1' 
-					ORDER BY a.`eventtype_order`";
+					ORDER BY a.`eventtype_order`
+					";
         $eventtype_results = $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
         if ($eventtype_results) {
             $eventtypes = array();

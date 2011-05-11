@@ -48,7 +48,14 @@ function writeOrder(container) {
 }
 
 Event.observe(window, 'load', function() {
-	if(typeof EVENT_LIST_STATIC_TOTAL_DURATION == "undefined") {
+        //Event handler for remove location/duartion
+        //N.B. jQuery must already be loaded.
+        jQuery(".remove").live("click", function(e){
+				jQuery(this).parent().remove();
+				cleanupList();
+			});
+
+        if(typeof EVENT_LIST_STATIC_TOTAL_DURATION == "undefined") {
 		EVENT_LIST_STATIC_TOTAL_DURATION = false;
 	}
 	if(typeof INITIAL_EVENT_DURATION != "undefined") {
@@ -67,11 +74,8 @@ Event.observe(window, 'load', function() {
 		option = select.options[select.selectedIndex];
 		li = new Element('li', {id: 'mtdlocation_'+option.value, 'class': 'location_duration'});
 		li.insert(option.text+"");
-                Prototype.Browser.IE7 = Prototype.Browser.IE && parseInt(navigator.userAgent.substring(navigator.userAgent.indexOf("MSIE")+5)) == 7;
-                Prototype.Browser.IE8 = Prototype.Browser.IE && parseInt(navigator.userAgent.substring(navigator.userAgent.indexOf("MSIE")+5)) == 8;
-                if (!Prototype.Browser.IE7  && !Prototype.Browser.IE8) {
-                    li.insert(new Element('a', {href: '#', onclick: '$(this).up().remove(); cleanupList(); return false;', 'class': 'remove'}).insert(new Element('img', {src: DELETE_IMAGE_URL})));
-                }
+                li.insert(new Element('a', {href: '#', id:'remove' + option.value, 'class': 'remove'}).insert(new Element('img', {src: DELETE_IMAGE_URL})));
+
 		span = new Element('span', {'class': 'duration_segment_container', 'style': 'margin-left:5px;'});
 		span.insert('Time:');
 		name = 'duration_segment[]';
@@ -80,9 +84,6 @@ Event.observe(window, 'load', function() {
                 
 		li.insert(span);
 
-                if (Prototype.Browser.IE7  || Prototype.Browser.IE8) {
-                    li.insert(new Element('a', {href: '#', onclick: '$(this).up().remove(); cleanupList(); return false;', 'class': 'remove'}).insert(new Element('img', {src: DELETE_IMAGE_URL})));
-                }
                 $('duration_container').insert(li);
 		cleanupList();
 		select.selectedIndex = 0;

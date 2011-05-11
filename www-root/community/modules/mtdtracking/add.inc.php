@@ -28,10 +28,11 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 	}
 
 	if (isset($_POST["mtdlocation_duration_order"])) {
-		$location_ids = explode(",", trim($_POST["mtdlocation_duration_order"]));
+		$mtdlocation_duration_order = clean_input($_POST["mtdlocation_duration_order"], array("notags", "trim"));
+		$location_ids = explode(",", $mtdlocation_duration_order);
 		$mtdlocation_durations = ((isset($_POST["duration_segment"]) && is_array($_POST["duration_segment"])) ? $_POST["duration_segment"] : array());
 
-		if ((is_array($location_ids)) && (count($location_ids))) {
+		if (!is_null($mtdlocation_duration_order) && $mtdlocation_duration_order != "" && (is_array($location_ids)) && (count($location_ids))) {
 			$count = 0;
 			$total_time = 0;
 			foreach ($location_ids as $order => $mtdlocation_id) {
@@ -60,6 +61,9 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 				$ERROR++;
 				$ERRORSTR[] = "The total time spent cannot be 0%.";
 			}
+		} else {
+			$ERROR++;
+			$ERRORSTR[] = "At least one <strong>Location</strong> is required.";
 		}
 	} else {
 		$ERROR++;
@@ -67,29 +71,34 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 	}
 
 
-	$start_date = clean_input($_POST["start_date"], array("notags", "trim"));
-	$start_date_time = new DateTime($start_date);
-	$start_date = $db->qstr($start_date_time->format('Y-m-d'));
+	$start_date = clean_input($_POST["start_date"], array("notags", "trim", "nows"));
+	$end_date = clean_input($_POST["end_date"], array("notags", "trim", "nows"));
 
-	$end_date = clean_input($_POST["end_date"], array("notags", "trim"));
-	$end_date_time = new DateTime($end_date);
-	$end_date = $db->qstr($end_date_time->format('Y-m-d'));
-
-	if (is_null($start_date) && is_null($end_date) && $start_date == "" && $end_date == "") {
-		$PROCESSED["start_date"] = 0;
-		$PROCESSED["end_date"] = 0;
+	if (is_null($start_date) || $start_date == "") {
 		$ERROR++;
-		$ERRORSTR[] = "Start date and end date are required.";
-	}
+		$ERRORSTR[] = "Start date is required.";
+		
+	} else if(is_null($end_date)  || $end_date == "") {
+		$ERROR++;
+		$ERRORSTR[] = "End date is required.";
 
-	if (validate_start_end_dates($start_date, $end_date)) {
-		$PROCESSED["start_date"] = $start_date;
-		$PROCESSED["end_date"] = $end_date;
 	} else {
-		$PROCESSED["start_date"] = 0;
-		$PROCESSED["end_date"] = 0;
-		$ERROR++;
-		$ERRORSTR[] = "Start date cannot be after the end date.";
+		if (!validate_date_format($start_date)) {
+			$ERROR++;
+			$ERRORSTR[] = "Invalid start date format.";
+		} else if (!validate_date_format($end_date)) {
+			$ERROR++;
+			$ERRORSTR[] = "Invalid end date format.";
+		}
+		else {
+			if (validate_start_end_dates($start_date, $end_date)) {
+				$PROCESSED["start_date"] = $start_date;
+				$PROCESSED["end_date"] = $end_date;
+			} else {
+				$ERROR++;
+				$ERRORSTR[] = "Start date cannot be after the end date.";
+			}
+		}
 	}
 
 	$PROCESSED["type_code"] = clean_input($_POST["type_code"], array("notags", "trim"));
@@ -112,16 +121,20 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 
 		$results = $db->GetAll($query);
 		if ($results) {
+			$start_date_time = new DateTime($start_date);
+			$end_date_time = new DateTime($end_date);
+			
 			foreach ($results as $result) {
 				$temp_start_date = new DateTime($result["start_date"]);
 				$temp_end_date = new DateTime($result["end_date"]);
 
-				if ($start_date_time >= $temp_start_date && $start_date_time <= $temp_end_date) {
-					$query = "SELECT service_description
+				$query = "SELECT service_description
 							  FROM  `mtd_moh_service_codes`
 							  WHERE `id` = " . $db->qstr($result["service_id"]);
 
-					$service_program = $db->GetOne($query);
+				$service_program = $db->GetOne($query);
+
+				if ($start_date_time >= $temp_start_date && $start_date_time <= $temp_end_date) {					
 					$ERROR++;
 					$ERRORSTR[] = "The selected start date overlapps with an existing entry for the " . $service_program . " program.";
 				}
@@ -180,4 +193,32 @@ function validate_start_end_dates($start_date, $end_date) {
 	}
 
 	return true;
+}
+
+/**
+ * This function checks that the date is in the format YYYY-MM-DD.
+ *
+ * @param <String> $in_date
+ * @return <boolean> true if date is valid as per format above.
+ */
+function validate_date_format($in_date) {
+	$in_date_arr = explode("-", $in_date);
+	$year = $in_date_arr[0];
+	$month = $in_date_arr[1];
+	$day = $in_date_arr[2];
+	if (strlen($year) != 4) {
+		return false;
+	}
+	else if (strlen($month) != 2) {
+		return false;
+	}
+	else if (strlen($day) != 2) {
+		return false;
+	}
+	else if (!checkdate($month, $day, $year)) {
+		return false;
+	}
+	else {
+		return true;
+	}
 }

@@ -101,30 +101,32 @@ if (!defined("PARENT_INCLUDED")) {
 		}
 
 		if ($SEARCH_MODE == "standard") {
-			$query_counter	= "
-						SELECT COUNT(*) AS `total_rows`
-						FROM `events` AS a
-						LEFT JOIN `event_audience` AS b
-						ON b.`event_id` = a.`event_id`
-						LEFT JOIN `courses` AS c
-						ON a.`course_id` = c.`course_id`
-						WHERE c.`course_active` = '1'
-						AND".(($SEARCH_CLASS) ? " b.`audience_type` = 'grad_year' AND b.`audience_value` = ".$db->qstr((int) $SEARCH_CLASS)." AND" : "").
-						(($SEARCH_ORGANISATION) && $SEARCH_ORGANISATION != 'all' ? " c.`organisation_id` = ".$db->qstr((int) $SEARCH_ORGANISATION)." AND" : "").
-						(($SEARCH_YEAR) ? " (`event_start` BETWEEN ".$db->qstr($SEARCH_DURATION["start"])." AND ".$db->qstr($SEARCH_DURATION["end"]).") AND" : "")."
-						MATCH (`event_title`, `event_description`, `event_goals`, `event_objectives`, `event_message`) AGAINST (".$db->qstr(str_replace(array("%", " AND ", " NOT "), array("%%", " +", " -"), $SEARCH_QUERY))." IN BOOLEAN MODE)";
-
-			$query_search	= "	SELECT a.*, b.`audience_value` AS `event_grad_year`, MATCH (`event_title`, `event_description`, `event_goals`, `event_objectives`, `event_message`) AGAINST (".$db->qstr(str_replace(array("%", " AND ", " NOT "), array("%%", " +", " -"), $SEARCH_QUERY))." IN BOOLEAN MODE) AS `rank`
+			$query_counter = "	SELECT COUNT(DISTINCT(a.`event_id`)) AS `total_rows`
 								FROM `events` AS a
 								LEFT JOIN `event_audience` AS b
 								ON b.`event_id` = a.`event_id`
 								LEFT JOIN `courses` AS c
 								ON a.`course_id` = c.`course_id`
 								WHERE c.`course_active` = '1'
+								AND (a.`parent_id` IS NULL OR a.`parent_id` = '0')
+								AND".(($SEARCH_CLASS) ? " b.`audience_type` = 'grad_year' AND b.`audience_value` = ".$db->qstr((int) $SEARCH_CLASS)." AND" : "").
+								(($SEARCH_ORGANISATION) && $SEARCH_ORGANISATION != 'all' ? " c.`organisation_id` = ".$db->qstr((int) $SEARCH_ORGANISATION)." AND" : "").
+								(($SEARCH_YEAR) ? " (`event_start` BETWEEN ".$db->qstr($SEARCH_DURATION["start"])." AND ".$db->qstr($SEARCH_DURATION["end"]).") AND" : "")."
+								MATCH (`event_title`, `event_description`, `event_goals`, `event_objectives`, `event_message`) AGAINST (".$db->qstr(str_replace(array("%", " AND ", " NOT "), array("%%", " +", " -"), $SEARCH_QUERY))." IN BOOLEAN MODE)";
+
+			$query_search = "	SELECT a.*, b.`audience_type`, b.`audience_value` AS `event_grad_year`, MATCH (`event_title`, `event_description`, `event_goals`, `event_objectives`, `event_message`) AGAINST (".$db->qstr(str_replace(array("%", " AND ", " NOT "), array("%%", " +", " -"), $SEARCH_QUERY))." IN BOOLEAN MODE) AS `rank`
+								FROM `events` AS a
+								LEFT JOIN `event_audience` AS b
+								ON b.`event_id` = a.`event_id`
+								LEFT JOIN `courses` AS c
+								ON a.`course_id` = c.`course_id`
+								WHERE c.`course_active` = '1'
+								AND (a.`parent_id` IS NULL OR a.`parent_id` = '0')
 								AND".(($SEARCH_CLASS) ? " b.`audience_type` = 'grad_year' AND b.`audience_value` = ".$db->qstr((int) $SEARCH_CLASS)." AND" : "").
 								(($SEARCH_ORGANISATION) && $SEARCH_ORGANISATION != 'all' ? " c.`organisation_id` = ".$db->qstr((int) $SEARCH_ORGANISATION)." AND" : "").
 								(($SEARCH_YEAR) ? " (`event_start` BETWEEN ".$db->qstr($SEARCH_DURATION["start"])." AND ".$db->qstr($SEARCH_DURATION["end"]).") AND" : "")."
 								MATCH (`event_title`, `event_description`, `event_goals`, `event_objectives`, `event_message`) AGAINST (".$db->qstr(str_replace(array("%", " AND ", " NOT "), array("%%", " +", " -"), $SEARCH_QUERY))." IN BOOLEAN MODE)
+								GROUP BY a.`event_id`
 								ORDER BY `rank` DESC, `event_start` DESC
 								LIMIT %s, %s";
 
@@ -479,7 +481,7 @@ if (!defined("PARENT_INCLUDED")) {
 						$description = search_description($result["event_objectives"]." ".$result["event_goals"]);
 
 						echo "<div id=\"result-".$result["event_id"]."\" style=\"width: 100%; margin-bottom: 10px; line-height: 16px;\">\n";
-						echo "	<a href=\"".ENTRADA_URL."/events?id=".$result["event_id"]."\" style=\"font-weight: bold\">".html_encode($result["event_title"])."</a> <span class=\"content-small\">Event on ".date(DEFAULT_DATE_FORMAT, $result["event_start"])."; Class of ".$result["event_grad_year"]."</span><br />\n";
+						echo "	<a href=\"".ENTRADA_URL."/events?id=".$result["event_id"]."\" style=\"font-weight: bold\">".html_encode($result["event_title"])."</a> <span class=\"content-small\">Event on ".date(DEFAULT_DATE_FORMAT, $result["event_start"])."; ".(($result["audience_type"] == "grad_year") ? "Class of ".$result["event_grad_year"] : "Group Activity")."</span><br />\n";
 						echo 	(($description) ? $description : "Description not available.")."\n";
 						echo "	<div style=\"white-space: nowrap; overflow: hidden\"><a href=\"".ENTRADA_URL."/events?id=".$result["event_id"]."\" style=\"color: green; font-size: 11px\" target=\"_blank\">".ENTRADA_URL."/events?id=".$result["event_id"]."</a></div>\n";
 						echo "</div>\n";

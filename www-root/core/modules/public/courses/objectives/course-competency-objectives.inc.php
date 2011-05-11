@@ -59,6 +59,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 						AND b.`objective_parent` NOT IN (".$objective_ids_string.")
 					)
 					AND a.`objective_type` = 'course'
+					AND b.`objective_active` = 1
 					ORDER BY a.`importance` ASC";
 		$objectives = $db->GetAll($query);
 		if ($objectives) {
@@ -69,6 +70,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 							AND b.`course_id` = ".$db->qstr($COURSE_ID)."
 							AND b.`objective_type` = 'course'
 							WHERE a.`objective_parent` = ".$db->qstr($objective["objective_id"])."
+							AND a.`objective_active` = 1
 							ORDER BY a.`objective_order` ASC";
 				$child_objectives = $db->GetAll($query);
 				if ($objective["importance"] == 1) {
@@ -99,7 +101,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 			}
 		}
 		
-		$competency = $db->GetRow("SELECT * FROM `global_lu_objectives` WHERE `objective_id` = ".$db->qstr($COMPETENCY_ID));
+		$competency = $db->GetRow("SELECT * FROM `global_lu_objectives` WHERE `objective_id` = ".$db->qstr($COMPETENCY_ID))." AND b.`objective_active` = 1";
 		$course = $db->GetRow("SELECT * FROM `courses` WHERE `course_id` = ".$db->qstr($COURSE_ID));
 
 		echo "<h1>".html_encode($course["course_name"])."</h1>";

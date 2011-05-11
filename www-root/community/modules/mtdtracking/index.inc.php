@@ -27,22 +27,18 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 
 	// Get the service code
 	$query = "	SELECT *
-				FROM  `mtd_moh_service_codes`
-				WHERE `service_description` = " . $db->qstr($result["moh_service_name"]);
+					FROM  `mtd_moh_service_codes`
+					WHERE `service_description` = " . $db->qstr($result["moh_service_name"]);
+
 	$result = $db->GetRow($query);
-	
+
 	$mtd_service_id = 0;
 	$mtd_service_code = "";
 	$mtd_service_description = "";
 
-	if ($result) {
-		$mtd_service_id = $result["id"];
-		$mtd_service_code = $result["service_code"];
-		$mtd_service_description = $result["service_description"];
-	} else {
-		$ERROR++;
-		$ERRORSTR[] = "Could not determine the service code.";
-	}
+	$mtd_service_id = $result["id"];
+	$mtd_service_code = $result["service_code"];
+	$mtd_service_description = $result["service_description"];
 
 	$query = "	SELECT *
 				FROM `mtd_facilities`
@@ -83,9 +79,9 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 				AND `mtd_schedule`.`resident_id` = `user_data_resident`.`proxy_id`
 				ORDER BY `mtd_schedule`.`id` DESC";
 	$mtd_schedule = $db->GetAll($query);
-	?>
+?>
 
-	<script type="text/javascript">
+	<script type="text/javascript" defer="defer">
 		jQuery(document).ready(function() {
 			schedule = jQuery("#mtd_schedule").flexigrid({
 				url: '<?php echo COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL . "?section=api-mtd-load-schedule&service_id=" . $mtd_service_id; ?>',
@@ -121,7 +117,7 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 					{name: 'Delete Selected', bclass: 'delete', onpress : deleteRecord}
 				]
 			});
-			
+
 			jQuery("#add_MTD_form").submit(function(e) {
 				//Cancel the default submit behaviour
 				e.preventDefault();
@@ -133,7 +129,7 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 				function( data ) {
 					var content = jQuery( data ).find( '#responseMsg' );
 					jQuery("#submitResponse").html( content );
-					
+
 					jQuery("#submitResponse").fadeIn();
 					jQuery("#submitResponse").delay(5000).fadeOut();
 				});
@@ -144,32 +140,32 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 				showOn: 'button',
 				buttonImageOnly: true,
 				buttonImage: "<?php echo ENTRADA_URL . '/images/jquery-calendar.gif'; ?>",
-				buttonText: 'Calendar',	
+				buttonText: 'Calendar',
 				dateFormat: 'yy-mm-dd',
-				numberOfMonths: 2,	
-				showButtonPanel: true,	
-				closeOnSelect:false	
+				numberOfMonths: 2,
+				showButtonPanel: true,
+				closeOnSelect:false
 			});
-			
-			//Add datepickers	
-			var s_date = jQuery( "#start_date" ).datepicker({	
-				onSelect: function( selectedDate ) {	
-					instance = jQuery( this ).data( "datepicker" ),	
-					date = jQuery.datepicker.parseDate(	
-					instance.settings.dateFormat ||	
-						jQuery.datepicker._defaults.dateFormat,	
-					selectedDate, instance.settings );	
-					var start_date = new Date(date);	
-					var default_end_date = start_date.addWeeks(4);	
-					jQuery("#end_date").datepicker( 'setDate', default_end_date )	
-					jQuery("#end_date").datepicker( "option", "minDate", date );	
-				}	
-			}).datepicker('setDate', Date.today());	
-	
-	        var e_date = jQuery( "#end_date" ).datepicker().datepicker('setDate', Date.today().addWeeks(4));
+
+			//Add datepickers
+			var s_date = jQuery( "#start_date" ).datepicker({
+				onSelect: function( selectedDate ) {
+					instance = jQuery( this ).data( "datepicker" ),
+					date = jQuery.datepicker.parseDate(
+					instance.settings.dateFormat ||
+						jQuery.datepicker._defaults.dateFormat,
+					selectedDate, instance.settings );
+					var start_date = new Date(date);
+					var default_end_date = start_date.addWeeks(4);
+					jQuery("#end_date").datepicker( 'setDate', default_end_date )
+					jQuery("#end_date").datepicker( "option", "minDate", date );
+				}
+			}).datepicker('setDate', Date.today());
+
+			var e_date = jQuery( "#end_date" ).datepicker().datepicker('setDate', Date.today().addWeeks(4));
 
 		});
-		
+
 		function validateRequired(formArray) {
 			for (field in formArray) {
 				if (field == null || field == "")
@@ -187,37 +183,37 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 						// a workaround for a flaw in the demo system (http://dev.jqueryui.com/ticket/4375), ignore!
 						jQuery("#delete-confirm").dialog("destroy");
 
-							jQuery("#delete-confirm").dialog({
-								resizable: false,
-								height:180,
-								modal: true,
-								buttons: {
-									'Delete': function() {
-										var ids = "";
-										jQuery('.trSelected', grid).each(function() {
-											var id = jQuery(this).attr('id');
-											id = id.substring(id.lastIndexOf('row')+3);
-											if(ids == "") {
-												ids = id;
-											} else {
-												ids = id+"|"+ids;
-											}
-										});
-										jQuery.ajax
-										({
-											type: "POST",
-											dataType: "json",
-											url: '<?php echo COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL; ?>?section=api-mtd-delete&rid='+ids
-										});
+						jQuery("#delete-confirm").dialog({
+							resizable: false,
+							height:180,
+							modal: true,
+							buttons: {
+								'Delete': function() {
+									var ids = "";
+									jQuery('.trSelected', grid).each(function() {
+										var id = jQuery(this).attr('id');
+										id = id.substring(id.lastIndexOf('row')+3);
+										if(ids == "") {
+											ids = id;
+										} else {
+											ids = id+"|"+ids;
+										}
+									});
+									jQuery.ajax
+									({
+										type: "POST",
+										dataType: "json",
+										url: '<?php echo COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL; ?>?section=api-mtd-delete&rid='+ids
+									});
 
-										window.setTimeout('schedule.flexReload()', 1000);
-										jQuery(this).dialog('close');
-									},
-									Cancel: function() {
-										jQuery(this).dialog('close');
-									}
+									window.setTimeout('schedule.flexReload()', 1000);
+									jQuery(this).dialog('close');
+								},
+								Cancel: function() {
+									jQuery(this).dialog('close');
 								}
-							});
+							}
+						});
 					} else {
 						jQueryDialog.dialog('open');
 					}
@@ -226,16 +222,16 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 		}
 
 		jQueryDialog = jQuery('<div></div>')
-			.html('<span class="ui-icon ui-icon-circle-check" style="float:left; margin:0 7px 50px 0;"></span>You must select at least one record in order to delete.')
-			.dialog({
-				autoOpen: false,
-				title: 'Please Select a Record',
-				buttons: {
-					Ok: function() {
-						jQuery(this).dialog('close');
-					}
+		.html('<span class="ui-icon ui-icon-circle-check" style="float:left; margin:0 7px 50px 0;"></span>You must select at least one record in order to delete.')
+		.dialog({
+			autoOpen: false,
+			title: 'Please Select a Record',
+			buttons: {
+				Ok: function() {
+					jQuery(this).dialog('close');
 				}
-			});
+			}
+		});
 
 		function getResident(id) {
 			jQuery("#resident_proxy_id").val(id);
@@ -271,7 +267,7 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 			jQuery('.location_duration').remove();
 		}
 
-		var DELETE_IMAGE_URL = "<?php echo ENTRADA_URL."/images/action-delete.gif"; ?>";
+		var DELETE_IMAGE_URL = "<?php echo ENTRADA_URL . "/images/action-delete.gif"; ?>";
 	</script>
 
 	<style type="text/css">
@@ -293,6 +289,14 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 		}
 		#resident_not_found {
 			color: red;
+		}
+
+		.flexigrid tr.trSelected td.sorted,
+		.flexigrid tr.trSelected td {
+			background: #fad42e;
+			border-right: 1px solid #d2e3ec;
+			border-left: 1px solid #eef8ff;
+			border-bottom: 1px solid #a8d8eb;
 		}
 
 	</style>
@@ -324,65 +328,65 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 				<label for="mtdlocation">Location:</label><br />
 				<select id="mtdlocation" name="mtdlocation">
 					<option value="">Choose a Location</option>
-					<?php
-					echo "<optgroup label=\"Kingston\">";
-					foreach ($mtd_locations_kingston as $mtd_location) {
-						echo "<option value=\"" . $mtd_location["id"] . "\">" . $mtd_location["facility_name"] . "</option>";
-					}
-					echo "</optgroup>";
-					echo "<optgroup label=\"Other\">";
-					foreach ($mtd_locations_other as $mtd_location) {
-						echo "<option value=\"" . $mtd_location["id"] . "\">" . $mtd_location["facility_name"] . "</option>";
-					}
-					echo "</optgroup>";
-					?>
-				</select>
-			</p>
-			<ol id="duration_container" class="sortableList" style="display: none"></ol>
-			<div id="total_duration" class="content-small" style="margin-bottom: 10px">Total percent time: 0 %.</div>
-			<input type="hidden" id="mtdlocation_duration_order" name="mtdlocation_duration_order" value="" />
+				<?php
+				echo "<optgroup label=\"Kingston\">";
+				foreach ($mtd_locations_kingston as $mtd_location) {
+					echo "<option value=\"" . $mtd_location["id"] . "\">" . $mtd_location["facility_name"] . "</option>";
+				}
+				echo "</optgroup>";
+				echo "<optgroup label=\"Other\">";
+				foreach ($mtd_locations_other as $mtd_location) {
+					echo "<option value=\"" . $mtd_location["id"] . "\">" . $mtd_location["facility_name"] . "</option>";
+				}
+				echo "</optgroup>";
+				?>
+			</select>
+		</p>
+		<ol id="duration_container" class="sortableList" style="display: none"></ol>
+		<div id="total_duration" class="content-small" style="margin-bottom: 10px">Total percent time: 0 %.</div>
+		<input type="hidden" id="mtdlocation_duration_order" name="mtdlocation_duration_order" value="" />
 
-			<?php echo "<label>Service Code: </label>" . $mtd_service_code . " (" . $mtd_service_description . ")"; ?>
-			<input type="hidden" id ="service_id" name="service_id" value="<?php echo $mtd_service_id ?>" />
-			<p>
-				<input id="add_submit" type="submit" value="Add" style="margin-right:20px"/><a href="#" id="clearForm" onclick="clearForm();return false;">Clear Form</a>
-			</p>
-		</form>
-	</div>
+		<?php echo "<label>Service Code: </label>" . $mtd_service_code . " (" . $mtd_service_description . ")"; ?>
+				<input type="hidden" id ="service_id" name="service_id" value="<?php echo $mtd_service_id ?>" />
+				<p>
+					<input id="add_submit" type="submit" value="Add" style="margin-right:20px"/><a href="#" id="clearForm" onclick="clearForm();return false;">Clear Form</a>
+				</p>
+			</form>
+		</div>
 
-	<div id ="mtd_resident_container" class="mtd-resident-profile">
-		<div id="resident_not_found"></div>
-		<table id="resident_data">
-			<colgroup>
-				<col style="font-weight: bold;" />
-				<col class="resident_data" />
-			</colgroup>
-			<thead><tr><td colspan="2" style="font-weight:bold; font-size: 14px; border-bottom: 2px solid #999999;">Resident Profile</td><td></td></tr></thead>
-			<tbody>
-				<tr><td style="font-weight:bold;">Name: </td></tr>
-				<tr><td><span id="full_name" class="resident_data" /></td></tr>
-				<tr><td style="font-weight:bold;">School: </td></tr>
-				<tr><td><span id="school_description" class="resident_data"/></td></tr>
-				<tr><td style="font-weight:bold;">Program: </td></tr>
-				<tr><td><span id="program_description" class="resident_data"/></td></tr>
-				<tr><td style="font-weight:bold;">Category: </td></tr>
-				<tr><td><span id="category_description" class="resident_data"/></td></tr>
-			</tbody>
-		</table>
-	</div>
+		<div id ="mtd_resident_container" class="mtd-resident-profile">
+			<div id="resident_not_found"></div>
+			<table id="resident_data">
+				<colgroup>
+					<col style="font-weight: bold;" />
+					<col class="resident_data" />
+				</colgroup>
+				<thead><tr><td colspan="2" style="font-weight:bold; font-size: 14px; border-bottom: 2px solid #999999;">Resident Profile</td><td></td></tr></thead>
+				<tbody>
+					<tr><td style="font-weight:bold;">Name: </td></tr>
+					<tr><td><span id="full_name" class="resident_data" /></td></tr>
+					<tr><td style="font-weight:bold;">School: </td></tr>
+					<tr><td><span id="school_description" class="resident_data"/></td></tr>
+					<tr><td style="font-weight:bold;">Program: </td></tr>
+					<tr><td><span id="program_description" class="resident_data"/></td></tr>
+					<tr><td style="font-weight:bold;">Category: </td></tr>
+					<tr><td><span id="category_description" class="resident_data"/></td></tr>
+				</tbody>
+			</table>
+		</div>
 
-	<div id="submitResponse" style="display:none; float:right; width:35%"></div>
-	
-	<br class="clearboth">
-	
-	<div id="button_container" style="float: right;">
-		<input type="button" onclick="window.location = '<?php echo COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL . "?section=export_schedule&service_id=" . $mtd_service_id; ?>'" value="Download Data" />
-	</div>
-	<br />
-	<br class="clearboth">
-	
-	<div id="schedule_container" style="float: left;">
-		<table id="mtd_schedule" class="" style="display:none"></table>
-	</div>
-	<?php
-}
+		<div id="submitResponse" style="display:none; float:right; width:35%"></div>
+
+		<br class="clearboth">
+
+		<div id="button_container" style="float: right;">
+			<input type="button" onclick="window.location = '<?php echo COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL . "?section=export_schedule&service_id=" . $mtd_service_id; ?>'" value="Download Data" />
+		</div>
+		<br />
+		<br class="clearboth">
+
+		<div id="schedule_container" style="float: left;">
+			<table id="mtd_schedule" class="" style="display:none"></table>
+		</div>
+<?php
+			}

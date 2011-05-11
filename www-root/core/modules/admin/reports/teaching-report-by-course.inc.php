@@ -412,14 +412,14 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 							/**
 							 * Select all of the event types in the system.
 							 */
-							$query		= "	SELECT a.* FROM `entrada`.`events_lu_eventtypes` AS a 
-											LEFT JOIN `entrada`.`eventtype_organisation` AS c 
-											ON a.eventtype_id = c.eventtype_id 
-											LEFT JOIN `entrada_auth`.`organisations` AS b
-											ON b.organisation_id = c.organisation_id 
-											WHERE b.organisation_id = ".$db->qstr($_SESSION["details"]["organisation_id"])."
-											AND a.eventtype_active = '1' 
-											ORDER BY a.eventtype_order
+							$query		= "	SELECT a.* FROM `events_lu_eventtypes` AS a 
+											LEFT JOIN `eventtype_organisation` AS c 
+											ON a.`eventtype_id` = c.`eventtype_id` 
+											LEFT JOIN `".AUTH_DATABASE."`.`organisations` AS b
+											ON b.`organisation_id` = c.`organisation_id` 
+											WHERE b.`organisation_id` = ".$db->qstr($_SESSION["details"]["organisation_id"])."
+											AND a.`eventtype_active` = '1' 
+											ORDER BY a.`eventtype_order`
 								";
 							$results	= $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
 							if($results) {
@@ -513,14 +513,14 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 							/**
 							 * Select all of the event types in the system.
 							 */
-							$query		= "	SELECT a.* FROM `entrada`.`events_lu_eventtypes` AS a 
-											LEFT JOIN `entrada`.`eventtype_organisation` AS c 
-											ON a.eventtype_id = c.eventtype_id 
-											LEFT JOIN `entrada_auth`.`organisations` AS b
-											ON b.organisation_id = c.organisation_id 
-											WHERE b.organisation_id = ".$db->qstr($_SESSION["details"]["organisation_id"])."
-											AND a.eventtype_active = '1' 
-											ORDER BY a.eventtype_order
+							$query		= "	SELECT a.* FROM `events_lu_eventtypes` AS a 
+											LEFT JOIN `eventtype_organisation` AS c 
+											ON a.`eventtype_id` = c.`eventtype_id` 
+											LEFT JOIN `".AUTH_DATABASE."`.`organisations` AS b
+											ON b.`organisation_id` = c.`organisation_id` 
+											WHERE b.`organisation_id` = ".$db->qstr($_SESSION["details"]["organisation_id"])."
+											AND a.`eventtype_active` = '1' 
+											ORDER BY a.`eventtype_order`
 								";
 							$results	= $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
 							if($results) {
@@ -614,14 +614,14 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 							/**
 							 * Select all of the event types in the system.
 							 */
-							$query		= "	SELECT a.* FROM `entrada`.`events_lu_eventtypes` AS a 
-											LEFT JOIN `entrada`.`eventtype_organisation` AS c 
-											ON a.eventtype_id = c.eventtype_id 
-											LEFT JOIN `entrada_auth`.`organisations` AS b
-											ON b.organisation_id = c.organisation_id 
-											WHERE b.organisation_id = ".$db->qstr($_SESSION["details"]["organisation_id"])."
-											AND a.eventtype_active = '1' 
-											ORDER BY a.eventtype_order
+							$query		= "	SELECT a.* FROM `events_lu_eventtypes` AS a 
+											LEFT JOIN `eventtype_organisation` AS c 
+											ON a.`eventtype_id` = c.`eventtype_id` 
+											LEFT JOIN `".AUTH_DATABASE."`.`organisations` AS b
+											ON b.`organisation_id` = c.`organisation_id` 
+											WHERE b.`organisation_id` = ".$db->qstr($_SESSION["details"]["organisation_id"])."
+											AND a.`eventtype_active` = '1' 
+											ORDER BY a.`eventtype_order`
 								";
 							$results	= $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
 							if($results) {

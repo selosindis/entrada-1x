@@ -12428,8 +12428,7 @@ function validate_integer_field($input){
 	if (!$int_test  && $input != ""  && !is_null($input)) {
 		$output = $input;
 		return $output;
-	}
-	else {
+	} else {
 		return 0;
 	}
 }

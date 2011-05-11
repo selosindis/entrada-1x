@@ -260,6 +260,7 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 			jQuery("#full_name").html("");
 			//Clear the form fields
 			jQuery("#resident_name").val("");
+			jQuery("#resident_proxy_id").val(0);
 			jQuery("#start_date").val("");
 			jQuery("#end_date").val("");
 			jQuery('#type_code_i').attr('checked', true);

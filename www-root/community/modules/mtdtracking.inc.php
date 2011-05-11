@@ -30,13 +30,13 @@ if (communities_module_access($COMMUNITY_ID, $MODULE_ID, $SECTION)) {
 		/**
 		 * Prepend jQuery to the $HEAD stack.
 		 */
-		array_unshift($HEAD,
-			"<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/location_plus.js\"></script>",
+		array_unshift($HEAD,			
 			"<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery.min.js?release=".html_encode(APPLICATION_VERSION)."\"></script>",
 			"<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery-ui.min.js?release=".html_encode(APPLICATION_VERSION)."\"></script>",
+			"<script type=\"text/javascript\">jQuery.noConflict();</script>",
+			"<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/location_plus.js\"></script>",
 			"<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/date.js\"></script>",
 			"<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/flexigrid.js\"></script>",
-			"<script type=\"text/javascript\">jQuery.noConflict();</script>",
 			"<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery.validate.min.js\"></script>"
 		);
 

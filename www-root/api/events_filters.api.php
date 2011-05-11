@@ -142,14 +142,14 @@ if (($options_for) && (isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["i
         break;
     case "eventtype":
         // Get the possible event type filters
-        $query = "	SELECT a.eventtype_id, a.eventtype_title FROM `entrada`.`events_lu_eventtypes` AS a 
-					LEFT JOIN `entrada`.`eventtype_organisation` AS c 
-					ON a.eventtype_id = c.eventtype_id 
-					LEFT JOIN `entrada_auth`.`organisations` AS b
-					ON b.organisation_id = c.organisation_id 
-					WHERE b.organisation_id = ".$db->qstr($_SESSION["details"]["organisation_id"])."
-					AND a.eventtype_active = '1' 
-					ORDER BY a.eventtype_order";
+        $query = "	SELECT a.`eventtype_id`, a.`eventtype_title` FROM `events_lu_eventtypes` AS a 
+					LEFT JOIN `eventtype_organisation` AS c 
+					ON a.`eventtype_id` = c.`eventtype_id` 
+					LEFT JOIN `".AUTH_DATABASE."`.`organisations` AS b
+					ON b.`organisation_id` = c.`organisation_id` 
+					WHERE b.`organisation_id` = ".$db->qstr($_SESSION["details"]["organisation_id"])."
+					AND a.`eventtype_active` = '1' 
+					ORDER BY a.`eventtype_order`";
         $eventtype_results = $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
         if ($eventtype_results) {
             $eventtypes = array();

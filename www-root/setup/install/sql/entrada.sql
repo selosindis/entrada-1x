@@ -3362,7 +3362,7 @@ CREATE TABLE IF NOT EXISTS `settings` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `settings` (`shortname`, `value`) VALUES
-('version_db', '1204'),
+('version_db', '1203'),
 ('version_entrada', '1.2.0');
 
 CREATE TABLE `small_groups` (

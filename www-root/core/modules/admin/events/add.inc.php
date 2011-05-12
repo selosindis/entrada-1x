@@ -511,7 +511,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							<select id="eventtype_ids" name="eventtype_ids">
 								<option id="-1"> -- Pick a type to add -- </option>
 								<?php
-								$query		= "SELECT * FROM `events_lu_eventtypes` WHERE `eventtype_active` = '1' ORDER BY `eventtype_order` ASC";
+								$query		= "	SELECT a.* FROM `events_lu_eventtypes` AS a 
+												LEFT JOIN `eventtype_organisation` AS c 
+												ON a.`eventtype_id` = c.`eventtype_id` 
+												LEFT JOIN `".AUTH_DATABASE."`.`organisations` AS b
+												ON b.`organisation_id` = c.`organisation_id` 
+												WHERE b.`organisation_id` = ".$db->qstr($_SESSION["details"]["organisation_id"])."
+												AND a.`eventtype_active` = '1' 
+												ORDER BY a.`eventtype_order`
+									
+								";
 								$results	= $db->GetAll($query);
 								if ($results) {
 									$event_types = array();

@@ -439,12 +439,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						/**
 						 * Add existing event type segments to the processed array.
 						 */
-						$query = "	SELECT *
-									FROM `event_eventtypes` AS `types`
-									LEFT JOIN `events_lu_eventtypes` AS `lu_types`
-									ON `lu_types`.`eventtype_id` = `types`.`eventtype_id`
-									WHERE `event_id` = ".$db->qstr($EVENT_ID)."
-									ORDER BY `types`.`eeventtype_id` ASC";
+						$query = "	SELECT `types`.*,`lu_types`.* FROM `event_eventtypes` AS `types` 
+									LEFT JOIN `events_lu_eventtypes` AS `lu_types` 
+									ON `lu_types`.`eventtype_id` = `types`.`eventtype_id` 
+									LEFT JOIN `eventtype_organisation` AS `type_org` 
+									ON `lu_types`.`eventtype_id` = `type_org`.`eventtype_id` 
+									LEFT JOIN `".AUTH_DATABASE."`.`organisations` AS `org` 
+									ON `type_org`.`organisation_id` = `org`.`organisation_id` 
+									WHERE `types`.`event_id` = ".$db->qstr($EVENT_ID)." 
+									AND `type_org`.`organisation_id` = ".$db->qstr($_SESSION["details"]["organisation_id"])." 
+									ORDER BY `types`.`eventtype_id` ASC";
 						$results = $db->GetAll($query);
 						if ($results) {
 							foreach ($results as $contact_order => $result) {
@@ -595,7 +599,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 										<select id="eventtype_ids" name="eventtype_ids">
 											<option id="-1"> -- Pick a type to add -- </option>
 												<?php
-												$query		= "SELECT * FROM `events_lu_eventtypes` WHERE `eventtype_active` = '1' ORDER BY `eventtype_order` ASC";
+												$query		= "	SELECT a.* FROM `events_lu_eventtypes` AS a 
+																LEFT JOIN `eventtype_organisation` AS c 
+																ON a.`eventtype_id` = c.`eventtype_id` 
+																LEFT JOIN `".AUTH_DATABASE."`.`organisations` AS b
+																ON b.`organisation_id` = c.`organisation_id` 
+																WHERE b.`organisation_id` = ".$db->qstr($_SESSION["details"]["organisation_id"])."
+																AND a.`eventtype_active` = '1' 
+																ORDER BY a.`eventtype_order`
+													";
 												$results	= $db->GetAll($query);
 												if ($results) {
 												$event_types = array();

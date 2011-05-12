@@ -25,9 +25,12 @@
 require_once("init.inc.php");
 
 $mail = new Zend_Mail();
-
-$mail->addHeader("X-Originating-IP", $_SERVER["REMOTE_ADDR"]);
+if(isset($_SERVER["REMOTE_ADDR"])){
+	$mail->addHeader("X-Originating-IP", $_SERVER["REMOTE_ADDR"]);
+}
 $mail->addHeader("X-Section", "Communities Notify System",true);
+
+
 
 /**
  * Function generates Subject and Body of notification posts.
@@ -55,12 +58,12 @@ function build_post($post) {
 								"%ENTRADA_URL%"
 							);
 			$query 		= "	SELECT a.*, CONCAT_WS(' ', b.firstname, b.lastname) as `fullname`, c.`community_title`, c.`community_url`, d.`page_url`
-							FROM `".TABLES_PREFIX."community_".$post["type"]."s` AS a
+							FROM `community_".$post["type"]."s` AS a
 							LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
 							ON b.`id` = ".$db->qstr($post["author_id"])."
-							LEFT JOIN `".TABLES_PREFIX."communities` AS c
+							LEFT JOIN `communities` AS c
 							ON a.`community_id` = c.`community_id`
-							LEFT JOIN `".TABLES_PREFIX."community_pages` AS d
+							LEFT JOIN `community_pages` AS d
 							ON a.`cpage_id` = d.`cpage_id`
 							WHERE a.`c".$post["type"]."_id` = ".$db->qstr($post["record_id"]);
 			$result		= $db->GetRow($query);
@@ -89,12 +92,12 @@ function build_post($post) {
 								"%ENTRADA_URL%"
 							);
 			$query 		= "	SELECT a.*, CONCAT_WS(' ', b.firstname, b.lastname) as `fullname`, c.`community_title`, c.`community_url`, d.`page_url`
-							FROM `".TABLES_PREFIX."community_polls` AS a
+							FROM `community_polls` AS a
 							LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
 							ON b.`id` = ".$db->qstr($post["author_id"])."
-							LEFT JOIN `".TABLES_PREFIX."communities` AS c
+							LEFT JOIN `communities` AS c
 							ON a.`community_id` = c.`community_id`
-							LEFT JOIN `".TABLES_PREFIX."community_pages` AS d
+							LEFT JOIN `community_pages` AS d
 							ON a.`cpage_id` = d.`cpage_id`
 							WHERE a.`cpolls_id` = ".$db->qstr($post["record_id"]);
 			$result		= $db->GetRow($query);
@@ -124,14 +127,14 @@ function build_post($post) {
 								"%ENTRADA_URL%"
 							);
 			$query 		= "	SELECT a.*, CONCAT_WS(' ', b.firstname, b.lastname) as `fullname`, c.`community_title`, c.`community_url`, d.`page_url`, e.`folder_title`
-							FROM `".TABLES_PREFIX."community_share_files` AS a
+							FROM `community_share_files` AS a
 							LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
 							ON b.`id` = ".$db->qstr($post["author_id"])."
-							LEFT JOIN `".TABLES_PREFIX."communities` AS c
+							LEFT JOIN `communities` AS c
 							ON a.`community_id` = c.`community_id`
-							LEFT JOIN `".TABLES_PREFIX."community_shares` AS e
+							LEFT JOIN `community_shares` AS e
 							ON a.`cshare_id` = e.`cshare_id`
-							LEFT JOIN `".TABLES_PREFIX."community_pages` AS d
+							LEFT JOIN `community_pages` AS d
 							ON e.`cpage_id` = d.`cpage_id`
 							WHERE a.`csfile_id` = ".$db->qstr($post["record_id"]);
 			$result		= $db->GetRow($query);
@@ -159,14 +162,14 @@ function build_post($post) {
 								"%ENTRADA_URL%"
 							);
 			$query 		= "	SELECT a.*, CONCAT_WS(' ', b.firstname, b.lastname) as `fullname`, c.`community_title`, c.`community_url`, d.`page_url`, e.`gallery_title`
-							FROM `".TABLES_PREFIX."community_gallery_photos` AS a
+							FROM `community_gallery_photos` AS a
 							LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
 							ON b.`id` = ".$db->qstr($post["author_id"])."
-							LEFT JOIN `".TABLES_PREFIX."communities` AS c
+							LEFT JOIN `communities` AS c
 							ON a.`community_id` = c.`community_id`
-							LEFT JOIN `".TABLES_PREFIX."community_galleries` AS e
+							LEFT JOIN `community_galleries` AS e
 							ON a.`cgallery_id` = e.`cgallery_id`
-							LEFT JOIN `".TABLES_PREFIX."community_pages` AS d
+							LEFT JOIN `community_pages` AS d
 							ON e.`cpage_id` = d.`cpage_id`
 							WHERE a.`cgphoto_id` = ".$db->qstr($post["record_id"]);
 			$result		= $db->GetRow($query);
@@ -195,16 +198,16 @@ function build_post($post) {
 								"%ENTRADA_URL%"
 							);
 			$query 		= "	SELECT a.*, CONCAT_WS(' ', b.firstname, b.lastname) as `fullname`, b.`organisation_id`, c.`community_title`, c.`community_url`, e.`page_url`, f.`forum_title`, ".($post["type"] == "reply" ? "g" : "a").".`topic_title` AS `record_title`
-							FROM `".TABLES_PREFIX."community_discussion_topics` AS a
+							FROM `community_discussion_topics` AS a
 							LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
 							ON b.`id` = ".$db->qstr($post["author_id"])."
-							LEFT JOIN `".TABLES_PREFIX."communities` AS c
+							LEFT JOIN `communities` AS c
 							ON a.`community_id` = c.`community_id`
-							LEFT JOIN `".TABLES_PREFIX."community_discussions` AS d
+							LEFT JOIN `community_discussions` AS d
 							ON a.`cdiscussion_id` = d.`cdiscussion_id`
-							LEFT JOIN `".TABLES_PREFIX."community_pages` AS e
+							LEFT JOIN `community_pages` AS e
 							ON d.`cpage_id` = e.`cpage_id`
-							LEFT JOIN `".TABLES_PREFIX."community_discussions` AS f
+							LEFT JOIN `community_discussions` AS f
 							ON a.`cdiscussion_id` = f.`cdiscussion_id`
 							".($post["type"] == "reply" ? "LEFT JOIN `community_discussion_topics` AS g
 							ON a.`cdtopic_parent` = g.`cdtopic_id`" : "")."
@@ -235,7 +238,7 @@ function build_post($post) {
 							);
 			$query 		= "	SELECT CONCAT_WS(a.firstname, a.lastname) as `fullname`, b.`community_title`, b.`community_url`, b.`community_title`
 							FROM `".AUTH_DATABASE."`.`user_data` AS a
-							LEFT JOIN `".TABLES_PREFIX."communities` AS b
+							LEFT JOIN `communities` AS b
 							ON b.`community_id` = ".$db->qstr($post["record_id"])."
 							WHERE a.`id` = ".$db->qstr($post["author_id"]);
 			$result		= $db->GetRow($query);
@@ -256,7 +259,7 @@ function build_post($post) {
 
 	$NOTIFICATION_MESSAGE		 	 = array();
 
-	$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(WEBSITE_ABSOLUTE."/templates/".DEFAULT_TEMPLATE."/email/".$post['body']);
+	$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".DEFAULT_TEMPLATE."/email/".$post['body']);
 	$mail->setBodyText(clean_input(str_replace($search, $replace, $NOTIFICATION_MESSAGE["textbody"]), array("postclean")));
 }
 
@@ -283,13 +286,13 @@ if ((@is_dir(CACHE_DIRECTORY)) && (@is_writable(CACHE_DIRECTORY))) {
 		if (@file_put_contents(COMMUNITY_NOTIFY_LOCK, 'L_O_C_K')) {
 			$limit	= COMMUNITY_NOTIFY_LIMIT;
 
-			$query	=  "SELECT * FROM `".TABLES_PREFIX."community_notifications` WHERE `release_time` < ". $db->qstr(time());
+			$query	=  "SELECT * FROM `community_notifications` WHERE `release_time` < ". $db->qstr(time());
 			$posts	= $db->GetAll($query);
 			if ($posts) {
 				foreach ($posts as $post) {
 					build_post($post);
 
-					$query = "SELECT `ccnotification_id`, `proxy_id` FROM `".TABLES_PREFIX."cron_community_notifications`
+					$query = "SELECT `ccnotification_id`, `proxy_id` FROM `cron_community_notifications`
 								WHERE `cnotification_id` = ".$db->qstr($post['cnotification_id']);
 					$proxies = $db->GetAll($query);
 					foreach ($proxies as $proxy) {
@@ -298,7 +301,7 @@ if ((@is_dir(CACHE_DIRECTORY)) && (@is_writable(CACHE_DIRECTORY))) {
 						$result  = $db->GetRow($query);
 						if ($result && $result["notifications"]) send_member($result);
 
-						if (!$db->Execute("DELETE FROM `".TABLES_PREFIX."cron_community_notifications` WHERE `ccnotification_id` = ".$db->qstr($proxy['ccnotification_id']))) {	// Delete the recipient
+						if (!$db->Execute("DELETE FROM `cron_community_notifications` WHERE `ccnotification_id` = ".$db->qstr($proxy['ccnotification_id']))) {	// Delete the recipient
 							application_log("error", "Failed to delete record with `ccnotification_id` $proxy[ccnotification_id] from table `cron_community_notifications`. Database said: ".$db->ErrorMsg());
 						}
 
@@ -313,7 +316,7 @@ if ((@is_dir(CACHE_DIRECTORY)) && (@is_writable(CACHE_DIRECTORY))) {
 						}
 					}
 
-					if (!$db->Execute("DELETE FROM `".TABLES_PREFIX."community_notifications` WHERE `cnotification_id` = ".$db->qstr($post['cnotification_id']))) {	// Delete the notification
+					if (!$db->Execute("DELETE FROM `community_notifications` WHERE `cnotification_id` = ".$db->qstr($post['cnotification_id']))) {	// Delete the notification
 						application_log("error", "Failed to delete record with `cnotification_id` $post[cnotification_id] from table `community_notifications`. Database said: ".$db->ErrorMsg());
 					}
 				}

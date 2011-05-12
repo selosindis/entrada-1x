@@ -222,6 +222,43 @@ if (!defined("IN_APARTMENTS")) {
 				$ERRORSTR[]	= "You must provide a valid e-mail address for the apartment's superintendent.";
 			}
 
+
+			if (isset($_POST['keys_from_super']) && $_POST['keys_from_super'] == true) {
+				$PROCESSED['keys_firstname'] = $PROCESSED['super_firstname'];
+				$PROCESSED['keys_lastname'] = $PROCESSED['super_lastname'];
+				$PROCESSED['keys_phone'] = $PROCESSED['super_phone'];
+				$PROCESSED['keys_email'] = $PROCESSED['super_email'];
+			} else {
+				if (isset($_POST["keys_firstname"]) && ($tmp_input = clean_input($_POST["keys_firstname"], array("trim", "notags")))) {
+					$PROCESSED["keys_firstname"] = $tmp_input;
+				} else {
+					$ERROR++;
+					$ERRORSTR[] = "You must provide the firstname of the key contact.";
+				}
+
+				if (isset($_POST["keys_lastname"]) && ($tmp_input = clean_input($_POST["keys_lastname"], array("trim", "notags")))) {
+					$PROCESSED["keys_lastname"] = $tmp_input;
+				} else {
+					$ERROR++;
+					$ERRORSTR[] = "You must provide the lastname of the key contact.";
+				}
+
+				if (isset($_POST["keys_phone"]) && ($tmp_input = clean_input($_POST["keys_phone"], array("trim", "notags")))) {
+					$PROCESSED["keys_phone"] = $tmp_input;
+				} else {
+					$ERROR++;
+					$ERRORSTR[] = "You must provide the telephone number of the key contact.";
+				}
+
+				if (isset($_POST["keys_email"]) && ($tmp_input = clean_input($_POST["keys_email"], array("trim", "notags"))) && valid_address($tmp_input)) {
+					$PROCESSED["keys_email"] = $tmp_input;
+				} else {
+					$ERROR++;
+					$ERRORSTR[] = "You must provide a valid e-mail address for the key contact.";
+				}
+			}			
+			
+			
 			/**
 			 * Required field "release_date" / Available Start (validated through validate_calendars function).
 			 * Non-required field "release_until" / Available Finish (validated through validate_calendars function).
@@ -311,6 +348,16 @@ if (!defined("IN_APARTMENTS")) {
 			<script type="text/javascript">
 			var googleMap = null;
 			var updater = null;
+
+		    function showHide(){
+				if(!document.getElementById('keys_from_super').checked){
+					document.getElementById('keys_division').style.visibility = 'visible';
+				}
+				else{
+					document.getElementById('keys_division').style.visibility = 'hidden';
+				}
+			}			
+
 
 			function initialize() {
 				googleMap = new GMap2($('mapData'));
@@ -610,6 +657,51 @@ if (!defined("IN_APARTMENTS")) {
 								<input type="text" id="super_email" name="super_email" value="<?php echo html_encode($PROCESSED["super_email"]); ?>" maxlength="32" style="width: 250px" />
 							</td>
 						</tr>
+						
+						
+						<tr>
+							<td colspan="4"><h2>Contact for Keys</h2>
+								<input type="checkbox"name ="keys_from_super" id="keys_from_super" value="true" onclick="showHide();" checked="checked">Same as Superintendent</input>
+							</td>
+						</tr>
+					</tbody>
+					<tbody id ="keys_division" style="visibility:hidden;">
+						<tr>
+							<td>&nbsp;</td>
+							<td><label for="keys_firstname" class="form-required">Firstname</label></td>
+							<td colspan="2">
+								<input type="text" id="keys_firstname" name="keys_firstname" value="<?php echo html_encode($PROCESSED["keys_firstname"]); ?>" maxlength="32" style="width: 250px" />
+							</td>
+						</tr>
+						<tr>
+							<td>&nbsp;</td>
+							<td><label for="keys_lastname" class="form-required">Lastname</label></td>
+							<td colspan="2">
+								<input type="text" id="keys_lastname" name="keys_lastname" value="<?php echo html_encode($PROCESSED["keys_lastname"]); ?>" maxlength="32" style="width: 250px" />
+							</td>
+						</tr>
+						<tr>
+							<td>&nbsp;</td>
+							<td><label for="keys_phone" class="form-required">Telephone Number</label></td>
+							<td colspan="2">
+								<input type="text" id="keys_phone" name="keys_phone" value="<?php echo html_encode($PROCESSED["keys_phone"]); ?>" maxlength="32" style="width: 250px" />
+							</td>
+						</tr>
+						<tr>
+							<td>&nbsp;</td>
+							<td><label for="keys_email" class="form-required">E-Mail Address</label></td>
+							<td colspan="2">
+								<input type="text" id="keys_email" name="keys_email" value="<?php echo html_encode($PROCESSED["keys_email"]); ?>" maxlength="32" style="width: 250px" />
+							</td>
+						</tr>
+
+					</tbody>
+					<tbody>
+
+						
+						
+						
+						
 						<tr>
 							<td colspan="4"><h2>Apartment Availability</h2></td>
 						</tr>

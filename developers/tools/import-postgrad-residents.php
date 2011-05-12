@@ -117,11 +117,21 @@ switch ($ACTION) {
 					if ($result) {
 						$resident["program_id"] = $result["id"];
 					}
+					else {
+						$query = "SELECT id FROM `" . DATABASE_NAME . "`.`mtd_moh_program_codes` WHERE `program_code` = UKN";
+						$id = $db->GetOne($query);
+						$resident["program_id"] = $id;
+					}
 
 					$query = "SELECT * FROM `" . DATABASE_NAME . "`.`mtd_categories` WHERE `category_code` = " . $db->qstr($temp_resident["category_code"]);
 					$result = $db->GetRow($query);
 					if ($result) {
 						$resident["category_id"] = $result["id"];
+					}
+					else {
+						$query = "SELECT id FROM `" . DATABASE_NAME . "`.`mtd_categories` WHERE `category_code` = UKN";
+						$id = $db->GetOne($query);
+						$resident["category_id"] = $id;
 					}
 
 					$query = "SELECT a.`id` FROM `" . AUTH_DATABASE . "`.`user_data` a, `" . AUTH_DATABASE . "`.`user_access` b
@@ -130,10 +140,10 @@ switch ($ACTION) {
 							  AND b.`group` = 'resident'
 							  AND a.id = b.user_id";
 					
-					$result = $db->GetRow($query);
+					$proxy_id = $db->GetOne($query);
 
-					if ($result) {
-						$resident["proxy_id"] = $result["id"];
+					if ($proxy_id) {
+						$resident["proxy_id"] = $proxy_id;
 						if ($db->AutoExecute(AUTH_DATABASE . ".user_data_resident", $resident, "INSERT")) {
 							output_success("ROW: " .$row_count . " - Insert of resident proxy_id[" . $resident["proxy_id"] .  "] succeeded");
 						}

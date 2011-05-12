@@ -2524,6 +2524,29 @@ function course_name($course_id = 0, $return_course_name = true, $return_course_
 }
 
 /**
+ * This function returns the name of the small group if it is found, otherwise false.
+ *
+ * @param int $id
+ * @return string
+ */
+function small_group_name($small_group_id = 0) {
+	global $db;
+
+	if (($small_group_id = (int) $small_group_id)) {
+		$output = array();
+		$query	= "	SELECT `group_name` FROM `small_groups` 
+					WHERE `sgroup_id` = ".$db->qstr($small_group_id)."
+					AND `group_active` = '1'";
+		$result	= $db->GetRow($query);
+		if ($result) {
+			return $result["group_name"];
+		}
+	}
+
+	return false;
+}
+
+/**
  * This function returns an array of the hierarchal path to the provided
  * course_id.
  *
@@ -6374,7 +6397,7 @@ function plotkit_statistics_lables($labels = array()) {
 
 	if(is_array($labels)) {
 		foreach ($labels as $key => $label) {
-			$output[] = "{label: '".$label."', v: ".(int) $key."}";
+			$output[] = "{label: '".$label."', v: ".$key."}";
 		}
 	}
 
@@ -6392,7 +6415,7 @@ function plotkit_statistics_values($values = array()) {
 
 	if(is_array($values)) {
 		foreach ($values as $key => $value) {
-			$output[] = "[".(int) $key.", ".(int) $value."]";
+			$output[] = "[".(int) $key.", ".$value."]";
 		}
 	}
 
@@ -8598,6 +8621,7 @@ function events_output_filter_controls($module_type = "") {
 					<option value="student">Student Filters</option>
 					<option value="grad">Graduating Year Filters</option>
 					<option value="course">Course Filters</option>
+					<option value="smallgroup">Small Group Filters</option>
 					<option value="phase">Phase / Term Filters</option>
 					<option value="eventtype">Event Type Filters</option>
 					<option value="clinical_presentation">Clinical Presentation Filters</option>
@@ -8707,6 +8731,9 @@ function events_output_filter_controls($module_type = "") {
 									break;
 									case "course" :
 										echo course_name($filter_value);
+									break;
+									case "smallgroup" :
+										echo small_group_name($filter_value);
 									break;
 									case "phase" :
 										echo "Phase / Term ".strtoupper($filter_value);
@@ -9229,12 +9256,37 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 									if (($result) && ($tmp_input = clean_input($result["grad_year"], "alphanumeric"))) {
 										$student_grad_year = "(`event_audience`.`audience_type` = 'grad_year' AND `event_audience`.`audience_value` = ".$db->qstr($tmp_input).") OR ";
 									}
+									
+									/**
+									 * Get the small groups of the proxy_id.
+									 */
+									$query = "	SELECT `sgroup_id`
+												FROM `small_group_members`
+												WHERE `proxy_id` = ".$db->qstr($student_proxy_id)."
+												AND `member_active` = 1";
+									$results = $db->GetAll($query);
+									if (count($results)) {
+										$group_ids_string = "";
+										foreach ($results as $result) {
+											if ($group_ids_string) {
+												$group_ids_string = $db->qstr($result["sgroup_id"]);
+											} else {
+												$group_ids_string .= ", ".$db->qstr($result["sgroup_id"]);
+											}
+										}
+										if ($group_ids_string) {
+											$student_groups = "(`event_audience`.`audience_type` = 'small_group' AND `event_audience`.`audience_value` IN (".$group_ids_string.")) OR ";
+										}
+									}
 
 									$where_student[] = "(".$student_grad_year."(`event_audience`.`audience_type` = 'proxy_id' AND `event_audience`.`audience_value` = ".$db->qstr($student_proxy_id)."))";
 								}
 							break;
 							case "grad" :
 								$where_grad_year[] = "(`event_audience`.`audience_type` = 'grad_year' AND `event_audience`.`audience_value` = ".$db->qstr((int) $filter_value).")";
+							break;
+							case "smallgroup" :
+								$where_group[] = "(`event_audience`.`audience_type` = 'small_group' AND `event_audience`.`audience_value` = ".$db->qstr((int) $filter_value).")";
 							break;
 							case "course" :
 								$where_course[] = "(`events`.`course_id` = ".$db->qstr($filter_value).")";
@@ -9265,6 +9317,9 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 		}
 		if (isset($where_grad_year) && count($where_grad_year)) {
 			$tmp_query[] = implode(" OR ", $where_grad_year);
+		}
+		if (isset($where_group) && count($where_group)) {
+			$tmp_query[] = implode(" OR ", $where_group);
 		}
 		if (isset($where_course) && count($where_course)) {
 			$tmp_query[] = implode(" OR ", $where_course);
@@ -10583,10 +10638,15 @@ function getUndergraduateSupervisionCourses() {
 function getDefaultEnrollment() {
     global $db;
 
-    $query = "SELECT `eventtype_id`, `eventtype_title`, `eventtype_default_enrollment`
-	FROM `events_lu_eventtypes`
-	WHERE `eventtype_default_enrollment` IS NOT NULL
-	ORDER BY `eventtype_default_enrollment` DESC";
+    $query = "	SELECT `t`.`eventtype_id`,`t`. `eventtype_title`,`t`. `eventtype_default_enrollment` 
+				FROM `events_lu_eventtypes` AS `t`
+				LEFT JOIN  `eventtype_organisation` AS `e_o`
+				ON `t`.`eventtype_id` = `e_o`.`eventtype_id` 
+				LEFT JOIN  `entrada_auth`.`organisations` AS `o` 
+				ON `o`.`organisation_id` = `e_o`.`organisation_id` 
+				WHERE `t`.`eventtype_default_enrollment` IS NOT NULL 
+				AND `o`.`organisation_id` = ".$db->qstr($_SESSION["details"]["organisation_id"])." 
+				ORDER BY `t`.`eventtype_default_enrollment` DESC";
     
     $results = $db->GetAll($query);
     
@@ -10640,7 +10700,14 @@ function display_default_enrollment($reportMode = false) {
 
 	$output_html = "";
 	
-	$query = "SELECT `eventtype_title`, `eventtype_default_enrollment` FROM `events_lu_eventtypes` WHERE `eventtype_active` = '1' ORDER BY `eventtype_default_enrollment`";	
+	$query = "	SELECT `eventtype_title`, `eventtype_default_enrollment` FROM `events_lu_eventtypes` AS `e` 
+				LEFT JOIN `eventtype_organisation` AS `e_o` 
+				ON `e`.`eventtype_id` = `e_o`.`eventtype_id` 
+				LEFT JOIN `entrada_auth`.`organisations` as `o` 
+				ON `o`.`organisation_id` = `e_o`. `organisation_id` 
+				WHERE `e`.`eventtype_active` = '1'  
+				AND `o`.`organisation_id` = ".$db->qstr($_SESSION["details"]["organisation_id"])." 
+				ORDER BY `e`.`eventtype_default_enrollment`";	
 	
 	if($results = $db->GetAll($query)) {
 		$previous = "";
@@ -12416,8 +12483,7 @@ function validate_integer_field($input){
 	if (!$int_test  && $input != ""  && !is_null($input)) {
 		$output = $input;
 		return $output;
-	}
-	else {
+	} else {
 		return 0;
 	}
 }

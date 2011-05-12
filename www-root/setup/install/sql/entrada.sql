@@ -3362,8 +3362,37 @@ CREATE TABLE IF NOT EXISTS `settings` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `settings` (`shortname`, `value`) VALUES
-('version_db', '1200'),
+('version_db', '1204'),
 ('version_entrada', '1.2.0');
+
+CREATE TABLE `small_groups` (
+  `sgroup_id` int(11) NOT NULL AUTO_INCREMENT,
+  `sgcategory_id` int(11) NOT NULL,
+  `group_name` varchar(64) NOT NULL,
+  `group_active` tinyint(1) NOT NULL DEFAULT '1',
+  `updated_date` int(11) DEFAULT NULL,
+  `updated_by` int(11) DEFAULT NULL,
+  PRIMARY KEY (`sgroup_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE `small_group_categories` (
+  `sgcategory_id` int(11) NOT NULL AUTO_INCREMENT,
+  `category_name` varchar(64) NOT NULL,
+  `category_active` tinyint(1) NOT NULL DEFAULT '1',
+  `updated_date` int(11) DEFAULT NULL,
+  `updated_by` int(11) DEFAULT NULL,
+  PRIMARY KEY (`sgcategory_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE `small_group_members` (
+  `sgmember_id` int(11) NOT NULL AUTO_INCREMENT,
+  `sgroup_id` int(11) NOT NULL,
+  `proxy_id` int(11) NOT NULL,
+  `member_active` tinyint(1) NOT NULL DEFAULT '1',
+  `updated_by` int(11) DEFAULT NULL,
+  `updated_date` int(11) DEFAULT NULL,
+  PRIMARY KEY (`sgmember_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `statistics` (
   `statistic_id` int(12) NOT NULL AUTO_INCREMENT,
@@ -3401,12 +3430,6 @@ CREATE TABLE IF NOT EXISTS `statistics_archive` (
   KEY `action_field` (`action_field`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `student_awards_external`
---
-
 CREATE TABLE IF NOT EXISTS `student_awards_external` (
   `id` int(11) NOT NULL auto_increment,
   `user_id` int(11) NOT NULL,
@@ -3419,11 +3442,6 @@ CREATE TABLE IF NOT EXISTS `student_awards_external` (
   PRIMARY KEY  (`id`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `student_awards_internal`
---
 
 CREATE TABLE IF NOT EXISTS `student_awards_internal` (
   `id` int(11) NOT NULL auto_increment,
@@ -3432,12 +3450,6 @@ CREATE TABLE IF NOT EXISTS `student_awards_internal` (
   `year` year(4) NOT NULL,
   PRIMARY KEY  (`id`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `student_awards_internal_types`
---
 
 CREATE TABLE IF NOT EXISTS `student_awards_internal_types` (
   `id` int(11) NOT NULL auto_increment,
@@ -3448,12 +3460,6 @@ CREATE TABLE IF NOT EXISTS `student_awards_internal_types` (
   UNIQUE KEY `title_unique` (`title`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `student_clineval_comments`
---
-
 CREATE TABLE IF NOT EXISTS `student_clineval_comments` (
   `id` int(11) NOT NULL auto_increment,
   `source` varchar(4096) NOT NULL,
@@ -3461,12 +3467,6 @@ CREATE TABLE IF NOT EXISTS `student_clineval_comments` (
   `user_id` int(11) NOT NULL,
   PRIMARY KEY  (`id`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `student_community_health_and_epidemiology`
---
 
 CREATE TABLE IF NOT EXISTS `student_community_health_and_epidemiology` (
   `user_id` int(11) NOT NULL,
@@ -3478,12 +3478,6 @@ CREATE TABLE IF NOT EXISTS `student_community_health_and_epidemiology` (
   `comment` varchar(500) default NULL,
   PRIMARY KEY  (`user_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `student_contributions`
---
 
 CREATE TABLE IF NOT EXISTS `student_contributions` (
   `id` int(11) NOT NULL auto_increment,
@@ -3500,12 +3494,6 @@ CREATE TABLE IF NOT EXISTS `student_contributions` (
   PRIMARY KEY  (`id`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `student_critical_enquiries`
---
-
 CREATE TABLE IF NOT EXISTS `student_critical_enquiries` (
   `user_id` int(11) NOT NULL,
   `title` varchar(255) NOT NULL,
@@ -3517,12 +3505,6 @@ CREATE TABLE IF NOT EXISTS `student_critical_enquiries` (
   PRIMARY KEY  (`user_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `student_disciplinary_actions`
---
-
 CREATE TABLE IF NOT EXISTS `student_disciplinary_actions` (
   `id` int(11) NOT NULL auto_increment,
   `user_id` int(11) NOT NULL,
@@ -3530,24 +3512,12 @@ CREATE TABLE IF NOT EXISTS `student_disciplinary_actions` (
   PRIMARY KEY  (`id`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `student_formal_remediations`
---
-
 CREATE TABLE IF NOT EXISTS `student_formal_remediations` (
   `id` int(11) NOT NULL auto_increment,
   `user_id` int(11) NOT NULL,
   `remediation_details` mediumtext NOT NULL,
   PRIMARY KEY  (`id`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `student_international_activities`
---
 
 CREATE TABLE IF NOT EXISTS `student_international_activities` (
   `id` int(11) NOT NULL auto_increment,
@@ -3560,24 +3530,12 @@ CREATE TABLE IF NOT EXISTS `student_international_activities` (
   PRIMARY KEY  (`id`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `student_leaves_of_absence`
---
-
 CREATE TABLE IF NOT EXISTS `student_leaves_of_absence` (
   `id` int(11) NOT NULL auto_increment,
   `user_id` int(11) NOT NULL,
   `absence_details` mediumtext NOT NULL,
   PRIMARY KEY  (`id`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `student_mspr`
---
 
 CREATE TABLE IF NOT EXISTS `student_mspr` (
   `user_id` int(11) default NULL,
@@ -3587,23 +3545,11 @@ CREATE TABLE IF NOT EXISTS `student_mspr` (
   `carms_number` int(10) unsigned default NULL
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `student_mspr_class`
---
-
 CREATE TABLE IF NOT EXISTS `student_mspr_class` (
   `year` int(11) NOT NULL default '0',
   `closed` int(11) default NULL,
   PRIMARY KEY  (`year`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `student_observerships`
---
 
 CREATE TABLE IF NOT EXISTS `student_observerships` (
   `id` int(11) NOT NULL auto_increment,
@@ -3619,12 +3565,6 @@ CREATE TABLE IF NOT EXISTS `student_observerships` (
   PRIMARY KEY  (`id`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `student_research`
---
-
 CREATE TABLE IF NOT EXISTS `student_research` (
   `id` int(11) NOT NULL auto_increment,
   `user_id` int(11) NOT NULL,
@@ -3635,12 +3575,6 @@ CREATE TABLE IF NOT EXISTS `student_research` (
   PRIMARY KEY  (`id`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `student_studentships`
---
-
 CREATE TABLE IF NOT EXISTS `student_studentships` (
   `id` int(11) NOT NULL auto_increment,
   `user_id` int(11) NOT NULL,
@@ -3648,12 +3582,6 @@ CREATE TABLE IF NOT EXISTS `student_studentships` (
   `year` year(4) NOT NULL default '0000',
   PRIMARY KEY  (`id`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `student_student_run_electives`
---
 
 CREATE TABLE IF NOT EXISTS `student_student_run_electives` (
   `id` int(11) NOT NULL auto_increment,
@@ -3683,14 +3611,6 @@ CREATE TABLE IF NOT EXISTS `users_online` (
   KEY `timestamp` (`timestamp`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
--- Tasks Module tables
-
--- --------------------------------------------------------
-
---
--- Table structure for table `tasks`
---
-
 CREATE TABLE IF NOT EXISTS `tasks` (
   `task_id` int(12) unsigned NOT NULL auto_increment,
   `title` varchar(255) NOT NULL,
@@ -3710,23 +3630,11 @@ CREATE TABLE IF NOT EXISTS `tasks` (
   PRIMARY KEY  (`task_id`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `task_associated_faculty`
---
-
 CREATE TABLE IF NOT EXISTS `task_associated_faculty` (
   `task_id` int(12) unsigned NOT NULL,
   `faculty_id` int(12) unsigned NOT NULL,
   PRIMARY KEY  (`task_id`,`faculty_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `task_completion`
---
 
 CREATE TABLE IF NOT EXISTS `task_completion` (
   `task_id` int(12) unsigned NOT NULL,
@@ -3741,12 +3649,6 @@ CREATE TABLE IF NOT EXISTS `task_completion` (
   PRIMARY KEY  (`task_id`,`recipient_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `task_owners`
---
-
 CREATE TABLE IF NOT EXISTS `task_owners` (
   `task_id` int(12) unsigned NOT NULL default '0',
   `owner_id` int(12) unsigned NOT NULL default '0',
@@ -3754,24 +3656,12 @@ CREATE TABLE IF NOT EXISTS `task_owners` (
   PRIMARY KEY  (`task_id`,`owner_id`,`owner_type`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `task_recipients`
---
-
 CREATE TABLE IF NOT EXISTS `task_recipients` (
   `task_id` int(12) unsigned NOT NULL,
   `recipient_type` enum('user','group','grad_year','organisation') NOT NULL,
   `recipient_id` int(12) unsigned NOT NULL,
   PRIMARY KEY  (`task_id`,`recipient_type`,`recipient_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `task_verifiers`
---
 
 CREATE TABLE IF NOT EXISTS `task_verifiers` (
   `task_id` int(12) unsigned NOT NULL,
@@ -3888,19 +3778,6 @@ CREATE TABLE IF NOT EXISTS `mtd_moh_service_codes` (
 ) ENGINE=MyISAM  DEFAULT CHARSET=latin1 ;
 
 CREATE TABLE IF NOT EXISTS `mtd_schedule` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `start_date` date NOT NULL,
-  `end_date` date NOT NULL,
-  `service_id` int(3) NOT NULL,
-  `resident_id` int(11) NOT NULL,
-  `creator_id` int(12) NOT NULL,
-  `type_code` varchar(1) NOT NULL,
-  `updated_date` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00' ON UPDATE CURRENT_TIMESTAMP,
-  `updated_by` int(12) NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1;
-
-CREATE TABLE IF NOT EXISTS `mtd_schedule` (
   `id` int(11) NOT NULL ;
   `start_date` date NOT NULL,
   `end_date` date NOT NULL,
@@ -3934,3 +3811,10 @@ CREATE TABLE IF NOT EXISTS `mtd_type` (
 INSERT INTO `mtd_type` (`id`, `type_code`, `type_description`) VALUES
 (1, 'I', 'in-patient/emergency'),
 (2, 'O', 'out-patient');
+
+CREATE TABLE IF NOT EXISTS `eventtype_organisation`(
+`eventtype_id` INT(12) NOT NULL, 
+`organisation_id` INT(12) NOT NULL, 
+KEY `eventtype_id` (`eventtype_id`),
+KEY `organisation_id` (`organisation_id`)
+) ENGINE = MyISAM DEFAULT CHARSET=utf8;

@@ -142,11 +142,19 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 		    <div class="content-heading"> Logbook Report</div>
 		<?php
 	// Collect mandatory objectives not seen within the rotation
-		    $query  = "	SELECT  a.`objective_id`, b.`objective_name` FROM `".CLERKSHIP_DATABASE."`.`logbook_mandatory_objectives` a
-				INNER JOIN `".DATABASE_NAME."`.`global_lu_objectives` b ON a.`objective_id` = b.`objective_id`
-				WHERE a.`rotation_id` = ".$db->qstr($rotation_id)." AND a.`objective_id` NOT IN
-				(   SELECT distinct c.`objective_id` FROM `".CLERKSHIP_DATABASE."`.`logbook_entry_objectives` c, `".CLERKSHIP_DATABASE."`.`logbook_entries` d
-				    WHERE d.`proxy_id` = ".$db->qstr($PROXY_ID)." AND d.`entry_active` = 1 AND c.`lentry_id` = d.`lentry_id`)
+		    $query  = "	SELECT  a.`objective_id`, b.`objective_name` 
+				FROM `".CLERKSHIP_DATABASE."`.`logbook_mandatory_objectives` a
+				INNER JOIN `".DATABASE_NAME."`.`global_lu_objectives` b 
+				ON a.`objective_id` = b.`objective_id`
+				WHERE a.`rotation_id` = ".$db->qstr($rotation_id)." 
+				AND a.`objective_id` NOT IN
+				(   
+					SELECT distinct c.`objective_id` 
+					FROM `".CLERKSHIP_DATABASE."`.`logbook_entry_objectives` c, `".CLERKSHIP_DATABASE."`.`logbook_entries` d
+				    WHERE d.`proxy_id` = ".$db->qstr($PROXY_ID)." 
+					AND d.`entry_active` = 1 
+					AND c.`lentry_id` = d.`lentry_id`
+				)
 				ORDER BY b.`objective_name`";
 		    $results = $db->GetAll($query);
 

@@ -46,12 +46,31 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 	*/
 	$clinical_presentations_list = array();
 	$clinical_presentations = array();
+	
+	if(isset($_GET["org_id"])){
+		$ORGANISATION_ID = $_GET["org_id"];
+	}
+	else{
+		if(isset($_GET["id"]))
+		$ORGANISATION_ID = $_GET["org_id"];
+		else{
+			$ORGANISATION_ID = 1;
+		}
+	}
 
-	$results = fetch_mcc_objectives();
+	
+	$results = fetch_mcc_objectives_for_org($ORGANISATION_ID);
+	
+	
 	if ($results) {
 		foreach ($results as $result) {
 			$clinical_presentations_list[$result["objective_id"]] = $result["objective_name"];
 		}
+	}
+	else {
+		$NOTICE++;
+		$NOTICESTR[] = "No Mandated Objectives found for this organisation.";
+		$clinical_presentations_list = false;
 	}
 
 	if ((isset($_POST["clinical_presentations"])) && (is_array($_POST["clinical_presentations"])) && (count($_POST["clinical_presentations"]))) {
@@ -290,7 +309,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								$db->Execute("INSERT INTO `course_objectives` SET `course_id` = ".$db->qstr($COURSE_ID).", `objective_id` = ".$db->qstr($objective_id).", `updated_date` = ".$db->qstr(time()).", `updated_by` = ".$db->qstr($_SESSION["details"]["id"]).", `importance` = '3'");
 							}
 						}
-
+						$NOTICE = 0;
 						$SUCCESS++;
 						$SUCCESSSTR[]	= "You have successfully added <strong>".html_encode($PROCESSED["course_name"])."</strong> to this system.<br /><br />".$msg;
 						$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
@@ -475,14 +494,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						<td></td>
 						<td><label for="organisation_id" class="form-required">Course Organisation</label></td>
 						<td>
-							<select id="organisation_id" name="organisation_id" style="width: 250px">
+							<script>
+								function updateCourseObjectives(idx){
+									alert("index is "+idx);
+								}
+							</script>
+							<select id="organisation_id" name="organisation_id" onchange ="updateCourseObjectives(this.options[this.selectedIndex].value);"style="width: 250px">
 							<?php
 							$query		= "SELECT `organisation_id`, `organisation_title` FROM `".AUTH_DATABASE."`.`organisations`";
 							$results	= $db->GetAll($query);
 							if ($results) {
 								foreach($results as $result) {
 									if ($ENTRADA_ACL->amIAllowed(new CourseResource(null, $result['organisation_id']), 'create')) {
-										echo "<option value=\"".(int) $result["organisation_id"]."\"".(((isset($PROCESSED["organisation_id"])) && ($PROCESSED["organisation_id"] == $result["organisation_id"])) ? " selected=\"selected\"" : "").">".html_encode($result["organisation_title"])."</option>\n";
+										//echo "<option value=\"".(int) $result["organisation_id"]."\"".(((isset($PROCESSED["organisation_id"])) && ($PROCESSED["organisation_id"] == $result["organisation_id"])) ? " selected=\"selected\"" : "").">".html_encode($result["organisation_title"])."</option>\n";
+										echo "<option value=\"".(int) $result["organisation_id"]."\"".(($ORGANISATION_ID == $result["organisation_id"]) ? " selected=\"selected\"" : "").">".html_encode($result["organisation_title"])."</option>\n";
 									}
 								}
 							}
@@ -537,7 +562,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			</div>
 
 			<?php				
-				$course_objectives = courses_fetch_objectives(array(0), 1, false, $posted_objectives);
+
+				list($course_objectives,$top_level_id) = courses_fetch_objectives_for_org($ORGANISATION_ID,array(0),-1,0, false, $posted_objectives);
 				$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/elementresizer.js\"></script>\n";
 			?>
 			<a name="course-objectives-section"></a>
@@ -576,7 +602,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								<strong>Note:</strong> For more detailed information please refer to the <a href="http://www.mcc.ca/Objectives_online/objectives.pl?lang=english&loc=contents" target="_blank" style="font-size: 11px">MCC Objectives for the Qualifying Examination</a>.
 							</div>
 						</td>
-						<td>
+						<td id="mandated_objectives_section">
+							<?php
+							if(!$clinical_presentations_list){
+								echo display_notice();
+							}
+							else{   ?>						
 							<select class="multi-picklist" id="PickList" name="clinical_presentations[]" multiple="multiple" size="5" style="width: 100%; margin-bottom: 5px">
 							<?php
 							if ((is_array($clinical_presentations)) && (count($clinical_presentations))) {
@@ -586,6 +617,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							}
 							?>
 							</select>
+
 							<div style="float: left; display: inline">
 								<input type="button" id="clinical_presentations_list_state_btn" class="button" value="Show List" onclick="toggle_list('clinical_presentations_list')" />
 							</div>
@@ -607,6 +639,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								?>
 								</select>
 							</div>
+							<?php
+							}
+							?>
 							<script type="text/javascript">
 							$('PickList').observe('keypress', function(event) {
 								if (event.keyCode == Event.KEY_DELETE) {
@@ -629,13 +664,23 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						<td>
 							<label for="objective_select" class="form-nrequired">Course Objectives</label>
 						</td>
-						<td>
+						<td id="curriculum_objectives_section">
+							<?php
+							if(!count($course_objectives["objectives"])){
+								$NOTICE = 1;
+								$NOTICESTR = null;
+								$NOTICESTR[] = "No Curriculum Objectives were found for this organisation.";
+								echo display_notice();
+									
+							}
+							else{
+							?>							
 							<select id="objective_select" onchange="showMultiSelect()">
 							<option value="">- Select Competency -</option>
 							<?php
 							$objective_select = "";
 							foreach ($course_objectives["objectives"] as $parent_id => $parent) {
-								if ($parent["parent"] == 1) {
+								if ($parent["parent"] == $top_level_id) {
 									echo "<optgroup label=\"".$parent["name"]."\">";
 									foreach($course_objectives["objectives"] as $objective_id => $objective) {
 										if ($objective["parent"] == $parent_id) {
@@ -671,6 +716,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							}
 							?>
 							</select>
+							<?php
+							}
+							?>
 						</td>
 					</tr>
 					<tr>

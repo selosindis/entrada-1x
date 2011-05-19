@@ -508,29 +508,38 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						<td></td>
 						<td style="vertical-align: top"><label for="eventtype_ids" class="form-required">Event Types</label></td>
 						<td>
-							<select id="eventtype_ids" name="eventtype_ids">
-								<option id="-1"> -- Pick a type to add -- </option>
-								<?php
+															<?php
 								$query		= "	SELECT a.* FROM `events_lu_eventtypes` AS a 
 												LEFT JOIN `eventtype_organisation` AS c 
 												ON a.`eventtype_id` = c.`eventtype_id` 
 												LEFT JOIN `".AUTH_DATABASE."`.`organisations` AS b
 												ON b.`organisation_id` = c.`organisation_id` 
-												WHERE b.`organisation_id` = ".$db->qstr($_SESSION["details"]["organisation_id"])."
+												WHERE b.`organisation_id` = ".$ORGANISATION_ID."
 												AND a.`eventtype_active` = '1' 
 												ORDER BY a.`eventtype_order`
 									
 								";
 								$results	= $db->GetAll($query);
-								if ($results) {
+								if (!$results) {
+									$ERROR = 1;
+									$ERRORSTR = null;
+									$ERRORSTR[] = "No Event Types were found for this Organisation. You will need to add at least one Event Type before continuing.";
+									echo display_error();						
+								}
+								else{
+								?>
+							
+							<select id="eventtype_ids" name="eventtype_ids">
+								<option id="-1"> -- Pick a type to add -- </option>
+								<?php
 									$event_types = array();
 									foreach($results as $result) {
 										$title = html_encode($result["eventtype_title"]);
 										echo "<option value=\"".$result["eventtype_id"]."\">".$title."</option>";
 									}
-								}
 								?>
 							</select>
+							<?php }?>
 							<div id="duration_notice" class="content-small" >Use the list above to select the different components of this event. When you select one, it will appear here and you can change the order and duration.</div>
 							<ol id="duration_container" class="sortableList" style="display: none;">
 								<?php
@@ -606,15 +615,24 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						<td></td>
 						<td><label for="course_id" class="form-required">Course</label></td>
 						<td>
-							<select id="course_id" name="course_id" style="width: 95%">
 							<?php
 							$query = "	SELECT * FROM `courses`
 										WHERE `organisation_id` = ".$db->qstr($ORGANISATION_ID)."
 										AND `course_active` = '1'
 										ORDER BY `course_name` ASC";
 							$results = $db->GetAll($query);
-							if ($results) {
-								foreach($results as $result) {
+							if (!$results){
+								$ERROR = 1;
+								$ERRORSTR = null;
+								$ERRORSTR[] = "No Courses were found for this Organisation. You will need to add at least one Course before continuing.";
+								echo display_error();
+							}
+							else{
+
+							?>
+							<select id="course_id" name="course_id" style="width: 95%">
+							<?php
+									foreach($results as $result) {
 									if ($ENTRADA_ACL->amIAllowed(new EventResource(null, $result["course_id"], $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"]), "create")) {
 										echo "<option value=\"".(int) $result["course_id"]."\"".(($PROCESSED["course_id"] == $result["course_id"]) ? " selected=\"selected\"" : "").">".html_encode($result["course_name"])."</option>\n";
 									}

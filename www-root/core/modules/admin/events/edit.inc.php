@@ -72,9 +72,23 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				// Error Checking
 				switch($STEP) {
 					case 2 :
+						
+						$query		= "SELECT a.*, b.`eventtype_title` FROM `event_eventtypes` AS a LEFT JOIN `events_lu_eventtypes` AS b ON a.`eventtype_id` = b.`eventtype_id` WHERE a.`event_id` = ".$db->qstr($EVENT_ID)." ORDER BY `eeventtype_id` ASC";
+						$results	= $db->GetAll($query);
+						$initial_duration = 0;
+						if ($results) {
+							foreach ($results as $result) {
+								$initial_duration += $result["duration"];
+								//$event_eventtypes[] = array($result["eventtype_id"], $result["duration"], $event_eventtypes_list[$result["eventtype_id"]]);
+								$old_event_eventtypes[] = $result;
+							}
+						}
+						
+						
 						/**
 						 * Required field "event_title" / Event Title.
-						 */
+						 */			
+
 						if ((isset($_POST["event_title"])) && ($event_title = clean_input($_POST["event_title"], array("notags", "trim")))) {
 							$PROCESSED["event_title"] = $event_title;
 						} else {
@@ -197,6 +211,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							$event_types = explode(",", trim($_POST["eventtype_duration_order"]));
 							$eventtype_durations = $_POST["duration_segment"];
 
+							
+							
+							
 							if ((is_array($event_types)) && (count($event_types))) {
 								foreach ($event_types as $order => $eventtype_id) {
 									if (($eventtype_id = clean_input($eventtype_id, array("trim", "int"))) && ($duration = clean_input($eventtype_durations[$order], array("trim", "int")))) {
@@ -206,9 +223,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 										}
 
 										$query	= "SELECT `eventtype_title` FROM `events_lu_eventtypes` WHERE `eventtype_id` = ".$db->qstr($eventtype_id);
+										//$query = "SELECT a.*, b.`eventtype_title` FROM `event_eventtypes` AS a LEFT JOIN `events_lu_eventtypes` AS b ON a.`eventtype_id` = b.`eventtype_id` WHERE a.`eventtype_id` = ".$db->qstr($eventtype_id)." ORDER BY `eeventtype_id` ASC";
 										$result	= $db->GetRow($query);
+										
 										if ($result) {
-											$PROCESSED["event_types"][] = array($eventtype_id, $duration, $result["eventtype_title"]);
+											$PROCESSED["event_types"][] = array("eventtype_id"=>$eventtype_id,"duration"=> $duration, "eventtype_title"=>$result["eventtype_title"]);
+											//$PROCESSED["event_types"][] = $result;									
 										} else {
 											$ERROR++;
 											$ERRORSTR[] = "One of the <strong>event types</strong> you specified was invalid.";
@@ -218,6 +238,25 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 										$ERRORSTR[] = "One of the <strong>event types</strong> you specified is invalid.";
 									}
 								}
+								
+								
+							$event_duration	= 0;
+							$old_event_duration = 0;
+							foreach($PROCESSED["event_types"] as $event_type) {
+								$event_duration += $event_type["duration"];
+							}
+						
+							foreach($old_event_eventtypes as $event_type) {
+								$old_event_duration += $event_type["duration"];
+							}
+							
+							if($old_event_duration != $event_duration) {
+								$ERROR++;
+								$ERRORSTR[] = "The modified <strong>Event Types</strong> duration specified is different than the exisitng one, please ensure the event's duration remains the same.";
+							}
+							
+								
+								
 							}
 						} else {
 							$ERROR++;
@@ -307,11 +346,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							$PROCESSED["event_finish"] = $PROCESSED["event_start"];
 							$PROCESSED["event_duration"] = 0;
 							foreach($PROCESSED["event_types"] as $event_type) {
-								$PROCESSED["event_finish"] += $event_type[1]*60;
-								$PROCESSED["event_duration"] += $event_type[1];
+								$PROCESSED["event_finish"] += $event_type["duration"]*60;
+								$PROCESSED["event_duration"] += $event_type["duration"];
 							}
 
-							$PROCESSED["eventtype_id"] = $PROCESSED["event_types"][0][0];
+							$PROCESSED["eventtype_id"] = $PROCESSED["event_types"][0]["eventtype_id"];
 
 							if ($db->AutoExecute("events", $PROCESSED, "UPDATE", "`event_id` = ".$db->qstr($EVENT_ID))) {
 								$query = "DELETE FROM `event_audience` WHERE `event_id` = ".$db->qstr($EVENT_ID);
@@ -319,7 +358,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 									$query = "DELETE FROM `event_eventtypes` WHERE `event_id` = ".$db->qstr($EVENT_ID);
 									if ($db->Execute($query)) {
 										foreach($PROCESSED["event_types"] as $event_type) {
-											if (!$db->AutoExecute("event_eventtypes", array("event_id" => $EVENT_ID, "eventtype_id" => $event_type[0], "duration" => $event_type[1]), "INSERT")) {
+											if (!$db->AutoExecute("event_eventtypes", array("event_id" => $EVENT_ID, "eventtype_id" => $event_type["eventtype_id"], "duration" => $event_type["duration"]), "INSERT")) {
 												$ERROR++;
 												$ERRORSTR[] = "There was an error while trying to save the selected <strong>Event Type</strong> for this event.<br /><br />The system administrator was informed of this error; please try again later.";
 
@@ -414,12 +453,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 										$msg	= "You will now be redirected to the event index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 									break;
 								}
+								if(!$ERROR){
+									$SUCCESS++;
+									$SUCCESSSTR[] = "You have successfully edited <strong>".html_encode($PROCESSED["event_title"])."</strong> in the system.<br /><br />".$msg;
+									$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
 
-								$SUCCESS++;
-								$SUCCESSSTR[] = "You have successfully edited <strong>".html_encode($PROCESSED["event_title"])."</strong> in the system.<br /><br />".$msg;
-								$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
-
-								application_log("success", "Event [".$EVENT_ID."] has been modified.");
+									application_log("success", "Event [".$EVENT_ID."] has been modified.");
+								}
 							} else {
 								$ERROR++;
 								$ERRORSTR[] = "There was a problem updating this event in the system. The system administrator was informed of this error; please try again later.";
@@ -439,7 +479,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						/**
 						 * Add existing event type segments to the processed array.
 						 */
-						$query = "	SELECT `types`.*,`lu_types`.* FROM `event_eventtypes` AS `types` 
+						/*$query = "	SELECT `types`.`eventtype_id`,`types`.`duration`,`lu_types`.`eventtype_title` FROM `event_eventtypes` AS `types` 
 									LEFT JOIN `events_lu_eventtypes` AS `lu_types` 
 									ON `lu_types`.`eventtype_id` = `types`.`eventtype_id` 
 									LEFT JOIN `eventtype_organisation` AS `type_org` 
@@ -447,12 +487,21 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 									LEFT JOIN `".AUTH_DATABASE."`.`organisations` AS `org` 
 									ON `type_org`.`organisation_id` = `org`.`organisation_id` 
 									WHERE `types`.`event_id` = ".$db->qstr($EVENT_ID)." 
-									AND `type_org`.`organisation_id` = ".$db->qstr($_SESSION["details"]["organisation_id"])." 
-									ORDER BY `types`.`eventtype_id` ASC";
+									AND `type_org`.`organisation_id` = ".$ORGANISATION_ID." 
+									ORDER BY `types`.`eventtype_id` ASC";*/
+						
+						$query = "	SELECT *
+									FROM `event_eventtypes` AS `types`
+									LEFT JOIN `events_lu_eventtypes` AS `lu_types`
+									ON `lu_types`.`eventtype_id` = `types`.`eventtype_id`
+									WHERE `event_id` = ".$db->qstr($EVENT_ID)."
+									ORDER BY `types`.`eeventtype_id` ASC";
+						
 						$results = $db->GetAll($query);
 						if ($results) {
 							foreach ($results as $contact_order => $result) {
-								$PROCESSED["event_types"][] = array($result["eventtype_id"], $result["duration"], $result["eventtype_title"]);
+								$PROCESSED["event_types"][] = array("eventtype_id"=>$result["eventtype_id"], "duration"=>$result["duration"], "eventtype_title"=>$result["eventtype_title"]);
+								//$PROCESSED["event_types"][] = $result;
 							}
 						}
 
@@ -604,7 +653,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 																ON a.`eventtype_id` = c.`eventtype_id` 
 																LEFT JOIN `".AUTH_DATABASE."`.`organisations` AS b
 																ON b.`organisation_id` = c.`organisation_id` 
-																WHERE b.`organisation_id` = ".$db->qstr($_SESSION["details"]["organisation_id"])."
+																WHERE b.`organisation_id` = ".$ORGANISATION_ID."
 																AND a.`eventtype_active` = '1' 
 																ORDER BY a.`eventtype_order`
 													";
@@ -618,23 +667,49 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 												}
 												?>
 										</select>
-										<div id="duration_notice" class="content-small" >Use the list above to select the different components of this event. When you select one, it will appear here and you can change the order and duration.</div>
+<div id="duration_notice" class="content-small">Use the list above to select the different components of this event. When you select one, it will appear here and you can change the order and duration.</div>
+									<?php
+                                    echo "<ol id=\"duration_container\" class=\"sortableList\" style=\"display: none\">\n";
+                                    if (is_array($PROCESSED["event_types"])) {
+                                        
+										foreach ($PROCESSED["event_types"] as $eventtype) {
+                                            echo "<li id=\"type_".(int) $eventtype["eventtype_id"]."\" class=\"\">".html_encode($eventtype["eventtype_title"])."
+                                                <a href=\"#\" onclick=\"$(this).up().remove(); cleanupList(); return false;\" class=\"remove\">
+                                                    <img src=\"".ENTRADA_URL."/images/action-delete.gif\">
+                                                </a>
+                                                <span class=\"duration_segment_container\">
+                                                    Duration: <input class=\"duration_segment\" name=\"duration_segment[]\" onchange=\"cleanupList();\" value=\"".$eventtype["duration"]."\"> minutes
+                                                </span>
+                                            </li>";
+                                        }
+                                    echo "</ol>";
+									
+									}
+									?>
+									<div id="total_duration" class="content-small">Total time: 0 minutes.</div>
+									<input id="eventtype_duration_order" name="eventtype_duration_order" style="display: none;"/>										
+										
+										
+										
+										<?php
+										
+										/*<div id="duration_notice" class="content-small" >Use the list above to select the different components of this event. When you select one, it will appear here and you can change the order and duration.</div>
 										<ol id="duration_container" class="sortableList" style="display: none;">
 											<?php
 											foreach($PROCESSED["event_types"] as $eventtype) {
-												echo "<li id=\"type_".$eventtype[0]."\" class=\"\">".$eventtype[2]."
+												echo "<li id=\"type_".$eventtype["eventtype_id"]."\" class=\"\">".$eventtype["eventtype_title"]."
 													<a href=\"#\" onclick=\"$(this).up().remove(); cleanupList(); return false;\" class=\"remove\">
 														<img src=\"".ENTRADA_URL."/images/action-delete.gif\">
 													</a>
 													<span class=\"duration_segment_container\">
-														Duration: <input class=\"duration_segment\" name=\"duration_segment[]\" onchange=\"cleanupList();\" value=\"".$eventtype[1]."\"> minutes
+														Duration: <input class=\"duration_segment\" name=\"duration_segment[]\" onchange=\"cleanupList();\" value=\"".$eventtype["eventtype_duration"]."\"> minutes
 													</span>
 												</li>";
 											}
 											?>
 										</ol>
 										<div id="total_duration" class="content-small">Total time: 0 minutes.</div>
-										<input id="eventtype_duration_order" name="eventtype_duration_order" style="display: none;">
+										<input id="eventtype_duration_order" name="eventtype_duration_order" style="display: none;">*/?>
 									</td>
 								</tr>
 								<tr>
@@ -795,7 +870,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 											<?php
 											if (is_array($organisation_categories) && count($organisation_categories)) {
 												foreach($organisation_categories as $organisation_id => $organisation_info) {
-													echo "<option value=\"".$organisation_id."\"".(($PROCESSED["associated_organisation_id"] == $year) ? " selected=\"selected\"" : "").">".$organisation_info['text']."</option>\n";
+													//echo "<option value=\"".$organisation_id."\"".(($PROCESSED["associated_organisation_id"] == $year) ? " selected=\"selected\"" : "").">".$organisation_info['text']."</option>\n";
+													echo "<option value=\"".$organisation_id."\"".(($ORGANISATION_ID == $organisation_id) ? " selected=\"selected\"" : "").">".$organisation_info['text']."</option>\n";
 												}
 											}
 											?>
@@ -864,4 +940,5 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 		application_log("notice", "Failed to provide event identifer when attempting to edit a event.");
 	}
 }
+
 ?>

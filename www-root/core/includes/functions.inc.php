@@ -8658,7 +8658,7 @@ function courses_fetch_objectives_for_org($org_id,$course_ids,$top_level_id = -1
 
 
 
-function course_objectives_in_list($objectives, $parent_id, $edit_importance = false, $parent_active = false, $importance = 1, $selected_only = false, $top = true, $display_importance = "primary", $hierarchical = false) {
+function course_objectives_in_list($objectives, $parent_id, $top_level_id, $edit_importance = false, $parent_active = false, $importance = 1, $selected_only = false, $top = true, $display_importance = "primary", $hierarchical = false) {
 	$output = "";
 	$active = array("primary" => false, "secondary" => false, "tertiary" => false);
 	
@@ -8705,7 +8705,7 @@ function course_objectives_in_list($objectives, $parent_id, $edit_importance = f
 	if ((is_array($objectives)) && (count($objectives))) {
 		if (((isset($objectives[$parent_id]) && count($objectives[$parent_id]["parent_ids"])) || $hierarchical) && (!isset($objectives[$parent_id]["parent_ids"]) || count($objectives[$parent_id]["parent_ids"]) < 3)) {
 //			$output .= "\n<ul class=\"objective-list\" id=\"objective_".$parent_id."_list\"".((($parent_id == 1) && (count($objectives[$parent_id]["parent_ids"]) > 2)) ? " style=\"padding-left: 0; margin-top: 0\"" : " style=\"padding-left: 15px;\"")." >";
-			$output .= "\n<ul class=\"objective-list\" id=\"objective_".$parent_id."_list\"".(((count($objectives[$parent_id]["parent_ids"]) < 2 && !$hierarchical) || ($hierarchical && $parent_id == 1)) ? " style=\"padding-left: 0; margin-top: 0\"" : "").">\n";
+			$output .= "\n<ul class=\"objective-list\" id=\"objective_".$parent_id."_list\"".(((count($objectives[$parent_id]["parent_ids"]) < 2 && !$hierarchical) || ($hierarchical && $parent_id == $top_level_id)) ? " style=\"padding-left: 0; margin-top: 0\"" : "").">\n";
 		}
 		$iterated = false;
 		do {
@@ -8746,7 +8746,7 @@ function course_objectives_in_list($objectives, $parent_id, $edit_importance = f
 					}
 				}
 				if ($objective["parent"] == $parent_id) {
-					$output .= course_objectives_in_list($objectives, $objective_id, $edit_importance, ((isset($objective[$display_importance]) && $objective[$display_importance]) ? true : false), $importance, $selected_only, false, $display_importance, $hierarchical);
+					$output .= course_objectives_in_list($objectives, $objective_id,$top_level_id, $edit_importance, ((isset($objective[$display_importance]) && $objective[$display_importance]) ? true : false), $importance, $selected_only, false, $display_importance, $hierarchical);
 				}
 			}
 			$iterated = true;

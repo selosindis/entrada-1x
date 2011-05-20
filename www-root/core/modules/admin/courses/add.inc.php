@@ -349,7 +349,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			break;
 		case 1 :
 		default :
-			require_once(ENTRADA_ABSOLUTE."/javascript/courses.js.php");				
+			
 			
 			$LASTUPDATED	= $course_details["updated_date"];
 
@@ -564,6 +564,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			<?php				
 
 				list($course_objectives,$top_level_id) = courses_fetch_objectives_for_org($ORGANISATION_ID,array(0),-1,0, false, $posted_objectives);
+				echo "course string: ".$course_ids_string;
+				require_once(ENTRADA_ABSOLUTE."/javascript/courses.js.php");
 				$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/elementresizer.js\"></script>\n";
 			?>
 			<a name="course-objectives-section"></a>
@@ -726,7 +728,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						<td>&nbsp;</td>
 						<td>
 							<span class="content-small">Select a Competency and a list of available course and curriculum objectives will be displayed to choose from. Once you have selected an objective, it will be placed in the list below and you may leave it as primary or change the importance to secondary or tertiary.</span>
-							<?php echo $objective_select; ?>
+							
+							<?php echo $objective_select;?>
+							
 							<script type="text/javascript">
 								var multiselect = [];
 								var id;
@@ -771,13 +775,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						</td>
 					</tr>
 					<tr>
-						<td colspan="3">&nbsp;</td>
+						
+						<td colspan="3">&nbsp;<?php var_dump($top_level_id); //echo '<br/>'; var_dump($course_objectives["objectives"]);?></td>
+					</tr>
+					<tr>
+						<td colspan="3"><?php $return = course_objectives_in_list($course_objectives, $top_level_id, true); echo 'dumping return'; var_dump($return);?></td>
 					</tr>
 					<tr>
 						<td>&nbsp;</td>
 						<td colspan="2">
 							<div id="objectives_list">
-							<?php echo course_objectives_in_list($course_objectives, 1, true); ?>
+							
+							<?php //echo course_objectives_in_list($course_objectives, $top_level_id, true); ?>
 							</div>
 						</td>
 					</tr>

@@ -454,7 +454,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				case 1 :
 				default :
 
-					require_once(ENTRADA_ABSOLUTE."/javascript/courses.js.php");
+					
 					$LASTUPDATED	= $course_details["updated_date"];
 
 					$course_directors	= array();
@@ -685,7 +685,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					<?php 
 					
 						list($course_objectives,$top_level_id) = courses_fetch_objectives_for_org($ORGANISATION_ID,array($COURSE_ID),-1,0, false, $posted_objectives);
-
+						require_once(ENTRADA_ABSOLUTE."/javascript/courses.js.php");
 						$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/elementresizer.js\"></script>\n";
 					?>
 					<a name="course-objectives-section"></a>
@@ -900,7 +900,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								<td colspan="2">&nbsp;</td>
 								<td style="padding-top: 5px;">
 									<div id="objectives_list">
-									<?php echo course_objectives_in_list($course_objectives, 1, true, false, 1, false, true, "primary", true); ?>
+									<?php echo course_objectives_in_list($course_objectives,$top_level_id, $top_level_id, true, false, 1, false, true, "primary", true); ?>
 									</div>
 								</td>
 							</tr>

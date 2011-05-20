@@ -364,8 +364,9 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 										fadeDuration:	0.30
 									});";
 								if ($result["objective_name"]) {
-									echo "<li><a id=\"objective-".$result["objective_id"]."-details\" style=\"text-decoration: none;\" href=\"".ENTRADA_URL."/objectives?section=objective-details&api=true&oid=".$result["objective_id"]."&cid=".$COURSE_ID."\">".$result["objective_name"]."</a></li>\n";
+									echo "<li><a id=\"objective-".$result["objective_id"]."-details\" style=\"text-decoration: none;\" href=\"".ENTRADA_URL."/courses/objectives?section=objective-details&api=true&oid=".$result["objective_id"]."&cid=".$COURSE_ID."\">".$result["objective_name"]."</a></li>\n";
 								}
+							
 							}
 							$HEAD[] = "
 								});

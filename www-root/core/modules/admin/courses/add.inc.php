@@ -776,10 +776,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					</tr>
 					<tr>
 						
-						<td colspan="3">&nbsp;<?php var_dump($top_level_id); //echo '<br/>'; var_dump($course_objectives["objectives"]);?></td>
+						<td colspan="3">&nbsp;</td>
 					</tr>
 					<tr>
-						<td colspan="3"><?php $return = course_objectives_in_list($course_objectives, $top_level_id, true); echo 'dumping return'; var_dump($return);?></td>
+						<td colspan="3"><?php $return = course_objectives_in_list($course_objectives, $top_level_id, true);?></td>
 					</tr>
 					<tr>
 						<td>&nbsp;</td>

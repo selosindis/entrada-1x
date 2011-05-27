@@ -44,7 +44,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			$ORGANISATION_ID = $_GET["org_id"];
 		}
 		else{
-			$ORGANISATION_ID = 1;
+			$query = "SELECT organisation_id FROM courses WHERE course_id = ".$db->qstr($COURSE_ID);
+			$ORGANISATION_ID = $db->GetOne($query);
 		}
 
 		

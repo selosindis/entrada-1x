@@ -53,7 +53,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				exit;
 			} else {
 				$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/events?".replace_query(array("section" => "edit", "id" => $EVENT_ID)), "title" => "Editing Event");
-
+				$ORGANISATION_ID = $event_info["organisation_id"];
 				$PROCESSED["associated_faculty"] = array();
 				$PROCESSED["event_audience_type"] = "grad_year";
 				$PROCESSED["associated_grad_year"] = "";

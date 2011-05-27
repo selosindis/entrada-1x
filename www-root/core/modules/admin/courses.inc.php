@@ -50,6 +50,13 @@ if(!defined("PARENT_INCLUDED")) {
 		} else {
 			$COURSE_ID = 0;
 		}
+		
+		if(isset($_GET["org_id"])){
+			$ORGANISATION_ID = $_GET["org_id"];
+		}
+		else{
+			$ORGANISATION_ID = 1;
+		}
 
 		/**
 		 * Check for groups which have access to the administrative side of this module

@@ -45,7 +45,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 } else {
 	if($COURSE_ID) {
 		
-		$course_objectives = courses_fetch_objectives(array($COURSE_ID), 1, false, false, 0, true);
+		list($course_objectives,$top_level_id) = courses_fetch_objectives_for_org($ORGANISATION_ID,array($COURSE_ID),-1, 1, false, false, 0, true);
 		
 		$query			= "	SELECT * FROM `courses` 
 							WHERE `course_id` = ".$db->qstr($COURSE_ID)."
@@ -577,7 +577,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 										<div id="objectives_list">
 										<h3>Curriculum Objectives</h3>
 										<strong>The learner will be able to:</strong>
-										<?php echo event_objectives_in_list($course_objectives, 1, true); ?>
+										<?php echo event_objectives_in_list($course_objectives, $top_level_id,$top_level_id, true); ?>
 										</div>
 									</td>
 								</tr>

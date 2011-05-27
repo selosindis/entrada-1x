@@ -5,8 +5,22 @@ function noPublic(obj) {
 	return;
 }
 
+
+
+function addFile() {
+	if (addFileHTML) {
+		var file_id	= $$('#file_list div.file-upload').length;
+		var newItem		= new Template(addFileHTML);
+
+		$('file_list').insert(newItem.evaluate({'file_id' : file_id, 'file_number' : (file_id + 1)}));
+	}
+
+	return;
+}
+
+
 function uploadFile() {
-	if($('display-upload-button')) {
+	/*if($('display-upload-button')) {
 		if($('display-upload-status')) {
 			if(($('uploaded_file')) && ($('uploaded_file').value != '')) {
 				$('display-upload-button').innerHTML = $('display-upload-status').innerHTML;
@@ -16,17 +30,17 @@ function uploadFile() {
 
 	if($('upload-file-form')) {
 		$('upload-file-form').submit();
-	}
+	}*/
 
+	$('upload-file-form').submit();
 	return;
 }
 
-function fetchFilename() {
-	var fn = $('uploaded_file').value;
+function fetchFilename(file_id) {
+	var fn = $('uploaded_file_'+file_id).value;
 	if (fn == ''){
-		$('uploaded_file').value = '';
+		$('uploaded_file_'+file_id).value = '';
 	} else {
-		if($('file_title').value == '') {
 			var filename = fn.match(/[\/|\\]([^\\\/]+)$/);
 
 			if (filename == null) {
@@ -35,10 +49,8 @@ function fetchFilename() {
 				filename = filename[1];
 			}
 
-			$('file_title').value = filename;
-		}
-
-		$('file_title').focus();
+			$('file_'+file_id+'_title').value = filename;
+		$('file_'+file_id+'_title').focus();
 	}
 }
 

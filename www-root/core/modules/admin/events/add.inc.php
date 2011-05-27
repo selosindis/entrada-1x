@@ -387,6 +387,26 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							break;
 						}
 
+						$query = "	SELECT b.* FROM `community_courses` AS a 
+									LEFT JOIN `community_pages` AS b 
+									ON a.`community_id` = b.`community_id` 
+									LEFT JOIN `community_page_options` AS c 
+									ON b.`community_id` = c.`community_id` 
+									WHERE c.`option_title` = 'show_history' 
+									AND c.`option_value` = 1 
+									AND b.`page_url` = 'course_calendar' 
+									AND b.`page_active` = 1 
+									AND a.`course_id` = ".$PROCESSED["course_id"];
+						$result = $db->GetRow($query);
+						
+						if($result){
+							$COMMUNITY_ID = $result["community_id"];
+							$PAGE_ID = $result["cpage_id"];
+							communities_log_history($COMMUNITY_ID, $PAGE_ID, $EVENT_ID, "community_history_add_learning_event", 1);
+						}
+						
+						
+						
 						$SUCCESS++;
 						$SUCCESSSTR[] = "You have successfully added <strong>".html_encode($PROCESSED["event_title"])."</strong> to the system.<br /><br />".$msg;
 						$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
@@ -496,6 +516,37 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						<td colspan="3">&nbsp;</td>
 					</tr>
 					<?php echo generate_calendars("event", "Event Date & Time", true, true, ((isset($PROCESSED["event_start"])) ? $PROCESSED["event_start"] : 0)); ?>
+
+					<!-- TEMP ADDITION -->
+					<tr>
+					<script>
+						function toggleRecurring(){
+							if(document.getElementById('recurring_check').checked){		
+								document.getElementById('recurring_params').show();
+								document.getElementById('recurring_select').show();
+							}
+							else{
+								document.getElementById('recurring_params').hide();
+								document.getElementById('recurring_select').hide();								
+							}
+						}
+					</script>
+						<td><input id ="recurring_check" type ="checkbox" name ="recurring_event" value ="true" onclick="toggleRecurring()"/></td>
+						<td>Recurring Event</td>
+						<td style="display:none;" id="recurring_select"><select><option>Daily</option><option>Weekly</option><option>Bi-Weekly</option><option>Monthly</option></select></td>
+					</tr>
+					<tr id ="recurring_params" style="display:none;">
+						<td></td>
+						<td>Ends:</td>
+						<td><input type="radio" name ="recurrance_type" checked="checked"/> After <input type="text" name="num_occurrences"/> occurrences.<br/>
+							<input type="radio" name ="recurrance_type"/> On &nbsp;&nbsp;&nbsp;<input type="text" name ="event_finish_date"/>
+							<a href="javascript: showCalendar('', document.getElementById('event_finish_date'), document.getElementById('event_finish_date'), '', 'event_finish_date', 0, 20, 1)" title="Show Calendar"><img src="<?php echo ENTRADA_URL;?>/images/cal-calendar.gif" width="23" height="23" alt="Show Calendar" title="Show Calendar" border="0" style="vertical-align: middle"/></a>
+						</td>
+					</tr>
+					
+					<?php //echo generate_calendars("event", "End Event After", false, false, 0, true, true, ((isset($PROCESSED["event_finish"])) ? $PROCESSED["event_finish"] : 0),false,false,"",""); ?>
+					<!--/TEMP ADDITION-->
+					
 					<tr>
 						<td></td>
 						<td><label for="event_location" class="form-nrequired">Event Location</label></td>

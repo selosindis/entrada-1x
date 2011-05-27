@@ -3906,6 +3906,10 @@ function community_history_record_title($history_key = "", $record_id = 0, $page
 		case "community_history_edit_event" :
 			$query = "SELECT (`event_title`) as `record_title` FROM `community_events` WHERE `cevent_id` = ".$db->qstr($record_id)." AND `cpage_id` = ".$db->qstr($page_id)." AND `community_id` = ".$db->qstr($community_id);
 			break;
+		case "community_history_add_learning_event" :
+		case "community_history_edit_learning_event" :
+			$query = "SELECT (`event_title`) as `record_title` FROM `events` WHERE `event_id` = ".$db->qstr($record_id);
+			break;
 		case "community_history_add_photo_comment" :
 		case "community_history_edit_photo_comment" :
 			$query = "SELECT (`photo_title`) as `record_title` FROM `community_gallery_photos` WHERE `cgphoto_id` = ".$db->qstr($parent_id)." AND `community_id` = ".$db->qstr($community_id);

@@ -454,6 +454,25 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 									break;
 								}
 								if(!$ERROR){
+									$query = "	SELECT b.* FROM `community_courses` AS a 
+												LEFT JOIN `community_pages` AS b 
+												ON a.`community_id` = b.`community_id` 
+												LEFT JOIN `community_page_options` AS c 
+												ON b.`community_id` = c.`community_id` 
+												WHERE c.`option_title` = 'show_history' 
+												AND c.`option_value` = 1 
+												AND b.`page_url` = 'course_calendar' 
+												AND b.`page_active` = 1 
+												AND a.`course_id` = ".$PROCESSED["course_id"];
+									$result = $db->GetRow($query);
+						
+									if($result){
+										$COMMUNITY_ID = $result["community_id"];
+										$PAGE_ID = $result["cpage_id"];
+										communities_log_history($COMMUNITY_ID, $PAGE_ID, $EVENT_ID, "community_history_edit_learning_event", 1);
+									}
+									
+									
 									$SUCCESS++;
 									$SUCCESSSTR[] = "You have successfully edited <strong>".html_encode($PROCESSED["event_title"])."</strong> in the system.<br /><br />".$msg;
 									$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";

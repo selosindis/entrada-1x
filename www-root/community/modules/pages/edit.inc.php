@@ -84,8 +84,8 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 		$PAGE_TYPE= $page_type;
 	}
 	
-	if ($home_page && $PAGE_TYPE == "default") {
-		$query		= "SELECT * FROM `community_page_options` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `cpage_id` = '0'";
+	if ($home_page) {
+		$query		= "SELECT * FROM `community_page_options` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID);//." AND `cpage_id` = '0'";
 		$results	= $db->GetAll($query);
 		if ($results) {
 			foreach ($results as $result) {
@@ -426,7 +426,7 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 										}
 									}
 								}
-								if ($home_page && $PAGE_TYPE == "default") {
+								if ($home_page) {
 									/**
 									 * Non-required fields for various page options of what to display on default home pages
 									 */
@@ -496,7 +496,7 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 								
 								if ($db->AutoExecute("community_pages", $PROCESSED, "UPDATE", "cpage_id = ".$PAGE_ID)) {
 									if ($home_page) {
-										if ($PAGE_TYPE == "default") {
+										if ($PAGE_TYPE == "default" || $PAGE_TYPE == "course") {
 											if ($db->Execute("UPDATE `community_page_options` SET `option_value` = ".$db->qstr($page_options["show_announcements"]["option_value"])." WHERE `cpoption_id` = ".$db->qstr($page_options["show_announcements"]["cpoption_id"]))) {
 												if ($db->Execute("UPDATE `community_page_options` SET `option_value` = ".$db->qstr($page_options["show_events"]["option_value"])." WHERE `cpoption_id` = ".$db->qstr($page_options["show_events"]["cpoption_id"]))) {
 													if ($db->Execute("UPDATE `community_page_options` SET `option_value` = ".$db->qstr($page_options["show_history"]["option_value"])." WHERE `cpoption_id` = ".$db->qstr($page_options["show_history"]["cpoption_id"]))) {
@@ -1063,7 +1063,7 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 													<tr>
 														<td colspan="2">
 															<div id="objectives_list">
-															<?php echo event_objectives_in_list($course_objectives, 1, true); ?>
+															<?php echo event_objectives_in_list($course_objectives, 1, 1, true); ?>
 															</div>
 														</td>
 													</tr>
@@ -1214,7 +1214,7 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 										</td>
 									</tr>
 									<?php
-								} elseif ($home_page && $PAGE_TYPE == "default") {
+								} elseif ($home_page) {
 								?>
 									<tr>
 										<td colspan="2" style="padding-top: 1em;">

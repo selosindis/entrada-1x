@@ -73,6 +73,11 @@ define("CLERKSHIP_LOTTERY_START", strtotime("March 1st, 2010"));
 define("CLERKSHIP_LOTTERY_FINISH", strtotime("March 14th, 2010"));
 define("CLERKSHIP_LOTTERY_MAX", 6);
 define("CLERKSHIP_FIRST_CLASS", 2011);
+define("ONE_WEEK", 604800);
+define("CLERKSHIP_SIX_WEEKS_PAST", 4);
+define("CLERKSHIP_ROTATION_ENDED", 3);
+define("CLERKSHIP_ONE_WEEK_PRIOR", 2);
+define("CLERKSHIP_ROTATION_PERIOD", 1);
 $CLERKSHIP_REQUIRED_WEEKS = 14;
 $CLERKSHIP_CATEGORY_TYPE_ID = 13;
 $CLERKSHIP_EVALUATION_FORM = "http://url_of_your_schools_precptor_evaluation_of_clerk_form.pdf";
@@ -124,6 +129,7 @@ define("DEFAULT_TEMPLATE", "default");											// This is the system template 
 define("DEFAULT_LANGUAGE", "en");												// This is the default language file that will be loaded. Language files must be placed in your DEFAULT_TEMPLATE."/languages directory. (i.e. en.lang.php)
 define("DEFAULT_CHARSET", "UTF-8");												// The character encoding which will be used on the website & in e-mails.
 define("DEFAULT_COUNTRY_ID", 39);												// The default contry id used to determine provinces / states, etc.
+define("DEFAULT_PROVINCE_ID", 9);												// The default provice id that is selected (use 0 for none).
 
 define("DEFAULT_DATE_FORMAT", "D M d/y g:ia");
 define("DEFAULT_ROWS_PER_PAGE", 25);
@@ -253,7 +259,7 @@ define("DEBUG_MODE", true);														// Some places have extra debug code to
 define("SHOW_LOAD_STATS", true);												// Do you want to see the time it takes to load each page?
 
 define("APPLICATION_NAME", "Entrada");											// The name of this application in your school (i.e. MedCentral, Osler, etc.)
-define("APPLICATION_VERSION", "1.2.0");											// The current filesystem version of Entrada.
+define("APPLICATION_VERSION", "1.2.0.1");											// The current filesystem version of Entrada.
 define("APPLICATION_IDENTIFIER", "app-".AUTH_APP_ID);							// PHP does not allow session key's to be integers (sometimes), so we have to make it a string.
 
 $DEFAULT_META["title"] = "Entrada: An eLearning Community";
@@ -283,6 +289,7 @@ $AGENT_CONTACTS["agent-notifications"] = array("name" => "Undergraduate Educatio
 $AGENT_CONTACTS["agent-clerkship"] = array("name" => "Clerkship Administrator", "email" => $config->admin->email, "director_ids" => array(0));
 $AGENT_CONTACTS["agent-clerkship-international"] = array("name" => "International Clerkship Administrator", "email" => $config->admin->email);
 $AGENT_CONTACTS["agent-regionaled"] = array("name" => "Apartment Administrator", "email" => $config->admin->email);
+$AGENT_CONTACTS["community-notifications"] = array("name" => "Communities Administrator", "email" => $config->admin->email);
 
 /**
  * A list of reserved names of community pages (in lower case). If a new community page matches

@@ -340,7 +340,7 @@ CREATE TABLE IF NOT EXISTS `user_data` (
   KEY `organisation_id` (`organisation_id`),
   KEY `gender` (`gender`),
   KEY `country_id` (`country_id`),
-  KEY `province_id` (`province_id`)
+  KEY `province_id` (`province_id`),
   FULLTEXT KEY `firstname_2` (`firstname`,`lastname`,`email`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 

@@ -27,17 +27,17 @@
  */
 require_once("init.inc.php");
 
-date_default_timezone_set(DEFAULT_TIMEZONE);
-
-session_start();
-
-$proxy_id 	= $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"];
-$_SESSION["details"]["email_updated"] = true;
-
-$PROCESSED["email_updated"] = time();
-$PROCESSED["updated_by"] = $proxy_id;
-if(!$db->AutoExecute(AUTH_DATABASE.".user_data", $PROCESSED, "UPDATE", "`id`=".$db->qstr($proxy_id))) {
-	echo $db->ErrorMsg();
-	exit;
+if((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) { 	
+	$proxy_id 	= $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"];
+	$_SESSION["details"]["email_updated"] = true;
+	
+	$PROCESSED["email_updated"] = time();
+	$PROCESSED["updated_by"] = $proxy_id;
+	if(!$db->AutoExecute(AUTH_DATABASE.".user_data", $PROCESSED, "UPDATE", "`id`=".$db->qstr($proxy_id))) {
+		echo $db->ErrorMsg();
+		exit;
+	}
+} else {
+	application_log("error", "Verify Email API accessed without valid session_id.");
 }
 ?>

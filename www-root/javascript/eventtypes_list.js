@@ -42,7 +42,16 @@ function writeOrder(container) {
 	$('eventtype_duration_order').value = Sortable.sequence('duration_container').join(',');
 }
 
-document.observe("dom:loaded", function() {
+document.observe('click', function(e, el) {
+  if (el = e.findElement('.remove')) {
+    $(el).up().remove();
+    cleanupList();
+  }
+});
+
+
+document.observe("dom:loaded", function() {        
+
 	if(typeof EVENT_LIST_STATIC_TOTAL_DURATION == "undefined") {
 		EVENT_LIST_STATIC_TOTAL_DURATION = false;
 	}
@@ -55,7 +64,7 @@ document.observe("dom:loaded", function() {
 		option = select.options[select.selectedIndex];
 		li = new Element('li', {id: 'type_'+option.value, 'class': ''});
 		li.insert(option.text+"  ");
-		li.insert(new Element('a', {href: '#', onclick: '$(this).up().remove(); cleanupList(); return false;', 'class': 'remove'}).insert(new Element('img', {src: DELETE_IMAGE_URL})));
+		li.insert(new Element('a', {href: '#', 'class': 'remove'}).insert(new Element('img', {src: DELETE_IMAGE_URL})));
 		span = new Element('span', {'class': 'duration_segment_container'});
 		span.insert('Duration: ');
 		name = 'duration_segment[]';

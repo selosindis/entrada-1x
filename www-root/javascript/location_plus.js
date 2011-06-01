@@ -5,10 +5,14 @@ function cleanupList() {
 	ol = $('duration_container');
 	if(ol.immediateDescendants().length > 0) {
 		ol.show();
-		$('duration_notice').hide();
+		if ($('duration_notice')) {
+			$('duration_notice').hide();
+		}
 	} else {
 		ol.hide();
-		$('duration_notice').show();
+		if ($('duration_notice')) {
+			$('duration_notice').show();
+		}
 	}
 	var some_too_low = false;
 	total = $$('input.duration_segment').inject(0, function(acc, e) {
@@ -44,7 +48,14 @@ function writeOrder(container) {
 }
 
 Event.observe(window, 'load', function() {
-	if(typeof EVENT_LIST_STATIC_TOTAL_DURATION == "undefined") {
+        //Event handler for remove location/duartion
+        //N.B. jQuery must already be loaded.
+        jQuery(".remove").live("click", function(e){
+				jQuery(this).parent().remove();
+				cleanupList();
+			});
+
+        if(typeof EVENT_LIST_STATIC_TOTAL_DURATION == "undefined") {
 		EVENT_LIST_STATIC_TOTAL_DURATION = false;
 	}
 	if(typeof INITIAL_EVENT_DURATION != "undefined") {
@@ -63,12 +74,14 @@ Event.observe(window, 'load', function() {
 		option = select.options[select.selectedIndex];
 		li = new Element('li', {id: 'mtdlocation_'+option.value, 'class': 'location_duration'});
 		li.insert(option.text+"");
+                li.insert(new Element('a', {href: '#', id:'remove' + option.value, 'class': 'remove'}).insert(new Element('img', {src: DELETE_IMAGE_URL})));
+
 		span = new Element('span', {'class': 'duration_segment_container', 'style': 'margin-left:5px;'});
 		span.insert('Time:');
 		name = 'duration_segment[]';
 		span.insert(new Element('input', {'style': 'width:25px;', 'class': 'duration_segment', name: 'duration_segment[]', onchange: 'cleanupList();', 'value': percent_val}));
 		span.insert(' %&nbsp&nbsp');
-                span.insert(new Element('a', {href: '#', onclick: '$(parentNode).up().remove(); cleanupList(); return false;', 'class': 'remove'}).insert(new Element('img', {src: DELETE_IMAGE_URL})));
+                
 		li.insert(span);
 
                 $('duration_container').insert(li);

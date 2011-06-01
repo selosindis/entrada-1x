@@ -298,21 +298,26 @@ form.inplaceeditor-form a {
 margin-left:10px;
 }
 
-a.button,button,form.inplaceeditor-form input[type=submit],input[type=button],input[type=submit],input.button-add,input.button-remove,input.button-red,input.button {
+a.button,button,input[type=submit],input[type=button],input.button-add,input.button-remove,input.button-red,input.button {
 color:#000;
 font-family:'Lucida Grande', Geneva, Verdana, Arial, Helvetica, sans-serif;
 font-size:12px;
 width:115px;
 height:22px;
-border:none;
-background:#EEE url(../images/btn_bg.gif);
+border:0;
+background:#EEE url(../images/btn_bg.gif) no-repeat;
 vertical-align: middle;
+}
+
+button:active,input[type=submit]:active,input[type=button]:active {
+background-position: 0 -22px;
 }
 
 a.button {
 display: block;
 text-align: center;
 }
+
 a.button:hover {
 text-decoration: none;
 color:#000;
@@ -334,12 +339,24 @@ button.add,input.button-add {
 background-image:url(../images/btn_bg_add.gif);
 }
 
+button.add:active,input.button-add:active {
+background-position: 0 -22px;
+}
+
 button.remove,input.button-remove {
 background-image:url(../images/btn_bg_remove.gif);
 }
 
+button.remove:active,input.button-remove:active {
+background-position: 0 -22px;
+}
+
 button.red,input.button-red {
 background-image:url(../images/btn_bg_red.gif);
+}
+
+button.red:active,input.button-red:active {
+background-position: 0 -22px;
 }
 
 div.display-map input[type=button],div.display-map input[type=submit],button.small,input.button-sm {
@@ -350,6 +367,10 @@ width:57px;
 height:20px;
 border:none;
 background:#EEE url(../images/btn_bg_sm.gif);
+}
+
+div.display-map input[type=button]:active,div.display-map input[type=submit]:active,button.small:active,input.button-sm:active {
+background-position: 0 -20px;
 }
 
 button.disabled-button,input.disabled-button {
@@ -2701,7 +2722,7 @@ div#associated_faculty_list ul.menu li.community,div#associated_student_list ul.
 cursor:move;
 }
 
-ul#faculty_list,ul#student_list,ul#director_list,ul#coordinator_list,ul#individual_list,ul#verifier_list,ul#author_list {
+ul#faculty_list,ul#student_list,ul#director_list,ul#coordinator_list,ul#individual_list,ul#verifier_list,ul#author_list,ul#small_group_list {
 width:250px;
 overflow:none;
 position:relative;

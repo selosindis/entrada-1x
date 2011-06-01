@@ -259,7 +259,7 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 										if ($page_details["parent_id"] != 0) {
 											$query = "SELECT `page_url` FROM `community_pages` WHERE `cpage_id` = ".$db->qstr($page_details["parent_id"]);
 											if ($parent_url = $db->GetOne($query)) {
-												$page_url = $parent_url . DIRECTORY_SEPARATOR . $page_url;
+												$page_url = $parent_url . "/" . $page_url;
 											}
 										}
 										if (in_array($page_url, $COMMUNITY_RESERVED_PAGES)) {

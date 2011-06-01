@@ -3442,7 +3442,6 @@ CREATE TABLE IF NOT EXISTS `student_awards_external` (
   PRIMARY KEY  (`id`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 
-
 CREATE TABLE IF NOT EXISTS `student_awards_internal` (
   `id` int(11) NOT NULL auto_increment,
   `user_id` int(11) NOT NULL,
@@ -3595,7 +3594,6 @@ CREATE TABLE IF NOT EXISTS `student_student_run_electives` (
   `end_year` smallint(4) unsigned default NULL,
   PRIMARY KEY  (`id`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
-
 
 CREATE TABLE IF NOT EXISTS `users_online` (
   `session_id` varchar(32) NOT NULL,

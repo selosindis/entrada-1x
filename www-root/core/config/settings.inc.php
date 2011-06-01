@@ -447,6 +447,7 @@ $MODULES["clerkship"] = array("title" => "Manage Clerkship", "resource" => "cler
 $MODULES["courses"] = array("title" => "Manage Courses", "resource"=> "coursecontent", "permission" => "update");
 $MODULES["evaluations"] = array("title" => "Manage Evaluations", "resource" => "evaluation", "permission" => "update");
 $MODULES["communities"] = array("title" => "Manage Communities", "resource" => "community", "permission" => "update");
+$MODULES["groups"] = array("title" => "Manage Groups", "resource" => "group", "permission" => "update");
 $MODULES["events"] = array("title" => "Manage Events", "resource" => "eventcontent", "permission" => "update");
 $MODULES["gradebook"] = array("title" => "Manage Gradebook", "resource" => "gradebook", "permission" => "update");
 //$MODULES["mspr"] = array("title" => "Manage MSPRs", "resource" => "mspr", "permission" => "create"); //removed as it is now under manage users

@@ -3364,6 +3364,7 @@ CREATE TABLE IF NOT EXISTS `settings` (
 INSERT INTO `settings` (`shortname`, `value`) VALUES
 ('version_db', '1203'),
 ('version_entrada', '1.2.0');
+
 CREATE TABLE `small_groups` (
   `sgroup_id` int(11) NOT NULL AUTO_INCREMENT,
   `sgcategory_id` int(11) NOT NULL,
@@ -3776,21 +3777,6 @@ CREATE TABLE IF NOT EXISTS `mtd_moh_service_codes` (
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=latin1 ;
 
-CREATE TABLE IF NOT EXISTS `mtd_residents` (
-  `id` int(11) NOT NULL ;
-  `cmpa_no` int(11) NOT NULL,
-  `cpso_no` int(11) NOT NULL,
-  `school_id` int(11) NOT NULL,
-  `program_id` int(11) NOT NULL,
-  `student_no` int(11) NOT NULL,
-  `last_name` varchar(50) NOT NULL,
-  `first_name` varchar(50) NOT NULL,
-  `category_id` int(11) NOT NULL,
-  `assess_prog_img` varchar(1) NOT NULL,
-  `assess_prog_non_img` varchar(1) NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1 ;
-
 CREATE TABLE IF NOT EXISTS `mtd_schedule` (
   `id` int(11) NOT NULL ;
   `start_date` date NOT NULL,
@@ -3808,12 +3794,23 @@ CREATE TABLE IF NOT EXISTS `mtd_schools` (
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=latin1 ;
 
-CREATE TABLE IF NOT EXISTS `pgme_moh_programs` (
+CREATE TABLE IF NOT EXISTS `mtd_pgme_moh_programs` (
   `id` int(11) NOT NULL ;
   `pgme_program_name` varchar(100) NOT NULL,
   `moh_service_name` varchar(100) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=latin1 ;
+
+CREATE TABLE IF NOT EXISTS `mtd_type` (
+  `id` int(12) NOT NULL AUTO_INCREMENT,
+  `type_code` varchar(1) NOT NULL,
+  `type_description` varchar(100) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM  DEFAULT CHARSET=latin1;
+
+INSERT INTO `mtd_type` (`id`, `type_code`, `type_description`) VALUES
+(1, 'I', 'in-patient/emergency'),
+(2, 'O', 'out-patient');
 
 CREATE TABLE IF NOT EXISTS `eventtype_organisation`(
 `eventtype_id` INT(12) NOT NULL, 

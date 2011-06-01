@@ -41,21 +41,28 @@ $usersId = $_SESSION["details"]["id"];
 $PROCESSED["service_id"] = validate_integer_field($_GET["service_id"]);
 
 ob_clear_open_buffers();
-$query = "SELECT `mtd_facilities`.`facility_name`, `mtd_residents`.`first_name`,
-				 `mtd_residents`.`last_name`, `mtd_schedule`.`start_date`, 
-				 `mtd_schedule`.`end_date`, `mtd_residents`.`cpso_no`,
-				 `mtd_residents`.`student_no`,`mtd_schools`.`school_code`,
+$query = "SELECT `mtd_facilities`.`facility_name`, `user_data_resident`.`first_name`,
+				 `user_data_resident`.`last_name`, `mtd_schedule`.`start_date`,
+				 `mtd_schedule`.`end_date`, `user_data_resident`.`cpso_no`,
+				 `user_data_resident`.`student_no`,`mtd_schools`.`school_code`,
 				 `mtd_locale_duration`.`percent_time`, `mtd_moh_program_codes`.`program_code`,
-				 `mtd_categories`.`category_code`
-		  FROM  `mtd_schedule`, `mtd_facilities`, `mtd_residents`, `mtd_locale_duration`,
-				`mtd_schools`, `mtd_moh_program_codes`, `mtd_categories`
+				 `mtd_moh_service_codes`.`service_code`, `mtd_categories`.`category_code`
+		  FROM  `" . DATABASE_NAME . "`.`mtd_schedule`,
+				`" . DATABASE_NAME . "`.`mtd_facilities`,
+				`" . AUTH_DATABASE . "`.`user_data_resident`,
+				`" . DATABASE_NAME . "`.`mtd_locale_duration`,
+				`" . DATABASE_NAME . "`.`mtd_schools`,
+				`" . DATABASE_NAME . "`.`mtd_moh_program_codes`,
+				`" . DATABASE_NAME . "`.`mtd_moh_service_codes`,
+				`" . DATABASE_NAME . "`.`mtd_categories`
 	      WHERE `mtd_schedule`.`id` = `mtd_locale_duration`.`schedule_id`
 		  AND `mtd_facilities`.`id` = `mtd_locale_duration`.`location_id`
 		  AND `mtd_schedule`.`service_id` = '" . $PROCESSED["service_id"] . "'
-		  AND `mtd_schedule`.`resident_id` = `mtd_residents`.`id`
-		  AND `mtd_schools`.`id` = `mtd_residents`.`school_id`
-		  AND `mtd_moh_program_codes`.`id` = `mtd_residents`.`program_id`
-		  AND `mtd_categories`.`id` = `mtd_residents`.`category_id`
+		  AND `mtd_schedule`.`resident_id` = `user_data_resident`.`proxy_id`
+		  AND `mtd_schools`.`id` = `user_data_resident`.`school_id`
+		  AND `mtd_moh_program_codes`.`id` = `user_data_resident`.`program_id`
+		  AND `mtd_moh_service_codes`.`id` = `mtd_schedule`.`service_id`
+		  AND `mtd_categories`.`id` = `user_data_resident`.`category_id`
 		  ORDER BY start_date DESC";
 
 $results = $db->GetAll($query);
@@ -85,7 +92,7 @@ if ($results) {
 		$line["first_name"] = $result["first_name"];
 		$line["last_name"] = $result["last_name"];
 		$line["category_code"] = $result["category_code"];
-		$line["service_code"] = $PROCESSED["service_id"];
+		$line["service_code"] = $result["service_code"];
 		$line["facility_name"] = $result["facility_name"];
 		$line["start_date"] = $result["start_date"];
 		$line["end_date"] = $result["end_date"];

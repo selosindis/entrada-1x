@@ -19,6 +19,17 @@
  * Run this script to copy a community (specified by community id) to a new
  * community.
  *
+ * Tables to back up when creating new communities with the copy community tool:
+
+		communities
+		community_galleries
+		community_gallery_photos
+		community_members
+		community_pages
+		community_page_options
+
+		Generic Community to copy from: 519 (in Production)
+ *
  * @author Unit: Medical Education Technology Unit
  * @author Developer: Don Zuiker <don.zuiker@queensu.ca>
  * @copyright Copyright 2011 Queen's University. All Rights Reserved.
@@ -59,7 +70,7 @@ print "\nPlease enter the username that the new community will belong to: ";
 fscanf(STDIN, "%s\n", $user_name);
 
 $query = "	SELECT *
-			FROM `user_data`
+			FROM " . AUTH_DATABASE . ".`user_data`
 			WHERE `username` = '" . $user_name . "'";
 
 $user_data = $auth_db->GetRow($query);
@@ -79,52 +90,24 @@ output_notice("The proxy id for the entered username is: " . $user_data["id"]);
 
 $COMMUNITY_ID = intval($COMMUNITY_ID);
 $query = "	SELECT *
-			FROM `communities`
+			FROM " . DATABASE_NAME . ".`communities`
 			WHERE `community_id` = " . $db->qstr($COMMUNITY_ID);
 $community = $db->GetRow($query);
 while (!$community) {
 	print "\nPlease ensure you enter a valid Community ID: " . $db->ErrorMsg();
 	fscanf(STDIN, "%d\n", $COMMUNITY_ID); // reads number from STDIN
-	$community = $db->GetRow("SELECT * FROM `communities` WHERE `community_id` = " . $db->qstr($COMMUNITY_ID));
+	$community = $db->GetRow("SELECT * FROM " . DATABASE_NAME . ".`communities` WHERE `community_id` = " . $db->qstr($COMMUNITY_ID));
 }
 
-//Rheumatology removed from list since it has already been created.
-
-$site_names = array("Aboriginal Health - Family Medicine",
-"Anatomic Pathology",
-"Anesthesia - Family Medicine",
-"Anesthesiology",
-"Cardiology",
-"Care of the Elderly - Family Medicine",
-"Public Health and Preventative Medicine",
-"Critical Care Medicine",
-"Developmental Disabilities - Family Medicine",
-"Diagnostic Radiology",
-"Emergency Medicine",
-"Emergency Medicine - Family Medicine",
-"Family Medicine",
-"Gastroenterology",
-"General Surgery",
-"Hematology",
-"Internal Medicine",
-"Medical Oncology",
-"Nephrology",
-"Neurology",
-"Obstetrics and Gynecology",
-"Ophthalmology",
-"Orthopedic Surgery",
-"Palliative Care - Family Medicine",
-"Palliative Care Medicine",
-"Pediatrics",
-"Physical Medicine and Rehabilitation",
-"Psychiatry",
-"Radiation Oncology",
-"Respirology",
-"Rural Skills - Family Medicine",
-"Surgical Foundations",
-"Urology",
-"Women's Health - Family Medicine",
-"Accreditation Standards");
+//Create sites for non-programs
+$site_names = array("Otolaryngology",
+	"Endocrinology",
+	"Cardiac Surgery",
+	"Thoracic Surgery",
+	"Neurosurgery",
+	"Plastic Surgery",
+	"Vascular Surgery",
+	"Geriatrics");
 
 $site_name_prefix = "pgme";
 $template = $community["community_template"];
@@ -144,6 +127,14 @@ foreach ($site_names as $s_name) {
 	$public_view = 0;
 	$troll_view = 0;
 	$time = time();
+
+	$community_url = "/" . $site_name_prefix ."_" . $s_name_url;
+	$query = "SELECT *
+			  FROM communities
+			  WHERE community_url = " . $db->qstr($community_url);
+	$result = $db->GetRow($query);
+
+	if (!$result) {
 
 	$COMM_INSERT = array();
 //These are top level communities, i.e. they are not child communities.
@@ -171,12 +162,18 @@ foreach ($site_names as $s_name) {
 	$COMM_INSERT["updated_date"] = $time;
 	$COMM_INSERT["updated_by"] = $user_data["id"];
 
-	if (!(($db->AutoExecute("communities", $COMM_INSERT, "INSERT")) && ($new_community_id = $db->Insert_Id()))) {
+	if (!(($db->AutoExecute("" . DATABASE_NAME . ".communities", $COMM_INSERT, "INSERT")) && ($new_community_id = $db->Insert_Id()))) {
 		output_error("There was a problem while inserting the new community. Database said: " . $db->ErrorMsg());
 		exit;
 	}
 
 	output_notice("\n\nThe new community ID is: " . $new_community_id);
+
+	}
+	else {
+		output_error("Community already exists.  Community URL: " . $community_url . "\n");
+		exit();
+	}
 
 	/*
 	 * Activate each community module (all 7 that are currently available).
@@ -200,22 +197,22 @@ foreach ($site_names as $s_name) {
 	output_success("Activated all community modules.");
 
 //Add _this_ user as a member
-	if (!$db->AutoExecute("community_members", array("community_id" => $new_community_id, "proxy_id" => 4264, "member_active" => 1, "member_joined" => time(), "member_acl" => 1), "INSERT")) {
+	if (!$db->AutoExecute("" . DATABASE_NAME . ".community_members", array("community_id" => $new_community_id, "proxy_id" => $user_data["id"], "member_active" => 1, "member_joined" => time(), "member_acl" => 1), "INSERT")) {
 		output_error("Failed to insert you as a member of the new community. Database said: " . $db->ErrorMsg());
 	}
 
 //Set the Community Page options
-	$query = "	INSERT INTO `community_page_options` (`community_id`, `option_title`)
+	$query = "	INSERT INTO " . DATABASE_NAME . ".`community_page_options` (`community_id`, `option_title`)
 			VALUES (" . $db->qstr($new_community_id) . ", 'show_announcements')";
 	if (!$db->Execute($query)) {
 		output_error("Could not add 'show_announcement` option for community [" . $new_community_id . "]. Database said: " . $db->ErrorMsg());
 	}
-	$query = "	INSERT INTO `community_page_options` (`community_id`, `option_title`)
+	$query = "	INSERT INTO " . DATABASE_NAME . ".`community_page_options` (`community_id`, `option_title`)
 			VALUES (" . $db->qstr($new_community_id) . ", 'show_events')";
 	if (!$db->Execute($query)) {
 		output_error("Could not add 'show_event` option for community [" . $new_community_id . "]. Database said: " . $db->ErrorMsg());
 	}
-	$query = "	INSERT INTO `community_page_options` (`community_id`, `option_title`) VALUES
+	$query = "	INSERT INTO " . DATABASE_NAME . ".`community_page_options` (`community_id`, `option_title`) VALUES
 			(" . $db->qstr($new_community_id) . ", 'show_history')";
 	if (!$db->Execute($query)) {
 		output_error("Could not add 'show_history` option for community [" . $new_community_id . "]. Database said: " . $db->ErrorMsg());
@@ -225,7 +222,7 @@ foreach ($site_names as $s_name) {
 
 //fetch all of the top level parent community pages from the community to copy
 	$query = "	SELECT *
-			FROM `community_pages`
+			FROM " . DATABASE_NAME . ".`community_pages`
 			WHERE `community_id` = " . $COMMUNITY_ID . "
 			AND `parent_id` = '0'
 			ORDER BY cpage_id ASC";
@@ -253,13 +250,13 @@ foreach ($site_names as $s_name) {
 
 //Validate that all pages were copied by comparing the given community ID to the new community ID.
 	$query = "	SELECT *
-			FROM `community_pages`
+			FROM " . DATABASE_NAME . ".`community_pages`
 			WHERE `community_id` = " . $COMMUNITY_ID . "
 			AND page_active = 1";
 	$old_community_pages_arr = $db->GetAll($query);
 
 	$query = "	SELECT *
-			FROM `community_pages`
+			FROM " . DATABASE_NAME . ".`community_pages`
 			WHERE `community_id` = " . $new_community_id . "
 			AND page_active = 1";
 	$new_community_pages_arr = $db->GetAll($query);
@@ -286,7 +283,7 @@ foreach ($site_names as $s_name) {
  */
 function copy_images($db, $old_community_id, $old_gallery_id, $new_community_id, $new_gallery_id, $proxy_id) {
 	$query = "	SELECT *
-			FROM `community_gallery_photos`
+			FROM " . DATABASE_NAME . ".`community_gallery_photos`
 			WHERE `community_id` = " . $old_community_id . "
 			AND `cgallery_id` = " . $old_gallery_id;
 
@@ -310,7 +307,7 @@ function copy_images($db, $old_community_id, $old_gallery_id, $new_community_id,
 			$photo["updated_by"] = $proxy_id;
 			$photo["notify"] = $community_photo["notify"];
 
-			$db->AutoExecute("community_gallery_photos", $photo, "INSERT");
+			$db->AutoExecute("" . DATABASE_NAME . ".community_gallery_photos", $photo, "INSERT");
 			$new_photo_id = $db->Insert_Id();
 
 			$source_photo = ENTRADA_STORAGE . DIRECTORY_SEPARATOR . "community-galleries" . DIRECTORY_SEPARATOR . $community_photo["cgphoto_id"];
@@ -353,7 +350,7 @@ function copy_images($db, $old_community_id, $old_gallery_id, $new_community_id,
  */
 function create_gallery($db, $old_community_id, $old_gallery_page_id, $new_community_id, $new_parent_id, $proxy_id) {
 	$query = "	SELECT *
-			FROM `community_galleries`
+			FROM " . DATABASE_NAME . ".`community_galleries`
 			WHERE `community_id` = " . $old_community_id . "
 			AND `cpage_id` = " . $old_gallery_page_id;
 
@@ -388,7 +385,7 @@ function create_gallery($db, $old_community_id, $old_gallery_page_id, $new_commu
 		$gallery["updated_date"] = $time;
 		$gallery["updated_by"] = $proxy_id;
 
-		$db->AutoExecute("community_galleries", $gallery, "INSERT");
+		$db->AutoExecute("" . DATABASE_NAME . ".community_galleries", $gallery, "INSERT");
 		$new_gallery_id = $db->Insert_Id();
 		output_success("Created new gallery with id: " . $new_gallery_id);
 		return array("new_gallery_id" => $new_gallery_id, "old_gallery_id" => $community_gallery_arr["cgallery_id"]);
@@ -411,7 +408,7 @@ function create_gallery($db, $old_community_id, $old_gallery_page_id, $new_commu
  */
 function create_child_pages($db, $cpage_id, $COMMUNITY_ID, $new_parent_id, $new_community_id, $proxy_id) {
 	$query = "	SELECT *
-				FROM `community_pages`
+				FROM " . DATABASE_NAME . ".`community_pages`
 				WHERE `community_id` = " . $COMMUNITY_ID . "
 				AND `parent_id` = " . $db->qstr($cpage_id) . "
 				ORDER BY cpage_id ASC";
@@ -439,13 +436,13 @@ function create_child_pages($db, $cpage_id, $COMMUNITY_ID, $new_parent_id, $new_
  */
 function find_photo_id($db, $old_photo_id, $new_community_id) {
 	$query = "	SELECT *
-			FROM `community_gallery_photos`
+			FROM " . DATABASE_NAME . ".`community_gallery_photos`
 			WHERE `cgphoto_id` = " . $db->qstr($old_photo_id);
 
 	$old_photo = $db->GetRow($query);
 	
 	$query = "	SELECT *
-			FROM `community_gallery_photos`
+			FROM " . DATABASE_NAME . ".`community_gallery_photos`
 			WHERE `photo_filename` = '" . $old_photo["photo_filename"] . "'
 			AND `photo_filesize` = " . $old_photo["photo_filesize"] . "
 			AND `community_id` = " . $new_community_id;
@@ -481,7 +478,7 @@ function insert_community_page($db, $page, $new_community_id, $proxy_id) {
 
 		//check the page content for intra-community URL's and rename for the new community
 		$query = "	SELECT *
-			FROM `communities`
+			FROM " . DATABASE_NAME . ".`communities`
 			WHERE `community_id` = " . $db->qstr($new_community_id);
 		$community = $db->GetRow($query);
 		$page["page_content"] = str_replace("pgme_generic", $community["community_shortname"], $page["page_content"]);
@@ -504,7 +501,7 @@ function insert_community_page($db, $page, $new_community_id, $proxy_id) {
 			}
 		}
 
-		$query = "	INSERT INTO `community_pages`
+		$query = "	INSERT INTO " . DATABASE_NAME . ".`community_pages`
 						(`community_id`,
 						`parent_id`,
 						`page_order`,

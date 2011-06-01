@@ -16,20 +16,19 @@
  * You should have received a copy of the GNU General Public License
  * along with Entrada.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Guest User Import Utilitiy
+ * Import of resident data.
  *
- * This is a script that you can use to import guest users into a specific community.
- * It also gives them the correct permissions in the entrada_auth.user_access table.
+ * This is a script that imports resident data into the Medtech Auth database
+ * into the user_data_resident table.  It first checks to see if the resident
+ * already has an entry in the user_data table and is allowed to access
+ * Medtech Central and is a member of the resident group.
  *
  * Instructions:
  * 0. Backup the databases *always* before importing new users.
  *
- * 1. Run "./import-community-guests.php -validate path/to/file.csv" to import all of
- *    the data in the rows of your CSV file.
- *
  * @author Unit: Medical Education Technology Unit
- * @author Developer: Matt Simpson <matt.simpson@queensu.ca>
- * @copyright Copyright 2010 Queen's University. All Rights Reserved.
+ * @author Developer: Don Zuiker <don.zuiker@queensu.ca>
+ * @copyright Copyright 2011 Queen's University. All Rights Reserved.
  *
  */
 set_include_path(get_include_path() . PATH_SEPARATOR . dirname(__FILE__) . "/includes");
@@ -118,19 +117,47 @@ switch ($ACTION) {
 					if ($result) {
 						$resident["program_id"] = $result["id"];
 					}
+					else {
+						$query = "SELECT id FROM `" . DATABASE_NAME . "`.`mtd_moh_program_codes` WHERE `program_code` = UKN";
+						$id = $db->GetOne($query);
+						$resident["program_id"] = $id;
+					}
 
 					$query = "SELECT * FROM `" . DATABASE_NAME . "`.`mtd_categories` WHERE `category_code` = " . $db->qstr($temp_resident["category_code"]);
 					$result = $db->GetRow($query);
 					if ($result) {
 						$resident["category_id"] = $result["id"];
 					}
-
-					if ($db->AutoExecute(DATABASE_NAME . ".mtd_residents", $resident, "INSERT")) {
-
+					else {
+						$query = "SELECT id FROM `" . DATABASE_NAME . "`.`mtd_categories` WHERE `category_code` = UKN";
+						$id = $db->GetOne($query);
+						$resident["category_id"] = $id;
 					}
+
+					$query = "SELECT a.`id` FROM `" . AUTH_DATABASE . "`.`user_data` a, `" . AUTH_DATABASE . "`.`user_access` b
+						      WHERE a.`number` = " . $db->qstr($resident["student_no"]) .
+							" AND b.`app_id` = 1
+							  AND b.`group` = 'resident'
+							  AND a.id = b.user_id";
+					
+					$proxy_id = $db->GetOne($query);
+
+					if ($proxy_id) {
+						$resident["proxy_id"] = $proxy_id;
+						if ($db->AutoExecute(AUTH_DATABASE . ".user_data_resident", $resident, "INSERT")) {
+							output_success("ROW: " .$row_count . " - Insert of resident proxy_id[" . $resident["proxy_id"] .  "] succeeded");
+						}
+						else {
+							output_error("ROW: " .$row_count . " - Insert of resident proxy_id[" . $resident["proxy_id"] .  "] failed.  DB said: " . $db->ErrorMsg());
+						}
+					}
+					else {
+						echo "\nResident not found. Student No.: " . $resident["student_no"];
+					}					
 				}
 			}
 			fclose($handle);
+			echo "Finished import\n";
 		} else {
 			output_error("Unable to open the provided CSV file [" . $CSV_FILE . "].");
 		}

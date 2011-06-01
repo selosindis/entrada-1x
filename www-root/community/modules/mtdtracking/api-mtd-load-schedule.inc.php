@@ -60,6 +60,13 @@ if (!defined("IN_MTDTRACKING")) {
 		$limit = '10';
 	}
 
+	$query = "SELECT COUNT(*) AS total
+				FROM `mtd_schedule` a
+				WHERE a.`service_id` = " . $PROCESSED["service_id"];
+
+	$result = $db->GetRow($query);
+	$total = $result["total"];
+
 	if (isset($_POST["page"]) && $_POST["page"] != '') {
 		$page = $_POST['page'];
 		if ($page == 1) {
@@ -78,14 +85,17 @@ if (!defined("IN_MTDTRACKING")) {
 		$where = "";
 	}
 
-	$query = "SELECT `mtd_schedule`.`id`, `mtd_facilities`.`facility_name`, `mtd_residents`.`first_name`,
-				 `mtd_residents`.`last_name`, `mtd_schedule`.`start_date`, `mtd_schedule`.`end_date`,
+	$query = "SELECT `mtd_schedule`.`id`, `mtd_facilities`.`facility_name`, `user_data_resident`.`first_name`,
+				 `user_data_resident`.`last_name`, `mtd_schedule`.`start_date`, `mtd_schedule`.`end_date`,
 				 `mtd_locale_duration`.`percent_time`
-		  FROM  `mtd_schedule`, `mtd_facilities`, `mtd_residents`, `mtd_locale_duration`
+		  FROM  `" . DATABASE_NAME . "`.`mtd_schedule`,
+				`" . DATABASE_NAME . "`.`mtd_facilities`,
+				`" . AUTH_DATABASE . "`.`user_data_resident`,
+				`" . DATABASE_NAME . "`.`mtd_locale_duration`
 	      WHERE `mtd_schedule`.`id` = `mtd_locale_duration`.`schedule_id`
 		  AND `mtd_facilities`.`id` = `mtd_locale_duration`.`location_id`
 		  AND `mtd_schedule`.`service_id` = '" . $PROCESSED["service_id"] . "'
-		  AND `mtd_schedule`.`resident_id` = `mtd_residents`.`id`" . $where . "
+		  AND `mtd_schedule`.`resident_id` = `user_data_resident`.`proxy_id`" . $where . "
 		  ORDER BY " . $sort . " " . $dir . "
 		  LIMIT " . $start . " , " . $limit;
 
@@ -98,7 +108,6 @@ if (!defined("IN_MTDTRACKING")) {
 	header("Content-type: text/json");
 
 	if ($results) {
-		$total = count($results);
 		$data['page'] = $page;
 		$data['total'] = $total;
 		foreach ($results as $row) {

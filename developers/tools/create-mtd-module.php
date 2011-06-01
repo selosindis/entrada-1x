@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU General Public License
  * along with Entrada.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Run this script to copy a community (specified by community id) to a new
- * community.
+ * Run this script to create the MTD Tracking page on each of the specified
+ * Communities in the site_names array.
  *
  * @author Unit: Medical Education Technology Unit
  * @author Developer: Don Zuiker <don.zuiker@queensu.ca>
@@ -53,54 +53,14 @@ $ERROR = false;
 
 output_notice("This script is used to add the Medical Training Days application as a page in each Postgrad Community.");
 
-/*
- * Programs that do not need an instance of the MTD Tracking application:
- *
- * "Surgical Foundations" (will be tracked under General or Orthopedic Surgery)
- * "Accreditation Standards" Not a Program that is tracked at MOH.
- * 
- * All of these are simply Family Medicine:
- *
- * "Anesthesia - Family Medicine",
- * "Care of the Elderly - Family Medicine",
- * "Developmental Disabilities - Family Medicine",
- * "Emergency Medicine - Family Medicine",
- * "Palliative Care - Family Medicine",
- * "Rural Skills - Family Medicine",
- * "Women's Health - Family Medicine"
- * 
- * 
- */
-
-$site_names = array(
-	"Aboriginal Health - Family Medicine",
-	"Anatomic Pathology",
-	"Anesthesiology",
-	"Cardiology",
-	"Critical Care Medicine",	
-	"Diagnostic Radiology",
-	"Emergency Medicine",
-	"Family Medicine",
-	"Gastroenterology",
-	"General Surgery",
-	"Hematology",
-	"Internal Medicine",
-	"Medical Oncology",
-	"Nephrology",
-	"Neurology",
-	"Obstetrics and Gynecology",
-	"Ophthalmology",
-	"Orthopedic Surgery",
-	"Palliative Care Medicine",
-	"Pediatrics",
-	"Physical Medicine and Rehabilitation",
-	"Psychiatry",
-	"Public Health",
-	"Radiation Oncology",
-	"Respirology",
-	"Rheumatology",
-	"Urology",
-	);
+$site_names = array("Otolaryngology",
+	"Endocrinology",
+	"Cardiac Surgery",
+	"Thoracic Surgery",
+	"Neurosurgery",
+	"Plastic Surgery",
+	"Vascular Surgery",
+	"Geriatrics");
 
 $site_name_prefix = "pgme";
 
@@ -118,30 +78,31 @@ foreach ($site_names as $s_name) {
 
 	//Get the community id
 	$query = "SELECT *
-			  FROM communities
-			  WHERE community_url like " . $db->qstr($community_url . "%");
+			  FROM " . DATABASE_NAME . ".`communities`
+			  WHERE community_url = " . $db->qstr($community_url);
 	$result = $db->GetRow($query);
 	if (!$result) {
-		output_error("Could not find the community URL: " . $community_url);
+		output_error("Could not find the community URL: " . $community_url . " " . $query);
 	} else {
+		output_notice("Creating page...");
 		//MTD Module = 8
 		communities_module_activate_and_page_create($result["community_id"], 8);
 
 		set_module_page_permissions($db, $result["community_id"], 8, 0, 0, 0);
 
-		output_notice("\n\nThe MTD Page has been added to " . $s_name . ".");
+		output_notice("The MTD Page has been added to " . $s_name . ".");
 	}
 }
 
 function set_module_page_permissions($db, $community_id, $module_id, $allow_member_view, $allow_public_view, $allow_troll_view) {
-	$query = "SELECT * FROM `communities_modules` WHERE `module_id` = " . $db->qstr($module_id) . " AND `module_active` = '1'";
+	$query = "SELECT * FROM " . DATABASE_NAME . ".`communities_modules` WHERE `module_id` = " . $db->qstr($module_id) . " AND `module_active` = '1'";
 	$module_info = $db->GetRow($query);
 	$module_shortname = "";
 
 	if ($module_info) {
 		$module_shortname = $module_info["module_shortname"];
 
-		if ($db->AutoExecute("community_pages",
+		if ($db->AutoExecute("" . DATABASE_NAME . ".`community_pages`",
 						array("allow_member_view" => 0, "allow_public_view" => 0, "allow_troll_view" => 0,
 							"updated_date" => time(), "updated_by" => 5440), "UPDATE",
 						"`community_id` = " . $db->qstr($community_id) . " AND page_type = " . $db->qstr($module_shortname))) {

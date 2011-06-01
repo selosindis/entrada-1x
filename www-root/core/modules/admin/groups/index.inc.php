@@ -315,7 +315,7 @@ if (!defined("IN_GROUPS")) {
 		echo "<div class=\"clear\"></div>\n";
 	}
 
-	if (count($scheduler_groups["groups"])) {
+	if ($scheduler_groups["groups"] && count($scheduler_groups["groups"])) {
 		if ($ENTRADA_ACL->amIAllowed("group", "delete", false)) : ?>
 		<form id="frmSelect"  action="<?php echo ENTRADA_URL; ?>/admin/groups?section=manage" method="post">
 		<?php endif; ?>

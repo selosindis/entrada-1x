@@ -618,6 +618,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 						fileWizard.focus();
 					}
+						
 				}
 
 				function openLinkWizard(eid, lid, action) {

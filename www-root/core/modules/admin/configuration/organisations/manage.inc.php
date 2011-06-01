@@ -34,7 +34,12 @@
 
 		}
 		else{
-		echo "No ID";
+			$url = ENTRADA_URL."/admin/configuration/organisations/";
+			$ERROR++;
+			$ERRORSTR[] = "No organisation was selected. Please select an organisation and try again. In five seconds you will now be returned to the organisation screen, or, click <a href = \"".$url."\">here</a> to continue.";
+			echo display_error();
+			$ONLOAD[]	= "setTimeout('window.location=\\'".$url."\\'', 5000)";
+			
 		}
 		
 		

@@ -119,9 +119,22 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 
 				if ($db->AutoExecute("global_lu_objectives", $PROCESSED, "INSERT")) {
 					if ($OBJECTIVE_ID = $db->Insert_Id()) {
-						$params = array("objective_id"=>$OBJECTIVE_ID,"organisation_id"=>$ORGANISATION_ID);
-						
-						if($db->AutoExecute("objective_organisation", $params, "INSERT")){
+						if($PROCESSED["objective_parent"] == 0){
+							$params = array("objective_id"=>$OBJECTIVE_ID,"organisation_id"=>$ORGANISATION_ID);
+							if($db->AutoExecute("objective_organisation", $params, "INSERT")){
+								$url = ENTRADA_URL . "/admin/configuration/organisations/manage/objectives?org_id=".$ORGANISATION_ID;
+								$SUCCESS++;
+								$SUCCESSSTR[] = "You have successfully added <strong>".html_encode($PROCESSED["objective_name"])."</strong> to the system.<br /><br />You will now be redirected to the objectives index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+								$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
+								application_log("success", "New Objective [".$OBJECTIVE_ID."] added to the system.");
+							}
+							else{
+								$ERROR++;
+								$ERRORSTR[] = "There was a problem associating this objective to your organisation. The system administrator was informed of this error; please try again later.";
+
+								application_log("error", "There was an error associating an objective with an organisation. Database said: ".$db->ErrorMsg());
+							}
+						}else{
 							$url = ENTRADA_URL . "/admin/configuration/organisations/manage/objectives?org_id=".$ORGANISATION_ID;
 							$SUCCESS++;
 							$SUCCESSSTR[] = "You have successfully added <strong>".html_encode($PROCESSED["objective_name"])."</strong> to the system.<br /><br />You will now be redirected to the objectives index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";

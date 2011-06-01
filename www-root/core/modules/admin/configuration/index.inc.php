@@ -1,9 +1,4 @@
-<?php
 
-echo "<h1>".$MODULES[strtolower($MODULE)]['title']."</h1>";
-
-
-?>
 <div style="float: right">
 	<ul class="page-action">
 		<li><a href="<?php echo ENTRADA_URL; ?>/admin/configuration/organisations?section=add" class="strong-green">Add New Organisation</a></li>
@@ -50,8 +45,6 @@ $query		= "	SELECT * FROM `".AUTH_DATABASE."`.`organisations`
 
 		echo display_notice($NOTICESTR);
 	}
-
-
 
 
 ?>

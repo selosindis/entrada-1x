@@ -11234,6 +11234,35 @@ function objectives_delete($objective_id = 0, $children_move_target = 0, $level 
 }
 
 /**
+ * Function will delete all pages below the specified parent_id.
+ *
+ * @param int $parent_id
+ * @return true
+ */
+function objectives_delete_for_org($organisation_id=0,$objective_id = 0, $children_move_target = 0, $level = 0) {
+	global $db, $deleted_count;
+
+	
+	$query = "	SELECT COUNT(*) FROM `objective_organisation` 
+				WHERE `objective_id` = ".$db->qstr($objective_id);
+	
+	$result = (int)$db->GetOne($query);
+	
+	if($reslt == 1){
+		$success = objectives_delete($objective_id,$children_move_target,$level);
+	}
+	if($success){
+		$query = "	DELETE FROM `objective_organisation` 
+					WHERE `objective_id` = ".$db->qstr($objetive_id)."
+					AND `organisation_id` = ".$db->qstr($organisation_id);
+		$result = $db->Execute($query);
+		
+	}
+		
+	return $success;
+}
+
+/**
  * Function will return all objectives below the specified objective_parent.
  *
  * @param int $identifier

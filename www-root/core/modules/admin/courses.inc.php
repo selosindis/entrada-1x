@@ -55,7 +55,7 @@ if(!defined("PARENT_INCLUDED")) {
 			$ORGANISATION_ID = $_GET["org_id"];
 		}
 		else{
-			$ORGANISATION_ID = 1;
+			$ORAGNISATION_ID = false;
 		}
 
 		/**

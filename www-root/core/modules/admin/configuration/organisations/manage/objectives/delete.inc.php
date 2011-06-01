@@ -30,7 +30,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 	header("Location: ".ENTRADA_URL);
 	exit;
 } elseif(!$ENTRADA_ACL->amIAllowed('objective', 'delete', false)) {
-	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/".$MODULE."\\'', 15000)";
+	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/configuration/organisations/".$MODULE."\\'', 15000)";
 
 	$ERROR++;
 	$ERRORSTR[]	= "Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
@@ -88,7 +88,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 			$moved_count = 0;
 			$deleted_count = 0;
 			foreach ($objectives as $objective) {
-				if (objectives_delete($objective["objective_id"], $objective["objective_children_target"])) {
+				if (objectives_delete_for_org($ORGANISATION_ID,$objective["objective_id"], $objective["objective_children_target"])) {
 					$query				= "	SELECT `objective_id`, `objective_order` 
 											FROM `global_lu_objectives` 
 											WHERE `objective_parent` = ".$db->qstr($objective["objective_parent"])." 

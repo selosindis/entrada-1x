@@ -2529,13 +2529,13 @@ function course_name($course_id = 0, $return_course_name = true, $return_course_
  * @param int $id
  * @return string
  */
-function small_group_name($small_group_id = 0) {
+function group_name($group_id = 0) {
 	global $db;
 
-	if (($small_group_id = (int) $small_group_id)) {
+	if (($group_id = (int) $group_id)) {
 		$output = array();
-		$query	= "	SELECT `group_name` FROM `small_groups` 
-					WHERE `sgroup_id` = ".$db->qstr($small_group_id)."
+		$query	= "	SELECT `group_name` FROM `groups` 
+					WHERE `group_id` = ".$db->qstr($group_id)."
 					AND `group_active` = '1'";
 		$result	= $db->GetRow($query);
 		if ($result) {
@@ -7181,7 +7181,7 @@ function lp_multiple_select_table($checkboxes, $indent, $i, $category_select_all
 
 		$i++;
 
-		$return .= '<tr class="'.$class.'"><td class="'.$name_class.' indent_'.$indent.'"><label for="'.$checkbox['value'].'">'.$checkbox['text'].'</label></td><td class="'.$input_class.'">'.$input.'</td></tr>';
+		$return .= '<tr class="'.$class.'"><td class="'.$name_class.' indent_'.$indent.'"><label for="'.$checkbox['value'].'" id="'.$checkbox['value'].'_label">'.$checkbox['text'].'</label></td><td class="'.$input_class.'">'.$input.'</td></tr>';
 
 		if(isset($checkbox['options'])) {
 			$return .= lp_multiple_select_table($checkbox['options'], $indent+1, $i);
@@ -8733,7 +8733,7 @@ function events_output_filter_controls($module_type = "") {
 										echo course_name($filter_value);
 									break;
 									case "smallgroup" :
-										echo small_group_name($filter_value);
+										echo group_name($filter_value);
 									break;
 									case "phase" :
 										echo "Phase / Term ".strtoupper($filter_value);
@@ -9260,8 +9260,8 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 									/**
 									 * Get the small groups of the proxy_id.
 									 */
-									$query = "	SELECT `sgroup_id`
-												FROM `small_group_members`
+									$query = "	SELECT `group_id`
+												FROM `group_members`
 												WHERE `proxy_id` = ".$db->qstr($student_proxy_id)."
 												AND `member_active` = 1";
 									$results = $db->GetAll($query);
@@ -9269,13 +9269,13 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 										$group_ids_string = "";
 										foreach ($results as $result) {
 											if ($group_ids_string) {
-												$group_ids_string = $db->qstr($result["sgroup_id"]);
+												$group_ids_string = $db->qstr($result["group_id"]);
 											} else {
-												$group_ids_string .= ", ".$db->qstr($result["sgroup_id"]);
+												$group_ids_string .= ", ".$db->qstr($result["group_id"]);
 											}
 										}
 										if ($group_ids_string) {
-											$student_groups = "(`event_audience`.`audience_type` = 'small_group' AND `event_audience`.`audience_value` IN (".$group_ids_string.")) OR ";
+											$student_groups = "(`event_audience`.`audience_type` = 'group' AND `event_audience`.`audience_value` IN (".$group_ids_string.")) OR ";
 										}
 									}
 
@@ -9286,7 +9286,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 								$where_grad_year[] = "(`event_audience`.`audience_type` = 'grad_year' AND `event_audience`.`audience_value` = ".$db->qstr((int) $filter_value).")";
 							break;
 							case "smallgroup" :
-								$where_group[] = "(`event_audience`.`audience_type` = 'small_group' AND `event_audience`.`audience_value` = ".$db->qstr((int) $filter_value).")";
+								$where_group[] = "(`event_audience`.`audience_type` = 'group' AND `event_audience`.`audience_value` = ".$db->qstr((int) $filter_value).")";
 							break;
 							case "course" :
 								$where_course[] = "(`events`.`course_id` = ".$db->qstr($filter_value).")";

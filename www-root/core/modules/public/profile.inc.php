@@ -236,9 +236,8 @@ function profile_update_personal_info() {
 						$PROCESSED_PHOTO["photo_mimetype"]	= $photo_mimetype;
 						$PROCESSED_PHOTO["photo_filesize"]	= $photo_filesize;
 
-						$photo_file_extension				= strtoupper($VALID_MIME_TYPES[strtolower(trim($_FILES["photo_file"]["type"]))]);
-						echo STORAGE_USER_PHOTOS;
-						exit;
+						$photo_file_extension = strtoupper($VALID_MIME_TYPES[strtolower(trim($_FILES["photo_file"]["type"]))]);
+
 						if ((!defined("STORAGE_USER_PHOTOS")) || (!@is_dir(STORAGE_USER_PHOTOS)) || (!@is_writable(STORAGE_USER_PHOTOS))) {
 							$ERROR++;
 							$ERRORSTR[] = "There is a problem with the gallery storage directory on the server; the system administrator has been informed of this error, please try again later.";

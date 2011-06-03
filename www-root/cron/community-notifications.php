@@ -30,8 +30,6 @@ if(isset($_SERVER["REMOTE_ADDR"])){
 }
 $mail->addHeader("X-Section", "Communities Notify System",true);
 
-
-
 /**
  * Function generates Subject and Body of notification posts.
  *

@@ -124,7 +124,7 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 								if ($PROCESSED["parent_id"] != 0) {
 									$query = "SELECT `page_url` FROM `community_pages` WHERE `cpage_id` = ".$db->qstr($PROCESSED["parent_id"]);
 									if ($parent_url = $db->GetOne($query)){
-										$page_url = $parent_url . DIRECTORY_SEPARATOR . $page_url;
+										$page_url = $parent_url . "/" . $page_url;
 									}
 								}
 								

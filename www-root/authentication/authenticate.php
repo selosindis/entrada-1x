@@ -223,6 +223,16 @@ if (!$ERROR) {
 					$user_data = $result;
 				}
 			break;
+			case "cas" :
+					$query	= "SELECT * FROM `user_data` WHERE `username` = ".$db->qstr($user_username)." AND `password` = ".$db->qstr($user_password);
+					$result	= $db->GetRow($query);
+					if ($result) {
+						/**
+						 * The provided user credentials are considered valid.
+						 */
+						$user_data = $result;
+					}	
+			break;
 			case "ldap" :
 			case "ldap3" :
 				$LDAP_CONNECT_OPTIONS = array(

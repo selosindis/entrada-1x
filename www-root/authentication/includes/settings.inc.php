@@ -45,7 +45,8 @@ define("LDAP_USER_QUERY_FIELD", "UniCaPKey");									// The attribute used to i
 define("LDAP_LOCAL_USER_QUERY_FIELD", "number");								// username | number : This field allows you to specify which local user_data field is used to search for a valid username.
 
 define("ALLOW_LOCAL", true);													// true | false : whether you want to allow local database authentication or not.
-define("ALLOW_LDAP", false);														// true | false : whether you want to allow LDAP authentication or not.
+define("ALLOW_LDAP", false);													// true | false : whether you want to allow LDAP authentication or not.
+define("ALLOW_CAS", false);														// true | false : whether you want to allow CAS authentication or not.
 
 define("NOTIFY_ADMIN_ON_ERROR",	false);
 

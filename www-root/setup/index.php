@@ -364,12 +364,12 @@ if (isset($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] == "on") {
 }
 $absolute_url .= "://";
 if ((isset($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] == "on" && $_SERVER["SERVER_PORT"] != "443") || (isset($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] != "on" && $_SERVER["SERVER_PORT"] != "80")) {
-	$absolute_url .= $_SERVER["SERVER_NAME"].":".$_SERVER["SERVER_PORT"].implode(DIRECTORY_SEPARATOR, array_pop(explode(DIRECTORY_SEPARATOR, $_SERVER["REQUEST_URI"])));
+	$absolute_url .= $_SERVER["SERVER_NAME"].":".$_SERVER["SERVER_PORT"].implode("/", array_pop(explode("/", $_SERVER["REQUEST_URI"])));
 } else {
-	$absolute_url .= $_SERVER["SERVER_NAME"].implode(DIRECTORY_SEPARATOR, array_slice(explode(DIRECTORY_SEPARATOR, $_SERVER["REQUEST_URI"]), 0, (count(explode(DIRECTORY_SEPARATOR, $_SERVER["REQUEST_URI"])) - 2)) );
+	$absolute_url .= $_SERVER["SERVER_NAME"].implode("/", array_slice(explode("/", $_SERVER["REQUEST_URI"]), 0, (count(explode("/", $_SERVER["REQUEST_URI"])) - 2)));
 }
 
-$relative_url = implode(DIRECTORY_SEPARATOR, array_slice(explode(DIRECTORY_SEPARATOR, $_SERVER["REQUEST_URI"]), 0, (count(explode(DIRECTORY_SEPARATOR, $_SERVER["REQUEST_URI"])) - 2)) );
+$relative_url = implode("/", array_slice(explode("/", $_SERVER["REQUEST_URI"]), 0, (count(explode("/", $_SERVER["REQUEST_URI"])) - 2)));
 
 $absolute_path = implode(DIRECTORY_SEPARATOR, array_slice(explode(DIRECTORY_SEPARATOR, $_SERVER['SCRIPT_FILENAME']), 0, (count(explode(DIRECTORY_SEPARATOR, $_SERVER['SCRIPT_FILENAME'])) - 2)) );
 

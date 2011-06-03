@@ -1,12 +1,12 @@
 CREATE TABLE IF NOT EXISTS `mtd_categories` (
-  `id` int(11) NOT NULL ;
+  `id` int(11) NOT NULL ,
   `category_code` varchar(3) NOT NULL,
   `category_description` varchar(100) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=latin1 ;
 
 CREATE TABLE IF NOT EXISTS `mtd_facilities` (
-  `id` int(11) NOT NULL ;
+  `id` int(11) NOT NULL ,
   `facility_code` int(3) NOT NULL,
   `facility_name` varchar(50) NOT NULL,
   `kingston` int(1) NOT NULL,
@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS `mtd_facilities` (
 ) ENGINE=MyISAM  DEFAULT CHARSET=latin1 ;
 
 CREATE TABLE IF NOT EXISTS `mtd_locale_duration` (
-  `id` int(11) NOT NULL ;
+  `id` int(11) NOT NULL ,
   `location_id` int(3) NOT NULL,
   `percent_time` int(3) NOT NULL,
   `schedule_id` int(11) NOT NULL,
@@ -22,14 +22,14 @@ CREATE TABLE IF NOT EXISTS `mtd_locale_duration` (
 ) ENGINE=MyISAM  DEFAULT CHARSET=latin1 ;
 
 CREATE TABLE IF NOT EXISTS `mtd_moh_program_codes` (
-  `id` int(11) NOT NULL ;
+  `id` int(11) NOT NULL ,
   `program_code` varchar(3) NOT NULL,
   `program_description` varchar(100) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=latin1 ;
 
 CREATE TABLE IF NOT EXISTS `mtd_moh_service_codes` (
-  `id` int(11) NOT NULL ;
+  `id` int(11) NOT NULL ,
   `service_code` varchar(3) NOT NULL,
   `service_description` varchar(50) NOT NULL,
   PRIMARY KEY (`id`)
@@ -49,14 +49,14 @@ CREATE TABLE IF NOT EXISTS `mtd_schedule` (
 ) ENGINE=MyISAM  DEFAULT CHARSET=latin1;
 
 CREATE TABLE IF NOT EXISTS `mtd_schools` (
-  `id` int(11) NOT NULL ;
+  `id` int(11) NOT NULL ,
   `school_code` varchar(3) NOT NULL,
   `school_description` varchar(100) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=latin1 ;
 
 CREATE TABLE IF NOT EXISTS `mtd_pgme_moh_programs` (
-  `id` int(11) NOT NULL ;
+  `id` int(11) NOT NULL ,
   `pgme_program_name` varchar(100) NOT NULL,
   `moh_service_name` varchar(100) NOT NULL,
   PRIMARY KEY (`id`)

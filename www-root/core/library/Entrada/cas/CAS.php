@@ -896,7 +896,6 @@ class CASClient
 	  curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 1);
 	  // but do not verify the certificate itself
 	  curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-      curl_setopt($ch, CURLOPT_SSLVERSION, 2);
 
       // return the CURL output into a variable
       curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);

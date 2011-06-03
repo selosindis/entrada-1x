@@ -829,10 +829,10 @@ function get_online_status($proxy_id = 0, $output_type = "text") {
 	$output = 0;
 
 	if($proxy_id = (int) trim($proxy_id)) {
-		$query	= "SELECT MAX(`timestamp`) AS `timestamp`
-				FROM `users_online`
-				WHERE `proxy_id` = ".$db->qstr($proxy_id)."
-				GROUP BY `proxy_id`";
+		$query = "	SELECT MAX(`timestamp`) AS `timestamp`
+					FROM `users_online`
+					WHERE `proxy_id` = ".$db->qstr($proxy_id)."
+					GROUP BY `proxy_id`";
 		$result	= $db->CacheGetRow(CACHE_TIMEOUT, $query);
 		if(($result) && ((int) $result["timestamp"])) {
 			if((int) $result["timestamp"] < (time() - 600)) {
@@ -1718,7 +1718,7 @@ function permissions_load() {
 	global $db;
 	$permissions	= array();
 	$permissions[$_SESSION["details"]["id"]] = array("permission_id" => 0, "group" => $_SESSION["details"]["group"], "role" => $_SESSION["details"]["role"], "organisation_id"=>$_SESSION["details"]["organisation_id"], "starts" => $_SESSION["details"]["access_starts"], "expires" => $_SESSION["details"]["access_expires"], "fullname" => ($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]), "firstname" => $_SESSION["details"]["firstname"], "lastname" => $_SESSION["details"]["lastname"]);
-	$query		= "SELECT a.*, b.`id` AS `proxy_id`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, b.`firstname`, b.`lastname`, b.`organisation_id`, c.`role`, c.`group`
+	$query = "	SELECT a.*, b.`id` AS `proxy_id`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, b.`firstname`, b.`lastname`, b.`organisation_id`, c.`role`, c.`group`
 				FROM `permissions` AS a
 				LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
 				ON b.`id` = a.`assigned_by`
@@ -1729,7 +1729,7 @@ function permissions_load() {
 				AND (c.`access_expires`='0' OR c.`access_expires`>=".$db->qstr(time()).")
 				WHERE a.`assigned_to`=".$db->qstr($_SESSION["details"]["id"])." AND a.`valid_from`<=".$db->qstr(time())." AND a.`valid_until`>=".$db->qstr(time())."
 				ORDER BY `fullname` ASC";
-	$results		= $db->GetAll($query);
+	$results = $db->GetAll($query);
 	if($results) {
 		foreach ($results as $result) {
 			$permissions[$result["proxy_id"]] = array("permission_id" => $result["permission_id"], "group" => $result["group"], "role" => $result["role"], "organisation_id"=>$result['organisation_id'],  "starts" => $result["valid_from"], "expires" => $result["valid_until"], "fullname" => $result["fullname"], "firstname" => $result["firstname"], "lastname" => $result["lastname"]);
@@ -2049,12 +2049,12 @@ function count_notice_reads($notice_id = 0) {
 	global $db;
 
 	if($notice_id = (int) $notice_id) {
-		$query	= "SELECT COUNT(*) AS `total_reads`
-				FROM `statistics`
-				WHERE `module` = 'notices'
-				AND `action` = 'read'
-				AND `action_field` = 'notice_id'
-				AND `action_value` = ".$db->qstr($notice_id);
+		$query = "	SELECT COUNT(*) AS `total_reads`
+					FROM `statistics`
+					WHERE `module` = 'notices'
+					AND `action` = 'read'
+					AND `action_field` = 'notice_id'
+					AND `action_value` = ".$db->qstr($notice_id);
 		$result	= $db->CacheGetRow(LONG_CACHE_TIMEOUT, $query);
 		if($result) {
 			return $result["total_reads"];
@@ -2094,7 +2094,7 @@ function clean_input($string, $rules = array()) {
 				break;
 				case "file" :
 				case "dir" :			// Allows only a minimal number of characters
-					$string = preg_replace(array("/[^a-z0-9_\-\.\/]/i", "/(\.)\.+/", "/(\/)\/+/"), "$1", $string);
+					$string = preg_replace(array("/[^a-z0-9_\:\-\.\/]/i", "/(\.)\.+/", "/(\/)\/+/"), "$1", $string);
 				break;
 				case "int" :			// Change string to an integer.
 					$string =  (int) $string;
@@ -2781,10 +2781,10 @@ function poll_answer_responses($poll_id = 0, $answer_id = 0) {
 	global $db;
 
 	if(($poll_id = (int) $poll_id) && ($answer_id = (int) $answer_id)) {
-		$query	= "SELECT COUNT(*) AS `responses`
-				FROM `poll_results`
-				WHERE `poll_id` = ".$db->qstr($poll_id)."
-				AND `answer_id` = ".$db->qstr($answer_id);
+		$query = "	SELECT COUNT(*) AS `responses`
+					FROM `poll_results`
+					WHERE `poll_id` = ".$db->qstr($poll_id)."
+					AND `answer_id` = ".$db->qstr($answer_id);
 		$result	= $db->GetRow($query);
 		if($result) {
 			return $result["responses"];
@@ -2804,10 +2804,10 @@ function poll_prevote_check($poll_id = 0) {
 	global $db;
 
 	if($poll_id = (int) $poll_id) {
-		$query	= "SELECT *
-				FROM `poll_results`
-				WHERE `poll_id` = ".$db->qstr($poll_id)."
-				AND `proxy_id` = ".$db->qstr($_SESSION["details"]["id"]);
+		$query = "	SELECT *
+					FROM `poll_results`
+					WHERE `poll_id` = ".$db->qstr($poll_id)."
+					AND `proxy_id` = ".$db->qstr($_SESSION["details"]["id"]);
 		$result	= $db->GetRow($query);
 		if($result) {
 			return false;
@@ -4149,12 +4149,12 @@ function communities_fetch_children($community_id = 0, $requested_fields = false
 	}
 
 	$fetched	= array();
-	$query		= "SELECT `".implode("`, `", $requested_fields)."`
+	$query = "	SELECT `".implode("`, `", $requested_fields)."`
 				FROM `communities`
 				WHERE `community_parent` = ".$db->qstr((int) $community_id)."
 				".((!(bool) $show_inactive) ? " AND `community_active` = '1'" : "")."
 				ORDER BY `community_title` ASC";
-	$results	= $db->GetAll($query);
+	$results = $db->GetAll($query);
 	if($results) {
 		foreach ($results as $result) {
 			$fetched[$result["community_id"]] = $result;
@@ -4716,18 +4716,18 @@ function communities_discussions_latest($cdiscussion_id = 0) {
 	$output["replies"]	= 0;
 
 	if($cdiscussion_id = (int) $cdiscussion_id) {
-		$query	= "SELECT IF(a.`cdtopic_parent` = '0', a.`cdtopic_id`, b.`cdtopic_id`) AS `cdtopic_id`, IF(a.`cdtopic_parent` = '0', a.`topic_title`, b.`topic_title`) AS `topic_title`, a.`updated_date`, a.`proxy_id`, c.`username`, CONCAT_WS(' ', c.`firstname`, c.`lastname`) AS `poster_fullname`
-				FROM `community_discussion_topics` AS a
-				LEFT JOIN `community_discussion_topics` AS b
-				ON a.`cdtopic_parent` = b.`cdtopic_id`
-				LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS c
-				ON a.`proxy_id` = c.`id`
-				WHERE a.`cdiscussion_id` = ".$db->qstr($cdiscussion_id)."
-				AND a.`community_id` = ".$db->qstr((int) $COMMUNITY_ID)."
-				AND a.`topic_active` = '1'
-				AND (b.`topic_active` IS NULL OR b.`topic_active`='1')
-				ORDER BY a.`updated_date` DESC
-				LIMIT 0, 1";
+		$query = "	SELECT IF(a.`cdtopic_parent` = '0', a.`cdtopic_id`, b.`cdtopic_id`) AS `cdtopic_id`, IF(a.`cdtopic_parent` = '0', a.`topic_title`, b.`topic_title`) AS `topic_title`, a.`updated_date`, a.`proxy_id`, c.`username`, CONCAT_WS(' ', c.`firstname`, c.`lastname`) AS `poster_fullname`
+					FROM `community_discussion_topics` AS a
+					LEFT JOIN `community_discussion_topics` AS b
+					ON a.`cdtopic_parent` = b.`cdtopic_id`
+					LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS c
+					ON a.`proxy_id` = c.`id`
+					WHERE a.`cdiscussion_id` = ".$db->qstr($cdiscussion_id)."
+					AND a.`community_id` = ".$db->qstr((int) $COMMUNITY_ID)."
+					AND a.`topic_active` = '1'
+					AND (b.`topic_active` IS NULL OR b.`topic_active`='1')
+					ORDER BY a.`updated_date` DESC
+					LIMIT 0, 1";
 		$result	= $db->CacheGetRow(CACHE_TIMEOUT, $query);
 		if($result) {
 			$output["username"]		= $result["username"];
@@ -4776,11 +4776,11 @@ function communities_shares_latest($cshare_id = 0) {
 	$output["total_bytes"]	= 0;
 
 	if($cshare_id = (int) $cshare_id) {
-		$query	= "SELECT COUNT(*) AS `total_files`
-				FROM `community_share_files` AS a
-				WHERE a.`cshare_id` = ".$db->qstr($cshare_id)."
-				AND a.`community_id` = ".$db->qstr((int) $COMMUNITY_ID)."
-				AND a.`file_active` = '1'";
+		$query = "	SELECT COUNT(*) AS `total_files`
+					FROM `community_share_files` AS a
+					WHERE a.`cshare_id` = ".$db->qstr($cshare_id)."
+					AND a.`community_id` = ".$db->qstr((int) $COMMUNITY_ID)."
+					AND a.`file_active` = '1'";
 		$result	= $db->CacheGetRow(CACHE_TIMEOUT, $query);
 		if($result) {
 			$output["total_files"] = (int) $result["total_files"];
@@ -5174,7 +5174,7 @@ function communities_set_children_urls($parent_id, $parent_url) {
 	if ($child_records) {
 		foreach ($child_records as $child_record) {
 			$page_url = clean_input($child_record["menu_title"], array("lower","underscores","page_url"));
-			$page_url = $parent_url . DIRECTORY_SEPARATOR . $page_url;
+			$page_url = $parent_url . "/" . $page_url;
 			if(in_array($page_url, $COMMUNITY_RESERVED_PAGES)) {
 				$ERROR++;
 				$ERRORSTR[] = "The <strong>Menu Title</strong> you have chosen is reserved, please try again.";
@@ -7586,7 +7586,6 @@ function clerkship_get_agerange ($agerange_id, $rotation_id) {
     return $db->GetOne($query);
 }
 
-
 /**
  * Function takes a period index value, a rotation row, and a clerk/rotation row
  * and determines whether the clerk should be notified of their progress in the rotation.
@@ -9440,11 +9439,11 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 	 */
 	if (session_id()) {
 		if ($community_id == false) {
-		$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dashboard"]["previous_query"]["query"] = $query_events;
-		$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dashboard"]["previous_query"]["total_rows"] = $output["total_rows"];
+			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dashboard"]["previous_query"]["query"] = $query_events;
+			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dashboard"]["previous_query"]["total_rows"] = $output["total_rows"];
 
-		$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["query"] = $query_events;
-		$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["total_rows"] = $output["total_rows"];
+			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["query"] = $query_events;
+			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["total_rows"] = $output["total_rows"];
 		} else {
 			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["community_page"][$community_id]["previous_query"]["query"] = $query_events;
 			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["community_page"][$community_id]["previous_query"]["total_rows"] = $output["total_rows"];
@@ -9951,7 +9950,7 @@ function notify_regional_education($action, $event_id) {
 				ON a.`event_id` = c.`event_id`
 				WHERE a.`event_id` = ".$db->qstr($event_id);
 	$result	= $db->GetRow($query);
-	if($result) {
+	if ($result) {
 			/**
 			 * Don't process this if the event has already ended as there's not need for notifications.
 			 */
@@ -10075,7 +10074,7 @@ function notify_regional_education($action, $event_id) {
 						$sent = false;
 					}
 					if($sent) {
-					application_log("success", "An event change notification has been sent to regional education to notify them of the changes to the event [".$event_info["event_id"]."] which will affect the apartment schedule.");
+						application_log("success", "An event change notification has been sent to regional education to notify them of the changes to the event [".$event_info["event_id"]."] which will affect the apartment schedule.");
 						return true;
 					} else {
 						system_log_data("error", "Unable to send ".$action." notification to regional education. PHPMailer said: ".$mail->ErrorInfo);
@@ -10089,7 +10088,7 @@ function notify_regional_education($action, $event_id) {
 				// No need to notify Regional Education because the event is already over, just return true.
 				return true;
 			}
-		} else {
+	} else {
 		system_log_data("error", "The notify_regional_education() function returned false with no results from the database query. Database said: ".$db->ErrorMsg());
 
 		return false;

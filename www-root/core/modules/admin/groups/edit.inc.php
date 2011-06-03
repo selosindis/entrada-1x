@@ -117,6 +117,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 						ORDER By `group_name`";
 			$results	= $db->GetAll($query);
 
+			if (!$results) {
+				header("Location: ".ENTRADA_URL."/admin/".$MODULE);
+			}
 			if (!$GROUP_ID) {
 				$GROUP_ID = $results[0]["group_id"]; // $group_ids[0];
 			}

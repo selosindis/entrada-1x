@@ -167,6 +167,7 @@ if ($RECORD_ID) {
 						if (!$progress_record) {
 							application_log("error", "Unable to locate a current quiz_progress record when attempting to submit a question response to aquiz_id [".$RECORD_ID."] (quiz_id [".$quiz_record["quiz_id"]."] / event_id [".$quiz_record["content_id"]."]).");
 						}
+						
 						/**
 						 * @exception 405: Unable to locate a current progress record.
 						 */

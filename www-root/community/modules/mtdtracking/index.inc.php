@@ -160,9 +160,9 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 					jQuery("#end_date").datepicker( 'setDate', default_end_date )
 					jQuery("#end_date").datepicker( "option", "minDate", date );
 				}
-			}).datepicker('setDate', Date.today());
+			})
 
-			var e_date = jQuery( "#end_date" ).datepicker().datepicker('setDate', Date.today().addWeeks(4));
+			var e_date = jQuery( "#end_date" ).datepicker();
 
 		});
 
@@ -266,6 +266,7 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 			jQuery('#type_code_i').attr('checked', true);
 			//remove the locations
 			jQuery('.location_duration').remove();
+			jQuery("#block_list").val("");
 		}
 
 		var DELETE_IMAGE_URL = "<?php echo ENTRADA_URL . "/images/action-delete.gif"; ?>";
@@ -315,12 +316,32 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 			</script>
 
 			<input id="find_resident_url" type="hidden" value="<?php echo COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL; ?>?section=find_resident" />
+
+			<div id="blocks" style="float:left;">
+				<p><br />
+					<strong>Pick a block:</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					<select id="block_list" name="block_list">
+						<option value=""></option>
+					<?php
+					for ($i = 1; $i <= 13; $i++) {
+						echo "<option value=\"" . $i . "\">" . "Block " . $i . "</option>";
+					}
+					?>
+				</select>
+			</p>
+
+		</div>
+
+		<div id="calendars" style="float:right">
+			<p>OR Pick a start and end date:</p>
 			<p>
 				<label for="start_date">Start Date:</label>	<input id="start_date" name="start_date" type="text" />
 				<br />
 				<br />
 				<label for="end_date">End Date:</label>	<input id="end_date" name="end_date" type="text" />
 			</p>
+		</div>
+		<div id="type_location_duration_service_button" style="float:left">
 			<p>
 				<label>Type:</label>&nbsp;
 				<input id="type_code_i" name="type_code" type="radio" value="I" CHECKED/> <label for="type_code_i" style="font-weight: normal">in-patient/emergency</label>&nbsp;<input id="type_code_o" name="type_code" type="radio" value="O"/> <label for="type_code_o" style="font-weight: normal">out-patient</label>
@@ -329,29 +350,31 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 				<label for="mtdlocation">Location:</label><br />
 				<select id="mtdlocation" name="mtdlocation">
 					<option value="">Choose a Location</option>
-				<?php
-				echo "<optgroup label=\"Kingston\">";
-				foreach ($mtd_locations_kingston as $mtd_location) {
-					echo "<option value=\"" . $mtd_location["id"] . "\">" . $mtd_location["facility_name"] . "</option>";
-				}
-				echo "</optgroup>";
-				echo "<optgroup label=\"Other\">";
-				foreach ($mtd_locations_other as $mtd_location) {
-					echo "<option value=\"" . $mtd_location["id"] . "\">" . $mtd_location["facility_name"] . "</option>";
-				}
-				echo "</optgroup>";
-				?>
-			</select>
-		</p>
-		<ol id="duration_container" class="sortableList" style="display: none"></ol>
-		<div id="total_duration" class="content-small" style="margin-bottom: 10px">Total percent time: 0 %.</div>
-		<input type="hidden" id="mtdlocation_duration_order" name="mtdlocation_duration_order" value="" />
+					<?php
+					echo "<optgroup label=\"Kingston\">";
+					foreach ($mtd_locations_kingston as $mtd_location) {
+						echo "<option value=\"" . $mtd_location["id"] . "\">" . $mtd_location["facility_name"] . "</option>";
+					}
+					echo "</optgroup>";
+					echo "<optgroup label=\"Other\">";
+					foreach ($mtd_locations_other as $mtd_location) {
+						echo "<option value=\"" . $mtd_location["id"] . "\">" . $mtd_location["facility_name"] . "</option>";
+					}
+					echo "</optgroup>";
+					?>
+				</select>
+			</p>
 
-		<?php echo "<label>Service Code: </label>" . $mtd_service_code . " (" . $mtd_service_description . ")"; ?>
-				<input type="hidden" id ="service_id" name="service_id" value="<?php echo $mtd_service_id ?>" />
-				<p>
-					<input id="add_submit" type="submit" value="Add" style="margin-right:20px"/><a href="#" id="clearForm" onclick="clearForm();return false;">Clear Form</a>
-				</p>
+			<ol id="duration_container" class="sortableList" style="display: none"></ol>
+			<div id="total_duration" class="content-small" style="margin-bottom: 10px">Total percent time: 0 %.</div>
+			<input type="hidden" id="mtdlocation_duration_order" name="mtdlocation_duration_order" value="" />
+
+			<?php echo "<label>Service Code: </label>" . $mtd_service_code . " (" . $mtd_service_description . ")"; ?>
+					<input type="hidden" id ="service_id" name="service_id" value="<?php echo $mtd_service_id ?>" />
+					<p>
+						<input id="add_submit" type="submit" value="Add" style="margin-right:20px"/><a href="#" id="clearForm" onclick="clearForm();return false;">Clear Form</a>
+					</p>
+				</div>
 			</form>
 		</div>
 
@@ -390,4 +413,4 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 			<table id="mtd_schedule" class="" style="display:none"></table>
 		</div>
 <?php
-			}
+				}

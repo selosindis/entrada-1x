@@ -1,3 +1,5 @@
+UPDATE `settings` SET `value` = '1204' WHERE `shortname` = 'version_db';
+
 CREATE TABLE `pg_eval_response_rates` (
   `id` int(12) NOT NULL AUTO_INCREMENT,
   `program_name` varchar(100) NOT NULL,

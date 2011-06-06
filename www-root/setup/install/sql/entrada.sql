@@ -3362,7 +3362,7 @@ CREATE TABLE IF NOT EXISTS `settings` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `settings` (`shortname`, `value`) VALUES
-('version_db', '1204'),
+('version_db', '1205'),
 ('version_entrada', '1.2.0');
 
 CREATE TABLE `small_groups` (
@@ -3839,7 +3839,7 @@ CREATE TABLE IF NOT EXISTS `group_members` (
   KEY `member_active` (`member_active`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8 ;
 
-CREATE TABLE `pg_eval_response_rates` (
+CREATE TABLE IF NOT EXISTS `pg_eval_response_rates` (
   `id` int(12) NOT NULL AUTO_INCREMENT,
   `program_name` varchar(100) NOT NULL,
   `response_type` varchar(20) NOT NULL,
@@ -3849,9 +3849,46 @@ CREATE TABLE `pg_eval_response_rates` (
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
-CREATE TABLE `pg_one45_community` (
+CREATE TABLE IF NOT EXISTS `pg_one45_community` (
   `id` int(12) NOT NULL AUTO_INCREMENT,
   `one45_name` varchar(50) NOT NULL,
   `community_name` varchar(50) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+
+CREATE TABLE IF NOT EXISTS `pg_blocks` (
+  `id` int(12) NOT NULL AUTO_INCREMENT,
+  `block_name` varchar(8) NOT NULL,
+  `start_date` date NOT NULL,
+  `end_date` date NOT NULL,
+  `year` varchar(9) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+
+INSERT INTO `pg_blocks` (`id`, `block_name`, `start_date`, `end_date`, `year`) VALUES
+(1, '1', '2010-07-01', '2010-07-26', '2010-2011'),
+(2, '2', '2010-07-27', '2010-08-23', '2010-2011'),
+(3, '3', '2010-08-24', '2010-09-20', '2010-2011'),
+(4, '4', '2010-09-21', '2010-10-18', '2010-2011'),
+(5, '5', '2010-10-19', '2010-11-15', '2010-2011'),
+(6, '6', '2010-11-16', '2010-12-13', '2010-2011'),
+(7, '7', '2010-12-14', '2011-01-10', '2010-2011'),
+(8, '8', '2011-01-11', '2011-02-07', '2010-2011'),
+(9, '9', '2011-02-08', '2011-03-07', '2010-2011'),
+(10, '10', '2011-03-08', '2011-04-04', '2010-2011'),
+(11, '11', '2011-04-05', '2011-05-02', '2010-2011'),
+(12, '12', '2011-05-03', '2011-05-30', '2010-2011'),
+(13, '13', '2011-05-31', '2011-06-30', '2010-2011'),
+(14, '1', '2011-07-01', '2011-08-01', '2011-2012'),
+(15, '2', '2011-08-02', '2011-08-29', '2011-2012'),
+(16, '3', '2011-08-30', '2011-09-26', '2011-2012'),
+(17, '4', '2011-09-27', '2011-10-24', '2011-2012'),
+(18, '5', '2011-10-25', '2011-11-21', '2011-2012'),
+(19, '6', '2011-11-22', '2011-12-19', '2011-2012'),
+(20, '7', '2012-12-20', '2012-01-16', '2011-2012'),
+(21, '8', '2012-01-17', '2012-02-13', '2011-2012'),
+(22, '9', '2012-02-14', '2012-03-12', '2011-2012'),
+(23, '10', '2012-03-13', '2012-04-09', '2011-2012'),
+(24, '11', '2012-04-10', '2012-05-07', '2011-2012'),
+(25, '12', '2012-05-08', '2012-06-04', '2011-2012'),
+(26, '13', '2012-06-05', '2012-06-30', '2011-2012');

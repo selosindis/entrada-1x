@@ -20,6 +20,7 @@ class Entrada_ACL extends ACL_Factory {
 		"mom" => array (
 			"awards",
 			"community",
+			"configuration",
 			"course" => array (
 				"coursecontent",
 				"event" => array (
@@ -1608,6 +1609,29 @@ class NoticeResource extends EntradaAclResource {
 	 */
 	public function getResourceId() {
 		return "notice";
+	}
+}
+
+/**
+ * Configuration Resource
+ *
+ * @author Organisation: Queen's University
+ * @author Unit: School of Medicine
+ * @author Developer: Matt Simpson <simpson@queensu.ca>
+ * @copyright Copyright 2010 Queen's University. All Rights Reserved.
+ */
+class ConfigurationResource extends EntradaAclResource {
+	var $organisation_id;
+
+	function __construct($organisation_id, $assert = null) {
+		$this->organisation_id = $organisation_id;
+		if(isset($assert)) {
+			$this->assert = $assert;
+		}
+	}
+
+	public function getResourceId() {
+		return "configuration";
 	}
 }
 

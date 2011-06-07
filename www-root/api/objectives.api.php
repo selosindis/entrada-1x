@@ -35,13 +35,19 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	ob_clear_open_buffers();
 	
 	if (isset($_POST["course_ids"]) && ($course_ids = (explode(",", $_POST["course_ids"])))) {
+		
+		$org_id = $_POST["org_id"];
+		$top_level_id = $_POST["top_level_id"];
+		
+		
 		if (isset($_POST["hierarchy"])) {
 			if (isset($_POST["event_id"]) && $_POST["event_id"]) {
 				$event_id = (int)$_POST["event_id"];
 			} else {
 				$event_id = 0;
 			}
-			$objectives = courses_fetch_objectives($course_ids, 1, false, false, $event_id);
+			
+			list($objectives,$top_level_id) = courses_fetch_objectives_for_org($org_id, $course_ids, -1,-0, false, false, $event_id);
 			if ($event_id) {
 				$temp_objectives = $objectives["objectives"];
 				foreach ($temp_objectives as $objective_id => $objective) {
@@ -73,7 +79,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 					}
 				}
 			}
-			echo course_objectives_in_list($objectives, 1, false, false, 1, false, true, "primary", true);
+			echo course_objectives_in_list($objectives, $top_level_id,$top_level_id, false, false, 1, false, true, "primary", true);
 		} else {
 			if (isset($_POST["event_id"]) && $_POST["event_id"]) {
 				$event_id = (int)$_POST["event_id"];
@@ -104,8 +110,8 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 			} else {
 				$tertiary_ids = array();
 			}
-			$objectives = courses_fetch_objectives($course_ids, 1, false, array("primary" => $primary_ids, "secondary" => $secondary_ids, "tertiary" => $tertiary_ids), $event_id);
-			echo course_objectives_in_list($objectives, 1, true, false, 1, false, true, "primary", true);
+			list($objectives,$top_level_id) = courses_fetch_objectives_for_org($org_id,$course_ids, -1,0,false, array("primary" => $primary_ids, "secondary" => $secondary_ids, "tertiary" => $tertiary_ids), $event_id);
+			echo course_objectives_in_list($objectives, $top_level_id,$top_level_id, true, false, 1, false, true, "primary", true);
 		}
 	}
 	exit;

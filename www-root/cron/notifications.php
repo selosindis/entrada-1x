@@ -174,6 +174,7 @@ function notifications_send($timestamp_start = 0, $timestamp_end = 0, $notice = 
 								LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
 								ON b.`id` = a.`proxy_id`
 								WHERE a.`event_id` = ".$db->qstr($event["event_id"])."
+								AND b.`contact_role` = 'teacher'
 								AND b.`id` IS NOT NULL
 								AND b.`email` <> ''
 								ORDER BY a.`contact_order` ASC";

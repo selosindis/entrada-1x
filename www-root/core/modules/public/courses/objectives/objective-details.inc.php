@@ -53,6 +53,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 			echo display_notice();
 		}
 	} elseif ((isset($OBJECTIVE_ID) && $OBJECTIVE_ID) && $API) {
+		
 		$query = "	SELECT a.*".(isset($COURSE_ID) && $COURSE_ID ? ", b.`objective_details`" : "")." 
 					FROM `global_lu_objectives` AS a
 					".(isset($COURSE_ID) && $COURSE_ID ? "

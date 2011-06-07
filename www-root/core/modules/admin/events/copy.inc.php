@@ -154,7 +154,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								}
 							}
 
-							$query	= "	SELECT $EVENT_ID `event_id`, a.`proxy_id`, a.`contact_order`, $updated_date `updated_date`, $USER_ID `updated_by`
+							$query	= "	SELECT $EVENT_ID `event_id`, a.`proxy_id`, a.`contact_order`,a.`contact_role`, $updated_date `updated_date`, $USER_ID `updated_by`
 										FROM `event_contacts` a
 										WHERE a.`event_id` = ".$db->qstr($event_id)."
 										ORDER BY a.`econtact_id` ASC";

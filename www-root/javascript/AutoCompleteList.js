@@ -46,9 +46,21 @@ var AutoCompleteList = function() {
 		this.addItem = function () {
 			if (($(type+'_id') != null) && ($(type+'_id').value != '') && ($(type+'_'+$(type+'_id').value) == null)) {
 				var id = $(type+'_id').value;
-				var li = new Element('li', {'id':type+'_'+id, 'style':'cursor: move;'}).update($(type+'_name').value).addClassName('community');
+				var li;
+
+				//li  = new Element('li', {'id':type+'_'+id, 'style':'cursor: move;margin-bottom:10px;width:350px;'}).update($(type+'_name').value+"<select name = \"faculty_role[]\" style=\"float:right;margin-right:30px;margin-top:-5px;\"><option value = \"teacher\">Teacher</option><option value = \"tutor\">Tutor</option><option value = \"ta\">Teacher's Assistant</option><option value = \"auditor\">Auditor</option></select>").addClassName('community');
+				li  = new Element('li', {'id':type+'_'+id, 'style':'cursor: move;'+((type=='faculty')?'margin-bottom:10px;width:350px;':'')}).update($(type+'_name').value).addClassName('community');
+				if(type=='faculty'){
+					var select = new Element('select',{style:'float:right;margin-right:30px;margin-top:-5px;'});
+					select.insert({bottom:new Element('option', { value: 'teacher'}).update('Teacher')});
+					select.insert({bottom:new Element('option', { value: 'tutor'}).update('Tutor')});
+					select.insert({bottom:new Element('option', { value: 'ta'}).update('Teacher\'s Assistant')});
+					select.insert({bottom:new Element('option', { value: 'auditor'}).update('Auditor')});
+					li.insert({bottom:select});
+				}
 				var img = new Element('img', {'src':remove_image} ).addClassName('list-cancel-image');
 				$(type+'_name').value = '';
+
 				li.insert({bottom:img});
 				$(type+'_id').value	= '';
 				$(type+'_list').appendChild(li);
@@ -69,6 +81,15 @@ var AutoCompleteList = function() {
 				} else {
 					document.fire(type+'_autocomplete:underlimit');
 				}
+			}
+			
+			if ("fireEvent" in $(type+'_list'))
+				$(type+'_list').fireEvent("onchange");
+			else
+			{
+				var evt = document.createEvent("HTMLEvents");
+				evt.initEvent("change", false, true);
+				$(type+'_list').dispatchEvent(evt);
 			}
 		}
 		

@@ -70,7 +70,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			true,
 			(isset($_GET["pv"]) ? (int) trim($_GET["pv"]) : 1),
 			$_SESSION[APPLICATION_IDENTIFIER]["events"]["pp"]);
-
+	$learning_events["total_rows"] = count($learning_events["events"]);
 	echo "<h1>".$MODULES[strtolower($MODULE)]["title"]."</h1>";
 
 	/**

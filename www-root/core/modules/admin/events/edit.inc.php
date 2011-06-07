@@ -105,6 +105,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							foreach($associated_faculty as $contact_order => $proxy_id) {
 								if ($proxy_id = clean_input($proxy_id, array("trim", "int"))) {
 									$PROCESSED["associated_faculty"][(int) $contact_order] = $proxy_id;
+									$PROCESSED["contact_role"][(int)$contact_order] = $_POST["faculty_role"][(int) $contact_order];
 								}
 							}
 						}
@@ -428,7 +429,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								if ($db->Execute($query)) {
 									if ((is_array($PROCESSED["associated_faculty"])) && (count($PROCESSED["associated_faculty"]))) {
 										foreach($PROCESSED["associated_faculty"] as $contact_order => $proxy_id) {
-											if (!$db->AutoExecute("event_contacts", array("event_id" => $EVENT_ID, "proxy_id" => $proxy_id, "contact_order" => (int) $contact_order, "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT")) {
+											if (!$db->AutoExecute("event_contacts", array("event_id" => $EVENT_ID, "proxy_id" => $proxy_id,"contact_role"=>$PROCESSED["contact_role"][$contact_order], "contact_order" => (int) $contact_order, "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT")) {
 												$ERROR++;
 												$ERRORSTR[] = "There was an error while trying to attach an <strong>Associated Faculty</strong> to this event.<br /><br />The system administrator was informed of this error; please try again later.";
 
@@ -533,6 +534,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						if ($results) {
 							foreach($results as $contact_order => $result) {
 								$PROCESSED["associated_faculty"][(int) $contact_order] = $result["proxy_id"];
+								$PROCESSED["contact_role"][(int)$result["proxy_id"]] = $result["contact_role"];
 							}
 						}
 
@@ -752,7 +754,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 												foreach ($PROCESSED["associated_faculty"] as $faculty) {
 													if ((array_key_exists($faculty, $FACULTY_LIST)) && is_array($FACULTY_LIST[$faculty])) {
 														?>
-														<li class="community" id="faculty_<?php echo $FACULTY_LIST[$faculty]["proxy_id"]; ?>" style="cursor: move;"><?php echo $FACULTY_LIST[$faculty]["fullname"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="faculty_list.removeItem('<?php echo $FACULTY_LIST[$faculty]["proxy_id"]; ?>');" class="list-cancel-image" /></li>
+														<li class="community" id="faculty_<?php echo $FACULTY_LIST[$faculty]["proxy_id"]; ?>" style="cursor: move;"><?php echo $FACULTY_LIST[$faculty]["fullname"]; ?><select name ="faculty_role[]"><option value="teacher" <?php if($PROCESSED["contact_role"][$faculty] == "teacher") echo "SELECTED";?>>Teacher</option><option value="tutor" <?php if($PROCESSED["contact_role"][$faculty] == "tutor") echo "SELECTED";?>>Tutor</option><option value="ta" <?php if($PROCESSED["contact_role"][$faculty] == "ta") echo "SELECTED";?>>Teacher's Assistant</option><option value="auditor" <?php if($PROCESSED["contact_role"][$faculty] == "auditor") echo "SELECTED";?>>Auditor</option></select><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="faculty_list.removeItem('<?php echo $FACULTY_LIST[$faculty]["proxy_id"]; ?>');" class="list-cancel-image" /></li>
 														<?php
 													}
 												}

@@ -851,7 +851,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								<td style="vertical-align: top">Associated Faculty</td>
 								<td>
 									<?php
-									$query		= "	SELECT a.`proxy_id`, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`email`
+									$query		= "	SELECT a.`proxy_id`, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, a.`contact_role`, b.`email`
 													FROM `event_contacts` AS a
 													LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
 													ON b.`id` = a.`proxy_id`
@@ -861,7 +861,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 									$results	= $db->GetAll($query);
 									if ($results) {
 										foreach ($results as $key => $result) {
-											echo "<a href=\"mailto:".html_encode($result["email"])."\">".html_encode($result["fullname"])."</a><br />\n";
+											echo "<a href=\"mailto:".html_encode($result["email"])."\">".html_encode($result["fullname"])."</a> - ".html_encode(ucwords($result["contact_role"]))."<br />\n";
 										}
 									} else {
 										echo "To Be Announced";

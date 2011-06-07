@@ -40,8 +40,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/eventtypes_list.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
-	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/AutoCompleteList.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
-
+	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/AutoCompleteList.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";	
+	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/growler/src/Growler.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 	echo "<script language=\"text/javascript\">var DELETE_IMAGE_URL = '".ENTRADA_URL."/images/action-delete.gif';</script>";
 	
 	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/events?".replace_query(array("section" => "add")), "title" => "Adding Event");
@@ -71,12 +71,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			/**
 			 * Non-required field "associated_faculty" / Associated Faculty (array of proxy ids).
 			 * This is actually accomplished after the event is inserted below.
-			 */
+			 */	
+			
 			if ((isset($_POST["associated_faculty"]))) {
 				$associated_faculty = explode(',',$_POST["associated_faculty"]);
 				foreach($associated_faculty as $contact_order => $proxy_id) {
 					if ($proxy_id = clean_input($proxy_id, array("trim", "int"))) {
 						$PROCESSED["associated_faculty"][(int) $contact_order] = $proxy_id;
+						$PROCESSED["contact_role"][(int) $contact_order] = $_POST["faculty_role"][(int)$contact_order];					
 					}
 				}
 			}
@@ -362,7 +364,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						 */
 						if ((is_array($PROCESSED["associated_faculty"])) && (count($PROCESSED["associated_faculty"]))) {
 							foreach($PROCESSED["associated_faculty"] as $contact_order => $proxy_id) {
-								if (!$db->AutoExecute("event_contacts", array("event_id" => $EVENT_ID, "proxy_id" => $proxy_id, "contact_order" => (int) $contact_order, "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT")) {
+								if (!$db->AutoExecute("event_contacts", array("event_id" => $EVENT_ID, "proxy_id" => $proxy_id, "contact_role"=>$PROCESSED["contact_role"][$contact_order],"contact_order" => (int) $contact_order, "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT")) {
 									$ERROR++;
 									$ERRORSTR[] = "There was an error while trying to attach an <strong>Associated Faculty</strong> to this event.<br /><br />The system administrator was informed of this error; please try again later.";
 
@@ -497,6 +499,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				}
 			}
 			?>
+
 			<form action="<?php echo ENTRADA_URL; ?>/admin/events?section=add&amp;step=2" method="post" id="addEventForm">
 				<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Adding Event">
 					<colgroup>
@@ -531,6 +534,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							}
 						}
 					</script>
+						
+				
 						<td><input id ="recurring_check" type ="checkbox" name ="recurring_event" value ="true" onclick="toggleRecurring()"/></td>
 						<td>Recurring Event</td>
 						<td style="display:none;" id="recurring_select"><select><option>Daily</option><option>Weekly</option><option>Bi-Weekly</option><option>Monthly</option></select></td>
@@ -631,7 +636,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 									foreach ($PROCESSED["associated_faculty"] as $faculty) {
 										if ((array_key_exists($faculty, $FACULTY_LIST)) && is_array($FACULTY_LIST[$faculty])) {
 											?>
-											<li class="community" id="faculty_<?php echo $FACULTY_LIST[$faculty]["proxy_id"]; ?>" style="cursor: move;"><?php echo $FACULTY_LIST[$faculty]["fullname"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="faculty_list.removeItem('<?php echo $FACULTY_LIST[$faculty]["proxy_id"]; ?>');" class="list-cancel-image" /></li>
+								<li class="community" id="faculty_<?php echo $FACULTY_LIST[$faculty]["proxy_id"]; ?>" style="cursor: move;margin-bottom:10px;width:350px;"><?php echo $FACULTY_LIST[$faculty]["fullname"]; ?><select name ="faculty_role[]" style="float:right;margin-right:30px;margin-top:-5px;"><option value="teacher">Teacher</option><option value="tutor">Tutor</option><option value="ta">Teacher's Assistant</option><option value="auditor">Auditor</option></select><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="faculty_list.removeItem('<?php echo $FACULTY_LIST[$faculty]["proxy_id"]; ?>');" class="list-cancel-image" /></li>
 											<?php
 										}
 									}
@@ -752,7 +757,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 											?>
 											<li class="community" id="student_<?php echo $STUDENT_LIST[$student]["proxy_id"]; ?>" style="cursor: move;"><?php echo $STUDENT_LIST[$student]["fullname"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="student_list.removeItem('<?php echo $STUDENT_LIST[$student]["proxy_id"]; ?>');" class="list-cancel-image" /></li>
 											<?php
-										}
+											}
 									}
 								}
 								?>
@@ -817,12 +822,59 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					</tr>
 				</table>
 			</form>
+
+
 			<script type="text/javascript">
+			
 				function selectEventAudienceOption(type) {
 					$$('.event_audience').invoke('hide');
 					$$('.'+type+'_audience').invoke('show');
+					if(type!== 'proxy_id'){
+						checkConflict();
+					}
 				}
 			</script>
+			<script>
+				var prevDate = '';
+				var prevTime = '00:00 AM';
+				var t=self.setInterval("checkDifference()",1500);
+					
+					
+				Event.observe('associated_grad_year','change',checkConflict);
+				Event.observe('associated_organisation_id','change',checkConflict);
+				Event.observe('student_list','change',checkConflict)
+				//Event.observe('event_start_date','keyup',checkConflict);
+					
+				
+				
+				
+				function checkDifference(){
+					if($('event_start_date').value !== prevDate){
+						prevDate = $('event_start_date').value;
+						checkConflict();
+					}
+					else if($('event_start_display').innerHTML !== prevTime){
+						prevTime = $('event_start_display').innerHTML;
+						checkConflict();						
+					}
+				}
+				function checkConflict(){
+					new Ajax.Request('<?php echo ENTRADA_URL;?>/api/learning-event-conflicts.php',
+					{
+						method:'post',
+						parameters: $("addEventForm").serialize(true),
+						onSuccess: function(transport){
+						var response = transport.responseText || null;
+						if(response !==null){
+							var g = new k.Growler();
+							g.warn(response,{life:5});
+						}
+						},
+						onFailure: function(){ alert('Something went wrong...') }
+					});
+				}
+			</script>
+			
 			<br /><br />
 			<?php
 		break;

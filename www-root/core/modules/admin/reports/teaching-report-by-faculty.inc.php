@@ -97,6 +97,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 						LEFT JOIN `event_contacts` AS b
 						ON b.`event_id` = a.`event_id`
 						WHERE b.`proxy_id` = ".$db->qstr($result["proxy_id"])."
+						AND b.`contact_role` = 'teacher' 
 						AND (a.`event_start` BETWEEN ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_start"])." AND ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_finish"]).")";
 			if ($int_use_cache) {
 				$sresults	= $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);

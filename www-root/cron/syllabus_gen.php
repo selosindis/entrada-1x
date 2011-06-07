@@ -45,6 +45,7 @@ function syllabus_display_learning_event() {
 					LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
 					ON b.`id` = a.`proxy_id`
 					WHERE a.`event_id` = ".$db->qstr($result["event_id"])."
+					AND a.`contact_role` = 'teacher' 
 					AND b.`id` IS NOT NULL
 					ORDER BY a.`contact_order` ASC";
 		$sresults	= $db->GetAll($squery);

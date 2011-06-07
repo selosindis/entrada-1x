@@ -67,9 +67,11 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 		new_sidebar_item("Display Style", $sidebar_html, "display-style", "open");
 	}
 	if(!$ORGANISATION_ID){
-	$query = "SELECT `organisation_id` FROM `courses` WHERE `course_id` = ".$db->qstr($COURSE_ID);
-		if($result = $db->GetOne($query))
+		$query = "SELECT `organisation_id` FROM `courses` WHERE `course_id` = ".$db->qstr($COURSE_ID);
+		if($result = $db->GetOne($query)){
 			$ORGANISATION_ID = $result;
+			$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"] = $result;
+		}
 		else
 			$ORGANISATION_ID	= $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"];
 	}

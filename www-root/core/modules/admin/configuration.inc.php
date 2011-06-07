@@ -13,7 +13,7 @@ $BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/configuration", "title" => "M
 		 * Add the Regional Education module secondary navigation.
 		 */
 		$sidebar_html  = "<ul class=\"menu\">";
-		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/configuration/settings/\">Manage Entrada Settings</a></li>\n";
+		//$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/configuration/settings/\">Manage Entrada Settings</a></li>\n";
 		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/configuration/organisations/\">Manage Organisations</a></li>\n";
 		$sidebar_html .= "</ul>";
 		new_sidebar_item("Configuration", $sidebar_html, "config-nav", "open");

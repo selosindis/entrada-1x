@@ -11655,10 +11655,19 @@ function objectives_build_course_competencies_array() {
 			$courses_array["courses"][$term_course_id]["total_in_term"] = $count;
 		}
 		
+		
+		$query = "	SELECT a.`objective_id` FROM `global_lu_objectives` AS a	
+					LEFT JOIN `objective_organisation` AS b 
+					ON a.`objective_id` = b.`objective_id` 
+					WHERE a.`objective_name` = 'Curriculum Objectives' 
+					AND b.`organisation_id` = ".$db->qstr($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"]);
+		
+		$parent_obj = $db->GetOne($query);
+		
 		$query = "	SELECT * FROM `global_lu_objectives`
 					WHERE `objective_parent` IN (
 						SELECT `objective_id` FROM `global_lu_objectives`
-						WHERE `objective_parent` = ".$db->qstr(CURRICULAR_OBJECTIVES_PARENT_ID)."
+						WHERE `objective_parent` = ".(isset($parent_obj)?$db->qstr($parent_obj):$db->qstr(CURRICULAR_OBJECTIVES_PARENT_ID))."
 					)";
 		$competencies = $db->GetAll($query);
 		if ($competencies && count($competencies)) {

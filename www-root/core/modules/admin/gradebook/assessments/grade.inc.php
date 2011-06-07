@@ -300,6 +300,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							    	}
 							    );
 							}
+							
 							function modify_exception (proxy_id, assessment_id) {
 								if (!updating) {
 									updating = true;

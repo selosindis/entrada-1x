@@ -397,7 +397,7 @@ CREATE TABLE IF NOT EXISTS `meta_values` (
   PRIMARY KEY  (`meta_value_id`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 
-INSERT INTO `settings` (`shortname`, `value`) VALUES ('version_entrada', '1.2.0');
+INSERT INTO `settings` (`shortname`, `value`) VALUES ('version_entrada', '1.2.0.1');
 UPDATE `settings` SET `value` = '1200' WHERE `shortname` = 'version_db';
 
 CREATE TABLE IF NOT EXISTS `ar_undergraduate_nonmedical_teaching` (

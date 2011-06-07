@@ -399,10 +399,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 
 			if ($report_evaluations["total_pages"] > 1) {
 				echo "<div class=\"fright\" style=\"margin-bottom: 10px\">\n";
-				echo "<form action=\"".ENTRADA_URL."/admin/evaluations\" method=\"get\" id=\"pageSelector\">\n";
+				echo "<form action=\"".ENTRADA_URL."/admin/evaluations/reports\" method=\"get\" id=\"pageSelector\">\n";
+				echo "<input type=\"hidden\" name=\"section\" value=\"student-teacher-evaluations\" />\n";
 				echo "<span style=\"width: 20px; vertical-align: middle; margin-right: 3px; text-align: left\">\n";
 				if ($report_evaluations["page_previous"]) {
-					echo "<a href=\"".ENTRADA_URL."/admin/evaluations?".replace_query(array("pv" => $report_evaluations["page_previous"]))."\"><img src=\"".ENTRADA_URL."/images/record-previous-on.gif\" border=\"0\" width=\"11\" height=\"11\" alt=\"Back to page ".$report_evaluations["page_previous"].".\" title=\"Back to page ".$report_evaluations["page_previous"].".\" style=\"vertical-align: middle\" /></a>\n";
+					echo "<a href=\"".ENTRADA_URL."/admin/evaluations/reports?".replace_query(array("pv" => $report_evaluations["page_previous"]))."\"><img src=\"".ENTRADA_URL."/images/record-previous-on.gif\" border=\"0\" width=\"11\" height=\"11\" alt=\"Back to page ".$report_evaluations["page_previous"].".\" title=\"Back to page ".$report_evaluations["page_previous"].".\" style=\"vertical-align: middle\" /></a>\n";
 				} else {
 					echo "<img src=\"".ENTRADA_URL."/images/record-previous-off.gif\" width=\"11\" height=\"11\" alt=\"\" title=\"\" style=\"vertical-align: middle\" />";
 				}
@@ -416,7 +417,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 				echo "</span>\n";
 				echo "<span style=\"width: 20px; vertical-align: middle; margin-left: 3px; text-align: right\">\n";
 				if ($report_evaluations["page_current"] < $report_evaluations["total_pages"]) {
-					echo "<a href=\"".ENTRADA_URL."/admin/evaluations?".replace_query(array("pv" => $report_evaluations["page_next"]))."\"><img src=\"".ENTRADA_URL."/images/record-next-on.gif\" border=\"0\" width=\"11\" height=\"11\" alt=\"Forward to page ".$report_evaluations["page_next"].".\" title=\"Forward to page ".$report_evaluations["page_next"].".\" style=\"vertical-align: middle\" /></a>";
+					echo "<a href=\"".ENTRADA_URL."/admin/evaluations/reports?".replace_query(array("pv" => $report_evaluations["page_next"]))."\"><img src=\"".ENTRADA_URL."/images/record-next-on.gif\" border=\"0\" width=\"11\" height=\"11\" alt=\"Forward to page ".$report_evaluations["page_next"].".\" title=\"Forward to page ".$report_evaluations["page_next"].".\" style=\"vertical-align: middle\" /></a>";
 				} else {
 					echo "<img src=\"".ENTRADA_URL."/images/record-next-off.gif\" width=\"11\" height=\"11\" alt=\"\" title=\"\" style=\"vertical-align: middle\" />";
 				}
@@ -467,7 +468,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 						$query = "	SELECT COUNT(`eprogress_id`) FROM `evaluation_progress`
 									WHERE `evaluation_id` = ".$db->qstr($result["evaluation_id"])."
 									AND `progress_value` = 'complete'";
-						$complete = $db->GetOne($query) / $result["min_submittable"];
+						$count = $db->GetOne($query);
+						if ($count) {
+							$complete = round($count / $result["min_submittable"]);
+						} else {
+							$complete = 0;
+						}
 
 						$url = ENTRADA_URL."/admin/evaluations/reports?section=".$SECTION."&amp;step=2&amp;id=".$result["evaluation_id"];
 

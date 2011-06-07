@@ -1816,6 +1816,21 @@ Element.Methods = {
         element.setAttribute(name, name);
       else element.setAttribute(name, value);
     }
+    
+    // solve bug involving 'className' in IE8
+    // https://prototype.lighthouseapp.com/projects/8886/tickets/529-element-constructor-doesnt-add-classname-in-ie8
+    var ieClass = (name == 'className');
+    if(ieClass && value && element.className == '')
+    {
+        element.removeAttribute('className');
+        if(value === true) {
+            element.setAttribute('class', 'class'); }
+        else {
+            element.setAttribute('class', value); }
+    }
+    else if(ieClass && (value === false || value === null) && element.className != '') {
+        element.removeAttribute('class');
+    }
     return element;
   },
 

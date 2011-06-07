@@ -1,4 +1,3 @@
-#!/usr/bin/php
 <?php
 /**
  * Entrada Tools
@@ -50,7 +49,7 @@ if(isset($opts["d"]) || DEFAULT_DUMP) {
 }
 
 //Reload test databases
-if(isset($opts["r"]) || DEFAULT_RELOAD) {
+if (false) { //(isset($opts["r"]) || DEFAULT_RELOAD) {
 	$setup = new Entrada_Setup(array(
 				"database_host" 		=> DATABASE_HOST,
 				"database_username" 	=> DATABASE_USER,

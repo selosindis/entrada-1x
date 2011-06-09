@@ -56,8 +56,7 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 			if ($total_time > 100) {
 				$ERROR++;
 				$ERRORSTR[] = "The total time spent cannot be greater than 100%.";
-			}
-			else if ($total_time == 0) {
+			} else if ($total_time == 0) {
 				$ERROR++;
 				$ERRORSTR[] = "The total time spent cannot be 0%.";
 			}
@@ -71,33 +70,63 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 	}
 
 
+	$block = clean_input($_POST["block_list"], array("notags", "trim", "nows"));
+
 	$start_date = clean_input($_POST["start_date"], array("notags", "trim", "nows"));
 	$end_date = clean_input($_POST["end_date"], array("notags", "trim", "nows"));
 
-	if (is_null($start_date) || $start_date == "") {
+	if ((is_null($block) || $block == "") && (is_null($start_date) || $start_date == "") && (is_null($end_date) || $end_date == "")) {
 		$ERROR++;
-		$ERRORSTR[] = "Start date is required.";
-		
-	} else if(is_null($end_date)  || $end_date == "") {
-		$ERROR++;
-		$ERRORSTR[] = "End date is required.";
-
-	} else {
-		if (!validate_date_format($start_date)) {
+		$ERRORSTR[] = "You must choose a block OR a start and end date.";
+	} else if (((is_null($block) || $block == ""))) {
+		if (is_null($start_date) || $start_date == "") {
 			$ERROR++;
-			$ERRORSTR[] = "Invalid start date format.";
-		} else if (!validate_date_format($end_date)) {
+			$ERRORSTR[] = "Start date is required.";
+		} else if (is_null($end_date) || $end_date == "") {
 			$ERROR++;
-			$ERRORSTR[] = "Invalid end date format.";
-		}
-		else {
-			if (validate_start_end_dates($start_date, $end_date)) {
-				$PROCESSED["start_date"] = $start_date;
-				$PROCESSED["end_date"] = $end_date;
-			} else {
+			$ERRORSTR[] = "End date is required.";
+		} else {
+			if (!validate_date_format($start_date)) {
 				$ERROR++;
-				$ERRORSTR[] = "Start date cannot be after the end date.";
+				$ERRORSTR[] = "Invalid start date format.";
+			} else if (!validate_date_format($end_date)) {
+				$ERROR++;
+				$ERRORSTR[] = "Invalid end date format.";
+			} else {
+				if (validate_start_end_dates($start_date, $end_date)) {
+					$PROCESSED["start_date"] = $start_date;
+					$PROCESSED["end_date"] = $end_date;
+				} else {
+					$ERROR++;
+					$ERRORSTR[] = "Start date cannot be after the end date.";
+				}
 			}
+		}
+	} else if ((is_null($start_date) || $start_date == "") && (is_null($end_date) || $end_date == "") && ((!is_null($block) || $block != ""))) {
+		//Retrieve block dates from the database based on the block selected.
+		//1. Determine the year we are in. e.g. "2010-2011"
+		//2. select the start and end dates based on the selected block.
+		$current_date = date("Y-m-d");
+		$date_arr = date_parse($current_date);
+		$year = "";
+		if ($date_arr["month"] >= 7) {
+			$year = $date_arr["year"] . "-" . strval(intval($date_arr["year"]) + 1);
+		} else {
+			$year = strval(intval($date_arr["year"]) - 1) . "-" . $date_arr["year"];
+		}
+
+		$query = "SELECT * 
+				  FROM `pg_blocks` 
+				  WHERE `block_name` = " . $db->qstr($block) . "
+				  AND year = " . $db->qstr($year);
+		$result = $db->GetRow($query);
+
+		if ($result) {
+			$PROCESSED["start_date"] = $result["start_date"];
+			$PROCESSED["end_date"] = $result["end_date"];
+		} else {
+			$ERROR++;
+			$ERRORSTR[] = "Block start and end dates not found.";
 		}
 	}
 
@@ -121,9 +150,9 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 
 		$results = $db->GetAll($query);
 		if ($results) {
-			$start_date_time = new DateTime($start_date);
-			$end_date_time = new DateTime($end_date);
-			
+			$start_date_time = new DateTime($PROCESSED["start_date"]);
+			$end_date_time = new DateTime($PROCESSED["end_date"]);
+
 			foreach ($results as $result) {
 				$temp_start_date = new DateTime($result["start_date"]);
 				$temp_end_date = new DateTime($result["end_date"]);
@@ -134,7 +163,7 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 
 				$service_program = $db->GetOne($query);
 
-				if ($start_date_time >= $temp_start_date && $start_date_time <= $temp_end_date) {					
+				if ($start_date_time >= $temp_start_date && $start_date_time <= $temp_end_date) {
 					$ERROR++;
 					$ERRORSTR[] = "The selected start date overlapps with an existing entry for the " . $service_program . " program.";
 				}
@@ -208,17 +237,13 @@ function validate_date_format($in_date) {
 	$day = $in_date_arr[2];
 	if (strlen($year) != 4) {
 		return false;
-	}
-	else if (strlen($month) != 2) {
+	} else if (strlen($month) != 2) {
 		return false;
-	}
-	else if (strlen($day) != 2) {
+	} else if (strlen($day) != 2) {
 		return false;
-	}
-	else if (!checkdate($month, $day, $year)) {
+	} else if (!checkdate($month, $day, $year)) {
 		return false;
-	}
-	else {
+	} else {
 		return true;
 	}
 }

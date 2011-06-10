@@ -222,7 +222,7 @@ if (!defined("IN_MANAGE")) {
 			}
 
 
-			if (isset($_POST['keys_from_super']) && $_POST['keys_from_super'] == true) {
+			if (!isset($_POST['keys_from_super'])) {
 				$PROCESSED['keys_firstname'] = $PROCESSED['super_firstname'];
 				$PROCESSED['keys_lastname'] = $PROCESSED['super_lastname'];
 				$PROCESSED['keys_phone'] = $PROCESSED['super_phone'];
@@ -309,7 +309,7 @@ if (!defined("IN_MANAGE")) {
 			$hide_key_info = ($APARTMENT_INFO['keys_firstname']==$APARTMENT_INFO['super_firstname'])&&
 								($APARTMENT_INFO['keys_lastname']==$APARTMENT_INFO['super_lastname'])&&
 									($APARTMENT_INFO['keys_phone']==$APARTMENT_INFO['super_phone']) &&
-										($APARTMENT_INFO['keys_email']==$APARTMENT_INFO['super_email'])?'true':'false';
+										($APARTMENT_INFO['keys_email']==$APARTMENT_INFO['super_email'])?'false':'true';
 			$PROCESSED = $APARTMENT_INFO;
 
 			if (isset($APARTMENT_INFO["region_id"])) {
@@ -344,6 +344,7 @@ if (!defined("IN_MANAGE")) {
 			if ((defined("GOOGLE_MAPS_API")) && (GOOGLE_MAPS_API != "")) {
 				$HEAD[] = "<script type=\"text/javascript\" src=\"" . GOOGLE_MAPS_API . "\"></script>";
 				$ONLOAD[] = "initialize()";
+				$ONLOAD[] = "toggle_visibility_checkbox($('keys_from_super'), 'keys_division')";
 
 				if (isset($PROCESSED["apartment_latitude"]) && $PROCESSED["apartment_latitude"] && isset($PROCESSED["apartment_longitude"]) && $PROCESSED["apartment_longitude"]) {
 					$ONLOAD[] = "addPointToMap('" . $PROCESSED["apartment_latitude"] . "', '" . $PROCESSED["apartment_longitude"] . "')";
@@ -676,10 +677,10 @@ if (!defined("IN_MANAGE")) {
 						<tr>
 							<td>&nbsp;</td>
 							<td>&nbsp;</td>
-							<td><input type="checkbox"name ="keys_from_super" id="keys_from_super" value="true" onclick="showHide();" checked="checked">Contact Superintendent for keys</input></td>
+							<td><input type="checkbox"name ="keys_from_super" id="keys_from_super" value="true" onclick="toggle_visibility_checkbox(this,'keys_division')">Use Different Contact For Keys</input></td>
 						</tr>
 						</tbody>
-						<tbody id ="keys_division" style="visibility:hidden;">	
+						<tbody id ="keys_division">	
 
 						<tr>
 							<td colspan="4"><h2>Contact for Keys</h2></td>
@@ -736,11 +737,10 @@ if (!defined("IN_MANAGE")) {
 			<script type="text/javascript">
 				
 					if(<?php echo $hide_key_info;?>){
-						document.getElementById('keys_division').style.visibility = 'hidden';
+						document.getElementById('keys_from_super').checked = true;
 					}
 					else{
 						document.getElementById('keys_from_super').checked = false;
-						document.getElementById('keys_division').style.visibility = 'visible';
 					}
 								
 			

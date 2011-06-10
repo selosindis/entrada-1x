@@ -1989,6 +1989,7 @@ CREATE TABLE IF NOT EXISTS `event_contacts` (
   `econtact_id` int(12) NOT NULL AUTO_INCREMENT,
   `event_id` int(12) NOT NULL DEFAULT '0',
   `proxy_id` int(12) NOT NULL DEFAULT '0',
+  `contact_role` ENUM('teacher','tutor','ta','auditor') NOT NULL,
   `contact_order` int(6) NOT NULL DEFAULT '0',
   `updated_date` bigint(64) NOT NULL DEFAULT '0',
   `updated_by` int(12) NOT NULL DEFAULT '0',
@@ -3362,7 +3363,7 @@ CREATE TABLE IF NOT EXISTS `settings` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `settings` (`shortname`, `value`) VALUES
-('version_db', '1205'),
+('version_db', '1206'),
 ('version_entrada', '1.2.0');
 
 CREATE TABLE `small_groups` (
@@ -3892,3 +3893,19 @@ INSERT INTO `pg_blocks` (`id`, `block_name`, `start_date`, `end_date`, `year`) V
 (24, '11', '2012-04-10', '2012-05-07', '2011-2012'),
 (25, '12', '2012-05-08', '2012-06-04', '2011-2012'),
 (26, '13', '2012-06-05', '2012-06-30', '2011-2012');
+
+CREATE TABLE IF NOT EXISTS `objective_organisation`(
+`objective_id` INT(12) NOT NULL, 
+`organisation_id` INT(12) NOT NULL, 
+KEY `objective_id` (`objective_id`),
+KEY `organistion_id` (`organisation_id`)
+) ENGINE = MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `topic_organisation`(
+`topic_id` INT(12) NOT NULL, 
+`organisation_id` INT(12) NOT NULL, 
+KEY `topic_id` (`topic_id`),
+KEY `organisation_id` (`organisation_id`)
+) ENGINE = MyISAM DEFAULT CHARSET=utf8;
+
+INSERT INTO `objective_organisation` SELECT a.`objective_id`, b.`organisation_id` FROM `global_lu_objectives` AS a JOIN `entrada_auth.organisations` AS b ON 1=1;

@@ -11301,18 +11301,19 @@ function objectives_delete_for_org($organisation_id=0,$objective_id = 0, $childr
 				WHERE `objective_id` = ".$db->qstr($objective_id);
 	
 	$result = (int)$db->GetOne($query);
+	$success=true;
 	
-	if($reslt == 1){
+	if($result == 1){
 		$success = objectives_delete($objective_id,$children_move_target,$level);
 	}
-	if($success){
-		$query = "	DELETE FROM `objective_organisation` 
-					WHERE `objective_id` = ".$db->qstr($objetive_id)."
-					AND `organisation_id` = ".$db->qstr($organisation_id);
-		$result = $db->Execute($query);
-		
-	}
-		
+
+	$query = "	DELETE FROM `objective_organisation` 
+				WHERE `objective_id` = ".$db->qstr($objective_id)."
+				AND `organisation_id` = ".$db->qstr($organisation_id);
+	$result = $db->Execute($query);
+	if(!isset($result))
+		$success=false;
+	
 	return $success;
 }
 

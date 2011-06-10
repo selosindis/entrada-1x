@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 UPDATE `settings` SET `value` = '1204' WHERE `shortname` = 'version_db';
 
 CREATE TABLE `pg_eval_response_rates` (
@@ -17,7 +17,7 @@ CREATE TABLE `pg_one45_community` (
   `community_name` varchar(50) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
-=======
+
 CREATE TABLE IF NOT EXISTS `objective_organisation`(
 `objective_id` INT(12) NOT NULL, 
 `organisation_id` INT(12) NOT NULL, 
@@ -34,5 +34,5 @@ KEY `organisation_id` (`organisation_id`)
 
 INSERT INTO `objective_organisation` SELECT a.`objective_id`, b.`organisation_id` FROM `global_lu_objectives` AS a JOIN `entrada_auth.organisations` AS b ON 1=1;
 
-ALTER TABLE `event_contacts` ADD `contact_role` VARCHAR(32) AFTER `proxy_id`;
->>>>>>> feat_organisations
+ALTER TABLE `event_contacts` ADD `contact_role` ENUM('teacher','tutor','ta','auditor') NOT NULL AFTER `proxy_id`;
+

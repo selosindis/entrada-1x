@@ -78,11 +78,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				foreach($associated_faculty as $contact_order => $proxy_id) {
 					if ($proxy_id = clean_input($proxy_id, array("trim", "int"))) {
 						$PROCESSED["associated_faculty"][(int) $contact_order] = $proxy_id;
-						$PROCESSED["contact_role"][(int) $contact_order] = $_POST["faculty_role"][(int)$contact_order];					
+						$PROCESSED["contact_role"][(int) $contact_order] = $_POST["faculty_role"][(int)$contact_order];
+						$PROCESSED["display_role"][$proxy_id] = $_POST["faculty_role"][(int) $contact_order];	
 					}
 				}
 			}
 
+			
 			/**
 			 * Non-required field "associated_faculty" / Associated Faculty (array of proxy ids).
 			 * This is actually accomplished after the event is inserted below.
@@ -636,7 +638,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 									foreach ($PROCESSED["associated_faculty"] as $faculty) {
 										if ((array_key_exists($faculty, $FACULTY_LIST)) && is_array($FACULTY_LIST[$faculty])) {
 											?>
-								<li class="community" id="faculty_<?php echo $FACULTY_LIST[$faculty]["proxy_id"]; ?>" style="cursor: move;margin-bottom:10px;width:350px;"><?php echo $FACULTY_LIST[$faculty]["fullname"]; ?><select name ="faculty_role[]" style="float:right;margin-right:30px;margin-top:-5px;"><option value="teacher">Teacher</option><option value="tutor">Tutor</option><option value="ta">Teacher's Assistant</option><option value="auditor">Auditor</option></select><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="faculty_list.removeItem('<?php echo $FACULTY_LIST[$faculty]["proxy_id"]; ?>');" class="list-cancel-image" /></li>
+								<li class="community" id="faculty_<?php echo $FACULTY_LIST[$faculty]["proxy_id"]; ?>" style="cursor: move;margin-bottom:10px;width:350px;"><?php echo $FACULTY_LIST[$faculty]["fullname"]; ?><select name ="faculty_role[]" style="float:right;margin-right:30px;margin-top:-5px;"><option value="teacher" <?php if($PROCESSED["display_role"][$faculty] == "teacher") echo "SELECTED";?>>Teacher</option><option value="tutor" <?php if($PROCESSED["display_role"][$faculty] == "tutor") echo "SELECTED";?>>Tutor</option><option value="ta" <?php if($PROCESSED["display_role"][$faculty] == "ta") echo "SELECTED";?>>Teacher's Assistant</option><option value="auditor" <?php if($PROCESSED["display_role"][$faculty] == "auditor") echo "SELECTED";?>>Auditor</option></select><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="faculty_list.removeItem('<?php echo $FACULTY_LIST[$faculty]["proxy_id"]; ?>');" class="list-cancel-image" /></li>
 											<?php
 										}
 									}
@@ -843,6 +845,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				Event.observe('associated_grad_year','change',checkConflict);
 				Event.observe('associated_organisation_id','change',checkConflict);
 				Event.observe('student_list','change',checkConflict)
+				Event.observe('eventtype_ids','change',checkConflict)
 				//Event.observe('event_start_date','keyup',checkConflict);
 					
 				
@@ -867,7 +870,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						var response = transport.responseText || null;
 						if(response !==null){
 							var g = new k.Growler();
-							g.warn(response,{life:5});
+							g.smoke(response,{life:7});
 						}
 						},
 						onFailure: function(){ alert('Something went wrong...') }

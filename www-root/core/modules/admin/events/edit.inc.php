@@ -38,6 +38,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 } else {
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/AutoCompleteList.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/eventtypes_list.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/growler/src/Growler.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 	if ($EVENT_ID) {
 		$query = "	SELECT a.*, b.`organisation_id`
 					FROM `events` AS a
@@ -106,6 +107,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								if ($proxy_id = clean_input($proxy_id, array("trim", "int"))) {
 									$PROCESSED["associated_faculty"][(int) $contact_order] = $proxy_id;
 									$PROCESSED["contact_role"][(int)$contact_order] = $_POST["faculty_role"][(int) $contact_order];
+									$PROCESSED["display_role"][$proxy_id] = $_POST["faculty_role"][(int) $contact_order];
 								}
 							}
 						}
@@ -534,7 +536,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						if ($results) {
 							foreach($results as $contact_order => $result) {
 								$PROCESSED["associated_faculty"][(int) $contact_order] = $result["proxy_id"];
-								$PROCESSED["contact_role"][(int)$result["proxy_id"]] = $result["contact_role"];
+								$PROCESSED["display_role"][(int)$result["proxy_id"]] = $result["contact_role"];
 							}
 						}
 
@@ -635,7 +637,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							}
 						}
 						?>
-						<form action="<?php echo ENTRADA_URL; ?>/admin/events?<?php echo replace_query(array("step" => 2)); ?>" method="post">
+						<form name="editEventForm" id="editEventForm" action="<?php echo ENTRADA_URL; ?>/admin/events?<?php echo replace_query(array("step" => 2)); ?>" method="post">
 							<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Editing Event">
 								<colgroup>
 									<col style="width: 3%" />
@@ -648,7 +650,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								<tr>
 									<td></td>
 									<td><label for="event_title" class="form-required">Event Title</label></td>
-									<td><input type="text" id="event_title" name="event_title" value="<?php echo html_encode($PROCESSED["event_title"]); ?>" maxlength="255" style="width: 95%" /></td>
+									<td>
+										<input type="text" id="event_title" name="event_title" value="<?php echo html_encode($PROCESSED["event_title"]); ?>" maxlength="255" style="width: 95%" />
+										<input type="hidden" name="event_id" value ="<?php echo $EVENT_ID;?>"/>
+									</td>
 								</tr>
 								<tr>
 									<td colspan="3">&nbsp;</td>
@@ -754,7 +759,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 												foreach ($PROCESSED["associated_faculty"] as $faculty) {
 													if ((array_key_exists($faculty, $FACULTY_LIST)) && is_array($FACULTY_LIST[$faculty])) {
 														?>
-														<li class="community" id="faculty_<?php echo $FACULTY_LIST[$faculty]["proxy_id"]; ?>" style="cursor: move;"><?php echo $FACULTY_LIST[$faculty]["fullname"]; ?><select name ="faculty_role[]"><option value="teacher" <?php if($PROCESSED["contact_role"][$faculty] == "teacher") echo "SELECTED";?>>Teacher</option><option value="tutor" <?php if($PROCESSED["contact_role"][$faculty] == "tutor") echo "SELECTED";?>>Tutor</option><option value="ta" <?php if($PROCESSED["contact_role"][$faculty] == "ta") echo "SELECTED";?>>Teacher's Assistant</option><option value="auditor" <?php if($PROCESSED["contact_role"][$faculty] == "auditor") echo "SELECTED";?>>Auditor</option></select><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="faculty_list.removeItem('<?php echo $FACULTY_LIST[$faculty]["proxy_id"]; ?>');" class="list-cancel-image" /></li>
+														<li class="community" id="faculty_<?php echo $FACULTY_LIST[$faculty]["proxy_id"]; ?>" style="cursor: move;margin-bottom:10px;width:350px;"><?php echo $FACULTY_LIST[$faculty]["fullname"]; ?><select name ="faculty_role[]" style="float:right;margin-right:30px;margin-top:-5px;"><option value="teacher" <?php if($PROCESSED["display_role"][$faculty] == "teacher") echo "SELECTED";?>>Teacher</option><option value="tutor" <?php if($PROCESSED["display_role"][$faculty] == "tutor") echo "SELECTED";?>>Tutor</option><option value="ta" <?php if($PROCESSED["display_role"][$faculty] == "ta") echo "SELECTED";?>>Teacher's Assistant</option><option value="auditor" <?php if($PROCESSED["display_role"][$faculty] == "auditor") echo "SELECTED";?>>Auditor</option></select><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="faculty_list.removeItem('<?php echo $FACULTY_LIST[$faculty]["proxy_id"]; ?>');" class="list-cancel-image" /></li>
 														<?php
 													}
 												}
@@ -933,8 +938,54 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							function selectEventAudienceOption(type) {
 								$$('.event_audience').invoke('hide');
 								$$('.'+type+'_audience').invoke('show');
+								if(type!== 'proxy_id'){
+									checkConflict();
+								}								
 							}
 						</script>
+						
+						<script>
+				var prevDate = $('event_start_date').value;
+				var prevTime = $('event_start_display').innerHTML;
+				var t=self.setInterval("checkDifference()",1500);
+					
+					
+				Event.observe('associated_grad_year','change',checkConflict);
+				Event.observe('associated_organisation_id','change',checkConflict);
+				Event.observe('student_list','change',checkConflict)
+				Event.observe('eventtype_ids','change',checkConflict)
+				//Event.observe('event_start_date','keyup',checkConflict);
+					
+				
+				
+				
+				function checkDifference(){
+					if($('event_start_date').value !== prevDate){
+						prevDate = $('event_start_date').value;
+						checkConflict();
+					}
+					else if($('event_start_display').innerHTML !== prevTime){
+						prevTime = $('event_start_display').innerHTML;
+						checkConflict();						
+					}
+				}
+				function checkConflict(){
+					new Ajax.Request('<?php echo ENTRADA_URL;?>/api/learning-event-conflicts.php',
+					{
+						method:'post',
+						parameters: $("editEventForm").serialize(true),
+						onSuccess: function(transport){
+						var response = transport.responseText || null;
+						if(response !==null){
+							var g = new k.Growler();
+							g.smoke(response,{life:7});
+						}
+						},
+						onFailure: function(){ alert('Something went wrong...') }
+					});
+				}
+			</script>
+						
 						<br /><br />
 						<?php
 					break;

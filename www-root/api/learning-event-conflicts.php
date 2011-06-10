@@ -31,6 +31,7 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 	$finish_time = $start_time + ($length * 60);
 	
 	$audience_type = $_POST["event_audience_type"];
+	$event_id = (int)$_POST["event_id"];
 	
 	$query = "	SELECT * FROM `events`  AS a JOIN `event_audience` AS b ON a.`event_id` = b.`event_id`
 			WHERE (" . $start_time . " BETWEEN `event_start` AND `event_finish` 
@@ -52,6 +53,8 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 		default:
 			break;
 	}
+	
+	$query .= " AND a.`event_id` != ".$event_id;
 	
 	$results = $db->GetAll($query);
 

@@ -94,7 +94,7 @@ function specialNotice(g, m, o, t, b, c){
 	o.header = o.header || t;
 	var n = createNotice(g, m, o);
 	n.setStyle({ backgroundColor: b, color: c});
-	n.style.cssText+=';padding:20px;-moz-border-radius:20px;-webkit-border-radius:20px;border-radius:20px;';
+	n.style.cssText+=';padding:20px;-moz-border-radius:20px;-webkit-border-radius:20px;border-radius:20px;border:2px solid gray;';
 	return n;
 }
 k.Growler = Class.create({
@@ -151,6 +151,9 @@ k.Growler = Class.create({
 	}
 	,growl: function(msg, options) {
 		return createNotice(this.growler, msg, options);
+	}
+	,smoke: function(msg, options){
+		return specialNotice(this.growler, msg, options, "<b>Event Conflicts!</b>", "#575757", "#FFF");
 	}
 	,warn: function(msg, options){
 		return specialNotice(this.growler, msg, options, "Warning!", "#F6BD6F", "#000");

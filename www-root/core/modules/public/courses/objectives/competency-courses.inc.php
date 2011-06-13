@@ -45,7 +45,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 		}
 		</style>
 		<?php
-		$query = "SELECT * FROM `global_lu_objectives` WHERE `objective_id` = ".$db->qstr($COMPETENCY_ID);
+		$query = "SELECT * FROM `global_lu_objectives` WHERE `objective_id` = ".$db->qstr($COMPETENCY_ID)." AND `objective_active` = 1";
 		$competency = $db->GetRow($query);
 		if ($competency) {
 			echo "<h1>Courses containing <strong>".$competency["objective_name"]."</strong> objectives</h1>\n";

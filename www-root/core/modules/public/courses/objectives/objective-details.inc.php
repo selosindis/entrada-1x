@@ -32,16 +32,17 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 		exit;
 } else {
 	if ((isset($OBJECTIVE_ID) && $OBJECTIVE_ID) && (!isset($API) || !$API)) {
-		$BREADCRUMB[] = array("url" => "", "title" => "Courses by Competency");
 		$query = "	SELECT a.*".(isset($COURSE_ID) && $COURSE_ID ? ", b.`objective_details`" : "")." 
 					FROM `global_lu_objectives` AS a
 					".(isset($COURSE_ID) && $COURSE_ID ? "
 					LEFT JOIN `course_objectives` AS b
 					ON a.`objective_id` = b.`objective_id`
 					AND b.`course_id` = ".$db->qstr($COURSE_ID) : "")."
-					WHERE a.`objective_id` = ".$db->qstr($OBJECTIVE_ID);
+					WHERE a.`objective_id` = ".$db->qstr($OBJECTIVE_ID)."
+					AND a.`objective_active` = 1";
 		$objective = $db->GetRow($query);
-		echo "<h1>".$objective["objective_name"]."</h2>\n";
+		$BREADCRUMB[] = array("url" => "", "title" => html_encode($objective["objective_name"])." Details");
+		echo "<h1>".html_encode($objective["objective_name"])."</h2>\n";
 		if (isset($objective["objective_details"]) && $objective["objective_details"]) {
 			echo "<p>".$objective["objective_details"]."</p>\n";
 		} elseif (isset($objective["objective_description"]) && $objective["objective_description"]) {
@@ -58,7 +59,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 					LEFT JOIN `course_objectives` AS b
 					ON a.`objective_id` = b.`objective_id`
 					AND b.`course_id` = ".$db->qstr($COURSE_ID) : "")."
-					WHERE a.`objective_id` = ".$db->qstr($OBJECTIVE_ID);
+					WHERE a.`objective_id` = ".$db->qstr($OBJECTIVE_ID)."
+					AND a.`objective_active` = 1";
 		$objective = $db->GetRow($query);
 		ob_clean();
 		echo "<h2>".$objective["objective_name"]."</h2>\n";

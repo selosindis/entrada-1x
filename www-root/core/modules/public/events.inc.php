@@ -104,6 +104,7 @@ if (!defined("PARENT_INCLUDED")) {
 					$sort_by = "`events`.`event_start` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]);
 				break;
 			}
+
 			if (isset($_GET["community"]) && $community_id = ((int)$_GET["community"])) {
 				if (isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["community_page"][$community_id]["previous_query"]["query"])) {
 					$query	= sprintf($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["community_page"][$community_id]["previous_query"]["query"], $sort_by, $RESULT_ID, 1);
@@ -119,18 +120,18 @@ if (!defined("PARENT_INCLUDED")) {
 					}
 				}
 			} else {
-			if (isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["query"])) {
-				$query	= sprintf($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["query"], $sort_by, $RESULT_ID, 1);
-				$result	= ((USE_CACHE) ? $db->CacheGetRow(CACHE_TIMEOUT, $query) : $db->GetRow($query));
-				if ($result) {
-					$USE_QUERY = true;
+				if (isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["query"])) {
+					$query	= sprintf($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["query"], $sort_by, $RESULT_ID, 1);
+					$result	= ((USE_CACHE) ? $db->CacheGetRow(CACHE_TIMEOUT, $query) : $db->GetRow($query));
+					if ($result) {
+						$USE_QUERY = true;
 
-					$EVENT_ID = (int) $result["event_id"];
-					$RESULT_TOTAL_ROWS = $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["total_rows"];
+						$EVENT_ID = (int) $result["event_id"];
+						$RESULT_TOTAL_ROWS = $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["total_rows"];
 
-					$_SERVER["QUERY_STRING"] = replace_query(array("drid" => false));
+						$_SERVER["QUERY_STRING"] = replace_query(array("drid" => false));
+					}
 				}
-			}
 			}
 
 			if (!$USE_QUERY) {

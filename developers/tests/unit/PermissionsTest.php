@@ -26,7 +26,7 @@
 */
 
 require_once dirname(__FILE__) . "/../test-helper.php";
-require_once "PHPUnit/Framework.php"; 
+require_once "/Users/zuikerd/pear/share/pear/PHPUnit.php";
 
 class PermissionsTest extends PHPUnit_Framework_TestCase {
 	protected $backupGlobalsBlacklist = array("db");
@@ -34,9 +34,9 @@ class PermissionsTest extends PHPUnit_Framework_TestCase {
 	/**
      * @dataProvider adminProvider
      */
-    public function testAdminPermissions(EntradaUser $user, $resource, $action, $expected, Entrada_Acl $acl, $querystring) {
-        $this->assertEquals($expected, $acl->isAllowed($user, $resource, $action, true));
-    }
+//    public function testAdminPermissions(EntradaUser $user, $resource, $action, $expected, Entrada_Acl $acl, $querystring) {
+//        $this->assertEquals($expected, $acl->isAllowed($user, $resource, $action, true));
+//    }
 	/**
      * @dataProvider staffadminProvider
      */
@@ -46,15 +46,15 @@ class PermissionsTest extends PHPUnit_Framework_TestCase {
 	/**
      * @dataProvider pcoordProvider
      */
-    public function testProgramCoordinatorPermissions(EntradaUser $user, $resource, $action, $expected, Entrada_Acl $acl, $querystring) {
-        $this->assertEquals($expected, $acl->isAllowed($user, $resource, $action, true));
-    }
-	/**
-     * @dataProvider directorProvider
-     */
-    public function testDirectorPermissions(EntradaUser $user, $resource, $action, $expected, Entrada_Acl $acl, $querystring) {
-        $this->assertEquals($expected, $acl->isAllowed($user, $resource, $action, true));
-    }
+//    public function testProgramCoordinatorPermissions(EntradaUser $user, $resource, $action, $expected, Entrada_Acl $acl, $querystring) {
+//        $this->assertEquals($expected, $acl->isAllowed($user, $resource, $action, true));
+//    }
+//	/**
+//     * @dataProvider directorProvider
+//     */
+//    public function testDirectorPermissions(EntradaUser $user, $resource, $action, $expected, Entrada_Acl $acl, $querystring) {
+//        $this->assertEquals($expected, $acl->isAllowed($user, $resource, $action, true));
+//    }
 
 	public function adminProvider() {
 		$queries = array(); $to_query = array();
@@ -70,10 +70,10 @@ class PermissionsTest extends PHPUnit_Framework_TestCase {
 	public function staffadminProvider() {
 		$queries = array();
 		
-		$queries[] = array(2, "course", 					"create", false); 	// staff admin can't create courses unconditionally
-		$queries[] = array(2, new CourseResource(1, 1), 	"create", true); 	// staff admin can create courses belonging to their organization
+		$queries[] = array(2, "course", "create", false); 	//* staff admin can't create courses unconditionally
+		$queries[] = array(2, new CourseResource(1, 1), 	"create", true); 	// (course, org) staff admin can create courses belonging to their organization
 		$queries[] = array(2, new CourseResource(1, 2), 	"create", false); 	// staff admin can't create courses not belonging to their organization
-		$queries[] = array(2, "event", 						"create", false);	// staff admin can't create events unconditionally
+		$queries[] = array(2, "event", "create", false);	//* (event, course, org) staff admin can't create events unconditionally
 		$queries[] = array(2, new EventResource(1, 1, 1), 	"create", true);  	// staff admin can create events belongning to courses belonging to their organization
 		$queries[] = array(2, new EventResource(1, 1, 2), 	"create", false);  	// staff admin can't create events not belongning to courses belonging to their organization
 		
@@ -89,13 +89,12 @@ class PermissionsTest extends PHPUnit_Framework_TestCase {
 		$queries[] = array(4, new CourseContentResource(1, 1), 	"update", true); 	// program coordinators can update course content for courses they coordinate
 		$queries[] = array(4, new CourseResource(1, 1), 		"update", false); 	// program coordinators can't update courses even if they coordinate them
 		$queries[] = array(4, new CourseResource(2, 1), 		"update", false); 	// program coordinators can't update courses they don't coordinate
-
 		$queries[] = array(4, "event", 					"update", false); 	// program coordinators can't unconditionally create events
 		$queries[] = array(4, new EventResource(1,1,1), "create", true); 	// program coordinators can create events belonging to courses they coordinate
-		$queries[] = array(4, new EventResource(1,1,1), "update", true); 	// program coordinators can create events belonging to courses they coordinate
-		$queries[] = array(4, new EventResource(1,1,1), "delete", true); 	// program coordinators can create events belonging to courses they coordinate
+		$queries[] = array(4, new EventResource(1,1,1), "update", true); 	//*(event, course, org) program coordinators can update events belonging to courses they coordinate
+		$queries[] = array(4, new EventResource(1,1,1), "delete", true); 	//* program coordinators can delete events belonging to courses they coordinate
 		$queries[] = array(4, new EventResource(3,2,1), "update", false); 	// program coordinators can't create events belonging to courses they don't coordinate
-		$queries[] = array(4, new EventContentResource(1,1,1), "update", true); 	// program coordinators can create events belonging to courses they coordinate
+		$queries[] = array(4, new EventContentResource(1,1,1), "update", true); 	//*(event, course, org) program coordinators can create events belonging to courses they coordinate
 		$queries[] = array(4, new EventContentResource(3,2,1), "update", false); 	// program coordinators can't create events belonging to courses they don't coordinate
 			
 		return $this->massage_queries($queries);
@@ -138,7 +137,7 @@ class PermissionsTest extends PHPUnit_Framework_TestCase {
 		foreach($queries as &$query) {
 			$query[0] = get_entrada_user($query[0]);
 			$query[4] = $this->get_user_acl($query[0]);
-			$query[5] = $query[0]->details["username"] . " trying to ".$query[2]." on ".(is_string($query[1]) ? $query[1] : get_class($query[1])).", supposed to be $query[3]";
+			$query[5] = $query[0]->details["username"] . " trying to ".$query[2]." on ".(is_string($query[1]) ? $query[1] : get_class($query[1])).", supposed to be " . $query[3];
 		}
 		return $queries;
 	}

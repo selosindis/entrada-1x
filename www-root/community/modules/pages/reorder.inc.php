@@ -86,7 +86,7 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 		$page_records	= $db->GetAll($page_ids_query);
 
 		foreach($page_records as $record) {
-			$url = end(explode(DIRECTORY_SEPARATOR, $record['page_url']));
+			$url = end(explode("/", $record['page_url']));
 			$page_ids[$record['cpage_id']] = array('found' => false, 'old_url_suffix'=>$url, 'old_id'=>$record['cpage_id']); //set this array up so that if a page_id is in this community, $page_ids[id] = true
 		}
 
@@ -105,7 +105,7 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 				//submitted data has been cleaned and all pages are accounted for, commit re-ordering
 				$page_order = 1;
 				foreach($order as $data) {
-					$new_url = implode(DIRECTORY_SEPARATOR, $data['url']);
+					$new_url = implode("/", $data['url']);
 					$query = "UPDATE `community_pages` SET `parent_id`=".$db->qstr((int) $data['parent']).", `page_order`=".$db->qstr($page_order).", `page_url`=".$db->qstr($new_url).
 							" WHERE `cpage_id`=".$db->qstr((int) $data['id']);
 					$db->Execute($query);

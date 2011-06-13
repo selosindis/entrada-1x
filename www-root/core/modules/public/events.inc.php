@@ -105,16 +105,32 @@ if (!defined("PARENT_INCLUDED")) {
 				break;
 			}
 
-			if (isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["query"])) {
-				$query	= sprintf($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["query"], $sort_by, $RESULT_ID, 1);
-				$result	= ((USE_CACHE) ? $db->CacheGetRow(CACHE_TIMEOUT, $query) : $db->GetRow($query));
-				if ($result) {
-					$USE_QUERY = true;
+			if (isset($_GET["community"]) && $community_id = ((int)$_GET["community"])) {
+				if (isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["community_page"][$community_id]["previous_query"]["query"])) {
+					$query	= sprintf($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["community_page"][$community_id]["previous_query"]["query"], $sort_by, $RESULT_ID, 1);
 
-					$EVENT_ID = (int) $result["event_id"];
-					$RESULT_TOTAL_ROWS = $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["total_rows"];
+					$result	= ((USE_CACHE) ? $db->CacheGetRow(CACHE_TIMEOUT, $query) : $db->GetRow($query));
+					if ($result) {
+						$USE_QUERY = true;
+	
+						$EVENT_ID = (int) $result["event_id"];
+						$RESULT_TOTAL_ROWS = $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["community_page"][$community_id]["previous_query"]["total_rows"];
+	
+						$_SERVER["QUERY_STRING"] = replace_query(array("drid" => false));
+					}
+				}
+			} else {
+				if (isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["query"])) {
+					$query	= sprintf($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["query"], $sort_by, $RESULT_ID, 1);
+					$result	= ((USE_CACHE) ? $db->CacheGetRow(CACHE_TIMEOUT, $query) : $db->GetRow($query));
+					if ($result) {
+						$USE_QUERY = true;
 
-					$_SERVER["QUERY_STRING"] = replace_query(array("drid" => false));
+						$EVENT_ID = (int) $result["event_id"];
+						$RESULT_TOTAL_ROWS = $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["total_rows"];
+
+						$_SERVER["QUERY_STRING"] = replace_query(array("drid" => false));
+					}
 				}
 			}
 
@@ -214,6 +230,32 @@ if (!defined("PARENT_INCLUDED")) {
 	 * If we were going into the $EVENT_ID
 	 */
 	if ($EVENT_ID) {
+		$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/windows/window.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+		$HEAD[] = "<link href=\"".ENTRADA_URL."/css/windows/default.css\" rel=\"stylesheet\" type=\"text/css\" />";
+		$HEAD[] = "<link href=\"".ENTRADA_URL."/css/windows/medtech.css\" rel=\"stylesheet\" type=\"text/css\" />";
+		?>
+		<script type="text/javascript">
+			function beginQuiz(id) {
+				Dialog.confirm('Do you really wish to begin your attempt of this quiz? The timer will begin immediately if this quiz has a time-limit, and you will only have until that timer expires to answer the questions before the quiz is closed to you.',
+					{
+						id:				'requestDialog',
+						width:			350,
+						height:			125,
+						title:			'Quiz Start Confirmation',
+						className:		'medtech',
+						okLabel:		'Yes',
+						cancelLabel:	'No',
+						closable:		'true',
+						buttonClass:	'button small',
+						ok:				function(win) {
+											window.location = '<?php echo ENTRADA_URL; ?>/quizzes?section=attempt&id='+id;
+											return true;
+										}
+					}
+				);
+			}
+		</script>
+		<?php
 		$query = "	SELECT a.*, b.`organisation_id`
 					FROM `events` AS a
 					LEFT JOIN `courses` AS b
@@ -635,7 +677,7 @@ if (!defined("PARENT_INCLUDED")) {
 					$show_clinical_presentations = (($clinical_presentations) ? true : false);
 
 					$show_curriculum_objectives = false;
-					$curriculum_objectives = courses_fetch_objectives(array($event_info["course_id"]), 1, false, false, $EVENT_ID);
+					$curriculum_objectives = courses_fetch_objectives(array($event_info["course_id"]), 1, false, false, $EVENT_ID, true);
 					
 					$temp_objectives = $curriculum_objectives["objectives"];
 					foreach ($temp_objectives as $objective_id => $objective) {
@@ -647,25 +689,27 @@ if (!defined("PARENT_INCLUDED")) {
 					foreach ($curriculum_objectives["objectives"] as $objective_id => $objective) {
 						if ($objective["event_objective"]) {
 							foreach ($objective["parent_ids"] as $parent_id) {
-								$curriculum_objectives["objectives"][$parent_id]["objective_".($objective["primary"] ? "primary" : ($objective["secondary"] ? "secondary" : "tertiary"))."_children"]++;
-								if ($curriculum_objectives["objectives"][$parent_id]["primary"]) {
-									$curriculum_objectives["objectives"][$objective_id]["primary"] = true;
-								} elseif ($curriculum_objectives["objectives"][$parent_id]["secondary"]) {
-									$curriculum_objectives["objectives"][$objective_id]["secondary"] = true;
-								} elseif ($curriculum_objectives["objectives"][$parent_id]["tertiary"]) {
-									$curriculum_objectives["objectives"][$objective_id]["tertiary"] = true;
-								} 
+								if ($objective["primary"] || $objective["secondary"] || $objective["tertiary"] || $curriculum_objectives["objectives"][$parent_id]["primary"] || $curriculum_objectives["objectives"][$parent_id]["secondary"] || $curriculum_objectives["objectives"][$parent_id]["tertiary"]) {
+									$curriculum_objectives["objectives"][$parent_id]["objective_".($objective["primary"] || ($curriculum_objectives["objectives"][$parent_id]["primary"] && !$objective["secondary"] && !$objective["tertiary"]) ? "primary" : ($objective["secondary"] || ($curriculum_objectives["objectives"][$parent_id]["secondary"] && !$objective["primary"] && !$objective["tertiary"]) ? "secondary" : "tertiary"))."_children"]++;
+									if ($curriculum_objectives["objectives"][$parent_id]["primary"]) {
+										$curriculum_objectives["objectives"][$objective_id]["primary"] = true;
+									} elseif ($curriculum_objectives["objectives"][$parent_id]["secondary"]) {
+										$curriculum_objectives["objectives"][$objective_id]["secondary"] = true;
+									} elseif ($curriculum_objectives["objectives"][$parent_id]["tertiary"]) {
+										$curriculum_objectives["objectives"][$objective_id]["tertiary"] = true;
+									} 
+								}
 							}
 							$show_curriculum_objectives = true;
 						}
 					}
 					foreach ($temp_objectives as $objective_id => $objective) {
 						if (!$objective["event_objective"]) {
-							if ($objective["primary"]) {
+							if ($objective["primary"] && !$curriculum_objectives["objectives"][$objective_id]["objective_primary_children"]) {
 								$curriculum_objectives["objectives"][$objective_id]["primary"] = false;
-							} elseif ($objective["secondary"]) {
+							} elseif ($objective["secondary"] && !$curriculum_objectives["objectives"][$objective_id]["objective_secondary_children"]) {
 								$curriculum_objectives["objectives"][$objective_id]["secondary"] = false;
-							} elseif ($objective["tertiary"]) {
+							} elseif ($objective["tertiary"] && !$curriculum_objectives["objectives"][$objective_id]["objective_tertiary_children"]) {
 								$curriculum_objectives["objectives"][$objective_id]["tertiary"] = false;
 							}
 						}
@@ -687,27 +731,9 @@ if (!defined("PARENT_INCLUDED")) {
 						if ($show_clinical_presentations) {
 							echo "	<div class=\"section-holder\">\n";
 							echo "		<h3>Clinical Presentations</h3>\n";
-							echo "<ul class=\"objectives\">\n";
-							$HEAD[] = "
-								<script type=\"text/javascript\" defer=\"defer\">
-								Event.observe(window, 'load', function() {";
-							foreach ($clinical_presentations as $result) {
-								$HEAD[] = "
-									new Control.Modal($('objective-".$result["objective_id"]."-details'), {
-										overlayOpacity:	0.75,
-										closeOnClick:	'overlay',
-										className:		'modal-description',
-										fade:			true,
-										fadeDuration:	0.30
-									});";
-								if ($result["objective_name"]) {
-									echo "<li><a id=\"objective-".$result["objective_id"]."-details\" style=\"text-decoration: none;\" href=\"".ENTRADA_URL."/objectives?section=objective-details&api=true&oid=".$result["objective_id"]."&cid=".$event_info["course_id"]."\">".$result["objective_name"]."</a></li>\n";
+							foreach ($clinical_presentations as $key => $result) {
+								echo (($key) ? ", " : "").$result["objective_name"];
 								}
-							}
-							$HEAD[] = "
-								});
-								</script>";
-							echo "</ul>\n";
 							echo "	</div>\n";
 						}
 						
@@ -900,7 +926,7 @@ if (!defined("PARENT_INCLUDED")) {
 							echo "		<td class=\"modified\" style=\"vertical-align: top\">".(((int) $quiz_record["last_visited"]) ? (((int) $quiz_record["last_visited"] >= (int) $quiz_record["updated_date"]) ? "<img src=\"".ENTRADA_URL."/images/checkmark.gif\" width=\"20\" height=\"20\" alt=\"You have previously completed this quiz.\" title=\"You have previously completed this quiz.\" style=\"vertical-align: middle\" />" : "<img src=\"".ENTRADA_URL."/images/exclamation.gif\" width=\"20\" height=\"20\" alt=\"This attached quiz has been updated since you last completed it.\" title=\"This attached quiz has been updated since you last completed it.\" style=\"vertical-align: middle\" />") : "")."</td>\n";
 							echo "		<td class=\"title\" style=\"vertical-align: top; white-space: normal; overflow: visible\">\n";
 							if ($allow_attempt) {
-								echo "		<a href=\"".ENTRADA_URL."/quizzes?section=attempt&amp;id=".$quiz_record["aquiz_id"]."\" title=\"Take ".html_encode($quiz_record["quiz_title"])."\" style=\"font-weight: bold\">".html_encode($quiz_record["quiz_title"])."</a>";
+								echo "		<a href=\"javascript: beginQuiz(".$quiz_record["aquiz_id"].")\" title=\"Take ".html_encode($quiz_record["quiz_title"])."\" style=\"font-weight: bold\">".html_encode($quiz_record["quiz_title"])."</a>";
 							} else {
 								echo "		<span style=\"color: #666666; font-weight: bold\">".html_encode($quiz_record["quiz_title"])."</span>";
 							}

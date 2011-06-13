@@ -32,7 +32,7 @@ require_once("InternalAward.class.php");
  *  
  * @author jonathan fingland
  */
-class InternalAwards {
+class InternalAwards extends Collection {
 	
 	/**
 	 * array of Awards objects
@@ -88,13 +88,13 @@ class InternalAwards {
 		global $db;
 		if (! self::$initialized || $refresh) {
 			self::$awards = array();
-			$query		= "SELECT * FROM `student_awards_internal_types` order by title asc";
+			$query		= "SELECT *, `id` as award_id FROM `student_awards_internal_types` order by title asc";
 			$results	= $db->GetAll($query);
 			foreach ($results as $result) {
 				array_push(self::$awards, InternalAward::fromArray($result));
 			}
 			self::$initialized = true;
 		}
-		return self::$awards;
+		return new self(self::$awards);
 	}
 }

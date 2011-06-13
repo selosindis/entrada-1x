@@ -59,8 +59,8 @@ class Events extends Collection {
 	static public function getByContact(User $user) {
 		global $db;
 		$user_id = $user->getID();
-		$query = "SELECT * from `events` a join `event_contacts` b on a.`event_id`=b.`event_id` where `proxy_id`=".$db->qstr($user_id);
-		$results = $db->getAll($query);
+		$query = "SELECT distinct a.* from `events` a join `event_contacts` b on a.`event_id`=b.`event_id` where `proxy_id`=?";
+		$results = $db->getAll($query, array($user_id));
 		$events = array();
 		if ($results) {
 			foreach ($results as $result) {

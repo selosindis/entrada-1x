@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * Class providing a model of an Organisation and its related data
+ * @author Jonathan Fingland
+ *
+ */
 class Organisation {
 	private	$organisation_id,
 			$organisation_title,

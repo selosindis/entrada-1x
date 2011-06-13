@@ -36,12 +36,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_AWARDS"))) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
-	
-	
-	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/awards", "title" => "Awards Listing");
-	
 	require_once("Models/awards/InternalAwards.class.php");
 	require_once("Models/awards/InternalAwardReceipts.class.php");
+	
 	process_manage_award_details();
 	$awards = InternalAwards::get(true);
 					
@@ -49,9 +46,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_AWARDS"))) {
 	$PAGE_META["description"]	= "";
 	$PAGE_META["keywords"]		= "";
 
-	$HEAD[] = "<script language='javascript' src='".ENTRADA_URL."/javascript/ActiveDataEntryProcessor.js'></script>";
+	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/ActiveDataEntryProcessor.js\"></script>";
 	?>
-	
 	<div id="award_messages">
 	<?php 
 	display_status_messages();
@@ -60,9 +56,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_AWARDS"))) {
 	<h1>Awards Listing</h1>
 
 	<?php
-	$show_new_award_form =  ($_GET['show'] != "new_award");
+	$show_new_award_form = (isset($_GET["show"]) && ($_GET["show"] == "new_award") ? true : false);
 	?>
-	<form id="new_award_form" action="<?php echo ENTRADA_URL; ?>/admin/awards" method="post"<?php echo (($show_new_award_form) ? " style=\"display:none;\"" : ""); ?>>
+	<form id="new_award_form" action="<?php echo ENTRADA_URL; ?>/admin/awards" method="post"<?php echo ((!$show_new_award_form) ? " style=\"display: none;\"" : ""); ?>>
 		<input type="hidden" name="action" value="new_award" />
 		<table class="award_details">
 			<colgroup>
@@ -106,31 +102,30 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_AWARDS"))) {
 				</tr>
 			</tbody>
 		</table>
-	<div class="clear">&nbsp;</div>
-</form>
-<div id="add_new_award_link" style="float: right;<?php if (!$show_new_award_form) { echo "display:none;"; }   ?>">
-<ul class="page-action">
-	<li><a id="add_new_award"
-		href="<?php echo ENTRADA_URL; ?>/admin/awards?show=add_new_award"
-		class="strong-green">Add Internal Award</a></li>
-</ul>
-</div>
-<div class="clear">&nbsp;</div>
-
-<div id="awards_listing">
-<?php
-	echo awards_list($awards);
-}?></div><script language="javascript">
-
-	var new_award = new ActiveDataEntryProcessor({
-		url : '<?php echo webservice_url("awards"); ?>',
-		data_destination: $('awards_listing'),
-		new_form: $('new_award_form'),
-		remove_forms_selector: '.remove_award_form',
-		new_button: $('add_new_award_link'),
-		hide_button: $('hide_new_award'),
-		messages: $('award_messages')
-		
-	});
-
+	</form>
+	<div class="clear"></div>
+	
+	<div id="add_new_award_link" style="float: right;<?php if ($show_new_award_form) { echo " display: none;"; } ?>">
+		<ul class="page-action">
+			<li><a id="add_new_award" href="<?php echo ENTRADA_URL; ?>/admin/awards?show=add_new_award" class="strong-green">Add Award</a></li>
+		</ul>
+	</div>
+	<div class="clear"></div>
+	
+	<div id="awards_listing">
+	<?php echo awards_list($awards); ?>
+	</div>
+	<script language="javascript">
+		var new_award = new ActiveDataEntryProcessor({
+			url : '<?php echo webservice_url("awards"); ?>',
+			data_destination: $('awards_listing'),
+			new_form: $('new_award_form'),
+			remove_forms_selector: '.remove_award_form',
+			new_button: $('add_new_award_link'),
+			hide_button: $('hide_new_award'),
+			messages: $('award_messages')
+		});
 	</script>
+	<?php
+}
+?>

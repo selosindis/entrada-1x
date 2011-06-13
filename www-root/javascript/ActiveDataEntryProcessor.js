@@ -73,11 +73,11 @@
 		}
 
 		function add_entry_remove_listeners() {
-			$$(remove_forms_selector).each(function (element) { element.observe('submit',entry_remove_ajax) });
+			$$(remove_forms_selector).each(function (element) { element.observe('submit',entry_remove_ajax); });
 		}
 		
 		function remove_entry_remove_listeners() {
-			$$(remove_forms_selector).each(function (element) { element.stopObserving('submit',entry_remove_ajax) });
+			$$(remove_forms_selector).each(function (element) { element.stopObserving('submit',entry_remove_ajax); });
 		}
 		
 		new_button.observe('click', new_entry_process_ajax);

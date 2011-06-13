@@ -181,7 +181,7 @@ class TaskVerifiers extends Collection {
 	 * @param int $task_id
 	 * @return boolean
 	 */	
-	public static function isVerifier($task_id) {
+	public static function isVerifier($proxy_id, $task_id) {
 		global $db;
 
 		$query = "SELECT `verifier_id` from `task_verifiers` where `verifier_id`=? and `task_id`=?";

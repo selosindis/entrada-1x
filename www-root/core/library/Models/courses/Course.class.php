@@ -340,7 +340,7 @@ class Course {
 	 * @return Organisation
 	 */
 	public function getOrganization() {
-		//TODO return the organization object once the class is created
+		return Organisation::get($this->organization);
 	}
 	
 	/**

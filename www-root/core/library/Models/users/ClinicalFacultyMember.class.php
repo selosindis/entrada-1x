@@ -51,7 +51,8 @@ class ClinicalFacultyMember extends User{
 	 * @return ClinicalFacultyMember
 	 */
 	public static function fromArray(array $arr) {
-		$user = parent::fromArray($arr);
+		$user = new self(); //to ensure the object is of the correct type
+		$user = parent::fromArray($arr, $user);
 		return $user;
 	}
 		

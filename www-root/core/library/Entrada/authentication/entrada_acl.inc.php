@@ -987,7 +987,7 @@ class ResourceOrganisationAssertion implements Zend_Acl_Assert_Interface {
 					//Return this role's ability to preform this privilege on this organisation.
 					return $acl->isAllowed($role, "resourceorganisation".$organisation_id, $privilege);
 				} elseif (!isset($organisation_id) || !$organisation_id) {
-					return true;
+					return false;
 				}
 			}
 		}

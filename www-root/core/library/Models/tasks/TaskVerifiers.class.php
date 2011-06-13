@@ -10,12 +10,22 @@
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
 */
 
+/**
+ * Instances are a Collection of TaskVerifier objects associated with a single associated task  
+ * 
+ * @author Jonathan Fingland
+ *
+ */
 class TaskVerifiers extends Collection {
 	
+	/**
+	 * Interal ID for Task
+	 * @var int
+	 */
 	private $task_id;
 	
 	/**
-	 * 
+	 * Returns a TaskVerifiers Collection of TaskVerifier objects
 	 * @param $task_id
 	 * @return TaskVerifiers
 	 */
@@ -43,6 +53,11 @@ class TaskVerifiers extends Collection {
 	}
 	
 	
+	/**
+	 * Adds the supplied user(s) to the list of verifiers for the specified task   
+	 * @param int $task_id
+	 * @param array|int|User $verifiers
+	 */
 	public static function add($task_id, $verifiers) {
 		global $db;
 		$query = "insert ignore into `task_verifiers` (`task_id`,`verifier_id`) values ";
@@ -70,6 +85,11 @@ class TaskVerifiers extends Collection {
 		}
 	} 
 	
+	/**
+	 * Removes the supplied user(s) from the list of verifiers for the specified task
+	 * @param int $task_id
+	 * @param array|int|User $verifiers
+	 */
 	public static function remove($task_id, $verifiers=null) {
 		global $db;
 		$q_task_id = $db->qstr($task_id);
@@ -101,6 +121,12 @@ class TaskVerifiers extends Collection {
 		}		
 	}
 	
+	/**
+	 * Returns Tasks collection of Task objects for which the supplied id is the proxy id of the verifier
+	 * @param unknown_type $verifier_id
+	 * @param unknown_type $options
+	 * @return Tasks
+	 */
 	public static function getTasksByVerifier($verifier_id, $options=array()) {
 		global $db;
 		
@@ -142,6 +168,19 @@ class TaskVerifiers extends Collection {
 		return new Tasks($tasks);
 	}
 	
+	/**
+	 * Returns true if the supplied proxy id is a designated verifier for the specified task
+	 * <code>
+	 * $proxy_id = 1234;
+	 * $task_id = 4321;
+	 * if (TaskVerifiers::isVerifier($proxy_id, $task_id)) {
+	 *   //do stuff based on condition
+	 * }
+	 * </code> 
+	 * @param int $proxy_id 
+	 * @param int $task_id
+	 * @return boolean
+	 */	
 	public static function isVerifier($task_id) {
 		global $db;
 

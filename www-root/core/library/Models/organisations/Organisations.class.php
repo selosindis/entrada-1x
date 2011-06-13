@@ -23,7 +23,7 @@
 */
 
 /**
- * Utility Class for getting a list of Users
+ * Utility Class for getting a list of Organisations
  * 
  * @author Organisation: Queen's University
  * @author Unit: School of Medicine
@@ -35,8 +35,7 @@ class Organisations extends Collection {
 	/**
 	 * Returns a Collection of Organisation objects 
 	 * TODO add criteria to selection process 
-	 * @param array
-	 * @return Users
+	 * @return Organisations
 	 */
 	static public function get() {
 		global $db;

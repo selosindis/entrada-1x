@@ -28,10 +28,9 @@ require_once("Award.class.php");
 require_once("InternalAward.class.php");
 
 /**
- * 
- * @author jonathan fingland
  * Model for retrieving and modifying awards list
  *  
+ * @author jonathan fingland
  */
 class InternalAwards {
 	
@@ -59,7 +58,7 @@ class InternalAwards {
 	}
 	
 	/**
-	 * 
+	 * Sorts the collection by award title 
 	 * @param int $direction
 	 */
 	public function sort($direction) {
@@ -80,6 +79,11 @@ class InternalAwards {
 		}
 	}
 	
+	/**
+	 * 
+	 * @param bool $refresh
+	 * @return array:
+	 */
 	static function get($refresh = false) {
 		global $db;
 		if (! self::$initialized || $refresh) {

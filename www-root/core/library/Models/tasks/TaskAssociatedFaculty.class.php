@@ -1,10 +1,20 @@
 <?php
-
+/**
+ * Collection class for managing faculty associated with a given task 
+ * 
+ * @author Jonathan Fingland
+ *
+ */
 class TaskAssociatedFaculty extends Collection {
 	
+	/**
+	 * Internal ID of the associated task
+	 * @var int
+	 */
 	private $task_id;
 	
-	/*
+	/**
+	 * Returns a Collection of Users deisgnated as associated faculty for the provided task ID
 	 * @return TaskAssociatedFaculty
 	 */
 	public static function get($task_id) {
@@ -31,6 +41,11 @@ class TaskAssociatedFaculty extends Collection {
 	}
 	
 	
+	/**
+	 * Adds the provided faculty member(s) to the list of faculty associated with the provided task ID 
+	 * @param int $task_id
+	 * @param array|int|User $faculty_members
+	 */
 	public static function add($task_id, $faculty_members) {
 		global $db;
 		$query = "insert ignore into `task_associated_faculty` (`task_id`,`faculty_id`) values ";
@@ -58,6 +73,11 @@ class TaskAssociatedFaculty extends Collection {
 		}
 	} 
 	
+	/**
+	 * Removes the provided faculty member(s) from the list of faculty associated with the provided task ID   
+	 * @param unknown_type $task_id
+	 * @param array|int|User $faculty_members
+	 */
 	public static function remove($task_id, $faculty_members=null) {
 		global $db;
 		$q_task_id = $db->qstr($task_id);

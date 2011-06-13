@@ -215,6 +215,7 @@ function profile_update_personal_info() {
 
 		$PROCESSED["prov_state"] = ($PROCESSED["province_id"] ? $PROCESSED["province_id"] : ($PROCESSED["province"] ? $PROCESSED["province"] : ""));
 	}
+	
 	if ((!$ERROR) && (isset($_FILES["photo_file"])) && ($_FILES["photo_file"]["error"] != 4)) {
 		switch($_FILES["photo_file"]["error"]) {
 			case 0 :
@@ -224,7 +225,7 @@ function profile_update_personal_info() {
 						$PROCESSED_PHOTO["photo_mimetype"]	= $photo_mimetype;
 						$PROCESSED_PHOTO["photo_filesize"]	= $photo_filesize;
 
-						$photo_file_extension				= strtoupper($VALID_MIME_TYPES[strtolower(trim($_FILES["photo_file"]["type"]))]);
+						$photo_file_extension = strtoupper($VALID_MIME_TYPES[strtolower(trim($_FILES["photo_file"]["type"]))]);
 
 						if ((!defined("STORAGE_USER_PHOTOS")) || (!@is_dir(STORAGE_USER_PHOTOS)) || (!@is_writable(STORAGE_USER_PHOTOS))) {
 							$ERROR++;

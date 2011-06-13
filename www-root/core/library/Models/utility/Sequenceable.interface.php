@@ -12,5 +12,11 @@
 
  
 interface Sequenceable {
+	
+	/**
+	 * Orders the implementing classes contents according to the provided sequence. 
+	 * @param unknown_type $user_id
+	 * @param array $ids
+	 */
 	public function setSequence($user_id, array $ids);
 }

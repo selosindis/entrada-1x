@@ -84,7 +84,7 @@ if (!defined("IN_PROFILE")) {
 					if ((document.getElementById('assistant_id') != null) && (document.getElementById('assistant_id').value != '')) {
 						document.getElementById('assisant_add_form').submit();
 					} else {
-							alert('You can only add people as assistants to your profile if they exist in this system.\n\nIf you are typing in their name properly (Lastname, Firstname) and their name does not show up in the list, then chances are that they do not exist in our system.\n\nPlease contact Denise Jones in the Undergrad office (613-533-6000 x77804) to get an account for the requested individual.\n\nImportant: When you see the correct name pop-up in the list as you type, make sure you select the name with your mouse, do not press the Enter button.');
+						alert('You can only add people as assistants to your profile if they already exist in the system.\n\nIf you are typing in their name properly (Lastname, Firstname) and their name does not show up in the list then chances are that they do not exist in our system.\n\nPlease Note: When you see the correct name pop-up in the list as you type, make sure you select the name with your mouse, do not press the Enter button.');
 
 						return false;
 					}

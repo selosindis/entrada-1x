@@ -12,16 +12,15 @@
 
 require_once("Template.class.php");
 
+	/**
+ * Class for simplifying the emailing of templates 
+ * @author Jonathan Fingland
+	 * 
+	 */
 class TemplateMailer {
 	
 	/**
-	 * 
-	 * @var Template
-	 */
-	private $_template;
-	
-	/**
-	 * 
+	 * Mail handler, currently only Zend_Mail is supported
 	 * @var Zend_Mail
 	 */
 	private $_mail_handler;
@@ -43,6 +42,16 @@ class TemplateMailer {
         throw new BadMethodCallException($method . " is not a valid method identifier");
     }
 	
+ 	/**
+ 	 * 
+ 	 * @param Template $template
+ 	 * @param array $to Array containing elements "email", "firstname", and "lastname"
+ 	 * @param array $from Array containing elements "email", "firstname", and "lastname"
+ 	 * @param string $language
+ 	 * @param array $bind_array Array of template variables to be bound to the template
+ 	 * @throws RuntimeException
+ 	 * @return boolean
+ 	 */
  	public function send(Template $template, array $to, array $from, $language, array $bind_array = array()) {
  		
  		$result = $template->getResult($bind_array, array("lang" => $language ));

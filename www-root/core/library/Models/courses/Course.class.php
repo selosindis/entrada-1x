@@ -167,15 +167,24 @@ class Course {
 	
 	/**
 	 * Alias of getCourseName()
+	 * @return string
 	 */
 	public function getTitle() {
 		return $this->getCourseName();
 	}
 	
+	/**
+	 * Return course code
+	 * @return string
+	 */
 	public function getCourseCode() {
 		return $this->course_code;
 	}
 	
+	/**
+	 * Returns the course description
+	 * @return string
+	 */
 	public function getDescription() {
 		return $this->course_description;
 	}
@@ -188,80 +197,157 @@ class Course {
 		//TODO add objective request after Objectives class
 	}
 	
+	/**
+	 * Returns value of unit_collaborator field
+	 * @return string
+	 */
 	public function getUnitCollaborator() {
 		return $this->unit_collaborator;
 	}
 	
+	/**
+	 * Returns value of unit_communicator field
+	 * @return string
+	 */
 	public function getUnitCommunicator() {
 		return $this->unit_communicator;
 	}
 	
+	/**
+	 * Returns value of unit_health_advocate field
+	 * @return string
+	 */
 	public function getUnitHealthAdvocate() {
 		return $this->unit_health_advocate;
 	}
 	
+	/**
+	 * Returns value of unit_manager field
+	 * @return string
+	 */
 	public function getUnitManager() {
 		return $this->unit_manager;
 	}
 	
+	/**
+	 * Returns value of unit_professional field
+	 * @return string
+	 */
 	public function getUnitProfessional() {
 		return $this->unit_professional;
 	}
 	
+	/**
+	 * Returns value of unit_scholar field
+	 * @return string
+	 */
 	public function getUnitScholar() {
 		return $this->unit_scholar;
 	}
 	
+	/**
+	 * Returns value of unit_medical_expert field
+	 * @return string
+	 */
 	public function getUnitMedicalExpert() {
 		return $this->unit_medical_expert;
 	}
 
+	/**
+	 * Returns value of unit_summative_assessment field
+	 * @return string
+	 */
 	public function getUnitSummativeAssessment() {
 		return $this->unit_summative_assessment;
 	}
 	
+	/**
+	 * Returns value of unit_formative_assessment field
+	 * @return string
+	 */
 	public function getUnitFormativeAsessment() {
 		return $this->unit_formative_assessment;
 	}
 	
+	/**
+	 * Returns value of unit_grading field
+	 * @return string
+	 */
 	public function getUnitGrading() {
 		return $this->unit_grading;
 	}
 	
+	/**
+	 * Returns required resource information for this course
+	 * @return string
+	 */
 	public function getResourcesRequired() {
 		return $this->resources_required;
 	}
 	
+	/**
+	 * Returns the optional resource information for this course
+	 * @return string
+	 */
 	public function getResourcesOptional() {
 		return $this->resources_optional;
 	}
 	
+	/**
+	 * Returns course web page url
+	 * @return string
+	 */
 	public function getURL() {
 		return $this->courrse_url;
 	}
 	
+	/**
+	 * Returns the message set for this course
+	 * @return string
+	 */
 	public function getCourseMessage() {
 		return $this->course_message;
 	}
 	
+	/**
+	 * Returns true if the course is active; false, otherwise
+	 * @return bool
+	 */
 	public function isActive() {
 		return $this->active === 1;
 	}
 	
+	/**
+	 * Returns true if there are notifications for this course; false, otherwise
+	 * @return boolean
+	 */
 	public function hasNotifications() {
 		return $this->notifications === 1;
 	}
 	
+	/**
+	 * Returns true if the provided user qualifies as an owner of the course. Owners are users specified as course director or program coordinator 
+	 * @param User $user
+	 * @return boolean
+	 */
 	public function isOwner(User $user) {
 		$user_id = $user->getID();
 		return (($user_id == $this->director_id) || ($user_id == $this->pcoord_id));
 	}
 	
-	
+	/**
+	 * Returns the Organisation under which this course belongs 
+	 * @return Organisation
+	 */
 	public function getOrganization() {
 		//TODO return the organization object once the class is created
 	}
 	
+	/**
+	 * Returns the Course belonging to the specified ID
+	 * @param int $course_id
+	 * @return Course
+	 */
 	public static function get($course_id) {
 		$cache = SimpleCache::getCache();
 		$course = $cache->get("Course",$course_id);
@@ -276,6 +362,11 @@ class Course {
 		return $course;
 	}
 	
+	/**
+	 * Creates a course from supplied array 
+	 * @param unknown_type $arr
+	 * @return Course
+	 */
 	public static function fromArray($arr) {
 		return new Course($arr['course_id'],$arr['curriculum_type_id'],$arr['director_id'],$arr['pcoord_id'],$arr['evalrep_id'],$arr['studrep_id'],$arr['course_name'],$arr['course_code'],$arr['course_description'],$arr['unit_collaborator'],$arr['unit_communicator'],$arr['unit_health_advocate'],$arr['unit_manager'],$arr['unit_professional'],$arr['unit_scholar'],$arr['unit_medical_expert'],$arr['unit_summative_assessment'],$arr['unit_formative_assessment'],$arr['unit_grading'],$arr['resources_required'],$arr['resources_optional'],$arr['course_url'],$arr['course_message'],$arr['notifications'],$arr['organization'],$arr['active']);		
 	}

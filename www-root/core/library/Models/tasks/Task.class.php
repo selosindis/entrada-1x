@@ -1,5 +1,10 @@
 <?php
-
+/**
+ * Task mdoel class for organizing and operating on task, and related, data 
+ * 
+ * @author Jonathan Fingland
+ *
+ */
 class Task {
 	//these are constants and not settings as they reflect database restrictions on the model.
 	const TITLE_MAX_LENGTH = 255;

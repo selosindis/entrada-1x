@@ -51,6 +51,11 @@ class Events extends Collection {
 		return new self($events);
 	}
 	
+	/**
+	 * Returns all events for which the provided user is a listed contact
+	 * @param User $user
+	 * @return Events
+	 */
 	static public function getByContact(User $user) {
 		global $db;
 		$user_id = $user->getID();

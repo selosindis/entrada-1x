@@ -28,10 +28,30 @@ require_once("Models/utility/SimpleCache.class.php");
 require_once("InternalAwardReceipts.class.php");
 require_once("Award.class.php");
 	
+/**
+ * Internal awards are those awards issued by the academic institution operating/employing entrada (e.g. Queen's University, University of Calgary, ...)
+ * @author Jonathan Fingland
+ *
+ */
 class InternalAward extends Award{
+	/**
+	 * ID of Internal Award
+	 * @var int
+	 */
 	private $id;
+	/**
+	 * Boolean flag indicating the disabled/enabled state of the award  
+	 * @var bool
+	 */
 	private $disabled;
 
+	/**
+	 * Constructs an Internal Award. 
+	 * @param string $id
+	 * @param string $title
+	 * @param string $terms
+	 * @param bool $disabled
+	 */
 	function __construct($id, $title, $terms, $disabled) {
 		$awarding_body = INTERNAL_AWARD_AWARDING_BODY;
 		parent::__construct($title,$terms, $awarding_body);
@@ -39,6 +59,12 @@ class InternalAward extends Award{
 		$this->disabled = $disabled;
 	}
 	
+	/**
+	 * Creates a new Internal Award in the database
+	 * @param string $title
+	 * @param string $terms
+	 * @return InternalAward
+	 */
 	static function create($title,$terms) {
 		global $db;
 		
@@ -53,10 +79,19 @@ class InternalAward extends Award{
 		}
 	}
 	
+	/**
+	 * Returns a collection of all receipts of this award (every issuance)
+	 * @return InternalAwardReceipts
+	 */
 	function getRecipients() {
 		return InternalAwardReceipts::get($this);
 	}
 	
+	/**
+	 * Returns the Internal award of the specified ID
+	 * @param int $award_id
+	 * @return InternalAward
+	 */
 	static function get($award_id) {
 		global $db;
 		$query		= "SELECT *, `id` as award_id FROM `student_awards_internal_types` where `id`=".$db->qstr($award_id);
@@ -70,18 +105,36 @@ class InternalAward extends Award{
 		}
 	}
 	
+	/**
+	 * Creates an InternalAward object using an array of properties<br /><ul><li>$arr['award_id']</li><li>$arr['title']</li><li>$arr['award_terms']</li><li>$arr['disabled']</li></ul>  
+	 * @param array $arr
+	 * @return InternalAward
+	 */
 	public static function fromArray(array $arr) {
 		return new self($arr['award_id'], $arr['title'], $arr['award_terms'], $arr['disabled']);
 	}
 	
+	/**
+	 * Returns true if the award has been disabled; False, otherwise.  
+	 * @return boolean
+	 */
 	public function isDisabled() {
 		return (bool)($this->disabled);	
 	}
 	
+	/**
+	 * Returns the internal ID of this award
+	 * @return int
+	 */
 	public function getID() {
 		return $this->id;
 	}
 	
+	/**
+	 * Updates the title and terms of this award 
+	 * @param string $title
+	 * @param string $terms
+	 */
 	public function update($title,$terms) {
 		global $db;
 		$query = "update `student_awards_internal_types` set
@@ -99,6 +152,9 @@ class InternalAward extends Award{
 		}
 	}
 	
+	/**
+	 * Disables this award
+	 */
 	public function disable() {
 		global $db;
 		$query = "Update `student_awards_internal_types` set `disabled`=1 where `id`=".$db->qstr($this->id);
@@ -112,6 +168,9 @@ class InternalAward extends Award{
 		
 	}
 	
+	/**
+	 * Enables this award
+	 */
 	public function enable() {
 		global $db;
 		$query = "Update `student_awards_internal_types` set `disabled`=0 where `id`=".$db->qstr($this->id);
@@ -124,6 +183,9 @@ class InternalAward extends Award{
 		}
 	}
 	
+	/**
+	 * Deletes this award from the Database. Checks first for the presence of award receipts. Awards with receipt history cannot be deleted. 
+	 */
 	public function delete() {
 		global $db;
 	

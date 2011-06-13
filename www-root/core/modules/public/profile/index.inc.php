@@ -278,7 +278,7 @@ if (!defined("IN_PROFILE")) {
 					</tr>
 
 					<tr>
-						<td><label for="country_id" class="form-required">Country</label></td>
+						<td><label for="country_id" class="form-required"><strong>Country</strong></label></td>
 						<td>
 							<?php
 							$countries = fetch_countries();
@@ -300,7 +300,7 @@ if (!defined("IN_PROFILE")) {
 						</td>
 					</tr>
 					<tr>
-						<td><label id="prov_state_label" for="prov_state_div" class="form-nrequired">Province / State</label></td>
+						<td><label id="prov_state_label" for="prov_state_div" class="form-nrequired"><strong>Province / State</strong></label></td>
 						<td>
 							<div id="prov_state_div">Please select a <strong>Country</strong> from above first.</div>
 						</td>

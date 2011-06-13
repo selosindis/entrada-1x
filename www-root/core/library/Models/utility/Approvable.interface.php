@@ -1,4 +1,9 @@
 <?php
+/**
+ * Identifies objects as requiring approval or rejection 
+ * @author Jonathan Fingland
+ *
+ */
 interface Approvable {
 	public function approve();
 	public function unapprove();

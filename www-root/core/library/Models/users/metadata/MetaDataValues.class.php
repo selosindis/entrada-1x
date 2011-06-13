@@ -10,7 +10,12 @@
  * @copyright Copyright 2011 Queen's University. All Rights Reserved.
 */
 
- 
+/**
+ * 
+ * Collection of MetaDataValue model objects 
+ * @author Jonathan Fingland
+ *
+ */
 class MetaDataValues extends Collection {
 
 	/**
@@ -77,10 +82,7 @@ class MetaDataValues extends Collection {
 			$query .= " WHERE " . implode(" AND ",$conditions);
 		}
 		$query.= $order_by;
-		//var_dump($query);
 		$results = $db->SelectLimit($query, $limit, $offset, array(AUTH_APP_ID));
-		//var_dump($results);
-		//var_dump($db->ErrorMsg());
 		$values = array();
 		if ($results) {
 			foreach ($results as $result) {

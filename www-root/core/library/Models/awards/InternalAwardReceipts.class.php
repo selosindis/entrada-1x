@@ -49,6 +49,12 @@ class InternalAwardReceipts extends Collection {
 		}
 		return $receipts;
 	}
+	
+	/**
+	 * Returns all award receipts for the given award
+	 * @param Award $award
+	 * @return InternalAwardReceipts
+	 */
 	static private function getByAward(Award $award) {
 		global $db;
 		$query		= "SELECT a.`id` as `award_receipt_id`, a.`user_id`, a.`year` 
@@ -67,6 +73,11 @@ class InternalAwardReceipts extends Collection {
 		return new self($receipts);
 	}
 	
+	/**
+	 * Returns all award receipts for the given user
+	 * @param User $user
+	 * @return InternalAwardReceipts
+	 */
 	static private function getByUser(User $user) {
 		global $db;
 		$query		= "SELECT a.`id` as `award_receipt_id`, c.`id` as award_id, a.`user_id` , c.title, c.award_terms, c.disabled, a.year 

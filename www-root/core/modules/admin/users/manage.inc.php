@@ -25,11 +25,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 	application_log("error", "Group [".$GROUP."] and role [".$ROLE."] do not have access to this module [".$MODULE."]");
 } else {
 	define("IN_MANAGE_USER", true);
-$query = "select * from `".AUTH_DATABASE."`.`user_access` `a` left join `".AUTH_DATABASE."`.`user_data` `b` on `a`.`user_id`=`b`.`id` where `b`.`id`=".$db->qstr($PROXY_ID);
-	$user_record = $db->GetRow($query);
+	
+	$query = "	SELECT * FROM `".AUTH_DATABASE."`.`user_access` AS a
+				LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
+				ON a.`user_id` = `b`.`id`
+				WHERE b.`id` = ?
+				AND a.`app_id` = ?";
+	$user_record = $db->GetRow($query, array($PROXY_ID, AUTH_APP_ID));
 	if (($user_record) && ($router) && ($router->initRoute())) {
-		
-	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/users/manage?id=".$PROXY_ID, "title" => "Manage ".html_encode($user_record["firstname"]." ".$user_record["lastname"]));
+		$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/users/manage?id=".$PROXY_ID, "title" => "Manage ".html_encode($user_record["firstname"]." ".$user_record["lastname"]));
 
 		$module_file = $router->getRoute();
 		if ($module_file) {
@@ -58,6 +62,7 @@ function add_user_management_sidebar () {
 	$baseurl = ENTRADA_URL."/admin/users/manage";
 	$sidebar_html  = "<ul class=\"menu\">";
 	$sidebar_html .= "	<li class=\"link\"><a href=\"".$baseurl."?id=".$PROXY_ID."\">Overview</a></li>\n";
+	//TODO -- uncomment when ready $sidebar_html .= "	<li class=\"link\"><a href=\"".$baseurl."/report?id=".$PROXY_ID."\">User Report</a></li>\n";
 	$sidebar_html .= "	<li class=\"link\"><a href=\"".$baseurl."?section=edit&id=".$PROXY_ID."\">Edit Profile</a></li>\n";
 	$sidebar_html .= "	<li class=\"link\"><a href=\"".$baseurl."/metadata?id=".$PROXY_ID."\">Edit Meta Data</a></li>\n";
 	$sidebar_html .= "	<li class=\"link\"><a href=\"".$baseurl."/incidents?id=".$PROXY_ID."\">Incidents</a></li>\n";

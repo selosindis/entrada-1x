@@ -359,6 +359,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 					}
 
 					if (!$ERROR && $ENTRADA_ACL->amIAllowed(new UserResource(null, $PROCESSED["organisation_id"]), "update")) {
+						$PROCESSED["email_updated"] = time();
 						if ($db->AutoExecute(AUTH_DATABASE.".user_data", $PROCESSED, "UPDATE", "id = ".$db->qstr($PROXY_ID))) {
 							/**
 							 * Send notice if any administrator account is updated.
@@ -418,10 +419,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 								}
 							}
 
-							$url = ENTRADA_URL."/admin/users";
+							$url = ENTRADA_URL."/admin/users/manage?id=".$PROXY_ID;
 
 							$SUCCESS++;
-							$SUCCESSSTR[] = "You have successfully updated the <strong>".html_encode($PROCESSED["firstname"]." ".$PROCESSED["lastname"])."</strong> account in the authentication system.<br /><br />You will now be redirected to the users index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+							$SUCCESSSTR[] = "You have successfully updated the <strong>".html_encode($PROCESSED["firstname"]." ".$PROCESSED["lastname"])."</strong> account in the authentication system.<br /><br />You will now be redirected to the users profile page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 
 							header( "refresh:5;url=".$url );
 				
@@ -520,10 +521,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 					if (@file_exists(STORAGE_USER_PHOTOS."/".$PROXY_ID."-upload")) {
 						$size_upload = getimagesize(STORAGE_USER_PHOTOS."/".$PROXY_ID."-upload");
 					}
-					$ONLOAD[] = "provStateFunction(\$F($('user-edit')['country_id']))";	
+					$ONLOAD[] = "provStateFunction('".$PROCESSED["country_id"]."', '".$PROCESSED["province_id"]."')";
 					?>
 					<h1 style="margin-top: 0px">Edit Profile Details</h1>
-					<form name="user-edit" id="user-edit" action="<?php echo ENTRADA_URL; ?>/admin/users/manage?section=edit&id=<?php echo $PROXY_ID; ?>&amp;step=2" method="post" onsubmit="selIt()">
+					<form name="user-edit" id="user-edit" action="<?php echo ENTRADA_URL; ?>/admin/users/manage?section=edit&id=<?php echo $PROXY_ID; ?>&amp;step=2" method="post">
 						<table style="width: 100%" cellspacing="1" cellpadding="1" border="0" summary="Edit MEdTech Profile">
 							<colgroup>
 								<col style="width: 3%" />
@@ -536,7 +537,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 								</tr>
 								<tr>
 									<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
-										<input type="submit" class="button" value="Save" />
+										<input type="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_RELATIVE; ?>/admin/users/manage?id=<?php echo $PROXY_ID; ?>'" />
+										<input type="submit" value="Save" />
 									</td>
 								</tr>
 							</tfoot>
@@ -548,7 +550,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 								</tr>
 								<tr>
 									<td>&nbsp;</td>
-									<td><label for="number" class="form-nrequired">Staff / Student Number:</label></td>
+									<td><label for="number" class="form-nrequired">Staff / Student Number</label></td>
 									<td>
 										<input type="text" id="number" name="number" value="<?php echo ((isset($PROCESSED["number"])) ? html_encode($PROCESSED["number"]) : ""); ?>" style="width: 250px" maxlength="25" />
 										<span class="content-small">(<strong>Important:</strong> Required when ever possible)</span>
@@ -556,14 +558,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 								</tr>
 								<tr>
 									<td>&nbsp;</td>
-									<td><label for="username" class="form-required"><?php echo APPLICATION_NAME; ?> Username:</label></td>
+									<td><label for="username" class="form-required">Username</label></td>
 									<td>
 										<input type="text" id="username" name="username" value="<?php echo ((isset($PROCESSED["username"])) ? html_encode($PROCESSED["username"]) : ""); ?>" style="width: 250px" maxlength="25" />
 									</td>
 								</tr>
 								<tr>
 									<td>&nbsp;</td>
-									<td style="vertical-align: top"><label for="password" class="form-required"><?php echo APPLICATION_NAME; ?> Password:</label></td>
+									<td style="vertical-align: top"><label for="password" class="form-required">Password</label></td>
 									<td>
 										<input type="text" id="password" name="password" value="" style="width: 250px" maxlength="25" />
 										<div class="content-small" style="margin-top: 5px">
@@ -576,7 +578,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 								</tr>
 								<tr>
 									<td>&nbsp;</td>
-									<td style="vertical-align: top"><label for="group" class="form-required">Account Type:</label></td>
+									<td style="vertical-align: top"><label for="group" class="form-required">Account Type</label></td>
 									<td>
 										<select id="group" name="group" style="width: 209px"></select> <span class="content-small"><strong>Account Group</strong></span><br />
 										<select id="role" name="role" style="width: 209px; margin-top: 5px"></select> <span class="content-small"><strong>Account Role</strong></span>
@@ -625,7 +627,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 								</tr>
 								<tr>
 									<td>&nbsp;</td>
-									<td style="vertical-align: top"><label for="account_active" class="form-required">Account Status:</label></td>
+									<td style="vertical-align: top"><label for="account_active" class="form-required">Account Status</label></td>
 									<td>
 										<select id="account_active" name="account_active" style="width: 209px">
 											<option value="true"<?php echo (((!isset($PROCESSED_ACCESS["account_active"])) || ($PROCESSED_ACCESS["account_active"] == "true")) ? " selected=\"selected\"" : ""); ?>>Active</option>
@@ -646,7 +648,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 									?>
 									<tr>
 										<td>&nbsp;</td>
-										<td style="vertical-align: bottom; padding-bottom: 15px;"><label for="photo_active" class="photo_active">Uploaded Photo:</label></td>
+										<td style="vertical-align: bottom; padding-bottom: 15px;"><label for="photo_active" class="photo_active">Uploaded Photo</label></td>
 										<td>
 											<div style="position: relative">
 												<?php
@@ -667,7 +669,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 								?>
 								<tr>
 									<td>&nbsp;</td>
-									<td><label for="prefix" class="form-nrequired">Prefix:</label></td>
+									<td><label for="prefix" class="form-nrequired">Prefix</label></td>
 									<td>
 										<select id="prefix" name="prefix" style="width: 55px; vertical-align: middle; margin-right: 5px">
 										<option value=""<?php echo ((!$result["prefix"]) ? " selected=\"selected\"" : ""); ?>></option>
@@ -683,12 +685,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 								</tr>
 								<tr>
 									<td>&nbsp;</td>
-									<td><label for="firstname" class="form-required">Firstname:</label></td>
+									<td><label for="firstname" class="form-required">Firstname</label></td>
 									<td><input type="text" id="firstname" name="firstname" value="<?php echo ((isset($PROCESSED["firstname"])) ? html_encode($PROCESSED["firstname"]) : ""); ?>" style="width: 250px; vertical-align: middle" maxlength="35" /></td>
 								</tr>
 								<tr>
 									<td>&nbsp;</td>
-									<td><label for="lastname" class="form-required">Lastname:</label></td>
+									<td><label for="lastname" class="form-required">Lastname</label></td>
 									<td><input type="text" id="lastname" name="lastname" value="<?php echo ((isset($PROCESSED["lastname"])) ? html_encode($PROCESSED["lastname"]) : ""); ?>" style="width: 250px; vertical-align: middle" maxlength="35" /></td>
 								</tr>
 								<tr>
@@ -696,7 +698,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 								</tr>
 								<tr>
 									<td>&nbsp;</td>
-									<td><label for="email" class="form-required">Primary E-Mail:</label></td>
+									<td><label for="email" class="form-required">Primary E-Mail</label></td>
 									<td>
 										<input type="text" id="email" name="email" value="<?php echo ((isset($PROCESSED["email"])) ? html_encode($PROCESSED["email"]) : ""); ?>" style="width: 250px; vertical-align: middle" maxlength="128" />
 										<span class="content-small">(<strong>Important:</strong> Official e-mail accounts only)</span>
@@ -704,7 +706,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 								</tr>
 								<tr>
 									<td>&nbsp;</td>
-									<td><label for="email_alt" class="form-nrequired">Alternative E-Mail:</label></td>
+									<td><label for="email_alt" class="form-nrequired">Alternative E-Mail</label></td>
 									<td><input type="text" id="email_alt" name="email_alt" value="<?php echo ((isset($PROCESSED["email_alt"])) ? html_encode($PROCESSED["email_alt"]) : ""); ?>" style="width: 250px; vertical-align: middle" maxlength="128" /></td>
 								</tr>
 								<tr>
@@ -712,7 +714,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 								</tr>
 								<tr>
 									<td>&nbsp;</td>
-									<td><label for="telephone" class="form-nrequired">Telephone Number:</label></td>
+									<td><label for="telephone" class="form-nrequired">Telephone Number</label></td>
 									<td>
 										<input type="text" id="telephone" name="telephone" value="<?php echo ((isset($PROCESSED["telephone"])) ? html_encode($PROCESSED["telephone"]) : ""); ?>" style="width: 250px; vertical-align: middle" maxlength="25" />
 										<span class="content-small">(<strong>Example:</strong> 613-533-6000 x74918)</span>
@@ -720,7 +722,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 								</tr>
 								<tr>
 									<td>&nbsp;</td>
-									<td><label for="fax" class="form-nrequired">Fax Number:</label></td>
+									<td><label for="fax" class="form-nrequired">Fax Number</label></td>
 									<td>
 										<input type="text" id="fax" name="fax" value="<?php echo ((isset($PROCESSED["fax"])) ? html_encode($PROCESSED["fax"]) : ""); ?>" style="width: 250px; vertical-align: middle" maxlength="25" />
 										<span class="content-small">(<strong>Example:</strong> 613-533-3204)</span>
@@ -736,7 +738,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 										<?php
 										$countries = fetch_countries();
 										if ((is_array($countries)) && (count($countries))) {
-											echo "<select id=\"country_id\" name=\"country_id\" style=\"width: 256px\" onchange=\"provStateFunction(this.value);\">\n";
+											echo "<select id=\"country_id\" name=\"country_id\" style=\"width: 256px\" onchange=\"provStateFunction();\">\n";
 											echo "<option value=\"0\"".((!$PROCESSED["country_id"]) ? " selected=\"selected\"" : "").">-- Select Country --</option>\n";
 											foreach ($countries as $country) {
 												echo "<option value=\"".(int) $country["countries_id"]."\"".(($PROCESSED["country_id"] == $country["countries_id"]) ? " selected=\"selected\"" : "").">".html_encode($country["country"])."</option>\n";
@@ -758,21 +760,21 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 								</tr>
 								<tr>
 									<td>&nbsp;</td>
-									<td><label for="city" class="form-nrequired">City:</label></td>
+									<td><label for="city" class="form-nrequired">City</label></td>
 									<td>
 										<input type="text" id="city" name="city" value="<?php echo ((isset($PROCESSED["city"])) ? html_encode($PROCESSED["city"]) : "Kingston"); ?>" style="width: 250px; vertical-align: middle" maxlength="35" />
 									</td>
 								</tr>
 								<tr>
 									<td>&nbsp;</td>
-									<td><label for="address" class="form-nrequired">Address:</label></td>
+									<td><label for="address" class="form-nrequired">Address</label></td>
 									<td>
 										<input type="text" id="address" name="address" value="<?php echo ((isset($PROCESSED["address"])) ? html_encode($PROCESSED["address"]) : ""); ?>" style="width: 250px; vertical-align: middle" maxlength="255" />
 									</td>
 								</tr>
 								<tr>
 									<td>&nbsp;</td>
-									<td><label for="postcode" class="form-nrequired">Postal Code:</label></td>
+									<td><label for="postcode" class="form-nrequired">Postal Code</label></td>
 									<td>
 										<input type="text" id="postcode" name="postcode" value="<?php echo ((isset($PROCESSED["postcode"])) ? html_encode($PROCESSED["postcode"]) : "K7L 3N6"); ?>" style="width: 250px; vertical-align: middle" maxlength="7" />
 										<span class="content-small">(<strong>Example:</strong> K7L 3N6)</span>
@@ -783,7 +785,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 								</tr>
 								<tr>
 									<td>&nbsp;</td>
-									<td style="vertical-align: top"><label for="office_hours">Office Hours:</label></td>
+									<td style="vertical-align: top"><label for="office_hours">Office Hours</label></td>
 									<td>
 										<textarea id="office_hours" name="office_hours" style="width: 254px; height: 40px;" maxlength="100"><?php echo html_encode($PROCESSED["office_hours"]); ?></textarea>
 									</td>
@@ -793,7 +795,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 								</tr>
 								<tr>
 									<td>&nbsp;</td>
-									<td style="vertical-align: top"><label for="notes" class="form-nrequired">General Comments:</label></td>
+									<td style="vertical-align: top"><label for="notes" class="form-nrequired">General Comments</label></td>
 									<td>
 										<textarea id="notes" name="notes" class="expandable" style="width: 246px; height: 75px"><?php echo ((isset($PROCESSED["notes"])) ? html_encode($PROCESSED["notes"]) : ""); ?></textarea>
 									</td>
@@ -826,78 +828,75 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 									<td>&nbsp;</td>
 									<td>Departments</td>
 									<td>
-										<?php
-										$ONLOAD[] = "organisationChange()";
-										if (isset($DEPARTMENT_LIST) && is_array($DEPARTMENT_LIST) && !empty($DEPARTMENT_LIST)) {
-											$departments = array();
+										<div style="position: relative">
+											<?php
+											$ONLOAD[] = "organisationChange()";
+											if (isset($DEPARTMENT_LIST) && is_array($DEPARTMENT_LIST) && !empty($DEPARTMENT_LIST)) {
+												$departments = array();
 
-											foreach ($DEPARTMENT_LIST as $organisation_id => $dlist) {
-												foreach ($dlist as $d) {
+												foreach ($DEPARTMENT_LIST as $organisation_id => $dlist) {
+													foreach ($dlist as $d) {
+														if (in_array($d["department_id"], $PROCESSED_DEPARTMENTS)) {
+															$checked = "checked=\"checked\"";
+														} else {
+															$checked = "";
+														}
 
-													if (in_array($d["department_id"], $PROCESSED_DEPARTMENTS)) {
-														$checked = "checked=\"checked\"";
-													} else {
-														$checked = "";
-													}
-
-													if (isset($organisation_categories[$organisation_id])) {
-														$departments[$organisation_id][] = array('text' => $d['department_title'], 'value' => $d['department_id'], 'checked' => $checked);
+														if (isset($organisation_categories[$organisation_id])) {
+															$departments[$organisation_id][] = array('text' => $d['department_title'], 'value' => $d['department_id'], 'checked' => $checked);
+														}
 													}
 												}
-											}
 
-											foreach ($departments as $organisation_id => $dlist) {
-												echo lp_multiple_select_popup("departments_".$organisation_id, $dlist, array("title" => "Select Departments:", "class" => "department_multi", "submit_text" => "Done", "cancel" => false, "submit" => true));
+												foreach ($departments as $organisation_id => $dlist) {
+													echo lp_multiple_select_popup("departments_".$organisation_id, $dlist, array("title" => "Select Departments:", "class" => "department_multi", "submit_text" => "Done", "cancel" => false, "submit" => true));
+												}
 											}
-										}
-										?>
+											?>
+										</div>
 										<input class="multi-picklist" id="in_departments" name="in_departments" style="display: none;">
 										<div id="in_departments_list"></div>
 										<input type="button" onclick="$('departments_'+$F('organisation_id')+'_options').show();" value="Select Multiple" >
 
 										<script type="text/javascript">
+										function provStateFunction(country_id, province_id) {
+											var url_country_id = 0
+											var url_province_id = 0;
 
-										
-										function provStateFunction(country_id) {
-											var url='<?php echo webservice_url("province"); ?>';
-											<?php
-											    if ($PROCESSED["province"] || $PROCESSED["province_id"]) {
-													$source_arr = $PROCESSED;
-											        $province = $source_arr["province"];
-											    	$province_id = $source_arr["province_id"];
-											    	$prov_state = ($province) ? $province : $province_id;
-											    }
-											?>
-											
-											url = url + '?countries_id=' + country_id + '&prov_state=<?php echo $prov_state; ?>';
-											new Ajax.Updater($('prov_state_div'), url,
-												{
-													method:'get',
-													onComplete: function (init_run) {
-														
-														if ($('prov_state').type == 'select-one') {
-															$('prov_state_label').removeClassName('form-nrequired');
-															$('prov_state_label').addClassName('form-required');
-															if (!init_run) 
-																$("prov_state").selectedIndex = 0;
-															
-															
-														} else {
-															
-															$('prov_state_label').removeClassName('form-required');
-															$('prov_state_label').addClassName('form-nrequired');
-															if (!init_run) 
-																$("prov_state").clear();
-															
-															
+											if (country_id != undefined) {
+												url_country_id = country_id;
+											} else if ($('country_id')) {
+												url_country_id = $('country_id').getValue();
+											}
+
+											if (province_id != undefined) {
+												url_province_id = province_id;
+											} else if ($('province_id')) {
+												url_province_id = $('province_id').getValue();
+											}
+
+											var url = '<?php echo webservice_url("province"); ?>?countries_id=' + url_country_id + '&prov_state=' + url_province_id;
+
+											new Ajax.Updater($('prov_state_div'), url, {
+												method:'get',
+												onComplete: function (init_run) {
+
+													if ($('prov_state').type == 'select-one') {
+														$('prov_state_label').removeClassName('form-nrequired');
+														$('prov_state_label').addClassName('form-required');
+														if (!init_run) {
+															$("prov_state").selectedIndex = 0;
 														}
-													}.curry(!provStateFunction.initialzed)
-												});
-											provStateFunction.initialzed = true;
-											
+													} else {
+														$('prov_state_label').removeClassName('form-required');
+														$('prov_state_label').addClassName('form-nrequired');
+														if (!init_run) {
+															$("prov_state").clear();
+														}
+													}
+												}
+											});
 										}
-										provStateFunction.initialzed = false;
-
 										
 										var multiselect = new Array();
 										function organisationChange() {

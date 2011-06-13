@@ -208,8 +208,7 @@ switch ($STEP) {
 		if (isset($_POST["entrada_relative"]) && ($entrada_relative = clean_input($_POST["entrada_relative"], "url"))) {
 			$PROCESSED["entrada_relative"] = $entrada_relative;
 		} else {
-			$ERROR++;
-			$ERRORSTR[] = "The relative web address where Entrada will be accessed on the host must be entered before continuing. (eg. '/entrada' if installed at the root level.)";
+			$PROCESSED["entrada_relative"] = "";
 		}
 
 		if (isset($_POST["entrada_absolute"]) && ($entrada_absolute = clean_input($_POST["entrada_absolute"], "dir"))) {
@@ -590,7 +589,7 @@ $storage_path = implode(DIRECTORY_SEPARATOR, array_slice(explode(DIRECTORY_SEPAR
 							<textarea id="htaccess_text" name="htaccess_text" style="width: 80%; height: 330px; font-size: 11px" onclick="this.select()" readonly="readonly"><?php
 							if (isset($display_htaccess) && $display_htaccess) {
 									$htaccess_text = file_get_contents($setup->entrada_absolute.$setup->htaccess_file);
-									$htaccess_text = str_replace("ENTRADA_RELATIVE", $setup->entrada_relative, $htaccess_text);
+									$htaccess_text = str_replace("ENTRADA_RELATIVE", (($setup->entrada_relative != "") ? $setup->entrada_relative : "/"), $htaccess_text);
 									echo $htaccess_text;
 								}
 							?></textarea>
@@ -945,13 +944,13 @@ $storage_path = implode(DIRECTORY_SEPARATOR, array_slice(explode(DIRECTORY_SEPAR
 								<tr>
 									<td>&nbsp;</td>
 									<td class="content-small" style="padding-bottom: 15px">
-										Full URL to application's index file without a trailing slash.
+										Full URL to Entrada (i.e. http://website.edu/entrada). 
 									</td>
 								</tr>
 								<tr>
 									<td>
 										<div class="valign">
-											<label for="entrada_relative">Entrada Relative URL</label>
+											<label for="entrada_relative" style="font-weight: normal">Entrada Relative URL</label>
 										</div>
 									</td>
 									<td>
@@ -963,7 +962,7 @@ $storage_path = implode(DIRECTORY_SEPARATOR, array_slice(explode(DIRECTORY_SEPAR
 								<tr>
 									<td>&nbsp;</td>
 									<td class="content-small" style="padding-bottom: 15px">
-										The relative URL where Entrada will live on your host.
+										The relative URL to Entrada on your site (i.e. /entrada).
 									</td>
 								</tr>
 								<tr>
@@ -981,7 +980,7 @@ $storage_path = implode(DIRECTORY_SEPARATOR, array_slice(explode(DIRECTORY_SEPAR
 								<tr>
 									<td>&nbsp;</td>
 									<td class="content-small" style="padding-bottom: 15px">
-										Full Directory Path to application's index file without a trailing slash.
+										Full absolute filesystem path to Entrada (without trailing slash).
 									</td>
 								</tr>
 								<tr>
@@ -999,7 +998,7 @@ $storage_path = implode(DIRECTORY_SEPARATOR, array_slice(explode(DIRECTORY_SEPAR
 								<tr>
 									<td>&nbsp;</td>
 									<td class="content-small" style="padding-bottom: 15px">
-										Full Directory Path to the Entrada storage folder.
+										Full absolute filesystem path to Entrada storage directory.
 									</td>
 								</tr>
 							</tbody>

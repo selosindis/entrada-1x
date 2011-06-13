@@ -500,7 +500,7 @@ if ($COMMUNITY_URL) {
 						$sidebar_html .= "	<li class=\"on\"><a href=\"".ENTRADA_URL."/communities?section=leave&amp;community=".$COMMUNITY_ID."\">Quit This Community</a></li>";
 						$sidebar_html .= "</ul>\n";
 						$sidebar_html .= "<hr/>\n";
-						$sidebar_html .= "<ul class=\"menu\"><li class=\"community\"><a href=\"".ENTRADA_URL.DIRECTORY_SEPARATOR."community".$COMMUNITY_URL.":members\">View All Members</a></li></ul>\n";
+						$sidebar_html .= "<ul class=\"menu\"><li class=\"community\"><a href=\"".ENTRADA_URL."/community".$COMMUNITY_URL.":members\">View All Members</a></li></ul>\n";
 						if ($MAILING_LISTS["active"]) {
 							$query = "SELECT * FROM `community_mailing_lists` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID);
 							$mail_list = $db->GetRow($query);

@@ -659,7 +659,7 @@ function new_sidebar_item($title = "", $html = "", $id = "", $state = "open", $p
 function ob_clear_open_buffers() {
 	$level = @ob_get_level();
 
-	for ($i = 0; $i <= $level; $i++) {
+	for ($i = 0; $i < $level; $i++) {
 		@ob_end_clean();
 	}
 
@@ -829,11 +829,10 @@ function get_online_status($proxy_id = 0, $output_type = "text") {
 	$output = 0;
 
 	if($proxy_id = (int) trim($proxy_id)) {
-		$query	= "
-				SELECT MAX(`timestamp`) AS `timestamp`
-				FROM `users_online`
-				WHERE `proxy_id` = ".$db->qstr($proxy_id)."
-				GROUP BY `proxy_id`";
+		$query = "	SELECT MAX(`timestamp`) AS `timestamp`
+					FROM `users_online`
+					WHERE `proxy_id` = ".$db->qstr($proxy_id)."
+					GROUP BY `proxy_id`";
 		$result	= $db->CacheGetRow(CACHE_TIMEOUT, $query);
 		if(($result) && ((int) $result["timestamp"])) {
 			if((int) $result["timestamp"] < (time() - 600)) {
@@ -1545,7 +1544,7 @@ function clerkship_display_available_evaluations() {
 					a.`notification_status` <> 'complete'
 					OR a.`notification_status` <> 'cancelled'
 				)
-				AND b.`event_finish` < ".$db->qstr(strtotime("-1 day 00:00:00"))."
+					AND b.`event_finish` < ".$db->qstr(strtotime("00:00:01"))."
 				AND b.`event_status` = 'published'
 				AND c.`item_status` = 'published'
 				AND d.`form_status` = 'published'
@@ -1719,8 +1718,7 @@ function permissions_load() {
 	global $db;
 	$permissions	= array();
 	$permissions[$_SESSION["details"]["id"]] = array("permission_id" => 0, "group" => $_SESSION["details"]["group"], "role" => $_SESSION["details"]["role"], "organisation_id"=>$_SESSION["details"]["organisation_id"], "starts" => $_SESSION["details"]["access_starts"], "expires" => $_SESSION["details"]["access_expires"], "fullname" => ($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]), "firstname" => $_SESSION["details"]["firstname"], "lastname" => $_SESSION["details"]["lastname"]);
-	$query		= "
-				SELECT a.*, b.`id` AS `proxy_id`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, b.`firstname`, b.`lastname`, b.`organisation_id`, c.`role`, c.`group`
+	$query = "	SELECT a.*, b.`id` AS `proxy_id`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, b.`firstname`, b.`lastname`, b.`organisation_id`, c.`role`, c.`group`
 				FROM `permissions` AS a
 				LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
 				ON b.`id` = a.`assigned_by`
@@ -1731,7 +1729,7 @@ function permissions_load() {
 				AND (c.`access_expires`='0' OR c.`access_expires`>=".$db->qstr(time()).")
 				WHERE a.`assigned_to`=".$db->qstr($_SESSION["details"]["id"])." AND a.`valid_from`<=".$db->qstr(time())." AND a.`valid_until`>=".$db->qstr(time())."
 				ORDER BY `fullname` ASC";
-	$results		= $db->GetAll($query);
+	$results = $db->GetAll($query);
 	if($results) {
 		foreach ($results as $result) {
 			$permissions[$result["proxy_id"]] = array("permission_id" => $result["permission_id"], "group" => $result["group"], "role" => $result["role"], "organisation_id"=>$result['organisation_id'],  "starts" => $result["valid_from"], "expires" => $result["valid_until"], "fullname" => $result["fullname"], "firstname" => $result["firstname"], "lastname" => $result["lastname"]);
@@ -2051,13 +2049,12 @@ function count_notice_reads($notice_id = 0) {
 	global $db;
 
 	if($notice_id = (int) $notice_id) {
-		$query	= "
-				SELECT COUNT(*) AS `total_reads`
-				FROM `statistics`
-				WHERE `module` = 'notices'
-				AND `action` = 'read'
-				AND `action_field` = 'notice_id'
-				AND `action_value` = ".$db->qstr($notice_id);
+		$query = "	SELECT COUNT(*) AS `total_reads`
+					FROM `statistics`
+					WHERE `module` = 'notices'
+					AND `action` = 'read'
+					AND `action_field` = 'notice_id'
+					AND `action_value` = ".$db->qstr($notice_id);
 		$result	= $db->CacheGetRow(LONG_CACHE_TIMEOUT, $query);
 		if($result) {
 			return $result["total_reads"];
@@ -2097,7 +2094,7 @@ function clean_input($string, $rules = array()) {
 				break;
 				case "file" :
 				case "dir" :			// Allows only a minimal number of characters
-					$string = preg_replace(array("/[^a-z0-9_\-\.\/]/i", "/(\.)\.+/", "/(\/)\/+/"), "$1", $string);
+					$string = preg_replace(array("/[^a-z0-9_\:\-\.\/]/i", "/(\.)\.+/", "/(\/)\/+/"), "$1", $string);
 				break;
 				case "int" :			// Change string to an integer.
 					$string = (int) $string;
@@ -2761,11 +2758,10 @@ function poll_answer_responses($poll_id = 0, $answer_id = 0) {
 	global $db;
 
 	if(($poll_id = (int) $poll_id) && ($answer_id = (int) $answer_id)) {
-		$query	= "
-				SELECT COUNT(*) AS `responses`
-				FROM `poll_results`
-				WHERE `poll_id` = ".$db->qstr($poll_id)."
-				AND `answer_id` = ".$db->qstr($answer_id);
+		$query = "	SELECT COUNT(*) AS `responses`
+					FROM `poll_results`
+					WHERE `poll_id` = ".$db->qstr($poll_id)."
+					AND `answer_id` = ".$db->qstr($answer_id);
 		$result	= $db->GetRow($query);
 		if($result) {
 			return $result["responses"];
@@ -2785,11 +2781,10 @@ function poll_prevote_check($poll_id = 0) {
 	global $db;
 
 	if($poll_id = (int) $poll_id) {
-		$query	= "
-				SELECT *
-				FROM `poll_results`
-				WHERE `poll_id` = ".$db->qstr($poll_id)."
-				AND `proxy_id` = ".$db->qstr($_SESSION["details"]["id"]);
+		$query = "	SELECT *
+					FROM `poll_results`
+					WHERE `poll_id` = ".$db->qstr($poll_id)."
+					AND `proxy_id` = ".$db->qstr($_SESSION["details"]["id"]);
 		$result	= $db->GetRow($query);
 		if($result) {
 			return false;
@@ -4131,13 +4126,12 @@ function communities_fetch_children($community_id = 0, $requested_fields = false
 	}
 
 	$fetched	= array();
-	$query		= "
-				SELECT `".implode("`, `", $requested_fields)."`
+	$query = "	SELECT `".implode("`, `", $requested_fields)."`
 				FROM `communities`
 				WHERE `community_parent` = ".$db->qstr((int) $community_id)."
 				".((!(bool) $show_inactive) ? " AND `community_active` = '1'" : "")."
 				ORDER BY `community_title` ASC";
-	$results	= $db->GetAll($query);
+	$results = $db->GetAll($query);
 	if($results) {
 		foreach ($results as $result) {
 			$fetched[$result["community_id"]] = $result;
@@ -4699,19 +4693,18 @@ function communities_discussions_latest($cdiscussion_id = 0) {
 	$output["replies"]	= 0;
 
 	if($cdiscussion_id = (int) $cdiscussion_id) {
-		$query	= "
-				SELECT IF(a.`cdtopic_parent` = '0', a.`cdtopic_id`, b.`cdtopic_id`) AS `cdtopic_id`, IF(a.`cdtopic_parent` = '0', a.`topic_title`, b.`topic_title`) AS `topic_title`, a.`updated_date`, a.`proxy_id`, c.`username`, CONCAT_WS(' ', c.`firstname`, c.`lastname`) AS `poster_fullname`
-				FROM `community_discussion_topics` AS a
-				LEFT JOIN `community_discussion_topics` AS b
-				ON a.`cdtopic_parent` = b.`cdtopic_id`
-				LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS c
-				ON a.`proxy_id` = c.`id`
-				WHERE a.`cdiscussion_id` = ".$db->qstr($cdiscussion_id)."
-				AND a.`community_id` = ".$db->qstr((int) $COMMUNITY_ID)."
-				AND a.`topic_active` = '1'
-				AND (b.`topic_active` IS NULL OR b.`topic_active`='1')
-				ORDER BY a.`updated_date` DESC
-				LIMIT 0, 1";
+		$query = "	SELECT IF(a.`cdtopic_parent` = '0', a.`cdtopic_id`, b.`cdtopic_id`) AS `cdtopic_id`, IF(a.`cdtopic_parent` = '0', a.`topic_title`, b.`topic_title`) AS `topic_title`, a.`updated_date`, a.`proxy_id`, c.`username`, CONCAT_WS(' ', c.`firstname`, c.`lastname`) AS `poster_fullname`
+					FROM `community_discussion_topics` AS a
+					LEFT JOIN `community_discussion_topics` AS b
+					ON a.`cdtopic_parent` = b.`cdtopic_id`
+					LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS c
+					ON a.`proxy_id` = c.`id`
+					WHERE a.`cdiscussion_id` = ".$db->qstr($cdiscussion_id)."
+					AND a.`community_id` = ".$db->qstr((int) $COMMUNITY_ID)."
+					AND a.`topic_active` = '1'
+					AND (b.`topic_active` IS NULL OR b.`topic_active`='1')
+					ORDER BY a.`updated_date` DESC
+					LIMIT 0, 1";
 		$result	= $db->CacheGetRow(CACHE_TIMEOUT, $query);
 		if($result) {
 			$output["username"]		= $result["username"];
@@ -4760,12 +4753,11 @@ function communities_shares_latest($cshare_id = 0) {
 	$output["total_bytes"]	= 0;
 
 	if($cshare_id = (int) $cshare_id) {
-		$query	= "
-				SELECT COUNT(*) AS `total_files`
-				FROM `community_share_files` AS a
-				WHERE a.`cshare_id` = ".$db->qstr($cshare_id)."
-				AND a.`community_id` = ".$db->qstr((int) $COMMUNITY_ID)."
-				AND a.`file_active` = '1'";
+		$query = "	SELECT COUNT(*) AS `total_files`
+					FROM `community_share_files` AS a
+					WHERE a.`cshare_id` = ".$db->qstr($cshare_id)."
+					AND a.`community_id` = ".$db->qstr((int) $COMMUNITY_ID)."
+					AND a.`file_active` = '1'";
 		$result	= $db->CacheGetRow(CACHE_TIMEOUT, $query);
 		if($result) {
 			$output["total_files"] = (int) $result["total_files"];
@@ -5159,7 +5151,7 @@ function communities_set_children_urls($parent_id, $parent_url) {
 	if ($child_records) {
 		foreach ($child_records as $child_record) {
 			$page_url = clean_input($child_record["menu_title"], array("lower","underscores","page_url"));
-			$page_url = $parent_url . DIRECTORY_SEPARATOR . $page_url;
+			$page_url = $parent_url . "/" . $page_url;
 			if(in_array($page_url, $COMMUNITY_RESERVED_PAGES)) {
 				$ERROR++;
 				$ERRORSTR[] = "The <strong>Menu Title</strong> you have chosen is reserved, please try again.";
@@ -6382,7 +6374,7 @@ function plotkit_statistics_lables($labels = array()) {
 
 	if(is_array($labels)) {
 		foreach ($labels as $key => $label) {
-			$output[] = "{label: '".$label."', v: ".(int) $key."}";
+			$output[] = "{label: '".$label."', v: ".$key."}";
 		}
 	}
 
@@ -6400,7 +6392,7 @@ function plotkit_statistics_values($values = array()) {
 
 	if(is_array($values)) {
 		foreach ($values as $key => $value) {
-			$output[] = "[".(int) $key.", ".(int) $value."]";
+			$output[] = "[".(int) $key.", ".$value."]";
 		}
 	}
 
@@ -7562,7 +7554,6 @@ function clerkship_get_rotation_schedule ($rotation, $proxy_id = 0) {
  * @param int $rotation_id
  * @return string
  */
-
 function clerkship_get_agerange ($agerange_id, $rotation_id) {
     global $db;
 
@@ -7570,6 +7561,455 @@ function clerkship_get_agerange ($agerange_id, $rotation_id) {
 		where `agerange_id` = ".$db->qstr($agerange_id)." and (`rotation_id` = ".$db->qstr($rotation_id)." or `rotation_id` = 0)
 		order by `rotation_id` desc limit 1";
     return $db->GetOne($query);
+}
+
+/**
+ * Function takes a period index value, a rotation row, and a clerk/rotation row
+ * and determines whether the clerk should be notified of their progress in the rotation.
+ * If they do require to be notified, whether due to completion or delinquency, then the
+ * function to send such notices is called also.
+ *
+ * @param int $rotation_period_index
+ * @param array $rotation
+ * @param array $clerk
+ * @return boolean
+ */
+function clerkship_progress_send_notice($rotation_period_index, $rotation, $clerk) {
+	global $db;
+	$query 	= "SELECT * FROM `".CLERKSHIP_DATABASE."`.`logbook_notification_history`
+			WHERE `rotation_id` = ".$db->qstr($rotation["rotation_id"])."
+			AND `clerk_id` = ".$db->qstr($clerk["proxy_id"])."
+			AND `proxy_id` = ".$db->qstr($clerk["proxy_id"])."
+			AND `notified_date` < ".$db->qstr((time() - ONE_WEEK));
+	$notified = $db->GetRow($query);
+	if (!$notified) {
+		$objective_progress = clerkship_rotation_objectives_progress($clerk["proxy_id"], $rotation["rotation_id"]);
+		switch ($rotation_period_index) {
+			case CLERKSHIP_SIX_WEEKS_PAST :
+				if ($objective_progress["required"] > $objective_progress["logged"]) {
+					$overdue_logging = array(
+												"proxy_id" => $clerk["proxy_id"],
+												"rotation_id" => $rotation["rotation_id"],
+												"event_id" => $clerk["event_id"],
+												"logged_required" => $objective_progress["required"],
+												"logged_completed" => $objective_progress["logged"]
+											);
+					$db->AutoExecute(CLERKSHIP_DATABASE.".logbook_overdue", $overdue_logging, "INSERT");
+					clerkship_notify_clerk($rotation_period_index, $clerk, $rotation, $objective_progress);
+				}
+				break;
+			case CLERKSHIP_ROTATION_ENDED :
+				if ($objective_progress["required"] > $objective_progress["logged"]) {
+					$overdue_logging = array(
+												"proxy_id" => $clerk["proxy_id"],
+												"rotation_id" => $rotation["rotation_id"],
+												"event_id" => $clerk["event_id"],
+												"logged_required" => $objective_progress["required"],
+												"logged_completed" => $objective_progress["logged"]
+											);
+					$db->AutoExecute(CLERKSHIP_DATABASE.".logbook_overdue", $overdue_logging, "INSERT");
+					clerkship_notify_clerk($rotation_period_index, $clerk, $rotation, $objective_progress);
+				}
+				break;
+			case CLERKSHIP_ONE_WEEK_PRIOR :
+			case CLERKSHIP_ROTATION_PERIOD :
+				if ((($objective_progress["logged"] / $objective_progress["required"]) * 100) < ($rotation["percent_required"])) {
+					$overdue_logging = array(
+												"proxy_id" => $clerk["proxy_id"],
+												"rotation_id" => $rotation["rotation_id"],
+												"event_id" => $clerk["event_id"],
+												"logged_required" => $objective_progress["required"],
+												"logged_completed" => $objective_progress["logged"]
+											);
+					$db->AutoExecute(CLERKSHIP_DATABASE.".logbook_overdue", $overdue_logging, "INSERT");
+					clerkship_notify_clerk($rotation_period_index, $clerk, $rotation, $objective_progress);
+				}
+				break;
+		}
+	}
+}
+
+/**
+ * Function takes a period index value, a rotation row, and a clerk/rotation row
+ * and sends notices to let them know that they are deficient/delinquent in their
+ * logging.
+ *
+ * @param int $rotation_period_index
+ * @param array $rotation
+ * @param array $clerk
+ * @return array
+ */
+function clerkship_notify_clerk($rotation_period_index, $clerk, $rotation, $objective_progress) {
+	global $db, $AGENT_CONTACTS;
+	if (defined("CLERKSHIP_EMAIL_NOTIFICATIONS") && CLERKSHIP_EMAIL_NOTIFICATIONS) {
+		$mail = new Zend_Mail();
+		$mail->addHeader("X-Originating-IP", $_SERVER["REMOTE_ADDR"]);
+		$mail->addHeader("X-Section", "Clerkship Notification System",true);
+		$mail->clearFrom();
+		$mail->clearSubject();
+		$mail->setFrom($AGENT_CONTACTS["agent-notifications"]["email"], APPLICATION_NAME.' Clerkship System');
+		switch ($rotation_period_index) {
+			case CLERKSHIP_SIX_WEEKS_PAST :
+				$mail->setSubject("Clerkship Logbook Deficiency Notification");
+				break;
+			case CLERKSHIP_ROTATION_ENDED :
+			case CLERKSHIP_ONE_WEEK_PRIOR :
+			case CLERKSHIP_ROTATION_PERIOD :
+				$mail->setSubject("Clerkship Logbook Progress Notification");
+				break;
+		}
+		$NOTIFICATION_MESSAGE		 	 = array();
+		switch ($rotation_period_index) {
+			case CLERKSHIP_SIX_WEEKS_PAST :
+				$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".DEFAULT_TEMPLATE."/email/clerkship-deficiency-clerk-notification.txt");
+				break;
+			case CLERKSHIP_ROTATION_ENDED :
+				$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".DEFAULT_TEMPLATE."/email/clerkship-rotation-incomplete-clerk-notification.txt");
+				break;
+			case CLERKSHIP_ONE_WEEK_PRIOR :
+			case CLERKSHIP_ROTATION_PERIOD :
+			default :
+				$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".DEFAULT_TEMPLATE."/email/clerkship-delinquency-clerk-notification.txt");
+				break;
+		}
+								
+		if ($rotation) {
+			$query 	= " SELECT `notified_date` FROM `".CLERKSHIP_DATABASE."`.`logbook_notification_history`
+					WHERE `clerk_id` = ".$db->qstr($clerk["proxy_id"])."
+					AND `proxy_id` = ".$db->qstr($clerk["proxy_id"])."
+					AND `rotation_id` = ".$db->quote($clerk["rotation_id"])."
+					ORDER BY `notified_date` DESC
+					LIMIT 0,1";
+			$last_notified = $db->GetOne($query);
+			if ($last_notified <= (strtotime("-1 week"))) {
+				
+				clerkship_add_queued_notification($rotation_period_index, $clerk, $rotation, $objective_progress);
+												
+				$search		= array(
+									"%CLERK_FULLNAME%",
+									"%ROTATION_TITLE%",
+									"%PROFILE_URL%",
+									"%PROGRAM_COORDINATOR%",
+									"%ROTATION_OVERVIEW_URL%",
+									"%ROTATION_DEFICIENCIES%",
+									"%ROTATION_DEFICIENCY_URL%",
+									"%ENTRY_MANAGEMENT_URL%",
+									"%APPLICATION_NAME%",
+									"%ENTRADA_URL%"
+								);
+				$replace	= array(
+									$clerk["fullname"],
+									$rotation["rotation_title"],
+									ENTRADA_URL."/people?id=".$clerk["proxy_id"],
+									"<a href=\"".get_account_data("email", $rotation["pcoord_id"])."\">".get_account_data("wholename", $rotation["pcoord_id"])."</a>",
+									ENTRADA_URL."/clerkship/logbook?section=view&core=".$clerk["rotation_id"],
+									implode(" \n", $objective_progress["required_list"]),
+									ENTRADA_URL."/clerkship/logbook?section=deficiency-plan&rotation=".$clerk["rotation_id"],
+									ENTRADA_URL."/clerkship/logbook?id=".$clerk["proxy_id"]."&sb=rotation&rotation=".$clerk["rotation_id"],
+									APPLICATION_NAME,
+									$last_notified
+							);
+				$mail->setBodyText(clean_input(str_replace($search, $replace, $NOTIFICATION_MESSAGE["textbody"]), array("postclean")));
+				
+				if ($clerk["proxy_id"]) {
+					$NOTICE 	= Array(
+										"target" => "proxy_id:".$clerk["proxy_id"],
+										"notice_summary" => clean_input(str_replace($search, $replace, "It has come to our attention that you have not met the logging requirements for the [%ROTATION_TITLE%] rotation after the allotted time. Please review your logbook entries and progress, and make note of how you plan to solve this problem via the <a href=\"%ROTATION_OVERVIEW_URL%\">Rotation progress</a> section."), array("postclean")),
+										"display_from" => time(),
+										"display_until" => strtotime("+1 week"),
+										"updated_date" => time(),
+										"updated_by" => 3499,
+										"organisation_id" => 1
+								);
+					if($db->AutoExecute("notices", $NOTICE, "INSERT")) {
+						if($NOTICE_ID = $db->Insert_Id()) {
+							application_log("success", "Successfully added notice ID [".$NOTICE_ID."]");
+						} else {
+							application_log("error", "Unable to fetch the newly inserted notice identifier for this notice.");
+						}
+					} else {
+						application_log("error", "Unable to insert new notice into the system. Database said: ".$db->ErrorMsg());
+					}
+				}
+				
+				$mail->clearRecipients();
+				if (strlen($clerk["email"])) {
+					$mail->addTo($clerk["email"], $clerk["fullname"]);
+					$sent = true;
+					try {
+						$mail->send();
+					}
+					catch (Exception $e) {
+						$sent = false;
+					}
+					if($sent) {
+						application_log("success", "Sent overdue logging notification to Clerk [".$clerk["proxy_id"]."].");
+					} else {
+						application_log("error", "Unable to send overdue logging notification to Clerk [".$clerk["proxy_id"]."].");
+					}
+					$NOTICE_HISTORY = Array(
+											"clerk_id" => $clerk["proxy_id"],
+											"proxy_id" => $clerk["proxy_id"],
+											"rotation_id" => $clerk["rotation_id"],
+											"notified_date" => time()
+											);
+					if($db->AutoExecute(CLERKSHIP_DATABASE.".logbook_notification_history", $NOTICE_HISTORY, "INSERT")) {
+						if($HISTORY_ID = $db->Insert_Id()) {
+							application_log("success", "Successfully added notification history ID [".$HISTORY_ID."]");
+						} else {
+							application_log("error", "Unable to fetch the newly inserted notification history identifier for this notice.");
+						}
+					} else {
+						application_log("error", "Unable to insert new notification history record into the system. Database said: ".$db->ErrorMsg());
+					}
+				}
+			}
+		}
+	}
+}
+
+/**
+ * Function takes a period index value, a rotation row, and a clerk/rotation row
+ * and adds notices to be sent to the program coordinator of the clerkship course
+ * in batches to let them know which clerks are deficient/delinquent in their logging.
+ *
+ * @param int $rotation_period_index
+ * @param array $rotation
+ * @param array $clerk
+ * @return array
+ */
+function clerkship_add_queued_notification($rotation_period_index, $clerk, $rotation, $objective_progress) {
+	global $db, $AGENT_CONTACTS;
+						
+	if ($rotation) {
+		$query 	= "SELECT `notified_date` FROM `".CLERKSHIP_DATABASE."`.`logbook_notification_history`
+				WHERE `clerk_id` = ".$db->qstr($clerk["proxy_id"])."
+				AND `proxy_id` = ".$db->qstr($rotation["pcoord_id"])."
+				AND `rotation_id` = ".$db->quote($clerk["rotation_id"])."
+				ORDER BY `notified_date` DESC
+				LIMIT 1";
+		$last_notified = $db->GetOne($query);
+		
+		if ($last_notified <= (strtotime("-1 week"))) {
+			if ($clerk["proxy_id"]) {
+				$coordinator_notification = array(
+														"clerk_id" => $clerk["proxy_id"], 
+														"proxy_id" => $rotation["pcoord_id"], 
+														"rotation_id" => $clerk["rotation_id"], 
+														"timeframe" => $rotation_period_index, 
+														"updated_date" => time(), 
+														"notification_sent" => false
+												);
+				if (!$db->AutoExecute(CLERKSHIP_DATABASE.".clerkship_queued_notifications", $coordinator_notification, "INSERT")) {
+					application_log("error", "Unable to save clerkship coordinator notification to the queue for clerk [".$clerk["proxu_id"]."]. Database said: ".$db->ErrorMsg());
+				}
+			}
+		}
+	}
+}
+/**
+ * Function takes a rotation_id and sends all the pending emails
+ * in the clerkship_queue_notifications table for that rotation
+ * to the clerkship coordinators.
+ *
+ * @param int $rotation_id
+ * @return boolean
+ */
+function clerkship_send_queued_notifications($rotation_id, $rotation_title, $proxy_id) {
+	global $db, $AGENT_CONTACTS;
+	$query 	= "SELECT * FROM `".CLERKSHIP_DATABASE."`.`clerkship_queued_notifications`
+			WHERE `rotation_id` = ".$db->qstr($rotation_id)."
+			AND `clerk_id` NOT IN (
+				SELECT `clerk_id` FROM `".CLERKSHIP_DATABASE."`.`logbook_notification_history` 
+				WHERE `notified_date` > ".$db->qstr(strtotime("-1 week"))."
+				AND `rotation_id` = ".$db->qstr($rotation_id)."
+				AND `proxy_id` = ".$db->qstr($proxy_id)."
+			)
+			AND `notification_sent` = '0'";
+	$clerk_notifications = $db->GetAll($query);
+	if ($clerk_notifications) {
+		$clerks = array();
+		$clerk_ids_string = "";
+		foreach ($clerk_notifications as $clerk_notification) {
+			$clerks[$clerk_notification["clerk_id"]] = get_account_data("fullname", $clerk_notification["clerk_id"]).($clerk_notification["timeframe"] == CLERKSHIP_ROTATION_ENDED ? "*" : ($clerk_notification["timeframe"] == CLERKSHIP_SIX_WEEKS_PAST ? "**" : ""))." - ".ENTRADA_URL."/clerkship/logbook?section=view&type=missing&id=".$clerk_notification["clerk_id"]."&core=".$clerk_notification["rotation_id"];
+			if ($clerk_ids_string) {
+				$clerk_ids_string .= ", ".$db->qstr($clerk_notification["clerk_id"]);
+			} else {
+				$clerk_ids_string = $db->qstr($clerk_notification["clerk_id"]);
+			}
+		}
+		if (isset($proxy_id) && $proxy_id && ($email = get_account_data("email", $proxy_id)) && ($fullname = get_account_data("fullname", $proxy_id))) {
+			if (defined("CLERKSHIP_EMAIL_NOTIFICATIONS") && CLERKSHIP_EMAIL_NOTIFICATIONS) {
+				$mail = new Zend_Mail();
+				$mail->addHeader("X-Originating-IP", $_SERVER["REMOTE_ADDR"]);
+				$mail->addHeader("X-Section", "Clerkship Notification System",true);
+				$mail->clearFrom();
+				$mail->clearSubject();
+				$mail->setFrom($AGENT_CONTACTS["agent-notifications"]["email"], APPLICATION_NAME.' Clerkship System');
+				$mail->setSubject("Clerkship Logbook Progress Notification");
+				
+				$NOTIFICATION_MESSAGE		 	 = array();
+				$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".DEFAULT_TEMPLATE."/email/clerkship-coordinator-notification.txt");
+								
+		
+				$search		= array(
+									"%ROTATION_TITLE%",
+									"%CLERK_LIST%",
+									"%APPLICATION_NAME%",
+									"%ENTRADA_URL%"
+								);
+				$replace	= array(
+									$rotation_title,
+									implode("<br/>\n", $clerks),
+									APPLICATION_NAME,
+									ENTRADA_URL
+							);
+				$mail->setBodyText(clean_input(str_replace($search, $replace, $NOTIFICATION_MESSAGE["textbody"]), array("postclean")));
+				
+				if (strlen($email)) {
+					$mail->clearRecipients();
+					$mail->addTo($email, $fullname);
+					$sent = true;
+					try {
+						$mail->send();
+					}
+					catch (Exception $e) {
+						$sent = false;
+					}
+					if($sent) {
+						application_log("success", "Sent overdue logging notification to Program Coordinator [".$proxy_id."].");
+					} else {
+						application_log("error", "Unable to send overdue logging notification to Program Coordinator [".$proxy_id."].");
+					}
+					foreach ($clerks as $clerk_id => $clerk) {
+						$NOTICE_HISTORY = Array(
+												"clerk_id" => $clerk_id,
+												"proxy_id" => $proxy_id,
+												"rotation_id" => $rotation_id,
+												"notified_date" => time()
+												);
+						if($db->AutoExecute(CLERKSHIP_DATABASE.".logbook_notification_history", $NOTICE_HISTORY, "INSERT")) {
+							if($HISTORY_ID = $db->Insert_Id()) {
+								application_log("success", "Successfully added notification history ID [".$HISTORY_ID."]");
+							} else {
+								application_log("error", "Unable to fetch the newly inserted notification history identifier for this notice.");
+							}
+						} else {
+							application_log("error", "Unable to insert new notification history record into the system. Database said: ".$db->ErrorMsg());
+						}
+					}
+					$db->AutoExecute(CLERKSHIP_DATABASE.".clerkship_queued_notifications", array("notification_sent" => 1), "UPDATE", "`clerk_id` IN (".$clerk_ids_string.")");
+				}
+			}
+		}
+	}
+}
+
+/**
+ * Function takes a clerk proxy id and a rotation id and returns the progress for the
+ * rotation; based on the number of required clinical procedures that have been logged.
+ *
+ * @param int $proxy_id
+ * @param int $rotation_id
+ * @return array
+ */
+function clerkship_rotation_objectives_progress($proxy_id, $rotation_id) {
+	global $db;
+	$query 	= "SELECT a.*, b.* FROM `".CLERKSHIP_DATABASE."`.`logbook_mandatory_objectives` AS a
+			JOIN `global_lu_objectives` AS b
+			ON a.`objective_id` = b.`objective_id`
+			WHERE `rotation_id` = ".$db->qstr($rotation_id);
+	$oresults = $db->GetAll($query);
+	if ($oresults) {
+		$total_required = 0;
+		$total_logged = 0;
+		$required_list = array();
+		$missing_list = array();
+		$logged_list = array();
+		$objective_string = "";
+		foreach ($oresults as $objective) {
+			if ($objective_string) {
+				$objective_string .= ",".$db->qstr($objective["objective_id"]);
+			} else {
+				$objective_string = $db->qstr($objective["objective_id"]);
+			}
+			$objectives[$objective["objective_id"]] = $objective["number_required"];
+			$total_required += $objective["number_required"];
+			$required_list[$objective["objective_id"]] = $objective["objective_name"];
+		}
+		if ($objective_string) {
+			$query 	= "SELECT COUNT(a.`objective_id`) as number_logged, a.`objective_id` FROM `".CLERKSHIP_DATABASE."`.`logbook_entry_objectives` AS a
+					LEFT JOIN `".CLERKSHIP_DATABASE."`.`logbook_entries` AS b
+					ON a.`lentry_id` = b.`lentry_id`
+					WHERE a.`objective_id` IN  (".$objective_string.")
+					AND b.`proxy_id` = ".$db->qstr($proxy_id)."
+					AND b.`entry_active` = 1
+					GROUP BY a.`objective_id`";
+			$numbers_logged = $db->GetAll($query);
+			if ($numbers_logged) {
+				foreach ($numbers_logged as $number_logged) {
+					if ($number_logged > $objectives[$number_logged["objective_id"]]) {
+						$total_logged += $objectives[$number_logged["objective_id"]];
+					} else {
+						$total_logged += $number_logged["number_logged"];
+					}
+					$logged_list[$number_logged["objective_id"]] = $required_list[$number_logged["objective_id"]];
+					unset($required_list[$number_logged["objective_id"]]);
+				}
+			}
+		}
+		return array("required" => $total_required, "logged" => $total_logged, "required_list" => $required_list, "logged_list" => $logged_list);
+	}
+	return false;
+}
+
+/**
+ * Function takes a clerk proxy id and a rotation id and returns the progress for the
+ * rotation; based on the number of required clinical tasks that have been logged.
+ *
+ * @param int $proxy_id
+ * @param int $rotation_id
+ * @return array
+ */
+function clerkship_rotation_tasks_progress($proxy_id, $rotation_id) {
+	$query 	= "SELECT * FROM `".CLERKSHIP_DATABASE."`.`logbook_preferred_procedures`
+			WHERE `rotation_id` = ".$db->qstr($rotation_id);
+	$oresults = $db->GetAll($query);
+	if ($tresults) {
+		$total_required = 0;
+		$total_logged = 0;
+		$task_string = "";
+		foreach ($tresults as $task) {
+			if ($task_string) {
+				$task_string .= ",".$db->qstr($task["lprocedure_id"]);
+			} else {
+				$task_string = $db->qstr($task["lprocedure_id"]);
+			}
+			$tasks[$task["lprocedure_id"]] = $task["number_required"];
+			$total_required += $task["number_required"];
+		}
+		if ($task_string) {
+			$query 	= "SELECT COUNT(a.`lprocedure_id`) as number_logged, a.`lprocedure_id` FROM `".CLERKSHIP_DATABASE."`.`logbook_entry_procedures` AS a
+					LEFT JOIN `".CLERKSHIP_DATABASE."`.`logbook_entries` AS b
+					ON a.`lentry_id` = b.`lentry_id`
+					WHERE a.`lprocedure_id` IN  (".$task_string.")
+					AND b.`proxy_id` = ".$db->qstr($proxy_id)."
+					AND b.`entry_active` = 1
+					GROUP BY a.`lprocedure_id`";
+			$numbers_logged = $db->GetAll($query);
+			if ($numbers_logged) {
+				foreach ($numbers_logged as $number_logged) {
+					if ($number_logged > $tasks[$number_logged["lprocedure_id"]]) {
+						$total_logged += $tasks[$number_logged["lprocedure_id"]];
+					} else {
+						$total_logged += $number_logged["number_logged"];
+					}
+				}
+			}
+		}
+		return array("required" => $total_required, "logged" => $total_logged);
+	}
+	return false;
 }
 
 function clerkship_deficiency_notifications($clerk_id, $rotation_id, $administrator = false, $completed = false, $comments = false) {
@@ -8803,7 +9243,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 		if (isset($where_clinical_presentation) && count($where_clinical_presentation)) {
 			$objective_sql = "	LEFT JOIN `event_objectives`
 								ON `event_objectives`.`event_id` = `events`.`event_id`
-								AND `event_objectives`.`objective_type` = 'course'";
+								AND `event_objectives`.`objective_type` = 'event'";
 		}
 
 	 	$query_count = str_replace("%CONTACT_JOIN%", $contact_sql, $query_count);
@@ -8891,16 +9331,20 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 	 * Provide the previous query so we can have previous / next event links on the details page.
 	 */
 	if (session_id()) {
-		$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dashboard"]["previous_query"]["query"] = $query_events;
-		$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dashboard"]["previous_query"]["total_rows"] = $output["total_rows"];
+		if ($community_id == false) {
+			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dashboard"]["previous_query"]["query"] = $query_events;
+			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dashboard"]["previous_query"]["total_rows"] = $output["total_rows"];
 
-		$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["query"] = $query_events;
-		$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["total_rows"] = $output["total_rows"];
+			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["query"] = $query_events;
+			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["total_rows"] = $output["total_rows"];
+		} else {
+			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["community_page"][$community_id]["previous_query"]["query"] = $query_events;
+			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["community_page"][$community_id]["previous_query"]["total_rows"] = $output["total_rows"];
+		}
 	}
 
 	$query_events = sprintf($query_events, $sort_by, $limit_parameter, $results_per_page);
 	$learning_events = $db->GetAll($query_events);
-
 	if ($learning_events) {
 		if ($_SESSION["details"]["group"] == "student") {
 			$event_ids = array();
@@ -9399,8 +9843,7 @@ function notify_regional_education($action, $event_id) {
 				ON a.`event_id` = c.`event_id`
 				WHERE a.`event_id` = ".$db->qstr($event_id);
 	$result	= $db->GetRow($query);
-	if($result) {
-		if (isset($result["manage_apartments"]) && ((int)$result["manage_apartments"]) == 1) {
+	if ($result) {
 			/**
 			 * Don't process this if the event has already ended as there's not need for notifications.
 			 */
@@ -9506,7 +9949,6 @@ function notify_regional_education($action, $event_id) {
 							$message .= "Update By:\t".$_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]." (".$_SESSION["details"]["id"].")\n";
 						break;
 					}
-		
 					$mail = new Zend_Mail();
 					$mail->addHeader("X-Originating-IP", $_SERVER["REMOTE_ADDR"]);
 					$mail->addHeader("X-Section", "Clerkship Notify System",true);
@@ -9525,6 +9967,7 @@ function notify_regional_education($action, $event_id) {
 						$sent = false;
 					}
 					if($sent) {
+						application_log("success", "An event change notification has been sent to regional education to notify them of the changes to the event [".$event_info["event_id"]."] which will affect the apartment schedule.");
 						return true;
 					} else {
 						system_log_data("error", "Unable to send ".$action." notification to regional education. PHPMailer said: ".$mail->ErrorInfo);
@@ -9538,9 +9981,6 @@ function notify_regional_education($action, $event_id) {
 				// No need to notify Regional Education because the event is already over, just return true.
 				return true;
 			}
-		} else {
-			return true;
-		}
 	} else {
 		system_log_data("error", "The notify_regional_education() function returned false with no results from the database query. Database said: ".$db->ErrorMsg());
 
@@ -10637,6 +11077,26 @@ function get_user_departments($user_id) {
 }
 
 /**
+ * This function gets all of the departments in the user_departments table
+ * @param string $user_id
+ * @return array $results
+ */
+function get_distinct_user_departments() {
+	global $db;
+	
+	$query = "	SELECT DISTINCT b.`department_title`, b.`department_id` 
+				FROM `".AUTH_DATABASE."`.`user_departments` AS a
+				JOIN `".AUTH_DATABASE."`.`departments` AS b
+				ON a.`dep_id` = b.`department_id`
+				WHERE (b.`department_active` = '1' OR b.`department_active` = '3') AND b.`parent_id`='0'
+				ORDER BY b.`department_title`";
+	
+	$results = $db->GetAll($query);
+	
+	return $results;
+}
+
+/**
  * This function gets determines if a user is a department head
  * @param int $user_id
  * @return int $department_id, bool returns false otherwise
@@ -11641,6 +12101,10 @@ function allowed_tags($value) {
 	return clean_input($value, array("allowedtags"));
 }
 
+/**
+ * This displays a person's name, picture etc. including basic biographical information and assistant info if relevant
+ * @param User $user
+ */
 function display_person(User $user) {
 	global $ENTRADA_ACL;
 	$photos = $user->getPhotos();
@@ -11884,5 +12348,22 @@ function generateAccessConditions($organisation, $group, $role, $proxy_id) {
 	}
 	if ($mask_strs) {
 		return implode(" AND ",$mask_strs);
+	}
+}
+
+/*
+ * This function validates the input variable by first trimming it and then checking to
+ * see that it contains integers only and that it is not blank or null.
+ *
+ * @return the input integer on successful validation, 0 on failed validation.
+ */
+function validate_integer_field($input){
+	$input = trim($input);
+	$int_test = preg_match("/[^\d+]/", $input);
+	if (!$int_test  && $input != ""  && !is_null($input)) {
+		$output = $input;
+		return $output;
+	} else {
+		return 0;
 	}
 }

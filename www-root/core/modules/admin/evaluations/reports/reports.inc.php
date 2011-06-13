@@ -100,7 +100,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 			break;
 		}
 
-		echo	"<div class=\"no-printing\">";
+		echo	"<div>";
 		echo	"<table width=\"100%\" summary=\"Evaluation Reports\">";
 		echo	"	<colgroup>
 						<col style=\"width: 18%\" />
@@ -226,8 +226,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 				echo "		<table width=\"80%\" summary=\"Question Statistics\">";
 				echo "			<tr>\n";
 				echo "				<td style=\"width: 34%\"></td>";
-				echo	"		<th align=\"left\" style=\"width: 22%\">Frequency</td>";
-				echo	"		<th align=\"left\" style=\"width: 22%\">Percent</td>";
+				echo "				<td align=\"left\" style=\"width: 22%\">Frequency</td>";
+				echo "				<td align=\"left\" style=\"width: 22%\">Percent</td>";
 				echo "			</tr>";
 			
 				/**
@@ -273,6 +273,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					echo "			<td>".round($profile[$index[$i]]["percent"],2)."</td>\n";
 					echo "		</tr>\n";
 				}
+
 				echo "			<tr>\n";
 				echo "				<td></td>\n";
 				echo "				<td>--------</td>\n";
@@ -291,12 +292,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 				if ($QUESTION_COMMENTS && isset($comments[$number]) && count($comments[$number])) {
 					echo "<tr>\n";
 					echo "	<td colspan=\"4\" style=\"padding-top: 15px\">";
-					echo "		<strong>Evaluator Comments</strong><br />";
-					echo "		<ol style=\"margin-top: 0\">";
+					echo "		<div class=\"comments\">\n";
+					echo "			<strong>Evaluator Comments</strong><br />";
+					echo "			<ol style=\"margin-top: 0\">";
 					foreach ($comments[$number] as $comment) {
-						echo "		<li style=\"margin-bottom: 5px\" class=\"content-small\">".html_encode($comment)."</li>";
+						echo "			<li style=\"margin-bottom: 5px\" class=\"content-small\">".html_encode($comment)."</li>";
 					}
-					echo "		</ol>";
+					echo "			</ol>";
+					echo "		</div>";
 					echo "	</td>";
 					echo "</tr>";
 
@@ -316,26 +319,64 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 		 * Use this code to Show comments for all questions at the end of the report
 		 */
 		if ($END_COMMENTS && count($comments)) {
-			echo	"<tr><td  colspan=\"4\">&nbsp;</td></tr>";
-			echo	"<tr><td colspan=\"2\"><h3>Question Comments:</h3></td><td colspan=\"2\" /></tr>";
-			for ($i=1; $i<=$number; $i++) {
+			echo "<tbody class=\"comments\">";
+			echo "	<tr>\n";
+			echo "		<td colspan=\"4\">&nbsp;</td>\n";
+			echo "	</tr>\n";
+			echo "	<tr>\n";
+			echo "		<td colspan=\"2\">\n";
+			echo "			<h3>Question Comments:</h3>\n";
+			echo "		</td>\n";
+			echo "		<td colspan=\"2\">&nbsp;</td>\n";
+			echo "	</tr>";
+			for ($i = 1; $i <= $number; $i++) {
 				if (isset($comments[$i]) && count($comments[$i])) {	
-					for ($j=0; $j<count($comments[$i]); $j++) {
+					for ($j = 0; $j < count($comments[$i]); $j++) {
+						echo "<tr>\n";
 						if ($j) {
-							echo "<tr><td />";
+							echo "	<td>&nbsp</td>\n";
 						} else {
-							echo "<tr><td>Question $i:</td>";
+							echo "	<td>Question $i:</td>\n";
 						}
-						echo "<td colspan=\"3\">".($j+1).") ".$comments[$i][$j]."</td></tr>";
+						echo "	<td colspan=\"3\">".($j + 1).") ".$comments[$i][$j]."</td>\n";
+						echo "</tr>";
 					}
 				}
 			}
-			echo	"	<tr><td  colspan=\"4\">&nbsp;</td></tr>";					
+			echo "	<tr>\n";
+			echo "		<td colspan=\"4\">&nbsp;</td>\n";
+			echo "	</tr>\n";
+			echo "</tbody>\n";
 		}
-		echo	"<tr><td /><td colspan=\"3\" align=\"right\">Form: $report[form_title] -- $report[form_description]</td></tr>";
-		echo	"</table>";
-		echo	"<hr><p />";
-		echo	"</div>";		
+		echo "	<tbody>\n";
+		echo "		<tr>";
+		echo "			<td>&nbsp;</td>\n";
+		echo "			<td colspan=\"3\" align=\"right\">Form: $report[form_title] -- $report[form_description]</td>\n";
+		echo "		</tr>";
+		echo "	</tbody>";
+		echo "</table>";
+		echo "<hr />";
+		echo "</div>";
+
+		if (count($comments)) {
+			$html = "<label for=\"toggle_comments\">Show comments:</label> <input type=\"checkbox\" id=\"toggle_comments\" value=\"1\" checked=\"checked\" />";
+			new_sidebar_item("Display Comments", $html);
+
+			?>
+			<script type="text/javascript">
+			$('toggle_comments').observe('click', function(event) {
+				if (this.checked) {
+					$$('.comments').each(function(el) {
+						$(el).show();
+					});
+				} else {
+					$$('.comments').each(function(el) {
+						$(el).hide();
+					});
+				}
+			});
+			</script>
+			<?php
+		}
 	}
 }
-?>

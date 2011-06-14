@@ -43,7 +43,7 @@ if ($RECORD_ID) {
 					AND `cannouncement_id` = ".$db->qstr($RECORD_ID)." LIMIT 1";
 		if ($db->Execute($query)) {
 			communities_deactivate_history($COMMUNITY_ID, $PAGE_ID, $RECORD_ID);
-
+			add_statistic("community_announcements", "delete", "cannouncement_id", $RECORD_ID);
 			delete_notifications('announcement:'.$announcement_record["cannouncement_id"]);
 		} else {
 			application_log("error", "Failed to delete [".$RECORD_ID."] announcement from community. Database said: ".$db->ErrorMsg());

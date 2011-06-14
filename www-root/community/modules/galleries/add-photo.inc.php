@@ -200,6 +200,7 @@ if ($RECORD_ID) {
 														
 														$SUCCESS++;
 														$SUCCESSSTR[] = "Photo ".$photo_number." has been successfully uploaded [".$PROCESSED["photo_title"]."].";
+														add_statistic("community_galleries", "photo_add", "cgphoto_id", $photo_id);
 														communities_log_history($COMMUNITY_ID, $PAGE_ID, $photo_id, "community_history_add_photo", 1, $RECORD_ID);
 													} else {
 														$query = "DELETE FROM `community_gallery_photos` WHERE `cgphoto_id` = ".$db->qstr($photo_id)." AND `cgallery_id` = ".$db->qstr($RECORD_ID)." AND `community_id` = ".$db->qstr($COMMUNITY_ID)." LIMIT 1";

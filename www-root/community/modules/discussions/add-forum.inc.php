@@ -155,6 +155,7 @@ switch($STEP) {
 					$SUCCESS++;
 					$SUCCESSSTR[]	= "You have successfully added a new discussion forum to the community.<br /><br />You will now be redirected to the index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 
+					add_statistic("community_discussions", "forum_add", "cdiscussion_id", $FORUM_ID);
 					communities_log_history($COMMUNITY_ID, $PAGE_ID, $FORUM_ID, "community_history_add_forum", 1);
 				}
 			}

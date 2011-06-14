@@ -371,6 +371,9 @@ if (communities_module_access($COMMUNITY_ID, $MODULE_ID, "delete")) {
 				echo	strip_tags($result["announcement_description"], $ALLOWED_HTML_TAGS);
 				echo "</div>\n";
 				echo "</div>";
+				
+				add_statistic("community_announcements", "view", "cannouncement_id", $result["cannouncement_id"]);
+				
 			}
 		} else {
 			$NOTICE++;

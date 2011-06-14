@@ -139,7 +139,7 @@ if ($RECORD_ID) {
 
 								$SUCCESS++;
 								$SUCCESSSTR[]	= "You have successfully updated this file.<br /><br />You will now be redirected to this file page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-
+								add_statistic("community_shares", "file_edit", "csfile_id", $RECORD_ID);
 								communities_log_history($COMMUNITY_ID, $PAGE_ID, $RECORD_ID, "community_history_edit_file", 1, $file_record["cshare_id"]);
 							}
 						}

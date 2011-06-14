@@ -155,7 +155,7 @@ if ($RECORD_ID) {
 
 							$SUCCESS++;
 							$SUCCESSSTR[]	= "You have successfully updated the <strong>".html_encode($PROCESSED["forum_title"])."</strong> discussion forum.<br /><br />You will now be redirected to the index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-
+							add_statistic("community_discussions", "forum_edit", "cdiscussion_id", $RECORD_ID);
 							communities_log_history($COMMUNITY_ID, $PAGE_ID, $RECORD_ID, "community_history_edit_forum", 1);
 						}
 

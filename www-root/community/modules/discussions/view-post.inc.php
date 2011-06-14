@@ -206,6 +206,7 @@ if ($RECORD_ID) {
 				?>
 			</div>
 			<?php
+			add_statistic("community_discussions", "post_view", "cdtopic_id", $RECORD_ID);
 		} else {
 			if ($ERROR) {
 				echo display_error();
@@ -214,6 +215,7 @@ if ($RECORD_ID) {
 				echo display_notice();
 			}
 		}
+		
 	} else {
 		application_log("error", "The provided discussion post id was invalid [".$RECORD_ID."] (View Post).");
 

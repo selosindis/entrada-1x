@@ -33,6 +33,8 @@ if ($RECORD_ID) {
 				if ($db->AutoExecute("community_share_comments", array("comment_active" => 0, "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "UPDATE", "`cscomment_id` = ".$db->qstr($RECORD_ID)." AND `csfile_id` = ".$db->qstr($comment_record["csfile_id"])." AND `cshare_id` = ".$db->qstr($comment_record["cshare_id"])." AND `community_id` = ".$db->qstr($COMMUNITY_ID))) {
 					communities_deactivate_history($COMMUNITY_ID, $PAGE_ID, $RECORD_ID);
 					delete_notifications("shares:file_comment:$RECORD_ID");
+					add_statistic("community_shares", "comment_delete", "cscomment_id", $RECORD_ID);
+					
 				} else {
 					application_log("error", "Failed to deactivate [".$RECORD_ID."] file comment from community. Database said: ".$db->ErrorMsg());
 				}

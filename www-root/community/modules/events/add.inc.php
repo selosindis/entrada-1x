@@ -117,6 +117,7 @@ switch ($STEP) {
 						$SUCCESSSTR[]	= "You have successfully added a new event to the community.<br /><br />You will now be redirected to the index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 					}
 					communities_log_history($COMMUNITY_ID, $PAGE_ID, $EVENT_ID, "community_history_add_event", ($PROCESSED["pending_moderation"] == 1 ? 0 : 1));
+					add_statistic("community_events", "add", "cevent_id", $EVENT_ID);
 				}
 			}
 

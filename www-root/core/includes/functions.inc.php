@@ -11243,7 +11243,8 @@ function is_department_head($user_id) {
  */
 function objectives_build_course_competencies_array() {
 	global $db;
-	$courses_array = array();
+	$courses_array = array("courses" => array(), "competencies" => array());
+	
 	$query = "	SELECT a.*, b.`curriculum_type_name` FROM `courses` AS a
 				LEFT JOIN `curriculum_lu_types` AS b
 				ON a.`curriculum_type_id` = b.`curriculum_type_id`

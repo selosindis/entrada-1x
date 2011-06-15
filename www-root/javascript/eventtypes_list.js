@@ -51,7 +51,6 @@ document.observe('click', function(e, el) {
 
 
 document.observe("dom:loaded", function() {        
-
 	if(typeof EVENT_LIST_STATIC_TOTAL_DURATION == "undefined") {
 		EVENT_LIST_STATIC_TOTAL_DURATION = false;
 	}

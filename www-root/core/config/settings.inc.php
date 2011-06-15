@@ -11,13 +11,16 @@
  *
 */
 
-if (defined("ENTRADA_TESTING_CONFIG")) {
-	$config_data = require ENTRADA_TESTING_CONFIG;
-} else {
-	$config_data = require "config.inc.php";
+/*
+ * Push user to setup if the config file doesn't exist, and the
+ * setup file does.
+ */
+if (!@file_exists("core/config/config.inc.php") && @file_exists("setup/index.php")) {
+	header("Location: setup/index.php");
+	exit;
 }
 
-$config = new Zend_Config($config_data);
+$config = new Zend_Config(require "config.inc.php");
 
 /**
  * The default timezone based on PHP's supported timezones:
@@ -450,7 +453,6 @@ $MODULES["communities"] = array("title" => "Manage Communities", "resource" => "
 $MODULES["groups"] = array("title" => "Manage Groups", "resource" => "group", "permission" => "update");
 $MODULES["events"] = array("title" => "Manage Events", "resource" => "eventcontent", "permission" => "update");
 $MODULES["gradebook"] = array("title" => "Manage Gradebook", "resource" => "gradebook", "permission" => "update");
-//$MODULES["mspr"] = array("title" => "Manage MSPRs", "resource" => "mspr", "permission" => "create"); //removed as it is now under manage users
 $MODULES["tasks"] = array("title" => "Manage Tasks", "resource" => "task", "permission" => "create"); 
 $MODULES["notices"] = array("title" => "Manage Notices", "resource" => "notice", "permission" => "update");
 $MODULES["objectives"]	= array("title" => "Manage Objectives", "resource" => "objective", "permission" => "update");

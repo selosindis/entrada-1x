@@ -223,12 +223,15 @@ if (!defined("IN_APARTMENTS")) {
 			}
 
 
-			if (!isset($_POST['keys_from_super'])) {
+			if (isset($_POST['keys_from_super'])) {
 				$PROCESSED['keys_firstname'] = $PROCESSED['super_firstname'];
 				$PROCESSED['keys_lastname'] = $PROCESSED['super_lastname'];
 				$PROCESSED['keys_phone'] = $PROCESSED['super_phone'];
 				$PROCESSED['keys_email'] = $PROCESSED['super_email'];
+				$super_for_keys = 'true';
 			} else {
+				$super_for_keys = 'false';
+				
 				if (isset($_POST["keys_firstname"]) && ($tmp_input = clean_input($_POST["keys_firstname"], array("trim", "notags")))) {
 					$PROCESSED["keys_firstname"] = $tmp_input;
 				} else {
@@ -301,6 +304,7 @@ if (!defined("IN_APARTMENTS")) {
 		break;
 		case 1 :
 		default :
+			$super_for_keys = 'true';
 			continue;
 		break;
 	}
@@ -324,7 +328,7 @@ if (!defined("IN_APARTMENTS")) {
 			$PROCESSED["prov_state"] = ((isset($PROCESSED["province_id"]) && $PROCESSED["province_id"]) ? (int) $PROCESSED["province_id"] : ((isset($PROCESSED["apartment_province"]) && $PROCESSED["apartment_province"]) ? $PROCESSED["apartment_province"] : ""));
 		
 			$ONLOAD[] = "provStateFunction(\$F($('addApartmentForm')['countries_id']))";
-			$ONLOAD[] = "toggle_visibility_checkbox($('keys_from_super'), 'keys_division')";
+			$ONLOAD[] = "display_key_contact(".$super_for_keys.")";
 			
 			/**
 			 * Determine whether the Google Maps can be shown.
@@ -350,14 +354,17 @@ if (!defined("IN_APARTMENTS")) {
 			var googleMap = null;
 			var updater = null;
 
-		    function showHide(){
-				if(!document.getElementById('keys_from_super').checked){
-					document.getElementById('keys_division').style.visibility = 'visible';
+
+				function display_key_contact(display) {
+					if (display) {
+						$('keys_from_super').checked = true;
+						Effect.Fade($('keys_division'));
+					} else {
+						$('keys_from_super').checked = false;
+						Effect.Appear($('keys_division'));
+					}
 				}
-				else{
-					document.getElementById('keys_division').style.visibility = 'hidden';
-				}
-			}			
+		
 
 
 			function initialize() {
@@ -659,9 +666,8 @@ if (!defined("IN_APARTMENTS")) {
 							</td>
 						</tr>
 						<tr>
-							<td>&nbsp;</td>
-							<td>&nbsp;</td>
-							<td><input type="checkbox"name ="keys_from_super" id="keys_from_super" value="false" onclick="toggle_visibility_checkbox(this,'keys_division')">Use Different Contact For Keys</input></td>
+							<td><input type="checkbox"name ="keys_from_super" id="keys_from_super" value="true" onclick="display_key_contact(this.checked)"/></td>
+							<td colspan="2"><label for="keys_from_super" class="form-nrequired">The superintendent is also the <strong>key contact</strong> for this apartment.</label></td>
 						</tr>
 						</tbody>
 						<tbody id ="keys_division">						
@@ -700,11 +706,6 @@ if (!defined("IN_APARTMENTS")) {
 
 					</tbody>
 					<tbody>
-
-						
-						
-						
-						
 						<tr>
 							<td colspan="4"><h2>Apartment Availability</h2></td>
 						</tr>

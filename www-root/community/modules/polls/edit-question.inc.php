@@ -128,7 +128,7 @@ if ($RECORD_ID) {
 					$SUCCESS++;
 					$SUCCESSSTR[]	= "You have successfully edited a question.<br /><br />You will now be redirected back to edit this ".$terminology."; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 
-
+					add_statistic("community_polling", "question_edit", "cpquestion_id", $RECORD_ID);
 					communities_log_history($COMMUNITY_ID, $PAGE_ID, $POLL_ID, "community_history_edit_poll", 0);
 				}
 	

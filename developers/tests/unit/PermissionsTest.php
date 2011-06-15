@@ -34,9 +34,9 @@ class PermissionsTest extends PHPUnit_Framework_TestCase {
 	/**
      * @dataProvider adminProvider
      */
-//    public function testAdminPermissions(EntradaUser $user, $resource, $action, $expected, Entrada_Acl $acl, $querystring) {
-//        $this->assertEquals($expected, $acl->isAllowed($user, $resource, $action, true));
-//    }
+    public function testAdminPermissions(EntradaUser $user, $resource, $action, $expected, Entrada_Acl $acl, $querystring) {
+        $this->assertEquals($expected, $acl->isAllowed($user, $resource, $action, true));
+    }
 	/**
      * @dataProvider staffadminProvider
      */
@@ -46,15 +46,15 @@ class PermissionsTest extends PHPUnit_Framework_TestCase {
 	/**
      * @dataProvider pcoordProvider
      */
-//    public function testProgramCoordinatorPermissions(EntradaUser $user, $resource, $action, $expected, Entrada_Acl $acl, $querystring) {
-//        $this->assertEquals($expected, $acl->isAllowed($user, $resource, $action, true));
-//    }
-//	/**
-//     * @dataProvider directorProvider
-//     */
-//    public function testDirectorPermissions(EntradaUser $user, $resource, $action, $expected, Entrada_Acl $acl, $querystring) {
-//        $this->assertEquals($expected, $acl->isAllowed($user, $resource, $action, true));
-//    }
+    public function testProgramCoordinatorPermissions(EntradaUser $user, $resource, $action, $expected, Entrada_Acl $acl, $querystring) {
+        $this->assertEquals($expected, $acl->isAllowed($user, $resource, $action, true));
+    }
+	/**
+     * @dataProvider directorProvider
+     */
+    public function testDirectorPermissions(EntradaUser $user, $resource, $action, $expected, Entrada_Acl $acl, $querystring) {
+        $this->assertEquals($expected, $acl->isAllowed($user, $resource, $action, true));
+    }
 
 	public function adminProvider() {
 		$queries = array(); $to_query = array();
@@ -106,11 +106,12 @@ class PermissionsTest extends PHPUnit_Framework_TestCase {
 		$queries[] = array(10, "course", 						"create", false); 	// directors can't create courses
 		$queries[] = array(10, "course", 						"update", false); 	// directors can't update any course
 		$queries[] = array(10, "course", 						"delete", false); 	// directors can't update any course
-		$queries[] = array(10, new CourseContentResource(1, 1), "update", false); 	// directors can't update course content for courses they direct
+		$queries[] = array(10, new CourseContentResource(1, 1), "update", true); 	// *(courseID, orgID) directors can update course content for courses they direct
 		$queries[] = array(10, new CourseResource(1, 1), 		"update", false); 	// directors can't update courses even if they coordinate them
 		$queries[] = array(10, new CourseResource(2, 1), 		"update", false); 	// directors can't update courses they don't coordinate
-		
-		$queries[] = array(10, "event",					"update", false); 			// directors can't unconditionally create events
+
+		$queries[] = array(10, "event",					"create", false); 			// directors can't unconditionally create events
+		$queries[] = array(10, "event",					"update", false); 			// directors can't unconditionally update events
 		$queries[] = array(10, new EventResource(1,1,1), "create", false); 			// directors can't create events belonging to courses they coordinate
 		$queries[] = array(10, new EventResource(1,1,1), "update", false); 			// directors can't update events belonging to courses they coordinate
 		$queries[] = array(10, new EventResource(1,1,1), "delete", false); 			// directors can't delete events belonging to courses they coordinate
@@ -137,7 +138,9 @@ class PermissionsTest extends PHPUnit_Framework_TestCase {
 		foreach($queries as &$query) {
 			$query[0] = get_entrada_user($query[0]);
 			$query[4] = $this->get_user_acl($query[0]);
-			$query[5] = $query[0]->details["username"] . " trying to ".$query[2]." on ".(is_string($query[1]) ? $query[1] : get_class($query[1])).", supposed to be " . $query[3];
+			$query[5] = $query[0]->details["username"] . " trying to ".$query[2]." on ".
+						(is_string($query[1]) ? $query[1] : get_class($query[1])).
+						", supposed to be " . ($query[3]) ? 'true' : 'false';
 		}
 		return $queries;
 	}

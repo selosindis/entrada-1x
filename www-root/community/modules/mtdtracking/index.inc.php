@@ -164,6 +164,14 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 
 			var e_date = jQuery( "#end_date" ).datepicker();
 
+			jQuery('#block_list').change(function(e) {
+				var block = jQuery(this).val();
+				var url = '<?php echo COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL; ?>?section=api-mtd-get-block&block='+block;
+				jQuery.get(url, function(data) {
+					jQuery('#block_choice').html(data);
+				});
+			});
+
 		});
 
 		function validateRequired(formArray) {
@@ -258,6 +266,7 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 			jQuery("#program_description").html("");
 			jQuery("#category_description").html("");
 			jQuery("#full_name").html("");
+			jQuery("#block_choice").html("");
 			//Clear the form fields
 			jQuery("#resident_name").val("");
 			jQuery("#resident_proxy_id").val(0);
@@ -329,11 +338,13 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 					?>
 				</select>
 			</p>
-
-		</div>
+			<div id="block_choice" style="float:left;">
+			</div>
+			</div>
 
 		<div id="calendars" style="float:right">
-			<p>OR Pick a start and end date:</p>
+			<br />
+			<p><strong>OR Pick a start and end date:</strong></p>
 			<p>
 				<label for="start_date">Start Date:</label>	<input id="start_date" name="start_date" type="text" />
 				<br />

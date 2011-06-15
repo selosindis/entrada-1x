@@ -31,8 +31,10 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 		header("Location: ".ENTRADA_URL);
 		exit;
 } else {
-		echo "<h1>Competencies by Course</h1>";
-		$objectives = objectives_build_course_competencies_array();
+	echo "<h1>Competencies by Course</h1>";
+	$objectives = objectives_build_course_competencies_array();
+	
+	if (!empty($objectives["courses"]) && !empty($objectives["competencies"])) {
 		?>
 		<style type="text/css">
 		.title {
@@ -108,4 +110,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 			</tbody>
 		</table>
 		<?php
+	} else {
+		echo display_notice(array("There are no <strong>courses</strong> or <strong>competencies</strong> available to view on the map at this time."));
+	}
 }

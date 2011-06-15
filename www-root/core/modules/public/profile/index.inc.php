@@ -222,7 +222,7 @@ if (!defined("IN_PROFILE")) {
 					<?php } else { ?>
 					<tr>
 						<td><strong>Primary E-Mail:</strong></td>
-						<td><input type="hidden" id="email" name="email" value="<?php echo html_encode($result["email"]); ?>" /><a href="mailto:<?php echo html_encode($result["email"]); ?>"><?php echo html_encode($result["email"]); ?></a></td>
+						<td><a href="mailto:<?php echo html_encode($result["email"]); ?>"><?php echo html_encode($result["email"]); ?></a></td>
 					</tr>
 					<?php } ?>
 					<tr>

@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS `eventtype_organisation`(
 `eventtype_id` INT(12) NOT NULL, 
 `organisation_id` INT(12) NOT NULL, 
-KEY `eventtype_id` (`eventtype_id`),
+PRIMARY KEY (`eventtype_id`),
 KEY `organisation_id` (`organisation_id`)
 ) ENGINE = MyISAM DEFAULT CHARSET=utf8;
 

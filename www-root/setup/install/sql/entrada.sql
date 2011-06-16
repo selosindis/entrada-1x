@@ -3814,7 +3814,7 @@ INSERT INTO `mtd_type` (`id`, `type_code`, `type_description`) VALUES
 CREATE TABLE IF NOT EXISTS `eventtype_organisation`(
 `eventtype_id` INT(12) NOT NULL, 
 `organisation_id` INT(12) NOT NULL, 
-KEY `eventtype_id` (`eventtype_id`),
+PRIMARY KEY (`eventtype_id`),
 KEY `organisation_id` (`organisation_id`)
 ) ENGINE = MyISAM DEFAULT CHARSET=utf8;
 
@@ -3897,14 +3897,14 @@ INSERT INTO `pg_blocks` (`id`, `block_name`, `start_date`, `end_date`, `year`) V
 CREATE TABLE IF NOT EXISTS `objective_organisation`(
 `objective_id` INT(12) NOT NULL, 
 `organisation_id` INT(12) NOT NULL, 
-KEY `objective_id` (`objective_id`),
+PRIMARY KEY (`objective_id`),
 KEY `organistion_id` (`organisation_id`)
 ) ENGINE = MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `topic_organisation`(
 `topic_id` INT(12) NOT NULL, 
 `organisation_id` INT(12) NOT NULL, 
-KEY `topic_id` (`topic_id`),
+PRIMARY KEY (`topic_id`),
 KEY `organisation_id` (`organisation_id`)
 ) ENGINE = MyISAM DEFAULT CHARSET=utf8;
 

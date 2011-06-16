@@ -11,4 +11,4 @@ CREATE TABLE IF NOT EXISTS `user_data_resident` (
   `assess_prog_img` varchar(1) NOT NULL,
   `assess_prog_non_img` varchar(1) NOT NULL,
   PRIMARY KEY (`proxy_id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 ;

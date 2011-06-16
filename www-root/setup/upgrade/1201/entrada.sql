@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS `mtd_categories` (
   `category_code` varchar(3) NOT NULL,
   `category_description` varchar(100) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 ;
 
 CREATE TABLE IF NOT EXISTS `mtd_facilities` (
   `id` int(11) NOT NULL ,
@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS `mtd_facilities` (
   `facility_name` varchar(50) NOT NULL,
   `kingston` int(1) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 ;
 
 CREATE TABLE IF NOT EXISTS `mtd_locale_duration` (
   `id` int(11) NOT NULL ,
@@ -19,21 +19,21 @@ CREATE TABLE IF NOT EXISTS `mtd_locale_duration` (
   `percent_time` int(3) NOT NULL,
   `schedule_id` int(11) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 ;
 
 CREATE TABLE IF NOT EXISTS `mtd_moh_program_codes` (
   `id` int(11) NOT NULL ,
   `program_code` varchar(3) NOT NULL,
   `program_description` varchar(100) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 ;
 
 CREATE TABLE IF NOT EXISTS `mtd_moh_service_codes` (
   `id` int(11) NOT NULL ,
   `service_code` varchar(3) NOT NULL,
   `service_description` varchar(50) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 ;
 
 CREATE TABLE IF NOT EXISTS `mtd_schedule` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -46,28 +46,28 @@ CREATE TABLE IF NOT EXISTS `mtd_schedule` (
   `updated_date` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00' ON UPDATE CURRENT_TIMESTAMP,
   `updated_by` int(12) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `mtd_schools` (
   `id` int(11) NOT NULL ,
   `school_code` varchar(3) NOT NULL,
   `school_description` varchar(100) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 ;
 
 CREATE TABLE IF NOT EXISTS `mtd_pgme_moh_programs` (
   `id` int(11) NOT NULL ,
   `pgme_program_name` varchar(100) NOT NULL,
   `moh_service_name` varchar(100) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 ;
 
 CREATE TABLE IF NOT EXISTS `mtd_type` (
   `id` int(12) NOT NULL AUTO_INCREMENT,
   `type_code` varchar(1) NOT NULL,
   `type_description` varchar(100) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 
 INSERT INTO `mtd_type` (`id`, `type_code`, `type_description`) VALUES
 (1, 'I', 'in-patient/emergency'),

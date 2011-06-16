@@ -143,9 +143,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 
 					if ($db->AutoExecute(AUTH_DATABASE . ".organisations", $PROCESSED, "UPDATE", "`organisation_id`=" . $db->qstr($ORGANISATION_ID))) {
 						$SUCCESS++;
-						$SUCCESSSTR[] = "You have successfully added <strong>" . html_encode($PROCESSED["organisation_title"]) . "</strong> to the system.<br /><br />You will now be redirected to the organisations index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"" . ENTRADA_URL . "/admin/configuration/organisations/manage?id=" . $ORGANISATION_ID . "\" style=\"font-weight: bold\">click here</a> to continue.";
+						$SUCCESSSTR[] = "You have successfully added <strong>" . html_encode($PROCESSED["organisation_title"]) . "</strong> to the system.<br /><br />You will now be redirected to the organisations index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"" . ENTRADA_URL . "/admin/configuration/organisations/manage?org=" . $ORGANISATION_ID . "\" style=\"font-weight: bold\">click here</a> to continue.";
 
-						$ONLOAD[] = "setTimeout('window.location=\\'" . ENTRADA_URL . "/admin/configuration/organisations/manage?id=" . $ORGANISATION_ID . "\\'', 5000)";
+						$ONLOAD[] = "setTimeout('window.location=\\'" . ENTRADA_URL . "/admin/configuration/organisations/manage?org=" . $ORGANISATION_ID . "\\'', 5000)";
 
 						application_log("success", "Updated information for the organisation [" . $PROCESSED["organisation_title"] . "] added to the system.");
 					} else {
@@ -357,7 +357,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 					</script>
 
 					<?php echo "<h1>Edit " . $ORGANISATION["organisation_title"] . "</h1>"; ?>
-					<form id ="editOrganisationForm" action = "<?php echo ENTRADA_URL; ?>/admin/configuration/organisations?section=edit&amp;org=<?php echo $ORGANISATION_ID; ?>&amp;step=2" method = "post">
+					<form id ="editOrganisationForm" action = "<?php echo ENTRADA_URL; ?>/admin/configuration/organisations/manage?section=edit&amp;org=<?php echo $ORGANISATION_ID; ?>&amp;step=2" method = "post">
 						<table  cellspacing="0" border="0" cellpadding="2" summary="Add Organisation Form">
 							<colgroup>
 								<col style="width: 24%" />

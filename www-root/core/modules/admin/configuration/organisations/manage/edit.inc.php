@@ -33,15 +33,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 
 	application_log("error", "Group [" . $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"] . "] and role [" . $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"] . "] do not have access to this module [" . $MODULE . "]");
 } else {
-	$BREADCRUMB[] = array("url" => ENTRADA_URL . "/admin/configuration/organisations?section=edit&amp;id=" . $ORGANISATION['organisation_id'], "title" => "Edit Organisation");
-
-	if (isset($_GET["id"])) {
-		$ORGANISATION_ID = $_GET["id"];
-
-		$query = "SELECT * FROM `" . AUTH_DATABASE . "`.`organisations` WHERE `organisation_id` = " . $db->qstr($ORGANISATION_ID);
-		$ORGANISATION = $db->GetRow($query);
-	}
-	if ($ORGANISATION) {
+	$BREADCRUMB[] = array("url" => ENTRADA_URL . "/admin/configuration/organisations?section=edit&amp;org=" . $ORGANISATION['organisation_id'], "title" => "Edit Organisation");
 
 		switch ($STEP) {
 			case 2 :
@@ -365,7 +357,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 					</script>
 
 					<?php echo "<h1>Edit " . $ORGANISATION["organisation_title"] . "</h1>"; ?>
-					<form id ="editOrganisationForm" action = "<?php echo ENTRADA_URL; ?>/admin/configuration/organisations?section=edit&amp;id=<?php echo $ORGANISATION_ID; ?>&amp;step=2" method = "post">
+					<form id ="editOrganisationForm" action = "<?php echo ENTRADA_URL; ?>/admin/configuration/organisations?section=edit&amp;org=<?php echo $ORGANISATION_ID; ?>&amp;step=2" method = "post">
 						<table  cellspacing="0" border="0" cellpadding="2" summary="Add Organisation Form">
 							<colgroup>
 								<col style="width: 24%" />
@@ -374,7 +366,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 							<tfoot>
 								<tr>
 									<td colspan="2" style="padding-top: 25px;text-align: right;padding-right:45px;">
-										<input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/configuration/organisations/manage?id=<?php echo $ORGANISATION_ID; ?>'" />
+										<input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/configuration/organisations/manage?org=<?php echo $ORGANISATION_ID; ?>'" />
 										<input type="submit" class="button" value="Save" />
 									</td>
 								</tr>
@@ -478,10 +470,5 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 
 				break;
 		}
-	} else {
-		$ERROR++;
-		$ERRORSTR[] = "The Organisation you've selected appears to be invalid. ";
-		echo display_error();
-	}
 }
 ?>

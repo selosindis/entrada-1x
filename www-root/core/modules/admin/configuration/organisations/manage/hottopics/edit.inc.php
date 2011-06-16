@@ -35,10 +35,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
 
-	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/configuration/organisations/manage/hottopics?".replace_query(array("section" => "edit"))."&amp;id=".$ORGANISATION_ID, "title" => "Edit Hot Topic");
+	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/configuration/organisations/manage/hottopics?".replace_query(array("section" => "edit"))."&amp;org=".$ORGANISATION_ID, "title" => "Edit Hot Topic");
 	
-	if (isset($_GET["topic_id"])) {
-		$PROCESSED["topic_id"] = $_GET["topic_id"];
+	if ((isset($_GET["topic_id"])) && ($topic = clean_input($_GET["topic_id"], array("notags", "trim")))) {
+		$PROCESSED["topic_id"] = $topic;
 	}
 	
 	
@@ -71,7 +71,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 				
 				if ($db->AutoExecute("`events_lu_topics`", $params, "UPDATE","`topic_id`=".$db->qstr($PROCESSED["topic_id"]))) {
 
-							$url = ENTRADA_URL . "/admin/configuration/organisations/manage/hottopics?id=".$ORGANISATION_ID;
+							$url = ENTRADA_URL . "/admin/configuration/organisations/manage/hottopics?org=".$ORGANISATION_ID;
 							$SUCCESS++;
 							$SUCCESSSTR[] = "You have successfully added <strong>".html_encode($PROCESSED["topic_name"])."</strong> to the system.<br /><br />You will now be redirected to the Hot Topics index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 							$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
@@ -127,7 +127,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 			}
 						
 			?>
-			<form action="<?php echo ENTRADA_URL."/admin/configuration/organisations/manage/hottopics"."?".replace_query(array("action" => "edit", "step" => 2))."&id=".$ORGANISATION_ID; ?>" method="post">
+			<form action="<?php echo ENTRADA_URL."/admin/configuration/organisations/manage/hottopics"."?".replace_query(array("action" => "edit", "step" => 2))."&org=".$ORGANISATION_ID; ?>" method="post">
 			<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Editing Page">
 			<colgroup>
 				<col style="width: 30%" />

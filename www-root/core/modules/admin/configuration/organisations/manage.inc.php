@@ -34,43 +34,43 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
-
-
 	if (($router) && ($router->initRoute())) {
 		$PREFERENCES = preferences_load($MODULE);
 		
-		
-		if(isset($_GET["org_id"])){
-			$ORGANISATION_ID = $_GET["org_id"];
-		}else if(isset($_GET["id"])){
-			$ORGANISATION_ID = $_GET["id"];
+		if (isset($_GET["org"]) && ($org = clean_input($_GET["org"], array("notags", "trim")))) {
+				$ORGANISATION_ID = $org;
 		}
 		
-		
 		if($ORGANISATION_ID){
-			if($ENTRADA_ACL->amIAllowed(new ConfigurationResource($ORGANISATION_ID),"read")){
-				$query = "SELECT * FROM `".AUTH_DATABASE."`.`organisations` WHERE `organisation_id` = ".$db->qstr($ORGANISATION_ID);
+			$query = "SELECT * FROM `" . AUTH_DATABASE . "`.`organisations` WHERE `organisation_id` = " . $db->qstr($ORGANISATION_ID);
+			$ORGANISATION = $db->GetRow($query);
+			if($ORGANISATION){
+				if($ENTRADA_ACL->amIAllowed(new ConfigurationResource($ORGANISATION_ID),"read")){
+					$query = "SELECT * FROM `".AUTH_DATABASE."`.`organisations` WHERE `organisation_id` = ".$db->qstr($ORGANISATION_ID);
 
-				$ORGANISATION = $db->GetRow($query);
-				$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/configuration/organisations/manage?id=".$ORGANISATION['organisation_id'], "title" => $ORGANISATION["organisation_title"]);
+					$ORGANISATION = $db->GetRow($query);
+					$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/configuration/organisations/manage?id=".$ORGANISATION['organisation_id'], "title" => $ORGANISATION["organisation_title"]);
 
-				$sidebar_html  = "<ul class=\"menu\">";
-				$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/configuration/organisations/manage/objectives?id=".$ORGANISATION_ID."\">Manage Objectives</a></li>\n";
-				$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/configuration/organisations/manage/eventtypes?id=".$ORGANISATION_ID."\">Manage Eventtypes</a></li>\n";
-				$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/configuration/organisations/manage/hottopics?id=".$ORGANISATION_ID."\">Manage Hot Topics</a></li>\n";
-				$sidebar_html .= "</ul>";
-				new_sidebar_item("Organisation Management", $sidebar_html, "config-org-nav", "open");
+					$sidebar_html  = "<ul class=\"menu\">";
+					$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/configuration/organisations/manage/objectives?org=".$ORGANISATION_ID."\">Manage Objectives</a></li>\n";
+					$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/configuration/organisations/manage/eventtypes?org=".$ORGANISATION_ID."\">Manage Eventtypes</a></li>\n";
+					$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/configuration/organisations/manage/hottopics?org=".$ORGANISATION_ID."\">Manage Hot Topics</a></li>\n";
+					$sidebar_html .= "</ul>";
+					new_sidebar_item("Organisation Management", $sidebar_html, "config-org-nav", "open");
 
 
-				$module_file = $router->getRoute();
-				if ($module_file) {
-					require_once($module_file);
+					$module_file = $router->getRoute();
+					if ($module_file) {
+						require_once($module_file);
+					}
+				}else {
+					add_notice("You don't appear to have access to change this organisation. If you feel you are seeing this in error, please contact your system administrator.");
+					echo display_notice();
 				}
-			}else {
-				add_notice("You don't appear to have access to change this organisation. If you feel you are seeing this in error, please contact your system administrator.");
+			}else{
+				add_notice("The organisation appears to be invalid. If you feel you are seeing this in error, please contact your system administrator.");
 				echo display_notice();
 			}
-
 		}
 		else{
 			$url = ENTRADA_URL."/admin/configuration/organisations/";

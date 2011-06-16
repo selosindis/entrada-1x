@@ -73,7 +73,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 						<tbody>
 							<?php
 							foreach($organisations as $result) {
-								$url = ENTRADA_URL."/admin/configuration/organisations/manage?id=".(int) $result["organisation_id"];
+								$url = ENTRADA_URL."/admin/configuration/organisations/manage?org=".(int) $result["organisation_id"];
 
 								echo "<tr>\n";
 								echo "	<td><a href=\"".$url."\">".html_encode($result["organisation_title"])."</a></td>\n";

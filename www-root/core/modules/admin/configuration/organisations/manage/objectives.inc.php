@@ -25,7 +25,7 @@
  *
 */
 
-$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/configuration/organisations/manage/objectives?id=".$ORGANISATION['organisation_id'], "title" => "Manage Objectives");
+$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/configuration/organisations/manage/objectives?org=".$ORGANISATION['organisation_id'], "title" => "Manage Objectives");
 
 if (!defined("PARENT_INCLUDED")) {
 	exit;
@@ -47,10 +47,7 @@ if (!defined("PARENT_INCLUDED")) {
 	if (($router) && ($router->initRoute())) {
 		$PREFERENCES = preferences_load($MODULE);
 		
-		if ((isset($_GET["id"])) && ((int) trim($_GET["id"]))) {
-			$OBJECTIVE_ID = (int) trim($_GET["id"]);
-		}
-		
+	
 		$module_file = $router->getRoute();
 		if ($module_file) {
 			require_once($module_file);

@@ -39,7 +39,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 		$PREFERENCES = preferences_load($MODULE);
 		
 
-		$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/configuration/organisations/manage/eventtypes?id=".$ORGANISATION['organisation_id'], "title" => "Manage Eventtypes");
+		$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/configuration/organisations/manage/eventtypes?org=".$ORGANISATION['organisation_id'], "title" => "Manage Eventtypes");
 
 		$module_file = $router->getRoute();
 		if ($module_file) {

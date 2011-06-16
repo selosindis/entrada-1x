@@ -35,7 +35,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
 
-	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/configuration/organisations/manage/hottopics?".replace_query(array("section" => "add"))."&amp;id=".$ORGANISATION_ID, "title" => "Add Hot Topic");
+	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/configuration/organisations/manage/hottopics?".replace_query(array("section" => "add"))."&amp;org=".$ORGANISATION_ID, "title" => "Add Hot Topic");
 	
 	// Error Checking
 	switch ($STEP) {
@@ -69,7 +69,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 						$params = array("topic_id"=>$TOPIC_ID,"organisation_id"=>$ORGANISATION_ID);
 						
 						if($db->AutoExecute("topic_organisation", $params, "INSERT")){
-							$url = ENTRADA_URL . "/admin/configuration/organisations/manage/hottopics?id=".$ORGANISATION_ID;
+							$url = ENTRADA_URL . "/admin/configuration/organisations/manage/hottopics?org=".$ORGANISATION_ID;
 							$SUCCESS++;
 							$SUCCESSSTR[] = "You have successfully added <strong>".html_encode($PROCESSED["topic_title"])."</strong> to the system.<br /><br />You will now be redirected to the Hot Topics index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 							$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
@@ -135,7 +135,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 			$ONLOAD[] = "selectOrder(".(isset($PROCESSED["objective_parent"]) && $PROCESSED["objective_parent"] ? $PROCESSED["objective_parent"] : "0").")";
 						
 			?>
-			<form action="<?php echo ENTRADA_URL."/admin/configuration/organisations/manage/hottopics"."?".replace_query(array("action" => "add", "step" => 2))."&id=".$ORGANISATION_ID; ?>" method="post">
+			<form action="<?php echo ENTRADA_URL."/admin/configuration/organisations/manage/hottopics"."?".replace_query(array("action" => "add", "step" => 2))."&org=".$ORGANISATION_ID; ?>" method="post">
 			<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Adding Page">
 			<colgroup>
 				<col style="width: 30%" />

@@ -39,7 +39,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 		$PREFERENCES = preferences_load($MODULE);
 		
 
-		$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/configuration/organisations/manage/hottopics?id=".$ORGANISATION['organisation_id'], "title" => "Manage Hot Topics");
+		$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/configuration/organisations/manage/hottopics?org=".$ORGANISATION['organisation_id'], "title" => "Manage Hot Topics");
 
 		$module_file = $router->getRoute();
 		if ($module_file) {

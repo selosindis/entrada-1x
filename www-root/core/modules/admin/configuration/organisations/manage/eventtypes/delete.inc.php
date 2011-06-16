@@ -38,9 +38,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 ?>
 <h1>Delete Event Types</h1>
 <?php
-	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/configuration/organisations/manage/eventtypes?section=delete&amp;id=".$ORGANISATION['organisation_id'], "title" => "Delete Eventtypes");
+	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/configuration/organisations/manage/eventtypes?section=delete&amp;org=".$ORGANISATION['organisation_id'], "title" => "Delete Eventtypes");
 
-	if(isset($_POST["remove_ids"]) && count($_POST["remove_ids"]) > 0){
+	if(isset($_POST["remove_ids"]) && is_array($_POST["remove_ids"]) && !empty($_POST["remove_ids"])){
 		foreach($_POST["remove_ids"] as $id){
 
 			$query = "SELECT COUNT(*) FROM `eventtype_organisation` WHERE `eventtype_id` = ".$db->qstr($id);
@@ -56,17 +56,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 			}
 			if($num_uses > 1){
 				$NOTICE++;
-				$NOTICESTR[] = "This Event Type still exists in the system because other Organisations were using it.<br/>You will now be redirected to the Event Type index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/configuration/organisations/manage/eventtypes/?id=".$ORGANISATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
+				$NOTICESTR[] = "This Event Type still exists in the system because other Organisations were using it.<br/>You will now be redirected to the Event Type index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/configuration/organisations/manage/eventtypes/?org=".$ORGANISATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
 			}
 			else{
 				$query = "UPDATE `events_lu_eventtypes` SET	`eventtype_active`=0 WHERE `eventtype_id` = ".$db->qstr($id);
 				if($db->Execute($query)){
 					$SUCCESS++;
-					$SUCCESSSTR[] = "Successfully removed Event Type [".$id."] from your the system.<br/>You will now be redirected to the Event Type index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/configuration/organisations/manage/eventtypes/?id=".$ORGANISATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
+					$SUCCESSSTR[] = "Successfully removed Event Type [".$id."] from your the system.<br/>You will now be redirected to the Event Type index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/configuration/organisations/manage/eventtypes/?org=".$ORGANISATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
 				}
 				else{
 					$ERROR++;
-					$ERRORSTR[] = "An error occurred while removing the Event Type [".$id."] from the system. The system administrator has been notified.You will now be redirected to the Event Type index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/configuration/organisations/manage/eventtypes/?id=".$ORGANISATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
+					$ERRORSTR[] = "An error occurred while removing the Event Type [".$id."] from the system. The system administrator has been notified.You will now be redirected to the Event Type index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/configuration/organisations/manage/eventtypes/?org=".$ORGANISATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
 					application_log("error", "An error occurred while removing the Event Type [".$id."] from the system. ");
 				}
 			}
@@ -80,9 +80,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 	}
 	else{
 		$ERROR++;
-		$ERRORSTR[] = "No Event Types were selected to be deleted. You will now be redirected to the Event Type index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/configuration/organisations/manage/eventtypes/?id=".$ORGANISATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
+		$ERRORSTR[] = "No Event Types were selected to be deleted. You will now be redirected to the Event Type index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/configuration/organisations/manage/eventtypes/?org=".$ORGANISATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
 
 		echo display_error();
 	}
-		$ONLOAD[] = "setTimeout('window.location=\\'".ENTRADA_URL."/admin/configuration/organisations/manage/eventtypes/?id=".$ORGANISATION_ID."\\'', 5000)";
+		$ONLOAD[] = "setTimeout('window.location=\\'".ENTRADA_URL."/admin/configuration/organisations/manage/eventtypes/?org=".$ORGANISATION_ID."\\'', 5000)";
 }

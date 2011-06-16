@@ -153,7 +153,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 				echo display_notice();
 			}
 			if ($success_count) {
-				$url = ENTRADA_URL."/admin/configuration/organisations/manage/objectives?org_id=".$ORGANISATION_ID;
+				$url = ENTRADA_URL."/admin/configuration/organisations/manage/objectives?org=".$ORGANISATION_ID;
 				$SUCCESS++;
 				$SUCCESSSTR[] = "You have successfully deactivated ".$success_count." objectives from the system.".($moved_count && $deleted_count ? " <br /><br />Additionally, ".$moved_count." of these objectives' children were placed under a new parent and ".$deleted_count." of the objectives' children were deactivated along with their parent objective." : ($moved_count && !$deleted_count ? " <br /><br />Additionally, ".$moved_count." of these objectives' children were placed under a new parent." : ($deleted_count ? " <br /><br />Additionally, ".$deleted_count." of these objectives' children were deactivated along with under a new parent." : "")))."<br /><br />You will now be redirected to the index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 				$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";

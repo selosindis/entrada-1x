@@ -36,7 +36,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 } else {
 
 
-	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/configuration/organisations/manage/eventtypes?".replace_query(array("section" => "add"))."&amp;id=".$ORGANISATION_ID, "title" => "Add Event Type");
+	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/configuration/organisations/manage/eventtypes?".replace_query(array("section" => "add"))."&amp;org=".$ORGANISATION_ID, "title" => "Add Event Type");
 	
 	// Error Checking
 	switch ($STEP) {
@@ -93,7 +93,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 						$params = array("eventtype_id"=>$EVENTTYPE_ID,"organisation_id"=>$ORGANISATION_ID);
 						
 						if($db->AutoExecute("eventtype_organisation", $params, "INSERT")){
-							$url = ENTRADA_URL . "/admin/configuration/organisations/manage/eventtypes?id=".$ORGANISATION_ID;
+							$url = ENTRADA_URL . "/admin/configuration/organisations/manage/eventtypes?org=".$ORGANISATION_ID;
 							$SUCCESS++;
 							$SUCCESSSTR[] = "You have successfully added <strong>".html_encode($PROCESSED["eventtype_title"])."</strong> to the system.<br /><br />You will now be redirected to the Event Types index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 							$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
@@ -159,7 +159,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 			$ONLOAD[] = "selectOrder(".(isset($PROCESSED["objective_parent"]) && $PROCESSED["objective_parent"] ? $PROCESSED["objective_parent"] : "0").")";
 						
 			?>
-			<form action="<?php echo ENTRADA_URL."/admin/configuration/organisations/manage/eventtypes"."?".replace_query(array("action" => "add", "step" => 2))."&id=".$ORGANISATION_ID; ?>" method="post">
+			<form action="<?php echo ENTRADA_URL."/admin/configuration/organisations/manage/eventtypes"."?".replace_query(array("action" => "add", "step" => 2))."&org=".$ORGANISATION_ID; ?>" method="post">
 			<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Adding Page">
 			<colgroup>
 				<col style="width: 30%" />

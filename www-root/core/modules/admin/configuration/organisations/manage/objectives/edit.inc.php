@@ -39,6 +39,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
+	
+	if (isset($_GET["id"]) && ($id = clean_input($_GET["id"], array("notags", "trim")))) {
+				$OBJECTIVE_ID = $id;
+	}
+	
 	if ($OBJECTIVE_ID) {
 		$query = "	SELECT * FROM `global_lu_objectives`
 					WHERE `objective_id` = ".$db->qstr($OBJECTIVE_ID)."
@@ -125,7 +130,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 						$PROCESSED["updated_by"] = $_SESSION["details"]["id"];
 						
 						if ($db->AutoExecute("global_lu_objectives", $PROCESSED, "UPDATE", "`objective_id` = ".$db->qstr($OBJECTIVE_ID))) {
-							$url = ENTRADA_URL . "/admin/configuration/organisations/manage/objectives?org_id=".$ORGANISATION_ID;
+							$url = ENTRADA_URL . "/admin/configuration/organisations/manage/objectives?org=".$ORGANISATION_ID;
 							
 							$SUCCESS++;
 							$SUCCESSSTR[] = "Your org id is ".$ORGANISATION_ID.". You have successfully updated <strong>".html_encode($PROCESSED["objective_name"])."</strong> in the system.<br /><br />You will now be redirected to the objectives index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";

@@ -38,7 +38,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 	<h1>Manage topics</h1>
 	<div style="float: right">
 		<ul class="page-action">
-			<li><a href="<?php echo ENTRADA_URL; ?>/admin/configuration/organisations/manage/hottopics?section=add&amp;id=<?php echo $ORGANISATION_ID;?>" class="strong-green">Add New Hot Topic</a></li>
+			<li><a href="<?php echo ENTRADA_URL; ?>/admin/configuration/organisations/manage/hottopics?section=add&amp;org=<?php echo $ORGANISATION_ID;?>" class="strong-green">Add New Hot Topic</a></li>
 		</ul>
 	</div>
 	<?php
@@ -61,7 +61,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 
 	if($results){
 	?>
-	<form action ="<?php echo ENTRADA_URL;?>/admin/configuration/organisations/manage/hottopics?section=delete&amp;id=<?php echo $ORGANISATION_ID;?>" method="post">
+	<form action ="<?php echo ENTRADA_URL;?>/admin/configuration/organisations/manage/hottopics?section=delete&amp;org=<?php echo $ORGANISATION_ID;?>" method="post">
 	<table class="tableList" cellspacing="0" cellpadding="1" border="0" summary="List of Organisations">
 		<colgroup>
 			<col class="modified" />
@@ -77,7 +77,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 			<?php
 				foreach($results as $result){
 					echo "<tr><td><input type=\"checkbox\" name = \"remove_ids[]\" value=\"".$result["topic_id"]."\"/></td>";
-					echo"<td><a href=\"".ENTRADA_URL."/admin/configuration/organisations/manage/hottopics?section=edit&amp;id=".$ORGANISATION_ID."&amp;topic_id=".$result["topic_id"]."\">".$result["topic_name"]."</a></td></tr>";
+					echo"<td><a href=\"".ENTRADA_URL."/admin/configuration/organisations/manage/hottopics?section=edit&amp;org=".$ORGANISATION_ID."&amp;topic_id=".$result["topic_id"]."\">".$result["topic_name"]."</a></td></tr>";
 				}
 			?>
 		</tbody>

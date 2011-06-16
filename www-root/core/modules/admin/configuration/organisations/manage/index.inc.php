@@ -2,7 +2,7 @@
 
 <div style="float: right">
 	<ul class="page-action-edit">
-		<li><a href="<?php echo ENTRADA_URL; ?>/admin/configuration/organisations?id=<?php echo$ORGANISATION_ID;?>&amp;section=edit" class="strong-green">Edit <?php echo $ORGANISATION["organisation_title"];?></a></li>
+		<li><a href="<?php echo ENTRADA_URL; ?>/admin/configuration/organisations/manage?org=<?php echo$ORGANISATION_ID;?>&amp;section=edit" class="strong-green">Edit <?php echo $ORGANISATION["organisation_title"];?></a></li>
 	</ul>
 </div>
 <?php

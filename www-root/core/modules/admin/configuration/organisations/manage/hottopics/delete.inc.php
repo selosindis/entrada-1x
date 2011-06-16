@@ -37,7 +37,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 ?>
 <h1>Delete Event Types</h1>
 <?php
-$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/configuration/organisations/manage/hottopics?section=delete&amp;id=".$ORGANISATION['organisation_id'], "title" => "Delete Hot Topics");
+$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/configuration/organisations/manage/hottopics?section=delete&amp;org=".$ORGANISATION['organisation_id'], "title" => "Delete Hot Topics");
 
 if(isset($_POST["remove_ids"]) && count($_POST["remove_ids"]) > 0){
 	foreach($_POST["remove_ids"] as $id){
@@ -55,17 +55,17 @@ if(isset($_POST["remove_ids"]) && count($_POST["remove_ids"]) > 0){
 		}
 		if($num_uses > 1){
 			$NOTICE++;
-			$NOTICESTR[] = "This Hot Topic still exists in the system because other Organisations were using it.<br/>You will now be redirected to the Hot Topics index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/configuration/organisations/manage/hottopics/?id=".$ORGANISATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
+			$NOTICESTR[] = "This Hot Topic still exists in the system because other Organisations were using it.<br/>You will now be redirected to the Hot Topics index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/configuration/organisations/manage/hottopics/?org=".$ORGANISATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
 		}
 		else{
 			$query = "UPDATE `events_lu_topics` SET	`topic_active`=0 WHERE `topic_id` = ".$db->qstr($id);
 			if($db->Execute($query)){
 				$SUCCESS++;
-				$SUCCESSSTR[] = "Successfully removed Hot Topic [".$id."] from your the system.<br/>You will now be redirected to the Hot Topics index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/configuration/organisations/manage/hottopics/?id=".$ORGANISATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
+				$SUCCESSSTR[] = "Successfully removed Hot Topic [".$id."] from your the system.<br/>You will now be redirected to the Hot Topics index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/configuration/organisations/manage/hottopics/?org=".$ORGANISATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
 			}
 			else{
 				$ERROR++;
-				$ERRORSTR[] = "An error occurred while removing the Hot Topic [".$id."] from the system. The system administrator has been notified.You will now be redirected to the Hot Topics index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/configuration/organisations/manage/hottopics/?id=".$ORGANISATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
+				$ERRORSTR[] = "An error occurred while removing the Hot Topic [".$id."] from the system. The system administrator has been notified.You will now be redirected to the Hot Topics index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/configuration/organisations/manage/hottopics/?org=".$ORGANISATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
 				application_log("error", "An error occurred while removing the Hot Topic [".$id."] from the system. ");
 			}
 		}
@@ -79,9 +79,9 @@ if(isset($_POST["remove_ids"]) && count($_POST["remove_ids"]) > 0){
 }
 else{
 	$ERROR++;
-	$ERRORSTR[] = "No Hot Topics were selected to be deleted. You will now be redirected to the Hot Topics index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/configuration/organisations/manage/hottopics/?id=".$ORGANISATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
+	$ERRORSTR[] = "No Hot Topics were selected to be deleted. You will now be redirected to the Hot Topics index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/configuration/organisations/manage/hottopics/?org=".$ORGANISATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
 	
 	echo display_error();
 }
-	$ONLOAD[] = "setTimeout('window.location=\\'".ENTRADA_URL."/admin/configuration/organisations/manage/hottopics/?id=".$ORGANISATION_ID."\\'', 5000)";
+	$ONLOAD[] = "setTimeout('window.location=\\'".ENTRADA_URL."/admin/configuration/organisations/manage/hottopics/?org=".$ORGANISATION_ID."\\'', 5000)";
 }

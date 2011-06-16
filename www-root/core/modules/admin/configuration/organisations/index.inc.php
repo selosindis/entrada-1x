@@ -60,7 +60,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 		if (!empty($organisations)) {
 				?>
 				<div id="organisations-section">
-					<form action="<?php echo ENTRADA_URL; ?>/admin/configuration/organisations?section=delete" method="post">
+					<form action="<?php echo ENTRADA_URL; ?>/admin/configuration/organisations/manage?section=delete" method="post">
 						<table class="tableList" cellspacing="0" cellpadding="1" border="0" summary="List of Organisations">
 							<colgroup>
 								<col class="modified" />
@@ -75,7 +75,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 							<tbody>
 								<?php
 								foreach($organisations as $result) {
-									$url = ENTRADA_URL."/admin/configuration/organisations/manage?org_id=".(int) $result["organisation_id"];
+									$url = ENTRADA_URL."/admin/configuration/organisations/manage?org=".(int) $result["organisation_id"];
 
 									echo "<tr>\n";
 									echo "	<td><input type=\"checkbox\" name = \"remove_ids[]\" value = \"".html_encode($result["organisation_id"])."\"/></td>\n";

@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS `user_data_resident` (
-  `proxy_id` int(12) NOT NULL ;
+  `proxy_id` int(12) NOT NULL,
   `cmpa_no` int(11) NOT NULL,
   `cpso_no` int(11) NOT NULL,
   `school_id` int(11) NOT NULL,

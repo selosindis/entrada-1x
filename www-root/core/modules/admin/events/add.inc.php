@@ -521,38 +521,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						<td colspan="3">&nbsp;</td>
 					</tr>
 					<?php echo generate_calendars("event", "Event Date & Time", true, true, ((isset($PROCESSED["event_start"])) ? $PROCESSED["event_start"] : 0)); ?>
-
-					<!-- TEMP ADDITION -->
-					<tr>
-					<script>
-						function toggleRecurring(){
-							if(document.getElementById('recurring_check').checked){		
-								document.getElementById('recurring_params').show();
-								document.getElementById('recurring_select').show();
-							}
-							else{
-								document.getElementById('recurring_params').hide();
-								document.getElementById('recurring_select').hide();								
-							}
-						}
-					</script>
-						
-				
-						<td><input id ="recurring_check" type ="checkbox" name ="recurring_event" value ="true" onclick="toggleRecurring()"/></td>
-						<td>Recurring Event</td>
-						<td style="display:none;" id="recurring_select"><select><option>Daily</option><option>Weekly</option><option>Bi-Weekly</option><option>Monthly</option></select></td>
-					</tr>
-					<tr id ="recurring_params" style="display:none;">
-						<td></td>
-						<td>Ends:</td>
-						<td><input type="radio" name ="recurrance_type" checked="checked"/> After <input type="text" name="num_occurrences"/> occurrences.<br/>
-							<input type="radio" name ="recurrance_type"/> On &nbsp;&nbsp;&nbsp;<input type="text" name ="event_finish_date"/>
-							<a href="javascript: showCalendar('', document.getElementById('event_finish_date'), document.getElementById('event_finish_date'), '', 'event_finish_date', 0, 20, 1)" title="Show Calendar"><img src="<?php echo ENTRADA_URL;?>/images/cal-calendar.gif" width="23" height="23" alt="Show Calendar" title="Show Calendar" border="0" style="vertical-align: middle"/></a>
-						</td>
-					</tr>
-					
-					<?php //echo generate_calendars("event", "End Event After", false, false, 0, true, true, ((isset($PROCESSED["event_finish"])) ? $PROCESSED["event_finish"] : 0),false,false,"",""); ?>
-					<!--/TEMP ADDITION-->
 					
 					<tr>
 						<td></td>

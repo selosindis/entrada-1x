@@ -228,7 +228,9 @@ if (!defined("IN_MANAGE")) {
 				$PROCESSED['keys_lastname'] = $PROCESSED['super_lastname'];
 				$PROCESSED['keys_phone'] = $PROCESSED['super_phone'];
 				$PROCESSED['keys_email'] = $PROCESSED['super_email'];
+				$super_for_keys = true;
 			} else {
+				$super_for_keys = false;
 				if (isset($_POST["keys_firstname"]) && ($tmp_input = clean_input($_POST["keys_firstname"], array("trim", "notags")))) {
 					$PROCESSED["keys_firstname"] = $tmp_input;
 				} else {

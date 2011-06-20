@@ -861,7 +861,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 									$results	= $db->GetAll($query);
 									if ($results) {
 										foreach ($results as $key => $result) {
-											echo "<a href=\"mailto:".html_encode($result["email"])."\">".html_encode($result["fullname"])."</a> - ".html_encode(ucwords($result["contact_role"]))."<br />\n";
+											echo "<a href=\"mailto:".html_encode($result["email"])."\">".html_encode($result["fullname"])."</a> - ".(($result["contact_role"] == "ta")?"Teacher's Assistant":html_encode(ucwords($result["contact_role"])))."<br />\n";
 										}
 									} else {
 										echo "To Be Announced";

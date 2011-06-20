@@ -3813,9 +3813,7 @@ INSERT INTO `mtd_type` (`id`, `type_code`, `type_description`) VALUES
 
 CREATE TABLE IF NOT EXISTS `eventtype_organisation`(
 `eventtype_id` INT(12) NOT NULL, 
-`organisation_id` INT(12) NOT NULL, 
-PRIMARY KEY (`eventtype_id`),
-KEY `organisation_id` (`organisation_id`)
+`organisation_id` INT(12) NOT NULL 
 ) ENGINE = MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `groups` (
@@ -3896,16 +3894,12 @@ INSERT INTO `pg_blocks` (`id`, `block_name`, `start_date`, `end_date`, `year`) V
 
 CREATE TABLE IF NOT EXISTS `objective_organisation`(
 `objective_id` INT(12) NOT NULL, 
-`organisation_id` INT(12) NOT NULL, 
-PRIMARY KEY (`objective_id`),
-KEY `organistion_id` (`organisation_id`)
+`organisation_id` INT(12) NOT NULL 
 ) ENGINE = MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `topic_organisation`(
 `topic_id` INT(12) NOT NULL, 
-`organisation_id` INT(12) NOT NULL, 
-PRIMARY KEY (`topic_id`),
-KEY `organisation_id` (`organisation_id`)
+`organisation_id` INT(12) NOT NULL 
 ) ENGINE = MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `objective_organisation` SELECT a.`objective_id`, b.`organisation_id` FROM `global_lu_objectives` AS a JOIN `entrada_auth.organisations` AS b ON 1=1;

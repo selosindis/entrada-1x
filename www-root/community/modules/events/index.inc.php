@@ -410,7 +410,7 @@ function setDateValue(field, date) {
 			}
 			echo "</tbody>\n";
 			echo "</table>\n";
-			add_statistic("community_events", "view", "community_id", $COMMUNITY_ID);
+			add_statistic("community:".$COMMUNITY_ID.":events", "view", "community_id", $COMMUNITY_ID);
 		} else {
 			$NOTICE++;
 			$NOTICESTR[] = "<strong>No Events Available</strong><br />There are no calendar events on this page that take place from <strong>".date(DEFAULT_DATE_FORMAT, $display_duration["start"])."</strong> until <strong>".date(DEFAULT_DATE_FORMAT, $display_duration["end"])."</strong>.<br /><br />You may want to view a different ".$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["dtype"]." or check back later.";

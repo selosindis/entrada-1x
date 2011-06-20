@@ -198,7 +198,7 @@ if ($RECORD_ID) {
 	
 												$SUCCESS++;
 												$SUCCESSSTR[]	= "You have successfully uploaded ".html_encode($PROCESSED["file_filename"])." (version 1).<br /><br />You will now be redirected to this files page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-												add_statistic("community_shares", "file_add", "csfile_id", $VERSION_ID);
+												add_statistic("community:".$COMMUNITY_ID.":shares", "file_add", "csfile_id", $VERSION_ID);
 												communities_log_history($COMMUNITY_ID, $PAGE_ID, $FILE_ID, "community_history_add_file", 1, $RECORD_ID);
 											}
 										}

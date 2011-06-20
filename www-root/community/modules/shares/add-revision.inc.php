@@ -138,7 +138,7 @@ if ($RECORD_ID) {
 
 										$SUCCESS++;
 										$SUCCESSSTR[]	= "You have successfully added a new revision to ".html_encode($file_record["file_title"])." (version ".$PROCESSED["file_version"].").<br /><br />You will now be redirected to this files page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-										add_statistic("community_shares", "revision_add", "csfversion_id", $VERSION_ID);
+										add_statistic("community:".$COMMUNITY_ID.":shares", "revision_add", "csfversion_id", $VERSION_ID);
 										communities_log_history($COMMUNITY_ID, $PAGE_ID, $VERSION_ID, "community_history_add_file_revision", 1, $RECORD_ID);
 									}
 								}

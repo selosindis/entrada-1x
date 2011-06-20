@@ -165,7 +165,7 @@ if ($RECORD_ID) {
 							$SUCCESS++;
 							$SUCCESSSTR[]	= "You have successfully updated the <strong>".html_encode($PROCESSED["folder_title"])."</strong> shared folder.<br /><br />You will now be redirected to the index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 							
-							add_statistic("community_shares", "folder_edit", "cshare_id", $RECORD_ID);
+							add_statistic("community:".$COMMUNITY_ID.":shares", "folder_edit", "cshare_id", $RECORD_ID);
 							communities_log_history($COMMUNITY_ID, $PAGE_ID, $RECORD_ID, "community_history_edit_share", 1);
 						}
 

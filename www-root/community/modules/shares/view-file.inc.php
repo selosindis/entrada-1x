@@ -118,7 +118,7 @@ if ($RECORD_ID) {
 								header("Content-Transfer-Encoding: binary\n");
 							break;
 						}
-						add_statistic("community_shares", "file_download", "csfile_id", $RECORD_ID);
+						add_statistic("community:".$COMMUNITY_ID.":shares", "file_download", "csfile_id", $RECORD_ID);
 						echo @file_get_contents($download_file, FILE_BINARY);
 						exit;
 					}

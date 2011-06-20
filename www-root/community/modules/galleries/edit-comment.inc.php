@@ -90,7 +90,7 @@ if ($RECORD_ID) {
 
 								$SUCCESS++;
 								$SUCCESSSTR[]	= "You have successfully edited your photo comment.<br /><br />You will now be redirected back to this photo; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-								add_statistic("community_galleries", "comment_edit", "cgcomment_id", $RECORD_ID);
+								add_statistic("community:".$COMMUNITY_ID.":galleries", "comment_edit", "cgcomment_id", $RECORD_ID);
 								communities_log_history($COMMUNITY_ID, $PAGE_ID, $RECORD_ID, "community_history_edit_photo_comment", 0, $comment_record["cgphoto_id"]);
 							}
 

@@ -30,7 +30,7 @@ if ($RECORD_ID) {
 				@$db->AutoExecute("community_share_comments", array("comment_active" => 0, "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "UPDATE", "`cshare_id` = ".$db->qstr($RECORD_ID)." AND `community_id` = ".$db->qstr($COMMUNITY_ID));
 				
 				communities_deactivate_history($COMMUNITY_ID, $PAGE_ID, $RECORD_ID);
-				add_statistic("community_shares", "folder_delete", "cshare_id", $RECORD_ID);
+				add_statistic("community:".$COMMUNITY_ID.":shares", "folder_delete", "cshare_id", $RECORD_ID);
 				$db->AutoExecute("community_history", array("history_display" => 0), "UPDATE", "`community_id` = ".$db->qstr($COMMUNITY_ID)." AND `module_id` = ".$db->qstr($MODULE_ID)." AND `record_id` = ".$db->qstr($RECORD_ID));
 			} else {
 				application_log("error", "Failed to deactivate [".$RECORD_ID."] shared folder from community. Database said: ".$db->ErrorMsg());

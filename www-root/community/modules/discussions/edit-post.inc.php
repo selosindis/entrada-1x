@@ -304,7 +304,7 @@ if ($RECORD_ID) {
 
 								$SUCCESS++;
 								$SUCCESSSTR[]	= "You have successfully updated your discussion post reply.<br /><br />You will now be redirected to this thread; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-								add_statistic("community_discussions", "post_edit", "cdtopic_id", $RECORD_ID);
+								add_statistic("community:".$COMMUNITY_ID.":discussions", "post_edit", "cdtopic_id", $RECORD_ID);
 								communities_log_history($COMMUNITY_ID, $PAGE_ID, $RECORD_ID, "community_history_edit_reply", 0, $topic_record["cdtopic_parent"]);
 							}
 

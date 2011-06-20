@@ -90,7 +90,7 @@ if ($RECORD_ID) {
 								$SUCCESS++;
 								$SUCCESSSTR[]	= "You have successfully edited your file comment.<br /><br />You will now be redirected back to this file; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 
-								add_statistic("community_shares", "comment_edit", "cscomment_id", $RECORD_ID);
+								add_statistic("community:".$COMMUNITY_ID.":shares", "comment_edit", "cscomment_id", $RECORD_ID);
 								communities_log_history($COMMUNITY_ID, $PAGE_ID, $RECORD_ID, "community_history_edit_file_comment", 0, $comment_record["csfile_id"]);
 							}
 

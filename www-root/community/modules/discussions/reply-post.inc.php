@@ -109,7 +109,7 @@ if ($RECORD_ID) {
 
 								$SUCCESS++;
 								$SUCCESSSTR[]	= "You have successfully replied to ".html_encode($topic_record["topic_title"]).".<br /><br />You will now be redirected back to this thread now; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-								add_statistic("community_discussions", "post_add", "cdtopic_id", $TOPIC_ID);
+								add_statistic("community:".$COMMUNITY_ID.":discussions", "post_add", "cdtopic_id", $TOPIC_ID);
 								communities_log_history($COMMUNITY_ID, $PAGE_ID, $TOPIC_ID, "community_history_add_reply", 1, $RECORD_ID);
 							}
 						}

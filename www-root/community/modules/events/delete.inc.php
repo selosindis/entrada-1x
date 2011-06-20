@@ -37,7 +37,7 @@ if ($RECORD_ID) {
 		if ($db->AutoExecute("community_events", array("event_active" => 0), "UPDATE", "`community_id` = ".$db->qstr($COMMUNITY_ID)." AND `cpage_id` = ".$db->qstr($PAGE_ID)." AND `event_active` = '1' AND `cevent_id` = ".$db->qstr($RECORD_ID))) {
 			communities_deactivate_history($COMMUNITY_ID, $PAGE_ID, $RECORD_ID);
 			delete_notifications("event:".$event_record["cevent_id"]);
-			add_statistic("community_events", "delete", "cevent_id", $RECORD_ID);
+			add_statistic("community:".$COMMUNITY_ID.":events", "delete", "cevent_id", $RECORD_ID);
 		} else {
 			application_log("error", "Failed to delete [".$RECORD_ID."] event from community. Database said: ".$db->ErrorMsg());
 		}

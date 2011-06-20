@@ -226,7 +226,7 @@ if ($RECORD_ID) {
 								$SUCCESS++;
 								$SUCCESSSTR[]	= "You have successfully updated this photo.<br /><br />You will now be redirected to this image; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 
-								add_statistic("community_galleries", "photo_edit", "cgphoto_id", $RECORD_ID);
+								add_statistic("community:".$COMMUNITY_ID.":galleries", "photo_edit", "cgphoto_id", $RECORD_ID);
 								communities_log_history($COMMUNITY_ID, $PAGE_ID, $RECORD_ID, "community_history_edit_photo", 1, $photo_record["cgallery_id"]);
 							} else {
 								$ERROR++;

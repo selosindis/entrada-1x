@@ -26,7 +26,7 @@ if ($RECORD_ID) {
 		if ((int) $gallery_record["gallery_active"]) {
 			if ($db->AutoExecute("community_galleries", array("gallery_active" => 0, "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "UPDATE", "`community_id` = ".$db->qstr($COMMUNITY_ID)." AND `cpage_id` = ".$db->qstr($PAGE_ID)." AND `cgallery_id` = ".$db->qstr($RECORD_ID))) {
 				communities_deactivate_history($COMMUNITY_ID, $PAGE_ID, $RECORD_ID);
-				add_statistic("community_galleries", "gallery_delete", "cgallery_id", $RECORD_ID);
+				add_statistic("community:".$COMMUNITY_ID.":galleries", "gallery_delete", "cgallery_id", $RECORD_ID);
 			} else {
 				application_log("error", "Failed to deactivate [".$RECORD_ID."] photo gallery from community. Database said: ".$db->ErrorMsg());
 			}

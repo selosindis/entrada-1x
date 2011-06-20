@@ -140,6 +140,7 @@ if ($RECORD_ID) {
 							$SUCCESSSTR[]	= "You have successfully added a new question to the ".$terminology.".<br /><br />You will now be redirected to the index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 						}
 						$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
+						add_statistic("community_polling", "question_add", "cpquestion_id", $QUESTION_ID);
 						communities_log_history($COMMUNITY_ID, $PAGE_ID, $PROCESSED["cpolls_id"], "community_history_edit_poll", 0);
 					}
 				}

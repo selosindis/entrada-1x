@@ -57,6 +57,7 @@ if ($RECORD_ID) {
 							}
 
 							@$db->AutoExecute("community_gallery_comments", array("cgallery_id" => $gallery_id, "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "UPDATE", "`cgphoto_id` = ".$db->qstr($RECORD_ID)." AND `cgallery_id` = ".$db->qstr($photo_record["cgallery_id"])." AND `community_id` = ".$db->qstr($COMMUNITY_ID));
+							add_statistic("community:".$COMMUNITY_ID.":galleries", "photo_move", "cgphoto_id", $RECORD_ID);
 							communities_log_history($COMMUNITY_ID, $PAGE_ID, $RECORD_ID, "community_history_move_photo", true, $gallery_id);
 						} else {
 							application_log("error", "Failed to deactivate [".$RECORD_ID."] photo from community. Database said: ".$db->ErrorMsg());

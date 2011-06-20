@@ -69,7 +69,7 @@ if (($options_for) && (isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["i
             WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
             AND a.`organisation_id` IN (".$organisation_ids_string.")
             AND (b.`group` = 'faculty' OR (b.`group` = 'resident' AND b.`role` = 'lecturer'))
-            AND a.`id` IN (SELECT `proxy_id` FROM `event_contacts`)
+            AND a.`id` IN (SELECT `proxy_id` FROM `event_contacts` WHERE `contact_role` = 'teacher')
             GROUP BY a.`id`
             ORDER BY `fullname` ASC";
         $teacher_results = $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);

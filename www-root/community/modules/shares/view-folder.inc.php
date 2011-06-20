@@ -332,6 +332,8 @@ if ($RECORD_ID) {
 				?>
 			</div>
 			<?php
+			
+			add_statistic("community:".$COMMUNITY_ID.":shares", "folder_view", "cshare_id", $RECORD_ID);
 		} else {
 			if ($ERROR) {
 				echo display_error();

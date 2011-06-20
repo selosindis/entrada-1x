@@ -66,7 +66,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 				<tr style="height: 200px;">
 					<td class="modified">&nbsp;</td>
 					<td class="title" style="padding-bottom: 20px; border-right: none;"><h3>Courses</h3></td>
-					<td class="title" style="padding: 0 0 80px 50px;"><h3 class="vertical-text">Competencies</h3></td>
+					<td class="title" style="padding: 0 0 80px 50px;width:177px;"><h3 class="vertical-text">Competencies</h3></td>
+
 					<?php
 						foreach ($objectives["competencies"] as $competency_id => $competency) {
 							?>

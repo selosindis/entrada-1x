@@ -26,7 +26,7 @@ if ($RECORD_ID) {
 			if (polls_module_access($RECORD_ID, "delete-poll")) {
 				if ($db->AutoExecute("community_polls", array("poll_active" => 0, "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "UPDATE", "`cpolls_id` = ".$db->qstr($RECORD_ID)." AND `cpage_id` = ".$db->qstr($PAGE_ID)." AND `community_id` = ".$db->qstr($COMMUNITY_ID))) {
 					communities_deactivate_history($COMMUNITY_ID, $PAGE_ID, $RECORD_ID);
-
+					add_statistic("community_polling", "poll_delete", "cpolls_id", $RECORD_ID);
 					$db->AutoExecute("community_history", array("history_display" => 0), "UPDATE", "`community_id` = ".$db->qstr($COMMUNITY_ID)." AND `module_id` = ".$db->qstr($MODULE_ID));
 					if ($poll_record[poll_notifications]) {  // Delete pending notifications
 						delete_notifications('polls:'.$poll_record["cpolls_id"]);

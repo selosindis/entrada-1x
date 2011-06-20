@@ -305,7 +305,7 @@ if ($RECORD_ID) {
 	
 						$SUCCESS++;
 						$SUCCESSSTR[]	= "You have successfully updated a ".$terminology." to the community.<br /><br />You will now be redirected to the index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-	
+						add_statistic("community_polling", "poll_edit", "cpolls_id", $RECORD_ID);
 						communities_log_history($COMMUNITY_ID, $PAGE_ID, $RECORD_ID, "community_history_edit_poll", 0);
 					}
 		

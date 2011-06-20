@@ -200,6 +200,76 @@ if ($community_courses) {
 				}
 			}
 
+
+			/**
+			* If the history is enabled, display the course history on the home page.
+			*/
+			$query			= "	SELECT * FROM `community_page_options`
+								WHERE `option_title` = 'show_history'
+								AND `community_id` = ".$db->qstr($COMMUNITY_ID)."
+								AND `option_value` = '1'";
+			$history_enabled	= $db->GetRow($query);
+			if ($history_enabled) {
+				/**
+				 * Fetch all community events and put the HTML output in a variable.
+				 */
+				$query		= "	SELECT *
+								FROM `community_history`
+								WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)."
+								AND `history_display` = '1'
+								ORDER BY `history_timestamp` DESC
+								LIMIT 0, 15";
+				$results	= $db->CacheGetAll(CACHE_TIMEOUT, $query);
+				if($results) {
+					$history_messages = "";
+					echo "<ul class=\"history\">";
+					foreach($results as $key => $result) {
+						if ((int)$result["cpage_id"] && ($result["history_key"] != "community_history_activate_module")) {
+							$query = "SELECT `page_url` FROM `community_pages` WHERE `cpage_id` = ".$db->qstr($result["cpage_id"])." AND `community_id` = ".$db->qstr($result["community_id"]);
+							$page_url = $db->GetOne($query);
+						} elseif ($result["history_key"] == "community_history_activate_module") {
+							$query = "SELECT a.`page_url` FROM `community_pages` as a JOIN `communities_modules` as b ON b.`module_shortname` = a.`page_type` WHERE b.`module_id` = ".$db->qstr($result["record_id"])." AND a.`community_id` = ".$db->qstr($result["community_id"])." AND a.`page_active` = '1'";
+							$page_url = $db->GetOne($query);
+						}
+					
+						if ($result["history_key"]) {
+							$history_message = $translate->_($result["history_key"]);
+							$record_title = "";
+							$parent_id = (int)$result["record_parent"];
+							community_history_record_title($result["history_key"], $result["record_id"], $result["cpage_id"], $result["community_id"], $result["proxy_id"]);
+
+						} else {
+							$history_message = $result["history_message"];
+						}
+					
+						$content_search						= array("%SITE_COMMUNITY_URL%", "%SYS_PROFILE_URL%", "%PAGE_URL%", "%RECORD_ID%", "%RECORD_TITLE%", "%PARENT_ID%", "%PROXY_ID%");
+						$content_replace					= array(COMMUNITY_URL.$COMMUNITY_URL, ENTRADA_URL."/people", $page_url, $result["record_id"], $record_title, $parent_id, $result["proxy_id"]);
+						$history_message			= str_replace($content_search, $content_replace, $history_message);
+						$history_messages .= "<li".(!($key % 2) ? " style=\"background-color: #F4F4F4\"" : "").">".strip_tags($history_message, "<a>")."</li>";
+					}
+					$history_messages .= "</ul>";
+				}
+				if ($history_messages) {
+				?>
+					<div style="position: relative; clear: both">
+						<div style="width: 100%">
+							<h2>Course History</h2>
+							<?php
+							echo $history_messages;
+							?>
+						</div>
+					</div>
+					<?php
+				}
+			}			
+			
+			
+			
+			
+			
+			
+			
+			
 			$query = "	SELECT b.*, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, c.`account_active`, c.`access_starts`, c.`access_expires`, c.`last_login`, c.`role`, c.`group`
 						FROM `courses` AS a
 						JOIN `".AUTH_DATABASE."`.`user_data` AS b

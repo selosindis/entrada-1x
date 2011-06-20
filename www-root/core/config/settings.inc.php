@@ -455,6 +455,7 @@ $MODULES["events"] = array("title" => "Manage Events", "resource" => "eventconte
 $MODULES["gradebook"] = array("title" => "Manage Gradebook", "resource" => "gradebook", "permission" => "update");
 $MODULES["tasks"] = array("title" => "Manage Tasks", "resource" => "task", "permission" => "create"); 
 $MODULES["notices"] = array("title" => "Manage Notices", "resource" => "notice", "permission" => "update");
+$MODULES["configuration"] = array("title" => "Manage Configuration", "resource" => "configuration", "permission" => "update");
 $MODULES["objectives"]	= array("title" => "Manage Objectives", "resource" => "objective", "permission" => "update");
 $MODULES["observerships"] = array("title" => "Manage Observerships", "resource" => "observerships", "permission" => "update");
 $MODULES["polls"] = array("title" => "Manage Polls", "resource" => "poll", "permission" => "update");

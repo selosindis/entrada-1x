@@ -330,6 +330,7 @@ switch($STEP) {
 								$SUCCESSSTR[]	= "You have successfully added a new ".$terminology." to the community.<br /><br />You will now be redirected to the index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 							}
 							$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
+							add_statistic("community_polling", "poll_add", "cpolls_id", $POLL_ID);
 							communities_log_history($COMMUNITY_ID, $PAGE_ID, $POLL_ID, "community_history_add_poll", 1);
 						}
 					}

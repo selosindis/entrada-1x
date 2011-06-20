@@ -198,7 +198,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 		?>
 		<div style="float: right">
 			<ul class="page-action">
-				<li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=add" class="strong-green">Add New Course</a></li>
+				<li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=add&amp;org_id=<?php echo $organisation_id;?>" class="strong-green">Add New Course</a></li>
 			</ul>
 		</div>
 		<div style="clear: both"></div>
@@ -366,7 +366,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			echo "<tr id=\"course-".$result["course_id"]."\" class=\"course".((!$url) ? " np" : "")."\">\n";
 			echo "	<td class=\"modified\">".(($administrator) ? "<input type=\"checkbox\" name=\"delete[]\" value=\"".$result["course_id"]."\" />" : "<img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"19\" height=\"19\" alt=\"\" title=\"\" />")."</td>\n";
 			echo "	<td class=\"general".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Course Name: ".html_encode($result["course_name"])."\">" : "").html_encode($result["curriculum_type_name"]).(($url) ? "</a>" : "")."</td>\n";
-			echo "	<td class=\"title".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Course Name: ".html_encode($result["course_name"])."\">" : "").html_encode($result["course_name"].(($result["course_code"]) ? ": ".$result["course_code"] : "")).(($url) ? "</a>" : "")."</td>\n";
+			echo "	<td class=\"title".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."&amp;org_id=".$result["organisation_id"]."\" title=\"Course Name: ".html_encode($result["course_name"])."\">" : "").html_encode($result["course_name"].(($result["course_code"]) ? ": ".$result["course_code"] : "")).(($url) ? "</a>" : "")."</td>\n";
 			echo "	<td class=\"teacher".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Course Director: ".html_encode($result["fullname"])."\">" : "").html_encode($result["fullname"]).(($url) ? "</a>" : "")."</td>\n";
 			echo "	<td class=\"notices\">".(((int) $result["notifications"]) ? "Yes" : "<strong>No</strong>")."</td>\n";
 			echo "	<td class=\"grades\">".(($url) ? "<a href=\"".ENTRADA_URL."/admin/".$MODULE."?section=content&amp;id=".$result["course_id"]."\"><img src=\"".ENTRADA_URL."/images/event-contents.gif\" width=\"16\" height=\"16\" alt=\"Manage Course Content\" title=\"Manage Course Content\" border=\"0\" /></a>" : "<img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"16\" height=\"16\" alt=\"\" title=\"\" />");

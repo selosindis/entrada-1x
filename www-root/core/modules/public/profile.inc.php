@@ -136,16 +136,19 @@ function profile_update_personal_info() {
 	} else {
 		$PROCESSED["office_hours"] = "";
 	}
-	if ((isset($_POST["email"])) && ($email = clean_input($_POST["email"], "trim", "lower"))) {
-		if (@valid_address($email)) {
-			$PROCESSED["email"] = $email;
-		} else {
+		
+	if($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"] == "faculty") {
+		if ((isset($_POST["email"])) && ($email = clean_input($_POST["email"], "trim", "lower"))) {
+			if (@valid_address($email)) {
+				$PROCESSED["email"] = $email;
+			} else {
+				$ERROR++;
+				$ERRORSTR[] = "The primary e-mail address you have provided is invalid. Please make sure that you provide a properly formatted e-mail address.";
+			}
+		} else { 
 			$ERROR++;
-			$ERRORSTR[] = "The primary e-mail address you have provided is invalid. Please make sure that you provide a properly formatted e-mail address.";
+			$ERRORSTR[] = "The primary e-mail address is a required field.";
 		}
-	} else { 
-		$ERROR++;
-		$ERRORSTR[] = "The primary e-mail address is a required field.";
 	}
 	
 	if ((isset($_POST["email_alt"])) && ($_POST["email_alt"] != "")) {

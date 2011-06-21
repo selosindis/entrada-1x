@@ -147,6 +147,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 								LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
 								ON a.`proxy_id` = b.`id`
 								WHERE a.`event_id` = ".$db->qstr($event["event_id"])."
+								AND a.`contact_role` = 'teacher' 
 								ORDER BY `fullname` ASC";
 					if($int_use_cache) {
 						$sresults	= $db->CacheGetAll(LONG_CACHE_TIMEOUT, $squery);

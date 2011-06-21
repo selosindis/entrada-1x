@@ -36,7 +36,7 @@ if ($RECORD_ID) {
 					@$db->AutoExecute("community_share_comments", array("comment_active" => 0, "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "UPDATE", "`csfile_id` = ".$db->qstr($RECORD_ID)." AND `cshare_id` = ".$db->qstr($file_record["cshare_id"])." AND `community_id` = ".$db->qstr($COMMUNITY_ID));
 
 					communities_deactivate_history($COMMUNITY_ID, $PAGE_ID, $RECORD_ID);
-
+					add_statistic("community:".$COMMUNITY_ID.":shares", "file_delete", "csfile_id", $RECORD_ID);
 					$db->AutoExecute("community_history", array("history_display" => 0), "UPDATE", "`community_id` = ".$db->qstr($COMMUNITY_ID)." AND `module_id` = ".$db->qstr($MODULE_ID)." AND `record_id` = ".$db->qstr($RECORD_ID));
 				} else {
 					application_log("error", "Failed to deactivate [".$RECORD_ID."] file from community. Database said: ".$db->ErrorMsg());

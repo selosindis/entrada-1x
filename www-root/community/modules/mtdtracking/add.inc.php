@@ -78,7 +78,10 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 	if ((is_null($block) || $block == "") && (is_null($start_date) || $start_date == "") && (is_null($end_date) || $end_date == "")) {
 		$ERROR++;
 		$ERRORSTR[] = "You must choose a block OR a start and end date.";
-	} else if (((is_null($block) || $block == ""))) {
+	} else if ($block && ($start_date || $end_date)) {
+		$ERROR++;
+		$ERRORSTR[] = "You must choose a block OR a start and end date, not both.";
+	} else if (is_null($block) || $block == "") {
 		if (is_null($start_date) || $start_date == "") {
 			$ERROR++;
 			$ERRORSTR[] = "Start date is required.";

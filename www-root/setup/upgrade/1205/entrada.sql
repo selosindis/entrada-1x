@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS `pg_blocks` (
   `end_date` date NOT NULL,
   `year` varchar(9) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 
 INSERT INTO `pg_blocks` (`id`, `block_name`, `start_date`, `end_date`, `year`) VALUES
 (1, '1', '2010-07-01', '2010-07-26', '2010-2011'),

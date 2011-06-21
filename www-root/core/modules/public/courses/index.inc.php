@@ -24,7 +24,6 @@
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
 */
-
 if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 	exit;
 } elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
@@ -67,7 +66,16 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 	
 		new_sidebar_item("Display Style", $sidebar_html, "display-style", "open");
 	}
-
+	if(!$ORGANISATION_ID){
+		$query = "SELECT `organisation_id` FROM `courses` WHERE `course_id` = ".$db->qstr($COURSE_ID);
+		if($result = $db->GetOne($query)){
+			$ORGANISATION_ID = $result;
+			$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"] = $result;
+		}
+		else
+			$ORGANISATION_ID	= $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"];
+	}
+	
 	$COURSE_LIST	= array();
 
 	$query		= "	SELECT * FROM `courses` 
@@ -284,15 +292,16 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 
 				<?php
 				$show_objectives = false;
-				$objectives = courses_fetch_objectives(array($COURSE_ID));
+				list($objectives,$top_level_id) = courses_fetch_objectives_for_org($ORGANISATION_ID,array($COURSE_ID));
 				foreach ($objectives["objectives"] as $objective) {
 					if ((isset($objective["primary"]) && $objective["primary"]) || (isset($objective["secondary"]) && $objective["secondary"]) || (isset($objective["tertiary"]) && $objective["tertiary"])) {
 						$show_objectives = true;
 						break;
 					}
 				}
-
-				if ($show_objectives || clean_input($course_details["course_objectives"], array("notags", "nows"))) {
+				$query = "	SELECT COUNT(*) FROM course_objectives WHERE course_id = ".$db->qstr($COURSE_ID);
+				$result = $db->GetOne($query);
+				if ($result) {
 					echo "<a name=\"course-objectives-section\"></a>\n";
 					echo "<h2 title=\"Course Objectives Section\">Course Objectives</h2>\n";
 					echo "<div id=\"course-objectives-section\">\n";
@@ -311,7 +320,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						echo "		</tr>\n";
 					}
 
-					if ($show_objectives) {
+					//if ($show_objectives) {
 						echo "		<tr>\n";
 						echo "			<td colspan=\"2\" style=\"text-align: justify;\" class=\"objectives\">\n";
 											?>
@@ -333,7 +342,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 											<?php
 						echo "				<h3>Curriculum Objectives</h3>";
 						echo "				<strong>The learner will be able to:</strong>";
-						echo "				<div id=\"objectives_list\">\n".course_objectives_in_list($objectives, 1)."\n</div>\n";
+						echo "				<div id=\"objectives_list\">\n".course_objectives_in_list($objectives, $top_level_id)."\n</div>\n";
 						echo "			</td>\n";
 						echo "		</tr>\n";
 						echo "		<tr>\n";
@@ -364,8 +373,9 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 										fadeDuration:	0.30
 									});";
 								if ($result["objective_name"]) {
-									echo "<li><a id=\"objective-".$result["objective_id"]."-details\" style=\"text-decoration: none;\" href=\"".ENTRADA_URL."/objectives?section=objective-details&api=true&oid=".$result["objective_id"]."&cid=".$COURSE_ID."\">".$result["objective_name"]."</a></li>\n";
+									echo "<li><a id=\"objective-".$result["objective_id"]."-details\" style=\"text-decoration: none;\" href=\"".ENTRADA_URL."/courses/objectives?section=objective-details&api=true&oid=".$result["objective_id"]."&cid=".$COURSE_ID."\">".$result["objective_name"]."</a></li>\n";
 								}
+							
 							}
 							$HEAD[] = "
 								});
@@ -376,7 +386,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						}
 						echo "			</td>\n";
 						echo "		</tr>\n";
-					}
+					//}
 					echo "		</tbody>";
 					echo "	</table>";
 					echo "</div>";

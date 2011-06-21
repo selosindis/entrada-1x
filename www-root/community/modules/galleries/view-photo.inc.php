@@ -346,6 +346,7 @@ if ($RECORD_ID) {
 				}
 			break;
 		}
+		add_statistic("community:".$COMMUNITY_ID.":galleries", "photo_view", "cgphoto_id", $RECORD_ID);
 	} else {
 		application_log("error", "The provided photo id was invalid [".$RECORD_ID."] (View Photo).");
 

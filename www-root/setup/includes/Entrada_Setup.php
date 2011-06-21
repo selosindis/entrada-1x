@@ -113,7 +113,7 @@ class Entrada_Setup
 		try {			
 
 			$htaccess_text = @file_get_contents($this->entrada_absolute . $this->htaccess_file);
-			$htaccess_text = str_replace("ENTRADA_RELATIVE", $this->entrada_relative, $htaccess_text);
+			$htaccess_text = str_replace("ENTRADA_RELATIVE", (($this->entrada_relative != "") ? $this->entrada_relative : "/"), $htaccess_text);
 		
 			if (!@file_put_contents($this->entrada_absolute."/.htaccess", $htaccess_text)) {
 				return false;

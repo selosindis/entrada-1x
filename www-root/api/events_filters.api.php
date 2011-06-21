@@ -142,20 +142,20 @@ if (($options_for) && (isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["i
         break;
     case "smallgroup":
         // Get the possible small group filters
-        $query = "	SELECT * FROM `".DATABASE_NAME."`.`small_groups` 
+        $query = "	SELECT * FROM `".DATABASE_NAME."`.`groups` 
             WHERE `group_active` = 1
             ORDER BY `group_name` ASC";
         $groups_results = $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
         if ($groups_results) {
             $groups = array();
             foreach ($groups_results as $sg) {
-                if (isset($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["smallgroup"]) && is_array($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["smallgroup"]) && (in_array($sg['sgroup_id'], $_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["smallgroup"]))) {
+                if (isset($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["smallgroup"]) && is_array($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["smallgroup"]) && (in_array($sg['group_id'], $_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["smallgroup"]))) {
                     $checked = 'checked="checked"';
                 } else {
                     $checked = '';
                 }
 
-                $groups[] = array('text' => $sg['group_name'], 'value' => 'smallgroup_'.$sg['sgroup_id'], 'checked' => $checked);
+                $groups[] = array('text' => $sg['group_name'], 'value' => 'smallgroup_'.$sg['group_id'], 'checked' => $checked);
             }
 
             echo lp_multiple_select_popup('smallgroup', $groups, array('title'=>'Select Small Groups:', 'submit_text'=>'Apply', 'cancel'=>true, 'submit'=>true));

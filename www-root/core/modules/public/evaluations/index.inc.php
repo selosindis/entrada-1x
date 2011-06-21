@@ -60,7 +60,6 @@ $query = "	SELECT * FROM `evaluations` AS a
 				)" : "")."
 			)
 			AND a.`evaluation_start` < ".$db->qstr(time())."
-			AND a.`evaluation_finish` > ".$db->qstr(time())."
 			GROUP BY a.`evaluation_id`
 			ORDER BY a.`evaluation_finish` ASC";
 $results = $db->GetAll($query);
@@ -125,7 +124,7 @@ if ($results) {
 					GROUP BY `eprogress_id`";
 		$evaluation_responses = $db->GetOne($query);
 		
-		if (($result["release_date"] <= time() || !$result["release_date"]) && ($result["release_until"] > time() || !$result["release_until"])) {
+		if (($result["release_date"] <= time() || !$result["release_date"])) {
 			$click_url = ENTRADA_URL."/evaluations?section=attempt&id=".$result["evaluation_id"];
 		} else {
 			$click_url = "";

@@ -11396,6 +11396,7 @@ function objectives_competency_courses($competency_id = 0) {
 				JOIN `course_objectives` AS b
 				ON a.`course_id` = b.`course_id`
 				AND `objective_id` IN (".objectives_build_objective_descendants_id_string($competency_id).")
+				AND a.`course_active` = 1
 				GROUP BY a.`course_id`";
 	$courses = $db->GetAll($query);
 	if ($courses) {
@@ -11908,7 +11909,7 @@ function evaluations_fetch_attempts($evaluation_id = 0) {
 
 	if ($evaluation_id = (int) $evaluation_id) {
 		$query		= "	SELECT COUNT(*) AS `total`
-						FROM `evaluations_progress`
+						FROM `evaluation_progress`
 						WHERE `evaluation_id` = ".$db->qstr($evaluation_id)."
 						AND `proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
 						AND `progress_value` <> 'inprogress'";

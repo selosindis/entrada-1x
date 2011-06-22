@@ -495,12 +495,14 @@ function communities_module_activate_and_page_create($community_id = 0, $module_
 			 */
 				if(!(int) $result["module_active"]) {
 					if(!$db->AutoExecute("community_modules", array("module_active" => 1), "UPDATE", "`community_id` = ".$db->qstr($community_id)." AND `module_id` = ".$db->qstr($module_id))) {
-						application_log("error", "Unable to active module ".(int) $module_id." (updating existing record) for updated community id ".(int) $COMMUNITY_ID.". Database said: ".$db->ErrorMsg());
+						output_error("Unable to active module ".(int) $module_id." (updating existing record) for updated community id ".(int) $COMMUNITY_ID.". Database said: ".$db->ErrorMsg());
+						return false;
 					}
 				}
 			} else {
 				if(!$db->AutoExecute("community_modules", array("community_id" => $community_id, "module_id" => $module_id, "module_active" => 1), "INSERT")) {
-					application_log("error", "Unable to active module ".(int) $module_id." (inserting new record) for updated community id ".(int) $COMMUNITY_ID.". Database said: ".$db->ErrorMsg());
+					output_error("Unable to active module ".(int) $module_id." (inserting new record) for updated community id ".(int) $COMMUNITY_ID.". Database said: ".$db->ErrorMsg());
+					return false;
 				}
 			}
 
@@ -515,22 +517,43 @@ function communities_module_activate_and_page_create($community_id = 0, $module_
 					$page_order = 0;
 				}
 
-				if(($db->AutoExecute("community_pages", array("community_id" => $community_id, "page_order" => $page_order, "page_type" => $module_info["module_shortname"], "menu_title" => $module_info["module_title"], "page_title" => $module_info["module_title"], "page_url" => $module_info["module_shortname"], "page_content" => "", "updated_date" => time(), "updated_by" => "MedTech"), "INSERT")) && ($cpage_id = $db->Insert_Id())) {
-
-					//communities_log_history($community_id, $cpage_id, 0, "community_history_add_page", 1);
-
-				} else {
-					application_log("error", "Unable to create page for module ".(int) $module_id." for new community id ".(int) $community_id.". Database said: ".$db->ErrorMsg());
+				if((!$db->AutoExecute("community_pages", array("community_id" => $community_id, "page_order" => $page_order, "page_type" => $module_info["module_shortname"], "menu_title" => $module_info["module_title"], "page_title" => $module_info["module_title"], "page_url" => $module_info["module_shortname"], "page_content" => "", "updated_date" => time(), "updated_by" => "MedTech"), "INSERT")) && ($cpage_id = $db->Insert_Id())) {
+					output_error("Unable to create page for module ".(int) $module_id." for new community id ".(int) $community_id.". Database said: ".$db->ErrorMsg());
+					return false;
 				}
 			}
 		} else {
-			application_log("error", "Module_id [".$module_id."] requested activation in community_id [".$community_id."] but the module is either missing or inactive.");
+			output_error("Module_id [".$module_id."] requested activation in community_id [".$community_id."] but the module is either missing or inactive. Connected to a DB: " . $db->isConnected());
+			return false;
 		}
 	} else {
-		application_log("error", "There was no community_id [".$community_id."] or module_id [".$module_id."] provided to active a module.");
+		output_error("There was no community_id [".$community_id."] or module_id [".$module_id."] provided to active a module.");
+		return false;
 	}
 
 	return true;
+}
+
+function set_module_page_permissions($db, $community_id, $module_id, $allow_member_view, $allow_public_view, $allow_troll_view) {
+	$query = "SELECT * FROM " . DATABASE_NAME . ".`communities_modules` WHERE `module_id` = " . $db->qstr($module_id) . " AND `module_active` = '1'";
+	$module_info = $db->GetRow($query);
+	$module_shortname = "";
+
+	if ($module_info) {
+		$module_shortname = $module_info["module_shortname"];
+
+		if ($db->AutoExecute("" . DATABASE_NAME . ".`community_pages`",
+						array("allow_member_view" => 0, "allow_public_view" => 0, "allow_troll_view" => 0,
+							"updated_date" => time(), "updated_by" => 5440), "UPDATE",
+						"`community_id` = " . $db->qstr($community_id) . " AND page_type = " . $db->qstr($module_shortname))) {
+
+			output_success("Permission set to allow Admin access only.");
+		} else {
+			output_error("Failed to create the module page.");
+		}
+	} else {
+		output_error("Module does not exist.");
+	}
 }
 
 /**

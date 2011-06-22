@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with Entrada.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Run this script to create the MTD Tracking page on each of the specified
+ * Run this script to create a page for the specififed module in each of the specified
  * Communities in the site_names array.
  *
  * @author Unit: Medical Education Technology Unit
@@ -46,70 +46,54 @@ if ((!isset($_SERVER["argv"])) || (@count($_SERVER["argv"]) < 1)) {
 require_once("classes/adodb/adodb.inc.php");
 require_once("config.inc.php");
 require_once("dbconnection.inc.php");
-require_once("auth_dbconnection.inc.php");
 require_once("functions.inc.php");
 
 $ERROR = false;
 
 output_notice("This script is used to add a module (and it's page) to a Community.");
 
-$site_names = array("Aboriginal Health - Family Medicine",
-"Accreditation Standards",
-"Anatomic Pathology",
-"Anesthesia - Family Medicine",
-"Anesthesiology",
-"Cardiac Surgery",
-"Care of the Elderly - Family Medicine",
+$one45_names = array("Anat/Gen Path",
+"Anesthesia",
+"Cardiology",
 "Critical Care Medicine",
-"Developmental Disabilities - Family Medicine",
 "Diagnostic Radiology",
-"Emergency Medicine",
-"Emergency Medicine - Family Medicine",
-"Endocrinology",
+"Emergency",
 "Family Medicine",
 "Gastroenterology",
-"General Surgery",
-"Generic Program",
-"Geriatrics",
-"Hematology",
-"Internal Medicine",
-"Medical Oncology",
+"General Surg",
+"Haematology",
+"Int Med Postgrad",
+"Med Onc",
 "Nephrology",
 "Neurology",
-"Neurosurgery",
-"Obstetrics and Gynecology",
+"Obs Gyne",
 "Ophthalmology",
-"Orthopedic Surgery",
-"Otolaryngology",
-"Palliative Care - Family Medicine",
-"Palliative Care Medicine",
+"Orthopedic Surg",
+"Palliative Care",
 "Pediatrics",
-"Physical Medicine and Rehabilitation",
-"Plastic Surgery",
+"PM & R",
 "Psychiatry",
-"Public Health and Preventative Medicine",
-"Radiation Oncology",
+"Rad Onc",
 "Respirology",
 "Rheumatology",
-"Rural Skills - Family Medicine",
-"Surgical Foundations",
-"Thoracic Surgery",
-"Urology",
-"Vascular Surgery",
-"Women's Health - Family Medicine");
+"Urology");
 
 $site_name_prefix = "pgme";
 
 print "\nStep 1 - Please enter the module number (from the communities_module table) of the module to create: ";
 fscanf(STDIN, "%d\n", $module_number); // reads number from STDIN
+$site_count = 0;
+foreach ($one45_names as $one45_name) {
+	$site_count++;
+	//Get the community name from the One45 name
+	$query = "SELECT community_name
+			  FROM " . DATABASE_NAME . ".`pg_one45_community`
+			  WHERE `one45_name` = " . $db->qstr($one45_name);
+	$site_name = $db->GetOne($query);
 
-foreach ($site_names as $s_name) {
-
-	$s_name_arr = explode("-", $s_name);
-	$s_name = trim($s_name_arr[0]);
 
 	//format the program name for use as an URL and community short name
-	$s_name_url = clean_input($s_name, array("page_url", "lowercase"));
+	$s_name_url = clean_input($site_name, array("page_url", "lowercase"));
 	$community_url = "/" . $site_name_prefix . "_" . $s_name_url;
 	$community_shortname = $site_name_prefix . "_" . $s_name_url;
 
@@ -120,16 +104,23 @@ foreach ($site_names as $s_name) {
 	$result = $db->GetRow($query);
 	if (!$result) {
 		output_error("Could not find the community URL: " . $community_url . " " . $query);
+		exit ();
 	} else {
 		output_notice("Creating page for community id: " . $result["community_id"]);
 
-		communities_module_activate_and_page_create($result["community_id"], $module_number);
+		if (!communities_module_activate_and_page_create($result["community_id"], $module_number)) {
+			output_error("Could not create the page for the module for community ID: " . $result["community_id"]);
+			exit ();
+		}
 
 		set_module_page_permissions($db, $result["community_id"], $module_number, 0, 0, 0);
 
-		output_notice("The MTD Page has been added to " . $s_name . ".");
+		output_success("The Reponse Rate Page has been added to " . $site_name . ".");
+		echo "\n\n";
 	}
 }
+
+output_notice("A total of " . $site_count . " communities had a new page added.\n");
 
 function set_module_page_permissions($db, $community_id, $module_id, $allow_member_view, $allow_public_view, $allow_troll_view) {
 	$query = "SELECT * FROM " . DATABASE_NAME . ".`communities_modules` WHERE `module_id` = " . $db->qstr($module_id) . " AND `module_active` = '1'";

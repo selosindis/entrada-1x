@@ -433,7 +433,7 @@ if ((!isset($_SESSION["isAuthorized"])) || (!(bool) $_SESSION["isAuthorized"])) 
 			 */
 			header("Location: ".ENTRADA_URL."/community".$result["community_url"]);
 			exit;
-		} elseif (isset($_SESSION["isAuthorized"]) && $_SESION["isAuthorized"] == true) {
+		} elseif (isset($_SESSION["isAuthorized"]) && $_SESSION["isAuthorized"] == true) {
 			header("Location: ".ENTRADA_URL."/?action=logout");
 			exit;
 		}
@@ -497,6 +497,7 @@ switch ($MODULE) {
 							)" : "")."
 						)
 						AND a.`evaluation_finish` < ".$db->qstr(time())."
+						AND a.`evaluation_active` = 1
 						GROUP BY a.`evaluation_id`
 						ORDER BY a.`evaluation_finish` ASC";
 			
@@ -504,8 +505,8 @@ switch ($MODULE) {
 			foreach ($evaluations as $evaluation) {
 				$completed_attempts = evaluations_fetch_attempts($evaluation["evaluation_id"]);
 				if ($evaluation["min_submittable"] > $completed_attempts) {
-					header("Location: ".str_replace("http://", "https://", strtolower(ENTRADA_URL)."/evaluations?section=attempt&id=".$evaluation["evaluation_id"]));
-					break;
+					header("Location: ".ENTRADA_URL."/evaluations?section=attempt&id=".$evaluation["evaluation_id"]);
+					exit;
 				}
 			}
 			

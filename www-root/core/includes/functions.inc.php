@@ -9334,6 +9334,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 					WHERE (a.`event_status` = 'published' OR a.`event_status` = 'approval')
 					AND b.`econtact_type` = 'student'
 					AND b.`etype_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+					AND a.`event_children` = 0
 					ORDER BY a.`event_start` ASC";
 		$clerkship_events = $db->GetAll($query);
 		if (isset($clerkship_events) && $clerkship_events) {
@@ -9445,6 +9446,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 
 	$query_events = "	SELECT `events`.`event_id`,
 						`events`.`course_id`,
+						`events`.`parent_id`,
 						`events`.`event_phase`,
 						`events`.`event_title`,
 						`events`.`event_message`,
@@ -9491,6 +9493,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 							ON `courses`.`course_id` = `events`.`course_id`
 							%OBJECTIVE_JOIN%
 							WHERE `courses`.`course_active` = '1'
+							AND `events`.`event_children` = 0
 							".($filter_clerkship_events && $course_ids_string ? "AND (`courses`.`course_id` NOT IN (".$course_ids_string.")\n OR (".implode("\n", $time_periods)."))" : "")."
 							AND (`events`.`release_date` <= ".$db->qstr(time())." OR `events`.`release_date` = 0)
 							AND (`events`.`release_until` >= ".$db->qstr(time())." OR `events`.`release_until` = 0)
@@ -9510,6 +9513,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 							ON  `courses`.`course_id` = `events`.`course_id`
 							%OBJECTIVE_JOIN%
 							WHERE `courses`.`course_active` = '1'
+							AND `events`.`event_children` = 0
 							".($filter_clerkship_events && $course_ids_string ? "AND (`courses`.`course_id` NOT IN (".$course_ids_string.")\n OR (".implode("\n", $time_periods)."))" : "")."
 							AND `courses`.`organisation_id` = ".$db->qstr($organisation_id);
 
@@ -9654,6 +9658,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 							LEFT JOIN `courses`
 							ON `events`.`course_id` = `courses`.`course_id`
 							WHERE `courses`.`organisation_id` = ".$db->qstr($organisation_id)."
+							AND `events`.`event_children` = 0
 							".($filter_clerkship_events && $course_ids_string ? "AND (`courses`.`course_id` NOT IN (".$course_ids_string.")\n OR (".implode("\n", $time_periods)."))" : "")."
 							AND (`events`.`release_date` <= ".$db->qstr(time())." OR `events`.`release_date` = 0)
 							AND (`events`.`release_until` >= ".$db->qstr(time())." OR `events`.`release_until` = 0)
@@ -9669,6 +9674,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 							LEFT JOIN `courses`
 							ON  (`courses`.`course_id` = `events`.`course_id`)
 							WHERE`courses`.`course_active` = '1'
+							AND `events`.`event_children` = 0
 							".($filter_clerkship_events && $course_ids_string ? "AND (`courses`.`course_id` NOT IN (".$course_ids_string.")\n OR (".implode("\n", $time_periods)."))" : "")."
 							AND `courses`.`organisation_id` = ".$db->qstr($organisation_id)."
 							".(($display_duration) ? "AND `events`.`event_start` BETWEEN ".$db->qstr($display_duration["start"])." AND ".$db->qstr($display_duration["end"]) : "")."
@@ -9767,6 +9773,30 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 					}
 					foreach ($learning_events as &$event) {
 						$event["last_visited"] = $dates_array[$event["event_id"]];
+					}
+				}
+			}
+		}
+		$parent_ids = array();
+		foreach ($learning_events as $event) {
+			if ($event["parent_id"]) {
+				$parent_ids[] = $event["parent_id"];
+			}
+		}
+		if (!empty($parent_ids)) {
+			$query = "	SELECT * FROM `events`
+						WHERE `event_id` IN (".implode(", ", $parent_ids).")
+						GROUP BY `event_id`";
+			$parent_events = $db->GetAll($query);
+			if (!empty($parent_events)) {
+				$parent_events_array = array();
+				foreach ($parent_events as $parent_event) {
+					$parent_events_array[$parent_event["event_id"]] = $parent_event;
+				}
+				foreach ($learning_events as &$event) {
+					if (key_exists($event["parent_id"], $parent_events_array)) {
+						$event["event_title"] = $parent_events_array[$event["parent_id"]]["event_title"]." - ".$event["event_title"];
+						$event["event_phase"] = $parent_events_array[$event["parent_id"]]["event_phase"];
 					}
 				}
 			}

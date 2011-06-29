@@ -247,7 +247,7 @@ if ($RECORD_ID) {
 				<tr>
 					<td colspan="2"><label for="poll_question" class="form-required">Question</label></td>
 					<td style="text-align: right">
-						<input type="text" id="poll_question" name="poll_question" value="<?php echo ((isset($PROCESSED["poll_question"])) ? html_encode($PROCESSED["poll_question"]) : ""); ?>" maxlength="64" style="width: 94%" />
+						<input type="text" id="poll_question" name="poll_question" value="<?php echo ((isset($PROCESSED["poll_question"])) ? html_encode($PROCESSED["poll_question"]) : ""); ?>" style="width: 94%" />
 					</td>
 				</tr>
 				<tr>

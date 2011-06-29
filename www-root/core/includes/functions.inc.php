@@ -12248,7 +12248,24 @@ function get_distinct_user_departments() {
 }
 
 /**
- * This function gets determines if a user is a department head
+ * This function gets all of the users in a specific department
+ * @param string $dep_id
+ * @return array $results
+ */
+function get_users_in_department($dep_id) {
+	global $db;
+	
+	$query = "	SELECT `user_id`
+				FROM `".AUTH_DATABASE."`.`user_departments`
+				WHERE `dep_id` IN(".$dep_id.")";
+	
+	$results = $db->GetAll($query);
+	
+	return $results;
+}
+
+/**
+ * This function determines if a user is a department head
  * @param int $user_id
  * @return int $department_id, bool returns false otherwise
  */

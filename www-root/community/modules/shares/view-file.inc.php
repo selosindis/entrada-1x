@@ -467,7 +467,7 @@ if ($RECORD_ID) {
 					?>
 				</div>
 				<?php
-				add_statistic("community_shares", "file_view", "csfile_id", $RECORD_ID);
+				add_statistic("community:".$COMMUNITY_ID.":shares", "file_view", "csfile_id", $RECORD_ID);
 			} else {
 				if ($ERROR) {
 					echo display_error();

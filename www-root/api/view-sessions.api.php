@@ -218,6 +218,11 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 					$PROCESSED["event_duration"] += $event_type[1];
 				}
 			}
+			
+			$query = "SELECT `course_id` FROM `events` WHERE `event_id` = ".$db->qstr($parent_id);
+			if ($course_id = $db->GetOne($query)) {
+				$PROCESSED["course_id"] = ((int) $course_id);
+			}
 
 			$PROCESSED["eventtype_id"] = 0;
 			if (($event_info && $db->AutoExecute("events", $PROCESSED, "UPDATE", "`event_id` = ".$db->qstr($event_id))) || ((!$event_info && $db->AutoExecute("events", $PROCESSED, "INSERT")))) {
@@ -272,7 +277,11 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 				}
 
 				$SUCCESS++;
-				$SUCCESSSTR[] = "You have successfully edited <strong>".html_encode($PROCESSED["event_title"])."</strong> in the system.";
+				if ($event_info) {
+					$SUCCESSSTR[] = "You have successfully edited <strong>".html_encode($PROCESSED["event_title"])."</strong> in the system.";
+				} else {
+					$SUCCESSSTR[] = "You have successfully created a new session [<strong>".html_encode($PROCESSED["event_title"])."</strong>] in the system.";
+				}
 
 				application_log("success", "Event [".$event_id."] has been modified.");
 			} else {
@@ -393,8 +402,13 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 			}
 		}
 	}
+	if ($SUCCESS) {
+		echo display_success();
+		echo "<input type=\"hidden\" id=\"success\" value=\"1\">";
+	}
 	if ($ERROR) {
 		echo display_error();
+		echo "<input type=\"hidden\" id=\"success\" value=\"0\">";
 	}
 	if ($NOTICE) {
 		echo display_notice();
@@ -620,7 +634,7 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 								foreach ($PROCESSED["associated_proxy_ids"] as $student) {
 									if ((array_key_exists($student, $STUDENT_LIST)) && is_array($STUDENT_LIST[$student])) {
 										?>
-										<li class="community" id="audience_proxy_<?php echo $STUDENT_LIST[$student]["proxy_id"]; ?>" style="cursor: move;"><?php echo $STUDENT_LIST[$student]["fullname"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="audience_list.removeItem('student_<?php echo $STUDENT_LIST[$student]["proxy_id"]; ?>');" class="list-cancel-image" /></li>
+										<li class="community" id="audience_proxy_<?php echo $STUDENT_LIST[$student]["proxy_id"]; ?>" style="cursor: move;"><?php echo $STUDENT_LIST[$student]["fullname"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="removeAudience('student_<?php echo $STUDENT_LIST[$student]["proxy_id"]; ?>');" class="list-cancel-image" /></li>
 										<?php
 									}
 								}
@@ -629,7 +643,7 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 								foreach ($PROCESSED["associated_group_ids"] as $group) {
 									if ((array_key_exists($group, $GROUP_LIST)) && is_array($GROUP_LIST[$group])) {
 										?>
-										<li class="community" id="audience_group_<?php echo $GROUP_LIST[$group]["group_id"]; ?>" style="cursor: move;"><?php echo $GROUP_LIST[$group]["group_name"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="audience_list.removeItem('group_<?php echo $GROUP_LIST[$group]["group_id"]; ?>');" class="list-cancel-image" /></li>
+										<li class="community" id="audience_group_<?php echo $GROUP_LIST[$group]["group_id"]; ?>" style="cursor: move;"><?php echo $GROUP_LIST[$group]["group_name"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="removeAudience('group_<?php echo $GROUP_LIST[$group]["group_id"]; ?>');" class="list-cancel-image" /></li>
 										<?php
 									}
 								}

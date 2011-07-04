@@ -1442,7 +1442,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 																		foreach ($result["associated_proxy_ids"] as $student) {
 																			if ((array_key_exists($student, $STUDENT_LIST)) && is_array($STUDENT_LIST[$student])) {
 																				?>
-																				<li class="community" id="audience_proxy_<?php echo $STUDENT_LIST[$student]["proxy_id"]; ?>" style="cursor: move;"><?php echo $STUDENT_LIST[$student]["fullname"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="audience_list.removeItem('student_<?php echo $STUDENT_LIST[$student]["proxy_id"]; ?>');" class="list-cancel-image" /></li>
+																				<li class="community" id="audience_proxy_<?php echo $STUDENT_LIST[$student]["proxy_id"]; ?>" style="cursor: move;"><?php echo $STUDENT_LIST[$student]["fullname"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="removeAudience('student_<?php echo $STUDENT_LIST[$student]["proxy_id"]; ?>');" class="list-cancel-image" /></li>
 																				<?php
 																			}
 																		}
@@ -1451,7 +1451,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 																		foreach ($result["associated_group_ids"] as $group) {
 																			if ((array_key_exists($group, $GROUP_LIST)) && is_array($GROUP_LIST[$group])) {
 																				?>
-																				<li class="community" id="audience_group_<?php echo $GROUP_LIST[$group]["group_id"]; ?>" style="cursor: move;"><?php echo $GROUP_LIST[$group]["group_name"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="audience_list.removeItem('group_<?php echo $GROUP_LIST[$group]["group_id"]; ?>');" class="list-cancel-image" /></li>
+																				<li class="community" id="audience_group_<?php echo $GROUP_LIST[$group]["group_id"]; ?>" style="cursor: move;"><?php echo $GROUP_LIST[$group]["group_name"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="removeAudience('group_<?php echo $GROUP_LIST[$group]["group_id"]; ?>');" class="list-cancel-image" /></li>
 																				<?php
 																			}
 																		}
@@ -1549,7 +1549,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 																foreach ($PROCESSED["associated_proxy_ids"] as $student) {
 																	if ((array_key_exists($student, $STUDENT_LIST)) && is_array($STUDENT_LIST[$student])) {
 																		?>
-																		<li class="community" id="audience_proxy_<?php echo $STUDENT_LIST[$student]["proxy_id"]; ?>" style="cursor: move;"><?php echo $STUDENT_LIST[$student]["fullname"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="audience_list.removeItem('student_<?php echo $STUDENT_LIST[$student]["proxy_id"]; ?>');" class="list-cancel-image" /></li>
+																		<li class="community" id="audience_proxy_<?php echo $STUDENT_LIST[$student]["proxy_id"]; ?>" style="cursor: move;"><?php echo $STUDENT_LIST[$student]["fullname"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="removeAudience('student_<?php echo $STUDENT_LIST[$student]["proxy_id"]; ?>');" class="list-cancel-image" /></li>
 																		<?php
 																	}
 																}
@@ -1558,7 +1558,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 																foreach ($PROCESSED["associated_group_ids"] as $group) {
 																	if ((array_key_exists($group, $GROUP_LIST)) && is_array($GROUP_LIST[$group])) {
 																		?>
-																		<li class="community" id="audience_group_<?php echo $GROUP_LIST[$group]["group_id"]; ?>" style="cursor: move;"><?php echo $GROUP_LIST[$group]["group_name"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="audience_list.removeItem('group_<?php echo $GROUP_LIST[$group]["group_id"]; ?>');" class="list-cancel-image" /></li>
+																		<li class="community" id="audience_group_<?php echo $GROUP_LIST[$group]["group_id"]; ?>" style="cursor: move;"><?php echo $GROUP_LIST[$group]["group_name"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="removeAudience('group_<?php echo $GROUP_LIST[$group]["group_id"]; ?>');" class="list-cancel-image" /></li>
 																		<?php
 																	}
 																}
@@ -1620,8 +1620,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 										}
 										
 										function addAudience(element) {
-											if (!$('audience_'+element.id)) {
-												$('audience_list').innerHTML += '<li class="community" id="audience_'+element.id+'" style="cursor: move;">'+$(element.value+'_label').innerHTML+'<img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="audience_list.removeItem(\''+element.id+'\');" class="list-cancel-image" /></li>';
+											if (!$('audience_'+element)) {
+												$('audience_list').innerHTML += '<li class="community" id="audience_'+element.id+'" style="cursor: move;">'+$(element.value+'_label').innerHTML+'<img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="removeAudience(\''+element.id+'\');" class="list-cancel-image" /></li>';
 												$$('#audience_list div').each(function (e) { e.hide(); });
 												Sortable.destroy('audience_list');
 												Sortable.create('audience_list');
@@ -1629,9 +1629,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 										}
 										
 										function removeAudience(element) {
-											$('audience_'+element.id).remove();
+											$('audience_'+element).remove();
 											Sortable.destroy('audience_list');
 											Sortable.create('audience_list');
+											$(element).checked = false;
 											if ($('audience_head').value == "") {
 												$$('#audience_list div').each(function (e) { e.show(); });
 											}
@@ -1710,7 +1711,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 												$('session-name-' + session_id).hide();
 												$('session-' + session_id).show();
 											}
-											document.getElementById("session-"+session_id).innerHTML = newname;
+											$("session-"+session_id).innerHTML = newname;
 											$('session_title').value = newname;
 										}
 										
@@ -1770,6 +1771,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 																$('session-line-0').id = 'session-line-'+$('updated_session_id').value;
 																$('session-line-'+$('updated_session_id').value).innerHTML = '<span id="session-'+ $('updated_session_id').value +'" onclick="loadSession('+ $('updated_session_id').value +')" class="logbook-entry">'+ $('session-0').innerHTML +'</span>';
 															}
+															if ($('success').value == 1) {
+																return true;
+															} else {
+																return false;
+															}
 														}
 													}
 												);
@@ -1778,21 +1784,48 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 										
 										function loadSession(session_id) {
 											if ($('current-session').value != session_id) {
-												saveSession($('current-session').value, false);
-												$('session-line-'+$('current-session').value).removeClassName('selected');
-												$('current-session').value = session_id;
-												$('session-line-'+$('current-session').value).addClassName('selected');
-												new Ajax.Updater({ success: 'session' }, '<?php echo ENTRADA_URL; ?>/api/view-sessions.api.php', 
+												new Ajax.Updater('session-notices' ,'<?php echo ENTRADA_URL; ?>/api/view-sessions.api.php', 
 													{
 														method: 'post',
 														parameters: {
-															'event_id' : session_id
+															'step': 2,
+															'hide_controls': true,
+															'event_start': 1,
+															'parent_id' : <?php echo (int)$EVENT_ID; ?>,
+															'event_id' : $('current-session').value,
+															'event_title': $('session_title').value,
+															'event_start_date': $('event_start_date').value,
+															'event_start_hour': $('event_start_hour').value,
+															'event_start_min': $('event_start_min').value,
+															'event_location': $('event_location').value,
+															'associated_session_faculty': ($('associated_session_faculty') ? $('associated_session_faculty').value : $('associated_faculty').value),
+															'session_audience': $('audience_head').value,
+															'new': 1
 														},
 														onComplete: function () {
-															session_faculty_list = new AutoCompleteList({ type: 'session_faculty', url: '<?php echo ENTRADA_RELATIVE ."/api/personnel.api.php?type=faculty', remove_image: '". ENTRADA_RELATIVE; ?>/images/action-delete.gif'});
-														},
-														onCreate: function () {
-															$('session').innerHTML = '<br/><br/><span class="content-small" style="align: center;">Loading... <img src="<?php echo ENTRADA_URL; ?>/images/indicator.gif" style="vertical-align: middle;" /></span>';
+															if ($('current-session').value == 0 && $('updated_session_id').value) {
+																$('session-line-0').id = 'session-line-'+$('updated_session_id').value;
+																$('session-line-'+$('updated_session_id').value).innerHTML = '<span id="session-'+ $('updated_session_id').value +'" onclick="loadSession('+ $('updated_session_id').value +')" class="logbook-entry">'+ $('session-0').innerHTML +'</span>';
+															}
+															if ($('success').value == 1) {
+																$('session-line-'+$('current-session').value).removeClassName('selected');
+																$('current-session').value = session_id;
+																$('session-line-'+$('current-session').value).addClassName('selected');
+																new Ajax.Updater({ success: 'session' }, '<?php echo ENTRADA_URL; ?>/api/view-sessions.api.php', 
+																	{
+																		method: 'post',
+																		parameters: {
+																			'event_id' : session_id
+																		},
+																		onComplete: function () {
+																			session_faculty_list = new AutoCompleteList({ type: 'session_faculty', url: '<?php echo ENTRADA_RELATIVE ."/api/personnel.api.php?type=faculty', remove_image: '". ENTRADA_RELATIVE; ?>/images/action-delete.gif'});
+																		},
+																		onCreate: function () {
+																			$('session').innerHTML = '<br/><br/><span class="content-small" style="align: center;">Loading... <img src="<?php echo ENTRADA_URL; ?>/images/indicator.gif" style="vertical-align: middle;" /></span>';
+																		}
+																	}
+																);
+															}
 														}
 													}
 												);

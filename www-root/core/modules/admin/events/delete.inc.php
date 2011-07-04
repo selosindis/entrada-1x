@@ -48,15 +48,19 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 		case 2 :
 		case 1 :
 		default :
-			if((!isset($_POST["checked"])) || (!is_array($_POST["checked"])) || (!@count($_POST["checked"]))) {
+			if(((!isset($_POST["checked"])) || (!is_array($_POST["checked"])) || (!@count($_POST["checked"]))) && (!isset($_GET["id"]) || !$_GET["id"])) {
 				header("Location: ".ENTRADA_URL."/admin/events");
 				exit;
 			} else {
-				foreach($_POST["checked"] as $event_id) {
-					$event_id = (int) trim($event_id);
-					if($event_id) {
-						$EVENT_IDS[] = $event_id;
+				if ((isset($_POST["checked"])) && (is_array($_POST["checked"])) && (@count($_POST["checked"]))) {
+					foreach($_POST["checked"] as $event_id) {
+						$event_id = (int) trim($event_id);
+						if($event_id) {
+							$EVENT_IDS[] = $event_id;
+						}
 					}
+				} elseif (isset($_GET["id"]) && ($event_id = clean_input($_GET["id"], array("trim", "int")))) {
+					$EVENT_IDS[] = $event_id;
 				}
 
 				if(!@count($EVENT_IDS)) {

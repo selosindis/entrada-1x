@@ -87,8 +87,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 		}
 	}
 
+	$HEAD[] = "<script type=\"text/javascript\">var DELETE_IMAGE_URL = '".ENTRADA_URL."/images/action-delete.gif';</script>";
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/picklist.js\"></script>\n";
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/scriptaculous/tree.js\"></script>\n";
+	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/groups_list.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/AutoCompleteList.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";	
+	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/growler/src/Growler.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 	$ONLOAD[] = "$('clinical_presentations_list').style.display = 'none'";
 
 	// Error Checking
@@ -309,6 +313,64 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								$db->Execute("INSERT INTO `course_objectives` SET `course_id` = ".$db->qstr($COURSE_ID).", `objective_id` = ".$db->qstr($objective_id).", `updated_date` = ".$db->qstr(time()).", `updated_by` = ".$db->qstr($_SESSION["details"]["id"]).", `importance` = '3'");
 							}
 						}
+
+						
+						
+						if((isset($_POST["enroll_start"])) && ($start = clean_input($_POST["enroll_start"],array("notags","trim")))){
+							$enroll_start = $start;
+						}
+						else{
+							$enroll_start = mktime(0, 0, 0, date("m"), date("d"), date("y"));
+						}
+						if((isset($_POST["enroll_end"])) && ($end = clean_input($_POST["enroll_end"],array("notags","trim")))){
+							$enroll_end = $end;
+						}
+						else{
+							$enroll_end =  mktime(0, 0, 0, date("m"), date("d"), date("y")+1);
+						}
+												
+						
+						
+						if (isset($_POST["group_order"])) {
+							$groups = explode(",", trim($_POST["group_order"]));					
+							if ((is_array($groups)) && (count($groups))) {
+								foreach($groups as $order => $group_id) {
+									if ($group_id = clean_input($group_id, array("trim", "int"))) {
+										$query = "SELECT `group_name` FROM `groups` WHERE `group_id` = ".$db->qstr($group_id);
+										$result	= $db->GetRow($query);
+										if ($result) {
+											$PROCESSED["groups"][] = array("id"=>$group_id,"title"=>$result["group_name"]);
+											$query = "	INSERT INTO `course_audience` VALUES(NULL,".$db->qstr($COURSE_ID).",'group_id',".$db->qstr($group_id).",".$enroll_start.",".$enroll_end.",1)";
+											if(!$db->Execute($query)){
+												add_error("Unable to insert the group [".$group_id."] as an audience member for course [".$COURSE_ID."]. Please try again later.");				
+											}
+											
+										} else {
+											$ERROR++;
+											$ERRORSTR[] = "One of the <strong>groups</strong> you specified was invalid.";
+										}
+									} else {
+										$ERROR++;
+										$ERRORSTR[] = "One of the <strong>groups</strong> you specified is invalid.";
+									}
+								}
+							}
+						}
+						
+						
+						
+						
+						if(isset($_POST["associated_student"]) && strlen($_POST["associated_student"])){
+							$PROCESSED["associated_students"] = explode(",",clean_input($_POST["associated_student"], array("notags", "trim")));
+							foreach($PROCESSED["associated_students"] as $student){
+								$query = "	INSERT INTO `course_audience` VALUES(NULL,".$db->qstr($COURSE_ID).",'proxy_id',".$db->qstr($student).",".$enroll_start.",".$enroll_end.",1)";
+								if(!$db->Execute($query)){
+									add_error("Unable to insert the student [".$student."] as an audience member for course [".$COURSE_ID."]. Please try again later.");				
+								}
+							}
+						}
+						
+						
 						$NOTICE = 0;
 						$SUCCESS++;
 						$SUCCESSSTR[]	= "You have successfully added <strong>".html_encode($PROCESSED["course_name"])."</strong> to this system.<br /><br />".$msg;
@@ -480,7 +542,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				echo display_error();
 			}
 			?>
-			<form action="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?<?php echo replace_query(array("step" => 2)); ?>" method="post" onsubmit="selIt()">
+			<form action="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?<?php echo replace_query(array("step" => 2)); ?>" method="post" id="addCourseForm" onsubmit="selIt()">
 			<h2 title="Course Details Section">Course Details</h2>
 			<div id="course-details-section">
 				<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Adding Course Details">
@@ -564,7 +626,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			<?php				
 
 				list($course_objectives,$top_level_id) = courses_fetch_objectives_for_org($ORGANISATION_ID,array(0),-1,0, false, $posted_objectives);
-				echo "course string: ".$course_ids_string;
 				require_once(ENTRADA_ABSOLUTE."/javascript/courses.js.php");
 				$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/elementresizer.js\"></script>\n";
 			?>
@@ -1035,7 +1096,118 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				</tbody>
 				</table>
 			</div>
+
+<!-- Course Audience-->		
+			<h2>Course Audience</h2>
+			<div>
+				<table>
+					<tr class="course_audience group_audience">
+						<td></td>
+						<td><label for="group_ids" class="form-required">Associated Groups</label></td>
+						<td>
+							<select id="group_ids" name="group_ids" style="width: 203px">
+								<option id="-1">-- Select a Group --</option>
+							<?php
+							
+							$query = "	SELECT `group_id`,`group_name` FROM `groups`";
+							$groups = $db->GetAll($query);							
+							if (isset($groups)) {
+								foreach ($groups as $group) {
+									echo "<option value=\"".$group["group_id"]."\">".html_encode($group["group_name"])."</option>";
+								}
+							}
+							?>
+							</select>
+							<div id="group_notice" class="content-small" >Use the list above to select the different groups to enroll in this course. When you select one, it will appear here.</div>
+							<ol id="group_container" class="sortableList" style="display: none;">
+								<?php
+								foreach($PROCESSED["groups"] as $group) {
+									echo "<li id=\"type_".$group["id"]."\" class=\"\">".$group["title"]."
+										<a href=\"#\" onclick=\"$(this).up().remove(); cleanupList(); return false;\" class=\"remove\">
+											<img src=\"".ENTRADA_URL."/images/action-delete.gif\">
+										</a>
+									</li>";
+								}
+								?>
+							</ol>
+							<input id="group_order" name="group_order" style="display: none;">
+						</td>
+					</tr>
+					<tr>
+						<td colspan="3">&nbsp;</td>
+					</tr>
+					<tr class="group_audience proxy_id_audience">
+						<td></td>
+						<td style="vertical-align: top"><label for="associated_proxy_ids" class="form-required">Associated Students</label></td>
+						<td>
+							<input type="text" id="student_name" name="fullname" size="30" autocomplete="off" style="width: 203px; vertical-align: middle" />
+							<?php
+							$ONLOAD[] = "student_list = new AutoCompleteList({ type: 'student', url: '". ENTRADA_RELATIVE ."/api/personnel.api.php?type=student', remove_image: '". ENTRADA_RELATIVE ."/images/action-delete.gif'})";
+							?>
+							<div class="autocomplete" id="student_name_auto_complete"></div>
+							
+							<input type="hidden" id="associated_student" name="associated_student" />
+							<input type="button" class="button-sm" id="add_associated_student" value="Add" style="vertical-align: middle" />
+							<span class="content-small">(<strong>Example:</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?>)</span>
+							<ul id="student_list" class="menu" style="margin-top: 15px">
+								<?php
+								if (is_array($PROCESSED["associated_students"]) && count($PROCESSED["associated_students"])) {
+									foreach ($PROCESSED["associated_students"] as $student) {
+										if ((array_key_exists($student, $STUDENT_LIST)) && is_array($STUDENT_LIST[$student])) {
+											?>
+											<li class="community" id="student_<?php echo $STUDENT_LIST[$student]["proxy_id"]; ?>" style="cursor: move;"><?php echo $STUDENT_LIST[$student]["fullname"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="student_list.removeItem('<?php echo $STUDENT_LIST[$student]["proxy_id"]; ?>');" class="list-cancel-image" /></li>
+											<?php
+											}
+									}
+								}
+								?>
+							</ul>
+							<input type="hidden" id="student_ref" name="student_ref" value="" />
+							<input type="hidden" id="student_id" name="student_id" value="" />
+						</td>
+					</tr>
+
+				</table>
+			</div>
+			<script type="text/javascript">
+				$('student_list').observe('change', checkConditions);
+				$('group_order').observe('change', checkConditions);
 				
+				function checkConditions(){
+						if($F('associated_student')){
+							var students = $F('associated_student').split(',');
+							if(students.length>0);{
+								if($F('group_order').length >0){
+									checkConflict();
+								}
+							}
+						}
+
+					}
+
+				
+				function checkConflict(){
+					new Ajax.Request('<?php echo ENTRADA_URL;?>/api/course-audience-conflicts.api.php',
+					{
+						method:'post',
+						parameters: $("addCourseForm").serialize(true),
+						onSuccess: function(transport){
+						var response = transport.responseText || null;
+						if(response !==null){
+							var g = new k.Growler();
+							g.smoke(response,{life:7});
+						}
+						},
+						onFailure: function(){ alert('Unable to check if a conflict exists.') }
+					});
+				}
+				
+			</script>
+			
+			
+			
+<!--/Course Audience-->
+			
 			<div style="padding-top: 25px">
 				<table style="width: 100%" cellspacing="0" cellpadding="0" border="0">
 				<tr>

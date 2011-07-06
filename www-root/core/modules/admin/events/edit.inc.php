@@ -56,7 +56,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/events?".replace_query(array("section" => "edit", "id" => $EVENT_ID)), "title" => "Editing Event");
 				$ORGANISATION_ID = $event_info["organisation_id"];
 				$PROCESSED["associated_faculty"] = array();
-				$PROCESSED["event_audience_type"] = "grad_year";
+				$PROCESSED["event_audience_type"] = "course";
 				$PROCESSED["associated_grad_year"] = "";
 				$PROCESSED["associated_group_ids"] = array();
 				$PROCESSED["associated_proxy_ids"] = array();
@@ -120,6 +120,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							$PROCESSED["event_audience_type"] = clean_input($_POST["event_audience_type"], array("page_url"));
 
 							switch($PROCESSED["event_audience_type"]) {
+								case "course" :
+									/**
+									 * Required field "course" / Course
+									 * This data is inserted into the event_audience table as course.
+									 */
+								break;									
 								case "grad_year" :
 									/**
 									 * Required field "associated_grad_year" / Graduating Year
@@ -376,6 +382,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 									}
 
 									switch($PROCESSED["event_audience_type"]) {
+										case "course" :
+											/**
+											 * If the audience for the event is meant to be grabbed via the course,
+											 * add it to the event_audience table.
+											 */
+												if (!$db->AutoExecute("event_audience", array("event_id" => $EVENT_ID, "audience_type" => "course", "audience_value" => $PROCESSED["course_id"], "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT")) {
+													$ERROR++;
+													$ERRORSTR[] = "There was an error while trying to attach the selected <strong>Course Audience</strong> to this event.<br /><br />The system administrator was informed of this error; please try again later.";
+
+													application_log("error", "Unable to insert a new event_audience record while adding a new event. Database said: ".$db->ErrorMsg());
+												}
+										break;
 										case "grad_year" :
 											/**
 											 * If there are any graduating years associated with this event,
@@ -551,6 +569,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							foreach($results as $result) {
 								if ($result["audience_type"] == $PROCESSED["event_audience_type"]) {
 									switch($result["audience_type"]) {
+										case "course" :
+											$PROCESSED["associated_course"] = (int)$result["audience_value"];
+										break;										
 										case "grad_year" :
 											$PROCESSED["associated_grad_year"] = clean_input($result["audience_value"], "alphanumeric");
 										break;
@@ -816,6 +837,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 									<td colspan="3">&nbsp;</td>
 								</tr>
 								<tr>
+									<td style="vertical-align: top"><input type="radio" name="event_audience_type" id="event_audience_type_course" value="course" onclick="selectEventAudienceOption('course')" style="vertical-align: middle"<?php echo (($PROCESSED["event_audience_type"] == "course") ? " checked=\"checked\"" : ""); ?> /></td>
+									<td colspan="2" style="padding-bottom: 15px">
+										<label for="event_audience_type_course" class="radio-group-title">Use Course Audience</label>
+										<div class="content-small">This event is intended for people enrolled in the course.</div>
+									</td>
+								</tr>									
+								<tr>
 									<td style="vertical-align: top"><input type="radio" name="event_audience_type" id="event_audience_type_grad_year" value="grad_year" onclick="selectEventAudienceOption('grad_year')" style="vertical-align: middle"<?php echo (($PROCESSED["event_audience_type"] == "grad_year") ? " checked=\"checked\"" : ""); ?> /></td>
 									<td colspan="2" style="padding-bottom: 15px">
 										<label for="event_audience_type_grad_year" class="radio-group-title">Entire Class Event</label>
@@ -970,7 +998,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					}
 				}
 				function checkConflict(){
-					new Ajax.Request('<?php echo ENTRADA_URL;?>/api/learning-event-conflicts.php',
+					new Ajax.Request('<?php echo ENTRADA_URL;?>/api/learning-event-conflicts.api.php',
 					{
 						method:'post',
 						parameters: $("editEventForm").serialize(true),
@@ -981,7 +1009,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							g.smoke(response,{life:7});
 						}
 						},
-						onFailure: function(){ alert('Something went wrong...') }
+						onFailure: function(){ alert('Unable to check if a conflict exists.') }
 					});
 				}
 			</script>

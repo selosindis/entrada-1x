@@ -36,15 +36,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
-	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/AutoCompleteList.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
-	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/eventtypes_list.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
-	$HEAD[]		= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/tabpane/tabpane.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
-	$HEAD[]		= "<link href=\"".ENTRADA_URL."/css/tabpane.css?release=".html_encode(APPLICATION_VERSION)."\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />\n";
-	$HEAD[]		= "<link href=\"".ENTRADA_URL."/css/tree.css?release=".html_encode(APPLICATION_VERSION)."\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />\n";
-	$HEAD[]		= "<style type=\"text/css\">.dynamic-tab-pane-control .tab-page {height:auto;}</style>\n";
-	$HEAD[]		= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/picklist.js\"></script>\n";
-	$HEAD[]		= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/scriptaculous/tree.js\"></script>\n";
-	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/elementresizer.js\"></script>\n";
 
 	/**
 	 * Load the rich text editor.
@@ -52,7 +43,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 	load_rte();
 
 	echo "<script language=\"text/javascript\">var DELETE_IMAGE_URL = '".ENTRADA_URL."/images/action-delete.gif';</script>";
-	
 	if ($EVENT_ID) {
 		$query = "	SELECT a.*, b.`organisation_id`
 					FROM `events` AS a
@@ -77,6 +67,19 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 		$event_info = false; 
 		if ($db->AutoExecute("events", array("event_title" => "Placeholder Event", "release_start" => 1, "release_finish" => 2), "INSERT")) {
 			$EVENT_ID = $db->Insert_Id();
+			$HEAD[] = "<script type=\"text/javascript\"> 
+						Event.observe(window, 'unload', 
+							function() {
+								var params = 'event_id=".(int) $EVENT_ID."'; 
+								var ajax = new Ajax.Request( '".ENTRADA_URL."/api/remove-placeholder-event.api.php', { 
+									method: 'get', 
+									parameters: params, 
+									asynchronous: false
+								});
+							}, 
+							false
+						);
+						</script>";
 		}
 	}
 	
@@ -87,6 +90,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 	$clinical_presentations = array();
 
 	$results = fetch_mcc_objectives(0, array(), $event_info["course_id"]);
+	$course_id = $event_info["course_id"];
 	if ($results) {
 		foreach ($results as $result) {
 			$clinical_presentations_list[$result["objective_id"]] = $result["objective_name"];
@@ -146,15 +150,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 	// Error Checking
 	switch($STEP) {
 		case 2 :
-			/**
-			 * Required field "event_title" / Event Title.
-			 */
-			if ((isset($_POST["event_title"])) && ($event_title = clean_input($_POST["event_title"], array("notags", "trim")))) {
-				$PROCESSED["event_title"] = $event_title;
-			} else {
-				$ERROR++;
-				$ERRORSTR[] = "The <strong>Event Title</strong> field is required.";
-			}
 			if (isset($_POST["clinical_presentations_submit"]) && $_POST["clinical_presentations_submit"]) {
 				if (((isset($_POST["clinical_presentations"])) && (is_array($_POST["clinical_presentations"])) && (count($_POST["clinical_presentations"])))) {
 					foreach ($_POST["clinical_presentations"] as $objective_id) {
@@ -207,103 +202,114 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			}
 
 
-			/**
-			 * Required fields "eventtype_id" / Event Type
-			 */
-			if (isset($_POST["eventtype_duration_order"])) {
-				$event_types = explode(",", trim($_POST["eventtype_duration_order"]));
-				$eventtype_durations = $_POST["duration_segment"];
-
-				if ((is_array($event_types)) && (count($event_types))) {
-					foreach ($event_types as $order => $eventtype_id) {
-						if (($eventtype_id = clean_input($eventtype_id, array("trim", "int"))) && ($duration = clean_input($eventtype_durations[$order], array("trim", "int")))) {
-							if (!($duration > 0)) {
-								$ERROR++;
-								$ERRORSTR[] = "Event type <strong>durations</strong> may not be 0 or negative.";
-							}
-
-							$query	= "SELECT `eventtype_title` FROM `events_lu_eventtypes` WHERE `eventtype_id` = ".$db->qstr($eventtype_id);
-							$result	= $db->GetRow($query);
-							if ($result) {
-								$PROCESSED["event_types"][] = array($eventtype_id, $duration, $result["eventtype_title"]);
+			if ($ENTRADA_ACL->amIAllowed(new EventResource($event_info["event_id"], $event_info["course_id"], $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"]), 'update')) {	
+				/**
+				 * Required field "event_title" / Event Title.
+				 */
+				if ((isset($_POST["event_title"])) && ($event_title = clean_input($_POST["event_title"], array("notags", "trim")))) {
+					$PROCESSED["event_title"] = $event_title;
+				} else {
+					$ERROR++;
+					$ERRORSTR[] = "The <strong>Event Title</strong> field is required.";
+				}
+				/**
+				 * Required fields "eventtype_id" / Event Type
+				 */
+				if (isset($_POST["eventtype_duration_order"])) {
+					$event_types = explode(",", trim($_POST["eventtype_duration_order"]));
+					$eventtype_durations = $_POST["duration_segment"];
+	
+					if ((is_array($event_types)) && (count($event_types))) {
+						foreach ($event_types as $order => $eventtype_id) {
+							if (($eventtype_id = clean_input($eventtype_id, array("trim", "int"))) && ($duration = clean_input($eventtype_durations[$order], array("trim", "int")))) {
+								if (!($duration > 0)) {
+									$ERROR++;
+									$ERRORSTR[] = "Event type <strong>durations</strong> may not be 0 or negative.";
+								}
+	
+								$query	= "SELECT `eventtype_title` FROM `events_lu_eventtypes` WHERE `eventtype_id` = ".$db->qstr($eventtype_id);
+								$result	= $db->GetRow($query);
+								if ($result) {
+									$PROCESSED["event_types"][] = array($eventtype_id, $duration, $result["eventtype_title"]);
+								} else {
+									$ERROR++;
+									$ERRORSTR[] = "One of the <strong>event types</strong> you specified was invalid.";
+								}
 							} else {
 								$ERROR++;
-								$ERRORSTR[] = "One of the <strong>event types</strong> you specified was invalid.";
+								$ERRORSTR[] = "One of the <strong>event types</strong> you specified is invalid.";
 							}
-						} else {
-							$ERROR++;
-							$ERRORSTR[] = "One of the <strong>event types</strong> you specified is invalid.";
 						}
-					}
-				}
-			} else {
-				$ERROR++;
-				$ERRORSTR[] = "The <strong>Event Types</strong> field is required.";
-			}
-
-			/**
-			 * Non-required field "event_location" / Event Location
-			 */
-			if ((isset($_POST["event_location"])) && ($event_location = clean_input($_POST["event_location"], array("notags", "trim")))) {
-				$PROCESSED["event_location"] = $event_location;
-			} else {
-				$PROCESSED["event_location"] = "";
-			}
-
-			/**
-			 * Required field "course_id" / Course
-			 */
-			if ((isset($_POST["course_id"])) && ($course_id = clean_input($_POST["course_id"], array("int")))) {
-				$query	= "	SELECT * FROM `courses` 
-							WHERE `course_id` = ".$db->qstr($course_id)."
-							AND `course_active` = '1'";
-				$result	= $db->GetRow($query);
-				if ($result) {
-					if ($ENTRADA_ACL->amIAllowed(new EventResource(null, $course_id, $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"]), "create")) {
-						$PROCESSED["course_id"] = $course_id;
-					} else {
-						$ERROR++;
-						$ERRORSTR[] = "You do not have permission to add an event for the course you selected. <br /><br />Please re-select the course you would like to place this event into.";
-						application_log("error", "A program coordinator attempted to add an event to a course [".$course_id."] they were not the coordinator of.");
 					}
 				} else {
 					$ERROR++;
-					$ERRORSTR[] = "The <strong>Course</strong> you selected does not exist.";
+					$ERRORSTR[] = "The <strong>Event Types</strong> field is required.";
 				}
-			} else {
-				$ERROR++;
-				$ERRORSTR[] = "The <strong>Course</strong> field is a required field.";
-			}
-
-			/**
-			 * Non-required field "event_phase" / Phase
-			 */
-			if ((isset($_POST["event_phase"])) && ($event_phase = clean_input($_POST["event_phase"], array("notags", "trim")))) {
-				$PROCESSED["event_phase"] = $event_phase;
-			} else {
-				$PROCESSED["event_phase"] = "";
-			}
-
-			/**
-			 * Non-required field "release_date" / Viewable Start (validated through validate_calendars function).
-			 * Non-required field "release_until" / Viewable Finish (validated through validate_calendars function).
-			 */
-			$viewable_date = validate_calendars("viewable", false, false);
-			if ((isset($viewable_date["start"])) && ((int) $viewable_date["start"])) {
-				$PROCESSED["release_date"] = (int) $viewable_date["start"];
-			} else {
-				$PROCESSED["release_date"] = 0;
-			}
-			if ((isset($viewable_date["finish"])) && ((int) $viewable_date["finish"])) {
-				$PROCESSED["release_until"] = (int) $viewable_date["finish"];
-			} else {
-				$PROCESSED["release_until"] = 0;
+	
+				/**
+				 * Non-required field "event_location" / Event Location
+				 */
+				if ((isset($_POST["event_location"])) && ($event_location = clean_input($_POST["event_location"], array("notags", "trim")))) {
+					$PROCESSED["event_location"] = $event_location;
+				} else {
+					$PROCESSED["event_location"] = "";
+				}
+	
+				/**
+				 * Required field "course_id" / Course
+				 */
+				if ((isset($_POST["course_id"])) && ($course_id = clean_input($_POST["course_id"], array("int")))) {
+					$query	= "	SELECT * FROM `courses` 
+								WHERE `course_id` = ".$db->qstr($course_id)."
+								AND `course_active` = '1'";
+					$result	= $db->GetRow($query);
+					if ($result) {
+						if ($ENTRADA_ACL->amIAllowed(new EventResource(null, $course_id, $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"]), "create")) {
+							$PROCESSED["course_id"] = $course_id;
+						} else {
+							$ERROR++;
+							$ERRORSTR[] = "You do not have permission to add an event for the course you selected. <br /><br />Please re-select the course you would like to place this event into.";
+							application_log("error", "A program coordinator attempted to add an event to a course [".$course_id."] they were not the coordinator of.");
+						}
+					} else {
+						$ERROR++;
+						$ERRORSTR[] = "The <strong>Course</strong> you selected does not exist.";
+					}
+				} else {
+					$ERROR++;
+					$ERRORSTR[] = "The <strong>Course</strong> field is a required field.";
+				}
+	
+				/**
+				 * Non-required field "event_phase" / Phase
+				 */
+				if ((isset($_POST["event_phase"])) && ($event_phase = clean_input($_POST["event_phase"], array("notags", "trim")))) {
+					$PROCESSED["event_phase"] = $event_phase;
+				} else {
+					$PROCESSED["event_phase"] = "";
+				}
+	
+				/**
+				 * Non-required field "release_date" / Viewable Start (validated through validate_calendars function).
+				 * Non-required field "release_until" / Viewable Finish (validated through validate_calendars function).
+				 */
+				$viewable_date = validate_calendars("viewable", false, false);
+				if ((isset($viewable_date["start"])) && ((int) $viewable_date["start"])) {
+					$PROCESSED["release_date"] = (int) $viewable_date["start"];
+				} else {
+					$PROCESSED["release_date"] = 0;
+				}
+				if ((isset($viewable_date["finish"])) && ((int) $viewable_date["finish"])) {
+					$PROCESSED["release_until"] = (int) $viewable_date["finish"];
+				} else {
+					$PROCESSED["release_until"] = 0;
+				}
 			}
 
 			if (isset($_POST["post_action"])) {
 				switch($_POST["post_action"]) {
-					case "content" :
-						$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] = "content";
+					case "manage" :
+						$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] = "manage";
 					break;
 					case "new" :
 						$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] = "new";
@@ -316,13 +322,24 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			} else {
 				$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] = "content";
 			}
-			/**
-			 * Event Description
-			 */
-			if ((isset($_POST["event_description"])) && (clean_input($_POST["event_description"], array("notags", "nows")))) {
-				$PROCESSED["event_description"] = clean_input($_POST["event_description"], array("allowedtags"));
-			} else {
-				$PROCESSED["event_description"] = "";
+			if ($ENTRADA_ACL->amIAllowed(new EventContentResource($event_info["event_id"], $event_info["course_id"], $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"]), 'update')) {	
+				/**
+				 * Event Description
+				 */
+				if ((isset($_POST["event_description"])) && (clean_input($_POST["event_description"], array("notags", "nows")))) {
+					$PROCESSED["event_description"] = clean_input($_POST["event_description"], array("allowedtags"));
+				} else {
+					$PROCESSED["event_description"] = "";
+				}
+	
+				/**
+				 * Teacher's Message
+				 */
+				if ((isset($_POST["event_message"])) && (clean_input($_POST["event_message"], array("notags", "nows")))) {
+					$PROCESSED["event_message"] = clean_input($_POST["event_message"], array("allowedtags"));
+				} else {
+					$PROCESSED["event_message"] = "";
+				}
 			}
 
 			/**
@@ -333,17 +350,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			} else {
 				$PROCESSED["event_objectives"] = "";
 			}
-
-			/**
-			 * Teacher's Message
-			 */
-			if ((isset($_POST["event_message"])) && (clean_input($_POST["event_message"], array("notags", "nows")))) {
-				$PROCESSED["event_message"] = clean_input($_POST["event_message"], array("allowedtags"));
-			} else {
-				$PROCESSED["event_message"] = "";
-			}
-			
-			if (!isset($event_info["sessions"]) || !count($event_info["sessions"])) {
+			if ((!isset($event_info["sessions"]) || !count($event_info["sessions"])) && $ENTRADA_ACL->amIAllowed('event', 'create', false)) {
 				/**
 				 * Required field "event_start" / Event Date & Time Start (validated through validate_calendars function).
 				 */
@@ -356,147 +363,132 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					$session_id = ((int) $_POST["current_session"]);
 				}
 				
-				if ((isset($_POST["session_audience"]))) {
-					$associated_audience = explode(',', $_POST["session_audience"]);
+				if ((isset($_POST["students_session_audience"]))) {
+					$associated_audience = explode(',', $_POST["students_session_audience"]);
 					if ((isset($associated_audience)) && (is_array($associated_audience)) && (count($associated_audience))) {
 						foreach($associated_audience as $audience_id) {
-								if (strpos($audience_id, "group") !== false) {
-									if ($group_id = clean_input(preg_replace("/[a-z_]/", "", $audience_id), array("trim", "int"))) {
-										$query = "	SELECT *
-													FROM `groups`
-													WHERE `group_id` = ".$db->qstr($group_id)."
-													AND `group_active` = 1";
-										$result	= $db->GetRow($query);
-										if ($result) {
-											$PROCESSED["associated_group_ids"][] = $group_id;
-										}
-									}
-								} elseif (strpos($audience_id, "proxy") !== false) {
-									if ($proxy_id = clean_input($audience_id, array("trim", "int"))) {
-										$query = "	SELECT a.*
-													FROM `".AUTH_DATABASE."`.`user_data` AS a
-													LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
-													ON a.`id` = b.`user_id`
-													WHERE a.`id` = ".$db->qstr($proxy_id)."
-													AND b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
-													AND b.`account_active` = 'true'
-													AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
-													AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")";
-										$result	= $db->GetRow($query);
-										if ($result) {
-											$PROCESSED["associated_proxy_ids"][] = $proxy_id;
-										}
+							if (strpos($audience_id, "student") !== false) {
+								if ($proxy_id = clean_input(preg_replace("/[a-z_]/", "", $audience_id), array("trim", "int"))) {
+									$query = "	SELECT a.*
+												FROM `".AUTH_DATABASE."`.`user_data` AS a
+												LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+												ON a.`id` = b.`user_id`
+												WHERE a.`id` = ".$db->qstr($proxy_id)."
+												AND b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+												AND b.`account_active` = 'true'
+												AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
+												AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")";
+									$result	= $db->GetRow($query);
+									if ($result) {
+										$PROCESSED["associated_proxy_ids"][] = $proxy_id;
 									}
 								}
+							}
 						}
-						if (!count($PROCESSED["associated_group_ids"]) && !count($PROCESSED["associated_proxy_ids"])) {
-							$ERROR++;
-							$ERRORSTR[] = "The <strong>Session Audience</strong> is a required field. Please try adding a group or an individual user to the session before continuing.";
+					}
+				}
+			
+				if ((isset($_POST["groups_session_audience"]))) {
+					$associated_audience = explode(',', $_POST["groups_session_audience"]);
+					if ((isset($associated_audience)) && (is_array($associated_audience)) && (count($associated_audience))) {
+						foreach($associated_audience as $audience_id) {
+							if (strpos($audience_id, "group") !== false) {
+								if ($group_id = clean_input(preg_replace("/[a-z_]/", "", $audience_id), array("trim", "int"))) {
+									$query = "	SELECT *
+												FROM `groups`
+												WHERE `group_id` = ".$db->qstr($group_id)."
+												AND `group_active` = 1";
+									$result	= $db->GetRow($query);
+									if ($result) {
+										$PROCESSED["associated_group_ids"][] = $group_id;
+									}
+								}
+							}
 						}
-					} else {
-						$ERROR++;
-						$ERRORSTR[] = "The <strong>Session Audience</strong> is a required field. Please try adding a group or an individual user to the session before continuing.";
+					}
+				}
+				
+				if ((isset($_POST["course_session_audience"])) && $_POST["course_session_audience"]) {
+					if ($course_id || ($course_id = $PROCESSED["course_id"])) {
+						$query = "SELECT *
+									FROM `courses`
+									WHERE `course_id` = ".$db->qstr($course_id)."
+									AND `course_active` = 1";
+						$result	= $db->GetRow($query);
+						if ($result) {
+							$PROCESSED["associated_course_ids"][] = $course_id;
+						}
 					}
 				}
 			}
 			
-			/**
-			 * Non-required field "associated_faculty" / Associated Faculty (array of proxy ids).
-			 * This is actually accomplished after the event is inserted below.
-			 */
-			if ((isset($_POST["associated_faculty"]))) {
-				$associated_faculty = explode(',',$_POST["associated_faculty"]);
-				foreach($associated_faculty as $contact_order => $proxy_id) {
-					if ($proxy_id = clean_input($proxy_id, array("trim", "int"))) {
-						$PROCESSED["associated_faculty"][(int) $contact_order] = $proxy_id;
+			if ($ENTRADA_ACL->amIAllowed(new EventResource($event_info["event_id"], $event_info["course_id"], $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"]), 'update')) {	
+				/**
+				 * Non-required field "associated_faculty" / Associated Faculty (array of proxy ids).
+				 * This is actually accomplished after the event is inserted below.
+				 */
+				if ((isset($_POST["associated_faculty"]))) {
+					$associated_faculty = explode(',',$_POST["associated_faculty"]);
+					foreach($associated_faculty as $contact_order => $proxy_id) {
+						if ($proxy_id = clean_input($proxy_id, array("trim", "int"))) {
+							$PROCESSED["associated_faculty"][(int) $contact_order] = $proxy_id;
+						}
 					}
 				}
-			}
-			
-			/**
-			 * Required field "course_id" / Course
-			 */
-			if ((isset($_POST["event_children"])) && ($event_children = clean_input($_POST["event_children"], array("int")))) {
-				$PROCESSED["event_children"] = $event_children;
-			} else {
-				$PROCESSED["event_children"] = 0;
+				
+				/**
+				 * Required field "course_id" / Course
+				 */
+				if ((isset($_POST["event_children"])) && ($event_children = clean_input($_POST["event_children"], array("int")))) {
+					$PROCESSED["event_children"] = $event_children;
+				} else {
+					$PROCESSED["event_children"] = 0;
+				}
 			}
 			
 			if (!$ERROR) {
 				if (isset($event_info["sessions"]) && count($event_info["sessions"])) {
 					$PROCESSED["session"] = array();
-					/**
-					 * Required field "event_start" / Event Date & Time Start (validated through validate_calendars function).
-					 */
-					$start_date = validate_calendars("event", true, false);
-					if ((isset($start_date["start"])) && ((int) $start_date["start"])) {
-						$PROCESSED["session"]["event_start"] = (int) $start_date["start"];
-					}
 					
 					if ((isset($_POST["current_session"])) && (((int) $_POST["current_session"]) || ((int) $_POST["current_session"]) === 0)) {
 						$session_id = ((int) $_POST["current_session"]);
+						$PROCESSED["session"]["event_id"] = $session_id;
 					}
 					
-					/**
-					 * Non-required field "event_id" / Event ID
-					 */
-					if ((isset($_POST["current_session"])) && ($session_event_id = clean_input($_POST["current_session"], array("notags", "trim")))) {
-						$PROCESSED["session"]["event_id"] = $session_event_id;
-					}
+					if ($ENTRADA_ACL->amIAllowed(new EventResource($session_id, $event_info["course_id"], $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"]), 'update')) {
+						/**
+						 * Required field "event_start" / Event Date & Time Start (validated through validate_calendars function).
+						 */
+						$start_date = validate_calendars("event", true, false);
+						if ((isset($start_date["start"])) && ((int) $start_date["start"])) {
+							$PROCESSED["session"]["event_start"] = (int) $start_date["start"];
+						}
 					
-					/**
-					 * Non-required field "event_location" / Event Location
-					 */
-					if ((isset($_POST["event_location"])) && ($event_location = clean_input($_POST["event_location"], array("notags", "trim")))) {
-						$PROCESSED["session"]["event_location"] = $event_location;
-					} else {
-						$PROCESSED["session"]["event_location"] = "";
-					}
-					
-					/**
-					 * Event Description
-					 */
-					if ((isset($_POST["session_description"])) && (clean_input($_POST["session_description"], array("notags", "nows")))) {
-						$PROCESSED["session"]["event_description"] = clean_input($_POST["session_description"], array("allowedtags"));
-					} else {
-						$PROCESSED["session"]["event_description"] = "";
-					}
-					
-					/**
-					 * Teacher's Message
-					 */
-					if ((isset($_POST["session_message"])) && (clean_input($_POST["session_message"], array("notags", "nows")))) {
-						$PROCESSED["session"]["event_message"] = clean_input($_POST["session_message"], array("allowedtags"));
-					} else {
-						$PROCESSED["session"]["event_message"] = "";
-					}
+						/**
+						 * Non-required field "event_location" / Event Location
+						 */
+						if ((isset($_POST["event_location"])) && ($event_location = clean_input($_POST["event_location"], array("notags", "trim")))) {
+							$PROCESSED["session"]["event_location"] = $event_location;
+						} else {
+							$PROCESSED["session"]["event_location"] = "";
+						}
 						
-					/**
-					 * Required field "event_title" / Event Title.
-					 */
-					if ((isset($_POST["session_title"])) && ($event_title = clean_input($_POST["session_title"], array("notags", "trim")))) {
-						$PROCESSED["session"]["event_title"] = $event_title;
-					} else {
-						$ERROR++;
-						$ERRORSTR[] = "The <strong>Session Title</strong> is required.";
-					}
-					
-					if ((isset($_POST["session_audience"]))) {
-						$associated_audience = explode(',', $_POST["session_audience"]);
-						if ((isset($associated_audience)) && (is_array($associated_audience)) && (count($associated_audience))) {
-							foreach($associated_audience as $audience_id) {
-									if (strpos($audience_id, "group") !== false) {
-										if ($group_id = clean_input(preg_replace("/[a-z_]/", "", $audience_id), array("trim", "int"))) {
-											$query = "	SELECT *
-														FROM `groups`
-														WHERE `group_id` = ".$db->qstr($group_id)."
-														AND `group_active` = 1";
-											$result	= $db->GetRow($query);
-											if ($result) {
-												$PROCESSED["session"]["associated_group_ids"][] = $group_id;
-											}
-										}
-									} elseif (strpos($audience_id, "proxy") !== false) {
+						/**
+						 * Required field "event_title" / Event Title.
+						 */
+						if ((isset($_POST["session_title"])) && ($event_title = clean_input($_POST["session_title"], array("notags", "trim")))) {
+							$PROCESSED["session"]["event_title"] = $event_title;
+						} else {
+							$ERROR++;
+							$ERRORSTR[] = "The <strong>Session Title</strong> is required.";
+						}
+						
+						
+						if ((isset($_POST["students_session_audience"]))) {
+							$associated_audience = explode(',', $_POST["students_session_audience"]);
+							if ((isset($associated_audience)) && (is_array($associated_audience)) && (count($associated_audience))) {
+								foreach($associated_audience as $audience_id) {
+									if (strpos($audience_id, "student") !== false) {
 										if ($proxy_id = clean_input(preg_replace("/[a-z_]/", "", $audience_id), array("trim", "int"))) {
 											$query = "	SELECT a.*
 														FROM `".AUTH_DATABASE."`.`user_data` AS a
@@ -513,40 +505,101 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 											}
 										}
 									}
+								}
 							}
-							if (!count($PROCESSED["session"]["associated_group_ids"]) && !count($PROCESSED["session"]["associated_proxy_ids"])) {
-								$ERROR++;
-								$ERRORSTR[] = "You have chosen <strong>Small Group Event</strong> as an <strong>Event Audience</strong> type, but have not selected any groups.";
+						}
+						
+						if ((isset($_POST["groups_session_audience"]))) {
+							$associated_audience = explode(',', $_POST["groups_session_audience"]);
+							if ((isset($associated_audience)) && (is_array($associated_audience)) && (count($associated_audience))) {
+								foreach($associated_audience as $audience_id) {
+									if (strpos($audience_id, "group") !== false) {
+										if ($group_id = clean_input(preg_replace("/[a-z_]/", "", $audience_id), array("trim", "int"))) {
+											$query = "	SELECT *
+														FROM `groups`
+														WHERE `group_id` = ".$db->qstr($group_id)."
+														AND `group_active` = 1";
+											$result	= $db->GetRow($query);
+											if ($result) {
+												$PROCESSED["session"]["associated_group_ids"][] = $group_id;
+											}
+										}
+									}
+								}
 							}
-						} else {
-							$ERROR++;
-							$ERRORSTR[] = "You have chosen <strong>Small Group Event</strong> as an <strong>Event Audience</strong> type, but have not selected any groups.";
+						}
+						
+						if ((isset($_POST["course_session_audience"])) && $_POST["course_session_audience"]) {
+							if ($course_id || ($course_id = $PROCESSED["course_id"])) {
+								$query = "SELECT *
+											FROM `courses`
+											WHERE `course_id` = ".$db->qstr($course_id)."
+											AND `course_active` = 1";
+								$result	= $db->GetRow($query);
+								if ($result) {
+									$PROCESSED["session"]["associated_course_ids"][] = $course_id;
+								}
+							}
+						}
+						
+						/**
+						 * Non-required field "associated_faculty" / Associated Faculty (array of proxy ids).
+						 * This is actually accomplished after the event is inserted below.
+						 */
+						if ((isset($_POST["associated_session_faculty"]))) {
+							$associated_session_faculty = explode(',',$_POST["associated_session_faculty"]);
+							foreach($associated_session_faculty as $contact_order => $proxy_id) {
+								if ($proxy_id = clean_input($proxy_id, array("trim", "int"))) {
+									$PROCESSED["session"]["associated_session_faculty"][(int) $contact_order] = $proxy_id;
+								}
+							}
+						}
+						
+						$PROCESSED["session"]["parent_id"] = $EVENT_ID;
+						$PROCESSED["session"]["course_id"] = $PROCESSED["course_id"];
+						$PROCESSED["session"]["event_phase"] = $PROCESSED["event_phase"];
+						$PROCESSED["session"]["event_finish"] = $PROCESSED["session"]["event_start"];
+						$PROCESSED["session"]["event_duration"] = 0;
+						foreach($PROCESSED["event_types"] as $event_type) {
+							$PROCESSED["session"]["event_finish"] += $event_type[1]*60;
+							$PROCESSED["session"]["event_duration"] += $event_type[1];
 						}
 					}
 					
+
 					/**
-					 * Non-required field "associated_faculty" / Associated Faculty (array of proxy ids).
-					 * This is actually accomplished after the event is inserted below.
+					 * Event Description
 					 */
-					if ((isset($_POST["associated_session_faculty"]))) {
-						$associated_session_faculty = explode(',',$_POST["associated_session_faculty"]);
-						foreach($associated_session_faculty as $contact_order => $proxy_id) {
-							if ($proxy_id = clean_input($proxy_id, array("trim", "int"))) {
-								$PROCESSED["session"]["associated_session_faculty"][(int) $contact_order] = $proxy_id;
-							}
-						}
+					if ((isset($_POST["session_description"])) && (clean_input($_POST["session_description"], array("notags", "nows")))) {
+						$PROCESSED["session"]["event_description"] = clean_input($_POST["session_description"], array("allowedtags"));
 					}
-					$PROCESSED["session"]["parent_id"] = $EVENT_ID;
-					$PROCESSED["session"]["course_id"] = $PROCESSED["course_id"];
-					$PROCESSED["session"]["event_phase"] = $PROCESSED["event_phase"];
+					
+					/**
+					 * Include Parent Event's Description
+					 */
+					if ((isset($_POST["include_parent_description"])) && (clean_input($_POST["include_parent_description"], array("int"))) == 1) {
+						$PROCESSED["session"]["include_parent_description"] = 1;
+					} else {
+						$PROCESSED["session"]["include_parent_description"] = 0;
+					}
+					/**
+					 * Teacher's Message
+					 */
+					if ((isset($_POST["session_message"])) && (clean_input($_POST["session_message"], array("notags", "nows")))) {
+						$PROCESSED["session"]["event_message"] = clean_input($_POST["session_message"], array("allowedtags"));
+					}
+					
+					/**
+					 * Include Parent Event's Teacher's Message
+					 */
+					if ((isset($_POST["include_parent_message"])) && (clean_input($_POST["include_parent_message"], array("int"))) == 1) {
+						$PROCESSED["session"]["include_parent_message"] = 1;
+					} else {
+						$PROCESSED["session"]["include_parent_message"] = 0;
+					}
+						
 					$PROCESSED["session"]["updated_date"] = time();
 					$PROCESSED["session"]["updated_by"] = $_SESSION["details"]["id"];
-					$PROCESSED["session"]["event_finish"] = $PROCESSED["session"]["event_start"];
-					$PROCESSED["session"]["event_duration"] = 0;
-					foreach($PROCESSED["event_types"] as $event_type) {
-						$PROCESSED["session"]["event_finish"] += $event_type[1]*60;
-						$PROCESSED["session"]["event_duration"] += $event_type[1];
-					}
 					
 					$event_info["sessions"][] = $PROCESSED["session"];
 					
@@ -575,7 +628,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								application_log("error", "There was an error inserting a new event. Database said: ".$db->ErrorMsg());
 							}
 						}
-						if ($session_updated == true) {
+						if ($session_updated == true && $ENTRADA_ACL->amIAllowed(new EventResource($session_id, $event_info["course_id"], $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"]), 'update')) {
 							$query = "DELETE FROM `event_audience` WHERE `event_id` = ".$db->qstr($PROCESSED["session"]["event_id"]);
 							if ($db->Execute($query)) {
 								$query = "DELETE FROM `event_eventtypes` WHERE `event_id` = ".$db->qstr($PROCESSED["session"]["event_id"]);
@@ -595,6 +648,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 									application_log("error", "Unable to delete any eventtype records while editing an event. Database said: ".$db->ErrorMsg());
 								}
 		
+								if (count($PROCESSED["session"]["associated_course_ids"])) {
+									if ($PROCESSED["session"]["associated_course_ids"]) {
+										if (!$db->AutoExecute("event_audience", array("event_id" => $PROCESSED["session"]["event_id"], "audience_type" => "course_id", "audience_value" => (int) $course_id, "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT")) {
+											$ERROR++;
+											$ERRORSTR[] = "There was an error while trying to attach the selected <strong>Course List</strong> to this event.<br /><br />The system administrator was informed of this error; please try again later.";
+		
+											application_log("error", "Unable to insert a new event_audience, course_id record while adding a new event. Database said: ".$db->ErrorMsg());
+										}
+									}
+								}
 								if (count($PROCESSED["session"]["associated_group_ids"])) {
 									foreach($PROCESSED["session"]["associated_group_ids"] as $group_id) {
 										if (!$db->AutoExecute("event_audience", array("event_id" => $PROCESSED["session"]["event_id"], "audience_type" => "group_id", "audience_value" => (int) $group_id, "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT")) {
@@ -628,8 +691,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							 */
 							$query = "DELETE FROM `event_contacts` WHERE `event_id` = ".$db->qstr($PROCESSED["session"]["event_id"]);
 							if ($db->Execute($query)) {
-								if ((is_array($PROCESSED["session"]["associated_faculty"])) && (count($PROCESSED["session"]["associated_faculty"]))) {
-									foreach($PROCESSED["session"]["associated_faculty"] as $contact_order => $proxy_id) {
+								if ((is_array($PROCESSED["session"]["associated_session_faculty"])) && (count($PROCESSED["session"]["associated_session_faculty"]))) {
+									foreach($PROCESSED["session"]["associated_session_faculty"] as $contact_order => $proxy_id) {
 										if (!$db->AutoExecute("event_contacts", array("event_id" => $PROCESSED["session"]["event_id"], "proxy_id" => $proxy_id, "contact_order" => (int) $contact_order, "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT")) {
 											$ERROR++;
 											$ERRORSTR[] = "There was an error while trying to attach an <strong>Associated Faculty</strong> to this session.<br /><br />The system administrator was informed of this error; please try again later.";
@@ -643,7 +706,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							$SUCCESS++;
 							
 							if (!$ERROR) {
-								$SUCCESSSTR[] = "You have successfully edited <strong>".html_encode($PROCESSED["session"]["event_title"])."</strong> in the system.<br /><br />".$msg;
+								$session_title = $db->GetOne("SELECT CONCAT(a.`event_title`, ' - ', b.`event_title`) FROM `events` AS a JOIN `events` AS b ON a.`event_id` = b.`parent_id` WHERE b.`event_id` = ".$db->qstr($session_id));
+								$SUCCESSSTR[] = "You have successfully edited <strong>".html_encode($session_title)."</strong> in the system.<br /><br />".$msg;
 								$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
 							}
 		
@@ -682,6 +746,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							application_log("error", "Unable to delete any eventtype records while editing an event. Database said: ".$db->ErrorMsg());
 						}
 
+						if (count($PROCESSED["associated_course_ids"])) {
+							if($PROCESSED["associated_course_ids"]) {
+								if (!$db->AutoExecute("event_audience", array("event_id" => $EVENT_ID, "audience_type" => "course_id", "audience_value" => (int) $course_id, "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT")) {
+									$ERROR++;
+									$ERRORSTR[] = "There was an error while trying to attach the selected <strong>Course List</strong> to this event.<br /><br />The system administrator was informed of this error; please try again later.";
+
+									application_log("error", "Unable to insert a new event_audience, group_id record while adding a new event. Database said: ".$db->ErrorMsg());
+								}
+							}
+						}
 						if (count($PROCESSED["associated_group_ids"])) {
 							foreach($PROCESSED["associated_group_ids"] as $group_id) {
 								if (!$db->AutoExecute("event_audience", array("event_id" => $EVENT_ID, "audience_type" => "group_id", "audience_value" => (int) $group_id, "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT")) {
@@ -746,11 +820,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					$SUCCESS++;
 					
 					if (!$ERROR) {
-						$SUCCESSSTR[] = "You have successfully edited <strong>".html_encode($PROCESSED["event_title"])."</strong> in the system.<br /><br />".$msg;
+						$SUCCESSSTR[] = "You have successfully edited <strong>".html_encode($event_info["event_title"])."</strong> in the system.<br /><br />".$msg;
 						$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
 					} else {
 						$STEP = 1;
-						$SUCCESSSTR[] = "You have successfully edited <strong>".html_encode($PROCESSED["event_title"])."</strong> in the system.";
 					}
 
 					application_log("success", "Event [".$EVENT_ID."] has been modified.");
@@ -777,6 +850,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 		break;
 		case 1 :
 		default :
+			$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/AutoCompleteList.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+			if ($ENTRADA_ACL->amIAllowed(new EventResource($result["event_id"], $result["course_id"], $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"]), 'update')) {
+				$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/eventtypes_list.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+			}
+			$HEAD[]		= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/tabpane/tabpane.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
+			$HEAD[]		= "<link href=\"".ENTRADA_URL."/css/tabpane.css?release=".html_encode(APPLICATION_VERSION)."\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />\n";
+			$HEAD[]		= "<link href=\"".ENTRADA_URL."/css/tree.css?release=".html_encode(APPLICATION_VERSION)."\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />\n";
+			$HEAD[]		= "<style type=\"text/css\">.dynamic-tab-pane-control .tab-page {height:auto;}</style>\n";
+			$HEAD[]		= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/picklist.js\"></script>\n";
+			$HEAD[]		= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/scriptaculous/tree.js\"></script>\n";
+			$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/elementresizer.js\"></script>\n";
 			/**
 			 * Compiles the full list of faculty members.
 			 */
@@ -798,7 +882,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			 * Compiles the list of students.
 			 */
 			$STUDENT_LIST = array();
-			$query = "	SELECT a.`id` AS `proxy_id`, b.`role`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, a.`organisation_id`
+			$query = "	SELECT a.`id` AS `proxy_id`, b.`role`, CONCAT_WS(' ', a.`firstname`, a.`lastname`) AS `fullname`, a.`organisation_id`
 						FROM `".AUTH_DATABASE."`.`user_data` AS a
 						LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 						ON a.`id` = b.`user_id`
@@ -868,6 +952,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				foreach($results as $result) {
 					if ($result["audience_type"] == $PROCESSED["event_audience_type"]) {
 						switch($result["audience_type"]) {
+							case "course_id" :
+								$PROCESSED["associated_course_ids"][] = (int) $result["audience_value"];
+							break;
 							case "group_id" :
 								$PROCESSED["associated_group_ids"][] = (int) $result["audience_value"];
 							break;
@@ -900,8 +987,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							<td colspan="3" style="text-align: right; padding-top: 5px"><input type="submit" value="Save" /></td>
 						</tr>
 					</tfoot>
+					<?php
+					if (!$ENTRADA_ACL->amIAllowed(new EventResource($result["event_id"], $result["course_id"], $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"]), 'update')) {
+					?>
+						<tr>
+							<td colspan="3"><h1 class="event-title"><?php echo html_encode($event_info["event_title"]); ?></h1></td>
+						</tr>
+					<?php
+					}
+					?>
 					<tr>
-						<td colspan="3"><h2>Event Details</h2></td>
+						<td colspan="3"><h2>Parent Event Details</h2></td>
 					</tr>
 					<?php
 					if ($ERROR || $NOTICE || $SUCCESS) {
@@ -927,6 +1023,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						</tr>
 						<?php
 					}
+					if ($ENTRADA_ACL->amIAllowed(new EventResource($result["event_id"], $result["course_id"], $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"]), 'update')) {
 					?>
 					<tr>
 						<td></td>
@@ -937,7 +1034,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						<td></td>
 						<td><label for="course_id" class="form-required">Course</label></td>
 						<td>
-							<select id="course_id" name="course_id" style="width: 95%">
+							<select id="course_id" name="course_id" style="width: 95%" onchange="updateCourse(this.selectedIndex)">
 							<?php
 							$query = "	SELECT * FROM `courses`
 										WHERE `organisation_id` = ".$db->qstr($ORGANISATION_ID)."
@@ -946,6 +1043,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							$results = $db->GetAll($query);
 							if ($results) {
 								foreach($results as $result) {
+									if ($event_info["course_id"] == $result["course_id"]) {
+										$course_id = $event_info["course_id"];
+										$course_name = $result["course_name"];
+									}
 									if ($ENTRADA_ACL->amIAllowed(new EventResource(null, $result["course_id"], $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"]), "create")) {
 										echo "<option value=\"".(int) $result["course_id"]."\"".(($PROCESSED["course_id"] == $result["course_id"]) ? " selected=\"selected\"" : "").">".html_encode($result["course_name"])."</option>\n";
 									}
@@ -953,8 +1054,119 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							}
 							?>
 							</select>
+							<input type="hidden" id="event_course_id" value="<?php echo $course_id; ?>" />
+							<input type="hidden" id="event_course_name" value="<?php echo $course_name; ?>" />
 						</td>
 					</tr>
+					<?php
+					} else {
+						?>
+						<tr>
+							<td>&nbsp;</td>
+							<td>Event Duration</td>
+							<td><?php echo (($event_info["event_duration"]) ? $event_info["event_duration"]." minutes" : "To Be Announced"); ?></td>
+						</tr>
+						<?php
+						if ($event_audience_type == "grad_year") {
+							$query		= "	SELECT a.`event_id`, a.`event_title`, b.`audience_value` AS `event_grad_year`
+											FROM `events` AS a
+											LEFT JOIN `event_audience` AS b
+											ON b.`event_id` = a.`event_id`
+											JOIN `courses` AS c
+											ON a.`course_id` = c.`course_id`
+											AND c.`organisation_id` = ".$db->qstr($event_info["organisation_id"])."
+											WHERE (a.`event_start` BETWEEN ".$db->qstr($event_info["event_start"])." AND ".$db->qstr(($event_info["event_finish"] - 1)).")
+											AND a.`event_id` <> ".$db->qstr($event_info["event_id"])."
+											AND b.`audience_type` = 'grad_year'
+											AND b.`audience_value` = ".$db->qstr((int) $associated_grad_year)."
+											ORDER BY a.`event_title` ASC";
+							$results	= $db->GetAll($query);
+							if ($results) {
+								echo "<tr>\n";
+								echo "	<td colspan=\"3\">&nbsp;</td>\n";
+								echo "</tr>\n";
+								echo "<tr>\n";
+								echo "	<td>&nbsp;</td>\n";
+								echo "	<td style=\"vertical-align: top\">Overlapping Event".((count($results) != 1) ? "s" : "")."</td>\n";
+								echo "	<td>\n";
+								foreach ($results as $result) {
+									echo "	<a href=\"".ENTRADA_URL."/admin/events?id=".$result["event_id"]."&section=content\">".html_encode($result["event_title"])."</a><br />\n";
+								}
+								echo "	</td>\n";
+								echo "</tr>\n";
+							}
+						}
+						?>
+						<tr>
+							<td colspan="3">&nbsp;</td>
+						</tr>
+						<tr>
+							<td>&nbsp;</td>
+							<td style="vertical-align: top">Associated Faculty</td>
+							<td>
+								<?php
+								$query		= "	SELECT a.`proxy_id`, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, a.`contact_role`, b.`email`
+												FROM `event_contacts` AS a
+												LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
+												ON b.`id` = a.`proxy_id`
+												WHERE a.`event_id` = ".$db->qstr($event_info["event_id"])."
+												AND b.`id` IS NOT NULL
+												ORDER BY a.`contact_order` ASC";
+								$results	= $db->GetAll($query);
+								if ($results) {
+									foreach ($results as $key => $result) {
+										echo "<a href=\"mailto:".html_encode($result["email"])."\">".html_encode($result["fullname"])."</a> - ".(($result["contact_role"] == "ta")?"Teacher's Assistant":html_encode(ucwords($result["contact_role"])))."<br />\n";
+									}
+								} else {
+									echo "To Be Announced";
+								}
+								?>
+							</td>
+						</tr>
+						<tr>
+							<td colspan="3">&nbsp;</td>
+						</tr>
+						<?php
+						if (!$ENTRADA_ACL->amIAllowed(new EventContentResource($event_info["event_id"], $event_info["course_id"], $event_info["organisation_id"]), "update")) {
+							echo "	<tr>\n";
+							echo "	<td>&nbsp;</td>\n";
+							echo "		<td>Phase / Term</td>\n";
+							echo "		<td>".strtoupper($event_info["event_phase"])."</td>\n";
+							echo "	</tr>\n";
+							echo "	<tr>\n";
+							echo "	<td>&nbsp;</td>\n";
+							echo "		<td>Course</td>\n";
+							echo "		<td>".(($event_info["course_id"]) ? "<a href=\"".ENTRADA_URL."/courses?id=".$event_info["course_id"]."\">".course_name($event_info["course_id"], true, true)."</a>" : "Not Yet Filed")."</td>\n";
+							echo "	</tr>\n";
+							if (clean_input($event_info["event_description"], array("notags", "nows")) != "") {
+								echo "	<tr>\n";
+								echo "		<td colspan=\"3\">&nbsp;</td>\n";
+								echo "	</tr>\n";
+								echo "	<tr>\n";
+								echo "		<td>&nbsp;</td>\n";
+								echo "		<td colspan=\"2\">\n";
+								echo "			<h3>Event Description</h3>\n";
+								echo			trim(strip_selected_tags($event_info["event_description"], array("font")));
+								echo "		</td>\n";
+								echo "	</tr>\n";
+							}
+		
+							if (clean_input($event_info["event_message"], array("notags", "nows")) != "") {
+								echo "	<tr>\n";
+								echo "		<td colspan=\"3\">&nbsp;</td>\n";
+								echo "	</tr>\n";
+								echo "	<tr>\n";
+								echo "		<td>&nbsp;</td>\n";
+								echo "		<td colspan=\"2\">\n";
+								echo "			<h3>Teacher's Message</h3>\n";
+								echo			trim(strip_selected_tags($event_info["event_message"], array("font")));
+								echo "		</td>\n";
+								echo "	</tr>\n";
+							}
+						}
+					}
+					if ($ENTRADA_ACL->amIAllowed(new EventContentResource($event_info["event_id"], $event_info["course_id"], $event_info["organisation_id"]), "update")) {
+					?>
 					<tr>
 						<td colspan="3">&nbsp;</td>
 					</tr>
@@ -977,9 +1189,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							<textarea id="event_message" name="event_message" style="width: 100%; height: 150px" cols="70" rows="10"><?php echo html_encode(trim(strip_selected_tags($event_info["event_message"], array("font")))); ?></textarea>
 						</td>
 					</tr>
+					<?php
+					}
+					?>
 					<tr>
 						<td colspan="3">&nbsp;</td>
 					</tr>
+					<?php
+					if ($ENTRADA_ACL->amIAllowed(new EventResource($event_info["event_id"], $event_info["course_id"], $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"]), 'update')) {
+					?>
 					<tr>
 						<td></td>
 						<td style="vertical-align: top"><label for="eventtype_ids" class="form-required">Event Types</label></td>
@@ -1069,9 +1287,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							<input type="hidden" id="faculty_id" name="faculty_id" value="" />
 						</td>
 					</tr>
+					<?php
+					}
+					?>
 					<tr>
 						<td colspan="3">
-							<h3>Sessions</h3>
+							<h2>Sessions</h2>
 						</td>
 					</tr>
 					<tr>
@@ -1128,16 +1349,27 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 													echo "</div>\n";
 													echo "<div class=\"session-list\"".($page_count != $chosen_page ? " style=\"display: none;\"" : "")." id=\"page-".$page_count."\">\n";
 												}
-												?>
-												<div id="session-line-<?php echo $result["event_id"]; ?>" class="event-session<?php echo $selected ? " selected" : ""; ?>">
-													<div id="session-<?php echo $result["event_id"]; ?>" onclick="loadSession(<?php echo $result["event_id"]; ?>)" class="logbook-entry">
-														<?php
-														echo limit_chars($result["event_title"], 21);
-														?>
+												if ($ENTRADA_ACL->amIAllowed(new EventResource($result["event_id"], $result["course_id"], $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"]), 'update') || $ENTRADA_ACL->amIAllowed(new EventContentResource($result["event_id"], $result["course_id"], $result["organisation_id"]), "update") || $ENTRADA_ACL->amIAllowed(new EventContentResource($event_info["event_id"], $event_info["course_id"], $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"]), 'update')) {
+													?>
+													<div id="session-line-<?php echo $result["event_id"]; ?>" class="event-session enabled<?php echo $selected ? " selected" : ""; ?>">
+														<div id="session-<?php echo $result["event_id"]; ?>" onclick="loadSession(<?php echo $result["event_id"]; ?>)" class="session-entry">
+															<?php
+															echo limit_chars($result["event_title"], 21);
+															?>
+														</div>
+														<input id="session-name-<?php echo $result["event_id"]; ?>" value="<?php echo $result["event_title"]; ?>" onchange="saveSessionName()" type="text" style="width: 95%; background-color: #EEEEEE; display: none;" />
 													</div>
-													<input id="session-name-<?php echo $result["event_id"]; ?>" value="<?php echo $result["event_title"]; ?>" onchange="saveSessionName()" type="text" style="width: 95%; background-color: #EEEEEE; display: none;" />
-												</div>
-												<?php
+													<?php
+												} else {?>
+													<div id="session-line-<?php echo $result["event_id"]; ?>" class="event-session disabled">
+														<div id="session-<?php echo $result["event_id"]; ?>" class="session-entry">
+															<?php
+															echo limit_chars($result["event_title"], 21);
+															?>
+														</div>
+													</div>
+													<?php
+												}
 											}
 											?>
 											<?php
@@ -1146,8 +1378,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 											<input type="hidden" id="current-page" name="current_pages" value="1" />		
 											<input type="hidden" value="0" id="current-session" name="current_session" />
 											<input type="hidden" id="session-count" name="event_children" value="1" />
-											<div id="session-line-0" class="event-session selected">
-												<div id="session-0" onclick="loadSession(0)" class="logbook-entry">
+											<div id="session-line-0" class="event-session enabled selected">
+												<div id="session-0" onclick="loadSession(0)" class="session-entry">
 													Session 1
 												</div>
 												<input id="session-name-0" value="Session 1" onchange="saveSessionName()" type="text" style="width: 95%; background-color: #EEEEEE; display: none;" />
@@ -1208,7 +1440,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								            foreach ($student_results as $r) {
 							                    $checked = (isset($PROCESSED["associated_proxy_ids"]) && count($PROCESSED["associated_proxy_ids"]) && array_search($r["proxy_id"], $PROCESSED["associated_proxy_ids"]) !== false ? "checked=\"checked\"" : "");
 								
-								                $students[$r["role"]]['options'][] = array('text' => $r['fullname'], 'value' => 'proxy_'.$r['proxy_id'], 'checked' => $checked);
+								                $students[$r["role"]]['options'][] = array('text' => $r['fullname'], 'value' => 'student_'.$r['proxy_id'], 'checked' => $checked);
 								            }
 								            echo lp_multiple_select_popup('students', $students, array('title'=>'Select Students:', 'cancel_text'=>'Close', 'cancel'=>true, 'class'=>'audience_dialog'));
 								        }
@@ -1244,7 +1476,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 														<col style="width: 75%" />
 													</colgroup>
 													<?php
-													echo generate_calendar("event_start", "Date and Time", true, $result["event_start"]);
+													if ($ENTRADA_ACL->amIAllowed(new EventResource($result["event_id"], $result["course_id"], $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"]), 'update')) {
+														echo generate_calendar("event_start", "Date and Time", true, $result["event_start"]);
 													?>
 													<tr>
 														<td colspan="3">&nbsp;</td>
@@ -1254,6 +1487,54 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 														<td><label for="event_location" class="form-nrequired">Session Location</label></td>
 														<td><input type="text" id="event_location" name="event_location" value="<?php echo $result["event_location"]; ?>" maxlength="255" style="width: 203px" /></td>
 													</tr>
+													<?php
+													} else {
+													?>
+													<tr>
+														<td colspan="3"><h3>Session Details</h3></td>
+													</tr>
+													<tr>
+														<td colspan="3">&nbsp;</td>
+													</tr>
+													<tr>
+														<td>&nbsp;</td>
+														<td>Event Date &amp; Time</td>
+														<td><?php echo date(DEFAULT_DATE_FORMAT, $result["event_start"]); ?></td>
+													</tr>
+													<tr>
+														<td>&nbsp;</td>
+														<td>Event Location</td>
+														<td><?php echo (($result["event_location"]) ? $result["event_location"] : "To Be Announced"); ?></td>
+													</tr>
+													<tr>
+														<td colspan="3">&nbsp;</td>
+													</tr>
+													<tr>
+														<td>&nbsp;</td>
+														<td style="vertical-align: top">Associated Faculty</td>
+														<td>
+															<?php
+															$query		= "	SELECT a.`proxy_id`, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, a.`contact_role`, b.`email`
+																			FROM `event_contacts` AS a
+																			LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
+																			ON b.`id` = a.`proxy_id`
+																			WHERE a.`event_id` = ".$db->qstr($result["event_id"])."
+																			AND b.`id` IS NOT NULL
+																			ORDER BY a.`contact_order` ASC";
+															$results	= $db->GetAll($query);
+															if ($results) {
+																foreach ($results as $key => $fresult) {
+																	echo "<a href=\"mailto:".html_encode($fresult["email"])."\">".html_encode($fresult["fullname"])."</a> - ".(($fresult["contact_role"] == "ta")?"Teacher's Assistant":html_encode(ucwords($fresult["contact_role"])))."<br />\n";
+																}
+															} else {
+																echo "To Be Announced";
+															}
+															?>
+														</td>
+													</tr>
+													<?php
+													}
+													?>
 													<tr>
 														<td colspan="3">&nbsp;</td>
 													</tr>
@@ -1297,6 +1578,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 															<label for="include_parent_message" class="form-nrequired">Include <strong>Teacher's Message</strong> from parent event</label>
 														</td>
 													</tr>
+													<?php
+													if ($ENTRADA_ACL->amIAllowed(new EventResource($result["event_id"], $result["course_id"], $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"]), 'update')) {
+													?>
 													<tr>
 														<td colspan="3">&nbsp;</td>
 													</tr>
@@ -1342,80 +1626,101 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 																 * Set the audience_type.
 																 */
 																$result["event_audience_type"] = $audience_results[0]["audience_type"];
-												
+																
 																foreach($audience_results as $audience) {
-																	if ($audience["audience_type"] == $result["event_audience_type"]) {
-																		switch($audience["audience_type"]) {
-																			case "group_id" :
-																				$result["associated_group_ids"][] = (int) $audience["audience_value"];
-																			break;
-																			case "proxy_id" :
-																				$result["associated_proxy_ids"][] = (int) $audience["audience_value"];
-																			break;
-																			case "grad_year" :
-																				$query = "SELECT `group_id` FROM `groups` WHERE `group_name` = 'School of Medicine: Class of ".((int)$result["audience_value"])."'";
-																				$group_id = $db->GetOne($query);
-																				if ($group_id) {
-																					$result["associated_group_ids"][] = (int) $group_id;
-																				}
-																			break;
-																		}
+																	switch($audience["audience_type"]) {
+																		case "course_id" :
+																			$result["associated_course_ids"][] = (int) $audience["audience_value"];
+																		break;
+																		case "group_id" :
+																			$result["associated_group_ids"][] = (int) $audience["audience_value"];
+																		break;
+																		case "proxy_id" :
+																			$result["associated_proxy_ids"][] = (int) $audience["audience_value"];
+																		break;
+																		case "grad_year" :
+																			$query = "SELECT `group_id` FROM `groups` WHERE `group_name` = 'School of Medicine: Class of ".((int)$result["audience_value"])."'";
+																			$group_id = $db->GetOne($query);
+																			if ($group_id) {
+																				$result["associated_group_ids"][] = (int) $group_id;
+																			}
+																		break;
 																	}
 																}
 															}
-															$audience_ids_string = "";
-															foreach ($result["associated_group_ids"] as $group_id) {
-																if ($audience_ids_string) {
-																	$audience_ids_string .= ",group_".$group_id;
+															$group_ids_string = "";
+															$student_ids_string = "";
+															if (isset($PROCESSED["associated_course_ids"]) && $PROCESSED["associated_course_ids"]) {
+																$course_audience_included = true;
+															} else {
+																$course_audience_included = false;
+															}
+															foreach ($PROCESSED["associated_group_ids"] as $group_id) {
+																if ($group_ids_string) {
+																	$group_ids_string .= ",group_".$group_id;
 																} else {
-																	$audience_ids_string = "group_".$group_id; 
+																	$group_ids_string = "group_".$group_id; 
 																}
 															}
-															foreach ($result["associated_proxy_ids"] as $proxy_id) {
-																if ($audience_ids_string) {
-																	$audience_ids_string .= ",proxy_".$proxy_id;
+															foreach ($PROCESSED["associated_proxy_ids"] as $proxy_id) {
+																if ($student_ids_string) {
+																	$student_ids_string .= ",student_".$proxy_id;
 																} else {
-																	$audience_ids_string = "proxy_".$proxy_id; 
+																	$student_ids_string = "student_".$proxy_id; 
 																}
 															}
 															?>
-															<input type="hidden" id="audience_head" name="session_audience" value="<?php echo $audience_ids_string; ?>" />
+															<input type="hidden" id="groups_audience_head" name="groups_session_audience" value="<?php echo $group_ids_string; ?>" />
+															<input type="hidden" id="students_audience_head" name="students_session_audience" value="<?php echo $student_ids_string; ?>" />
+															<input type="hidden" id="course_audience_head" name="course_session_audience" value="<?php echo $course_audience_included ? "1" : "0"; ?>" />
 															<script type="text/javascript">
 																var multiselect = [];
 																var id;
 																function showMultiSelect() {
 																	$$('select_multiple_container').invoke('hide');
 																	id = $F('audience_select');
-																	if (multiselect[id]) {
-																		$('audience_select').hide();
-																		multiselect[id].container.show();
-																		multiselect[id].container.down("input").activate();
-																	} else {
-																		if ($(id+'_options')) {
-																			$(id+'_options').addClassName('multiselect-processed');
-																			multiselect[id] = new Control.SelectMultiple('audience_head',id+'_options',{
-																				checkboxSelector: 'table.select_multiple_table tr td input[type=checkbox]',
-																				nameSelector: 'table.select_multiple_table tr td.select_multiple_name label',
-																				resize: id+'_scroll',
-																				afterCheck: function(element) {
-																					if (element.checked) {
-																						alert("added "+element.value);
-																					} else {
-																						alert("removed "+element.value);
-																					}
-																				}
-																			});
-											
-																			$(id+'_cancel').observe('click',function(event){
-																				this.container.hide();
-																				$('audience_select').show();
-																				$('audience_select').options.selectedIndex = 0;
-																				return false;
-																			}.bindAsEventListener(multiselect[id]));;
-											
+																	if (id != 'course') {
+																		$$('select_multiple_container').invoke('hide');
+																		if (multiselect[id]) {
 																			$('audience_select').hide();
 																			multiselect[id].container.show();
 																			multiselect[id].container.down("input").activate();
+																		} else {
+																			if ($(id+'_options')) {
+																				$(id+'_options').addClassName('multiselect-processed');
+																				multiselect[id] = new Control.SelectMultiple(id+'_audience_head',id+'_options',{
+																					checkboxSelector: 'table.select_multiple_table tr td input[type=checkbox]',
+																					nameSelector: 'table.select_multiple_table tr td.select_multiple_name label',
+																					resize: id+'_scroll',
+																					afterCheck: function(element) {
+																						if (element.checked) {
+																							addAudience(element.id, id);
+																						} else {
+																							removeAudience(element.id, id);
+																						}
+																					}
+																				});
+								
+																				$(id+'_cancel').observe('click',function(event){
+																					this.container.hide();
+																					$('audience_select').show();
+																					$('audience_select').options.selectedIndex = 0;
+																					return false;
+																				}.bindAsEventListener(multiselect[id]));
+								
+																				$('audience_select').hide();
+																				multiselect[id].container.show();
+																				multiselect[id].container.down("input").activate();
+																			}
+																		}
+																	} else if (!$('audience_course')) {
+																		if (!$('audience_course') || !$('audience_course').value) {
+																			$('audience_list').innerHTML += '<li class="community" id="audience_course" style="cursor: move;">'+$('event_course_name').value+'<img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="removeAudience(\'course\', \'course\');" class="list-cancel-image" /></li>';
+																			$$('#audience_list div').each(function (e) { e.hide(); });
+																			Sortable.destroy('audience_list');
+																			Sortable.create('audience_list');
+																			$('audience_select').options.selectedIndex = 0;
+																			$('course_audience_head').value = 1;
 																		}
 																	}
 																	return false;
@@ -1425,6 +1730,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 																<option value="">- Select Audience Type -</option>
 																<option value="groups">Groups</option>
 																<option value="students">Individual Students</option>
+																<option value="course">Course List</option>
 															</select>
 														</td>
 													</tr>
@@ -1434,7 +1740,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 														</td>
 														<td>
 															<div style="position: relative; width: 60%">
-																<input type="hidden" id="associated_audience" name="associated_audience" />
 																<ul class="menu" id="audience_list">
 																	<?php
 																	$ONLOAD[] = "Sortable.create('audience_list')";
@@ -1442,22 +1747,27 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 																		foreach ($result["associated_proxy_ids"] as $student) {
 																			if ((array_key_exists($student, $STUDENT_LIST)) && is_array($STUDENT_LIST[$student])) {
 																				?>
-																				<li class="community" id="audience_proxy_<?php echo $STUDENT_LIST[$student]["proxy_id"]; ?>" style="cursor: move;"><?php echo $STUDENT_LIST[$student]["fullname"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="removeAudience('student_<?php echo $STUDENT_LIST[$student]["proxy_id"]; ?>');" class="list-cancel-image" /></li>
+																				<li class="community" id="audience_student_<?php echo $STUDENT_LIST[$student]["proxy_id"]; ?>" style="cursor: move;"><?php echo $STUDENT_LIST[$student]["fullname"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="removeAudience('student_<?php echo $STUDENT_LIST[$student]["proxy_id"]; ?>', 'students');" class="list-cancel-image" /></li>
 																				<?php
 																			}
 																		}
+																	}
+																	if (is_array($result["associated_course_ids"]) && count($result["associated_course_ids"])) {
+																		?>
+																		<li class="community" id="audience_course" style="cursor: move;"><?php echo $course_name; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="removeAudience('course', 'course');" class="list-cancel-image" /></li>
+																		<?php
 																	}
 																	if (is_array($result["associated_group_ids"]) && count($result["associated_group_ids"])) {
 																		foreach ($result["associated_group_ids"] as $group) {
 																			if ((array_key_exists($group, $GROUP_LIST)) && is_array($GROUP_LIST[$group])) {
 																				?>
-																				<li class="community" id="audience_group_<?php echo $GROUP_LIST[$group]["group_id"]; ?>" style="cursor: move;"><?php echo $GROUP_LIST[$group]["group_name"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="removeAudience('group_<?php echo $GROUP_LIST[$group]["group_id"]; ?>');" class="list-cancel-image" /></li>
+																				<li class="community" id="audience_group_<?php echo $GROUP_LIST[$group]["group_id"]; ?>" style="cursor: move;"><?php echo $GROUP_LIST[$group]["group_name"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="removeAudience('group_<?php echo $GROUP_LIST[$group]["group_id"]; ?>', 'groups');" class="list-cancel-image" /></li>
 																				<?php
 																			}
 																		}
 																	}
 																	
-																	if (!(is_array($result["associated_proxy_ids"]) && count($result["associated_proxy_ids"])) && !(is_array($result["associated_group_ids"]) && count($result["associated_group_ids"]))) {
+																	if (!(is_array($result["associated_proxy_ids"]) && count($result["associated_proxy_ids"])) && !(is_array($result["associated_group_ids"]) && count($result["associated_group_ids"])) && !(is_array($result["associated_course_ids"]) && count($result["associated_course_ids"]))) {
 																		$NOTICE++;
 																		$NOTICESTR[] = "No audience has been selected for this event.";
 																		echo display_notice();
@@ -1467,6 +1777,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 															</div>
 														</td>
 													</tr>
+													<?php
+													}
+													?>
 												</table>
 												<?php
 											}
@@ -1510,27 +1823,36 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 												<td><label for="audience_type" class="form-nrequired">Audience Type</label></td>
 												<td>
 												<?php
-												$audience_ids_string = "";
-												foreach ($PROCESSED["associated_group_ids"] as $group_id) {
-													if ($audience_ids_string) {
-														$audience_ids_string .= ",group_".$group_id;
+													$group_ids_string = "";
+													$student_ids_string = "";
+													if (isset($PROCESSED["associated_course_ids"]) && $PROCESSED["associated_course_ids"]) {
+														$course_audience_included = true;
 													} else {
-														$audience_ids_string = "group_".$group_id; 
+														$course_audience_included = false;
 													}
-												}
-												foreach ($PROCESSED["associated_proxy_ids"] as $proxy_id) {
-													if ($audience_ids_string) {
-														$audience_ids_string .= ",proxy_".$proxy_id;
-													} else {
-														$audience_ids_string = "proxy_".$proxy_id; 
+													foreach ($PROCESSED["associated_group_ids"] as $group_id) {
+														if ($group_ids_string) {
+															$group_ids_string .= ",group_".$group_id;
+														} else {
+															$group_ids_string = "group_".$group_id; 
+														}
 													}
-												}
-												?>
-													<input type="hidden" id="audience_head" name="session_audience" value="<?php echo $audience_ids_string; ?>" />
+													foreach ($PROCESSED["associated_proxy_ids"] as $proxy_id) {
+														if ($student_ids_string) {
+															$student_ids_string .= ",student_".$proxy_id;
+														} else {
+															$student_ids_string = "student_".$proxy_id; 
+														}
+													}
+													?>
+													<input type="hidden" id="groups_audience_head" name="groups_session_audience" value="<?php echo $group_ids_string; ?>" />
+													<input type="hidden" id="students_audience_head" name="students_session_audience" value="<?php echo $student_ids_string; ?>" />
+													<input type="hidden" id="course_audience_head" name="course_session_audience" value="<?php echo $course_audience_included ? "1" : "0"; ?>" />
 													<select id="audience_select" onchange="showMultiSelect()">
 														<option value="">- Select Audience Type -</option>
 														<option value="groups">Groups</option>
 														<option value="students">Individual Students</option>
+														<option value="course">Course List</option>
 													</select>
 												</td>
 											</tr>
@@ -1541,30 +1863,34 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 												<td>
 													<br/>
 													<div style="position: relative; width: 60%">
-														<input type="hidden" id="associated_audience" name="associated_audience" />
 														<ul class="menu" id="audience_list">
 															<?php
 															$ONLOAD[] = "Sortable.create('audience_list')";
-															if (is_array($PROCESSED["associated_proxy_ids"]) && count($PROCESSED["associated_proxy_ids"])) {
-																foreach ($PROCESSED["associated_proxy_ids"] as $student) {
-																	if ((array_key_exists($student, $STUDENT_LIST)) && is_array($STUDENT_LIST[$student])) {
-																		?>
-																		<li class="community" id="audience_proxy_<?php echo $STUDENT_LIST[$student]["proxy_id"]; ?>" style="cursor: move;"><?php echo $STUDENT_LIST[$student]["fullname"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="removeAudience('student_<?php echo $STUDENT_LIST[$student]["proxy_id"]; ?>');" class="list-cancel-image" /></li>
-																		<?php
-																	}
-																}
+															if (is_array($PROCESSED["associated_course_ids"]) && count($PROCESSED["associated_course_ids"])) {
+																?>
+																<li class="community" id="audience_course" style="cursor: move;"><?php echo $course_name; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="removeAudience('course', 'course');" class="list-cancel-image" /></li>
+																<?php
 															}
 															if (is_array($PROCESSED["associated_group_ids"]) && count($PROCESSED["associated_group_ids"])) {
 																foreach ($PROCESSED["associated_group_ids"] as $group) {
 																	if ((array_key_exists($group, $GROUP_LIST)) && is_array($GROUP_LIST[$group])) {
 																		?>
-																		<li class="community" id="audience_group_<?php echo $GROUP_LIST[$group]["group_id"]; ?>" style="cursor: move;"><?php echo $GROUP_LIST[$group]["group_name"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="removeAudience('group_<?php echo $GROUP_LIST[$group]["group_id"]; ?>');" class="list-cancel-image" /></li>
+																		<li class="community" id="audience_group_<?php echo $GROUP_LIST[$group]["group_id"]; ?>" style="cursor: move;"><?php echo $GROUP_LIST[$group]["group_name"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="removeAudience('group_<?php echo $GROUP_LIST[$group]["group_id"]; ?>', 'groups');" class="list-cancel-image" /></li>
+																		<?php
+																	}
+																}
+															}
+															if (is_array($PROCESSED["associated_proxy_ids"]) && count($PROCESSED["associated_proxy_ids"])) {
+																foreach ($PROCESSED["associated_proxy_ids"] as $student) {
+																	if ((array_key_exists($student, $STUDENT_LIST)) && is_array($STUDENT_LIST[$student])) {
+																		?>
+																		<li class="community" id="audience_proxy_<?php echo $STUDENT_LIST[$student]["proxy_id"]; ?>" style="cursor: move;"><?php echo $STUDENT_LIST[$student]["fullname"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="removeAudience('student_<?php echo $STUDENT_LIST[$student]["proxy_id"]; ?>', 'students');" class="list-cancel-image" /></li>
 																		<?php
 																	}
 																}
 															}
 															
-															if (!(is_array($PROCESSED["associated_proxy_ids"]) && count($PROCESSED["associated_proxy_ids"])) && !(is_array($PROCESSED["associated_group_ids"]) && count($PROCESSED["associated_group_ids"]))) {
+															if (!(is_array($PROCESSED["associated_proxy_ids"]) && count($PROCESSED["associated_proxy_ids"])) && !(is_array($PROCESSED["associated_group_ids"]) && count($PROCESSED["associated_group_ids"])) && !(is_array($PROCESSED["associated_course_ids"]) && count($PROCESSED["associated_course_ids"]))) {
 																$NOTICE++;
 																$NOTICESTR[] = "No audience has been selected for this event.";
 																echo display_notice();
@@ -1582,67 +1908,92 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 										var multiselect = [];
 										var id;
 										function showMultiSelect() {
-											$$('select_multiple_container').invoke('hide');
 											id = $F('audience_select');
-											if (multiselect[id]) {
-												$('audience_select').hide();
-												multiselect[id].container.show();
-												multiselect[id].container.down("input").activate();
-											} else {
-												if ($(id+'_options')) {
-													$(id+'_options').addClassName('multiselect-processed');
-													multiselect[id] = new Control.SelectMultiple('audience_head',id+'_options',{
-														checkboxSelector: 'table.select_multiple_table tr td input[type=checkbox]',
-														nameSelector: 'table.select_multiple_table tr td.select_multiple_name label',
-														resize: id+'_scroll',
-														afterCheck: function(element) {
-															if (element.checked) {
-																addAudience(element);
-															} else {
-																removeAudience(element);
-															}
-														}
-													});
-	
-													$(id+'_cancel').observe('click',function(event){
-														this.container.hide();
-														$('audience_select').show();
-														$('audience_select').options.selectedIndex = 0;
-														return false;
-													}.bindAsEventListener(multiselect[id]));;
-	
+											if (id != 'course') {
+												$$('select_multiple_container').invoke('hide');
+												if (multiselect[id]) {
 													$('audience_select').hide();
 													multiselect[id].container.show();
 													multiselect[id].container.down("input").activate();
+												} else {
+													if ($(id+'_options')) {
+														$(id+'_options').addClassName('multiselect-processed');
+														multiselect[id] = new Control.SelectMultiple(id+'_audience_head',id+'_options',{
+															checkboxSelector: 'table.select_multiple_table tr td input[type=checkbox]',
+															nameSelector: 'table.select_multiple_table tr td.select_multiple_name label',
+															resize: id+'_scroll',
+															afterCheck: function(element) {
+																if (element.checked) {
+																	addAudience(element.id, id);
+																} else {
+																	removeAudience(element.id, id);
+																}
+															}
+														});
+		
+														$(id+'_cancel').observe('click',function(event){
+															this.container.hide();
+															$('audience_select').show();
+															$('audience_select').options.selectedIndex = 0;
+															return false;
+														}.bindAsEventListener(multiselect[id]));
+		
+														$('audience_select').hide();
+														multiselect[id].container.show();
+														multiselect[id].container.down("input").activate();
+													}
+												}
+											} else if (!$('audience_course')) {
+												if (!$('audience_course') || !$('audience_course').value) {
+													$('audience_list').innerHTML += '<li class="community" id="audience_course" style="cursor: move;">'+$('event_course_name').value+'<img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="removeAudience(\'course\', \'course\');" class="list-cancel-image" /></li>';
+													$$('#audience_list div').each(function (e) { e.hide(); });
+													Sortable.destroy('audience_list');
+													Sortable.create('audience_list');
+													$('audience_select').options.selectedIndex = 0;
+													$('course_audience_head').value = 1;
 												}
 											}
 											return false;
 										}
 										
-										function addAudience(element) {
+										function updateCourse(selectedIndex) {
+											$('event_course_id').value = $('course_id').options[selectedIndex].value;
+											$('event_course_name').value = $('course_id').options[selectedIndex].innerHTML;
+											if ($('audience_course').innerHTML != $('event_course_name').value+'<img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="removeAudience(\'course\', \'course\');" class="list-cancel-image" />') {
+												$('audience_course').innerHTML = $('event_course_name').value+'<img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="removeAudience(\'course\', \'course\');" class="list-cancel-image" />';
+											}
+										}
+										
+										function addAudience(element, id) {
 											if (!$('audience_'+element)) {
-												$('audience_list').innerHTML += '<li class="community" id="audience_'+element.id+'" style="cursor: move;">'+$(element.value+'_label').innerHTML+'<img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="removeAudience(\''+element.id+'\');" class="list-cancel-image" /></li>';
+												$('audience_list').innerHTML += '<li class="community" id="audience_'+element+'" style="cursor: move;">'+$($(element).value+'_label').innerHTML+'<img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="removeAudience(\''+element+'\', \''+id+'\');" class="list-cancel-image" /></li>';
 												$$('#audience_list div').each(function (e) { e.hide(); });
 												Sortable.destroy('audience_list');
 												Sortable.create('audience_list');
 											}
 										}
 										
-										function removeAudience(element) {
+										function removeAudience(element, id) {
 											$('audience_'+element).remove();
 											Sortable.destroy('audience_list');
 											Sortable.create('audience_list');
-											$(element).checked = false;
-											if ($('audience_head').value == "") {
+											if ($(element)) {
+												$(element).checked = false;
+											} else {
+												$('course_audience_head').value = 0;
+											}
+											if ($(id+'_audience_head').value == "") {
 												$$('#audience_list div').each(function (e) { e.show(); });
 											}
 										}
 										
 										function addSession() {
 											var session_id = $('current-session').value;
+											disableRTE();
 											new Ajax.Updater({ success: 'session' }, '<?php echo ENTRADA_URL; ?>/api/view-sessions.api.php', 
 													{
 														method: 'post',
+														evalScripts: 'true',
 														parameters: {
 															'step': 2,
 															'event_start': 1,
@@ -1653,8 +2004,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 															'event_start_hour': $('event_start_hour').value,
 															'event_start_min': $('event_start_min').value,
 															'event_location': $('event_location').value,
+															'session_message': $('session_message').value,
+															'session_description': $('session_description').value,
+															'include_parent_message': $('include_parent_message').checked,
+															'include_parent_description': $('include_parent_description').checked,
 															'associated_session_faculty': ($('associated_session_faculty') ? $('associated_session_faculty').value : $('associated_faculty').value),
-															'session_audience': $('audience_head').value,
+															'groups_session_audience': $('groups_audience_head').value,
+															'students_session_audience': $('students_audience_head').value,
+															'course_session_audience': $('course_audience_head').value,
 															'new': 1
 														},
 														onComplete: function () {
@@ -1662,7 +2019,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 															if ($('current-session').value == 0 && $('updated_session_id').value) {
 																$('current-session').value = $('updated_session_id').value;
 																$('session-line-0').id = 'session-line-'+$('updated_session_id').value;
-																$('session-line-'+$('updated_session_id').value).innerHTML = '<span id="session-'+ $('updated_session_id').value +'" onclick="loadSession('+ $('updated_session_id').value +')" class="logbook-entry">'+ $('session-0').innerHTML +'</span>';
+																$('session-line-'+$('updated_session_id').value).innerHTML = '<div id="session-'+ $('updated_session_id').value +'" onclick="loadSession('+ $('updated_session_id').value +')" class="session-entry">'+ $('session-0').innerHTML +'</div>';
 																$('updated_session_id').remove();
 															}
 															var session_id = $('current-session').value;
@@ -1679,14 +2036,29 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 																$('max-page-text').innerHTML = parseInt($('max-page-text').innerHTML) + 1;
 																$('session-lists').innerHTML += '<div class="session-list" id="page-'+$('max-page-text').innerHTML+'" style="width: 100%; display: none;"></div>';
 															}
-															$('page-'+$('max-page-text').innerHTML).innerHTML += '<div id="session-line-0" class="event-session selected"><span id="session-0" onclick="loadSession(0)" class="logbook-entry"> Session '+ session_count +' </span></div>';
+															$('page-'+$('max-page-text').innerHTML).innerHTML += '<div id="session-line-0" class="event-session selected"><div id="session-0" onclick="loadSession(0)" class="session-entry"> Session '+ session_count +' </div></div>';
 															lastPage();
+															enableRTE();
 														},
 														onCreate: function () {
 															$('session').innerHTML = '<br/><br/><span class="content-small" style="align: center;">Loading... <img src="<?php echo ENTRADA_URL; ?>/images/indicator.gif" style="vertical-align: middle;" /></span>';
 														}
 													}
 												);
+										}
+										
+										function disableRTE () {
+											if(tinyMCE.getInstanceById('session_description')) {
+												tinyMCE.execCommand('mceRemoveControl', false, 'session_description');
+											}
+											if(tinyMCE.getInstanceById('session_message')) {
+												tinyMCE.execCommand('mceRemoveControl', false, 'session_message');
+											}
+										}
+										
+										function enableRTE () {
+											tinyMCE.execCommand('mceAddControl', false, 'session_description');
+											tinyMCE.execCommand('mceAddControl', false, 'session_message');
 										}
 										
 										function renameSession() {
@@ -1715,75 +2087,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 											$('session_title').value = newname;
 										}
 										
-										function saveSession(session_id, load) {
-											if (load == null) {
-												new Ajax.Updater({ success: 'session' }, '<?php echo ENTRADA_URL; ?>/api/view-sessions.api.php', 
-													{
-														method: 'post',
-														parameters: {
-															'step': 2,
-															'event_start': 1,
-															'parent_id' : <?php echo (int)$EVENT_ID; ?>,
-															'event_id' : session_id,
-															'event_title': $('session_title').value,
-															'event_start_date': $('event_start_date').value,
-															'event_start_hour': $('event_start_hour').value,
-															'event_start_min': $('event_start_min').value,
-															'event_location': $('event_location').value,
-															'associated_session_faculty': ($('associated_session_faculty') ? $('associated_session_faculty').value : $('associated_faculty').value),
-															'session_audience': $('audience_head').value,
-															'new': 1
-														},
-														onComplete: function () {
-															session_faculty_list = new AutoCompleteList({ type: 'session_faculty', url: '<?php echo ENTRADA_RELATIVE ."/api/personnel.api.php?type=faculty', remove_image: '". ENTRADA_RELATIVE; ?>/images/action-delete.gif'});
-															if ($('current-session').value == 0 && $('updated_session_id').value) {
-																$('current-session').value = $('updated_session_id').value;
-																$('session-line-0').id = 'session-line-'+$('updated_session_id').value;
-																$('session-line-'+$('updated_session_id').value).innerHTML = '<span id="session-'+ $('updated_session_id').value +'" onclick="loadSession('+ $('updated_session_id').value +')" class="logbook-entry">'+ $('session-0').innerHTML +'</span>';
-															}
-														},
-														onCreate: function () {
-															$('session').innerHTML = '<br/><br/><span class="content-small" style="align: center;">Loading... <img src="<?php echo ENTRADA_URL; ?>/images/indicator.gif" style="vertical-align: middle;" /></span>';
-														}
-													}
-												);
-											} else {
-												new Ajax.Updater('session-notices' ,'<?php echo ENTRADA_URL; ?>/api/view-sessions.api.php', 
-													{
-														method: 'post',
-														parameters: {
-															'step': 2,
-															'hide_controls': true,
-															'event_start': 1,
-															'parent_id' : <?php echo (int)$EVENT_ID; ?>,
-															'event_id' : session_id,
-															'event_title': $('session_title').value,
-															'event_start_date': $('event_start_date').value,
-															'event_start_hour': $('event_start_hour').value,
-															'event_start_min': $('event_start_min').value,
-															'event_location': $('event_location').value,
-															'associated_session_faculty': ($('associated_session_faculty') ? $('associated_session_faculty').value : $('associated_faculty').value),
-															'session_audience': $('audience_head').value,
-															'new': 1
-														},
-														onComplete: function () {
-															if ($('current-session').value == 0 && $('updated_session_id').value) {
-																$('session-line-0').id = 'session-line-'+$('updated_session_id').value;
-																$('session-line-'+$('updated_session_id').value).innerHTML = '<span id="session-'+ $('updated_session_id').value +'" onclick="loadSession('+ $('updated_session_id').value +')" class="logbook-entry">'+ $('session-0').innerHTML +'</span>';
-															}
-															if ($('success').value == 1) {
-																return true;
-															} else {
-																return false;
-															}
-														}
-													}
-												);
-											}
-										}
-										
 										function loadSession(session_id) {
-											if ($('current-session').value != session_id) {
+											if ($('current-session').value != session_id && $('event_start_date')) {
 												new Ajax.Updater('session-notices' ,'<?php echo ENTRADA_URL; ?>/api/view-sessions.api.php', 
 													{
 														method: 'post',
@@ -1798,14 +2103,68 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 															'event_start_hour': $('event_start_hour').value,
 															'event_start_min': $('event_start_min').value,
 															'event_location': $('event_location').value,
+															'session_message': $('session_message').value,
+															'session_description': $('session_description').value,
+															'include_parent_message': $('include_parent_message').checked,
+															'include_parent_description': $('include_parent_description').checked,
 															'associated_session_faculty': ($('associated_session_faculty') ? $('associated_session_faculty').value : $('associated_faculty').value),
-															'session_audience': $('audience_head').value,
+															'groups_session_audience': $('groups_audience_head').value,
+															'students_session_audience': $('students_audience_head').value,
+															'course_session_audience': $('course_audience_head').value,
 															'new': 1
 														},
 														onComplete: function () {
 															if ($('current-session').value == 0 && $('updated_session_id').value) {
 																$('session-line-0').id = 'session-line-'+$('updated_session_id').value;
-																$('session-line-'+$('updated_session_id').value).innerHTML = '<span id="session-'+ $('updated_session_id').value +'" onclick="loadSession('+ $('updated_session_id').value +')" class="logbook-entry">'+ $('session-0').innerHTML +'</span>';
+																$('session-line-'+$('updated_session_id').value).innerHTML = '<div id="session-'+ $('updated_session_id').value +'" onclick="loadSession('+ $('updated_session_id').value +')" class="session-entry">'+ $('session-0').innerHTML +'</div>';
+															}
+															if ($('success').value == 1) {
+																$('session-line-'+$('current-session').value).removeClassName('selected');
+																$('current-session').value = session_id;
+																$('session-line-'+$('current-session').value).addClassName('selected');
+																disableRTE();
+																new Ajax.Updater({ success: 'session' }, '<?php echo ENTRADA_URL; ?>/api/view-sessions.api.php', 
+																	{
+																		method: 'post',
+																		evalScripts: 'true',
+																		parameters: {
+																			'event_id' : session_id
+																		},
+																		onComplete: function () {
+																			session_faculty_list = new AutoCompleteList({ type: 'session_faculty', url: '<?php echo ENTRADA_RELATIVE ."/api/personnel.api.php?type=faculty', remove_image: '". ENTRADA_RELATIVE; ?>/images/action-delete.gif'});
+																			enableRTE();
+																			if ($('audience_course') && $('audience_course').innerHTML != $('event_course_name').value+'<img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="removeAudience(\'course\', \'course\');" class="list-cancel-image" />') {
+																				$('audience_course').innerHTML = $('event_course_name').value+'<img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="removeAudience(\'course\', \'course\');" class="list-cancel-image" />';
+																			}
+																		},
+																		onCreate: function () {
+																			$('session').innerHTML = '<br/><br/><span class="content-small" style="align: center;">Loading... <img src="<?php echo ENTRADA_URL; ?>/images/indicator.gif" style="vertical-align: middle;" /></span>';
+																		}
+																	}
+																);
+															}
+														}
+													}
+												);
+											} else if ($('current-session').value != session_id) {
+												new Ajax.Updater('session-notices' ,'<?php echo ENTRADA_URL; ?>/api/view-sessions.api.php', 
+													{
+														method: 'post',
+														parameters: {
+															'step': 2,
+															'hide_controls': true,
+															'parent_id' : <?php echo (int)$EVENT_ID; ?>,
+															'event_id' : $('current-session').value,
+															'session_message': $('session_message').value,
+															'session_description': $('session_description').value,
+															'include_parent_message': $('include_parent_message').checked,
+															'include_parent_description': $('include_parent_description').checked,
+															'new': 1
+														},
+														onComplete: function () {
+															if ($('current-session').value == 0 && $('updated_session_id').value) {
+																$('session-line-0').id = 'session-line-'+$('updated_session_id').value;
+																$('session-line-'+$('updated_session_id').value).innerHTML = '<div id="session-'+ $('updated_session_id').value +'" onclick="loadSession('+ $('updated_session_id').value +')" class="session-entry">'+ $('session-0').innerHTML +'</div>';
 															}
 															if ($('success').value == 1) {
 																$('session-line-'+$('current-session').value).removeClassName('selected');
@@ -1814,6 +2173,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 																new Ajax.Updater({ success: 'session' }, '<?php echo ENTRADA_URL; ?>/api/view-sessions.api.php', 
 																	{
 																		method: 'post',
+																		evalScripts: 'true',
 																		parameters: {
 																			'event_id' : session_id
 																		},
@@ -2115,12 +2475,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							<div style="clear: both"></div>
 						</td>
 					</tr>
-					<tr>
-						<td colspan="3"><h2>Time Release Options</h2></td>
-					</tr>
-					<?php echo generate_calendars("viewable", "", true, false, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : 0), true, false, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0)); ?>
-
 					<?php
+					if ($ENTRADA_ACL->amIAllowed(new EventResource($result["event_id"], $result["course_id"], $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"]), 'update')) {
+						?>
+						<tr>
+							<td colspan="3"><h2>Time Release Options</h2></td>
+						</tr>
+						<?php echo generate_calendars("viewable", "", true, false, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : 0), true, false, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0));
+					}
 					if (isset($event_info) && $event_info) {
 						?>
 						<tr>

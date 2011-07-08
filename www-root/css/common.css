@@ -2819,7 +2819,7 @@ border:0px;
 
 ul li.logbook-entry {
 margin:8px 15px 0px 0px;
-text-align: center;
+text-align:center;
 }
 
 a.logbook-entry {
@@ -3328,11 +3328,14 @@ form#meta_data_form {
 .session-list .selected {
 	background-color: #EEEEEE;
 }
-.session-list div.event-session {
-	cursor: pointer;
+
+.session-list .disabled {
+	background-color: #AAAAAA;
+	cursor: default;
 }
 
-.session-list .event-session:hover {
+.session-list .enabled:hover {
+	cursor: pointer;
 	background-color: #DDDDDD;
 }
 
@@ -3380,7 +3383,13 @@ form#meta_data_form {
 .event-session {
 	vertical-align: middle; 
 	text-align: center; 
-	height: 27px; 
+	height: 37px; 
 	border-bottom: 1px solid #CCCCCC;
-	padding: 10px 0 0px 0;
+}
+
+div.session-entry {
+float:left;
+padding:10px 0 0px 0;
+width:100%;
+height:27px;
 }

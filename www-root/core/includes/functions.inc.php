@@ -9954,7 +9954,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 					WHERE (a.`event_status` = 'published' OR a.`event_status` = 'approval')
 					AND b.`econtact_type` = 'student'
 					AND b.`etype_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
-					AND a.`event_children` = 0
+					AND (`events`.`event_children` = 0 OR `events`.`event_children` IS NULL)
 					ORDER BY a.`event_start` ASC";
 		$clerkship_events = $db->GetAll($query);
 		if (isset($clerkship_events) && $clerkship_events) {
@@ -10113,7 +10113,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 							ON `courses`.`course_id` = `events`.`course_id`
 							%OBJECTIVE_JOIN%
 							WHERE `courses`.`course_active` = '1'
-							AND `events`.`event_children` = 0
+							AND (`events`.`event_children` = 0 OR `events`.`event_children` IS NULL)
 							".($filter_clerkship_events && $course_ids_string ? "AND (`courses`.`course_id` NOT IN (".$course_ids_string.")\n OR (".implode("\n", $time_periods)."))" : "")."
 							AND (`events`.`release_date` <= ".$db->qstr(time())." OR `events`.`release_date` = 0)
 							AND (`events`.`release_until` >= ".$db->qstr(time())." OR `events`.`release_until` = 0)
@@ -10133,7 +10133,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 							ON  `courses`.`course_id` = `events`.`course_id`
 							%OBJECTIVE_JOIN%
 							WHERE `courses`.`course_active` = '1'
-							AND `events`.`event_children` = 0
+							AND (`events`.`event_children` = 0 OR `events`.`event_children` IS NULL)
 							".($filter_clerkship_events && $course_ids_string ? "AND (`courses`.`course_id` NOT IN (".$course_ids_string.")\n OR (".implode("\n", $time_periods)."))" : "")."
 							AND `courses`.`organisation_id` = ".$db->qstr($organisation_id);
 
@@ -10278,7 +10278,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 							LEFT JOIN `courses`
 							ON `events`.`course_id` = `courses`.`course_id`
 							WHERE `courses`.`organisation_id` = ".$db->qstr($organisation_id)."
-							AND `events`.`event_children` = 0
+							AND (`events`.`event_children` = 0 OR `events`.`event_children` IS NULL)
 							".($filter_clerkship_events && $course_ids_string ? "AND (`courses`.`course_id` NOT IN (".$course_ids_string.")\n OR (".implode("\n", $time_periods)."))" : "")."
 							AND (`events`.`release_date` <= ".$db->qstr(time())." OR `events`.`release_date` = 0)
 							AND (`events`.`release_until` >= ".$db->qstr(time())." OR `events`.`release_until` = 0)
@@ -10294,7 +10294,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 							LEFT JOIN `courses`
 							ON  (`courses`.`course_id` = `events`.`course_id`)
 							WHERE`courses`.`course_active` = '1'
-							AND `events`.`event_children` = 0
+							AND (`events`.`event_children` = 0 OR `events`.`event_children` IS NULL)
 							".($filter_clerkship_events && $course_ids_string ? "AND (`courses`.`course_id` NOT IN (".$course_ids_string.")\n OR (".implode("\n", $time_periods)."))" : "")."
 							AND `courses`.`organisation_id` = ".$db->qstr($organisation_id)."
 							".(($display_duration) ? "AND `events`.`event_start` BETWEEN ".$db->qstr($display_duration["start"])." AND ".$db->qstr($display_duration["end"]) : "")."

@@ -99,16 +99,27 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 				echo "</div>\n";
 				echo "<div class=\"session-list\"".($page_count != $chosen_page ? " style=\"display: none;\"" : "")." id=\"page-".$page_count."\">\n";
 			}
-			?>
-			<div id="session-line-<?php echo $result["event_id"]; ?>" class="event-session<?php echo $selected ? " selected" : ""; ?>">
-				<div id="session-<?php echo $result["event_id"]; ?>" onclick="loadSession(<?php echo $result["event_id"]; ?>)" class="logbook-entry">
-					<?php
-					echo limit_chars($result["event_title"], 21);
-					?>
+			if ($ENTRADA_ACL->amIAllowed(new EventResource($result["event_id"], $result["course_id"], $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"]), 'update') || $ENTRADA_ACL->amIAllowed(new EventContentResource($result["event_id"], $result["course_id"], $result["organisation_id"]), "update")) {
+				?>
+				<div id="session-line-<?php echo $result["event_id"]; ?>" class="event-session enabled<?php echo $selected ? " selected" : ""; ?>">
+					<div id="session-<?php echo $result["event_id"]; ?>" onclick="loadSession(<?php echo $result["event_id"]; ?>)" class="session-entry">
+						<?php
+						echo limit_chars($result["event_title"], 21);
+						?>
+					</div>
+					<input id="session-name-<?php echo $result["event_id"]; ?>" value="<?php echo $result["event_title"]; ?>" onchange="saveSessionName()" type="text" style="width: 95%; background-color: #EEEEEE; display: none;" />
 				</div>
-				<input id="session-name-<?php echo $result["event_id"]; ?>" value="<?php echo $result["event_title"]; ?>" onchange="saveSessionName()" type="text" style="width: 95%; background-color: #EEEEEE; display: none;" />
-			</div>
-			<?php
+				<?php
+			} else {?>
+				<div id="session-line-<?php echo $result["event_id"]; ?>" class="event-session disabled">
+					<div id="session-<?php echo $result["event_id"]; ?>" class="session-entry">
+						<?php
+						echo limit_chars($result["event_title"], 21);
+						?>
+					</div>
+				</div>
+				<?php
+			}
 		}
 		?>
 		<?php
@@ -117,8 +128,8 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 		<input type="hidden" id="current-page" name="current_pages" value="1" />		
 		<input type="hidden" value="0" id="current-session" name="current_session" />
 		<input type="hidden" id="session-count" name="event_children" value="1" />
-		<div id="session-line-0" class="event-session selected">
-			<div id="session-0" onclick="loadSession(0)" class="logbook-entry">
+		<div id="session-line-0" class="event-session enabled selected">
+			<div id="session-0" onclick="loadSession(0)" class="session-entry">
 				Session 1
 			</div>
 			<input id="session-name-0" value="Session 1" onchange="saveSessionName()" type="text" style="width: 95%; background-color: #EEEEEE; display: none;" />

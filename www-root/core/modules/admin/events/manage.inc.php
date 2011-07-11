@@ -992,7 +992,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					</colgroup>
 					<tfoot>
 						<tr>
-							<td colspan="3" style="text-align: right; padding-top: 5px"><input type="submit" value="Save" /></td>
+							<td colspan="3" style="text-align: right; padding-top: 5px">
+								<span class="content-small">After saving:</span>
+								<select id="post_action" name="post_action">
+									<option value="manage"<?php echo (((!isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"])) || ($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "manage")) ? " selected=\"selected\"" : ""); ?>>Return to the event</option>
+									<option value="new"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "new") ? " selected=\"selected\"" : ""); ?>>Add another event</option>
+									<option value="index"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "index") ? " selected=\"selected\"" : ""); ?>>Return to event index</option>
+								</select>
+								
+								<input type="submit" value="Save" />
+							</td>
 						</tr>
 					</tfoot>
 					<?php

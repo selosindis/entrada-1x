@@ -2755,7 +2755,7 @@ div#associated_faculty_list ul.menu li.community,div#associated_student_list ul.
 cursor:move;
 }
 
-ul#faculty_list,ul#student_list,ul#director_list,ul#coordinator_list,ul#individual_list,ul#verifier_list,ul#author_list,ul#group_list {
+ul#faculty_list,ul#audience_list,ul#session_faculty_list,ul#student_list,ul#director_list,ul#coordinator_list,ul#individual_list,ul#verifier_list,ul#author_list,ul#group_list {
 width:250px;
 overflow:none;
 position:relative;
@@ -3326,12 +3326,13 @@ form#meta_data_form {
 }
 
 .session-list .selected {
-	background-color: #EEEEEE;
+	background-color: #DDDDDD;
 }
 
 .session-list .disabled {
-	background-color: #AAAAAA;
+	background-color: #DEDEDE;
 	cursor: default;
+	color: #BBBBBB;
 }
 
 .session-list .enabled:hover {
@@ -3350,6 +3351,12 @@ form#meta_data_form {
 	text-align: center; 
 	padding: 8px 0 0 0;
 	cursor: pointer;
+}
+
+.session-button.disabled {
+	background-color: #DEDEDE;
+	cursor: default;
+	color: #BBBBBB;
 }
 
 .session-pane-left .remove-button {

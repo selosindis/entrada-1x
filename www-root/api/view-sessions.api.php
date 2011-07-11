@@ -89,6 +89,7 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	} else {
 		$parent_info = false; 
 	}
+	
 	if ($ENTRADA_ACL->amIAllowed(new EventContentResource($event_info["event_id"], $parent_info["course_id"], $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"]), 'update') || $ENTRADA_ACL->amIAllowed(new EventContentResource($parent_info["event_id"], $parent_info["course_id"], $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"]), 'update')) {
 		if (isset($_POST["step"]) && $_POST["step"] && $_POST["step"] == 2) {
 			
@@ -100,13 +101,96 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 				if ((isset($start_date["start"])) && ((int) $start_date["start"])) {
 					$PROCESSED["event_start"] = (int) $start_date["start"];
 				}
-			}
 			
-			/**
-			 * Non-required field "event_location" / Event Location
-			 */
-			if ((isset($_POST["event_location"])) && ($event_location = clean_input($_POST["event_location"], array("notags", "trim")))) {
-				$PROCESSED["event_location"] = $event_location;
+				/**
+				 * Non-required field "event_location" / Event Location
+				 */
+				if ((isset($_POST["event_location"])) && ($event_location = clean_input($_POST["event_location"], array("notags", "trim")))) {
+					$PROCESSED["event_location"] = $event_location;
+				}
+				
+				/**
+				 * Required field "event_title" / Event Title.
+				 */
+				if ((isset($_POST["event_title"])) && ($event_title = clean_input($_POST["event_title"], array("notags", "trim")))) {
+					$PROCESSED["event_title"] = $event_title;
+				}
+				
+				if ((isset($_POST["students_session_audience"]))) {
+					$associated_audience = explode(',', $_POST["students_session_audience"]);
+					if ((isset($associated_audience)) && (is_array($associated_audience)) && (count($associated_audience))) {
+						foreach($associated_audience as $audience_id) {
+							if (strpos($audience_id, "student") !== false) {
+								if ($proxy_id = clean_input(preg_replace("/[a-z_]/", "", $audience_id), array("trim", "int"))) {
+									$query = "	SELECT a.*
+												FROM `".AUTH_DATABASE."`.`user_data` AS a
+												LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+												ON a.`id` = b.`user_id`
+												WHERE a.`id` = ".$db->qstr($proxy_id)."
+												AND b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+												AND b.`account_active` = 'true'
+												AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
+												AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")";
+									$result	= $db->GetRow($query);
+									if ($result) {
+										$PROCESSED["associated_proxy_ids"][] = $proxy_id;
+									}
+								}
+							}
+						}
+					}
+				}
+				
+				if ((isset($_POST["groups_session_audience"]))) {
+					$associated_audience = explode(',', $_POST["groups_session_audience"]);
+					if ((isset($associated_audience)) && (is_array($associated_audience)) && (count($associated_audience))) {
+						foreach($associated_audience as $audience_id) {
+							if (strpos($audience_id, "group") !== false) {
+								if ($group_id = clean_input(preg_replace("/[a-z_]/", "", $audience_id), array("trim", "int"))) {
+									$query = "	SELECT *
+												FROM `groups`
+												WHERE `group_id` = ".$db->qstr($group_id)."
+												AND `group_active` = 1";
+									$result	= $db->GetRow($query);
+									if ($result) {
+										$PROCESSED["associated_group_ids"][] = $group_id;
+									}
+								}
+							}
+						}
+					}
+				}
+				
+				if ((isset($_POST["course_session_audience"])) && $_POST["course_session_audience"]) {
+					if ($course_id || ($course_id = $PROCESSED["course_id"])) {
+						$query = "SELECT *
+									FROM `courses`
+									WHERE `course_id` = ".$db->qstr($course_id)."
+									AND `course_active` = 1";
+						$result	= $db->GetRow($query);
+						if ($result) {
+							$PROCESSED["associated_course_ids"][] = $course_id;
+						}
+					}
+				}
+				
+				if (!count($PROCESSED["associated_group_ids"]) && !count($PROCESSED["associated_proxy_ids"]) && !count($PROCESSED["associated_course_ids"])) {
+					$ERROR++;
+					$ERRORSTR[] = "You have not chosen an <strong>Audience</strong> for the session you were editing, please choose an audience type from the drop-down.";
+				}
+				
+				/**
+				 * Non-required field "associated_faculty" / Associated Faculty (array of proxy ids).
+				 * This is actually accomplished after the event is inserted below.
+				 */
+				if ((isset($_POST["associated_session_faculty"]))) {
+					$associated_session_faculty = explode(',',$_POST["associated_session_faculty"]);
+					foreach($associated_session_faculty as $contact_order => $proxy_id) {
+						if ($proxy_id = clean_input($proxy_id, array("trim", "int"))) {
+							$PROCESSED["associated_faculty"][(int) $contact_order] = $proxy_id;
+						}
+					}
+				}
 			}
 			
 			/**
@@ -140,88 +224,6 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 				$PROCESSED["include_parent_message"] = 0;
 			}
 				
-			/**
-			 * Required field "event_title" / Event Title.
-			 */
-			if ((isset($_POST["event_title"])) && ($event_title = clean_input($_POST["event_title"], array("notags", "trim")))) {
-				$PROCESSED["event_title"] = $event_title;
-			}
-			
-			if ((isset($_POST["students_session_audience"]))) {
-				$associated_audience = explode(',', $_POST["students_session_audience"]);
-				if ((isset($associated_audience)) && (is_array($associated_audience)) && (count($associated_audience))) {
-					foreach($associated_audience as $audience_id) {
-						if (strpos($audience_id, "student") !== false) {
-							if ($proxy_id = clean_input(preg_replace("/[a-z_]/", "", $audience_id), array("trim", "int"))) {
-								$query = "	SELECT a.*
-											FROM `".AUTH_DATABASE."`.`user_data` AS a
-											LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
-											ON a.`id` = b.`user_id`
-											WHERE a.`id` = ".$db->qstr($proxy_id)."
-											AND b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
-											AND b.`account_active` = 'true'
-											AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
-											AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")";
-								$result	= $db->GetRow($query);
-								if ($result) {
-									$PROCESSED["associated_proxy_ids"][] = $proxy_id;
-								}
-							}
-						}
-					}
-				}
-			}
-			
-			if ((isset($_POST["groups_session_audience"]))) {
-				$associated_audience = explode(',', $_POST["groups_session_audience"]);
-				if ((isset($associated_audience)) && (is_array($associated_audience)) && (count($associated_audience))) {
-					foreach($associated_audience as $audience_id) {
-						if (strpos($audience_id, "group") !== false) {
-							if ($group_id = clean_input(preg_replace("/[a-z_]/", "", $audience_id), array("trim", "int"))) {
-								$query = "	SELECT *
-											FROM `groups`
-											WHERE `group_id` = ".$db->qstr($group_id)."
-											AND `group_active` = 1";
-								$result	= $db->GetRow($query);
-								if ($result) {
-									$PROCESSED["associated_group_ids"][] = $group_id;
-								}
-							}
-						}
-					}
-				}
-			}
-			
-			if ((isset($_POST["course_session_audience"])) && $_POST["course_session_audience"]) {
-				if ($course_id || ($course_id = $PROCESSED["course_id"])) {
-					$query = "SELECT *
-								FROM `courses`
-								WHERE `course_id` = ".$db->qstr($course_id)."
-								AND `course_active` = 1";
-					$result	= $db->GetRow($query);
-					if ($result) {
-						$PROCESSED["associated_course_ids"][] = $course_id;
-					}
-				}
-			}
-			
-			if (!count($PROCESSED["associated_group_ids"]) && !count($PROCESSED["associated_proxy_ids"]) && !count($PROCESSED["associated_course_ids"])) {
-				$ERROR++;
-				$ERRORSTR[] = "You have not chosen an <strong>Audience</strong> for the session you were editing, please choose an audience type from the drop-down.";
-			}
-			
-			/**
-			 * Non-required field "associated_faculty" / Associated Faculty (array of proxy ids).
-			 * This is actually accomplished after the event is inserted below.
-			 */
-			if ((isset($_POST["associated_session_faculty"]))) {
-				$associated_session_faculty = explode(',',$_POST["associated_session_faculty"]);
-				foreach($associated_session_faculty as $contact_order => $proxy_id) {
-					if ($proxy_id = clean_input($proxy_id, array("trim", "int"))) {
-						$PROCESSED["associated_faculty"][(int) $contact_order] = $proxy_id;
-					}
-				}
-			}
 			
 			if (!$ERROR) {
 				$PROCESSED["updated_date"] = time();
@@ -348,6 +350,15 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 			}
 		} else {
 			$PROCESSED	= $event_info;
+			if (isset($_POST["event_start"]) && $_POST["event_start"]) {
+				/**
+				 * Required field "event_start" / Event Date & Time Start (validated through validate_calendars function).
+				 */
+				$start_date = validate_calendars("event", false, false);
+				if ((isset($start_date["start"])) && ((int) $start_date["start"])) {
+					$PROCESSED["event_start"] = (int) $start_date["start"];
+				}
+			}
 		}
 		if ($parent_id) {
 			$query = "SELECT COUNT(*) FROM `events` WHERE `parent_id` = ".$db->qstr($parent_id);

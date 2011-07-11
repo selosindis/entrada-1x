@@ -727,6 +727,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 				$PROCESSED["eventtype_id"] = $PROCESSED["event_types"][0][0];
 				if ($db->AutoExecute("events", $PROCESSED, "UPDATE", "`event_id` = ".$db->qstr($EVENT_ID))) {
+					if (isset($event_info["course_id"]) && $PROCESSED["course_id"] != $event_info["course_id"]) {
+						$query = "SELECT * FROM `events` WHERE `parent_id` = ".$db->qstr($EVENT_ID);
+						if ($child_events = $db->GetAll($query)) {
+							foreach ($child_events as $child_event) {
+								$db->AutoExecute("event_audience", array("audience_value" => $PROCESSED["course_id"]), "UPDATE", "`event_id` = ".$db->qstr($child_event["event_id"])." AND `audience_type` = 'course_id'");
+							}
+						}
+					}
 					$query = "DELETE FROM `event_audience` WHERE `event_id` = ".$db->qstr($EVENT_ID);
 					if ($db->Execute($query)) {
 						$query = "DELETE FROM `event_eventtypes` WHERE `event_id` = ".$db->qstr($EVENT_ID);
@@ -1319,7 +1327,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								}
 							}
 							?>
-							<span class="content-small">Page <span id="current-page-text"><?php echo $chosen_page; ?></span> of <span id="max-page-text"><?php echo $page_count; ?></span></span>
+							<span class="content-small">Page <span id="current-page-text"><?php echo $chosen_page; ?></span> of <div id="max-page-text" style="display: inline;"><?php echo $page_count; ?></div></span>
 							<div style="width: 100%;">
 								<div class="session-pane-left">
 									<div style="clear: both"></div>
@@ -1400,13 +1408,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 									}
 									?>
 									<div style="height: 15px; border-top: 1px solid #CCCCCC; position: absolute; bottom: 20px; width: 100%;">
-										<div class="session-button" onclick="addSession()" title="Add a new session">
+										<div class="session-button<?php echo ($ENTRADA_ACL->amIAllowed(new EventResource($result["event_id"], $result["course_id"], $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"]), 'create') ? "\" onclick=\"addSession()\" title=\"Add a new session" : " disabled\" title=\"[Disabled] Add a new session"); ?>">
 											+
 										</div>
-										<div class="session-button remove-button" onclick="removeSession()" title="Remove the selected session">
+										<div class="session-button remove-button<?php echo ($ENTRADA_ACL->amIAllowed(new EventResource($result["event_id"], $result["course_id"], $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"]), 'delete') ? "\" onclick=\"removeSession()\" title=\"Remove the selected session" : " disabled\" title=\"[Disabled] Remove the selected session"); ?>">
 											-
 										</div>
-										<div class="session-button edit-button" onclick="renameSession()" title="Rename the selected session">
+										<div class="session-button edit-button<?php echo ($ENTRADA_ACL->amIAllowed(new EventResource($result["event_id"], $result["course_id"], $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"]), 'update') ? "\" onclick=\"renameSession()\" title=\"Rename the selected session" : " disabled\" title=\"[Disabled] Rename the selected session"); ?>">
 											<img src="<?php echo ENTRADA_RELATIVE; ?>/images/action-edit.gif" />
 										</div>
 									</div>
@@ -1675,45 +1683,45 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 															<input type="hidden" id="course_audience_head" name="course_session_audience" value="<?php echo $course_audience_included ? "1" : "0"; ?>" />
 															<script type="text/javascript">
 																var multiselect = [];
-																var id;
+																var audience_id = 0;
 																function showMultiSelect() {
 																	$$('select_multiple_container').invoke('hide');
-																	id = $F('audience_select');
-																	if (id != 'course') {
+																	audience_id = $F('audience_select');
+																	if (audience_id != 'course') {
 																		$$('select_multiple_container').invoke('hide');
-																		if (multiselect[id]) {
+																		if (multiselect[audience_id]) {
 																			$('audience_select').hide();
-																			multiselect[id].container.show();
-																			multiselect[id].container.down("input").activate();
+																			multiselect[audience_id].container.show();
+																			multiselect[audience_id].container.down("input").activate();
 																		} else {
-																			if ($(id+'_options')) {
-																				$(id+'_options').addClassName('multiselect-processed');
-																				multiselect[id] = new Control.SelectMultiple(id+'_audience_head',id+'_options',{
+																			if ($(audience_id+'_options')) {
+																				$(audience_id+'_options').addClassName('multiselect-processed');
+																				multiselect[audience_id] = new Control.SelectMultiple(audience_id+'_audience_head',audience_id+'_options',{
 																					checkboxSelector: 'table.select_multiple_table tr td input[type=checkbox]',
 																					nameSelector: 'table.select_multiple_table tr td.select_multiple_name label',
-																					resize: id+'_scroll',
+																					resize: audience_id+'_scroll',
 																					afterCheck: function(element) {
 																						if (element.checked) {
-																							addAudience(element.id, id);
+																							addAudience(element.id, audience_id);
 																						} else {
-																							removeAudience(element.id, id);
+																							removeAudience(element.id, audience_id);
 																						}
 																					}
 																				});
 								
-																				$(id+'_cancel').observe('click',function(event){
+																				$(audience_id+'_cancel').observe('click',function(event){
 																					this.container.hide();
 																					$('audience_select').show();
 																					$('audience_select').options.selectedIndex = 0;
 																					return false;
-																				}.bindAsEventListener(multiselect[id]));
+																				}.bindAsEventListener(multiselect[audience_id]));
 								
 																				$('audience_select').hide();
-																				multiselect[id].container.show();
-																				multiselect[id].container.down("input").activate();
+																				multiselect[audience_id].container.show();
+																				multiselect[audience_id].container.down("input").activate();
 																			}
 																		}
-																	} else if (!$('audience_course')) {
+																	} else if ($('audience_course') ==  null) {
 																		if (!$('audience_course') || !$('audience_course').value) {
 																			$('audience_list').innerHTML += '<li class="community" id="audience_course" style="cursor: move;">'+$('event_course_name').value+'<img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="removeAudience(\'course\', \'course\');" class="list-cancel-image" /></li>';
 																			$$('#audience_list div').each(function (e) { e.hide(); });
@@ -1906,41 +1914,41 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 									?>
 									<script type="text/javascript">
 										var multiselect = [];
-										var id;
+										var audience_id = 0;
 										function showMultiSelect() {
-											id = $F('audience_select');
-											if (id != 'course') {
+											audience_id = $F('audience_select');
+											if (audience_id != 'course') {
 												$$('select_multiple_container').invoke('hide');
-												if (multiselect[id]) {
+												if (multiselect[audience_id]) {
 													$('audience_select').hide();
-													multiselect[id].container.show();
-													multiselect[id].container.down("input").activate();
+													multiselect[audience_id].container.show();
+													multiselect[audience_id].container.down("input").activate();
 												} else {
-													if ($(id+'_options')) {
-														$(id+'_options').addClassName('multiselect-processed');
-														multiselect[id] = new Control.SelectMultiple(id+'_audience_head',id+'_options',{
+													if ($(audience_id+'_options')) {
+														$(audience_id+'_options').addClassName('multiselect-processed');
+														multiselect[audience_id] = new Control.SelectMultiple(audience_id+'_audience_head',audience_id+'_options',{
 															checkboxSelector: 'table.select_multiple_table tr td input[type=checkbox]',
 															nameSelector: 'table.select_multiple_table tr td.select_multiple_name label',
-															resize: id+'_scroll',
+															resize: audience_id+'_scroll',
 															afterCheck: function(element) {
 																if (element.checked) {
-																	addAudience(element.id, id);
+																	addAudience(element.id, audience_id);
 																} else {
-																	removeAudience(element.id, id);
+																	removeAudience(element.id, audience_id);
 																}
 															}
 														});
 		
-														$(id+'_cancel').observe('click',function(event){
+														$(audience_id+'_cancel').observe('click',function(event){
 															this.container.hide();
 															$('audience_select').show();
 															$('audience_select').options.selectedIndex = 0;
 															return false;
-														}.bindAsEventListener(multiselect[id]));
+														}.bindAsEventListener(multiselect[audience_id]));
 		
 														$('audience_select').hide();
-														multiselect[id].container.show();
-														multiselect[id].container.down("input").activate();
+														multiselect[audience_id].container.show();
+														multiselect[audience_id].container.down("input").activate();
 													}
 												}
 											} else if (!$('audience_course')) {
@@ -1964,16 +1972,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 											}
 										}
 										
-										function addAudience(element, id) {
+										function addAudience(element, audience_id) {
 											if (!$('audience_'+element)) {
-												$('audience_list').innerHTML += '<li class="community" id="audience_'+element+'" style="cursor: move;">'+$($(element).value+'_label').innerHTML+'<img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="removeAudience(\''+element+'\', \''+id+'\');" class="list-cancel-image" /></li>';
+												$('audience_list').innerHTML += '<li class="community" id="audience_'+element+'" style="cursor: move;">'+$($(element).value+'_label').innerHTML+'<img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="removeAudience(\''+element+'\', \''+audience_id+'\');" class="list-cancel-image" /></li>';
 												$$('#audience_list div').each(function (e) { e.hide(); });
 												Sortable.destroy('audience_list');
 												Sortable.create('audience_list');
 											}
 										}
 										
-										function removeAudience(element, id) {
+										function removeAudience(element, audience_id) {
 											$('audience_'+element).remove();
 											Sortable.destroy('audience_list');
 											Sortable.create('audience_list');
@@ -1982,23 +1990,22 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 											} else {
 												$('course_audience_head').value = 0;
 											}
-											if ($(id+'_audience_head').value == "") {
+											if ($(audience_id+'_audience_head').value == "") {
 												$$('#audience_list div').each(function (e) { e.show(); });
 											}
 										}
 										
 										function addSession() {
 											var session_id = $('current-session').value;
-											disableRTE();
-											new Ajax.Updater({ success: 'session' }, '<?php echo ENTRADA_URL; ?>/api/view-sessions.api.php', 
+											new Ajax.Updater('session-notices' ,'<?php echo ENTRADA_URL; ?>/api/view-sessions.api.php', 
 													{
 														method: 'post',
-														evalScripts: 'true',
 														parameters: {
 															'step': 2,
+															'hide_controls': true,
 															'event_start': 1,
 															'parent_id' : <?php echo (int)$EVENT_ID; ?>,
-															'event_id' : session_id,
+															'event_id' : $('current-session').value,
 															'event_title': $('session_title').value,
 															'event_start_date': $('event_start_date').value,
 															'event_start_hour': $('event_start_hour').value,
@@ -2015,33 +2022,53 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 															'new': 1
 														},
 														onComplete: function () {
-															session_faculty_list = new AutoCompleteList({ type: 'session_faculty', url: '<?php echo ENTRADA_RELATIVE ."/api/personnel.api.php?type=faculty', remove_image: '". ENTRADA_RELATIVE; ?>/images/action-delete.gif'});
-															if ($('current-session').value == 0 && $('updated_session_id').value) {
-																$('current-session').value = $('updated_session_id').value;
-																$('session-line-0').id = 'session-line-'+$('updated_session_id').value;
-																$('session-line-'+$('updated_session_id').value).innerHTML = '<div id="session-'+ $('updated_session_id').value +'" onclick="loadSession('+ $('updated_session_id').value +')" class="session-entry">'+ $('session-0').innerHTML +'</div>';
-																$('updated_session_id').remove();
+															if ($('success').value == 1) {
+																disableRTE();
+																new Ajax.Updater({ success: 'session' }, '<?php echo ENTRADA_URL; ?>/api/view-sessions.api.php', 
+																	{
+																		method: 'post',
+																		evalScripts: 'true',
+																		parameters: {
+																			'new': 1,
+																			'event_start': 1,
+																			'parent_id' : <?php echo (int)$EVENT_ID; ?>,
+																			'event_start_date': $('event_start_date').value,
+																			'event_start_hour': $('event_start_hour').value,
+																			'event_start_min': $('event_start_min').value
+																		},
+																		onComplete: function () {
+																			if ($('current-session').value == 0 && $('updated_session_id').value) {
+																				$('current-session').value = $('updated_session_id').value;
+																				$('session-line-0').id = 'session-line-'+$('updated_session_id').value;
+																				$('session-line-'+$('updated_session_id').value).innerHTML = '<div id="session-'+ $('updated_session_id').value +'" onclick="loadSession('+ $('updated_session_id').value +')" class="session-entry">'+ $('session-0').innerHTML +'</div>';
+																				$('updated_session_id').remove();
+																			}
+																			var session_id = $('current-session').value;
+																			if (session_id == 0) {
+																				$('session-line-'+session_id).removeClassName('selected');
+																			} else {
+																				$('current-session').value = 0;
+																				$('session-line-'+session_id).removeClassName('selected');
+																			}
+																			var session_count = parseInt($('session-count').value);
+																			session_count++;
+																			$('session-count').value = session_count;
+																			if (session_count % 15 == 1) {
+																				document.getElementById('max-page-text').innerHTML = parseInt($('max-page-text').innerHTML) + 1;
+																				document.getElementById('session-lists').innerHTML += '<div class="session-list" id="page-'+$('max-page-text').innerHTML+'" style="width: 100%; display: none;"></div>';
+																			}
+																			var page_count = document.getElementById('max-page-text').innerHTML;
+																			document.getElementById('page-'+page_count).innerHTML += '<div id="session-line-0" class="event-session selected"><div id="session-0" onclick="loadSession(0)" class="session-entry"> Session '+ session_count +' </div></div>';
+																			lastPage();
+																			enableRTE();
+																			session_faculty_list = new AutoCompleteList({ type: 'session_faculty', url: '<?php echo ENTRADA_RELATIVE ."/api/personnel.api.php?type=faculty', remove_image: '". ENTRADA_RELATIVE; ?>/images/action-delete.gif'});
+																		},
+																		onCreate: function () {
+																			$('session').innerHTML = '<br/><br/><span class="content-small" style="align: center;">Loading... <img src="<?php echo ENTRADA_URL; ?>/images/indicator.gif" style="vertical-align: middle;" /></span>';
+																		}
+																	}
+																);
 															}
-															var session_id = $('current-session').value;
-															if (session_id == 0) {
-																$('session-line-'+session_id).removeClassName('selected');
-															} else {
-																$('current-session').value = 0;
-																$('session-line-'+session_id).removeClassName('selected');
-															}
-															var session_count = parseInt($('session-count').value);
-															session_count++;
-															$('session-count').value = session_count;
-															if (session_count % 15 == 1) {
-																$('max-page-text').innerHTML = parseInt($('max-page-text').innerHTML) + 1;
-																$('session-lists').innerHTML += '<div class="session-list" id="page-'+$('max-page-text').innerHTML+'" style="width: 100%; display: none;"></div>';
-															}
-															$('page-'+$('max-page-text').innerHTML).innerHTML += '<div id="session-line-0" class="event-session selected"><div id="session-0" onclick="loadSession(0)" class="session-entry"> Session '+ session_count +' </div></div>';
-															lastPage();
-															enableRTE();
-														},
-														onCreate: function () {
-															$('session').innerHTML = '<br/><br/><span class="content-small" style="align: center;">Loading... <img src="<?php echo ENTRADA_URL; ?>/images/indicator.gif" style="vertical-align: middle;" /></span>';
 														}
 													}
 												);
@@ -2057,8 +2084,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 										}
 										
 										function enableRTE () {
-											tinyMCE.execCommand('mceAddControl', false, 'session_description');
-											tinyMCE.execCommand('mceAddControl', false, 'session_message');
+											if(!tinyMCE.getInstanceById('session_description')) {
+												tinyMCE.execCommand('mceAddControl', false, 'session_description');
+											}
+											
+											if(!tinyMCE.getInstanceById('session_message')) {
+												tinyMCE.execCommand('mceAddControl', false, 'session_message');
+											}
 										}
 										
 										function renameSession() {
@@ -2449,23 +2481,23 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 										}
 										var text = new Array();
 						
-										function objectiveClick(element, id, default_text) {
+										function objectiveClick(element, objective_id, default_text) {
 											if (element.checked) {
 												var textarea = document.createElement('textarea');
-												textarea.name = 'objective_text['+id+']';
-												textarea.id = 'objective_text_'+id;
-												if (text[id] != null) {
-													textarea.innerHTML = text[id];
+												textarea.name = 'objective_text['+objective_id+']';
+												textarea.id = 'objective_text_'+objective_id;
+												if (text[objective_id] != null) {
+													textarea.innerHTML = text[objective_id];
 												} else {
 													textarea.innerHTML = default_text;
 												}
 												textarea.className = "expandable objective";
-												$('objective_'+id+"_append").insert({after: textarea});
-												setTimeout('new ExpandableTextarea($("objective_text_'+id+'"));', 100);
+												$('objective_'+objective_id+"_append").insert({after: textarea});
+												setTimeout('new ExpandableTextarea($("objective_text_'+objective_id+'"));', 100);
 											} else {
-												if ($('objective_text_'+id)) {
-													text[id] = $('objective_text_'+id).value;
-													$('objective_text_'+id).remove();
+												if ($('objective_text_'+objective_id)) {
+													text[objective_id] = $('objective_text_'+objective_id).value;
+													$('objective_text_'+objective_id).remove();
 												}
 											}
 										}

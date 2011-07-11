@@ -1343,12 +1343,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 											?>
 											<input type="hidden" id="session-count" name="event_children" value="<?php echo (int)count($event_info["sessions"]); ?>" />		
 											<?php
+											$selected = false;
+											$selected_id = 0;
 											foreach ($event_info["sessions"] as $key => $result) {
-												if (!isset($selected_session_id) && $key == 0 || $result["event_id"] == $selected_session_id) {
+												if ((!isset($selected_session_id) && !$selected && ($ENTRADA_ACL->amIAllowed(new EventResource($result["event_id"], $result["course_id"], $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"]), 'update') || $ENTRADA_ACL->amIAllowed(new EventContentResource($result["event_id"], $result["course_id"], $result["organisation_id"]), "update"))) || $result["event_id"] == $selected_session_id) {
 													$selected = true;
+													$selected_id = $result["event_id"];
 													echo "<input type=\"hidden\" value=\"".$result["event_id"]."\" id=\"current-session\"  name=\"current_session\" />";
-												} else {
-													$selected = false;
 												}
 												$count++;
 												if ($count > 15) {
@@ -1357,9 +1358,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 													echo "</div>\n";
 													echo "<div class=\"session-list\"".($page_count != $chosen_page ? " style=\"display: none;\"" : "")." id=\"page-".$page_count."\">\n";
 												}
-												if ($ENTRADA_ACL->amIAllowed(new EventResource($result["event_id"], $result["course_id"], $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"]), 'update') || $ENTRADA_ACL->amIAllowed(new EventContentResource($result["event_id"], $result["course_id"], $result["organisation_id"]), "update") || $ENTRADA_ACL->amIAllowed(new EventContentResource($event_info["event_id"], $event_info["course_id"], $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"]), 'update')) {
+												if ($ENTRADA_ACL->amIAllowed(new EventResource($result["event_id"], $result["course_id"], $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"]), 'update') || $ENTRADA_ACL->amIAllowed(new EventContentResource($result["event_id"], $result["course_id"], $result["organisation_id"]), "update")) {
 													?>
-													<div id="session-line-<?php echo $result["event_id"]; ?>" class="event-session enabled<?php echo $selected ? " selected" : ""; ?>">
+													<div id="session-line-<?php echo $result["event_id"]; ?>" class="event-session enabled<?php echo $selected_id == $result["event_id"] ? " selected" : ""; ?>">
 														<div id="session-<?php echo $result["event_id"]; ?>" onclick="loadSession(<?php echo $result["event_id"]; ?>)" class="session-entry">
 															<?php
 															echo limit_chars($result["event_title"], 21);

@@ -294,6 +294,7 @@ if (!defined("PARENT_INCLUDED")) {
 						$event_types = $event_resources["types"];
 						$query = "SELECT * FROM `events` WHERE `event_id` = ".$db->qstr($event_info["parent_id"]);
 						$parent_info = $db->GetRow($query);
+						$event_info["event_title"] = $parent_info["event_title"]." - ".$event_info["event_title"];
 						$event_info["event_objectives"] = $parent_info["event_objectives"];
 						$event_info["release_date"] = $parent_info["release_date"];
 						$event_info["release_until"] = $parent_info["release_until"];

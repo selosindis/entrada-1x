@@ -3326,7 +3326,7 @@ form#meta_data_form {
 }
 
 .session-list .selected {
-	background-color: #DDDDDD;
+	background-color: #CCCCCC;
 }
 
 .session-list .disabled {
@@ -3337,7 +3337,7 @@ form#meta_data_form {
 
 .session-list .enabled:hover {
 	cursor: pointer;
-	background-color: #DDDDDD;
+	background-color: #BBBBBB;
 }
 
 .session-pane-left .session-button:hover {

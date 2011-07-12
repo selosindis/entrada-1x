@@ -149,21 +149,21 @@ if (!defined("PARENT_INCLUDED")) {
 		switch ($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]) {
 			case "admin" :
 				$admin_wording = "Administrator View";
-				$admin_url = ENTRADA_URL."/admin/events".(($EVENT_ID) ? "?".replace_query(array("section" => "edit", "id" => $EVENT_ID)) : "");
+				$admin_url = ENTRADA_URL."/admin/events".(($EVENT_ID) ? "?".replace_query(array("section" => "manage", "id" => $EVENT_ID)) : "");
 			break;
 			case "pcoordinator" :
 				$admin_wording = "Coordinator View";
-				$admin_url = ENTRADA_URL."/admin/events".(($EVENT_ID) ? "?".replace_query(array("section" => "edit", "id" => $EVENT_ID)) : "");
+				$admin_url = ENTRADA_URL."/admin/events".(($EVENT_ID) ? "?".replace_query(array("section" => "manage", "id" => $EVENT_ID)) : "");
 			break;
 			case "director" :
 				$admin_wording = "Director View";
-				$admin_url = ENTRADA_URL."/admin/events".(($EVENT_ID) ? "?".replace_query(array("section" => "content", "id" => $EVENT_ID)) : "");
+				$admin_url = ENTRADA_URL."/admin/events".(($EVENT_ID) ? "?".replace_query(array("section" => "manage", "id" => $EVENT_ID)) : "");
 			break;
 			case "teacher" :
 			case "faculty" :
 			case "lecturer" :
 				$admin_wording = "Teacher View";
-				$admin_url = ENTRADA_URL."/admin/events".(($EVENT_ID) ? "?".replace_query(array("section" => "content", "id" => $EVENT_ID)) : "");
+				$admin_url = ENTRADA_URL."/admin/events".(($EVENT_ID) ? "?".replace_query(array("section" => "manage", "id" => $EVENT_ID)) : "");
 			break;
 			default :
 				$admin_wording = "";
@@ -284,13 +284,36 @@ if (!defined("PARENT_INCLUDED")) {
 			} else {
 				if ($ENTRADA_ACL->amIAllowed(new EventResource($EVENT_ID, $event_info['course_id'], $event_info['organisation_id']), 'read')) {
 					add_statistic($MODULE, "view", "event_id", $EVENT_ID);
-
-					$event_resources = fetch_event_resources($EVENT_ID, "all");
-					$event_files = $event_resources["files"];
-					$event_links = $event_resources["links"];
-					$event_quizzes = $event_resources["quizzes"];
-					$event_discussions = $event_resources["discussions"];
-					$event_types = $event_resources["types"];
+					if ($event_info["parent_id"]) {
+						$event_resources = fetch_event_resources($event_info["parent_id"], array("files", "links", "quizzes"));
+						$event_files = $event_resources["files"];
+						$event_links = $event_resources["links"];
+						$event_quizzes = $event_resources["quizzes"];
+						$event_resources = fetch_event_resources($EVENT_ID, array("discussions", "types"));
+						$event_discussions = $event_resources["discussions"];
+						$event_types = $event_resources["types"];
+						$query = "SELECT * FROM `events` WHERE `event_id` = ".$db->qstr($event_info["parent_id"]);
+						$parent_info = $db->GetRow($query);
+						$event_info["event_title"] = $parent_info["event_title"]." - ".$event_info["event_title"];
+						$event_info["event_objectives"] = $parent_info["event_objectives"];
+						$event_info["release_date"] = $parent_info["release_date"];
+						$event_info["release_until"] = $parent_info["release_until"];
+						$event_info["event_phase"] = $parent_info["event_phase"];
+						$event_info["course_id"] = $parent_info["course_id"];
+						if ($event_info["include_parent_description"] && $parent_info["event_description"]) {
+							$event_info["event_description"] = $parent_info["event_description"].(isset($event_info["event_description"]) && $event_info["event_description"] ? "\n\n<br/><br/>".$event_info["event_description"] : "");
+						}
+						if ($event_info["include_parent_message"] && $parent_info["event_message"]) {
+							$event_info["event_message"] = $parent_info["event_message"].(isset($event_info["event_message"]) && $event_info["event_message"] ? "\n\n<br/><br/>".$event_info["event_message"] : "");
+						}
+					} else {
+						$event_resources = fetch_event_resources($EVENT_ID, "all");
+						$event_files = $event_resources["files"];
+						$event_links = $event_resources["links"];
+						$event_quizzes = $event_resources["quizzes"];
+						$event_discussions = $event_resources["discussions"];
+						$event_types = $event_resources["types"];
+					}
 					
 					/**
 					 * Determine the event_audience information.
@@ -533,17 +556,27 @@ if (!defined("PARENT_INCLUDED")) {
 					echo "			<tr>\n";
 					echo "				<td style=\"vertical-align: top\">Faculty</td>\n";
 					echo "				<td>\n";
-					$squery		= "	SELECT a.`proxy_id`, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`email`, a.`contact_role`
+					$squery		= "	SELECT a.`proxy_id`, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`email`, a.`contact_order`
 									FROM `event_contacts` AS a
 									LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
 									ON b.`id` = a.`proxy_id`
 									WHERE a.`event_id` = ".$db->qstr($event_info["event_id"])."
 									AND b.`id` IS NOT NULL
-									ORDER BY a.`contact_order` ASC";
+									
+									UNION
+									
+									SELECT a.`proxy_id`, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`email`, a.`contact_order`
+									FROM `event_contacts` AS a
+									LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
+									ON b.`id` = a.`proxy_id`
+									WHERE a.`event_id` = ".$db->qstr($event_info["parent_id"])."
+									AND b.`id` IS NOT NULL
+									GROUP BY a.`proxy_id`
+									ORDER BY `contact_order` ASC";
 					$sresults	= $db->GetAll($squery);
 					if ($sresults) {
 						foreach ($sresults as $key => $sresult) {
-							echo "<a href=\"mailto:".html_encode($sresult["email"])."\">".html_encode($sresult["fullname"])."</a> - ".html_encode(ucwords($sresult["contact_role"]))."<br/>\n";
+							echo "<a href=\"mailto:".html_encode($sresult["email"])."\">".html_encode($sresult["fullname"])."</a><br/>\n";
 						}
 					} else {
 						echo "To Be Announced";

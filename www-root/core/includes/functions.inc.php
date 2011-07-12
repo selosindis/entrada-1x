@@ -812,6 +812,100 @@ function get_account_data($type = "", $id = 0) {
 	}
 }
 
+
+
+/**
+ * Fetches the page name for the given page data. Query depends on what type
+ * of data the action field is representing. 
+ * @global object $db
+ * @param type $page_data
+ * @return string 
+ */
+function get_page_name($page_data){
+	global $db;
+	$raw_page_data = explode("-",$page_data);
+	$action_field = $raw_page_data[0]."_".$raw_page_data[1];
+	$action_value = $raw_page_data[2];
+	
+	unset($query);
+	switch ($action_field){
+		case 'cshare_id':
+				$query = "	SELECT `folder_title` AS `page` 
+							FROM `community_shares` 
+							WHERE `cshare_id` = ".$db->qstr($action_value);
+			break;
+		case 'cscomment_id':
+				$query = "	SELECT b.`file_title` AS `page` 
+							FROM `community_share_comments` AS a 
+							LEFT JOIN `community_share_files` AS b 
+							ON a.`csfile_id` = b.`csfile_id` 
+							WHERE a.`cscomment_id` = ".$db->qstr($action_value);
+			break;
+		case 'csfile_id':
+				$query = "	SELECT b.`file_title` AS `page` 
+							FROM `community_share_files` A
+							WHERE a.`csfile_id` = ".$db->qstr($action_value);
+			break;
+		case 'csfversion_id':
+				$query = "	SELECT b.`file_title` AS `page` 
+							FROM `community_share_file_versions` AS a 
+							LEFT JOIN `community_share_files` AS b 
+							ON a.`csfile_id` = b.`csfile_id` 
+							WHERE a.`csfversion_id` = ".$db->qstr($action_value);
+			break;	
+		case 'cannouncement_id':
+				$query = "	SELECT `announcement_title` AS `page` 
+							FROM `community_announcements`
+							WHERE `cannouncement_id` = ".$db->qstr($action_value);
+			break;
+		case 'cdiscussion_id':
+				$query = "	SELECT `forum_title` AS `page` 
+							FROM `community_discussions`
+							WHERE `cdiscussion_id` = ".$db->qstr($action_value);
+			break;		
+		case 'cdtopic_id':
+				$query = "	SELECT `topic_title` AS `page` 
+							FROM `community_discussion_topics`
+							WHERE `cdtopic_id` = ".$db->qstr($action_value);
+			break;	
+		case 'cevent_id':
+				$query = "	SELECT `event_title` AS `page` 
+							FROM `community_events`
+							WHERE `cevent_id` = ".$db->qstr($action_value);
+			break;				
+		case 'cgallery_id':
+				$query = "	SELECT `gallery_title` AS `page` 
+							FROM `community_galleries`
+							WHERE `cgallery_id` = ".$db->qstr($action_value);
+			break;			
+		case 'cgphoto_id':
+				$query = "	SELECT `photo_title` AS `page` 
+							FROM `community_gallery_photos`
+							WHERE `cgphoto_id` = ".$db->qstr($action_value);
+			break;
+		case 'cgcomment_id':
+				$query = "	SELECT a.`gallery_title` AS `page` 
+							FROM `community_galleries` AS a
+							LEFT JOIN `community_gallery_comments` AS b 
+							ON a.`cgaller_id` = b.`cgallery_id`
+							WHERE `cgcomment_id` = ".$db->qstr($action_value);
+			break;
+		default:
+			break;
+	}
+	
+
+	
+
+	if ($query) {
+		$result = $db->GetOne($query);
+	} else {
+		$result = $action_field." ".$action_value;
+	}
+	
+	return $result;
+}
+
 /**
  * Function will return the online status of a particular proxy_id. You have the choice of the output,
  * either text (default), image or an integer.
@@ -2579,13 +2673,13 @@ function course_name($course_id = 0, $return_course_name = true, $return_course_
  * @param int $id
  * @return string
  */
-function small_group_name($small_group_id = 0) {
+function group_name($group_id = 0) {
 	global $db;
 
-	if (($small_group_id = (int) $small_group_id)) {
+	if (($group_id = (int) $group_id)) {
 		$output = array();
-		$query	= "	SELECT `group_name` FROM `small_groups` 
-					WHERE `sgroup_id` = ".$db->qstr($small_group_id)."
+		$query	= "	SELECT `group_name` FROM `groups` 
+					WHERE `group_id` = ".$db->qstr($group_id)."
 					AND `group_active` = '1'";
 		$result	= $db->GetRow($query);
 		if ($result) {
@@ -7235,7 +7329,7 @@ function lp_multiple_select_table($checkboxes, $indent, $i, $category_select_all
 
 		$i++;
 
-		$return .= '<tr class="'.$class.'"><td class="'.$name_class.' indent_'.$indent.'"><label for="'.$checkbox['value'].'">'.$checkbox['text'].'</label></td><td class="'.$input_class.'">'.$input.'</td></tr>';
+		$return .= '<tr class="'.$class.'"><td class="'.$name_class.' indent_'.$indent.'"><label for="'.$checkbox['value'].'" id="'.$checkbox['value'].'_label">'.$checkbox['text'].'</label></td><td class="'.$input_class.'">'.$input.'</td></tr>';
 
 		if(isset($checkbox['options'])) {
 			$return .= lp_multiple_select_table($checkbox['options'], $indent+1, $i);
@@ -8875,6 +8969,188 @@ function events_process_sorting() {
 }
 
 /**
+ * Function used by community reports to output the HTML for both the filter
+ * controls and current filter status (Showing Statistics That Include:) box.
+ */
+function tracking_output_filter_controls($module_type = "") {
+	global $db, $ENTRADA_ACL, $ORGANISATION_ID,$COMMUNITY_ID;
+
+	if (!isset($ORGANISATION_ID) || !$ORGANISATION_ID) {
+		if (isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["tracking"]["organisation_id"]) && $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["tracking"]["organisation_id"]) {
+			$ORGANISATION_ID = $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["tracking"]["organisation_id"];
+		} else {
+			$ORGANISATION_ID = $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"];
+			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["tracking"]["organisation_id"] = $ORGANISATION_ID;
+		}
+	}
+
+	/**
+	 * Determine whether or not this is being called from the admin section.
+	 */
+	if ($module_type == "admin") {
+		$module_type = "/admin";
+	} else {
+		$module_type = "";
+	}
+	?>
+	<table id="filterList" style="clear: both; width: 100%" cellspacing="0" cellpadding="0" border="0" summary="Event Filters">
+		<tr>
+			<td style="width: 53%; vertical-align: top">
+				<form action="<?php echo ENTRADA_URL.$module_type; ?>/communities" method="get" id="filter_edit" name="filter_edit" style="position: relative;">
+				<input type="hidden" name="section" value="reports" />
+				<input type="hidden" name="community" value="<?php echo $COMMUNITY_ID;?>" />
+				<input type="hidden" name="action" value="filter_edit" />
+				<input type="hidden" id="filter_edit_type" name="filter_type" value="" />
+				<input type="hidden" id="multifilter" name="filter" value="" />
+				<label for="filter_select" class="content-subheading" style="vertical-align: middle">Apply Filter:</label>
+				<select id="filter_select" onchange="showMultiSelect();" style="width: 184px; vertical-align: middle">
+					<option>Select Filter</option>
+					<option value="members">Member Filters</option>
+					<option value="module">Module Type Filters</option>
+					<option value="page">Page Filters</option>
+					<option value="action">Action Filters</option>
+					<option value="totals">Total Filters</option>
+				</select>
+				<span id="filter_options_loading" style="display:none; vertical-align: middle"><img src="<?php echo ENTRADA_RELATIVE; ?>/images/indicator.gif" width="16" height="16" alt="Please Wait" title="" style="vertical-align: middle" /> Loading ... </span>
+				<span id="options_container"></span>
+				</form>
+				<script type="text/javascript">
+				var multiselect = [];
+				var id;
+				function showMultiSelect() {
+					$$('select_multiple_container').invoke('hide');
+					id = $F('filter_select');
+					if (multiselect[id]) {
+						multiselect[id].container.show();
+					} else {
+						new Ajax.Request('<?php echo ENTRADA_URL."/api/tracking_filters.api.php";?>', {
+							parameters: {options_for: id},
+							method: "GET",
+							onLoading: function() {
+								$('filter_options_loading').show();
+							},
+							onSuccess: function(response) {
+								$('options_container').insert(response.responseText);
+								if ($(id+'_options')) {
+									$('filter_edit_type').value = id;
+									$(id+'_options').addClassName('multiselect-processed');
+
+									multiselect[id] = new Control.SelectMultiple('multifilter',id+'_options',{
+										checkboxSelector: 'table.select_multiple_table tr td input[type=checkbox]',
+											nameSelector: 'table.select_multiple_table tr td.select_multiple_name label',
+											filter: id+'_select_filter',
+											resize: id+'_scroll',
+											afterCheck: function(element) {
+												var tr = $(element.parentNode.parentNode);
+												tr.removeClassName('selected');
+												if (element.checked) {
+													tr.addClassName('selected');
+												}
+											}
+									});
+
+									$(id+'_cancel').observe('click',function(event){
+										this.container.hide();
+										$('filter_select').options.selectedIndex = 0;
+										$('filter_select').show();
+										return false;
+									}.bindAsEventListener(multiselect[id]));
+
+									$(id+'_close').observe('click',function(event){
+										this.container.hide();
+										$('filter_edit').submit();
+										return false;
+									}.bindAsEventListener(multiselect[id]));
+
+									multiselect[id].container.show();
+								}
+							},
+							onError: function(response) {
+								alert("There was an error retrieving the events filter requested. Please try again.")		
+							},
+							onComplete: function() {
+								$('filter_options_loading').hide();
+							}
+						});
+					}	
+					return false;
+				}
+				function setDateValue(field, date) {
+					timestamp = getMSFromDate(date);
+					if (field.value != timestamp) {
+						window.location = '<?php echo ENTRADA_URL.$module_type."/events?".(($_SERVER["QUERY_STRING"] != "") ? replace_query(array("dstamp" => false))."&" : ""); ?>dstamp='+timestamp;
+					}
+					return;
+				}
+				</script>
+			</td>
+			<td style="width: 47%; vertical-align: top">
+				<?php
+				if ((is_array($_SESSION[APPLICATION_IDENTIFIER]["tracking"]["filters"])) && (count($_SESSION[APPLICATION_IDENTIFIER]["tracking"]["filters"]))) {
+					echo "<table class=\"inner-content-box\" id=\"filter-list\" cellspacing=\"0\" summary=\"Selected Filter List\">\n";
+					echo "<thead>\n";
+					echo "	<tr>\n";
+					echo "		<td class=\"inner-content-box-head\">Showing Events That Include:</td>\n";
+					echo "	</tr>\n";
+					echo "</thead>\n";
+					echo "<tbody>\n";
+					echo "	<tr>\n";
+					echo "		<td class=\"inner-content-box-body\">";
+					echo "		<div id=\"filter-list-resize-handle\" style=\"margin:0px -6px -6px -7px;\">";
+					echo "		<div id=\"filter-list-resize\" style=\"height: 60px; overflow: auto;  padding: 0px 6px 6px 6px;\">\n";
+					foreach ($_SESSION[APPLICATION_IDENTIFIER]["tracking"]["filters"] as $filter_type => $filter_contents) {
+						if (is_array($filter_contents)) {
+							echo 	$filter_name = filter_name($filter_type);
+							echo "	<div style=\"margin: 2px 0px 10px 3px\">\n";
+							foreach ($filter_contents as $filter_key => $filter_value) {
+								echo "	<div id=\"".$filter_type."_".$filter_key."\">";
+								echo "		<a href=\"".ENTRADA_URL.$module_type."/communities?section=reports&community=".$COMMUNITY_ID."&action=filter_remove&amp;filter=".$filter_type."_".$filter_key."\" title=\"Remove this filter\">";
+								echo "		<img src=\"".ENTRADA_URL."/images/checkbox-on.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" />";
+								switch ($filter_type) {
+									case "members" :
+									case "student" :
+										echo get_account_data("fullname", $filter_value);
+									break;
+									case "organisation":
+										echo fetch_organisation_title($filter_value);
+									break;
+									case 'action':
+										echo ucwords(str_replace('-',' ',$filter_value));
+										break;
+									case 'page':
+										echo get_page_name($filter_value);
+										break;
+									default :
+										echo ucwords($filter_value);
+									break;
+								}
+								echo "		</a>";
+								echo "	</div>\n";
+							}
+							echo "	</div>\n";
+						}
+					}
+					echo "		</div>\n";
+					echo "		</div>\n";
+					echo "		</td>\n";
+					echo "	</tr>\n";
+					echo "</tbody>\n";
+					echo "</table>\n";
+					echo "<br />\n";
+					echo "<script type=\"text/javascript\">";
+					echo "	new ElementResizer($('filter-list-resize'), {handleElement: $('filter-list-resize-handle'), min: 40});";
+					echo "</script>";
+				}
+				?>
+			</td>
+		</tr>
+	</table>
+	<?php
+}
+
+
+
+/**
  * Function used by public events and admin events index to output the HTML for both the filter
  * controls and current filter status (Showing Events That Include:) box.
  */
@@ -9025,7 +9301,7 @@ function events_output_filter_controls($module_type = "") {
 										echo course_name($filter_value);
 									break;
 									case "smallgroup" :
-										echo small_group_name($filter_value);
+										echo group_name($filter_value);
 									break;
 									case "phase" :
 										echo "Phase / Term ".strtoupper($filter_value);
@@ -9059,6 +9335,74 @@ function events_output_filter_controls($module_type = "") {
 					echo "<script type=\"text/javascript\">";
 					echo "	new ElementResizer($('filter-list-resize'), {handleElement: $('filter-list-resize-handle'), min: 40});";
 					echo "</script>";
+				}
+				?>
+			</td>
+		</tr>
+	</table>
+	<?php
+}
+
+
+/**
+ * Function used by community reports to output the HTML for the calendar controls.
+ */
+function tracking_output_calendar_controls($module_type = "") {
+	global $dates, $COMMUNITY_ID;
+	
+	/**
+	 * Determine whether or not this is being called from the admin section.
+	 */
+	if ($module_type == "admin") {
+		$module_type = "/admin";
+	} else {
+		$module_type = "";
+	}
+	?>
+	<table style="width: 100%; margin: 10px 0px 10px 0px" cellspacing="0" cellpadding="0" border="0">
+		<tr>
+			<td style="width: 53%; vertical-align: top; text-align: left">
+				<table style="width: 298px; height: 23px" cellspacing="0" cellpadding="0" border="0" summary="Display Duration Type">
+					<tr>
+						<td style="width: 22px; height: 23px"><a href="<?php echo ENTRADA_URL.$module_type."/communities?section=reports&community=".$COMMUNITY_ID."&".replace_query(array("dstamp" => ($learning_events["duration_start"] - 2))); ?>" title="Previous <?php echo ucwords($_SESSION[APPLICATION_IDENTIFIER]["tracking"]["dtype"]); ?>"><img src="<?php echo ENTRADA_URL; ?>/images/cal-back.gif" border="0" width="22" height="23" alt="Previous <?php echo ucwords($_SESSION[APPLICATION_IDENTIFIER]["tracking"]["dtype"]); ?>" title="Previous <?php echo ucwords($_SESSION[APPLICATION_IDENTIFIER]["tracking"]["dtype"]); ?>" /></a></td>
+						<td style="width: 47px; height: 23px"><?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tracking"]["dtype"] == "day") ? "<img src=\"".ENTRADA_URL."/images/cal-day-on.gif\" width=\"47\" height=\"23\" border=\"0\" alt=\"Day View\" title=\"Day View\" />" : "<a href=\"".ENTRADA_URL.$module_type."/communities?section=reports&community=".$COMMUNITY_ID."&".replace_query(array("dtype" => "day"))."\"><img src=\"".ENTRADA_URL."/images/cal-day-off.gif\" width=\"47\" height=\"23\" border=\"0\" alt=\"Day View\" title=\"Day View\" /></a>"); ?></td>
+						<td style="width: 47px; height: 23px"><?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tracking"]["dtype"] == "week") ? "<img src=\"".ENTRADA_URL."/images/cal-week-on.gif\" width=\"47\" height=\"23\" border=\"0\" alt=\"Week View\" title=\"Week View\" />" : "<a href=\"".ENTRADA_URL.$module_type."/communities?section=reports&community=".$COMMUNITY_ID."&".replace_query(array("dtype" => "week"))."\"><img src=\"".ENTRADA_URL."/images/cal-week-off.gif\" width=\"47\" height=\"23\" border=\"0\" alt=\"Week View\" title=\"Week View\" /></a>"); ?></td>
+						<td style="width: 47px; height: 23px"><?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tracking"]["dtype"] == "month") ? "<img src=\"".ENTRADA_URL."/images/cal-month-on.gif\" width=\"47\" height=\"23\" border=\"0\" alt=\"Month View\" title=\"Month View\" />" : "<a href=\"".ENTRADA_URL.$module_type."/communities?section=reports&community=".$COMMUNITY_ID."&".replace_query(array("dtype" => "month"))."\"><img src=\"".ENTRADA_URL."/images/cal-month-off.gif\" width=\"47\" height=\"23\" border=\"0\" alt=\"Month View\" title=\"Month View\" /></a>"); ?></td>
+						<td style="width: 47px; height: 23px"><?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tracking"]["dtype"] == "year") ? "<img src=\"".ENTRADA_URL."/images/cal-year-on.gif\" width=\"47\" height=\"23\" border=\"0\" alt=\"Year View\" title=\"Year View\" />" : "<a href=\"".ENTRADA_URL.$module_type."/communities?section=reports&community=".$COMMUNITY_ID."&".replace_query(array("dtype" => "year"))."\"><img src=\"".ENTRADA_URL."/images/cal-year-off.gif\" width=\"47\" height=\"23\" border=\"0\" alt=\"Year View\" title=\"Year View\" /></a>"); ?></td>
+						<td style="width: 47px; height: 23px; border-left: 1px #9D9D9D solid"><a href="<?php echo ENTRADA_URL.$module_type."/events?".replace_query(array("dstamp" => ($learning_events["duration_end"] + 1))); ?>" title="Following <?php echo ucwords($_SESSION[APPLICATION_IDENTIFIER]["tracking"]["dtype"]); ?>"><img src="<?php echo ENTRADA_URL; ?>/images/cal-next.gif" border="0" width="22" height="23" alt="Following <?php echo ucwords($_SESSION[APPLICATION_IDENTIFIER]["tracking"]["dtype"]); ?>" title="Following <?php echo ucwords($_SESSION[APPLICATION_IDENTIFIER]["tracking"]["dtype"]); ?>" /></a></td>
+						<td style="width: 33px; height: 23px; text-align: right"><a href="<?php echo ENTRADA_URL.$module_type; ?>/communities?section=reports&<?php echo replace_query(array("dstamp" => time())); ?>"><img src="<?php echo ENTRADA_URL; ?>/images/cal-home.gif" width="23" height="23" alt="Reset to display current calendar <?php echo $_SESSION[APPLICATION_IDENTIFIER]["tracking"]["dtype"]; ?>." title="Reset to display current calendar <?php echo $_SESSION[APPLICATION_IDENTIFIER]["tracking"]["dtype"]; ?>." border="0" /></a></td>
+						<td style="width: 33px; height: 23px; text-align: right"><img src="<?php echo ENTRADA_URL; ?>/images/cal-calendar.gif" width="23" height="23" alt="Show Calendar" title="Show Calendar" onclick="showCalendar('', document.getElementById('dstamp'), document.getElementById('dstamp'), '<?php echo html_encode($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dstamp"]); ?>', 'calendar-holder', 8, 8, 1)" style="cursor: pointer" id="calendar-holder" /></td>
+					</tr>
+				</table>
+			</td>
+			<td style="width: 47%; vertical-align: top; text-align: right">
+				<?php
+				if ($learning_events["total_pages"] > 1) {
+					echo "<form action=\"".ENTRADA_URL.$module_type."/communities?section=reports&community=".$COMMUNITY_ID."\" method=\"get\" id=\"pageSelector\">\n";
+					echo "<div style=\"white-space: nowrap\">\n";
+					echo "<span style=\"width: 20px; vertical-align: middle; margin-right: 3px; text-align: left\">\n";
+					if ($learning_events["page_previous"]) {
+						echo "<a href=\"".ENTRADA_URL.$module_type."/communities?section=reports&community=".$COMMUNITY_ID."&".replace_query(array("pv" => $learning_events["page_previous"]))."\"><img src=\"".ENTRADA_URL."/images/record-previous-on.gif\" border=\"0\" width=\"11\" height=\"11\" alt=\"Back to page ".$learning_events["page_previous"].".\" title=\"Back to page ".$learning_events["page_previous"].".\" style=\"vertical-align: middle\" /></a>\n";
+					} else {
+						echo "<img src=\"".ENTRADA_URL."/images/record-previous-off.gif\" width=\"11\" height=\"11\" alt=\"\" title=\"\" style=\"vertical-align: middle\" />";
+					}
+					echo "</span>";
+					echo "<span style=\"vertical-align: middle\">\n";
+					echo "<select name=\"pv\" onchange=\"$('pageSelector').submit();\"".(($learning_events["total_pages"] <= 1) ? " disabled=\"disabled\"" : "").">\n";
+					for ($i = 1; $i <= $learning_events["total_pages"]; $i++) {
+						echo "<option value=\"".$i."\"".(($i == $learning_events["page_current"]) ? " selected=\"selected\"" : "").">".(($i == $learning_events["page_current"]) ? " Viewing" : "Jump To")." Page ".$i."</option>\n";
+					}
+					echo "</select>\n";
+					echo "</span>\n";
+					echo "<span style=\"width: 20px; vertical-align: middle; margin-left: 3px; text-align: right\">\n";
+					if ($learning_events["page_current"] < $learning_events["total_pages"]) {
+						echo "<a href=\"".ENTRADA_URL.$module_type."/communities?section=reports&community=".$COMMUNITY_ID."&".replace_query(array("pv" => $learning_events["page_next"]))."\"><img src=\"".ENTRADA_URL."/images/record-next-on.gif\" border=\"0\" width=\"11\" height=\"11\" alt=\"Forward to page ".$learning_events["page_next"].".\" title=\"Forward to page ".$learning_events["page_next"].".\" style=\"vertical-align: middle\" /></a>";
+					} else {
+						echo "<img src=\"".ENTRADA_URL."/images/record-next-off.gif\" width=\"11\" height=\"11\" alt=\"\" title=\"\" style=\"vertical-align: middle\" />";
+					}
+					echo "</span>\n";
+					echo "</div>\n";
+					echo "</form>\n";
 				}
 				?>
 			</td>
@@ -9316,6 +9660,282 @@ function events_process_filters($action = "", $module_type = "") {
 	}
 }
 
+
+
+
+/**
+ * Function used by community tracking to process the provided filter settings.
+ */
+function tracking_process_filters($action = "", $module_type = "") {
+	global $COMMUNITY_ID;
+	/**
+	 * Determine whether or not this is being called from the admin section.
+	 */
+	if ($module_type == "admin") {
+		$module_type = "/admin";
+	} else {
+		$module_type = "";
+	}
+
+	/**
+	 * Handles any page actions for this module.
+	 */
+	switch ($action) {
+		case "filter_add" :
+			if (isset($_GET["filter"])) {
+				$pieces = explode("_", clean_input($_GET["filter"], array("nows", "lower", "notags")));
+				$filter_key = $pieces[0];
+				$filter_value = $pieces[1];
+				if (($filter_key) && ($filter_value)) {
+					$key = 0;
+
+					if ((!is_array($_SESSION[APPLICATION_IDENTIFIER]["tracking"]["filters"][$filter_key])) || (!in_array($filter_value, $_SESSION[APPLICATION_IDENTIFIER]["tracking"]["filters"][$filter_key]))) {
+						/**
+						 * Check to see if this is a student attempting to view the calendar of another student.
+						 */
+						if (($filter_key != "student") || ($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"] != "student") || ($filter_value == $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])) {
+							$_SESSION[APPLICATION_IDENTIFIER]["tracking"]["filters"][$filter_key][] = $filter_value;
+
+							ksort($_SESSION[APPLICATION_IDENTIFIER]["tracking"]["filters"]);
+						}
+					}
+				}
+			}
+
+			$_SERVER["QUERY_STRING"] = replace_query(array("action" => false, "filter" => false));
+		break;
+		case "filter_edit" :
+			if (isset($_GET["filter"])) {
+				$filters = explode(",", clean_input($_GET["filter"], array("nows", "lower", "notags")));
+				if (isset($filters[1])) {
+					$pieces = explode("_", $filters[0]);
+					$filter_key	= $pieces[0];
+					unset($_SESSION[APPLICATION_IDENTIFIER]["tracking"]["filters"][$filter_key]);
+
+					foreach ($filters as $filter) {
+						$pieces = explode("_", $filter);
+						$filter_value = $pieces[1];
+						if (($filter_key != "student") || ($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"] != "student") || ($filter_value == $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])) {
+							$_SESSION[APPLICATION_IDENTIFIER]["tracking"]["filters"][$filter_key][] = $filter_value;
+							ksort($_SESSION[APPLICATION_IDENTIFIER]["tracking"]["filters"]);
+						}
+					}
+				} else {
+					$pieces = explode("_", $filters[0]);
+					$filter_key = $pieces[0];
+					$filter_value = $pieces[1];
+					if ($filter_value && $filter_key) {
+						//This is an actual filter, cool dude. Erase everything else since we only got one and add this one if its not a student looking at another student
+						if (($filter_key != "student") || ($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"] != "student") || ($filter_value == $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])) {
+							unset($_SESSION[APPLICATION_IDENTIFIER]["tracking"]["filters"][$filter_key]);
+							$_SESSION[APPLICATION_IDENTIFIER]["tracking"]["filters"][$filter_key][] = $filter_value;
+							ksort($_SESSION[APPLICATION_IDENTIFIER]["tracking"]["filters"]);
+						}
+					} else {
+						// This is coming from the select box and nothing was selected, so erase.
+						$filter_type = clean_input($_GET["filter_type"], array("nows", "lower", "notags"));
+						if (is_array($_SESSION[APPLICATION_IDENTIFIER]["tracking"]["filters"][$filter_type])) {
+							unset($_SESSION[APPLICATION_IDENTIFIER]["tracking"]["filters"][$filter_type]);
+						}
+					}
+				}
+
+				ksort($_SESSION[APPLICATION_IDENTIFIER]["tracking"]["filters"]);
+			}
+
+			$_SERVER["QUERY_STRING"] = replace_query(array("action" => false, "filter" => false));
+		break;
+		case "filter_remove" :
+			if (isset($_GET["filter"])) {
+				$pieces = explode("_", clean_input($_GET["filter"], array("nows", "lower", "notags")));
+				$filter_type = $pieces[0];
+				$filter_key	= $pieces[1];
+				if (($filter_type) && ($filter_key != "") && (isset($_SESSION[APPLICATION_IDENTIFIER]["tracking"]["filters"][$filter_type][$filter_key]))) {
+
+					unset($_SESSION[APPLICATION_IDENTIFIER]["tracking"]["filters"][$filter_type][$filter_key]);
+
+					if (!@count($_SESSION[APPLICATION_IDENTIFIER]["tracking"]["filters"][$filter_type])) {
+						unset($_SESSION[APPLICATION_IDENTIFIER]["tracking"]["filters"][$filter_type]);
+					}
+
+					ksort($_SESSION[APPLICATION_IDENTIFIER]["tracking"]["filters"]);
+				}
+			}
+
+			$_SERVER["QUERY_STRING"] = replace_query(array("action" => false, "filter" => false));
+		break;
+		case "filter_removeall" :
+			if (isset($_SESSION[APPLICATION_IDENTIFIER]["tracking"]["filters"])) {
+				unset($_SESSION[APPLICATION_IDENTIFIER]["tracking"]["filters"]);
+			}
+
+			$_SERVER["QUERY_STRING"] = replace_query(array("action" => false, "filter" => false));
+		break;
+		case "filter_defaults" :
+			/**
+			 * If this is the first time this page has been loaded, lets setup the default filters.
+			 */
+			if (!isset($_SESSION[APPLICATION_IDENTIFIER]["tracking"]["filter_defaults_set"])) {
+				$_SESSION[APPLICATION_IDENTIFIER]["tracking"]["filter_defaults_set"] = true;
+			}
+
+			/**
+			 * First unset any previous filters if they exist.
+			 */
+			if (isset($_SESSION[APPLICATION_IDENTIFIER]["tracking"]["filters"])) {
+				unset($_SESSION[APPLICATION_IDENTIFIER]["tracking"]["filters"]);
+			}
+
+			$_SESSION[APPLICATION_IDENTIFIER]["tracking"]["filters"] = events_filters_defaults(
+				$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"],
+				$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"],
+				$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]
+			);
+
+			$_SERVER["QUERY_STRING"] = replace_query(array("action" => false, "filter" => false));
+		break;
+		default :
+			continue;
+		break;
+	}
+
+	if (!isset($_SESSION[APPLICATION_IDENTIFIER]["tracking"]["filter_defaults_set"])) {
+		header("Location: ".ENTRADA_URL.$module_type."/communities?section=reports&community=".$COMMUNITY_ID."&action=filter_defaults");
+		exit;
+	}
+}
+
+
+
+function tracking_fetch_filtered_events($community_id,$filters = array()){
+	global $db, $ENTRADA_ACL;
+	$query = "	SELECT CONCAT_WS(' ',b.`firstname`,b.`lastname`) AS `fullname`, a.* 
+				FROM `statistics` AS a 
+				JOIN `".AUTH_DATABASE."`.`user_data` AS b 
+				ON a.`proxy_id` = b.`id` 
+				WHERE `module` LIKE('community:".$community_id.":%')";
+	$date_query = "	SELECT MIN(timestamp) AS 'start_date', MAX(timestamp) AS 'end_date' 
+					FROM `statistics` AS a 
+					JOIN `".AUTH_DATABASE."`.`user_data` AS b 
+					ON a.`proxy_id` = b.`id` 
+					WHERE `module` LIKE('community:".$community_id.":%')";
+	
+	if (isset($filters) && !empty($filters)){
+		foreach ($filters as $type=>$filter){
+			if (is_array($filter) && !empty($filter)){
+					switch ($type){
+						case 'members':
+							$query .= " AND a.`proxy_id` IN (".implode(',',$filter).")";
+							$date_query .= " AND a.`proxy_id` IN (".implode(',',$filter).")";
+							break;
+						case 'module':
+							//converts each array element to lower case and then finds modules containing the value 
+							$query .= " AND a.`module` REGEXP ".$db->qstr(implode('|',unserialize(strtolower(serialize($filter)))));
+							$date_query .= " AND a.`module` REGEXP ".$db->qstr(implode('|',unserialize(strtolower(serialize($filter)))));
+							break;
+						case 'action':
+							$search_filter = str_replace("-","_",$filter);
+							$query .= " AND a.`action` REGEXP ".$db->qstr(implode("|",$search_filter));
+							$date_query .= " AND a.`action` REGEXP ".$db->qstr(implode("|",$search_filter));
+							break;
+						case 'page':
+							$query .= "AND (";
+							$first = true;
+							foreach($filter as $key=>$filter_instance){
+								$raw_filter = explode("-",$filter_instance);
+								$field = $raw_filter[0]."_id";
+								$value = $raw_filter[2];					
+								$query .= ((!$first)?" OR":"")." (a.`action_field` = ".$db->qstr($field)." AND a.`action_value` = ".$db->qstr($value).")";
+								$date_query .= ((!$first)?"  OR":"")." (a.`action_field` = ".$db->qstr($field)." AND a.`action_value` = ".$db->qstr($value).")";
+								$first = false;
+							}
+							$query .=")";
+							break;
+						
+					}
+
+			}
+		}
+	}
+	$statistics = $db->GetAll($query);
+	$dates = $db->GetRow($date_query);
+	if ($statistics){
+		foreach ($statistics as $key=>$statistic){
+			unset($query);
+			switch ($statistic['action_field']){
+				case 'cshare_id':
+					$query = "	SELECT `folder_title` AS `page` 
+								FROM `community_shares` 
+								WHERE `cshare_id` = ".$db->qstr($statistic['action_value']);
+					break;
+				case 'cscomment_id':
+					$query = "	SELECT b.`file_title` AS `page` 
+								FROM `community_share_comments` AS a 
+								LEFT JOIN `community_share_files` AS b 
+								ON a.`csfile_id` = b.`csfile_id` 
+								WHERE a.`cscomment_id` = ".$db->qstr($statistic['action_value']);
+					break;
+				case 'csfile_id':
+					$query = "	SELECT b.`file_title` AS `page` 
+								FROM `community_share_files` A
+								WHERE a.`csfile_id` = ".$db->qstr($statistic['action_value']);
+					break;
+				case 'csfversion_id':
+					$query = "	SELECT b.`file_title` AS `page` 
+								FROM `community_share_file_versions` AS a 
+								LEFT JOIN `community_share_files` AS b 
+								ON a.`csfile_id` = b.`csfile_id` 
+								WHERE a.`csfversion_id` = ".$db->qstr($statistic['action_value']);
+					break;	
+				case 'cannouncement_id':
+					$query = "	SELECT `announcement_title` AS `page` 
+								FROM `community_announcements`
+								WHERE `cannouncement_id` = ".$db->qstr($statistic['action_value']);
+					break;
+				case 'cdiscussion_id':
+					$query = "	SELECT `forum_title` AS `page` 
+								FROM `community_discussions`
+								WHERE `cdiscussion_id` = ".$db->qstr($statistic['action_value']);
+					break;		
+				case 'cdtopic_id':
+					$query = "	SELECT `topic_title` AS `page` 
+								FROM `community_discussion_topics`
+								WHERE `cdtopic_id` = ".$db->qstr($statistic['action_value']);
+					break;	
+				case 'cevent_id':
+					$query = "	SELECT `event_title` AS `page` 
+								FROM `community_events`
+								WHERE `cevent_id` = ".$db->qstr($statistic['action_value']);
+					break;				
+				case 'cgallery_id':
+					$query = "	SELECT `gallery_title` AS `page` 
+								FROM `community_galleries`
+								WHERE `cgallery_id` = ".$db->qstr($statistic['action_value']);
+					break;			
+				case 'cgphoto_id':
+					$query = "	SELECT `photo_title` AS `page` 
+								FROM `community_gallery_photos`
+								WHERE `cgphoto_id` = ".$db->qstr($statistic['action_value']);
+					break;
+				case 'cgcomment_id':
+					$query = "	SELECT a.`gallery_title` AS `page` 
+								FROM `community_galleries` AS a
+								LEFT JOIN `community_gallery_comments` AS b 
+								ON a.`cgaller_id` = b.`cgallery_id`
+								WHERE `cgcomment_id` = ".$db->qstr($statistic['action_value']);
+					break;							
+
+			}
+			if($query){
+				$result = $db->GetOne($query);
+				$statistics[$key]['page'] = $result;
+			}
+		}
+	}
+	
+	return array($statistics,$dates);
+}
+
 /**
  * Function used by public events and admin events index to generate the SQL queries based on the users
  * filter settings and results that can be iterated through by these views.
@@ -9334,6 +9954,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 					WHERE (a.`event_status` = 'published' OR a.`event_status` = 'approval')
 					AND b.`econtact_type` = 'student'
 					AND b.`etype_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+					AND (`events`.`event_children` = 0 OR `events`.`event_children` IS NULL)
 					ORDER BY a.`event_start` ASC";
 		$clerkship_events = $db->GetAll($query);
 		if (isset($clerkship_events) && $clerkship_events) {
@@ -9445,6 +10066,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 
 	$query_events = "	SELECT `events`.`event_id`,
 						`events`.`course_id`,
+						`events`.`parent_id`,
 						`events`.`event_phase`,
 						`events`.`event_title`,
 						`events`.`event_message`,
@@ -9491,6 +10113,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 							ON `courses`.`course_id` = `events`.`course_id`
 							%OBJECTIVE_JOIN%
 							WHERE `courses`.`course_active` = '1'
+							AND (`events`.`event_children` = 0 OR `events`.`event_children` IS NULL)
 							".($filter_clerkship_events && $course_ids_string ? "AND (`courses`.`course_id` NOT IN (".$course_ids_string.")\n OR (".implode("\n", $time_periods)."))" : "")."
 							AND (`events`.`release_date` <= ".$db->qstr(time())." OR `events`.`release_date` = 0)
 							AND (`events`.`release_until` >= ".$db->qstr(time())." OR `events`.`release_until` = 0)
@@ -9510,6 +10133,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 							ON  `courses`.`course_id` = `events`.`course_id`
 							%OBJECTIVE_JOIN%
 							WHERE `courses`.`course_active` = '1'
+							AND (`events`.`event_children` = 0 OR `events`.`event_children` IS NULL)
 							".($filter_clerkship_events && $course_ids_string ? "AND (`courses`.`course_id` NOT IN (".$course_ids_string.")\n OR (".implode("\n", $time_periods)."))" : "")."
 							AND `courses`.`organisation_id` = ".$db->qstr($organisation_id);
 
@@ -9552,8 +10176,8 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 									/**
 									 * Get the small groups of the proxy_id.
 									 */
-									$query = "	SELECT `sgroup_id`
-												FROM `small_group_members`
+									$query = "	SELECT `group_id`
+												FROM `group_members`
 												WHERE `proxy_id` = ".$db->qstr($student_proxy_id)."
 												AND `member_active` = 1";
 									$results = $db->GetAll($query);
@@ -9561,13 +10185,13 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 										$group_ids_string = "";
 										foreach ($results as $result) {
 											if ($group_ids_string) {
-												$group_ids_string = $db->qstr($result["sgroup_id"]);
+												$group_ids_string = $db->qstr($result["group_id"]);
 											} else {
-												$group_ids_string .= ", ".$db->qstr($result["sgroup_id"]);
+												$group_ids_string .= ", ".$db->qstr($result["group_id"]);
 											}
 										}
 										if ($group_ids_string) {
-											$student_groups = "(`event_audience`.`audience_type` = 'small_group' AND `event_audience`.`audience_value` IN (".$group_ids_string.")) OR ";
+											$student_groups = "(`event_audience`.`audience_type` = 'group' AND `event_audience`.`audience_value` IN (".$group_ids_string.")) OR ";
 										}
 									}
 
@@ -9578,7 +10202,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 								$where_grad_year[] = "(`event_audience`.`audience_type` = 'grad_year' AND `event_audience`.`audience_value` = ".$db->qstr((int) $filter_value).")";
 							break;
 							case "smallgroup" :
-								$where_group[] = "(`event_audience`.`audience_type` = 'small_group' AND `event_audience`.`audience_value` = ".$db->qstr((int) $filter_value).")";
+								$where_group[] = "(`event_audience`.`audience_type` = 'group' AND `event_audience`.`audience_value` = ".$db->qstr((int) $filter_value).")";
 							break;
 							case "course" :
 								$where_course[] = "(`events`.`course_id` = ".$db->qstr($filter_value).")";
@@ -9654,6 +10278,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 							LEFT JOIN `courses`
 							ON `events`.`course_id` = `courses`.`course_id`
 							WHERE `courses`.`organisation_id` = ".$db->qstr($organisation_id)."
+							AND (`events`.`event_children` = 0 OR `events`.`event_children` IS NULL)
 							".($filter_clerkship_events && $course_ids_string ? "AND (`courses`.`course_id` NOT IN (".$course_ids_string.")\n OR (".implode("\n", $time_periods)."))" : "")."
 							AND (`events`.`release_date` <= ".$db->qstr(time())." OR `events`.`release_date` = 0)
 							AND (`events`.`release_until` >= ".$db->qstr(time())." OR `events`.`release_until` = 0)
@@ -9669,6 +10294,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 							LEFT JOIN `courses`
 							ON  (`courses`.`course_id` = `events`.`course_id`)
 							WHERE`courses`.`course_active` = '1'
+							AND (`events`.`event_children` = 0 OR `events`.`event_children` IS NULL)
 							".($filter_clerkship_events && $course_ids_string ? "AND (`courses`.`course_id` NOT IN (".$course_ids_string.")\n OR (".implode("\n", $time_periods)."))" : "")."
 							AND `courses`.`organisation_id` = ".$db->qstr($organisation_id)."
 							".(($display_duration) ? "AND `events`.`event_start` BETWEEN ".$db->qstr($display_duration["start"])." AND ".$db->qstr($display_duration["end"]) : "")."
@@ -9767,6 +10393,30 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 					}
 					foreach ($learning_events as &$event) {
 						$event["last_visited"] = $dates_array[$event["event_id"]];
+					}
+				}
+			}
+		}
+		$parent_ids = array();
+		foreach ($learning_events as $event) {
+			if ($event["parent_id"]) {
+				$parent_ids[] = $event["parent_id"];
+			}
+		}
+		if (!empty($parent_ids)) {
+			$query = "	SELECT * FROM `events`
+						WHERE `event_id` IN (".implode(", ", $parent_ids).")
+						GROUP BY `event_id`";
+			$parent_events = $db->GetAll($query);
+			if (!empty($parent_events)) {
+				$parent_events_array = array();
+				foreach ($parent_events as $parent_event) {
+					$parent_events_array[$parent_event["event_id"]] = $parent_event;
+				}
+				foreach ($learning_events as &$event) {
+					if (key_exists($event["parent_id"], $parent_events_array)) {
+						$event["event_title"] = $parent_events_array[$event["parent_id"]]["event_title"]." - ".$event["event_title"];
+						$event["event_phase"] = $parent_events_array[$event["parent_id"]]["event_phase"];
 					}
 				}
 			}
@@ -11628,7 +12278,24 @@ function get_distinct_user_departments() {
 }
 
 /**
- * This function gets determines if a user is a department head
+ * This function gets all of the users in a specific department
+ * @param string $dep_id
+ * @return array $results
+ */
+function get_users_in_department($dep_id) {
+	global $db;
+	
+	$query = "	SELECT `user_id`
+				FROM `".AUTH_DATABASE."`.`user_departments`
+				WHERE `dep_id` IN(".$dep_id.")";
+	
+	$results = $db->GetAll($query);
+	
+	return $results;
+}
+
+/**
+ * This function determines if a user is a department head
  * @param int $user_id
  * @return int $department_id, bool returns false otherwise
  */
@@ -11818,6 +12485,7 @@ function objectives_competency_courses($competency_id = 0) {
 				JOIN `course_objectives` AS b
 				ON a.`course_id` = b.`course_id`
 				AND `objective_id` IN (".objectives_build_objective_descendants_id_string($competency_id).")
+				AND a.`course_active` = 1
 				GROUP BY a.`course_id`";
 	$courses = $db->GetAll($query);
 	if ($courses) {
@@ -12330,7 +12998,7 @@ function evaluations_fetch_attempts($evaluation_id = 0) {
 
 	if ($evaluation_id = (int) $evaluation_id) {
 		$query		= "	SELECT COUNT(*) AS `total`
-						FROM `evaluations_progress`
+						FROM `evaluation_progress`
 						WHERE `evaluation_id` = ".$db->qstr($evaluation_id)."
 						AND `proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
 						AND `progress_value` <> 'inprogress'";

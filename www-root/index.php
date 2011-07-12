@@ -433,7 +433,7 @@ if ((!isset($_SESSION["isAuthorized"])) || (!(bool) $_SESSION["isAuthorized"])) 
 			 */
 			header("Location: ".ENTRADA_URL."/community".$result["community_url"]);
 			exit;
-		} elseif (isset($_SESSION["isAuthorized"]) && $_SESION["isAuthorized"] == true) {
+		} elseif (isset($_SESSION["isAuthorized"]) && $_SESSION["isAuthorized"] == true) {
 			header("Location: ".ENTRADA_URL."/?action=logout");
 			exit;
 		}
@@ -477,6 +477,40 @@ switch ($MODULE) {
 		require_once(ENTRADA_ABSOLUTE.DIRECTORY_SEPARATOR."default-pages".DIRECTORY_SEPARATOR."login.inc.php");
 	break;
 	default :
+		if ($_SESSION["details"]["group"] == "student" && $MODULE != "evaluations") {
+			$query = "SELECT * FROM `evaluations` AS a
+						JOIN `evaluation_evaluators` AS b
+						ON a.`evaluation_id` = b.`evaluation_id`
+						WHERE
+						(
+							(
+								b.`evaluator_type` = 'proxy_id'
+								AND b.`evaluator_value` = ".$db->qstr($_SESSION["details"]["id"])."
+							)
+							OR
+							(
+								b.`evaluator_type` = 'organisation_id'
+								AND b.`evaluator_value` = ".$db->qstr($_SESSION["details"]["organisation_id"])."
+							)".($_SESSION["details"]["group"] == "student" ? " OR (
+								b.`evaluator_type` = 'grad_year'
+								AND b.`evaluator_value` = ".$db->qstr($_SESSION["details"]["role"])."
+							)" : "")."
+						)
+						AND a.`evaluation_finish` < ".$db->qstr(time())."
+						AND a.`evaluation_active` = 1
+						GROUP BY a.`evaluation_id`
+						ORDER BY a.`evaluation_finish` ASC";
+			
+			$evaluations = $db->GetAll($query);
+			foreach ($evaluations as $evaluation) {
+				$completed_attempts = evaluations_fetch_attempts($evaluation["evaluation_id"]);
+				if ($evaluation["min_submittable"] > $completed_attempts) {
+					header("Location: ".ENTRADA_URL."/evaluations?section=attempt&id=".$evaluation["evaluation_id"]);
+					exit;
+				}
+			}
+			
+		}
 		/**
 		 * Initialize Entrada_Router so it can load the requested modules.
 		 */

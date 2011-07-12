@@ -35,19 +35,26 @@ if (!defined("IN_EVALUATIONS")) {
 
 	application_log("error", "Group [".$GROUP."] and role [".$ROLE."] does not have access to this module [".$MODULE."]");
 } else {
+	
 	/**
 	 * Update requested column to sort by.
-	 * Valid: director, name
+	 * Valid: date, teacher, title, phase
 	 */
-    if (isset($_GET["sb"])) {
-		if (@in_array(trim($_GET["sb"]), array("type", "name", "date", "teacher", "director", "notices"))) {
-			$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]	= trim($_GET["sb"]);
+	if(isset($_GET["sb"])) {
+		if(in_array(trim($_GET["sb"]), array("title" , "evaluation_start", "evaluation_finish", "evaluation_type"))) {
+			if (trim($_GET["sb"]) == "title") {
+				$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]	= "title";
+			} elseif (trim($_GET["sb"]) == "evaluation_start") {
+				$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]	= "evaluation_start";
+			} elseif (trim($_GET["sb"]) == "evaluation_finish") {
+				$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]	= "evaluation_finish";
+			} elseif (trim($_GET["sb"]) == "evaluation_type") {
+				$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]	= "evaluation_type";
+			}
 		}
-
-		$_SERVER["QUERY_STRING"] = replace_query(array("sb" => false));
 	} else {
-		if (!isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"])) {
-			$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] = "name";
+		if(!isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"])) {
+				$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]	= "title";
 		}
 	}
 
@@ -97,28 +104,6 @@ if (!defined("IN_EVALUATIONS")) {
 		<div style="clear: both"></div>
 		<?php
 	}
-	
-	/**
-	 * Update requested column to sort by.
-	 * Valid: date, teacher, title, phase
-	 */
-	if(isset($_GET["sb"])) {
-		if(in_array(trim($_GET["sb"]), array("title" , "evaluation_start", "evaluators", "targets"))) {
-			if (trim($_GET["sb"]) == "title") {
-				$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]	= "title";
-			} elseif (trim($_GET["sb"]) == "evaluation_start") {
-				$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]	= "evaluation_start";
-			} elseif (trim($_GET["sb"]) == "evaluators") {
-				$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]	= "evaluators";
-			} elseif (trim($_GET["sb"]) == "targets") {
-				$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]	= "targets";
-			}
-		}
-	} else {
-		if(!isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"])) {
-				$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]	= "title";
-		}
-	}
 
 	/**
 	 * Update requested order to sort by.
@@ -153,12 +138,12 @@ if (!defined("IN_EVALUATIONS")) {
 		case "evaluation_start" :
 			$sort_by = "a.`evaluation_start` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["so"]).", a.`evaluation_title` ASC";
 		break;
-		case "evaluators" :
-			$sort_by = "`evaluator_count` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["so"]).", a.`evaluation_start` ASC";
+		case "evaluation_finish" :
+			$sort_by = "a.`evaluation_finish` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["so"]).", a.`evaluation_title` ASC";
 		break;
-		case "targets" :
+		case "type" :
 		default :
-			$sort_by = "`target_count` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["so"]).", a.`evaluation_start` ASC";
+			$sort_by = "`evaluation_type` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["so"]).", a.`evaluation_start` ASC";
 		break;
 	}
 	
@@ -167,15 +152,15 @@ if (!defined("IN_EVALUATIONS")) {
 					FROM `evaluations`
 					WHERE `evaluation_active` = '1'";
     
-    $query_evaluations = "	SELECT a.`evaluation_id`, a.`evaluation_title`, a.`evaluation_active`, a.`evaluation_start`, COUNT(DISTINCT(b.`eevaluator_id`)) as `evaluator_count`,  COUNT(DISTINCT(c.`etarget_id`)) as `target_count`
-                            FROM `evaluations` AS a
-                            LEFT JOIN `evaluation_evaluators` AS b
-                            ON a.`evaluation_id` = b.`evaluation_id`
-                            LEFT JOIN `evaluation_targets` AS c
-                            ON a.`evaluation_id` = c.`evaluation_id`
-                            GROUP BY a.`evaluation_id`
-                            ORDER BY %s
-                            LIMIT %s, %s";
+    $query_evaluations = "	SELECT a.`evaluation_id`, a.`evaluation_title`, a.`evaluation_active`, a.`evaluation_start`, a.`evaluation_finish`, c.`target_shortname` AS `evaluation_type`
+							FROM `evaluations` AS a
+							JOIN `evaluation_targets` AS b
+							ON a.`evaluation_id` = b.`evaluation_id`
+							JOIN `evaluations_lu_targets` AS c
+							ON b.`target_id` = c.`target_id`
+							GROUP BY a.`evaluation_id`
+							ORDER BY %s
+							LIMIT %s, %s";
 
 	/**
 	 * Get the total number of results using the generated queries above and calculate the total number
@@ -266,7 +251,7 @@ if (!defined("IN_EVALUATIONS")) {
 				<col class="title" />
 				<col class="date" />
 				<col class="targets" />
-				<col class="evaluators" />
+				<col class="date-smallest" />
 				<col class="attachment" />
 			</colgroup>
 			<thead>
@@ -274,8 +259,8 @@ if (!defined("IN_EVALUATIONS")) {
 					<td class="modified">&nbsp;</td>
 					<td class="title<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "title") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("title", "Title"); ?></td>
 					<td class="date<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "evaluation_start") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("evaluation_start", "Evaluation Start"); ?></td>
-					<td class="targets<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "targets") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("targets", "Evaluation Targets"); ?></td>
-					<td class="evaluators<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "evaluators") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("evaluators", "Evaluators"); ?></td>
+					<td class="date<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "evaluation_finish") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("evaluation_finish", "Evaluation Finish"); ?></td>
+					<td class="date-smallest<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "type") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("type", "Evaluation Type"); ?></td>
 					<td class="attachment">&nbsp;</td>
 				</tr>
 			</thead>
@@ -298,8 +283,8 @@ if (!defined("IN_EVALUATIONS")) {
 				echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"checked[]\" value=\"".$result["evaluation_id"]."\" /></td>\n";
 				echo "	<td class=\"title\"><a href=\"".$url."\">".html_encode($result["evaluation_title"])."</a></td>\n";
 				echo "	<td class=\"date\"><a href=\"".$url."\">".date(DEFAULT_DATE_FORMAT, $result["evaluation_start"])."</a></td>\n";
-				echo "	<td class=\"target\"><a href=\"".$url."\">".html_encode($result["target_count"])."</a></td>\n";
-				echo "	<td class=\"evaluator\"><a href=\"".$url."\">".html_encode($result["evaluator_count"])."</a></td>\n";
+				echo "	<td class=\"target\"><a href=\"".$url."\">".date(DEFAULT_DATE_FORMAT, $result["evaluation_finish"])."</a></td>\n";
+				echo "	<td class=\"date-smallest\"><a href=\"".$url."\">".html_encode($result["evaluation_type"])."</a></td>\n";
 				echo "	<td class=\"attachment\"><a href=\"".ENTRADA_URL."/admin/evaluations?section=edit&id=".$result["evaluation_id"]."\"><img src=\"".ENTRADA_URL."/images/action-edit.gif\" width=\"16\" height=\"16\" alt=\"Manage Evaluation Detail\" title=\"Manage Evaluation Detail\" border=\"0\" /></a></td>\n";
 				echo "</tr>\n";
 			}
@@ -329,9 +314,9 @@ if (!defined("IN_EVALUATIONS")) {
 	$sidebar_html  = "Sort columns:\n";
 	$sidebar_html .= "<ul class=\"menu\">\n";
 	$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) == "title") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/evaluations?".replace_query(array("sb" => "title"))."\" title=\"Sort by Evaluation Title\">by evaluation title</a></li>\n";
-	$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) == "evaluation_start") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/evaluations?".replace_query(array("sb" => "evaluation_start"))."\" title=\"Sort by Date &amp; Time\">by date &amp; time</a></li>\n";
-	$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) == "targets") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/evaluations?".replace_query(array("sb" => "targets"))."\" title=\"Sort by Evaluation Targets\">by evaluation targets</a></li>\n";
-	$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) == "evaluators") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/evaluations?".replace_query(array("sb" => "evaluators"))."\" title=\"Sort by Evaluators\">by evaluators</a></li>\n";
+	$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) == "evaluation_start") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/evaluations?".replace_query(array("sb" => "evaluation_start"))."\" title=\"Sort by Evaluation Start\">by evaluation start</a></li>\n";
+	$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) == "evalluation_finish") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/evaluations?".replace_query(array("sb" => "evaluation_finish"))."\" title=\"Sort by Evaluation Finish\">by evaluation finish</a></li>\n";
+	$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) == "evaluation_type") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/evaluations?".replace_query(array("sb" => "evaluation_type"))."\" title=\"Sort by Evaluation Type\">by evaluation type</a></li>\n";
 	$sidebar_html .= "</ul>\n";
 	$sidebar_html .= "Order columns:\n";
 	$sidebar_html .= "<ul class=\"menu\">\n";

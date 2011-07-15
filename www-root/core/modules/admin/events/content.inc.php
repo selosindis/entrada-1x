@@ -40,6 +40,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
+
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/eventtypes_list.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 ?>
 <script type="text/javascript" charset="utf-8">
@@ -212,7 +213,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								ON a.`eventtype_id` = c.`eventtype_id` 
 								LEFT JOIN `".AUTH_DATABASE."`.`organisations` AS b
 								ON b.`organisation_id` = c.`organisation_id` 
-								WHERE b.`organisation_id` = ".$db->qstr($_SESSION["details"]["organisation_id"])."
+								WHERE b.`organisation_id` = ".$db->qstr($user->getActiveOrganisation())."
 								AND a.`eventtype_active` = '1' 
 								ORDER BY a.`eventtype_order`
 				";

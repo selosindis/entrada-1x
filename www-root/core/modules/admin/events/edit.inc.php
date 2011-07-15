@@ -47,7 +47,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					AND b.`course_active` = '1'";
 		$event_info	= $db->GetRow($query);
 		if ($event_info) {
-			if (!$ENTRADA_ACL->amIAllowed(new EventResource($event_info["event_id"], $event_info["course_id"], $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"]), 'update')) {
+			if (!$ENTRADA_ACL->amIAllowed(new EventResource($event_info["event_id"], $event_info["course_id"], $user->getActiveOrganisation()), 'update')) {
 				application_log("error", "A program coordinator attempted to edit an event [".$EVENT_ID."] that they were not the coordinator for.");
 				header("Location: ".ENTRADA_URL."/admin/".$MODULE);
 				exit;
@@ -242,7 +242,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 										AND `course_active` = '1'";
 							$result	= $db->GetRow($query);
 							if ($result) {
-								if ($ENTRADA_ACL->amIAllowed(new EventResource(null, $course_id, $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"]), "create")) {
+								if ($ENTRADA_ACL->amIAllowed(new EventResource(null, $course_id, $user->getActiveOrganisation()), "create")) {
 									$PROCESSED["course_id"] = $course_id;
 								} else {
 									$ERROR++;
@@ -447,7 +447,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 									LEFT JOIN `".AUTH_DATABASE."`.`organisations` AS `org` 
 									ON `type_org`.`organisation_id` = `org`.`organisation_id` 
 									WHERE `types`.`event_id` = ".$db->qstr($EVENT_ID)." 
-									AND `type_org`.`organisation_id` = ".$db->qstr($_SESSION["details"]["organisation_id"])." 
+									AND `type_org`.`organisation_id` = ".$db->qstr($user->getActiveOrganisation())."
 									ORDER BY `types`.`eventtype_id` ASC";
 						$results = $db->GetAll($query);
 						if ($results) {
@@ -604,7 +604,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 																ON a.`eventtype_id` = c.`eventtype_id` 
 																LEFT JOIN `".AUTH_DATABASE."`.`organisations` AS b
 																ON b.`organisation_id` = c.`organisation_id` 
-																WHERE b.`organisation_id` = ".$db->qstr($_SESSION["details"]["organisation_id"])."
+																WHERE b.`organisation_id` = ".$db->qstr($user->getActiveOrganisation())."
 																AND a.`eventtype_active` = '1' 
 																ORDER BY a.`eventtype_order`
 													";
@@ -702,7 +702,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 										$results	= $db->GetAll($query);
 										if ($results) {
 											foreach($results as $result) {
-												if ($ENTRADA_ACL->amIAllowed(new EventResource(null, $result["course_id"], $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"]), "create")) {
+												if ($ENTRADA_ACL->amIAllowed(new EventResource(null, $result["course_id"], $user->getActiveOrganisation()), "create")) {
 													echo "<option value=\"".(int) $result["course_id"]."\"".(($PROCESSED["course_id"] == $result["course_id"]) ? " selected=\"selected\"" : "").">".html_encode($result["course_name"])."</option>\n";
 												}
 											}
@@ -779,7 +779,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								<tr>
 									<td colspan="3">&nbsp;</td>
 								</tr>
-								<?php if ($ENTRADA_ACL->amIAllowed(new EventResource(null, null, $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"]),'create')) { ?>
+								<?php if ($ENTRADA_ACL->amIAllowed(new EventResource(null, null, $user->getActiveOrganisation()),'create')) { ?>
 								<tr>
 									<td style="vertical-align: top"><input type="radio" name="event_audience_type" id="event_audience_type_organisation_id" value="organisation_id" onclick="selectEventAudienceOption('organisation_id')" style="vertical-align: middle"<?php echo (($PROCESSED["event_audience_type"] == "organisation_id") ? " checked=\"checked\"" : ""); ?> /></td>
 									<td colspan="2" style="padding-bottom: 15px">

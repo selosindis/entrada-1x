@@ -35,6 +35,13 @@
  * Include the Entrada init code.
  */
 require_once("init.inc.php");
+
+if (isset($_GET["organisation_id"])) {
+	$organisation = clean_input($_GET["organisation_id"], array("trim", "notags", "int"));
+	$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"] = $organisation;
+	$user->setActiveOrganisation($organisation);
+}
+
 ob_start("on_checkout");
 
 $PROCEED_TO = ((isset($_GET["url"])) ? clean_input($_GET["url"], "trim") : ((isset($_SERVER["REQUEST_URI"])) ? clean_input($_SERVER["REQUEST_URI"], "trim") : false));
@@ -433,7 +440,7 @@ if ((!isset($_SESSION["isAuthorized"])) || (!(bool) $_SESSION["isAuthorized"])) 
 			 */
 			header("Location: ".ENTRADA_URL."/community".$result["community_url"]);
 			exit;
-		} elseif (isset($_SESSION["isAuthorized"]) && $_SESION["isAuthorized"] == true) {
+		} elseif (isset($_SESSION["isAuthorized"]) && $_SESSION["isAuthorized"] == true) {
 			header("Location: ".ENTRADA_URL."/?action=logout");
 			exit;
 		}
@@ -531,4 +538,22 @@ if ((isset($_SESSION["isAuthorized"])) && ($_SESSION["isAuthorized"])) {
 	$sidebar_html  = "<a href=\"javascript: sendFeedback('".ENTRADA_URL."/agent-feedback.php?enc=".feedback_enc()."')\"><img src=\"".ENTRADA_URL."/images/feedback.gif\" width=\"48\" height=\"48\" alt=\"Give Feedback\" border=\"0\" align=\"right\" hspace=\"3\" vspace=\"5\" /></a>";
 	$sidebar_html .= "Giving feedback is a very important part of application development. Please <a href=\"javascript: sendFeedback('".ENTRADA_URL."/agent-feedback.php?enc=".feedback_enc()."')\" style=\"font-size: 11px; font-weight: bold\">click here</a> to send us any feedback you may have about <u>this</u> page.<br /><br />\n";
 	new_sidebar_item("Feedback", $sidebar_html, "page-feedback", "open");
+
+	/**
+	 * Create the Organisation side bar.
+	 * If the org request attribute is set then change the current org id for this user.
+	 */
+	if ($user->getAllOrganisations() && count($user->getAllOrganisations()) > 1) {
+		$sidebar_html = "<ul class=\"menu\">\n";
+		foreach ($user->getAllOrganisations() as $key => $organisation_title) {
+			if ($key == $user->getActiveOrganisation()) {
+				$sidebar_html .= "<li class=\"on\"><a href=\"" . ENTRADA_URL . "/" . $MODULE . "/" . "?" . replace_query(array("organisation_id" => $key)) . "\">" . html_encode($organisation_title) . "</a></li>\n";
+			} else {
+				$sidebar_html .= "<li class=\"off\"><a href=\"" . ENTRADA_URL . "/" . $MODULE . "/" . "?" . replace_query(array("organisation_id" => $key)) . "\">" . html_encode($organisation_title) . "</a></li>\n";
+			}
+		}
+		$sidebar_html .= "</ul>\n";
+
+		new_sidebar_item("Organisations", $sidebar_html, "org-switch", "open", SIDEBAR_PREPEND);
+	}
 }

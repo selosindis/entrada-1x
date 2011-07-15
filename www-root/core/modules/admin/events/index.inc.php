@@ -52,7 +52,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 	 * Check if preferences need to be updated.
 	 */
 	preferences_update($MODULE, $PREFERENCES);
-
+	
 	/**
 	 * Fetch all of the events that apply to the current filter set.
 	 */
@@ -60,7 +60,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"],
 			$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"],
 			$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"],
-			$ORGANISATION_ID,
+			$user->getActiveOrganisation(),
 			$_SESSION[APPLICATION_IDENTIFIER]["events"]["sb"],
 			$_SESSION[APPLICATION_IDENTIFIER]["events"]["so"],
 			$_SESSION[APPLICATION_IDENTIFIER]["events"]["dtype"],

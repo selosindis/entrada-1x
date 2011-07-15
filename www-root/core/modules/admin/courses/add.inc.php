@@ -230,6 +230,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					$posted_objectives["tertiary"][] = clean_input($objective, "int");
 				}
 			}
+
+			/**
+			 * Check to see if the course is open or private.
+			 */
+			if ((isset($_POST["course_permission"])) && ($perm = clean_input($_POST["course_permission"], array("trim","notags")))) {
+				$PROCESSED["permission"] = $perm;
+			} else {
+				$PROCESSED["permission"] = "closed";
+			}
 			
 			if (!$ERROR) {
 				$PROCESSED["updated_date"]	= time();
@@ -313,22 +322,25 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								$db->Execute("INSERT INTO `course_objectives` SET `course_id` = ".$db->qstr($COURSE_ID).", `objective_id` = ".$db->qstr($objective_id).", `updated_date` = ".$db->qstr(time()).", `updated_by` = ".$db->qstr($_SESSION["details"]["id"]).", `importance` = '3'");
 							}
 						}
-
 						
-						
-						if((isset($_POST["enroll_start"])) && ($start = clean_input($_POST["enroll_start"],array("notags","trim")))){
-							$enroll_start = $start;
-						}
-						else{
+						$enrollment_date = validate_calendars("enrollment", false, false,false);
+						if ((isset($enrollment_date["start"])) && ((int) $enrollment_date["start"])) {
+							$PROCESSED["enrollment_start"] = (int) $enrollment_date["start"];
+							$enroll_start = $PROCESSED["enrollment_start"];
+						} else {
+							$PROCESSED["enrollment_start"] = 0;
 							$enroll_start = mktime(0, 0, 0, date("m"), date("d"), date("y"));
 						}
-						if((isset($_POST["enroll_end"])) && ($end = clean_input($_POST["enroll_end"],array("notags","trim")))){
-							$enroll_end = $end;
-						}
-						else{
+						if ((isset($enrollment_date["finish"])) && ((int) $enrollment_date["finish"])) {
+							$PROCESSED["enrollment_end"] = (int) $enrollment_date["finish"];
+							$enroll_end = $PROCESSED["enrollment_end"];
+						} else {
+							$PROCESSED["enrollment_end"] = 0;
 							$enroll_end =  mktime(0, 0, 0, date("m"), date("d"), date("y")+1);
 						}
-												
+						
+						
+						
 						
 						
 						if (isset($_POST["group_order"])) {
@@ -1101,6 +1113,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			<h2>Course Audience</h2>
 			<div>
 				<table>
+					<tr>
+						<td style="vertical-align: top"><input type="radio" name="course_permission" id="course_permission_closed" value="closed"  style="vertical-align: middle" checked="checked" /></td>
+						<td colspan="2" style="padding-bottom: 15px">
+							<label for="event_audience_type_course" class="radio-group-title">This course is private.</label>
+							<div class="content-small">This course is only viewable by its members.</div>
+						</td>
+					</tr>
+					<tr>
+						<td style="vertical-align: top"><input type="radio" name="course_permission" id="course_permission_open" value="open"  style="vertical-align: middle"<?php echo (($PROCESSED["permission"] == "open") ? " checked=\"checked\"" : ""); ?> /></td>
+						<td colspan="2" style="padding-bottom: 15px">
+							<label for="event_audience_type_course" class="radio-group-title">This course is open.</label>
+							<div class="content-small">This course is viewable by everyone.</div>
+						</td>
+					</tr>						
 					<tr class="course_audience group_audience">
 						<td></td>
 						<td><label for="group_ids" class="form-required">Associated Groups</label></td>
@@ -1136,7 +1162,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					<tr>
 						<td colspan="3">&nbsp;</td>
 					</tr>
-					<tr class="group_audience proxy_id_audience">
+					<tr class="course_audience proxy_id_audience">
 						<td></td>
 						<td style="vertical-align: top"><label for="associated_proxy_ids" class="form-required">Associated Students</label></td>
 						<td>
@@ -1166,10 +1192,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							<input type="hidden" id="student_id" name="student_id" value="" />
 						</td>
 					</tr>
+					<?php echo generate_calendars("enrollment", "", true, false, ((isset($PROCESSED["enrollment_start"])) ? $PROCESSED["enrollment_start"] : 0), true, false, ((isset($PROCESSED["enrollment_end"])) ? $PROCESSED["enrollment_end"] : 0),false); ?>					
 
 				</table>
 			</div>
 			<script type="text/javascript">
+			
+				function selectCourseAudienceOption(type) {
+					$$('.course_audience').invoke('hide');
+					$$('.'+type+'_audience').invoke('show');
+				}
+
 				$('student_list').observe('change', checkConditions);
 				$('group_order').observe('change', checkConditions);
 				

@@ -1598,6 +1598,7 @@ CREATE TABLE IF NOT EXISTS `courses` (
   `course_objectives` text,
   `course_url` text,
   `course_message` text NOT NULL,
+  `permission` ENUM('open','closed') NOT NULL DEFAULT 'closed',
   `notifications` int(1) NOT NULL DEFAULT '1',
   `course_active` int(1) NOT NULL DEFAULT '1',
   PRIMARY KEY  (`course_id`),
@@ -3819,6 +3820,7 @@ CREATE TABLE IF NOT EXISTS `eventtype_organisation`(
 CREATE TABLE IF NOT EXISTS `groups` (
   `group_id` int(12) NOT NULL AUTO_INCREMENT,
   `group_name` varchar(255) NOT NULL,
+  `parent_id` INT DEFAULT NULL,
   `group_active` int(1) NOT NULL DEFAULT '1',
   `updated_date` bigint(64) NOT NULL,
   `updated_by` int(12) NOT NULL,
@@ -3917,3 +3919,8 @@ CREATE TABLE `course_audience`(
  KEY `audience_value` (`audience_value`), 
  KEY `audience_active` (`audience_active`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE `group_organisation`(
+	`group_id` INT NOT NULL, 
+	`organisation_id` INT NOT NULL
+) ENGINE=MyISAM DEFAULT CHARSET = utf8;

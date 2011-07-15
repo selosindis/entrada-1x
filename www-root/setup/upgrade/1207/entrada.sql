@@ -14,4 +14,12 @@ CREATE TABLE `course_audience`(
  KEY `audience_active` (`audience_active`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
+
+CREATE TABLE `group_organisation`(
+	`group_id` INT NOT NULL, 
+	`organisation_id` INT NOT NULL
+) ENGINE=MyISAM DEFAULT CHARSET = utf8;
+
 ALTER TABLE `event_audience` MODIFY `audience_type` ENUM('proxy_id','grad_year','organisation_id','course');
+ALTER TABLE `courses` ADD COLUMN `permission` ENUM('open','closed') NOT NULL DEFAULT 'closed' AFTER `course_message`;
+ALTER TABLE `groups` ADD COLUMN `parent_id` INT DEFAULT NULL AFTER `group_name`;

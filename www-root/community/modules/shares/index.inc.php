@@ -92,7 +92,7 @@ if (communities_module_access($COMMUNITY_ID, $MODULE_ID, "delete-folder")) {
 
 				echo "<li class=\"folder-".(((int) $result["folder_icon"]) ? (int) $result["folder_icon"] : 1)."\">\n";
 				echo "	<div".((!$accessible) ? " class=\"na\" style=\"padding: 4px\"" : "").">\n";
-				echo "		".( (($COMMUNITY_MEMBER) ? ((!$COMMUNITY_ADMIN) ? $result["allow_member_upload"] == 1 && !$result["allow_member_read"] == 1 : false ) : $result["allow_troll_upload"] == 1 && !$result["allow_troll_read"] == 1 ) ? "<span id=\"folder-".(int) $result["cshare_id"]."-title\" style=\"font-weight: bold\">".html_encode($result["folder_title"])."</span>\n" : "<a id=\"folder-".(int) $result["cshare_id"]."-title\" href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-folder&amp;id=".$result["cshare_id"]."\" style=\"font-weight: bold\">".html_encode($result["folder_title"])."</a>\n");
+				echo "		".( (($COMMUNITY_MEMBER) ? ((!$COMMUNITY_ADMIN) ? $result["allow_member_upload"] == 1 && !$result["allow_member_read"] == 1 : false ) : $result["allow_troll_upload"] == 1 && !$result["allow_troll_read"] == 1 ) ? "<span id=\"folder-".(int) $result["cshare_id"]."-title\" style=\"font-weight: bold\">".html_encode($result["folder_title"])."</span>\n" : "<a id=\"folder-".(int) $result["cshare_id"]."-title\" href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-folder&amp;id=".$result["cshare_id"]."\" style=\"font-weight: bold\">".html_encode(limit_chars($result["folder_title"],58))."</a>\n");
 				echo "		<span class=\"content-small\">(".$files["total_files"]." files)</span>";
 				/** 
 				 * "?section=add-file&amp;id=".$result["cshare_id"]

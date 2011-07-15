@@ -49,12 +49,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 					$query = "SELECT * FROM `".AUTH_DATABASE."`.`organisations` WHERE `organisation_id` = ".$db->qstr($ORGANISATION_ID);
 
 					$ORGANISATION = $db->GetRow($query);
-					$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/configuration/organisations/manage?id=".$ORGANISATION['organisation_id'], "title" => $ORGANISATION["organisation_title"]);
+					$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/configuration/organisations/manage?org=".$ORGANISATION['organisation_id'], "title" => $ORGANISATION["organisation_title"]);
 
 					$sidebar_html  = "<ul class=\"menu\">";
 					$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/configuration/organisations/manage/objectives?org=".$ORGANISATION_ID."\">Manage Objectives</a></li>\n";
 					$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/configuration/organisations/manage/eventtypes?org=".$ORGANISATION_ID."\">Manage Eventtypes</a></li>\n";
 					$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/configuration/organisations/manage/hottopics?org=".$ORGANISATION_ID."\">Manage Hot Topics</a></li>\n";
+					$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/configuration/organisations/manage/metadata?org=".$ORGANISATION_ID."\">Manage Meta Data</a></li>\n";
 					$sidebar_html .= "</ul>";
 					new_sidebar_item("Organisation Management", $sidebar_html, "config-org-nav", "open");
 

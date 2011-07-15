@@ -1,5 +1,6 @@
 UPDATE `settings` SET `value` = '1207' WHERE `shortname` = 'version_db';
 
+ALTER TABLE `events` ADD `parent_id` int(11) NOT NULL AFTER `event_id`;
 ALTER TABLE `events` ADD `event_children` int(11) NOT NULL AFTER `parent_id`;
 ALTER TABLE `events` ADD `include_parent_description` tinyint(1) NOT NULL DEFAULT 1 AFTER `event_description`;
 ALTER TABLE `events` ADD `include_parent_message` int(11) NOT NULL DEFAULT 1 AFTER `event_message`;

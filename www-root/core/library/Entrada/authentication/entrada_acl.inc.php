@@ -20,6 +20,7 @@ class Entrada_ACL extends ACL_Factory {
 		"mom" => array (
 			"awards",
 			"community",
+			"configuration",
 			"course" => array (
 				"coursecontent",
 				"event" => array (
@@ -945,25 +946,25 @@ class ResourceOrganisationAssertion implements Zend_Acl_Assert_Interface {
 		if(isset($resource->organisation_id) && $acl->has("resourceorganisation".$resource->organisation_id)) {
 			return $acl->isAllowed($role, "resourceorganisation".$resource->organisation_id, $privilege);
 		} else {
-		//Otherwise, look at the object that the query was first made upon, which will have some information about it which hopefully can be used to figure out the organisation_id
-			if(isset($acl->_entrada_last_query)) {
+			//Otherwise, look at the object that the query was first made upon, which will have some information about it which hopefully can be used to figure out the organisation_id
+			if (isset($acl->_entrada_last_query)) {
 			//Use the organisation ID if provided
-				if(isset($acl->_entrada_last_query->organisation_id)) {
+				if (isset($acl->_entrada_last_query->organisation_id)) {
 					$organisation_id = $acl->_entrada_last_query->organisation_id;
 				} else {
 					global $db;
 					//Use the course ID if nessecary
-					if(isset($acl->_entrada_last_query->course_id) && $coourse_id != 0) {
-						$query	= "	SELECT `organisation_id` FROM `courses`
+					if (isset($acl->_entrada_last_query->course_id) && ($acl->_entrada_last_query->course_id != 0)) {
+						$query = "	SELECT `organisation_id` FROM `courses`
 									WHERE `course_id` = ".$db->qstr($acl->_entrada_last_query->course_id)."
 									AND `course_active` = '1'";
 						$result = $db->GetRow($query);
-						if($result) {
+						if ($result) {
 							$organisation_id = $result["organisation_id"];
 						}
-					} else if(isset($acl->_entrada_last_query->event_id)) {
+					} elseif (isset($acl->_entrada_last_query->event_id) && ($acl->_entrada_last_query->event_id != 0)) {
 						//Use the event ID if nessecary
-						$query	= "	SELECT a.`course_id`, b.`organisation_id` AS course_organisation_id, d.`audience_value` AS event_organisation_id
+						$query = "	SELECT a.`course_id`, b.`organisation_id` AS course_organisation_id, d.`audience_value` AS event_organisation_id
 									FROM `events` AS a
 									LEFT JOIN `courses` AS b
 									ON b.`course_id` = a.`course_id`
@@ -972,25 +973,24 @@ class ResourceOrganisationAssertion implements Zend_Acl_Assert_Interface {
 									AND d.`audience_type` = 'organisation_id'
 									WHERE b.`course_active` = '1'
 									ORDER BY b.`organisation_id`";
-							$result = $db->GetRow($query);
-							if($result) {
-								if(isset($result["course_organisation_id"])) {
-									$organisation_id = $result["course_organisation_id"];
-								} else if (isset($result["event_organisation_id"])) {
-									$organisation_id = $result["event_organisation_id"];
-								}
+						$result = $db->GetRow($query);
+						if ($result) {
+							if (isset($result["course_organisation_id"])) {
+								$organisation_id = $result["course_organisation_id"];
+							} elseif (isset($result["event_organisation_id"])) {
+								$organisation_id = $result["event_organisation_id"];
 							}
 						}
+					}
 				}
 
-				if(isset($organisation_id) && $acl->has("resourceorganisation".$organisation_id)) {
+				if (isset($organisation_id) && $acl->has("resourceorganisation".$organisation_id)) {
 					//Return this role's ability to preform this privilege on this organisation.
 					return $acl->isAllowed($role, "resourceorganisation".$organisation_id, $privilege);
-				} elseif (!isset($organisation_id) || !$organisation_id) {
-					return false;
 				}
 			}
 		}
+		
 		return false;
 	}
 }
@@ -1608,6 +1608,29 @@ class NoticeResource extends EntradaAclResource {
 	 */
 	public function getResourceId() {
 		return "notice";
+	}
+}
+
+/**
+ * Configuration Resource
+ *
+ * @author Organisation: Queen's University
+ * @author Unit: School of Medicine
+ * @author Developer: Matt Simpson <simpson@queensu.ca>
+ * @copyright Copyright 2010 Queen's University. All Rights Reserved.
+ */
+class ConfigurationResource extends EntradaAclResource {
+	var $organisation_id;
+
+	function __construct($organisation_id, $assert = null) {
+		$this->organisation_id = $organisation_id;
+		if(isset($assert)) {
+			$this->assert = $assert;
+		}
+	}
+
+	public function getResourceId() {
+		return "configuration";
 	}
 }
 

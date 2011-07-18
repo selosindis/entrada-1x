@@ -111,56 +111,56 @@ function award_recipients_list(InternalAward $award) {
 		<?php
 }
 
-function awards_list($awards) {
-	?>
-
-			<table class="manage_awards tableList" cellspacing="0" summary="List of Awards">
-			<colgroup>
-				<col class="title" width="45%" />
-				<col class="award_terms" width="50%" />
-				<col class="controls" width="5%" />
-			</colgroup>
-			<thead>
-				<tr>
-					<td class="title sortedASC" style="font-size: 12px"><div class="noLink">Title</div></td>
-					<td class="award_terms" style="font-size: 12px">Terms of Award</td>
-					<td class="controls">&nbsp;</td>
-				</tr>
-			</thead>
-			<tbody>
-				
-		<?php 
-			
-			foreach($awards as $award) {
-				?>
-				<tr<?php if ($award->isDisabled()) echo " class=\"disabled\""; ?>>
-					<td class="title"><a href="<?php echo ENTRADA_URL; ?>/admin/awards?section=award_details&id=<?php echo $award->getID(); ?>">
-						<?php echo clean_input($award->getTitle(), array("notags", "specialchars")) ?></a>	
-					</td>
-					<td class="award_terms">
-						<?php
-						$award_terms =clean_input($award->getTerms(), array("notags", "specialchars"));
-						if (strlen($award_terms) > 152) {
-							$award_terms = preg_replace("/([\s\S]{150,}?[\.\s,])[\s\S]*/","$1...",$award_terms );
-						}
-						echo $award_terms; ?>	
-					</td>
-					<td class="controls">
-						<form class="remove_award_form" action="<?php echo ENTRADA_URL; ?>/admin/awards?id=<?php echo $award_id; ?>" method="post" >
-							<input type="hidden" name="award_id" value="<?php echo clean_input($award->getID(), array("notags", "specialchars")); ?>"></input>
-							<input type="hidden" name="action" value="remove_award"></input>
-							
-							<input type="image" src="<?php echo ENTRADA_URL ?>/images/action-delete.gif"></input> 
-						</form></td>
-				</tr>
-				<?php 
-				
-			}
-		
+function awards_list($awards = array()) {
+	if (is_array($awards) && !empty($awards)) {
 		?>
-			</tbody>
-			</table>
-			<?php
+		<table class="manage_awards tableList" cellspacing="0" summary="List of Awards">
+		<colgroup>
+			<col class="title" width="45%" />
+			<col class="award_terms" width="50%" />
+			<col class="controls" width="5%" />
+		</colgroup>
+		<thead>
+			<tr>
+				<td class="title sortedASC borderl" style="font-size: 12px"><div class="noLink">Title</div></td>
+				<td class="award_terms" style="font-size: 12px">Terms of Award</td>
+				<td class="controls">&nbsp;</td>
+			</tr>
+		</thead>
+		<tbody>
+		<?php 
+		foreach($awards as $award) {
+			?>
+			<tr<?php if ($award->isDisabled()) echo " class=\"disabled\""; ?>>
+				<td class="title"><a href="<?php echo ENTRADA_URL; ?>/admin/awards?section=award_details&id=<?php echo $award->getID(); ?>">
+					<?php echo clean_input($award->getTitle(), array("notags", "specialchars")) ?></a>	
+				</td>
+				<td class="award_terms">
+					<?php
+					$award_terms = clean_input($award->getTerms(), array("notags", "specialchars"));
+					if (strlen($award_terms) > 152) {
+						$award_terms = preg_replace("/([\s\S]{150,}?[\.\s,])[\s\S]*/", "$1...", $award_terms );
+					}
+					echo $award_terms; ?>	
+				</td>
+				<td class="controls">
+					<form class="remove_award_form" action="<?php echo ENTRADA_URL; ?>/admin/awards?id=<?php echo $award_id; ?>" method="post" >
+						<input type="hidden" name="award_id" value="<?php echo clean_input($award->getID(), array("notags", "specialchars")); ?>"></input>
+						<input type="hidden" name="action" value="remove_award"></input>
+						
+						<input type="image" src="<?php echo ENTRADA_URL ?>/images/action-delete.gif"></input> 
+					</form>
+				</td>
+			</tr>
+			<?php 
+		}
+		?>
+		</tbody>
+		</table>
+		<?php
+	} else {
+		echo display_notice(array("There are no awards in the system at this time, please click <strong>Add Award</strong> to begin."));
+	}
 }
 
 

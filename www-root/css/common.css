@@ -858,9 +858,42 @@ font-size:11px;
 padding:2px 3px;
 }
 
-#pagination-links a:hover {
+#pagination-buttons {
+height:21px;
+font-size:11px;
+color:#999;
+position: absolute;
+bottom: 35px;
+}
+
+#pagination-buttons div {
+float: left;
+border:1px #CCC solid;
+background-color:#E9E9E9;
+color:#333;
+font-size:11px;
+padding:2px 3px;
+cursor: pointer;
+}
+
+
+#pagination-buttons div.large-button {
+width: 31px;
+}
+
+#pagination-buttons div.small-button {
+width: 20px;
+text-align: center;
+}
+
+#pagination-links a:hover,
+#pagination-buttons div:hover {
 background-color:#CCC;
 color:#000;
+}
+
+#pagination-buttons a:hover {
+text-decoration: none;
 }
 
 #pagination-links span.active {
@@ -2722,7 +2755,7 @@ div#associated_faculty_list ul.menu li.community,div#associated_student_list ul.
 cursor:move;
 }
 
-ul#faculty_list,ul#student_list,ul#director_list,ul#coordinator_list,ul#individual_list,ul#verifier_list,ul#author_list,ul#small_group_list {
+ul#faculty_list,ul#audience_list,ul#session_faculty_list,ul#student_list,ul#director_list,ul#coordinator_list,ul#individual_list,ul#verifier_list,ul#author_list,ul#group_list {
 width:250px;
 overflow:none;
 position:relative;
@@ -2786,11 +2819,16 @@ border:0px;
 
 ul li.logbook-entry {
 margin:8px 15px 0px 0px;
-text-align: center;
+text-align:center;
 }
 
 a.logbook-entry {
 cursor:pointer;
+}
+
+.event-session {
+white-space: nowrap;
+overflow: hidden;
 }
 
 ul li.flagged {
@@ -3279,4 +3317,86 @@ form#meta_data_form {
 	padding:15px;
 	height:auto;
 	width:auto;
+}
+
+.audience_dialog { 
+	z-index: 100000;
+	top: 80px;
+	left: 220px;
+}
+
+.session-list .selected {
+	background-color: #CCCCCC;
+}
+
+.session-list .disabled {
+	background-color: #DEDEDE;
+	cursor: default;
+	color: #BBBBBB;
+}
+
+.session-list .enabled:hover {
+	cursor: pointer;
+	background-color: #BBBBBB;
+}
+
+.session-pane-left .session-button:hover {
+	background-color: #DDDDDD;
+}
+
+.session-pane-left .session-button {
+	float: left; 
+	height: 27px; 
+	width: 50px; 
+	text-align: center; 
+	padding: 8px 0 0 0;
+	cursor: pointer;
+}
+
+.session-button.disabled {
+	background-color: #DEDEDE;
+	cursor: default;
+	color: #BBBBBB;
+}
+
+.session-pane-left .remove-button {
+	border-left: 1px solid #CCCCCC; 
+	border-right: 1px solid #CCCCCC;
+}
+
+.session-pane-left .edit-button {
+	width: 32px;
+}
+
+.session-pane-left {
+	width: 18%; 
+	float: left; 
+	height: 625px; 
+	border: 1px solid #CCCCCC; 
+	border-right: none; 
+	position: relative;
+}
+
+.session-pane-right {
+	position: relative;
+	width: 78%; 
+	border: 1px solid #CCCCCC; 
+	float: left; 
+	height: 620px; 
+	overflow: auto; 
+	padding: 5px 10px 0px 10px;
+}
+
+.event-session {
+	vertical-align: middle; 
+	text-align: center; 
+	height: 37px; 
+	border-bottom: 1px solid #CCCCCC;
+}
+
+div.session-entry {
+float:left;
+padding:10px 0 0px 0;
+width:100%;
+height:27px;
 }

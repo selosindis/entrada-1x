@@ -58,19 +58,26 @@ require_once("functions.inc.php");
 $query = "UPDATE `".AUTH_DATABASE."`.`user_data` SET `password` = MD5('password'), `department` = NULL, `prefix` = '', `email_alt` = '', `google_id` = '', `telephone` = '', `address` = '', `city` = 'Kingston', `province` = '', `country` = '', `country_id` = 39, `province_id` = 9, `notifications` = 1, `office_hours` = ''";
 $db->Execute($query);
 
-$query = "	SELECT *
-			FROM `".AUTH_DATABASE."`.`user_data`
-			ORDER BY `id` ASC";
+$query = "	SELECT a.*, b.`group`
+			FROM `".AUTH_DATABASE."`.`user_data` AS a
+			JOIN `".AUTH_DATABASE."`.`user_access` AS b
+			ON b.`user_id` = a.`id`
+			WHERE b.`app_id` = '1'
+			ORDER BY a.`id` ASC";
 $results = $db->GetAll($query);
 if ($results) {
+	$users = array("student" => 0, "faculty" => 0, "staff" => 0, "resident" => 0, "medtech" => 0);
+	
 	foreach ($results as $key => $result) {
+		$users[$result["group"]]++;
+		
 		$number = (2432154 + $key);
 		$firstname = $db->GetOne("SELECT `firstname` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` <> '".$result["id"]."' ORDER BY RAND() LIMIT 1");
 		$lastname = $db->GetOne("SELECT `lastname` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` <> '".$result["id"]."' ORDER BY RAND() LIMIT 1");
 		$privacy = rand(0, 3);
 		$gender = rand(1, 2);
-		$username = "user".$key;
-
+		$username = $result["group"].$users[$result["group"]];
+		
 		$query = "	UPDATE `".AUTH_DATABASE."`.`user_data` SET
 					`number` = '".(int) $number."',
 					`username` = ".$db->qstr($username).",

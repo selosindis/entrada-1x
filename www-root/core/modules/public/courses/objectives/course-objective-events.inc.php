@@ -73,7 +73,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 		$display_duration = fetch_timestamps("academic", $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dstamp"]);
 		$query = "	SELECT `course_name` FROM `courses` WHERE `course_id` = ".$db->qstr($COURSE_ID);
 		$course_name = $db->GetOne($query);
-		$query = "	SELECT * FROM `global_lu_objectives` WHERE `objective_id` = ".$db->qstr($OBJECTIVE_ID)." AND b.`objective_active` = 1";
+		$query = "	SELECT * FROM `global_lu_objectives` WHERE `objective_id` = ".$db->qstr($OBJECTIVE_ID)." AND `objective_active` = 1";
 		$objective = $db->GetRow($query);
 		if (isset($course_name) && $course_name && isset($objective["objective_name"]) && $objective["objective_name"]) {
 			echo "<h1>".html_encode($course_name)."</h2>";

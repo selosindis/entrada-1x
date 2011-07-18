@@ -121,6 +121,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 							LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS d
 							ON d.`id` = c.`proxy_id`
 							WHERE (a.`event_start` BETWEEN ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_start"])." AND ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_finish"]).")
+							AND c.`contact_role` = 'teacher' 
 							AND b.`course_active` = '1'
 							AND a.`event_phase` = ".$db->qstr($term).
 							$organisation_where."

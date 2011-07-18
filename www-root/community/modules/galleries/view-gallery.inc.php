@@ -335,6 +335,7 @@ if ($RECORD_ID) {
 				?>
 			</div>
 			<?php
+			add_statistic("community:".$COMMUNITY_ID.":galleries", "gallery_view", "cgallery_id", $RECORD_ID);
 		} else {
 			if ($ERROR) {
 				echo display_error();

@@ -140,6 +140,7 @@ if ($RECORD_ID) {
 							$SUCCESSSTR[]	= "You have successfully added a new question to the ".$terminology.".<br /><br />You will now be redirected to the index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 						}
 						$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
+						add_statistic("community_polling", "question_add", "cpquestion_id", $QUESTION_ID);
 						communities_log_history($COMMUNITY_ID, $PAGE_ID, $PROCESSED["cpolls_id"], "community_history_edit_poll", 0);
 					}
 				}
@@ -246,7 +247,7 @@ if ($RECORD_ID) {
 				<tr>
 					<td colspan="2"><label for="poll_question" class="form-required">Question</label></td>
 					<td style="text-align: right">
-						<input type="text" id="poll_question" name="poll_question" value="<?php echo ((isset($PROCESSED["poll_question"])) ? html_encode($PROCESSED["poll_question"]) : ""); ?>" maxlength="64" style="width: 94%" />
+						<input type="text" id="poll_question" name="poll_question" value="<?php echo ((isset($PROCESSED["poll_question"])) ? html_encode($PROCESSED["poll_question"]) : ""); ?>" style="width: 94%" />
 					</td>
 				</tr>
 				<tr>

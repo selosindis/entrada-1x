@@ -39,8 +39,8 @@ $BREADCRUMB[] = array("url" => ENTRADA_URL."/".$MODULE, "title" => "Courses");
 
 if (($router) && ($router->initRoute())) {
 	$COURSE_ID			= 0;
-	$ORGANISATION_ID	= $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"];
-
+	//$ORGANISATION_ID	= $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"];
+	$ORGANISATION_ID = false;
 	if ((isset($_GET["id"])) && ((int) trim($_GET["id"]))) {
 		$COURSE_ID = (int) trim($_GET["id"]);
 	}

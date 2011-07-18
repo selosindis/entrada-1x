@@ -44,8 +44,17 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 	if($COURSE_ID) {
+		if(!$ORGANISATION_ID){
+			$query = "SELECT `organisation_id` FROM `courses` WHERE `course_id` = ".$db->qstr($COURSE_ID);
+			$result = $db->GetOne($query);
+			if($result)
+				$ORGANISATION_ID = (int)$result;
+			else
+				$ORGANISATION_ID = 1;
+		}
 		
-		$course_objectives = courses_fetch_objectives(array($COURSE_ID), 1, false, false, 0, true);
+		
+		list($course_objectives,$top_level_id) = courses_fetch_objectives_for_org($ORGANISATION_ID,array($COURSE_ID),-1, 1, false, false, 0, true);
 		
 		$query			= "	SELECT * FROM `courses` 
 							WHERE `course_id` = ".$db->qstr($COURSE_ID)."
@@ -507,7 +516,11 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						</form>
 					</div>
 					<?php
-					if (count($course_objectives["used_ids"])) {
+					$query = "	SELECT COUNT(*) FROM course_objectives WHERE course_id = ".$db->qstr($COURSE_ID);
+					$result = $db->GetOne($query);
+					
+					
+					if ($result) {
 						?>
 						<a name="course-objectives-section"></a>
 						<h2 title="Course Objectives Section">Course Objectives</h2>
@@ -545,6 +558,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 									<td colspan="2">
 										<?php
 										echo "<h3>Clinical Presentations</h3>";
+										 
 										$query = "	SELECT b.*
 													FROM `course_objectives` AS a
 													JOIN `global_lu_objectives` AS b
@@ -555,6 +569,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 													GROUP BY b.`objective_id`
 													ORDER BY b.`objective_order`";
 										$results = $db->GetAll($query);
+																				
 										if ($results) {
 											echo "<ul class=\"objectives\">\n";
 											foreach ($results as $result) {
@@ -577,7 +592,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 										<div id="objectives_list">
 										<h3>Curriculum Objectives</h3>
 										<strong>The learner will be able to:</strong>
-										<?php echo event_objectives_in_list($course_objectives, 1, true); ?>
+										<?php echo event_objectives_in_list($course_objectives, $top_level_id,$top_level_id, true); ?>
 										</div>
 									</td>
 								</tr>

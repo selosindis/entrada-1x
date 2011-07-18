@@ -41,8 +41,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 } else {
 	
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/eventtypes_list.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
-	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/AutoCompleteList.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
-
+	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/AutoCompleteList.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";	
+	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/growler/src/Growler.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 	echo "<script language=\"text/javascript\">var DELETE_IMAGE_URL = '".ENTRADA_URL."/images/action-delete.gif';</script>";
 	
 	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/events?".replace_query(array("section" => "add")), "title" => "Adding Event");
@@ -72,16 +72,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			/**
 			 * Non-required field "associated_faculty" / Associated Faculty (array of proxy ids).
 			 * This is actually accomplished after the event is inserted below.
-			 */
+			 */	
+			
 			if ((isset($_POST["associated_faculty"]))) {
 				$associated_faculty = explode(',',$_POST["associated_faculty"]);
 				foreach($associated_faculty as $contact_order => $proxy_id) {
 					if ($proxy_id = clean_input($proxy_id, array("trim", "int"))) {
 						$PROCESSED["associated_faculty"][(int) $contact_order] = $proxy_id;
+						$PROCESSED["contact_role"][(int) $contact_order] = $_POST["faculty_role"][(int)$contact_order];
+						$PROCESSED["display_role"][$proxy_id] = $_POST["faculty_role"][(int) $contact_order];	
 					}
 				}
 			}
 
+			
 			/**
 			 * Non-required field "associated_faculty" / Associated Faculty (array of proxy ids).
 			 * This is actually accomplished after the event is inserted below.
@@ -363,7 +367,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						 */
 						if ((is_array($PROCESSED["associated_faculty"])) && (count($PROCESSED["associated_faculty"]))) {
 							foreach($PROCESSED["associated_faculty"] as $contact_order => $proxy_id) {
-								if (!$db->AutoExecute("event_contacts", array("event_id" => $EVENT_ID, "proxy_id" => $proxy_id, "contact_order" => (int) $contact_order, "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT")) {
+								if (!$db->AutoExecute("event_contacts", array("event_id" => $EVENT_ID, "proxy_id" => $proxy_id, "contact_role"=>$PROCESSED["contact_role"][$contact_order],"contact_order" => (int) $contact_order, "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT")) {
 									$ERROR++;
 									$ERRORSTR[] = "There was an error while trying to attach an <strong>Associated Faculty</strong> to this event.<br /><br />The system administrator was informed of this error; please try again later.";
 
@@ -388,6 +392,26 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							break;
 						}
 
+						$query = "	SELECT b.* FROM `community_courses` AS a 
+									LEFT JOIN `community_pages` AS b 
+									ON a.`community_id` = b.`community_id` 
+									LEFT JOIN `community_page_options` AS c 
+									ON b.`community_id` = c.`community_id` 
+									WHERE c.`option_title` = 'show_history' 
+									AND c.`option_value` = 1 
+									AND b.`page_url` = 'course_calendar' 
+									AND b.`page_active` = 1 
+									AND a.`course_id` = ".$PROCESSED["course_id"];
+						$result = $db->GetRow($query);
+						
+						if($result){
+							$COMMUNITY_ID = $result["community_id"];
+							$PAGE_ID = $result["cpage_id"];
+							communities_log_history($COMMUNITY_ID, $PAGE_ID, $EVENT_ID, "community_history_add_learning_event", 1);
+						}
+						
+						
+						
 						$SUCCESS++;
 						$SUCCESSSTR[] = "You have successfully added <strong>".html_encode($PROCESSED["event_title"])."</strong> to the system.<br /><br />".$msg;
 						$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
@@ -478,6 +502,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				}
 			}
 			?>
+
 			<form action="<?php echo ENTRADA_URL; ?>/admin/events?section=add&amp;step=2" method="post" id="addEventForm">
 				<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Adding Event">
 					<colgroup>
@@ -497,6 +522,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						<td colspan="3">&nbsp;</td>
 					</tr>
 					<?php echo generate_calendars("event", "Event Date & Time", true, true, ((isset($PROCESSED["event_start"])) ? $PROCESSED["event_start"] : 0)); ?>
+					
 					<tr>
 						<td></td>
 						<td><label for="event_location" class="form-nrequired">Event Location</label></td>
@@ -509,9 +535,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						<td></td>
 						<td style="vertical-align: top"><label for="eventtype_ids" class="form-required">Event Types</label></td>
 						<td>
-							<select id="eventtype_ids" name="eventtype_ids">
-								<option id="-1"> -- Pick a type to add -- </option>
-								<?php
+															<?php
 								$query		= "	SELECT a.* FROM `events_lu_eventtypes` AS a 
 												LEFT JOIN `eventtype_organisation` AS c 
 												ON a.`eventtype_id` = c.`eventtype_id` 
@@ -520,16 +544,28 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 												WHERE b.`organisation_id` = ".$db->qstr($user->getActiveOrganisation())."
 												AND a.`eventtype_active` = '1' 
 												ORDER BY a.`eventtype_order`";
-								$results	= $db->GetAll($query);								
-								if ($results) {
+
+								$results	= $db->GetAll($query);
+								if (!$results) {
+									$ERROR = 1;
+									$ERRORSTR = null;
+									$ERRORSTR[] = "No Event Types were found for this Organisation. You will need to add at least one Event Type before continuing.";
+									echo display_error();						
+								}
+								else{
+								?>
+							
+							<select id="eventtype_ids" name="eventtype_ids">
+								<option id="-1"> -- Pick a type to add -- </option>
+								<?php
 									$event_types = array();
 									foreach($results as $result) {
 										$title = html_encode($result["eventtype_title"]);
 										echo "<option value=\"".$result["eventtype_id"]."\">".$title."</option>";
 									}
-								}
 								?>
 							</select>
+							<?php }?>
 							<div id="duration_notice" class="content-small" >Use the list above to select the different components of this event. When you select one, it will appear here and you can change the order and duration.</div>
 							<ol id="duration_container" class="sortableList" style="display: none;">
 								<?php
@@ -570,7 +606,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 									foreach ($PROCESSED["associated_faculty"] as $faculty) {
 										if ((array_key_exists($faculty, $FACULTY_LIST)) && is_array($FACULTY_LIST[$faculty])) {
 											?>
-											<li class="community" id="faculty_<?php echo $FACULTY_LIST[$faculty]["proxy_id"]; ?>" style="cursor: move;"><?php echo $FACULTY_LIST[$faculty]["fullname"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="faculty_list.removeItem('<?php echo $FACULTY_LIST[$faculty]["proxy_id"]; ?>');" class="list-cancel-image" /></li>
+								<li class="community" id="faculty_<?php echo $FACULTY_LIST[$faculty]["proxy_id"]; ?>" style="cursor: move;margin-bottom:10px;width:350px;"><?php echo $FACULTY_LIST[$faculty]["fullname"]; ?><select name ="faculty_role[]" style="float:right;margin-right:30px;margin-top:-5px;"><option value="teacher" <?php if($PROCESSED["display_role"][$faculty] == "teacher") echo "SELECTED";?>>Teacher</option><option value="tutor" <?php if($PROCESSED["display_role"][$faculty] == "tutor") echo "SELECTED";?>>Tutor</option><option value="ta" <?php if($PROCESSED["display_role"][$faculty] == "ta") echo "SELECTED";?>>Teacher's Assistant</option><option value="auditor" <?php if($PROCESSED["display_role"][$faculty] == "auditor") echo "SELECTED";?>>Auditor</option></select><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="faculty_list.removeItem('<?php echo $FACULTY_LIST[$faculty]["proxy_id"]; ?>');" class="list-cancel-image" /></li>
 											<?php
 										}
 									}
@@ -605,15 +641,25 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						<td></td>
 						<td><label for="course_id" class="form-required">Course</label></td>
 						<td>
-							<select id="course_id" name="course_id" style="width: 95%">
 							<?php
 							$query = "	SELECT * FROM `courses`
-										WHERE `organisation_id` = ".$db->qstr($ORGANISATION_ID)."
+										WHERE `organisation_id` = ".$db->qstr($user->getActiveOrganisation())."
 										AND `course_active` = '1'
 										ORDER BY `course_name` ASC";
 							$results = $db->GetAll($query);
-							if ($results) {
-								foreach($results as $result) {
+
+							if (!$results){
+								$ERROR = 1;
+								$ERRORSTR = null;
+								$ERRORSTR[] = "No Courses were found for this Organisation. You will need to add at least one Course before continuing.";
+								echo display_error();
+							}
+							else{
+
+							?>
+							<select id="course_id" name="course_id" style="width: 95%">
+							<?php
+									foreach($results as $result) {
 									if ($ENTRADA_ACL->amIAllowed(new EventResource(null, $result["course_id"], $user->getActiveOrganisation()), "create")) {
 										echo "<option value=\"".(int) $result["course_id"]."\"".(($PROCESSED["course_id"] == $result["course_id"]) ? " selected=\"selected\"" : "").">".html_encode($result["course_name"])."</option>\n";
 									}
@@ -682,7 +728,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 											?>
 											<li class="community" id="student_<?php echo $STUDENT_LIST[$student]["proxy_id"]; ?>" style="cursor: move;"><?php echo $STUDENT_LIST[$student]["fullname"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="student_list.removeItem('<?php echo $STUDENT_LIST[$student]["proxy_id"]; ?>');" class="list-cancel-image" /></li>
 											<?php
-										}
+											}
 									}
 								}
 								?>
@@ -747,12 +793,60 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					</tr>
 				</table>
 			</form>
+
+
 			<script type="text/javascript">
+			
 				function selectEventAudienceOption(type) {
 					$$('.event_audience').invoke('hide');
 					$$('.'+type+'_audience').invoke('show');
+					if(type!== 'proxy_id'){
+						checkConflict();
+					}
 				}
 			</script>
+			<script>
+				var prevDate = '';
+				var prevTime = '00:00 AM';
+				var t=self.setInterval("checkDifference()",1500);
+					
+					
+				Event.observe('associated_grad_year','change',checkConflict);
+				Event.observe('associated_organisation_id','change',checkConflict);
+				Event.observe('student_list','change',checkConflict)
+				Event.observe('eventtype_ids','change',checkConflict)
+				//Event.observe('event_start_date','keyup',checkConflict);
+					
+				
+				
+				
+				function checkDifference(){
+					if($('event_start_date').value !== prevDate){
+						prevDate = $('event_start_date').value;
+						checkConflict();
+					}
+					else if($('event_start_display').innerHTML !== prevTime){
+						prevTime = $('event_start_display').innerHTML;
+						checkConflict();						
+					}
+				}
+				function checkConflict(){
+					new Ajax.Request('<?php echo ENTRADA_URL;?>/api/learning-event-conflicts.php',
+					{
+						method:'post',
+						parameters: $("addEventForm").serialize(true),
+						onSuccess: function(transport){
+						var response = transport.responseText || null;
+						if(response !==null){
+							var g = new k.Growler();
+							g.smoke(response,{life:7});
+						}
+						},
+						onFailure: function(){ alert('Something went wrong...') }
+					});
+				}
+			</script>
+			
 			<br /><br />
 			<?php
 		break;

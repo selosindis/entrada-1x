@@ -84,7 +84,7 @@ if(!defined("PARENT_INCLUDED")) {
 			$sidebar_html  = "<ul class=\"menu\">\n";
 			$sidebar_html .= "	<li class=\"off\"><a href=\"".ENTRADA_URL."/events".(($EVENT_ID) ? "?".replace_query(array("id" => $EVENT_ID, "action" => false, "section" => false)) : "")."\">Student View</a></li>\n";
 			if($admin_wording) {
-				$sidebar_html .= "<li class=\"on\"><a href=\"".ENTRADA_URL."/admin/events".(($EVENT_ID) ? "?".replace_query(array("id" => $EVENT_ID, "action" => "edit")) : "")."\">".html_encode($admin_wording)."</a></li>\n";
+				$sidebar_html .= "<li class=\"on\"><a href=\"".ENTRADA_URL."/admin/events".(($EVENT_ID) ? "?".replace_query(array("id" => $EVENT_ID, "action" => "manage")) : "")."\">".html_encode($admin_wording)."</a></li>\n";
 			}
 			$sidebar_html .= "</ul>\n";
 

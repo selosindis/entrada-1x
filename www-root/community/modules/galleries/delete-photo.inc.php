@@ -39,6 +39,7 @@ if ($RECORD_ID) {
 							application_log("error", "Failed to remove the gallery hilite image [".$RECORD_ID."] photo from community [".$COMMUNITY_ID."]. Database said: ".$db->ErrorMsg());
 						}
 					}
+					add_statistic("community:".$COMMUNITY_ID.":galleries", "photo_delete", "cgphoto_id", $RECORD_ID);
 					communities_deactivate_history($COMMUNITY_ID, $PAGE_ID, $RECORD_ID);
 
 				} else {

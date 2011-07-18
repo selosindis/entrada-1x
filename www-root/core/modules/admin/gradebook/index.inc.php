@@ -318,7 +318,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 		<tbody>
 		<?php
 		if ((@count($results) == 1) && !($ENTRADA_ACL->amIAllowed(new CourseResource($results[0]["course_id"], $results[0]["organisation_id"]), "update"))) {
-			header("Location: ".ENTRADA_URL."/admin/".$MODULE."?section=content&id=".$results[0]["course_id"]);
+			header("Location: ".ENTRADA_URL."/admin/".$MODULE."?section=view&id=".$results[0]["course_id"]);
 			exit;
 		}
 

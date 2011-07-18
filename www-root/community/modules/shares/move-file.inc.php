@@ -47,7 +47,7 @@ if ($RECORD_ID) {
 							@$db->AutoExecute("community_share_comments", array("cshare_id" => $share_id, "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "UPDATE", "`csfile_id` = ".$db->qstr($RECORD_ID)." AND `cshare_id` = ".$db->qstr($file_record["cshare_id"])." AND `community_id` = ".$db->qstr($COMMUNITY_ID));
 
 							communities_log_history($COMMUNITY_ID, $PAGE_ID, $RECORD_ID, "community_history_move_file", true, $share_id);
-
+							add_statistic("community:".$COMMUNITY_ID.":shares", "file_move", "csfile_id", $RECORD_ID);
 							$db->AutoExecute("community_history", array("history_display" => 0), "UPDATE", "`community_id` = ".$db->qstr($COMMUNITY_ID)." AND `module_id` = ".$db->qstr($MODULE_ID)." AND `record_id` = ".$db->qstr($RECORD_ID));
 						} else {
 							application_log("error", "Failed to move [".$RECORD_ID."] file to folder. Database said: ".$db->ErrorMsg());

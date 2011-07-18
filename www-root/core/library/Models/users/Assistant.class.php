@@ -22,16 +22,19 @@ class Assistant extends User {
 	 * @var int
 	 */
 	private $permission_id;
+	
 	/**
 	 * Proxy ID of the user to whcih this Assistant is assigned 
 	 * @var int
 	 */
 	private $assigned_to;
+	
 	/**
 	 * timestamp of the date from which this relationship becomes valid 
 	 * @var int
 	 */
 	private $valid_from;
+	
 	/**
 	 * timestamp of the date on which this relationship becomes invalid
 	 * @var int
@@ -42,7 +45,6 @@ class Assistant extends User {
 	 * Adds the Assistant related fields to this object
 	 * @param array $arr
 	 */
-
 	private function addAssistantFields(array $arr) { 
 		$this->permission_id = $arr['permission_id'];
 		$this->assigned_to = $arr['assigned_to'];

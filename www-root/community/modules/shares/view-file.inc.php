@@ -118,11 +118,12 @@ if ($RECORD_ID) {
 								header("Content-Transfer-Encoding: binary\n");
 							break;
 						}
-
+						add_statistic("community:".$COMMUNITY_ID.":shares", "file_download", "csfile_id", $RECORD_ID);
 						echo @file_get_contents($download_file, FILE_BINARY);
 						exit;
 					}
 				}
+				
 			}
 
 			if ((!$ERROR) || (!$NOTICE)) {
@@ -466,6 +467,7 @@ if ($RECORD_ID) {
 					?>
 				</div>
 				<?php
+				add_statistic("community:".$COMMUNITY_ID.":shares", "file_view", "csfile_id", $RECORD_ID);
 			} else {
 				if ($ERROR) {
 					echo display_error();

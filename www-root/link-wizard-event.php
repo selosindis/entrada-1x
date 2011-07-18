@@ -127,7 +127,20 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 					AND b.`course_active` = '1'";
 		$result	= $db->GetRow($query);
 		if($result) {
-			if(!$ENTRADA_ACL->amIAllowed(new EventContentResource($EVENT_ID, $result["course_id"], $result["organisation_id"]), "update")) {
+			$query = "SELECT * FROM `events` WHERE `parent_id` = ".$db->qstr($EVENT_ID);
+			$access_allowed = false;
+			if (!$ENTRADA_ACL->amIAllowed(new EventContentResource($EVENT_ID, $result["course_id"], $result["organisation_id"]), "update")) {
+				if ($sessions = $db->GetAll($query)) {
+					foreach ($sessions as $session) {
+						if ($ENTRADA_ACL->amIAllowed(new EventContentResource($session["event_id"], $result["course_id"], $result["organisation_id"]), "update")) {
+							$access_allowed = true;
+						}
+					}
+				}
+			} else {
+				$access_allowed = true;
+			}
+			if (!$access_allowed) {
 				$ONLOAD[]		= "closeWizard()";
 
 				$ERROR++;

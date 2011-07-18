@@ -93,6 +93,7 @@ if ($RECORD_ID) {
 									$SUCCESS++;
 									$SUCCESSSTR[]	= "You have successfully added a new file comment.<br /><br />You will now be redirected back to this file; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 
+									add_statistic("community:".$COMMUNITY_ID.":shares", "comment_add", "cscomment_id", $COMMENT_ID);
 									communities_log_history($COMMUNITY_ID, $PAGE_ID, $COMMENT_ID, "community_history_add_file_comment", 1, $RECORD_ID);
 								}
 							}

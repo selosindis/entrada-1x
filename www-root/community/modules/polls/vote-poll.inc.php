@@ -131,6 +131,7 @@ if ($RECORD_ID) {
 						
 											$SUCCESS++;
 											$SUCCESSSTR[]	= "You have successfully voted.<br /><br />You will now be redirected back to your community; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+											add_statistic("community_polling", "poll_vote", "cpolls_id", $RECORD_ID);
 										} 
 									}
 								} else {

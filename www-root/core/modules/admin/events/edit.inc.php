@@ -38,6 +38,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 } else {
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/AutoCompleteList.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/eventtypes_list.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/growler/src/Growler.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 	if ($EVENT_ID) {
 		$query = "	SELECT a.*, b.`organisation_id`
 					FROM `events` AS a
@@ -53,7 +54,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				exit;
 			} else {
 				$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/events?".replace_query(array("section" => "edit", "id" => $EVENT_ID)), "title" => "Editing Event");
-
+				$ORGANISATION_ID = $event_info["organisation_id"];
 				$PROCESSED["associated_faculty"] = array();
 				$PROCESSED["event_audience_type"] = "grad_year";
 				$PROCESSED["associated_grad_year"] = "";
@@ -72,9 +73,23 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				// Error Checking
 				switch($STEP) {
 					case 2 :
+						
+						$query		= "SELECT a.*, b.`eventtype_title` FROM `event_eventtypes` AS a LEFT JOIN `events_lu_eventtypes` AS b ON a.`eventtype_id` = b.`eventtype_id` WHERE a.`event_id` = ".$db->qstr($EVENT_ID)." ORDER BY `eeventtype_id` ASC";
+						$results	= $db->GetAll($query);
+						$initial_duration = 0;
+						if ($results) {
+							foreach ($results as $result) {
+								$initial_duration += $result["duration"];
+								//$event_eventtypes[] = array($result["eventtype_id"], $result["duration"], $event_eventtypes_list[$result["eventtype_id"]]);
+								$old_event_eventtypes[] = $result;
+							}
+						}
+						
+						
 						/**
 						 * Required field "event_title" / Event Title.
-						 */
+						 */			
+
 						if ((isset($_POST["event_title"])) && ($event_title = clean_input($_POST["event_title"], array("notags", "trim")))) {
 							$PROCESSED["event_title"] = $event_title;
 						} else {
@@ -91,6 +106,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							foreach($associated_faculty as $contact_order => $proxy_id) {
 								if ($proxy_id = clean_input($proxy_id, array("trim", "int"))) {
 									$PROCESSED["associated_faculty"][(int) $contact_order] = $proxy_id;
+									$PROCESSED["contact_role"][(int)$contact_order] = $_POST["faculty_role"][(int) $contact_order];
+									$PROCESSED["display_role"][$proxy_id] = $_POST["faculty_role"][(int) $contact_order];
 								}
 							}
 						}
@@ -197,6 +214,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							$event_types = explode(",", trim($_POST["eventtype_duration_order"]));
 							$eventtype_durations = $_POST["duration_segment"];
 
+							
+							
+							
 							if ((is_array($event_types)) && (count($event_types))) {
 								foreach ($event_types as $order => $eventtype_id) {
 									if (($eventtype_id = clean_input($eventtype_id, array("trim", "int"))) && ($duration = clean_input($eventtype_durations[$order], array("trim", "int")))) {
@@ -206,9 +226,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 										}
 
 										$query	= "SELECT `eventtype_title` FROM `events_lu_eventtypes` WHERE `eventtype_id` = ".$db->qstr($eventtype_id);
+										//$query = "SELECT a.*, b.`eventtype_title` FROM `event_eventtypes` AS a LEFT JOIN `events_lu_eventtypes` AS b ON a.`eventtype_id` = b.`eventtype_id` WHERE a.`eventtype_id` = ".$db->qstr($eventtype_id)." ORDER BY `eeventtype_id` ASC";
 										$result	= $db->GetRow($query);
+										
 										if ($result) {
-											$PROCESSED["event_types"][] = array($eventtype_id, $duration, $result["eventtype_title"]);
+											$PROCESSED["event_types"][] = array("eventtype_id"=>$eventtype_id,"duration"=> $duration, "eventtype_title"=>$result["eventtype_title"]);
+											//$PROCESSED["event_types"][] = $result;									
 										} else {
 											$ERROR++;
 											$ERRORSTR[] = "One of the <strong>event types</strong> you specified was invalid.";
@@ -218,6 +241,25 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 										$ERRORSTR[] = "One of the <strong>event types</strong> you specified is invalid.";
 									}
 								}
+								
+								
+							$event_duration	= 0;
+							$old_event_duration = 0;
+							foreach($PROCESSED["event_types"] as $event_type) {
+								$event_duration += $event_type["duration"];
+							}
+						
+							foreach($old_event_eventtypes as $event_type) {
+								$old_event_duration += $event_type["duration"];
+							}
+							
+							if($old_event_duration != $event_duration) {
+								$ERROR++;
+								$ERRORSTR[] = "The modified <strong>Event Types</strong> duration specified is different than the exisitng one, please ensure the event's duration remains the same.";
+							}
+							
+								
+								
 							}
 						} else {
 							$ERROR++;
@@ -307,11 +349,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							$PROCESSED["event_finish"] = $PROCESSED["event_start"];
 							$PROCESSED["event_duration"] = 0;
 							foreach($PROCESSED["event_types"] as $event_type) {
-								$PROCESSED["event_finish"] += $event_type[1]*60;
-								$PROCESSED["event_duration"] += $event_type[1];
+								$PROCESSED["event_finish"] += $event_type["duration"]*60;
+								$PROCESSED["event_duration"] += $event_type["duration"];
 							}
 
-							$PROCESSED["eventtype_id"] = $PROCESSED["event_types"][0][0];
+							$PROCESSED["eventtype_id"] = $PROCESSED["event_types"][0]["eventtype_id"];
 
 							if ($db->AutoExecute("events", $PROCESSED, "UPDATE", "`event_id` = ".$db->qstr($EVENT_ID))) {
 								$query = "DELETE FROM `event_audience` WHERE `event_id` = ".$db->qstr($EVENT_ID);
@@ -319,7 +361,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 									$query = "DELETE FROM `event_eventtypes` WHERE `event_id` = ".$db->qstr($EVENT_ID);
 									if ($db->Execute($query)) {
 										foreach($PROCESSED["event_types"] as $event_type) {
-											if (!$db->AutoExecute("event_eventtypes", array("event_id" => $EVENT_ID, "eventtype_id" => $event_type[0], "duration" => $event_type[1]), "INSERT")) {
+											if (!$db->AutoExecute("event_eventtypes", array("event_id" => $EVENT_ID, "eventtype_id" => $event_type["eventtype_id"], "duration" => $event_type["duration"]), "INSERT")) {
 												$ERROR++;
 												$ERRORSTR[] = "There was an error while trying to save the selected <strong>Event Type</strong> for this event.<br /><br />The system administrator was informed of this error; please try again later.";
 
@@ -389,7 +431,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								if ($db->Execute($query)) {
 									if ((is_array($PROCESSED["associated_faculty"])) && (count($PROCESSED["associated_faculty"]))) {
 										foreach($PROCESSED["associated_faculty"] as $contact_order => $proxy_id) {
-											if (!$db->AutoExecute("event_contacts", array("event_id" => $EVENT_ID, "proxy_id" => $proxy_id, "contact_order" => (int) $contact_order, "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT")) {
+											if (!$db->AutoExecute("event_contacts", array("event_id" => $EVENT_ID, "proxy_id" => $proxy_id,"contact_role"=>$PROCESSED["contact_role"][$contact_order], "contact_order" => (int) $contact_order, "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT")) {
 												$ERROR++;
 												$ERRORSTR[] = "There was an error while trying to attach an <strong>Associated Faculty</strong> to this event.<br /><br />The system administrator was informed of this error; please try again later.";
 
@@ -414,12 +456,32 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 										$msg	= "You will now be redirected to the event index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 									break;
 								}
+								if(!$ERROR){
+									$query = "	SELECT b.* FROM `community_courses` AS a 
+												LEFT JOIN `community_pages` AS b 
+												ON a.`community_id` = b.`community_id` 
+												LEFT JOIN `community_page_options` AS c 
+												ON b.`community_id` = c.`community_id` 
+												WHERE c.`option_title` = 'show_history' 
+												AND c.`option_value` = 1 
+												AND b.`page_url` = 'course_calendar' 
+												AND b.`page_active` = 1 
+												AND a.`course_id` = ".$PROCESSED["course_id"];
+									$result = $db->GetRow($query);
+						
+									if($result){
+										$COMMUNITY_ID = $result["community_id"];
+										$PAGE_ID = $result["cpage_id"];
+										communities_log_history($COMMUNITY_ID, $PAGE_ID, $EVENT_ID, "community_history_edit_learning_event", 1);
+									}
+									
+									
+									$SUCCESS++;
+									$SUCCESSSTR[] = "You have successfully edited <strong>".html_encode($PROCESSED["event_title"])."</strong> in the system.<br /><br />".$msg;
+									$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
 
-								$SUCCESS++;
-								$SUCCESSSTR[] = "You have successfully edited <strong>".html_encode($PROCESSED["event_title"])."</strong> in the system.<br /><br />".$msg;
-								$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
-
-								application_log("success", "Event [".$EVENT_ID."] has been modified.");
+									application_log("success", "Event [".$EVENT_ID."] has been modified.");
+								}
 							} else {
 								$ERROR++;
 								$ERRORSTR[] = "There was a problem updating this event in the system. The system administrator was informed of this error; please try again later.";
@@ -439,7 +501,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						/**
 						 * Add existing event type segments to the processed array.
 						 */
-						$query = "	SELECT `types`.*,`lu_types`.* FROM `event_eventtypes` AS `types` 
+						$query = "	SELECT `types`.`eventtype_id`,`types`.`duration`,`lu_types`.`eventtype_title` FROM `event_eventtypes` AS `types` 
 									LEFT JOIN `events_lu_eventtypes` AS `lu_types` 
 									ON `lu_types`.`eventtype_id` = `types`.`eventtype_id` 
 									LEFT JOIN `eventtype_organisation` AS `type_org` 
@@ -449,10 +511,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 									WHERE `types`.`event_id` = ".$db->qstr($EVENT_ID)." 
 									AND `type_org`.`organisation_id` = ".$db->qstr($user->getActiveOrganisation())."
 									ORDER BY `types`.`eventtype_id` ASC";
+					
 						$results = $db->GetAll($query);
 						if ($results) {
 							foreach ($results as $contact_order => $result) {
-								$PROCESSED["event_types"][] = array($result["eventtype_id"], $result["duration"], $result["eventtype_title"]);
+								$PROCESSED["event_types"][] = array("eventtype_id"=>$result["eventtype_id"], "duration"=>$result["duration"], "eventtype_title"=>$result["eventtype_title"]);
 							}
 						}
 
@@ -465,6 +528,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						if ($results) {
 							foreach($results as $contact_order => $result) {
 								$PROCESSED["associated_faculty"][(int) $contact_order] = $result["proxy_id"];
+								$PROCESSED["display_role"][(int)$result["proxy_id"]] = $result["contact_role"];
 							}
 						}
 
@@ -565,7 +629,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							}
 						}
 						?>
-						<form action="<?php echo ENTRADA_URL; ?>/admin/events?<?php echo replace_query(array("step" => 2)); ?>" method="post">
+						<form name="editEventForm" id="editEventForm" action="<?php echo ENTRADA_URL; ?>/admin/events?<?php echo replace_query(array("step" => 2)); ?>" method="post">
 							<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Editing Event">
 								<colgroup>
 									<col style="width: 3%" />
@@ -578,7 +642,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								<tr>
 									<td></td>
 									<td><label for="event_title" class="form-required">Event Title</label></td>
-									<td><input type="text" id="event_title" name="event_title" value="<?php echo html_encode($PROCESSED["event_title"]); ?>" maxlength="255" style="width: 95%" /></td>
+									<td>
+										<input type="text" id="event_title" name="event_title" value="<?php echo html_encode($PROCESSED["event_title"]); ?>" maxlength="255" style="width: 95%" />
+										<input type="hidden" name="event_id" value ="<?php echo $EVENT_ID;?>"/>
+									</td>
 								</tr>
 								<tr>
 									<td colspan="3">&nbsp;</td>
@@ -618,23 +685,27 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 												}
 												?>
 										</select>
-										<div id="duration_notice" class="content-small" >Use the list above to select the different components of this event. When you select one, it will appear here and you can change the order and duration.</div>
-										<ol id="duration_container" class="sortableList" style="display: none;">
-											<?php
-											foreach($PROCESSED["event_types"] as $eventtype) {
-												echo "<li id=\"type_".$eventtype[0]."\" class=\"\">".$eventtype[2]."
-													<a href=\"#\" onclick=\"$(this).up().remove(); cleanupList(); return false;\" class=\"remove\">
-														<img src=\"".ENTRADA_URL."/images/action-delete.gif\">
-													</a>
-													<span class=\"duration_segment_container\">
-														Duration: <input class=\"duration_segment\" name=\"duration_segment[]\" onchange=\"cleanupList();\" value=\"".$eventtype[1]."\"> minutes
-													</span>
-												</li>";
-											}
-											?>
-										</ol>
-										<div id="total_duration" class="content-small">Total time: 0 minutes.</div>
-										<input id="eventtype_duration_order" name="eventtype_duration_order" style="display: none;">
+<div id="duration_notice" class="content-small">Use the list above to select the different components of this event. When you select one, it will appear here and you can change the order and duration.</div>
+									<?php
+                                    echo "<ol id=\"duration_container\" class=\"sortableList\" style=\"display: none\">\n";
+                                    if (is_array($PROCESSED["event_types"])) {
+                                        
+										foreach ($PROCESSED["event_types"] as $eventtype) {
+                                            echo "<li id=\"type_".(int) $eventtype["eventtype_id"]."\" class=\"\">".html_encode($eventtype["eventtype_title"])."
+                                                <a href=\"#\" onclick=\"$(this).up().remove(); cleanupList(); return false;\" class=\"remove\">
+                                                    <img src=\"".ENTRADA_URL."/images/action-delete.gif\">
+                                                </a>
+                                                <span class=\"duration_segment_container\">
+                                                    Duration: <input class=\"duration_segment\" name=\"duration_segment[]\" onchange=\"cleanupList();\" value=\"".$eventtype["duration"]."\"> minutes
+                                                </span>
+                                            </li>";
+                                        }
+                                    echo "</ol>";
+									
+									}
+									?>
+									<div id="total_duration" class="content-small">Total time: 0 minutes.</div>
+									<input id="eventtype_duration_order" name="eventtype_duration_order" style="display: none;"/>									
 									</td>
 								</tr>
 								<tr>
@@ -658,7 +729,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 												foreach ($PROCESSED["associated_faculty"] as $faculty) {
 													if ((array_key_exists($faculty, $FACULTY_LIST)) && is_array($FACULTY_LIST[$faculty])) {
 														?>
-														<li class="community" id="faculty_<?php echo $FACULTY_LIST[$faculty]["proxy_id"]; ?>" style="cursor: move;"><?php echo $FACULTY_LIST[$faculty]["fullname"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="faculty_list.removeItem('<?php echo $FACULTY_LIST[$faculty]["proxy_id"]; ?>');" class="list-cancel-image" /></li>
+														<li class="community" id="faculty_<?php echo $FACULTY_LIST[$faculty]["proxy_id"]; ?>" style="cursor: move;margin-bottom:10px;width:350px;"><?php echo $FACULTY_LIST[$faculty]["fullname"]; ?><select name ="faculty_role[]" style="float:right;margin-right:30px;margin-top:-5px;"><option value="teacher" <?php if($PROCESSED["display_role"][$faculty] == "teacher") echo "SELECTED";?>>Teacher</option><option value="tutor" <?php if($PROCESSED["display_role"][$faculty] == "tutor") echo "SELECTED";?>>Tutor</option><option value="ta" <?php if($PROCESSED["display_role"][$faculty] == "ta") echo "SELECTED";?>>Teacher's Assistant</option><option value="auditor" <?php if($PROCESSED["display_role"][$faculty] == "auditor") echo "SELECTED";?>>Auditor</option></select><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="faculty_list.removeItem('<?php echo $FACULTY_LIST[$faculty]["proxy_id"]; ?>');" class="list-cancel-image" /></li>
 														<?php
 													}
 												}
@@ -795,7 +866,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 											<?php
 											if (is_array($organisation_categories) && count($organisation_categories)) {
 												foreach($organisation_categories as $organisation_id => $organisation_info) {
-													echo "<option value=\"".$organisation_id."\"".(($PROCESSED["associated_organisation_id"] == $year) ? " selected=\"selected\"" : "").">".$organisation_info['text']."</option>\n";
+													//echo "<option value=\"".$organisation_id."\"".(($PROCESSED["associated_organisation_id"] == $year) ? " selected=\"selected\"" : "").">".$organisation_info['text']."</option>\n";
+													echo "<option value=\"".$organisation_id."\"".(($ORGANISATION_ID == $organisation_id) ? " selected=\"selected\"" : "").">".$organisation_info['text']."</option>\n";
 												}
 											}
 											?>
@@ -836,8 +908,54 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							function selectEventAudienceOption(type) {
 								$$('.event_audience').invoke('hide');
 								$$('.'+type+'_audience').invoke('show');
+								if(type!== 'proxy_id'){
+									checkConflict();
+								}								
 							}
 						</script>
+						
+						<script>
+				var prevDate = $('event_start_date').value;
+				var prevTime = $('event_start_display').innerHTML;
+				var t=self.setInterval("checkDifference()",1500);
+					
+					
+				Event.observe('associated_grad_year','change',checkConflict);
+				Event.observe('associated_organisation_id','change',checkConflict);
+				Event.observe('student_list','change',checkConflict)
+				Event.observe('eventtype_ids','change',checkConflict)
+				//Event.observe('event_start_date','keyup',checkConflict);
+					
+				
+				
+				
+				function checkDifference(){
+					if($('event_start_date').value !== prevDate){
+						prevDate = $('event_start_date').value;
+						checkConflict();
+					}
+					else if($('event_start_display').innerHTML !== prevTime){
+						prevTime = $('event_start_display').innerHTML;
+						checkConflict();						
+					}
+				}
+				function checkConflict(){
+					new Ajax.Request('<?php echo ENTRADA_URL;?>/api/learning-event-conflicts.php',
+					{
+						method:'post',
+						parameters: $("editEventForm").serialize(true),
+						onSuccess: function(transport){
+						var response = transport.responseText || null;
+						if(response !==null){
+							var g = new k.Growler();
+							g.smoke(response,{life:7});
+						}
+						},
+						onFailure: function(){ alert('Something went wrong...') }
+					});
+				}
+			</script>
+						
 						<br /><br />
 						<?php
 					break;
@@ -864,4 +982,5 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 		application_log("notice", "Failed to provide event identifer when attempting to edit a event.");
 	}
 }
+
 ?>

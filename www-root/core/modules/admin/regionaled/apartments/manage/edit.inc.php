@@ -35,7 +35,8 @@ if (!defined("IN_MANAGE")) {
 	echo display_error();
 
 	application_log("error", "Group [" . $GROUP . "] and role [" . $ROLE . "] does not have access to this module [" . $MODULE . "]");
-} else {
+} else 
+{
 	$BREADCRUMB[] = array("url" => ENTRADA_URL . "/admin/regionaled/apartments/manage?id=" . $APARTMENT_ID, "title" => "Edit Apartment");
 
 	switch ($STEP) {
@@ -222,12 +223,14 @@ if (!defined("IN_MANAGE")) {
 			}
 
 
-			if (isset($_POST['keys_from_super']) && $_POST['keys_from_super'] == true) {
+			if (isset($_POST['keys_from_super'])) {
 				$PROCESSED['keys_firstname'] = $PROCESSED['super_firstname'];
 				$PROCESSED['keys_lastname'] = $PROCESSED['super_lastname'];
 				$PROCESSED['keys_phone'] = $PROCESSED['super_phone'];
 				$PROCESSED['keys_email'] = $PROCESSED['super_email'];
+				$super_for_keys = true;
 			} else {
+				$super_for_keys = false;
 				if (isset($_POST["keys_firstname"]) && ($tmp_input = clean_input($_POST["keys_firstname"], array("trim", "notags")))) {
 					$PROCESSED["keys_firstname"] = $tmp_input;
 				} else {
@@ -283,68 +286,59 @@ if (!defined("IN_MANAGE")) {
 					$SUCCESSSTR[] = "You have successfully updated <strong>" . html_encode($PROCESSED["apartment_title"]) . "</strong>.<br /><br />You will now be redirected to the apartment index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"" . ENTRADA_URL . "/admin/regionaled/apartments/manage?id=" . $APARTMENT_ID . "\" style=\"font-weight: bold\">click here</a> to continue.";
 
 					$ONLOAD[] = "setTimeout('window.location=\\'" . ENTRADA_URL . "/admin/regionaled/apartments/manage?id=" . $APARTMENT_ID . "\\'', 5000)";
-
 					application_log("success", "Apartment_id [" . $APARTMENT_ID . "] was updated.");
 				} else {
 					$ERROR++;
 					$ERRORSTR[] = "We were unable to updated this apartment at this time.<br /><br />The system administrator has been notified of this issue, please try again later.";
-
 					application_log("error", "Failed to update apartment_id [" . $APARTMENT_ID . "]. Database said: " . $db->ErrorMsg());
 				}
 			}
-
 			if ($ERROR) {
 				$STEP = 1;
 			}
 			break;
 		case 1 :
 		default :
-			
+
 			if (!isset($APARTMENT_INFO['keys_firstname']) || $APARTMENT_INFO['keys_firstname'] == '') {
 				$APARTMENT_INFO['keys_firstname'] = $APARTMENT_INFO['super_firstname'];
 				$APARTMENT_INFO['keys_lastname'] = $APARTMENT_INFO['super_lastname'];
 				$APARTMENT_INFO['keys_phone'] = $APARTMENT_INFO['super_phone'];
 				$APARTMENT_INFO['keys_email'] = $APARTMENT_INFO['super_email'];
 			}
-			$hide_key_info = ($APARTMENT_INFO['keys_firstname']==$APARTMENT_INFO['super_firstname'])&&
+			$super_for_keys = ($APARTMENT_INFO['keys_firstname']==$APARTMENT_INFO['super_firstname'])&&
 								($APARTMENT_INFO['keys_lastname']==$APARTMENT_INFO['super_lastname'])&&
 									($APARTMENT_INFO['keys_phone']==$APARTMENT_INFO['super_phone']) &&
 										($APARTMENT_INFO['keys_email']==$APARTMENT_INFO['super_email'])?'true':'false';
 			$PROCESSED = $APARTMENT_INFO;
-
 			if (isset($APARTMENT_INFO["region_id"])) {
 				$PROCESSED["city"] = get_region_name($APARTMENT_INFO["region_id"]);
 			}
 			break;
 	}
-
 	switch ($STEP) {
-		case 2 :
-			if ($ERROR) {
-				echo display_errors();
-			}
-
-			if ($NOTICE) {
-				echo display_notices();
-			}
-
-			if ($SUCCESS) {
-				echo display_success();
-			}
-			break;
-		case 1 :
+	case 2 :
+		if ($ERROR) {
+			echo display_errors();
+		}
+		if ($NOTICE) {
+			echo display_notices();
+		}
+		if ($SUCCESS) {
+			echo display_success();
+		}
+		break;
+	case 1 :
 		default :
 			$PROCESSED["prov_state"] = ((isset($PROCESSED["province_id"]) && $PROCESSED["province_id"]) ? (int) $PROCESSED["province_id"] : ((isset($PROCESSED["apartment_province"]) && $PROCESSED["apartment_province"]) ? $PROCESSED["apartment_province"] : ""));
-
 			$ONLOAD[] = "provStateFunction(\$F($('editApartmentForm')['countries_id']))";
-
+			$ONLOAD[] = "display_key_contact(".$super_for_keys.")";
 			/**
 			 * Determine whether the Google Maps can be shown.
 			 */
 			if ((defined("GOOGLE_MAPS_API")) && (GOOGLE_MAPS_API != "")) {
 				$HEAD[] = "<script type=\"text/javascript\" src=\"" . GOOGLE_MAPS_API . "\"></script>";
 				$ONLOAD[] = "initialize()";
-
 				if (isset($PROCESSED["apartment_latitude"]) && $PROCESSED["apartment_latitude"] && isset($PROCESSED["apartment_longitude"]) && $PROCESSED["apartment_longitude"]) {
 					$ONLOAD[] = "addPointToMap('" . $PROCESSED["apartment_latitude"] . "', '" . $PROCESSED["apartment_longitude"] . "')";
 				}
@@ -359,24 +353,21 @@ if (!defined("IN_MANAGE")) {
 			<script type="text/javascript">
 				var googleMap = null;
 				var updater = null;
-
 				
-
-		        function showHide(){
-					if(!document.getElementById('keys_from_super').checked){
-						document.getElementById('keys_division').style.visibility = 'visible';
-					}
-					else{
-						document.getElementById('keys_division').style.visibility = 'hidden';
+				function display_key_contact(display) {
+					if (display) {
+						$('keys_from_super').checked = true;
+						Effect.Fade($('keys_division'));
+					} else {
+						$('keys_from_super').checked = false;
+						Effect.Appear($('keys_division'));
 					}
 				}
-
-
-
+				
+				
 				function initialize() {
 					googleMap = new GMap2($('mapData'));
 				}
-
 				function provStateFunction(countries_id) {
 					var url='<?php echo webservice_url("province"); ?>';
 					url = url + '?countries_id=' + countries_id + '&prov_state=<?php echo rawurlencode((isset($_POST["prov_state"]) ? clean_input($_POST["prov_state"], array("notags", "trim")) : $PROCESSED["prov_state"])); ?>';
@@ -385,15 +376,12 @@ if (!defined("IN_MANAGE")) {
 						method:'get',
 						onComplete: function () {
 							generateAutocomplete();
-
 							if ($('prov_state').type == 'select-one') {
 								$('prov_state').observe('change', updateAptData);
-
 								$('prov_state_label').removeClassName('form-nrequired');
 								$('prov_state_label').addClassName('form-required');
 							} else {
 								$('prov_state').observe('blur', updateAptData);
-
 								$('prov_state_label').removeClassName('form-required');
 								$('prov_state_label').addClassName('form-nrequired');
 							}
@@ -414,21 +402,17 @@ if (!defined("IN_MANAGE")) {
 						});
 					}
 				}
-
 				function getRegionId(text, li) {
 					if (li.id) {
 						$('region_id').setValue(li.id);
 					}
 				}
-
 				function addPointToMap(lat, lng) {
 					if (googleMap && lat != '' && lng != '' && GBrowserIsCompatible()) {
 						point = new GLatLng(lat, lng);
-
 						addMarker(point, lat, lng);
 					}
 				}
-
 				function addAddressToMap(response) {
 					if (googleMap && GBrowserIsCompatible()) {
 						if (!response || response.Status.code != 200) {
@@ -436,23 +420,19 @@ if (!defined("IN_MANAGE")) {
 						} else {
 							place = response.Placemark[0];
 							point = new GLatLng(place.Point.coordinates[1], place.Point.coordinates[0]);
-
 							addMarker(point, place.Point.coordinates[1], place.Point.coordinates[0]);
 						}
 					}
 				}
-
 				function addMarker(point, lat, lng) {
 					if (googleMap && point && lat && lng) {
 						if (!$('mapContainer').visible()) {
 							$('mapContainer').show();
 						}
-
 						googleMap = new GMap2($('mapData'));
 						googleMap.setUIToDefault();
 						googleMap.setCenter(point, 15);
 						googleMap.clearOverlays();
-
 						var icon = new GIcon();
 						icon.image = '<?php echo ENTRADA_URL; ?>/images/icon-apartment.gif';
 						icon.shadow = '<?php echo ENTRADA_URL; ?>/images/icon-apartment-shadow.png';
@@ -460,20 +440,16 @@ if (!defined("IN_MANAGE")) {
 						icon.shadowSize = new GSize(35, 34);
 						icon.iconAnchor = new GPoint(25, 34);
 						icon.infoWindowAnchor = new GPoint(15, 5);
-
 						var marker = new GMarker(point, icon);
 						googleMap.addOverlay(marker);
-
 						$('apartment_latitude').setValue(lat);
 						$('apartment_longitude').setValue(lng);
 					}
 				}
-
 				function updateAptData() {
 					var address = ($('apartment_address') ? $F('apartment_address') : false);
 					var country = ($F('countries_id') ? $('countries_id')[$('countries_id').selectedIndex].text : false);
 					var city = ($F('city') ? $F('city') : false);
-
 					if ($('prov_state').type == 'select-one' && ($F('prov_state') > 0)) {
 						var province = $('prov_state')[$F('prov_state')].text;
 					} else if ($('prov_state').type == 'text' && $F('prov_state') != '') {
@@ -481,35 +457,27 @@ if (!defined("IN_MANAGE")) {
 					} else {
 						var province = false;
 					}
-
 					if (googleMap && address && city && country && GBrowserIsCompatible()) {
 						var geocoder = new GClientGeocoder();
-
 						var search = [address, city];
 						if (province) {
 							search.push(province);
 						}
 						search.push(country);
-
 						searchFor = search.join(', ');
-
 						geocoder.getLocations(searchFor, addAddressToMap);
 					}
-
 					if ((address) && ($F('apartment_title') == '')) {
 						$('apartment_title').setValue(($F('apartment_number').length > 0 ? $F('apartment_number') + ' - ' : '') + address);
 					}
-
 					return false;
 				}
 			</script>
-
 			<form action="<?php echo ENTRADA_URL; ?>/admin/regionaled/apartments/manage?id=<?php echo $APARTMENT_ID; ?>&section=edit" method="post" id="editApartmentForm">
 				<input type="hidden" id="step" name="step" value="2" />
 				<input type="hidden" id="region_id" name="region_id" value="<?php echo (isset($PROCESSED["region_id"]) ? (int) $PROCESSED["region_id"] : 0); ?>" />
 				<input type="hidden" id="apartment_latitude" name="apartment_latitude" value="<?php echo (isset($PROCESSED["apartment_latitude"]) ? html_encode($PROCESSED["apartment_latitude"]) : 0); ?>" />
 				<input type="hidden" id="apartment_longitude" name="apartment_longitude" value="<?php echo (isset($PROCESSED["apartment_longitude"]) ? html_encode($PROCESSED["apartment_longitude"]) : 0); ?>" />
-
 				<table style="width: 100%" cellspacing="0" border="0" cellpadding="2" summary="Edit Apartment Form">
 					<colgroup>
 						<col style="width: 3%" />
@@ -533,19 +501,19 @@ if (!defined("IN_MANAGE")) {
 							<td>&nbsp;</td>
 							<td><label for="countries_id" class="form-required">Country</label></td>
 							<td>
-			<?php
-			$countries = fetch_countries();
-			if ((is_array($countries)) && (count($countries))) {
-				echo "<select id=\"countries_id\" name=\"countries_id\" style=\"width: 256px\" onchange=\"provStateFunction(this.value); updateAptData();\">\n";
-				foreach ($countries as $country) {
-					echo "<option value=\"" . (int) $country["countries_id"] . "\"" . (($PROCESSED["countries_id"] == $country["countries_id"]) ? " selected=\"selected\"" : (!isset($PROCESSED["countries_id"]) && $country["countries_id"] == DEFAULT_COUNTRY_ID) ? " selected=\"selected\"" : "") . ">" . html_encode($country["country"]) . "</option>\n";
-				}
-				echo "</select>\n";
-			} else {
-				echo "<input type=\"hidden\" id=\"countries_id\" name=\"countries_id\" value=\"0\" />\n";
-				echo "Country information not currently available.\n";
-			}
-			?>
+								<?php
+								$countries = fetch_countries();
+								if ((is_array($countries)) && (count($countries))) {
+									echo "<select id=\"countries_id\" name=\"countries_id\" style=\"width: 256px\" onchange=\"provStateFunction(this.value); updateAptData();\">\n";
+									foreach ($countries as $country) {
+										echo "<option value=\"" . (int) $country["countries_id"] . "\"" . (($PROCESSED["countries_id"] == $country["countries_id"]) ? " selected=\"selected\"" : (!isset($PROCESSED["countries_id"]) && $country["countries_id"] == DEFAULT_COUNTRY_ID) ? " selected=\"selected\"" : "") . ">" . html_encode($country["country"]) . "</option>\n";
+									}
+									echo "</select>\n";
+								} else {
+									echo "<input type=\"hidden\" id=\"countries_id\" name=\"countries_id\" value=\"0\" />\n";
+									echo "Country information not currently available.\n";
+								}
+								?>
 							</td>
 							<td rowspan="10">
 								<div id="mapContainer" style="display: none;">
@@ -673,78 +641,64 @@ if (!defined("IN_MANAGE")) {
 								<input type="text" id="super_email" name="super_email" value="<?php echo html_encode($PROCESSED["super_email"]); ?>" maxlength="32" style="width: 250px" />
 							</td>
 						</tr>
-
-
 						<tr>
-							<td colspan="4"><h2>Contact for Keys</h2>
-								<input type="checkbox"name ="keys_from_super" id="keys_from_super" value="true" onclick="showHide();" checked="checked">Same as Superintendent</input>
-							</td>
-						</tr>
-					</tbody>
-					<tbody id ="keys_division">
-						<tr>
-							<td>&nbsp;</td>
-							<td><label for="keys_firstname" class="form-required">Firstname</label></td>
-							<td colspan="2">
-								<input type="text" id="keys_firstname" name="keys_firstname" value="<?php echo html_encode($PROCESSED["keys_firstname"]); ?>" maxlength="32" style="width: 250px" />
-							</td>
+							<td colspan="4">&nbsp;</td>
 						</tr>
 						<tr>
-							<td>&nbsp;</td>
-							<td><label for="keys_lastname" class="form-required">Lastname</label></td>
-							<td colspan="2">
-								<input type="text" id="keys_lastname" name="keys_lastname" value="<?php echo html_encode($PROCESSED["keys_lastname"]); ?>" maxlength="32" style="width: 250px" />
-							</td>
+							<td><input type="checkbox"name ="keys_from_super" id="keys_from_super" value="true" onclick="display_key_contact(this.checked)"/></td>
+							<td colspan="2"><label for="keys_from_super" class="form-nrequired">The superintendent is also the <strong>key contact</strong> for this apartment.</label></td>
 						</tr>
-						<tr>
-							<td>&nbsp;</td>
-							<td><label for="keys_phone" class="form-required">Telephone Number</label></td>
-							<td colspan="2">
-								<input type="text" id="keys_phone" name="keys_phone" value="<?php echo html_encode($PROCESSED["keys_phone"]); ?>" maxlength="32" style="width: 250px" />
-							</td>
-						</tr>
-						<tr>
-							<td>&nbsp;</td>
-							<td><label for="keys_email" class="form-required">E-Mail Address</label></td>
-							<td colspan="2">
-								<input type="text" id="keys_email" name="keys_email" value="<?php echo html_encode($PROCESSED["keys_email"]); ?>" maxlength="32" style="width: 250px" />
-							</td>
-						</tr>
-
-					</tbody>
-					<tbody>
-
-						<tr>
-							<td colspan="4"><h2>Apartment Availability</h2></td>
-						</tr>
-						<tr>
-							<td colspan="3"></td>
-							<td rowspan="3"></td>
-						</tr>
-			<?php
-			$available_start = ((isset($PROCESSED["available_start"])) ? (int) $PROCESSED["available_start"] : time());
-			$available_finish = ((isset($PROCESSED["available_finish"])) ? (int) $PROCESSED["available_finish"] : 0);
-
-			echo generate_calendars("available", "", true, true, $available_start, true, false, $available_finish, false);
-			?>
-					</tbody>
-				</table>
-			</form>
-			<script type="text/javascript">
-				
-					if(<?php echo $hide_key_info;?>){
-						document.getElementById('keys_division').style.visibility = 'hidden';
-					}
-					else{
-						document.getElementById('keys_from_super').checked = false;
-						document.getElementById('keys_division').style.visibility = 'visible';
-					}
-								
-			
-			</script>
-			
-			
-						<?php
-						break;
-				}
-			}
+						</tbody>
+						<tbody id="keys_division" style="display: none">
+							<tr>
+								<td colspan="4"><h2>Contact for Keys</h2></td>
+							</tr>
+							<tr>
+								<td>&nbsp;</td>
+								<td><label for="keys_firstname" class="form-required">Firstname</label></td>
+								<td colspan="2">
+									<input type="text" id="keys_firstname" name="keys_firstname" value="<?php echo html_encode($PROCESSED["keys_firstname"]); ?>" maxlength="32" style="width: 250px" />
+								</td>
+							</tr>
+							<tr>
+								<td>&nbsp;</td>
+								<td><label for="keys_lastname" class="form-required">Lastname</label></td>
+								<td colspan="2">
+									<input type="text" id="keys_lastname" name="keys_lastname" value="<?php echo html_encode($PROCESSED["keys_lastname"]); ?>" maxlength="32" style="width: 250px" />
+								</td>
+							</tr>
+							<tr>
+								<td>&nbsp;</td>
+								<td><label for="keys_phone" class="form-required">Telephone Number</label></td>
+								<td colspan="2">
+									<input type="text" id="keys_phone" name="keys_phone" value="<?php echo html_encode($PROCESSED["keys_phone"]); ?>" maxlength="32" style="width: 250px" />
+								</td>
+							</tr>
+							<tr>
+								<td>&nbsp;</td>
+								<td><label for="keys_email" class="form-required">E-Mail Address</label></td>
+								<td colspan="2">
+									<input type="text" id="keys_email" name="keys_email" value="<?php echo html_encode($PROCESSED["keys_email"]); ?>" maxlength="32" style="width: 250px" />
+								</td>
+							</tr>
+						</tbody>
+						<tbody>
+							<tr>
+								<td colspan="4"><h2>Apartment Availability</h2></td>
+							</tr>
+							<tr>
+								<td colspan="3"></td>
+								<td rowspan="3"></td>
+							</tr>
+							<?php
+								$available_start = ((isset($PROCESSED["available_start"])) ? (int) $PROCESSED["available_start"] : time());
+								$available_finish = ((isset($PROCESSED["available_finish"])) ? (int) $PROCESSED["available_finish"] : 0);
+								echo generate_calendars("available", "", true, true, $available_start, true, false, $available_finish, false);
+							?>
+						</tbody>
+					</table>
+				</form>
+		<?php	
+		break;
+	}
+}

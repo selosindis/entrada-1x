@@ -493,34 +493,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				<tbody>
 					<tr>
 						<td></td>
-<<<<<<< HEAD
-=======
-						<td><label for="organisation_id" class="form-required">Course Organisation</label></td>
-						<td>
-							<script>
-								function updateCourseObjectives(idx){
-									alert("index is "+idx);
-								}
-							</script>
-							<select id="organisation_id" name="organisation_id" onchange ="updateCourseObjectives(this.options[this.selectedIndex].value);"style="width: 250px">
-							<?php
-							$query		= "SELECT `organisation_id`, `organisation_title` FROM `".AUTH_DATABASE."`.`organisations`";
-							$results	= $db->GetAll($query);
-							if ($results) {
-								foreach($results as $result) {
-									if ($ENTRADA_ACL->amIAllowed(new CourseResource(null, $result['organisation_id']), 'create')) {
-										//echo "<option value=\"".(int) $result["organisation_id"]."\"".(((isset($PROCESSED["organisation_id"])) && ($PROCESSED["organisation_id"] == $result["organisation_id"])) ? " selected=\"selected\"" : "").">".html_encode($result["organisation_title"])."</option>\n";
-										echo "<option value=\"".(int) $result["organisation_id"]."\"".(($ORGANISATION_ID == $result["organisation_id"]) ? " selected=\"selected\"" : "").">".html_encode($result["organisation_title"])."</option>\n";
-									}
-								}
-							}
-							?>
-							</select>
-						</td>
-					</tr>
-					<tr>
-						<td></td>
->>>>>>> 85c99ebbd5ac7f5fc2134ab847d983b0dab3cdf1
 						<td style="vertical-align: top"><label for="curriculum_type_id" class="form-nrequired">Curriculum Category</label></td>
 						<td>
 							<select id="curriculum_type_id" name="curriculum_type_id" style="width: 250px">

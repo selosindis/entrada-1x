@@ -554,7 +554,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				echo display_error();
 			}
 			?>
+
 			<form action="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?<?php echo replace_query(array("step" => 2)); ?>" method="post" id="addCourseForm" onsubmit="selIt()">
+
+			<input type="hidden" name="organisation_id" id="organisation_id" value=<?php echo $user->getActiveOrganisation() ?> />
 			<h2 title="Course Details Section">Course Details</h2>
 			<div id="course-details-section">
 				<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Adding Course Details">
@@ -566,6 +569,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				<tbody>
 					<tr>
 						<td></td>
+
 						<td><label for="organisation_id" class="form-required">Course Organisation</label></td>
 						<td>
 							<script>
@@ -853,15 +857,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					</tr>
 					<tr>
 						<td colspan="3"><?php $return = course_objectives_in_list($course_objectives, $top_level_id, true);?></td>
-					</tr>
-					<tr>
-						<td>&nbsp;</td>
-						<td colspan="2">
-							<div id="objectives_list">
-							
-							<?php //echo course_objectives_in_list($course_objectives, $top_level_id, true); ?>
-							</div>
-						</td>
 					</tr>
 					<tr>
 						<td colspan="3">&nbsp;</td>

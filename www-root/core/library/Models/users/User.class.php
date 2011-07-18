@@ -22,7 +22,7 @@
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
 */
-require_once("Models/utility/SimpleCache.class.php");
+
 require_once("Models/organisations/Organisation.class.php");
 require_once("Models/users/GraduatingClass.class.php");
 
@@ -64,7 +64,10 @@ class User {
 			$privacy_level,
 			$notifications,
 			$office_hours,
-			$clinical;
+			$clinical,
+			$active_organisation,
+			$all_organisations;
+
 	
 	private $group, $role;
 
@@ -219,11 +222,13 @@ class User {
 	}
 	
 	/**
+	 * Not supported yet.
+	 * 
 	 * @return Organisation
 	 */
-	function getOrganisation() {
-		return Organisation::get($this->organisation_id);
-	}
+//	function getOrganisation() {
+//		return Organisation::get($this->organisation_id);
+//	}
 	
 	/**
 	 * Returns the ID of the organisation to which the user belongs
@@ -240,6 +245,53 @@ class User {
 	function getPhotos() {
 		return UserPhotos::get($this->getID());
 	}
+
+	/**
+	 * Returns the currently active organisation.
+	 * If not set then it returns the default org for this user found
+	 * in the user_data table.
+	 *
+	 * @return int
+	 */
+	function getActiveOrganisation() {
+		if ($this->active_organisation) {
+			return $this->active_organisation;
+		}
+		else if ($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"]) {
+			return $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"];
+		}
+		else {
+			return $this->organisation_id;
+		}
+	}
+
+	/**
+	 * Sets the active organisation.
+	 * 
+	 * @param <String> $value - the active, i.e., current org
+	 */
+	public function setActiveOrganisation($value){
+		$this->active_organisation = $value;
+	}
+
+	/**
+	 * Returns an array of all the organisation that this user
+	 * belongs to.
+	 *
+	 * @return array
+	 */
+	function getAllOrganisations() {
+		return $this->all_organisations;
+	}
+
+	/**
+	 * Sets the array of all orgs this user belongs to.
+	 *
+	 * @param <array> $value
+	 */
+	function setAllOrganisations($value) {
+		$this->all_organisations = $value;
+	}
 	
 	/**
 	 * 
@@ -247,16 +299,36 @@ class User {
 	 * @return User
 	 */
 	public static function get($proxy_id) {
-		$cache = SimpleCache::getCache();
-		$user = $cache->get("User",$proxy_id);
 		if (!$user) {
+			$user = new User();
 			global $db;
-			$query = "SELECT a.*, b.`group`, b.`role` FROM `".AUTH_DATABASE."`.`user_data` a LEFT JOIN `".AUTH_DATABASE."`.`user_access` b on a.`id`=b.`user_id` and b.`app_id`=? WHERE a.`id` = ?";
+			$query = "SELECT a.*, b.`group`, b.`role` 
+					  FROM `".AUTH_DATABASE."`.`user_data` a
+					  LEFT JOIN `".AUTH_DATABASE."`.`user_access` b
+						  on a.`id`=b.`user_id` and b.`app_id`=?
+					  WHERE a.`id` = ?";
 			$result = $db->getRow($query, array(AUTH_APP_ID,$proxy_id));
+
 			if ($result) {
-				$user = self::fromArray($result);  			
-			}		
-		} 
+				$user = self::fromArray($result, $user);
+			}
+			
+			//get all of the users orgs
+			$query = "SELECT b.`organisation_id`, b.`organisation_title`
+					  FROM `".AUTH_DATABASE."`.`user_organisation` a
+					  JOIN `".AUTH_DATABASE."`.`organisations` b
+						  on a.`organisation_id` = b.`organisation_id`
+					  WHERE a.`proxy_id` = ?";
+			$results = $db->getAll($query, array($proxy_id));
+
+			//every user should have at least one org.
+			if ($results) {
+				foreach ($results as $result) {
+					$organisation_list[$result["organisation_id"]] = html_encode($result["organisation_title"]);
+				}				
+				$user->setAllOrganisations($organisation_list);
+			}
+		}
 		return $user;
 	}
 	
@@ -265,14 +337,7 @@ class User {
 	 * @param array $arr
 	 * @return User
 	 */
-	public static function fromArray(array $arr, User $user = null) {
-		$cache = SimpleCache::getCache();
-		if (is_null($user)) {
-			$user = $cache->get("User", $arr['id']); //re-use a cached copy if we can. helps prevent inconsistent objects 
-			if (!$user) {
-				$user = new User();
-			}
-		}
+	public static function fromArray(array $arr, User $user) {
 		$user->id = $arr['id'];
 		$user->username = $arr['username'];
 		$user->firstname = $arr['firstname'];
@@ -302,11 +367,8 @@ class User {
 		$user->office_hours = $arr['office_hours'];
 		$user->clinical = $arr['clinical'];
 		$user->group = $arr['group'];
-		$user->role = $arr['role'];
-		
-		
-		//be sure to cache this whenever created.
-		$cache->set($user,"User",$user->id);
+		$user->role = $arr['role'];		
+
 		return $user;
 	}
 	
@@ -476,4 +538,5 @@ class User {
 		}
 		return new Users($users);
 	}
+
 }

@@ -49,16 +49,20 @@ if (!defined("IN_MTDTRACKING")) {
 
 	$block = clean_input($_GET['block'], array("notags", "trim", "nows"));
 
-	$query = "SELECT *
+	if ($block) {
+		$query = "SELECT *
 				  FROM `pg_blocks`
 				  WHERE `block_name` = " . $db->qstr($block) . "
 				  AND year = " . $db->qstr($year);
-	$result = $db->GetRow($query);
+		$result = $db->GetRow($query);
 
-	$start_date = new DateTime($result["start_date"]);
-	$end_date = new DateTime($result["end_date"]);
+		$start_date = new DateTime($result["start_date"]);
+		$end_date = new DateTime($result["end_date"]);
 
-	echo "<span>Block " . $block . " selected<br />  Start: " . $start_date->format('F jS, Y') . "<br />  End: " . $end_date->format('F jS, Y') . "</span>";
+		echo "<span>Block " . $block . " selected<br />  Start: " . $start_date->format('F jS, Y') . "<br />  End: " . $end_date->format('F jS, Y') . "</span>";
+	} else {
+		echo "";
+	}
 
 	exit();
 }

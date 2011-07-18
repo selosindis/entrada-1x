@@ -2673,13 +2673,13 @@ function course_name($course_id = 0, $return_course_name = true, $return_course_
  * @param int $id
  * @return string
  */
-function small_group_name($small_group_id = 0) {
+function group_name($group_id = 0) {
 	global $db;
 
-	if (($small_group_id = (int) $small_group_id)) {
+	if (($group_id = (int) $group_id)) {
 		$output = array();
-		$query	= "	SELECT `group_name` FROM `small_groups` 
-					WHERE `sgroup_id` = ".$db->qstr($small_group_id)."
+		$query	= "	SELECT `group_name` FROM `groups` 
+					WHERE `group_id` = ".$db->qstr($group_id)."
 					AND `group_active` = '1'";
 		$result	= $db->GetRow($query);
 		if ($result) {
@@ -7298,6 +7298,7 @@ function lp_multiple_select_inline($id, $checkboxes, $options) {
 function lp_multiple_select_table($checkboxes, $indent, $i, $category_select_all = false) {
 	$return = "";
 	$input_class = 'select_multiple_checkbox';
+
 	foreach($checkboxes as $checkbox) {
 		if($i%2 == 0) {
 			$class = 'even';
@@ -7329,12 +7330,15 @@ function lp_multiple_select_table($checkboxes, $indent, $i, $category_select_all
 
 		$i++;
 
-		$return .= '<tr class="'.$class.'"><td class="'.$name_class.' indent_'.$indent.'"><label for="'.$checkbox['value'].'">'.$checkbox['text'].'</label></td><td class="'.$input_class.'">'.$input.'</td></tr>';
+		if ($checkbox['value']) {
+			$return .= '<tr class="'.$class.'"><td class="'.$name_class.' indent_'.$indent.'"><label for="'.$checkbox['value'].'">'.$checkbox['text'].'</label></td><td class="'.$input_class.'">'.$input.'</td></tr>';
+		}
 
 		if(isset($checkbox['options'])) {
 			$return .= lp_multiple_select_table($checkbox['options'], $indent+1, $i);
 		}
 	}
+
 	return $return;
 }
 
@@ -9173,6 +9177,7 @@ function events_output_filter_controls($module_type = "") {
 		$module_type = "";
 	}
 	?>
+	
 	<table id="filterList" style="clear: both; width: 100%" cellspacing="0" cellpadding="0" border="0" summary="Event Filters">
 		<tr>
 			<td style="width: 53%; vertical-align: top">
@@ -9201,11 +9206,12 @@ function events_output_filter_controls($module_type = "") {
 				function showMultiSelect() {
 					$$('select_multiple_container').invoke('hide');
 					id = $F('filter_select');
+					organisation_id = <?php echo $ORGANISATION_ID ?>;
 					if (multiselect[id]) {
 						multiselect[id].container.show();
 					} else {
 						new Ajax.Request('<?php echo ENTRADA_URL."/api/events_filters.api.php";?>', {
-							parameters: {options_for: id},
+							parameters: {options_for: id, organisation_id: organisation_id},
 							method: "GET",
 							onLoading: function() {
 								$('filter_options_loading').show();
@@ -9299,7 +9305,7 @@ function events_output_filter_controls($module_type = "") {
 										echo course_name($filter_value);
 									break;
 									case "smallgroup" :
-										echo small_group_name($filter_value);
+										echo group_name($filter_value);
 									break;
 									case "phase" :
 										echo "Phase / Term ".strtoupper($filter_value);
@@ -9961,6 +9967,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 					WHERE (a.`event_status` = 'published' OR a.`event_status` = 'approval')
 					AND b.`econtact_type` = 'student'
 					AND b.`etype_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+					AND (`events`.`event_children` = 0 OR `events`.`event_children` IS NULL)
 					ORDER BY a.`event_start` ASC";
 		$clerkship_events = $db->GetAll($query);
 		if (isset($clerkship_events) && $clerkship_events) {
@@ -10072,6 +10079,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 
 	$query_events = "	SELECT `events`.`event_id`,
 						`events`.`course_id`,
+						`events`.`parent_id`,
 						`events`.`event_phase`,
 						`events`.`event_title`,
 						`events`.`event_message`,
@@ -10118,6 +10126,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 							ON `courses`.`course_id` = `events`.`course_id`
 							%OBJECTIVE_JOIN%
 							WHERE `courses`.`course_active` = '1'
+							AND (`events`.`event_children` = 0 OR `events`.`event_children` IS NULL)
 							".($filter_clerkship_events && $course_ids_string ? "AND (`courses`.`course_id` NOT IN (".$course_ids_string.")\n OR (".implode("\n", $time_periods)."))" : "")."
 							AND (`events`.`release_date` <= ".$db->qstr(time())." OR `events`.`release_date` = 0)
 							AND (`events`.`release_until` >= ".$db->qstr(time())." OR `events`.`release_until` = 0)
@@ -10137,6 +10146,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 							ON  `courses`.`course_id` = `events`.`course_id`
 							%OBJECTIVE_JOIN%
 							WHERE `courses`.`course_active` = '1'
+							AND (`events`.`event_children` = 0 OR `events`.`event_children` IS NULL)
 							".($filter_clerkship_events && $course_ids_string ? "AND (`courses`.`course_id` NOT IN (".$course_ids_string.")\n OR (".implode("\n", $time_periods)."))" : "")."
 							AND `courses`.`organisation_id` = ".$db->qstr($organisation_id);
 
@@ -10179,8 +10189,8 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 									/**
 									 * Get the small groups of the proxy_id.
 									 */
-									$query = "	SELECT `sgroup_id`
-												FROM `small_group_members`
+									$query = "	SELECT `group_id`
+												FROM `group_members`
 												WHERE `proxy_id` = ".$db->qstr($student_proxy_id)."
 												AND `member_active` = 1";
 									$results = $db->GetAll($query);
@@ -10188,13 +10198,13 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 										$group_ids_string = "";
 										foreach ($results as $result) {
 											if ($group_ids_string) {
-												$group_ids_string = $db->qstr($result["sgroup_id"]);
+												$group_ids_string = $db->qstr($result["group_id"]);
 											} else {
-												$group_ids_string .= ", ".$db->qstr($result["sgroup_id"]);
+												$group_ids_string .= ", ".$db->qstr($result["group_id"]);
 											}
 										}
 										if ($group_ids_string) {
-											$student_groups = "(`event_audience`.`audience_type` = 'small_group' AND `event_audience`.`audience_value` IN (".$group_ids_string.")) OR ";
+											$student_groups = "(`event_audience`.`audience_type` = 'group' AND `event_audience`.`audience_value` IN (".$group_ids_string.")) OR ";
 										}
 									}
 
@@ -10205,7 +10215,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 								$where_grad_year[] = "(`event_audience`.`audience_type` = 'grad_year' AND `event_audience`.`audience_value` = ".$db->qstr((int) $filter_value).")";
 							break;
 							case "smallgroup" :
-								$where_group[] = "(`event_audience`.`audience_type` = 'small_group' AND `event_audience`.`audience_value` = ".$db->qstr((int) $filter_value).")";
+								$where_group[] = "(`event_audience`.`audience_type` = 'group' AND `event_audience`.`audience_value` = ".$db->qstr((int) $filter_value).")";
 							break;
 							case "course" :
 								$where_course[] = "(`events`.`course_id` = ".$db->qstr($filter_value).")";
@@ -10281,6 +10291,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 							LEFT JOIN `courses`
 							ON `events`.`course_id` = `courses`.`course_id`
 							WHERE `courses`.`organisation_id` = ".$db->qstr($organisation_id)."
+							AND (`events`.`event_children` = 0 OR `events`.`event_children` IS NULL)
 							".($filter_clerkship_events && $course_ids_string ? "AND (`courses`.`course_id` NOT IN (".$course_ids_string.")\n OR (".implode("\n", $time_periods)."))" : "")."
 							AND (`events`.`release_date` <= ".$db->qstr(time())." OR `events`.`release_date` = 0)
 							AND (`events`.`release_until` >= ".$db->qstr(time())." OR `events`.`release_until` = 0)
@@ -10296,6 +10307,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 							LEFT JOIN `courses`
 							ON  (`courses`.`course_id` = `events`.`course_id`)
 							WHERE`courses`.`course_active` = '1'
+							AND (`events`.`event_children` = 0 OR `events`.`event_children` IS NULL)
 							".($filter_clerkship_events && $course_ids_string ? "AND (`courses`.`course_id` NOT IN (".$course_ids_string.")\n OR (".implode("\n", $time_periods)."))" : "")."
 							AND `courses`.`organisation_id` = ".$db->qstr($organisation_id)."
 							".(($display_duration) ? "AND `events`.`event_start` BETWEEN ".$db->qstr($display_duration["start"])." AND ".$db->qstr($display_duration["end"]) : "")."
@@ -10394,6 +10406,30 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 					}
 					foreach ($learning_events as &$event) {
 						$event["last_visited"] = $dates_array[$event["event_id"]];
+					}
+				}
+			}
+		}
+		$parent_ids = array();
+		foreach ($learning_events as $event) {
+			if ($event["parent_id"]) {
+				$parent_ids[] = $event["parent_id"];
+			}
+		}
+		if (!empty($parent_ids)) {
+			$query = "	SELECT * FROM `events`
+						WHERE `event_id` IN (".implode(", ", $parent_ids).")
+						GROUP BY `event_id`";
+			$parent_events = $db->GetAll($query);
+			if (!empty($parent_events)) {
+				$parent_events_array = array();
+				foreach ($parent_events as $parent_event) {
+					$parent_events_array[$parent_event["event_id"]] = $parent_event;
+				}
+				foreach ($learning_events as &$event) {
+					if (key_exists($event["parent_id"], $parent_events_array)) {
+						$event["event_title"] = $parent_events_array[$event["parent_id"]]["event_title"]." - ".$event["event_title"];
+						$event["event_phase"] = $parent_events_array[$event["parent_id"]]["event_phase"];
 					}
 				}
 			}
@@ -12462,6 +12498,7 @@ function objectives_competency_courses($competency_id = 0) {
 				JOIN `course_objectives` AS b
 				ON a.`course_id` = b.`course_id`
 				AND `objective_id` IN (".objectives_build_objective_descendants_id_string($competency_id).")
+				AND a.`course_active` = 1
 				GROUP BY a.`course_id`";
 	$courses = $db->GetAll($query);
 	if ($courses) {
@@ -12974,7 +13011,7 @@ function evaluations_fetch_attempts($evaluation_id = 0) {
 
 	if ($evaluation_id = (int) $evaluation_id) {
 		$query		= "	SELECT COUNT(*) AS `total`
-						FROM `evaluations_progress`
+						FROM `evaluation_progress`
 						WHERE `evaluation_id` = ".$db->qstr($evaluation_id)."
 						AND `proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
 						AND `progress_value` <> 'inprogress'";

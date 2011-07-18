@@ -44,6 +44,11 @@ require_once("Entrada/router/router.class.php");
 require_once("cache.inc.php");
 require_once("acl.inc.php");
 
+require_once("Models/users/User.class.php");
+if ($_SESSION["details"]["id"]) {
+	$user = User::get($_SESSION["details"]["id"]);
+}
+
 ini_set("filter.default_flags", FILTER_FLAG_NO_ENCODE_QUOTES);
 
 /**

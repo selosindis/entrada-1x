@@ -1844,15 +1844,20 @@ CREATE TABLE IF NOT EXISTS `evaluation_targets` (
 
 CREATE TABLE IF NOT EXISTS `events` (
   `event_id` int(12) NOT NULL AUTO_INCREMENT,
+  `parent_id` int(12) DEFAULT NULL,
+  `event_children` int(11) DEFAULT NULL,
   `recurring_id` int(12) DEFAULT '0',
+  `eventtype_id` int(12) DEFAULT '0',
   `region_id` int(12) DEFAULT '0',
   `course_id` int(12) NOT NULL DEFAULT '0',
   `event_phase` varchar(12) DEFAULT NULL,
   `event_title` varchar(255) NOT NULL,
   `event_description` text,
+  `include_parent_description` tinyint(1) NOT NULL DEFAULT '1',
   `event_goals` text,
   `event_objectives` text,
   `event_message` text,
+  `include_parent_message` tinyint(1) NOT NULL DEFAULT '1',
   `event_location` varchar(64) DEFAULT NULL,
   `event_start` bigint(64) NOT NULL,
   `event_finish` bigint(64) NOT NULL,
@@ -1975,7 +1980,11 @@ CREATE TABLE IF NOT EXISTS `events_recurring` (
 CREATE TABLE IF NOT EXISTS `event_audience` (
   `eaudience_id` int(12) NOT NULL AUTO_INCREMENT,
   `event_id` int(12) NOT NULL DEFAULT '0',
+<<<<<<< HEAD
   `audience_type` enum('proxy_id','grad_year','organisation_id','course') NOT NULL,
+=======
+  `audience_type` enum('proxy_id','grad_year','organisation_id','group_id','course_id') NOT NULL,
+>>>>>>> a76be84606efe6b1723ea65537a57529fc1edbf3
   `audience_value` varchar(16) NOT NULL,
   `updated_date` bigint(64) NOT NULL DEFAULT '0',
   `updated_by` int(12) NOT NULL DEFAULT '0',

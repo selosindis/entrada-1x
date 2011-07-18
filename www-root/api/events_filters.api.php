@@ -30,18 +30,23 @@ $options_for = false;
 if (isset($_GET["options_for"])) {
     $options_for = clean_input($_GET["options_for"], array("trim"));
 }
-if (($options_for) && (isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
-    $query = "SELECT `organisation_id`,`organisation_title` FROM `".AUTH_DATABASE."`.`organisations` ORDER BY `organisation_title` ASC";
-    $organisation_results = $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
+
+$organisation_id = 0;
+
+$organisation_id = $user->getActiveOrganisation();
+
+if (($options_for) && ($organisation_id) && (isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
+    $query = "SELECT `organisation_id`,`organisation_title` FROM `".AUTH_DATABASE."`.`organisations` WHERE `organisation_id` = " . $organisation_id;
+    $organisation_results = $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query); //will always be one record since the filter should be org based.
     $organisation_ids_string = "";
     if ($organisation_results) {
         $organisations = array();
-        foreach ($organisation_results as $result) {
+        foreach ($organisation_results as $result) {			
             if($ENTRADA_ACL->amIAllowed("resourceorganisation".$result["organisation_id"], "read")) {
                 if (!$organisation_ids_string) {
                     $organisation_ids_string = $db->qstr($result["organisation_id"]);
                 } else {
-                    $organisation_ids_string .= ", ".$db->qstr($result["organisation_id"]);
+                    $organisation_ids_string .= ", ".$db->qstr($result["organisation_id"]);					
                 }
                 if (isset($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["organisation"]) && is_array($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["organisation"]) && (in_array($result["organisation_id"], $_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["organisation"]))) {
                     $checked = 'checked="checked"';
@@ -56,7 +61,7 @@ if (($options_for) && (isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["i
     if (!$organisation_ids_string) {
         $organisation_ids_string = $db->qstr($ORGANISATION_ID);
     }
-
+	
     switch($options_for) {
     case "teacher":
         // Get the possible teacher filters
@@ -66,15 +71,22 @@ if (($options_for) && (isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["i
             ON b.`user_id` = a.`id`
             JOIN `".DATABASE_NAME."`.`event_contacts` AS c
             ON c.`proxy_id` = a.`id`
+			JOIN `".DATABASE_NAME."`.`events` AS d
+			ON d.`event_id` = c.`event_id`
+			JOIN `".DATABASE_NAME."`.`courses` AS e
+			ON e.`course_id` = d.`course_id`
             WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
-            AND a.`organisation_id` IN (".$organisation_ids_string.")
             AND (b.`group` = 'faculty' OR (b.`group` = 'resident' AND b.`role` = 'lecturer'))
-            AND a.`id` IN (SELECT `proxy_id` FROM `event_contacts` WHERE `contact_role` = 'teacher')
+            AND a.`id` IN (SELECT `proxy_id` FROM `event_contacts`)
+			AND e.`organisation_id` =  " . $organisation_ids_string . "
             GROUP BY a.`id`
             ORDER BY `fullname` ASC";
         $teacher_results = $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
+
         if ($teacher_results) {
-            $teachers = $organisation_categories;
+
+			$teachers = $organisation_categories;
+			
             foreach ($teacher_results as $r) {
                 if (isset($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["teacher"]) && is_array($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["teacher"]) && (in_array($r['proxy_id'], $_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]['teacher']))) {
                     $checked = 'checked="checked"';
@@ -84,6 +96,7 @@ if (($options_for) && (isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["i
 
                 $teachers[$r["organisation_id"]]['options'][] = array('text' => $r['fullname'], 'value' => 'teacher_'.$r['proxy_id'], 'checked' => $checked);
             }
+
             echo lp_multiple_select_popup('teacher', $teachers, array('title'=>'Select Teachers:', 'submit_text'=>'Apply', 'cancel'=>true, 'submit'=>true));
         }
         break;
@@ -142,20 +155,20 @@ if (($options_for) && (isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["i
         break;
     case "smallgroup":
         // Get the possible small group filters
-        $query = "	SELECT * FROM `".DATABASE_NAME."`.`small_groups` 
+        $query = "	SELECT * FROM `".DATABASE_NAME."`.`groups` 
             WHERE `group_active` = 1
             ORDER BY `group_name` ASC";
         $groups_results = $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
         if ($groups_results) {
             $groups = array();
             foreach ($groups_results as $sg) {
-                if (isset($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["smallgroup"]) && is_array($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["smallgroup"]) && (in_array($sg['sgroup_id'], $_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["smallgroup"]))) {
+                if (isset($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["smallgroup"]) && is_array($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["smallgroup"]) && (in_array($sg['group_id'], $_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["smallgroup"]))) {
                     $checked = 'checked="checked"';
                 } else {
                     $checked = '';
                 }
 
-                $groups[] = array('text' => $sg['group_name'], 'value' => 'smallgroup_'.$sg['sgroup_id'], 'checked' => $checked);
+                $groups[] = array('text' => $sg['group_name'], 'value' => 'smallgroup_'.$sg['group_id'], 'checked' => $checked);
             }
 
             echo lp_multiple_select_popup('smallgroup', $groups, array('title'=>'Select Small Groups:', 'submit_text'=>'Apply', 'cancel'=>true, 'submit'=>true));
@@ -168,7 +181,7 @@ if (($options_for) && (isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["i
 					ON a.`eventtype_id` = c.`eventtype_id` 
 					LEFT JOIN `".AUTH_DATABASE."`.`organisations` AS b
 					ON b.`organisation_id` = c.`organisation_id` 
-					WHERE b.`organisation_id` = ".$db->qstr($_SESSION["details"]["organisation_id"])."
+					WHERE b.`organisation_id` = ".$db->qstr($user->getActiveOrganisation())."
 					AND a.`eventtype_active` = '1' 
 					ORDER BY a.`eventtype_order`
 					";

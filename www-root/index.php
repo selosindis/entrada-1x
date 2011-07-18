@@ -35,6 +35,13 @@
  * Include the Entrada init code.
  */
 require_once("init.inc.php");
+
+if (isset($_GET["organisation_id"])) {
+	$organisation = clean_input($_GET["organisation_id"], array("trim", "notags", "int"));
+	$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"] = $organisation;
+	$user->setActiveOrganisation($organisation);
+}
+
 ob_start("on_checkout");
 
 $PROCEED_TO = ((isset($_GET["url"])) ? clean_input($_GET["url"], "trim") : ((isset($_SERVER["REQUEST_URI"])) ? clean_input($_SERVER["REQUEST_URI"], "trim") : false));
@@ -433,7 +440,7 @@ if ((!isset($_SESSION["isAuthorized"])) || (!(bool) $_SESSION["isAuthorized"])) 
 			 */
 			header("Location: ".ENTRADA_URL."/community".$result["community_url"]);
 			exit;
-		} elseif (isset($_SESSION["isAuthorized"]) && $_SESION["isAuthorized"] == true) {
+		} elseif (isset($_SESSION["isAuthorized"]) && $_SESSION["isAuthorized"] == true) {
 			header("Location: ".ENTRADA_URL."/?action=logout");
 			exit;
 		}
@@ -477,6 +484,40 @@ switch ($MODULE) {
 		require_once(ENTRADA_ABSOLUTE.DIRECTORY_SEPARATOR."default-pages".DIRECTORY_SEPARATOR."login.inc.php");
 	break;
 	default :
+		if ($_SESSION["details"]["group"] == "student" && $MODULE != "evaluations") {
+			$query = "SELECT * FROM `evaluations` AS a
+						JOIN `evaluation_evaluators` AS b
+						ON a.`evaluation_id` = b.`evaluation_id`
+						WHERE
+						(
+							(
+								b.`evaluator_type` = 'proxy_id'
+								AND b.`evaluator_value` = ".$db->qstr($_SESSION["details"]["id"])."
+							)
+							OR
+							(
+								b.`evaluator_type` = 'organisation_id'
+								AND b.`evaluator_value` = ".$db->qstr($_SESSION["details"]["organisation_id"])."
+							)".($_SESSION["details"]["group"] == "student" ? " OR (
+								b.`evaluator_type` = 'grad_year'
+								AND b.`evaluator_value` = ".$db->qstr($_SESSION["details"]["role"])."
+							)" : "")."
+						)
+						AND a.`evaluation_finish` < ".$db->qstr(time())."
+						AND a.`evaluation_active` = 1
+						GROUP BY a.`evaluation_id`
+						ORDER BY a.`evaluation_finish` ASC";
+			
+			$evaluations = $db->GetAll($query);
+			foreach ($evaluations as $evaluation) {
+				$completed_attempts = evaluations_fetch_attempts($evaluation["evaluation_id"]);
+				if ($evaluation["min_submittable"] > $completed_attempts) {
+					header("Location: ".ENTRADA_URL."/evaluations?section=attempt&id=".$evaluation["evaluation_id"]);
+					exit;
+				}
+			}
+			
+		}
 		/**
 		 * Initialize Entrada_Router so it can load the requested modules.
 		 */
@@ -531,4 +572,22 @@ if ((isset($_SESSION["isAuthorized"])) && ($_SESSION["isAuthorized"])) {
 	$sidebar_html  = "<a href=\"javascript: sendFeedback('".ENTRADA_URL."/agent-feedback.php?enc=".feedback_enc()."')\"><img src=\"".ENTRADA_URL."/images/feedback.gif\" width=\"48\" height=\"48\" alt=\"Give Feedback\" border=\"0\" align=\"right\" hspace=\"3\" vspace=\"5\" /></a>";
 	$sidebar_html .= "Giving feedback is a very important part of application development. Please <a href=\"javascript: sendFeedback('".ENTRADA_URL."/agent-feedback.php?enc=".feedback_enc()."')\" style=\"font-size: 11px; font-weight: bold\">click here</a> to send us any feedback you may have about <u>this</u> page.<br /><br />\n";
 	new_sidebar_item("Feedback", $sidebar_html, "page-feedback", "open");
+
+	/**
+	 * Create the Organisation side bar.
+	 * If the org request attribute is set then change the current org id for this user.
+	 */
+	if ($user->getAllOrganisations() && count($user->getAllOrganisations()) > 1) {
+		$sidebar_html = "<ul class=\"menu\">\n";
+		foreach ($user->getAllOrganisations() as $key => $organisation_title) {
+			if ($key == $user->getActiveOrganisation()) {
+				$sidebar_html .= "<li class=\"on\"><a href=\"" . ENTRADA_URL . "/" . $MODULE . "/" . "?" . replace_query(array("organisation_id" => $key)) . "\">" . html_encode($organisation_title) . "</a></li>\n";
+			} else {
+				$sidebar_html .= "<li class=\"off\"><a href=\"" . ENTRADA_URL . "/" . $MODULE . "/" . "?" . replace_query(array("organisation_id" => $key)) . "\">" . html_encode($organisation_title) . "</a></li>\n";
+			}
+		}
+		$sidebar_html .= "</ul>\n";
+
+		new_sidebar_item("Organisations", $sidebar_html, "org-switch", "open", SIDEBAR_PREPEND);
+	}
 }

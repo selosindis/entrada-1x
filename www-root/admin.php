@@ -47,6 +47,15 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 } else {
 	define("IN_ADMIN", true);
 
+	/*
+	 * If the org request attribute is set then change the current org id for this user.
+	 */
+	if (isset($_GET["organisation_id"])) {
+		$organisation = clean_input($_GET["organisation_id"], array("trim", "notags", "int"));
+		$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"] = $organisation;
+		$user->setActiveOrganisation($organisation);
+	}
+
 	/**
 	 * If they were logged into another application and came here, they should still be
 	 * signed in, unfortunately I can't do that yet, so they're logged out.
@@ -171,4 +180,22 @@ if((isset($_SESSION["isAuthorized"])) && ($_SESSION["isAuthorized"])) {
 	$sidebar_html .= "Giving feedback is a very important part of application development. Please <a href=\"javascript: sendFeedback('".ENTRADA_URL."/agent-feedback.php?enc=".feedback_enc()."')\"><b>click here</b></a> to send us any feedback you may have about <u>this</u> page.<br /><br />\n";
 
 	new_sidebar_item("Page Feedback", $sidebar_html, "page-feedback", "open");
+
+	/**
+	 * Create the Organisation side bar.
+	 */
+
+	if ($user->getAllOrganisations() && count($user->getAllOrganisations()) > 1) {
+		$sidebar_html = "<ul class=\"menu\">\n";
+		foreach ($user->getAllOrganisations() as $key => $organisation_title) {
+			if ($key == $user->getActiveOrganisation()) {
+				$sidebar_html .= "<li class=\"on\"><a href=\"" . ENTRADA_URL . "/admin/" . $MODULE . "/" . "?" . replace_query(array("organisation_id" => $key)) . "\">" . html_encode($organisation_title) . "</a></li>\n";
+			} else {
+				$sidebar_html .= "<li class=\"off\"><a href=\"" . ENTRADA_URL . "/admin/" . $MODULE . "/" . "?" . replace_query(array("organisation_id" => $key)) . "\">" . html_encode($organisation_title) . "</a></li>\n";
+			}
+		}
+		$sidebar_html .= "</ul>\n";
+
+		new_sidebar_item("Organisations", $sidebar_html, "org-switch", "open", SIDEBAR_PREPEND);
+	}
 }

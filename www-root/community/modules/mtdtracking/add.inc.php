@@ -146,35 +146,40 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 	}
 
 	if (!$ERROR) {
-		//Validate that there is no overlapp of dates for this resident
-		$query = "SELECT *
-				  FROM  `mtd_schedule`
-				  WHERE `resident_id` = " . $db->qstr($resident["proxy_id"]);
 
-		$results = $db->GetAll($query);
-		if ($results) {
-			$start_date_time = new DateTime($PROCESSED["start_date"]);
-			$end_date_time = new DateTime($PROCESSED["end_date"]);
+		//Validate that there is no overlapp of dates for this resident that exceed 100% time.
+		$start_date_time = strtotime($PROCESSED["start_date"]);
+		$end_date_time = strtotime($PROCESSED["end_date"]);
+		$temp_date = $start_date_time;
 
-			foreach ($results as $result) {
-				$temp_start_date = new DateTime($result["start_date"]);
-				$temp_end_date = new DateTime($result["end_date"]);
+		while ($temp_date <= $end_date_time) {
 
-				$query = "SELECT service_description
+			$temp_date_str = date('Y-m-d', $temp_date);
+
+			$query = "select *
+							  from mtd_schedule m1
+							  where " . $db->qstr($temp_date_str) . " BETWEEN m1.start_date AND m1.end_date
+							  AND m1.resident_id = " . $db->qstr($resident["proxy_id"]);
+
+			$results = $db->GetAll($query);
+
+			if ($results) {
+				$sum = 0;
+				foreach ($results as $result) {
+					$query = "select sum(percent_time) from mtd_locale_duration where schedule_id = " . $result["id"];
+					$sum = $sum + $db->GetOne($query);
+				}
+
+				if ($sum + $total_time > 100) {
+					$query = "SELECT service_description
 							  FROM  `mtd_moh_service_codes`
 							  WHERE `id` = " . $db->qstr($result["service_id"]);
-
-				$service_program = $db->GetOne($query);
-
-				if ($start_date_time >= $temp_start_date && $start_date_time <= $temp_end_date) {
+					$service_program = $db->GetOne($query);
 					$ERROR++;
-					$ERRORSTR[] = "The selected start date overlapps with an existing entry for the " . $service_program . " program.";
-				}
-				if ($end_date_time >= $temp_start_date && $end_date_time <= $temp_end_date) {
-					$ERROR++;
-					$ERRORSTR[] = "The selected end date overlapps with an existing entry for the " . $service_program . " program.";
+					$ERRORSTR[] = "\nThe entry on the date, " . $temp_date_str . " exceeds 100% time as a result of an overlapping entry from " . $service_program;
 				}
 			}
+			$temp_date = strtotime("+1 day", $temp_date);
 		}
 	}
 

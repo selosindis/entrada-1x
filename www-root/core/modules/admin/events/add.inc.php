@@ -39,6 +39,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
+	
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/eventtypes_list.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/AutoCompleteList.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";	
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/growler/src/Growler.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
@@ -238,7 +239,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							AND `course_active` = '1'";
 				$result	= $db->GetRow($query);
 				if ($result) {
-					if ($ENTRADA_ACL->amIAllowed(new EventResource(null, $course_id, $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"]), "create")) {
+					if ($ENTRADA_ACL->amIAllowed(new EventResource(null, $course_id, $user->getActiveOrganisation()), "create")) {
 						$PROCESSED["course_id"] = $course_id;
 					} else {
 						$ERROR++;
@@ -558,11 +559,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 												ON a.`eventtype_id` = c.`eventtype_id` 
 												LEFT JOIN `".AUTH_DATABASE."`.`organisations` AS b
 												ON b.`organisation_id` = c.`organisation_id` 
-												WHERE b.`organisation_id` = ".$ORGANISATION_ID."
+												WHERE b.`organisation_id` = ".$db->qstr($user->getActiveOrganisation())."
 												AND a.`eventtype_active` = '1' 
-												ORDER BY a.`eventtype_order`
-									
-								";
+												ORDER BY a.`eventtype_order`";
+
 								$results	= $db->GetAll($query);
 								if (!$results) {
 									$ERROR = 1;
@@ -661,10 +661,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						<td>
 							<?php
 							$query = "	SELECT * FROM `courses`
-										WHERE `organisation_id` = ".$db->qstr($ORGANISATION_ID)."
+										WHERE `organisation_id` = ".$db->qstr($user->getActiveOrganisation())."
 										AND `course_active` = '1'
 										ORDER BY `course_name` ASC";
 							$results = $db->GetAll($query);
+
 							if (!$results){
 								$ERROR = 1;
 								$ERRORSTR = null;
@@ -677,7 +678,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							<select id="course_id" name="course_id" style="width: 95%">
 							<?php
 									foreach($results as $result) {
-									if ($ENTRADA_ACL->amIAllowed(new EventResource(null, $result["course_id"], $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"]), "create")) {
+									if ($ENTRADA_ACL->amIAllowed(new EventResource(null, $result["course_id"], $user->getActiveOrganisation()), "create")) {
 										echo "<option value=\"".(int) $result["course_id"]."\"".(($PROCESSED["course_id"] == $result["course_id"]) ? " selected=\"selected\"" : "").">".html_encode($result["course_name"])."</option>\n";
 									}
 								}
@@ -764,7 +765,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					<tr>
 						<td colspan="3">&nbsp;</td>
 					</tr>
-					<?php if ($ENTRADA_ACL->amIAllowed(new EventResource(null, null, $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"]), 'create')) { ?>
+					<?php if ($ENTRADA_ACL->amIAllowed(new EventResource(null, null, $user->getActiveOrganisation()), 'create')) { ?>
 					<tr>
 						<td style="vertical-align: top"><input type="radio" name="event_audience_type" id="event_audience_type_organisation_id" value="organisation_id" onclick="selectEventAudienceOption('organisation_id')" style="vertical-align: middle"<?php echo (($PROCESSED["event_audience_type"] == "organisation_id") ? " checked=\"checked\"" : ""); ?> /></td>
 						<td colspan="2" style="padding-bottom: 15px">

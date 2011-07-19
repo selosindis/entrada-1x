@@ -776,10 +776,12 @@ function get_account_data($type = "", $id = 0) {
 			case "fullname" :
 			case "lastfirst" :
 				$query = "SELECT CONCAT_WS(', ', `lastname`, `firstname`) AS `fullname` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id`=".$db->qstr($id);
+				$type = "fullname";
 			break;
 			case "wholename" :
 			case "firstlast" :
 				$query = "SELECT CONCAT_WS(' ', `firstname`, `lastname`) AS `firstlast` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id`=".$db->qstr($id);
+				$type = "firstlast";
 			break;
 			case "email" :
 				$query = "SELECT `email` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id`=".$db->qstr($id);

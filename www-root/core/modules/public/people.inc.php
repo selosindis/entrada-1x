@@ -56,7 +56,7 @@ if (!defined("PARENT_INCLUDED")) {
 	$PROCESSED		= array();
 	$PREFERENCES	= preferences_load($MODULE);
 
-	$ORGANISATION_ID = $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"];
+	$ORGANISATION_ID = $user->getActiveOrganisation();
 	$organisation_query = "SELECT * FROM `".AUTH_DATABASE."`.`organisations`";
 	$ORGANISATIONS = $db->GetAll($organisation_query);
 	$ORGANISATION_BY_ID = array();
@@ -157,7 +157,7 @@ if (!defined("PARENT_INCLUDED")) {
 					$ERRORSTR[] = "To browse a group, you must select a group from the group select list.";	
 				}
 				
-				if(isset($_GET["o"]) && ($organisation = clean_input($_GET["o"], array("trim", "int"))) && isset($ORGANISATIONS_BY_ID[$organisation])) {
+				if(($organisation = $user->getActiveOrganisation()) && isset($ORGANISATIONS_BY_ID[$organisation])) {
 					$PROCESSED["organisation"] = $organisation;
 					$search_query .= " in ".$ORGANISATIONS_BY_ID[$organisation]["organisation_title"];
 				} else {
@@ -170,9 +170,11 @@ if (!defined("PARENT_INCLUDED")) {
 										FROM `".AUTH_DATABASE."`.`user_data` AS a
 										LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 										ON b.`user_id` = a.`id`
+										LEFT JOIN `".AUTH_DATABASE."`.`user_organisation` AS c
+										ON c.`proxy_id` = a.`id`
 										AND b.`app_id` IN (".AUTH_APP_IDS_STRING.")
 										WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
-										AND a.`organisation_id` = ".$db->qstr($PROCESSED["organisation"])."
+										AND c.`organisation_id` = ".$db->qstr($PROCESSED["organisation"])."
 										AND b.`group` ".($PROCESSED["group"] == "staff" ? "IN ('staff', 'medtech')" : "= ".$db->qstr($PROCESSED["group"]))."
 										".(($PROCESSED["role"]) ? "AND b.`role` = ".$db->qstr($PROCESSED["role"]) : "")."
 										GROUP BY a.`id`
@@ -182,9 +184,11 @@ if (!defined("PARENT_INCLUDED")) {
 										FROM `".AUTH_DATABASE."`.`user_data` AS a
 										LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 										ON b.`user_id` = a.`id`
+										LEFT JOIN `".AUTH_DATABASE."`.`user_organisation` AS c
+										ON c.`proxy_id` = a.`id`
 										AND b.`app_id` IN (".AUTH_APP_IDS_STRING.")
 										WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
-										AND a.`organisation_id` = ".$db->qstr($PROCESSED["organisation"])."
+										AND c.`organisation_id` = ".$db->qstr($PROCESSED["organisation"])."											
 										AND b.`group` ".($PROCESSED["group"] == "staff" ? "IN ('staff', 'medtech')" : "= ".$db->qstr($PROCESSED["group"]))."
 										".(($PROCESSED["role"]) ? "AND b.`role` = ".$db->qstr($PROCESSED["role"]) : "")."
 										GROUP BY a.`id`
@@ -374,7 +378,7 @@ if (!defined("PARENT_INCLUDED")) {
 									ORDER BY `fullname` ASC, FIELD(b.`app_id`, ".AUTH_APP_IDS_STRING.")";
 			break;
 		}
-		
+
 		$results	= $db->GetAll($query_count);
 		/**
 		 * Get the total number of results using the generated queries above and calculate the total number
@@ -678,17 +682,6 @@ if (!defined("PARENT_INCLUDED")) {
 				</tr>
 			</tfoot>
 			<tbody>
-				<tr>
-					<td>&nbsp;</td>
-					<td><label for="group" class="form-required">Browse Organisation:</label></td>
-					<td>
-						<select id="organisations" name="o" style="width: 209px">
-							<?php foreach($ORGANISATIONS as $o) {
-								echo "<option value=\"".$o["organisation_id"]."\"".(isset($PROCESSED["organisation"]) && $o["organisation_id"] == $PROCESSED["organisation"] ? "selected=\"selected\"" : "").">".$o["organisation_title"]."</option>";
-							}?>
-						</select>
-					</td>
-				</tr>
 				<tr>
 					<td>&nbsp;</td>
 					<td><label for="group" class="form-required">Browse Group:</label></td>

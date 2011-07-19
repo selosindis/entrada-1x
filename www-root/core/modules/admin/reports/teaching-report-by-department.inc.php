@@ -84,8 +84,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 							<tr>
 								<td colspan="3"><h2>Report Options</h2></td>
 							</tr>
-										<?php echo generate_calendars("reporting", "Reporting Date", true, true, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_start"], true, true, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_finish"]);
-										echo generate_organisation_select();?>
+								<?php echo generate_calendars("reporting", "Reporting Date", true, true, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_start"], true, true, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_finish"]);?>
 							<tr>
 								<td colspan="3" style="padding-top: 15px">
 									<input type="checkbox" id="show_all_teachers" name="show_all_teachers" value="1" style="vertical-align: middle"<?php echo (($PROCESSED["show_all_teachers"]) ? " checked=\"checked\"" : ""); ?> /> <label for="show_all_teachers" class="form-nrequired" style="vertical-align: middle">Display teachers in departments who are not currently teaching.</label>
@@ -107,11 +106,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 				$department_sidebar	= array();
 				$default_na_name	= "Unknown or N/A";
 
-				if(isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["organisation_id"]) && $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["organisation_id"] != -1) {
-					$organisation_where = " AND (a.`organisation_id` = ".$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["organisation_id"].") ";
-				} else {
-					$organisation_where = "";
-				}
+				$organisation_where = " AND (a.`organisation_id` = ".$user->getActiveOrganisation().") ";
 
 				$query	= "	SELECT a.`id` AS `proxy_id`, a.`number` AS `staff_number`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, a.`email`
 							FROM `".AUTH_DATABASE."`.`user_data` AS a

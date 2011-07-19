@@ -38,18 +38,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 	if ($COURSE_ID) {
-		
-		
-		if(isset($_GET["org_id"])){
-			$ORGANISATION_ID = $_GET["org_id"];
-		}
-		else{
-			$query = "SELECT organisation_id FROM courses WHERE course_id = ".$db->qstr($COURSE_ID);
-			$ORGANISATION_ID = $db->GetOne($query);
-		}
 
-		
-		
+			$ORGANISATION_ID = $user->getActiveOrganisation();
+				
 		/** 
 		* Fetch the Clinical Presentation details.
 		*/
@@ -138,19 +129,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					/**
 			 * Required field "organisation_id" / Organisation Name.
 			 */
-			if ((isset($_POST["organisation_id"])) && ($organisation_id = clean_input($_POST["organisation_id"], array("int")))) {
-				if ($ENTRADA_ACL->amIAllowed(new CourseResource(null, $organisation_id), 'create')) {
-					$PROCESSED["organisation_id"] = $organisation_id;
+				if ($ENTRADA_ACL->amIAllowed(new CourseResource(null, $ORGANISATION_ID), 'create')) {
+					$PROCESSED["organisation_id"] = $ORGANISATION_ID;
 				} else {
 					$ERROR++;
 					$ERRORSTR[] = "You do not have permission to add a course for this organisation. This error has been logged and will be investigated.";
-					application_log("Proxy id [".$_SESSION['details']['proxy_id']."] tried to eicreate a course within an organisation [".$organisation_id."] they didn't have permissions on. ");
+					application_log("Proxy id [".$_SESSION['details']['proxy_id']."] tried to eicreate a course within an organisation [".$ORGANISATION_ID."] they didn't have permissions on. ");
 				}
-
-			} else {
-				$ERROR++;
-				$ERRORSTR[] = "The <strong>Organisation Name</strong> field is required.";
-			}
 
 					/**
 					 * Non-required field "course_code" / Course Code.
@@ -618,25 +603,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							<col style="width: 75%" />
 						</colgroup>
 						<tbody>
-							<tr>
-								<td></td>
-								<td><label for="organisation_id" class="form-required">Course Organisation</label></td>
-								<td>
-									<select id="organisation_id" name="organisation_id" style="width: 250px">
-									<?php
-									$query		= "SELECT `organisation_id`, `organisation_title` FROM `".AUTH_DATABASE."`.`organisations`";
-									$results	= $db->GetAll($query);
-									if ($results) {
-										foreach($results as $result) {
-											if ($ENTRADA_ACL->amIAllowed(new CourseResource(null, $result['organisation_id']), 'create')) {
-												echo "<option value=\"".(int) $result["organisation_id"]."\"".(((isset($PROCESSED["organisation_id"])) && ($PROCESSED["organisation_id"] == $result["organisation_id"])) ? " selected=\"selected\"" : "").">".html_encode($result["organisation_title"])."</option>\n";
-											}
-										}
-									}
-									?>
-									</select>
-								</td>
-							</tr>
 							<tr>
 								<td></td>
 								<td style="vertical-align: top"><label for="curriculum_type_id" class="form-nrequired">Curriculum Category</label></td>

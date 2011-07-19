@@ -26,7 +26,7 @@ class TaskAssociatedFaculty extends Collection {
 		$faculty = array();
 		if ($results) {
 			foreach ($results as $result) {
-				$faculty_member = User::fromArray($result);
+				$faculty_member = User::get($result["id"]);
 				if ($faculty_member) {
 					$faculty[] = $faculty_member;
 				}

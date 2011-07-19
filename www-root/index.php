@@ -39,7 +39,9 @@ require_once("init.inc.php");
 if (isset($_GET["organisation_id"])) {
 	$organisation = clean_input($_GET["organisation_id"], array("trim", "notags", "int"));
 	$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"] = $organisation;
-	$user->setActiveOrganisation($organisation);
+	if ($user) {
+		$user->setActiveOrganisation($organisation);
+	}
 }
 
 ob_start("on_checkout");

@@ -563,16 +563,6 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 		<div style="text-align: right">
 			<form>
 				<div>
-					<label for="organisation-quick-select" class="content-small">Organisation:</label>
-					<select id="organisation-quick-select" name="organisation-quick-select" style="width: 300px" onchange="window.location='<?php echo ENTRADA_URL; ?>/courses?org='+this.options[this.selectedIndex].value">
-					<?php
-					foreach ($ORGANISATION_LIST as $organisation_id => $organisation_name) {
-						echo "<option value=\"".$organisation_id."\" ".($organisation_id == $ORGANISATION_ID ? 'selected': '').">".$organisation_name."</option>\n";
-					}
-					?>
-					</select>
-				</div>
-				<div>
 					<label for="course-quick-select" class="content-small">Course Quick Select:</label>
 					<select id="course-quick-select" name="course-quick-select" style="width: 300px" onchange="window.location='<?php echo ENTRADA_URL; ?>/courses?org=<?php echo $ORGANISATION_ID;?>&id='+this.options[this.selectedIndex].value">
 					<option value="">-- Select a Course --</option>

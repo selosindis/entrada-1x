@@ -481,6 +481,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			}
 			?>
 			<form action="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?<?php echo replace_query(array("step" => 2)); ?>" method="post" onsubmit="selIt()">
+			<input type="hidden" name="organisation_id" id="organisation_id" value=<?php echo $user->getActiveOrganisation() ?> />
 			<h2 title="Course Details Section">Course Details</h2>
 			<div id="course-details-section">
 				<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Adding Course Details">
@@ -490,31 +491,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					<col style="width: 75%" />
 				</colgroup>
 				<tbody>
-					<tr>
-						<td></td>
-						<td><label for="organisation_id" class="form-required">Course Organisation</label></td>
-						<td>
-							<script>
-								function updateCourseObjectives(idx){
-									alert("index is "+idx);
-								}
-							</script>
-							<select id="organisation_id" name="organisation_id" onchange ="updateCourseObjectives(this.options[this.selectedIndex].value);"style="width: 250px">
-							<?php
-							$query		= "SELECT `organisation_id`, `organisation_title` FROM `".AUTH_DATABASE."`.`organisations`";
-							$results	= $db->GetAll($query);
-							if ($results) {
-								foreach($results as $result) {
-									if ($ENTRADA_ACL->amIAllowed(new CourseResource(null, $result['organisation_id']), 'create')) {
-										//echo "<option value=\"".(int) $result["organisation_id"]."\"".(((isset($PROCESSED["organisation_id"])) && ($PROCESSED["organisation_id"] == $result["organisation_id"])) ? " selected=\"selected\"" : "").">".html_encode($result["organisation_title"])."</option>\n";
-										echo "<option value=\"".(int) $result["organisation_id"]."\"".(($ORGANISATION_ID == $result["organisation_id"]) ? " selected=\"selected\"" : "").">".html_encode($result["organisation_title"])."</option>\n";
-									}
-								}
-							}
-							?>
-							</select>
-						</td>
-					</tr>
 					<tr>
 						<td></td>
 						<td style="vertical-align: top"><label for="curriculum_type_id" class="form-nrequired">Curriculum Category</label></td>
@@ -780,15 +756,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					</tr>
 					<tr>
 						<td colspan="3"><?php $return = course_objectives_in_list($course_objectives, $top_level_id, true);?></td>
-					</tr>
-					<tr>
-						<td>&nbsp;</td>
-						<td colspan="2">
-							<div id="objectives_list">
-							
-							<?php //echo course_objectives_in_list($course_objectives, $top_level_id, true); ?>
-							</div>
-						</td>
 					</tr>
 					<tr>
 						<td colspan="3">&nbsp;</td>

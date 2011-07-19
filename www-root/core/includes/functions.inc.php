@@ -7300,6 +7300,7 @@ function lp_multiple_select_inline($id, $checkboxes, $options) {
 function lp_multiple_select_table($checkboxes, $indent, $i, $category_select_all = false) {
 	$return = "";
 	$input_class = 'select_multiple_checkbox';
+
 	foreach($checkboxes as $checkbox) {
 		if($i%2 == 0) {
 			$class = 'even';
@@ -7331,12 +7332,15 @@ function lp_multiple_select_table($checkboxes, $indent, $i, $category_select_all
 
 		$i++;
 
-		$return .= '<tr class="'.$class.'"><td class="'.$name_class.' indent_'.$indent.'"><label for="'.$checkbox['value'].'" id="'.$checkbox['value'].'_label">'.$checkbox['text'].'</label></td><td class="'.$input_class.'">'.$input.'</td></tr>';
+		if ($checkbox['value']) {
+			$return .= '<tr class="'.$class.'"><td class="'.$name_class.' indent_'.$indent.'"><label for="'.$checkbox['value'].'">'.$checkbox['text'].'</label></td><td class="'.$input_class.'">'.$input.'</td></tr>';
+		}
 
 		if(isset($checkbox['options'])) {
 			$return .= lp_multiple_select_table($checkbox['options'], $indent+1, $i);
 		}
 	}
+
 	return $return;
 }
 
@@ -9177,6 +9181,7 @@ function events_output_filter_controls($module_type = "") {
 		$module_type = "";
 	}
 	?>
+	
 	<table id="filterList" style="clear: both; width: 100%" cellspacing="0" cellpadding="0" border="0" summary="Event Filters">
 		<tr>
 			<td style="width: 53%; vertical-align: top">
@@ -9205,11 +9210,12 @@ function events_output_filter_controls($module_type = "") {
 				function showMultiSelect() {
 					$$('select_multiple_container').invoke('hide');
 					id = $F('filter_select');
+					organisation_id = <?php echo $ORGANISATION_ID ?>;
 					if (multiselect[id]) {
 						multiselect[id].container.show();
 					} else {
 						new Ajax.Request('<?php echo ENTRADA_URL."/api/events_filters.api.php";?>', {
-							parameters: {options_for: id},
+							parameters: {options_for: id, organisation_id: organisation_id},
 							method: "GET",
 							onLoading: function() {
 								$('filter_options_loading').show();

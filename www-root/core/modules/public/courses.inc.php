@@ -45,8 +45,8 @@ if (($router) && ($router->initRoute())) {
 		$COURSE_ID = (int) trim($_GET["id"]);
 	}
 
-	if ((isset($_GET["org"])) && ((int) trim($_GET["org"]))) {
-		$ORGANISATION_ID = (int) trim($_GET["org"]);
+	if ((isset($_GET["organisation_id"])) && ((int) trim($_GET["organisation_id"]))) {
+		$ORGANISATION_ID = (int) trim($_GET["organisation_id"]);
 	}
 
 	$module_file = $router->getRoute();

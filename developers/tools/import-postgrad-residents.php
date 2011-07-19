@@ -78,7 +78,7 @@ switch ($ACTION) {
 					$resident = array();
 					$resident["first_name"] = clean_input($row[0], array("trim"));
 					$resident["last_name"] = clean_input($row[1], array("trim"));
-					$resident["cmpa_no"] = clean_input($row[2], array("trim", "int"));
+					$resident["cmpa_no"] = clean_input($row[2], array("trim")); //can be a non-int like "DND"
 					$resident["cpso_no"] = clean_input($row[3], array("trim", "int"));
 					$resident["student_no"] = clean_input($row[4], array("trim", "int"));
 					$temp_resident["program_code"] = clean_input($row[5], array("trim"));
@@ -110,6 +110,22 @@ switch ($ACTION) {
 						default:
 							$resident["school_id"] = 7;
 					}
+					
+					if (!$resident["first_name"]) {
+						output_error("No first name found for " . $resident["first_name"] . " " . $resident["last_name"] . ", student number: " . $resident["student_no"]);
+					}
+					if (!$resident["last_name"]) {
+						output_error("No last name found for " . $resident["first_name"] . " " . $resident["last_name"] . ", student number: " . $resident["student_no"]);
+					}
+					if (!$resident["cpso_no"]) {
+						output_error("No cpso no found for " . $resident["first_name"] . " " . $resident["last_name"] . ", student number: " . $resident["student_no"]);
+					}
+					if ($resident["cpso_no"] != "DND" && !$resident["cmpa_no"]) {
+						output_error("No cmpa no found for " . $resident["first_name"] . " " . $resident["last_name"] . ", student number: " . $resident["student_no"]);
+					}
+					if (!$resident["school_id"]) {
+						output_error("No school code found for " . $resident["first_name"] . " " . $resident["last_name"] . ", student number: " . $resident["student_no"]);
+					}
 
 					//Get the program_id and category_id from the respective codes.
 					$query = "SELECT * FROM `" . DATABASE_NAME . "`.`mtd_moh_program_codes` WHERE `program_code` = " . $db->qstr($temp_resident["program_code"]);
@@ -118,6 +134,7 @@ switch ($ACTION) {
 						$resident["program_id"] = $result["id"];
 					}
 					else {
+						output_error("No program code found for " . $resident["first_name"] . " " . $resident["last_name"] . ", student number: " . $resident["student_no"]);
 						$query = "SELECT id FROM `" . DATABASE_NAME . "`.`mtd_moh_program_codes` WHERE `program_code` = UKN";
 						$id = $db->GetOne($query);
 						$resident["program_id"] = $id;
@@ -129,21 +146,34 @@ switch ($ACTION) {
 						$resident["category_id"] = $result["id"];
 					}
 					else {
+						output_error("No category code found for " . $resident["first_name"] . " " . $resident["last_name"] . ", student number: " . $resident["student_no"]);
 						$query = "SELECT id FROM `" . DATABASE_NAME . "`.`mtd_categories` WHERE `category_code` = UKN";
 						$id = $db->GetOne($query);
 						$resident["category_id"] = $id;
 					}
 
-					$query = "SELECT a.`id` FROM `" . AUTH_DATABASE . "`.`user_data` a, `" . AUTH_DATABASE . "`.`user_access` b
+					$query = "SELECT a.`id` as 'proxy_id', b.`group` as 'group' FROM `" . AUTH_DATABASE . "`.`user_data` a, `" . AUTH_DATABASE . "`.`user_access` b
 						      WHERE a.`number` = " . $db->qstr($resident["student_no"]) .
 							" AND b.`app_id` = 1
-							  AND b.`group` = 'resident'
 							  AND a.id = b.user_id";
 					
-					$proxy_id = $db->GetOne($query);
+					$result = $db->GetRow($query);
 
-					if ($proxy_id) {
-						$resident["proxy_id"] = $proxy_id;
+					if ($result) {
+						$resident["proxy_id"] = $result["proxy_id"];
+
+						//update Queen's Medical School Alumni to resident
+						if ($result["group"] != "resident") {
+							$record["group"] = "resident";
+							$record["role"] = "resident";
+
+							if (!$db->AutoExecute(AUTH_DATABASE . ".user_access", $record, 'UPDATE', 'user_id = ' . $resident["proxy_id"] . ' AND app_id = 1')) {
+								output_error("Could not update student to resident group and role.  Student number: " . $resident["student_no"]);
+							} else {
+								output_notice("Updated the group and role of student no. " . $resident["student_no"] . " to resident.");
+							}
+						}
+
 						if ($db->AutoExecute(AUTH_DATABASE . ".user_data_resident", $resident, "INSERT")) {
 							output_success("ROW: " .$row_count . " - Insert of resident proxy_id[" . $resident["proxy_id"] .  "] succeeded");
 						}
@@ -157,7 +187,7 @@ switch ($ACTION) {
 				}
 			}
 			fclose($handle);
-			echo "Finished import\n";
+			echo "\nFinished import\n";
 		} else {
 			output_error("Unable to open the provided CSV file [" . $CSV_FILE . "].");
 		}

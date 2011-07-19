@@ -209,28 +209,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 	<tr>
 		<td style="width: 100%; text-align: right">
 			<div style="white-space: nowrap">
-				<form action="<?php echo ENTRADA_URL."/admin/".$MODULE;?>" method="get" id="organisationSelector" style="vertical-align: middle">
-					<label for="organisation_id">Organisation filter:</label>
-					<select name="organisation_id" id="organisation_id" onchange="$('organisationSelector').submit();" style="display:inline;">
-							<?php
-							$query		= "SELECT `organisation_id`, `organisation_title` FROM `".AUTH_DATABASE."`.`organisations`";
-							$results	= $db->GetAll($query);
-							$all = true;
-							if($results) {
-								foreach($results as $result) {
-							if($ENTRADA_ACL->amIAllowed(new CourseResource(null, $result["organisation_id"]), "read")) {
-										echo "<option value=\"".(int) $result["organisation_id"]."\"".(isset($organisation_id) && $organisation_id == $result["organisation_id"] ? " selected=\"selected\"" : "").">".html_encode($result["organisation_title"])."</option>\n";
-									} else {
-										$all = false;
-									}
-								}
-							}
-							if($all) {
-								echo "<option value=\"all\" ".(isset($organisation_id) && $organisation_id == "all" ? "selected=\"selected\"" : "").">All organisations</option>";
-							}
-							?>
-					</select>
-				</form>
 					<?php
 					if ($TOTAL_PAGES > 1) {
 						echo "<form action=\"".ENTRADA_URL."/admin/".$MODULE."\" method=\"get\" id=\"pageSelector\" style=\"display:inline;\">\n";
@@ -425,4 +403,3 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 
 	new_sidebar_item("Sort Results", $sidebar_html, "sort-results", "open");
 }
-?>

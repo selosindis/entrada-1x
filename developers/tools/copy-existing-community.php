@@ -57,7 +57,6 @@ if ((!isset($_SERVER["argv"])) || (@count($_SERVER["argv"]) < 1)) {
 require_once("classes/adodb/adodb.inc.php");
 require_once("config.inc.php");
 require_once("dbconnection.inc.php");
-require_once("auth_dbconnection.inc.php");
 require_once("functions.inc.php");
 
 $ERROR = false;
@@ -73,17 +72,17 @@ $query = "	SELECT *
 			FROM " . AUTH_DATABASE . ".`user_data`
 			WHERE `username` = '" . $user_name . "'";
 
-$user_data = $auth_db->GetRow($query);
+$user_data = $db->GetRow($query);
 
 while (!$user_data) {
-	print "\nDatabase error: " . $auth_db->ErrorMsg();
+	print "\nDatabase error: " . $db->ErrorMsg();
 	print "\nPlease ensure you enter a valid username: ";
 	fscanf(STDIN, "%d\n", $user_name);
 	$query = "	SELECT *
-				FROM `medtech_auth`.`user_data`
+				FROM " . AUTH_DATABASE . "`user_data`
 				WHERE `username` = '" . $user_name . "'";
 
-	$user_data = $auth_db->GetRow($query);
+	$user_data = $db->GetRow($query);
 }
 
 output_notice("The proxy id for the entered username is: " . $user_data["id"]);
@@ -100,14 +99,7 @@ while (!$community) {
 }
 
 //Create sites for non-programs
-$site_names = array("Otolaryngology",
-	"Endocrinology",
-	"Cardiac Surgery",
-	"Thoracic Surgery",
-	"Neurosurgery",
-	"Plastic Surgery",
-	"Vascular Surgery",
-	"Geriatrics");
+$site_names = array("Family Medicine-Belleville-Quinte");
 
 $site_name_prefix = "pgme";
 $template = $community["community_template"];
@@ -185,12 +177,20 @@ foreach ($site_names as $s_name) {
 	 * 5 - Galleries - galleries
 	 * 6 - Polling - polls
 	 * 7 - Quizzes - quizzes...need to confirm as many Quizzes in the database are of page_type = default
+	 * 8 - MTD
+	 * 9 - Response Rate
 	 *
 	 */
-	$community_modules = array(1, 2, 3, 4, 5, 6, 7);
+	$community_modules = array(1, 2, 3, 4, 5, 6, 7, 8 ,9);
 	foreach ($community_modules as $module_id) {
+		if ($module_id == 8 || $module_id == 9) {
+			if (!communities_module_activate_and_page_create($new_community_id, $module_id)){
+				output_error("Unable to activate module (and create page) for [" . (int) $module_id . "] for new community id [" . (int) $new_community_id . "]. Database said: " . $db->ErrorMsg());
+			}
+			set_module_page_permissions($db, $new_community_id, $module_id, 0, 0, 0);
+		}
 		if (!communities_module_activate($new_community_id, $module_id)) {
-			output_error("Unable to active module [" . (int) $module_id . "] for new community id [" . (int) $new_community_id . "]. Database said: " . $db->ErrorMsg());
+			output_error("Unable to activate module [" . (int) $module_id . "] for new community id [" . (int) $new_community_id . "]. Database said: " . $db->ErrorMsg());
 		}
 	}
 

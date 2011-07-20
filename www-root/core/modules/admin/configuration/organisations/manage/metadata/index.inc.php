@@ -79,7 +79,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 						foreach($metadata_types as $child){
 							if($child["parent_type_id"] == $type["meta_type_id"]){
 								echo "<tr><td><input type=\"checkbox\" name = \"remove_ids[]\" value=\"".$child["meta_type_id"]."\" class=\"child-".$type["meta_type_id"]."\"/></td>";
-								echo"<td><a href=\"".ENTRADA_URL."/admin/configuration/organisations/manage/metadata?section=edit&amp;org=".$ORGANISATION_ID."&amp;meta=".$child["meta_type_id"]."\">--->".$child["label"]."</a></td></tr>";							
+								echo"<td><a href=\"".ENTRADA_URL."/admin/configuration/organisations/manage/metadata?section=edit&amp;org=".$ORGANISATION_ID."&amp;meta=".$child["meta_type_id"]."\">".$type["label"]." → ".$child["label"]."</a></td></tr>";							
 							}
 						}
 					}

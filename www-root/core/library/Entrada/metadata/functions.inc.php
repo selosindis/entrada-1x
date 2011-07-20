@@ -173,12 +173,12 @@ function getTypes_User(User $user) {
 	return MetaDataTypes::get($org_id, $group, $role, $proxy_id);
 }
 
-function getUserCategoryValues(User $user, MetaDataType $category) {
-	$org_id = $user->getOrganisationID();
-	$group = $user->getGroup();
-	$role = $user->getRole();
-	$proxy_id = $user->getID();
-	
+function getUserCategoryValues(User $eUser, MetaDataType $category) {
+	$org_id = $eUser->getOrganisationID();
+	$group = $eUser->getGroup();
+	$role = $eUser->getRole();
+	$proxy_id = $eUser->getID();
+
 	return MetaDataValues::get($org_id, $group, $role,$proxy_id, $category, true, array("order by"=>array(array("meta_value_id", "desc"))));
 }
 
@@ -269,19 +269,20 @@ function editMetaDataTable_Category($organisation_id=null, $group=null, $role=nu
 	return editMetaDataTable(ob_get_clean(), $prepend);
 }
 
-function editMetaDataTable_User(User $user) {
+function editMetaDataTable_User(User $eUser) {
 	
-	$types = getTypes_User($user);
+	$types = getTypes_User($eUser);
 	$categories = getCategories($types);
 	if (count($categories) == 0) {
 		return errNoCats_MetaDataTable();
 	}
 	ob_start();
-	foreach ($categories as $category) { 
-		$values = getUserCategoryValues($user, $category);
-		//var_dump($values);
-		$descendant_type_sets = getDescendentTypesArray($types, $category); 
-		$label = html_encode($category->getLabel());
+	if ($categories) {
+		foreach ($categories as $category) { 
+			$values = getUserCategoryValues($eUser, $category);
+			//var_dump($values);
+			$descendant_type_sets = getDescendentTypesArray($types, $category); 
+			$label = html_encode($category->getLabel());
 	?>
 	<tbody id="cat_<?php echo $category->getID(); ?>">
 		<tr class="cat_head" id="cat_head_<?php echo $category->getID(); ?>">
@@ -289,12 +290,16 @@ function editMetaDataTable_User(User $user) {
 			<th colspan="2"><?php echo $label; ?></th>
 			<td class="control" colspan="3"><ul class="page-action"><li class="last"><a href="#" class="add_btn" id="add_btn_<?php echo $category->getID(); ?>">Add <?php echo $label; ?></a></li></ul></td>
 		</tr>
-		<?php
-			foreach ($values as $value) {
-				echo editMetaDataRow($value, $category, $descendant_type_sets);
-			} ?>
+		<?php		
+			if ($values) {
+				foreach ($values as $value) {
+					echo editMetaDataRow($value, $category, $descendant_type_sets);
+				} 
+			}?>
+
 	</tbody>
 	<?php 
+		}
 	}
 	return editMetaDataTable(ob_get_clean());
 }

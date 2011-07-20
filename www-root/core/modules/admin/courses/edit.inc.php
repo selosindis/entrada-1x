@@ -39,71 +39,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 } else {
 	if ($COURSE_ID) {
 		
-		
-		if(isset($_GET["org_id"])){
-			$ORGANISATION_ID = $_GET["org_id"];
-		}
-		else{
-			$query = "SELECT organisation_id FROM courses WHERE course_id = ".$db->qstr($COURSE_ID);
-			$ORGANISATION_ID = $db->GetOne($query);
-		}
-
-		
-		
-		/** 
-		* Fetch the Clinical Presentation details.
-		*/
-		$clinical_presentations_list	= array();
-		$clinical_presentations			= array();
-	
-		$results	= fetch_mcc_objectives_for_org($ORGANISATION_ID);
-		if ($results) {
-			foreach ($results as $result) {
-				$clinical_presentations_list[$result["objective_id"]] = $result["objective_name"];
-			}
-		}
-		else {
-			$NOTICE++;
-			$NOTICESTR[] = "No Mandated Objectives found for this organisation.";
-			$clinical_presentations_list = false;
-		}
-	
-		if (isset($_POST["clinical_presentations_submit"]) && $_POST["clinical_presentations_submit"]) {
-		if ((isset($_POST["clinical_presentations"])) && (is_array($_POST["clinical_presentations"])) && (count($_POST["clinical_presentations"]))) {
-			foreach ($_POST["clinical_presentations"] as $objective_id) {
-				if ($objective_id = clean_input($objective_id, array("trim", "int"))) {
-						$query	= "	SELECT `objective_id`
-									FROM `global_lu_objectives` 
-								WHERE `objective_id` = ".$db->qstr($objective_id)."
-									AND `objective_active` = '1'
-									ORDER BY `objective_order` ASC";
-					$result	= $db->GetRow($query);
-					if ($result) {
-						$clinical_presentations[$objective_id] = $clinical_presentations_list[$objective_id];
-					}
-				}
-			}
-		} else {
-				$clinical_presentations = array();
-			}
-		} else {
-			$query		= "SELECT `objective_id` FROM `course_objectives` WHERE `objective_type` = 'event' AND `course_id` = ".$db->qstr($COURSE_ID);
-			$results	= $db->GetAll($query);
-			if ($results) {
-				foreach ($results as $result) {
-					if (!empty($clinical_presentations_list[$result["objective_id"]])) {
-					$clinical_presentations[$result["objective_id"]] = $clinical_presentations_list[$result["objective_id"]];
-					}
-				}
-			}
-		}
 		$HEAD[]		= "<script type=\"text/javascript\">var DELETE_IMAGE_URL = '".ENTRADA_URL."/images/action-delete.gif';</script>";
 		$HEAD[]		= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/picklist.js\"></script>\n";
 		$HEAD[]		= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/scriptaculous/tree.js\"></script>\n";
 		$HEAD[]		= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/groups_list.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 		$HEAD[]		= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/AutoCompleteList.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";	
-		$HEAD[]		= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/growler/src/Growler.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
-		$ONLOAD[]	= "$('clinical_presentations_list').style.display = 'none'";
+		$HEAD[]		= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/growler/src/Growler.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";		
 		
 		$query			= "	SELECT * FROM `courses` 
 							WHERE `course_id` = ".$db->qstr($COURSE_ID)."
@@ -112,6 +53,59 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 		if ($course_details && $ENTRADA_ACL->amIAllowed(new CourseResource($course_details['course_id'], $course_details['organisation_id']), 'update')) {
 			$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "edit", "id" => $COURSE_ID, "step" => false)), "title" => "Editing Course");
 
+
+			$ORGANISATION_ID = $user->getActiveOrganisation();
+			
+			/** 
+			* Fetch the Clinical Presentation details.
+			*/
+			$clinical_presentations_list	= array();
+			$clinical_presentations			= array();
+
+			$results	= fetch_mcc_objectives_for_org($ORGANISATION_ID);
+			if ($results) {
+				foreach ($results as $result) {
+					$clinical_presentations_list[$result["objective_id"]] = $result["objective_name"];
+				}
+			}
+			else {
+				$NOTICE++;
+				$NOTICESTR[] = "No Mandated Objectives found for this organisation.";
+				$clinical_presentations_list = false;
+			}
+
+			if (isset($_POST["clinical_presentations_submit"]) && $_POST["clinical_presentations_submit"]) {
+			if ((isset($_POST["clinical_presentations"])) && (is_array($_POST["clinical_presentations"])) && (count($_POST["clinical_presentations"]))) {
+				foreach ($_POST["clinical_presentations"] as $objective_id) {
+					if ($objective_id = clean_input($objective_id, array("trim", "int"))) {
+							$query	= "	SELECT `objective_id`
+										FROM `global_lu_objectives` 
+									WHERE `objective_id` = ".$db->qstr($objective_id)."
+										AND `objective_active` = '1'
+										ORDER BY `objective_order` ASC";
+						$result	= $db->GetRow($query);
+						if ($result) {
+							$clinical_presentations[$objective_id] = $clinical_presentations_list[$objective_id];
+						}
+					}
+				}
+			} else {
+					$clinical_presentations = array();
+				}
+			} else {
+				$query		= "SELECT `objective_id` FROM `course_objectives` WHERE `objective_type` = 'event' AND `course_id` = ".$db->qstr($COURSE_ID);
+				$results	= $db->GetAll($query);
+				if ($results) {
+					foreach ($results as $result) {
+						if (!empty($clinical_presentations_list[$result["objective_id"]])) {
+						$clinical_presentations[$result["objective_id"]] = $clinical_presentations_list[$result["objective_id"]];
+						}
+					}
+				}
+			}			
+			
+			
+			
 			courses_subnavigation($course_details);
 
 			echo "<h1>Editing Course</h1>\n";
@@ -141,21 +135,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					}
 
 					/**
-			 * Required field "organisation_id" / Organisation Name.
-			 */
-			if ((isset($_POST["organisation_id"])) && ($organisation_id = clean_input($_POST["organisation_id"], array("int")))) {
-				if ($ENTRADA_ACL->amIAllowed(new CourseResource(null, $organisation_id), 'create')) {
-					$PROCESSED["organisation_id"] = $organisation_id;
-				} else {
-					$ERROR++;
-					$ERRORSTR[] = "You do not have permission to add a course for this organisation. This error has been logged and will be investigated.";
-					application_log("Proxy id [".$_SESSION['details']['proxy_id']."] tried to eicreate a course within an organisation [".$organisation_id."] they didn't have permissions on. ");
-				}
+					 * Required field "organisation_id" / Organisation Name.
+					 */
 
-			} else {
-				$ERROR++;
-				$ERRORSTR[] = "The <strong>Organisation Name</strong> field is required.";
-			}
+					$organisation_id = $course_details["organisation_id"];
+					if ($ENTRADA_ACL->amIAllowed(new CourseResource(null, $organisation_id), 'create')) {
+						$PROCESSED["organisation_id"] = $organisation_id;
+					} else {
+						$ERROR++;
+						$ERRORSTR[] = "You do not have permission to add a course for this organisation. This error has been logged and will be investigated.";
+						application_log("Proxy id [".$_SESSION['details']['proxy_id']."] tried to eicreate a course within an organisation [".$organisation_id."] they didn't have permissions on. ");
+					}
+
 
 					/**
 					 * Non-required field "course_code" / Course Code.
@@ -452,53 +443,71 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 
 							
 							$query = "	DELETE FROM `course_audience` WHERE `course_id` = ".$db->qstr($COURSE_ID);
-							$db->Execute($query);							
+							if ($db->Execute($query)) {							
 							
+								if (isset($_POST["group_order"]) && strlen(isset($_POST["group_order"]))) {
+									$groups = explode(",", clean_input($_POST["group_order"]),array("notags","trim"));					
+									if ((is_array($groups)) && (count($groups))) {
+										foreach($groups as $order => $group_id) {
+											if ($group_id = clean_input($group_id, array("trim", "int"))) {
+												$query = "SELECT `group_name` FROM `groups` WHERE `group_id` = ".$db->qstr($group_id);
+												$result	= $db->GetRow($query);
+												if ($result) {
+													$PROCESSED["groups"][] = array("id"=>$group_id,"title"=>$result["group_name"]);
+													$query = "	INSERT INTO `course_audience` VALUES(NULL,".$db->qstr($COURSE_ID).",'group_id',".$db->qstr($group_id).",".$enroll_start.",".$enroll_end.",1)";
+													if(!$db->Execute($query)){
+														add_error("Unable to insert the group [".$group_id."] as an audience member for course [".$COURSE_ID."]. Please try again later.");				
+													}
 
-							if (isset($_POST["group_order"])) {
-								$groups = explode(",", trim($_POST["group_order"]));					
-								if ((is_array($groups)) && (count($groups))) {
-									foreach($groups as $order => $group_id) {
-										if ($group_id = clean_input($group_id, array("trim", "int"))) {
-											$query = "SELECT `group_name` FROM `groups` WHERE `group_id` = ".$db->qstr($group_id);
-											$result	= $db->GetRow($query);
-											if ($result) {
-												$PROCESSED["groups"][] = array("id"=>$group_id,"title"=>$result["group_name"]);
-												$query = "	INSERT INTO `course_audience` VALUES(NULL,".$db->qstr($COURSE_ID).",'group_id',".$db->qstr($group_id).",".$enroll_start.",".$enroll_end.",1)";
-												if(!$db->Execute($query)){
-													add_error("Unable to insert the group [".$group_id."] as an audience member for course [".$COURSE_ID."]. Please try again later.");				
+												} else {
+													$ERROR++;
+													$ERRORSTR[] = "One of the <strong>groups</strong> you specified was invalid.";
 												}
-
 											} else {
 												$ERROR++;
-												$ERRORSTR[] = "One of the <strong>groups</strong> you specified was invalid.";
+												$ERRORSTR[] = "One of the <strong>groups</strong> you specified is invalid.";
 											}
-										} else {
-											$ERROR++;
-											$ERRORSTR[] = "One of the <strong>groups</strong> you specified is invalid.";
 										}
+									} else {
+										$nogroups = true;
 									}
-								}
-							}
 
-							if(isset($_POST["associated_student"])){
-								$PROCESSED["associated_students"] = explode(",",clean_input($_POST["associated_student"], array("notags", "trim")));
-								foreach($PROCESSED["associated_students"] as $student){
-									$query = "	INSERT INTO `course_audience` VALUES(NULL,".$db->qstr($COURSE_ID).",'proxy_id',".$db->qstr($student).",".$enroll_start.",".$enroll_end.",1)";
-									if(!$db->Execute($query)){
-										add_error("Unable to insert the student [".$student."] as an audience member for course [".$COURSE_ID."]. Please try again later.");				
+								} else {
+									$nogroups = true;
+								}								
+								
+
+								if (isset($_POST["associated_student"]) && strlen($_POST["associated_student"])) {
+									$PROCESSED["associated_students"] = explode(",",clean_input($_POST["associated_student"], array("notags", "trim")));
+									if (is_array($PROCESSED["associated_students"]) && count($PROCESSED["associated_students"])) {
+										foreach($PROCESSED["associated_students"] as $student){
+											$query = "	INSERT INTO `course_audience` VALUES(NULL,".$db->qstr($COURSE_ID).",'proxy_id',".$db->qstr($student).",".$enroll_start.",".$enroll_end.",1)";
+											if(!$db->Execute($query)){
+												add_error("Unable to insert the student [".$student."] as an audience member for course [".$COURSE_ID."]. Please try again later.");				
+											}
+										}
+									}  else {
+										$nostudents = true;
 									}
+									
+								} else {
+									$nostudents = true;
 								}
+								
+								if ($nogroups && $nostudents) {
+									$ERROR++;
+									$ERRORSTR[] = "You must select at least one audience member.";
+								}
+							
 							}
 							
-							
-							
-							
-							$NOTICE = 0;
-							$url = ENTRADA_URL."/admin/courses?organisation_id=".$ORGANISATION_ID;
-							$SUCCESS++;
-							$SUCCESSSTR[]	= "You have successfully edited <strong>".html_encode($PROCESSED["course_name"])."</strong> in the system.<br /><br />".$msg;
-							$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
+							if (!$ERROR) {
+								$NOTICE = 0;
+								$url = ENTRADA_URL."/admin/courses?organisation_id=".$ORGANISATION_ID;
+								$SUCCESS++;
+								$SUCCESSSTR[]	= "You have successfully edited <strong>".html_encode($PROCESSED["course_name"])."</strong> in the system.<br /><br />".$msg;
+								$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
+							}
 
 							application_log("success", "Course [".$COURSE_ID."] has been modified.");
 						} else {
@@ -747,25 +756,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						<tbody>
 							<tr>
 								<td></td>
-								<td><label for="organisation_id" class="form-required">Course Organisation</label></td>
-								<td>
-									<select id="organisation_id" name="organisation_id" style="width: 250px">
-									<?php
-									$query		= "SELECT `organisation_id`, `organisation_title` FROM `".AUTH_DATABASE."`.`organisations`";
-									$results	= $db->GetAll($query);
-									if ($results) {
-										foreach($results as $result) {
-											if ($ENTRADA_ACL->amIAllowed(new CourseResource(null, $result['organisation_id']), 'create')) {
-												echo "<option value=\"".(int) $result["organisation_id"]."\"".(((isset($PROCESSED["organisation_id"])) && ($PROCESSED["organisation_id"] == $result["organisation_id"])) ? " selected=\"selected\"" : "").">".html_encode($result["organisation_title"])."</option>\n";
-											}
-										}
-									}
-									?>
-									</select>
-								</td>
-							</tr>
-							<tr>
-								<td></td>
 								<td style="vertical-align: top"><label for="curriculum_type_id" class="form-nrequired">Curriculum Category</label></td>
 								<td>
 									<select id="curriculum_type_id" name="curriculum_type_id" style="width: 250px">
@@ -864,6 +854,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 									<select class="multi-picklist" id="PickList" name="clinical_presentations[]" multiple="multiple" size="5" style="width: 100%; margin-bottom: 5px">
 									<?php
 									if ((is_array($clinical_presentations)) && (count($clinical_presentations))) {
+										$ONLOAD[] = "$('clinical_presentations_list').style.display = 'none'";
 										foreach ($clinical_presentations as $objective_id => $presentation_name) {
 											echo "<option value=\"".(int) $objective_id."\">".html_encode($presentation_name)."</option>\n";
 										}
@@ -897,16 +888,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 									?>
 									<input type="hidden" value="1" name="clinical_presentations_submit" />
 									<script type="text/javascript">
-									$('PickList').observe('keypress', function(event) {
-										if (event.keyCode == Event.KEY_DELETE) {
-											delIt();
-										}
-									});
-									$('SelectList').observe('keypress', function(event) {
-										if (event.keyCode == Event.KEY_RETURN) {
-											addIt();
-										}
-									});
+									if($('PickList')){
+										$('PickList').observe('keypress', function(event) {
+											if (event.keyCode == Event.KEY_DELETE) {
+												delIt();
+											}
+										});
+									}
+									if($('SelectList')){
+										$('SelectList').observe('keypress', function(event) {
+											if (event.keyCode == Event.KEY_RETURN) {
+												addIt();
+											}
+										});
+									}
 									</script>
 								</td>
 							</tr>

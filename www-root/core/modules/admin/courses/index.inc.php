@@ -89,6 +89,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 	 * Update requsted organisation filter
 	 * Valid: any integer really.
 	 */
+	/*
 	if(isset($_GET['organisation_id'])) {
 		if($_GET['organisation_id'] == 'all') {
 			$organisation_id = null;
@@ -107,7 +108,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			$organisation_id = $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["organisation_id"];
 		}
 		$organisation_where = '`organisation_id` = '.$organisation_id;
-	}
+	}*/
 
 	/**
 	 * Check if preferences need to be updated on the server at this point.
@@ -198,7 +199,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 		?>
 		<div style="float: right">
 			<ul class="page-action">
-				<li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=add&amp;org_id=<?php echo $organisation_id;?>" class="strong-green">Add New Course</a></li>
+				<li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=add" class="strong-green">Add New Course</a></li>
 			</ul>
 		</div>
 		<div style="clear: both"></div>

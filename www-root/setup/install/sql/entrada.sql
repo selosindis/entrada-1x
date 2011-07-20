@@ -1980,11 +1980,7 @@ CREATE TABLE IF NOT EXISTS `events_recurring` (
 CREATE TABLE IF NOT EXISTS `event_audience` (
   `eaudience_id` int(12) NOT NULL AUTO_INCREMENT,
   `event_id` int(12) NOT NULL DEFAULT '0',
-<<<<<<< HEAD
-  `audience_type` enum('proxy_id','grad_year','organisation_id','course') NOT NULL,
-=======
   `audience_type` enum('proxy_id','grad_year','organisation_id','group_id','course_id') NOT NULL,
->>>>>>> a76be84606efe6b1723ea65537a57529fc1edbf3
   `audience_value` varchar(16) NOT NULL,
   `updated_date` bigint(64) NOT NULL DEFAULT '0',
   `updated_by` int(12) NOT NULL DEFAULT '0',
@@ -3373,7 +3369,7 @@ CREATE TABLE IF NOT EXISTS `settings` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `settings` (`shortname`, `value`) VALUES
-('version_db', '1207'),
+('version_db', '1208 '),
 ('version_entrada', '1.2.0');
 
 CREATE TABLE `small_groups` (

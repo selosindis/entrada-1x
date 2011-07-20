@@ -71,29 +71,14 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 				$ERROR++;
 				$ERRORSTR[] = "You must select a valid display finish date.";
 			}
-			/**
-			 *
-			 * Required field "organisation_id" / Organisation Name.
-			 */
-			if(isset($_POST["organisation_id"])) {
-				if($organisation_id = clean_input($_POST["organisation_id"], array("int"))) {
-					if($ENTRADA_ACL->amIAllowed(new NoticeResource($organisation_id), 'create')) {
-						$PROCESSED["organisation_id"] = $organisation_id;
-					} else {
-						$ERROR++;
-						$ERRORSTR[] = "You do not have permission to add a notice for this organisation. This error has been logged and will be investigated.";
-						application_log("error", "Proxy id [".$_SESSION['details']['proxy_id']."] tried to create a notice within an organisation [".$organisation_id."] they didn't have permissions on. ");
-					}
-				} else if($_POST["organisation_id"] == 'all') {
-					$PROCESSED["organisation_id"] = null;
-				} else {
-					$ERROR++;
-					$ERRORSTR[] = "You do not have permission to add a course for this organisation. This error has been logged and will be investigated.";
-					application_log("error","Proxy id [".$_SESSION['details']['proxy_id']."] tried to create a notice within an organisation [".$organisation_id."] they didn't have permissions on. ");
-				}
+
+			$organisation_id = $user->getActiveOrganisation();
+			if ($ENTRADA_ACL->amIAllowed(new NoticeResource($organisation_id), 'create')) {
+				$PROCESSED["organisation_id"] = $organisation_id;
 			} else {
 				$ERROR++;
-				$ERRORSTR[] = "The <strong>Organisation Name</strong> field is required.";
+				$ERRORSTR[] = "You do not have permission to add a notice for this organisation. This error has been logged and will be investigated.";
+				application_log("error", "Proxy id [" . $_SESSION['details']['proxy_id'] . "] tried to create a notice within an organisation [" . $organisation_id . "] they didn't have permissions on. ");
 			}
 
 			if(!$ERROR) {
@@ -168,30 +153,6 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 			</colgroup>
 			<tr>
 				<td colspan="3"><h2>Notice Details</h2></td>
-			</tr>
-			<tr>
-				<td></td>
-				<td><label for="organisation_id" class="form-required">Target Organisation</label></td>
-				<td><select id="organisation_id" name="organisation_id" style="width: 250px">
-					<?php
-					$query		= "SELECT `organisation_id`, `organisation_title` FROM `".AUTH_DATABASE."`.`organisations`";
-					$results	= $db->GetAll($query);
-					$all_organisations = false;
-					if($results) {
-						$all_organisations = true;
-						foreach($results as $result) {
-							if($ENTRADA_ACL->amIAllowed(new NoticeResource($result['organisation_id']), 'create')) {
-								echo "<option value=\"".(int) $result["organisation_id"]."\"".(((isset($PROCESSED["organisation_id"])) && ($PROCESSED["organisation_id"] == $result["organisation_id"])) ? " selected=\"selected\"" : "").">".html_encode($result["organisation_title"])."</option>\n";
-							} else {
-								$all_organisations = false;
-							}
-						}
-					}
-					if($all_organisations) { ?>
-						<option value="all">All Organisations</option>
-					<?php } ?>
-					</select>
-				</td>
 			</tr>
 			<tr>
 				<td></td>

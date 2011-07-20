@@ -47,19 +47,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 	$clinical_presentations_list = array();
 	$clinical_presentations = array();
 	
-	if(isset($_GET["org_id"])){
-		$ORGANISATION_ID = $_GET["org_id"];
-	}
-	else{
-		if(isset($_GET["id"]))
-		$ORGANISATION_ID = $_GET["org_id"];
-		else{
-			$ORGANISATION_ID = 1;
-		}
-	}
-
-	
-	$results = fetch_mcc_objectives_for_org($ORGANISATION_ID);
+	$ORGANISATION_ID = $user->GetActiveOrganisation();
+	$results = fetch_mcc_objectives_for_org($user->getActiveOrganisation());
 	
 	
 	if ($results) {
@@ -87,9 +76,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 		}
 	}
 
+	$HEAD[] = "<script type=\"text/javascript\">var DELETE_IMAGE_URL = '".ENTRADA_URL."/images/action-delete.gif';</script>";
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/picklist.js\"></script>\n";
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/scriptaculous/tree.js\"></script>\n";
-	$ONLOAD[] = "$('clinical_presentations_list').style.display = 'none'";
+	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/groups_list.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/AutoCompleteList.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";	
+	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/growler/src/Growler.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+	
+	
 
 	// Error Checking
 	switch($STEP) {
@@ -113,21 +107,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				$ERRORSTR[] = "The <strong>Course Name</strong> field is required.";
 			}
 
-			/**
-			 * Required field "organisation_id" / Organisation Name.
-			 */
-			if ((isset($_POST["organisation_id"])) && ($organisation_id = clean_input($_POST["organisation_id"], array("int")))) {
-				if ($ENTRADA_ACL->amIAllowed(new CourseResource(null, $organisation_id), 'create')) {
-					$PROCESSED["organisation_id"] = $organisation_id;
-				} else {
-					$ERROR++;
-					$ERRORSTR[] = "You do not have permission to add a course for this organisation. This error has been logged and will be investigated.";
-					application_log("error", "Proxy id [".$_SESSION['details']['proxy_id']."] tried to create a course within an organisation [".$organisation_id."] they didn't have permissions on. ");
-				}
+			$organisation_id = $user->getActiveOrganisation();
+			if ($ENTRADA_ACL->amIAllowed(new CourseResource(null, $organisation_id), 'create')) {
+				$PROCESSED["organisation_id"] = $organisation_id;
 			} else {
 				$ERROR++;
-				$ERRORSTR[] = "The <strong>Organisation Name</strong> field is required.";
+				$ERRORSTR[] = "You do not have permission to add a course for this organisation. This error has been logged and will be investigated.";
+				application_log("error", "Proxy id [".$_SESSION['details']['proxy_id']."] tried to create a course within an organisation [".$organisation_id."] they didn't have permissions on. ");
 			}
+
 
 			/**
 			 * Non-required field "course_code" / Course Code.
@@ -226,6 +214,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					$posted_objectives["tertiary"][] = clean_input($objective, "int");
 				}
 			}
+
+			/**
+			 * Check to see if the course is open or private.
+			 */
+			if ((isset($_POST["course_permission"])) && ($perm = clean_input($_POST["course_permission"], array("trim","notags")))) {
+				$PROCESSED["permission"] = $perm;
+			} else {
+				$PROCESSED["permission"] = "closed";
+			}
 			
 			if (!$ERROR) {
 				$PROCESSED["updated_date"]	= time();
@@ -277,7 +274,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							}
 						}
 
-						switch($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"]) {
+						switch ($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"]) {
 							case "content" :
 								$url = ENTRADA_URL."/admin/".$MODULE."?section=content&id=".$COURSE_ID;
 								$msg = "You will now be redirected to the course content page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
@@ -309,12 +306,86 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								$db->Execute("INSERT INTO `course_objectives` SET `course_id` = ".$db->qstr($COURSE_ID).", `objective_id` = ".$db->qstr($objective_id).", `updated_date` = ".$db->qstr(time()).", `updated_by` = ".$db->qstr($_SESSION["details"]["id"]).", `importance` = '3'");
 							}
 						}
-						$NOTICE = 0;
-						$SUCCESS++;
-						$SUCCESSSTR[]	= "You have successfully added <strong>".html_encode($PROCESSED["course_name"])."</strong> to this system.<br /><br />".$msg;
-						$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
+						
+						$enrollment_date = validate_calendars("enrollment", false, false,false);
+						if ((isset($enrollment_date["start"])) && ((int) $enrollment_date["start"])) {
+							$PROCESSED["enrollment_start"] = (int) $enrollment_date["start"];
+							$enroll_start = $PROCESSED["enrollment_start"];
+						} else {
+							$PROCESSED["enrollment_start"] = 0;
+							$enroll_start = mktime(0, 0, 0, date("m"), date("d"), date("y"));
+						}
+						if ((isset($enrollment_date["finish"])) && ((int) $enrollment_date["finish"])) {
+							$PROCESSED["enrollment_end"] = (int) $enrollment_date["finish"];
+							$enroll_end = $PROCESSED["enrollment_end"];
+						} else {
+							$PROCESSED["enrollment_end"] = 0;
+							$enroll_end =  mktime(0, 0, 0, date("m"), date("d"), date("y")+1);
+						}
+						
+						
+						
+						
+						
+						if (isset($_POST["group_order"]) && strlen($_POST["group_order"])) {
+							$groups = explode(",", clean_input($_POST["group_order"]),array("trim"),"notags");					
+							if ((is_array($groups)) && (count($groups))) {
+								foreach($groups as $order => $group_id) {
+									if ($group_id = clean_input($group_id, array("trim", "int"))) {
+										$query = "SELECT `group_name` FROM `groups` WHERE `group_id` = ".$db->qstr($group_id);
+										$result	= $db->GetRow($query);
+										if ($result) {
+											$PROCESSED["groups"][] = array("id"=>$group_id,"title"=>$result["group_name"]);
+											$query = "	INSERT INTO `course_audience` VALUES(NULL,".$db->qstr($COURSE_ID).",'group_id',".$db->qstr($group_id).",".$enroll_start.",".$enroll_end.",1)";
+											if(!$db->Execute($query)){
+												add_error("Unable to insert the group [".$group_id."] as an audience member for course [".$COURSE_ID."]. Please try again later.");				
+											}
+											
+										} else {
+											$ERROR++;
+											$ERRORSTR[] = "One of the <strong>groups</strong> you specified was invalid.";
+										}
+									} else {
+										$ERROR++;
+										$ERRORSTR[] = "One of the <strong>groups</strong> you specified is invalid.";
+									}
+								}
+							} else {
+								$nogroups = true;
+							}
+						} else {
+							$nogroups = true;
+						}
+						
+						if (isset($_POST["associated_student"]) && strlen($_POST["associated_student"])) {
+							$PROCESSED["associated_students"] = explode(",",clean_input($_POST["associated_student"], array("notags", "trim")));
+							if(is_array($PROCESSED["associated_students"]) && count($PROCESSED["associated_students"])){
+								foreach ($PROCESSED["associated_students"] as $student) {
+									$query = "	INSERT INTO `course_audience` VALUES(NULL,".$db->qstr($COURSE_ID).",'proxy_id',".$db->qstr($student).",".$enroll_start.",".$enroll_end.",1)";
+									if (!$db->Execute($query)) {
+										add_error("Unable to insert the student [".$student."] as an audience member for course [".$COURSE_ID."]. Please try again later.");				
+									}
+								}
+							} else {
+								$nostudents = true;
+							}
+						} else {
+							$nostudents = true;
+						}
+						
+						if ($nogroups && $nostudents) {
+							$ERROR++;
+							$ERRORSTR[] = "You must select at least one audience member.";
+						}
+						
+						if (!$ERROR) {
+							$NOTICE = 0;
+							$SUCCESS++;
+							$SUCCESSSTR[]	= "You have successfully added <strong>".html_encode($PROCESSED["course_name"])."</strong> to this system.<br /><br />".$msg;
+							$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
 
-						application_log("success", "New course [".$COURSE_ID."] added to the system.");
+							application_log("success", "New course [".$COURSE_ID."] added to the system.");
+						}
 					}
 				} else {
 					$ERROR++;
@@ -480,7 +551,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				echo display_error();
 			}
 			?>
-			<form action="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?<?php echo replace_query(array("step" => 2)); ?>" method="post" onsubmit="selIt()">
+
+			<form action="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?<?php echo replace_query(array("step" => 2)); ?>" method="post" id="addCourseForm" onsubmit="selIt()">
+
 			<input type="hidden" name="organisation_id" id="organisation_id" value=<?php echo $user->getActiveOrganisation() ?> />
 			<h2 title="Course Details Section">Course Details</h2>
 			<div id="course-details-section">
@@ -540,7 +613,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			<?php				
 
 				list($course_objectives,$top_level_id) = courses_fetch_objectives_for_org($ORGANISATION_ID,array(0),-1,0, false, $posted_objectives);
-				echo "course string: ".$course_ids_string;
 				require_once(ENTRADA_ABSOLUTE."/javascript/courses.js.php");
 				$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/elementresizer.js\"></script>\n";
 			?>
@@ -607,7 +679,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								<h2>Clinical Presentations List</h2>
 								<select class="multi-picklist" id="SelectList" name="other_event_objectives_list" multiple="multiple" size="15" style="width: 100%">
 								<?php
-								if ((is_array($clinical_presentations_list)) && (count($clinical_presentations_list))) {
+								if ((is_array($clinical_presentations_list)) && (count($clinical_presentations_list))) {	
+									$ONLOAD[] = "$('clinical_presentations_list').style.display = 'none'";
 									foreach ($clinical_presentations_list as $objective_id => $presentation_name) {
 										if (!array_key_exists($objective_id, $clinical_presentations)) {
 											echo "<option value=\"".(int) $objective_id."\">".html_encode($presentation_name)."</option>\n";
@@ -621,145 +694,149 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							}
 							?>
 							<script type="text/javascript">
-							$('PickList').observe('keypress', function(event) {
-								if (event.keyCode == Event.KEY_DELETE) {
-									delIt();
+								if($('PickList')){
+									$('PickList').observe('keypress', function(event) {
+										if (event.keyCode == Event.KEY_DELETE) {
+											delIt();
+										}
+									});
 								}
-							});
-							$('SelectList').observe('keypress', function(event) {
-								if (event.keyCode == Event.KEY_RETURN) {
-									addIt();
-								}
-							});
+								if($('SelectList')){
+									$('SelectList').observe('keypress', function(event) {
+										if (event.keyCode == Event.KEY_RETURN) {
+											addIt();
+										}
+									});
+								]
+
 							</script>
 						</td>
 					</tr>
 					<tr>
 						<td colspan="3">&nbsp;</td>
 					</tr>
-					<tr>
-						<td>&nbsp;</td>
-						<td>
-							<label for="objective_select" class="form-nrequired">Course Objectives</label>
-						</td>
-						<td id="curriculum_objectives_section">
-							<?php
-							if(!count($course_objectives["objectives"])){
-								$NOTICE = 1;
-								$NOTICESTR = null;
-								$NOTICESTR[] = "No Curriculum Objectives were found for this organisation.";
-								echo display_notice();
-									
-							}
-							else{
-							?>							
-							<select id="objective_select" onchange="showMultiSelect()">
-							<option value="">- Select Competency -</option>
-							<?php
-							$objective_select = "";
-							foreach ($course_objectives["objectives"] as $parent_id => $parent) {
-								if ($parent["parent"] == $top_level_id) {
-									echo "<optgroup label=\"".$parent["name"]."\">";
-									foreach($course_objectives["objectives"] as $objective_id => $objective) {
-										if ($objective["parent"] == $parent_id) {
-											echo "<option value=\"id_".$objective_id."\">".$objective["name"]."</option>";
-											foreach($course_objectives["objectives"] as $child_id => $child) {
-												if ($child["parent"] == $objective_id) {
-													if (array_search($child_id, $course_objectives["used_ids"]) !== false) {
-														$checked = "checked=\"checked\"";
-													} else {
-														$checked = "";
-													}
-													$selectable_objectives[$child_id] = array("text" => $child["name"], "value" => $child_id, "checked" => $checked, "category" => true);
-													foreach($course_objectives["objectives"] as $grandkid_id => $grandkid) {
-														if ($grandkid["parent"] == $child_id) {
-															if (array_search($grandkid_id, $course_objectives["used_ids"]) !== false) {
+							<tr>
+								<td>&nbsp;</td>
+								<td>
+									<label for="objective_select" class="form-nrequired">Curriculum Objectives</label>
+								</td>
+								<td>
+									<?php
+									if(!count($course_objectives["objectives"])){
+										$NOTICE = 1;
+										$NOTICESTR = null;
+										$NOTICESTR[] = "No Curriculum Objectives were found for this organisation.";
+										echo display_notice();
+										
+									}
+									else{
+									?>
+									<select id="objective_select" onchange="showMultiSelect()">
+									<option value="">- Select Competency -</option>
+									<?php
+									$objective_select = "";
+									foreach ($course_objectives["objectives"] as $parent_id => $parent) {
+										if ($parent["parent"] == $top_level_id) {
+											echo "<optgroup label=\"".$parent["name"]."\">";
+											foreach($course_objectives["objectives"] as $objective_id => $objective) {
+												if ($objective["parent"] == $parent_id) {
+													echo "<option value=\"id_".$objective_id."\">".$objective["name"]."</option>";
+													foreach ($course_objectives["objectives"] as $child_id => $child) {
+														if ($child["parent"] == $objective_id) {
+															if (array_search($child_id, $course_objectives["used_ids"]) !== false) {
 																$checked = "checked=\"checked\"";
 															} else {
 																$checked = "";
 															}
-															if ($grandkid["parent"] == $child_id) {
-																$selectable_objectives[$grandkid_id] = array("text" => "<strong>".$grandkid["name"]."</strong><br />".$grandkid["description"], "value" => $grandkid_id, "checked" => $checked);
+															$selectable_objectives[$child_id] = array("text" => $child["name"], "value" => $child_id, "checked" => $checked, "category" => true);
+															foreach($course_objectives["objectives"] as $grandkid_id => $grandkid) {
+																if ($grandkid["parent"] == $child_id) {
+																	if (array_search($grandkid_id, $course_objectives["used_ids"]) !== false) {
+																		$checked = "checked=\"checked\"";
+																	} else {
+																		$checked = "";
+																	}
+																	if ($grandkid["parent"] == $child_id) {
+																		$selectable_objectives[$grandkid_id] = array("text" => "<strong>".$grandkid["name"]."</strong><br />".$grandkid["description"], "value" => $grandkid_id, "checked" => $checked);
+																	}
+																}
 															}
 														}
 													}
+													$objective_select .= course_objectives_multiple_select_options_checked("id_".$objective_id, $selectable_objectives, array("title" => "Please select program or curricular objectives", "cancel" => true, "cancel_text" => "Close", "submit" => false, "width" => "550px"));
+												}
+												unset($selectable_objectives);
+											}
+											echo "\n</optgroup>";
+										}
+									}
+									?>
+									</select>
+									<?php
+									}
+									?>
+								</td>
+							</tr>
+							<tr>
+								<td>&nbsp;</td>
+								<td>&nbsp;</td>
+								<td>
+									<span class="content-small"><strong>Helpful Tip:</strong> Select a competency from the select box above, and a list of course and curricular objectives will then be displayed. Once you have selected an objective it will be placed in the list below and you may leave it as primary or change the importance to secondary or tertiary.</span>
+									<?php echo $objective_select; ?>
+									<script type="text/javascript">
+										var multiselect = [];
+										var id;
+										function showMultiSelect() {
+											$$('select_multiple_container').invoke('hide');
+											id = $F('objective_select');
+											if (multiselect[id]) {
+												$('objective_select').hide();
+												multiselect[id].container.show();
+												multiselect[id].container.down("input").activate();
+											} else {
+												if ($(id+'_options')) {
+													$(id+'_options').addClassName('multiselect-processed');
+													multiselect[id] = new Control.SelectMultiple('objectives_head',id+'_options',{
+														checkboxSelector: 'table.select_multiple_table tr td input[type=checkbox]',
+														nameSelector: 'table.select_multiple_table tr td.select_multiple_name label',
+														resize: id+'_scroll',
+														afterCheck: function(element) {
+															if (element.checked) {
+																addObjective(element);
+															} else {
+																removeObjective(element);
+															}
+														}
+													});
+	
+													$(id+'_cancel').observe('click',function(event){
+														this.container.hide();
+														$('objective_select').show();
+														$('objective_select').options.selectedIndex = 0;
+														return false;
+													}.bindAsEventListener(multiselect[id]));;
+	
+													$('objective_select').hide();
+													multiselect[id].container.show();
+													multiselect[id].container.down("input").activate();
 												}
 											}
-											$objective_select .= course_objectives_multiple_select_options_checked("id_".$objective_id, $selectable_objectives, array("title" => "Please select program or curriculum objectives", "cancel" => true, "cancel_text" => "Close", "submit" => false, "width" => "550px"));
+											return false;
 										}
-										unset($selectable_objectives);
-									}
-									echo "\n</optgroup>";
-								}
-							}
-							?>
-							</select>
-							<?php
-							}
-							?>
-						</td>
-					</tr>
-					<tr>
-						<td>&nbsp;</td>
-						<td>&nbsp;</td>
-						<td>
-							<span class="content-small">Select a Competency and a list of available course and curriculum objectives will be displayed to choose from. Once you have selected an objective, it will be placed in the list below and you may leave it as primary or change the importance to secondary or tertiary.</span>
-							
-							<?php echo $objective_select;?>
-							
-							<script type="text/javascript">
-								var multiselect = [];
-								var id;
-								function showMultiSelect() {
-									$$('select_multiple_container').invoke('hide');
-									id = $F('objective_select');
-									if (multiselect[id]) {
-										$('objective_select').hide();
-										multiselect[id].container.show();
-										multiselect[id].container.down("input").activate();
-									} else {
-										if ($(id+'_options')) {
-											$(id+'_options').addClassName('multiselect-processed');
-											multiselect[id] = new Control.SelectMultiple('objectives_head',id+'_options',{
-												checkboxSelector: 'table.select_multiple_table tr td input[type=checkbox]',
-												nameSelector: 'table.select_multiple_table tr td.select_multiple_name label',
-												resize: id+'_scroll',
-												afterCheck: function(element) {
-													if (element.checked) {
-														addObjective(element);
-													} else {
-														removeObjective(element);
-													}
-												}
-											});
-
-											$(id+'_cancel').observe('click',function(event){
-												this.container.hide();
-												$('objective_select').show();
-												$('objective_select').options.selectedIndex = 0;
-												return false;
-											}.bindAsEventListener(multiselect[id]));;
-
-											$('objective_select').hide();
-											multiselect[id].container.show();
-											multiselect[id].container.down("input").activate();
-										}
-									}
-									return false;
-								}
-							</script>
-						</td>
-					</tr>
-					<tr>
-						
-						<td colspan="3">&nbsp;</td>
-					</tr>
-					<tr>
-						<td colspan="3"><?php $return = course_objectives_in_list($course_objectives, $top_level_id, true);?></td>
-					</tr>
+									</script>
+								</td>
+							</tr>
+							<tr>
+								<td colspan="2">&nbsp;</td>
+								<td style="padding-top: 5px;">
+									<div id="objectives_list">
+									<?php echo course_objectives_in_list($course_objectives,$top_level_id, $top_level_id, true, false, 1, false, true, "primary", true); ?>
+									</div>
+								</td>
+							</tr>
 					<tr>
 						<td colspan="3">&nbsp;</td>
-					</tr>
+					</tr>							
 				</tbody>
 				</table>
 			</div>
@@ -1002,7 +1079,141 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				</tbody>
 				</table>
 			</div>
+		
+			<h2>Course Audience</h2>
+			<div>
+				<table>
+					<colgroup>
+						<col style="width: 3%" />
+						<col style="width: 22%" />
+						<col style="width: 75%" />
+					</colgroup>
+					<tbody>
+						<tr>
+							<td style="vertical-align: top"><input type="radio" name="course_permission" id="course_permission_closed" value="closed"  style="vertical-align: middle" checked="checked" /></td>
+							<td colspan="2" style="padding-bottom: 15px">
+								<label for="course_audience_type_course" class="radio-group-title">This course is private.</label>
+								<div class="content-small">This course is only viewable by its members.</div>
+							</td>
+						</tr>
+						<tr>
+							<td style="vertical-align: top"><input type="radio" name="course_permission" id="course_permission_open" value="open"  style="vertical-align: middle"<?php echo (($PROCESSED["permission"] == "open") ? " checked=\"checked\"" : ""); ?> /></td>
+							<td colspan="2" style="padding-bottom: 15px">
+								<label for="course_audience_type_course" class="radio-group-title">This course is open.</label>
+								<div class="content-small">This course is viewable by everyone.</div>
+							</td>
+						</tr>						
+						<tr class="course_audience group_audience">
+							<td></td>
+							<td><label for="group_ids" class="form-required">Associated Groups</label></td>
+							<td>
+								<select id="group_ids" name="group_ids" style="width: 203px">
+									<option id="-1">-- Select a Group --</option>
+								<?php
+
+								$query = "	SELECT `group_id`,`group_name` FROM `groups`";
+								$groups = $db->GetAll($query);							
+								if (isset($groups)) {
+									foreach ($groups as $group) {
+										echo "<option value=\"".$group["group_id"]."\">".html_encode($group["group_name"])."</option>";
+									}
+								}
+								?>
+								</select>
+								<div id="group_notice" class="content-small" >Use the list above to select the different groups to enroll in this course. When you select one, it will appear here.</div>
+								<ol id="group_container" class="sortableList" style="display: none;">
+									<?php
+									foreach($PROCESSED["groups"] as $group) {
+										echo "<li id=\"type_".$group["id"]."\" class=\"\">".$group["title"]."
+											<a href=\"#\" onclick=\"$(this).up().remove(); cleanupList(); return false;\" class=\"remove\">
+												<img src=\"".ENTRADA_URL."/images/action-delete.gif\">
+											</a>
+										</li>";
+									}
+									?>
+								</ol>
+								<input id="group_order" name="group_order" style="display: none;">
+							</td>
+						</tr>
+						<tr>
+							<td colspan="3">&nbsp;</td>
+						</tr>
+						<tr class="course_audience proxy_id_audience">
+							<td></td>
+							<td style="vertical-align: top"><label for="associated_proxy_ids" class="form-required">Associated Students</label></td>
+							<td>
+								<input type="text" id="student_name" name="fullname" size="30" autocomplete="off" style="width: 203px; vertical-align: middle" />
+								<?php
+								$ONLOAD[] = "student_list = new AutoCompleteList({ type: 'student', url: '". ENTRADA_RELATIVE ."/api/personnel.api.php?type=student', remove_image: '". ENTRADA_RELATIVE ."/images/action-delete.gif'})";
+								?>
+								<div class="autocomplete" id="student_name_auto_complete"></div>
+
+								<input type="hidden" id="associated_student" name="associated_student" />
+								<input type="button" class="button-sm" id="add_associated_student" value="Add" style="vertical-align: middle" />
+								<span class="content-small">(<strong>Example:</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?>)</span>
+								<ul id="student_list" class="menu" style="margin-top: 15px">
+									<?php
+									if (is_array($PROCESSED["associated_students"]) && count($PROCESSED["associated_students"])) {
+										foreach ($PROCESSED["associated_students"] as $student) {
+											if ((array_key_exists($student, $STUDENT_LIST)) && is_array($STUDENT_LIST[$student])) {
+												?>
+												<li class="community" id="student_<?php echo $STUDENT_LIST[$student]["proxy_id"]; ?>" style="cursor: move;"><?php echo $STUDENT_LIST[$student]["fullname"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="student_list.removeItem('<?php echo $STUDENT_LIST[$student]["proxy_id"]; ?>');" class="list-cancel-image" /></li>
+												<?php
+												}
+										}
+									}
+									?>
+								</ul>
+								<input type="hidden" id="student_ref" name="student_ref" value="" />
+								<input type="hidden" id="student_id" name="student_id" value="" />
+							</td>
+						</tr>
+						<?php echo generate_calendars("enrollment", "", true, false, ((isset($PROCESSED["enrollment_start"])) ? $PROCESSED["enrollment_start"] : 0), true, false, ((isset($PROCESSED["enrollment_end"])) ? $PROCESSED["enrollment_end"] : 0),false); ?>					
+					</tbody>
+				</table>
+			</div>
+			<script type="text/javascript">
+			
+				function selectCourseAudienceOption(type) {
+					$$('.course_audience').invoke('hide');
+					$$('.'+type+'_audience').invoke('show');
+				}
+
+				$('student_list').observe('change', checkConditions);
+				$('group_order').observe('change', checkConditions);
 				
+				function checkConditions(){
+						if($F('associated_student')){
+							var students = $F('associated_student').split(',');
+							if(students.length>0);{
+								if($F('group_order').length >0){
+									checkConflict();
+								}
+							}
+						}
+
+					}
+
+				
+				function checkConflict(){
+					new Ajax.Request('<?php echo ENTRADA_URL;?>/api/course-audience-conflicts.api.php',
+					{
+						method:'post',
+						parameters: $("addCourseForm").serialize(true),
+						onSuccess: function(transport){
+						var response = transport.responseText || null;
+						if(response !==null){
+							var g = new k.Growler();
+							g.smoke(response,{life:7});
+						}
+						},
+						onFailure: function(){ alert('Unable to check if a conflict exists.') }
+					});
+				}
+				
+			</script>
+			
+			
 			<div style="padding-top: 25px">
 				<table style="width: 100%" cellspacing="0" cellpadding="0" border="0">
 				<tr>

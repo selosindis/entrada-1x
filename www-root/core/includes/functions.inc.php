@@ -9002,8 +9002,7 @@ function tracking_output_filter_controls($module_type = "") {
 	<table id="filterList" style="clear: both; width: 100%" cellspacing="0" cellpadding="0" border="0" summary="Event Filters">
 		<tr>
 			<td style="width: 53%; vertical-align: top">
-				<form action="<?php echo ENTRADA_URL.$module_type; ?>/communities" method="get" id="filter_edit" name="filter_edit" style="position: relative;">
-				<input type="hidden" name="section" value="reports" />
+				<form action="<?php echo ENTRADA_URL.$module_type; ?>/communities/reports" method="get" id="filter_edit" name="filter_edit" style="position: relative;">
 				<input type="hidden" name="community" value="<?php echo $COMMUNITY_ID;?>" />
 				<input type="hidden" name="action" value="filter_edit" />
 				<input type="hidden" id="filter_edit_type" name="filter_type" value="" />
@@ -9015,7 +9014,6 @@ function tracking_output_filter_controls($module_type = "") {
 					<option value="module">Module Type Filters</option>
 					<option value="page">Page Filters</option>
 					<option value="action">Action Filters</option>
-					<option value="totals">Total Filters</option>
 				</select>
 				<span id="filter_options_loading" style="display:none; vertical-align: middle"><img src="<?php echo ENTRADA_RELATIVE; ?>/images/indicator.gif" width="16" height="16" alt="Please Wait" title="" style="vertical-align: middle" /> Loading ... </span>
 				<span id="options_container"></span>
@@ -9814,10 +9812,83 @@ function tracking_process_filters($action = "", $module_type = "") {
 }
 
 
+function get_page_for_statistic($action_field,$action_value){
+	global $db;
+	unset($query);
+	switch ($action_field){
+		case 'cshare_id':
+			$query = "	SELECT `folder_title` AS `page` 
+						FROM `community_shares` 
+						WHERE `cshare_id` = ".$db->qstr($action_value);
+			break;
+		case 'cscomment_id':
+			$query = "	SELECT b.`file_title` AS `page` 
+						FROM `community_share_comments` AS a 
+						LEFT JOIN `community_share_files` AS b 
+						ON a.`csfile_id` = b.`csfile_id` 
+						WHERE a.`cscomment_id` = ".$db->qstr($action_value);
+			break;
+		case 'csfile_id':
+			$query = "	SELECT `file_title` AS `page` 
+						FROM `community_share_files` 
+						WHERE `csfile_id` = ".$db->qstr($action_value);
+			break;
+		case 'csfversion_id':
+			$query = "	SELECT b.`file_title` AS `page` 
+						FROM `community_share_file_versions` AS a 
+						LEFT JOIN `community_share_files` AS b 
+						ON a.`csfile_id` = b.`csfile_id` 
+						WHERE a.`csfversion_id` = ".$db->qstr($action_value);
+			break;	
+		case 'cannouncement_id':
+			$query = "	SELECT `announcement_title` AS `page` 
+						FROM `community_announcements`
+						WHERE `cannouncement_id` = ".$db->qstr($action_value);
+			break;
+		case 'cdiscussion_id':
+			$query = "	SELECT `forum_title` AS `page` 
+						FROM `community_discussions`
+						WHERE `cdiscussion_id` = ".$db->qstr($action_value);
+			break;		
+		case 'cdtopic_id':
+			$query = "	SELECT `topic_title` AS `page` 
+						FROM `community_discussion_topics`
+						WHERE `cdtopic_id` = ".$db->qstr($action_value);
+			break;	
+		case 'cevent_id':
+			$query = "	SELECT `event_title` AS `page` 
+						FROM `community_events`
+						WHERE `cevent_id` = ".$db->qstr($action_value);
+			break;				
+		case 'cgallery_id':
+			$query = "	SELECT `gallery_title` AS `page` 
+						FROM `community_galleries`
+						WHERE `cgallery_id` = ".$db->qstr($action_value);
+			break;			
+		case 'cgphoto_id':
+			$query = "	SELECT `photo_title` AS `page` 
+						FROM `community_gallery_photos`
+						WHERE `cgphoto_id` = ".$db->qstr($action_value);
+			break;
+		case 'cgcomment_id':
+			$query = "	SELECT a.`gallery_title` AS `page` 
+						FROM `community_galleries` AS a
+						LEFT JOIN `community_gallery_comments` AS b 
+						ON a.`cgaller_id` = b.`cgallery_id`
+						WHERE `cgcomment_id` = ".$db->qstr($action_value);
+			break;							
+
+	}
+	if($query){
+		$result = $db->GetOne($query);
+		 return $result;
+	}
+	return false;
+}
 
 function tracking_fetch_filtered_events($community_id,$filters = array()){
 	global $db, $ENTRADA_ACL;
-	$query = "	SELECT CONCAT_WS(' ',b.`firstname`,b.`lastname`) AS `fullname`, a.* 
+	$query = "	SELECT CONCAT_WS(' ',b.`firstname`,b.`lastname`) AS `fullname`,b.`id` AS `user_id`, a.* 
 				FROM `statistics` AS a 
 				JOIN `".AUTH_DATABASE."`.`user_data` AS b 
 				ON a.`proxy_id` = b.`id` 
@@ -9869,74 +9940,10 @@ function tracking_fetch_filtered_events($community_id,$filters = array()){
 	$dates = $db->GetRow($date_query);
 	if ($statistics){
 		foreach ($statistics as $key=>$statistic){
-			unset($query);
-			switch ($statistic['action_field']){
-				case 'cshare_id':
-					$query = "	SELECT `folder_title` AS `page` 
-								FROM `community_shares` 
-								WHERE `cshare_id` = ".$db->qstr($statistic['action_value']);
-					break;
-				case 'cscomment_id':
-					$query = "	SELECT b.`file_title` AS `page` 
-								FROM `community_share_comments` AS a 
-								LEFT JOIN `community_share_files` AS b 
-								ON a.`csfile_id` = b.`csfile_id` 
-								WHERE a.`cscomment_id` = ".$db->qstr($statistic['action_value']);
-					break;
-				case 'csfile_id':
-					$query = "	SELECT b.`file_title` AS `page` 
-								FROM `community_share_files` A
-								WHERE a.`csfile_id` = ".$db->qstr($statistic['action_value']);
-					break;
-				case 'csfversion_id':
-					$query = "	SELECT b.`file_title` AS `page` 
-								FROM `community_share_file_versions` AS a 
-								LEFT JOIN `community_share_files` AS b 
-								ON a.`csfile_id` = b.`csfile_id` 
-								WHERE a.`csfversion_id` = ".$db->qstr($statistic['action_value']);
-					break;	
-				case 'cannouncement_id':
-					$query = "	SELECT `announcement_title` AS `page` 
-								FROM `community_announcements`
-								WHERE `cannouncement_id` = ".$db->qstr($statistic['action_value']);
-					break;
-				case 'cdiscussion_id':
-					$query = "	SELECT `forum_title` AS `page` 
-								FROM `community_discussions`
-								WHERE `cdiscussion_id` = ".$db->qstr($statistic['action_value']);
-					break;		
-				case 'cdtopic_id':
-					$query = "	SELECT `topic_title` AS `page` 
-								FROM `community_discussion_topics`
-								WHERE `cdtopic_id` = ".$db->qstr($statistic['action_value']);
-					break;	
-				case 'cevent_id':
-					$query = "	SELECT `event_title` AS `page` 
-								FROM `community_events`
-								WHERE `cevent_id` = ".$db->qstr($statistic['action_value']);
-					break;				
-				case 'cgallery_id':
-					$query = "	SELECT `gallery_title` AS `page` 
-								FROM `community_galleries`
-								WHERE `cgallery_id` = ".$db->qstr($statistic['action_value']);
-					break;			
-				case 'cgphoto_id':
-					$query = "	SELECT `photo_title` AS `page` 
-								FROM `community_gallery_photos`
-								WHERE `cgphoto_id` = ".$db->qstr($statistic['action_value']);
-					break;
-				case 'cgcomment_id':
-					$query = "	SELECT a.`gallery_title` AS `page` 
-								FROM `community_galleries` AS a
-								LEFT JOIN `community_gallery_comments` AS b 
-								ON a.`cgaller_id` = b.`cgallery_id`
-								WHERE `cgcomment_id` = ".$db->qstr($statistic['action_value']);
-					break;							
-
-			}
-			if($query){
-				$result = $db->GetOne($query);
-				$statistics[$key]['page'] = $result;
+			$page = get_page_for_statistic($statistic["action_field"], $statistic["action_value"]);
+			
+			if($page){
+				$statistics[$key]['page'] = $page;
 			}
 		}
 	}

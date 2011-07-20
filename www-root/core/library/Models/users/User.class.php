@@ -299,35 +299,33 @@ class User {
 	 * @return User
 	 */
 	public static function get($proxy_id) {
-		if (!$user) {
-			$user = new User();
-			global $db;
-			$query = "SELECT a.*, b.`group`, b.`role` 
-					  FROM `".AUTH_DATABASE."`.`user_data` a
-					  LEFT JOIN `".AUTH_DATABASE."`.`user_access` b
+		$user = new User();
+		global $db;
+		$query = "SELECT a.*, b.`group`, b.`role`
+					  FROM `" . AUTH_DATABASE . "`.`user_data` a
+					  LEFT JOIN `" . AUTH_DATABASE . "`.`user_access` b
 						  on a.`id`=b.`user_id` and b.`app_id`=?
 					  WHERE a.`id` = ?";
-			$result = $db->getRow($query, array(AUTH_APP_ID,$proxy_id));
+		$result = $db->getRow($query, array(AUTH_APP_ID, $proxy_id));
 
-			if ($result) {
-				$user = self::fromArray($result, $user);
-			}
-			
-			//get all of the users orgs
-			$query = "SELECT b.`organisation_id`, b.`organisation_title`
-					  FROM `".AUTH_DATABASE."`.`user_organisation` a
-					  JOIN `".AUTH_DATABASE."`.`organisations` b
+		if ($result) {
+			$user = self::fromArray($result, $user);
+		}
+
+		//get all of the users orgs
+		$query = "SELECT b.`organisation_id`, b.`organisation_title`
+					  FROM `" . AUTH_DATABASE . "`.`user_organisation` a
+					  JOIN `" . AUTH_DATABASE . "`.`organisations` b
 						  on a.`organisation_id` = b.`organisation_id`
 					  WHERE a.`proxy_id` = ?";
-			$results = $db->getAll($query, array($proxy_id));
+		$results = $db->getAll($query, array($proxy_id));
 
-			//every user should have at least one org.
-			if ($results) {
-				foreach ($results as $result) {
-					$organisation_list[$result["organisation_id"]] = html_encode($result["organisation_title"]);
-				}				
-				$user->setAllOrganisations($organisation_list);
+		//every user should have at least one org.
+		if ($results) {
+			foreach ($results as $result) {
+				$organisation_list[$result["organisation_id"]] = html_encode($result["organisation_title"]);
 			}
+			$user->setAllOrganisations($organisation_list);
 		}
 		return $user;
 	}

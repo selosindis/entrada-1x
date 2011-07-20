@@ -55,7 +55,7 @@ class TaskCompletions extends Collection {
 		if ($results) {
 			foreach ($results as $result) {
 				$completion = TaskCompletion::fromArray($result);
-				$recipient = User::fromArray($result); //and throw away. will be retrieved from cache when needed
+				$recipient = User::get($result["id"]); //and throw away. will be retrieved from cache when needed
 				$completions[] = $completion;
 			}
 		}
@@ -104,7 +104,7 @@ class TaskCompletions extends Collection {
 		if ($results) {
 			foreach ($results as $result) {
 				$task = Task::fromArray($result);//for cache
-				$user = User::fromArray($result);//for cache
+				$user = User::get($result["id"]);//for cache
 				$completion = TaskCompletion::fromArray($result);
 				$completions[] = $completion;
 			}
@@ -142,7 +142,7 @@ class TaskCompletions extends Collection {
 		$verifiers = array();
 		if ($results) {
 			foreach ($results as $result) {
-				$verifier = User::fromArray($result);
+				$verifier = User::get($result["id"]);
 				if ($verifier) {
 					$verifiers[] = $verifier;
 				}

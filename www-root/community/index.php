@@ -453,7 +453,7 @@ if ($COMMUNITY_URL) {
 						$sidebar_html .= "	<li class=\"admin\"><a href=\"".ENTRADA_URL."/communities?section=modify&amp;community=".$COMMUNITY_ID."\" style=\"font-weight: bold\">Manage Community</a></li>\n";
 						$sidebar_html .= "	<li class=\"admin\"><a href=\"".ENTRADA_URL."/communities?section=members&amp;community=".$COMMUNITY_ID."\" style=\"font-weight: bold\">Manage Members</a></li>\n";
 						$sidebar_html .= "	<li class=\"admin\"><a href=\"".COMMUNITY_URL.$COMMUNITY_URL.":pages\" style=\"font-weight: bold\">Manage Pages</a></li>\n";
-						$sidebar_html .= "	<li class=\"admin\"><a href=\"".ENTRADA_URL."/communities?section=reports&amp;community=".$COMMUNITY_ID."\" style=\"font-weight: bold\">View Community Reports</a></li>\n";
+						$sidebar_html .= "	<li class=\"admin\"><a href=\"".ENTRADA_URL."/communities/reports?community=".$COMMUNITY_ID."\" style=\"font-weight: bold\">View Community Reports</a></li>\n";
 						$sidebar_html .= "</ul>\n";
 
 						new_sidebar_item("Admin Centre", $sidebar_html, "community-admin", "open");

@@ -89,25 +89,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 	 * Update requsted organisation filter
 	 * Valid: any integer really.
 	 */
-	if(isset($_GET["organisation_id"])) {
-		if($_GET["organisation_id"] == "all") {
-			$organisation_id = null;
-		} else if((int) trim($_GET["organisation_id"])) {
-				$organisation_id = (int) trim($_GET["organisation_id"]);
-				$organisation_where = "`organisation_id` = ".$organisation_id;
-			}
 
-		$_SERVER["QUERY_STRING"] = replace_query(array("organisation_id" => false));
-		$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["organisation_id"] = $organisation_id;
-	} else {
-		if (!isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["organisation_id"])) {
-			$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["organisation_id"] = $_SESSION["details"]["organisation_id"];
-			$organisation_id = $_SESSION["details"]["organisation_id"];
-		} else {
-			$organisation_id = $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["organisation_id"];
-		}
-		$organisation_where = "`organisation_id` = ".$organisation_id;
-	}
+	$organisation_id = $user->getActiveOrganisation();
+	$organisation_where = "`organisation_id` = " . $organisation_id;
+
 
 	/**
 	 * Check if preferences need to be updated on the server at this point.
@@ -191,62 +176,40 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 
 	?>
 	<table style="clear: both; width: 100%; margin-bottom: 10px" cellspacing="0" cellpadding="0" border="0">
-	<tr>
-		<td style="width: 100%; text-align: right">
-			<div style="white-space: nowrap">
-				<form action="<?php echo ENTRADA_URL."/admin/".$MODULE;?>" method="get" id="organisationSelector" style="vertical-align: middle">
-					<label for="organisation_id">Organisation filter:</label>
-					<select name="organisation_id" id="organisation_id" onchange="$('organisationSelector').submit();" style="display:inline;">
-							<?php
-							$query		= "SELECT `organisation_id`, `organisation_title` FROM `".AUTH_DATABASE."`.`organisations`";
-							$results	= $db->GetAll($query);
-							$all = true;
-							if($results) {
-								foreach($results as $result) {
-							if($ENTRADA_ACL->amIAllowed(new CourseResource(null, $result["organisation_id"]), "read")) {
-										echo "<option value=\"".(int) $result["organisation_id"]."\"".(isset($organisation_id) && $organisation_id == $result["organisation_id"] ? " selected=\"selected\"" : "").">".html_encode($result["organisation_title"])."</option>\n";
-									} else {
-										$all = false;
-									}
-								}
-							}
-							if($all) {
-								echo "<option value=\"all\" ".(isset($organisation_id) && $organisation_id == "all" ? "selected=\"selected\"" : "").">All organisations</option>";
-							}
-							?>
-					</select>
-				</form>
-					<?php
-					if ($TOTAL_PAGES > 1) {
-						echo "<form action=\"".ENTRADA_URL."/admin/".$MODULE."\" method=\"get\" id=\"pageSelector\" style=\"display:inline;\">\n";
-						echo "<span style=\"width: 20px; vertical-align: middle; margin-right: 3px; text-align: left\">\n";
-						if ($PAGE_PREVIOUS) {
-							echo "<a href=\"".ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("pv" => $PAGE_PREVIOUS))."\"><img src=\"".ENTRADA_URL."/images/record-previous-on.gif\" border=\"0\" width=\"11\" height=\"11\" alt=\"Back to page ".$PAGE_PREVIOUS.".\" title=\"Back to page ".$PAGE_PREVIOUS.".\" style=\"vertical-align: middle\" /></a>\n";
-						} else {
-							echo "<img src=\"".ENTRADA_URL."/images/record-previous-off.gif\" width=\"11\" height=\"11\" alt=\"\" title=\"\" style=\"vertical-align: middle\" />";
-						}
-						echo "</span>";
-						echo "<span style=\"vertical-align: middle\">\n";
-						echo "<select name=\"pv\" onchange=\"$('pageSelector').submit();\"".(($TOTAL_PAGES <= 1) ? " disabled=\"disabled\"" : "").">\n";
-						for($i = 1; $i <= $TOTAL_PAGES; $i++) {
-							echo "<option value=\"".$i."\"".(($i == $PAGE_CURRENT) ? " selected=\"selected\"" : "").">".(($i == $PAGE_CURRENT) ? " Viewing" : "Jump To")." Page ".$i."</option>\n";
-						}
-						echo "</select>\n";
-						echo "</span>\n";
-						echo "<span style=\"width: 20px; vertical-align: middle; margin-left: 3px; text-align: right\">\n";
-						if ($PAGE_CURRENT < $TOTAL_PAGES) {
-							echo "<a href=\"".ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("pv" => $PAGE_NEXT))."\"><img src=\"".ENTRADA_URL."/images/record-next-on.gif\" border=\"0\" width=\"11\" height=\"11\" alt=\"Forward to page ".$PAGE_NEXT.".\" title=\"Forward to page ".$PAGE_NEXT.".\" style=\"vertical-align: middle\" /></a>";
-						} else {
-							echo "<img src=\"".ENTRADA_URL."/images/record-next-off.gif\" width=\"11\" height=\"11\" alt=\"\" title=\"\" style=\"vertical-align: middle\" />";
-						}
-						echo "</span>\n";
+		<tr>
+			<td style="width: 100%; text-align: right">
+				<?php
+				echo "<div style=\"white-space: nowrap\">\n";
+				if ($TOTAL_PAGES > 1) {
+					echo "<form action=\"" . ENTRADA_URL . "/admin/" . $MODULE . "\" method=\"get\" id=\"pageSelector\" style=\"display:inline;\">\n";
+					echo "<span style=\"width: 20px; vertical-align: middle; margin-right: 3px; text-align: left\">\n";
+					if ($PAGE_PREVIOUS) {
+						echo "<a href=\"" . ENTRADA_URL . "/admin/" . $MODULE . "?" . replace_query(array("pv" => $PAGE_PREVIOUS)) . "\"><img src=\"" . ENTRADA_URL . "/images/record-previous-on.gif\" border=\"0\" width=\"11\" height=\"11\" alt=\"Back to page " . $PAGE_PREVIOUS . ".\" title=\"Back to page " . $PAGE_PREVIOUS . ".\" style=\"vertical-align: middle\" /></a>\n";
+					} else {
+						echo "<img src=\"" . ENTRADA_URL . "/images/record-previous-off.gif\" width=\"11\" height=\"11\" alt=\"\" title=\"\" style=\"vertical-align: middle\" />";
 					}
-					echo "</form>\n";
-					echo "</div>\n";
-					?>
-		</td>
-	</tr>
-</table>
+					echo "</span>";
+					echo "<span style=\"vertical-align: middle\">\n";
+					echo "<select name=\"pv\" onchange=\"$('pageSelector').submit();\"" . (($TOTAL_PAGES <= 1) ? " disabled=\"disabled\"" : "") . ">\n";
+					for ($i = 1; $i <= $TOTAL_PAGES; $i++) {
+						echo "<option value=\"" . $i . "\"" . (($i == $PAGE_CURRENT) ? " selected=\"selected\"" : "") . ">" . (($i == $PAGE_CURRENT) ? " Viewing" : "Jump To") . " Page " . $i . "</option>\n";
+					}
+					echo "</select>\n";
+					echo "</span>\n";
+					echo "<span style=\"width: 20px; vertical-align: middle; margin-left: 3px; text-align: right\">\n";
+					if ($PAGE_CURRENT < $TOTAL_PAGES) {
+						echo "<a href=\"" . ENTRADA_URL . "/admin/" . $MODULE . "?" . replace_query(array("pv" => $PAGE_NEXT)) . "\"><img src=\"" . ENTRADA_URL . "/images/record-next-on.gif\" border=\"0\" width=\"11\" height=\"11\" alt=\"Forward to page " . $PAGE_NEXT . ".\" title=\"Forward to page " . $PAGE_NEXT . ".\" style=\"vertical-align: middle\" /></a>";
+					} else {
+						echo "<img src=\"" . ENTRADA_URL . "/images/record-next-off.gif\" width=\"11\" height=\"11\" alt=\"\" title=\"\" style=\"vertical-align: middle\" />";
+					}
+					echo "</span>\n";
+				}
+				echo "</form>\n";
+				echo "</div>\n";
+				?>
+			</td>
+		</tr>
+	</table>
 	<?php
 	/**
 	 * Provides the first parameter of MySQLs LIMIT statement by calculating which row to start results from.

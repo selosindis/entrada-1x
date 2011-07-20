@@ -1598,6 +1598,7 @@ CREATE TABLE IF NOT EXISTS `courses` (
   `course_objectives` text,
   `course_url` text,
   `course_message` text NOT NULL,
+  `permission` ENUM('open','closed') NOT NULL DEFAULT 'closed',
   `notifications` int(1) NOT NULL DEFAULT '1',
   `course_active` int(1) NOT NULL DEFAULT '1',
   PRIMARY KEY  (`course_id`),
@@ -3368,7 +3369,7 @@ CREATE TABLE IF NOT EXISTS `settings` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `settings` (`shortname`, `value`) VALUES
-('version_db', '1207'),
+('version_db', '1208 '),
 ('version_entrada', '1.2.0');
 
 CREATE TABLE `small_groups` (
@@ -3824,6 +3825,7 @@ CREATE TABLE IF NOT EXISTS `eventtype_organisation`(
 CREATE TABLE IF NOT EXISTS `groups` (
   `group_id` int(12) NOT NULL AUTO_INCREMENT,
   `group_name` varchar(255) NOT NULL,
+  `parent_id` INT DEFAULT NULL,
   `group_active` int(1) NOT NULL DEFAULT '1',
   `updated_date` bigint(64) NOT NULL,
   `updated_by` int(12) NOT NULL,
@@ -3908,3 +3910,22 @@ CREATE TABLE IF NOT EXISTS `topic_organisation`(
 ) ENGINE = MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `objective_organisation` SELECT a.`objective_id`, b.`organisation_id` FROM `global_lu_objectives` AS a JOIN `entrada_auth.organisations` AS b ON 1=1;
+
+CREATE TABLE `course_audience`(
+	`caudience_id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY, 
+	`course_id` INT NOT NULL, 
+	`audience_type` ENUM('proxy_id','group_id') NOT NULL, 
+	`audience_value` INT NOT NULL, 
+	`enroll_start` BIGINT NOT NULL, 
+	`enroll_finish` BIGINT NOT NULL, 
+	`audience_active` INT(1) NOT NULL DEFAULT '1', 
+ KEY `event_id` (`event_id`), 
+ KEY `audience_type` (`audience_type`), 
+ KEY `audience_value` (`audience_value`), 
+ KEY `audience_active` (`audience_active`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE `group_organisation`(
+	`group_id` INT NOT NULL, 
+	`organisation_id` INT NOT NULL
+) ENGINE=MyISAM DEFAULT CHARSET = utf8;

@@ -52,7 +52,7 @@ if (!defined("PARENT_INCLUDED")) {
 	$SEARCH_CLASS				= 0;
 	$SEARCH_YEAR				= 0;
 	$SEARCH_DURATION			= array();
-	$SEARCH_ORGANISATION		= $_SESSION['details']['organisation_id'];
+	$SEARCH_ORGANISATION		= $user->getActiveOrganisation();
 	$RESULTS_PER_PAGE			= 10;
 
 	/**
@@ -196,35 +196,6 @@ if (!defined("PARENT_INCLUDED")) {
 				</tr>
 				<tr>
 					<td colspan="3">&nbsp;</td>
-				</tr>
-				<tr>
-					<td>
-						<label for="o" style="font-weight: bold; margin-right: 5px; white-space: nowrap">Organisation:</label>
-					</td>
-					<td>
-						<select id="o" name="o" style="width: 250px">
-						<?php
-						$query		= "SELECT `organisation_id`, `organisation_title` FROM `".AUTH_DATABASE."`.`organisations`";
-						$results	= $db->GetAll($query);
-						$all = true;
-						if ($results) {
-							foreach ($results as $result) {
-								if ($ENTRADA_ACL->amIAllowed("resourceorganisation".$result["organisation_id"], "read")) {
-									echo "<option value=\"".(int) $result["organisation_id"]."\"".(isset($SEARCH_ORGANISATION) && $SEARCH_ORGANISATION == $result['organisation_id'] ? " selected=\"selected\"" : "").">".html_encode($result["organisation_title"])."</option>\n";
-								} else {
-									$all = false;
-								}
-							}
-						}
-						if ($all) {
-							echo '<option value="all" '.(isset($SEARCH_ORGANISATION) && $SEARCH_ORGANISATION == 'all' ? 'selected="selected"' : '').">All organisations</option>";
-						}
-						?>
-						</select>
-					</td>
-					<td>
-						&nbsp;
-					</td>
 				</tr>
 				<tr>
 					<td>

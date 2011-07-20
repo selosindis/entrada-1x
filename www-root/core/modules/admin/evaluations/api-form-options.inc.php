@@ -75,7 +75,7 @@ if (!defined("IN_EVALUATIONS")) {
 
 					$query = "	SELECT `course_id`, `organisation_id`, `course_code`, `course_name`
 								FROM `courses`
-								WHERE `organisation_id`=".$db->qstr($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"])."
+								WHERE `organisation_id`=".$user->getActiveOrganisation()."
 								AND `course_active` = '1'
 								ORDER BY `course_code` ASC, `course_name` ASC";
 					$results = $db->GetAll($query);

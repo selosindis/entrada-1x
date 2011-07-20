@@ -38,7 +38,7 @@ class TaskVerifiers extends Collection {
 		$verifiers = array();
 		if ($results) {
 			foreach ($results as $result) {
-				$verifier = User::fromArray($result);
+				$verifier = User::get($result["id"]);
 				if ($verifier) {
 					$verifiers[] = $verifier;
 				}

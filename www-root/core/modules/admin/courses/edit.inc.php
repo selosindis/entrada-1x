@@ -38,8 +38,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 	if ($COURSE_ID) {
-		
-		$HEAD[]		= "<script type=\"text/javascript\">var DELETE_IMAGE_URL = '".ENTRADA_URL."/images/action-delete.gif';</script>";
+
 		$HEAD[]		= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/picklist.js\"></script>\n";
 		$HEAD[]		= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/scriptaculous/tree.js\"></script>\n";
 		$HEAD[]		= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/groups_list.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
@@ -137,15 +136,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					/**
 					 * Required field "organisation_id" / Organisation Name.
 					 */
-
-					$organisation_id = $course_details["organisation_id"];
-					if ($ENTRADA_ACL->amIAllowed(new CourseResource(null, $organisation_id), 'create')) {
-						$PROCESSED["organisation_id"] = $organisation_id;
-					} else {
-						$ERROR++;
-						$ERRORSTR[] = "You do not have permission to add a course for this organisation. This error has been logged and will be investigated.";
-						application_log("Proxy id [".$_SESSION['details']['proxy_id']."] tried to eicreate a course within an organisation [".$organisation_id."] they didn't have permissions on. ");
-					}
+						if ($ENTRADA_ACL->amIAllowed(new CourseResource(null, $ORGANISATION_ID), 'create')) {
+							$PROCESSED["organisation_id"] = $ORGANISATION_ID;
+						} else {
+							$ERROR++;
+							$ERRORSTR[] = "You do not have permission to add a course for this organisation. This error has been logged and will be investigated.";
+							application_log("Proxy id [".$_SESSION['details']['proxy_id']."] tried to eicreate a course within an organisation [".$ORGANISATION_ID."] they didn't have permissions on. ");
+						}
 
 
 					/**

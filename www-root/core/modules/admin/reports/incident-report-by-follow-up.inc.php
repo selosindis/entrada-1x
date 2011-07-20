@@ -56,31 +56,6 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 			</tr>
 			<?php echo generate_calendars("reporting", "Reporting Date", true, true, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_start"], true, true, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_finish"]); ?>
 			<tr>
-				<td style="vertical-align: top;"><input id="organisation_checkbox" type="checkbox" disabled="disabled" checked="checked"></td>
-				<td style="vertical-align: top; padding-top: 4px;"><label for="organisation_id" class="form-required">Organisation</label></td>
-				<td style="vertical-align: top;">
-					<select id="organisation_id" name="organisation_id" style="width: 177px">
-					<?php
-					$query		= "SELECT `organisation_id`, `organisation_title` FROM `".AUTH_DATABASE."`.`organisations`";
-					$results	= $db->GetAll($query);
-					$all_organisations = false;
-					if($results) {
-						$all_organisations = true;
-						foreach($results as $result) {
-							if($ENTRADA_ACL->amIAllowed('resourceorganisation'.$result["organisation_id"], 'read')) {
-								echo "<option value=\"".(int) $result["organisation_id"]."\"".(((isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["organisation_id"])) && ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["organisation_id"] == $result["organisation_id"])) ? " selected=\"selected\"" : "").">".html_encode($result["organisation_title"])."</option>\n";
-							} else {
-								$all_organisations = false;
-							}
-						}
-					}
-					if($all_organisations) { ?>
-						<option value="-1" <?php echo (isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["organisation_id"]) && ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["organisation_id"] == -1) ? " selected=\"selected\"" : ""); ?>>All organisations</option>
-					<?php } ?>
-					</select>
-				</td>
-			</tr>
-			<tr>
 				<td colspan="3" style="text-align: right; padding-top: 10px"><input type="submit" class="button" value="Create Report" /></td>
 			</tr>
 		</tbody>
@@ -93,11 +68,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 
 	$report_results	= array();
 
-	if(isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["organisation_id"]) && $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["organisation_id"] != -1) {
-		$organisation_where = " AND (b.`organisation_id` = ".$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["organisation_id"].") ";
-	} else {
-		$organisation_where = "";
-	}
+	$organisation_where = " AND (b.`organisation_id` = ".$user->getActiveOrganisation().") ";
 	
 	$query	= "
 			SELECT a.*, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`

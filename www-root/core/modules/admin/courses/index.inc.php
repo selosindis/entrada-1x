@@ -134,6 +134,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 		break;
 	}
 
+	$organisation_where ="`organisation_id` = ".$db->qstr($user->getActiveOrganisation());
+	
 	/**
 	 * Get the total number of results using the generated queries above and calculate the total number
 	 * of pages that are available based on the results per page preferences.

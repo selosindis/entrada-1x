@@ -30,6 +30,7 @@
  */
 require_once "Zend/Loader/Autoloader.php";
 $loader = Zend_Loader_Autoloader::getInstance();
+//$loader->registerNamespace('Entrada_');
 
 require_once("config/settings.inc.php");
 
@@ -45,11 +46,13 @@ require_once("cache.inc.php");
 require_once("acl.inc.php");
 
 require_once("Models/users/User.class.php");
-if ($_SESSION["details"]["id"]) {
-	$user = User::get($_SESSION["details"]["id"]);
+if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
+	$ENTRADA_USER = User::get($_SESSION["details"]["id"]);
+} else {
+	$ENTRADA_USER = false;
 }
 
-ini_set("filter.default_flags", FILTER_FLAG_NO_ENCODE_QUOTES);
+@ini_set("filter.default_flags", FILTER_FLAG_NO_ENCODE_QUOTES);
 
 /**
  * If Entrada is in development mode and the user is not a developer send them to the

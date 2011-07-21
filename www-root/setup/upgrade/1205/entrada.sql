@@ -1,5 +1,3 @@
-UPDATE `settings` SET `value` = '1205' WHERE `shortname` = 'version_db';
-
 CREATE TABLE IF NOT EXISTS `pg_blocks` (
   `id` int(12) NOT NULL AUTO_INCREMENT,
   `block_name` varchar(8) NOT NULL,
@@ -36,3 +34,5 @@ INSERT INTO `pg_blocks` (`id`, `block_name`, `start_date`, `end_date`, `year`) V
 (24, '11', '2012-04-10', '2012-05-07', '2011-2012'),
 (25, '12', '2012-05-08', '2012-06-04', '2011-2012'),
 (26, '13', '2012-06-05', '2012-06-30', '2011-2012');
+
+UPDATE `settings` SET `value` = '1205' WHERE `shortname` = 'version_db';

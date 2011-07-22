@@ -1123,7 +1123,7 @@ if (!defined("PARENT_INCLUDED")) {
 				$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"],
 				$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"],
 				$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"],
-				$user->getActiveOrganisation(),
+				$ENTRADA_USER->getActiveOrganisation(),
 				$_SESSION[APPLICATION_IDENTIFIER]["events"]["sb"],
 				$_SESSION[APPLICATION_IDENTIFIER]["events"]["so"],
 				$_SESSION[APPLICATION_IDENTIFIER]["events"]["dtype"],

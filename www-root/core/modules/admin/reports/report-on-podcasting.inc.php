@@ -101,7 +101,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 	 * Top 25 Downloaded Podcasts
 	 * 
 	 */
-	$organisation_where = " AND (e.`organisation_id` = ".$user->getActiveOrganisation().") ";
+	$organisation_where = " AND (e.`organisation_id` = ".$ENTRADA_USER->getActiveOrganisation().") ";
 
 	$query		= "
 				SELECT a.`accesses`, a.`efile_id` AS `podcast_id`, a.`event_id`, a.`file_name`, b.`event_title`, b.`event_start`, c.`audience_value` AS `event_grad_year`

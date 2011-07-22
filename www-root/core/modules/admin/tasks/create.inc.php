@@ -203,7 +203,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 						<?php
 						$query		= "	SELECT * FROM `courses` 
 										WHERE `course_active` = '1'
-										AND `organisation_id` = " . $user->getActiveOrganisation() . "
+										AND `organisation_id` = " . $ENTRADA_USER->getActiveOrganisation() . "
 										ORDER BY `course_name` ASC";
 						$results	= $db->GetAll($query);
 						if($results) {

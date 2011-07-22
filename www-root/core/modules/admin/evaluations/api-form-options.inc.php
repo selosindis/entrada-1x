@@ -75,7 +75,7 @@ if (!defined("IN_EVALUATIONS")) {
 
 					$query = "	SELECT `course_id`, `organisation_id`, `course_code`, `course_name`
 								FROM `courses`
-								WHERE `organisation_id`=".$user->getActiveOrganisation()."
+								WHERE `organisation_id`=".$ENTRADA_USER->getActiveOrganisation()."
 								AND `course_active` = '1'
 								ORDER BY `course_code` ASC, `course_name` ASC";
 					$results = $db->GetAll($query);

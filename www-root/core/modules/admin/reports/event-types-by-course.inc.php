@@ -45,7 +45,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 	 * Fetch all courses into an array that will be used.
 	 */
 	$query = "SELECT * FROM `courses`
-			  WHERE `organisation_id` = ".$user->getActiveOrganisation()."
+			  WHERE `organisation_id` = ".$ENTRADA_USER->getActiveOrganisation()."
 			  ORDER BY `course_code` ASC";
 	$courses = $db->GetAll($query);
 	if ($courses) {
@@ -195,7 +195,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 					ON a.`eventtype_id` = c.`eventtype_id` 
 					LEFT JOIN `".AUTH_DATABASE."`.`organisations` AS b
 					ON b.`organisation_id` = c.`organisation_id` 
-					WHERE b.`organisation_id` = ".$db->qstr($user->getActiveOrganisation())."
+					WHERE b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
 					AND a.`eventtype_active` = '1' 
 					ORDER BY a.`eventtype_order`
 			";

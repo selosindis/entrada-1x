@@ -49,7 +49,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 				// Error Checking
 				switch($STEP) {
 					case 2 :
-						if ($organisation_id = $user->getActiveOrganisation()) {
+						if ($organisation_id = $ENTRADA_USER->getActiveOrganisation()) {
 							if ($ENTRADA_ACL->amIAllowed(new NoticeResource($organisation_id), 'create')) {
 								$PROCESSED["organisation_id"] = $organisation_id;
 							} else {

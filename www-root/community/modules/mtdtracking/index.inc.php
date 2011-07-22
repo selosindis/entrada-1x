@@ -187,6 +187,12 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 				}
 			});
 
+			jQuery('#download_button').click(function(e) {
+				var year = jQuery('#year').val();
+				var url = '<?php echo COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL . "?section=export_schedule&service_id=" . $mtd_service_id; ?>' + "&year=" + year;
+				window.location = url;
+			});
+
 		});
 
 		function validateRequired(formArray) {
@@ -445,7 +451,7 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 		<br class="clearboth">
 
 		<div id="button_container" style="float: right;">
-			<input type="button" onclick="window.location = '<?php echo COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL . "?section=export_schedule&service_id=" . $mtd_service_id; ?>'" value="Download Data" />
+			<input type="button" id="download_button" name="download_button" value="Download Data" />
 		</div>
 		<br />
 		<br class="clearboth">

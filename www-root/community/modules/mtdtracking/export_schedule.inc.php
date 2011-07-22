@@ -30,18 +30,34 @@ if (!defined("IN_MTDTRACKING")) {
 	header("Location: " . ENTRADA_URL);
 	exit;
 } else {
-@set_include_path(implode(PATH_SEPARATOR, array(
-    dirname(__FILE__) . "/../../../core/includes",
-    get_include_path(),
-)));
+	@set_include_path(implode(PATH_SEPARATOR, array(
+						dirname(__FILE__) . "/../../../core/includes",
+						get_include_path(),
+					)));
 
-require_once("functions.inc.php");
+	require_once("functions.inc.php");
 
-$usersId = $_SESSION["details"]["id"];
-$PROCESSED["service_id"] = validate_integer_field($_GET["service_id"]);
+	$usersId = $_SESSION["details"]["id"];
+	$PROCESSED["service_id"] = validate_integer_field($_GET["service_id"]);
 
-ob_clear_open_buffers();
-$query = "SELECT `mtd_facilities`.`facility_name`, `user_data_resident`.`first_name`,
+	$year = clean_input($_GET["year"], array("notags", "trim", "nows"));
+
+	if (!$year) {
+		$current_date = date("Y-m-d");
+		$date_arr = date_parse($current_date);
+
+		if ($date_arr["month"] >= 7) {
+			$year = $date_arr["year"] . "-" . strval(intval($date_arr["year"]) + 1);
+		} else {
+			$year = strval(intval($date_arr["year"]) - 1) . "-" . $date_arr["year"];
+		}
+	}
+
+	$year_min = substr($year, 0, 4);
+	$year_max = substr($year, 5, 4);
+
+	ob_clear_open_buffers();
+	$query = "SELECT `mtd_facilities`.`facility_name`, `user_data_resident`.`first_name`,
 				 `user_data_resident`.`last_name`, `mtd_schedule`.`start_date`,
 				 `mtd_schedule`.`end_date`, `user_data_resident`.`cpso_no`,
 				 `user_data_resident`.`student_no`,`mtd_schools`.`school_code`,
@@ -63,45 +79,46 @@ $query = "SELECT `mtd_facilities`.`facility_name`, `user_data_resident`.`first_n
 		  AND `mtd_moh_program_codes`.`id` = `user_data_resident`.`program_id`
 		  AND `mtd_moh_service_codes`.`id` = `mtd_schedule`.`service_id`
 		  AND `mtd_categories`.`id` = `user_data_resident`.`category_id`
+		  AND date_format(`mtd_schedule`.`start_date`, '%Y-%m-%d') between '" . $year_min . "-07-01' AND '" . $year_max . "-06-30'
 		  ORDER BY start_date DESC";
 
-$results = $db->GetAll($query);
+	$results = $db->GetAll($query);
 
-header("Expires: 0"); // set expiration time
+	header("Expires: 0"); // set expiration time
 // browser must download file from server instead of cache
-header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
+	header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
 // force download dialog
-header("Content-Type: application/force-download");
-header("Content-Type: application/octet-stream");
-header("Content-Type: application/download");
-header("Content-Type:  application/vnd.ms-excel");
-header("Content-Disposition: attachment; filename=\"mtd_schedule.csv\"");
+	header("Content-Type: application/force-download");
+	header("Content-Type: application/octet-stream");
+	header("Content-Type: application/download");
+	header("Content-Type:  application/vnd.ms-excel");
+	header("Content-Disposition: attachment; filename=\"mtd_schedule.csv\"");
 
-echo "\"School_Code\",\"CPSO_No\",\"Student_No\",\"Program_Code\",\"First_Name\",\"Last_Name\",\"Category_Code\",\"Service_Code\",\"Location\",\"Start_Date\",\"End_Date\",\"Percent_Time\"\n";
+	echo "\"School_Code\",\"CPSO_No\",\"Student_No\",\"Program_Code\",\"First_Name\",\"Last_Name\",\"Category_Code\",\"Service_Code\",\"Location\",\"Start_Date\",\"End_Date\",\"Percent_Time\"\n";
 
-if ($results) {
-	//an array for holding each line of the result set before echoing it
-	//to the buffer.
-	$line = array();
-	foreach ($results as $result) {
+	if ($results) {
+		//an array for holding each line of the result set before echoing it
+		//to the buffer.
+		$line = array();
+		foreach ($results as $result) {
 
-		$line["school_code"] = $result["school_code"];
-		$line["cpso_no"] = $result["cpso_no"];
-		$line["student_no"] = $result["student_no"];
-		$line["program_code"] = $result["program_code"];
-		$line["first_name"] = $result["first_name"];
-		$line["last_name"] = $result["last_name"];
-		$line["category_code"] = $result["category_code"];
-		$line["service_code"] = $result["service_code"];
-		$line["facility_name"] = $result["facility_name"];
-		$line["start_date"] = $result["start_date"];
-		$line["end_date"] = $result["end_date"];
-		$line["percent_time"] = $result["percent_time"];
-		echo implode(",", $line) . "\n";
+			$line["school_code"] = $result["school_code"];
+			$line["cpso_no"] = $result["cpso_no"];
+			$line["student_no"] = $result["student_no"];
+			$line["program_code"] = $result["program_code"];
+			$line["first_name"] = $result["first_name"];
+			$line["last_name"] = $result["last_name"];
+			$line["category_code"] = $result["category_code"];
+			$line["service_code"] = $result["service_code"];
+			$line["facility_name"] = $result["facility_name"];
+			$line["start_date"] = $result["start_date"];
+			$line["end_date"] = $result["end_date"];
+			$line["percent_time"] = $result["percent_time"];
+			echo implode(",", $line) . "\n";
+		}
+	} else {
+		echo "No results";
 	}
-} else {
-	echo "No results";
-}
-exit();
+	exit();
 }
 ?>

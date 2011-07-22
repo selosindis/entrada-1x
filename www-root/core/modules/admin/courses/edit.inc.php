@@ -53,7 +53,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "edit", "id" => $COURSE_ID, "step" => false)), "title" => "Editing Course");
 
 
-			$ORGANISATION_ID = $user->getActiveOrganisation();
+			$ORGANISATION_ID = $ENTRADA_USER->getActiveOrganisation();
 			
 			/** 
 			* Fetch the Clinical Presentation details.

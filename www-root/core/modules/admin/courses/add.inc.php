@@ -47,8 +47,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 	$clinical_presentations_list = array();
 	$clinical_presentations = array();
 	
-	$ORGANISATION_ID = $user->GetActiveOrganisation();
-	$results = fetch_mcc_objectives_for_org($user->getActiveOrganisation());
+	$ORGANISATION_ID = $ENTRADA_USER->GetActiveOrganisation();
+	$results = fetch_mcc_objectives_for_org($ENTRADA_USER->getActiveOrganisation());
 	
 	
 	if ($results) {
@@ -107,7 +107,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				$ERRORSTR[] = "The <strong>Course Name</strong> field is required.";
 			}
 
-			$organisation_id = $user->getActiveOrganisation();
+			$organisation_id = $ENTRADA_USER->getActiveOrganisation();
 			if ($ENTRADA_ACL->amIAllowed(new CourseResource(null, $organisation_id), 'create')) {
 				$PROCESSED["organisation_id"] = $organisation_id;
 			} else {
@@ -554,7 +554,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 
 			<form action="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?<?php echo replace_query(array("step" => 2)); ?>" method="post" id="addCourseForm" onsubmit="selIt()">
 
-			<input type="hidden" name="organisation_id" id="organisation_id" value=<?php echo $user->getActiveOrganisation() ?> />
+			<input type="hidden" name="organisation_id" id="organisation_id" value=<?php echo $ENTRADA_USER->getActiveOrganisation() ?> />
 			<h2 title="Course Details Section">Course Details</h2>
 			<div id="course-details-section">
 				<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Adding Course Details">

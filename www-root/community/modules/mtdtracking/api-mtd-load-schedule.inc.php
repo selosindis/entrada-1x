@@ -85,6 +85,21 @@ if (!defined("IN_MTDTRACKING")) {
 		$where = "";
 	}
 
+	$year = clean_input($_GET["year"], array("notags", "trim", "nows"));
+	if (!$year) {
+		$current_date = date("Y-m-d");
+		$date_arr = date_parse($current_date);
+
+		if ($date_arr["month"] >= 7) {
+			$year = $date_arr["year"] . "-" . strval(intval($date_arr["year"]) + 1);
+		} else {
+			$year = strval(intval($date_arr["year"]) - 1) . "-" . $date_arr["year"];
+		}
+	} 	
+
+	$year_min = substr($year, 0, 4);
+	$year_max = substr($year, 5, 4);
+
 	$query = "SELECT `mtd_schedule`.`id`, `mtd_facilities`.`facility_name`, `user_data_resident`.`first_name`,
 				 `user_data_resident`.`last_name`, `mtd_schedule`.`start_date`, `mtd_schedule`.`end_date`,
 				 `mtd_locale_duration`.`percent_time`
@@ -95,7 +110,9 @@ if (!defined("IN_MTDTRACKING")) {
 	      WHERE `mtd_schedule`.`id` = `mtd_locale_duration`.`schedule_id`
 		  AND `mtd_facilities`.`id` = `mtd_locale_duration`.`location_id`
 		  AND `mtd_schedule`.`service_id` = '" . $PROCESSED["service_id"] . "'
-		  AND `mtd_schedule`.`resident_id` = `user_data_resident`.`proxy_id`" . $where . "
+		  AND `mtd_schedule`.`resident_id` = `user_data_resident`.`proxy_id`
+		  AND date_format(`mtd_schedule`.`start_date`, '%Y-%m-%d') between '" . $year_min . "-07-01' AND '" . $year_max . "-06-30'" .
+		  $where . "
 		  ORDER BY " . $sort . " " . $dir . "
 		  LIMIT " . $start . " , " . $limit;
 

@@ -56,7 +56,7 @@ if (!defined("PARENT_INCLUDED")) {
 	$PROCESSED		= array();
 	$PREFERENCES	= preferences_load($MODULE);
 
-	$ORGANISATION_ID = $user->getActiveOrganisation();
+	$ORGANISATION_ID = $ENTRADA_USER->getActiveOrganisation();
 	$organisation_query = "SELECT * FROM `".AUTH_DATABASE."`.`organisations`";
 	$ORGANISATIONS = $db->GetAll($organisation_query);
 	$ORGANISATION_BY_ID = array();
@@ -157,7 +157,7 @@ if (!defined("PARENT_INCLUDED")) {
 					$ERRORSTR[] = "To browse a group, you must select a group from the group select list.";	
 				}
 				
-				if(($organisation = $user->getActiveOrganisation()) && isset($ORGANISATIONS_BY_ID[$organisation])) {
+				if(($organisation = $ENTRADA_USER->getActiveOrganisation()) && isset($ORGANISATIONS_BY_ID[$organisation])) {
 					$PROCESSED["organisation"] = $organisation;
 					$search_query .= " in ".$ORGANISATIONS_BY_ID[$organisation]["organisation_title"];
 				} else {

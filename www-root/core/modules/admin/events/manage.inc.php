@@ -1054,7 +1054,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							<select id="course_id" name="course_id" style="width: 95%" onchange="updateCourse(this.selectedIndex)">
 							<?php
 							$query = "	SELECT * FROM `courses`
-										WHERE `organisation_id` = ".$db->qstr($user->getActiveOrganisation())."
+										WHERE `organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
 										AND `course_active` = '1'
 										ORDER BY `course_name` ASC";
 
@@ -1065,7 +1065,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 										$course_id = $event_info["course_id"];
 										$course_name = $result["course_name"];
 									}
-									if ($ENTRADA_ACL->amIAllowed(new EventResource(null, $result["course_id"], $user->getActiveOrganisation()), "create")) {
+									if ($ENTRADA_ACL->amIAllowed(new EventResource(null, $result["course_id"], $ENTRADA_USER->getActiveOrganisation()), "create")) {
 										echo "<option value=\"".(int) $result["course_id"]."\"".(($PROCESSED["course_id"] == $result["course_id"]) ? " selected=\"selected\"" : "").">".html_encode($result["course_name"])."</option>\n";
 									}
 								}

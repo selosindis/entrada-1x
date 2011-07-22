@@ -72,7 +72,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 				$ERRORSTR[] = "You must select a valid display finish date.";
 			}
 
-			$organisation_id = $user->getActiveOrganisation();
+			$organisation_id = $ENTRADA_USER->getActiveOrganisation();
 			if ($ENTRADA_ACL->amIAllowed(new NoticeResource($organisation_id), 'create')) {
 				$PROCESSED["organisation_id"] = $organisation_id;
 			} else {

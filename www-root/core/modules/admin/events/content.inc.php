@@ -213,7 +213,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								ON a.`eventtype_id` = c.`eventtype_id` 
 								LEFT JOIN `".AUTH_DATABASE."`.`organisations` AS b
 								ON b.`organisation_id` = c.`organisation_id` 
-								WHERE b.`organisation_id` = ".$db->qstr($user->getActiveOrganisation())."
+								WHERE b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
 								AND a.`eventtype_active` = '1' 
 								ORDER BY a.`eventtype_order`
 				";

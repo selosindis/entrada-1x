@@ -3369,37 +3369,8 @@ CREATE TABLE IF NOT EXISTS `settings` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `settings` (`shortname`, `value`) VALUES
-('version_db', '1208 '),
+('version_db', '1209 '),
 ('version_entrada', '1.2.0');
-
-CREATE TABLE `small_groups` (
-  `sgroup_id` int(11) NOT NULL AUTO_INCREMENT,
-  `sgcategory_id` int(11) NOT NULL,
-  `group_name` varchar(64) NOT NULL,
-  `group_active` tinyint(1) NOT NULL DEFAULT '1',
-  `updated_date` int(11) DEFAULT NULL,
-  `updated_by` int(11) DEFAULT NULL,
-  PRIMARY KEY (`sgroup_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
-CREATE TABLE `small_group_categories` (
-  `sgcategory_id` int(11) NOT NULL AUTO_INCREMENT,
-  `category_name` varchar(64) NOT NULL,
-  `category_active` tinyint(1) NOT NULL DEFAULT '1',
-  `updated_date` int(11) DEFAULT NULL,
-  `updated_by` int(11) DEFAULT NULL,
-  PRIMARY KEY (`sgcategory_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
-CREATE TABLE `small_group_members` (
-  `sgmember_id` int(11) NOT NULL AUTO_INCREMENT,
-  `sgroup_id` int(11) NOT NULL,
-  `proxy_id` int(11) NOT NULL,
-  `member_active` tinyint(1) NOT NULL DEFAULT '1',
-  `updated_by` int(11) DEFAULT NULL,
-  `updated_date` int(11) DEFAULT NULL,
-  PRIMARY KEY (`sgmember_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `statistics` (
   `statistic_id` int(12) NOT NULL AUTO_INCREMENT,
@@ -3822,28 +3793,36 @@ CREATE TABLE IF NOT EXISTS `eventtype_organisation`(
 `organisation_id` INT(12) NOT NULL 
 ) ENGINE = MyISAM DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `groups` (
-  `group_id` int(12) NOT NULL AUTO_INCREMENT,
-  `group_name` varchar(255) NOT NULL,
-  `parent_id` INT DEFAULT NULL,
-  `group_active` int(1) NOT NULL DEFAULT '1',
-  `updated_date` bigint(64) NOT NULL,
-  `updated_by` int(12) NOT NULL,
-  PRIMARY KEY (`group_id`),
-  FULLTEXT KEY `group_title` (`group_name`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 ;
+CREATE TABLE IF NOT EXISTS `student_groups` (
+  `sgroup_id` int(11) NOT NULL AUTO_INCREMENT,
+  `group_name` varchar(64) NOT NULL,
+  `group_active` tinyint(1) NOT NULL DEFAULT '1',
+  `updated_date` int(11) DEFAULT NULL,
+  `updated_by` int(11) DEFAULT NULL,
+  PRIMARY KEY (`sgroup_id`)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `group_members` (
-  `gmember_id` int(12) NOT NULL AUTO_INCREMENT,
-  `group_id` int(12) NOT NULL DEFAULT '0',
-  `proxy_id` int(12) NOT NULL DEFAULT '0',
-  `member_active` int(1) NOT NULL DEFAULT '1',
-  `updated_date` bigint(64) NOT NULL DEFAULT '0',
-  `updated_by` int(12) NOT NULL DEFAULT '0',
-  PRIMARY KEY (`gmember_id`),
-  KEY `group_id` (`group_id`,`proxy_id`,`updated_date`,`updated_by`),
+CREATE TABLE IF NOT EXISTS `student_group_members` (
+  `sgmember_id` int(11) NOT NULL AUTO_INCREMENT,
+  `sgroup_id` int(11) NOT NULL,
+  `proxy_id` int(11) NOT NULL,
+  `member_active` tinyint(1) NOT NULL DEFAULT '1',
+  `updated_date` int(11) DEFAULT NULL,
+  `updated_by` int(11) DEFAULT NULL,
+  PRIMARY KEY (`sgmember_id`)
+  KEY `group_id` (`sgroup_id`,`proxy_id`,`updated_date`,`updated_by`),
   KEY `member_active` (`member_active`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `student_group_organisations` (
+  `sgorganisation_id` int(11) NOT NULL AUTO_INCREMENT,
+  `sgroup_id` int(11) NOT NULL,
+  `organisation_id` int(11) NOT NULL,
+  `updated_by` int(11) DEFAULT NULL,
+  `updated_date` int(11) DEFAULT NULL,
+  PRIMARY KEY (`sgorganisation_id`)
+  KEY `group_id` (`sgroup_id`,`organisation_id`,`updated_date`,`updated_by`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `pg_eval_response_rates` (
   `id` int(12) NOT NULL AUTO_INCREMENT,

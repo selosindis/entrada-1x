@@ -80,7 +80,7 @@ if(isset($GROUP_ID)) {
 	if(isset($ORGANISATION_ID) && isset($GROUP) && isset($ROLE)) {
 		$query			= "SELECT * FROM `student_groups` WHERE `sgroup_id` = ".$db->qstr($GROUP_ID)." AND `group_active` = '1'";
 		$group_details	= $db->GetRow($query);
-		if($group_details) {
+		if($group_details || !$GROUP_ID) {
 			if($ENTRADA_ACL->amIAllowed('group', 'update')) {
 				//Groups  exists and is editable by the current users
 				$nmembers_results		= false;

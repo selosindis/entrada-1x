@@ -41,13 +41,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 
 	switch ($STEP) {
 		case "2" :
-			if((isset($_POST["add_group_id"])) && ((int) trim($_POST["add_group_id"])) && strlen($_POST["group_members"])) {
+			if((isset($_POST["add_group_id"])) && ((int) trim($_POST["add_group_id"])) && strlen($_POST["student_group_members"])) {
 				$PROCESSED["sgroup_id"] = (int) trim($_POST["add_group_id"]);
 			} else {
 				header("Location: ".ENTRADA_URL."/admin/".$MODULE);
 			}
 
-			$proxy_ids = explode(',', $_POST["group_members"]);
+			$proxy_ids = explode(',', $_POST["student_group_members"]);
 			$PROCESSED["updated_date"]	= time();
 			$PROCESSED["updated_by"] = $_SESSION["details"]["id"];
 

@@ -105,16 +105,16 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 				}
 				$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/groups?section=edit&ids=".implode(",", $_SESSION["ids"])."\\'', ".(isset($wait)?$wait:0).")";
 			} elseif ($MEMBERS)  {  // Delete members
-				foreach($GROUP_IDS as $gmember_id) {
+				foreach($GROUP_IDS as $sgmember_id) {
 					switch ($_POST["coa"]) {
 						case "deactivate":
-							$db->Execute("UPDATE `student_group_members` SET `member_active`='0' WHERE `gmember_id` = ".$db->qstr($gmember_id));
+							$db->Execute("UPDATE `student_group_members` SET `member_active`='0' WHERE `sgmember_id` = ".$db->qstr($sgmember_id));
 						break;
 						case "activate":
-							$db->Execute("UPDATE `student_group_members` SET `member_active`='1' WHERE `gmember_id` = ".$db->qstr($gmember_id));
+							$db->Execute("UPDATE `student_group_members` SET `member_active`='1' WHERE `sgmember_id` = ".$db->qstr($sgmember_id));
 						break;
 						case "delete":
-							$db->Execute("DELETE FROM `student_group_members` WHERE `gmember_id` = ".$db->qstr($gmember_id));
+							$db->Execute("DELETE FROM `student_group_members` WHERE `sgmember_id` = ".$db->qstr($sgmember_id));
 						break;
 					}
 				}
@@ -229,14 +229,14 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 			} elseif ($MEMBERS) {  // Delete members
 				echo "<h1>De/Activate or Delete Member".($MEMBERS>1?"s":"")."</h1>";
 
-				$results = $db->getAll ("SELECT c.`gmember_id`, CONCAT_WS(' ', a.`firstname`, a.`lastname`) AS `fullname`,
+				$results = $db->getAll ("SELECT c.`sgmember_id`, CONCAT_WS(' ', a.`firstname`, a.`lastname`) AS `fullname`,
 										CONCAT_WS(':', b.`group`, b.`role`) AS `grouprole`, c.`sgroup_id`, d.`group_name`, c.`member_active`
 										FROM `".AUTH_DATABASE."`.`user_data` AS a
 										LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 										ON a.`id` = b.`user_id`
 										INNER JOIN `student_group_members` c ON a.`id` = c.`proxy_id`
 										INNER JOIN `student_groups` d ON c.`sgroup_id` = d.`sgroup_id`
-										WHERE c.`gmember_id`  IN (".implode(", ", $GROUP_IDS).")
+										WHERE c.`sgmember_id`  IN (".implode(", ", $GROUP_IDS).")
 										ORDER by `grouprole`, `lastname`, `firstname`");
 				if($results) {
 					echo display_notice(array("Please review the following member".($MEMBERS>1?"s":"")." to ensure that you wish to, deactivate, activate or <strong>permanently delete</strong> them from the group"));
@@ -284,7 +284,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 										$url 	= ENTRADA_URL."/admin/groups?section=edit&amp;id=".$result["sgroup_id"];
 								
 										echo "<tr id=\"group-".$result["sgroup_id"]."\" class=\"event".((!$url) ? " np" : ((!$result["member_active"]) ? " na" : ""))."\">\n";
-										echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"checked[]\" value=\"".$result["gmember_id"]."\" checked=\"checked\" /></td>\n";
+										echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"checked[]\" value=\"".$result["sgmember_id"]."\" checked=\"checked\" /></td>\n";
 										echo "	<td class=\"community_title".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Name: ".html_encode($result["fullname"])."\">" : "").html_encode($result["fullname"]).(($url) ? "</a>" : "")."</td>\n";
 										echo "	<td class=\"community_shortname".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Group Name: ".html_encode($result["group_name"])."\">" : "").html_encode($result["group_name"]).(($url) ? "</a>" : "")."</td>\n";
 										echo "	<td class=\"date".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Role: ".html_encode($result["grouprole"])."\">" : "").html_encode($result["grouprole"]).(($url) ? "</a>" : "")."</td>\n";

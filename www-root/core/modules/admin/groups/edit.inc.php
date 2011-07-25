@@ -55,7 +55,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 			foreach($proxy_ids as $proxy_id) {
 				if(($proxy_id = (int) trim($proxy_id))) {
 					$count++;
-					if (!$db->GetOne("SELECT `gmember_id` FROM `student_group_members` WHERE `sgroup_id` = ".$db->qstr($PROCESSED["sgroup_id"])." AND `proxy_id` =".$db->qstr($proxy_id))) {
+					if (!$db->GetOne("SELECT `sgmember_id` FROM `student_group_members` WHERE `sgroup_id` = ".$db->qstr($PROCESSED["sgroup_id"])." AND `proxy_id` =".$db->qstr($proxy_id))) {
 						$PROCESSED["proxy_id"]	= $proxy_id;
 						$added++;
 						if (!$db->AutoExecute("`student_group_members`", $PROCESSED, "INSERT")) {
@@ -126,7 +126,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 
 			$group_name = $db->GetOne("SELECT `group_name` FROM `student_groups` WHERE `sgroup_id` = ".$db->qstr($GROUP_ID));
 
-			$emembers_query	= "	SELECT c.`gmember_id`, CONCAT_WS(' ', a.`firstname`, a.`lastname`) AS `fullname`, c.`member_active`,
+			$emembers_query	= "	SELECT c.`sgmember_id`, CONCAT_WS(' ', a.`firstname`, a.`lastname`) AS `fullname`, c.`member_active`,
 								a.`username`, a.`organisation_id`, a.`username`, CONCAT_WS(':', b.`group`, b.`role`) AS `grouprole`
 								FROM `".AUTH_DATABASE."`.`user_data` AS a
 								LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
@@ -243,11 +243,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 							if ($results) {
 								foreach($results as $result) {
 									echo "<tr  class=\"event".(!$result["member_active"] ? " na" : "")."\">";
-									echo "	<td class=\"modified\"><input type=\"checkbox\" class=\"delchk\" name=\"checked[]\" onclick=\"memberChecks()\" value=\"".$result["gmember_id"]."\" /></td>\n";
+									echo "	<td class=\"modified\"><input type=\"checkbox\" class=\"delchk\" name=\"checked[]\" onclick=\"memberChecks()\" value=\"".$result["sgmember_id"]."\" /></td>\n";
 									echo "	<td><a href=\"".ENTRADA_URL."/people?profile=".$result["username"]."\" >".html_encode($result["fullname"])."</a></td>";
 									echo "	<td><a href=\"".ENTRADA_URL."/people?profile=".$result["username"]."\" >".$result["grouprole"]."</a></td>";
 									echo "	<td>
-										<a href=\"".ENTRADA_URL."/admin/groups?section=manage&mids=".$result["gmember_id"]."\"><img src=\"".ENTRADA_URL."/images/action-delete.gif\" width=\"16\" height=\"16\" alt=\"Delete/Activate Member\" title=\"Delete/Activate Member\" border=\"0\" /></a>
+										<a href=\"".ENTRADA_URL."/admin/groups?section=manage&mids=".$result["sgmember_id"]."\"><img src=\"".ENTRADA_URL."/images/action-delete.gif\" width=\"16\" height=\"16\" alt=\"Delete/Activate Member\" title=\"Delete/Activate Member\" border=\"0\" /></a>
 										</td>\n";
 									echo "</tr>";
 								}
@@ -395,11 +395,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 				row.appendChild(new Element('td').update(option));
 				return table;
 			});
-			$('group_members_list').update(table);
-			ids[index] = $F('group_members').split(',').compact();
+			$('student_group_members_list').update(table);
+			ids[index] = $F('student_group_members').split(',').compact();
 		}
 
-		$('group_members_select_filter').observe('keypress', function(event){
+		$('student_group_members_select_filter').observe('keypress', function(event){
 		    if(event.keyCode == Event.KEY_RETURN) {
 				Event.stop(event);
 			}
@@ -408,16 +408,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 		//Reload the multiselect every time the category select box changes
 		var multiselect;
 
-		$('group_members_category_select').observe('change', function(event) {
+		$('student_group_members_category_select').observe('change', function(event) {
 
-			if ($('group_members_category_select').selectedIndex != 0) {
-				$('group_members_scroll').update(new Element('div', {'style':'width: 100%; height: 100%; background: transparent url(<?php echo ENTRADA_URL;?>/images/loading.gif) no-repeat center'}));
+			if ($('student_group_members_category_select').selectedIndex != 0) {
+				$('student_group_members_scroll').update(new Element('div', {'style':'width: 100%; height: 100%; background: transparent url(<?php echo ENTRADA_URL;?>/images/loading.gif) no-repeat center'}));
 	
 				//Grab the new contents
-				var updater = new Ajax.Updater('group_members_scroll', '<?php echo ENTRADA_URL."/admin/groups?section=membersapi";?>',{
+				var updater = new Ajax.Updater('student_group_members_scroll', '<?php echo ENTRADA_URL."/admin/groups?section=membersapi";?>',{
 					method:'post',
 					parameters: {
-						'ogr':$F('group_members_category_select'),
+						'ogr':$F('student_group_members_category_select'),
 						'group_id':'<?php echo $GROUP_ID;?>'
 					},
 					onSuccess: function(transport) {
@@ -425,7 +425,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 						this.makemultiselect = true;
 					},
 					onFailure: function(transport){
-						$('group_members_scroll').update(new Element('div', {'class':'display-error'}).update('There was a problem communicating with the server. An administrator has been notified, please try again later.'));
+						$('student_group_members_scroll').update(new Element('div', {'class':'display-error'}).update('There was a problem communicating with the server. An administrator has been notified, please try again later.'));
 					},
 					onComplete: function(transport) {
 						//Only if successful (the flag set above), regenerate the multiselect based on the new options
@@ -433,13 +433,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 							if(multiselect) {
 								multiselect.destroy();
 							}
-							multiselect = new Control.SelectMultiple('group_members','group_members_options',{
+							multiselect = new Control.SelectMultiple('student_group_members','student_group_members_options',{
 								labelSeparator: '; ',
 								checkboxSelector: 'table.select_multiple_table tr td.select_multiple_checkbox input[type=checkbox]',
 								categoryCheckboxSelector: 'table.select_multiple_table tr td.select_multiple_checkbox_category input[type=checkbox]',
 								nameSelector: 'table.select_multiple_table tr td.select_multiple_name label',
 								overflowLength: 70,
-								filter: 'group_members_select_filter',
+								filter: 'student_group_members_select_filter',
 								afterCheck: function(element) {
 									var tr = $(element.parentNode.parentNode);
 									tr.removeClassName('selected');
@@ -448,7 +448,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 									}
 								},
 								updateDiv: function(options, isnew) {
-									updatePeopleList(options, $('group_members_category_select').selectedIndex);
+									updatePeopleList(options, $('student_group_members_category_select').selectedIndex);
 								}
 							});
 						}

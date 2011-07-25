@@ -166,7 +166,7 @@ if (!defined("IN_GROUPS")) {
 
 //						WHERE `group_active` = '1'";
 
-	$query_groups = "	SELECT a.*, COUNT(b.`gmember_id`) AS members, case when (MIN(b.`member_active`)=0) then 1 else 0 end as `inactive` FROM `student_groups` AS a
+	$query_groups = "	SELECT a.*, COUNT(b.`sgmember_id`) AS members, case when (MIN(b.`member_active`)=0) then 1 else 0 end as `inactive` FROM `student_groups` AS a
 						LEFT JOIN `student_group_members` b
 						ON a.`sgroup_id` = b.`sgroup_id` where true";
 //						WHERE `group_active` = '1'";

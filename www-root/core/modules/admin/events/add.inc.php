@@ -328,7 +328,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								 * If the audience is to be grabbed via the course enrollment
 								 * add it to the event_audience table.
 								 */
-									if (!$db->AutoExecute("event_audience", array("event_id" => $EVENT_ID, "audience_type" => "course", "audience_value" => $PROCESSED["course_id"], "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT")) {
+									if (!$db->AutoExecute("event_audience", array("event_id" => $EVENT_ID, "audience_type" => "course_id", "audience_value" => $PROCESSED["course_id"], "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT")) {
 										$ERROR++;
 										$ERRORSTR[] = "There was an error while trying to attach the selected <strong>Course Audience</strong> to this event.<br /><br />The system administrator was informed of this error; please try again later.";
 
@@ -396,7 +396,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 						switch($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"]) {
 							case "content" :
-								$url	= ENTRADA_URL."/admin/events?section=content&id=".$EVENT_ID;
+								$url	= ENTRADA_URL."/admin/events?section=manage&id=".$EVENT_ID;
 								$msg	= "You will now be redirected to the event content page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 							break;
 							case "new" :

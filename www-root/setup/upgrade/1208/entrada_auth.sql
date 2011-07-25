@@ -1,4 +1,4 @@
-CREATE TABLE `user_organisation` (
+CREATE TABLE `user_organisation` IF NOT EXISTS(
 	`id` int(12) NOT NULL AUTO_INCREMENT, 
 	`organisation_id` int(3) NOT NULL, 
 	`proxy_id` int(12) NOT NULL, 

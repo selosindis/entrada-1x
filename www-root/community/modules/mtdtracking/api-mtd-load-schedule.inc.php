@@ -105,15 +105,17 @@ if (!defined("IN_MTDTRACKING")) {
 
 	$query = "SELECT `mtd_schedule`.`id`, `mtd_facilities`.`facility_name`, `user_data_resident`.`first_name`,
 				 `user_data_resident`.`last_name`, `mtd_schedule`.`start_date`, `mtd_schedule`.`end_date`,
-				 `mtd_locale_duration`.`percent_time`
+				 `mtd_locale_duration`.`percent_time`, `mtd_type`.`type_description`
 		  FROM  `" . DATABASE_NAME . "`.`mtd_schedule`,
 				`" . DATABASE_NAME . "`.`mtd_facilities`,
 				`" . AUTH_DATABASE . "`.`user_data_resident`,
-				`" . DATABASE_NAME . "`.`mtd_locale_duration`
+				`" . DATABASE_NAME . "`.`mtd_locale_duration`,
+				`" . DATABASE_NAME . "`.`mtd_type`
 	      WHERE `mtd_schedule`.`id` = `mtd_locale_duration`.`schedule_id`
 		  AND `mtd_facilities`.`id` = `mtd_locale_duration`.`location_id`
 		  AND `mtd_schedule`.`service_id` = '" . $PROCESSED["service_id"] . "'
 		  AND `mtd_schedule`.`resident_id` = `user_data_resident`.`proxy_id`
+		  AND `mtd_schedule`.`type_code` = `mtd_type`.`type_code`
 		  AND date_format(`mtd_schedule`.`start_date`, '%Y-%m-%d') between '" . $year_min . "-07-01' AND '" . $year_max . "-06-30'" .
 		  $where . "
 		  ORDER BY " . $sort . " " . $dir . "
@@ -140,6 +142,7 @@ if (!defined("IN_MTDTRACKING")) {
 					, $row["start_date"]
 					, $row["end_date"]
 					, $row["percent_time"]
+					, $row["type_description"]
 				)
 			);
 		}

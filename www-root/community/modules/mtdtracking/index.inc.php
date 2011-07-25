@@ -65,20 +65,6 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 				FROM `mtd_categories`";
 	$mtd_categories = $db->GetAll($query);
 
-	$query = "	SELECT `mtd_schedule`.`id`, `mtd_facilities`.`facility_name`, `user_data_resident`.`first_name`,
-				`user_data_resident`.`last_name`, `mtd_schedule`.`start_date`, `mtd_schedule`.`end_date`, `mtd_schedule`.`percent_time`
-				FROM  `" . DATABASE_NAME . "`.`mtd_schedule`,
-				`" . DATABASE_NAME . "`.`mtd_facilities`,
-				`" . DATABASE_NAME . "`.`mtd_moh_program_codes`,
-				`" . DATABASE_NAME . "`.`mtd_schools`,
-				`" . AUTH_DATABASE . "`.`user_data_resident`
-				WHERE `mtd_schedule`.`location_id` = `mtd_facilities`.`id`
-				AND `mtd_schedule`.`program_id` = `mtd_moh_program_codes`.`id`
-				AND `mtd_schedule`.`service_id` = '" . $mtd_service_id . "'
-				AND `mtd_schedule`.`school_id` = `mtd_schools`.`id`
-				AND `mtd_schedule`.`resident_id` = `user_data_resident`.`proxy_id`
-				ORDER BY `mtd_schedule`.`id` DESC";
-	$mtd_schedule = $db->GetAll($query);
 ?>
 
 	<script type="text/javascript" defer="defer">
@@ -88,12 +74,13 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 				dataType: 'json',
 				method: 'POST',
 				colModel : [
-					{display: 'Location', name : 'facility_name', width : 250, sortable : true, align: 'left'},
+					{display: 'Location', name : 'facility_name', width : 200, sortable : true, align: 'left'},
 					{display: 'Last', name : 'last_name', width : 100, sortable : true, align: 'left'},
 					{display: 'First', name : 'first_name', width : 100, sortable : true, align: 'left'},
 					{display: 'Start', name : 'start_date', width : 100, sortable : true, align: 'left'},
 					{display: 'End', name : 'end_date', width : 100,  sortable : true, align: 'left'},
-					{display: '%', name : 'percent_time', width : 50,  sortable : true, align: 'left'}
+					{display: '%', name : 'percent_time', width : 25,  sortable : true, align: 'left'},
+					{display: 'Type', name : 'type_description', width : 125,  sortable : true, align: 'left'}
 				],
 				searchitems : [
 					{display: 'Location', name : 'facility_name'},
@@ -391,7 +378,9 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 		<div id="type_location_duration_service_button" style="float:left">
 			<p>
 				<label>Type:</label>&nbsp;
-				<input id="type_code_i" name="type_code" type="radio" value="I" CHECKED/> <label for="type_code_i" style="font-weight: normal">in-patient/emergency</label>&nbsp;<input id="type_code_o" name="type_code" type="radio" value="O"/> <label for="type_code_o" style="font-weight: normal">out-patient</label>
+				<input id="type_code_i" name="type_code" type="radio" value="I" CHECKED/> <label for="type_code_i" style="font-weight: normal">in-patient/emergency</label>&nbsp;
+				<input id="type_code_o" name="type_code" type="radio" value="O"/> <label for="type_code_o" style="font-weight: normal">out-patient</label>&nbsp;
+				<input id="type_code_r" name="type_code" type="radio" value="R"/> <label for="type_code_r" style="font-weight: normal">research elective</label>
 			</p>
 			<p>
 				<label for="mtdlocation">Location:</label><br />

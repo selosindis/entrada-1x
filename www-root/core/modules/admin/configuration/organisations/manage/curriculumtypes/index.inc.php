@@ -92,7 +92,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 	}
 	else{
 		$NOTICE++;
-		$NOTICESTR[] = "There are currently no Hot Topics assigned to this Organisation";
+		$NOTICESTR[] = "There are currently no Curriculum Types assigned to this Organisation";
 		echo "<br/>".display_notice();
 
 	}

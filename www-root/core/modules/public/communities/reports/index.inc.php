@@ -40,30 +40,10 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
 
-	if ($MAILING_LISTS["active"]) {
-		require_once("Entrada/mail-list/mail-list.class.php");
-	}
-
-
-
-
-	/*if ($MAILING_LISTS["active"]) {
-		$mailing_list = new MailingList($COMMUNITY_ID);
-		$list_mode = $mailing_list->type;
-
-		$query				= "	SELECT a.*, b.`list_type`
-							FROM `communities` AS a
-							JOIN `community_mailing_lists` AS b
-							ON a.`community_id` = b.`community_id`
-							WHERE a.`community_id` = ".$db->qstr($COMMUNITY_ID)."
-							AND a.`community_active` = '1'";
-	} else {*/
-		$query				= "	SELECT *
-							FROM `communities`
+	$query				= "	SELECT * FROM `communities`
 							WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)."
 							AND `community_active` = '1'";
-	//}
-		
+
 	$community_details	= $db->GetRow($query);
 	if($community_details) {
 		$BREADCRUMB[]		= array("url" => ENTRADA_URL."/communities?".replace_query(array("section" => "modify")), "title" => "Manage Community");
@@ -726,11 +706,12 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 		/**
 		* Output the calendar controls and pagination.
 		*/
-		events_output_calendar_controls();
+		//events_output_calendar_controls();
 
 		list($statistics,$dates) = tracking_fetch_filtered_events($COMMUNITY_ID,$_SESSION[APPLICATION_IDENTIFIER]["tracking"]["filters"]);
 
 		?>
+		<br/>
 		<div class="tableListTop">
 			<img src="<?php echo ENTRADA_URL; ?>/images/lecture-info.gif" width="15" height="15" alt="" title="" style="vertical-align: middle" />
 			<?php
@@ -817,4 +798,6 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 	}
 
 }
+
+
 ?>

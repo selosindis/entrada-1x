@@ -9187,7 +9187,7 @@ function tracking_output_filter_controls($module_type = "") {
 							echo "	<div style=\"margin: 2px 0px 10px 3px\">\n";
 							foreach ($filter_contents as $filter_key => $filter_value) {
 								echo "	<div id=\"".$filter_type."_".$filter_key."\">";
-								echo "		<a href=\"".ENTRADA_URL.$module_type."/communities?section=reports&community=".$COMMUNITY_ID."&action=filter_remove&amp;filter=".$filter_type."_".$filter_key."\" title=\"Remove this filter\">";
+								echo "		<a href=\"".ENTRADA_URL.$module_type."/communities/reports?community=".$COMMUNITY_ID."&action=filter_remove&amp;filter=".$filter_type."_".$filter_key."\" title=\"Remove this filter\">";
 								echo "		<img src=\"".ENTRADA_URL."/images/checkbox-on.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" />";
 								switch ($filter_type) {
 									case "members" :

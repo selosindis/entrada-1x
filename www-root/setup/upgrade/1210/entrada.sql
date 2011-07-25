@@ -20,4 +20,4 @@ DROP TABLE IF EXISTS `small_groups`;
 DROP TABLE IF EXISTS `small_group_members`;
 DROP TABLE IF EXISTS `small_group_categories`;
 
-UPDATE `settings` SET `value` = '1209' WHERE `shortname` = 'version_db';
+UPDATE `settings` SET `value` = '1210' WHERE `shortname` = 'version_db';

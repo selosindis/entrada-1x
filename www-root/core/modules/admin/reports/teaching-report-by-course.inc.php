@@ -103,7 +103,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 	$default_na_name		= "Unknown or N/A";
 	$report_results			= array();
 	
-	$organisation_where = "AND (`courses`.`organisation_id` = ".$user->getActiveOrganisation().") ";
+	$organisation_where = "AND (`courses`.`organisation_id` = ".$ENTRADA_USER->getActiveOrganisation().") ";
 
 	$query = "	SELECT * FROM `courses` 
 				WHERE `course_active` = '1' 
@@ -172,7 +172,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 				WHERE a.`course_id` = '0'
 				AND (a.`event_start` BETWEEN ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_start"])." 
 				AND ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_finish"]).")
-				AND (b.`audience_type` = 'organisation' AND b.`audience_value` = ".$user->getActiveOrganisation().")";
+				AND (b.`audience_type` = 'organisation' AND b.`audience_value` = ".$ENTRADA_USER->getActiveOrganisation().")";
 
 	
 	if($int_use_cache) {
@@ -412,7 +412,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 											ON a.`eventtype_id` = c.`eventtype_id` 
 											LEFT JOIN `".AUTH_DATABASE."`.`organisations` AS b
 											ON b.`organisation_id` = c.`organisation_id` 
-											WHERE b.`organisation_id` = ".$user->getActiveOrganisation()."
+											WHERE b.`organisation_id` = ".$ENTRADA_USER->getActiveOrganisation()."
 											AND a.`eventtype_active` = '1' 
 											ORDER BY a.`eventtype_order`
 								";
@@ -513,7 +513,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 											ON a.`eventtype_id` = c.`eventtype_id` 
 											LEFT JOIN `".AUTH_DATABASE."`.`organisations` AS b
 											ON b.`organisation_id` = c.`organisation_id` 
-											WHERE b.`organisation_id` = ".$user->getActiveOrganisation()."
+											WHERE b.`organisation_id` = ".$ENTRADA_USER->getActiveOrganisation()."
 											AND a.`eventtype_active` = '1' 
 											ORDER BY a.`eventtype_order`
 								";
@@ -614,7 +614,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 											ON a.`eventtype_id` = c.`eventtype_id` 
 											LEFT JOIN `".AUTH_DATABASE."`.`organisations` AS b
 											ON b.`organisation_id` = c.`organisation_id` 
-											WHERE b.`organisation_id` = ".$user->getActiveOrganisation()."
+											WHERE b.`organisation_id` = ".$ENTRADA_USER->getActiveOrganisation()."
 											AND a.`eventtype_active` = '1' 
 											ORDER BY a.`eventtype_order`
 								";

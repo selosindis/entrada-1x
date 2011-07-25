@@ -36,20 +36,10 @@ if (!defined("IN_MTDTRACKING")) {
 	ob_clear_open_buffers();
 
 	//Retrieve block dates from the database based on the block selected.
-	//1. Determine the year we are in. e.g. "2010-2011"
-	//2. select the start and end dates based on the selected block.
-	$current_date = date("Y-m-d");
-	$date_arr = date_parse($current_date);
-	$year = "";
-	if ($date_arr["month"] >= 7) {
-		$year = $date_arr["year"] . "-" . strval(intval($date_arr["year"]) + 1);
-	} else {
-		$year = strval(intval($date_arr["year"]) - 1) . "-" . $date_arr["year"];
-	}
-
 	$block = clean_input($_GET['block'], array("notags", "trim", "nows"));
+	$year = clean_input($_GET["year"], array("notags", "trim", "nows"));
 
-	if ($block) {
+	if ($block && $year) {
 		$query = "SELECT *
 				  FROM `pg_blocks`
 				  WHERE `block_name` = " . $db->qstr($block) . "

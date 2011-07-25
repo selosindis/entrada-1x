@@ -52,7 +52,7 @@ if (!defined("PARENT_INCLUDED")) {
 	$SEARCH_CLASS				= 0;
 	$SEARCH_YEAR				= 0;
 	$SEARCH_DURATION			= array();
-	$SEARCH_ORGANISATION		= $user->getActiveOrganisation();
+	$SEARCH_ORGANISATION		= $ENTRADA_USER->getActiveOrganisation();
 	$RESULTS_PER_PAGE			= 10;
 
 	/**

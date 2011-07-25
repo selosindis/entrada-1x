@@ -505,14 +505,14 @@ top:24px;
 position:absolute;
 z-index:999;
 font-weight:400;
-width:150px;
+width:160px;
 display:none;
 padding:0;
 }
 
 #tabs .drop_options li {
 background:transparent url(../images/tabs/drop_left.gif) no-repeat left top;
-width:150px;
+width:160px;
 border:0;
 padding:0;
 }
@@ -523,7 +523,7 @@ margin-left:3px;
 color:#3C3C3C;
 font-size:11px;
 padding:5px 9px 4px 4px;
-width: 134px;
+width: 144px;
 }
 
 #tabs li:hover .drop_options li {
@@ -589,7 +589,7 @@ background:transparent url(../images/list-admin.gif) no-repeat left 1px;
 padding-left:16px;
 }
 
-#tabs #more_tab > a span,#tabs #admin_tab > a span {
+#tabs .sub-menu > a span, #tabs #more_tab > a span,#tabs #admin_tab > a span {
 background:transparent url(../images/arrow-asc.gif) no-repeat right 5px;
 padding-right:13px;
 }

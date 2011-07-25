@@ -30,7 +30,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 	require_once("Models/tasks/Tasks.class.php");
 	require_once("Models/users/User.class.php");
 	
-	$user = User::get($PROXY_ID);
+	$ENTRADA_USER = User::get($PROXY_ID);
 	
 	if (isset($_POST['tasks']) && is_array($_POST['tasks'])) {
 		$task_ids = $_POST['tasks'];

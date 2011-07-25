@@ -106,7 +106,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 				$department_sidebar	= array();
 				$default_na_name	= "Unknown or N/A";
 
-				$organisation_where = " AND (a.`organisation_id` = ".$user->getActiveOrganisation().") ";
+				$organisation_where = " AND (a.`organisation_id` = ".$ENTRADA_USER->getActiveOrganisation().") ";
 
 				$query	= "	SELECT a.`id` AS `proxy_id`, a.`number` AS `staff_number`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, a.`email`
 							FROM `".AUTH_DATABASE."`.`user_data` AS a

@@ -75,7 +75,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 		echo "	<strong>Date Range:</strong> ".date(DEFAULT_DATE_FORMAT, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_start"])." <strong>to</strong> ".date(DEFAULT_DATE_FORMAT, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_finish"]).".";
 		echo "</div>\n";
 
-		$organisation_where = " AND (b.`organisation_id` = ".$user->getActiveOrganisation().") ";
+		$organisation_where = " AND (b.`organisation_id` = ".$ENTRADA_USER->getActiveOrganisation().") ";
 		
 		foreach ($terms_included as $term => $term_title) {
 			echo "<h2>".$term_title."</h2>";

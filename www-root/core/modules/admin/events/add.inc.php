@@ -239,7 +239,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							AND `course_active` = '1'";
 				$result	= $db->GetRow($query);
 				if ($result) {
-					if ($ENTRADA_ACL->amIAllowed(new EventResource(null, $course_id, $user->getActiveOrganisation()), "create")) {
+					if ($ENTRADA_ACL->amIAllowed(new EventResource(null, $course_id, $ENTRADA_USER->getActiveOrganisation()), "create")) {
 						$PROCESSED["course_id"] = $course_id;
 					} else {
 						$ERROR++;
@@ -559,7 +559,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 												ON a.`eventtype_id` = c.`eventtype_id` 
 												LEFT JOIN `".AUTH_DATABASE."`.`organisations` AS b
 												ON b.`organisation_id` = c.`organisation_id` 
-												WHERE b.`organisation_id` = ".$db->qstr($user->getActiveOrganisation())."
+												WHERE b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
 												AND a.`eventtype_active` = '1' 
 												ORDER BY a.`eventtype_order`";
 
@@ -661,7 +661,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						<td>
 							<?php
 							$query = "	SELECT * FROM `courses`
-										WHERE `organisation_id` = ".$db->qstr($user->getActiveOrganisation())."
+										WHERE `organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
 										AND `course_active` = '1'
 										ORDER BY `course_name` ASC";
 							$results = $db->GetAll($query);
@@ -678,7 +678,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							<select id="course_id" name="course_id" style="width: 95%">
 							<?php
 									foreach($results as $result) {
-									if ($ENTRADA_ACL->amIAllowed(new EventResource(null, $result["course_id"], $user->getActiveOrganisation()), "create")) {
+									if ($ENTRADA_ACL->amIAllowed(new EventResource(null, $result["course_id"], $ENTRADA_USER->getActiveOrganisation()), "create")) {
 										echo "<option value=\"".(int) $result["course_id"]."\"".(($PROCESSED["course_id"] == $result["course_id"]) ? " selected=\"selected\"" : "").">".html_encode($result["course_name"])."</option>\n";
 									}
 								}
@@ -765,7 +765,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					<tr>
 						<td colspan="3">&nbsp;</td>
 					</tr>
-					<?php if ($ENTRADA_ACL->amIAllowed(new EventResource(null, null, $user->getActiveOrganisation()), 'create')) { ?>
+					<?php if ($ENTRADA_ACL->amIAllowed(new EventResource(null, null, $ENTRADA_USER->getActiveOrganisation()), 'create')) { ?>
 					<tr>
 						<td style="vertical-align: top"><input type="radio" name="event_audience_type" id="event_audience_type_organisation_id" value="organisation_id" onclick="selectEventAudienceOption('organisation_id')" style="vertical-align: middle"<?php echo (($PROCESSED["event_audience_type"] == "organisation_id") ? " checked=\"checked\"" : ""); ?> /></td>
 						<td colspan="2" style="padding-bottom: 15px">

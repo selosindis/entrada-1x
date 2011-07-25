@@ -71,11 +71,16 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 
 
 	$block = clean_input($_POST["block_list"], array("notags", "trim", "nows"));
+	$year = clean_input($_POST["year"], array("notags", "trim", "nows"));
 
 	$start_date = clean_input($_POST["start_date"], array("notags", "trim", "nows"));
 	$end_date = clean_input($_POST["end_date"], array("notags", "trim", "nows"));
-
-	if ((is_null($block) || $block == "") && (is_null($start_date) || $start_date == "") && (is_null($end_date) || $end_date == "")) {
+	
+	if (is_null($year) || $year == "") {
+		$ERROR++;
+		$ERRORSTR[] = "A year must be selected.";
+	}
+	else if ((is_null($block) || $block == "") && (is_null($start_date) || $start_date == "") && (is_null($end_date) || $end_date == "")) {
 		$ERROR++;
 		$ERRORSTR[] = "You must choose a block OR a start and end date.";
 	} else if ($block && ($start_date || $end_date)) {
@@ -105,19 +110,10 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 				}
 			}
 		}
-	} else if ((is_null($start_date) || $start_date == "") && (is_null($end_date) || $end_date == "") && ((!is_null($block) || $block != ""))) {
+	} else if ((is_null($start_date) || $start_date == "") && (is_null($end_date) || $end_date == "") && (!is_null($block) || $block != "")) {
 		//Retrieve block dates from the database based on the block selected.
 		//1. Determine the year we are in. e.g. "2010-2011"
 		//2. select the start and end dates based on the selected block.
-		$current_date = date("Y-m-d");
-		$date_arr = date_parse($current_date);
-		$year = "";
-		if ($date_arr["month"] >= 7) {
-			$year = $date_arr["year"] . "-" . strval(intval($date_arr["year"]) + 1);
-		} else {
-			$year = strval(intval($date_arr["year"]) - 1) . "-" . $date_arr["year"];
-		}
-
 		$query = "SELECT * 
 				  FROM `pg_blocks` 
 				  WHERE `block_name` = " . $db->qstr($block) . "

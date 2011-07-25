@@ -424,65 +424,97 @@ function navigator_tabs() {
 		$max_public = MAX_NAV_TABS - 1;
 	}
 
-    //Add the admin stuff if needed
-	$admin_priviledges = false;
-	$admin_tabs	= array();
+	$navigator_admin = array();
+	$navigator_public = array();
+	
+	$tabs_admin = "";
+	$tabs_public = "";
+	
+	$output_html = "";
 
-	//Check for the admin permission on each module
+
+	/**
+	 * Check for the admin permissions on each module.
+	 */
 	foreach ($MODULES as $tab_name => $module_info) {
 		if ($ENTRADA_ACL->amIAllowed($module_info["resource"], $module_info["permission"], false)) {
-			$admin_tabs[] = "<li class=\"%".$tab_name."%\"><a href=\"".ENTRADA_URL."/admin/".$tab_name."\"><span>".html_encode(((isset($module_info["title"])) ? $module_info["title"] : ucwords(strtolower($tab_name))))."</span></a></li>\n";
-			$admin_priviledges = true;
+			$navigator_admin[] = "<li class=\"%".$tab_name."%\"><a href=\"".ENTRADA_URL."/admin/".$tab_name."\"><span>".html_encode(((isset($module_info["title"])) ? $module_info["title"] : ucwords(strtolower($tab_name))))."</span></a></li>\n";
 		}
 	}
 
-	if ($admin_priviledges) {
+	if (!empty($navigator_admin)) {
 		$max_public--;
+		
 		if (defined("IN_ADMIN") && (IN_ADMIN == true)) {
 			$tab_bold = " current";
-			$admin_text = str_replace("%".$MODULE."%", "current", implode("\n", $admin_tabs));
+			$admin_text = str_replace("%".$MODULE."%", "current", implode("\n", $navigator_admin));
 		} else {
 			$tab_bold = "";
-			$admin_text = implode("\n", $admin_tabs);
+			$admin_text = implode("\n", $navigator_admin);
 		}
 		
-        $admin  = "<li class=\"admin staysput".$tab_bold."\" id=\"admin_tab\"><a href=\"#\" onclick=\"return false;\" id=\"admin_tab_link\"><span>Admin</span></a><ul class=\"drop_options\" id=\"admin_drop_options\">";
-		$admin .= $admin_text;
-		$admin .= "<li class=\"bottom\"><div>&nbsp;</div></li>";
-		$admin .= "</ul><!--[if lte IE 6.5]><iframe src=\"".ENTRADA_RELATIVE."/blank.html\"></iframe><![endif]--></li>\n";
+        $tabs_admin .= "<li class=\"admin staysput".$tab_bold."\" id=\"admin_tab\">";
+		$tabs_admin .= "	<a href=\"#\" onclick=\"return false;\" id=\"admin_tab_link\"><span>Admin</span></a>";
+		$tabs_admin .= "	<ul class=\"drop_options\" id=\"admin_drop_options\">";
+		$tabs_admin .=			$admin_text;
+		$tabs_admin .= "		<li class=\"bottom\"><div>&nbsp;</div></li>";
+		$tabs_admin .= "	</ul>";
+		$tabs_admin .= "	<!--[if lte IE 6.5]><iframe src=\"".ENTRADA_RELATIVE."/blank.html\"></iframe><![endif]-->";
+		$tabs_admin .= "</li>\n";
 	}
 
-	$PUBLIC_MODULES = array();
-	$PUBLIC_MODULES[] = array("name" => "dashboard", "text" => "Dashboard");
-	$PUBLIC_MODULES[] = array("name" => "communities", "text" => "Communities");
-	$PUBLIC_MODULES[] = array("name" => "courses", "text" => "Courses");
-	$PUBLIC_MODULES[] = array("name" => "events", "text" => "Learning Events");
-	$PUBLIC_MODULES[] = array("name" => "clerkship", "text" => "Clerkship", "resource" => "clerkship", "permission" => "read");
+	$navigator_public[] = array("name" => "dashboard", "text" => "Dashboard");
+	$navigator_public[] = array("name" => "communities", "text" => "Communities");
+	$navigator_public[] = array("name" => "courses", "text" => "Courses");
+	$navigator_public[] = array("name" => "events", "text" => "Learning Events");
+	$navigator_public[] = array("name" => "clerkship", "text" => "Clerkship", "resource" => "clerkship", "permission" => "read");
 
 	if (in_array($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"], array("student", "resident"))) {
-		$PUBLIC_MODULES[] = array("name" => "regionaled", "text" => "Accommodations", "resource" => "regionaled_tab", "permission" => "read");
+		$navigator_public[] = array("name" => "regionaled", "text" => "Accommodations", "resource" => "regionaled_tab", "permission" => "read");
 	}
 
-	$PUBLIC_MODULES[] = array("name" => "search", "text" => "Curriculum Search");
-	$PUBLIC_MODULES[] = array("name" => "people", "text" => "People Search");
-
-	$PUBLIC_MODULES[] = array("name" => "evaluations", "text" => "My Evaluations");
-	$PUBLIC_MODULES[] = array("name" => "tasks", "text" => "My Tasks", "resource" => "tasktab", "permission" => "read");
-	$PUBLIC_MODULES[] = array("name" => "annualreport", "text" => "My Annual Report", "resource" => "annualreport", "permission" => "read");
-    $PUBLIC_MODULES[] = array("name" => "profile", "text" => "My Profile");
-	$PUBLIC_MODULES[] = array("name" => "library", "text" => "Library", "target" => "_blank");
-	$PUBLIC_MODULES[] = array("name" => "help", "text" => "Help");
+	$navigator_public[] = array("name" => "search", "text" => "Curriculum Search");
+		
+//	$navigator_public[] = array(
+//		"name" => "curriculum",
+//		"text" => "Curriculum",
+//		"children" => array(
+//			array(
+//				"name" => "curriculum/overview",
+//				"text" => "Overview"
+//			),
+//			array(
+//				"name" => "curriculum/search",
+//				"text" => "Search"
+//			),
+//			array(
+//				"name" => "curriculum/objectives",
+//				"text" => "Objective Map"
+//			)
+//		)
+//	);
+	
+	$navigator_public[] = array("name" => "people", "text" => "People Search");
+	$navigator_public[] = array("name" => "evaluations", "text" => "My Evaluations");
+	$navigator_public[] = array("name" => "tasks", "text" => "My Tasks", "resource" => "tasktab", "permission" => "read");
+	$navigator_public[] = array("name" => "annualreport", "text" => "My Annual Report", "resource" => "annualreport", "permission" => "read");
+    $navigator_public[] = array("name" => "profile", "text" => "My Profile");
+	$navigator_public[] = array("name" => "library", "text" => "Library", "target" => "_blank");
+	$navigator_public[] = array("name" => "help", "text" => "Help");
 
 	$public_tabs = array();
 	$more_tabs = array();
+	
 	$counter = 0;
-	$more_bold = ""; // Keep track of bolding the more button when a tab within it is the current one
-	$output = "";
-	$extra = "";
+	$more_bold = "";
 
-	foreach ($PUBLIC_MODULES as $module) {
-		$current = false;
-		$class = array();
+	foreach ($navigator_public as $module) {
+		$active = false;
+		$css_classes = array();
+		
+		$children = "";
+		$child_active = false;
+		$has_children = false; 
 
 		if (isset($module["resource"]) && isset($module["permission"])) {
 			if ($ENTRADA_ACL->amIAllowed($module["resource"], $module["permission"])) {
@@ -494,22 +526,62 @@ function navigator_tabs() {
 			$counter++;
 		}
 		
-		if ($counter == 1) {
-			$class[] = "first";
+		if (isset($module["children"]) && is_array($module["children"]) && !empty($module["children"])) {
+			$has_children = true;
+			$css_classes[] = "sub-menu";
 		}
 
+		if ($counter == 1) {
+			$css_classes[] = "first";
+		}
+
+		if ($has_children) {
+			$children .= "<ul class=\"drop_options\">";
+
+			foreach ($module["children"] as $child_item) {
+				$child_active = false;
+
+				if (isset($child_item["resource"]) && isset($child_item["permission"])) {
+					if (!$ENTRADA_ACL->amIAllowed($child_item["resource"], $child_item["permission"])) {
+						continue;
+					}
+				}
+
+				if ($MODULE == $child_item["name"]) {
+					$child_active = true;
+					
+					if (!in_array("current", $css_classes)) {
+						$css_classes[] = "current";						
+					}
+				}
+
+				$children .= "<li".($child_active ? " class=\"current\"" : "").">";
+				$children .= "	<a href=\"".ENTRADA_URL."/".$child_item["name"]."\"><span>".$child_item["text"]."</span></a>";			
+				$children .= "</li>";
+			}
+			
+			$children .= "	<li class=\"bottom\"><div></div></li>";
+			$children .= "</ul>";
+			$children .= "<!--[if lte IE 6.5]><iframe src=\"".ENTRADA_RELATIVE."/blank.html\"></iframe><![endif]-->";
+		}		
+		
         if ($MODULE == $module["name"]) {
-			$class[] = "current";
-			$current = true;
+			$css_classes[] = "current";
+			$active = true;
 		}
 		
-		$tab = "<li".(!empty($class) ? " class=\"".implode(" ", $class)."\"" : "")."><a href=\"".ENTRADA_URL."/".$module["name"]."\"><span>".$module["text"]."</span></a></li>\n";
+		$tab  = "<li".(!empty($css_classes) ? " class=\"".implode(" ", $css_classes)."\"" : "").">";
+		$tab .= "	<a href=\"".ENTRADA_URL."/".$module["name"]."\"><span>".$module["text"]."</span></a>";
+		if ($children) {
+			$tab .= $children;
+		}
+		$tab .= "</li>\n";
 
 		// Push excess public tabs into more
 		if ($counter > $max_public) {
 			$more_tabs[] = $tab;
 
-			if ($current == true) {
+			if ($active == true) {
 				$more_bold = " current";
 			}
 		} else {
@@ -517,45 +589,52 @@ function navigator_tabs() {
 		}
 	}
 
-	$public = implode("\n", $public_tabs);
-
+	/**
+	 * Add "More" tabs.
+	 */
 	if (!empty($more_tabs)) {
-
 		// Grab another tab into more to make space for the more tab within the max limit
 		$more_tabs[] = array_pop($public_tabs);
 
-		$more  = "";
-		$more .= "<li class=\"more staysput".$more_bold."\" id=\"more_tab\"><a href=\"#\" onclick=\"return false;\"><span>More</span></a><ul class=\"drop_options\" id=\"more_drop_options\">";
-		$more .= implode("\n", $more_tabs);
-		$more .= "<li class=\"bottom\"><div></div></li>";
-		$more .= "</ul><!--[if lte IE 6.5]><iframe src=\"".ENTRADA_RELATIVE."/blank.html\"></iframe><![endif]--></li>\n";
+		$tabs_more  = "<li class=\"more staysput".$more_bold."\" id=\"more_tab\">";
+		$tabs_more .= "	<a href=\"#\" onclick=\"return false;\"><span>More</span></a>";
+		$tabs_more .= "	<ul class=\"drop_options\" id=\"more_drop_options\">";
+		$tabs_more .=		implode("\n", $more_tabs);
+		$tabs_more .= "		<li class=\"bottom\"><div></div></li>";
+		$tabs_more .= "	</ul>";
+		$tabs_more .= "	<!--[if lte IE 6.5]><iframe src=\"".ENTRADA_RELATIVE."/blank.html\"></iframe><![endif]-->";
+		$tabs_more .= "</li>\n";
 	}
 
-	$public = implode("\n", $public_tabs);
+	$tabs_public = implode("\n", $public_tabs);
 	
-	// Logout and button
-	$extra .= "<li class=\"last staysput\"><a href=\"".ENTRADA_URL."?action=logout\"><span>Logout</span></a></li>\n";
-
-	// Start output
-	$output .= $public;
+	$output_html .= $tabs_public;
 	
-    if (isset($more)) {
-		$output .= $more;
+    if (!empty($tabs_more)) {
+		$output_html .= $tabs_more;
 	}
 
-	// Highlight current tab
-	$output = str_replace("%".$MODULE."%", "current", $output);
-	
-    if ($admin_priviledges) {
-		$output .= $admin;
+    if (!empty($navigator_admin)) {
+		$output_html .= $tabs_admin;
 	}
-
-	$output .= $extra;
 	
-	// Get rid of place holders
-	$output = preg_replace("/\%(.*)\%/", "", $output);
+	/**
+	 * Add Logout tab.
+	 */
+	$output_html .= "<li class=\"last staysput\"><a href=\"".ENTRADA_RELATIVE."?action=logout\"><span>Logout</span></a></li>\n";
+	
 
-	return "<div id=\"screenTabs\"><div id=\"tabs\"><ul>".$output."</ul></div></div>";
+	/**
+	 * Replace the active module with the current css keyword.
+	 */
+	$output_html = str_replace("%".$MODULE."%", "current", $output_html);
+	
+	/**
+	 * Remove temporary placeholders.
+	 */
+	$output_html = "<div id=\"screenTabs\"><div id=\"tabs\"><ul>".preg_replace("/\%(.*)\%/", "", $output_html)."</ul></div></div>";
+
+	return $output_html;
 }
 
 /**

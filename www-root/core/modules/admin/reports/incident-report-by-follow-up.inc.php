@@ -68,7 +68,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 
 	$report_results	= array();
 
-	$organisation_where = " AND (b.`organisation_id` = ".$user->getActiveOrganisation().") ";
+	$organisation_where = " AND (b.`organisation_id` = ".$ENTRADA_USER->getActiveOrganisation().") ";
 	
 	$query	= "
 			SELECT a.*, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`

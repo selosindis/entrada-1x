@@ -90,7 +90,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 	 * Valid: any integer really.
 	 */
 
-	$organisation_id = $user->getActiveOrganisation();
+	$organisation_id = $ENTRADA_USER->getActiveOrganisation();
 	$organisation_where = "`organisation_id` = " . $organisation_id;
 
 

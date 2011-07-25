@@ -166,10 +166,31 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 
 			jQuery('#block_list').change(function(e) {
 				var block = jQuery(this).val();
-				var url = '<?php echo COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL; ?>?section=api-mtd-get-block&block='+block;
+				var year = jQuery('#year').val();
+				var url = '<?php echo COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL; ?>?section=api-mtd-get-block&block='+block+'&year='+year;
 				jQuery.get(url, function(data) {
 					jQuery('#block_choice').html(data);
 				});
+			});
+
+			jQuery('#year').change(function(e) {
+				var year = jQuery(this).val();
+				var newURL = '<?php echo COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL . "?section=api-mtd-load-schedule&service_id=" . $mtd_service_id; ?>' + "&year=" + year;
+				window.setTimeout("schedule.flexOptions({url: '" + newURL + "'}).flexReload()", 1000);
+				//Redisplay the block dates for the newly selected year
+				var block = jQuery('#block_list').val();
+				if (block != null || block != "") {
+					var url = '<?php echo COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL; ?>?section=api-mtd-get-block&block='+block+'&year='+year;
+					jQuery.get(url, function(data) {
+						jQuery('#block_choice').html(data);
+					});
+				}
+			});
+
+			jQuery('#download_button').click(function(e) {
+				var year = jQuery('#year').val();
+				var url = '<?php echo COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL . "?section=export_schedule&service_id=" . $mtd_service_id; ?>' + "&year=" + year;
+				window.location = url;
 			});
 
 		});
@@ -325,7 +346,17 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 			</script>
 
 			<input id="find_resident_url" type="hidden" value="<?php echo COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL; ?>?section=find_resident" />
-
+			<div id="year_selector">
+					<br />
+					<strong>Pick a year:</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					<select id="year" name="year">
+						<option value="2011-2012">2011-2012</option>
+						<option value="2010-2011">2010-2011</option>						
+					</select>
+			</div>
+			<br />
+			<hr />
+	<div id="period_selectors">
 			<div id="blocks" style="float:left;">
 				<p><br />
 					<strong>Pick a block:</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
@@ -352,6 +383,11 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 				<label for="end_date">End Date:</label>	<input id="end_date" name="end_date" type="text" />
 			</p>
 		</div>
+	</div>
+	
+				<br /><br /><br /><br /><br /><br /><br /><br /><br />
+				<hr />
+
 		<div id="type_location_duration_service_button" style="float:left">
 			<p>
 				<label>Type:</label>&nbsp;
@@ -415,7 +451,7 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 		<br class="clearboth">
 
 		<div id="button_container" style="float: right;">
-			<input type="button" onclick="window.location = '<?php echo COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL . "?section=export_schedule&service_id=" . $mtd_service_id; ?>'" value="Download Data" />
+			<input type="button" id="download_button" name="download_button" value="Download Data" />
 		</div>
 		<br />
 		<br class="clearboth">

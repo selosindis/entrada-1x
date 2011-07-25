@@ -39,8 +39,8 @@ require_once("init.inc.php");
 if (isset($_GET["organisation_id"])) {
 	$organisation = clean_input($_GET["organisation_id"], array("trim", "notags", "int"));
 	$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"] = $organisation;
-	if ($user) {
-		$user->setActiveOrganisation($organisation);
+	if ($ENTRADA_USER) {
+		$ENTRADA_USER->setActiveOrganisation($organisation);
 	}
 }
 
@@ -579,10 +579,10 @@ if ((isset($_SESSION["isAuthorized"])) && ($_SESSION["isAuthorized"])) {
 	 * Create the Organisation side bar.
 	 * If the org request attribute is set then change the current org id for this user.
 	 */
-	if ($user->getAllOrganisations() && count($user->getAllOrganisations()) > 1) {
+	if ($ENTRADA_USER->getAllOrganisations() && count($ENTRADA_USER->getAllOrganisations()) > 1) {
 		$sidebar_html = "<ul class=\"menu\">\n";
-		foreach ($user->getAllOrganisations() as $key => $organisation_title) {
-			if ($key == $user->getActiveOrganisation()) {
+		foreach ($ENTRADA_USER->getAllOrganisations() as $key => $organisation_title) {
+			if ($key == $ENTRADA_USER->getActiveOrganisation()) {
 				$sidebar_html .= "<li class=\"on\"><a href=\"" . ENTRADA_URL . "/" . $MODULE . "/" . "?" . replace_query(array("organisation_id" => $key)) . "\">" . html_encode($organisation_title) . "</a></li>\n";
 			} else {
 				$sidebar_html .= "<li class=\"off\"><a href=\"" . ENTRADA_URL . "/" . $MODULE . "/" . "?" . replace_query(array("organisation_id" => $key)) . "\">" . html_encode($organisation_title) . "</a></li>\n";

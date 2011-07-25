@@ -56,7 +56,7 @@ if (!defined("PARENT_INCLUDED")) {
 	$PROCESSED		= array();
 	$PREFERENCES	= preferences_load($MODULE);
 
-	$ORGANISATION_ID = $user->getActiveOrganisation();
+	$ORGANISATION_ID = $ENTRADA_USER->getActiveOrganisation();
 	$organisation_query = "SELECT * FROM `".AUTH_DATABASE."`.`organisations`";
 	$ORGANISATIONS = $db->GetAll($organisation_query);
 	$ORGANISATION_BY_ID = array();
@@ -157,7 +157,7 @@ if (!defined("PARENT_INCLUDED")) {
 					$ERRORSTR[] = "To browse a group, you must select a group from the group select list.";	
 				}
 				
-				if(($organisation = $user->getActiveOrganisation()) && isset($ORGANISATIONS_BY_ID[$organisation])) {
+				if(($organisation = $ENTRADA_USER->getActiveOrganisation()) && isset($ORGANISATIONS_BY_ID[$organisation])) {
 					$PROCESSED["organisation"] = $organisation;
 					$search_query .= " in ".$ORGANISATIONS_BY_ID[$organisation]["organisation_title"];
 				} else {
@@ -188,7 +188,7 @@ if (!defined("PARENT_INCLUDED")) {
 										ON c.`proxy_id` = a.`id`
 										AND b.`app_id` IN (".AUTH_APP_IDS_STRING.")
 										WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
-										AND c.`organisation_id` = ".$db->qstr($PROCESSED["organisation"])."											
+										AND c.`organisation_id` = ".$db->qstr($PROCESSED["organisation"])."
 										AND b.`group` ".($PROCESSED["group"] == "staff" ? "IN ('staff', 'medtech')" : "= ".$db->qstr($PROCESSED["group"]))."
 										".(($PROCESSED["role"]) ? "AND b.`role` = ".$db->qstr($PROCESSED["role"]) : "")."
 										GROUP BY a.`id`
@@ -270,28 +270,10 @@ if (!defined("PARENT_INCLUDED")) {
 			default :
 				$group_string			= "";
 				$role_string			= "";
-				$organisation_string	= "";
 				if ((isset($_REQUEST["q"])) && ($query = clean_input($_REQUEST["q"], array("trim", "notags")))) {
 					$search_query		= $query;
 					$plaintext_query	= $search_query;
 					$search_query_text	= html_encode($query);
-				}
-
-				
-				if (isset($_REQUEST["search_organisations"]) && ($search_organisations = explode(",", $_REQUEST["search_organisations"]))) {
-					foreach ($search_organisations as $org) {
-						if (isset($organisations_string) && ($org = clean_input($org, "credentials"))) {
-							$organisations_string .= ", ".$db->qstr($org);
-						} elseif (($org = clean_input($org, "credentials"))) {
-							$organisations_string = $db->qstr($org);
-						} else {
-							$search_organisations = array($ORGANISATION_ID);
-							$organisations_string = "'$ORGANISATION_ID'";
-						}
-					}
-				} else {
-					$search_organisations = array("$ORGANISATION_ID");
-					$organisations_string = "'$ORGANISATION_ID'";
 				}
 				
 				if (isset($_REQUEST["search_groups"]) && ($search_groups = explode(",", $_REQUEST["search_groups"]))) {
@@ -344,9 +326,11 @@ if (!defined("PARENT_INCLUDED")) {
 									FROM `".AUTH_DATABASE."`.`user_data` AS a
 									LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 									ON b.`user_id` = a.`id`
+									LEFT JOIN `".AUTH_DATABASE."`.`user_organisation` as c
+									ON c.`proxy_id` = a.`id`
 									AND b.`app_id` IN (".AUTH_APP_IDS_STRING.")
 									WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
-									AND a.`organisation_id` IN (" . $organisations_string . ")
+									AND c.`organisation_id` IN (" . $ORGANISATION_ID . ")
 									AND (b.`group` ".($group_string && $role_string ? "IN (".$group_string.")									
 									OR (b.`group` = 'student' 
 										AND b.`role` IN (".$role_string.")))" : ($role_string ? "= 'student' 
@@ -365,7 +349,7 @@ if (!defined("PARENT_INCLUDED")) {
 									ON b.`user_id` = a.`id`
 									AND b.`app_id` IN (".AUTH_APP_IDS_STRING.")
 									WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
-									AND a.`organisation_id` IN (" . $organisations_string . ")
+									AND a.`organisation_id` IN (" . $ORGANISATION_ID . ")
 									AND (b.`group` ".($group_string && $role_string ? "IN (".$group_string.")
 									OR (b.`group` = 'student' 
 										AND b.`role` IN (".$role_string.")))" : ($role_string ? "= 'student' 
@@ -620,37 +604,6 @@ if (!defined("PARENT_INCLUDED")) {
 									<td><input class="search_classes" id="class_<?php echo (date("Y", time()) + $year_offset + 2); ?>" type="checkbox" <?php echo ((isset($_REQUEST["search_classes"]) && is_array(explode(',', $_REQUEST["search_classes"])) && array_search((date("Y", time()) + $year_offset + 2), (explode(',', $_REQUEST["search_classes"]))) !== false) || (isset($_REQUEST["search_classes"]) && $_REQUEST["search_classes"] == (date("Y", time()) + $year_offset + 2)) || (!isset($_REQUEST["search_groups"]) && !isset($_REQUEST["search_classes"]) && !isset($_REQUEST["search_alumni"])) ? "checked=\"checked\" " : ""); ?>value="<?php echo (date("Y", time()) + $year_offset + 2); ?>" onclick="addClass()" /><label class="content-small" for="class_<?php echo (date("Y", time()) + $year_offset + 2); ?>"> Class of <?php echo (date("Y", time()) + $year_offset + 2); ?></label></td>
 									<td><input class="search_classes" id="class_<?php echo (date("Y", time()) + $year_offset + 3); ?>" type="checkbox" <?php echo ((isset($_REQUEST["search_classes"]) && is_array(explode(',', $_REQUEST["search_classes"])) && array_search((date("Y", time()) + $year_offset + 3), (explode(',', $_REQUEST["search_classes"]))) !== false) || (isset($_REQUEST["search_classes"]) && $_REQUEST["search_classes"] == (date("Y", time()) + $year_offset + 3)) || (!isset($_REQUEST["search_groups"]) && !isset($_REQUEST["search_classes"]) && !isset($_REQUEST["search_alumni"])) ? "checked=\"checked\" " : ""); ?>value="<?php echo (date("Y", time()) + $year_offset + 3); ?>" onclick="addClass()" /><label class="content-small" for="class_<?php echo (date("Y", time()) + $year_offset + 3); ?>"> Class of <?php echo (date("Y", time()) + $year_offset + 3); ?></label></td>
 								</tr>
-							</table>
-						</div>
-					</td>
-				</tr>
-				<tr>
-					<td>&nbsp;</td>
-					<td style="padding-top: 15px; vertical-align: top;"><label class="form-required">Organisations to search:</label></td>
-					<td style="padding-top: 15px;">
-						<div>
-							<table style="width: 350px; padding-left: 50px;">
-								<?php 
-								$search_arr = $search_organisations;
-								for($i = 0; $i < count($ORGANISATIONS)/2; $i++) : ?>
-								<tr>
-									<?php 
-									// For every two organisaions
-									for($j = 0; $j < 2; $j++): 
-										if(isset($ORGANISATIONS[2*$i+$j])):
-											$o = $ORGANISATIONS[2*$i+$j]; 
-											$o["id"] = $o["organisation_id"]; ?>
-											<td>
-												<input id="org_<?php echo $o["id"];?>" class="search_organisations" type="checkbox" <?php echo ((isset($search_arr) && (is_array($search_arr) && array_search($o['id'], $search_arr) !== false) || (!isset($search_arr) && $o['id'] == $ORGANISATION_ID)) ? "checked=\"checked\" " : ""); ?>value="<?php echo $o["id"]; ?>" onclick="addOrganisation()" />
-												<label class="content-small" for="org_<?php echo $o["id"];?>"><?php echo $o["organisation_title"];?></label>
-											</td>
-										<?php else: ?>
-											<td>&nbsp;</td>
-										<?php endif; ?>
-										
-									<?php endfor; ?>
-								</tr>
-								<?php endfor; ?>
 							</table>
 						</div>
 					</td>

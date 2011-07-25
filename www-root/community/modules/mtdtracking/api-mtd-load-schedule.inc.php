@@ -60,9 +60,27 @@ if (!defined("IN_MTDTRACKING")) {
 		$limit = '10';
 	}
 
+	$year = clean_input($_GET["year"], array("notags", "trim", "nows"));
+	if (!$year) {
+		$current_date = date("Y-m-d");
+		$date_arr = date_parse($current_date);
+
+		if ($date_arr["month"] >= 7) {
+			$year = $date_arr["year"] . "-" . strval(intval($date_arr["year"]) + 1);
+		} else {
+			$year = strval(intval($date_arr["year"]) - 1) . "-" . $date_arr["year"];
+		}
+	}
+
+	$year_min = substr($year, 0, 4);
+	$year_max = substr($year, 5, 4);
+
 	$query = "SELECT COUNT(*) AS total
-				FROM `mtd_schedule` a
-				WHERE a.`service_id` = " . $PROCESSED["service_id"];
+				FROM `" . DATABASE_NAME . "`.`mtd_schedule` a,
+					 `" . DATABASE_NAME . "`.`mtd_locale_duration` b
+				WHERE a.`id` = b.`schedule_id`
+				AND a.`service_id` = " . $PROCESSED["service_id"] . "
+				AND date_format(a.`start_date`, '%Y-%m-%d') between '" . $year_min . "-07-01' AND '" . $year_max . "-06-30'";
 
 	$result = $db->GetRow($query);
 	$total = $result["total"];
@@ -84,21 +102,6 @@ if (!defined("IN_MTDTRACKING")) {
 	} else {
 		$where = "";
 	}
-
-	$year = clean_input($_GET["year"], array("notags", "trim", "nows"));
-	if (!$year) {
-		$current_date = date("Y-m-d");
-		$date_arr = date_parse($current_date);
-
-		if ($date_arr["month"] >= 7) {
-			$year = $date_arr["year"] . "-" . strval(intval($date_arr["year"]) + 1);
-		} else {
-			$year = strval(intval($date_arr["year"]) - 1) . "-" . $date_arr["year"];
-		}
-	} 	
-
-	$year_min = substr($year, 0, 4);
-	$year_max = substr($year, 5, 4);
 
 	$query = "SELECT `mtd_schedule`.`id`, `mtd_facilities`.`facility_name`, `user_data_resident`.`first_name`,
 				 `user_data_resident`.`last_name`, `mtd_schedule`.`start_date`, `mtd_schedule`.`end_date`,

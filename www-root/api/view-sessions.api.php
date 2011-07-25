@@ -148,8 +148,8 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 							if (strpos($audience_id, "group") !== false) {
 								if ($group_id = clean_input(preg_replace("/[a-z_]/", "", $audience_id), array("trim", "int"))) {
 									$query = "	SELECT *
-												FROM `groups`
-												WHERE `group_id` = ".$db->qstr($group_id)."
+												FROM `student_groups`
+												WHERE `sgroup_id` = ".$db->qstr($group_id)."
 												AND `group_active` = 1";
 									$result	= $db->GetRow($query);
 									if ($result) {
@@ -410,13 +410,13 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 		 */
 		$GROUP_LIST = array();
 		$query = "	SELECT *
-					FROM `groups`
+					FROM `student_groups`
 					WHERE `group_active` = '1'
 					ORDER BY `group_name`";
 		$results = $db->GetAll($query);
 		if ($results) {
 			foreach($results as $result) {
-				$GROUP_LIST[$result["group_id"]] = $result;
+				$GROUP_LIST[$result["sgroup_id"]] = $result;
 			}
 		}
 	
@@ -451,7 +451,7 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 						$PROCESSED["associated_proxy_ids"][] = (int) $result["audience_value"];
 					break;
 					case "grad_year" :
-						$query = "SELECT `group_id` FROM `groups` WHERE `group_name` = 'School of Medicine: Class of ".((int)$result["audience_value"])."'";
+						$query = "SELECT `sgroup_id` FROM `student_groups` WHERE `group_name` = 'School of Medicine: Class of ".((int)$result["audience_value"])."'";
 						$group_id = $db->GetOne($query);
 						if ($group_id) {
 							$PROCESSED["associated_group_ids"][] = (int) $group_id;
@@ -475,14 +475,14 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 			?>
 			<div style="position: relative;">
 				<?php
-		        $query 	= "	SELECT * FROM `groups`
+		        $query 	= "	SELECT * FROM `student_groups`
 		        		WHERE `group_active` = 1
 		        		ORDER BY `group_name`";
 		        $group_results = $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
 		        if ($group_results) {
 		            foreach ($group_results as $r) {
-						$checked = (isset($PROCESSED["associated_group_ids"]) && array_search($r["group_id"], $PROCESSED["associated_group_ids"]) !== false ? "checked=\"checked\"" : "");
-		                $groups[$r["group_id"]] = array('text' => $r['group_name'], 'value' => 'group_'.$r['group_id'], 'checked' => $checked);
+						$checked = (isset($PROCESSED["associated_group_ids"]) && array_search($r["sgroup_id"], $PROCESSED["associated_group_ids"]) !== false ? "checked=\"checked\"" : "");
+		                $groups[$r["sgroup_id"]] = array('text' => $r['group_name'], 'value' => 'group_'.$r['sgroup_id'], 'checked' => $checked);
 		            }
 		            echo lp_multiple_select_popup('groups', $groups, array('title'=>'Select Groups:', 'cancel_text'=>'Close', 'cancel'=>true, 'class'=>'audience_dialog'));
 		        }
@@ -683,7 +683,7 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										$PROCESSED["associated_proxy_ids"][] = (int) $audience["audience_value"];
 									break;
 									case "grad_year" :
-										$query = "SELECT `group_id` FROM `groups` WHERE `group_name` = 'School of Medicine: Class of ".((int)$PROCESSED["audience_value"])."'";
+										$query = "SELECT `sgroup_id` FROM `student_groups` WHERE `group_name` = 'School of Medicine: Class of ".((int)$PROCESSED["audience_value"])."'";
 										$group_id = $db->GetOne($query);
 										if ($group_id) {
 											$PROCESSED["associated_group_ids"][] = (int) $group_id;
@@ -699,7 +699,7 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 						} else {
 							$course_audience_included = false;
 						}
-						foreach ($PROCESSED["associated_group_ids"] as $group_id) {
+						foreach ($PROCESSED["associated_group_idgroup_ids"] as $group_id) {
 							if ($group_ids_string) {
 								$group_ids_string .= ",group_".$group_id;
 							} else {
@@ -805,7 +805,7 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 									foreach ($PROCESSED["associated_group_ids"] as $group) {
 										if ((array_key_exists($group, $GROUP_LIST)) && is_array($GROUP_LIST[$group])) {
 											?>
-											<li class="community" id="audience_group_<?php echo $GROUP_LIST[$group]["group_id"]; ?>" style="cursor: move;"><?php echo $GROUP_LIST[$group]["group_name"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="removeAudience('group_<?php echo $GROUP_LIST[$group]["group_id"]; ?>', 'groups');" class="list-cancel-image" /></li>
+											<li class="community" id="audience_group_<?php echo $GROUP_LIST[$group]["sgroup_id"]; ?>" style="cursor: move;"><?php echo $GROUP_LIST[$group]["group_name"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="removeAudience('group_<?php echo $GROUP_LIST[$group]["sgroup_id"]; ?>', 'groups');" class="list-cancel-image" /></li>
 											<?php
 										}
 									}

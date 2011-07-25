@@ -93,14 +93,14 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 			if (isset($_POST["name"])) {  // Rename group
 				$group_name = clean_input($_POST["name"], array("notags", "trim"));
 				if (strlen($group_name) && strcmp($group_name,$_POST["group_name"])) {
-					$result	= $db->GetOne("	SELECT `group_id` FROM `groups`
+					$result	= $db->GetOne("	SELECT `sgroup_id` FROM `student_groups`
 							WHERE `group_name` = '".$group_name."'");
 					if ($result) {
 						$ERROR++;
 						$ERRORSTR[] = "The group name already exists in system.";
 						$wait = 10000;
 					} else {
-						$db->Execute("UPDATE `groups` SET `group_name`='".$group_name."' WHERE `group_id` = ".$db->qstr($GROUP_ID));
+						$db->Execute("UPDATE `student_groups` SET `group_name`='".$group_name."' WHERE `sgroup_id` = ".$db->qstr($GROUP_ID));
 					}
 				}
 				$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/groups?section=edit&ids=".implode(",", $_SESSION["ids"])."\\'', ".(isset($wait)?$wait:0).")";
@@ -108,13 +108,13 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 				foreach($GROUP_IDS as $gmember_id) {
 					switch ($_POST["coa"]) {
 						case "deactivate":
-							$db->Execute("UPDATE `group_members` SET `member_active`='0' WHERE `gmember_id` = ".$db->qstr($gmember_id));
+							$db->Execute("UPDATE `student_group_members` SET `member_active`='0' WHERE `gmember_id` = ".$db->qstr($gmember_id));
 						break;
 						case "activate":
-							$db->Execute("UPDATE `group_members` SET `member_active`='1' WHERE `gmember_id` = ".$db->qstr($gmember_id));
+							$db->Execute("UPDATE `student_group_members` SET `member_active`='1' WHERE `gmember_id` = ".$db->qstr($gmember_id));
 						break;
 						case "delete":
-							$db->Execute("DELETE FROM `group_members` WHERE `gmember_id` = ".$db->qstr($gmember_id));
+							$db->Execute("DELETE FROM `student_group_members` WHERE `gmember_id` = ".$db->qstr($gmember_id));
 						break;
 					}
 				}
@@ -127,28 +127,28 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 					if($group_id = (int) $group_id) {
 						switch ($_POST["coa"]) {
 							case "deactivate":
-								$db->Execute("UPDATE `groups` SET `group_active`='0' WHERE `group_id` = ".$db->qstr($group_id));
+								$db->Execute("UPDATE `student_groups` SET `group_active`='0' WHERE `sgroup_id` = ".$db->qstr($group_id));
 							break;
 							case "activate":
-								$db->Execute("UPDATE `groups` SET `group_active`='1' WHERE `group_id` = ".$db->qstr($group_id));
+								$db->Execute("UPDATE `student_groups` SET `group_active`='1' WHERE `sgroup_id` = ".$db->qstr($group_id));
 							break;
 							case "delete":
-								$query	= "	SELECT `group_id`,  `group_name`
-											FROM `groups`
-											WHERE `group_id` = ".$db->qstr($group_id);
+								$query	= "	SELECT `sgroup_id`,  `group_name`
+											FROM `student_groups`
+											WHERE `sgroup_id` = ".$db->qstr($group_id);
 								$result	= $db->GetRow($query);
 								if ($result) {
 									/**
-									 * Remove all records from group_members table.
+									 * Remove all records from student_group_members table.
 									 */
-									$query = "DELETE FROM `group_members` WHERE `group_id` = ".$db->qstr($group_id);
+									$query = "DELETE FROM `student_group_members` WHERE `sgroup_id` = ".$db->qstr($group_id);
 									$db->Execute($query);
 									$removed[$group_id]["group_name"] = $result["group_name"];
 								}
 								/**
 								 * Remove group_id record from groups table.
 								 */
-								$query = "DELETE FROM `groups` WHERE `group_id` = ".$db->qstr($group_id);
+								$query = "DELETE FROM `student_groups` WHERE `sgroup_id` = ".$db->qstr($group_id);
 								break;
 						}
 						$db->Execute($query);
@@ -190,8 +190,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 			} elseif ($GROUP_ID) { // Rename group
 				echo "<h1>Rename Group</h1>";
 
-				$result	= $db->GetOne("	SELECT `group_name` FROM `groups`
-							WHERE `group_id` =	".$db->qstr($GROUP_ID));
+				$result	= $db->GetOne("	SELECT `group_name` FROM `student_groups`
+							WHERE `sgroup_id` =	".$db->qstr($GROUP_ID));
 				if($result) {
 					echo display_notice(array("Please choose a new name for the group"));
 					?>
@@ -230,12 +230,12 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 				echo "<h1>De/Activate or Delete Member".($MEMBERS>1?"s":"")."</h1>";
 
 				$results = $db->getAll ("SELECT c.`gmember_id`, CONCAT_WS(' ', a.`firstname`, a.`lastname`) AS `fullname`,
-										CONCAT_WS(':', b.`group`, b.`role`) AS `grouprole`, c.`group_id`, d.`group_name`, c.`member_active`
+										CONCAT_WS(':', b.`group`, b.`role`) AS `grouprole`, c.`sgroup_id`, d.`group_name`, c.`member_active`
 										FROM `".AUTH_DATABASE."`.`user_data` AS a
 										LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 										ON a.`id` = b.`user_id`
-										INNER JOIN `group_members` c ON a.`id` = c.`proxy_id`
-										INNER JOIN `groups` d ON c.`group_id` = d.`group_id`
+										INNER JOIN `student_group_members` c ON a.`id` = c.`proxy_id`
+										INNER JOIN `student_groups` d ON c.`sgroup_id` = d.`sgroup_id`
 										WHERE c.`gmember_id`  IN (".implode(", ", $GROUP_IDS).")
 										ORDER by `grouprole`, `lastname`, `firstname`");
 				if($results) {
@@ -281,14 +281,14 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 
 								if($ENTRADA_ACL->amIAllowed('group', 'delete')) {
 									foreach ($results as $result) {
-										$url 	= ENTRADA_URL."/admin/groups?section=edit&amp;id=".$result["group_id"];
+										$url 	= ENTRADA_URL."/admin/groups?section=edit&amp;id=".$result["sgroup_id"];
 								
-										echo "<tr id=\"group-".$result["group_id"]."\" class=\"event".((!$url) ? " np" : ((!$result["member_active"]) ? " na" : ""))."\">\n";
+										echo "<tr id=\"group-".$result["sgroup_id"]."\" class=\"event".((!$url) ? " np" : ((!$result["member_active"]) ? " na" : ""))."\">\n";
 										echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"checked[]\" value=\"".$result["gmember_id"]."\" checked=\"checked\" /></td>\n";
 										echo "	<td class=\"community_title".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Name: ".html_encode($result["fullname"])."\">" : "").html_encode($result["fullname"]).(($url) ? "</a>" : "")."</td>\n";
 										echo "	<td class=\"community_shortname".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Group Name: ".html_encode($result["group_name"])."\">" : "").html_encode($result["group_name"]).(($url) ? "</a>" : "")."</td>\n";
 										echo "	<td class=\"date".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Role: ".html_encode($result["grouprole"])."\">" : "").html_encode($result["grouprole"]).(($url) ? "</a>" : "")."</td>\n";
-										echo "	<td class=\"attachment\">".(($url) ? "<a href=\"".ENTRADA_URL."/admin/groups?section=edit&amp;ids=".$result["group_id"]."\"><img src=\"".ENTRADA_URL."/images/action-edit.gif\" width=\"16\" height=\"16\" alt=\"Manage Group\" title=\"Manage Group\" border=\"0\" /></a>" : "<img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"16\" height=\"16\" alt=\"\" title=\"\" />")."</td>\n";
+										echo "	<td class=\"attachment\">".(($url) ? "<a href=\"".ENTRADA_URL."/admin/groups?section=edit&amp;ids=".$result["sgroup_id"]."\"><img src=\"".ENTRADA_URL."/images/action-edit.gif\" width=\"16\" height=\"16\" alt=\"Manage Group\" title=\"Manage Group\" border=\"0\" /></a>" : "<img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"16\" height=\"16\" alt=\"\" title=\"\" />")."</td>\n";
 										echo "</tr>\n";
 									}
 								}
@@ -303,8 +303,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 
 				$total_groups	= count($GROUP_IDS);
 
-				$query = "	SELECT * FROM `groups`
-							WHERE `group_id` IN (".implode(", ", $GROUP_IDS).")
+				$query = "	SELECT * FROM `student_groups`
+							WHERE `sgroup_id` IN (".implode(", ", $GROUP_IDS).")
 							ORDER BY `group_name` ASC";
 
 				$results	= $db->GetAll($query);
@@ -348,19 +348,19 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 							<tbody>
 							<?php
 								foreach($results as $result) {
-									$result["members"] = $db->GetOne("SELECT COUNT(*) AS members FROM  `group_members` WHERE `group_id` = ".$db->qstr($result["group_id"]));
+									$result["members"] = $db->GetOne("SELECT COUNT(*) AS members FROM  `student_group_members` WHERE `sgroup_id` = ".$db->qstr($result["sgroup_id"]));
 
 									$url			= "";
 
 									if($ENTRADA_ACL->amIAllowed('group', 'delete')) {
-										$url 	= ENTRADA_URL."/admin/groups?section=edit&amp;id=".$result["group_id"];
+										$url 	= ENTRADA_URL."/admin/groups?section=edit&amp;id=".$result["sgroup_id"];
 								
-										echo "<tr id=\"group-".$result["group_id"]."\" class=\"event".((!$url) ? " np" : ((!$result["group_active"]) ? " na" : ""))."\">\n";
-										echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"checked[]\" value=\"".$result["group_id"]."\" checked=\"checked\" /></td>\n";
+										echo "<tr id=\"group-".$result["sgroup_id"]."\" class=\"event".((!$url) ? " np" : ((!$result["group_active"]) ? " na" : ""))."\">\n";
+										echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"checked[]\" value=\"".$result["sgroup_id"]."\" checked=\"checked\" /></td>\n";
 										echo "	<td class=\"community_title".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Group Name: ".html_encode($result["group_name"])."\">" : "").html_encode($result["group_name"]).(($url) ? "</a>" : "")."</td>\n";
 										echo "	<td class=\"community_shortname".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Number of sembers: ".$result["members"]."\">" : "").$result["members"].(($url) ? "</a>" : "")."</td>\n";
 										echo "	<td class=\"date".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Updated Date\">" : "").date("M jS Y", $result["updated_date"]).(($url) ? "</a>" : "")."</td>\n";
-										echo "	<td class=\"attachment\">".(($url) ? "<a href=\"".ENTRADA_URL."/admin/groups?section=edit&amp;ids=".$result["group_id"]."\"><img src=\"".ENTRADA_URL."/images/action-edit.gif\" width=\"16\" height=\"16\" alt=\"Manage Group\" title=\"Manage Group\" border=\"0\" /></a>" : "<img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"16\" height=\"16\" alt=\"\" title=\"\" />")."</td>\n";
+										echo "	<td class=\"attachment\">".(($url) ? "<a href=\"".ENTRADA_URL."/admin/groups?section=edit&amp;ids=".$result["sgroup_id"]."\"><img src=\"".ENTRADA_URL."/images/action-edit.gif\" width=\"16\" height=\"16\" alt=\"Manage Group\" title=\"Manage Group\" border=\"0\" /></a>" : "<img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"16\" height=\"16\" alt=\"\" title=\"\" />")."</td>\n";
 										echo "</tr>\n";
 									}
 								}

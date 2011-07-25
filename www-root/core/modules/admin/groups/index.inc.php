@@ -161,14 +161,14 @@ if (!defined("IN_GROUPS")) {
 	}
 	
 	/**** Query ***/
-	$query_count = "	SELECT COUNT(`group_id`) AS `total_rows`
-						FROM `groups` Where true";
+	$query_count = "	SELECT COUNT(`sgroup_id`) AS `total_rows`
+						FROM `student_groups` Where true";
 
 //						WHERE `group_active` = '1'";
 
-	$query_groups = "	SELECT a.*, COUNT(b.`gmember_id`) AS members, case when (MIN(b.`member_active`)=0) then 1 else 0 end as `inactive` FROM `groups` AS a
-						LEFT JOIN `group_members` b
-						ON a.`group_id` = b.`group_id` where true";
+	$query_groups = "	SELECT a.*, COUNT(b.`gmember_id`) AS members, case when (MIN(b.`member_active`)=0) then 1 else 0 end as `inactive` FROM `student_groups` AS a
+						LEFT JOIN `student_group_members` b
+						ON a.`sgroup_id` = b.`sgroup_id` where true";
 //						WHERE `group_active` = '1'";
 
 	switch ($search_type) {
@@ -185,7 +185,7 @@ if (!defined("IN_GROUPS")) {
 		break;
 	}
 
-	$query_groups = $query_groups." GROUP By a.`group_id` ORDER BY %s LIMIT %s, %s";
+	$query_groups = $query_groups." GROUP By a.`sgroup_id` ORDER BY %s LIMIT %s, %s";
 
 	/**
 	 * Get the total number of results using the generated queries above and calculate the total number
@@ -372,15 +372,15 @@ if (!defined("IN_GROUPS")) {
 			<tbody>
 			<?php
 			foreach ($scheduler_groups["groups"] as $result) {
-				$url = ENTRADA_URL."/admin/groups?section=edit&ids=".$result["group_id"];
+				$url = ENTRADA_URL."/admin/groups?section=edit&ids=".$result["sgroup_id"];
 
 
-				echo "<tr id=\"group-".$result["group_id"]."\" class=\"group".((!$result["group_active"]) ? " na" : (($result["inactive"]) ? " np" : ""))."\">\n";
-				echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"checked[]\" value=\"".$result["group_id"]."\" /></td>\n";
+				echo "<tr id=\"group-".$result["sgroup_id"]."\" class=\"group".((!$result["group_active"]) ? " na" : (($result["inactive"]) ? " np" : ""))."\">\n";
+				echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"checked[]\" value=\"".$result["sgroup_id"]."\" /></td>\n";
 				echo "	<td class=\"community_title\"><a href=\"".$url."\">".html_encode($result["group_name"])."</a></td>\n";
 				echo "	<td class=\"community_shortname\"><a href=\"".$url."\">".$result["members"]."</a></td>\n";
 				echo "	<td class=\"date\"><a href=\"".$url."\">".date("M jS Y", $result["updated_date"])."</a></td>\n";
-				echo "	<td class=\"attachment\"><a href=\"".ENTRADA_URL."/admin/groups?section=edit&ids=".$result["group_id"]."\"><img src=\"".ENTRADA_URL."/images/action-edit.gif\" width=\"16\" height=\"16\" alt=\"Manage Group\" title=\"Manage Group\" border=\"0\" /></a></td>\n";
+				echo "	<td class=\"attachment\"><a href=\"".ENTRADA_URL."/admin/groups?section=edit&ids=".$result["sgroup_id"]."\"><img src=\"".ENTRADA_URL."/images/action-edit.gif\" width=\"16\" height=\"16\" alt=\"Manage Group\" title=\"Manage Group\" border=\"0\" /></a></td>\n";
 				echo "</tr>\n";
 			}
 			?>

@@ -332,11 +332,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							if ((is_array($groups)) && (count($groups))) {
 								foreach($groups as $order => $group_id) {
 									if ($group_id = clean_input($group_id, array("trim", "int"))) {
-										$query = "SELECT `group_name` FROM `groups` WHERE `group_id` = ".$db->qstr($group_id);
+										$query = "SELECT `group_name` FROM `student_groups` WHERE `sgroup_id` = ".$db->qstr($group_id);
 										$result	= $db->GetRow($query);
 										if ($result) {
 											$PROCESSED["groups"][] = array("id"=>$group_id,"title"=>$result["group_name"]);
-											$query = "	INSERT INTO `course_audience` VALUES(NULL,".$db->qstr($COURSE_ID).",'group_id',".$db->qstr($group_id).",".$enroll_start.",".$enroll_end.",1)";
+											$query = "	INSERT INTO `course_audience` VALUES(NULL,".$db->qstr($COURSE_ID).",'sgroup_id',".$db->qstr($group_id).",".$enroll_start.",".$enroll_end.",1)";
 											if(!$db->Execute($query)){
 												add_error("Unable to insert the group [".$group_id."] as an audience member for course [".$COURSE_ID."]. Please try again later.");				
 											}
@@ -1111,11 +1111,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 									<option id="-1">-- Select a Group --</option>
 								<?php
 
-								$query = "	SELECT `group_id`,`group_name` FROM `groups`";
+								$query = "	SELECT `sgroup_id`,`group_name` FROM `student_groups`";
 								$groups = $db->GetAll($query);							
 								if (isset($groups)) {
 									foreach ($groups as $group) {
-										echo "<option value=\"".$group["group_id"]."\">".html_encode($group["group_name"])."</option>";
+										echo "<option value=\"".$group["sgroup_id"]."\">".html_encode($group["group_name"])."</option>";
 									}
 								}
 								?>

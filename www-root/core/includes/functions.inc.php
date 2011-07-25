@@ -2680,8 +2680,8 @@ function group_name($group_id = 0) {
 
 	if (($group_id = (int) $group_id)) {
 		$output = array();
-		$query	= "	SELECT `group_name` FROM `groups` 
-					WHERE `group_id` = ".$db->qstr($group_id)."
+		$query	= "	SELECT `group_name` FROM `student_groups` 
+					WHERE `sgroup_id` = ".$db->qstr($group_id)."
 					AND `group_active` = '1'";
 		$result	= $db->GetRow($query);
 		if ($result) {
@@ -10191,8 +10191,8 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 									/**
 									 * Get the small groups of the proxy_id.
 									 */
-									$query = "	SELECT `group_id`
-												FROM `group_members`
+									$query = "	SELECT `sgroup_id`
+												FROM `student_group_members`
 												WHERE `proxy_id` = ".$db->qstr($student_proxy_id)."
 												AND `member_active` = 1";
 									$results = $db->GetAll($query);
@@ -10200,9 +10200,9 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 										$group_ids_string = "";
 										foreach ($results as $result) {
 											if ($group_ids_string) {
-												$group_ids_string = $db->qstr($result["group_id"]);
+												$group_ids_string = $db->qstr($result["sgroup_id"]);
 											} else {
-												$group_ids_string .= ", ".$db->qstr($result["group_id"]);
+												$group_ids_string .= ", ".$db->qstr($result["sgroup_id"]);
 											}
 										}
 										if ($group_ids_string) {

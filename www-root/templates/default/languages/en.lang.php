@@ -23,21 +23,21 @@ return array (
 			"courses" => array ("title" => "Courses"),
 			"events" => array ("title" => "Learning Events"),
 			"clerkship" => array ("title" => "Clerkship", "resource" => "clerkship", "permission" => "read"),
-	//		"search" => array ("title" => "Curriculum Search"),
-			"curriculum" => array (
-				"title" => "Curriculum",
-				"children" => array (
-					"curriculum/overview" => array (
-						"title" => "Overview"
-					),
-					"curriculum/search" => array (
-						"title" => "Search"
-					),
-					"curriculum/objectives" => array (
-						"title" => "Objective Map"
-					)
-				)
-			),
+			"search" => array ("title" => "Curriculum Search"),
+//			"curriculum" => array (
+//				"title" => "Curriculum",
+//				"children" => array (
+//					"curriculum/overview" => array (
+//						"title" => "Overview"
+//					),
+//					"curriculum/search" => array (
+//						"title" => "Search"
+//					),
+//					"curriculum/objectives" => array (
+//						"title" => "Objective Map"
+//					)
+//				)
+//			),
 			"people" => array ("title" => "People Search"),
 			"evaluations" => array ("title" => "My Evaluations"),
 			"tasks" => array ("title" => "My Tasks", "resource" => "tasktab", "permission" => "read"),

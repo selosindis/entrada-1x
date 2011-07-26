@@ -78,9 +78,9 @@ if(isset($GROUP_ID)) {
 	}
 	
 	if(isset($ORGANISATION_ID) && isset($GROUP) && isset($ROLE)) {
-		$query			= "SELECT * FROM `groups` WHERE `group_id` = ".$db->qstr($GROUP_ID)." AND `group_active` = '1'";
+		$query			= "SELECT * FROM `student_groups` WHERE `sgroup_id` = ".$db->qstr($GROUP_ID)." AND `group_active` = '1'";
 		$group_details	= $db->GetRow($query);
-		if($group_details) {
+		if($group_details || !$GROUP_ID) {
 			if($ENTRADA_ACL->amIAllowed('group', 'update')) {
 				//Groups  exists and is editable by the current users
 				$nmembers_results		= false;
@@ -101,7 +101,7 @@ if(isset($GROUP_ID)) {
 
 				//Fetch list of current members
 				$current_member_list	= array();
-				$query		= "SELECT `proxy_id` FROM `group_members` WHERE `group_id` = ".$db->qstr($GROUP_ID)." AND `member_active` = '1'";
+				$query		= "SELECT `proxy_id` FROM `student_group_members` WHERE `sgroup_id` = ".$db->qstr($GROUP_ID)." AND `member_active` = '1'";
 				$results	= $db->GetAll($query);
 				if($results) {
 					foreach($results as $result) {

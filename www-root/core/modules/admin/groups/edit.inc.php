@@ -41,13 +41,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 
 	switch ($STEP) {
 		case "2" :
-			if((isset($_POST["add_group_id"])) && ((int) trim($_POST["add_group_id"])) && strlen($_POST["group_members"])) {
-				$PROCESSED["group_id"] = (int) trim($_POST["add_group_id"]);
+			if((isset($_POST["add_group_id"])) && ((int) trim($_POST["add_group_id"])) && strlen($_POST["student_group_members"])) {
+				$PROCESSED["sgroup_id"] = (int) trim($_POST["add_group_id"]);
 			} else {
 				header("Location: ".ENTRADA_URL."/admin/".$MODULE);
 			}
 
-			$proxy_ids = explode(',', $_POST["group_members"]);
+			$proxy_ids = explode(',', $_POST["student_group_members"]);
 			$PROCESSED["updated_date"]	= time();
 			$PROCESSED["updated_by"] = $_SESSION["details"]["id"];
 
@@ -55,10 +55,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 			foreach($proxy_ids as $proxy_id) {
 				if(($proxy_id = (int) trim($proxy_id))) {
 					$count++;
-					if (!$db->GetOne("SELECT `gmember_id` FROM `group_members` WHERE `group_id` = ".$db->qstr($PROCESSED["group_id"])." AND `proxy_id` =".$db->qstr($proxy_id))) {
+					if (!$db->GetOne("SELECT `sgmember_id` FROM `student_group_members` WHERE `sgroup_id` = ".$db->qstr($PROCESSED["sgroup_id"])." AND `proxy_id` =".$db->qstr($proxy_id))) {
 						$PROCESSED["proxy_id"]	= $proxy_id;
 						$added++;
-						if (!$db->AutoExecute("`group_members`", $PROCESSED, "INSERT")) {
+						if (!$db->AutoExecute("`student_group_members`", $PROCESSED, "INSERT")) {
 							$ERROR++;
 							$ERRORSTR[]	= "Failed to insert this member into the group. Please contact a system administrator if this problem persists.";
 							application_log("error", "Error while inserting member into database. Database server said: ".$db->ErrorMsg());
@@ -90,8 +90,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 		default :			// Step 1
 			$group_ids = array();
 			
-			if(isset($PROCESSED["group_id"]) && (int)$PROCESSED["group_id"]) {
-				$GROUP_ID = $PROCESSED["group_id"];
+			if(isset($PROCESSED["sgroup_id"]) && (int)$PROCESSED["sgroup_id"]) {
+				$GROUP_ID = $PROCESSED["sgroup_id"];
 			} else {
 				$GROUP_ID = 0;
 			}
@@ -112,8 +112,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 								
 			$group_ids = $_SESSION["ids"];
 			
-			$query = "	SELECT * FROM `groups`
-						WHERE `group_id` IN (".implode(", ", $group_ids).")
+			$query = "	SELECT * FROM `student_groups`
+						WHERE `sgroup_id` IN (".implode(", ", $group_ids).")
 						ORDER By `group_name`";
 			$results	= $db->GetAll($query);
 
@@ -121,22 +121,22 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 				header("Location: ".ENTRADA_URL."/admin/".$MODULE);
 			}
 			if (!$GROUP_ID) {
-				$GROUP_ID = $results[0]["group_id"]; // $group_ids[0];
+				$GROUP_ID = $results[0]["sgroup_id"]; // $group_ids[0];
 			}
 
-			$group_name = $db->GetOne("SELECT `group_name` FROM `groups` WHERE `group_id` = ".$db->qstr($GROUP_ID));
+			$group_name = $db->GetOne("SELECT `group_name` FROM `student_groups` WHERE `sgroup_id` = ".$db->qstr($GROUP_ID));
 
-			$emembers_query	= "	SELECT c.`gmember_id`, CONCAT_WS(' ', a.`firstname`, a.`lastname`) AS `fullname`, c.`member_active`,
+			$emembers_query	= "	SELECT c.`sgmember_id`, CONCAT_WS(' ', a.`firstname`, a.`lastname`) AS `fullname`, c.`member_active`,
 								a.`username`, a.`organisation_id`, a.`username`, CONCAT_WS(':', b.`group`, b.`role`) AS `grouprole`
 								FROM `".AUTH_DATABASE."`.`user_data` AS a
 								LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 								ON a.`id` = b.`user_id`
-								INNER JOIN `group_members` c ON a.`id` = c.`proxy_id`
+								INNER JOIN `student_group_members` c ON a.`id` = c.`proxy_id`
 								WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
 								AND b.`account_active` = 'true'
 								AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
 								AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
-								AND c.`group_id` = ".$db->qstr($GROUP_ID)."
+								AND c.`sgroup_id` = ".$db->qstr($GROUP_ID)."
 								GROUP BY a.`id`
 								ORDER BY a.`lastname` ASC, a.`firstname` ASC";
 			$ONLOAD[]	= "showgroup('".$group_name."',".$GROUP_ID.")";
@@ -189,15 +189,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 						<?php
 							foreach($results as $result) {
 								$members = $db->GetRow("SELECT COUNT(*) AS members, case when (MIN(`member_active`)=0) then 1 else 0 end as `inactive`
-														FROM  `group_members` WHERE `group_id` = ".$db->qstr($result["group_id"]));
+														FROM  `student_group_members` WHERE `sgroup_id` = ".$db->qstr($result["sgroup_id"]));
 								
 									echo "<tr class=\"group".((!$result["group_active"]) ? " na" : (($members["inactive"]) ? " np" : ""))."\">";
-									echo "	<td style=\"vertical-align: top\">&nbsp;<input type=\"radio\" name=\"groups\" value=\"".$result["group_id"]."\" onclick=\"selectgroup(".$result["group_id"].",'".$result["group_name"]."');\"".(($result["group_id"] == $GROUP_ID) ?" checked=\"checked\"" : "")."/></td>\n";
-									echo "	<td><a href=\"".ENTRADA_URL."/admin/groups?section=edit&id=".$result["group_id"]."\" >".html_encode($result["group_name"])."</a></td>";
-									echo "	<td><a href=\"".ENTRADA_URL."/admin/groups?section=edit&id=".$result["group_id"]."\" >".$members["members"]."</a></td>";
+									echo "	<td style=\"vertical-align: top\">&nbsp;<input type=\"radio\" name=\"groups\" value=\"".$result["sgroup_id"]."\" onclick=\"selectgroup(".$result["sgroup_id"].",'".$result["group_name"]."');\"".(($result["sgroup_id"] == $GROUP_ID) ?" checked=\"checked\"" : "")."/></td>\n";
+									echo "	<td><a href=\"".ENTRADA_URL."/admin/groups?section=edit&id=".$result["sgroup_id"]."\" >".html_encode($result["group_name"])."</a></td>";
+									echo "	<td><a href=\"".ENTRADA_URL."/admin/groups?section=edit&id=".$result["sgroup_id"]."\" >".$members["members"]."</a></td>";
 									echo "	<td>
-										<a href=\"".ENTRADA_URL."/admin/groups?section=manage&gids=".$result["group_id"]."\"><img src=\"".ENTRADA_URL."/images/action-edit.gif\" width=\"16\" height=\"16\" alt=\"Rename Group\" title=\"Rename Group\" border=\"0\" /></a>&nbsp;
-										<a href=\"".ENTRADA_URL."/admin/groups?section=manage&ids=".$result["group_id"]."\"><img src=\"".ENTRADA_URL."/images/action-delete.gif\" width=\"16\" height=\"16\" alt=\"Delete/Activate Group\" title=\"Delete/Activate Group\" border=\"0\" /></a>
+										<a href=\"".ENTRADA_URL."/admin/groups?section=manage&gids=".$result["sgroup_id"]."\"><img src=\"".ENTRADA_URL."/images/action-edit.gif\" width=\"16\" height=\"16\" alt=\"Rename Group\" title=\"Rename Group\" border=\"0\" /></a>&nbsp;
+										<a href=\"".ENTRADA_URL."/admin/groups?section=manage&ids=".$result["sgroup_id"]."\"><img src=\"".ENTRADA_URL."/images/action-delete.gif\" width=\"16\" height=\"16\" alt=\"Delete/Activate Group\" title=\"Delete/Activate Group\" border=\"0\" /></a>
 										</td>\n";
 									echo "</tr>";
 							}
@@ -243,11 +243,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 							if ($results) {
 								foreach($results as $result) {
 									echo "<tr  class=\"event".(!$result["member_active"] ? " na" : "")."\">";
-									echo "	<td class=\"modified\"><input type=\"checkbox\" class=\"delchk\" name=\"checked[]\" onclick=\"memberChecks()\" value=\"".$result["gmember_id"]."\" /></td>\n";
+									echo "	<td class=\"modified\"><input type=\"checkbox\" class=\"delchk\" name=\"checked[]\" onclick=\"memberChecks()\" value=\"".$result["sgmember_id"]."\" /></td>\n";
 									echo "	<td><a href=\"".ENTRADA_URL."/people?profile=".$result["username"]."\" >".html_encode($result["fullname"])."</a></td>";
 									echo "	<td><a href=\"".ENTRADA_URL."/people?profile=".$result["username"]."\" >".$result["grouprole"]."</a></td>";
 									echo "	<td>
-										<a href=\"".ENTRADA_URL."/admin/groups?section=manage&mids=".$result["gmember_id"]."\"><img src=\"".ENTRADA_URL."/images/action-delete.gif\" width=\"16\" height=\"16\" alt=\"Delete/Activate Member\" title=\"Delete/Activate Member\" border=\"0\" /></a>
+										<a href=\"".ENTRADA_URL."/admin/groups?section=manage&mids=".$result["sgmember_id"]."\"><img src=\"".ENTRADA_URL."/images/action-delete.gif\" width=\"16\" height=\"16\" alt=\"Delete/Activate Member\" title=\"Delete/Activate Member\" border=\"0\" /></a>
 										</td>\n";
 									echo "</tr>";
 								}
@@ -321,7 +321,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 										}
 
 										$current_member_list	= array();
-										$query		= "SELECT `proxy_id` FROM `group_members` WHERE `group_id` = ".$db->qstr($GROUP_ID)." AND `member_active` = '1'";
+										$query		= "SELECT `proxy_id` FROM `student_group_members` WHERE `sgroup_id` = ".$db->qstr($GROUP_ID)." AND `member_active` = '1'";
 										$results	= $db->GetAll($query);
 										if($results) {
 											foreach($results as $result) {
@@ -353,7 +353,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 													sort($members[$key]['options']);
 												}
 											}
-											echo lp_multiple_select_inline('group_members', $members, array(
+											echo lp_multiple_select_inline('student_group_members', $members, array(
 													'width'	=>'100%',
 													'ajax'=>true,
 													'selectboxname'=>'group and role',
@@ -395,11 +395,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 				row.appendChild(new Element('td').update(option));
 				return table;
 			});
-			$('group_members_list').update(table);
-			ids[index] = $F('group_members').split(',').compact();
+			$('student_group_members_list').update(table);
+			ids[index] = $F('student_group_members').split(',').compact();
 		}
 
-		$('group_members_select_filter').observe('keypress', function(event){
+		$('student_group_members_select_filter').observe('keypress', function(event){
 		    if(event.keyCode == Event.KEY_RETURN) {
 				Event.stop(event);
 			}
@@ -408,16 +408,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 		//Reload the multiselect every time the category select box changes
 		var multiselect;
 
-		$('group_members_category_select').observe('change', function(event) {
+		$('student_group_members_category_select').observe('change', function(event) {
 
-			if ($('group_members_category_select').selectedIndex != 0) {
-				$('group_members_scroll').update(new Element('div', {'style':'width: 100%; height: 100%; background: transparent url(<?php echo ENTRADA_URL;?>/images/loading.gif) no-repeat center'}));
+			if ($('student_group_members_category_select').selectedIndex != 0) {
+				$('student_group_members_scroll').update(new Element('div', {'style':'width: 100%; height: 100%; background: transparent url(<?php echo ENTRADA_URL;?>/images/loading.gif) no-repeat center'}));
 	
 				//Grab the new contents
-				var updater = new Ajax.Updater('group_members_scroll', '<?php echo ENTRADA_URL."/admin/groups?section=membersapi";?>',{
+				var updater = new Ajax.Updater('student_group_members_scroll', '<?php echo ENTRADA_URL."/admin/groups?section=membersapi";?>',{
 					method:'post',
 					parameters: {
-						'ogr':$F('group_members_category_select'),
+						'ogr':$F('student_group_members_category_select'),
 						'group_id':'<?php echo $GROUP_ID;?>'
 					},
 					onSuccess: function(transport) {
@@ -425,7 +425,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 						this.makemultiselect = true;
 					},
 					onFailure: function(transport){
-						$('group_members_scroll').update(new Element('div', {'class':'display-error'}).update('There was a problem communicating with the server. An administrator has been notified, please try again later.'));
+						$('student_group_members_scroll').update(new Element('div', {'class':'display-error'}).update('There was a problem communicating with the server. An administrator has been notified, please try again later.'));
 					},
 					onComplete: function(transport) {
 						//Only if successful (the flag set above), regenerate the multiselect based on the new options
@@ -433,13 +433,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 							if(multiselect) {
 								multiselect.destroy();
 							}
-							multiselect = new Control.SelectMultiple('group_members','group_members_options',{
+							multiselect = new Control.SelectMultiple('student_group_members','student_group_members_options',{
 								labelSeparator: '; ',
 								checkboxSelector: 'table.select_multiple_table tr td.select_multiple_checkbox input[type=checkbox]',
 								categoryCheckboxSelector: 'table.select_multiple_table tr td.select_multiple_checkbox_category input[type=checkbox]',
 								nameSelector: 'table.select_multiple_table tr td.select_multiple_name label',
 								overflowLength: 70,
-								filter: 'group_members_select_filter',
+								filter: 'student_group_members_select_filter',
 								afterCheck: function(element) {
 									var tr = $(element.parentNode.parentNode);
 									tr.removeClassName('selected');
@@ -448,7 +448,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 									}
 								},
 								updateDiv: function(options, isnew) {
-									updatePeopleList(options, $('group_members_category_select').selectedIndex);
+									updatePeopleList(options, $('student_group_members_category_select').selectedIndex);
 								}
 							});
 						}

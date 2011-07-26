@@ -836,10 +836,12 @@ function get_account_data($type = "", $id = 0) {
 			case "fullname" :
 			case "lastfirst" :
 				$query = "SELECT CONCAT_WS(', ', `lastname`, `firstname`) AS `fullname` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id`=".$db->qstr($id);
+				$type = "fullname";
 			break;
 			case "wholename" :
 			case "firstlast" :
 				$query = "SELECT CONCAT_WS(' ', `firstname`, `lastname`) AS `firstlast` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id`=".$db->qstr($id);
+				$type = "firstlast";
 			break;
 			case "email" :
 				$query = "SELECT `email` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id`=".$db->qstr($id);
@@ -9171,7 +9173,7 @@ function tracking_output_filter_controls($module_type = "") {
 							echo "	<div style=\"margin: 2px 0px 10px 3px\">\n";
 							foreach ($filter_contents as $filter_key => $filter_value) {
 								echo "	<div id=\"".$filter_type."_".$filter_key."\">";
-								echo "		<a href=\"".ENTRADA_URL.$module_type."/communities?section=reports&community=".$COMMUNITY_ID."&action=filter_remove&amp;filter=".$filter_type."_".$filter_key."\" title=\"Remove this filter\">";
+								echo "		<a href=\"".ENTRADA_URL.$module_type."/communities/reports?community=".$COMMUNITY_ID."&action=filter_remove&amp;filter=".$filter_type."_".$filter_key."\" title=\"Remove this filter\">";
 								echo "		<img src=\"".ENTRADA_URL."/images/checkbox-on.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" />";
 								switch ($filter_type) {
 									case "members" :
@@ -10325,8 +10327,8 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 									/**
 									 * Get the small groups of the proxy_id.
 									 */
-									$query = "	SELECT `group_id`
-												FROM `group_members`
+									$query = "	SELECT `sgroup_id`
+												FROM `student_group_members`
 												WHERE `proxy_id` = ".$db->qstr($student_proxy_id)."
 												AND `member_active` = 1";
 									$results = $db->GetAll($query);
@@ -10334,9 +10336,9 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 										$group_ids_string = "";
 										foreach ($results as $result) {
 											if ($group_ids_string) {
-												$group_ids_string = $db->qstr($result["group_id"]);
+												$group_ids_string = $db->qstr($result["sgroup_id"]);
 											} else {
-												$group_ids_string .= ", ".$db->qstr($result["group_id"]);
+												$group_ids_string .= ", ".$db->qstr($result["sgroup_id"]);
 											}
 										}
 										if ($group_ids_string) {

@@ -89,7 +89,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 	$clinical_presentations_list = array();
 	$clinical_presentations = array();
 
-	$results = fetch_mcc_objectives(0, array(), $event_info["course_id"]);
+	$results = fetch_clinical_presentations(0, array(), $event_info["course_id"]);
 	$course_id = $event_info["course_id"];
 	if ($results) {
 		foreach ($results as $result) {
@@ -1154,7 +1154,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							echo "	<tr>\n";
 							echo "	<td>&nbsp;</td>\n";
 							echo "		<td>Course</td>\n";
-							echo "		<td>".(($event_info["course_id"]) ? "<a href=\"".ENTRADA_URL."/courses?id=".$event_info["course_id"]."\">".course_name($event_info["course_id"], true, true)."</a>" : "Not Yet Filed")."</td>\n";
+							echo "		<td>".(($event_info["course_id"]) ? "<a href=\"".ENTRADA_URL."/courses?id=".$event_info["course_id"]."\">".fetch_course_title($event_info["course_id"], true, true)."</a>" : "Not Yet Filed")."</td>\n";
 							echo "	</tr>\n";
 							if (clean_input($event_info["event_description"], array("notags", "nows")) != "") {
 								echo "	<tr>\n";

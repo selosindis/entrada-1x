@@ -90,7 +90,7 @@ if ($COURSE_ID) {
 	$results = $db->GetAll($query);
 	if ($results) {
 		?>
-		<h1><?php echo course_name($COURSE_ID); ?> Gradebook</h1>
+		<h1><?php echo fetch_course_title($COURSE_ID); ?> Gradebook</h1>
 		<table class="tableList" cellspacing="0" summary="List of Assessments">
 			<colgroup>
 				<col class="modified" />

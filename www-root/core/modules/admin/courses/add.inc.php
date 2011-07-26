@@ -47,16 +47,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 	$clinical_presentations_list = array();
 	$clinical_presentations = array();
 	
-	$ORGANISATION_ID = $ENTRADA_USER->GetActiveOrganisation();
-	$results = fetch_mcc_objectives_for_org($ENTRADA_USER->getActiveOrganisation());
-	
-	
+	$results = fetch_clinical_presentations();
 	if ($results) {
 		foreach ($results as $result) {
 			$clinical_presentations_list[$result["objective_id"]] = $result["objective_name"];
 		}
-	}
-	else {
+	} else {
 		$NOTICE++;
 		$NOTICESTR[] = "No Mandated Objectives found for this organisation.";
 		$clinical_presentations_list = false;
@@ -612,7 +608,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 
 			<?php				
 
-				list($course_objectives,$top_level_id) = courses_fetch_objectives_for_org($ORGANISATION_ID,array(0),-1,0, false, $posted_objectives);
+				list($course_objectives,$top_level_id) = courses_fetch_objectives_for_org($ENTRADA_USER->GetActiveOrganisation(), array(0), -1, 0, false, $posted_objectives);
 				require_once(ENTRADA_ABSOLUTE."/javascript/courses.js.php");
 				$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/elementresizer.js\"></script>\n";
 			?>

@@ -933,6 +933,23 @@ padding-left:20px;
 background:transparent url(../images/checkbox-off.gif) no-repeat;
 }
 
+ul.menu.none li {
+list-style-type:none;
+background:none;
+padding-left:0;
+}
+
+ul.menu.none li img {
+width:14px;
+height:14px;
+border:0;
+vertical-align:middle;
+}
+
+ul.menu.none li span {
+vertical-align:middle;
+}
+
 ul.menu li.community {
 background:transparent url(../images/list-community.gif) no-repeat;
 }
@@ -1230,17 +1247,22 @@ width:100px;
 border-left:none;
 }
 
-table.tableList tr td.notices,table.tableList tr td.accesses,table.tableList tr td.phase {
+table.tableList tr td.notices,table.tableList tr td.accesses,table.tableList tr td.term {
 width:50px;
 border-left:none;
 }
 
 table.tableList tr td.grades {
-	width: 40px;
-	border-left: none;
+width:40px;
+border-left:none;
 }
 
-table.tableList tr td.report-hours{
+table.tableList tr td.course-code {
+width:90px;
+border-left:none;
+}
+
+table.tableList tr td.report-hours {
 overflow:hidden;
 width:90px;
 border-left:none;

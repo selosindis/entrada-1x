@@ -53,15 +53,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "edit", "id" => $COURSE_ID, "step" => false)), "title" => "Editing Course");
 
 
-			$ORGANISATION_ID = $ENTRADA_USER->getActiveOrganisation();
-			
 			/** 
 			* Fetch the Clinical Presentation details.
 			*/
 			$clinical_presentations_list	= array();
 			$clinical_presentations			= array();
 
-			$results	= fetch_mcc_objectives_for_org($ORGANISATION_ID);
+			$results = fetch_clinical_presentations();
 			if ($results) {
 				foreach ($results as $result) {
 					$clinical_presentations_list[$result["objective_id"]] = $result["objective_name"];
@@ -136,12 +134,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					/**
 					 * Required field "organisation_id" / Organisation Name.
 					 */
-						if ($ENTRADA_ACL->amIAllowed(new CourseResource(null, $ORGANISATION_ID), 'create')) {
-							$PROCESSED["organisation_id"] = $ORGANISATION_ID;
+						if ($ENTRADA_ACL->amIAllowed(new CourseResource(null, $ENTRADA_USER->getActiveOrganisation()), 'create')) {
+							$PROCESSED["organisation_id"] = $ENTRADA_USER->getActiveOrganisation();
 						} else {
 							$ERROR++;
 							$ERRORSTR[] = "You do not have permission to add a course for this organisation. This error has been logged and will be investigated.";
-							application_log("Proxy id [".$_SESSION['details']['proxy_id']."] tried to eicreate a course within an organisation [".$ORGANISATION_ID."] they didn't have permissions on. ");
+							application_log("Proxy id [".$_SESSION['details']['proxy_id']."] tried to eicreate a course within an organisation [".$ENTRADA_USER->getActiveOrganisation()."] they didn't have permissions on. ");
 						}
 
 
@@ -500,7 +498,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							
 							if (!$ERROR) {
 								$NOTICE = 0;
-								$url = ENTRADA_URL."/admin/courses?organisation_id=".$ORGANISATION_ID;
+								$url = ENTRADA_URL."/admin/courses";
 								$SUCCESS++;
 								$SUCCESSSTR[]	= "You have successfully edited <strong>".html_encode($PROCESSED["course_name"])."</strong> in the system.<br /><br />".$msg;
 								$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
@@ -799,7 +797,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 
 					<?php 
 					
-						list($course_objectives,$top_level_id) = courses_fetch_objectives_for_org($ORGANISATION_ID,array($COURSE_ID),-1,0, false, $posted_objectives);
+						list($course_objectives,$top_level_id) = courses_fetch_objectives_for_org($ENTRADA_USER->getActiveOrganisation(), array($COURSE_ID), -1, 0, false, $posted_objectives);
 						require_once(ENTRADA_ABSOLUTE."/javascript/courses.js.php");
 						$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/elementresizer.js\"></script>\n";
 					?>

@@ -14,6 +14,99 @@
     
 return array (
 	/**
+	 * Core Navigation
+	 */
+	"navigation_tabs" => array (
+		"public" => array (
+			"dashboard" => array ("title" => "Dashboard"),
+			"communities" => array ("title" => "Communities"),
+			"courses" => array ("title" => "Courses"),
+			"events" => array ("title" => "Learning Events"),
+			"clerkship" => array ("title" => "Clerkship", "resource" => "clerkship", "permission" => "read"),
+	//		"search" => array ("title" => "Curriculum Search"),
+			"curriculum" => array (
+				"title" => "Curriculum",
+				"children" => array (
+					"curriculum/overview" => array (
+						"title" => "Overview"
+					),
+					"curriculum/search" => array (
+						"title" => "Search"
+					),
+					"curriculum/objectives" => array (
+						"title" => "Objective Map"
+					)
+				)
+			),
+			"people" => array ("title" => "People Search"),
+			"evaluations" => array ("title" => "My Evaluations"),
+			"tasks" => array ("title" => "My Tasks", "resource" => "tasktab", "permission" => "read"),
+			"annualreport" => array ("title" => "My Annual Report", "resource" => "annualreport", "permission" => "read"),
+			"profile" => array ("title" => "My Profile"),
+			"library" => array ("title" => "Library", "target" => "_blank"),
+			"help" => array ("title" => "Help")
+		),
+/*		@todo This is not currently used, unfortunately this exists in core/includes/settings.php in the $MODULES array.
+		We need to fix this in order to allow it to work from here. The use of the $MODULES array is silly,
+		and I believe this is something that should be handled by the ACL or is just plain unnecessary.
+
+		"admin" => array (
+			"awards" => array ("title" => "Manage Awards", "resource" => "awards", "permission" => "update"),
+			"clerkship" => array ("title" => "Manage Clerkship", "resource" => "clerkship", "permission" => "update"),
+			"courses" => array ("title" => "Manage Courses", "resource"=> "coursecontent", "permission" => "update"),
+			"evaluations" => array ("title" => "Manage Evaluations", "resource" => "evaluation", "permission" => "update"),
+			"communities" => array ("title" => "Manage Communities", "resource" => "community", "permission" => "update"),
+			"groups" => array ("title" => "Manage Groups", "resource" => "group", "permission" => "update"),
+			"events" => array ("title" => "Manage Events", "resource" => "eventcontent", "permission" => "update"),
+			"gradebook" => array ("title" => "Manage Gradebook", "resource" => "gradebook", "permission" => "update"),
+			"tasks" => array ("title" => "Manage Tasks", "resource" => "task", "permission" => "create"), 
+			"notices" => array ("title" => "Manage Notices", "resource" => "notice", "permission" => "update"),
+			"configuration" => array ("title" => "Manage Configuration", "resource" => "configuration", "permission" => "update"),
+			"objectives" => array ("title" => "Manage Objectives", "resource" => "objective", "permission" => "update"),
+			"observerships" => array ("title" => "Manage Observerships", "resource" => "observerships", "permission" => "update"),
+			"polls" => array ("title" => "Manage Polls", "resource" => "poll", "permission" => "update"),
+			"quizzes" => array ("title" => "Manage Quizzes", "resource" => "quiz", "permission" => "update"),
+			"users" => array ("title" => "Manage Users", "resource" => "user", "permission" => "update"),
+			"regionaled" => array ("title" => "Regional Education", "resource" => "regionaled", "permission" => "update"),
+			"reports" => array ("title" => "System Reports", "resource" => "reportindex", "permission" => "read"),
+			"annualreport" => array ("title" => "Annual Reports", "resource" => "annualreportadmin", "permission" => "read")			
+		)
+*/
+	),
+	
+	"events_filter_controls" => array (
+		"teacher" => array (
+			"label" => "Teacher Filters"
+		),
+		"student" => array (
+			"label" => "Student Filters"
+		),
+		"group" => array (
+			"label" => "Classes &amp; Group Filters"
+		),
+		"course" => array (
+			"label" => "Course Filters"
+		),
+		"term" => array (
+			"label" => "Term Filters"
+		),
+		"eventtype" => array (
+			"label" => "Learning Event Type Filters"
+		),
+		"cp" => array (
+			"label" => "Clinical Presentation Filters",
+			"global_lu_objectives_name" => "MCC Objectives"
+		),
+		"co" => array (
+			"label" => "Curriculum Objective Filters",
+			"global_lu_objectives_name" => "Queen's Objectives"
+		),
+		"topic" => array (
+			"label" => "Hot Topic Filters"
+		)
+	),
+	
+	/**
 	 * Global terminology used across different Entrada modules.
 	 */
     "global_button_save" => "Save",

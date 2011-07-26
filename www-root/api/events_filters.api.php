@@ -263,7 +263,7 @@ if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
 							$checked = "";
 						}
 
-						$topics[$ENTRADA_USER->getActiveOrganisation()]["options"][] = array("text" => $topic["topic_name"], "value" => "_" . $topic["topic_id"], "checked" => $checked);
+						$topics[$ENTRADA_USER->getActiveOrganisation()]["options"][] = array("text" => $topic["topic_name"], "value" => "topic_" . $topic["topic_id"], "checked" => $checked);
 					}
 				}
 

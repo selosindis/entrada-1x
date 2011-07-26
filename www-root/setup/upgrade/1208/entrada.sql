@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS `course_audience`(
 	`enroll_start` BIGINT NOT NULL, 
 	`enroll_finish` BIGINT NOT NULL, 
 	`audience_active` INT(1) NOT NULL DEFAULT '1', 
-	KEY `event_id` (`event_id`), 
+	KEY `course_id` (`course_id`), 
 	KEY `audience_type` (`audience_type`), 
 	KEY `audience_value` (`audience_value`), 
 	KEY `audience_active` (`audience_active`)

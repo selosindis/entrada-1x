@@ -196,7 +196,7 @@ switch ($ACTION) {
 	default :
 		echo "\nUsage: import-community-guests.php [options] /path/to/import-file.csv";
 		echo "\n   -usage               Brings up this help screen.";
-		echo "\n   -import              Proceeds with import to database and sends e-mail.";
+		echo "\n   -import              Proceeds with import to database.";
 		break;
 }
 echo "\n\n";

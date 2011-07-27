@@ -33,9 +33,9 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 		foreach($groups as $group){
 			$query = "	SELECT CONCAT_WS(' ',a.`firstname`,a.`lastname`) AS `fullname`, c.`group_name` 
 						FROM `".AUTH_DATABASE."`.`user_data` AS a 
-						JOIN `student_group_members` AS b ON a.`id` = b.`proxy_id` 
-						JOIN `student_groups` AS c ON b.`sgroup_id` = c.`sgroup_id` 
-						WHERE b.`sgroup_id` = ".$db->qstr($group)." 
+						JOIN `group_members` AS b ON a.`id` = b.`proxy_id` 
+						JOIN `groups` AS c ON b.`group_id` = c.`group_id` 
+						WHERE b.`group_id` = ".$db->qstr($group)." 
 						AND b.`proxy_id` = ".$db->qstr($student);
 			$result = $db->GetRow($query);
 			if($result){

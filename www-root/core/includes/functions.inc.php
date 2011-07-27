@@ -10309,6 +10309,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 							case "student" :
 								if (($user_group != "student") || ($filter_value == $proxy_id)) {
 									$student_grad_year = "";
+									$groups = "";
 									$student_proxy_id = (int) $filter_value;
 
 									/**
@@ -10327,26 +10328,26 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 									/**
 									 * Get the small groups of the proxy_id.
 									 */
-									$query = "	SELECT `sgroup_id`
-												FROM `student_group_members`
+									$query = "	SELECT `group_id`
+												FROM `group_members`
 												WHERE `proxy_id` = ".$db->qstr($student_proxy_id)."
 												AND `member_active` = 1";
 									$results = $db->GetAll($query);
 									if (count($results)) {
 										$group_ids_string = "";
 										foreach ($results as $result) {
-											if ($group_ids_string) {
-												$group_ids_string = $db->qstr($result["sgroup_id"]);
+											if (!$group_ids_string) {
+												$group_ids_string = $db->qstr($result["group_id"]);
 											} else {
-												$group_ids_string .= ", ".$db->qstr($result["sgroup_id"]);
+												$group_ids_string .= ", ".$db->qstr($result["group_id"]);
 											}
 										}
 										if ($group_ids_string) {
-											$student_groups = "(`event_audience`.`audience_type` = 'group' AND `event_audience`.`audience_value` IN (".$group_ids_string.")) OR ";
+											$groups = "(`event_audience`.`audience_type` = 'group' AND `event_audience`.`audience_value` IN (".$group_ids_string.")) OR ";
 										}
 									}
 
-									$where_student[] = "(".$student_grad_year."(`event_audience`.`audience_type` = 'proxy_id' AND `event_audience`.`audience_value` = ".$db->qstr($student_proxy_id)."))";
+									$where_student[] = "(".$student_grad_year.$groups."(`event_audience`.`audience_type` = 'proxy_id' AND `event_audience`.`audience_value` = ".$db->qstr($student_proxy_id)."))";
 								}
 							break;
 							case "grad" :
@@ -10454,7 +10455,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 							GROUP BY `events`.`event_id`";
 	}
 
-		$query_events .= "\n ORDER BY %s".($pagination ? " LIMIT %s, %s" : "");
+	$query_events .= "\n ORDER BY %s".($pagination ? " LIMIT %s, %s" : "");
 
 	/**
 	 * Get the total number of results using the generated queries above and calculate the total number

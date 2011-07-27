@@ -97,34 +97,34 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 				$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] = "content";
 			}
 
-			$proxy_ids = explode(',', $_POST["student_group_members"]);
+			$proxy_ids = explode(',', $_POST["group_members"]);
 			$PROCESSED["updated_date"]	= time();
 			$PROCESSED["updated_by"] = $_SESSION["details"]["id"];
 			
 			if (!$ERROR) {
-				$result = $db->GetRow("SELECT `sgroup_id` FROM `student_groups` WHERE `group_name` = ".$db->qstr($PROCESSED["group_name"]));
+				$result = $db->GetRow("SELECT `group_id` FROM `groups` WHERE `group_name` = ".$db->qstr($PROCESSED["group_name"]));
 				if ($result) {
 					$ERROR++;
 					$ERRORSTR[] = "The <strong>Group name</strong> already exits. The group was not created";
 				} else {
-					if (!$db->AutoExecute("student_groups", $PROCESSED, "INSERT")) {
+					if (!$db->AutoExecute("groups", $PROCESSED, "INSERT")) {
 						$ERROR++;
 						$ERRORSTR[] = "There was an error while trying to add the <strong>Group</strong> ".$PROCESSED["group_name"].".<br /><br />The system administrator was informed of this error; please try again later.";
 						application_log("error", "Unable to insert a new group ".$PROCESSED["group_name"].". Database said: ".$db->ErrorMsg());
 					}
 					$GROUP_ID = $db->Insert_Id();
-					$PROCESSED["sgroup_id"] = $GROUP_ID;
-					if (!$db->AutoExecute("student_group_organisations", $PROCESSED, "INSERT")) {
+					$PROCESSED["group_id"] = $GROUP_ID;
+					if (!$db->AutoExecute("group_organisations", $PROCESSED, "INSERT")) {
 						$ERROR++;
 						$ERRORSTR[] = "There was an error while trying to add the <strong>Group</strong> ".$PROCESSED["group_name"].".<br /><br />The system administrator was informed of this error; please try again later.";
-						application_log("error", "Unable to insert a new group organisation for sgroup_id [".$GROUP_ID."[. Database said: ".$db->ErrorMsg());
+						application_log("error", "Unable to insert a new group organisation for group_id [".$GROUP_ID."[. Database said: ".$db->ErrorMsg());
 					} else {
 						$added = 0;
 						foreach($proxy_ids as $proxy_id) {
 							if(($proxy_id = (int) trim($proxy_id))) {
 								$PROCESSED["proxy_id"]	= $proxy_id;
 								$added++;
-								if (!$db->AutoExecute("`student_group_members`", $PROCESSED, "INSERT")) {
+								if (!$db->AutoExecute("`group_members`", $PROCESSED, "INSERT")) {
 									$ERROR++;
 									$ERRORSTR[]	= "Failed to insert this member into the group. Please contact a system administrator if this problem persists.";
 									application_log("error", "Error while inserting member into database. Database server said: ".$db->ErrorMsg());
@@ -300,7 +300,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 														}
 				
 														$current_member_list	= array();
-														$query		= "SELECT `proxy_id` FROM `student_group_members` WHERE `sgroup_id` = ".$db->qstr($GROUP_ID)." AND `member_active` = '1'";
+														$query		= "SELECT `proxy_id` FROM `group_members` WHERE `group_id` = ".$db->qstr($GROUP_ID)." AND `member_active` = '1'";
 														$results	= $db->GetAll($query);
 														if($results) {
 															foreach($results as $result) {
@@ -332,7 +332,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 																	sort($members[$key]['options']);
 																}
 															}
-															echo lp_multiple_select_inline('student_group_members', $members, array(
+															echo lp_multiple_select_inline('group_members', $members, array(
 																	'width'	=>'100%',
 																	'ajax'=>true,
 																	'selectboxname'=>'group and role',
@@ -343,12 +343,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 															echo "No One Available [1]";
 														}
 													?>
-														<input class="multi-picklist" id="student_group_members" name="student_group_members" style="display: none;">
+														<input class="multi-picklist" id="group_members" name="group_members" style="display: none;">
+														<input id="group_members_index" name="group_members_index" style="display: none;">
+														<input id="group_member_ids" name="group_member_ids" style="display: none;">
 													</div>
 												</td>
 												<td style="vertical-align: top; padding-left: 20px;">
 													<h3>Members to be Added on Submission</h3>
-													<div id="student_group_members_list"></div>
+													<div id="group_members_list"></div>
 												</td>
 											</tr>
 										</tbody>
@@ -367,21 +369,38 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 		
 				//Updates the People Being Added div with all the options
 				function updatePeopleList(newoptions, index) {
-					people[index] = newoptions;
-		
-					table = people.flatten().inject(new Element('table', {'class':'member-list'}), function(table, option, i) {
-						if(i%2 == 0) {
-							row = new Element('tr');
-							table.appendChild(row);
+					if ($('group_members_index').value == index) {
+						people[index] = newoptions;
+			
+						table = people.flatten().inject(new Element('table', {'class':'member-list'}), function(table, option, i) {
+							if(i%2 == 0) {
+								row = new Element('tr');
+								table.appendChild(row);
+							}
+							row.appendChild(new Element('td').update(option));
+							return table;
+						});
+						$('group_members_list').update(table);
+						var member_ids = "";
+						ids[index] = $F('group_members').split(',').compact();
+						for (i=0; i < length.ids; i++) {
+							if (ids[i].length) {
+								for (j=0; j < ids[i].length; i++) {
+									if (!member_ids) {
+										member_ids = ids[i][j];
+									} else {
+										member_ids = member_ids + ',' + ids[i][j];
+									}
+								}
+							}
 						}
-						row.appendChild(new Element('td').update(option));
-						return table;
-					});
-					$('student_group_members_list').update(table);
-					ids[index] = $F('student_group_members').split(',').compact();
+						$('group_member_ids').value = member_ids;
+					} else {
+						$('group_members_index').value = index;
+					}
 				}
 		
-				$('student_group_members_select_filter').observe('keypress', function(event){
+				$('group_members_select_filter').observe('keypress', function(event){
 				    if(event.keyCode == Event.KEY_RETURN) {
 						Event.stop(event);
 					}
@@ -390,24 +409,25 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 				//Reload the multiselect every time the category select box changes
 				var multiselect;
 		
-				$('student_group_members_category_select').observe('change', function(event) {
+				$('group_members_category_select').observe('change', function(event) {
 		
-					if ($('student_group_members_category_select').selectedIndex != 0) {
-						$('student_group_members_scroll').update(new Element('div', {'style':'width: 100%; height: 100%; background: transparent url(<?php echo ENTRADA_URL;?>/images/loading.gif) no-repeat center'}));
+					if ($('group_members_category_select').selectedIndex != 0) {
+						$('group_members_scroll').update(new Element('div', {'style':'width: 100%; height: 100%; background: transparent url(<?php echo ENTRADA_URL;?>/images/loading.gif) no-repeat center'}));
 			
 						//Grab the new contents
-						var updater = new Ajax.Updater('student_group_members_scroll', '<?php echo ENTRADA_URL."/admin/groups?section=membersapi";?>',{
+						var updater = new Ajax.Updater('group_members_scroll', '<?php echo ENTRADA_URL."/admin/groups?section=membersapi";?>',{
 							method:'post',
 							parameters: {
-								'ogr':$F('student_group_members_category_select'),
-								'group_id':'0'
+								'ogr':$F('group_members_category_select'),
+								'group_id':'0',
+								'added_ids[]':ids[$('group_members_category_select').selectedIndex]
 							},
 							onSuccess: function(transport) {
 								//onSuccess fires before the update actually takes place, so just set a flag for onComplete, which takes place after the update happens
 								this.makemultiselect = true;
 							},
 							onFailure: function(transport){
-								$('student_group_members_scroll').update(new Element('div', {'class':'display-error'}).update('There was a problem communicating with the server. An administrator has been notified, please try again later.'));
+								$('group_members_scroll').update(new Element('div', {'class':'display-error'}).update('There was a problem communicating with the server. An administrator has been notified, please try again later.'));
 							},
 							onComplete: function(transport) {
 								//Only if successful (the flag set above), regenerate the multiselect based on the new options
@@ -415,13 +435,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 									if(multiselect) {
 										multiselect.destroy();
 									}
-									multiselect = new Control.SelectMultiple('student_group_members','student_group_members_options',{
+									multiselect = new Control.SelectMultiple('group_members','group_members_options',{
 										labelSeparator: '; ',
 										checkboxSelector: 'table.select_multiple_table tr td.select_multiple_checkbox input[type=checkbox]',
 										categoryCheckboxSelector: 'table.select_multiple_table tr td.select_multiple_checkbox_category input[type=checkbox]',
 										nameSelector: 'table.select_multiple_table tr td.select_multiple_name label',
 										overflowLength: 70,
-										filter: 'student_group_members_select_filter',
+										filter: 'group_members_select_filter',
 										afterCheck: function(element) {
 											var tr = $(element.parentNode.parentNode);
 											tr.removeClassName('selected');
@@ -430,7 +450,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 											}
 										},
 										updateDiv: function(options, isnew) {
-											updatePeopleList(options, $('student_group_members_category_select').selectedIndex);
+											updatePeopleList(options, $('group_members_category_select').selectedIndex);
 										}
 									});
 								}

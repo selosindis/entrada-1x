@@ -48,7 +48,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 		header("Location: ".ENTRADA_URL."/admin/groups");
 		exit;
 	}
-	$result = $db->GetOne("	SELECT TRIM(`group_name`) FROM `student_groups` WHERE `sgroup_id` = ".$group_ids[0]);
+	$result = $db->GetOne("	SELECT TRIM(`group_name`) FROM `groups` WHERE `group_id` = ".$group_ids[0]);
 	list($filename, $result) = preg_split('/ /', $result, 1);
 	$filename = "Group-$filename-".date("dmhi",time())."csv";
 	header("Content-Type:  application/vnd.ms-excel");
@@ -56,16 +56,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 
 	echo "\"Group Name\",\"Firstname\",\"Lastname\",\"Active\",\"Osler ID\"\n";
 
-	$query = "	SELECT * FROM `student_groups`
-				WHERE `sgroup_id` IN (".implode(", ", $group_ids).")
+	$query = "	SELECT * FROM `groups`
+				WHERE `group_id` IN (".implode(", ", $group_ids).")
 				ORDER By `group_name`";
 	$groups	= $db->GetAll($query);
 	
 	foreach ($groups as $group) {
 		$query	= "	SELECT a.`firstname`, a.`lastname`, b.`member_active`, a.`id`
 					FROM `".AUTH_DATABASE."`.`user_data` AS a
-					INNER JOIN `student_group_members` b ON a.`id` = b.`proxy_id`
-					WHERE b.`sgroup_id` = ".$db->qstr($group["sgroup_id"])."
+					INNER JOIN `group_members` b ON a.`id` = b.`proxy_id`
+					WHERE b.`group_id` = ".$db->qstr($group["group_id"])."
 					ORDER BY a.`lastname` ASC, a.`firstname` ASC";
 		$results = $db->GetAll($query);
 

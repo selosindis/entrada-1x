@@ -1164,6 +1164,7 @@ if($COMMUNITY_ID) {
 													?>
 
 								<input class="multi-picklist" id="community_members" name="community_members" style="display: none;">
+								<input id="community_members_index" name="community_members_index" style="display: none;">
 							</div>
 						</td>
 						<td style="vertical-align: top; padding-left: 20px;">
@@ -1215,18 +1216,22 @@ if($COMMUNITY_ID) {
 	var ids = [[]];
 	//Updates the People Being Added div with all the options
 	function updatePeopleList(newoptions, index) {
-		people[index] = newoptions;
-		table = people.flatten().inject(new Element('table', {'class':'member-list'}), function(table, option, i) {
-			if(i%2 == 0) {
-				row = new Element('tr');
-				table.appendChild(row);
-			}
-			row.appendChild(new Element('td').update(option));
-			return table;
-		});
-		$('community_members_list').update(table);
-		ids[index] = $F('community_members').split(',').compact();
-		$('acc_community_members').value = ids.flatten().join(',');
+		if ($('community_members_index').value == index) {
+			people[index] = newoptions;
+			table = people.flatten().inject(new Element('table', {'class':'member-list'}), function(table, option, i) {
+				if(i%2 == 0) {
+					row = new Element('tr');
+					table.appendChild(row);
+				}
+				row.appendChild(new Element('td').update(option));
+				return table;
+			});
+			$('community_members_list').update(table);
+			ids[index] = $F('community_members').split(',').compact();
+			$('acc_community_members').value = ids.flatten().join(',');
+		} else {
+			$('community_members_index').value = index;
+		}
 	}
 
 
@@ -1248,7 +1253,8 @@ if($COMMUNITY_ID) {
 				method:'post',
 				parameters: {
 					'ogr':$F('community_members_category_select'),
-					'community_id':'<?php echo $COMMUNITY_ID;?>'
+					'community_id':'<?php echo $COMMUNITY_ID;?>',
+					'added_ids[]':ids[$('community_members_category_select').selectedIndex]
 				},
 				onSuccess: function(transport) {
 					//onSuccess fires before the update actually takes place, so just set a flag for onComplete, which takes place after the update happens

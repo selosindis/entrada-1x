@@ -30,21 +30,28 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_PGRESPONSE"))) {
 		$one45_names_array[] = $db->qstr($result["one45_name"]);
 	}
 
+	$query = "SELECT max(gen_date)
+			  FROM  `pg_eval_response_rates`";
+
+	$max_gen_date = $db->GetOne($query);
+
 	$query = "SELECT percent_complete
 			  FROM  `pg_eval_response_rates`
 			  WHERE `program_name` = 'TOTALS'
-			  AND `response_type` = 'RESIDENT'";
+			  AND `response_type` = 'RESIDENT'
+			  AND gen_date = '" . $max_gen_date . "'";
 
 	$total_resident_response_rate = $db->GetOne($query);
 
 	$query = "SELECT percent_complete
 			  FROM  `pg_eval_response_rates`
 			  WHERE `program_name` = 'TOTALS'
-			  AND `response_type` = 'FACULTY'";
+			  AND `response_type` = 'FACULTY'
+			  AND gen_date = '" . $max_gen_date . "'";
 
 	$total_faculty_response_rate = $db->GetOne($query);
 ?>
-	<h3>The following ITER and Faculty Evaluation Completion Rate data covers blocks 9 to 11 as of June 15th, 2011.</h3>
+	<h3>The following ITER and Faculty Evaluation Completion Rate data covers blocks 9 to 11 as of <?php echo date_format(date_create($max_gen_date), "F j, Y"); ?></h3>
 	<br />
 <?php
 	foreach ($one45_names_array as $one45_name) {
@@ -57,7 +64,8 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_PGRESPONSE"))) {
 		// Get the response rates for this program
 		$query = "SELECT *
 			  FROM  `pg_eval_response_rates`
-			  WHERE `program_name` in (" . $one45_name . ")";
+			  WHERE `program_name` in (" . $one45_name . ")
+			  AND gen_date = '" . $max_gen_date . "'";
 
 		$results = $db->GetAll($query);
 		$resident_count = 0;

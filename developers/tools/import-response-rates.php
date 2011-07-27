@@ -104,6 +104,8 @@ switch ($ACTION) {
 								$program_response_rates["completed"] = $program_row[1];
 								$program_response_rates["distributed"] = $program_row[2];
 								$program_response_rates["percent_complete"] = $program_row[3];
+								$program_response_rates["gen_date"] = date("Y-m-d");
+
 								if ($db->AutoExecute(DATABASE_NAME . ".pg_eval_response_rates", $program_response_rates, "INSERT")) {
 									output_success("ROW: " . $row_count . " - Insert succeeded");
 								} else {

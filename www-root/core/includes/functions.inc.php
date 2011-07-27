@@ -1202,27 +1202,33 @@ function community_order_link($field_id, $field_name) {
  * @return string
  */
 function filter_name($filter_key) {
-	switch($filter_key) {
-		case "teacher":
+	switch ($filter_key) {
+		case "teacher" :
 			return "Teachers Involved";
 		break;
-		case "student":
+		case "student" :
 			return "Students Involved";
 		break;
-		case "grad":
-			return "Graduating Years Involved";
-		break;
-		case "term":
-			return "Terms Involved";
-		break;
-		case "course":
+		case "course" :
 			return "Courses Involved";
 		break;
-		case "eventtype":
+		case "group" :
+			return "Classes / Groups Involved";
+		break;
+		case "eventtype" :
 			return "Event Types";
 		break;
-		case "objective":
+		case "term" :
+			return "Terms Involved";
+		break;
+		case "cp" :
 			return "Clinical Presentations Involved";
+		break;
+		case "co" :
+			return "Curriculum Objectives Involved";
+		break;
+		case "topic" :
+			return "Hot Topics Involved";
 		break;
 		default :
 			return false;
@@ -1245,21 +1251,21 @@ function startof($type, $timestamp = 0) {
 	switch($type) {
 		case "all" :
 			return false;
-			break;
+		break;
 		case "day" :
 			return mktime(0, 0, 0, date("n", $timestamp), date("j", $timestamp), date("Y", $timestamp));
-			break;
+		break;
 		case "month" :
 		case "academic" :
 			return mktime(0, 0, 0, date("n", $timestamp), 1, date("Y", $timestamp));
-			break;
+		break;
 		case "year" :
 			return mktime(0, 0, 0, 1, 1, date("Y", $timestamp));
-			break;
+		break;
 		case "week" :
 		default :
 			return mktime(0, 0, 0, date("n", $timestamp), (date("j", $timestamp) - date("w", $timestamp)), date("Y", $timestamp));
-			break;
+		break;
 	}
 }
 
@@ -1637,14 +1643,29 @@ function fetch_curriculum_objectives_children($parent_id = 0, &$objectives) {
 }
 
 function fetch_event_topics() {
-	global $db, $ENTRADA_USER, $translate;
+	global $db, $ENTRADA_USER;
 // ALTER TABLE `events_lu_topics` ADD `active` TINYINT(1) NOT NULL DEFAULT '1' AFTER `topic_type`, ADD INDEX (`active`);
+	
+	$topic_id = (int) $topic_id;
 	
 	$query = "SELECT `topic_id`, `topic_name` FROM `events_lu_topics` WHERE `active` = '1' ORDER BY `topic_name` ASC";
 	$results = $db->GetAll($query);
 	
 	return $results;
+}
+
+function fetch_event_topic_title($topic_id = 0) {
+	global $db;
 	
+	$topic_id = (int) $topic_id;
+	
+	if ($topic_id) {
+		$query = "SELECT `topic_name` FROM `events_lu_topics` WHERE `topic_id` = ".$db->qstr($topic_id);
+
+		return $db->GetOne($query);
+	}
+	
+	return false;
 }
 
 /**
@@ -9418,23 +9439,24 @@ function events_output_filter_controls($module_type = "") {
 									case "student" :
 										echo get_account_data("fullname", $filter_value);
 									break;
-									case "grad" :
-										echo "Class of ".$filter_value;
+									case "course" :
+										echo fetch_course_title($filter_value);
 									break;
 									case "group" :
 										echo fetch_group_title($filter_value);
 									break;
-									case "course" :
-										echo fetch_course_title($filter_value);
+									case "eventtype" :
+										echo fetch_eventtype_title($filter_value);
 									break;
 									case "term" :
 										echo fetch_term_title($filter_value);
 									break;
-									case "eventtype" :
-										echo fetch_eventtype_title($filter_value);
-									break;
-									case "objective":
+									case "cp":
+									case "co":
 										echo fetch_objective_title($filter_value);
+									break;
+									case "topic":
+										echo fetch_event_topic_title($filter_value);
 									break;
 									default :
 										echo strtoupper($filter_value);
@@ -9682,6 +9704,7 @@ function events_process_filters($action = "", $module_type = "") {
 		break;
 		case "filter_edit" :
 			if (isset($_GET["filter"])) {
+				
 				$filters = explode(",", clean_input($_GET["filter"], array("nows", "lower", "notags")));
 				if (isset($filters[1])) {
 					$pieces = explode("_", $filters[0]);
@@ -9926,11 +9949,12 @@ function tracking_process_filters($action = "", $module_type = "") {
 	}
 }
 
-
-function get_page_for_statistic($action_field,$action_value){
+function get_page_for_statistic($action_field, $action_value){
 	global $db;
-	unset($query);
-	switch ($action_field){
+	
+	$query = false;
+	
+	switch ($action_field) {
 		case 'cshare_id':
 			$query = "	SELECT `folder_title` AS `page` 
 						FROM `community_shares` 
@@ -9994,7 +10018,8 @@ function get_page_for_statistic($action_field,$action_value){
 			break;							
 
 	}
-	if($query){
+	
+	if ($query) {
 		$result = $db->GetOne($query);
 		 return $result;
 	}
@@ -10151,7 +10176,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 	}	
 
 	$filter_clerkship_events = false;
-	if ($_SESSION["details"]["group"] == "student" && $ENTRADA_ACL->amIAllowed("clerkship", "read")) {
+	if (($_SESSION["details"]["group"] == "student") && $ENTRADA_ACL->amIAllowed("clerkship", "read")) {
 		$query = "	SELECT a.*, c.*
 					FROM `".CLERKSHIP_DATABASE."`.`events` AS a
 					LEFT JOIN `".CLERKSHIP_DATABASE."`.`event_contacts` AS b
@@ -10227,6 +10252,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 						`courses`.`course_code`,
 						`courses`.`course_name`,
 						`curriculum_lu_types`.`curriculum_type_id`,
+						`curriculum_lu_types`.`curriculum_type_name` AS `event_phase`,
 						`curriculum_lu_types`.`curriculum_type_name` AS `event_term`,
 						CONCAT_WS(', ', `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname`) AS `fullname`
 						FROM `events`";
@@ -10237,14 +10263,20 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 	if (is_array($filters) && !empty($filters)) {
 		$tmp_query = array();
 		$where_teacher = array();
+		$where_student = array();
 		$where_course = array();
-		$where_grad_year = array();
+		$where_group = array();
+		$where_eventtype = array();
 		$where_term = array();
-		$where_type = array();
 		$where_clinical_presentation = array();
+		$where_curriculum_objective = array();
+		$where_topic = array();
+		
 		$join_event_contacts = array();
+		
 		$contact_sql = "";
 		$objective_sql = "";
+		$topic_sql = "";
 
 		$query_count = "	SELECT COUNT(DISTINCT `events`.`event_id`) AS `total_rows`
 							FROM `events`
@@ -10261,6 +10293,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 							LEFT JOIN `courses`
 							ON `courses`.`course_id` = `events`.`course_id`
 							%OBJECTIVE_JOIN%
+							%TOPIC_JOIN%
 							WHERE `courses`.`course_active` = '1'
 							AND (`events`.`event_children` = 0 OR `events`.`event_children` IS NULL)
 							".($filter_clerkship_events && $course_ids_string ? "AND (`courses`.`course_id` NOT IN (".$course_ids_string.")\n OR (".implode("\n", $time_periods)."))" : "")."
@@ -10283,6 +10316,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 							LEFT JOIN `curriculum_lu_types`
 							ON `curriculum_lu_types`.`curriculum_type_id` = `courses`.`curriculum_type_id`
 							%OBJECTIVE_JOIN%
+							%TOPIC_JOIN%
 							WHERE `courses`.`course_active` = '1'
 							AND (`events`.`event_children` = 0 OR `events`.`event_children` IS NULL)
 							".($filter_clerkship_events && $course_ids_string ? "AND (`courses`.`course_id` NOT IN (".$course_ids_string.")\n OR (".implode("\n", $time_periods)."))" : "")."
@@ -10348,25 +10382,29 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 									}
 
 									$where_student[] = "(".$student_grad_year.$groups."(`event_audience`.`audience_type` = 'proxy_id' AND `event_audience`.`audience_value` = ".$db->qstr($student_proxy_id)."))";
+
 								}
-							break;
-							case "grad" :
-								$where_grad_year[] = "(`event_audience`.`audience_type` = 'grad_year' AND `event_audience`.`audience_value` = ".$db->qstr((int) $filter_value).")";
-							break;
-							case "smallgroup" :
-								$where_group[] = "(`event_audience`.`audience_type` = 'group' AND `event_audience`.`audience_value` = ".$db->qstr((int) $filter_value).")";
 							break;
 							case "course" :
 								$where_course[] = "(`events`.`course_id` = ".$db->qstr($filter_value).")";
 							break;
+							case "group" :
+								$where_group[] = "(`event_audience`.`audience_type` = 'group_id' AND `event_audience`.`audience_value` = ".$db->qstr((int) $filter_value).")";
+							break;
+							case "eventtype" :
+								$where_eventtype[] = "(`types`.`eventtype_id` = ".$db->qstr((int) $filter_value).")";
+							break;
 							case "term" :
 								$where_term[] = "(`curriculum_lu_types`.`curriculum_type_id` = ".$db->qstr($filter_value).")";
 							break;
-							case "eventtype" :
-								$where_type[] = "(`types`.`eventtype_id` = ".$db->qstr((int) $filter_value).")";
-							break;
-							case "objective" :
+							case "cp" :
 								$where_clinical_presentation[] = "(`event_objectives`.`objective_id` = ".$db->qstr((int) $filter_value).")";
+							break;
+							case "co" :
+								$where_curriculum_objective[] = "(`event_objectives`.`objective_id` = ".$db->qstr((int) $filter_value).")";
+							break;
+							case "topic" :
+								$where_topic[] = "(`event_topics`.`etopic_id` = ".$db->qstr((int) $filter_value).")";
 							break;
 							default :
 								continue;
@@ -10383,40 +10421,48 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 		if (isset($where_student) && count($where_student)) {
 			$tmp_query[] = implode(" OR ", $where_student);
 		}
-		if (isset($where_grad_year) && count($where_grad_year)) {
-			$tmp_query[] = implode(" OR ", $where_grad_year);
+		if (isset($where_course) && count($where_course)) {
+			$tmp_query[] = implode(" OR ", $where_course);
 		}
 		if (isset($where_group) && count($where_group)) {
 			$tmp_query[] = implode(" OR ", $where_group);
 		}
-		if (isset($where_course) && count($where_course)) {
-			$tmp_query[] = implode(" OR ", $where_course);
+		if (isset($where_eventtype) && count($where_eventtype)) {
+			$tmp_query[] = implode(" OR ", $where_eventtype);
 		}
 		if (isset($where_term) && count($where_term)) {
 			$tmp_query[] = implode(" OR ", $where_term);
 		}
-		if (isset($where_type) && count($where_type)) {
-			$tmp_query[] = implode(" OR ", $where_type);
-		}
 		if (isset($where_clinical_presentation) && count($where_clinical_presentation)) {
 			$tmp_query[] = implode(" OR ", $where_clinical_presentation);
 		}
+		if (isset($where_curriculum_objective) && count($where_curriculum_objective)) {
+			$tmp_query[] = implode(" OR ", $where_curriculum_objective);
+		}
+		if (isset($where_topic) && count($where_topic)) {
+			$tmp_query[] = implode(" OR ", $where_topic);
+		}
 
-		if (isset($tmp_query) && count($tmp_query)) {
+		if (isset($tmp_query) && !empty($tmp_query)) {
 			$query_count .= " AND (".implode(") AND (", $tmp_query).")";
 			$query_events .= " AND (".implode(") AND (", $tmp_query).")";
 		}
 
-		if (isset($join_event_contacts) && count($join_event_contacts)) {
+		if (isset($join_event_contacts) && !empty($join_event_contacts)) {
 			$contact_sql = "	LEFT JOIN `event_contacts`
 								ON `event_contacts`.`event_id` = `events`.`event_id`
 								AND (".implode(" OR ", $join_event_contacts).")";
 		}
 
-		if (isset($where_clinical_presentation) && count($where_clinical_presentation)) {
-			$objective_sql = "	LEFT JOIN `event_objectives`
+		if ((isset($where_clinical_presentation) && !empty($where_clinical_presentation)) || (isset($where_curriculum_objective) && !empty($where_curriculum_objective))) {
+			$objective_sql = "	JOIN `event_objectives`
 								ON `event_objectives`.`event_id` = `events`.`event_id`
 								AND `event_objectives`.`objective_type` = 'event'";
+		}
+
+		if (isset($where_topic) && !empty($where_topic)) {
+			$topic_sql = "	LEFT JOIN `event_topics`
+							ON `event_topics`.`event_id` = `events`.`event_id`";
 		}
 
 	 	$query_count = str_replace("%CONTACT_JOIN%", $contact_sql, $query_count);
@@ -10424,6 +10470,9 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 
 	 	$query_count = str_replace("%OBJECTIVE_JOIN%", $objective_sql, $query_count);
 		$query_events = str_replace("%OBJECTIVE_JOIN%", $objective_sql, $query_events)." GROUP BY `events`.`event_id` ";
+		
+	 	$query_count = str_replace("%TOPIC_JOIN%", $topic_sql, $query_count);
+		$query_events = str_replace("%TOPIC_JOIN%", $topic_sql, $query_events);
 	} else {
 		$query_count = "	SELECT COUNT(DISTINCT `events`.`event_id`) AS `total_rows`
 							FROM `events`
@@ -10524,6 +10573,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 	}
 
 	$query_events = sprintf($query_events, $sort_by, $limit_parameter, $results_per_page);
+	
 	$learning_events = $db->GetAll($query_events);
 	if ($learning_events) {
 		if ($_SESSION["details"]["group"] == "student") {

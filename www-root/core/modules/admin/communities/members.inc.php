@@ -359,6 +359,10 @@ if($COMMUNITY_ID) {
 								if ($MAILING_LISTS["active"]) {
 									$mail_list = new MailingList($COMMUNITY_ID);
 								}
+								$added_proxy_ids = array();
+								foreach ($proxy_ids as &$proxy_id) {
+									$added_proxy_ids = (int) $proxy_id;
+								}
 
 								foreach($proxy_ids as $proxy_id) {
 									if(($proxy_id = (int) trim($proxy_id))) {
@@ -1143,9 +1147,39 @@ if($COMMUNITY_ID) {
 																}
 															}
 
+															$added_ids = array();
+															$added_people = array();
+															$key_value = 1;
 															foreach($members as $key => $member) {
 																if(isset($member['options']) && is_array($member['options']) && !empty($member['options'])) {
 																	sort($members[$key]['options']);
+																	foreach ($members[$key]['options'] as $member_group) {
+																		$tmp_array = explode("|", $member_group["value"]);
+																		$organisation_id = $tmp_array[0];
+																		$group = $tmp_array[1];
+																		$role = $tmp_array[2];
+																		if ($added_proxy_ids) {
+																			$query = "SELECT a.`id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) as `fullname` FROM `".AUTH_DATABASE."`.`user_data` AS a
+																						JOIN `".AUTH_DATABASE."`.`user_access` AS b
+																						ON a.`id` = b.`user_id`
+																						WHERE a.`organisation_id` = ".$db->qstr($organisation_id)."
+																						AND b.`group` = ".$db->qstr($group)."
+																						".($group == "student" ? "AND b.`role` = ".$db->qstr($role) : "")."
+																						AND b.`app_id` IN (".AUTH_APP_IDS_STRING.")
+																						AND b.`account_active` = 'true'
+																						AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
+																						AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
+																						AND a.`id` IN (".implode(",", $added_proxy_ids).")";
+																			if ($member_ids = $db->GetAll($query)) {
+																				$added_ids[$key_value] = array();
+																				foreach ($member_ids as $member_id) {
+																					$added_ids[$key_value][] = (int) $member_id["id"];
+																					$added_people[$member_id["id"]] = $member_id["fullname"];
+																				}
+																			}
+																			$key_value++;
+																		}
+																	}
 																}
 															}
 
@@ -1165,12 +1199,31 @@ if($COMMUNITY_ID) {
 
 								<input class="multi-picklist" id="community_members" name="community_members" style="display: none;">
 								<input id="community_members_index" name="community_members_index" style="display: none;">
+								<input id="community_member_ids" name="community_member_ids" value="<?php  echo (isset($added_proxy_ids) && $added_proxy_ids ? implode(",", $added_proxy_ids) : "") ?>" style="display: none;">
 							</div>
 						</td>
 						<td style="vertical-align: top; padding-left: 20px;">
 							<input id="acc_community_members" style="display: none;" name="acc_community_members"/>
 							<h3>Members to be Added on Submission</h3>
-							<div id="community_members_list"></div>
+								<div id="community_members_list">
+								<?php
+									if ($added_people) {
+										echo "<table class=\"member-list\">";
+										echo "	<tr>";
+										$tmp_count = 0;
+										foreach ($added_people as $fullname) {
+											if ($tmp_count%2 == 0 && $tmp_count) {
+												echo "	</tr>";
+												echo "	<tr>";
+											}
+											$tmp_count++;
+											echo "<td>".$fullname."</td>";
+										}
+										echo "	</tr>";
+										echo "</table>";
+									}
+								?>
+								</div>
 						</td>
 				</tbody>
 			</table>
@@ -1212,8 +1265,32 @@ if($COMMUNITY_ID) {
 <script type="text/javascript">
 	setupAllTabs(true);
 
-	var people = [[]];
-	var ids = [[]];
+	<?php
+	if (isset($added_ids) && $added_ids) {
+		?>
+		var ids = [];
+		var people = [];
+		<?php
+		foreach ($added_ids as $key => $added_ids_array) {
+			if ($added_ids_array) {
+				?>
+				ids[<?php echo $key; ?>] = [<?php echo implode(",", $added_ids_array); ?>];
+				people[<?php echo $key; ?>] = [];
+				<?php
+				foreach ($added_ids_array as $id) {
+					?>
+					people[<?php echo $key; ?>].push('<?php echo $added_people[$id]; ?>');
+					<?php
+				}
+			}
+		}
+	} else { 
+		?>
+		var people = [[]];
+		var ids = [[]];
+		<?php 
+	} 
+	?>
 	//Updates the People Being Added div with all the options
 	function updatePeopleList(newoptions, index) {
 		if ($('community_members_index').value == index) {
@@ -1227,6 +1304,20 @@ if($COMMUNITY_ID) {
 				return table;
 			});
 			$('community_members_list').update(table);
+			var member_ids = "";
+			if ($F('community_members')) {
+				ids[index] = $F('community_members').split(',').compact();
+				for (i=0; i < ids.length; i++) {
+					if (ids[i] !== undefined && ids[i].length > 0) {
+						if (!member_ids) {
+							member_ids = ids[i].join(',');
+						} else {
+							member_ids = member_ids + ',' + ids[i].join(',');
+						}
+					}
+				}
+				$('community_member_ids').value = member_ids;
+			}
 			ids[index] = $F('community_members').split(',').compact();
 			$('acc_community_members').value = ids.flatten().join(',');
 		} else {

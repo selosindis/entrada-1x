@@ -9883,7 +9883,7 @@ function tracking_process_filters($action = "", $module_type = "") {
 	}
 
 	if (!isset($_SESSION[APPLICATION_IDENTIFIER]["tracking"]["filter_defaults_set"])) {
-		header("Location: ".ENTRADA_URL.$module_type."/communities?section=reports&community=".$COMMUNITY_ID."&action=filter_defaults");
+		header("Location: ".ENTRADA_URL.$module_type."/communities/reports?community=".$COMMUNITY_ID."&action=filter_defaults");
 		exit;
 	}
 }

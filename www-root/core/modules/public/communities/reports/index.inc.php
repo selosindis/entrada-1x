@@ -39,14 +39,13 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
-
 	$query				= "	SELECT * FROM `communities`
 							WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)."
 							AND `community_active` = '1'";
 
 	$community_details	= $db->GetRow($query);
 	if($community_details) {
-		$BREADCRUMB[]		= array("url" => ENTRADA_URL."/communities?".replace_query(array("section" => "modify")), "title" => "Manage Community");
+		$BREADCRUMB[]		= array("url" => ENTRADA_URL."/communities/reports", "title" => "Manage Community");
 		$community_resource = new CommunityResource($COMMUNITY_ID);
 		if($ENTRADA_ACL->amIAllowed($community_resource, 'update')) {
 			echo "<h1>".html_encode($community_details["community_title"])."</h1>\n";
@@ -698,7 +697,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 					?>
 
 		<h2 style="margin-top: 0px">Community Reports</h2>
-		<?php
+			
+<?php
 
 		tracking_process_filters($ACTION);
 
@@ -712,69 +712,28 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 
 		?>
 		<br/>
-		<div class="tableListTop">
-			<img src="<?php echo ENTRADA_URL; ?>/images/lecture-info.gif" width="15" height="15" alt="" title="" style="vertical-align: middle" />
-			<?php
-			switch ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["dtype"]) {
-				case "day" :
-					echo "Found ".count($statistics)." interaction".((count($statistics) != 1) ? "s" : "")." that take place on <strong>".date("D, M jS, Y", $dates["start_date"])."</strong>.\n";
-				break;
-				case "month" :
-					echo "Found ".count($statistics)." interaction".((count($statistics) != 1) ? "s" : "")." that take place during <strong>".date("F", $dates["start_date"])."</strong> of <strong>".date("Y", $statistics["start_date"])."</strong>.\n";
-				break;
-				case "year" :
-					echo "Found ".count($statistics)." interaction".((count($statistics) != 1) ? "s" : "")." that take place during <strong>".date("Y", $dates["start_date"])."</strong>.\n";
-				break;
-				default :
-				case "week" :
-					echo "Found ".count($statistics)." interaction".((count($statistics) != 1) ? "s" : "")." from <strong>".date("D, M jS, Y", $dates["start_date"])."</strong> to <strong>".date("D, M jS, Y", $dates["end_date"])."</strong>.\n";
-				break;
+
+		
+		<ul class="history" style="margin-left:-40px;">
+			
+		<?php 
+			foreach($statistics as $key=>$statistic){
+				$module = explode(':',$statistic['module']);
+				$action = explode('_',$statistic['action']); 
+				$activity_message = "<a href=\"".ENTRADA_URL."/communities/reports?section=user&community=".$COMMUNITY_ID."&user=".$statistic["user_id"]."\">".$statistic['fullname']."</a> ";
+				$activity_message .= ((count($action)>1)?$action[1]:$action[0])."ed the <a href=\"".ENTRADA_URL."/communities/reports?section=type&community=".$COMMUNITY_ID."&type=".$module[2]."\">".ucwords($module[2])."</a>";
+				$activity_message .= " titled <a href=\"".ENTRADA_URL."/communities/reports?section=page&community=".$COMMUNITY_ID."&page=".$statistic["action_field"]."-".$statistic["action_value"]."\">".(isset($statistic["page"])?$statistic["page"]:"-")."</a>";
+				$activity_message .= " at ".date('D M j/y h:i a', $statistic['timestamp']);
+					
+
+				echo "<li".(!($key % 2) ? " style=\"background-color: #F4F4F4\"" : "").">".$activity_message."</li>";
 			}
 			?>
-		</div>
-		<table class="tableList" cellspacing="0" cellpadding="1" summary="List of Events">
-			<colgroup>
-				<col class="modified" />
-				<col class="date" />
-				<col class="phase" />
-				<col class="teacher" />
-				<col class="title" />
-				<col class="attachment" />
-			</colgroup>
-			<thead>
-				<tr>
-					<td class="modified">&nbsp;</td>
-					<td class="date<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "date") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo public_order_link("date", "Date &amp; Time"); ?></td>
-					<td class="phase<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "action") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo public_order_link("action", "Action"); ?></td>
-					<td class="teacher<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "module") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo public_order_link("module", "Module Type"); ?></td>
-					<td class="title<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "page") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo public_order_link("page", "Page"); ?></td>
-					<td class="title<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "member") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo public_order_link("member", "Member"); ?></td>
-					<td class="attachment">&nbsp;</td>
-				</tr>
-			</thead>
-			<tbody>
-				<?php
-				if (isset($statistics) && is_array($statistics)) {
-					foreach($statistics as $statistic){
-					?>						<tr>
-					<td>&nbsp;</td>
-					<td><?php echo date('D M j/y h:i a', $statistic['timestamp']); ?></td>
-					<td><?php $action = explode('_',$statistic['action']); echo ucwords(((count($action)>1)?$action[1]:$action[0]));?></td>
-					<td><?php $module = explode(':',$statistic['module']); echo "<a href=\"".ENTRADA_URL."/communities/reports?section=type&community=".$COMMUNITY_ID."&type=".$module[2]."\">".ucwords($module[2])."</a>"; ?></td>
-					<td><?php echo "<a href=\"".ENTRADA_URL."/communities/reports?section=page&community=".$COMMUNITY_ID."&page=".$statistic["action_field"]."-".$statistic["action_value"]."\">".(isset($statistic["page"])?$statistic["page"]:"-")."</a>";?></td>
-					<td><?php echo "<a href=\"".ENTRADA_URL."/communities/reports?section=user&community=".$COMMUNITY_ID."&user=".$statistic["user_id"]."\">".$statistic['fullname']."</a>";?></td>
-					<td>&nbsp;</td>
-					</tr>
-					<?php
 
-					}
-				}
-				?>
-			</tbody>
-		</table>
+		</ul>		
 
-	<!--/TRACKING EDITS-->		
 
+	<!--/TRACKING EDITS-->	
 
 
 					<?php

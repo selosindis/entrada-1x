@@ -3400,3 +3400,18 @@ padding:10px 0 0px 0;
 width:100%;
 height:27px;
 }
+
+ul.history li,ul.history li a {
+white-space:nowrap;
+overflow:hidden;
+font-size:11px;
+text-decoration:none;
+line-height:135%;
+padding:1px;
+}
+
+ul.history li {
+padding-bottom:4px;
+padding-left:17px;
+background:transparent url(../community/templates/default/images/list-history.gif) no-repeat 0 2px;
+}

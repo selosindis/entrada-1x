@@ -342,7 +342,7 @@ switch($ACTION) {
 					}
 				}
 
-				$description  = "Course: ".(($result["course_id"]) ? "<a href=\"".ENTRADA_URL."/courses?id=".$result["course_id"]."\">".course_name($result["course_id"])."</a> ".(($result["course_num"]) ? "(".$result["course_num"].")" : "") : "Not Filed")."<br  />";
+				$description  = "Course: ".(($result["course_id"]) ? "<a href=\"".ENTRADA_URL."/courses?id=".$result["course_id"]."\">".fetch_course_title($result["course_id"])."</a> ".(($result["course_num"]) ? "(".$result["course_num"].")" : "") : "Not Filed")."<br  />";
 				$description .= "Associated Faculty:";
 				$description .= "<ol>";
 				if(count($primary_contact)) {

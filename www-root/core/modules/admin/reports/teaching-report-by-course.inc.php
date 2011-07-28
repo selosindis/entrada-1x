@@ -236,7 +236,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 			}
 						
 			if((int) $course_id) {
-				$course_name	= (($tmp_course_name = course_name($course_id)) ? $tmp_course_name : "Unknown Course Name");
+				$course_name	= (($tmp_course_name = fetch_course_title($course_id)) ? $tmp_course_name : "Unknown Course Name");
 			} else {
 				$course_name	= "Learning Events With No Assigned Course";
 			}

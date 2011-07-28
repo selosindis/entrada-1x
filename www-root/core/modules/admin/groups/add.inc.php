@@ -41,7 +41,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 } else {
 	ini_set('auto_detect_line_endings',true);
 
-	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/eventtypes_list.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/AutoCompleteList.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 
 	echo "<script language=\"text/javascript\">var DELETE_IMAGE_URL = '".ENTRADA_URL."/images/action-delete.gif';</script>";
@@ -61,347 +60,111 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 	// Error Checking
 	switch($STEP) {
 		case 2 :
-			/*
-			 *  CSV file format "group_name, first_name, last_name, status, entrada_id"
+			/**
+			 * Required field "group_name" / Group Name.
 			 */
-			$PROCESSED["updated_date"]	= time();
-			$PROCESSED["updated_by"]	= $_SESSION["details"]["id"];
-
-			if (!empty($_FILES)) {
-				if ($_FILES["file"]["error"] || !$_FILES["file"]["size"]) {
-					$ERROR++;
-					$ERRORSTR[] = "There was a problem <strong>upleading</strong>.";
-					$STEP = 1;					
-				} else {
-					$PROCESSED["group_id"]	= 0;
-					$PROCESSED["group_name"]	= "";
-					$PROCESSED["group_active"]	= 1;
-
-					$fh = fopen($_FILES["file"]["tmp_name"], 'r');
-					$line = 0;
-				    while (($data = fgetcsv($fh, 1000, ",")) !== FALSE) {
-						if ($line++) {
-							if ($num != count($data)) {
-								$ERROR++;
-								$ERRORSTR[] = "The file appears as an<strong>inconsistent</strong> csv file: varying field number.";
-								$STEP = 1;
-								break 2;
-							}
-						}
-				        $num = count($data);
-					}
-					if ($line < 2) {
-						$ERROR++;
-						$ERRORSTR[] = "The file has <strong>no data</strong> or only a header line.";
-						$STEP = 1;
-						break;
-					}
-					fclose($fh);
-					
-					$fh = fopen($_FILES["file"]["tmp_name"], 'r');
-					$line = $count = $group_count = 0;
-					while (($data = fgetcsv($fh, 1000, ",")) !== FALSE) {
-						if (!$line++) {  // Skip header
-							continue;
-						}
-						if (!strlen($data[0]) || ((!strlen($data[1]) || !strlen($data[2])) && !strlen($data[4]))) {
-							continue;
-						}
-						if (strcmp($data[0], $PROCESSED["group_name"])) { // A new or different group
-							$PROCESSED["group_name"] = $data[0];
-							$result = $db->GetOne("SELECT `group_id` FROM `groups` WHERE `group_name` = ".$db->qstr($PROCESSED["group_name"]));
-							if ($result) {
-								$PROCESSED["group_id"] = $result;
-							} else {
-								unset($PROCESSED["group_id"]);
-								if ($db->AutoExecute("groups", $PROCESSED, "INSERT")) {
-									$PROCESSED["group_id"] = $db->Insert_Id();
-								} else {
-									$ERROR++;
-									$ERRORSTR[] = "There was an error while trying to add the <strong>Group</strong> ".$PROCESSED["group_name"].".<br /><br />The system administrator was informed of this error; please try again later.";
-									application_log("error", "Unable to insert a new group ".$PROCESSED["group_name"].". Database said: ".$db->ErrorMsg());
-									$STEP = 1;
-									break 2;
-								}
-							}
-							if (!in_array($PROCESSED["group_id"],$GROUP_IDS)) {
-								$GROUP_IDS[] = $PROCESSED["group_id"];
-								$group_count++;
-							}
-						}
-						if ($id = (int)$data[4]) {  // Add the member
-							$PROCESSED["proxy_id"] = $id; // Use a given Olser id
-							$result = $db->GetRow("SELECT * FROM `group_members` WHERE `proxy_id` = ".$db->qstr($PROCESSED["proxy_id"])." AND `group_id` = ".$PROCESSED["group_id"]);
-							if ($result) {
-								$continue ;
-							} else {
-								$PROCESSED["member_active"] =  $data[3];
-								if ($db->AutoExecute("group_members", $PROCESSED, "INSERT")) {
-									$count++;
-								} else {
-									$ERROR++;
-									$ERRORSTR[] = "There was an error while trying to add the <strong>Group Member</strong> ".$PROCESSED["proxy_id"]." into ".$PROCESSED["group_name"].".<br /><br />The system administrator was informed of this error; please try again later.";
-									application_log("error", "Unable to insert a new group member ".$PROCESSED["proxy_id"]." into ".$PROCESSED["group_name"].". Database said: ".$db->ErrorMsg());
-									$STEP = 1;
-									break 2;
-								}
-							}
-						} else {  // Try the names
-							$result = $db->GetOne("	SELECT `id` FROM `".AUTH_DATABASE."`.`user_data`
-													WHERE `firstname` LIKE ".$db->qstr($data[1])." AND `lastname` LIKE ".$db->qstr($data[2]));
-							if (!$result) {
-								print_r($data);
-								continue ;
-							}
-							$PROCESSED["proxy_id"] = $result;
-							$result = $db->GetRow("SELECT * FROM `group_members` WHERE `group_name` = ".$db->qstr($PROCESSED["proxy_id"]));
-							if ($result) {
-								$continue ;
-							} else {
-								$PROCESSED["member_active"] =  $data[3];
-								if ($db->AutoExecute("group_members", $PROCESSED, "INSERT")) {
-									$count++;
-								} else {
-									$ERROR++;
-									$ERRORSTR[] = "There was an error while trying to add the <strong>Group Member</strong> ".$PROCESSED["proxy_id"]." into ".$PROCESSED["group_name"].".<br /><br />The system administrator was informed of this error; please try again later.";
-									application_log("error", "Unable to insert a new group member ".$PROCESSED["proxy_id"]." into ".$PROCESSED["group_name"].". Database said: ".$db->ErrorMsg());
-									$STEP = 1;
-									break 2;
-								}
-							}
-						}
-					}
-					fclose($fh);
-				}
-				if ($count) {
-					$url	= ENTRADA_URL."/admin/groups?section=edit&ids=".implode(",", $GROUP_IDS);
-					$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 0)";
-				}
-			} else { 
+			if ((isset($_POST["group_name"])) && ($group_name = clean_input($_POST["group_name"], array("notags", "trim")))) {
+				$PROCESSED["group_name"] = $group_name;
+			} else {
+				$ERROR++;
+				$ERRORSTR[] = "The <strong>Group Name</strong> field is required.";
+			}
 			
-				/**
-				 * Required field "prefix" / Group Name.
-				 */
-				if ((isset($_POST["prefix"])) && ($group_prefix = clean_input($_POST["prefix"], array("notags", "trim")))) {
-					$PROCESSED["group_name"] = $group_prefix;
+			/**
+			 * Required field "organisation_id" / Organisation.
+			 */
+			if ((isset($_POST["organisation_id"])) && ($organisation_id = clean_input($_POST["organisation_id"], array("trim", "int")))) {
+				$PROCESSED["organisation_id"] = $organisation_id;
+			} else {
+				$ERROR++;
+				$ERRORSTR[] = "The <strong>Organisation</strong> field is required.";
+			}
+
+			if (isset($_POST["post_action"])) {
+				switch($_POST["post_action"]) {
+					case "content" :
+						$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] = "content";
+					break;
+					case "new" :
+						$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] = "new";
+					break;
+					case "index" :
+					default :
+						$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] = "index";
+					break;
+				}
+			} else {
+				$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] = "content";
+			}
+
+			$proxy_ids = explode(',', $_POST["group_member_ids"]);
+			
+			foreach ($proxy_ids as &$proxy_id) {
+				$proxy_id = (int) $proxy_id;
+			}
+			$PROCESSED["updated_date"]	= time();
+			$PROCESSED["updated_by"] = $_SESSION["details"]["id"];
+			
+			if (!$ERROR) {
+				$result = $db->GetRow("SELECT `group_id` FROM `groups` WHERE `group_name` = ".$db->qstr($PROCESSED["group_name"]));
+				if ($result) {
+					$ERROR++;
+					$ERRORSTR[] = "The <strong>Group name</strong> already exits. The group was not created";
 				} else {
-					$ERROR++;
-					$ERRORSTR[] = "The <strong>Group Prefix</strong> field is required.";
-				}
-
-				/**
-				 * Required field "status" / Group Status.
-				 */
-				if (!((isset($_POST["group_active"])) && ($group_active = clean_input($_POST["group_active"], array("notags", "trim"))))) {
-					$ERROR++;
-					$ERRORSTR[] = "The <strong>Group Status</strong> value is required.";
-				}
-
-				/**
-				 * Non-required field "associated_faculty" / Associated Faculty (array of proxy ids).
-				 * This is actually accomplished after the event is inserted below.
-				 */
-				if (isset($_POST["group_type"])) {
-					$group_type = clean_input($_POST["group_type"], array("page_url"));
-
-					switch($group_type) {
-						case "individual" :
-							if (!((isset($_POST["number_of_groups"])) && ($number_of_groups = clean_input($_POST["number_of_groups"], array("trim", "int"))))) {
-								$ERROR++;
-								$ERRORSTR[] = "A <strong># of Groups</strong> value is required.";
-							}
-						break;
-						case "grad_year" :
-							/**
-							 * Required field "associated_grad_year" / Graduating Year
-							 * This data is inserted into the event_audience table as grad_year.
-							 */
-							if (!((isset($_POST["associated_grad_year"])) && ($associated_grad_year = clean_input($_POST["associated_grad_year"], "alphanumeric")))) {
-								$ERROR++;
-								$ERRORSTR[] = "You have chosen <strong>Entire Class Event</strong> as an <strong>Event Audience</strong> type, but have not selected a graduating year.";
-							}
-
-							if (!((isset($_POST["number"])) && ($number_of_groups = clean_input($_POST["number"], array("trim", "int"))))) {
-								$number_of_groups = 0;
-							}
-
-							if (isset($_POST["group_populate"])) {
-								$group_populate = clean_input($_POST["group_populate"], array("page_url"));
-								switch($group_populate) {
-									case "group_number" :
-										if (!$number_of_groups) {
-											$ERROR++;
-											$ERRORSTR[] = "A value for <strong># of Groups</strong> is required.";
-										}
-									break;
-									case "group_size" :
-										if (!$number_of_groups) {
-											$number_of_groups = -$number_of_groups;
-											$ERROR++;
-											$ERRORSTR[] = "A value for <strong>Group size</strong> is required.";
-										}
-									break;
-									default:
-										$ERROR++;
-										$ERRORSTR[] = "Unable to proceed because the <strong>Groups</strong> style is unrecognized.";
-									break;
-								}
-							} else {
-								$ERROR++;
-								$ERRORSTR[] = "Unable to proceed because the <strong>Groups</strong> style is unrecognized.";
-							}
-							if (isset($_POST["populate"])) {
-								$populate = 1;
-							}
-						break;
-						default :
-							$ERROR++;
-							$ERRORSTR[] = "Unable to proceed because the <strong>Grouping</strong> type is unrecognized.";
-
-							application_log("error", "Unrecognized group_type [".$_POST["group_type"]."] encountered.");
-						break;
+					if (!$db->AutoExecute("groups", $PROCESSED, "INSERT")) {
+						$ERROR++;
+						$ERRORSTR[] = "There was an error while trying to add the <strong>Group</strong> ".$PROCESSED["group_name"].".<br /><br />The system administrator was informed of this error; please try again later.";
+						application_log("error", "Unable to insert a new group ".$PROCESSED["group_name"].". Database said: ".$db->ErrorMsg());
 					}
-				} else {
-					$ERROR++;
-					$ERRORSTR[] = "Unable to proceed because the <strong>Grouping</strong> type is unrecognized.";
-
-					application_log("error", "The group_type field has not been set.");
+					$GROUP_ID = $db->Insert_Id();
+					$PROCESSED["group_id"] = $GROUP_ID;
+					if (!$db->AutoExecute("group_organisations", $PROCESSED, "INSERT")) {
+						$ERROR++;
+						$ERRORSTR[] = "There was an error while trying to add the <strong>Group</strong> ".$PROCESSED["group_name"].".<br /><br />The system administrator was informed of this error; please try again later.";
+						application_log("error", "Unable to insert a new group organisation for group_id [".$GROUP_ID."[. Database said: ".$db->ErrorMsg());
+					} else {
+						$added = 0;
+						foreach($proxy_ids as $proxy_id) {
+							if(($proxy_id = (int) trim($proxy_id))) {
+								$PROCESSED["proxy_id"]	= $proxy_id;
+								$added++;
+								if (!$db->AutoExecute("`group_members`", $PROCESSED, "INSERT")) {
+									$ERROR++;
+									$ERRORSTR[]	= "Failed to insert this member into the group. Please contact a system administrator if this problem persists.";
+									application_log("error", "Error while inserting member into database. Database server said: ".$db->ErrorMsg());
+								}
+							}
+						}
+					}
 				}
 
-				if (isset($_POST["post_action"])) {
-					switch($_POST["post_action"]) {
-						case "content" :
-							$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] = "content";
-						break;
-						case "new" :
-							$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] = "new";
+
+				switch($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"]) {
+					case "new" :
+							$url	= ENTRADA_URL."/admin/groups?section=add";
+							$msg	= "You will now be redirected to add another group; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 						break;
 						case "index" :
 						default :
-							$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] = "index";
+							$url	= ENTRADA_URL."/admin/groups";
+							$msg	= "You will now be redirected to the group index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 						break;
 					}
-				} else {
-					$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] = "content";
-				}
 
-				if (!$ERROR) {
-					$PROCESSED["group_active"] 	= ($group_active == "true") ? 1 : 0;
+					$SUCCESS++;
+					$SUCCESSSTR[] = "You have successfully added <strong>".html_encode($PROCESSED["event_title"])."</strong> to the system.<br /><br />".$msg;
+					$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
 
-					if ($number_of_groups==1) {
-						$result = $db->GetRow("SELECT `group_id` FROM `groups` WHERE `group_name` = ".$db->qstr($PROCESSED["group_name"]));
-						if ($result) {
-							$ERROR++;
-							$ERRORSTR[] = "The <strong>Group name</strong> already exits. The group was not created";
-						} else {
-							if (!$db->AutoExecute("groups", $PROCESSED, "INSERT")) {
-								$ERROR++;
-								$ERRORSTR[] = "There was an error while trying to add the <strong>Group</strong> ".$PROCESSED["group_name"].".<br /><br />The system administrator was informed of this error; please try again later.";
-								application_log("error", "Unable to insert a new group ".$PROCESSED["group_name"].". Database said: ".$db->ErrorMsg());
-							}
-							$GROUP_IDS[] = $db->Insert_Id();
-						}
+					application_log("success", "New event [".$EVENT_ID."] added to the system.");
+			} else {
+				$ERROR++;
+				$ERRORSTR[] = "There was a problem inserting group into the system. The system administrator was informed of this error; please try again later.";
 
-					} else {
-						$prefix = $PROCESSED["group_name"].' ';
+				application_log("error", "There was an error inserting a group. Database said: ".$db->ErrorMsg());
+			}
 
-						if ($group_populate == "group_size") {
-							$query	= "	SELECT COUNT(a.`id`)
-										FROM `".AUTH_DATABASE."`.`user_data` AS a
-										LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
-										ON a.`id` = b.`user_id`
-										WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
-										AND b.`account_active` = 'true'
-										AND b.`group` = 'student'
-										AND b.`role` >= ".$db->qstr($associated_grad_year);
-							$students = $db->GetOne($query);
-							$number_of_groups = ceil($students / $number_of_groups) ;
-						}
-						$dfmt = "%0".strlen((string) $number_of_groups)."d";
-
-						$result = false;
-						for ($i=1;$i<=$number_of_groups&&!$result;$i++){
-							$result = $db->GetRow("SELECT `group_id` FROM `groups` WHERE `group_name` = ".$db->qstr($prefix.sprintf($dfmt,$i)));	
-						}
-						if ($result) {
-							$ERROR++;
-							$ERRORSTR[] = "A <strong>Group name</strong> already exits. The groups were not created";
-						} else {
-							for ($i=1;$i<=$number_of_groups;$i++) {
-								$PROCESSED["group_name"] = $prefix.sprintf($dfmt,$i);
-								if (!$db->AutoExecute("groups", $PROCESSED, "INSERT")) {
-									$ERROR++;
-									$ERRORSTR[] = "There was an error while trying to add the <strong>Group</strong> ".$PROCESSED["group_name"].".<br /><br />The system administrator was informed of this error; please try again later.";
-									application_log("error", "Unable to insert a new group ".$PROCESSED["group_name"].". Database said: ".$db->ErrorMsg());
-									break;
-								}
-								$GROUP_IDS[] = $db->Insert_Id();
-							}
-						}
-					}	
-					if ($populate) {
-						unset($PROCESSED["group_name"]);
-						unset($PROCESSED["group_active"]);
-						$PROCESSED["member_active"] = 1;
-
-						$query	= "	SELECT a.`id`
-									FROM `".AUTH_DATABASE."`.`user_data` AS a
-									LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
-									ON a.`id` = b.`user_id`
-									WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
-									AND b.`account_active` = 'true'
-									AND b.`group` = 'student'
-									AND b.`role` >= ".$db->qstr($associated_grad_year)."
-									ORDER By RAND()";
-						$results = $db->GetAll($query);
-
-						$i = 0;
-						foreach($results as $result) {
-							$PROCESSED["proxy_id"] =  $result["id"];
-							$PROCESSED["group_id"] =  $GROUP_IDS[$i++];
-							if (!$db->AutoExecute("group_members", $PROCESSED, "INSERT")) {
-								$ERROR++;
-								$ERRORSTR[] = "There was an error while trying to add the <strong>Group member</strong> ".$PROCESSED["proxy_id"].".<br /><br />The system administrator was informed of this error; please try again later.";
-								application_log("error", "Unable to insert a new group member ".$PROCESSED["proxy_id"].". Database said: ".$db->ErrorMsg());
-								break;
-							}
-							if ($i==$number_of_groups) {
-								$i = 0;
-							}
-						}
-					}
-
-					switch($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"]) {
-						case "content" :
-							$url	= ENTRADA_URL."/admin/groups?section=edit&ids=".implode(",", $GROUP_IDS);
-							$msg	= "You will now be redirected to the event content page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-						break;
-						case "new" :
-								$url	= ENTRADA_URL."/admin/groups?section=add";
-								$msg	= "You will now be redirected to add more group(s); this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-							break;
-							case "index" :
-							default :
-								$url	= ENTRADA_URL."/admin/groups";
-								$msg	= "You will now be redirected to the group index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-							break;
-						}
-
-						$SUCCESS++;
-						$SUCCESSSTR[] = "You have successfully added <strong>".html_encode($PROCESSED["event_title"])."</strong> to the system.<br /><br />".$msg;
-						$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
-
-						application_log("success", "New event [".$EVENT_ID."] added to the system.");
-				} else {
-					$ERROR++;
-					$ERRORSTR[] = "There was a problem inserting group into the system. The system administrator was informed of this error; please try again later.";
-
-					application_log("error", "There was an error inserting a group. Database said: ".$db->ErrorMsg());
-				}
-
-				if ($ERROR) {
-					$STEP = 1;
-				}
+			if ($ERROR) {
+				$STEP = 1;
 			}
 		break;
 		case 1 :
@@ -418,7 +181,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 		case 1 :
 		default :
 			$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/elementresizer.js\"></script>\n";
-			$ONLOAD[] = "selectgroupOption('".$group_type."',0)";
 
 			if ($ERROR) {
 				echo display_error();
@@ -432,24 +194,55 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 						<col style="width: 20%" />
 						<col style="width: 77%" />
 					</colgroup>
+					<tfoot>
+						<tr>
+							<td colspan="3" style="padding-top: 25px">
+								<table style="width: 100%" cellspacing="0" cellpadding="0" border="0">
+									<tr>
+										<td style="width: 25%; text-align: left">
+											<input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/groups'" />
+										</td>
+										<td style="width: 75%; text-align: right; vertical-align: middle">
+											<span class="content-small">After saving:</span>
+											<select id="post_action" name="post_action">
+												<option value="new"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "new") ? " selected=\"selected\"" : ""); ?>>Add another group</option>
+												<option value="index"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "index") ? " selected=\"selected\"" : ""); ?>>Return to group list</option>
+											</select>
+											<input type="submit" class="button" value="Proceed" />
+										</td>
+									</tr>
+								</table>
+							</td>
+						</tr>
+					</tfoot>
 					<tr>
 						<td colspan="3"><h2>Group Details</h2></td>
 					</tr>
 					<tr class="prefixR">
 						<td></td>
-						<td><label for="prefix" class="form-required">Group Prefix</label></td>
-						<td><input type="text" id="prefix" name="prefix" value="<?php echo html_encode($PROCESSED["group_name"]); ?>" maxlength="255" style="width: 45%" /></td>
+						<td><label for="group_name" class="form-required">Group Name</label></td>
+						<td><input type="text" id="group_name" name="group_name" value="<?php echo html_encode($PROCESSED["group_name"]); ?>" maxlength="255" style="width: 45%" /></td>
 					</tr>
 					<tr>
 						<td colspan="3">&nbsp;</td>
 					</tr>
 					<tr>
 						<td>&nbsp;</td>
-						<td style="vertical-align: top"><label for="group_active" class="form-required">Group Status:</label></td>
+						<td><label for="organisation_id" class="form-required">Organisation</label></td>
 						<td>
-							<select id="group_active" name="group_active" style="width: 109px">
-								<option value="true"<?php echo (((!isset($group_active)) || ($group_active == "true")) ? " selected=\"selected\"" : ""); ?>>Active</option>
-								<option value="false"<?php echo (($group_active == "false") ? " selected=\"selected\"" : ""); ?>>Disabled</option>
+							<select id="organisation_id" name="organisation_id" style="width: 250px">
+							<?php
+							$query		= "SELECT `organisation_id`, `organisation_title` FROM `".AUTH_DATABASE."`.`organisations`";
+							$results	= $db->GetAll($query);
+							if ($results) {
+								foreach($results as $result) {
+									if ($ENTRADA_ACL->amIAllowed(new CourseResource(null, $result['organisation_id']), 'create')) {
+										$organisation_categories[$result["organisation_id"]] = array($result["organisation_title"]);
+										echo "<option value=\"".(int) $result["organisation_id"]."\"".(((isset($PROCESSED["organisation_id"])) && ($PROCESSED["organisation_id"] == $result["organisation_id"])) ? " selected=\"selected\"" : "").">".html_encode($result["organisation_title"])."</option>\n";
+									}
+								}
+							}
+							?>
 							</select>
 						</td>
 					</tr>
@@ -457,134 +250,302 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 						<td colspan="3">&nbsp;</td>
 					</tr>
 					<tr>
-						<td style="vertical-align: top"><input type="radio" name="group_type" id="group_type_individual" value="individual" onclick="selectgroupOption('individual',0)" style="vertical-align: middle"<?php echo (($group_type == "individual") ? " checked=\"checked\"" : ""); ?> /></td>
-						<td colspan="2" style="padding-bottom: 15px">
-							<label for="group_type_individual" class="radio-group-title">Individual Groups</label>
-							<div class="content-small">This grouping is intended for any users.</div>
-						</td>
-					</tr>
-					<tr class="group_members individual_members">
-						<td></td>
-						<td style="vertical-align: top; text-align: center"><label for="number_of_groups" class="form-required"># of Groups</label></td>
-						<td><input type="text" id="prefix" name="number_of_groups" value="<?php echo html_encode($number_of_groups); ?>" maxlength="10" style="width: 15%" />
-							<span class="content-small">   For a single group the Group Prefix is the Group name.</span>
-						</td>
-					</tr>
-					<tr>
-						<td style="vertical-align: top"><input type="radio" name="group_type" id="group_type_grad_year" value="grad_year" onclick="selectgroupOption('grad_year',0)" style="vertical-align: middle"<?php echo (($group_type == "grad_year") ? " checked=\"checked\"" : ""); ?> /></td>
-						<td colspan="2" style="padding-bottom: 15px">
-							<label for="group_type_grad_year" class="radio-group-title">Class Groups</label>
-							<div class="content-small">This grouping is intended for an entire class.</div>
-						</td>
-					</tr>
-					<tr class="group_members grad_year_members">
-						<td></td>
-						<td><label for="associated_grad_year" class="form-required">Graduating Year</label></td>
-						<td>
-							<table>
-								<colgroup>
-									<col style="width: 25%" />
-									<col style="width: 8%" />
-									<col style="width: 10%" />
-									<col style="width: 5%" />
-									<col style="width: 3%" />
-									<col style="width: 17%" />
-									<col style="width: 3%" />
-									<col style="width: 29%" />
-								</colgroup>
-								<tr>
-									<td>
-										<select id="associated_grad_year" name="associated_grad_year" style="width: 100%">
-										<?php
-										$cut_off_year = (fetch_first_year() - 3);
-										if (isset($SYSTEM_GROUPS["student"]) && !empty($SYSTEM_GROUPS["student"])) {
-											foreach ($SYSTEM_GROUPS["student"] as $class) {
-												if (clean_input($class, "numeric") >= $cut_off_year) {
-													echo "<option value=\"".$class."\"".(($associated_grad_year == $class) ? " selected=\"selected\"" : "").">Class of ".html_encode($class)."</option>\n";
-												}
-											}
-										}
-										?>
-										</select>
-									</td>
-									<td />
-									<td><input type="text" id="prefix" name="number" value="<?php echo html_encode($number_of_groups); ?>"  style="width: 100%"/></td>
-									<td />
-									<td ><input type="radio" name="group_populate" id="group_populate_group_number" value="group_number" <?php echo (($group_populate == "group_number") ? " checked=\"checked\"" : ""); ?> /></td>
-									<td><label for="group_number" class="form-required"># of Groups</label></td>
-									<td ><input type="radio" name="group_populate" id="group_populate_group_size" value="group_size" <?php echo (($group_populate == "grad_size") ? " checked=\"checked\"" : ""); ?> /></td>
-									<td><label for="group_size" class="form-required">Group Size</label></td>
-								</tr>
-							</table>
-						</td>
-					</tr>
-					<tr class="group_members grad_year_members">
-						<td colspan="2" />
-						<td>
-							<table>
-								<colgroup>
-									<col style="width: 70%" />
-									<col style="width: 10%" />
-									<col style="width: 20%" />
-								</colgroup>
-								<tr>
-									<td />
-									<td class="modified"><input type="checkbox" name="populate" value="1" <?php if($populate==1) echo "checked"; ?> /></td>
-									<td class="form-required">Populate</td>
-								</tr>
-							</table>
-						</td>
-					</tr>
-					<tr>
-						<td style="vertical-align: top"><input type="radio" name="group_type" id="group_type_file" value="file" onclick="selectgroupOption('file',1)" style="vertical-align: middle"<?php echo (($group_type == "file") ? " checked=\"checked\"" : ""); ?> /></td>
-						<td colspan="2" style="padding-bottom: 15px">
-							<label for="group_type_file" class="radio-group-title">Upload Groups</label>
-							<div class="content-small">Load groups from CSV (excel) file.</div>
-						</td>
-					</tr>
-					<tr class="group_members file_members">
-						<td></td>
-						<td style="vertical-align: top"><label for="file" class="form-required">Filename:</label></td>	
-						<td>
-							<input type="file" id="file" name="file" />
-						</td>
-					</tr>
-					<tr>
-						<td colspan="3" style="padding-top: 25px">
-							<table style="width: 100%" cellspacing="0" cellpadding="0" border="0">
-								<tr>
-									<td style="width: 25%; text-align: left">
-										<input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/groups'" />
-									</td>
-									<td style="width: 75%; text-align: right; vertical-align: middle">
-										<span class="content-small">After saving:</span>
-										<select id="post_action" name="post_action">
-											<option value="content"<?php echo (((!isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"])) || ($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "content")) ? " selected=\"selected\"" : ""); ?>>Add members to group</option>
-											<option value="new"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "new") ? " selected=\"selected\"" : ""); ?>>Add another group</option>
-											<option value="index"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "index") ? " selected=\"selected\"" : ""); ?>>Return to group list</option>
-										</select>
-										<input type="submit" class="button" value="Proceed" />
-									</td>
-								</tr>
-							</table>
+						<td colspan="3">
+							<br />
+							<div id="additions">
+								<h2 style="margin-top: 10px">Add Members</h2>
+								<form action="<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "edit", "type" => "add", "step" => 2)); ?>" method="post">
+									<table style="margin-top: 1px; width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Add Member">
+										<colgroup>
+											<col style="width: 45%" />
+											<col style="width: 10%" />
+											<col style="width: 45%" />
+										</colgroup>
+										<tbody>
+											<tr>
+												<td colspan="3" style="vertical-align: top">
+													If you would like to add users that already exist in the system to this group yourself, you can do so by clicking the checkbox beside their name from the list below.
+													Once you have reviewed the list at the bottom and are ready, click the <strong>Proceed</strong> button at the bottom to complete the process.
+												</td>
+											</tr>
+											<tr>
+												<td colspan="2" />
+												<td>
+													<div id="group_name_title"></div>
+												</td>
+											</tr>			
+											<tr>
+												<td colspan="2" style="vertical-align: top">
+													<div class="member-add-type" id="existing-member-add-type">
+													<?php
+														$nmembers_results	= false;
+				
+														$nmembers_query	= "	SELECT a.`id` AS `proxy_id`, CONCAT_WS(' ', a.`firstname`, a.`lastname`) AS `fullname`, a.`username`, a.`organisation_id`, b.`group`, b.`role`
+																			FROM `".AUTH_DATABASE."`.`user_data` AS a
+																			LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+																			ON a.`id` = b.`user_id`
+																			WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
+																			AND b.`account_active` = 'true'
+																			AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
+																			AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
+																			GROUP BY a.`id`
+																			ORDER BY a.`lastname` ASC, a.`firstname` ASC";
+				
+														//Fetch list of categories
+														$query	= "SELECT `organisation_id`,`organisation_title` FROM `".AUTH_DATABASE."`.`organisations` ORDER BY `organisation_title` ASC";
+														$organisation_results	= $db->GetAll($query);
+														if($organisation_results) {
+															$organisations = array();
+															foreach($organisation_results as $result) {
+																if($ENTRADA_ACL->amIAllowed('resourceorganisation'.$result["organisation_id"], 'create')) {
+																	$member_categories[$result["organisation_id"]] = array('text' => $result["organisation_title"], 'value' => 'organisation_'.$result["organisation_id"], 'category'=>true);
+																}
+															}
+														}
+				
+														$current_member_list	= array();
+														$query		= "SELECT `proxy_id` FROM `group_members` WHERE `group_id` = ".$db->qstr($GROUP_ID)." AND `member_active` = '1'";
+														$results	= $db->GetAll($query);
+														if($results) {
+															foreach($results as $result) {
+																if($proxy_id = (int) $result["proxy_id"]) {
+																	$current_member_list[] = $proxy_id;
+																}
+															}
+														}
+				
+														$nmembers_results = $db->GetAll($nmembers_query);
+														if($nmembers_results) {
+															$members = $member_categories;
+															foreach($nmembers_results as $member) {
+																$organisation_id = $member['organisation_id'];
+																$group = $member['group'];
+																$role = $member['role'];
+																
+																if($group == "student" && !isset($members[$organisation_id]['options'][$group.$role])) {
+																	$members[$organisation_id]['options'][$group.$role] = array('text' => $group. ' > '.$role, 'value' => $organisation_id.'|'.$group.'|'.$role);
+																} elseif ($group != "guest" && $group != "student" && !isset($members[$organisation_id]['options'][$group."all"])) {
+																	$members[$organisation_id]['options'][$group."all"] = array('text' => $group. ' > all', 'value' => $organisation_id.'|'.$group.'|all');
+																}
+															}
+				
+															$added_ids = array();
+															$added_people = array();
+															$key_value = 1;
+															foreach($members as $key => $member) {
+																if(isset($member['options']) && is_array($member['options']) && !empty($member['options'])) {
+																	sort($members[$key]['options']);
+																	foreach ($members[$key]['options'] as $member_group) {
+																		$tmp_array = explode("|", $member_group["value"]);
+																		$organisation_id = $tmp_array[0];
+																		$group = $tmp_array[1];
+																		$role = $tmp_array[2];
+																		if ($proxy_ids) {
+																			$query = "SELECT a.`id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) as `fullname` FROM `".AUTH_DATABASE."`.`user_data` AS a
+																						JOIN `".AUTH_DATABASE."`.`user_access` AS b
+																						ON a.`id` = b.`user_id`
+																						WHERE a.`organisation_id` = ".$db->qstr($organisation_id)."
+																						AND b.`group` = ".$db->qstr($group)."
+																						".($group == "student" ? "AND b.`role` = ".$db->qstr($role) : "")."
+																						AND b.`app_id` IN (".AUTH_APP_IDS_STRING.")
+																						AND b.`account_active` = 'true'
+																						AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
+																						AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
+																						AND a.`id` IN (".implode(",", $proxy_ids).")";
+																			if ($member_ids = $db->GetAll($query)) {
+																				$added_ids[$key_value] = array();
+																				foreach ($member_ids as $member_id) {
+																					$added_ids[$key_value][] = (int) $member_id["id"];
+																					$added_people[$member_id["id"]] = $member_id["fullname"];
+																				}
+																			}
+																			$key_value++;
+																		}
+																	}
+																}
+															}
+															echo lp_multiple_select_inline('group_members', $members, array(
+																	'width'	=>'100%',
+																	'ajax'=>true,
+																	'selectboxname'=>'group and role',
+																	'default-option'=>'-- Select Group & Role --',
+																	'category_check_all'=>true));
+				
+														} else {
+															echo "No One Available [1]";
+														}
+													?>
+														<input class="multi-picklist" id="group_members" name="group_members" style="display: none;">
+														<input id="group_members_index" name="group_members_index" style="display: none;">
+														<input id="group_member_ids" name="group_member_ids" value="<?php  echo (isset($proxy_ids) && $proxy_ids ? implode(",", $proxy_ids) : "") ?>" style="display: none;">
+													</div>
+												</td>
+												<td style="vertical-align: top; padding-left: 20px;">
+													<h3>Members to be Added on Submission</h3>
+													<div id="group_members_list">
+													<?php
+														if ($added_people) {
+															echo "<table class=\"member-list\">";
+															echo "	<tr>";
+															$tmp_count = 0;
+															foreach ($added_people as $fullname) {
+																if ($tmp_count%2 == 0 && $tmp_count) {
+																	echo "	</tr>";
+																	echo "	<tr>";
+																}
+																$tmp_count++;
+																echo "<td>".$fullname."</td>";
+															}
+															echo "	</tr>";
+															echo "</table>";
+														}
+													?>
+													</div>
+												</td>
+											</tr>
+										</tbody>
+									</table>
+									<input type="hidden" id="add_group_id" name="add_group_id" value="" />
+								</form>
+							</div>
 						</td>
 					</tr>
 				</table>
 			</form>
 			<script type="text/javascript">
-				function selectgroupOption(type,files) {
-					$$('.group_members').invoke('hide');
-					$$('.'+type+'_members').invoke('show');
-					if (files) {
-						$$('.prefixR').invoke('hide');
-						$('file').style.display = 'block';
-						$('file').disabled = false;
-						$('frmSubmit').enctype="multipart/form-data";
+				<?php
+				if (isset($added_ids) && $added_ids) {
+					?>
+					var ids = [];
+					var people = [];
+					<?php
+					foreach ($added_ids as $key => $added_ids_array) {
+						if ($added_ids_array) {
+							?>
+							ids[<?php echo $key; ?>] = [<?php echo implode(",", $added_ids_array); ?>];
+							people[<?php echo $key; ?>] = [];
+							<?php
+							foreach ($added_ids_array as $id) {
+								?>
+								people[<?php echo $key; ?>].push('<?php echo $added_people[$id]; ?>');
+								<?php
+							}
+						}
+					}
+				} else { 
+					?>
+					var people = [[]];
+					var ids = [[]];
+					<?php 
+				} 
+				?>
+				var disablestatus = 0;
+		
+				//Updates the People Being Added div with all the options
+				function updatePeopleList(newoptions, index) {
+					if ($('group_members_index').value == index) {
+						people[index] = newoptions;
+						table = people.flatten().inject(new Element('table', {'class':'member-list'}), function(table, option, i) {
+							if(i%2 == 0) {
+								row = new Element('tr');
+								table.appendChild(row);
+							}
+							row.appendChild(new Element('td').update(option));
+							return table;
+						});
+						$('group_members_list').update(table);
+						var member_ids = "";
+						if ($F('group_members')) {
+							ids[index] = $F('group_members').split(',').compact();
+							$('group_member_ids').value = ids.flatten().join(',');
+						}
 					} else {
-						$$('.prefixR').invoke('show');
-						$('frmSubmit').enctype="application/x-www-form-urlencoded";
-						$('file').style.display = 'none';
-						$('file').disabled = true;
+						$('group_members_index').value = index;
+					}
+				}
+		
+				$('group_members_select_filter').observe('keypress', function(event){
+				    if(event.keyCode == Event.KEY_RETURN) {
+						Event.stop(event);
+					}
+				});
+		
+				//Reload the multiselect every time the category select box changes
+				var multiselect;
+		
+				$('group_members_category_select').observe('change', function(event) {
+		
+					if ($('group_members_category_select').selectedIndex != 0) {
+						$('group_members_scroll').update(new Element('div', {'style':'width: 100%; height: 100%; background: transparent url(<?php echo ENTRADA_URL;?>/images/loading.gif) no-repeat center'}));
+			
+						//Grab the new contents
+						var updater = new Ajax.Updater('group_members_scroll', '<?php echo ENTRADA_URL."/admin/groups?section=membersapi";?>',{
+							method:'post',
+							parameters: {
+								'ogr':$F('group_members_category_select'),
+								'group_id':'0',
+								'added_ids[]':ids[$('group_members_category_select').selectedIndex]
+							},
+							onSuccess: function(transport) {
+								//onSuccess fires before the update actually takes place, so just set a flag for onComplete, which takes place after the update happens
+								this.makemultiselect = true;
+							},
+							onFailure: function(transport){
+								$('group_members_scroll').update(new Element('div', {'class':'display-error'}).update('There was a problem communicating with the server. An administrator has been notified, please try again later.'));
+							},
+							onComplete: function(transport) {
+								//Only if successful (the flag set above), regenerate the multiselect based on the new options
+								if(this.makemultiselect) {
+									if(multiselect) {
+										multiselect.destroy();
+									}
+									multiselect = new Control.SelectMultiple('group_members','group_members_options',{
+										labelSeparator: '; ',
+										checkboxSelector: 'table.select_multiple_table tr td.select_multiple_checkbox input[type=checkbox]',
+										categoryCheckboxSelector: 'table.select_multiple_table tr td.select_multiple_checkbox_category input[type=checkbox]',
+										nameSelector: 'table.select_multiple_table tr td.select_multiple_name label',
+										overflowLength: 70,
+										filter: 'group_members_select_filter',
+										afterCheck: function(element) {
+											var tr = $(element.parentNode.parentNode);
+											tr.removeClassName('selected');
+											if(element.checked) {
+												tr.addClassName('selected');
+											}
+										},
+										updateDiv: function(options, isnew) {
+											updatePeopleList(options, $('group_members_category_select').selectedIndex);
+										}
+									});
+								}
+							}
+						});
+					}
+				});
+
+				function toggleDisabled(el) {
+					try {
+						el.disabled = !el.disabled;
+						}
+					catch(E){
+					}
+					if (el.childNodes && el.childNodes.length > 0) {
+						for (var x = 0; x < el.childNodes.length; x++) {
+							toggleDisabled(el.childNodes[x]);
+						}
+					}
+				}
+				function memberChecks() {
+					if ($$('.delchk:checked').length&&!disablestatus) {
+						disablestatus = 1;
+						toggleDisabled($('additions'),true);
+						$('delbutton').style.display = 'block';
+						$('additions').fade({ duration: 0.3, to: 0.25 }); 
+					} else if (!$$('.delchk:checked').length&&disablestatus) {
+						disablestatus = 0;
+						toggleDisabled($('additions'),false);
+						$('delbutton').style.display = 'none';
+						$('additions').fade({ duration: 0.3, to: 1.0 });
 					}
 				}
 			</script>

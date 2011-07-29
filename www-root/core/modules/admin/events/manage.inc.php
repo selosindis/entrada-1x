@@ -89,7 +89,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 	$clinical_presentations_list = array();
 	$clinical_presentations = array();
 
-	$results = fetch_mcc_objectives(0, array(), $event_info["course_id"]);
+	$results = fetch_clinical_presentations(0, array(), $event_info["course_id"]);
 	$course_id = $event_info["course_id"];
 	if ($results) {
 		foreach ($results as $result) {
@@ -202,7 +202,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			}
 
 
-			if ($ENTRADA_ACL->amIAllowed(new EventResource($event_info["event_id"], $event_info["course_id"], $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"]), 'update')) {	
+			if ($ENTRADA_ACL->amIAllowed(new EventResource($event_info["event_id"], $event_info["course_id"], $event_info["organisation_id"]), 'update')) {	
 				/**
 				 * Required field "event_title" / Event Title.
 				 */
@@ -264,7 +264,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								AND `course_active` = '1'";
 					$result	= $db->GetRow($query);
 					if ($result) {
-						if ($ENTRADA_ACL->amIAllowed(new EventResource(null, $course_id, $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"]), "create")) {
+						if ($ENTRADA_ACL->amIAllowed(new EventResource(null, $course_id, $user->getActiveOrganisation()), "create")) {
 							$PROCESSED["course_id"] = $course_id;
 						} else {
 							$ERROR++;
@@ -322,7 +322,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			} else {
 				$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] = "content";
 			}
-			if ($ENTRADA_ACL->amIAllowed(new EventContentResource($event_info["event_id"], $event_info["course_id"], $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"]), 'update')) {	
+			if ($ENTRADA_ACL->amIAllowed(new EventContentResource($event_info["event_id"], $event_info["course_id"], $event_info["organisation_id"]), 'update')) {	
 				/**
 				 * Event Description
 				 */
@@ -422,7 +422,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				}
 			}
 			
-			if ($ENTRADA_ACL->amIAllowed(new EventResource($event_info["event_id"], $event_info["course_id"], $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"]), 'update')) {	
+			if ($ENTRADA_ACL->amIAllowed(new EventResource($event_info["event_id"], $event_info["course_id"], $event_info["organisation_id"]), 'update')) {	
 				/**
 				 * Non-required field "associated_faculty" / Associated Faculty (array of proxy ids).
 				 * This is actually accomplished after the event is inserted below.
@@ -455,7 +455,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						$PROCESSED["session"]["event_id"] = $session_id;
 					}
 					
-					if ($ENTRADA_ACL->amIAllowed(new EventResource($session_id, $event_info["course_id"], $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"]), 'update')) {
+					if ($ENTRADA_ACL->amIAllowed(new EventResource($session_id, $event_info["course_id"], $event_info["organisation_id"]), 'update')) {
 						/**
 						 * Required field "event_start" / Event Date & Time Start (validated through validate_calendars function).
 						 */
@@ -628,7 +628,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								application_log("error", "There was an error inserting a new event. Database said: ".$db->ErrorMsg());
 							}
 						}
-						if ($session_updated == true && $ENTRADA_ACL->amIAllowed(new EventResource($session_id, $event_info["course_id"], $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"]), 'update')) {
+						if ($session_updated == true && $ENTRADA_ACL->amIAllowed(new EventResource($session_id, $event_info["course_id"], $event_info["organisation_id"]), 'update')) {
 							$query = "DELETE FROM `event_audience` WHERE `event_id` = ".$db->qstr($PROCESSED["session"]["event_id"]);
 							if ($db->Execute($query)) {
 								$query = "DELETE FROM `event_eventtypes` WHERE `event_id` = ".$db->qstr($PROCESSED["session"]["event_id"]);
@@ -859,7 +859,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 		case 1 :
 		default :
 			$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/AutoCompleteList.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
-			if ($ENTRADA_ACL->amIAllowed(new EventResource($result["event_id"], $result["course_id"], $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"]), 'update')) {
+			if ($ENTRADA_ACL->amIAllowed(new EventResource($event_info["event_id"], $event_info["course_id"], $event_info["organisation_id"]), 'update')) {
 				$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/eventtypes_list.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 			}
 			$HEAD[]		= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/tabpane/tabpane.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
@@ -1005,7 +1005,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						</tr>
 					</tfoot>
 					<?php
-					if (!$ENTRADA_ACL->amIAllowed(new EventResource($result["event_id"], $result["course_id"], $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"]), 'update')) {
+					if (!$ENTRADA_ACL->amIAllowed(new EventResource($event_info["event_id"], $event_info["course_id"], $event_info["organisation_id"]), 'update')) {
 					?>
 						<tr>
 							<td colspan="3"><h1 class="event-title"><?php echo html_encode($event_info["event_title"]); ?></h1></td>
@@ -1040,7 +1040,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						</tr>
 						<?php
 					}
-					if ($ENTRADA_ACL->amIAllowed(new EventResource($result["event_id"], $result["course_id"], $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"]), 'update')) {
+					if ($ENTRADA_ACL->amIAllowed(new EventResource($event_info["event_id"], $event_info["course_id"], $event_info["organisation_id"]), 'update')) {
 					?>
 					<tr>
 						<td></td>
@@ -1154,7 +1154,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							echo "	<tr>\n";
 							echo "	<td>&nbsp;</td>\n";
 							echo "		<td>Course</td>\n";
-							echo "		<td>".(($event_info["course_id"]) ? "<a href=\"".ENTRADA_URL."/courses?id=".$event_info["course_id"]."\">".course_name($event_info["course_id"], true, true)."</a>" : "Not Yet Filed")."</td>\n";
+							echo "		<td>".(($event_info["course_id"]) ? "<a href=\"".ENTRADA_URL."/courses?id=".$event_info["course_id"]."\">".fetch_course_title($event_info["course_id"], true, true)."</a>" : "Not Yet Filed")."</td>\n";
 							echo "	</tr>\n";
 							if (clean_input($event_info["event_description"], array("notags", "nows")) != "") {
 								echo "	<tr>\n";
@@ -1214,7 +1214,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						<td colspan="3">&nbsp;</td>
 					</tr>
 					<?php
-					if ($ENTRADA_ACL->amIAllowed(new EventResource($event_info["event_id"], $event_info["course_id"], $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"]), 'update')) {
+					if ($ENTRADA_ACL->amIAllowed(new EventResource($event_info["event_id"], $event_info["course_id"], $event_info["organisation_id"]), 'update')) {
 					?>
 					<tr>
 						<td></td>
@@ -1356,7 +1356,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 											$selected = false;
 											$selected_id = 0;
 											foreach ($event_info["sessions"] as $key => $result) {
-												if ((!isset($selected_session_id) && !$selected && ($ENTRADA_ACL->amIAllowed(new EventResource($result["event_id"], $result["course_id"], $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"]), 'update') || $ENTRADA_ACL->amIAllowed(new EventContentResource($result["event_id"], $result["course_id"], $result["organisation_id"]), "update"))) || $result["event_id"] == $selected_session_id) {
+												if ((!isset($selected_session_id) && !$selected && ($ENTRADA_ACL->amIAllowed(new EventResource($result["event_id"], $result["course_id"], $result["organisation_id"]), 'update') || $ENTRADA_ACL->amIAllowed(new EventContentResource($result["event_id"], $result["course_id"], $result["organisation_id"]), "update"))) || $result["event_id"] == $selected_session_id) {
 													$selected = true;
 													$selected_id = $result["event_id"];
 													echo "<input type=\"hidden\" value=\"".$result["event_id"]."\" id=\"current-session\"  name=\"current_session\" />";
@@ -1368,7 +1368,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 													echo "</div>\n";
 													echo "<div class=\"session-list\"".($page_count != $chosen_page ? " style=\"display: none;\"" : "")." id=\"page-".$page_count."\">\n";
 												}
-												if ($ENTRADA_ACL->amIAllowed(new EventResource($result["event_id"], $result["course_id"], $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"]), 'update') || $ENTRADA_ACL->amIAllowed(new EventContentResource($result["event_id"], $result["course_id"], $result["organisation_id"]), "update")) {
+												if ($ENTRADA_ACL->amIAllowed(new EventResource($result["event_id"], $result["course_id"], $result["organisation_id"]), 'update') || $ENTRADA_ACL->amIAllowed(new EventContentResource($result["event_id"], $result["course_id"], $result["organisation_id"]), "update")) {
 													?>
 													<div id="session-line-<?php echo $result["event_id"]; ?>" class="event-session enabled<?php echo $selected_id == $result["event_id"] ? " selected" : ""; ?>">
 														<div id="session-<?php echo $result["event_id"]; ?>" onclick="loadSession(<?php echo $result["event_id"]; ?>)" class="session-entry">
@@ -1419,13 +1419,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 									}
 									?>
 									<div style="height: 15px; border-top: 1px solid #CCCCCC; position: absolute; bottom: 20px; width: 100%;">
-										<div class="session-button<?php echo ($ENTRADA_ACL->amIAllowed(new EventResource($result["event_id"], $result["course_id"], $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"]), 'create') ? "\" onclick=\"addSession()\" title=\"Add a new session" : " disabled\" title=\"[Disabled] Add a new session"); ?>">
+										<div class="session-button<?php echo ($ENTRADA_ACL->amIAllowed(new EventResource($event_info["event_id"], $event_info["course_id"], $event_info["organisation_id"]), 'create') ? "\" onclick=\"addSession()\" title=\"Add a new session" : " disabled\" title=\"[Disabled] Add a new session"); ?>">
 											+
 										</div>
-										<div class="session-button remove-button<?php echo ($ENTRADA_ACL->amIAllowed(new EventResource($result["event_id"], $result["course_id"], $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"]), 'delete') ? "\" onclick=\"removeSession()\" title=\"Remove the selected session" : " disabled\" title=\"[Disabled] Remove the selected session"); ?>">
+										<div class="session-button remove-button<?php echo ($ENTRADA_ACL->amIAllowed(new EventResource($event_info["event_id"], $event_info["course_id"], $event_info["organisation_id"]), 'delete') ? "\" onclick=\"removeSession()\" title=\"Remove the selected session" : " disabled\" title=\"[Disabled] Remove the selected session"); ?>">
 											-
 										</div>
-										<div class="session-button edit-button<?php echo ($ENTRADA_ACL->amIAllowed(new EventResource($result["event_id"], $result["course_id"], $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"]), 'update') ? "\" onclick=\"renameSession()\" title=\"Rename the selected session" : " disabled\" title=\"[Disabled] Rename the selected session"); ?>">
+										<div class="session-button edit-button<?php echo ($ENTRADA_ACL->amIAllowed(new EventResource($event_info["event_id"], $event_info["course_id"], $event_info["organisation_id"]), 'update') ? "\" onclick=\"renameSession()\" title=\"Rename the selected session" : " disabled\" title=\"[Disabled] Rename the selected session"); ?>">
 											<img src="<?php echo ENTRADA_RELATIVE; ?>/images/action-edit.gif" />
 										</div>
 									</div>
@@ -1495,7 +1495,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 														<col style="width: 75%" />
 													</colgroup>
 													<?php
-													if ($ENTRADA_ACL->amIAllowed(new EventResource($result["event_id"], $result["course_id"], $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"]), 'update')) {
+													if ($ENTRADA_ACL->amIAllowed(new EventResource($result["event_id"], $result["course_id"], $result["organisation_id"]), 'update')) {
 														echo generate_calendar("event_start", "Date and Time", true, $result["event_start"]);
 													?>
 													<tr>
@@ -1598,7 +1598,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 														</td>
 													</tr>
 													<?php
-													if ($ENTRADA_ACL->amIAllowed(new EventResource($result["event_id"], $result["course_id"], $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"]), 'update')) {
+													if ($ENTRADA_ACL->amIAllowed(new EventResource($result["event_id"], $result["course_id"], $result["organisation_id"]), 'update')) {
 													?>
 													<tr>
 														<td colspan="3">&nbsp;</td>
@@ -2519,7 +2519,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						</td>
 					</tr>
 					<?php
-					if ($ENTRADA_ACL->amIAllowed(new EventResource($result["event_id"], $result["course_id"], $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"]), 'update')) {
+					if ($ENTRADA_ACL->amIAllowed(new EventResource($event_info["event_id"], $event_info["course_id"], $event_info["organisation_id"]), 'update')) {
 						?>
 						<tr>
 							<td colspan="3"><h2>Time Release Options</h2></td>

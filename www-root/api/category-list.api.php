@@ -89,5 +89,3 @@ if (isset($_POST["cid"]) && $_SESSION["isAuthorized"]) {
 		}
 	}
 }
-
-?>

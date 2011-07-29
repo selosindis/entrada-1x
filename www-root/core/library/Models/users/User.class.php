@@ -101,8 +101,16 @@ class User {
 	 * Returns the id of the user
 	 * @return int
 	 */
-	public function getID() {
+	public function getProxyId() {
 		return $this->id;
+	}
+
+	/**
+	 * Returns the id of the user
+	 * @return int
+	 */
+	public function getID() {
+		return $this->getProxyId();
 	}
 		
 	/**
@@ -405,13 +413,18 @@ class User {
 	 */
 	private function getAccess() {
 		global $db;
-		$query = "SELECT * FROM `".AUTH_DATABASE."`.`user_access` WHERE `user_id` = ? AND `account_active` = 'true'
-				  AND (`access_starts` = '0' OR `access_starts` < ?) AND (`access_expires` = '0' OR `access_expires` >=  ?)
-				  AND `app_id` = ?";
+		$query = "	SELECT *
+					FROM `".AUTH_DATABASE."`.`user_access`
+					WHERE `user_id` = ?
+					AND `account_active` = 'true'
+					AND (`access_starts` = '0' OR `access_starts` < ?)
+					AND (`access_expires` = '0' OR `access_expires` >= ?)
+					AND `app_id` = ?";
 		$result = $db->getRow($query, array($this->getID(), time(), time(), AUTH_APP_ID));
 		if ($result) {
-			$this->group = $result['group'];
-			$this->role = $result['role'];
+			$this->group = $result["group"];
+			$this->role = $result["role"];
+			
 			return true;
 		}			
 	}

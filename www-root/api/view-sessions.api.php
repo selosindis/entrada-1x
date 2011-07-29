@@ -699,7 +699,7 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 						} else {
 							$course_audience_included = false;
 						}
-						foreach ($PROCESSED["associated_group_ids"] as $group_id) {
+						foreach ($PROCESSED["associated_group_idgroup_ids"] as $group_id) {
 							if ($group_ids_string) {
 								$group_ids_string .= ",group_".$group_id;
 							} else {

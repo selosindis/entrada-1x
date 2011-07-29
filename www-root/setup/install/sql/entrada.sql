@@ -3369,37 +3369,8 @@ CREATE TABLE IF NOT EXISTS `settings` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `settings` (`shortname`, `value`) VALUES
-('version_db', '1208 '),
+('version_db', '1209 '),
 ('version_entrada', '1.2.0');
-
-CREATE TABLE `small_groups` (
-  `sgroup_id` int(11) NOT NULL AUTO_INCREMENT,
-  `sgcategory_id` int(11) NOT NULL,
-  `group_name` varchar(64) NOT NULL,
-  `group_active` tinyint(1) NOT NULL DEFAULT '1',
-  `updated_date` int(11) DEFAULT NULL,
-  `updated_by` int(11) DEFAULT NULL,
-  PRIMARY KEY (`sgroup_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
-CREATE TABLE `small_group_categories` (
-  `sgcategory_id` int(11) NOT NULL AUTO_INCREMENT,
-  `category_name` varchar(64) NOT NULL,
-  `category_active` tinyint(1) NOT NULL DEFAULT '1',
-  `updated_date` int(11) DEFAULT NULL,
-  `updated_by` int(11) DEFAULT NULL,
-  PRIMARY KEY (`sgcategory_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
-CREATE TABLE `small_group_members` (
-  `sgmember_id` int(11) NOT NULL AUTO_INCREMENT,
-  `sgroup_id` int(11) NOT NULL,
-  `proxy_id` int(11) NOT NULL,
-  `member_active` tinyint(1) NOT NULL DEFAULT '1',
-  `updated_by` int(11) DEFAULT NULL,
-  `updated_date` int(11) DEFAULT NULL,
-  PRIMARY KEY (`sgmember_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `statistics` (
   `statistic_id` int(12) NOT NULL AUTO_INCREMENT,
@@ -3750,7 +3721,7 @@ CREATE TABLE IF NOT EXISTS `mtd_categories` (
   `category_code` varchar(3) NOT NULL,
   `category_description` varchar(100) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 ;
 
 CREATE TABLE IF NOT EXISTS `mtd_facilities` (
   `id` int(11) NOT NULL ,
@@ -3758,7 +3729,7 @@ CREATE TABLE IF NOT EXISTS `mtd_facilities` (
   `facility_name` varchar(50) NOT NULL,
   `kingston` int(1) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 ;
 
 CREATE TABLE IF NOT EXISTS `mtd_locale_duration` (
   `id` int(11) NOT NULL ,
@@ -3766,21 +3737,21 @@ CREATE TABLE IF NOT EXISTS `mtd_locale_duration` (
   `percent_time` int(3) NOT NULL,
   `schedule_id` int(11) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 ;
 
 CREATE TABLE IF NOT EXISTS `mtd_moh_program_codes` (
   `id` int(11) NOT NULL ,
   `program_code` varchar(3) NOT NULL,
   `program_description` varchar(100) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 ;
 
 CREATE TABLE IF NOT EXISTS `mtd_moh_service_codes` (
   `id` int(11) NOT NULL ,
   `service_code` varchar(3) NOT NULL,
   `service_description` varchar(50) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 ;
 
 CREATE TABLE IF NOT EXISTS `mtd_schedule` (
   `id` int(11) NOT NULL ,
@@ -3790,28 +3761,28 @@ CREATE TABLE IF NOT EXISTS `mtd_schedule` (
   `resident_id` int(11) NOT NULL,
   `creator_id` int(11) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 ;
 
 CREATE TABLE IF NOT EXISTS `mtd_schools` (
   `id` int(11) NOT NULL ,
   `school_code` varchar(3) NOT NULL,
   `school_description` varchar(100) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 ;
 
 CREATE TABLE IF NOT EXISTS `mtd_pgme_moh_programs` (
   `id` int(11) NOT NULL ,
   `pgme_program_name` varchar(100) NOT NULL,
   `moh_service_name` varchar(100) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 ;
 
 CREATE TABLE IF NOT EXISTS `mtd_type` (
   `id` int(12) NOT NULL AUTO_INCREMENT,
   `type_code` varchar(1) NOT NULL,
   `type_description` varchar(100) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 
 INSERT INTO `mtd_type` (`id`, `type_code`, `type_description`) VALUES
 (1, 'I', 'in-patient/emergency'),
@@ -3822,28 +3793,36 @@ CREATE TABLE IF NOT EXISTS `eventtype_organisation`(
 `organisation_id` INT(12) NOT NULL 
 ) ENGINE = MyISAM DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `groups` (
-  `group_id` int(12) NOT NULL AUTO_INCREMENT,
-  `group_name` varchar(255) NOT NULL,
-  `parent_id` INT DEFAULT NULL,
-  `group_active` int(1) NOT NULL DEFAULT '1',
-  `updated_date` bigint(64) NOT NULL,
-  `updated_by` int(12) NOT NULL,
-  PRIMARY KEY (`group_id`),
-  FULLTEXT KEY `group_title` (`group_name`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 ;
+CREATE TABLE IF NOT EXISTS `student_groups` (
+  `sgroup_id` int(11) NOT NULL AUTO_INCREMENT,
+  `group_name` varchar(64) NOT NULL,
+  `group_active` tinyint(1) NOT NULL DEFAULT '1',
+  `updated_date` int(11) DEFAULT NULL,
+  `updated_by` int(11) DEFAULT NULL,
+  PRIMARY KEY (`sgroup_id`)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `group_members` (
-  `gmember_id` int(12) NOT NULL AUTO_INCREMENT,
-  `group_id` int(12) NOT NULL DEFAULT '0',
-  `proxy_id` int(12) NOT NULL DEFAULT '0',
-  `member_active` int(1) NOT NULL DEFAULT '1',
-  `updated_date` bigint(64) NOT NULL DEFAULT '0',
-  `updated_by` int(12) NOT NULL DEFAULT '0',
-  PRIMARY KEY (`gmember_id`),
-  KEY `group_id` (`group_id`,`proxy_id`,`updated_date`,`updated_by`),
+CREATE TABLE IF NOT EXISTS `student_group_members` (
+  `sgmember_id` int(11) NOT NULL AUTO_INCREMENT,
+  `sgroup_id` int(11) NOT NULL,
+  `proxy_id` int(11) NOT NULL,
+  `member_active` tinyint(1) NOT NULL DEFAULT '1',
+  `updated_date` int(11) DEFAULT NULL,
+  `updated_by` int(11) DEFAULT NULL,
+  PRIMARY KEY (`sgmember_id`)
+  KEY `group_id` (`sgroup_id`,`proxy_id`,`updated_date`,`updated_by`),
   KEY `member_active` (`member_active`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `student_group_organisations` (
+  `sgorganisation_id` int(11) NOT NULL AUTO_INCREMENT,
+  `sgroup_id` int(11) NOT NULL,
+  `organisation_id` int(11) NOT NULL,
+  `updated_by` int(11) DEFAULT NULL,
+  `updated_date` int(11) DEFAULT NULL,
+  PRIMARY KEY (`sgorganisation_id`)
+  KEY `group_id` (`sgroup_id`,`organisation_id`,`updated_date`,`updated_by`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `pg_eval_response_rates` (
   `id` int(12) NOT NULL AUTO_INCREMENT,
@@ -3852,15 +3831,16 @@ CREATE TABLE IF NOT EXISTS `pg_eval_response_rates` (
   `completed` int(10) NOT NULL,
   `distributed` int(10) NOT NULL,
   `percent_complete` int(3) NOT NULL,
+   `gen_date` date NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `pg_one45_community` (
   `id` int(12) NOT NULL AUTO_INCREMENT,
   `one45_name` varchar(50) NOT NULL,
   `community_name` varchar(50) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `pg_blocks` (
   `id` int(12) NOT NULL AUTO_INCREMENT,
@@ -3869,7 +3849,7 @@ CREATE TABLE IF NOT EXISTS `pg_blocks` (
   `end_date` date NOT NULL,
   `year` varchar(9) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `pg_blocks` (`id`, `block_name`, `start_date`, `end_date`, `year`) VALUES
 (1, '1', '2010-07-01', '2010-07-26', '2010-2011'),

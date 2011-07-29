@@ -39,6 +39,7 @@ if (!defined("PARENT_INCLUDED")) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
+	
 	$USE_QUERY = false;
 	$EVENT_ID = 0;
 	$RESULT_ID = 0;
@@ -85,26 +86,9 @@ if (!defined("PARENT_INCLUDED")) {
 	} elseif (isset($_GET["rid"])) {
 		$RESULT_ID = (int) trim($_GET["rid"]);
 
-		if (($RESULT_ID) || ($RESULT_ID === 0)) {
-			/**
-			 * Provide the queries with the columns to order by.
-			 */
-			switch ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) {
-				case "teacher" :
-					$sort_by = "`fullname` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]).", `events`.`event_start` ASC";
-				break;
-				case "title" :
-					$sort_by = "`events`.`event_title` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]).", `events`.`event_start` ASC";
-				break;
-				case "phase" :
-					$sort_by = "`events`.`event_phase` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]).", `events`.`event_start` ASC";
-				break;
-				case "date" :
-				default :
-					$sort_by = "`events`.`event_start` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]);
-				break;
-			}
-
+		if ($RESULT_ID || ($RESULT_ID === 0)) {
+			$sort_by = events_fetch_sorting_query($_SESSION[APPLICATION_IDENTIFIER]["events"]["sb"], $_SESSION[APPLICATION_IDENTIFIER]["events"]["so"]);
+			
 			if (isset($_GET["community"]) && $community_id = ((int)$_GET["community"])) {
 				if (isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["community_page"][$community_id]["previous_query"]["query"])) {
 					$query	= sprintf($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["community_page"][$community_id]["previous_query"]["query"], $sort_by, $RESULT_ID, 1);
@@ -121,7 +105,7 @@ if (!defined("PARENT_INCLUDED")) {
 				}
 			} else {
 				if (isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["query"])) {
-					$query	= sprintf($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["query"], $sort_by, $RESULT_ID, 1);
+					$query = sprintf($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["query"], $sort_by, $RESULT_ID, 1);
 					$result	= ((USE_CACHE) ? $db->CacheGetRow(CACHE_TIMEOUT, $query) : $db->GetRow($query));
 					if ($result) {
 						$USE_QUERY = true;
@@ -171,10 +155,10 @@ if (!defined("PARENT_INCLUDED")) {
 			break;
 		}
 
-		$sidebar_html  = "<ul class=\"menu\">\n";
-		$sidebar_html .= "	<li class=\"on\"><a href=\"".ENTRADA_URL."/events".(($EVENT_ID) ? "?".replace_query(array("id" => $EVENT_ID, "action" => false)) : "")."\">Student View</a></li>\n";
+		$sidebar_html  = "<ul class=\"menu none\">\n";
+		$sidebar_html .= "	<li><a href=\"".ENTRADA_RELATIVE."/events".(($EVENT_ID) ? "?".replace_query(array("id" => $EVENT_ID, "action" => false)) : "")."\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-on.gif\" alt=\"\" /> <span>Student View</span></a></li>\n";
 		if (($admin_wording) && ($admin_url)) {
-			$sidebar_html .= "<li class=\"off\"><a href=\"".$admin_url."\">".html_encode($admin_wording)."</a></li>\n";
+			$sidebar_html .= "<li><a href=\"".$admin_url."\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-off.gif\" alt=\"\" /> <span>".html_encode($admin_wording)."</span></a></li>\n";
 		}
 		$sidebar_html .= "</ul>\n";
 
@@ -615,7 +599,7 @@ if (!defined("PARENT_INCLUDED")) {
 					echo "			</tr>\n";
 					echo "			<tr>\n";
 					echo "				<td>Course</td>\n";
-					echo "				<td>".(($event_info["course_id"]) ? "<a href=\"".ENTRADA_URL."/courses?id=".$event_info["course_id"]."\">".course_name($event_info["course_id"], true, true)."</a>" : "Not Yet Filed")."</td>\n";
+					echo "				<td>".(($event_info["course_id"]) ? "<a href=\"".ENTRADA_URL."/courses?id=".$event_info["course_id"]."\">".fetch_course_title($event_info["course_id"], true, true)."</a>" : "Not Yet Filed")."</td>\n";
 					echo "			</tr>\n";
 					echo "			<tr>\n";
 					echo "				<td colspan=\"2\">&nbsp;</td>\n";
@@ -1168,22 +1152,20 @@ if (!defined("PARENT_INCLUDED")) {
 				}
 				?>
 			</div>
-			<table class="tableList" cellspacing="0" cellpadding="1" summary="List of Events">
+			<table class="tableList" cellspacing="0" cellpadding="1" summary="List of Learning Events">
 				<colgroup>
 					<col class="modified" />
 					<col class="date" />
-					<col class="phase" />
-					<col class="teacher" />
+					<col class="course-code" />
 					<col class="title" />
 					<col class="attachment" />
 				</colgroup>
 				<thead>
 					<tr>
 						<td class="modified">&nbsp;</td>
-						<td class="date<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "date") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo public_order_link("date", "Date &amp; Time"); ?></td>
-						<td class="phase<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "phase") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo public_order_link("phase", "Phase"); ?></td>
-						<td class="teacher<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "teacher") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo public_order_link("teacher", "Teacher"); ?></td>
-						<td class="title<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "title") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo public_order_link("title", "Event Title"); ?></td>
+						<td class="date<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["events"]["sb"] == "date") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["events"]["so"]) : ""); ?>"><?php echo public_order_link("date", "Date &amp; Time"); ?></td>
+						<td class="course-code<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["events"]["sb"] == "course") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["events"]["so"]) : ""); ?>"><?php echo public_order_link("course", "Course"); ?></td>
+						<td class="title<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["events"]["sb"] == "title") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["events"]["so"]) : ""); ?>"><?php echo public_order_link("title", "Event Title"); ?></td>
 						<td class="attachment">&nbsp;</td>
 					</tr>
 				</thead>
@@ -1238,8 +1220,7 @@ if (!defined("PARENT_INCLUDED")) {
 							}
 							echo "	</td>\n";
 							echo "	<td class=\"date\"><a href=\"".$url."\" title=\"Event Date\">".date(DEFAULT_DATE_FORMAT, $result["event_start"])."</a></td>\n";
-							echo "	<td class=\"phase\"><a href=\"".$url."\" title=\"Intended For Phase ".html_encode($result["event_phase"])."\">".html_encode($result["event_phase"])."</a></td>\n";
-							echo "	<td class=\"teacher\"><a href=\"".$url."\" title=\"Primary Teacher: ".html_encode($result["fullname"])."\">".html_encode($result["fullname"])."</a></td>\n";
+							echo "	<td class=\"course-code\"><a href=\"".$url."\" title=\"Course: ".html_encode($result["course_name"])."\">".html_encode($result["course_code"])."</a></td>\n";
 							echo "	<td class=\"title\"><a href=\"".$url."\" title=\"Event Title: ".html_encode($result["event_title"])."\">".html_encode($result["event_title"])."</a></td>\n";
 							echo "	<td class=\"attachment\">".(($attachments) ? "<img src=\"".ENTRADA_URL."/images/attachment.gif\" width=\"16\" height=\"16\" alt=\"Contains ".$attachments." attachment".(($attachments != 1) ? "s" : "")."\" title=\"Contains ".$attachments." attachment".(($attachments != 1) ? "s" : "")."\" />" : "<img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"16\" height=\"16\" alt=\"\" title=\"\" style=\"vertical-align: middle\" />")."</td>\n";
 							echo "</tr>\n";
@@ -1303,43 +1284,10 @@ if (!defined("PARENT_INCLUDED")) {
 		echo "</form>\n";
 
 		/**
-		 * Sidebar item that will provide another method for sorting, ordering, etc.
+		 * Output the sidebar for sorting and legend.
 		 */
-		$sidebar_html  = "Sort columns:\n";
-		$sidebar_html .= "<ul class=\"menu\">\n";
-		$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) == "date") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/events?".replace_query(array("sb" => "date"))."\" title=\"Sort by Date &amp; Time\">by date &amp; time</a></li>\n";
-		$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) == "phase") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/events?".replace_query(array("sb" => "phase"))."\" title=\"Sort by Phase\">by phase</a></li>\n";
-		$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) == "teacher") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/events?".replace_query(array("sb" => "teacher"))."\" title=\"Sort by Teacher\">by primary teacher</a></li>\n";
-		$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) == "title") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/events?".replace_query(array("sb" => "title"))."\" title=\"Sort by Event Title\">by event title</a></li>\n";
-		$sidebar_html .= "</ul>\n";
-		$sidebar_html .= "Order columns:\n";
-		$sidebar_html .= "<ul class=\"menu\">\n";
-		$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) == "asc") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/events?".replace_query(array("so" => "asc"))."\" title=\"Ascending Order\">in ascending order</a></li>\n";
-		$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) == "desc") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/events?".replace_query(array("so" => "desc"))."\" title=\"Descending Order\">in descending order</a></li>\n";
-		$sidebar_html .= "</ul>\n";
-		$sidebar_html .= "Rows per page:\n";
-		$sidebar_html .= "<ul class=\"menu\">\n";
-		$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) == "5") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/events?".replace_query(array("pp" => "5"))."\" title=\"Display 5 Rows Per Page\">5 rows per page</a></li>\n";
-		$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) == "15") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/events?".replace_query(array("pp" => "15"))."\" title=\"Display 15 Rows Per Page\">15 rows per page</a></li>\n";
-		$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) == "25") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/events?".replace_query(array("pp" => "25"))."\" title=\"Display 25 Rows Per Page\">25 rows per page</a></li>\n";
-		$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) == "50") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/events?".replace_query(array("pp" => "50"))."\" title=\"Display 50 Rows Per Page\">50 rows per page</a></li>\n";
-		$sidebar_html .= "</ul>\n";
-		$sidebar_html .= "&quot;Show Only&quot; settings:\n";
-		$sidebar_html .= "<ul class=\"menu\">\n";
-		$sidebar_html .= "	<li class=\"item\"><a href=\"".ENTRADA_URL."/events?".replace_query(array("action" => "filter_defaults"))."\" title=\"Apply default filters\">apply default filters</a></li>\n";
-		$sidebar_html .= "	<li class=\"item\"><a href=\"".ENTRADA_URL."/events?".replace_query(array("action" => "filter_removeall"))."\" title=\"Remove all filters\">remove all filters</a></li>\n";
-		$sidebar_html .= "</ul>\n";
-
-		new_sidebar_item("Sort Results", $sidebar_html, "sort-results", "open");
-
-		$sidebar_html  = "<div style=\"margin: 2px 0px 10px 3px; font-size: 10px\">\n";
-		$sidebar_html .= "	<div><img src=\"".ENTRADA_URL."/images/legend-updated.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" style=\"vertical-align: middle\" /> recently updated</div>\n";
-		$sidebar_html .= "	<div><img src=\"".ENTRADA_URL."/images/legend-individual.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" style=\"vertical-align: middle\" /> individual learning event</div>\n";
-		$sidebar_html .= "</div>\n";
-
-		new_sidebar_item("Learning Event Legend", $sidebar_html, "event-legend", "open");
+		events_output_sidebar();
 
 		$ONLOAD[] = "initList()";
 	}
 }
-?>

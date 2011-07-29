@@ -51,9 +51,9 @@ if((isset($_GET["group"])) && ((int) trim($_GET["group"]))) {
 }
 
 if((isset($_GET["action"])) && ($tmp_action_type = clean_input(trim($_GET["action"]), "alphanumeric"))) {
-	$ACTION	= strcmp($tmp_action_type,'all') ? 0 : 1;
+	$ACTION	= strcmp($tmp_action_type,"all") ? 0 : 1;
 } elseif((isset($_POST["action"])) && ($tmp_action_type = clean_input(trim($_POST["action"]), "alphanumeric"))) {
-	$ACTION	= strcmp($tmp_action_type,'all') ? 0 : 1;
+	$ACTION	= strcmp($tmp_action_type,"all") ? 0 : 1;
 } else {
 	$ACTION = 0;
 }
@@ -65,7 +65,7 @@ if(isset($GROUP_ID)) {
 
 	//Figure out the organisation, group, and role requested
 	if(isset($_POST["ogr"])) {
-		$pieces = explode('|', $_POST["ogr"]);
+		$pieces = explode("|", $_POST["ogr"]);
 		if(isset($pieces[0])) {
 			$ORGANISATION_ID = clean_input($pieces[0], array("trim", "int"));
 		}
@@ -76,12 +76,19 @@ if(isset($GROUP_ID)) {
 			$ROLE = clean_input($pieces[2], array("trim", "alphanumeric"));
 		}
 	}
+
+	if((isset($_POST["added_ids"])) && (is_array($_POST["added_ids"])) && count($_POST["added_ids"])) {
+		$previously_added_ids = array();
+		foreach ($_POST["added_ids"] as $id) {
+			$previously_added_ids[] = (int) trim($id);
+		}
+	}
 	
 	if(isset($ORGANISATION_ID) && isset($GROUP) && isset($ROLE)) {
 		$query			= "SELECT * FROM `groups` WHERE `group_id` = ".$db->qstr($GROUP_ID)." AND `group_active` = '1'";
 		$group_details	= $db->GetRow($query);
-		if($group_details) {
-			if($ENTRADA_ACL->amIAllowed('group', 'update')) {
+		if($group_details || !$GROUP_ID) {
+			if($ENTRADA_ACL->amIAllowed("group", "update")) {
 				//Groups  exists and is editable by the current users
 				$nmembers_results		= false;
 				$nmembers_query	= "	SELECT a.`id` AS `proxy_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, a.`username`, a.`organisation_id`, b.`group`, b.`role`
@@ -91,7 +98,7 @@ if(isset($GROUP_ID)) {
 									WHERE (( 1 = ".$db->qstr($ACTION).") OR (
 									a.`organisation_id` = ".$db->qstr($ORGANISATION_ID)."
 									AND b.`group` = ".$db->qstr($GROUP)."
-									".($ROLE != 'all' ? "AND b.`role` = ".$db->qstr($ROLE) : "")."))
+									".($ROLE != "all" ? "AND b.`role` = ".$db->qstr($ROLE) : "")."))
 									AND b.`app_id` IN (".AUTH_APP_IDS_STRING.")
 									AND b.`account_active` = 'true'
 									AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
@@ -114,26 +121,26 @@ if(isset($GROUP_ID)) {
 				if($nmembers_query != "") {
 					$nmembers_results = $db->GetAll($nmembers_query);
 					if($nmembers_results) {
-						$members = array(array('text' => "$GROUP > $ROLE", 'value'=>$GROUP.$ROLE, 'options'=>array(), 'disabled'=>false, 'category'=>'true'));
+						$members = array(array("text" => $GROUP." > ".$ROLE, "value"=>$GROUP.$ROLE, "options"=>array(), "disabled"=>false, "category"=>"true"));
 						foreach($nmembers_results as $member) {
-							if(in_array($member['proxy_id'], $current_member_list)) {
+							if(in_array($member["proxy_id"], $current_member_list)) {
 								$registered = true;
 							} else {
 								$registered = false;
 							}
-							$members[0]['options'][] = array('text' => $member['fullname'].($registered ? ' (already a member)' : ''), 'value' => $member['proxy_id'], 'disabled' => $registered);
-//							$members[0]['options'][] = array('text' => $member['fullname'], 'value' => $member['proxy_id'], 'disabled' => false, 'checked' => ($registered ? "checked=\"checked\"" : ""));	
+							$members[0]["options"][] = array("text" => $member["fullname"].($registered ? " (already a member)" : ""), "value" => $member["proxy_id"], "disabled" => $registered, "checked" => (isset($previously_added_ids) && in_array(((int)$member["proxy_id"]), $previously_added_ids) ? "checked=\"checked\"" : ""));
+//							$members[0]["options"][] = array("text" => $member["fullname"], "value" => $member["proxy_id"], "disabled" => false, "checked" => ($registered ? "checked=\"checked\"" : ""));	
 						}
 						
-						foreach($members[0]['options'] as $key => $member) {
-							if(isset($member['options']) && is_array($member['options']) && !empty($member['options'])) {
+						foreach($members[0]["options"] as $key => $member) {
+							if(isset($member["options"]) && is_array($member["options"]) && !empty($member["options"])) {
 								//Alphabetize members
-								sort($members[0]['options'][$key]['options']);
+								sort($members[0]["options"][$key]["options"]);
 							}
 						}
-						echo '<table cellspacing="0" cellpadding="0" class="select_multiple_table" width="100%">';
+						echo "<table cellspacing=\"0\" cellpadding=\"0\" class=\"select_multiple_table\" width=\"100%\">";
 						echo lp_multiple_select_table($members, 0, 0, true);
-						echo '</table>';
+						echo "</table>";
 					} else {
 						echo "No One Available [1]";
 					}

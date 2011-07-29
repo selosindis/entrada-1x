@@ -106,6 +106,14 @@ define("AUTH_LOCKOUT_TIMEOUT", 900);											// The amount of time in seconds 
 
 define("AUTH_FORCE_SSL", false);												// If you want to force all login attempts to use SSL, set this to true, otherwise false.
 
+define("LDAP_HOST", "ldap3-prev.queensu.ca");									// The hostname of your LDAP server.
+define("LDAP_BASE_DN", "ou=people,o=main,dc=queensu,dc=ca");					// The BaseDN of your LDAP server.
+define("LDAP_SEARCH_DN", "uid=meds_ops_medtech,ou=people,dc=queensu,dc=ca");    // The LDAP username that is used to search LDAP tree for the member attribute.
+define("LDAP_SEARCH_DN_PASS", "IaLu6wmiSSI4");									// The LDAP password for the SearchDN above. These fields are optional.
+define("LDAP_MEMBER_ATTR", "queensuCaUniUid");									// The member attribute used to identify the users unique LDAP ID.
+define("LDAP_USER_QUERY_FIELD", "queensuCaPKey");								// The attribute used to identify the users staff / student number. Only used if LDAP_LOCAL_USER_QUERY_FIELD is set to "number".
+define("LDAP_LOCAL_USER_QUERY_FIELD", "number");								// username | number : This field allows you to specify which local user_data field is used to search for a valid username.
+
 define("AUTH_ALLOW_CAS", false);												// Whether or not you wish to allow CAS authorisation.
 define("AUTH_CAS_HOSTNAME", "cas.schoolu.ca");									// Hostname of your CAS server.
 define("AUTH_CAS_PORT", 443);													// Port that CAS is running on.

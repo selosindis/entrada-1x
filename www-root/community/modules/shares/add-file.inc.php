@@ -92,8 +92,10 @@ if ($RECORD_ID) {
 						 */
 						if ((isset($_POST["file_title"][$tmp_file_id])) && ($title = clean_input($_POST["file_title"][$tmp_file_id], array("notags", "trim")))) {
 							$PROCESSED["file_title"] = $title;
+							$file_uploads[$tmp_file_id]["file_title"] = $title;
 						} elseif ((isset($PROCESSED["file_filename"])) && ($PROCESSED["file_filename"])) {
 							$PROCESSED["file_title"] = $PROCESSED["file_filename"];
+							$file_uploads[$tmp_file_id]["file_title"] = $PROCESSED["file_filename"];
 						} else {
 							$ERROR++;
 							$ERRORSTR[] = "The <strong>File Title</strong> field is required.";
@@ -104,9 +106,11 @@ if ($RECORD_ID) {
 						 *
 						 */
 						if ((isset($_POST["file_description"][$tmp_file_id])) && $description = clean_input($_POST["file_description"][$tmp_file_id], array("notags", "trim"))) {
-								$PROCESSED["file_description"] = $description;
+							$PROCESSED["file_description"] = $description;
+							$file_uploads[$tmp_file_id]["file_description"] = $description;
 						} else {
 							$PROCESSED["file_description"] = "";
+							$file_uploads[$tmp_file_id]["file_description"] = "";
 						}
 	
 						/**
@@ -114,8 +118,10 @@ if ($RECORD_ID) {
 						 */
 						if ((isset($_POST["access_method"][$tmp_file_id])) && clean_input($_POST["access_method"][$tmp_file_id], array("int")) == 1) {
 							$PROCESSED["access_method"] = 1;
+							$file_uploads[$tmp_file_id]["access_method"] = 1;
 						} else {
 							$PROCESSED["access_method"] = 0;
+							$file_uploads[$tmp_file_id]["access_method"] = 0;
 						}
 	
 					
@@ -269,6 +275,8 @@ if ($RECORD_ID) {
 						}
 						if ($ERROR) {
 							echo display_error();
+							$NOTICE++;
+							$NOTICESTR[] = "You experienced an error while trying to upload your file(s). Due to limitations with browsers you will need to reselect the files you wish to upload. The information about the files have been retained for your convenisnce.";
 						}
 						if ($NOTICE) {
 							echo display_notice();
@@ -377,12 +385,12 @@ if ($RECORD_ID) {
 													</tr>
 													<tr>
 														<td colspan="2"><label for="file_title" class="form-required">File Title</label></td>
-														<td><input type="text" id="file_<?php echo $tmp_file_id;?>_title" name="file_title[<?php echo $tmp_file_id;?>]" value="<?php echo ((isset($PROCESSED["file_title"])) ? html_encode($PROCESSED["file_title"]) : ""); ?>" maxlength="64" style="width: 95%" /></td>
+														<td><input type="text" id="file_<?php echo $tmp_file_id;?>_title" name="file_title[<?php echo $tmp_file_id;?>]" value="<?php echo ((isset($file_upload["file_title"])) ? html_encode($file_upload["file_title"]) : ""); ?>" maxlength="64" style="width: 95%" /></td>
 													</tr>
 													<tr>
 														<td colspan="2" style="vertical-align: top"><label for="file_description" class="form-nrequired">File Description</label></td>
 														<td style="vertical-align: top">
-															<textarea id="file_<?php echo $tmp_file_id;?>_description" name="file_description[<?php echo $tmp_file_id;?>]" style="width: 95%; height: 60px" cols="50" rows="5"><?php echo ((isset($PROCESSED["file_description"])) ? html_encode($PROCESSED["file_description"]) : ""); ?></textarea>
+															<textarea id="file_<?php echo $tmp_file_id;?>_description" name="file_description[<?php echo $tmp_file_id;?>]" style="width: 95%; height: 60px;max-width: 300px;min-width: 300px;" cols="50" rows="5"><?php echo ((isset($file_upload["file_description"])) ? html_encode($file_upload["file_description"]) : ""); ?></textarea>
 														</td>
 													</tr>
 													<tr>
@@ -393,8 +401,8 @@ if ($RECORD_ID) {
 														document.write(     '			<tr>'+
 																			'				<td colspan="2" style="vertical-align: top"><label for="access_method" class="form-nrequired">Access Method</label></td>'+
 																			'				<td>'+
-																			'					<input type="radio" id="access_method_0_<?php echo $tmp_file_id;?>" name="access_method[#{file_id}]" value="0" style="vertical-align: middle" checked=\"checked\"" /> <label for="access_method_0" style="vertical-align: middle" class="content-small">Download this file to their computer first, then open it.</label><br />'+
-																			'					<input type="radio" id="access_method_1_<?php echo $tmp_file_id;?>" name="access_method[#{file_id}]" value="1" style="vertical-align: middle"<?php echo (((isset($PROCESSED["access_method"])) && ((int) $PROCESSED["access_method"])) ? " checked=\"checked\"" : ""); ?> /> <label for="access_method_1" style="vertical-align: middle" class="content-small">Attempt to view it directly in the web-browser.</label><br />'+
+																			'					<input type="radio" id="access_method_0_<?php echo $tmp_file_id;?>" name="access_method[<?php echo $tmp_file_id;?>]" value="0" style="vertical-align: middle" checked/> <label for="access_method_0" style="vertical-align: middle" class="content-small">Download this file to their computer first, then open it.</label><br />'+
+																			'					<input type="radio" id="access_method_1_<?php echo $tmp_file_id;?>" name="access_method[<?php echo $tmp_file_id;?>]" value="1" style="vertical-align: middle"<?php echo (((isset($file_upload["access_method"])) && ((int) $file_upload["access_method"]) == 1) ? " checked" : ""); ?> /> <label for="access_method_1" style="vertical-align: middle" class="content-small">Attempt to view it directly in the web-browser.</label><br />'+
 																			'				</td>'+
 																			'			</tr>');
 													}

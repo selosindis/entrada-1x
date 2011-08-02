@@ -97,7 +97,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 				$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] = "content";
 			}
 
-			$proxy_ids = explode(',', $_POST["group_members"]);
+			$proxy_ids = explode(',', $_POST["group_member_ids"]);
+			
+			foreach ($proxy_ids as &$proxy_id) {
+				$proxy_id = (int) $proxy_id;
+			}
 			$PROCESSED["updated_date"]	= time();
 			$PROCESSED["updated_by"] = $_SESSION["details"]["id"];
 			
@@ -226,7 +230,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 						<td>&nbsp;</td>
 						<td><label for="organisation_id" class="form-required">Organisation</label></td>
 						<td>
-							<select id="organisation_id" name="organisation_id" style="width: 250px" onchange="organisationChange();">
+							<select id="organisation_id" name="organisation_id" style="width: 250px">
 							<?php
 							$query		= "SELECT `organisation_id`, `organisation_title` FROM `".AUTH_DATABASE."`.`organisations`";
 							$results	= $db->GetAll($query);
@@ -313,13 +317,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 														$nmembers_results = $db->GetAll($nmembers_query);
 														if($nmembers_results) {
 															$members = $member_categories;
-				
 															foreach($nmembers_results as $member) {
-				
 																$organisation_id = $member['organisation_id'];
 																$group = $member['group'];
 																$role = $member['role'];
-				
+																
 																if($group == "student" && !isset($members[$organisation_id]['options'][$group.$role])) {
 																	$members[$organisation_id]['options'][$group.$role] = array('text' => $group. ' > '.$role, 'value' => $organisation_id.'|'.$group.'|'.$role);
 																} elseif ($group != "guest" && $group != "student" && !isset($members[$organisation_id]['options'][$group."all"])) {
@@ -327,9 +329,39 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 																}
 															}
 				
+															$added_ids = array();
+															$added_people = array();
+															$key_value = 1;
 															foreach($members as $key => $member) {
 																if(isset($member['options']) && is_array($member['options']) && !empty($member['options'])) {
 																	sort($members[$key]['options']);
+																	foreach ($members[$key]['options'] as $member_group) {
+																		$tmp_array = explode("|", $member_group["value"]);
+																		$organisation_id = $tmp_array[0];
+																		$group = $tmp_array[1];
+																		$role = $tmp_array[2];
+																		if ($proxy_ids) {
+																			$query = "SELECT a.`id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) as `fullname` FROM `".AUTH_DATABASE."`.`user_data` AS a
+																						JOIN `".AUTH_DATABASE."`.`user_access` AS b
+																						ON a.`id` = b.`user_id`
+																						WHERE a.`organisation_id` = ".$db->qstr($organisation_id)."
+																						AND b.`group` = ".$db->qstr($group)."
+																						".($group == "student" ? "AND b.`role` = ".$db->qstr($role) : "")."
+																						AND b.`app_id` IN (".AUTH_APP_IDS_STRING.")
+																						AND b.`account_active` = 'true'
+																						AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
+																						AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
+																						AND a.`id` IN (".implode(",", $proxy_ids).")";
+																			if ($member_ids = $db->GetAll($query)) {
+																				$added_ids[$key_value] = array();
+																				foreach ($member_ids as $member_id) {
+																					$added_ids[$key_value][] = (int) $member_id["id"];
+																					$added_people[$member_id["id"]] = $member_id["fullname"];
+																				}
+																			}
+																			$key_value++;
+																		}
+																	}
 																}
 															}
 															echo lp_multiple_select_inline('group_members', $members, array(
@@ -345,12 +377,30 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 													?>
 														<input class="multi-picklist" id="group_members" name="group_members" style="display: none;">
 														<input id="group_members_index" name="group_members_index" style="display: none;">
-														<input id="group_member_ids" name="group_member_ids" style="display: none;">
+														<input id="group_member_ids" name="group_member_ids" value="<?php  echo (isset($proxy_ids) && $proxy_ids ? implode(",", $proxy_ids) : "") ?>" style="display: none;">
 													</div>
 												</td>
 												<td style="vertical-align: top; padding-left: 20px;">
 													<h3>Members to be Added on Submission</h3>
-													<div id="group_members_list"></div>
+													<div id="group_members_list">
+													<?php
+														if ($added_people) {
+															echo "<table class=\"member-list\">";
+															echo "	<tr>";
+															$tmp_count = 0;
+															foreach ($added_people as $fullname) {
+																if ($tmp_count%2 == 0 && $tmp_count) {
+																	echo "	</tr>";
+																	echo "	<tr>";
+																}
+																$tmp_count++;
+																echo "<td>".$fullname."</td>";
+															}
+															echo "	</tr>";
+															echo "</table>";
+														}
+													?>
+													</div>
 												</td>
 											</tr>
 										</tbody>
@@ -362,16 +412,39 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 					</tr>
 				</table>
 			</form>
-			<script type="text/javascript">				
-				var people = [[]];
-				var ids = [[]];
+			<script type="text/javascript">
+				<?php
+				if (isset($added_ids) && $added_ids) {
+					?>
+					var ids = [];
+					var people = [];
+					<?php
+					foreach ($added_ids as $key => $added_ids_array) {
+						if ($added_ids_array) {
+							?>
+							ids[<?php echo $key; ?>] = [<?php echo implode(",", $added_ids_array); ?>];
+							people[<?php echo $key; ?>] = [];
+							<?php
+							foreach ($added_ids_array as $id) {
+								?>
+								people[<?php echo $key; ?>].push('<?php echo $added_people[$id]; ?>');
+								<?php
+							}
+						}
+					}
+				} else { 
+					?>
+					var people = [[]];
+					var ids = [[]];
+					<?php 
+				} 
+				?>
 				var disablestatus = 0;
 		
 				//Updates the People Being Added div with all the options
 				function updatePeopleList(newoptions, index) {
 					if ($('group_members_index').value == index) {
 						people[index] = newoptions;
-			
 						table = people.flatten().inject(new Element('table', {'class':'member-list'}), function(table, option, i) {
 							if(i%2 == 0) {
 								row = new Element('tr');
@@ -382,19 +455,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 						});
 						$('group_members_list').update(table);
 						var member_ids = "";
-						ids[index] = $F('group_members').split(',').compact();
-						for (i=0; i < length.ids; i++) {
-							if (ids[i].length) {
-								for (j=0; j < ids[i].length; i++) {
-									if (!member_ids) {
-										member_ids = ids[i][j];
-									} else {
-										member_ids = member_ids + ',' + ids[i][j];
-									}
-								}
-							}
+						if ($F('group_members')) {
+							ids[index] = $F('group_members').split(',').compact();
+							$('group_member_ids').value = ids.flatten().join(',');
 						}
-						$('group_member_ids').value = member_ids;
 					} else {
 						$('group_members_index').value = index;
 					}

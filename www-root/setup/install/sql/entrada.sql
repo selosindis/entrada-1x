@@ -927,9 +927,62 @@ CREATE TABLE IF NOT EXISTS `assessments` (
   `type` varchar(255) NOT NULL,
   `marking_scheme_id` int(10) unsigned NOT NULL,
   `numeric_grade_points_total` float unsigned DEFAULT NULL,
-  `grade_weighting` int(11) NOT NULL default '0',
+  `grade_weighting` int(11) NOT NULL DEFAULT '0',
+  `narrative` tinyint(1) NOT NULL DEFAULT '0',
+  `required` tinyint(1) NOT NULL DEFAULT '1',
+  `characteristic_id` int(4) NOT NULL,
   PRIMARY KEY (`assessment_id`)
+) ENGINE=MyISAM AUTO_INCREMENT=114 DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `assessment_options` (
+  `aoption_id` int(12) NOT NULL AUTO_INCREMENT,
+  `assessment_id` int(12) NOT NULL DEFAULT '0',
+  `option_id` int(12) NOT NULL DEFAULT '0',
+  `option_active` int(1) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`aoption_id`),
+  KEY `assessment_id` (`assessment_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `assessments_lu_meta` (
+  `id` int(12) unsigned NOT NULL AUTO_INCREMENT,
+  `organisation_id` int(12) unsigned NOT NULL DEFAULT '0',
+  `type` enum('rating','project','exam','paper','asessment','presentation','quiz','RAT','reflection') DEFAULT NULL,
+  `title` varchar(60) NOT NULL,
+  `description` text,
+  `active` tinyint(1) unsigned DEFAULT '1',
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+INSERT INTO `assessments_lu_meta` (`organisation_id`, `type`, `title`) VALUES 
+('1', '1', 'Faculty, resident or preceptor rating'),
+('1', '2', 'Final project'),
+('1', '3', 'Final written examination'),
+('1', '3', 'Laboratory or practical examination (except OSCE/SP)'),
+('1', '3', 'Midterm examination'),
+('1', '3', 'NBME subject examination'),
+('1', '3', 'Oral exam'),
+('1', '3', 'OSCE/SP examination'),
+('1', '4', 'Paper'),
+('1', '5', 'Peer-assessment'),
+('1', '6', 'Presentation'),
+('1', '7', 'Quiz'),
+('1', '8', 'RAT'),
+('1', '9', 'Reflection'),
+('1', '5', 'Self-assessment'),
+('1', '5', 'Other assessments')
+
+CREATE TABLE IF NOT EXISTS `assessments_lu_meta_options` (
+  `id` int(12) unsigned NOT NULL AUTO_INCREMENT,
+  `title` varchar(60) NOT NULL,
+  `active` tinyint(1) unsigned DEFAULT '1',
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+INSERT INTO `assessments_lu_meta_options` (`title`) VALUES
+('Essay questions'),
+('Fill-in, short answer questions'),
+('Multiple-choice, true/false, matching questions'),
+('Problem-solving written exercises')
 
 CREATE TABLE `assessment_exceptions` (
   `aexception_id` int(12) NOT NULL auto_increment,
@@ -3721,7 +3774,7 @@ CREATE TABLE IF NOT EXISTS `mtd_categories` (
   `category_code` varchar(3) NOT NULL,
   `category_description` varchar(100) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 ;
 
 CREATE TABLE IF NOT EXISTS `mtd_facilities` (
   `id` int(11) NOT NULL ,
@@ -3729,7 +3782,7 @@ CREATE TABLE IF NOT EXISTS `mtd_facilities` (
   `facility_name` varchar(50) NOT NULL,
   `kingston` int(1) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 ;
 
 CREATE TABLE IF NOT EXISTS `mtd_locale_duration` (
   `id` int(11) NOT NULL ,
@@ -3737,21 +3790,21 @@ CREATE TABLE IF NOT EXISTS `mtd_locale_duration` (
   `percent_time` int(3) NOT NULL,
   `schedule_id` int(11) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 ;
 
 CREATE TABLE IF NOT EXISTS `mtd_moh_program_codes` (
   `id` int(11) NOT NULL ,
   `program_code` varchar(3) NOT NULL,
   `program_description` varchar(100) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 ;
 
 CREATE TABLE IF NOT EXISTS `mtd_moh_service_codes` (
   `id` int(11) NOT NULL ,
   `service_code` varchar(3) NOT NULL,
   `service_description` varchar(50) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 ;
 
 CREATE TABLE IF NOT EXISTS `mtd_schedule` (
   `id` int(11) NOT NULL ,
@@ -3761,28 +3814,28 @@ CREATE TABLE IF NOT EXISTS `mtd_schedule` (
   `resident_id` int(11) NOT NULL,
   `creator_id` int(11) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 ;
 
 CREATE TABLE IF NOT EXISTS `mtd_schools` (
   `id` int(11) NOT NULL ,
   `school_code` varchar(3) NOT NULL,
   `school_description` varchar(100) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 ;
 
 CREATE TABLE IF NOT EXISTS `mtd_pgme_moh_programs` (
   `id` int(11) NOT NULL ,
   `pgme_program_name` varchar(100) NOT NULL,
   `moh_service_name` varchar(100) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 ;
 
 CREATE TABLE IF NOT EXISTS `mtd_type` (
   `id` int(12) NOT NULL AUTO_INCREMENT,
   `type_code` varchar(1) NOT NULL,
   `type_description` varchar(100) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 
 INSERT INTO `mtd_type` (`id`, `type_code`, `type_description`) VALUES
 (1, 'I', 'in-patient/emergency'),
@@ -3831,15 +3884,16 @@ CREATE TABLE IF NOT EXISTS `pg_eval_response_rates` (
   `completed` int(10) NOT NULL,
   `distributed` int(10) NOT NULL,
   `percent_complete` int(3) NOT NULL,
+   `gen_date` date NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `pg_one45_community` (
   `id` int(12) NOT NULL AUTO_INCREMENT,
   `one45_name` varchar(50) NOT NULL,
   `community_name` varchar(50) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `pg_blocks` (
   `id` int(12) NOT NULL AUTO_INCREMENT,
@@ -3848,7 +3902,7 @@ CREATE TABLE IF NOT EXISTS `pg_blocks` (
   `end_date` date NOT NULL,
   `year` varchar(9) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `pg_blocks` (`id`, `block_name`, `start_date`, `end_date`, `year`) VALUES
 (1, '1', '2010-07-01', '2010-07-26', '2010-2011'),

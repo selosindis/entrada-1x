@@ -132,7 +132,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						}
 					}
 					//characteristic check
-					if ((isset($_POST["assessment_characteristic"])) && ($assessment_characteristic = clean_input($_POST["assessment_characteristic"], array("trim", "int")))) {
+					if ((isset($_POST["assessment_characteristic"])) && ($assessment_characteristic = clean_input($_POST["assessment_characteristic"], array("trim", "int"))) == 0) {
+						$ERROR++;
+						$ERRORSTR[] = "The <strong>Assessment Characteristic</strong> field is a required field.";
+					} else if ((isset($_POST["assessment_characteristic"])) && ($assessment_characteristic = clean_input($_POST["assessment_characteristic"], array("trim", "int")))) {
 						$PROCESSED["characteristic_id"] = $assessment_characteristic;
 					}
 					//extended options check

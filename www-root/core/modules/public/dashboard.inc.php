@@ -225,7 +225,7 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 		if (($notices_to_display) && ($total_notices = @count($notices_to_display))) {
 			?>
 			<div class="display-notice" style="color: #333333; max-height: 200px; overflow: auto">
-				<div style="float: right"><a href="<?php echo ENTRADA_URL; ?>/rss/<?php echo $_SESSION["details"]["username"]; ?>.rss" target="_blank" style="color: #666666; font-size: 10px; text-decoration: none">RSS feed available</a> <a href="<?php echo ENTRADA_URL; ?>/notices/<?php echo $rss_feed_name; ?>" target="_blank"><img src="<?php echo ENTRADA_URL; ?>/images/rss-enabled.gif" width="11" height="11" alt="RSS Icon" title="Notices are RSS enabled" border="0" /></a></div>
+				<div style="float: right"><a href="<?php echo ENTRADA_URL; ?>/rss/<?php echo $_SESSION["details"]["username"]; ?>.rss" target="_blank" style="color: #666666; font-size: 10px; text-decoration: none">RSS feed available</a> <a href="<?php echo ENTRADA_URL; ?>/rss/<?php echo $_SESSION["details"]["username"]; ?>.rss" target="_blank"><img src="<?php echo ENTRADA_URL; ?>/images/rss-enabled.gif" width="11" height="11" alt="RSS Icon" title="Notices are RSS enabled" border="0" /></a></div>
 				<h2>New <?php echo APPLICATION_NAME; ?> Notice<?php echo (($total_notices != 1) ? "s" : ""); ?></h2>
 				<form action="<?php echo ENTRADA_URL; ?>/dashboard?action=read" method="post">
 					<table style="width: 97%" cellspacing="2" cellpadding="2" border="0" summary="New Notice<?php echo (($total_notices != 1) ? "s" : ""); ?>">
@@ -265,7 +265,7 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 		case "student" :
 			$BREADCRUMB[] = array("url" => ENTRADA_URL, "title" => "Student Dashboard");
 
-			$HEAD[]	= "<link rel=\"alternate\" type=\"application/rss+xml\" title=\"Class of ".$_SESSION["details"]["grad_year"].", Notices\" href=\"".ENTRADA_URL."/notices/".$_SESSION["details"]["grad_year"]."\" />";
+			$HEAD[]	= "<link rel=\"alternate\" type=\"application/rss+xml\" title=\"Notices\" href=\"".ENTRADA_URL."/notices/".$_SESSION["details"]["grad_year"]."\" />";
 
 			if (!isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dstamp"])) {
 				$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dstamp"] = time();
@@ -565,7 +565,7 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 						</table>
 					</td>
 					<td style="text-align: right; vertical-align: middle; white-space: nowrap">
-						<h1 style="margin: 8px 0">Class of <strong><?php echo $_SESSION["details"]["grad_year"]; ?></strong> Schedule</h1>
+						<h1 style="margin: 8px 0"><strong>My</strong> Schedule</h1>
 					</td>
 				</tr>
 				</table>

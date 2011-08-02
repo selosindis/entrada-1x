@@ -310,8 +310,6 @@ if (!$ERROR) {
 		 * We have found a successful user record in the system, break the chain here.
 		 */
 		if (!empty($user_data)) {
-			application_log("auth_error", "Found you.");
-
 			break;
 		}
 	}
@@ -325,9 +323,6 @@ if (!$ERROR) {
 
 			echo "\t\t<status>".encrypt("failed", $auth_password)."</status>\n";
 			echo "\t\t<message>".encrypt("The username or password you have provided is incorrect.", $auth_password)."</message>\n";
-
-			application_log("auth_error", "Bleh.");
-
 		}
 	}
 }

@@ -1,6 +1,6 @@
-ALTER TABLE `assessments` ADD COLUMN `required` TINYINT(1) NOT NULL DEFAULT '1' AFTER `grade_weighting`;
-ALTER TABLE `assessments` ADD COLUMN `narrative` TINYINT(1) NOT NULL DEFAULT '0' AFTER `required`;
-ALTER TABLE `assessments` ADD COLUMN `characteristic_id` int(4) NOT NULL AFTER `narrative`;
+ALTER TABLE `assessments` ADD COLUMN `narrative` TINYINT(1) NOT NULL DEFAULT '0' AFTER `grade_weighting`;
+ALTER TABLE `assessments` ADD COLUMN `required` TINYINT(1) NOT NULL DEFAULT '1' AFTER `narrative`;
+ALTER TABLE `assessments` ADD COLUMN `characteristic_id` int(4) NOT NULL AFTER `required`;
 
 CREATE TABLE IF NOT EXISTS `assessment_options` (
   `aoption_id` int(12) NOT NULL AUTO_INCREMENT,

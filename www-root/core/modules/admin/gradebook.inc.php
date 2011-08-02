@@ -49,7 +49,7 @@ if(!defined("PARENT_INCLUDED")) {
 	$JQUERY[] = "<script type=\"text/javascript\">jQuery.noConflict(); var ENTRADA_URL = '".ENTRADA_URL."';</script>";
 	$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/gradebook.js\"></script>\n";
 	
-	$ASSESSMENT_TYPES = array("Formative", "Summative", "Narrative");
+	$ASSESSMENT_TYPES = array("Formative", "Summative");
 	
 	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/gradebook", "title" => "Gradebooks");
 

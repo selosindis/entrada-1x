@@ -129,13 +129,13 @@ if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
 				if ($courses_results) {
 					
 					foreach ($courses_results as $course) {
-						if (isset($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["course"]) && is_array($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["course"]) && in_array($course['course_id'], $_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["course"])) {
+						if (isset($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["course"]) && is_array($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["course"]) && in_array($course["course_id"], $_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["course"])) {
 							$checked = "checked=\"checked\"";
 						} else {
 							$checked = "";
 						}
 
-						$courses[$ENTRADA_USER->getActiveOrganisation()]["options"][] = array("text" => $course["course_name"], "value" => "course_" . $course["course_id"], "checked" => $checked);
+						$courses[$ENTRADA_USER->getActiveOrganisation()]["options"][] = array("text" => $course["course_name"].($course["course_code"] ? ": ".$course["course_code"] : ""), "value" => "course_" . $course["course_id"], "checked" => $checked);
 					}
 
 					echo lp_multiple_select_popup("course", $courses, array("title" => "Select Courses:", "submit_text" => "Apply", "cancel" => true, "submit" => true));
@@ -152,7 +152,7 @@ if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
 				if ($groups_results) {
 					
 					foreach ($groups_results as $group) {
-						if (isset($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["group"]) && is_array($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["smallgroup"]) && in_array($group["group_id"], $_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["group"])) {
+						if (isset($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["group"]) && is_array($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["group"]) && in_array($group["group_id"], $_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["group"])) {
 							$checked = "checked=\"checked\"";
 						} else {
 							$checked = "";
@@ -218,7 +218,7 @@ if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
 				$clinical_presentations = fetch_clinical_presentations();
 				if ($clinical_presentations) {
 					foreach ($clinical_presentations as $clinical_presentation) {
-						if (isset($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["cp"]) && is_array($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["cp"]) && in_array($clinical_presentation["value"], $_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["cp"])) {
+						if (isset($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["cp"]) && is_array($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["cp"]) && in_array($clinical_presentation["objective_id"], $_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["cp"])) {
 							$checked = "checked=\"checked\"";
 						} else {
 							$checked = "";
@@ -238,13 +238,13 @@ if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
 				
 				if ($children) {
 					foreach ($children as $curriculum_objective) {
-						if (isset($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["co"]) && is_array($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["co"]) && in_array($curriculum_objective["value"], $_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["co"])) {
+						if (isset($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["co"]) && is_array($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["co"]) && in_array($curriculum_objective["objective_id"], $_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["co"])) {
 							$checked = "checked=\"checked\"";
 						} else {
 							$checked = "";
 						}
 
-						$objectives[$ENTRADA_USER->getActiveOrganisation()]["options"][] = array("text" => $curriculum_objective["objective_name"], "value" => "cp_" . $curriculum_objective["objective_id"], "checked" => $checked);
+						$objectives[$ENTRADA_USER->getActiveOrganisation()]["options"][] = array("text" => $curriculum_objective["objective_name"], "value" => "co_" . $curriculum_objective["objective_id"], "checked" => $checked);
 					}
 				}
 

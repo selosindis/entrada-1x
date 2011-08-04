@@ -3846,35 +3846,36 @@ CREATE TABLE IF NOT EXISTS `eventtype_organisation`(
 `organisation_id` INT(12) NOT NULL 
 ) ENGINE = MyISAM DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `student_groups` (
-  `sgroup_id` int(11) NOT NULL AUTO_INCREMENT,
+CREATE TABLE IF NOT EXISTS `groups` (
+  `group_id` int(11) NOT NULL AUTO_INCREMENT,
   `group_name` varchar(64) NOT NULL,
+  `group_type` enum('small_group','class') NOT NULL DEFAULT 'small_group',
   `group_active` tinyint(1) NOT NULL DEFAULT '1',
   `updated_date` int(11) DEFAULT NULL,
   `updated_by` int(11) DEFAULT NULL,
-  PRIMARY KEY (`sgroup_id`)
+  PRIMARY KEY (`group_id`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `student_group_members` (
-  `sgmember_id` int(11) NOT NULL AUTO_INCREMENT,
-  `sgroup_id` int(11) NOT NULL,
+CREATE TABLE IF NOT EXISTS `group_members` (
+  `gmember_id` int(11) NOT NULL AUTO_INCREMENT,
+  `group_id` int(11) NOT NULL,
   `proxy_id` int(11) NOT NULL,
   `member_active` tinyint(1) NOT NULL DEFAULT '1',
   `updated_date` int(11) DEFAULT NULL,
   `updated_by` int(11) DEFAULT NULL,
-  PRIMARY KEY (`sgmember_id`)
-  KEY `group_id` (`sgroup_id`,`proxy_id`,`updated_date`,`updated_by`),
+  PRIMARY KEY (`gmember_id`)
+  KEY `group_id` (`group_id`,`proxy_id`,`updated_date`,`updated_by`),
   KEY `member_active` (`member_active`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `student_group_organisations` (
-  `sgorganisation_id` int(11) NOT NULL AUTO_INCREMENT,
-  `sgroup_id` int(11) NOT NULL,
+CREATE TABLE IF NOT EXISTS `group_organisations` (
+  `gorganisation_id` int(11) NOT NULL AUTO_INCREMENT,
+  `group_id` int(11) NOT NULL,
   `organisation_id` int(11) NOT NULL,
   `updated_by` int(11) DEFAULT NULL,
   `updated_date` int(11) DEFAULT NULL,
-  PRIMARY KEY (`sgorganisation_id`)
-  KEY `group_id` (`sgroup_id`,`organisation_id`,`updated_date`,`updated_by`)
+  PRIMARY KEY (`gorganisation_id`)
+  KEY `group_id` (`group_id`,`organisation_id`,`updated_date`,`updated_by`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `pg_eval_response_rates` (

@@ -756,7 +756,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 									<select id="curriculum_type_id" name="curriculum_type_id" style="width: 250px">
 									<option value="0"<?php echo (((!isset($PROCESSED["curriculum_type_id"])) || (!(int) $PROCESSED["curriculum_type_id"])) ? " selected=\"selected\"" : ""); ?>>- Select Curriculum Category -</option>
 									<?php
-									$query		= "SELECT * FROM `curriculum_lu_types` WHERE `curriculum_type_active` = '1' ORDER BY `curriculum_type_order` ASC";
+									$query = "	SELECT a.* FROM `curriculum_lu_types` AS a 
+										JOIN `curriculum_type_organisation` AS b 
+										ON a.`curriculum_type_id` = b.`curriculum_type_id` 
+										WHERE a.`curriculum_type_active` = 1 
+										AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+										ORDER BY `curriculum_type_order` ASC";
+									
 									$results	= $db->GetAll($query);
 									if ($results) {
 										foreach($results as $result) {

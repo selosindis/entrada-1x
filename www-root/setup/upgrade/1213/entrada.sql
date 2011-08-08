@@ -2,6 +2,12 @@ ALTER TABLE `assessments` ADD COLUMN `narrative` TINYINT(1) NOT NULL DEFAULT '0'
 ALTER TABLE `assessments` ADD COLUMN `required` TINYINT(1) NOT NULL DEFAULT '1' AFTER `narrative`;
 ALTER TABLE `assessments` ADD COLUMN `characteristic_id` int(4) NOT NULL AFTER `required`;
 
+ALTER TABLE `assessment_marking_schemes` ADD COLUMN `description` text NOT NULL AFTER `handler`;
+UPDATE `assessment_marking_schemes` SET `description` = 'Enter P for Pass, or F for Fail, in the assessment mark column.' WHERE `id` = '1';
+UPDATE `assessment_marking_schemes` SET `description` = 'Enter a percentage in the assessment mark column.' WHERE `id` = '2';
+UPDATE `assessment_marking_schemes` SET `description` = 'Enter a numeric total in the assessment mark column.' WHERE `id` = '3';
+UPDATE `assessment_marking_schemes` SET `description` = 'Enter C for Complete, or I for Incomplete, in the assessment mark column.' WHERE `id` = '4';
+
 CREATE TABLE IF NOT EXISTS `assessment_options` (
   `aoption_id` int(12) NOT NULL AUTO_INCREMENT,
   `assessment_id` int(12) NOT NULL DEFAULT '0',

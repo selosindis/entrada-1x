@@ -326,7 +326,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						<td><label for="grade_weighting" class="form-nrequired">Assessment Weighting</label></td>
 						<td>
 							<input type="text" id="grade_weighting" name="grade_weighting" value="<?php echo (int) html_encode($PROCESSED["grade_weighting"]); ?>" maxlength="3" style="width: 30px" autocomplete="off" />
-							<span class="content-small"><strong>Tip:</strong> The percentage or numeric value of the final grade this assessment worth.</span>
+							<span class="content-small"><strong>Tip:</strong> The percentage or numeric value of the final grade this assessment is worth.</span>
 						</td>
 					</tr>
 				</tbody>
@@ -401,19 +401,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				<tbody>
 					<tr>
 						<td></td>
-						<td><label for="type" class="form-required">Assessment Type</label></td>
-						<td>
-							<select id="type" name="type" style="width: 203px">
-							<?php
-							foreach ($ASSESSMENT_TYPES as $type) {
-								echo "<option value=\"".$type."\"".(($PROCESSED["type"] == $type) ? " selected=\"selected\"" : "").">".$type."</option>";
-							}
-							?>
-							</select>
-						</td>
-					</tr>
-					<tr>
-						<td></td>
 						<td><label for="marking_scheme_id" class="form-required">Marking Scheme</label></td>
 						<td>
 							<select id="marking_scheme_id" name="marking_scheme_id" style="width: 203px">
@@ -431,6 +418,19 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						<td>
 							<input type="text" id="numeric_grade_points_total" name="numeric_grade_points_total" value="<?php echo html_encode($PROCESSED["numeric_grade_points_total"]); ?>" maxlength="5" style="width: 50px" />
 							<span class="content-small"><strong>Tip:</strong> Maximum points possible for this assessment (i.e. <strong>20</strong> for &quot;X out of 20).</span>
+						</td>
+					</tr>
+					<tr>
+						<td></td>
+						<td><label for="type" class="form-required">Assessment Type</label></td>
+						<td>
+							<select id="type" name="type" style="width: 203px">
+							<?php
+							foreach ($ASSESSMENT_TYPES as $type) {
+								echo "<option value=\"".$type."\"".(($PROCESSED["type"] == $type) ? " selected=\"selected\"" : "").">".$type."</option>";
+							}
+							?>
+							</select>
 						</td>
 					</tr>
 					<tr>
@@ -472,7 +472,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								jQuery('#assessment_required_options').hide();
 								
 							} else {
-								//jQuery('#assessment_required_0').attr('checked', 'checked');
 								jQuery('#assessment_required_options').show();
 								
 							}
@@ -489,7 +488,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						});
 						
 						jQuery('#assessment_characteristic').ready(function (){
-							//jQuery('#assessment_options input:[type=checkbox]').removeAttr('checked');
 							var assessmentType = jQuery('#assessment_characteristic option:selected').attr('assessmenttype');
 							if(assessmentType == 'exam' || assessmentType == 'quiz') {
 								jQuery('#assessment_options').show();

@@ -10026,8 +10026,17 @@ function get_page_for_statistic($action_field, $action_value){
 	return false;
 }
 
-function tracking_fetch_filtered_events($community_id,$filters = array()){
+function tracking_fetch_filtered_events($community_id,$filters = array(),$paginate = true, $page = 1){
 	global $db, $ENTRADA_ACL;
+	
+	$results_per_page = 25;
+	
+	$count = "	SELECT COUNT(*) AS `count`
+				FROM `statistics` AS a 
+				JOIN `".AUTH_DATABASE."`.`user_data` AS b 
+				ON a.`proxy_id` = b.`id` 
+				WHERE `module` LIKE('community:".$community_id.":%')";
+	
 	$query = "	SELECT CONCAT_WS(' ',b.`firstname`,b.`lastname`) AS `fullname`,b.`id` AS `user_id`, a.* 
 				FROM `statistics` AS a 
 				JOIN `".AUTH_DATABASE."`.`user_data` AS b 
@@ -10039,36 +10048,34 @@ function tracking_fetch_filtered_events($community_id,$filters = array()){
 					ON a.`proxy_id` = b.`id` 
 					WHERE `module` LIKE('community:".$community_id.":%')";
 	
+	$where = "";
+	
 	if (isset($filters) && !empty($filters)){
 		foreach ($filters as $type=>$filter){
 			if (is_array($filter) && !empty($filter)){
 					switch ($type){
 						case 'members':
-							$query .= " AND a.`proxy_id` IN (".implode(',',$filter).")";
-							$date_query .= " AND a.`proxy_id` IN (".implode(',',$filter).")";
+							$where .= " AND a.`proxy_id` IN (".implode(',',$filter).")";
 							break;
 						case 'module':
 							//converts each array element to lower case and then finds modules containing the value 
-							$query .= " AND a.`module` REGEXP ".$db->qstr(implode('|',unserialize(strtolower(serialize($filter)))));
-							$date_query .= " AND a.`module` REGEXP ".$db->qstr(implode('|',unserialize(strtolower(serialize($filter)))));
+							$where .= " AND a.`module` REGEXP ".$db->qstr(implode('|',unserialize(strtolower(serialize($filter)))));
 							break;
 						case 'action':
 							$search_filter = str_replace("-","_",$filter);
-							$query .= " AND a.`action` REGEXP ".$db->qstr(implode("|",$search_filter));
-							$date_query .= " AND a.`action` REGEXP ".$db->qstr(implode("|",$search_filter));
+							$where .= " AND a.`action` REGEXP ".$db->qstr(implode("|",$search_filter));
 							break;
 						case 'page':
-							$query .= "AND (";
+							$where .= "AND (";
 							$first = true;
 							foreach($filter as $key=>$filter_instance){
 								$raw_filter = explode("-",$filter_instance);
 								$field = $raw_filter[0]."_id";
 								$value = $raw_filter[2];					
-								$query .= ((!$first)?" OR":"")." (a.`action_field` = ".$db->qstr($field)." AND a.`action_value` = ".$db->qstr($value).")";
-								$date_query .= ((!$first)?"  OR":"")." (a.`action_field` = ".$db->qstr($field)." AND a.`action_value` = ".$db->qstr($value).")";
+								$where .= ((!$first)?" OR":"")." (a.`action_field` = ".$db->qstr($field)." AND a.`action_value` = ".$db->qstr($value).")";
 								$first = false;
 							}
-							$query .=")";
+							$where .=")";
 							break;
 						
 					}
@@ -10076,6 +10083,26 @@ function tracking_fetch_filtered_events($community_id,$filters = array()){
 			}
 		}
 	}
+	$count .= $where;
+	$query .= $where;
+	$date_query .= $where;
+	
+	$num_results = $db->GetOne($count);
+	if ($paginate) {
+		$num_pages = ceil($num_results/$results_per_page);
+		if ($num_pages > 1 && $page > 1 && $page <= $num_pages) {
+			$lower_limit = ($page-1)*$results_per_page;
+			$upper_limit = $results_per_page;
+		} else {
+			$lower_limit = 0;
+			$upper_limit = $results_per_page;		
+		}
+		$limit = " LIMIT ".$lower_limit.",".$upper_limit;
+		$query .= $limit;
+		$date_query .= $limit;
+		
+	}
+	
 	$statistics = $db->GetAll($query);
 	$dates = $db->GetRow($date_query);
 	if ($statistics){
@@ -10088,7 +10115,7 @@ function tracking_fetch_filtered_events($community_id,$filters = array()){
 		}
 	}
 	
-	return array($statistics,$dates);
+	return array($statistics,$dates,$num_pages);
 }
 
 /**

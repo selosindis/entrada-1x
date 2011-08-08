@@ -707,26 +707,60 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 		* Output the calendar controls and pagination.
 		*/
 		//events_output_calendar_controls();
+		
+		
+		if (isset($_GET["pg"]) && ($page = clean_input($_GET["pg"], array("int","trim")))) {
+			$PROCESSED["page"] = $page;
+		} else {
+			$PROCESSED["page"] = 1;
+		}
+		
+		
 
-		list($statistics,$dates) = tracking_fetch_filtered_events($COMMUNITY_ID,$_SESSION[APPLICATION_IDENTIFIER]["tracking"]["filters"]);
-
+		list($statistics,$dates,$num_pages) = tracking_fetch_filtered_events($COMMUNITY_ID,$_SESSION[APPLICATION_IDENTIFIER]["tracking"]["filters"],true,$PROCESSED["page"]);
+		
+		if ($PROCESSED["page"] > $num_pages) {
+			$PROCESSED["page"] = 1;
+		}
+		
+		echo "<div style=\"float:right;\">";
+		echo "<form id=\"pageSelector\" action=\"".ENTRADA_URL."/communities/reports\" method=\"get\">";
+		echo "<input type=\"hidden\" name=\"community\" value=\"".$COMMUNITY_ID."\"/>";
+		if ($PROCESSED["page"] != 1) {
+			echo "<a href=\"".ENTRADA_URL."/communities/reports?community=".$COMMUNITY_ID."&pg=".($PROCESSED["page"]-1)."\"><img src =\"".ENTRADA_URL."/images/record-previous-on.gif\" width=\"11\" height=\"11\" alt=\"Previous Page\" title=\"Previous Page\" style=\"vertical-align:middle;\"/></a>";
+		}
+		echo "<select name=\"pg\" onchange=\"$('pageSelector').submit();\">";
+		for ($i = 1;$i <= $num_pages; $i++) {
+			if ($i == $PROCESSED["page"]) {
+				echo "<option selected=\"selected\" value=\"".$i."\">Viewing Page ".$i."</option>";
+			} else {
+				echo "<option value=\"".$i."\">Jump to Page ".$i."</option>";
+			}
+		}
+		echo "</select>";
+		if ($PROCESSED["page"] != $num_pages) {
+			echo "<a href=\"".ENTRADA_URL."/communities/reports?community=".$COMMUNITY_ID."&pg=".($PROCESSED["page"]+1)."\"><img src =\"".ENTRADA_URL."/images/record-next-on.gif\" width=\"11\" height=\"11\" alt=\"Next Page\" title=\"Next Page\" style=\"vertical-align:middle;\"/></a>";
+		}
+		echo "</form></div>";
 		?>
-		<br/>
+		<br/><br/>
 
 		
 		<ul class="history" style="margin-left:-40px;">
 			
-		<?php 
-			foreach($statistics as $key=>$statistic){
-				$module = explode(':',$statistic['module']);
-				$action = explode('_',$statistic['action']); 
-				$activity_message = "<a href=\"".ENTRADA_URL."/communities/reports?section=user&community=".$COMMUNITY_ID."&user=".$statistic["user_id"]."\">".$statistic['fullname']."</a> ";
-				$activity_message .= ((count($action)>1)?$action[1]:$action[0])."ed the <a href=\"".ENTRADA_URL."/communities/reports?section=type&community=".$COMMUNITY_ID."&type=".$module[2]."\">".ucwords($module[2])."</a>";
-				$activity_message .= " titled <a href=\"".ENTRADA_URL."/communities/reports?section=page&community=".$COMMUNITY_ID."&page=".$statistic["action_field"]."-".$statistic["action_value"]."\">".(isset($statistic["page"])?$statistic["page"]:"-")."</a>";
-				$activity_message .= " at ".date('D M j/y h:i a', $statistic['timestamp']);
-					
+		<?php
+			if ($statistics) {
+				foreach($statistics as $key=>$statistic){
+					$module = explode(':',$statistic['module']);
+					$action = explode('_',$statistic['action']); 
+					$activity_message = "<a href=\"".ENTRADA_URL."/communities/reports?section=user&community=".$COMMUNITY_ID."&user=".$statistic["user_id"]."\">".$statistic['fullname']."</a> ";
+					$activity_message .= ((count($action)>1)?$action[1]:$action[0])."ed the <a href=\"".ENTRADA_URL."/communities/reports?section=type&community=".$COMMUNITY_ID."&type=".$module[2]."\">".ucwords($module[2])."</a>";
+					$activity_message .= " titled <a href=\"".ENTRADA_URL."/communities/reports?section=page&community=".$COMMUNITY_ID."&page=".$statistic["action_field"]."-".$statistic["action_value"]."\">".(isset($statistic["page"])?$statistic["page"]:"-")."</a>";
+					$activity_message .= " at ".date('D M j/y h:i a', $statistic['timestamp']);
 
-				echo "<li".(!($key % 2) ? " style=\"background-color: #F4F4F4\"" : "").">".$activity_message."</li>";
+
+					echo "<li".(!($key % 2) ? " style=\"background-color: #F4F4F4\"" : "").">".$activity_message."</li>";
+				}
 			}
 			?>
 

@@ -195,67 +195,101 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					echo "<form action=\"".ENTRADA_URL . "/admin/gradebook/assessments?".replace_query(array("section" => "delete", "step"=>1))."\" method=\"post\">";
 				}
 				?>
-				<table class="tableList" cellspacing="0" summary="List of Assessments" id="assessment_list">
-				<colgroup>
-					<col class="modified" />
-					<col class="title" />
-					<col class="general" />
-					<col class="general" />
-					<col class="general" />
-				</colgroup>
-				<thead>
-					<tr>
-						<td class="modified">&nbsp;</td>
-						<td class="title<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "name") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("name", "Name"); ?></td>
-						<td class="general<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "year") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("year", "Graduating Year"); ?></td>
-						<td class="general<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "type") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("type", "Assessment Type"); ?></td>
-						<td class="general<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "scheme") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("scheme", "Marking Scheme"); ?></td>
-					</tr>
-				</thead>
-				<tfoot>
-					<tr>
-						<td></td>
-						<td colspan="3" style="padding-top: 10px">
-							<script type="text/javascript" charset="utf-8">
-								function exportSelected() {
-									var ids = [];
-									$$('#assessment_list .modified input:checked').each(function(checkbox) {
-										ids.push($F(checkbox));
-									});
-									if(ids.length > 0) {
-										window.location = '<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "io", "download" => "csv", "assessment_ids" => false)); ?>&assessment_ids='+ids.join(',');
-									} else {
-										alert("You must select some assessments to export.");
-									}
-									return false;
-								}
-							</script>
-							<input type="submit" class="button" value="Delete Selected" />
-							<input type="submit" class="button" value="Export Selected" onclick="exportSelected(); return false;"/>
-						</td>
-						<td><a id="fullscreen-edit" class="button" href="<?php echo ENTRADA_URL . "/admin/gradebook?" . replace_query(array("section" => "api-edit")); ?>"><div>Fullscreen</div></a>
-					</tr>
-				</tfoot>
+				
+				<table class="tableList" cellspacing="0" summary="List of Assessments" id="assessment_list">			
 				<tbody>
+					
 					<?php
-					foreach($assessments as $key => $assessment) {
-						$url = ENTRADA_URL."/admin/gradebook/assessments?section=grade&amp;id=".$COURSE_ID."&amp;assessment_id=".$assessment["assessment_id"];
-						
-						echo "<tr id=\"assessment-".$assessment["assessment_id"]."\">";
-						if ($ENTRADA_ACL->amIAllowed("gradebook", "delete", false)) {
-							echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"delete[]\" value=\"".$assessment["assessment_id"]."\" /></td>\n";
-						} else {
-							echo "	<td class=\"modified\"><img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"19\" height=\"19\" alt=\"\" title=\"\" /></td>";
-						}
-						echo "	<td class=\"title\"><a href=\"$url\">".$assessment["name"]."</a></td>";
-						echo "	<td class=\"general\"><a href=\"$url\">".$assessment["grad_year"]."</a></td>";
-						echo "	<td class=\"general\"><a href=\"$url\">".$assessment["type"]."</a></td>";
-						echo "	<td class=\"general\"><a href=\"$url\">".$assessment["marking_scheme_name"]."</a></td>";
-						echo "</tr>";
+					$query =  "SELECT DISTINCT `assessments`.`course_id`, `assessments`.`grad_year` FROM `assessments`
+							   WHERE `course_id` =". $db->qstr($COURSE_ID)."
+							   ORDER BY `grad_year`";
+					$grad_years = $db->GetAll($query);
+					if ($grad_years) {
+						foreach ($grad_years as $grad_year) {
+							echo "<tr>";
+							echo "<td width=\"20\"></td>";
+							echo "<td><h2 style=\"border-bottom: 0;\">Class of " . $grad_year["grad_year"]."</h2></td>";
+							echo "<td colspan=\"2\"><h2 style=\"border-bottom: 0;\">Grade Weighting</h2></td>";
+							echo "</tr>";
+							
+							$query =  "SELECT `assessments`.`course_id`, `assessments`.`assessment_id`, `assessments`.`name`, `assessments`.`grade_weighting` FROM `assessments`
+									   WHERE `grad_year` =" . $db->qstr($grad_year["grad_year"])."
+									   AND `course_id` =". $db->qstr($COURSE_ID);
+							
+							$results = $db->GetAll($query);
+							if ($results) {
+								$query =  "SELECT `assessments`.`course_id`, SUM(`assessments`.`grade_weighting`) AS `grade_weighting` FROM `assessments`
+										   WHERE `grad_year` =". $db->qstr($grad_year["grad_year"])." 
+										   AND `course_id` =". $db->qstr($COURSE_ID);
+								
+								$total_grade_weights = $db->GetAll($query);
+								foreach ($results as $result) {
+									$url = ENTRADA_URL."/admin/gradebook/assessments?section=grade&amp;id=".$COURSE_ID."&amp;assessment_id=".$result["assessment_id"];
+									echo "<tr>";
+									//echo "<td id=\"assessment-".$assessment["assessment_id"]."\">";
+									if ($ENTRADA_ACL->amIAllowed("gradebook", "delete", false)) {
+										echo "	<td><input type=\"checkbox\" name=\"delete[]\" value=\"".$result["assessment_id"]."\" /></td>\n";
+									} else {
+										echo "	<td class=\"modified\" width=\"20\"><img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"19\" height=\"19\" alt=\"\" title=\"\" /></td>";
+									}
+									echo "<td><a href=\"$url\" width=\"367\">".$result["name"]."</a></td>";
+									echo "<td colspan=\"2\"><a href=\"$url\">".$result["grade_weighting"]. "%</a></td>"; 
+									echo "</tr>";
+								}
+								echo "<tr>";
+								echo "<td style=\"border-bottom: 0\"></td>";
+								echo "<td style=\"border-bottom: 0\"></td>";
+								foreach ($total_grade_weights as $total_grade_weight) {
+									if ($total_grade_weight["grade_weighting"] < '100') {
+										echo "<td style=\"color: #ff2431; border-bottom: 0\">". $total_grade_weight["grade_weighting"]."%</td>";
+									} else {
+										echo "<td style=\"border-bottom: 0\">". $total_grade_weight["grade_weighting"]."%</td>";
+									}
+								}
+								echo "</tr>";
+							}
+							?>
+							<tr>
+								<td style="padding-top: 10px; border-bottom:0;"colspan="2">
+									<script type="text/javascript" charset="utf-8">
+										function exportSelected() {
+											var ids = [];
+											$$('#assessment_list .modified input:checked').each(function(checkbox) {
+												ids.push($F(checkbox));
+											});
+											if(ids.length > 0) {
+												window.location = '<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "io", "download" => "csv", "assessment_ids" => false)); ?>&assessment_ids='+ids.join(',');
+											} else {
+												alert("You must select some assessments to export.");
+											}
+											return false;
+										}
+									</script>
+									<input type="submit" class="button" value="Delete Selected" />
+									<input type="submit" class="button" value="Export Selected" onclick="exportSelected(); return false;"/>
+								</td>
+								<td colspan="2" style="padding-top: 10px; border-bottom: 0; "><a id="fullscreen-edit" class="button" style="float:right;" href="<?php echo ENTRADA_URL . "/admin/gradebook?" . replace_query(array("section" => "api-edit")); ?>"><div>Fullscreen</div></a></td>
+							</tr>
+							<tr>
+								<td style="border-bottom:0;"></td>
+							</tr>
+					<?php
+					}
+						/*foreach($assessments as $key => $assessment) {
+							
+							echo "<a href=\"$url\">".$assessment["name"]."</a>";
+							echo "	<td class=\"title\"><a href=\"$url\">".$assessment["name"]."</a></td>";
+							echo "	<td class=\"general\"><a href=\"$url\">".$assessment["grad_year"]."</a></td>";
+							echo "	<td class=\"general\"><a href=\"$url\">".$assessment["type"]."</a></td>";
+							echo "	<td class=\"general\"><a href=\"$url\">".$assessment["marking_scheme_name"]."</a></td>";
+							echo "</tr>";
+						}*/
 					}
 					?>
 				</tbody>
+			
 			</table>
+			
 			<div class="gradebook_edit" style="display: none;"></div>
 				<?php
 				if ($ENTRADA_ACL->amIAllowed("gradebook", "delete", false)) {

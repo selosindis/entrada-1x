@@ -46,7 +46,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 		$m_query = "	SELECT * FROM `assessment_marking_schemes`
 						WHERE `enabled` = 1;";
 		$MARKING_SCHEMES = $db->GetAll($m_query);
-
+		
+		$assessment_options_query = "SELECT `id`, `title`, `active`
+									 FROM `assessments_lu_meta_options`
+									 WHERE `active` = '1'";
+		$assessment_options = $db->GetAll($assessment_options_query);
 		if ($course_details && $MARKING_SCHEMES && $ENTRADA_ACL->amIAllowed(new GradebookResource($course_details["course_id"], $course_details["organisation_id"]), "update")) {
 			function return_id($arr) {
 				return $arr["id"];
@@ -78,7 +82,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						$ERROR++;
 						$ERRORSTR[] = "You must supply a <strong>Grade Weighting</strong> for this assessment.";
 					}
-					
 					if((isset($_POST["description"])) && ($description = clean_input($_POST["description"], array("notags", "trim")))) {
 						$PROCESSED["description"] = $description;
 					} else {
@@ -98,7 +101,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						$ERRORSTR[] = "You must pick a valid <strong>Type</strong> for this assessment.";
 					}
 					
-					if((isset($_POST["marking_scheme_id"])) && ($marking_scheme_id = clean_input($_POST["marking_scheme_id"], array("int")))) {
+					if((isset($_POST["marking_scheme_id"])) && ($marking_scheme_id = clean_input($_POST["marking_scheme_id"], array("trim","int")))) {
 						if (@in_array($marking_scheme_id, $MARKING_SCHEME_IDS)) {
 							$PROCESSED["marking_scheme_id"] = $marking_scheme_id;
 						} else {
@@ -109,10 +112,50 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						$ERROR++;
 						$ERRORSTR[] = "The <strong>Marking Scheme</strong> field is a required field.";
 					}
-					
+					//narrative check
+					if ((isset($_POST["narrative_assessment"])) && ($narrative = clean_input($_POST["narrative_assessment"], array("trim", "int")))) {
+						$PROCESSED["narrative"] = $narrative;
+					} else {
+						$PROCESSED["narrative"] = 0;
+					}
+					//optional/required check
+					if ((isset($_POST["assessment_required"]))) {
+						switch (clean_input($_POST["assessment_required"], array("trim", "int"))) {
+							case 0 :
+								$PROCESSED["required"] = 0;
+							break;
+							case 1 :
+								$PROCESSED["required"] = 1;
+							break;
+							default :
+							break;
+						}
+					}
+					//characteristic check
+					if ((isset($_POST["assessment_characteristic"])) && ($assessment_characteristic = clean_input($_POST["assessment_characteristic"], array("trim", "int"))) == 0) {
+						$ERROR++;
+						$ERRORSTR[] = "The <strong>Assessment Characteristic</strong> field is a required field.";
+					} else if ((isset($_POST["assessment_characteristic"])) && ($assessment_characteristic = clean_input($_POST["assessment_characteristic"], array("trim", "int")))) {
+						$PROCESSED["characteristic_id"] = $assessment_characteristic;
+					}
+					//extended options check
+					if ((is_array($_POST["option"])) && (count($_POST["option"]))) {
+					$assessment_options_selected = array();
+						foreach ($_POST["option"] as $option_id) {
+							if ($option_id = (int) $option_id) {
+								$query = "SELECT * FROM `assessments_lu_meta_options` 
+										  WHERE id = " .$db->qstr($option_id)."
+										  AND `active` = '1'";
+								$results = $db->GetAll($query);
+								if ($results) {
+									$assessment_options_selected[] = $option_id;
+								}
+							}
+						}
+					}
 					// Sometimes requried field "number grade points total". Specifies what a numeric marking scheme assessment is "out of".
 					// Only required when marking scheme is numeric, ID 3, hardcoded.
-					if((isset($_POST["numeric_grade_points_total"])) && ($points_total = clean_input($_POST["numeric_grade_points_total"], array("notags", "trim")))) {
+					if ((isset($_POST["numeric_grade_points_total"])) && ($points_total = clean_input($_POST["numeric_grade_points_total"], array("notags", "trim")))) {
 						$PROCESSED["numeric_grade_points_total"] = $points_total;
 					} else {
 						$PROCESSED["numeric_grade_points_total"] = "";
@@ -124,7 +167,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							}
 						}
 					}
-					
 					if (isset($_POST["post_action"])) {
 						if(@in_array($_POST["post_action"], array("new", "index", "parent", "grade"))) {
 							$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] = $_POST["post_action"];
@@ -135,18 +177,33 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] = "index";
 					}
 					
-					if(!$ERROR) {
+					if (!$ERROR) {
 						$PROCESSED["updated_date"]	= time();
 						$PROCESSED["updated_by"]	= $_SESSION["details"]["id"];
 						$PROCESSED["course_id"]		= $COURSE_ID;
 						
-						if($db->AutoExecute("assessments", $PROCESSED, "INSERT")) {
+						if ($db->AutoExecute("assessments", $PROCESSED, "INSERT")) {		
 							if($ASSESSMENT_ID = $db->Insert_Id()) {
 								application_log("success", "Successfully added assessment ID [".$ASSESSMENT_ID."]");
 							} else {
 								application_log("error", "Unable to fetch the newly inserted assessment identifier for this assessment.");
 							}
-							
+							if ($assessment_options) {
+								foreach ($assessment_options as $assessment_option) {
+									$query = "SELECT * FROM `assessments` WHERE assessment_id =" . $ASSESSMENT_ID;
+									$results = $db->GetRow($query);
+									if ($results) {
+										$PROCESSED["assessment_id"] = $results["assessment_id"];
+										$PROCESSED["option_id"] = $assessment_option["id"];
+										if (in_array($assessment_option["id"], $assessment_options_selected)) {
+											$PROCESSED["option_active"] = 1;
+										} else{
+											$PROCESSED["option_active"] = 0;
+										}
+									}
+									$db->AutoExecute("assessment_options", $PROCESSED, "INSERT");
+								}
+							}
 							switch($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"]) {
 								case "grade" :
 									$url = ENTRADA_URL."/admin/gradebook/assessments?".replace_query(array("step" => false, "section" => "grade", "assessment_id" => $ASSESSMENT_ID));
@@ -166,7 +223,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 									$msg = "You will now be redirected to the <strong>assessment index</strong> page for ". $course_details["course_name"] . "; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 								break;
 							}
-							
 							$SUCCESS++;
 							$SUCCESSSTR[] 	= $msg;
 							$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
@@ -179,18 +235,19 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						}
 					}
 
-					if($ERROR) {
+					if ($ERROR) {
 						$STEP = 1;
 					}
 				break;
 				case 1 :
+					
 				default :
 					continue;
 				break;
 			}
 
 			// Display Content
-			switch($STEP) {
+			switch ($STEP) {
 				case 2 :
 					if ($SUCCESS) {
 						echo display_success();
@@ -206,7 +263,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				default :
 			?>
 			<h1>Add Assessment</h1>
-			<?php if ($ERROR) {
+			<?php
+			if ($ERROR) {
 				echo display_error();
 			}
 			?>
@@ -267,38 +325,88 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						<td></td>
 						<td><label for="grade_weighting" class="form-nrequired">Assessment Weighting</label></td>
 						<td>
-							<input type="text" id="grade_weighting" name="grade_weighting" value="<?php echo (int) html_encode($PROCESSED["grade_weighting"]); ?>" maxlength="3" style="width: 30px" />
-							<span class="content-small"><strong>Tip:</strong> The percentage or numeric value of the final grade this assessment worth.</span>
+							<input type="text" id="grade_weighting" name="grade_weighting" value="<?php echo (int) html_encode($PROCESSED["grade_weighting"]); ?>" maxlength="3" style="width: 30px" autocomplete="off" />
+							<span class="content-small"><strong>Tip:</strong> The percentage or numeric value of the final grade this assessment is worth.</span>
+						</td>
+					</tr>
+				</tbody>
+				<tbody id="assessment_required_options" style="display: none;">
+					<tr>
+						<td>&nbsp;</td>
+						<td colspan="2" style="padding-top: 10px">
+							<label class="form-nrequired" for="assessment_required_0">Is this assessment <strong>optional</strong> or <strong>required</strong>?</label>
+							<div style="margin: 5px 0 0 25px">
+								<input type="radio" name="assessment_required" value="0" id="assessment_required_0" <?php echo (($PROCESSED["required"] == 0)) ? " checked=\"checked\"" : "" ?> /> <label class="form-nrequired" for="assessment_required_0">Optional</label><br />
+								<input type="radio" name="assessment_required" value="1" id="assessment_required_1" <?php echo (($PROCESSED["required"] == 1)) ? " checked=\"checked\"" : "" ?> /> <label class="form-nrequired" for="assessment_required_1">Required</label>
+							</div>
+						</td>
+					</tr>
+				</tbody>
+				<tbody>
+					<tr>
+						<td colspan="3">&nbsp;</td>
+					</tr>
+					<tr>
+						<td></td>
+						<td><label for="assessment_characteristic" class="form-required">Characteristic</label></td>
+						<td>
+							<select id="assessment_characteristic" name="assessment_characteristic">
+								<option value="">-- Select Assessment Characteristic --</option>
+								<?php
+								$query = "	SELECT *
+											FROM `assessments_lu_meta`
+											WHERE `organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+											AND `active` = '1'
+											ORDER BY `type` ASC, `title` ASC";
+								$assessment_characteristics = $db->GetAll($query);
+								if ($assessment_characteristics) {
+									$type = "";
+									foreach ($assessment_characteristics as $key => $characteristic) {
+										if ($type != $characteristic["type"]) {
+											if ($key) {
+												echo "</optgroup>";
+											}
+											echo "<optgroup label=\"".ucwords(strtolower($characteristic["type"]))."s\">";
+											
+											$type = $characteristic["type"];
+										}
+										
+										echo "<option value=\"" . $characteristic["id"] . "\" assessmenttype=\"" . $characteristic["type"] . "\"".(($PROCESSED["characteristic_id"] == $characteristic["id"]) ? " selected=\"selected\"" : "").">".$characteristic["title"]."</option>";
+									}
+									echo "</optgroup>";
+								}
+								?>
+							</select>
+						</td>
+					</tr>
+				</tbody>
+				<tbody id="assessment_options" style="display: none;">
+					<tr>
+						<td></td>
+						<td style="vertical-align: top;"><label class="form-nrequired">Extended Options</label></td>
+						<td>
+							<?php 
+							if ($assessment_options) {
+								foreach ($assessment_options as $assessment_option) {
+									echo "<input type=\"checkbox\" value=\"".$assessment_option["id"]."\" name=\"option[]\"" .((in_array($assessment_option["id"], $assessment_options_selected)) ? " checked=\"checked\"" : "") . " id=\"extended_option".$assessment_option["id"]. "\" /><label for=\"extended_option".$assessment_option["id"]."\">".$assessment_option["title"]."</label><br />";
+								}
+							}
+							?>
 						</td>
 					</tr>
 					<tr>
 						<td colspan="3">&nbsp;</td>
 					</tr>
-					<tr>
-						<td colspan="3"><h2>Assessment Strategy</h2></td>
-					</tr>
-					<tr>
-						<td></td>
-						<td><label for="type" class="form-required">Assessment Type</label></td>
-						<td>
-							<select id="type" name="type" style="width: 203px">
-							<?php
-							foreach($ASSESSMENT_TYPES as $type) {
-								echo "<option value=\"".$type."\"".(($PROCESSED["type"] == $type) ? " selected=\"selected\"" : "").">".$type."</option>";
-							}
-							?>
-							</select>
-						</td>
-					</tr>
+				</tbody>
+				<tbody>
 					<tr>
 						<td></td>
 						<td><label for="marking_scheme_id" class="form-required">Marking Scheme</label></td>
 						<td>
 							<select id="marking_scheme_id" name="marking_scheme_id" style="width: 203px">
 							<?php
-							foreach($MARKING_SCHEMES as $scheme) {
-								echo "<option value=\"".$scheme["id"]."\"".(($PROCESSED["marking_scheme_id"] == $scheme["id"]) ? " selected=\"selected\"" : "").">".$scheme["name"]."</option>";
-								
+							foreach ($MARKING_SCHEMES as $scheme) {
+								echo "<option value=\"".$scheme["id"]."\"".(($PROCESSED["marking_scheme_id"] == $scheme["id"]) ? " selected=\"selected\"" : "").">".$scheme["name"]."</option>";	
 							}
 							?>
 							</select>
@@ -312,17 +420,82 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							<span class="content-small"><strong>Tip:</strong> Maximum points possible for this assessment (i.e. <strong>20</strong> for &quot;X out of 20).</span>
 						</td>
 					</tr>
+					<tr>
+						<td></td>
+						<td><label for="type" class="form-required">Assessment Type</label></td>
+						<td>
+							<select id="type" name="type" style="width: 203px">
+							<?php
+							foreach ($ASSESSMENT_TYPES as $type) {
+								echo "<option value=\"".$type."\"".(($PROCESSED["type"] == $type) ? " selected=\"selected\"" : "").">".$type."</option>";
+							}
+							?>
+							</select>
+						</td>
+					</tr>
+					<tr>
+						<td colspan="3">&nbsp;</td>
+					</tr>
+					<tr>
+						<td><input type="checkbox" id="narrative_assessment" name="narrative_assessment" value="1" <?php echo (($PROCESSED["narrative"] == 1)) ? " checked=\"checked\"" : ""?> /></td>
+						<td colspan="2">
+							<label for="narrative_assessment" class="form-nrequired">This is a <strong>narrative assessment</strong>.</label>
+						</td>
+					</tr>
 				</tbody>
 				</table>
 				<script type="text/javascript" charset="utf-8">
 					jQuery(function($) {
-						$('#marking_scheme_id').change(function() {
-							if($(':selected', this).val() == 3 || $(':selected', this).text() == "Numeric") {
-								$('#numeric_marking_scheme_details').show();
+						jQuery('#marking_scheme_id').change(function() {
+							if(jQuery(':selected', this).val() == 3 || jQuery(':selected', this).text() == "Numeric") {
+								jQuery('#numeric_marking_scheme_details').show();
 							} else {
-								$('#numeric_marking_scheme_details').hide();
+								jQuery('#numeric_marking_scheme_details').hide();
 							}
 						}).trigger('change');
+						
+						jQuery('#grade_weighting').keyup(function() {
+							if (parseInt(jQuery('#grade_weighting').val())) {
+								jQuery('#assessment_required_1').attr('checked', 'checked');
+								jQuery('#assessment_required_options').hide();
+								
+							} else {
+								jQuery('#assessment_required_0').attr('checked', 'checked');
+								jQuery('#assessment_required_options').show();
+								
+							}
+						});
+						
+						jQuery('#grade_weighting').ready(function() {
+							if (parseInt(jQuery('#grade_weighting').val())) {
+								jQuery('#assessment_required_1').attr('checked', 'checked');
+								jQuery('#assessment_required_options').hide();
+								
+							} else {
+								jQuery('#assessment_required_options').show();
+								
+							}
+						});
+						
+						jQuery('#assessment_characteristic').change(function (){
+							jQuery('#assessment_options input:[type=checkbox]').removeAttr('checked');
+							var assessmentType = jQuery('#assessment_characteristic option:selected').attr('assessmenttype');
+							if(assessmentType == 'exam' || assessmentType == 'quiz') {
+								jQuery('#assessment_options').show();
+							} else {
+								jQuery('#assessment_options').hide();
+							}
+						});
+						
+						jQuery('#assessment_characteristic').ready(function (){
+							var assessmentType = jQuery('#assessment_characteristic option:selected').attr('assessmenttype');
+							if(assessmentType == 'exam' || assessmentType == 'quiz') {
+								jQuery('#assessment_options').show();
+							} else {
+								jQuery('#assessment_options').hide();
+							}
+						});
+				
 					});
 				</script>
 				<div style="padding-top: 25px">

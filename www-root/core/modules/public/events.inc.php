@@ -27,10 +27,10 @@
 if (!defined("PARENT_INCLUDED")) {
 	exit;
 } elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
-	header("Location: ".ENTRADA_URL);
+	header("Location: ".ENTRADA_RELATIVE);
 	exit;
 } elseif (!$ENTRADA_ACL->amIAllowed('event', 'read', false)) {
-	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/".$MODULE."\\'', 15000)";
+	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_RELATIVE."/".$MODULE."\\'', 15000)";
 
 	$ERROR++;
 	$ERRORSTR[]	= "Your account does not have the permissions required to use this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
@@ -133,21 +133,21 @@ if (!defined("PARENT_INCLUDED")) {
 		switch ($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]) {
 			case "admin" :
 				$admin_wording = "Administrator View";
-				$admin_url = ENTRADA_URL."/admin/events".(($EVENT_ID) ? "?".replace_query(array("section" => "manage", "id" => $EVENT_ID)) : "");
+				$admin_url = ENTRADA_RELATIVE."/admin/events".(($EVENT_ID) ? "?".replace_query(array("section" => "manage", "id" => $EVENT_ID)) : "");
 			break;
 			case "pcoordinator" :
 				$admin_wording = "Coordinator View";
-				$admin_url = ENTRADA_URL."/admin/events".(($EVENT_ID) ? "?".replace_query(array("section" => "manage", "id" => $EVENT_ID)) : "");
+				$admin_url = ENTRADA_RELATIVE."/admin/events".(($EVENT_ID) ? "?".replace_query(array("section" => "manage", "id" => $EVENT_ID)) : "");
 			break;
 			case "director" :
 				$admin_wording = "Director View";
-				$admin_url = ENTRADA_URL."/admin/events".(($EVENT_ID) ? "?".replace_query(array("section" => "manage", "id" => $EVENT_ID)) : "");
+				$admin_url = ENTRADA_RELATIVE."/admin/events".(($EVENT_ID) ? "?".replace_query(array("section" => "manage", "id" => $EVENT_ID)) : "");
 			break;
 			case "teacher" :
 			case "faculty" :
 			case "lecturer" :
 				$admin_wording = "Teacher View";
-				$admin_url = ENTRADA_URL."/admin/events".(($EVENT_ID) ? "?".replace_query(array("section" => "manage", "id" => $EVENT_ID)) : "");
+				$admin_url = ENTRADA_RELATIVE."/admin/events".(($EVENT_ID) ? "?".replace_query(array("section" => "manage", "id" => $EVENT_ID)) : "");
 			break;
 			default :
 				$admin_wording = "";
@@ -179,20 +179,20 @@ if (!defined("PARENT_INCLUDED")) {
 	}
 
 	$sidebar_html  = "<div style=\"text-align: center\">\n";
-	$sidebar_html .= "	<a href=\"".ENTRADA_URL."/podcasts\"><img src=\"".ENTRADA_URL."/images/podcast-dashboard-image.jpg\" width=\"149\" height=\"99\" alt=\"MEdTech Podcasts\" title=\"Subscribe to our Podcast feed.\" border=\"0\"></a><br />\n";
-	$sidebar_html .= "	<a href=\"".ENTRADA_URL."/podcasts\" style=\"color: #557CA3; font-size: 14px\">Podcasts Available</a>";
+	$sidebar_html .= "	<a href=\"".ENTRADA_RELATIVE."/podcasts\"><img src=\"".ENTRADA_RELATIVE."/images/podcast-dashboard-image.jpg\" width=\"149\" height=\"99\" alt=\"MEdTech Podcasts\" title=\"Subscribe to our Podcast feed.\" border=\"0\"></a><br />\n";
+	$sidebar_html .= "	<a href=\"".ENTRADA_RELATIVE."/podcasts\" style=\"color: #557CA3; font-size: 14px\">Podcasts Available</a>";
 	$sidebar_html .= "</div>\n";
 	new_sidebar_item("Podcasts in iTunes", $sidebar_html, "podcast-bar", "open", "2.1");
 
-	$BREADCRUMB[] = array("url" => ENTRADA_URL."/events", "title" => "View Events");
+	$BREADCRUMB[] = array("url" => ENTRADA_RELATIVE."/events", "title" => "View Events");
 
 	/**
 	 * If we were going into the $EVENT_ID
 	 */
 	if ($EVENT_ID) {
-		$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/windows/window.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
-		$HEAD[] = "<link href=\"".ENTRADA_URL."/css/windows/default.css\" rel=\"stylesheet\" type=\"text/css\" />";
-		$HEAD[] = "<link href=\"".ENTRADA_URL."/css/windows/medtech.css\" rel=\"stylesheet\" type=\"text/css\" />";
+		$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/windows/window.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+		$HEAD[] = "<link href=\"".ENTRADA_RELATIVE."/css/windows/default.css\" rel=\"stylesheet\" type=\"text/css\" />";
+		$HEAD[] = "<link href=\"".ENTRADA_RELATIVE."/css/windows/medtech.css\" rel=\"stylesheet\" type=\"text/css\" />";
 		?>
 		<script type="text/javascript">
 			function beginQuiz(id) {
@@ -208,7 +208,7 @@ if (!defined("PARENT_INCLUDED")) {
 						closable:		'true',
 						buttonClass:	'button small',
 						ok:				function(win) {
-											window.location = '<?php echo ENTRADA_URL; ?>/quizzes?section=attempt&id='+id;
+											window.location = '<?php echo ENTRADA_RELATIVE; ?>/quizzes?section=attempt&id='+id;
 											return true;
 										}
 					}
@@ -276,35 +276,15 @@ if (!defined("PARENT_INCLUDED")) {
 					}
 					
 					/**
-					 * Determine the event_audience information.
+					 * Gather the learners associated with this event from the event_audience table.
 					 */
-					$event_audience_type = "";
-					$associated_grad_year = "";
-					$associated_group_ids = array();
-					$associated_proxy_ids = array();
+					$associated_learners = array();;
 
 					$query = "SELECT * FROM `event_audience` WHERE `event_id` = ".$db->qstr($EVENT_ID);
 					$results = $db->GetAll($query);
 					if ($results) {
-						/**
-						 * Set the audience_type.
-						 */
-						$event_audience_type = $results[0]["audience_type"];
-
 						foreach ($results as $result) {
-							if ($result["audience_type"] == $event_audience_type) {
-								switch ($result["audience_type"]) {
-									case "grad_year" :
-										$associated_grad_year = clean_input($result["audience_value"], "alphanumeric");
-									break;
-									case "group_id" :
-										$associated_group_ids[] = (int) $result["audience_value"];
-									break;
-									case "proxy_id" :
-										$associated_proxy_ids[] = (int) $result["audience_value"];
-									break;
-								}
-							}
+							$associated_learners[$result["audience_type"]] = $result["audience_value"];
 						}
 					}
 
@@ -313,7 +293,7 @@ if (!defined("PARENT_INCLUDED")) {
 					$PAGE_META["description"]	= trim(str_replace(array("\t", "\n", "\r"), " ", html_encode(strip_tags($event_info["event_goals"]))));
 					$PAGE_META["keywords"]		= "";
 
-					$BREADCRUMB[]				= array("url" => ENTRADA_URL."/events?".replace_query(array("id" => $event_info["event_id"])), "title" => $event_info["event_title"]);
+					$BREADCRUMB[]				= array("url" => ENTRADA_RELATIVE."/events?".replace_query(array("id" => $event_info["event_id"])), "title" => $event_info["event_title"]);
 
 					$include_details			= true;
 					$include_audience			= true;
@@ -323,11 +303,11 @@ if (!defined("PARENT_INCLUDED")) {
 
 					$icon_resources				= ((((is_array($event_files)) && (count($event_files))) || ((is_array($event_links)) && (count($event_links))) || ((is_array($event_quizzes)) && (count($event_quizzes)))) ? true : false);
 					$icon_discussion			= (((is_array($event_discussions)) && (count($event_discussions))) ? true : false);
-					$icon_syllabus				= ((($event_audience_type == "grad_year") && ($associated_grad_year) && ($event_info["event_phase"])) ? true : false);
+					$icon_course_website		= true;
 
 					$resources_title			= (($icon_resources) ? "Download or view the attached event resources." : "There are no event resources currently attached.");
 					$discussion_title			= (($icon_discussion) ? "Read the posted discussion comments." : "Start up a conversion, leave your comment!");
-					$syllabus_title				= (($icon_syllabus) ? "Download the Class of ".$associated_grad_year.", Phase ".strtoupper($event_info["event_phase"])." Syllabus" : "No Syllabus Available");
+					$syllabus_title				= "Visit Course Website";
 
 					if (($_SESSION["details"]["allow_podcasting"]) && ($event_audience_type == "grad_year") && (in_array($_SESSION["details"]["allow_podcasting"], array($associated_grad_year, "all")))) {
 						$sidebar_html = "To upload a podcast: <a href=\"javascript:openPodcastWizard('".$EVENT_ID."')\">click here</a>";
@@ -344,7 +324,7 @@ if (!defined("PARENT_INCLUDED")) {
 									var windowX = (screen.width / 2) - (windowW / 2);
 									var windowY = (screen.height / 2) - (windowH / 2);
 
-									fileWizard = window.open('<?php echo ENTRADA_URL ?>/file-wizard-podcast.php?id=' + id, 'podcastWizard', 'width='+windowW+', height='+windowH+', scrollbars=no, resizable=yes');
+									fileWizard = window.open('<?php echo ENTRADA_RELATIVE ?>/file-wizard-podcast.php?id=' + id, 'podcastWizard', 'width='+windowW+', height='+windowH+', scrollbars=no, resizable=yes');
 									fileWizard.blur();
 									window.focus();
 
@@ -364,17 +344,17 @@ if (!defined("PARENT_INCLUDED")) {
 						echo "<tr>\n";
 						echo "	<td style=\"width: 22px; height: 23px\">";
 						if ($RESULT_ID > 0) {
-							echo "<a href=\"".ENTRADA_URL."/events?".replace_query(array(((isset($_GET["drid"])) ? "drid" : "rid") => ($RESULT_ID - 1)))."\" title=\"Previous Event\"><img src=\"".ENTRADA_URL."/images/cal-back.gif\" border=\"0\" width=\"22\" height=\"23\" alt=\"Previous Event\" title=\"Previous Event\" /></a>";
+							echo "<a href=\"".ENTRADA_RELATIVE."/events?".replace_query(array(((isset($_GET["drid"])) ? "drid" : "rid") => ($RESULT_ID - 1)))."\" title=\"Previous Event\"><img src=\"".ENTRADA_RELATIVE."/images/cal-back.gif\" border=\"0\" width=\"22\" height=\"23\" alt=\"Previous Event\" title=\"Previous Event\" /></a>";
 						} else {
-							echo "<img src=\"".ENTRADA_URL."/images/cal-back-off.gif\" border=\"0\" width=\"22\" height=\"23\" alt=\"\" title=\"\" />";
+							echo "<img src=\"".ENTRADA_RELATIVE."/images/cal-back-off.gif\" border=\"0\" width=\"22\" height=\"23\" alt=\"\" title=\"\" />";
 						}
 						echo "	</td>\n";
-						echo "	<td style=\"width: 100%; height: 23px; background: url('".ENTRADA_URL."/images/cal-table-bg.gif') #FFFFFF repeat-x; text-align: center; font-size: 10px; color: #666666; white-space: nowrap; overflow: hidden\">".html_encode($event_info["event_title"])."</td>\n";
+						echo "	<td style=\"width: 100%; height: 23px; background: url('".ENTRADA_RELATIVE."/images/cal-table-bg.gif') #FFFFFF repeat-x; text-align: center; font-size: 10px; color: #666666; white-space: nowrap; overflow: hidden\">".html_encode($event_info["event_title"])."</td>\n";
 						echo "	<td style=\"width: 22px; height: 23px\">";
 						if ($RESULT_ID < ($RESULT_TOTAL_ROWS - 1)) {
-							echo "<a href=\"".ENTRADA_URL."/events?".replace_query(array(((isset($_GET["drid"])) ? "drid" : "rid") => ($RESULT_ID + 1)))."\" title=\"Next Event\"><img src=\"".ENTRADA_URL."/images/cal-next.gif\" border=\"0\" width=\"22\" height=\"23\" alt=\"Next Event\" title=\"Next Event\" /></a>";
+							echo "<a href=\"".ENTRADA_RELATIVE."/events?".replace_query(array(((isset($_GET["drid"])) ? "drid" : "rid") => ($RESULT_ID + 1)))."\" title=\"Next Event\"><img src=\"".ENTRADA_RELATIVE."/images/cal-next.gif\" border=\"0\" width=\"22\" height=\"23\" alt=\"Next Event\" title=\"Next Event\" /></a>";
 						} else {
-							echo "<img src=\"".ENTRADA_URL."/images/cal-next-off.gif\" width=\"22\" height=\"23\" alt=\"\" title=\"\" />";
+							echo "<img src=\"".ENTRADA_RELATIVE."/images/cal-next-off.gif\" width=\"22\" height=\"23\" alt=\"\" title=\"\" />";
 						}
 						echo "	</td>\n";
 						echo "</tr>\n";
@@ -382,8 +362,8 @@ if (!defined("PARENT_INCLUDED")) {
 					}
 
 					echo "	<div style=\"text-align: right; margin-top: 8px\">\n";
-					echo "		<a href=\"".ENTRADA_URL."/events?id=".$event_info["event_id"]."\"><img src=\"".ENTRADA_URL."/images/page-link.gif\" width=\"16\" height=\"16\" alt=\"Link to this page\" title=\"Link to this page\" border=\"0\" style=\"margin-right: 3px; vertical-align: middle\" /></a> <a href=\"".ENTRADA_URL."/events?id=".$event_info["event_id"]."\" style=\"font-size: 10px; margin-right: 8px\">Link to this page</a>\n";
-					echo "		<a href=\"javascript:window.print()\"><img src=\"".ENTRADA_URL."/images/page-print.gif\" width=\"16\" height=\"16\" alt=\"Print this page\" title=\"Print this page\" border=\"0\" style=\"margin-right: 3px; vertical-align: middle\" /></a> <a href=\"javascript: window.print()\" style=\"font-size: 10px; margin-right: 8px\">Print this page</a>\n";
+					echo "		<a href=\"".ENTRADA_RELATIVE."/events?id=".$event_info["event_id"]."\"><img src=\"".ENTRADA_RELATIVE."/images/page-link.gif\" width=\"16\" height=\"16\" alt=\"Link to this page\" title=\"Link to this page\" border=\"0\" style=\"margin-right: 3px; vertical-align: middle\" /></a> <a href=\"".ENTRADA_RELATIVE."/events?id=".$event_info["event_id"]."\" style=\"font-size: 10px; margin-right: 8px\">Link to this page</a>\n";
+					echo "		<a href=\"javascript:window.print()\"><img src=\"".ENTRADA_RELATIVE."/images/page-print.gif\" width=\"16\" height=\"16\" alt=\"Print this page\" title=\"Print this page\" border=\"0\" style=\"margin-right: 3px; vertical-align: middle\" /></a> <a href=\"javascript: window.print()\" style=\"font-size: 10px; margin-right: 8px\">Print this page</a>\n";
 					echo "	</div>\n";
 
 					echo "</div>\n";
@@ -400,67 +380,95 @@ if (!defined("PARENT_INCLUDED")) {
 					}
 					echo "</div>\n";
 					echo "<h1 class=\"event-title\">".html_encode($event_info["event_title"])."</h1>\n";
-					echo "<div style=\"float: right; width: 215px\">\n";
-					echo "   <ul class=\"access-legend\">\n";
-					echo "     <li><span style=\"font-weight: bold\">Quick Access Legend</span>\n";
-					echo "         <ul>\n";
-					echo "           <li><a href=\"#event-resources-section\" onclick=\"$('event-resources-section').scrollTo(); return false;\" title=\"".$resources_title."\"><img src=\"".ENTRADA_URL."/images/icon-resources-".(($icon_resources) ? "on" : "off").".gif\" width=\"36\" height=\"36\" alt=\"".$resources_title."\" title=\"".$resources_title."\" border=\"0\" style=\"vertical-align: middle; margin-right: 5px\" />Event Resources</a></li>\n";
-					echo "           <li><a href=\"#event-comments-section\" onclick=\"$('event-comments-section').scrollTo(); return false;\" title=\"".$discussion_title."\"><img src=\"".ENTRADA_URL."/images/icon-discussion-".(($icon_discussion) ? "on" : "off").".gif\" width=\"36\" height=\"36\" alt=\"".$discussion_title."\" title=\"".$discussion_title."\" border=\"0\" style=\"vertical-align: middle; margin-right: 5px\" />Event Discussions</a></li>\n";
-					echo "           <li><a href=\"".(($icon_syllabus) ? ENTRADA_URL."/syllabi/class-of-".$associated_grad_year."_phase-".$event_info["event_phase"].".pdf\" target=\"_blank" : "#")."\" title=\"".$syllabus_title."\"><img src=\"".ENTRADA_URL."/images/icon-syllabus-".(($icon_syllabus) ? "on" : "off").".gif\" width=\"36\" height=\"36\" alt=\"".$syllabus_title."\" title=\"".$syllabus_title."\" border=\"0\" style=\"vertical-align: middle; margin-right: 5px\" />Phase ".strtoupper($event_info["event_phase"])." Syllabus</a></li>\n";
-					echo "         </ul>\n";
-					echo "     </li>\n";
-					echo "   </ul>\n";
+					
+					echo "<div style=\"float: right; width: 215px;\">\n";
+//					echo "   <ul class=\"access-legend\">\n";
+//					echo "     <li><span style=\"font-weight: bold\">Quick Access Legend</span>\n";
+//					echo "         <ul>\n";
+//					echo "           <li><a href=\"#event-resources-section\" onclick=\"$('event-resources-section').scrollTo(); return false;\" title=\"".$resources_title."\"><img src=\"".ENTRADA_RELATIVE."/images/icon-resources-".(($icon_resources) ? "on" : "off").".gif\" width=\"36\" height=\"36\" alt=\"".$resources_title."\" title=\"".$resources_title."\" border=\"0\" style=\"vertical-align: middle; margin-right: 5px\" />Event Resources</a></li>\n";
+//					echo "           <li><a href=\"#event-comments-section\" onclick=\"$('event-comments-section').scrollTo(); return false;\" title=\"".$discussion_title."\"><img src=\"".ENTRADA_RELATIVE."/images/icon-discussion-".(($icon_discussion) ? "on" : "off").".gif\" width=\"36\" height=\"36\" alt=\"".$discussion_title."\" title=\"".$discussion_title."\" border=\"0\" style=\"vertical-align: middle; margin-right: 5px\" />Event Discussions</a></li>\n";
+//					echo "           <li><a href=\"\"><img src=\"".ENTRADA_RELATIVE."/images/icon-syllabus-on.gif\" width=\"36\" height=\"36\" alt=\"".$syllabus_title."\" title=\"".$syllabus_title."\" border=\"0\" style=\"vertical-align: middle; margin-right: 5px\" />".$syllabus_title."</a></li>\n";
+//					echo "         </ul>\n";
+//					echo "     </li>\n";
+//					echo "   </ul>\n";
+					
+require_once("Models/utility/Collection.class.php");
+require_once("Models/utility/SimpleCache.class.php");
 
-					if ($event_audience_type == "grad_year") {
-						if ((clean_input($event_info["event_goals"], array("notags", "trim"))) || (clean_input($event_info["event_objectives"], array("notags", "trim")))) {
-							$limit_related_events = 0;
+require_once("Models/users/User.class.php");
+require_once("Models/users/Users.class.php");
+require_once("Models/users/Assistant.class.php");
+require_once("Models/users/UserPhoto.class.php");
+require_once("Models/users/UserPhotos.class.php");
+require_once("Models/users/GraduatingClass.class.php");
+require_once("Models/organisations/Organisation.class.php");
+require_once("Models/organisations/Organisations.class.php");
+require_once("Models/users/Department.class.php");
+require_once("Models/users/Departments.class.php");
+require_once("Models/events/EventContacts.class.php");
+require_once("Models/events/Event.class.php");
+require_once("Models/events/Events.class.php");
+require_once("Models/courses/Course.class.php");
+require_once("Models/courses/Courses.class.php");
 
-							if (clean_input($event_info["event_goals"], array("notags", "trim"))) {
-								$limit_related_events += 2;
-							}
+require_once("Models/regions/Region.class.php");
+require_once("Models/regions/Country.class.php");
 
-							if (clean_input($event_info["event_objectives"], array("notags", "trim"))) {
-								$limit_related_events += 2;
-							}
+require_once("Models/tasks/Tasks.class.php");
+require_once("Models/tasks/Task.class.php");
+require_once("Models/tasks/TaskOwners.class.php");
+require_once("Models/tasks/TaskRecipients.class.php");
+require_once("Models/tasks/TaskCompletions.class.php");
+require_once("Models/tasks/TaskAssociatedFaculty.class.php");
+require_once("Models/tasks/TaskVerifiers.class.php");
 
-							if (clean_input($event_info["event_message"], array("notags", "trim"))) {
-								$limit_related_events += 1;
-							}
+					$query		= "	SELECT a.`proxy_id`, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`email`, a.`contact_order`
+									FROM `event_contacts` AS a
+									LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
+									ON b.`id` = a.`proxy_id`
+									WHERE a.`event_id` = ".$db->qstr($event_info["event_id"])."
+									AND b.`id` IS NOT NULL
+									
+									UNION
+									
+									SELECT a.`proxy_id`, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`email`, a.`contact_order`
+									FROM `event_contacts` AS a
+									LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
+									ON b.`id` = a.`proxy_id`
+									WHERE a.`event_id` = ".$db->qstr($event_info["parent_id"])."
+									AND b.`id` IS NOT NULL
+									GROUP BY a.`proxy_id`
+									ORDER BY `contact_order` ASC";
+					$faculty = $db->GetAll($query);
+					if ($faculty) {
+						echo "<ul class=\"access-legend\">\n";
+						echo "	<li><span style=\"font-weight: bold\">Faculty Members</span>\n";
+						echo "		<ul>\n";
+						foreach ($faculty as $result) {
+							
+							$photos = UserPhotos::get($result["proxy_id"]);
+							
+//							$photo = new UserPhoto(UserPhoto::fromArray($official));
 
-							if ($limit_related_events) {
-								$search_keywords	= clean_input($event_info["event_title"], array("notags", "trim"))." ".clean_input($event_info["event_goals"], array("notags", "trim"))." ".clean_input($event_info["event_objectives"], array("notags", "trim"))." ".clean_input($event_info["event_message"], array("notags", "trim"));
-								$search_query		= "	SELECT a.*, b.`audience_value` AS `event_grad_year`, MATCH (a.`event_title`, a.`event_description`, a.`event_goals`, a.`event_objectives`, a.`event_message`) AGAINST (".$db->qstr(str_replace(array("%", " AND ", " NOT "), array("%%", " +", " -"), $search_keywords))." IN BOOLEAN MODE) AS `rank`
-														FROM `events` AS a
-														LEFT JOIN `event_audience` AS b
-														ON b.`event_id` = a.`event_id`
-														LEFT JOIN `courses` AS c
-														ON a.`course_id` = c.`course_id`
-														WHERE b.`audience_type` = 'grad_year'
-														AND c.`course_active` = '1'
-														AND b.`audience_value` = ".$db->qstr($associated_grad_year)."
-														AND MATCH (a.`event_title`, a.`event_description`, a.`event_goals`, a.`event_objectives`, a.`event_message`) AGAINST (".$db->qstr(str_replace(array("%", " AND ", " NOT "), array("%%", " +", " -"), $search_keywords))." IN BOOLEAN MODE)
-														AND a.event_id <> ".$db->qstr($event_info["event_id"])."
-														GROUP BY a.`event_id`
-														ORDER BY `rank` DESC, a.`event_start` DESC
-														LIMIT 0, ".$limit_related_events;
-								$search_results		= $db->CacheGetAll(LONG_CACHE_TIMEOUT, $search_query);
-								if ($search_results) {
-									echo "   <ul class=\"access-legend\">\n";
-									echo "		<li><span style=\"font-weight: bold\">Related Events</span>\n";
-									echo "			<ul>\n";
-									foreach ($search_results as $search_result) {
-										echo "			<li><a href=\"".ENTRADA_URL."/events?id=".$search_result["event_id"]."\" target=\"_blank\"><strong>".html_encode($search_result["event_title"])."</strong><br /><span style=\"color: #666666; font-size: 11px; font-weight: normal\">Event on ".date(DEFAULT_DATE_FORMAT, $search_result["event_start"])."; Class of ".$search_result["event_grad_year"]."</span></a></li>\n";
-									}
-									echo "   		</ul>\n";
-									echo "   	</li>\n";
-									echo "   </ul>\n";
-								}
-							}
+//							$feat_str = $official_photo->getFilename();
+							Zend_Debug::dump($photos);
+							
+							echo "		<li><a href=\"mailto:".html_encode($result["email"])."\">".html_encode($result["fullname"])."</a></li>\n";
 						}
-					}
+						echo "		</ul>\n";
+						echo "	</li>\n";
+						echo "</ul>\n";
+					}					
 					echo "</div>\n";
 
 					echo "<div style=\"float: left; width: 520px\">\n";
+					
+					if (clean_input($event_info["event_description"], array("notags", "nows")) != "") {
+						echo "<div style=\"font-size: 14px; line-height: 150%\">";
+						echo trim(strip_selected_tags($event_info["event_description"], array("font")));
+						echo "</div>";
+					}
+					
 					echo "	<a name=\"event-details-section\"></a>\n";
 					echo "	<h2 title=\"Event Details Section\">Event Details</h2>\n";
 					echo "	<div id=\"event-details-section\" class=\"section-holder\">\n";
@@ -478,7 +486,10 @@ if (!defined("PARENT_INCLUDED")) {
 					echo "				<td>Location</td>\n";
 					echo "				<td>".(($event_info["event_location"]) ? $event_info["event_location"] : "To Be Announced")."</td>\n";
 					echo "			</tr>\n";
-
+					
+					/**
+					 * @todo This needs to be fixed as $event_audience_type is no longer for grad_year.
+					 */
 					if ($event_audience_type == "grad_year") {
 						$query		= "	SELECT a.`event_id`, a.`event_title`, b.`audience_value` AS `event_grad_year`
 										FROM `events` AS a
@@ -502,48 +513,13 @@ if (!defined("PARENT_INCLUDED")) {
 							echo "		<td style=\"vertical-align: top\">Overlapping Event".((count($results) != 1) ? "s" : "")."</td>\n";
 							echo "		<td>\n";
 							foreach ($results as $result) {
-								echo "		<a href=\"".ENTRADA_URL."/events?id=".$result["event_id"]."\">".html_encode($result["event_title"])."</a><br />\n";
+								echo "		<a href=\"".ENTRADA_RELATIVE."/events?id=".$result["event_id"]."\">".html_encode($result["event_title"])."</a><br />\n";
 							}
 							echo "		</td>\n";
 							echo "	</tr>\n";
 						}
 					}
-
-					echo "			<tr>\n";
-					echo "				<td colspan=\"2\">&nbsp;</td>\n";
-					echo "			</tr>\n";
-
-					echo "			<tr>\n";
-					echo "				<td style=\"vertical-align: top\">Faculty</td>\n";
-					echo "				<td>\n";
-					$squery		= "	SELECT a.`proxy_id`, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`email`, a.`contact_order`
-									FROM `event_contacts` AS a
-									LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
-									ON b.`id` = a.`proxy_id`
-									WHERE a.`event_id` = ".$db->qstr($event_info["event_id"])."
-									AND b.`id` IS NOT NULL
-									
-									UNION
-									
-									SELECT a.`proxy_id`, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`email`, a.`contact_order`
-									FROM `event_contacts` AS a
-									LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
-									ON b.`id` = a.`proxy_id`
-									WHERE a.`event_id` = ".$db->qstr($event_info["parent_id"])."
-									AND b.`id` IS NOT NULL
-									GROUP BY a.`proxy_id`
-									ORDER BY `contact_order` ASC";
-					$sresults	= $db->GetAll($squery);
-					if ($sresults) {
-						foreach ($sresults as $key => $sresult) {
-							echo "<a href=\"mailto:".html_encode($sresult["email"])."\">".html_encode($sresult["fullname"])."</a><br/>\n";
-						}
-					} else {
-						echo "To Be Announced";
-					}
-					echo "				</td>\n";
-					echo "			</tr>\n";
-
+					
 					if ($event_types) {
 						echo "	<tr>\n";
 						echo "		<td colspan=\"2\">&nbsp;</td>\n";
@@ -567,79 +543,11 @@ if (!defined("PARENT_INCLUDED")) {
 						echo "		<td>Event Duration</td>\n";
 						echo "		<td>".(((int) $event_info["event_duration"]) ? $event_info["event_duration"]." minutes" : "To Be Announced")."</td>\n";
 						echo "	</tr>\n";
-					}
+					}					
 
-					if (clean_input($event_info["event_description"], array("notags", "nows")) != "") {
-						echo "	<tr>\n";
-						echo "		<td colspan=\"2\">&nbsp;</td>\n";
-						echo "	</tr>\n";
-						echo "	<tr>\n";
-						echo "		<td colspan=\"2\">\n";
-						echo "			<h3>Event Description</h3>\n";
-						echo			trim(strip_selected_tags($event_info["event_description"], array("font")));
-						echo "		</td>\n";
-						echo "	</tr>\n";
-					}
-					echo "		</tbody>\n";
-					echo "		</table>\n";
-					echo "	</div>\n";
-
-					echo "	<a name=\"event-audience-section\"></a>\n";
-					echo "	<h2 title=\"Event Audience Section\">Event Audience</h2>\n";
-					echo "	<div id=\"event-audience-section\" class=\"section-holder\">\n";
-					echo "		<table style=\"width: 100%\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" summary=\"Event Audience Information\">\n";
-					echo "		<colgroup>\n";
-					echo "			<col style=\"width: 25%\" />\n";
-					echo "			<col style=\"width: 75%\" />\n";
-					echo "		</colgroup>\n";
-					echo "		<tbody>\n";
-					echo "			<tr>\n";
-					echo "				<td>Phase / Term</td>\n";
-					echo "				<td>".strtoupper($event_info["event_phase"])."</td>\n";
-					echo "			</tr>\n";
-					echo "			<tr>\n";
-					echo "				<td>Course</td>\n";
-					echo "				<td>".(($event_info["course_id"]) ? "<a href=\"".ENTRADA_URL."/courses?id=".$event_info["course_id"]."\">".fetch_course_title($event_info["course_id"], true, true)."</a>" : "Not Yet Filed")."</td>\n";
-					echo "			</tr>\n";
 					echo "			<tr>\n";
 					echo "				<td colspan=\"2\">&nbsp;</td>\n";
 					echo "			</tr>\n";
-
-					switch ($event_audience_type) {
-						case "grad_year" :
-							echo "	<tr>\n";
-							echo "		<td>Graduating Year</td>\n";
-							echo "		<td>Class of ".$associated_grad_year."</td>\n";
-							echo "	</tr>\n";
-						break;
-						case "group_id" :
-							echo "	<tr>\n";
-							echo "		<td style=\"vertical-align: top\">Group</td>\n";
-							echo "		<td style=\"vertical-align: top\">\n";
-							echo "			<ul class=\"general-list\">";
-							foreach ($associated_group_ids as $group_id) {
-							/**
-							 * @todo Once the group support has been added this will need to be changed.
-							 */
-								echo "			<li>Group ID: ".$group_id."</li>\n";
-							}
-							echo "			</ul>\n";
-							echo "		</td>\n";
-							echo "	</tr>\n";
-						break;
-						case "proxy_id" :
-							echo "	<tr>\n";
-							echo "		<td style=\"vertical-align: top\">Learner".((count($associated_proxy_ids) != 1) ? "s" : "")."</td>\n";
-							echo "		<td style=\"vertical-align: top\">\n";
-							echo "			<ul class=\"general-list\">";
-							foreach ($associated_proxy_ids as $proxy_id) {
-								echo "			<li><a href=\"".ENTRADA_URL."/people?profile=".get_account_data("username", $proxy_id)."\" target=\"_blank\">".get_account_data("firstlast", $proxy_id)."</a></li>\n";
-							}
-							echo "			</ul>\n";
-							echo "		</td>\n";
-							echo "	</tr>\n";
-						break;
-					}
 
 					if (clean_input($event_info["event_message"], array("notags", "nows")) != "") {
 						echo "	<tr>\n";
@@ -652,6 +560,48 @@ if (!defined("PARENT_INCLUDED")) {
 						echo "		</td>\n";
 						echo "	</tr>\n";
 					}
+					
+					echo "			<tr>\n";
+					echo "				<td colspan=\"2\">&nbsp;</td>\n";
+					echo "			</tr>\n";
+
+					echo "	<tr>\n";
+					echo "		<td style=\"vertical-align: top\">Learners</td>\n";
+					echo "		<td style=\"vertical-align: top\">\n";
+					echo "			<ul class=\"general-list\">";
+					
+					switch ($event_audience_type) {
+						case "course_id" :
+							echo "<li>Course ID: ".$group_id."</li>\n";
+						break;
+						case "group_id" :
+							echo "	<tr>\n";
+							echo "		<td style=\"vertical-align: top\"></td>\n";
+							echo "		<td style=\"vertical-align: top\">\n";
+							echo "			<ul class=\"general-list\">";
+							foreach ($associated_group_ids as $group_id) {
+								echo "			<li>Group ID: ".$group_id."</li>\n";
+							}
+							echo "			</ul>\n";
+							echo "		</td>\n";
+							echo "	</tr>\n";
+						break;
+						case "proxy_id" :
+							echo "	<tr>\n";
+							echo "		<td style=\"vertical-align: top\">Learner".((count($associated_proxy_ids) != 1) ? "s" : "")."</td>\n";
+							echo "		<td style=\"vertical-align: top\">\n";
+							echo "			<ul class=\"general-list\">";
+							foreach ($associated_proxy_ids as $proxy_id) {
+								echo "			<li><a href=\"".ENTRADA_RELATIVE."/people?profile=".get_account_data("username", $proxy_id)."\" target=\"_blank\">".get_account_data("firstlast", $proxy_id)."</a></li>\n";
+							}
+							echo "			</ul>\n";
+							echo "		</td>\n";
+							echo "	</tr>\n";
+						break;
+					}					
+					echo "			</ul>\n";
+					echo "		</td>\n";
+					echo "	</tr>\n";
 					echo "		</tbody>\n";
 					echo "		</table>\n";
 					echo "	</div>\n";
@@ -739,7 +689,7 @@ if (!defined("PARENT_INCLUDED")) {
 								} else {
 									hierarchy = 0;
 								}
-								new Ajax.Updater('objectives_list', '<?php echo ENTRADA_URL; ?>/api/objectives.api.php', 
+								new Ajax.Updater('objectives_list', '<?php echo ENTRADA_RELATIVE; ?>/api/objectives.api.php', 
 									{
 										method:	'post',
 										parameters: 'course_ids=<?php echo $event_info["course_id"] ?>&hierarchy='+hierarchy+'&event_id=<?php echo $EVENT_ID; ?>'
@@ -790,12 +740,12 @@ if (!defined("PARENT_INCLUDED")) {
 							$ext		= $parts["extension"];
 
 							echo "	<tr id=\"file-".$result["efile_id"]."\">\n";
-							echo "		<td class=\"modified\" style=\"vertical-align: top\">".(((int) $result["last_visited"]) ? (((int) $result["last_visited"] >= (int) $result["updated_date"]) ? "<img src=\"".ENTRADA_URL."/images/accept.png\" width=\"16\" height=\"16\" alt=\"You have already downloaded the latest version.\" title=\"You have already downloaded the latest version.\" />" : "<img src=\"".ENTRADA_URL."/images/exclamation.png\" width=\"16\" height=\"16\" alt=\"This file has been updated since you have last downloaded it.\" title=\"This file has been updated since you have last downloaded it.\" />") : "")."</td>\n";
+							echo "		<td class=\"modified\" style=\"vertical-align: top\">".(((int) $result["last_visited"]) ? (((int) $result["last_visited"] >= (int) $result["updated_date"]) ? "<img src=\"".ENTRADA_RELATIVE."/images/accept.png\" width=\"16\" height=\"16\" alt=\"You have already downloaded the latest version.\" title=\"You have already downloaded the latest version.\" />" : "<img src=\"".ENTRADA_RELATIVE."/images/exclamation.png\" width=\"16\" height=\"16\" alt=\"This file has been updated since you have last downloaded it.\" title=\"This file has been updated since you have last downloaded it.\" />") : "")."</td>\n";
 							echo "		<td class=\"file-category\" style=\"vertical-align: top\">".((isset($RESOURCE_CATEGORIES["event"][$result["file_category"]])) ? html_encode($RESOURCE_CATEGORIES["event"][$result["file_category"]]) : "Unknown Category")."</td>\n";
 							echo "		<td class=\"title\" style=\"vertical-align: top; white-space: normal; overflow: visible\">\n";
-							echo "			<img src=\"".ENTRADA_URL."/serve-icon.php?ext=".$ext."\" width=\"16\" height=\"16\" alt=\"".strtoupper($ext)." Document\" title=\"".strtoupper($ext)." Document\" style=\"vertical-align: middle\" />\n";
+							echo "			<img src=\"".ENTRADA_RELATIVE."/serve-icon.php?ext=".$ext."\" width=\"16\" height=\"16\" alt=\"".strtoupper($ext)." Document\" title=\"".strtoupper($ext)." Document\" style=\"vertical-align: middle\" />\n";
 							if (((!(int) $result["release_date"]) || ($result["release_date"] <= time())) && ((!(int) $result["release_until"]) || ($result["release_until"] >= time()))) {
-								echo "		<a href=\"".ENTRADA_URL."/file-event.php?id=".$result["efile_id"]."\" title=\"Click to download ".html_encode($result["file_title"])."\" style=\"font-weight: bold\"".(((int) $result["access_method"]) ? " target=\"_blank\"" : "").">".html_encode($result["file_title"])."</a>";
+								echo "		<a href=\"".ENTRADA_RELATIVE."/file-event.php?id=".$result["efile_id"]."\" title=\"Click to download ".html_encode($result["file_title"])."\" style=\"font-weight: bold\"".(((int) $result["access_method"]) ? " target=\"_blank\"" : "").">".html_encode($result["file_title"])."</a>";
 							} else {
 								echo "		<span style=\"color: #666666; font-weight: bold\">".html_encode($result["file_title"])."</span>";
 							}
@@ -844,10 +794,10 @@ if (!defined("PARENT_INCLUDED")) {
 					if ($event_links) {
 						foreach ($event_links as $result) {
 							echo "	<tr>\n";
-							echo "		<td class=\"modified\" style=\"vertical-align: top\">".(((int) $result["last_visited"]) ? (((int) $result["last_visited"] >= (int) $result["updated_date"]) ? "<img src=\"".ENTRADA_URL."/images/accept.png\" width=\"16\" height=\"16\" alt=\"You have previously visited this link.\" title=\"You have previously visited this link.\" />" : "<img src=\"".ENTRADA_URL."/images/exclamation.png\" width=\"16\" height=\"16\" alt=\"An update to this link has been made, please re-visit it.\" title=\"An update to this link has been made, please re-visit it.\" />") : "")."</td>\n";
+							echo "		<td class=\"modified\" style=\"vertical-align: top\">".(((int) $result["last_visited"]) ? (((int) $result["last_visited"] >= (int) $result["updated_date"]) ? "<img src=\"".ENTRADA_RELATIVE."/images/accept.png\" width=\"16\" height=\"16\" alt=\"You have previously visited this link.\" title=\"You have previously visited this link.\" />" : "<img src=\"".ENTRADA_RELATIVE."/images/exclamation.png\" width=\"16\" height=\"16\" alt=\"An update to this link has been made, please re-visit it.\" title=\"An update to this link has been made, please re-visit it.\" />") : "")."</td>\n";
 							echo "		<td class=\"title\" style=\"vertical-align: top; white-space: normal; overflow: visible\">\n";
 							if (((!(int) $result["release_date"]) || ($result["release_date"] <= time())) && ((!(int) $result["release_until"]) || ($result["release_until"] >= time()))) {
-								echo "		<a href=\"".ENTRADA_URL."/link-event.php?id=".$result["elink_id"]."\" title=\"Click to visit ".$result["link"]."\" style=\"font-weight:  bold\" target=\"_blank\">".(($result["link_title"] != "") ? html_encode($result["link_title"]) : $result["link"])."</a>\n";
+								echo "		<a href=\"".ENTRADA_RELATIVE."/link-event.php?id=".$result["elink_id"]."\" title=\"Click to visit ".$result["link"]."\" style=\"font-weight:  bold\" target=\"_blank\">".(($result["link_title"] != "") ? html_encode($result["link_title"]) : $result["link"])."</a>\n";
 							} else {
 								echo "		<span style=\"color: #666666; font-weight: bold\">".(($result["link_title"] != "") ? html_encode($result["link_title"]) : "Untitled Link")."</span>";
 							}
@@ -916,7 +866,7 @@ if (!defined("PARENT_INCLUDED")) {
 							}
 
 							echo "	<tr id=\"quiz-".$quiz_record["aquiz_id"]."\">\n";
-							echo "		<td class=\"modified\" style=\"vertical-align: top\">".(((int) $quiz_record["last_visited"]) ? (((int) $quiz_record["last_visited"] >= (int) $quiz_record["updated_date"]) ? "<img src=\"".ENTRADA_URL."/images/checkmark.gif\" width=\"20\" height=\"20\" alt=\"You have previously completed this quiz.\" title=\"You have previously completed this quiz.\" style=\"vertical-align: middle\" />" : "<img src=\"".ENTRADA_URL."/images/exclamation.gif\" width=\"20\" height=\"20\" alt=\"This attached quiz has been updated since you last completed it.\" title=\"This attached quiz has been updated since you last completed it.\" style=\"vertical-align: middle\" />") : "")."</td>\n";
+							echo "		<td class=\"modified\" style=\"vertical-align: top\">".(((int) $quiz_record["last_visited"]) ? (((int) $quiz_record["last_visited"] >= (int) $quiz_record["updated_date"]) ? "<img src=\"".ENTRADA_RELATIVE."/images/checkmark.gif\" width=\"20\" height=\"20\" alt=\"You have previously completed this quiz.\" title=\"You have previously completed this quiz.\" style=\"vertical-align: middle\" />" : "<img src=\"".ENTRADA_RELATIVE."/images/exclamation.gif\" width=\"20\" height=\"20\" alt=\"This attached quiz has been updated since you last completed it.\" title=\"This attached quiz has been updated since you last completed it.\" style=\"vertical-align: middle\" />") : "")."</td>\n";
 							echo "		<td class=\"title\" style=\"vertical-align: top; white-space: normal; overflow: visible\">\n";
 							if ($allow_attempt) {
 								echo "		<a href=\"javascript: beginQuiz(".$quiz_record["aquiz_id"].")\" title=\"Take ".html_encode($quiz_record["quiz_title"])."\" style=\"font-weight: bold\">".html_encode($quiz_record["quiz_title"])."</a>";
@@ -964,7 +914,7 @@ if (!defined("PARENT_INCLUDED")) {
 												$percentage = ((round(($entry["quiz_score"] / $entry["quiz_value"]), 2)) * 100);
 												echo "<li class=\"".(($percentage >= 60) ? "correct" : "incorrect")."\">";
 												echo	date(DEFAULT_DATE_FORMAT, $entry["updated_date"])." <strong>Score:</strong> ".$entry["quiz_score"]."/".$entry["quiz_value"]." (".$percentage."%)";
-												echo "	( <a href=\"".ENTRADA_URL."/quizzes?section=results&amp;id=".$entry["qprogress_id"]."\">review quiz</a> )";
+												echo "	( <a href=\"".ENTRADA_RELATIVE."/quizzes?section=results&amp;id=".$entry["qprogress_id"]."\">review quiz</a> )";
 												echo "</li>";
 											} else {
 												echo "<li>".date(DEFAULT_DATE_FORMAT, $entry["updated_date"])." <strong>Score:</strong> To Be Released ".date(DEFAULT_DATE_FORMAT, $quiz_record["release_until"])."</li>";
@@ -974,7 +924,7 @@ if (!defined("PARENT_INCLUDED")) {
 											echo "<li class=\"incorrect\">".date(DEFAULT_DATE_FORMAT, $entry["updated_date"])." <strong>Expired Attempt</strong>: not completed.</li>";
 										break;
 										case "inprogress" :
-											echo "<li>".date(DEFAULT_DATE_FORMAT, $entry["updated_date"])." <strong>Attempt In Progress</strong> ( <a href=\"".ENTRADA_URL."/quizzes?section=attempt&amp;id=".$quiz_record["aquiz_id"]."\">continue quiz</a> )</li>";
+											echo "<li>".date(DEFAULT_DATE_FORMAT, $entry["updated_date"])." <strong>Attempt In Progress</strong> ( <a href=\"".ENTRADA_RELATIVE."/quizzes?section=attempt&amp;id=".$quiz_record["aquiz_id"]."\">continue quiz</a> )</li>";
 										break;
 										default :
 											continue;
@@ -1038,7 +988,7 @@ if (!defined("PARENT_INCLUDED")) {
 						echo "<div class=\"content-small\">There are no comments or discussions on this event. <strong>Start a conversation</strong>, leave your comment below.</div>\n";
 					}
 					echo "	<br /><br />";
-					echo "	<form action=\"".ENTRADA_URL."/discussions?action=add".(($USE_QUERY) ? "&amp;".((isset($_GET["drid"])) ? "drid" : "rid")."=".$RESULT_ID : "")."\" method=\"post\">\n";
+					echo "	<form action=\"".ENTRADA_RELATIVE."/discussions?action=add".(($USE_QUERY) ? "&amp;".((isset($_GET["drid"])) ? "drid" : "rid")."=".$RESULT_ID : "")."\" method=\"post\">\n";
 					echo "		<input type=\"hidden\" name=\"event_id\" value=\"".$EVENT_ID."\" />\n";
 					echo "		<label for=\"discussion_comment\" class=\"content-subheading\">Leave a Comment</label>\n";
 					echo "		<div class=\"content-small\">Posting comment as <strong>".$_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]."</strong></div>\n";
@@ -1053,10 +1003,6 @@ if (!defined("PARENT_INCLUDED")) {
 					$sidebar_html  = "<ul class=\"menu\">\n";
 					if ($include_details) {
 						$sidebar_html .= "	<li class=\"link\"><a href=\"#event-details-section\" onclick=\"$('event-details-section').scrollTo(); return false;\" title=\"Event Details\">Event Details</a></li>\n";
-					}
-
-					if ($include_audience) {
-						$sidebar_html .= "	<li class=\"link\"><a href=\"#event-audience-section\" onclick=\"$('event-audience-section').scrollTo(); return false;\" title=\"Event Audience\">Event Audience</a></li>\n";
 					}
 
 					if ($include_objectives) {
@@ -1084,11 +1030,11 @@ if (!defined("PARENT_INCLUDED")) {
 			}
 		}
 	} else {
-		$HEAD[] = "<link href=\"".ENTRADA_URL."/javascript/calendar/css/xc2_default.css\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />";
-		$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/calendar/config/xc2_default.js\"></script>\n";
-		$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/calendar/script/xc2_inpage.js\"></script>\n";
-		$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/calendar/script/xc2_timestamp.js\"></script>\n";
-		$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/elementresizer.js\"></script>\n";
+		$HEAD[] = "<link href=\"".ENTRADA_RELATIVE."/javascript/calendar/css/xc2_default.css\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />";
+		$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/calendar/config/xc2_default.js\"></script>\n";
+		$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/calendar/script/xc2_inpage.js\"></script>\n";
+		$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/calendar/script/xc2_timestamp.js\"></script>\n";
+		$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/elementresizer.js\"></script>\n";
 
 		/**
 		 * Process any filter requests.
@@ -1099,6 +1045,8 @@ if (!defined("PARENT_INCLUDED")) {
 		 * Check if preferences need to be updated.
 		 */
 		preferences_update($MODULE, $PREFERENCES);
+
+Zend_Debug::dump($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]);
 
 		/**
 		 * Fetch all of the events that apply to the current filter set.
@@ -1133,7 +1081,7 @@ if (!defined("PARENT_INCLUDED")) {
 		if (!empty($learning_events["events"])) {
 			?>
 			<div class="tableListTop">
-				<img src="<?php echo ENTRADA_URL; ?>/images/lecture-info.gif" width="15" height="15" alt="" title="" style="vertical-align: middle" />
+				<img src="<?php echo ENTRADA_RELATIVE; ?>/images/lecture-info.gif" width="15" height="15" alt="" title="" style="vertical-align: middle" />
 				<?php
 				switch ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["dtype"]) {
 					case "day" :
@@ -1180,7 +1128,7 @@ if (!defined("PARENT_INCLUDED")) {
 					foreach ($learning_events["events"] as $result) {
 						if (((!$result["release_date"]) || ($result["release_date"] <= time())) && ((!$result["release_until"]) || ($result["release_until"] >= time()))) {
 							$attachments = attachment_check($result["event_id"]);
-							$url = ENTRADA_URL."/events?rid=".$rid;
+							$url = ENTRADA_RELATIVE."/events?rid=".$rid;
 							$is_modified = false;
 
 							/**
@@ -1212,17 +1160,17 @@ if (!defined("PARENT_INCLUDED")) {
 							echo "<tr id=\"event-".$result["event_id"]."\" class=\"event".(($is_modified) ? " modified" : (($result["audience_type"] == "proxy_id") ? " individual" : ""))."\">\n";
 							echo "	<td class=\"modified\">";
 							if ($is_modified) {
-								echo "<img src=\"".ENTRADA_URL."/images/event-modified.gif\" width=\"16\" height=\"16\" alt=\"This event has been modified since your last visit on ".date(DEFAULT_DATE_FORMAT, $result["last_visited"]).".\" title=\"This event has been modified since your last visit on ".date(DEFAULT_DATE_FORMAT, $result["last_visited"]).".\" style=\"vertical-align: middle\" />";
+								echo "<img src=\"".ENTRADA_RELATIVE."/images/event-modified.gif\" width=\"16\" height=\"16\" alt=\"This event has been modified since your last visit on ".date(DEFAULT_DATE_FORMAT, $result["last_visited"]).".\" title=\"This event has been modified since your last visit on ".date(DEFAULT_DATE_FORMAT, $result["last_visited"]).".\" style=\"vertical-align: middle\" />";
 							} elseif ($result["audience_type"] == "proxy_id") {
-								echo "<img src=\"".ENTRADA_URL."/images/event-individual.gif\" width=\"16\" height=\"16\" alt=\"Individual Event\" title=\"Individual Event\" style=\"vertical-align: middle\" />";
+								echo "<img src=\"".ENTRADA_RELATIVE."/images/event-individual.gif\" width=\"16\" height=\"16\" alt=\"Individual Event\" title=\"Individual Event\" style=\"vertical-align: middle\" />";
 							} else {
-								echo "<img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"16\" height=\"16\" alt=\"\" title=\"\" style=\"vertical-align: middle\" />";
+								echo "<img src=\"".ENTRADA_RELATIVE."/images/pixel.gif\" width=\"16\" height=\"16\" alt=\"\" title=\"\" style=\"vertical-align: middle\" />";
 							}
 							echo "	</td>\n";
 							echo "	<td class=\"date\"><a href=\"".$url."\" title=\"Event Date\">".date(DEFAULT_DATE_FORMAT, $result["event_start"])."</a></td>\n";
 							echo "	<td class=\"course-code\"><a href=\"".$url."\" title=\"Course: ".html_encode($result["course_name"])."\">".html_encode($result["course_code"])."</a></td>\n";
 							echo "	<td class=\"title\"><a href=\"".$url."\" title=\"Event Title: ".html_encode($result["event_title"])."\">".html_encode($result["event_title"])."</a></td>\n";
-							echo "	<td class=\"attachment\">".(($attachments) ? "<img src=\"".ENTRADA_URL."/images/attachment.gif\" width=\"16\" height=\"16\" alt=\"Contains ".$attachments." attachment".(($attachments != 1) ? "s" : "")."\" title=\"Contains ".$attachments." attachment".(($attachments != 1) ? "s" : "")."\" />" : "<img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"16\" height=\"16\" alt=\"\" title=\"\" style=\"vertical-align: middle\" />")."</td>\n";
+							echo "	<td class=\"attachment\">".(($attachments) ? "<img src=\"".ENTRADA_RELATIVE."/images/attachment.gif\" width=\"16\" height=\"16\" alt=\"Contains ".$attachments." attachment".(($attachments != 1) ? "s" : "")."\" title=\"Contains ".$attachments." attachment".(($attachments != 1) ? "s" : "")."\" />" : "<img src=\"".ENTRADA_RELATIVE."/images/pixel.gif\" width=\"16\" height=\"16\" alt=\"\" title=\"\" style=\"vertical-align: middle\" />")."</td>\n";
 							echo "</tr>\n";
 						}
 
@@ -1238,7 +1186,7 @@ if (!defined("PARENT_INCLUDED")) {
 				} else {
 					$sidebar_html = "There is ".$count_modified." teaching event on this page which has been updated since you last looked at it.";
 				}
-				$sidebar_html .= " Eg. <img src=\"".ENTRADA_URL."/images/highlighted-example.gif\" width=\"67\" height=\"14\" alt=\"Updated events are denoted like.\" title=\"Updated events are denoted like.\" style=\"vertical-align: middle\" />";
+				$sidebar_html .= " Eg. <img src=\"".ENTRADA_RELATIVE."/images/highlighted-example.gif\" width=\"67\" height=\"14\" alt=\"Updated events are denoted like.\" title=\"Updated events are denoted like.\" style=\"vertical-align: middle\" />";
 
 				new_sidebar_item("Recently Modified", $sidebar_html, "modified-event", "open");
 			}

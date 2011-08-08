@@ -78,17 +78,19 @@
 	 						"photo_type" => 0
 	 					);
 	 					return self::fromArray($photo);
-	 					break;
+ 					break;
 	 				case self::UPLOADED:
 	 					global $db;
-	 					$query			= "SELECT * FROM `".AUTH_DATABASE."`.`user_photos` WHERE `proxy_id` = ?";
+	 					$query = "SELECT * FROM `".AUTH_DATABASE."`.`user_photos` WHERE `proxy_id` = ?";
 						$result	= $db->GetRow($query, array($user_id));
 						if ($result) { //ensure it's in the database, too
 							return self::fromArray($result);
 						}
-	 					break;
+ 					break;
 	 			}
 	 		}
+			
+			return false;
  		}
  	}
  }

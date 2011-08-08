@@ -59,7 +59,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 		if ($course_details && $ENTRADA_ACL->amIAllowed(new GradebookResource($course_details["course_id"], $course_details["organisation_id"]), "read")) {
 			$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/gradebook/assessments?".replace_query(array("section" => "grade", "id" => $COURSE_ID, "step" => false)), "title" => "Grading Assessment");
 
-			$query = "	SELECT `assessments`.*,`assessment_marking_schemes`.`id` as `marking_scheme_id`, `assessment_marking_schemes`.`handler`
+			$query = "	SELECT `assessments`.*,`assessment_marking_schemes`.`id` as `marking_scheme_id`, `assessment_marking_schemes`.`handler`, `assessment_marking_schemes`.`description` as `marking_scheme_description`
 						FROM `assessments`
 						LEFT JOIN `assessment_marking_schemes` ON `assessment_marking_schemes`.`id` = `assessments`.`marking_scheme_id`
 						WHERE `assessments`.`assessment_id` = ".$db->qstr($ASSESSMENT_ID);
@@ -85,15 +85,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					width: 100%;
 				}	
 				</style>
-				<h1 class="event-title"><?php echo $assessment["name"]; ?> (Class of <?php echo $assessment["grad_year"]; ?>)</h1>
-				
-				<div style="float: right; text-align: right;">
+				<div>
+					<h1 class="event-title"><?php echo $assessment["name"]; ?> (Class of <?php echo $assessment["grad_year"]; ?>)</h1>
+				</div>
+				<div style="float: left; width: 440px;">
+					<h2 style="border-bottom: none; margin-bottom: 3px; margin-top: 0;"><?php echo $assessment["type"]; ?> Assessment</h2>
+					<p style="margin-top: 0;"><?php echo $assessment["description"]; ?></p>
+				</div>
+				<div style="float: right; text-align: right; width:300px;">
+					<h2 style="border-bottom: none; margin-top: 0;">Weighting <?php echo $assessment["grade_weighting"]."%"; ?></h2>
 					<ul class="page-action">
 						<li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE . "/assessments/?" . replace_query(array("section" => "edit", "step" => false)); ?>" class="strong-green">Edit Assessment</a></li>
 					</ul>
 				</div>
-				<div style="clear: both"><br /></div>
-			
+				<div style="clear: both;"></div>
 				<?php
 				$query = "	SELECT b.`id` AS `proxy_id`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, b.`number`, g.`grade_id` AS `grade_id`, g.`value` AS `grade_value`, h.`grade_weighting`
 							FROM `".AUTH_DATABASE."`.`user_data` AS b
@@ -118,6 +123,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					<span id="assessment_name" style="display: none;"><?php echo $assessment["name"]; ?></span>
 					<div id="gradebook_grades">
 						<h2>Grades</h2>
+						<div style="margin-bottom: 5px;"">
+							<span class="content-small"><strong>Tip: </strong><?php echo $assessment["marking_scheme_description"]; ?></span>
+						</div>
 						<table style="width: 440px" class="gradebook single <?php echo $editable; ?>">
 							<tbody>
 								<?php

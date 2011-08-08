@@ -927,9 +927,62 @@ CREATE TABLE IF NOT EXISTS `assessments` (
   `type` varchar(255) NOT NULL,
   `marking_scheme_id` int(10) unsigned NOT NULL,
   `numeric_grade_points_total` float unsigned DEFAULT NULL,
-  `grade_weighting` int(11) NOT NULL default '0',
+  `grade_weighting` int(11) NOT NULL DEFAULT '0',
+  `narrative` tinyint(1) NOT NULL DEFAULT '0',
+  `required` tinyint(1) NOT NULL DEFAULT '1',
+  `characteristic_id` int(4) NOT NULL,
   PRIMARY KEY (`assessment_id`)
+) ENGINE=MyISAM AUTO_INCREMENT=114 DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `assessment_options` (
+  `aoption_id` int(12) NOT NULL AUTO_INCREMENT,
+  `assessment_id` int(12) NOT NULL DEFAULT '0',
+  `option_id` int(12) NOT NULL DEFAULT '0',
+  `option_active` int(1) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`aoption_id`),
+  KEY `assessment_id` (`assessment_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `assessments_lu_meta` (
+  `id` int(12) unsigned NOT NULL AUTO_INCREMENT,
+  `organisation_id` int(12) unsigned NOT NULL DEFAULT '0',
+  `type` enum('rating','project','exam','paper','asessment','presentation','quiz','RAT','reflection') DEFAULT NULL,
+  `title` varchar(60) NOT NULL,
+  `description` text,
+  `active` tinyint(1) unsigned DEFAULT '1',
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+INSERT INTO `assessments_lu_meta` (`organisation_id`, `type`, `title`) VALUES 
+('1', '1', 'Faculty, resident or preceptor rating'),
+('1', '2', 'Final project'),
+('1', '3', 'Final written examination'),
+('1', '3', 'Laboratory or practical examination (except OSCE/SP)'),
+('1', '3', 'Midterm examination'),
+('1', '3', 'NBME subject examination'),
+('1', '3', 'Oral exam'),
+('1', '3', 'OSCE/SP examination'),
+('1', '4', 'Paper'),
+('1', '5', 'Peer-assessment'),
+('1', '6', 'Presentation'),
+('1', '7', 'Quiz'),
+('1', '8', 'RAT'),
+('1', '9', 'Reflection'),
+('1', '5', 'Self-assessment'),
+('1', '5', 'Other assessments')
+
+CREATE TABLE IF NOT EXISTS `assessments_lu_meta_options` (
+  `id` int(12) unsigned NOT NULL AUTO_INCREMENT,
+  `title` varchar(60) NOT NULL,
+  `active` tinyint(1) unsigned DEFAULT '1',
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+INSERT INTO `assessments_lu_meta_options` (`title`) VALUES
+('Essay questions'),
+('Fill-in, short answer questions'),
+('Multiple-choice, true/false, matching questions'),
+('Problem-solving written exercises')
 
 CREATE TABLE `assessment_exceptions` (
   `aexception_id` int(12) NOT NULL auto_increment,
@@ -953,15 +1006,16 @@ CREATE TABLE IF NOT EXISTS `assessment_marking_schemes` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(255) NOT NULL,
   `handler` varchar(255) NOT NULL DEFAULT 'Boolean',
+  `description` text NOT NULL,
   `enabled` tinyint(1) NOT NULL DEFAULT '1',
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-INSERT INTO `assessment_marking_schemes` (`id`,`name`,`handler`,`enabled`) VALUES
-(1, 'Pass/Fail', 'Boolean', 1),
-(2, 'Percentage', 'Percentage', 1),
-(3, 'Numeric', 'Numeric', 1),
-(4, 'Complete/Incomplete', 'IncompleteComplete', 1);
+INSERT INTO `assessment_marking_schemes` (`id`,`name`,`handler`,`description`,`enabled`) VALUES
+(1, 'Pass/Fail', 'Boolean', 'Enter P for Pass, or F for Fail, in the assessment mark column.', 1),
+(2, 'Percentage', 'Percentage', 'Enter a percentage in the assessment mark column.', 1),
+(3, 'Numeric', 'Numeric', 'Enter a numeric total in the assessment mark column.', 1),
+(4, 'Complete/Incomplete', 'IncompleteComplete', 'Enter C for Complete, or I for Incomplete, in the assessment mark column.', 1);
 
 CREATE TABLE IF NOT EXISTS `communities` (
   `community_id` int(12) NOT NULL AUTO_INCREMENT,
@@ -3793,35 +3847,36 @@ CREATE TABLE IF NOT EXISTS `eventtype_organisation`(
 `organisation_id` INT(12) NOT NULL 
 ) ENGINE = MyISAM DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `student_groups` (
-  `sgroup_id` int(11) NOT NULL AUTO_INCREMENT,
+CREATE TABLE IF NOT EXISTS `groups` (
+  `group_id` int(11) NOT NULL AUTO_INCREMENT,
   `group_name` varchar(64) NOT NULL,
+  `group_type` enum('small_group','class') NOT NULL DEFAULT 'small_group',
   `group_active` tinyint(1) NOT NULL DEFAULT '1',
   `updated_date` int(11) DEFAULT NULL,
   `updated_by` int(11) DEFAULT NULL,
-  PRIMARY KEY (`sgroup_id`)
+  PRIMARY KEY (`group_id`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `student_group_members` (
-  `sgmember_id` int(11) NOT NULL AUTO_INCREMENT,
-  `sgroup_id` int(11) NOT NULL,
+CREATE TABLE IF NOT EXISTS `group_members` (
+  `gmember_id` int(11) NOT NULL AUTO_INCREMENT,
+  `group_id` int(11) NOT NULL,
   `proxy_id` int(11) NOT NULL,
   `member_active` tinyint(1) NOT NULL DEFAULT '1',
   `updated_date` int(11) DEFAULT NULL,
   `updated_by` int(11) DEFAULT NULL,
-  PRIMARY KEY (`sgmember_id`)
-  KEY `group_id` (`sgroup_id`,`proxy_id`,`updated_date`,`updated_by`),
+  PRIMARY KEY (`gmember_id`)
+  KEY `group_id` (`group_id`,`proxy_id`,`updated_date`,`updated_by`),
   KEY `member_active` (`member_active`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `student_group_organisations` (
-  `sgorganisation_id` int(11) NOT NULL AUTO_INCREMENT,
-  `sgroup_id` int(11) NOT NULL,
+CREATE TABLE IF NOT EXISTS `group_organisations` (
+  `gorganisation_id` int(11) NOT NULL AUTO_INCREMENT,
+  `group_id` int(11) NOT NULL,
   `organisation_id` int(11) NOT NULL,
   `updated_by` int(11) DEFAULT NULL,
   `updated_date` int(11) DEFAULT NULL,
-  PRIMARY KEY (`sgorganisation_id`)
-  KEY `group_id` (`sgroup_id`,`organisation_id`,`updated_date`,`updated_by`)
+  PRIMARY KEY (`gorganisation_id`)
+  KEY `group_id` (`group_id`,`organisation_id`,`updated_date`,`updated_by`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `pg_eval_response_rates` (

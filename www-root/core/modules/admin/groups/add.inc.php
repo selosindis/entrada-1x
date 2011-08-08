@@ -79,6 +79,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 				$ERROR++;
 				$ERRORSTR[] = "The <strong>Organisation</strong> field is required.";
 			}
+			
+			/**
+			 * Required field "group_type" / Group Type.
+			 */
+			if ((isset($_POST["group_type"])) && ($group_type = clean_input($_POST["group_type"], array("trim"))) && in_array($group_type, array("small_group", "class"))) {
+				$PROCESSED["group_type"] = $group_type;
+			} else {
+				$ERROR++;
+				$ERRORSTR[] = "The <strong>Group Type</strong> field is required.";
+			}
 
 			if (isset($_POST["post_action"])) {
 				switch($_POST["post_action"]) {
@@ -243,6 +253,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 								}
 							}
 							?>
+							</select>
+						</td>
+					</tr>
+					<tr>
+						<td colspan="3">&nbsp;</td>
+					</tr>
+					<tr>
+						<td>&nbsp;</td>
+						<td><label for="group_type" class="form-required">Group Type</label></td>
+						<td>
+							<select id="group_type" name="group_type" style="width: 250px">
+							<option value="0">-- Select a group type --</option>
+							<option value="small_group"<?php echo ($PROCESSED["group_type"] == "small_group" ? " selected=\"selected\"" : ""); ?>>Small group</option>
+							<option value="class"<?php echo ($PROCESSED["group_type"] == "class" ? " selected=\"selected\"" : ""); ?>>Class list</option>
 							</select>
 						</td>
 					</tr>

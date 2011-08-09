@@ -37,7 +37,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
-		
 	if ($COURSE_ID) {
 		$query			= "	SELECT * FROM `courses` 
 							WHERE `course_id` = ".$db->qstr($COURSE_ID)."
@@ -197,7 +196,33 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				?>
 				
 				<table class="tableList" cellspacing="0" summary="List of Assessments" id="assessment_list">			
-				<tbody>
+					<tfoot>
+						<tr>
+							<td style="padding-top: 10px; border-bottom:0;"colspan="2">
+								<script type="text/javascript" charset="utf-8">
+									function exportSelected() {
+										var ids = [];
+										$$('#assessment_list .modified input:checked').each(function(checkbox) {
+											ids.push($F(checkbox));
+										});
+										if(ids.length > 0) {
+											window.location = '<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "io", "download" => "csv", "assessment_ids" => false)); ?>&assessment_ids='+ids.join(',');
+										} else {
+											alert("You must select some assessments to export.");
+										}
+										return false;
+									}
+								</script>
+								<input type="submit" class="button" value="Delete Selected" />
+								<input type="submit" class="button" value="Export Selected" onclick="exportSelected(); return false;"/>
+							</td>
+							<td colspan="2" style="padding-top: 10px; border-bottom: 0; "><a id="fullscreen-edit" class="button" style="float:right;" href="<?php echo ENTRADA_URL . "/admin/gradebook?" . replace_query(array("section" => "api-edit")); ?>"><div>Fullscreen</div></a></td>
+						</tr>
+						<tr>
+							<td style="border-bottom:0;"></td>
+						</tr>
+					</tfoot>
+					<tbody>
 					
 					<?php
 					$query =  "SELECT DISTINCT `assessments`.`course_id`, `assessments`.`grad_year` FROM `assessments`
@@ -225,10 +250,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								$total_grade_weights = $db->GetAll($query);
 								foreach ($results as $result) {
 									$url = ENTRADA_URL."/admin/gradebook/assessments?section=grade&amp;id=".$COURSE_ID."&amp;assessment_id=".$result["assessment_id"];
-									echo "<tr>";
-									//echo "<td id=\"assessment-".$assessment["assessment_id"]."\">";
+									echo "<tr id=\"assessment-".$result["assessment_id"]."\">";
 									if ($ENTRADA_ACL->amIAllowed("gradebook", "delete", false)) {
-										echo "	<td><input type=\"checkbox\" name=\"delete[]\" value=\"".$result["assessment_id"]."\" /></td>\n";
+										echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"delete[]\" value=\"".$result["assessment_id"]."\" /></td>\n";
 									} else {
 										echo "	<td class=\"modified\" width=\"20\"><img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"19\" height=\"19\" alt=\"\" title=\"\" /></td>";
 									}
@@ -248,49 +272,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								}
 								echo "</tr>";
 							}
-							?>
-							<tr>
-								<td style="padding-top: 10px; border-bottom:0;"colspan="2">
-									<script type="text/javascript" charset="utf-8">
-										function exportSelected() {
-											var ids = [];
-											$$('#assessment_list .modified input:checked').each(function(checkbox) {
-												ids.push($F(checkbox));
-											});
-											if(ids.length > 0) {
-												window.location = '<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "io", "download" => "csv", "assessment_ids" => false)); ?>&assessment_ids='+ids.join(',');
-											} else {
-												alert("You must select some assessments to export.");
-											}
-											return false;
-										}
-									</script>
-									<input type="submit" class="button" value="Delete Selected" />
-									<input type="submit" class="button" value="Export Selected" onclick="exportSelected(); return false;"/>
-								</td>
-								<td colspan="2" style="padding-top: 10px; border-bottom: 0; "><a id="fullscreen-edit" class="button" style="float:right;" href="<?php echo ENTRADA_URL . "/admin/gradebook?" . replace_query(array("section" => "api-edit")); ?>"><div>Fullscreen</div></a></td>
-							</tr>
-							<tr>
-								<td style="border-bottom:0;"></td>
-							</tr>
-					<?php
-					}
-						/*foreach($assessments as $key => $assessment) {
-							
-							echo "<a href=\"$url\">".$assessment["name"]."</a>";
-							echo "	<td class=\"title\"><a href=\"$url\">".$assessment["name"]."</a></td>";
-							echo "	<td class=\"general\"><a href=\"$url\">".$assessment["grad_year"]."</a></td>";
-							echo "	<td class=\"general\"><a href=\"$url\">".$assessment["type"]."</a></td>";
-							echo "	<td class=\"general\"><a href=\"$url\">".$assessment["marking_scheme_name"]."</a></td>";
-							echo "</tr>";
-						}*/
+						}
 					}
 					?>
-				</tbody>
-			
-			</table>
-			
-			<div class="gradebook_edit" style="display: none;"></div>
+					</tbody>
+				</table>
+				<div class="gradebook_edit" style="display: none;"></div>
 				<?php
 				if ($ENTRADA_ACL->amIAllowed("gradebook", "delete", false)) {
 					echo "</form>";

@@ -16,7 +16,7 @@ jQuery(document).ready(function($) {
 			colModel: [
 				{display: 'Student Name', name: 'name', width: 200, sortable: false},
 				{display: 'Student Number', name: 'number', width: 120, sortable: false},
-				{display: $('#assessment_name').html(), name: 'name', width: 120, sortable: false}
+				{display: 'Student Mark', name: 'name', width: 120, sortable: false}
 			]
 		}));
 

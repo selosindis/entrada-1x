@@ -17,3 +17,5 @@ CREATE TABLE IF NOT EXISTS `course_group_audience` (
   `active` int(1) NOT NULL,
   PRIMARY KEY (`cgaudience_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+UPDATE `settings` SET `value` = '1215' WHERE `shortname` = 'version_db';

@@ -80,7 +80,7 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 
 	<script type="text/javascript" defer="defer">
 		jQuery(document).ready(function() {
-			var service_id = null;
+			var service_id = 0;
 			if (jQuery("#mtdservice_select").val()) {
 				service_id = jQuery("#mtdservice_select").val();
 			}
@@ -179,6 +179,13 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 			});
 
 			jQuery('#year').change(function(e) {
+				var service_id = 0;
+				if (jQuery("#mtdservice_select").val()) {
+					service_id = jQuery("#mtdservice_select").val();
+				}
+				else {
+					service_id = jQuery("#service_id").val();
+				}
 				var year = jQuery(this).val();
 				var newURL = '<?php echo COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL . "?section=api-mtd-load-schedule&service_id=" ?>' + service_id + "&year=" + year;
 				window.setTimeout("schedule.flexOptions({url: '" + newURL + "'}).flexReload()", 1000);
@@ -200,6 +207,13 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 			});
 
 			jQuery('#download_button').click(function(e) {
+				var service_id = 0;
+				if (jQuery("#mtdservice_select").val()) {
+					service_id = jQuery("#mtdservice_select").val();
+				}
+				else {
+					service_id = jQuery("#service_id").val();
+				}
 				var year = jQuery('#year').val();
 				var url = '<?php echo COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL . "?section=export_schedule&service_id=" ?>' + service_id + "&year=" + year;
 				window.location = url;

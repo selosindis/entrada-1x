@@ -602,7 +602,7 @@ function navigator_tabs() {
 	/**
 	 * Add Logout tab.
 	 */
-	$output_html .= "<li class=\"last staysput\"><a href=\"".ENTRADA_RELATIVE."?action=logout\"><span>Logout</span></a></li>\n";
+	$output_html .= "<li class=\"last staysput\"><a href=\"".ENTRADA_RELATIVE."/?action=logout\"><span>Logout</span></a></li>\n";
 	
 
 	/**

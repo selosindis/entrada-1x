@@ -1326,14 +1326,19 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							<?php
 							$count = 0;
 							$page_count = 1;
-							foreach ($event_info["sessions"] as $key => $session) {
-								$count++;
-								if ($count > 15) {
-									$count = 1;
-									$page_count++;
-								}
-								if (!isset($selected_session_id) && $key == 0 || $session["event_id"] == $selected_session_id) {
-									$chosen_page = $page_count;
+							$chosen_page = 1;
+							
+							if ($event_info["sessions"]) {
+								foreach ($event_info["sessions"] as $key => $session) {
+									$count++;
+									if ($count > 15) {
+										$count = 1;
+										$page_count++;
+									}
+									
+									if (!isset($selected_session_id) && $key == 0 || $session["event_id"] == $selected_session_id) {
+										$chosen_page = $page_count;
+									}
 								}
 							}
 							?>
@@ -1844,23 +1849,30 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 												<?php
 													$group_ids_string = "";
 													$student_ids_string = "";
+													
 													if (isset($PROCESSED["associated_course_ids"]) && $PROCESSED["associated_course_ids"]) {
 														$course_audience_included = true;
 													} else {
 														$course_audience_included = false;
 													}
-													foreach ($PROCESSED["associated_group_ids"] as $group_id) {
-														if ($group_ids_string) {
-															$group_ids_string .= ",group_".$group_id;
-														} else {
-															$group_ids_string = "group_".$group_id; 
+													
+													if ($PROCESSED["associated_group_ids"]) {
+														foreach ($PROCESSED["associated_group_ids"] as $group_id) {
+															if ($group_ids_string) {
+																$group_ids_string .= ",group_".$group_id;
+															} else {
+																$group_ids_string = "group_".$group_id; 
+															}
 														}
 													}
-													foreach ($PROCESSED["associated_proxy_ids"] as $proxy_id) {
-														if ($student_ids_string) {
-															$student_ids_string .= ",student_".$proxy_id;
-														} else {
-															$student_ids_string = "student_".$proxy_id; 
+													
+													if ($PROCESSED["associated_proxy_ids"]) {
+														foreach ($PROCESSED["associated_proxy_ids"] as $proxy_id) {
+															if ($student_ids_string) {
+																$student_ids_string .= ",student_".$proxy_id;
+															} else {
+																$student_ids_string = "student_".$proxy_id; 
+															}
 														}
 													}
 													?>
@@ -1885,12 +1897,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 														<ul class="menu" id="audience_list">
 															<?php
 															$ONLOAD[] = "Sortable.create('audience_list')";
-															if (is_array($PROCESSED["associated_course_ids"]) && count($PROCESSED["associated_course_ids"])) {
+															if (isset($PROCESSED["associated_course_ids"]) && is_array($PROCESSED["associated_course_ids"]) && count($PROCESSED["associated_course_ids"])) {
 																?>
 																<li class="community" id="audience_course" style="cursor: move;"><?php echo $course_name; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="removeAudience('course', 'course');" class="list-cancel-image" /></li>
 																<?php
 															}
-															if (is_array($PROCESSED["associated_group_ids"]) && count($PROCESSED["associated_group_ids"])) {
+															if (isset($PROCESSED["associated_group_ids"]) && is_array($PROCESSED["associated_group_ids"]) && count($PROCESSED["associated_group_ids"])) {
 																foreach ($PROCESSED["associated_group_ids"] as $group) {
 																	if ((array_key_exists($group, $GROUP_LIST)) && is_array($GROUP_LIST[$group])) {
 																		?>
@@ -1899,7 +1911,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 																	}
 																}
 															}
-															if (is_array($PROCESSED["associated_proxy_ids"]) && count($PROCESSED["associated_proxy_ids"])) {
+															if (isset($PROCESSED["associated_proxy_ids"]) && is_array($PROCESSED["associated_proxy_ids"]) && count($PROCESSED["associated_proxy_ids"])) {
 																foreach ($PROCESSED["associated_proxy_ids"] as $student) {
 																	if ((array_key_exists($student, $STUDENT_LIST)) && is_array($STUDENT_LIST[$student])) {
 																		?>

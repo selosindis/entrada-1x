@@ -119,12 +119,15 @@ if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
 				}
 			break;
 			case "course" : // Courses
-				$courses = $organisation;
 
-				$query = "	SELECT `course_id`, `course_name`, `course_code`
+				$courses = array();
+				$courses[1] = array("text" => $organisation[$ENTRADA_USER->getActiveOrganisation()]["text"] . " Active Courses", "value" => "active_courses", "category" => true);
+				$courses[0] = array("text" => $organisation[$ENTRADA_USER->getActiveOrganisation()]["text"] . " Inactive Courses", "value" => "inactive_courses", "category" => true);            
+
+				$query = "	SELECT `course_id`, `course_name`, `course_code`, `course_active`
 							FROM `courses` 
 							WHERE `organisation_id` = " . $db->qstr($ENTRADA_USER->getActiveOrganisation()) . "
-							ORDER BY `course_name` ASC";
+							ORDER BY `course_code`, `course_name` ASC";
 				$courses_results = $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
 				if ($courses_results) {
 					
@@ -135,7 +138,7 @@ if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
 							$checked = "";
 						}
 
-						$courses[$ENTRADA_USER->getActiveOrganisation()]["options"][] = array("text" => $course["course_name"].($course["course_code"] ? ": ".$course["course_code"] : ""), "value" => "course_" . $course["course_id"], "checked" => $checked);
+						$courses[$course["course_active"]]["options"][] = array("text" => ($course["course_code"] ? $course["course_code"].": " : "").$course["course_name"], "value" => "course_" . $course["course_id"], "checked" => $checked);
 					}
 
 					echo lp_multiple_select_popup("course", $courses, array("title" => "Select Courses:", "submit_text" => "Apply", "cancel" => true, "submit" => true));

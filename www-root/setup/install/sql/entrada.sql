@@ -1012,10 +1012,10 @@ CREATE TABLE IF NOT EXISTS `assessment_marking_schemes` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `assessment_marking_schemes` (`id`,`name`,`handler`,`description`,`enabled`) VALUES
-(1, 'Pass/Fail', 'Boolean', 'Enter P for Pass, or F for Fail, in the assessment mark column.', 1),
-(2, 'Percentage', 'Percentage', 'Enter a percentage in the assessment mark column.', 1),
-(3, 'Numeric', 'Numeric', 'Enter a numeric total in the assessment mark column.', 1),
-(4, 'Complete/Incomplete', 'IncompleteComplete', 'Enter C for Complete, or I for Incomplete, in the assessment mark column.', 1);
+(1, 'Pass/Fail', 'Boolean', 'Enter P for Pass, or F for Fail, in the student mark column.', 1),
+(2, 'Percentage', 'Percentage', 'Enter a percentage in the student mark column.', 1),
+(3, 'Numeric', 'Numeric', 'Enter a numeric total in the student mark column.', 1),
+(4, 'Complete/Incomplete', 'IncompleteComplete', 'Enter C for Complete, or I for Incomplete, in the student mark column.', 1);
 
 CREATE TABLE IF NOT EXISTS `communities` (
   `community_id` int(12) NOT NULL AUTO_INCREMENT,

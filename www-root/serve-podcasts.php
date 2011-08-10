@@ -68,6 +68,7 @@ if(!isset($_SERVER["PHP_AUTH_USER"])) {
 
 	$auth = new AuthSystem((((defined("AUTH_DEVELOPMENT")) && (AUTH_DEVELOPMENT != "")) ? AUTH_DEVELOPMENT : AUTH_PRODUCTION));	
 	$auth->setAppAuthentication(AUTH_APP_ID, AUTH_USERNAME, AUTH_PASSWORD);
+	$auth->setEncryption(AUTH_ENCRYPTION_METHOD);
 	$auth->setUserAuthentication($username, $password, AUTH_METHOD);
 	$result = $auth->Authenticate(array("id", "firstname", "lastname", "email", "role", "group"));
 

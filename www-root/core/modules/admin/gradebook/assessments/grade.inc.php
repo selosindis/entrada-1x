@@ -123,7 +123,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					<span id="assessment_name" style="display: none;"><?php echo $assessment["name"]; ?></span>
 					<div id="gradebook_grades">
 						<h2>Grades</h2>
-						<div style="margin-bottom: 5px;"">
+						<div style="margin-bottom: 5px;">
 							<span class="content-small"><strong>Tip: </strong><?php echo $assessment["marking_scheme_description"]; ?></span>
 						</div>
 						<table style="width: 440px" class="gradebook single <?php echo $editable; ?>">

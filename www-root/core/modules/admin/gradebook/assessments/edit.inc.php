@@ -328,7 +328,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 									<tr>
 										<td>&nbsp;</td>
 										<td style="vertical-align: top"><label for="description" class="form-nrequired">Assessment Description</label></td>
-										<td><textarea id="description" name="description" style="width: 99%; height: 50px"><?php echo html_encode($PROCESSED["description"]); ?></textarea></td>
+										<td><textarea id="description" name="description" class="expandable" style="width: 99%; height: 150px"><?php echo html_encode($PROCESSED["description"]); ?></textarea></td>
 									</tr>
 									<tr>
 										<td colspan="3">&nbsp;</td>

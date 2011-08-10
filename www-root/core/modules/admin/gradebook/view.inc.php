@@ -174,17 +174,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 			<?php
 			}
 			
-			// Fetch all associated assessments
-			$query = "	SELECT `assessments`.`assessment_id`,`assessments`.`grad_year`,`assessments`.`name`,`assessments`.`type`, `assessment_marking_schemes`.`name` as 'marking_scheme_name'
-						FROM `assessments`
-						LEFT JOIN `assessment_marking_schemes` ON `assessments`.`marking_scheme_id` = `assessment_marking_schemes`.`id`
-						WHERE `course_id` = ".$db->qstr($COURSE_ID)."
-						ORDER BY %s
-						LIMIT %s, %s";
-						
-			$query = sprintf($query, $sort_by, $limit_parameter, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]);
-			$assessments = 	$db->GetAll($query);
-			if($assessments) {
+			$query =  "SELECT DISTINCT `assessments`.`course_id`, `assessments`.`grad_year` FROM `assessments`
+					   WHERE `course_id` =". $db->qstr($COURSE_ID)."
+					   ORDER BY `grad_year`";
+			$grad_years = $db->GetAll($query);
+			if($grad_years) {
 				if ($total_pages > 1) {
 					echo "<div id=\"pagination-links\">\n";
 					echo "Pages: ".$pagination->GetPageLinks();
@@ -225,10 +219,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					<tbody>
 					
 					<?php
-					$query =  "SELECT DISTINCT `assessments`.`course_id`, `assessments`.`grad_year` FROM `assessments`
-							   WHERE `course_id` =". $db->qstr($COURSE_ID)."
-							   ORDER BY `grad_year`";
-					$grad_years = $db->GetAll($query);
 					if ($grad_years) {
 						foreach ($grad_years as $grad_year) {
 							echo "<tr>";

@@ -19,3 +19,4 @@ CREATE TABLE IF NOT EXISTS `course_group_audience` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 UPDATE `settings` SET `value` = '1215' WHERE `shortname` = 'version_db';
+UPDATE `settings` SET `value` = '1.3.0DEV' WHERE `shortname` = 'version_entrada';

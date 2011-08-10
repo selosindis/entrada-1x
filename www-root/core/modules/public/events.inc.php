@@ -1046,8 +1046,6 @@ require_once("Models/tasks/TaskVerifiers.class.php");
 		 */
 		preferences_update($MODULE, $PREFERENCES);
 
-Zend_Debug::dump($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]);
-
 		/**
 		 * Fetch all of the events that apply to the current filter set.
 		 */

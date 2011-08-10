@@ -44,9 +44,17 @@ define("LDAP_MEMBER_ATTR", "UniUid");											// The member attribute used to 
 define("LDAP_USER_QUERY_FIELD", "UniCaPKey");									// The attribute used to identify the users staff / student number. Only used if LDAP_LOCAL_USER_QUERY_FIELD is set to "number".
 define("LDAP_LOCAL_USER_QUERY_FIELD", "number");								// username | number : This field allows you to specify which local user_data field is used to search for a valid username.
 
-define("ALLOW_LOCAL", true);													// true | false : whether you want to allow local database authentication or not.
-define("ALLOW_LDAP", false);													// true | false : whether you want to allow LDAP authentication or not.
-define("ALLOW_CAS", false);														// true | false : whether you want to allow CAS authentication or not.
+$ALLOWED_AUTH_METHODS = array(													// Authentication methods you want this server to support.
+	"local" => true,															// Uses local entrada_auth database to authenticate users.
+	"ldap" => false,															// Uses configured LDAP server (LDAP_HOST) to authenticate users.
+	"cas" => false																// Uses CAS to authenticate users.
+);
+
+$ALLOWED_ENCRYPTION_METHODS = array(											// Encryption methods you want this server to use.
+	"default" => true,															// default = low security, no PHP requirements
+	"blowfish" => true,															// blowfish = medium security, requires mCrypt with PHP.
+	"rijndael" => true															// rijndael 256 (a.k.a. AES) = highest security, requires mCrypt with PHP.
+);
 
 define("NOTIFY_ADMIN_ON_ERROR",	false);
 

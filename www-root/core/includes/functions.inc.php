@@ -602,7 +602,7 @@ function navigator_tabs() {
 	/**
 	 * Add Logout tab.
 	 */
-	$output_html .= "<li class=\"last staysput\"><a href=\"".ENTRADA_RELATIVE."?action=logout\"><span>Logout</span></a></li>\n";
+	$output_html .= "<li class=\"last staysput\"><a href=\"".ENTRADA_RELATIVE."/?action=logout\"><span>Logout</span></a></li>\n";
 	
 
 	/**
@@ -7416,10 +7416,10 @@ function lp_multiple_select_table($checkboxes, $indent, $i, $category_select_all
 				$input = "&nbsp;";
 				$class .= ' disabled';
 				$name_class = "select_multiple_name_disabled";
-			} else {
-				$input = '<input type="checkbox" id="'.$checkbox['value'].'" value="'.$checkbox['value'].'" '.$checkbox['checked'].'/>';
-				$name_class = "select_multiple_name";
-			}
+		} else {
+			$input = '<input type="checkbox" id="'.$checkbox['value'].'" value="'.$checkbox['value'].'" '.$checkbox['checked'].'/>';
+			$name_class = "select_multiple_name";
+		}
 
 		if(isset($checkbox['name_class'])) {
 			$name_class = $checkbox['name_class'];
@@ -7427,7 +7427,7 @@ function lp_multiple_select_table($checkboxes, $indent, $i, $category_select_all
 
 		$i++;
 
-		if ($checkbox['value']) {
+		if (isset($checkbox['value']) && $checkbox['value']) {
 			$return .= '<tr class="'.$class.'"><td class="'.$name_class.' indent_'.$indent.'"><label for="'.$checkbox['value'].'">'.$checkbox['text'].'</label></td><td class="'.$input_class.'">'.$input.'</td></tr>';
 		}
 

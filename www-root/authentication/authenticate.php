@@ -26,6 +26,9 @@
  * 
  * Changes:
  * =============================================================================
+ * 1.4.0 - August 10th, 2011
+ * [+]	Added enc_method variable to specify encryption method (default = low security, no requirements | blowfish = medium security, requires mCrypt | rijndael 256 = highest security, requires mcrypt).
+
  * 1.3.0 - August 24th, 2010
  * [*]	Added ability for fallback auth methods (auth_method = "local, ldap").
  *
@@ -126,9 +129,7 @@ if (isset($_POST["auth_method"]) && ($tmp_input = clean_input($_POST["auth_metho
 		foreach ($auth_method_pieces as $auth_method_piece) {
 			$auth_method_piece = clean_input($auth_method_piece, array("alphanumeric", "lowercase"));
 
-			$auth_constant = "ALLOW_" . strtoupper($auth_method_piece);
-
-			if ($auth_method_piece && defined($auth_constant) && constant($auth_constant)) {
+			if ($auth_method_piece && is_array($ALLOWED_AUTH_METHODS) && isset($ALLOWED_AUTH_METHODS[$auth_method_piece]) && (bool) $ALLOWED_AUTH_METHODS[$auth_method_piece]) {
 				$auth_method_chain[] = $auth_method_piece;
 			} else {
 				application_log("auth_error", "The provided application auth_method string [".$tmp_input."] has a bad method included [".$auth_method_piece."].");
@@ -182,6 +183,16 @@ if (isset($_POST["auth_app_id"]) && isset($_POST["auth_username"]) && isset($_PO
 	application_log("auth_error", "The application login information (i.e. auth_app_id, auth_username or auth_password) was missing from the request.");
 }
 
+if (isset($_POST["enc_method"]) && ($tmp_input = clean_input($_POST["enc_method"], "alphanumeric"))) {
+	if (is_array($ALLOWED_ENCRYPTION_METHODS) && isset($ALLOWED_ENCRYPTION_METHODS[$tmp_input]) && (bool) $ALLOWED_ENCRYPTION_METHODS[$tmp_input]) {
+		$encryption_method = $tmp_input;
+	}
+}
+
+if (!isset($encryption_method)) {
+	$encryption_method = "default";
+}
+
 /**
  * Validate the provided user credentials.
  */
@@ -189,7 +200,7 @@ if (!$ERROR) {
 	if (isset($_POST["username"]) && isset($_POST["password"])) {
 		$user_username = clean_input($_POST["username"], "credentials");
 		$user_password = clean_input($_POST["password"], "trim");
-
+		
 		if (empty($user_username) || empty($user_password)) {
 			$ERROR++;
 
@@ -466,6 +477,9 @@ if (!$ERROR) {
 						break;
 						case "group" :
 							echo "\t\t<".$value.">".encrypt($user_access["group"], $auth_password)."</".$value.">\n";
+						break;
+						case "grad_year" :
+							echo "\t\t<".$value.">".encrypt($user_data["grad_year"], $auth_password)."</".$value.">\n";
 						break;
 						case "private_hash" :
 							echo "\t\t<".$value.">".encrypt($user_access["private_hash"], $auth_password)."</".$value.">\n";

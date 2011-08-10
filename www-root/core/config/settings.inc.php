@@ -94,7 +94,8 @@ $CLERKSHIP_FIELD_STATUS["cancelled"] = array("name" => "Cancelled", "visible" =>
 
 define("CURRICULAR_OBJECTIVES_PARENT_ID", 1);
 
-define("AUTH_PRODUCTION", ENTRADA_URL."/authentication/authenticate.php");
+define("AUTH_PRODUCTION", ENTRADA_URL."/authentication/authenticate.php");		// Full URL to your production Entrada authentication server.
+define("AUTH_ENCRYPTION_METHOD", "default");									// Encryption method the authentication client will use to decrypt information from authentication server. default = low security, but no requirements | blowfish = medium security, requires mCrypt | rijndael 256 = highest security, requires mcrypt.
 define("AUTH_APP_ID", "1");														// Application ID for the Authentication System.
 define("AUTH_APP_IDS_STRING", "1");												// Application ID's to query for users in.
 define("AUTH_USERNAME", $config->auth_username);								// Application username to connect to the Authentication System.

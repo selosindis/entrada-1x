@@ -269,13 +269,13 @@ define("MSPR_STORAGE",$config->entrada_storage . "/msprs");					//Full directory
 define("SENDMAIL_PATH", "/usr/sbin/sendmail -t -i");							// Full path and parametres to sendmail.
 
 define("DEBUG_MODE", true);														// Some places have extra debug code to show sample output. Set this to true if you want to see it.
-define("SHOW_LOAD_STATS", true);												// Do you want to see the time it takes to load each page?
+define("SHOW_LOAD_STATS", false);												// Do you want to see the time it takes to load each page?
 
 define("APPLICATION_NAME", "Entrada");											// The name of this application in your school (i.e. MedCentral, Osler, etc.)
-define("APPLICATION_VERSION", "1.2.0");											// The current filesystem version of Entrada.
+define("APPLICATION_VERSION", "1.3.0DEV");											// The current filesystem version of Entrada.
 define("APPLICATION_IDENTIFIER", "app-".AUTH_APP_ID);							// PHP does not allow session key's to be integers (sometimes), so we have to make it a string.
 
-$DEFAULT_META["title"] = "Entrada: An eLearning Community";
+$DEFAULT_META["title"] = "Entrada: An eLearning Ecosystem";
 $DEFAULT_META["keywords"] = "";
 $DEFAULT_META["description"] = "";
 
@@ -466,7 +466,6 @@ $MODULES["gradebook"] = array("title" => "Manage Gradebook", "resource" => "grad
 $MODULES["tasks"] = array("title" => "Manage Tasks", "resource" => "task", "permission" => "create"); 
 $MODULES["notices"] = array("title" => "Manage Notices", "resource" => "notice", "permission" => "update");
 $MODULES["configuration"] = array("title" => "Manage Configuration", "resource" => "configuration", "permission" => "update");
-$MODULES["observerships"] = array("title" => "Manage Observerships", "resource" => "observerships", "permission" => "update");
 $MODULES["polls"] = array("title" => "Manage Polls", "resource" => "poll", "permission" => "update");
 $MODULES["quizzes"] = array("title" => "Manage Quizzes", "resource" => "quiz", "permission" => "update");
 $MODULES["users"] = array("title" => "Manage Users", "resource" => "user", "permission" => "update");

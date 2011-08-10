@@ -38,7 +38,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 	if ($COURSE_ID) {
-
+		$HEAD[] = "<script type=\"text/javascript\">var DELETE_IMAGE_URL = '".ENTRADA_URL."/images/action-delete.gif';</script>";
 		$HEAD[]		= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/picklist.js\"></script>\n";
 		$HEAD[]		= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/scriptaculous/tree.js\"></script>\n";
 		$HEAD[]		= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/groups_list.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
@@ -441,7 +441,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							if ($db->Execute($query)) {							
 							
 								if (isset($_POST["group_order"]) && strlen(isset($_POST["group_order"]))) {
-									$groups = explode(",", clean_input($_POST["group_order"]),array("notags","trim"));					
+									$groups = explode(",", clean_input($_POST["group_order"],array("notags","trim")));					
 									if ((is_array($groups)) && (count($groups))) {
 										foreach($groups as $order => $group_id) {
 											if ($group_id = clean_input($group_id, array("trim", "int"))) {
@@ -463,12 +463,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 												$ERRORSTR[] = "One of the <strong>groups</strong> you specified is invalid.";
 											}
 										}
-									} else {
-										$nogroups = true;
 									}
 
-								} else {
-									$nogroups = true;
 								}								
 								
 
@@ -481,19 +477,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 												add_error("Unable to insert the student [".$student."] as an audience member for course [".$COURSE_ID."]. Please try again later.");				
 											}
 										}
-									}  else {
-										$nostudents = true;
 									}
 									
-								} else {
-									$nostudents = true;
 								}
-								
-								if ($nogroups && $nostudents) {
-									$ERROR++;
-									$ERRORSTR[] = "You must select at least one audience member.";
-								}
-							
+
 							}
 							
 							if (!$ERROR) {

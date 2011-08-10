@@ -29,7 +29,8 @@ $ldap->SetFetchMode(ADODB_FETCH_ASSOC);
 $ldap->debug = false;
 $query = "	SELECT `course_code`,`course_id` 
 			FROM `courses` 
-			WHERE `course_active` = 1";
+			WHERE `course_active` = 1
+			AND `ldap_sync` = 1";
 $results = $db->GetAll($query);
 if ($results) {
 	foreach ($results as $course) {
@@ -38,13 +39,13 @@ if ($results) {
 		
 		$query = "	SELECT a.`id`, a.`number` 
 					FROM `".AUTH_DATABASE."`.`user_data` AS a 
-					JOIN `course_group_audience` AS b	
+					JOIN `group_members` AS b	
 					ON a.`id` = b.`proxy_id` 
-					AND b.`active` = 1
-					JOIN `course_groups` AS c 
-					ON b.`cgroup_id` = c.`cgroup_id`
-					WHERE c.`course_id` = ".$db->qstr($course["course_id"])."
-					AND c.`group_name` = 'Course List'
+					AND b.`member_active` = 1
+					JOIN `groups` AS c 
+					ON b.`group_id` = c.`group_id`
+					WHERE c.`group_type` = 'class_list' 
+					AND c.`group_value` = ".$db->qstr($course["course_id"])."
 					AND b.`entrada_only` = 0";
 		
 		
@@ -72,16 +73,27 @@ if ($results) {
 				//make new connection with the base set to people to get user information
 				if ($ldap->Connect(LDAP_HOST, LDAP_SEARCH_DN,LDAP_SEARCH_DN_PASS, LDAP_PEOPLE_BASE_DN)) {
 					
-					$query = "	SELECT `cgroup_id` FROM `course_groups` WHERE `course_id` = ".$db->qstr($course["course_id"])." AND `group_name` = 'Course List'";
+					$query = "	SELECT `group_id` FROM `groups` WHERE `group_type` = 'class_list' AND `group_value` = ".$db->qstr($course["course_id"]);
 					$group_id = $db->GetOne($query);
 					
 					if (!$group_id && count($result["uniqueMember"])) {
-						$query = "	INSERT INTO `course_groups` VALUES(NULL,".$db->qstr($course["course_id"]).",'Course List', 1)";
+						$query = "	INSERT INTO `groups` VALUES(NULL,".$db->qstr($course["course_code"]." Class List").",0,'class_list',".$db->qstr($course["course_id"]).",0,0,1,0,0)";
 						$db->Execute($query);
 						$group_id = $db->Insert_Id();
 					}
 					
-					if ($group_id) {				
+					if ($group_id) {
+						
+						$query = "	SELECT * FROM `course_audience` 
+									WHERE `course_id` = ".$db->qstr($course["course_id"])." 
+									AND `audience_type` = 'group_id' 
+									AND `audience_value` = ".$db->qstr($group_id);
+						
+						if (!$db->GetAll($query)) {
+							$query = "	INSERT INTO `course_audience` VALUES (NULL,".$db->qstr($course["course_id"]).",'group_id',".$db->qstr($group_id).",0,0,1)";
+							$db->Execute($query);
+						}
+						
 						if ($result["uniqueMember"] && count($result["uniqueMember"])){			
 							//for each user in the unique member list get their queensuCaPkey
 							foreach ($result["uniqueMember"] as $key=>$member) {
@@ -98,14 +110,14 @@ if ($results) {
 												WHERE `number` = ".$db->qstr($pKey);
 									//if there is a record, the student is created inside Entrada, no result means there is no linked Entrada account
 									if ($id = $db->GetOne($query)) {
-										$query = "	SELECT * FROM `course_group_audience` 
+										$query = "	SELECT * FROM `group_members` 
 													WHERE `proxy_id` = ".$db->qstr($id)."
-													AND `cgroup_id` = ".$db->qstr($group_id);
+													AND `group_id` = ".$db->qstr($group_id);
 
 										//if no result, insert into the course audience, otherwise remove from array
 										if (!$result=$db->GetAll($query)) {
 											//insert into audience
-											$query = "	INSERT INTO `course_group_audience` VALUES(NULL,".$db->qstr($group_id).",".$db->qstr($id).",".time().",".time().",1)";
+											$query = "	INSERT INTO `group_members` VALUES(NULL,".$db->qstr($group_id).",".$db->qstr($id).",".time().",".time().",1,0,".time().",0)";
 											if ($db->Execute($query)) {
 												echo $pKey." WAS SUCCESSFULLY REGISTERED INTO THE COURSE: ".$course["course_code"]."    ";
 											} else {
@@ -137,10 +149,10 @@ if ($results) {
 							print_r($course_audience);
 							$end_stamp = time();
 							foreach ($course_audience["id"] as $key=>$audience_member) {
-								$query = "	UPDATE `course_group_audience` 
+								$query = "	UPDATE `group_members` 
 											SET `finish_date` = ".$db->qstr($end_stamp).", 
-											`active` = 0 
-											WHERE `cgroup_id` = ".$db->qstr($group_id)."
+											`member_active` = 0 
+											WHERE `group_id` = ".$db->qstr($group_id)."
 											AND `proxy_id` = ".$db->qstr($audience_member);
 								if ($db->Execute($query)) {
 									echo $course_audience["number"][$key]." is no longer a member of the course";

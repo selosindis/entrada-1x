@@ -324,7 +324,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						
 						
 						if (isset($_POST["group_order"]) && strlen($_POST["group_order"])) {
-							$groups = explode(",", clean_input($_POST["group_order"]),array("trim"),"notags");					
+							$groups = explode(",", clean_input($_POST["group_order"],array("trim","notags")));					
 							if ((is_array($groups)) && (count($groups))) {
 								foreach($groups as $order => $group_id) {
 									if ($group_id = clean_input($group_id, array("trim", "int"))) {
@@ -346,33 +346,19 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 										$ERRORSTR[] = "One of the <strong>groups</strong> you specified is invalid.";
 									}
 								}
-							} else {
-								$nogroups = true;
 							}
-						} else {
-							$nogroups = true;
 						}
 						
 						if (isset($_POST["associated_student"]) && strlen($_POST["associated_student"])) {
 							$PROCESSED["associated_students"] = explode(",",clean_input($_POST["associated_student"], array("notags", "trim")));
-							if(is_array($PROCESSED["associated_students"]) && count($PROCESSED["associated_students"])){
 								foreach ($PROCESSED["associated_students"] as $student) {
 									$query = "	INSERT INTO `course_audience` VALUES(NULL,".$db->qstr($COURSE_ID).",'proxy_id',".$db->qstr($student).",".$enroll_start.",".$enroll_end.",1)";
 									if (!$db->Execute($query)) {
 										add_error("Unable to insert the student [".$student."] as an audience member for course [".$COURSE_ID."]. Please try again later.");				
 									}
 								}
-							} else {
-								$nostudents = true;
-							}
-						} else {
-							$nostudents = true;
-						}
-						
-						if ($nogroups && $nostudents) {
-							$ERROR++;
-							$ERRORSTR[] = "You must select at least one audience member.";
-						}
+						} 
+
 						
 						if (!$ERROR) {
 							$NOTICE = 0;
@@ -1104,7 +1090,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								<label for="course_audience_type_course" class="radio-group-title">This course is open.</label>
 								<div class="content-small">This course is viewable by everyone.</div>
 							</td>
-						</tr>						
+						</tr>
+						<tr>
+							<td><input type="checkbox" id="ldap_sync" name="sync_ldap" /></td>
+							<td colspan="2">
+								<label for="ldap sync" class="radio-group-title">Sync course with Queen's enrollment records.</label>
+								<div class="content-small">Checking this box will sync this course list with the Queen's LDAP server twice a day.</div>
+							</td>
+						</tr>			
+						<tr>
+							<td colspan="3">&nbsp;</td>
+						</tr>
 						<tr class="course_audience group_audience">
 							<td></td>
 							<td><label for="group_ids" class="form-required">Associated Groups</label></td>
@@ -1122,7 +1118,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								}
 								?>
 								</select>
-								<div id="group_notice" class="content-small" >Use the list above to select the different groups to enroll in this course. When you select one, it will appear here.</div>
+								<div id="group_notice" class="content-small" >Use the list above to select any groups to add as audience members. When you select one, it will appear here.</div>
 								<ol id="group_container" class="sortableList" style="display: none;">
 									<?php
 									foreach($PROCESSED["groups"] as $group) {
@@ -1134,7 +1130,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 									}
 									?>
 								</ol>
-								<input id="group_order" name="group_order" style="display: none;">
+								<input id="group_order" name="group_order" value ="" style="display: none;">
 							</td>
 						</tr>
 						<tr>
@@ -1169,6 +1165,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								<input type="hidden" id="student_ref" name="student_ref" value="" />
 								<input type="hidden" id="student_id" name="student_id" value="" />
 							</td>
+						</tr>
+						<tr>
+							<td>&nbsp;</td>
+							<td colspan="2" class="content-small"><span class="bold">Note:</span> Any audience members you associate here will be in addition to the class list synced with the course if you selected 'Sync course with Queen's enrollment records.'</td>
+						</tr>
+						<tr>
+							<td colspan="3">&nbsp;</td>
 						</tr>
 						<?php echo generate_calendars("enrollment", "", true, false, ((isset($PROCESSED["enrollment_start"])) ? $PROCESSED["enrollment_start"] : 0), true, false, ((isset($PROCESSED["enrollment_end"])) ? $PROCESSED["enrollment_end"] : 0),false); ?>					
 					</tbody>

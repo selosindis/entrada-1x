@@ -1465,6 +1465,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							                    $checked = (isset($PROCESSED["associated_proxy_ids"]) && count($PROCESSED["associated_proxy_ids"]) && array_search($r["proxy_id"], $PROCESSED["associated_proxy_ids"]) !== false ? "checked=\"checked\"" : "");
 								
 								                $students[$r["role"]]['options'][] = array('text' => $r['fullname'], 'value' => 'student_'.$r['proxy_id'], 'checked' => $checked);
+								                if (!isset($students[$r["role"]]["category"]) || $students[$r["role"]]["category"] != "true") {
+								                	$students[$r["role"]]["category"] = "true";
+								                }
 								            }
 								            echo lp_multiple_select_popup('students', $students, array('title'=>'Select Students:', 'cancel_text'=>'Close', 'cancel'=>true, 'class'=>'audience_dialog'));
 								        }
@@ -1856,7 +1859,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 														$course_audience_included = false;
 													}
 													
-													if ($PROCESSED["associated_group_ids"]) {
+													if (is_array($PROCESSED["associated_group_ids"])) {
 														foreach ($PROCESSED["associated_group_ids"] as $group_id) {
 															if ($group_ids_string) {
 																$group_ids_string .= ",group_".$group_id;

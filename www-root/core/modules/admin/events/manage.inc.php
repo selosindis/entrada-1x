@@ -48,8 +48,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					FROM `events` AS a
 					LEFT JOIN `courses` AS b
 					ON b.`course_id` = a.`course_id`
-					WHERE a.`event_id` = ".$db->qstr($EVENT_ID)."
-					AND b.`course_active` = '1'";
+					WHERE a.`event_id` = ".$db->qstr($EVENT_ID);
 		$event_info	= $db->GetRow($query);
 		if ($event_info["parent_id"]) {
 			$selected_session_id = $EVENT_ID;
@@ -59,8 +58,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						FROM `events` AS a
 						LEFT JOIN `courses` AS b
 						ON b.`course_id` = a.`course_id`
-						WHERE a.`event_id` = ".$db->qstr($EVENT_ID)."
-						AND b.`course_active` = '1'";
+						WHERE a.`event_id` = ".$db->qstr($EVENT_ID);
 			$event_info	= $db->GetRow($query);
 		}
 	} else {
@@ -260,8 +258,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				 */
 				if ((isset($_POST["course_id"])) && ($course_id = clean_input($_POST["course_id"], array("int")))) {
 					$query	= "	SELECT * FROM `courses` 
-								WHERE `course_id` = ".$db->qstr($course_id)."
-								AND `course_active` = '1'";
+								WHERE `course_id` = ".$db->qstr($course_id);
 					$result	= $db->GetRow($query);
 					if ($result) {
 						if ($ENTRADA_ACL->amIAllowed(new EventResource(null, $course_id, $user->getActiveOrganisation()), "create")) {
@@ -410,10 +407,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				
 				if ((isset($_POST["course_session_audience"])) && $_POST["course_session_audience"]) {
 					if ($course_id || ($course_id = $PROCESSED["course_id"])) {
-						$query = "SELECT *
+						$query = "	SELECT *
 									FROM `courses`
-									WHERE `course_id` = ".$db->qstr($course_id)."
-									AND `course_active` = 1";
+									WHERE `course_id` = ".$db->qstr($course_id);
 						$result	= $db->GetRow($query);
 						if ($result) {
 							$PROCESSED["associated_course_ids"][] = $course_id;
@@ -533,8 +529,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							if ($course_id || ($course_id = $PROCESSED["course_id"])) {
 								$query = "SELECT *
 											FROM `courses`
-											WHERE `course_id` = ".$db->qstr($course_id)."
-											AND `course_active` = 1";
+											WHERE `course_id` = ".$db->qstr($course_id);
 								$result	= $db->GetRow($query);
 								if ($result) {
 									$PROCESSED["session"]["associated_course_ids"][] = $course_id;
@@ -1055,7 +1050,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							<?php
 							$query = "	SELECT * FROM `courses`
 										WHERE `organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
-										AND `course_active` = '1'
+										AND (`course_active` = '1'".((int) $event_info["course_id"] ? " OR `course_id` = ".$db->qstr($event_info["course_id"]) : "").")
 										ORDER BY `course_name` ASC";
 
 							$results = $db->GetAll($query);
@@ -1065,6 +1060,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 										$course_id = $event_info["course_id"];
 										$course_name = $result["course_name"];
 									}
+									
 									if ($ENTRADA_ACL->amIAllowed(new EventResource(null, $result["course_id"], $ENTRADA_USER->getActiveOrganisation()), "create")) {
 										echo "<option value=\"".(int) $result["course_id"]."\"".(($PROCESSED["course_id"] == $result["course_id"]) ? " selected=\"selected\"" : "").">".html_encode($result["course_name"])."</option>\n";
 									}
@@ -1086,19 +1082,19 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						</tr>
 						<?php
 						if ($event_audience_type == "grad_year") {
-							$query		= "	SELECT a.`event_id`, a.`event_title`, b.`audience_value` AS `event_grad_year`
-											FROM `events` AS a
-											LEFT JOIN `event_audience` AS b
-											ON b.`event_id` = a.`event_id`
-											JOIN `courses` AS c
-											ON a.`course_id` = c.`course_id`
-											AND c.`organisation_id` = ".$db->qstr($event_info["organisation_id"])."
-											WHERE (a.`event_start` BETWEEN ".$db->qstr($event_info["event_start"])." AND ".$db->qstr(($event_info["event_finish"] - 1)).")
-											AND a.`event_id` <> ".$db->qstr($event_info["event_id"])."
-											AND b.`audience_type` = 'grad_year'
-											AND b.`audience_value` = ".$db->qstr((int) $associated_grad_year)."
-											ORDER BY a.`event_title` ASC";
-							$results	= $db->GetAll($query);
+							$query = "	SELECT a.`event_id`, a.`event_title`, b.`audience_value` AS `event_grad_year`
+										FROM `events` AS a
+										LEFT JOIN `event_audience` AS b
+										ON b.`event_id` = a.`event_id`
+										JOIN `courses` AS c
+										ON a.`course_id` = c.`course_id`
+										AND c.`organisation_id` = ".$db->qstr($event_info["organisation_id"])."
+										WHERE (a.`event_start` BETWEEN ".$db->qstr($event_info["event_start"])." AND ".$db->qstr(($event_info["event_finish"] - 1)).")
+										AND a.`event_id` <> ".$db->qstr($event_info["event_id"])."
+										AND b.`audience_type` = 'grad_year'
+										AND b.`audience_value` = ".$db->qstr((int) $associated_grad_year)."
+										ORDER BY a.`event_title` ASC";
+							$results = $db->GetAll($query);
 							if ($results) {
 								echo "<tr>\n";
 								echo "	<td colspan=\"3\">&nbsp;</td>\n";

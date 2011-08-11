@@ -220,8 +220,7 @@ if (!defined("PARENT_INCLUDED")) {
 					FROM `events` AS a
 					LEFT JOIN `courses` AS b
 					ON b.`course_id` = a.`course_id`
-					WHERE a.`event_id` = ".$db->qstr($EVENT_ID)."
-					AND b.`course_active` = '1'";
+					WHERE a.`event_id` = ".$db->qstr($EVENT_ID);
 		$event_info	= $db->GetRow($query);
 		if (!$event_info) {
 			$ERROR++;

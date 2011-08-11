@@ -602,7 +602,7 @@ function navigator_tabs() {
 	/**
 	 * Add Logout tab.
 	 */
-	$output_html .= "<li class=\"last staysput\"><a href=\"".ENTRADA_RELATIVE."?action=logout\"><span>Logout</span></a></li>\n";
+	$output_html .= "<li class=\"last staysput\"><a href=\"".ENTRADA_RELATIVE."/?action=logout\"><span>Logout</span></a></li>\n";
 	
 
 	/**
@@ -1428,11 +1428,11 @@ function fetch_event_resources($event_id = 0, $options = array()) {
 
 		if ($fetch_types) {
 			$query	= "	SELECT *
-						FROM `event_eventtypes` AS `types`
-						LEFT JOIN `events_lu_eventtypes` AS `lu_types`
-						ON `types`.`eventtype_id` = `lu_types`.`eventtype_id`
-						WHERE `types`.`event_id` = ".$db->qstr($event_id)."
-						ORDER BY `types`.`eeventtype_id` ASC";
+						FROM `event_eventtypes` AS a
+						LEFT JOIN `events_lu_eventtypes` AS b
+						ON a.`eventtype_id` = b.`eventtype_id`
+						WHERE a.`event_id` = ".$db->qstr($event_id)."
+						ORDER BY a.`eeventtype_id` ASC";
 			$output["types"] = $db->GetAll($query);
 		}
 
@@ -7416,10 +7416,10 @@ function lp_multiple_select_table($checkboxes, $indent, $i, $category_select_all
 				$input = "&nbsp;";
 				$class .= ' disabled';
 				$name_class = "select_multiple_name_disabled";
-			} else {
-				$input = '<input type="checkbox" id="'.$checkbox['value'].'" value="'.$checkbox['value'].'" '.$checkbox['checked'].'/>';
-				$name_class = "select_multiple_name";
-			}
+		} else {
+			$input = '<input type="checkbox" id="'.$checkbox['value'].'" value="'.$checkbox['value'].'" '.$checkbox['checked'].'/>';
+			$name_class = "select_multiple_name";
+		}
 
 		if(isset($checkbox['name_class'])) {
 			$name_class = $checkbox['name_class'];
@@ -7427,7 +7427,7 @@ function lp_multiple_select_table($checkboxes, $indent, $i, $category_select_all
 
 		$i++;
 
-		if ($checkbox['value']) {
+		if (isset($checkbox['value']) && $checkbox['value']) {
 			$return .= '<tr class="'.$class.'"><td class="'.$name_class.' indent_'.$indent.'"><label for="'.$checkbox['value'].'">'.$checkbox['text'].'</label></td><td class="'.$input_class.'">'.$input.'</td></tr>';
 		}
 
@@ -9944,7 +9944,7 @@ function tracking_process_filters($action = "", $module_type = "") {
 	}
 
 	if (!isset($_SESSION[APPLICATION_IDENTIFIER]["tracking"]["filter_defaults_set"])) {
-		header("Location: ".ENTRADA_URL.$module_type."/communities?section=reports&community=".$COMMUNITY_ID."&action=filter_defaults");
+		header("Location: ".ENTRADA_URL.$module_type."/communities/reports?community=".$COMMUNITY_ID."&action=filter_defaults");
 		exit;
 	}
 }
@@ -10026,8 +10026,17 @@ function get_page_for_statistic($action_field, $action_value){
 	return false;
 }
 
-function tracking_fetch_filtered_events($community_id,$filters = array()){
+function tracking_fetch_filtered_events($community_id,$filters = array(),$paginate = true, $page = 1){
 	global $db, $ENTRADA_ACL;
+	
+	$results_per_page = 25;
+	
+	$count = "	SELECT COUNT(*) AS `count`
+				FROM `statistics` AS a 
+				JOIN `".AUTH_DATABASE."`.`user_data` AS b 
+				ON a.`proxy_id` = b.`id` 
+				WHERE `module` LIKE('community:".$community_id.":%')";
+	
 	$query = "	SELECT CONCAT_WS(' ',b.`firstname`,b.`lastname`) AS `fullname`,b.`id` AS `user_id`, a.* 
 				FROM `statistics` AS a 
 				JOIN `".AUTH_DATABASE."`.`user_data` AS b 
@@ -10039,36 +10048,34 @@ function tracking_fetch_filtered_events($community_id,$filters = array()){
 					ON a.`proxy_id` = b.`id` 
 					WHERE `module` LIKE('community:".$community_id.":%')";
 	
+	$where = "";
+	
 	if (isset($filters) && !empty($filters)){
 		foreach ($filters as $type=>$filter){
 			if (is_array($filter) && !empty($filter)){
 					switch ($type){
 						case 'members':
-							$query .= " AND a.`proxy_id` IN (".implode(',',$filter).")";
-							$date_query .= " AND a.`proxy_id` IN (".implode(',',$filter).")";
+							$where .= " AND a.`proxy_id` IN (".implode(',',$filter).")";
 							break;
 						case 'module':
 							//converts each array element to lower case and then finds modules containing the value 
-							$query .= " AND a.`module` REGEXP ".$db->qstr(implode('|',unserialize(strtolower(serialize($filter)))));
-							$date_query .= " AND a.`module` REGEXP ".$db->qstr(implode('|',unserialize(strtolower(serialize($filter)))));
+							$where .= " AND a.`module` REGEXP ".$db->qstr(implode('|',unserialize(strtolower(serialize($filter)))));
 							break;
 						case 'action':
 							$search_filter = str_replace("-","_",$filter);
-							$query .= " AND a.`action` REGEXP ".$db->qstr(implode("|",$search_filter));
-							$date_query .= " AND a.`action` REGEXP ".$db->qstr(implode("|",$search_filter));
+							$where .= " AND a.`action` REGEXP ".$db->qstr(implode("|",$search_filter));
 							break;
 						case 'page':
-							$query .= "AND (";
+							$where .= "AND (";
 							$first = true;
 							foreach($filter as $key=>$filter_instance){
 								$raw_filter = explode("-",$filter_instance);
 								$field = $raw_filter[0]."_id";
 								$value = $raw_filter[2];					
-								$query .= ((!$first)?" OR":"")." (a.`action_field` = ".$db->qstr($field)." AND a.`action_value` = ".$db->qstr($value).")";
-								$date_query .= ((!$first)?"  OR":"")." (a.`action_field` = ".$db->qstr($field)." AND a.`action_value` = ".$db->qstr($value).")";
+								$where .= ((!$first)?" OR":"")." (a.`action_field` = ".$db->qstr($field)." AND a.`action_value` = ".$db->qstr($value).")";
 								$first = false;
 							}
-							$query .=")";
+							$where .=")";
 							break;
 						
 					}
@@ -10076,6 +10083,26 @@ function tracking_fetch_filtered_events($community_id,$filters = array()){
 			}
 		}
 	}
+	$count .= $where;
+	$query .= $where;
+	$date_query .= $where;
+	
+	$num_results = $db->GetOne($count);
+	if ($paginate) {
+		$num_pages = ceil($num_results/$results_per_page);
+		if ($num_pages > 1 && $page > 1 && $page <= $num_pages) {
+			$lower_limit = ($page-1)*$results_per_page;
+			$upper_limit = $results_per_page;
+		} else {
+			$lower_limit = 0;
+			$upper_limit = $results_per_page;		
+		}
+		$limit = " LIMIT ".$lower_limit.",".$upper_limit;
+		$query .= $limit;
+		$date_query .= $limit;
+		
+	}
+	
 	$statistics = $db->GetAll($query);
 	$dates = $db->GetRow($date_query);
 	if ($statistics){
@@ -10088,7 +10115,7 @@ function tracking_fetch_filtered_events($community_id,$filters = array()){
 		}
 	}
 	
-	return array($statistics,$dates);
+	return array($statistics,$dates,$num_pages);
 }
 
 /**
@@ -10263,7 +10290,8 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 	if (is_array($filters) && !empty($filters)) {
 		$tmp_query = array();
 		$where_teacher = array();
-		$where_student = array();
+		$where_student_group_ids = array();
+		$where_student_proxy_ids = array();
 		$where_course = array();
 		$where_group = array();
 		$where_eventtype = array();
@@ -10283,8 +10311,8 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 							LEFT JOIN `event_contacts` AS `primary_teacher`
 							ON `primary_teacher`.`event_id` = `events`.`event_id`
 							AND `primary_teacher`.`contact_order` = '0'
-							LEFT JOIN `event_eventtypes` AS `types`
-							ON `types`.`event_id` = `events`.`event_id`
+							LEFT JOIN `event_eventtypes`
+							ON `event_eventtypes`.`event_id` = `events`.`event_id`
 							LEFT JOIN `event_audience`
 							ON `event_audience`.`event_id` = `events`.`event_id`
 							%CONTACT_JOIN%
@@ -10304,8 +10332,8 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 		$query_events .= "	LEFT JOIN `event_contacts` AS `primary_teacher`
 							ON `primary_teacher`.`event_id` = `events`.`event_id`
 							AND `primary_teacher`.`contact_order` = '0'
-							LEFT JOIN `event_eventtypes` AS `types`
-							ON `types`.`event_id` = `events`.`event_id`
+							LEFT JOIN `event_eventtypes`
+							ON `event_eventtypes`.`event_id` = `events`.`event_id`
 							LEFT JOIN `event_audience`
 							ON `event_audience`.`event_id` = `events`.`event_id`
 							%CONTACT_JOIN%
@@ -10332,79 +10360,51 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 
 		if (!empty($filters)) {
 			foreach ($filters as $filter_type => $filter_contents) {
-				if ((is_array($filter_contents)) && (count($filter_contents))) {
+				if ((is_array($filter_contents)) && (!empty($filter_contents))) {
 					foreach ($filter_contents as $filter_key => $filter_value) {
 						switch ($filter_type) {
 							case "teacher" :
-								$where_teacher[] = "(`primary_teacher`.`proxy_id` = ".$db->qstr($filter_value)." OR `event_contacts`.`proxy_id` = ".$db->qstr($filter_value).")";
-
-								$join_event_contacts[] = "(`event_contacts`.`proxy_id` = ".$db->qstr($filter_value).")";
+								$where_teacher[] = (int) $filter_value;
 							break;
 							case "student" :
-								if (($user_group != "student") || ($filter_value == $proxy_id)) {
-									$student_grad_year = "";
-									$groups = "";
-									$student_proxy_id = (int) $filter_value;
+								if (($user_roup != "student") || ($filter_value == $proxy_id)) {
+									$where_student_proxy_ids[] = (int) $filter_value;
 
 									/**
-									 * Get the grad_year of the proxy_id.
-									 */
-									$query = "	SELECT `role` AS `grad_year`
-												FROM `".AUTH_DATABASE."`.`user_access`
-												WHERE `user_id` = ".$db->qstr($student_proxy_id)."
-												AND `app_id` = ".$db->qstr(AUTH_APP_ID)."
-												AND `group` = 'student'";
-									$result = $db->GetRow($query);
-									if (($result) && ($tmp_input = clean_input($result["grad_year"], "alphanumeric"))) {
-										$student_grad_year = "(`event_audience`.`audience_type` = 'grad_year' AND `event_audience`.`audience_value` = ".$db->qstr($tmp_input).") OR ";
-									}
-									
-									/**
-									 * Get the small groups of the proxy_id.
+									 * Get the system groups the proxy_id is a member of.
 									 */
 									$query = "	SELECT `group_id`
 												FROM `group_members`
-												WHERE `proxy_id` = ".$db->qstr($student_proxy_id)."
-												AND `member_active` = 1";
+												WHERE `proxy_id` = ".$db->qstr($student_id)."
+												AND `member_active` = '1'";
 									$results = $db->GetAll($query);
-									if (count($results)) {
-										$group_ids_string = "";
+									if ($results) {
 										foreach ($results as $result) {
-											if (!$group_ids_string) {
-												$group_ids_string = $db->qstr($result["group_id"]);
-											} else {
-												$group_ids_string .= ", ".$db->qstr($result["group_id"]);
-											}
-										}
-										if ($group_ids_string) {
-											$groups = "(`event_audience`.`audience_type` = 'group' AND `event_audience`.`audience_value` IN (".$group_ids_string.")) OR ";
+											$where_student_groups_ids[] = (int) $result["group_id"];
 										}
 									}
-
-									$where_student[] = "(".$student_grad_year.$groups."(`event_audience`.`audience_type` = 'proxy_id' AND `event_audience`.`audience_value` = ".$db->qstr($student_proxy_id)."))";
-
 								}
 							break;
 							case "course" :
-								$where_course[] = "(`events`.`course_id` = ".$db->qstr($filter_value).")";
+								$where_course[] = (int) $filter_value;
 							break;
 							case "group" :
-								$where_group[] = "(`event_audience`.`audience_type` = 'group_id' AND `event_audience`.`audience_value` = ".$db->qstr((int) $filter_value).")";
+								$where_group[] = (int) $filter_value;
 							break;
 							case "eventtype" :
-								$where_eventtype[] = "(`types`.`eventtype_id` = ".$db->qstr((int) $filter_value).")";
+								$where_eventtype[] = (int) $filter_value;
 							break;
 							case "term" :
-								$where_term[] = "(`curriculum_lu_types`.`curriculum_type_id` = ".$db->qstr($filter_value).")";
+								$where_term[] = (int) $filter_value;
 							break;
 							case "cp" :
-								$where_clinical_presentation[] = "(`event_objectives`.`objective_id` = ".$db->qstr((int) $filter_value).")";
+								$where_clinical_presentation[] = (int) $filter_value;
 							break;
 							case "co" :
-								$where_curriculum_objective[] = "(`event_objectives`.`objective_id` = ".$db->qstr((int) $filter_value).")";
+								$where_curriculum_objective[] = (int) $filter_value;
 							break;
 							case "topic" :
-								$where_topic[] = "(`event_topics`.`etopic_id` = ".$db->qstr((int) $filter_value).")";
+								$where_topic[] = (int) $filter_value;
 							break;
 							default :
 								continue;
@@ -10415,52 +10415,69 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 			}
 		}
 
-		if (isset($where_teacher) && count($where_teacher)) {
-			$tmp_query[] = implode(" OR ", $where_teacher);
+		if ($where_teacher) {
+			$tmp_query[] = "(`primary_teacher`.`proxy_id` IN (".implode(", ", $where_teacher).") OR `event_contacts`.`proxy_id` IN (".implode(", ", $where_teacher)."))";
 		}
-		if (isset($where_student) && count($where_student)) {
-			$tmp_query[] = implode(" OR ", $where_student);
+		
+		if ($where_student_proxy_ids || $where_student_group_ids) {
+			$where_student = array();
+			
+			if ($where_student_group_ids) {
+				$where_student[] = "(`event_audience`.`audience_type` = 'group' AND `event_audience`.`audience_value` IN (".implode(", ", $where_student_group_ids)."))";
+			}
+			
+			if ($where_student_proxy_ids) {
+				$where_student[] = "(`event_audience`.`audience_type` = 'proxy_id' AND `event_audience`.`audience_value` IN (".implode(", ", $where_student_proxy_ids)."))";
+			}
+			
+			$tmp_query[] = "(".implode(" OR ", $where_student).")";
 		}
-		if (isset($where_course) && count($where_course)) {
-			$tmp_query[] = implode(" OR ", $where_course);
+		
+		if ($where_course) {
+			$tmp_query[] = "(`events`.`course_id` IN (".implode(", ", $where_course)."))";
 		}
-		if (isset($where_group) && count($where_group)) {
-			$tmp_query[] = implode(" OR ", $where_group);
+		
+		if ($where_group) {
+			$tmp_query[] = "(`event_audience`.`audience_type` = 'group_id' AND `event_audience`.`audience_value` IN (".implode(", ", $where_group)."))";
 		}
-		if (isset($where_eventtype) && count($where_eventtype)) {
-			$tmp_query[] = implode(" OR ", $where_eventtype);
+		
+		if ($where_eventtype) {
+			$tmp_query[] = "(`event_eventtypes`.`eventtype_id` IN (".implode(", ", $where_eventtype)."))";
 		}
-		if (isset($where_term) && count($where_term)) {
-			$tmp_query[] = implode(" OR ", $where_term);
+		
+		if ($where_term) {
+			$tmp_query[] = "(`curriculum_lu_types`.`curriculum_type_id` IN (".implode(", ", $where_term)."))";
 		}
-		if (isset($where_clinical_presentation) && count($where_clinical_presentation)) {
-			$tmp_query[] = implode(" OR ", $where_clinical_presentation);
+		
+		if ($where_clinical_presentation) {
+			$tmp_query[] = "(`event_objectives`.`objective_id` IN (".implode(", ", $where_clinical_presentation)."))";
 		}
-		if (isset($where_curriculum_objective) && count($where_curriculum_objective)) {
-			$tmp_query[] = implode(" OR ", $where_curriculum_objective);
+		
+		if ($where_curriculum_objective) {
+			$tmp_query[] = "(`event_objectives`.`objective_id` IN (".implode(", ", $where_curriculum_objective)."))";
 		}
-		if (isset($where_topic) && count($where_topic)) {
-			$tmp_query[] = implode(" OR ", $where_topic);
+		
+		if ($where_topic) {
+			$tmp_query[] = "(`event_topics`.`topic_id` IN (".implode(", ", $where_topic)."))";
 		}
 
-		if (isset($tmp_query) && !empty($tmp_query)) {
+		if ($tmp_query) {
 			$query_count .= " AND (".implode(") AND (", $tmp_query).")";
 			$query_events .= " AND (".implode(") AND (", $tmp_query).")";
 		}
 
-		if (isset($join_event_contacts) && !empty($join_event_contacts)) {
+		if ($where_teacher) {
 			$contact_sql = "	LEFT JOIN `event_contacts`
 								ON `event_contacts`.`event_id` = `events`.`event_id`
-								AND (".implode(" OR ", $join_event_contacts).")";
+								AND (`event_contacts`.`proxy_id` IN (".implode(", ", $where_teacher)."))";
 		}
 
-		if ((isset($where_clinical_presentation) && !empty($where_clinical_presentation)) || (isset($where_curriculum_objective) && !empty($where_curriculum_objective))) {
-			$objective_sql = "	JOIN `event_objectives`
-								ON `event_objectives`.`event_id` = `events`.`event_id`
-								AND `event_objectives`.`objective_type` = 'event'";
+		if ($where_clinical_presentation || $where_curriculum_objective) {
+			$objective_sql = "	LEFT JOIN `event_objectives`
+								ON `event_objectives`.`event_id` = `events`.`event_id`";
 		}
 
-		if (isset($where_topic) && !empty($where_topic)) {
+		if ($where_topic) {
 			$topic_sql = "	LEFT JOIN `event_topics`
 							ON `event_topics`.`event_id` = `events`.`event_id`";
 		}
@@ -10469,10 +10486,12 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 		$query_events = str_replace("%CONTACT_JOIN%", $contact_sql, $query_events);
 
 	 	$query_count = str_replace("%OBJECTIVE_JOIN%", $objective_sql, $query_count);
-		$query_events = str_replace("%OBJECTIVE_JOIN%", $objective_sql, $query_events)." GROUP BY `events`.`event_id` ";
+		$query_events = str_replace("%OBJECTIVE_JOIN%", $objective_sql, $query_events);
 		
 	 	$query_count = str_replace("%TOPIC_JOIN%", $topic_sql, $query_count);
 		$query_events = str_replace("%TOPIC_JOIN%", $topic_sql, $query_events);
+		
+		$query_events .= " GROUP BY `events`.`event_id`";
 	} else {
 		$query_count = "	SELECT COUNT(DISTINCT `events`.`event_id`) AS `total_rows`
 							FROM `events`
@@ -10504,7 +10523,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 							GROUP BY `events`.`event_id`";
 	}
 
-	$query_events .= "\n ORDER BY %s".($pagination ? " LIMIT %s, %s" : "");
+	$query_events .= " ORDER BY %s".($pagination ? " LIMIT %s, %s" : "");
 
 	/**
 	 * Get the total number of results using the generated queries above and calculate the total number
@@ -10573,7 +10592,10 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 	}
 
 	$query_events = sprintf($query_events, $sort_by, $limit_parameter, $results_per_page);
-	
+//echo "<pre>";
+//print_r($query_events);
+//echo "</pre>";
+//exit;
 	$learning_events = $db->GetAll($query_events);
 	if ($learning_events) {
 		if ($_SESSION["details"]["group"] == "student") {

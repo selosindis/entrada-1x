@@ -81,7 +81,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 						WHERE `module` LIKE 'community:".$COMMUNITY_ID.":%' 
 						AND `proxy_id` = ".$db->qstr($USER_ID)."
 						GROUP BY `proxy_id`, `module`, `action_field`, `action_value`, `action`
-						ORDER BY `module`,`action`";
+						ORDER BY `count`,`module`,`action`";
 			$results = $db->GetAll($query);
 			if($results){
 				
@@ -120,15 +120,22 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 			<?php	
 
 				$total = 0;
-				foreach($results as $result){
+				foreach ($results as $result) {
 					$page = get_page_for_statistic($result["action_field"], $result["action_value"]);
 					$module = explode(":",$result["module"]);
+					$action_info = explode("_",$result["action"]);
+					if (count($action_info) == 1) {
+						$action = $result["action"];
+					} else {
+						$action = $action_info[1];
+					}
+					
 					if ($page) {
 					?>
 						<tr><td>&nbsp;</td>
 							<td><?php echo "<a href=\"".ENTRADA_URL."/communities/reports?section=type&community=".$COMMUNITY_ID."&type=".$module[2]."\">".ucwords($module[2])."</a>";?></td>
 							<td><?php echo "<a href=\"".ENTRADA_URL."/communities/reports?section=page&community=".$COMMUNITY_ID."&page=".$result["action_field"]."-".$result["action_value"]."\">".ucwords($page)."</a>";?></td>
-							<td><?php echo ucwords($result["action"]);?></td>
+							<td><?php echo ucwords($action);?></td>
 							<td><?php echo $result["count"];?></td>
 							<td>&nbsp;</td></tr>
 					<?php

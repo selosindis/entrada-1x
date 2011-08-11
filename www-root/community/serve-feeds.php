@@ -135,6 +135,7 @@ if ($page_id) {
 					
 						$auth = new AuthSystem((((defined("AUTH_DEVELOPMENT")) && (AUTH_DEVELOPMENT != "")) ? AUTH_DEVELOPMENT : AUTH_PRODUCTION));
 						$auth->setAppAuthentication(AUTH_APP_ID, AUTH_USERNAME, AUTH_PASSWORD);
+						$auth->setEncryption(AUTH_ENCRYPTION_METHOD);
 					
 						$username = clean_input($_SERVER["PHP_AUTH_USER"], "credentials");
 						$password = clean_input($_SERVER["PHP_AUTH_PW"], "trim");
@@ -268,6 +269,7 @@ if ($page_id) {
 					
 						$auth = new AuthSystem((((defined("AUTH_DEVELOPMENT")) && (AUTH_DEVELOPMENT != "")) ? AUTH_DEVELOPMENT : AUTH_PRODUCTION));
 						$auth->setAppAuthentication(AUTH_APP_ID, AUTH_USERNAME, AUTH_PASSWORD);
+						$auth->setEncryption(AUTH_ENCRYPTION_METHOD);
 					
 						$username = clean_input($_SERVER["PHP_AUTH_USER"], "credentials");
 						$password = clean_input($_SERVER["PHP_AUTH_PW"], "trim");
@@ -477,6 +479,7 @@ if ($page_id) {
 						
 							$auth = new AuthSystem((((defined("AUTH_DEVELOPMENT")) && (AUTH_DEVELOPMENT != "")) ? AUTH_DEVELOPMENT : AUTH_PRODUCTION));
 							$auth->setAppAuthentication(AUTH_APP_ID, AUTH_USERNAME, AUTH_PASSWORD);
+							$auth->setEncryption(AUTH_ENCRYPTION_METHOD);
 						
 							$username = clean_input($_SERVER["PHP_AUTH_USER"], "credentials");
 							$password = clean_input($_SERVER["PHP_AUTH_PW"], "trim");
@@ -609,6 +612,7 @@ if ($page_id) {
 						
 							$auth = new AuthSystem((((defined("AUTH_DEVELOPMENT")) && (AUTH_DEVELOPMENT != "")) ? AUTH_DEVELOPMENT : AUTH_PRODUCTION));
 							$auth->setAppAuthentication(AUTH_APP_ID, AUTH_USERNAME, AUTH_PASSWORD);
+							$auth->setEncryption(AUTH_ENCRYPTION_METHOD);
 						
 							$username = clean_input($_SERVER["PHP_AUTH_USER"], "credentials");
 							$password = clean_input($_SERVER["PHP_AUTH_PW"], "trim");
@@ -751,6 +755,7 @@ if ($page_id) {
 			
 				$auth = new AuthSystem((((defined("AUTH_DEVELOPMENT")) && (AUTH_DEVELOPMENT != "")) ? AUTH_DEVELOPMENT : AUTH_PRODUCTION));
 				$auth->setAppAuthentication(AUTH_APP_ID, AUTH_USERNAME, AUTH_PASSWORD);
+				$auth->setEncryption(AUTH_ENCRYPTION_METHOD);
 			
 				$username = clean_input($_SERVER["PHP_AUTH_USER"], "credentials");
 				$password = clean_input($_SERVER["PHP_AUTH_PW"], "trim");

@@ -48,8 +48,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					FROM `events` AS a
 					LEFT JOIN `courses` AS b
 					ON b.`course_id` = a.`course_id`
-					WHERE a.`event_id` = ".$db->qstr($EVENT_ID)."
-					AND b.`course_active` = '1'";
+					WHERE a.`event_id` = ".$db->qstr($EVENT_ID);
 		$event_info	= $db->GetRow($query);
 		if ($event_info["parent_id"]) {
 			$selected_session_id = $EVENT_ID;
@@ -59,8 +58,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						FROM `events` AS a
 						LEFT JOIN `courses` AS b
 						ON b.`course_id` = a.`course_id`
-						WHERE a.`event_id` = ".$db->qstr($EVENT_ID)."
-						AND b.`course_active` = '1'";
+						WHERE a.`event_id` = ".$db->qstr($EVENT_ID);
 			$event_info	= $db->GetRow($query);
 		}
 	} else {
@@ -260,8 +258,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				 */
 				if ((isset($_POST["course_id"])) && ($course_id = clean_input($_POST["course_id"], array("int")))) {
 					$query	= "	SELECT * FROM `courses` 
-								WHERE `course_id` = ".$db->qstr($course_id)."
-								AND `course_active` = '1'";
+								WHERE `course_id` = ".$db->qstr($course_id);
 					$result	= $db->GetRow($query);
 					if ($result) {
 						if ($ENTRADA_ACL->amIAllowed(new EventResource(null, $course_id, $user->getActiveOrganisation()), "create")) {
@@ -410,10 +407,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				
 				if ((isset($_POST["course_session_audience"])) && $_POST["course_session_audience"]) {
 					if ($course_id || ($course_id = $PROCESSED["course_id"])) {
-						$query = "SELECT *
+						$query = "	SELECT *
 									FROM `courses`
-									WHERE `course_id` = ".$db->qstr($course_id)."
-									AND `course_active` = 1";
+									WHERE `course_id` = ".$db->qstr($course_id);
 						$result	= $db->GetRow($query);
 						if ($result) {
 							$PROCESSED["associated_course_ids"][] = $course_id;
@@ -533,8 +529,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							if ($course_id || ($course_id = $PROCESSED["course_id"])) {
 								$query = "SELECT *
 											FROM `courses`
-											WHERE `course_id` = ".$db->qstr($course_id)."
-											AND `course_active` = 1";
+											WHERE `course_id` = ".$db->qstr($course_id);
 								$result	= $db->GetRow($query);
 								if ($result) {
 									$PROCESSED["session"]["associated_course_ids"][] = $course_id;
@@ -1055,7 +1050,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							<?php
 							$query = "	SELECT * FROM `courses`
 										WHERE `organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
-										AND `course_active` = '1'
+										AND (`course_active` = '1'".((int) $event_info["course_id"] ? " OR `course_id` = ".$db->qstr($event_info["course_id"]) : "").")
 										ORDER BY `course_name` ASC";
 
 							$results = $db->GetAll($query);
@@ -1065,6 +1060,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 										$course_id = $event_info["course_id"];
 										$course_name = $result["course_name"];
 									}
+									
 									if ($ENTRADA_ACL->amIAllowed(new EventResource(null, $result["course_id"], $ENTRADA_USER->getActiveOrganisation()), "create")) {
 										echo "<option value=\"".(int) $result["course_id"]."\"".(($PROCESSED["course_id"] == $result["course_id"]) ? " selected=\"selected\"" : "").">".html_encode($result["course_name"])."</option>\n";
 									}
@@ -1086,19 +1082,19 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						</tr>
 						<?php
 						if ($event_audience_type == "grad_year") {
-							$query		= "	SELECT a.`event_id`, a.`event_title`, b.`audience_value` AS `event_grad_year`
-											FROM `events` AS a
-											LEFT JOIN `event_audience` AS b
-											ON b.`event_id` = a.`event_id`
-											JOIN `courses` AS c
-											ON a.`course_id` = c.`course_id`
-											AND c.`organisation_id` = ".$db->qstr($event_info["organisation_id"])."
-											WHERE (a.`event_start` BETWEEN ".$db->qstr($event_info["event_start"])." AND ".$db->qstr(($event_info["event_finish"] - 1)).")
-											AND a.`event_id` <> ".$db->qstr($event_info["event_id"])."
-											AND b.`audience_type` = 'grad_year'
-											AND b.`audience_value` = ".$db->qstr((int) $associated_grad_year)."
-											ORDER BY a.`event_title` ASC";
-							$results	= $db->GetAll($query);
+							$query = "	SELECT a.`event_id`, a.`event_title`, b.`audience_value` AS `event_grad_year`
+										FROM `events` AS a
+										LEFT JOIN `event_audience` AS b
+										ON b.`event_id` = a.`event_id`
+										JOIN `courses` AS c
+										ON a.`course_id` = c.`course_id`
+										AND c.`organisation_id` = ".$db->qstr($event_info["organisation_id"])."
+										WHERE (a.`event_start` BETWEEN ".$db->qstr($event_info["event_start"])." AND ".$db->qstr(($event_info["event_finish"] - 1)).")
+										AND a.`event_id` <> ".$db->qstr($event_info["event_id"])."
+										AND b.`audience_type` = 'grad_year'
+										AND b.`audience_value` = ".$db->qstr((int) $associated_grad_year)."
+										ORDER BY a.`event_title` ASC";
+							$results = $db->GetAll($query);
 							if ($results) {
 								echo "<tr>\n";
 								echo "	<td colspan=\"3\">&nbsp;</td>\n";
@@ -1326,14 +1322,19 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							<?php
 							$count = 0;
 							$page_count = 1;
-							foreach ($event_info["sessions"] as $key => $session) {
-								$count++;
-								if ($count > 15) {
-									$count = 1;
-									$page_count++;
-								}
-								if (!isset($selected_session_id) && $key == 0 || $session["event_id"] == $selected_session_id) {
-									$chosen_page = $page_count;
+							$chosen_page = 1;
+							
+							if ($event_info["sessions"]) {
+								foreach ($event_info["sessions"] as $key => $session) {
+									$count++;
+									if ($count > 15) {
+										$count = 1;
+										$page_count++;
+									}
+									
+									if (!isset($selected_session_id) && $key == 0 || $session["event_id"] == $selected_session_id) {
+										$chosen_page = $page_count;
+									}
 								}
 							}
 							?>
@@ -1460,6 +1461,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							                    $checked = (isset($PROCESSED["associated_proxy_ids"]) && count($PROCESSED["associated_proxy_ids"]) && array_search($r["proxy_id"], $PROCESSED["associated_proxy_ids"]) !== false ? "checked=\"checked\"" : "");
 								
 								                $students[$r["role"]]['options'][] = array('text' => $r['fullname'], 'value' => 'student_'.$r['proxy_id'], 'checked' => $checked);
+								                if (!isset($students[$r["role"]]["category"]) || $students[$r["role"]]["category"] != "true") {
+								                	$students[$r["role"]]["category"] = "true";
+								                }
 								            }
 								            echo lp_multiple_select_popup('students', $students, array('title'=>'Select Students:', 'cancel_text'=>'Close', 'cancel'=>true, 'class'=>'audience_dialog'));
 								        }
@@ -1844,23 +1848,30 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 												<?php
 													$group_ids_string = "";
 													$student_ids_string = "";
+													
 													if (isset($PROCESSED["associated_course_ids"]) && $PROCESSED["associated_course_ids"]) {
 														$course_audience_included = true;
 													} else {
 														$course_audience_included = false;
 													}
-													foreach ($PROCESSED["associated_group_ids"] as $group_id) {
-														if ($group_ids_string) {
-															$group_ids_string .= ",group_".$group_id;
-														} else {
-															$group_ids_string = "group_".$group_id; 
+													
+													if (is_array($PROCESSED["associated_group_ids"])) {
+														foreach ($PROCESSED["associated_group_ids"] as $group_id) {
+															if ($group_ids_string) {
+																$group_ids_string .= ",group_".$group_id;
+															} else {
+																$group_ids_string = "group_".$group_id; 
+															}
 														}
 													}
-													foreach ($PROCESSED["associated_proxy_ids"] as $proxy_id) {
-														if ($student_ids_string) {
-															$student_ids_string .= ",student_".$proxy_id;
-														} else {
-															$student_ids_string = "student_".$proxy_id; 
+													
+													if ($PROCESSED["associated_proxy_ids"]) {
+														foreach ($PROCESSED["associated_proxy_ids"] as $proxy_id) {
+															if ($student_ids_string) {
+																$student_ids_string .= ",student_".$proxy_id;
+															} else {
+																$student_ids_string = "student_".$proxy_id; 
+															}
 														}
 													}
 													?>
@@ -1885,12 +1896,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 														<ul class="menu" id="audience_list">
 															<?php
 															$ONLOAD[] = "Sortable.create('audience_list')";
-															if (is_array($PROCESSED["associated_course_ids"]) && count($PROCESSED["associated_course_ids"])) {
+															if (isset($PROCESSED["associated_course_ids"]) && is_array($PROCESSED["associated_course_ids"]) && count($PROCESSED["associated_course_ids"])) {
 																?>
 																<li class="community" id="audience_course" style="cursor: move;"><?php echo $course_name; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="removeAudience('course', 'course');" class="list-cancel-image" /></li>
 																<?php
 															}
-															if (is_array($PROCESSED["associated_group_ids"]) && count($PROCESSED["associated_group_ids"])) {
+															if (isset($PROCESSED["associated_group_ids"]) && is_array($PROCESSED["associated_group_ids"]) && count($PROCESSED["associated_group_ids"])) {
 																foreach ($PROCESSED["associated_group_ids"] as $group) {
 																	if ((array_key_exists($group, $GROUP_LIST)) && is_array($GROUP_LIST[$group])) {
 																		?>
@@ -1899,7 +1910,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 																	}
 																}
 															}
-															if (is_array($PROCESSED["associated_proxy_ids"]) && count($PROCESSED["associated_proxy_ids"])) {
+															if (isset($PROCESSED["associated_proxy_ids"]) && is_array($PROCESSED["associated_proxy_ids"]) && count($PROCESSED["associated_proxy_ids"])) {
 																foreach ($PROCESSED["associated_proxy_ids"] as $student) {
 																	if ((array_key_exists($student, $STUDENT_LIST)) && is_array($STUDENT_LIST[$student])) {
 																		?>

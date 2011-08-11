@@ -38,7 +38,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 	if ($COURSE_ID) {
-
+		$HEAD[] = "<script type=\"text/javascript\">var DELETE_IMAGE_URL = '".ENTRADA_URL."/images/action-delete.gif';</script>";
 		$HEAD[]		= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/picklist.js\"></script>\n";
 		$HEAD[]		= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/scriptaculous/tree.js\"></script>\n";
 		$HEAD[]		= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/groups_list.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
@@ -243,6 +243,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					} else {
 						$PROCESSED["permission"] = "closed";
 					}					
+
+					if ((isset($_POST["sync_ldap"])) && $sync = clean_input($_POST["sync_ldap"],array("int","notags"))) {
+						$PROCESSED["sync_ldap"] = 1;
+					} else {
+						$PROCESSED["sync_ldap"] = 0;
+					}					
 					
 					
 					if (!$ERROR) {
@@ -440,8 +446,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							$query = "	DELETE FROM `course_audience` WHERE `course_id` = ".$db->qstr($COURSE_ID);
 							if ($db->Execute($query)) {							
 							
-								if (isset($_POST["group_order"]) && strlen(isset($_POST["group_order"]))) {
-									$groups = explode(",", clean_input($_POST["group_order"]),array("notags","trim"));					
+								if (isset($_POST["group_order"]) && strlen($_POST["group_order"])) {
+									$groups = explode(",", clean_input($_POST["group_order"],array("notags","trim")));					
 									if ((is_array($groups)) && (count($groups))) {
 										foreach($groups as $order => $group_id) {
 											if ($group_id = clean_input($group_id, array("trim", "int"))) {
@@ -463,12 +469,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 												$ERRORSTR[] = "One of the <strong>groups</strong> you specified is invalid.";
 											}
 										}
-									} else {
-										$nogroups = true;
 									}
 
-								} else {
-									$nogroups = true;
 								}								
 								
 
@@ -481,19 +483,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 												add_error("Unable to insert the student [".$student."] as an audience member for course [".$COURSE_ID."]. Please try again later.");				
 											}
 										}
-									}  else {
-										$nostudents = true;
 									}
 									
-								} else {
-									$nostudents = true;
 								}
-								
-								if ($nogroups && $nostudents) {
-									$ERROR++;
-									$ERRORSTR[] = "You must select at least one audience member.";
-								}
-							
+
 							}
 							
 							if (!$ERROR) {
@@ -756,7 +749,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 									<select id="curriculum_type_id" name="curriculum_type_id" style="width: 250px">
 									<option value="0"<?php echo (((!isset($PROCESSED["curriculum_type_id"])) || (!(int) $PROCESSED["curriculum_type_id"])) ? " selected=\"selected\"" : ""); ?>>- Select Curriculum Category -</option>
 									<?php
-									$query		= "SELECT * FROM `curriculum_lu_types` WHERE `curriculum_type_active` = '1' ORDER BY `curriculum_type_order` ASC";
+									$query = "	SELECT a.* FROM `curriculum_lu_types` AS a 
+										JOIN `curriculum_type_organisation` AS b 
+										ON a.`curriculum_type_id` = b.`curriculum_type_id` 
+										WHERE a.`curriculum_type_active` = 1 
+										AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+										ORDER BY `curriculum_type_order` ASC";
+									
 									$results	= $db->GetAll($query);
 									if ($results) {
 										foreach($results as $result) {
@@ -1288,7 +1287,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								<label for="event_audience_type_course" class="radio-group-title">This course is open.</label>
 								<div class="content-small">This course is viewable by everyone.</div>
 							</td>
-						</tr>							
+						</tr>
+						<tr>
+							<td><input type="checkbox" id="ldap_sync" name="sync_ldap" value ="1" <?php echo ((isset($PROCESSED["sync_ldap"]) && ($PROCESSED["sync_ldap"] == 1))?" checked=\"checked\"":"");?>/></td>
+							<td colspan="2">
+								<label for="sync_ldap" class="radio-group-title">Sync course with enrollment records.</label>
+								<div class="content-small">Checking this box will sync this course list with the LDAP server twice a day.</div>
+							</td>
+						</tr>
+						<tr>
+							<td colspan="3">&nbsp;</td>
+						</tr>
 						<tr class="course_audience group_audience">
 							<td></td>
 							<td><label for="group_ids" class="form-required">Associated Groups</label></td>

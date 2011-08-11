@@ -29,7 +29,7 @@ document.observe('click', function(e, el) {
 
 
 document.observe("dom:loaded", function() {        
-	
+
 	$('group_ids').observe('change', function(event){
 		select = $('group_ids');
 		option = select.options[select.selectedIndex];

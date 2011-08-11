@@ -126,8 +126,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 			if (!$GROUP_ID) {
 				$GROUP_ID = $results[0]["group_id"]; // $group_ids[0];
 			}
-
-			$group_name = $db->GetOne("SELECT `group_name` FROM `groups` WHERE `group_id` = ".$db->qstr($GROUP_ID));
+			
+			$query = "SELECT a.*, b.`organisation_id` FROM `groups` AS a
+						LEFT JOIN `group_organisations` AS b
+						ON a.`group_id` = b.`group_id`
+						WHERE a.`group_id` = ".$db->qstr($GROUP_ID);
+			if ($group = $db->GetRow($query)) {
+				$group_name = $group["group_name"];
+				$PROCESSED = $group;
+			}
 
 			$emembers_query	= "	SELECT c.`gmember_id`, CONCAT_WS(' ', a.`firstname`, a.`lastname`) AS `fullname`, c.`member_active`,
 								a.`username`, a.`organisation_id`, a.`username`, CONCAT_WS(':', b.`group`, b.`role`) AS `grouprole`
@@ -210,9 +217,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 				</div>
 				<br />
 			</form>
-			<form action="<?php echo ENTRADA_URL; ?>/admin/groups?section=manage" method="post">
 				<h2 style="margin-top: 10px">View Members</h2>
-				<div style=" width: 484px">
+			<div style=" width: 484px">
+				<form action="<?php echo ENTRADA_URL; ?>/admin/groups?section=manage" method="post">
 					<div style="clear: both"></div> 
 					<?php echo (($ERROR) ? display_error($ERRORSTR) : ""); ?>
 					<table class="tableList" cellspacing="1" cellpadding="1">
@@ -265,9 +272,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 				<input type="hidden" name="members" value="1" />
 			</form>
 			<br />
-			<div id="additions">
-				<h2 style="margin-top: 10px">Add Members</h2>
-				<form action="<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "edit", "type" => "add", "step" => 2)); ?>" method="post">
+			<form action="<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "edit", "type" => "add", "step" => 2)); ?>" method="post">
+				<div id="additions">
+					<h2 style="margin-top: 10px">Add Members</h2>
 					<table style="margin-top: 1px; width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Add Member">
 						<colgroup>
 							<col style="width: 45%" />
@@ -299,7 +306,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 									<div class="member-add-type" id="existing-member-add-type">
 									<?php
 										$nmembers_results	= false;
-
+	
 										$nmembers_query	= "	SELECT a.`id` AS `proxy_id`, CONCAT_WS(' ', a.`firstname`, a.`lastname`) AS `fullname`, a.`username`, a.`organisation_id`, b.`group`, b.`role`
 															FROM `".AUTH_DATABASE."`.`user_data` AS a
 															LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
@@ -310,7 +317,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 															AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
 															GROUP BY a.`id`
 															ORDER BY a.`lastname` ASC, a.`firstname` ASC";
-
+	
 										//Fetch list of categories
 										$query	= "SELECT `organisation_id`,`organisation_title` FROM `".AUTH_DATABASE."`.`organisations` ORDER BY `organisation_title` ASC";
 										$organisation_results	= $db->GetAll($query);
@@ -322,7 +329,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 												}
 											}
 										}
-
+	
 										$current_member_list	= array();
 										$query		= "SELECT `proxy_id` FROM `group_members` WHERE `group_id` = ".$db->qstr($GROUP_ID)." AND `member_active` = '1'";
 										$results	= $db->GetAll($query);
@@ -333,13 +340,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 												}
 											}
 										}
-
+	
 										$nmembers_results = $db->GetAll($nmembers_query);
 										if($nmembers_results) {
 											$members = $member_categories;
-
+	
 											foreach($nmembers_results as $member) {
-
+	
 												$organisation_id = $member['organisation_id'];
 												$group = $member['group'];
 												$role = $member['role'];
@@ -349,7 +356,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 													$members[$organisation_id]['options'][$group."all"] = array('text' => $group. ' > all', 'value' => $organisation_id.'|'.$group.'|all');
 												}
 											}
-
+	
 											$added_ids = array();
 											$added_people = array();
 											$key_value = 1;
@@ -391,7 +398,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 													'selectboxname'=>'group and role',
 													'default-option'=>'-- Select Group & Role --',
 													'category_check_all'=>true));
-
+	
 										} else {
 											echo "No One Available [1]";
 										}

@@ -98,7 +98,8 @@ if ($ACTION == "login") {
 							FROM `".AUTH_DATABASE."`.`user_access` as a
 							LEFT JOIN `".AUTH_DATABASE."`.`user_data` as b
 							ON b.`id` = a.`user_id`
-							WHERE b.`username` = ".$db->qstr($username);
+							WHERE b.`username` = ".$db->qstr($username)."
+							AND a.`app_id` = ".$db->qstr(AUTH_APP_ID);
 		$lockout_result = $db->GetRow($lockout_query);
 		if ($lockout_result) {
 			$USER_ACCESS_ID = $lockout_result["id"];
@@ -138,7 +139,7 @@ if ($ACTION == "login") {
 	if ($ERROR == 0) {
 		$auth = new AuthSystem((((defined("AUTH_DEVELOPMENT")) && (AUTH_DEVELOPMENT != "")) ? AUTH_DEVELOPMENT : AUTH_PRODUCTION));
 		$auth->setAppAuthentication(AUTH_APP_ID, AUTH_USERNAME, AUTH_PASSWORD);
-
+		$auth->setEncryption(AUTH_ENCRYPTION_METHOD);
 		$auth->setUserAuthentication($username, $password, AUTH_METHOD);
 		$result = $auth->Authenticate(
 			array(
@@ -161,9 +162,10 @@ if ($ACTION == "login") {
 			)
 		);
 	}
+
 	if ($ERROR == 0 && $result["STATUS"] == "success") {
 		if (isset($USER_ACCESS_ID)) {
-			if (!$db->Execute("UPDATE `".AUTH_DATABASE."`.`user_access` SET `login_attempts` = NULL WHERE `id` = ".$USER_ACCESS_ID)) {
+			if (!$db->Execute("UPDATE `".AUTH_DATABASE."`.`user_access` SET `login_attempts` = NULL WHERE `id` = ".(int) $USER_ACCESS_ID." AND `app_id` = ".$db->qstr(AUTH_APP_ID))) {
 				application_log("error", "Unable to incrememnt the login attempt counter for user [".$username."]. Database said ".$db->ErrorMsg());
 			}
 		}

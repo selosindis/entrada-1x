@@ -44,10 +44,10 @@ if((isset($_GET["community"])) && ((int) trim($_GET["community"]))) {
 
 if($COMMUNITY_ID){
 
-	$query = "	SELECT `community_title` FROM `communities` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID);
-	$community_title = $db->GetOne($query);
+	$query = "	SELECT `community_title`,`community_url` FROM `communities` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID);
+	$result = $db->GetRow($query);
 	
-	$BREADCRUMB[] = array("url" => ENTRADA_URL."/".$MODULE."/reports?community=".$COMMUNITY_ID, "title" => $community_title);
+	$BREADCRUMB[] = array("url" => ENTRADA_URL."/community/".$result["community_url"], "title" => $result["community_title"]);
 
 	if (($router) && ($router->initRoute())) {
 		$PREFERENCES = preferences_load($MODULE);
@@ -77,14 +77,13 @@ if($COMMUNITY_ID){
 		$HEAD[] = "<link href=\"".ENTRADA_URL."/css/communities.css?release=".html_encode(APPLICATION_VERSION)."\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />\n";
 
 
-
-		
 		$module_file = $router->getRoute();
+		
 		if ($module_file) {
 			require_once($module_file);
 		}
 		
-		 
+ 
 		/**
 		 * Check if preferences need to be updated on the server at this point.
 		 */

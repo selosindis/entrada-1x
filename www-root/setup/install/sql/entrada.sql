@@ -927,9 +927,62 @@ CREATE TABLE IF NOT EXISTS `assessments` (
   `type` varchar(255) NOT NULL,
   `marking_scheme_id` int(10) unsigned NOT NULL,
   `numeric_grade_points_total` float unsigned DEFAULT NULL,
-  `grade_weighting` int(11) NOT NULL default '0',
+  `grade_weighting` int(11) NOT NULL DEFAULT '0',
+  `narrative` tinyint(1) NOT NULL DEFAULT '0',
+  `required` tinyint(1) NOT NULL DEFAULT '1',
+  `characteristic_id` int(4) NOT NULL,
   PRIMARY KEY (`assessment_id`)
+) ENGINE=MyISAM AUTO_INCREMENT=114 DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `assessment_options` (
+  `aoption_id` int(12) NOT NULL AUTO_INCREMENT,
+  `assessment_id` int(12) NOT NULL DEFAULT '0',
+  `option_id` int(12) NOT NULL DEFAULT '0',
+  `option_active` int(1) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`aoption_id`),
+  KEY `assessment_id` (`assessment_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `assessments_lu_meta` (
+  `id` int(12) unsigned NOT NULL AUTO_INCREMENT,
+  `organisation_id` int(12) unsigned NOT NULL DEFAULT '0',
+  `type` enum('rating','project','exam','paper','asessment','presentation','quiz','RAT','reflection') DEFAULT NULL,
+  `title` varchar(60) NOT NULL,
+  `description` text,
+  `active` tinyint(1) unsigned DEFAULT '1',
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+INSERT INTO `assessments_lu_meta` (`organisation_id`, `type`, `title`) VALUES 
+('1', '1', 'Faculty, resident or preceptor rating'),
+('1', '2', 'Final project'),
+('1', '3', 'Final written examination'),
+('1', '3', 'Laboratory or practical examination (except OSCE/SP)'),
+('1', '3', 'Midterm examination'),
+('1', '3', 'NBME subject examination'),
+('1', '3', 'Oral exam'),
+('1', '3', 'OSCE/SP examination'),
+('1', '4', 'Paper'),
+('1', '5', 'Peer-assessment'),
+('1', '6', 'Presentation'),
+('1', '7', 'Quiz'),
+('1', '8', 'RAT'),
+('1', '9', 'Reflection'),
+('1', '5', 'Self-assessment'),
+('1', '5', 'Other assessments')
+
+CREATE TABLE IF NOT EXISTS `assessments_lu_meta_options` (
+  `id` int(12) unsigned NOT NULL AUTO_INCREMENT,
+  `title` varchar(60) NOT NULL,
+  `active` tinyint(1) unsigned DEFAULT '1',
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+INSERT INTO `assessments_lu_meta_options` (`title`) VALUES
+('Essay questions'),
+('Fill-in, short answer questions'),
+('Multiple-choice, true/false, matching questions'),
+('Problem-solving written exercises')
 
 CREATE TABLE `assessment_exceptions` (
   `aexception_id` int(12) NOT NULL auto_increment,
@@ -953,15 +1006,16 @@ CREATE TABLE IF NOT EXISTS `assessment_marking_schemes` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(255) NOT NULL,
   `handler` varchar(255) NOT NULL DEFAULT 'Boolean',
+  `description` text NOT NULL,
   `enabled` tinyint(1) NOT NULL DEFAULT '1',
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-INSERT INTO `assessment_marking_schemes` (`id`,`name`,`handler`,`enabled`) VALUES
-(1, 'Pass/Fail', 'Boolean', 1),
-(2, 'Percentage', 'Percentage', 1),
-(3, 'Numeric', 'Numeric', 1),
-(4, 'Complete/Incomplete', 'IncompleteComplete', 1);
+INSERT INTO `assessment_marking_schemes` (`id`,`name`,`handler`,`description`,`enabled`) VALUES
+(1, 'Pass/Fail', 'Boolean', 'Enter P for Pass, or F for Fail, in the student mark column.', 1),
+(2, 'Percentage', 'Percentage', 'Enter a percentage in the student mark column.', 1),
+(3, 'Numeric', 'Numeric', 'Enter a numeric total in the student mark column.', 1),
+(4, 'Complete/Incomplete', 'IncompleteComplete', 'Enter C for Complete, or I for Incomplete, in the student mark column.', 1);
 
 CREATE TABLE IF NOT EXISTS `communities` (
   `community_id` int(12) NOT NULL AUTO_INCREMENT,
@@ -1614,6 +1668,21 @@ CREATE TABLE IF NOT EXISTS `courses` (
   FULLTEXT KEY `course_objectives` (`course_objectives`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
+CREATE TABLE `course_audience`(
+	`caudience_id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY, 
+	`course_id` INT NOT NULL, 
+	`audience_type` ENUM('proxy_id','group_id') NOT NULL, 
+	`audience_value` INT NOT NULL, 
+	`enroll_start` BIGINT NOT NULL, 
+	`enroll_finish` BIGINT NOT NULL, 
+	`audience_active` INT(1) NOT NULL DEFAULT '1', 
+ KEY `event_id` (`event_id`), 
+ KEY `audience_type` (`audience_type`), 
+ KEY `audience_value` (`audience_value`), 
+ KEY `audience_active` (`audience_active`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+
 CREATE TABLE IF NOT EXISTS `course_contacts` (
   `contact_id` int(12) NOT NULL AUTO_INCREMENT,
   `course_id` int(12) NOT NULL DEFAULT '0',
@@ -1651,6 +1720,28 @@ CREATE TABLE IF NOT EXISTS `course_files` (
   KEY `valid_until` (`valid_until`),
   KEY `access_method` (`access_method`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `course_groups` (
+  `cgroup_id` int(11) NOT NULL AUTO_INCREMENT,
+  `course_id` int(11) NOT NULL,
+  `group_name` VARCHAR(30) NOT NULL,
+  `active` int(1) DEFAULT NULL,
+  PRIMARY KEY (`cgroup_id`),
+  KEY `course_id` (`course_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+
+CREATE TABLE IF NOT EXISTS `course_group_audience` (
+  `cgaudience_id` int(11) NOT NULL AUTO_INCREMENT,
+  `cgroup_id` int(11) NOT NULL,
+  `proxy_id` int(11) NOT NULL,
+  `entrada_only` INT(1) DEFAULT 0,
+  `start_date` BIGINT(64) NOT NULL,
+  `finish_date` BIGINT(64) NOT NULL,
+  `active` int(1) NOT NULL,
+  PRIMARY KEY (`cgaudience_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
 
 CREATE TABLE IF NOT EXISTS `course_links` (
   `id` int(12) NOT NULL AUTO_INCREMENT,
@@ -1706,7 +1797,6 @@ CREATE TABLE  IF NOT EXISTS `curriculum_lu_types` (
   PRIMARY KEY  (`curriculum_type_id`),
   KEY `curriculum_type_order` (`curriculum_type_order`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
 INSERT INTO `curriculum_lu_types` (`curriculum_type_id`, `parent_id`, `curriculum_type_name`, `curriculum_type_description`, `curriculum_type_order`, `curriculum_type_active`, `updated_date`, `updated_by`) VALUES
 (1, 0, 'Term 1', NULL, 0, 1, 1250538588, 1),
 (2, 0, 'Term 2', NULL, 1, 1, 1250538588, 1),
@@ -1716,6 +1806,22 @@ INSERT INTO `curriculum_lu_types` (`curriculum_type_id`, `parent_id`, `curriculu
 (6, 0, 'Term 6', NULL, 5, 1, 1250538588, 1),
 (7, 0, 'Term 7', NULL, 6, 1, 1250538588, 1),
 (8, 0, 'Term 8', NULL, 7, 1, 1250538588, 1);
+
+CREATE TABLE IF NOT EXISTS `curriculum_periods`(
+	`cperiod_id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+	`curriculum_type_id` INT NOT NULL,
+	`start_date` BIGINT(64) NOT NULL,
+	`finish_date` BIGINT(64) NOT NULL,
+	`active` INT(1) NOT NULL DEFAULT 1
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `curriculum_type_organisation` (
+  `curriculum_type_id` int(11) NOT NULL,
+  `organisation_id` int(11) NOT NULL,
+  PRIMARY KEY (`curriculum_type_id`,`organisation_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+INSERT INTO `curriculum_type_organisation` SELECT `curriculum_type_id`, 1 FROM `curriculum_lu_types`;
 
 CREATE TABLE IF NOT EXISTS `evaluations` (
   `evaluation_id` int(12) NOT NULL AUTO_INCREMENT,
@@ -3219,6 +3325,12 @@ INSERT INTO `global_lu_schools` (`schools_id`, `school_title`) VALUES
 (16, 'University of Toronto'),
 (17, 'University of Western Ontario');
 
+CREATE TABLE IF NOT EXISTS `group_organisation`(
+  `group_id` INT NOT NULL, 
+  `organisation_id` INT NOT NULL,
+  PRIMARY KEY(`group_id`,`organisation_id`)	
+) ENGINE=MyISAM DEFAULT CHARSET = utf8;
+
 CREATE TABLE IF NOT EXISTS `notices` (
   `notice_id` int(12) NOT NULL AUTO_INCREMENT,
   `target` varchar(32) NOT NULL DEFAULT '',
@@ -3235,6 +3347,16 @@ CREATE TABLE IF NOT EXISTS `notices` (
   KEY `display_until` (`display_until`),
   KEY `organisation_id` (`organisation_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+
+CREATE TABLE IF NOT EXISTS `objective_organisation`(
+  `objective_id` INT(12) NOT NULL, 
+  `organisation_id` INT(12) NOT NULL, 
+  PRIMARY KEY(`objective_id`,`organisation_id`)
+) ENGINE = MyISAM DEFAULT CHARSET=utf8;
+
+INSERT INTO `objective_organisation` SELECT `objective_id`, 1 FROM `global_lu_objectives`;
+
 
 CREATE TABLE IF NOT EXISTS `permissions` (
   `permission_id` int(12) NOT NULL AUTO_INCREMENT,
@@ -3369,8 +3491,8 @@ CREATE TABLE IF NOT EXISTS `settings` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `settings` (`shortname`, `value`) VALUES
-('version_db', '1209 '),
-('version_entrada', '1.2.0');
+('version_db', '1215 '),
+('version_entrada', '1.3.0DEV');
 
 CREATE TABLE IF NOT EXISTS `statistics` (
   `statistic_id` int(12) NOT NULL AUTO_INCREMENT,
@@ -3793,35 +3915,42 @@ CREATE TABLE IF NOT EXISTS `eventtype_organisation`(
 `organisation_id` INT(12) NOT NULL 
 ) ENGINE = MyISAM DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `student_groups` (
-  `sgroup_id` int(11) NOT NULL AUTO_INCREMENT,
-  `group_name` varchar(64) NOT NULL,
+CREATE TABLE IF NOT EXISTS `groups` (
+  `group_id` int(11) NOT NULL AUTO_INCREMENT,
+  `group_name` varchar(64) NOT NULL, 
+  `group_type` VARCHAR(20) NOT NULL DEFAULT 'small_group',
+  `group_value` INT,
+  `start_date` BIGINT(64) NOT NULL,
+  `expire_date` BIGINT(64),
   `group_active` tinyint(1) NOT NULL DEFAULT '1',
   `updated_date` int(11) DEFAULT NULL,
   `updated_by` int(11) DEFAULT NULL,
-  PRIMARY KEY (`sgroup_id`)
+  PRIMARY KEY (`group_id`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `student_group_members` (
-  `sgmember_id` int(11) NOT NULL AUTO_INCREMENT,
-  `sgroup_id` int(11) NOT NULL,
+CREATE TABLE IF NOT EXISTS `group_members` (
+  `gmember_id` int(11) NOT NULL AUTO_INCREMENT,
+  `group_id` int(11) NOT NULL,
   `proxy_id` int(11) NOT NULL,
+  `start_date` BIGINT(64), 
+  `finish_date` BIGINT(64),
+  `entrada_only` INT(1),
   `member_active` tinyint(1) NOT NULL DEFAULT '1',
   `updated_date` int(11) DEFAULT NULL,
   `updated_by` int(11) DEFAULT NULL,
-  PRIMARY KEY (`sgmember_id`)
-  KEY `group_id` (`sgroup_id`,`proxy_id`,`updated_date`,`updated_by`),
+  PRIMARY KEY (`gmember_id`)
+  KEY `group_id` (`group_id`,`proxy_id`,`updated_date`,`updated_by`),
   KEY `member_active` (`member_active`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `student_group_organisations` (
-  `sgorganisation_id` int(11) NOT NULL AUTO_INCREMENT,
-  `sgroup_id` int(11) NOT NULL,
+CREATE TABLE IF NOT EXISTS `group_organisations` (
+  `gorganisation_id` int(11) NOT NULL AUTO_INCREMENT,
+  `group_id` int(11) NOT NULL,
   `organisation_id` int(11) NOT NULL,
   `updated_by` int(11) DEFAULT NULL,
   `updated_date` int(11) DEFAULT NULL,
-  PRIMARY KEY (`sgorganisation_id`)
-  KEY `group_id` (`sgroup_id`,`organisation_id`,`updated_date`,`updated_by`)
+  PRIMARY KEY (`gorganisation_id`)
+  KEY `group_id` (`group_id`,`organisation_id`,`updated_date`,`updated_by`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `pg_eval_response_rates` (
@@ -3879,46 +4008,8 @@ INSERT INTO `pg_blocks` (`id`, `block_name`, `start_date`, `end_date`, `year`) V
 (25, '12', '2012-05-08', '2012-06-04', '2011-2012'),
 (26, '13', '2012-06-05', '2012-06-30', '2011-2012');
 
-CREATE TABLE IF NOT EXISTS `objective_organisation`(
-`objective_id` INT(12) NOT NULL, 
-`organisation_id` INT(12) NOT NULL 
-) ENGINE = MyISAM DEFAULT CHARSET=utf8;
-
 CREATE TABLE IF NOT EXISTS `topic_organisation`(
-`topic_id` INT(12) NOT NULL, 
-`organisation_id` INT(12) NOT NULL 
+  `topic_id` INT(12) NOT NULL, 
+  `organisation_id` INT(12) NOT NULL,
+  PRIMARY KEY(`topic_id`,`organisation_id`) 
 ) ENGINE = MyISAM DEFAULT CHARSET=utf8;
-
-INSERT INTO `objective_organisation` SELECT a.`objective_id`, b.`organisation_id` FROM `global_lu_objectives` AS a JOIN `entrada_auth.organisations` AS b ON 1=1;
-
-CREATE TABLE `course_audience`(
-	`caudience_id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY, 
-	`course_id` INT NOT NULL, 
-	`audience_type` ENUM('proxy_id','group_id') NOT NULL, 
-	`audience_value` INT NOT NULL, 
-	`enroll_start` BIGINT NOT NULL, 
-	`enroll_finish` BIGINT NOT NULL, 
-	`audience_active` INT(1) NOT NULL DEFAULT '1', 
- KEY `event_id` (`event_id`), 
- KEY `audience_type` (`audience_type`), 
- KEY `audience_value` (`audience_value`), 
- KEY `audience_active` (`audience_active`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
-CREATE TABLE `group_organisation` IF NOT EXISTS(
-	`group_id` INT NOT NULL, 
-	`organisation_id` INT NOT NULL
-) ENGINE=MyISAM DEFAULT CHARSET = utf8;
-
-CREATE TABLE `curriculum_type_organisation` IF NOT EXISTS(
-	`curriculum_type_id` INT NOT NULL, 
-	`organisation_id` INT NOT NULL
-)  ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
-CREATE TABLE `curriculum_periods` IF NOT EXISTS(
-	`cperiod_id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-	`curriculum_type_id` INT NOT NULL,
-	`start_date` BIGINT(64) NOT NULL,
-	`finish_date` BIGINT(64) NOT NULL,
-	`active` INT(1) NOT NULL DEFAULT 1
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;

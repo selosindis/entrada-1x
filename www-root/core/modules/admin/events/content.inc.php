@@ -52,8 +52,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						FROM `events` AS a
 						LEFT JOIN `courses` AS b
 						ON b.`course_id` = a.`course_id`
-						WHERE a.`event_id` = ".$db->qstr($EVENT_ID)."
-						AND b.`course_active` = '1'";
+						WHERE a.`event_id` = ".$db->qstr($EVENT_ID);
 		$event_info	= $db->GetRow($query);
 		if ($event_info) {
 			if (!$ENTRADA_ACL->amIAllowed(new EventContentResource($event_info["event_id"], $event_info["course_id"], $event_info["organisation_id"]), "update")) {
@@ -439,12 +438,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								/**
 								 * Refresh the event_info array based on new details.
 								 */
-								$query		= "	SELECT a.*, b.`organisation_id`
-												FROM `events` AS a
-												LEFT JOIN `courses` AS b
-												ON b.`course_id` = a.`course_id`
-												WHERE a.`event_id` = ".$db->qstr($EVENT_ID)."
-												AND b.`course_active` = '1'";
+								$query = "	SELECT a.*, b.`organisation_id`
+											FROM `events` AS a
+											LEFT JOIN `courses` AS b
+											ON b.`course_id` = a.`course_id`
+											WHERE a.`event_id` = ".$db->qstr($EVENT_ID);
 								$event_info	= $db->GetRow($query);
 								if (!$event_info) {
 									application_log("error", "After updating the text content of event_id [".$EVENT_ID."] the select query failed.");

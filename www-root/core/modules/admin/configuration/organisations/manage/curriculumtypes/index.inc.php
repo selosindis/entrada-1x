@@ -61,7 +61,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 
 	if($results){
 	?>
-	<form action ="<?php echo ENTRADA_URL;?>/admin/configuration/organisations/manage/hottopics?section=delete&amp;org=<?php echo $ORGANISATION_ID;?>" method="post">
+	<form action ="<?php echo ENTRADA_URL;?>/admin/configuration/organisations/manage/curriculumtypes?section=delete&amp;org=<?php echo $ORGANISATION_ID;?>" method="post">
 	<table class="tableList" cellspacing="0" cellpadding="1" border="0" summary="List of Organisations">
 		<colgroup>
 			<col class="modified"/>

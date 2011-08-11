@@ -44,8 +44,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					FROM `events` AS a
 					LEFT JOIN `courses` AS b
 					ON b.`course_id` = a.`course_id`
-					WHERE a.`event_id` = ".$db->qstr($EVENT_ID)."
-					AND b.`course_active` = '1'";
+					WHERE a.`event_id` = ".$db->qstr($EVENT_ID);
 		$event_info	= $db->GetRow($query);
 		if ($event_info) {
 			if (!$ENTRADA_ACL->amIAllowed(new EventResource($event_info["event_id"], $event_info["course_id"], $ENTRADA_USER->getActiveOrganisation()), 'update')) {
@@ -286,8 +285,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						 */
 						if ((isset($_POST["course_id"])) && ($course_id = clean_input($_POST["course_id"], array("int")))) {
 							$query	= "	SELECT * FROM `courses` 
-										WHERE `course_id` = ".$db->qstr($course_id)."
-										AND `course_active` = '1'";
+										WHERE `course_id` = ".$db->qstr($course_id);
 							$result	= $db->GetRow($query);
 							if ($result) {
 								if ($ENTRADA_ACL->amIAllowed(new EventResource(null, $course_id, $ENTRADA_USER->getActiveOrganisation()), "create")) {
@@ -706,7 +704,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 												}
 												?>
 										</select>
-<div id="duration_notice" class="content-small">Use the list above to select the different components of this event. When you select one, it will appear here and you can change the order and duration.</div>
+									<div id="duration_notice" class="content-small">Use the list above to select the different components of this event. When you select one, it will appear here and you can change the order and duration.</div>
 									<?php
                                     echo "<ol id=\"duration_container\" class=\"sortableList\" style=\"display: none\">\n";
                                     if (is_array($PROCESSED["event_types"])) {
@@ -789,7 +787,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 										<?php
 										$query		= "	SELECT * FROM `courses`
 														WHERE `organisation_id` = ".$db->qstr($ORGANISATION_ID)."
-														AND `course_active` = '1'
+														AND (`course_active` = '1' OR `course_id` = ".$db->qstr($PROCESSED["course_id"]).")
 														ORDER BY `course_name` ASC";
 										$results	= $db->GetAll($query);
 										if ($results) {

@@ -220,6 +220,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				$PROCESSED["permission"] = "closed";
 			}
 			
+			
+			if ((isset($_POST["sync_ldap"])) && $sync = clean_input($_POST["sync_ldap"],array("int","notags"))) {
+				$PROCESSED["sync_ldap"] = 1;
+			} else {
+				$PROCESSED["sync_ldap"] = 0;
+			}
+			
+			
 			if (!$ERROR) {
 				$PROCESSED["updated_date"]	= time();
 				$PROCESSED["updated_by"]	= $_SESSION["details"]["id"];
@@ -1092,9 +1100,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							</td>
 						</tr>
 						<tr>
-							<td><input type="checkbox" id="ldap_sync" name="sync_ldap" /></td>
+							<td><input type="checkbox" id="ldap_sync" name="sync_ldap" value ="1" <?php echo ((isset($PROCESSED["sync_ldap"]) && ($PROCESSED["sync_ldap"] == 1))?" checked=\"checked\"":"");?>/></td>
 							<td colspan="2">
-								<label for="ldap sync" class="radio-group-title">Sync course with Queen's enrollment records.</label>
+								<label for="sync_ldap" class="radio-group-title">Sync course with Queen's enrollment records.</label>
 								<div class="content-small">Checking this box will sync this course list with the Queen's LDAP server twice a day.</div>
 							</td>
 						</tr>			

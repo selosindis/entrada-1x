@@ -16,10 +16,7 @@ CREATE TABLE IF NOT EXISTS `curriculum_type_organisation` (
   PRIMARY KEY (`curriculum_type_id`,`organisation_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-
-INSERT INTO `curriculum_type_organisation` SELECT a.`curriculum_type_id`, b.`organisation_id` FROM `curriculum_lu_types` AS a JOIN entrada_auth.`organisations` AS b ON 1=1;
-
-CREATE TABLE `curriculum_periods` IF NOT EXISTS(
+CREATE TABLE IF NOT EXISTS `curriculum_periods`(
 	`cperiod_id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
 	`curriculum_type_id` INT NOT NULL,
 	`start_date` BIGINT(64) NOT NULL,

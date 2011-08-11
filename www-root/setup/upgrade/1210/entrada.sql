@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS `student_group_organisations` (
   `organisation_id` int(11) NOT NULL,
   `updated_by` int(11) DEFAULT NULL,
   `updated_date` int(11) DEFAULT NULL,
-  PRIMARY KEY (`sgorganisation_id`)
+  PRIMARY KEY (`sgorganisation_id`),
   KEY `group_id` (`sgroup_id`,`organisation_id`,`updated_date`,`updated_by`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 

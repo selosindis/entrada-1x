@@ -11,3 +11,21 @@ margin-bottom:10px;
 .tail-bottom {
 background:url(../images/tail-bottom.gif) left bottom repeat-x;
 }
+
+#system-sidebar {
+float:left;
+width:20%;
+}
+
+#system-sidebar > div {
+padding:5px;
+}
+
+#system-content {
+float:left;
+width:80%;
+}
+
+#system-content > div {
+padding:0 0 5px 5px;
+}

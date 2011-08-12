@@ -7293,7 +7293,7 @@ function lp_multiple_select_popup($id, $checkboxes, $options) {
 		'submit_text'	=>	'Submit',
 		'filter'		=>	true,
 		'class'			=>	'',
-		'width'			=>	'400px',
+		'width'			=>	'450px',
 		'hidden'		=>	true
 	);
 

@@ -140,6 +140,11 @@ if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
 
 						$courses[$course["course_active"]]["options"][] = array("text" => ($course["course_code"] ? $course["course_code"].": " : "").$course["course_name"], "value" => "course_" . $course["course_id"], "checked" => $checked);
 					}
+					
+					// If there are no inactive courses, don't display the heading.
+					if (!isset($courses[0]["options"]) || empty($courses[0]["options"])) {
+						unset($courses[0]);
+					}
 
 					echo lp_multiple_select_popup("course", $courses, array("title" => "Select Courses:", "submit_text" => "Apply", "cancel" => true, "submit" => true));
 				}

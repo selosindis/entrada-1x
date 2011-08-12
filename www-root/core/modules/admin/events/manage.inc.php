@@ -261,7 +261,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								WHERE `course_id` = ".$db->qstr($course_id);
 					$result	= $db->GetRow($query);
 					if ($result) {
-						if ($ENTRADA_ACL->amIAllowed(new EventResource(null, $course_id, $user->getActiveOrganisation()), "create")) {
+						if ($ENTRADA_ACL->amIAllowed(new EventResource(null, $course_id, $ENTRADA_USER->getActiveOrganisation()), "create")) {
 							$PROCESSED["course_id"] = $course_id;
 						} else {
 							$ERROR++;

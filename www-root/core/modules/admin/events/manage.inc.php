@@ -859,10 +859,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			}
 			$HEAD[]		= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/tabpane/tabpane.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
 			$HEAD[]		= "<link href=\"".ENTRADA_URL."/css/tabpane.css?release=".html_encode(APPLICATION_VERSION)."\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />\n";
-			$HEAD[]		= "<link href=\"".ENTRADA_URL."/css/tree.css?release=".html_encode(APPLICATION_VERSION)."\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />\n";
 			$HEAD[]		= "<style type=\"text/css\">.dynamic-tab-pane-control .tab-page {height:auto;}</style>\n";
 			$HEAD[]		= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/picklist.js\"></script>\n";
-			$HEAD[]		= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/scriptaculous/tree.js\"></script>\n";
 			$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/elementresizer.js\"></script>\n";
 			/**
 			 * Compiles the full list of faculty members.
@@ -2019,7 +2017,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 										
 										function addSession() {
 											var session_id = $('current-session').value;
-											new Ajax.Updater('session-notices' ,'<?php echo ENTRADA_URL; ?>/api/view-sessions.api.php', 
+											if (session_id && session_id != "0") {
+												new Ajax.Updater('session-notices' ,'<?php echo ENTRADA_URL; ?>/api/view-sessions.api.php', 
 													{
 														method: 'post',
 														parameters: {
@@ -2094,6 +2093,77 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 														}
 													}
 												);
+											}  else {
+												new Ajax.Updater('session-notices' ,'<?php echo ENTRADA_URL; ?>/api/view-sessions.api.php', 
+													{
+														method: 'post',
+														parameters: {
+															'step': 2,
+															'hide_controls': true,
+															'parent_id' : <?php echo (int)$EVENT_ID; ?>,
+															'event_id' : $('current-session').value,
+															'event_start': 1,
+															'event_start_date': $('event_start_date').value,
+															'event_start_hour': $('event_start_hour').value,
+															'event_start_min': $('event_start_min').value,
+															'event_location': $('event_location').value,
+															'groups_session_audience': $('groups_audience_head').value,
+															'students_session_audience': $('students_audience_head').value,
+															'course_session_audience': $('course_audience_head').value,
+															'new': 1
+														},
+														onComplete: function () {
+															if ($('success').value == 1) {
+																disableRTE();
+																new Ajax.Updater({ success: 'session' }, '<?php echo ENTRADA_URL; ?>/api/view-sessions.api.php', 
+																	{
+																		method: 'post',
+																		evalScripts: 'true',
+																		parameters: {
+																			'new': 1,
+																			'event_start': 1,
+																			'parent_id' : <?php echo (int)$EVENT_ID; ?>,
+																			'event_start_date': $('event_start_date').value,
+																			'event_start_hour': $('event_start_hour').value,
+																			'event_start_min': $('event_start_min').value
+																		},
+																		onComplete: function () {
+																			if ($('current-session').value == 0 && $('updated_session_id').value) {
+																				$('current-session').value = $('updated_session_id').value;
+																				$('session-line-0').id = 'session-line-'+$('updated_session_id').value;
+																				$('session-line-'+$('updated_session_id').value).innerHTML = '<div id="session-'+ $('updated_session_id').value +'" onclick="loadSession('+ $('updated_session_id').value +')" class="session-entry">'+ $('session-0').innerHTML +'</div>';
+																				$('updated_session_id').remove();
+																			}
+																			var session_id = $('current-session').value;
+																			if (session_id == 0) {
+																				$('session-line-'+session_id).removeClassName('selected');
+																			} else {
+																				$('current-session').value = 0;
+																				$('session-line-'+session_id).removeClassName('selected');
+																			}
+																			var session_count = parseInt($('session-count').value);
+																			session_count++;
+																			$('session-count').value = session_count;
+																			if (session_count % 15 == 1) {
+																				document.getElementById('max-page-text').innerHTML = parseInt($('max-page-text').innerHTML) + 1;
+																				document.getElementById('session-lists').innerHTML += '<div class="session-list" id="page-'+$('max-page-text').innerHTML+'" style="width: 100%; display: none;"></div>';
+																			}
+																			var page_count = document.getElementById('max-page-text').innerHTML;
+																			document.getElementById('page-'+page_count).innerHTML += '<div id="session-line-0" class="event-session selected"><div id="session-0" onclick="loadSession(0)" class="session-entry"> Session '+ session_count +' </div></div>';
+																			lastPage();
+																			enableRTE();
+																			session_faculty_list = new AutoCompleteList({ type: 'session_faculty', url: '<?php echo ENTRADA_RELATIVE ."/api/personnel.api.php?type=faculty', remove_image: '". ENTRADA_RELATIVE; ?>/images/action-delete.gif'});
+																		},
+																		onCreate: function () {
+																			$('session').innerHTML = '<br/><br/><span class="content-small" style="align: center;">Loading... <img src="<?php echo ENTRADA_URL; ?>/images/indicator.gif" style="vertical-align: middle;" /></span>';
+																		}
+																	}
+																);
+															}
+														}
+													}
+												);
+											}
 										}
 										
 										function disableRTE () {

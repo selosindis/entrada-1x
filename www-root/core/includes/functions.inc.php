@@ -7428,7 +7428,7 @@ function lp_multiple_select_table($checkboxes, $indent, $i, $category_select_all
 		$i++;
 
 		if (isset($checkbox['value']) && $checkbox['value']) {
-			$return .= '<tr class="'.$class.'"><td class="'.$name_class.' indent_'.$indent.'"><label for="'.$checkbox['value'].'">'.$checkbox['text'].'</label></td><td class="'.$input_class.'">'.$input.'</td></tr>';
+			$return .= '<tr class="'.$class.'"><td class="'.$name_class.' indent_'.$indent.'"><label for="'.$checkbox['value'].'" id="'.$checkbox['value'].'_label">'.$checkbox['text'].'</label></td><td class="'.$input_class.'">'.$input.'</td></tr>';
 		}
 
 		if(isset($checkbox['options'])) {

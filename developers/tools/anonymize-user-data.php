@@ -83,7 +83,7 @@ if ($results) {
 					`username` = ".$db->qstr($username).",
 					`firstname` = ".$db->qstr($firstname).",
 					`lastname` = ".$db->qstr($lastname).",
-					`email` = ".$db->qstr($username."@demo.entrada-project.org.").",
+					`email` = ".$db->qstr($username."@demo.entrada-project.org").",
 					`telephone` = '613-533-6000',
 					`privacy_level` = '".(int) $privacy."',
 					`gender` = '".(int) $gender."'

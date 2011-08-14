@@ -48,8 +48,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					FROM `events` AS a
 					LEFT JOIN `courses` AS b
 					ON b.`course_id` = a.`course_id`
-					WHERE a.`event_id` = ".$db->qstr($EVENT_ID)."
-					AND b.`course_active` = '1'";
+					WHERE a.`event_id` = ".$db->qstr($EVENT_ID);
 		$event_info	= $db->GetRow($query);
 		if ($event_info["parent_id"]) {
 			$selected_session_id = $EVENT_ID;
@@ -59,8 +58,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						FROM `events` AS a
 						LEFT JOIN `courses` AS b
 						ON b.`course_id` = a.`course_id`
-						WHERE a.`event_id` = ".$db->qstr($EVENT_ID)."
-						AND b.`course_active` = '1'";
+						WHERE a.`event_id` = ".$db->qstr($EVENT_ID);
 			$event_info	= $db->GetRow($query);
 		}
 	} else {
@@ -260,11 +258,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				 */
 				if ((isset($_POST["course_id"])) && ($course_id = clean_input($_POST["course_id"], array("int")))) {
 					$query	= "	SELECT * FROM `courses` 
-								WHERE `course_id` = ".$db->qstr($course_id)."
-								AND `course_active` = '1'";
+								WHERE `course_id` = ".$db->qstr($course_id);
 					$result	= $db->GetRow($query);
 					if ($result) {
-						if ($ENTRADA_ACL->amIAllowed(new EventResource(null, $course_id, $user->getActiveOrganisation()), "create")) {
+						if ($ENTRADA_ACL->amIAllowed(new EventResource(null, $course_id, $ENTRADA_USER->getActiveOrganisation()), "create")) {
 							$PROCESSED["course_id"] = $course_id;
 						} else {
 							$ERROR++;
@@ -410,10 +407,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				
 				if ((isset($_POST["course_session_audience"])) && $_POST["course_session_audience"]) {
 					if ($course_id || ($course_id = $PROCESSED["course_id"])) {
-						$query = "SELECT *
+						$query = "	SELECT *
 									FROM `courses`
-									WHERE `course_id` = ".$db->qstr($course_id)."
-									AND `course_active` = 1";
+									WHERE `course_id` = ".$db->qstr($course_id);
 						$result	= $db->GetRow($query);
 						if ($result) {
 							$PROCESSED["associated_course_ids"][] = $course_id;
@@ -533,8 +529,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							if ($course_id || ($course_id = $PROCESSED["course_id"])) {
 								$query = "SELECT *
 											FROM `courses`
-											WHERE `course_id` = ".$db->qstr($course_id)."
-											AND `course_active` = 1";
+											WHERE `course_id` = ".$db->qstr($course_id);
 								$result	= $db->GetRow($query);
 								if ($result) {
 									$PROCESSED["session"]["associated_course_ids"][] = $course_id;
@@ -864,10 +859,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			}
 			$HEAD[]		= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/tabpane/tabpane.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
 			$HEAD[]		= "<link href=\"".ENTRADA_URL."/css/tabpane.css?release=".html_encode(APPLICATION_VERSION)."\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />\n";
-			$HEAD[]		= "<link href=\"".ENTRADA_URL."/css/tree.css?release=".html_encode(APPLICATION_VERSION)."\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />\n";
 			$HEAD[]		= "<style type=\"text/css\">.dynamic-tab-pane-control .tab-page {height:auto;}</style>\n";
 			$HEAD[]		= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/picklist.js\"></script>\n";
-			$HEAD[]		= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/scriptaculous/tree.js\"></script>\n";
 			$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/elementresizer.js\"></script>\n";
 			/**
 			 * Compiles the full list of faculty members.
@@ -1055,7 +1048,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							<?php
 							$query = "	SELECT * FROM `courses`
 										WHERE `organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
-										AND `course_active` = '1'
+										AND (`course_active` = '1'".((int) $event_info["course_id"] ? " OR `course_id` = ".$db->qstr($event_info["course_id"]) : "").")
 										ORDER BY `course_name` ASC";
 
 							$results = $db->GetAll($query);
@@ -1065,6 +1058,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 										$course_id = $event_info["course_id"];
 										$course_name = $result["course_name"];
 									}
+									
 									if ($ENTRADA_ACL->amIAllowed(new EventResource(null, $result["course_id"], $ENTRADA_USER->getActiveOrganisation()), "create")) {
 										echo "<option value=\"".(int) $result["course_id"]."\"".(($PROCESSED["course_id"] == $result["course_id"]) ? " selected=\"selected\"" : "").">".html_encode($result["course_name"])."</option>\n";
 									}
@@ -1086,19 +1080,19 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						</tr>
 						<?php
 						if ($event_audience_type == "grad_year") {
-							$query		= "	SELECT a.`event_id`, a.`event_title`, b.`audience_value` AS `event_grad_year`
-											FROM `events` AS a
-											LEFT JOIN `event_audience` AS b
-											ON b.`event_id` = a.`event_id`
-											JOIN `courses` AS c
-											ON a.`course_id` = c.`course_id`
-											AND c.`organisation_id` = ".$db->qstr($event_info["organisation_id"])."
-											WHERE (a.`event_start` BETWEEN ".$db->qstr($event_info["event_start"])." AND ".$db->qstr(($event_info["event_finish"] - 1)).")
-											AND a.`event_id` <> ".$db->qstr($event_info["event_id"])."
-											AND b.`audience_type` = 'grad_year'
-											AND b.`audience_value` = ".$db->qstr((int) $associated_grad_year)."
-											ORDER BY a.`event_title` ASC";
-							$results	= $db->GetAll($query);
+							$query = "	SELECT a.`event_id`, a.`event_title`, b.`audience_value` AS `event_grad_year`
+										FROM `events` AS a
+										LEFT JOIN `event_audience` AS b
+										ON b.`event_id` = a.`event_id`
+										JOIN `courses` AS c
+										ON a.`course_id` = c.`course_id`
+										AND c.`organisation_id` = ".$db->qstr($event_info["organisation_id"])."
+										WHERE (a.`event_start` BETWEEN ".$db->qstr($event_info["event_start"])." AND ".$db->qstr(($event_info["event_finish"] - 1)).")
+										AND a.`event_id` <> ".$db->qstr($event_info["event_id"])."
+										AND b.`audience_type` = 'grad_year'
+										AND b.`audience_value` = ".$db->qstr((int) $associated_grad_year)."
+										ORDER BY a.`event_title` ASC";
+							$results = $db->GetAll($query);
 							if ($results) {
 								echo "<tr>\n";
 								echo "	<td colspan=\"3\">&nbsp;</td>\n";
@@ -2023,7 +2017,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 										
 										function addSession() {
 											var session_id = $('current-session').value;
-											new Ajax.Updater('session-notices' ,'<?php echo ENTRADA_URL; ?>/api/view-sessions.api.php', 
+											if (session_id && session_id != "0") {
+												new Ajax.Updater('session-notices' ,'<?php echo ENTRADA_URL; ?>/api/view-sessions.api.php', 
 													{
 														method: 'post',
 														parameters: {
@@ -2098,6 +2093,77 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 														}
 													}
 												);
+											}  else {
+												new Ajax.Updater('session-notices' ,'<?php echo ENTRADA_URL; ?>/api/view-sessions.api.php', 
+													{
+														method: 'post',
+														parameters: {
+															'step': 2,
+															'hide_controls': true,
+															'parent_id' : <?php echo (int)$EVENT_ID; ?>,
+															'event_id' : $('current-session').value,
+															'event_start': 1,
+															'event_start_date': $('event_start_date').value,
+															'event_start_hour': $('event_start_hour').value,
+															'event_start_min': $('event_start_min').value,
+															'event_location': $('event_location').value,
+															'groups_session_audience': $('groups_audience_head').value,
+															'students_session_audience': $('students_audience_head').value,
+															'course_session_audience': $('course_audience_head').value,
+															'new': 1
+														},
+														onComplete: function () {
+															if ($('success').value == 1) {
+																disableRTE();
+																new Ajax.Updater({ success: 'session' }, '<?php echo ENTRADA_URL; ?>/api/view-sessions.api.php', 
+																	{
+																		method: 'post',
+																		evalScripts: 'true',
+																		parameters: {
+																			'new': 1,
+																			'event_start': 1,
+																			'parent_id' : <?php echo (int)$EVENT_ID; ?>,
+																			'event_start_date': $('event_start_date').value,
+																			'event_start_hour': $('event_start_hour').value,
+																			'event_start_min': $('event_start_min').value
+																		},
+																		onComplete: function () {
+																			if ($('current-session').value == 0 && $('updated_session_id').value) {
+																				$('current-session').value = $('updated_session_id').value;
+																				$('session-line-0').id = 'session-line-'+$('updated_session_id').value;
+																				$('session-line-'+$('updated_session_id').value).innerHTML = '<div id="session-'+ $('updated_session_id').value +'" onclick="loadSession('+ $('updated_session_id').value +')" class="session-entry">'+ $('session-0').innerHTML +'</div>';
+																				$('updated_session_id').remove();
+																			}
+																			var session_id = $('current-session').value;
+																			if (session_id == 0) {
+																				$('session-line-'+session_id).removeClassName('selected');
+																			} else {
+																				$('current-session').value = 0;
+																				$('session-line-'+session_id).removeClassName('selected');
+																			}
+																			var session_count = parseInt($('session-count').value);
+																			session_count++;
+																			$('session-count').value = session_count;
+																			if (session_count % 15 == 1) {
+																				document.getElementById('max-page-text').innerHTML = parseInt($('max-page-text').innerHTML) + 1;
+																				document.getElementById('session-lists').innerHTML += '<div class="session-list" id="page-'+$('max-page-text').innerHTML+'" style="width: 100%; display: none;"></div>';
+																			}
+																			var page_count = document.getElementById('max-page-text').innerHTML;
+																			document.getElementById('page-'+page_count).innerHTML += '<div id="session-line-0" class="event-session selected"><div id="session-0" onclick="loadSession(0)" class="session-entry"> Session '+ session_count +' </div></div>';
+																			lastPage();
+																			enableRTE();
+																			session_faculty_list = new AutoCompleteList({ type: 'session_faculty', url: '<?php echo ENTRADA_RELATIVE ."/api/personnel.api.php?type=faculty', remove_image: '". ENTRADA_RELATIVE; ?>/images/action-delete.gif'});
+																		},
+																		onCreate: function () {
+																			$('session').innerHTML = '<br/><br/><span class="content-small" style="align: center;">Loading... <img src="<?php echo ENTRADA_URL; ?>/images/indicator.gif" style="vertical-align: middle;" /></span>';
+																		}
+																	}
+																);
+															}
+														}
+													}
+												);
+											}
 										}
 										
 										function disableRTE () {

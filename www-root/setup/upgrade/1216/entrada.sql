@@ -9,23 +9,19 @@ ALTER TABLE `group_members` ADD COLUMN `entrada_only` INT(1) DEFAULT 0 AFTER `me
 
 ALTER TABLE `courses` ADD COLUMN `sync_ldap` INT(1) NOT NULL DEFAULT 0 AFTER `permission`;
 
-
 CREATE TABLE IF NOT EXISTS `curriculum_type_organisation` (
   `curriculum_type_id` int(11) NOT NULL,
   `organisation_id` int(11) NOT NULL,
   PRIMARY KEY (`curriculum_type_id`,`organisation_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-
-INSERT INTO `curriculum_type_organisation` SELECT a.`curriculum_type_id`, b.`organisation_id` FROM `curriculum_lu_types` AS a JOIN entrada_auth.`organisations` AS b ON 1=1;
-
-CREATE TABLE `curriculum_periods` IF NOT EXISTS(
-	`cperiod_id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-	`curriculum_type_id` INT NOT NULL,
-	`start_date` BIGINT(64) NOT NULL,
-	`finish_date` BIGINT(64) NOT NULL,
-	`active` INT(1) NOT NULL DEFAULT 1
+CREATE TABLE `curriculum_periods` (
+  `cperiod_id` int(11) NOT NULL AUTO_INCREMENT,
+  `curriculum_type_id` int(11) NOT NULL,
+  `start_date` bigint(64) NOT NULL,
+  `finish_date` bigint(64) NOT NULL,
+  `active` int(1) NOT NULL DEFAULT '1',
+  PRIMARY KEY (`cperiod_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
 
 UPDATE `settings` SET `value` = '1216' WHERE `shortname` = 'version_db';

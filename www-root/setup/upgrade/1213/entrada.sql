@@ -43,7 +43,7 @@ INSERT INTO `assessments_lu_meta` (`organisation_id`, `type`, `title`) VALUES
 ('1', '8', 'RAT'),
 ('1', '9', 'Reflection'),
 ('1', '5', 'Self-assessment'),
-('1', '5', 'Other assessments')
+('1', '5', 'Other assessments');
 
 CREATE TABLE IF NOT EXISTS `assessments_lu_meta_options` (
   `id` int(12) unsigned NOT NULL AUTO_INCREMENT,
@@ -56,6 +56,6 @@ INSERT INTO `assessments_lu_meta_options` (`title`) VALUES
 ('Essay questions'),
 ('Fill-in, short answer questions'),
 ('Multiple-choice, true/false, matching questions'),
-('Problem-solving written exercises')
+('Problem-solving written exercises');
 
 UPDATE `settings` SET `value` = '1213' WHERE `shortname` = 'version_db';

@@ -243,6 +243,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					} else {
 						$PROCESSED["permission"] = "closed";
 					}					
+
+					if ((isset($_POST["sync_ldap"])) && $sync = clean_input($_POST["sync_ldap"],array("int","notags"))) {
+						$PROCESSED["sync_ldap"] = 1;
+					} else {
+						$PROCESSED["sync_ldap"] = 0;
+					}					
 					
 					
 					if (!$ERROR) {
@@ -440,7 +446,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							$query = "	DELETE FROM `course_audience` WHERE `course_id` = ".$db->qstr($COURSE_ID);
 							if ($db->Execute($query)) {							
 							
-								if (isset($_POST["group_order"]) && strlen(isset($_POST["group_order"]))) {
+								if (isset($_POST["group_order"]) && strlen($_POST["group_order"])) {
 									$groups = explode(",", clean_input($_POST["group_order"],array("notags","trim")));					
 									if ((is_array($groups)) && (count($groups))) {
 										foreach($groups as $order => $group_id) {
@@ -1281,7 +1287,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								<label for="event_audience_type_course" class="radio-group-title">This course is open.</label>
 								<div class="content-small">This course is viewable by everyone.</div>
 							</td>
-						</tr>							
+						</tr>
+						<tr>
+							<td><input type="checkbox" id="ldap_sync" name="sync_ldap" value ="1" <?php echo ((isset($PROCESSED["sync_ldap"]) && ($PROCESSED["sync_ldap"] == 1))?" checked=\"checked\"":"");?>/></td>
+							<td colspan="2">
+								<label for="sync_ldap" class="radio-group-title">Sync course with enrollment records.</label>
+								<div class="content-small">Checking this box will sync this course list with the LDAP server twice a day.</div>
+							</td>
+						</tr>
+						<tr>
+							<td colspan="3">&nbsp;</td>
+						</tr>
 						<tr class="course_audience group_audience">
 							<td></td>
 							<td><label for="group_ids" class="form-required">Associated Groups</label></td>

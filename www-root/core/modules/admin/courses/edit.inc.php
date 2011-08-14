@@ -470,7 +470,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 
 								if (isset($_POST["associated_student"]) && strlen($_POST["associated_student"])) {
 									$PROCESSED["associated_students"] = explode(",",clean_input($_POST["associated_student"], array("notags", "trim")));
-									if (is_array($PROCESSED["associated_students"]) && count($PROCESSED["associated_students"])) {
+									if (isset($PROCESSED["associated_students"]) && is_array($PROCESSED["associated_students"])) {
 										foreach($PROCESSED["associated_students"] as $student){
 											$query = "	INSERT INTO `course_audience` VALUES(NULL,".$db->qstr($COURSE_ID).",'proxy_id',".$db->qstr($student).",".$enroll_start.",".$enroll_end.",1)";
 											if(!$db->Execute($query)){
@@ -1333,7 +1333,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 									<span class="content-small">(<strong>Example:</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?>)</span>
 									<ul id="student_list" class="menu" style="margin-top: 15px">
 										<?php
-										if (is_array($PROCESSED["associated_students"]) && count($PROCESSED["associated_students"])) {
+										if (isset($PROCESSED["associated_students"]) && is_array($PROCESSED["associated_students"])) {
 											foreach ($PROCESSED["associated_students"] as $student) {
 												if ((array_key_exists($student, $STUDENT_LIST)) && is_array($STUDENT_LIST[$student])) {
 													?>

@@ -7970,17 +7970,19 @@ function clerkship_notify_clerk($rotation_period_index, $clerk, $rotation, $obje
 				break;
 		}
 		$NOTIFICATION_MESSAGE		 	 = array();
+		global $ENTRADA_ACTIVE_TEMPLATE;
+		
 		switch ($rotation_period_index) {
 			case CLERKSHIP_SIX_WEEKS_PAST :
-				$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".DEFAULT_TEMPLATE."/email/clerkship-deficiency-clerk-notification.txt");
+				$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".$ENTRADA_ACTIVE_TEMPLATE."/email/clerkship-deficiency-clerk-notification.txt");
 				break;
 			case CLERKSHIP_ROTATION_ENDED :
-				$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".DEFAULT_TEMPLATE."/email/clerkship-rotation-incomplete-clerk-notification.txt");
+				$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".$ENTRADA_ACTIVE_TEMPLATE."/email/clerkship-rotation-incomplete-clerk-notification.txt");
 				break;
 			case CLERKSHIP_ONE_WEEK_PRIOR :
 			case CLERKSHIP_ROTATION_PERIOD :
 			default :
-				$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".DEFAULT_TEMPLATE."/email/clerkship-delinquency-clerk-notification.txt");
+				$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".$ENTRADA_ACTIVE_TEMPLATE."/email/clerkship-delinquency-clerk-notification.txt");
 				break;
 		}
 								
@@ -8160,7 +8162,7 @@ function clerkship_send_queued_notifications($rotation_id, $rotation_title, $pro
 				$mail->setSubject("Clerkship Logbook Progress Notification");
 				
 				$NOTIFICATION_MESSAGE		 	 = array();
-				$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".DEFAULT_TEMPLATE."/email/clerkship-coordinator-notification.txt");
+				$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".$ENTRADA_ACTIVE_TEMPLATE."/email/clerkship-coordinator-notification.txt");
 								
 		
 				$search		= array(
@@ -8373,9 +8375,9 @@ function clerkship_deficiency_notifications($clerk_id, $rotation_id, $administra
 								ENTRADA_URL
 							);
 			if ($administrator) {
-				$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".DEFAULT_TEMPLATE."/email/clerk-deficiency-plan-admin-notification.txt");					
+				$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".$ENTRADA_ACTIVE_TEMPLATE."/email/clerk-deficiency-plan-admin-notification.txt");					
 			} else {
-				$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".DEFAULT_TEMPLATE."/email/clerk-deficiency-plan-reviewed-".($completed ? "complete" : "incomplete")."-notification.txt");
+				$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".$ENTRADA_ACTIVE_TEMPLATE."/email/clerk-deficiency-plan-reviewed-".($completed ? "complete" : "incomplete")."-notification.txt");
 			}
 			$mail->setBodyText(clean_input(str_replace($search, $replace, $NOTIFICATION_MESSAGE["textbody"]), array("postclean")));
 			

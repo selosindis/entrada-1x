@@ -257,7 +257,8 @@ function build_post($post) {
 
 	$NOTIFICATION_MESSAGE		 	 = array();
 
-	$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".DEFAULT_TEMPLATE."/email/".$post['body']);
+	global $ENTRADA_ACTIVE_TEMPLATE;
+	$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".$ENTRADA_ACTIVE_TEMPLATE."/email/".$post['body']);
 	$mail->setBodyText(clean_input(str_replace($search, $replace, $NOTIFICATION_MESSAGE["textbody"]), array("postclean")));
 }
 

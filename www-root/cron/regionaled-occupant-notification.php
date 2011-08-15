@@ -54,7 +54,8 @@ $query = "	SELECT c.`username`,
 			AND DATEDIFF(FROM_UNIXTIME(b.`inhabiting_start`), NOW()) = 30";
 $occupants = $db->GetAll($query);
 if ($occupants) {
-	$email_body = file_get_contents(ENTRADA_ABSOLUTE . "/templates/" . DEFAULT_TEMPLATE . "/email/regionaled-learner-accommodation-notification.txt");
+	global $ENTRADA_ACTIVE_TEMPLATE;
+	$email_body = file_get_contents(ENTRADA_ABSOLUTE . "/templates/" . $ENTRADA_ACTIVE_TEMPLATE . "/email/regionaled-learner-accommodation-notification.txt");
 	
 	foreach ($occupants as $occupant) {
 		$mail->clearSubject();

@@ -1796,6 +1796,45 @@ function fetch_countries() {
 }
 
 /**
+ * Function will return a list of available templates.
+ * @param none
+ * @return results
+ */
+function fetch_templates() {
+	//search the templates directory for available templates.
+	$dir    = ENTRADA_ABSOLUTE . '/templates';
+	$results = scandir($dir);
+
+	if (is_array($results) && count($results)) {
+		$results = array_filter($results, "remove_dirs");
+		if ($results) {
+			return $results;
+		} else {
+			return false;
+		}
+	} else {
+		return false;
+	}
+}
+
+/**
+ * This function is the array_filter callback used in fetch_templates to
+ * filter the array of directors for the removal of "." and "..".
+ *
+ * @param <string> $dir
+ * @return <boolean> false if the directory is "." or "..".
+ */
+function remove_dirs($dir) {
+	if ($dir == "." || $dir == "..") {
+		return false;
+	}
+	else {
+		return true;
+	}
+}
+
+
+/**
  * Function will return a specific Country from the list of Countries.
  * @param $countries_id
  * @return resultset(country) or bool

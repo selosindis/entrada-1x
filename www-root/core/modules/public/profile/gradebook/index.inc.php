@@ -24,7 +24,6 @@
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
 */
-
 if((!defined("PARENT_INCLUDED")) || (!defined("IN_PUBLIC_GRADEBOOK"))) {
 	exit;
 } elseif((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
@@ -86,6 +85,9 @@ $query = "	SELECT a.*, COUNT(b.`assessment_id`) AS `assessments`
 			JOIN `assessments` AS b
 			ON a.`course_id` = b.`course_id`
 			AND b.`grad_year` = ".$db->qstr($_SESSION["details"]["role"])."
+			WHERE (b.`release_date` != '0' AND b.`release_date` <= ".$db->qstr(time()).")
+			AND (b.`release_until` = '0' OR b.`release_until` >= ".$db->qstr(time()).")
+			AND b.`show_learner` = '1'
 			GROUP BY a.`course_id`
 			ORDER BY ".$sort_by;
 $results = $db->GetAll($query);

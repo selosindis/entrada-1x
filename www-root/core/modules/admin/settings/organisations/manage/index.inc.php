@@ -87,6 +87,12 @@ echo "<h1>".$ORGANISATION["organisation_title"]."</h1>";
 					<?php echo $ORGANISATION["organisation_desc"];?>
 				</td>
 			</tr>
+			<tr>
+				<td><label for="template">Template</label></td>
+				<td>
+					<?php echo $ORGANISATION["template"];?>
+				</td>
+			</tr>
 
 		</tbody>
 </table>

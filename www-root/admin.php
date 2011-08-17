@@ -46,6 +46,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	exit;
 } else {
 	define("IN_ADMIN", true);
+	global $ENTRADA_ACTIVE_TEMPLATE;
 
 	/*
 	 * If the org request attribute is set then change the current org id for this user.
@@ -133,7 +134,7 @@ $router->setSection($SECTION);
 
 define("PARENT_INCLUDED", true);
 
-require_once (ENTRADA_ABSOLUTE."/templates/".DEFAULT_TEMPLATE."/layouts/admin/header.tpl.php");
+require_once (ENTRADA_ABSOLUTE."/templates/".$ENTRADA_ACTIVE_TEMPLATE."/layouts/admin/header.tpl.php");
 if (($router) && ($route = $router->initRoute($MODULE))) {
 	/**
 	 * Responsible for displaying the permission masks sidebar item
@@ -164,7 +165,7 @@ if (($router) && ($route = $router->initRoute($MODULE))) {
 	exit;
 }
 
-require_once (ENTRADA_ABSOLUTE."/templates/".DEFAULT_TEMPLATE."/layouts/admin/footer.tpl.php");
+require_once (ENTRADA_ABSOLUTE."/templates/".$ENTRADA_ACTIVE_TEMPLATE."/layouts/admin/footer.tpl.php");
 
 /**
  * Add the Feedback Sidebar Window.

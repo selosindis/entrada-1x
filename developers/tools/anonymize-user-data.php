@@ -24,6 +24,9 @@
  * - Replace e-mail addresses with a general one.
  * - Reset passwords to password.
  *
+ * This script needs to be updated to handle users who do not have a record
+ * in the user_access table. 
+ *
  * @author Unit: Medical Education Technology Unit
  * @author Developer: Matt Simpson <matt.simpson@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
@@ -51,6 +54,8 @@ require_once("config.inc.php");
 require_once("dbconnection.inc.php");
 require_once("functions.inc.php");
 
+echo "\nAnonymizing user data on " . DATABASE_HOST;
+
 /**
  * Reset password to password
  * Empty department, email_alt, google_id, telephone, address, city, province, country, and office hours.
@@ -64,30 +69,48 @@ $query = "	SELECT a.*, b.`group`
 			ON b.`user_id` = a.`id`
 			WHERE b.`app_id` = '1'
 			ORDER BY a.`id` ASC";
+
 $results = $db->GetAll($query);
 if ($results) {
-	$users = array("student" => 0, "faculty" => 0, "staff" => 0, "resident" => 0, "medtech" => 0);
-	
+	//Group type of Other added to handle all other groups than those listed.
+	//The Group type is used as part of creating a unique username.
+	$users = array("student" => 0, "faculty" => 0, "staff" => 0, "resident" => 0, "medtech" => 0, "other" => 0);
+	$count = 0;
 	foreach ($results as $key => $result) {
-		$users[$result["group"]]++;
+	
+		if (array_key_exists($result["group"], $users)) {
+			$username_prefix = $result["group"];
+			$username_postfix = $users[$result["group"]]++;
+		} else {
+			$username_prefix = "other";
+			$username_postfix = $users["other"]++;
+		}
 		
 		$number = (2432154 + $key);
 		$firstname = $db->GetOne("SELECT `firstname` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` <> '".$result["id"]."' ORDER BY RAND() LIMIT 1");
 		$lastname = $db->GetOne("SELECT `lastname` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` <> '".$result["id"]."' ORDER BY RAND() LIMIT 1");
 		$privacy = rand(0, 3);
 		$gender = rand(1, 2);
-		$username = $result["group"].$users[$result["group"]];
+		$username = $username_prefix.$username_postfix;
 		
 		$query = "	UPDATE `".AUTH_DATABASE."`.`user_data` SET
 					`number` = '".(int) $number."',
 					`username` = ".$db->qstr($username).",
 					`firstname` = ".$db->qstr($firstname).",
 					`lastname` = ".$db->qstr($lastname).",
-					`email` = ".$db->qstr($username."@demo.entrada-project.org.").",
+					`email` = ".$db->qstr($username."@demo.entrada-project.org").",
 					`telephone` = '613-533-6000',
 					`privacy_level` = '".(int) $privacy."',
 					`gender` = '".(int) $gender."'
 					WHERE `id` = '".$result["id"]."'";
-		$db->Execute($query);
+
+		$update = $db->Execute($query);
+		if ($update) {
+			$count++;
+		}
+		else {
+			echo "\nError updating user id: " . $result["id"] . ". Database said: " . $db->ErrorMsg();
+		}
 	}
+	echo "\nNumber of rows updated: " . $count . "\n";
 }

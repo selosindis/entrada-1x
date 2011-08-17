@@ -1796,6 +1796,45 @@ function fetch_countries() {
 }
 
 /**
+ * Function will return a list of available templates.
+ * @param none
+ * @return results
+ */
+function fetch_templates() {
+	//search the templates directory for available templates.
+	$dir    = ENTRADA_ABSOLUTE . '/templates';
+	$results = scandir($dir);
+
+	if (is_array($results) && count($results)) {
+		$results = array_filter($results, "remove_dirs");
+		if ($results) {
+			return $results;
+		} else {
+			return false;
+		}
+	} else {
+		return false;
+	}
+}
+
+/**
+ * This function is the array_filter callback used in fetch_templates to
+ * filter the array of directors for the removal of "." and "..".
+ *
+ * @param <string> $dir
+ * @return <boolean> false if the directory is "." or "..".
+ */
+function remove_dirs($dir) {
+	if ($dir == "." || $dir == "..") {
+		return false;
+	}
+	else {
+		return true;
+	}
+}
+
+
+/**
  * Function will return a specific Country from the list of Countries.
  * @param $countries_id
  * @return resultset(country) or bool
@@ -7293,7 +7332,7 @@ function lp_multiple_select_popup($id, $checkboxes, $options) {
 		'submit_text'	=>	'Submit',
 		'filter'		=>	true,
 		'class'			=>	'',
-		'width'			=>	'400px',
+		'width'			=>	'450px',
 		'hidden'		=>	true
 	);
 
@@ -7428,7 +7467,7 @@ function lp_multiple_select_table($checkboxes, $indent, $i, $category_select_all
 		$i++;
 
 		if (isset($checkbox['value']) && $checkbox['value']) {
-			$return .= '<tr class="'.$class.'"><td class="'.$name_class.' indent_'.$indent.'"><label for="'.$checkbox['value'].'">'.$checkbox['text'].'</label></td><td class="'.$input_class.'">'.$input.'</td></tr>';
+			$return .= '<tr class="'.$class.'"><td class="'.$name_class.' indent_'.$indent.'"><label for="'.$checkbox['value'].'" id="'.$checkbox['value'].'_label">'.$checkbox['text'].'</label></td><td class="'.$input_class.'">'.$input.'</td></tr>';
 		}
 
 		if(isset($checkbox['options'])) {
@@ -7931,17 +7970,19 @@ function clerkship_notify_clerk($rotation_period_index, $clerk, $rotation, $obje
 				break;
 		}
 		$NOTIFICATION_MESSAGE		 	 = array();
+		global $ENTRADA_ACTIVE_TEMPLATE;
+		
 		switch ($rotation_period_index) {
 			case CLERKSHIP_SIX_WEEKS_PAST :
-				$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".DEFAULT_TEMPLATE."/email/clerkship-deficiency-clerk-notification.txt");
+				$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".$ENTRADA_ACTIVE_TEMPLATE."/email/clerkship-deficiency-clerk-notification.txt");
 				break;
 			case CLERKSHIP_ROTATION_ENDED :
-				$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".DEFAULT_TEMPLATE."/email/clerkship-rotation-incomplete-clerk-notification.txt");
+				$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".$ENTRADA_ACTIVE_TEMPLATE."/email/clerkship-rotation-incomplete-clerk-notification.txt");
 				break;
 			case CLERKSHIP_ONE_WEEK_PRIOR :
 			case CLERKSHIP_ROTATION_PERIOD :
 			default :
-				$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".DEFAULT_TEMPLATE."/email/clerkship-delinquency-clerk-notification.txt");
+				$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".$ENTRADA_ACTIVE_TEMPLATE."/email/clerkship-delinquency-clerk-notification.txt");
 				break;
 		}
 								
@@ -8121,7 +8162,7 @@ function clerkship_send_queued_notifications($rotation_id, $rotation_title, $pro
 				$mail->setSubject("Clerkship Logbook Progress Notification");
 				
 				$NOTIFICATION_MESSAGE		 	 = array();
-				$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".DEFAULT_TEMPLATE."/email/clerkship-coordinator-notification.txt");
+				$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".$ENTRADA_ACTIVE_TEMPLATE."/email/clerkship-coordinator-notification.txt");
 								
 		
 				$search		= array(
@@ -8334,9 +8375,9 @@ function clerkship_deficiency_notifications($clerk_id, $rotation_id, $administra
 								ENTRADA_URL
 							);
 			if ($administrator) {
-				$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".DEFAULT_TEMPLATE."/email/clerk-deficiency-plan-admin-notification.txt");					
+				$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".$ENTRADA_ACTIVE_TEMPLATE."/email/clerk-deficiency-plan-admin-notification.txt");					
 			} else {
-				$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".DEFAULT_TEMPLATE."/email/clerk-deficiency-plan-reviewed-".($completed ? "complete" : "incomplete")."-notification.txt");
+				$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".$ENTRADA_ACTIVE_TEMPLATE."/email/clerk-deficiency-plan-reviewed-".($completed ? "complete" : "incomplete")."-notification.txt");
 			}
 			$mail->setBodyText(clean_input(str_replace($search, $replace, $NOTIFICATION_MESSAGE["textbody"]), array("postclean")));
 			

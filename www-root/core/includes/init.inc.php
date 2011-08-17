@@ -35,6 +35,7 @@ $loader = Zend_Loader_Autoloader::getInstance();
 require_once("config/settings.inc.php");
 
 require_once("Entrada/adodb/adodb.inc.php");
+
 require_once("functions.inc.php");
 
 require_once("dbconnection.inc.php");
@@ -53,6 +54,19 @@ if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
 }
 
 @ini_set("filter.default_flags", FILTER_FLAG_NO_ENCODE_QUOTES);
+
+$ENTRADA_ACTIVE_TEMPLATE = "";
+
+//If we know the active org then we can get the active template.
+if ($ENTRADA_USER) {
+	$query = "SELECT template FROM `" . AUTH_DATABASE . "`.`organisations` WHERE `organisation_id` = " . $db->qstr($ENTRADA_USER->getActiveOrganisation());
+	$ENTRADA_ACTIVE_TEMPLATE = $db->GetOne($query);
+}
+
+//if we do not have an active template default to the "default" template.
+if (!$ENTRADA_ACTIVE_TEMPLATE) {
+		$ENTRADA_ACTIVE_TEMPLATE = DEFAULT_TEMPLATE;
+}
 
 /**
  * If Entrada is in development mode and the user is not a developer send them to the
@@ -75,7 +89,7 @@ if ((defined("AUTH_ALLOW_CAS")) && (AUTH_ALLOW_CAS == true)) {
  * Setup Zend_Translate for language file support.
  */
 if ($ENTRADA_CACHE) Zend_Translate::setCache($ENTRADA_CACHE);
-$translate = new Zend_Translate("array", ENTRADA_ABSOLUTE."/templates/".DEFAULT_TEMPLATE."/languages/".DEFAULT_LANGUAGE.".lang.php", DEFAULT_LANGUAGE);
+$translate = new Zend_Translate("array", ENTRADA_ABSOLUTE."/templates/".$ENTRADA_ACTIVE_TEMPLATE."/languages/".DEFAULT_LANGUAGE.".lang.php", DEFAULT_LANGUAGE);
 
 $ADODB_CACHE_DIR = CACHE_DIRECTORY;
 $time_start = getmicrotime();

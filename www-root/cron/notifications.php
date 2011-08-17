@@ -36,8 +36,9 @@ $NOTIFICATION_BLACKLIST = array();
 $NOTIFICATION_MESSAGE		 	 = array();
 $NOTIFICATION_MESSAGE["subject"] = "Teaching Reminder Notice: %EVENT_DATE%";
 
-$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".DEFAULT_TEMPLATE."/email/teaching-notification.txt");
-$NOTIFICATION_MESSAGE["htmlbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".DEFAULT_TEMPLATE."/email/teaching-notification.html");
+global $ENTRADA_ACTIVE_TEMPLATE;
+$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".$ENTRADA_ACTIVE_TEMPLATE."/email/teaching-notification.txt");
+$NOTIFICATION_MESSAGE["htmlbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".$ENTRADA_ACTIVE_TEMPLATE."/email/teaching-notification.html");
 
 $NOTIFICATION_REMINDERS = array();
 
@@ -249,7 +250,7 @@ function notifications_send($timestamp_start = 0, $timestamp_end = 0, $notice = 
 								((count($associated_faculty) > 0) ? "   - ".implode("\n   - ", $associated_faculty)."\n" : ""),
 								$event_resources["html"],
 								$event_resources["text"],
-								ENTRADA_URL."/templates/".DEFAULT_TEMPLATE."/images"
+								ENTRADA_URL."/templates/".$ENTRADA_ACTIVE_TEMPLATE."/images"
 							);
 				
 				$mail->Subject	= str_replace(array("%EVENT_DATE%", "%SUBJECT_SUFFIX%"), array(date("Y-m-d", $event["event_start"]), (($notice["subject_suffix"] != "") ? " ".$notice["subject_suffix"] : "")), $NOTIFICATION_MESSAGE["subject"]);

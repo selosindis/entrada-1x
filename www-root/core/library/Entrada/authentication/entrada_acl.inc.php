@@ -20,6 +20,7 @@ class Entrada_ACL extends ACL_Factory {
 		"mom" => array (
 			"awards",
 			"community",
+			"communityadmin",
 			"configuration",
 			"course" => array (
 				"coursecontent",

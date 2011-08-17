@@ -60,7 +60,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 							$result = $db->GetRow($query);
 							if ($result) {
 								$PROCESSED["province_id"] = $tmp_input;
-								$PROCESSED["organisation_province"] = $result["province"];
+								$PROCESSED["organisation_province"] = $result["abbreviation"];
 							} else {
 								$ERROR++;
 								$ERRORSTR[] = "The province / state you have selected does not appear to exist in our database. Please selected a valid province / state.";
@@ -136,6 +136,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 			} else {
 				$ERROR++;
 				$ERRORSTR[] = "You must provide a description for this organisation.";
+			}
+			if (isset($_POST["template"]) && ($tmp_input = clean_input($_POST["template"], array("trim", "notags")))) {
+				$PROCESSED["template"] = $tmp_input;
+			} else {
+				//Default to the default template if no template selected.
+				if (DEFAULT_TEMPLATE) {
+					$PROCESSED["template"] = DEFAULT_TEMPLATE;
+				} else {
+					$ERROR++;
+					$ERRORSTR[] = "No template found.";
+				}
 			}
 
 			if (!$ERROR) {
@@ -339,7 +350,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 					<tfoot>
 						<tr>
 							<td colspan="2" style="padding-top: 25px;text-align: right;padding-right:45px;">
-								<input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/regionaled/apartments'" />
+								<input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/configuration'" />
 								<input type="submit" class="button" value="Save" />
 							</td> 
 						</tr>
@@ -429,6 +440,30 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 							<td>
 								<input type="text" id="organisation_desc" name="organisation_desc" value="<?php echo html_encode($PROCESSED["organisation_desc"]); ?>" style="width: 250px" />
 							</td>
+						</tr>
+						<tr>
+							<td><label for="template" class="form-required">Template</label></td>
+							<td>
+								<?php
+								$templates = fetch_templates();
+								if (is_array($templates) && count($templates)) {
+								?>
+									<select id="template" name="template" style="width: 250px">
+									<?php foreach ($templates as $template) { ?>
+										<option value="<?php echo $template; ?>"
+											<?php echo (($PROCESSED["template"] == $template) ? "selected=selected" : ""); ?> >
+												<?php echo $template; ?>
+										</option>
+									<?php
+											}
+									?>
+										</select>
+								<?php
+										} else {
+											echo html_encode($PROCESSED["template"]) . " (not modifiable for this organisation)";
+										}
+								?>
+									</td>
 						</tr>
 					</tbody>
 				</table>

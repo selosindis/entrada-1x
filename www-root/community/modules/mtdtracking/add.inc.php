@@ -137,8 +137,11 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 
 	$PROCESSED["service_id"] = validate_integer_field($_POST["service_id"]);
 	if (!$PROCESSED["service_id"]) {
-		$ERROR++;
-		$ERRORSTR[] = "No service code found.";
+		$PROCESSED["service_id"] = validate_integer_field($_POST["mtdservice_select"]);
+		if (!$PROCESSED["service_id"]) {
+			$ERROR++;
+			$ERRORSTR[] = "No service code found.";
+		}
 	}
 
 	if (!$ERROR) {

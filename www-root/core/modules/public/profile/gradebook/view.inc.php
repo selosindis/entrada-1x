@@ -86,6 +86,9 @@ if ($COURSE_ID) {
 				JOIN `assessment_marking_schemes` AS d
 				ON b.`marking_scheme_id` = d.`id`
 				WHERE a.`course_id` = ".$db->qstr($COURSE_ID)."
+				AND (b.`release_date` != '0' AND b.`release_date` <= ".$db->qstr(time()).")
+				AND (b.`release_until` = '0' OR b.`release_until` >= ".$db->qstr(time()).")
+				AND b.`show_learner` = '1'
 				ORDER BY ".$sort_by;
 	$results = $db->GetAll($query);
 	if ($results) {

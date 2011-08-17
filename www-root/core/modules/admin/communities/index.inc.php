@@ -23,12 +23,13 @@
  * @copyright Copyright 2010 University of Calgary. All Rights Reserved.
  *
 */
+
 if (!defined("IN_COMMUNITIES")) {
 	exit;
 } elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	header("Location: ".ENTRADA_URL);
 	exit;
-} elseif (!$ENTRADA_ACL->amIAllowed("evaluation", "update", false)) {
+} elseif (!$ENTRADA_ACL->amIAllowed("communityadmin", "read", false)) {
 	add_error("Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.");
 
 	echo display_error();
@@ -39,9 +40,6 @@ if (!defined("IN_COMMUNITIES")) {
 	 * Update requested column to sort by.
 	 * Valid: director, name
 	 */
-
-	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/tabpane/tabpane.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
-	$HEAD[] = "<link href=\"".ENTRADA_URL."/css/tabpane.css?release=".html_encode(APPLICATION_VERSION)."\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />\n";
 
 	$search_type		= "browse-newest";
 	$browse_number		= 25;
@@ -228,6 +226,7 @@ if (!defined("IN_COMMUNITIES")) {
 		$scheduler_communities["total_rows"] = 0;
 		$scheduler_communities["total_pages"] = 1;
 	}
+	
 	/**
 	 * Check if pv variable is set and see if it's a valid page, other wise page 1 it is.
 	 */
@@ -259,90 +258,39 @@ if (!defined("IN_COMMUNITIES")) {
 	$scheduler_communities["communities"] = $db->GetAll($query_communities);
 	?>
 
-	<style type="text/css">
-	.dynamic-tab-pane-control .tab-page {
-		height: 100px;
-	}
-	</style>
-	<div class="tab-pane" id="user-tabs">
-	    <!--
-		<div class="tab-page">
-			<h2 class="tab">Newest Communities</h2>
-			<form action="<?php echo ENTRADA_URL; ?>/admin/communities" method="get">
-			<input type="hidden" name="type" value="browse-newest" />
-			<table style="width: 100%" cellspacing="1" cellpadding="1" border="0" summary="Browse Newest Users">
-			<colgroup>
-				<col style="width: 3%" />
-				<col style="width: 25%" />
-				<col style="width: 72%" />
-			</colgroup>
-			<tfoot>
-				<tr>
-					<td colspan="3">&nbsp;</td>
-				</tr>
-				<tr>
-					<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
-						<input type="submit" class="button" value="Show" />
-					</td>
-				</tr>
-			</tfoot>
-			<tbody>
-				<tr>
-					<td>&nbsp;</td>
-					<td style="vertical-align: top"><label for="number" class="form-required">Number of Newest Communities:</label></td>
-					<td>
-						<select id="number" name="n" style="width: 100px">
-						<option value="1">1</option>
-						<option value="50">50</option>
-						<option value="75">75</option>
-						<option value="100">100</option>
-						</select>
-					</td>
-				</tr>
-			</tbody>
-			</table>
-			</form>
-		</div>
-     -->
-		<div class="tab-page">
-			<h2 class="tab">Community Search</h2>
-			<form action="<?php echo ENTRADA_URL; ?>/admin/communities" method="get">
-			<input type="hidden" name="type" value="search" />
-			<table style="width: 100%" cellspacing="1" cellpadding="1" border="0" summary="Search For Community">
-			<colgroup>
-				<col style="width: 3%" />
-				<col style="width: 25%" />
-				<col style="width: 72%" />
-			</colgroup>
-			<tfoot>
-				<tr>
-					<td colspan="3">&nbsp;</td>
-				</tr>
-				<tr>
-					<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
-						<input type="submit" class="button" value="Search" />
-						<input type="button" class="button" value="Browse All"  onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/communities'"/>
-					</td>
-				</tr>
-			</tfoot>
-			<tbody>
-				<tr>
-					<td>&nbsp;</td>
-					<td style="vertical-align: top"><label for="q" class="form-required">Community Search:</label></td>
-					<td>
-						<input type="text" id="q" name="q" value="<?php echo html_encode($search_query); ?>" style="width: 350px" />
-						<div class="content-small" style="margin-top: 10px">
-							<strong>Note:</strong> You can search for community title, or Category title.
-						</div>
-					</td>
-				</tr>
-			</tbody>
-			</table>
-			</form>
-		</div>
-	</div>
-	
-	<script type="text/javascript">setupAllTabs(true);</script>
+	<h2>Community Search</h2>
+	<form action="<?php echo ENTRADA_URL; ?>/admin/communities" method="get">
+	<input type="hidden" name="type" value="search" />
+	<table style="width: 100%" cellspacing="1" cellpadding="1" border="0" summary="Search For Community">
+	<colgroup>
+		<col style="width: 17%" />
+		<col style="width: 48%" />
+		<col style="width: 35%" />
+	</colgroup>
+	<tbody>
+		<tr>
+			<td style="vertical-align: top"><label for="q" class="form-required">Community Search</label></td>
+			<td style="vertical-align: top">
+				<input type="text" id="q" name="q" value="<?php echo html_encode($search_query); ?>" style="width: 325px" />
+				<div class="content-small" style="margin-top: 10px">
+					<strong>Note:</strong> You can search for community title, or Category title.
+				</div>
+			</td>
+			<td style="vertical-align: top">
+				<input type="submit" class="button" value="Search" />
+				<?php
+				if ($search_query != "") {
+					?>
+					<input type="button" class="button" value="Show All"  onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/communities'"/>
+					<?php
+				}
+				?>
+			</td>
+		</tr>
+	</tbody>
+	</table>
+	</form>
+	<br /><br />
 	<?php
 	if ($scheduler_communities["total_pages"] > 1) {
 		echo "<div class=\"fright\" style=\"margin-bottom: 10px\">\n";
@@ -374,58 +322,56 @@ if (!defined("IN_COMMUNITIES")) {
 	}
 
 	if (count($scheduler_communities["communities"])) {
-		if ($ENTRADA_ACL->amIAllowed("evaluation", "delete", false)) : ?>
+		if ($ENTRADA_ACL->amIAllowed("communityadmin", "delete", false)) : ?>
 		<form action="<?php echo ENTRADA_URL; ?>/admin/communities?section=delete" method="post">
 		<?php endif; ?>
 		<table class="tableList" cellspacing="0" cellpadding="1" summary="List of communities">
 			<colgroup>
 				<col class="modified" />
-				<col class="community_title" />
-				<col class="community_opened" />
-				<col class="targets" />
+				<col class="title" />
+				<col class="title" />
+				<col class="date" />
 				<col class="attachment" />
 				<col class="attachment" />
 			</colgroup>
 			<thead>
 				<tr>
 					<td class="modified">&nbsp;</td>
-					<td class="community_title<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "community_title") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("community_title", "Community Title"); ?></td>
+					<td class="title<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "community_title") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("community_title", "Community Title"); ?></td>
+					<td class="title<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "category_title") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("category_title", "Category"); ?></td>
 					<td class="date<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "community_opened") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("community_opened", "Creation Date"); ?></td>
-					<td class="evaluators<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "category_title") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("category_title", "Category"); ?></td>
 					<td class="attachment">&nbsp;</td>
 					<td class="attachment">&nbsp;</td>
 				</tr>
 			</thead>
-			<?php if ($ENTRADA_ACL->amIAllowed("evaluation", "delete", false)) : ?>
+			<?php if ($ENTRADA_ACL->amIAllowed("communityadmin", "delete", false)) : ?>
 			<tfoot>
-			    <!--
 				<tr>
 					<td></td>
 					<td colspan="5" style="padding-top: 10px">
-						<input type="submit" class="button" value="Delete Selected" />
+						<input type="submit" class="button" value="Deactivate" />
 					</td>
 				</tr>
-			    -->
 			</tfoot>
 			<?php endif; ?>
 			<tbody>
 			<?php
 			foreach ($scheduler_communities["communities"] as $result) {
-				$url = ENTRADA_URL."/admin/communities?section=modify&community=".$result["community_id"];
+				$url = ENTRADA_URL."/communities?section=modify&community=".$result["community_id"];
 
-				echo "<tr id=\"evaluation-".$result["evaluation_id"]."\" class=\"evaluation\">\n";
-				echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"checked[]\" value=\"".$result["evaluation_id"]."\" /></td>\n";
-				echo "	<td class=\"community_title\"><a href=\"".$url."\">".html_encode($result["community_title"])."</a></td>\n";
+				echo "<tr id=\"community-".$result["community_id"]."\">\n";
+				echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"checked[]\" value=\"".$result["community_id"]."\" /></td>\n";
+				echo "	<td class=\"title\"><a href=\"".$url."\">".html_encode($result["community_title"])."</a></td>\n";
+				echo "	<td class=\"title\"><a href=\"".$url."\">".html_encode($result["category_title"])."</a></td>\n";
 				echo "	<td class=\"date\"><a href=\"".$url."\">".date(DEFAULT_DATE_FORMAT, $result["community_opened"])."</a></td>\n";
-				echo "	<td class=\"category_title\"><a href=\"".$url."\">".html_encode($result["category_title"])."</a></td>\n";
-				echo "	<td class=\"attachment\"><a href=\"".ENTRADA_URL."/admin/communities?section=members&community=".$result["community_id"]."\"><img src=\"".ENTRADA_URL."/images/headshot-male.gif\" width=\"16\" height=\"16\" alt=\"Manage Community Members\" title=\"Manage Community Members\" border=\"0\" /></a></td>\n";
-				echo "	<td class=\"attachment\"><a href=\"".ENTRADA_URL."/admin/communities?section=modify&community=".$result["community_id"]."\"><img src=\"".ENTRADA_URL."/images/action-edit.gif\" width=\"16\" height=\"16\" alt=\"Manage Community\" title=\"Manage Community\" border=\"0\" /></a></td>\n";
+				echo "	<td class=\"attachment\"><a href=\"".ENTRADA_URL."/communities?section=members&community=".$result["community_id"]."\"><img src=\"".ENTRADA_URL."/images/headshot-male.gif\" width=\"16\" height=\"16\" alt=\"Manage Community Members\" title=\"Manage Community Members\" border=\"0\" /></a></td>\n";
+				echo "	<td class=\"attachment\"><a href=\"".ENTRADA_URL."/communities?section=modify&community=".$result["community_id"]."\"><img src=\"".ENTRADA_URL."/images/action-edit.gif\" width=\"16\" height=\"16\" alt=\"Manage Community\" title=\"Manage Community\" border=\"0\" /></a></td>\n";
 				echo "</tr>\n";
 			}
 			?>
 			</tbody>
 		</table>
-		<?php if ($ENTRADA_ACL->amIAllowed("evaluation", "delete", false)) : ?>
+		<?php if ($ENTRADA_ACL->amIAllowed("communityadmin", "delete", false)) : ?>
 		</form>
 		<?php
 		endif;

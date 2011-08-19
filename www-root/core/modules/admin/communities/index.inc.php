@@ -323,7 +323,7 @@ if (!defined("IN_COMMUNITIES")) {
 
 	if (count($scheduler_communities["communities"])) {
 		if ($ENTRADA_ACL->amIAllowed("communityadmin", "delete", false)) : ?>
-		<form action="<?php echo ENTRADA_URL; ?>/admin/communities?section=delete" method="post">
+		<form action="<?php echo ENTRADA_URL; ?>/admin/communities?section=deactivate" method="post">
 		<?php endif; ?>
 		<table class="tableList" cellspacing="0" cellpadding="1" summary="List of communities">
 			<colgroup>

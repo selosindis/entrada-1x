@@ -23,7 +23,30 @@
  * 
  */
 
-require_once("bootstrap.php");
+@set_time_limit(0);
+@set_include_path(implode(PATH_SEPARATOR, array(
+    dirname(__FILE__) . "/../../../core",
+    dirname(__FILE__) . "/../../../core/includes",
+    dirname(__FILE__) . "/../../../core/library",
+    get_include_path(),
+)));
+
+/**
+ * Include the Entrada init code.
+ */
+require_once("init.inc.php");
+
+if((!isset($_SERVER["argv"])) || (@count($_SERVER["argv"]) < 1)) {
+	echo "<html>\n";
+	echo "<head>\n";
+	echo "	<title>Processing Error</title>\n";
+	echo "</head>\n";
+	echo "<body>\n";
+	echo "This file should be run by command line only.";
+	echo "</body>\n";
+	echo "</html>\n";
+	exit;
+}
 
 $grad_years_array = array();
 

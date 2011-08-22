@@ -36,7 +36,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 } else {
 
 	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings/organisations/manage/curriculumtypes?".replace_query(array("section" => "add"))."&amp;org=".$ORGANISATION_ID, "title" => "Edit");
-	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery.min.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+	//$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery.min.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 	
 	if ((isset($_GET["type_id"])) && ($type = clean_input($_GET["type_id"], array("notags", "trim")))) {
 		$PROCESSED["curriculum_type_id"] = $type;
@@ -185,6 +185,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 			<tfoot>
 				<tr>
 					<td colspan="2" style="padding-top: 15px; text-align: right">
+						<input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/settings/organisations/manage/curriculumtypes?org=<?php echo $ORGANISATION_ID;?>'" />
                         <input type="submit" class="button" value="<?php echo $translate->_("global_button_save"); ?>" />                           
 					</td>
 				</tr>

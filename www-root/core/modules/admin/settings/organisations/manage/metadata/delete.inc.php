@@ -39,7 +39,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 <h1>Delete Event Types</h1>
 <?php
 	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings/organisations/manage/metadata?section=delete&amp;org=".$ORGANISATION['organisation_id'], "title" => "Delete MetaData");
-	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery.min.js\"></script>";
+	//$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery.min.js\"></script>";
 	if (isset($_POST["remove_ids"]) && is_array($_POST["remove_ids"]) && !empty($_POST["remove_ids"])) {
 		foreach ($_POST["remove_ids"] as $id){
 			$PROCESSED["remove_ids"][] = (int) $id;

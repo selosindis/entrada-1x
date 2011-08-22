@@ -10125,8 +10125,8 @@ function tracking_fetch_filtered_events($community_id,$filters = array(),$pagina
 		}
 	}
 	$count .= $where;
-	$query .= $where;
-	$date_query .= $where;
+	$query .= $where." ORDER BY a.`timestamp` DESC";
+	$date_query .= $where." ORDER BY a.`timestamp` DESC";
 	
 	$num_results = $db->GetOne($count);
 	if ($paginate) {

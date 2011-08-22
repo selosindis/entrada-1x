@@ -45,7 +45,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 
 	$community_details	= $db->GetRow($query);
 	if($community_details) {
-		$BREADCRUMB[]		= array("url" => ENTRADA_URL."/communities/reports", "title" => "Manage Community");
+		$BREADCRUMB[]		= array("url" => ENTRADA_URL."/communities/reports", "title" => "Reports");
 		$community_resource = new CommunityResource($COMMUNITY_ID);
 		if($ENTRADA_ACL->amIAllowed($community_resource, 'update')) {
 			echo "<h1>".html_encode($community_details["community_title"])."</h1>\n";

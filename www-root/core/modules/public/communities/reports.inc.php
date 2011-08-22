@@ -47,7 +47,7 @@ if($COMMUNITY_ID){
 	$query = "	SELECT `community_title`,`community_url` FROM `communities` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID);
 	$result = $db->GetRow($query);
 	
-	$BREADCRUMB[] = array("url" => ENTRADA_URL."/community/".$result["community_url"], "title" => $result["community_title"]);
+	$BREADCRUMB[] = array("url" => ENTRADA_URL."/community".$result["community_url"], "title" => $result["community_title"]);
 
 	if (($router) && ($router->initRoute())) {
 		$PREFERENCES = preferences_load($MODULE);

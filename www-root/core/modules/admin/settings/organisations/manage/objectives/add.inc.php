@@ -215,6 +215,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 			<tfoot>
 				<tr>
 					<td colspan="2" style="padding-top: 15px; text-align: right">
+						<input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/settings/organisations/manage/objectives?org=<?php echo $ORGANISATION_ID;?>'" />
                         <input type="submit" class="button" value="<?php echo $translate->_("global_button_save"); ?>" />                           
 					</td>
 				</tr>

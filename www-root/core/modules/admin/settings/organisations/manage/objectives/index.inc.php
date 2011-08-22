@@ -50,12 +50,6 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 				<li><a href="<?php echo ENTRADA_URL; ?>/admin/settings/organisations/manage/objectives?section=add&amp;org=<?php echo $ORGANISATION_ID; ?>&amp;step=1" class="strong-green">Add New Objective</a></li>
 			</ul>
 		</div>
-		<!-- This div is just an idea, leads to the same place as the above. It will likely be removed -->
-		<div style="float: right; margin-right:20px;">
-			<ul class="page-action">
-				<li><a href="<?php echo ENTRADA_URL; ?>/admin/settings/organisations/manage/objectives?section=add&amp;org=<?php echo $ORGANISATION_ID; ?>&amp;step=1" class="strong-green">Add Existing Objective*</a></li>
-			</ul>
-		</div>
 		<div style="clear: both"></div>
 		<?php 
 	}

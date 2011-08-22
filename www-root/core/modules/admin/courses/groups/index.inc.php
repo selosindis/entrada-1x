@@ -149,14 +149,14 @@ if (!defined("IN_COURSE_GROUPS")) {
 	 */
 	switch ($_SESSION[APPLICATION_IDENTIFIER][$MODULE."-".$SUBMODULE]["sb"]) {
 		case "group_name" :
-			$sort_by = "a.`group_name` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["groups"]["so"]).", a.`group_name` ASC";
+			$sort_by = "a.`group_name` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE."-".$SUBMODULE]["so"]).", a.`group_name` ASC";
 		break;
 		case "members" :
-			$sort_by = "`members` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["groups"]["so"]).", `members` ASC";
+			$sort_by = "`members` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE."-".$SUBMODULE]["so"]).", `members` ASC";
 		break;
 		case "updated_date" :
 		default :
-			$sort_by = "a.`updated_date` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["groups"]["so"]).", a.`updated_date` ASC";
+			$sort_by = "a.`updated_date` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE."-".$SUBMODULE]["so"]).", a.`updated_date` ASC";
 		break;
 	}
 	
@@ -167,7 +167,7 @@ if (!defined("IN_COURSE_GROUPS")) {
 
 	$query_groups = "SELECT a.*, COUNT(b.`cgmember_id`) AS `members`
 					FROM `course_groups` AS a
-					LEFT JOIN `course_group_members` AS b
+					JOIN `course_group_members` AS b
 					ON a.`cgroup_id` = b.`cgroup_id`
 					WHERE a.`course_id` = ".$db->qstr($COURSE_ID);
 
@@ -196,12 +196,12 @@ if (!defined("IN_COURSE_GROUPS")) {
 	if ($result_count) {
 		$scheduler_groups["total_rows"] = (int) $result_count["total_rows"];
 
-		if ($scheduler_groups["total_rows"] <= $_SESSION[APPLICATION_IDENTIFIER]["groups"]["pp"]) {
+		if ($scheduler_groups["total_rows"] <= $_SESSION[APPLICATION_IDENTIFIER][$MODULE."-".$SUBMODULE]["pp"]) {
 			$scheduler_groups["total_pages"] = 1;
-		} elseif (($scheduler_groups["total_rows"] % $_SESSION[APPLICATION_IDENTIFIER]["groups"]["pp"]) == 0) {
-			$scheduler_groups["total_pages"] = (int) ($scheduler_groups["total_rows"] / $_SESSION[APPLICATION_IDENTIFIER]["groups"]["pp"]);
+		} elseif (($scheduler_groups["total_rows"] % $_SESSION[APPLICATION_IDENTIFIER][$MODULE."-".$SUBMODULE]["pp"]) == 0) {
+			$scheduler_groups["total_pages"] = (int) ($scheduler_groups["total_rows"] / $_SESSION[APPLICATION_IDENTIFIER][$MODULE."-".$SUBMODULE]["pp"]);
 		} else {
-			$scheduler_groups["total_pages"] = (int) ($scheduler_groups["total_rows"] / $_SESSION[APPLICATION_IDENTIFIER]["groups"]["pp"]) + 1;
+			$scheduler_groups["total_pages"] = (int) ($scheduler_groups["total_rows"] / $_SESSION[APPLICATION_IDENTIFIER][$MODULE."-".$SUBMODULE]["pp"]) + 1;
 		}
 	} else {
 		$scheduler_groups["total_rows"] = 0;
@@ -226,15 +226,15 @@ if (!defined("IN_COURSE_GROUPS")) {
 	/**
 	 * Provides the first parameter of MySQLs LIMIT statement by calculating which row to start results from.
 	 */
-	$limit_parameter = (int) (($_SESSION[APPLICATION_IDENTIFIER]["groups"]["pp"] * $scheduler_groups["page_current"]) - $_SESSION[APPLICATION_IDENTIFIER]["groups"]["pp"]);
+	$limit_parameter = (int) (($_SESSION[APPLICATION_IDENTIFIER][$MODULE."-".$SUBMODULE]["pp"] * $scheduler_groups["page_current"]) - $_SESSION[APPLICATION_IDENTIFIER][$MODULE."-".$SUBMODULE]["pp"]);
 
 	/**
 	 * Provide the previous query so we can have previous / next event links on the details page.
 	 */
-	$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["groups"]["previous_query"]["query"] = $query_groups;
-	$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["groups"]["previous_query"]["total_rows"] = $scheduler_groups["total_rows"];
+	$_SESSION[APPLICATION_IDENTIFIER]["tmp"][$MODULE."-".$SUBMODULE]["previous_query"]["query"] = $query_groups;
+	$_SESSION[APPLICATION_IDENTIFIER]["tmp"][$MODULE."-".$SUBMODULE]["previous_query"]["total_rows"] = $scheduler_groups["total_rows"];
 
-	$query_groups = sprintf($query_groups, $sort_by, $limit_parameter, $_SESSION[APPLICATION_IDENTIFIER]["groups"]["pp"]);
+	$query_groups = sprintf($query_groups, $sort_by, $limit_parameter, $_SESSION[APPLICATION_IDENTIFIER][$MODULE."-".$SUBMODULE]["pp"]);
 	$scheduler_groups["groups"] = $db->GetAll($query_groups);
 //	Zend_Debug::dump($scheduler_groups);
 

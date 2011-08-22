@@ -92,8 +92,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 							}
 							break;
 						case TASK_RECIPIENT_CLASS:
-							foreach($PROCESSED["associated_grad_years"] as $grad_year) {
-								$recipients[] = array("type" => TASK_RECIPIENT_CLASS, "id" => $grad_year);	
+							foreach($PROCESSED["associated_cohorts"] as $cohort) {
+								$recipients[] = array("type" => TASK_RECIPIENT_CLASS, "id" => $cohort);	
 							}
 							break;
 						case TASK_RECIPIENT_ORGANISATION:
@@ -270,16 +270,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 				</tr>
 				<tr class="task_recipient <?php echo TASK_RECIPIENT_CLASS; ?>_recipient">
 					<td></td>
-					<td><label for="associated_grad_years" class="form-required"><?php echo $translate->translate("task_field_graduating_class"); ?></label></td>
+					<td><label for="associated_cohorts" class="form-required"><?php echo $translate->translate("task_field_cohort"); ?></label></td>
 					<td>
-						<select id="associated_grad_years" name="associated_grad_years" style="width: 203px">
+						<select id="associated_cohorts" name="associated_cohorts" style="width: 203px">
 						<?php
-						$cut_off_year = (fetch_first_year() - 3);
-						if (isset($SYSTEM_GROUPS["student"]) && !empty($SYSTEM_GROUPS["student"])) {
-							foreach ($SYSTEM_GROUPS["student"] as $class) {
-								if (clean_input($class, "numeric") >= $cut_off_year) {
-									echo "<option value=\"".$class."\"".(($PROCESSED["associated_grad_years"] == $class) ? " selected=\"selected\"" : "").">Class of ".html_encode($class)."</option>\n";
-								}
+						$active_cohorts = groups_get_active_cohorts($ENTRADA_USER->getActiveOrganisation());
+						if (isset($active_cohorts) && !empty($active_cohorts)) {
+							foreach ($active_cohorts as $cohort) {
+								echo "<option value=\"".$cohort["group_id"]."\"".(($PROCESSED["associated_cohorts"] == $cohort["group_id"]) ? " selected=\"selected\"" : "").">".html_encode($cohort["group_name"])."</option>\n";
 							}
 						}
 						?>

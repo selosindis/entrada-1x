@@ -489,6 +489,7 @@ switch ($MODULE) {
 	break;
 	default :
 		if ($_SESSION["details"]["group"] == "student" && $MODULE != "evaluations") {
+			$cohort = groups_get_cohort($_SESSION["details"]["id"]);
 			$query = "SELECT * FROM `evaluations` AS a
 						JOIN `evaluation_evaluators` AS b
 						ON a.`evaluation_id` = b.`evaluation_id`
@@ -503,8 +504,8 @@ switch ($MODULE) {
 								b.`evaluator_type` = 'organisation_id'
 								AND b.`evaluator_value` = ".$db->qstr($_SESSION["details"]["organisation_id"])."
 							)".($_SESSION["details"]["group"] == "student" ? " OR (
-								b.`evaluator_type` = 'grad_year'
-								AND b.`evaluator_value` = ".$db->qstr($_SESSION["details"]["role"])."
+								b.`evaluator_type` = 'cohort'
+								AND b.`evaluator_value` = ".$db->qstr($cohort["group_id"])."
 							)" : "")."
 						)
 						AND a.`evaluation_finish` < ".$db->qstr(time())."

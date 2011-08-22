@@ -156,7 +156,7 @@ class TaskVerifiers extends Collection {
 		}
 		
 		$tasks = array();
-		$rs = $db->selectLimit("SELECT a.* from `task_verifiers` b left join `tasks` a on a.`task_id`=b.`task_id` where `verifier_id`=? ".$where.$order_by, $limit, $offset, array($verifier_id));
+		$rs = $db->selectLimit("SELECT a.* from `task_verifiers` b left join `tasks` a on a.`task_id`=b.`task_id` where `verifier_id`=? ".(isset($where) && $where ? $where : "").(isset($order_by) && $order_by ? $order_by : ""), $limit, $offset, array($verifier_id));
 		if ($rs) {
 			$results = $rs->getIterator();	
 			foreach ($results as $result) {

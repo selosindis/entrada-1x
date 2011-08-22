@@ -46,19 +46,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 		
 		if ($course_details && $ENTRADA_ACL->amIAllowed(new GradebookResource($course_details["course_id"], $course_details["organisation_id"]), "read")) {
 						
-			if (isset($_GET["year"]) && ($tmp_input = clean_input($_GET["year"], "credentials"))) {
-				$GRAD_YEAR = $tmp_input;
+			if (isset($_GET["cohort"]) && ($tmp_input = clean_input($_GET["cohort"], "int"))) {
+				$COHORT = $tmp_input;
 			} else {
-				$GRAD_YEAR = (int) (date("Y"));
+				$COHORT = (int) (date("Y"));
 			}			
 				
 			?>
 			<div id="toolbar" style="display: none;">
-				<select id="filter_grad_year" name="filter_grad_year" style="width: 203px; float: right;">
+				<select id="filter_cohort" name="filter_cohort" style="width: 203px; float: right;">
 				<?php
-				if (isset($SYSTEM_GROUPS["student"]) && !empty($SYSTEM_GROUPS["student"])) {
-					foreach ($SYSTEM_GROUPS["student"] as $class) {
-						echo "<option value=\"".$class."\"".(($GRAD_YEAR == $class) ? " selected=\"selected\"" : "").">Class of ".html_encode($class)."</option>\n";
+				$cohorts = groups_get_all_cohorts($ENTRADA_USER->getActiveOrganisation());
+				if (isset($cohorts) && !empty($cohorts)) {
+					foreach ($cohorts as $cohort) {
+						echo "<option value=\"".$cohort["group_id"]."\"".(($COHORT == $cohort["group_id"]) ? " selected=\"selected\"" : "").">".html_encode($cohort["group_name"])."</option>\n";
 					}
 				}
 				?>
@@ -70,7 +71,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						LEFT JOIN `assessment_marking_schemes` 
 						ON `assessment_marking_schemes`.`id` = `assessments`.`marking_scheme_id`
 						WHERE `assessments`.`course_id` = ".$db->qstr($COURSE_ID)."
-						AND `assessments`.`grad_year` = ".$db->qstr($GRAD_YEAR);
+						AND `assessments`.`cohort` = ".$db->qstr($COHORT);
 			$assessments = $db->GetAll($query);
 			if($assessments) {
 				$query	= 	"SELECT b.`id` AS `proxy_id`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, b.`number`, c.`role`";
@@ -87,7 +88,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					$query .= "LEFT JOIN `".DATABASE_NAME."`.`assessment_grades` AS g$key ON b.`id` = g$key.`proxy_id` AND g$key.`assessment_id` = ".$db->qstr($assessment["assessment_id"])."\n";
 				}
 				
-				$query .= 	" WHERE c.`group` = 'student' AND c.`role` = ".$db->qstr($GRAD_YEAR);
+				$query .= 	" WHERE c.`group` = 'student' AND c.`role` = ".$db->qstr($COHORT);
 				$query .=	" GROUP BY b.`id`";
 				$query .=	" ORDER BY b.`lastname`, b.`firstname`";
 				
@@ -145,13 +146,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					</tbody>
 				</table>
 				<?php if(count($students) === 0):	?>
-				<div class="display-notice">There are no students in the system for this Graduating Year <strong><?php echo $GRAD_YEAR; ?></strong>.</div>
+				<div class="display-notice">There are no students in the system for this cohort [<strong><?php echo groups_get_name($COHORT); ?></strong>].</div>
 				<?php endif; ?>
 			<?php
 			} else {
 				echo "<table class=\"gradebook\"></table>";
 				$NOTICE++;
-				$NOTICESTR[] = "No assessments could be found for this gradebook for the graduating class of $GRAD_YEAR.";
+				$NOTICESTR[] = "No assessments could be found for this gradebook for this cohort [".groups_get_name($COHORT)."].";
 
 				echo display_notice();
 			

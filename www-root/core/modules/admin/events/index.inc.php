@@ -162,7 +162,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			<?php
 
 			$count_modified		= 0;
-			$count_grad_year	= 0;
+			$count_cohort		= 0;
 			$count_group		= 0;
 			$count_individual	= 0;
 
@@ -185,8 +185,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				 * Increment the appropriate audience_type counter.
 				 */
 				switch ($result["audience_type"]) {
-					case "grad_year" :
-						$count_grad_year++;
+					case "cohort" :
+						$count_cohort++;
 					break;
 					case "group_id" :
 						$count_group++;

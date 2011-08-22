@@ -209,13 +209,32 @@ class TaskCompletion {
 			global $db;
 			
 			$query = "	SELECT a.*, b.`task_id`, c.`verifier_id`, c.`verified_date`, a.`id` as `recipient_id`, c.`completed_date`, c.`faculty_id`, c.`completion_comment`, c.`rejection_comment`, c.`rejection_date`
-						from `".AUTH_DATABASE."`.`user_data` a
-						inner join `task_recipients` b on 
-						(b.`recipient_type`='grad_year' and a.`grad_year`=b.`recipient_id`) 
-						or (b.`recipient_type`='user' and a.`id` = b.`recipient_id`) 
-						or (b.`recipient_type`='organisation' and b.`recipient_id`=a.`organisation_id`) 
-						left join `task_completion` c on c.`task_id`=b.`task_id` and c.`recipient_id` = a.`id`
-						where b.`task_id`=? and a.`id`=?";
+						FROM `".AUTH_DATABASE."`.`user_data` AS a
+						LEFT JOIN `group_members` AS gm
+						ON a.`id` = gm.`proxy_id`
+						LEFT JOIN `groups` AS g
+						ON gm.`group_id` = g.`group_id`
+						AND g.`group_type` = 'cohort'
+						INNER JOIN `task_recipients` AS b 
+						ON 
+						(
+							b.`recipient_type` = 'cohort' 
+							AND g.`group_id` = b.`recipient_id`
+						) 
+						OR 
+						(
+							b.`recipient_type` = 'user' 
+							AND a.`id` = b.`recipient_id`
+						) 
+						OR 
+						(
+							b.`recipient_type` = 'organisation' 
+							AND b.`recipient_id` = a.`organisation_id`
+						) 
+						LEFT JOIN `task_completion` AS c 
+						ON c.`task_id` = b.`task_id` 
+						AND c.`recipient_id` = a.`id`
+						WHERE b.`task_id` = ? AND a.`id` = ?";
 			$result = $db->GetRow($query, array($task_id,$recipient_id));
 			
 			if ($result) {

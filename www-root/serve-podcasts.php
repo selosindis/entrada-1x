@@ -221,7 +221,7 @@ switch($ACTION) {
 						}
 
 						$query	= "
-								SELECT a.*, b.`efile_id`, b.`file_type`, b.`file_size`, b.`file_name`, b.`file_title`, b.`file_notes`, c.`audience_value` AS `event_grad_year`
+								SELECT a.*, b.`efile_id`, b.`file_type`, b.`file_size`, b.`file_name`, b.`file_title`, b.`file_notes`, c.`audience_value` AS `event_cohort`
 								FROM `events` AS a
 								LEFT JOIN `event_files` AS b
 								ON b.`event_id` = a.`event_id`
@@ -232,7 +232,7 @@ switch($ACTION) {
 								AND b.`file_type` IN ('".implode("', '", $VALID_PODCASTS)."')
 								AND (b.`release_date` = '0' OR b.`release_date` <= ".$db->qstr(time()).")
 								AND (b.`release_until` = '0' OR b.`release_until` > ".$db->qstr(time()).")
-								AND c.`audience_type` = 'grad_year'
+								AND c.`audience_type` = 'cohort'
 								ORDER BY a.`event_start` DESC
 								LIMIT 0, 150";
 
@@ -248,12 +248,12 @@ switch($ACTION) {
 						}
 					break;
 					case "student" :
-						if((!isset($pieces[1])) || (!$grad_year = (int) $pieces[1])) {
-							$grad_year = 0;
+						if((!isset($pieces[1])) || (!$cohort = (int) $pieces[1])) {
+							$cohort = 0;
 						}
 
 						$query  	=	"
-									SELECT a.*, b.`efile_id`, b.`file_type`, b.`file_size`, b.`file_name`, b.`file_title`, b.`file_notes`, c.`audience_value` AS `event_grad_year`
+									SELECT a.*, b.`efile_id`, b.`file_type`, b.`file_size`, b.`file_name`, b.`file_title`, b.`file_notes`, c.`audience_value` AS `event_cohort`
 									FROM `events` AS a
 									LEFT JOIN `event_files` AS b
 									ON b.`event_id` = a.`event_id`
@@ -263,7 +263,7 @@ switch($ACTION) {
 									AND b.`file_type` IN ('".implode("', '", $VALID_PODCASTS)."')
 									AND (b.`release_date` = '0' OR b.`release_date` <= ".$db->qstr(time()).")
 									AND (b.`release_until` = '0' OR b.`release_until` > ".$db->qstr(time()).")
-									AND (c.`audience_type` = 'grad_year'".(((int) $grad_year) ? " AND c.`audience_value` = ".$db->qstr((int) $grad_year) : "").")
+									AND (c.`audience_type` = 'cohort'".(((int) $cohort) ? " AND c.`audience_value` = ".$db->qstr((int) $cohort) : "").")
 									ORDER BY a.`event_start` DESC
 									LIMIT 0, 150";
 						$results	= $db->GetAll($query);
@@ -359,7 +359,7 @@ switch($ACTION) {
 				}
 				$description .= "</ol><br /><br />";
 
-				$description .= "Graduating Year: Class of ".$result["event_grad_year"]."<br />";
+				$description .= "Cohort: ".html_encode(groups_get_name($result["event_cohort"]))."<br />";
 				$description .= "Phase: ".strtoupper($result["event_phase"])."<br />";
 				$description .= "Event Date/Time: ".date(DEFAULT_DATE_FORMAT, $result["event_start"])."<br />";
 				$description .= "Event Duration: ".(($result["event_duration"]) ? $result["event_duration"]." minutes" : "Not provided")."<br />";

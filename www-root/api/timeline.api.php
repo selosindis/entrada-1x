@@ -60,7 +60,7 @@ if((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 					FROM `events` AS a
 					LEFT JOIN `event_audience` AS b
 					ON b.`event_id` = a.`event_id`
-					WHERE b.`audience_type` = 'grad_year'
+					WHERE b.`audience_type` = 'cohort'
 					AND b.`audience_value` = ".$db->qstr($SEARCH_CLASS)."
 					AND".(($SEARCH_YEAR) ? " (a.`event_start` BETWEEN ".$db->qstr($SEARCH_DURATION["start"])." AND ".$db->qstr($SEARCH_DURATION["end"]).") AND" : "")."
 					MATCH (a.`event_title`, a.`event_description`, a.`event_goals`, a.`event_objectives`, a.`event_message`) AGAINST (".$db->qstr(str_replace(array("%", " AND ", " NOT "), array("%%", " +", " -"), $SEARCH_QUERY))." IN BOOLEAN MODE)

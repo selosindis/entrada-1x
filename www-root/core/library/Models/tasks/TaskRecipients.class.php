@@ -14,7 +14,7 @@ class TaskRecipients extends Collection {
 	private $task_id;
 	
 	/**
-	 * Returns Colleciton of Task Recipients including User, GraduatingClass, or Organisation objects
+	 * Returns Colleciton of Task Recipients including User, Cohort, or Organisation objects
 	 * @param int $task_id
 	 * @return TaskRecipients
 	 */
@@ -34,7 +34,7 @@ class TaskRecipients extends Collection {
 						$recipient = User::get($rid);
 						break;
 					case TASK_RECIPIENT_CLASS:
-						$recipient = GraduatingClass::get($rid /* grad year */);
+						$recipient = Cohort::get($rid /* cohort */);
 						break;
 					case TASK_RECIPIENT_ORGANISATION:
 						$recipient = Organisation::get($rid);
@@ -69,9 +69,9 @@ class TaskRecipients extends Collection {
 			if ($recipient instanceof User) {
 				$recipient_type = TASK_RECIPIENT_USER;
 				$recipient_id = $recipient->getID();
-			} elseif ($recipient instanceof GraduatingClass) {
+			} elseif ($recipient instanceof Cohort) {
 				$recipient_type = TASK_RECIPIENT_CLASS;
-				$recipient_id = $recipient->getGradYear();
+				$recipient_id = $recipient->getCohort();
 			} elseif ($recipient instanceof Organisation) {
 				$recipient_type = TASK_RECIPIENT_ORGANISATION;
 				$recipient_id = $recipient->getID();
@@ -111,9 +111,9 @@ class TaskRecipients extends Collection {
 				if ($recipient instanceof User) {
 					$recipient_type = TASK_RECIPIENT_USER;
 					$recipient_id = $recipient->getID();
-				} elseif ($recipient instanceof GraduatingClass) {
+				} elseif ($recipient instanceof Cohort) {
 					$recipient_type = TASK_RECIPIENT_CLASS;
-					$recipient_id = $recipient->getGradYear();
+					$recipient_id = $recipient->getCohort();
 				} elseif ($recipient instanceof Organisation) {
 					$recipient_type = TASK_RECIPIENT_ORGANISATION;
 					$recipient_id = $recipient->getID();

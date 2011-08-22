@@ -41,6 +41,8 @@ $clerkship_evaluations = trim(ob_get_clean());
 
 echo $clerkship_evaluations;
 
+$cohort = groups_get_cohort($_SESSION["details"]["id"]);
+
 $query = "	SELECT * FROM `evaluations` AS a
 			JOIN `evaluation_evaluators` AS b
 			ON a.`evaluation_id` = b.`evaluation_id`
@@ -55,11 +57,12 @@ $query = "	SELECT * FROM `evaluations` AS a
 					b.`evaluator_type` = 'organisation_id'
 					AND b.`evaluator_value` = ".$db->qstr($_SESSION["details"]["organisation_id"])."
 				)".($_SESSION["details"]["group"] == "student" ? " OR (
-					b.`evaluator_type` = 'grad_year'
-					AND b.`evaluator_value` = ".$db->qstr($_SESSION["details"]["role"])."
+					b.`evaluator_type` = 'cohort'
+					AND b.`evaluator_value` = ".$db->qstr($cohort["group_id"])."
 				)" : "")."
 			)
 			AND a.`evaluation_start` < ".$db->qstr(time())."
+			AND a.`evaluation_active` = 1
 			GROUP BY a.`evaluation_id`
 			ORDER BY a.`evaluation_finish` ASC";
 $results = $db->GetAll($query);

@@ -6,7 +6,7 @@ require_once("Entrada/metadata/functions.inc.php"); //include the general metada
 
 require_once("Models/users/UserPhoto.class.php");
 require_once("Models/users/UserPhotos.class.php");
-require_once("Models/users/GraduatingClass.class.php");
+require_once("Models/users/Cohort.class.php");
 require_once("Models/organisations/Organisation.class.php");
 require_once("Models/organisations/Organisations.class.php");
 require_once("Models/users/Department.class.php");

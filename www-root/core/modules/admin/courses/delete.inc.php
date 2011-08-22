@@ -131,10 +131,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					
 					$query = "UPDATE `courses` SET `course_active` = '0' WHERE `course_id` = ".$db->qstr($course_id);
 					$db->Execute($query);
-					
-					$query = "DELETE FROM `course_audience` WHERE `course_id` = ".$db->qstr($course_id);
-					$db->Execute($query);
-					
+										
 				}
 			}
 

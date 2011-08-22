@@ -35,7 +35,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 	require_once("Models/tasks/TaskRecipients.class.php");
 	require_once("Models/tasks/TaskCompletions.class.php");
 	require_once("Models/users/User.class.php");
-	require_once("Models/users/GraduatingClass.class.php");
+	require_once("Models/users/Cohort.class.php");
 	
 	$BREADCRUMB[] = array("url" => ENTRADA_URL."/tasks?section=verification", "title" => "Task Verification");
 			

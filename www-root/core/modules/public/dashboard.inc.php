@@ -151,9 +151,10 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 		break;
 		case "student" :
 		default :
-			$rss_feed_name = clean_input($_SESSION["details"]["grad_year"], "alphanumeric");
-			$notice_where_clause = "(a.`target`='".clean_input($_SESSION["details"]["grad_year"], "alphanumeric")."' OR a.`target` = 'all' OR a.`target` = 'students' OR a.`target` = ".$db->qstr("proxy_id:".((int) $_SESSION["details"]["id"])).")";
-			$poll_where_clause = "(a.`poll_target`='".clean_input($_SESSION["details"]["grad_year"], "alphanumeric")."' OR a.`poll_target` = 'all' OR a.`poll_target` = 'students')";
+			$cohort = groups_get_cohort($_SESSION["details"]["id"]);
+			$rss_feed_name = clean_input((isset($_SESSION["details"]["grad_year"]) && $_SESSION["details"]["grad_year"] ? $_SESSION["details"]["grad_year"] : "default"), "alphanumeric");
+			$notice_where_clause = "(a.`target`='".clean_input($cohort["group_id"], "alphanumeric")."' OR a.`target` = 'all' OR a.`target` = 'students' OR a.`target` = ".$db->qstr("proxy_id:".((int) $_SESSION["details"]["id"])).")";
+			$poll_where_clause = "(a.`poll_target_type` = 'cohort' AND a.`poll_target`='".clean_input($cohort["group_id"], "alphanumeric")."' OR a.`poll_target` = 'all' OR a.`poll_target` = 'students')";
 		break;
 	}
 	$notice_where_clause .= "AND (a.`organisation_id` IS NULL OR a.`organisation_id` = ".$_SESSION["details"]["organisation_id"].")";
@@ -265,18 +266,22 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 		case "student" :
 			$BREADCRUMB[] = array("url" => ENTRADA_URL, "title" => "Student Dashboard");
 
-			$HEAD[]	= "<link rel=\"alternate\" type=\"application/rss+xml\" title=\"Notices\" href=\"".ENTRADA_URL."/notices/".$_SESSION["details"]["grad_year"]."\" />";
+			/**
+			 * How did this person not get assigned this already? Mak'em new.
+			 */
+			if (!isset($cohort)) {
+				$query = "SELECT * 
+						FROM `groups`
+						WHERE `group_id` = ".$db->qstr(fetch_first_cohort());
+				$cohort = $db->GetRow($query);
+			}
+			
+			$HEAD[]	= "<link rel=\"alternate\" type=\"application/rss+xml\" title=\"Notices\" href=\"".ENTRADA_URL."/notices/".$cohort["group_id"]."\" />";
 
 			if (!isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dstamp"])) {
 				$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dstamp"] = time();
 			}
 
-			/**
-			 * How did this person not get assigned this already? Mak'em new.
-			 */
-			if (!isset($_SESSION["details"]["grad_year"])) {
-				$_SESSION["details"]["grad_year"] = fetch_first_year();
-			}
 
 			$display_schedule_tabs	= false;
 

@@ -37,7 +37,6 @@ $user_organisation_id = 0;
 
 $calendar_type = "json";
 $user_private_hash = "";
-$user_grad_year = fetch_first_year();
 
 /**
  * Check if the request has multiple parts to it indicating the URL contains a private_hash,
@@ -73,10 +72,6 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 	$user_role = $_SESSION["details"]["role"];
 	$user_group = $_SESSION["details"]["group"];
 	$user_organisation_id = $_SESSION["details"]["organisation_id"];
-
-	if (isset($_SESSION["details"]["grad_year"]) && (int) $_SESSION["details"]["grad_year"]) {
-		$user_grad_year = (int) $_SESSION["details"]["grad_year"];
-	}
 } else {
 	/**
 	 * If the are not already authenticated, check to see if they have provided
@@ -107,10 +102,6 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 			$user_role = $result["role"];
 			$user_group = $result["group"];
 			$user_organisation_id = $result["organisation_id"];
-
-			if (($user_group == "student") && (int) $user_role) {
-				$user_grad_year = (int) $user_role;
-			}
 		} else {
 			/**
 			 * If the query above fails, redirect them back here but without the
@@ -149,9 +140,6 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 				$user_group = $result["GROUP"];
 				$user_organisation_id = $result["ORGANISATION_ID"];
 
-				if (($user_group == "student") && (int) $user_role) {
-					$user_grad_year = (int) $user_role;
-				}
 			} else {
 				$ERROR++;
 				application_log("access", $result["MESSAGE"]);

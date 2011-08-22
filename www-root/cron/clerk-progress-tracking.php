@@ -22,6 +22,8 @@
  * Include the Entrada init code.
  */
 require_once("init.inc.php");
+ini_set("display_errors", 1);
+$excused = array(1799, 1767, 1725, 1785, 1749, 1801);
 $query 	= "SELECT * FROM `".CLERKSHIP_DATABASE."`.`global_lu_rotations` AS a
 		LEFT JOIN `courses` AS b
 		ON a.`course_id` = b.`course_id`
@@ -44,6 +46,7 @@ if ($rotations) {
 					ON b.`etype_id` = g.`proxy_id`
 					AND a.`rotation_id` = g.`rotation_id`
 					WHERE b.`econtact_type` = 'student'
+					AND a.`event_start` > ".$db->qstr(strtotime("December 25th, 2009"))."
 					AND f.`group` >= 'student'
 					AND f.`role` >= ".$db->qstr(CLERKSHIP_FIRST_CLASS)."
 					AND c.`rotation_id` = ".$db->qstr($rotation["rotation_id"])."

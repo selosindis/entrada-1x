@@ -24,10 +24,9 @@
 require_once("init.inc.php");
 require_once("Entrada/icalendar/class.ical.inc.php");
 
-$grad_year_start	= (date("Y", time()) + ((date("m", time()) < 7) ?  3 : 4));
-$grad_year_finish 	= ($grad_year_start - 4);
+$cohorts = groups_get_active_cohorts($ENTRADA_USER->getActiveOrganisation());
 
-for($grad_year = $grad_year_start; $grad_year >= $grad_year_finish; $grad_year--) {
+foreach($cohorts as $cohort) {
 	$query		= "
 				SELECT a.*, c.`proxy_id`, CONCAT_WS(' ', d.`firstname`, d.`lastname`) AS `fullname`, d.`email`
 				FROM `events` AS a
@@ -37,13 +36,13 @@ for($grad_year = $grad_year_start; $grad_year >= $grad_year_finish; $grad_year--
 				ON c.`event_id` = a.`event_id`
 				LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS d
 				ON d.`id` = c.`proxy_id`
-				WHERE b.`audience_type` = 'grad_year'
-				AND b.`audience_value` = ".$db->qstr($grad_year)."
+				WHERE b.`audience_type` = 'cohort'
+				AND b.`audience_value` = ".$db->qstr($cohort["group_id"])."
 				AND (c.`contact_order` IS NULL OR c.`contact_order` = '0')
 				ORDER BY a.`event_start` ASC";
 	$results	= $db->GetAll($query);
 	if($results) {
-		$ical = new iCal("-//".html_encode($_SERVER["HTTP_HOST"])."//iCal".(($grad_year) ? $grad_year : "")." Learning Events Calendar MIMEDIR//EN", 1, ENTRADA_ABSOLUTE."/calendars/", (($grad_year) ? $grad_year : "all_years")); // (ProgrammID, Method (1 = Publish | 0 = Request), Download Directory)
+		$ical = new iCal("-//".html_encode($_SERVER["HTTP_HOST"])."//iCal".(($cohort["group_name"]) ? html_encode($cohort["group_name"]) : "")." Learning Events Calendar MIMEDIR//EN", 1, ENTRADA_ABSOLUTE."/calendars/", (($cohort) ? $cohort["group_id"] : "all_cohorts")); // (ProgrammID, Method (1 = Publish | 0 = Request), Download Directory)
 		foreach($results as $result) {
 			$ical->addEvent(
 				array((($result["fullname"] != "") ? $result["fullname"] : ""), (($result["email"]) ? $result["email"] : "")), // Organizer
@@ -51,7 +50,7 @@ for($grad_year = $grad_year_start; $grad_year >= $grad_year_finish; $grad_year--
 				(int) $result["event_finish"], // End Time (write 'allday' for an allday event instead of a timestamp)
 				$result["event_location"], // Location
 				1, // Transparancy (0 = OPAQUE | 1 = TRANSPARENT)
-				array("Phase ".$result["event_phase"], "Class of ".$grad_year), // Array with Strings
+				array("Phase ".$result["event_phase"], html_encode($cohort["group_name"])), // Array with Strings
 				strip_tags($result["event_message"]), // Description
 				strip_tags($result["event_title"]), // Title
 				1, // Class (0 = PRIVATE | 1 = PUBLIC | 2 = CONFIDENTIAL)

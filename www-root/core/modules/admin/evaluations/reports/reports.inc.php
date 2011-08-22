@@ -136,23 +136,23 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 						WHERE ev.`evaluator_type` = 'proxy_id'
 						AND ev.`evaluation_id` = ".$db->qstr($report["evaluation"])."
 						UNION
-						SELECT a.`user_id` `evaluator`
-						FROM `".AUTH_DATABASE."`.`user_access` a , `evaluation_evaluators` ev
-						WHERE ev.`evaluator_type` = 'grad_year'
-						AND ev.`evaluator_value` = a.`role`
-						AND a.`app_id` = ".$db->qstr(AUTH_APP_ID)."
-						AND a.`account_active` = 'true'
+						SELECT a.`proxy_id` `evaluator`
+						FROM `group_members` a , `evaluation_evaluators` ev
+						WHERE ev.`evaluator_type` = 'cohort'
+						AND ev.`evaluator_value` = a.`group_id`
+						AND a.`member_active` = 'true'
 						AND ev.`evaluation_id` = ".$db->qstr($report["evaluation"])."
 					) t";
 		$evaluators	= $db->GetOne($query);
 
 		if ($STUDENTS) {		
-			$query = "	SELECT COUNT(DISTINCT(a.`user_id`)) `total`,  a.`role` `year`
-						FROM `".AUTH_DATABASE."`.`user_access` a, `evaluation_evaluators` ev
-						WHERE ev.`evaluator_type` = 'grad_year'
-						AND ev.`evaluator_value` = a.`role`
-						AND a.`app_id` = ".$db->qstr(AUTH_APP_ID)."
-						AND a.`account_active` = 'true'
+			$query = "	SELECT COUNT(DISTINCT(a.`proxy_id`)) `total`,  b.`group_name`
+						FROM `group_members` a, `evaluation_evaluators` ev
+						JOIN `groups` AS b
+						ON a.`group_id` = b.`group_id`
+						WHERE ev.`evaluator_type` = 'cohort'
+						AND ev.`evaluator_value` = a.`group_id`
+						AND a.`member_active` = 'true'
 						AND ev.`evaluation_id` = ".$db->qstr($report["evaluation"]);
 			$class	= $db->GetRow($query);	
 		}
@@ -176,7 +176,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 		 */
 		if ($STUDENTS && ($class["total"]>0)) {
 			$indies = $evaluators-$class["total"];
-			echo "	<td>Class of $class[year] (#$class[total])".($indies?" plus $indies individual".($indies>1?"s":""):"")."</td>";
+			echo "	<td>$class[group_name] (#$class[total])".($indies?" plus $indies individual".($indies>1?"s":""):"")."</td>";
 		} else {
 			echo "	<td>$evaluators</td>";
 		}

@@ -49,12 +49,10 @@ if (!defined("PARENT_INCLUDED")) {
 		$POLL_TARGETS["all"] = "Poll all students, faculty &amp; staff";
 		$POLL_TARGETS["students"] = "Poll all students";
 
-		$cut_off_year = (fetch_first_year() - 3);
-		if (isset($SYSTEM_GROUPS["student"]) && !empty($SYSTEM_GROUPS["student"])) {
-			foreach ($SYSTEM_GROUPS["student"] as $class) {
-				if (clean_input($class, "numeric") >= $cut_off_year) {
-					$POLL_TARGETS[$class] = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Poll class of ".$class;
-				}
+		$active_cohorts = groups_get_active_cohorts($ENTRADA_USER->getActiveOrganisation());
+		if (isset($active_cohorts) && !empty($active_cohorts)) {
+			foreach ($active_cohorts as $cohort) {
+				$POLL_TARGETS[$cohort["group_id"]] = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Poll ".html_encode($cohort["group_name"]);
 			}
 		}
 

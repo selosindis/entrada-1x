@@ -104,7 +104,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 	$organisation_where = " AND (e.`organisation_id` = ".$ENTRADA_USER->getActiveOrganisation().") ";
 
 	$query		= "
-				SELECT a.`accesses`, a.`efile_id` AS `podcast_id`, a.`event_id`, a.`file_name`, b.`event_title`, b.`event_start`, c.`audience_value` AS `event_grad_year`
+				SELECT a.`accesses`, a.`efile_id` AS `podcast_id`, a.`event_id`, a.`file_name`, b.`event_title`, b.`event_start`, c.`audience_value` AS `event_cohort`
 				FROM `event_files` AS a
 				LEFT JOIN `events` AS b
 				ON b.`event_id` = a.`event_id`
@@ -115,7 +115,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 				WHERE a.`file_category` = 'podcast'
 				AND e.`course_active` = '1'
 				AND (b.`event_start` BETWEEN ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_start"])." AND ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_finish"]).")
-				AND c.`audience_type` = 'grad_year'".$organisation_where;
+				AND c.`audience_type` = 'cohort'".$organisation_where;
 	
 	$results	= $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
 	if($results) {
@@ -267,7 +267,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 					echo "	<td>".($key + 1).".</td>\n";
 					echo "	<td>\n";
 					echo "		<a href=\"".ENTRADA_URL."/events?id=".$result["event_id"]."\" style=\"font-weight: bold\" target=\"_blank\">".html_encode(limit_chars($result["event_title"], 50))."</a> <span class=\"content-small\">(".(int) $result["accesses"]." time".(($result["accesses"] != 1) ? "s" : "").")</span>\n";
-					echo "		<div class=\"content-small\">Event on ".date(DEFAULT_DATE_FORMAT, $result["event_start"])."; Class of ".$result["event_grad_year"]."</div>\n";
+					echo "		<div class=\"content-small\">Event on ".date(DEFAULT_DATE_FORMAT, $result["event_start"])."; Class of ".$result["event_cohort"]."</div>\n";
 					echo "	</td>\n";
 					echo "	<td style=\"vertical-align: top\"><a href=\"".ENTRADA_URL."/file-event.php?id=".$result["podcast_id"]."\" style=\"font-size: 11px\">".html_encode($result["file_name"])."</a></td>\n";
 					echo "</tr>\n";

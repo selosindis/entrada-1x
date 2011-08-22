@@ -613,7 +613,7 @@ define("TASK_OWNER_EVENT", "event");
 
 //Audience
 define("TASK_RECIPIENT_USER", "user"); 
-define("TASK_RECIPIENT_CLASS", "grad_year"); 
+define("TASK_RECIPIENT_CLASS", "cohort"); 
 define("TASK_RECIPIENT_ORGANISATION", "organisation"); 
 
 
@@ -636,7 +636,7 @@ define("TASK_FACULTY_SELECTION_OFF", "off");
 
 
 //Defaults
-define("TASK_DEFAULT_RECIPIENT_TYPE",TASK_RECIPIENT_USER); //options are: user, grad_year, organisation
+define("TASK_DEFAULT_RECIPIENT_TYPE",TASK_RECIPIENT_USER); //options are: user, cohort, organisation
 define("TASK_DEFAULT_VERIFICATION_TYPE", TASK_VERIFICATION_NONE);
 define("TASK_DEFAULT_VERIFICATION_NOTIFICATION", TASK_VERIFICATION_NOTIFICATION_OFF);
 define("TASK_DEFAULT_COMPLETE_COMMENT", TASK_COMMENT_ALLOW);

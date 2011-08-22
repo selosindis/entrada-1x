@@ -40,7 +40,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 	if ($COURSE_ID) {
 		$HEAD[] = "<script type=\"text/javascript\">var DELETE_IMAGE_URL = '".ENTRADA_URL."/images/action-delete.gif';</script>";
 		$HEAD[]		= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/picklist.js\"></script>\n";
-		$HEAD[]		= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/scriptaculous/tree.js\"></script>\n";
 		$HEAD[]		= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/groups_list.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 		$HEAD[]		= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/AutoCompleteList.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";	
 		$HEAD[]		= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/growler/src/Growler.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";		
@@ -421,42 +420,42 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 									}
 								}
 							}
-							
-							
-							
-						
-							$enrollment_date = validate_calendars("enrollment", false, false,false);
-							if ((isset($enrollment_date["start"])) && ((int) $enrollment_date["start"])) {
-								$PROCESSED["enrollment_start"] = (int) $enrollment_date["start"];
-								$enroll_start = $PROCESSED["enrollment_start"];
-							} else {
-								$PROCESSED["enrollment_start"] = 0;
-								$enroll_start = mktime(0, 0, 0, date("m"), date("d"), date("y"));
-							}
-							if ((isset($enrollment_date["finish"])) && ((int) $enrollment_date["finish"])) {
-								$PROCESSED["enrollment_end"] = (int) $enrollment_date["finish"];
-								$enroll_end = $PROCESSED["enrollment_end"];
-							} else {
-								$PROCESSED["enrollment_end"] = 0;
-								$enroll_end =  mktime(0, 0, 0, date("m"), date("d"), date("y")+1);
-							}
 
-
-							
-							$query = "	DELETE FROM `course_audience` WHERE `course_id` = ".$db->qstr($COURSE_ID);
-							if ($db->Execute($query)) {							
-							
-								if (isset($_POST["group_order"]) && strlen($_POST["group_order"])) {
-									$groups = explode(",", clean_input($_POST["group_order"],array("notags","trim")));					
+							if (isset($_POST["group_order"]) && strlen($_POST["group_order"])) {
+								$groups = explode(",", clean_input($_POST["group_order"],array("notags","trim")));
+								if ($_POST["period"] && $cperiod_id = clean_input($_POST["period"], array("trim", "int"))) {		
 									if ((is_array($groups)) && (count($groups))) {
-										foreach($groups as $order => $group_id) {
+										
+										$new_groups = array();
+										$updated_groups = array();
+										$removed_groups = array();
+										$group_ids_string = "";
+										
+										foreach ($groups as $group_id) {
+											$group_ids_string .= ($group_ids_string ? ", ".$db->qstr($group_id) : $db->qstr($group_id));
+											$query = "SELECT * FROM `course_audience` WHERE `audience_type` = 'group_id' AND `audience_value` = ".$db->qstr($group_id)." AND `course_id` = ".$db->qstr($COURSE_ID);
+											if ($group_record = $db->GetRow($query) && $group_record["cperiod_id"] != $cperiod_id) {
+												$updated_groups[] = $group_id;
+											} else {
+												$new_groups[] = $group_id;
+											}
+										}
+										
+										$query = "SELECT * FROM `course_audience` WHERE `audience_type` = 'group_id' AND `audience_value` NOT IN (".$group_ids_string.") AND `course_id` = ".$db->qstr($COURSE_ID)." AND `audience_active` = 1 AND (`enroll_finish` > ".$db->qstr(time())." OR `enroll_finish` = 0)";
+										if ($group_records = $db->GetAll($query)) {
+											foreach ($group_records as $group_record) {
+												$removed_groups = $group_record["audience_value"];
+											}
+										}
+										
+										foreach($new_groups as $order => $group_id) {
 											if ($group_id = clean_input($group_id, array("trim", "int"))) {
 												$query = "SELECT `group_name` FROM `groups` WHERE `group_id` = ".$db->qstr($group_id);
 												$result	= $db->GetRow($query);
 												if ($result) {
-													$PROCESSED["groups"][] = array("id"=>$group_id,"title"=>$result["group_name"]);
-													$query = "	INSERT INTO `course_audience` VALUES(NULL,".$db->qstr($COURSE_ID).",'group_id',".$db->qstr($group_id).",".$enroll_start.",".$enroll_end.",1)";
-													if(!$db->Execute($query)){
+													$PROCESSED["groups"][] = array("id" => $group_id, "title" => $result["group_name"]);
+													
+													if(!$db->AutoExecute("course_audience", array("audience_type" => "group_id", "audience_value" => $group_id, "course_id" => $COURSE_ID, "cperiod_id" => $cperiod_id), "INSERT")){
 														add_error("Unable to insert the group [".$group_id."] as an audience member for course [".$COURSE_ID."]. Please try again later.");				
 													}
 
@@ -469,24 +468,100 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 												$ERRORSTR[] = "One of the <strong>groups</strong> you specified is invalid.";
 											}
 										}
-									}
+										
+										foreach($updated_groups as $order => $group_id) {
+											if ($group_id = clean_input($group_id, array("trim", "int"))) {
+												$query = "SELECT `group_name` FROM `groups` WHERE `group_id` = ".$db->qstr($group_id);
+												$result	= $db->GetRow($query);
+												if ($result) {
+													$PROCESSED["groups"][] = array("id" => $group_id, "title" => $result["group_name"]);
+													
+													if(!$db->AutoExecute("course_audience", array("audience_type" => "group_id", "audience_value" => $group_id, "course_id" => $COURSE_ID, "cperiod_id" => $cperiod_id, "enroll_finish" => 0, "audience_active" => 1), "UPDATE", "`audience_value` = ".$db->qstr($group_id)." AND `audience_type` = 'group_id' AND `course_id` = ".$db->qstr($COURSE_ID))){
+														add_error("Unable to update the group [".$group_id."] as an audience member for course [".$COURSE_ID."]. Please try again later.");				
+													}
 
-								}								
-								
+												} else {
+													$ERROR++;
+													$ERRORSTR[] = "One of the <strong>groups</strong> you specified was invalid.";
+												}
+											} else {
+												$ERROR++;
+												$ERRORSTR[] = "One of the <strong>groups</strong> you specified is invalid.";
+											}
+										}
+										
+										foreach($removed_groups as $order => $group_id) {
+											if ($group_id = clean_input($group_id, array("trim", "int"))) {
+												$query = "SELECT `group_name` FROM `groups` WHERE `group_id` = ".$db->qstr($group_id);
+												$result	= $db->GetRow($query);
+												if ($result) {
+													$PROCESSED["groups"][] = array("id" => $group_id, "title" => $result["group_name"]);
+													
+													if(!$db->AutoExecute("course_audience", array("audience_type" => "group_id", "audience_value" => $group_id, "course_id" => $COURSE_ID, "enroll_finish" => time(), "audience_active" => 0), "UPDATE", "`audience_value` = ".$db->qstr($group_id)." AND `audience_type` = 'group_id' AND `course_id` = ".$db->qstr($COURSE_ID))){
+														add_error("Unable to deactivate the group [".$group_id."] as an audience member for course [".$COURSE_ID."]. Please try again later.");				
+													}
 
+												} else {
+													$ERROR++;
+													$ERRORSTR[] = "One of the <strong>groups</strong> you specified was invalid.";
+												}
+											} else {
+												$ERROR++;
+												$ERRORSTR[] = "One of the <strong>groups</strong> you specified is invalid.";
+											}
+										}
+									}		
+								}
+							}
+							if ($_POST["period"] && $cperiod_id = clean_input($_POST["period"], array("trim", "int"))) {	
 								if (isset($_POST["associated_student"]) && strlen($_POST["associated_student"])) {
 									$PROCESSED["associated_students"] = explode(",",clean_input($_POST["associated_student"], array("notags", "trim")));
 									if (isset($PROCESSED["associated_students"]) && is_array($PROCESSED["associated_students"])) {
-										foreach($PROCESSED["associated_students"] as $student){
-											$query = "	INSERT INTO `course_audience` VALUES(NULL,".$db->qstr($COURSE_ID).",'proxy_id',".$db->qstr($student).",".$enroll_start.",".$enroll_end.",1)";
-											if(!$db->Execute($query)){
-												add_error("Unable to insert the student [".$student."] as an audience member for course [".$COURSE_ID."]. Please try again later.");				
+										
+										$new_students = array();
+										$updated_students = array();
+										$removed_students = array();
+										$student_ids_string = "";
+										
+										foreach ($PROCESSED["associated_students"] as $student_id) {
+											$student_ids_string .= ($student_ids_string ? ", ".$db->qstr($student_id) : $db->qstr($student_id));
+											$query = "SELECT * FROM `course_audience` WHERE `audience_type` = 'proxy_id' AND `audience_value` = ".$db->qstr($student_id)." AND `course_id` = ".$db->qstr($COURSE_ID);
+											if ($student_record = $db->GetRow($query) && $student_record["cperiod_id"] != $cperiod_id) {
+												$updated_students[] = $student_id;
+											} else {
+												$new_students[] = $student_id;
+											}
+										}
+										
+										$query = "SELECT * FROM `course_audience` WHERE `audience_type` = 'proxy_id' AND `audience_value` NOT IN (".$student_ids_string.") AND `course_id` = ".$db->qstr($COURSE_ID)." AND `audience_active` = 1 AND (`enroll_finish` > ".$db->qstr(time())." OR `enroll_finish` = 0)";
+										if ($student_records = $db->GetAll($query)) {
+											foreach ($student_records as $student_record) {
+												$removed_students[] = $student_record["audience_value"];
+											}
+										}
+																				
+										foreach($new_students as $student_id){
+											if(!$db->AutoExecute("course_audience", array("audience_type" => "proxy_id", "audience_value" => $student_id, "course_id" => $COURSE_ID, "cperiod_id" => $cperiod_id), "INSERT")){
+												add_error("Unable to insert the student [".$student_id."] as an audience member for course [".$COURSE_ID."]. Please try again later.");				
+											}
+										}
+										
+										foreach($updated_students as $student_id){
+											if(!$db->AutoExecute("course_audience", array("audience_type" => "proxy_id", "audience_value" => $student_id, "course_id" => $COURSE_ID, "enroll_finish" => 0, "audience_active" => 1, "cperiod_id" => $cperiod_id), "UPDATE", "`audience_value` = ".$db->qstr($student_id)." AND `audience_type` = 'proxy_id' AND `course_id` = ".$db->qstr($COURSE_ID))){
+												add_error("Unable to update the student [".$student_id."] as an audience member for course [".$COURSE_ID."]. Please try again later.");				
+											}
+										}
+										
+										foreach($removed_students as $student_id){
+											if(!$db->AutoExecute("course_audience", array("audience_type" => "proxy_id", "audience_value" => $student_id, "course_id" => $COURSE_ID, "enroll_finish" => time(), "audience_active" => 0, "cperiod_id" => $cperiod_id), "UPDATE", "`audience_value` = ".$db->qstr($student_id)." AND `audience_type` = 'proxy_id' AND `course_id` = ".$db->qstr($COURSE_ID))){
+												add_error("Unable to deactivate the student [".$student_id."] as an audience member for course [".$COURSE_ID."]. Please try again later.");				
 											}
 										}
 									}
-									
 								}
-
+							} elseif ((isset($_POST["associated_student"]) && strlen($_POST["associated_student"])) || isset($_POST["group_order"]) && strlen($_POST["group_order"])) {
+								$ERROR++;
+								$ERRORSTR[] = "Please ensure you select an <strong>Enrollment period</strong> for the selected course audience.";
 							}
 							
 							if (!$ERROR) {
@@ -540,11 +615,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					$chosen_course_directors	= array();
 
 					
-					$query = "	SELECT * FROM `course_audience` WHERE `course_id` = ".$db->qstr($COURSE_ID);
+					$query = "SELECT a.* FROM `course_audience` AS a
+								JOIN `curriculum_periods` AS b
+								ON a.`cperiod_id` = b.`cperiod_id`
+								WHERE a.`course_id` = ".$db->qstr($COURSE_ID)." 
+								AND a.`audience_active` = 1 
+								AND (a.`enroll_finish` = 0 OR a.`enroll_finish` > ".$db->qstr(time()).")
+								AND b.`finish_date` >= ".$db->qstr(time());
 					$course_audience = $db->GetAll($query);
 					if ($course_audience) {
-						$PROCESSED["enrollment_start"] = $course_audience[0]["enroll_start"];
-						$PROCESSED["enrollment_end"] = $course_audience[0]["enroll_finish"];
+						$PROCESSED["cperiod_id"] = $course_audience[0]["cperiod_id"];
 						foreach($course_audience as $audience_member){
 							if ($audience_member["audience_type"] == "group_id") {
 								$query = "SELECT `group_id`,`group_name` FROM `groups` WHERE `group_id` = ".$db->qstr($audience_member["audience_value"]);
@@ -746,8 +826,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								<td></td>
 								<td style="vertical-align: top"><label for="curriculum_type_id" class="form-nrequired">Curriculum Category</label></td>
 								<td>
-									<select id="curriculum_type_id" name="curriculum_type_id" style="width: 250px">
-									<option value="0"<?php echo (((!isset($PROCESSED["curriculum_type_id"])) || (!(int) $PROCESSED["curriculum_type_id"])) ? " selected=\"selected\"" : ""); ?>>- Select Curriculum Category -</option>
+									<select id="curriculum_type_id" name="curriculum_type_id" style="width: 250px" onchange="loadCurriculumPeriods(this.options[this.selectedIndex].value)">
+										<option value="0"<?php echo (((!isset($PROCESSED["curriculum_type_id"])) || (!(int) $PROCESSED["curriculum_type_id"])) ? " selected=\"selected\"" : ""); ?>>- Select Curriculum Category -</option>
 									<?php
 									$query = "	SELECT a.* FROM `curriculum_lu_types` AS a 
 										JOIN `curriculum_type_organisation` AS b 
@@ -1109,6 +1189,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 											}
 										}
 										
+										function loadCurriculumPeriods(cperiod_id) {
+											var updater = new Ajax.Updater('curriculum_type_periods', '<?php echo ENTRADA_URL."/api/curriculum_type_periods.api.php"; ?>',{
+												method:'post',
+												parameters: {
+													'cperiod_id': cperiod_id
+												},
+												onFailure: function(transport){
+													$('curriculum_type_periods').update(new Element('div', {'class':'display-error'}).update('No Periods were found for this Curriculum Category.'));
+												}
+											});
+										}
 										</script>
 										<input type="text" id="director_name" name="fullname" size="30" autocomplete="off" style="width: 203px; vertical-align: middle" onkeyup="checkItem('director')" onblur="addItemNoError('director')" />
 										<script>
@@ -1364,7 +1455,35 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 									<input type="hidden" id="student_id" name="student_id" value="" />
 								</td>
 							</tr>
-							<?php echo generate_calendars("enrollment", "", true, false, ((isset($PROCESSED["enrollment_start"])) ? $PROCESSED["enrollment_start"] : 0), true, false, ((isset($PROCESSED["enrollment_end"])) ? $PROCESSED["enrollment_end"] : 0),false); ?>					
+							<tr>
+								<td>&nbsp;</td>
+								<td><label for="period" class="form-required">Enrollment period</label></td>
+								<td>
+									<div id="curriculum_type_periods">
+										<?php 
+										if ($PROCESSED["curriculum_type_id"]) {
+												$query = "SELECT * FROM `curriculum_periods` WHERE `curriculum_type_id` = ".$db->qstr($PROCESSED["curriculum_type_id"]." AND `active` = 1 AND `finish_date` >= ".$db->qstr(time()));
+												if ($periods = $db->GetAll($query)) {
+													?>
+													<select name="period" id="period">
+														<option value="0">-- Select a Period --</option>
+														<?php
+														foreach ($periods as $period) {
+															echo "<option value=\"".$period["cperiod_id"]."\"".($PROCESSED["cperiod_id"] == $period["cperiod_id"] ? " selected=\"selected\"" : "").">".date("F jS, Y" ,$period["start_date"])." to ".date("F jS, Y" ,$period["finish_date"])."</option>";
+														}
+														?>
+													</select>
+													<?php
+												} else {
+													echo "<div class=\"display-notice\"><ul><li>No periods have been found for the selected <strong>Curriculum Category</strong>.</li></ul></div>";
+												}
+										} else {
+											echo "<div class=\"display-notice\"><ul><li>No <strong>Curriculum Category</strong> has been selected.</li></ul></div>";
+										}
+										?>
+									</div>
+								</td>
+							</tr>
 						</table>
 					</div>
 					<script type="text/javascript">

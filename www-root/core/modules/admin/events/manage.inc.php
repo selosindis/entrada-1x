@@ -914,61 +914,65 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					$GROUP_LIST[$result["group_id"]] = $result;
 				}
 			}
-			/**
-			 * Add existing event type segments to the processed array.
-			 */
-			$query = "	SELECT *
-						FROM `event_eventtypes` AS `types`
-						LEFT JOIN `events_lu_eventtypes` AS `lu_types`
-						ON `lu_types`.`eventtype_id` = `types`.`eventtype_id`
-						WHERE `event_id` = ".$db->qstr($EVENT_ID)."
-						ORDER BY `types`.`eeventtype_id` ASC";
-			$results = $db->GetAll($query);
-			if ($results) {
-				foreach ($results as $contact_order => $result) {
-					$PROCESSED["event_types"][] = array($result["eventtype_id"], $result["duration"], $result["eventtype_title"]);
-				}
-			}
-
-			/**
-			 * Add any existing associated faculty from the event_contacts table
-			 * into the $PROCESSED["associated_faculty"] array.
-			 */
-			$query = "SELECT * FROM `event_contacts` WHERE `event_id` = ".$db->qstr($EVENT_ID)." ORDER BY `contact_order` ASC";
-			$results = $db->GetAll($query);
-			if ($results) {
-				foreach($results as $contact_order => $result) {
-					$PROCESSED["associated_faculty"][(int) $contact_order] = $result["proxy_id"];
-				}
-			}
 			
-			$query = "SELECT * FROM `event_audience` WHERE `event_id` = ".$db->qstr((isset($event_info["sessions"]) && $event_info["sessions"] ? (isset($selected_session_id) && $selected_session_id ? $selected_session_id : $event_info["sessions"][0]["event_id"]) : $EVENT_ID));
-			$results = $db->GetAll($query);
-			if ($results) {
+			if ($event_info) {
 				/**
-				 * Set the audience_type.
+				 * Add existing event type segments to the processed array.
 				 */
-				$PROCESSED["event_audience_type"] = $results[0]["audience_type"];
-
-				foreach($results as $result) {
-					if ($result["audience_type"] == $PROCESSED["event_audience_type"]) {
-						switch($result["audience_type"]) {
-							case "course_id" :
-								$PROCESSED["associated_course_ids"][] = (int) $result["audience_value"];
-							break;
-							case "group_id" :
-								$PROCESSED["associated_group_ids"][] = (int) $result["audience_value"];
-							break;
-							case "proxy_id" :
-								$PROCESSED["associated_proxy_ids"][] = (int) $result["audience_value"];
-							break;
-							case "grad_year" :
-								$query = "SELECT `group_id` FROM `groups` WHERE `group_name` = 'School of Medicine: Class of ".((int)$result["audience_value"])."'";
-								$group_id = $db->GetOne($query);
-								if ($group_id) {
-									$PROCESSED["associated_group_ids"][] = (int) $group_id;
-								}
-							break;
+				$query = "	SELECT *
+							FROM `event_eventtypes` AS `types`
+							LEFT JOIN `events_lu_eventtypes` AS `lu_types`
+							ON `lu_types`.`eventtype_id` = `types`.`eventtype_id`
+							WHERE `event_id` = ".$db->qstr($EVENT_ID)."
+							ORDER BY `types`.`eeventtype_id` ASC";
+				$results = $db->GetAll($query);
+				if ($results) {
+					foreach ($results as $contact_order => $result) {
+						$PROCESSED["event_types"][] = array($result["eventtype_id"], $result["duration"], $result["eventtype_title"]);
+					}
+				}
+	
+				/**
+				 * Add any existing associated faculty from the event_contacts table
+				 * into the $PROCESSED["associated_faculty"] array.
+				 */
+				$query = "SELECT * FROM `event_contacts` WHERE `event_id` = ".$db->qstr($EVENT_ID)." ORDER BY `contact_order` ASC";
+				$results = $db->GetAll($query);
+				if ($results) {
+					foreach($results as $contact_order => $result) {
+						$PROCESSED["associated_faculty"][(int) $contact_order] = $result["proxy_id"];
+						$PROCESSED["display_role"][(int)$result["proxy_id"]] = $result["contact_role"];
+					}
+				}
+				
+				$query = "SELECT * FROM `event_audience` WHERE `event_id` = ".$db->qstr((isset($event_info["sessions"]) && $event_info["sessions"] ? (isset($selected_session_id) && $selected_session_id ? $selected_session_id : $event_info["sessions"][0]["event_id"]) : $EVENT_ID));
+				$results = $db->GetAll($query);
+				if ($results) {
+					/**
+					 * Set the audience_type.
+					 */
+					$PROCESSED["event_audience_type"] = $results[0]["audience_type"];
+	
+					foreach($results as $result) {
+						if ($result["audience_type"] == $PROCESSED["event_audience_type"]) {
+							switch($result["audience_type"]) {
+								case "course_id" :
+									$PROCESSED["associated_course_ids"][] = (int) $result["audience_value"];
+								break;
+								case "group_id" :
+									$PROCESSED["associated_group_ids"][] = (int) $result["audience_value"];
+								break;
+								case "proxy_id" :
+									$PROCESSED["associated_proxy_ids"][] = (int) $result["audience_value"];
+								break;
+								case "cohort" :
+									$query = "SELECT `group_id` FROM `groups` WHERE `group_name` = 'School of Medicine: Class of ".((int)$result["audience_value"])."'";
+									$group_id = $db->GetOne($query);
+									if ($group_id) {
+										$PROCESSED["associated_group_ids"][] = (int) $group_id;
+									}
+								break;
+							}
 						}
 					}
 				}
@@ -1079,8 +1083,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							<td><?php echo (($event_info["event_duration"]) ? $event_info["event_duration"]." minutes" : "To Be Announced"); ?></td>
 						</tr>
 						<?php
-						if ($event_audience_type == "grad_year") {
-							$query = "	SELECT a.`event_id`, a.`event_title`, b.`audience_value` AS `event_grad_year`
+						if ($event_audience_type == "cohort") {
+							$query = "	SELECT a.`event_id`, a.`event_title`, b.`audience_value` AS `event_cohort`
 										FROM `events` AS a
 										LEFT JOIN `event_audience` AS b
 										ON b.`event_id` = a.`event_id`
@@ -1089,8 +1093,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 										AND c.`organisation_id` = ".$db->qstr($event_info["organisation_id"])."
 										WHERE (a.`event_start` BETWEEN ".$db->qstr($event_info["event_start"])." AND ".$db->qstr(($event_info["event_finish"] - 1)).")
 										AND a.`event_id` <> ".$db->qstr($event_info["event_id"])."
-										AND b.`audience_type` = 'grad_year'
-										AND b.`audience_value` = ".$db->qstr((int) $associated_grad_year)."
+										AND b.`audience_type` = 'cohort'
+										AND b.`audience_value` = ".$db->qstr((int) $associated_cohort)."
 										ORDER BY a.`event_title` ASC";
 							$results = $db->GetAll($query);
 							if ($results) {
@@ -1288,7 +1292,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 									foreach ($PROCESSED["associated_faculty"] as $faculty) {
 										if ((array_key_exists($faculty, $FACULTY_LIST)) && is_array($FACULTY_LIST[$faculty])) {
 											?>
-											<li class="community" id="faculty_<?php echo $FACULTY_LIST[$faculty]["proxy_id"]; ?>" style="cursor: move;"><?php echo $FACULTY_LIST[$faculty]["fullname"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="faculty_list.removeItem('<?php echo $FACULTY_LIST[$faculty]["proxy_id"]; ?>');" class="list-cancel-image" /></li>
+											<li class="community" id="faculty_<?php echo $FACULTY_LIST[$faculty]["proxy_id"]; ?>" style="cursor: move;margin-bottom:10px;width:350px;"><?php echo $FACULTY_LIST[$faculty]["fullname"]; ?><select name ="faculty_role[]" style="float:right;margin-right:30px;margin-top:-5px;"><option value="teacher" <?php if($PROCESSED["display_role"][$faculty] == "teacher") echo "SELECTED";?>>Teacher</option><option value="tutor" <?php if($PROCESSED["display_role"][$faculty] == "tutor") echo "SELECTED";?>>Tutor</option><option value="ta" <?php if($PROCESSED["display_role"][$faculty] == "ta") echo "SELECTED";?>>Teacher's Assistant</option><option value="auditor" <?php if($PROCESSED["display_role"][$faculty] == "auditor") echo "SELECTED";?>>Auditor</option></select><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="faculty_list.removeItem('<?php echo $FACULTY_LIST[$faculty]["proxy_id"]; ?>');" class="list-cancel-image" /></li>
 											<?php
 										}
 									}
@@ -1659,7 +1663,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 																		case "proxy_id" :
 																			$result["associated_proxy_ids"][] = (int) $audience["audience_value"];
 																		break;
-																		case "grad_year" :
+																		case "cohort" :
 																			$query = "SELECT `group_id` FROM `groups` WHERE `group_name` = 'School of Medicine: Class of ".((int)$result["audience_value"])."'";
 																			$group_id = $db->GetOne($query);
 																			if ($group_id) {

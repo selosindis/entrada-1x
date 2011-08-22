@@ -278,12 +278,20 @@ if (!defined("PARENT_INCLUDED")) {
 					 * Gather the learners associated with this event from the event_audience table.
 					 */
 					$associated_learners = array();;
+					$associated_cohort_ids = array();;
+					$associated_group_ids = array();;
 
 					$query = "SELECT * FROM `event_audience` WHERE `event_id` = ".$db->qstr($EVENT_ID);
 					$results = $db->GetAll($query);
 					if ($results) {
 						foreach ($results as $result) {
 							$associated_learners[$result["audience_type"]] = $result["audience_value"];
+							$event_audience_type = $result["audience_type"];
+							if ($result["audience_type"] == "cohort") {
+								$associated_cohort_ids = $result["audience_value"];
+							} elseif ($result["audience_type"] == "group_id") {
+								$associated_group_ids = $result["audience_value"];
+							}
 						}
 					}
 
@@ -308,7 +316,7 @@ if (!defined("PARENT_INCLUDED")) {
 					$discussion_title			= (($icon_discussion) ? "Read the posted discussion comments." : "Start up a conversion, leave your comment!");
 					$syllabus_title				= "Visit Course Website";
 
-					if (($_SESSION["details"]["allow_podcasting"]) && ($event_audience_type == "grad_year") && (in_array($_SESSION["details"]["allow_podcasting"], array($associated_grad_year, "all")))) {
+					if (($_SESSION["details"]["allow_podcasting"]) && ($event_audience_type == "cohort") && (in_array($_SESSION["details"]["allow_podcasting"], array($associated_cohort, "all")))) {
 						$sidebar_html = "To upload a podcast: <a href=\"javascript:openPodcastWizard('".$EVENT_ID."')\">click here</a>";
 						new_sidebar_item("Upload A Podcast", $sidebar_html, "podcast_uploading", "open", "2.0");
 						?>
@@ -399,7 +407,7 @@ require_once("Models/users/Users.class.php");
 require_once("Models/users/Assistant.class.php");
 require_once("Models/users/UserPhoto.class.php");
 require_once("Models/users/UserPhotos.class.php");
-require_once("Models/users/GraduatingClass.class.php");
+require_once("Models/users/Cohort.class.php");
 require_once("Models/organisations/Organisation.class.php");
 require_once("Models/organisations/Organisations.class.php");
 require_once("Models/users/Department.class.php");
@@ -487,10 +495,11 @@ require_once("Models/tasks/TaskVerifiers.class.php");
 					echo "			</tr>\n";
 					
 					/**
-					 * @todo This needs to be fixed as $event_audience_type is no longer for grad_year.
+					 * @todo This needs to be fixed as $event_audience_type is no longer for cohort.
 					 */
-					if ($event_audience_type == "grad_year") {
-						$query		= "	SELECT a.`event_id`, a.`event_title`, b.`audience_value` AS `event_grad_year`
+					if ($event_audience_type == "cohort") {
+						$cohort = groups_get_cohort($_SESSION["details"]["id"]);
+						$query		= "	SELECT a.`event_id`, a.`event_title`, b.`audience_value` AS `event_cohort`
 										FROM `events` AS a
 										LEFT JOIN `event_audience` AS b
 										ON b.`event_id` = a.`event_id`
@@ -500,8 +509,8 @@ require_once("Models/tasks/TaskVerifiers.class.php");
 										WHERE (a.`event_start` BETWEEN ".$db->qstr($event_info["event_start"])." AND ".$db->qstr(($event_info["event_finish"] - 1)).")
 										AND c.`course_active` = '1'
 										AND a.`event_id` <> ".$db->qstr($event_info["event_id"])."
-										AND b.`audience_type` = 'grad_year'
-										AND b.`audience_value` = ".$db->qstr((int) $associated_grad_year)."
+										AND b.`audience_type` = 'cohort'
+										AND b.`audience_value` = ".$db->qstr((int) $cohort["group_id"])."
 										ORDER BY `event_title` ASC";
 						$results	= $db->GetAll($query);
 						if ($results) {
@@ -579,7 +588,19 @@ require_once("Models/tasks/TaskVerifiers.class.php");
 							echo "		<td style=\"vertical-align: top\">\n";
 							echo "			<ul class=\"general-list\">";
 							foreach ($associated_group_ids as $group_id) {
-								echo "			<li>Group ID: ".$group_id."</li>\n";
+								echo "			<li>".html_encode(groups_get_name($group_id))."</li>\n";
+							}
+							echo "			</ul>\n";
+							echo "		</td>\n";
+							echo "	</tr>\n";
+						break;
+						case "cohort" :
+							echo "	<tr>\n";
+							echo "		<td style=\"vertical-align: top\"></td>\n";
+							echo "		<td style=\"vertical-align: top\">\n";
+							echo "			<ul class=\"general-list\">";
+							foreach ($associated_cohort_ids as $group_id) {
+								echo "			<li>".html_encode(groups_get_name($group_id))."</li>\n";
 							}
 							echo "			</ul>\n";
 							echo "		</td>\n";
@@ -629,7 +650,7 @@ require_once("Models/tasks/TaskVerifiers.class.php");
 						$curriculum_objectives["objectives"][$objective_id]["objective_tertiary_children"] = 0;
 					}
 					foreach ($curriculum_objectives["objectives"] as $objective_id => $objective) {
-						if ($objective["event_objective"]) {
+						if (isset($objective["event_objective"]) && $objective["event_objective"]) {
 							foreach ($objective["parent_ids"] as $parent_id) {
 								if ($objective["primary"] || $objective["secondary"] || $objective["tertiary"] || $curriculum_objectives["objectives"][$parent_id]["primary"] || $curriculum_objectives["objectives"][$parent_id]["secondary"] || $curriculum_objectives["objectives"][$parent_id]["tertiary"]) {
 									$curriculum_objectives["objectives"][$parent_id]["objective_".($objective["primary"] || ($curriculum_objectives["objectives"][$parent_id]["primary"] && !$objective["secondary"] && !$objective["tertiary"]) ? "primary" : ($objective["secondary"] || ($curriculum_objectives["objectives"][$parent_id]["secondary"] && !$objective["primary"] && !$objective["tertiary"]) ? "secondary" : "tertiary"))."_children"]++;
@@ -646,12 +667,12 @@ require_once("Models/tasks/TaskVerifiers.class.php");
 						}
 					}
 					foreach ($temp_objectives as $objective_id => $objective) {
-						if (!$objective["event_objective"]) {
-							if ($objective["primary"] && !$curriculum_objectives["objectives"][$objective_id]["objective_primary_children"]) {
+						if (!isset($objective["event_objective"]) || !$objective["event_objective"]) {
+							if (isset($objective["primary"]) && $objective["primary"] && !$curriculum_objectives["objectives"][$objective_id]["objective_primary_children"]) {
 								$curriculum_objectives["objectives"][$objective_id]["primary"] = false;
-							} elseif ($objective["secondary"] && !$curriculum_objectives["objectives"][$objective_id]["objective_secondary_children"]) {
+							} elseif (isset($objective["secondary"]) && $objective["secondary"] && !$curriculum_objectives["objectives"][$objective_id]["objective_secondary_children"]) {
 								$curriculum_objectives["objectives"][$objective_id]["secondary"] = false;
-							} elseif ($objective["tertiary"] && !$curriculum_objectives["objectives"][$objective_id]["objective_tertiary_children"]) {
+							} elseif (isset($objective["tertiary"]) && $objective["tertiary"] && !$curriculum_objectives["objectives"][$objective_id]["objective_tertiary_children"]) {
 								$curriculum_objectives["objectives"][$objective_id]["tertiary"] = false;
 							}
 						}
@@ -1118,7 +1139,7 @@ require_once("Models/tasks/TaskVerifiers.class.php");
 					<?php
 					$rid = $learning_events["rid"];
 					$count_modified = 0;
-					$count_grad_year = 0;
+					$count_cohort = 0;
 					$count_group = 0;
 					$count_individual = 0;
 
@@ -1131,7 +1152,7 @@ require_once("Models/tasks/TaskVerifiers.class.php");
 							/**
 							 * Determine if this event has been modified since their last visit.
 							 */
-							if (((int) $result["last_visited"]) && ((int) $result["last_visited"] < (int) $result["updated_date"])) {
+							if (isset($result["last_visited"]) && ((int) $result["last_visited"]) && ((int) $result["last_visited"] < (int) $result["updated_date"])) {
 								$is_modified = true;
 								$count_modified++;
 							}
@@ -1140,8 +1161,8 @@ require_once("Models/tasks/TaskVerifiers.class.php");
 							 * Increment the appropriate audience_type counter.
 							 */
 							switch ($result["audience_type"]) {
-								case "grad_year" :
-									$count_grad_year++;
+								case "cohort" :
+									$count_cohort++;
 								break;
 								case "group_id" :
 									$count_group++;

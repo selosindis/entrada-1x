@@ -51,7 +51,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 	$group_populate = "group_number";
 	$group_active = "true";
 	$number_of_groups ="";
-	$associated_grad_year = "";
 	$populate = 0;
 	$GROUP_IDS = array();
 
@@ -83,7 +82,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 			/**
 			 * Required field "group_type" / Group Type.
 			 */
-			if ((isset($_POST["group_type"])) && ($group_type = clean_input($_POST["group_type"], array("trim"))) && in_array($group_type, array("small_group", "class"))) {
+			if ((isset($_POST["group_type"])) && ($group_type = clean_input($_POST["group_type"], array("trim"))) && in_array($group_type, array("course_list", "cohort"))) {
 				$PROCESSED["group_type"] = $group_type;
 			} else {
 				$ERROR++;
@@ -265,8 +264,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 						<td>
 							<select id="group_type" name="group_type" style="width: 250px">
 							<option value="0">-- Select a group type --</option>
-							<option value="small_group"<?php echo ($PROCESSED["group_type"] == "small_group" ? " selected=\"selected\"" : ""); ?>>Small group</option>
-							<option value="class"<?php echo ($PROCESSED["group_type"] == "class" ? " selected=\"selected\"" : ""); ?>>Class list</option>
+							<option value="course_list"<?php echo ($PROCESSED["group_type"] == "course_list" ? " selected=\"selected\"" : ""); ?>>Course list</option>
+							<option value="cohort"<?php echo ($PROCESSED["group_type"] == "cohort" ? " selected=\"selected\"" : ""); ?>>Cohort</option>
 							</select>
 						</td>
 					</tr>

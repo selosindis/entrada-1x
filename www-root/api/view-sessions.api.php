@@ -450,8 +450,8 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 					case "proxy_id" :
 						$PROCESSED["associated_proxy_ids"][] = (int) $result["audience_value"];
 					break;
-					case "grad_year" :
-						$query = "SELECT `group_id` FROM `groups` WHERE `group_name` = 'School of Medicine: Class of ".((int)$result["audience_value"])."'";
+					case "cohort" :
+						$query = "SELECT `group_id` FROM `groups` WHERE `group_id` = ".$db->qstr($result["audience_value"])." AND `group_active` = 1";
 						$group_id = $db->GetOne($query);
 						if ($group_id) {
 							$PROCESSED["associated_group_ids"][] = (int) $group_id;
@@ -682,8 +682,8 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 									case "proxy_id" :
 										$PROCESSED["associated_proxy_ids"][] = (int) $audience["audience_value"];
 									break;
-									case "grad_year" :
-										$query = "SELECT `group_id` FROM `groups` WHERE `group_name` = 'School of Medicine: Class of ".((int)$PROCESSED["audience_value"])."'";
+									case "cohort" :
+										$query = "SELECT `group_id` FROM `groups` WHERE `group_id` = ".$db->qstr($PROCESSED["audience_value"])." AND `group_active` = 1";
 										$group_id = $db->GetOne($query);
 										if ($group_id) {
 											$PROCESSED["associated_group_ids"][] = (int) $group_id;
@@ -699,7 +699,7 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 						} else {
 							$course_audience_included = false;
 						}
-						foreach ($PROCESSED["associated_group_idgroup_ids"] as $group_id) {
+						foreach ($PROCESSED["associated_group_ids"] as $group_id) {
 							if ($group_ids_string) {
 								$group_ids_string .= ",group_".$group_id;
 							} else {

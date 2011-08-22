@@ -10143,8 +10143,8 @@ function tracking_fetch_filtered_events($community_id,$filters = array(),$pagina
 		}
 	}
 	$count .= $where;
-	$query .= $where;
-	$date_query .= $where;
+	$query .= $where." ORDER BY a.`timestamp` DESC";
+	$date_query .= $where." ORDER BY a.`timestamp` DESC";
 	
 	$num_results = $db->GetOne($count);
 	if ($paginate) {
@@ -12121,7 +12121,7 @@ function objectives_inlists_conf($identifier = 0, $indent = 0) {
 			if ($has_children) {
 				$output .= "	<a class=\"objective-expand\" onclick=\"showObjectiveChildren('".$result["objective_id"]."')\"><img id=\"objective-".$result["objective_id"]."-arrow\" src=\"".ENTRADA_URL."/images/arrow-right.gif\" style=\"border: none; text-decoration: none;\" /></a>";
 			}
-			$output .= "	&nbsp;<a href=\"".ENTRADA_URL."/admin/configuration/organisations/manage/objectives?".replace_query(array("org"=>$ORGANISATION_ID,"section" => "edit", "step" => 1, "id" => $result["objective_id"]))."\">";
+			$output .= "	&nbsp;<a href=\"".ENTRADA_URL."/admin/settings/organisations/manage/objectives?".replace_query(array("org"=>$ORGANISATION_ID,"section" => "edit", "step" => 1, "id" => $result["objective_id"]))."\">";
 			$output .= html_encode($result["objective_name"])."</a></span>\n";
 			$output .= "</div>";
 			$output .= objectives_inlists_conf($result["objective_id"], $indent + 1);

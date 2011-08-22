@@ -27,15 +27,31 @@ require_once("dbconnection.inc.php");
 $ldap = NewADOConnection("ldap");
 $ldap->SetFetchMode(ADODB_FETCH_ASSOC);
 $ldap->debug = false;
-$query = "	SELECT `course_code`,`course_id` 
+$query = "	SELECT `course_code`,`course_id`,`curriculum_type_id` 
 			FROM `courses` 
 			WHERE `course_active` = 1
 			AND `ldap_sync` = 1";
 $results = $db->GetAll($query);
 if ($results) {
 	foreach ($results as $course) {
+		$start_date = 0;
+		$end_date = 0;
 		
-					
+		if ($course["curriculum_type_id"] != 0) {
+			$now = time();
+			$query = "SELECT `start_date`, `finish_date` FROM `curriculum_periods` WHERE ".$db->qstr($now)." BETWEEN `start_date` AND `finish_date` AND `active` = 1 AND `curriculum_type_id` = ".$db->qstr($course["curriculum_type_id"]);
+			if ($result = $db->GetRow($query)) {
+				$start_date = $result["start_date"];
+				$end_date = $result["finish_date"];
+			} else {
+				$query = "SELECT * FROM `curriculum_periods` WHERE `active` = 1 AND `curriculum_type_id` = ".$db->qstr($course["curriculum_type_id"])."ORDER BY start_date ASC LIMIT 1";
+				if ($result = $db->GetRow($query)) {
+					$start_date = $result["start_date"];
+					$end_date = $result["finish_date"];
+				}
+			}
+		}		
+		
 		
 		$query = "	SELECT a.`id`, a.`number` 
 					FROM `".AUTH_DATABASE."`.`user_data` AS a 
@@ -75,9 +91,9 @@ if ($results) {
 					
 					$query = "	SELECT `group_id` FROM `groups` WHERE `group_type` = 'class_list' AND `group_value` = ".$db->qstr($course["course_id"]);
 					$group_id = $db->GetOne($query);
-					
+					$now = time();
 					if (!$group_id && count($result["uniqueMember"])) {
-						$query = "	INSERT INTO `groups` VALUES(NULL,".$db->qstr($course["course_code"]." Class List").",0,'class_list',".$db->qstr($course["course_id"]).",0,0,1,0,0)";
+						$query = "	INSERT INTO `groups` VALUES(NULL,".$db->qstr($course["course_code"]." Class List").",0,'class_list',".$db->qstr($course["course_id"]).",".$db->qstr($start_date).",".$db->qstr($finish_date).",1,".$db->qstr($now).",0)";
 						$db->Execute($query);
 						$group_id = $db->Insert_Id();
 					}
@@ -90,7 +106,7 @@ if ($results) {
 									AND `audience_value` = ".$db->qstr($group_id);
 						
 						if (!$db->GetAll($query)) {
-							$query = "	INSERT INTO `course_audience` VALUES (NULL,".$db->qstr($course["course_id"]).",'group_id',".$db->qstr($group_id).",0,0,1)";
+							$query = "	INSERT INTO `course_audience` VALUES (NULL,".$db->qstr($course["course_id"]).",'group_id',".$db->qstr($group_id).",".$db->qstr($start_date).",".$db->qstr($finish_date).",1)";
 							$db->Execute($query);
 						}
 						
@@ -117,7 +133,7 @@ if ($results) {
 										//if no result, insert into the course audience, otherwise remove from array
 										if (!$result=$db->GetAll($query)) {
 											//insert into audience
-											$query = "	INSERT INTO `group_members` VALUES(NULL,".$db->qstr($group_id).",".$db->qstr($id).",".time().",".time().",1,0,".time().",0)";
+											$query = "	INSERT INTO `group_members` VALUES(NULL,".$db->qstr($group_id).",".$db->qstr($id).",".$db->qstr($start_date).",".$db->qstr($finish_date).",1,0,".$db->qstr($now).",0)";
 											if ($db->Execute($query)) {
 												echo $pKey." WAS SUCCESSFULLY REGISTERED INTO THE COURSE: ".$course["course_code"]."    ";
 											} else {

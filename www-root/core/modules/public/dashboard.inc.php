@@ -51,12 +51,12 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/calendar/script/xc2_inpage.js\"></script>";
 	$HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/calendar/script/xc2_timestamp.js\"></script>";
 
-	$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/jquery/jquery.min.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
-	$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/jquery/jquery-ui.min.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
+	//$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/jquery/jquery.min.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
+	//$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/jquery/jquery-ui.min.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
 	$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/jquery/jquery.weekcalendar.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
 	$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/jquery/jquery.qtip.min.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
-	$JQUERY[] = "<script type=\"text/javascript\">jQuery.noConflict();</script>";
-	$JQUERY[] = "<link href=\"".ENTRADA_RELATIVE."/css/jquery/jquery-ui.css?release=".html_encode(APPLICATION_VERSION)."\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />\n";
+	//$JQUERY[] = "<script type=\"text/javascript\">jQuery.noConflict();</script>";
+	//$JQUERY[] = "<link href=\"".ENTRADA_RELATIVE."/css/jquery/jquery-ui.css?release=".html_encode(APPLICATION_VERSION)."\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />\n";
 	$JQUERY[] = "<link href=\"".ENTRADA_RELATIVE."/css/jquery/jquery.weekcalendar.css?release=".html_encode(APPLICATION_VERSION)."\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />\n";
 
 	/**

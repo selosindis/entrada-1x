@@ -49,7 +49,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 			if (isset($_GET["cohort"]) && ($tmp_input = clean_input($_GET["cohort"], "int"))) {
 				$COHORT = $tmp_input;
 			} else {
-				$COHORT = (int) (date("Y"));
+				$cohorts = groups_get_active_cohorts($ENTRADA_USER->getActiveOrganisation());
+				$COHORT = $cohorts[3]["group_id"];
 			}			
 				
 			?>
@@ -78,17 +79,27 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				foreach($assessments as $key => $assessment) {
 					$query 	.= ", g$key.`grade_id` AS `grade_".$key."_id`, g$key.`value` AS `grade_".$key."_value`";
 				}
+				
+				$student_query = "SELECT `proxy_id` FROM `group_members` WHERE `group_id` = ".$db->qstr($COHORT)." AND `member_active` = 1";
+				$students = $db->GetAll($student_query);
+				
+				$student_ids_string = "";
+				
+				foreach ($students as $student) {
+					$student_ids_string .= ($student_ids_string ? ", ".$db->qstr($student["proxy_id"]) : $db->qstr($student["proxy_id"]));
+				}
+				
 				$query 	.=" FROM `".AUTH_DATABASE."`.`user_data` AS b
 							LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS c
 							ON c.`user_id` = b.`id` AND c.`app_id`=".$db->qstr(AUTH_APP_ID)."
 							AND c.`account_active`='true'
 							AND (c.`access_starts`='0' OR c.`access_starts`<=".$db->qstr(time()).")
-							AND (c.`access_expires`='0' OR c.`access_expires`>=".$db->qstr(time()).") ";
+							AND (c.`access_expires`='0' OR c.`access_expires`>=".$db->qstr(time()).")";
 				foreach($assessments as $key => $assessment) {
 					$query .= "LEFT JOIN `".DATABASE_NAME."`.`assessment_grades` AS g$key ON b.`id` = g$key.`proxy_id` AND g$key.`assessment_id` = ".$db->qstr($assessment["assessment_id"])."\n";
 				}
 				
-				$query .= 	" WHERE c.`group` = 'student' AND c.`role` = ".$db->qstr($COHORT);
+				$query .= 	" WHERE c.`group` = 'student' AND b.`id` IN (".$student_ids_string.")";
 				$query .=	" GROUP BY b.`id`";
 				$query .=	" ORDER BY b.`lastname`, b.`firstname`";
 				
@@ -152,7 +163,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 			} else {
 				echo "<table class=\"gradebook\"></table>";
 				$NOTICE++;
-				$NOTICESTR[] = "No assessments could be found for this gradebook for this cohort [".groups_get_name($COHORT)."].";
+				$NOTICESTR[] = "No assessments could be found for this gradebook for this cohort [$COHORT".groups_get_name($COHORT)."].";
 
 				echo display_notice();
 			

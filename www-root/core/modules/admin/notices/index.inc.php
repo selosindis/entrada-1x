@@ -38,7 +38,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 		
-	if ($organisation_list && count($organisation_list) > 1) {
+	if (isset($organisation_list) && $organisation_list && count($organisation_list) > 1) {
 		$sidebar_html = "<ul class=\"menu\">\n";
 		foreach ($organisation_list as $key => $organisation_title) {
 			if ($key == $ORGANISATION_ID) {

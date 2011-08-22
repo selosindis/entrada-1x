@@ -153,7 +153,7 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 		default :
 			$cohort = groups_get_cohort($_SESSION["details"]["id"]);
 			$rss_feed_name = clean_input((isset($_SESSION["details"]["grad_year"]) && $_SESSION["details"]["grad_year"] ? $_SESSION["details"]["grad_year"] : "default"), "alphanumeric");
-			$notice_where_clause = "(a.`target`='".clean_input($cohort["group_id"], "alphanumeric")."' OR a.`target` = 'all' OR a.`target` = 'students' OR a.`target` = ".$db->qstr("proxy_id:".((int) $_SESSION["details"]["id"])).")";
+			$notice_where_clause = "(a.`target`='cohort:".clean_input($cohort["group_id"], "alphanumeric")."' OR a.`target` = 'all' OR a.`target` = 'students' OR a.`target` = ".$db->qstr("proxy_id:".((int) $_SESSION["details"]["id"])).")";
 			$poll_where_clause = "(a.`poll_target_type` = 'cohort' AND a.`poll_target`='".clean_input($cohort["group_id"], "alphanumeric")."' OR a.`poll_target` = 'all' OR a.`poll_target` = 'students')";
 		break;
 	}

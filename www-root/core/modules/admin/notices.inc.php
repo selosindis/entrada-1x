@@ -46,7 +46,7 @@ if(!defined("PARENT_INCLUDED")) {
 	if (($router) && ($router->initRoute())) {
 		$PREFERENCES = preferences_load($MODULE);
 	
-		$ORGANISATION_ID = $user->getActiveOrganisation();
+		$ORGANISATION_ID = $ENTRADA_USER->getActiveOrganisation();
 		$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["organisation_id"] = $ORGANISATION_ID;
 
 		$NOTICE_TARGETS = array();
@@ -56,7 +56,7 @@ if(!defined("PARENT_INCLUDED")) {
 		$active_cohorts = groups_get_active_cohorts($ENTRADA_USER->getActiveOrganisation());
 		if (isset($active_cohorts) && !empty($active_cohorts)) {
 			foreach ($active_cohorts as $cohort) {
-				$NOTICE_TARGETS[$cohort["group_id"]] = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Visible to ".html_encode($cohort["group_name"]);
+				$NOTICE_TARGETS["cohort:".$cohort["group_id"]] = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Visible to ".html_encode($cohort["group_name"]);
 			}
 		}
 

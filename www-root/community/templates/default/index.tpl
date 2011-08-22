@@ -10,6 +10,9 @@
 
 	<meta name="robots" content="index, follow" />
 
+        <script type="text/javascript" src="{php}echo ENTRADA_URL{/php}/javascript/jquery/jquery.min.js"></script>
+	<script type="text/javascript" src="{php}echo ENTRADA_URL{/php}/javascript/jquery/jquery-ui.min.js"></script>
+
 	<link href="{$template_relative}/css/stylesheet.css" rel="stylesheet" type="text/css" media="all" />
 	<link href="{$template_relative}/css/print.css" rel="stylesheet" type="text/css" media="print" />
 

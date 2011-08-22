@@ -38,7 +38,10 @@
 	<style type="text/css">
 	body { behavior: url(<?php echo ENTRADA_RELATIVE; ?>/css/fixes/csshoverfix.htc); }
 	</style>
-	
+	<link href="<?php echo ENTRADA_URL;?>/css/jquery/jquery-ui.css" rel="stylesheet" type="text/css" />	
+	<script type="text/javascript" src="<?php echo ENTRADA_RELATIVE; ?>/javascript/jquery/jquery.min.js?release=<?php echo html_encode(APPLICATION_VERSION); ?>"></script>
+	<script type="text/javascript" src="<?php echo ENTRADA_RELATIVE; ?>/javascript/jquery/jquery-ui.min.js?release=<?php echo html_encode(APPLICATION_VERSION); ?>"></script>	
+	<script type="text/javascript">jQuery.noConflict();</script>
 	%JQUERY%
 
 	<script type="text/javascript" src="<?php echo ENTRADA_RELATIVE; ?>/javascript/scriptaculous/prototype.js?r=<?php echo html_encode(APPLICATION_VERSION); ?>"></script>
@@ -48,7 +51,6 @@
 	<script type="text/javascript" src="<?php echo ENTRADA_RELATIVE; ?>/javascript/livepipe/selectmultiplemod.js?r=<?php echo html_encode(APPLICATION_VERSION); ?>"></script>
 	<script type="text/javascript" src="<?php echo ENTRADA_RELATIVE; ?>/javascript/common.js?r=<?php echo html_encode(APPLICATION_VERSION); ?>"></script>
 	<script type="text/javascript" src="<?php echo ENTRADA_RELATIVE; ?>/javascript/selectmenu.js?r=<?php echo html_encode(APPLICATION_VERSION); ?>"></script>
-
 	%HEAD%
 </head>
 <body>

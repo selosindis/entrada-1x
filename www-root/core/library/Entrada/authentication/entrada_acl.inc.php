@@ -20,6 +20,7 @@ class Entrada_ACL extends ACL_Factory {
 		"mom" => array (
 			"awards",
 			"community",
+			"communityadmin",
 			"configuration",
 			"course" => array (
 				"coursecontent",
@@ -1975,7 +1976,6 @@ class CommunityResource extends EntradaAclResource {
 	public function getResourceId() {
 		return "community".($this->specific ? $this->community_id : "");
 	}
-
 }
 
 class EntradaUser implements Zend_Acl_Role_Interface {

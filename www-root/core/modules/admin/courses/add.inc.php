@@ -1102,8 +1102,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						<tr>
 							<td><input type="checkbox" id="ldap_sync" name="sync_ldap" value ="1" <?php echo ((isset($PROCESSED["sync_ldap"]) && ($PROCESSED["sync_ldap"] == 1))?" checked=\"checked\"":"");?>/></td>
 							<td colspan="2">
-								<label for="sync_ldap" class="radio-group-title">Sync course with Queen's enrollment records.</label>
-								<div class="content-small">Checking this box will sync this course list with the Queen's LDAP server twice a day.</div>
+								<label for="sync_ldap" class="radio-group-title">Sync course with enrollment records.</label>
+								<div class="content-small">Checking this box will sync this course list with the LDAP server twice a day.</div>
 							</td>
 						</tr>			
 						<tr>
@@ -1176,7 +1176,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						</tr>
 						<tr>
 							<td>&nbsp;</td>
-							<td colspan="2" class="content-small"><span class="bold">Note:</span> Any audience members you associate here will be in addition to the class list synced with the course if you selected 'Sync course with Queen's enrollment records.'</td>
+							<td colspan="2" class="content-small"><span class="bold">Note:</span> Any audience members you associate here will be in addition to the class list synced with the course if you selected 'Sync course with enrollment records.'</td>
 						</tr>
 						<tr>
 							<td colspan="3">&nbsp;</td>

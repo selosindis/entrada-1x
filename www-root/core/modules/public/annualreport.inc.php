@@ -52,13 +52,13 @@ if(!defined("PARENT_INCLUDED")) {
 		$HEAD[] = "<link href=\"".ENTRADA_URL."/css/annualreport.css\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />\n";
 		$HEAD[] = "<link href=\"".ENTRADA_URL."/css/tabpane.css\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />\n";
 		$HEAD[] = "<link href=\"".ENTRADA_URL."/css/calendar.css\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />\n";
-		$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery.min.js\"></script>\n";
-		$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery-ui.min.js\"></script>\n";
-		$JQUERY[] = "<link href=\"".ENTRADA_URL."/css/jquery/jquery-ui.css\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />\n";
+		//$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery.min.js\"></script>\n";
+		//$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery-ui.min.js\"></script>\n";
+		//$JQUERY[] = "<link href=\"".ENTRADA_URL."/css/jquery/jquery-ui.css\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />\n";
 		
 		$JQUERY[] = "<link href=\"".ENTRADA_URL."/css/jquery/flexigrid.css\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />";
 		$JQUERY[] = "<script language=\"javascript\" type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/flexigrid.pack.js\"></script>\n";
-		$JQUERY[] = "<script type=\"text/javascript\">jQuery.noConflict();</script>";
+		//$JQUERY[] = "<script type=\"text/javascript\">jQuery.noConflict();</script>";
 		
 		/**
 		 * Add the Annual Report module secondary navigation.

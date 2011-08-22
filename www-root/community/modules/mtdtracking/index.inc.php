@@ -36,9 +36,20 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 	$mtd_service_code = "";
 	$mtd_service_description = "";
 
-	$mtd_service_id = $result["id"];
-	$mtd_service_code = $result["service_code"];
-	$mtd_service_description = $result["service_description"];
+	$mtd_service_id_arr = array();
+	$mtd_service_code_arr = array();
+	$mtd_service_description_arr = array();
+
+	//add the other services that Internal Medicine does tracking for
+	if ($result["service_description"] == "Internal Medicine") {
+		array_push($mtd_service_id_arr, $result["id"], "1", "10");
+		array_push($mtd_service_code_arr, $result["service_code"], "ALL", "END");
+		array_push($mtd_service_description_arr, $result["service_description"], "Allergy", "Endocrinology");
+	} else {
+		$mtd_service_id = $result["id"];
+		$mtd_service_code = $result["service_code"];
+		$mtd_service_description = $result["service_description"];
+	}
 
 	$query = "	SELECT *
 				FROM `mtd_facilities`
@@ -69,8 +80,15 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 
 	<script type="text/javascript" defer="defer">
 		jQuery(document).ready(function() {
+			var service_id = 0;
+			if (jQuery("#mtdservice_select").val()) {
+				service_id = jQuery("#mtdservice_select").val();
+			}
+			else {
+				service_id = jQuery("#service_id").val();
+			}
 			schedule = jQuery("#mtd_schedule").flexigrid({
-				url: '<?php echo COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL . "?section=api-mtd-load-schedule&service_id=" . $mtd_service_id; ?>',
+				url: '<?php echo COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL . "?section=api-mtd-load-schedule&service_id="?>' + service_id,
 				dataType: 'json',
 				method: 'POST',
 				colModel : [
@@ -161,8 +179,15 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 			});
 
 			jQuery('#year').change(function(e) {
+				var service_id = 0;
+				if (jQuery("#mtdservice_select").val()) {
+					service_id = jQuery("#mtdservice_select").val();
+				}
+				else {
+					service_id = jQuery("#service_id").val();
+				}
 				var year = jQuery(this).val();
-				var newURL = '<?php echo COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL . "?section=api-mtd-load-schedule&service_id=" . $mtd_service_id; ?>' + "&year=" + year;
+				var newURL = '<?php echo COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL . "?section=api-mtd-load-schedule&service_id=" ?>' + service_id + "&year=" + year;
 				window.setTimeout("schedule.flexOptions({url: '" + newURL + "'}).flexReload()", 1000);
 				//Redisplay the block dates for the newly selected year
 				var block = jQuery('#block_list').val();
@@ -174,9 +199,23 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 				}
 			});
 
-			jQuery('#download_button').click(function(e) {
+			jQuery('#mtdservice_select').change(function(e) {
+				var service_id = jQuery(this).val();
 				var year = jQuery('#year').val();
-				var url = '<?php echo COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL . "?section=export_schedule&service_id=" . $mtd_service_id; ?>' + "&year=" + year;
+				var newURL = '<?php echo COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL . "?section=api-mtd-load-schedule&year="?>' + year + "&service_id=" + service_id;
+				window.setTimeout("schedule.flexOptions({url: '" + newURL + "'}).flexReload()", 1000);
+			});
+
+			jQuery('#download_button').click(function(e) {
+				var service_id = 0;
+				if (jQuery("#mtdservice_select").val()) {
+					service_id = jQuery("#mtdservice_select").val();
+				}
+				else {
+					service_id = jQuery("#service_id").val();
+				}
+				var year = jQuery('#year').val();
+				var url = '<?php echo COMMUNITY_URL . $COMMUNITY_URL . ":" . $PAGE_URL . "?section=export_schedule&service_id=" ?>' + service_id + "&year=" + year;
 				window.location = url;
 			});
 
@@ -404,9 +443,20 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 			<ol id="duration_container" class="sortableList" style="display: none"></ol>
 			<div id="total_duration" class="content-small" style="margin-bottom: 10px">Total percent time: 0 %.</div>
 			<input type="hidden" id="mtdlocation_duration_order" name="mtdlocation_duration_order" value="" />
-
-			<?php echo "<label>Service Code: </label>" . $mtd_service_code . " (" . $mtd_service_description . ")"; ?>
+			<br />
+			<?php if (!empty($mtd_service_id_arr)) { 
+					  $i = 0;//loop counter ?>
+			<label for="mtdservice_select">Service:</label>
+			<select id="mtdservice_select" name="mtdservice_select">
+			<?php	foreach ($mtd_service_id_arr as $mtd_service_id_el) {
+						echo "<option value=\"" . $mtd_service_id_el . "\">" . $mtd_service_description_arr[$i] . "</option>";
+						$i++;
+				} ?>
+			</select>
+			<?php } else {
+				    echo "<label>Service Code: </label>" . $mtd_service_code . " (" . $mtd_service_description . ")"; ?>
 					<input type="hidden" id ="service_id" name="service_id" value="<?php echo $mtd_service_id ?>" />
+			<?php } ?>
 					<p>
 						<input id="add_submit" type="submit" value="Add" style="margin-right:20px"/><a href="#" id="clearForm" onclick="clearForm();return false;">Clear Form</a>
 					</p>

@@ -931,8 +931,11 @@ CREATE TABLE IF NOT EXISTS `assessments` (
   `narrative` tinyint(1) NOT NULL DEFAULT '0',
   `required` tinyint(1) NOT NULL DEFAULT '1',
   `characteristic_id` int(4) NOT NULL,
+  `show_learner` tinyint(1) NOT NULL DEFAULT '0',
+  `release_date` bigint(64) NOT NULL DEFAULT '0',
+  `release_until` bigint(64) NOT NULL DEFAULT '0',
   PRIMARY KEY (`assessment_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=114 DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `assessment_options` (
   `aoption_id` int(12) NOT NULL AUTO_INCREMENT,
@@ -969,7 +972,7 @@ INSERT INTO `assessments_lu_meta` (`organisation_id`, `type`, `title`) VALUES
 ('1', '8', 'RAT'),
 ('1', '9', 'Reflection'),
 ('1', '5', 'Self-assessment'),
-('1', '5', 'Other assessments')
+('1', '5', 'Other assessments');
 
 CREATE TABLE IF NOT EXISTS `assessments_lu_meta_options` (
   `id` int(12) unsigned NOT NULL AUTO_INCREMENT,
@@ -982,7 +985,7 @@ INSERT INTO `assessments_lu_meta_options` (`title`) VALUES
 ('Essay questions'),
 ('Fill-in, short answer questions'),
 ('Multiple-choice, true/false, matching questions'),
-('Problem-solving written exercises')
+('Problem-solving written exercises');
 
 CREATE TABLE `assessment_exceptions` (
   `aexception_id` int(12) NOT NULL auto_increment,

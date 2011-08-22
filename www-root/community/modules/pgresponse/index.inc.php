@@ -54,6 +54,8 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_PGRESPONSE"))) {
 	<h3>The following ITER and Faculty Evaluation Completion Rate data covers blocks 9 to 11 as of <?php echo date_format(date_create($max_gen_date), "F j, Y"); ?></h3>
 	<br />
 <?php
+	$response_rate_result_flag = 0;//If true then the PGME Overall response rates will be shown too.
+	
 	foreach ($one45_names_array as $one45_name) {
 		$resident_completed = 0;
 		$resident_distributed = 0;
@@ -64,30 +66,26 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_PGRESPONSE"))) {
 		// Get the response rates for this program
 		$query = "SELECT *
 			  FROM  `pg_eval_response_rates`
-			  WHERE `program_name` in (" . $one45_name . ")
+			  WHERE `program_name` = " . $one45_name . "
 			  AND gen_date = '" . $max_gen_date . "'";
 
 		$results = $db->GetAll($query);
-		$resident_count = 0;
-		$faculty_count = 0;
+
 		foreach ($results as $result) {
 
 			if ($result["response_type"] == "Resident") {
-				$resident_count++;
-				$resident_completed += $result["completed"];
-				$resident_distributed += $result["distributed"];
-				$resident_percent_complete += $result["percent_complete"];
+				$resident_completed = $result["completed"];
+				$resident_distributed = $result["distributed"];
+				$resident_percent_complete = $result["percent_complete"];
 			} else if ($result["response_type"] == "Faculty") {
-				$faculty_count++;
-				$faculty_completed += $result["completed"];
-				$faculty_distributed += $result["distributed"];
-				$faculty_percent_complete += $result["percent_complete"];
+				$faculty_completed = $result["completed"];
+				$faculty_distributed = $result["distributed"];
+				$faculty_percent_complete = $result["percent_complete"];
 			}
 		}
-		$resident_percent_complete = $resident_percent_complete / $resident_count;
-		$faculty_percent_complete = $faculty_percent_complete / $faculty_count;
 
 		if ($resident_distributed && $faculty_distributed) {
+			$response_rate_result_flag = 1; //This program has at least one set of results.
 ?>
 			<strong><?php echo substr($one45_name, 1, strlen($one45_name) - 2) ?></strong>
 			<br />
@@ -114,7 +112,7 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_PGRESPONSE"))) {
 <?php
 		}
 	}
-	if ($resident_distributed && $faculty_distributed) {
+	if ($response_rate_result_flag && $total_resident_response_rate && $total_faculty_response_rate) {
 ?>
 		<div id="total_response">
 			<strong>Overall Postgrad Medicine Totals</strong>

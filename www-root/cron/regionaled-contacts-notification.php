@@ -25,6 +25,8 @@
  */
 require_once("init.inc.php");
 
+global $ENTRADA_ACTIVE_TEMPLATE;
+
 $search = array("%CONTACT_NAME%", "%APARTMENT_TITLE%", "%OCCUPANTS_AND_DATES%", "%REGIONALED_CONTACT%", "%APPLICATION_NAME%");
 
 
@@ -73,7 +75,7 @@ foreach ($apartments as $apartment) {
 			$occupants_list .= $occupant_name." will be staying from ".date("l F j Y @ g:i A",  strtotime($occupant["inhabiting_start"]))." to ".date("l F j Y @ g:i A",  strtotime($occupant["inhabiting_finish"])).".\n";
 		}
 		if (!isset($occupants_email)) {
-			$occupants_email = file_get_contents(ENTRADA_ABSOLUTE . "/templates/" . DEFAULT_TEMPLATE . "/email/regionaled-apartment-occupants-monthly-notification.txt");
+			$occupants_email = file_get_contents(ENTRADA_ABSOLUTE . "/templates/" . $ENTRADA_ACTIVE_TEMPLATE . "/email/regionaled-apartment-occupants-monthly-notification.txt");
 		}
 		
 		//send to super
@@ -101,7 +103,7 @@ foreach ($apartments as $apartment) {
 		}
 	} else {
 		if (!isset($no_occupants_email)) {
-			$no_occupants_email = file_get_contents(ENTRADA_ABSOLUTE . "/templates/" . DEFAULT_TEMPLATE . "/email/regionaled-apartment-no-occupants-monthly-notification.txt");
+			$no_occupants_email = file_get_contents(ENTRADA_ABSOLUTE . "/templates/" . $ENTRADA_ACTIVE_TEMPLATE . "/email/regionaled-apartment-no-occupants-monthly-notification.txt");
 		}
 
 		$replace = array($apartment["super_full"], $apartment["apartment_title"], "", $AGENT_CONTACTS["agent-regionaled"]["name"], "Entrada");

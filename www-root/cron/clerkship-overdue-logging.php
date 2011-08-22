@@ -22,6 +22,7 @@
  * Include the Entrada init code.
  */
 require_once("init.inc.php");
+global $ENTRADA_ACTIVE_TEMPLATE;
 
 $query		= "	SELECT a.*, b.`etype_id` as `proxy_id`, c.*, CONCAT_WS(' ', e.`firstname`, e.`lastname`) as `fullname`, MIN(a.`event_start`) as `start`, MAX(a.`event_finish`) AS `finish`
 				FROM `".CLERKSHIP_DATABASE."`.`events` AS a
@@ -147,7 +148,7 @@ if ($results) {
 														ENTRADA_URL
 													);
 									
-									$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(WEBSITE_ABSOLUTE."/templates/".DEFAULT_TEMPLATE."/email/clerkship-deficiency-admin-notification.txt");
+									$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(WEBSITE_ABSOLUTE."/templates/".$ENTRADA_ACTIVE_TEMPLATE."/email/clerkship-deficiency-admin-notification.txt");
 									$mail->setBodyText(clean_input(str_replace($search, $replace, $NOTIFICATION_MESSAGE["textbody"]), array("postclean")));
 									
 									if ($rotation["pcoord_id"]) {
@@ -212,7 +213,7 @@ if ($results) {
 								$last_notified = $db->GetOne($query);
 								
 								if ($last_notified <= (strtotime("-1 week"))) {
-									$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(WEBSITE_ABSOLUTE."/templates/".DEFAULT_TEMPLATE."/email/clerkship-deficiency-clerk-notification.txt");
+									$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(WEBSITE_ABSOLUTE."/templates/".$ENTRADA_ACTIVE_TEMPLATE."/email/clerkship-deficiency-clerk-notification.txt");
 									
 									$search	= array(
 														"%ROTATION_TITLE%",

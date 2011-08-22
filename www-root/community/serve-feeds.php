@@ -905,7 +905,8 @@ if ($page_id) {
 				 * Setup Zend_Translate for language file support.
 				 */
 				if ($ENTRADA_CACHE) Zend_Translate::setCache($ENTRADA_CACHE);
-				$translate = new Zend_Translate("array", ENTRADA_ABSOLUTE."/templates/".DEFAULT_TEMPLATE."/languages/".DEFAULT_LANGUAGE.".lang.php", DEFAULT_LANGUAGE);
+				global $ENTRADA_ACTIVE_TEMPLATE;
+				$translate = new Zend_Translate("array", ENTRADA_ABSOLUTE."/templates/".$ENTRADA_ACTIVE_TEMPLATE."/languages/".DEFAULT_LANGUAGE.".lang.php", DEFAULT_LANGUAGE);
 
 				foreach ($rss_output as $result) {
 					

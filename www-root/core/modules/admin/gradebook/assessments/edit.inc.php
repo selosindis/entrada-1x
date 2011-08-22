@@ -123,6 +123,33 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							$ERROR++;
 							$ERRORSTR[] = "The <strong>Marking Scheme</strong> field is a required field.";
 						}
+						//Show in learner gradebook check
+						if ((isset($_POST["show_learner_option"]))) {
+							switch ($show_learner_option = clean_input($_POST["show_learner_option"], array("trim", "int"))) {
+								case 0 :
+									$PROCESSED["show_learner"] = $show_learner_option;
+									$PROCESSED["release_date"] = 0;
+									$PROCESSED["release_until"] = 0;
+								break;
+								case 1 :
+									$PROCESSED["show_learner"] = $show_learner_option;
+									$release_dates = validate_calendars("show", false, false);
+									if ((isset($release_dates["start"])) && ((int) $release_dates["start"])) {
+										$PROCESSED["release_date"]	= (int) $release_dates["start"];
+									} else {
+										$PROCESSED["release_date"]	= 0;
+									}
+									if ((isset($release_dates["finish"])) && ((int) $release_dates["finish"])) {
+										$PROCESSED["release_until"]	= (int) $release_dates["finish"];
+									} else {
+										$PROCESSED["release_until"]	= 0;
+									}
+								break;
+								default :
+									$PROCESSED["show_learner"] = 0;
+								break;
+							}
+						}
 						//narrative check
 						if ((isset($_POST["narrative_assessment"])) && ($narrative = clean_input($_POST["narrative_assessment"], array("trim", "int")))) {
 							$PROCESSED["narrative"] = $narrative;
@@ -178,7 +205,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								}
 							}
 						}
-
 						if (isset($_POST["post_action"])) {
 							if (@in_array($_POST["post_action"], array("new", "index", "parent", "grade"))) {
 								$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] = $_POST["post_action"];
@@ -456,8 +482,31 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 									<tr>
 										<td colspan="3">&nbsp;</td>
 									</tr>
+								</tbody>
+								<tbody>
 									<tr>
-										<td><input type="checkbox" id="narrative_assessment" name="narrative_assessment" value="1" <?php echo (($PROCESSED["narrative"] == 1)) ? " checked=\"checked\"" : "" ?> /></td>
+										<td colspan="3"><input type="radio" name="show_learner_option" value="0" id="show_learner_option_0" <?php echo (($PROCESSED["show_learner"] == 0)) ? " checked=\"checked\"" : "" ?> style="margin-right: 5px;" /><label class="form-nrequired" for="show_learner_option_0">Don't Show this Assessment in Learner Gradebook</label></td>
+									</tr>
+									<tr>
+										<td colspan="3"><input type="radio" name="show_learner_option" value="1" id="show_learner_option_1" <?php echo (($PROCESSED["show_learner"] == 1)) ? " checked=\"checked\"" : "" ?> style="margin-right: 5px;" /><label class="form-nrequired" for="show_learner_option_1">Show this Assessment in Learner Gradebook</label></td>
+									</tr>
+									<tr>
+										<td colspan="3">&nbsp;</td>
+									</tr>
+								</tbody>
+								<tbody id="gradebook_release_options" style="display: none;">
+									<tr>
+										<td></td>
+										<td><?php echo generate_calendars("show", "", true, true, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : time()), true, false, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0), true, false, " in Gradebook After", " in Gradebook Until"); ?></td>
+										<td></td>
+									</tr>
+									<tr>
+										<td colspan="3">&nbsp;</td>
+									</tr>
+								</tbody>
+								<tbody>
+									<tr>
+										<td><input type="checkbox" id="narrative_assessment" name="narrative_assessment" value="1" <?php echo (($PROCESSED["narrative"] == 1)) ? " checked=\"checked\"" : ""?> /></td>
 										<td colspan="2">
 											<label for="narrative_assessment" class="form-nrequired">This is a <strong>narrative assessment</strong>.</label>
 										</td>
@@ -513,6 +562,24 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 											jQuery('#assessment_options').show();
 										} else {
 											jQuery('#assessment_options').hide();
+										}
+									});
+									
+									jQuery("input[name='show_learner_option']").change(function(){
+										if (jQuery("input[name='show_learner_option']:checked").val() == 1) {
+											jQuery('#gradebook_release_options').show();
+										}
+										else if (jQuery("input[name='show_learner_option']:checked").val() == 0) {
+											jQuery('#gradebook_release_options').hide();
+										}
+									});
+
+									jQuery(document).ready(function(){
+										if (jQuery("input[name='show_learner_option']:checked").val() == 1) {
+											jQuery('#gradebook_release_options').show();
+										}
+										else if (jQuery("input[name='show_learner_option']:checked").val() == 0) {
+											jQuery('#gradebook_release_options').hide();
 										}
 									});
 										

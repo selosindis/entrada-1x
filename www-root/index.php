@@ -474,8 +474,9 @@ if (($MODULE == "login") && (!isset($_SERVER["HTTPS"])) && ((!defined("AUTH_FORC
 }
 
 define("PARENT_INCLUDED", true);
+global $ENTRADA_ACTIVE_TEMPLATE;
 
-require_once (ENTRADA_ABSOLUTE."/templates/".DEFAULT_TEMPLATE."/layouts/public/header.tpl.php");
+require_once (ENTRADA_ABSOLUTE."/templates/".$ENTRADA_ACTIVE_TEMPLATE."/layouts/public/header.tpl.php");
 
 switch ($MODULE) {
 	case "privacy_policy" :
@@ -563,7 +564,7 @@ switch ($MODULE) {
 	break;
 }
 
-require_once(ENTRADA_ABSOLUTE."/templates/".DEFAULT_TEMPLATE."/layouts/public/footer.tpl.php");
+require_once(ENTRADA_ABSOLUTE."/templates/".$ENTRADA_ACTIVE_TEMPLATE."/layouts/public/footer.tpl.php");
 
 /**
  * Add the Feedback Sidebar Window.

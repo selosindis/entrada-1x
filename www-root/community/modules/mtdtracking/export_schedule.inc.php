@@ -62,7 +62,8 @@ if (!defined("IN_MTDTRACKING")) {
 				 `mtd_schedule`.`end_date`, `user_data_resident`.`cpso_no`,
 				 `user_data_resident`.`student_no`,`mtd_schools`.`school_code`,
 				 `mtd_locale_duration`.`percent_time`, `mtd_moh_program_codes`.`program_code`,
-				 `mtd_moh_service_codes`.`service_code`, `mtd_categories`.`category_code`
+				 `mtd_moh_service_codes`.`service_code`, `mtd_categories`.`category_code`,
+				 `mtd_type`.`type_description`
 		  FROM  `" . DATABASE_NAME . "`.`mtd_schedule`,
 				`" . DATABASE_NAME . "`.`mtd_facilities`,
 				`" . AUTH_DATABASE . "`.`user_data_resident`,
@@ -70,7 +71,8 @@ if (!defined("IN_MTDTRACKING")) {
 				`" . DATABASE_NAME . "`.`mtd_schools`,
 				`" . DATABASE_NAME . "`.`mtd_moh_program_codes`,
 				`" . DATABASE_NAME . "`.`mtd_moh_service_codes`,
-				`" . DATABASE_NAME . "`.`mtd_categories`
+				`" . DATABASE_NAME . "`.`mtd_categories`,
+				`" . DATABASE_NAME . "`.`mtd_type`
 	      WHERE `mtd_schedule`.`id` = `mtd_locale_duration`.`schedule_id`
 		  AND `mtd_facilities`.`id` = `mtd_locale_duration`.`location_id`
 		  AND `mtd_schedule`.`service_id` = '" . $PROCESSED["service_id"] . "'
@@ -79,6 +81,7 @@ if (!defined("IN_MTDTRACKING")) {
 		  AND `mtd_moh_program_codes`.`id` = `user_data_resident`.`program_id`
 		  AND `mtd_moh_service_codes`.`id` = `mtd_schedule`.`service_id`
 		  AND `mtd_categories`.`id` = `user_data_resident`.`category_id`
+		  AND `mtd_schedule`.`type_code` = `mtd_type`.`type_code`
 		  AND date_format(`mtd_schedule`.`start_date`, '%Y-%m-%d') between '" . $year_min . "-07-01' AND '" . $year_max . "-06-30'
 		  ORDER BY start_date DESC";
 
@@ -94,7 +97,7 @@ if (!defined("IN_MTDTRACKING")) {
 	header("Content-Type:  application/vnd.ms-excel");
 	header("Content-Disposition: attachment; filename=\"mtd_schedule.csv\"");
 
-	echo "\"School_Code\",\"CPSO_No\",\"Student_No\",\"Program_Code\",\"First_Name\",\"Last_Name\",\"Category_Code\",\"Service_Code\",\"Location\",\"Start_Date\",\"End_Date\",\"Percent_Time\"\n";
+	echo "\"School_Code\",\"CPSO_No\",\"Student_No\",\"Program_Code\",\"First_Name\",\"Last_Name\",\"Category_Code\",\"Service_Code\",\"Location\",\"Start_Date\",\"End_Date\",\"Percent_Time\",\"Type\"\n";
 
 	if ($results) {
 		//an array for holding each line of the result set before echoing it
@@ -114,6 +117,7 @@ if (!defined("IN_MTDTRACKING")) {
 			$line["start_date"] = $result["start_date"];
 			$line["end_date"] = $result["end_date"];
 			$line["percent_time"] = $result["percent_time"];
+			$line["type_description"] = $result["type_description"];
 			echo implode(",", $line) . "\n";
 		}
 	} else {

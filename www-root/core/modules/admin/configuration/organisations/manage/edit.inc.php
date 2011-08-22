@@ -59,7 +59,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 								$result = $db->GetRow($query);
 								if ($result) {
 									$PROCESSED["province_id"] = $tmp_input;
-									$PROCESSED["organisation_province"] = $result["province"];
+									$PROCESSED["organisation_province"] = $result["abbreviation"];
 								} else {
 									$ERROR++;
 									$ERRORSTR[] = "The province / state you have selected does not appear to exist in our database. Please selected a valid province / state.";
@@ -137,6 +137,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 					$ERRORSTR[] = "You must provide a description for this organisation.";
 				}
 
+				if (isset($_POST["template"]) && ($tmp_input = clean_input($_POST["template"], array("trim", "notags")))) {
+					$PROCESSED["template"] = $tmp_input;
+				} else {
+					//Default to the default template if no template selected.
+					if (DEFAULT_TEMPLATE) {
+						$PROCESSED["template"] = DEFAULT_TEMPLATE;
+					} else {
+						$ERROR++;
+						$ERRORSTR[] = "No template found.";
+					}
+				}
+
 				if (!$ERROR) {
 					$PROCESSED["updated_last"] = time();
 					$PROCESSED["updated_by"] = $_SESSION["details"]["id"];
@@ -177,20 +189,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 				$PROCESSED["organisation_email"] = $ORGANISATION["organisation_email"];
 				$PROCESSED["organisation_url"] = $ORGANISATION["organisation_url"];
 				$PROCESSED["organisation_desc"] = $ORGANISATION["organisation_desc"];
+				$PROCESSED["template"] = $ORGANISATION["template"];
 
 				$query = "SELECT * FROM `global_lu_countries` WHERE `country` = " . $db->qstr($PROCESSED["organisation_country"]);
 				$result = $db->GetRow($query);
 				if ($result) {
 					$PROCESSED["countries_id"] = $result["countries_id"];
-					$query = "SELECT * FROM `global_lu_provinces` WHERE `province` = " . $db->qstr($PROCESSED["organisation_province"]); //." AND `country_id` = ".$db->qstr($PROCESSED["countries_id"]);
-					//SELECT * FROM `global_lu_provinces` WHERE `province` =  AND `country_id` = ;
-					$result = $db->GetRow($query);
-					if ($result) {
-						$PROCESSED["province_id"] = $result["province_id"];
-					}
 				}
-
-
+				$query = "SELECT * FROM `global_lu_provinces` WHERE `abbreviation` = " . $db->qstr($PROCESSED["organisation_province"]);
+				$result = $db->GetRow($query);
+				if ($result) {
+					$PROCESSED["province_id"] = $result["province_id"];
+				}
 
 				break;
 		}
@@ -225,11 +235,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 					}
 					?>
 
-
-
-
 					<script type="text/javascript">
-
 
 						function provStateFunction(countries_id) {
 							var url='<?php echo webservice_url("province"); ?>';
@@ -401,6 +407,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 									<td><label for="province_id" class="form-required">Province / State</label></td>
 									<td>
 										<div id="prov_state_div">Please select a <strong>Country</strong> from above first.</div>
+										
 									</td>
 								</tr>
 								<tr>
@@ -455,6 +462,31 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 									<td><label for="description_id" class="form-required">Description</label></td>
 									<td>
 										<input type="text" id="organisation_desc" name="organisation_desc" value="<?php echo html_encode($PROCESSED["organisation_desc"]); ?>" style="width: 250px" />
+									</td>
+								</tr>
+								<tr>
+									<td><label for="template" class="form-required">Template</label></td>
+									<td>										
+											<?php
+											$templates = fetch_templates();
+											if (is_array($templates) && count($templates)) {
+											?>
+											<select id="template" name="template" style="width: 250px">												
+											<?php
+												foreach ($templates as $template) { ?>
+													<option value="<?php echo $template; ?>"
+															<?php echo (($PROCESSED["template"] == $template) ? "selected=selected" : ""); ?> >
+														<?php echo $template; ?>
+													</option>
+											<?php
+												}
+											?>
+											</select>
+											<?php
+											} else {
+												echo  html_encode($PROCESSED["template"]) . " (not modifiable for this organisation)";
+											}
+											?>
 									</td>
 								</tr>
 							</tbody>

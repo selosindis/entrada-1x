@@ -48,6 +48,7 @@ if($COMMUNITY_ID){
 	$result = $db->GetRow($query);
 	
 	$BREADCRUMB[] = array("url" => ENTRADA_URL."/community".$result["community_url"], "title" => $result["community_title"]);
+	$BREADCRUMB[]		= array("url" => ENTRADA_URL."/communities/reports?community=".$COMMUNITY_ID, "title" => "Reports");
 
 	if (($router) && ($router->initRoute())) {
 		$PREFERENCES = preferences_load($MODULE);

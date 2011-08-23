@@ -1671,7 +1671,7 @@ CREATE TABLE IF NOT EXISTS `courses` (
   FULLTEXT KEY `course_objectives` (`course_objectives`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-CREATE TABLE `course_audience`(
+CREATE TABLE IF NOT EXISTS `course_audience`(
 	`caudience_id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY, 
 	`course_id` INT NOT NULL, 
 	`audience_type` ENUM('proxy_id','group_id') NOT NULL, 
@@ -1679,7 +1679,6 @@ CREATE TABLE `course_audience`(
 	`cperiod_id` int(11) NOT NULL,
 	`enroll_finish` BIGINT NOT NULL, 
 	`audience_active` INT(1) NOT NULL DEFAULT '1', 
- KEY `event_id` (`event_id`), 
  KEY `audience_type` (`audience_type`), 
  KEY `audience_value` (`audience_value`), 
  KEY `audience_active` (`audience_active`)

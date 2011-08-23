@@ -67,14 +67,19 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 		header("Content-Length: ".$filesize);
 		header("Content-Transfer-Encoding: binary");
 					
-				
 		echo file_get_contents(ANNUALREPORT_STORAGE."/".$FILE, FILE_BINARY);
-				
-		// delete the files (PDF and HTML).
+		
+		$extension = explode(".", $FILE);
+		$extension = $extension["1"];
+		
+		// delete the files (PDF and HTML or TXT).
 		unlink(ANNUALREPORT_STORAGE."/".$FILE);
-		$FILE = str_replace(".pdf", ".html", $FILE);
-		unlink(ANNUALREPORT_STORAGE."/".$FILE);
+		if($extension == "pdf") {
+			$FILE = str_replace(".pdf", ".html", $FILE);
+			unlink(ANNUALREPORT_STORAGE."/".$FILE);
+		}
 		exit;
+		
 	} else {
 		$TITLE	= "Not Found";
 		$BODY	= display_notice(array("The file that you are trying to download (<strong>".html_encode($result["file_name"])."</strong>) does not exist in the filesystem.<br /><br />Please contact a system administrator or a teacher listed on the <a href=\"".ENTRADA_URL."/events?id=".$result["event_id"]."\" style=\"font-weight: bold\">event page</a>."));

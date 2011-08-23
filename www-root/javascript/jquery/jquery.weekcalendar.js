@@ -1430,8 +1430,7 @@
    });
 
    $.extend($.ui.weekCalendar, {
-      version: '1.2.2-pre',
-
+      version: '1.2.2-pre'
    });
 
    var MILLIS_IN_DAY = 86400000;

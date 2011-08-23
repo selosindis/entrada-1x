@@ -26,17 +26,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 } elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	header("Location: ".ENTRADA_URL);
 	exit;
-} elseif (!$ENTRADA_ACL->amIAllowed('eventcontent', 'update', false)) {
-	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/".$MODULE."\\'', 15000)";
-
-	$ERROR++;
-	$ERRORSTR[]	= "Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
+} elseif (!$ENTRADA_ACL->amIAllowed("eventcontent", "update", false)) {
+	add_error("Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.");
 
 	echo display_error();
 
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
-
 	/**
 	 * Load the rich text editor.
 	 */
@@ -1212,10 +1208,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						<?php
 						if (!$ENTRADA_ACL->amIAllowed(new EventContentResource($event_info["event_id"], $event_info["course_id"], $event_info["organisation_id"]), "update")) {
 							echo "	<tr>\n";
-							echo "	<td>&nbsp;</td>\n";
-							echo "		<td>Phase / Term</td>\n";
-							echo "		<td>".strtoupper($event_info["event_phase"])."</td>\n";
-							echo "	</tr>\n";
 							echo "	<tr>\n";
 							echo "	<td>&nbsp;</td>\n";
 							echo "		<td>Course</td>\n";
@@ -1316,26 +1308,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								</ol>
 								<div id="total_duration" class="content-small">Total time: 0 minutes.</div>
 								<input id="eventtype_duration_order" name="eventtype_duration_order" style="display: none;">
-							</td>
-						</tr>
-						<tr>
-							<td colspan="3">&nbsp;</td>
-						</tr>
-						<tr>
-							<td></td>
-							<td><label for="event_phase" class="form-nrequired">Term / Phase</label></td>
-							<td>
-								<select id="event_phase" name="event_phase" style="width: 203px">
-									<option value="1"<?php echo (($PROCESSED["event_phase"] == "1") ? " selected=\"selected\"" : "") ?>>Term 1</option>
-									<option value="2"<?php echo (($PROCESSED["event_phase"] == "2") ? " selected=\"selected\"" : "") ?>>Term 2</option>
-									<option value="T3"<?php echo (($PROCESSED["event_phase"] == "T3") ? " selected=\"selected\"" : "") ?>>Term 3</option>
-									<option value="T4"<?php echo (($PROCESSED["event_phase"] == "T4") ? " selected=\"selected\"" : "") ?>>Term 4</option>
-									<option value="2A"<?php echo (($PROCESSED["event_phase"] == "2A") ? " selected=\"selected\"" : "") ?>>Phase 2A</option>
-									<option value="2B"<?php echo (($PROCESSED["event_phase"] == "2B") ? " selected=\"selected\"" : "") ?>>Phase 2B</option>
-									<option value="2C"<?php echo (($PROCESSED["event_phase"] == "2C") ? " selected=\"selected\"" : "") ?>>Phase 2C</option>
-									<option value="2E"<?php echo (($PROCESSED["event_phase"] == "2E") ? " selected=\"selected\"" : "") ?>>Phase 2E</option>
-									<option value="3"<?php echo (($PROCESSED["event_phase"] == "3") ? " selected=\"selected\"" : "") ?>>Phase 3</option>
-								</select>
 							</td>
 						</tr>
 						<tr>

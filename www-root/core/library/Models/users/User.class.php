@@ -24,7 +24,7 @@
 */
 
 require_once("Models/organisations/Organisation.class.php");
-require_once("Models/users/GraduatingClass.class.php");
+require_once("Models/users/Cohort.class.php");
 
 /**
  * User class with basic information and access to user related info
@@ -41,6 +41,7 @@ class User {
 			$lastname,
 			$number,
 			$grad_year,
+			$cohort,
 			$entry_year,
 			$password,
 			$organisation_id,
@@ -130,12 +131,28 @@ class User {
 	}
 	
 	/**
-	 * Returns the entire class of the same grad year
-	 * @return GraduatingClass
+	 * Returns the cohort of the user, if available
+	 * @return int
 	 */
-	function getGraduatingClass() {
-		if ($this->grad_year) {
-			return GraduatingClass::get($this->grad_year);
+	function getCohort() {
+		return $this->cohort;
+	}
+	
+	/**
+	 * Sets the cohort of the user, if available
+	 * @param int $value : The cohort with which the given user is associated.
+	 */
+	public function setCohort($value) {
+		$this->cohort = $value;
+	}
+	
+	/**
+	 * Returns the entire class of the same cohort
+	 * @return Cohort
+	 */
+	function getFullCohort() {
+		if ($this->cohort) {
+			return Cohort::get($this->cohort);
 		}
 	}
 	
@@ -318,6 +335,16 @@ class User {
 
 		if ($result) {
 			$user = self::fromArray($result, $user);
+		}
+		
+		$query = "SELECT a.`group_id` FROM `groups` AS a
+					JOIN `group_members` AS b
+					ON a.`group_id` = b.`group_id`
+					WHERE a.`group_type` = 'cohort'
+					AND b.`proxy_id` = ?";
+		$result = $db->getOne($query, array($proxy_id));
+		if ($result) {
+			$user->setCohort($result);
 		}
 
 		//get all of the users orgs

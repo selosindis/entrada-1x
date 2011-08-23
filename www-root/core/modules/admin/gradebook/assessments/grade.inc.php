@@ -65,7 +65,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						WHERE `assessments`.`assessment_id` = ".$db->qstr($ASSESSMENT_ID);
 			$assessment = $db->GetRow($query);
 			if ($assessment) {
-				$GRAD_YEAR = $assessment["grad_year"];
+				$COHORT = $assessment["cohort"];
 				
 				courses_subnavigation($course_details);
 
@@ -86,7 +86,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				}	
 				</style>
 				<div>
-					<h1 class="event-title"><?php echo $assessment["name"]; ?> (Class of <?php echo $assessment["grad_year"]; ?>)</h1>
+					<h1 class="event-title"><?php echo $assessment["name"]; ?> (Class of <?php echo $assessment["cohort"]; ?>)</h1>
 				</div>
 				<div style="float: left; width: 440px;">
 					<h2 style="border-bottom: none; margin-bottom: 3px; margin-top: 0;"><?php echo $assessment["type"]; ?> Assessment</h2>
@@ -102,7 +102,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				<?php
 				$query = "	SELECT b.`id` AS `proxy_id`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, b.`number`, g.`grade_id` AS `grade_id`, g.`value` AS `grade_value`, h.`grade_weighting`
 							FROM `".AUTH_DATABASE."`.`user_data` AS b
-							LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS c
+							JOIN `".AUTH_DATABASE."`.`user_access` AS c
 							ON c.`user_id` = b.`id` 
 							AND c.`app_id`=".$db->qstr(AUTH_APP_ID)."
 							AND c.`account_active` = 'true'
@@ -114,8 +114,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							LEFT JOIN `assessment_exceptions` AS h
 							ON b.`id` = h.`proxy_id`
 							AND g.`assessment_id` = h.`assessment_id`
+							JOIN `group_members` AS i
+							ON b.`id` = i.`proxy_id`
 							WHERE c.`group` = 'student'
-							AND c.`role` = ".$db->qstr($GRAD_YEAR)."
+							AND i.`group_id` = ".$db->qstr($COHORT)."
 							ORDER BY b.`lastname` ASC, b.`firstname` ASC";
 				$students = $db->GetAll($query);
 				$editable = $ENTRADA_ACL->amIAllowed(new GradebookResource($course_details["course_id"], $course_details["organisation_id"]), "update") ? "gradebook_editable" : "gradebook_not_editable";
@@ -376,7 +378,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				<?php
 				else:
 				?>
-				<div class="display-notice">There are no students in the system for this assessment's Graduating Year <strong><?php echo $GRAD_YEAR; ?></strong>.</div>
+				<div class="display-notice">There are no students in the system for this assessment's Cohort: <strong><?php echo groups_get_name($COHORT); ?></strong>.</div>
 				<?php endif;
 			} else {
 				$ERROR++;

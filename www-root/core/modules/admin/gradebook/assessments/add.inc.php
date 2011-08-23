@@ -62,11 +62,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 			// Error Checking
 			switch($STEP) {
 				case 2 :
-					if((isset($_POST["grad_year"])) && ($grad_year = clean_input($_POST["grad_year"], "credentials"))) {
-						$PROCESSED["grad_year"] = $grad_year;
+					if((isset($_POST["cohort"])) && ($cohort = clean_input($_POST["cohort"], "credentials"))) {
+						$PROCESSED["cohort"] = $cohort;
 					} else {
 						$ERROR++;
-						$ERRORSTR[] = "You must select a <strong>Graduating Year</strong> for this assessment.";
+						$ERRORSTR[] = "You must select a <strong>Cohort</strong> for this assessment.";
 					}
 
 					if((isset($_POST["name"])) && ($name = clean_input($_POST["name"], array("notags", "trim")))) {
@@ -298,35 +298,32 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 			<form action="<?php echo ENTRADA_URL; ?>/admin/gradebook/assessments?<?php echo replace_query(array("step" => 2)); ?>" method="post">
 				<h2>Assessment Details</h2>
 				<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Adding Assessment">
-					<colgroup>
-						<col style="width: 3%" />
-						<col style="width: 22%" />
-						<col style="width: 75%" />
-					</colgroup>
-					<tbody>
-						<tr>
-							<td></td>
-							<td><label class="form-nrequired">Course Name</label></td>
-							<td>
-								<a href="<?php echo ENTRADA_URL; ?>/admin/gradebook?<?php echo replace_query(array("step" => false, "section" => "view")); ?>"><?php echo html_encode($course_details["course_name"]); ?></a>
-							</td>
-						</tr>
-						<tr>
-							<td colspan="3">&nbsp;</td>
-						</tr>
-						<tr>
-							<td></td>
-							<td><label for="grad_year" class="form-required">Graduating Year</label></td>
-							<td>
-								<select id="grad_year" name="grad_year" style="width: 250px">
-								<?php
-								$cut_off_year = (fetch_first_year() - 3);
-								if (isset($SYSTEM_GROUPS["student"]) && !empty($SYSTEM_GROUPS["student"])) {
-									foreach ($SYSTEM_GROUPS["student"] as $class) {
-										if (clean_input($class, "numeric") >= $cut_off_year) {
-											echo "<option value=\"".$class."\"".(($PROCESSED["grad_year"] == $class) ? " selected=\"selected\"" : "").">Class of ".html_encode($class)."</option>\n";
-										}
-									}
+				<colgroup>
+					<col style="width: 3%" />
+					<col style="width: 22%" />
+					<col style="width: 75%" />
+				</colgroup>
+				<tbody>
+					<tr>
+						<td></td>
+						<td><label class="form-nrequired">Course Name</label></td>
+						<td>
+							<a href="<?php echo ENTRADA_URL; ?>/admin/gradebook?<?php echo replace_query(array("step" => false, "section" => "view")); ?>"><?php echo html_encode($course_details["course_name"]); ?></a>
+						</td>
+					</tr>
+					<tr>
+						<td colspan="3">&nbsp;</td>
+					</tr>
+					<tr>
+						<td></td>
+						<td><label for="cohort" class="form-required">Cohort</label></td>
+						<td>
+							<select id="cohort" name="cohort" style="width: 250px">
+							<?php
+							$active_cohorts = groups_get_active_cohorts($ENTRADA_USER->getActiveOrganisation());
+							if (isset($active_cohorts) && !empty($active_cohorts)) {
+								foreach ($active_cohorts as $cohort) {
+									echo "<option value=\"".$cohort["group_id"]."\"".(($PROCESSED["cohort"] == $cohort["group_id"]) ? " selected=\"selected\"" : "").">".html_encode($cohort["group_name"])."</option>\n";
 								}
 								?>
 								</select>							

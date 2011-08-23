@@ -313,7 +313,7 @@ class Task {
 		foreach($task_recipients as $task_recipient) {
 			if (($task_recipient instanceof User) && ($task_recipient === $user)  ) {
 				return true;
-			} else if(($task_recipient instanceof GraduatingClass) && ($user->getGraduatingClass() == $task_recipient)) {
+			} else if(($task_recipient instanceof Cohort) && ($user->getFullCohort() == $task_recipient)) {
 				return true;
 			} else if(($task_recipient instanceof Organisation) && ($task_recipient == $user->getOrganisation())) {
 				return true;

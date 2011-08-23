@@ -232,33 +232,35 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					/**
 					 * Processing for evaluation_evaluators table.
 					 */
-					if (isset($_POST["target_group_type"]) && in_array($_POST["target_group_type"], array("grad_year", "percentage", "proxy_id"))) {
+					if (isset($_POST["target_group_type"]) && in_array($_POST["target_group_type"], array("cohort", "percentage", "proxy_id"))) {
 						switch ($_POST["target_group_type"]) {
-							case "grad_year" :
-								if (isset($_POST["grad_year"]) && ($grad_year = clean_input($_POST["grad_year"], array("alphanumeric")))) {
-									$PROCESSED["evaluation_evaluators"][] = array("evaluator_type" => "grad_year", "evaluator_value" => $grad_year);
+							case "cohort" :
+								if (isset($_POST["cohort"]) && ($cohort = clean_input($_POST["cohort"], array("alphanumeric")))) {
+									$PROCESSED["evaluation_evaluators"][] = array("evaluator_type" => "cohort", "evaluator_value" => $cohort);
 								} else {
 									add_error("Please provide a valid class to complete this evaluation.");
 								}
 							break;
 							case "percentage" :
-								if (isset($_POST["percentage_grad_year"]) && ($grad_year = clean_input($_POST["percentage_grad_year"], array("alphanumeric")))) {
+								if (isset($_POST["percentage_cohort"]) && ($cohort = clean_input($_POST["percentage_cohort"], array("alphanumeric")))) {
 									$percentage = clean_input($_POST["percentage_percent"], "int");
 									if (($percentage >= 100) || ($percentage < 1)) {
 										$percentage = 100;
 
-										$PROCESSED["evaluation_evaluators"][] = array("evaluator_type" => "grad_year", "evaluator_value" => $grad_year);
+										$PROCESSED["evaluation_evaluators"][] = array("evaluator_type" => "cohort", "evaluator_value" => $cohort);
 									} else {
 										$query = "	SELECT a.`id` AS `proxy_id`
 													FROM `".AUTH_DATABASE."`.`user_data` AS a
-													LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+													JOIN `".AUTH_DATABASE."`.`user_access` AS b
 													ON b.`user_id` = a.`id`
+													JOIN `group_members` AS c
+													ON a.`id` = c.`proxy_id`
 													WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
 													AND b.`account_active` = 'true'
 													AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
 													AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
 													AND b.`group` = 'student'
-													AND b.`role` = ".$db->qstr($grad_year);
+													AND c.`group_id` = ".$db->qstr($cohort);
 										$results = $db->GetAll($query);
 										if ($results) {
 											$total_students = count($results);

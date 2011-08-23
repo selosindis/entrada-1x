@@ -907,8 +907,13 @@ if ($COMMUNITY_ID) {
 										ORDER BY %s
 										LIMIT %s, %s";
 							
-							// Ensure that if the user has sorted on Member Type in the members tab and has moved to the administrators tab
-							// that the member type sort is removed as this is not included in the above administrator query.
+							// If the user has sorted on Member Type in the members tab and has moved to the administrators tab
+							// the member type sort is removed and the results are sorted on name as member type is not shown in the results since all
+							// are of the administrator type.
+							if ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "type") {
+								$SORT_BY	= "CONCAT_WS(', ', b.`lastname`, b.`firstname`) ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]);
+							}
+							
 							$SORT_BY = str_replace("CASE c.`group` WHEN 'guest' THEN 1 WHEN '%' THEN 2 END ASC", "a.`member_joined`", $SORT_BY);
 							
 							$query		= sprintf($query, $SORT_BY, $limit_parameter, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]);

@@ -293,7 +293,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 					
 				});
 			</script>
-			<?
+			<?php
 		}
 	} else {
 		header( "refresh:15;url=".ENTRADA_URL."/admin/".$MODULE );

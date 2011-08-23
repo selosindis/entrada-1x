@@ -74,7 +74,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 
 	$HEAD[] = "<script type=\"text/javascript\">var DELETE_IMAGE_URL = '".ENTRADA_URL."/images/action-delete.gif';</script>";
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/picklist.js\"></script>\n";
-	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/scriptaculous/tree.js\"></script>\n";
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/groups_list.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/AutoCompleteList.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";	
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/growler/src/Growler.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
@@ -311,61 +310,63 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							}
 						}
 						
-						$enrollment_date = validate_calendars("enrollment", false, false,false);
-						if ((isset($enrollment_date["start"])) && ((int) $enrollment_date["start"])) {
-							$PROCESSED["enrollment_start"] = (int) $enrollment_date["start"];
-							$enroll_start = $PROCESSED["enrollment_start"];
-						} else {
-							$PROCESSED["enrollment_start"] = 0;
-							$enroll_start = mktime(0, 0, 0, date("m"), date("d"), date("y"));
-						}
-						if ((isset($enrollment_date["finish"])) && ((int) $enrollment_date["finish"])) {
-							$PROCESSED["enrollment_end"] = (int) $enrollment_date["finish"];
-							$enroll_end = $PROCESSED["enrollment_end"];
-						} else {
-							$PROCESSED["enrollment_end"] = 0;
-							$enroll_end =  mktime(0, 0, 0, date("m"), date("d"), date("y")+1);
-						}
-						
-						
-						
-						
 						
 						if (isset($_POST["group_order"]) && strlen($_POST["group_order"])) {
-							$groups = explode(",", clean_input($_POST["group_order"],array("trim","notags")));					
-							if ((is_array($groups)) && (count($groups))) {
-								foreach($groups as $order => $group_id) {
-									if ($group_id = clean_input($group_id, array("trim", "int"))) {
-										$query = "SELECT `group_name` FROM `groups` WHERE `group_id` = ".$db->qstr($group_id);
-										$result	= $db->GetRow($query);
-										if ($result) {
-											$PROCESSED["groups"][] = array("id"=>$group_id,"title"=>$result["group_name"]);
-											$query = "	INSERT INTO `course_audience` VALUES(NULL,".$db->qstr($COURSE_ID).",'group_id',".$db->qstr($group_id).",".$enroll_start.",".$enroll_end.",1)";
-											if(!$db->Execute($query)){
-												add_error("Unable to insert the group [".$group_id."] as an audience member for course [".$COURSE_ID."]. Please try again later.");				
-											}
-											
-										} else {
-											$ERROR++;
-											$ERRORSTR[] = "One of the <strong>groups</strong> you specified was invalid.";
+								$groups = explode(",", clean_input($_POST["group_order"],array("notags","trim")));
+								if ($_POST["period"] && $cperiod_id = clean_input($_POST["period"], array("trim", "int"))) {		
+									if ((is_array($groups)) && (count($groups))) {
+										
+										$new_groups = array();
+										
+										foreach ($groups as $group_id) {
+											$new_groups[] = $group_id;
 										}
-									} else {
-										$ERROR++;
-										$ERRORSTR[] = "One of the <strong>groups</strong> you specified is invalid.";
-									}
+										
+										foreach($new_groups as $order => $group_id) {
+											if ($group_id = clean_input($group_id, array("trim", "int"))) {
+												$query = "SELECT `group_name` FROM `groups` WHERE `group_id` = ".$db->qstr($group_id);
+												$result	= $db->GetRow($query);
+												if ($result) {
+													$PROCESSED["groups"][] = array("id" => $group_id, "title" => $result["group_name"]);
+													
+													if(!$db->AutoExecute("course_audience", array("audience_type" => "group_id", "audience_value" => $group_id, "course_id" => $COURSE_ID, "cperiod_id" => $cperiod_id), "INSERT")){
+														add_error("Unable to insert the group [".$group_id."] as an audience member for course [".$COURSE_ID."]. Please try again later.");				
+													}
+
+												} else {
+													$ERROR++;
+													$ERRORSTR[] = "One of the <strong>groups</strong> you specified was invalid.";
+												}
+											} else {
+												$ERROR++;
+												$ERRORSTR[] = "One of the <strong>groups</strong> you specified is invalid.";
+											}
+										}
+									}		
 								}
 							}
-						}
-						
-						if (isset($_POST["associated_student"]) && strlen($_POST["associated_student"])) {
-							$PROCESSED["associated_students"] = explode(",",clean_input($_POST["associated_student"], array("notags", "trim")));
-								foreach ($PROCESSED["associated_students"] as $student) {
-									$query = "	INSERT INTO `course_audience` VALUES(NULL,".$db->qstr($COURSE_ID).",'proxy_id',".$db->qstr($student).",".$enroll_start.",".$enroll_end.",1)";
-									if (!$db->Execute($query)) {
-										add_error("Unable to insert the student [".$student."] as an audience member for course [".$COURSE_ID."]. Please try again later.");				
+							if ($_POST["period"] && $cperiod_id = clean_input($_POST["period"], array("trim", "int"))) {	
+								if (isset($_POST["associated_student"]) && strlen($_POST["associated_student"])) {
+									$PROCESSED["associated_students"] = explode(",",clean_input($_POST["associated_student"], array("notags", "trim")));
+									if (isset($PROCESSED["associated_students"]) && is_array($PROCESSED["associated_students"])) {
+										
+										$new_students = array();
+										
+										foreach ($PROCESSED["associated_students"] as $student_id) {
+											$new_students[] = $student_id;
+										}
+																				
+										foreach($new_students as $student_id){
+											if(!$db->AutoExecute("course_audience", array("audience_type" => "proxy_id", "audience_value" => $student_id, "course_id" => $COURSE_ID, "cperiod_id" => $cperiod_id), "INSERT")){
+												add_error("Unable to insert the student [".$student_id."] as an audience member for course [".$COURSE_ID."]. Please try again later.");				
+											}
+										}
 									}
 								}
-						} 
+							} elseif ((isset($_POST["associated_student"]) && strlen($_POST["associated_student"])) || isset($_POST["group_order"]) && strlen($_POST["group_order"])) {
+								$ERROR++;
+								$ERRORSTR[] = "Please ensure you select an <strong>Enrollment period</strong> for the selected course audience.";
+							}
 
 						
 						if (!$ERROR) {

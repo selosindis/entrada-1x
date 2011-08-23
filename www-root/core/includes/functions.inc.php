@@ -1669,6 +1669,21 @@ function fetch_event_topic_title($topic_id = 0) {
 }
 
 /**
+ * Function returns the group_id of the first year class. This year is
+ * frequently used used as a default or fallback throughout Entrada.
+ */
+function fetch_first_cohort() {
+	global $db, $ENTRADA_USER;
+	$query = "SELECT a.`group_id` FROM `groups` AS a
+				JOIN `group_organisations` AS b
+				ON a.`group_id` = b.`group_id`
+				WHERE a.`group_type` = 'cohort'
+				AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+				ORDER BY a.`group_id` DESC";
+	return $db->GetOne($query);
+}
+
+/**
  * Function returns the graduating year of the first year class. This year is
  * frequently used used as a default or fallback throughout Entrada.
  */
@@ -8454,6 +8469,9 @@ function courses_subnavigation($course_details) {
 	echo "<div class=\"no-printing\">\n";
 	echo "	<div style=\"float: right\">\n";
 	if($ENTRADA_ACL->amIAllowed(new CourseResource($course_details["course_id"], $course_details["organisation_id"]), "update")) {
+		echo "<a href=\"".ENTRADA_URL."/admin/courses?".replace_query(array("section" => "groups", "id" => $course_details["course_id"], "step" => false))."\"><img src=\"".ENTRADA_URL."/images/event-group.gif\" width=\"16\" height=\"16\" alt=\"Edit course groups\" title=\"Edit course groups\" border=\"0\" style=\"vertical-align: middle; margin-bottom: 2px;\" /></a> <a href=\"".ENTRADA_URL."/admin/courses?".replace_query(array("section" => "groups", "id" => $course_details["course_id"], "step" => false))."\" style=\"font-size: 10px; margin-right: 8px\">Edit course groups</a>\n";
+	}
+	if($ENTRADA_ACL->amIAllowed(new CourseResource($course_details["course_id"], $course_details["organisation_id"]), "update")) {
 		echo "<a href=\"".ENTRADA_URL."/admin/courses?".replace_query(array("section" => "edit", "id" => $course_details["course_id"], "step" => false))."\"><img src=\"".ENTRADA_URL."/images/event-details.gif\" width=\"16\" height=\"16\" alt=\"Edit course details\" title=\"Edit course details\" border=\"0\" style=\"vertical-align: middle; margin-bottom: 2px;\" /></a> <a href=\"".ENTRADA_URL."/admin/courses?".replace_query(array("section" => "edit", "id" => $course_details["course_id"], "step" => false))."\" style=\"font-size: 10px; margin-right: 8px\">Edit course details</a>\n";
 	}
 	if($ENTRADA_ACL->amIAllowed(new CourseContentResource($course_details["course_id"], $course_details["organisation_id"]), "read")) {
@@ -9692,7 +9710,7 @@ function events_filters_defaults($proxy_id = 0, $group = "", $role = "") {
 		case "medtech" :
 		case "staff" :
 		default :
-			$filters["grad"][0] = (int) fetch_first_year();
+			$filters["grad"][0] = (int) fetch_first_cohort();
 		break;
 	}
 
@@ -10633,10 +10651,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 	}
 
 	$query_events = sprintf($query_events, $sort_by, $limit_parameter, $results_per_page);
-//echo "<pre>";
-//print_r($query_events);
-//echo "</pre>";
-//exit;
+	
 	$learning_events = $db->GetAll($query_events);
 	if ($learning_events) {
 		if ($_SESSION["details"]["group"] == "student") {
@@ -13418,7 +13433,7 @@ function evaluation_generate_description($min_submittable = 0, $evaluation_quest
 	return sprintf($output, $string_1, $string_2, $string_3, $string_4);
 }
 
-function gradebook_get_weighted_grades($course_id, $grad_year, $proxy_id, $assessment_id = false) {
+function gradebook_get_weighted_grades($course_id, $cohort, $proxy_id, $assessment_id = false) {
 	global $db;
 	$weighted_grade = 0;
 	$weighted_total = 0;
@@ -13427,7 +13442,7 @@ function gradebook_get_weighted_grades($course_id, $grad_year, $proxy_id, $asses
 				FROM `assessments`
 				LEFT JOIN `assessment_marking_schemes` ON `assessment_marking_schemes`.`id` = `assessments`.`marking_scheme_id`
 				WHERE `assessments`.`course_id` = ".$db->qstr($course_id)."
-				AND `assessments`.`grad_year` = ".$db->qstr($grad_year).
+				AND `assessments`.`cohort` = ".$db->qstr($cohort).
 				($assessment_id ? " AND `assessments`.`assessment_id` = ".$db->qstr($assessment_id) : "");
 	$assessments = $db->GetAll($query);
 	if($assessments) {
@@ -13844,4 +13859,93 @@ function validate_integer_field($input){
 	} else {
 		return 0;
 	}
+}
+
+/**
+ * This function returns the name of the group for the id given
+ *
+ * @param int $group_id
+ * @return string $group_name
+ */
+function groups_get_name($group_id) {
+	global $db;
+	$query = "SELECT `group_name` FROM `groups` WHERE `group_id` = ".$db->qstr($group_id);
+	if ($group_name = $db->GetOne($query)) {
+		return $group_name;
+	}
+	return false;
+}
+
+/**
+ * This function returns the first cohort record related to the given proxy_id
+ *
+ * @param int $proxy_id
+ * @return array $group
+ */
+function groups_get_cohort($proxy_id) {
+	global $db, $ENTRADA_USER;
+	$query = "SELECT a.* 
+			FROM `groups` AS a 
+			JOIN `group_members` AS b 
+			ON a.`group_id` = b.`group_id` 
+			WHERE b.`proxy_id` = ".$db->qstr($proxy_id)."
+			AND a.`group_type` = 'cohort'";
+	if ($cohort = $db->GetRow($query)) {
+		return $cohort;
+	} else {
+		$query = "SELECT a.* 
+				FROM `groups` AS a 
+				JOIN `group_organisations` AS b 
+				ON a.`group_id` = b.`group_id` 
+				WHERE b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+				AND a.`group_type` = 'cohort'
+				ORDER BY a.`group_id` DESC
+				LIMIT 0, 4";
+		if ($cohort = $db->GetRow($query)) {
+			return $cohort;
+		}
+	}
+	return false;
+}
+
+/**
+ * This function returns the cohort records related to the given organisation_id
+ *
+ * @param int $organisation_id
+ * @return array $groups
+ */
+function groups_get_all_cohorts($organisation_id) {
+	global $db;
+	$query = "SELECT a.* 
+			FROM `groups` AS a 
+			JOIN `group_organisations` AS b 
+			ON a.`group_id` = b.`group_id` 
+			WHERE b.`organisation_id` = ".$db->qstr($organisation_id)."
+			AND a.`group_type` = 'cohort'";
+	if ($cohorts = $db->GetAll($query)) {
+		return $cohorts;
+	}
+	return false;
+}
+
+/**
+ * This function returns the cohort records related to the given organisation_id
+ *
+ * @param int $organisation_id
+ * @return array $groups
+ */
+function groups_get_active_cohorts($organisation_id) {
+	global $db;
+	$query = "SELECT a.* 
+			FROM `groups` AS a 
+			JOIN `group_organisations` AS b 
+			ON a.`group_id` = b.`group_id` 
+			WHERE b.`organisation_id` = ".$db->qstr($organisation_id)."
+			AND a.`group_type` = 'cohort'
+			ORDER BY a.`group_id` DESC
+			LIMIT 0, 4";
+	if ($cohorts = $db->GetAll($query)) {
+		return $cohorts;
+	}
+	return false;
 }

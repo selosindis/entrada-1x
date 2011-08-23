@@ -65,7 +65,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 							application_log("Proxy id [" . $_SESSION['details']['proxy_id'] . "] tried to eicreate a course within an organisation [" . $organisation_id . "] they didn't have permissions on. ");
 						}
 	
-						if((isset($_POST["target"])) && ($target_audience = clean_input($_POST["target"], "alphanumeric"))) {
+						if((isset($_POST["target"])) && ($target_audience = clean_input($_POST["target"], array("trim", "dir")))) {
 							$PROCESSED["target"] = $target_audience;
 						} else {
 							$ERROR++;

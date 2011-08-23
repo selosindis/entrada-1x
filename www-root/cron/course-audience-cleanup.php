@@ -25,7 +25,7 @@ require_once("init.inc.php");
 
 $today = mktime(0, 0, 0, date("m"), date("d"), date("y"));
 
-$query = "	SELECT * FROM `course_audience` WHERE `enroll_finish` < ".$db->qstr($today)." AND `audience_active` = 1";
+$query = "	SELECT * FROM `course_audience` WHERE `enroll_finish` < ".$db->qstr($today)." AND `enroll_finish` != 0 AND `audience_active` = 1";
 $results = $db->GetAll($query);
 
 if ($results) {

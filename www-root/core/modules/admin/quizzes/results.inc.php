@@ -42,7 +42,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 } else {
 	if ($RECORD_ID) {
 		if ($QUIZ_TYPE == "event") {
-			$query		= "	SELECT a.*, b.`course_id`, b.`event_title` AS `content_title`, d.`audience_type`, d.`audience_value` AS `event_grad_year`, e.`quiz_title` AS `default_quiz_title`, e.`quiz_description` AS `default_quiz_description`, f.`quiztype_code`, g.`organisation_id`
+			$query		= "	SELECT a.*, b.`course_id`, b.`event_title` AS `content_title`, d.`audience_type`, d.`audience_value` AS `event_cohort`, e.`quiz_title` AS `default_quiz_title`, e.`quiz_description` AS `default_quiz_description`, f.`quiztype_code`, g.`organisation_id`
 							FROM `attached_quizzes` AS a
 							LEFT JOIN `events` AS b
 							ON a.`content_type` = 'event' 
@@ -101,27 +101,25 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 				}
 				$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/".$MODULE."?section=results&id=".$RECORD_ID, "title" => "Quiz Results");
 
-				if ($QUIZ_TYPE == "event" && $quiz_record["audience_type"] == "grad_year") {
-					$event_grad_year = $quiz_record["event_grad_year"];
+				if ($QUIZ_TYPE == "event" && $quiz_record["audience_type"] == "cohort") {
+					$event_cohort = $quiz_record["event_cohort"];
 				} else {
-					$event_grad_year = 0;
+					$event_cohort = 0;
 				}
 
 				$calculation_targets			= array();
 				$calculation_targets["all"]		= "all quiz respondents";
 				$calculation_targets["student"]	= "all students";
 
-				$cut_off_year = (fetch_first_year() - 3);
-				if (isset($SYSTEM_GROUPS["student"]) && !empty($SYSTEM_GROUPS["student"])) {
-					foreach ($SYSTEM_GROUPS["student"] as $class) {
-						if (clean_input($class, "numeric") >= $cut_off_year) {
-							$calculation_targets["student:".$class]	= "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;class of ".$class;
-						}
+				$active_cohorts = groups_get_active_cohorts($ENTRADA_USER->getActiveOrganisation());
+				if (isset($active_cohorts) && !empty($active_cohorts)) {
+					foreach ($active_cohorts as $cohort) {
+						$calculation_targets["student:".$cohort["group_id"]]	= "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;".html_encode($cohort["group_name"]);
 					}
 				}
 
-				if (($event_grad_year) && (!array_key_exists("student:".$event_grad_year, $calculation_targets))) {
-					$calculation_targets["student:".$event_grad_year] = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;class of ".$event_grad_year;
+				if (($event_cohort) && (!array_key_exists("student:".$event_cohort, $calculation_targets))) {
+					$calculation_targets["student:".$event_cohort] = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;".groups_get_name($event_cohort);
 				}
 				
 				$calculation_targets["resident"]	= "all residents";
@@ -140,7 +138,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 					$_SERVER["QUERY_STRING"] = replace_query(array("target" => false));
 				} else {
 					if (!isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["target"])) {
-						$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["target"] = (($event_grad_year) ? "student:".$event_grad_year : "all");
+						$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["target"] = (($event_cohort) ? "student:".$event_cohort : "all");
 					}
 				}
 

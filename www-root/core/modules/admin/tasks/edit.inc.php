@@ -46,7 +46,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 		$recipient = $recipients->current();
 		if ($recipient instanceof User) {
 			$recipient_type = TASK_RECIPIENT_USER;
-		} elseif ($recipient instanceof GraduatingClass ) {
+		} elseif ($recipient instanceof Cohort ) {
 			$recipient_type = TASK_RECIPIENT_CLASS;
 		} elseif ($recipient instanceof Organisation) {
 			$recipient_type = TASK_RECIPIENT_ORGANISATION;
@@ -72,9 +72,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 		foreach ($recipients as $recipient ){
 			if ($recipient instanceof User) {
 				$PROCESSED["associated_individual"][] = $recipient->getID();
-			} elseif($recipient instanceof GraduatingClass) {
-				$PROCESSED["associated_grad_years"][] = $recipient->getGradYear();
-				$PROCESSED["associated_grad_year"] = $recipient->getGradYear(); //XXX for compaibility with single select style (before new multi-select widget) 
+			} elseif($recipient instanceof Cohort) {
+				$PROCESSED["associated_cohorts"][] = $recipient->getCohort();
+				$PROCESSED["associated_cohort"] = $recipient->getCohort(); //XXX for compaibility with single select style (before new multi-select widget) 
 			} elseif($recipient instanceof Organisation) {
 				$PROCESSED["associated_organisation_id"] = $recipient->getID();
 			}
@@ -157,8 +157,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 								}
 								break;
 							case TASK_RECIPIENT_CLASS:
-								foreach($PROCESSED["associated_grad_year"] as $grad_year) {
-									$recipients[] = array("type" => TASK_RECIPIENT_CLASS, "id" => $grad_year);	
+								foreach($PROCESSED["associated_cohort"] as $cohort) {
+									$recipients[] = array("type" => TASK_RECIPIENT_CLASS, "id" => $cohort);	
 								}
 								break;
 							case TASK_RECIPIENT_ORGANISATION:
@@ -210,7 +210,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 						<table style="width: 100%" cellspacing="0" cellpadding="0" border="0">
 							<tr>
 								<td style="width: 25%; text-align: left">
-									<input type="button" class="button" value="<? echo $translate->translate("task_button_cancel"); ?>" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/tasks'" />
+									<input type="button" class="button" value="<?php echo $translate->translate("task_button_cancel"); ?>" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/tasks'" />
 								</td>
 								<td style="width: 75%; text-align: right; vertical-align: middle">
 									<span class="content-small">After saving:</span>
@@ -219,7 +219,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 										<option value="index"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "index") ? " selected=\"selected\"" : ""); ?>>Return to task list</option>
 									</select>
 									<input type="hidden" name="action" value="Save" />
-									<input type="submit" class="button" value="<? echo $translate->translate("task_button_save"); ?>" />
+									<input type="submit" class="button" value="<?php echo $translate->translate("task_button_save"); ?>" />
 								</td>
 							</tr>
 						</table>
@@ -327,13 +327,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 				</tr>
 				<tr class="task_recipient <?php echo TASK_RECIPIENT_CLASS; ?>_recipient">
 					<td></td>
-					<td><label for="associated_grad_years" class="form-required"><?php echo $translate->translate("task_field_graduating_class"); ?></label></td>
+					<td><label for="associated_cohorts" class="form-required"><?php echo $translate->translate("task_field_cohort"); ?></label></td>
 					<td>
-						<select id="associated_grad_years" name="associated_grad_years" style="width: 203px">
+						<select id="associated_cohorts" name="associated_cohorts" style="width: 203px">
 						<?php
-						if (isset($SYSTEM_GROUPS["student"]) && !empty($SYSTEM_GROUPS["student"])) {
-							foreach ($SYSTEM_GROUPS["student"] as $class) {
-								echo "<option value=\"".$class."\"".(($PROCESSED["associated_grad_year"] == $class) ? " selected=\"selected\"" : "").">Class of ".html_encode($class)."</option>\n";
+						$cohorts = groups_get_all_cohorts($ENTRADA_USER->getActiveOrganisation());
+						if (isset($cohorts) && !empty($cohorts)) {
+							foreach ($cohorts as $cohort) {
+								echo "<option value=\"".$cohort["group_id"]."\"".(($PROCESSED["associated_cohort"] == $cohort["group_id"]) ? " selected=\"selected\"" : "").">".html_encode($cohort["group_name"])."</option>\n";
 							}
 						}
 						?>

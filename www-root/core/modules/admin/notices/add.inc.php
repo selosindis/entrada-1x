@@ -44,7 +44,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 	// Error Checking
 	switch($STEP) {
 		case 2 :
-			if((isset($_POST["target"])) && ($target_audience = clean_input($_POST["target"], "alphanumeric"))) {
+			if((isset($_POST["target"])) && ($target_audience = clean_input($_POST["target"], array("trim", "dir")))) {
 				$PROCESSED["target"] = $target_audience;
 			} else {
 				$ERROR++;

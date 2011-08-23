@@ -420,12 +420,10 @@ if (!defined("PARENT_INCLUDED")) {
 	preferences_update($MODULE, $PREFERENCES);
 
 	$student_classes = array();
-	$cut_off_year = (fetch_first_year() - 3);
-	if (isset($SYSTEM_GROUPS["student"]) && !empty($SYSTEM_GROUPS["student"])) {
-		foreach ($SYSTEM_GROUPS["student"] as $class) {
-			if (clean_input($class, "numeric") >= $cut_off_year) {
-				$student_classes[$class] = "Class of ".$class;
-			}
+	$active_cohorts = groups_get_active_cohorts($ENTRADA_USER->getActiveOrganisation());
+	if (isset($active_cohorts) && !empty($active_cohorts)) {
+		foreach ($active_cohorts as $cohort) {
+			$student_classes[$cohort["group_id"]] = $cohort["group_name"];
 		}
 	}
 	

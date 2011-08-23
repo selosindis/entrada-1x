@@ -134,15 +134,15 @@ if((!isset($_SESSION["isAuthorized"])) || (!(bool) $_SESSION["isAuthorized"])) {
 	<?php
 	if($EVENT_ID) {
 		$query	= "
-				SELECT a.*, b.`audience_value` AS `event_grad_year`
+				SELECT a.*, b.`audience_value` AS `event_cohort`
 				FROM `events` AS a
 				LEFT JOIN `event_audience` AS b
 				ON b.`event_id` = a.`event_id`
 				WHERE a.`event_id` = ".$db->qstr($EVENT_ID)."
-				AND b.`audience_type` = 'grad_year'";
+				AND b.`audience_type` = 'cohort'";
 		$result	= $db->GetRow($query);
 		if($result) {
-			if((!isset($_SESSION["details"]["allow_podcasting"])) || (!(bool) $_SESSION["details"]["allow_podcasting"]) || (($_SESSION["details"]["allow_podcasting"] != "all") && ($_SESSION["details"]["allow_podcasting"] != $result["event_grad_year"]))) {
+			if((!isset($_SESSION["details"]["allow_podcasting"])) || (!(bool) $_SESSION["details"]["allow_podcasting"]) || (($_SESSION["details"]["allow_podcasting"] != "all") && ($_SESSION["details"]["allow_podcasting"] != $result["event_cohort"]))) {
 				$ONLOAD[] = "closeWizard()";
 
 				$ERROR++;

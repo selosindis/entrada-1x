@@ -45,12 +45,10 @@ if (($router) && ($router->initRoute())) {
 
 	$GROUP_TARGETS = array();
 
-	$cut_off_year = (fetch_first_year() - 3);
-	if (isset($SYSTEM_GROUPS["student"]) && !empty($SYSTEM_GROUPS["student"])) {
-		foreach ($SYSTEM_GROUPS["student"] as $class) {
-			if (clean_input($class, "numeric") >= $cut_off_year) {
-				$GROUP_TARGETS["student_".$class] = "Students, Class of ".$class;
-			}
+	$active_cohorts = groups_get_active_cohorts($ENTRADA_USER->getActiveOrganisation());
+	if (isset($active_cohorts) && !empty($active_cohorts)) {
+		foreach ($active_cohorts as $cohort) {
+			$GROUP_TARGETS["student_".$cohort["group_id"]] = "Students, ".$cohort["group_name"];
 		}
 	}
 

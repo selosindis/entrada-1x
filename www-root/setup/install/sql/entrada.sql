@@ -921,7 +921,7 @@ CREATE TABLE IF NOT EXISTS `ar_ward_supervision` (
 CREATE TABLE IF NOT EXISTS `assessments` (
   `assessment_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `course_id` int(10) unsigned NOT NULL,
-  `grad_year` varchar(35) NOT NULL,
+  `cohort` varchar(35) NOT NULL,
   `name` varchar(255) NOT NULL,
   `description` text NOT NULL,
   `type` varchar(255) NOT NULL,
@@ -1675,8 +1675,8 @@ CREATE TABLE IF NOT EXISTS `course_audience`(
 	`caudience_id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY, 
 	`course_id` INT NOT NULL, 
 	`audience_type` ENUM('proxy_id','group_id') NOT NULL, 
-	`audience_value` INT NOT NULL, 
-	`enroll_start` BIGINT NOT NULL, 
+	`audience_value` INT NOT NULL,
+	`cperiod_id` int(11) NOT NULL,
 	`enroll_finish` BIGINT NOT NULL, 
 	`audience_active` INT(1) NOT NULL DEFAULT '1', 
  KEY `audience_type` (`audience_type`), 
@@ -1877,7 +1877,7 @@ INSERT INTO `evaluations_lu_targets` (`target_id`, `target_shortname`, `target_t
 CREATE TABLE IF NOT EXISTS `evaluation_evaluators` (
   `eevaluator_id` int(12) NOT NULL AUTO_INCREMENT,
   `evaluation_id` int(12) NOT NULL,
-  `evaluator_type` enum('proxy_id','grad_year','organisation_id') NOT NULL,
+  `evaluator_type` enum('proxy_id','grad_year','cohort','organisation_id') NOT NULL,
   `evaluator_value` int(12) NOT NULL,
   `updated_date` bigint(64) NOT NULL,
   `updated_by` int(12) NOT NULL,
@@ -2088,7 +2088,7 @@ CREATE TABLE IF NOT EXISTS `events_recurring` (
 CREATE TABLE IF NOT EXISTS `event_audience` (
   `eaudience_id` int(12) NOT NULL AUTO_INCREMENT,
   `event_id` int(12) NOT NULL DEFAULT '0',
-  `audience_type` enum('proxy_id','grad_year','organisation_id','group_id','course_id') NOT NULL,
+  `audience_type` enum('proxy_id','grad_year','cohort','organisation_id','group_id','course_id') NOT NULL,
   `audience_value` varchar(16) NOT NULL,
   `updated_date` bigint(64) NOT NULL DEFAULT '0',
   `updated_by` int(12) NOT NULL DEFAULT '0',
@@ -3385,6 +3385,7 @@ CREATE TABLE IF NOT EXISTS `poll_answers` (
 
 CREATE TABLE IF NOT EXISTS `poll_questions` (
   `poll_id` int(12) NOT NULL AUTO_INCREMENT,
+  `poll_target_type` enum('group', 'grad_year', 'cohort') NOT NULL,
   `poll_target` varchar(32) NOT NULL DEFAULT 'all',
   `poll_question` text NOT NULL,
   `poll_from` bigint(64) NOT NULL DEFAULT '0',
@@ -3493,7 +3494,7 @@ CREATE TABLE IF NOT EXISTS `settings` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `settings` (`shortname`, `value`) VALUES
-('version_db', '1215 '),
+('version_db', '1218 '),
 ('version_entrada', '1.3.0DEV');
 
 CREATE TABLE IF NOT EXISTS `statistics` (
@@ -3758,7 +3759,7 @@ CREATE TABLE IF NOT EXISTS `task_owners` (
 
 CREATE TABLE IF NOT EXISTS `task_recipients` (
   `task_id` int(12) unsigned NOT NULL,
-  `recipient_type` enum('user','group','grad_year','organisation') NOT NULL,
+  `recipient_type` enum('user','group','grad_year','cohort','organisation') NOT NULL,
   `recipient_id` int(12) unsigned NOT NULL,
   PRIMARY KEY  (`task_id`,`recipient_type`,`recipient_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
@@ -3920,7 +3921,7 @@ CREATE TABLE IF NOT EXISTS `eventtype_organisation`(
 CREATE TABLE IF NOT EXISTS `groups` (
   `group_id` int(11) NOT NULL AUTO_INCREMENT,
   `group_name` varchar(64) NOT NULL, 
-  `group_type` VARCHAR(20) NOT NULL DEFAULT 'small_group',
+  `group_type` enum('course_list','cohort') NOT NULL DEFAULT 'course_list',
   `group_value` INT,
   `start_date` BIGINT(64) NOT NULL,
   `expire_date` BIGINT(64),

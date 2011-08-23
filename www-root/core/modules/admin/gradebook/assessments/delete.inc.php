@@ -125,8 +125,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				default :
 			
 					// Fetch all associated assessments
-					$query = "SELECT `assessment_id`,`grad_year`,`name`,`type`  FROM `assessments` WHERE `course_id` = ".$db->qstr($COURSE_ID)."
-					AND `assessment_id` IN (".implode(", ", $ASSESSMENT_IDS).") ORDER BY `name` ASC";
+					$query = "SELECT a.`assessment_id`, a.`cohort`, a.`name`, a.`type`, b.`group_name` AS `cohort_name`  
+								FROM `assessments` AS a
+								JOIN `groups` AS b
+								ON a.`cohort` = b.`group_id`
+								WHERE a.`course_id` = ".$db->qstr($COURSE_ID)."
+								AND a.`assessment_id` IN (".implode(", ", $ASSESSMENT_IDS).") ORDER BY a.`name` ASC";
 					$assessments = 	$db->GetAll($query);
 					if($assessments) {
 						echo display_notice(array("Please review the following notices to ensure that you wish to permanently delete them. This action cannot be undone."));
@@ -167,7 +171,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								echo "<tr id=\"assessment-".$assessment["assessment_id"]."\">";
 								echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"delete[]\" checked=\"checked\" value=\"".$assessment["assessment_id"]."\" /></td>\n";
 								echo "	<td class=\"title\"><a href=\"$url\">".$assessment["name"]."</a></td>";
-								echo "	<td class=\"general\"><a href=\"$url\">".$assessment["grad_year"]."</a></td>";
+								echo "	<td class=\"general\"><a href=\"$url\">".$assessment["cohort_name"]."</a></td>";
 								echo "	<td class=\"general\"><a href=\"$url\">".$assessment["type"]."</a></td>";
 								echo "	<td class=\"general\">"."&nbsp;"."</td>";
 								echo "</tr>";

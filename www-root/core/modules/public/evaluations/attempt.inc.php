@@ -32,6 +32,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_PUBLIC_EVALUATIONS"))) {
 }
 
 if ($RECORD_ID) {
+	$cohort = groups_get_cohort($_SESSION["details"]["id"]);
+	
 	$query			= "	SELECT a.*, c.`eprogress_id`, e.`target_title`, c.`etarget_id`
 						FROM `evaluations` AS a
 						LEFT JOIN `evaluation_evaluators` AS b
@@ -58,8 +60,8 @@ if ($RECORD_ID) {
 								b.`evaluator_type` = 'organisation_id'
 								AND b.`evaluator_value` = ".$db->qstr($_SESSION["details"]["organisation_id"])."
 							)".($_SESSION["details"]["group"] == "student" ? " OR (
-								b.`evaluator_type` = 'grad_year'
-								AND b.`evaluator_value` = ".$db->qstr($_SESSION["details"]["role"])."
+								b.`evaluator_type` = 'cohort'
+								AND b.`evaluator_value` = ".$db->qstr($cohort["group_id"])."
 							)" : "")."
 						)
 						AND a.`evaluation_active` = '1'
@@ -292,8 +294,8 @@ if ($RECORD_ID) {
 																b.`evaluator_type` = 'organisation_id'
 																AND b.`evaluator_value` = ".$db->qstr($_SESSION["details"]["organisation_id"])."
 															)".($_SESSION["details"]["group"] == "student" ? " OR (
-																b.`evaluator_type` = 'grad_year'
-																AND b.`evaluator_value` = ".$db->qstr($_SESSION["details"]["role"])."
+																b.`evaluator_type` = 'cohort'
+																AND b.`evaluator_value` = ".$db->qstr($cohort["group_id"])."
 															)" : "")."
 														)
 														AND `progress_value` = 'inprogress'

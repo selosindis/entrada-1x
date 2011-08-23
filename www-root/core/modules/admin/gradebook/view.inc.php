@@ -50,7 +50,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 			 * Valid: director, name
 			 */
 			if (isset($_GET["sb"])) {
-				if (@in_array(trim($_GET["sb"]), array("name", "year", "type", "scheme"))) {
+				if (@in_array(trim($_GET["sb"]), array("name", "type", "scheme"))) {
 					$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]	= trim($_GET["sb"]);
 				} else {
 					$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] = "name";
@@ -105,10 +105,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 			 */
 			switch($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) {
 				case "name" :
-					$sort_by	= "`assessments`.`name` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]).", `assessments`.`grad_year` ASC";
-					break;
-				case "year" :
-					$sort_by	= "`assessments`.`grad_year` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]);
+					$sort_by	= "`assessments`.`name` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]).", `assessments`.`cohort` ASC";
 					break;
 				case "type" :
 					$sort_by	= "`assessments`.`type` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]);
@@ -174,11 +171,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 			<?php
 			}
 			
-			$query =  "SELECT DISTINCT `assessments`.`course_id`, `assessments`.`grad_year` FROM `assessments`
+			$query =  "SELECT DISTINCT `assessments`.`course_id`, `assessments`.`cohort` FROM `assessments`
 					   WHERE `course_id` =". $db->qstr($COURSE_ID)."
-					   ORDER BY `grad_year`";
-			$grad_years = $db->GetAll($query);
-			if($grad_years) {
+					   ORDER BY `cohort`";
+			$cohorts = $db->GetAll($query);
+			if($cohorts) {
 				if ($total_pages > 1) {
 					echo "<div id=\"pagination-links\">\n";
 					echo "Pages: ".$pagination->GetPageLinks();
@@ -219,22 +216,22 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					<tbody>
 					
 					<?php
-					if ($grad_years) {
-						foreach ($grad_years as $grad_year) {
+					if ($cohorts) {
+						foreach ($cohorts as $cohort) {
 							echo "<tr>";
-							echo "<td width=\"20\"></td>";
-							echo "<td><h2 style=\"border-bottom: 0;\">Class of " . $grad_year["grad_year"]."</h2></td>";
+							echo "<td style=\"width: 20px;\"></td>";
+							echo "<td style=\"width: 400px;\"><h2 style=\"border-bottom: 0;\">".groups_get_name($cohort["cohort"])."</h2></td>";
 							echo "<td colspan=\"2\"><h2 style=\"border-bottom: 0;\">Grade Weighting</h2></td>";
 							echo "</tr>";
 							
 							$query =  "SELECT `assessments`.`course_id`, `assessments`.`assessment_id`, `assessments`.`name`, `assessments`.`grade_weighting` FROM `assessments`
-									   WHERE `grad_year` =" . $db->qstr($grad_year["grad_year"])."
+									   WHERE `cohort` =" . $db->qstr($cohort["cohort"])."
 									   AND `course_id` =". $db->qstr($COURSE_ID);
 							
 							$results = $db->GetAll($query);
 							if ($results) {
 								$query =  "SELECT `assessments`.`course_id`, SUM(`assessments`.`grade_weighting`) AS `grade_weighting` FROM `assessments`
-										   WHERE `grad_year` =". $db->qstr($grad_year["grad_year"])." 
+										   WHERE `cohort` =". $db->qstr($cohort["cohort"])." 
 										   AND `course_id` =". $db->qstr($COURSE_ID);
 								
 								$total_grade_weights = $db->GetAll($query);
@@ -273,6 +270,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					echo "</form>";
 				}
 			} else {
+				echo $query;
 				// No assessments in this course.
 				?>
 				<div class="display-notice">

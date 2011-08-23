@@ -135,7 +135,10 @@ switch ($ACTION) {
 			break;
 			case "student" :
 			default :
-				$notice_where_clause	= "(".(((int) $_SESSION["details"]["grad_year"]) ? "a.`target`='".(int) $_SESSION["details"]["grad_year"]."' OR " : "")."a.`target` = 'all' OR a.`target` = 'students' OR a.`target` = ".$db->qstr("proxy_id:".((int) $USER_PROXY_ID)).")";
+				if ($_SESSION["details"]["group"] == "student") {
+					$cohort = groups_get_cohort($USER_PROXY_ID);
+				}
+				$notice_where_clause	= "(".(($_SESSION["details"]["group"] == "student") ? "a.`target`='".(int) $cohort["group_id"]."' OR " : "")."a.`target` = 'all' OR a.`target` = 'students' OR a.`target` = ".$db->qstr("proxy_id:".((int) $USER_PROXY_ID)).")";
 			break;
 		}
 		$notice_where_clause .= 'AND (a.`organisation_id` IS NULL OR a.`organisation_id` = '.$USER_ORGANISATION_ID.')';

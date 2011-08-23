@@ -75,8 +75,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				// Error Checking
 				switch ($STEP) {
 					case 2 :
-						if ((isset($_POST["grad_year"])) && ($grad_year = clean_input($_POST["grad_year"], "credentials"))) {
-							$PROCESSED["grad_year"] = $grad_year;
+						if ((isset($_POST["cohort"])) && ($cohort = clean_input($_POST["cohort"], "credentials"))) {
+							$PROCESSED["cohort"] = $cohort;
 						} else {
 							$ERROR++;
 							$ERRORSTR[] = "You must select a <strong>Graduating Year</strong> for this assessment.";
@@ -330,13 +330,19 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 									</tr>
 									<tr>
 										<td></td>
-										<td><label for="grad_year" class="form-required">Graduating Year</label></td>
+										<td><label for="cohort" class="form-required">Cohort</label></td>
 										<td>
-											<select id="grad_year" name="grad_year" style="width: 250px">
+											<select id="cohort" name="cohort" style="width: 250px">
 												<?php
-												if (isset($SYSTEM_GROUPS["student"]) && !empty($SYSTEM_GROUPS["student"])) {
-													foreach ($SYSTEM_GROUPS["student"] as $class) {
-														echo "<option value=\"" . $class . "\"" . (($PROCESSED["grad_year"] == $class) ? " selected=\"selected\"" : "") . ">Class of " . html_encode($class) . "</option>\n";
+												$query = "SELECT a.* FROM `groups` AS a
+															JOIN `group_organisations` AS b
+															ON a.`group_id` = b.`group_id`
+															WHERE b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+															a.`group_type` = 'cohort'";
+												
+												if ($cohorts = $db->GetAll($query)) {
+													foreach ($cohorts as $cohort) {
+														echo "<option value=\"" . $cohort . "\"" . (($PROCESSED["cohort"] == $cohort) ? " selected=\"selected\"" : "") . ">" . html_encode($cohort["group_name"]) . "</option>\n";
 													}
 												}
 												?>

@@ -61,9 +61,9 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 					OR " . $finish_time . " BETWEEN `event_start` AND `event_finish`)";
 		
 		switch ($audience_type) {
-			case "grad_year" :
-				$grad_year = isset($_POST["associated_grad_year"]) ? clean_input($_POST["associated_grad_year"], array("int")) : 0;
-				$query .= "AND b.audience_type = 'grad_year' AND b.`audience_value` = ".$db->qstr($grad_year);
+			case "cohort" :
+				$cohort = isset($_POST["associated_cohort"]) ? clean_input($_POST["associated_cohort"], array("int")) : 0;
+				$query .= "AND b.audience_type = 'cohort' AND b.`audience_value` = ".$db->qstr($cohort);
 			break;
 			case "proxy_id" :
 				$proxy_ids = isset($_POST["associated_student"]) ? clean_input($_POST["associated_student"], array("notags","trim")) : 0;

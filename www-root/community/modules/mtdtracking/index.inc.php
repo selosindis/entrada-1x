@@ -219,6 +219,10 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 				window.location = url;
 			});
 
+			//Default the location to KGH
+			jQuery("#mtdlocation option[value='59']").attr('selected', 'selected');
+			createLocationDuration();
+
 		});
 
 		function validateRequired(formArray) {

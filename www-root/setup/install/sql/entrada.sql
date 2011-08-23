@@ -3328,12 +3328,6 @@ INSERT INTO `global_lu_schools` (`schools_id`, `school_title`) VALUES
 (16, 'University of Toronto'),
 (17, 'University of Western Ontario');
 
-CREATE TABLE IF NOT EXISTS `group_organisation`(
-  `group_id` INT NOT NULL, 
-  `organisation_id` INT NOT NULL,
-  PRIMARY KEY(`group_id`,`organisation_id`)	
-) ENGINE=MyISAM DEFAULT CHARSET = utf8;
-
 CREATE TABLE IF NOT EXISTS `notices` (
   `notice_id` int(12) NOT NULL AUTO_INCREMENT,
   `target` varchar(32) NOT NULL DEFAULT '',
@@ -3942,7 +3936,7 @@ CREATE TABLE IF NOT EXISTS `group_members` (
   `member_active` tinyint(1) NOT NULL DEFAULT '1',
   `updated_date` int(11) DEFAULT NULL,
   `updated_by` int(11) DEFAULT NULL,
-  PRIMARY KEY (`gmember_id`)
+  PRIMARY KEY (`gmember_id`),
   KEY `group_id` (`group_id`,`proxy_id`,`updated_date`,`updated_by`),
   KEY `member_active` (`member_active`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;

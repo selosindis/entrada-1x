@@ -80,7 +80,8 @@ if ($organisations = $db->GetAll($query)) {
 								ON a.`id` = b.`user_id`
 								WHERE b.`role` = ".$db->qstr($grad_year["role"])."
 								AND b.`group` = 'student'
-								AND a.`organisation_id` = ".$db->qstr($organisation["organisation_id"]);
+								AND a.`organisation_id` = ".$db->qstr($organisation["organisation_id"])."
+								GROUP BY a.`id`";
 					if ($students = $db->GetAll($query)) {
 						foreach ($students as $student) {
 							$group_member = array(	"proxy_id" => $student["proxy_id"],

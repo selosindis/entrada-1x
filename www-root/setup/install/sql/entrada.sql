@@ -1672,19 +1672,20 @@ CREATE TABLE IF NOT EXISTS `courses` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `course_audience` (
-	`caudience_id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY, 
-	`course_id` INT NOT NULL, 
-	`audience_type` ENUM('proxy_id','group_id') NOT NULL, 
-	`audience_value` INT NOT NULL,
-	`cperiod_id` int(11) NOT NULL,
-	`enroll_finish` BIGINT NOT NULL, 
-	`audience_active` INT(1) NOT NULL DEFAULT '1', 
- KEY `course_id` (`course_id`), 
- KEY `audience_type` (`audience_type`), 
- KEY `audience_value` (`audience_value`), 
- KEY `audience_active` (`audience_active`)
+  `caudience_id` int(11) NOT NULL AUTO_INCREMENT,
+  `course_id` int(11) NOT NULL,
+  `audience_type` enum('proxy_id','group_id') NOT NULL,
+  `audience_value` int(11) NOT NULL,
+  `cperiod_id` int(11) NOT NULL,
+  `enroll_start` bigint(20) NOT NULL,
+  `enroll_finish` bigint(20) NOT NULL,
+  `audience_active` int(1) NOT NULL DEFAULT '1',
+  PRIMARY KEY (`caudience_id`),
+  KEY `course_id` (`course_id`),
+  KEY `audience_type` (`audience_type`),
+  KEY `audience_value` (`audience_value`),
+  KEY `audience_active` (`audience_active`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
 
 CREATE TABLE IF NOT EXISTS `course_contacts` (
   `contact_id` int(12) NOT NULL AUTO_INCREMENT,

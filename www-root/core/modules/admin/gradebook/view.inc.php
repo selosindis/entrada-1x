@@ -270,7 +270,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					echo "</form>";
 				}
 			} else {
-				echo $query;
 				// No assessments in this course.
 				?>
 				<div class="display-notice">

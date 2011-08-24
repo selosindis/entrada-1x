@@ -269,7 +269,7 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 			/**
 			 * How did this person not get assigned this already? Mak'em new.
 			 */
-			if (!isset($cohort)) {
+			if (!isset($cohort) || !$cohort) {
 				$query = "SELECT * 
 						FROM `groups`
 						WHERE `group_id` = ".$db->qstr(fetch_first_cohort());

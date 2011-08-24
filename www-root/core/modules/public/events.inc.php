@@ -29,17 +29,13 @@ if (!defined("PARENT_INCLUDED")) {
 } elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	header("Location: ".ENTRADA_RELATIVE);
 	exit;
-} elseif (!$ENTRADA_ACL->amIAllowed('event', 'read', false)) {
-	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_RELATIVE."/".$MODULE."\\'', 15000)";
-
-	$ERROR++;
-	$ERRORSTR[]	= "Your account does not have the permissions required to use this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
+} elseif (!$ENTRADA_ACL->amIAllowed("event", "read", false)) {
+	add_error("Your account does not have the permissions required to use this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.");
 
 	echo display_error();
 
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
-	
 	$USE_QUERY = false;
 	$EVENT_ID = 0;
 	$RESULT_ID = 0;
@@ -129,7 +125,7 @@ if (!defined("PARENT_INCLUDED")) {
 	 * Check for groups which have access to the administrative side of this module
 	 * and add the appropriate toggle sidebar item.
 	 */
-	if ($ENTRADA_ACL->amIAllowed('eventcontent', 'update', false)) {
+	if ($ENTRADA_ACL->amIAllowed("eventcontent", "update", false)) {
 		switch ($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]) {
 			case "admin" :
 				$admin_wording = "Administrator View";
@@ -184,7 +180,7 @@ if (!defined("PARENT_INCLUDED")) {
 	$sidebar_html .= "</div>\n";
 	new_sidebar_item("Podcasts in iTunes", $sidebar_html, "podcast-bar", "open", "2.1");
 
-	$BREADCRUMB[] = array("url" => ENTRADA_RELATIVE."/events", "title" => "View Events");
+	$BREADCRUMB[] = array("url" => ENTRADA_RELATIVE."/events", "title" => "Learning Events");
 
 	/**
 	 * If we were going into the $EVENT_ID
@@ -193,6 +189,7 @@ if (!defined("PARENT_INCLUDED")) {
 		$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/windows/window.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 		$HEAD[] = "<link href=\"".ENTRADA_RELATIVE."/css/windows/default.css\" rel=\"stylesheet\" type=\"text/css\" />";
 		$HEAD[] = "<link href=\"".ENTRADA_RELATIVE."/css/windows/medtech.css\" rel=\"stylesheet\" type=\"text/css\" />";
+		
 		?>
 		<script type="text/javascript">
 			function beginQuiz(id) {
@@ -278,20 +275,12 @@ if (!defined("PARENT_INCLUDED")) {
 					 * Gather the learners associated with this event from the event_audience table.
 					 */
 					$associated_learners = array();;
-					$associated_cohort_ids = array();;
-					$associated_group_ids = array();;
 
 					$query = "SELECT * FROM `event_audience` WHERE `event_id` = ".$db->qstr($EVENT_ID);
 					$results = $db->GetAll($query);
 					if ($results) {
 						foreach ($results as $result) {
 							$associated_learners[$result["audience_type"]] = $result["audience_value"];
-							$event_audience_type = $result["audience_type"];
-							if ($result["audience_type"] == "cohort") {
-								$associated_cohort_ids = $result["audience_value"];
-							} elseif ($result["audience_type"] == "group_id") {
-								$associated_group_ids = $result["audience_value"];
-							}
 						}
 					}
 
@@ -316,7 +305,7 @@ if (!defined("PARENT_INCLUDED")) {
 					$discussion_title			= (($icon_discussion) ? "Read the posted discussion comments." : "Start up a conversion, leave your comment!");
 					$syllabus_title				= "Visit Course Website";
 
-					if (($_SESSION["details"]["allow_podcasting"]) && ($event_audience_type == "cohort") && (in_array($_SESSION["details"]["allow_podcasting"], array($associated_cohort, "all")))) {
+					if (($_SESSION["details"]["allow_podcasting"]) && ($event_audience_type == "grad_year") && (in_array($_SESSION["details"]["allow_podcasting"], array($associated_grad_year, "all")))) {
 						$sidebar_html = "To upload a podcast: <a href=\"javascript:openPodcastWizard('".$EVENT_ID."')\">click here</a>";
 						new_sidebar_item("Upload A Podcast", $sidebar_html, "podcast_uploading", "open", "2.0");
 						?>
@@ -347,25 +336,55 @@ if (!defined("PARENT_INCLUDED")) {
 
 					echo "<div class=\"no-printing\">\n";
 					if (($USE_QUERY) && ($RESULT_TOTAL_ROWS > 1)) {
+						/**
+						 * Load jQuery and jSwipe to handle next and back on mobile devices.
+						 */
+						$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/jquery/jquery.min.js?r=".html_encode(APPLICATION_VERSION)."\"></script>\n";
+						$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/jquery/jquery.touchSwipe.js?r=".html_encode(APPLICATION_VERSION)."\"></script>\n";
+						$JQUERY[] = "<script type=\"text/javascript\">jQuery.noConflict();</script>";
+						
+						$back_click = "";
+						$next_click = "";
+						
 						echo "<table style=\"width: 100%; height: 23px\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\">\n";
 						echo "<tr>\n";
 						echo "	<td style=\"width: 22px; height: 23px\">";
 						if ($RESULT_ID > 0) {
-							echo "<a href=\"".ENTRADA_RELATIVE."/events?".replace_query(array(((isset($_GET["drid"])) ? "drid" : "rid") => ($RESULT_ID - 1)))."\" title=\"Previous Event\"><img src=\"".ENTRADA_RELATIVE."/images/cal-back.gif\" border=\"0\" width=\"22\" height=\"23\" alt=\"Previous Event\" title=\"Previous Event\" /></a>";
+							$back_click = ENTRADA_URL."/events?".replace_query(array(((isset($_GET["drid"])) ? "drid" : "rid") => ($RESULT_ID - 1)));
+							
+							echo "<a id=\"back_event\" href=\"".$back_click."\" title=\"Previous Event\"><img src=\"".ENTRADA_RELATIVE."/images/cal-back.gif\" border=\"0\" width=\"22\" height=\"23\" alt=\"Previous Event\" title=\"Previous Event\" /></a>";
 						} else {
 							echo "<img src=\"".ENTRADA_RELATIVE."/images/cal-back-off.gif\" border=\"0\" width=\"22\" height=\"23\" alt=\"\" title=\"\" />";
 						}
 						echo "	</td>\n";
-						echo "	<td style=\"width: 100%; height: 23px; background: url('".ENTRADA_RELATIVE."/images/cal-table-bg.gif') #FFFFFF repeat-x; text-align: center; font-size: 10px; color: #666666; white-space: nowrap; overflow: hidden\">".html_encode($event_info["event_title"])."</td>\n";
+						echo "	<td id=\"swipe-location\" style=\"width: 100%; height: 23px; background: url('".ENTRADA_RELATIVE."/images/cal-table-bg.gif') #FFFFFF repeat-x; text-align: center; font-size: 10px; color: #666666; white-space: nowrap; overflow: hidden\">".html_encode($event_info["event_title"])."</td>\n";
 						echo "	<td style=\"width: 22px; height: 23px\">";
 						if ($RESULT_ID < ($RESULT_TOTAL_ROWS - 1)) {
-							echo "<a href=\"".ENTRADA_RELATIVE."/events?".replace_query(array(((isset($_GET["drid"])) ? "drid" : "rid") => ($RESULT_ID + 1)))."\" title=\"Next Event\"><img src=\"".ENTRADA_RELATIVE."/images/cal-next.gif\" border=\"0\" width=\"22\" height=\"23\" alt=\"Next Event\" title=\"Next Event\" /></a>";
+							$next_click = ENTRADA_URL."/events?".replace_query(array(((isset($_GET["drid"])) ? "drid" : "rid") => ($RESULT_ID + 1)));
+							
+							echo "<a id=\"next_event\" href=\"".$next_click."\" title=\"Next Event\"><img src=\"".ENTRADA_RELATIVE."/images/cal-next.gif\" border=\"0\" width=\"22\" height=\"23\" alt=\"Next Event\" title=\"Next Event\" /></a>";
 						} else {
 							echo "<img src=\"".ENTRADA_RELATIVE."/images/cal-next-off.gif\" width=\"22\" height=\"23\" alt=\"\" title=\"\" />";
 						}
 						echo "	</td>\n";
 						echo "</tr>\n";
 						echo "</table>\n";
+						
+						/**
+						 * If there are $next or $back URL's then add swipe for phone / tablet devices.
+						 */
+						if ($next_click || $back_click) {
+							$swipe = array();
+							
+							if ($back_click) {
+								$swipe[] = "swipeRight: function() { window.location = '".$back_click."' }";
+							}
+							if ($next_click) {
+								$swipe[] = "swipeLeft: function() { window.location = '".$next_click."' }";
+							}
+							
+							echo "<script type=\"text/javascript\">jQuery(document).ready(function() { jQuery('body').swipe({".implode(", ", $swipe)."}); });</script>";
+						}
 					}
 
 					echo "	<div style=\"text-align: right; margin-top: 8px\">\n";
@@ -375,358 +394,163 @@ if (!defined("PARENT_INCLUDED")) {
 
 					echo "</div>\n";
 
-					echo "<div class=\"content-small\">";
-					if ($event_info["course_id"]) {
-						$curriculum_path = curriculum_hierarchy($event_info["course_id"]);
-
-						if ((is_array($curriculum_path)) && (count($curriculum_path))) {
-							echo implode(" &gt; ", $curriculum_path);
-						}
-					} else {
-						echo "No Associated Course";
-					}
-					echo "</div>\n";
+					echo "<div class=\"content-small\">".fetch_course_path($event_info["course_id"])."</div>\n";
 					echo "<h1 class=\"event-title\">".html_encode($event_info["event_title"])."</h1>\n";
 					
-					echo "<div style=\"float: right; width: 215px;\">\n";
-//					echo "   <ul class=\"access-legend\">\n";
-//					echo "     <li><span style=\"font-weight: bold\">Quick Access Legend</span>\n";
-//					echo "         <ul>\n";
-//					echo "           <li><a href=\"#event-resources-section\" onclick=\"$('event-resources-section').scrollTo(); return false;\" title=\"".$resources_title."\"><img src=\"".ENTRADA_RELATIVE."/images/icon-resources-".(($icon_resources) ? "on" : "off").".gif\" width=\"36\" height=\"36\" alt=\"".$resources_title."\" title=\"".$resources_title."\" border=\"0\" style=\"vertical-align: middle; margin-right: 5px\" />Event Resources</a></li>\n";
-//					echo "           <li><a href=\"#event-comments-section\" onclick=\"$('event-comments-section').scrollTo(); return false;\" title=\"".$discussion_title."\"><img src=\"".ENTRADA_RELATIVE."/images/icon-discussion-".(($icon_discussion) ? "on" : "off").".gif\" width=\"36\" height=\"36\" alt=\"".$discussion_title."\" title=\"".$discussion_title."\" border=\"0\" style=\"vertical-align: middle; margin-right: 5px\" />Event Discussions</a></li>\n";
-//					echo "           <li><a href=\"\"><img src=\"".ENTRADA_RELATIVE."/images/icon-syllabus-on.gif\" width=\"36\" height=\"36\" alt=\"".$syllabus_title."\" title=\"".$syllabus_title."\" border=\"0\" style=\"vertical-align: middle; margin-right: 5px\" />".$syllabus_title."</a></li>\n";
-//					echo "         </ul>\n";
-//					echo "     </li>\n";
-//					echo "   </ul>\n";
-					
-require_once("Models/utility/Collection.class.php");
-require_once("Models/utility/SimpleCache.class.php");
-
-require_once("Models/users/User.class.php");
-require_once("Models/users/Users.class.php");
-require_once("Models/users/Assistant.class.php");
-require_once("Models/users/UserPhoto.class.php");
-require_once("Models/users/UserPhotos.class.php");
-require_once("Models/users/Cohort.class.php");
-require_once("Models/organisations/Organisation.class.php");
-require_once("Models/organisations/Organisations.class.php");
-require_once("Models/users/Department.class.php");
-require_once("Models/users/Departments.class.php");
-require_once("Models/events/EventContacts.class.php");
-require_once("Models/events/Event.class.php");
-require_once("Models/events/Events.class.php");
-require_once("Models/courses/Course.class.php");
-require_once("Models/courses/Courses.class.php");
-
-require_once("Models/regions/Region.class.php");
-require_once("Models/regions/Country.class.php");
-
-require_once("Models/tasks/Tasks.class.php");
-require_once("Models/tasks/Task.class.php");
-require_once("Models/tasks/TaskOwners.class.php");
-require_once("Models/tasks/TaskRecipients.class.php");
-require_once("Models/tasks/TaskCompletions.class.php");
-require_once("Models/tasks/TaskAssociatedFaculty.class.php");
-require_once("Models/tasks/TaskVerifiers.class.php");
-
-					$query		= "	SELECT a.`proxy_id`, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`email`, a.`contact_order`
-									FROM `event_contacts` AS a
-									LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
-									ON b.`id` = a.`proxy_id`
-									WHERE a.`event_id` = ".$db->qstr($event_info["event_id"])."
-									AND b.`id` IS NOT NULL
+					echo "<div id=\"event-sidebar\">\n";
+					?>
+					<table>
+						<tbody>
+							<tr>
+								<th>Date &amp; Time</th>
+								<td><?php echo date(DEFAULT_DATE_FORMAT, $event_info["event_start"]); ?></td>
+							</tr>
+							<tr class="spacer">
+								<td colspan="2"><hr></td>
+							</tr>
+							<tr>
+								<th>Location</th>
+								<td><?php echo (($event_info["event_location"]) ? $event_info["event_location"] : "To Be Announced"); ?></td>
+							</tr>
+							<tr class="spacer">
+								<td colspan="2"><hr></td>
+							</tr>
+							<tr>
+								<th>Duration</th>
+								<td>
+									<?php
+									echo (((int) $event_info["event_duration"]) ? $event_info["event_duration"]." Minutes" : "To Be Announced");
 									
-									UNION
-									
-									SELECT a.`proxy_id`, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`email`, a.`contact_order`
-									FROM `event_contacts` AS a
-									LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
-									ON b.`id` = a.`proxy_id`
-									WHERE a.`event_id` = ".$db->qstr($event_info["parent_id"])."
-									AND b.`id` IS NOT NULL
-									GROUP BY a.`proxy_id`
-									ORDER BY `contact_order` ASC";
-					$faculty = $db->GetAll($query);
-					if ($faculty) {
-						echo "<ul class=\"access-legend\">\n";
-						echo "	<li><span style=\"font-weight: bold\">Faculty Members</span>\n";
-						echo "		<ul>\n";
-						foreach ($faculty as $result) {
-							
-							$photos = UserPhotos::get($result["proxy_id"]);
-							
-//							$photo = new UserPhoto(UserPhoto::fromArray($official));
+									if ($event_types) {
+										echo "<br /><br />";
+										echo "<div class=\"content-small\">\n";
+										echo "<strong>Breakdown</strong><br />";
+										foreach($event_types as $type) {
+											echo "".$type["duration"]." minutes of ".strtolower($type["eventtype_title"])."<br />";
+										}
+										echo "</div>";
+									}
+									?>
+								</td>
+							</tr>
+							<tr class="spacer">
+								<td colspan="2"><hr></td>
+							</tr>
+							<tr>
+								<th>Teachers</th>
+								<td>
+									<?php
+									$query = "	SELECT a.`proxy_id`, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`email`, a.`contact_order`
+												FROM `event_contacts` AS a
+												LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
+												ON b.`id` = a.`proxy_id`
+												WHERE a.`event_id` = ".$db->qstr($event_info["event_id"])."
+												AND b.`id` IS NOT NULL
 
-//							$feat_str = $official_photo->getFilename();
-							Zend_Debug::dump($photos);
-							
-							echo "		<li><a href=\"mailto:".html_encode($result["email"])."\">".html_encode($result["fullname"])."</a></li>\n";
-						}
-						echo "		</ul>\n";
-						echo "	</li>\n";
-						echo "</ul>\n";
-					}					
+												UNION
+
+												SELECT a.`proxy_id`, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`email`, a.`contact_order`
+												FROM `event_contacts` AS a
+												LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
+												ON b.`id` = a.`proxy_id`
+												WHERE a.`event_id` = ".$db->qstr($event_info["parent_id"])."
+												AND b.`id` IS NOT NULL
+												GROUP BY a.`proxy_id`
+												ORDER BY `contact_order` ASC";
+									$faculty = $db->GetAll($query);
+									if ($faculty) {
+										foreach ($faculty as $result) {
+											echo "<a href=\"mailto:".html_encode($result["email"])."\">".html_encode($result["fullname"])."</a><br />\n";
+										}
+									}									
+									?>
+								</td>
+							</tr>
+							<tr class="spacer">
+								<td colspan="2"><hr></td>
+							</tr>							
+							<tr>
+								<th>Audience</th>
+								<td>
+									<ul class="general-list">
+									<?php
+									switch ($event_audience_type) {
+										case "course_id" :
+											echo "<li>Course ID: ".$group_id."</li>\n";
+										break;
+										case "group_id" :
+											foreach ($associated_group_ids as $group_id) {
+												echo "<li>Group ID: ".$group_id."</li>\n";
+											}
+										break;
+										case "proxy_id" :
+											foreach ($associated_proxy_ids as $proxy_id) {
+												echo "<li><a href=\"".ENTRADA_RELATIVE."/people?profile=".get_account_data("username", $proxy_id)."\" target=\"_blank\">".get_account_data("firstlast", $proxy_id)."</a></li>\n";
+											}
+										break;
+										default :
+											echo "<li>To Be Announced</li>";
+										break;
+									}					
+									?>
+									</ul>
+								</td>
+							</tr>
+							<tr class="spacer">
+								<td colspan="2"><hr></td>
+							</tr>
+						</tbody>
+					</table>
+					<?php
+/**
+ * @todo This needs to be fixed as $event_audience_type is no longer for grad_year.
+ */
+if ($event_audience_type == "grad_year") {
+	$query		= "	SELECT a.`event_id`, a.`event_title`, b.`audience_value` AS `event_grad_year`
+					FROM `events` AS a
+					LEFT JOIN `event_audience` AS b
+					ON b.`event_id` = a.`event_id`
+					LEFT JOIN `courses` AS c
+					ON a.`course_id` = c.`course_id`
+					AND c.`organisation_id` = ".$db->qstr($event_info["organisation_id"])."
+					WHERE (a.`event_start` BETWEEN ".$db->qstr($event_info["event_start"])." AND ".$db->qstr(($event_info["event_finish"] - 1)).")
+					AND c.`course_active` = '1'
+					AND a.`event_id` <> ".$db->qstr($event_info["event_id"])."
+					AND b.`audience_type` = 'grad_year'
+					AND b.`audience_value` = ".$db->qstr((int) $associated_grad_year)."
+					ORDER BY `event_title` ASC";
+	$results	= $db->GetAll($query);
+	if ($results) {
+		echo "	<tr>\n";
+		echo "		<td colspan=\"2\">&nbsp;</td>\n";
+		echo "	</tr>\n";
+		echo "	<tr>\n";
+		echo "		<td style=\"vertical-align: top\">Overlapping Event".((count($results) != 1) ? "s" : "")."</td>\n";
+		echo "		<td>\n";
+		foreach ($results as $result) {
+			echo "		<a href=\"".ENTRADA_RELATIVE."/events?id=".$result["event_id"]."\">".html_encode($result["event_title"])."</a><br />\n";
+		}
+		echo "		</td>\n";
+		echo "	</tr>\n";
+	}
+}					
 					echo "</div>\n";
 
-					echo "<div style=\"float: left; width: 520px\">\n";
+					echo "<div class=\"event-body\">\n";
 					
 					if (clean_input($event_info["event_description"], array("notags", "nows")) != "") {
-						echo "<div style=\"font-size: 14px; line-height: 150%\">";
+						echo "<div class=\"event-description\">";
 						echo trim(strip_selected_tags($event_info["event_description"], array("font")));
 						echo "</div>";
 					}
 					
-					echo "	<a name=\"event-details-section\"></a>\n";
-					echo "	<h2 title=\"Event Details Section\">Event Details</h2>\n";
-					echo "	<div id=\"event-details-section\" class=\"section-holder\">\n";
-					echo "		<table style=\"width: 100%\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" summary=\"Detailed Event Information\">\n";
-					echo "		<colgroup>\n";
-					echo "			<col style=\"width: 25%\" />\n";
-					echo "			<col style=\"width: 75%\" />\n";
-					echo "		</colgroup>\n";
-					echo "		<tbody>\n";
-					echo "			<tr>\n";
-					echo "				<td>Date &amp; Time</td>\n";
-					echo "				<td>".date(DEFAULT_DATE_FORMAT, $event_info["event_start"])."</td>\n";
-					echo "			</tr>\n";
-					echo "			<tr>\n";
-					echo "				<td>Location</td>\n";
-					echo "				<td>".(($event_info["event_location"]) ? $event_info["event_location"] : "To Be Announced")."</td>\n";
-					echo "			</tr>\n";
-					
-					/**
-					 * @todo This needs to be fixed as $event_audience_type is no longer for cohort.
-					 */
-					if ($event_audience_type == "cohort") {
-						$cohort = groups_get_cohort($_SESSION["details"]["id"]);
-						$query		= "	SELECT a.`event_id`, a.`event_title`, b.`audience_value` AS `event_cohort`
-										FROM `events` AS a
-										LEFT JOIN `event_audience` AS b
-										ON b.`event_id` = a.`event_id`
-										LEFT JOIN `courses` AS c
-										ON a.`course_id` = c.`course_id`
-										AND c.`organisation_id` = ".$db->qstr($event_info["organisation_id"])."
-										WHERE (a.`event_start` BETWEEN ".$db->qstr($event_info["event_start"])." AND ".$db->qstr(($event_info["event_finish"] - 1)).")
-										AND c.`course_active` = '1'
-										AND a.`event_id` <> ".$db->qstr($event_info["event_id"])."
-										AND b.`audience_type` = 'cohort'
-										AND b.`audience_value` = ".$db->qstr((int) $cohort["group_id"])."
-										ORDER BY `event_title` ASC";
-						$results	= $db->GetAll($query);
-						if ($results) {
-							echo "	<tr>\n";
-							echo "		<td colspan=\"2\">&nbsp;</td>\n";
-							echo "	</tr>\n";
-							echo "	<tr>\n";
-							echo "		<td style=\"vertical-align: top\">Overlapping Event".((count($results) != 1) ? "s" : "")."</td>\n";
-							echo "		<td>\n";
-							foreach ($results as $result) {
-								echo "		<a href=\"".ENTRADA_RELATIVE."/events?id=".$result["event_id"]."\">".html_encode($result["event_title"])."</a><br />\n";
-							}
-							echo "		</td>\n";
-							echo "	</tr>\n";
-						}
-					}
-					
-					if ($event_types) {
-						echo "	<tr>\n";
-						echo "		<td colspan=\"2\">&nbsp;</td>\n";
-						echo "	</tr>\n";
-						echo "	<tr>\n";
-						echo "		<td style=\"vertical-align: top\">Event Type".(count($event_types) > 1 ? "s" : "")."</td>\n";
-						echo "		<td>";
-						foreach($event_types as $type) {
-							echo html_encode($type["eventtype_title"]) . " <span class=\"content-small\">".$type["duration"]." minutes</span><br />";
-						}
-						echo "		";
-						echo "		</td>\n";
-						echo "	</tr>\n";
-					}
-
-					if ((!$event_types) || (count($event_types) > 1)) {
-						echo "	<tr>\n";
-						echo "		<td colspan=\"2\">&nbsp;</td>\n";
-						echo "	</tr>\n";
-						echo "	<tr>\n";
-						echo "		<td>Event Duration</td>\n";
-						echo "		<td>".(((int) $event_info["event_duration"]) ? $event_info["event_duration"]." minutes" : "To Be Announced")."</td>\n";
-						echo "	</tr>\n";
-					}					
-
-					echo "			<tr>\n";
-					echo "				<td colspan=\"2\">&nbsp;</td>\n";
-					echo "			</tr>\n";
-
 					if (clean_input($event_info["event_message"], array("notags", "nows")) != "") {
-						echo "	<tr>\n";
-						echo "		<td colspan=\"2\">&nbsp;</td>\n";
-						echo "	</tr>\n";
-						echo "	<tr>\n";
-						echo "		<td colspan=\"2\">\n";
-						echo "			<h3>Teacher's Message</h3>\n";
-						echo			trim(strip_selected_tags($event_info["event_message"], array("font")));
-						echo "		</td>\n";
-						echo "	</tr>\n";
-					}
-					
-					echo "			<tr>\n";
-					echo "				<td colspan=\"2\">&nbsp;</td>\n";
-					echo "			</tr>\n";
-
-					echo "	<tr>\n";
-					echo "		<td style=\"vertical-align: top\">Learners</td>\n";
-					echo "		<td style=\"vertical-align: top\">\n";
-					echo "			<ul class=\"general-list\">";
-					
-					switch ($event_audience_type) {
-						case "course_id" :
-							echo "<li>Course ID: ".$group_id."</li>\n";
-						break;
-						case "group_id" :
-							echo "	<tr>\n";
-							echo "		<td style=\"vertical-align: top\"></td>\n";
-							echo "		<td style=\"vertical-align: top\">\n";
-							echo "			<ul class=\"general-list\">";
-							foreach ($associated_group_ids as $group_id) {
-								echo "			<li>".html_encode(groups_get_name($group_id))."</li>\n";
-							}
-							echo "			</ul>\n";
-							echo "		</td>\n";
-							echo "	</tr>\n";
-						break;
-						case "cohort" :
-							echo "	<tr>\n";
-							echo "		<td style=\"vertical-align: top\"></td>\n";
-							echo "		<td style=\"vertical-align: top\">\n";
-							echo "			<ul class=\"general-list\">";
-							foreach ($associated_cohort_ids as $group_id) {
-								echo "			<li>".html_encode(groups_get_name($group_id))."</li>\n";
-							}
-							echo "			</ul>\n";
-							echo "		</td>\n";
-							echo "	</tr>\n";
-						break;
-						case "proxy_id" :
-							echo "	<tr>\n";
-							echo "		<td style=\"vertical-align: top\">Learner".((count($associated_proxy_ids) != 1) ? "s" : "")."</td>\n";
-							echo "		<td style=\"vertical-align: top\">\n";
-							echo "			<ul class=\"general-list\">";
-							foreach ($associated_proxy_ids as $proxy_id) {
-								echo "			<li><a href=\"".ENTRADA_RELATIVE."/people?profile=".get_account_data("username", $proxy_id)."\" target=\"_blank\">".get_account_data("firstlast", $proxy_id)."</a></li>\n";
-							}
-							echo "			</ul>\n";
-							echo "		</td>\n";
-							echo "	</tr>\n";
-						break;
-					}					
-					echo "			</ul>\n";
-					echo "		</td>\n";
-					echo "	</tr>\n";
-					echo "		</tbody>\n";
-					echo "		</table>\n";
-					echo "	</div>\n";
-
-					$query					= "	SELECT b.`objective_id`, b.`objective_name`
-												FROM `event_objectives` AS a
-												LEFT JOIN `global_lu_objectives` AS b
-												ON b.`objective_id` = a.`objective_id`
-												WHERE a.`objective_type` = 'event'
-												AND b.`objective_active` = '1'
-												AND a.`event_id` = ".$db->qstr($EVENT_ID)."
-												ORDER BY b.`objective_name` ASC;";
-					$clinical_presentations	= $db->GetAll($query);
-
-					$show_event_objectives	= ((clean_input($event_info["event_objectives"], array("notags", "nows")) != "") ? true : false);
-					$show_clinical_presentations = (($clinical_presentations) ? true : false);
-
-					$show_curriculum_objectives = false;
-					$curriculum_objectives = courses_fetch_objectives(array($event_info["course_id"]), 1, false, false, $EVENT_ID, true);
-					
-					$temp_objectives = $curriculum_objectives["objectives"];
-					foreach ($temp_objectives as $objective_id => $objective) {
-						unset($curriculum_objectives["used_ids"][$objective_id]);
-						$curriculum_objectives["objectives"][$objective_id]["objective_primary_children"] = 0;
-						$curriculum_objectives["objectives"][$objective_id]["objective_secondary_children"] = 0;
-						$curriculum_objectives["objectives"][$objective_id]["objective_tertiary_children"] = 0;
-					}
-					foreach ($curriculum_objectives["objectives"] as $objective_id => $objective) {
-						if (isset($objective["event_objective"]) && $objective["event_objective"]) {
-							foreach ($objective["parent_ids"] as $parent_id) {
-								if ($objective["primary"] || $objective["secondary"] || $objective["tertiary"] || $curriculum_objectives["objectives"][$parent_id]["primary"] || $curriculum_objectives["objectives"][$parent_id]["secondary"] || $curriculum_objectives["objectives"][$parent_id]["tertiary"]) {
-									$curriculum_objectives["objectives"][$parent_id]["objective_".($objective["primary"] || ($curriculum_objectives["objectives"][$parent_id]["primary"] && !$objective["secondary"] && !$objective["tertiary"]) ? "primary" : ($objective["secondary"] || ($curriculum_objectives["objectives"][$parent_id]["secondary"] && !$objective["primary"] && !$objective["tertiary"]) ? "secondary" : "tertiary"))."_children"]++;
-								if ($curriculum_objectives["objectives"][$parent_id]["primary"]) {
-									$curriculum_objectives["objectives"][$objective_id]["primary"] = true;
-								} elseif ($curriculum_objectives["objectives"][$parent_id]["secondary"]) {
-									$curriculum_objectives["objectives"][$objective_id]["secondary"] = true;
-								} elseif ($curriculum_objectives["objectives"][$parent_id]["tertiary"]) {
-									$curriculum_objectives["objectives"][$objective_id]["tertiary"] = true;
-								} 
-							}
-							}
-							$show_curriculum_objectives = true;
-						}
-					}
-					foreach ($temp_objectives as $objective_id => $objective) {
-						if (!isset($objective["event_objective"]) || !$objective["event_objective"]) {
-							if (isset($objective["primary"]) && $objective["primary"] && !$curriculum_objectives["objectives"][$objective_id]["objective_primary_children"]) {
-								$curriculum_objectives["objectives"][$objective_id]["primary"] = false;
-							} elseif (isset($objective["secondary"]) && $objective["secondary"] && !$curriculum_objectives["objectives"][$objective_id]["objective_secondary_children"]) {
-								$curriculum_objectives["objectives"][$objective_id]["secondary"] = false;
-							} elseif (isset($objective["tertiary"]) && $objective["tertiary"] && !$curriculum_objectives["objectives"][$objective_id]["objective_tertiary_children"]) {
-								$curriculum_objectives["objectives"][$objective_id]["tertiary"] = false;
-							}
-						}
-					}
-					if ($show_event_objectives || $show_clinical_presentations || $show_curriculum_objectives) {
-						$include_objectives = true;
-
-						echo "<a name=\"event-objectives-section\"></a>\n";
-						echo "<h2 title=\"Event Objectives Section\">Event Objectives</h2>\n";
-						echo "<div id=\"event-objectives-section\">\n";
-
-						if ($show_event_objectives) {
-							echo "	<div class=\"section-holder\">\n";
-							echo "		<h3>Free-Text Objectives</h3>\n";
-							echo		trim(strip_selected_tags($event_info["event_objectives"], array("font")));
-							echo "	</div>\n";
-						}
-
-						if ($show_clinical_presentations) {
-							echo "	<div class=\"section-holder\">\n";
-							echo "		<h3>Clinical Presentations</h3>\n";
-							foreach ($clinical_presentations as $key => $result) {
-								echo (($key) ? ", " : "").$result["objective_name"];
-							}
-							echo "	</div>\n";
-						}
-						
-						if ($show_curriculum_objectives) {
-							?>
-							<script type="text/javascript">
-							function renewList (hierarchy) {
-								if (hierarchy != null && hierarchy) {
-									hierarchy = 1;
-								} else {
-									hierarchy = 0;
-								}
-								new Ajax.Updater('objectives_list', '<?php echo ENTRADA_RELATIVE; ?>/api/objectives.api.php', 
-									{
-										method:	'post',
-										parameters: 'course_ids=<?php echo $event_info["course_id"] ?>&hierarchy='+hierarchy+'&event_id=<?php echo $EVENT_ID; ?>'
-							    	}
-					    		);
-							}
-				    		</script>
-							<?php
-							echo "<div class=\"section-holder\">\n";
-							echo "	<h3>Curriculum Objectives</h3>\n";
-							echo "	<strong>The learner will be able to:</strong>";
-							echo	course_objectives_in_list($curriculum_objectives, 1, false, false, 1, true)."\n";
-							echo "</div>\n";
-						}
+						echo "<div class=\"event-message\">\n";
+						echo "	<h3>Teacher's Message:</h3>\n";
+						echo	trim(strip_selected_tags($event_info["event_message"], array("font")));
 						echo "</div>\n";
-					}
-
+					}					
+					
 					echo "</div>\n";
 
 					echo "<div style=\"clear: both\" />\n";
@@ -1016,6 +840,107 @@ require_once("Models/tasks/TaskVerifiers.class.php");
 					echo "		<div style=\"text-align: right; padding-top: 8px\"><input type=\"submit\" class=\"button\" value=\"Submit\" /></div>\n";
 					echo "	</form>\n";
 					echo "</div>\n";
+					
+$query = "	SELECT b.`objective_id`, b.`objective_name`
+			FROM `event_objectives` AS a
+			LEFT JOIN `global_lu_objectives` AS b
+			ON b.`objective_id` = a.`objective_id`
+			WHERE a.`objective_type` = 'event'
+			AND b.`objective_active` = '1'
+			AND a.`event_id` = ".$db->qstr($EVENT_ID)."
+			ORDER BY b.`objective_name` ASC;";
+$clinical_presentations	= $db->GetAll($query);
+
+$show_event_objectives	= ((clean_input($event_info["event_objectives"], array("notags", "nows")) != "") ? true : false);
+$show_clinical_presentations = (($clinical_presentations) ? true : false);
+
+$show_curriculum_objectives = false;
+$curriculum_objectives = courses_fetch_objectives(array($event_info["course_id"]), 1, false, false, $EVENT_ID, true);
+
+$temp_objectives = $curriculum_objectives["objectives"];
+foreach ($temp_objectives as $objective_id => $objective) {
+	unset($curriculum_objectives["used_ids"][$objective_id]);
+	$curriculum_objectives["objectives"][$objective_id]["objective_primary_children"] = 0;
+	$curriculum_objectives["objectives"][$objective_id]["objective_secondary_children"] = 0;
+	$curriculum_objectives["objectives"][$objective_id]["objective_tertiary_children"] = 0;
+}
+foreach ($curriculum_objectives["objectives"] as $objective_id => $objective) {
+	if ($objective["event_objective"]) {
+		foreach ($objective["parent_ids"] as $parent_id) {
+			if ($objective["primary"] || $objective["secondary"] || $objective["tertiary"] || $curriculum_objectives["objectives"][$parent_id]["primary"] || $curriculum_objectives["objectives"][$parent_id]["secondary"] || $curriculum_objectives["objectives"][$parent_id]["tertiary"]) {
+				$curriculum_objectives["objectives"][$parent_id]["objective_".($objective["primary"] || ($curriculum_objectives["objectives"][$parent_id]["primary"] && !$objective["secondary"] && !$objective["tertiary"]) ? "primary" : ($objective["secondary"] || ($curriculum_objectives["objectives"][$parent_id]["secondary"] && !$objective["primary"] && !$objective["tertiary"]) ? "secondary" : "tertiary"))."_children"]++;
+			if ($curriculum_objectives["objectives"][$parent_id]["primary"]) {
+				$curriculum_objectives["objectives"][$objective_id]["primary"] = true;
+			} elseif ($curriculum_objectives["objectives"][$parent_id]["secondary"]) {
+				$curriculum_objectives["objectives"][$objective_id]["secondary"] = true;
+			} elseif ($curriculum_objectives["objectives"][$parent_id]["tertiary"]) {
+				$curriculum_objectives["objectives"][$objective_id]["tertiary"] = true;
+			} 
+		}
+		}
+		$show_curriculum_objectives = true;
+	}
+}
+foreach ($temp_objectives as $objective_id => $objective) {
+	if (!$objective["event_objective"]) {
+		if ($objective["primary"] && !$curriculum_objectives["objectives"][$objective_id]["objective_primary_children"]) {
+			$curriculum_objectives["objectives"][$objective_id]["primary"] = false;
+		} elseif ($objective["secondary"] && !$curriculum_objectives["objectives"][$objective_id]["objective_secondary_children"]) {
+			$curriculum_objectives["objectives"][$objective_id]["secondary"] = false;
+		} elseif ($objective["tertiary"] && !$curriculum_objectives["objectives"][$objective_id]["objective_tertiary_children"]) {
+			$curriculum_objectives["objectives"][$objective_id]["tertiary"] = false;
+		}
+	}
+}
+if ($show_event_objectives || $show_clinical_presentations || $show_curriculum_objectives) {
+	$include_objectives = true;
+
+	echo "<a name=\"event-objectives-section\"></a>\n";
+	echo "<h2 title=\"Event Objectives Section\">Event Objectives</h2>\n";
+	echo "<div id=\"event-objectives-section\">\n";
+
+	if ($show_event_objectives) {
+		echo "	<div class=\"section-holder\">\n";
+		echo "		<h3>Free-Text Objectives</h3>\n";
+		echo		trim(strip_selected_tags($event_info["event_objectives"], array("font")));
+		echo "	</div>\n";
+	}
+
+	if ($show_clinical_presentations) {
+		echo "	<div class=\"section-holder\">\n";
+		echo "		<h3>Clinical Presentations</h3>\n";
+		foreach ($clinical_presentations as $key => $result) {
+			echo (($key) ? ", " : "").$result["objective_name"];
+		}
+		echo "	</div>\n";
+	}
+
+	if ($show_curriculum_objectives) {
+		?>
+		<script type="text/javascript">
+		function renewList (hierarchy) {
+			if (hierarchy != null && hierarchy) {
+				hierarchy = 1;
+			} else {
+				hierarchy = 0;
+			}
+			new Ajax.Updater('objectives_list', '<?php echo ENTRADA_RELATIVE; ?>/api/objectives.api.php', 
+				{
+					method:	'post',
+					parameters: 'course_ids=<?php echo $event_info["course_id"] ?>&hierarchy='+hierarchy+'&event_id=<?php echo $EVENT_ID; ?>'
+				}
+			);
+		}
+		</script>
+		<?php
+		echo "<div class=\"section-holder\">\n";
+		echo "	<h3>Curriculum Objectives</h3>\n";
+		echo "	<strong>The learner will be able to:</strong>";
+		echo	course_objectives_in_list($curriculum_objectives, 1, false, false, 1, true)."\n";
+		echo "</div>\n";
+	}
+	echo "</div>\n";
+}					
 
 					/**
 					 * Sidebar item that will provide the links to the different sections within this page.
@@ -1084,8 +1009,6 @@ require_once("Models/tasks/TaskVerifiers.class.php");
 				(isset($_GET["pv"]) ? (int) trim($_GET["pv"]) : 1),
 				$_SESSION[APPLICATION_IDENTIFIER]["events"]["pp"]);
 
-		echo "<h1>View Events</h1>";
-
 		/**
 		 * Output the filter HTML.
 		 */
@@ -1139,7 +1062,7 @@ require_once("Models/tasks/TaskVerifiers.class.php");
 					<?php
 					$rid = $learning_events["rid"];
 					$count_modified = 0;
-					$count_cohort = 0;
+					$count_grad_year = 0;
 					$count_group = 0;
 					$count_individual = 0;
 
@@ -1152,7 +1075,7 @@ require_once("Models/tasks/TaskVerifiers.class.php");
 							/**
 							 * Determine if this event has been modified since their last visit.
 							 */
-							if (isset($result["last_visited"]) && ((int) $result["last_visited"]) && ((int) $result["last_visited"] < (int) $result["updated_date"])) {
+							if (((int) $result["last_visited"]) && ((int) $result["last_visited"] < (int) $result["updated_date"])) {
 								$is_modified = true;
 								$count_modified++;
 							}
@@ -1161,8 +1084,8 @@ require_once("Models/tasks/TaskVerifiers.class.php");
 							 * Increment the appropriate audience_type counter.
 							 */
 							switch ($result["audience_type"]) {
-								case "cohort" :
-									$count_cohort++;
+								case "grad_year" :
+									$count_grad_year++;
 								break;
 								case "group_id" :
 									$count_group++;

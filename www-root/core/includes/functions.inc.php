@@ -1457,6 +1457,32 @@ function fetch_organisation_title($organisation_id = 0) {
 }
 
 /**
+ * This functio returns the full path of the course, including the name (i.e. Term 1 > Unit 3 > FooBar 101).
+ * 
+ * @param type $course_id
+ * @return string 
+ */
+function fetch_course_path($course_id = 0) {
+	$output = "";
+	
+	$course_id = (int) $course_id;
+	
+	if ($course_id) {
+		$curriculum_path = curriculum_hierarchy($course_id);
+
+		if ((is_array($curriculum_path)) && (!empty($curriculum_path))) {
+			$output = implode(" &gt; ", $curriculum_path);
+		}
+	}
+	
+	if (!$output) {
+		$output = "No Associated Course";
+	}
+	
+	return $output;
+}
+
+/**
  * This function returns the name of the course if it is found, otherwise false.
  *
  * @param int $id

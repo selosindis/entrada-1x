@@ -909,7 +909,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								<tr>
 									<td>&nbsp;</td>
 									<td colspan="2">
-										<div id="related_events_list">
+										<div id="related_events">
 											<?php
 												require_once("modules/admin/events/api-related-events.inc.php");
 											?>
@@ -951,11 +951,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								$$('.'+type+'_audience').invoke('show');
 								if(type!== 'proxy_id'){
 									checkConflict();
-								}								
+								}
 							}
 				
 							function removeRelatedEvent(event_id) {
-								var updater = new Ajax.Updater('related_events_list', '<?php echo ENTRADA_URL."/admin/events?section=api-related-events";?>',{
+								var updater = new Ajax.Updater('related_events', '<?php echo ENTRADA_URL."/admin/events?section=api-related-events";?>',{
+									evalScripts: true,
 									method:'post',
 									parameters: {
 										'ajax' : 1,
@@ -966,15 +967,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 									},
 									onLoading: function (transport) {
 										$('related_events_list').innerHTML = '<br/><br/><span class="content-small" style="align: center;">Loading... <img src="<?php echo ENTRADA_URL; ?>/images/indicator.gif" style="vertical-align: middle;" /></span>';
-									},
-									onFailure: function (transport){
-										$('related_events_notifications').update(new Element('div', {'class':'display-error'}).update('There was a problem communicating with the server. An administrator has been notified, please try again later.'));
 									}
 								});
 							}
 				
 							function addRelatedEvent(event_id) {
-								var updater = new Ajax.Updater('related_events_list', '<?php echo ENTRADA_URL."/admin/events?section=api-related-events";?>',{
+								var updater = new Ajax.Updater('related_events', '<?php echo ENTRADA_URL."/admin/events?section=api-related-events";?>',{
+									evalScripts: true,
 									method:'post',
 									parameters: {
 										'ajax' : 1,
@@ -985,9 +984,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 									},
 									onLoading: function (transport) {
 										$('related_events_list').innerHTML = '<br/><br/><span class="content-small" style="align: center;">Loading... <img src="<?php echo ENTRADA_URL; ?>/images/indicator.gif" style="vertical-align: middle;" /></span>';
-									},
-									onFailure: function (transport){
-										$('related_events_notifications').update(new Element('div', {'class':'display-error'}).update('There was a problem communicating with the server. An administrator has been notified, please try again later.'));
 									}
 								});
 							}

@@ -11,23 +11,19 @@
  *
 */
 ?>
-<!doctype html>
-<!-- paulirish.com/2008/conditional-stylesheets-vs-css-hacks-answer-neither/ -->
-<!--[if lt IE 7 ]> <html class="no-js ie6" lang="en"> <![endif]-->
-<!--[if IE 7 ]>    <html class="no-js ie7" lang="en"> <![endif]-->
-<!--[if IE 8 ]>    <html class="no-js ie8" lang="en"> <![endif]-->
-<!--[if (gte IE 9)|!(IE)]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
-	<meta charset="<?php echo DEFAULT_CHARSET; ?>">
+	<meta charset="<?php echo DEFAULT_CHARSET; ?>" />
 
 	<title>%TITLE%</title>
 
-	<meta name="description" content="%DESCRIPTION%">
-	<meta name="keywords" content="%KEYWORDS%">
+	<meta name="description" content="%DESCRIPTION%" />
+	<meta name="keywords" content="%KEYWORDS%" />
 
-	<meta name="robots" content="index, follow">
+	<meta name="robots" content="index, follow" />
 
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	
 	<link href="<?php echo ENTRADA_RELATIVE; ?>/css/common.css?r=<?php echo html_encode(APPLICATION_VERSION); ?>" rel="stylesheet" type="text/css" media="all" />
 	<link href="<?php echo ENTRADA_RELATIVE; ?>/css/print.css?r=<?php echo html_encode(APPLICATION_VERSION); ?>" rel="stylesheet" type="text/css" media="print" />

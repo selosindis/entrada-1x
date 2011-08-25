@@ -321,7 +321,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 						switch($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"]) {
 							case "content" :
-								$url	= ENTRADA_URL."/admin/events?section=manage&id=".$EVENT_ID;
+								$url	= ENTRADA_URL."/admin/events?section=content&id=".$EVENT_ID;
 								$msg	= "You will now be redirected to the event content page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 							break;
 							case "new" :

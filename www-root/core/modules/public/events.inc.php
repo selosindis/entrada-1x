@@ -129,21 +129,21 @@ if (!defined("PARENT_INCLUDED")) {
 		switch ($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]) {
 			case "admin" :
 				$admin_wording = "Administrator View";
-				$admin_url = ENTRADA_RELATIVE."/admin/events".(($EVENT_ID) ? "?".replace_query(array("section" => "manage", "id" => $EVENT_ID)) : "");
+				$admin_url = ENTRADA_RELATIVE."/admin/events".(($EVENT_ID) ? "?".replace_query(array("section" => "edit", "id" => $EVENT_ID)) : "");
 			break;
 			case "pcoordinator" :
 				$admin_wording = "Coordinator View";
-				$admin_url = ENTRADA_RELATIVE."/admin/events".(($EVENT_ID) ? "?".replace_query(array("section" => "manage", "id" => $EVENT_ID)) : "");
+				$admin_url = ENTRADA_RELATIVE."/admin/events".(($EVENT_ID) ? "?".replace_query(array("section" => "edit", "id" => $EVENT_ID)) : "");
 			break;
 			case "director" :
 				$admin_wording = "Director View";
-				$admin_url = ENTRADA_RELATIVE."/admin/events".(($EVENT_ID) ? "?".replace_query(array("section" => "manage", "id" => $EVENT_ID)) : "");
+				$admin_url = ENTRADA_RELATIVE."/admin/events".(($EVENT_ID) ? "?".replace_query(array("section" => "content", "id" => $EVENT_ID)) : "");
 			break;
 			case "teacher" :
 			case "faculty" :
 			case "lecturer" :
 				$admin_wording = "Teacher View";
-				$admin_url = ENTRADA_RELATIVE."/admin/events".(($EVENT_ID) ? "?".replace_query(array("section" => "manage", "id" => $EVENT_ID)) : "");
+				$admin_url = ENTRADA_RELATIVE."/admin/events".(($EVENT_ID) ? "?".replace_query(array("section" => "content", "id" => $EVENT_ID)) : "");
 			break;
 			default :
 				$admin_wording = "";

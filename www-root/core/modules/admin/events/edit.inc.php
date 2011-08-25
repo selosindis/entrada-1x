@@ -513,7 +513,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					case 1 :
 					default :
 						$PROCESSED	= $event_info;
-
 						/**
 						 * Add existing event type segments to the processed array.
 						 */
@@ -905,6 +904,22 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								</tr>
 								<?php } ?>
 								<tr>
+									<td colspan="3"><h2>Related Events</h2></td>
+								</tr>
+								<tr>
+									<td>&nbsp;</td>
+									<td colspan="2">
+										<div id="related_events_list">
+											<?php
+												require_once("modules/admin/events/api-related-events.inc.php");
+											?>
+										</div>
+									</td>
+								</tr>
+								<tr>
+									<td colspan="3">&nbsp;</td>
+								</tr>
+								<tr>
 									<td colspan="3"><h2>Time Release Options</h2></td>
 								</tr>
 								<?php echo generate_calendars("viewable", "", true, false, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : 0), true, false, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0)); ?>
@@ -938,49 +953,83 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 									checkConflict();
 								}								
 							}
+				
+							function removeRelatedEvent(event_id) {
+								var updater = new Ajax.Updater('related_events_list', '<?php echo ENTRADA_URL."/admin/events?section=api-related-events";?>',{
+									method:'post',
+									parameters: {
+										'ajax' : 1,
+										'course_id' : $('course_id').value,
+										'event_id' : '<?php echo $EVENT_ID; ?>',
+										'remove_id' : event_id,
+										'related_event_ids_clean' : $F('related_event_ids_clean')
+									},
+									onLoading: function (transport) {
+										$('related_events_list').innerHTML = '<br/><br/><span class="content-small" style="align: center;">Loading... <img src="<?php echo ENTRADA_URL; ?>/images/indicator.gif" style="vertical-align: middle;" /></span>';
+									},
+									onFailure: function (transport){
+										$('related_events_notifications').update(new Element('div', {'class':'display-error'}).update('There was a problem communicating with the server. An administrator has been notified, please try again later.'));
+									}
+								});
+							}
+				
+							function addRelatedEvent(event_id) {
+								var updater = new Ajax.Updater('related_events_list', '<?php echo ENTRADA_URL."/admin/events?section=api-related-events";?>',{
+									method:'post',
+									parameters: {
+										'ajax' : 1,
+										'course_id' : $('course_id').value,
+										'event_id' : '<?php echo $EVENT_ID; ?>',
+										'add_id' : event_id,
+										'related_event_ids_clean' : $F('related_event_ids_clean')
+									},
+									onLoading: function (transport) {
+										$('related_events_list').innerHTML = '<br/><br/><span class="content-small" style="align: center;">Loading... <img src="<?php echo ENTRADA_URL; ?>/images/indicator.gif" style="vertical-align: middle;" /></span>';
+									},
+									onFailure: function (transport){
+										$('related_events_notifications').update(new Element('div', {'class':'display-error'}).update('There was a problem communicating with the server. An administrator has been notified, please try again later.'));
+									}
+								});
+							}
+							
+							var prevDate = $('event_start_date').value;
+							var prevTime = $('event_start_display').innerHTML;
+							var t=self.setInterval("checkDifference()",1500);
+								
+								
+							Event.observe('associated_grad_year','change',checkConflict);
+							Event.observe('associated_organisation_id','change',checkConflict);
+							Event.observe('student_list','change',checkConflict)
+							Event.observe('eventtype_ids','change',checkConflict)
+							//Event.observe('event_start_date','keyup',checkConflict);
+								
+							
+							function checkDifference(){
+								if($('event_start_date').value !== prevDate){
+									prevDate = $('event_start_date').value;
+									checkConflict();
+								}
+								else if($('event_start_display').innerHTML !== prevTime){
+									prevTime = $('event_start_display').innerHTML;
+									checkConflict();						
+								}
+							}
+							function checkConflict(){
+								new Ajax.Request('<?php echo ENTRADA_URL;?>/api/learning-event-conflicts.api.php',
+								{
+									method:'post',
+									parameters: $("editEventForm").serialize(true),
+									onSuccess: function(transport){
+									var response = transport.responseText || null;
+									if(response !==null){
+										var g = new k.Growler();
+										g.smoke(response,{life:7});
+									}
+									},
+									onFailure: function(){ alert('Unable to check if a conflict exists.') }
+								});
+							}
 						</script>
-						
-						<script>
-				var prevDate = $('event_start_date').value;
-				var prevTime = $('event_start_display').innerHTML;
-				var t=self.setInterval("checkDifference()",1500);
-					
-					
-				Event.observe('associated_grad_year','change',checkConflict);
-				Event.observe('associated_organisation_id','change',checkConflict);
-				Event.observe('student_list','change',checkConflict)
-				Event.observe('eventtype_ids','change',checkConflict)
-				//Event.observe('event_start_date','keyup',checkConflict);
-					
-				
-				
-				
-				function checkDifference(){
-					if($('event_start_date').value !== prevDate){
-						prevDate = $('event_start_date').value;
-						checkConflict();
-					}
-					else if($('event_start_display').innerHTML !== prevTime){
-						prevTime = $('event_start_display').innerHTML;
-						checkConflict();						
-					}
-				}
-				function checkConflict(){
-					new Ajax.Request('<?php echo ENTRADA_URL;?>/api/learning-event-conflicts.api.php',
-					{
-						method:'post',
-						parameters: $("editEventForm").serialize(true),
-						onSuccess: function(transport){
-						var response = transport.responseText || null;
-						if(response !==null){
-							var g = new k.Growler();
-							g.smoke(response,{life:7});
-						}
-						},
-						onFailure: function(){ alert('Unable to check if a conflict exists.') }
-					});
-				}
-			</script>
 						
 						<br /><br />
 						<?php

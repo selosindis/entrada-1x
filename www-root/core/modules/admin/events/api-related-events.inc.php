@@ -65,8 +65,8 @@ if (!defined("IN_EVENTS")) {
 		}
 		if (isset($_POST["add_id"]) && ($tmp_input = $_POST["add_id"])) {
 			$PROCESSED["add_id"] = $tmp_input;
-			$query = "SELECT `parent_id` FROM `events` WHERE `event_id` = ".$db->qstr($PROCESSED["add_id"])." AND `course_id` = ".$db->qstr($PROCESSED["course_id"]);
-			if (!$event_exists = $db->GetOne($query)) {
+			$query = "SELECT * FROM `events` WHERE `event_id` = ".$db->qstr($PROCESSED["add_id"])." AND `course_id` = ".$db->qstr($PROCESSED["course_id"]);
+			if (!$event_exists = $db->GetRow($query)) {
 				$related_event_error = true;
 				$related_event_error_message = "The event ID which you supplied was not related to the same course as this event. Please try again with an event ID which exists within the course.";
 			}
@@ -94,7 +94,7 @@ if (!defined("IN_EVENTS")) {
 				$keyword = "child";
 				$query = "SELECT * FROM `events` WHERE `parent_id` = ".$db->qstr($PROCESSED["event_id"]);
 			}
-			if ($event_exists == ($event["parent_id"] ? $event["parent_id"] : $PROCESSED["event_id"])) {
+			if (isset($event_exists) && $event_exists["parent_id"] == ($event["parent_id"] ? $event["parent_id"] : $PROCESSED["event_id"])) {
 				$related_event_error = true;
 				$related_event_error_message = "The event ID which you supplied is already associated with this event. Please try again with an event ID which is not already related to the current event.";
 			}
@@ -124,6 +124,7 @@ if (!defined("IN_EVENTS")) {
 			}
 			?>
 			<div style="width: 100%;">
+				<input type="hidden" id="parent_id" name="parent_id" value="<?php echo ($event["parent_id"] ? $event["parent_id"] : $PROCESSED["event_id"]); ?>" />
 				<input id="related_event_ids_clean" name="related_event_ids_clean" type="hidden" value="<?php echo $related_event_ids_clean; ?>">
 				<?php
 				foreach ($related_events as $related_event) {
@@ -136,7 +137,7 @@ if (!defined("IN_EVENTS")) {
 					<label for="related_events_select" class="form-nrequired"><?php echo ucfirst($keyword); ?> Events</label>
 				</div>
 				<div style="width: 72%; float: left;">
-					<input type="text" name="related_event_id" id="related_event_id" />
+					<input autocomplete="off" type="text" name="related_event_id" id="related_event_id" />
 					<input class="button-sm" type="button" value="Add" onclick="addRelatedEvent($('related_event_id').value)" />
 					<script type="text/javascript">
 						$('related_event_id').observe('keypress', function(event){
@@ -146,6 +147,10 @@ if (!defined("IN_EVENTS")) {
 							}
 						});
 					</script>
+					<?php
+					$ONLOAD[] = "generateEventAutocomplete()";
+					?>
+					<div class="autocomplete" id="events_autocomplete"></div>
 				</div>
 				<div style="clear: both; padding-top: 5px;" class="content-small">
 					Please select an <strong>Event ID</strong> to be added as a <?php echo $keyword; ?> event.

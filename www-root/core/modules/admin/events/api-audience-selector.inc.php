@@ -45,9 +45,14 @@ if (!defined("IN_EVENTS")) {
 	ob_clear_open_buffers();
 	
 	$options_for = false;
-
-	if (isset($_GET["options_for"])) {
-		$options_for = clean_input($_GET["options_for"], array("trim"));
+	$course_id = 0;
+	
+	if (isset($_POST["options_for"]) && ($tmp_input = clean_input($_POST["options_for"], array("trim")))) {
+		$options_for = $tmp_input;
+	}
+	
+	if (isset($_POST["course_id"]) && ($tmp_input = clean_input($_POST["course_id"], array("int")))) {
+		$course_id = $tmp_input;
 	}
 	
 	if ($options_for && $ENTRADA_USER->getActiveOrganisation()) {
@@ -58,10 +63,13 @@ if (!defined("IN_EVENTS")) {
 			case "cohorts" : // Classes
 				$groups = $organisation;
 				
-				$query = "	SELECT *
-							FROM `groups` 
-							WHERE `group_active` = 1
-							ORDER BY `group_name` ASC";
+				$query = "	SELECT a.*
+							FROM `groups` AS a
+							JOIN `group_organisations` AS b
+							ON b.`group_id` = a.`group_id`
+							WHERE a.`group_active` = '1'
+							AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+							ORDER BY a.`group_name` ASC";
 				$groups_results = $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
 				if ($groups_results) {
 					
@@ -75,13 +83,37 @@ if (!defined("IN_EVENTS")) {
 						$groups[$ENTRADA_USER->getActiveOrganisation()]["options"][] = array("text" => $group["group_name"], "value" => "group_" . $group["group_id"], "checked" => $checked);
 					}
 
-					echo lp_multiple_select_popup("cohorts", $groups, array("title" => "Select Classes or Groups:", "submit_text" => "Apply", "cancel" => true, "submit" => true));
+					echo lp_multiple_select_popup("cohorts", $groups, array("title" => "Select Cohorts of Learners:", "submit_text" => "Close", "submit" => true));
+				} else {
+					echo display_notice("There are no cohorts of learners available.");
 				}
 			break;
 			case "course_groups" :
-				echo "Coming soon.";
+				$groups = $organisation;
+				
+				$query = "	SELECT a.*
+							FROM `course_groups` AS a
+							WHERE a.`active` = '1'
+							AND a.`course_id` = ".$db->qstr($course_id)."
+							ORDER BY a.`group_name` ASC";
+				$groups_results = $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
+				if ($groups_results) {
+					
+					foreach ($groups_results as $group) {
+						if (isset($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["group"]) && is_array($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["group"]) && in_array($group["group_id"], $_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["group"])) {
+							$checked = "checked=\"checked\"";
+						} else {
+							$checked = "";
+						}
+
+						$groups[$ENTRADA_USER->getActiveOrganisation()]["options"][] = array("text" => $group["group_name"], "value" => "cgroup_" . $group["cgroup_id"], "checked" => $checked);
+					}
+
+					echo lp_multiple_select_popup("course_groups", $groups, array("title" => "Select Course Specific Small Groups:", "submit_text" => "Close", "submit" => true));
+				} else {
+					//echo display_notice("There are no small groups in the course you have selected.");
+				}
 			break;
-			
 			case "students" : // Students
 				$students = $organisation;
 
@@ -112,7 +144,9 @@ if (!defined("IN_EVENTS")) {
 						$students[$ENTRADA_USER->getActiveOrganisation()]["options"][] = array("text" => $student["fullname"], "value" => "student_".$student["proxy_id"], "checked" => $checked);
 					}
 
-					echo lp_multiple_select_popup("students", $students, array("title" => "Select Students:", "submit_text" => "Apply", "cancel" => true, "submit" => true));
+					echo lp_multiple_select_popup("students", $students, array("title" => "Select Individual Learners:", "submit_text" => "Close", "submit" => true));
+				} else {
+					echo display_notice("There are no students available.");
 				}
 			break;
 

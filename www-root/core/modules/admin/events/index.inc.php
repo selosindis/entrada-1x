@@ -161,11 +161,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			<tbody>
 			<?php
 
-			$count_modified		= 0;
-			$count_cohort		= 0;
-			$count_group		= 0;
-			$count_individual	= 0;
-
+			$count_modified = 0;
+			
 			foreach ($learning_events["events"] as $result) {
 				$url = "";
 				$accessible = true;
@@ -181,25 +178,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					$accessible = false;
 				}
 
-				/**
-				 * Increment the appropriate audience_type counter.
-				 */
-				switch ($result["audience_type"]) {
-					case "cohort" :
-						$count_cohort++;
-					break;
-					case "group_id" :
-						$count_group++;
-					break;
-					case "proxy_id" :
-						$count_individual++;
-					break;
-					default :
-						continue;
-					break;
-				}
-
-				echo "<tr id=\"event-".$result["event_id"]."\" class=\"event".((!$url) ? " np" : ((!$accessible) ? " na" : (($result["audience_type"] == "proxy_id") ? " individual" : "")))."\">\n";
+				echo "<tr id=\"event-".$result["event_id"]."\" class=\"event".((!$url) ? " np" : ((!$accessible) ? " na" : ""))."\">\n";
 				echo "	<td class=\"modified\">".(($administrator) ? "<input type=\"checkbox\" name=\"checked[]\" value=\"".$result["event_id"]."\" />" : "<img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"19\" height=\"19\" alt=\"\" title=\"\" />")."</td>\n";
 				echo "	<td class=\"date".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Event Date\">" : "").date(DEFAULT_DATE_FORMAT, $result["event_start"]).(($url) ? "</a>" : "")."</td>\n";
 				echo "	<td class=\"term".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Intended For Term ".html_encode($result["event_term"])."\">" : "").html_encode($result["event_term"]).(($url) ? "</a>" : "")."</td>\n";

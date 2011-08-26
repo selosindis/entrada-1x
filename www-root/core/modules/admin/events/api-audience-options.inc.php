@@ -56,78 +56,64 @@ if (!defined("IN_EVENTS")) {
 			$PROCESSED["course_id"] = $tmp_input;
 		}
 	}
-
+	
 	if ($PROCESSED["course_id"]) {
-		?>
-		<table style="width: 100%" cellspacing="0" cellpadding="0">
-			<colgroup>
-				<col style="width: 4%" />
-				<col style="width: 96%" />
-			</colgroup>
-			<tbody>
-			<?php
-			$query = "	SELECT b.*
-						FROM `courses` AS a
-						JOIN `groups` AS b
-						ON b.`group_type` = 'course_list'
-						AND b.`group_value` = ".$db->qstr($PROCESSED["course_id"])."
-						WHERE b.`group_active` = '1'
-						AND a.`course_active` = '1'
-						AND a.`course_id` = ".$db->qstr($PROCESSED["course_id"]);
-			$target_details = $db->GetRow($query);
-			if ($target_details) {
+		$query = "SELECT * FROM `courses` WHERE `course_id` = ".$db->qstr($PROCESSED["course_id"]);
+		$course_info = $db->GetRow($query);
+		if ($course_info) {
+			$permission = $course_info["permission"];
+			if ($permission == "open") {
+				$query = "SELECT * FROM `groups` WHERE `group_type` = 'course_list' AND `group_value` = ".$db->qstr($PROCESSED["course_id"]);
+				$course_list = $db->GetRow($query);
 				?>
 				<tr>
-					<td style="vertical-align: top"><input type="radio" name="audience_group_type" id="audience_group_type_enrollment" value="enrollment" onclick="selectTargetGroupOption(this.value)" style="vertical-align: middle" /></td>
-					<td style="padding-bottom: 15px">
-						<label for="target_group_type_enrolled" class="radio-group-title">Defined course enrollment list</label>
-						<div class="content-small">This event is for all students actively registered in this course.</div>
+					<td>&nbsp;</td>
+					<td style="vertical-align: top"><label for="faculty_name" class="form-nrequired">Associated Learners</label></td>
+					<td>
+						<table>
+							<tbody>
+								<?php
+								if ($course_list) {
+									?>
+									<tr>
+										<td style="vertical-align: top"><input type="radio" name="event_audience_type" id="event_audience_type_course" value="course" onclick="selectEventAudienceOption('course')" style="vertical-align: middle"<?php echo ((($PROCESSED["event_audience_type"] == "course") || !isset($PROCESSED["event_audience_type"])) ? " checked=\"checked\"" : ""); ?> /></td>
+										<td colspan="2" style="padding-bottom: 15px">
+											<label for="event_audience_type_course" class="radio-group-title">All Learners Enrolled in <?php echo html_encode($course_info["course_code"]); ?></label>
+											<div class="content-small">This event is intended for all learners enrolled in the course.</div>
+										</td>
+									</tr>
+									<?php
+								}
+								?>
+								<tr>
+									<td style="vertical-align: top"><input type="radio" name="event_audience_type" id="event_audience_type_custom" value="custom" onclick="selectEventAudienceOption('custom')" style="vertical-align: middle"<?php echo ((($PROCESSED["event_audience_type"] == "custom") || (!$course_list)) ? " checked=\"checked\"" : ""); ?> /></td>
+									<td colspan="2" style="padding-bottom: 15px">
+										<label for="event_audience_type_custom" class="radio-group-title">A Custom Event Audience</label>
+										<div class="content-small">This event is intended for a custom selection of learners.</div>
+
+										<div id="event_audience_type_custom_options" style="<?php echo ($course_list ? "display: none; " : ""); ?>position: relative; margin-top: 10px;">
+											<select id="audience_type" onchange="showMultiSelect();" style="width: 275px;">
+												<option value="">-- Select an audience type --</option>
+												<option value="cohorts">Cohorts of learners</option>
+												<option value="course_groups">Course specific small groups</option>
+												<option value="students">Individual learners</option>
+											</select>
+
+											<span id="options_loading" style="display:none; vertical-align: middle"><img src="<?php echo ENTRADA_RELATIVE; ?>/images/indicator.gif" width="16" height="16" alt="Please Wait" title="" style="vertical-align: middle" /> Loading ... </span>
+											<span id="options_container"></span>
+
+											<input type="hidden" id="multifilter" name="filter" value="" />
+											<ul class="menu multiselect" id="audience_list" style="margin-top: 5px"></ul>
+										</div>
+									</td>
+								</tr>
+							</tbody>
+						</table>
 					</td>
 				</tr>
 				<?php
 			}
-			?>
-				<tr >
-					<td style="vertical-align: top"><input type="radio" name="target_group_type" id="target_group_type_proxy_id" value="proxy_id" onclick="selectTargetGroupOption(this.value)" style="vertical-align: middle" /></td>
-					<td style="padding-bottom: 15px">
-						<label for="target_group_type_proxy_id" class="radio-group-title">Selected students must complete this evaluation</label>
-						<div class="content-small">This evaluation must be completed only by the selected individuals.</div>
-					</td>
-				</tr>
-				<tr class="target_group proxy_id_audience">
-					<td>&nbsp;</td>
-					<td style="vertical-align: middle" class="content-small">
-						<label for="student_name" class="form-required">Student Name</label>
-
-						<input type="text" id="student_name" name="fullname" size="30" autocomplete="off" style="width: 203px; vertical-align: middle" />
-						<div class="autocomplete" id="student_name_auto_complete"></div>
-
-						<input type="hidden" id="associated_student" name="associated_student" />
-						<input type="button" class="button-sm" id="add_associated_student" value="Add" style="vertical-align: middle" />
-						<span class="content-small" style="margin-left: 3px; padding-top: 5px"><strong>e.g.</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?></span>
-						<ul id="student_list" class="menu" style="margin-top: 15px">
-							<?php
-							if (($PROCESSED["evaluation_evaluators"][0]["evaluator_type"] == "proxy_id") && is_array($PROCESSED["evaluation_evaluators"]) && !empty($PROCESSED["evaluation_evaluators"])) {
-								foreach ($PROCESSED["evaluation_evaluators"] as $evaluator) {
-									$proxy_id = (int) $evaluator["evaluator_value"];
-									?>
-									<li class="community" id="student_<?php echo $proxy_id; ?>" style="cursor: move;"><?php echo get_account_data("fullname", $proxy_id); ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="student_list.removeItem('<?php echo $proxy_id; ?>');" class="list-cancel-image" /></li>
-									<?php
-								}
-							}
-							?>
-						</ul>
-						<input type="hidden" id="student_ref" name="student_ref" value="" />
-						<input type="hidden" id="student_id" name="student_id" value="" />
-					</td>
-				</tr>
-			</tbody>
-		</table>
-		<script type="text/javascript" defer="defer">
-		selectTargetGroupOption('<?php echo (isset($PROCESSED["evaluation_evaluators"][0]["evaluator_type"]) ? $PROCESSED["evaluation_evaluators"][0]["evaluator_type"] : 'cohort'); ?>');
-		student_list = new AutoCompleteList({ type: 'student', url: '<?php echo ENTRADA_RELATIVE; ?>/api/personnel.api.php?type=student', remove_image: '<?php echo ENTRADA_RELATIVE; ?>/images/action-delete.gif' });
-		</script>
-		<?php
+		}
 	}
 
 	/**

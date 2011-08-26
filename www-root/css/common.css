@@ -922,6 +922,10 @@ font-size:10px;
 text-decoration:none;
 }
 
+ul.menu.multiselect li a {
+font-size:11px;
+}
+
 ul.menu li.bold a {
 font-weight:bold;
 }
@@ -931,6 +935,13 @@ font-size:10px;
 padding-bottom:4px;
 padding-left:20px;
 background:transparent url(../images/checkbox-off.gif) no-repeat;
+}
+
+ul.menu.multiselect li,ul.menu.multiselect li.off {
+margin-top:5px;
+padding-bottom:5px;
+font-size:11px;
+border-bottom:1px #EEE solid;
 }
 
 ul.menu.none li {
@@ -950,8 +961,11 @@ ul.menu.none li span {
 vertical-align:middle;
 }
 
-ul.menu li.community {
+ul.menu li.group,ul.menu li.community {
 background:transparent url(../images/list-community.gif) no-repeat;
+}
+ul.menu li.user {
+background:transparent url(../images/list-user.gif) no-repeat;
 }
 
 ul.menu li.undergrad {
@@ -1483,6 +1497,22 @@ padding:5px 5px 10px;
 
 ul.objective-list li input[type=checkbox] {
 vertical-align: middle;
+}
+
+ol.community-list {
+margin-left:0;
+padding-left:0;
+list-style-type:none;
+}
+
+ol.community-list li {
+border-bottom:#F1F1F1 1px solid;
+margin-top:2px;
+padding:0 0 2px 10px;
+}
+
+ol.community-list li:first-child {
+margin-top:0;
 }
 
 ul.objective-list li label.heading, ol.objective-list li span.heading {
@@ -2778,7 +2808,7 @@ cursor:move;
 }
 
 ul#faculty_list,ul#audience_list,ul#session_faculty_list,ul#student_list,ul#director_list,ul#coordinator_list,ul#individual_list,ul#verifier_list,ul#author_list,ul#group_list {
-width:250px;
+width:275px;
 overflow:none;
 position:relative;
 }

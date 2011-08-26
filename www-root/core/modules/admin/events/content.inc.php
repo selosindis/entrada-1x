@@ -42,11 +42,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 } else {
 
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/eventtypes_list.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
-?>
-<script type="text/javascript" charset="utf-8">
-	var EVENT_LIST_STATIC_TOTAL_DURATION = true;
-</script>
-<?php
+	?>
+	<script type="text/javascript">
+		var EVENT_LIST_STATIC_TOTAL_DURATION = true;
+	</script>
+	<?php
 	if ($EVENT_ID) {
 		$query		= "	SELECT a.*, b.`organisation_id`
 						FROM `events` AS a
@@ -63,12 +63,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			} else {
 				$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/events?".replace_query(array("section" => "content", "id" => $EVENT_ID)), "title" => "Event Content");
 
-				$HEAD[]		= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/tabpane/tabpane.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
-				$HEAD[]		= "<link href=\"".ENTRADA_URL."/css/tabpane.css?release=".html_encode(APPLICATION_VERSION)."\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />\n";
-				$HEAD[]		= "<link href=\"".ENTRADA_URL."/css/tree.css?release=".html_encode(APPLICATION_VERSION)."\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />\n";
-				$HEAD[]		= "<style type=\"text/css\">.dynamic-tab-pane-control .tab-page {height:auto;}</style>\n";
-				$HEAD[]		= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/picklist.js\"></script>\n";
-				$HEAD[]		= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/scriptaculous/tree.js\"></script>\n";
+				$HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/picklist.js\"></script>\n";
 
 				/**
 				 * Load the rich text editor.

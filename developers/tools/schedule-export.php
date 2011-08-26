@@ -39,19 +39,13 @@
  *
  */
 
-echo "\n\n";
-echo "@todo\n\n";
-echo "Before you run this to you have to change event_duration\n\n";
-echo "and eventtype_title to a semi-colon delimited list.\n\n";
-exit;
-
 set_include_path(get_include_path().PATH_SEPARATOR.dirname(__FILE__)."/includes");
 
 @ini_set("auto_detect_line_endings", 1);
 @ini_set("magic_quotes_runtime", 0);
 set_time_limit(0);
 
-if((!isset($_SERVER["argv"])) || (@count($_SERVER["argv"]) < 1)) {
+if ((!isset($_SERVER["argv"])) || (@count($_SERVER["argv"]) < 1)) {
 	echo "<html>\n";
 	echo "<head>\n";
 	echo "	<title>Processing Error</title>\n";
@@ -69,80 +63,201 @@ require_once("dbconnection.inc.php");
 require_once("functions.inc.php");
 
 
-$START_DATE		= ((isset($_SERVER["argv"][1]) && (trim($_SERVER["argv"][1]))) ? strtotime(trim($_SERVER["argv"][1])." 00:00:00") : mktime(0, 0, 0, 9, 1, date("Y")));
-$END_DATE		= ((isset($_SERVER["argv"][2]) && (trim($_SERVER["argv"][2]))) ? strtotime(trim($_SERVER["argv"][2])." 23:59:59") : strtotime("+1 year", ($START_DATE - 1)));
+$START_DATE = ((isset($_SERVER["argv"][1]) && (trim($_SERVER["argv"][1]))) ? strtotime(trim($_SERVER["argv"][1])." 00:00:00") : mktime(0, 0, 0, 9, 1, date("Y")));
+$END_DATE = ((isset($_SERVER["argv"][2]) && (trim($_SERVER["argv"][2]))) ? strtotime(trim($_SERVER["argv"][2])." 23:59:59") : strtotime("+1 year", ($START_DATE - 1)));
+$ORGANISATION_ID = ((isset($_SERVER["argv"][3]) && (trim($_SERVER["argv"][3]))) ? (int) $_SERVER["argv"][3] : 1);
 
-$CSV_HEADINGS	= array("Event ID", "Phase", "Grad Class", "Course Num", "Course / Unit Name", "Date", "Start Time", "Event Duration", "Event Type", "Event Title", "Event Location", "Teacher Staff Number(s)", "Teacher Name(s)");
+/**
+ * Testing Stuff
+ */
 
-$OUTPUT_FILE	= dirname(__FILE__)."/data/schedule-export_".date("Y-m-d").".csv"; 
-
-$total_events	= 0;
-$total_errors	= 0;
-
-$query		= "
-			SELECT a.*, b.`audience_value` AS `event_grad_year`, c.`course_name`, d.`eventtype_title`
+$query = "	SELECT a.*, b.`audience_value` AS `event_grad_year`, c.`course_name`
 			FROM `events` AS a
 			LEFT JOIN `event_audience` AS b
 			ON b.`event_id` = a.`event_id`
 			LEFT JOIN `courses` AS c
 			ON c.`course_id` = a.`course_id`
-			LEFT JOIN `events_lu_eventtypes` AS d
-			ON d.`eventtype_id` = a.`eventtype_id`
-			WHERE a.`event_start` BETWEEN ".$db->qstr($START_DATE)." AND ".$db->qstr($END_DATE)."
+			WHERE c.`organisation_id` = ".$db->qstr($ORGANISATION_ID)."
+			AND a.`event_phase` <> '3'
+			AND a.`event_start` BETWEEN ".$db->qstr($START_DATE)." AND ".$db->qstr($END_DATE)."
 			AND b.`audience_type` = 'grad_year'
+			AND (a.`parent_id` = '0' OR a.`parent_id` IS NULL)
+			GROUP BY a.`event_id`
 			ORDER BY a.`event_phase` ASC, a.`event_start` ASC";
-$results	= $db->GetAll($query);
-if($results) {
-	$handle = fopen($OUTPUT_FILE, "w+");
-	if($handle) {
-		fputcsv($handle, $CSV_HEADINGS);
 			
-		foreach($results as $result) {
-			$staff_number	= array();
-			$staff_names	= array();
-			
-			$query		= "SELECT * FROM `event_contacts` WHERE `event_id` = ".$db->qstr($result["event_id"])." ORDER BY `contact_order` ASC";
-			$sresults	= $db->GetAll($query);
-			if($sresults) {
-				foreach($sresults as $sresult) {
-					if($info = get_user_info($sresult["proxy_id"])) {
-						$staff_number[$sresult["proxy_id"]]	= $info["number"];
-						$staff_names[$sresult["proxy_id"]]	= $info["firstname"]." ".$info["lastname"];
+$results = $db->GetAll($query);
+if ($results) {
+	$count = 0;
+	
+	foreach ($results as $result) {
+		$count++;
+		$query = "	SELECT a.*, b.`audience_value` AS `event_grad_year`, c.`course_name`
+					FROM `events` AS a
+					LEFT JOIN `event_audience` AS b
+					ON b.`event_id` = a.`event_id`
+					LEFT JOIN `courses` AS c
+					ON c.`course_id` = a.`course_id`
+					WHERE c.`organisation_id` = ".$db->qstr($ORGANISATION_ID)."
+					AND a.`event_phase` <> '3'
+					AND a.`parent_id` = ".$db->qstr($result["event_id"])."
+					GROUP BY a.`event_id`
+					ORDER BY a.`event_phase` ASC, a.`event_start` ASC";
+		$sresults = $db->GetAll($query);
+		if ($sresults) {
+			$count += count($sresults);
+		}
+	}
+	
+	echo "\n\nTotal lines that should be in the file below: ".$count."\n\n";
+}
+
+$CSV_HEADINGS = array("Original Event", "Parent Event", "Term", "Grad Class", "Course Name", "Date", "Start Time", "Total Duration", "Event Type Durations", "Event Types", "Event Title", "Location", "Teacher Staff Number(s)", "Teacher Name(s)");
+
+$OUTPUT_FILE = dirname(__FILE__)."/data/schedule-export_".date("Y-m-d").".csv"; 
+
+$total_events = 0;
+$total_errors = 0;
+
+function fetch_events($parent_id = 0) {
+	global $db, $START_DATE, $END_DATE, $ORGANISATION_ID;
+	
+	$parent_id = (int) $parent_id;
+	
+	$query = "	SELECT a.*, b.`audience_type`, b.`audience_value` AS `event_grad_year`, c.`course_name`
+				FROM `events` AS a
+				LEFT JOIN `event_audience` AS b
+				ON b.`event_id` = a.`event_id`
+				LEFT JOIN `courses` AS c
+				ON c.`course_id` = a.`course_id`
+				WHERE c.`organisation_id` = ".$db->qstr($ORGANISATION_ID)."
+				AND a.`event_phase` <> '3'";
+				
+				if (!$parent_id) {
+					$query .= " AND a.`event_start` BETWEEN ".$db->qstr($START_DATE)." AND ".$db->qstr($END_DATE)."
+								AND b.`audience_type` = 'grad_year'
+								AND (a.`parent_id` = '0' OR a.`parent_id` IS NULL)";
+				} else {
+					$query .= " AND a.`parent_id` = ".$db->qstr($parent_id);
+				}
+				
+	$query .= "	GROUP BY a.`event_id`
+				ORDER BY a.`event_phase` ASC, a.`event_start` ASC";
+				
+	$results = $db->GetAll($query);
+
+	return $results;
+}
+
+function write_row($result = array()) {
+	global $db, $handle, $CSV_HEADINGS;
+	
+	$row = array();
+	$event_types = array();
+	$event_type_durations = array();
+	$staff_number = array();
+	$staff_names = array();
+
+	$query = "SELECT * FROM `event_contacts` WHERE `event_id` = ".$db->qstr($result["event_id"])." ORDER BY `contact_order` ASC";
+	$sresults = $db->GetAll($query);
+	if ($sresults) {
+		foreach ($sresults as $sresult) {
+			if ($info = get_user_info($sresult["proxy_id"])) {
+				$staff_number[$sresult["proxy_id"]]	= $info["number"];
+				$staff_names[$sresult["proxy_id"]]	= $info["firstname"]." ".$info["lastname"];
+			}
+		}
+	}
+
+	$query = "	SELECT a.`eventtype_id`, a.`duration`, b.`eventtype_title`
+				FROM `event_eventtypes` AS a
+				JOIN `events_lu_eventtypes` AS b
+				ON b.`eventtype_id` = a.`eventtype_id`
+				WHERE a.`event_id` = ".$db->qstr($result["event_id"])."
+				AND b.`eventtype_active` = '1'";
+	$sresults = $db->GetAll($query);
+	if ($sresults) {
+		foreach ($sresults as $key => $sresult) {
+			$event_types[$key] = $sresult["eventtype_title"];
+			$event_type_durations[$key] = $sresult["duration"];
+		}
+	}
+
+	$row[] = (int) $result["event_id"];								// Original Event
+	$row[] = (int) $result["parent_id"];							// Original Parent
+	$row[] = stripslashes($result["event_phase"]);					// Term
+	$row[] = ($result["audience_type"] == "grad_year" ? stripslashes($result["event_grad_year"]) : "");				// Grad Class
+	$row[] = stripslashes($result["course_name"]);					// Course Name
+	$row[] = date("Y-m-d", $result["event_start"]);					// Date
+	$row[] = date("H:i", $result["event_start"]);					// Start Time
+	$row[] = stripslashes($result["event_duration"]);				// Total Duration
+	$row[] = stripslashes(implode("; ", $event_type_durations));	// Event Type Durations
+	$row[] = stripslashes(implode("; ", $event_types));				// Event Types
+	$row[] = stripslashes($result["event_title"]);					// Event Title
+	$row[] = stripslashes($result["event_location"]);				// Location
+	$row[] = stripslashes(implode("; ", $staff_number));			// Teacher Staff Number(s)
+	$row[] = stripslashes(implode("; ", $staff_names));				// Teacher Name(s)
+	
+	$total_columns = count($row);
+	$total_headings = count($CSV_HEADINGS);
+	if ($total_columns != $total_headings) {
+		echo "\n\n[FATAL] The number of columns [".$total_columns."] for event_id [".$result["event_id"]."] do not match the number of headings [".$total_headings."].";
+		exit;
+	}
+	
+	if (fputcsv($handle, $row)) {
+		return true;
+	}
+	
+	return false;
+}
+
+/**
+ * Open output file for writing.
+ */
+$handle = fopen($OUTPUT_FILE, "w+");
+if ($handle) {
+	
+	/**
+	 * Write the CSV heading line.
+	 */
+	fputcsv($handle, $CSV_HEADINGS);
+
+	/**
+	 * Fetch all parent events between the requested dates.
+	 */
+	$parents = fetch_events();
+	if ($parents) {
+		foreach ($parents as $parent) {
+			if (write_row($parent)) {
+				$total_events++;
+
+				/**
+				 * Fetch all children of this parent so they're ordered correctly in the CSV file.
+				 */
+				$children = fetch_events($parent["event_id"]);
+				if ($children) {
+					foreach ($children as $child) {
+						if (write_row($child)) {
+							$total_events++;
+						} else {
+							$total_errors++;	
+						}
 					}
 				}
-			}
-			
-			$row	= array();
-			$row[]	= $result["event_id"];							// Event ID
-			$row[]	= stripslashes($result["event_phase"]);			// Phase
-			$row[]	= stripslashes($result["event_grad_year"]);		// Grad Class
-			$row[]	= stripslashes($result["course_num"]);			// Course Num
-			$row[]	= stripslashes($result["course_name"]);			// Course / Unit Name
-			$row[]	= date("Y-m-d", $result["event_start"]);		// Date
-			$row[]	= date("H:i", $result["event_start"]);			// Start Time
-			$row[]	= stripslashes($result["event_duration"]);		// Duration
-			$row[]	= stripslashes($result["eventtype_title"]);		// Event Type Title
-			$row[]	= stripslashes($result["event_title"]);			// Event Title
-			$row[]	= stripslashes($result["event_location"]);		// Location
-			$row[]	= stripslashes(implode("; ", $staff_number));	// Teacher Staff Number(s)
-			$row[]	= stripslashes(implode("; ", $staff_names));	// Teacher Name(s)
-	
-			if(fputcsv($handle, $row)) {
-				$total_events++;
 			} else {
 				$total_errors++;	
 			}
 		}
-		
-		fclose($handle);
-	} else {
-		echo "\n\nWARNING: Unable to write data to your output file, please ensure this directory is writable by PHP.";
-		echo "\n".$OUTPUT_FILE;
 	}
+	
+	fclose($handle);
+} else {
+	echo "\n\nWARNING: Unable to write data to your output file, please ensure this directory is writable by PHP.";
+	echo "\n".$OUTPUT_FILE;
 }
 
-if($total_events) {
-	if($total_errors) {
+if ($total_events) {
+	if ($total_errors) {
 		echo "\n\nWARNING: Unable to save ".$total_errors." row".(($total_errors != 1) ? "s" : "")." to the export file.\n";	
 	}
 	
@@ -151,5 +266,5 @@ if($total_events) {
 } else {
 	echo "\n\nWARNING: There were no Learning Events in the system from ".date("Y-m-d", $START_DATE)." until ".date("Y-m-d", $END_DATE);
 }
+
 echo "\n\n================================================================\n";
-?>

@@ -51,8 +51,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 					FROM `course_files` AS a
 					LEFT JOIN `courses` AS b
 					ON a.`course_id` = b.`course_id`
-					WHERE a.`id` = ".$db->qstr($FILE_ID)."
-					AND b.`course_active` = '1'";
+					WHERE a.`id` = ".$db->qstr($FILE_ID);
 		$result	= ((USE_CACHE) ? $db->CacheGetRow(CACHE_TIMEOUT, $query) : $db->GetRow($query));
 		if($result) {
 			$accesses		= $result["accesses"];

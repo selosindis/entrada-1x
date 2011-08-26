@@ -10405,6 +10405,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 							ON `".AUTH_DATABASE."`.`user_data`.`id` = `primary_teacher`.`proxy_id`
 							LEFT JOIN `courses`
 							ON `courses`.`course_id` = `events`.`course_id`
+							LEFT JOIN `curriculum_lu_types` ON `curriculum_lu_types`.`curriculum_type_id` = `courses`.`curriculum_type_id`
 							%OBJECTIVE_JOIN%
 							%TOPIC_JOIN%
 							WHERE `courses`.`course_active` = '1'
@@ -10725,9 +10726,13 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 				}
 				foreach ($learning_events as &$event) {
 					if (key_exists($event["parent_id"], $parent_events_array)) {
-						$event["event_title"] = $parent_events_array[$event["parent_id"]]["event_title"]." - ".$event["event_title"];
-						$event["event_term"] = $parent_events_array[$event["parent_id"]]["event_term"];
-					}
+						if ($parent_events_array[$event["parent_id"]]["event_title"]) {
+							$event["event_title"] = $parent_events_array[$event["parent_id"]]["event_title"]." - ".$event["event_title"];
+						}
+						if ($parent_events_array[$event["parent_id"]]["event_term"]) {
+							$event["event_term"] = $parent_events_array[$event["parent_id"]]["event_term"];
+						}
+					} 
 				}
 			}
 		}

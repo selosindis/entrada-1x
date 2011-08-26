@@ -89,7 +89,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							ON b.`id` = d.`proxy_id`
 							AND c.`account_active`='true'
 							AND (c.`access_starts`='0' OR c.`access_starts`<=".$db->qstr(time()).")
-							AND (c.`access_expires`='0' OR c.`access_expires`>==".$db->qstr(time()).") ";
+							AND (c.`access_expires`='0' OR c.`access_expires`>=".$db->qstr(time()).") ";
 				foreach ($assessments as $key => $assessment) {
 					$query .= " LEFT JOIN `".DATABASE_NAME."`.`assessment_grades` AS assessment_$key ON b.`id` = assessment_$key.`proxy_id` AND assessment_$key.`assessment_id` = ".$db->qstr($assessment["assessment_id"])."\n";
 				}

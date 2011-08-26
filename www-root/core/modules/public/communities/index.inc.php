@@ -82,11 +82,11 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 				if($results) {
 					?>
 					<h2>Most Active Communities</h2>
-					<ol style="padding-left: 25px; margin-left: 0.3em;">
+					<ol class="community-list">
 					<?php
 					foreach($results as $result) {
 						?>
-						<li><a href="<?php echo ENTRADA_URL."/community".$result["community_url"]; ?>"><?php echo html_encode(limit_chars($result["community_title"], 32)); ?></a></li>
+						<li><a href="<?php echo ENTRADA_URL."/community".$result["community_url"]; ?>"><?php echo html_encode(limit_chars($result["community_title"], 35)); ?></a></li>
 						<?php
 					}
 					?>
@@ -106,15 +106,12 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 				if($results) {
 					?>
 					<h2>Newest Communities</h2>
-					<ol style="padding-left: 25px; margin-left: 0.3em">
+					<ol class="community-list">
 					<?php
 					foreach($results as $result) {
 						?>
 						<li>
-							<div style="position: relative; vertical-align: middle">
-								<a href="<?php echo ENTRADA_URL."/community".$result["community_url"]; ?>" title="<?php echo html_encode(limit_chars($result["community_description"], 400)); ?>"><?php echo html_encode(limit_chars($result["community_title"], 17)); ?></a>
-								<span style="position: absolute; right: 0px; vertical-align: middle" class="content-small">(<?php echo date("Y-m-d", $result["community_opened"]); ?>)</span>
-							</div>
+							<a href="<?php echo ENTRADA_URL."/community".$result["community_url"]; ?>" title="<?php echo html_encode(limit_chars($result["community_description"], 400)); ?>"><?php echo html_encode(limit_chars($result["community_title"], 35)); ?></a>
 						</li>
 						<?php
 					}

@@ -26,8 +26,7 @@
 require_once("init.inc.php");
 require_once("Models/utility/Template.class.php");
 require_once("Models/utility/TemplateMailer.class.php");
-
-$SEND_EMAIL_NOTIFICATIONS = true;
+$SEND_EMAIL_NOTIFICATIONS = false;
 $SET_INACTIVE_COMMUNITIES = false;
 
 $mail = new TemplateMailer(new Zend_Mail());
@@ -56,13 +55,22 @@ if ($results) {
 		$history_timestamps = $db->GetAll($query);
 		if ($history_timestamps) {
 			foreach ($history_timestamps as $history_timestamp) {
+				//of the two timestamps returned check which is most recent
+				if ($history_timestamp["history_timestamp"] > $history_timestamp["timestamp"]) {
+					$timestamp = $history_timestamp["history_timestamp"]; 
+				} else if ($history_timestamp["history_timestamp"] < $history_timestamp["timestamp"]) {
+					$timestamp = $history_timestamp["timestamp"];
+				} else if ($history_timestamp["history_timestamp"] == $history_timestamp["timestamp"]) {
+					$timestamp = $history_timestamp["history_timestamp"];
+				}
+				
 				$query = "  SELECT a.`community_id`, a.`proxy_id`, a.`member_acl`, b.`id`, b.`firstname`, b.`lastname`, b.`email` 
 							FROM `community_members` AS a
 							LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
 							ON a.`proxy_id` = b.`id`
 							WHERE a.`community_id` = " . $db->qstr($history_timestamp["community_id"]) ."
 							AND a.member_acl = '1'";
-				if (($history_timestamp["history_timestamp"] >= strtotime("-6 months 00:00:00") && $history_timestamp["history_timestamp"] <= strtotime("-6 months 23:59:59")) || ($history_timestamp["timestamp"] >= strtotime("-6 months 00:00:00") && $history_timestamp["timestamp"] <= strtotime("-6 months 23:59:59")&& $history_timestamp["timestamp"] != NULL)) {
+				if (($timestamp >= strtotime("-6 months 00:00:00") && $timestamp <= strtotime("-6 months 23:59:59")))  {
 					$admin_info_results = $db->GetAll($query);
 					if ($admin_info_results) {
 						$xml_file = TEMPLATE_ABSOLUTE."/email/community-cleanup.xml";
@@ -90,7 +98,7 @@ if ($results) {
 							}
 						}						
 					}
-				} elseif (($history_timestamp["history_timestamp"] >= strtotime("-12 months 00:00:00") && $history_timestamp["history_timestamp"] <= strtotime("-12 months 23:59:59")) || ($history_timestamp["timestamp"] >= strtotime("-12 months 00:00:00") && $history_timestamp["timestamp"] <= strtotime("-12 months 23:59:59")&& $history_timestamp["timestamp"] != NULL)) {
+				} elseif (($timestamp >= strtotime("-12 months 00:00:00") && $timestamp <= strtotime("-12 months 23:59:59"))) {
 					$admin_info_results = $db->GetAll($query);
 					if ($admin_info_results) {
 						$xml_file = TEMPLATE_ABSOLUTE."/email/community-cleanup.xml";
@@ -118,7 +126,7 @@ if ($results) {
 							}
 						}
 					}
-				} elseif (($history_timestamp["history_timestamp"] >= strtotime("-12 months -7 days 00:00:00") && $history_timestamp["history_timestamp"] <= strtotime("-12 months -7 days 23:59:59")) || ($history_timestamp["timestamp"] >= strtotime("-12 months -7 days 00:00:00") && $history_timestamp["timestamp"] <= strtotime("-12 months -7 days 23:59:59") && $history_timestamp["timestamp"] != NULL)) {
+				} elseif (($timestamp >= strtotime("-12 months -7 days 00:00:00") && $timestamp <= strtotime("-12 months -7 days 23:59:59")))  {
 					$query = "  SELECT * FROM `communities`
 								WHERE `community_id` = " . $db->qstr($history_timestamp["community_id"]);
 					$inactive_community_results = $db->GetAll($query);
@@ -139,12 +147,15 @@ if ($results) {
 							}
 						}
 					}
-				} elseif (($history_timestamp["history_timestamp"] < strtotime("-12 months -7 days 00:00:00")) || ($history_timestamp["timestamp"] < strtotime("-12 months -7 days 00:00:00") && $history_timestamp["timestamp"] != NULL)) {
+				} elseif (($timestamp < strtotime("-12 months -7 days 00:00:00"))) {
 					$query = "  SELECT * FROM `communities`
 								WHERE `community_id` = " . $db->qstr($history_timestamp["community_id"]);		
 					$inactive_community_results = $db->GetAll($query);
 					if ($inactive_community_results) {
 						foreach($inactive_community_results as $inactive_community) {
+							echo "\n";
+							echo $history_timestamp["history_timestamp"]."\n";
+							echo $history_timestamp["timestamp"]."\n";
 							$query = "  UPDATE `communities` SET `community_active` = '0'
 										WHERE `community_id` =" . $db->qstr($inactive_community["community_id"]);
 							if ($SET_INACTIVE_COMMUNITIES) {
@@ -156,7 +167,7 @@ if ($results) {
 								}	
 							}
 							else {
-								application_log("cron", "Action: Community ". $history_timestamp["community_id"]. " inactive for more than 12 months 7 days. Set to inactive.");
+								application_log("cron", "Action: Community ". $history_timestamp["community_id"]. " " . $history_timestamp["history_timestamp"]. " " ."inactive for more than 12 months 7 days. Set to inactive.");
 							}
 						}							
 					}

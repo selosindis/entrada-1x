@@ -55,6 +55,10 @@ if (!defined("IN_EVENTS")) {
 		$course_id = $tmp_input;
 	}
 	
+	if (isset($_POST["event_id"]) && ($tmp_input = clean_input($_POST["event_id"], array("int")))) {
+		$event_id = $tmp_input;
+	}
+	
 	if ($options_for && $ENTRADA_USER->getActiveOrganisation()) {
 		
 		$organisation[$ENTRADA_USER->getActiveOrganisation()] = array("text" => fetch_organisation_title($ENTRADA_USER->getActiveOrganisation()), "value" => "organisation_" . $ENTRADA_USER->getActiveOrganisation(), "category" => true);
@@ -72,9 +76,17 @@ if (!defined("IN_EVENTS")) {
 							ORDER BY a.`group_name` ASC";
 				$groups_results = $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
 				if ($groups_results) {
+					$cohort_ids = array();
+					if ($event_id) {
+						$query = "SELECT `audience_value` FROM `event_audience` WHERE `event_id` = ".$db->qstr($event_id)." AND `audience_type` = 'cohort'";
+						$cohorts = $db->GetAll($query);
+						foreach ($cohorts as $cohort) {
+							$cohort_ids[] = $cohort["audience_value"];
+						}
+					}
 					
 					foreach ($groups_results as $group) {
-						if (isset($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["group"]) && is_array($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["group"]) && in_array($group["group_id"], $_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["group"])) {
+						if (isset($event_id) && in_array($group["group_id"], $cohort_ids)) {
 							$checked = "checked=\"checked\"";
 						} else {
 							$checked = "";
@@ -99,8 +111,16 @@ if (!defined("IN_EVENTS")) {
 				$groups_results = $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
 				if ($groups_results) {
 					
+					$course_group_ids = array();
+					if ($event_id) {
+						$query = "SELECT `audience_value` FROM `event_audience` WHERE `event_id` = ".$db->qstr($event_id)." AND `audience_type` = 'group_id'";
+						$course_groups = $db->GetAll($query);
+						foreach ($course_groups as $course_group) {
+							$course_group_ids[] = $course_group["audience_value"];
+						}
+					}
 					foreach ($groups_results as $group) {
-						if (isset($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["group"]) && is_array($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["group"]) && in_array($group["group_id"], $_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["group"])) {
+						if (isset($event_id) && in_array($group["group_id"], $course_group_ids)) {
 							$checked = "checked=\"checked\"";
 						} else {
 							$checked = "";
@@ -134,8 +154,16 @@ if (!defined("IN_EVENTS")) {
 				$student_results = $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
 				if ($student_results) {
 					
+					$proxy_ids = array();
+					if ($event_id) {
+						$query = "SELECT `audience_value` FROM `event_audience` WHERE `event_id` = ".$db->qstr($event_id)." AND `audience_type` = 'proxy_id'";
+						$associated_students = $db->GetAll($query);
+						foreach ($associated_students as $associated_student) {
+							$proxy_ids[] = $associated_student["audience_value"];
+						}
+					}
 					foreach ($student_results as $student) {
-						if (isset($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["student"]) && is_array($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["student"]) && in_array($student["proxy_id"], $_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["student"])) {
+						if (isset($event_id) && in_array($student["proxy_id"], $proxy_ids)) {
 							$checked = "checked=\"checked\"";
 						} else {
 							$checked = "";

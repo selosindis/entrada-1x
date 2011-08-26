@@ -87,13 +87,7 @@ if (!defined("IN_EVENTS")) {
 	if (isset($PROCESSED["event_id"]) && $PROCESSED["event_id"]) {
 		$query = "SELECT * FROM `events` WHERE `event_id` = ".$db->qstr($PROCESSED["event_id"]);
 		if ($event = $db->GetRow($query)) {
-			if ($event["parent_id"]) {
-				$keyword = "sibling";
-				$query = "SELECT * FROM `events` WHERE `parent_id` = ".$db->qstr($event["parent_id"]);
-			} else {
-				$keyword = "child";
-				$query = "SELECT * FROM `events` WHERE `parent_id` = ".$db->qstr($PROCESSED["event_id"]);
-			}
+			$query = "SELECT * FROM `events` WHERE `parent_id` = ".$db->qstr($PROCESSED["event_id"]);
 			if (isset($event_exists) && $event_exists["parent_id"] == ($event["parent_id"] ? $event["parent_id"] : $PROCESSED["event_id"])) {
 				$related_event_error = true;
 				$related_event_error_message = "The event ID which you supplied is already associated with this event. Please try again with an event ID which is not already related to the current event.";
@@ -134,7 +128,7 @@ if (!defined("IN_EVENTS")) {
 				}
 				?>
 				<div style="width: 21%; position: relative; float: left;">
-					<label for="related_events_select" class="form-nrequired"><?php echo ucfirst($keyword); ?> Events</label>
+					<label for="related_events_select" class="form-nrequired">Child Events</label>
 				</div>
 				<div style="width: 72%; float: left;">
 					<input autocomplete="off" type="text" name="related_event_id" id="related_event_id" />
@@ -153,7 +147,7 @@ if (!defined("IN_EVENTS")) {
 					<div class="autocomplete" id="events_autocomplete"></div>
 				</div>
 				<div style="clear: both; padding-top: 5px;" class="content-small">
-					Please select an <strong>Event ID</strong> to be added as a <?php echo $keyword; ?> event.
+					Please select an <strong>Event ID</strong> to be added as a child of this event.
 				</div>
 				<div style="width: 21%; position: relative; float: left;">
 					&nbsp;
@@ -164,18 +158,20 @@ if (!defined("IN_EVENTS")) {
 						if (is_array($related_events) && count($related_events)) {
 							foreach ($related_events as $related_event) {
 								?>
-								<li class="community" id="related_event_<?php echo $related_event["event_id"]; ?>" style="margin-bottom: 5px; width: 450px; height: 1.5em;">
-									<div style="width: 250px; position: relative; float:left; margin-left: 15px;">
-										<?php echo $related_event["event_title"]; ?>
-									</div>
-									<div style="float: left;">
-										<?php
-											echo date(DEFAULT_DATE_FORMAT, $related_event["event_start"]);
-										?>
-									</div>
-									<div  style="float: right;">
-										<img style="position: relative;" src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="removeRelatedEvent('<?php echo $related_event["event_id"]; ?>');" class="list-cancel-image" />
-									</div>
+								<li class="community" id="related_event_<?php echo $related_event["event_id"]; ?>" style="margin-bottom: 5px; width: 550px; height: 1.5em;">
+									<a href="<?php echo ENTRADA_URL; ?>/admin/events?id=<?php echo $related_event["event_id"] ?>&section=edit">
+										<div style="width: 300px; position: relative; float:left; margin-left: 15px;">
+											<?php echo $related_event["event_title"]; ?>
+										</div>
+										<div style="float: left;">
+											<?php
+												echo date(DEFAULT_DATE_FORMAT, $related_event["event_start"]);
+											?>
+										</div>
+										<div  style="float: right;">
+											<img style="position: relative;" src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="removeRelatedEvent('<?php echo $related_event["event_id"]; ?>');" class="list-cancel-image" />
+										</div>
+									</a>
 								</li>
 								<?php
 							}

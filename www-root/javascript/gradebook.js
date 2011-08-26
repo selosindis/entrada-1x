@@ -34,7 +34,7 @@ jQuery(document).ready(function($) {
 		$('.change_gradebook_year select').change(function(e) {
 			$('.gradebook_edit').html(loading_html);
 			$.ajax({
-				url: $('#fullscreen-edit').attr('href') + "&year=" + $(this).val(),
+				url: $('#fullscreen-edit').attr('href') + "&cohort=" + $(this).val(),
 				cache: false, 
 				success: function(data, status, request) {
 					$('.gradebook_edit').html(data);

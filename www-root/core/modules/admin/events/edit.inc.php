@@ -782,7 +782,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 									<td></td>
 									<td><label for="course_id" class="form-required">Course</label></td>
 									<td>
-										<select id="course_id" name="course_id" style="width: 95%">
+										<select id="course_id" name="course_id" onchange="generateEventAutocomplete()" style="width: 95%">
 										<?php
 										$query		= "	SELECT * FROM `courses`
 														WHERE `organisation_id` = ".$db->qstr($ORGANISATION_ID)."
@@ -909,7 +909,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								<tr>
 									<td>&nbsp;</td>
 									<td colspan="2">
-										<div id="related_events_list">
+										<div id="related_events">
 											<?php
 												require_once("modules/admin/events/api-related-events.inc.php");
 											?>
@@ -951,11 +951,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								$$('.'+type+'_audience').invoke('show');
 								if(type!== 'proxy_id'){
 									checkConflict();
-								}								
+								}
 							}
 				
 							function removeRelatedEvent(event_id) {
-								var updater = new Ajax.Updater('related_events_list', '<?php echo ENTRADA_URL."/admin/events?section=api-related-events";?>',{
+								var updater = new Ajax.Updater('related_events', '<?php echo ENTRADA_URL."/admin/events?section=api-related-events";?>',{
+									evalScripts: true,
 									method:'post',
 									parameters: {
 										'ajax' : 1,
@@ -967,14 +968,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 									onLoading: function (transport) {
 										$('related_events_list').innerHTML = '<br/><br/><span class="content-small" style="align: center;">Loading... <img src="<?php echo ENTRADA_URL; ?>/images/indicator.gif" style="vertical-align: middle;" /></span>';
 									},
-									onFailure: function (transport){
-										$('related_events_notifications').update(new Element('div', {'class':'display-error'}).update('There was a problem communicating with the server. An administrator has been notified, please try again later.'));
+									onComplete: function (transport) {
+										generateEventAutocomplete();
 									}
 								});
 							}
 				
 							function addRelatedEvent(event_id) {
-								var updater = new Ajax.Updater('related_events_list', '<?php echo ENTRADA_URL."/admin/events?section=api-related-events";?>',{
+								var updater = new Ajax.Updater('related_events', '<?php echo ENTRADA_URL."/admin/events?section=api-related-events";?>',{
+									evalScripts: true,
 									method:'post',
 									parameters: {
 										'ajax' : 1,
@@ -986,8 +988,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 									onLoading: function (transport) {
 										$('related_events_list').innerHTML = '<br/><br/><span class="content-small" style="align: center;">Loading... <img src="<?php echo ENTRADA_URL; ?>/images/indicator.gif" style="vertical-align: middle;" /></span>';
 									},
-									onFailure: function (transport){
-										$('related_events_notifications').update(new Element('div', {'class':'display-error'}).update('There was a problem communicating with the server. An administrator has been notified, please try again later.'));
+									onComplete: function (transport) {
+										generateEventAutocomplete();
 									}
 								});
 							}
@@ -1027,6 +1029,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 									}
 									},
 									onFailure: function(){ alert('Unable to check if a conflict exists.') }
+								});
+							}
+							var events_updater = null;
+							function generateEventAutocomplete() {
+								events_updater = new Ajax.Autocompleter('related_event_id', 'events_autocomplete', 
+								'<?php echo ENTRADA_URL; ?>/api/events-by-id.api.php?parent_id='+$('parent_id').value+'&course_id='+$('course_id').options[$('course_id').selectedIndex].value, 
+								{
+									frequency: 0.2, 
+									minChars: 1,
+									afterUpdateElement: function (text, li) {
+										addRelatedEvent(li.id);
+									}
 								});
 							}
 						</script>

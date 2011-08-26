@@ -176,10 +176,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 						}
 						</script>";
 			$HEAD[] = "<script type=\"text/javascript\">var DELETE_IMAGE_URL = '".ENTRADA_URL."/images/action-delete.gif';</script>";
-			//$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/subtypes_list.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 			$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/typelist-select.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 			$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/typelist-text.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
-			$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/growler/src/Growler.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 			$ONLOAD[] = "selectOrder(".(isset($PROCESSED["objective_parent"]) && $PROCESSED["objective_parent"] ? $PROCESSED["objective_parent"] : "0").")";
 						
 			?>

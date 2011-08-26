@@ -208,7 +208,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 				//$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/subtypes_list.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 				$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/typelist-select.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 				$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/typelist-text.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
-				$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/growler/src/Growler.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 				$ONLOAD[] = "toggleGroup(".(isset($PROCESSED["parent_type_id"])? $PROCESSED["parent_type_id"] : "-1").")";
 
 				?>

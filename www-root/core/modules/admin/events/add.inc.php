@@ -691,6 +691,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							$('options_loading').show();
 						},
 						onSuccess: function(response) {
+
 							if (response.responseText) {
 								$('options_container').insert(response.responseText);
 
@@ -809,9 +810,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							parameters : {
 								ajax : 1,
 								course_id : $F('course_id'),
-								event_audience_students: $('event_audience_students').value,
-								event_audience_course_groups: $('event_audience_course_groups').value,
-								event_audience_cohort: $('event_audience_cohort').value
+								event_audience_students: ($('event_audience_students') ? $('event_audience_students').getValue() : ''),
+								event_audience_course_groups: ($('event_audience_course_groups') ? $('event_audience_course_groups').getValue() : ''),
+								event_audience_cohort: ($('event_audience_cohort') ? $('event_audience_cohort').getValue() : '')
 							},
 							onSuccess : function (response) {
 								if (response.responseText == "") {

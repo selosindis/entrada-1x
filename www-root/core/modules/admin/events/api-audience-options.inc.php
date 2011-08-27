@@ -329,12 +329,6 @@ if (!defined("IN_EVENTS")) {
 													}
 												}
 											}
-
-											if (!(is_array($PROCESSED["associated_proxy_ids"]) && count($PROCESSED["associated_proxy_ids"])) && !(is_array($PROCESSED["associated_group_ids"]) && count($PROCESSED["associated_group_ids"])) && !(is_array($PROCESSED["associated_cohort_ids"]) && count($PROCESSED["associated_cohort_ids"])) && !(is_array($PROCESSED["associated_course_ids"]) && count($PROCESSED["associated_course_ids"]))) {
-												$NOTICE++;
-												$NOTICESTR[] = "No audience has been selected for this event.";
-												echo display_notice();
-											}
 											?>
 											</ul>
 										</div>

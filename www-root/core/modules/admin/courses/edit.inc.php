@@ -106,6 +106,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			echo "<h1>Editing Course</h1>\n";
 
 			$PROCESSED["permission"] = $course_details["permission"];
+			$PROCESSED["sync_ldap"] = $course_details["sync_ldap"];
 			
 			// Error Checking
 			switch($STEP) {
@@ -188,6 +189,24 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					}
 
 					/**
+					 * Check to see if course is private or open.
+					 */
+					if ((isset($_POST["permission"])) && ($permission = clean_input($_POST["permission"],array("trim")))) {
+						$PROCESSED["permission"] = $permission;
+					} else {
+						$PROCESSED["permission"] = "open";
+					}
+
+					/**
+					 * Check to see if ldap sync is enabled or not for events in this course.
+					 */
+					if ((isset($_POST["sync_ldap"])) && (!clean_input($_POST["sync_ldap"], "int"))) {
+						$PROCESSED["sync_ldap"] = 0;
+					} else {
+						$PROCESSED["sync_ldap"] = 1;
+					}					
+					
+					/**
 					 * Non-required field "course_directors" / Course Directors (array of proxy ids).
 					 * This is actually accomplished after the course is modified below.
 					 */
@@ -231,21 +250,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							$TERTIARY_OBJECTIVES[] = clean_input($objective, "int");
 							$posted_objectives["tertiary"][] = clean_input($objective, "int");
 						}
-					}
-					
-					/**
-					 * Check to see if the course is open or private.
-					 */
-					if ((isset($_POST["course_permission"])) && ($perm = clean_input($_POST["course_permission"], array("trim","notags")))) {
-						$PROCESSED["permission"] = $perm;
-					} else {
-						$PROCESSED["permission"] = "closed";
-					}					
-
-					if ((isset($_POST["sync_ldap"])) && $sync = clean_input($_POST["sync_ldap"],array("int","notags"))) {
-						$PROCESSED["sync_ldap"] = 1;
-					} else {
-						$PROCESSED["sync_ldap"] = 0;
 					}					
 					
 					
@@ -420,148 +424,75 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								}
 							}
 
-							if (isset($_POST["group_order"]) && strlen($_POST["group_order"])) {
-								$groups = explode(",", clean_input($_POST["group_order"],array("notags","trim")));
-								if ($_POST["period"] && $cperiod_id = clean_input($_POST["period"], array("trim", "int"))) {		
-									if ((is_array($groups)) && (count($groups))) {
-										
-										$new_groups = array();
-										$updated_groups = array();
-										$removed_groups = array();
-										$group_ids_string = "";
-										
-										foreach ($groups as $group_id) {
-											$group_ids_string .= ($group_ids_string ? ", ".$db->qstr($group_id) : $db->qstr($group_id));
-											$query = "SELECT * FROM `course_audience` WHERE `audience_type` = 'group_id' AND `audience_value` = ".$db->qstr($group_id)." AND `course_id` = ".$db->qstr($COURSE_ID);
-											if ($group_record = $db->GetRow($query) && $group_record["cperiod_id"] != $cperiod_id) {
-												$updated_groups[] = $group_id;
-											} else {
-												$new_groups[] = $group_id;
-											}
-										}
-										
-										$query = "SELECT * FROM `course_audience` WHERE `audience_type` = 'group_id' AND `audience_value` NOT IN (".$group_ids_string.") AND `course_id` = ".$db->qstr($COURSE_ID)." AND `audience_active` = 1 AND (`enroll_finish` > ".$db->qstr(time())." OR `enroll_finish` = 0)";
-										if ($group_records = $db->GetAll($query)) {
-											foreach ($group_records as $group_record) {
-												$removed_groups = $group_record["audience_value"];
-											}
-										}
-										
-										foreach($new_groups as $order => $group_id) {
-											if ($group_id = clean_input($group_id, array("trim", "int"))) {
-												$query = "SELECT `group_name` FROM `groups` WHERE `group_id` = ".$db->qstr($group_id);
-												$result	= $db->GetRow($query);
-												if ($result) {
-													$PROCESSED["groups"][] = array("id" => $group_id, "title" => $result["group_name"]);
-													
-													if(!$db->AutoExecute("course_audience", array("audience_type" => "group_id", "audience_value" => $group_id, "course_id" => $COURSE_ID, "cperiod_id" => $cperiod_id), "INSERT")){
-														add_error("Unable to insert the group [".$group_id."] as an audience member for course [".$COURSE_ID."]. Please try again later.");				
-													}
+							
+							
+							if (isset($_POST["periods"]) && is_array($_POST["periods"]) && $periods = $_POST["periods"]) {
+								foreach ($periods as $key=>$unproced_period) {
+									$period_id = (int)$unproced_period;
 
-												} else {
-													$ERROR++;
-													$ERRORSTR[] = "One of the <strong>groups</strong> you specified was invalid.";
-												}
-											} else {
-												$ERROR++;
-												$ERRORSTR[] = "One of the <strong>groups</strong> you specified is invalid.";
-											}
-										}
+									if (isset($_POST["group_audience_members"][$key]) && strlen($_POST["group_audience_members"][$key]) && $group_member_string = clean_input($_POST["group_audience_members"][$key],array("trim","notags"))) {
 										
-										foreach($updated_groups as $order => $group_id) {
-											if ($group_id = clean_input($group_id, array("trim", "int"))) {
-												$query = "SELECT `group_name` FROM `groups` WHERE `group_id` = ".$db->qstr($group_id);
-												$result	= $db->GetRow($query);
-												if ($result) {
-													$PROCESSED["groups"][] = array("id" => $group_id, "title" => $result["group_name"]);
-													
-													if(!$db->AutoExecute("course_audience", array("audience_type" => "group_id", "audience_value" => $group_id, "course_id" => $COURSE_ID, "cperiod_id" => $cperiod_id, "enroll_finish" => 0, "audience_active" => 1), "UPDATE", "`audience_value` = ".$db->qstr($group_id)." AND `audience_type` = 'group_id' AND `course_id` = ".$db->qstr($COURSE_ID))){
-														add_error("Unable to update the group [".$group_id."] as an audience member for course [".$COURSE_ID."]. Please try again later.");				
-													}
+										$query = "	DELETE FROM `course_audience` 
+													WHERE `audience_type` = 'group_id' 
+													AND `course_id`=".$db->qstr($COURSE_ID)." 
+													AND `cperiod_id` = ".$db->qstr($period_id)."
+													AND `audience_value` NOT IN(".$group_member_string.")";
+										$db->Execute($query);
 
-												} else {
-													$ERROR++;
-													$ERRORSTR[] = "One of the <strong>groups</strong> you specified was invalid.";
-												}
-											} else {
-												$ERROR++;
-												$ERRORSTR[] = "One of the <strong>groups</strong> you specified is invalid.";
-											}
-										}
-										
-										foreach($removed_groups as $order => $group_id) {
-											if ($group_id = clean_input($group_id, array("trim", "int"))) {
-												$query = "SELECT `group_name` FROM `groups` WHERE `group_id` = ".$db->qstr($group_id);
-												$result	= $db->GetRow($query);
-												if ($result) {
-													$PROCESSED["groups"][] = array("id" => $group_id, "title" => $result["group_name"]);
-													
-													if(!$db->AutoExecute("course_audience", array("audience_type" => "group_id", "audience_value" => $group_id, "course_id" => $COURSE_ID, "enroll_finish" => time(), "audience_active" => 0), "UPDATE", "`audience_value` = ".$db->qstr($group_id)." AND `audience_type` = 'group_id' AND `course_id` = ".$db->qstr($COURSE_ID))){
-														add_error("Unable to deactivate the group [".$group_id."] as an audience member for course [".$COURSE_ID."]. Please try again later.");				
+										$group_members = explode(",",$group_member_string);
+										if ($group_members) {
+											foreach ($group_members as $member) {
+												$PROCESSED["periods"][$period_id][]=array("course_id"=>$COURSE_ID,"audience_type"=>'group_id',"audience_value"=>$member,"cperiod_id"=>$period_id,"audience_active"=>1);
+												$query = "	SELECT * FROM `course_audience` 
+															WHERE `audience_type`='group_id'
+															AND `course_id`=".$db->qstr($COURSE_ID)." 
+															AND `cperiod_id` = ".$db->qstr($period_id)."
+															AND `audience_value`=".$db->qstr($member);
+												$row = $db->GetRow($query);
+												if(!$row){
+													if (!$db->AutoExecute("course_audience",$PROCESSED["periods"][$period_id][(count($PROCESSED["periods"][$period_id])-1)],"INSERT")) {
+														add_error("An error occurred while adding the group with id ".$member." as an audience member.");
 													}
-
-												} else {
-													$ERROR++;
-													$ERRORSTR[] = "One of the <strong>groups</strong> you specified was invalid.";
 												}
-											} else {
-												$ERROR++;
-												$ERRORSTR[] = "One of the <strong>groups</strong> you specified is invalid.";
-											}
-										}
-									}		
-								}
-							}
-							if ($_POST["period"] && $cperiod_id = clean_input($_POST["period"], array("trim", "int"))) {	
-								if (isset($_POST["associated_student"]) && strlen($_POST["associated_student"])) {
-									$PROCESSED["associated_students"] = explode(",",clean_input($_POST["associated_student"], array("notags", "trim")));
-									if (isset($PROCESSED["associated_students"]) && is_array($PROCESSED["associated_students"])) {
-										
-										$new_students = array();
-										$updated_students = array();
-										$removed_students = array();
-										$student_ids_string = "";
-										
-										foreach ($PROCESSED["associated_students"] as $student_id) {
-											$student_ids_string .= ($student_ids_string ? ", ".$db->qstr($student_id) : $db->qstr($student_id));
-											$query = "SELECT * FROM `course_audience` WHERE `audience_type` = 'proxy_id' AND `audience_value` = ".$db->qstr($student_id)." AND `course_id` = ".$db->qstr($COURSE_ID);
-											if ($student_record = $db->GetRow($query) && $student_record["cperiod_id"] != $cperiod_id) {
-												$updated_students[] = $student_id;
-											} else {
-												$new_students[] = $student_id;
-											}
-										}
-										
-										$query = "SELECT * FROM `course_audience` WHERE `audience_type` = 'proxy_id' AND `audience_value` NOT IN (".$student_ids_string.") AND `course_id` = ".$db->qstr($COURSE_ID)." AND `audience_active` = 1 AND (`enroll_finish` > ".$db->qstr(time())." OR `enroll_finish` = 0)";
-										if ($student_records = $db->GetAll($query)) {
-											foreach ($student_records as $student_record) {
-												$removed_students[] = $student_record["audience_value"];
-											}
-										}
-																				
-										foreach($new_students as $student_id){
-											if(!$db->AutoExecute("course_audience", array("audience_type" => "proxy_id", "audience_value" => $student_id, "course_id" => $COURSE_ID, "cperiod_id" => $cperiod_id), "INSERT")){
-												add_error("Unable to insert the student [".$student_id."] as an audience member for course [".$COURSE_ID."]. Please try again later.");				
-											}
-										}
-										
-										foreach($updated_students as $student_id){
-											if(!$db->AutoExecute("course_audience", array("audience_type" => "proxy_id", "audience_value" => $student_id, "course_id" => $COURSE_ID, "enroll_finish" => 0, "audience_active" => 1, "cperiod_id" => $cperiod_id), "UPDATE", "`audience_value` = ".$db->qstr($student_id)." AND `audience_type` = 'proxy_id' AND `course_id` = ".$db->qstr($COURSE_ID))){
-												add_error("Unable to update the student [".$student_id."] as an audience member for course [".$COURSE_ID."]. Please try again later.");				
-											}
-										}
-										
-										foreach($removed_students as $student_id){
-											if(!$db->AutoExecute("course_audience", array("audience_type" => "proxy_id", "audience_value" => $student_id, "course_id" => $COURSE_ID, "enroll_finish" => time(), "audience_active" => 0, "cperiod_id" => $cperiod_id), "UPDATE", "`audience_value` = ".$db->qstr($student_id)." AND `audience_type` = 'proxy_id' AND `course_id` = ".$db->qstr($COURSE_ID))){
-												add_error("Unable to deactivate the student [".$student_id."] as an audience member for course [".$COURSE_ID."]. Please try again later.");				
+
+												//$query = "	INSERT INTO `course_audience` VALUES(NULL,".$db->qstr($COURSE_ID).",'group_id',".$db->qstr($member).",0,0,1)";
 											}
 										}
 									}
+
+									if (isset($_POST["individual_audience_members"][$key]) && strlen($_POST["individual_audience_members"][$key]) && $individual_member_string = clean_input($_POST["individual_audience_members"][$key],array("trim","notags"))) {
+										$query = "	DELETE FROM `course_audience` 
+													WHERE `audience_type` = 'proxy_id' 
+													AND `course_id`=".$db->qstr($COURSE_ID)." 
+													AND `cperiod_id` = ".$db->qstr($period_id)."
+													AND `audience_value` NOT IN(".$individual_member_string.")";
+										$db->Execute($query);
+										
+										$individual_members = explode(",",$individual_member_string);
+										if ($individual_members) {
+											foreach ($individual_members as $member) {
+												$PROCESSED["periods"][$period_id][]=array("course_id"=>$COURSE_ID,"audience_type"=>'proxy_id',"audience_value"=>$member,"cperiod_id"=>$period_id,"audience_active"=>1);
+												$query = "	SELECT * FROM `course_audience` 
+															WHERE `audience_type`='proxy_id'
+															AND `course_id`=".$db->qstr($COURSE_ID)." 
+															AND `cperiod_id` = ".$db->qstr($period_id)."
+															AND `audience_value`=".$db->qstr($member);
+												$row = $db->GetRow($query);
+												if(!$row){
+													if (!$db->AutoExecute("course_audience",$PROCESSED["periods"][$period_id][(count($PROCESSED["periods"][$period_id])-1)],"INSERT")) {
+														add_error("An error occurred while adding the student with id ".$member." as an audience member.");
+													}
+												}
+												//$query = "	INSERT INTO `course_audience` VALUES(NULL,".$db->qstr($COURSE_ID).",'proxy_id',".$db->qstr($member).",0,0,1)";
+											}
+										}
+									}								
+
 								}
-							} elseif ((isset($_POST["associated_student"]) && strlen($_POST["associated_student"])) || isset($_POST["group_order"]) && strlen($_POST["group_order"])) {
-								$ERROR++;
-								$ERRORSTR[] = "Please ensure you select an <strong>Enrollment period</strong> for the selected course audience.";
+
 							}
+							
+							
 							
 							if (!$ERROR) {
 								$NOTICE = 0;
@@ -605,7 +536,26 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				break;
 				case 1 :
 				default :
-
+					
+					$query = "	SELECT * FROM `groups` AS a
+						JOIN `group_organisations` AS b
+						ON a.`group_id`=b.`group_id`
+						WHERE b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+						AND a.`group_active` = 1";
+					?><script type="text/javascript"><?php
+					if ($groups = $db->GetAll($query)) {
+						echo "var is_groups=true;";
+						echo "var group_ids = new Array();";
+						echo "var group_names = new Array();";
+						foreach ($groups as $key=>$group){
+							echo "group_ids[".$key."] = ".$group["group_id"].";";
+							echo "group_names[".$key."] = '".$group["group_name"]."';";
+						}
+					} else {
+						echo "var is_groups=false;\n";
+					}
+						?></script><?php
+					
 					
 					$LASTUPDATED	= $course_details["updated_date"];
 
@@ -876,6 +826,28 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 									<input type="radio" name="notifications" id="notification_off" value="0"<?php echo (((isset($PROCESSED["notifications"])) && (!(int) $PROCESSED["notifications"])) ? " checked=\"checked\"" : ""); ?> /> <label for="notification_off"><strong>Do not</strong> send e-mail notifications to faculty for events under this course.</label>
 								</td>
 							</tr>
+							<tr>
+								<td></td>
+								<td style="vertical-align: top"><span class="form-nrequired">Course Visibility</span></td>
+								<td style="vertical-align: top">
+									<input type="radio" name="permission" id="visibility_on" value="open"<?php echo (((!isset($PROCESSED["permission"])) || ((isset($PROCESSED["permission"])) && ($PROCESSED["permission"] == "open"))) ? " checked=\"checked\"" : ""); ?> /> <label for="visibility_on">This course is <strong>open</strong> and visible to all logged in users.</label><br />
+									<input type="radio" name="permission" id="visibility_off" value="closed"<?php echo (((isset($PROCESSED["permission"])) && ($PROCESSED["permission"] == "closed")) ? " checked=\"checked\"" : ""); ?> /> <label for="visibility_off">This course is <strong>private</strong> and only visible to logged in users enrolled in the course.</label>
+								</td>
+							</tr>
+							<?php
+							if (true) {
+								?>
+							<tr>
+								<td></td>
+								<td style="vertical-align: top"><span class="form-nrequired">Audience Sync</span></td>
+								<td style="vertical-align: top">
+									<input type="radio" name="sync_ldap" id="sync_on" value="1"<?php echo (((!isset($PROCESSED["sync_ldap"])) || ((isset($PROCESSED["sync_ldap"])) && ($PROCESSED["sync_ldap"]))) ? " checked=\"checked\"" : ""); ?> /> <label for="sync_on">This course <strong>should</strong> have its audience synced with the LDAP server.</label><br />
+									<input type="radio" name="sync_ldap" id="sync_off" value="0"<?php echo (((isset($PROCESSED["sync_ldap"])) && (!(int)$PROCESSED["sync_ldap"])) ? " checked=\"checked\"" : ""); ?> /> <label for="sync_off">This course's audience will be managed manually and <strong>should not</strong> be synced with the LDAP server.</label><br/>
+									<br/>
+									<div class="content-small"><strong>Note:</strong> Even if the audience is synced, additional individuals and groups can be added as audience members below.</div>
+								</td>
+							</tr>
+						<?php }?>							
 						</tbody>
 						</table>
 					</div>
@@ -1388,10 +1360,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 													if ($periods = $db->GetAll($query)) {
 														?>
 														<select name="curriculum_period" id="period_select" onchange="addPeriod(this.options[this.selectedIndex].value,this.options[this.selectedIndex].text,this.selectedIndex)">
-															<option value="0">-- Select a Period --</option>
+															<option value="0" selected="selected">-- Select a Period --</option>
 															<?php
 															foreach ($periods as $period) {
-																echo "<option value=\"".$period["cperiod_id"]."\"".($PROCESSED["cperiod_id"] == $period["cperiod_id"] ? " selected=\"selected\"" : "").">".date("F jS, Y" ,$period["start_date"])." to ".date("F jS, Y" ,$period["finish_date"])."</option>";
+																echo "<option value=\"".$period["cperiod_id"]."\" ".((array_key_exists($period["cperiod_id"], $PROCESSED["periods"]))?" disabled=\"disabled\"":"").">".date("F jS, Y" ,$period["start_date"])." to ".date("F jS, Y" ,$period["finish_date"])."</option>";
+																
 															}
 															?>
 														</select>
@@ -1419,41 +1392,62 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 									<div class="period_item" id="period_item_<?php echo $key;?>" style="margin-bottom:20px;">
 										<h3><img src="<?php echo ENTRADA_RELATIVE;?>/images/action-delete.gif" style="vertical-align:top;margin-right:20px;cursor:pointer;" class="remove_period" id="remove_period_<?php echo $key;?>"/><?php echo date("F jS,Y",$period_data["start_date"])." to ".date("F jS,Y",$period_data["finish_date"]);?></h3>
 										<div class="audience_list" id="audience_list_<?php echo $key;?>" style="margin-bottom:10px;">
+											<h4>Associated Groups</h4>	
 										<ol id="audience_container_<?php echo $key;?>" class="sortableList"">
 											<?php 
 											foreach ($period as $audience) {
 												switch($audience["audience_type"]){
 													case 'group_id':
 														$query = "SELECT `group_name` AS `title` FROM `groups` WHERE `group_id`=".$db->qstr($audience["audience_value"]);
-														$group_ids[] = $audience["audience_value"];
+														$group_ids[$key][] = $audience["audience_value"];
 														$audience["type"] = 'cohort';
-														break;
-													case 'proxy_id':
-														$query = "SELECT CONCAT_WS(' ',`firstname`,`lastname`) AS `title` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id`=".$db->qstr($audience["audience_value"]);
-														$individual_ids[]=$audience["audience_value"];
-														$audience["type"]='individual';
+														$audience["title"] = $db->GetOne($query);
+														?>
+														<li id="audience_<?php echo $audience["type"]."_".$audience["audience_value"];?>" class="audience_cohort"><?php echo $audience["title"];?><span style="cursor:pointer;float:right;" class="remove_audience"><img src="<?php echo ENTRADA_RELATIVE;?>/images/action-delete.gif"></span></li>
+														<?php
 														break;
 												}
 
-												$audience["title"] = $db->GetOne($query);
-											?>
-											<li id="audience_<?php echo $audience["type"]."_".$audience["audience_value"];?>" class="audience_cohort"><?php echo $audience["title"];?><span style="cursor:pointer;float:right;" class="remove_audience"><img src="<?php echo ENTRADA_RELATIVE;?>/images/action-delete.gif"></span></li>
-											<?php
 											}
 											?>
 										</ol>
-										<ul id="student_<?php echo $key;?>_list" class="menu" style="margin-top: 15px"></ul>
+											<h4>Associated Students</h4>
+											<ul id="student_<?php echo $key;?>_list" class="menu" style="margin-top: 15px;width:390px;">
+											<?php
+											foreach ($period as $audience) {
+												switch ($audience["audience_type"]) {
+													case 'proxy_id':
+														$query = "SELECT CONCAT_WS(',',`lastname`,`firstname`) AS `title` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id`=".$db->qstr($audience["audience_value"]);
+														$individual_ids[$key][]=$audience["audience_value"];
+														$audience["type"]='individual';
+														$audience["title"] = $db->GetOne($query);
+														
+													?>
+												<li id="student_<?php echo $key.'_'.$audience["audience_value"];?>" style="cursor: move; position: relative; " class="user"><?php echo $audience["title"];?><img src="<?php echo ENTRADA_RELATIVE;?>/images/action-delete.gif" class="list-cancel-image" onclick="removeItem('<?php echo $audience["audience_value"];?>','student_<?php echo $key;?>')"></li>
+														<?php
+														break;
+												}
+											}
+											?>
+											</ul>
+										</div>
+										
 										<select class="audience_type_select" id="audience_type_select_<?php echo $key;?>" onchange="showSelect(<?php echo $key;?>,this.options[this.selectedIndex].value)"><option value="0">-- Select Audience Type --</option></option><option value="cohort">Cohort</option><option value="individual">Individual</option></select>
-										<select style="display:none;" class="type_select" id="cohort_select_<?php echo $key;?>" onchange="addAudience(<?php echo $key;?>,this.options[this.selectedIndex].text,'cohort',this.options[this.selectedIndex].value)"><option value="0">-- Add Cohort --</option><?php foreach($groups as $group) {echo "<option value=\"".$group["group_id"]."\">".$group["group_name"]."</option>";}?></select>
-										<input style="display:none;width:203px;vertical-align: middle;margin-left:10px;margin-right:10px;" type="text" class="type_select" id="individual_select_<?php echo $period["cperiod_id"];?>"/><input style="display:none;" type="button" class="button-sm type_select" id="add_associated_student_<?php echo $key;?>" onclick="addAudience(<?php echo $key;?>,null,'individual')" value="Add" style="vertical-align: middle" />
-										<input style="display:none;width:203px;vertical-align: middle;margin-left:10px;margin-right:10px;" type="text" class="type_select" id="student_<?php echo $key;?>_name" autocomplete="off"/><input style="display:none;" type="button" class="button-sm type_select" id="add_associated_student_<?php echo $key;?>" onclick="addItem('student_<?php echo $key;?>')" value="Add" style="vertical-align: middle" />
+										<select style="display:none;" class="type_select" id="cohort_select_<?php echo $key;?>" onchange="addAudience(<?php echo $key;?>,this.options[this.selectedIndex].text,'cohort',this.options[this.selectedIndex].value)"><option value="0">-- Add Cohort --</option>
+										<?php 
+										foreach($groups as $group) {
+											echo "<option value=\"".$group["group_id"]."\"".((in_array($group["group_id"],$group_ids[$key]))?" disabled=\"disabled\"":"").">".$group["group_name"]."</option>";
+										}?>
+										</select>
+										<input style="display:none;width:203px;vertical-align: middle;margin-left:10px;margin-right:10px;" type="text" name="fullname" class="type_select" id="student_<?php echo $key;?>_name" autocomplete="off"/><input style="display:none;" type="button" class="button-sm type_select" id="add_associated_student_<?php echo $key;?>" value="Add" style="vertical-align: middle" />
 										<div class="autocomplete" id="student_<?php echo $key;?>_name_auto_complete" style="margin-left:200px;"></div>
 										<div id="student_<?php echo $key;?>">(Example: Thorn, Brandon)</div>
-										<input type="hidden" name="group_audience_members[]" id="group_audience_members_<?php echo $key;?>" value="<?php echo explode(',',$group_ids);?>"/>
-										<input type="hidden" name="student_id[]" id="associated_student_<?php echo $key;?>"/>
+										<input type="hidden" name="group_audience_members[]" id="group_audience_members_<?php echo $key;?>" value="<?php echo implode(',',$group_ids[$key]);?>"/>
+										<input type="hidden" name="individual_audience_members[]" id="associated_student_<?php echo $key;?>"/>
 										<input type="hidden" name="student_id[]" id="student_<?php echo $key;?>_id"/>
 										<input type="hidden" name="student_ref[]" id="student_<?php echo $key;?>_ref"/>
 										<input type="hidden" name="periods[]" value="<?php echo $key;?>"/>
+										<?php $ONLOAD[] = "new AutoCompleteList({ type: 'student_".$key."', url: '".ENTRADA_RELATIVE."/api/personnel.api.php?type=student', remove_image: '".ENTRADA_RELATIVE."/images/action-delete.gif'})";?>
 									</div>
 
 									<?php
@@ -1462,10 +1456,137 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							?>
 						</div>
 					</div>
-					</div>
+					
 					<script type="text/javascript">
-					$('student_list').observe('change', checkConditions);
-					$('group_order').observe('change', checkConditions);
+					var updaters = new Array();
+					function addPeriod(period_id,period_text,index){
+						jQuery("#period_select option[value='"+period_id+"']").attr('disabled','disabled');
+						jQuery("#period_select").val('0');
+						jQuery('#period_list').show();
+						jQuery('#period_list').append('<div class="period_item" id="period_item_'+period_id+'" style="margin-bottom:20px;"></div>');
+						jQuery('#period_item_'+period_id).append('<h3><img src="'+DELETE_IMAGE_URL+'" style="vertical-align:top;margin-right:20px;cursor:pointer;" class="remove_period" id="remove_period_'+period_id+'"/>'+period_text+'</h3>');
+						jQuery('#period_item_'+period_id).append('<div class="audience_list" id="audience_list_'+period_id+'" style="margin-bottom:10px;">');
+						jQuery('#period_item_'+period_id).append('<h4>Associated Groups</h4><ol id="audience_container_'+period_id+'" class="sortableList""></ol></div>');
+						jQuery('#period_item_'+period_id).append('<h4>Associated Students</h4><ul id="student_'+period_id+'_list" class="menu" style="margin-top: 15px;width:390px;"></ul>');
+						jQuery('#period_item_'+period_id).append('<select class="audience_type_select" id="audience_type_select_'+period_id+'" onchange="showSelect('+period_id+',this.options[this.selectedIndex].value)"><option value="0">-- Select Audience Type --</option></option><option value="cohort">Cohort</option><option value="individual">Individual</option></select>');
+						jQuery('#period_item_'+period_id).append('<select style="display:none;" class="type_select" id="cohort_select_'+period_id+'" onchange="addAudience('+period_id+',this.options[this.selectedIndex].text,\'cohort\',this.options[this.selectedIndex].value)"><option value="0">-- Add Cohort --</option>'+getGroupOptions()+'</select>');
+						jQuery('#period_item_'+period_id).append('<input style="display:none;width:203px;vertical-align: middle;margin-left:10px;margin-right:10px;" name="fullname" type="text" class="type_select" id="student_'+period_id+'_name" autocomplete=\"off\")"/><input style="display:none;" type="button" class="button-sm type_select" id="add_associated_student_'+period_id+'" onclick="addItem(student_'+period_id+')" value="Add" style="vertical-align: middle" />');
+						jQuery('#period_item_'+period_id).append('<div class="autocomplete" id="student_'+period_id+'_name_auto_complete" style="margin-left:200px;"></div>');
+						jQuery('#period_item_'+period_id).append('<div id="student_'+period_id+'">(Example: Thorn, Brandon)</div>');
+						jQuery('#period_item_'+period_id).append('<input type="hidden" name="group_audience_members[]" id="group_audience_members_'+period_id+'"/>');
+						jQuery('#period_item_'+period_id).append('<input type="hidden" name="individual_audience_members[]" id="associated_student_'+period_id+'"/>');
+						jQuery('#period_item_'+period_id).append('<input type="hidden" name="student_id[]" id="student_'+period_id+'_id"/>');
+						jQuery('#period_item_'+period_id).append('<input type="hidden" name="student_ref[]" id="student_'+period_id+'_ref"/>');
+						jQuery('#period_item_'+period_id).append('<input type="hidden" name="periods[]" value="'+period_id+'"/>');
+
+						eval("student_"+period_id+"_list = new AutoCompleteList({ type: 'student_"+period_id+"', url: '<?php echo ENTRADA_RELATIVE;?>/api/personnel.api.php?type=student', remove_image: '"+DELETE_IMAGE_URL+"'})");
+						eval("window.student_"+period_id+"_list = student_"+period_id+"_list");
+						eval("console.log(student_"+period_id+"_list)");
+						eval("console.log(window.student_"+period_id+"_list)");
+
+						//updaters[updaters.length] = new Ajax.Autocompleter('student_'+period_id+'_name', 'student_'+period_id+'_name_auto_complete', '<?php echo ENTRADA_RELATIVE; ?>/api/personnel.api.php?type=student', {frequency: 0.2, minChars: 2, afterUpdateElement: function (text, li) {selectItem(li.id, student); copyItem(student);}});
+					}
+
+					function showSelect(period_id,type){
+						jQuery('.type_select').each(function(){
+							$(this).hide();
+						});				
+
+						if (type=='cohort') {
+							jQuery('#'+type+'_select_'+period_id).show();
+						}
+
+						if (type=='individual') {
+							jQuery('#student_'+period_id+'_name').show();
+							jQuery('#add_associated_student_'+period_id).show();
+						}
+						jQuery('.audience_type_select').each(function(){
+							jQuery(this).val('0');
+						});
+						jQuery("#audience_type_select_"+period_id).show();
+						jQuery("#audience_type_select_"+period_id+" option[value='"+type+"']").attr('selected','selected');					
+					}
+
+					function getGroupOptions(){					
+						var markup = '';
+						if (is_groups) {
+							for (i=0;i<group_ids.length;i++) {
+								markup += '<option value="'+group_ids[i]+'">'+group_names[i]+'</option>';
+							}
+						}
+						return markup;
+					}
+
+					function printGroupList(period_id) {
+						var markup = '<ol id="group_'+period_id+'_container" class="sortableList" style="display: none;"></ol><input id="group_'+period_id+'order" name="group_order[]" value ="" style="display: none;"/>';
+						return markup;
+					}
+
+					function printIndividualList(period_id) {
+						var markup = '<input type="hidden" id="associated_student_'+period_id+'" name="associated_student[]" />'+
+										'<ul id="student_'+period_id+'_list" class="menu" style="margin-top: 15px"></ul><input type="hidden" id="student_'+period_id+'_ref" name="student_ref[]" value="" /><input type="hidden" id="student_'+period_id+'_id" name="student_id[]" value="" />';
+						return markup;
+					}
+
+					function addAudience(period_id,audience_value,type,select_value){
+						if (type=='individual') {
+							audience_value = jQuery('#individual_select_'+period_id).val();
+						}
+						li = new Element('li', {id: 'audience_'+type+'_'+select_value, 'class': 'audience_'+type});
+						li.insert(audience_value+"  ");
+						li.insert(new Element('span', {style: 'cursor:pointer;float:right;','class': 'remove_audience'}).insert(new Element('img', {src: DELETE_IMAGE_URL})));
+						$('audience_container_'+period_id).insert(li);
+
+						jQuery('#'+type+'_select_'+period_id).val('');
+						if (type=='cohort') {
+							jQuery('#'+type+'_select_'+period_id).val('0');
+							jQuery("#cohort_select_"+period_id+" option[value='"+select_value+"']").attr('disabled','disabled');
+							var ids = jQuery('#group_audience_members_'+period_id).val().split(',');
+							if (jQuery('#group_audience_members_'+period_id).val().length == 0) {
+								idx = 0;
+							} else {
+								idx = ids.length;
+							}
+							ids[idx] = select_value;
+							jQuery('#group_audience_members_'+period_id).val(ids.join(','));
+						}
+					}
+
+					function selectCourseAudienceOption(type) {
+						$$('.course_audience').invoke('hide');
+						$$('.'+type+'_audience').invoke('show');
+					}
+				
+
+					jQuery('.remove_period').live('click',function(e){
+						var id_info = e.target.id.split('_');
+						var id = id_info[2];
+						jQuery('#period_item_'+id).remove();
+						jQuery("#period_select option[value='"+id+"']").removeAttr('disabled');
+					});
+
+					jQuery('.remove_audience').live('click',function(e){
+						var period_info = $(e.target).up().up().up().id.split('_');
+						var period_id = period_info[2];
+						var id_info = $(e.target).up().up().id.split('_');
+						var type = id_info[1];
+						var id = id_info[2];
+						if (type==='cohort') {
+							var members_array = jQuery('#group_audience_members_'+period_id).val().split(',');
+							var idx = jQuery.inArray(id, members_array);
+							if (idx != -1) {
+								members_array.splice(idx,1);
+							}
+							jQuery('#group_audience_members_'+period_id).val(members_array.join(','));
+							jQuery("#cohort_select_"+period_id+" option[value='"+id+"']").removeAttr('disabled');
+						}
+						$(e.target).up().up().remove();
+
+					});						
+						
+						
+					//$('student_list').observe('change', checkConditions);
+					//$('group_order').observe('change', checkConditions);
 
 					function checkConditions(){
 							if($F('associated_student')){

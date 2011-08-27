@@ -164,6 +164,23 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				$PROCESSED["notifications"] = 1;
 			}
 
+			/**
+			 * Check to see if notifications are enabled or not for events in this course.
+			 */
+			if ((isset($_POST["permission"])) && ($permission = clean_input($_POST["permission"],array("notags","trim")))) {
+				$PROCESSED["permission"] = $permission;
+			} else {
+				$PROCESSED["permission"] = "open";
+			}
+
+			/**
+			 * Check to see if notifications are enabled or not for events in this course.
+			 */
+			if ((isset($_POST["sync_ldap"])) && (!clean_input($_POST["sync_ldap"], "int"))) {
+				$PROCESSED["sync_ldap"] = 0;
+			} else {
+				$PROCESSED["sync_ldap"] = 1;
+			}
 			if (isset($_POST["post_action"])) {
 				switch($_POST["post_action"]) {
 					case "content" :
@@ -320,7 +337,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 										foreach ($group_members as $member) {
 											$PROCESSED["periods"][$period_id][]=array("course_id"=>$COURSE_ID,"audience_type"=>'group_id',"audience_value"=>$member,"cperiod_id"=>$period_id,"audience_active"=>1);
 											
-											if (!$db->AutoExecute("course_audience",$PROCESSED["periods"][$period_id][(count($PROCESSED["periods"])-1)],"INSERT")) {
+											if (!$db->AutoExecute("course_audience",$PROCESSED["periods"][$period_id][(count($PROCESSED["periods"][$period_id])-1)],"INSERT")) {
 												add_error("An error occurred while adding the group with id ".$member." as an audience member.");
 											}
 												
@@ -334,8 +351,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 									if ($individual_members) {
 										foreach ($individual_members as $member) {
 											$PROCESSED["periods"][$period_id][]=array("course_id"=>$COURSE_ID,"audience_type"=>'proxy_id',"audience_value"=>$member,"cperiod_id"=>$period_id,"audience_active"=>1);
-											$db->AutoExecute("course_audience",$PROCESSED["periods"][$period_id][(count($PROCESSED["periods"])-1)],"INSERT");
-											add_error("An error occurred while adding the group with id ".$member." as an audience member.");
+											if(!$db->AutoExecute("course_audience",$PROCESSED["periods"][$period_id][(count($PROCESSED["periods"][$period_id])-1)],"INSERT")) {
+												add_error("An error occurred while adding the student with id ".$member." as an audience member.");
+											}
 											//$query = "	INSERT INTO `course_audience` VALUES(NULL,".$db->qstr($COURSE_ID).",'proxy_id',".$db->qstr($member).",0,0,1)";
 										}
 									}
@@ -1189,7 +1207,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 													<option value="0">-- Select a Period --</option>
 													<?php
 													foreach ($periods as $period) {
-														echo "<option value=\"".$period["cperiod_id"]."\"".($PROCESSED["cperiod_id"] == $period["cperiod_id"] ? " selected=\"selected\"" : "").">".date("F jS, Y" ,$period["start_date"])." to ".date("F jS, Y" ,$period["finish_date"])."</option>";
+														echo "<option value=\"".$period["cperiod_id"]."\" ".((array_key_exists($period["cperiod_id"], $PROCESSED["periods"]))?" disabled=\"disabled\"":"").">".date("F jS, Y" ,$period["start_date"])." to ".date("F jS, Y" ,$period["finish_date"])."</option>";
 													}
 													?>
 												</select>
@@ -1217,38 +1235,59 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							<div class="period_item" id="period_item_<?php echo $key;?>" style="margin-bottom:20px;">
 								<h3><img src="<?php echo ENTRADA_RELATIVE;?>/images/action-delete.gif" style="vertical-align:top;margin-right:20px;cursor:pointer;" class="remove_period" id="remove_period_<?php echo $key;?>"/><?php echo date("F jS,Y",$period_data["start_date"])." to ".date("F jS,Y",$period_data["finish_date"]);?></h3>
 								<div class="audience_list" id="audience_list_<?php echo $key;?>" style="margin-bottom:10px;">
+									<h4>Associated Groups</h4>	
 								<ol id="audience_container_<?php echo $key;?>" class="sortableList"">
 									<?php 
 									foreach ($period as $audience) {
 										switch($audience["audience_type"]){
 											case 'group_id':
 												$query = "SELECT `group_name` AS `title` FROM `groups` WHERE `group_id`=".$db->qstr($audience["audience_value"]);
-												$group_ids[] = $audience["audience_value"];
+												$group_ids[$key][] = $audience["audience_value"];
 												$audience["type"] = 'cohort';
-												break;
-											case 'proxy_id':
-												$query = "SELECT CONCAT_WS(' ',`firstname`,`lastname`) AS `title` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id`=".$db->qstr($audience["audience_value"]);
-												$individual_ids[]=$audience["audience_value"];
-												$audience["type"]='individual';
+												$audience["title"] = $db->GetOne($query);
+												?>
+												<li id="audience_<?php echo $audience["type"]."_".$audience["audience_value"];?>" class="audience_cohort"><?php echo $audience["title"];?><span style="cursor:pointer;float:right;" class="remove_audience"><img src="<?php echo ENTRADA_RELATIVE;?>/images/action-delete.gif"></span></li>
+												<?php
 												break;
 										}
-										
-										$audience["title"] = $db->GetOne($query);
-									?>
-									<li id="audience_<?php echo $audience["type"]."_".$audience["audience_value"];?>" class="audience_cohort"><?php echo $audience["title"];?><span style="cursor:pointer;float:right;" class="remove_audience"><img src="<?php echo ENTRADA_RELATIVE;?>/images/action-delete.gif"></span></li>
-									<?php
+
 									}
 									?>
 								</ol>
-								<ul id="student_<?php echo $key;?>_list" class="menu" style="margin-top: 15px"></ul>
+									<h4>Associated Students</h4>
+									<ul id="student_<?php echo $key;?>_list" class="menu" style="margin-top: 15px;width:390px;">
+									<?php
+									foreach ($period as $audience) {
+										switch ($audience["audience_type"]) {
+											case 'proxy_id':
+												$query = "SELECT CONCAT_WS(',',`lastname`,`firstname`) AS `title` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id`=".$db->qstr($audience["audience_value"]);
+												$individual_ids[$key][]=$audience["audience_value"];
+												$audience["type"]='individual';
+												$audience["title"] = $db->GetOne($query);
+
+											?>
+										<li id="student_<?php echo $key.'_'.$audience["audience_value"];?>" style="cursor: move; position: relative; " class="user"><?php echo $audience["title"];?><img src="<?php echo ENTRADA_RELATIVE;?>/images/action-delete.gif" class="list-cancel-image"></li>
+												<?php
+												break;
+										}
+									}
+									?>
+									</ul>
+								</div>
 								<select class="audience_type_select" id="audience_type_select_<?php echo $key;?>" onchange="showSelect(<?php echo $key;?>,this.options[this.selectedIndex].value)"><option value="0">-- Select Audience Type --</option></option><option value="cohort">Cohort</option><option value="individual">Individual</option></select>
-								<select style="display:none;" class="type_select" id="cohort_select_<?php echo $key;?>" onchange="addAudience(<?php echo $key;?>,this.options[this.selectedIndex].text,'cohort',this.options[this.selectedIndex].value)"><option value="0">-- Add Cohort --</option><?php foreach($groups as $group) {echo "<option value=\"".$group["group_id"]."\">".$group["group_name"]."</option>";}?></select>
+								<select style="display:none;" class="type_select" id="cohort_select_<?php echo $key;?>" onchange="addAudience(<?php echo $key;?>,this.options[this.selectedIndex].text,'cohort',this.options[this.selectedIndex].value)"><option value="0">-- Add Cohort --</option>
+								<?php 
+									foreach ($groups as $group) {
+										echo "<option value=\"".$group["group_id"]."\" ".((in_array($group["group_id"],$group_ids[$key]))?" disabled=\"disabled\"":"").">".$group["group_name"]."</option>";		
+									}
+								?>
+								</select>
 								<input style="display:none;width:203px;vertical-align: middle;margin-left:10px;margin-right:10px;" type="text" class="type_select" id="individual_select_<?php echo $period["cperiod_id"];?>"/><input style="display:none;" type="button" class="button-sm type_select" id="add_associated_student_<?php echo $key;?>" onclick="addAudience(<?php echo $key;?>,null,'individual')" value="Add" style="vertical-align: middle" />
 								<input style="display:none;width:203px;vertical-align: middle;margin-left:10px;margin-right:10px;" type="text" class="type_select" id="student_<?php echo $key;?>_name" autocomplete="off"/><input style="display:none;" type="button" class="button-sm type_select" id="add_associated_student_<?php echo $key;?>" onclick="addItem('student_<?php echo $key;?>')" value="Add" style="vertical-align: middle" />
 								<div class="autocomplete" id="student_<?php echo $key;?>_name_auto_complete" style="margin-left:200px;"></div>
 								<div id="student_<?php echo $key;?>">(Example: Thorn, Brandon)</div>
 								<input type="hidden" name="group_audience_members[]" id="group_audience_members_<?php echo $key;?>" value="<?php echo explode(',',$group_ids);?>"/>
-								<input type="hidden" name="student_id[]" id="associated_student_<?php echo $key;?>"/>
+								<input type="hidden" name="individual_audience_members[]" id="associated_student_<?php echo $key;?>"/>
 								<input type="hidden" name="student_id[]" id="student_<?php echo $key;?>_id"/>
 								<input type="hidden" name="student_ref[]" id="student_<?php echo $key;?>_ref"/>
 								<input type="hidden" name="periods[]" value="<?php echo $key;?>"/>
@@ -1260,7 +1299,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					?>
 				</div>
 			</div>
-			</div>
+			
 			<script type="text/javascript">
 				var updaters = new Array();
 				function addPeriod(period_id,period_text,index){
@@ -1270,18 +1309,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					jQuery('#period_list').append('<div class="period_item" id="period_item_'+period_id+'" style="margin-bottom:20px;"></div>');
 					jQuery('#period_item_'+period_id).append('<h3><img src="'+DELETE_IMAGE_URL+'" style="vertical-align:top;margin-right:20px;cursor:pointer;" class="remove_period" id="remove_period_'+period_id+'"/>'+period_text+'</h3>');
 					jQuery('#period_item_'+period_id).append('<div class="audience_list" id="audience_list_'+period_id+'" style="margin-bottom:10px;">');
-					jQuery('#period_item_'+period_id).append('<ol id="audience_container_'+period_id+'" class="sortableList""></ol></div>');
-					jQuery('#period_item_'+period_id).append('<ul id="student_'+period_id+'_list" class="menu" style="margin-top: 15px"></ul>');
+					jQuery('#period_item_'+period_id).append('<h4>Associated Groups</h4><ol id="audience_container_'+period_id+'" class="sortableList""></ol></div>');
+					jQuery('#period_item_'+period_id).append('<h4>Associated Students</h4><ul id="student_'+period_id+'_list" class="menu" style="margin-top: 15px;width:390px;"></ul>');
 					jQuery('#period_item_'+period_id).append('<select class="audience_type_select" id="audience_type_select_'+period_id+'" onchange="showSelect('+period_id+',this.options[this.selectedIndex].value)"><option value="0">-- Select Audience Type --</option></option><option value="cohort">Cohort</option><option value="individual">Individual</option></select>');
 					//jQuery('#period_item_'+period_id).append('<select style="display:none;" class="type_select" id="cohort_select_'+period_id+'" onchange="addAudience('+period_id+',this.options[this.selectedIndex].text,\'cohort\',this.options[this.selectedIndex].value)"><option value="0">-- Add Cohort --</option></option><option value="1">Group 1</option><option value="2">Group 2</option></select>');
 					jQuery('#period_item_'+period_id).append('<select style="display:none;" class="type_select" id="cohort_select_'+period_id+'" onchange="addAudience('+period_id+',this.options[this.selectedIndex].text,\'cohort\',this.options[this.selectedIndex].value)"><option value="0">-- Add Cohort --</option>'+getGroupOptions()+'</select>');
 					//jQuery('#period_item_'+period_id).append('<input style="display:none;width:203px;vertical-align: middle;margin-left:10px;margin-right:10px;" type="text" class="type_select" id="individual_select_'+period_id+'"/><input style="display:none;" type="button" class="button-sm type_select" id="add_associated_student_'+period_id+'" onclick="addAudience('+period_id+',null,\'individual\')" value="Add" style="vertical-align: middle" />');
-					jQuery('#period_item_'+period_id).append('<input style="display:none;width:203px;vertical-align: middle;margin-left:10px;margin-right:10px;" type="text" class="type_select" id="student_'+period_id+'_name" autocomplete=\"off\")"/><input style="display:none;" type="button" class="button-sm type_select" id="add_associated_student_'+period_id+'" onclick="addItem(student_'+period_id+')" value="Add" style="vertical-align: middle" />');
+					jQuery('#period_item_'+period_id).append('<input style="display:none;width:203px;vertical-align: middle;margin-left:10px;margin-right:10px;" type="text" class="type_select" name=\"fullname\" id="student_'+period_id+'_name" autocomplete=\"off\")"/><input style="display:none;" type="button" class="button-sm type_select" id="add_associated_student_'+period_id+'" value="Add" style="vertical-align: middle" />');
 					jQuery('#period_item_'+period_id).append('<div class="autocomplete" id="student_'+period_id+'_name_auto_complete" style="margin-left:200px;"></div>');
 					jQuery('#period_item_'+period_id).append('<div id="student_'+period_id+'">(Example: Thorn, Brandon)</div>');
 					jQuery('#period_item_'+period_id).append('<input type="hidden" name="group_audience_members[]" id="group_audience_members_'+period_id+'"/>');
 					//jQuery('#period_item_'+period_id).append('<input type="hidden" name="individual_audience_members[]" id="individual_audience_members_'+period_id+'"/>');
-					jQuery('#period_item_'+period_id).append('<input type="hidden" name="student_id[]" id="associated_student_'+period_id+'"/>');
+					jQuery('#period_item_'+period_id).append('<input type="hidden" name="individual_audience_members[]" id="associated_student_'+period_id+'"/>');
 					jQuery('#period_item_'+period_id).append('<input type="hidden" name="student_id[]" id="student_'+period_id+'_id"/>');
 					jQuery('#period_item_'+period_id).append('<input type="hidden" name="student_ref[]" id="student_'+period_id+'_ref"/>');
 					jQuery('#period_item_'+period_id).append('<input type="hidden" name="periods[]" value="'+period_id+'"/>');

@@ -7982,6 +7982,19 @@ function clerkship_progress_send_notice($rotation_period_index, $rotation, $cler
 }
 
 /**
+ * This function returns the numeric suffix in English for the provided number.
+ * 
+ * @param int $number
+ * @return string
+ */
+function numeric_suffix($number = 0) { 
+    $test_number = abs($number) % 10; 
+    $ext = ((abs($number) %100 < 21 && abs($number) %100 > 4) ? 'th' : (($test_number < 4) ? ($test_number < 3) ? ($test_number < 2) ? ($test_number < 1) ? 'th' : 'st' : 'nd' : 'rd' : 'th'));
+    
+	return $number.$ext; 
+}
+
+/**
  * Function takes a period index value, a rotation row, and a clerk/rotation row
  * and sends notices to let them know that they are deficient/delinquent in their
  * logging.

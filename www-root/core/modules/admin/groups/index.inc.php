@@ -160,17 +160,22 @@ if (!defined("IN_GROUPS")) {
 		break;
 	}
 	
-	/**** Query ***/
-	$query_count = "	SELECT COUNT(`group_id`) AS `total_rows`
-						FROM `groups` Where true";
+	$query_count = "	SELECT COUNT(a.`group_id`) AS `total_rows`
+						FROM `groups` AS a
+						JOIN `group_organisations` AS b
+						ON b.`group_id` = a.`group_id`
+						WHERE a.`group_active` = '1'
+						AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation());
 
-//						WHERE `group_active` = '1'";
-
-	$query_groups = "	SELECT a.*, COUNT(b.`gmember_id`) AS members, case when (MIN(b.`member_active`)=0) then 1 else 0 end as `inactive` FROM `groups` AS a
-						LEFT JOIN `group_members` b
-						ON a.`group_id` = b.`group_id` where true";
-//						WHERE `group_active` = '1'";
-
+	$query_groups = "	SELECT a.*, COUNT(b.`gmember_id`) AS members, CASE WHEN (MIN(b.`member_active`) = 0) THEN 1 ELSE 0 END AS `inactive`
+						FROM `groups` AS a
+						JOIN `group_members` b
+						ON b.`group_id` = a.`group_id`
+						JOIN `group_organisations` AS c
+						ON c.`group_id` = a.`group_id`
+						WHERE a.`group_active` = '1'
+						AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation());
+	
 	switch ($search_type) {
 		case "search" :
 		default :

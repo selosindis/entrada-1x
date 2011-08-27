@@ -10015,11 +10015,7 @@ function tracking_process_filters($action = "", $module_type = "") {
 				unset($_SESSION[APPLICATION_IDENTIFIER]["tracking"]["filters"]);
 			}
 
-			$_SESSION[APPLICATION_IDENTIFIER]["tracking"]["filters"] = events_filters_defaults(
-				$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"],
-				$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"],
-				$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]
-			);
+			$_SESSION[APPLICATION_IDENTIFIER]["tracking"]["filters"] = array();
 
 			$_SERVER["QUERY_STRING"] = replace_query(array("action" => false, "filter" => false));
 		break;
@@ -10194,7 +10190,7 @@ function tracking_fetch_filtered_events($community_id,$filters = array(),$pagina
 		foreach ($statistics as $key=>$statistic){
 			$page = get_page_for_statistic($statistic["action_field"], $statistic["action_value"]);
 			
-			if($page){
+			if ($page) {
 				$statistics[$key]['page'] = $page;
 			}
 		}

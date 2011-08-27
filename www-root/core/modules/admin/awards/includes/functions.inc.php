@@ -8,7 +8,7 @@ function award_details_edit($award) {
 <form class="edit_award_form" action="<?php echo ENTRADA_URL; ?>/admin/awards?section=award_details&id=<?php echo $award->getID(); ?>" method="post" >
 	<input type="hidden" name="action" value="edit_award_details"></input>
 	<input type="hidden" name="award_id" value="<?php echo $award->getID(); ?>"></input>
-	<table class="award_details">
+	<table class="award_details" style="width: 100%">
 		<colgroup>
 			<col width="3%"></col>
 			<col width="25%"></col>
@@ -19,7 +19,10 @@ function award_details_edit($award) {
 				<td colspan="3">&nbsp;</td>
 			</tr>
 			<tr>
-				<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
+				<td>
+					<input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/awards'" />
+				</td>
+				<td colspan="2" style="padding-top: 5px; text-align: right">
 					<input type="submit" class="button" value="Submit Changes" />
 				</td>
 			</tr>
@@ -30,11 +33,11 @@ function award_details_edit($award) {
 		?>
 			<tr>
 				<td>&nbsp;</td>
-				<td >
+				<td>
 					<label for="award_title" class="form-required">Title:</label>
 				</td>
-				<td >
-					<input id="award_title" name="award_title" <?php if($disabled) echo " disabled=\"disabled\"";?> type="text" maxlength="4096" style="width: 250px; vertical-align: middle;" value="<?php echo clean_input($award->getTitle(), array("notags", "specialchars")) ?>"></input>	
+				<td>
+					<input id="award_title" name="award_title" type="text" maxlength="4096" style="width: 250px; vertical-align: middle;" value="<?php echo clean_input($award->getTitle(), array("notags", "specialchars")) ?>"></input>	
 				</td>
 			</tr>
 			<tr>
@@ -42,17 +45,17 @@ function award_details_edit($award) {
 				<td style="vertical-align:top;">
 					<label for="award_terms" class="form-required">Terms of Award:</label>
 				</td>
-				<td >
-					<textarea id="award_terms" name="award_terms" <?php if($disabled) echo " disabled=\"disabled\"";?> style="width: 100%; height: 100px;" cols="65" rows="20"><?php echo clean_input($award->getTerms(), array("notags", "specialchars")) ?></textarea>	
+				<td>
+					<textarea id="award_terms" name="award_terms" style="width: 100%; height: 100px;" cols="65" rows="20"><?php echo clean_input($award->getTerms(), array("notags", "specialchars")) ?></textarea>	
 				</td>
 			</tr>
 			<tr>
 			<td>&nbsp;</td>
 			<td style="vertical-align:top;">
-			<label for="award_disabled" class="form-nrequired">Disabled:</label>
+				<label for="award_disabled" class="form-nrequired">Disabled:</label>
 			</td>
-			<td><input type="radio" name="award_disabled" value="0"<?php if(!$disabled) echo " checked=\"checked\"";?>>No</input><br />
-			<input type="radio" name="award_disabled" value="1"<?php if($disabled) echo " checked=\"checked\"";?>>Yes</input></td>
+			<td><input type="radio" name="award_disabled" id="award_disabled_0" value="0"<?php if(!$disabled) echo " checked=\"checked\"";?>></input><label for="award_disabled_0">No</label><br />
+			<input type="radio" name="award_disabled" id="award_disabled_1" value="1"<?php if($disabled) echo " checked=\"checked\"";?>></input><label for="award_disabled_1">Yes</label></td>
 			</tr>
 		</tbody>
 	</table>
@@ -72,7 +75,7 @@ function award_recipients_list(InternalAward $award) {
 			</colgroup>
 			<thead>
 				<tr>
-					<td class="general">
+					<td class="general" style="border-left: 1px solid #999;">
 						Full Name
 					</td>
 					<td class="sortedDESC">
@@ -194,7 +197,10 @@ function process_manage_award_details() {
 				$user_id = (isset($_POST['internal_award_user_id']) ? $_POST['internal_award_user_id'] : 0);
 				if ($user_id && $award_id) {
 					$year = $_POST['internal_award_year'];
-					InternalAwardReceipt::create($award_id,$user_id,$year);
+					$info = array("award_id" => $award_id,
+								   "user_id" => $user_id,
+								   "year" => $year);
+					InternalAwardReceipt::create($info);
 				}
 			break;
 		

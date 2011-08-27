@@ -10294,7 +10294,6 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 					WHERE (a.`event_status` = 'published' OR a.`event_status` = 'approval')
 					AND b.`econtact_type` = 'student'
 					AND b.`etype_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
-					AND (`events`.`event_children` = 0 OR `events`.`event_children` IS NULL)
 					ORDER BY a.`event_start` ASC";
 		$clerkship_events = $db->GetAll($query);
 		if ($clerkship_events) {
@@ -10405,7 +10404,6 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 							%OBJECTIVE_JOIN%
 							%TOPIC_JOIN%
 							WHERE `courses`.`course_active` = '1'
-							AND (`events`.`event_children` = 0 OR `events`.`event_children` IS NULL)
 							".($filter_clerkship_events && $course_ids_string ? "AND (`courses`.`course_id` NOT IN (".$course_ids_string.")\n OR (".implode("\n", $time_periods)."))" : "")."
 							AND (`events`.`release_date` <= ".$db->qstr(time())." OR `events`.`release_date` = 0)
 							AND (`events`.`release_until` >= ".$db->qstr(time())." OR `events`.`release_until` = 0)
@@ -10428,7 +10426,6 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 							%OBJECTIVE_JOIN%
 							%TOPIC_JOIN%
 							WHERE `courses`.`course_active` = '1'
-							AND (`events`.`event_children` = 0 OR `events`.`event_children` IS NULL)
 							".($filter_clerkship_events && $course_ids_string ? "AND (`courses`.`course_id` NOT IN (".$course_ids_string.")\n OR (".implode("\n", $time_periods)."))" : "")."
 							AND `courses`.`organisation_id` = ".$db->qstr($organisation_id);
 
@@ -10449,22 +10446,24 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 								$where_teacher[] = (int) $filter_value;
 							break;
 							case "student" :
-								if (($user_roup != "student") || ($filter_value == $proxy_id)) {
+								if (($user_group != "student") || ($filter_value == $proxy_id)) {
 									$where_student_proxy_ids[] = (int) $filter_value;
+									$where_student_cohort[] = groups_get_cohort((int) $filter_value);
 
 									/**
 									 * Get the system groups the proxy_id is a member of.
 									 */
-									$query = "	SELECT `group_id`
-												FROM `group_members`
-												WHERE `proxy_id` = ".$db->qstr($student_id)."
-												AND `member_active` = '1'";
-									$results = $db->GetAll($query);
-									if ($results) {
-										foreach ($results as $result) {
-											$where_student_groups_ids[] = (int) $result["group_id"];
-										}
-									}
+//									$query = "	SELECT `group_id`
+//												FROM `group_members`
+//												WHERE `proxy_id` = ".$db->qstr($student_id)."
+//												AND `member_active` = '1'";
+//									$results = $db->GetAll($query);
+//									if ($results) {
+//										foreach ($results as $result) {
+//											$where_student_groups_ids[] = (int) $result["group_id"];
+//										}
+//									}
+									
 								}
 							break;
 							case "course" :
@@ -10505,7 +10504,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 			$where_student = array();
 			
 			if ($where_student_group_ids) {
-				$where_student[] = "(`event_audience`.`audience_type` = 'group' AND `event_audience`.`audience_value` IN (".implode(", ", $where_student_group_ids)."))";
+				$where_student[] = "(`event_audience`.`audience_type` = 'group_id' AND `event_audience`.`audience_value` IN (".implode(", ", $where_student_group_ids)."))";
 			}
 			
 			if ($where_student_proxy_ids) {
@@ -10520,7 +10519,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 		}
 		
 		if ($where_group) {
-			$tmp_query[] = "(`event_audience`.`audience_type` = 'group_id' AND `event_audience`.`audience_value` IN (".implode(", ", $where_group)."))";
+			$tmp_query[] = "(`event_audience`.`audience_type` = 'cohort' AND `event_audience`.`audience_value` IN (".implode(", ", $where_group)."))";
 		}
 		
 		if ($where_eventtype) {
@@ -10580,7 +10579,6 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 							LEFT JOIN `courses`
 							ON `events`.`course_id` = `courses`.`course_id`
 							WHERE `courses`.`organisation_id` = ".$db->qstr($organisation_id)."
-							AND (`events`.`event_children` = 0 OR `events`.`event_children` IS NULL)
 							".($filter_clerkship_events && $course_ids_string ? "AND (`courses`.`course_id` NOT IN (".$course_ids_string.")\n OR (".implode("\n", $time_periods)."))" : "")."
 							AND (`events`.`release_date` <= ".$db->qstr(time())." OR `events`.`release_date` = 0)
 							AND (`events`.`release_until` >= ".$db->qstr(time())." OR `events`.`release_until` = 0)
@@ -10598,7 +10596,6 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 							LEFT JOIN `curriculum_lu_types`
 							ON `curriculum_lu_types`.`curriculum_type_id` = `courses`.`curriculum_type_id`
 							WHERE `courses`.`course_active` = '1'
-							AND (`events`.`event_children` = 0 OR `events`.`event_children` IS NULL)
 							".($filter_clerkship_events && $course_ids_string ? "AND (`courses`.`course_id` NOT IN (".$course_ids_string.")\n OR (".implode("\n", $time_periods)."))" : "")."
 							AND `courses`.`organisation_id` = ".$db->qstr($organisation_id)."
 							".(($display_duration) ? "AND `events`.`event_start` BETWEEN ".$db->qstr($display_duration["start"])." AND ".$db->qstr($display_duration["end"]) : "")."
@@ -10674,7 +10671,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 	}
 
 	$query_events = sprintf($query_events, $sort_by, $limit_parameter, $results_per_page);
-	
+
 	$learning_events = $db->GetAll($query_events);
 	if ($learning_events) {
 		if ($_SESSION["details"]["group"] == "student") {
@@ -13894,12 +13891,19 @@ function validate_integer_field($input){
  * @param int $group_id
  * @return string $group_name
  */
-function groups_get_name($group_id) {
+function groups_get_name($group_id = 0) {
 	global $db;
-	$query = "SELECT `group_name` FROM `groups` WHERE `group_id` = ".$db->qstr($group_id);
-	if ($group_name = $db->GetOne($query)) {
-		return $group_name;
+	
+	$group_id = (int) $group_id;
+	
+	if ($group_id) {
+		$query = "SELECT `group_name` FROM `groups` WHERE `group_id` = ".$db->qstr($group_id);
+		$group_name = $db->GetOne($query);
+		if ($group_name) {
+			return $group_name;
+		}
 	}
+	
 	return false;
 }
 
@@ -13911,27 +13915,30 @@ function groups_get_name($group_id) {
  */
 function groups_get_cohort($proxy_id) {
 	global $db, $ENTRADA_USER;
-	$query = "SELECT a.* 
-			FROM `groups` AS a 
-			JOIN `group_members` AS b 
-			ON a.`group_id` = b.`group_id` 
-			WHERE b.`proxy_id` = ".$db->qstr($proxy_id)."
-			AND a.`group_type` = 'cohort'";
-	if ($cohort = $db->GetRow($query)) {
+	
+	$query = "	SELECT a.* 
+				FROM `groups` AS a 
+				JOIN `group_members` AS b 
+				ON a.`group_id` = b.`group_id` 
+				WHERE b.`proxy_id` = ".$db->qstr($proxy_id)."
+				AND a.`group_type` = 'cohort'";
+	$cohort = $db->GetRow($query);
+	if ($cohort) {
 		return $cohort;
 	} else {
-		$query = "SELECT a.* 
-				FROM `groups` AS a 
-				JOIN `group_organisations` AS b 
-				ON a.`group_id` = b.`group_id` 
-				WHERE b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
-				AND a.`group_type` = 'cohort'
-				ORDER BY a.`group_id` DESC
-				LIMIT 0, 4";
-		if ($cohort = $db->GetRow($query)) {
+		$query = "	SELECT a.* 
+					FROM `groups` AS a 
+					JOIN `group_organisations` AS b 
+					ON a.`group_id` = b.`group_id` 
+					WHERE b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+					AND a.`group_type` = 'cohort'
+					ORDER BY a.`group_id` DESC";
+		$cohort = $db->GetRow($query);
+		if ($cohort) {
 			return $cohort;
 		}
 	}
+	
 	return false;
 }
 

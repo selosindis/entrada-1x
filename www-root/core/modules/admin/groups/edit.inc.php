@@ -93,6 +93,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 		default :			// Step 1
 			$group_ids = array();
 			
+			
+/**
+ * @todo What the heck is this? Will who ever did this, please fix this. It's crap.
+ * 
+ */
 			if(isset($PROCESSED["group_id"]) && (int)$PROCESSED["group_id"]) {
 				$GROUP_ID = $PROCESSED["group_id"];
 			} else {
@@ -127,7 +132,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 				$GROUP_ID = $results[0]["group_id"]; // $group_ids[0];
 			}
 			
-			$query = "SELECT a.*, b.`organisation_id` FROM `groups` AS a
+			$query = "	SELECT a.*, b.`organisation_id` FROM `groups` AS a
 						LEFT JOIN `group_organisations` AS b
 						ON a.`group_id` = b.`group_id`
 						WHERE a.`group_id` = ".$db->qstr($GROUP_ID);
@@ -154,121 +159,90 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 			$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/groups?section=edit", "title" => "Edit");
 			
 			?>
-			<span class="content-heading">Manage Groups Edit</span>
-			<br> </br>
-			<div style=" width: 484px">
-				<div style="float: right">
-					<ul class="page-action">
-						<li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=add" class="strong-green">Add Group</a></li>
-					</ul>
-				</div>
-			</div>
-			<h2 style="margin-top: 10px">Manage Groups</h2>
-			<div style=" width: 484px">
-				<div style="clear: both"></div> 
+			<h1>Editing Groups</h1>
+			
+			<h2>Selected Groups</h2>
+			<form action="<?php echo ENTRADA_URL; ?>/admin/<?php echo "$MODULE"; ?>?section=edit&step=1" method="post" id="addMembersForm">
+				<input type="hidden" id="step" name="step" value="1" />
+				<input type="hidden" id="group_id" name="group_id" value="" />
+
 				<?php echo (($ERROR) ? display_error($ERRORSTR) : ""); ?>
 				<table class="tableList" cellspacing="1" cellpadding="1">
 					<colgroup>
 						<col style="width: 6%" />
 						<col style="width: 54%" />
-						<col style="width: 25%" />
-						<col style="width: 15%" />
+						<col style="width: 30%" />
+						<col style="width: 10%" />
 					</colgroup>
-					<thead >
-						<td />
-						<td>&nbsp; Group Name</td>
-						<td>&nbsp; Members</td>
-						<td />
+					<thead>
+						<tr>
+							<td></td>
+							<td>Group Name</td>
+							<td>Members</td>
+							<td></td>
+						</tr>
 					</thead>
+					<tbody>
+					<?php
+						foreach($results as $result) {
+							$members = $db->GetRow("SELECT COUNT(*) AS members, case when (MIN(`member_active`)=0) then 1 else 0 end as `inactive`
+													FROM  `group_members` WHERE `group_id` = ".$db->qstr($result["group_id"]));
+
+								echo "<tr class=\"group".((!$result["group_active"]) ? " na" : (($members["inactive"]) ? " np" : ""))."\">";
+								echo "	<td><input type=\"radio\" name=\"groups\" value=\"".$result["group_id"]."\" onclick=\"selectgroup(".$result["group_id"].",'".$result["group_name"]."');\"".(($result["group_id"] == $GROUP_ID) ?" checked=\"checked\"" : "")."/></td>\n";
+								echo "	<td><a href=\"".ENTRADA_URL."/admin/groups?section=edit&id=".$result["group_id"]."\" >".html_encode($result["group_name"])."</a></td>";
+								echo "	<td><a href=\"".ENTRADA_URL."/admin/groups?section=edit&id=".$result["group_id"]."\" >".$members["members"]."</a></td>";
+								echo "	<td>
+											<a href=\"".ENTRADA_URL."/admin/groups?section=manage&gids=".$result["group_id"]."\"><img src=\"".ENTRADA_URL."/images/action-edit.gif\" width=\"16\" height=\"16\" alt=\"Rename Group\" title=\"Rename Group\" border=\"0\" /></a>&nbsp;
+											<a href=\"".ENTRADA_URL."/admin/groups?section=manage&ids=".$result["group_id"]."\"><img src=\"".ENTRADA_URL."/images/action-delete.gif\" width=\"16\" height=\"16\" alt=\"Delete/Activate Group\" title=\"Delete/Activate Group\" border=\"0\" /></a>
+										</td>\n";
+								echo "</tr>";
+						}
+					?>
+					</tbody>
 				</table>
-			</div>	
-			<form action="<?php echo ENTRADA_URL; ?>/admin/<?php echo "$MODULE"; ?>?section=edit&step=1" method="post" id="addMembersForm">
-				<input type="hidden" id="step" name="step" value="1" />
-				<input type="hidden" id="group_id" name="group_id" value="" />
-				<div STYLE="overflow: auto; width: 482px; height: 100px; 
-		            border-left: 1px gray solid; border-bottom: 1px gray solid; 
-		            border-right: 1px gray solid; padding:0px; margin: 0px">
-					<table class="tableList" width="452px" cellspacing="0" cellpadding="1" summary="List of groups">
-						<colgroup>
-							<col style="width: 32px" />
-							<col style="width: 270px" />
-							<col style="width: 100px" />
-							<col style="width: 50px" />
-						</colgroup>
-						<tbody>
-						<?php
-							foreach($results as $result) {
-								$members = $db->GetRow("SELECT COUNT(*) AS members, case when (MIN(`member_active`)=0) then 1 else 0 end as `inactive`
-														FROM  `group_members` WHERE `group_id` = ".$db->qstr($result["group_id"]));
-								
-									echo "<tr class=\"group".((!$result["group_active"]) ? " na" : (($members["inactive"]) ? " np" : ""))."\">";
-									echo "	<td style=\"vertical-align: top\">&nbsp;<input type=\"radio\" name=\"groups\" value=\"".$result["group_id"]."\" onclick=\"selectgroup(".$result["group_id"].",'".$result["group_name"]."');\"".(($result["group_id"] == $GROUP_ID) ?" checked=\"checked\"" : "")."/></td>\n";
-									echo "	<td><a href=\"".ENTRADA_URL."/admin/groups?section=edit&id=".$result["group_id"]."\" >".html_encode($result["group_name"])."</a></td>";
-									echo "	<td><a href=\"".ENTRADA_URL."/admin/groups?section=edit&id=".$result["group_id"]."\" >".$members["members"]."</a></td>";
-									echo "	<td>
-										<a href=\"".ENTRADA_URL."/admin/groups?section=manage&gids=".$result["group_id"]."\"><img src=\"".ENTRADA_URL."/images/action-edit.gif\" width=\"16\" height=\"16\" alt=\"Rename Group\" title=\"Rename Group\" border=\"0\" /></a>&nbsp;
-										<a href=\"".ENTRADA_URL."/admin/groups?section=manage&ids=".$result["group_id"]."\"><img src=\"".ENTRADA_URL."/images/action-delete.gif\" width=\"16\" height=\"16\" alt=\"Delete/Activate Group\" title=\"Delete/Activate Group\" border=\"0\" /></a>
-										</td>\n";
-									echo "</tr>";
-							}
-						?>
-						</tbody>
-					</table>
-				</div>
-				<br />
 			</form>
-				<h2 style="margin-top: 10px">View Members</h2>
-			<div style=" width: 484px">
-				<form action="<?php echo ENTRADA_URL; ?>/admin/groups?section=manage" method="post">
-					<div style="clear: both"></div> 
-					<?php echo (($ERROR) ? display_error($ERRORSTR) : ""); ?>
-					<table class="tableList" cellspacing="1" cellpadding="1">
-						<colgroup>
-							<col style="width: 6%" />
-							<col style="width: 54%" />
-							<col style="width: 30%" />
-							<col style="width: 10%" />
-						</colgroup>
-						<thead >
-							<td />
-							<td>&nbsp; Name</td>
-							<td>&nbsp; Group & Role</td>
-							<td />
-						</thead>
-					</table>
-				</div>	
-				<div STYLE="overflow: auto; width: 482px; height: 100px; 
-	            border-left: 1px gray solid; border-bottom: 1px gray solid; 
-	            border-right: 1px gray solid; padding:0px; margin: 0px">
-					<table class="tableList" width="452px" cellspacing="0" cellpadding="1" summary="List of Members">
-						<colgroup>
-							<col style="width: 32px" />
-							<col style="width: 250px" />
-							<col style="width: 145px" />
-							<col style="width: 25px" />
-						</colgroup>
-						<tbody>
-						<?php
-							$results = $db->GetAll($emembers_query);
-							if ($results) {
-								foreach($results as $result) {
-									echo "<tr  class=\"event".(!$result["member_active"] ? " na" : "")."\">";
-									echo "	<td class=\"modified\"><input type=\"checkbox\" class=\"delchk\" name=\"checked[]\" onclick=\"memberChecks()\" value=\"".$result["gmember_id"]."\" /></td>\n";
-									echo "	<td><a href=\"".ENTRADA_URL."/people?profile=".$result["username"]."\" >".html_encode($result["fullname"])."</a></td>";
-									echo "	<td><a href=\"".ENTRADA_URL."/people?profile=".$result["username"]."\" >".$result["grouprole"]."</a></td>";
-									echo "	<td>
-										<a href=\"".ENTRADA_URL."/admin/groups?section=manage&mids=".$result["gmember_id"]."\"><img src=\"".ENTRADA_URL."/images/action-delete.gif\" width=\"16\" height=\"16\" alt=\"Delete/Activate Member\" title=\"Delete/Activate Member\" border=\"0\" /></a>
+
+			<h2>View Selected Group Members</h2>
+			<form action="<?php echo ENTRADA_URL; ?>/admin/groups?section=manage" method="post">
+				<table class="tableList" cellspacing="1" cellpadding="1">
+					<colgroup>
+						<col style="width: 6%" />
+						<col style="width: 54%" />
+						<col style="width: 30%" />
+						<col style="width: 10%" />
+					</colgroup>
+					<thead>
+						<tr>
+							<td></td>
+							<td>Full Name</td>
+							<td>Group &amp; Role</td>
+							<td></td>
+						</tr>
+					</thead>
+					<tbody>
+					<?php
+						$results = $db->GetAll($emembers_query);
+						if ($results) {
+							foreach($results as $result) {
+								echo "<tr class=\"event".(!$result["member_active"] ? " na" : "")."\">";
+								echo "	<td><input type=\"checkbox\" class=\"delchk\" name=\"checked[]\" onclick=\"memberChecks()\" value=\"".$result["gmember_id"]."\" /></td>\n";
+								echo "	<td><a href=\"".ENTRADA_URL."/people?profile=".$result["username"]."\" >".html_encode($result["fullname"])."</a></td>";
+								echo "	<td><a href=\"".ENTRADA_URL."/people?profile=".$result["username"]."\" >".$result["grouprole"]."</a></td>";
+								echo "	<td>
+											<a href=\"".ENTRADA_URL."/admin/groups?section=manage&mids=".$result["gmember_id"]."\"><img src=\"".ENTRADA_URL."/images/action-delete.gif\" width=\"16\" height=\"16\" alt=\"Delete/Activate Member\" title=\"Delete/Activate Member\" border=\"0\" /></a>
 										</td>\n";
-									echo "</tr>";
-								}
+								echo "</tr>";
 							}
-						?>
-						</tbody>
-					</table>
-				</div>
+						}
+					?>
+					</tbody>
+				</table>
+				
 				<div id="delbutton" style="padding-top: 15px; text-align: right; display:none">
 					<input type="submit" class="button" value="Delete/Activate" style="vertical-align: middle" />
 				</div>
+				
 				<input type="hidden" name="members" value="1" />
 			</form>
 			<br />

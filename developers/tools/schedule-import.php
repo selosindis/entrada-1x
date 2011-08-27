@@ -70,13 +70,15 @@ require_once("functions.inc.php");
 
 $ENABLE_LOGGING			= true;		// true | false to enable | disable logging.
 
-$COPY_EVENT_ED10		= false;	// Copy ED10 data from old events.
-$COPY_EVENT_ED11		= false;	// Copy ED11 data from old events.
+$COPY_EVENT_ED10		= true;	// Copy ED10 data from old events.
+$COPY_EVENT_ED11		= true;	// Copy ED11 data from old events.
 $COPY_EVENT_FILES		= true;		// Copy event files from old events.
 $COPY_EVENT_LINKS		= true;		// Copy event links from old events.
 $COPY_EVENT_OBJECTIVES	= true;		// Copy event objectives from old events.
 
 $EVENT_TYPE_LOOKUP		= array();
+
+$PARENTS_PROCESSED		= array();
 
 $ACTION					= ((isset($_SERVER["argv"][1])) ? trim($_SERVER["argv"][1]) : "-usage");
 $CSV_FILE				= (((isset($_SERVER["argv"][2])) && (trim($_SERVER["argv"][2]) != "")) ? trim($_SERVER["argv"][2]) : false);
@@ -105,24 +107,43 @@ switch ($ACTION) {
 				 * be the CSV heading titles.
 				 */
 				if ($row_count > 1) {
-					$event_ids			= array();
-					$proxy_ids			= array();
-					$event_duration		= 0;
-					$eventtype_ids		= array();
-					$eventtype_duration = array();
-		
-					$event_id			= ((isset($row[0])) ? clean_input($row[0]) : "");
-					$event_phase		= ((isset($row[1])) ? clean_input($row[1]) : "");
-					$event_grad_year	= ((isset($row[2])) ? clean_input($row[2]) : "");
-					$course_num			= ((isset($row[3])) ? clean_input($row[3]) : "");
-					$course_name		= ((isset($row[4])) ? clean_input($row[4]) : "");
-					$event_date			= ((isset($row[5])) ? clean_input($row[5]) : "");
-					$event_start_time	= ((isset($row[6])) ? clean_input($row[6]) : "");
-					$event_durations	= ((isset($row[7])) ? clean_input($row[7]) : 0);
-					$event_types		= ((isset($row[8])) ? clean_input($row[8]) : "");
-					$event_title		= ((isset($row[9])) ? clean_input($row[9]) : "");
-					$event_location		= ((isset($row[10]) && ($row[10] != "")) ? clean_input($row[10]) : "TBA");
-					$staff_numbers		= ((isset($row[11])) ? clean_input($row[11]) : "");
+					$event_ids = array();
+					$parent_id = 0;
+					$staff_numbers = array();
+					$total_duration = 0;
+					$event_duration = 0;
+					$event_type_list = array();
+					$event_type_durations = array();
+
+/**
+ * 0	Original Event Id
+ * 1	Parent Event
+ * 2	Term
+ * 3	Grad Class
+ * 4	Course Name
+ * 5	Date
+ * 6	Start Time
+ * 7	Total Duration
+ * 8	Event Type Durations
+ * 9	Event Types
+ * 10	Event Title
+ * 11	Location
+ * 12	Teacher Staff Number(s)
+ * 13	Teacher Name(s)			
+ */					
+					$event_id = ((isset($row[0])) ? clean_input($row[0], "int") : 0);			// Original Event ID
+					$parent_id = ((isset($row[1])) ? clean_input($row[1], "int") : 0);			// Parent Event ID
+					$event_term = ((isset($row[2])) ? clean_input($row[2]) : "");				// Term (not really used anymore)
+					$event_grad_year = ((isset($row[3])) ? clean_input($row[3]) : "");			// Graduating Class (needs to change going forward)
+					$course_name = ((isset($row[4])) ? clean_input($row[4]) : "");				// Full name of the course.
+					$event_date = ((isset($row[5])) ? clean_input($row[5]) : "");				// Date
+					$event_start_time = ((isset($row[6])) ? clean_input($row[6]) : "");			// Start time
+					$total_duration = ((isset($row[7])) ? clean_input($row[7]) : "");			// Total duration (not really used)
+					$event_durations = ((isset($row[8])) ? clean_input($row[8]) : 0);			// Event type segment durations.
+					$event_types = ((isset($row[9])) ? clean_input($row[9]) : "");				// Event types (by name)
+					$event_title = ((isset($row[10])) ? clean_input($row[10]) : "");			// Event title
+					$event_location = ((isset($row[11]) && ($row[11] != "")) ? clean_input($row[11]) : "TBA"); // Location
+					$staff_number = ((isset($row[12])) ? clean_input($row[12]) : "");			// Staff numbers.
 					
 					/**
 					 * Validation for provided previous lecture ids.
@@ -139,7 +160,7 @@ switch ($ACTION) {
 					}
 
 					/**
-					 * Validation for provided previous lecture ids.
+					 * Validation for provided previous event durations.
 					 */
 					if ($event_durations) {
 						$pieces = explode(";", $event_durations);
@@ -148,7 +169,7 @@ switch ($ACTION) {
 								$tmp_event_duration = clean_input($tmp_event_duration, array("nows", "int"));
 								if ($tmp_event_duration) {
 									$event_duration += $tmp_event_duration;
-									$eventtype_duration[$key] = $tmp_event_duration;
+									$event_type_durations[$key] = $tmp_event_duration;
 								}
 							}
 						}
@@ -175,7 +196,7 @@ switch ($ACTION) {
 									}
 
 									$eventtype_id = $EVENT_TYPE_LOOKUP[$tmp_event_type];
-									$eventtype_ids[] = array("eventtype_id" => $eventtype_id, "duration" => $eventtype_duration[$key]);
+									$event_type_list[] = array("eventtype_id" => $eventtype_id, "duration" => $event_type_durations[$key]);
 								}
 							}
 						}
@@ -188,27 +209,39 @@ switch ($ACTION) {
 					/**
 					 * Validation for provided staff ids.
 					 */
-					if ($staff_numbers) {
-						$pieces = explode(";", $staff_numbers);
+					if ($staff_number) {
+						$pieces = explode(";", $staff_number);
 						if ((is_array($pieces)) && (count($pieces))) {
 							foreach ($pieces as $tmp_staff_number) {
 								if ($tmp_staff_number = clean_input($tmp_staff_number, array("nows", "int"))) {
 									if ($proxy_id = get_proxy_id($tmp_staff_number)) {
-										$proxy_ids[] = $proxy_id;
+										$staff_numbers[] = $proxy_id;
 									}
 								}
 							}
+						}
+					}
+					
+					/**
+					 * Validation for parent_id
+					 */
+					if ($parent_id) {
+						if (!array_key_exists($parent_id, $PARENTS_PROCESSED)) {
+							$parent_id = 0;
+							
+							output_notice("[Row ".$row_count."]\tThe parent_id [".$parent_id."] of this event has not yet been added, hierarchy will be skipped.");
 						}
 					}
 	
 					$historical								= get_event_data($event_ids);
 	
 					$processed_event						= array();
+					$processed_event["parent_id"]			= ($parent_id ? $PARENTS_PROCESSED[$parent_id]: 0);
 					$processed_event["recurring_id"]		= 0;
 					$processed_event["region_id"]			= ((isset($historical["region_id"])) ? $historical["region_id"] : 0);
 					$processed_event["course_id"]			= get_course_id($course_name);
-					$processed_event["course_num"]			= $course_num;
-					$processed_event["event_phase"]			= $event_phase;
+					$processed_event["course_num"]			= ""; // Not used.
+					$processed_event["event_phase"]			= $event_term; // Not really used.
 					$processed_event["event_title"]			= $event_title;
 					$processed_event["event_description"]	= ((isset($historical["event_description"])) ? $historical["event_description"] : "");
 					$processed_event["event_goals"]			= ((isset($historical["event_goals"])) ? $historical["event_goals"] : "");
@@ -224,17 +257,23 @@ switch ($ACTION) {
 					$processed_event["updated_by"]			= 1;
 		
 					if (($db->AutoExecute("events", $processed_event, "INSERT")) && ($new_event_id = $db->Insert_Id())) {
-						output_success("[Row ".$row_count."]\tImported learning event for phase ".$event_phase." [".$new_event_id."] on ".date("r", $processed_event["event_start"]));
+						if (is_array($event_ids) && !empty($event_ids)) {
+							foreach ($event_ids as $id) {
+								$PARENTS_PROCESSED[$id] = $new_event_id;
+							}
+						}
+						
+						output_success("[Row ".$row_count."]\tImported learning event for phase ".$event_term." [".$new_event_id."] on ".date("r", $processed_event["event_start"]));
 							
 						/**
 						 * Attach graduating class information to new event.
 						 */
-						$processed_audience						= array();
-						$processed_audience["event_id"]			= $new_event_id;
-						$processed_audience["audience_type"]	= "grad_year";
-						$processed_audience["audience_value"]	= $event_grad_year;
-						$processed_audience["updated_date"]		= time();
-						$processed_audience["updated_by"]		= 1;
+						$processed_audience = array();
+						$processed_audience["event_id"] = $new_event_id;
+						$processed_audience["audience_type"] = "grad_year";
+						$processed_audience["audience_value"] = $event_grad_year;
+						$processed_audience["updated_date"] = time();
+						$processed_audience["updated_by"] = 1;
 						
 						if ($db->AutoExecute("event_audience", $processed_audience, "INSERT")) {
 							output_success("[Row ".$row_count."]\tAttached event_id [".$new_event_id."] to class of ".$event_grad_year);
@@ -242,8 +281,8 @@ switch ($ACTION) {
 							/**
 							 * Attach event types to new event.
 							 */
-							if (count($eventtype_ids)) {
-								foreach ($eventtype_ids as $key => $eventtype) {
+							if (count($event_type_list)) {
+								foreach ($event_type_list as $key => $eventtype) {
 									$eventtype["event_id"] = $new_event_id;
 									if ($db->AutoExecute("event_eventtypes", $eventtype, "INSERT")) {
 										output_success("[Row ".$row_count."]\tAttached eventtype_id [".$eventtype["eventtype_id"]."] to event_id [".$new_event_id."].");
@@ -254,8 +293,8 @@ switch ($ACTION) {
 							/**
 							 * Attach teachers to new event.
 							 */
-							if (count($proxy_ids)) {
-								foreach ($proxy_ids as $key => $proxy_id) {
+							if (count($staff_numbers)) {
+								foreach ($staff_numbers as $key => $proxy_id) {
 									if ($db->AutoExecute("event_contacts", array("event_id" => $new_event_id, "proxy_id" => $proxy_id, "contact_order" => $key, "updated_date" => time(), "updated_by" => 1), "INSERT")) {
 										output_success("[Row ".$row_count."]\tAttached proxy_id [".$proxy_id."] to event_id [".$new_event_id."] as teacher #".$key.".");
 									}
@@ -477,7 +516,7 @@ switch ($ACTION) {
 							output_error("[Row ".$row_count."]\tUnable to attached event_id [".$new_event_id."] to class of ".$event_grad_year.". Database said: ".$db->ErrorMsg());
 						}
 					} else {
-						output_error("[Row ".$row_count."]\tUnable to import learning event for phase [".$event_phase."] on ".date("r", $processed_event["event_start"]).". Database said: ".$db->ErrorMsg());
+						output_error("[Row ".$row_count."]\tUnable to import learning event for phase [".$event_term."] on ".date("r", $processed_event["event_start"]).". Database said: ".$db->ErrorMsg());
 					}
 				}
 			}
@@ -499,24 +538,43 @@ switch ($ACTION) {
 				 * be the CSV heading titles.
 				 */
 				if ($row_count > 1) {
-					$event_ids			= array();
-					$proxy_ids			= array();
-					$event_duration		= 0;
-					$eventtype_ids		= array();
-					$eventtype_duration = array();
+					$event_ids = array();
+					$parent_id = 0;
+					$staff_numbers = array();
+					$total_duration = 0;
+					$event_duration = 0;
+					$event_type_list = array();
+					$event_type_durations = array();
 
-					$event_id			= ((isset($row[0])) ? clean_input($row[0]) : "");
-					$event_phase		= ((isset($row[1])) ? clean_input($row[1]) : "");
-					$event_grad_year	= ((isset($row[2])) ? clean_input($row[2]) : "");
-					$course_num			= ((isset($row[3])) ? clean_input($row[3]) : "");
-					$course_name		= ((isset($row[4])) ? clean_input($row[4]) : "");
-					$event_date			= ((isset($row[5])) ? clean_input($row[5]) : "");
-					$event_start_time	= ((isset($row[6])) ? clean_input($row[6]) : "");
-					$event_durations	= ((isset($row[7])) ? clean_input($row[7]) : 0);
-					$event_types		= ((isset($row[8])) ? clean_input($row[8]) : "");
-					$event_title		= ((isset($row[9])) ? clean_input($row[9]) : "");
-					$event_location		= ((isset($row[10]) && ($row[10] != "")) ? clean_input($row[10]) : "TBA");
-					$staff_numbers		= ((isset($row[11])) ? clean_input($row[11]) : "");
+/**
+ * 0	Original Event Id
+ * 1	Parent Event
+ * 2	Term
+ * 3	Grad Class
+ * 4	Course Name
+ * 5	Date
+ * 6	Start Time
+ * 7	Total Duration
+ * 8	Event Type Durations
+ * 9	Event Types
+ * 10	Event Title
+ * 11	Location
+ * 12	Teacher Staff Number(s)
+ * 13	Teacher Name(s)			
+ */					
+					$event_id = ((isset($row[0])) ? clean_input($row[0], "int") : 0);			// Original Event ID
+					$parent_id = ((isset($row[1])) ? clean_input($row[1], "int") : 0);			// Parent Event ID
+					$event_term = ((isset($row[2])) ? clean_input($row[2]) : "");				// Term (not really used anymore)
+					$event_grad_year = ((isset($row[3])) ? clean_input($row[3]) : "");			// Graduating Class (needs to change going forward)
+					$course_name = ((isset($row[4])) ? clean_input($row[4]) : "");				// Full name of the course.
+					$event_date = ((isset($row[5])) ? clean_input($row[5]) : "");				// Date
+					$event_start_time = ((isset($row[6])) ? clean_input($row[6]) : "");			// Start time
+					$total_duration = ((isset($row[7])) ? clean_input($row[7]) : "");			// Total duration (not really used)
+					$event_durations = ((isset($row[8])) ? clean_input($row[8]) : 0);			// Event type segment durations.
+					$event_types = ((isset($row[9])) ? clean_input($row[9]) : "");				// Event types (by name)
+					$event_title = ((isset($row[10])) ? clean_input($row[10]) : "");			// Event title
+					$event_location = ((isset($row[11]) && ($row[11] != "")) ? clean_input($row[11]) : "TBA"); // Location
+					$staff_number = ((isset($row[12])) ? clean_input($row[12]) : "");			// Staff numbers.
 
 					/**
 					 * Validation for provided previous lecture ids.
@@ -525,15 +583,23 @@ switch ($ACTION) {
 						$pieces = explode(";", $event_id);
 						if ((is_array($pieces)) && (count($pieces))) {
 							foreach ($pieces as $tmp_event_id) {
-								if (!$tmp_event_id = clean_input($tmp_event_id, array("nows", "int"))) {
-									output_error("Invalid event_id provided.");
+								if ($tmp_event_id = clean_input($tmp_event_id, array("nows", "int"))) {
+									$query = "SELECT * FROM `events` WHERE `event_id` = ".$db->qstr($tmp_event_id);
+									$result = $db->GetRow($query);
+									if ($result) {
+										$event_ids[] = $tmp_event_id;
+									} else {
+										output_error("[Row ".$row_count."]\tThe provided event ID does not exist.");
+									}
+								} else {
+									output_error("[Row ".$row_count."]\tInvalid event_id provided.");
 								}
 							}
 						}
 					}
 
 					/**
-					 * Validation for provided previous lecture ids.
+					 * Validation for provided previous event durations.
 					 */
 					if ($event_durations) {
 						$pieces = explode(";", $event_durations);
@@ -542,12 +608,16 @@ switch ($ACTION) {
 								$tmp_event_duration = clean_input($tmp_event_duration, array("nows", "int"));
 								if ($tmp_event_duration) {
 									$event_duration += $tmp_event_duration;
-									$eventtype_duration[$key] = $tmp_event_duration;
+									$event_type_durations[$key] = $tmp_event_duration;
 								} else {
-									output_error("Invalid event type duration found.");
+									output_error("[Row ".$row_count."]\tInvalid event type duration found.");
 								}
 							}
 						}
+					}
+					
+					if ($event_duration != $total_duration) {
+						output_notice("[Row ".$row_count."]\tThe specified total duration [".$total_duration."] does not equal the calculated duration [".$event_duration."].");
 					}
 
 					/**
@@ -570,16 +640,18 @@ switch ($ACTION) {
 										if ($eventtype = get_eventtype_id($tmp_event_type)) {
 											$EVENT_TYPE_LOOKUP[$tmp_event_type] = $eventtype;
 										} else {
-											output_error("Unknown event type encountered [".$tmp_event_type."].");
+											output_error("[Row ".$row_count."]\tUnknown event type encountered [".$tmp_event_type."].");
 										}
 									}
 
 									$eventtype_id = $EVENT_TYPE_LOOKUP[$tmp_event_type];
 
 									if (!$eventtype_id) {
-										output_error("Eventtype ID was blank [".$eventtype_id."].");
+										output_error("[Row ".$row_count."]\tEventtype ID was blank [".$eventtype_id."].");
 									} else {
-										$eventtype_ids[] = array("eventtype_id" => $eventtype_id, "duration" => $eventtype_duration[$key]);
+//print_r($eventtype_id);										
+//print_r($event_type_durations);										
+										$event_type_list[] = array("eventtype_id" => $eventtype_id, "duration" => $event_type_durations[$key]);
 									}
 								}
 							}
@@ -590,8 +662,8 @@ switch ($ACTION) {
 						$course_name = "General Events";
 					}
 
-					if ($event_phase == "") {
-						output_notice("[Row ".$row_count."]\tThe event phase [".$event_phase."] appears to be missing.");
+					if ($event_term == "") {
+						output_notice("[Row ".$row_count."]\tThe event term [".$event_term."] appears to be missing.");
 					}
 
 					if (!(int) $event_grad_year) {
@@ -604,6 +676,21 @@ switch ($ACTION) {
 
 					if (!$event_start = strtotime($event_date." ".$event_start_time)) {
 						output_notice("[Row ".$row_count."]\tUnable to parse the UNIX timestamp for [".$event_date." ".$event_start_time."].");
+					} else {
+						$test_year = date("Y", $event_start);
+						$test_hour = date("G", $event_start);
+						
+						if (($test_hour < 8) || ($test_hour > 17)) {
+							output_notice("[Row ".$row_count."]\tThe hour of this event is out of the normal range: ".date("r", $event_start));
+						}
+						
+						if ($event_start < time()) {
+							output_notice("[Row ".$row_count."]\tAre you intentionally importing a historical event? ".date("r", $event_start));
+						}
+						
+						if ($event_start > strtotime("+1 year")) {
+							output_notice("[Row ".$row_count."]\tAre you intentionally importing an event over 1 year away? ".date("r", $event_start));
+						}
 					}
 					
 					if (!(int) $event_duration) {
@@ -614,8 +701,8 @@ switch ($ACTION) {
 						output_notice("[Row ".$row_count."]\tThe event title [".$event_title."] appears to be missing.");
 					}
 					
-					if ($staff_numbers) {
-						$pieces = explode(";", $staff_numbers);
+					if ($staff_number) {
+						$pieces = explode(";", $staff_number);
 						if ((is_array($pieces)) && (count($pieces))) {
 							foreach ($pieces as $tmp_staff_number) {
 								if ($tmp_staff_number = clean_input($tmp_staff_number, array("nows", "int"))) {
@@ -624,6 +711,23 @@ switch ($ACTION) {
 									}
 								}
 							}
+						}
+					}
+					
+					/**
+					 * Validation for parent_id
+					 */
+					if ($parent_id) {
+						if (!array_key_exists($parent_id, $PARENTS_PROCESSED)) {
+							$parent_id = 0;
+							
+							output_notice("[Row ".$row_count."]\tThe parent_id [".$parent_id."] of this event has not yet been added, hierarchy will be skipped.");
+						}
+					}
+
+					if (is_array($event_ids) && !empty($event_ids)) {
+						foreach ($event_ids as $id) {
+							$PARENTS_PROCESSED[$id] = true;
 						}
 					}
 				}

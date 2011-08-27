@@ -80,67 +80,71 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				}
 			}
 
-			
-			/**
-			 * Non-required field "associated_faculty" / Associated Faculty (array of proxy ids).
-			 * This is actually accomplished after the event is inserted below.
-			 */
-			if (isset($_POST["event_audience_type"])) {
-				$PROCESSED["event_audience_type"] = clean_input($_POST["event_audience_type"], array("page_url"));
-
-				switch($PROCESSED["event_audience_type"]) {
-					case "course" :
-						/**
-						 * Required field "course" / Course
-						 * This data is inserted into the event_audience table as course.
-						 */
-					break;					
-					case "group_id" :
-						add_error("The <strong>Group Event</strong> as an <strong>Event Audience</strong> type, has not yet been implemented.");
-					break;
-					case "proxy_id" :
-						/**
-						 * Required field "associated_proxy_ids" / Associated Students
-						 * This data is inserted into the event_audience table as proxy_id.
-						 */
-						if ((isset($_POST["associated_student"]))) {
-							$associated_proxies = explode(",", $_POST["associated_student"]);
-							if ((isset($associated_proxies)) && (is_array($associated_proxies)) && (count($associated_proxies))) {
-								foreach($associated_proxies as $proxy_id) {
-									if ($proxy_id = clean_input($proxy_id, array("trim", "int"))) {
-										$query = "	SELECT a.*
-													FROM `".AUTH_DATABASE."`.`user_data` AS a
-													LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
-													ON a.`id` = b.`user_id`
-													WHERE a.`id` = ".$db->qstr($proxy_id)."
-													AND b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
-													AND b.`account_active` = 'true'
-													AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
-													AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")";
-										$result	= $db->GetRow($query);
-										if ($result) {
-											$PROCESSED["associated_proxy_ids"][] = $proxy_id;
-										}
-									}
+			if ((isset($_POST["event_audience_students"]))) {
+				$associated_audience = explode(',', $_POST["event_audience_students"]);
+				if ((isset($associated_audience)) && (is_array($associated_audience)) && (count($associated_audience))) {
+					foreach($associated_audience as $audience_id) {
+						if (strpos($audience_id, "student") !== false) {
+							if ($proxy_id = clean_input(preg_replace("/[a-z_]/", "", $audience_id), array("trim", "int"))) {
+								$query = "	SELECT a.*
+											FROM `".AUTH_DATABASE."`.`user_data` AS a
+											LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+											ON a.`id` = b.`user_id`
+											WHERE a.`id` = ".$db->qstr($proxy_id)."
+											AND b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+											AND b.`account_active` = 'true'
+											AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
+											AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")";
+								$result	= $db->GetRow($query);
+								if ($result) {
+									$PROCESSED["associated_proxy_ids"][] = $proxy_id;
 								}
-								if (!count($PROCESSED["associated_proxy_ids"])) {
-									add_error("You have chosen <strong>Individual Student Event</strong> as an <strong>Event Audience</strong> type, but have not selected any individuals.");
-								}
-							} else {
-								add_error("You have chosen <strong>Individual Student Event</strong> as an <strong>Event Audience</strong> type, but have not selected any individuals.");
 							}
 						}
-					break;
-					default :
-						add_error("Unable to proceed because the <strong>Event Audience</strong> type is unrecognized.");
-
-						application_log("error", "Unrecognized event_audience_type [".$_POST["event_audience_type"]."] encountered.");
-					break;
+					}
 				}
-			} else {
-				add_error("Unable to proceed because the <strong>Event Audience</strong> type is unrecognized.");
-
-				application_log("error", "The event_audience_type field has not been set.");
+			}
+		
+			if ((isset($_POST["event_audience_course_groups"]))) {
+				$associated_audience = explode(',', $_POST["event_audience_course_groups"]);
+				if ((isset($associated_audience)) && (is_array($associated_audience)) && (count($associated_audience))) {
+					foreach($associated_audience as $audience_id) {
+						if (strpos($audience_id, "group") !== false) {
+							if ($group_id = clean_input(preg_replace("/[a-z_]/", "", $audience_id), array("trim", "int"))) {
+								$query = "	SELECT *
+											FROM `course_groups`
+											WHERE `cgroup_id` = ".$db->qstr($group_id)."
+											AND `course_id` = ".$db->qstr($course_id)."
+											AND `group_active` = 1";
+								$result	= $db->GetRow($query);
+								if ($result) {
+									$PROCESSED["associated_group_ids"][] = $group_id;
+								}
+							}
+						}
+					}
+				}
+			}
+		
+			if ((isset($_POST["event_audience_cohorts"]))) {
+				$associated_audience = explode(',', $_POST["event_audience_cohorts"]);
+				if ((isset($associated_audience)) && (is_array($associated_audience)) && (count($associated_audience))) {
+					foreach($associated_audience as $audience_id) {
+						if (strpos($audience_id, "group") !== false) {
+							if ($group_id = clean_input(preg_replace("/[a-z_]/", "", $audience_id), array("trim", "int"))) {
+								$query = "	SELECT *
+											FROM `groups`
+											WHERE `group_id` = ".$db->qstr($group_id)."
+											AND `group_type` = 'cohort'
+											AND `group_active` = 1";
+								$result	= $db->GetRow($query);
+								if ($result) {
+									$PROCESSED["associated_cohort_ids"][] = $group_id;
+								}
+							}
+						}
+					}
+				}
 			}
 
 			/**
@@ -270,38 +274,35 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							}
 						}
 						
-						switch($PROCESSED["event_audience_type"]) {
-							case "course" :	// Audience is limited to the enrollment of the selected course.
-								/**
-								 * If the audience is to be grabbed via the course enrollment
-								 * add it to the event_audience table.
-								 */
-								if (!$db->AutoExecute("event_audience", array("event_id" => $EVENT_ID, "audience_type" => "course_id", "audience_value" => $PROCESSED["course_id"], "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT")) {
-									add_error("There was an error while trying to attach the selected <strong>Course Audience</strong> to this event.<br /><br />The system administrator was informed of this error; please try again later.");
+						if (count($PROCESSED["associated_cohort_ids"])) {
+							foreach($PROCESSED["associated_cohort_ids"] as $group_id) {
+								if (!$db->AutoExecute("event_audience", array("event_id" => $EVENT_ID, "audience_type" => "cohort", "audience_value" => (int) $group_id, "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT")) {
+									$ERROR++;
+									$ERRORSTR[] = "There was an error while trying to attach the selected <strong>Cohort</strong> to this event.<br /><br />The system administrator was informed of this error; please try again later.";
 
-									application_log("error", "Unable to insert a new event_audience record while adding a new event. Database said: ".$db->ErrorMsg());
+									application_log("error", "Unable to insert a new event_audience, cohort record while adding a new event. Database said: ".$db->ErrorMsg());
 								}
-							break;
-							case "group_id" :
-							break;
-							case "proxy_id" :
-								/**
-								 * If there are proxy_ids associated with this event,
-								 * add them to the event_audience table.
-								 */
-								if (count($PROCESSED["associated_proxy_ids"])) {
-									foreach($PROCESSED["associated_proxy_ids"] as $proxy_id) {
-										if (!$db->AutoExecute("event_audience", array("event_id" => $EVENT_ID, "audience_type" => "proxy_id", "audience_value" => (int) $proxy_id, "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT")) {
-											add_error("There was an error while trying to attach the selected <strong>Proxy ID</strong> to this event.<br /><br />The system administrator was informed of this error; please try again later.");
+							}
+						}
+						if (count($PROCESSED["associated_group_ids"])) {
+							foreach($PROCESSED["associated_group_ids"] as $group_id) {
+								if (!$db->AutoExecute("event_audience", array("event_id" => $EVENT_ID, "audience_type" => "group_id", "audience_value" => (int) $group_id, "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT")) {
+									$ERROR++;
+									$ERRORSTR[] = "There was an error while trying to attach the selected <strong>Group</strong> to this event.<br /><br />The system administrator was informed of this error; please try again later.";
 
-											application_log("error", "Unable to insert a new event_audience, proxy_id record while adding a new event. Database said: ".$db->ErrorMsg());
-										}
-									}
+									application_log("error", "Unable to insert a new event_audience, group_id record while adding a new event. Database said: ".$db->ErrorMsg());
 								}
-							break;
-							default :
-								application_log("error", "Unrecognized event_audience_type [".$_POST["event_audience_type"]."] encountered, no audience added for event_id [".$EVENT_ID."].");
-							break;
+							}
+						}
+						if (count($PROCESSED["associated_proxy_ids"])) {
+							foreach($PROCESSED["associated_proxy_ids"] as $proxy_id) {
+								if (!$db->AutoExecute("event_audience", array("event_id" => $EVENT_ID, "audience_type" => "proxy_id", "audience_value" => (int) $proxy_id, "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT")) {
+									$ERROR++;
+									$ERRORSTR[] = "There was an error while trying to attach the selected <strong>Proxy ID</strong> to this event.<br /><br />The system administrator was informed of this error; please try again later.";
+
+									application_log("error", "Unable to insert a new event_audience, proxy_id record while adding a new event. Database said: ".$db->ErrorMsg());
+								}
+							}
 						}
 
 						/**
@@ -425,6 +426,38 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			if ($results) {
 				foreach($results as $result) {
 					$STUDENT_LIST[$result["proxy_id"]] = array('proxy_id'=>$result["proxy_id"], 'fullname'=>$result["fullname"], 'organisation_id'=>$result['organisation_id']);
+				}
+			}
+												
+			/**
+			 * Compiles the list of groups.
+			 */
+			$GROUP_LIST = array();
+			$query = "	SELECT *
+						FROM `course_groups`
+						WHERE `group_active` = '1'
+						AND `course_id` = ".$db->qstr($PROCESSED["course_id"])."
+						ORDER BY `group_name`";
+			$results = $db->GetAll($query);
+			if ($results) {
+				foreach($results as $result) {
+					$GROUP_LIST[$result["cgroup_id"]] = $result;
+				}
+			}
+			
+			/**
+			 * Compiles the list of groups.
+			 */
+			$COHORT_LIST = array();
+			$query = "	SELECT *
+						FROM `groups`
+						WHERE `group_active` = '1'
+						AND `group_type` = 'cohort'
+						ORDER BY `group_name` ASC";
+			$results = $db->GetAll($query);
+			if ($results) {
+				foreach($results as $result) {
+					$COHORT_LIST[$result["group_id"]] = $result;
 				}
 			}
 
@@ -632,7 +665,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					
 					<tbody id="audience-options"<?php echo ((!$PROCESSED["event_audience_type"]) ? " style=\"display: none\"" : ""); ?>>
 					<?php
-					if ($PROCESSED["eform_id"]) {
+					if ($PROCESSED["course_id"]) {
 						require_once(ENTRADA_ABSOLUTE."/core/modules/admin/events/api-audience-options.inc.php");
 					}
 					?>
@@ -658,6 +691,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							$('options_loading').show();
 						},
 						onSuccess: function(response) {
+
 							if (response.responseText) {
 								$('options_container').insert(response.responseText);
 
@@ -665,7 +699,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 									$(audience_type + '_options').addClassName('multiselect-processed');
 
-									multiselect[audience_type] = new Control.SelectMultiple('multifilter', audience_type + '_options', {
+									multiselect[audience_type] = new Control.SelectMultiple('event_audience_'+audience_type, audience_type + '_options', {
 										checkboxSelector: 'table.select_multiple_table tr td input[type=checkbox]',
 										nameSelector: 'table.select_multiple_table tr td.select_multiple_name label',
 										filter: audience_type + '_select_filter',
@@ -740,6 +774,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				if ($(element)) {
 					$(element).checked = false;
 				}
+				var audience = $('event_audience_'+audience_id).value.split(',');
+				for (var i = 0; i < audience.length; i++) {
+					if (audience[i] == element) {
+						audience.splice(i, 1);
+						break;
+					}
+				}
+				$('event_audience_'+audience_id).value = audience.join(',');
 			}
 
 			function selectEventAudienceOption(type) {
@@ -767,7 +809,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							evalScripts : true,
 							parameters : {
 								ajax : 1,
-								course_id : $F('course_id')
+								course_id : $F('course_id'),
+								event_audience_students: ($('event_audience_students') ? $('event_audience_students').getValue() : ''),
+								event_audience_course_groups: ($('event_audience_course_groups') ? $('event_audience_course_groups').getValue() : ''),
+								event_audience_cohort: ($('event_audience_cohort') ? $('event_audience_cohort').getValue() : '')
 							},
 							onSuccess : function (response) {
 								if (response.responseText == "") {

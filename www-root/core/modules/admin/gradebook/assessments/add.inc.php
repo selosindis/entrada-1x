@@ -288,42 +288,43 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					break;
 				case 1 :
 				default :
-			?>
-			<h1>Add Assessment</h1>
-			<?php
-			if ($ERROR) {
-				echo display_error();
-			}
-			?>
-			<form action="<?php echo ENTRADA_URL; ?>/admin/gradebook/assessments?<?php echo replace_query(array("step" => 2)); ?>" method="post">
-				<h2>Assessment Details</h2>
-				<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Adding Assessment">
-				<colgroup>
-					<col style="width: 3%" />
-					<col style="width: 22%" />
-					<col style="width: 75%" />
-				</colgroup>
-				<tbody>
-					<tr>
-						<td></td>
-						<td><label class="form-nrequired">Course Name</label></td>
-						<td>
-							<a href="<?php echo ENTRADA_URL; ?>/admin/gradebook?<?php echo replace_query(array("step" => false, "section" => "view")); ?>"><?php echo html_encode($course_details["course_name"]); ?></a>
-						</td>
-					</tr>
-					<tr>
-						<td colspan="3">&nbsp;</td>
-					</tr>
-					<tr>
-						<td></td>
-						<td><label for="cohort" class="form-required">Cohort</label></td>
-						<td>
-							<select id="cohort" name="cohort" style="width: 250px">
-							<?php
-							$active_cohorts = groups_get_active_cohorts($ENTRADA_USER->getActiveOrganisation());
-							if (isset($active_cohorts) && !empty($active_cohorts)) {
-								foreach ($active_cohorts as $cohort) {
-									echo "<option value=\"".$cohort["group_id"]."\"".(($PROCESSED["cohort"] == $cohort["group_id"]) ? " selected=\"selected\"" : "").">".html_encode($cohort["group_name"])."</option>\n";
+				?>
+				<h1>Add Assessment</h1>
+				<?php
+				if ($ERROR) {
+					echo display_error();
+				}
+				?>
+				<form action="<?php echo ENTRADA_URL; ?>/admin/gradebook/assessments?<?php echo replace_query(array("step" => 2)); ?>" method="post">
+					<h2>Assessment Details</h2>
+					<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Adding Assessment">
+					<colgroup>
+						<col style="width: 3%" />
+						<col style="width: 22%" />
+						<col style="width: 75%" />
+					</colgroup>
+					<tbody>
+						<tr>
+							<td></td>
+							<td><label class="form-nrequired">Course Name</label></td>
+							<td>
+								<a href="<?php echo ENTRADA_URL; ?>/admin/gradebook?<?php echo replace_query(array("step" => false, "section" => "view")); ?>"><?php echo html_encode($course_details["course_name"]); ?></a>
+							</td>
+						</tr>
+						<tr>
+							<td colspan="3">&nbsp;</td>
+						</tr>
+						<tr>
+							<td></td>
+							<td><label for="cohort" class="form-required">Cohort</label></td>
+							<td>
+								<select id="cohort" name="cohort" style="width: 250px">
+								<?php
+								$active_cohorts = groups_get_active_cohorts($ENTRADA_USER->getActiveOrganisation());
+								if (isset($active_cohorts) && !empty($active_cohorts)) {
+									foreach ($active_cohorts as $cohort) {
+										echo "<option value=\"".$cohort["group_id"]."\"".(($PROCESSED["cohort"] == $cohort["group_id"]) ? " selected=\"selected\"" : "").">".html_encode($cohort["group_name"])."</option>\n";
+									}
 								}
 								?>
 								</select>							

@@ -334,15 +334,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 										<td>
 											<select id="cohort" name="cohort" style="width: 250px">
 												<?php
-												$query = "SELECT a.* FROM `groups` AS a
-															JOIN `group_organisations` AS b
-															ON a.`group_id` = b.`group_id`
-															WHERE b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
-															a.`group_type` = 'cohort'";
-												
-												if ($cohorts = $db->GetAll($query)) {
-													foreach ($cohorts as $cohort) {
-														echo "<option value=\"" . $cohort . "\"" . (($PROCESSED["cohort"] == $cohort) ? " selected=\"selected\"" : "") . ">" . html_encode($cohort["group_name"]) . "</option>\n";
+												$active_cohorts = groups_get_active_cohorts($ENTRADA_USER->getActiveOrganisation());
+												if (isset($active_cohorts) && !empty($active_cohorts)) {
+													foreach ($active_cohorts as $cohort) {
+														echo "<option value=\"" . $cohort["group_id"] . "\"" . (($PROCESSED["cohort"] == $cohort["group_id"]) ? " selected=\"selected\"" : "") . ">" . html_encode($cohort["group_name"]) . "</option>\n";
 													}
 												}
 												?>

@@ -94,7 +94,9 @@ class InternalAwards extends Collection {
 				array_push(self::$awards, InternalAward::fromArray($result));
 			}
 			self::$initialized = true;
+
 		}
-		return new self(self::$awards);
+		return (self::$awards);
+		//return new self(self::$awards);
 	}
 }

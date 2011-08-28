@@ -619,6 +619,59 @@ function navigator_tabs() {
 }
 
 /**
+ * This function adds sw
+ * 
+ * @global array $JQUERY
+ * @param string $next
+ * @param string $back
+ * @param string $type
+ * @return true 
+ */
+function navigator_swipe($direction = array(), $type = "click") {
+	global $JQUERY;
+	
+	if ($type != "js") {
+		$type = "click";
+	}
+	
+	/**
+	 * Load jSwipe to handle next and back on mobile devices.
+	 */
+	$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/jquery/jquery.touchSwipe.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
+	
+	$swipe = array();
+	
+	/**
+	 * Shortcuts.
+	 */
+	if (isset($direction["next"]) && ($tmp_input = clean_input($direction["next"]))) {
+		$direction["left"] = $tmp_input;
+	}
+	if (isset($direction["back"]) && ($tmp_input = clean_input($direction["back"]))) {
+		$direction["right"] = $tmp_input;
+	}
+	
+	if (isset($direction["up"]) && ($tmp_input = clean_input($direction["up"]))) {
+		$swipe[] = "swipeUp: function() { ".(($type == "click") ? "window.location = '".$direction["up"]."'" : $direction["up"])." }";
+	}
+	if (isset($direction["right"]) && ($tmp_input = clean_input($direction["right"]))) {
+		$swipe[] = "swipeRight: function() { ".(($type == "click") ? "window.location = '".$direction["right"]."'" : $direction["right"])." }";
+	}
+	if (isset($direction["down"]) && ($tmp_input = clean_input($direction["down"]))) {
+		$swipe[] = "swipeDown: function() { ".(($type == "click") ? "window.location = '".$direction["down"]."'" : $direction["down"])." }";
+	}
+	if (isset($direction["left"]) && ($tmp_input = clean_input($direction["left"]))) {
+		$swipe[] = "swipeLeft: function() { ".(($type == "click") ? "window.location = '".$direction["left"]."'" : $direction["left"])." }";
+	}
+	
+	if (!empty($swipe)) {
+		echo "<script type=\"text/javascript\">jQuery(document).ready(function() { jQuery('body').swipe({".implode(", ", $swipe)."}); });</script>";
+	}
+	
+	return true;
+}
+
+/**
  * Function is called by on_checkout. Adds any breadcrumb menu items specified in $BREADCRUMB array.
  *
  * @param string $buffer
@@ -1291,152 +1344,6 @@ function fetch_template($template_file = "", $fetch_style = "filesystem") {
 				break;
 			}
 		}
-	}
-
-	return false;
-}
-
-/**
- * This function returns arrays of the requested resources from a learning event.
- * 
- * @global object $db
- * @param int $event_id
- * @param array $options
- * @return array
- */
-function fetch_event_resources($event_id = 0, $options = array()) {
-	global $db;
-
-	$fetch_files = false;
-	$fetch_links = false;
-	$fetch_quizzes = false;
-	$fetch_discussions = false;
-	$fetch_types = false;
-	$output = array();
-
-	if ($event_id = (int) $event_id) {
-		if (is_scalar($options)) {
-			if (trim($options) != "") {
-				$options = array($options);
-			} else {
-				$options = array();
-			}
-		}
-
-		if (!count($options)) {
-			$options = array("all");
-		}
-
-		if (in_array("all", $options)) {
-			$fetch_files = true;
-			$fetch_links = true;
-			$fetch_quizzes = true;
-			$fetch_discussions = true;
-			$fetch_types = true;
-		}
-
-		if (in_array("files", $options)) {
-			$fetch_files = true;
-		}
-
-		if (in_array("links", $options)) {
-			$fetch_links = true;
-		}
-
-		if (in_array("quizzes", $options)) {
-			$fetch_quizzes = true;
-		}
-
-		if (in_array("discussions", $options)) {
-			$fetch_discussions = true;
-		}
-
-		if (in_array("types", $options)) {
-			$fetch_types = true;
-		}
-
-		if ($fetch_files) {
-			/**
-			 * This query will get all of the files associated with this event.
-			 */
-			$query	= "	SELECT a.*, MAX(b.`timestamp`) AS `last_visited`
-						FROM `event_files` AS a
-						LEFT JOIN `statistics` AS b
-						ON b.`module` = 'events'
-						AND b.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
-						AND b.`action` = 'file_download'
-						AND b.`action_field` = 'file_id'
-						AND b.`action_value` = a.`efile_id`
-						WHERE a.`event_id` = ".$db->qstr($event_id)."
-						GROUP BY a.`efile_id`
-						ORDER BY a.`file_category` ASC, a.`file_title` ASC";
-			$output["files"] = $db->GetAll($query);
-		}
-
-		if ($fetch_links) {
-			/**
-			 * This query will retrieve all of the links associated with this evevnt.
-			 */
-			$query	= "	SELECT a.*, MAX(b.`timestamp`) AS `last_visited`
-						FROM `event_links` AS a
-						LEFT JOIN `statistics` AS b
-						ON b.`module` = 'events'
-						AND b.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
-						AND b.`action` = 'link_access'
-						AND b.`action_field` = 'link_id'
-						AND b.`action_value` = a.`elink_id`
-						WHERE a.`event_id` = ".$db->qstr($event_id)."
-						GROUP BY a.`elink_id`
-						ORDER BY a.`link_title` ASC";
-			$output["links"] = $db->GetAll($query);
-		}
-
-		if ($fetch_quizzes) {
-
-			/**
-			 * This query will retrieve all of the quizzes associated with this evevnt.
-			 */
-			$query	= "	SELECT a.*, b.`quiztype_code`, b.`quiztype_title`, MAX(c.`timestamp`) AS `last_visited`
-						FROM `attached_quizzes` AS a
-						LEFT JOIN `quizzes_lu_quiztypes` AS b
-						ON b.`quiztype_id` = a.`quiztype_id`
-						LEFT JOIN `statistics` AS c
-						ON c.`module` = 'events'
-						AND c.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
-						AND c.`action` = 'quiz_complete'
-						AND c.`action_field` = 'aquiz_id'
-						AND c.`action_value` = a.`aquiz_id`
-						WHERE a.`content_type` = 'event'
-						AND a.`content_id` = ".$db->qstr($event_id)."
-						GROUP BY a.`aquiz_id`
-						ORDER BY a.`required` DESC, a.`quiz_title` ASC, a.`release_until` ASC";
-			$output["quizzes"] = $db->GetAll($query);
-		}
-
-		if ($fetch_discussions) {
-			/**
-			 * This query will retrieve all discussions associated with this event.
-			 */
-			$query	= "	SELECT *
-						FROM `event_discussions`
-						WHERE `event_id` = ".$db->qstr($event_id)."
-						AND `discussion_comment` <> ''
-						AND `discussion_active` = '1'
-						ORDER BY `ediscussion_id` ASC";
-			$output["discussions"] = $db->GetAll($query);
-		}
-
-		if ($fetch_types) {
-			$query	= "	SELECT *
-						FROM `event_eventtypes` AS a
-						LEFT JOIN `events_lu_eventtypes` AS b
-						ON a.`eventtype_id` = b.`eventtype_id`
-						WHERE a.`event_id` = ".$db->qstr($event_id)."
-						ORDER BY a.`eeventtype_id` ASC";
-			$output["types"] = $db->GetAll($query);
-		}
-
-		return $output;
 	}
 
 	return false;
@@ -2809,24 +2716,24 @@ function attachment_check($event_id = 0, $side = "public") {
 	$total_quizzes	= 0;
 	$grand_total	= 0;
 
-	if($event_id = (int) $event_id) {
+	if ($event_id = (int) $event_id) {
 		$query	= "SELECT COUNT(*) AS `total_files` FROM `event_files` WHERE `event_id` = ".$db->qstr($event_id).(($side == "public") ? " AND (`release_date` = '0' OR `release_date` <= '".time()."') AND (`release_until` = '0' OR `release_until` >= '".time()."')" : "");
 		$result	= ((USE_CACHE) ? $db->CacheGetRow(LONG_CACHE_TIMEOUT, $query) : $db->GetRow($query));
-		if($result) {
+		if ($result) {
 			$total_files = $result["total_files"];
 			$grand_total += $total_files;
 		}
 
 		$query	= "SELECT COUNT(*) AS `total_links` FROM `event_links` WHERE `event_id` = ".$db->qstr($event_id).(($side == "public") ? " AND (`release_date` = '0' OR `release_date` <= '".time()."') AND (`release_until` = '0' OR `release_until` >= '".time()."')" : "");
 		$result	= ((USE_CACHE) ? $db->CacheGetRow(LONG_CACHE_TIMEOUT, $query) : $db->GetRow($query));
-		if($result) {
+		if ($result) {
 			$total_links = $result["total_links"];
 			$grand_total += $total_links;
 		}
 
 		$query	= "SELECT COUNT(*) AS `total_quizzes` FROM `attached_quizzes` WHERE a.`content_type` = 'event' AND a.`content_id` = ".$db->qstr($event_id).(($side == "public") ? " AND (`release_date` = '0' OR `release_date` <= '".time()."') AND (`release_until` = '0' OR `release_until` >= '".time()."')" : "");
 		$result	= ((USE_CACHE) ? $db->CacheGetRow(LONG_CACHE_TIMEOUT, $query) : $db->GetRow($query));
-		if($result) {
+		if ($result) {
 			$total_quizzes = $result["total_quizzes"];
 			$grand_total += $total_quizzes;
 		}
@@ -2843,28 +2750,6 @@ function attachment_check($event_id = 0, $side = "public") {
 function getmicrotime() {
 	list($usec, $sec) = explode(" ", microtime());
 	return ((float) $usec + (float) $sec);
-}
-
-/**
- * This function returns the number of events that are associated wtih the
- * provided course_id.
- *
- * @param int $course_id
- * @return int
- */
-
-function courses_count_associated_events($course_id = 0) {
-	global $db;
-
-	if($course_id = (int) $course_id) {
-		$query	= "SELECT COUNT(*) AS `total_events` FROM `events` WHERE `course_id` = ".$db->qstr($course_id);
-		$result	= $db->GetRow($query);
-		if($result) {
-			return (int) $result["total_events"];
-		}
-	}
-
-	return 0;
 }
 
 /**
@@ -8505,6 +8390,7 @@ function clerkship_deficiency_notifications($clerk_id, $rotation_id, $administra
 
 function courses_subnavigation($course_details) {
 	global $ENTRADA_ACL;
+	
 	echo "<div class=\"no-printing\">\n";
 	echo "	<div style=\"float: right\">\n";
 	if($ENTRADA_ACL->amIAllowed(new CourseResource($course_details["course_id"], $course_details["organisation_id"]), "update")) {
@@ -8522,6 +8408,48 @@ function courses_subnavigation($course_details) {
 	echo "	</div>\n";
 	echo "</div>\n";
 	echo "<br/>";
+}
+
+function course_fetch_course_group($cgroup_id = 0) {
+	global $db;
+	
+	$cgroup_id = (int) $cgroup_id;
+	
+	if ($cgroup_id) {
+		$query = "	SELECT a.*, COUNT(b.`cgaudience_id`) AS `members`
+					FROM `course_groups` AS a
+					LEFT JOIN `course_group_audience` AS b
+					ON b.`cgroup_id` = a.`cgroup_id`
+					WHERE a.`cgroup_id` = ".$db->qstr($cgroup_id)."
+					GROUP BY a.`cgroup_id`";
+		$result = $db->GetRow($query);
+		if ($result) {
+			return $result;
+		}
+	}
+	
+	return false;
+}
+
+/**
+ * This function returns the number of events that are associated wtih the
+ * provided course_id.
+ *
+ * @param int $course_id
+ * @return int
+ */
+function courses_count_associated_events($course_id = 0) {
+	global $db;
+
+	if($course_id = (int) $course_id) {
+		$query	= "SELECT COUNT(*) AS `total_events` FROM `events` WHERE `course_id` = ".$db->qstr($course_id);
+		$result	= $db->GetRow($query);
+		if($result) {
+			return (int) $result["total_events"];
+		}
+	}
+
+	return 0;
 }
 
 function courses_fetch_objectives($course_ids, $parent_id = 1, $objectives = false, $objective_ids = false, $event_id = 0, $fetch_all_text = false) {
@@ -8738,7 +8666,9 @@ function courses_fetch_objectives($course_ids, $parent_id = 1, $objectives = fal
 	return $objectives;
 }
 
-
+/**
+ * @todo bt37 Please fix this.
+ */
 function courses_fetch_objectives_for_org($org_id,$course_ids,$top_level_id = -1, $parent_id = 1, $objectives = false, $objective_ids = false, $event_id = 0, $fetch_all_text = false) {
 	global $db;
 	
@@ -10743,6 +10673,277 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 			}
 		}
 		$output["events"] = $learning_events;
+	}
+
+	return $output;
+}
+
+/**
+ * Returns all teachers, tutors, TAs, and auditors for the specified learning event.
+ * 
+ * @global object $db
+ * @param int $event_id
+ * @return array 
+ */
+function events_fetch_event_contacts($event_id = 0) {
+	global $db;
+	
+	$output = array();
+	
+	$event_id = (int) $event_id;
+	
+	if ($event_id) {
+		$query = "	SELECT a.`proxy_id`, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`email`, a.`contact_role`, a.`contact_order`
+					FROM `event_contacts` AS a
+					JOIN `".AUTH_DATABASE."`.`user_data` AS b
+					ON b.`id` = a.`proxy_id`
+					WHERE a.`event_id` = ".$db->qstr($event_id)."
+					ORDER BY a.`contact_order` ASC";
+		$results = $db->GetAll($query);
+		if ($results) {
+			foreach ($results as $result) {
+				$output[$result["contact_role"]][] = $result;
+			}
+		}
+	}
+	
+	return $output;
+}
+
+/**
+ * Returns all audience members for the specified learning event.
+ * 
+ * @global object $db
+ * @param int $event_id
+ * @return array 
+ */
+function events_fetch_event_audience($event_id = 0) {
+	global $db;
+
+	$output = array();
+	
+	$event_id = (int) $event_id;
+	
+	if ($event_id) {
+		$query = "SELECT * FROM `event_audience` WHERE `event_id` = ".$db->qstr($event_id);
+		$results = $db->GetAll($query);
+		if ($results) {
+			// This puts them in the display order I want them in.
+			$output = array("course_id" => array(), "cohort" => array(), "group_id" => array(), "proxy_id" => array());
+			
+			foreach ($results as $result) {
+				$row = array (
+						"type" => $result["audience_type"],
+						"link" => "",
+						"title" => "",
+						"count" => 0
+				);
+				
+				switch ($result["audience_type"]) {
+					case "course_id" : // Course Audience
+						$row["link"] = ENTRADA_URL . "/courses?id=".$result["audience_value"];
+						$row["title"] = fetch_course_title($result["audience_value"]);
+					break;
+					case "cohort" :	// Cohorts
+						$row["title"] = fetch_group_title($result["audience_value"]);
+					break;
+					case "group_id" : // Course Groups
+						$cgroup = course_fetch_course_group($result["audience_value"]);
+						
+						$row["title"] = $cgroup["group_name"];
+						$row["count"] = $cgroup["members"];
+					break;
+					case "proxy_id" : // Learners
+						$row["link"] = ENTRADA_URL . "/people?id=".$result["audience_value"];
+						$row["title"] = get_account_data("fullname", $result["audience_value"]);
+					break;
+					default : // No longer supported, but include the value just in case.
+						$row["title"] = $result["audience_value"];
+						
+						application_log("notice", "audience_type [".$result["audience_type"]."] is no longer supported, but is used in event_id [".$event_id."].");
+					break;
+				}
+				
+				if ($row["title"]) {
+					$output[$result["audience_type"]][] = $row;
+				}
+			}
+		}
+	}
+	
+	return $output;
+}
+
+/**
+ * This function returns arrays of the requested resources from a learning event.
+ * 
+ * @global object $db
+ * @param int $event_id
+ * @param array $options
+ * @return array
+ */
+function events_fetch_event_resources($event_id = 0, $options = array(), $exclude = array()) {
+	global $db;
+
+	$fetch_files = false;
+	$fetch_links = false;
+	$fetch_quizzes = false;
+	$fetch_discussions = false;
+	$fetch_types = false;
+	
+	$output = array();
+
+	$event_id = (int) $event_id;
+	
+	if ($event_id) {
+		if (is_scalar($options)) {
+			if (trim($options) != "") {
+				$options = array($options);
+			} else {
+				$options = array();
+			}
+		}
+
+		if (!count($options)) {
+			$options = array("all");
+		}
+		
+		if (is_scalar($exclude)) {
+			if (trim($exclude) != "") {
+				$exclude = array($exclude);
+			} else {
+				$exclude = array();
+			}
+		}
+
+		if (in_array("all", $options)) {
+			$fetch_files = true;
+			$fetch_links = true;
+			$fetch_quizzes = true;
+			$fetch_discussions = true;
+			$fetch_types = true;
+		}
+
+		if (in_array("files", $options)) {
+			$fetch_files = true;
+		}
+
+		if (in_array("links", $options)) {
+			$fetch_links = true;
+		}
+
+		if (in_array("quizzes", $options)) {
+			$fetch_quizzes = true;
+		}
+
+		if (in_array("discussions", $options)) {
+			$fetch_discussions = true;
+		}
+
+		if (in_array("types", $options)) {
+			$fetch_types = true;
+		}
+		
+		if (in_array("files", $exclude)) {
+			$fetch_files = false;
+		}
+
+		if (in_array("links", $exclude)) {
+			$fetch_links = false;
+		}
+
+		if (in_array("quizzes", $exclude)) {
+			$fetch_quizzes = false;
+		}
+
+		if (in_array("discussions", $exclude)) {
+			$fetch_discussions = false;
+		}
+
+		if (in_array("types", $exclude)) {
+			$fetch_types = false;
+		}
+
+		if ($fetch_files) {
+			/**
+			 * This query will get all of the files associated with this event.
+			 */
+			$query	= "	SELECT a.*, MAX(b.`timestamp`) AS `last_visited`
+						FROM `event_files` AS a
+						LEFT JOIN `statistics` AS b
+						ON b.`module` = 'events'
+						AND b.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+						AND b.`action` = 'file_download'
+						AND b.`action_field` = 'file_id'
+						AND b.`action_value` = a.`efile_id`
+						WHERE a.`event_id` = ".$db->qstr($event_id)."
+						GROUP BY a.`efile_id`
+						ORDER BY a.`file_category` ASC, a.`file_title` ASC";
+			$output["files"] = $db->GetAll($query);
+		}
+
+		if ($fetch_links) {
+			/**
+			 * This query will retrieve all of the links associated with this evevnt.
+			 */
+			$query	= "	SELECT a.*, MAX(b.`timestamp`) AS `last_visited`
+						FROM `event_links` AS a
+						LEFT JOIN `statistics` AS b
+						ON b.`module` = 'events'
+						AND b.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+						AND b.`action` = 'link_access'
+						AND b.`action_field` = 'link_id'
+						AND b.`action_value` = a.`elink_id`
+						WHERE a.`event_id` = ".$db->qstr($event_id)."
+						GROUP BY a.`elink_id`
+						ORDER BY a.`link_title` ASC";
+			$output["links"] = $db->GetAll($query);
+		}
+
+		if ($fetch_quizzes) {
+
+			/**
+			 * This query will retrieve all of the quizzes associated with this evevnt.
+			 */
+			$query	= "	SELECT a.*, b.`quiztype_code`, b.`quiztype_title`, MAX(c.`timestamp`) AS `last_visited`
+						FROM `attached_quizzes` AS a
+						LEFT JOIN `quizzes_lu_quiztypes` AS b
+						ON b.`quiztype_id` = a.`quiztype_id`
+						LEFT JOIN `statistics` AS c
+						ON c.`module` = 'events'
+						AND c.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+						AND c.`action` = 'quiz_complete'
+						AND c.`action_field` = 'aquiz_id'
+						AND c.`action_value` = a.`aquiz_id`
+						WHERE a.`content_type` = 'event'
+						AND a.`content_id` = ".$db->qstr($event_id)."
+						GROUP BY a.`aquiz_id`
+						ORDER BY a.`required` DESC, a.`quiz_title` ASC, a.`release_until` ASC";
+			$output["quizzes"] = $db->GetAll($query);
+		}
+
+		if ($fetch_discussions) {
+			/**
+			 * This query will retrieve all discussions associated with this event.
+			 */
+			$query	= "	SELECT *
+						FROM `event_discussions`
+						WHERE `event_id` = ".$db->qstr($event_id)."
+						AND `discussion_comment` <> ''
+						AND `discussion_active` = '1'
+						ORDER BY `ediscussion_id` ASC";
+			$output["discussions"] = $db->GetAll($query);
+		}
+
+		if ($fetch_types) {
+			$query	= "	SELECT *
+						FROM `event_eventtypes` AS a
+						LEFT JOIN `events_lu_eventtypes` AS b
+						ON a.`eventtype_id` = b.`eventtype_id`
+						WHERE a.`event_id` = ".$db->qstr($event_id)."
+						ORDER BY a.`eeventtype_id` ASC";
+			$output["types"] = $db->GetAll($query);
+		}
 	}
 
 	return $output;

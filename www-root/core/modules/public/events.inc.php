@@ -241,32 +241,22 @@ if (!defined("PARENT_INCLUDED")) {
 				if ($ENTRADA_ACL->amIAllowed(new EventResource($EVENT_ID, $event_info['course_id'], $event_info['organisation_id']), 'read')) {
 					add_statistic($MODULE, "view", "event_id", $EVENT_ID);
 					
-					$event_resources = fetch_event_resources($EVENT_ID, "all");
+					$event_contacts = events_fetch_event_contacts($EVENT_ID);
+					$event_audience = events_fetch_event_audience($EVENT_ID);
+
+					$event_resources = events_fetch_event_resources($EVENT_ID, "all");
 					$event_files = $event_resources["files"];
 					$event_links = $event_resources["links"];
 					$event_quizzes = $event_resources["quizzes"];
 					$event_discussions = $event_resources["discussions"];
 					$event_types = $event_resources["types"];
 					
-					/**
-					 * Gather the learners associated with this event from the event_audience table.
-					 */
-					$associated_audience = array();
-
-					$query = "SELECT * FROM `event_audience` WHERE `event_id` = ".$db->qstr($EVENT_ID);
-					$results = $db->GetAll($query);
-					if ($results) {
-						foreach ($results as $result) {
-							$associated_audience[$result["audience_type"]] = $result["audience_value"];
-						}
-					}
-
 					// Meta information for this page.
 					$PAGE_META["title"]			= $event_info["event_title"]." - ".APPLICATION_NAME;
 					$PAGE_META["description"]	= trim(str_replace(array("\t", "\n", "\r"), " ", html_encode(strip_tags($event_info["event_goals"]))));
 					$PAGE_META["keywords"]		= "";
 
-					$BREADCRUMB[]				= array("url" => ENTRADA_RELATIVE."/events?".replace_query(array("id" => $event_info["event_id"])), "title" => $event_info["event_title"]);
+					$BREADCRUMB[] = array("url" => ENTRADA_RELATIVE."/events?".replace_query(array("id" => $event_info["event_id"])), "title" => $event_info["event_title"]);
 
 					$include_details			= true;
 					$include_audience			= true;
@@ -282,44 +272,39 @@ if (!defined("PARENT_INCLUDED")) {
 					$discussion_title			= (($icon_discussion) ? "Read the posted discussion comments." : "Start up a conversion, leave your comment!");
 					$syllabus_title				= "Visit Course Website";
 
+// @todo simpson This needs to be fixed.
 					if (($_SESSION["details"]["allow_podcasting"]) && ($event_audience_type == "grad_year") && (in_array($_SESSION["details"]["allow_podcasting"], array($associated_grad_year, "all")))) {
 						$sidebar_html = "To upload a podcast: <a href=\"javascript:openPodcastWizard('".$EVENT_ID."')\">click here</a>";
 						new_sidebar_item("Upload A Podcast", $sidebar_html, "podcast_uploading", "open", "2.0");
+						
 						?>
 						<script type="text/javascript">
-							function openPodcastWizard(id) {
-								if (!id) {
-									return;
-								} else {
-									var windowW = 485;
-									var windowH = 585;
+						function openPodcastWizard(id) {
+							if (!id) {
+								return;
+							} else {
+								var windowW = 485;
+								var windowH = 585;
 
-									var windowX = (screen.width / 2) - (windowW / 2);
-									var windowY = (screen.height / 2) - (windowH / 2);
+								var windowX = (screen.width / 2) - (windowW / 2);
+								var windowY = (screen.height / 2) - (windowH / 2);
 
-									fileWizard = window.open('<?php echo ENTRADA_RELATIVE ?>/file-wizard-podcast.php?id=' + id, 'podcastWizard', 'width='+windowW+', height='+windowH+', scrollbars=no, resizable=yes');
-									fileWizard.blur();
-									window.focus();
+								fileWizard = window.open('<?php echo ENTRADA_RELATIVE ?>/file-wizard-podcast.php?id=' + id, 'podcastWizard', 'width='+windowW+', height='+windowH+', scrollbars=no, resizable=yes');
+								fileWizard.blur();
+								window.focus();
 
-									fileWizard.resizeTo(windowW, windowH);
-									fileWizard.moveTo(windowX, windowY);
+								fileWizard.resizeTo(windowW, windowH);
+								fileWizard.moveTo(windowX, windowY);
 
-									fileWizard.focus();
-								}
+								fileWizard.focus();
 							}
+						}
 						</script>
 						<?php
 					}
 
 					echo "<div class=\"no-printing\">\n";
 					if (($USE_QUERY) && ($RESULT_TOTAL_ROWS > 1)) {
-						/**
-						 * Load jQuery and jSwipe to handle next and back on mobile devices.
-						 */
-						$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/jquery/jquery.min.js?r=".html_encode(APPLICATION_VERSION)."\"></script>\n";
-						$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/jquery/jquery.touchSwipe.js?r=".html_encode(APPLICATION_VERSION)."\"></script>\n";
-						$JQUERY[] = "<script type=\"text/javascript\">jQuery.noConflict();</script>";
-						
 						$back_click = "";
 						$next_click = "";
 						
@@ -346,22 +331,11 @@ if (!defined("PARENT_INCLUDED")) {
 						echo "	</td>\n";
 						echo "</tr>\n";
 						echo "</table>\n";
-						
+
 						/**
-						 * If there are $next or $back URL's then add swipe for phone / tablet devices.
+						 * Add swipe functionality if swipe is supported.
 						 */
-						if ($next_click || $back_click) {
-							$swipe = array();
-							
-							if ($back_click) {
-								$swipe[] = "swipeRight: function() { window.location = '".$back_click."' }";
-							}
-							if ($next_click) {
-								$swipe[] = "swipeLeft: function() { window.location = '".$next_click."' }";
-							}
-							
-							echo "<script type=\"text/javascript\">jQuery(document).ready(function() { jQuery('body').swipe({".implode(", ", $swipe)."}); });</script>";
-						}
+						navigator_swipe(array("next" => $next_click, "back" => $back_click));
 					}
 
 					echo "	<div style=\"text-align: right; margin-top: 8px\">\n";
@@ -411,19 +385,7 @@ if (!defined("PARENT_INCLUDED")) {
 								</td>
 							</tr>
 							<?php
-							$query = "	SELECT a.`proxy_id`, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`email`, a.`contact_role`, a.`contact_order`
-										FROM `event_contacts` AS a
-										JOIN `".AUTH_DATABASE."`.`user_data` AS b
-										ON b.`id` = a.`proxy_id`
-										WHERE a.`event_id` = ".$db->qstr($event_info["event_id"])."
-										ORDER BY a.`contact_order` ASC";
-							$results = $db->GetAll($query);
-							if ($results) {
-								$event_contacts = array();
-								foreach ($results as $result) {
-									$event_contacts[$result["contact_role"]][] = $result;
-								}
-								
+							if ($event_contacts) {
 								if (isset($event_contacts["teacher"]) && ($count = count($event_contacts["teacher"]))) {
 									?>
 									<tr class="spacer">
@@ -432,11 +394,13 @@ if (!defined("PARENT_INCLUDED")) {
 									<tr>
 										<th>Teacher<?php echo (($count != 1) ? "s" : ""); ?></th>
 										<td>
+											<ul class="menu">
 											<?php
 											foreach ($event_contacts["teacher"] as $contact) {
-												echo "<a href=\"mailto:".html_encode($contact["email"])."\">".html_encode($contact["fullname"])."</a><br />\n";
+												echo "<li class=\"user\"><a href=\"".ENTRADA_RELATIVE."/people?id=".$contact["proxy_id"]."\">".html_encode($contact["fullname"])."</a></li>\n";
 											}									
 											?>
+											</ul>
 										</td>
 									</tr>
 									<?php
@@ -449,11 +413,13 @@ if (!defined("PARENT_INCLUDED")) {
 									<tr>
 										<th>Tutor<?php echo (($count != 1) ? "s" : ""); ?></th>
 										<td>
+											<ul class="menu">
 											<?php
 											foreach ($event_contacts["tutor"] as $contact) {
-												echo "<a href=\"mailto:".html_encode($contact["email"])."\">".html_encode($contact["fullname"])."</a><br />\n";
+												echo "<li class=\"user\"><a href=\"".ENTRADA_RELATIVE."/people?id=".$contact["proxy_id"]."\">".html_encode($contact["fullname"])."</a></li>\n";
 											}									
 											?>
+											</ul>
 										</td>
 									</tr>
 									<?php
@@ -466,11 +432,13 @@ if (!defined("PARENT_INCLUDED")) {
 									<tr>
 										<th>TA<?php echo (($count != 1) ? "s" : ""); ?></th>
 										<td>
+											<ul class="menu">
 											<?php
 											foreach ($event_contacts["ta"] as $contact) {
-												echo "<a href=\"mailto:".html_encode($contact["email"])."\">".html_encode($contact["fullname"])."</a><br />\n";
+												echo "<li class=\"user\"><a href=\"".ENTRADA_RELATIVE."/people?id=".$contact["proxy_id"]."\">".html_encode($contact["fullname"])."</a></li>\n";
 											}									
 											?>
+											</ul>
 										</td>
 									</tr>
 									<?php
@@ -483,11 +451,13 @@ if (!defined("PARENT_INCLUDED")) {
 									<tr>
 										<th>Auditor<?php echo (($count != 1) ? "s" : ""); ?></th>
 										<td>
+											<ul class="menu">
 											<?php
 											foreach ($event_contacts["auditor"] as $contact) {
-												echo "<a href=\"mailto:".html_encode($contact["email"])."\">".html_encode($contact["fullname"])."</a><br />\n";
+												echo "<li class=\"user\"><a href=\"".ENTRADA_RELATIVE."/people?id=".$contact["proxy_id"]."\">".html_encode($contact["fullname"])."</a></li>\n";
 											}									
 											?>
+											</ul>
 										</td>
 									</tr>
 									<?php
@@ -500,11 +470,31 @@ if (!defined("PARENT_INCLUDED")) {
 							<tr>
 								<th>Audience</th>
 								<td>
-									<ul class="general-list">
 									<?php
-														
+									if ($event_audience) {
+										?>
+										<ul class="menu">
+										<?php
+										foreach ($event_audience as $audience_type => $results) {
+											if ($audience_type == "proxy_id") {
+												$css_class = "user";
+											} else {
+												$css_class = "group";
+											}
+											
+											if (is_array($results)) {
+												foreach ($results as $audience) {
+													echo "<li class=\"".$css_class."\">".($audience["link"] ? "<a href=\"".$audience["link"]."\">" : "").$audience["title"].($audience["link"] ? "</a>" : "")."</li>";
+												}
+											} elseif (isset($results["title"])) {
+												echo "<li class=\"".$css_class."\">".($results["link"] ? "<a href=\"".$results["link"]."\">" : "").$results["title"].($results["link"] ? "</a>" : "")."</li>";
+											}
+										}
+										?>
+										</ul>
+										<?php
+									}
 									?>
-									</ul>
 								</td>
 							</tr>
 							<tr class="spacer">
@@ -514,23 +504,23 @@ if (!defined("PARENT_INCLUDED")) {
 					</table>
 					<?php
 /**
- * @todo This needs to be fixed as $event_audience_type is no longer for grad_year.
+ * @todo simpson This needs to be fixed as $event_audience_type is no longer for grad_year.
  */
 if ($event_audience_type == "grad_year") {
-	$query		= "	SELECT a.`event_id`, a.`event_title`, b.`audience_value` AS `event_grad_year`
-					FROM `events` AS a
-					LEFT JOIN `event_audience` AS b
-					ON b.`event_id` = a.`event_id`
-					LEFT JOIN `courses` AS c
-					ON a.`course_id` = c.`course_id`
-					AND c.`organisation_id` = ".$db->qstr($event_info["organisation_id"])."
-					WHERE (a.`event_start` BETWEEN ".$db->qstr($event_info["event_start"])." AND ".$db->qstr(($event_info["event_finish"] - 1)).")
-					AND c.`course_active` = '1'
-					AND a.`event_id` <> ".$db->qstr($event_info["event_id"])."
-					AND b.`audience_type` = 'grad_year'
-					AND b.`audience_value` = ".$db->qstr((int) $associated_grad_year)."
-					ORDER BY `event_title` ASC";
-	$results	= $db->GetAll($query);
+	$query = "	SELECT a.`event_id`, a.`event_title`, b.`audience_value` AS `event_grad_year`
+				FROM `events` AS a
+				LEFT JOIN `event_audience` AS b
+				ON b.`event_id` = a.`event_id`
+				LEFT JOIN `courses` AS c
+				ON a.`course_id` = c.`course_id`
+				AND c.`organisation_id` = ".$db->qstr($event_info["organisation_id"])."
+				WHERE (a.`event_start` BETWEEN ".$db->qstr($event_info["event_start"])." AND ".$db->qstr(($event_info["event_finish"] - 1)).")
+				AND c.`course_active` = '1'
+				AND a.`event_id` <> ".$db->qstr($event_info["event_id"])."
+				AND b.`audience_type` = 'grad_year'
+				AND b.`audience_value` = ".$db->qstr((int) $associated_grad_year)."
+				ORDER BY `event_title` ASC";
+	$results = $db->GetAll($query);
 	if ($results) {
 		echo "	<tr>\n";
 		echo "		<td colspan=\"2\">&nbsp;</td>\n";

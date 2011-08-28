@@ -251,13 +251,13 @@ if (!defined("PARENT_INCLUDED")) {
 					/**
 					 * Gather the learners associated with this event from the event_audience table.
 					 */
-					$associated_learners = array();;
+					$associated_audience = array();
 
 					$query = "SELECT * FROM `event_audience` WHERE `event_id` = ".$db->qstr($EVENT_ID);
 					$results = $db->GetAll($query);
 					if ($results) {
 						foreach ($results as $result) {
-							$associated_learners[$result["audience_type"]] = $result["audience_value"];
+							$associated_audience[$result["audience_type"]] = $result["audience_value"];
 						}
 					}
 
@@ -410,28 +410,90 @@ if (!defined("PARENT_INCLUDED")) {
 									?>
 								</td>
 							</tr>
-							<tr class="spacer">
-								<td colspan="2"><hr></td>
-							</tr>
-							<tr>
-								<th>Teachers</th>
-								<td>
-									<?php
-									$query = "	SELECT a.`proxy_id`, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`email`, a.`contact_order`
-												FROM `event_contacts` AS a
-												LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
-												ON b.`id` = a.`proxy_id`
-												WHERE a.`event_id` = ".$db->qstr($event_info["event_id"])."
-												AND b.`id` IS NOT NULL";
-									$faculty = $db->GetAll($query);
-									if ($faculty) {
-										foreach ($faculty as $result) {
-											echo "<a href=\"mailto:".html_encode($result["email"])."\">".html_encode($result["fullname"])."</a><br />\n";
-										}
-									}									
+							<?php
+							$query = "	SELECT a.`proxy_id`, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`email`, a.`contact_role`, a.`contact_order`
+										FROM `event_contacts` AS a
+										JOIN `".AUTH_DATABASE."`.`user_data` AS b
+										ON b.`id` = a.`proxy_id`
+										WHERE a.`event_id` = ".$db->qstr($event_info["event_id"])."
+										ORDER BY a.`contact_order` ASC";
+							$results = $db->GetAll($query);
+							if ($results) {
+								$event_contacts = array();
+								foreach ($results as $result) {
+									$event_contacts[$result["contact_role"]][] = $result;
+								}
+								
+								if (isset($event_contacts["teacher"]) && ($count = count($event_contacts["teacher"]))) {
 									?>
-								</td>
-							</tr>
+									<tr class="spacer">
+										<td colspan="2"><hr></td>
+									</tr>
+									<tr>
+										<th>Teacher<?php echo (($count != 1) ? "s" : ""); ?></th>
+										<td>
+											<?php
+											foreach ($event_contacts["teacher"] as $contact) {
+												echo "<a href=\"mailto:".html_encode($contact["email"])."\">".html_encode($contact["fullname"])."</a><br />\n";
+											}									
+											?>
+										</td>
+									</tr>
+									<?php
+								}
+								if (isset($event_contacts["tutor"]) && ($count = count($event_contacts["tutor"]))) {
+									?>
+									<tr class="spacer">
+										<td colspan="2"><hr></td>
+									</tr>
+									<tr>
+										<th>Tutor<?php echo (($count != 1) ? "s" : ""); ?></th>
+										<td>
+											<?php
+											foreach ($event_contacts["tutor"] as $contact) {
+												echo "<a href=\"mailto:".html_encode($contact["email"])."\">".html_encode($contact["fullname"])."</a><br />\n";
+											}									
+											?>
+										</td>
+									</tr>
+									<?php
+								}
+								if (isset($event_contacts["ta"]) && ($count = count($event_contacts["ta"]))) {
+									?>
+									<tr class="spacer">
+										<td colspan="2"><hr></td>
+									</tr>
+									<tr>
+										<th>TA<?php echo (($count != 1) ? "s" : ""); ?></th>
+										<td>
+											<?php
+											foreach ($event_contacts["ta"] as $contact) {
+												echo "<a href=\"mailto:".html_encode($contact["email"])."\">".html_encode($contact["fullname"])."</a><br />\n";
+											}									
+											?>
+										</td>
+									</tr>
+									<?php
+								}
+								if (isset($event_contacts["auditor"]) && ($count = count($event_contacts["auditor"]))) {
+									?>
+									<tr class="spacer">
+										<td colspan="2"><hr></td>
+									</tr>
+									<tr>
+										<th>Auditor<?php echo (($count != 1) ? "s" : ""); ?></th>
+										<td>
+											<?php
+											foreach ($event_contacts["auditor"] as $contact) {
+												echo "<a href=\"mailto:".html_encode($contact["email"])."\">".html_encode($contact["fullname"])."</a><br />\n";
+											}									
+											?>
+										</td>
+									</tr>
+									<?php
+								}
+							}
+							?>
 							<tr class="spacer">
 								<td colspan="2"><hr></td>
 							</tr>							
@@ -440,24 +502,7 @@ if (!defined("PARENT_INCLUDED")) {
 								<td>
 									<ul class="general-list">
 									<?php
-									switch ($event_audience_type) {
-										case "course_id" :
-											echo "<li>Course ID: ".$group_id."</li>\n";
-										break;
-										case "group_id" :
-											foreach ($associated_group_ids as $group_id) {
-												echo "<li>Group ID: ".$group_id."</li>\n";
-											}
-										break;
-										case "proxy_id" :
-											foreach ($associated_proxy_ids as $proxy_id) {
-												echo "<li><a href=\"".ENTRADA_RELATIVE."/people?profile=".get_account_data("username", $proxy_id)."\" target=\"_blank\">".get_account_data("firstlast", $proxy_id)."</a></li>\n";
-											}
-										break;
-										default :
-											echo "<li>To Be Announced</li>";
-										break;
-									}					
+														
 									?>
 									</ul>
 								</td>

@@ -73,7 +73,8 @@ if (!defined("IN_EVENTS")) {
 							ON b.`group_id` = a.`group_id`
 							WHERE a.`group_active` = '1'
 							AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
-							ORDER BY a.`group_name` ASC";
+							AND a.`group_type` = 'cohort'
+							ORDER BY a.`group_name` DESC";
 				$groups_results = $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
 				if ($groups_results) {
 					$cohort_ids = array();
@@ -107,7 +108,7 @@ if (!defined("IN_EVENTS")) {
 							FROM `course_groups` AS a
 							WHERE a.`active` = '1'
 							AND a.`course_id` = ".$db->qstr($course_id)."
-							ORDER BY a.`group_name` ASC";
+							ORDER BY LENGTH(a.`group_name`), a.`group_name` ASC"; // The LENGTH sort is a MySQL natural sorting hack.
 				$groups_results = $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
 				if ($groups_results) {
 					

@@ -868,77 +868,87 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								audience_type = $F('audience_type');
 								course_id = $F('course_id');
 				
-								if (audience_type) {
-									new Ajax.Request('<?php echo ENTRADA_RELATIVE; ?>/admin/events?section=api-audience-selector', {
-										evalScripts : true,
-										parameters: { 'options_for' : audience_type, 'course_id' : course_id, 'event_id' : <?php echo $EVENT_ID; ?> },
-										method: 'post',
-										onLoading: function() {
-											$('options_loading').show();
-										},
-										onSuccess: function(response) {
-											if (response.responseText) {
-												$('options_container').insert(response.responseText);
-				
-												if ($(audience_type + '_options')) {
-				
-													$(audience_type + '_options').addClassName('multiselect-processed');
-				
-													multiselect[audience_type] = new Control.SelectMultiple('event_audience_'+audience_type, audience_type + '_options', {
-														checkboxSelector: 'table.select_multiple_table tr td input[type=checkbox]',
-														nameSelector: 'table.select_multiple_table tr td.select_multiple_name label',
-														filter: audience_type + '_select_filter',
-														resize: audience_type + '_scroll',
-														afterCheck: function(element) {
-															var tr = $(element.parentNode.parentNode);
-															tr.removeClassName('selected');
-				
-															if (element.checked) {
-																tr.addClassName('selected');
-				
-																addAudience(element.id, audience_type);
-															} else {
-																removeAudience(element.id, audience_type);
+								if (multiselect[audience_type]) {
+									multiselect[audience_type].container.show();
+								} else {
+									if (audience_type) {
+										new Ajax.Request('<?php echo ENTRADA_RELATIVE; ?>/admin/events?section=api-audience-selector', {
+											evalScripts : true,
+											parameters: {
+												'options_for' : audience_type, 
+												'course_id' : course_id, 'event_id' : <?php echo $EVENT_ID; ?>,
+												'event_audience_cohorts' : $('event_audience_cohorts').value, 
+												'event_audience_course_groups' : $('event_audience_course_groups').value, 
+												'event_audience_students' : $('event_audience_students').value
+											},
+											method: 'post',
+											onLoading: function() {
+												$('options_loading').show();
+											},
+											onSuccess: function(response) {
+												if (response.responseText) {
+													$('options_container').insert(response.responseText);
+					
+													if ($(audience_type + '_options')) {
+					
+														$(audience_type + '_options').addClassName('multiselect-processed');
+					
+														multiselect[audience_type] = new Control.SelectMultiple('event_audience_'+audience_type, audience_type + '_options', {
+															checkboxSelector: 'table.select_multiple_table tr td input[type=checkbox]',
+															nameSelector: 'table.select_multiple_table tr td.select_multiple_name label',
+															filter: audience_type + '_select_filter',
+															resize: audience_type + '_scroll',
+															afterCheck: function(element) {
+																var tr = $(element.parentNode.parentNode);
+																tr.removeClassName('selected');
+					
+																if (element.checked) {
+																	tr.addClassName('selected');
+					
+																	addAudience(element.id, audience_type);
+																} else {
+																	removeAudience(element.id, audience_type);
+																}
 															}
+														});
+					
+														if ($(audience_type + '_cancel')) {
+															$(audience_type + '_cancel').observe('click', function(event) {
+																this.container.hide();
+					
+																$('audience_type').options.selectedIndex = 0;
+																$('audience_type').show();
+					
+																return false;
+															}.bindAsEventListener(multiselect[audience_type]));
 														}
-													});
-				
-													if ($(audience_type + '_cancel')) {
-														$(audience_type + '_cancel').observe('click', function(event) {
-															this.container.hide();
-				
-															$('audience_type').options.selectedIndex = 0;
-															$('audience_type').show();
-				
-															return false;
-														}.bindAsEventListener(multiselect[audience_type]));
+					
+														if ($(audience_type + '_close')) {
+															$(audience_type + '_close').observe('click', function(event) {
+																this.container.hide();
+																
+																$('audience_type').clear();
+					
+																return false;
+															}.bindAsEventListener(multiselect[audience_type]));
+														}
+					
+														multiselect[audience_type].container.show();
 													}
-				
-													if ($(audience_type + '_close')) {
-														$(audience_type + '_close').observe('click', function(event) {
-															this.container.hide();
-															
-															$('audience_type').clear();
-				
-															return false;
-														}.bindAsEventListener(multiselect[audience_type]));
-													}
-				
-													multiselect[audience_type].container.show();
+												} else {
+													new Effect.Highlight('audience_type', {startcolor: '#FFD9D0', restorecolor: 'true'});
+													new Effect.Shake('audience_type');
 												}
-											} else {
-												new Effect.Highlight('audience_type', {startcolor: '#FFD9D0', restorecolor: 'true'});
-												new Effect.Shake('audience_type');
+											},
+											onError: function() {
+												alert("There was an error retrieving the requested audience. Please try again.");
+											},
+											onComplete: function() {
+												$('options_loading').hide();
 											}
-										},
-										onError: function() {
-											alert("There was an error retrieving the requested audience. Please try again.");
-										},
-										onComplete: function() {
-											$('options_loading').hide();
-										}
-									});
-								}	
+										});
+									}
+								}
 								return false;
 							}
 							

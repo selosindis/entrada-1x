@@ -165,6 +165,21 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 					}
 				}
 				
+				if (!$course_audience) {
+					$query = "SELECT a.* FROM `course_audience` AS a 
+								JOIN `curriculum_periods` AS b
+								ON a.`cperiod_id` = b.`cperiod_id`
+								WHERE a.`course_id` = ".$db->qstr($COURSE_ID)." 
+								AND a.`audience_active` = 1
+								AND b.`start_date` <= ".$db->qstr(time())."
+								AND b.`finish_date` >= ".$db->qstr(time());
+					$course_audience_record = $db->GetRow($query);
+					if ($course_audience_record) {
+						$course_audience = true;
+					}
+					
+				}
+				
 				$PROCESSED["course_id"] = $COURSE_ID;
 
 				if ($number_of_groups == 1) {
@@ -185,47 +200,62 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 					$prefix = $PROCESSED["group_name"].' ';
 
 					if ($group_populate == "group_size") {
-						$query	= "	SELECT COUNT(a.`id`)
-									FROM `".AUTH_DATABASE."`.`user_data` AS a
-									JOIN `".AUTH_DATABASE."`.`user_access` AS b
-									ON a.`id` = b.`user_id`
-									JOIN `course_audience` AS c
-									ON c.`course_id` = ".$db->qstr($COURSE_ID)."
-									AND c.`audience_type` = 'proxy_id'
-									AND a.`id` = c.`audience_value`
-									JOIN `curriculum_periods` AS d
-									ON c.`cperiod_id` = d.`cperiod_id`
-									WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
-									AND b.`account_active` = 'true'
-									AND b.`group` = 'student'
-									AND c.`audience_active` = 1
-									AND d.`start_date` <= ".$db->qstr(time())."
-									AND d.`finish_date` >= ".$db->qstr(time());
-						$students = $db->GetOne($query);
-						$query	= "	SELECT COUNT(a.`id`)
-									FROM `".AUTH_DATABASE."`.`user_data` AS a
-									JOIN `".AUTH_DATABASE."`.`user_access` AS b
-									ON a.`id` = b.`user_id`
-									JOIN `course_audience` AS c
-									ON c.`course_id` = ".$db->qstr($COURSE_ID)."
-									AND c.`audience_type` = 'group_id'
-									JOIN `groups` AS d
-									ON c.`audience_value` = d.`group_id`
-									JOIN `group_members` AS e
-									ON d.`group_id` = e.`group_id`
-									AND e.`proxy_id` = a.`id`
-									JOIN `curriculum_periods` AS f
-									ON c.`cperiod_id` = f.`cperiod_id`
-									WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
-									AND b.`account_active` = 'true'
-									AND b.`group` = 'student'
-									AND c.`audience_active` = 1
-									AND f.`start_date` <= ".$db->qstr(time())."
-									AND f.`finish_date` >= ".$db->qstr(time())."
-									AND d.`group_active` = 1
-									AND d.`start_date` <= ".$db->qstr(time())."
-									AND d.`expire_date` >= ".$db->qstr(time());
-						$students += $db->GetOne($query);
+						if ($course_audience) {
+							$query	= "	SELECT COUNT(a.`id`)
+										FROM `".AUTH_DATABASE."`.`user_data` AS a
+										JOIN `".AUTH_DATABASE."`.`user_access` AS b
+										ON a.`id` = b.`user_id`
+										JOIN `course_audience` AS c
+										ON c.`course_id` = ".$db->qstr($COURSE_ID)."
+										AND c.`audience_type` = 'proxy_id'
+										AND a.`id` = c.`audience_value`
+										JOIN `curriculum_periods` AS d
+										ON c.`cperiod_id` = d.`cperiod_id`
+										WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+										AND b.`account_active` = 'true'
+										AND b.`group` = 'student'
+										AND c.`audience_active` = 1
+										AND d.`start_date` <= ".$db->qstr(time())."
+										AND d.`finish_date` >= ".$db->qstr(time());
+							$students = $db->GetOne($query);
+							$query	= "	SELECT COUNT(a.`id`)
+										FROM `".AUTH_DATABASE."`.`user_data` AS a
+										JOIN `".AUTH_DATABASE."`.`user_access` AS b
+										ON a.`id` = b.`user_id`
+										JOIN `course_audience` AS c
+										ON c.`course_id` = ".$db->qstr($COURSE_ID)."
+										AND c.`audience_type` = 'group_id'
+										JOIN `groups` AS d
+										ON c.`audience_value` = d.`group_id`
+										JOIN `group_members` AS e
+										ON d.`group_id` = e.`group_id`
+										AND e.`proxy_id` = a.`id`
+										JOIN `curriculum_periods` AS f
+										ON c.`cperiod_id` = f.`cperiod_id`
+										WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+										AND b.`account_active` = 'true'
+										AND b.`group` = 'student'
+										AND c.`audience_active` = 1
+										AND f.`start_date` <= ".$db->qstr(time())."
+										AND f.`finish_date` >= ".$db->qstr(time())."
+										AND d.`group_active` = 1
+										AND e.`member_active` = 1
+										AND ((d.`start_date` <= ".$db->qstr(time())." OR d.`start_date` = 0)
+										AND (d.`expire_date` >= ".$db->qstr(time())." OR d.`expire_date` = 0))";
+							$students += $db->GetOne($query);
+						} else {
+							$query	= "	SELECT a.`id`
+										FROM `".AUTH_DATABASE."`.`user_data` AS a
+										LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+										ON a.`id` = b.`user_id`
+										WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
+										AND b.`account_active` = 'true'
+										AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
+										AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
+										GROUP BY a.`id`
+										ORDER BY a.`lastname` ASC, a.`firstname` ASC";
+							$students = count($db->GetAll($query));
+						}
 						$number_of_groups = ceil($students / $size_of_groups) ;
 					}
 					$dfmt = "%0".strlen((string) $number_of_groups)."d";
@@ -292,8 +322,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 									AND b.`group` = 'student'
 									AND c.`audience_active` = 1
 									AND f.`start_date` <= ".$db->qstr(time())."
-									AND f.`start_date` >= ".$db->qstr(time())."
+									AND f.`finish_date` >= ".$db->qstr(time())."
 									AND d.`group_active` = 1
+									AND e.`member_active` = 1
 									AND (d.`start_date` <= ".$db->qstr(time())." OR d.`start_date` = 0)
 									AND (d.`expire_date` >= ".$db->qstr(time())." OR d.`start_date` = 0)
 									
@@ -316,11 +347,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 					foreach($results as $result) {
 						$PROCESSED["proxy_id"] =  $result["id"];
 						
-						$PROCESSED["cgroup_id"] =  $GROUP_IDS[$i++];
-						
+						$PROCESSED["cgroup_id"] =  $GROUP_IDS[$i];
+						$i++;
 						if (!$db->AutoExecute("course_group_audience", $PROCESSED, "INSERT")) {
 							$ERROR++;
-							$ERRORSTR[] = "There was an error while trying to add the <strong>Group member</strong> ".$PROCESSED["proxy_id"].".<br /><br />The system administrator was informed of this error; please try again later.";
+							$ERRORSTR[] = "There was an error while trying to add an audience member to the database.<br /><br />The system administrator was informed of this error; please try again later.";
 							application_log("error", "Unable to insert a new group member ".$PROCESSED["proxy_id"].". Database said: ".$db->ErrorMsg());
 							break;
 						}

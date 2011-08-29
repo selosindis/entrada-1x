@@ -419,3 +419,10 @@ CREATE TABLE `user_organisation` (
 	`proxy_id` int(12) NOT NULL, 
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM AUTO_INCREMENT=10365 DEFAULT CHARSET=utf8;
+
+INSERT INTO `user_organisations` (`organisation_id`, `proxy_id`)
+    SELECT '1', a.`id`
+    FROM `user_data` AS a
+        JOIN `user_access` AS b
+        ON b.`user_id` = a.`id`
+    WHERE b.`app_id` = '1';

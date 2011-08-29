@@ -128,7 +128,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 
 			$group_name = $db->GetOne("SELECT `group_name` FROM `course_groups` WHERE `cgroup_id` = ".$db->qstr($GROUP_ID));
 
-			$emembers_query	= "	SELECT c.`cgaudience_id`, CONCAT_WS(' ', a.`firstname`, a.`lastname`) AS `fullname`, c.`member_active`,
+			$emembers_query	= "	SELECT c.`cgaudience_id`, CONCAT_WS(' ', a.`firstname`, a.`lastname`) AS `fullname`, c.`active`,
 								a.`username`, a.`organisation_id`, a.`username`, CONCAT_WS(':', b.`group`, b.`role`) AS `grouprole`
 								FROM `".AUTH_DATABASE."`.`user_data` AS a
 								LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
@@ -191,10 +191,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 						<tbody>
 						<?php
 							foreach($results as $result) {
-								$members = $db->GetRow("SELECT COUNT(*) AS members, case when (MIN(`member_active`)=0) then 1 else 0 end as `inactive`
+								$members = $db->GetRow("SELECT COUNT(*) AS members, case when (MIN(`active`)=0) then 1 else 0 end as `inactive`
 														FROM  `course_group_audience` WHERE `cgroup_id` = ".$db->qstr($result["cgroup_id"]));
 								
-									echo "<tr class=\"group".((!$result["group_active"]) ? " na" : (($members["inactive"]) ? " np" : ""))."\">";
+									echo "<tr class=\"group".((!$result["active"]) ? " na" : (($members["inactive"]) ? " np" : ""))."\">";
 									echo "	<td style=\"vertical-align: top\">&nbsp;<input type=\"radio\" name=\"groups\" value=\"".$result["cgroup_id"]."\" onclick=\"selectgroup(".$result["cgroup_id"].",'".$result["group_name"]."');\"".(($result["cgroup_id"] == $GROUP_ID) ?" checked=\"checked\"" : "")."/></td>\n";
 									echo "	<td><a href=\"".ENTRADA_URL."/admin/courses/groups?section=edit&id=".$COURSE_ID."&gid=".$result["cgroup_id"]."\" >".html_encode($result["group_name"])."</a></td>";
 									echo "	<td><a href=\"".ENTRADA_URL."/admin/courses/groups?section=edit&id=".$COURSE_ID."&gid=".$result["cgroup_id"]."\" >".$members["members"]."</a></td>";
@@ -245,7 +245,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 							$results = $db->GetAll($emembers_query);
 							if ($results) {
 								foreach($results as $result) {
-									echo "<tr  class=\"event".(!$result["member_active"] ? " na" : "")."\">";
+									echo "<tr  class=\"event".(!$result["active"] ? " na" : "")."\">";
 									echo "	<td class=\"modified\"><input type=\"checkbox\" class=\"delchk\" name=\"checked[]\" onclick=\"memberChecks()\" value=\"".$result["cgaudience_id"]."\" /></td>\n";
 									echo "	<td><a href=\"".ENTRADA_URL."/people?profile=".$result["username"]."\" >".html_encode($result["fullname"])."</a></td>";
 									echo "	<td><a href=\"".ENTRADA_URL."/people?profile=".$result["username"]."\" >".$result["grouprole"]."</a></td>";
@@ -349,7 +349,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 																AND c.`audience_active` = 1
 																AND d.`start_date` <= ".$db->qstr(time())."
 																AND d.`finish_date` >= ".$db->qstr(time())."
-																AND d.`group_active` = 1
+																AND d.`active` = 1
 																AND (d.`start_date` <= ".$db->qstr(time())." OR d.`start_date` = 0)
 																AND (d.`expire_date` >= ".$db->qstr(time())." OR d.`start_date` = 0)
 																
@@ -380,7 +380,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 										}
 
 										$current_member_list	= array();
-										$query		= "SELECT `proxy_id` FROM `course_group_audience` WHERE `cgroup_id` = ".$db->qstr($GROUP_ID)." AND `member_active` = '1'";
+										$query		= "SELECT `proxy_id` FROM `course_group_audience` WHERE `cgroup_id` = ".$db->qstr($GROUP_ID)." AND `active` = '1'";
 										$results	= $db->GetAll($query);
 										if($results) {
 											foreach($results as $result) {

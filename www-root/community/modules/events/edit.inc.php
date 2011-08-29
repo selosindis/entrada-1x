@@ -217,7 +217,7 @@ if ($RECORD_ID) {
 					</tr>
 					<tr>
 						<td>&nbsp;</td>
-						<td colspan="2"><label for="event_description" class="form-required">Event Body</label></td>
+						<td colspan="2"><label for="event_description" class="form-nrequired">Event Details / Description</label></td>
 					</tr>
 					<tr>
 						<td>&nbsp;</td>

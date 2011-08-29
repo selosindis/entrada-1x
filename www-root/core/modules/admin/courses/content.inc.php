@@ -380,7 +380,6 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							$OTHER_DIRECTORS[] = $sub_result["proxy_id"];
 						}
 					}
-					$course_ids_string = $COURSE_ID;
 					require_once(ENTRADA_ABSOLUTE."/javascript/courses.js.php");
 
 					courses_subnavigation($course_details);

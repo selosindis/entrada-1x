@@ -65,6 +65,29 @@ if (!defined("IN_EVENTS")) {
 
 		switch ($options_for) {
 			case "cohorts" : // Classes
+				/**
+				 * Cohorts.
+				 */
+				if ((isset($_POST["event_audience_cohorts"]))) {
+					$associated_audience = explode(',', $_POST["event_audience_cohorts"]);
+					if ((isset($associated_audience)) && (is_array($associated_audience)) && (count($associated_audience))) {
+						foreach($associated_audience as $audience_id) {
+							if (strpos($audience_id, "group") !== false) {
+								if ($group_id = clean_input(preg_replace("/[a-z_]/", "", $audience_id), array("trim", "int"))) {
+									$query = "	SELECT *
+												FROM `groups`
+												WHERE `group_id` = ".$db->qstr($group_id)."
+												AND `group_type` = 'cohort'
+												AND `group_active` = 1";
+									$result	= $db->GetRow($query);
+									if ($result) {
+										$PROCESSED["associated_cohort_ids"][] = $group_id;
+									}
+								}
+							}
+						}
+					}
+				}
 				$groups = $organisation;
 				
 				$query = "	SELECT a.*
@@ -77,17 +100,8 @@ if (!defined("IN_EVENTS")) {
 							ORDER BY a.`group_name` DESC";
 				$groups_results = $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
 				if ($groups_results) {
-					$cohort_ids = array();
-					if ($event_id) {
-						$query = "SELECT `audience_value` FROM `event_audience` WHERE `event_id` = ".$db->qstr($event_id)." AND `audience_type` = 'cohort'";
-						$cohorts = $db->GetAll($query);
-						foreach ($cohorts as $cohort) {
-							$cohort_ids[] = $cohort["audience_value"];
-						}
-					}
-					
 					foreach ($groups_results as $group) {
-						if (isset($event_id) && in_array($group["group_id"], $cohort_ids)) {
+						if (in_array($group["group_id"], $PROCESSED["associated_cohort_ids"])) {
 							$checked = "checked=\"checked\"";
 						} else {
 							$checked = "";
@@ -102,6 +116,29 @@ if (!defined("IN_EVENTS")) {
 				}
 			break;
 			case "course_groups" :
+				/**
+				 * Course Groups
+				 */
+				if (isset($_POST["event_audience_course_groups"]) && isset($PROCESSED["course_id"]) && $PROCESSED["course_id"]) {
+					$associated_audience = explode(',', $_POST["event_audience_course_groups"]);
+					if ((isset($associated_audience)) && (is_array($associated_audience)) && (count($associated_audience))) {
+						foreach($associated_audience as $audience_id) {
+							if (strpos($audience_id, "cgroup") !== false) {
+								if ($cgroup_id = clean_input(preg_replace("/[a-z_]/", "", $audience_id), array("trim", "int"))) {
+									$query = "	SELECT *
+												FROM `course_groups`
+												WHERE `cgroup_id` = ".$db->qstr($cgroup_id)."
+												AND `course_id` = ".$db->qstr($PROCESSED["course_id"])."
+												AND (`active` = '1')";
+									$result	= $db->GetRow($query);
+									if ($result) {
+										$PROCESSED["associated_cgroup_ids"][] = $cgroup_id;
+									}
+								}
+							}
+						}
+					}
+				}
 				$groups = $organisation;
 				
 				$query = "	SELECT a.*
@@ -111,17 +148,8 @@ if (!defined("IN_EVENTS")) {
 							ORDER BY LENGTH(a.`group_name`), a.`group_name` ASC"; // The LENGTH sort is a MySQL natural sorting hack.
 				$groups_results = $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
 				if ($groups_results) {
-					
-					$course_group_ids = array();
-					if ($event_id) {
-						$query = "SELECT `audience_value` FROM `event_audience` WHERE `event_id` = ".$db->qstr($event_id)." AND `audience_type` = 'group_id'";
-						$course_groups = $db->GetAll($query);
-						foreach ($course_groups as $course_group) {
-							$course_group_ids[] = $course_group["audience_value"];
-						}
-					}
 					foreach ($groups_results as $group) {
-						if (isset($event_id) && in_array($group["group_id"], $course_group_ids)) {
+						if (in_array($group["group_id"], $PROCESSED["associated_cgroup_ids"])) {
 							$checked = "checked=\"checked\"";
 						} else {
 							$checked = "";
@@ -136,6 +164,33 @@ if (!defined("IN_EVENTS")) {
 				}
 			break;
 			case "students" : // Students
+				/**
+				 * Learners
+				 */
+				if ((isset($_POST["event_audience_students"]))) {
+					$associated_audience = explode(',', $_POST["event_audience_students"]);
+					if ((isset($associated_audience)) && (is_array($associated_audience)) && (count($associated_audience))) {
+						foreach($associated_audience as $audience_id) {
+							if (strpos($audience_id, "student") !== false) {
+								if ($proxy_id = clean_input(preg_replace("/[a-z_]/", "", $audience_id), array("trim", "int"))) {
+									$query = "	SELECT a.*
+												FROM `".AUTH_DATABASE."`.`user_data` AS a
+												LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+												ON a.`id` = b.`user_id`
+												WHERE a.`id` = ".$db->qstr($proxy_id)."
+												AND b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+												AND b.`account_active` = 'true'
+												AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
+												AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")";
+									$result	= $db->GetRow($query);
+									if ($result) {
+										$PROCESSED["associated_proxy_ids"][] = $proxy_id;
+									}
+								}
+							}
+						}
+					}
+				}
 				$students = $organisation;
 
 				$query = "	SELECT a.`id` AS `proxy_id`, a.`organisation_id`, b.`role`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`
@@ -154,17 +209,8 @@ if (!defined("IN_EVENTS")) {
 							ORDER BY a.`grad_year` DESC, a.`lastname` ASC, a.`firstname` ASC";
 				$student_results = $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
 				if ($student_results) {
-					
-					$proxy_ids = array();
-					if ($event_id) {
-						$query = "SELECT `audience_value` FROM `event_audience` WHERE `event_id` = ".$db->qstr($event_id)." AND `audience_type` = 'proxy_id'";
-						$associated_students = $db->GetAll($query);
-						foreach ($associated_students as $associated_student) {
-							$proxy_ids[] = $associated_student["audience_value"];
-						}
-					}
 					foreach ($student_results as $student) {
-						if (isset($event_id) && in_array($student["proxy_id"], $proxy_ids)) {
+						if (in_array($student["proxy_id"], $PROCESSED["associated_proxy_ids"])) {
 							$checked = "checked=\"checked\"";
 						} else {
 							$checked = "";

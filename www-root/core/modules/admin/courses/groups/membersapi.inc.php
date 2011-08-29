@@ -91,7 +91,7 @@ if(isset($GROUP_ID)) {
 	}
 	
 	if(isset($ORGANISATION_ID) && isset($GROUP) && isset($ROLE)) {
-		$query			= "SELECT * FROM `course_groups` WHERE `cgroup_id` = ".$db->qstr($GROUP_ID)." AND `group_active` = '1'";
+		$query			= "SELECT * FROM `course_groups` WHERE `cgroup_id` = ".$db->qstr($GROUP_ID)." AND `active` = '1'";
 		$group_details	= $db->GetRow($query);
 		if($group_details) {
 			if($ENTRADA_ACL->amIAllowed('group', 'update')) {
@@ -141,7 +141,7 @@ if(isset($GROUP_ID)) {
 									AND c.`audience_active` = 1
 									AND f.`start_date` <= ".$db->qstr(time())."
 									AND f.`finish_date` >= ".$db->qstr(time())."
-									AND d.`group_active` = 1
+									AND d.`active` = 1
 									AND (d.`start_date` <= ".$db->qstr(time())." OR d.`start_date` = 0)
 									AND (d.`expire_date` >= ".$db->qstr(time())." OR d.`start_date` = 0)
 									AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
@@ -155,7 +155,7 @@ if(isset($GROUP_ID)) {
 
 				//Fetch list of current members
 				$current_member_list	= array();
-				$query		= "SELECT `proxy_id` FROM `course_group_audience` WHERE `cgroup_id` = ".$db->qstr($GROUP_ID)." AND `member_active` = '1'";
+				$query		= "SELECT `proxy_id` FROM `course_group_audience` WHERE `cgroup_id` = ".$db->qstr($GROUP_ID)." AND `active` = '1'";
 				$results	= $db->GetAll($query);
 				if($results) {
 					foreach($results as $result) {

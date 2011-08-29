@@ -109,10 +109,10 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 				foreach($GROUP_IDS as $cgaudience_id) {
 					switch ($_POST["coa"]) {
 						case "deactivate":
-							$db->Execute("UPDATE `course_group_audience` SET `member_active`='0' WHERE `cgaudience_id` = ".$db->qstr($cgaudience_id));
+							$db->Execute("UPDATE `course_group_audience` SET `active`='0' WHERE `cgaudience_id` = ".$db->qstr($cgaudience_id));
 						break;
 						case "activate":
-							$db->Execute("UPDATE `course_group_audience` SET `member_active`='1' WHERE `cgaudience_id` = ".$db->qstr($cgaudience_id));
+							$db->Execute("UPDATE `course_group_audience` SET `active`='1' WHERE `cgaudience_id` = ".$db->qstr($cgaudience_id));
 						break;
 						case "delete":
 							$db->Execute("DELETE FROM `course_group_audience` WHERE `cgaudience_id` = ".$db->qstr($cgaudience_id));
@@ -128,10 +128,10 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 					if($group_id = (int) $group_id) {
 						switch ($_POST["coa"]) {
 							case "deactivate":
-								$db->Execute("UPDATE `course_groups` SET `group_active`='0' WHERE `cgroup_id` = ".$db->qstr($group_id));
+								$db->Execute("UPDATE `course_groups` SET `active`='0' WHERE `cgroup_id` = ".$db->qstr($group_id));
 							break;
 							case "activate":
-								$db->Execute("UPDATE `course_groups` SET `group_active`='1' WHERE `cgroup_id` = ".$db->qstr($group_id));
+								$db->Execute("UPDATE `course_groups` SET `active`='1' WHERE `cgroup_id` = ".$db->qstr($group_id));
 							break;
 							case "delete":
 								$query	= "	SELECT `cgroup_id`,  `group_name`
@@ -231,7 +231,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 				echo "<h1>De/Activate or Delete Member".($MEMBERS>1?"s":"")."</h1>";
 
 				$results = $db->getAll ("SELECT c.`cgaudience_id`, CONCAT_WS(' ', a.`firstname`, a.`lastname`) AS `fullname`,
-										CONCAT_WS(':', b.`group`, b.`role`) AS `grouprole`, c.`cgroup_id`, d.`group_name`, c.`member_active`
+										CONCAT_WS(':', b.`group`, b.`role`) AS `grouprole`, c.`cgroup_id`, d.`group_name`, c.`active`
 										FROM `".AUTH_DATABASE."`.`user_data` AS a
 										LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 										ON a.`id` = b.`user_id`
@@ -284,7 +284,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 									foreach ($results as $result) {
 										$url 	= ENTRADA_URL."/admin/courses/groups?section=edit&amp;gid=".$result["group_id"]."&amp;id=".$COURSE_ID;
 								
-										echo "<tr id=\"group-".$result["cgroup_id"]."\" class=\"event".((!$url) ? " np" : ((!$result["member_active"]) ? " na" : ""))."\">\n";
+										echo "<tr id=\"group-".$result["cgroup_id"]."\" class=\"event".((!$url) ? " np" : ((!$result["active"]) ? " na" : ""))."\">\n";
 										echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"checked[]\" value=\"".$result["cgaudience_id"]."\" checked=\"checked\" /></td>\n";
 										echo "	<td class=\"community_title".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Name: ".html_encode($result["fullname"])."\">" : "").html_encode($result["fullname"]).(($url) ? "</a>" : "")."</td>\n";
 										echo "	<td class=\"community_shortname".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Group Name: ".html_encode($result["group_name"])."\">" : "").html_encode($result["group_name"]).(($url) ? "</a>" : "")."</td>\n";
@@ -356,7 +356,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 									if($ENTRADA_ACL->amIAllowed('course', 'update')) {
 										$url 	= ENTRADA_URL."/admin/courses/groups?section=edit&amp;gid=".$result["group_id"]."&amp;id=".$COURSE_ID;
 								
-										echo "<tr id=\"group-".$result["cgroup_id"]."\" class=\"event".((!$url) ? " np" : ((!$result["group_active"]) ? " na" : ""))."\">\n";
+										echo "<tr id=\"group-".$result["cgroup_id"]."\" class=\"event".((!$url) ? " np" : ((!$result["active"]) ? " na" : ""))."\">\n";
 										echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"checked[]\" value=\"".$result["cgroup_id"]."\" checked=\"checked\" /></td>\n";
 										echo "	<td class=\"community_title".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Group Name: ".html_encode($result["group_name"])."\">" : "").html_encode($result["group_name"]).(($url) ? "</a>" : "")."</td>\n";
 										echo "	<td class=\"community_shortname".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Number of sembers: ".$result["members"]."\">" : "").$result["members"].(($url) ? "</a>" : "")."</td>\n";

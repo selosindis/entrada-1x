@@ -69,7 +69,7 @@ function addObjective(element, primary) {
 		new Ajax.Updater('objectives_list', '<?php echo ENTRADA_URL; ?>/api/objectives.api.php', 
 			{
 				method:	'post',
-				parameters: 'course_ids=<?php echo $course_ids_string ?>&org_id=<?php echo $ORGANISATION_ID;?>&top_level_id=<?php echo $top_level_id;?>&primary_ids='+ids["primary"]+"&secondary_ids="+ids["secondary"]+"&tertiary_ids="+ids["tertiary"]
+				parameters: 'course_ids=<?php echo $COURSE_ID ?>&org_id=<?php echo $ENTRADA_USER->getActiveOrganisation();?>&top_level_id=<?php echo $top_level_id;?>&primary_ids='+ids["primary"]+"&secondary_ids="+ids["secondary"]+"&tertiary_ids="+ids["tertiary"]
 	    	}
 	    );
 	}
@@ -158,7 +158,7 @@ function removeObjective(element, primary) {
 	new Ajax.Updater('objectives_list', '<?php echo ENTRADA_URL; ?>/api/objectives.api.php', 
 		{
 			method:	'post',
-			parameters: 'course_ids=<?php echo $course_ids_string ?>&org_id=<?php echo $ORGANISATION_ID;?>&top_level_id=<?php echo $top_level_id;?>&primary_ids='+ids["primary"]+"&secondary_ids="+ids["secondary"]+"&tertiary_ids="+ids["tertiary"]
+			parameters: 'course_ids=<?php echo $COURSE_ID ?>&org_id=<?php echo $ENTRADA_USER->getActiveOrganisation();?>&top_level_id=<?php echo $top_level_id;?>&primary_ids='+ids["primary"]+"&secondary_ids="+ids["secondary"]+"&tertiary_ids="+ids["tertiary"]
     	}
     );
 	tr.removeClassName(importance_string);
@@ -272,7 +272,7 @@ function moveObjective(objective_id, move_location) {
 	new Ajax.Updater('objectives_list', '<?php echo ENTRADA_URL; ?>/api/objectives.api.php', 
 		{
 			method:	'post',
-			parameters: 'course_ids=<?php echo $course_ids_string ?>&org_id=<?php echo $ORGANISATION_ID;?>&top_level_id=<?php echo $top_level_id;?>&primary_ids='+ids["primary"]+"&secondary_ids="+ids["secondary"]+"&tertiary_ids="+ids["tertiary"]
+			parameters: 'course_ids=<?php echo $COURSE_ID ?>&org_id=<?php echo $ENTRADA_USER->getActiveOrganisation(); ?>&top_level_id=<?php echo $top_level_id;?>&primary_ids='+ids["primary"]+"&secondary_ids="+ids["secondary"]+"&tertiary_ids="+ids["tertiary"]
     	}
     );
 }

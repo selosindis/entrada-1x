@@ -82,7 +82,7 @@ return array (
 			"label" => "Student Filters"
 		),
 		"group" => array (
-			"label" => "Classes &amp; Group Filters"
+			"label" => "Cohort Filters"
 		),
 		"course" => array (
 			"label" => "Course Filters"

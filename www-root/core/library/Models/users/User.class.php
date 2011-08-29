@@ -349,7 +349,7 @@ class User {
 
 		//get all of the users orgs
 		$query = "SELECT b.`organisation_id`, b.`organisation_title`
-					  FROM `" . AUTH_DATABASE . "`.`user_organisation` a
+					  FROM `" . AUTH_DATABASE . "`.`user_organisations` a
 					  JOIN `" . AUTH_DATABASE . "`.`organisations` b
 						  on a.`organisation_id` = b.`organisation_id`
 					  WHERE a.`proxy_id` = ?";

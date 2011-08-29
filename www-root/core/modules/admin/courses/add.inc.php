@@ -205,6 +205,37 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			} else {
 				$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] = "content";
 			}
+
+			
+			if (isset($_POST["periods"]) && is_array($_POST["periods"]) && $periods = $_POST["periods"]) {
+				foreach ($periods as $key=>$unproced_period) {
+					$period_id = (int)$unproced_period;
+
+					if (isset($_POST["group_audience_members"][$key]) && strlen($_POST["group_audience_members"][$key]) && $group_member_string = clean_input($_POST["group_audience_members"][$key],array("trim","notags"))) {
+						$group_members = explode(",",$group_member_string);
+						if ($group_members) {
+							foreach ($group_members as $member) {
+								$PROCESSED["periods"][$period_id][]=array("audience_type"=>'group_id',"audience_value"=>$member,"cperiod_id"=>$period_id,"audience_active"=>1);
+
+								//$query = "	INSERT INTO `course_audience` VALUES(NULL,".$db->qstr($COURSE_ID).",'group_id',".$db->qstr($member).",0,0,1)";
+							}
+						}
+					}
+
+					if (isset($_POST["individual_audience_members"][$key]) && strlen($_POST["individual_audience_members"][$key]) && $individual_member_string = clean_input($_POST["individual_audience_members"][$key],array("trim","notags"))) {
+						$individual_members = explode(",",$individual_member_string);
+						if ($individual_members) {
+							foreach ($individual_members as $member) {
+								$PROCESSED["periods"][$period_id][]=array("audience_type"=>'proxy_id',"audience_value"=>$member,"cperiod_id"=>$period_id,"audience_active"=>1);
+
+								//$query = "	INSERT INTO `course_audience` VALUES(NULL,".$db->qstr($COURSE_ID).",'proxy_id',".$db->qstr($member).",0,0,1)";
+							}
+						}
+					}								
+
+				}
+
+			}			
 			
 			if (!has_error()) {
 				$PROCESSED["updated_date"] = time();
@@ -268,34 +299,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							}
 						}
 						
-						if (isset($_POST["periods"]) && is_array($_POST["periods"]) && $periods = $_POST["periods"]) {
-							foreach ($periods as $key => $unproced_period) {
-								$period_id = (int) $unproced_period;
-								
-								if (isset($_POST["group_audience_members"][$key]) && strlen($_POST["group_audience_members"][$key]) && ($group_member_string = clean_input($_POST["group_audience_members"][$key], array("trim","notags")))) {
-									$group_members = explode(",", $group_member_string);
-									if ($group_members) {
-										foreach ($group_members as $member) {
-											$PROCESSED["periods"][$period_id][] = array("course_id" => $COURSE_ID, "audience_type" => "group_id", "audience_value" => $member, "cperiod_id" => $period_id, "audience_active" => 1);
-											
-											if (!$db->AutoExecute("course_audience", $PROCESSED["periods"][$period_id][(count($PROCESSED["periods"][$period_id]) - 1)], "INSERT")) {
-												add_error("An error occurred while adding the group with id ".$member." as an audience member.");
-											}
-										}
-									}
+						foreach ($PROCESSED["periods"] as $period_id=>$period) {
+							foreach ($period as $key=>$audience) {
+								$audience["course_id"] = $COURSE_ID;
+								//if(!$db->AutoExecute("course_audience",$PROCESSED["periods"][$period_id][(count($PROCESSED["periods"][$period_id])-1)],"INSERT")) {
+								if(!$db->AutoExecute("course_audience",$audience,"INSERT")) {
+									add_error("An error occurred while adding the student with id ".$member." as an audience member.");
 								}
-								
-								if (isset($_POST["individual_audience_members"][$key]) && strlen($_POST["individual_audience_members"][$key]) && ($individual_member_string = clean_input($_POST["individual_audience_members"][$key], array("trim","notags")))) {
-									$individual_members = explode(",",$individual_member_string);
-									if ($individual_members) {
-										foreach ($individual_members as $member) {
-											$PROCESSED["periods"][$period_id][] = array("course_id" => $COURSE_ID, "audience_type" => "proxy_id", "audience_value" => $member, "cperiod_id" => $period_id, "audience_active" => 1);
-											if(!$db->AutoExecute("course_audience", $PROCESSED["periods"][$period_id][(count($PROCESSED["periods"][$period_id]) - 1)], "INSERT")) {
-												add_error("An error occurred while adding the student with id ".$member." as an audience member.");
-											}
-										}
-									}
-								}								
 							}
 						}
 						
@@ -314,6 +324,66 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 									$url = ENTRADA_URL."/admin/".$MODULE;
 									$msg = "You will now be redirected to the course index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 								break;
+							
+
+						/*
+						if (isset($_POST["group_order"]) && strlen($_POST["group_order"])) {
+								$groups = explode(",", clean_input($_POST["group_order"],array("notags","trim")));
+								if ($_POST["period"] && $cperiod_id = clean_input($_POST["period"], array("trim", "int"))) {		
+									if ((is_array($groups)) && (count($groups))) {
+										
+										$new_groups = array();
+										
+										foreach ($groups as $group_id) {
+											$new_groups[] = $group_id;
+										}
+										
+										foreach($new_groups as $order => $group_id) {
+											if ($group_id = clean_input($group_id, array("trim", "int"))) {
+												$query = "SELECT `group_name` FROM `groups` WHERE `group_id` = ".$db->qstr($group_id);
+												$result	= $db->GetRow($query);
+												if ($result) {
+													$PROCESSED["groups"][] = array("id" => $group_id, "title" => $result["group_name"]);
+													
+													if(!$db->AutoExecute("course_audience", array("audience_type" => "group_id", "audience_value" => $group_id, "course_id" => $COURSE_ID, "cperiod_id" => $cperiod_id), "INSERT")){
+														add_error("Unable to insert the group [".$group_id."] as an audience member for course [".$COURSE_ID."]. Please try again later.");				
+													}
+
+												} else {
+													$ERROR++;
+													$ERRORSTR[] = "One of the <strong>groups</strong> you specified was invalid.";
+												}
+											} else {
+												$ERROR++;
+												$ERRORSTR[] = "One of the <strong>groups</strong> you specified is invalid.";
+											}
+										}
+									}		
+								}
+							}
+							if ($_POST["period"] && $cperiod_id = clean_input($_POST["period"], array("trim", "int"))) {	
+								if (isset($_POST["associated_student"]) && strlen($_POST["associated_student"])) {
+									$PROCESSED["associated_students"] = explode(",",clean_input($_POST["associated_student"], array("notags", "trim")));
+									if (isset($PROCESSED["associated_students"]) && is_array($PROCESSED["associated_students"])) {
+										
+										$new_students = array();
+										
+										foreach ($PROCESSED["associated_students"] as $student_id) {
+											
+											$new_students[] = $student_id;
+										}
+																				
+										foreach($new_students as $student_id){
+											if(!$db->AutoExecute("course_audience", array("audience_type" => "proxy_id", "audience_value" => $student_id, "course_id" => $COURSE_ID, "cperiod_id" => $cperiod_id), "INSERT")){
+												add_error("Unable to insert the student [".$student_id."] as an audience member for course [".$COURSE_ID."]. Please try again later.");				
+											}
+										}
+									}
+								}
+							} elseif ((isset($_POST["associated_student"]) && strlen($_POST["associated_student"])) || isset($_POST["group_order"]) && strlen($_POST["group_order"])) {
+								$ERROR++;
+								$ERRORSTR[] = "Please ensure you select an <strong>Enrollment period</strong> for the selected course audience.";*/
+
 							}
 							
 							$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
@@ -322,6 +392,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							application_log("success", "New course [".$COURSE_ID."] added to the system.");
 						}
 					}
+					
 				} else {
 					add_error("There was a problem inserting this course into the system. The system administrator was informed of this error; please try again later.");
 
@@ -1098,15 +1169,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					</tbody>
 				</table>
 				<div id="period_list">
+
 					<h1 style="font-size:14px;">Active Periods</h1>
 					<?php 
 					if (isset($PROCESSED["periods"])) {
 						foreach ($PROCESSED["periods"] as $key=>$period) {
 							$query = "SELECT * FROM `curriculum_periods` WHERE `cperiod_id` = ".$db->qstr($key);
 							$period_data = $db->GetRow($query);
+
 							?>
 							<div class="period_item" id="period_item_<?php echo $key;?>" style="margin-bottom:20px;">
-								<h3><img src="<?php echo ENTRADA_RELATIVE;?>/images/action-delete.gif" style="vertical-align:top;margin-right:20px;cursor:pointer;" class="remove_period" id="remove_period_<?php echo $key;?>" /><?php echo date("F jS,Y",$period_data["start_date"])." to ".date("F jS,Y",$period_data["finish_date"]);?></h3>
+								<h3><img src="<?php echo ENTRADA_RELATIVE;?>/images/action-delete.gif" style="vertical-align:top;margin-right:20px;cursor:pointer;" class="remove_period" id="remove_period_<?php echo $key;?>"/><?php echo date("F jS,Y",$period_data["start_date"])." to ".date("F jS,Y",$period_data["finish_date"]);?></h3>
 								<div class="audience_list" id="audience_list_<?php echo $key;?>" style="margin-bottom:10px;">
 									<h4>Associated Groups</h4>	
 								<ol id="audience_container_<?php echo $key;?>" class="sortableList"">
@@ -1126,6 +1199,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 
 									}
 									?>
+
 								</ol>
 									<h4>Associated Students</h4>
 									<ul id="student_<?php echo $key;?>_list" class="menu" style="margin-top: 15px;width:390px;">
@@ -1139,7 +1213,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 												$audience["title"] = $db->GetOne($query);
 
 											?>
-										<li id="student_<?php echo $key.'_'.$audience["audience_value"];?>" style="cursor: move; position: relative; " class="user"><?php echo $audience["title"];?><img src="<?php echo ENTRADA_RELATIVE;?>/images/action-delete.gif" class="list-cancel-image"></li>
+										<li id="student_<?php echo $key.'_'.$audience["audience_value"];?>" style="cursor: move; position: relative; " class="user"><?php echo $audience["title"];?><img src="<?php echo ENTRADA_RELATIVE;?>/images/action-delete.gif" class="list-cancel-image" onclick="removeItem('<?php echo $audience["audience_value"];?>','student_<?php echo $key;?>')"></li>
 												<?php
 												break;
 										}
@@ -1147,29 +1221,30 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 									?>
 									</ul>
 								</div>
+
 								<select class="audience_type_select" id="audience_type_select_<?php echo $key;?>" onchange="showSelect(<?php echo $key;?>,this.options[this.selectedIndex].value)"><option value="0">-- Select Audience Type --</option></option><option value="cohort">Cohort</option><option value="individual">Individual</option></select>
 								<select style="display:none;" class="type_select" id="cohort_select_<?php echo $key;?>" onchange="addAudience(<?php echo $key;?>,this.options[this.selectedIndex].text,'cohort',this.options[this.selectedIndex].value)"><option value="0">-- Add Cohort --</option>
 								<?php 
-								foreach ($groups as $group) {
-									echo "<option value=\"".$group["group_id"]."\" ".((in_array($group["group_id"],$group_ids[$key]))?" disabled=\"disabled\"":"").">".$group["group_name"]."</option>";		
-								}
-								?>
+								foreach($groups as $group) {
+									echo "<option value=\"".$group["group_id"]."\"".((in_array($group["group_id"],$group_ids[$key]))?" disabled=\"disabled\"":"").">".$group["group_name"]."</option>";
+								}?>
 								</select>
-								<input style="display:none;width:203px;vertical-align: middle;margin-left:10px;margin-right:10px;" type="text" class="type_select" id="individual_select_<?php echo $period["cperiod_id"];?>"/><input style="display:none;" type="button" class="button-sm type_select" id="add_associated_student_<?php echo $key;?>" onclick="addAudience(<?php echo $key;?>,null,'individual')" value="Add" style="vertical-align: middle" />
-								<input style="display:none;width:203px;vertical-align: middle;margin-left:10px;margin-right:10px;" type="text" class="type_select" id="student_<?php echo $key;?>_name" autocomplete="off"/><input style="display:none;" type="button" class="button-sm type_select" id="add_associated_student_<?php echo $key;?>" onclick="addItem('student_<?php echo $key;?>')" value="Add" style="vertical-align: middle" />
+								<input style="display:none;width:203px;vertical-align: middle;margin-left:10px;margin-right:10px;" type="text" name="fullname" class="type_select" id="student_<?php echo $key;?>_name" autocomplete="off"/><input style="display:none;" type="button" class="button-sm type_select" id="add_associated_student_<?php echo $key;?>" value="Add" style="vertical-align: middle" />
 								<div class="autocomplete" id="student_<?php echo $key;?>_name_auto_complete" style="margin-left:200px;"></div>
 								<div id="student_<?php echo $key;?>">(Example: Thorn, Brandon)</div>
-								<input type="hidden" name="group_audience_members[]" id="group_audience_members_<?php echo $key;?>" value="<?php echo explode(',',$group_ids);?>"/>
+								<input type="hidden" name="group_audience_members[]" id="group_audience_members_<?php echo $key;?>" value="<?php echo implode(',',$group_ids[$key]);?>"/>
 								<input type="hidden" name="individual_audience_members[]" id="associated_student_<?php echo $key;?>"/>
 								<input type="hidden" name="student_id[]" id="student_<?php echo $key;?>_id"/>
 								<input type="hidden" name="student_ref[]" id="student_<?php echo $key;?>_ref"/>
 								<input type="hidden" name="periods[]" value="<?php echo $key;?>"/>
+								<?php $ONLOAD[] = "new AutoCompleteList({ type: 'student_".$key."', url: '".ENTRADA_RELATIVE."/api/personnel.api.php?type=student', remove_image: '".ENTRADA_RELATIVE."/images/action-delete.gif'})";?>
 							</div>
-					
+
 							<?php
 						}
 					} 
 					?>
+
 				</div>
 			</div>
 			
@@ -1273,7 +1348,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					$$('.course_audience').invoke('hide');
 					$$('.'+type+'_audience').invoke('show');
 				}
-				jQuery('#period_list').hide();
+				
 
 				jQuery('.remove_period').live('click',function(e){
 					var id_info = e.target.id.split('_');

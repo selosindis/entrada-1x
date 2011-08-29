@@ -194,6 +194,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						}
 					}					
 					
+
 					/**
 					 * Non-required field "pcoord_id" .
 					 */
@@ -237,6 +238,42 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					} else {
 						$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] = "content";
 					}
+
+					if (isset($_POST["periods"]) && is_array($_POST["periods"]) && $periods = $_POST["periods"]) {
+						foreach ($periods as $key=>$unproced_period) {
+							$period_id = (int)$unproced_period;
+							
+							$period_list[]=$period_id;
+							
+							if (isset($_POST["group_audience_members"][$key]) && strlen($_POST["group_audience_members"][$key]) && $group_member_string = clean_input($_POST["group_audience_members"][$key],array("trim","notags"))) {
+								$group_members = explode(",",$group_member_string);
+								if ($group_members) {
+									foreach ($group_members as $member) {
+										$group_list[] = $member["audience_value"];
+										$PROCESSED["periods"][$period_id][]=array("audience_type"=>'group_id',"audience_value"=>$member,"cperiod_id"=>$period_id,"audience_active"=>1);
+
+										//$query = "	INSERT INTO `course_audience` VALUES(NULL,".$db->qstr($COURSE_ID).",'group_id',".$db->qstr($member).",0,0,1)";
+									}
+								}
+							}
+
+							if (isset($_POST["individual_audience_members"][$key]) && strlen($_POST["individual_audience_members"][$key]) && $individual_member_string = clean_input($_POST["individual_audience_members"][$key],array("trim","notags"))) {
+								$individual_members = explode(",",$individual_member_string);
+								if ($individual_members) {
+									foreach ($individual_members as $member) {
+										$individual_list[] = $member["audience_value"];
+										$PROCESSED["periods"][$period_id][]=array("audience_type"=>'proxy_id',"audience_value"=>$member,"cperiod_id"=>$period_id,"audience_active"=>1);
+
+										//$query = "	INSERT INTO `course_audience` VALUES(NULL,".$db->qstr($COURSE_ID).",'proxy_id',".$db->qstr($member).",0,0,1)";
+									}
+								}
+							}								
+
+						}
+
+					}					
+					
+
 					
 					if (!has_error()) {
 						$PROCESSED["updated_date"]	= time();
@@ -398,65 +435,39 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								}
 							}
 
-							if (isset($_POST["periods"]) && is_array($_POST["periods"]) && $periods = $_POST["periods"]) {
-								foreach ($periods as $key=>$unproced_period) {
-									$period_id = (int)$unproced_period;
 
-									if (isset($_POST["group_audience_members"][$key]) && strlen($_POST["group_audience_members"][$key]) && ($group_member_string = clean_input($_POST["group_audience_members"][$key], array("trim","notags")))) {
-// @todo bt37 Do you really not want to delete course_audience information unless the above is true? What if you're trying to to remove everyone?
-										$query = "	DELETE FROM `course_audience` 
-													WHERE `audience_type` = 'group_id' 
-													AND `course_id`=".$db->qstr($COURSE_ID)." 
-													AND `cperiod_id` = ".$db->qstr($period_id)."
-													AND `audience_value` NOT IN(".$group_member_string.")";
-										$db->Execute($query);
-
-										$group_members = explode(",",$group_member_string);
-										if ($group_members) {
-											foreach ($group_members as $member) {
-												$PROCESSED["periods"][$period_id][]=array("course_id"=>$COURSE_ID,"audience_type"=>'group_id',"audience_value"=>$member,"cperiod_id"=>$period_id,"audience_active"=>1);
-												$query = "	SELECT * FROM `course_audience` 
-															WHERE `audience_type`='group_id'
-															AND `course_id`=".$db->qstr($COURSE_ID)." 
-															AND `cperiod_id` = ".$db->qstr($period_id)."
-															AND `audience_value`=".$db->qstr($member);
-												$row = $db->GetRow($query);
-												if(!$row){
-													if (!$db->AutoExecute("course_audience",$PROCESSED["periods"][$period_id][(count($PROCESSED["periods"][$period_id])-1)],"INSERT")) {
-														add_error("An error occurred while adding the group with id ".$member." as an audience member.");
-													}
-												}
+							
+							
+							$query = "	DELETE FROM `course_audience` WHERE `course_id` = ".$db->qstr($COURSE_ID).(isset($period_list)?" AND `cperiod_id` NOT IN (".implode(",",$period_list).")":"");
+							$db->Execute($query);
+										
+							
+							
+							if ($PROCESSED["periods"]) {
+								foreach ($PROCESSED["periods"] as $period_id=>$period) {
+									$query = "	DELETE FROM `course_audience` WHERE `course_id` = ".$db->qstr($COURSE_ID)." AND `period_id` = ".$db->qstr($period_id)." AND `audience_type` = 'group_id'".(isset($group_list)?" AND `audience_value` NOT IN (".implode(",",$group_list).")":"");
+									$db->Execute($query);
+									
+									$query = "	DELETE FROM `course_audience` WHERE `course_id` = ".$db->qstr($COURSE_ID)." AND `period_id` = ".$db->qstr($period_id)." AND `audience_type` = 'proxy_id'".(isset($individual_list)?" AND `audience_value` NOT IN (".implode(",",$individual_list).")":"");
+									$db->Execute($query);
+									
+									foreach ($period as $key=>$audience) {
+										$audience["course_id"] = $COURSE_ID;
+										$query = "	SELECT * FROM	`course_audience` 
+													WHERE `course_id` = ".$db->qstr($COURSE_ID)."
+													AND `cperiod_id` = ".$db->qstr($audience["cperiod_id"])."
+													AND `audience_type` = ".$db->qstr($audience["audience_type"])."
+													AND `audience_value` = ".$db->qstr($audience["audience_value"])."
+													AND `audience_active` = 1";
+										
+										if (!$row=$db->GetRow($query)) {
+											//if(!$db->AutoExecute("course_audience",$PROCESSED["periods"][$period_id][(count($PROCESSED["periods"][$period_id])-1)],"INSERT")) {
+											if(!$db->AutoExecute("course_audience",$audience,"INSERT")) {
+												add_error("An error occurred while adding the student with id ".$member." as an audience member.");
 											}
 										}
 									}
 
-									if (isset($_POST["individual_audience_members"][$key]) && strlen($_POST["individual_audience_members"][$key]) && $individual_member_string = clean_input($_POST["individual_audience_members"][$key],array("trim","notags"))) {
-// @todo bt37 Do you really not want to delete course_audience information unless the above is true? What if you're trying to to remove everyone?
-										$query = "	DELETE FROM `course_audience` 
-													WHERE `audience_type` = 'proxy_id' 
-													AND `course_id`=".$db->qstr($COURSE_ID)." 
-													AND `cperiod_id` = ".$db->qstr($period_id)."
-													AND `audience_value` NOT IN(".$individual_member_string.")";
-										$db->Execute($query);
-										
-										$individual_members = explode(",",$individual_member_string);
-										if ($individual_members) {
-											foreach ($individual_members as $member) {
-												$PROCESSED["periods"][$period_id][]=array("course_id"=>$COURSE_ID,"audience_type"=>'proxy_id',"audience_value"=>$member,"cperiod_id"=>$period_id,"audience_active"=>1);
-												$query = "	SELECT * FROM `course_audience` 
-															WHERE `audience_type`='proxy_id'
-															AND `course_id`=".$db->qstr($COURSE_ID)." 
-															AND `cperiod_id` = ".$db->qstr($period_id)."
-															AND `audience_value`=".$db->qstr($member);
-												$row = $db->GetRow($query);
-												if(!$row){
-													if (!$db->AutoExecute("course_audience",$PROCESSED["periods"][$period_id][(count($PROCESSED["periods"][$period_id])-1)],"INSERT")) {
-														add_error("An error occurred while adding the student with id ".$member." as an audience member.");
-													}
-												}
-											}
-										}
-									}								
 								}
 							}
 							

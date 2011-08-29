@@ -106,16 +106,16 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 				}
 				$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/courses/groups?section=edit&id=".$COURSE_ID."&ids=".implode(",", $_SESSION["ids"])."\\'', ".(isset($wait)?$wait:0).")";
 			} elseif ($MEMBERS)  {  // Delete members
-				foreach($GROUP_IDS as $cgmember_id) {
+				foreach($GROUP_IDS as $cgaudience_id) {
 					switch ($_POST["coa"]) {
 						case "deactivate":
-							$db->Execute("UPDATE `course_group_members` SET `member_active`='0' WHERE `cgmember_id` = ".$db->qstr($cgmember_id));
+							$db->Execute("UPDATE `course_group_audience` SET `member_active`='0' WHERE `cgaudience_id` = ".$db->qstr($cgaudience_id));
 						break;
 						case "activate":
-							$db->Execute("UPDATE `course_group_members` SET `member_active`='1' WHERE `cgmember_id` = ".$db->qstr($cgmember_id));
+							$db->Execute("UPDATE `course_group_audience` SET `member_active`='1' WHERE `cgaudience_id` = ".$db->qstr($cgaudience_id));
 						break;
 						case "delete":
-							$db->Execute("DELETE FROM `course_group_members` WHERE `cgmember_id` = ".$db->qstr($cgmember_id));
+							$db->Execute("DELETE FROM `course_group_audience` WHERE `cgaudience_id` = ".$db->qstr($cgaudience_id));
 						break;
 					}
 				}
@@ -142,7 +142,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 									/**
 									 * Remove all records from group_members table.
 									 */
-									$query = "DELETE FROM `course_group_members` WHERE `cgroup_id` = ".$db->qstr($group_id);
+									$query = "DELETE FROM `course_group_audience` WHERE `cgroup_id` = ".$db->qstr($group_id);
 									$db->Execute($query);
 									$removed[$group_id]["group_name"] = $result["group_name"];
 								}
@@ -230,14 +230,14 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 			} elseif ($MEMBERS) {  // Delete members
 				echo "<h1>De/Activate or Delete Member".($MEMBERS>1?"s":"")."</h1>";
 
-				$results = $db->getAll ("SELECT c.`cgmember_id`, CONCAT_WS(' ', a.`firstname`, a.`lastname`) AS `fullname`,
+				$results = $db->getAll ("SELECT c.`cgaudience_id`, CONCAT_WS(' ', a.`firstname`, a.`lastname`) AS `fullname`,
 										CONCAT_WS(':', b.`group`, b.`role`) AS `grouprole`, c.`cgroup_id`, d.`group_name`, c.`member_active`
 										FROM `".AUTH_DATABASE."`.`user_data` AS a
 										LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 										ON a.`id` = b.`user_id`
-										INNER JOIN `course_group_members` c ON a.`id` = c.`proxy_id`
+										INNER JOIN `course_group_audience` c ON a.`id` = c.`proxy_id`
 										INNER JOIN `course_groups` d ON c.`cgroup_id` = d.`cgroup_id`
-										WHERE c.`cgmember_id`  IN (".implode(", ", $GROUP_IDS).")
+										WHERE c.`cgaudience_id`  IN (".implode(", ", $GROUP_IDS).")
 										ORDER by `grouprole`, `lastname`, `firstname`");
 				if($results) {
 					echo display_notice(array("Please review the following member".($MEMBERS>1?"s":"")." to ensure that you wish to, deactivate, activate or <strong>permanently delete</strong> them from the group"));
@@ -285,7 +285,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 										$url 	= ENTRADA_URL."/admin/courses/groups?section=edit&amp;gid=".$result["group_id"]."&amp;id=".$COURSE_ID;
 								
 										echo "<tr id=\"group-".$result["cgroup_id"]."\" class=\"event".((!$url) ? " np" : ((!$result["member_active"]) ? " na" : ""))."\">\n";
-										echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"checked[]\" value=\"".$result["cgmember_id"]."\" checked=\"checked\" /></td>\n";
+										echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"checked[]\" value=\"".$result["cgaudience_id"]."\" checked=\"checked\" /></td>\n";
 										echo "	<td class=\"community_title".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Name: ".html_encode($result["fullname"])."\">" : "").html_encode($result["fullname"]).(($url) ? "</a>" : "")."</td>\n";
 										echo "	<td class=\"community_shortname".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Group Name: ".html_encode($result["group_name"])."\">" : "").html_encode($result["group_name"]).(($url) ? "</a>" : "")."</td>\n";
 										echo "	<td class=\"date".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Role: ".html_encode($result["grouprole"])."\">" : "").html_encode($result["grouprole"]).(($url) ? "</a>" : "")."</td>\n";
@@ -349,7 +349,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 							<tbody>
 							<?php
 								foreach($results as $result) {
-									$result["members"] = $db->GetOne("SELECT COUNT(*) AS members FROM  `course_group_members` WHERE `cgroup_id` = ".$db->qstr($result["cgroup_id"]));
+									$result["members"] = $db->GetOne("SELECT COUNT(*) AS members FROM  `course_group_audience` WHERE `cgroup_id` = ".$db->qstr($result["cgroup_id"]));
 
 									$url			= "";
 

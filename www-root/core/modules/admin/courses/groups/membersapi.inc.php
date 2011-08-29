@@ -155,7 +155,7 @@ if(isset($GROUP_ID)) {
 
 				//Fetch list of current members
 				$current_member_list	= array();
-				$query		= "SELECT `proxy_id` FROM `course_group_members` WHERE `cgroup_id` = ".$db->qstr($GROUP_ID)." AND `member_active` = '1'";
+				$query		= "SELECT `proxy_id` FROM `course_group_audience` WHERE `cgroup_id` = ".$db->qstr($GROUP_ID)." AND `member_active` = '1'";
 				$results	= $db->GetAll($query);
 				if($results) {
 					foreach($results as $result) {

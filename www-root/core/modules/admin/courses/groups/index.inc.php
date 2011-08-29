@@ -165,9 +165,9 @@ if (!defined("IN_COURSE_GROUPS")) {
 					FROM `course_groups` 
 					WHERE `course_id` = ".$db->qstr($COURSE_ID);
 
-	$query_groups = "SELECT a.*, COUNT(b.`cgmember_id`) AS `members`
+	$query_groups = "SELECT a.*, COUNT(b.`cgaudience_id`) AS `members`
 					FROM `course_groups` AS a
-					JOIN `course_group_members` AS b
+					LEFT JOIN `course_group_audience` AS b
 					ON a.`cgroup_id` = b.`cgroup_id`
 					WHERE a.`course_id` = ".$db->qstr($COURSE_ID);
 
@@ -323,16 +323,14 @@ if (!defined("IN_COURSE_GROUPS")) {
 			<colgroup>
 				<col class="modified" />
 				<col class="community_title" />
-				<col class="community_shortname" />
-				<col class="community_opened" />
+				<col class="date" />
 				<col class="attachment" />
 			</colgroup>
 			<thead>
 				<tr>
 					<td class="modified">&nbsp;</td>
 					<td class="community_title<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE."-".$SUBMODULE]["sb"] == "group_name") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE."-".$SUBMODULE]["so"]) : ""); ?>"><?php echo admin_order_link("group_name", "Group Name", $SUBMODULE); ?></td>
-					<td class="community_shortname<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE."-".$SUBMODULE]["sb"] == "members") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE."-".$SUBMODULE]["so"]) : ""); ?>"><?php echo admin_order_link("members", "Number of members", $SUBMODULE); ?></td>
-					<td class="community_opened<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE."-".$SUBMODULE]["sb"] == "updated_date") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE."-".$SUBMODULE]["so"]) : ""); ?>"><?php echo admin_order_link("updated_date", "Updated Date", $SUBMODULE); ?></td>
+					<td class="date<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE."-".$SUBMODULE]["sb"] == "members") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE."-".$SUBMODULE]["so"]) : ""); ?>"><?php echo admin_order_link("members", "Number of members", $SUBMODULE); ?></td>
 					<td class="attachment">&nbsp;</td>
 				</tr>
 			</thead>
@@ -341,7 +339,7 @@ if (!defined("IN_COURSE_GROUPS")) {
 				<tr>
 					<td />
 						<?php
-						$colspan = 4;
+						$colspan = 3;
 						if ($ENTRADA_ACL->amIAllowed("group", "delete", false)) {
 							$colspan--;
 							?>
@@ -367,11 +365,10 @@ if (!defined("IN_COURSE_GROUPS")) {
 				$url = ENTRADA_URL."/admin/courses/groups?section=edit&id=".$COURSE_ID."&ids=".$result["cgroup_id"];
 
 
-				echo "<tr id=\"group-".$result["cgroup_id"]."\" class=\"group".((!$result["group_active"]) ? " na" : ((!$result["group_active"]) ? " np" : ""))."\">\n";
+				echo "<tr id=\"group-".$result["cgroup_id"]."\" class=\"group".((!$result["active"]) ? " na" : ((!$result["active"]) ? " np" : ""))."\">\n";
 				echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"checked[]\" value=\"".$result["cgroup_id"]."\" /></td>\n";
 				echo "	<td class=\"community_title\"><a href=\"".$url."\">".html_encode($result["group_name"])."</a></td>\n";
-				echo "	<td class=\"community_shortname\"><a href=\"".$url."\">".$result["members"]."</a></td>\n";
-				echo "	<td class=\"date\"><a href=\"".$url."\">".date("M jS Y", $result["updated_date"])."</a></td>\n";
+				echo "	<td class=\"date\"><a href=\"".$url."\">".$result["members"]."</a></td>\n";
 				echo "	<td class=\"attachment\"><a href=\"".ENTRADA_URL."/admin/courses/groups?section=edit&id=".$COURSE_ID."&ids=".$result["cgroup_id"]."\"><img src=\"".ENTRADA_URL."/images/action-edit.gif\" width=\"16\" height=\"16\" alt=\"Manage Group\" title=\"Manage Group\" border=\"0\" /></a></td>\n";
 				echo "</tr>\n";
 			}

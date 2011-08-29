@@ -50,7 +50,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 
 	$group_type = "individual";
 	$group_populate = "group_number";
-	$group_active = "true";
 	$number_of_groups = "";
 	$populate = 0;
 	$GROUP_IDS = array();
@@ -74,14 +73,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 			} else {
 				$ERROR++;
 				$ERRORSTR[] = "The <strong>Group Prefix</strong> field is required.";
-			}
-
-			/**
-			 * Required field "status" / Group Status.
-			 */
-			if (!((isset($_POST["group_active"])) && ($group_active = clean_input($_POST["group_active"], array("notags", "trim"))))) {
-				$ERROR++;
-				$ERRORSTR[] = "The <strong>Group Status</strong> value is required.";
 			}
 
 			/**
@@ -166,7 +157,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 			if (!$ERROR) {
 				
 				$query = "SELECT * FROM `courses` WHERE `course_id` = ".$db->qstr($COURSE_ID);
-				if ($course = $db->GetAll($query)) {
+				if ($course = $db->GetRow($query)) {
 					if ($course["permission"] == "closed") {
 						$course_audience = true;
 					} else {
@@ -175,7 +166,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 				}
 				
 				$PROCESSED["course_id"] = $COURSE_ID;
-				$PROCESSED["group_active"] 	= ($group_active == "true") ? 1 : 0;
 
 				if ($number_of_groups == 1) {
 					$result = $db->GetRow("SELECT `cgroup_id` FROM `course_groups` WHERE `group_name` = ".$db->qstr($PROCESSED["group_name"]));
@@ -246,7 +236,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 					}
 					if ($result) {
 						$ERROR++;
-						$ERRORSTR[] = "A <strong>Group name</strong> already exits. The groups were not created";
+						$ERRORSTR[] = "A <strong>Group name</strong> already exists. The groups were not created";
 					} else {
 						for ($i=1;$i<=$number_of_groups;$i++) {
 							$PROCESSED["group_name"] = $prefix.sprintf($dfmt,$i);
@@ -262,7 +252,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 				}	
 				if ($populate) {
 					unset($PROCESSED["group_name"]);
-					unset($PROCESSED["group_active"]);
 					$PROCESSED["active"] = 1;
 					if ($course_audience) {
 						$query	= "	SELECT a.`id`
@@ -329,7 +318,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 						
 						$PROCESSED["cgroup_id"] =  $GROUP_IDS[$i++];
 						
-						if (!$db->AutoExecute("course_group_members", $PROCESSED, "INSERT")) {
+						if (!$db->AutoExecute("course_group_audience", $PROCESSED, "INSERT")) {
 							$ERROR++;
 							$ERRORSTR[] = "There was an error while trying to add the <strong>Group member</strong> ".$PROCESSED["proxy_id"].".<br /><br />The system administrator was informed of this error; please try again later.";
 							application_log("error", "Unable to insert a new group member ".$PROCESSED["proxy_id"].". Database said: ".$db->ErrorMsg());
@@ -414,19 +403,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 						<td colspan="2">&nbsp;</td>
 						<td>
 							<div class="content-small">This will be used as the first portion of the default name for the groups created, with the second portion being which number the group is (eg. For the prefix "small group" the first 3 groups created would be named: small group 1, small group 2 and small group 3).</div>
-						</td>
-					</tr>
-					<tr>
-						<td colspan="3">&nbsp;</td>
-					</tr>
-					<tr>
-						<td>&nbsp;</td>
-						<td style="vertical-align: top"><label for="group_active" class="form-required">Group Status:</label></td>
-						<td>
-							<select id="group_active" name="group_active" style="width: 109px">
-								<option value="true"<?php echo (((!isset($group_active)) || ($group_active == "true")) ? " selected=\"selected\"" : ""); ?>>Active</option>
-								<option value="false"<?php echo (($group_active == "false") ? " selected=\"selected\"" : ""); ?>>Disabled</option>
-							</select>
 						</td>
 					</tr>
 					<tr>

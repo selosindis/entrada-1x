@@ -55,10 +55,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 			foreach($proxy_ids as $proxy_id) {
 				if(($proxy_id = (int) trim($proxy_id))) {
 					$count++;
-					if (!$db->GetOne("SELECT `cgmember_id` FROM `course_group_members` WHERE `cgroup_id` = ".$db->qstr($PROCESSED["cgroup_id"])." AND `proxy_id` =".$db->qstr($proxy_id))) {
+					if (!$db->GetOne("SELECT `cgaudience_id` FROM `course_group_audience` WHERE `cgroup_id` = ".$db->qstr($PROCESSED["cgroup_id"])." AND `proxy_id` =".$db->qstr($proxy_id))) {
 						$PROCESSED["proxy_id"]	= $proxy_id;
 						$added++;
-						if (!$db->AutoExecute("`course_group_members`", $PROCESSED, "INSERT")) {
+						if (!$db->AutoExecute("`course_group_audience`", $PROCESSED, "INSERT")) {
 							$ERROR++;
 							$ERRORSTR[]	= "Failed to insert this member into the group. Please contact a system administrator if this problem persists.";
 							application_log("error", "Error while inserting member into database. Database server said: ".$db->ErrorMsg());
@@ -128,12 +128,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 
 			$group_name = $db->GetOne("SELECT `group_name` FROM `course_groups` WHERE `cgroup_id` = ".$db->qstr($GROUP_ID));
 
-			$emembers_query	= "	SELECT c.`cgmember_id`, CONCAT_WS(' ', a.`firstname`, a.`lastname`) AS `fullname`, c.`member_active`,
+			$emembers_query	= "	SELECT c.`cgaudience_id`, CONCAT_WS(' ', a.`firstname`, a.`lastname`) AS `fullname`, c.`member_active`,
 								a.`username`, a.`organisation_id`, a.`username`, CONCAT_WS(':', b.`group`, b.`role`) AS `grouprole`
 								FROM `".AUTH_DATABASE."`.`user_data` AS a
 								LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 								ON a.`id` = b.`user_id`
-								INNER JOIN `course_group_members` AS c 
+								INNER JOIN `course_group_audience` AS c 
 								ON a.`id` = c.`proxy_id`
 								WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
 								AND b.`account_active` = 'true'
@@ -192,7 +192,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 						<?php
 							foreach($results as $result) {
 								$members = $db->GetRow("SELECT COUNT(*) AS members, case when (MIN(`member_active`)=0) then 1 else 0 end as `inactive`
-														FROM  `course_group_members` WHERE `cgroup_id` = ".$db->qstr($result["cgroup_id"]));
+														FROM  `course_group_audience` WHERE `cgroup_id` = ".$db->qstr($result["cgroup_id"]));
 								
 									echo "<tr class=\"group".((!$result["group_active"]) ? " na" : (($members["inactive"]) ? " np" : ""))."\">";
 									echo "	<td style=\"vertical-align: top\">&nbsp;<input type=\"radio\" name=\"groups\" value=\"".$result["cgroup_id"]."\" onclick=\"selectgroup(".$result["cgroup_id"].",'".$result["group_name"]."');\"".(($result["cgroup_id"] == $GROUP_ID) ?" checked=\"checked\"" : "")."/></td>\n";
@@ -246,11 +246,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 							if ($results) {
 								foreach($results as $result) {
 									echo "<tr  class=\"event".(!$result["member_active"] ? " na" : "")."\">";
-									echo "	<td class=\"modified\"><input type=\"checkbox\" class=\"delchk\" name=\"checked[]\" onclick=\"memberChecks()\" value=\"".$result["cgmember_id"]."\" /></td>\n";
+									echo "	<td class=\"modified\"><input type=\"checkbox\" class=\"delchk\" name=\"checked[]\" onclick=\"memberChecks()\" value=\"".$result["cgaudience_id"]."\" /></td>\n";
 									echo "	<td><a href=\"".ENTRADA_URL."/people?profile=".$result["username"]."\" >".html_encode($result["fullname"])."</a></td>";
 									echo "	<td><a href=\"".ENTRADA_URL."/people?profile=".$result["username"]."\" >".$result["grouprole"]."</a></td>";
 									echo "	<td>
-										<a href=\"".ENTRADA_URL."/admin/courses/groups?section=manage&id=".$COURSE_ID."&mids=".$result["cgmember_id"]."\"><img src=\"".ENTRADA_URL."/images/action-delete.gif\" width=\"16\" height=\"16\" alt=\"Delete/Activate Member\" title=\"Delete/Activate Member\" border=\"0\" /></a>
+										<a href=\"".ENTRADA_URL."/admin/courses/groups?section=manage&id=".$COURSE_ID."&mids=".$result["cgaudience_id"]."\"><img src=\"".ENTRADA_URL."/images/action-delete.gif\" width=\"16\" height=\"16\" alt=\"Delete/Activate Member\" title=\"Delete/Activate Member\" border=\"0\" /></a>
 										</td>\n";
 									echo "</tr>";
 								}
@@ -380,7 +380,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 										}
 
 										$current_member_list	= array();
-										$query		= "SELECT `proxy_id` FROM `course_group_members` WHERE `cgroup_id` = ".$db->qstr($GROUP_ID)." AND `member_active` = '1'";
+										$query		= "SELECT `proxy_id` FROM `course_group_audience` WHERE `cgroup_id` = ".$db->qstr($GROUP_ID)." AND `member_active` = '1'";
 										$results	= $db->GetAll($query);
 										if($results) {
 											foreach($results as $result) {

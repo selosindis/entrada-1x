@@ -222,7 +222,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 									if ($results) {
 										$PROCESSED["assessment_id"] = $results["assessment_id"];
 										$PROCESSED["option_id"] = $assessment_option["id"];
-										if (in_array($assessment_option["id"], $assessment_options_selected)) {
+										if (is_array($assessment_options_selected) && in_array($assessment_option["id"], $assessment_options_selected)) {
 											$PROCESSED["option_active"] = 1;
 										} else{
 											$PROCESSED["option_active"] = 0;
@@ -413,7 +413,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								<?php 
 								if ($assessment_options) {
 									foreach ($assessment_options as $assessment_option) {
-										echo "<input type=\"checkbox\" value=\"".$assessment_option["id"]."\" name=\"option[]\"" .((in_array($assessment_option["id"], $assessment_options_selected)) ? " checked=\"checked\"" : "") . " id=\"extended_option".$assessment_option["id"]. "\" /><label for=\"extended_option".$assessment_option["id"]."\">".$assessment_option["title"]."</label><br />";
+										echo "<input type=\"checkbox\" value=\"".$assessment_option["id"]."\" name=\"option[]\"" .((is_array($assessment_options_selected) && in_array($assessment_option["id"], $assessment_options_selected)) ? " checked=\"checked\"" : "") . " id=\"extended_option".$assessment_option["id"]. "\" /><label for=\"extended_option".$assessment_option["id"]."\">".$assessment_option["title"]."</label><br />";
 									}
 								}
 								?>

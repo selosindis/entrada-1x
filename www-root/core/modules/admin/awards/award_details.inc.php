@@ -23,7 +23,6 @@
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
 */
-
 if ((!defined("PARENT_INCLUDED")) || (!defined("IN_AWARDS"))) {
 	exit;
 } elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
@@ -101,17 +100,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_AWARDS"))) {
 			<td colspan="3">&nbsp;</td>
 		</tr>
 		<tr>
-			<td colspan="3"
-				style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right;">
-				<div id="hide_award_recipient_link" style="display:inline-block;">
-					<ul class="page-action-cancel">
-						<li><a id="hide_award_recipient"
-							href="<?php echo ENTRADA_URL; ?>/admin/awards?section=award_details&id=<?php echo $award_id; ?>"
-							class="strong-green">[ Cancel Adding Internal Award ]</a></li>
-					</ul>
-				</div>
-				
-			<input type="submit" class="button" value="Add Recipient" /></td>
+			<td colspan="2">
+				<input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/awards?section=award_details&id=<?php echo $award_id; ?>'" />
+			</td>
+			<td style="padding-top: 5px; text-align: right;">	
+				<input type="submit" class="button" value="Add Recipient" />
+			</td>
 		</tr>
 	</tfoot>
 	<tbody>
@@ -220,12 +214,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_AWARDS"))) {
 
 	var award_recipient_comments = new ActiveDataEntryProcessor({
 		url : '<?php echo webservice_url("awards"); ?>',
-		data_destination: $('award_recipients'),
-		new_form: $('add_award_recipient_form'),
+		data_destination: $('#award_recipients'),
+		new_form: $('#add_award_recipient_form'),
 		remove_forms_selector: '.remove_award_recipient_form',
-		new_button: $('add_award_recipient_link'),
-		hide_button: $('hide_award_recipient'),
-		messages: $('award_messages')
+		new_button: $('#add_award_recipient_link'),
+		hide_button: $('#hide_award_recipient'),
+		messages: $('#award_messages')
 		
 	});
 

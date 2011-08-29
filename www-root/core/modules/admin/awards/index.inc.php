@@ -23,7 +23,6 @@
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
 */
-
 if ((!defined("PARENT_INCLUDED")) || (!defined("IN_AWARDS"))) {
 	exit;
 } elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
@@ -41,6 +40,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_AWARDS"))) {
 	
 	process_manage_award_details();
 	$awards = InternalAwards::get(true);
+
+	
 					
 	$PAGE_META["title"]			= "Awards Listing";
 	$PAGE_META["description"]	= "";
@@ -54,13 +55,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_AWARDS"))) {
 	?>
 	</div>
 	<h1>Awards Listing</h1>
-
 	<?php
-	$show_new_award_form = (isset($_GET["show"]) && ($_GET["show"] == "new_award") ? true : false);
+	$show_new_award_form = (isset($_GET["show"]) && ($_GET["show"] == "add_new_award") ? true : false);
 	?>
 	<form id="new_award_form" action="<?php echo ENTRADA_URL; ?>/admin/awards" method="post"<?php echo ((!$show_new_award_form) ? " style=\"display: none;\"" : ""); ?>>
 		<input type="hidden" name="action" value="new_award" />
-		<table class="award_details">
+		<table class="award_details" style="width: 100%;">
 			<colgroup>
 				<col width="3%"></col>
 				<col width="25%"></col>
@@ -71,34 +71,34 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_AWARDS"))) {
 					<td colspan="3">&nbsp;</td>
 				</tr>
 				<tr>
-					<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
-						<input type="submit" class="button" value="Add Award" />
-						<div id="hide_new_award_link" style="display:inline-block;">
-							<ul class="page-action-cancel">
-								<li><a id="hide_new_award" href="<?php echo ENTRADA_URL; ?>/admin/awards" class="strong-green">[ Cancel Adding Internal Award ]</a></li>
-							</ul>
-						</div>
+					<td colspan="2">
+						<input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/awards'" />
 					</td>
+					<td style="text-align: right; padding-top: 5px;">
+						<input type="submit" class="button" value="Add Award" />
+					</td>
+				</tr>
+				<tr>
+					<td colspan="3">&nbsp;</td>
 				</tr>
 			</tfoot>
 			<tbody>
 				<tr>
-					<td>&nbsp;</td>
-					<td >
-						<label for="award_title" class="form-required">Title:</label>
+					<td>
+						<label for="award_title" class="form-required">Title</label>
 					</td>
-					<td >
+					<td colspan="2">
 						<input id="award_title" name="award_title" type="text" maxlength="4096" style="width: 250px; vertical-align: middle;" ></input>	
 					</td>
 				</tr>
 				<tr>
-					<td>&nbsp;</td>
 					<td style="vertical-align:top;">
-						<label for="award_terms" class="form-required">Terms of Award:</label>
+						<label for="award_terms" class="form-required">Terms of Award</label>
 					</td>
-					<td >
-						<textarea id="award_terms" name="award_terms" style="width: 100%; height: 100px;" cols="65" rows="20"></textarea>	
+					<td colspan="2">
+						<textarea id="award_terms" name="award_terms" style="width: 60%; height: 100px;" cols="65" rows="20"></textarea>	
 					</td>
+
 				</tr>
 			</tbody>
 		</table>
@@ -115,15 +115,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_AWARDS"))) {
 	<div id="awards_listing">
 	<?php echo awards_list($awards); ?>
 	</div>
-	<script language="javascript">
+		<script language="javascript">
 		var new_award = new ActiveDataEntryProcessor({
 			url : '<?php echo webservice_url("awards"); ?>',
-			data_destination: $('awards_listing'),
-			new_form: $('new_award_form'),
+			data_destination: $('#awards_listing'),
+			new_form: $('#new_award_form'),
 			remove_forms_selector: '.remove_award_form',
-			new_button: $('add_new_award_link'),
-			hide_button: $('hide_new_award'),
-			messages: $('award_messages')
+			new_button: $('#add_new_award_link'),
+			hide_button: $('#hide_new_award'),
+			messages: $('#award_messages')
 		});
 	</script>
 	<?php

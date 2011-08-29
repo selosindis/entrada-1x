@@ -76,29 +76,12 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			$ORGANISATION_ID	= $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"];
 	}
 	
-	$COURSE_LIST	= array();
+	$COURSE_LIST = array();
 
-	$query		= "	SELECT * FROM `courses` 
-					WHERE `organisation_id`=".$db->qstr($ORGANISATION_ID)." 
-					AND `course_active` = '1'
-					ORDER BY `course_name` ASC";
-	$results	= $db->GetAll($query);
+	$results = courses_fetch_courses(true, false);
 	if ($results) {
 		foreach ($results as $result) {
-			if ($ENTRADA_ACL->amIAllowed(new CourseResource($result["course_id"], $result["organisation_id"]), 'read')) {
-				$COURSE_LIST[$result["course_id"]] = html_encode($result["course_name"].(($result["course_code"]) ? ": ".$result["course_code"] : ""));
-			}
-		}
-	}
-
-	$ORGANISATION_LIST	= array();
-	$query		= "SELECT `organisation_id`, `organisation_title` FROM `".AUTH_DATABASE."`.`organisations` ORDER BY `organisation_title` ASC";
-	$results	= $db->GetAll($query);
-	if ($results) {
-		foreach ($results as $result) {
-			if ($ENTRADA_ACL->amIAllowed("resourceorganisation".$result["organisation_id"], "read")) {
-				$ORGANISATION_LIST[$result["organisation_id"]] = html_encode($result["organisation_title"]);
-			}
+			$COURSE_LIST[$result["course_id"]] = html_encode($result["course_name"].(($result["course_code"]) ? ": ".$result["course_code"] : ""));
 		}
 	}
 
@@ -106,18 +89,19 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 	 * If we were going into the $COURSE_ID
 	 */
 	if ($COURSE_ID) {
-		$course_community = $db->GetOne("	SELECT b.`community_url` FROM `community_courses` AS a
-											JOIN `communities` AS b
-											ON a.`community_id` = b.`community_id`
-											WHERE a.`course_id` = ".$db->qstr($COURSE_ID));
+		$query = "	SELECT b.`community_url` FROM `community_courses` AS a
+					JOIN `communities` AS b
+					ON a.`community_id` = b.`community_id`
+					WHERE a.`course_id` = ".$db->qstr($COURSE_ID);
+		$course_community = $db->GetOne($query);
 		if ($course_community) {
 			header("Location: ".ENTRADA_URL."/community".$course_community);
 			exit;
 		}
 
-		$query			= "	SELECT * FROM `courses` 
-							WHERE `course_id`=".$db->qstr($COURSE_ID)."
-							AND `course_active` = '1'";
+		$query = "	SELECT * FROM `courses` 
+					WHERE `course_id` = ".$db->qstr($COURSE_ID)."
+					AND `course_active` = '1'";
 		$course_details	= ((USE_CACHE) ? $db->CacheGetRow(CACHE_TIMEOUT, $query) : $db->GetRow($query));
 		if (!$course_details) {
 			$ERROR++;
@@ -125,15 +109,15 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 
 			echo display_error();
 		} else {
-			if ($ENTRADA_ACL->amIAllowed(new CourseResource($COURSE_ID, $result['organisation_id']), 'read')) {
+			if ($ENTRADA_ACL->amIAllowed(new CourseResource($COURSE_ID, $result["organisation_id"]), "read")) {
 				add_statistic($MODULE, "view", "course_id", $COURSE_ID);
 
-				$BREADCRUMB[]		= array("url" => ENTRADA_URL."/".$MODULE."?".replace_query(array("id" => $course_details["course_id"])), "title" => $course_details["course_name"].(($course_details["course_code"]) ? ": ".$course_details["course_code"] : ""));
+				$BREADCRUMB[] = array("url" => ENTRADA_URL."/".$MODULE."?".replace_query(array("id" => $course_details["course_id"])), "title" => $course_details["course_name"].(($course_details["course_code"]) ? ": ".$course_details["course_code"] : ""));
 
-				$OTHER_DIRECTORS	= array();
+				$OTHER_DIRECTORS = array();
 
-				$sub_query		= "SELECT `proxy_id` FROM `course_contacts` WHERE `course_contacts`.`course_id`=".$db->qstr($COURSE_ID)." AND `course_contacts`.`contact_type` = 'director' ORDER BY `contact_order` ASC";
-				$sub_results	= $db->GetAll($sub_query);
+				$sub_query = "SELECT `proxy_id` FROM `course_contacts` WHERE `course_contacts`.`course_id`=".$db->qstr($COURSE_ID)." AND `course_contacts`.`contact_type` = 'director' ORDER BY `contact_order` ASC";
+				$sub_results = $db->GetAll($sub_query);
 				if ($sub_results) {
 					foreach ($sub_results as $sub_result) {
 						$OTHER_DIRECTORS[] = $sub_result["proxy_id"];

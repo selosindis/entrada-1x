@@ -933,7 +933,7 @@ font-weight:bold;
 ul.menu li,ul.menu li.off {
 font-size:10px;
 padding-bottom:4px;
-padding-left:20px;
+padding-left:17px;
 background:transparent url(../images/checkbox-off.gif) no-repeat;
 }
 
@@ -964,7 +964,8 @@ vertical-align:middle;
 ul.menu li.group,ul.menu li.community {
 background:transparent url(../images/list-community.gif) no-repeat;
 }
-ul.menu li.user {
+
+ul.menu li.user, ul.menu li.user.male, ul.menu li.user.female {
 background:transparent url(../images/list-user.gif) no-repeat;
 }
 

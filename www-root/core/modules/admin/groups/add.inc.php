@@ -60,6 +60,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 	switch($STEP) {
 		case 2 :
 			/**
+			 * Get the active organisation_id and add it to the PROCESSED array.
+			 */
+			$PROCESSED["organisation_id"] = $ENTRADA_USER->getActiveOrganisation();
+			
+			/**
 			 * Required field "group_name" / Group Name.
 			 */
 			if ((isset($_POST["group_name"])) && ($group_name = clean_input($_POST["group_name"], array("notags", "trim")))) {
@@ -67,16 +72,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 			} else {
 				$ERROR++;
 				$ERRORSTR[] = "The <strong>Group Name</strong> field is required.";
-			}
-			
-			/**
-			 * Required field "organisation_id" / Organisation.
-			 */
-			if ((isset($_POST["organisation_id"])) && ($organisation_id = clean_input($_POST["organisation_id"], array("trim", "int")))) {
-				$PROCESSED["organisation_id"] = $organisation_id;
-			} else {
-				$ERROR++;
-				$ERRORSTR[] = "The <strong>Organisation</strong> field is required.";
 			}
 			
 			/**
@@ -231,29 +226,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 						<td></td>
 						<td><label for="group_name" class="form-required">Group Name</label></td>
 						<td><input type="text" id="group_name" name="group_name" value="<?php echo html_encode($PROCESSED["group_name"]); ?>" maxlength="255" style="width: 45%" /></td>
-					</tr>
-					<tr>
-						<td colspan="3">&nbsp;</td>
-					</tr>
-					<tr>
-						<td>&nbsp;</td>
-						<td><label for="organisation_id" class="form-required">Organisation</label></td>
-						<td>
-							<select id="organisation_id" name="organisation_id" style="width: 250px">
-							<?php
-							$query		= "SELECT `organisation_id`, `organisation_title` FROM `".AUTH_DATABASE."`.`organisations`";
-							$results	= $db->GetAll($query);
-							if ($results) {
-								foreach($results as $result) {
-									if ($ENTRADA_ACL->amIAllowed(new CourseResource(null, $result['organisation_id']), 'create')) {
-										$organisation_categories[$result["organisation_id"]] = array($result["organisation_title"]);
-										echo "<option value=\"".(int) $result["organisation_id"]."\"".(((isset($PROCESSED["organisation_id"])) && ($PROCESSED["organisation_id"] == $result["organisation_id"])) ? " selected=\"selected\"" : "").">".html_encode($result["organisation_title"])."</option>\n";
-									}
-								}
-							}
-							?>
-							</select>
-						</td>
 					</tr>
 					<tr>
 						<td colspan="3">&nbsp;</td>

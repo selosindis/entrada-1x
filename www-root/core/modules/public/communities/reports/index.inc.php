@@ -752,8 +752,10 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 				foreach($statistics as $key=>$statistic){
 					$module = explode(':',$statistic['module']);
 					$action = explode('_',$statistic['action']); 
+					$user_action = ((count($action)>1)?$action[1]:$action[0]);
+					$user_action = ($user_action == "delete"?$user_action."d":$user_action."ed");
 					$activity_message = "<a href=\"".ENTRADA_URL."/communities/reports?section=user&community=".$COMMUNITY_ID."&user=".$statistic["user_id"]."\">".$statistic['fullname']."</a> ";
-					$activity_message .= ((count($action)>1)?$action[1]:$action[0])."ed the <a href=\"".ENTRADA_URL."/communities/reports?section=type&community=".$COMMUNITY_ID."&type=".$module[2]."\">".ucwords($module[2])."</a>";
+					$activity_message .= $user_action." the <a href=\"".ENTRADA_URL."/communities/reports?section=type&community=".$COMMUNITY_ID."&type=".$module[2]."\">".ucwords($module[2])."</a>";
 					$activity_message .= " titled <a href=\"".ENTRADA_URL."/communities/reports?section=page&community=".$COMMUNITY_ID."&page=".$statistic["action_field"]."-".$statistic["action_value"]."\">".(isset($statistic["page"])?$statistic["page"]:"-")."</a>";
 					$activity_message .= " at ".date('D M j/y h:i a', $statistic['timestamp']);
 

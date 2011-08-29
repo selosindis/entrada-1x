@@ -915,14 +915,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						</tfoot>
 						<tbody>
 							<tr>
-								<td>Phase / Term</td>
-								<td><?php echo strtoupper($event_info["event_phase"]); ?></td>
-							</tr>
-							<tr>
-								<td style="white-space: nowrap">Course</td>
-								<td style="white-space: nowrap"><?php echo (($event_info["course_id"]) ? "<a href=\"".ENTRADA_URL."/courses?id=".$event_info["course_id"]."\">".fetch_course_title($event_info["course_id"])."</a> " : "Not Yet Filed"); ?></td>
-							</tr>
-							<tr>
 								<td colspan="2">&nbsp;</td>
 							</tr>
 							<?php

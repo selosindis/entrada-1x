@@ -192,7 +192,7 @@ if (!defined("IN_COURSE_GROUPS")) {
 	 * of pages that are available based on the results per page preferences.
 	 */
 	$result_count = $db->GetRow($query_count);
-
+	
 	if ($result_count) {
 		$scheduler_groups["total_rows"] = (int) $result_count["total_rows"];
 
@@ -288,7 +288,8 @@ if (!defined("IN_COURSE_GROUPS")) {
 	echo "<p />";
 	if ($scheduler_groups["total_pages"] > 1) {
 		echo "<div class=\"fright\" style=\"margin-bottom: 10px\">\n";
-		echo "<form action=\"".ENTRADA_URL."/admin/courses/groups?id=".$COURSE_ID."\" method=\"get\" id=\"pageSelector\">\n";
+		echo "<form action=\"".ENTRADA_URL."/admin/courses/groups\" method=\"get\" id=\"pageSelector\">\n";
+		echo "<input name=\"id\" type=\"hidden\" value=\"".$COURSE_ID."\"/>";
 		echo "<span style=\"width: 20px; vertical-align: middle; margin-right: 3px; text-align: left\">\n";
 		if ($scheduler_groups["page_previous"]) {
 			echo "<a href=\"".ENTRADA_URL."/admin/courses/groups?".replace_query(array("pv" => $scheduler_groups["page_previous"]))."\"><img src=\"".ENTRADA_URL."/images/record-previous-on.gif\" border=\"0\" width=\"11\" height=\"11\" alt=\"Back to page ".$scheduler_groups["page_previous"].".\" title=\"Back to page ".$scheduler_groups["page_previous"].".\" style=\"vertical-align: middle\" /></a>\n";

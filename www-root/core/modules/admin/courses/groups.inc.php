@@ -37,7 +37,6 @@ if (!defined("PARENT_INCLUDED")) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
-	ini_set("display_errors", 1);
 	define("IN_COURSE_GROUPS",	true);
 
 	$STEP			= 1;

@@ -3928,15 +3928,15 @@ CREATE TABLE IF NOT EXISTS `groups` (
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `group_members` (
-  `gmember_id` int(11) NOT NULL AUTO_INCREMENT,
-  `group_id` int(11) NOT NULL,
-  `proxy_id` int(11) NOT NULL,
-  `start_date` BIGINT(64), 
-  `finish_date` BIGINT(64),
-  `entrada_only` INT(1),
-  `member_active` tinyint(1) NOT NULL DEFAULT '1',
-  `updated_date` int(11) DEFAULT NULL,
-  `updated_by` int(11) DEFAULT NULL,
+  `gmember_id` int(12) NOT NULL AUTO_INCREMENT,
+  `group_id` int(12) NOT NULL DEFAULT '0',
+  `proxy_id` int(12) NOT NULL DEFAULT '0',
+  `start_date` BIGINT(64) NOT NULL DEFAULT '0',
+  `finish_date` BIGINT(64) NOT NULL DEFAULT '0',
+  `member_active` int(1) NOT NULL DEFAULT '1',
+  `entrada_only` INT(1) DEFAULT 0,
+  `updated_date` bigint(64) NOT NULL DEFAULT '0',
+  `updated_by` int(12) NOT NULL DEFAULT '0',
   PRIMARY KEY (`gmember_id`),
   KEY `group_id` (`group_id`,`proxy_id`,`updated_date`,`updated_by`),
   KEY `member_active` (`member_active`)

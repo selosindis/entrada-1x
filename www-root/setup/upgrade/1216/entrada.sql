@@ -3,8 +3,8 @@ ALTER TABLE `groups` ADD COLUMN `group_value` INT AFTER `group_type`;
 ALTER TABLE `groups` ADD COLUMN `start_date` BIGINT(64) AFTER `group_value`;
 ALTER TABLE `groups` ADD COLUMN `expire_date` BIGINT(64) AFTER `start_date`;
 
-ALTER TABLE `group_members` ADD COLUMN `start_date` BIGINT(64) AFTER `proxy_id`;
-ALTER TABLE `group_members` ADD COLUMN `finish_date` BIGINT(64) AFTER `start_date`;
+ALTER TABLE `group_members` ADD COLUMN `start_date` BIGINT(64) NOT NULL DEFAULT 0 AFTER `proxy_id`;
+ALTER TABLE `group_members` ADD COLUMN `finish_date` BIGINT(64) NOT NULL DEFAULT 0 AFTER `start_date`;
 ALTER TABLE `group_members` ADD COLUMN `entrada_only` INT(1) DEFAULT 0 AFTER `member_active`;
 
 ALTER TABLE `courses` ADD COLUMN `sync_ldap` INT(1) NOT NULL DEFAULT 0 AFTER `permission`;

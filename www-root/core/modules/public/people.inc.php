@@ -170,7 +170,7 @@ if (!defined("PARENT_INCLUDED")) {
 										FROM `".AUTH_DATABASE."`.`user_data` AS a
 										LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 										ON b.`user_id` = a.`id`
-										LEFT JOIN `".AUTH_DATABASE."`.`user_organisation` AS c
+										LEFT JOIN `".AUTH_DATABASE."`.`user_organisations` AS c
 										ON c.`proxy_id` = a.`id`
 										AND b.`app_id` IN (".AUTH_APP_IDS_STRING.")
 										WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
@@ -184,7 +184,7 @@ if (!defined("PARENT_INCLUDED")) {
 										FROM `".AUTH_DATABASE."`.`user_data` AS a
 										LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 										ON b.`user_id` = a.`id`
-										LEFT JOIN `".AUTH_DATABASE."`.`user_organisation` AS c
+										LEFT JOIN `".AUTH_DATABASE."`.`user_organisations` AS c
 										ON c.`proxy_id` = a.`id`
 										AND b.`app_id` IN (".AUTH_APP_IDS_STRING.")
 										WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
@@ -326,7 +326,7 @@ if (!defined("PARENT_INCLUDED")) {
 									FROM `".AUTH_DATABASE."`.`user_data` AS a
 									LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 									ON b.`user_id` = a.`id`
-									LEFT JOIN `".AUTH_DATABASE."`.`user_organisation` as c
+									LEFT JOIN `".AUTH_DATABASE."`.`user_organisations` as c
 									ON c.`proxy_id` = a.`id`
 									AND b.`app_id` IN (".AUTH_APP_IDS_STRING.")
 									WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")

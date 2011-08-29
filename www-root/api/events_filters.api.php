@@ -119,18 +119,13 @@ if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
 				}
 			break;
 			case "course" : // Courses
-
+				
 				$courses = array();
 				$courses[1] = array("text" => $organisation[$ENTRADA_USER->getActiveOrganisation()]["text"] . " Active Courses", "value" => "active_courses", "category" => true);
 				$courses[0] = array("text" => $organisation[$ENTRADA_USER->getActiveOrganisation()]["text"] . " Inactive Courses", "value" => "inactive_courses", "category" => true);            
 
-				$query = "	SELECT `course_id`, `course_name`, `course_code`, `course_active`
-							FROM `courses` 
-							WHERE `organisation_id` = " . $db->qstr($ENTRADA_USER->getActiveOrganisation()) . "
-							ORDER BY `course_code`, `course_name` ASC";
-				$courses_results = $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
+				$courses_results = courses_fetch_courses(false);
 				if ($courses_results) {
-					
 					foreach ($courses_results as $course) {
 						if (isset($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["course"]) && is_array($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["course"]) && in_array($course["course_id"], $_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["course"])) {
 							$checked = "checked=\"checked\"";
@@ -152,11 +147,7 @@ if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
 			case "group" : // Classes & Groups
 				$groups = $organisation;
 				
-				$query = "	SELECT *
-							FROM `groups` 
-							WHERE `group_active` = 1
-							ORDER BY `group_name` ASC";
-				$groups_results = $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
+				$groups_results = groups_get_all_cohorts($ENTRADA_USER->getActiveOrganisation());
 				if ($groups_results) {
 					
 					foreach ($groups_results as $group) {
@@ -203,12 +194,17 @@ if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
 			case "term" : // Terms
 				$terms = $organisation;
 
-				$query = "SELECT * FROM `curriculum_lu_types` WHERE `curriculum_type_active` = '1' ORDER BY `curriculum_type_order` ASC";
+				$query = "	SELECT a.*
+							FROM `curriculum_lu_types` AS a
+							JOIN `curriculum_type_organisation` AS b
+							ON b.`curriculum_type_id` = a.`curriculum_type_id`
+							WHERE a.`curriculum_type_active` = '1'
+							AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+							ORDER BY a.`curriculum_type_order` ASC";
 				$curriculum_types = $db->GetAll($query);
 				if ($curriculum_types) {
-					
 					foreach ($curriculum_types as $curriculum_type) {
-						if (isset($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["term"]) && is_array($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["term"]) && in_array($eventtype["curriculum_type_id"], $_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["term"])) {
+						if (isset($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["term"]) && is_array($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["term"]) && in_array($curriculum_type["curriculum_type_id"], $_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]["term"])) {
 							$checked = "checked=\"checked\"";
 						} else {
 							$checked = "";

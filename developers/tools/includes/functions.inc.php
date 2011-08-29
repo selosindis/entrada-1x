@@ -232,7 +232,7 @@ function get_course_id($course_name = "") {
 	global $db;
 
 	if (trim($course_name) != "") {
-		$query = "SELECT `course_id` FROM `courses` WHERE `course_name` LIKE " . $db->qstr($course_name);
+		$query = "SELECT `course_id` FROM `courses` WHERE `course_name` LIKE " . $db->qstr($course_name) . " AND `course_active` = '1'";
 		$result = $db->GetRow($query);
 		if ($result) {
 			return $result["course_id"];

@@ -856,7 +856,7 @@ $show_event_objectives	= ((clean_input($event_info["event_objectives"], array("n
 $show_clinical_presentations = (($clinical_presentations) ? true : false);
 
 $show_curriculum_objectives = false;
-$curriculum_objectives = courses_fetch_objectives(array($event_info["course_id"]), 1, false, false, $EVENT_ID, true);
+list($curriculum_objectives,$top_level_id) = courses_fetch_objectives($ENTRADA_USER->getActiveOrganisation(),array($event_info["course_id"]),-1, 1, false, false, $EVENT_ID, true);
 
 $temp_objectives = $curriculum_objectives["objectives"];
 foreach ($temp_objectives as $objective_id => $objective) {
@@ -937,7 +937,7 @@ if ($show_event_objectives || $show_clinical_presentations || $show_curriculum_o
 		echo "<div class=\"section-holder\">\n";
 		echo "	<h3>Curriculum Objectives</h3>\n";
 		echo "	<strong>The learner will be able to:</strong>";
-		echo	course_objectives_in_list($curriculum_objectives, 1, false, false, 1, true)."\n";
+		echo	course_objectives_in_list($curriculum_objectives, $top_level_id,$top_level_id, false, false, 1, true)."\n";
 		echo "</div>\n";
 	}
 	echo "</div>\n";

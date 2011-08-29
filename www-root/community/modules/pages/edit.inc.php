@@ -206,7 +206,10 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 				        		$course_ids_string .= $course_id["course_id"];
 				        	}
 				        }
-						$course_objectives = courses_fetch_objectives($course_ids, 1, false, false, 0, true);
+						
+						$query = "	SELECT `organisation_id` FROM `courses` WHERE `course_id` = ".$db->qstr($results[0]["course_id"]);
+						$org_id = $db->GetOne($query);
+						list($course_objectives,$top_level_id) = courses_fetch_objectives($org_id,$course_ids, -1,1, false, false, 0, true);
 					}
 					
 									
@@ -1063,7 +1066,7 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 													<tr>
 														<td colspan="2">
 															<div id="objectives_list">
-															<?php echo event_objectives_in_list($course_objectives, 1, 1, true); ?>
+															<?php echo event_objectives_in_list($course_objectives, $top_level_id,$top_level_id, true); ?>
 															</div>
 														</td>
 													</tr>

@@ -222,6 +222,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 			</tfoot>
 			<tbody>
 				<tr>
+					<td colspan="2">
+						<?php 
+							add_notice("<strong>Note:</strong><br/>If this is a parent for Curriculum Objectives please label it 'Curriculum Objectives'.<br/>If this is a parent for Mandates Objectives (such as MCC Objectives) please label it 'Mandated Objectives'.");
+							echo display_notice();
+						?>
+					</td>
+				</tr>
+				<tr>
 					<td><label for="objective_name" class="form-required">Objective Name:</label></td>
 					<td><input type="text" id="objective_name" name="objective_name" value="<?php echo ((isset($PROCESSED["objective_name"])) ? html_encode($PROCESSED["objective_name"]) : ""); ?>" maxlength="60" style="width: 300px" /></td>
 				</tr>

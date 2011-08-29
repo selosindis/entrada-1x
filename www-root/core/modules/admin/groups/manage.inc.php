@@ -185,6 +185,14 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 		break;
 		case 1 :
 		default :
+			
+			$orgs = array_keys($ENTRADA_USER->getAllOrganisations());
+			$query = "SELECT * FROM `group_organisations` WHERE `group_id` =".$db->qstr($GROUP_ID)." AND `organisation_id` IN (".implode(",",$orgs).")";
+			
+			if (!$result = $db->GetAll($query)) {
+				add_error("You do not have access to change edit this group.");
+			}
+			
 			if($ERROR) {
 				echo display_error();
 			} elseif ($GROUP_ID) { // Rename group

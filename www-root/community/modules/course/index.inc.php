@@ -995,7 +995,7 @@ if ($community_courses) {
 			}
 
 			$show_objectives = false;
-			$objectives = courses_fetch_objectives($course_ids, 1, false);
+			list($objectives,$top_level_id) = courses_fetch_objectives($ENTRADA_USER->getActiveOrganisation(),$course_ids,-1, 1, false);
 
 			?>
 			<script type="text/javascript">
@@ -1015,7 +1015,7 @@ if ($community_courses) {
     		</script>
 			<?php
 			echo "<strong>The learner will be able to:</strong>";
-			echo "<div id=\"objectives_list\">\n".course_objectives_in_list($objectives, 1, false, false, 1, false)."\n</div>\n";
+			echo "<div id=\"objectives_list\">\n".course_objectives_in_list($objectives, $top_level_id,$top_level_id, false, false, 1, false)."\n</div>\n";
 		break;
 		case (strpos($PAGE_URL, "mcc_presentations") !== false) :
 			$query = "	SELECT b.*

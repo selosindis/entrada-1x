@@ -171,7 +171,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				/**
 				 * Fetch the Curriculum Objective details.
 				 */
-				list($curriculum_objectives_list,$top_level_id) = courses_fetch_objectives_for_org($ORGANISATION_ID,array($event_info["course_id"]),-1, 1, false, false, $EVENT_ID, true);
+				list($curriculum_objectives_list,$top_level_id) = courses_fetch_objectives($event_info["organisation_id"],array($event_info["course_id"]),-1, 1, false, false, $EVENT_ID, true);
 				$curriculum_objectives = array();
 
 				if (isset($_POST["checked_objectives"]) && ($checked_objectives = $_POST["checked_objectives"]) && (is_array($checked_objectives))) {
@@ -394,7 +394,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 										/**
 										 * Changes have been made so update the $curriculum_objectives_list variable.
 										 */
-										$curriculum_objectives_list = courses_fetch_objectives(array($event_info["course_id"]), 1, false, false, $EVENT_ID, true);
+										list($curriculum_objectives_list,$top_level_id) = courses_fetch_objectives($event_info["organisation_id"],array($event_info["course_id"]), -1, 1, false, false, $EVENT_ID, true);
 									}
 								}
 

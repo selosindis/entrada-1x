@@ -276,7 +276,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 
 				<?php
 				$show_objectives = false;
-				list($objectives,$top_level_id) = courses_fetch_objectives_for_org($ORGANISATION_ID,array($COURSE_ID));
+				list($objectives,$top_level_id) = courses_fetch_objectives($ORGANISATION_ID,array($COURSE_ID));
 				foreach ($objectives["objectives"] as $objective) {
 					if ((isset($objective["primary"]) && $objective["primary"]) || (isset($objective["secondary"]) && $objective["secondary"]) || (isset($objective["tertiary"]) && $objective["tertiary"])) {
 						$show_objectives = true;
@@ -326,7 +326,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 											<?php
 						echo "				<h3>Curriculum Objectives</h3>";
 						echo "				<strong>The learner will be able to:</strong>";
-						echo "				<div id=\"objectives_list\">\n".course_objectives_in_list($objectives, $top_level_id)."\n</div>\n";
+						echo "				<div id=\"objectives_list\">\n".course_objectives_in_list($objectives, $top_level_id,$top_level_id)."\n</div>\n";
 						echo "			</td>\n";
 						echo "		</tr>\n";
 						echo "		<tr>\n";

@@ -132,6 +132,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 				$GROUP_ID = $results[0]["group_id"]; // $group_ids[0];
 			}
 			
+
 			$query = "	SELECT a.*, b.`organisation_id` FROM `groups` AS a
 						LEFT JOIN `group_organisations` AS b
 						ON a.`group_id` = b.`group_id`
@@ -202,7 +203,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 					</tbody>
 				</table>
 			</form>
-
+			<?php
+			
+			$orgs = array_keys($ENTRADA_USER->getAllOrganisations());
+			$query = "SELECT * FROM `group_organisations` WHERE `group_id` =".$db->qstr($GROUP_ID)." AND `organisation_id` IN (".implode(",",$orgs).")";
+			
+			if ($result = $db->GetAll($query)) {	
+			?>
 			<h2>View Selected Group Members</h2>
 			<form action="<?php echo ENTRADA_URL; ?>/admin/groups?section=manage" method="post">
 				<table class="tableList" cellspacing="1" cellpadding="1">
@@ -410,6 +417,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 					<input type="hidden" id="add_group_id" name="add_group_id" value="" />
 				</form>
 			</div>
+				
+		<?php			
+		} else {
+			add_error("You do not have access to change edit this group.");
+			echo display_error();
+		} 
+		?>
 		<script type="text/javascript">
 
 		<?php

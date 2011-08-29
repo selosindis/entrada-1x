@@ -663,7 +663,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 
 			<?php				
 
-				list($course_objectives,$top_level_id) = courses_fetch_objectives_for_org($ENTRADA_USER->getActiveOrganisation(), array(0), -1, 0, false, $posted_objectives);
+				list($course_objectives,$top_level_id) = courses_fetch_objectives($ENTRADA_USER->getActiveOrganisation(), array(0), -1, 0, false, $posted_objectives);
 				require_once(ENTRADA_ABSOLUTE."/javascript/courses.js.php");
 				$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/elementresizer.js\"></script>\n";
 			?>

@@ -94,7 +94,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 	/**
 	 * Fetch the Curriculum Objective details.
 	 */
-	$curriculum_objectives_list = courses_fetch_objectives(array($event_info["course_id"]), 1, false, false, $EVENT_ID, true);
+	list($curriculum_objectives_list,$top_level_id) = courses_fetch_objectives($ENTRADA_USER->getActiveOrganisation(),array($event_info["course_id"]),-1, 1, false, false, $EVENT_ID, true);
 	$curriculum_objectives = array();
 
 	$query = "SELECT `objective_id` FROM `event_objectives` WHERE `event_id` = ".$db->qstr($EVENT_ID)." AND `objective_type` = 'course'";
@@ -2809,7 +2809,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 												echo "	<td style=\"vertical-align: top\">\n";
 												echo "		<div id=\"course-objectives-section\">\n";
 												echo "			<strong>The learner will be able to:</strong>\n";
-												echo			event_objectives_in_list($curriculum_objectives_list, 1, true, false, 1, false);
+												echo			event_objectives_in_list($curriculum_objectives_list,$top_level_id,$top_level_id, true, false, 1, false);
 												echo "		</div>\n";
 												echo "	</td>\n";
 												echo "</tr>\n";

@@ -54,7 +54,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 		}
 		
 		
-		list($course_objectives,$top_level_id) = courses_fetch_objectives_for_org($ORGANISATION_ID,array($COURSE_ID),-1, 1, false, false, 0, true);
+		list($course_objectives,$top_level_id) = courses_fetch_objectives($ORGANISATION_ID,array($COURSE_ID),-1, 1, false, false, 0, true);
 		
 		$query			= "	SELECT * FROM `courses` 
 							WHERE `course_id` = ".$db->qstr($COURSE_ID)."

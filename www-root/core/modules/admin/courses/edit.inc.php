@@ -242,14 +242,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					if (isset($_POST["periods"]) && is_array($_POST["periods"]) && $periods = $_POST["periods"]) {
 						foreach ($periods as $key=>$unproced_period) {
 							$period_id = (int)$unproced_period;
-							
+												
 							$period_list[]=$period_id;
 							
 							if (isset($_POST["group_audience_members"][$key]) && strlen($_POST["group_audience_members"][$key]) && $group_member_string = clean_input($_POST["group_audience_members"][$key],array("trim","notags"))) {
 								$group_members = explode(",",$group_member_string);
 								if ($group_members) {
 									foreach ($group_members as $member) {
-										$group_list[] = $member["audience_value"];
+										$group_list[$period_id][] = $member["audience_value"];
 										$PROCESSED["periods"][$period_id][]=array("audience_type"=>'group_id',"audience_value"=>$member,"cperiod_id"=>$period_id,"audience_active"=>1);
 
 										//$query = "	INSERT INTO `course_audience` VALUES(NULL,".$db->qstr($COURSE_ID).",'group_id',".$db->qstr($member).",0,0,1)";
@@ -261,7 +261,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								$individual_members = explode(",",$individual_member_string);
 								if ($individual_members) {
 									foreach ($individual_members as $member) {
-										$individual_list[] = $member["audience_value"];
+										$individual_list[$period_id][] = $member["audience_value"];
 										$PROCESSED["periods"][$period_id][]=array("audience_type"=>'proxy_id',"audience_value"=>$member,"cperiod_id"=>$period_id,"audience_active"=>1);
 
 										//$query = "	INSERT INTO `course_audience` VALUES(NULL,".$db->qstr($COURSE_ID).",'proxy_id',".$db->qstr($member).",0,0,1)";
@@ -445,10 +445,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							
 							if ($PROCESSED["periods"]) {
 								foreach ($PROCESSED["periods"] as $period_id=>$period) {
-									$query = "	DELETE FROM `course_audience` WHERE `course_id` = ".$db->qstr($COURSE_ID)." AND `period_id` = ".$db->qstr($period_id)." AND `audience_type` = 'group_id'".(isset($group_list)?" AND `audience_value` NOT IN (".implode(",",$group_list).")":"");
+									$query = "	DELETE FROM `course_audience` WHERE `course_id` = ".$db->qstr($COURSE_ID)." AND `cperiod_id` = ".$db->qstr($period_id)." AND `audience_type` = 'group_id'".(isset($group_list[$period_id])?" AND `audience_value` NOT IN (".implode(",",$group_list[$period_id]).")":"");
 									$db->Execute($query);
 									
-									$query = "	DELETE FROM `course_audience` WHERE `course_id` = ".$db->qstr($COURSE_ID)." AND `period_id` = ".$db->qstr($period_id)." AND `audience_type` = 'proxy_id'".(isset($individual_list)?" AND `audience_value` NOT IN (".implode(",",$individual_list).")":"");
+									$query = "	DELETE FROM `course_audience` WHERE `course_id` = ".$db->qstr($COURSE_ID)." AND `cperiod_id` = ".$db->qstr($period_id)." AND `audience_type` = 'proxy_id'".(isset($individual_list[$period_id])?" AND `audience_value` NOT IN (".implode(",",$individual_list[$period_id]).")":"");
 									$db->Execute($query);
 									
 									foreach ($period as $key=>$audience) {
@@ -469,6 +469,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 									}
 
 								}
+							} else {
+								$query = "	DELETE FROM `course_audience` WHERE `course_id` = ".$db->qstr($COURSE_ID);
+								$db->Execute($query);
 							}
 							
 							if (!has_error()) {
@@ -833,7 +836,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 
 					<?php 
 					
-						list($course_objectives,$top_level_id) = courses_fetch_objectives_for_org($ENTRADA_USER->getActiveOrganisation(), array($COURSE_ID), -1, 0, false, $posted_objectives);
+						list($course_objectives,$top_level_id) = courses_fetch_objectives($course_details["organisation_id"], array($COURSE_ID), -1, 0, false, $posted_objectives);
 						require_once(ENTRADA_ABSOLUTE."/javascript/courses.js.php");
 						$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/elementresizer.js\"></script>\n";
 					?>

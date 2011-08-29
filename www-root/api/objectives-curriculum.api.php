@@ -11,7 +11,7 @@ if(isset($_POST["org_id"])){
 		$posted_objectives = null;
 	}
 	
-	list($course_objectives,$top_level_id) = courses_fetch_objectives_for_org($ORGANISATION_ID,array(0),-1,0, false, $posted_objectives);
+	list($course_objectives,$top_level_id) = courses_fetch_objectives($ORGANISATION_ID,array(0),-1,0, false, $posted_objectives);
 
 	if (is_array($course_objectives["primary_ids"])) {
 		foreach ($course_objectives["primary_ids"] as $objective_id) {

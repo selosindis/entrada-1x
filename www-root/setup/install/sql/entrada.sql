@@ -4012,3 +4012,5 @@ CREATE TABLE IF NOT EXISTS `topic_organisation`(
   `organisation_id` INT(12) NOT NULL,
   PRIMARY KEY(`topic_id`,`organisation_id`) 
 ) ENGINE = MyISAM DEFAULT CHARSET=utf8;
+
+INSERT INTO `topic_organisation` SELECT `topic_id`,1 FROM `events_lu_topics`;

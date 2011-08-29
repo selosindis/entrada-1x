@@ -169,7 +169,7 @@ if (!defined("IN_GROUPS")) {
 
 	$query_groups = "	SELECT a.*, COUNT(b.`gmember_id`) AS members, CASE WHEN (MIN(b.`member_active`) = 0) THEN 1 ELSE 0 END AS `inactive`
 						FROM `groups` AS a
-						JOIN `group_members` b
+						LEFT JOIN `group_members` b
 						ON b.`group_id` = a.`group_id`
 						JOIN `group_organisations` AS c
 						ON c.`group_id` = a.`group_id`

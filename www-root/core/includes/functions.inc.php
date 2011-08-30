@@ -1512,7 +1512,7 @@ function fetch_clinical_presentations($parent_id = 0, $presentations = array(), 
 					ON a.`objective_id` = b.`objective_id`
 					WHERE a.`objective_active` = '1'
 					AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
-					AND a.`objective_name` = ".$db->qstr("Mandated Objectives");//$objective_name);
+					AND a.`objective_name` = ".$db->qstr($objective_name);
 	}
 	
 	$results = $db->GetAll($query);
@@ -1556,7 +1556,7 @@ function fetch_curriculum_objectives_children($parent_id = 0, &$objectives) {
 					ON a.`objective_id` = b.`objective_id`
 					WHERE a.`objective_active` = '1'
 					AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
-					AND a.`objective_name` = ".$db->qstr("Curriculum Objectives");//$objective_name);
+					AND a.`objective_name` = ".$db->qstr($objective_name);
 	}
 	
 	$results = $db->GetAll($query);

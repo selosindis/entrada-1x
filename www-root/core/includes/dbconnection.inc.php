@@ -26,6 +26,7 @@
 */
 
 $ADODB_QUOTE_FIELDNAMES = true;	// Whether or not you want ADOdb to backtick field names in AutoExecute, GetInsertSQL and GetUpdateSQL.
+define("ADODB_QUOTE_FIELDNAMES", $ADODB_QUOTE_FIELDNAMES);
 
 // Information required to start a new database connection.
 $db = NewADOConnection(DATABASE_TYPE);

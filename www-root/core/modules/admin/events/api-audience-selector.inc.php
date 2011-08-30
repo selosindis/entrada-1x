@@ -88,6 +88,7 @@ if (!defined("IN_EVENTS")) {
 						}
 					}
 				}
+				
 				$groups = $organisation;
 				
 				$query = "	SELECT a.*
@@ -101,7 +102,7 @@ if (!defined("IN_EVENTS")) {
 				$groups_results = $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
 				if ($groups_results) {
 					foreach ($groups_results as $group) {
-						if (in_array($group["group_id"], $PROCESSED["associated_cohort_ids"])) {
+						if (isset($PROCESSED["associated_cohort_ids"]) && is_array($PROCESSED["associated_cohort_ids"]) && in_array($group["group_id"], $PROCESSED["associated_cohort_ids"])) {
 							$checked = "checked=\"checked\"";
 						} else {
 							$checked = "";
@@ -139,6 +140,7 @@ if (!defined("IN_EVENTS")) {
 						}
 					}
 				}
+				
 				$groups = $organisation;
 				
 				$query = "	SELECT a.*
@@ -149,7 +151,7 @@ if (!defined("IN_EVENTS")) {
 				$groups_results = $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
 				if ($groups_results) {
 					foreach ($groups_results as $group) {
-						if (in_array($group["group_id"], $PROCESSED["associated_cgroup_ids"])) {
+						if (isset($PROCESSED["associated_cgroup_ids"]) && is_array($PROCESSED["associated_cgroup_ids"]) && in_array($group["group_id"], $PROCESSED["associated_cgroup_ids"])) {
 							$checked = "checked=\"checked\"";
 						} else {
 							$checked = "";
@@ -191,6 +193,7 @@ if (!defined("IN_EVENTS")) {
 						}
 					}
 				}
+				
 				$students = $organisation;
 
 				$query = "	SELECT a.`id` AS `proxy_id`, a.`organisation_id`, b.`role`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`
@@ -210,7 +213,7 @@ if (!defined("IN_EVENTS")) {
 				$student_results = $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
 				if ($student_results) {
 					foreach ($student_results as $student) {
-						if (in_array($student["proxy_id"], $PROCESSED["associated_proxy_ids"])) {
+						if (isset($PROCESSED["associated_proxy_ids"]) && is_array($PROCESSED["associated_proxy_ids"]) && in_array($student["proxy_id"], $PROCESSED["associated_proxy_ids"])) {
 							$checked = "checked=\"checked\"";
 						} else {
 							$checked = "";

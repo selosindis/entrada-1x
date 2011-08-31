@@ -567,12 +567,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			echo "<h2>Course Listing</h2>\n";
 			echo "<ol class=\"curriculum-layout\">\n";
 			foreach ($terms as $term) {
-				$query		= "	SELECT * FROM `courses` 
-								WHERE `curriculum_type_id` = ".$db->qstr($term["curriculum_type_id"])." 
-								AND `course_active` = '1'
-								AND `organisation_id` = ".$db->qstr($ORGANISATION_ID)." 
-								ORDER BY `course_code` ASC";
-				$courses	= $db->GetAll($query);
+				$courses = courses_fetch_courses(true, true, $term["curriculum_type_id"]);
 				if ($courses) {
 					echo "<li><h3>".html_encode($term["curriculum_type_name"])."</h3>\n";
 					echo "	<ul class=\"course-list\">\n";

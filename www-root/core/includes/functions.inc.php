@@ -8484,11 +8484,24 @@ function courses_count_associated_events($course_id = 0) {
 	return 0;
 }
 
-function courses_fetch_courses($only_active_courses = true, $order_by_course_code = true) {
+function courses_fetch_courses($only_active_courses = true, $order_by_course_code = true, $curriculum_type_id = 0) {
 	global $db, $ENTRADA_ACL, $ENTRADA_USER;
 	
 	$only_active_courses = (bool) $only_active_courses;
 	$order_by_course_code = (bool) $order_by_course_code;
+	
+	$curriculum_type_ids = array();
+	
+	if (is_scalar($curriculum_type_id) && ($id = (int) trim($curriculum_type_id))) {
+		$curriculum_type_ids[] = $id;
+	} elseif (is_array($curriculum_type_id)) {
+		foreach ($curriculum_type_id as $id) {
+			$id = (int) trim($id);
+			if ($id) {
+				$curriculum_type_ids[] = $id;
+			}
+		}
+	}
 	
 	$output = array();
 	
@@ -8513,6 +8526,10 @@ function courses_fetch_courses($only_active_courses = true, $order_by_course_cod
 	if ($only_active_courses) {
 		$query .= "	AND a.`course_active` = '1'";
 	}
+	
+	if (!empty($curriculum_type_ids)) {
+		$query .= "	AND a.`curriculum_type_id` IN (".implode(", ", $curriculum_type_ids).")";
+	}
 	$query .= "	ORDER BY".($order_by_course_code ? " a.`course_code`," : "")." a.`course_name` ASC";
 	$results = $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
 	if ($results) {
@@ -8525,11 +8542,6 @@ function courses_fetch_courses($only_active_courses = true, $order_by_course_cod
 	
 	return $output;
 }
-
-
-/**
- * @todo bt37 Please fix this.
- */
 
 /**
  *
@@ -8769,7 +8781,11 @@ function courses_fetch_objectives($org_id,$course_ids,$top_level_id = -1, $paren
 											ORDER BY b.`objective_order` ASC");
 		if ($event_objectives) {
 			foreach ($event_objectives as $objective) {
-				if ($objectives["objectives"][$objective["objective_id"]]["primary"] || $objectives["objectives"][$objective["objective_id"]]["secondary"] || $objectives["objectives"][$objective["objective_id"]]["tertiary"] || count(array_intersect($objectives["objectives"][$objective["objective_id"]]["parent_ids"], $objectives["used_ids"]))) {
+				if ($objectives["objectives"][$objective["objective_id"]]["primary"] ||
+						$objectives["objectives"][$objective["objective_id"]]["secondary"] ||
+						$objectives["objectives"][$objective["objective_id"]]["tertiary"] ||
+						(is_array($objectives["objectives"][$objective["objective_id"]]["parent_ids"]) && $objectives["used_ids"] && count(array_intersect($objectives["objectives"][$objective["objective_id"]]["parent_ids"], $objectives["used_ids"])))
+						) {
 					$objectives["objectives"][$objective["objective_id"]]["event_objective_details"] = $objective["objective_details"];
 					$objectives["objectives"][$objective["objective_id"]]["event_objective"] = true;
 				}

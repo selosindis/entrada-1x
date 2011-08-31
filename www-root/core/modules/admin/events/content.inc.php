@@ -1088,8 +1088,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							<tr>
 								<td colspan="2">&nbsp;</td>
 							</tr>
-							<tr>
-								<td colspan="2">
+						</tbody>
+					</table>
 									<table style="width: 100%" cellspacing="0" summary="List of ED10">
 										<colgroup>
 											<col style="width: 55%" />
@@ -1097,6 +1097,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 											<col style="width: 15%" />
 											<col style="width: 15%" />
 										</colgroup>
+										<tfoot>
+											<tr>
+												<td colspan="4" style="text-align: right; padding-top: 5px"><input type="submit" value="Save" /></td>
+											</tr>
+										</tfoot>
 										<tr>
 											<td colspan="4">
 												<h2>Event Topics</h2>
@@ -1171,9 +1176,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 										}
 										?>
 										</table>
-									</td></tr>
-						</tbody>
-	  </table>
 			</div>
 				</form>
 

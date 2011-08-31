@@ -5,4 +5,6 @@ INSERT INTO `user_organisations` (`organisation_id`, `proxy_id`)
         ON b.`user_id` = a.`id`
     WHERE b.`app_id` = '1';
 
+ALTER TABLE `organisations` ADD `template` VARCHAR(32) NOT NULL DEFAULT 'default' AFTER `organisation_desc`;
+
 UPDATE `settings` SET `value` = '1219' WHERE `shortname` = 'version_db';

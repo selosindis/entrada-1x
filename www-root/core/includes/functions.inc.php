@@ -1753,10 +1753,10 @@ function fetch_countries() {
 function fetch_templates() {
 	//search the templates directory for available templates.
 	$dir    = ENTRADA_ABSOLUTE . '/templates';
-	$results = scandir($dir);
+	$dir_contents = scandir($dir);
 
-	if (is_array($results) && count($results)) {
-		$results = array_filter($results, "remove_dirs");
+	if (is_array($dir_contents) && count($dir_contents)) {
+		$results = array_filter($dir_contents, "filter_dir");
 		if ($results) {
 			return $results;
 		} else {
@@ -1769,17 +1769,18 @@ function fetch_templates() {
 
 /**
  * This function is the array_filter callback used in fetch_templates to
- * filter the array of directors for the removal of "." and "..".
+ * filter the array of template directory contents for the removal of files,
+ * "." and "..".
  *
  * @param <string> $dir
- * @return <boolean> false if the directory is "." or "..".
+ * @return <boolean> true if $item is a directory and not "." or ".."; false otherwise.
  */
-function remove_dirs($dir) {
-	if ($dir == "." || $dir == "..") {
-		return false;
-	}
-	else {
+function filter_dir($item) {
+	$item_abs = ENTRADA_ABSOLUTE . '/templates/' . $item;
+	if (is_dir($item_abs) && $item != "." && $item != "..") {
 		return true;
+	} else {
+		return false;
 	}
 }
 

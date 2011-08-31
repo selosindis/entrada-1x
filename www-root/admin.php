@@ -196,12 +196,12 @@ if((isset($_SESSION["isAuthorized"])) && ($_SESSION["isAuthorized"])) {
 	 */
 
 	if ($ENTRADA_USER->getAllOrganisations() && count($ENTRADA_USER->getAllOrganisations()) > 1) {
-		$sidebar_html = "<ul class=\"menu\">\n";
+		$sidebar_html = "<ul class=\"menu none\">\n";
 		foreach ($ENTRADA_USER->getAllOrganisations() as $key => $organisation_title) {
 			if ($key == $ENTRADA_USER->getActiveOrganisation()) {
-				$sidebar_html .= "<li class=\"on\"><a href=\"" . ENTRADA_URL . "/admin/" . $MODULE . "/" . "?" . replace_query(array("organisation_id" => $key)) . "\">" . html_encode($organisation_title) . "</a></li>\n";
+				$sidebar_html .= "<li><a href=\"" . ENTRADA_URL . "/admin/" . $MODULE . "/" . "?" . replace_query(array("organisation_id" => $key)) . "\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-on.gif\" alt=\"\" /> <span>" . html_encode($organisation_title) . "</span></a></li>\n";
 			} else {
-				$sidebar_html .= "<li class=\"off\"><a href=\"" . ENTRADA_URL . "/admin/" . $MODULE . "/" . "?" . replace_query(array("organisation_id" => $key)) . "\">" . html_encode($organisation_title) . "</a></li>\n";
+				$sidebar_html .= "<li><a href=\"" . ENTRADA_URL . "/admin/" . $MODULE . "/" . "?" . replace_query(array("organisation_id" => $key)) . "\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-off.gif\" alt=\"\" /> <span>" . html_encode($organisation_title) . "</span></a></li>\n";
 			}
 		}
 		$sidebar_html .= "</ul>\n";

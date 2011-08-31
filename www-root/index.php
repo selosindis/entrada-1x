@@ -36,14 +36,6 @@
  */
 require_once("init.inc.php");
 
-if (isset($_GET["organisation_id"])) {
-	$organisation = clean_input($_GET["organisation_id"], array("trim", "notags", "int"));
-	$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"] = $organisation;
-	if ($ENTRADA_USER) {
-		$ENTRADA_USER->setActiveOrganisation($organisation);
-	}
-}
-
 ob_start("on_checkout");
 
 $PROCEED_TO = ((isset($_GET["url"])) ? clean_input($_GET["url"], "trim") : ((isset($_SERVER["REQUEST_URI"])) ? clean_input($_SERVER["REQUEST_URI"], "trim") : false));
@@ -474,7 +466,6 @@ if (($MODULE == "login") && (!isset($_SERVER["HTTPS"])) && ((!defined("AUTH_FORC
 }
 
 define("PARENT_INCLUDED", true);
-global $ENTRADA_ACTIVE_TEMPLATE;
 
 require_once (ENTRADA_ABSOLUTE."/templates/".$ENTRADA_ACTIVE_TEMPLATE."/layouts/public/header.tpl.php");
 

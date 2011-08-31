@@ -2,6 +2,7 @@ This email is meant to be a reminder for you to continue logging your clerkship 
 
 %ROTATION_DEFICIENCIES%
 
+Please contact your clinical supervisor or the course curricular administrator to discuss any problems that you are having attaining the mandatory clinical goals of this rotation.
 
 An overview of your progress in this rotation can be found here:
 %ROTATION_OVERVIEW_URL%

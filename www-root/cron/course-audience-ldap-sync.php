@@ -36,18 +36,21 @@ if ($results) {
 	foreach ($results as $course) {
 		$start_date = 0;
 		$end_date = 0;
+		$curriculum_period = 0;
 		
 		if ($course["curriculum_type_id"] != 0) {
 			$now = time();
-			$query = "SELECT `start_date`, `finish_date` FROM `curriculum_periods` WHERE ".$db->qstr($now)." BETWEEN `start_date` AND `finish_date` AND `active` = 1 AND `curriculum_type_id` = ".$db->qstr($course["curriculum_type_id"]);
+			$query = "SELECT `start_date`, `finish_date`,`cperiod_id` FROM `curriculum_periods` WHERE ".$db->qstr($now)." BETWEEN `start_date` AND `finish_date` AND `active` = 1 AND `curriculum_type_id` = ".$db->qstr($course["curriculum_type_id"]);
 			if ($result = $db->GetRow($query)) {
 				$start_date = $result["start_date"];
 				$end_date = $result["finish_date"];
+				$curriculum_period = $result["cperiod_id"];
 			} else {
 				$query = "SELECT * FROM `curriculum_periods` WHERE `active` = 1 AND `curriculum_type_id` = ".$db->qstr($course["curriculum_type_id"])."ORDER BY start_date ASC LIMIT 1";
 				if ($result = $db->GetRow($query)) {
 					$start_date = $result["start_date"];
 					$end_date = $result["finish_date"];
+					$curriculum_period = $result["cperiod_id"];
 				}
 			}
 		}		
@@ -106,7 +109,7 @@ if ($results) {
 									AND `audience_value` = ".$db->qstr($group_id);
 						
 						if (!$db->GetAll($query)) {
-							$query = "	INSERT INTO `course_audience` VALUES (NULL,".$db->qstr($course["course_id"]).",'group_id',".$db->qstr($group_id).",".$db->qstr($start_date).",".$db->qstr($finish_date).",1)";
+							$query = "	INSERT INTO `course_audience` VALUES (NULL,".$db->qstr($course["course_id"]).",'group_id',".$db->qstr($group_id).",".$db->qstr($curriculum_period).",".$db->qstr($finish_date).",1)";
 							$db->Execute($query);
 						}
 						

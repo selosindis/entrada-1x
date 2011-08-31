@@ -55,19 +55,6 @@ if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
 
 @ini_set("filter.default_flags", FILTER_FLAG_NO_ENCODE_QUOTES);
 
-$ENTRADA_ACTIVE_TEMPLATE = "";
-
-//If we know the active org then we can get the active template.
-if ($ENTRADA_USER) {
-	$query = "SELECT template FROM `" . AUTH_DATABASE . "`.`organisations` WHERE `organisation_id` = " . $db->qstr($ENTRADA_USER->getActiveOrganisation());
-	$ENTRADA_ACTIVE_TEMPLATE = $db->GetOne($query);
-}
-
-//if we do not have an active template default to the "default" template.
-if (!$ENTRADA_ACTIVE_TEMPLATE) {
-		$ENTRADA_ACTIVE_TEMPLATE = DEFAULT_TEMPLATE;
-}
-
 /**
  * If Entrada is in development mode and the user is not a developer send them to the
  * notavailable.html file.
@@ -84,6 +71,31 @@ if ((defined("AUTH_ALLOW_CAS")) && (AUTH_ALLOW_CAS == true)) {
 
 	phpCAS::client(CAS_VERSION_2_0, AUTH_CAS_HOSTNAME, AUTH_CAS_PORT, AUTH_CAS_URI, false);
 }
+
+$ENTRADA_ACTIVE_TEMPLATE = "";
+
+if ($ENTRADA_USER) {
+	if (isset($_GET["organisation_id"])) {
+		$organisation = clean_input($_GET["organisation_id"], array("trim", "notags", "int"));
+		
+		$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"] = $organisation;
+		$ENTRADA_USER->setActiveOrganisation($organisation);
+	}
+
+ 	$query = "SELECT `template` FROM `" . AUTH_DATABASE . "`.`organisations` WHERE `organisation_id` = " . $db->qstr($ENTRADA_USER->getActiveOrganisation());
+	$ENTRADA_ACTIVE_TEMPLATE = $db->CacheGetOne(CACHE_TIMEOUT, $query);
+}
+
+if (!$ENTRADA_ACTIVE_TEMPLATE) {
+	$ENTRADA_ACTIVE_TEMPLATE = DEFAULT_TEMPLATE;
+}
+
+global $ENTRADA_ACTIVE_TEMPLATE;
+
+define("TEMPLATE_URL", ENTRADA_URL."/templates/".$ENTRADA_ACTIVE_TEMPLATE);
+define("TEMPLATE_ABSOLUTE", ENTRADA_ABSOLUTE."/templates/".$ENTRADA_ACTIVE_TEMPLATE);
+define("TEMPLATE_RELATIVE", ENTRADA_RELATIVE."/templates/".$ENTRADA_ACTIVE_TEMPLATE);
+
 
 /**
  * Setup Zend_Translate for language file support.

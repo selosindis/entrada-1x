@@ -568,10 +568,6 @@ $ENTRADA_CHARSETS["BIG5-HKSCS"] = array("description" => "Big5 with Hong Kong ex
 $ENTRADA_CHARSETS["Shift_JIS"] = array("description" => "Japanese.", "mysql_names" => "sjis", "mysql_collate" => "sjis_japanese_ci");
 $ENTRADA_CHARSETS["EUC-JP"] = array("description" => "Japanese.", "mysql_names" => "ujis", "mysql_collate" => "ujis_japanese_ci");
 
-define("TEMPLATE_URL", ENTRADA_URL."/templates/".DEFAULT_TEMPLATE);
-define("TEMPLATE_ABSOLUTE", ENTRADA_ABSOLUTE."/templates/".DEFAULT_TEMPLATE);
-define("TEMPLATE_RELATIVE", ENTRADA_RELATIVE."/templates/".DEFAULT_TEMPLATE);
-
 /**
  * Define the current reporting year for use withing the Annual Reporting Module - If the current month is between January and April then the current reporting
  * year is last year otherwise it is this year. This is because the due date for annual reports are due in February and March and often times faculty complete

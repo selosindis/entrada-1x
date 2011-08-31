@@ -206,6 +206,7 @@ CREATE TABLE IF NOT EXISTS `organisations` (
   `organisation_email` varchar(128) NOT NULL DEFAULT '',
   `organisation_url` text NOT NULL,
   `organisation_desc` text,
+  `template` varchar(32) NOT NULL DEFAULT 'default',
   PRIMARY KEY  (`organisation_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 

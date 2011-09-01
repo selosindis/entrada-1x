@@ -55,7 +55,8 @@ class Users extends Collection {
 		$users = array();
 		if ($results) {
 			foreach ($results as $result) {
-				$user =  User::fromArray($result);
+				$user = new User();
+				$user =  User::fromArray($result, $user);
 				$cohort = groups_get_cohort($result["id"]);
 				if ($cohort) {
 					$user->setCohort($cohort["group_id"]);

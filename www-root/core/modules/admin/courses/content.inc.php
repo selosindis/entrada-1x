@@ -94,7 +94,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								/**
 								 * Not-Required: course_url | External Website Url
 								 */
-								if((isset($_POST["course_url"])) && ($tmp_input = clean_input($_POST["course_url"], array("notags", "nows")))) {
+								if((isset($_POST["course_url"])) && ($tmp_input = clean_input($_POST["course_url"], array("notags", "nows"))) && ($tmp_input != "http://")) {
 									$PROCESSED["course_url"] = $tmp_input;
 								} else {
 									$PROCESSED["course_url"] = "";
@@ -418,7 +418,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							<?php
 							echo "<tr>\n";
 							echo "	<td><label for=\"course_url\" class=\"form-nrequired\">External Website URL</label></td>\n";
-							echo "	<td><input type=\"text\" id=\"course_url\" name=\"course_url\" value=\"".((isset($PROCESSED["course_url"])) ? html_encode($PROCESSED["course_url"]) : "")."\" style=\"width: 450px\" /></td>\n";
+							echo "	<td><input type=\"text\" id=\"course_url\" name=\"course_url\" value=\"".((isset($PROCESSED["course_url"]) && ($PROCESSED["course_url"] != "")) ? html_encode($PROCESSED["course_url"]) : "http://")."\" style=\"width: 450px\" />
+									<br /><span class=\"content-small\"><strong>Example:</strong> http://meds.queensu.ca</span></td>\n";
 							echo "</tr>\n";
 							echo "<tr>\n";
 							echo "	<td>&nbsp;</td>\n";

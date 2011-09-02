@@ -995,6 +995,7 @@ if ($COMMUNITY_ID) {
 					</tr>
 				</tfoot>
 				<tbody>
+					<tr><td></td></tr>
 					<tr>
 						<td colspan="3" style="vertical-align: top">
 								<p>
@@ -1165,6 +1166,7 @@ if ($COMMUNITY_ID) {
 							<h3>Members to be Added on Submission</h3>
 							<div id="community_members_list"></div>
 						</td>
+					</tr>
 				</tbody>
 			</table>
 		</form>

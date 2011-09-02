@@ -79,7 +79,7 @@ if ($COURSE_ID) {
 				FROM `courses` AS a
 				JOIN `assessments` AS b
 				ON a.`course_id` = b.`course_id`
-				AND b.`grad_year` = ".$db->qstr($_SESSION["details"]["role"])."
+				AND b.`cohort` = ".$db->qstr($ENTRADA_USER->getCohort())."
 				LEFT JOIN `assessment_grades` AS c
 				ON b.`assessment_id` = c.`assessment_id`
 				AND c.`proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."

@@ -55,16 +55,6 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	exit;
 } else {
 	define("IN_ADMIN", true);
-	global $ENTRADA_ACTIVE_TEMPLATE;
-
-	/*
-	 * If the org request attribute is set then change the current org id for this user.
-	 */
-	if (isset($_GET["organisation_id"])) {
-		$organisation = clean_input($_GET["organisation_id"], array("trim", "notags", "int"));
-		$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"] = $organisation;
-		$ENTRADA_USER->setActiveOrganisation($organisation);
-	}
 
 	/**
 	 * If they were logged into another application and came here, they should still be

@@ -57,9 +57,6 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 		.objectives {
 			border-right: 1px solid #EBEBEB;
 		}
-		li {
-			margin-top: 10px;
-		}
 		</style>
 		<table class="tableList" cellspacing="0" summary="List of Objectives">
 			<tbody>

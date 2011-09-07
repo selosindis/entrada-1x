@@ -243,6 +243,18 @@ if (!defined("PARENT_INCLUDED")) {
 					
 					$event_contacts = events_fetch_event_contacts($EVENT_ID);
 					$event_audience = events_fetch_event_audience($EVENT_ID);
+					
+					$associated_cohorts = array("all");
+					$associated_cohorts_string = "";
+					$query = "SELECT * FROM `event_audience` WHERE `event_id` = ".$db->qstr($EVENT_ID)." AND `audience_type` = 'cohort'";
+					$cohorts = $db->GetAll($query);
+					if ($cohorts) {
+						foreach ($cohorts as $cohort) {
+							$associated_cohorts[] = $cohort["audience_value"];
+							$associated_cohorts_string .= ($associated_cohorts_string ? ", ".$db->qstr($cohort["audience_value"]) : $db->qstr($cohort["audience_value"]) );
+						}
+						$event_audience_type = "cohort";
+					}
 
 					$event_resources = events_fetch_event_resources($EVENT_ID, "all");
 					$event_files = $event_resources["files"];
@@ -273,7 +285,7 @@ if (!defined("PARENT_INCLUDED")) {
 					$syllabus_title				= "Visit Course Website";
 
 // @todo simpson This needs to be fixed.
-					if (($_SESSION["details"]["allow_podcasting"]) && ($event_audience_type == "grad_year") && (in_array($_SESSION["details"]["allow_podcasting"], array($associated_grad_year, "all")))) {
+					if (($_SESSION["details"]["allow_podcasting"]) && ($event_audience_type == "cohort") && (in_array($_SESSION["details"]["allow_podcasting"], $associated_cohorts))) {
 						$sidebar_html = "To upload a podcast: <a href=\"javascript:openPodcastWizard('".$EVENT_ID."')\">click here</a>";
 						new_sidebar_item("Upload A Podcast", $sidebar_html, "podcast_uploading", "open", "2.0");
 						
@@ -506,7 +518,7 @@ if (!defined("PARENT_INCLUDED")) {
 /**
  * @todo simpson This needs to be fixed as $event_audience_type is no longer for grad_year.
  */
-if ($event_audience_type == "grad_year") {
+if ($event_audience_type == "cohort") {
 	$query = "	SELECT a.`event_id`, a.`event_title`, b.`audience_value` AS `event_grad_year`
 				FROM `events` AS a
 				LEFT JOIN `event_audience` AS b
@@ -517,8 +529,8 @@ if ($event_audience_type == "grad_year") {
 				WHERE (a.`event_start` BETWEEN ".$db->qstr($event_info["event_start"])." AND ".$db->qstr(($event_info["event_finish"] - 1)).")
 				AND c.`course_active` = '1'
 				AND a.`event_id` <> ".$db->qstr($event_info["event_id"])."
-				AND b.`audience_type` = 'grad_year'
-				AND b.`audience_value` = ".$db->qstr((int) $associated_grad_year)."
+				AND b.`audience_type` = 'cohort'
+				AND b.`audience_value` IN (".$associated_cohorts_string.")
 				ORDER BY `event_title` ASC";
 	$results = $db->GetAll($query);
 	if ($results) {

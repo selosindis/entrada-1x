@@ -253,8 +253,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								$result	= $db->GetRow($query);
 								if ($result) {
 									$event_eventtypes[] = array("eventtype_id"=>$eventtype_id, "duration"=>$duration, "eventtype_title"=>$result["eventtype_title"]);
-										
-										
 								}
 							}
 						}
@@ -314,8 +312,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								$event_duration	= 0;
 
 								foreach($event_eventtypes as $event_type) {
-									$event_finish += ($event_type[1] * 60);
-									$event_duration += $event_type[1];
+									$event_finish += ($event_type["duration"] * 60);
+									$event_duration += $event_type["duration"];
 								}
 					
 								/**

@@ -37,6 +37,8 @@
  */
 require_once("init.inc.php");
 
+application_log("cron", "-- Beginning of course-audience-sync --");
+
 $ldap = NewADOConnection("ldap");
 $ldap->SetFetchMode(ADODB_FETCH_ASSOC);
 $ldap->debug = false;
@@ -80,9 +82,8 @@ if ($results) {
 					AND b.`entrada_only` = 0
 					AND b.`member_active` = 1";
 		$audience = $db->GetAll($query);
+		$course_audience = array();
 		if ($audience) {
-			$course_audience = array();
-			
 			foreach ($audience as $key=>$audience_member) {
 				$course_audience["id"][$key] = $audience_member["id"];
 				$course_audience["number"][$key] = $audience_member["number"];
@@ -97,7 +98,7 @@ if ($results) {
 		$query = "	SELECT `community_id` FROM `community_courses` WHERE `course_id` = ".$db->qstr($course["course_id"]);
 		$comm_id = $db->GetOne($query);
 		if ($comm_id) {
-			echo "The community for the course ".$course["course_id"]." is ".$comm_id." \n";
+			application_log("cron", "The community for the course ".$course["course_id"]." is ".$comm_id.".");
 		
 			$community_audience = array();
 			
@@ -112,7 +113,7 @@ if ($results) {
 				$community_audience = false;
 			}
 		} else {
-			echo "There is no community for the course ".$course["course_id"]." \n";
+			application_log("cron", "There is no community for the course ".$course["course_id"].".");
 		}
 
 		//create LDAP connection
@@ -155,21 +156,26 @@ if ($results) {
 									AND `audience_type` = 'group_id' 
 									AND `audience_value` = ".$db->qstr($group_id);
 						if (!$db->GetAll($query)) {
-							$query = "INSERT INTO `course_audience` VALUES (NULL,".$db->qstr($course["course_id"]).",'group_id',".$db->qstr($group_id).",".$db->qstr($curriculum_period).",".$db->qstr($end_date).",1)";
-							$db->Execute($query);
+							$values = array();
+							$values["course_id"] = $course["course_id"];
+							$values["audience_type"] = "group_id";
+							$values["audience_value"] = $group_id;
+							$values["enroll_finish"] = $end_date;
+							$values["audience_active"] = "1";
+							$values["cperiod_id"] = $curriculum_period;
+							$db->AutoExecute("course_audience",$values,"INSERT");
 						}
 
-						if ($result["uniqueMember"] && count($result["uniqueMember"])){			
+						if ($result["uniqueMember"] && is_array($result["uniqueMember"]) && count($result["uniqueMember"])){			
 							//for each user in the unique member list get their queensuCaPkey
 							foreach ($result["uniqueMember"] as $key=>$member) {
-								$member_path = explode(',', $member);
-								$uniUid = trim(str_replace('QueensuCaUniUid=', '', $member_path[0]));
+								$member_path = explode(",", $member);
+								$uniUid = trim(str_replace("QueensuCaUniUid=", "", $member_path[0]));
 
 								//there should always be a result, if not the LDAP server has a student enrolled with no LDAP entry
 								if (($result = $ldap->GetRow("QueensuCaUniUid=".$uniUid."*"))) {
-									//echo $uniUid."'s student number is ".$result["queensuCaPKey"]."        ";
-
-									$pKey = (int) str_replace("S","",$result["queensuCaPKey"]);
+									
+									$pKey = (int) str_replace("S", "", $result["queensuCaPKey"]);
 									$query = "	SELECT `id` 
 												FROM `".AUTH_DATABASE."`.`user_data` 
 												WHERE `number` = ".$db->qstr($pKey);
@@ -182,101 +188,113 @@ if ($results) {
 										//if no result, insert into the course audience, otherwise remove from array
 										if (!$result=$db->GetAll($query)) {
 											//insert into audience
-											$query = "	INSERT INTO `group_members` VALUES(NULL,".$db->qstr($group_id).",".$db->qstr($id).",".$db->qstr($start_date).",".$db->qstr($end_date).",1,0,".$db->qstr($now).",0)";
-											if ($db->Execute($query)) {
-												echo $pKey." WAS SUCCESSFULLY REGISTERED INTO THE COURSE: ".$course["course_code"]."     \n";
+											$values = array();
+											$values["group_id"] = $group_id;
+											$values["proxy_id"] = $id;
+											$values["start_date"] = $start_date;
+											$values["expire_date"] = $end_date;
+											$values["member_active"] = "1";
+											$values["entrada_only"] = "0";
+											$values["updated_date"] = time();
+											$values["updated_by"] = "1";
+											if ($db->AutoExecute("group_members",$values,"INSERT")) {												
+												application_log("cron", $id." was successfully registered into course [".$course["course_code"]."].");
 											} else {
-												echo "Error occurred while adding ".$pKey." to the course. \n";
+												application_log("cron", "Error occurred while adding [".$id."] to the course.");
 											}
 										} elseif ($course_audience) {
-											$key = array_search($pKey,$course_audience["number"]);
+											$key = array_search($pKey, $course_audience["number"]);
 											if ($key !== false) {
 												unset($course_audience["number"][$key]);
 												unset($course_audience["id"][$key]);
 												
-												echo $pKey." was already a course member in Entrada amd the key was unset. \n";
+												application_log("cron", $pKey." was already a course member in the system amd the key was unset.");
 											}
-											echo $pKey." was already a course member in Entrada \n";
+											application_log("cron", $pKey." was already a course member in the system.");
 										}
 
 										if ($comm_id) {
 											$query = "SELECT * FROM `community_members` WHERE `community_id` = ".$db->qstr($comm_id)." AND `proxy_id` = ".$db->qstr($id)." AND `member_active` = 1";
 											if (!$row = $db->GetRow($query)) {
-												$query = "INSERT INTO `community_members` VALUES(NULL,".$db->qstr($comm_id).",".$db->qstr($id).",1,".$db->qstr(time()).",0)";
-												$db->Execute($query);
-												echo $pKey." WAS SUCCESSFULLY REGISTERED INTO THE COURSE WEBSITE: ".$course["course_code"]." \n";
+												$values = array();
+												$values["community_id"] = $comm_id;
+												$values["proxy_id"] = $id;
+												$values["member_active"] = "1";
+												$values["member_joined"] = time();
+												$values["member_acl"] = "0";
+												if ($db->AutoExecute("community_members",$values,"INSERT")) {
+													application_log("cron", $pKey." was successfully registered into course website [".$course["course_code"]."].");
+												}
 											} else {
 												$key = array_search($id,$community_audience["id"]);
 												if ($key !== false) {
 													unset($community_audience["id"][$key]);
-													echo $pKey." WAS ALREADY A MEMBER OF THE COURSE WEBSITE: ".$course["course_code"]." \n";
+													application_log("cron", $pKey." was already a member of the course website [".$course["course_code"]."].");
 												}
 											}
 										}										
 									} else {
-										//echo 'Student found in course on LDAP server who is not registered in Entrada.';
+										//application_log( 'Student found in course on LDAP server who is not registered in Entrada.';
 									}
 
 								} else {
-									echo "LDAP records out of date, inform LDAP admin. \n";
+									application_log("cron", "LDAP records out of date, inform LDAP admin.");
 								}
 
 							}
 						} else {
-							echo 'No members found for course '.$course["cource_code"]." \n";
+							application_log("cron", "No members found for course ".$course["cource_code"].".");
 						}
 
-						if ($course_audience) {
+						if (isset($course_audience) && $course_audience) {
 							$end_stamp = time();
 							foreach ($course_audience["id"] as $key=>$audience_member) {
-								$query = "	UPDATE `group_members` 
-											SET `finish_date` = ".$db->qstr($end_stamp).", 
-											`member_active` = 0,
-											`updated_date` = ".$db->qstr($end_stamp).", 
-											WHERE `group_id` = ".$db->qstr($group_id)."
-											AND `proxy_id` = ".$db->qstr($audience_member);
-								if ($db->Execute($query)) {
-									echo $course_audience["number"][$key]." is no longer a member of the course \n";
+								$values = array();
+								$values["finish_date"] = $end_stamp;
+								$values["member_active"] = 0;
+								$values["updated_date"] = $end_stamp;
+								if ($db->AutoExecute("group_members",$values,"UPDATE","`group_id` = ".$db->qstr($group_id)." AND `proxy_id` = ".$db->qstr($audience_member))) {
+									application_log("success",$course_audience["number"][$key]." was successfully removed from  the group ".$group_id.".");
 								} else {
-									echo "Error occurred while removing ".$pKey." from the course list. \n";
+									application_log("cron", "Error occurred while removing ".$pKey." from the group list ".$group_id.".");
 								}
 							}					
 						}
-
-						if (isset($community_audience)) {
-							$end_stamp = time();
-							foreach ($community_audience["id"] as $key=>$audience_member) {
-								$query = "	UPDATE `community_members` 
-											SET `member_active` = 0 
-											WHERE `community_id` = ".$db->qstr($comm_id)."
-											AND `proxy_id` = ".$db->qstr($audience_member)."
-											AND `member_active` = 1";
-								if ($db->Execute($query)) {
-									echo $audience_member." is no longer a member of the course community \n";
-								} else {
-									echo "Error occurred while removing ".$pKey." from the community. \n";
-								}
-							}					
-						}						
+						if ($comm_id) {
+							if (isset($community_audience) && $community_audience) {
+								$end_stamp = time();
+								foreach ($community_audience["id"] as $key=>$audience_member) {
+									$values = array();
+									$values["member_active"] = 0;
+									if ($db->AutoExecute("community_members",$values,"UPDATE","`community_id` = ".$db->qstr($comm_id)." AND `proxy_id` = ".$db->qstr($audience_member)." AND `member_active` = 1")) {
+										application_log("success",$audience_member." was successfully removed from the  course community ".$comm_id.".");
+									} else {
+										application_log("cron", "Error occurred while removing ".$pKey." from the community ".$comm_id.".");
+									}
+								}					
+							}				
+						}
 
 					} else {
-						echo 'No group_id for course '.$course["course_code"]." \n";
+						application_log("cron", "No group_id for course ".$course["course_code"].".");
 					}
 
 					$ldap->Close();
 
 
 				} else {
-					echo "Could not connect to get student information \n";
+					application_log("cron", "Could not connect to get student information.");
 				}
 
 			} else {
-				echo "No results from LDAP server for Entrada course ".$course["course_code"].". Check that course code is valid.                \n";
+				application_log("cron", "No results from LDAP server for course ".$course["course_code"].". Check that course code is valid.");
 			}
 		} else {
-			echo "Could not connect to get course information. \n";
+			application_log("cron", "Could not connect to get course information.");
 		}
 	}
 } else {
-	echo "No courses found in system. \n";
+	application_log("cron", "No courses found in system.");
 }
+
+application_log("cron", "-- End of course-audience-sync --");

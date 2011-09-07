@@ -1609,13 +1609,14 @@ function fetch_event_topic_title($topic_id = 0) {
  */
 function fetch_first_cohort() {
 	global $db, $ENTRADA_USER;
-	$query = "SELECT a.`group_id` FROM `groups` AS a
+	$query = "	SELECT a.`group_id` FROM `groups` AS a
 				JOIN `group_organisations` AS b
 				ON a.`group_id` = b.`group_id`
 				WHERE a.`group_type` = 'cohort'
+				AND a.`group_active` = '1'
 				AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
-				ORDER BY a.`group_id` DESC";
-	return $db->GetOne($query);
+				ORDER BY a.`group_id` DESC LIMIT 0, 1";
+	return $db->CacheGetOne(CACHE_TIMEOUT, $query);
 }
 
 /**
@@ -14142,7 +14143,8 @@ function groups_get_all_cohorts($organisation_id = 0, $only_active_groups = fals
 					ON a.`group_id` = b.`group_id` 
 					WHERE b.`organisation_id` = ".$db->qstr($organisation_id)."
 					".($only_active_groups ? " AND a.`group_active` = '1'" : "")."
-					AND a.`group_type` = 'cohort'";
+					AND a.`group_type` = 'cohort'
+					ORDER BY `group_name` DESC";
 		$cohorts = $db->GetAll($query);
 		if ($cohorts) {
 			return $cohorts;

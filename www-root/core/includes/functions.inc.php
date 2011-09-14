@@ -10566,9 +10566,9 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 		}
 		
 		$parent_ids = array();
-		foreach ($learning_events as $event) {
-			if ($event["parent_id"]) {
-				$parent_ids[] = $event["parent_id"];
+		foreach ($learning_events as $temp_event) {
+			if ($temp_event["parent_id"]) {
+				$parent_ids[] = $temp_event["parent_id"];
 			}
 		}
 		

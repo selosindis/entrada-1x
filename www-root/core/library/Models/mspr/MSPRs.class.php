@@ -25,7 +25,8 @@ class MSPRs extends Collection {
 			foreach ($results as $result) {
 				
 				//unfortunate but cuts down on db requests by including this in the main query
-				$user =  User::fromArray($result);
+				$user = new User();
+				$user =  User::fromArray($result, $user);
 				
 				$mspr = MSPR::fromArray($result);
 				$msprs[] = $mspr;
@@ -52,7 +53,8 @@ class MSPRs extends Collection {
 		if ($results) {
 			foreach ($results as $result) {
 				
-				$user =  User::fromArray($result);
+				$user = new User();
+				$user =  User::fromArray($result, $user);
 				
 				$mspr = MSPR::fromArray($result);
 				$msprs[] = $mspr;

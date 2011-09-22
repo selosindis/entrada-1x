@@ -151,7 +151,7 @@ if (!defined("IN_EVENTS")) {
 												$query = "	SELECT *
 															FROM `course_groups`
 															WHERE `course_id` = ".$db->qstr($PROCESSED["course_id"])."
-															AND `group_active` = '1'
+															AND `active` = '1'
 															ORDER BY LENGTH(`group_name`), `group_name` ASC";
 												$results = $db->GetAll($query);
 												if ($results) {
@@ -221,7 +221,7 @@ if (!defined("IN_EVENTS")) {
 																			FROM `course_groups`
 																			WHERE `cgroup_id` = ".$db->qstr($cgroup_id)."
 																			AND `course_id` = ".$db->qstr($PROCESSED["course_id"])."
-																			AND `group_active` = 1";
+																			AND `active` = 1";
 																$result	= $db->GetRow($query);
 																if ($result) {
 																	$PROCESSED["associated_cgroup_ids"][] = $cgroup_id;

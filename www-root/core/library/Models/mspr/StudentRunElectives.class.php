@@ -7,7 +7,7 @@ class StudentRunElectives extends Collection {
 	public static function get(User $user) {
 		global $db;
 		$user_id = $user->getID();
-		$query		= "SELECT * FROM `student_student_run_electives` WHERE `user_id` = ".$db->qstr($user_id)." ORDER BY `start_year` ASC, `start_month` ASC";
+		$query = "SELECT * FROM `student_student_run_electives` WHERE `user_id` = ".$db->qstr($user_id)." ORDER BY `start_year` ASC, `start_month` ASC";
 		$results = $db->getAll($query);
 		$sres = array();
 		if ($results) {

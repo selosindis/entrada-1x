@@ -12,7 +12,7 @@ class FormalRemediation extends AbstractStudentDetails {
 	
 	public static function get($id) {
 		global $db;
-		$query		= "SELECT * FROM `student_formal_remediations` where `id`=".$db->qstr($id);
+		$query = "SELECT * FROM `student_formal_remediations` where `id`=".$db->qstr($id);
 		$result	= $db->GetRow($query);
 		if ($result) {
 			$fr = FormalRemediation::fromArray($result);

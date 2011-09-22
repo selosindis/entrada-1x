@@ -33,7 +33,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 
 	application_log("error", "Group [" . $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"] . "] and role [" . $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"] . "] do not have access to this module [" . $MODULE . "]");
 } else {
-	$BREADCRUMB[] = array("url" => ENTRADA_URL . "/admin/configuration/organisations?section=add", "title" => "Add Organisation");
+	$BREADCRUMB[] = array("url" => ENTRADA_URL . "/admin/settings/organisations?section=add", "title" => "Add Organisation");
 
 
 	switch ($STEP) {
@@ -155,9 +155,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 
 				if (($db->AutoExecute(AUTH_DATABASE . ".organisations", $PROCESSED, "INSERT")) && ($organisation_id = $db->Insert_Id())) {
 					$SUCCESS++;
-					$SUCCESSSTR[] = "You have successfully added <strong>" . html_encode($PROCESSED["organisation_title"]) . "</strong> to the system.<br /><br />You will now be redirected to the organisations index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"" . ENTRADA_URL . "/admin/configuration/organisations\" style=\"font-weight: bold\">click here</a> to continue.";
+					$SUCCESSSTR[] = "You have successfully added <strong>" . html_encode($PROCESSED["organisation_title"]) . "</strong> to the system.<br /><br />You will now be redirected to the organisations index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"" . ENTRADA_URL . "/admin/settings/organisations\" style=\"font-weight: bold\">click here</a> to continue.";
 
-					$ONLOAD[] = "setTimeout('window.location=\\'" . ENTRADA_URL . "/admin/configuration/organisations/\\'', 5000)";
+					$ONLOAD[] = "setTimeout('window.location=\\'" . ENTRADA_URL . "/admin/settings/organisations/\\'', 5000)";
 
 					application_log("success", "New organisation [" . $organisation_id . "] added to the system.");
 				} else {
@@ -341,7 +341,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 			</script>
 
 			<h1>Add Organisation</h1>
-			<form id ="addOrganisationForm" action = "<?php echo ENTRADA_URL; ?>/admin/configuration/organisations?section=add&amp;step=2" method = "post">
+			<form id ="addOrganisationForm" action = "<?php echo ENTRADA_URL; ?>/admin/settings/organisations?section=add&amp;step=2" method = "post">
 				<table  cellspacing="0" border="0" cellpadding="2" summary="Add Organisation Form">
 					<colgroup>
 						<col style="width: 24%" />
@@ -350,7 +350,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 					<tfoot>
 						<tr>
 							<td colspan="2" style="padding-top: 25px;text-align: right;padding-right:45px;">
-								<input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/configuration'" />
+								<input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/settings'" />
 								<input type="submit" class="button" value="Save" />
 							</td> 
 						</tr>

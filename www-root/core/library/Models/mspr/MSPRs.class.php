@@ -1,9 +1,9 @@
 <?php
-
+require_once("Models/utility/AttentionRequirable.interface.php");
 require_once("MSPR.class.php");
 require_once("Models/utility/Collection.class.php");
 
-$ORGANISATION_ID	= $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"];
+$ORGANISATION_ID = $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"];
 
 
 class MSPRs extends Collection {
@@ -13,20 +13,20 @@ class MSPRs extends Collection {
 	 */
 	static public function getAll() {
 		global $db, $ORGANISATION_ID;
-		$query		= "select * from `student_mspr` a 
-						left join `".AUTH_DATABASE."`.`user_data` b 
-						on a.user_id = b.id
-						where `organisation_id`=?
-						order by lastname, firstname";
+		$query = "	select * from `student_mspr` a 
+					left join `".AUTH_DATABASE."`.`user_data` b 
+					on a.user_id = b.id
+					where `organisation_id`=?
+					order by lastname, firstname";
 		
-		$results	= $db->GetAll($query, array($ORGANISATION_ID));
+		$results = $db->GetAll($query, array($ORGANISATION_ID));
 		$msprs = array();
 		if ($results) {
 			foreach ($results as $result) {
 				
 				//unfortunate but cuts down on db requests by including this in the main query
 				$user = new User();
-				$user =  User::fromArray($result, $user);
+				$user = User::fromArray($result, $user);
 				
 				$mspr = MSPR::fromArray($result);
 				$msprs[] = $mspr;
@@ -42,19 +42,19 @@ class MSPRs extends Collection {
 	 */
 	static public function getYear($year) {
 		global $db, $ORGANISATION_ID;
-		$query		= "select * from `student_mspr` a 
-						left join `".AUTH_DATABASE."`.`user_data` b 
-						on a.user_id = b.id 
-						where `grad_year`=".$db->qstr($year)." 
-						and `organisation_id`=".$db->qstr($ORGANISATION_ID)."
-						order by lastname, firstname";
+		$query = "	select * from `student_mspr` a 
+					left join `".AUTH_DATABASE."`.`user_data` b 
+					on a.user_id = b.id 
+					where `grad_year`=".$db->qstr($year)." 
+					and `organisation_id`=".$db->qstr($ORGANISATION_ID)."
+					order by lastname, firstname";
 		$results	= $db->GetAll($query);
 		$msprs = array();
 		if ($results) {
 			foreach ($results as $result) {
 				
 				$user = new User();
-				$user =  User::fromArray($result, $user);
+				$user = User::fromArray($result, $user);
 				
 				$mspr = MSPR::fromArray($result);
 				$msprs[] = $mspr;

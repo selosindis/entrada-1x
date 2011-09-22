@@ -65,7 +65,7 @@ if (!defined("PARENT_INCLUDED")) {
 		$GROUP_ID	= (int) trim($_GET["gid"]);
 	}
 	
-	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/courses/groups?id=".$COURSE_ID, "title" => "Manage Course Groups");
+	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/courses/groups?id=".$COURSE_ID, "title" => "Manage " . $module_singular_name . " Groups");
 	
 	if (($router) && ($router->initRoute())) {
 		$module_file = $router->getRoute();

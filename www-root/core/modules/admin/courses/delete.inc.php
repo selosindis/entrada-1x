@@ -44,9 +44,9 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
-	$BREADCRUMB[]	= array("url" => "", "title" => "Delete Courses");
+	$BREADCRUMB[]	= array("url" => "", "title" => "Delete " . $module_title);
 
-	echo "<h1>Delete Courses</h1>";
+	echo "<h1>Delete " . $module_title . "</h1>";
 
 	$COURSE_IDS = array();
 
@@ -139,7 +139,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 
 			if($total_removed = @count($removed)) {
 				$SUCCESS++;
-				$SUCCESSSTR[$SUCCESS]  = "You have successfully removed ".$total_removed." course".(($total_removed != 1) ? "s" : "")." from the system.";
+				$SUCCESSSTR[$SUCCESS]  = "You have successfully removed ".$total_removed." " . $module_singular_name .(($total_removed != 1) ? "s" : "")." from the system.";
 				$SUCCESSSTR[$SUCCESS] .= "<br /><br />You will be automatically redirected to the course index in 5 seconds, or you can <a href=\"".ENTRADA_URL."/admin/".$MODULE."\">click here</a> if you do not wish to wait.";
 
 				echo display_success();
@@ -187,8 +187,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					<thead>
 						<tr>
 							<td class="modified">&nbsp;</td>
-							<td class="title sortedASC" style="font-size: 12px"><div class="noLink">Course Name</div></td>
-							<td class="teacher" style="font-size: 12px">Course Director</td>
+							<td class="title sortedASC" style="font-size: 12px"><div class="noLink"><?php echo $module_singular_name; ?> Name</div></td>
+							<td class="teacher" style="font-size: 12px"><?php echo $module_singular_name; ?>Director</td>
 							<td class="general" style="font-size: 12px">Associated Events</td>
 							<td class="attachment">&nbsp;</td>
 						</tr>
@@ -212,7 +212,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							echo "	<td class=\"title\"><a href=\"".$url."\" title=\"Course Name: ".html_encode($result["course_name"])."\">".html_encode($result["course_name"])."</a></td>\n";
 							echo "	<td class=\"teacher\"><a href=\"".$url."\" title=\"Course Director: ".html_encode($result["fullname"])."\">".html_encode($result["fullname"])."</a></td>\n";
 							echo "	<td class=\"general\">".$events." event".(($events != 1) ? "s" : "")."</td>\n";
-							echo "	<td class=\"attachment\"><a href=\"".ENTRADA_URL."/admin/".$MODULE."?section=content&amp;id=".$result["course_id"]."\"><img src=\"".ENTRADA_URL."/images/event-contents.gif\" width=\"16\" height=\"16\" alt=\"Manage Course Content\" title=\"Manage Course Content\" border=\"0\" /></a></td>\n";
+							echo "	<td class=\"attachment\"><a href=\"".ENTRADA_URL."/admin/".$MODULE."?section=content&amp;id=".$result["course_id"]."\"><img src=\"".ENTRADA_URL."/images/event-contents.gif\" width=\"16\" height=\"16\" alt=\"Manage " . $module_singular_name . " Content\" title=\"Manage " . $module_singular_name . " Content\" border=\"0\" /></a></td>\n";
 							echo "</tr>\n";
 						}
 						?>

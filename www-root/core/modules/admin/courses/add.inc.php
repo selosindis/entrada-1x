@@ -38,9 +38,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/picklist.js\"></script>\n";
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/AutoCompleteList.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";	
 
-	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "add")), "title" => "Adding Course");
+	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "add")), "title" => "Adding " . $module_singular_name);
 
-	echo "<h1>Adding Course</h1>\n";
+	echo "<h1>Adding " . $module_singular_name . "</h1>\n";
 	
 	/** 
 	* Fetch the Clinical Presentation details.
@@ -97,7 +97,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			if ((isset($_POST["course_name"])) && ($course_name = clean_input($_POST["course_name"], array("notags", "trim")))) {
 				$PROCESSED["course_name"] = $course_name;
 			} else {
-				add_error("The <strong>Course Name</strong> field is required.");
+				add_error("The <strong>" . $module_singular_name .  "Name</strong> field is required.");
 			}
 
 			/**
@@ -106,7 +106,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			if ((isset($_POST["course_code"])) && ($course_code = clean_input($_POST["course_code"], array("notags", "trim")))) {
 				$PROCESSED["course_code"] = $course_code;
 			} else {
-				add_error("The <strong>Course Code</strong> field is required and must be provided.");
+				add_error("The <strong>" . $module_singular_name . " Code</strong> field is required and must be provided.");
 			}
 
 			/**
@@ -261,7 +261,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							foreach($associated_directors as $proxy_id) {
 								if ($proxy_id = clean_input($proxy_id, array("trim", "int"))) {
 									if (!$db->AutoExecute("course_contacts", array("course_id" => $COURSE_ID, "proxy_id" => $proxy_id, "contact_type" => "director", "contact_order" => $order), "INSERT")) {
-										add_error("There was an error when trying to insert a &quot;Course Director&quot; into the system. The system administrator was informed of this error; please try again later.");
+										add_error("There was an error when trying to insert a &quot;" . $module_singular_name . " Director&quot; into the system. The system administrator was informed of this error; please try again later.");
 	
 										application_log("error", "Unable to insert a new course_contact to the database when updating an event. Database said: ".$db->ErrorMsg());
 									} else {
@@ -579,7 +579,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			?>
 
 			<form action="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?<?php echo replace_query(array("step" => 2)); ?>" method="post" id="addCourseForm" onsubmit="selIt()">
-			<h2 title="Course Details Section">Course Details</h2>
+			<h2 title="Course Details Section"><?php echo $module_singular_name; ?> Details</h2>
 			<div id="course-details-section">
 				<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Adding Course Details">
 				<colgroup>
@@ -616,12 +616,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					</tr>
 					<tr>
 						<td></td>
-						<td><label for="course_name" class="form-required">Course Name</label></td>
+						<td><label for="course_name" class="form-required"><?php echo $module_singular_name; ?> Name</label></td>
 						<td><input type="text" id="course_name" name="course_name" value="<?php echo html_encode($PROCESSED["course_name"]); ?>" maxlength="85" style="width: 243px" /></td>
 					</tr>
 					<tr>
 						<td></td>
-						<td><label for="course_code" class="form-required">Course Code</label></td>
+						<td><label for="course_code" class="form-required"><?php echo $module_singular_name; ?> Code</label></td>
 						<td><input type="text" id="course_code" name="course_code" value="<?php echo html_encode($PROCESSED["course_code"]); ?>" maxlength="16" style="width: 243px" /></td>
 					</tr>
 					<tr>
@@ -637,7 +637,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					</tr>
 					<tr>
 						<td></td>
-						<td style="vertical-align: top"><span class="form-nrequired">Course Permissions</span></td>
+						<td style="vertical-align: top"><span class="form-nrequired"><?php echo $module_singular_name; ?> Permissions</span></td>
 						<td style="vertical-align: top">
 							<input type="radio" name="permission" id="visibility_on" value="open"<?php echo (((!isset($PROCESSED["permission"])) || ((isset($PROCESSED["permission"])) && ($PROCESSED["permission"] == "open"))) ? " checked=\"checked\"" : ""); ?> /> <label for="visibility_on">This course is <strong>open</strong> and visible to all logged in users.</label><br />
 							<input type="radio" name="permission" id="visibility_off" value="closed"<?php echo (((isset($PROCESSED["permission"])) && ($PROCESSED["permission"] == "closed")) ? " checked=\"checked\"" : ""); ?> /> <label for="visibility_off">This course is <strong>private</strong> and only visible to logged in users enrolled in the course.</label>
@@ -668,7 +668,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/elementresizer.js\"></script>\n";
 			?>
 			<a name="course-objectives-section"></a>
-			<h2 title="Course Objectives Section">Course Objectives</h2>
+			<h2 title="Course Objectives Section"><?php echo $module_singular_name; ?> Objectives</h2>
 			<div id="course-objectives-section">
 				<input type="hidden" id="objectives_head" name="course_objectives" value="" />
 				<?php
@@ -875,7 +875,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				</table>
 			</div>
 					
-			<h2 title="Course Contacts Section">Course Contacts</h2>
+			<h2 title="Course Contacts Section"><?php echo $module_singular_name; ?> Contacts</h2>
 			<div id="course-contacts-section">
 				<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Editing Course Contacts">
 				<colgroup>
@@ -886,7 +886,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				<tbody>
 					<tr>
 						<td></td>
-						<td style="vertical-align: top"><label for="director_name" class="form-nrequired">Course Directors</label></td>
+						<td style="vertical-align: top"><label for="director_name" class="form-nrequired"><?php echo $module_singular_name; ?> Directors</label></td>
 						<td>
 							<div style="position: relative;">
 								<script type="text/javascript">
@@ -1128,7 +1128,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			</div>
 		
 			<!-- Course Audience-->	
-			<h2>Course Enrollment</h2>
+			<h2><?php echo $module_singular_name; ?> Enrollment</h2>
 			<div>
 				<table>
 					<colgroup>
@@ -1222,7 +1222,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 									</ul>
 								</div>
 
-								<select class="audience_type_select" id="audience_type_select_<?php echo $key;?>" onchange="showSelect(<?php echo $key;?>,this.options[this.selectedIndex].value)"><option value="0">-- Select Audience Type --</option></option><option value="cohort">Cohort</option><option value="individual">Individual</option></select>
+								<select class="audience_type_select" id="audience_type_select_<?php echo $key;?>" onchange="showSelect(<?php echo $key;?>,this.options[this.selectedIndex].value)"><option value="0">-- Select Audience Type --</option><option value="cohort">Cohort</option><option value="individual">Individual</option></select>
 								<select style="display:none;" class="type_select" id="cohort_select_<?php echo $key;?>" onchange="addAudience(<?php echo $key;?>,this.options[this.selectedIndex].text,'cohort',this.options[this.selectedIndex].value)"><option value="0">-- Add Cohort --</option>
 								<?php 
 								foreach($groups as $group) {

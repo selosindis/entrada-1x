@@ -8393,21 +8393,21 @@ function clerkship_deficiency_notifications($clerk_id, $rotation_id, $administra
 }
 
 function courses_subnavigation($course_details) {
-	global $ENTRADA_ACL;
+	global $ENTRADA_ACL, $module_singular_name;
 	
 	echo "<div class=\"no-printing\">\n";
 	echo "	<div style=\"float: right\">\n";
 	if($ENTRADA_ACL->amIAllowed(new CourseResource($course_details["course_id"], $course_details["organisation_id"]), "update")) {
-		echo "<a href=\"".ENTRADA_RELATIVE."/admin/courses/groups?".replace_query(array("section" => false, "assessment_id" => false, "id" => $course_details["course_id"], "step" => false))."\"><img src=\"".ENTRADA_RELATIVE."/images/event-group.gif\" width=\"16\" height=\"16\" alt=\"Edit course groups\" title=\"Edit course groups\" border=\"0\" style=\"vertical-align: middle; margin-bottom: 2px;\" /></a> <a href=\"".ENTRADA_RELATIVE."/admin/courses/groups?".replace_query(array("section" => false, "assessment_id" => false, "id" => $course_details["course_id"], "step" => false))."\" style=\"font-size: 10px; margin-right: 8px\">Edit course groups</a>\n";
+		echo "<a href=\"".ENTRADA_RELATIVE."/admin/courses/groups?".replace_query(array("section" => false, "assessment_id" => false, "id" => $course_details["course_id"], "step" => false))."\"><img src=\"".ENTRADA_RELATIVE."/images/event-group.gif\" width=\"16\" height=\"16\" alt=\"Edit course groups\" title=\"Edit course groups\" border=\"0\" style=\"vertical-align: middle; margin-bottom: 2px;\" /></a> <a href=\"".ENTRADA_RELATIVE."/admin/courses/groups?".replace_query(array("section" => false, "assessment_id" => false, "id" => $course_details["course_id"], "step" => false))."\" style=\"font-size: 10px; margin-right: 8px\">Edit " . $module_singular_name . " Groups</a>\n";
 	}
 	if($ENTRADA_ACL->amIAllowed(new CourseResource($course_details["course_id"], $course_details["organisation_id"]), "update")) {
-		echo "<a href=\"".ENTRADA_RELATIVE."/admin/courses?".replace_query(array("section" => "edit", "id" => $course_details["course_id"], "step" => false))."\"><img src=\"".ENTRADA_RELATIVE."/images/event-details.gif\" width=\"16\" height=\"16\" alt=\"Edit course details\" title=\"Edit course details\" border=\"0\" style=\"vertical-align: middle; margin-bottom: 2px;\" /></a> <a href=\"".ENTRADA_RELATIVE."/admin/courses?".replace_query(array("section" => "edit", "id" => $course_details["course_id"], "step" => false))."\" style=\"font-size: 10px; margin-right: 8px\">Edit course details</a>\n";
+		echo "<a href=\"".ENTRADA_RELATIVE."/admin/courses?".replace_query(array("section" => "edit", "id" => $course_details["course_id"], "step" => false))."\"><img src=\"".ENTRADA_RELATIVE."/images/event-details.gif\" width=\"16\" height=\"16\" alt=\"Edit course details\" title=\"Edit course details\" border=\"0\" style=\"vertical-align: middle; margin-bottom: 2px;\" /></a> <a href=\"".ENTRADA_RELATIVE."/admin/courses?".replace_query(array("section" => "edit", "id" => $course_details["course_id"], "step" => false))."\" style=\"font-size: 10px; margin-right: 8px\">Edit  " . $module_singular_name . " Details</a>\n";
 	}
 	if($ENTRADA_ACL->amIAllowed(new CourseContentResource($course_details["course_id"], $course_details["organisation_id"]), "read")) {
-		echo "<a href=\"".ENTRADA_RELATIVE."/admin/courses?".replace_query(array("section" => "content", "id" => $course_details["course_id"], "step" => false))."\"><img src=\"".ENTRADA_RELATIVE."/images/event-contents.gif\" width=\"16\" height=\"16\" alt=\"Manage course content\" title=\"Manage course content\" border=\"0\" style=\"vertical-align: middle; margin-bottom: 2px;\" /></a> <a href=\"".ENTRADA_RELATIVE."/admin/courses?".replace_query(array("section" => "content", "id" => $course_details["course_id"], "step" => false))."\" style=\"font-size: 10px; margin-right: 8px;\">Manage course content</a>\n";
+		echo "<a href=\"".ENTRADA_RELATIVE."/admin/courses?".replace_query(array("section" => "content", "id" => $course_details["course_id"], "step" => false))."\"><img src=\"".ENTRADA_RELATIVE."/images/event-contents.gif\" width=\"16\" height=\"16\" alt=\"Manage course content\" title=\"Manage course content\" border=\"0\" style=\"vertical-align: middle; margin-bottom: 2px;\" /></a> <a href=\"".ENTRADA_RELATIVE."/admin/courses?".replace_query(array("section" => "content", "id" => $course_details["course_id"], "step" => false))."\" style=\"font-size: 10px; margin-right: 8px;\">Manage  " . $module_singular_name . " Content</a>\n";
 	}
 	if($ENTRADA_ACL->amIAllowed(new GradebookResource($course_details["course_id"], $course_details["organisation_id"]), "read")) {
-		echo "<a href=\"".ENTRADA_RELATIVE."/admin/gradebook?section=view&amp;id=".$course_details["course_id"]."\" style=\"font-size: 10px;\"><img src=\"".ENTRADA_RELATIVE."/images/book_go.png\" width=\"16\" height=\"16\" alt=\"Manage course content\" title=\"Manage course content\" border=\"0\" style=\"vertical-align: middle\" />&nbsp;Manage course gradebook</a>";				
+		echo "<a href=\"".ENTRADA_RELATIVE."/admin/gradebook?section=view&amp;id=".$course_details["course_id"]."\" style=\"font-size: 10px;\"><img src=\"".ENTRADA_RELATIVE."/images/book_go.png\" width=\"16\" height=\"16\" alt=\"Manage course content\" title=\"Manage course content\" border=\"0\" style=\"vertical-align: middle\" />&nbsp;Manage  " . $module_singular_name . " Gradebook</a>";
 	}
 	echo "	</div>\n";
 	echo "</div>\n";
@@ -8535,10 +8535,10 @@ function courses_fetch_courses($only_active_courses = true, $order_by_course_cod
 	$query .= "	ORDER BY".($order_by_course_code ? " a.`course_code`," : "")." a.`course_name` ASC";
 	$results = $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
 	if ($results) {
-		foreach ($results as $result) {
-			if ($ENTRADA_ACL->amIAllowed(new CourseResource($result["course_id"], $result["organisation_id"]), "read")) {
-				$output[] = $result; 
-			}
+		foreach ($results as $result) {			
+				if ($ENTRADA_ACL->amIAllowed(new CourseResource($result["course_id"], $ENTRADA_USER->getOrganisationID()), "read")) {
+					$output[] = $result;
+				}
 		}
 	}
 	

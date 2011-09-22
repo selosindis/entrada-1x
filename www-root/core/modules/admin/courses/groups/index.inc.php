@@ -112,7 +112,7 @@ if (!defined("IN_COURSE_GROUPS")) {
 	preferences_update($MODULE, $PREFERENCES);
 
 	?>
-	<h1>Manage Course Groups</h1>
+	<h1>Manage <?php echo $module_singular_name; ?> Groups</h1>
 		<div style="float: right">
 			<ul class="page-action">
 				<li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE.(isset($SUBMODULE) && $SUBMODULE ? "/".$SUBMODULE : ""); ?>?section=add&id=<?php echo $COURSE_ID; ?>" class="strong-green">Add Group</a></li>

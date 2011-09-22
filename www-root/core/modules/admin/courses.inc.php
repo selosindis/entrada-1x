@@ -40,7 +40,10 @@ if(!defined("PARENT_INCLUDED")) {
 } else {
 	define("IN_COURSES", true);
 
-	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/courses", "title" => $MODULES[strtolower($MODULE)]["title"]);
+	$module_title = $translate->_("courses");
+	$module_singular_name = $translate->_("course");
+
+	$BREADCRUMB[] = array("url" => ENTRADA_URL."/".$MODULE, "title" => $module_title);
 
 	if (($router) && ($router->initRoute())) {
 		$PREFERENCES = preferences_load($MODULE);

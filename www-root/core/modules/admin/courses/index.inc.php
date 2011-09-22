@@ -370,11 +370,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			<h3>No Available <?php echo $module_title; ?></h3>
 
 			<?php if ($ENTRADA_ACL->amIAllowed('course', 'create', false)) : ?>
-			There are currently no courses available in the system.
+			There are currently no <?php echo strtolower($module_title); ?> available in the system.
 			<br /><br />
-			You should start by adding a new course by clicking the <strong>Add <?php echo $module_title; ?></strong> link above.
+			You should start by adding a new <?php echo strtolower($module_singular_name); ?> by clicking the <strong>Add <?php echo $module_title; ?></strong> link above.
 			<?php else : ?>
-			It appears that there are no courses that you are able access in the system.
+			It appears that there are no <?php echo strtolower($module_title); ?> that you are able access in the system.
 			<br /><br />
 			If you believe you are receiving this message in error, please contact an administrator.
 			<?php endif; ?>

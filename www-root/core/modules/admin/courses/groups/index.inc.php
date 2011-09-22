@@ -384,7 +384,7 @@ if (!defined("IN_COURSE_GROUPS")) {
 		?>
 		<div class="display-notice">
 			<h3>No Available Groups</h3>
-			There are currently no available small groups in the system for this course. To begin click the <strong>Add Group</strong> link above.
+			There are currently no available small groups in the system for this <?php echo strtolower($module_singular_name); ?>. To begin click the <strong>Add Group</strong> link above.
 		</div>
 		<?php
 	}

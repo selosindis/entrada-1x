@@ -488,20 +488,22 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					$STUDENT_LIST[$result["proxy_id"]] = array("proxy_id" => $result["proxy_id"], "fullname" => $result["fullname"], "organisation_id" => $result["organisation_id"]);
 				}
 			}
-												
-			/**
-			 * Compiles the list of groups.
-			 */
-			$GROUP_LIST = array();
-			$query = "	SELECT *
-						FROM `course_groups`
-						WHERE `course_id` = ".$db->qstr($PROCESSED["course_id"])."
-						AND (`active` = '1')
-						ORDER BY LENGTH(`group_name`), `group_name` ASC";
-			$results = $db->GetAll($query);
-			if ($results) {
-				foreach($results as $result) {
-					$GROUP_LIST[$result["cgroup_id"]] = $result;
+			
+			if (isset($PROCESSED["course_id"])) {						
+				/**
+				 * Compiles the list of groups.
+				 */
+				$GROUP_LIST = array();
+				$query = "	SELECT *
+							FROM `course_groups`
+							WHERE `course_id` = ".$db->qstr($PROCESSED["course_id"])."
+							AND (`active` = '1')
+							ORDER BY LENGTH(`group_name`), `group_name` ASC";
+				$results = $db->GetAll($query);
+				if ($results) {
+					foreach($results as $result) {
+						$GROUP_LIST[$result["cgroup_id"]] = $result;
+					}
 				}
 			}
 			
@@ -614,8 +616,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							<td></td>
 							<td style="vertical-align: top"><label for="event_title" class="form-required">Event Title</label></td>
 							<td>
-								<div id="course_id_path" class="content-small"><?php echo fetch_course_path($PROCESSED["course_id"]); ?></div>
-								<input type="text" id="event_title" name="event_title" value="<?php echo html_encode($PROCESSED["event_title"]); ?>" maxlength="255" style="width: 95%; font-size: 150%; padding: 3px" />
+								<div id="course_id_path" class="content-small"><?php echo (isset($PROCESSED["course_id"]) && $PROCESSED["course_id"] ? fetch_course_path($PROCESSED["course_id"]) : ""); ?></div>
+								<input type="text" id="event_title" name="event_title" value="<?php echo (isset($PROCESSED["event_title"]) && $PROCESSED["event_title"] ? html_encode($PROCESSED["event_title"]) : ""); ?>" maxlength="255" style="width: 95%; font-size: 150%; padding: 3px" />
 							</td>
 						</tr>
 						<tr>
@@ -625,7 +627,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						<tr>
 							<td></td>
 							<td><label for="event_location" class="form-nrequired">Event Location</label></td>
-							<td><input type="text" id="event_location" name="event_location" value="<?php echo html_encode($PROCESSED["event_location"]); ?>" maxlength="255" style="width: 200px" /></td>
+							<td><input type="text" id="event_location" name="event_location" value="<?php echo (isset($PROCESSED["event_location"]) && $PROCESSED["event_location"] ? html_encode($PROCESSED["event_location"]) : ""); ?>" maxlength="255" style="width: 200px" /></td>
 						</tr>
 						<tr>
 							<td colspan="3">&nbsp;</td>
@@ -714,7 +716,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					</tbody>
 					<tbody id="audience-options"<?php echo ((!$PROCESSED["event_audience_type"]) ? " style=\"display: none\"" : ""); ?>>
 					<?php
-					if ($PROCESSED["course_id"]) {
+					if (isset($PROCESSED["course_id"]) && $PROCESSED["course_id"]) {
 						require_once(ENTRADA_ABSOLUTE."/core/modules/admin/events/api-audience-options.inc.php");
 					}
 					?>

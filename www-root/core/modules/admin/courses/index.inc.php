@@ -257,11 +257,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					LEFT JOIN `course_contacts`
 					ON `course_contacts`.`course_id` = `courses`.`course_id`
 					AND `course_contacts`.`contact_type` = 'director'
-					AND `course_contacts`.`contact_order` = 0
 					LEFT JOIN `".AUTH_DATABASE."`.`user_data`
 					ON `".AUTH_DATABASE."`.`user_data`.`id` = `course_contacts`.`proxy_id`
 					WHERE `courses`.`course_active` = '1'
 					".(isset($organisation_where) ? " AND `courses`.".$organisation_where : "")."
+					GROUP BY `courses`.`course_id`
 					ORDER BY %s LIMIT %s, %s";
 	} else {
 		$query	= "	SELECT `courses`.`course_id`, `courses`.`organisation_id`, `courses`.`course_name`, `courses`.`course_code`, `courses`.`course_url`, `courses`.`notifications`, `curriculum_lu_types`.`curriculum_type_name`, CONCAT_WS(', ', `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname`) AS `fullname`
@@ -269,7 +269,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					LEFT JOIN `course_contacts`
 					ON `course_contacts`.`course_id` = `courses`.`course_id`
 					AND `course_contacts`.`contact_type` = 'director'
-					AND `course_contacts`.`contact_order` = 0
 					LEFT JOIN `curriculum_lu_types`
 					ON `curriculum_lu_types`.`curriculum_type_id` = `courses`.`curriculum_type_id`
 					LEFT JOIN `".AUTH_DATABASE."`.`user_data`
@@ -287,6 +286,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					)
 					AND `courses`.`course_active` = '1'
 					".(isset($organisation_where) ? ' AND `courses`.'.$organisation_where : '')."
+					GROUP BY `courses`.`course_id`
 					ORDER BY %s LIMIT %s, %s";
 	}
 

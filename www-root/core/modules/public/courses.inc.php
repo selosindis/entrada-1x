@@ -35,7 +35,10 @@ if (!defined("PARENT_INCLUDED")) {
 
 define("IN_COURSES", true);
 
-$BREADCRUMB[] = array("url" => ENTRADA_URL."/".$MODULE, "title" => "Courses");
+$module_title = $translate->_("courses");
+$module_singular_name = $translate->_("course");
+
+$BREADCRUMB[] = array("url" => ENTRADA_URL."/".$MODULE, "title" => $module_title);
 
 if (($router) && ($router->initRoute())) {
 	$COURSE_ID			= 0;

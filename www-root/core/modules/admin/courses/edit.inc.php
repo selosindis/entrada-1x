@@ -44,9 +44,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/picklist.js\"></script>\n";
 			$HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/AutoCompleteList.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";	
 
-			$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "edit", "id" => $COURSE_ID, "step" => false)), "title" => "Editing Course");
+			$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "edit", "id" => $COURSE_ID, "step" => false)), "title" => "Editing " . $module_singular_name);
 
-			echo "<h1>Editing Course</h1>\n";
+			echo "<h1>Editing " . $module_singular_name  . "</h1>\n";
 
 			/** 
 			* Fetch the Clinical Presentation details.
@@ -125,7 +125,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					if ((isset($_POST["course_name"])) && ($course_name = clean_input($_POST["course_name"], array("notags", "trim")))) {
 						$PROCESSED["course_name"] = $course_name;
 					} else {
-						add_error("The <strong>Course Name</strong> field is required.");
+						add_error("The <strong>" . $module_singular_name . " Name</strong> field is required.");
 					}
 
 					/**
@@ -134,7 +134,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					if ((isset($_POST["course_code"])) && ($course_code = clean_input($_POST["course_code"], array("notags", "trim")))) {
 						$PROCESSED["course_code"] = $course_code;
 					} else {
-						add_error("The <strong>Course Code</strong> field is required and must be provided.");
+						add_error("The <strong>" . $module_singular_name . " Code</strong> field is required and must be provided.");
 					}
 
 					/**
@@ -325,7 +325,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 									foreach($associated_directors as $proxy_id) {
 										if ($proxy_id = clean_input($proxy_id, array("trim", "int"))) {
 											if (!$db->AutoExecute("course_contacts", array("course_id" => $COURSE_ID, "proxy_id" => $proxy_id, "contact_type" => "director", "contact_order" => $order), "INSERT")) {
-												add_error("There was an error when trying to insert a &quot;Course Director&quot; into the system. The system administrator was informed of this error; please try again later.");
+												add_error("There was an error when trying to insert a &quot;" . $module_singular_name . " Director&quot; into the system. The system administrator was informed of this error; please try again later.");
 
 												application_log("error", "Unable to insert a new course_contact to the database when updating an event. Database said: ".$db->ErrorMsg());
 											} else {
@@ -494,7 +494,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
 								add_success("You have successfully edited <strong>".html_encode($PROCESSED["course_name"])."</strong> in the system.<br /><br />".$msg);
 
-								application_log("success", "Course [".$COURSE_ID."] has been modified.");
+								application_log("success", $module_singular_name . " [".$COURSE_ID."] has been modified.");
 							}
 						} else {
 							add_error("There was a problem updating this course in the system. The system administrator was informed of this error; please try again later.");
@@ -752,7 +752,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					}
 					?>
 					<form action="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?<?php echo replace_query(array("step" => 2)); ?>" method="post" id="editCourseForm" onsubmit="selIt()">
-					<h2 title="Course Details Section">Course Details</h2>
+					<h2 title="Course Details Section"><?php echo $module_singular_name; ?> Details</h2>
 					<div id="course-details-section">
 						<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Editing Course Details">
 						<colgroup>
@@ -789,12 +789,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							</tr>
 							<tr>
 								<td></td>
-								<td><label for="course_name" class="form-required">Course Name</label></td>
+								<td><label for="course_name" class="form-required"><?php echo $module_singular_name; ?> Name</label></td>
 								<td><input type="text" id="course_name" name="course_name" value="<?php echo html_encode($PROCESSED["course_name"]); ?>" maxlength="85" style="width: 243px" /></td>
 							</tr>
 							<tr>
 								<td></td>
-								<td><label for="course_code" class="form-required">Course Code</label></td>
+								<td><label for="course_code" class="form-required"><?php echo $module_singular_name; ?> Code</label></td>
 								<td><input type="text" id="course_code" name="course_code" value="<?php echo html_encode($PROCESSED["course_code"]); ?>" maxlength="16" style="width: 243px" /></td>
 							</tr>
 							<tr>
@@ -804,16 +804,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								<td></td>
 								<td style="vertical-align: top"><span class="form-nrequired">Reminder Notifications</span></td>
 								<td style="vertical-align: top">
-									<input type="radio" name="notifications" id="notification_on" value="1"<?php echo (((!isset($PROCESSED["notifications"])) || ((isset($PROCESSED["notifications"])) && ($PROCESSED["notifications"]))) ? " checked=\"checked\"" : ""); ?> /> <label for="notification_on">Send e-mail notifications to faculty for events under this course.</label><br />
-									<input type="radio" name="notifications" id="notification_off" value="0"<?php echo (((isset($PROCESSED["notifications"])) && (!(int) $PROCESSED["notifications"])) ? " checked=\"checked\"" : ""); ?> /> <label for="notification_off"><strong>Do not</strong> send e-mail notifications to faculty for events under this course.</label>
+									<input type="radio" name="notifications" id="notification_on" value="1"<?php echo (((!isset($PROCESSED["notifications"])) || ((isset($PROCESSED["notifications"])) && ($PROCESSED["notifications"]))) ? " checked=\"checked\"" : ""); ?> /> <label for="notification_on">Send e-mail notifications to faculty for events under this <?php echo strtolower($module_singular_name); ?>.</label><br />
+									<input type="radio" name="notifications" id="notification_off" value="0"<?php echo (((isset($PROCESSED["notifications"])) && (!(int) $PROCESSED["notifications"])) ? " checked=\"checked\"" : ""); ?> /> <label for="notification_off"><strong>Do not</strong> send e-mail notifications to faculty for events under this <?php echo strtolower($module_singular_name); ?>.</label>
 								</td>
 							</tr>
 							<tr>
 								<td></td>
-								<td style="vertical-align: top"><span class="form-nrequired">Course Permissions</span></td>
+								<td style="vertical-align: top"><span class="form-nrequired"><?php echo $module_singular_name; ?> Permissions</span></td>
 								<td style="vertical-align: top">
-									<input type="radio" name="permission" id="visibility_on" value="open"<?php echo (((!isset($PROCESSED["permission"])) || ((isset($PROCESSED["permission"])) && ($PROCESSED["permission"] == "open"))) ? " checked=\"checked\"" : ""); ?> /> <label for="visibility_on">This course is <strong>open</strong> and visible to all logged in users.</label><br />
-									<input type="radio" name="permission" id="visibility_off" value="closed"<?php echo (((isset($PROCESSED["permission"])) && ($PROCESSED["permission"] == "closed")) ? " checked=\"checked\"" : ""); ?> /> <label for="visibility_off">This course is <strong>private</strong> and only visible to logged in users enrolled in the course.</label>
+									<input type="radio" name="permission" id="visibility_on" value="open"<?php echo (((!isset($PROCESSED["permission"])) || ((isset($PROCESSED["permission"])) && ($PROCESSED["permission"] == "open"))) ? " checked=\"checked\"" : ""); ?> /> <label for="visibility_on">This <?php echo strtolower($module_singular_name); ?> is <strong>open</strong> and visible to all logged in users.</label><br />
+									<input type="radio" name="permission" id="visibility_off" value="closed"<?php echo (((isset($PROCESSED["permission"])) && ($PROCESSED["permission"] == "closed")) ? " checked=\"checked\"" : ""); ?> /> <label for="visibility_off">This <?php echo strtolower($module_singular_name); ?> is <strong>private</strong> and only visible to logged in users enrolled in the <?php echo strtolower($module_singular_name); ?>.</label>
 								</td>
 							</tr>
 							<?php
@@ -823,8 +823,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								<td></td>
 								<td style="vertical-align: top"><span class="form-nrequired">Audience Sync</span></td>
 								<td style="vertical-align: top">
-									<input type="radio" name="sync_ldap" id="sync_on" value="1"<?php echo (((!isset($PROCESSED["sync_ldap"])) || ((isset($PROCESSED["sync_ldap"])) && ($PROCESSED["sync_ldap"]))) ? " checked=\"checked\"" : ""); ?> /> <label for="sync_on">This course <strong>should</strong> have its audience synced with the LDAP server.</label><br />
-									<input type="radio" name="sync_ldap" id="sync_off" value="0"<?php echo (((isset($PROCESSED["sync_ldap"])) && (!(int)$PROCESSED["sync_ldap"])) ? " checked=\"checked\"" : ""); ?> /> <label for="sync_off">This course's audience will be managed manually and <strong>should not</strong> be synced with the LDAP server.</label><br/>
+									<input type="radio" name="sync_ldap" id="sync_on" value="1"<?php echo (((!isset($PROCESSED["sync_ldap"])) || ((isset($PROCESSED["sync_ldap"])) && ($PROCESSED["sync_ldap"]))) ? " checked=\"checked\"" : ""); ?> /> <label for="sync_on">This <?php echo strtolower($module_singular_name); ?> <strong>should</strong> have its audience synced with the LDAP server.</label><br />
+									<input type="radio" name="sync_ldap" id="sync_off" value="0"<?php echo (((isset($PROCESSED["sync_ldap"])) && (!(int)$PROCESSED["sync_ldap"])) ? " checked=\"checked\"" : ""); ?> /> <label for="sync_off">This <?php echo strtolower($module_singular_name); ?>'s audience will be managed manually and <strong>should not</strong> be synced with the LDAP server.</label><br/>
 									<br/>
 									<div class="content-small"><strong>Note:</strong> Even if the audience is synced, additional individuals and groups can be added as audience members below.</div>
 								</td>
@@ -841,7 +841,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/elementresizer.js\"></script>\n";
 					?>
 					<a name="course-objectives-section"></a>
-					<h2 title="Course Objectives Section">Course Objectives</h2>
+					<h2 title="Course Objectives Section"><?php echo $module_singular_name; ?> Objectives</h2>
 					<div id="course-objectives-section">
 						<input type="hidden" id="objectives_head" name="course_objectives" value="" />
 						<?php
@@ -991,7 +991,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								<td>&nbsp;</td>
 								<td>&nbsp;</td>
 								<td>
-									<span class="content-small"><strong>Helpful Tip:</strong> Select a competency from the select box above, and a list of course and curricular objectives will then be displayed. Once you have selected an objective it will be placed in the list below and you may leave it as primary or change the importance to secondary or tertiary.</span>
+									<span class="content-small"><strong>Helpful Tip:</strong> Select a competency from the select box above, and a list of <?php echo strtolower($module_singular_name); ?> and curricular objectives will then be displayed. Once you have selected an objective it will be placed in the list below and you may leave it as primary or change the importance to secondary or tertiary.</span>
 									<?php echo $objective_select; ?>
 									<script type="text/javascript">
 										var multiselect = [];
@@ -1051,9 +1051,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						</table>
 					</div>
 					
-					<h2 title="Course Contacts Section">Course Contacts</h2>
+					<h2 title="Course Contacts Section"><?php echo $module_singular_name; ?> Contacts</h2>
 					<div id="course-contacts-section">
-						<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Editing Course Contacts">
+						<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Editing <?php echo $module_singular_name; ?> Contacts">
 						<colgroup>
 							<col style="width: 3%" />
 							<col style="width: 22%" />
@@ -1062,7 +1062,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						<tbody>
 							<tr>
 								<td></td>
-								<td style="vertical-align: top"><label for="director_name" class="form-nrequired">Course Directors</label></td>
+								<td style="vertical-align: top"><label for="director_name" class="form-nrequired"><?php echo $module_singular_name; ?> Directors</label></td>
 								<td>
 									<script type="text/javascript">
 									var sortables = new Array();
@@ -1246,7 +1246,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							<tr>
 								<td colspan="2">&nbsp;</td>
 								<td>
-									<span class="content-small"><strong>Important:</strong> Program Coordinators will be able to add, edit or remove learning events in this course.</span>
+									<span class="content-small"><strong>Important:</strong> Program Coordinators will be able to add, edit or remove learning events in this <?php echo strtolower($module_singular_name); ?>.</span>
 								</td>
 							</tr>
 
@@ -1300,7 +1300,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					</div>
 					
 					<!-- Course Audience-->	
-					<h2>Course Enrollment</h2>
+					<h2><?php echo $module_singular_name; ?> Enrollment</h2>
 					<div>
 						<table>
 							<colgroup>

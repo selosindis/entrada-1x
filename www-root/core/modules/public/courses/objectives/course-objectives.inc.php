@@ -32,7 +32,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 		exit;
 } else {
 	if ((isset($COURSE_ID) && $COURSE_ID)) {
-		$BREADCRUMB[] = array("url" => ENTRADA_URL."/courses/objectives?section=course-objectives&cid=".$COURSE_ID, "title" => "Course Objectives");
+		$BREADCRUMB[] = array("url" => ENTRADA_URL."/courses/objectives?section=course-objectives&cid=".$COURSE_ID, "title" => $module_singular_name . " Objectives");
 		?>
 		<style type="text/css">
 		li.pad-top {

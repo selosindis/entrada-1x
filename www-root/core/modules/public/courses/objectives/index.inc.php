@@ -31,7 +31,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 		header("Location: ".ENTRADA_URL);
 		exit;
 } else {
-	echo "<h1>Competencies by Course</h1>";
+	echo "<h1>Competencies by " . $module_singular_name . "</h1>";
 	$objectives = objectives_build_course_competencies_array();
 	
 	if (!empty($objectives["courses"]) && !empty($objectives["competencies"])) {

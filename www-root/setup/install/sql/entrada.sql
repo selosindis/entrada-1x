@@ -1820,9 +1820,9 @@ CREATE TABLE IF NOT EXISTS `curriculum_periods`(
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `curriculum_type_organisation` (
-  `curriculum_type_id` int(11) NOT NULL,
-  `organisation_id` int(11) NOT NULL,
-  PRIMARY KEY (`curriculum_type_id`,`organisation_id`)
+  `curriculum_type_id` int(11) NOT NULL,
+  `organisation_id` int(11) NOT NULL,
+  PRIMARY KEY (`curriculum_type_id`,`organisation_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `curriculum_type_organisation` SELECT `curriculum_type_id`, 1 FROM `curriculum_lu_types`;
@@ -3948,7 +3948,7 @@ CREATE TABLE IF NOT EXISTS `group_organisations` (
   `organisation_id` int(11) NOT NULL,
   `updated_by` int(11) DEFAULT NULL,
   `updated_date` int(11) DEFAULT NULL,
-  PRIMARY KEY (`gorganisation_id`)
+  PRIMARY KEY (`gorganisation_id`),
   KEY `group_id` (`group_id`,`organisation_id`,`updated_date`,`updated_by`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 

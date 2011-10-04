@@ -67,7 +67,8 @@ if (!defined("IN_EVENTS")) {
 		if ($course_info) {
 			$permission = $course_info["permission"];
 			
-			$query = "SELECT * FROM `groups` AS a JOIN `group_organisations` AS b ON a.`group_id` = b.`group_id` WHERE ((`group_type` = 'course_list' AND `group_value` = ".$db->qstr($PROCESSED["course_id"]).") OR (b.`organisation_id` = '".$course_info["organisation_id"]."'))".($use_ajax ? " AND `group_active` = '1'" : "");
+			//$query = "SELECT * FROM `groups` AS a JOIN `group_organisations` AS b ON a.`group_id` = b.`group_id` WHERE ((`group_type` = 'course_list' AND `group_value` = ".$db->qstr($PROCESSED["course_id"]).") OR (b.`organisation_id` = '".$course_info["organisation_id"]."'))".($use_ajax ? " AND `group_active` = '1'" : "");
+			$query = "SELECT a.* FROM `course_audience` AS a JOIN `courses` AS b ON a.`course_id` = b.`course_id` AND a.`course_id` = ".$db->qstr($PROCESSED["course_id"])." WHERE a.`audience_active` = '1'";
 			$course_list = $db->GetRow($query);
 			
 			$query = "SELECT * FROM `course_groups` WHERE `course_id` = ".$db->qstr($PROCESSED["course_id"]).($use_ajax ? " AND `group_active` = '1'" : "")." ORDER BY LENGTH(`group_name`), `group_name` ASC";

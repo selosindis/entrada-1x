@@ -73,6 +73,10 @@ if (!defined("IN_EVENTS")) {
 			
 			$query = "SELECT * FROM `course_groups` WHERE `course_id` = ".$db->qstr($PROCESSED["course_id"]).($use_ajax ? " AND `group_active` = '1'" : "")." ORDER BY LENGTH(`group_name`), `group_name` ASC";
 			$course_groups = $db->GetAll($query);
+			
+			$query = "SELECT * FROM `event_audience` WHERE `event_id` = ".$db->qstr($EVENT_ID)." AND `audience_type` != 'course_id'";
+			$custom_audience = $db->GetAll($query);
+			
 			?>
 			<tr>
 				<td>&nbsp;</td>
@@ -101,7 +105,7 @@ if (!defined("IN_EVENTS")) {
 										<label for="event_audience_type_custom" class="radio-group-title">A Custom Event Audience</label>
 										<div class="content-small">This event is intended for a custom selection of learners.</div>
 
-										<div id="event_audience_type_custom_options" style="<?php echo ($course_list ? "display: none; " : ""); ?>position: relative; margin-top: 10px;">
+										<div id="event_audience_type_custom_options" style="<?php echo ($course_list && !$custom_audience ? "display: none; " : ""); ?>position: relative; margin-top: 10px;">
 											<select id="audience_type" onchange="showMultiSelect();" style="width: 275px;">
 												<option value="">-- Select an audience type --</option>
 												<?php

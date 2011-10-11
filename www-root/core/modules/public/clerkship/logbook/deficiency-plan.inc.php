@@ -331,23 +331,26 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 							<td colspan="3">&nbsp;</td>
 						</tr>
 						<?php
-						$query = "	SELECT `objective_name`
-									FROM `global_lu_objectives`
-									WHERE `objective_id` NOT IN 
+						$query = "	SELECT a.`objective_name`
+									FROM `global_lu_objectives` AS a
+									JOIN `objective_organisation` AS b
+									ON a.`objective_id` = b.`objective_id`
+									AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+									WHERE a.`objective_id` NOT IN 
 									(
 										SELECT `objective_id` 
 										FROM `".CLERKSHIP_DATABASE."`.`logbook_entry_objectives`
 										WHERE `lentry_id` IN 
 										(".$entry_ids_string.")
 									)
-									AND `objective_id` IN
+									AND a.`objective_id` IN
 									(
 										SELECT `objective_id`
 										FROM `".CLERKSHIP_DATABASE."`.`logbook_mandatory_objectives`
 										WHERE `rotation_id` = ".$db->qstr($ROTATION_ID)."
 									)
-									AND `objective_parent` = '200'
-									AND `objective_active` = '1'";
+									AND a.`objective_parent` = '200'
+									AND a.`objective_active` = '1'";
 						$objectives = $db->CacheGetAll($query);
 						if ($objectives && count($objectives)) {
 							?>
@@ -531,23 +534,26 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 							<td colspan="3">&nbsp;</td>
 						</tr>
 						<?php
-						$query = "	SELECT `objective_name`
-									FROM `global_lu_objectives`
-									WHERE `objective_id` NOT IN 
+						$query = "	SELECT a.`objective_name`
+									FROM `global_lu_objectives` AS a
+									JOIN `objective_organisation` AS b
+									ON a.`objective_id` = b.`objective_id`
+									AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+									WHERE a.`objective_id` NOT IN 
 									(
 										SELECT `objective_id` 
 										FROM `".CLERKSHIP_DATABASE."`.`logbook_entry_objectives`
 										WHERE `lentry_id` IN 
 										(".$entry_ids_string.")
 									)
-									AND `objective_id` IN
+									AND a.`objective_id` IN
 									(
 										SELECT `objective_id`
 										FROM `".CLERKSHIP_DATABASE."`.`logbook_mandatory_objectives`
 										WHERE `rotation_id` = ".$db->qstr($ROTATION_ID)."
 									)
-									AND `objective_parent` = '200'
-									AND `objective_active` = '1'";
+									AND a.`objective_parent` = '200'
+									AND a.`objective_active` = '1'";
 						$objectives = $db->GetAll($query);
 						if ($objectives && count($objectives)) {
 							?>

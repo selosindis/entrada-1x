@@ -59,16 +59,19 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 		if (isset($_REQUEST["organisation_id"]) && ((int)$_REQUEST["organisation_id"])) {
 			$organisation_id = clean_input($_REQUEST["organisation_id"], array("int"));
 		} else {
-			$organisation_id = 0;
+			$organisation_id = $ENTRADA_USER->getActiveOrganisation();
 		}
 		
 		if (isset($_REQUEST["type"]) && $_REQUEST["type"] == "order") {
 			if ($parent_id) {
-				$query = "	SELECT * FROM `global_lu_objectives`
-							WHERE `objective_parent` = ".$db->qstr($parent_id)."
-							AND `objective_active` = '1'
-							ORDER BY `objective_order` ASC";
-			}{
+				$query = "SELECT a.* FROM `global_lu_objectives` AS a
+							JOIN `objective_organisation` AS b
+							ON a.`objective_id` = b.`objective_id`
+							WHERE a.`objective_parent` = ".$db->qstr($parent_id)."
+							AND a.`objective_active` = '1'
+							AND b.`organisation_id` = ".$db->qstr($organisation_id)."
+							ORDER BY a.`objective_order` ASC";
+			} else {
 				$query = "	SELECT * FROM `global_lu_objectives` AS a
 							LEFT JOIN `objective_organisation` AS b
 							ON a.`objective_id` = b.`objective_id`
@@ -102,9 +105,12 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 			}
 		} else {
 			if ($parent_id !== 0) {
-				$query = "	SELECT * FROM `global_lu_objectives`
-							WHERE `objective_id` = ".$db->qstr($parent_id)."
-							AND `objective_active` = '1'";
+				$query = "	SELECT a.* FROM `global_lu_objectives` AS a
+							JOIN `objective_organisation` AS b
+							ON a.`objective_id` = b.`objective_id`
+							WHERE a.`objective_id` = ".$db->qstr($parent_id)."
+							AND b.`organisation_id` = ".$db->qstr($organisation_id)."
+							AND a.`objective_active` = '1'";
 				$objective = $db->GetRow($query);
 				if ($objective) {
 					if ($objective["objective_parent"]) {
@@ -116,9 +122,12 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 						$count = 2;
 						while ($last_parent_id) {
 							$count++;
-							$query = "	SELECT * FROM `global_lu_objectives`
-										WHERE `objective_id` = ".$db->qstr($last_parent_id)."
-										AND `objective_active` = '1'";
+							$query = "SELECT a.* FROM `global_lu_objectives` AS a
+										JOIN `objective_organisation` AS b
+										ON a.`objective_id` = b.`objective_id`
+										WHERE a.`objective_id` = ".$db->qstr($last_parent_id)."
+										AND b.`organisation_id` = ".$db->qstr($organisation_id)."
+										AND a.`objective_active` = '1'";
 							$parent_objective = $db->GetRow($query);
 							$objective_selected_reverse[$count]["parent"]	= $parent_objective["objective_parent"];
 							$objective_selected_reverse[$count]["id"]		= $parent_objective["objective_id"];
@@ -161,10 +170,13 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 									ORDER BY a.`objective_order` ASC";
 					}
 					else{
-						$query = "	SELECT * FROM `global_lu_objectives`
-								WHERE `objective_parent` = ".$db->qstr($objective_selected[$level]["parent"])."
-								AND `objective_active` = '1'".
-								($excluded ? " AND `objective_id` NOT IN (".$excluded.")" : ($objective_id ? " AND `objective_id` != ".$db->qstr($objective_id) : ""));
+						$query = "SELECT a.* FROM `global_lu_objectives` AS a
+									JOIN `objective_organisation` AS b
+									ON a.`objective_id` = b.`objective_id`
+									WHERE a.`objective_parent` = ".$db->qstr($objective_selected[$level]["parent"])."
+									AND b.`organisation_id` = ".$db->qstr($organisation_id)."
+									AND a.`objective_active` = '1'".
+								($excluded ? " AND a.`objective_id` NOT IN (".$excluded.")" : ($objective_id ? " AND a.`objective_id` != ".$db->qstr($objective_id) : ""));
 					}
 					$results = $db->GetAll($query);
 					if ($results) {

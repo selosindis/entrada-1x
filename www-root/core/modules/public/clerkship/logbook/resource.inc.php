@@ -48,13 +48,21 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 	$objective_id = 0;
     }
 
-    $query  = " SELECT `objective_id`, `objective_name`
-		FROM `".DATABASE_NAME."`.`global_lu_objectives`
-		WHERE `objective_id` = ".$db->qstr($objective_id)."
+    $query  = " SELECT a.`objective_id`, a.`objective_name`
+		FROM `".DATABASE_NAME."`.`global_lu_objectives` AS a
+		JOIN `objective_organisation` AS b
+		ON a.`objective_id` = b.`objective_id`
+		AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+		WHERE a.`objective_id` = ".$db->qstr($objective_id)."
 		UNION
 		SELECT a.`objective_id`, a.`objective_name`
-		FROM `".DATABASE_NAME."`.`global_lu_objectives` as a, `".DATABASE_NAME."`.`global_lu_objectives` as b
-		WHERE b.`objective_parent` = a.`objective_id`  AND a.`objective_id` > 200
+		FROM `".DATABASE_NAME."`.`global_lu_objectives` as a
+		JOIN `".DATABASE_NAME."`.`global_lu_objectives` as b
+		ON a.`objective_id` = b.`objective_parent`
+		JOIN `objective_organisation` AS c
+		ON c.`objective_id` = b.`objective_id`
+		AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+		WHERE a.`objective_id` > 200
 		AND b.`objective_id` = ".$db->qstr($objective_id);
     $results = $db->GetAll($query);
 

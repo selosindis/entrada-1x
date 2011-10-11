@@ -64,31 +64,25 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 	$result = $db->GetAll($query);
 	
 	if(isset($result) && count($result)>0){
-	
-	
-	?>
-	<form action="<?php echo ENTRADA_URL."/admin/settings/organisations/manage/objectives?".replace_query(array("section" => "delete", "step" => 1))."&amp;org=".$ORGANISATION_ID; ?>" method="post">
-		<table class="tableList" cellspacing="0" summary="List of Objectives">
-			<thead>
-				<tr>
-					<td class="modified">&nbsp;</td>
-					<td class="title">Objectives</td>
-				</tr>
-			</thead>
-		</table>	
-		<?php
-		echo objectives_inlists_conf(0, 0, array('id'=>'pagelists'));
 		?>
-		<input type="submit" class="button" value="Delete Selected" />
-	</form>
-		
-	
-		
-	<?php
-}
-else{
-	$NOTICE++;
-	$NOTICESTR[] = "There are currently no Objectives assigned to this Organisation";
-	echo display_notice();
-}
+		<form action="<?php echo ENTRADA_URL."/admin/settings/organisations/manage/objectives?".replace_query(array("section" => "delete", "step" => 1, "org" => $ORGANISATION_ID)); ?>" method="post">
+			<table class="tableList" cellspacing="0" summary="List of Objectives">
+				<thead>
+					<tr>
+						<td class="modified">&nbsp;</td>
+						<td class="title">Objectives</td>
+					</tr>
+				</thead>
+			</table>	
+			<?php
+			echo objectives_inlists_conf(0, 0, array('id'=>'pagelists'));
+			?>
+			<input type="submit" class="button" value="Delete Selected" />
+		</form>
+		<?php
+	} else {
+		$NOTICE++;
+		$NOTICESTR[] = "There are currently no Objectives assigned to this Organisation";
+		echo display_notice();
+	}
 }

@@ -899,6 +899,9 @@ function get_account_data($type = "", $id = 0) {
 			case "email" :
 				$query = "SELECT `email` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id`=".$db->qstr($id);
 			break;
+			case "organisation_id" :
+				$query = "SELECT `organisation_id` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id`=".$db->qstr($id);
+			break;
 			case "username" :
 				$query = "SELECT `username` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id`=".$db->qstr($id);
 			break;
@@ -1449,10 +1452,14 @@ function fetch_term_title($curriculum_type_id = 0) {
 }
 
 function fetch_objective_title($objective_id = 0) {
-	global $db;
+	global $db, $ENTRADA_USER;
 	
 	if ($objective_id = (int) $objective_id) {
-		$query = "SELECT `objective_name` FROM `global_lu_objectives` WHERE `objective_id` = ".$db->qstr($objective_id);
+		$query = "SELECT a.`objective_name` FROM `global_lu_objectives` AS a
+					JOIN `objective_organisation` AS b
+					ON a.`objective_id` = b.`objective_id`
+					WHERE a.`objective_id` = ".$db->qstr($objective_id)."
+					AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation());
 		$result	= $db->GetRow($query);
 		if ($result) {
 			return $result["objective_name"];
@@ -1498,10 +1505,13 @@ function fetch_clinical_presentations($parent_id = 0, $presentations = array(), 
 	}
 
 	if ($parent_id) {
-		$query = "	SELECT *
-					FROM `global_lu_objectives`
+		$query = "	SELECT a.*
+					FROM `global_lu_objectives` AS a
+					JOIN `objective_organisation` AS b
+					ON a.`objective_id` = b.`objective_id`
 					WHERE `objective_active` = '1'
-					AND `objective_parent` = ".$db->qstr($parent_id);
+					AND `objective_parent` = ".$db->qstr($parent_id)."
+					AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation());
 	} else {
 		$objective_name = $translate->_("events_filter_controls");
 		$objective_name = $objective_name["cp"]["global_lu_objectives_name"];
@@ -1542,10 +1552,13 @@ function fetch_curriculum_objectives_children($parent_id = 0, &$objectives) {
 	$parent_id = (int) $parent_id;
 	
 	if ($parent_id) {
-		$query = "	SELECT *
-					FROM `global_lu_objectives`
-					WHERE `objective_active` = '1'
-					AND `objective_parent` = ".$db->qstr($parent_id);
+		$query = "	SELECT a.*
+					FROM `global_lu_objectives` AS a
+					JOIN `objective_organisation` AS b
+					ON a.`objective_id` = b.`objective_id`
+					WHERE a.`objective_active` = '1'
+					AND a.`objective_parent` = ".$db->qstr($parent_id)."
+					AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation());
 	} else {
 		$objective_name = $translate->_("events_filter_controls");
 		$objective_name = $objective_name["co"]["global_lu_objectives_name"];
@@ -7821,7 +7834,7 @@ function clerkship_progress_send_notice($rotation_period_index, $rotation, $cler
 			WHERE `rotation_id` = ".$db->qstr($rotation["rotation_id"])."
 			AND `clerk_id` = ".$db->qstr($clerk["proxy_id"])."
 			AND `proxy_id` = ".$db->qstr($clerk["proxy_id"])."
-			AND `notified_date` < ".$db->qstr((time() - ONE_WEEK));
+			AND `notified_date` > ".$db->qstr((time() - ONE_WEEK));
 	$notified = $db->GetRow($query);
 	if (!$notified) {
 		$objective_progress = clerkship_rotation_objectives_progress($clerk["proxy_id"], $rotation["rotation_id"]);
@@ -8171,10 +8184,14 @@ function clerkship_send_queued_notifications($rotation_id, $rotation_title, $pro
  */
 function clerkship_rotation_objectives_progress($proxy_id, $rotation_id) {
 	global $db;
+	
 	$query 	= "SELECT a.*, b.* FROM `".CLERKSHIP_DATABASE."`.`logbook_mandatory_objectives` AS a
 			JOIN `global_lu_objectives` AS b
 			ON a.`objective_id` = b.`objective_id`
-			WHERE `rotation_id` = ".$db->qstr($rotation_id);
+			JOIN `objective_organisation` AS c
+			ON b.`objective_id` = c.`objective_id`
+			WHERE a.`rotation_id` = ".$db->qstr($rotation_id)."
+			AND c.`organisation_id` = ".$db->qstr(get_account_data("organisation_id", $proxy_id));
 	$oresults = $db->GetAll($query);
 	if ($oresults) {
 		$total_required = 0;
@@ -8579,18 +8596,24 @@ function courses_fetch_objectives($org_id, $course_ids, $top_level_id = -1, $par
 						FROM `course_objectives` AS a
 						JOIN `global_lu_objectives` AS b
 						ON a.`objective_id` = b.`objective_id`
+						JOIN `objective_organisation` AS c
+						ON b.`objective_id` = c.`objective_id`
 						WHERE ".($fetch_all_text ? "" : "`importance` != '0'
 						AND ")."`course_id` IN (".$escaped_course_ids.")
 						AND a.`objective_type` = 'course'
+						AND c.`organisation_id` = ".$db->qstr($org_id)."
 						UNION
 						SELECT b.`objective_name`, b.`objective_id`, a.`importance`, a.`objective_details`, a.`course_id`, b.`objective_parent`, b.`objective_order`
 						FROM `course_objectives` AS a
 						JOIN `global_lu_objectives` AS b
 						ON a.`objective_id` = b.`objective_parent`
 						AND `course_id` IN (".$escaped_course_ids.")
+						JOIN `objective_organisation` AS c
+						ON b.`objective_id` = c.`objective_id`
 						WHERE ".($fetch_all_text ? "" : "`importance` != '0'
 						AND a.`objective_type` = 'course'
 						AND ")."a.`objective_type` = 'course'
+						AND c.`organisation_id` = ".$db->qstr($org_id)."
 						AND b.`objective_id` NOT IN (
 							SELECT a.`objective_id`
 							FROM `course_objectives` AS a
@@ -8647,18 +8670,21 @@ function courses_fetch_objectives($org_id, $course_ids, $top_level_id = -1, $par
 	if($top_level_id == -1){
 		$objective_name = $translate->_("events_filter_controls");
 		$objective_name = $objective_name["co"]["global_lu_objectives_name"];
-		$query	= "	SELECT a.* FROM `global_lu_objectives` AS a 
+		$query	= "SELECT a.* FROM `global_lu_objectives` AS a 
 					INNER JOIN `objective_organisation` AS b 
 					ON a.`objective_id` = b.`objective_id` 
-					WHERE b.`organisation_id` = ".$org_id." 
+					WHERE b.`organisation_id` = ".$db->qstr($org_id)."
 					AND `objective_active` = '1'
 					AND a.`objective_name` LIKE ".$db->qstr($objective_name)."
 					ORDER BY a.`objective_order` ASC ";
 	} else {
-		$query	= "	SELECT * FROM `global_lu_objectives` 
-					WHERE `objective_parent` = ".$db->qstr($parent_id)."
-					AND `objective_active` = '1'
-					ORDER BY `objective_order` ASC";
+		$query	= "SELECT a.* FROM `global_lu_objectives` AS a
+					JOIN `objective_organisation` AS b
+					ON a.`objective_id` = b.`objective_id`
+					WHERE a.`objective_parent` = ".$db->qstr($parent_id)."
+					AND a.`objective_active` = '1'
+					AND b.`organisation_id` = ".$db->qstr($org_id)."
+					ORDER BY a.`objective_order` ASC";
 	}	
 	$results	= $db->GetAll($query);
 	if($results) {
@@ -8666,10 +8692,13 @@ function courses_fetch_objectives($org_id, $course_ids, $top_level_id = -1, $par
 			$top_level_id = $results[0]["objective_id"];
 			$parent_id = $top_level_id;
 			
-			$query	= "	SELECT * FROM `global_lu_objectives` 
-						WHERE `objective_parent` = ".$db->qstr($parent_id)."
-						AND `objective_active` = '1'
-						ORDER BY `objective_order` ASC";
+			$query	= "SELECT a.* FROM `global_lu_objectives` AS a
+						JOIN `objective_organisation` AS b
+						ON a.`objective_id` = b.`objective_id`
+						WHERE a.`objective_parent` = ".$db->qstr($parent_id)."
+						AND b.`organisation_id` = ".$db->qstr($org_id)."
+						AND a.`objective_active` = '1'
+						ORDER BY a.`objective_order` ASC";
 		
 			
 			$results = $db->GetAll($query);
@@ -8778,7 +8807,10 @@ function courses_fetch_objectives($org_id, $course_ids, $top_level_id = -1, $par
 		$event_objectives = $db->GetAll("	SELECT a.* FROM `event_objectives` AS a
 											JOIN `global_lu_objectives` AS b
 											ON a.`objective_id` = b.`objective_id`
+											JOIN `objective_organisation` AS c
+											ON b.`objective_id` = c.`objective_id`
 											WHERE a.`event_id` = ".$db->qstr($event_id)."
+											AND c.`organisation_id` = ".$db->qstr($org_id)."
 											AND a.`objective_type` = 'course'
 											AND a.`objective_id` IN (".$event_objectives_string.")
 											ORDER BY b.`objective_order` ASC");
@@ -8814,6 +8846,8 @@ function courses_fetch_objectives($org_id, $course_ids, $top_level_id = -1, $par
  * @return string 
  */
 function course_objectives_in_list($objectives, $parent_id, $top_level_id, $edit_importance = false, $parent_active = false, $importance = 1, $selected_only = false, $top = true, $display_importance = "primary", $hierarchical = false, $full_objective_list) {
+	global $ENTRADA_USER;
+	
 	$output = "";
 	$active = array("primary" => false, "secondary" => false, "tertiary" => false);
 	
@@ -10078,7 +10112,7 @@ function events_fetch_sorting_query($sort_by = "", $sort_order = "ASC") {
 		break;
 		case "date" :
 		default :
-			$sort_by = "`events`.`event_start` ".strtoupper($sort_order);
+			$sort_by = "`events`.`event_start` ".strtoupper($sort_order).", `events`.`updated_date` DESC";
 		break;
 	}
 
@@ -10879,7 +10913,7 @@ function events_fetch_event_resources($event_id = 0, $options = array(), $exclud
 }
 
 function event_objectives_in_list($objectives, $parent_id, $top_level_id, $edit_text = false, $parent_active = false, $importance = 1, $course = true, $top = true, $display_importance = "primary", $full_objective_list = false) {
-	global $edit_ajax;
+	global $edit_ajax, $ENTRADA_USER;
 	
 	if (!$full_objective_list) {
 		$full_objective_list = events_fetch_objectives_structure($parent_id, $objectives["used_ids"]);
@@ -11062,11 +11096,16 @@ function events_flatten_objectives ($objectives) {
 }
 
 function events_fetch_objectives_structure($parent_id, $used_ids) {
-	global $db;
+	global $db, $ENTRADA_USER;
 	
 	$full_objective_list = array();
 	
-	$query = "SELECT * FROM `global_lu_objectives` WHERE `objective_parent` = ".$db->qstr($parent_id)." ORDER BY `objective_order` ASC";
+	$query = "SELECT a.* FROM `global_lu_objectives` AS a
+				JOIN `objective_organisation` AS b
+				ON a.`objective_id` = b.`objective_id`
+				WHERE a.`objective_parent` = ".$db->qstr($parent_id)." 
+				AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+				ORDER BY a.`objective_order` ASC";
 	$objective_children = $db->GetAll($query);
 	
 	if ($objective_children) {
@@ -12281,7 +12320,7 @@ function objectives_inlists($identifier = 0, $indent = 0) {
 	$output		= "";
 
 	if(($identifier===0) && ($indent === 0)) {
-		$query	= "	SELECT * FROM `global_lu_objectives` AS a
+		$query	= "SELECT * FROM `global_lu_objectives` AS a
 					LEFT JOIN `objective_organisation` AS b
 					ON a.`objective_id` = b.`objective_id`
 					WHERE a.`objective_parent` = '0' 
@@ -12289,10 +12328,13 @@ function objectives_inlists($identifier = 0, $indent = 0) {
 					AND b.`organisation_id` = ".$db->qstr($ORGANISATION_ID)."
 					ORDER BY a.`objective_order` ASC";
 	} else {
-		$query	= "	SELECT * FROM `global_lu_objectives` 
-					WHERE `objective_parent` = ".$db->qstr($identifier)." 
-					AND `objective_active` = '1' 
-					ORDER BY `objective_order` ASC";
+		$query	= "SELECT a.* FROM `global_lu_objectives` AS a
+					JOIN `objective_organisation` AS b
+					ON a.`objective_id` = b.`objective_id`
+					WHERE a.`objective_parent` = ".$db->qstr($identifier)." 
+					AND a.`objective_active` = '1'
+					AND b.`organisation_id` = ".$db->qstr($ORGANISATION_ID)."
+					ORDER BY a.`objective_order` ASC";
 	}
 	if ($indent < 1) {
 		?>
@@ -12317,10 +12359,13 @@ function objectives_inlists($identifier = 0, $indent = 0) {
 			$output .= "<div class=\"objective-container\">";
 			$output .= "	<span class=\"delete\"><input type=\"checkbox\" id=\"delete_".$result["objective_id"]."\" name=\"delete[".$result["objective_id"]."][objective_id]\" value=\"".$result["objective_id"]."\"".(($selected == $result["objective_id"]) ? " checked=\"checked\"" : "")." onclick=\"$$('#".$result["objective_id"]."-children input[type=checkbox]').each(function(e){e.checked = $('delete_".$result["objective_id"]."').checked; if (e.checked) e.disable(); else e.enable();});\"/></span>\n";
 			$output .= "	<span class=\"next\">";
-			$query = "	SELECT * FROM `global_lu_objectives` 
-						WHERE `objective_parent` = ".$db->qstr($result["objective_id"])." 
-						AND `objective_active` = '1' 
-						ORDER BY `objective_order` ASC";
+			$query = "SELECT a.* FROM `global_lu_objectives` AS a 
+						JOIN `objective_organisation` AS b
+						ON a.`objective_id` = b.`objective_id`
+						WHERE a.`objective_parent` = ".$db->qstr($result["objective_id"])." 
+						AND b.`organisation_id` = ".$db->qstr($ORGANISATION_ID)."
+						AND a.`objective_active` = '1' 
+						ORDER BY a.`objective_order` ASC";
 			if ($db->GetAll($query)) {
 				$has_children = true;
 			} else {
@@ -12372,10 +12417,13 @@ function objectives_inlists_conf($identifier = 0, $indent = 0) {
 					AND b.`organisation_id` = ".$db->qstr($ORGANISATION_ID)."
 					ORDER BY a.`objective_order` ASC";
 	} else {
-		$query	= "	SELECT * FROM `global_lu_objectives` 
-					WHERE `objective_parent` = ".$db->qstr($identifier)." 
-					AND `objective_active` = '1' 
-					ORDER BY `objective_order` ASC";
+		$query	= "	SELECT a.* FROM `global_lu_objectives` AS a
+					LEFT JOIN `objective_organisation` AS b
+					ON a.`objective_id` = b.`objective_id`
+					WHERE a.`objective_parent` = ".$db->qstr($identifier)." 
+					AND a.`objective_active` = '1' 
+					AND b.`organisation_id` = ".$db->qstr($ORGANISATION_ID)."
+					ORDER BY a.`objective_order` ASC";
 	}
 	if ($indent < 1) {
 		?>
@@ -12400,10 +12448,13 @@ function objectives_inlists_conf($identifier = 0, $indent = 0) {
 			$output .= "<div class=\"objective-container\">";
 			$output .= "	<span class=\"delete\"><input type=\"checkbox\" id=\"delete_".$result["objective_id"]."\" name=\"delete[".$result["objective_id"]."][objective_id]\" value=\"".$result["objective_id"]."\"".(($selected == $result["objective_id"]) ? " checked=\"checked\"" : "")." onclick=\"$$('#".$result["objective_id"]."-children input[type=checkbox]').each(function(e){e.checked = $('delete_".$result["objective_id"]."').checked; if (e.checked) e.disable(); else e.enable();});\"/></span>\n";
 			$output .= "	<span class=\"next\">";
-			$query = "	SELECT * FROM `global_lu_objectives` 
-						WHERE `objective_parent` = ".$db->qstr($result["objective_id"])." 
-						AND `objective_active` = '1' 
-						ORDER BY `objective_order` ASC";
+			$query = "SELECT a.* FROM `global_lu_objectives` AS a
+						JOIN `objective_organisation` AS b
+						ON a.`objective_id` = b.`objective_id`
+						WHERE a.`objective_parent` = ".$db->qstr($result["objective_id"])." 
+						AND a.`objective_active` = '1' 
+						AND b.`organisation_id` = ".$db->qstr($ORGANISATION_ID)."
+						ORDER BY a.`objective_order` ASC";
 			if ($db->GetAll($query)) {
 				$has_children = true;
 			} else {
@@ -12439,7 +12490,7 @@ function objectives_inlists_conf($identifier = 0, $indent = 0) {
  * @return string
  */
 function objectives_inselect($parent_id = 0, &$current_selected, $indent = 0, &$exclude = array()) {
-	global $db, $MODULE, $COMMUNITY_ID;
+	global $db, $MODULE, $COMMUNITY_ID, $ENTRADA_USER;
 
 	if($indent > 99) {
 		die("Preventing infinite loop");
@@ -12450,10 +12501,13 @@ function objectives_inselect($parent_id = 0, &$current_selected, $indent = 0, &$
 	}
 
 	$output	= "";
-	$query	= "	SELECT * FROM `global_lu_objectives` 
-				WHERE `objective_active` = '1' 
-				AND `objective_parent` = ".$db->qstr($parent_id)." 
-				ORDER BY `objective_id` ASC";
+	$query	= "SELECT a.* FROM `global_lu_objectives` AS a
+				JOIN `objective_organisation` AS b
+				ON a.`objective_id` = b.`objective_id`
+				WHERE a.`objective_active` = '1' 
+				AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+				AND a.`objective_parent` = ".$db->qstr($parent_id)." 
+				ORDER BY a.`objective_id` ASC";
 	$results	= $db->GetAll($query);
 	if($results) {
 		foreach ($results as $result) {
@@ -12498,7 +12552,7 @@ function objectives_delete($objective_id = 0, $children_move_target = 0, $level 
 			}
 		}
 		if($children_move_target === false) {
-			$query		= "	SELECT `objective_id` FROM `global_lu_objectives` 
+			$query		= "	SELECT `objective_id` FROM `global_lu_objectives`
 							WHERE `objective_active` = '1' 
 							AND `objective_parent` = ".$db->qstr($objective_id);
 			$results	= $db->GetAll($query);
@@ -12522,22 +12576,23 @@ function objectives_delete_for_org($organisation_id=0,$objective_id = 0, $childr
 	global $db, $deleted_count;
 
 	
-	$query = "	SELECT COUNT(*) FROM `objective_organisation` 
+	$query = "SELECT COUNT(*) FROM `objective_organisation` 
 				WHERE `objective_id` = ".$db->qstr($objective_id);
 	
 	$result = (int)$db->GetOne($query);
-	$success=true;
+	$success = true;
 	
 	if($result == 1){
 		$success = objectives_delete($objective_id,$children_move_target,$level);
 	}
 
-	$query = "	DELETE FROM `objective_organisation` 
+	$query = "DELETE FROM `objective_organisation` 
 				WHERE `objective_id` = ".$db->qstr($objective_id)."
 				AND `organisation_id` = ".$db->qstr($organisation_id);
 	$result = $db->Execute($query);
-	if(!isset($result))
-		$success=false;
+	if (!isset($result) || !$result) {
+		$success = false;
+	}
 	
 	return $success;
 }
@@ -12549,7 +12604,7 @@ function objectives_delete_for_org($organisation_id=0,$objective_id = 0, $childr
  * @param int $indent
  * @return string
  */
-function objectives_intable($identifier = 0, $indent = 0, $excluded_objectives = false) {
+function objectives_intable($ORGANISATION_ID, $identifier = 0, $indent = 0, $excluded_objectives = false) {
 	global $db, $ONLOAD;
 
 	if($indent > 99) {
@@ -12564,10 +12619,13 @@ function objectives_intable($identifier = 0, $indent = 0, $excluded_objectives =
 	$output		= "";
 	
 	if(($identifier)) {
-		$query	= "	SELECT * FROM `global_lu_objectives` 
-					WHERE `objective_id` = ".$db->qstr((int)$identifier)." 
-					AND `objective_active` = '1' 
-					ORDER BY `objective_order` ASC";
+		$query	= "SELECT * FROM `global_lu_objectives` AS a
+					JOIN `objective_organisation` AS b
+					ON a.`objective_id` = b.`objective_id`
+					WHERE a.`objective_id` = ".$db->qstr((int)$identifier)." 
+					AND a.`objective_active` = '1' 
+					AND b.`organisation_id` = ".$db->qstr($ORGANISATION_ID)."
+					ORDER BY a.`objective_order` ASC";
 	}
 
 	$result	= $db->GetRow($query);
@@ -12580,10 +12638,13 @@ function objectives_intable($identifier = 0, $indent = 0, $excluded_objectives =
 		$output .= "		<input type=\"hidden\" name=\"delete[".((int)$identifier)."][objective_id]\" value=\"".((int)$identifier)."\" />";
 		$output .= "</td>\n";
 		$output .= "</tr>\n";
-		$query = "	SELECT COUNT(`objective_id`) FROM `global_lu_objectives` 
-					WHERE `objective_active` = '1'
-					GROUP BY `objective_parent`
-					HAVING `objective_parent` = ".$db->qstr((int)$identifier);
+		$query = "SELECT COUNT(a.`objective_id`) FROM `global_lu_objectives` AS a
+					JOIN `objective_organisation` AS b
+					ON a.`objective_id` = b.`objective_id`
+					WHERE a.`objective_active` = '1'
+					AND b.`organisation_id` = ".$db->qstr($ORGANISATION_ID)."
+					GROUP BY a.`objective_parent`
+					HAVING a.`objective_parent` = ".$db->qstr((int)$identifier);
 		$children = $db->GetOne($query);
 		if ($children) {
 			$output .= "<tbody id=\"delete-".((int)$identifier)."-children\">";
@@ -12896,7 +12957,7 @@ function is_department_head($user_id) {
  * @return array $obectives
  */
 function objectives_build_course_competencies_array() {
-	global $db;
+	global $db, $ENTRADA_USER;
 	$courses_array = array("courses" => array(), "competencies" => array());
 	
 	$query = "	SELECT a.*, b.`curriculum_type_name` FROM `courses` AS a
@@ -12910,7 +12971,7 @@ function objectives_build_course_competencies_array() {
 					OR b.`curriculum_type_active` = '1'
 				)
 				AND a.`course_active` = 1
-				AND a.`organisation_id` = ".$db->qstr($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"])."
+				AND a.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
 				ORDER BY a.`curriculum_type_id` ASC, a.`course_code` ASC";
 	$courses = $db->GetAll($query);
 	if ($courses) {
@@ -12958,15 +13019,18 @@ function objectives_build_course_competencies_array() {
 					LEFT JOIN `objective_organisation` AS b 
 					ON a.`objective_id` = b.`objective_id` 
 					WHERE a.`objective_name` = 'Curriculum Objectives' 
-					AND b.`organisation_id` = ".$db->qstr($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"]);
+					AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation());
 		
 		$parent_obj = $db->GetOne($query);
 		
-		$query = "	SELECT * FROM `global_lu_objectives`
-					WHERE `objective_parent` IN (
+		$query = "	SELECT a.* FROM `global_lu_objectives` AS a
+					JOIN `objective_organisation` AS b
+					ON a.`objective_id` = b.`objective_id`
+					WHERE a.`objective_parent` IN (
 						SELECT `objective_id` FROM `global_lu_objectives`
 						WHERE `objective_parent` = ".(isset($parent_obj)?$db->qstr($parent_obj):$db->qstr(CURRICULAR_OBJECTIVES_PARENT_ID))."
-					)";
+					)
+					AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation());
 		$competencies = $db->GetAll($query);
 		if ($competencies && count($competencies)) {
 			foreach ($competencies as $competency) {
@@ -13001,9 +13065,12 @@ function objectives_build_course_competencies_array() {
  * @return $objective_ids_string
  */
 function objectives_build_objective_descendants_id_string($objective_id = 0, $objective_ids_string = "") {
-	global $db;
-	$query = "	SELECT `objective_id` FROM `global_lu_objectives`
-				WHERE `objective_parent` = ".$db->qstr($objective_id);
+	global $db, $ENTRADA_USER;
+	$query = "	SELECT a.`objective_id` FROM `global_lu_objectives` AS a
+				JOIN `objective_organisation` AS b
+				ON a.`objective_id` = b.`objective_id`
+				WHERE a.`objective_parent` = ".$db->qstr($objective_id)."
+				AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation());
 	$objective_ids = $db->GetAll($query);
 	if ($objective_ids) {
 		foreach ($objective_ids as $objective_id) {
@@ -13054,13 +13121,14 @@ function objectives_build_course_objectives_id_string($course_id = 0) {
  * @return $objective_ids_string
  */
 function objectives_competency_courses($competency_id = 0) {
-	global $db;
+	global $db, $ENTRADA_USER;
 	$query = "	SELECT a.*, MIN(b.`importance`) AS `importance` 
 				FROM `courses` AS a
 				JOIN `course_objectives` AS b
 				ON a.`course_id` = b.`course_id`
 				AND `objective_id` IN (".objectives_build_objective_descendants_id_string($competency_id).")
 				AND a.`course_active` = 1
+				AND a.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
 				GROUP BY a.`course_id`";
 	$courses = $db->GetAll($query);
 	if ($courses) {

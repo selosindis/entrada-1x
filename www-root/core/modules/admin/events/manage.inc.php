@@ -152,8 +152,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 										JOIN `course_objectives` AS b
 										ON b.`course_id` = ".$event_info["course_id"]."
 										AND a.`objective_id` = b.`objective_id`
+										JOIN `objective_organisation` AS c
+										ON a.`objective_id` = c.`objective_id`
 										WHERE a.`objective_id` = ".$db->qstr($objective_id)."
 										AND b.`objective_type` = 'event'
+										AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
 										AND a.`objective_active` = '1'";
 							$result	= $db->GetRow($query);
 							if ($result) {

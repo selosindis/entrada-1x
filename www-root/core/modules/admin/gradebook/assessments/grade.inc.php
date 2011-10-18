@@ -118,6 +118,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							ON b.`id` = i.`proxy_id`
 							WHERE c.`group` = 'student'
 							AND i.`group_id` = ".$db->qstr($COHORT)."
+							AND i.`member_active` = '1' 
 							ORDER BY b.`lastname` ASC, b.`firstname` ASC";
 				$students = $db->GetAll($query);
 				$editable = $ENTRADA_ACL->amIAllowed(new GradebookResource($course_details["course_id"], $course_details["organisation_id"]), "update") ? "gradebook_editable" : "gradebook_not_editable";
@@ -153,13 +154,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 										<td><?php echo $student["fullname"]; ?></td>
 										<td><?php echo $student["number"]; ?></td>
 										<td>
-											<span class="grade"
+											<span class="grade" id="grade_<?php echo $assessment["assessment_id"]; ?>_<?php echo $student["proxy_id"] ?>"
 												data-grade-id="<?php echo $grade_id; ?>"
 												data-assessment-id="<?php echo $assessment["assessment_id"]; ?>"
 												data-proxy-id="<?php echo $student["proxy_id"] ?>"
 											><?php echo $grade_value; ?></span>
 											<span class="gradesuffix" <?php echo (($grade_value === "-") ? "style=\"display: none;\"" : "") ?>>
 												<?php echo assessment_suffix($assessment); ?>
+											</span>
+											<span class="gradesuffix" style="float:right;">
+												<img src="<?php echo ENTRADA_URL;?>/images/action-edit.gif" class="edit_grade" id ="edit_grade_<?php echo $assessment["assessment_id"]; ?>_<?php echo $student["proxy_id"] ?>" style="cursor:pointer;"/>
 											</span>
 										</td>
 									</tr>
@@ -168,7 +172,30 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								?>
 							</tbody>
 						</table>
+						<br/>
+						<h2>Import Grades</h2>
+						<div id="display-notice-box" class="display-notice" style="width:408px;">
+							<ul>
+							<li><strong>Important Notes:</strong>
+								<br/>Format for the CSV should be [Student Number, Grade] with each entry on a separate line (without the brackets). 
+								<br/>Any grades entered will be overwritten if present in the CSV.</li>
+							</ul>
+						</div>
+						<form enctype="multipart/form-data" action="<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "csv-upload", "assessment_id" => $ASSESSMENT_ID)); ?>" method="POST">
+							<input type="file" name ="file"/><br/><br/>
+							<input type="submit" value ="Import CSV"/>
+						</form>
 					</div>
+					<script type="text/javascript">
+						jQuery(document).ready(function(){
+
+							jQuery('.edit_grade').click(function(e){
+								var id = e.target.id.substring(5);
+								jQuery('#'+id).trigger('click');
+							});
+						});
+
+					</script>
 					<div id="gradebook_stats">
 						<h2>Statistics</h2>
 						<div id="graph"></div>

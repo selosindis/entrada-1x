@@ -191,6 +191,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						<tr>
 							<td style="padding-top: 10px; border-bottom:0;"colspan="2">
 								<script type="text/javascript" charset="utf-8">
+
+									jQuery(document).ready(function(){
+										jQuery('.edit_grade').live('click',function(e){
+											var id = e.target.id.substring(5);
+											jQuery('#'+id).trigger('click');
+										});
+									});
+									
 									function exportSelected() {
 										var ids = [];
 										$$('#assessment_list .modified input:checked').each(function(checkbox) {

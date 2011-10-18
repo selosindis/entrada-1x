@@ -14331,6 +14331,63 @@ function groups_get_all_cohorts($organisation_id = 0, $only_active_groups = fals
 }
 
 /**
+ * This function returns the course_list records related to the given organisation_id
+ *
+ * @param int $organisation_id
+ * @return array $groups
+ */
+function groups_get_all_course_lists($organisation_id = 0, $only_active_groups = false) {
+	global $db;
+	
+	$organisation_id = (int) $organisation_id;
+	
+	if ($organisation_id) {
+		$query = "	SELECT a.* 
+					FROM `groups` AS a 
+					JOIN `group_organisations` AS b 
+					ON a.`group_id` = b.`group_id` 
+					WHERE b.`organisation_id` = ".$db->qstr($organisation_id)."
+					".($only_active_groups ? " AND a.`group_active` = '1'" : "")."
+					AND a.`group_type` = 'course_list'
+					ORDER BY `group_name` DESC";
+		$course_lists = $db->GetAll($query);
+		if ($course_lists) {
+			return $course_lists;
+		}
+	}
+	
+	return false;
+}
+
+/**
+ * This function returns the group records related to the given organisation_id
+ *
+ * @param int $organisation_id
+ * @return array $groups
+ */
+function groups_get_all_groups($organisation_id = 0, $only_active_groups = false) {
+	global $db;
+	
+	$organisation_id = (int) $organisation_id;
+	
+	if ($organisation_id) {
+		$query = "	SELECT a.* 
+					FROM `groups` AS a 
+					JOIN `group_organisations` AS b 
+					ON a.`group_id` = b.`group_id` 
+					WHERE b.`organisation_id` = ".$db->qstr($organisation_id)."
+					".($only_active_groups ? " AND a.`group_active` = '1'" : "")."
+					ORDER BY `group_name` DESC";
+		$groups = $db->GetAll($query);
+		if ($groups) {
+			return $groups;
+		}
+	}
+	
+	return false;
+}
+
+/**
  * This function returns the cohort records related to the given organisation_id
  *
  * @param int $organisation_id

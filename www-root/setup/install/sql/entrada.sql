@@ -3331,7 +3331,6 @@ INSERT INTO `global_lu_schools` (`schools_id`, `school_title`) VALUES
 
 CREATE TABLE IF NOT EXISTS `notices` (
   `notice_id` int(12) NOT NULL AUTO_INCREMENT,
-  `target` varchar(32) NOT NULL DEFAULT '',
   `organisation_id` int(12) DEFAULT NULL,
   `notice_summary` text NOT NULL,
   `notice_details` text NOT NULL,
@@ -3340,12 +3339,21 @@ CREATE TABLE IF NOT EXISTS `notices` (
   `updated_date` bigint(64) NOT NULL DEFAULT '0',
   `updated_by` int(12) NOT NULL DEFAULT '0',
   PRIMARY KEY  (`notice_id`),
-  KEY `target` (`target`),
   KEY `display_from` (`display_from`),
   KEY `display_until` (`display_until`),
   KEY `organisation_id` (`organisation_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
+CREATE TABLE IF NOT EXISTS `notice_audience`(
+	`naudience_id` INT(11) NOT NULL AUTO_INCREMENT, 
+	`notice_id` INT(11) NOT NULL,
+	`audience_type` VARCHAR(20) NOT NULL,
+	`audience_value` INT(11) NOT NULL DEFAULT '0',
+	`updated_by` INT(11) NOT NULL DEFAULT '0',
+	`updated_date` bigint(64) NOT NULL DEFAULT '0',
+	PRIMARY KEY (`naudience_id`),
+	KEY `audience_id`(`notice_id`,`audience_type`,`audience_value`,`updated_date`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;	
 
 CREATE TABLE IF NOT EXISTS `objective_organisation`(
   `objective_id` INT(12) NOT NULL, 

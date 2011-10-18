@@ -85,6 +85,9 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 				$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/notices\\'', 5000)";
 
 				if($total_removed = $db->Affected_Rows()) {
+					$query = "DELETE FROM `notice_audience` WHERE `notice_id` IN (".implode(", ", $NOTICE_IDS).")";
+					$db->Execute($query);
+					
 					$SUCCESS++;
 					$SUCCESSSTR[]  = "You have successfully removed ".$total_removed." notice".(($total_removed != 1) ? "s" : "")." from the system.<br /><br />You will be automatically redirected to the event index in 5 seconds, or you can <a href=\"".ENTRADA_URL."/admin/notices\">click here</a> if you do not wish to wait.";
 

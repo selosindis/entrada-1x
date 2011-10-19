@@ -21,7 +21,7 @@ INSERT INTO `notice_audience` (`audience_type`, `audience_value`, `notice_id`, `
 UPDATE `notice_audience` SET `audience_type` = CONCAT('all:', `audience_type`) WHERE `audience_type` != 'all' AND `audience_type` != 'cohort';
 UPDATE `notice_audience` SET `audience_type` = 'cohorts' WHERE `audience_type` = 'cohort';
 UPDATE `notice_audience` SET `audience_type` = 'all:users' WHERE `audience_type` = 'all';
-UPDATE `notice_audience` SET `audience_type` = 'students' WHERE `audience_type` = 'proxy_id';
+UPDATE `notice_audience` SET `audience_type` = 'students' WHERE `audience_type` = 'all:proxy_id';
 
 ALTER TABLE `notices` DROP COLUMN `target`; 
 

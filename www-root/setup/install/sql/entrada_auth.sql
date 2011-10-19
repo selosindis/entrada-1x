@@ -414,7 +414,7 @@ CREATE TABLE IF NOT EXISTS `user_data_resident` (
   PRIMARY KEY (`proxy_id`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=latin1 ;
 
-CREATE TABLE `user_organisation` (
+CREATE TABLE `user_organisations` (
 	`id` int(12) NOT NULL AUTO_INCREMENT, 
 	`organisation_id` int(3) NOT NULL, 
 	`proxy_id` int(12) NOT NULL, 

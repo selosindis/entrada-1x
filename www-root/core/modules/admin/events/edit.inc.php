@@ -533,7 +533,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					case 1 :
 					default :
 						$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/elementresizer.js\"></script>\n";
-						$ONLOAD[] = "selectEventAudienceOption('".(isset($PROCESSED["event_audience_type"]) && $PROCESSED["event_audience_type"] ? $PROCESSED["event_audience_type"] : "custom")."')";
 						
 						$LASTUPDATED = $result["updated_date"];
 
@@ -801,7 +800,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 										</td>
 									</tr>
 								</tbody>
-								<tbody id="audience-options"<?php echo (($PROCESSED["event_audience_type"] == "course") ? " style=\"display: none\"" : ""); ?>>
+								<tbody id="audience-options">
+
 								<?php
 								if ($PROCESSED["course_id"]) {
 									require_once(ENTRADA_ABSOLUTE."/core/modules/admin/events/api-audience-options.inc.php");

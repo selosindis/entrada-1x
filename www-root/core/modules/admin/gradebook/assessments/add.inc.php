@@ -62,11 +62,19 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 			// Error Checking
 			switch($STEP) {
 				case 2 :
-					if((isset($_POST["cohort"])) && ($cohort = clean_input($_POST["cohort"], "credentials"))) {
-						$PROCESSED["cohort"] = $cohort;
+					if (isset($_POST["associated_audience"]) && $_POST["associated_audience"] == "manual_select") {
+
+						if((isset($_POST["cohort"])) && ($cohort = clean_input($_POST["cohort"], "credentials"))) {
+							$PROCESSED["cohort"] = $cohort;
+						} else {
+							$ERROR++;
+							$ERRORSTR[] = "You must select an <strong>Audience</strong> for this assessment.";
+						}
+					} elseif($group_id = (int)$_POST["associated_audience"]) {
+						$PROCESSED["cohort"] = $group_id;
 					} else {
-						$ERROR++;
-						$ERRORSTR[] = "You must select a <strong>Cohort</strong> for this assessment.";
+							$ERROR++;
+							$ERRORSTR[] = "You must select an <strong>Audience</strong> for this assessment.";
 					}
 
 					if((isset($_POST["name"])) && ($name = clean_input($_POST["name"], array("notags", "trim")))) {
@@ -311,16 +319,35 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								<a href="<?php echo ENTRADA_URL; ?>/admin/gradebook?<?php echo replace_query(array("step" => false, "section" => "view")); ?>"><?php echo html_encode($course_details["course_name"]); ?></a>
 							</td>
 						</tr>
+						<?php 					
+						$query = "SELECT * FROM `groups` WHERE `group_type` = 'course_list' AND `group_value` = ".$db->qstr($COURSE_ID);
+						$course_list = $db->GetRow($query);
+						if($course_list){
+							?>
 						<tr>
 							<td colspan="3">&nbsp;</td>
 						</tr>
 						<tr>
-							<td></td>
+							<td><input type="radio" name="associated_audience" id="course_list" value ="<?php echo $course_list["group_id"];?>" checked="checked"/></td>
+							<td><label for="cohort" class="form-required">Course List</label></td>
+							<td>
+								<span class="radio-group-title">All Learners in the <?php echo $course_details["course_code"];?> Course List Group</span>
+								<div class="content-small">This assessment is intended for all learners that are members of the <?php echo $course_details["course_code"];?> Course List.</div>
+							</td>
+						</tr>
+						<?php
+						}
+						?>
+						<tr>
+							<td colspan="3">&nbsp;</td>
+						</tr>
+						<tr>
+							<td><input type="radio" name="associated_audience" id="manual_select" value="manual_select"<?php echo (!$course_list?" checked=\"checked\"":"");?>/></td>
 							<td><label for="cohort" class="form-required">Cohort</label></td>
 							<td>
 								<select id="cohort" name="cohort" style="width: 250px">
 								<?php
-								$active_cohorts = groups_get_active_cohorts($ENTRADA_USER->getActiveOrganisation());
+								$active_cohorts = groups_get_all_cohorts($ENTRADA_USER->getActiveOrganisation());
 								if (isset($active_cohorts) && !empty($active_cohorts)) {
 									foreach ($active_cohorts as $cohort) {
 										echo "<option value=\"".$cohort["group_id"]."\"".(($PROCESSED["cohort"] == $cohort["group_id"]) ? " selected=\"selected\"" : "").">".html_encode($cohort["group_name"])."</option>\n";

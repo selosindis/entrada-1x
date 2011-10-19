@@ -47,8 +47,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 			if((isset($_POST["target"])) && ($target_audience = clean_input($_POST["target"], array("trim", "dir")))) {
 				$PROCESSED["target"] = $target_audience;
 			} else {
-				$ERROR++;
-				$ERRORSTR[] = "You must select a valid target audience from the select box.";
+				$PROCESSED["target"] = 'updated';
 			}
 
 			if((isset($_POST["notice_summary"])) && ($notice_summary = strip_tags(clean_input($_POST["notice_summary"], "trim"), "<a><br><p>"))) {
@@ -72,7 +71,95 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 				$ERRORSTR[] = "You must select a valid display finish date.";
 			}
 
-			$organisation_id = $ENTRADA_USER->getActiveOrganisation();
+			if (isset($_POST["target_audience"]) && $target_audience = clean_input($_POST["target_audience"],"trim")) {
+				if(strpos($target_audience,"all:") !== false){
+					$PROCESSED["associated_audience"][] = array("audience_type"=>$target_audience,"audience_value"=>0);
+				}
+			} 
+			if(!isset($PROCESSED["associated_audience"]) || !count($PROCESSED["associated_audience"])){
+				/**
+				 * Non-required field "associated_faculty" / Associated Faculty (array of proxy ids).
+				 * This is actually accomplished after the event is inserted below.
+				 */	
+				if ((isset($_POST["associated_faculty"]))) {
+					$associated_faculty = explode(",", $_POST["associated_faculty"]);
+					foreach($associated_faculty as $contact_order => $proxy_id) {
+						$id = explode("_",$proxy_id);
+						$id = $id[1];					
+						if ($proxy_id = clean_input($id, array("trim", "int"))) {
+							$PROCESSED["associated_audience"][] = array("audience_type"=>"faculty","audience_value"=>$proxy_id);
+						}
+					}
+				}			
+
+				/**
+				 * Non-required field "associated_students" / Associated Students (array of proxy ids).
+				 * This is actually accomplished after the event is inserted below.
+				 */	
+				if ((isset($_POST["associated_students"]))) {
+					$associated_students = explode(",", $_POST["associated_students"]);
+					foreach($associated_students as $contact_order => $proxy_id) {
+						$id = explode("_",$proxy_id);
+						$id = $id[1];					
+						if ($proxy_id = clean_input($id, array("trim", "int"))) {
+							$PROCESSED["associated_audience"][] =  array("audience_type"=>"students","audience_value"=>$proxy_id);
+						}
+					}
+				}			
+
+				/**
+				 * Non-required field "associated_staff" / Associated Staff (array of proxy ids).
+				 * This is actually accomplished after the event is inserted below.
+				 */	
+				if ((isset($_POST["associated_staff"]))) {
+					$associated_staff = explode(",", $_POST["associated_staff"]);
+					foreach($associated_staff as $contact_order => $proxy_id) {
+						$id = explode("_",$proxy_id);
+						$id = $id[1];
+						if ($proxy_id = clean_input($id, array("trim", "int"))) {
+							$PROCESSED["associated_audience"][] =  array("audience_type"=>"staff","audience_value"=>$proxy_id);
+						}
+					}
+				}			
+
+				/**
+				 * Non-required field "associated_cohorts" / Associated Cohorts (array of proxy ids).
+				 * This is actually accomplished after the event is inserted below.
+				 */	
+				if ((isset($_POST["associated_cohorts"]))) {
+					$associated_cohorts = explode(",", $_POST["associated_cohorts"]);
+					foreach($associated_cohorts as $contact_order => $group_id) {
+						$id = explode("_",$group_id);
+						$id = $id[1];
+						if ($group_id = clean_input($id, array("trim", "int"))) {
+							$PROCESSED["associated_audience"][] =  array("audience_type"=>"cohorts","audience_value"=>$group_id);
+						}
+					}
+				}			
+
+				/**
+				 * Non-required field "associated_course_list" / Associated Course List (array of proxy ids).
+				 * This is actually accomplished after the event is inserted below.
+				 */	
+				if ((isset($_POST["associated_course_list"]))) {
+					$associated_course_list = explode(",", $_POST["associated_course_list"]);
+					foreach($associated_course_list as $contact_order => $group_id) {
+						$id = explode("_",$group_id);
+						$id = $id[1];
+						if ($group_id = clean_input($id, array("trim", "int"))) {
+							$PROCESSED["associated_audience"][] =  array("audience_type"=>"course_list","audience_value"=>$group_id);
+						}
+					}
+				}			
+				
+			}
+			if (isset($_POST["org_id"]) && $org_id = clean_input($_POST["org_id"],"int")) {
+				$organisation_id = $org_id;
+				$PROCESSED["org_id"] = $org_id;
+			} else {
+				$organisation_id = $ENTRADA_USER->getActiveOrganisation();
+				$PROCESSED["org_id"] = $organisation_id;
+			}
 			if ($ENTRADA_ACL->amIAllowed(new NoticeResource($organisation_id), 'create')) {
 				$PROCESSED["organisation_id"] = $organisation_id;
 			} else {
@@ -81,13 +168,37 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 				application_log("error", "Proxy id [" . $_SESSION['details']['proxy_id'] . "] tried to create a notice within an organisation [" . $organisation_id . "] they didn't have permissions on. ");
 			}
 
-			if(!$ERROR) {
+			if(!isset($PROCESSED["associated_audience"]) || !count($PROCESSED["associated_audience"])){
+				add_error('You must select at least one audience to display the notice to. ');
+			}
+			
+			
+			if (!$ERROR) {
 				$PROCESSED["updated_date"]	= time();
 				$PROCESSED["updated_by"]		= $_SESSION["details"]["id"];
 
-				if($db->AutoExecute("notices", $PROCESSED, "INSERT")) {
-					if($NOTICE_ID = $db->Insert_Id()) {
+				if ($db->AutoExecute("notices", $PROCESSED, "INSERT")) {
+					if ($NOTICE_ID = $db->Insert_Id()) {
 						application_log("success", "Successfully added notice ID [".$NOTICE_ID."]");
+						
+						if (isset($PROCESSED["associated_audience"]) && count($PROCESSED["associated_audience"])) {
+							foreach($PROCESSED["associated_audience"] as $audience_member){
+								$audience_member["updated_by"] = $ENTRADA_USER->getProxyId();
+								$audience_member["updated_date"] = time();
+								$audience_member["notice_id"] = $NOTICE_ID;
+								if ($db->AutoExecute("notice_audience", $audience_member, "INSERT")) {
+									application_log("success", "Successfully added audience for notice ID [".$NOTICE_ID."]");
+								} else {
+									
+								}
+								
+								
+							}
+						}
+						
+						
+						
+						
 					} else {
 						application_log("error", "Unable to fetch the newly inserted notice identifier for this notice.");
 					}
@@ -111,6 +222,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 		break;
 		case 1 :
 		default :
+			$PROCESSED["org_id"] = $ENTRADA_USER->getActiveOrganisation();
 			continue;
 		break;
 	}
@@ -130,6 +242,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 		break;
 		case 1 :
 		default :
+			$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/elementresizer.js\"></script>\n";
 			$buttons	= array();
 			$buttons[1] = array("link", "separator", "undo", "redo", "pasteword", "cleanup", "save");
 			$buttons[2] = array();
@@ -156,21 +269,28 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 			</tr>
 			<tr>
 				<td></td>
-				<td><label for="target" class="form-required">Target Audience</label></td>
+				<td><label for="org_id" class="form-required">Target Organisation</label></td>
 				<td>
-					<select id="target" name="target" style="width: 300px">
+					<select id="org_id" name="org_id" style="width: 300px" onchange="updateAudienceOptions();">
 					<?php
-					if(is_array($NOTICE_TARGETS)) {
-						foreach($NOTICE_TARGETS as $key => $target_name) {
-							echo "<option value=\"".$key."\"".((isset($PROCESSED["target"]) && $PROCESSED["target"] == $key) ? " selected=\"selected\"" : "").">".$target_name."</option>\n";
+					//$query = "SELECT * FROM `".AUTH_DATABASE."`.`organisations` WHERE `organisation_title` IN('".implode("','",$ENTRADA_USER->getAllOrganisations())."')";
+					$orgs = $ENTRADA_USER->getAllOrganisations();
+					if(is_array($orgs)) {
+						foreach($orgs as $key => $target_name) {
+							echo "<option value=\"".$key."\"".(($ENTRADA_USER->getActiveOrganisation() == $key) ? " selected=\"selected\"" : "").">".$target_name."</option>\n";
 						}
-					} else {
-						echo "<option value=\"all\" selected=\"selected\">-- Visible to everyone --</option>\n";
 					}
 					?>
 					</select>
 				</td>
 			</tr>
+			<tbody id="audience-options">
+			<?php
+			if ($PROCESSED["org_id"]) {
+				require_once(ENTRADA_ABSOLUTE."/core/modules/admin/notices/api-audience-options.inc.php");
+			}
+			?>			
+			</tbody>	
 			<tr>
 				<td></td>
 				<td style="vertical-align: top"><label for="notice_summary" class="form-required">Notice Summary</label></td>
@@ -198,6 +318,169 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 			</tr>
 			</table>
 			</form>
+
+<script type="text/javascript">
+			var multiselect = [];
+			var audience_type;
+
+			function showMultiSelect() {
+				$$('select_multiple_container').invoke('hide');
+				audience_type = $F('audience_type');
+				org_id = $F('org_id');
+				if(audience_type.match(/all.*/)){
+					$('audience_list').hide();
+				}else if (multiselect[audience_type]) {
+					$('audience_list').show();
+					multiselect[audience_type].container.show();
+				} else {
+					$('audience_list').show();
+					if (audience_type) {
+						new Ajax.Request('<?php echo ENTRADA_RELATIVE; ?>/admin/notices?section=api-audience-selector', {
+							evalScripts : true,
+							parameters: { 
+								'options_for' : audience_type, 
+								'org_id' : org_id, 
+								'associated_cohorts' : $('associated_cohorts').value, 
+								'associated_students' : $('associated_students').value
+							},
+							method: 'post',
+							onLoading: function() {
+								$('options_loading').show();
+							},
+							onSuccess: function(response) {
+								if (response.responseText) {
+									$('options_container').insert(response.responseText);
+									if ($(audience_type + '_options')) {
+										$(audience_type + '_options').addClassName('multiselect-processed');
+
+										multiselect[audience_type] = new Control.SelectMultiple('associated_'+audience_type, audience_type + '_options', {
+											checkboxSelector: 'table.select_multiple_table tr td input[type=checkbox]',
+											nameSelector: 'table.select_multiple_table tr td.select_multiple_name label',
+											filter: audience_type + '_select_filter',
+											resize: audience_type + '_scroll',
+											afterCheck: function(element) {
+												var tr = $(element.parentNode.parentNode);
+												tr.removeClassName('selected');
+	
+												if (element.checked) {
+													tr.addClassName('selected');
+	
+													addAudience(element.id, audience_type);
+												} else {
+													removeAudience(element.id, audience_type);
+												}
+											}
+										});
+										
+	
+										if ($(audience_type + '_cancel')) {
+											$(audience_type + '_cancel').observe('click', function(event) {
+												this.container.hide();
+												$('audience_type').options.selectedIndex = 0;
+												$('audience_type').show();
+	
+												return false;
+											}.bindAsEventListener(multiselect[audience_type]));
+										}
+	
+										if ($(audience_type + '_close')) {
+											$(audience_type + '_close').observe('click', function(event) {
+												this.container.hide();
+												$('audience_type').options.selectedIndex = 0;
+												$('audience_type').clear();
+	
+												return false;
+											}.bindAsEventListener(multiselect[audience_type]));
+										}
+	
+										multiselect[audience_type].container.show();
+									}
+								} else {
+									new Effect.Highlight('audience_type', {startcolor: '#FFD9D0', restorecolor: 'true'});
+									new Effect.Shake('audience_type');
+								}
+							},
+							onError: function() {
+								alert("There was an error retrieving the requested audience. Please try again.");
+							},
+							onComplete: function() {
+								$('options_loading').hide();
+							}
+						});
+					}
+				}
+				return false;
+			}
+
+			function addAudience(element, audience_id) {
+				if (!$('audience_'+element)) {
+					$('audience_list').innerHTML += '<li class="' + ((audience_id == 'students' || audience_id == 'faculty' || audience_id == 'staff' )? 'user' : 'group') + '" id="audience_'+element+'" style="cursor: move;">'+$($(element).value+'_label').innerHTML+'<img src="<?php echo ENTRADA_RELATIVE; ?>/images/action-delete.gif" onclick="removeAudience(\''+element+'\', \''+audience_id+'\');" class="list-cancel-image" /></li>';
+					$$('#audience_list div').each(function (e) { e.hide(); });
+
+					Sortable.destroy('audience_list');
+					Sortable.create('audience_list');
+				}
+			}
+
+			function removeAudience(element, audience_id) {
+				$('audience_'+element).remove();
+				Sortable.destroy('audience_list');
+				Sortable.create('audience_list');
+				if ($(element)) {
+					$(element).checked = false;
+				}
+				var audience = $('associated_'+audience_id).value.split(',');
+				for (var i = 0; i < audience.length; i++) {
+					if (audience[i] == element) {
+						audience.splice(i, 1);
+						break;
+					}
+				}
+				$('associated_'+audience_id).value = audience.join(',');
+			}
+
+			function selectEventAudienceOption(type) {
+				if (type == 'custom' && !jQuery('#event_audience_type_custom_options').is(":visible")) {
+					jQuery('#event_audience_type_custom_options').slideDown();
+				} else if (type != 'custom' && jQuery('#event_audience_type_custom_options').is(":visible")) {
+					jQuery('#event_audience_type_custom_options').slideUp();
+				}
+			}
+			
+			function updateAudienceOptions() {
+				if ($F('org_id') > 0)  {
+
+					selectedCourse = currentLabel;
+					$('audience-options').show();
+					$('audience-options').update('<tr><td colspan="2">&nbsp;</td><td><div class="content-small" style="vertical-align: middle"><img src="<?php echo ENTRADA_RELATIVE; ?>/images/indicator.gif" width="16" height="16" alt="Please Wait" title="" style="vertical-align: middle" /> Please wait while <strong>audience options</strong> are being loaded ... </div></td></tr>');
+					new Ajax.Updater('audience-options', '<?php echo ENTRADA_RELATIVE; ?>/admin/notices?section=api-audience-options', {
+						evalScripts : true,
+						parameters : {
+							ajax : 1,
+							org_id : $F('org_id'),
+							event_audience_students: ($('associated_students') ? $('associated_students').getValue() : ''),
+							event_audience_cohort: ($('associated_cohorts') ? $('associated_cohorts').getValue() : '')
+						},
+						onSuccess : function (response) {
+							if (response.responseText == "") {
+								$('audience-options').update('');
+								$('audience-options').hide();
+							}
+						},
+						onFailure : function () {
+							$('audience-options').update('');
+							$('audience-options').hide();
+						}
+					});
+					
+				} else {
+					$('audience-options').update('');
+					$('audience-options').hide();
+				}
+			}
+			
+			</script>
+
 			<?php
 		break;
 	}

@@ -205,10 +205,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 			</form>
 			<?php
 			
-			$orgs = array_keys($ENTRADA_USER->getAllOrganisations());
-			$query = "SELECT * FROM `group_organisations` WHERE `group_id` =".$db->qstr($GROUP_ID)." AND `organisation_id` IN (".implode(",",$orgs).")";
-			
-			if ($result = $db->GetAll($query)) {	
+//			$orgs = array_keys($ENTRADA_USER->getAllOrganisations());
+//			$query = "SELECT * FROM `group_organisations` WHERE `group_id` =".$db->qstr($GROUP_ID)." AND `organisation_id` IN (".implode(",",$orgs).")";
+//			print_r($ENTRADA_USER->getAllOrganisations());
+//			if ($result = $db->GetAll($query)) {	
 			?>
 			<h2>View Selected Group Members</h2>
 			<form action="<?php echo ENTRADA_URL; ?>/admin/groups?section=manage" method="post">
@@ -419,10 +419,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 			</div>
 				
 		<?php			
-		} else {
-			add_error("You do not have access to change edit this group.");
-			echo display_error();
-		} 
+//		} else {
+//			add_error("You do not have access to change edit this group.");
+//			echo display_error();
+//		} 
 		?>
 		<script type="text/javascript">
 

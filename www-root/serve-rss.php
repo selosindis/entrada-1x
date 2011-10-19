@@ -116,35 +116,71 @@ switch ($ACTION) {
 		$rss->descriptionHtmlSyndicated = true;
 		$rss->link				= ENTRADA_URL."/dashboard";
 		$rss->syndicationURL	= ENTRADA_URL."/rss/";
-		
-		switch ($USER_GROUP) {
-			case "alumni" :
-				$notice_where_clause	= "(a.`target` = 'all' OR a.`target` = 'alumni' OR a.`target` = ".$db->qstr("proxy_id:".((int) $USER_PROXY_ID)).")";
-			break;
-			case "faculty" :
-				$notice_where_clause	= "(a.`target` = 'all' OR a.`target` = 'faculty' OR a.`target` = ".$db->qstr("proxy_id:".((int) $USER_PROXY_ID)).")";
-			break;
-			case "medtech" :
-				$notice_where_clause	= "(a.`target` NOT LIKE 'proxy_id:%' OR a.`target` = ".$db->qstr("proxy_id:".((int) $USER_PROXY_ID)).")";
-			break;
-			case "resident" :
-				$notice_where_clause	= "(a.`target` = 'all' OR a.`target` = 'resident' OR a.`target` = ".$db->qstr("proxy_id:".((int) $USER_PROXY_ID)).")";
-			break;
-			case "staff" :
-				$notice_where_clause	= "(a.`target` = 'all' OR a.`target` = 'staff' OR a.`target` = ".$db->qstr("proxy_id:".((int) $USER_PROXY_ID)).")";
-			break;
+
+		switch($USER_GROUP){
 			case "student" :
+			case "alumni" :				
+				$corrected_role = "students";
+				break;
+			case "medtech" :
+				$corrected_role = "staff";
+				break;
 			default :
-				if ($_SESSION["details"]["group"] == "student") {
-					$cohort = groups_get_cohort($USER_PROXY_ID);
-				}
-				$notice_where_clause	= "(".(($_SESSION["details"]["group"] == "student") ? "a.`target`='".(int) $cohort["group_id"]."' OR " : "")."a.`target` = 'all' OR a.`target` = 'students' OR a.`target` = ".$db->qstr("proxy_id:".((int) $USER_PROXY_ID)).")";
-			break;
+				$corrected_role = $USER_GROUP;
 		}
+		
+		
+		
+		$notice_where_clause = "(
+						(
+						c.`audience_type` = 'all:users'
+						OR c.`audience_type` = 'all:".$corrected_role."'
+						OR
+						(
+							c.`audience_type` = 'students' 
+							OR c.`audience_type` = 'faculty' 
+							OR c.`audience_type` = 'staff') 
+							AND c.`audience_value` = ".$db->qstr($_SESSION["details"]["id"])."
+						) 
+						OR ((
+							c.`audience_type` = 'cohorts' 
+							OR c.`audience_type` = 'course_list') 
+							AND c.`audience_value` IN (
+								SELECT `group_id` 
+								FROM `group_members` 
+								WHERE `proxy_id` = ".$db->qstr($_SESSION["details"]["id"]).")
+						)
+					)";
+//		switch ($USER_GROUP) {
+//			case "alumni" :
+//				$old_notice_where_clause	= "(a.`target` = 'all' OR a.`target` = 'alumni' OR a.`target` = ".$db->qstr("proxy_id:".((int) $USER_PROXY_ID)).")";
+//			break;
+//			case "faculty" :
+//				$old_notice_where_clause	= "(a.`target` = 'all' OR a.`target` = 'faculty' OR a.`target` = ".$db->qstr("proxy_id:".((int) $USER_PROXY_ID)).")";
+//			break;
+//			case "medtech" :
+//				$old_notice_where_clause	= "(a.`target` NOT LIKE 'proxy_id:%' OR a.`target` = ".$db->qstr("proxy_id:".((int) $USER_PROXY_ID)).")";
+//			break;
+//			case "resident" :
+//				$old_notice_where_clause	= "(a.`target` = 'all' OR a.`target` = 'resident' OR a.`target` = ".$db->qstr("proxy_id:".((int) $USER_PROXY_ID)).")";
+//			break;
+//			case "staff" :
+//				$old_notice_where_clause	= "(a.`target` = 'all' OR a.`target` = 'staff' OR a.`target` = ".$db->qstr("proxy_id:".((int) $USER_PROXY_ID)).")";
+//			break;
+//			case "student" :
+//			default :
+//				if ($_SESSION["details"]["group"] == "student") {
+//					$cohort = groups_get_cohort($USER_PROXY_ID);
+//				}
+//				$old_notice_where_clause	= "(".(($_SESSION["details"]["group"] == "student") ? "a.`target`='".(int) $cohort["group_id"]."' OR " : "")."a.`target` = 'all' OR a.`target` = 'students' OR a.`target` = ".$db->qstr("proxy_id:".((int) $USER_PROXY_ID)).")";
+//			break;
+//		}
 		$notice_where_clause .= 'AND (a.`organisation_id` IS NULL OR a.`organisation_id` = '.$USER_ORGANISATION_ID.')';
 		$organisation = $db->GetRow("SELECT `organisation_title` FROM ".AUTH_DATABASE.".`organisations` WHERE `organisation_id` = ".$USER_ORGANISATION_ID);
 		$query = "	SELECT a.*
 					FROM `notices` AS a
+					JOIN `notice_audience` AS c
+					ON a.`notice_id` = c.`notice_id`
 					WHERE ".(($notice_where_clause) ? $notice_where_clause." AND" : "")."
 					(a.`display_from`='0' OR a.`display_from` <= '".time()."')
 					ORDER BY a.`updated_date` DESC, a.`display_from` DESC";

@@ -158,15 +158,6 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 		<tbody>
 			<?php
 			foreach($results as $result) {
-				if (preg_match("/^proxy_id:[\d]+$/",$result["target"])) {
-					preg_match("/[\d]+/", $result["target"], $id);
-					if (isset($id) && array_key_exists(0, $id)) {
-						$NOTICE_TARGETS[$result["target"]] = "Visible to ".get_account_data("firstlast", $id[0]);
-						unset($id[0]);
-					} else {
-						$NOTICE_TARGETS[$result["target"]] = "Visible to specfic user.";
-					}
-				}
 				$url			= ENTRADA_URL."/admin/notices?section=edit&amp;id=".$result["notice_id"];
 				$expired		= false;
 				

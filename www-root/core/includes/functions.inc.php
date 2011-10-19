@@ -7979,6 +7979,8 @@ function clerkship_notify_clerk($rotation_period_index, $clerk, $rotation, $obje
 								);
 					if($db->AutoExecute("notices", $NOTICE, "INSERT")) {
 						if($NOTICE_ID = $db->Insert_Id()) {
+							$naudience = array("notice_id"=>$NOTICE_ID,"audience_type"=>"students","audience_value"=>$clerk["proxy_id"],"updated_by"=>0,"updated_date"=>time());
+							$db->AutoExecute("notice_audience", $naudience, "INSERT");
 							application_log("success", "Successfully added notice ID [".$NOTICE_ID."]");
 						} else {
 							application_log("error", "Unable to fetch the newly inserted notice identifier for this notice.");
@@ -8345,6 +8347,8 @@ function clerkship_deficiency_notifications($clerk_id, $rotation_id, $administra
 								);
 				if($db->AutoExecute("notices", $NOTICE, "INSERT")) {
 					if($NOTICE_ID = $db->Insert_Id()) {
+						$naudience = array("notice_id"=>$NOTICE_ID,"audience_type"=>"students","audience_value"=>($administrator ? $rotation["pcoord_id"] : $clerk_id),"updated_by"=>0,"updated_date"=>time());
+						$db->AutoExecute("notice_audience",$naudience,"INSERT");
 						application_log("success", "Successfully added notice ID [".$NOTICE_ID."]");
 					} else {
 						application_log("error", "Unable to fetch the newly inserted notice identifier for this notice.");

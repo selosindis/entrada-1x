@@ -125,7 +125,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 	<div style="clear: both"></div>
 
 	<?php
-	$query	= "SELECT `notices`.*, `organisations`.`organisation_title` FROM `notices` LEFT JOIN `".AUTH_DATABASE."`.`organisations` ON `".AUTH_DATABASE."`.`organisations`.`organisation_id` = `notices`.`organisation_id` WHERE `target` NOT LIKE '%proxy_id:%' AND `notices`.`organisation_id` = ".$db->qstr($ORGANISATION_ID)." ORDER BY ".$SORT_BY;
+	$query	= "SELECT `notices`.*, `organisations`.`organisation_title` FROM `notices` LEFT JOIN `".AUTH_DATABASE."`.`organisations` ON `".AUTH_DATABASE."`.`organisations`.`organisation_id` = `notices`.`organisation_id` WHERE `notices`.`organisation_id` = ".$db->qstr($ORGANISATION_ID)." ORDER BY ".$SORT_BY;
 	$results	= ((USE_CACHE) ? $db->CacheGetAll(CACHE_TIMEOUT, $query) : $db->GetAll($query));
 	if($results) {
 		?>

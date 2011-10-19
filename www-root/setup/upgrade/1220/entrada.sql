@@ -9,7 +9,19 @@ CREATE TABLE IF NOT EXISTS `notice_audience`(
 	KEY `audience_id`(`notice_id`,`audience_type`,`audience_value`,`updated_date`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;	
 
--- RUN THE UPGRADE.PHP FILE AFTER THE QUERY ABOVE BUT BEFORE THE QUERY BELOW
+INSERT INTO `notice_audience` (`audience_type`, `audience_value`, `notice_id`, `updated_by`) 
+	(
+		SELECT 	SUBSTRING_INDEX( `target` , ':', 1 ) AS `audience_type`, 
+				SUBSTRING_INDEX( `target` , ':', -1 ) AS `audience_value`, 
+				`notice_id`, 
+				1 
+		FROM `notices`
+	);
+
+UPDATE `notice_audience` SET `audience_type` = CONCAT('all:', `audience_type`) WHERE `audience_type` != 'all' AND `audience_type` != 'cohort';
+UPDATE `notice_audience` SET `audience_type` = 'cohorts' WHERE `audience_type` = 'cohort';
+UPDATE `notice_audience` SET `audience_type` = 'all:users' WHERE `audience_type` = 'all';
+UPDATE `notice_audience` SET `audience_type` = 'students' WHERE `audience_type` = 'proxy_id';
 
 ALTER TABLE `notices` DROP COLUMN `target`; 
 

@@ -62,34 +62,40 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						$member_found = false;
 						$line_data = explode(",",$line);			
 						if (is_int($stud_num = (int)$line_data[0]) && $PROCESSED["value"] = clean_input($line_data[1],array("trim","notags"))) {
-							$query = "SELECT * FROM `".AUTH_DATABASE."`.`user_data` WHERE `number` = ".$db->qstr($stud_num);
+							if(is_numeric($PROCESSED["value"])){
 
-							$users = $db->GetAll($query);
-							if ($users) {
-								foreach ($users as $user) {
-									$query = "SELECT * FROM `group_members` WHERE `group_id` = ".$db->qstr($GROUP)." AND `proxy_id` = ".$db->qstr($user["id"]);
-									$member = $db->GetRow($query);
-									if ($member) {
-										$PROCESSED["proxy_id"] = $member["proxy_id"];
-										$member_found = true;
-										break;
+
+								$query = "SELECT * FROM `".AUTH_DATABASE."`.`user_data` WHERE `number` = ".$db->qstr($stud_num);
+
+								$users = $db->GetAll($query);
+								if ($users) {
+									foreach ($users as $user) {
+										$query = "SELECT * FROM `group_members` WHERE `group_id` = ".$db->qstr($GROUP)." AND `proxy_id` = ".$db->qstr($user["id"]);
+										$member = $db->GetRow($query);
+										if ($member) {
+											$PROCESSED["proxy_id"] = $member["proxy_id"];
+											$member_found = true;
+											break;
+										}
 									}
-								}
-								if ($member_found) {
-									//$db->AutoExecute("assessment_grades",$PROCESSED,"INSERT");
-									$query = "SELECT * FROM `assessment_grades` WHERE `assessment_id` = ".$db->qstr($ASSESSMENT_ID)." AND `proxy_id` = ".$db->qstr($member["proxy_id"]);
-									$grade = $db->GetRow($query);
-									if ($grade) {
-										$db->AutoExecute("assessment_grades",$PROCESSED,"UPDATE","`grade_id`=".$db->qstr($grade["grade_id"]));
+									if ($member_found) {
+										//$db->AutoExecute("assessment_grades",$PROCESSED,"INSERT");
+										$query = "SELECT * FROM `assessment_grades` WHERE `assessment_id` = ".$db->qstr($ASSESSMENT_ID)." AND `proxy_id` = ".$db->qstr($member["proxy_id"]);
+										$grade = $db->GetRow($query);
+										if ($grade) {
+											$db->AutoExecute("assessment_grades",$PROCESSED,"UPDATE","`grade_id`=".$db->qstr($grade["grade_id"]));
+										} else {
+											$db->AutoExecute("assessment_grades",$PROCESSED,"INSERT");
+										}
+
 									} else {
-										$db->AutoExecute("assessment_grades",$PROCESSED,"INSERT");
+										add_error("Student on line ".$key." is not registered in the class.");
 									}
-
 								} else {
-									add_error("Student on line ".$key." is not registered in the class.");
+									add_error("Student on line ".$key." is not registered in the system.");
 								}
 							} else {
-								add_error("Student on line ".$key." is not registered in the system.");
+								add_error("Invalid data on line ".$key.":".$line.".");
 							}
 						} else {
 							add_error("Invalid data on line ".$key.":".$line.".");

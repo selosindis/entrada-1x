@@ -39,7 +39,10 @@ if (isset($_GET["rotation"]) && (clean_input($_GET["rotation"], "int"))) {
 				JOIN `".CLERKSHIP_DATABASE."`.`logbook_mandatory_objectives` AS b
 				ON a.`objective_id` = b.`objective_id`
 				AND `rotation_id` = ".$db->qstr($rotation)."
-				AND a.`objective_active` = '1'";
+				AND a.`objective_active` = '1'
+				JOIN `objective_organisation` AS c
+				ON a.`objective_id` = c.`objective_id`
+				AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."";
 } else {
 	$rotation = false;
 	$query = "	SELECT a.*, b.`rotation_id`
@@ -47,6 +50,9 @@ if (isset($_GET["rotation"]) && (clean_input($_GET["rotation"], "int"))) {
 				JOIN `".CLERKSHIP_DATABASE."`.`logbook_mandatory_objectives` AS b
 				ON a.`objective_id` = b.`objective_id`
 				AND a.`objective_active` = '1'
+				JOIN `objective_organisation` AS c
+				ON a.`objective_id` = c.`objective_id`
+				AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
 				ORDER BY b.`rotation_id` ASC";
 }
 $objectives = $db->GetAll($query);

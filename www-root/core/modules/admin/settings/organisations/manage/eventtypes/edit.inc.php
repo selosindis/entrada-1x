@@ -62,29 +62,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 				$PROCESSED["eventtype_description"] = $eventtype_description;
 			} else {
 				$PROCESSED["eventtype_description"] = "";
-			}
-
-			/*if (!$ERROR && $objective_details["objective_order"] != $PROCESSED["objective_order"]) {
-				$query = "	SELECT `objective_id` FROM `global_lu_objectives`
-							WHERE `objective_parent` = ".$db->qstr($PROCESSED["objective_parent"])."
-							AND `objective_order` >= ".$db->qstr($PROCESSED["objective_order"])."
-							AND `objective_active` = '1'
-							ORDER BY `objective_order` ASC";
-				$objectives = $db->GetAll($query);
-				if ($objectives) {
-					$count = $PROCESSED["objective_order"];
-					foreach ($objectives as $objective) {
-						$count++;
-						if (!$db->AutoExecute("global_lu_objectives", array("objective_order" => $count), "UPDATE", "`objective_id` = ".$db->qstr($objective["objective_id"]))) {
-							$ERROR++;
-							$ERRORSTR[] = "There was a problem adding this objective to the system. The system administrator was informed of this error; please try again later.";
-		
-							application_log("error", "There was an error updating an objective. Database said: ".$db->ErrorMsg());
-						}
-					}
-				}
-			}*/
-			
+			}			
 			
 			if (!$ERROR) {
 				

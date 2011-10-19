@@ -563,7 +563,10 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 													FROM `course_objectives` AS a
 													JOIN `global_lu_objectives` AS b
 													ON a.`objective_id` = b.`objective_id`
+													JOIN `objective_organisation` AS c
+													ON b.`objective_id` = c.`objective_id`
 													WHERE a.`objective_type` = 'event'
+													AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
 													AND b.`objective_active` = '1'
 													AND a.`course_id` = ".$db->qstr($COURSE_ID)."
 													GROUP BY b.`objective_id`

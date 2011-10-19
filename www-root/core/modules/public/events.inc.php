@@ -858,6 +858,9 @@ $query = "	SELECT b.`objective_id`, b.`objective_name`
 			FROM `event_objectives` AS a
 			LEFT JOIN `global_lu_objectives` AS b
 			ON b.`objective_id` = a.`objective_id`
+			JOIN `objective_organisation` AS c
+			ON b.`objective_id` = c.`objective_id`
+			AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
 			WHERE a.`objective_type` = 'event'
 			AND b.`objective_active` = '1'
 			AND a.`event_id` = ".$db->qstr($EVENT_ID)."

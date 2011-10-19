@@ -60,10 +60,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 	if ((isset($_POST["clinical_presentations"])) && (is_array($_POST["clinical_presentations"])) && (count($_POST["clinical_presentations"]))) {
 		foreach ($_POST["clinical_presentations"] as $objective_id) {
 			if ($objective_id = clean_input($objective_id, array("trim", "int"))) {
-				$query = "	SELECT `objective_id`
-							FROM `global_lu_objectives`
-							WHERE `objective_id` = ".$db->qstr($objective_id)."
-							AND `objective_active` = '1'";
+				$query = "SELECT a.`objective_id`
+							FROM `global_lu_objectives` AS a
+							JOIN `objective_organisation` AS b
+							ON a.`objective_id` = b.`objective_id`
+							WHERE a.`objective_id` = ".$db->qstr($objective_id)."
+							AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+							AND a.`objective_active` = '1'";
 				$result = $db->GetRow($query);
 				if ($result) {
 					$clinical_presentations[$objective_id] = $clinical_presentations_list[$objective_id];

@@ -93,11 +93,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 			}
 
 			if (!$ERROR && $objective_details["objective_order"] != $PROCESSED["objective_order"]) {
-				$query = "	SELECT `objective_id` FROM `global_lu_objectives`
-							WHERE `objective_parent` = ".$db->qstr($PROCESSED["objective_parent"])."
-							AND `objective_order` >= ".$db->qstr($PROCESSED["objective_order"])."
-							AND `objective_active` = '1'
-							ORDER BY `objective_order` ASC";
+				$query = "SELECT a.`objective_id` FROM `global_lu_objectives` AS a
+							JOIN `objective_organisation` AS b
+							ON a.`objective_id` = b.`objective_id`
+							WHERE a.`objective_parent` = ".$db->qstr($PROCESSED["objective_parent"])."
+							AND a.`objective_order` >= ".$db->qstr($PROCESSED["objective_order"])."
+							AND a.`objective_active` = '1'
+							AND b.`organisation_id` = ".$db->qstr($ORGANISATION_ID)."
+							ORDER BY a.`objective_order` ASC";
 				$objectives = $db->GetAll($query);
 				if ($objectives) {
 					$count = $PROCESSED["objective_order"];

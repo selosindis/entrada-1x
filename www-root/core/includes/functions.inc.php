@@ -13817,8 +13817,7 @@ function gradebook_get_weighted_grades($course_id, $cohort, $proxy_id, $assessme
 	$query = "	SELECT `assessments`.*,`assessment_marking_schemes`.`handler`
 				FROM `assessments`
 				LEFT JOIN `assessment_marking_schemes` ON `assessment_marking_schemes`.`id` = `assessments`.`marking_scheme_id`
-				WHERE `assessments`.`course_id` = ".$db->qstr($course_id)."
-				AND `assessments`.`cohort` = ".$db->qstr($cohort).
+				WHERE `assessments`.`course_id` = ".$db->qstr($course_id).
 				($assessment_id ? " AND `assessments`.`assessment_id` = ".$db->qstr($assessment_id) : "");
 	$assessments = $db->GetAll($query);
 	if($assessments) {

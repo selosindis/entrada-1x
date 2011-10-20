@@ -140,7 +140,7 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 			$rss_feed_name = "medtech";
 			$notice_where_clause = "(a.`target` NOT LIKE 'proxy_id:%' OR a.`target` = ".$db->qstr("proxy_id:".((int) $_SESSION["details"]["id"])).")";
 			$poll_where_clause = "(a.`poll_target` = 'all' OR a.`poll_target` = 'staff')";;
-			$corrected_role = "staff";
+			$corrected_role = "medtech";
 		break;
 		case "resident" :
 			$rss_feed_name = "resident";
@@ -205,19 +205,19 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 
 	if ((defined("ENABLE_NOTICES")) && (ENABLE_NOTICES)) {
 		$notices_to_display = array();
-		$query = "	SELECT a.*, b.`statistic_id`, MAX(b.`timestamp`) AS `last_read` 
-					FROM `notices` AS a 
-					LEFT JOIN `statistics` AS b 
-					ON b.`module` = 'notices' 
-					AND b.`proxy_id` = ".$db->qstr($_SESSION["details"]["id"])." 
-					AND b.`action` = 'read' 
-					AND b.`action_field` = 'notice_id' 
-					AND b.`action_value` = a.`notice_id` 
+		$query = "	SELECT a.*, b.`statistic_id`, MAX(b.`timestamp`) AS `last_read`
+					FROM `notices` AS a
+					LEFT JOIN `statistics` AS b
+					ON b.`module` = 'notices'
+					AND b.`proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
+					AND b.`action` = 'read'
+					AND b.`action_field` = 'notice_id'
+					AND b.`action_value` = a.`notice_id`
 					LEFT JOIN `notice_audience` AS c 
 					ON a.`notice_id` = c.`notice_id` 
 					WHERE (
 						c.`audience_type` = 'all:users'
-						OR c.`audience_type` = 'all:".$corrected_role."'
+						".($corrected_role == "medtech" ? "OR c.`audience_type` LIKE '%all%' OR c.`audience_type` = 'cohorts'" : "OR c.`audience_type` = 'all:".$corrected_role."'")."
 						OR
 						((
 							c.`audience_type` = 'students' 
@@ -240,8 +240,8 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 					OR a.`display_from` <= '".time()."') 
 					AND (a.`display_until`='0' 
 					OR a.`display_until` >= '".time()."') 
-					AND a.`organisation_id` = ".$db->qstr($_SESSION["details"]["organisation_id"])." 
-					GROUP BY a.`notice_id` 
+					AND a.`organisation_id` = ".$db->qstr($_SESSION["details"]["organisation_id"])."
+					GROUP BY a.`notice_id`
 					ORDER BY a.`updated_date` DESC, a.`display_until` ASC";
 		
 		$results = $db->GetAll($query);

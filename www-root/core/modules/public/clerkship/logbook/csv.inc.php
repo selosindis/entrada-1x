@@ -154,9 +154,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 			foreach ($results as $result) {
 				$query = "	SELECT b.`objective_name`
 							FROM `".CLERKSHIP_DATABASE."`.`logbook_entry_objectives` AS a
-							LEFT JOIN `global_lu_objectives` AS b
+							JOIN `global_lu_objectives` AS b
 							ON a.`objective_id` = b.`objective_id`
+							JOIN `objective_organisation` AS c
+							ON c.`organisation_id` = b.`organisation_id`
 							WHERE a.`lentry_id` = ".$db->qstr($result["lentry_id"])."
+							AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
 							AND b.`objective_active` = '1'";
 				
 				$objectives = $db->GetAll($query);
@@ -169,7 +172,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 				}
 				$query = "	SELECT b.`procedure`
 							FROM `".CLERKSHIP_DATABASE."`.`logbook_entry_procedures` AS a
-							LEFT JOIN `".CLERKSHIP_DATABASE."`.`logbook_lu_procedures` AS b
+							JOIN `".CLERKSHIP_DATABASE."`.`logbook_lu_procedures` AS b
 							ON a.`lprocedure_id` = b.`lprocedure_id`
 							WHERE a.`lentry_id` = ".$db->qstr($result["lentry_id"]);
 				

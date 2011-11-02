@@ -133,7 +133,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 			$event_record	= $db->GetRow($query);
 			if($event_record) {
 				$access_allowed = false;
-				if (!$ENTRADA_ACL->amIAllowed(new EventContentResource($EVENT_ID, $event_record["course_id"], $event_record["organisation_id"]), "update")) {
+				if (!$ENTRADA_ACL->amIAllowed(new EventContentResource($RECORD_ID, $event_record["course_id"], $event_record["organisation_id"]), "update")) {
 					$query = "SELECT * FROM `events` WHERE `parent_id` = ".$db->qstr($RECORD_ID);
 					if ($sessions = $db->GetAll($query)) {
 						foreach ($sessions as $session) {

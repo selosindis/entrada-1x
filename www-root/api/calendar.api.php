@@ -152,6 +152,23 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 			unset($username, $password);
 		}
 	}
+	
+	$ENTRADA_USER = User::get($user_proxy_id);
+	
+	$details = array();
+	$details["app_id"] = (int) AUTH_APP_ID;
+	$details["id"] = $user_proxy_id;
+	$details["username"] = $user_username;
+	$details["prefix"] = "";
+	$details["firstname"] = $user_firstname;
+	$details["lastname"] = $user_lastname;
+	$details["email"] = $user_email;
+	$details["telephone"] = "";
+	$details["role"] = $user_role;
+	$details["group"] = $user_group;
+	$details["organisation_id"] = $user_organisation_id;
+
+	$ENTRADA_ACL = new Entrada_Acl($details);
 }
 
 if ($user_proxy_id) {

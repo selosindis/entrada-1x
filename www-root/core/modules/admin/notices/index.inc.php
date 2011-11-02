@@ -125,7 +125,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 	<div style="clear: both"></div>
 
 	<?php
-	$query	= "SELECT `notices`.*, `organisations`.`organisation_title` FROM `notices` LEFT JOIN `".AUTH_DATABASE."`.`organisations` ON `".AUTH_DATABASE."`.`organisations`.`organisation_id` = `notices`.`organisation_id` WHERE `target` NOT LIKE '%proxy_id:%' AND `notices`.`organisation_id` = ".$db->qstr($ORGANISATION_ID)." ORDER BY ".$SORT_BY;
+	$query	= "SELECT `notices`.*, `organisations`.`organisation_title` FROM `notices` LEFT JOIN `".AUTH_DATABASE."`.`organisations` ON `".AUTH_DATABASE."`.`organisations`.`organisation_id` = `notices`.`organisation_id` WHERE `notices`.`organisation_id` = ".$db->qstr($ORGANISATION_ID)." ORDER BY ".$SORT_BY;
 	$results	= ((USE_CACHE) ? $db->CacheGetAll(CACHE_TIMEOUT, $query) : $db->GetAll($query));
 	if($results) {
 		?>
@@ -133,7 +133,6 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 		<table class="tableList" cellspacing="0" summary="List of Notices">
 		<colgroup>
 			<col class="modified" />
-			<col class="general" />
 			<col class="general" />
 			<col class="title" />
 			<col class="date" />
@@ -143,7 +142,6 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 			<tr>
 				<td class="modified">&nbsp;</td>
 				<td class="general<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "organisation") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("organisation", "Target Organisation"); ?></td>
-				<td class="general<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "target") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("target", "Target Audience"); ?></td>
 				<td class="title<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "summary") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("summary", "Notice Summary"); ?></td>
 				<td class="date<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "date") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("date", "Display Until"); ?></td>
 				<td class="accesses">Reads</td>
@@ -152,7 +150,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 		<tfoot>
 			<tr>
 				<td></td>
-				<td colspan="5" style="padding-top: 10px">
+				<td colspan="4" style="padding-top: 10px">
 					<input type="submit" class="button" value="Delete Selected" />
 				</td>
 			</tr>
@@ -160,15 +158,6 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 		<tbody>
 			<?php
 			foreach($results as $result) {
-				if (preg_match("/^proxy_id:[\d]+$/",$result["target"])) {
-					preg_match("/[\d]+/", $result["target"], $id);
-					if (isset($id) && array_key_exists(0, $id)) {
-						$NOTICE_TARGETS[$result["target"]] = "Visible to ".get_account_data("firstlast", $id[0]);
-						unset($id[0]);
-					} else {
-						$NOTICE_TARGETS[$result["target"]] = "Visible to specfic user.";
-					}
-				}
 				$url			= ENTRADA_URL."/admin/notices?section=edit&amp;id=".$result["notice_id"];
 				$expired		= false;
 				
@@ -179,7 +168,6 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 				echo "<tr id=\"notice-".$result["notice_id"]."\" class=\"notice".(($expired) ? " na" : "")."\">\n";
 				echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"delete[]\" value=\"".$result["notice_id"]."\" /></td>\n";
 				echo "	<td class=\"general\">".(($url) ? "<a href=\"".$url."\">" : "").html_encode($result["organisation_title"]).(($url) ? "</a>" : "")."</td>\n";
-				echo "	<td class=\"general\">".(($url) ? "<a href=\"".$url."\" title=\"Edit Notice: ".html_encode($result["notice_summary"])."\">" : "").((isset($NOTICE_TARGETS[$result["target"]])) ? str_replace("&nbsp;", "", $NOTICE_TARGETS[$result["target"]]) : $result["target"]).(($url) ? "</a>" : "")."</td>\n";
 				echo "	<td class=\"title\">".(($url) ? "<a href=\"".$url."\">" : "").html_encode($result["notice_summary"]).(($url) ? "</a>" : "")."</td>\n";
 				echo "	<td class=\"date\">".(($url) ? "<a href=\"".$url."\">" : "").date(DEFAULT_DATE_FORMAT, $result["display_until"]).(($url) ? "</a>" : "")."</td>\n";
 				echo "	<td class=\"accesses\">".count_notice_reads($result["notice_id"])."</td>\n";

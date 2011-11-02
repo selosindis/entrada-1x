@@ -32,7 +32,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 		exit;
 } else {
 	if ((isset($COURSE_ID) && $COURSE_ID) && (isset($OBJECTIVE_ID) && $OBJECTIVE_ID)) {
-		$BREADCRUMB[] = array("url" => ENTRADA_RELATIVE."/courses/objectives?section=course-objectives&cid=".$COURSE_ID, "title" => "Course Objectives");
+		$BREADCRUMB[] = array("url" => ENTRADA_RELATIVE."/courses/objectives?section=course-objectives&cid=".$COURSE_ID, "title" => $module_singular_name . " Objectives");
 		$BREADCRUMB[] = array("url" => "", "title" => "Learning Events");
 			
 		/**
@@ -73,7 +73,12 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 		$display_duration = fetch_timestamps("academic", $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dstamp"]);
 		$query = "	SELECT `course_name` FROM `courses` WHERE `course_id` = ".$db->qstr($COURSE_ID);
 		$course_name = $db->GetOne($query);
-		$query = "	SELECT * FROM `global_lu_objectives` WHERE `objective_id` = ".$db->qstr($OBJECTIVE_ID)." AND `objective_active` = 1";
+		$query = "SELECT * FROM `global_lu_objectives` AS a 
+					JOIN `objective_organisation` AS b
+					ON a.`objective_id` = b.`objective_id`
+					AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+					WHERE a.`objective_id` = ".$db->qstr($OBJECTIVE_ID)." 
+					AND a.`objective_active` = 1";
 		$objective = $db->GetRow($query);
 		if (isset($course_name) && $course_name && isset($objective["objective_name"]) && $objective["objective_name"]) {
 			echo "<h1>".html_encode($course_name)."</h2>";
@@ -85,6 +90,9 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 						ON a.`event_id` = b.`event_id`
 						JOIN `global_lu_objectives` AS c
 						ON a.`objective_id` = c.`objective_id`
+						JOIN `objective_organisation` AS d
+						ON c.`objective_id` = d.`objective_id`
+						AND d.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
 						WHERE a.`objective_id` = ".$db->qstr($OBJECTIVE_ID)."
 						AND a.`event_id` IN (
 							SELECT `event_id` FROM `events`
@@ -102,6 +110,9 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 							ON a.`event_id` = b.`event_id`
 							JOIN `global_lu_objectives` AS c
 							ON a.`objective_id` = c.`objective_id`
+							JOIN `objective_organisation` AS d
+							ON c.`objective_id` = d.`objective_id`
+							AND d.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
 							WHERE c.`objective_parent` = ".$db->qstr($OBJECTIVE_ID)."
 							AND a.`event_id` IN (
 								SELECT `event_id` FROM `events`

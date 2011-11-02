@@ -128,26 +128,31 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 			$rss_feed_name = "alumni";
 			$notice_where_clause = "(a.`target` = 'all' OR a.`target` = 'alumni' OR a.`target` = ".$db->qstr("proxy_id:".((int) $_SESSION["details"]["id"])).")";
 			$poll_where_clause = "(a.`poll_target` = 'all' OR a.`poll_target` = 'alumni')";;
+			$corrected_role = "students";
 		break;
 		case "faculty" :
 			$rss_feed_name = "faculty";
 			$notice_where_clause = "(a.`target` = 'all' OR a.`target` = 'faculty' OR a.`target` = ".$db->qstr("proxy_id:".((int) $_SESSION["details"]["id"])).")";
 			$poll_where_clause = "(a.`poll_target` = 'all' OR a.`poll_target` = 'faculty')";;
+			$corrected_role = "faculty";
 		break;
 		case "medtech" :
 			$rss_feed_name = "medtech";
 			$notice_where_clause = "(a.`target` NOT LIKE 'proxy_id:%' OR a.`target` = ".$db->qstr("proxy_id:".((int) $_SESSION["details"]["id"])).")";
 			$poll_where_clause = "(a.`poll_target` = 'all' OR a.`poll_target` = 'staff')";;
+			$corrected_role = "medtech";
 		break;
 		case "resident" :
 			$rss_feed_name = "resident";
 			$notice_where_clause = "(a.`target` = 'all' OR a.`target` = 'resident' OR a.`target` = ".$db->qstr("proxy_id:".((int) $_SESSION["details"]["id"])).")";
 			$poll_where_clause = "(a.`poll_target` = 'all' OR a.`poll_target` = 'resident')";;
+			$corrected_role = "resident";
 		break;
 		case "staff" :
 			$rss_feed_name = "staff";
 			$notice_where_clause = "(a.`target` = 'all' OR a.`target` = 'staff' OR a.`target` = ".$db->qstr("proxy_id:".((int) $_SESSION["details"]["id"])).")";
 			$poll_where_clause = "(a.`poll_target` = 'all' OR a.`poll_target` = 'staff')";;
+			$corrected_role = "staff";
 		break;
 		case "student" :
 		default :
@@ -155,6 +160,7 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 			$rss_feed_name = clean_input((isset($_SESSION["details"]["grad_year"]) && $_SESSION["details"]["grad_year"] ? $_SESSION["details"]["grad_year"] : "default"), "alphanumeric");
 			$notice_where_clause = "(a.`target`='cohort:".clean_input($cohort["group_id"], "alphanumeric")."' OR a.`target` = 'all' OR a.`target` = 'students' OR a.`target` = ".$db->qstr("proxy_id:".((int) $_SESSION["details"]["id"])).")";
 			$poll_where_clause = "(a.`poll_target_type` = 'cohort' AND a.`poll_target`='".clean_input($cohort["group_id"], "alphanumeric")."' OR a.`poll_target` = 'all' OR a.`poll_target` = 'students')";
+			$corrected_role = "students";
 		break;
 	}
 	$notice_where_clause .= "AND (a.`organisation_id` IS NULL OR a.`organisation_id` = ".$_SESSION["details"]["organisation_id"].")";
@@ -207,12 +213,37 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 					AND b.`action` = 'read'
 					AND b.`action_field` = 'notice_id'
 					AND b.`action_value` = a.`notice_id`
-					WHERE ".(($notice_where_clause) ? $notice_where_clause." AND" : "")."
-					(a.`display_from`='0' OR a.`display_from` <= '".time()."')
-					AND (a.`display_until`='0' OR a.`display_until` >= '".time()."')
+					LEFT JOIN `notice_audience` AS c 
+					ON a.`notice_id` = c.`notice_id` 
+					WHERE (
+						c.`audience_type` = 'all:users'
+						".($corrected_role == "medtech" ? "OR c.`audience_type` LIKE '%all%' OR c.`audience_type` = 'cohorts'" : "OR c.`audience_type` = 'all:".$corrected_role."'")."
+						OR
+						((
+							c.`audience_type` = 'students' 
+							OR c.`audience_type` = 'faculty' 
+							OR c.`audience_type` = 'staff') 
+							AND c.`audience_value` = ".$db->qstr($_SESSION["details"]["id"])."
+						) 
+						OR ((
+							c.`audience_type` = 'cohorts' 
+							OR c.`audience_type` = 'course_list') 
+							AND c.`audience_value` IN (
+								SELECT `group_id` 
+								FROM `group_members` 
+								WHERE `proxy_id` = ".$db->qstr($_SESSION["details"]["id"]).")
+						)
+					) 
+					AND (a.`organisation_id` IS NULL 
+					OR a.`organisation_id` = ".$db->qstr($_SESSION["details"]["organisation_id"]).") 
+					AND (a.`display_from`='0' 
+					OR a.`display_from` <= '".time()."') 
+					AND (a.`display_until`='0' 
+					OR a.`display_until` >= '".time()."') 
 					AND a.`organisation_id` = ".$db->qstr($_SESSION["details"]["organisation_id"])."
 					GROUP BY a.`notice_id`
 					ORDER BY a.`updated_date` DESC, a.`display_until` ASC";
+		
 		$results = $db->GetAll($query);
 		if ($results) {
 			foreach ($results as $result) {

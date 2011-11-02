@@ -68,8 +68,11 @@ if ($community_courses) {
 						JOIN `".AUTH_DATABASE."`.`user_access` AS c
 						ON c.`user_id` = b.`id`
 						AND c.`app_id` IN (".AUTH_APP_IDS_STRING.")
+						JOIN `courses` AS d
+						ON a.`course_id` = d.`course_id`
 						WHERE a.`course_id` IN (".implode(", ", $course_ids).")
 						AND a.`contact_type` = 'director'
+						AND d.`course_active` = 1
 						GROUP BY b.`id`
 						ORDER BY `contact_order` ASC";
 			if ($results = $db->GetAll($query)) {
@@ -1022,9 +1025,12 @@ if ($community_courses) {
 						FROM `course_objectives` AS a
 						JOIN `global_lu_objectives` AS b
 						ON a.`objective_id` = b.`objective_id`
+						JOIN `objective_organisation` AS c
+						ON b.`objective_id` = c.`objective_id`
 						WHERE a.`objective_type` = 'event'
 						AND a.`course_id` IN (".implode(", ", $course_ids).")
 						AND b.`objective_active` = 1
+						AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
 						GROUP BY b.`objective_id`
 						ORDER BY b.`objective_order`";
 			$results = $db->GetAll($query);

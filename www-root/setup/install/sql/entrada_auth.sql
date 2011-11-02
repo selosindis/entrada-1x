@@ -400,7 +400,7 @@ CREATE TABLE IF NOT EXISTS `user_preferences` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `user_data_resident` (
-  `proxy_id` int(12) NOT NULL ;
+  `proxy_id` int(12) NOT NULL,
   `cmpa_no` int(11) NOT NULL,
   `cpso_no` int(11) NOT NULL,
   `school_id` int(11) NOT NULL,
@@ -412,18 +412,18 @@ CREATE TABLE IF NOT EXISTS `user_data_resident` (
   `assess_prog_img` varchar(1) NOT NULL,
   `assess_prog_non_img` varchar(1) NOT NULL,
   PRIMARY KEY (`proxy_id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1 ;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-CREATE TABLE `user_organisation` (
+CREATE TABLE `user_organisations` (
 	`id` int(12) NOT NULL AUTO_INCREMENT, 
 	`organisation_id` int(3) NOT NULL, 
 	`proxy_id` int(12) NOT NULL, 
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=10365 DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `user_organisations` (`organisation_id`, `proxy_id`)
-    SELECT '1', a.`id`
-    FROM `user_data` AS a
-        JOIN `user_access` AS b
-        ON b.`user_id` = a.`id`
-    WHERE b.`app_id` = '1';
+SELECT '1', a.`id`
+FROM `user_data` AS a
+JOIN `user_access` AS b
+ON b.`user_id` = a.`id`
+WHERE b.`app_id` = '1';

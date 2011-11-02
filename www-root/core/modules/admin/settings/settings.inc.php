@@ -1,6 +1,6 @@
 <?php
 
-$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/configuration/settings", "title" => "Manage Entrada Settings");
+$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings", "title" => "Manage Entrada Settings");
 
 ?>
 <h1>Manage Entrada Settings</h1>

@@ -53,6 +53,9 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 		$query = "	SELECT * FROM `course_objectives` AS a
 					JOIN `global_lu_objectives` AS b
 					ON a.`objective_id` = b.`objective_id`
+					JOIN `objective_organisation` AS c
+					ON b.`objective_id` = c.`objective_id`
+					AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
 					WHERE a.`course_id` = ".$db->qstr($COURSE_ID)."
 					AND (
 						b.`objective_id` IN (".$competency_ids_string.")
@@ -69,6 +72,9 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 							ON a.`objective_id` = b.`objective_id`
 							AND b.`course_id` = ".$db->qstr($COURSE_ID)."
 							AND b.`objective_type` = 'course'
+							JOIN `objective_organisation` AS c
+							ON a.`objective_id` = c.`objective_id`
+							AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
 							WHERE a.`objective_parent` = ".$db->qstr($objective["objective_id"])."
 							AND a.`objective_active` = 1
 							ORDER BY a.`objective_order` ASC";
@@ -101,7 +107,13 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 			}
 		}
 		
-		$competency = $db->GetRow("SELECT * FROM `global_lu_objectives` WHERE `objective_id` = ".$db->qstr($COMPETENCY_ID))." AND b.`objective_active` = 1";
+		$competency = $db->GetRow("SELECT a.* 
+									FROM `global_lu_objectives` AS a
+									JOIN `objective_organisation` AS b
+									ON a.`objective_id` = b.`objective_id`
+									AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+									WHERE a.`objective_id` = ".$db->qstr($COMPETENCY_ID))." 
+									AND a.`objective_active` = 1";
 		$course = $db->GetRow("SELECT * FROM `courses` WHERE `course_id` = ".$db->qstr($COURSE_ID));
 
 		echo "<h1>".html_encode($course["course_name"])."</h1>";

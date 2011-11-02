@@ -306,7 +306,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			} else {
 				$total_events	= count($EVENT_IDS);
 				
-				$query		= "	SELECT a.`event_id`, a.`event_title`, a.`event_start`, a.`event_phase`, a.`release_date`, a.`release_until`, a.`updated_date`, CONCAT_WS(', ', c.`lastname`, c.`firstname`) AS `fullname`, d.organisation_id
+				$query		= "	SELECT a.`event_id`, a.`event_title`, a.`event_start`, a.`event_phase`, a.`release_date`, a.`release_until`, a.`updated_date`, CONCAT_WS(', ', c.`lastname`, c.`firstname`) AS `fullname`, d.`course_id`, d.organisation_id
 								FROM `events` AS a
 								LEFT JOIN `event_contacts` AS b
 								ON b.`event_id` = a.`event_id`

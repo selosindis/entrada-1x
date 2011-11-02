@@ -338,7 +338,11 @@ return array (
 	"task_rejection_comment_policy_invalid" => "Invalid rejection comment policy provided. Please select one of the options from the list.", 
 	
 	/** notices **/
-	"task_title_too_long" => "The <strong>Task Title</strong> field has a maximum length of %MAX_LENGTH% characters. The title was truncated to accomodate this." //note, the field has the same restriction, so the user is unlikely to receive this message
+	"task_title_too_long" => "The <strong>Task Title</strong> field has a maximum length of %MAX_LENGTH% characters. The title was truncated to accomodate this.", //note, the field has the same restriction, so the user is unlikely to receive this message
+
+	/** courses **/
+	"course" => "Course",
+	"courses" => "Courses"
 	
 	);
 ?>

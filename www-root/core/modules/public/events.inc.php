@@ -527,7 +527,6 @@ if ($event_audience_type == "cohort") {
 				ON a.`course_id` = c.`course_id`
 				AND c.`organisation_id` = ".$db->qstr($event_info["organisation_id"])."
 				WHERE (a.`event_start` BETWEEN ".$db->qstr($event_info["event_start"])." AND ".$db->qstr(($event_info["event_finish"] - 1)).")
-				AND c.`course_active` = '1'
 				AND a.`event_id` <> ".$db->qstr($event_info["event_id"])."
 				AND b.`audience_type` = 'cohort'
 				AND b.`audience_value` IN (".$associated_cohorts_string.")

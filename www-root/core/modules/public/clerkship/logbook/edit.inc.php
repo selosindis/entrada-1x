@@ -583,25 +583,31 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 									}
 									echo "<select id=\"rotation_objective_id\" name=\"rotation_objective_id\" onchange=\"addObjective(this.value, 0)\" style=\"width: 95%;\">\n";
 									echo "<option value=\"0\"".((!isset($PROCESSED["objective_id"])) ? " selected=\"selected\"" : "").">-- Select Clinical Presentation --</option>\n";
-									$query		= "	SELECT DISTINCT * FROM `global_lu_objectives` 
-													WHERE `objective_parent` = '200' 
-													AND `objective_active` = '1'
+									$query		= "SELECT DISTINCT a.* FROM `global_lu_objectives` AS a
+													JOIN `objective_organisation` AS b
+													ON a.`objective_id` = b.`objective_id`
+													AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+													WHERE a.`objective_parent` = '200' 
+													AND a.`objective_active` = '1'
 													AND 
 													(
-														`objective_id` IN 
+														a.`objective_id` IN 
 														(
 															SELECT `objective_id` FROM `".CLERKSHIP_DATABASE."`.`logbook_mandatory_objectives` 
 															WHERE `rotation_id` = ".$db->qstr($rotation_id)." 
 														)
 													)
-													ORDER BY `objective_name`";
+													ORDER BY a.`objective_name`";
 									$results	= $db->GetAll($query);
 									if ($results) {
 										foreach ($results as $result) {
 											echo "<option id=\"rotation-obj-item-".$result["objective_id"]."\" value=\"".(int) $result["objective_id"]."\">".html_encode($result["objective_name"])."</option>\n";
-											$query = "	SELECT * FROM `global_lu_objectives` 
-														WHERE `objective_parent` = ".$db->qstr($result["objective_id"])."
-														AND `objective_active` = '1'";
+											$query = "SELECT a.* FROM `global_lu_objectives` AS a
+														JOIN `objective_organisation` AS b
+														ON a.`objective_id` = b.`objective_id`
+														AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+														WHERE a.`objective_parent` = ".$db->qstr($result["objective_id"])."
+														AND a.`objective_active` = '1'";
 											$children = $db->GetAll($query);
 											if ($children) {
 												foreach ($children as $child) {
@@ -615,21 +621,27 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 									echo "<select id=\"defficient_objective_id\" name=\"defficient_objective_id\" onchange=\"addObjective(this.value, 0)\" style=\"width: 95%; display: none;\">\n";
 									echo "<option value=\"0\"".((!isset($PROCESSED["objective_id"])) ? " selected=\"selected\"" : "").">-- Select Clinical Presentation --</option>\n";
 									
-									$query		= "	SELECT DISTINCT * FROM `global_lu_objectives` 
-													WHERE `objective_parent` = '200' 
-													AND `objective_active` = '1'
+									$query		= "SELECT DISTINCT a.* FROM `global_lu_objectives` AS a
+													JOIN `objective_organisation` AS b
+													ON a.`objective_id` = b.`objective_id`
+													AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+													WHERE a.`objective_parent` = '200' 
+													AND a.`objective_active` = '1'
 													AND 
 													(
-														`objective_id` IN (".$objective_ids.")
+														a.`objective_id` IN (".$objective_ids.")
 													)
-													ORDER BY `objective_name`";
+													ORDER BY a.`objective_name`";
 									$results	= $db->GetAll($query);
 									if ($results) {
 										foreach ($results as $result) {
 											echo "<option id=\"defficient-obj-item-".$result["objective_id"]."\" value=\"".(int) $result["objective_id"]."\">".html_encode($result["objective_name"])."</option>\n";
-											$query = "	SELECT * FROM `global_lu_objectives` 
-														WHERE `objective_parent` = ".$db->qstr($result["objective_id"])."
-														AND `objective_active` = '1'";
+											$query = "SELECT a.* FROM `global_lu_objectives` AS a
+														JOIN `objective_organisation` AS b
+														ON a.`objective_id` = b.`objective_id`
+														AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+														WHERE a.`objective_parent` = ".$db->qstr($result["objective_id"])."
+														AND a.`objective_active` = '1'";
 											$children = $db->GetAll($query);
 											if ($children) {
 												foreach ($children as $child) {
@@ -641,17 +653,23 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 									echo "</select>\n";
 									echo "<select id=\"all_objective_id\" name=\"all_objective_id\" onchange=\"addObjective(this.value, 0)\" style=\"width: 95%; display: none;\">\n";
 									echo "<option value=\"0\"".((!isset($PROCESSED["objective_id"])) ? " selected=\"selected\"" : "").">-- Select Clinical Presentation --</option>\n";
-									$query		= "	SELECT * FROM `global_lu_objectives` 
-													WHERE `objective_parent` = '200' 
-													AND `objective_active` = '1'
-													ORDER BY `objective_name`";
+									$query		= "SELECT a.* FROM `global_lu_objectives` AS a
+													JOIN `objective_organisation` AS b
+													ON a.`objective_id` = b.`objective_id`
+													AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+													WHERE a.`objective_parent` = '200' 
+													AND a.`objective_active` = '1'
+													ORDER BY a.`objective_name`";
 									$results	= $db->GetAll($query);
 									if ($results) {
 										foreach ($results as $result) {
 											echo "<option id=\"all-obj-item-".$result["objective_id"]."\" value=\"".(int) $result["objective_id"]."\">".html_encode($result["objective_name"])."</option>\n";
-											$query = "	SELECT * FROM `global_lu_objectives` 
-														WHERE `objective_parent` = ".$db->qstr($result["objective_id"])."
-														AND `objective_active` = '1'";
+											$query = "SELECT a.* FROM `global_lu_objectives` AS a
+														JOIN `objective_organisation` AS b
+														ON a.`objective_id` = b.`objective_id`
+														AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+														WHERE a.`objective_parent` = ".$db->qstr($result["objective_id"])."
+														AND a.`objective_active` = '1'";
 											$children = $db->GetAll($query);
 											if ($children) {
 												foreach ($children as $child) {
@@ -681,13 +699,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 									<?php 
 									if (is_array($PROCESSED_OBJECTIVES) && count($PROCESSED_OBJECTIVES)) { 
 										foreach ($PROCESSED_OBJECTIVES as $objective_id) {
-											$query = "	SELECT * FROM `global_lu_objectives` 
-														WHERE `objective_id` = ".$db->qstr($objective_id["objective_id"])." 
-														AND `objective_active` = '1'
+											$query = "SELECT a.* FROM `global_lu_objectives` AS a
+														JOIN `objective_organisation` AS b
+														ON a.`objective_id` = b.`objective_id`
+														AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+														WHERE a.`objective_id` = ".$db->qstr($objective_id["objective_id"])." 
+														AND a.`objective_active` = '1'
 														AND 
 														(
-															`objective_parent` = '200' 
-															OR `objective_parent` IN 
+															a.`objective_parent` = '200' 
+															OR a.`objective_parent` IN 
 															(
 																SELECT `objective_id` FROM `global_lu_objectives` 
 																WHERE `objective_parent` = '200'

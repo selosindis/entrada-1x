@@ -398,25 +398,30 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 											</div>
 											<script type="text/javascript" defer="defer">
 												var deleteQuestion_id = 0;
-
-												Sortable.create('quiz-questions-list', { handles : $$('#quiz-questions-list div.question'), onUpdate : updateQuizQuestionOrder });
-
-												$$('a.question-controls-delete').each(function(obj) {
-													new Control.Modal(obj.id, {
-														overlayOpacity:	0.75,
-														closeOnClick:	'overlay',
-														className:		'modal-confirmation',
-														fade:			true,
-														fadeDuration:	0.30,
-														beforeOpen: function() {
-															deleteQuestion_id = obj.readAttribute('title');
-															$('delete-question-confirmation-content').innerHTML = $('question_text_' + obj.readAttribute('title')).innerHTML;
-														},
-														afterClose: function() {
-															deleteQuestion_id = 0;
-															$('delete-question-confirmation-content').innerHTML = '';
-														}
-													});
+												
+												document.observe('dom:loaded', function() {
+													try {
+														Sortable.create('quiz-questions-list', { handles : $$('#quiz-questions-list div.question'), onUpdate : updateQuizQuestionOrder });
+														$$('a.question-controls-delete').each(function(obj) {
+															new Control.Modal(obj.id, {
+																overlayOpacity:	0.75,
+																closeOnClick:	'overlay',
+																className:		'modal-confirmation',
+																fade:			true,
+																fadeDuration:	0.30,
+																beforeOpen: function() {
+																	deleteQuestion_id = obj.readAttribute('title');
+																	$('delete-question-confirmation-content').innerHTML = $('question_text_' + obj.readAttribute('title')).innerHTML;
+																},
+																afterClose: function() {
+																	deleteQuestion_id = 0;
+																	$('delete-question-confirmation-content').innerHTML = '';
+																}
+															});
+														});
+													} catch (e) {
+														clog(e); 
+													}
 												});
 
 												function updateQuizQuestionOrder() {
@@ -525,22 +530,28 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						</form>
 					</div>
 					<script type="text/javascript" defer="defer">
-						// Modal control for deleting quiz.
-						new Control.Modal('quiz-control-disable', {
-							overlayOpacity:	0.75,
-							closeOnClick:	'overlay',
-							className:		'modal-confirmation',
-							fade:			true,
-							fadeDuration:	0.30
-						});
-
-						// Modal control for copying quiz.
-						new Control.Modal('quiz-control-copy', {
-							overlayOpacity:	0.75,
-							closeOnClick:	'overlay',
-							className:		'modal-confirmation',
-							fade:			true,
-							fadeDuration:	0.30
+						document.observe('dom:loaded', function() {
+							try {
+								// Modal control for deleting quiz.
+								new Control.Modal('quiz-control-disable', {
+									overlayOpacity:	0.75,
+									closeOnClick:	'overlay',
+									className:		'modal-confirmation',
+									fade:			true,
+									fadeDuration:	0.30
+								});
+		
+								// Modal control for copying quiz.
+								new Control.Modal('quiz-control-copy', {
+									overlayOpacity:	0.75,
+									closeOnClick:	'overlay',
+									className:		'modal-confirmation',
+									fade:			true,
+									fadeDuration:	0.30
+								});
+							} catch (e) { 
+								clog(e); 
+							}
 						});
 					</script>
 

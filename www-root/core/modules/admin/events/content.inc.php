@@ -139,7 +139,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 											JOIN `course_objectives` AS b
 											ON b.`course_id` = ".$event_info["course_id"]."
 											AND a.`objective_id` = b.`objective_id`
+											JOIN `objective_organisation` AS c
+											ON a.`objective_id` = c.`objective_id`
 											WHERE a.`objective_id` = ".$db->qstr($objective_id)."
+											AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
 											AND b.`objective_type` = 'event'
 											AND a.`objective_active` = '1'";
 								$result	= $db->GetRow($query);
@@ -172,6 +175,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				 * Fetch the Curriculum Objective details.
 				 */
 				list($curriculum_objectives_list,$top_level_id) = courses_fetch_objectives($event_info["organisation_id"],array($event_info["course_id"]),-1, 1, false, false, $EVENT_ID, true);
+				
 				$curriculum_objectives = array();
 
 				if (isset($_POST["checked_objectives"]) && ($checked_objectives = $_POST["checked_objectives"]) && (is_array($checked_objectives))) {
@@ -374,9 +378,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 									if ((isset($curriculum_objectives)) && (is_array($curriculum_objectives)) && (count($curriculum_objectives))) {
 										foreach ($curriculum_objectives as $objective_id => $objective_text) {
 											if ($objective_id = (int) $objective_id) {
-												$query	= "	SELECT * FROM `global_lu_objectives` 
-															WHERE `objective_id` = ".$db->qstr($objective_id)."
-															AND `objective_active` = '1'";
+												$query	= "SELECT a.* FROM `global_lu_objectives` AS a
+															JOIN `objective_organisation` AS b
+															ON a.`objective_id` = b.`objective_id`
+															WHERE a.`objective_id` = ".$db->qstr($objective_id)."
+															AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+															AND a.`objective_active` = '1'";
 												$result	= $db->GetRow($query);
 												if ($result) {
 													if (!$db->AutoExecute("event_objectives", array("event_id" => $EVENT_ID, "objective_details" => $objective_text, "objective_id" => $objective_id, "objective_type" => "course", "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT")) {

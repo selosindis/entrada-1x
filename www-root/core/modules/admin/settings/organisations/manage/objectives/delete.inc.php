@@ -23,7 +23,6 @@
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
 */
-
 if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 	exit;
 } elseif((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
@@ -56,9 +55,12 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 					if ((int)$objective["objective_id"]) {
 						$objective["objective_id"] = clean_input($objective["objective_id"], "int");
 					}
-					$query	= "	SELECT * FROM `global_lu_objectives` 
-								WHERE `objective_id` = ".$db->qstr($objective["objective_id"])."
-								AND `objective_active` = '1'";
+					$query	= "SELECT a.* FROM `global_lu_objectives` AS a
+								JOIN `objective_organisation` AS b
+								ON a.`objective_id` = b.`objective_id`
+								WHERE a.`objective_id` = ".$db->qstr($objective["objective_id"])."
+								AND b.`organisation_id` = ".$db->qstr($ORGANISATION_ID)."
+								AND a.`objective_active` = '1'";
 					$result	= $db->GetRow($query);
 					if ($result) {
 						if (((int)$result["objective_active"]) == 0) {
@@ -203,7 +205,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 				<tbody>
 				<?php
 				foreach ($objectives as $objective) {
-					echo objectives_intable($objective["objective_id"], 0, $objective_ids_string);
+					echo objectives_intable($ORGANISATION_ID, $objective["objective_id"], 0, $objective_ids_string);
 				}
 				?>
 				</tbody>

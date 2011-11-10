@@ -55,16 +55,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				
 			?>
 			<div id="toolbar" style="display: none;">
-				<select id="filter_cohort" name="filter_cohort" style="width: 203px; float: right;">
+				<select id="filter_cohort" name="filter_cohort" style="width: 203px; float: left;">
 				<?php
-				$cohorts = groups_get_all_cohorts($ENTRADA_USER->getActiveOrganisation());
+				$cohorts = groups_get_all_groups($ENTRADA_USER->getActiveOrganisation());
 				if (isset($cohorts) && !empty($cohorts)) {
 					foreach ($cohorts as $cohort) {
 						echo "<option value=\"".$cohort["group_id"]."\"".(($COHORT == $cohort["group_id"]) ? " selected=\"selected\"" : "").">".html_encode($cohort["group_name"])."</option>\n";
 					}
 				}
 				?>
-				</select>
+				</select>		
 			</div>
 			<?php
 			$query = "	SELECT `assessments`.*, `assessment_marking_schemes`.`handler`
@@ -141,12 +141,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								?>
 								<td>
 									<span class="grade"
+										id="grade_<?php echo $assessment["assessment_id"]; ?>_<?php echo $student["proxy_id"] ?>"  
 										data-grade-id="<?php echo $grade_id; ?>"
 										data-assessment-id="<?php echo $assessment["assessment_id"]; ?>"
 										data-proxy-id="<?php echo $student["proxy_id"] ?>"
 									><?php echo $grade_value; ?></span>
 									<span class="gradesuffix" <?php echo (($grade_value === "-") ? "style=\"display: none;\"" : "") ?>>
 										<?php echo assessment_suffix($assessment); ?>
+									</span>
+									<span class="gradesuffix" style="float:right;">
+												<img src="<?php echo ENTRADA_URL;?>/images/action-edit.gif" class="edit_grade" id ="edit_grade_<?php echo $assessment["assessment_id"]; ?>_<?php echo $student["proxy_id"] ?>" style="cursor:pointer;"/>
 									</span>
 								</td>
 								<?php
@@ -163,7 +167,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 			} else {
 				echo "<table class=\"gradebook\"></table>";
 				$NOTICE++;
-				$NOTICESTR[] = "No assessments could be found for this gradebook for this cohort [$COHORT".groups_get_name($COHORT)."].";
+				$NOTICESTR[] = "No assessments could be found for this gradebook for this cohort [".groups_get_name($COHORT)."].";
 
 				echo display_notice();
 			

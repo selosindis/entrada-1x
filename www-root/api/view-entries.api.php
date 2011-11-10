@@ -77,11 +77,14 @@ if((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 
 		    $participation |=  $part = $entry["participation_level"] > 1; // Display 'participation level' indicator
 		    
-		    $query = "	SELECT b.`objective_name` obj FROM `".CLERKSHIP_DATABASE."`.`logbook_entry_objectives` a
-				INNER JOIN `".DATABASE_NAME."`.`global_lu_objectives` b
+		    $query = "	SELECT b.`objective_name` obj FROM `".CLERKSHIP_DATABASE."`.`logbook_entry_objectives` AS a
+				INNER JOIN `".DATABASE_NAME."`.`global_lu_objectives` AS b
 				ON a.`objective_id` = b.`objective_id`
+				INNER JOIN `".DATABASE_NAME."`.`objective_organisation` AS c
+				ON b.`objective_id` = c.`objective_id
 				WHERE a.`lentry_id` = ".$db->qstr($entry["lentry_id"])."
 				AND b.`objective_active` = '1'
+				AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
 				ORDER by a.`leobjective_id`";
 		    $objectives = $db->GetAll($query);
 

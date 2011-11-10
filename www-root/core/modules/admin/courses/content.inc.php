@@ -79,7 +79,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					header("Location: ".ENTRADA_URL."/community".$result["community_url"].":pages");
 					exit;
 				} else {
-					$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "content", "id" => $COURSE_ID)), "title" => "Course Content");
+					$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "content", "id" => $COURSE_ID)), "title" => $module_singular_name . " Content");
 	
 					$PROCESSED		= $course_details;
 					/**
@@ -130,7 +130,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								if($db->AutoExecute("courses", $PROCESSED, "UPDATE", "`course_id` = ".$db->qstr($COURSE_ID))) {
 									
 									$SUCCESS++;
-									$SUCCESSSTR[] = "You have successfully updated the <strong>".html_encode($course_details["course_name"])."</strong> course details section.";
+									$SUCCESSSTR[] = "You have successfully updated the <strong>".html_encode($course_details["course_name"])."</strong> " . $module_singular_name . " details section.";
 	
 									application_log("success", "Successfully updated course_id [".$COURSE_ID."] course details.");
 								} else {
@@ -166,7 +166,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								}
 	
 								$SUCCESS++;
-								$SUCCESSSTR[] = "You have successfully updated the <strong>".html_encode($course_details["course_name"])."</strong> course objectives section.";
+								$SUCCESSSTR[] = "You have successfully updated the <strong>".html_encode($course_details["course_name"])."</strong> " . $module_singular_name . " objectives section.";
 	
 								application_log("success", "Successfully updated course_id [".$COURSE_ID."] course objectives.");
 							break;
@@ -400,7 +400,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 	
 					?>
 					<a name="course-details-section"></a>
-					<h2 title="Course Details Section">Course Details</h2>
+					<h2 title="Course Details Section"><?php echo $module_singular_name; ?> Details</h2>
 					<div id="course-details-section">
 						<form action="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?<?php echo replace_query(); ?>" method="post">
 						<input type="hidden" name="type" value="text" />
@@ -423,13 +423,13 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							echo "</tr>\n";
 							echo "<tr>\n";
 							echo "	<td>&nbsp;</td>\n";
-							echo "	<td><span class=\"content-small\"><strong>Please Note:</strong> If you have an external course website or have created a Community for your course, please enter the URL here and a link will be automatically created on the public side.</span></td>\n";
+							echo "	<td><span class=\"content-small\"><strong>Please Note:</strong> If you have an external " . strtolower($module_singular_name) . " website or have created a Community for your course, please enter the URL here and a link will be automatically created on the public side.</span></td>\n";
 							echo "</tr>\n";
 							echo "<tr>\n";
 							echo "	<td colspan=\"2\">&nbsp;</td>\n";
 							echo "</tr>\n";
 							echo "<tr>\n";
-							echo "	<td style=\"vertical-align: top\">Course Directors</td>\n";
+							echo "	<td style=\"vertical-align: top\">" . $module_singular_name . " Directors</td>\n";
 							echo "	<td>\n";
 										$squery		= "	SELECT a.`proxy_id`, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`email`
 														FROM `course_contacts` AS a
@@ -496,7 +496,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							echo "	<td colspan=\"2\">&nbsp;</td>\n";
 							echo "</tr>\n";
 							echo "<tr>\n";
-							echo "	<td style=\"vertical-align: top\"><label for=\"course_description\" class=\"form-nrequired\">Course Description</label></td>\n";
+							echo "	<td style=\"vertical-align: top\"><label for=\"course_description\" class=\"form-nrequired\">" . $module_singular_name . " Description</label></td>\n";
 							echo "	<td>\n";
 							echo "		<textarea id=\"course_description\" name=\"course_description\" style=\"width: 100%; height: 150px\" cols=\"70\" rows=\"10\">".((isset($PROCESSED["course_description"])) ? html_encode(trim(strip_selected_tags($PROCESSED["course_description"], array("font")))) : "")."</textarea>";
 							echo "	</td>\n";
@@ -523,7 +523,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					if ($result) {
 						?>
 						<a name="course-objectives-section"></a>
-						<h2 title="Course Objectives Section">Course Objectives</h2>
+						<h2 title="Course Objectives Section"><?php echo $module_singular_name; ?> Objectives</h2>
 						<div id="course-objectives-section">
 							<form action="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?<?php echo replace_query(); ?>" method="post">
 							<input type="hidden" name="type" value="objectives" />
@@ -563,7 +563,10 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 													FROM `course_objectives` AS a
 													JOIN `global_lu_objectives` AS b
 													ON a.`objective_id` = b.`objective_id`
+													JOIN `objective_organisation` AS c
+													ON b.`objective_id` = c.`objective_id`
 													WHERE a.`objective_type` = 'event'
+													AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
 													AND b.`objective_active` = '1'
 													AND a.`course_id` = ".$db->qstr($COURSE_ID)."
 													GROUP BY b.`objective_id`
@@ -611,7 +614,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					}
 					?>
 					<a name="course-resources-section"></a>
-					<h2 title="Course Resources Section">Course Resources</h2>
+					<h2 title="Course Resources Section"><?php echo $module_singular_name; ?> Resources</h2>
 					<div id="course-resources-section">
 						<div style="margin-bottom: 15px">
 							<div style="float: left; margin-bottom: 5px">
@@ -680,7 +683,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							} else {
 								echo "<tr>\n";
 								echo "	<td colspan=\"6\">\n";
-								echo "		<div class=\"content-small\" style=\"margin-top: 3px; margin-bottom: 5px\">There have been no files added to this course. To <strong>add a new file</strong>, simply click the Add File button.</div>\n";
+								echo "		<div class=\"content-small\" style=\"margin-top: 3px; margin-bottom: 5px\">There have been no files added to this " . strtolower($module_singular_name) . ". To <strong>add a new file</strong>, simply click the Add File button.</div>\n";
 								echo "	</td>\n";
 								echo "</tr>\n";
 							}
@@ -749,7 +752,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							} else {
 								echo "<tr>\n";
 								echo "	<td colspan=\"5\">\n";
-								echo "		<div class=\"content-small\" style=\"margin-top: 3px; margin-bottom: 5px\">There have been no links added to this course. To <strong>add a new link</strong>, simply click the Add Link button.</div>\n";
+								echo "		<div class=\"content-small\" style=\"margin-top: 3px; margin-bottom: 5px\">There have been no links added to this " . strtolower($module_singular_name) . ". To <strong>add a new link</strong>, simply click the Add Link button.</div>\n";
 								echo "	</td>\n";
 								echo "</tr>\n";
 							}
@@ -764,9 +767,9 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					 * Sidebar item that will provide the links to the different sections within this page.
 					 */
 					$sidebar_html  = "<ul class=\"menu\">\n";
-					$sidebar_html .= "	<li class=\"link\"><a href=\"#course-details-section\" onclick=\"$('course-details-section').scrollTo(); return false;\" title=\"Course Details\">Course Details</a></li>\n";
-					$sidebar_html .= "	<li class=\"link\"><a href=\"#course-objectives-section\" onclick=\"$('course-objectives-section').scrollTo(); return false;\" title=\"Course Objectives\">Course Objectives</a></li>\n";
-					$sidebar_html .= "	<li class=\"link\"><a href=\"#course-resources-section\" onclick=\"$('course-resources-section').scrollTo(); return false;\" title=\"Course Resources\">Course Resources</a></li>\n";
+					$sidebar_html .= "	<li class=\"link\"><a href=\"#course-details-section\" onclick=\"$('course-details-section').scrollTo(); return false;\" title=\"Course Details\">" . $module_singular_name . " Details</a></li>\n";
+					$sidebar_html .= "	<li class=\"link\"><a href=\"#course-objectives-section\" onclick=\"$('course-objectives-section').scrollTo(); return false;\" title=\"Course Objectives\">" . $module_singular_name . " Objectives</a></li>\n";
+					$sidebar_html .= "	<li class=\"link\"><a href=\"#course-resources-section\" onclick=\"$('course-resources-section').scrollTo(); return false;\" title=\"Course Resources\">" . $module_singular_name . " Resources</a></li>\n";
 					$sidebar_html .= "</ul>\n";
 		
 					new_sidebar_item("Page Anchors", $sidebar_html, "page-anchors", "open", "1.9");

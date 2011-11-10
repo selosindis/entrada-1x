@@ -67,11 +67,16 @@ if (!defined("IN_EVENTS")) {
 		if ($course_info) {
 			$permission = $course_info["permission"];
 			
-			$query = "SELECT * FROM `groups` WHERE `group_type` = 'course_list' AND `group_value` = ".$db->qstr($PROCESSED["course_id"]).($use_ajax ? " AND `group_active` = '1'" : "");
+			//$query = "SELECT * FROM `groups` AS a JOIN `group_organisations` AS b ON a.`group_id` = b.`group_id` WHERE ((`group_type` = 'course_list' AND `group_value` = ".$db->qstr($PROCESSED["course_id"]).") OR (b.`organisation_id` = '".$course_info["organisation_id"]."'))".($use_ajax ? " AND `group_active` = '1'" : "");
+			$query = "SELECT a.* FROM `course_audience` AS a JOIN `courses` AS b ON a.`course_id` = b.`course_id` AND a.`course_id` = ".$db->qstr($PROCESSED["course_id"])." WHERE a.`audience_active` = '1'";
 			$course_list = $db->GetRow($query);
 			
-			$query = "SELECT * FROM `course_groups` WHERE `course_id` = ".$db->qstr($PROCESSED["course_id"]).($use_ajax ? " AND `active` = '1'" : "")." ORDER BY LENGTH(`group_name`), `group_name` ASC";
+			$query = "SELECT * FROM `course_groups` WHERE `course_id` = ".$db->qstr($PROCESSED["course_id"]).($use_ajax ? " AND `group_active` = '1'" : "")." ORDER BY LENGTH(`group_name`), `group_name` ASC";
 			$course_groups = $db->GetAll($query);
+			
+			$query = "SELECT * FROM `event_audience` WHERE `event_id` = ".$db->qstr($EVENT_ID)." AND `audience_type` != 'course_id'";
+			$custom_audience = $db->GetAll($query);
+			
 			?>
 			<tr>
 				<td>&nbsp;</td>
@@ -100,7 +105,7 @@ if (!defined("IN_EVENTS")) {
 										<label for="event_audience_type_custom" class="radio-group-title">A Custom Event Audience</label>
 										<div class="content-small">This event is intended for a custom selection of learners.</div>
 
-										<div id="event_audience_type_custom_options" style="<?php echo ($course_list ? "display: none; " : ""); ?>position: relative; margin-top: 10px;">
+										<div id="event_audience_type_custom_options" style="<?php echo ($course_list && !$custom_audience ? "display: none; " : ""); ?>position: relative; margin-top: 10px;">
 											<select id="audience_type" onchange="showMultiSelect();" style="width: 275px;">
 												<option value="">-- Select an audience type --</option>
 												<?php
@@ -132,11 +137,14 @@ if (!defined("IN_EVENTS")) {
 												 * Compiles the list of groups from groups table (known as Cohorts).
 												 */
 												$COHORT_LIST = array();
-												$query = "	SELECT *
-															FROM `groups`
-															WHERE `group_active` = '1'
-															AND `group_type` = 'cohort'
-															ORDER BY LENGTH(`group_name`), `group_name` ASC";
+												$query = "	SELECT a.*
+															FROM `groups` AS a
+															JOIN `group_organisations` AS b
+															ON a.`group_id` = b.`group_id`
+															WHERE a.`group_active` = '1'
+															AND a.`group_type` = 'cohort'
+															AND b.`organisation_id` = '".$course_info["organisation_id"]."'
+															ORDER BY LENGTH(a.`group_name`), a.`group_name` ASC";
 												$results = $db->GetAll($query);
 												if ($results) {
 													foreach($results as $result) {
@@ -192,11 +200,14 @@ if (!defined("IN_EVENTS")) {
 													foreach($associated_audience as $audience_id) {
 														if (strpos($audience_id, "group") !== false) {
 															if ($group_id = clean_input(preg_replace("/[a-z_]/", "", $audience_id), array("trim", "int"))) {
-																$query = "	SELECT *
-																			FROM `groups`
-																			WHERE `group_id` = ".$db->qstr($group_id)."
-																			AND `group_type` = 'cohort'
-																			AND `group_active` = 1";
+																$query = "	SELECT a.*
+																			FROM `groups` AS a
+																			JOIN `group_organisations` AS b
+																			ON a.`group_id` = b.`group_id`
+																			WHERE a.`group_id` = ".$db->qstr($group_id)."
+																			AND a.`group_type` = 'cohort'
+																			AND a.`group_active` = 1
+																			AND b.`organisation_id` = '".$course_info["organisation_id"]."'";
 																$result	= $db->GetRow($query);
 																if ($result) {
 																	$PROCESSED["associated_cohort_ids"][] = $group_id;
@@ -352,8 +363,8 @@ if (!defined("IN_EVENTS")) {
 														<?php
 													}
 												}
-											}											
-											
+											}	
+
 											if (is_array($PROCESSED["associated_proxy_ids"]) && count($PROCESSED["associated_proxy_ids"])) {
 												foreach ($PROCESSED["associated_proxy_ids"] as $student) {
 													if ((array_key_exists($student, $STUDENT_LIST)) && is_array($STUDENT_LIST[$student])) {
@@ -362,7 +373,7 @@ if (!defined("IN_EVENTS")) {
 														<?php
 													}
 												}
-											}
+											}											
 											?>
 											</ul>
 										</div>

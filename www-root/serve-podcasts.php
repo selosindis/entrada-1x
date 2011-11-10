@@ -204,7 +204,7 @@ switch($ACTION) {
 			break;
 			case "student" :
 			default :
-				$CHANNELS[] = "student:".$USER_ROLE;
+				$CHANNELS[] = "student:".groups_get_cohort($USER_PROXY_ID);
 			break;
 		}
 

@@ -108,8 +108,8 @@ if (communities_module_access($COMMUNITY_ID, $MODULE_ID, "delete-forum")) {
 				echo 		((communities_module_access($COMMUNITY_ID, $MODULE_ID, "delete-forum")) ? " (<a class=\"action\" href=\"javascript:discussionDelete('".$result["cdiscussion_id"]."')\">delete</a>)" : "");
 				echo "		<div class=\"content-small\">".html_encode(limit_chars($result["forum_description"], 125))."</div>\n";
 				echo "	</td>\n";
-				echo "	<td>".$topics["posts"]."</td>\n";
-				echo "	<td>".$topics["replies"]."</td>\n";
+				echo "	<td class=\"center\">".$topics["posts"]."</td>\n";
+				echo "	<td class=\"center\">".$topics["replies"]."</td>\n";
 				echo "	<td class=\"small\">\n";
 				if ((int) $topics["posts"]) {
 					echo "	<strong>Time:</strong> ".date("M d Y, g:ia", $topics["updated_date"])."<br />\n";

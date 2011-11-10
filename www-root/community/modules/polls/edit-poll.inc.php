@@ -395,7 +395,7 @@ if ($RECORD_ID) {
 						</td>
 					</tr>
 					<tr>
-						<td colspan="2" style="vertical-align: top"><label for="poll_description" class="form-nrequired">Description</label></td>
+						<td colspan="2" style="vertical-align: top !important"><label for="poll_description" class="form-nrequired">Description</label></td>
 						<td style="text-align: right; vertical-align: top">
 							<textarea id="poll_description" name="poll_description" style="width: 95%; height: 60px" cols="50" rows="5"><?php echo ((isset($PROCESSED["poll_description"])) ? html_encode($PROCESSED["poll_description"]) : ""); ?></textarea>
 						</td>

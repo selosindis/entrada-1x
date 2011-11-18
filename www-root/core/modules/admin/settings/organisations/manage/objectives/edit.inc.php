@@ -184,11 +184,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 
 					$HEAD[]	= "<script type=\"text/javascript\">
 								function selectObjective(parent_id, objective_id) {
-									new Ajax.Updater('selectObjectiveField', '".ENTRADA_URL."/api/objectives-list.api.php', {parameters: {'pid': parent_id, 'id': objective_id}});
+									new Ajax.Updater('selectObjectiveField', '".ENTRADA_URL."/api/objectives-list.api.php', {parameters: {'pid': parent_id, 'id': objective_id, 'organisation_id': ".$ORGANISATION_ID."}});
 									return;
 								}
 								function selectOrder(objective_id, parent_id) {
-									new Ajax.Updater('selectOrderField', '".ENTRADA_URL."/api/objectives-list.api.php', {parameters: {'id': objective_id, 'type': 'order', 'pid': parent_id}});
+									new Ajax.Updater('selectOrderField', '".ENTRADA_URL."/api/objectives-list.api.php', {parameters: {'id': objective_id, 'type': 'order', 'pid': parent_id, 'organisation_id': ".$ORGANISATION_ID."}});
 									return;
 								}
 								</script>";

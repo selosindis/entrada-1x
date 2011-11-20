@@ -26,7 +26,7 @@ $query	= "	SELECT *
 $result	= $db->GetRow($query);
 if ($result) {
 	if (isset($result["page_title"]) && trim($result["page_title"]) != "") {
-		echo "<h1>".html_encode($result["page_title"])."</h1>\n";
+		//echo "<h1>".html_encode($result["page_title"])."</h1>\n";
 	}
 	
 	if ($ERROR) {
@@ -168,13 +168,14 @@ if ($result) {
 		/**
 		 * Determine what and how to display the announcements information.
 		 */
+		/*
 		if ($community_announcements) {
 			$community_announcements_width = ($community_events ? "49" : "98");
 			echo "<div style=\"width: ". $community_announcements_width ."%; float: left; padding-right: 5px\">\n";
 			echo $community_announcements;
 			echo "</div>\n";
 		}
-		
+		*/
 		/**
 		 * Determine what and how to display the events information.
 		 */
@@ -183,6 +184,19 @@ if ($result) {
 			echo "<div style=\"width: ". $community_events_width ."%; float: left\">\n";
 			echo $community_events;
 			echo "</div>\n";
+		}
+		
+		/**
+		 * Get the community title and description 
+		 */
+		$query = "SELECT community_title, community_description FROM communities
+				  WHERE community_id= ".$db->qstr($COMMUNITY_ID);
+		$results = $db->GetRow($query);
+		if ($results) {
+			echo "<div class=\"welcome-message\">";
+			echo "<h1>".$results["community_title"]."</h1>";
+			echo "<p>".$results["community_description"]."</p>";
+			echo "</div>";
 		}
 		
 		/**
@@ -205,8 +219,12 @@ if ($result) {
 							LIMIT 0, 15";
 			$results	= $db->CacheGetAll(CACHE_TIMEOUT, $query);
 			if($results) {
+				?>
+				<section>
+					<h2 class="history">Community History</h2>
+				<?php
 				$history_messages = "";
-				echo "<ul class=\"history\">";
+				echo "<ul class=\"history-list\">";
 				foreach($results as $key => $result) {
 					if ((int)$result["cpage_id"] && ($result["history_key"] != "community_history_activate_module")) {
 						$query = "SELECT `page_url` FROM `community_pages` WHERE `cpage_id` = ".$db->qstr($result["cpage_id"])." AND `community_id` = ".$db->qstr($result["community_id"]);
@@ -229,20 +247,16 @@ if ($result) {
 					$content_search						= array("%SITE_COMMUNITY_URL%", "%SYS_PROFILE_URL%", "%PAGE_URL%", "%RECORD_ID%", "%RECORD_TITLE%", "%PARENT_ID%", "%PROXY_ID%");
 					$content_replace					= array(COMMUNITY_URL.$COMMUNITY_URL, ENTRADA_URL."/people", $page_url, $result["record_id"], $record_title, $parent_id, $result["proxy_id"]);
 					$history_message			= str_replace($content_search, $content_replace, $history_message);
-					$history_messages .= "<li".(!($key % 2) ? " style=\"background-color: #F4F4F4\"" : "").">".strip_tags($history_message, "<a>")."</li>";
+					$history_messages .= "<li"./*.(!($key % 2) ? " style=\"background-color: #F4F4F4\"" : "").*/">".strip_tags($history_message, "<a>")."</li>";
 				}
 				$history_messages .= "</ul>";
 			}
 			if ($history_messages) {
 				?>
-				<div style="position: relative; clear: both">
-					<div style="width: 100%">
-						<h2>Community History</h2>
-						<?php
-						echo $history_messages;
-						?>
-					</div>
-				</div>
+					<?php
+					echo $history_messages;
+					?>
+				</section>
 				<?php
 			}
 		}

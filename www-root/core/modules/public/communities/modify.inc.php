@@ -89,7 +89,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 					case 2 :
 						$PROCESSED["community_members"]	= "";
 						$PROCESSED["sub_communities"]	= 0;
-
 						/**
 						 * Required: Community Name / community_title
 						 */
@@ -153,7 +152,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 							$ERROR++;
 							$ERRORSTR[] = "You must specify the Access Permissions for this new community.";
 						}
-
+						if (isset($_POST["template_selection"])) {
+							if ($template_selection = clean_input($_POST["template_selection"], array("trim", "int"))) {
+								$query = "SELECT * FROM `community_templates` WHERE `template_id` = ". $db->qstr($template_selection);
+								$results = $db->GetRow($query);
+								if ($results) {
+									$PROCESSED["community_template"] = $results["template_name"];
+									$db->AutoExecute("communities", $PROCESSED, "UPDATE", "`community_id` = " . $db->qstr($COMMUNITY_ID));
+								}
+							}		
+						}
 						/**
 						 * Not Required: Sub-Communities / sub_communities
 						 */
@@ -313,7 +321,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 						$COMMUNITY_PARENT				= $community_details["community_parent"];
 						$community_groups				= array();
 						$community_communities			= array();
-
 						$query = "SELECT `module_id` FROM `community_modules` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `module_active` = '1'";
 						$results = $db->GetAll($query);
 						if ($results) {
@@ -321,8 +328,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 								$PROCESSED["community_modules"][] = (int) $result["module_id"];
 							}
 						}
-
-
+						$community_template = $PROCESSED["community_template"];
+						$query = "SELECT * FROM `community_templates` WHERE `template_name` =".$db->qstr($community_template);
+						$results = $db->GetRow($query);
+						if ($results) {
+							$template_selection = $results["template_id"];
+						}
 						if (($community_details["community_registration"] == 2) && ($community_details["community_members"])) {
 							$community_groups = @unserialize($community_details["community_members"]);
 						}
@@ -336,11 +347,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 				// Display Content
 				switch ($STEP) {
 					case 3 :
+						$PROCESSED["community_registration"];
 						$community_url	= ENTRADA_URL."/community".$community_details["community_url"];
 
 						$PROCESSED["updated_date"]	= time();
 						$PROCESSED["updated_by"]	= $_SESSION["details"]["id"];
-
 						if ($db->AutoExecute("communities", $PROCESSED, "UPDATE", "`community_id` = ".$db->qstr($COMMUNITY_ID))) {
 							if ($MAILING_LISTS["active"] && array_key_exists("community_list_mode", $PROCESSED) && $PROCESSED["community_list_mode"] != $mailing_list->type) {
 								$mailing_list->mode_change($PROCESSED["community_list_mode"]);
@@ -868,6 +879,33 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 												<td style="vertical-align: top"><?php echo help_create_button("Community Description", ""); ?></td>
 												<td style="vertical-align: top"><label for="community_description" class="form-nrequired">Community Description</label></td>
 												<td><textarea id="community_description" name="community_description" style="width: 500px; height: 75px"><?php echo html_encode($PROCESSED["community_description"]); ?></textarea></td>
+											</tr>
+											<tr>
+												<td style="padding-top:6px; vertical-align: top"><?php echo help_create_button("Community Template", ""); ?></td>
+												<td style="padding-top:6px; vertical-align: top"><label for="community_template" class="form-required">Community Template</label></td>
+												<td style="vertical-align: top">
+												<?php 
+												$query = "SELECT * FROM `community_templates` WHERE `organisation_id` = ". $db->qstr($ENTRADA_USER->getActiveOrganisation());
+												$results = $db->GetAll($query);
+												if($results) {
+													?>
+													<ul class="community-themes">
+													<?php
+													foreach($results as $community_template) {
+													?>
+														<li id="<?php echo $community_template["template_name"]."-template"; ?>" class="edit">
+															<div class="template-rdo">
+																<input type="radio" id="<?php echo "template_option_".$community_template["template_id"] ?>" name="template_selection" value="<?php echo $community_template["template_id"]; ?>" <?php echo (($community_template["template_id"]== $template_selection) ? " checked=\"checked\"" : "") ?> />
+															</div>
+														</li>
+													<?php
+													}
+													?>
+													</ul>
+												<?php
+												}
+												?>
+												</td>
 											</tr>
 											<tr>
 												<td colspan="3">&nbsp;</td>

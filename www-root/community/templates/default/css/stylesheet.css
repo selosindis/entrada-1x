@@ -157,7 +157,7 @@ font-weight:400;
 color:#036;
 }
 
-h2,.content-subheading {
+h2.history,.content-subheading {
 font-family:"Century Gothic", Helvetica, Arial, sans-serif;
 font-size:16px;
 color:#036;
@@ -429,7 +429,7 @@ line-height:135%;
 padding:1px;
 }
 
-ul.announcements li,ul.events li,ul.history li,ul.history li a {
+ul.announcements li,ul.events li,ul.history-list li,ul.history-list li a {
 white-space:nowrap;
 overflow:hidden;
 font-size:11px;
@@ -450,7 +450,7 @@ padding-left:17px;
 background:transparent url(../images/list-calendar.gif) no-repeat 0 2px;
 }
 
-ul.history li {
+ul.history-list li {
 padding-bottom:4px;
 padding-left:17px;
 background:transparent url(../images/list-history.gif) no-repeat 0 2px;
@@ -965,7 +965,7 @@ cursor:pointer;
 padding:3px;
 }
 
-#file-download-releases ul,ul.shares,ul.announcements,ul.events,ul.history,ul.menu {
+#file-download-releases ul,ul.shares,ul.announcements,ul.events,ul.history-list,ul.menu {
 list-style-type:none;
 margin:0 0 10px;
 padding:4px 0 0;

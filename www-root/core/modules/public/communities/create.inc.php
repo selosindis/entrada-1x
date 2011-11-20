@@ -150,9 +150,11 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 			$PROCESSED["category_id"]		= $CATEGORY_ID;
 			$PROCESSED["community_active"]	= 1;
 			$PROCESSED["community_members"]	= "";
-
 			$query	= "SELECT `category_status` FROM `communities_categories` WHERE `category_id` = ".$db->qstr($PROCESSED["category_id"])." AND `category_visible` = '1'";
 			$result	= $db->GetRow($query);
+			
+			$template_query = "SELECT * FROM `community_templates` WHERE `template_id` = ". $db->qstr($template_selection);
+			$community_template = $db->GetRow($template_query);
 			if($result) {
 				if($result["category_status"] == 1) {
 					$PROCESSED["community_active"] = 0;
@@ -246,7 +248,13 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 				$ERROR++;
 				$ERRORSTR[] = "You must specify the Access Permissions for this new community.";
 			}
-
+			if (isset($_POST["template_selection"])) {
+				if ($template_selection = clean_input($_POST["template_selection"], array("trim", "int"))) {
+					if ($community_template) {
+						$PROCESSED["community_template"] = $results["template_name"];
+					}
+				}		
+			}
 			if(isset($_POST["community_registration"])) {
 				switch(clean_input($_POST["community_registration"], array("trim", "int"))) {
 					case 0 :
@@ -446,6 +454,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 		/**
 		 * This error checking is actually done above because it's a requirement for any page (including 3).
 		 */
+			$template_selection = 0;
 			continue;
 			break;
 		case 1 :
@@ -463,7 +472,6 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 			break;
 		case 2 :
 			$ONLOAD[] = "validateShortname('".html_encode($PROCESSED["community_shortname"])."')";
-
 			if((!isset($PROCESSED["community_registration"])) || (!(int) $PROCESSED["community_registration"])) {
 				$ONLOAD[] = "selectRegistrationOption('0')";
 			} else {
@@ -566,6 +574,35 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 								}
 							}
 							?><span id="displayed_shortname"></span>
+			</td>
+		</tr>
+		<tr>
+			<td style="padding-top:6px;"><?php echo help_create_button("Community Template", ""); ?></td>
+			<td style="padding-top:6px;"><label for="community_template" class="form-required">Community Template</label></td>
+			<td>
+				<div>
+					<?php 
+					$query = "SELECT * FROM `community_templates` WHERE `organisation_id` = ". $db->qstr($ENTRADA_USER->getActiveOrganisation());
+					$results = $db->GetAll($query);
+					if($results) {
+						?>
+						<ul class="community-themes">
+						<?php
+						foreach($results as $community_template) {
+							?>
+							<li id="<?php echo $community_template["template_name"]."-template"; ?>">
+								<div class="template-rdo">
+									<input type="radio" id="<?php echo "template_option_".$community_template["template_id"] ?>" name="template_selection" value="<?php echo $community_template["template_id"]; ?>"<?php echo ((($template_selection == 0) && ($community_template["template_id"] == 1) || ($template_selection == $community_template["template_id"])) ? " checked=\"checked\"" : ""); ?> />
+								</div>
+							</li>
+						<?php
+						}
+						?>
+						</ul>
+					<?php
+					}
+					?>
+				</div>
 			</td>
 		</tr>
 		<tr>

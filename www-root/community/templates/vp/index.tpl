@@ -31,26 +31,26 @@
 	<body>
 
 	  <div class="container">
-		<header class="page-header">
-			<div class="span-24 page-header-title">
-				<hgroup class="span-6 left-space">
-					<!--<div class="logo-title append-1 left-space">-->
-						<h1>School <em>of</em> Medicine</h1>
-						<h2>Faculty <em>of</em> Health Sciences</h2>
-					<!--</div>-->
-				</hgroup>
-				<hgroup class="span-10"">
-					<h3 class="module-name prepend-1" >{$site_community_title}</h3>
-				</hgroup>
-			</div> <!-- ./end page-header-title -->
-			{include file="navigation_primary.tpl" site_primary_navigation=$site_primary_navigation}
-			<nav class="breadcrumb span-24">	
-			{$site_breadcrumb_trail}
-			</nav>
-		</header>
-		<div id="main" role="main" class="span-24">
-			<p class="span-24 toggle"><a href="#" id="toggle" class="toggle-panel"></a></p>
-			<aside class="span-5 left-nav">
+    <header class="page-header">
+		<div class="span-24 page-header-title">
+			<hgroup class="span-6 left-space">
+				<!--<div class="logo-title append-1 left-space">-->
+					<h1>School <em>of</em> Medicine</h1>
+					<h2>Faculty <em>of</em> Health Sciences</h2>
+				<!--</div>-->
+			</hgroup>
+			<hgroup class="span-10"">
+				<h3 class="module-name prepend-1" >{$site_community_title}</h3>
+			</hgroup>
+		</div> <!-- ./end page-header-title -->
+		{include file="navigation_primary.tpl" site_primary_navigation=$site_primary_navigation}
+		<nav class="breadcrumb span-24">	
+		{$site_breadcrumb_trail}	
+		</nav>
+    </header>
+    <div id="main" role="main" class="span-24">
+		<p class="span-24 toggle"><a href="#" class="toggle-panel"></a></p>
+		<aside class="span-5 left-nav">
 				{if $is_logged_in && $user_is_admin}
 					{include file="sidebar-blocks/admin_block.tpl"}
 				{else}
@@ -59,17 +59,11 @@
 				{if $is_logged_in && $user_is_member && $show_tertiary_sideblock}
 					{include file="sidebar-blocks/tertiary_block.tpl"}
 				{/if}
-			</aside>
-			<section class="span-18 left-space content">
-				<!--<div class="welcome-message">
-				<h1>Welcome to the {$site_community_title} Community</h1>
-					<p>{$page_description}</p>
-				</div>-->
-				<section>
-					{$page_content}
-				</section>	
-			</section>
-			<aside class="span-5 last right-nav collapsed">
+		</aside>
+		<section class="span-18 left-space content">
+			{$page_content}
+		</section>	
+		<aside class="span-5 last right-nav collapsed">
 				{if $is_logged_in && $user_is_admin}
 					{include file="sidebar-blocks/admin_block.tpl"}
 				{/if}
@@ -77,12 +71,12 @@
 				{if $is_logged_in && $user_is_member}
 					{include file="sidebar-blocks/community_block.tpl"}
 				{/if}
-			</aside>
-		</div>
-		<footer class="span-24">
-			<p>{php}echo COPYRIGHT_STRING;{/php}</p>
-		</footer>
-	  </div> <!--! end of #container -->
+		</aside>
+    </div>
+    <footer class="span-24">
+		<p>{php}echo COPYRIGHT_STRING;{/php}</p>
+    </footer>
+  </div> <!--! end of #container -->
 	
 
 

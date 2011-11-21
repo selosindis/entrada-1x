@@ -577,8 +577,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 			</td>
 		</tr>
 		<tr>
-			<td style="padding-top:6px;"><?php echo help_create_button("Community Template", ""); ?></td>
-			<td style="padding-top:6px;"><label for="community_template" class="form-required">Community Template</label></td>
+			<td style="padding-top:6px;"><?php echo help_create_button("Community Template", "community_template"); ?></td>
+			<td style="padding-top:6px;"><label for="community_template" class="form-nrequired">Community Template</label></td>
 			<td>
 				<div>
 					<?php 
@@ -594,7 +594,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 								<div class="template-rdo">
 									<input type="radio" id="<?php echo "template_option_".$community_template["template_id"] ?>" name="template_selection" value="<?php echo $community_template["template_id"]; ?>"<?php echo ((($template_selection == 0) && ($community_template["template_id"] == 1) || ($template_selection == $community_template["template_id"])) ? " checked=\"checked\"" : ""); ?> />
 								</div>
-							</li>
+								<label for="<?php echo "template_option_".$community_template["template_id"] ?>" style="display:block; padding-top:80px;"><?php echo ucfirst($community_template["template_name"]. " Template"); ?></label>
+							</li> 
 						<?php
 						}
 						?>

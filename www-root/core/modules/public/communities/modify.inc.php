@@ -605,6 +605,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 									</tr>
 									<?php
 								}
+								if ($PROCESSED["community_template"] != $community_details["community_template"]) {
+										?>
+									<tr>
+										<td><?php echo help_create_button("Community Template", "community_template"); ?></td>
+										<td><span class="form-nrequired">Community Template</span></td>
+										<td><?php echo ucfirst($PROCESSED["community_template"]); ?> Template</td>
+									</tr>
+									<?php
+								}
 
 								if (($PROCESSED["community_registration"] != $community_details["community_registration"]) || ($PROCESSED["community_members"] != $community_details["community_members"])) {
 										?>
@@ -882,7 +891,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 											</tr>
 											<tr>
 												<td style="padding-top:6px; vertical-align: top"><?php echo help_create_button("Community Template", ""); ?></td>
-												<td style="padding-top:6px; vertical-align: top"><label for="community_template" class="form-required">Community Template</label></td>
+												<td style="padding-top:6px; vertical-align: top"><label for="community_template" class="form-nrequired">Community Template</label></td>
 												<td style="vertical-align: top">
 												<?php 
 												$query = "SELECT * FROM `community_templates` WHERE `organisation_id` = ". $db->qstr($ENTRADA_USER->getActiveOrganisation());
@@ -897,6 +906,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 															<div class="template-rdo">
 																<input type="radio" id="<?php echo "template_option_".$community_template["template_id"] ?>" name="template_selection" value="<?php echo $community_template["template_id"]; ?>" <?php echo (($community_template["template_id"]== $template_selection) ? " checked=\"checked\"" : "") ?> />
 															</div>
+															<label for="<?php echo "template_option_".$community_template["template_id"] ?>" style="display:block; padding-top:80px;"><?php echo ucfirst($community_template["template_name"]. " Template"); ?></label>
 														</li>
 													<?php
 													}

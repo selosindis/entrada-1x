@@ -153,8 +153,6 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 			$query	= "SELECT `category_status` FROM `communities_categories` WHERE `category_id` = ".$db->qstr($PROCESSED["category_id"])." AND `category_visible` = '1'";
 			$result	= $db->GetRow($query);
 			
-			$template_query = "SELECT * FROM `community_templates` WHERE `template_id` = ". $db->qstr($template_selection);
-			$community_template = $db->GetRow($template_query);
 			if($result) {
 				if($result["category_status"] == 1) {
 					$PROCESSED["community_active"] = 0;
@@ -250,8 +248,11 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 			}
 			if (isset($_POST["template_selection"])) {
 				if ($template_selection = clean_input($_POST["template_selection"], array("trim", "int"))) {
+					$template_query = "SELECT * FROM `community_templates` WHERE `template_id` = ". $db->qstr($template_selection);
+					$community_template = $db->GetRow($template_query);
 					if ($community_template) {
-						$PROCESSED["community_template"] = $results["template_name"];
+						$PROCESSED["community_template"] = $community_template["template_name"];
+						echo $PROCESSED["community_template"];
 					}
 				}		
 			}

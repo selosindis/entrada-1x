@@ -57,6 +57,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 					$count++;
 					if (!$db->GetOne("SELECT `cgaudience_id` FROM `course_group_audience` WHERE `cgroup_id` = ".$db->qstr($PROCESSED["cgroup_id"])." AND `proxy_id` =".$db->qstr($proxy_id))) {
 						$PROCESSED["proxy_id"]	= $proxy_id;
+						$PROCESSED["active"] = 1;
 						$added++;
 						if (!$db->AutoExecute("`course_group_audience`", $PROCESSED, "INSERT")) {
 							$ERROR++;
@@ -97,8 +98,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 			} else {
 				$GROUP_ID = 0;
 			}
-			if (isset($_GET["gids"])) {
-				$_SESSION["gids"] = array(htmlentities($_GET["gids"]));
+			if (isset($_GET["ids"])) {
+				$_SESSION["gids"] = array(htmlentities($_GET["ids"]));
 			} elseif (isset($_POST["checked"])) {
 				$_SESSION["gids"] = $_POST["checked"];
 			} elseif((isset($_POST["group_id"])) && ((int) trim($_POST["group_id"]))) {
@@ -347,11 +348,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 																AND b.`account_active` = 'true'
 																AND b.`group` = 'student'
 																AND c.`audience_active` = 1
-																AND d.`start_date` <= ".$db->qstr(time())."
-																AND d.`finish_date` >= ".$db->qstr(time())."
-																AND d.`active` = 1
+																AND d.`group_active` = 1
 																AND (d.`start_date` <= ".$db->qstr(time())." OR d.`start_date` = 0)
-																AND (d.`expire_date` >= ".$db->qstr(time())." OR d.`start_date` = 0)
+																AND (d.`expire_date` >= ".$db->qstr(time())." OR d.`expire_date` = 0)
 																
 																GROUP BY a.`id`
 																ORDER BY `lastname` ASC, `firstname` ASC";
@@ -367,6 +366,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 																GROUP BY a.`id`
 																ORDER BY a.`lastname` ASC, a.`firstname` ASC";
 										}
+										
 										//Fetch list of categories
 										$query	= "SELECT `organisation_id`,`organisation_title` FROM `".AUTH_DATABASE."`.`organisations` ORDER BY `organisation_title` ASC";
 										$organisation_results	= $db->GetAll($query);

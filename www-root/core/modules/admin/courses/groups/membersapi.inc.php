@@ -141,9 +141,9 @@ if(isset($GROUP_ID)) {
 									AND c.`audience_active` = 1
 									AND f.`start_date` <= ".$db->qstr(time())."
 									AND f.`finish_date` >= ".$db->qstr(time())."
-									AND d.`active` = 1
+									AND d.`group_active` = 1
 									AND (d.`start_date` <= ".$db->qstr(time())." OR d.`start_date` = 0)
-									AND (d.`expire_date` >= ".$db->qstr(time())." OR d.`start_date` = 0)
+									AND (d.`expire_date` >= ".$db->qstr(time())." OR d.`expire_date` = 0 OR d.`expire_date` IS NULL)
 									AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
 									AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
 									AND a.`organisation_id` = ".$db->qstr($ORGANISATION_ID)."

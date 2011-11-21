@@ -252,7 +252,6 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 					$community_template = $db->GetRow($template_query);
 					if ($community_template) {
 						$PROCESSED["community_template"] = $community_template["template_name"];
-						echo $PROCESSED["community_template"];
 					}
 				}		
 			}

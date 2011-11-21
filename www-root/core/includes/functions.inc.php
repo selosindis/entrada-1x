@@ -3263,8 +3263,8 @@ function generate_calendar($fieldname, $display_name = "", $required = false, $c
 		$output .= "	<td style=\"vertical-align: top\">&nbsp;</td>\n";		
 	}
 	$output .= "	<td style=\"vertical-align: top; padding-top: 4px\"><label id=\"".$fieldname."_text\" for=\"".$fieldname."\" class=\"".($required ? "form-required" : "form-nrequired")."\">".html_encode($display_name)."</label></td>\n";
-	$output .= "	<td style=\"vertical-align: top\">\n";
-	$output .= "		<input type=\"text\" name=\"".$fieldname."_date\" id=\"".$fieldname."_date\" value=\"".$time_date."\" $readonly autocomplete=\"off\" ".(!$disabled ? "onfocus=\"showCalendar('', this, this, '', '".$fieldname."_date', 0, 20, 1)\"" : "")."style=\"width: 170px; vertical-align: middle\" />&nbsp;";
+	$output .= "	<td style=\"vertical-align: top\" id=\"".$fieldname."_row\">\n";
+	$output .= "		<input type=\"text\" name=\"".$fieldname."_date\" id=\"".$fieldname."_date\" value=\"".$time_date."\" $readonly autocomplete=\"off\" ".(!$disabled ? "onfocus=\"showCalendar('', this, this, '', '".$fieldname."_date', 0, 20, 1)\"" : "")."style=\"width: 145px; vertical-align: middle\" />&nbsp;";
 
 	if (!$disabled) {
 		$output .= "	<a href=\"javascript: showCalendar('', document.getElementById('".$fieldname."_date'), document.getElementById('".$fieldname."_date'), '', '".$fieldname."_date', 0, 20, 1)\" title=\"Show Calendar\" onclick=\"if (!document.getElementById('".$fieldname."').checked) { return false; }\"><img src=\"".ENTRADA_URL."/images/cal-calendar.gif\" width=\"23\" height=\"23\" alt=\"Show Calendar\" title=\"Show Calendar\" border=\"0\" style=\"vertical-align: middle\" /></a>";
@@ -4541,7 +4541,6 @@ function communities_module_details($module_id = 0, $requested_info = array()) {
  */
 function communities_module_access($community_id = 0, $module_id = 0, $action = "index") {
 	global $db;
-
 	if(($community_id = (int) $community_id) && ($module_id = (int) $module_id) && ($action = trim($action))) {
 		$query	= "SELECT * FROM `community_permissions` WHERE `community_id` = ".$db->qstr($community_id)." AND `module_id` = ".$db->qstr($module_id);
 		$result	= $db->GetRow($query);
@@ -4551,7 +4550,6 @@ function communities_module_access($community_id = 0, $module_id = 0, $action = 
 			return communities_module_access_generic($module_id, $action);
 		}
 	}
-
 	return false;
 }
 /**
@@ -4564,9 +4562,7 @@ function communities_module_access($community_id = 0, $module_id = 0, $action = 
  */
 function communities_module_access_generic($module_id = 0, $action = "index") {
 	global $db, $LOGGED_IN, $COMMUNITY_MEMBER, $COMMUNITY_ADMIN, $PROXY_ID, $RECORD_AUTHOR, $PAGE_OPTIONS;
-
 	$allow_to_load = false;
-
 	if(((bool) $LOGGED_IN) && ((bool) $COMMUNITY_MEMBER) && ((bool) $COMMUNITY_ADMIN)) {
 		$allow_to_load = true;
 	} else {
@@ -4587,7 +4583,6 @@ function communities_module_access_generic($module_id = 0, $action = "index") {
 			}
 		}
 	}
-
 	return $allow_to_load;
 }
 
@@ -4829,13 +4824,15 @@ function communities_fetch_pages($community_id = 0, $user_access = 0) {
 						} else {
 							$new_window = false;
 						}
-						$navigation[$i]	= array(	"link_order"	=> (int) $result["page_order"],
-													"link_parent"	=> 0,
-													"link_url"		=> ":".$result["page_url"],
-													"link_title"	=> $result["menu_title"],
-													"link_selected" => ($result["page_url"] == $PAGE_URL ? true : false),
-													"link_new_window" => ($new_window ? true : false),
-													"link_type"		=> $result["page_type"]);
+					$navigation[$i]	= array(	
+						"link_order"	=> (int) $result["page_order"],
+						"link_parent"	=> 0,
+						"link_url"		=> ":".$result["page_url"],
+						"link_title"	=> $result["menu_title"],
+						"link_selected" => ($result["page_url"] == $PAGE_URL ? true : false),
+						"link_new_window" => ($new_window ? true : false),
+						"link_type"		=> $result["page_type"],
+						"cpage_id" => $result["cpage_id"] );
 						$visible = true;
 					} else {
 						$visible = false;

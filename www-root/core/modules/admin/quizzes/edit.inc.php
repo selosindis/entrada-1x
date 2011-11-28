@@ -592,7 +592,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 										</ul>
 									</div>
 									<?php
-									$query		= "	SELECT a.*, b.`course_id`, b.`eventtype_id`, b.`event_title`, b.`event_start`, b.`event_duration`, c.`course_name`, c.`course_code`
+									$query		= "	SELECT a.*, b.`event_id`, b.`course_id`, b.`eventtype_id`, b.`event_title`, b.`event_start`, b.`event_duration`, c.`course_name`, c.`course_code`
 													FROM `attached_quizzes` AS a
 													JOIN `events` AS b
 													ON a.`content_type` = 'event' 
@@ -626,10 +626,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 											<?php
 											foreach($results as $result) {
 												$url = ENTRADA_URL."/admin/events?section=content&id=".$result["event_id"];
-
+												$completed_attempts = $db->GetOne("SELECT COUNT(DISTINCT `proxy_id`) FROM `quiz_progress` WHERE `progress_value` = 'complete' AND `aquiz_id` = ".$db->qstr($result["aquiz_id"]));
+												
 												echo "<tr id=\"event-".$result["event_id"]."\" class=\"event\">\n";
 												echo "	<td class=\"modified\">\n";
-												if ($result["accesses"] > 0) {
+												if ($completed_attempts > 0) {
 													echo "	<a href=\"".ENTRADA_URL."/admin/quizzes?section=results&amp;id=".$result["aquiz_id"]."\"><img src=\"".ENTRADA_URL."/images/view-stats.gif\" width=\"16\" height=\"16\" alt=\"View results of ".html_encode($result["quiz_title"])."\" title=\"View results of ".html_encode($result["quiz_title"])."\" style=\"vertical-align: middle\" border=\"0\" /></a>\n";
 												} else {
 													echo "	<img src=\"".ENTRADA_URL."/images/view-stats-disabled.gif\" width=\"16\" height=\"16\" alt=\"No completed quizzes at this time.\" title=\"No completed quizzes at this time.\" style=\"vertical-align: middle\" border=\"0\" />\n";
@@ -638,7 +639,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 												echo "	<td class=\"date\"><a href=\"".$url."\" title=\"Event Date\">".date(DEFAULT_DATE_FORMAT, $result["event_start"])."</a></td>\n";
 												echo "	<td class=\"title\"><a href=\"".$url."\" title=\"Event Title: ".html_encode($result["event_title"])."\">".html_encode($result["event_title"])."</a></td>\n";
 												echo "	<td class=\"title\"><a href=\"".$url."\" title=\"Quiz Title: ".html_encode($result["quiz_title"])."\">".html_encode($result["quiz_title"])."</a></td>\n";
-												echo "	<td class=\"completed\">".(int) $result["accesses"]."</td>\n";
+												echo "	<td class=\"completed\">".(int) $completed_attempts."</td>\n";
 												echo "</tr>\n";
 											}
 											?>
@@ -724,10 +725,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 											<?php
 											foreach($results as $result) {
 												$url = ENTRADA_URL."/community".$result["community_url"].":".$result["page_url"];
+												$completed_attempts = $db->GetOne("SELECT COUNT(DISTINCT `proxy_id`) FROM `quiz_progress` WHERE `progress_value` = 'complete' AND `aquiz_id` = ".$db->qstr($result["aquiz_id"]));
 
 												echo "<tr id=\"community-page-".$result["cpage_id"]."\" class=\"community-page\">\n";
 												echo "	<td class=\"modified\">\n";
-												if ($result["accesses"] > 0) {
+												if ($completed_attempts > 0) {
 													echo "	<a href=\"".ENTRADA_URL."/admin/quizzes?section=results&amp;community=true&amp;id=".$result["aquiz_id"]."\"><img src=\"".ENTRADA_URL."/images/view-stats.gif\" width=\"16\" height=\"16\" alt=\"View results of ".html_encode($result["quiz_title"])."\" title=\"View results of ".html_encode($result["quiz_title"])."\" style=\"vertical-align: middle\" border=\"0\" /></a>\n";
 												} else {
 													echo "	<img src=\"".ENTRADA_URL."/images/view-stats-disabled.gif\" width=\"16\" height=\"16\" alt=\"No completed quizzes at this time.\" title=\"No completed quizzes at this time.\" style=\"vertical-align: middle\" border=\"0\" />\n";
@@ -735,7 +737,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 												echo "	</td>\n";
 												echo "	<td class=\"title\"><a href=\"".$url."\" title=\"Community Page: ".html_encode($result["page_title"])."\">".html_encode($result["page_title"])."</a></td>\n";
 												echo "	<td class=\"title\"><a href=\"".$url."\" title=\"Quiz Title: ".html_encode($result["quiz_title"])."\">".html_encode($result["quiz_title"])."</a></td>\n";
-												echo "	<td class=\"completed\">".(int) $result["accesses"]."</td>\n";
+												echo "	<td class=\"completed\">".(int) $completed_attempts."</td>\n";
 												echo "</tr>\n";
 											}
 											?>

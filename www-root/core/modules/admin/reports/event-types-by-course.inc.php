@@ -214,6 +214,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 								LEFT JOIN `events_lu_eventtypes` AS d
 								ON d.`eventtype_id` = c.`eventtype_id`
 								WHERE c.`eventtype_id` = ".$db->qstr($event_type["eventtype_id"])."
+								AND (a.`parent_id` IS NULL OR a.`parent_id` = 0)
 								AND (a.`event_start` BETWEEN ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_start"])." AND ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_finish"]).")
 								".(isset($event_title_search) && $event_title_search ? "AND a.`event_title` LIKE ".$db->qstr("%".$event_title_search."%") : "")."
 								AND a.`course_id` = ".$db->qstr($course_id)."

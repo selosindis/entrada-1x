@@ -22,7 +22,6 @@
  * Include the Entrada init code.
  */
 require_once("init.inc.php");
-ini_set("display_errors", 1);
 $excused = array(1799, 1767, 1725, 1785, 1749, 1801);
 $query 	= "SELECT * FROM `".CLERKSHIP_DATABASE."`.`global_lu_rotations` AS a
 		LEFT JOIN `courses` AS b

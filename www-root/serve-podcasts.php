@@ -87,6 +87,7 @@ if(!isset($_SERVER["PHP_AUTH_USER"])) {
 			$USER_EMAIL		= $result["EMAIL"];
 			$USER_ROLE		= $result["ROLE"];
 			$USER_GROUP		= $result["GROUP"];
+			$ENTRADA_USER = User::get($result["ID"]);
 		}
 	} else {
 		$ERROR++;
@@ -161,6 +162,7 @@ switch($ACTION) {
 		}
 	break;
 	case "feed" :
+	default :
 		switch($USER_GROUP) {
 			case "faculty" :
 			case "resident" :
@@ -204,7 +206,8 @@ switch($ACTION) {
 			break;
 			case "student" :
 			default :
-				$CHANNELS[] = "student:".groups_get_cohort($USER_PROXY_ID);
+				$cohort_array = groups_get_cohort($USER_PROXY_ID);
+				$CHANNELS[] = "student:".$cohort_array["group_id"];
 			break;
 		}
 
@@ -304,7 +307,7 @@ switch($ACTION) {
 
 		$rss->podcast = new Podcast();
 		$rss->podcast->block			= "yes";
-		$rss->podcast->subtitle			= "Lastest podcasts from learning events in the School of Medicine at Queen's University.";
+		$rss->podcast->subtitle			= "Latest podcasts from learning events in the School of Medicine at Queen's University.";
 		$rss->podcast->author			= "School of Medicine, Queen's University";
 		$rss->podcast->owner_email		= "medtech@queensu.ca";
 		$rss->podcast->owner_name		= "School of Medicine, Queen's University";
@@ -390,8 +393,5 @@ switch($ACTION) {
 		echo $rss->createFeed("PODCAST");
 
 		add_statistic("podcasts", "view", "proxy_id", $USER_PROXY_ID, $USER_PROXY_ID);
-	break;
-	default :
-		continue;
 	break;
 }

@@ -3930,7 +3930,7 @@ function expired_session($expireref, $sesskey) {
 
 function display_weather($city_code = "", $options = array(), $weather_source = "weather.com") {
 	global $WEATHER_LOCATION_CODES;
-
+	
 	$output_html	= "";
 	$weather		= array();
 	$weather_codes	= array();
@@ -3952,23 +3952,56 @@ function display_weather($city_code = "", $options = array(), $weather_source = 
 	if((!is_array($weather_codes)) || (count($weather_codes) < 1)) {
 		$weather_codes = $WEATHER_LOCATION_CODES;
 	}
-
 	if(is_array($weather_codes)) {
 		foreach ($weather_codes as $weather_code => $city_name) {
 			if(@file_exists(CACHE_DIRECTORY."/weather-".$weather_code.".xml")) {
 				$xml		= @simplexml_load_file(CACHE_DIRECTORY."/weather-".$weather_code.".xml");
 				$weather	= array();
-
 				if ($xml) {
-					$weather["icon"]		= $xml->cc->icon;
-					$weather["tmp"]			= $xml->cc->tmp;
-					$weather["conditions"]	= $xml->cc->t;
-					$weather["flik"]		= $xml->cc->flik;
-					$weather["s"]			= $xml->cc->wind->s;
-					$weather["windir"]		= $xml->cc->wind->t;
-					$weather["sunr"]		= $xml->loc->sunr;
-					$weather["suns"]		= $xml->loc->suns;
-							} else {
+					$yweather = $xml->channel->children("http://xml.weather.yahoo.com/ns/rss/1.0");
+					foreach ($yweather as $key => $category) {
+						foreach ($category->attributes() as $skey => $attribute) {
+							$xml_data[$skey] = $attribute[0];
+						}
+					}
+					$yweather = $xml->channel->item->children("http://xml.weather.yahoo.com/ns/rss/1.0");
+					foreach ($yweather as $key => $category) {
+						if ($key != "forecast") {
+							foreach ($category->attributes() as $skey => $attribute) {
+								$xml_data[$skey] = $attribute[0];
+							}
+						}
+					}
+					$weather["icon"]		= $xml_data["code"];
+					$weather["tmp"]			= $xml_data["temp"];
+					$weather["conditions"]	= $xml_data["text"];
+					$wind_directions 		= array(
+													0 => "N",
+													1 => "NNE",
+													2 => "NE",
+													3 => "ENE",
+													4 => "E",
+													5 => "ESE",
+													6 => "SE",
+													7 => "SSE",
+													8 => "S",
+													9 => "SSW",
+													10 => "SW",
+													11 => "WSW",
+													12 => "W",
+													13 => "WNW",
+													14 => "NW",
+													15 => "NNW"
+												);
+					$angle_difference 		= 22.5;
+					$direction_index 		= round((((float)$xml_data["direction"])/((float)$angle_difference)));
+					$direction_string		= $wind_directions[($direction_index < 16 && $direction_index >= 0 ? $direction_index : 0)];
+					$weather["windir"]		= $direction_string;
+					$weather["s"]			= $xml_data["speed"]." ".$xml_data["distance"]."/h";
+					$weather["sunr"]		= $xml_data["sunrise"];
+					$weather["suns"]		= $xml_data["sunset"];
+					$weather["flik"]		= $xml_data["chill"];
+				} else {
 					$weather["icon"]		= "0";
 					$weather["tmp"]			= "?";
 					$weather["conditions"]	= "Unknown";
@@ -3988,7 +4021,7 @@ function display_weather($city_code = "", $options = array(), $weather_source = 
 				$output_html .= "<tbody>\n";
 				$output_html .= "	<tr>\n";
 				$output_html .= "		<td style=\"text-align: center; vertical-align: middle\">\n";
-				$output_html .= "			<a href=\"http://www.weather.com/weather/local/".$weather_code."\" target=\"_blank\"><img src=\"".ENTRADA_URL."/images/weather/".((!(int) $weather["icon"]) ? "na" : (int) $weather["icon"]).".png\" width=\"64\" height=\"64\" border=\"0\" alt=\"".html_encode($weather["conditions"]).": click for detailed forecast.\" title=\"".html_encode($weather["conditions"]).": click for detailed forecast.\" /></a>";
+				$output_html .= "			<img src=\"".ENTRADA_URL."/images/weather/".((!(int) $weather["icon"]) ? "na" : (int) $weather["icon"]).".png\" width=\"64\" height=\"64\" border=\"0\" alt=\"".html_encode($weather["conditions"])."\" title=\"".html_encode($weather["conditions"])."\" />";
 				$output_html .= "		</td>\n";
 				$output_html .= "		<td style=\"text-align: center; vertical-align: middle\">\n";
 				$output_html .= "			<h1 style=\"font-size: 28px; margin: 0px\">".((int) $weather["tmp"])."&#176;C</h1>";
@@ -4005,7 +4038,7 @@ function display_weather($city_code = "", $options = array(), $weather_source = 
 
 				$output_html .= "	<tr>\n";
 				$output_html .= "		<td class=\"content-small\" style=\"text-align: right; padding-right: 10px\">Wind:</td>\n";
-				$output_html .= "		<td class=\"content-small\">".(($weather["s"] == "calm") ? "Calm" : html_encode($weather["windir"])." @ ".html_encode($weather["s"])." km/h")."</td>";
+				$output_html .= "		<td class=\"content-small\">".(($weather["s"] == "calm") ? "Calm" : html_encode($weather["windir"])." @ ".html_encode($weather["s"]))."</td>";
 				$output_html .= "	</tr>\n";
 				$output_html .= "	<tr>\n";
 				$output_html .= "		<td class=\"content-small\" style=\"text-align: right; padding-right: 10px\">Dawn:</td>\n";
@@ -4793,15 +4826,27 @@ function communities_fetch_pages($community_id = 0, $user_access = 0) {
 	$module_enabled["default"] = true;
 	$module_enabled["url"] = true;
 	$module_enabled["course"] = true;
-
+	
 	if(($community_id = (int) $community_id) && ($community_access < 4 || $user_access > 1)) {
-		$home_title = $db->GetOne("SELECT `menu_title` FROM `community_pages` WHERE `community_id` =".$db->qstr($community_id)." AND `page_url` = ''");
-		$navigation[0]	= array(	"link_order"	=> 0,
-									"link_parent"	=> 0,
-									"link_url"		=> "",
-									"link_title"	=> (isset($home_title) && ($home_title != "") ? $home_title : "Home"),
-									"link_selected" => (isset($result) && $result["page_url"] == $PAGE_URL ? true : false),
-									"link_type"		=> "dashboard");
+	
+		$query = "SELECT * FROM `community_pages`
+					WHERE `page_url` = ''
+					AND `community_id` = ".$db->qstr($community_id);
+		$home = $db->GetRow($query);
+		$navigation[$home["cpage_id"]]	= array(
+					           "cpage_id" => $home["cpage_id"],
+					           "link_order" => 0,
+					           "link_parent" => $home["parent_id"],
+					           "link_url" => "",
+					           "link_title" => $home["menu_title"],
+					           "link_selected" => ($home["page_url"] == $PAGE_URL ? true : false),
+					           "link_new_window" => 0,
+					           "link_type" => $home["page_type"],
+					           "link_children" => array()
+							);
+		if (communities_page_has_children($home["cpage_id"], $access_query_condition[$user_access])) {
+			$navigation[0]["link_children"] = communities_fetch_child_pages($home["cpage_id"], $access_query_condition[$user_access]);
+		}
 
 		$full_query		= "SELECT `cpage_id`, `page_url`, `menu_title`, `page_order`, `page_type` FROM `community_pages` WHERE `community_id` = ".$db->qstr($community_id)." AND `page_url` != '' AND `page_active` = '1' ORDER BY `page_order` ASC";
 		$full_results	= $db->GetAll($full_query);
@@ -4810,12 +4855,21 @@ function communities_fetch_pages($community_id = 0, $user_access = 0) {
 				$exists[$result["page_url"]] = $result["menu_title"];
 			}
 		}
-
-		$available_query	= "SELECT `cpage_id`, `page_url`, `menu_title`, `page_order`, `page_type`, `page_content`, `page_visible` FROM `community_pages` WHERE `parent_id`='0' AND `community_id` =".$db->qstr($community_id)." AND ".$access_query_condition[$user_access]." AND `page_url` != '' AND `page_active` = '1' ORDER BY `page_order` ASC";
+		$available_query		= "SELECT `cpage_id`, `page_url`, `menu_title`, `page_order`, `page_type` FROM `community_pages` WHERE `community_id` = ".$db->qstr($community_id)." AND ".$access_query_condition[$user_access]." AND `page_url` != '' AND `page_active` = '1' ORDER BY `page_order` ASC";
 		$available_results	= $db->GetAll($available_query);
-		if($available_results) {
+		if($full_results) {
+			foreach ($full_results as $result) {
+				$available[$result["page_url"]]		= $result["menu_title"];
+				$available_ids[$result["page_url"]]	= $result["cpage_id"];
+				$details[$result["page_url"]]		= $result;
+			}
+		}
+
+		$navigation_query	= "SELECT `cpage_id`, `page_url`, `menu_title`, `page_order`, `page_type`, `page_content`, `page_visible` FROM `community_pages` WHERE `parent_id` = '0' AND `community_id` =".$db->qstr($community_id)." AND ".$access_query_condition[$user_access]." AND `page_url` != '' AND `page_active` = '1' ORDER BY `page_order` ASC";
+		$navigation_results	= $db->GetAll($navigation_query);
+		if($navigation_results) {
 			$i = 1;
-			foreach ($available_results as $result) {
+			foreach ($navigation_results as $result) {
 				if ($module_enabled[$result["page_type"]]) {
 					if (((int)$result["page_visible"]) == 1) {
 						if ($result["page_type"] == "url") {
@@ -4824,31 +4878,25 @@ function communities_fetch_pages($community_id = 0, $user_access = 0) {
 						} else {
 							$new_window = false;
 						}
-					$navigation[$i]	= array(	
-						"link_order"	=> (int) $result["page_order"],
-						"link_parent"	=> 0,
-						"link_url"		=> ":".$result["page_url"],
-						"link_title"	=> $result["menu_title"],
-						"link_selected" => ($result["page_url"] == $PAGE_URL ? true : false),
-						"link_new_window" => ($new_window ? true : false),
-						"link_type"		=> $result["page_type"],
-						"cpage_id" => $result["cpage_id"] );
+					$navigation[$result["cpage_id"]]	= array(	
+												"cpage_id" => $result["cpage_id"],
+												"link_order"	=> (int) $result["page_order"],
+												"link_parent"	=> 0,
+												"link_url"		=> ":".$result["page_url"],
+												"link_title"	=> $result["menu_title"],
+												"link_selected" => ($result["page_url"] == $PAGE_URL ? true : false),
+												"link_new_window" => ($new_window ? true : false),
+												"link_type"		=> $result["page_type"],
+												"link_children" => array()
+											);
 						$visible = true;
 					} else {
 						$visible = false;
 					}
-					$available[$result["page_url"]]		= $result["menu_title"];
-					$available_ids[$result["page_url"]]	= $result["cpage_id"];
-					$details[$result["page_url"]]		= $result;
-					$i++;
-					$children = communities_fetch_child_pages("", $community_id, $user_access, $result["cpage_id"], $access_query_condition, $i, $navigation, $available, $details, $available_ids, $module_enabled, $visible);
-					if ($i < $children["count"]) {
-						$i = $children["count"];
-						$available = $children["available"];
-						$available_ids = $children["available_ids"];
-						$details = $children["details"];
-						$navigation = $children["navigation"];
+					if (communities_page_has_children($result["cpage_id"], $access_query_condition[$user_access])) {
+						$navigation[$result["cpage_id"]]["link_children"] = communities_fetch_child_pages($result["cpage_id"], $access_query_condition[$user_access]);
 					}
+					$i++;
 				}
 			}
 		}
@@ -4857,47 +4905,58 @@ function communities_fetch_pages($community_id = 0, $user_access = 0) {
 	return array("enabled" => $available, "navigation" => $navigation, "details" => $details, "exists" => $exists, "available_ids" => $available_ids);
 }
 
-function communities_fetch_child_pages($indent = "", $community_id = 0, $user_access = 0, $parent_id = 0, $access_query_condition = array(), $i, $navigation, $available, $details, $available_ids, $module_enabled = array(), $visible) {
+function communities_page_has_children($cpage_id, $access_query_condition) {
+	global $db;
+	$query = "SELECT COUNT(`cpage_id`) FROM `community_pages`
+				WHERE `parent_id` = ".$db->qstr($cpage_id)."
+				AND ".$access_query_condition;
+	$found = $db->GetOne($query);
+	return ($found ? true : false);
+}
+
+
+function communities_fetch_child_pages($cpage_id, $access_query_condition, $level = 1) {
 	global $db, $PAGE_URL;
 	
-	$cquery		= "SELECT `cpage_id`, `page_url`, `menu_title`, `page_type`, `page_order`, `page_content`, `page_visible` FROM `community_pages` WHERE `parent_id` = ".$db->qstr($parent_id)." AND `community_id` =".$db->qstr($community_id)." AND ".$access_query_condition[$user_access]." AND `page_active` = '1' ORDER BY `page_order` ASC";
-	$cresults	= $db->GetAll($cquery);
-	if($cresults) {
-		foreach ($cresults as $cresult) {
-			if ($module_enabled[$cresult["page_type"]]) {
-				if ((((int)$cresult["page_visible"]) == 1) && ($visible)) {
-					if ($cresult["page_type"] == "url") {
-						$query = "SELECT `option_value` FROM `community_page_options` WHERE `cpage_id` = ".$db->qstr($cresult["cpage_id"])." AND `option_title` = 'new_window'";
-						$new_window = $db->GetOne($query);
-					} else {
-						$new_window = false;
-					}
-					$navigation[$i]	= array(
-						"link_order"	=> (int) $cresult["page_order"],
-						"link_parent"	=> $parent_id,
-						"link_url"		=> ":".$cresult["page_url"],
-						"link_title"	=> $cresult["menu_title"],
-						"link_selected" => ($cresult["page_url"] == $PAGE_URL ? true : false),
-						"link_new_window" => ($new_window ? true : false),
-						"link_type"		=> $cresult["page_type"]);
-				}
-				$available[$cresult["page_url"]]		= $cresult["menu_title"];
-				$available_ids[$cresult["page_url"]]	= $cresult["cpage_id"];
-				$details[$cresult["page_url"]]			= $cresult;
-				$i++;
-
-
-				$children = communities_fetch_child_pages($indent . "&nbsp;&nbsp;", $community_id, $user_access, $cresult["cpage_id"], $access_query_condition, $i, $navigation, $available, $details, $available_ids, $module_enabled, $visible);
-				if ($i < $children["count"]) {
-					$i = $children["count"];
-					$available = $children["available"];
-					$available_ids = $children["available_ids"];
-					$details = $children["details"];
+	if ($level > 99) {
+		return false;
+	}
+	
+	$children_array = array();
+	
+	$query = "SELECT * FROM `community_pages`
+				WHERE `parent_id` = ".$db->qstr($cpage_id)."
+				AND ".$access_query_condition;
+	$children = $db->GetAll($query);
+	if ($children) {
+		foreach ($children as $child) {
+			if ($child["page_type"] == "url") {
+				$child["new_window"] = $db->GetOne("SELECT `option_value` FROM `community_page_options` WHERE `cpage_id` = ".$db->qstr($child["cpage_id"])." AND `option_title` = 'new_window'");
+			} else {
+				$child["new_window"] = false;
+			}
+			$child_array = array(
+						           "cpage_id" => $child["cpage_id"],
+						           "link_order" => $child["page_order"],
+						           "link_parent" => $child["parent_id"],
+						           "link_url" => ":".$child["page_url"],
+						           "link_title" => $child["menu_title"],
+						           "link_selected" => ($child["page_url"] == $PAGE_URL ? true : false),
+						           "link_new_window" => ($child["new_window"] ? $child["new_window"] : 0),
+						           "link_type" => $child["page_type"],
+						           "link_children" => array()
+								);
+			$found = communities_page_has_children($child["cpage_id"], $access_query_condition);
+			if ($found) {
+				$child_descendants = communities_fetch_child_pages($child["cpage_id"], $access_query_condition, ($level + 1));
+				if ($child_descendants) {
+					$child_array["link_children"] = $child_descendants;
 				}
 			}
+			$children_array[$child["cpage_id"]] = $child_array;
 		}
+		return $children_array;
 	}
-	return array("count" => $i, "available" => $available, "details" => $details, "navigation" => $navigation, "available_ids" => $available_ids);
 }
 
 

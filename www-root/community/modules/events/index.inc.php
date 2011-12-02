@@ -5,24 +5,25 @@
  * Displayed the event calendar index, which will hopefully be a real calendar
  * sooner rather than later.
  * 
- * @author Organisation: Queen's University
+ * @author Organisation: QueenF's University
  * @author Unit: School of Medicine
  * @author Developer: James Ellis <james.ellis@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  * 
 */
-
+$query =  " SELECT * FROM `community_events` WHERE `community_id` = " .$db->qstr($COMMUNITY_ID);
 if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_EVENTS"))) {
 	exit;
 } elseif (!$COMMUNITY_LOAD) {
 	exit;
 }
-
 $HEAD[] = "<link href=\"".ENTRADA_URL."/javascript/calendar/css/xc2_default.css\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />";
 $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/calendar/config/xc2_default.js\"></script>\n";
 $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/calendar/script/xc2_inpage.js\"></script>\n";
 $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/calendar/script/xc2_timestamp.js\"></script>\n";
-
+$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/jquery/jquery.weekcalendar.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
+$HEAD[] = "<link href=\"".ENTRADA_RELATIVE."/css/jquery/jquery.community-weekcalendar.css?release=".html_encode(APPLICATION_VERSION)."\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />\n";
+$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/jquery/jquery.qtip.min.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
 if (!$RECORD_ID) {
 	/**
 	 * Update requested length of time to display.
@@ -236,18 +237,6 @@ function setDateValue(field, date) {
 		<?php
 	}
 	?>
-	<table style="width: 298px; height: 23px" cellspacing="0" cellpadding="0" border="0" summary="Display Duration Type">
-	<tr>
-		<td style="width: 22px; height: 23px"><?php echo "<a href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?".replace_query(array("dstamp" => ($display_duration["start"] - 2)))."\" title=\"Previous ".ucwords($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["dtype"])."\"><img src=\"".ENTRADA_URL."/images/cal-back.gif\" border=\"0\" width=\"22\" height=\"23\" alt=\"Previous ".ucwords($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["dtype"])."\" title=\"Previous ".ucwords($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["dtype"])."\" /></a>"; ?></td>
-		<td style="width: 47px; height: 23px"><?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["dtype"] == "day") ? "<img src=\"".ENTRADA_URL."/images/cal-day-on.gif\" width=\"47\" height=\"23\" border=\"0\" alt=\"Day View\" title=\"Day View\" />" : "<a href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?".replace_query(array("dtype" => "day"))."\"><img src=\"".ENTRADA_URL."/images/cal-day-off.gif\" width=\"47\" height=\"23\" border=\"0\" alt=\"Day View\" title=\"Day View\" /></a>"); ?></td>
-		<td style="width: 47px; height: 23px"><?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["dtype"] == "week") ? "<img src=\"".ENTRADA_URL."/images/cal-week-on.gif\" width=\"47\" height=\"23\" border=\"0\" alt=\"Week View\" title=\"Week View\" />" : "<a href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?".replace_query(array("dtype" => "week"))."\"><img src=\"".ENTRADA_URL."/images/cal-week-off.gif\" width=\"47\" height=\"23\" border=\"0\" alt=\"Week View\" title=\"Week View\" /></a>"); ?></td>
-		<td style="width: 47px; height: 23px"><?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["dtype"] == "month") ? "<img src=\"".ENTRADA_URL."/images/cal-month-on.gif\" width=\"47\" height=\"23\" border=\"0\" alt=\"Month View\" title=\"Month View\" />" : "<a href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?".replace_query(array("dtype" => "month"))."\"><img src=\"".ENTRADA_URL."/images/cal-month-off.gif\" width=\"47\" height=\"23\" border=\"0\" alt=\"Month View\" title=\"Month View\" /></a>"); ?></td>
-		<td style="width: 47px; height: 23px"><?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["dtype"] == "year") ? "<img src=\"".ENTRADA_URL."/images/cal-year-on.gif\" width=\"47\" height=\"23\" border=\"0\" alt=\"Year View\" title=\"Year View\" />" : "<a href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?".replace_query(array("dtype" => "year"))."\"><img src=\"".ENTRADA_URL."/images/cal-year-off.gif\" width=\"47\" height=\"23\" border=\"0\" alt=\"Year View\" title=\"Year View\" /></a>"); ?></td>
-		<td style="width: 47px; height: 23px; border-left: 1px #9D9D9D solid"><?php echo "<a href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?".replace_query(array("dstamp" => ($display_duration["end"] + 1)))."\" title=\"Following ".ucwords($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["dtype"])."\"><img src=\"".ENTRADA_URL."/images/cal-next.gif\" border=\"0\" width=\"22\" height=\"23\" alt=\"Following ".ucwords($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["dtype"])."\" title=\"Following ".ucwords($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["dtype"])."\" /></a>"; ?></td>
-		<td style="width: 33px; height: 23px; text-align: right"><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?<?php echo replace_query(array("dstamp" => time())); ?>"><img src="<?php echo ENTRADA_URL; ?>/images/cal-home.gif" width="23" height="23" alt="Reset to display current calendar <?php echo $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["dtype"]; ?>." title="Reset to display current calendar <?php echo $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["dtype"]; ?>." border="0" /></a></td>
-		<td style="width: 33px; height: 23px; text-align: right"><img src="<?php echo ENTRADA_URL; ?>/images/cal-calendar.gif" width="23" height="23" alt="Show Calendar" title="Show Calendar" onclick="showCalendar('', document.getElementById('dstamp'), document.getElementById('dstamp'), '<?php echo html_encode($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dstamp"]); ?>', 'calendar-holder', 8, 8, 1)" style="cursor: pointer" id="calendar-holder" /></td>
-	</tr>
-	</table>
 	<?php
 	if ($RECORD_ID) {
 		$query	= "	SELECT a.*, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`username`
@@ -259,7 +248,6 @@ function setDateValue(field, date) {
 					AND a.`event_active` = '1'
 					AND a.`cpage_id` = ".$db->qstr($PAGE_ID)."
 					AND a.`cevent_id` = ".$db->qstr($RECORD_ID);
-		
 		$result	= $db->GetRow($query);
 		if ($result) {
 			$allow_to_load = true;
@@ -355,7 +343,8 @@ function setDateValue(field, date) {
 			}
 		}
 
-
+		
+		
 		$query		= "	SELECT a.*, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`username`
 						FROM `community_events` AS a
 						LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
@@ -363,24 +352,34 @@ function setDateValue(field, date) {
 						WHERE a.`community_id` = ".$db->qstr($COMMUNITY_ID)."
 						".( $PAGE_OPTIONS["moderate_posts"] == 1 ? "AND a.`pending_moderation` = '0'" : "")."
 						AND a.`event_active` = '1'
-						AND (a.`release_date` = '0' OR a.`release_date` <= '".time()."')
-						AND (a.`release_until` = '0' OR a.`release_until` > '".time()."')
-						".(isset($display_duration) && $display_duration ? "AND a.`event_start` BETWEEN ".$db->qstr($display_duration["start"])." AND ".$db->qstr($display_duration["end"]) : "")."
 						AND a.`cpage_id` = ".$db->qstr($PAGE_ID)."
 						ORDER BY a.`event_start` ASC
 						LIMIT ".$limit_parameter.", ".$_SESSION[APPLICATION_IDENTIFIER]["cid_".$COMMUNITY_ID][$PAGE_URL]["pp"];
+		//echo $query;
+		//exit;
 		$results	= $db->GetAll($query);
 		if ($results) {
 			$last_date 		= 0;
 			$total_events	= @count($results);
-		
+			
 			echo "<table class=\"calendar\" style=\"width: 99%\">\n";
 			echo "<colgroup>\n";
 			echo "	<col style=\"width: 30%\" />\n";
-			echo "	<col style=\"width: 70%\" />\n";
+			echo "	<col style=\"width: 70%\" />\n"; 
 			echo "</colgroup>\n";
 			echo "<tbody>\n";
+			
 			foreach ($results as $key => $result) {
+				/*$events[] = array (
+						"id" => $result["cevent_id"],
+						"start"	=> date("c", $result["event_start"]),
+						"end" => date("c", $result["event_finish"]),
+						"title" => strip_tags($result["event_title"]),
+						"loc" => "fsfds",
+						"type" => "",
+						"updated" => date("c", $result["updated_date"])
+				);*/
+				
 				if (($last_date < strtotime("00:00:00", $result["event_start"])) || ($last_date > strtotime("23:59:59", $result["event_start"]))) {
 					$last_date = $result["event_start"];
 					echo "<tr>\n";
@@ -404,19 +403,150 @@ function setDateValue(field, date) {
 				echo "		<a href=\"".COMMUNITY_RELATIVE.$COMMUNITY_URL.":".$PAGE_URL."?id=".$result["cevent_id"]."\" id=\"event-".$result["cevent_id"]."-title\">".html_encode($result["event_title"])."</a>\n";
 				echo 	((communities_module_access($COMMUNITY_ID, $MODULE_ID, "edit")) ? " (<a class=\"action\" href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=edit&amp;id=".$result["cevent_id"]."\">edit</a>)" : "");
 				echo 	((communities_module_access($COMMUNITY_ID, $MODULE_ID, "delete")) ? " (<a class=\"action\" href=\"javascript:eventDelete('".$result["cevent_id"]."')\">delete</a>)" : "");
+				
 				echo "		<div class=\"content-small\">".limit_chars(strip_tags(str_replace("<br />", " ", $result["event_description"])), 150)."</div>";
 				echo "	</td>\n";
 				echo "</tr>\n";
 			}
 			echo "</tbody>\n";
 			echo "</table>\n";
+			
+			}
 			add_statistic("community:".$COMMUNITY_ID.":events", "view", "community_id", $COMMUNITY_ID);
-		} else {
-			$NOTICE++;
-			$NOTICESTR[] = "<strong>No Events Available</strong><br />There are no calendar events on this page that take place from <strong>".date(DEFAULT_DATE_FORMAT, $display_duration["start"])."</strong> until <strong>".date(DEFAULT_DATE_FORMAT, $display_duration["end"])."</strong>.<br /><br />You may want to view a different ".$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["dtype"]." or check back later.";
+			?>
+			<!--
+			<div class="tab-page" style="height: auto">
+				<h2 class="tab">Community Event Schedule</h2>
+				<script type="text/javascript">
+				var year = new Date().getFullYear();
+				var month = new Date().getMonth();
+				var day = new Date().getDate();
+				var daysToShow = 7;
+				
+				jQuery(document).ready(function() {
+					jQuery(".toggle-panel").click(function() {
+						if (jQuery("#toggle").hasClass("off")) {
+							daysToShow = 5;
+						}
+					});	
+					jQuery('#dashboardCalendar').weekCalendar({
+						
+						date : new Date(<?php echo ((($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dstamp"]) ? $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dstamp"] : time()) * 1000); ?>),
+						dateFormat : 'M d',
+						height: function($calendar) {
+							return 500;
+						},
+						daysToShow: daysToShow,
+						firstDayOfWeek: 1,
+						useShortDayNames: true,
+						allowCalEventOverlap: true,
+						overlapEventsSeparate: false,
+						timeslotsPerHour: 4,
+						timeslotHeight: 17,
+						buttons: false,
+						readonly: true,
+						businessHours : { start: 8, end: 18, limitDisplay : false },
+						eventRender : function(calEvent, $event) {
+							switch (calEvent.type) {
+								case 3 :
+									$event.find('.wc-time').css({'backgroundColor': '#5F718F', 'border':'1px solid #354868'});
+									$event.css({'backgroundColor':'#7E92B5'});
+								break;
+								case 2 :
+									$event.find('.wc-time').css({'backgroundColor':'#9E9E48', 'border':'1px solid #8A8A2D'});
+									$event.css({'backgroundColor':'#B5B37E'});
+
+									if (calEvent.updated) {
+										calEvent.title += '<div class="wc-updated-event calEventUpdated' + calEvent.id + '"> Last updated ' + calEvent.updated + '</div>';
+									}
+								break;
+								default :
+								break;
+							}
+
+							$event.find('.wc-time,.wc-title').qtip({
+								content: {
+									text: '<img class="throbber" src="<?php echo ENTRADA_RELATIVE; ?>/images/throbber.gif" alt="Loading..." />',
+									url: '<?php echo ENTRADA_RELATIVE; ?>/api/community-events.api.php?id=' + calEvent.id + '<?php echo "&community=".$COMMUNITY_URL; ?>',
+									title: {
+										text: '<a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":events"."?section=edit&amp;id="; ?>' + calEvent.id + '" style="font-weight: bold" id="event-' + calEvent.id + '-title">' + calEvent.title + '</a>',
+										button: 'Close'
+									}
+								},
+								position: {
+									corner: {
+										target: 'topMiddle',
+										tooltip: 'topMiddle'
+									},
+									adjust: {
+										screen: true
+									}
+								},
+								show: {
+									when: 'click',
+									solo: true
+								},
+								hide: 'unfocus',
+								style: {
+									tip: true,
+									border: { width: 0, radius: 4 },
+									name: 'light',
+									width: 300
+								}
+							});
+						},
+						eventClick : function(calEvent, $event) {
+							if (calEvent.type == 2) {
+								$event.find('.wc-time').animate({'backgroundColor':'#2B72D0', 'border':'1px solid #1B62C0'}, 500);
+								$event.animate({'backgroundColor':'#68A1E5'}, 500);
+								$event.find('.calEventUpdated' + calEvent.id).fadeOut(500);
+							}
+						},
+						externalDates : function (calendar) {
+							jQuery('#currentDateInfo').html(calendar.find('.wc-day-1').html() + ' - ' + calendar.find('.wc-day-5').html());
+						},
+						data : <?php echo json_encode($events); ?>
+					});
+				});
+
+				function setDateValue(field, date) {
+					timestamp = (getMSFromDate(date) * 1000);
+					alert(timestamp);
+					if (field.value != timestamp) {
+						field.value = getMSFromDate(date);
+						jQuery('#dashboardCalendar').weekCalendar('gotoWeek', new Date(timestamp));
+					}
+
+					return;
+				}
+				</script>
+				
+				<table style="width: 100%" cellspacing="0" cellpadding="0" border="0" summary="Weekly Student Calendar">
+					<tr>
+						<td style="text-align: left; vertical-align: middle; white-space: nowrap">
+							<table style="width: 375px; height: 23px" cellspacing="0" cellpadding="0" border="0">
+								<tr>
+									<td style="width: 22px; height: 23px"><img src="<?php echo ENTRADA_URL; ?>/images/cal-back.gif" width="22" height="23" alt="Previous Week" title="Previous Week" border="0" class="wc-prev" onclick="jQuery('#dashboardCalendar').weekCalendar('prevWeek');" /></td>
+									<td style="width: 271px; height: 23px; background: url('<?php echo ENTRADA_URL; ?>/images/cal-table-bg.gif'); text-align: center; font-size: 10px; color: #666666">
+										<div id="currentDateInfo"></div>
+									</td>
+									<td style="width: 22px; height: 23px"><img src="<?php echo ENTRADA_URL; ?>/images/cal-next.gif" width="22" height="23" alt="Next Week" title="Next Week" border="0" class="wc-next" onclick="jQuery('#dashboardCalendar').weekCalendar('nextWeek');" /></td>
+									<td style="width: 30px; height: 23px; text-align: right"><img src="<?php echo ENTRADA_URL; ?>/images/cal-home.gif" width="23" height="23" alt="Reset to this week" title="Reset to this week" border="0" class="wc-today" onclick="jQuery('#dashboardCalendar').weekCalendar('today');" /></td>
+									<td style="width: 30px; height: 23px; text-align: right"><img src="<?php echo ENTRADA_URL; ?>/images/cal-calendar.gif" width="23" height="23" alt="Show Calendar" title="Show Calendar" onclick="showCalendar('', document.getElementById('dstamp'), document.getElementById('dstamp'), '<?php echo html_encode($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dstamp"]); ?>', 'calendar-holder', 8, 8, 1)" style="cursor: pointer" id="calendar-holder" /></td>
+								</tr>
+							</table>
+						</td>
+					</tr>
+					<tr>
+						<td>&nbsp;</td>
+					</tr>
+				</table>
+				<div id="dashboardCalendar"></div>
+				</div>
+	-->
+				
+		<?php
 		
-			echo display_notice();
-		}
 	}
 ?>
 </div>

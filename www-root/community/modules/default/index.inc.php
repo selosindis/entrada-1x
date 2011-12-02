@@ -120,7 +120,7 @@ if ($result) {
 								LIMIT 0, 10";
 			$announcements	= $db->GetAll($query);
 			if ($announcements) {
-				$community_announcements .= "<h1 style=\"font-size: 16px;\">Latest Announcements</h1>\n";
+				$community_announcements .= "<h1 class=\"announcement-title\">Latest Announcements</h1>\n";
 				$last_date = 0;
 				foreach ($announcements as $key => $announcement) {
 					if (($last_date < strtotime("00:00:00", $announcement["release_date"])) || ($last_date > strtotime("23:59:59", $announcement["release_date"]))) {
@@ -129,7 +129,7 @@ if ($result) {
 						}
 			
 						$last_date = $announcement["release_date"];
-						$community_announcements .= "<h3>".date("l F dS Y", $announcement["release_date"])."</h3>\n";
+						$community_announcements .= "<h3  class=\"announcement-date\">".date("l F dS Y", $announcement["release_date"])."</h3>\n";
 						$community_announcements .= "<ul class=\"announcements\">\n";
 					}
 					$community_announcements .= "<li".(!($key % 2) ? " class=\"odd-announcement\"" : "")."><a href=\"".COMMUNITY_RELATIVE.$COMMUNITY_URL.":".$announcement["page_url"]."?id=".$announcement["cannouncement_id"]."\">".html_encode(limit_chars($announcement["announcement_title"], (isset($events) && $events ? 46: 108)))."</a></li>\n";
@@ -142,7 +142,7 @@ if ($result) {
 		
 		if ($events_enabled) {
 			if ($events) {
-				$community_events .= "<h1 style=\"font-size: 16px;\">Upcoming Events</h1>\n";
+				$community_events .= "<h1 class=\"announcement-title\">Upcoming Events</h1>\n";
 				$last_date = 0;
 				
 				foreach ($events as $key => $event) {
@@ -152,7 +152,7 @@ if ($result) {
 						}
 			
 						$last_date = $event["event_start"];
-						$community_events .= "<h3>".date("l F dS Y", $event["event_start"])."</h3>\n";
+						$community_events .= "<h3 class=\"announcement-date\">".date("l F dS Y", $event["event_start"])."</h3>\n";
 						$community_events .= "<ul class=\"announcements\">\n";
 					}
 					$community_events .= "<li".(!($key % 2) ? " class=\"odd-announcement\"" : "")."><a href=\"".COMMUNITY_RELATIVE.$COMMUNITY_URL.":".$event["page_url"]."?id=".$event["cevent_id"]."\">".html_encode($event["event_title"])."</a></li>\n";
@@ -168,14 +168,14 @@ if ($result) {
 		/**
 		 * Determine what and how to display the announcements information.
 		 */
-		/*
+		
 		if ($community_announcements) {
 			$community_announcements_width = ($community_events ? "49" : "98");
 			echo "<div style=\"width: ". $community_announcements_width ."%; float: left; padding-right: 5px\">\n";
 			echo $community_announcements;
 			echo "</div>\n";
 		}
-		*/
+		
 		/**
 		 * Determine what and how to display the events information.
 		 */
@@ -189,15 +189,16 @@ if ($result) {
 		/**
 		 * Get the community title and description 
 		 */
+		/*
 		$query = "SELECT community_title, community_description FROM communities
 				  WHERE community_id= ".$db->qstr($COMMUNITY_ID);
 		$results = $db->GetRow($query);
 		if ($results) {
-			echo "<div class=\"welcome-message\">";
+			echo "<div class=\"welcome-message  clear\" >";
 			echo "<h1>".$results["community_title"]."</h1>";
 			echo "<p>".$results["community_description"]."</p>";
 			echo "</div>";
-		}
+		}*/	
 		
 		/**
 		 * If the events module is enabled, display the event details on this Dashboard.
@@ -220,6 +221,7 @@ if ($result) {
 			$results	= $db->CacheGetAll(CACHE_TIMEOUT, $query);
 			if($results) {
 				?>
+<div style="clear:both"></div>
 				<section>
 					<h2 class="history">Community History</h2>
 				<?php
@@ -253,9 +255,11 @@ if ($result) {
 			}
 			if ($history_messages) {
 				?>
+					
 					<?php
 					echo $history_messages;
 					?>
+					
 				</section>
 				<?php
 			}

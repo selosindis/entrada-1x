@@ -334,7 +334,7 @@ header h3.module-name{
 header.page-header h1{
 	margin-top:0.5em;
 	color:#f9f6e2;
-	text-shadow:1px 1px 1px rgba(0, 0, 0, 0.3);
+	text-shadow:1px 1px 1px rgba(0, 0, 0, 0.8);
 }
 header.page-header h2{
 	font-size:1em;
@@ -543,10 +543,11 @@ nav .next-link{
 	font-size:1.5em;
 }
 .content h2.history{
-	background:url("../images/band-corner.png") right center no-repeat #B33003;
+	background:url("../images/band.png") right center no-repeat #B33003;
 	display:inline-block;
 	color:#FFF;
 	margin-left:-10px;
+	margin-top:18px;
 	padding:0 50px 0 10px;
 }
 
@@ -581,6 +582,12 @@ aside h1{
 	padding-left:18px;
 	margin-right:-7px;
 	position:relative;
+}
+.content ul.announcements li {
+	padding: 4px 0;
+	background: url(../images/list-announcement.gif) no-repeat 0 2px;
+	padding-left: 14px;
+	padding-top: 0;
 }
 .corner {
 	background:url("../images/corner.png") left top no-repeat transparent;
@@ -743,7 +750,19 @@ label#release_start_text, label#release_finish_text  {
 #release_start, #release_finish {
 	margin-top: 10px !important;
 }
-
+#event_start_row, #event_finish_row {
+	vertical-align: middle !important;
+}
+label#event_start_text, label#event_finish_text {
+	display:block;
+	margin-top:4px;
+}
+input#event_start, input#event_finish {
+	margin-top:9px;
+}
+table.calendar td {
+	vertical-align: top;
+}
 .modified {
 	width:18px;
 }
@@ -950,12 +969,17 @@ div.community-page-list.home {
 /*RSS Feed*/
 div#module-header {
 	padding:5px 0 0 0;
-}
-div#module-header a {
-	background:url("../images/rss-icon.jpg") no-repeat;
-	padding:0 0 0 17px; 
+	position:relative;
 }
 
+a.feeds.rss {
+	background:url("../images/rss-enabled.gif") no-repeat;
+	padding:0 0 0 14px; 
+}
+a.feeds.ics {
+	background: transparent url(../images/ics-enabled.gif) no-repeat center left;
+	padding-left:14px;
+}
 /*Share list styles*/
 ul.shares li.folder-1 {
 	background: transparent url(../images/list-folder-1.gif) no-repeat 0px 12px;
@@ -1068,4 +1092,44 @@ div.editable {
 ol.questions {
 	margin-bottom:0;
 	padding-left:45px;
+}
+h1.announcement-title {
+	color: #59574E;
+	font-size: 1.3em;
+	height: 28px;
+	line-height: 28px;
+	margin-top: 17px;
+	position: relative;
+}
+#file-download-releases ul, ul.shares, ul.announcements, ul.events, ul.history-list, ul.menu {
+	list-style-type: none;
+	margin: 0 0 10px;
+	padding: 4px 0 0;
+}
+h3.announcement-date {
+	font-size: 1.2em;
+	margin-bottom: 0;
+	margin-top: 0;
+}
+#pagination-links {
+	position: absolute;
+	top: 6px;
+	right: 4px;
+	height: 20px;
+	font-size: 11px;
+	color: #999;
+}
+#pagination-links a {
+	border: 1px #CCC solid;
+	background-color: #E9E9E9;
+	color: #333;
+	font-size: 11px;
+	padding: 2px 3px;
+}
+#pagination-links span.active {
+	border: 1px #999 solid;
+	background-color: #CCC;
+	color: black;
+	font-size: 11px;
+	padding: 2px 3px;
 }

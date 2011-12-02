@@ -549,7 +549,6 @@ section.left-space{
 	border-bottom:1px solid #888;
 	font-weight:bold;
 	margin-bottom:0.3em;
-	margin-top:0.9em;
 }
 .content h2.history{
 	background:url("../images/time.png") 101% bottom no-repeat transparent;
@@ -566,12 +565,32 @@ section.left-space{
 .content ul.history-list li:nth-child(odd){
 	background-color:#fafafa;
 }
+.content ul.announcements {
+	list-style:none;
+	padding-left:0;
+	margin-right:0;
+}
+.content ul.announcements li{
+	padding:4px 0;
+	background: url(../images/list-announcement.gif) no-repeat 0 2px;
+	padding-left:14px;
+	padding-top:0;
+}
+a.feeds.ics {
+	background: transparent url(../images/ics-enabled.gif) no-repeat center left;
+	padding-left:14px;
+}
 aside section{
 	-moz-box-shadow:1px 1px 0 rgba(0, 0, 0, 0.1);
 	-webkit-box-shadow:1px 1px 0 rgba(0, 0, 0, 0.1);
 	box-shadow:1px 1px 0 rgba(0, 0, 0, 0.1);
 	background:#fafafa;
 	margin-bottom:36px;
+}
+h3.announcement-date {
+	font-size:1.2em;
+	margin-bottom: 0;
+	margin-top:0;
 }
 aside.right-nav 
 {
@@ -729,6 +748,12 @@ table.permissions tbody td.on {
 table.permissions td.left {
 	text-align:left;
 }
+table.calendar td {
+	vertical-align: top;
+}
+table.calendar h3 {
+	margin-bottom:10px;
+}
 input {
 	font-family: Arial, Helvetica, sans-serif;
 	font-size: 1em;
@@ -756,7 +781,16 @@ label#release_start_text, label#release_finish_text  {
 #release_start, #release_finish {
 	margin-top: 10px !important;
 }
-
+#event_start_row, #event_finish_row {
+	vertical-align: middle !important;
+}
+label#event_start_text, label#event_finish_text {
+	display:block;
+	margin-top:4px;
+}
+input#event_start, input#event_finish {
+	margin-top:9px;
+}
 .modified {
 	width:18px;
 }
@@ -890,7 +924,7 @@ div.display-notice ul {
 div.display-error {
 	background:#FFD9D0;
 	border:1px #337B9F solid;
-	margin:10px 0 0 0;
+	margin:10px 0 20px 0;
 	padding:15px 0 15px 10px;
 }
 div.display-error ul {
@@ -942,6 +976,7 @@ ul.page-action li:last-child {
 }
 div.community-page-list.home {
 	border-bottom:1px dotted #eee;
+	margin-top:10px;
 	padding-left:21px;
 }
 
@@ -964,9 +999,10 @@ div.community-page-list.home {
 /*RSS Feed*/
 div#module-header {
 	padding:0 0 0 0;
+	position:relative;
 }
-div#module-header a {
-	background:url("../images/rss-icon.jpg") no-repeat;
+div#module-header a.feeds.rss {
+	background:url("../images/rss-enabled.gif") no-repeat;
 	padding:0 0 0 17px; 
 }
 
@@ -1082,4 +1118,63 @@ div.editable {
 ol.questions {
 	margin-bottom:0;
 	padding-left:45px;
+}
+ul {
+	list-style: none;
+	padding-left: 0;
+	margin-right: 0;
+}
+ul.announcements, ul.events {
+	list-style-type: none;
+	margin: 0 0 10px;
+	padding: 4px 0 0;
+}
+h1.announcement-title {
+	border-bottom: 1px solid #888;
+	font-weight: bold;
+	font-size:1.7em;
+	margin-bottom: 0.3em;
+	margin-top: 0.9em;
+}
+#pagination-links {
+	position: absolute;
+	top: 6px;
+	right: 4px;
+	height: 20px;
+	font-size: 11px;
+	color: #999;
+}
+#pagination-links a {
+	border: 1px #CCC solid;
+	background-color: #E9E9E9;
+	color: #333;
+	font-size: 11px;
+	padding: 2px 3px;
+}
+#pagination-links span.active {
+	border: 1px #999 solid;
+	background-color: #CCC;
+	color: black;
+	font-size: 11px;
+	padding: 2px 3px;
+}
+.display-notice ul li {
+	background: transparent url(../images/list-notice.gif) no-repeat 0 3px;
+	margin-left:14px;
+	padding-left:14px;
+}
+.display-success ul li {
+	background: transparent url(../images/list-success.gif) no-repeat 0 3px;
+	margin-left:14px;
+	padding-left:14px;
+}
+.display-error ul li {
+	background: transparent url(../images/list-error.gif) no-repeat 0 3px;
+	margin-left:14px;
+	padding-left:14px;
+}
+ul.community-themes li label {
+	display:block;
+	padding-top:55px;
+	text-indent:-9999em;
 }

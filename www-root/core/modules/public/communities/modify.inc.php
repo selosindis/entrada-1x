@@ -827,6 +827,98 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 									</table>
 								</div>
 								<div class="tab-page">
+									<script type="text/javascript" charset="utf-8">
+										jQuery(function() {
+											jQuery( ".large-view-1" ).click(function() {
+												jQuery(".default-large").dialog({ 
+													 width: 776 , 
+													 height: 577,
+													 position: 'center',
+													 draggable: false,
+													 resizable: false,
+													 modal : true, 
+													 show: 'fade',
+													 hide: 'fade',
+													 title: 'Default Template',
+													 buttons: {
+													'Select': function() {
+													   jQuery('#template_option_1').attr('checked', 'checked');
+													   jQuery(this).dialog('close');
+													},
+													'Close': function() {
+													   jQuery(this).dialog('close');
+													}
+												  }
+												});
+											});
+											jQuery( ".large-view-2" ).click(function() {
+												jQuery(".meeting-large").dialog({
+													 width: 776 , 
+													 height: 577,
+													 position: 'center',
+													 draggable: false,
+													 resizable: false,
+													 modal : true,
+													 show: 'fade',
+													 hide: 'fade',
+													 title: 'Meeting Template',
+													 buttons: {
+													'Select': function() {
+													   jQuery('#template_option_2').attr('checked', 'checked');
+													   jQuery(this).dialog('close');
+													},
+													'Close': function() {
+													   jQuery(this).dialog('close');
+													}
+												  }
+												});
+											});
+											jQuery( ".large-view-3" ).click(function() {
+												jQuery(".vp-large").dialog({
+													 width: 776 , 
+													 height: 577,
+													 position: 'center',
+													 draggable: false,
+													 resizable: false,
+													 modal : true,
+													 show: 'fade',
+													 hide: 'fade',
+													 title: 'Virtual Patient Template',
+													 buttons: {
+													'Select': function() {
+													   jQuery('#template_option_3').attr('checked', 'checked');
+													   jQuery(this).dialog('close');
+													},
+													'Close': function() {
+													   jQuery(this).dialog('close');
+													}
+												  }
+												});
+											});
+											jQuery( ".large-view-4" ).click(function() {
+												jQuery(".education-large").dialog({
+													 width: 776, 
+													 height: 577,
+													 position: 'center',
+													 draggable: false,
+													 resizable: false,
+													 modal : true,
+													 show: 'fade',
+													 hide: 'fade',
+													 title: 'Education Template',
+													 buttons: {
+													'Select': function() {
+													   jQuery('#template_option_4').attr('checked', 'checked');
+													   jQuery(this).dialog('close');
+													},
+													'Close': function() {
+													   jQuery(this).dialog('close');
+													}
+												  }
+												});
+											});
+										});
+									</script>
 									<h2 class="tab">Details</h2>
 									<h2 style="margin-top: 0px">Community Details</h2>
 									<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Modifying Community Details">
@@ -906,12 +998,27 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 															<div class="template-rdo">
 																<input type="radio" id="<?php echo "template_option_".$community_template["template_id"] ?>" name="template_selection" value="<?php echo $community_template["template_id"]; ?>" <?php echo (($community_template["template_id"]== $template_selection) ? " checked=\"checked\"" : "") ?> />
 															</div>
+															<div class="large-view">
+																<a href="#" class="<?php echo "large-view-".$community_template["template_id"]; ?>"><img src="<?php echo ENTRADA_URL. "/images/icon-magnify.gif"  ?>" /></a>
+															</div>
 															<label for="<?php echo "template_option_".$community_template["template_id"] ?>" style="display:block; padding-top:80px;"><?php echo ucfirst($community_template["template_name"]. " Template"); ?></label>
 														</li>
 													<?php
 													}
 													?>
 													</ul>
+													<div class="default-large" style="display:none;">
+														<img src="<?php echo ENTRADA_URL."/images/template-default-large.jpg" ?>" alt="Default Template Screen shot" />
+													</div>
+													<div class="meeting-large" style="display:none;">
+														<img src="<?php echo ENTRADA_URL."/images/template-meeting-large.jpg" ?>" alt="Meeting Template Screen shot" />
+													</div> 
+													<div class="vp-large" style="display:none;">
+														<img src="<?php echo ENTRADA_URL."/images/template-vp-large.jpg" ?>" alt="Virtual Patient Template Screen shot" />
+													</div> 
+													<div class="education-large" style="display:none;">
+														<img src="<?php echo ENTRADA_URL."/images/template-education-large.jpg" ?>" alt="Education Template Screen shot" />
+													</div>
 												<?php
 												}
 												?>

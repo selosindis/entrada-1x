@@ -586,7 +586,12 @@ aside ul a{
 	display:block;
 	text-decoration:none;
 }
-
+.content ul.announcements li {
+	padding: 4px 0;
+	background: url(../images/list-announcement.gif) no-repeat 0 2px;
+	padding-left: 14px;
+	padding-top: 0;
+}
 aside ul a:hover{
 	color:#000;
 	background-color:#f6f6f6;
@@ -699,6 +704,16 @@ table.mceLayout {
 #release_start_row, #release_finish_row {
 	vertical-align: middle !important;
 }
+#event_start_row, #event_finish_row {
+	vertical-align: middle !important;
+}
+label#event_start_text, label#event_finish_text {
+	display:block;
+	margin-top:4px;
+}
+input#event_start, input#event_finish {
+	margin-top:9px;
+}
 label#release_start_text, label#release_finish_text  {
 	display:block;
 	padding-top:6px;
@@ -745,6 +760,9 @@ table.discussions tr:first-child td:last-child {
 	-webkit-border-radius:0 3px 0 0;
 	-moz-border-radius:0 3px 0 0;
 	border-radius:0 3px 0 0;
+}
+table.calendar td {
+	vertical-align: top;
 }
 table.discussions thead {
 	background-color:#4B4B4B;
@@ -913,12 +931,16 @@ div.community-page-list.home {
 /*RSS Feed*/
 div#module-header {
 	padding:5px 0 0 0;
+	position:relative;
 }
-div#module-header a {
-	background:url("../images/rss-icon.jpg") no-repeat;
-	padding:0 0 0 17px; 
+div#module-header a.feeds.rss {
+	background:url("../images/rss-enabled.gif") no-repeat;
+	padding-left:14px; 
 }
-
+a.feeds.ics {
+	background: transparent url(../images/ics-enabled.gif) no-repeat;
+	padding-left: 14px;
+}
 /*Share list styles*/
 ul.shares li.folder-1 {
 	background: transparent url(../images/list-folder-1.gif) no-repeat 0px 12px;
@@ -1031,4 +1053,44 @@ div.editable {
 ol.questions {
 	margin-bottom:0;
 	padding-left:45px;
+}
+h1.announcement-title {
+	color: #59574E;
+	font-size: 1.3em;
+	height: 28px;
+	line-height: 28px;
+	margin-top: 17px;
+	position: relative;
+}
+ul.announcements, ul.events {
+	list-style-type: none;
+	margin: 0 0 10px;
+	padding: 4px 0 0;
+}
+h3.announcement-date {
+	font-size: 1.2em;
+	margin-bottom: 0;
+	margin-top: 0;
+}
+#pagination-links {
+	position: absolute;
+	top: 6px;
+	right: 4px;
+	height: 20px;
+	font-size: 11px;
+	color: #999;
+}
+#pagination-links a {
+	border: 1px #CCC solid;
+	background-color: #E9E9E9;
+	color: #333;
+	font-size: 11px;
+	padding: 2px 3px;
+}
+#pagination-links span.active {
+	border: 1px #999 solid;
+	background-color: #CCC;
+	color: black;
+	font-size: 11px;
+	padding: 2px 3px;
 }

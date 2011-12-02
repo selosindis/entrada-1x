@@ -45,7 +45,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 	}
 
 	$BREADCRUMB[]		= array("url" => ENTRADA_URL."/communities?".replace_query(array("section" => "create")), "title" => "Creating a Community");
-
+	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/windows/window.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 	$CATEGORY_ID		= 0;
 	$COMMUNITY_PARENT	= 0;
 
@@ -253,7 +253,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 					if ($community_template) {
 						$PROCESSED["community_template"] = $community_template["template_name"];
 					}
-				}		
+				}
 			}
 			if(isset($_POST["community_registration"])) {
 				switch(clean_input($_POST["community_registration"], array("trim", "int"))) {
@@ -499,6 +499,98 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 				echo display_notice();
 			}
 			?>
+<script type="text/javascript" charset="utf-8">
+	jQuery(function() {
+		jQuery( ".large-view-1" ).click(function() {
+			jQuery(".default-large").dialog({ 
+				 width: 776 , 
+				 height: 577,
+				 position: 'center',
+				 draggable: false,
+				 resizable: false,
+				 modal : true, 
+				 show: 'fade',
+				 hide: 'fade',
+				 title: 'Default Template',
+				 buttons: {
+				'Select': function() {
+				   jQuery('#template_option_1').attr('checked', 'checked');
+				   jQuery(this).dialog('close');
+				},
+				'Close': function() {
+				   jQuery(this).dialog('close');
+				}
+			  }
+			});
+		});
+		jQuery( ".large-view-2" ).click(function() {
+			jQuery(".meeting-large").dialog({
+				 width: 776 , 
+				 height: 577,
+				 position: 'center',
+				 draggable: false,
+				 resizable: false,
+				 modal : true,
+				 show: 'fade',
+				 hide: 'fade',
+				 title: 'Meeting Template',
+				 buttons: {
+				'Select': function() {
+				   jQuery('#template_option_2').attr('checked', 'checked');
+				   jQuery(this).dialog('close');
+				},
+				'Close': function() {
+				   jQuery(this).dialog('close');
+				}
+			  }
+			});
+		});
+		jQuery( ".large-view-3" ).click(function() {
+			jQuery(".vp-large").dialog({
+				 width: 776 , 
+				 height: 577,
+				 position: 'center',
+				 draggable: false,
+				 resizable: false,
+				 modal : true,
+				 show: 'fade',
+				 hide: 'fade',
+				 title: 'Virtual Patient Template',
+				 buttons: {
+				'Select': function() {
+				   jQuery('#template_option_3').attr('checked', 'checked');
+				   jQuery(this).dialog('close');
+				},
+				'Close': function() {
+				   jQuery(this).dialog('close');
+				}
+			  }
+			});
+		});
+		jQuery( ".large-view-4" ).click(function() {
+			jQuery(".education-large").dialog({
+				 width: 776, 
+				 height: 577,
+				 position: 'center',
+				 draggable: false,
+				 resizable: false,
+				 modal : true,
+				 show: 'fade',
+				 hide: 'fade',
+				 title: 'Education Template',
+				 buttons: {
+				'Select': function() {
+				   jQuery('#template_option_4').attr('checked', 'checked');
+				   jQuery(this).dialog('close');
+				},
+				'Close': function() {
+				   jQuery(this).dialog('close');
+				}
+			  }
+			});
+		});
+	});
+</script>
 <form action="<?php echo ENTRADA_URL."/".$MODULE."?".replace_query(array("action" => "create", "step" => 3)); ?>" method="post">
 	<input type="hidden" name="category_id" value="<?php echo html_encode($CATEGORY_ID); ?>" />
 	<input type="hidden" name="community_parent" value="<?php echo html_encode($COMMUNITY_PARENT); ?>" />
@@ -594,12 +686,27 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 								<div class="template-rdo">
 									<input type="radio" id="<?php echo "template_option_".$community_template["template_id"] ?>" name="template_selection" value="<?php echo $community_template["template_id"]; ?>"<?php echo ((($template_selection == 0) && ($community_template["template_id"] == 1) || ($template_selection == $community_template["template_id"])) ? " checked=\"checked\"" : ""); ?> />
 								</div>
-								<label for="<?php echo "template_option_".$community_template["template_id"] ?>" style="display:block; padding-top:80px;"><?php echo ucfirst($community_template["template_name"]. " Template"); ?></label>
+								<div class="large-view">
+									<a href="#" class="<?php echo "large-view-".$community_template["template_id"]; ?>"><img src="<?php echo ENTRADA_URL. "/images/icon-magnify.gif"  ?>" /></a>
+								</div>
+								<label for="<?php echo "template_option_".$community_template["template_id"]; ?>"><?php echo ucfirst($community_template["template_name"]. " Template"); ?></label>
 							</li> 
 						<?php
 						}
 						?>
 						</ul>
+						<div class="default-large" style="display:none;">
+							<img src="<?php echo ENTRADA_URL."/images/template-default-large.gif" ?>" alt="Default Template Screen shot" />
+						</div>
+						<div class="meeting-large" style="display:none;">
+							<img src="<?php echo ENTRADA_URL."/images/template-meeting-large.gif" ?>" alt="Meeting Template Screen shot" />
+						</div> 
+						<div class="vp-large" style="display:none;">
+							<img src="<?php echo ENTRADA_URL."/images/template-vp-large.gif" ?>" alt="Virtual Patient Template Screen shot" />
+						</div> 
+						<div class="education-large" style="display:none;">
+							<img src="<?php echo ENTRADA_URL."/images/template-education-large.gif" ?>" alt="Education Template Screen shot" />
+						</div> 
 					<?php
 					}
 					?>
@@ -607,7 +714,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 			</td>
 		</tr>
 		<tr>
-			<td colspan="3">&nbsp;</td>
+			<td colspan="3">&nbsp;
+			</td>
 		</tr>
 		<?php /* <tr>
 			<td><?php echo help_create_button("Contact E-Mail Address", ""); ?></td>

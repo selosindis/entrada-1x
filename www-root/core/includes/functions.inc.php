@@ -4804,7 +4804,8 @@ function communities_fetch_pages($community_id = 0, $user_access = 0) {
 	$details			= array();
 	$available_ids		= array();
 
-	$access_query_condition = array(	" `allow_public_view` = 1 ",
+	$access_query_condition = array(
+		" `allow_public_view` = 1 ",
 		" `allow_troll_view` = 1 ",
 		" `allow_member_view` = 1 ",
 		" 1 ");
@@ -4823,6 +4824,7 @@ function communities_fetch_pages($community_id = 0, $user_access = 0) {
 			$module_enabled[$module_record["module_shortname"]] = (((int) $module_record["module_active"]) == 1 ? true : false);
 		}
 	}
+	
 	$module_enabled["default"] = true;
 	$module_enabled["url"] = true;
 	$module_enabled["course"] = true;
@@ -4926,7 +4928,8 @@ function communities_fetch_child_pages($cpage_id, $access_query_condition, $leve
 	
 	$query = "SELECT * FROM `community_pages`
 				WHERE `parent_id` = ".$db->qstr($cpage_id)."
-				AND ".$access_query_condition;
+				AND ".$access_query_condition."
+				AND `page_active` = '1'";
 	$children = $db->GetAll($query);
 	if ($children) {
 		foreach ($children as $child) {

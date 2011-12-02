@@ -3564,7 +3564,7 @@ ul.community-themes li.edit {
 	float:left;
 	height:70px;
 	list-style: none;
-	margin:4px 6px 4px 0;
+	margin:4px 5px 4px 0;
 	position:relative;
 	width:130px;
 }
@@ -3602,9 +3602,28 @@ div.template-rdo {
 	top:44px;
 
 }
+div.large-view {
+	background:#fff;
+	border-right: 1px solid #ccc;
+	border-top: 1px solid #ccc;
+	border-bottom: none;
+	border-left: none;
+	left:0;
+	position:absolute;
+	top:44px;
+
+}
 div.template-rdo input {
 	margin:7px 10px 5px 10px;
 }
 .selected {
 	border:3px solid #337B9F;
+}
+ul.community-themes li label {
+	display:block;
+	padding-top:55px;
+	text-indent:-9999em;
+}
+.ui-button {
+	outline:none;
 }

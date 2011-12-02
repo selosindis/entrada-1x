@@ -35,7 +35,6 @@ if ((isset($_GET["id"])) && ($tmp_input = clean_input($_GET["id"], array("trim",
 if (isset($_GET["drid"])) {
 	$dashboard_result_id = clean_input($_GET["drid"], array("trim", "int"));
 }
-
 if (($event_id) && (isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 	?>
 	<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "DTD/xhtml1-transitional.dtd">

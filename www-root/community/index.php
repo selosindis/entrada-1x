@@ -605,7 +605,7 @@ if ($COMMUNITY_URL) {
 					$PAGE_CONTENT	= $page_text.$PAGE_CONTENT;
 
 				}
-
+				
 				$PAGE_META["title"] = $community_details["community_title"];
 				$PAGE_META["description"] = trim(str_replace(array("\t", "\n", "\r"), " ", html_encode(strip_tags($community_details["community_description"]))));
 				$PAGE_META["keywords"] = trim(str_replace(array("\t", "\n", "\r"), " ", html_encode(strip_tags($community_details["community_keywords"]))));"";
@@ -621,7 +621,7 @@ if ($COMMUNITY_URL) {
 
 				$smarty->assign("site_template", $COMMUNITY_TEMPLATE);
 				$smarty->assign("site_theme", ((isset($community_details["community_theme"])) ? $community_details["community_theme"] : ""));
-
+				
 				$smarty->assign("site_default_charset", DEFAULT_CHARSET);
 
 				$smarty->assign("site_community_url", COMMUNITY_URL.$COMMUNITY_URL);
@@ -663,73 +663,6 @@ if ($COMMUNITY_URL) {
 				$smarty->assign("date_joined", $date_joined);
 				$smarty->assign("member_name", $member_name);
 				
-				/**
-				 * This query gets the children pages for a community
-				 */
-				$query = "SELECT `cpage_id`, `community_id`, `parent_id`, `menu_title`, `page_url` 
-						  FROM `community_pages`
-						  WHERE community_id= ". $db->qstr($COMMUNITY_ID)."
-						  AND `parent_id` > '0'
-					      AND `page_active` ='1'
-						  AND `page_visible` = '1'";
-				
-				
-				$results = $db->GetAll($query);
-				if($results) {
-					$child_data = array();
-					foreach ($results as $child_page_data) {
-						$child_data[] = array(
-						"cpage_id" => $child_page_data["cpage_id"],
-						"parent_id" => $child_page_data["parent_id"],	
-						"menu_title" => $child_page_data["menu_title"],
-						"page_url" => $child_page_data["page_url"]	
-						);
-					}
-				}
-				
-				/**
-				 * Get child pages that have children
-				 */
-				$query = "SELECT `cpage_id`, `community_id`, `page_active`, `page_visible` FROM `community_pages` 
-						  WHERE `cpage_id` IN (SELECT `parent_id` FROM `community_pages`) 
-						  AND `community_id` = ". $db->qstr($COMMUNITY_ID)." 
-						  AND `page_active` = '1'
-						  AND `page_visible` = '1' 
-						  AND `parent_id` > '0'";
-				
-				$results = $db->GetAll($query);
-				$show_tertiary_sideblock = false;
-				
-				if ($results) {
-					foreach ($results as $result) {
-						$cpage_id = $result["cpage_id"];
-						
-						/**
-						 * Uses the cpage_id of any child pages that have children to find them.
-						 */
-						$query = "SELECT * FROM community_pages 
-								  WHERE parent_id= ". $db->qstr($cpage_id). "
-								  AND `page_active` = '1'
-								  AND `page_visible` = '1'";
-						
-						$results = $db->GetAll($query);
-						
-						if ($results) {
-							$show_tertiary_sideblock = true;
-							foreach ($results as $result) {
-								$tertiary_pages[] = array(
-									"cpage_id" => $result["cpage_id"],
-									"menu_title" => $result["menu_title"],
-									"page_url" => $result["page_url"]
-								);
-							}
-							$smarty->assign("show_tertiary_sideblock", $show_tertiary_sideblock);
-							$smarty->assign("tertiary_pages", $tertiary_pages);
-						}
-					}
-				}
-				
-				$smarty->assign("child_data", $child_data);
 				$smarty->display("index.tpl");
 			}
 		} else {

@@ -188,9 +188,6 @@ switch ($STEP) {
 				<td><input type="text" id="event_title" name="event_title" value="<?php echo ((isset($PROCESSED["event_title"])) ? html_encode($PROCESSED["event_title"]) : ""); ?>" maxlength="128" style="width: 96%; float: left;" /></td>
 			</tr>
 			<tr>
-				<td colspan="3">&nbsp;</td>
-			</tr>
-			<tr>
 				<td>&nbsp;</td>
 				<td><label for="event_location" class="form-nrequired">Event Location</label></td>
 				<td><input type="text" id="event_location" name="event_location" value="<?php echo ((isset($PROCESSED["event_location"])) ? html_encode($PROCESSED["event_location"]) : ""); ?>" maxlength="128" style="width: 170px" /> <span class="content-small">(<strong>e.g.</strong> Bracken Library, Room 102)</span></td>
@@ -205,12 +202,10 @@ switch ($STEP) {
 				<td colspan="3">&nbsp;</td>
 			</tr>
 			<tr>
-				<td>&nbsp;</td>
-				<td colspan="2"><label for="event_description" class="form-nrequired">Event Details / Description</label></td>
+				<td colspan="3"><label for="event_description" class="form-nrequired">Event Details / Description</label></td>
 			</tr>
 			<tr>
-				<td>&nbsp;</td>
-				<td colspan="2">
+				<td colspan="3">
 					<textarea id="event_description" name="event_description" style="width: 98%; height: 200px" cols="70" rows="10"><?php echo ((isset($PROCESSED["event_description"])) ? html_encode($PROCESSED["event_description"]) : ""); ?></textarea>
 				</td>
 			</tr>

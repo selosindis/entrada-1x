@@ -431,7 +431,6 @@ if ($COMMUNITY_URL) {
 					if (@file_exists(ENTRADA_ABSOLUTE."/community/templates/".$COMMUNITY_TEMPLATE."/includes/config.inc.php")) {
 						require_once(ENTRADA_ABSOLUTE."/community/templates/".$COMMUNITY_TEMPLATE."/includes/config.inc.php");
 					}
-
 					/**
 					 * Responsible for displaying the permission masks sidebar item
 					 * if they have more than their own permission set available.
@@ -610,7 +609,9 @@ if ($COMMUNITY_URL) {
 				$PAGE_META["title"] = $community_details["community_title"];
 				$PAGE_META["description"] = trim(str_replace(array("\t", "\n", "\r"), " ", html_encode(strip_tags($community_details["community_description"]))));
 				$PAGE_META["keywords"] = trim(str_replace(array("\t", "\n", "\r"), " ", html_encode(strip_tags($community_details["community_keywords"]))));"";
-
+				
+				$member_name = html_encode($_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]);
+				$date_joined = "Joined: ".date("Y-m-d", $COMMUNITY_MEMBER_SINCE);
 				$smarty->assign("template_relative", COMMUNITY_RELATIVE."/templates/".$COMMUNITY_TEMPLATE);
 				$smarty->assign("sys_community_relative", COMMUNITY_RELATIVE);
 				
@@ -620,7 +621,7 @@ if ($COMMUNITY_URL) {
 
 				$smarty->assign("site_template", $COMMUNITY_TEMPLATE);
 				$smarty->assign("site_theme", ((isset($community_details["community_theme"])) ? $community_details["community_theme"] : ""));
-
+				
 				$smarty->assign("site_default_charset", DEFAULT_CHARSET);
 
 				$smarty->assign("site_community_url", COMMUNITY_URL.$COMMUNITY_URL);
@@ -634,12 +635,12 @@ if ($COMMUNITY_URL) {
 				$smarty->assign("site_primary_navigation", $COMMUNITY_PAGES["navigation"]);
 				$smarty->assign("site_navigation_items_per_column", 4);
 				$smarty->assign("site_breadcrumb_trail", "%BREADCRUMB%");
-
 				if (($COMMUNITY_MODULE != "pages") && ($COMMUNITY_MODULE != "members") && ($SECTION == "index")) {
 					$query = "	SELECT `cpage_id`
 								FROM `community_pages`
 								WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)."
 								AND `page_url` = ".$db->qstr($PAGE_URL);
+	
 					$result = $db->GetRow($query);
 					if ($result) {
 						$smarty->assign("child_nav", communities_page_children_in_list($result["cpage_id"]));
@@ -647,7 +648,7 @@ if ($COMMUNITY_URL) {
 						$smarty->assign("child_nav", "");	
 					}
 				}
-
+				$smarty->assign("community_id", $COMMUNITY_ID);
 				$smarty->assign("page_title", "%TITLE%");
 				$smarty->assign("page_description", "%DESCRIPTION%");
 				$smarty->assign("page_keywords", "%KEYWORDS%");
@@ -656,8 +657,11 @@ if ($COMMUNITY_URL) {
 				$smarty->assign("page_content", $PAGE_CONTENT);
 				
 				$smarty->assign("user_is_anonymous", (($LOGGED_IN) ? false : true));
+				$smarty->assign("is_logged_in", $LOGGED_IN);
 				$smarty->assign("user_is_member", $COMMUNITY_MEMBER);
 				$smarty->assign("user_is_admin", $COMMUNITY_ADMIN);
+				$smarty->assign("date_joined", $date_joined);
+				$smarty->assign("member_name", $member_name);
 				
 				$smarty->display("index.tpl");
 			}

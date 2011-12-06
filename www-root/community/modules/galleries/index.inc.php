@@ -94,7 +94,7 @@ if (communities_module_access($COMMUNITY_ID, $MODULE_ID, "delete-gallery")) {
 				}
 
 				echo "<td".((!$accessible) ? " class=\"na\"" : "")." style=\"vertical-align: top; text-align: center\">";
-				echo "	<h2 id=\"gallery-".$result["cgallery_id"]."-title\"><a href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-gallery&amp;id=".$result["cgallery_id"]."\">".html_encode(limit_chars($result["gallery_title"], 26))."</a></h2>\n";
+				echo "	<h2 id=\"gallery-".$result["cgallery_id"]."-title\" class=\"gallery-heading\"><a href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-gallery&amp;id=".$result["cgallery_id"]."\">".html_encode(limit_chars($result["gallery_title"], 26))."</a></h2>\n";
 				echo "	<a href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-gallery&amp;id=".$result["cgallery_id"]."\">".communities_galleries_fetch_thumbnail($result["gallery_cgphoto_id"])."</a>";
 				echo "	<div style=\"margin-top: 5px\">\n";
 				echo		((communities_module_access($COMMUNITY_ID, $MODULE_ID, "edit-gallery")) ? " (<a class=\"action\" href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=edit-gallery&amp;id=".$result["cgallery_id"]."\">edit</a>)" : "");

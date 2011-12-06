@@ -237,7 +237,7 @@ switch($STEP) {
 				<td><input type="text" id="folder_title" name="folder_title" value="<?php echo ((isset($PROCESSED["folder_title"])) ? html_encode($PROCESSED["folder_title"]) : ""); ?>" maxlength="64" style="width: 95%" /></td>
 			</tr>
 			<tr>
-				<td colspan="2" style="vertical-align: top"><label for="folder_description" class="form-nrequired">Folder Description</label></td>
+				<td colspan="2" style="vertical-align: top !important"><label for="folder_description" class="form-nrequired">Folder Description</label></td>
 				<td style="vertical-align: top">
 					<textarea id="folder_description" name="folder_description" style="width: 95%; height: 60px" cols="50" rows="5"><?php echo ((isset($PROCESSED["folder_description"])) ? html_encode($PROCESSED["folder_description"]) : ""); ?></textarea>
 				</td>

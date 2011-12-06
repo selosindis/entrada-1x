@@ -81,14 +81,17 @@ CREATE TABLE IF NOT EXISTS `ar_clinics` (
 CREATE TABLE IF NOT EXISTS `ar_conference_papers` (
   `conference_papers_id` int(11) NOT NULL auto_increment,
   `lectures_papers_list` text NOT NULL,
-  `status` varchar(25) NOT NULL DEFAULT '',
+  `status` varchar(25) NOT NULL default '',
   `institution` text NOT NULL,
-  `location` varchar(250) NOT NULL DEFAULT '',
-  `type` varchar(30) NOT NULL DEFAULT '',
-  `year_reported` int(4) NOT NULL DEFAULT '0',
-  `proxy_id` int(11) DEFAULT NULL,
-  `updated_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
-  `updated_by` int(11) DEFAULT NULL,
+  `location` varchar(250) default NULL,
+  `countries_id` int(12) default NULL,
+  `city` varchar(100) default NULL,
+  `prov_state` varchar(200) default NULL,
+  `type` varchar(30) NOT NULL default '',
+  `year_reported` int(4) NOT NULL default '0',
+  `proxy_id` int(11) default NULL,
+  `updated_date` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
+  `updated_by` int(11) default NULL,
   PRIMARY KEY  (`conference_papers_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
@@ -126,14 +129,19 @@ CREATE TABLE IF NOT EXISTS `ar_continuing_education` (
 
 CREATE TABLE IF NOT EXISTS `ar_external_contributions` (
   `external_contributions_id` int(11) NOT NULL auto_increment,
-  `organisation` varchar(255) NOT NULL DEFAULT '',
-  `city_country` text NOT NULL,
+  `organisation` varchar(255) NOT NULL default '',
+  `city_country` text,
+  `countries_id` int(12) default NULL,
+  `city` varchar(100) default NULL,
+  `prov_state` varchar(200) default NULL,
+  `role` varchar(150) default NULL,
+  `role_description` text,
   `description` text NOT NULL,
-  `days_of_year` int(3) NOT NULL DEFAULT '0',
-  `year_reported` int(4) NOT NULL DEFAULT '0',
-  `proxy_id` int(11) DEFAULT NULL,
-  `updated_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
-  `updated_by` int(11) DEFAULT NULL,
+  `days_of_year` int(3) NOT NULL default '0',
+  `year_reported` int(4) NOT NULL default '0',
+  `proxy_id` int(11) default NULL,
+  `updated_date` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
+  `updated_by` int(11) default NULL,
   PRIMARY KEY  (`external_contributions_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
@@ -279,7 +287,13 @@ INSERT INTO `ar_lu_contribution_roles` (`id`, `contribution_role`) VALUES
 (13, 'Secretary'),
 (14, 'Vice Chair'),
 (15, 'Vice President'),
-(16, 'Other (specify)');
+(16, 'Other (specify)'),
+(17, 'Site Leader on a Clinical Trial'),
+(18, 'Learned Society: President'),
+(19, 'Learned Society: Vice-President'),
+(20, 'Learned Society: Secretary'),
+(21, 'Learned Society: Treasurer'),
+(22, 'Learned Society: Board Member');
 
 CREATE TABLE IF NOT EXISTS `ar_lu_contribution_types` (
   `id` int(11) NOT NULL auto_increment,
@@ -797,22 +811,25 @@ CREATE TABLE IF NOT EXISTS `ar_profile` (
 
 CREATE TABLE IF NOT EXISTS `ar_research` (
   `research_id` int(11) NOT NULL auto_increment,
+  `status` varchar(10) default NULL,
   `grant_title` text NOT NULL,
   `type` varchar(50) NOT NULL,
+  `location` varchar(25) default NULL,
+  `multiinstitutional` varchar(3) default NULL,
   `agency` text,
   `role` varchar(50) NOT NULL,
-  `principal_investigator` varchar(100) NOT NULL DEFAULT '',
+  `principal_investigator` varchar(100) NOT NULL default '',
   `co_investigator_list` text,
-  `amount_received` decimal(20,2) NOT NULL DEFAULT '0.00',
-  `start_month` int(2) NOT NULL DEFAULT '0',
-  `start_year` int(4) NOT NULL DEFAULT '0',
-  `end_month` int(2) DEFAULT '0',
-  `end_year` int(4) DEFAULT '0',
-  `year_reported` int(4) NOT NULL DEFAULT '0',
-  `funding_status` varchar(9) NOT NULL DEFAULT '',
-  `proxy_id` int(11) DEFAULT NULL,
-  `updated_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
-  `updated_by` int(11) DEFAULT NULL,
+  `amount_received` decimal(20,2) NOT NULL default '0.00',
+  `start_month` int(2) NOT NULL default '0',
+  `start_year` int(4) NOT NULL default '0',
+  `end_month` int(2) default '0',
+  `end_year` int(4) default '0',
+  `year_reported` int(4) NOT NULL default '0',
+  `funding_status` varchar(9) NOT NULL default '',
+  `proxy_id` int(11) default NULL,
+  `updated_date` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
+  `updated_by` int(11) default NULL,
   PRIMARY KEY  (`research_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 

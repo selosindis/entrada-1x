@@ -29,7 +29,7 @@
 	</head>
 
 	<body>
-
+	{$sys_system_navigator}
 	  <div class="container">
 		<header class="page-header">
 			<div class="span-24 page-header-title">
@@ -50,16 +50,11 @@
 		</header>
 		<div id="main" role="main" class="span-24">
 			<p class="span-24 toggle"><a href="#" id="toggle" class="toggle-panel"></a></p>
-			<aside class="span-5 left-nav">
-				{if $is_logged_in && $user_is_admin}
-					{include file="sidebar-blocks/admin_block.tpl"}
-				{else}
-					{include file="sidebar-blocks/entrada_block.tpl"}
-				{/if}
-				{if $is_logged_in && $user_is_member && $show_tertiary_sideblock}
-					{include file="sidebar-blocks/tertiary_block.tpl"}
-				{/if}
+			{if $show_tertiary_sideblock}
+			<aside class="span-5 left-nav">	
+				{include file="sidebar-blocks/tertiary_block.tpl"}				
 			</aside>
+			{/if}
 			<section class="span-18 left-space content">
 				<!--<div class="welcome-message">
 				<h1>Welcome to the {$site_community_title} Community</h1>

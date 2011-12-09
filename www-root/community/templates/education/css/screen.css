@@ -348,22 +348,25 @@ nav.top-navigation {
 	border-top:1px solid #c45730;
 	background:#b5360a;
 	background: -moz-linear-gradient(top,  #c73504,  #b33003); /* for firefox 3.6+ */
-	height:30px;
 	line-height:30px;
 	color:#FFF;
 }
+nav.top-navigation ul {
+	position:relative;
+	z-index:1;
+}
 nav.top-navigation ul.navigation-list li{
 	position:relative;
-	z-index:106;
 }
+
 
 nav.top-navigation ul.navigation-list .submenu{
 	background:#b33003;
 	display:none;
 	position:absolute;
 	left:0;
-	z-index:105;
 	top:30px;
+	z-index:2;
 }
 nav.top-navigation ul.navigation-list .submenu{
 	line-height:22px;
@@ -534,6 +537,7 @@ nav .next-link{
 }
 .content {
 	margin:0 15px;
+	padding-top:1px;
 }
 .content h1{
 	font-size:2em;
@@ -1132,4 +1136,16 @@ h3.announcement-date {
 	color: black;
 	font-size: 11px;
 	padding: 2px 3px;
+}
+.display-notice ul li {
+	background: transparent url(../images/list-notice.gif) no-repeat 0 3px;
+	padding-left:14px;
+}
+.display-success ul li {
+	background: transparent url(../images/list-success.gif) no-repeat 0 3px;
+	padding-left:14px;
+}
+.display-error ul li {
+	background: transparent url(../images/list-error.gif) no-repeat 0 3px;
+	padding-left:14px;
 }

@@ -345,11 +345,12 @@ nav.top-navigation  ul{
 	background:#0d6490;
 	margin-left:10px;
 	font-family:Arial;
+	position:relative;
+	z-index:1;
 
 }
 nav.top-navigation ul.navigation-list li{
 	position:relative;
-	z-index:10;
 }
 nav.top-navigation ul.navigation-list{
 	-moz-border-radius:5px 5px 0 0;
@@ -357,7 +358,8 @@ nav.top-navigation ul.navigation-list{
 	border-radius:5px 5px 0 0;
 	background: -webkit-gradient(linear, left top, left bottom, from(#0e6a98), to(#0c5c83)); /* for webkit browsers */
 	background: -moz-linear-gradient(top,  #0e6a98,  #0c5c83); /* for firefox 3.6+ */
-		width:930px;
+	width:930px;
+
 }
 
 nav.top-navigation ul.navigation-list .submenu{
@@ -366,9 +368,9 @@ nav.top-navigation ul.navigation-list .submenu{
 	display:none;
 	position:absolute;
 	left:0;
-	z-index:5;
 	margin-left:0;
 	opacity:1;
+	z-index:2;
 }
 nav.top-navigation ul.navigation-list .submenu{
 	line-height:22px;
@@ -533,6 +535,7 @@ nav .next-link{
 .left-space{padding-left:20px;}
 section.left-space{
 	padding-left:10px;
+	padding-top:1px;
 }
 .right-space{margin-right:10px;}
 .content h1,h2,h3,h4,h5,h6{

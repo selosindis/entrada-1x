@@ -57,7 +57,6 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 	} elseif((isset($_POST["category_id"])) && ((int) trim($_POST["category_id"]))) {
 		$CATEGORY_ID	= (int) trim($_POST["category_id"]);
 	}
-
 	/**
 	 * Ensure the selected category is feasible or send them to the first step.
 	 */
@@ -673,28 +672,32 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 			<td style="padding-top:6px;"><label for="community_template" class="form-nrequired">Community Template</label></td>
 			<td>
 				<div>
-					<?php 
-					$query = "SELECT * FROM `community_templates` WHERE `organisation_id` = ". $db->qstr($ENTRADA_USER->getActiveOrganisation());
-					$results = $db->GetAll($query);
-					if($results) {
+					<?php
+						$query = "SELECT * FROM `community_templates`"; 
+						$results = $db->GetAll($query);
+						if ($results) {
 						?>
-						<ul class="community-themes">
-						<?php
-						foreach($results as $community_template) {
+							<ul class="community-themes">
+							<?php
+							foreach($results as $community_template) {
+								?>
+								<li id="<?php echo $community_template["template_name"]."-template"; ?>">
+									<div class="template-rdo">
+										<input type="radio" id="<?php echo "template_option_".$community_template["template_id"] ?>" name="template_selection" value="<?php echo $community_template["template_id"]; ?>"<?php echo ((($template_selection == 0) && ($community_template["template_id"] == 1) || ($template_selection == $community_template["template_id"])) ? " checked=\"checked\"" : ""); ?> />
+									</div>
+									<div class="large-view">
+										<a href="#" class="<?php echo "large-view-".$community_template["template_id"]; ?>"><img src="<?php echo ENTRADA_URL. "/images/icon-magnify.gif"  ?>" /></a>
+									</div>
+									<label for="<?php echo "template_option_".$community_template["template_id"]; ?>"><?php echo ucfirst($community_template["template_name"]. " Template"); ?></label>
+								</li> 
+							<?php
+							}
 							?>
-							<li id="<?php echo $community_template["template_name"]."-template"; ?>">
-								<div class="template-rdo">
-									<input type="radio" id="<?php echo "template_option_".$community_template["template_id"] ?>" name="template_selection" value="<?php echo $community_template["template_id"]; ?>"<?php echo ((($template_selection == 0) && ($community_template["template_id"] == 1) || ($template_selection == $community_template["template_id"])) ? " checked=\"checked\"" : ""); ?> />
-								</div>
-								<div class="large-view">
-									<a href="#" class="<?php echo "large-view-".$community_template["template_id"]; ?>"><img src="<?php echo ENTRADA_URL. "/images/icon-magnify.gif"  ?>" /></a>
-								</div>
-								<label for="<?php echo "template_option_".$community_template["template_id"]; ?>"><?php echo ucfirst($community_template["template_name"]. " Template"); ?></label>
-							</li> 
+							</ul>
 						<?php
 						}
+					if($results) {
 						?>
-						</ul>
 						<div class="default-large" style="display:none;">
 							<img src="<?php echo ENTRADA_URL."/images/template-default-large.gif" ?>" alt="Default Template Screen shot" />
 						</div>

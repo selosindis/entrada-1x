@@ -1008,16 +1008,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 													?>
 													</ul>
 													<div class="default-large" style="display:none;">
-														<img src="<?php echo ENTRADA_URL."/images/template-default-large.jpg" ?>" alt="Default Template Screen shot" />
+														<img src="<?php echo ENTRADA_URL."/images/template-default-large.gif" ?>" alt="Default Template Screen shot" />
 													</div>
 													<div class="meeting-large" style="display:none;">
-														<img src="<?php echo ENTRADA_URL."/images/template-meeting-large.jpg" ?>" alt="Meeting Template Screen shot" />
+														<img src="<?php echo ENTRADA_URL."/images/template-meeting-large.gif" ?>" alt="Meeting Template Screen shot" />
 													</div> 
 													<div class="vp-large" style="display:none;">
-														<img src="<?php echo ENTRADA_URL."/images/template-vp-large.jpg" ?>" alt="Virtual Patient Template Screen shot" />
+														<img src="<?php echo ENTRADA_URL."/images/template-vp-large.gif" ?>" alt="Virtual Patient Template Screen shot" />
 													</div> 
 													<div class="education-large" style="display:none;">
-														<img src="<?php echo ENTRADA_URL."/images/template-education-large.jpg" ?>" alt="Education Template Screen shot" />
+														<img src="<?php echo ENTRADA_URL."/images/template-education-large.gif" ?>" alt="Education Template Screen shot" />
 													</div>
 												<?php
 												}

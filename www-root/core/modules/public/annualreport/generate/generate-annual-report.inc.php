@@ -1563,8 +1563,12 @@ if($results = queryIt($proxy_id, $table, $startDate, $endDate, $db)) {
 					echo "	<td class=\"student_name\">".html_encode($result["lectures_papers_list"])."&nbsp;</td>\n";
 					echo "	<td class=\"small_numbers\">".html_encode($result["status"])."&nbsp;</td>\n";
 					echo "	<td class=\"course_name\">".html_encode($result["institution"])."&nbsp;</td>\n";
-					echo "	<td class=\"small_numbers\">".html_encode($result["location"])."&nbsp;</td>\n";
-					echo "	<td class=\"small_numbers\">".html_encode($result["type"])."&nbsp;</td>\n";
+					if($REPORT_YEAR < '2011') {
+						echo "	<td class=\"small_numbers\">".html_encode($result["location"])."&nbsp;</td>\n";
+					} else {
+						echo "	<td class=\"small_numbers\">".html_encode($result["city"] . ", " . $result["prov_state"])."&nbsp;</td>\n";
+					}
+					echo "	<td class=\"small_numbers\">".html_encode($result["type"])."&nbsp;</td>\n";	
 					echo "	<td class=\"assigned\">".html_encode($result['year_reported'])."&nbsp;</td>\n";
 					echo "</tr>\n";
 					$ctr++;
@@ -2247,7 +2251,7 @@ else
 				<tr>
 					<td class="delete" id="colDelete" width="2%">#</td>
 					<td class="organisation" id="colsite" width="23%">Name of Organisation</td>
-					<td class="city_country" id="colaverage_hours" width="15%">City, Country</td>
+					<td class="city_country" id="colaverage_hours" width="15%">Location</td>
 					<td class="description" id="colspecial_features" width="50%">Description of Involvement</td>	
 					<td class="average_hours" id="colaverage_hours" width="10%">Days/Year</td>
 				</tr>
@@ -2260,7 +2264,11 @@ else
 				echo "<tr>\n";
 				echo "	<td class=\"delete\" width=\"2%\">".$ctr."&nbsp;</td>\n";
 				echo "	<td class=\"organisation\" width=\"23%\">".html_encode($result['organisation']);
-				echo "	<td class=\"city_country\" width=\"15%\">".html_encode($result['city_country'])."&nbsp;</td>\n";
+				if($REPORT_YEAR < '2011') {
+					echo "	<td class=\"city_country\">".html_encode($result["city_country"])."&nbsp;</td>\n";
+				} else {
+					echo "	<td class=\"city_country\">".html_encode($result["city"] . ", " . $result["prov_state"])."&nbsp;</td>\n";
+				}
 				echo "	<td class=\"description\" width=\"50%\">".html_encode($result['description'])."&nbsp;</td>\n";
 				echo "	<td class=\"average_hours\" width=\"10%\">".html_encode($result['days_of_year'])."&nbsp;</td>\n";
 				echo "</tr>";

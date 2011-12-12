@@ -72,6 +72,10 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			A report that shows publications in your department for a specific date range.
 		</li>
 		<li>
+			<a href="<?php echo ENTRADA_URL; ?>/annualreport/reports?section=my_departmental_publications_by_member">Publications By Members</a><br />
+			A report that shows publications in your department for a specific date range grouped by faculty member.
+		</li>
+		<li>
 			<a href="<?php echo ENTRADA_URL; ?>/annualreport/reports?section=my_departmental_grants">Research Grants</a><br />
 			A report that shows Research Grants in your department for a specific date range.
 		</li>

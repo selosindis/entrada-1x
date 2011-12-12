@@ -28,6 +28,7 @@
 	<link rel="stylesheet" href="{$template_relative}/css/screen.css">
 </head>
 <body>
+	{$sys_system_navigator}
     <header class="page-header">
 		<div class="container">
 		<div class="span-24 page-header-title">
@@ -55,16 +56,11 @@
 	 <div class="container">
 		<div id="main" role="main" class="span-24">
 		<p class="span-24 toggle"><a href="#" class="toggle-panel"></a></p>
+		{if $show_tertiary_sideblock}
 		<aside class="span-5 left-nav">
-			{if $is_logged_in && $user_is_admin}
-				{include file="sidebar-blocks/admin_left_block.tpl"}
-			{else}
-				{include file="sidebar-blocks/entrada_block.tpl"}
-			{/if}
-			{if $is_logged_in && $user_is_member && $show_tertiary_sideblock}
-				{include file="sidebar-blocks/tertiary_block.tpl"}
-			{/if}
+			{include file="sidebar-blocks/tertiary_block.tpl"}
 		</aside>
+		{/if}
 		<section class="span-18 content">
 			{$page_content}
 		</section>

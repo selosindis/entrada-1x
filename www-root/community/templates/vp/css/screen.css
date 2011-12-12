@@ -356,10 +356,11 @@ nav.top-navigation {
 nav.top-navigation  ul{
 	margin-left:10px;
 	font-family:Arial;
+	position:relative;
+	z-index:1;
 }
 nav.top-navigation ul.navigation-list li{
 	position:relative;
-	z-index:10;
 }
 
 nav.top-navigation ul.navigation-list .submenu{
@@ -370,6 +371,7 @@ nav.top-navigation ul.navigation-list .submenu{
 	z-index:5;
 	margin-left:0;
 	opacity:1;
+	z-index:2;
 }
 nav.top-navigation ul.navigation-list .submenu{
 	line-height:22px;
@@ -533,7 +535,7 @@ p.toggle a.off{
 #main p, #main ul li{
 	font-size:1em;
 }
-.left-space{padding-left:20px;}
+.left-space{padding-left:20px; padding-top:1px;}
 .right-space{margin-right:10px;}
 .content h1,h2,h3,h4,h5,h6{
 	color:#4b4b4b;
@@ -1093,4 +1095,16 @@ h3.announcement-date {
 	color: black;
 	font-size: 11px;
 	padding: 2px 3px;
+}
+.display-notice ul li {
+	background: transparent url(../images/list-notice.gif) no-repeat 0 3px;
+	padding-left:14px;
+}
+.display-success ul li {
+	background: transparent url(../images/list-success.gif) no-repeat 0 3px;
+	padding-left:14px;
+}
+.display-error ul li {
+	background: transparent url(../images/list-error.gif) no-repeat 0 3px;
+	padding-left:14px;
 }

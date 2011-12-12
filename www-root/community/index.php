@@ -338,7 +338,6 @@ if ($COMMUNITY_URL) {
 				 */
 				$COMMUNITY_MODULES = communities_fetch_modules($COMMUNITY_ID);
 				$COMMUNITY_PAGES = communities_fetch_pages($COMMUNITY_ID, $USER_ACCESS);
-				
 				/**
 				 * Loading Prototype
 				 */
@@ -662,7 +661,17 @@ if ($COMMUNITY_URL) {
 				$smarty->assign("user_is_admin", $COMMUNITY_ADMIN);
 				$smarty->assign("date_joined", $date_joined);
 				$smarty->assign("member_name", $member_name);
-				
+				$show_tertiary_sideblock = false;
+				foreach ($COMMUNITY_PAGES["navigation"] as $key => $value) {
+					if (count($value["link_children"]) > 0) {
+						foreach($value["link_children"] as $key2 => $value2) {
+							if ($value2["link_selected"]) {
+								$show_tertiary_sideblock = true;
+							}
+						}
+					}
+				}
+				$smarty->assign("show_tertiary_sideblock", $show_tertiary_sideblock);
 				$smarty->display("index.tpl");
 			}
 		} else {

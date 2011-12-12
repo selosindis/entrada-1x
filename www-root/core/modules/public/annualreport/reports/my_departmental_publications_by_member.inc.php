@@ -47,14 +47,14 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 		$departmentID = $departmentID[0]["department_id"];
 	}
 	
-	$departmentOuput = fetch_department_title($departmentID);
+	$departmentOutput = fetch_department_title($departmentID);
 	
-	$BREADCRUMB[]	= array("url" => "", "title" => "Publications for ".$departmentOuput);
+	$BREADCRUMB[]	= array("url" => "", "title" => "Publications for ".$departmentOutput);
 	
 	function display($results, $db)
     {	
 	    foreach($results as $result)
-	    {
+	    {	
 	    	$formattedRec	= "";
 	    	
 	        if($formattedRec == "") {
@@ -112,9 +112,9 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 	        }
 	        
 	        // Do not allow duplicates (i.e. multiple faculty report the same publication.
-	        if(in_array($formattedRec, $outputArray[$result["status"]]) === false) {
+	        //if(in_array($formattedRec, $outputArray[$result["status"]]) === false) {
 	        	$outputArray[$result["status"]][] = $formattedRec;
-	        }
+	        //}
 	    }
 	    
 	    $keyHeader = "<b>(1) Published:</b><br>";
@@ -124,20 +124,21 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 	    	for($u=0; $u<count($outputArray['Published']); $u++) {
 	    		$ctr=$u + 1;
 	    		$outputString = $outputArray['Published'][$u]."<br /><br />";
-	    		echo $outputString;
+	    		echo "<strong>" . $ctr . " - </strong>" .$outputString;
 	    	}
+	    	$totalCount = $ctr;
 	    } else {
 	    	echo "No Records.<br>";
 	    }
 	    	    
 	    $keyHeader = "<br><b>(2) In Press:</b><br>";
-		echo $keyHeader;
+		echo $keyHeader;		
 		
 	    if(count($outputArray['In Press']) > 0) {
     		for($u=0; $u<count($outputArray['In Press']); $u++) {
 	    		$ctr=$u + 1;
 	    		$outputString = $outputArray['In Press'][$u]."<br /><br />";
-	    		echo $outputString;
+	    		echo "<strong>" . $ctr . " - </strong>" .$outputString;
 	    	}
 	    } else {
 	    	echo "No Records.<br>";
@@ -150,7 +151,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
     		for($u=0; $u<count($outputArray['Submitted']); $u++) {
 	    		$ctr=$u + 1;
 	    		$outputString = $outputArray['Submitted'][$u]."<br /><br />";
-	    		echo $outputString;
+	    		echo "<strong>" . $ctr . " - </strong>" .$outputString;
 	    	}
 	    } else {
 	    	echo "No Records.<br>";
@@ -300,7 +301,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 		
 		$listOfDepartmentMembers = array();
 		
-		$departmentOuput = fetch_department_title($departmentID);
+		$departmentOutput = fetch_department_title($departmentID);
 		
 		if($isParentDepartment = fetch_department_children($departmentID)) {
 			foreach($isParentDepartment as $userDepartment) {
@@ -309,77 +310,89 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 				$departmentQuery .= " OR `dep_id`=".$db->qstr($thisDept);
 			}
 		}
-		$usersInDepartmentQuery = "SELECT DISTINCT `user_id` FROM `".AUTH_DATABASE."`.`user_departments`
-		WHERE `dep_id` = ".$db->qstr($departmentID).$departmentQuery;
 		
-		$departmentMembers = $db->GetAll($usersInDepartmentQuery);
-			
-		foreach($departmentMembers as $departmentMemberValue) {
-			$listOfDepartmentMembers[] = $departmentMemberValue["user_id"];
-		}
-		
-		$listOfDepartmentMembers = implode(",", $listOfDepartmentMembers);
-		
-		if(substr($departmentOuput, -1, 1) == "s") {
-			$departmentOuput = $departmentOuput."'";
+		if(substr($departmentOutput, -1, 1) == "s") {
+			$departmentOutput = $departmentOutput."'";
 		} else {
-			$departmentOuput = $departmentOuput."'s";
+			$departmentOutput = $departmentOutput."'s";
 		}
 		
-		echo "<h1 style=\"page-break-before: avoid\">Department of ".$departmentOuput." Publications</h1>";
+		echo "<h1 style=\"page-break-before: avoid\">Department of ".$departmentOutput." Publications by Member</h1>";
 		echo "<div class=\"content-small\" style=\"margin-bottom: 10px\">\n";
 		echo "	<strong>Date Range:</strong> ".$startYear." <strong>to</strong> ".$endYear;
 		echo "</div>";
-	
-		foreach($PROCESSED["type_id"] as $typeID) {
-			switch ($typeID) {
-				case 1:
-				case 4: 
-					$table = "ar_peer_reviewed_papers";
-					break;
-				case 2:
-				case 5: 
-					$table = "ar_non_peer_reviewed_papers";
-					break;
-				case 3:
-				case 6: 
-				case 7: 
-				case 8: 
-					$table = "ar_book_chapter_mono";
-					break;
-				case 10: 
-				case 11: 
-					$table = "ar_poster_reports";
-					break;
-			}
+		
+		$usersInDepartmentQuery = "SELECT DISTINCT `user_id`, `firstname`, `lastname` FROM `".AUTH_DATABASE."`.`user_departments`, `".AUTH_DATABASE."`.`user_data`
+		WHERE (`dep_id` = ".$db->qstr($departmentID).$departmentQuery.")
+		AND `user_id` = `user_data`.`id`
+		ORDER BY `lastname` ASC, `firstname` ASC";
+		
+		$departmentMembers = $db->GetAll($usersInDepartmentQuery);
+		$lastMember = "";
+		
+		foreach($departmentMembers as $departmentMemberValue) {
+			$departmentMember = $departmentMemberValue["user_id"];
+			$departmentMemberName = $departmentMemberValue["firstname"] . " " . $departmentMemberValue["lastname"];
 			
-			$query = "SELECT *
-			FROM `".$table."` 
-			WHERE `proxy_id` IN(".$listOfDepartmentMembers.")
-			AND `type_id` = '$typeID'".$dateWhere;
-			
-			if($results = $db->GetAll($query)) {
-				$currentType = getPublicationTypesSpecificFromID($typeID);
-				if(substr($currentType, -1, 1) != "s") {
-					$currentType = $currentType . "s";
+			foreach($PROCESSED["type_id"] as $typeID) {
+				switch ($typeID) {
+					case 1:
+					case 4: 
+						$table = "`".DATABASE_NAME."`.`ar_peer_reviewed_papers`";
+						break;
+					case 2:
+					case 5: 
+						$table = "`".DATABASE_NAME."`.`ar_non_peer_reviewed_papers`";
+						break;
+					case 3:
+					case 6: 
+					case 7: 
+					case 8: 
+						$table = "`".DATABASE_NAME."`.`ar_book_chapter_mono`";
+						break;
+					case 10: 
+					case 11: 
+						$table = "`".DATABASE_NAME."`.`ar_poster_reports`";
+						break;
 				}
-				$publicationSidebar[] = $currentType;
-				echo "<a name=\"".$currentType."\"></a>";
-				echo "<h2>".$currentType."</h2>\n";
-				display($results, $db);
-			
-				$tableCtr++;
+				
+				$query = "SELECT *
+				FROM ".$table.", `".AUTH_DATABASE."`.`user_data`
+				WHERE `proxy_id` = ".$departmentMember."
+				AND `proxy_id` = `".AUTH_DATABASE."`.`user_data`.`id`
+				AND `type_id` = '$typeID'".$dateWhere;
+				
+				if($results = $db->GetAll($query)) {
+					if($departmentMember != $lastMember) {
+						echo "<h2>".$departmentMemberName."</h2>";
+						$outputBreak = false;
+					} else {
+						$outputBreak = true;
+					}
+					$currentType = getPublicationTypesSpecificFromID($typeID);
+					if(substr($currentType, -1, 1) != "s") {
+						$currentType = $currentType . "s";
+					}
+					$publicationSidebar[] = $currentType;
+					echo "<a name=\"".$departmentMemberName."\"></a>";
+					if($outputBreak == true) {
+						echo "<br>";
+					}
+					echo "<h3>".$currentType."</h3>\n";
+					display($results, $db);
+					$lastMember = $departmentMember;
+				}
 			}
 		}
 		
-		if(isset($publicationSidebar)) {
+		/*if(isset($publicationSidebar)) {
 			$sidebar_html  = "<ul class=\"menu\">\n";
 			foreach($publicationSidebar as $result) {
 				$sidebar_html .= "	<li class=\"link\"><a href=\"#".$result."\" title=\"".html_encode($result)."\">".html_encode($result)."</a></li>\n";
 			}
 			$sidebar_html .= "</ul>";
 			new_sidebar_item("Publication List", $sidebar_html, "publication-list", "open");
-		}
+		}*/
 	}
 }
 ?>

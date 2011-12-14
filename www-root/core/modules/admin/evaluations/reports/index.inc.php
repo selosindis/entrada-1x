@@ -51,6 +51,10 @@ if (!defined("IN_EVALUATIONS")) {
 			<a href="<?php echo ENTRADA_URL; ?>/admin/evaluations/reports?section=student-teacher-evaluations">Teacher Evaluations</a><br />
 			Reports showing the students' evaluation of their pre-clerkship teachers.
 		</li>
+		<li>
+			<a href="<?php echo ENTRADA_URL; ?>/admin/evaluations/reports?section=student-clerkship-evaluations">Clerkship Evaluations</a><br />
+			Reports showing the students' evaluation of their clerkship teachers and/or rotations.
+		</li>
 	</ol>
 	<?php
 }

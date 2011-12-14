@@ -1819,6 +1819,110 @@ function fetch_specific_country($countries_id) {
 }
 
 /**
+ * This function generates a select box containing all child categories below the
+ * category passed in.
+ *
+ * @param unknown_type $results
+ * @param unknown_type $parent_id
+ * @param unknown_type $current_selected
+ * @param unknown_type $indent
+ * @param unknown_type $exclude
+ * @param unknown_type $hide_empty
+ * @return unknown
+ */
+function clerkship_categories_inselect($results, $parent_id = 0, $current_selected = array(), $indent = 0, $exclude = array(), $hide_empty = false) {
+	if($indent > 99) {
+		die("Preventing infinite loop");
+	}
+
+	$output	= "";
+	$ctotal	= @count($results);
+	for($i = 0; $i < $ctotal; $i++) {
+		if($results[$i]["category_parent"] == $parent_id) {
+			if((!@in_array($results[$i]["category_id"], $exclude)) && (!@in_array($parent_id, $exclude))) {
+				$result  = clerkship_categories_inselect($results, $results[$i]["category_id"], $current_selected, $indent + 1, $exclude, $hide_empty);
+				$output .= (((!$hide_empty) || ($result != "")) ? "<option value=\"".$results[$i]["category_id"]."\"".((@in_array($results[$i]["category_id"], $current_selected)) ? " selected=\"selected\"" : "").">".str_repeat("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;", $indent).(($indent > 0) ? "&rarr;&nbsp;" : "").$results[$i]["category_name"]."</option>\n" : " ");
+				$output .= $result;
+			} else {
+				$exclude[] = $results[$i]["category_id"];
+			}
+		}
+	}
+	return $output;
+}
+
+/**
+ * Returns true if child categories exist underneath the parent_id passed in
+ *
+ * @param unknown_type $parent_id
+ * @param unknown_type $indent
+ * @return unknown
+ */
+function clerkship_generate_included_categories($parent_id = 0, $indent = 0) {
+	global $db, $report_results;
+
+	if($indent > 99) die("Preventing infinite loop");
+
+	$query		= "
+				SELECT a.`category_id`, a.`category_name`
+				FROM `".CLERKSHIP_DATABASE."`.`categories` AS a
+				WHERE a.`category_parent` = ".$db->qstr($parent_id)."
+				AND a.`category_status` <> 'trash'
+				GROUP BY a.`category_id`
+				ORDER BY a.`category_order` ASC";
+	$results	= $db->GetAll($query);
+	foreach($results as $result) {
+		$report_results[$result["category_name"]]["indent"]			= (int) $indent;
+		$report_results[$result["category_name"]]["category_ids"][]	= (int) $result["category_id"];
+		clerkship_generate_included_categories($result["category_id"], $indent + 1);
+	}
+
+	return ((@count($report_results) > 0) ? true : false);
+}
+
+/**
+ * Returns all categories under the specified parent id as an array.
+ *
+ * @param unknown_type $parent_id
+ * @param unknown_type $indent
+ * @return unknown
+ */
+function clerkship_categories_inarray($parent_id, $indent = 0) {
+	global $db, $sub_category_ids;
+
+	if($indent > 99) {
+		die("Preventing infinite loop");
+	}
+
+	$query		= "SELECT * FROM `".CLERKSHIP_DATABASE."`.`categories` WHERE `category_parent`=".$db->qstr($parent_id)." AND `category_status`<>'trash' ORDER BY `category_order` ASC";
+	$results	= $db->GetAll($query);
+	foreach($results as $result) {
+		$sub_category_ids[] = $result["category_id"];
+		clerkship_categories_inarray($result["category_id"], $indent + 1);
+	}
+
+	return ((@count($sub_category_ids) > 0) ? true : false);
+}
+
+/**
+ * Returns the name of the category with the supplied category id.
+ *
+ * @param unknown_type $category_id
+ * @return unknown
+ */
+function clerkship_categories_name($category_id = 0) {
+	global $db;
+
+	$query	= "SELECT `category_name` FROM `".CLERKSHIP_DATABASE."`.`categories` WHERE `category_id`=".$db->qstr($category_id);
+	$result	= $db->GetRow($query);
+	if($result) {
+		return $result["category_name"];
+	} else {
+		return "Not Available";
+	}
+}
+
+/**
  * Output any available Clerkship evaluations the learner may have to complete.
  * 
  * @global object $db

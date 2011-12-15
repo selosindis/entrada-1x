@@ -3575,15 +3575,19 @@ ul.community-themes li.last {
 	margin-right:0;
 }
 
-#meeting-template {
+#committee-template {
 	background: url("../images/meeting-thumb.jpg");
 	border-color: #ccc;
 }
-#vp-template {
+#virtualPatient-template {
 	background: url("../images/vp-thumb.jpg");
 	border-color: #ccc;
 }
-#education-template {
+#course-template {
+background: url("../images/course-thumb.jpg");
+border-color: #CCC;
+}
+#learningModule-template {
 	background: url("../images/education-thumb.jpg");
 	border-color: #ccc;
 }

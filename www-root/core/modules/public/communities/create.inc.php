@@ -502,8 +502,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 	jQuery(function() {
 		jQuery( ".large-view-1" ).click(function() {
 			jQuery(".default-large").dialog({ 
-				 width: 776 , 
-				 height: 577,
+				 width: 792 , 
+				 height: 720,
 				 position: 'center',
 				 draggable: false,
 				 resizable: false,
@@ -523,16 +523,16 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 			});
 		});
 		jQuery( ".large-view-2" ).click(function() {
-			jQuery(".meeting-large").dialog({
-				 width: 776 , 
-				 height: 577,
+			jQuery(".committee-large").dialog({
+				 width: 792 , 
+				 height: 720,
 				 position: 'center',
 				 draggable: false,
 				 resizable: false,
 				 modal : true,
 				 show: 'fade',
 				 hide: 'fade',
-				 title: 'Meeting Template',
+				 title: 'Committee Template',
 				 buttons: {
 				'Select': function() {
 				   jQuery('#template_option_2').attr('checked', 'checked');
@@ -546,8 +546,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 		});
 		jQuery( ".large-view-3" ).click(function() {
 			jQuery(".vp-large").dialog({
-				 width: 776 , 
-				 height: 577,
+				 width: 792 , 
+				 height: 720,
 				 position: 'center',
 				 draggable: false,
 				 resizable: false,
@@ -567,19 +567,41 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 			});
 		});
 		jQuery( ".large-view-4" ).click(function() {
-			jQuery(".education-large").dialog({
-				 width: 776, 
-				 height: 577,
+			jQuery(".learningModule-large").dialog({
+				 width: 792, 
+				 height: 720,
 				 position: 'center',
 				 draggable: false,
 				 resizable: false,
 				 modal : true,
 				 show: 'fade',
 				 hide: 'fade',
-				 title: 'Education Template',
+				 title: 'Learning Module Template',
 				 buttons: {
 				'Select': function() {
 				   jQuery('#template_option_4').attr('checked', 'checked');
+				   jQuery(this).dialog('close');
+				},
+				'Close': function() {
+				   jQuery(this).dialog('close');
+				}
+			  }
+			});
+		});
+		jQuery( ".large-view-5" ).click(function() {
+			jQuery(".course-large").dialog({
+				 width: 792, 
+				 height: 720,
+				 position: 'center',
+				 draggable: false,
+				 resizable: false,
+				 modal : true,
+				 show: 'fade',
+				 hide: 'fade',
+				 title: 'Course Template',
+				 buttons: {
+				'Select': function() {
+				   jQuery('#template_option_5').attr('checked', 'checked');
 				   jQuery(this).dialog('close');
 				},
 				'Close': function() {
@@ -679,40 +701,64 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 						?>
 							<ul class="community-themes">
 							<?php
+							$template_groups = array();
+							$template_category = array();
 							foreach($results as $community_template) {
-								?>
-								<li id="<?php echo $community_template["template_name"]."-template"; ?>">
-									<div class="template-rdo">
-										<input type="radio" id="<?php echo "template_option_".$community_template["template_id"] ?>" name="template_selection" value="<?php echo $community_template["template_id"]; ?>"<?php echo ((($template_selection == 0) && ($community_template["template_id"] == 1) || ($template_selection == $community_template["template_id"])) ? " checked=\"checked\"" : ""); ?> />
-									</div>
-									<div class="large-view">
-										<a href="#" class="<?php echo "large-view-".$community_template["template_id"]; ?>"><img src="<?php echo ENTRADA_URL. "/images/icon-magnify.gif"  ?>" /></a>
-									</div>
-									<label for="<?php echo "template_option_".$community_template["template_id"]; ?>"><?php echo ucfirst($community_template["template_name"]. " Template"); ?></label>
-								</li> 
-							<?php
+								$permissions_query = "SELECT * FROM `communities_template_permissions` WHERE `template`= ".$db->qstr($community_template["template_name"]);
+								$template_permissions = $db->GetAll($permissions_query);
+								if ($template_permissions) {
+									foreach ($template_permissions as $template_permission) {
+										if ($template_permission["permission_type"] == null && $template_permission["permission_value"] == null) {
+											$template_groups[] = $template_permission["template"];
+										}
+										if ($template_permission["permission_type"] == "category_id" && $template_permission["permission_value"] == null) {
+											$template_groups[] = $template_permission["template"];
+										}
+										if ($template_permission["permission_type"] == "category_id") {
+											$template_category = explode(",", $template_permission["permission_value"]);
+										}
+										if ($template_permission["permission_type"] == "group") {
+											$template_groups = explode(",", $template_permission["permission_value"]);
+										}
+									}
+									if (in_array($GROUP, $template_groups) && in_array($CATEGORY_ID, $template_category) || in_array($template_permission["template"], $template_groups)) {
+										?>
+										<li id="<?php echo $community_template["template_name"]."-template"; ?>">
+											<div class="template-rdo">
+												<input type="radio" id="<?php echo "template_option_".$community_template["template_id"] ?>" name="template_selection" value="<?php echo $community_template["template_id"]; ?>"<?php echo ((($template_selection == 0) && ($community_template["template_id"] == 1) || ($template_selection == $community_template["template_id"])) ? " checked=\"checked\"" : ""); ?> />
+											</div>
+											<div class="large-view">
+												<a href="#" class="<?php echo "large-view-".$community_template["template_id"]; ?>"><img src="<?php echo ENTRADA_URL. "/images/icon-magnify.gif"  ?>" /></a>
+											</div>
+											<label for="<?php echo "template_option_".$community_template["template_id"]; ?>"><?php echo ucfirst($community_template["template_name"]. " Template"); ?></label>
+										</li> 
+									<?php
+									}
+								}
 							}
 							?>
 							</ul>
-						<?php
-						}
-					if($results) {
-						?>
 						<div class="default-large" style="display:none;">
 							<img src="<?php echo ENTRADA_URL."/images/template-default-large.gif" ?>" alt="Default Template Screen shot" />
 						</div>
-						<div class="meeting-large" style="display:none;">
-							<img src="<?php echo ENTRADA_URL."/images/template-meeting-large.gif" ?>" alt="Meeting Template Screen shot" />
+						<div class="committee-large" style="display:none;">
+							<img src="<?php echo ENTRADA_URL."/images/template-meeting-large.gif" ?>" alt="Committee Template Screen shot" />
 						</div> 
 						<div class="vp-large" style="display:none;">
 							<img src="<?php echo ENTRADA_URL."/images/template-vp-large.gif" ?>" alt="Virtual Patient Template Screen shot" />
 						</div> 
-						<div class="education-large" style="display:none;">
-							<img src="<?php echo ENTRADA_URL."/images/template-education-large.gif" ?>" alt="Education Template Screen shot" />
+						<div class="learningModule-large" style="display:none;">
+							<img src="<?php echo ENTRADA_URL."/images/template-education-large.gif" ?>" alt="Learning Template Screen shot" />
+						</div>
+						<div class="course-large" style="display:none;">
+							<img src="<?php echo ENTRADA_URL."/images/template-course-large.gif" ?>" alt="Course Template Screen shot" />
 						</div> 
 					<?php
 					}
 					?>
+						
+							
+								
 				</div>
 			</td>
 		</tr>

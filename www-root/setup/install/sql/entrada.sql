@@ -1042,13 +1042,13 @@ CREATE TABLE IF NOT EXISTS `communities` (
   `community_parent` int(12) NOT NULL DEFAULT '0',
   `category_id` int(12) NOT NULL DEFAULT '0',
   `community_url` text NOT NULL,
-  `community_template` varchar(12) NOT NULL DEFAULT 'default',
+  `community_template` varchar(30) NOT NULL DEFAULT 'default',
   `community_theme` varchar(12) NOT NULL DEFAULT 'default',
-  `community_shortname` varchar(32) NOT NULL,
-  `community_title` varchar(64) NOT NULL,
+  `community_shortname` varchar(32) NOT NULL DEFAULT '',
+  `community_title` varchar(64) NOT NULL DEFAULT '',
   `community_description` text NOT NULL,
-  `community_keywords` varchar(255) NOT NULL,
-  `community_email` varchar(128) NOT NULL,
+  `community_keywords` varchar(255) NOT NULL DEFAULT '',
+  `community_email` varchar(128) NOT NULL DEFAULT '',
   `community_website` text NOT NULL,
   `community_protected` int(1) NOT NULL DEFAULT '1',
   `community_registration` int(1) NOT NULL DEFAULT '1',
@@ -1061,16 +1061,36 @@ CREATE TABLE IF NOT EXISTS `communities` (
   `storage_max` int(32) NOT NULL DEFAULT '104857600',
   `updated_date` bigint(64) NOT NULL DEFAULT '0',
   `updated_by` int(12) NOT NULL DEFAULT '0',
-  PRIMARY KEY  (`community_id`),
+  PRIMARY KEY (`community_id`),
   KEY `sub_communities` (`sub_communities`),
   KEY `community_parent` (`community_parent`,`category_id`,`community_protected`,`community_registration`,`community_opened`,`updated_date`,`updated_by`),
   KEY `community_shortname` (`community_shortname`),
   KEY `max_storage` (`storage_max`),
   KEY `storage_usage` (`storage_usage`),
   KEY `community_active` (`community_active`),
-  FULLTEXT KEY `community_title` (`community_title`,`community_description`,`community_keywords`),
-  FULLTEXT KEY `community_url` (`community_url`)
+  FULLTEXT KEY `community_url` (`community_url`),
+  FULLTEXT KEY `community_title` (`community_title`,`community_description`,`community_keywords`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `communities_template_permissions` (
+  `ctpermission_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
+  `permission_type` enum('category_id','group') DEFAULT NULL,
+  `permission_value` varchar(32) DEFAULT NULL,
+  `template` varchar(32) NOT NULL,
+  PRIMARY KEY (`ctpermission_id`),
+  KEY `permission_index` (`permission_type`,`permission_value`,`template`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+INSERT INTO `communities_template_permissions` (`ctpermission_id`, `permission_type`, `permission_value`, `template`) VALUES
+(1,'','','default'),
+(2,'group','faculty,staff','course'),
+(3,'category_id','5','course'),
+(4,'group','faculty,staff','committee'),
+(5,'category_id','12','committee'),
+(6,'group','faculty,staff','learningModule'),
+(7,'group','faculty,staff','virtualPatient'),
+(9,'category_id','','virtualPatient'),
+(8,'category_id','','learningModule');
 
 CREATE TABLE IF NOT EXISTS `communities_categories` (
   `category_id` int(12) NOT NULL AUTO_INCREMENT,
@@ -1658,7 +1678,7 @@ CREATE TABLE IF NOT EXISTS `community_share_file_versions` (
   KEY `file_active` (`file_active`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-CREATE TABLE `community_templates` (
+CREATE TABLE IF NOT EXISTS `community_templates` (
   `template_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
   `template_name` varchar(60) NOT NULL,
   `template_description` text,
@@ -1669,10 +1689,11 @@ CREATE TABLE `community_templates` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `community_templates` (`template_id`, `template_name`, `template_description`, `organisation_id`, `group`, `role`) VALUES
-(1, 'default', "", NULL, NULL, NULL),
-(2, 'meeting', "", NULL, NULL, NULL),
-(3, 'vp', "", NULL, NULL, NULL),
-(4, 'education', "", NULL, NULL, NULL);
+(1,'default','',NULL,NULL,NULL),
+(2,'committee','',NULL,NULL,NULL),
+(3,'virtualPatient','',NULL,NULL,NULL),
+(4,'learningModule','',NULL,NULL,NULL),
+(5,'course','',NULL,NULL,NULL);
 
 CREATE TABLE IF NOT EXISTS `courses` (
   `course_id` int(12) unsigned NOT NULL AUTO_INCREMENT,

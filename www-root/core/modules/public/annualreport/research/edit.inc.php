@@ -85,13 +85,13 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 					}
 					if($_SESSION["details"]["clinical_member"]) {
 						/**
-						 * Required field "location" / Location
+						 * Required field "category" / Category
 						 */
 						if((isset($_POST["location"])) && ($location = clean_input($_POST["location"], array("notags", "trim")))) {
 							$PROCESSED["location"] = $location;
 						} else {
 							$ERROR++;
-							$ERRORSTR[] = "The <b>Location</b> field is required.";
+							$ERRORSTR[] = "The <b>Category</b> field is required.";
 						}
 						/**
 						 * Required field "multiinstitutional" / Multi-Institutional
@@ -408,7 +408,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 					?>
 					<tr>
 						<td></td>
-						<td style="vertical-align: top"><label for="location" class="form-required">Location</label></td>
+						<td style="vertical-align: top"><label for="category" class="form-required">Category</label></td>
 						<td>
 						<?php
 							if($PROCESSED["location"] == "External" || $researchResult["location"] == "External") {

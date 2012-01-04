@@ -312,30 +312,31 @@ INSERT INTO `ar_lu_contribution_types` (`id`, `contribution_type`) VALUES
 (8, 'Subcommittee (specify)'),
 (9, 'Other (specify)');
 
-CREATE TABLE IF NOT EXISTS `ar_lu_degree_types` (
-  `id` int(11) NOT NULL auto_increment,
+CREATE TABLE `ar_lu_degree_types` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `degree_type` varchar(50) NOT NULL DEFAULT '',
-  PRIMARY KEY  (`id`)
+  `visible` int(1) DEFAULT '1',
+  PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-INSERT INTO `ar_lu_degree_types` (`id`, `degree_type`) VALUES
-(1, 'BA'),
-(2, 'BSc'),
-(3, 'BNSc'),
-(4, 'MA'),
-(5, 'MD'),
-(6, 'M ED'),
-(7, 'MES'),
-(8, 'MSc'),
-(9, 'MScOT'),
-(10, 'MSc OT (Project)'),
-(11, 'MScPT'),
-(12, 'MSC PT (Project)'),
-(13, 'PDF'),
-(14, 'PhD'),
-(15, 'Clinical Fellow'),
-(16, 'Summer Research Student'),
-(17, 'MPA Candidate');
+INSERT INTO `ar_lu_degree_types` (`id`, `degree_type`, `visible`) VALUES
+(1, 'BA', 1),
+(2, 'BSc', 1),
+(3, 'BNSc', 1),
+(4, 'MA', 1),
+(5, 'MD', 1),
+(6, 'M ED', 1),
+(7, 'MES', 1),
+(8, 'MSc', 1),
+(9, 'MScOT', 1),
+(10, 'MSc OT (Project)', 1),
+(11, 'MScPT', 1),
+(12, 'MSC PT (Project)', 1),
+(13, 'PDF', 1),
+(14, 'PhD', 1),
+(15, 'Clinical Fellow', 1),
+(16, 'Summer Research Student', 1),
+(17, 'MPA Candidate', 1);
 
 CREATE TABLE IF NOT EXISTS `ar_lu_education_locations` (
   `id` int(11) NOT NULL auto_increment,

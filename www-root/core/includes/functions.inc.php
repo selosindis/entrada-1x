@@ -11874,6 +11874,40 @@ function getPublicationRoleSpecificFromID($roleID) {
 }
 
 /**
+ * This function gets lookup data from the ar_lu_pr_roles table
+ *
+ * @return array $results
+ */
+function getPRPublicationRoles() {
+    global $db;
+
+    $query = "SELECT *
+	FROM `ar_lu_pr_roles`
+	ORDER BY `role_description`";
+	
+    $results = $db->GetAll($query);
+	
+	return $results;
+}
+
+/**
+ * This function gets lookup data from the ar_lu_pr_roles table
+ *
+ * @return array $result
+ */
+function getPRPublicationRoleSpecificFromID($roleID) {
+    global $db;
+
+    $query = "SELECT `role_description`
+	FROM `ar_lu_pr_roles`
+	WHERE `role_id` = '$roleID'";
+	
+    $result = $db->GetRow($query);
+	
+	return $result["role_description"];
+}
+
+/**
  * This function gets lookup data from the ar_lu_activity_types table
  *
  * @return array $results

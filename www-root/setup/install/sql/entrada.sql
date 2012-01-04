@@ -312,7 +312,7 @@ INSERT INTO `ar_lu_contribution_types` (`id`, `contribution_type`) VALUES
 (8, 'Subcommittee (specify)'),
 (9, 'Other (specify)');
 
-CREATE TABLE `ar_lu_degree_types` (
+CREATE TABLE IF NOT EXISTS `ar_lu_degree_types` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `degree_type` varchar(50) NOT NULL DEFAULT '',
   `visible` int(1) DEFAULT '1',
@@ -456,6 +456,13 @@ INSERT INTO `ar_lu_patent_types` (`id`, `patent_type`) VALUES
 (2, 'Non-Disclosure Agreement'),
 (3, 'Patent Applied For'),
 (4, 'Patent Obtained');
+
+CREATE TABLE IF NOT EXISTS `ar_lu_pr_roles` (
+  `role_id` int(11) NOT NULL default '0',
+  `role_description` varchar(50) NOT NULL default '',
+  PRIMARY KEY  (`role_id`),
+  KEY `role_description` (`role_description`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `ar_lu_prize_categories` (
   `id` int(11) NOT NULL auto_increment,

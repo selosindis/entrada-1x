@@ -11985,6 +11985,7 @@ function getDegreeTypes() {
 
     $query = "SELECT *
 	FROM `ar_lu_degree_types`
+	WHERE `visible` = '1'
 	ORDER BY `degree_type` ASC";
 	
     $results = $db->GetAll($query);

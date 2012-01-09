@@ -460,8 +460,11 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 						<td><select name="role_id" id="role_id" style="vertical-align: middle; width: 35%">
 						<option value = ""></option>
 						<?php
-							$roles = getPublicationRoles();
-							
+							if($_SESSION["details"]["clinical_member"] && $PROCESSED["year_reported"] > '2010') {
+								$roles = getPRPublicationRoles();
+							} else {
+								$roles = getPublicationRoles();
+							}
 							foreach($roles as $role) {
 								echo "<option value=\"".$role["role_id"]."\"".((isset($PROCESSED["role_id"]) && $PROCESSED["role_id"] == $role["role_id"]) ? " selected=\"selected\"" : "").">".$role["role_description"]."</option>\n";
 							}

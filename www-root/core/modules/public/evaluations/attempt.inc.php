@@ -283,21 +283,7 @@ if ($RECORD_ID) {
 								$query				= "	SELECT *
 														FROM `evaluation_progress`
 														WHERE `evaluation_id` = ".$db->qstr($RECORD_ID)."
-														AND 
-														(
-															(
-																b.`evaluator_type` = 'proxy_id'
-																AND b.`evaluator_value` = ".$db->qstr($_SESSION["details"]["id"])."
-															)
-															OR
-															(
-																b.`evaluator_type` = 'organisation_id'
-																AND b.`evaluator_value` = ".$db->qstr($_SESSION["details"]["organisation_id"])."
-															)".($_SESSION["details"]["group"] == "student" ? " OR (
-																b.`evaluator_type` = 'cohort'
-																AND b.`evaluator_value` = ".$db->qstr($cohort["group_id"])."
-															)" : "")."
-														)
+														AND `proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
 														AND `progress_value` = 'inprogress'
 														ORDER BY `updated_date` ASC";
 								$progress_record	= $db->GetRow($query);

@@ -51,6 +51,17 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 	switch($STEP) {
 		case 2 :
 			$ENDERROR = false;
+			if($_SESSION["details"]["clinical_member"]) {
+				/**
+				 * Required field "status" / Status
+				 */
+				if((isset($_POST["status"])) && ($status = clean_input($_POST["status"], array("notags", "trim")))) {
+					$PROCESSED["status"] = $status;
+				} else {
+					$ERROR++;
+					$ERRORSTR[] = "The <b>Status</b> field is required.";
+				}
+			}
 			/**
 			 * Required field "grant_title" / Grant Title.
 			 */
@@ -68,6 +79,26 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			} else {
 				$ERROR++;
 				$ERRORSTR[] = "The <b>Type</b> field is required.";
+			}
+			if($_SESSION["details"]["clinical_member"]) {
+				/**
+				 * Required field "category" / Category
+				 */
+				if((isset($_POST["location"])) && ($location = clean_input($_POST["location"], array("notags", "trim")))) {
+					$PROCESSED["location"] = $location;
+				} else {
+					$ERROR++;
+					$ERRORSTR[] = "The <b>Category</b> field is required.";
+				}
+				/**
+				 * Required field "multiinstitutional" / Multi-Institutional
+				 */
+				if((isset($_POST["multiinstitutional"])) && ($multiinstitutional = clean_input($_POST["multiinstitutional"], array("notags", "trim")))) {
+					$PROCESSED["multiinstitutional"] = $multiinstitutional;
+				} else {
+					$ERROR++;
+					$ERRORSTR[] = "The <b>Multi-Institutional</b> field is required.";
+				}
 			}
 			/**
 			 * Dependent field "agency" / Sponsoring Agency.
@@ -304,6 +335,36 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			<tr>
 				<td colspan="3"><h2>Details</h2></td>
 			</tr>
+			<?php
+				if($_SESSION["details"]["clinical_member"]) {
+			?>
+			<tr>
+				<td></td>
+				<td style="vertical-align: top"><label for="status" class="form-required">Status</label></td>
+				<td>
+				<?php
+					if($PROCESSED["status"] == "Ongoing") {
+						echo "<input type=\"radio\" id=\"status\" name=\"status\" value=\"New\"/> New<br>
+						<input type=\"radio\" id=\"status\" name=\"status\" value=\"Ongoing\"/ CHECKED> Ongoing<br>
+						<input type=\"radio\" id=\"status\" name=\"status\" value=\"Renewed\"/> Renewed";
+					} else if($PROCESSED["status"] == "Renewed") {
+						echo "<input type=\"radio\" id=\"status\" name=\"status\" value=\"New\"/> New<br>
+						<input type=\"radio\" id=\"status\" name=\"status\" value=\"Ongoing\"/> Ongoing<br>
+						<input type=\"radio\" id=\"status\" name=\"status\" value=\"Renewed\" CHECKED/> Renewed";
+					} else {
+						echo "<input type=\"radio\" id=\"status\" name=\"status\" value=\"New\" CHECKED /> New<br>
+						<input type=\"radio\" id=\"status\" name=\"status\" value=\"Ongoing\"/> Ongoing<br>
+						<input type=\"radio\" id=\"status\" name=\"status\" value=\"Renewed\"/> Renewed";
+					}
+				?>
+				</td>
+			</tr>
+			<tr>
+				<td colspan="3">&nbsp;</td>
+			</tr>
+			<?php
+				}
+			?>
 			<tr>
 				<td></td>
 				<td><label for="grant_title" class="form-required">Title of Research / Grant</label></td>
@@ -327,6 +388,48 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			<tr>
 				<td colspan="3">&nbsp;</td>
 			</tr>
+			<?php
+				if($_SESSION["details"]["clinical_member"]) {
+			?>
+			<tr>
+				<td></td>
+				<td style="vertical-align: top"><label for="category" class="form-required">Category</label></td>
+				<td>
+				<?php
+					if($PROCESSED["location"] == "External") {
+						echo "<input type=\"radio\" id=\"location\" name=\"location\" value=\"Internal\"/> Internal to Queen's<br>
+						<input type=\"radio\" id=\"location\" name=\"location\" value=\"External\" CHECKED /> External";
+					} else {
+						echo "<input type=\"radio\" id=\"location\" name=\"location\" value=\"Internal\" CHECKED /> Internal to Queen's<br>
+						<input type=\"radio\" id=\"location\" name=\"location\" value=\"External\"/> External";
+					}
+				?>
+				</td>
+			</tr>
+			<tr>
+				<td colspan="3">&nbsp;</td>
+			</tr>
+			<tr>
+				<td></td>
+				<td style="vertical-align: top"><label for="multiinstitutional" class="form-required">Multi-Institutional</label></td>
+				<td>
+				<?php
+					if($PROCESSED["multiinstitutional"] == "Yes") {
+						echo "<input type=\"radio\" id=\"multiinstitutional\" name=\"multiinstitutional\" value=\"Yes\" CHECKED/> Yes<br>
+						<input type=\"radio\" id=\"multiinstitutional\" name=\"multiinstitutional\" value=\"No\"/> No";
+					} else {
+						echo "<input type=\"radio\" id=\"multiinstitutional\" name=\"multiinstitutional\" value=\"Yes\"/> Yes<br>
+						<input type=\"radio\" id=\"multiinstitutional\" name=\"multiinstitutional\" value=\"No\" CHECKED/> No";
+					}
+				?>
+				</td>
+			</tr>
+			<tr>
+				<td colspan="3">&nbsp;</td>
+			</tr>
+			<?php
+				}
+			?>
 			<tr>
 				<td></td>
 				<td style="vertical-align: top"><label for="agency" class="form-nrequired">Sponsoring Agency</label></td>

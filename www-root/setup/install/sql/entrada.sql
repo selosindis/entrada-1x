@@ -81,14 +81,17 @@ CREATE TABLE IF NOT EXISTS `ar_clinics` (
 CREATE TABLE IF NOT EXISTS `ar_conference_papers` (
   `conference_papers_id` int(11) NOT NULL auto_increment,
   `lectures_papers_list` text NOT NULL,
-  `status` varchar(25) NOT NULL DEFAULT '',
+  `status` varchar(25) NOT NULL default '',
   `institution` text NOT NULL,
-  `location` varchar(250) NOT NULL DEFAULT '',
-  `type` varchar(30) NOT NULL DEFAULT '',
-  `year_reported` int(4) NOT NULL DEFAULT '0',
-  `proxy_id` int(11) DEFAULT NULL,
-  `updated_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
-  `updated_by` int(11) DEFAULT NULL,
+  `location` varchar(250) default NULL,
+  `countries_id` int(12) default NULL,
+  `city` varchar(100) default NULL,
+  `prov_state` varchar(200) default NULL,
+  `type` varchar(30) NOT NULL default '',
+  `year_reported` int(4) NOT NULL default '0',
+  `proxy_id` int(11) default NULL,
+  `updated_date` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
+  `updated_by` int(11) default NULL,
   PRIMARY KEY  (`conference_papers_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
@@ -126,14 +129,19 @@ CREATE TABLE IF NOT EXISTS `ar_continuing_education` (
 
 CREATE TABLE IF NOT EXISTS `ar_external_contributions` (
   `external_contributions_id` int(11) NOT NULL auto_increment,
-  `organisation` varchar(255) NOT NULL DEFAULT '',
-  `city_country` text NOT NULL,
+  `organisation` varchar(255) NOT NULL default '',
+  `city_country` text,
+  `countries_id` int(12) default NULL,
+  `city` varchar(100) default NULL,
+  `prov_state` varchar(200) default NULL,
+  `role` varchar(150) default NULL,
+  `role_description` text,
   `description` text NOT NULL,
-  `days_of_year` int(3) NOT NULL DEFAULT '0',
-  `year_reported` int(4) NOT NULL DEFAULT '0',
-  `proxy_id` int(11) DEFAULT NULL,
-  `updated_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
-  `updated_by` int(11) DEFAULT NULL,
+  `days_of_year` int(3) NOT NULL default '0',
+  `year_reported` int(4) NOT NULL default '0',
+  `proxy_id` int(11) default NULL,
+  `updated_date` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
+  `updated_by` int(11) default NULL,
   PRIMARY KEY  (`external_contributions_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
@@ -279,7 +287,13 @@ INSERT INTO `ar_lu_contribution_roles` (`id`, `contribution_role`) VALUES
 (13, 'Secretary'),
 (14, 'Vice Chair'),
 (15, 'Vice President'),
-(16, 'Other (specify)');
+(16, 'Other (specify)'),
+(17, 'Site Leader on a Clinical Trial'),
+(18, 'Learned Society: President'),
+(19, 'Learned Society: Vice-President'),
+(20, 'Learned Society: Secretary'),
+(21, 'Learned Society: Treasurer'),
+(22, 'Learned Society: Board Member');
 
 CREATE TABLE IF NOT EXISTS `ar_lu_contribution_types` (
   `id` int(11) NOT NULL auto_increment,
@@ -299,29 +313,30 @@ INSERT INTO `ar_lu_contribution_types` (`id`, `contribution_type`) VALUES
 (9, 'Other (specify)');
 
 CREATE TABLE IF NOT EXISTS `ar_lu_degree_types` (
-  `id` int(11) NOT NULL auto_increment,
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `degree_type` varchar(50) NOT NULL DEFAULT '',
-  PRIMARY KEY  (`id`)
+  `visible` int(1) DEFAULT '1',
+  PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-INSERT INTO `ar_lu_degree_types` (`id`, `degree_type`) VALUES
-(1, 'BA'),
-(2, 'BSc'),
-(3, 'BNSc'),
-(4, 'MA'),
-(5, 'MD'),
-(6, 'M ED'),
-(7, 'MES'),
-(8, 'MSc'),
-(9, 'MScOT'),
-(10, 'MSc OT (Project)'),
-(11, 'MScPT'),
-(12, 'MSC PT (Project)'),
-(13, 'PDF'),
-(14, 'PhD'),
-(15, 'Clinical Fellow'),
-(16, 'Summer Research Student'),
-(17, 'MPA Candidate');
+INSERT INTO `ar_lu_degree_types` (`id`, `degree_type`, `visible`) VALUES
+(1, 'BA', 1),
+(2, 'BSc', 1),
+(3, 'BNSc', 1),
+(4, 'MA', 1),
+(5, 'MD', 1),
+(6, 'M ED', 1),
+(7, 'MES', 1),
+(8, 'MSc', 1),
+(9, 'MScOT', 1),
+(10, 'MSc OT (Project)', 1),
+(11, 'MScPT', 1),
+(12, 'MSC PT (Project)', 1),
+(13, 'PDF', 1),
+(14, 'PhD', 1),
+(15, 'Clinical Fellow', 1),
+(16, 'Summer Research Student', 1),
+(17, 'MPA Candidate', 1);
 
 CREATE TABLE IF NOT EXISTS `ar_lu_education_locations` (
   `id` int(11) NOT NULL auto_increment,
@@ -441,6 +456,13 @@ INSERT INTO `ar_lu_patent_types` (`id`, `patent_type`) VALUES
 (2, 'Non-Disclosure Agreement'),
 (3, 'Patent Applied For'),
 (4, 'Patent Obtained');
+
+CREATE TABLE IF NOT EXISTS `ar_lu_pr_roles` (
+  `role_id` int(11) NOT NULL default '0',
+  `role_description` varchar(50) NOT NULL default '',
+  PRIMARY KEY  (`role_id`),
+  KEY `role_description` (`role_description`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `ar_lu_prize_categories` (
   `id` int(11) NOT NULL auto_increment,
@@ -797,22 +819,25 @@ CREATE TABLE IF NOT EXISTS `ar_profile` (
 
 CREATE TABLE IF NOT EXISTS `ar_research` (
   `research_id` int(11) NOT NULL auto_increment,
+  `status` varchar(10) default NULL,
   `grant_title` text NOT NULL,
   `type` varchar(50) NOT NULL,
+  `location` varchar(25) default NULL,
+  `multiinstitutional` varchar(3) default NULL,
   `agency` text,
   `role` varchar(50) NOT NULL,
-  `principal_investigator` varchar(100) NOT NULL DEFAULT '',
+  `principal_investigator` varchar(100) NOT NULL default '',
   `co_investigator_list` text,
-  `amount_received` decimal(20,2) NOT NULL DEFAULT '0.00',
-  `start_month` int(2) NOT NULL DEFAULT '0',
-  `start_year` int(4) NOT NULL DEFAULT '0',
-  `end_month` int(2) DEFAULT '0',
-  `end_year` int(4) DEFAULT '0',
-  `year_reported` int(4) NOT NULL DEFAULT '0',
-  `funding_status` varchar(9) NOT NULL DEFAULT '',
-  `proxy_id` int(11) DEFAULT NULL,
-  `updated_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
-  `updated_by` int(11) DEFAULT NULL,
+  `amount_received` decimal(20,2) NOT NULL default '0.00',
+  `start_month` int(2) NOT NULL default '0',
+  `start_year` int(4) NOT NULL default '0',
+  `end_month` int(2) default '0',
+  `end_year` int(4) default '0',
+  `year_reported` int(4) NOT NULL default '0',
+  `funding_status` varchar(9) NOT NULL default '',
+  `proxy_id` int(11) default NULL,
+  `updated_date` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
+  `updated_by` int(11) default NULL,
   PRIMARY KEY  (`research_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
@@ -1025,13 +1050,13 @@ CREATE TABLE IF NOT EXISTS `communities` (
   `community_parent` int(12) NOT NULL DEFAULT '0',
   `category_id` int(12) NOT NULL DEFAULT '0',
   `community_url` text NOT NULL,
-  `community_template` varchar(12) NOT NULL DEFAULT 'default',
+  `community_template` varchar(30) NOT NULL DEFAULT 'default',
   `community_theme` varchar(12) NOT NULL DEFAULT 'default',
-  `community_shortname` varchar(32) NOT NULL,
-  `community_title` varchar(64) NOT NULL,
+  `community_shortname` varchar(32) NOT NULL DEFAULT '',
+  `community_title` varchar(64) NOT NULL DEFAULT '',
   `community_description` text NOT NULL,
-  `community_keywords` varchar(255) NOT NULL,
-  `community_email` varchar(128) NOT NULL,
+  `community_keywords` varchar(255) NOT NULL DEFAULT '',
+  `community_email` varchar(128) NOT NULL DEFAULT '',
   `community_website` text NOT NULL,
   `community_protected` int(1) NOT NULL DEFAULT '1',
   `community_registration` int(1) NOT NULL DEFAULT '1',
@@ -1044,16 +1069,36 @@ CREATE TABLE IF NOT EXISTS `communities` (
   `storage_max` int(32) NOT NULL DEFAULT '104857600',
   `updated_date` bigint(64) NOT NULL DEFAULT '0',
   `updated_by` int(12) NOT NULL DEFAULT '0',
-  PRIMARY KEY  (`community_id`),
+  PRIMARY KEY (`community_id`),
   KEY `sub_communities` (`sub_communities`),
   KEY `community_parent` (`community_parent`,`category_id`,`community_protected`,`community_registration`,`community_opened`,`updated_date`,`updated_by`),
   KEY `community_shortname` (`community_shortname`),
   KEY `max_storage` (`storage_max`),
   KEY `storage_usage` (`storage_usage`),
   KEY `community_active` (`community_active`),
-  FULLTEXT KEY `community_title` (`community_title`,`community_description`,`community_keywords`),
-  FULLTEXT KEY `community_url` (`community_url`)
+  FULLTEXT KEY `community_url` (`community_url`),
+  FULLTEXT KEY `community_title` (`community_title`,`community_description`,`community_keywords`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `communities_template_permissions` (
+  `ctpermission_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
+  `permission_type` enum('category_id','group') DEFAULT NULL,
+  `permission_value` varchar(32) DEFAULT NULL,
+  `template` varchar(32) NOT NULL,
+  PRIMARY KEY (`ctpermission_id`),
+  KEY `permission_index` (`permission_type`,`permission_value`,`template`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+INSERT INTO `communities_template_permissions` (`ctpermission_id`, `permission_type`, `permission_value`, `template`) VALUES
+(1,'','','default'),
+(2,'group','faculty,staff','course'),
+(3,'category_id','5','course'),
+(4,'group','faculty,staff','committee'),
+(5,'category_id','12','committee'),
+(6,'group','faculty,staff','learningModule'),
+(7,'group','faculty,staff','virtualPatient'),
+(9,'category_id','','virtualPatient'),
+(8,'category_id','','learningModule');
 
 CREATE TABLE IF NOT EXISTS `communities_categories` (
   `category_id` int(12) NOT NULL AUTO_INCREMENT,
@@ -1640,6 +1685,23 @@ CREATE TABLE IF NOT EXISTS `community_share_file_versions` (
   KEY `cshare_id` (`csfile_id`,`cshare_id`,`community_id`,`proxy_id`,`file_version`,`updated_date`,`updated_by`),
   KEY `file_active` (`file_active`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `community_templates` (
+  `template_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
+  `template_name` varchar(60) NOT NULL,
+  `template_description` text,
+  `organisation_id` int(12) unsigned DEFAULT NULL,
+  `group` int(12) unsigned DEFAULT NULL,
+  `role` varchar(100) DEFAULT NULL,
+  PRIMARY KEY (`template_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+INSERT INTO `community_templates` (`template_id`, `template_name`, `template_description`, `organisation_id`, `group`, `role`) VALUES
+(1,'default','',NULL,NULL,NULL),
+(2,'committee','',NULL,NULL,NULL),
+(3,'virtualPatient','',NULL,NULL,NULL),
+(4,'learningModule','',NULL,NULL,NULL),
+(5,'course','',NULL,NULL,NULL);
 
 CREATE TABLE IF NOT EXISTS `courses` (
   `course_id` int(12) unsigned NOT NULL AUTO_INCREMENT,

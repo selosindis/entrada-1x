@@ -567,7 +567,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 			conference_papers_grid = jQuery("#flex6").flexigrid
 			(
 				{
-				url: '<?php echo ENTRADA_URL; ?>/api/ar_loadgrid.api.php?id=<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>&t=<?php echo $fields; ?>',
+				url: '<?php echo ENTRADA_URL; ?>/api/ar_loadgrid_conference.api.php?id=<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>&t=<?php echo $fields; ?>',
 				dataType: 'json',
 				method: 'POST',
 				colModel : [

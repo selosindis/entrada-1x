@@ -681,11 +681,11 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 					break;
 			}
 
-			$query		= "	SELECT a.*, CONCAT_WS(', ', c.`lastname`, c.`firstname`) AS `fullname`, MAX(d.`timestamp`) AS `last_visited`
+			$query		= "	SELECT a.*, e.`course_code`, CONCAT_WS(', ', c.`lastname`, c.`firstname`) AS `fullname`, MAX(d.`timestamp`) AS `last_visited`
 							FROM `events` AS a
-							LEFT JOIN `event_contacts` AS b
+							JOIN `event_contacts` AS b
 							ON b.`event_id` = a.`event_id`
-							LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS c
+							JOIN `".AUTH_DATABASE."`.`user_data` AS c
 							ON c.`id` = b.`proxy_id`
 							LEFT JOIN `statistics` AS d
 							ON d.`module` = 'events'
@@ -693,6 +693,8 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 							AND d.`action` = 'view'
 							AND d.`action_field` = 'event_id'
 							AND d.`action_value` = a.`event_id`
+							JOIN `courses` AS e
+							ON e.`course_id` = a.`course_id`
 							WHERE (a.`event_start` BETWEEN ".$db->qstr($DISPLAY_DURATION["start"])." AND ".$db->qstr($DISPLAY_DURATION["end"]).")
 							AND b.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
 							GROUP BY a.`event_id`
@@ -730,7 +732,7 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 						<colgroup>
 							<col class="modified" />
 							<col class="date" />
-							<col class="phase" />
+							<col class="course-code" />
 							<col class="title" />
 							<col class="attachment" />
 						</colgroup>
@@ -738,7 +740,7 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 							<tr>
 								<td class="modified" id="colModified">&nbsp;</td>
 								<td class="date sortedASC"><div class="noLink">Date &amp; Time</div></td>
-								<td class="phase">Phase</td>
+								<td class="course-code">Course</td>
 								<td class="title">Event Title</td>
 								<td class="attachment">&nbsp;</td>
 							</tr>
@@ -759,8 +761,8 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 
 									echo "<tr id=\"event-".$result["event_id"]."\" class=\"event\">\n";
 									echo "	<td class=\"modified\">".(($is_modified) ? "<img src=\"".ENTRADA_URL."/images/lecture-modified.gif\" width=\"15\" height=\"15\" alt=\"This event has been modified since your last visit on ".date(DEFAULT_DATE_FORMAT, $result["last_visited"]).".\" title=\"This event has been modified since your last visit on ".date(DEFAULT_DATE_FORMAT, $result["last_visited"]).".\" style=\"vertical-align: middle\" />" : "<img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"15\" height=\"15\" alt=\"\" title=\"\" style=\"vertical-align: middle\" />")."</td>\n";
-									echo "	<td class=\"date\"><a href=\"".$url."\" title=\"Event Date\">".date(DEFAULT_DATE_FORMAT, $result["event_start"])."</a></td>\n";
-									echo "	<td class=\"phase\"><a href=\"".$url."\" title=\"Intended For Phase ".html_encode($result["event_phase"])."\">".html_encode($result["event_phase"])."</a></td>\n";
+									echo "	<td class=\"date\"><a href=\"".$url."\">".date(DEFAULT_DATE_FORMAT, $result["event_start"])."</a></td>\n";
+									echo "	<td class=\"course-code\"><a href=\"".$url."\">".html_encode($result["course_code"])."</a></td>\n";
 									echo "	<td class=\"title\"><a href=\"".$url."\" title=\"Event Title: ".html_encode($result["event_title"])."\">".html_encode($result["event_title"])."</a></td>\n";
 									echo "	<td class=\"attachment\">".(($attachments) ? "<img src=\"".ENTRADA_URL."/images/attachment.gif\" width=\"16\" height=\"16\" alt=\"Contains ".$attachments." attachment".(($attachments != 1) ? "s" : "")."\" title=\"Contains ".$attachments." attachment".(($attachments != 1) ? "s" : "")."\" />" : "<img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"16\" height=\"16\" alt=\"\" title=\"\" style=\"vertical-align: middle\" />")."</td>\n";
 									echo "</tr>\n";

@@ -108,7 +108,7 @@ if(!defined("PARENT_INCLUDED")) {
 		 */
 		preferences_update($MODULE, $PREFERENCES);
 		
-		if($_SESSION["details"]["email_updated"] == false && $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"] == "faculty") {
+		if($_SESSION["details"]["email_updated"] == false && $_SESSION["details"]["group"] == "faculty") {
 		?>
 		<script>
 		jQuery(document).ready(function() {

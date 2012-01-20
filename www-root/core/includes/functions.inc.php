@@ -14940,3 +14940,22 @@ function fetch_cases_list() {
 		return false;
 	}
 }
+
+/**
+ * This function returns the curriculum level related to a course code
+ *
+ * @param int $organisation_id
+ * @return array $groups
+ */
+function fetch_curriculum_level($course_code) {
+	global $db, $ENTRADA_USER;
+	
+	$query = "SELECT `curriculum_level` FROM `curriculum_lu_levels`, `courses`, `curriculum_lu_types`
+	WHERE `courses`.`course_code` = ".$db->qstr($course_code)." 
+	AND `courses`.`curriculum_type_id` = `curriculum_lu_types`.`curriculum_type_id`
+	AND `curriculum_lu_types`.`curriculum_level_id` = `curriculum_lu_levels`.`curriculum_level_id`";
+	
+	$curriculum_level = $db->GetROw($query);
+	
+	return $curriculum_level["curriculum_level"];
+}

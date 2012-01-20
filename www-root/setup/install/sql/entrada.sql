@@ -1851,27 +1851,29 @@ CREATE TABLE IF NOT EXISTS `cron_community_notifications` (
   PRIMARY KEY  (`ccnotification_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-CREATE TABLE  IF NOT EXISTS `curriculum_lu_types` (
-  `curriculum_type_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
-  `parent_id` int(12) unsigned NOT NULL DEFAULT '0',
+CREATE TABLE `curriculum_lu_types` (
+  `curriculum_type_id` int(12) unsigned NOT NULL auto_increment,
+  `parent_id` int(12) unsigned NOT NULL default '0',
   `curriculum_type_name` varchar(60) NOT NULL,
   `curriculum_type_description` text,
-  `curriculum_type_order` int(12) unsigned NOT NULL DEFAULT '0',
-  `curriculum_type_active` int(1) unsigned NOT NULL DEFAULT '1',
+  `curriculum_type_order` int(12) unsigned NOT NULL default '0',
+  `curriculum_type_active` int(1) unsigned NOT NULL default '1',
+  `curriculum_level_id` int(12) default NULL,
   `updated_date` bigint(64) unsigned NOT NULL,
   `updated_by` int(12) unsigned NOT NULL,
   PRIMARY KEY  (`curriculum_type_id`),
   KEY `curriculum_type_order` (`curriculum_type_order`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-INSERT INTO `curriculum_lu_types` (`curriculum_type_id`, `parent_id`, `curriculum_type_name`, `curriculum_type_description`, `curriculum_type_order`, `curriculum_type_active`, `updated_date`, `updated_by`) VALUES
-(1, 0, 'Term 1', NULL, 0, 1, 1250538588, 1),
-(2, 0, 'Term 2', NULL, 1, 1, 1250538588, 1),
-(3, 0, 'Term 3', NULL, 2, 1, 1250538588, 1),
-(4, 0, 'Term 4', NULL, 3, 1, 1250538588, 1),
-(5, 0, 'Term 5', NULL, 4, 1, 1250538588, 1),
-(6, 0, 'Term 6', NULL, 5, 1, 1250538588, 1),
-(7, 0, 'Term 7', NULL, 6, 1, 1250538588, 1),
-(8, 0, 'Term 8', NULL, 7, 1, 1250538588, 1);
+) ENGINE=MyISAM DEFAULT CHARSET=ut8;
+
+INSERT INTO `curriculum_lu_types` (`curriculum_type_id`, `parent_id`, `curriculum_type_name`, `curriculum_type_description`, `curriculum_type_order`, `curriculum_type_active`, `curriculum_level_id`, `updated_date`, `updated_by`) VALUES
+(1, 0, 'Term 1', NULL, 0, 1, NULL, 1250538588, 1),
+(2, 0, 'Term 2', NULL, 1, 1, NULL, 1250538588, 1),
+(3, 0, 'Term 3', NULL, 2, 1, NULL, 1250538588, 1),
+(4, 0, 'Term 4', NULL, 3, 1, NULL, 1250538588, 1),
+(5, 0, 'Term 5', NULL, 4, 1, NULL, 1250538588, 1),
+(6, 0, 'Term 6', NULL, 5, 1, NULL, 1250538588, 1),
+(7, 0, 'Term 7', NULL, 6, 1, NULL, 1250538588, 1),
+(8, 0, 'Term 8', NULL, 7, 1, NULL, 1250538588, 1);
 
 CREATE TABLE IF NOT EXISTS `curriculum_periods`(
 	`cperiod_id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -4084,3 +4086,13 @@ CREATE TABLE IF NOT EXISTS `topic_organisation`(
 ) ENGINE = MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `topic_organisation` SELECT `topic_id`,1 FROM `events_lu_topics`;
+
+CREATE TABLE `curriculum_lu_levels` (
+  `curriculum_level_id` int(11) unsigned NOT NULL auto_increment,
+  `curriculum_level` varchar(100) NOT NULL default '',
+  PRIMARY KEY  (`curriculum_level_id`)
+) ENGINE=MyISAM AUTO_INCREMENT=3 DEFAULT CHARSET=utf8;
+
+INSERT INTO `curriculum_lu_levels` (`curriculum_level_id`, `curriculum_level`) VALUES
+(1, 'Undergraduate'),
+(2, 'Postgraduate');

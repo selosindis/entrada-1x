@@ -28,7 +28,7 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 	// Get the service code
 	$query = "	SELECT *
 					FROM  `mtd_moh_service_codes`
-					WHERE `service_description` = " . $db->qstr($result["moh_service_name"]);
+					WHERE `service_description` = " . $db->qstr($result["moh_program_description"]);
 
 	$result = $db->GetRow($query);
 
@@ -42,9 +42,9 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 
 	//add the other services that Internal Medicine does tracking for
 	if ($result["service_description"] == "Internal Medicine") {
-		array_push($mtd_service_id_arr, $result["id"], "1", "10");
-		array_push($mtd_service_code_arr, $result["service_code"], "ALL", "END");
-		array_push($mtd_service_description_arr, $result["service_description"], "Allergy", "Endocrinology");
+		array_push($mtd_service_id_arr, $result["id"], "1", "10", "22");
+		array_push($mtd_service_code_arr, $result["service_code"], "ALL", "END", "ID");
+		array_push($mtd_service_description_arr, $result["service_description"], "Allergy", "Endocrinology", "Infectious Diseases");
 	} else {
 		$mtd_service_id = $result["id"];
 		$mtd_service_code = $result["service_code"];

@@ -236,9 +236,9 @@ GOOGLENOTIFICATION;
  * After you register, customize the URL below with your key.
  *
  */
-define("DEFAULT_WEATHER_FETCH", "http://xoap.weather.com/weather/local/%LOCATIONCODE%?cc=*&link=xoap&prod=xoap&unit=m&par=YOUR-PARTNER-ID&key=YOUR-API-KEY");
+define("DEFAULT_WEATHER_FETCH", "http://weather.yahooapis.com/forecastrss?u=c&w=%LOCATIONCODE%");
 
-$WEATHER_LOCATION_CODES = array("CAXX0225" => "Kingston, Ontario");				// These are the weather.com weather city / airport weather codes that are fetched and stored for use on the Dashboard.
+$WEATHER_LOCATION_CODES = array("4145" => "Kingston, Ontario");				// These are the weather.com weather city / airport weather codes that are fetched and stored for use on the Dashboard.
 
 define("LOG_DIRECTORY", $config->entrada_storage . "/logs");					// Full directory path to the logs directory without a trailing slash.
 

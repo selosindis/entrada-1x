@@ -78,15 +78,6 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 					} else {
 						$ERROR++;
 						$ERRORSTR[] = "The <strong>Institution</strong> field is required.";
-					}			
-					/**
-					 * Required field "location" / Location
-					 */
-					if((isset($_POST["location"])) && ($location = clean_input($_POST["location"], array("notags", "trim")))) {
-						$PROCESSED["location"] = $location;
-					} else {
-						$ERROR++;
-						$ERRORSTR[] = "The <strong>Location</strong> field is required.";
 					}
 					/**
 					 * Required field "type" / Type.
@@ -105,6 +96,56 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 					} else {
 						$ERROR++;
 						$ERRORSTR[] = "The <strong>Year Reported</strong> field is required.";
+					}
+					if($PROCESSED["year_reported"] < '2011') {
+						/**
+						 * Required field "location" / Location
+						 */
+						if((isset($_POST["location"])) && ($location = clean_input($_POST["location"], array("notags", "trim")))) {
+							$PROCESSED["location"] = $location;
+						} else {
+							$ERROR++;
+							$ERRORSTR[] = "The <strong>Location</strong> field is required.";
+						}
+					} else {
+						/**
+						 * Required field "countries_id" / Country.
+						 */
+						if ((isset($_POST["countries_id"])) && ($countries_id = clean_input($_POST["countries_id"], "int"))) {
+							$PROCESSED["countries_id"] = $countries_id;
+							//Province is required if the `countries_id` has provinces related to it in the database.
+							$query = "	SELECT count(`province`) FROM `global_lu_provinces`
+										WHERE `country_id` = ".$db->qstr($PROCESSED["countries_id"])."
+										GROUP BY `country_id`";
+							$province_required = ($db->GetOne($query) ? true : false);
+						} else {
+							$ERROR++;
+							$ERRORSTR[] = "The <strong>Country</strong> field is required.";
+							$province_required = false;
+						}
+						/**
+						 * Required field "city" / City.
+						 */
+						if ((isset($_POST["city"])) && ($city = clean_input($_POST["city"], array("notags", "trim"))) && strpos($city, ",") === false) {
+							$PROCESSED["city"] = $city;
+						} else {
+							$ERROR++;
+							$ERRORSTR[] = "The <strong>City</strong> field is required, and should not contain either the province/state or any commas.";
+						}
+						/**
+						 * Required field "prov_state" / Prov / State.
+						 */
+						if ((isset($_POST["prov_state"])) && ($prov_state = clean_input($_POST["prov_state"], array("notags", "trim")))) {
+							$PROCESSED["prov_state"] = htmlentities($prov_state);
+							if (strlen($prov_state) > 100)
+							{
+								$ERROR++;
+								$ERRORSTR[] = "The <strong>Prov / State</strong> can only contain a maximum of 100 characters.";
+							}
+						} elseif ($province_required) {
+							$ERROR++;
+							$ERRORSTR[] = "The <strong>Prov / State</strong> field is required.";
+						}
 					}
 					
 					if(isset($_POST["post_action"])) {
@@ -179,14 +220,50 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 					if(!isset($PROCESSED) || count($PROCESSED) <= 0)
 					{
 						$conferencePaperQuery = "SELECT * FROM `ar_conference_papers` WHERE `conference_papers_id` =".$db->qstr($CONFERENCE_PAPERS_ID);						
-						$conferencePaperResult = $db->GetRow($conferencePaperQuery);
+						$PROCESSED = $db->GetRow($conferencePaperQuery);
 					}
+					$HEAD[]			= "<script type=\"text/javascript\">
+					var updater = null;
+					function provStateFunction(countries_id)
+					{	
+						var url='".webservice_url("clerkship_prov")."';
+						url=url+'?countries_id='+countries_id+'&prov_state=".rawurlencode((isset($PROCESSED["prov_state"]) ? clean_input($PROCESSED["prov_state"], array("notags", "trim")) : $PROCESSED["prov_state"]))."';
+				    	new Ajax.Updater($('prov_state_div'), url, 
+							{ 
+								method:'get',
+								onComplete: function () {
+									generateAutocomplete();
+									if ($('prov_state').selectedIndex || $('prov_state').selectedIndex === 0) {
+										$('prov_state_label').removeClassName('form-nrequired');
+										$('prov_state_label').addClassName('form-required');
+									} else {
+										$('prov_state_label').removeClassName('form-required');
+										$('prov_state_label').addClassName('form-nrequired');
+									}
+								}
+							});
+					}
+					
+					function generateAutocomplete() {
+						if (updater != null) {
+							updater.url = '".ENTRADA_URL."/api/cities-by-country.api.php?countries_id='+$('countries_id').options[$('countries_id').selectedIndex].value+'&prov_state='+($('prov_state') !== null ? ($('prov_state').selectedIndex || $('prov_state').selectedIndex === 0 ? $('prov_state').options[$('prov_state').selectedIndex].value : $('prov_state').value) : '');
+						} else {
+							updater = new Ajax.Autocompleter('city', 'city_auto_complete', 
+								'".ENTRADA_URL."/api/cities-by-country.api.php?countries_id='+$('countries_id').options[$('countries_id').selectedIndex].value+'&prov_state='+($('prov_state') !== null ? ($('prov_state').selectedIndex || $('prov_state').selectedIndex === 0 ? $('prov_state').options[$('prov_state').selectedIndex].value : $('prov_state').value) : ''), 
+								{
+									frequency: 0.2, 
+									minChars: 2
+								});
+						}
+					}
+					</script>\n";
+					$ONLOAD[]		= "provStateFunction(\$F($('addConferencePaperForm')['countries_id']))";
 					
 					if($ERROR) {
 						echo display_error();
 					}
 					?>					
-					<form action="<?php echo ENTRADA_URL; ?>/annualreport/research?section=edit_conference_papers&amp;step=2&amp;rid=<?php echo $CONFERENCE_PAPERS_ID;?>" method="post">
+					<form id="addConferencePaperForm" action="<?php echo ENTRADA_URL; ?>/annualreport/research?section=edit_conference_papers&amp;step=2&amp;rid=<?php echo $CONFERENCE_PAPERS_ID;?>" method="post">
 					<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Editing Invited Lectures / Conference Papers">
 					<colgroup>
 						<col style="width: 3%" />
@@ -220,11 +297,61 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 						<td style="vertical-align: top"><label for="institution" class="form-required">Institution</label></td>
 						<td><input type="text" id="institution" name="institution" value="<?php echo ((isset($conferencePaperResult["institution"])) ? html_encode($conferencePaperResult["institution"]) : html_encode($PROCESSED["institution"])); ?>" maxlength="255" style="width: 95%" /></td>
 					</tr>
+					<?php
+					if($PROCESSED["year_reported"] < '2011') {
+					?>
 					<tr>
 						<td></td>
 						<td style="vertical-align: top"><label for="location" class="form-required">Location</label></td>
 						<td><input type="text" id="location" name="location" value="<?php echo ((isset($conferencePaperResult["location"])) ? html_encode($conferencePaperResult["location"]) : html_encode($PROCESSED["location"])); ?>" maxlength="255" style="width: 95%" /></td>
 					</tr>
+					<?php 
+					} else {
+					?>
+					<tr>
+						<td></td>
+						<td><label for="countries_id" class="form-required">Country</label></td>
+						<td>
+							<?php
+								if (@count($countries = fetch_countries()) > 0) {
+									echo "<select id=\"countries_id\" name=\"countries_id\" style=\"width: 90%\" onchange=\"provStateFunction(this.value);\">\n";
+									echo "<option value=\"0\"".((!isset($PROCESSED["countries_id"])) ? " selected=\"selected\"" : "").">-- Country --</option>\n";
+									foreach ($countries as $value) {
+										echo "<option value=\"".(int) $value["countries_id"]."\"".(($PROCESSED["countries_id"] == $value["countries_id"]) ? " selected=\"selected\"" : (!isset($PROCESSED["countries_id"]) && $value["countries_id"] == DEFAULT_COUNTRY_ID) ? " selected=\"selected\"" : "").">".html_encode($value["country"])."</option>\n";
+									}
+									echo "</select>\n";
+									} else {
+										echo "<input type=\"hidden\" id=\"countries_id\" name=\"countries_id\" value=\"0\" />\n";
+										echo "Country Information Not Available\n";
+									}
+							?>
+						</td>
+					</tr>
+					<tr>
+						<td></td>
+						<td><label id="prov_state_label" for="prov_state_div" class="form-required">Prov / State</label></td>
+						<td>
+							<div id="prov_state_div" style="display: inline">Select a Country above</div>
+						</td>
+					</tr>
+					<tr>
+						<td></td>
+						<td><label for="city" class="form-required">City</label></td>
+						<td>
+							<input type="text" id="city" name="city" size="100" autocomplete="off" style="width: 250px; vertical-align: middle" value="<?php echo $PROCESSED["city"]; ?>"/>
+							<script type="text/javascript">
+								$('city').observe('keypress', function(event){
+									if(event.keyCode == Event.KEY_RETURN) {
+										Event.stop(event);
+									}
+								});
+							</script>
+							<div class="autocomplete" id="city_auto_complete"></div>
+						</td>
+					</tr>
+					<?php 
+					}
+					?>
 					<tr>
 						<td></td>
 						<td><label for="type" class="form-required">Type</label></td>

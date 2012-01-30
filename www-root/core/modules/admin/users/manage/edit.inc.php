@@ -617,7 +617,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 									<td colspan="2">&nbsp;</td>
 									<td style="padding-top: 15px">
 										<input type="checkbox" id="clinical" name="clinical" value="1"<?php echo (((empty($PROCESSED)) || ((isset($PROCESSED["clinical"])) && ((int) $PROCESSED["clinical"]))) ? " checked=\"checked\"" : ""); ?> style="vertical-align: middle;" />
-										<label for="clinical" class="form-nrequired">This new user is a <strong>clinical</strong> faculty member.</label>
+										<label for="clinical" class="form-nrequired">This user is a <strong>clinical</strong> faculty member.</label>
 									</td>
 								</tr>
 								<tr>

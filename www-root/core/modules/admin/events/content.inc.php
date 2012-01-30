@@ -134,7 +134,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					if (((isset($_POST["clinical_presentations"])) && (is_array($_POST["clinical_presentations"])) && (count($_POST["clinical_presentations"])))) {
 						foreach ($_POST["clinical_presentations"] as $objective_id) {
 							if ($objective_id = clean_input($objective_id, array("trim", "int"))) {
-								$query	= "	SELECT a.`objective_id`
+								$query	= "SELECT a.`objective_id`
 											FROM `global_lu_objectives` AS a
 											JOIN `course_objectives` AS b
 											ON b.`course_id` = ".$event_info["course_id"]."
@@ -1395,10 +1395,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						echo "<tbody>\n";
 						if ($results) {
 							foreach ($results as $result) {
+								$completed_attempts = $db->GetOne("SELECT COUNT(DISTINCT `proxy_id`) FROM `quiz_progress` WHERE `progress_value` = 'complete' AND `aquiz_id` = ".$db->qstr($result["aquiz_id"]));
 								echo "<tr>\n";
 								echo "	<td class=\"modified\" style=\"width: 50px; white-space: nowrap\">\n";
 								echo "		<input type=\"checkbox\" name=\"delete[]\" value=\"".$result["aquiz_id"]."\" style=\"vertical-align: middle\" />\n";
-								if ($result["accesses"] > 0) {
+								if ($completed_attempts > 0) {
 									echo "	<a href=\"".ENTRADA_URL."/admin/quizzes?section=results&amp;id=".$result["aquiz_id"]."\"><img src=\"".ENTRADA_URL."/images/view-stats.gif\" width=\"16\" height=\"16\" alt=\"View results of ".html_encode($result["quiz_title"])."\" title=\"View results of ".html_encode($result["quiz_title"])."\" style=\"vertical-align: middle\" border=\"0\" /></a>\n";
 								} else {
 									echo "	<img src=\"".ENTRADA_URL."/images/view-stats-disabled.gif\" width=\"16\" height=\"16\" alt=\"No completed quizzes at this time.\" title=\"No completed quizzes at this time.\" style=\"vertical-align: middle\" border=\"0\" />\n";
@@ -1410,7 +1411,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								echo "	</td>\n";
 								echo "	<td class=\"date-small\"><span class=\"content-date\">".(((int) $result["release_date"]) ? date(DEFAULT_DATE_FORMAT, $result["release_date"]) : "No Restrictions")."</span></td>\n";
 								echo "	<td class=\"date-small\"><span class=\"content-date\">".(((int) $result["release_until"]) ? date(DEFAULT_DATE_FORMAT, $result["release_until"]) : "No Restrictions")."</span></td>\n";
-								echo "	<td class=\"accesses\" style=\"text-align: center\">".$result["accesses"]."</td>\n";
+								echo "	<td class=\"accesses\" style=\"text-align: center\">".$completed_attempts."</td>\n";
 								echo "</tr>\n";
 							}
 						} else {

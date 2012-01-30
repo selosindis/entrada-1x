@@ -62,18 +62,91 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 						$ERRORSTR[] = "The <strong>Organisation</strong> field is required.";
 					}
 					/**
-					 * Required field "city_country" / City Country			 
+					 * Required field "year_reported" / Year Reported.
 					 */
-					if((isset($_POST["city_country"])) && ($city_country = clean_input($_POST["city_country"], array("notags", "trim")))) {
-						$PROCESSED["city_country"] = $city_country;
-						if(count(explode(",", $city_country)) < 2)
-						{
-							$ERROR++;
-							$ERRORSTR[] = "The <strong>City Country</strong> field must be formatted as follows: City<strong>, </strong>Country.";
-						}
+					if((isset($_POST["year_reported"])) && ($year_reported = clean_input($_POST["year_reported"], array("int")))) {
+						$PROCESSED["year_reported"] = $year_reported;
 					} else {
 						$ERROR++;
-						$ERRORSTR[] = "The <strong>City Country</strong> field is required.";
+						$ERRORSTR[] = "The <strong>Year Reported</strong> field is required.";
+					}
+					if($PROCESSED["year_reported"] < '2011') {
+						/**
+						 * Required field "city_country" / City Country			 
+						 */
+						if((isset($_POST["city_country"])) && ($city_country = clean_input($_POST["city_country"], array("notags", "trim")))) {
+							$PROCESSED["city_country"] = $city_country;
+							if(count(explode(",", $city_country)) < 2)
+							{
+								$ERROR++;
+								$ERRORSTR[] = "The <strong>City Country</strong> field must be formatted as follows: City<strong>, </strong>Country.";
+							}
+						} else {
+							$ERROR++;
+							$ERRORSTR[] = "The <strong>City Country</strong> field is required.";
+						}
+					} else {
+						/**
+						 * Required field "countries_id" / Country.
+						 */
+						if ((isset($_POST["countries_id"])) && ($countries_id = clean_input($_POST["countries_id"], "int"))) {
+							$PROCESSED["countries_id"] = $countries_id;
+							//Province is required if the `countries_id` has provinces related to it in the database.
+							$query = "	SELECT count(`province`) FROM `global_lu_provinces`
+										WHERE `country_id` = ".$db->qstr($PROCESSED["countries_id"])."
+										GROUP BY `country_id`";
+							$province_required = ($db->GetOne($query) ? true : false);
+						} else {
+							$ERROR++;
+							$ERRORSTR[] = "The <strong>Country</strong> field is required.";
+							$province_required = false;
+						}
+						/**
+						 * Required field "city" / City.
+						 */
+						if ((isset($_POST["city"])) && ($city = clean_input($_POST["city"], array("notags", "trim"))) && strpos($city, ",") === false) {
+							$PROCESSED["city"] = $city;
+						} else {
+							$ERROR++;
+							$ERRORSTR[] = "The <strong>City</strong> field is required, and should not contain either the province/state or any commas.";
+						}
+						/**
+						 * Required field "prov_state" / Prov / State.
+						 */
+						if ((isset($_POST["prov_state"])) && ($prov_state = clean_input($_POST["prov_state"], array("notags", "trim")))) {
+							$PROCESSED["prov_state"] = htmlentities($prov_state);
+							if (strlen($prov_state) > 100)
+							{
+								$ERROR++;
+								$ERRORSTR[] = "The <strong>Prov / State</strong> can only contain a maximum of 100 characters.";
+							}
+						} elseif ($province_required) {
+							$ERROR++;
+							$ERRORSTR[] = "The <strong>Prov / State</strong> field is required.";
+						}
+					}
+					if($_SESSION["details"]["clinical_member"]) {
+						/**
+						 * Required field "role" / Role.
+						 */
+						$role_description = clean_input($_POST["role_description"], array("notags", "trim"))	;
+						$PROCESSED["role_description"] = $role_description;
+						if((isset($_POST["role"])) && ($role = clean_input($_POST["role"], array("notags", "trim")))) {
+					
+						$PROCESSED["role"] = $role;
+						
+						if(strpos($PROCESSED["role"], "(specify)") === FALSE && ($_POST["role_description"] != "" || $PROCESSED["role_description"] != "" )) {
+							$ERROR++;
+							$ERRORSTR[] = "If you wish to enter data in the <strong>Role Description</strong> field then you must select \"Other (specify)\" as a <strong>Role</strong>
+							  Otherwise clear the <strong>Role Description</strong> field and resubmit.";
+						} else if(strpos($PROCESSED["role"], "(specify)") !== FALSE && ($_POST["role_description"] == "" && $PROCESSED["role_description"] == "" )) {
+							$ERROR++;
+							$ERRORSTR[] = "Please specify the \"Other\" <strong>Role</strong> in the <strong>Role Description</strong> field.";
+						}
+						} else {
+							$ERROR++;
+							$ERRORSTR[] = "The <strong>Role</strong> field is required.";
+						}
 					}
 					/**
 					 * Required field "description" / Description			 
@@ -93,15 +166,6 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 					} else {
 						$ERROR++;
 						$ERRORSTR[] = "The <strong>Days/Year</strong> field is required.";
-					}
-					/**
-					 * Required field "year_reported" / Year Reported.
-					 */
-					if((isset($_POST["year_reported"])) && ($year_reported = clean_input($_POST["year_reported"], array("int")))) {
-						$PROCESSED["year_reported"] = $year_reported;
-					} else {
-						$ERROR++;
-						$ERRORSTR[] = "The <strong>Year Reported</strong> field is required.";
 					}
 					
 					if(isset($_POST["post_action"])) {
@@ -177,7 +241,44 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 					{
 						$externalQuery = "SELECT * FROM `ar_external_contributions` WHERE `external_contributions_id` =".$db->qstr($EXTERNAL_CONTRIBUTIONS_ID);						
 						$externalResult = $db->GetRow($externalQuery);
+						$PROCESSED = $externalResult;
 					}
+					$HEAD[]			= "<script type=\"text/javascript\">
+					var updater = null;
+					function provStateFunction(countries_id)
+					{	
+						var url='".webservice_url("clerkship_prov")."';
+						url=url+'?countries_id='+countries_id+'&prov_state=".rawurlencode((isset($PROCESSED["prov_state"]) ? clean_input($PROCESSED["prov_state"], array("notags", "trim")) : $PROCESSED["prov_state"]))."';
+				    	new Ajax.Updater($('prov_state_div'), url, 
+							{ 
+								method:'get',
+								onComplete: function () {
+									generateAutocomplete();
+									if ($('prov_state').selectedIndex || $('prov_state').selectedIndex === 0) {
+										$('prov_state_label').removeClassName('form-nrequired');
+										$('prov_state_label').addClassName('form-required');
+									} else {
+										$('prov_state_label').removeClassName('form-required');
+										$('prov_state_label').addClassName('form-nrequired');
+									}
+								}
+							});
+					}
+					
+					function generateAutocomplete() {
+						if (updater != null) {
+							updater.url = '".ENTRADA_URL."/api/cities-by-country.api.php?countries_id='+$('countries_id').options[$('countries_id').selectedIndex].value+'&prov_state='+($('prov_state') !== null ? ($('prov_state').selectedIndex || $('prov_state').selectedIndex === 0 ? $('prov_state').options[$('prov_state').selectedIndex].value : $('prov_state').value) : '');
+						} else {
+							updater = new Ajax.Autocompleter('city', 'city_auto_complete', 
+								'".ENTRADA_URL."/api/cities-by-country.api.php?countries_id='+$('countries_id').options[$('countries_id').selectedIndex].value+'&prov_state='+($('prov_state') !== null ? ($('prov_state').selectedIndex || $('prov_state').selectedIndex === 0 ? $('prov_state').options[$('prov_state').selectedIndex].value : $('prov_state').value) : ''), 
+								{
+									frequency: 0.2, 
+									minChars: 2
+								});
+						}
+					}
+					</script>\n";
+					$ONLOAD[]		= "provStateFunction(\$F($('editExternalServiceForm')['countries_id']))";
 					
 					if($ERROR) {
 						echo display_error();
@@ -197,7 +298,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 					(iii)&nbsp;&nbsp;&nbsp;Consulting and entrepreneurial activities.<br />
 					(iv)&nbsp;&nbsp;&nbsp;&nbsp;Activities that are service commitments to an outside body, association, or group.<br /></font>
 					<?php } ?>
-					<form action="<?php echo ENTRADA_URL; ?>/annualreport/academic?section=edit_external&amp;step=2&amp;rid=<?php echo $EXTERNAL_CONTRIBUTIONS_ID;?>" method="post">
+					<form id="editExternalServiceForm" action="<?php echo ENTRADA_URL; ?>/annualreport/academic?section=edit_external&amp;step=2&amp;rid=<?php echo $EXTERNAL_CONTRIBUTIONS_ID;?>" method="post">
 					<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Adding Contributions to External Organisations / International Development Projects">
 					<colgroup>
 						<col style="width: 3%" />
@@ -212,11 +313,86 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 						<td><label for="organisation" class="form-required">Organisation</label></td>
 						<td><input type="text" id="organisation" name="organisation" value="<?php echo ((isset($externalResult["organisation"])) ? html_encode($externalResult["organisation"]) : html_encode($PROCESSED["organisation"])); ?>" maxlength="255" style="width: 95%" /></td>
 					</tr>
+					<?php
+					if($PROCESSED["year_reported"] < '2011') {
+					?>
 					<tr>
 						<td></td>
 						<td style="vertical-align: top"><label for="city_country" class="form-required">City, Country</label></td>
 						<td><input type="text" id="city_country" name="city_country" value="<?php echo ((isset($externalResult["city_country"])) ? html_encode($externalResult["city_country"]) : html_encode($PROCESSED["city_country"])); ?>" maxlength="255" style="width: 95%" /></td>
 					</tr>
+					<?php 
+					} else {
+					?>
+					<tr>
+						<td></td>
+						<td><label for="countries_id" class="form-required">Country</label></td>
+						<td>
+							<?php
+								if (@count($countries = fetch_countries()) > 0) {
+									echo "<select id=\"countries_id\" name=\"countries_id\" style=\"width: 90%\" onchange=\"provStateFunction(this.value);\">\n";
+									echo "<option value=\"0\"".((!isset($PROCESSED["countries_id"])) ? " selected=\"selected\"" : "").">-- Country --</option>\n";
+									foreach ($countries as $value) {
+										echo "<option value=\"".(int) $value["countries_id"]."\"".(($PROCESSED["countries_id"] == $value["countries_id"]) ? " selected=\"selected\"" : (!isset($PROCESSED["countries_id"]) && $value["countries_id"] == DEFAULT_COUNTRY_ID) ? " selected=\"selected\"" : "").">".html_encode($value["country"])."</option>\n";
+									}
+									echo "</select>\n";
+									} else {
+										echo "<input type=\"hidden\" id=\"countries_id\" name=\"countries_id\" value=\"0\" />\n";
+										echo "Country Information Not Available\n";
+									}
+							?>
+						</td>
+					</tr>
+					<tr>
+						<td></td>
+						<td><label id="prov_state_label" for="prov_state_div" class="form-required">Prov / State</label></td>
+						<td>
+							<div id="prov_state_div" style="display: inline">Select a Country above</div>
+						</td>
+					</tr>
+					<tr>
+						<td></td>
+						<td><label for="city" class="form-required">City</label></td>
+						<td>
+							<input type="text" id="city" name="city" size="100" autocomplete="off" style="width: 250px; vertical-align: middle" value="<?php echo $PROCESSED["city"]; ?>"/>
+							<script type="text/javascript">
+								$('city').observe('keypress', function(event){
+									if(event.keyCode == Event.KEY_RETURN) {
+										Event.stop(event);
+									}
+								});
+							</script>
+							<div class="autocomplete" id="city_auto_complete"></div>
+						</td>
+					</tr>
+					<?php 
+					}
+					?>
+					<?php
+					if($_SESSION["details"]["clinical_member"]) {
+					?>
+					<tr>
+						<td></td>
+						<td style="vertical-align: top"><label for="role" class="form-required">Role</label></td>				
+						<td><select name="role" id="role" style="vertical-align: middle">
+						<option value=""></option>
+						<?php
+							$contributionRoleArray = getContributionRoles();
+							foreach($contributionRoleArray as $contributionRoleListValue) {
+								echo "<option value=\"".$contributionRoleListValue["contribution_role"]."\"".(($externalResult["role"] == $contributionRoleListValue["contribution_role"] || $PROCESSED["role"] == $contributionRoleListValue["contribution_role"]) ? " selected=\"selected\"" : "").">".html_encode($contributionRoleListValue["contribution_role"])."</option>\n";
+							}
+							echo "</select>";
+						?>
+						</td>
+					</tr>
+					<tr>
+						<td></td>
+						<td style="vertical-align: top"><label for="role_description" class="form-nrequired">Role Description</label></td>
+						<td><input type="text" id="role_description" name="role_description" value="<?php echo ((isset($externalResult["role_description"])) ? html_encode($externalResult["role_description"]) : html_encode($PROCESSED["role_description"])); ?>" style="width: 95%" /></td>
+					</tr>
+					<?php
+					}
+					?>
 					<tr>
 						<td></td>
 						<td style="vertical-align: top"><label for="description" class="form-required">Description</label></td>				

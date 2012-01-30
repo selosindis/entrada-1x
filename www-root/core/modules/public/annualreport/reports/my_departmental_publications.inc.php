@@ -107,6 +107,10 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 	            }
 	        }
 	        
+	        if(!isset($outputArray[$result["status"]])) {
+	        	$outputArray[$result["status"]] = array();
+	        }
+	        
 	        // Do not allow duplicates (i.e. multiple faculty report the same publication.
 	        if(in_array($formattedRec, $outputArray[$result["status"]]) === false) {
 	        	$outputArray[$result["status"]][] = $formattedRec;

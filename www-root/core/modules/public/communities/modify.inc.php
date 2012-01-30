@@ -81,6 +81,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 			$BREADCRUMB[]		= array("url" => ENTRADA_URL."/communities?".replace_query(array("section" => "modify")), "title" => "Manage Community");
 			$community_resource = new CommunityResource($COMMUNITY_ID);
 			if ($ENTRADA_ACL->amIAllowed($community_resource, 'update')) {
+				$CATEGORY_ID = $community_details["category_id"];
 				echo "<h1>".html_encode($community_details["community_title"])."</h1>\n";
 
 				// Error Checking
@@ -89,7 +90,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 					case 2 :
 						$PROCESSED["community_members"]	= "";
 						$PROCESSED["sub_communities"]	= 0;
-
 						/**
 						 * Required: Community Name / community_title
 						 */
@@ -153,7 +153,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 							$ERROR++;
 							$ERRORSTR[] = "You must specify the Access Permissions for this new community.";
 						}
-
+						if (isset($_POST["template_selection"])) {
+							if ($template_selection = clean_input($_POST["template_selection"], array("trim", "int"))) {
+								$query = "SELECT * FROM `community_templates` WHERE `template_id` = ". $db->qstr($template_selection);
+								$results = $db->GetRow($query);
+								if ($results) {
+									$PROCESSED["community_template"] = $results["template_name"];
+									$db->AutoExecute("communities", $PROCESSED, "UPDATE", "`community_id` = " . $db->qstr($COMMUNITY_ID));
+								}
+							}		
+						}
 						/**
 						 * Not Required: Sub-Communities / sub_communities
 						 */
@@ -313,7 +322,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 						$COMMUNITY_PARENT				= $community_details["community_parent"];
 						$community_groups				= array();
 						$community_communities			= array();
-
 						$query = "SELECT `module_id` FROM `community_modules` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `module_active` = '1'";
 						$results = $db->GetAll($query);
 						if ($results) {
@@ -321,8 +329,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 								$PROCESSED["community_modules"][] = (int) $result["module_id"];
 							}
 						}
-
-
+						$community_template = $PROCESSED["community_template"];
+						$query = "SELECT * FROM `community_templates` WHERE `template_name` =".$db->qstr($community_template);
+						$results = $db->GetRow($query);
+						if ($results) {
+							$template_selection = $results["template_id"];
+						}
 						if (($community_details["community_registration"] == 2) && ($community_details["community_members"])) {
 							$community_groups = @unserialize($community_details["community_members"]);
 						}
@@ -336,11 +348,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 				// Display Content
 				switch ($STEP) {
 					case 3 :
+						$PROCESSED["community_registration"];
 						$community_url	= ENTRADA_URL."/community".$community_details["community_url"];
 
 						$PROCESSED["updated_date"]	= time();
 						$PROCESSED["updated_by"]	= $_SESSION["details"]["id"];
-
 						if ($db->AutoExecute("communities", $PROCESSED, "UPDATE", "`community_id` = ".$db->qstr($COMMUNITY_ID))) {
 							if ($MAILING_LISTS["active"] && array_key_exists("community_list_mode", $PROCESSED) && $PROCESSED["community_list_mode"] != $mailing_list->type) {
 								$mailing_list->mode_change($PROCESSED["community_list_mode"]);
@@ -594,6 +606,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 									</tr>
 									<?php
 								}
+								if ($PROCESSED["community_template"] != $community_details["community_template"]) {
+										?>
+									<tr>
+										<td><?php echo help_create_button("Community Template", "community_template"); ?></td>
+										<td><span class="form-nrequired">Community Template</span></td>
+										<td><?php echo ucfirst($PROCESSED["community_template"]); ?> Template</td>
+									</tr>
+									<?php
+								}
 
 								if (($PROCESSED["community_registration"] != $community_details["community_registration"]) || ($PROCESSED["community_members"] != $community_details["community_members"])) {
 										?>
@@ -807,6 +828,121 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 									</table>
 								</div>
 								<div class="tab-page">
+									<script type="text/javascript" charset="utf-8">
+										jQuery(function() {
+											jQuery( ".large-view-1" ).click(function() {
+												jQuery(".default-large").dialog({ 
+													 width: 792 , 
+													 height: 720,
+													 position: 'center',
+													 draggable: false,
+													 resizable: false,
+													 modal : true, 
+													 show: 'fade',
+													 hide: 'fade',
+													 title: 'Default Template',
+													 buttons: {
+													'Select': function() {
+													   jQuery('#template_option_1').attr('checked', 'checked');
+													   jQuery(this).dialog('close');
+													},
+													'Close': function() {
+													   jQuery(this).dialog('close');
+													}
+												  }
+												});
+											});
+											jQuery( ".large-view-2" ).click(function() {
+												jQuery(".committee-large").dialog({
+													 width: 792 , 
+													 height: 720,
+													 position: 'center',
+													 draggable: false,
+													 resizable: false,
+													 modal : true,
+													 show: 'fade',
+													 hide: 'fade',
+													 title: 'Committee Template',
+													 buttons: {
+													'Select': function() {
+													   jQuery('#template_option_2').attr('checked', 'checked');
+													   jQuery(this).dialog('close');
+													},
+													'Close': function() {
+													   jQuery(this).dialog('close');
+													}
+												  }
+												});
+											});
+											jQuery( ".large-view-3" ).click(function() {
+												jQuery(".vp-large").dialog({
+													 width: 792 , 
+													 height: 720,
+													 position: 'center',
+													 draggable: false,
+													 resizable: false,
+													 modal : true,
+													 show: 'fade',
+													 hide: 'fade',
+													 title: 'Virtual Patient Template',
+													 buttons: {
+													'Select': function() {
+													   jQuery('#template_option_3').attr('checked', 'checked');
+													   jQuery(this).dialog('close');
+													},
+													'Close': function() {
+													   jQuery(this).dialog('close');
+													}
+												  }
+												});
+											});
+											jQuery( ".large-view-4" ).click(function() {
+												jQuery(".learningModule-large").dialog({
+													 width: 792, 
+													 height: 720,
+													 position: 'center',
+													 draggable: false,
+													 resizable: false,
+													 modal : true,
+													 show: 'fade',
+													 hide: 'fade',
+													 title: 'Learning Module Template',
+													 buttons: {
+													'Select': function() {
+													   jQuery('#template_option_4').attr('checked', 'checked');
+													   jQuery(this).dialog('close');
+													},
+													'Close': function() {
+													   jQuery(this).dialog('close');
+													}
+												  }
+												});
+											});
+											jQuery( ".large-view-5" ).click(function() {
+												jQuery(".course-large").dialog({
+													 width: 792, 
+													 height: 720,
+													 position: 'center',
+													 draggable: false,
+													 resizable: false,
+													 modal : true,
+													 show: 'fade',
+													 hide: 'fade',
+													 title: 'Course Template',
+													 buttons: {
+													'Select': function() {
+													   jQuery('#template_option_5').attr('checked', 'checked');
+													   jQuery(this).dialog('close');
+													},
+													'Close': function() {
+													   jQuery(this).dialog('close');
+													}
+												  }
+												});
+											});
+										});
+										
+									</script>
 									<h2 class="tab">Details</h2>
 									<h2 style="margin-top: 0px">Community Details</h2>
 									<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Modifying Community Details">
@@ -868,6 +1004,79 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 												<td style="vertical-align: top"><?php echo help_create_button("Community Description", ""); ?></td>
 												<td style="vertical-align: top"><label for="community_description" class="form-nrequired">Community Description</label></td>
 												<td><textarea id="community_description" name="community_description" style="width: 500px; height: 75px"><?php echo html_encode($PROCESSED["community_description"]); ?></textarea></td>
+											</tr>
+											<tr>
+												<td style="padding-top:6px; vertical-align: top"><?php echo help_create_button("Community Template", ""); ?></td>
+												<td style="padding-top:6px; vertical-align: top"><label for="community_template" class="form-nrequired">Community Template</label></td>
+												<td style="vertical-align: top">
+												<div>
+												<?php
+													$query = "SELECT * FROM `community_templates`"; 
+													$results = $db->GetAll($query);
+													if ($results) {
+													?>
+														<ul class="community-themes">
+														<?php
+														$template_groups = array();
+														$template_category = array();
+														foreach($results as $community_template) {
+															$permissions_query = "SELECT * FROM `communities_template_permissions` WHERE `template`= ".$db->qstr($community_template["template_name"]);
+															$template_permissions = $db->GetAll($permissions_query);
+															if ($template_permissions) {
+																foreach ($template_permissions as $template_permission) {
+																	if ($template_permission["permission_type"] == null && $template_permission["permission_value"] == null) {
+																		$template_groups[] = $template_permission["template"];
+																	}
+																	if ($template_permission["permission_type"] == "category_id" && $template_permission["permission_value"] == null) {
+																		$template_groups[] = $template_permission["template"];
+																	}
+																	if ($template_permission["permission_type"] == "category_id") {
+																		$template_category = explode(",", $template_permission["permission_value"]);
+																	}
+																	if ($template_permission["permission_type"] == "group") {
+																		$template_groups = explode(",", $template_permission["permission_value"]);
+																	}
+																}
+																if (in_array($GROUP, $template_groups) && in_array($CATEGORY_ID, $template_category) || in_array($template_permission["template"], $template_groups)) {
+																	?>
+																	<li id="<?php echo $community_template["template_name"]."-template"; ?>" class="edit">
+																		<div class="template-rdo">
+																			<input type="radio" id="<?php echo "template_option_".$community_template["template_id"] ?>" name="template_selection" value="<?php echo $community_template["template_id"]; ?>"<?php echo ((($template_selection == 0) && ($community_template["template_id"] == 1) || ($template_selection == $community_template["template_id"])) ? " checked=\"checked\"" : ""); ?> />
+																		</div>
+																		<div class="large-view">
+																			<a href="#" class="<?php echo "large-view-".$community_template["template_id"]; ?>"><img src="<?php echo ENTRADA_URL. "/images/icon-magnify.gif"  ?>" /></a>
+																		</div>
+																		<label for="<?php echo "template_option_".$community_template["template_id"]; ?>"><?php echo ucfirst($community_template["template_name"]. " Template"); ?></label>
+																	</li> 
+																<?php
+																}
+															}
+														}
+														?>
+														</ul>
+													<div class="default-large" style="display:none;">
+														<img src="<?php echo ENTRADA_URL."/images/template-default-large.gif" ?>" alt="Default Template Screen shot" />
+													</div>
+													<div class="committee-large" style="display:none;">
+														<img src="<?php echo ENTRADA_URL."/images/template-meeting-large.gif" ?>" alt="Committee Template Screen shot" />
+													</div> 
+													<div class="vp-large" style="display:none;">
+														<img src="<?php echo ENTRADA_URL."/images/template-vp-large.gif" ?>" alt="Virtual Patient Template Screen shot" />
+													</div> 
+													<div class="learningModule-large" style="display:none;">
+														<img src="<?php echo ENTRADA_URL."/images/template-education-large.gif" ?>" alt="Learning Template Screen shot" />
+													</div>
+													<div class="course-large" style="display:none;">
+														<img src="<?php echo ENTRADA_URL."/images/template-course-large.gif" ?>" alt="Course Template Screen shot" />
+													</div> 
+												<?php
+												}
+												?>
+						
+							
+								
+				</div>
+												</td>
 											</tr>
 											<tr>
 												<td colspan="3">&nbsp;</td>

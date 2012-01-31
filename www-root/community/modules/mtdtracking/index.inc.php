@@ -381,7 +381,8 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 					<strong>Pick a year:</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 					<select id="year" name="year">
 						<option value="2011-2012">2011-2012</option>
-						<option value="2010-2011">2010-2011</option>						
+						<option value="2010-2011">2010-2011</option>
+						<option value="2009-2010">2009-2010</option>
 					</select>
 			</div>
 			<br />

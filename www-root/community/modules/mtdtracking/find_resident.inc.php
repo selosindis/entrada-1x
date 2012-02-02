@@ -62,8 +62,8 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 		$resident_school = $db->GetRow($query);
 
 		$query = "SELECT *
-				  FROM  `mtd_moh_program_codes`
-				  WHERE `id` = " . $resident["program_id"];
+				  FROM  `mtd_pgme_moh_programs`
+				  WHERE `moh_program_id` = " . $resident["program_id"];
 
 		$resident_program = $db->GetRow($query);
 
@@ -81,7 +81,7 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 				<div id=\"category_id\">" . $resident["category_id"] . "</div>
 				<div id=\"full_name\">" . $full_name . "</div>
 				<div id=\"student_no\">" . $resident["student_no"] . "</div>
-				<div id=\"program_description\">" . $resident_program["program_description"] . "</div>
+				<div id=\"program_description\">" . $resident_program["pgme_program_name"] . "</div>
 				<div id=\"category_description\">" . $resident_category["category_description"] . "</div>
 				<div id=\"query\">" . $queryResident . "</div>
 				<div id=\"resident_not_found\"></div>

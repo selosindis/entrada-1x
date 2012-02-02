@@ -86,12 +86,12 @@ if(isset($_GET["clinical"])) {
 	}
 }
 
-function queryIt($proxy_id, $table, $startDate, $endDate, $db)
+function queryIt($proxy_id, $table, $startDate, $endDate, $db, $roleTable)
 {
-	$query = "SELECT * FROM `".$table."`, `global_lu_roles`, `ar_lu_publication_type`
+	$query = "SELECT * FROM `".$table."`, `".$roleTable."`, `ar_lu_publication_type`
     WHERE `".$table."`.`proxy_id` = '$proxy_id'
     AND `".$table."`.`type_id` = `ar_lu_publication_type`.`type_id`
-    AND `".$table."`.`role_id` = `global_lu_roles`.`role_id`
+    AND `".$table."`.`role_id` = `".$roleTable."`.`role_id`
     AND `".$table."`.`year_reported` BETWEEN '$startDate' AND '$endDate'
     ORDER BY `status` ASC";
 	
@@ -1461,8 +1461,13 @@ else
 	$endDate = $REPORT_YEAR;
 
 	$table = "ar_peer_reviewed_papers";
-
-if($results = queryIt($proxy_id, $table, $startDate, $endDate, $db)) {
+	if($_SESSION["details"]["clinical_member"] && $REPORT_YEAR > '2010') {
+		$roleTable = "ar_lu_pr_roles";
+	} else {
+		$roleTable = "global_lu_roles";
+	}
+	
+if($results = queryIt($proxy_id, $table, $startDate, $endDate, $db, $roleTable)) {
 	display($results, $db, $typeDesc = true);
 } else {
 	echo $noRecOutput;
@@ -1476,8 +1481,9 @@ if($results = queryIt($proxy_id, $table, $startDate, $endDate, $db)) {
 	$endDate = $REPORT_YEAR;
 
 	$table = "ar_non_peer_reviewed_papers";
+	$roleTable = "global_lu_roles";
 
-if($results = queryIt($proxy_id, $table, $startDate, $endDate, $db)) {
+if($results = queryIt($proxy_id, $table, $startDate, $endDate, $db, $roleTable)) {
 	display($results, $db, $typeDesc = true);
 } else {
 	echo $noRecOutput;
@@ -1491,8 +1497,9 @@ if($results = queryIt($proxy_id, $table, $startDate, $endDate, $db)) {
 	$endDate = $REPORT_YEAR;
 
 	$table = "ar_book_chapter_mono";
-
-if($results = queryIt($proxy_id, $table, $startDate, $endDate, $db)) {
+	$roleTable = "global_lu_roles";
+	
+if($results = queryIt($proxy_id, $table, $startDate, $endDate, $db, $roleTable)) {
 	display($results, $db, $typeDesc = true);
 } else {
 	echo $noRecOutput;
@@ -1506,8 +1513,9 @@ if($results = queryIt($proxy_id, $table, $startDate, $endDate, $db)) {
 	$endDate = $REPORT_YEAR;
 
 	$table = "ar_poster_reports";
+	$roleTable = "global_lu_roles";
 
-if($results = queryIt($proxy_id, $table, $startDate, $endDate, $db)) {
+if($results = queryIt($proxy_id, $table, $startDate, $endDate, $db, $roleTable)) {
 	display($results, $db, $typeDesc = true);
 } else {
 	echo $noRecOutput;

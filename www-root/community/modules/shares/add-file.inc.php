@@ -276,7 +276,7 @@ if ($RECORD_ID) {
 						if ($ERROR) {
 							echo display_error();
 							$NOTICE++;
-							$NOTICESTR[] = "You experienced an error while trying to upload your file(s). Due to limitations with browsers you will need to reselect the files you wish to upload. The information about the files have been retained for your convenisnce.";
+							$NOTICESTR[] = "There was an error while trying to upload your file(s). You will need to reselect the file(s) you wish to upload.";
 						}
 						if ($NOTICE) {
 							echo display_notice();

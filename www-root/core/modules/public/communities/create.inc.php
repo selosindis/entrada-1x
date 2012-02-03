@@ -704,6 +704,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 							$default_templates = array();
 							$groups = array();
 							$category = array();
@@ -713,6 +714,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 								$permissions_query = "SELECT * FROM `communities_template_permissions` WHERE `template`=". $db->qstr($community_template["template_name"]);
 								$template_permissions = $db->GetAll($permissions_query);
 =======
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 =======
@@ -731,6 +734,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 								//exit;
 								$template_permissions = $db->GetAll($group_permissions_query);
 								
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 >>>>>>> Stashed changes
@@ -790,6 +794,11 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 									$template_group = array();
 									foreach ($template_permissions as $template_permission) {
 >>>>>>> Stashed changes
+=======
+								if ($template_permissions) {
+									$template_group = array();
+									foreach ($template_permissions as $template_permission) {
+>>>>>>> Stashed changes
 							
 										$template_group = explode(",", $template_permission["permission_value"]);
 										
@@ -815,6 +824,9 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 									}	
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes

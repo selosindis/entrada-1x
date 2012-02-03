@@ -1029,6 +1029,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 														$default_templates = array();
 														$groups = array();
 														$category = array();
@@ -1036,6 +1037,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 														$default_groups = array();
 														
 =======
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 =======
@@ -1076,6 +1079,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 																	?>
 																	<?php
 																}
@@ -1094,6 +1098,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 =======
 =======
 =======
+=======
+>>>>>>> Stashed changes
 																}
 																if ((in_array($GROUP, $template_groups) && in_array($CATEGORY_ID, $template_category))) {
 																	if (in_array($template_permission["template"], $template_groups)) {
@@ -1109,6 +1115,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 																		</li> <?php
 																	}
 																	
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 																}
 																if ((in_array($GROUP, $template_groups) && in_array($CATEGORY_ID, $template_category))) {

@@ -1028,6 +1028,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 														<?php
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 														$default_templates = array();
 														$groups = array();
 														$category = array();
@@ -1035,6 +1036,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 														$default_groups = array();
 														
 =======
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 														
@@ -1072,6 +1075,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 																	}
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 																	?>
 																	<?php
 																}
@@ -1089,6 +1093,23 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 																<?php
 =======
 =======
+=======
+																}
+																if ((in_array($GROUP, $template_groups) && in_array($CATEGORY_ID, $template_category))) {
+																	if (in_array($template_permission["template"], $template_groups)) {
+																		?>
+																		<li id="<?php echo $community_template["template_name"]."-template"; ?>" class="edit">
+																			<div class="template-rdo">
+																				<input type="radio" id="<?php echo "template_option_".$community_template["template_id"] ?>" name="template_selection" value="<?php echo $community_template["template_id"]; ?>"<?php echo ((($template_selection == 0) && ($community_template["template_id"] == 1) || ($template_selection == $community_template["template_id"])) ? " checked=\"checked\"" : ""); ?> />
+																			</div>
+																			<div class="large-view">
+																				<a href="#" class="<?php echo "large-view-".$community_template["template_id"]; ?>"><img src="<?php echo ENTRADA_URL. "/images/icon-magnify.gif"  ?>" /></a>
+																			</div>
+																			<label for="<?php echo "template_option_".$community_template["template_id"]; ?>"><?php echo ucfirst($community_template["template_name"]. " Template"); ?></label>
+																		</li> <?php
+																	}
+																	
+>>>>>>> Stashed changes
 																}
 																if ((in_array($GROUP, $template_groups) && in_array($CATEGORY_ID, $template_category))) {
 																	if (in_array($template_permission["template"], $template_groups)) {

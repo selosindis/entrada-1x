@@ -701,10 +701,6 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 						?>
 							<ul class="community-themes">
 							<?php
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
 							$default_templates = array();
 							$groups = array();
 							$category = array();
@@ -713,35 +709,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 							foreach($results as $community_template) {
 								$permissions_query = "SELECT * FROM `communities_template_permissions` WHERE `template`=". $db->qstr($community_template["template_name"]);
 								$template_permissions = $db->GetAll($permissions_query);
-=======
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-							
-							
-							$template_groups = array();
-							$template_category = array();
-							foreach($results as $community_template) {
-								$group_permissions_query = "  SELECT * FROM `communities_template_permissions` 
-														WHERE `permission_value` LIKE ". $db->qstr("%".$GROUP."%")."
-														OR `permission_type` = '' 
-														AND `permission_value` = ''
-														AND `template`= ". $db->qstr($community_template["template_name"]);
-								//echo $group_permissions_query;
-								//exit;
-								$template_permissions = $db->GetAll($group_permissions_query);
-								
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
 								if ($template_permissions) {
-									$template_group = array();
 									foreach ($template_permissions as $template_permission) {
-<<<<<<< Updated upstream
 										if ($template_permission["permission_type"] == "group") {
 											$groups = explode(",",$template_permission["permission_value"]);
 										}
@@ -783,62 +752,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 									<?php
 									}
 								} 
-=======
-=======
-								if ($template_permissions) {
-									$template_group = array();
-									foreach ($template_permissions as $template_permission) {
->>>>>>> Stashed changes
-=======
-								if ($template_permissions) {
-									$template_group = array();
-									foreach ($template_permissions as $template_permission) {
->>>>>>> Stashed changes
-=======
-								if ($template_permissions) {
-									$template_group = array();
-									foreach ($template_permissions as $template_permission) {
->>>>>>> Stashed changes
-							
-										$template_group = explode(",", $template_permission["permission_value"]);
-										
-										
-								}
-								//Zend_debug::dump($permissions);
 							}
-							if (in_array($GROUP, $template_group)) {
-										?>
-										<li id="<?php echo $community_template["template_name"]."-template"; ?>">
-											<div class="template-rdo">
-												<input type="radio" id="<?php echo "template_option_".$community_template["template_id"] ?>" name="template_selection" value="<?php echo $community_template["template_id"]; ?>"<?php echo ((($template_selection == 0) && ($community_template["template_id"] == 1) || ($template_selection == $community_template["template_id"])) ? " checked=\"checked\"" : ""); ?> />
-											</div>
-											<div class="large-view">
-												<a href="#" class="<?php echo "large-view-".$community_template["template_id"]; ?>"><img src="<?php echo ENTRADA_URL. "/images/icon-magnify.gif"  ?>" /></a>
-											</div>
-											<label for="<?php echo "template_option_".$community_template["template_id"]; ?>"><?php echo ucfirst($community_template["template_name"]. " Template"); ?></label>
-										</li> 
-									<?php 
-									
-									
-									
-									}	
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-							}
-							
-							Zend_Debug::dump($template_group);
 							?>
-										
-									
-										
 							</ul>
 							<div class="default-large" style="display:none;">
 								<img src="<?php echo ENTRADA_URL."/images/template-default-large.gif" ?>" alt="Default Template Screen shot" />

@@ -1026,12 +1026,21 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 													?>
 														<ul class="community-themes">
 														<?php
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
 														$default_templates = array();
 														$groups = array();
 														$category = array();
 														$default_categories = array();
 														$default_groups = array();
 														
+=======
+=======
+>>>>>>> Stashed changes
+														
+														$template_groups = array();
+														$template_category = array();
+>>>>>>> Stashed changes
 														foreach($results as $community_template) {
 															$permissions_query = "SELECT * FROM `communities_template_permissions` WHERE `template`=". $db->qstr($community_template["template_name"]);
 															$template_permissions = $db->GetAll($permissions_query);
@@ -1061,6 +1070,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 																			}
 																		}
 																	}
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
 																	?>
 																	<?php
 																}
@@ -1076,9 +1087,44 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 																	<label for="<?php echo "template_option_".$community_template["template_id"]; ?>"><?php echo ucfirst($community_template["template_name"]. " Template"); ?></label>
 																</li>
 																<?php
+=======
+=======
+																}
+																if ((in_array($GROUP, $template_groups) && in_array($CATEGORY_ID, $template_category))) {
+																	if (in_array($template_permission["template"], $template_groups)) {
+																		?>
+																		<li id="<?php echo $community_template["template_name"]."-template"; ?>" class="edit">
+																			<div class="template-rdo">
+																				<input type="radio" id="<?php echo "template_option_".$community_template["template_id"] ?>" name="template_selection" value="<?php echo $community_template["template_id"]; ?>"<?php echo ((($template_selection == 0) && ($community_template["template_id"] == 1) || ($template_selection == $community_template["template_id"])) ? " checked=\"checked\"" : ""); ?> />
+																			</div>
+																			<div class="large-view">
+																				<a href="#" class="<?php echo "large-view-".$community_template["template_id"]; ?>"><img src="<?php echo ENTRADA_URL. "/images/icon-magnify.gif"  ?>" /></a>
+																			</div>
+																			<label for="<?php echo "template_option_".$community_template["template_id"]; ?>"><?php echo ucfirst($community_template["template_name"]. " Template"); ?></label>
+																		</li> <?php
+																	}
+																	
+>>>>>>> Stashed changes
+																}
+																if ((in_array($GROUP, $template_groups) && in_array($CATEGORY_ID, $template_category))) {
+																	if (in_array($template_permission["template"], $template_groups)) {
+																		?>
+																		<li id="<?php echo $community_template["template_name"]."-template"; ?>" class="edit">
+																			<div class="template-rdo">
+																				<input type="radio" id="<?php echo "template_option_".$community_template["template_id"] ?>" name="template_selection" value="<?php echo $community_template["template_id"]; ?>"<?php echo ((($template_selection == 0) && ($community_template["template_id"] == 1) || ($template_selection == $community_template["template_id"])) ? " checked=\"checked\"" : ""); ?> />
+																			</div>
+																			<div class="large-view">
+																				<a href="#" class="<?php echo "large-view-".$community_template["template_id"]; ?>"><img src="<?php echo ENTRADA_URL. "/images/icon-magnify.gif"  ?>" /></a>
+																			</div>
+																			<label for="<?php echo "template_option_".$community_template["template_id"]; ?>"><?php echo ucfirst($community_template["template_name"]. " Template"); ?></label>
+																		</li> <?php
+																	}
+																	
+>>>>>>> Stashed changes
 																}
 															} 
 														}
+
 														?>
 														</ul>
 														<div class="default-large" style="display:none;">

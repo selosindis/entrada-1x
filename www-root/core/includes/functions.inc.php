@@ -896,6 +896,9 @@ function get_account_data($type = "", $id = 0) {
 				$query = "SELECT CONCAT_WS(' ', `firstname`, `lastname`) AS `firstlast` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id`=".$db->qstr($id);
 				$type = "firstlast";
 			break;
+			case "grad_year" :
+				$query = "SELECT `grad_year` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id`=".$db->qstr($id);
+			break;
 			case "email" :
 				$query = "SELECT `email` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id`=".$db->qstr($id);
 			break;
@@ -7851,13 +7854,31 @@ function clerkship_get_rotation_overview($rotation_id, $proxy_id = 0) {
 				(
 					SELECT `objective_id` FROM `".CLERKSHIP_DATABASE."`.`logbook_mandatory_objectives`
 					WHERE `rotation_id` = ".$db->qstr($rotation_id)."
-				)";
+					AND `grad_year_min` <= ".$db->qstr(get_account_data("grad_year", $proxy_id))."
+					AND (`grad_year_max` = 0 OR `grad_year_max` >= ".$db->qstr(get_account_data("grad_year", $proxy_id)).")
+				)".(get_account_data("grad_year", $proxy_id) >= 2013 ? "
+				AND b.`llocation_id` IN
+				(
+					SELECT dd.`llocation_id` FROM `".CLERKSHIP_DATABASE."`.`logbook_mandatory_objectives` AS aa
+					JOIN `".CLERKSHIP_DATABASE."`.`logbook_mandatory_objective_locations` AS bb
+					ON aa.`lmobjective_id` = bb.`lmobjective_id`
+					JOIN `".CLERKSHIP_DATABASE."`.`logbook_locations_types` AS cc
+					ON bb.`lltype_id` = cc.`lltype_id`
+					JOIN `".CLERKSHIP_DATABASE."`.`logbook_lu_locations` AS dd
+					ON cc.`lltype_id` = dd.`lltype_id`
+					WHERE aa.`objective_id` = a.`objective_id`
+					AND aa.`rotation_id` = ".$db->qstr($rotation_id)."
+					AND aa.`grad_year_min` <= ".$db->qstr(get_account_data("grad_year", $proxy_id))."
+					AND (aa.`grad_year_max` = 0 OR aa.`grad_year_max` >= ".$db->qstr(get_account_data("grad_year", $proxy_id)).")
+				)" : "");
     $result = $db->GetAll($query);
     $mandatories = (int) ($result) ? count($result) : 0;
 
     // Get count of all Mandatory clinical presentations for this rotation
     $query  = " SELECT  COUNT(*) FROM `".CLERKSHIP_DATABASE."`.`logbook_mandatory_objectives`
-				WHERE `rotation_id` = ".$db->qstr($rotation_id);
+				WHERE `rotation_id` = ".$db->qstr($rotation_id)."
+				AND `grad_year_min` <= ".$db->qstr(get_account_data("grad_year", $proxy_id))."
+				AND (`grad_year_max` = 0 OR `grad_year_max` >= ".$db->qstr(get_account_data("grad_year", $proxy_id)).")";
     $all_mandatories = $db->GetOne($query);
  
     $query  = "	SELECT COUNT(*) FROM `".CLERKSHIP_DATABASE."`.`logbook_entry_procedures` AS a
@@ -8356,6 +8377,8 @@ function clerkship_rotation_objectives_progress($proxy_id, $rotation_id) {
 			JOIN `objective_organisation` AS c
 			ON b.`objective_id` = c.`objective_id`
 			WHERE a.`rotation_id` = ".$db->qstr($rotation_id)."
+			AND a.`grad_year_min` <= ".$db->qstr(get_account_data("grad_year", $proxy_id))."
+			AND (a.`grad_year_max` = 0 OR a.`grad_year_max` >= ".$db->qstr(get_account_data("grad_year", $proxy_id)).")
 			AND c.`organisation_id` = ".$db->qstr(get_account_data("organisation_id", $proxy_id));
 	$oresults = $db->GetAll($query);
 	if ($oresults) {
@@ -8376,13 +8399,28 @@ function clerkship_rotation_objectives_progress($proxy_id, $rotation_id) {
 			$required_list[$objective["objective_id"]] = $objective["objective_name"];
 		}
 		if ($objective_string) {
-			$query 	= "SELECT COUNT(a.`objective_id`) as number_logged, a.`objective_id` FROM `".CLERKSHIP_DATABASE."`.`logbook_entry_objectives` AS a
-					LEFT JOIN `".CLERKSHIP_DATABASE."`.`logbook_entries` AS b
-					ON a.`lentry_id` = b.`lentry_id`
-					WHERE a.`objective_id` IN  (".$objective_string.")
-					AND b.`proxy_id` = ".$db->qstr($proxy_id)."
-					AND b.`entry_active` = 1
-					GROUP BY a.`objective_id`";
+			$query 	= "SELECT COUNT(a.`objective_id`) as number_logged, a.`objective_id` 
+						FROM `".CLERKSHIP_DATABASE."`.`logbook_entry_objectives` AS a
+						LEFT JOIN `".CLERKSHIP_DATABASE."`.`logbook_entries` AS b
+						ON a.`lentry_id` = b.`lentry_id`
+						WHERE a.`objective_id` IN  (".$objective_string.")
+						AND b.`proxy_id` = ".$db->qstr($proxy_id)."
+						AND b.`entry_active` = 1
+						".(get_account_data("grad_year", $proxy_id) >= 2013 ? "AND b.`llocation_id` IN
+						(
+							SELECT dd.`llocation_id` FROM `".CLERKSHIP_DATABASE."`.`logbook_mandatory_objectives` AS aa
+							JOIN `".CLERKSHIP_DATABASE."`.`logbook_mandatory_objective_locations` AS bb
+							ON aa.`lmobjective_id` = bb.`lmobjective_id`
+							JOIN `".CLERKSHIP_DATABASE."`.`logbook_locations_types` AS cc
+							ON bb.`lltype_id` = cc.`lltype_id`
+							JOIN `".CLERKSHIP_DATABASE."`.`logbook_lu_locations` AS dd
+							ON cc.`lltype_id` = dd.`lltype_id`
+							WHERE aa.`objective_id` = a.`objective_id`
+							AND aa.`rotation_id` = ".$db->qstr($rotation_id)."
+							AND aa.`grad_year_min` <= ".$db->qstr(get_account_data("grad_year", $proxy_id))."
+							AND (aa.`grad_year_max` = 0 OR aa.`grad_year_max` >= ".$db->qstr(get_account_data("grad_year", $proxy_id)).")
+						)
+						GROUP BY a.`objective_id`" : "");
 			$numbers_logged = $db->GetAll($query);
 			if ($numbers_logged) {
 				foreach ($numbers_logged as $number_logged) {
@@ -8411,7 +8449,9 @@ function clerkship_rotation_objectives_progress($proxy_id, $rotation_id) {
  */
 function clerkship_rotation_tasks_progress($proxy_id, $rotation_id) {
 	$query 	= "SELECT * FROM `".CLERKSHIP_DATABASE."`.`logbook_preferred_procedures`
-			WHERE `rotation_id` = ".$db->qstr($rotation_id);
+			WHERE `rotation_id` = ".$db->qstr($rotation_id)."
+			AND `grad_year_min` <= ".$db->qstr(get_account_data("grad_year", $proxy_id))."
+			AND (`grad_year_max` = 0 OR `grad_year_max` >= ".$db->qstr(get_account_data("grad_year", $proxy_id)).")";
 	$oresults = $db->GetAll($query);
 	if ($tresults) {
 		$total_required = 0;
@@ -14904,4 +14944,170 @@ function fetch_cases_list() {
 	} else {
 		return false;
 	}
+}
+
+/**
+ * Function used by community reports to output the HTML for both the filter
+ * controls and current filter status (Showing Statistics That Include:) box.
+ */
+function clerkship_output_filter_controls($module_type, $proxy_id) {
+	global $db, $ENTRADA_ACL, $MODULE;
+
+	/**
+	 * Determine whether or not this is being called from the admin section.
+	 */
+	if ($module_type == "admin") {
+		$module_type = "/admin";
+	} else {
+		$module_type = "";
+	}
+	?>
+	<table id="filterList" style="clear: both; width: 100%" cellspacing="0" cellpadding="0" border="0" summary="Entry Filters">
+		<tr>
+			<td style="width: 53%; vertical-align: top">
+				<form action="<?php echo ENTRADA_URL.$module_type."/clerkship/clerk?".$_SERVER["QUERY_STRING"]; ?>" method="get" id="filter_edit" name="filter_edit" style="position: relative;">
+				<input type="hidden" name="proxy_id" value="<?php echo $proxy_id;?>" />
+				<input type="hidden" name="action" value="filter_edit" />
+				<input type="hidden" id="filter_edit_type" name="filter_type" value="" />
+				<input type="hidden" id="multifilter" name="filter" value="" />
+				<label for="filter_select" class="content-subheading" style="vertical-align: middle">Apply Filter:</label>
+				<select id="filter_select" onchange="showMultiSelect();" style="width: 184px; vertical-align: middle">
+					<option>Select Filter</option>
+					<option value="objective">Presentation Filters</option>
+					<option value="procedure">Task Filters</option>
+					<option value="rotation_id">Rotation</option>
+					<option value="location_id">Setting</option>
+				</select>
+				<span id="filter_options_loading" style="display:none; vertical-align: middle"><img src="<?php echo ENTRADA_RELATIVE; ?>/images/indicator.gif" width="16" height="16" alt="Please Wait" title="" style="vertical-align: middle" /> Loading ... </span>
+				<span id="options_container"></span>
+				</form>
+				<script type="text/javascript">
+				var multiselect = [];
+				var id;
+				function showMultiSelect() {
+					$$('select_multiple_container').invoke('hide');
+					id = $F('filter_select');
+					if (multiselect[id]) {
+						multiselect[id].container.show();
+					} else {
+						new Ajax.Request('<?php echo ENTRADA_URL."/api/clerkship_filters.api.php";?>', {
+							parameters: {options_for: id},
+							method: "GET",
+							onLoading: function() {
+								$('filter_options_loading').show();
+							},
+							onSuccess: function(response) {
+								$('options_container').insert(response.responseText);
+								if ($(id+'_options')) {
+									$('filter_edit_type').value = id;
+									$(id+'_options').addClassName('multiselect-processed');
+
+									multiselect[id] = new Control.SelectMultiple('multifilter',id+'_options',{
+										checkboxSelector: 'table.select_multiple_table tr td input[type=checkbox]',
+											nameSelector: 'table.select_multiple_table tr td.select_multiple_name label',
+											filter: id+'_select_filter',
+											resize: id+'_scroll',
+											afterCheck: function(element) {
+												var tr = $(element.parentNode.parentNode);
+												tr.removeClassName('selected');
+												if (element.checked) {
+													tr.addClassName('selected');
+												}
+											}
+									});
+
+									$(id+'_cancel').observe('click',function(event){
+										this.container.hide();
+										$('filter_select').options.selectedIndex = 0;
+										$('filter_select').show();
+										return false;
+									}.bindAsEventListener(multiselect[id]));
+
+									$(id+'_close').observe('click',function(event){
+										this.container.hide();
+										$('filter_edit').submit();
+										return false;
+									}.bindAsEventListener(multiselect[id]));
+
+									multiselect[id].container.show();
+								}
+							},
+							onError: function(response) {
+								alert("There was an error retrieving the events filter requested. Please try again.")		
+							},
+							onComplete: function() {
+								$('filter_options_loading').hide();
+							}
+						});
+					}	
+					return false;
+				}
+				function setDateValue(field, date) {
+					timestamp = getMSFromDate(date);
+					if (field.value != timestamp) {
+						window.location = '<?php echo ENTRADA_URL.$module_type."/clerkship/clerk?".(($_SERVER["QUERY_STRING"] != "") ? replace_query(array("dstamp" => false))."&" : ""); ?>dstamp='+timestamp;
+					}
+					return;
+				}
+				</script>
+			</td>
+			<td style="width: 47%; vertical-align: top">
+				<?php
+				if ((is_array($_SESSION[APPLICATION_IDENTIFIER]["tracking"]["filters"])) && (count($_SESSION[APPLICATION_IDENTIFIER]["tracking"]["filters"]))) {
+					echo "<table class=\"inner-content-box\" id=\"filter-list\" cellspacing=\"0\" summary=\"Selected Filter List\">\n";
+					echo "<thead>\n";
+					echo "	<tr>\n";
+					echo "		<td class=\"inner-content-box-head\">Showing Entries That Include:</td>\n";
+					echo "	</tr>\n";
+					echo "</thead>\n";
+					echo "<tbody>\n";
+					echo "	<tr>\n";
+					echo "		<td class=\"inner-content-box-body\">";
+					echo "		<div id=\"filter-list-resize-handle\" style=\"margin:0px -6px -6px -7px;\">";
+					echo "		<div id=\"filter-list-resize\" style=\"height: 60px; overflow: auto;  padding: 0px 6px 6px 6px;\">\n";
+					foreach ($_SESSION[APPLICATION_IDENTIFIER]["tracking"]["filters"] as $filter_type => $filter_contents) {
+						if (is_array($filter_contents)) {
+							echo 	$filter_name = filter_name($filter_type);
+							echo "	<div style=\"margin: 2px 0px 10px 3px\">\n";
+							foreach ($filter_contents as $filter_key => $filter_value) {
+								echo "	<div id=\"".$filter_type."_".$filter_key."\">";
+								echo "		<a href=\"".ENTRADA_URL.$module_type."/clerkship/clerk?ids=".$proxy_id."&action=filter_remove&amp;filter=".$filter_type."_".$filter_key."\" title=\"Remove this filter\">";
+								echo "		<img src=\"".ENTRADA_URL."/images/checkbox-on.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" />";
+								switch ($filter_type) {
+									case "objective_id" :
+										echo fetch_objective_title($filter_value);
+									break;
+									case "procedure_id":
+										//echo Procedure name;
+									break;
+									case "rotation_id":
+										//echo rotation title;
+									break;
+									case "location_id":
+									default :
+										//echo location name;
+									break;
+								}
+								echo "		</a>";
+								echo "	</div>\n";
+							}
+							echo "	</div>\n";
+						}
+					}
+					echo "		</div>\n";
+					echo "		</div>\n";
+					echo "		</td>\n";
+					echo "	</tr>\n";
+					echo "</tbody>\n";
+					echo "</table>\n";
+					echo "<br />\n";
+					echo "<script type=\"text/javascript\">";
+					echo "	new ElementResizer($('filter-list-resize'), {handleElement: $('filter-list-resize-handle'), min: 40});";
+					echo "</script>";
+				}
+				?>
+			</td>
+		</tr>
+	</table>
+	<?php
 }

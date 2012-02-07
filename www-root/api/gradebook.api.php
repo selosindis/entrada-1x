@@ -206,14 +206,22 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 		}
 
 		if($db->AutoExecute("assessment_grades", $grade, $mode, $where)) {
-			if($mode == "update") {
+			if ($mode == "UPDATE") {
+				application_log("success", "Successfully updated grade for assessment_id [".$ASSESSMENT_ID."] for proxy_id [".$PROXY_ID."].");
+			
 				$GRADE_ID = $db->qstr($grade["grade_id"]);
-			} else if($mode == "create") {
+			} else if($mode == "INSERT") {
+				application_log("success", "Successfully entered grade for assessment_id [".$ASSESSMENT_ID."] for proxy_id [".$PROXY_ID."].");
+			
 				$GRADE_ID = $db->Insert_ID();
+			} else {
+				application_log("error", "Unknown mode for assessment_id [".$ASSESSMENT_ID."] for proxy_id [".$PROXY_ID."].");
 			}
+			
 		 	echo $GRADE_ID."|". format_retrieved_grade($GRADE_VALUE, $assessment);
 		} else {
 			echo "Error saving grade!";
+			
 			application_log("error", "Failed to save grade when AJAX editing. DB said [".$db->ErrorMsg()."]");
 		}
 	}

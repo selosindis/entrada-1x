@@ -536,7 +536,7 @@ function navigator_tabs() {
 					}
 
 					$tab_children .= "<li".($child_active ? " class=\"current\"" : "").">";
-					$tab_children .= "	<a href=\"".ENTRADA_RELATIVE."/".$child_shortname."\"><span>".$child_item["title"]."</span></a>";			
+					$tab_children .= "	<a href=\"".((isset($child_item["url"])) ? $child_item["url"] : ENTRADA_RELATIVE."/".$child_shortname)."\"".((isset($child_item["target"])) ? " target=\"".$child_item["target"]."\"" : "")."\"><span>".$child_item["title"]."</span></a>";			
 					$tab_children .= "</li>";
 				}
 
@@ -11914,6 +11914,40 @@ function getPublicationRoleSpecificFromID($roleID) {
 }
 
 /**
+ * This function gets lookup data from the ar_lu_pr_roles table
+ *
+ * @return array $results
+ */
+function getPRPublicationRoles() {
+    global $db;
+
+    $query = "SELECT *
+	FROM `ar_lu_pr_roles`
+	ORDER BY `role_description`";
+	
+    $results = $db->GetAll($query);
+	
+	return $results;
+}
+
+/**
+ * This function gets lookup data from the ar_lu_pr_roles table
+ *
+ * @return array $result
+ */
+function getPRPublicationRoleSpecificFromID($roleID) {
+    global $db;
+
+    $query = "SELECT `role_description`
+	FROM `ar_lu_pr_roles`
+	WHERE `role_id` = '$roleID'";
+	
+    $result = $db->GetRow($query);
+	
+	return $result["role_description"];
+}
+
+/**
  * This function gets lookup data from the ar_lu_activity_types table
  *
  * @return array $results
@@ -12025,6 +12059,7 @@ function getDegreeTypes() {
 
     $query = "SELECT *
 	FROM `ar_lu_degree_types`
+	WHERE `visible` = '1'
 	ORDER BY `degree_type` ASC";
 	
     $results = $db->GetAll($query);
@@ -15110,4 +15145,23 @@ function clerkship_output_filter_controls($module_type, $proxy_id) {
 		</tr>
 	</table>
 	<?php
+}
+
+/*
+ * This function returns the curriculum level related to a course code
+ *
+ * @param int $organisation_id
+ * @return array $groups
+ */
+function fetch_curriculum_level($course_code) {
+	global $db, $ENTRADA_USER;
+	
+	$query = "SELECT `curriculum_level` FROM `curriculum_lu_levels`, `courses`, `curriculum_lu_types`
+	WHERE `courses`.`course_code` = ".$db->qstr($course_code)." 
+	AND `courses`.`curriculum_type_id` = `curriculum_lu_types`.`curriculum_type_id`
+	AND `curriculum_lu_types`.`curriculum_level_id` = `curriculum_lu_levels`.`curriculum_level_id`";
+	
+	$curriculum_level = $db->GetROw($query);
+	
+	return $curriculum_level["curriculum_level"];
 }

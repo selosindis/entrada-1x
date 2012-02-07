@@ -1,4 +1,5 @@
 DROP TABLE IF EXISTS `community_templates`;
+DROP TABLE IF EXISTS `communities_template_permissions`;
 
 ALTER TABLE `communities` MODIFY `community_template` VARCHAR(30) NOT NULL DEFAULT 'default';
 
@@ -15,8 +16,8 @@ CREATE TABLE IF NOT EXISTS `community_templates` (
 INSERT INTO `community_templates` (`template_id`, `template_name`, `template_description`, `organisation_id`, `group`, `role`) VALUES
 (1,'default','',NULL,NULL,NULL),
 (2,'committee','',NULL,NULL,NULL),
-(3,'virtualPatient','',NULL,NULL,NULL),
-(4,'learningModule','',NULL,NULL,NULL),
+(3,'virtualpatient','',NULL,NULL,NULL),
+(4,'learningmodule','',NULL,NULL,NULL),
 (5,'course','',NULL,NULL,NULL);
 
 CREATE TABLE IF NOT EXISTS `communities_template_permissions` (
@@ -34,10 +35,10 @@ INSERT INTO `communities_template_permissions` (`ctpermission_id`, `permission_t
 (3,'category_id','5','course'),
 (4,'group','faculty,staff','committee'),
 (5,'category_id','12','committee'),
-(6,'group','faculty,staff','learningModule'),
-(7,'group','faculty,staff','virtualPatient'),
-(9,'category_id','','virtualPatient'),
-(8,'category_id','','learningModule');
+(6,'group','faculty,staff','learningmodule'),
+(7,'group','faculty,staff','virtualpatient'),
+(9,'category_id','','virtualpatient'),
+(8,'category_id','','learningmodule');
 
 
 UPDATE `settings` SET `value` = '1221' WHERE `shortname` = 'version_db';

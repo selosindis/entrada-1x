@@ -3579,7 +3579,7 @@ ul.community-themes li.last {
 	background: url("../images/meeting-thumb.jpg");
 	border-color: #ccc;
 }
-#virtualPatient-template {
+#virtualpatient-template {
 	background: url("../images/vp-thumb.jpg");
 	border-color: #ccc;
 }
@@ -3587,7 +3587,7 @@ ul.community-themes li.last {
 background: url("../images/course-thumb.jpg");
 border-color: #CCC;
 }
-#learningModule-template {
+#learningmodule-template {
 	background: url("../images/education-thumb.jpg");
 	border-color: #ccc;
 }

@@ -536,7 +536,7 @@ function navigator_tabs() {
 					}
 
 					$tab_children .= "<li".($child_active ? " class=\"current\"" : "").">";
-					$tab_children .= "	<a href=\"".ENTRADA_RELATIVE."/".$child_shortname."\"><span>".$child_item["title"]."</span></a>";			
+					$tab_children .= "	<a href=\"".((isset($child_item["url"])) ? $child_item["url"] : ENTRADA_RELATIVE."/".$child_shortname)."\"".((isset($child_item["target"])) ? " target=\"".$child_item["target"]."\"" : "")."\"><span>".$child_item["title"]."</span></a>";			
 					$tab_children .= "</li>";
 				}
 

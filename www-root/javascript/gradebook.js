@@ -14,16 +14,26 @@ jQuery(document).ready(function($) {
 		$('table.gradebook.single').flexigrid($.extend({}, flexiopts, {
 			width: 440,
 			colModel: [
-				{display: 'Student Name', name: 'name', width: 200, sortable: false},
-				{display: 'Student Number', name: 'number', width: 120, sortable: false},
-				{display: 'Student Mark', name: 'name', width: 120, sortable: false}
+				{display: 'Student Name', name: 'name', width: 160, sortable: false},
+				{display: 'Student Number', name: 'number', width: 140, sortable: false},
+				{display: 'Student Mark', name: 'name', width: 102, sortable: false},
+			]
+		}));
+
+		$('table.gradebook.numeric').flexigrid($.extend({}, flexiopts, {
+			width: 440,
+			colModel: [
+				{display: 'Student Name', name: 'name', width: 150, sortable: false},
+				{display: 'Student Number', name: 'number', width: 100, sortable: false},
+				{display: 'Student Mark', name: 'name', width: 100, sortable: false},
+				{display: 'Percent', name: 'name', width: 40, sortable: false}
 			]
 		}));
 
 		$('table.gradebook').flexigrid($.extend({}, flexiopts, {
 			title: "Gradebook",
 			buttons : [
-				{name: "Close", bclass: "gradebook_edit_close" },
+				{name: "Close", bclass: "gradebook_edit_close"},
 				{name: "Add Assessment", bclass: "gradebook_edit_add"},
 				{separator: true},
 				{name: "Change Grad Year", bclass: "change_gradebook_year"}
@@ -69,15 +79,26 @@ jQuery(document).ready(function($) {
 					value = values[1];
 					$(this).html(value);				
 				}
+					
+				var suffix = $(this).next('.gradesuffix').html().split('|');
 
 				if(value == "-") {
+					var percent = 0;
 					$(this).attr('data-grade-id', '');
 					$(this).next('.gradesuffix').hide();
 				} else {
+					if (suffix[1]) {
+						var percent = (value/suffix[1]*100).toFixed(2);
+					}
+					
 					$(this).attr('data-grade-id', grade_id);
 					$(this).next('.gradesuffix').show();
 				}
-
+				
+				if (suffix[1]) {
+					var id_suffix = $(this).attr('id').substring(5);
+					$('#percentage'+id_suffix).html('<div style="width: 45px; ">'+percent+'%</div>');
+				}				
 			}
 		}).keyup(function(e){
 			var dest;

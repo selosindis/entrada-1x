@@ -94,7 +94,7 @@ if(isset($GROUP_ID)) {
 		$query			= "SELECT * FROM `course_groups` WHERE `cgroup_id` = ".$db->qstr($GROUP_ID)." AND `active` = '1'";
 		$group_details	= $db->GetRow($query);
 		if($group_details) {
-			if($ENTRADA_ACL->amIAllowed('group', 'update')) {
+			if($ENTRADA_ACL->amIAllowed('course', 'update')) {
 				//Groups  exists and is editable by the current users
 				$nmembers_results		= false;
 				$nmembers_query	= "	SELECT a.`id` AS `proxy_id`, CONCAT_WS(' ', a.`firstname`, a.`lastname`) AS `fullname`, a.`lastname`, a.`firstname`, a.`username`, a.`organisation_id`, b.`group`, b.`role`

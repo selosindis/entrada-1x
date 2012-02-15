@@ -86,12 +86,12 @@ if(isset($_GET["clinical"])) {
 	}
 }
 
-function queryIt($proxy_id, $table, $startDate, $endDate, $db)
+function queryIt($proxy_id, $table, $startDate, $endDate, $db, $roleTable)
 {
-	$query = "SELECT * FROM `".$table."`, `global_lu_roles`, `ar_lu_publication_type`
+	$query = "SELECT * FROM `".$table."`, `".$roleTable."`, `ar_lu_publication_type`
     WHERE `".$table."`.`proxy_id` = '$proxy_id'
     AND `".$table."`.`type_id` = `ar_lu_publication_type`.`type_id`
-    AND `".$table."`.`role_id` = `global_lu_roles`.`role_id`
+    AND `".$table."`.`role_id` = `".$roleTable."`.`role_id`
     AND `".$table."`.`year_reported` BETWEEN '$startDate' AND '$endDate'
     ORDER BY `status` ASC";
 	
@@ -123,6 +123,20 @@ function display($results, $db)
 				$month 	= substr($result["status_date"], 0, 2);
 				$year 	= substr($result["status_date"], 2, 4);
             	$formattedRec = $formattedRec . $month . "-" . $year . ", ";
+            } else if(isset($result["epub_date"]) && strlen($result["epub_date"]) == 5) {
+				$month 	= substr($result["epub_date"], 0, 1);
+				if($month == 0) {
+					$month = 1;
+				}
+				$year 	= substr($result["epub_date"], 1, 4);
+				$formattedRec = $formattedRec . $month . "-" . $year . " (e-pub), ";
+			} else if(isset($result["epub_date"]) && strlen($result["epub_date"]) == 6) {
+				$month 	= substr($result["epub_date"], 0, 2);
+				if($month == 0) {
+					$month = 1;
+				}
+				$year 	= substr($result["epub_date"], 2, 4);
+            	$formattedRec = $formattedRec . $month . "-" . $year . " (e-pub), ";
             }
             
             if($result["source"] != "") {
@@ -360,7 +374,7 @@ if(!$undergraduateTeachingResults = $db->GetAll($undergraduateTeachingQuery))
 		<thead>
 			<tr>
 				<td class="delete" id="colDelete">#</td>
-				<td class="course_number" id="colcourse_number" style="width: 100px">Course Number</td>
+				<td class="course_number" id="colcourse_number" style="width: 100px">Course Number<?php if(AUTH_APP_ID == "101") { echo " / Level"; } ?></td>
 				<td class="course_name" id="colcourse_name" style="width: 100px">Course Name</td>
 				<td class="assigned" id="colassigned">Assigned</td>
 			</tr>
@@ -397,9 +411,15 @@ if(!$undergraduateTeachingResults = $db->GetAll($undergraduateTeachingQuery))
 				{
 					$commentsArray[$ctr]['comments'] = $result['comments'];
 				}
+				$curriculum_level = fetch_curriculum_level($result['course_number']);
 				echo "<tr>\n";
 				echo "	<td class=\"delete\">".$listing."&nbsp;</td>\n";					
-				echo "	<td class=\"course_number\">".html_encode($result['course_number'])."&nbsp;</td>\n";
+				echo "	<td class=\"course_number\">".html_encode($result['course_number']);
+				if(AUTH_APP_ID == "101") 
+				{ 
+					echo " / ".$curriculum_level; 
+				} 
+				echo "&nbsp;</td>\n";
 				echo "	<td class=\"course_name\">".((strlen(html_encode($result['course_name'])) > 80) ? substr(html_encode($result['course_name']), 0, 79) . "..." : html_encode($result['course_name']))."&nbsp;</td>\n";
 				echo "	<td class=\"assigned\">".html_encode($result['assigned'])."&nbsp;</td>\n";
 				echo "</tr>\n";
@@ -1461,8 +1481,13 @@ else
 	$endDate = $REPORT_YEAR;
 
 	$table = "ar_peer_reviewed_papers";
-
-if($results = queryIt($proxy_id, $table, $startDate, $endDate, $db)) {
+	if($_SESSION["details"]["clinical_member"] && $REPORT_YEAR > '2010') {
+		$roleTable = "ar_lu_pr_roles";
+	} else {
+		$roleTable = "global_lu_roles";
+	}
+	
+if($results = queryIt($proxy_id, $table, $startDate, $endDate, $db, $roleTable)) {
 	display($results, $db, $typeDesc = true);
 } else {
 	echo $noRecOutput;
@@ -1476,8 +1501,9 @@ if($results = queryIt($proxy_id, $table, $startDate, $endDate, $db)) {
 	$endDate = $REPORT_YEAR;
 
 	$table = "ar_non_peer_reviewed_papers";
+	$roleTable = "global_lu_roles";
 
-if($results = queryIt($proxy_id, $table, $startDate, $endDate, $db)) {
+if($results = queryIt($proxy_id, $table, $startDate, $endDate, $db, $roleTable)) {
 	display($results, $db, $typeDesc = true);
 } else {
 	echo $noRecOutput;
@@ -1491,8 +1517,9 @@ if($results = queryIt($proxy_id, $table, $startDate, $endDate, $db)) {
 	$endDate = $REPORT_YEAR;
 
 	$table = "ar_book_chapter_mono";
-
-if($results = queryIt($proxy_id, $table, $startDate, $endDate, $db)) {
+	$roleTable = "global_lu_roles";
+	
+if($results = queryIt($proxy_id, $table, $startDate, $endDate, $db, $roleTable)) {
 	display($results, $db, $typeDesc = true);
 } else {
 	echo $noRecOutput;
@@ -1506,8 +1533,9 @@ if($results = queryIt($proxy_id, $table, $startDate, $endDate, $db)) {
 	$endDate = $REPORT_YEAR;
 
 	$table = "ar_poster_reports";
+	$roleTable = "global_lu_roles";
 
-if($results = queryIt($proxy_id, $table, $startDate, $endDate, $db)) {
+if($results = queryIt($proxy_id, $table, $startDate, $endDate, $db, $roleTable)) {
 	display($results, $db, $typeDesc = true);
 } else {
 	echo $noRecOutput;

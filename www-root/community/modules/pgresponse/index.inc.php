@@ -16,6 +16,9 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_PGRESPONSE"))) {
 	exit;
 } elseif (!$COMMUNITY_LOAD) {
 	exit;
+} elseif (true) { ?>
+	<p>Sorry, response rates are not available on this site at the moment.</p>
+<?php
 } else {
 	$community_title = $community_details["community_title"];
 	$query = "SELECT *
@@ -91,7 +94,7 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_PGRESPONSE"))) {
 			<br />
 			<br />
 			<div id="resident_response">
-				<strong>Resident's Evaluation of Faculty Forms</strong>
+				<strong>Faculty and Rotation Evaluation Forms</strong>
 				<table>
 					<tr><td>Completed:</td> <td><?php echo $resident_completed ?></td></tr>
 					<tr><td>Distributed:</td> <td><?php echo $resident_distributed ?></td></tr>

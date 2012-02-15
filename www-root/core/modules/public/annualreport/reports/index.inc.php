@@ -65,7 +65,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 	</ol>
 	<?php 
 	if($ENTRADA_ACL->amIAllowed('mydepartment', 'read', 'DepartmentHead') || $ENTRADA_ACL->amIAllowed('myowndepartment', 'read', 'DepartmentRep')) { ?>
-	<h2 style="color: #669900">My Department Reports</h2>
+	<h2 style="color: #669900">Research Reports for My Department</h2>
 	<ol class="system-reports">
 		<li>
 			<a href="<?php echo ENTRADA_URL; ?>/annualreport/reports?section=my_departmental_publications">Publications</a><br />
@@ -78,6 +78,25 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 		<li>
 			<a href="<?php echo ENTRADA_URL; ?>/annualreport/reports?section=my_departmental_grants">Research Grants</a><br />
 			A report that shows Research Grants in your department for a specific date range.
+		</li>
+	</ol>
+	<h2 style="color: #669900">Teaching Reports for My Department</h2>
+	<ol class="system-reports">
+		<li>
+			<a href="<?php echo ENTRADA_URL; ?>/annualreport/reports?section=my_departmental_ug_teaching">Undergraduate Medical Teaching</a><br />
+			A report that shows Undergraduate Medical Teaching (MEdTech) in your department for a specific calendar year.
+		</li>
+		<li>
+			<a href="<?php echo ENTRADA_URL; ?>/annualreport/reports?section=my_departmental_ug_nonmedical_teaching">Undergraduate Non-Medical Teaching</a><br />
+			A report that shows Undergraduate Non-Medical Teaching in your department for a specific calendar year.
+		</li>
+		<li>
+			<a href="<?php echo ENTRADA_URL; ?>/annualreport/reports?section=my_departmental_pg_teaching">Postgraduate Teaching</a><br />
+			A report that shows Postgraduate Teaching in your department for a specific calendar year.
+		</li>
+		<li>
+			<a href="<?php echo ENTRADA_URL; ?>/annualreport/reports?section=my_departmental_clinical_teaching">Clincial Teaching</a><br />
+			A report that shows Clinical Teaching in your department for a specific date range.
 		</li>
 	</ol>
 	<?php } ?>

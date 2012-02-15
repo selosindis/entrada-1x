@@ -536,7 +536,7 @@ function navigator_tabs() {
 					}
 
 					$tab_children .= "<li".($child_active ? " class=\"current\"" : "").">";
-					$tab_children .= "	<a href=\"".ENTRADA_RELATIVE."/".$child_shortname."\"><span>".$child_item["title"]."</span></a>";			
+					$tab_children .= "	<a href=\"".((isset($child_item["url"])) ? $child_item["url"] : ENTRADA_RELATIVE."/".$child_shortname)."\"".((isset($child_item["target"])) ? " target=\"".$child_item["target"]."\"" : "")."\"><span>".$child_item["title"]."</span></a>";			
 					$tab_children .= "</li>";
 				}
 
@@ -1815,6 +1815,110 @@ function fetch_specific_country($countries_id) {
 		return $result["country"];
 	} else {
 		return false;
+	}
+}
+
+/**
+ * This function generates a select box containing all child categories below the
+ * category passed in.
+ *
+ * @param unknown_type $results
+ * @param unknown_type $parent_id
+ * @param unknown_type $current_selected
+ * @param unknown_type $indent
+ * @param unknown_type $exclude
+ * @param unknown_type $hide_empty
+ * @return unknown
+ */
+function clerkship_categories_inselect($results, $parent_id = 0, $current_selected = array(), $indent = 0, $exclude = array(), $hide_empty = false) {
+	if($indent > 99) {
+		die("Preventing infinite loop");
+	}
+
+	$output	= "";
+	$ctotal	= @count($results);
+	for($i = 0; $i < $ctotal; $i++) {
+		if($results[$i]["category_parent"] == $parent_id) {
+			if((!@in_array($results[$i]["category_id"], $exclude)) && (!@in_array($parent_id, $exclude))) {
+				$result  = clerkship_categories_inselect($results, $results[$i]["category_id"], $current_selected, $indent + 1, $exclude, $hide_empty);
+				$output .= (((!$hide_empty) || ($result != "")) ? "<option value=\"".$results[$i]["category_id"]."\"".((@in_array($results[$i]["category_id"], $current_selected)) ? " selected=\"selected\"" : "").">".str_repeat("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;", $indent).(($indent > 0) ? "&rarr;&nbsp;" : "").$results[$i]["category_name"]."</option>\n" : " ");
+				$output .= $result;
+			} else {
+				$exclude[] = $results[$i]["category_id"];
+			}
+		}
+	}
+	return $output;
+}
+
+/**
+ * Returns true if child categories exist underneath the parent_id passed in
+ *
+ * @param unknown_type $parent_id
+ * @param unknown_type $indent
+ * @return unknown
+ */
+function clerkship_generate_included_categories($parent_id = 0, $indent = 0) {
+	global $db, $report_results;
+
+	if($indent > 99) die("Preventing infinite loop");
+
+	$query		= "
+				SELECT a.`category_id`, a.`category_name`
+				FROM `".CLERKSHIP_DATABASE."`.`categories` AS a
+				WHERE a.`category_parent` = ".$db->qstr($parent_id)."
+				AND a.`category_status` <> 'trash'
+				GROUP BY a.`category_id`
+				ORDER BY a.`category_order` ASC";
+	$results	= $db->GetAll($query);
+	foreach($results as $result) {
+		$report_results[$result["category_name"]]["indent"]			= (int) $indent;
+		$report_results[$result["category_name"]]["category_ids"][]	= (int) $result["category_id"];
+		clerkship_generate_included_categories($result["category_id"], $indent + 1);
+	}
+
+	return ((@count($report_results) > 0) ? true : false);
+}
+
+/**
+ * Returns all categories under the specified parent id as an array.
+ *
+ * @param unknown_type $parent_id
+ * @param unknown_type $indent
+ * @return unknown
+ */
+function clerkship_categories_inarray($parent_id, $indent = 0) {
+	global $db, $sub_category_ids;
+
+	if($indent > 99) {
+		die("Preventing infinite loop");
+	}
+
+	$query		= "SELECT * FROM `".CLERKSHIP_DATABASE."`.`categories` WHERE `category_parent`=".$db->qstr($parent_id)." AND `category_status`<>'trash' ORDER BY `category_order` ASC";
+	$results	= $db->GetAll($query);
+	foreach($results as $result) {
+		$sub_category_ids[] = $result["category_id"];
+		clerkship_categories_inarray($result["category_id"], $indent + 1);
+	}
+
+	return ((@count($sub_category_ids) > 0) ? true : false);
+}
+
+/**
+ * Returns the name of the category with the supplied category id.
+ *
+ * @param unknown_type $category_id
+ * @return unknown
+ */
+function clerkship_categories_name($category_id = 0) {
+	global $db;
+
+	$query	= "SELECT `category_name` FROM `".CLERKSHIP_DATABASE."`.`categories` WHERE `category_id`=".$db->qstr($category_id);
+	$result	= $db->GetRow($query);
+	if($result) {
+		return $result["category_name"];
+	} else {
+		return "Not Available";
 	}
 }
 
@@ -11770,6 +11874,40 @@ function getPublicationRoleSpecificFromID($roleID) {
 }
 
 /**
+ * This function gets lookup data from the ar_lu_pr_roles table
+ *
+ * @return array $results
+ */
+function getPRPublicationRoles() {
+    global $db;
+
+    $query = "SELECT *
+	FROM `ar_lu_pr_roles`
+	ORDER BY `role_description`";
+	
+    $results = $db->GetAll($query);
+	
+	return $results;
+}
+
+/**
+ * This function gets lookup data from the ar_lu_pr_roles table
+ *
+ * @return array $result
+ */
+function getPRPublicationRoleSpecificFromID($roleID) {
+    global $db;
+
+    $query = "SELECT `role_description`
+	FROM `ar_lu_pr_roles`
+	WHERE `role_id` = '$roleID'";
+	
+    $result = $db->GetRow($query);
+	
+	return $result["role_description"];
+}
+
+/**
  * This function gets lookup data from the ar_lu_activity_types table
  *
  * @return array $results
@@ -11881,6 +12019,7 @@ function getDegreeTypes() {
 
     $query = "SELECT *
 	FROM `ar_lu_degree_types`
+	WHERE `visible` = '1'
 	ORDER BY `degree_type` ASC";
 	
     $results = $db->GetAll($query);
@@ -14800,4 +14939,23 @@ function fetch_cases_list() {
 	} else {
 		return false;
 	}
+}
+
+/**
+ * This function returns the curriculum level related to a course code
+ *
+ * @param int $organisation_id
+ * @return array $groups
+ */
+function fetch_curriculum_level($course_code) {
+	global $db, $ENTRADA_USER;
+	
+	$query = "SELECT `curriculum_level` FROM `curriculum_lu_levels`, `courses`, `curriculum_lu_types`
+	WHERE `courses`.`course_code` = ".$db->qstr($course_code)." 
+	AND `courses`.`curriculum_type_id` = `curriculum_lu_types`.`curriculum_type_id`
+	AND `curriculum_lu_types`.`curriculum_level_id` = `curriculum_lu_levels`.`curriculum_level_id`";
+	
+	$curriculum_level = $db->GetROw($query);
+	
+	return $curriculum_level["curriculum_level"];
 }

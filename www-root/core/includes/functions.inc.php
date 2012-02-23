@@ -10422,6 +10422,8 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 						`events`.`course_id`,
 						`events`.`parent_id`,
 						`events`.`event_title`,
+						`events`.`event_description`,
+						`events`.`event_duration`,
 						`events`.`event_message`,
 						`events`.`event_location`,
 						`events`.`event_start`,

@@ -94,7 +94,7 @@ if(isset($GROUP_ID)) {
 		$query			= "SELECT * FROM `course_groups` WHERE `cgroup_id` = ".$db->qstr($GROUP_ID)." AND `active` = '1'";
 		$group_details	= $db->GetRow($query);
 		if($group_details) {
-			if($ENTRADA_ACL->amIAllowed('group', 'update')) {
+			if($ENTRADA_ACL->amIAllowed('course', 'update')) {
 				//Groups  exists and is editable by the current users
 				$nmembers_results		= false;
 				$nmembers_query	= "	SELECT a.`id` AS `proxy_id`, CONCAT_WS(' ', a.`firstname`, a.`lastname`) AS `fullname`, a.`lastname`, a.`firstname`, a.`username`, a.`organisation_id`, b.`group`, b.`role`
@@ -141,9 +141,9 @@ if(isset($GROUP_ID)) {
 									AND c.`audience_active` = 1
 									AND f.`start_date` <= ".$db->qstr(time())."
 									AND f.`finish_date` >= ".$db->qstr(time())."
-									AND d.`active` = 1
+									AND d.`group_active` = 1
 									AND (d.`start_date` <= ".$db->qstr(time())." OR d.`start_date` = 0)
-									AND (d.`expire_date` >= ".$db->qstr(time())." OR d.`start_date` = 0)
+									AND (d.`expire_date` >= ".$db->qstr(time())." OR d.`expire_date` = 0 OR d.`expire_date` IS NULL)
 									AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
 									AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
 									AND a.`organisation_id` = ".$db->qstr($ORGANISATION_ID)."

@@ -9065,7 +9065,7 @@ function courses_fetch_objectives($org_id, $course_ids, $top_level_id = -1, $par
  * @param type $hierarchical
  * @return string 
  */
-function course_objectives_in_list($objectives, $parent_id, $top_level_id, $edit_importance = false, $parent_active = false, $importance = 1, $selected_only = false, $top = true, $display_importance = "primary", $hierarchical = false, $full_objective_list) {
+function course_objectives_in_list($objectives, $parent_id, $top_level_id, $edit_importance = false, $parent_active = false, $importance = 1, $selected_only = false, $top = true, $display_importance = "primary", $hierarchical = false, $full_objective_list = false) {
 	global $ENTRADA_USER;
 	
 	$output = "";

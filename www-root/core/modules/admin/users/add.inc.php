@@ -415,6 +415,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 			if ($ENTRADA_ACL->amIAllowed(new UserResource(null, $PROCESSED["organisation_id"]), 'create')) {
 				if ($permissions_only) {
 					if ($db->AutoExecute(AUTH_DATABASE.".user_access", $PROCESSED_ACCESS, "INSERT")) {
+						$PROXY_ID = $db->Insert_Id();
 						if (($PROCESSED_ACCESS["group"] == "medtech") || ($PROCESSED_ACCESS["role"] == "admin")) {
 							application_log("error", "USER NOTICE: A new user (".$PROCESSED["firstname"]." ".$PROCESSED["lastname"].") was added to ".APPLICATION_NAME." as ".$PROCESSED_ACCESS["group"]." > ".$PROCESSED_ACCESS["role"].".");
 						}
@@ -445,6 +446,25 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 							}
 						}
 
+						
+						$query = "SELECT `group_id` FROM `groups` WHERE `group_name` = 'Class of ".$PROCESSED_ACCESS["role"]."' AND `group_type` = 'cohort' AND `group_active` = 1";
+						$group_id = $db->GetOne($query);
+						if($group_id){			
+							$gmember = array(
+								'group_id' => $group_id,
+								'proxy_id' => $PROXY_ID,
+								'start_date' => time(),
+								'finish_date' => 0,
+								'member_active' => 1,
+								'entrada_only' => 1,
+								'updated_date' => time(),
+								'updated_by' => $ENTRADA_USER->getProxyId()
+							);
+							
+							print_r($gmember);
+							$db->AutoExecute("group_members", $gmember, "INSERT");
+						}
+						
 						$url			= ENTRADA_URL."/admin/users";
 
 						$SUCCESS++;

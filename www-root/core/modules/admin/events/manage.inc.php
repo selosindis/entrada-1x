@@ -2743,7 +2743,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 													<td style="vertical-align: top">
 														Clinical Presentations
 														<div class="content-small" style="margin-top: 5px">
-															<strong>Note:</strong> For more detailed information please refer to the <a href="http://www.mcc.ca/Objectives_online/objectives.pl?lang=english&loc=contents" target="_blank" style="font-size: 11px">MCC Objectives for the Qualifying Examination</a>.
+															<strong>Note:</strong> For more detailed information please refer to the <a href="http://apps.mcc.ca/Objectives_Online/objectives.pl?loc=home&lang=english" target="_blank" style="font-size: 11px">MCC Objectives for the Qualifying Examination</a>.
 														</div>
 													</td>
 													<td>

@@ -43,10 +43,17 @@ $ldap = NewADOConnection("ldap");
 $ldap->SetFetchMode(ADODB_FETCH_ASSOC);
 $ldap->debug = false;
 
+/**
+ * NOTE: This script is made for the Winter 2011-2012 term. To change the terms do the following:
+ * 1 - Change the curriculum_type_id to the appropriate ID
+ * 2 - Change the 'W' on line 132 to whatever term you're in (look at the suffix on some of the of the Course Codes)
+ * 3 - Change the '_1_' on line 137 to the term code (number of the month the term starts in)
+ */
 $query = "	SELECT `course_code`,`course_id`,`curriculum_type_id`,`organisation_id` 
 			FROM `courses` 
-			WHERE `course_active` = 1
-			AND `sync_ldap` = 1";
+			WHERE `course_active` = '1'
+			AND `sync_ldap` = '1'
+			AND `curriculum_type_id` = '11'";
 $results = $db->GetAll($query);
 if ($results) {
 	foreach ($results as $course) {
@@ -62,7 +69,7 @@ if ($results) {
 				$end_date = $result["finish_date"];
 				$curriculum_period = $result["cperiod_id"];
 			} else {
-				$query = "SELECT * FROM `curriculum_periods` WHERE `active` = 1 AND `curriculum_type_id` = ".$db->qstr($course["curriculum_type_id"])."ORDER BY start_date ASC LIMIT 1";
+				$query = "SELECT * FROM `curriculum_periods` WHERE `active` = 1 AND `curriculum_type_id` = ".$db->qstr($course["curriculum_type_id"])."ORDER BY `start_date` ASC LIMIT 1";
 				if ($result = $db->GetRow($query)) {
 					$start_date = $result["start_date"];
 					$end_date = $result["finish_date"];
@@ -117,10 +124,18 @@ if ($results) {
 		}
 
 		//create LDAP connection
+		
 		if ($ldap->Connect(LDAP_HOST, LDAP_SEARCH_DN,LDAP_SEARCH_DN_PASS, LDAP_GROUPS_BASE_DN)) {
 			//get the course information, in particular the list of unique members
-			$course_code_base = clean_input($course["course_code"], "alpha")."_".clean_input($course["course_code"], "numeric");
-			if (($results = $ldap->GetAll("cn=".$course_code_base."*_9_*"))) {
+			/**
+			 * Change from W depending on term
+			 */
+			$course_code = str_replace("W","",$course["course_code"]);
+			$course_code_base = clean_input($course_code, "alpha")."_".clean_input($course_code, "numeric");
+			/**
+			 * Change _1_ to appropriate term ID (matches month number the term starts in)
+			 */
+			if (($results = $ldap->GetAll("cn=".$course_code_base."*_1_*"))) {
 				$ldap->Close();
 					echo "<strong>".$course["course_code"]."</strong><pre>".print_r($results, true)."</pre>\n<br/>";
 				$uniUids = array();
@@ -293,8 +308,9 @@ if ($results) {
 			} else {
 				application_log("cron", "No results from LDAP server for course ".$course["course_code"].". Check that course code is valid.");
 			}
-		} else {
+		} else {			
 			application_log("cron", "Could not connect to get course information.");
+			application_log("cron",$ldap->ErrorMsg());
 		}
 	}
 } else {

@@ -85,7 +85,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					}
 						
 					if((isset($_POST["grade_weighting"])) && ($_POST["grade_weighting"] !== NULL)) {
-						$PROCESSED["grade_weighting"] = clean_input($_POST["grade_weighting"], "int");
+						$PROCESSED["grade_weighting"] = clean_input($_POST["grade_weighting"], "float");
 					} else {
 						$ERROR++;
 						$ERRORSTR[] = "You must supply a <strong>Grade Weighting</strong> for this assessment.";

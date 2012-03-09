@@ -274,23 +274,21 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 							}
 						});
 					} else {
-						jQueryDialog.dialog('open');
+						jQuery('#delete-valid').dialog({
+							title: "No Items Selected for Delete",
+							resizable: false,
+							height:180,
+							modal: true,
+							buttons: {
+								Ok: function() {
+									jQuery(this).dialog('close');
+								}
+							}
+						})
 					}
 				});
 			}
 		}
-
-		jQueryDialog = jQuery('<div></div>')
-		.html('<span class="ui-icon ui-icon-circle-check" style="float:left; margin:0 7px 50px 0;"></span>You must select at least one record in order to delete.')
-		.dialog({
-			autoOpen: false,
-			title: 'Please Select a Record',
-			buttons: {
-				Ok: function() {
-					jQuery(this).dialog('close');
-				}
-			}
-		});
 
 		function getResident(id) {
 			jQuery("#resident_proxy_id").val(id);
@@ -363,6 +361,7 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 
 	</style>
 
+	<div id="delete-valid" style="display:none"><p><span class="ui-icon ui-icon-circle-check" style="float:left; margin:0 7px 50px 0;"></span>You must select at least one record in order to delete.</p></div>
 	<div id="delete-confirm" style="display:none"><p><span class="ui-icon ui-icon-alert" style="float:left; margin:0 7px 20px 0;"></span>All selected rows will be deleted. Are you sure?</p></div>
 
 	<div id ="MTD_form_container" class="mtd-form">

@@ -85,7 +85,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					}
 						
 					if((isset($_POST["grade_weighting"])) && ($_POST["grade_weighting"] !== NULL)) {
-						$PROCESSED["grade_weighting"] = clean_input($_POST["grade_weighting"], "int");
+						$PROCESSED["grade_weighting"] = clean_input($_POST["grade_weighting"], "float");
 					} else {
 						$ERROR++;
 						$ERRORSTR[] = "You must supply a <strong>Grade Weighting</strong> for this assessment.";
@@ -377,7 +377,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							<td></td>
 							<td><label for="grade_weighting" class="form-nrequired">Assessment Weighting</label></td>
 							<td>
-								<input type="text" id="grade_weighting" name="grade_weighting" value="<?php echo (int) html_encode($PROCESSED["grade_weighting"]); ?>" maxlength="3" style="width: 30px" autocomplete="off" />
+								<input type="text" id="grade_weighting" name="grade_weighting" value="<?php echo (int) html_encode($PROCESSED["grade_weighting"]); ?>" maxlength="5" style="width: 40px" autocomplete="off" />
 								<span class="content-small"><strong>Tip:</strong> The percentage or numeric value of the final grade this assessment is worth.</span>
 							</td>
 						</tr>

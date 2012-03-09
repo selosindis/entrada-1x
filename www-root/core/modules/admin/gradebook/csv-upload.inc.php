@@ -70,7 +70,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								$users = $db->GetAll($query);
 								if ($users) {
 									foreach ($users as $user) {
-										$query = "SELECT * FROM `group_members` WHERE `group_id` = ".$db->qstr($GROUP)." AND `proxy_id` = ".$db->qstr($user["id"]);
+										$query = "SELECT * FROM `group_members` WHERE `group_id` = ".$db->qstr($GROUP)." AND `proxy_id` = ".$db->qstr($user["id"])." AND `member_active` = '1'";
 										$member = $db->GetRow($query);
 										if ($member) {
 											$PROCESSED["proxy_id"] = $member["proxy_id"];

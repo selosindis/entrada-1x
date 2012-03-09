@@ -123,6 +123,20 @@ function display($results, $db)
 				$month 	= substr($result["status_date"], 0, 2);
 				$year 	= substr($result["status_date"], 2, 4);
             	$formattedRec = $formattedRec . $month . "-" . $year . ", ";
+            } else if(isset($result["epub_date"]) && strlen($result["epub_date"]) == 5) {
+				$month 	= substr($result["epub_date"], 0, 1);
+				if($month == 0) {
+					$month = 1;
+				}
+				$year 	= substr($result["epub_date"], 1, 4);
+				$formattedRec = $formattedRec . $month . "-" . $year . " (e-pub), ";
+			} else if(isset($result["epub_date"]) && strlen($result["epub_date"]) == 6) {
+				$month 	= substr($result["epub_date"], 0, 2);
+				if($month == 0) {
+					$month = 1;
+				}
+				$year 	= substr($result["epub_date"], 2, 4);
+            	$formattedRec = $formattedRec . $month . "-" . $year . " (e-pub), ";
             }
             
             if($result["source"] != "") {
@@ -360,7 +374,7 @@ if(!$undergraduateTeachingResults = $db->GetAll($undergraduateTeachingQuery))
 		<thead>
 			<tr>
 				<td class="delete" id="colDelete">#</td>
-				<td class="course_number" id="colcourse_number" style="width: 100px">Course Number</td>
+				<td class="course_number" id="colcourse_number" style="width: 100px">Course Number<?php if(AUTH_APP_ID == "101") { echo " / Level"; } ?></td>
 				<td class="course_name" id="colcourse_name" style="width: 100px">Course Name</td>
 				<td class="assigned" id="colassigned">Assigned</td>
 			</tr>
@@ -397,9 +411,15 @@ if(!$undergraduateTeachingResults = $db->GetAll($undergraduateTeachingQuery))
 				{
 					$commentsArray[$ctr]['comments'] = $result['comments'];
 				}
+				$curriculum_level = fetch_curriculum_level($result['course_number']);
 				echo "<tr>\n";
 				echo "	<td class=\"delete\">".$listing."&nbsp;</td>\n";					
-				echo "	<td class=\"course_number\">".html_encode($result['course_number'])."&nbsp;</td>\n";
+				echo "	<td class=\"course_number\">".html_encode($result['course_number']);
+				if(AUTH_APP_ID == "101") 
+				{ 
+					echo " / ".$curriculum_level; 
+				} 
+				echo "&nbsp;</td>\n";
 				echo "	<td class=\"course_name\">".((strlen(html_encode($result['course_name'])) > 80) ? substr(html_encode($result['course_name']), 0, 79) . "..." : html_encode($result['course_name']))."&nbsp;</td>\n";
 				echo "	<td class=\"assigned\">".html_encode($result['assigned'])."&nbsp;</td>\n";
 				echo "</tr>\n";

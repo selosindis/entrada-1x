@@ -130,11 +130,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 					$ERRORSTR[] = "You must provide a website for this organisation.";
 				}
 
-				if (isset($_POST["organisation_desc"]) && ($tmp_input = clean_input($_POST["organisation_desc"], array("trim", "notags")))) {
+				if (isset($_POST["organisation_desc"]) && ($tmp_input = clean_input($_POST["organisation_desc"], array("trim","notags")))) {
 					$PROCESSED["organisation_desc"] = $tmp_input;
-				} else {
-					$ERROR++;
-					$ERRORSTR[] = "You must provide a description for this organisation.";
 				}
 
 				if (isset($_POST["template"]) && ($tmp_input = clean_input($_POST["template"], array("trim", "notags")))) {
@@ -459,7 +456,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 									</td>
 								</tr>
 								<tr>
-									<td><label for="description_id" class="form-required">Description</label></td>
+									<td><label for="description_id" class="">Description</label></td>
 									<td>
 										<input type="text" id="organisation_desc" name="organisation_desc" value="<?php echo html_encode($PROCESSED["organisation_desc"]); ?>" style="width: 250px" />
 									</td>

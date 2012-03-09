@@ -418,6 +418,44 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 									}
 								}
 							}
+							
+							$query = "SELECT `group_id` FROM `groups` WHERE `group_name` = 'Class of ".$PROCESSED_ACCESS["role"]."' AND `group_type` = 'cohort' AND `group_active` = 1";
+							$group_id = $db->GetOne($query);
+
+							if($group_id){
+								$query = "SELECT * FROM `group_members` WHERE `group_id` = ".$db->qstr($group_id)." AND `proxy_id` = ".$db->qstr($PROXY_ID)." AND `member_active` = 1";
+								
+								$result = $db->GetRow($query);
+								if(!$result){
+									$query = "SELECT `group_id` FROM `groups` WHERE `group_type` = 'cohort' AND `group_active` = 1";
+									$cohorts = $db->GetAll($query);
+									
+									$cohort_ids = array();
+									if($cohorts){
+										foreach($cohorts as $cohort){
+											$cohort_ids[] = $cohort["group_id"];
+										}
+									}
+									
+
+									$query = "DELETE FROM `group_members` WHERE `proxy_id` = ".$db->qstr($PROXY_ID)." AND `member_active` = '1' AND `group_id` IN(".implode(",",$cohort_ids).")";
+									//$db->AutoExecute("group_members",array("member_active"=>"0"),"UPDATE",$where);
+									$db->Execute($query);
+									$gmember = array(
+										'group_id' => $group_id,
+										'proxy_id' => $PROXY_ID,
+										'start_date' => time(),
+										'finish_date' => 0,
+										'member_active' => 1,
+										'entrada_only' => 1,
+										'updated_date' => time(),
+										'updated_by' => $ENTRADA_USER->getProxyId()
+									);
+									$db->AutoExecute("group_members", $gmember, "INSERT");
+								}
+
+							}
+							
 
 							$url = ENTRADA_URL."/admin/users/manage?id=".$PROXY_ID;
 

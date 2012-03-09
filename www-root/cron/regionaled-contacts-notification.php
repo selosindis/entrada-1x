@@ -5,6 +5,8 @@
  *
  * Cron job responsible for emailing apartment contacts once a month with the
  * scheduled occupants for the month.
+ * 
+ * Setup to run the first of each month in CRON.
  *
  * @author Organisation: Queen's University
  * @author Unit: Faculty of Medicine

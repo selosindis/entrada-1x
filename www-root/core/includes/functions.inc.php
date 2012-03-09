@@ -536,7 +536,7 @@ function navigator_tabs() {
 					}
 
 					$tab_children .= "<li".($child_active ? " class=\"current\"" : "").">";
-					$tab_children .= "	<a href=\"".ENTRADA_RELATIVE."/".$child_shortname."\"><span>".$child_item["title"]."</span></a>";			
+					$tab_children .= "	<a href=\"".((isset($child_item["url"])) ? $child_item["url"] : ENTRADA_RELATIVE."/".$child_shortname)."\"".((isset($child_item["target"])) ? " target=\"".$child_item["target"]."\"" : "")."\"><span>".$child_item["title"]."</span></a>";			
 					$tab_children .= "</li>";
 				}
 
@@ -5730,7 +5730,7 @@ function communities_pages_inlists($identifier = 0, $indent = 0, $options = arra
 				$output .= "	<span class=\"".(((int) $result["page_visible"]) == 0 ? "hidden-page " : "")."next off\">".
 								html_encode($result["menu_title"])."</span>\n";
 			} else {
-				$output .= "	<span class=\"delete\">".($result["page_type"] != "course" ? "<input type=\"radio\" id=\"delete_".$result["cpage_id"]."\" name=\"delete\" value=\"".$result["cpage_id"]."\"".(($selected == $result["cpage_id"]) ? " checked=\"checked\"" : "")." />" : "<div class=\"course-spacer\">&nbsp;</div>")."</span>\n";
+				$output .= "	<span class=\"delete\">".($result["page_type"] != "course" ? "<input type=\"checkbox\" id=\"delete_".$result["cpage_id"]."\" name=\"delete[]\" value=\"".$result["cpage_id"]."\"".(($selected == $result["cpage_id"]) ? " checked=\"checked\"" : "")." />" : "<div class=\"course-spacer\">&nbsp;</div>")."</span>\n";
 				$output .= "	<span class=\"".(((int) $result["page_visible"]) == 0 ? "hidden-page " : "")."next\">
 								<a href=\"".COMMUNITY_URL.$COMMUNITY_URL.":pages?".replace_query(array("action" => "edit", "step" => 1, "page" => $result["cpage_id"]))."\">".
 								html_encode($result["menu_title"])."</a></span>\n";
@@ -5795,7 +5795,7 @@ function communities_pages_intable($identifier = 0, $indent = 0, $options = arra
 				$output .= "</tr>\n";
 			} else {
 				$output .= "<tr id=\"content_".$result["cpage_id"]."\">\n";
-				$output .= "	<td>".($result["page_type"] != "course" ? "<input type=\"radio\" id=\"delete_".$result["cpage_id"]."\" name=\"delete\" value=\"".$result["cpage_id"]."\" style=\"vertical-align: middle\"".(($selected == $result["cpage_id"]) ? " checked=\"checked\"" : "")." />" : "&nbsp;")."</td>\n";
+				$output .= "	<td>".($result["page_type"] != "course" ? "<input type=\"checkbox\" id=\"delete_".$result["cpage_id"]."\" name=\"delete[]\" value=\"".$result["cpage_id"]."\" style=\"vertical-align: middle\"".(($selected == $result["cpage_id"]) ? " checked=\"checked\"" : "")." />" : "&nbsp;")."</td>\n";
 				$output .= "	<td ".(((int) $result["page_visible"]) == 0 ? " class=\"hidden-page\"" : "")."style=\"padding-left: ".($indent * 25)."px; vertical-align: middle\"><img src=\"".ENTRADA_URL."/images/record-next-on.gif\" width=\"11\" height=\"11\" border=\"0\" alt=\"\" title=\"\" style=\"vertical-align: middle; margin-right: 5px\" /><a href=\"".COMMUNITY_URL.$COMMUNITY_URL.":pages?".replace_query(array("action" => "edit", "step" => 1, "page" => $result["cpage_id"]))."\"".(($result["parent_id"] == 0) ? " style=\"font-weight: bold\"" : "").">".html_encode($result["menu_title"])."</a></td>\n";
 				$output .= "</tr>\n";
 			}
@@ -9025,7 +9025,7 @@ function courses_fetch_objectives($org_id, $course_ids, $top_level_id = -1, $par
  * @param type $hierarchical
  * @return string 
  */
-function course_objectives_in_list($objectives, $parent_id, $top_level_id, $edit_importance = false, $parent_active = false, $importance = 1, $selected_only = false, $top = true, $display_importance = "primary", $hierarchical = false, $full_objective_list) {
+function course_objectives_in_list($objectives, $parent_id, $top_level_id, $edit_importance = false, $parent_active = false, $importance = 1, $selected_only = false, $top = true, $display_importance = "primary", $hierarchical = false, $full_objective_list = false) {
 	global $ENTRADA_USER;
 	
 	$output = "";

@@ -181,6 +181,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 				}
 				
 				$PROCESSED["course_id"] = $COURSE_ID;
+				$PROCESSED["active"] = 1;
 
 				if ($number_of_groups == 1) {
 					$result = $db->GetRow("SELECT `cgroup_id` FROM `course_groups` WHERE `group_name` = ".$db->qstr($PROCESSED["group_name"]));
@@ -241,7 +242,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 										AND d.`group_active` = 1
 										AND e.`member_active` = 1
 										AND ((d.`start_date` <= ".$db->qstr(time())." OR d.`start_date` = 0)
-										AND (d.`expire_date` >= ".$db->qstr(time())." OR d.`expire_date` = 0))";
+										AND (d.`expire_date` >= ".$db->qstr(time())." OR d.`expire_date` = 0 OR d.`expire_date` IS NULL))";
 							$students += $db->GetOne($query);
 						} else {
 							$query	= "	SELECT a.`id`
@@ -249,6 +250,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 										LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 										ON a.`id` = b.`user_id`
 										WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
+										AND b.`group` = 'student'										
 										AND b.`account_active` = 'true'
 										AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
 										AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
@@ -270,6 +272,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 					} else {
 						for ($i=1;$i<=$number_of_groups;$i++) {
 							$PROCESSED["group_name"] = $prefix.sprintf($dfmt,$i);
+							$PROCESSED["active"] = 1;
 							if (!$db->AutoExecute("course_groups", $PROCESSED, "INSERT")) {
 								$ERROR++;
 								$ERRORSTR[] = "There was an error while trying to add the <strong>Group</strong> ".$PROCESSED["group_name"].".<br /><br />The system administrator was informed of this error; please try again later.";
@@ -335,6 +338,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 									LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 									ON a.`id` = b.`user_id`
 									WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
+									AND b.`group` = 'student'
 									AND b.`account_active` = 'true'
 									AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
 									AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")

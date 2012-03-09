@@ -530,6 +530,10 @@ width:115px;
 height:22px;
 border:none;
 }
+input[type=submit].disabled, input.button.disabled {
+	background:#EEE url(../images/btn_bg_disabled.gif) no-repeat center center;
+	color:#CCC;
+}
 
 input.button.small {
 background:#EEE url(../images/btn_bg_sm.gif) no-repeat center center;

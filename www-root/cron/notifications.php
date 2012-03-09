@@ -119,7 +119,7 @@ function fetch_event_resources_text($event_id = 0) {
 			$output["html"] .= "</div>\n";
 			
 			$output["text"] .= "   *There are no resources available for download.*\n\n";
-			$output["text"] .= "   Please take a moment to upload any relavant documents at the following URL:\n";
+			$output["text"] .= "   Please take a moment to upload any relevant documents at the following URL:\n";
 			$output["text"] .= "   ".ENTRADA_URL."/admin/events?section=content&id=".$event_id."\n\n";
 		}
 	}

@@ -44,35 +44,35 @@ Please enter your <?php echo APPLICATION_NAME; ?> username and password to log i
 	}
 	?>
 	<form action="<?php echo ENTRADA_URL; ?>/<?php echo (($PROCEED_TO) ? "?url=".rawurlencode($PROCEED_TO) : ""); ?>" method="post">
-	<input type="hidden" name="action" value="login" />
-	<table style="width: 275px" cellspacing="1" cellpadding="1" border="0">
-	<colgroup>
-		<col style="width: 30%" />
-		<col style="width: 70%" />
-	</colgroup>
-	<tfoot>
-		<tr>
-			<td colspan="2" style="text-align: right"><input type="submit" class="button" value="Login" /></td>
-		</tr>
-		<tr>
-			<td colspan="2" style="padding-top: 15px">
-				<?php if ((defined("PASSWORD_RESET_URL")) && (PASSWORD_RESET_URL != "")) : ?>
-				<a href="<?php echo PASSWORD_RESET_URL; ?>" style="font-size: 10px">Forgot your password?</a> <span class="content-small">|</span>
-				<?php endif; ?>
-				<a href="<?php echo ENTRADA_URL; ?>/help" style="font-size: 10px">Need Help?</a>
-			</td>
-		</tr>
-	</tfoot>
-	<tbody>
-		<tr>
-			<td><label for="username" style="font-weight: bold">Username:</label></td>
-			<td style="text-align: right"><input type="text" id="username" name="username" value="<?php echo ((isset($_REQUEST["username"])) ? html_encode(trim($_REQUEST["username"])) : ""); ?>" style="width: 150px" /></td>
-		</tr>
-		<tr>
-			<td><label for="password" style="font-weight: bold">Password:</label></td>
-			<td style="text-align: right"><input type="password" id="password" name="password" value="" style="width: 150px" /></td>
-		</tr>
-	</tbody>
-	</table>
+		<input type="hidden" name="action" value="login" />
+		<table style="width: 275px" cellspacing="1" cellpadding="1" border="0">
+			<colgroup>
+				<col style="width: 30%" />
+				<col style="width: 70%" />
+			</colgroup>
+			<tfoot>
+				<tr>
+					<td colspan="2" style="text-align: right"><input type="submit" class="button" value="Login" /></td>
+				</tr>
+				<tr>
+					<td colspan="2" style="padding-top: 15px">
+						<?php if ((defined("PASSWORD_RESET_URL")) && (PASSWORD_RESET_URL != "")) : ?>
+						<a href="<?php echo PASSWORD_RESET_URL; ?>" style="font-size: 10px">Forgot your password?</a> <span class="content-small">|</span>
+						<?php endif; ?>
+						<a href="<?php echo ENTRADA_URL; ?>/help" style="font-size: 10px">Need Help?</a>
+					</td>
+				</tr>
+			</tfoot>
+			<tbody>
+				<tr>
+					<td><label for="username" style="font-weight: bold">Username:</label></td>
+					<td style="text-align: right"><input type="text" id="username" name="username" value="<?php echo ((isset($_REQUEST["username"])) ? html_encode(trim($_REQUEST["username"])) : ""); ?>" style="width: 150px" /></td>
+				</tr>
+				<tr>
+					<td><label for="password" style="font-weight: bold">Password:</label></td>
+					<td style="text-align: right"><input type="password" id="password" name="password" value="" style="width: 150px" /></td>
+				</tr>
+			</tbody>
+		</table>
 	</form>
 </blockquote>

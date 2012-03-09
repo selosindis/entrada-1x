@@ -128,8 +128,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						<h2>Grades</h2>
 						<div style="margin-bottom: 5px;">
 							<span class="content-small"><strong>Tip: </strong><?php echo $assessment["marking_scheme_description"]; ?></span>
-						</div>
-						<table style="width: 440px" class="gradebook single <?php echo $editable; ?>">
+						</div>				
+						<table style="width: 438px" class="gradebook <?php echo ($assessment["marking_scheme_id"] == 3?'numeric':'single');?> <?php echo $editable; ?>">
 							<tbody>
 								<?php
 								foreach ($students as $key => $student) {
@@ -166,6 +166,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 												<img src="<?php echo ENTRADA_URL;?>/images/action-edit.gif" class="edit_grade" id ="edit_grade_<?php echo $assessment["assessment_id"]; ?>_<?php echo $student["proxy_id"] ?>" style="cursor:pointer;"/>
 											</span>
 										</td>
+										<?php
+										if ($assessment["marking_scheme_id"] == 3) {
+											?>
+										<td id="percentage_<?php echo $assessment["assessment_id"]; ?>_<?php echo $student["proxy_id"] ?>"><?php echo round($student["grade_value"],2);?>%</td>
+										<?php
+										}
+										?>
 									</tr>
 									<?php
 								}

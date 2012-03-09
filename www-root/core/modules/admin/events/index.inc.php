@@ -141,7 +141,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			<tfoot>
 				<tr>
 					<td></td>
-					<td style="padding-top: 10px" colspan="5">
+					<td style="padding-top: 10px" colspan="2">
 						<?php
 						if ($ENTRADA_ACL->amIAllowed("event", "delete", false)) {
 							?>
@@ -151,6 +151,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						if ($ENTRADA_ACL->amIAllowed("event", "create", false)) {
 							?>
 							<input type="submit" class="button" value="Copy Selected"  onClick="document.frmSelect.action ='<?php echo ENTRADA_URL; ?>/admin/events?section=copy'" />
+							<?php
+						}						
+						?>
+					</td>
+					<td style="padding-top: 10px; text-align: right" colspan="3">
+						<?php
+						if ($ENTRADA_ACL->amIAllowed("event", "delete", false)) {
+							?>
+							<input type="button" value="Export Results" onclick="window.location='<?php echo ENTRADA_URL . "/admin/events/export"; ?>';" />
 							<?php
 						}
 						?>

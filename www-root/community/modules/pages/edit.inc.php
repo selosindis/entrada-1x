@@ -189,7 +189,7 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 				$query			= "SELECT * FROM `community_pages` WHERE `cpage_id` = ".$db->qstr($PAGE_ID)." AND `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `page_active` = '1'";
 				$page_details	= $db->GetRow($query);
 				if ($page_details) {
-					load_rte((($PAGE_TYPE == "default") ? "communityadvanced" : "communitybasic"));
+					load_rte(($PAGE_TYPE == "default" || $PAGE_TYPE == "course") ? "communityadvanced" : "communitybasic");
 					
 					$BREADCRUMB[]	= array("url" => "", "title" => "Edit Page");
 				

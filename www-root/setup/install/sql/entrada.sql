@@ -952,7 +952,7 @@ CREATE TABLE IF NOT EXISTS `assessments` (
   `type` varchar(255) NOT NULL,
   `marking_scheme_id` int(10) unsigned NOT NULL,
   `numeric_grade_points_total` float unsigned DEFAULT NULL,
-  `grade_weighting` int(11) NOT NULL DEFAULT '0',
+  `grade_weighting` float NOT NULL DEFAULT '0',
   `narrative` tinyint(1) NOT NULL DEFAULT '0',
   `required` tinyint(1) NOT NULL DEFAULT '1',
   `characteristic_id` int(4) NOT NULL,

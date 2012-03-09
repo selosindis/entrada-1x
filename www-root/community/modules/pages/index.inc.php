@@ -75,14 +75,14 @@ if ($COMMUNITY_ID) {
 				</div>
 				<?php echo communities_pages_inlists(0, 0, array('id'=>'pagelists')); ?>
 
-				<input type="submit" class="button" value="Delete Selected" />
+				<input type="submit" id="delete_pages_button" class="button" value="Delete Selected" />
 				<input type="button" id="reorder_pages_button" class="button" onclick="toggleSorting();" value="Reorder Pages">
+				<input type="submit" id="save_pages_order_button" class="button" value="Save Ordering" style="display:none;"/>
 				</form>
 				<form action="<?php echo COMMUNITY_URL.$community_details["community_url"].":pages?".replace_query(array("action" => "reorder", "step" => 1)); ?>" method="post">
 					<div id="reorder-info" style="display: none;">
 						<textarea id="pageorder" name="pageorder" style="display: none;"></textarea>
 						<p class="content-small">Rearrange the pages in the table above by dragging them, and then press the <strong>Save Ordering</strong> button.</p>
-						<input type="submit" class="button" value="Save Ordering" />
 					</div>
 				</form>
 				<script type="text/javascript">
@@ -99,11 +99,14 @@ if ($COMMUNITY_ID) {
 					function toggleSorting() {
 						$('pagelists').toggleClassName('sortable');
 						$('reorder-info').toggle();
+						$('save_pages_order_button').toggle();
 						if(tree.isSortable) {
 							tree.setUnsortable();
 							$$('div.community-page-container a').each(function(e) {
 								e.stopObserving('click');
 							});
+							$('reorder_pages_button').value = "Reorder Pages";
+							$('delete_pages_button').removeClassName('disabled').removeAttribute("disabled","");
 						} else {
 							$$('div.community-page-container a').each(function(e) {
 								e.observe('click', function(event) {event.stop();});
@@ -111,6 +114,7 @@ if ($COMMUNITY_ID) {
 							tree.setSortable();
 							updatePageOrderBox('pagelists');
 							$('reorder_pages_button').value = "Cancel Reordering";
+							$('delete_pages_button').addClassName('disabled').writeAttribute("disabled");
 						}
 						return false;
 					}

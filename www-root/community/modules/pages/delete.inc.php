@@ -7,8 +7,9 @@
  * 
  * @author Organisation: Queen's University
  * @author Unit: School of Medicine
- * @author Developer: James Ellis <james.ellis@queensu.ca>
- * @author Developer: Matt Simpson <matt.simpson@queensu.ca>
+ * @author Developer: James Ellis	<james.ellis@queensu.ca>
+ * @author Developer: Matt Simpson	<matt.simpson@queensu.ca>
+ * @author Developer: Ryan Warner	<ryan.warner@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  * 
 */
@@ -25,7 +26,6 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 
 	echo display_notice();
 } else {
-	$CPAGE_ID		= 0;
 	
 	$BREADCRUMB[]	= array("url" => "", "title" => "Delete Pages");
 
@@ -36,25 +36,31 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 		case 2 :
 		case 1 :
 		default :
-			if ((isset($_POST["delete"])) && ($tmp_input = clean_input($_POST["delete"], array("nows", "int")))) {
-				$query	= "SELECT * FROM `community_pages` WHERE `cpage_id` = ".$db->qstr($tmp_input)." AND `community_id` = ".$db->qstr($COMMUNITY_ID);
-				$result	= $db->GetRow($query);
-				if ($result) {
-					$CPAGE_ID	= $result["cpage_id"];
-					$parent_id	= $result["parent_id"];
-					$page_order	= $result["page_order"];
-					$page_url 	= $result["page_url"];
-					if ($page_url == "" || !$page_url) {
-						$ERROR++;
-						$ERRORSTR[] = "The home page of the community cannot be deleted.";
-					} elseif (((int)$result["page_active"]) == 0) {
-						$ERROR++;
-						$ERRORSTR[] = "The page you have tried to delete does not exist within this community.";
+			if (isset($_POST["delete"])) {
+				$i = 0;
+				foreach ($_POST["delete"] as $del) {
+					if (clean_input($del,"int")) {
+						$query	= "SELECT * FROM `community_pages` WHERE `cpage_id` = ".$db->qstr($del)." AND `community_id` = ".$db->qstr($COMMUNITY_ID);
+						$result	= $db->GetRow($query);
+						if ($result) {
+							$pages[$i]["CPAGE_ID"]	= $result["cpage_id"];
+							$pages[$i]["parent_id"]	= $result["parent_id"];
+							$pages[$i]["page_order"]	= $result["page_order"];
+							$pages[$i]["page_url"] 	= $result["page_url"];
+							if ($pages[$i]["page_url"] == "" || !$pages[$i]["page_url"]) {
+								$ERROR++;
+								$ERRORSTR[] = "The home page of the community cannot be deleted.";
+							} elseif (((int)$result["page_active"]) == 0) {
+								$ERROR++;
+								$ERRORSTR[] = "The page you have tried to delete does not exist within this community.";
+							}
+						}
+						$i++;
 					}
 				}
 			}
 			
-			if (!$CPAGE_ID) {
+			if (!$pages) {
 				header("Location: ".COMMUNITY_URL.$community_details["community_url"].":pages");
 				exit;
 			}
@@ -64,13 +70,15 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 	// Display Page
 	switch($STEP) {
 		case 2 :
-			communities_pages_delete($CPAGE_ID);
-			$query			= "SELECT `cpage_id`, `page_order` FROM `community_pages` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `parent_id` = ".$db->qstr($parent_id)." AND `page_order` > ".$db->qstr($page_order);
-			$moving_pages	= $db->GetAll($query);
-			if ($moving_pages) {
-				foreach($moving_pages as $moving_page) {
-					$query = "UPDATE `community_pages` SET `page_order` = ".$db->qstr($moving_page["page_order"] - 1)." WHERE `cpage_id` = ".$db->qstr($moving_page["cpage_id"]);
-					$db->Execute($query);
+			foreach ($pages as $page) {
+				communities_pages_delete($page["CPAGE_ID"]);
+				$query			= "SELECT `cpage_id`, `page_order` FROM `community_pages` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `parent_id` = ".$db->qstr($parent_id)." AND `page_order` > ".$db->qstr($page_order);
+				$moving_pages	= $db->GetAll($query);
+				if ($moving_pages) {
+					foreach($moving_pages as $moving_page) {
+						$query = "UPDATE `community_pages` SET `page_order` = ".$db->qstr($moving_page["page_order"] - 1)." WHERE `cpage_id` = ".$db->qstr($moving_page["cpage_id"]);
+						$db->Execute($query);
+					}
 				}
 			}
 			header("Location: ".COMMUNITY_URL.$community_details["community_url"].":pages");
@@ -105,7 +113,9 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 				</tfoot>
 				<tbody>
 				<?php
-				echo communities_pages_intable($CPAGE_ID, 0, array("selected" => $CPAGE_ID, "selectable_children" => false));
+					foreach ($pages as $page) {
+						echo communities_pages_intable($page["CPAGE_ID"], 0, array("selected" => $page["CPAGE_ID"], "selectable_children" => false));
+					}
 				?>
 				</tbody>
 				</table>

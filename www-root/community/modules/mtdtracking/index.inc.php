@@ -322,6 +322,7 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 			jQuery("#start_date").val("");
 			jQuery("#end_date").val("");
 			jQuery('#type_code_i').attr('checked', true);
+			jQuery('#mtdlocation option[value=""]').attr('selected', 'selected');
 			//remove the locations
 			jQuery('.location_duration').remove();
 			jQuery("#block_list").val("");

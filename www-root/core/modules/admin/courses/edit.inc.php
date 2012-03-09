@@ -825,8 +825,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								<td></td>
 								<td style="vertical-align: top"><span class="form-nrequired">Audience Sync</span></td>
 								<td style="vertical-align: top">
-									<input type="radio" name="sync_ldap" id="sync_on" value="1"<?php echo (((!isset($PROCESSED["sync_ldap"])) || ((isset($PROCESSED["sync_ldap"])) && ($PROCESSED["sync_ldap"]))) ? " checked=\"checked\"" : ""); ?> /> <label for="sync_on">This <?php echo strtolower($module_singular_name); ?> <strong>should</strong> have its audience synced with the LDAP server.</label><br />
-									<input type="radio" name="sync_ldap" id="sync_off" value="0"<?php echo (((isset($PROCESSED["sync_ldap"])) && (!(int)$PROCESSED["sync_ldap"])) ? " checked=\"checked\"" : ""); ?> /> <label for="sync_off">This <?php echo strtolower($module_singular_name); ?>'s audience will be managed manually and <strong>should not</strong> be synced with the LDAP server.</label><br/>
+									
+									<table width="100%" cellpadding="0" cellspacing="0" border="0">
+										<tr>
+											<td style="vertical-align: top;"><input type="radio" name="sync_ldap" id="sync_off" value="0"<?php echo (((!isset($PROCESSED["sync_ldap"])) || (isset($PROCESSED["sync_ldap"])) && (!(int)$PROCESSED["sync_ldap"])) ? " checked=\"checked\"" : ""); ?> /></td>
+											<td style="vertical-align: top;padding-left:.3em;"><label for="sync_off">This <?php echo strtolower($module_singular_name); ?>'s audience will be managed manually and <strong>should not</strong> be synced with the LDAP server.</label></td>
+										</tr>
+										<tr>
+											<td style="vertical-align: top;"><input type="radio" name="sync_ldap" id="sync_on" value="1"<?php echo ((((isset($PROCESSED["sync_ldap"])) && ($PROCESSED["sync_ldap"]))) ? " checked=\"checked\"" : ""); ?> /></td>
+											<td style="vertical-align: top;padding-left:.3em;"><label for="sync_on">This course <strong>should</strong> have its audience synced with the LDAP server.</label></td>
+										</tr>
+									</table>
+									 <br />
 									<br/>
 									<div class="content-small"><strong>Note:</strong> Even if the audience is synced, additional individuals and groups can be added as audience members below.</div>
 								</td>

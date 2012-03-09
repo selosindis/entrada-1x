@@ -4,7 +4,9 @@
  * Entrada [ http://www.entrada-project.org ]
  *
  * Cron job responsible for emailing occupants 30 days prior to their starting
- * inhabiting date
+ * inhabiting date.
+ *
+ * Setup to run daily in CRON.
  *
  * @author Organisation: Queen's University
  * @author Unit: Faculty of Medicine

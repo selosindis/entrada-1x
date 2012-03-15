@@ -9052,18 +9052,21 @@ function course_objectives_in_list($objectives, $parent_id, $top_level_id, $edit
 				return;
 			}
 		} else {
-			if (!empty($objectives["primary_ids"])) {
+			if ($objectives["primary_ids"]) {
 				$active["primary"] = true;
-			} elseif ($display_importance == "primary" && $active["secondary"]) {
-				$display_importance = "secondary";
+				$display_importance = "primary";
 			}
-			if (!empty($objectives["secondary_ids"])) {
+			if ($objectives["secondary_ids"]) {
 				$active["secondary"] = true;
-			} elseif ($display_importance == "secondary" && $active["tertiary"]) {
-				$display_importance = "tertiary";
+				if (empty($objectives["primary_ids"])) {
+					$display_importance = "secondary";
+				} 
 			}
-			if (!empty($objectives["tertiary_ids"])) {
+			if ($objectives["tertiary_ids"]) {
 				$active["tertiary"] = true;
+				if (empty($objectives["primary_ids"]) && empty($objectives["secondary_ids"])) {
+					$display_importance = "tertiary";
+				} 
 			}
 		}
 		$objectives = $objectives["objectives"];

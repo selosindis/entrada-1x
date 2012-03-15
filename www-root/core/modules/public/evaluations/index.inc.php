@@ -64,7 +64,7 @@ $query = "	SELECT * FROM `evaluations` AS a
 			AND a.`evaluation_start` < ".$db->qstr(time())."
 			AND a.`evaluation_active` = 1
 			GROUP BY a.`evaluation_id`
-			ORDER BY a.`evaluation_finish` ASC";
+			ORDER BY a.`evaluation_finish` DESC";
 $results = $db->GetAll($query);
 if ($results) {
 	$evaluation_id = 0;

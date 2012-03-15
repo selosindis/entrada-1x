@@ -22,7 +22,7 @@ if ((isset($_POST["method"])) && ($method = clean_input($_POST["method"], array(
 			
 			// $credentials = md5('simpson'.'apple123');
 			
-			$query = "SELECT * FROM `user_data` WHERE MD5(CONCAT(`username`, `password`)) = $credentails";
+			// $query = "SELECT * FROM `user_data` WHERE MD5(CONCAT(`username`, `password`)) = $credentails";
 			
 			
 			$logged_in = false;
@@ -316,8 +316,7 @@ if ((isset($_POST["method"])) && ($method = clean_input($_POST["method"], array(
 				}
 			}
 			break;
-		case "notices" :
-			
+		case "notices" :			
 			if ((isset($_POST["authenticated"]))) {
 				$authenticated = $_POST["authenticated"];
 			}
@@ -339,36 +338,35 @@ if ((isset($_POST["method"])) && ($method = clean_input($_POST["method"], array(
 			if ((isset($_POST["group"])) && (trim($_POST["group"]))) {
 				$group = $_POST["group"];
 			}
+			if ((isset($_POST["sub_method"])) && (trim($_POST["sub_method"]))) {
+				$sub_method = $_POST["sub_method"];
+			}
+			if ((isset($_POST["notice_id"])) && (trim($_POST["notice_id"]))) {
+				$notice_id = $_POST["notice_id"];
+			}
 			
 			switch ($group) {
 				case "alumni" :
-					//$notice_where_clause = "(a.`target` = 'all' OR a.`target` = 'alumni' OR a.`target` = ".$db->qstr("proxy_id:".((int) $_SESSION["details"]["id"])).")";
 					$corrected_role = "students";
 				break;
 				case "faculty" :
-					//$notice_where_clause = "(a.`target` = 'all' OR a.`target` = 'faculty' OR a.`target` = ".$db->qstr("proxy_id:".((int) $_SESSION["details"]["id"])).")";
 					$corrected_role = "faculty";
 				break;
 				case "medtech" :
-					//$notice_where_clause = "(a.`target` NOT LIKE 'proxy_id:%' OR a.`target` = ".$db->qstr("proxy_id:".((int) $_SESSION["details"]["id"])).")";
 					$corrected_role = "medtech";
 				break;
 				case "resident" :
-					//$notice_where_clause = "(a.`target` = 'all' OR a.`target` = 'resident' OR a.`target` = ".$db->qstr("proxy_id:".((int) $_SESSION["details"]["id"])).")";
 					$corrected_role = "resident";
 				break;
 				case "staff" :
-					//$notice_where_clause = "(a.`target` = 'all' OR a.`target` = 'staff' OR a.`target` = ".$db->qstr("proxy_id:".((int) $_SESSION["details"]["id"])).")";
 					$corrected_role = "staff";
 				break;
 				case "student" :
 				default :
 					$cohort = groups_get_cohort($id);
-					$notice_where_clause = "(a.`target`='cohort:".clean_input($cohort["group_id"], "alphanumeric")."' OR a.`target` = 'all' OR a.`target` = 'students' OR a.`target` = ".$db->qstr("proxy_id:".((int) $_SESSION["details"]["id"])).")";
 					$corrected_role = "students";
 				break;
 			}
-			$notice_where_clause .= "AND (a.`organisation_id` IS NULL OR a.`organisation_id` = ".$organisation_id.")";
 			
 			$query = "	SELECT a.*, b.`statistic_id`, MAX(b.`timestamp`) AS `last_read`
 						FROM `notices` AS a
@@ -409,20 +407,35 @@ if ((isset($_POST["method"])) && ($method = clean_input($_POST["method"], array(
 						GROUP BY a.`notice_id`
 						ORDER BY a.`updated_date` DESC, a.`display_until` ASC";
 			
+			$notices_to_display = array();
 			$results = $db->GetAll($query);
 			if ($results) {
-				foreach ($results as $result) {
-					if ((!$result["statistic_id"]) || ($result["last_read"] <= $result["updated_date"])) {
-						$notices_to_display[] = $result;
-					}
+				$rows = 0;
+				switch ($sub_method) {
+					case "fetch_notices" :
+						foreach ($results as $result) {
+							$result["default_date"][] = date(DEFAULT_DATE_FORMAT, $result["updated_date"]);
+							//$result["last_read"] = date(DEFAULT_DATE_FORMAT, $result["last_read"]);
+							$notices_to_display[] = $result;
+						}
+						echo json_encode($notices_to_display);
+					break;
+					case "count_notices" :
+						foreach ($results as $result) {
+							if ((!$result["statistic_id"]) || ($result["last_read"] <= $result["updated_date"])) {
+								$rows ++;
+							}
+						}
+						echo $rows;
+					break;
+					case "mark_read" :
+						add_statistic("notices", "read", "notice_id", $notice_id);
+						echo $rows;
+					break;
+						
 				}
 			}
-			echo json_encode($notices_to_display);
-			break;
-		
-		case "gradebook" :
-			echo json_encode($method);
-			break;
+		break;
 	}
 }
 ?>

@@ -32,6 +32,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 			
 			$PROCESSED_ACCESS = array();
 			$PROCESSED_DEPARTMENTS = array();
+			$department_names = array();
 
 			echo "<h1>Manage: <strong>".html_encode($user_record["firstname"]." ".$user_record["lastname"])."</strong></h1>\n";
 
@@ -46,11 +47,33 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 			if ($results) {
 				foreach ($results as $result) {
 					$PROCESSED_DEPARTMENTS[] = (int) $result["dep_id"];
+					$query = "SELECT * FROM `".AUTH_DATABASE."`.`departments` WHERE `department_id` = " . (int) $result["dep_id"];
+					$dept = $db->GetROW($query);
+					if ($dept) {
+						$department_names[] = $dept["department_title"];
+					}
 				}
+				sort($department_names);
 			}
 			
 			$gender = @file_get_contents(webservice_url("gender", $user_record["number"]));
 
+			$query = "SELECT * FROM `".AUTH_DATABASE."`.`organisations` WHERE `organisation_id` = ". $user_record["organisation_id"];
+			$default_organisation = $db->GetRow($query);
+
+			$organisation_names = array();
+			$query = "SELECT * FROM `".AUTH_DATABASE."`.`user_organisations` WHERE `proxy_id` = ".$db->qstr($PROXY_ID);
+			$results = $db->GetAll($query);
+			if ($results) {
+				foreach ($results as $result) {
+					$query = "SELECT * FROM `".AUTH_DATABASE."`.`organisations` WHERE `organisation_id` = ". $result["organisation_id"];
+					$org = $db->GetRow($query);
+					if ($org) {
+						$organisation_names[] = $org["organisation_title"];
+					}
+				}
+				sort($organisation_names);
+			}
 
 			if ($ERROR) {
 				echo display_error();
@@ -137,6 +160,24 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 											<tr>
 												<td>E-Mail Address:</td>
 												<td><a href="mailto:<?php echo $user_record["email"]; ?>"><?php echo $user_record["email"]; ?></a></td>
+											</tr>
+											<tr>
+												<td>Default Organisation:</td>
+												<td><?php echo $default_organisation["organisation_title"]; ?></td>
+											</tr>
+											<tr>
+												<td>Other Organisations:</td>
+												<td><?php
+														$organisation_names_diff = array_diff($organisation_names, array($default_organisation["organisation_title"]));
+														if (count($organisation_names_diff) > 0) {
+															echo implode(", ", $organisation_names_diff);
+														}
+													?>
+												</td>
+											</tr>
+											<tr>
+												<td>Departments:</td>
+												<td><?php echo implode(", ", $department_names) ?></td>
 											</tr>
 										</table>
 									</td>

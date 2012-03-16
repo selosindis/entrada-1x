@@ -3631,4 +3631,8 @@ ul.community-themes li label {
 .ui-button {
 	outline:none;
 }
-
+.manage-user-depts {
+    position:relative;
+    top:auto;
+    left:auto;
+}

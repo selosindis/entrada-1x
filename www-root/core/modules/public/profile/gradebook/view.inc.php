@@ -41,9 +41,7 @@ if (isset($_GET["sb"])) {
 
 	$_SERVER["QUERY_STRING"] = replace_query(array("sb" => false));
 } else {
-	if (!isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"])) {
-		$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] = "title";
-	}
+	$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] = "";
 }
 
 /**
@@ -63,13 +61,16 @@ if (isset($_GET["so"])) {
 /**
  * Provide the queries with the columns to order by.
  */
+
 switch ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) {
 	case "title" :
-	default :
 		$sort_by = "`name` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]);
 	break;
 	case "type" :
 		$sort_by = "`type` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]);
+	break;
+	default :
+		$sort_by = "`order`";
 	break;
 }
 
@@ -90,6 +91,7 @@ if ($COURSE_ID) {
 				AND b.`show_learner` = '1'
 				ORDER BY ".$sort_by;
 	$results = $db->GetAll($query);
+
 	if ($results) {
 		?>
 		<h1><?php echo fetch_course_title($COURSE_ID); ?> Gradebook</h1>

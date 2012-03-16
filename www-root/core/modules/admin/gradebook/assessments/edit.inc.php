@@ -55,6 +55,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								AND `course_active` = '1'";
 			$course_details = $db->GetRow($query);
 
+			$HEAD[] = "<script type=\"text/javascript\">var DELETE_IMAGE_URL = '".ENTRADA_URL."/images/action-delete.gif';</script>";
+			$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/picklist.js\"></script>\n";
+			$HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/AutoCompleteList.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";	
+
+			$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "edit", "id" => $COURSE_ID, "step" => false)), "title" => "Editing " . $module_singular_name);
+
+			
 			$m_query = "	SELECT * FROM `assessment_marking_schemes` 
 								WHERE `enabled` = 1;";
 			$MARKING_SCHEMES = $db->GetAll($m_query);
@@ -75,6 +82,29 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				// Error Checking
 				switch ($STEP) {
 					case 2 :
+						
+						$clinical_presentations = array();
+					
+						if (isset($_POST["clinical_presentations"])) {
+								$tmp_input = $_POST["clinical_presentations"];
+								foreach ($tmp_input as $presentation) {
+									$PROCESSED["clinical_presentations"][] = clean_input($presentation, "int");
+								}
+						}
+						
+						if (isset($_POST["checked_objectives"]) && ($checked_objectives = $_POST["checked_objectives"]) && (is_array($checked_objectives))) {
+							foreach ($checked_objectives as $objective_id => $status) {
+								if ($objective_id = (int) $objective_id) {
+									if (isset($_POST["objective_text"][$objective_id]) && ($tmp_input = clean_input($_POST["objective_text"][$objective_id], array("notags")))) {
+										$objective_text = $tmp_input;
+									} else {
+										$objective_text = false;
+									}
+									$PROCESSED["curriculum_objectives"][$objective_id] = $objective_text;
+								}
+							}
+						}
+						
 						if (isset($_POST["associated_audience"]) && $_POST["associated_audience"] == "manual_select") {
 
 							if((isset($_POST["cohort"])) && ($cohort = clean_input($_POST["cohort"], "credentials"))) {
@@ -222,7 +252,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						} else {
 							$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] = "index";
 						}
-
+						
 						if (!$ERROR) {
 							$PROCESSED["updated_date"] = time();
 							$PROCESSED["updated_by"] = $_SESSION["details"]["id"];
@@ -245,6 +275,31 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 										}
 									}
 								}
+								
+								$query = "DELETE FROM `assessment_objectives` WHERE `objective_type` = 'clinical_presentation' AND `assessment_id` = ".$db->qstr($ASSESSMENT_ID);
+								if ($db->Execute($query)) {
+									if ((is_array($PROCESSED["clinical_presentations"])) && (count($PROCESSED["clinical_presentations"]))) {
+										foreach ($PROCESSED["clinical_presentations"] as $objective_id) {
+											if (!$db->AutoExecute("assessment_objectives", array("assessment_id" => $ASSESSMENT_ID, "objective_id" => $objective_id, "objective_type" => "clinical_presentation", "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT")) {
+												add_error("There was an error when trying to insert a &quot;clinical presentation&quot; into the system. System administrators have been informed of this error; please try again later.");
+												application_log("error", "Unable to insert a new clinical presentation to the database when adding a new event. Database said: ".$db->ErrorMsg());
+											}
+										}
+									}
+								}
+								
+								$query = "DELETE FROM `assessment_objectives` WHERE `objective_type` = 'curricular_objective' AND `assessment_id` = ".$db->qstr($ASSESSMENT_ID);
+								if ($db->Execute($query)) {
+									if ((is_array($PROCESSED["curriculum_objectives"]) && count($PROCESSED["curriculum_objectives"]))) {
+										foreach ($PROCESSED["curriculum_objectives"] as $objective_key => $objective_text) {
+											if (!$db->AutoExecute("assessment_objectives", array("assessment_id" => $ASSESSMENT_ID, "objective_id" => $objective_key, "objective_details" => $objective_text, "objective_type" => "curricular_objective", "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT")) {
+												add_error("There was an error when trying to insert a &quot;clinical presentation&quot; into the system. System administrators have been informed of this error; please try again later.");
+												application_log("error", "Unable to insert a new clinical presentation to the database when adding a new event. Database said: ".$db->ErrorMsg());
+											}
+										}
+									}
+								}
+								
 								switch ($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"]) {
 									case "grade" :
 										$url = ENTRADA_URL . "/admin/gradebook/assessments?" . replace_query(array("step" => false, "section" => "grade", "assessment_id" => $ASSESSMENT_ID));
@@ -310,6 +365,99 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						break;
 					case 1 :
 					default :
+						
+						/** 
+						* Fetch the Clinical Presentation details.
+						*/
+						$clinical_presentations_list = array();
+						$clinical_presentations = array();
+
+						$results = fetch_clinical_presentations();
+						
+						if ($results) {
+							foreach ($results as $result) {
+								$clinical_presentations_list[$result["objective_id"]] = $result["objective_name"];
+							}
+						} else {
+							$clinical_presentations_list = false;
+						}
+						
+						$query =	"SELECT a.`objective_id`, b.`objective_name`
+									 FROM `course_objectives` AS a
+									 JOIN `global_lu_objectives` AS b
+									 ON a.`objective_id` = b.`objective_id`
+									 WHERE a.`course_id` = ".$COURSE_ID."
+									 AND a.`objective_type` = 'event'";
+						
+						$course_clinical_presentations = $db->GetAssoc($query);
+
+						if (isset($_POST["clinical_presentations_submit"]) && $_POST["clinical_presentations_submit"]) {
+							if (((isset($_POST["clinical_presentations"])) && (is_array($_POST["clinical_presentations"])) && (count($_POST["clinical_presentations"])))) {
+								foreach ($_POST["clinical_presentations"] as $objective_id) {
+									if ($objective_id = clean_input($objective_id, array("trim", "int"))) {
+										$query	= "SELECT a.`objective_id`
+													FROM `global_lu_objectives` AS a
+													JOIN `course_objectives` AS b
+													ON b.`course_id` = ".$COURSE_ID."
+													AND a.`objective_id` = b.`objective_id`
+													JOIN `objective_organisation` AS c
+													ON a.`objective_id` = c.`objective_id`
+													WHERE a.`objective_id` = ".$db->qstr($objective_id)."
+													AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+													AND b.`objective_type` = 'event'
+													AND a.`objective_active` = '1'";
+										$result	= $db->GetRow($query);
+										if ($result) {
+											$clinical_presentations[$objective_id] = $clinical_presentations_list[$objective_id];
+										}
+									}
+								}
+							} else {
+								$clinical_presentations = array();
+							}
+						} else {
+							$query	 = "SELECT `objective_id`
+										FROM `assessment_objectives`
+										WHERE `assessment_id` = ".$ASSESSMENT_ID."
+										AND `objective_type` = 'clinical_presentation'";
+							$results = $db->GetAll($query);
+							if ($results) {
+								foreach ($results as $result) {
+									$clinical_presentations[$result["objective_id"]] = $clinical_presentations_list[$result["objective_id"]];
+								}
+							}
+						}
+						
+						/**
+						* Fetch the Curriculum Objective details.
+						*/
+						list($curriculum_objectives_list,$top_level_id) = courses_fetch_objectives(1,array($COURSE_ID),-1, 1, false, false, 0, true);
+				
+						$curriculum_objectives = array();
+
+						if (isset($_POST["checked_objectives"]) && ($checked_objectives = $_POST["checked_objectives"]) && (is_array($checked_objectives))) {
+							foreach ($checked_objectives as $objective_id => $status) {
+								if ($objective_id = (int) $objective_id) {
+									if (isset($_POST["objective_text"][$objective_id]) && ($tmp_input = clean_input($_POST["objective_text"][$objective_id], array("notags")))) {
+										$objective_text = $tmp_input;
+									} else {
+										$objective_text = false;
+									}
+
+									$curriculum_objectives[$objective_id] = $objective_text;
+								}
+							}
+						}
+						
+						$query = "SELECT `objective_id`, `objective_details` FROM `assessment_objectives` WHERE `assessment_id` = ".$db->qstr($ASSESSMENT_ID)." AND `objective_type` = 'curricular_objective'";
+						$results = $db->GetAll($query);
+						if ($results) {
+							foreach ($results as $result) {
+								$curriculum_objectives_list["objectives"][$result["objective_id"]]["event_objective"] = true;
+								$curriculum_objectives_list["objectives"][$result["objective_id"]]["event_objective_details"] = $result["objective_details"];
+							}
+						}
+						
 						?>
 						<h1>Edit Assessment</h1>
 						<?php
@@ -317,7 +465,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							echo display_error();
 						}
 						?>
-						<form action="<?php echo ENTRADA_URL; ?>/admin/gradebook/assessments?<?php echo replace_query(array("step" => 2)); ?>" method="post">
+						<form action="<?php echo ENTRADA_URL; ?>/admin/gradebook/assessments?<?php echo replace_query(array("step" => 2)); ?>" method="post" onsubmit="selIt()">
 							<h2>Assessment Details</h2>
 							<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Editing Assessment">
 								<colgroup>
@@ -607,6 +755,130 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 										
 								});
 							</script>
+							<?php
+							list($course_objectives,$top_level_id) = courses_fetch_objectives($ENTRADA_USER->getActiveOrganisation(), array($ASSESSMENT_ID), -1, 0, false, $posted_objectives, 0, false);
+							require_once(ENTRADA_ABSOLUTE."/javascript/courses.js.php");
+							$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/elementresizer.js\"></script>\n";
+							?>
+							<a name="course-objectives-section"></a>
+							<h2 title="Course Objectives Section">Assessment Objectives</h2>
+							<div id="course-objectives-section">
+								<input type="hidden" id="objectives_head" name="course_objectives" value="" />
+								<?php
+								if (is_array($course_objectives["primary_ids"])) {
+									foreach ($course_objectives["primary_ids"] as $objective_id) {
+										echo "<input type=\"hidden\" class=\"primary_objectives\" id=\"primary_objective_".$objective_id."\" name=\"primary_objectives[]\" value=\"".$objective_id."\" />\n";
+									}
+								}
+								if (is_array($course_objectives["secondary_ids"])) {
+									foreach ($course_objectives["secondary_ids"] as $objective_id) {
+										echo "<input type=\"hidden\" class=\"secondary_objectives\" id=\"secondary_objective_".$objective_id."\" name=\"secondary_objectives[]\" value=\"".$objective_id."\" />\n";
+									}
+								}
+								if (is_array($course_objectives["tertiary_ids"])) {
+									foreach ($course_objectives["tertiary_ids"] as $objective_id) {
+										echo "<input type=\"hidden\" class=\"tertiary_objectives\" id=\"tertiary_objective_".$objective_id."\" name=\"tertiary_objectives[]\" value=\"".$objective_id."\" />\n";
+									}
+								}
+								?>
+								<table style="width: 100%" cellspacing="0" cellpadding="2" border="0">
+								<colgroup>
+									<col width="3%" />
+									<col width="22%" />
+									<col width="75%" />
+								</colgroup>
+								<tbody>
+									<tr>
+										<td>&nbsp;</td>
+										<td style="vertical-align: top">
+											Clinical Presentations
+											<div class="content-small" style="margin-top: 5px">
+												<strong>Note:</strong> For more detailed information please refer to the <a href="http://www.mcc.ca/Objectives_online/objectives.pl?lang=english&loc=contents" target="_blank" style="font-size: 11px">MCC Objectives for the Qualifying Examination</a>.
+											</div>
+										</td>
+										<td id="mandated_objectives_section">
+											<select class="multi-picklist" id="PickList" name="clinical_presentations[]" multiple="multiple" size="5" style="width: 100%; margin-bottom: 5px">
+											<?php
+											if ((is_array($clinical_presentations)) && (count($clinical_presentations))) {
+												foreach ($clinical_presentations as $objective_id => $presentation_name) {
+													echo "<option value=\"".(int) $objective_id."\">".html_encode($presentation_name)."</option>\n";
+												}
+											}
+											?>
+											</select>
+											<div style="float: left; display: inline">
+												<input type="button" id="clinical_presentations_list_state_btn" class="button" value="Show List" onclick="toggle_list('clinical_presentations_list')" />
+											</div>
+											<div style="float: right; display: inline">
+												<input type="button" id="clinical_presentations_list_remove_btn" class="button-remove" onclick="delIt()" value="Remove" />
+												<input type="button" id="clinical_presentations_list_add_btn" class="button-add" onclick="addIt()" style="display: none" value="Add" />
+											</div>
+											<div id="clinical_presentations_list" style="clear: both; padding-top: 3px; display: none">
+												<h2>Clinical Presentations List</h2>
+												<select class="multi-picklist" id="SelectList" name="other_event_objectives_list" multiple="multiple" size="15" style="width: 100%">
+												<?php
+												if ((is_array($course_clinical_presentations)) && (count($course_clinical_presentations))) {	
+													$ONLOAD[] = "$('clinical_presentations_list').style.display = 'none'";
+													foreach ($course_clinical_presentations as $objective_id => $presentation_name) {
+														if (!array_key_exists($objective_id, $clinical_presentations)) {
+															echo "<option value=\"".(int) $objective_id."\">".html_encode($presentation_name)."</option>\n";
+														}
+													}
+												}
+												?>
+												</select>
+											</div>
+											<input type="hidden" value="1" name="clinical_presentations_submit" />
+											<script type="text/javascript">
+												function movedObjective() {
+													alert("overwritten");
+												}
+												
+												if($('PickList')){
+													$('PickList').observe('keypress', function(event) {
+														if (event.keyCode == Event.KEY_DELETE) {
+															delIt();
+														}
+													});
+												}
+												if($('SelectList')){
+													$('SelectList').observe('keypress', function(event) {
+														if (event.keyCode == Event.KEY_RETURN) {
+															addIt();
+														}
+													});
+												}
+											</script>
+										</td>
+									</tr>
+									<tr>
+								<td colspan="3">&nbsp;</td>
+							</tr><pre>
+							<?php 
+							if ((is_array($curriculum_objectives_list["used_ids"])) && (count($curriculum_objectives_list["used_ids"]))) { 
+							?>
+							<tr>
+								<td></td>
+								<td style="vertical-align: top;">
+									<span class="form-nrequired">Curriculum Objectives</span>
+									<div class="content-small" style="margin-top: 5px">
+										<strong>Note:</strong> Please check any curriculum objectives that are covered during this learning event.
+									</div>
+									</td>
+								<td style="vertical-align: top;">
+									<div id="course-objectives-section">
+										<strong>The learner will be able to:</strong>
+										<?php echo event_objectives_in_list($curriculum_objectives_list, $top_level_id,$top_level_id, true, false, 1, false); ?>
+									</div>
+								</td>
+							</tr>
+							<?php } ?>
+							<tr>
+								<td colspan="3">&nbsp;</td>
+							</tr>			
+								</tbody>
+								</table>
+							</div>
 							<div style="padding-top: 25px">
 								<table style="width: 100%" cellspacing="0" cellpadding="0" border="0">
 									<tr>

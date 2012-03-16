@@ -22,6 +22,25 @@
  *
  */
 
+if (isset($_POST["mode"]) && clean_input($_POST["mode"],"nows") == "ajax") {
+	ob_clear_open_buffers();
+	
+	global $db;
+	
+	$course_id = (int) $_POST["course_id"];
+	$new_order = (array) $_POST["order"];
+	
+	foreach ($new_order as $orderkey => $order) {
+		$query = "UPDATE assessments SET `order` = ".$order[0]." WHERE `assessment_id` = ".$orderkey;
+		if(!$db->Execute($query)) {
+			application_log("error", "Failed to update assessment[".$orderkey."] to order[".$order[0]."]. Database said: ".$db->ErrorMsg());
+		}
+	}
+	
+	exit;
+}
+
+
 if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 	exit;
 } elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
@@ -109,13 +128,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					break;
 				case "type" :
 					$sort_by	= "`assessments`.`type` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]);
-				break;
+					break;
 				case "scheme" :
 					$sort_by	= "`assessment_marking_schemes`.`name` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]);
-				break;
+					break;
 				default :
-					$sort_by	= "`assessments`.`name` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]);
-				break;
+					$sort_by	= "`assessments`.`order` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]);
 			}
 			
 			$query	= "	SELECT COUNT(*) AS `total_rows` FROM FROM `assessments` WHERE `course_id` = ".$db->qstr($COURSE_ID);			
@@ -189,7 +207,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				<table class="tableList" cellspacing="0" summary="List of Assessments" id="assessment_list">			
 					<tfoot>
 						<tr>
-							<td style="padding-top: 10px; border-bottom:0;"colspan="2">
+							<td style="padding-top: 10px; border-bottom:0;"colspan="3">
 								<script type="text/javascript" charset="utf-8">
 
 									jQuery(document).ready(function(){
@@ -212,10 +230,86 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 										return false;
 									}
 								</script>
-								<input type="submit" class="button" value="Delete Selected" />
-								<input type="submit" class="button" value="Export Selected" onclick="exportSelected(); return false;"/>
+								<style type="text/css">
+									.handle {width:16px;height:16px;background-image:url(/entrada/www-root/images/arrow-resize.png);background-position:center center;background-repeat:no-repeat;display:block;}
+									#saveorder {display:none;}
+								</style>
+								<script type="text/javascript">
+									jQuery(function(){
+										
+										var reordering = false;
+										var orderChanged = false;
+										jQuery("#reorder").click(function(){
+											jQuery(".ordermsg").remove();
+											if (reordering == false) {
+												jQuery("#saveorder").show();
+												jQuery("#delete, #export").hide();
+												
+												jQuery("#assessment_list tbody tr td.modified .delete").hide();
+												jQuery("#assessment_list tbody tr td.modified").append("<span class=\"handle\"></span>");
+												jQuery("#assessment_list tbody").sortable({
+													items: ".assessment",
+													containment: "parent",
+													handle: ".handle",
+													change: function(event,ui){
+														orderChanged = true;
+													}
+												});
+												reordering = true;
+												jQuery("#reorder").attr("value", "Cancel Reorder");
+											} else {
+												jQuery("#saveorder").hide();
+												jQuery("#assessment_list tbody tr td.modified .handle").remove();
+												jQuery("#assessment_list tbody tr td.modified .delete").show();
+												jQuery("#reorder").attr("value", "Reorder");
+												reordering = false;
+												jQuery("#delete, #export").show();
+												if (orderChanged == true) {
+													// if you try to cancel the sortable and the order hasn't changed javascript breaks.
+													jQuery("#assessment_list tbody").sortable("cancel").sortable("destroy");
+												} else { 
+													jQuery("#assessment_list tbody").sortable("destroy");
+												}
+											}
+											return false;
+										});
+										
+										jQuery("#saveorder").click(function(){
+											jQuery(".ordermsg").remove();
+											// assign order to assessment 
+											jQuery("#assessment_list tbody tr td.modified .order").each(function(){
+												jQuery(this).attr("value",jQuery(this).parent().parent().index()-1);
+											});
+											
+											// serialize the form data to pass to the ajax updater
+											var formData = jQuery("#assessment_list").parent().serialize();
+
+											var ajaxParams = "mode=ajax&course_id=<?php echo $COURSE_ID; ?>&"+formData;
+											var ajaxURL = "<?php echo $PAGE_URL; ?>";
+
+											jQuery.ajax({
+												data: ajaxParams,
+												url: ajaxURL,
+												type: "POST"
+											});
+
+											reordering = false;
+											jQuery(this).hide();
+											jQuery("#assessment_list tbody tr td .handle").remove();
+											jQuery("#assessment_list tbody tr td.modified .delete").show();
+											jQuery("#reorder").attr("value", "Reorder");
+											jQuery("#assessment_list tbody").sortable("destroy");
+											jQuery("#assessment_list").parent().append("<p class=\"ordermsg\">Assessment order has been saved!</p>");
+											jQuery("#delete, #export").show();
+										});
+									});
+								</script>
+								<input type="submit" class="button" id="delete" value="Delete Selected" />
+								<input type="submit" class="button" id="export" value="Export Selected" onclick="exportSelected(); return false;"/>
+								<input type="button" class="button" id="reorder" value="Reorder" />
+								<input type="button" class="button" id="saveorder" value="Save Order" />
 							</td>
-							<td colspan="2" style="padding-top: 10px; border-bottom: 0; "><a id="fullscreen-edit" class="button" style="float:right;" href="<?php echo ENTRADA_URL . "/admin/gradebook?" . replace_query(array("section" => "api-edit")); ?>"><div>Fullscreen</div></a></td>
+							<td style="padding-top: 10px; border-bottom: 0; "><a id="fullscreen-edit" class="button" style="float:right;" href="<?php echo ENTRADA_URL . "/admin/gradebook?" . replace_query(array("section" => "api-edit")); ?>"><div>Fullscreen</div></a></td>
 						</tr>
 						<tr>
 							<td style="border-bottom:0;"></td>
@@ -232,9 +326,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							echo "<td colspan=\"2\"><h2 style=\"border-bottom: 0;\">Grade Weighting</h2></td>";
 							echo "</tr>";
 							
-							$query =  "SELECT `assessments`.`course_id`, `assessments`.`assessment_id`, `assessments`.`name`, `assessments`.`grade_weighting` FROM `assessments`
+							$query =  "SELECT `assessments`.`course_id`, `assessments`.`assessment_id`, `assessments`.`name`, `assessments`.`grade_weighting`, `assessments`.`order` FROM `assessments`
 									   WHERE `cohort` =" . $db->qstr($cohort["cohort"])."
-									   AND `course_id` =". $db->qstr($COURSE_ID);
+									   AND `course_id` =". $db->qstr($COURSE_ID)."
+									   ORDER BY `order` ASC"
+									;
 							
 							$results = $db->GetAll($query);
 							if ($results) {
@@ -245,11 +341,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								$total_grade_weights = $db->GetAll($query);
 								foreach ($results as $result) {
 									$url = ENTRADA_URL."/admin/gradebook/assessments?section=grade&amp;id=".$COURSE_ID."&amp;assessment_id=".$result["assessment_id"];
-									echo "<tr id=\"assessment-".$result["assessment_id"]."\">";
+									echo "<tr id=\"assessment-".$result["assessment_id"]."\" class=\"assessment\">";
 									if ($ENTRADA_ACL->amIAllowed("gradebook", "delete", false)) {
-										echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"delete[]\" value=\"".$result["assessment_id"]."\" /></td>\n";
+										echo "	<td class=\"modified\"><input type=\"hidden\" name=\"order[".$result['assessment_id']."][]\" value=\"".$result["order"]."\" class=\"order\" /><input class=\"delete\" type=\"checkbox\" name=\"delete[]\" value=\"".$result["assessment_id"]."\" /></td>\n";
 									} else {
-										echo "	<td class=\"modified\" width=\"20\"><img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"19\" height=\"19\" alt=\"\" title=\"\" /></td>";
+										echo "	<td class=\"modified\" width=\"20\"><input type=\"hidden\" name=\"order[".$result["assessment_id"]."][]\" value=\"sortorder\" class=\"order\" /><img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"19\" height=\"19\" alt=\"\" title=\"\" /></td>";
 									}
 									echo "<td><a href=\"$url\" width=\"367\">".$result["name"]."</a></td>";
 									echo "<td colspan=\"2\"><a href=\"$url\">".$result["grade_weighting"]. "%</a></td>"; 

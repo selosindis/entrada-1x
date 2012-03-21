@@ -230,10 +230,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 										return false;
 									}
 								</script>
-								<style type="text/css">
-									.handle {width:16px;height:16px;background-image:url(/entrada/www-root/images/arrow-resize.png);background-position:center center;background-repeat:no-repeat;display:block;}
-									#saveorder {display:none;}
-								</style>
 								<script type="text/javascript">
 									jQuery(function(){
 										

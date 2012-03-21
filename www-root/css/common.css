@@ -3636,3 +3636,6 @@ ul.community-themes li label {
     top:auto;
     left:auto;
 }
+
+.handle {width:16px;height:16px;background-image:url(../images/arrow-resize.png);background-position:center center;background-repeat:no-repeat;display:block;}
+#saveorder {display:none;}

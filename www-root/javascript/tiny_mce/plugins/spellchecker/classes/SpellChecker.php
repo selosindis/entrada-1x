@@ -1,6 +1,6 @@
 <?php
 /**
- * $Id: SpellChecker.php 1130 2010-04-20 17:10:49Z simpson $
+ * $Id: editor_plugin_src.js 201 2007-02-12 15:56:56Z spocke $
  *
  * @package MCManager.includes
  * @author Moxiecode

@@ -1,8 +1,8 @@
 <?php
 @set_include_path(implode(PATH_SEPARATOR, array(
-    dirname(__FILE__) . "/../../core",
-    dirname(__FILE__) . "/../../core/includes",
-    dirname(__FILE__) . "/../../core/library",
+    dirname(__FILE__) . "/../core",
+    dirname(__FILE__) . "/../core/includes",
+    dirname(__FILE__) . "/../core/library",
     get_include_path(),
 )));
 

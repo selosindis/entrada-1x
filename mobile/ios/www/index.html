@@ -52,7 +52,7 @@
 
 							var method = "login";
 								$.ajax({
-								url:'https://' + window.url + 'entrada-mobile/api/entrada_mobile.api.php',
+								url:'https://' + window.url + 'api/mobile.api.php',
 								type: 'post',
 								data: ({method: method, username: window.username, password: window.password}),
 								dataType: 'json',
@@ -97,7 +97,7 @@
 						var method = "login";
 						$(document).ready(function () {
 							$.ajax({
-							url:'https://' + window.url + 'entrada-mobile/api/entrada_mobile.api.php',
+							url:'https://' + window.url + 'api/mobile.api.php',
 							type: 'post',
 							data: ({method: method, username: window.username, password: window.password}),
 							dataType: 'json',
@@ -174,7 +174,7 @@
 					function load_scheduler () {
 						var method = "agenda";
 						$.ajax({
-							url:'https://' + window.url + 'entrada-mobile/api/entrada_mobile.api.php',
+							url:'https://' + window.url + 'api/mobile.api.php',
 							type: 'post',
 							data: ({method: method, authenticated: window.authenticated, firstname: window.firstname, lastname: window.lastname, role: window.role, group: window.group, id: window.user_id, organisation_id: window.organisation_id}),
 							success:function(data){
@@ -213,7 +213,8 @@
 										$(".dhx_dayevents_scale_event").children("div").each(function () {
 											$(this).css("width", width - 44);
 										});
-										if($$("scheduler").$$("buttons").getValue()=="day"){ 
+										
+										if ($$("scheduler").$$("buttons").getValue() =="day") { 
 											$$("scheduler").$$("dayList").render();
 										}
 									}
@@ -227,7 +228,7 @@
 						var method = "notices";
 						var sub_method = "fetch_notices";
 						$.ajax({
-							url:'https://' + window.url + 'entrada-mobile/api/entrada_mobile.api.php',
+							url:'https://' + window.url + 'api/mobile.api.php',
 							type: 'post',
 							data: ({method: method, group: window.group, id: window.user_id, organisation_id: window.organisation_id, sub_method: sub_method}),
 							dataType: 'json',
@@ -261,7 +262,7 @@
 										var sub_method = "mark_read";
 										var notice_id = val.notice_id;
 										$.ajax({
-											url:'http://' + window.url + 'entrada-mobile/api/entrada_mobile.api.php',
+											url:'http://' + window.url + 'api/mobile.api.php',
 											type: 'post',
 											data: ({method: method, group: window.group, id: window.user_id, organisation_id: window.organisation_id, sub_method: sub_method, notice_id: val.notice_id}),
 											dataType: 'text',
@@ -293,14 +294,19 @@
 					function scheduler_update () {
 						var method = "agenda";
 						$.ajax({
-							url:'https://' + window.url + 'entrada-mobile/api/entrada_mobile.api.php',
+							url:'https://' + window.url + 'api/mobile.api.php',
 							type: 'post',
 							data: ({method: method, authenticated: window.authenticated, firstname: window.firstname, lastname: window.lastname, role: window.role, group: window.group, id: window.user_id, organisation_id: window.organisation_id}),
 							success:function(data){
 								$$("scheduler").clearAll()
 								$$("scheduler").parse(data);
+								
 								if($$("scheduler").$$("buttons").getValue()=="day"){ 
 									$$("scheduler").$$("dayList").render();
+								}
+								
+								if($$("scheduler").$$("buttons").getValue() == "month") {
+									$$("scheduler").$$("calendarView").render();
 								}
 							}
 						});
@@ -310,7 +316,7 @@
 						var method = "notices";
 						var sub_method = "count_notices";
 						$.ajax({
-							url:'https://' + window.url + 'entrada-mobile/api/entrada_mobile.api.php',
+							url:'https://' + window.url + 'api/mobile.api.php',
 							type: 'post',
 							data: ({method: method, group: window.group, id: window.user_id, organisation_id: window.organisation_id, sub_method: sub_method}),
 							dataType: 'text',
@@ -454,9 +460,9 @@
                     <label for="password">Password:</label>
                     <input type="password" name="password" id="password" value="" />
                 </div>
-                <!--<ul data-role="listview" data-inset="true" class="ui-corner-all">
-				  <li data-theme="e" id="login-status" class="ui-btn ui-btn-up-e"></li>
-				</ul>-->
+                <ul data-role="listview" data-inset="true" class="ui-corner-all">
+					<li data-theme="e" id="login-status" class="ui-btn ui-btn-up-e"></li>
+				</ul>
                 <fieldset data-role="controlgroup">
                     <legend>Auto-login options:</legend>
                     <input type="radio" name="login-option" id="save-password" value="1" checked="checked" />

@@ -479,7 +479,7 @@ switch ($MODULE) {
 	case "login" :
 		require_once(ENTRADA_ABSOLUTE.DIRECTORY_SEPARATOR."default-pages".DIRECTORY_SEPARATOR."login.inc.php");
 	break;
-	default :
+	default :/*
 		if ($_SESSION["details"]["group"] == "student" && $MODULE != "evaluations") {
 			$cohort = groups_get_cohort($_SESSION["details"]["id"]);
 			$query = "SELECT * FROM `evaluations` AS a

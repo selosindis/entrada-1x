@@ -17,10 +17,10 @@
  *
  * This file is used to add events to the entrada.events table.
  *
- * @author Organisation: University of Calgary
+ * @author Organisation: Queen's University
  * @author Unit: Undergraduate Medical Education
- * @author Developer: Doug Hall <hall@ucalgary.ca>
- * @copyright Copyright 2010 Queen's University. All Rights Reserved.
+ * @author Developer: James Ellis <james.ellis@queensu.ca>
+ * @copyright Copyright 2011 Queen's University. All Rights Reserved.
  *
 */
 ini_set("display_errors", 1);
@@ -29,7 +29,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 } elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	header("Location: ".ENTRADA_URL);
 	exit;
-} elseif (!$ENTRADA_ACL->amIAllowed("evaluations", "update", false)) {
+} elseif (!$ENTRADA_ACL->amIAllowed("evaluation", "read", false)) {
 	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/".$MODULE."\\'', 15000)";
 
 	$ERROR++;
@@ -79,13 +79,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 				// Get All Regions?
 			}
 	
-			if(@is_array($_GET["teacher_ids"])) {
+			if(@is_array($_GET["teacher_ids"]) && ($_SESSION["details"]["group"] != "faculty" || array_search($_SESSION["details"]["role"], array("faculty", "lecturer")) === false)) {
 				foreach($_GET["teacher_ids"] as $teacher_id) {
 					$teacher_id = (int) trim($teacher_id);
 					if($teacher_id) {
 						$TEACHER_IDS[] = $teacher_id;
 					}
 				}
+			} elseif ($_SESSION["details"]["group"] == "faculty" && array_search($_SESSION["details"]["role"], array("faculty", "lecturer")) !== false) {
+				$TEACHER_IDS[] = $_SESSION["details"]["id"];
 			}
 			if((!@count($TEACHER_IDS)) || ($_GET["teacher_type"] == "all")) {
 				// Get All Teachers?
@@ -105,10 +107,23 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 		case "2" :
 			$ITEM_IDS = array();
 	
-			if(@is_array($_GET["item_ids"])) {
-				foreach($_GET["item_ids"] as $item_id) {
-					if($item_id = (int) trim($item_id)) {
-						$ITEM_IDS[] = $item_id;
+			if(isset($_GET["category_id"]) && ($category_id = trim(preg_replace("/[^\d]/", "", $_GET["category_id"]))) && ($type = preg_replace("/[\d]/", "", $_GET["category_id"]))) {
+				$type = ($type == "r" ? "Rotation" : "Teacher");
+				$query = "SELECT `item_id` FROM `".CLERKSHIP_DATABASE."`.`evaluations`
+							WHERE `category_id` IN (
+								SELECT a.`category_id` FROM `".CLERKSHIP_DATABASE."`.`categories` AS a
+								WHERE a.`category_parent` = ".$db->qstr($category_id)."
+								UNION
+								SELECT a.`category_id` FROM `".CLERKSHIP_DATABASE."`.`categories` AS a
+								JOIN `".CLERKSHIP_DATABASE."`.`categories` AS b
+								ON a.`category_parent` = b.`category_id`
+								WHERE b.`category_parent` = ".$db->qstr($category_id)."
+							)
+							AND (`item_title` LIKE '%".$type." Evaluation'".($type == "Teacher" ? "
+							OR `item_title` LIKE '%Preceptor Evaluation')" : ")");
+				if ($results = $db->GetAll($query)) {
+					foreach ($results as $result) {
+						$ITEM_IDS[] = $result["item_id"];
 					}
 				}
 			}
@@ -393,18 +408,45 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 	
 					$comment_ids			= array();
 	
-					$i = @count($ACCORDIAN);
-					$show_tab	= $i;
-					$ACCORDIAN[$i]	 = "	<div id=\"sidebar-panel-".$i."\">\n";
-					$ACCORDIAN[$i]	.= "		<div id=\"sidebar-panel-".$i."-header\" class=\"accordionTabTitleBar\">Report Options</div>\n";
-					$ACCORDIAN[$i]	.= "		<div id=\"sidebar-panel-".$i."-content\" class=\"accordionTabContentBox\">\n";
-					$ACCORDIAN[$i]	.= "			<div class=\"accordionTabContentPadding\">\n";
-					$ACCORDIAN[$i]	.= "				<form>\n";
-					$ACCORDIAN[$i]	.= "				<input type=\"checkbox\" id=\"selectall\" name=\"selectall\" value=\"1\" onclick=\"toggle_comments('comment_ids')\" style=\"vertical-align: middle\" /> <label for=\"selectall\" style=\"font-size: 11px\">Display Comments</label>\n";
-					$ACCORDIAN[$i]	.= "				</form>\n";
-					$ACCORDIAN[$i]	.= "			</div>\n";
-					$ACCORDIAN[$i]	.= "		</div>\n";
-					$ACCORDIAN[$i]	.= "	</div>\n";
+					$HEAD[] = "	<script type=\"text/javascript\">
+									var showComments = 'false';
+									function toggle_comments() {
+										if(showComments == 'false') {
+											if(!comment_ids.length) {
+												document.getElementById(comment_ids).style.display = '';
+											} else {
+												for (i = 0; i < comment_ids.length; i++) {
+													document.getElementById(comment_ids[i]).style.display = '';
+												}
+											}
+											showComments = 'true';
+											return;
+										} else {
+											if(!comment_ids.length) {
+												document.getElementById(comment_ids).style.display = 'none';
+											} else {
+												for (i = 0; i < comment_ids.length; i++) {
+													document.getElementById(comment_ids[i]).style.display = 'none';
+												}
+											}
+											showComments = 'false';
+											return;
+										}
+									}
+								</script>";
+					
+					$sidebar_html	 = "	<div id=\"sidebar-panel-".$i."\">\n";
+					$sidebar_html	.= "		<div id=\"sidebar-panel-".$i."-header\" class=\"accordionTabTitleBar\">Report Options</div>\n";
+					$sidebar_html	.= "		<div id=\"sidebar-panel-".$i."-content\" class=\"accordionTabContentBox\">\n";
+					$sidebar_html	.= "			<div class=\"accordionTabContentPadding\">\n";
+					$sidebar_html	.= "				<form>\n";
+					$sidebar_html	.= "				<input type=\"checkbox\" id=\"selectall\" name=\"selectall\" value=\"1\" onclick=\"toggle_comments('comment_ids')\" style=\"vertical-align: middle\" /> <label for=\"selectall\" style=\"font-size: 11px\">Display Comments</label>\n";
+					$sidebar_html	.= "				</form>\n";
+					$sidebar_html	.= "			</div>\n";
+					$sidebar_html	.= "		</div>\n";
+					$sidebar_html	.= "	</div>\n";
+	
+					new_sidebar_item("Report Options", $sidebar_html, "report-options", "open");
 	
 					// Setup the basis for the questions asked and possible answers.
 					$query	= "SELECT `question_id`, `question_text` FROM `".CLERKSHIP_DATABASE."`.`eval_questions` 
@@ -491,7 +533,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 							if($answers) {
 								foreach($answers as $answer) {
 									if($answer["answer_value"] == "0") {
-										$reports[$answer["question_id"]]["answers"][$answer["answer_value"]]["comments"][] = sanitize_comment($answer["result_value"], $filter_array);
+										$reports[$answer["question_id"]]["answers"][$answer["answer_value"]]["comments"][] = preg_replace($filter_array, "'<span class=\"filtered-text\">'.str_repeat(\"*\", 8).'</span>'", $answer["result_value"]);
 									} else {
 										$reports[$answer["question_id"]]["answers"][$answer["answer_value"]]["result"]++;
 									}
@@ -648,11 +690,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					}
 				}
 	
-				if(($form_type == "teacher") && ((!@is_array($ADMINISTRATION[$_SESSION["details"]["group"]][$_SESSION["details"]["role"]]["options"][$MODULE])) || (!@in_array("allow-teacher", $ADMINISTRATION[$_SESSION["details"]["group"]][$_SESSION["details"]["role"]]["options"][$MODULE])))) {
-					$ERROR++;
-					$ERRORSTR[] = "Your MEdTech account does not have the permission levels required to generate reports on teachers.";
-				}
-	
 				if($ERROR) {
 					echo display_error($ERRORSTR);
 				} else {
@@ -758,38 +795,39 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					echo "	<td colspan=\"2\">&nbsp;</td>\n";
 					echo "</tr>\n";
 	
-					switch($form_type) {
-						case "teacher" :
-							echo "<tr>\n";
-							echo "	<td style=\"vertical-align: top\">\n";
-							echo "		<input type=\"radio\" id=\"teacher_type_all\" name=\"teacher_type\" value=\"all\" style=\"vertical-align: middle\" checked=\"checked\" onclick=\"document.getElementById('show_teachers').style.display='none'\" /> <label for=\"teacher_type_all\" class=\"form-nrequired\">Include all teachers with this report.</label><br />\n";
-							echo "		<input type=\"radio\" id=\"teacher_type_specified\" name=\"teacher_type\" value=\"specified\" style=\"vertical-align: middle\" onclick=\"document.getElementById('show_teachers').style.display='block'\" /> <label for=\"teacher_type_specified\" class=\"form-nrequired\">Specify which teachers to include with this report.</label><br />\n";
-							echo "	</td>\n";
-							echo "	<td style=\"vertical-align: top\">\n";
-							echo "		<div id=\"show_teachers\" style=\"display: none\">\n";
-							echo "			<select id=\"teacher_ids\" name=\"teacher_ids[]\" style=\"width: 300px; height: 225px\" multiple=\"multiple\">\n";
-							$query	= "SELECT `id` AS `proxy_id`, CONCAT_WS(', ', `lastname`, `firstname`) AS `fullname` 
-										FROM `".AUTH_DATABASE."`.`user_data` 
-										LEFT JOIN `".CLERKSHIP_DATABASE."`.`eval_completed` 
-										ON `".CLERKSHIP_DATABASE."`.`eval_completed`.`instructor_id` = `".AUTH_DATABASE."`.`user_data`.`id` 
-										WHERE `".CLERKSHIP_DATABASE."`.`eval_completed`.`instructor_id` NOT LIKE 'OT-' 
-										AND `".CLERKSHIP_DATABASE."`.`eval_completed`.`instructor_id` <> '0' 
-										GROUP BY `".CLERKSHIP_DATABASE."`.`eval_completed`.`instructor_id` 
-										ORDER BY `fullname`";
-							$results	= $db->GetAll($query);
-							if($results) {
-								foreach($results as $result) {
-									echo "		<option value=\"".$result["proxy_id"]."\">".html_encode($result["fullname"])."</option>\n";
-								}
+					if ($form_type == "teacher" && ($_SESSION["details"]["group"] != "faculty" || array_search($_SESSION["details"]["role"], array("faculty", "lecturer")) === false)) {
+						echo "<tr>\n";
+						echo "	<td style=\"vertical-align: top\">\n";
+						echo "		<input type=\"radio\" id=\"teacher_type_all\" name=\"teacher_type\" value=\"all\" style=\"vertical-align: middle\" checked=\"checked\" onclick=\"document.getElementById('show_teachers').style.display='none'\" /> <label for=\"teacher_type_all\" class=\"form-nrequired\">Include all teachers with this report.</label><br />\n";
+						echo "		<input type=\"radio\" id=\"teacher_type_specified\" name=\"teacher_type\" value=\"specified\" style=\"vertical-align: middle\" onclick=\"document.getElementById('show_teachers').style.display='block'\" /> <label for=\"teacher_type_specified\" class=\"form-nrequired\">Specify which teachers to include with this report.</label><br />\n";
+						echo "	</td>\n";
+						echo "	<td style=\"vertical-align: top\">\n";
+						echo "		<div id=\"show_teachers\" style=\"display: none\">\n";
+						echo "			<select id=\"teacher_ids\" name=\"teacher_ids[]\" style=\"width: 300px; height: 225px\" multiple=\"multiple\">\n";
+						$query	= "SELECT `id` AS `proxy_id`, CONCAT_WS(', ', `lastname`, `firstname`) AS `fullname` 
+									FROM `".AUTH_DATABASE."`.`user_data` 
+									LEFT JOIN `".CLERKSHIP_DATABASE."`.`eval_completed` 
+									ON `".CLERKSHIP_DATABASE."`.`eval_completed`.`instructor_id` = `".AUTH_DATABASE."`.`user_data`.`id` 
+									WHERE `".CLERKSHIP_DATABASE."`.`eval_completed`.`instructor_id` NOT LIKE 'OT-' 
+									AND `".CLERKSHIP_DATABASE."`.`eval_completed`.`instructor_id` <> '0' 
+									GROUP BY `".CLERKSHIP_DATABASE."`.`eval_completed`.`instructor_id` 
+									ORDER BY `fullname`";
+						$results	= $db->GetAll($query);
+						if($results) {
+							foreach($results as $result) {
+								echo "		<option value=\"".$result["proxy_id"]."\">".html_encode($result["fullname"])."</option>\n";
 							}
-							echo "			</select>\n";
-							echo "		</div>\n";
-							echo "	</td>\n";
-							echo "</tr>\n";
-							echo "<tr>\n";
-							echo "	<td colspan=\"2\">&nbsp;</td>\n";
-							echo "</tr>\n";
-						break;
+						}
+						echo "			</select>\n";
+						echo "		</div>\n";
+						echo "	</td>\n";
+						echo "</tr>\n";
+						echo "<tr>\n";
+						echo "	<td colspan=\"2\">&nbsp;</td>\n";
+						echo "</tr>\n";
+					} elseif ($form_type == "teacher") {
+						echo "<input type=\"hidden\" name=\"teacher_ids[]\" value=\"".$_SESSION["details"]["id"]."\" />";
+						echo "<input type=\"hidden\" name=\"teacher_type\" value=\"specified\" />";
 					}
 					echo "<tr>\n";
 					echo "	<td colspan=\"2\" style=\"text-align: right\">\n";
@@ -827,31 +865,23 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 			<input type="hidden" name="step" value="2" />
 			<table width="100%" cellspacing="0" cellpadding="2" border="0">
 			<tr>
-				<td width="20%" style="vertical-align: top"><label for="item_ids" class="form-required">Running Evaluation: <sup>*</sup></label></td>
+				<td width="20%" style="vertical-align: top"><label for="item_ids" class="form-required">Running Evaluation:</label></td>
 				<td width="80%">
 					<?php
-					$query		= "SELECT a.*, b.`form_type`
-									FROM `".CLERKSHIP_DATABASE."`.`evaluations` AS a
-									LEFT JOIN `".CLERKSHIP_DATABASE."`.`eval_forms` AS b
-									ON b.`form_id` = a.`form_id`
-									WHERE a.`item_status` <> 'cancelled'
-									ORDER BY a.`item_title` ASC";
+					$query		= "SELECT * FROM `".CLERKSHIP_DATABASE."`.`categories` WHERE `category_name` LIKE 'Class of %'";
 					$results	= $db->GetAll($query);
 					if($results) {
-						echo "<select id=\"item_ids\" name=\"item_ids[]\" multiple=\"multiple\" size=\"10\" style=\"width: 100%; height: 225px\">\n";
+						echo "<select id=\"category_id\" name=\"category_id\" size=\"10\" style=\"width: 100%; height: 225px\">\n";
 						foreach($results as $result) {
-							if(($result["form_type"] != "teacher") || ((@is_array($ADMINISTRATION[$_SESSION["details"]["group"]][$_SESSION["details"]["role"]]["options"][$MODULE])) && (@in_array("allow-teacher", $ADMINISTRATION[$_SESSION["details"]["group"]][$_SESSION["details"]["role"]]["options"][$MODULE])))) {
-								echo "<option value=\"".$result["item_id"]."\">".html_encode($result["item_title"])."</option>\n";
+							if ($_SESSION["details"]["group"] != "faculty" || array_search($_SESSION["details"]["role"], array("faculty", "lecturer")) === false) {
+								echo "<option value=\"".$result["category_id"]."r\">".html_encode($result["category_name"])." Rotation Evaluations</option>\n";
 							}
+							echo "<option value=\"".$result["category_id"]."t\">".html_encode($result["category_name"])." Teacher Evaluations</option>\n";
 						}
 						echo "</select>\n";
 					}
 					?>
 				</td>
-			</tr>
-			<tr>
-				<td>&nbsp;</td>
-				<td><span class="content-small"><sup>*</sup> To produce a summative report, select multiple evaluations by holding the Apple key + click.</span></td>
 			</tr>
 			<tr>
 				<td colspan="2" align="right">

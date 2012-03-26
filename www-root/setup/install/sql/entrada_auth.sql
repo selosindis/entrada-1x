@@ -113,7 +113,8 @@ INSERT INTO `acl_permissions` (`resource_type`, `resource_value`, `entity_type`,
 ('myowndepartment', NULL, 'user', '1', NULL, 1, 1, 1, 1, NULL),
 ('annualreportadmin', NULL, 'group:role', 'medtech:admin', NULL, 1, 1, 1, 1, NULL),
 ('gradebook', NULL, 'group', 'student', NULL, NULL, 1, NULL, NULL, NULL),
-('metadata', NULL, 'group:role', 'staff:admin', 1, 1, 1, 1, 1, NULL);
+('metadata', NULL, 'group:role', 'staff:admin', 1, 1, 1, 1, 1, NULL),
+('evaluation', NULL, 'group', 'faculty', 1, 0, 1, 0, 0, 'IsEvaluated');
 
 CREATE TABLE IF NOT EXISTS `departments` (
   `department_id` int(12) unsigned NOT NULL AUTO_INCREMENT,

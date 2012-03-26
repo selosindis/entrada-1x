@@ -29,7 +29,7 @@ if (!defined("PARENT_INCLUDED")) {
 } elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	header("Location: ".ENTRADA_URL);
 	exit;
-} elseif (!$ENTRADA_ACL->amIAllowed("evaluations", "update", false)) {
+} elseif (!$ENTRADA_ACL->amIAllowed("evaluation", "read", false)) {
 	$ERROR++;
 	$ERRORSTR[]	= "Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
 
@@ -42,28 +42,39 @@ if (!defined("PARENT_INCLUDED")) {
 	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/evaluations", "title" => "Manage Evaluations");
 
 	if (($router) && ($router->initRoute())) {
-		$PREFERENCES = preferences_load($MODULE);
-
-		/**
-		 * Add the Regional Education module secondary navigation.
-		 */
-		$sidebar_html  = "<ul class=\"menu\">";
-		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/evaluations\">Manage Evaluations</a></li>\n";
-		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/evaluations/forms\">Manage Forms</a></li>\n";
-//		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/evaluations/notifications\">Manage Notifications</a></li>\n";
-		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/evaluations/reports\">Evaluation Reports</a></li>\n";
-		$sidebar_html .= "</ul>";
-		new_sidebar_item("Manage Evaluations", $sidebar_html, "evaluation-nav", "open");
-
-		$module_file = $router->getRoute();
-		if ($module_file) {
-			require_once($module_file);
+		$modules = $router->getModules();
+		if (!$ENTRADA_ACL->amIAllowed("evaluation", "update", false) && count($modules) >= 2 && $modules[1] != "reports") {
+			$ERROR++;
+			$ERRORSTR[]	= "Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
+		
+			echo display_error();
+		
+			application_log("error", "Group [".$GROUP."] and role [".$ROLE."] does not have access to this module [".$MODULE."]");
+		} else {
+			if (!$ENTRADA_ACL->amIAllowed("evaluation", "update", false) && count($modules) < 2) {
+				header("Location: ".ENTRADA_URL."/admin/evaluations/reports?section=student-clerkship-evaluations");
+			}
+			if ($ENTRADA_ACL->amIAllowed("evaluation", "update", false)) {
+				$sidebar_html  = "<ul class=\"menu\">";
+				$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/evaluations\">Manage Evaluations</a></li>\n";
+				$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/evaluations/forms\">Manage Forms</a></li>\n";
+		//		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/evaluations/notifications\">Manage Notifications</a></li>\n";
+				$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/evaluations/reports\">Evaluation Reports</a></li>\n";
+				$sidebar_html .= "</ul>";
+				new_sidebar_item("Manage Evaluations", $sidebar_html, "evaluation-nav", "open");
+			}
+			$PREFERENCES = preferences_load($MODULE);
+			
+			$module_file = $router->getRoute();
+			if ($module_file) {
+				require_once($module_file);
+			}
+	
+			/**
+			 * Check if preferences need to be updated on the server at this point.
+			 */
+			preferences_update($MODULE, $PREFERENCES);
 		}
-
-		/**
-		 * Check if preferences need to be updated on the server at this point.
-		 */
-		preferences_update($MODULE, $PREFERENCES);
 	} else {
 		$url = ENTRADA_URL."/admin/".$MODULE;
 		application_log("error", "The Entrada_Router failed to load a request. The user was redirected to [".$url."].");

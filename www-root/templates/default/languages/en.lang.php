@@ -342,7 +342,8 @@ return array (
 
 	/** courses **/
 	"course" => "Course",
-	"courses" => "Courses"
+	"courses" => "Courses",
+	"evaluation_filtered_words" => "Dr. Doctor; Firstname Lastname"
 	
 	);
 ?>

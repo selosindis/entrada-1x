@@ -3578,7 +3578,7 @@ CREATE TABLE IF NOT EXISTS `settings` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `settings` (`shortname`, `value`) VALUES
-('version_db', '1218 '),
+('version_db', '1227 '),
 ('version_entrada', '1.3.0DEV');
 
 CREATE TABLE IF NOT EXISTS `statistics` (

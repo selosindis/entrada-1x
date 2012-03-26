@@ -4987,22 +4987,22 @@ function communities_fetch_pages($community_id = 0, $user_access = 0) {
 						} else {
 							$new_window = false;
 						}
-					$navigation[$result["cpage_id"]]	= array(	
-												"cpage_id" => $result["cpage_id"],
-												"link_order"	=> (int) $result["page_order"],
-												"link_parent"	=> 0,
-												"link_url"		=> ":".$result["page_url"],
-												"link_title"	=> $result["menu_title"],
-												"link_selected" => ($result["page_url"] == $PAGE_URL ? true : false),
-												"link_new_window" => ($new_window ? true : false),
-												"link_type"		=> $result["page_type"],
-												"link_children" => array()
-											);
+						$navigation[$result["cpage_id"]]	= array(	
+													"cpage_id" => $result["cpage_id"],
+													"link_order"	=> (int) $result["page_order"],
+													"link_parent"	=> 0,
+													"link_url"		=> ":".$result["page_url"],
+													"link_title"	=> $result["menu_title"],
+													"link_selected" => ($result["page_url"] == $PAGE_URL ? true : false),
+													"link_new_window" => ($new_window ? true : false),
+													"link_type"		=> $result["page_type"],
+													"link_children" => array()
+												);
 						$visible = true;
 					} else {
 						$visible = false;
 					}
-					if (communities_page_has_children($result["cpage_id"], $access_query_condition[$user_access])) {
+					if (communities_page_has_children($result["cpage_id"], $access_query_condition[$user_access]) && $visible) {
 						$navigation[$result["cpage_id"]]["link_children"] = communities_fetch_child_pages($result["cpage_id"], $access_query_condition[$user_access]);
 					}
 					$i++;
@@ -5040,30 +5040,32 @@ function communities_fetch_child_pages($cpage_id, $access_query_condition, $leve
 	$children = $db->GetAll($query);
 	if ($children) {
 		foreach ($children as $child) {
-			if ($child["page_type"] == "url") {
-				$child["new_window"] = $db->GetOne("SELECT `option_value` FROM `community_page_options` WHERE `cpage_id` = ".$db->qstr($child["cpage_id"])." AND `option_title` = 'new_window'");
-			} else {
-				$child["new_window"] = false;
-			}
-			$child_array = array(
-						           "cpage_id" => $child["cpage_id"],
-						           "link_order" => $child["page_order"],
-						           "link_parent" => $child["parent_id"],
-						           "link_url" => ":".$child["page_url"],
-						           "link_title" => $child["menu_title"],
-						           "link_selected" => ($child["page_url"] == $PAGE_URL ? true : false),
-						           "link_new_window" => ($child["new_window"] ? $child["new_window"] : 0),
-						           "link_type" => $child["page_type"],
-						           "link_children" => array()
-								);
-			$found = communities_page_has_children($child["cpage_id"], $access_query_condition);
-			if ($found) {
-				$child_descendants = communities_fetch_child_pages($child["cpage_id"], $access_query_condition, ($level + 1));
-				if ($child_descendants) {
-					$child_array["link_children"] = $child_descendants;
+			if (((int)$child["page_visible"]) == 1) {
+				if ($child["page_type"] == "url") {
+					$child["new_window"] = $db->GetOne("SELECT `option_value` FROM `community_page_options` WHERE `cpage_id` = ".$db->qstr($child["cpage_id"])." AND `option_title` = 'new_window'");
+				} else {
+					$child["new_window"] = false;
 				}
+				$child_array = array(
+							           "cpage_id" => $child["cpage_id"],
+							           "link_order" => $child["page_order"],
+							           "link_parent" => $child["parent_id"],
+							           "link_url" => ":".$child["page_url"],
+							           "link_title" => $child["menu_title"],
+							           "link_selected" => ($child["page_url"] == $PAGE_URL ? true : false),
+							           "link_new_window" => ($child["new_window"] ? $child["new_window"] : 0),
+							           "link_type" => $child["page_type"],
+							           "link_children" => array()
+									);
+				$found = communities_page_has_children($child["cpage_id"], $access_query_condition);
+				if ($found) {
+					$child_descendants = communities_fetch_child_pages($child["cpage_id"], $access_query_condition, ($level + 1));
+					if ($child_descendants) {
+						$child_array["link_children"] = $child_descendants;
+					}
+				}
+				$children_array[$child["cpage_id"]] = $child_array;
 			}
-			$children_array[$child["cpage_id"]] = $child_array;
 		}
 		return $children_array;
 	}
@@ -8091,7 +8093,7 @@ function numeric_suffix($number = 0) {
  * @return array
  */
 function clerkship_notify_clerk($rotation_period_index, $clerk, $rotation, $objective_progress) {
-	global $db, $AGENT_CONTACTS;
+	global $db, $AGENT_CONTACTS, $ENTRADA_ACTIVE_TEMPLATE;
 	if (defined("CLERKSHIP_EMAIL_NOTIFICATIONS") && CLERKSHIP_EMAIL_NOTIFICATIONS) {
 		$mail = new Zend_Mail();
 		$mail->addHeader("X-Originating-IP", $_SERVER["REMOTE_ADDR"]);
@@ -8110,7 +8112,6 @@ function clerkship_notify_clerk($rotation_period_index, $clerk, $rotation, $obje
 				break;
 		}
 		$NOTIFICATION_MESSAGE		 	 = array();
-		global $ENTRADA_ACTIVE_TEMPLATE;
 		
 		switch ($rotation_period_index) {
 			case CLERKSHIP_SIX_WEEKS_PAST :
@@ -8271,7 +8272,7 @@ function clerkship_add_queued_notification($rotation_period_index, $clerk, $rota
  * @return boolean
  */
 function clerkship_send_queued_notifications($rotation_id, $rotation_title, $proxy_id) {
-	global $db, $AGENT_CONTACTS;
+	global $db, $AGENT_CONTACTS, $ENTRADA_ACTIVE_TEMPLATE;
 	$query 	= "SELECT * FROM `".CLERKSHIP_DATABASE."`.`clerkship_queued_notifications`
 			WHERE `rotation_id` = ".$db->qstr($rotation_id)."
 			AND `clerk_id` NOT IN (
@@ -8491,7 +8492,7 @@ function clerkship_rotation_tasks_progress($proxy_id, $rotation_id) {
 }
 
 function clerkship_deficiency_notifications($clerk_id, $rotation_id, $administrator = false, $completed = false, $comments = false) {
-	global $AGENT_CONTACTS, $db;
+	global $AGENT_CONTACTS, $db, $ENTRADA_ACTIVE_TEMPLATE;
 	if (defined("CLERKSHIP_EMAIL_NOTIFICATIONS") && CLERKSHIP_EMAIL_NOTIFICATIONS) {
 		$mail = new Zend_Mail();
 		$mail->addHeader("X-Originating-IP", $_SERVER["REMOTE_ADDR"]);
@@ -8502,17 +8503,17 @@ function clerkship_deficiency_notifications($clerk_id, $rotation_id, $administra
 		$mail->setSubject("Clerkship Logbook Deficiency Notification");
 		$NOTIFICATION_MESSAGE	= array();
 						
-		$query	 				= "	SELECT CONCAT_WS(' ', `firstname`, `lastname`) as `fullname`, `email`, `id`
+		$query	 				= "SELECT CONCAT_WS(' ', `firstname`, `lastname`) as `fullname`, `email`, `id`
 									FROM `".AUTH_DATABASE."`.`user_data`
 									WHERE `id` = ".$db->quote($clerk_id);
 		$clerk					= $db->GetRow($query);
 		
-		$query 					= "	SELECT a.`rotation_title`, c.`email`, CONCAT_WS(' ', c.`firstname`, c.`lastname`) as `fullname`, b.`pcoord_id`
+		$query 					= "SELECT a.`rotation_title`, c.`email`, CONCAT_WS(' ', c.`firstname`, c.`lastname`) as `fullname`, c.`id` AS `proxy_id`
 									FROM `".CLERKSHIP_DATABASE."`.`global_lu_rotations` AS a
 									LEFT JOIN `courses` AS b
 									ON a.`course_id` = b.`course_id`
 									LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS c
-									ON c.`id` = ".($administrator ? "b.`pcoord_id`" : $db->qstr($clerk_id))."
+									ON c.`id` = ".($administrator ? "(SELECT `proxy_id` FROM `course_contacts` WHERE `course_id` = b.`course_id` AND `contact_type` = 'director' ORDER BY `contact_order` ASC LIMIT 0, 1)" : $db->qstr($clerk_id))."
 									WHERE a.`rotation_id` = ".$db->quote($rotation_id)."
 									AND b.`course_active` = '1'";
 		$rotation				= $db->GetRow($query);
@@ -8546,7 +8547,7 @@ function clerkship_deficiency_notifications($clerk_id, $rotation_id, $administra
 			}
 			$mail->setBodyText(clean_input(str_replace($search, $replace, $NOTIFICATION_MESSAGE["textbody"]), array("postclean")));
 			
-			if (($rotation["pcoord_id"] && $administrator) || !$administrator) {
+			if (($rotation["email"] && $administrator) || !$administrator) {
 				if ($administrator) {
 					$notice_message = "The clerk [%CLERK_FULLNAME%] has completed a plan to attain deficiencies for a rotation [%ROTATION_TITLE%] after the allotted time. Please review their <a href=\"%DEFICIENCY_PLAN_URL%\">Deficiency Plan</a> now to ensure it meets all requirements.";
 				} else {
@@ -8557,7 +8558,7 @@ function clerkship_deficiency_notifications($clerk_id, $rotation_id, $administra
 					}
 				}
 				$NOTICE = Array(
-									"target" => "proxy_id:".($administrator ? $rotation["pcoord_id"] : $clerk_id),
+									"target" => "proxy_id:".($administrator ? $rotation["proxy_id"] : $clerk_id),
 									"notice_summary" => clean_input(str_replace($search, $replace, $notice_message), array("postclean")),
 									"display_from" => time(),
 									"display_until" => strtotime("+2 weeks"),
@@ -8567,7 +8568,7 @@ function clerkship_deficiency_notifications($clerk_id, $rotation_id, $administra
 								);
 				if($db->AutoExecute("notices", $NOTICE, "INSERT")) {
 					if($NOTICE_ID = $db->Insert_Id()) {
-						$naudience = array("notice_id"=>$NOTICE_ID,"audience_type"=>"students","audience_value"=>($administrator ? $rotation["pcoord_id"] : $clerk_id),"updated_by"=>0,"updated_date"=>time());
+						$naudience = array("notice_id"=>$NOTICE_ID,"audience_type"=>"students","audience_value"=>($administrator ? $rotation["proxy_id"] : $clerk_id),"updated_by"=>0,"updated_date"=>time());
 						$db->AutoExecute("notice_audience",$naudience,"INSERT");
 						application_log("success", "Successfully added notice ID [".$NOTICE_ID."]");
 					} else {
@@ -8587,9 +8588,9 @@ function clerkship_deficiency_notifications($clerk_id, $rotation_id, $administra
 						$sent = false;
 					}
 					if($sent && $administrator) {
-						application_log("success", "Sent overdue logging notification to Program Coordinator ID [".$rotation["pcoord_id"]."].");
+						application_log("success", "Sent overdue logging notification to Program Coordinator ID [".$rotation["proxy_id"]."].");
 					} elseif ($administrator) {
-						application_log("error", "Unable to send overdue logging notification to Program Coordinator ID [".$rotation["pcoord_id"]."].");
+						application_log("error", "Unable to send overdue logging notification to Program Coordinator ID [".$rotation["proxy_id"]."].");
 					} elseif (!$administrator && $sent) {
 						application_log("success", "Sent overdue logging notification to Clerk ID [".$clerk_id."].");
 					} else {
@@ -8597,7 +8598,7 @@ function clerkship_deficiency_notifications($clerk_id, $rotation_id, $administra
 					}
 					$NOTICE_HISTORY = Array(
 											"clerk_id" => $clerk_id,
-											"proxy_id" => ($administrator ? $rotation["pcoord_id"] : $clerk_id),
+											"proxy_id" => ($administrator ? $rotation["proxy_id"] : $clerk_id),
 											"rotation_id" => $rotation_id,
 											"notified_date" => time()
 											);
@@ -15169,4 +15170,58 @@ function fetch_curriculum_level($course_code) {
 	$curriculum_level = $db->GetROw($query);
 	
 	return $curriculum_level["curriculum_level"];
+}
+
+// This function returns a trim and tidylist of words
+function filtered_words() {
+	global $search, $translate;
+
+	$search = array();
+	$filtered_words = $translate->_("evaluation_filtered_words");
+
+	if($filtered_words) {
+		$search = explode("; ", $filtered_words);
+		if(@is_array($search)) {
+			$search = clean_empty_values($search);
+			array_walk($search, "prepare_filter_string");
+		}
+	}
+
+	return array_unique($search);
+}
+
+// Cleans empty values from an array.
+function clean_empty_values($array = array()) {
+	foreach ($array as $index => $value) {
+		if (trim($value) == "") {
+			unset($array[$index]);
+		}
+	}
+	return $array;
+}
+
+// This function is used by the filtered_words function to strim whitespace.
+function prepare_filter_string(&$string) {
+	if(is_string($string)) {
+		$string = "/(".trim(quotemeta($string)).")/ie";	// Trims, cleans and converts filter string to a regex.
+	}
+	return $string;
+}
+
+// Function will return all categories in an array.
+function categories_inarray($parent_id, $indent = 0) {
+	global $db, $sub_category_ids;
+
+	if($indent > 99) {
+		die("Preventing infinite loop");
+	}
+
+	$query		= "SELECT * FROM `".CLERKSHIP_DATABASE."`.`categories` WHERE `category_parent` = ".$db->qstr($parent_id)." AND `category_status` <> 'trash' ORDER BY `category_order` ASC";
+	$results	= $db->GetAll($query);
+	foreach($results as $result) {
+		$sub_category_ids[] = $result["category_id"];
+		categories_inarray($result["category_id"], $indent + 1);
+	}
+
+	return ((@count($sub_category_ids) > 0) ? true : false);
 }

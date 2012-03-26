@@ -72,9 +72,9 @@ define("ADODB_DIR", ENTRADA_ABSOLUTE."/core/library/Entrada/adodb");
 define("CLERKSHIP_DATABASE", $config->database->clerkship_database);			// The name of the database that stores the clerkship schedule information.
 define("CLERKSHIP_SITE_TYPE", 1);												// The value this application will use for site types in the clerkship logbook module. This will be removed/replaced by functional logic to decide which site type to use in the future - for now, leave this as 1.
 define("CLERKSHIP_EMAIL_NOTIFICATIONS", true);									// Whether email notifications will be sent out to the Program Coordinator of the Rotation's related course
-define("CLERKSHIP_LOTTERY_START", strtotime("March 1st, 2010"));
-define("CLERKSHIP_LOTTERY_FINISH", strtotime("March 14th, 2010"));
-define("CLERKSHIP_LOTTERY_MAX", 6);
+define("CLERKSHIP_LOTTERY_START", strtotime("March 1st, 2012"));
+define("CLERKSHIP_LOTTERY_FINISH", strtotime("March 14th, 2012"));
+define("CLERKSHIP_LOTTERY_MAX", 8);
 define("CLERKSHIP_FIRST_CLASS", 2011);
 define("ONE_WEEK", 604800);
 define("CLERKSHIP_SIX_WEEKS_PAST", 4);
@@ -458,7 +458,7 @@ $MODULES = array();
 $MODULES["awards"] = array("title" => "Manage Awards", "resource" => "awards", "permission" => "update");
 $MODULES["clerkship"] = array("title" => "Manage Clerkship", "resource" => "clerkship", "permission" => "update");
 $MODULES["courses"] = array("title" => "Manage Courses", "resource"=> "coursecontent", "permission" => "update");
-$MODULES["evaluations"] = array("title" => "Manage Evaluations", "resource" => "evaluation", "permission" => "update");
+$MODULES["evaluations"] = array("title" => "Manage Evaluations", "resource" => "evaluation", "permission" => "read");
 $MODULES["communities"] = array("title" => "Manage Communities", "resource" => "communityadmin", "permission" => "read");
 $MODULES["groups"] = array("title" => "Manage Groups", "resource" => "group", "permission" => "update");
 $MODULES["events"] = array("title" => "Manage Events", "resource" => "eventcontent", "permission" => "update");

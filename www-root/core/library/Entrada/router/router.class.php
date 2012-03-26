@@ -49,6 +49,10 @@ class Entrada_Router {
 		return ($section &&($this->section = $section));
 	}
 
+	public function getModules() {
+		return $this->modules;
+	}
+
 	public function getLoadPath() {
 		return $this->load_path;
 	}

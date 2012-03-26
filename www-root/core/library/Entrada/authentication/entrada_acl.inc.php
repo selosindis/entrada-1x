@@ -624,6 +624,43 @@ class TaskRecipientAssertion implements Zend_Acl_Assert_Interface {
 	}
 }
 
+class IsEvaluatedAssertion implements Zend_Acl_Assert_Interface {
+
+/**
+ * Asserts that the role references the director, coordinator, or secondary director of the course resource
+ *
+ * @param Zend_Acl $acl The ACL object isself (the one calling the assertion)
+ * @param Zend_Acl_Role_Interface $role The role being queried
+ * @param Zend_Acl_Resource_Interface $resource The resource being queried
+ * @param string $privilege The privilege being queried
+ * @return boolean
+ */
+	public function assert(Zend_Acl $acl, Zend_Acl_Role_Interface $role = null, Zend_Acl_Resource_Interface $resource = null, $privilege = null) {
+		global $db;
+		
+		//If asserting is off then return true right away
+		if((isset($resource->assert) && $resource->assert == false) || (isset($acl->_entrada_last_query) && isset($acl->_entrada_last_query->assert) && $acl->_entrada_last_query->assert == false)) {
+			return true;
+		}
+		$role_id = $role->getRoleId();
+		$user_id	= preg_replace('/[^0-9]+/', "", $role_id);
+
+		if($user_id == "") {
+			$role_id = $acl->_entrada_last_query_role->getRoleId();
+			$user_id	= preg_replace('/[^0-9]+/', "", $role_id);
+		}
+
+		$query = "SELECT * FROM `".CLERKSHIP_DATABASE."`.`eval_completed` WHERE `instructor_id` = ".$db->qstr($user_id);
+		$evaluated = $db->GetRow($query);
+		
+		if ($evaluated) {
+			return 	true;
+		} else {
+			return false;
+		}
+	}
+}
+
 class TaskVerifierAssertion implements Zend_Acl_Assert_Interface {
 
 /**

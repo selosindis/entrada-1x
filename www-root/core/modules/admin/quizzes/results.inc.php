@@ -245,6 +245,32 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 											GROUP BY a.`proxy_id`
 											ORDER BY c.`group` ASC, c.`role` ASC, `fullname` ASC";
 						$respondents	= $db->GetAll($query);
+
+						
+						if ($QUIZ_TYPE == "community_page") {
+							$query			= "	SELECT a.`proxy_id`, b.`number`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, c.`group`
+												FROM `community_members` AS a
+												LEFT JOIN `quiz_progress` AS d
+												ON d.`proxy_id` = a.`proxy_id`
+												LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
+												ON b.`id` = a.`proxy_id`
+												LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS c
+												ON c.`user_id` = a.`proxy_id`,
+												`attached_quizzes` e
+												WHERE e.`aquiz_id` = ".$db->qstr($RECORD_ID)."
+												".((($target_group != "all") && ($target_group)) ? " AND c.`group` = ".$db->qstr($target_group) : "")."
+												".((($target_group != "all") && ($target_role)) ? " AND c.`role` = ".$db->qstr($target_role) : "")."
+												AND a.`community_id` = ".$db->qstr($quiz_record["community_id"]) . "
+												AND `member_active` = '1'
+												AND `member_acl` != '1'
+												AND d.`proxy_id` IS NULL
+												GROUP BY a.`proxy_id`
+												ORDER BY c.`group` ASC, c.`role` ASC, `fullname` ASC";
+
+							$members_with_no_attempts = $db->GetAll($query);
+						} else {
+							$members_with_no_attempts = "";
+						}
 					}
 
 					if ($respondents) {
@@ -293,12 +319,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 							} else {
 								$attempts[$respondent["proxy_id"]] = 0;
 							}
-
+		
 						}
 					}
-
-					if ($total_attempts) {
-						if ((isset($_GET["download"])) && (in_array($_GET["download"], array("csv"))) && (count($respondents))) {
+					
+					if ($total_attempts) {	
+						if ((isset($_GET["download"])) && (in_array($_GET["download"], array("csv"))) && (!in_array($_GET["noattempts"], array("true"))) && (count($respondents))) {
 							ob_start();
 							echo '"Number","Fullname","Completed","Score","Out Of","Percent"', "\n";
 
@@ -343,6 +369,56 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 							header("Content-Type: application/octet-stream");
 							header("Content-Type: text/csv");
 							header("Content-Disposition: attachment; filename=\"".date("Y-m-d")."_".useable_filename($quiz_record["content_title"]."_".$quiz_record["quiz_title"]).".csv\"");
+							header("Content-Length: ".strlen($contents));
+							header("Content-Transfer-Encoding: binary\n");
+
+							echo $contents;
+							exit;
+						} elseif ((isset($_GET["download"])) && (in_array($_GET["download"], array("csv"))) && (in_array($_GET["noattempts"], array("true"))) && (count($members_with_no_attempts))) {
+							ob_start();
+							echo '"Number","Fullname","Completed","Score","Out Of","Percent"', "\n";
+
+							$quiz_value	= 0;
+							foreach ($members_with_no_attempts as $respondent) {
+								$quiz_score	= 0;
+								$proxy_id	= $respondent["proxy_id"];
+
+								if ((isset($attempts[$proxy_id])) && ($attempts[$proxy_id]) && (is_array($attempts[$proxy_id]))) {
+									foreach ($attempts[$proxy_id] as $attempt) {
+										$quiz_score	= $attempt["quiz_score"];
+										$quiz_value = $attempt["quiz_value"];
+
+										$cols	= array();
+										$cols[]	= (($respondent["group"] == "student") ? $respondent["number"] : 0);
+										$cols[]	= $respondent["fullname"];
+										$cols[] = (((int) $attempt["updated_date"]) ? date(DEFAULT_DATE_FORMAT, $attempt["updated_date"]) : "Unknown");
+										$cols[]	= $quiz_score;
+										$cols[]	= $quiz_value;
+										$cols[]	= number_format(((round(($quiz_score / $quiz_value), 3)) * 100), 1)."%";
+									}
+								} else {
+									$cols	= array();
+									$cols[]	= $respondent["number"];
+									$cols[]	= $respondent["fullname"];
+									$cols[] = "Not Attempted";
+									$cols[]	= "0";
+									$cols[]	= $quiz_value;
+									$cols[]	= "0%";
+								}
+
+								echo '"'.implode('","', $cols).'"', "\n";
+							}
+							$contents = ob_get_contents();
+
+							ob_clear_open_buffers();
+
+							header("Pragma: public");
+							header("Expires: 0");
+							header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
+							header("Content-Type: application/force-download");
+							header("Content-Type: application/octet-stream");
+							header("Content-Type: text/csv");
+							header("Content-Disposition: attachment; filename=\"".date("Y-m-d")."_".useable_filename($quiz_record["content_title"]."_NOT_ATTEMPTED_".$quiz_record["quiz_title"]).".csv\"");
 							header("Content-Length: ".strlen($contents));
 							header("Content-Transfer-Encoding: binary\n");
 
@@ -490,7 +566,86 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 							</tbody>
 							</table>
 						</div>
-						<?php
+
+						<?php 
+						if ($QUIZ_TYPE == "community_page") { ?>
+						<a name="quiz-no-attempts-section"></a>
+						<h2 title="Quiz Respondent Section">Quiz Results by Not Attempted</h2>
+						<div id="quiz-no-attempts-section">
+							<table class="quizResults">
+							<colgroup>
+								<col style="width: 3%" />
+								<col style="width: 13%" />
+								<col style="width: 35%" />
+								<col style="width: 23%" />
+								<col style="width: 8%" />
+								<col style="width: 2%" />
+								<col style="width: 8%" />
+								<col style="width: 8%" />
+							</colgroup>
+							<tfoot>
+								<tr>
+									<td>&nbsp;</td>
+									<td colspan="6" style="padding-top: 10px">
+										<button onclick="window.location='<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("download" => "csv", "noattempts" => "true")); ?>'">Download CSV</button>
+									</td>
+								</tr>
+							</tfoot>
+							<tbody>
+								<tr>
+									<td class="borderless">&nbsp;</td>
+									<td class="borderless bold">Number</td>
+									<td class="borderless bold">Fullname</td>
+									<td class="borderless bold">Completed</td>
+									<td class="borderless right bold">Score</td>
+									<td class="borderless center bold">/</td>
+									<td class="borderless left bold">Out Of</td>
+									<td class="borderless right bold">Percent</td>
+								</tr>
+
+								<?php
+								$quiz_value	= 0;
+								if (is_array($members_with_no_attempts) && sizeof($members_with_no_attempts) > 0) {
+									foreach ($members_with_no_attempts as $respondent) {
+										$quiz_score	= 0;
+										$proxy_id	= $respondent["proxy_id"];
+
+										if ((isset($attempts[$proxy_id])) && ($attempts[$proxy_id]) && (is_array($attempts[$proxy_id]))) {
+											foreach ($attempts[$proxy_id] as $attempt) {
+												$quiz_score		= $attempt["quiz_score"];
+												$quiz_value		= $attempt["quiz_value"];
+												$quiz_percent	= number_format(((round(($quiz_score / $quiz_value), 3)) * 100), 1);
+
+												echo "<tr>\n";
+												echo "	<td><img src=\"".ENTRADA_URL."/images/question-".((($quiz_percent > 60)) ? "correct" : "incorrect").".gif\" width=\"16\" height=\"16\" /></td>";
+												echo "	<td><a href=\"".ENTRADA_URL."/quizzes?section=results&amp;id=".$attempt["qprogress_id"]."\">".html_encode((($respondent["group"] == "student") ? $respondent["number"] : 0))."</a></td>\n";
+												echo "	<td><a href=\"".ENTRADA_URL."/quizzes?section=results&amp;id=".$attempt["qprogress_id"]."\">".html_encode($respondent["fullname"])."</a></td>\n";
+												echo "	<td><a href=\"".ENTRADA_URL."/quizzes?section=results&amp;id=".$attempt["qprogress_id"]."\">".(((int) $attempt["updated_date"]) ? date(DEFAULT_DATE_FORMAT, $attempt["updated_date"]) : "Unknown")."</a></td>\n";
+												echo "	<td class=\"right\">".$quiz_score."</td>\n";
+												echo "	<td class=\"center\">/</td>\n";
+												echo "	<td class=\"left\">".$quiz_value."</td>\n";
+												echo "	<td class=\"right\">".$quiz_percent."%</td>\n";
+												echo "</tr>";
+											}
+										} else {
+											echo "<tr>\n";
+											echo "	<td><img src=\"".ENTRADA_URL."/images/question-incorrect.gif\" width=\"16\" height=\"16\" /></td>";
+											echo "	<td>".html_encode((($respondent["group"] == "student") ? $respondent["number"] : 0))."</td>\n";
+											echo "	<td>".html_encode($respondent["fullname"])."</td>\n";
+											echo "	<td>Not Attempted</td>\n";
+											echo "	<td class=\"right\">0</td>\n";
+											echo "	<td class=\"center\">/</td>\n";
+											echo "	<td class=\"left\">".$quiz_value."</td>\n";
+											echo "	<td class=\"right\">0%</td>\n";
+											echo "</tr>";
+										}
+									}
+								}
+								?>
+							</tbody>
+							</table>
+						</div>
+						<?php }
 					} else {
 						?>
 						<div class="display-notice">

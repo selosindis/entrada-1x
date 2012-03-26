@@ -103,7 +103,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					}
 
 					add_success("Successfully updated <strong>Gradebook</strong>. You will now be redirected to the <strong>Grade Assessment</strong> page for <strong>".$ASSESSMENT_NAME. "</strong>. This will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue now.");
-
+					$COURSE_ID = (int)$_GET["id"];
+					if (isset($_GET["assignment_id"]) && $ASSIGNMENT_ID = (int)$_GET["assignment_id"]) {
+						$url = ENTRADA_URL."/admin/gradebook/assignments?section=grade&id=".$COURSE_ID."&assignment_id=".$ASSIGNMENT_ID;
+					} else {
+						$url = ENTRADA_URL."/admin/gradebook/assessments?section=grade&id=".$COURSE_ID."&assessment_id=".$ASSESSMENT_ID;
+					}
 				} else {
 					add_error("Invalid <strong>Assessment ID</strong> provided. You will now be redirected to the <strong>Gradebook Index</strong>. This will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue now.");
 				}

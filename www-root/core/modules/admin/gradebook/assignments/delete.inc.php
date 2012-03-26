@@ -51,7 +51,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				echo "<h1>" . implode(": ", $curriculum_path) . " Gradebook </h1>";
 			}
 			echo "<br/>";
-			$ASSESSMENT_IDS	= array();
+			$ASSIGNMENT_IDS	= array();
 			$INDEX_URL = ENTRADA_URL."/admin/gradebook?".replace_query(array("section" => "view", "step" => false));
 			// Error Checking
 			switch($STEP) {
@@ -64,14 +64,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 
 						application_log("notice", "Assessment delete page accessed without providing any assessment id's to delete.");
 					} else {
-						foreach($_POST["delete"] as $assessment_id) {
-							$assessment_id = (int) trim($assessment_id);
-							if($assessment_id) {
-								$ASSESSMENT_IDS[] = $assessment_id;
+						foreach($_POST["delete"] as $assignment_id) {
+							$assignment_id = (int) trim($assignment_id);
+							if($assignment_id) {
+								$ASSIGNMENT_IDS[] = $assignment_id;
 							}
 						}
 
-						if(!@count($ASSESSMENT_IDS)) {
+						if(!@count($ASSIGNMENT_IDS)) {
 							$ERROR++;
 							$ERRORSTR[] = "There were no valid assessment identifiers provided to delete. Please ensure that you access this section through the assessment index.";
 						}
@@ -86,16 +86,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 			// Display Page
 			switch($STEP) {
 				case 2 :
-					$query = "DELETE FROM `assessments` WHERE `assessment_id` IN (".implode(", ", $ASSESSMENT_IDS).")";
+					$query = "DELETE FROM `assignments` WHERE `assignment_id` IN (".implode(", ", $ASSIGNMENT_IDS).")";
 					if($db->Execute($query)) {
-						$db->AutoExecute ("assignments",array("assessment_id"=>0),"UPDATE","`assessment_id` IN (".implode(", ", $ASSESSMENT_IDS).")");
 						$ONLOAD[]	= "setTimeout('window.location=\\'".$INDEX_URL."\\'', 5000)";
+
 						if($total_removed = $db->Affected_Rows()) {
-							$query = "DELETE FROM `assessment_grades` WHERE `assessment_id` IN (".implode(", ", $ASSESSMENT_IDS).")";
-							if($db->Execute($query)) {							
-								application_log("success", "Successfully removed assessment ids: ".implode(", ", $ASSESSMENT_IDS));
+							$query = "DELETE FROM `assessment_grades` WHERE `assessment_id` IN (".implode(", ", $ASSIGNMENT_IDS).")";
+							if($db->Execute($query)) {
+								application_log("success", "Successfully removed assessment ids: ".implode(", ", $ASSIGNMENT_IDS));
 							} else {
-								application_log("error", "Successfully removed assessment ids: ".implode(", ", $ASSESSMENT_IDS), "but was unable to remove the grades pertaining to them.");
+								application_log("error", "Successfully removed assessment ids: ".implode(", ", $ASSIGNMENT_IDS), "but was unable to remove the grades pertaining to them.");
 							}
 							
 							$SUCCESS++;
@@ -110,7 +110,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 
 							echo display_error();
 
-							application_log("error", "Failed to remove any assessment ids: ".implode(", ", $ASSESSMENT_IDS).". Database said: ".$db->ErrorMsg());
+							application_log("error", "Failed to remove any assessment ids: ".implode(", ", $ASSIGNMENT_IDS).". Database said: ".$db->ErrorMsg());
 						}
 					} else {
 						$ERROR++;
@@ -118,21 +118,21 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 
 						echo display_error();
 
-						application_log("error", "Failed to execute remove query for assessment ids: ".implode(", ", $ASSESSMENT_IDS).". Database said: ".$db->ErrorMsg());
+						application_log("error", "Failed to execute remove query for assessment ids: ".implode(", ", $ASSIGNMENT_IDS).". Database said: ".$db->ErrorMsg());
 					}
 				break;
 				case 1 :
 				default :
 			
 					// Fetch all associated assessments
-					$query = "SELECT a.`assessment_id`, a.`cohort`, a.`name`, a.`type`, b.`group_name` AS `cohort_name`  
-								FROM `assessments` AS a
-								JOIN `groups` AS b
-								ON a.`cohort` = b.`group_id`
+					$query = "SELECT a.`assignment_id`, a.`assignment_title`, b.`name`, a.`assessment_id` 
+								FROM `assignments` AS a
+								LEFT JOIN `assessments` AS b
+								ON a.`assessment_id` = b.`assessment_id`
 								WHERE a.`course_id` = ".$db->qstr($COURSE_ID)."
-								AND a.`assessment_id` IN (".implode(", ", $ASSESSMENT_IDS).") ORDER BY a.`name` ASC";
-					$assessments = 	$db->GetAll($query);
-					if($assessments) {
+								AND a.`assignment_id` IN (".implode(", ", $ASSIGNMENT_IDS).") ORDER BY a.`assignment_title` ASC";
+					$assignments = 	$db->GetAll($query);
+					if($assignments) {
 						echo display_notice(array("Please review the following notices to ensure that you wish to permanently delete them. This action cannot be undone."));
 						echo "<form action=\"".ENTRADA_URL . "/admin/gradebook/assessments?".replace_query(array("section" => "delete", "step"=>2))."\" method=\"post\">";
 						
@@ -142,39 +142,34 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						<colgroup>
 							<col class="modified" />
 							<col class="title" />
-							<col class="general" />
-							<col class="general" />
-							<col class="general" />
+							<col class="title" />
 						</colgroup>
 						<thead>
 							<tr>
 								<td class="modified">&nbsp;</td>
-								<td class="title sortedASC">Name</td>
-								<td class="general">Graduating Year</td>
-								<td class="general">Assessment Type</td>
-								<td class="general">Grades Entered</td>
+								<td class="title sortedASC">Assignment Title</td>
+								<td class="title">Associated Assessment</td>
 							</tr>
 						</thead>
 						<tfoot>
 							<tr>
 								<td></td>
-								<td colspan="4" style="padding-top: 10px">
+								<td colspan="2" style="padding-top: 10px">
 									<input type="submit" class="button" value="Delete Selected" />
 								</td>
 							</tr>
 						</tfoot>
 						<tbody>
 							<?php
-							foreach($assessments as $key => $assessment) {
-								$url = ENTRADA_URL."/admin/gradebook/assessments?section=edit&amp;id=".$COURSE_ID."&amp;assessment_id=".$assessment["assessment_id"];
-						
-								echo "<tr id=\"assessment-".$assessment["assessment_id"]."\">";
-								echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"delete[]\" checked=\"checked\" value=\"".$assessment["assessment_id"]."\" /></td>\n";
-								echo "	<td class=\"title\"><a href=\"$url\">".$assessment["name"]."</a></td>";
-								echo "	<td class=\"general\"><a href=\"$url\">".$assessment["cohort_name"]."</a></td>";
-								echo "	<td class=\"general\"><a href=\"$url\">".$assessment["type"]."</a></td>";
-								echo "	<td class=\"general\">"."&nbsp;"."</td>";
+							foreach($assignments as $key => $assignment) {
+								$url = ENTRADA_URL."/admin/gradebook/assignments?section=edit&amp;id=".$COURSE_ID."&amp;assignment_id=".$assignment["assignment_id"];
+								$assessment_url = ENTRADA_URL."/admin/gradebook/assessments?section=edit&amp;id=".$COURSE_ID."&amp;assessment_id=".$assignment["assessment_id"];
+								echo "<tr id=\"assignment-".$assignment["assessment_id"]."\">";
+								echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"delete[]\" checked=\"checked\" value=\"".$assignment["assignment_id"]."\" /></td>\n";
+								echo "	<td class=\"title\"><a href=\"$url\">".$assignment["assignment_title"]."</a></td>";
+								echo "	<td class=\"general\">".(isset($assignment["name"])?"<a href=\"$assessment_url\">".$assignment["name"]."</a>":"No Assessment")."</td>";
 								echo "</tr>";
+								//((!isset($assignment["name"]) || $assignment["name"] == null)?$assignment["name"]:"No Assessment")
 							}
 							?>
 						</tbody>

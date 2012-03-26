@@ -31,7 +31,7 @@ if(!defined("PARENT_INCLUDED")) {
 } elseif((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	header("Location: ".ENTRADA_URL);
 	exit;
-} elseif (false){//!$ENTRADA_ACL->amIAllowed("gradebook", "read")) {
+} elseif (false) {//!$ENTRADA_ACL->amIAllowed("gradebook", "read")) { @todo: add ACL for assignment
 	$ERROR++;
 	$ERRORSTR[]	= "You do not have the permissions required to use this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
 
@@ -39,7 +39,7 @@ if(!defined("PARENT_INCLUDED")) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
-	define("IN_PUBLIC_GRADEBOOK",	true);
+	define("IN_PUBLIC_ASSIGNMENTS",	true);
 	
 	//$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery.min.js\"></script>\n";
 	$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery.modal.js\"></script>\n";
@@ -51,15 +51,14 @@ if(!defined("PARENT_INCLUDED")) {
 	
 	$ASSESSMENT_TYPES = array("Formative", "Summative", "Narrative");
 	
-	$BREADCRUMB[] = array("url" => ENTRADA_URL."/profile/gradebook", "title" => "Gradebooks");
+	$BREADCRUMB[] = array("url" => ENTRADA_URL."/profile/gradebook/assignments", "title" => "Assignments");
 
 	if (($router) && ($router->initRoute())) {
 		$PREFERENCES = preferences_load($MODULE);
-
 		if (isset($_GET["id"]) && ($tmp_input = clean_input($_GET["id"], array("nows", "int")))) {
-			$COURSE_ID = $tmp_input;
+			$RECORD_ID = $tmp_input;
 		} else {
-			$COURSE_ID = 0;
+			$RECORD_ID = 0;
 		}
 		
 		$module_file = $router->getRoute();

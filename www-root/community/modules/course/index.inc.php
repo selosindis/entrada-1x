@@ -38,7 +38,6 @@ if ($result) {
 	echo 	$result["page_content"];
 	echo "</div>";
 }
-
 $query	= "	SELECT *
 			FROM `community_courses`
 			WHERE `community_id` = ".$db->qstr($COMMUNITY_ID);
@@ -1037,6 +1036,49 @@ if ($community_courses) {
 				}
 				echo "</ul>\n";
 			}
+		break;
+		case (strpos($PAGE_URL,"course_assignments") !== false):
+			?>
+				<table class="tableList" cellspacing="0" summary="List of Assignments" id="assignment_list">			
+					<?php
+					$query =  "	SELECT a.*, b.`course_code` 
+								FROM `assignments` AS a
+								JOIN `courses` AS b
+								ON a.`course_id` = b.`course_id`
+								WHERE a.`course_id` IN (".implode(', ',$course_ids).")
+								AND a.`release_date` < ".$db->qstr(time())."
+								AND (a.`release_until` > ".$db->qstr(time())."
+									OR a.`release_until` = 0)";
+					$results = $db->GetAll($query);
+					if ($results) { ?>
+					<thead>
+						<tr>
+							<td width="20">&nbsp;</td>
+							<td colspan="3">Assignment Title</td>
+							<td colspan="2">Course Code</td>
+							<td colspan="2">Due Date</td>
+						</tr>
+					</thead>
+					<?php } ?>
+					<tbody>
+						<?php
+						if($results){
+							foreach ($results as $result) {
+								$url = ENTRADA_URL."/profile/gradebook/assignments?section=view&amp;id=".$result["assignment_id"];
+								echo "<tr id=\"assignment-".$result["assignment_id"]."\">";
+								echo "<td class=\"modified\" width=\"20\"><img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"19\" height=\"19\" alt=\"\" title=\"\" /></td>";
+								echo "<td colspan=\"3\"><a href=\"$url\">".$result["assignment_title"]."</a></td>";
+								echo "<td colspan=\"2\"><a href=\"$url\">".$result["course_code"]. "</a></td>"; 
+								echo "<td colspan=\"2\"><a href=\"$url\">".($result["due_date"] == 0?"No Due Date":date(DEFAULT_DATE_FORMAT,$result["due_date"])). "</a></td>"; 
+								echo "</tr>";
+							}
+						} else {
+							?> <tr><td><?php add_notice('No Assignments have been created for this course.'); echo display_notice(); ?></td></tr><?php
+						}
+					?>
+					</tbody>
+				</table>			
+				<?php
 		break;
 		default :
 		break;

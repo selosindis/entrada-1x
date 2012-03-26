@@ -15,23 +15,19 @@
  * You should have received a copy of the GNU General Public License
  * along with Entrada.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Primary controller file for the public Gradebook module.
- * /gradebook
- *
  * @author Organisation: Queen's University
  * @author Unit: School of Medicine
- * @author Developer: James Ellis <james.ellis@queensu.ca>
+ * @author Developer: Harry Brundage <hbrundage@qmed.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
  */
-require_once("Entrada/gradebook/handlers.inc.php");
 
 if(!defined("PARENT_INCLUDED")) {
 	exit;
 } elseif((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	header("Location: ".ENTRADA_URL);
 	exit;
-} elseif (false){//!$ENTRADA_ACL->amIAllowed("gradebook", "read")) {
+} elseif (!$ENTRADA_ACL->amIAllowed($MODULES[strtolower($MODULE)]["resource"], $MODULES[strtolower($MODULE)]["permission"], false)) {
 	$ERROR++;
 	$ERRORSTR[]	= "You do not have the permissions required to use this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
 
@@ -39,19 +35,9 @@ if(!defined("PARENT_INCLUDED")) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
-	define("IN_PUBLIC_GRADEBOOK",	true);
-	
-	//$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery.min.js\"></script>\n";
-	$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery.modal.js\"></script>\n";
-	$JQUERY[] = "<link href=\"".ENTRADA_URL."/css/jquery/flexigrid.css\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />";
-	$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/flexigrid.js\"></script>\n";
-	$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery.editable.js\"></script>\n";
-	//$JQUERY[] = "<script type=\"text/javascript\">jQuery.noConflict(); var ENTRADA_URL = '".ENTRADA_URL."';</script>";
-	$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/gradebook.js\"></script>\n";
-	
-	$ASSESSMENT_TYPES = array("Formative", "Summative", "Narrative");
-	
-	$BREADCRUMB[] = array("url" => ENTRADA_URL."/profile/gradebook", "title" => "Gradebooks");
+	define("IN_ASSESSMENTS", true);
+
+	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/gradebook?".replace_query(array("section" => "view", "id" => $COURSE_ID, "step" => false)), "title" => "Assignments");
 
 	if (($router) && ($router->initRoute())) {
 		$PREFERENCES = preferences_load($MODULE);
@@ -60,6 +46,12 @@ if(!defined("PARENT_INCLUDED")) {
 			$COURSE_ID = $tmp_input;
 		} else {
 			$COURSE_ID = 0;
+		}
+		
+		if ((isset($_GET["assignment_id"])) && ($tmp_input = clean_input($_GET["assignment_id"], array("nows", "int")))) {
+			$ASSIGNMENT_ID = $tmp_input;
+		} else {
+			$ASSIGNNMENT_ID = 0;
 		}
 		
 		$module_file = $router->getRoute();
@@ -71,11 +63,5 @@ if(!defined("PARENT_INCLUDED")) {
 		 * Check if preferences need to be updated on the server at this point.
 		 */
 		preferences_update($MODULE, $PREFERENCES);
-	} else {
-		$url = ENTRADA_URL;
-		application_log("error", "The Entrada_Router failed to load a request. The user was redirected to [".$url."].");
-
-		header("Location: ".$url);
-		exit;
 	}
 }

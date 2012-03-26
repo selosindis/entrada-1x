@@ -911,6 +911,7 @@ resize:none;
 textarea.expandable {
 width:100%;
 padding:4px;
+min-height:50px;
 }
 
 table.sidebar {
@@ -3632,3 +3633,77 @@ ul.community-themes li label {
 	outline:none;
 }
 
+table.discussions thead tr td,table.permissions thead tr td,table.page-options thead tr td {
+background-image:url(../images/list-header.gif);
+height:20px;
+vertical-align:middle;
+border:1px solid #999;
+color:#333;
+text-align:center;
+background-color:#EBEBEB;
+font-size:11px;
+font-weight:700;
+padding:0 4px 0 2px;
+}
+
+table.discussions.posts thead tr td {
+text-align:right;
+vertical-align:middle;
+border:1px solid #EEE;
+color:#EEE;
+background-color:#A3A3A3;
+font-size:14px;
+font-weight:700;
+background-image:none;
+padding:7px 15px 7px 7px;
+}
+
+table.discussions thead tr td a,table.discussions thead tr td a:hover,table.permissions thead tr td a,table.page-options thead tr td a,table.permissions thead tr td a:hover,table.page-options thead tr td a:hover {
+font-size:11px;
+display:block;
+width:auto!important;
+color:#333;
+text-decoration:none;
+}
+
+table.galleries tbody tr td,table.discussions tbody tr td {
+height:16px!important;
+text-align:left;
+font-size:11px;
+overflow:hidden;
+text-overflow:ellipsis;
+border-bottom:1px solid #EBEBEB;
+padding:4px 4px 8px 2px;
+}
+
+table.discussions.forums tbody tr td {
+padding:4px 4px 2px 2px;
+}
+
+table.galleries tbody tr td {
+height:16px!important;
+text-align:left;
+font-size:11px;
+background-color:#FEFEFE;
+border:1px solid #EBEBEB;
+padding:8px;
+}
+
+table.discussions.posts tbody tr td {
+height:16px!important;
+text-align:left;
+font-size:11px;
+background-color:#FEFEFE;
+border:1px solid #EBEBEB;
+border-bottom:3px solid #EBEBEB;
+padding:8px;
+}
+
+table.discussions.posts tbody tr td.content {
+font-size:12px;
+padding:13px;
+}
+
+table.galleries tbody tr td.small a,table.galleries tbody tr td.small a:hover,table.galleries tbody tr td.small,table.discussions tbody tr td.small a,table.discussions tbody tr td.small a:hover,table.discussions tbody tr td.small {
+	font-size:10px;
+}

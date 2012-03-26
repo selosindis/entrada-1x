@@ -17,8 +17,8 @@
  *
  * @author Organisation: Queen's University
  * @author Unit: School of Medicine
- * @author Developer: Harry Brundage <hbrundage@qmed.ca>
- * @copyright Copyright 2010 Queen's University. All Rights Reserved.
+ * @author Developer: Brandon Thorn <brandon.thorn@queensu.ca>
+ * @copyright Copyright 2012 Queen's University. All Rights Reserved.
  *
  */
 

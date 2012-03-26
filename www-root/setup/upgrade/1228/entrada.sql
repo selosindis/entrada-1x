@@ -1,4 +1,4 @@
-CREATE TABLE `assignments` (
+CREATE TABLE IF NOT EXISTS `assignments` (
   `assignment_id` int(11) NOT NULL AUTO_INCREMENT,
   `course_id` int(11) NOT NULL,
   `assessment_id` int(11) NOT NULL,
@@ -15,7 +15,7 @@ CREATE TABLE `assignments` (
   PRIMARY KEY (`assignment_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-CREATE TABLE `assignment_files` (
+CREATE TABLE IF NOT EXISTS `assignment_files` (
   `afile_id` int(11) NOT NULL AUTO_INCREMENT,
   `assignment_id` int(11) NOT NULL,
   `parent_id` int(11) DEFAULT '0',
@@ -29,7 +29,7 @@ CREATE TABLE `assignment_files` (
   PRIMARY KEY (`afile_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-CREATE TABLE `assignment_file_versions` (
+CREATE TABLE IF NOT EXISTS `assignment_file_versions` (
   `afversion_id` int(11) NOT NULL AUTO_INCREMENT,
   `afile_id` int(11) NOT NULL,
   `assignment_id` int(11) NOT NULL,
@@ -44,7 +44,7 @@ CREATE TABLE `assignment_file_versions` (
   PRIMARY KEY (`afversion_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-CREATE TABLE `assignment_contacts` (
+CREATE TABLE IF NOT EXISTS `assignment_contacts` (
   `acontact_id` int(11) NOT NULL AUTO_INCREMENT,
   `assignment_id` int(11) NOT NULL,
   `proxy_id` int(11) NOT NULL,
@@ -54,7 +54,7 @@ CREATE TABLE `assignment_contacts` (
   PRIMARY KEY (`acontact_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-CREATE TABLE `assignment_comments` (
+CREATE TABLE IF NOT EXISTS `assignment_comments` (
   `acomment_id` int(12) NOT NULL AUTO_INCREMENT,
   `afile_id` int(12) NOT NULL DEFAULT '0',
   `assignment_id` int(12) NOT NULL DEFAULT '0',
@@ -73,4 +73,4 @@ CREATE TABLE `assignment_comments` (
   FULLTEXT KEY `comment_title` (`comment_title`,`comment_description`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-UPDATE `settings` SET `value` = '1226' WHERE `shortname` = 'version_db';
+UPDATE `settings` SET `value` = '1228' WHERE `shortname` = 'version_db';

@@ -1486,11 +1486,12 @@ function fetch_eventtype_title($eventtype_id = 0) {
 	return false;
 }
 
-function fetch_clinical_presentations($parent_id = 0, $presentations = array(), $course_id = 0, $presentation_ids = false) {
+function fetch_clinical_presentations($parent_id = 0, $presentations = array(), $course_id = 0, $presentation_ids = false, $org_id = 0) {
 	global $db, $ENTRADA_USER, $translate;
 	
 	$parent_id = (int) $parent_id;
 	$course_id = (int) $course_id;
+	$org_id = ($org_id == 0 ? $ENTRADA_USER->getActiveOrganisation() : (int) $org_id );
 	
 	if ($course_id) {
 		$presentation_ids = array();
@@ -1506,7 +1507,7 @@ function fetch_clinical_presentations($parent_id = 0, $presentations = array(), 
 			}
 		}
 	}
-
+	
 	if ($parent_id) {
 		$query = "	SELECT a.*
 					FROM `global_lu_objectives` AS a
@@ -1514,7 +1515,7 @@ function fetch_clinical_presentations($parent_id = 0, $presentations = array(), 
 					ON a.`objective_id` = b.`objective_id`
 					WHERE `objective_active` = '1'
 					AND `objective_parent` = ".$db->qstr($parent_id)."
-					AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation());
+					AND b.`organisation_id` = ".$db->qstr($org_id);
 	} else {
 		$objective_name = $translate->_("events_filter_controls");
 		$objective_name = $objective_name["cp"]["global_lu_objectives_name"];
@@ -1524,7 +1525,7 @@ function fetch_clinical_presentations($parent_id = 0, $presentations = array(), 
 					JOIN `objective_organisation` AS b
 					ON a.`objective_id` = b.`objective_id`
 					WHERE a.`objective_active` = '1'
-					AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+					AND b.`organisation_id` = ".$db->qstr($org_id)."
 					AND a.`objective_name` = ".$db->qstr($objective_name);
 	}
 	
@@ -1534,7 +1535,7 @@ function fetch_clinical_presentations($parent_id = 0, $presentations = array(), 
 			if ($parent_id) {
 				$presentations[] = $result;
 			}
-			$presentations = fetch_clinical_presentations($result["objective_id"], $presentations, 0, (isset($presentation_ids) && $presentation_ids ? $presentation_ids : array()));
+			$presentations = fetch_clinical_presentations($result["objective_id"], $presentations, 0, (isset($presentation_ids) && $presentation_ids ? $presentation_ids : array()), $org_id);
 		}
 	}
 	
@@ -9066,11 +9067,12 @@ function courses_fetch_objectives($org_id, $course_ids, $top_level_id = -1, $par
  * @param type $hierarchical
  * @return string 
  */
-function course_objectives_in_list($objectives, $parent_id, $top_level_id, $edit_importance = false, $parent_active = false, $importance = 1, $selected_only = false, $top = true, $display_importance = "primary", $hierarchical = false, $full_objective_list = false) {
+function course_objectives_in_list($objectives, $parent_id, $top_level_id, $edit_importance = false, $parent_active = false, $importance = 1, $selected_only = false, $top = true, $display_importance = "primary", $hierarchical = false, $full_objective_list = false, $org_id = 0) {
 	global $ENTRADA_USER;
 	
 	$output = "";
 	$active = array("primary" => false, "secondary" => false, "tertiary" => false);
+	$org_id = ($org_id == 0 ? $ENTRADA_USER->getActiveOrganisation() : (int) $org_id );
 	
 	if ($top) {
 		if ($selected_only) {
@@ -9115,15 +9117,13 @@ function course_objectives_in_list($objectives, $parent_id, $top_level_id, $edit
 			return;
 		}
 	}
-	
 	if (!$full_objective_list) {
-		$full_objective_list = events_fetch_objectives_structure($parent_id, $objectives["used_ids"]);
+		$full_objective_list = events_fetch_objectives_structure($parent_id, $objectives["used_ids"], $org_id);
 	}
 	$flat_objective_list = events_flatten_objectives($full_objective_list);
 	
 	if ((is_array($objectives)) && (count($objectives))) {
 		if (((isset($objectives[$parent_id]) && count($objectives[$parent_id]["parent_ids"])) || $hierarchical) && (!isset($objectives[$parent_id]["parent_ids"]) || count($objectives[$parent_id]["parent_ids"]) < 3)) {
-//			$output .= "\n<ul class=\"objective-list\" id=\"objective_".$parent_id."_list\"".((($parent_id == 1) && (count($objectives[$parent_id]["parent_ids"]) > 2)) ? " style=\"padding-left: 0; margin-top: 0\"" : " style=\"padding-left: 15px;\"")." >";
 			$output .= "\n<ul class=\"objective-list\" id=\"objective_".$parent_id."_list\"".(((count($objectives[$parent_id]["parent_ids"]) < 2 && !$hierarchical) || ($hierarchical && $parent_id == $top_level_id)) ? " style=\"padding-left: 0; margin-top: 0\"" : "").">\n";
 		}
 		$iterated = false;
@@ -11319,8 +11319,11 @@ function events_flatten_objectives ($objectives) {
 	return $flat_objectives;
 }
 
-function events_fetch_objectives_structure($parent_id, $used_ids) {
+function events_fetch_objectives_structure($parent_id, $used_ids, $org_id = 0) {
+
 	global $db, $ENTRADA_USER;
+	
+	$org_id = ($org_id == 0 ? $ENTRADA_USER->getActiveOrganisation() : (int) $org_id );
 	
 	$full_objective_list = array();
 	
@@ -11328,7 +11331,7 @@ function events_fetch_objectives_structure($parent_id, $used_ids) {
 				JOIN `objective_organisation` AS b
 				ON a.`objective_id` = b.`objective_id`
 				WHERE a.`objective_parent` = ".$db->qstr($parent_id)." 
-				AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+				AND b.`organisation_id` = ".$db->qstr($org_id)."
 				ORDER BY a.`objective_order` ASC";
 	$objective_children = $db->GetAll($query);
 	
@@ -11339,7 +11342,7 @@ function events_fetch_objectives_structure($parent_id, $used_ids) {
 																		"children_active" => false,
 																		"children" => array()
 																	);
-			$full_objective_list[$objective["objective_id"]]["children"] = events_fetch_objectives_structure($objective["objective_id"], $used_ids);
+			$full_objective_list[$objective["objective_id"]]["children"] = events_fetch_objectives_structure($objective["objective_id"], $used_ids, $org_id);
 			if (count($full_objective_list[$objective["objective_id"]]["children"])) {
 				$full_objective_list[$objective["objective_id"]]["children_active"] = event_objectives_active($full_objective_list[$objective["objective_id"]]["children"]);
 			}

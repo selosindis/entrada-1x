@@ -345,22 +345,53 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 					/**
 					 * Required field "organisation_id" / Organisation Name.
 					 */
-					if ((isset($_POST["organisation_id"])) && ($organisation_id = clean_input($_POST["organisation_id"], array("int")))) {
-						if ($ENTRADA_ACL->amIAllowed(new CourseResource(null, $organisation_id), 'create')) {
-							$PROCESSED["organisation_id"] = $organisation_id;
+					if ((isset($_POST["organisation_ids"])) && ($organisation_ids = $_POST["organisation_ids"]) && (is_array($organisation_ids))) {
+						if ((isset($_POST["default_organisation_id"])) && ($default_organisation_id = clean_input($_POST["default_organisation_id"], array("int")))) {
+							if ($ENTRADA_ACL->amIAllowed('resourceorganisation' . $default_organisation_id, 'create')) {
+								if (in_array($default_organisation_id, $organisation_ids)) {
+									$PROCESSED["organisation_id"] = $default_organisation_id;
+								} else {
+									$ERROR++;
+									$ERRORSTR[] = "The default <strong>Organisation</strong> must be one of the checked organisations.";
+								}
+							} else {
+								$ERROR++;
+								$ERRORSTR[] = "You do not have permission to add a user within the selected organisation. This error has been logged and will be investigated.";
+								application_log("Proxy id [" . $_SESSION['details']['proxy_id'] . "] tried to create a user within an organisation [" . $organisation_id . "] they didn't have permissions on. ");
+							}
 						} else {
 							$ERROR++;
-							$ERRORSTR[] = "You do not have permission to add a course for this organisation. This error has been logged and will be investigated.";
-							application_log("Proxy id [".$_SESSION['details']['proxy_id']."] tried to eicreate a course within an organisation [".$organisation_id."] they didn't have permissions on. ");
+							$ERRORSTR[] = "A default <strong>Organisation</strong> must be set.";
 						}
 					} else {
 						$ERROR++;
-						$ERRORSTR[] = "The <strong>Organisation Name</strong> field is required.";
+						$ERRORSTR[] = "At least one <strong>Organisation</strong> is required.";
 					}
 
 					if (!$ERROR && $ENTRADA_ACL->amIAllowed(new UserResource(null, $PROCESSED["organisation_id"]), "update")) {
 						$PROCESSED["email_updated"] = time();
 						if ($db->AutoExecute(AUTH_DATABASE.".user_data", $PROCESSED, "UPDATE", "id = ".$db->qstr($PROXY_ID))) {
+							//Delete the existing user_organisation entries in order to add what is current
+							$query = "DELETE FROM `".AUTH_DATABASE."`.`user_organisations` WHERE `proxy_id` = ".$db->qstr($PROXY_ID);
+							if ($db->Execute($query)) {
+								//Add the user's organisations to the user_organisation table.
+								foreach ($organisation_ids as $org_id) {
+										$row = array();
+										$row["organisation_id"] = $org_id;
+										$row["proxy_id"] = $PROXY_ID;
+										if (!$db->AutoExecute(AUTH_DATABASE.".user_organisations", $row, "INSERT")) {
+											$ERROR++;
+											$ERRORSTR[] = "Unable to add all of this user's organisations to the database. The MEdTech Unit has been informed of this error, please try again later.";
+
+											application_log("error", "Unable to add all of the user's (" . $PROCESSED_ACCESS["user_id"] . ") Database said: ".$db->ErrorMsg());
+										}
+									}
+							} else {
+								$ERROR++;
+								$ERRORSTR[] = "Unable to delete this user's organisations. The MEdTech Unit has been informed of this error, please try again later.";
+
+								application_log("error", "Unable to delete this user's organisations (" . $PROCESSED_ACCESS["user_id"] . ") Database said: ".$db->ErrorMsg());
+							}
 							/**
 							 * Send notice if any administrator account is updated.
 							 */
@@ -397,14 +428,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 							 * Handle the inserting of user data into the user_departments table
 							 * if departmental information exists in the form.
 							 */
-							if ((isset($_POST["in_departments"]))) {
-								$in_departments = explode(',',$_POST['in_departments']);
-								foreach ($in_departments as $department_id) {
-									if ($department_id = (int) $department_id) {
-										$query	= "SELECT * FROM `".AUTH_DATABASE."`.`user_departments` WHERE `user_id` = ".$db->qstr($PROCESSED_ACCESS["user_id"])." AND `dep_id` = ".$db->qstr($department_id);
-										$result	= $db->GetRow($query);
-										if (!$result) {
-											$PROCESSED_DEPARTMENTS[] = $department_id;
+							$query = "SELECT `organisation_id`, `organisation_title` FROM `" . AUTH_DATABASE . "`.`organisations`";
+							$results = $db->GetAll($query);
+							if ($results) {
+								foreach ($results as $result) {
+									if ((isset($_POST["in_departments" . $result["organisation_id"]]))) {
+										$in_departments = explode(',', $_POST['in_departments'. $result["organisation_id"]]);
+										foreach ($in_departments as $department_id) {
+											if ($department_id = (int) $department_id) {
+												$query = "SELECT * FROM `" . AUTH_DATABASE . "`.`user_departments` WHERE `user_id` = " . $db->qstr($PROCESSED_ACCESS["user_id"]) . " AND `dep_id` = " . $db->qstr($department_id);
+												$result = $db->GetRow($query);
+												if (!$result) {
+													$PROCESSED_DEPARTMENTS[] = $department_id;
+												}
+											}
 										}
 									}
 								}
@@ -493,6 +530,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 					}
 					
 					$gender = @file_get_contents(webservice_url("gender", $user_record["number"]));
+
+					//Initialize Organisation ID array for initial page display
+					$organisation_ids = array();
+					$query = "SELECT * FROM `".AUTH_DATABASE."`.`user_organisations` WHERE `proxy_id` = ".$db->qstr($PROXY_ID);
+					$results = $db->GetAll($query);
+					foreach ($results as $result) {
+						$organisation_ids[] = $result["organisation_id"];
+					}
+					//ensure the user's default org is added
+					if (!in_array($user_record["organisation_id"], $organisation_ids)) {
+						$organisation_ids[] = $user_record["organisation_id"];
+					}
 				break;
 			}
 			// Display Page.
@@ -561,6 +610,78 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 					}
 					$ONLOAD[] = "provStateFunction('".$PROCESSED["country_id"]."', '".$PROCESSED["province_id"]."')";
 					?>
+<script type="text/javascript">
+jQuery(document).ready(function() {
+				jQuery('input[name="default_organisation_id"]').click(function(e) {
+					var radio_val = jQuery(this).val();
+					if (jQuery(this).attr('checked')) {
+						jQuery('label[for="rdb' + jQuery(this).val() + '"]').addClass("content-small");
+						jQuery('label[for="rdb' + jQuery(this).val() + '"]').html("&nbsp;default");
+					}
+					jQuery('input[name="default_organisation_id"]').each(function(index, Element) {
+						if (jQuery(this).val() != radio_val) {
+							jQuery('label[for="rdb' + jQuery(this).val() + '"]').html("");
+						}
+					})
+				});
+				jQuery('a[class="dept_link"]').click(function(e) {
+					e.preventDefault();
+					var org_id = jQuery(this).attr('id').substring(5,6);
+					if (jQuery('#departments_' + org_id + '_options')) {
+							jQuery('#departments_' + org_id + '_options').show();
+							jQuery('#dept_' + org_id + '_link').hide();
+					}
+				});
+				jQuery('input[name="organisation_ids[]"]').click(function(e) {
+					//ensure that the default is not set to this unchecked org.
+					if (!jQuery(this).attr('checked')) {
+						var checkbox_val = jQuery(this).val();
+						jQuery('input[name=default_organisation_id][value=' + checkbox_val + ']').attr("checked", false);
+						jQuery('input[name=default_organisation_id][value=' + checkbox_val + ']').attr("disabled", true);
+						//make the next checked org the default.
+						var new_default_org = jQuery('input[name="organisation_ids[]"]:checked:first').val();
+						jQuery('input[name=default_organisation_id][value=' + new_default_org + ']').attr("checked", true);
+						jQuery('label[for="rdb' + checkbox_val + '"]').html("");
+						jQuery('label[for="rdb' + new_default_org + '"]').addClass("content-small");
+						jQuery('label[for="rdb' + new_default_org + '"]').html("&nbsp;default");
+						jQuery('#dept_' + checkbox_val + '_link').hide();
+						jQuery('#in_departments' + checkbox_val).val("");
+						jQuery('#in_departments_list' + checkbox_val + ' .associated_list').html("");
+						jQuery('.select_multiple_table input:checkbox').removeAttr('checked');
+						jQuery('.select_multiple_table tr').removeClass('selected');
+					} else if (jQuery(this).attr('checked')) {
+						var checkbox_val = jQuery(this).val();
+						//var radio_val = jQuery('input[name=default_organisation_id]:checked').val();
+						jQuery('input[name=default_organisation_id][value=' + checkbox_val + ']').attr("disabled", false);
+						if (!jQuery('input[name="default_organisation_id"]').is(':checked')) {
+							jQuery('input[name=default_organisation_id][value=' + checkbox_val + ']').attr("checked", true);
+							jQuery('label[for="rdb' + checkbox_val + '"]').addClass("content-small");
+							jQuery('label[for="rdb' + checkbox_val + '"]').html("&nbsp;default");
+						}
+						if(!jQuery('#departments_' + checkbox_val + '_options').is(":visible")) {
+							jQuery('#dept_' + checkbox_val + '_link').show();
+						} else {
+							jQuery('#dept_' + checkbox_val + '_link').hide();
+						}
+					}
+				});
+				jQuery('input[name="organisation_ids[]"]').each(function(index, Element){
+					var org_id = jQuery(this).val();
+					if (!jQuery(this).attr('checked')) {
+						jQuery('input[name=default_organisation_id][value=' + org_id + ']').attr("disabled", true);
+						if (jQuery('#departments_' + org_id + '_options').length) {
+							jQuery('#departments_' + org_id + '_options').hide();
+							jQuery('#dept_' + org_id + '_link').hide();
+						}
+					} else {
+						if (jQuery('#departments_' + org_id + '_options').length) {
+							jQuery('#departments_' + org_id + '_options').hide();
+							jQuery('#dept_' + org_id + '_link').show();
+						}
+					}
+				})
+			});
+</script>
 					<h1 style="margin-top: 0px">Edit Profile Details</h1>
 					<form name="user-edit" id="user-edit" action="<?php echo ENTRADA_URL; ?>/admin/users/manage?section=edit&id=<?php echo $PROXY_ID; ?>&amp;step=2" method="post">
 						<table style="width: 100%" cellspacing="1" cellpadding="1" border="0" summary="Edit MEdTech Profile">
@@ -840,63 +961,114 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 								</tr>
 								<tr>
 									<td colspan="3">
-										<h2>Departmental Options</h2>
+										<h2>Organisational and Departmental Options</h2>
 									</td>
 								</tr>
+								<?php								
+								$query		= "SELECT `organisation_id`, `organisation_title` FROM `".AUTH_DATABASE."`.`organisations`";
+								$results	= $db->GetAll($query);
+								if ($results && $ENTRADA_ACL->amIAllowed(new CourseResource(null, $result['organisation_id']), 'create')) {
+									foreach($results as $result) {
+										if ($ENTRADA_ACL->amIAllowed(new CourseResource(null, $result['organisation_id']), 'create')) { ?>
 								<tr>
 									<td>&nbsp;</td>
-									<td><label for="organisation_id" class="form-required">Organisation</label></td>
-									<td><select id="organisation_id" name="organisation_id" style="width: 250px" onchange="organisationChange();">
-										<?php
-										$query		= "SELECT `organisation_id`, `organisation_title` FROM `".AUTH_DATABASE."`.`organisations`";
-										$results	= $db->GetAll($query);
-										if ($results) {
-											foreach ($results as $result) {
-												if ($ENTRADA_ACL->amIAllowed(new CourseResource(null, $result['organisation_id']), 'create')) {
-													$organisation_categories[$result["organisation_id"]] = array($result["organisation_title"]);
-													echo "<option value=\"".(int) $result["organisation_id"]."\"".(((isset($PROCESSED["organisation_id"])) && ($PROCESSED["organisation_id"] == $result["organisation_id"])) ? " selected=\"selected\"" : "").">".html_encode($result["organisation_title"])."</option>\n";
-												}
-											}
+									<td colspan="2"><table class="org_table"><tr><td style="width: 450px">
+								<?php
+										/*
+										 * 1st check is for the initial page display
+										 * 2nd check is for a page redisplay
+										 */
+										if (!isset ($PROCESSED["organisation_id"])) {
+											$organisation_categories[$result["organisation_id"]] = array($result["organisation_title"]);
+											$checked = ((isset($PROCESSED["organisation_id"]) && ($result["organisation_id"] == $PROCESSED["organisation_id"])) ? " checked=\"checked\"" : "");											
+											echo "<input type=\"checkbox\" id=\"cbx" . (int) $result["organisation_id"] . "\" name=\"organisation_ids[]\" value=\"".(int) $result["organisation_id"]."\" "
+											     . $checked	. "/>&nbsp;<label style=\"vertical-align: middle;\" for=\"cbx" . (int) $result["organisation_id"] ."\">" . html_encode($result["organisation_title"]) . "</label>";
+											echo "</td>";
+											echo "<td><input type=\"radio\" id=\"rdb" . (int) $result["organisation_id"] . "\" name=\"default_organisation_id\" value=\"".(int) $result["organisation_id"]."\"" .
+													(($ENTRADA_USER->getActiveOrganisation() == $result["organisation_id"]) ? " checked=\"checked\" />"
+														. "<label class=\"content-small\" for=\"rdb" . (int) $result["organisation_id"] ."\">&nbsp;default</label>" : "/><label for=\"rdb" . (int) $result["organisation_id"] ."\"></label>");
+										} else {
+											$organisation_categories[$result["organisation_id"]] = array($result["organisation_title"]);
+											$checked = ((in_array($result["organisation_id"], $organisation_ids)) ? " checked=\"checked\"" : "");
+											echo "<input type=\"checkbox\" id=\"cbx" . (int) $result["organisation_id"] . "\" name=\"organisation_ids[]\" value=\"".(int) $result["organisation_id"]."\" " . $checked . "/>"
+													. "&nbsp;<label style=\"vertical-align: middle;\" for=\"cbx" . (int) $result["organisation_id"] ."\">" . html_encode($result["organisation_title"]) . "</label>";
+											echo "</td>";
+											echo "<td><input type=\"radio\" id=\"rdb" . (int) $result["organisation_id"] . "\" name=\"default_organisation_id\" value=\"".(int) $result["organisation_id"]."\"" .
+													(($PROCESSED["organisation_id"] == $result["organisation_id"]) ? " checked=\"checked\" />"
+												    . "<label class=\"content-small\" for=\"rdb" . (int) $result["organisation_id"] ."\">&nbsp;default</label>" : "/><label for=\"rdb" . (int) $result["organisation_id"] ."\"></label>");
 										}
-										?>
-										</select>
-									</td>
-								</tr>
-								<tr>
-									<td>&nbsp;</td>
-									<td>Departments</td>
-									<td>
-										<div style="position: relative">
-											<?php
-											$ONLOAD[] = "organisationChange()";
-											if (isset($DEPARTMENT_LIST) && is_array($DEPARTMENT_LIST) && !empty($DEPARTMENT_LIST)) {
-												$departments = array();
+										echo "</td></tr>";
 
-												foreach ($DEPARTMENT_LIST as $organisation_id => $dlist) {
-													foreach ($dlist as $d) {
-														if (in_array($d["department_id"], $PROCESSED_DEPARTMENTS)) {
-															$checked = "checked=\"checked\"";
-														} else {
-															$checked = "";
-														}
+										if (isset($DEPARTMENT_LIST[$result["organisation_id"]]) && is_array($DEPARTMENT_LIST[$result["organisation_id"]]) && !empty($DEPARTMENT_LIST[$result["organisation_id"]])) {
+											echo "<tr><td id=\"dept_" . $result["organisation_id"] . "_cell\">";
+											?>
+											<a id="dept_<?php echo $result["organisation_id"] . "_link"; ?>" class="dept_link" href="#">Pick Departments</a>
+											<input class="multi-picklist" id="<?php echo "in_departments" . $result["organisation_id"] ?>" name="<?php echo "in_departments" . $result["organisation_id"] ?>" style="display: none;">
+											<div id=<?php echo "in_departments_list" . $result["organisation_id"]; ?>></div>
+										<?php
+											$departments = array();
 
-														if (isset($organisation_categories[$organisation_id])) {
-															$departments[$organisation_id][] = array('text' => $d['department_title'], 'value' => $d['department_id'], 'checked' => $checked);
-														}
+											foreach($DEPARTMENT_LIST as $organisation_id => $dlist) {
+												foreach($dlist as $d) {
+
+													if (in_array($d['department_id'], $PROCESSED_DEPARTMENTS)) {
+														$checked = 'checked="checked"';
+													} else {
+														$checked = '';
+													}
+
+													if (isset($organisation_categories[$organisation_id])) {
+														$departments[$organisation_id][] = array('text' => $d['department_title'], 'value' => $d['department_id'], 'checked' => $checked);
 													}
 												}
-
-												foreach ($departments as $organisation_id => $dlist) {
-													echo lp_multiple_select_popup("departments_".$organisation_id, $dlist, array("title" => "Select Departments:", "class" => "department_multi", "submit_text" => "Done", "cancel" => false, "submit" => true));
+											}
+											foreach($departments as $organisation_id => $dlist) {
+												if ($organisation_id == $result["organisation_id"]) {
+													echo '<div id="departments_'.$organisation_id.'_options_container">';
+													echo lp_multiple_select_popup('departments_'.$organisation_id, $dlist, array('title'=>'Departments List:', 'class'=>  array ('department_multi', 'manage-user-depts'), 'submit_text'=>'Done', 'cancel'=>false, 'submit'=>true));
+													echo '</div>';
 												}
 											}
+										    echo "</td></tr>";
+										} else {
+											//case where there are no departments
+											echo "<tr><td><br/></td></tr>";
+										}
 											?>
-										</div>
-										<input class="multi-picklist" id="in_departments" name="in_departments" style="display: none;">
-										<div id="in_departments_list"></div>
-										<input type="button" onclick="$('departments_'+$F('organisation_id')+'_options').show();" value="Select Multiple" >
-
-										<script type="text/javascript">
+								</table></td>
+						</tr>
+							<?php		}	//end if
+									} //end for
+							?>
+						<tr>
+							<td colspan="3">&nbsp;</td>
+						</tr>
+						<tr>
+							<td colspan="3">
+								<h2>Notification Options</h2>
+							</td>
+						</tr>
+						<tr>
+							<td><input type="checkbox" id="send_notification" name="send_notification" value="1"<?php echo (((empty($_POST)) || ((isset($_POST["send_notification"])) && ((int) $_POST["send_notification"]))) ? " checked=\"checked\"" : ""); ?> style="vertical-align: middle" onclick="toggle_visibility_checkbox(this, 'send_notification_msg')" /></td>
+							<td colspan="2"><label for="send_notification" class="form-nrequired">Send this new user a password reset e-mail after adding them.</label></td>
+						</tr>
+						<tr>
+							<td>&nbsp;</td>
+							<td colspan="2">
+								<div id="send_notification_msg" style="display: block">
+									<label for="notification_message" class="form-required">Notification Message</label><br />
+									<textarea id="notification_message" name="notification_message" rows="10" cols="65" style="width: 100%; height: 200px"><?php echo ((isset($_POST["notification_message"])) ? html_encode($_POST["notification_message"]) : $DEFAULT_NEW_USER_NOTIFICATION); ?></textarea>
+									<span class="content-small"><strong>Available Variables:</strong> %firstname%, %lastname%, %username%, %password_reset_url%, %application_url%, %application_name%</span>
+								</div>
+							</td>
+						</tr>
+						<tr>
+							<td colspan="3">&nbsp;</td>
+						</tr>
+					</tbody>
+				</table>
+			</form>
+					<script type="text/javascript">
 										function provStateFunction(country_id, province_id) {
 											var url_country_id = 0
 											var url_province_id = 0;
@@ -935,38 +1107,49 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 												}
 											});
 										}
-										
+
 										var multiselect = new Array();
-										function organisationChange() {
-											$$('.department_multi').invoke('hide');
-											$('in_departments').value = "";
-											if (multiselect[$F('organisation_id')]) {
-												multiselect[$F('organisation_id')].scanCheckBoxes();
-											} else {
-												$('in_departments_list').immediateDescendants().invoke('remove');
-											}
+
+								    jQuery('input[name="organisation_ids[]"]').click(function() {
+										var org_id = jQuery(this).val();
+										if(jQuery(this).attr('checked')) {
+											jQuery('#departments_' + org_id + '_options').show();
+										} else {
+											jQuery('#departments_' + org_id + '_options').hide();
 										}
+									})
 
-										$$('.department_multi').each(function(element) {
-											var id = element.id;
-											numeric_id = id.substring(12,13);
-											generic = element.id.substring(0, element.id.length - 8);
-											this[numeric_id] = new Control.SelectMultiple('in_departments',id,{
-												labelSeparator: '; ',
-												checkboxSelector: 'table.select_multiple_table tr td input[type=checkbox]',
-												nameSelector: 'table.select_multiple_table tr td.select_multiple_name label',
-												overflowLength: 70,
-												filter: generic+'_select_filter',
-												resize: generic+'_scroll',
-												afterCheck: apresCheck,
-												updateDiv: updateDepartmentList
-											});
+									$$('.department_multi').each(function(element) {
+										var id = element.id;
+										numeric_id = id.substring(12,13);
+										generic = element.id.substring(0, element.id.length - 8);
+										this[numeric_id] = new Control.SelectMultiple('in_departments' + numeric_id,id,{
+											labelSeparator: '; ',
+											checkboxSelector: 'table.select_multiple_table tr td input[type=checkbox]',
+											nameSelector: 'table.select_multiple_table tr td.select_multiple_name label',
+											overflowLength: 70,
+											filter: generic+'_select_filter',
+											resize: generic+'_scroll',
+											afterCheck: apresCheck,
+											updateDiv: function(options) {
+												var org_container = $(element).up('div').id;
+												var org_id = org_container.substring(12,13);
+												ul = options.inject(new Element('ul', {'class':'associated_list'}), function(list, option) {
+													list.appendChild(new Element('li').update(option));
+													return list;
+												});
+												$('in_departments_list' + org_id).update(ul);
+										    }
+										});
 
-											$(generic+'_close').observe('click',function(event){
-												this.container.hide();
-												return false;
-											}.bindAsEventListener(this[numeric_id]));
-										}, multiselect);
+										$(generic + '_close').observe('click',function(event){
+											var org_container = this.container.id;
+											var org_id = org_container.substring(12,13);
+											this.container.hide();
+											$('dept_' + org_id + '_link').show();
+											return false;
+										}.bindAsEventListener(this[numeric_id]));
+									}, multiselect);
 
 										function apresCheck(element) {
 											var tr = $(element.parentNode.parentNode);
@@ -996,7 +1179,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 													clinical.hide();
 												} else {
 													grad_year.hide();
-													entry_year.hide();	
+													entry_year.hide();
 													if($F('group') == "faculty") {
 														clinical.show();
 													} else {
@@ -1006,14 +1189,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 											});
 										});
 										</script>
-									</td>
-								</tr>
-							</tbody>
-						</table>
-					</form>
 					<?php
 				break;
-			}
+				} //end if organisation results
+			} //end display switch
 		} else {
 			$ERROR++;
 			$ERRORSTR[] = "In order to edit a user profile you must provide a valid identifier. The provided ID does not exist in this system.";

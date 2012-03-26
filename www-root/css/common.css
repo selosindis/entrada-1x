@@ -3631,4 +3631,11 @@ ul.community-themes li label {
 .ui-button {
 	outline:none;
 }
+.manage-user-depts {
+    position:relative;
+    top:auto;
+    left:auto;
+}
 
+.handle {width:16px;height:16px;background-image:url(../images/arrow-resize.png);background-position:center center;background-repeat:no-repeat;display:block;}
+#saveorder {display:none;}

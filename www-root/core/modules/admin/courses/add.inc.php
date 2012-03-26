@@ -302,12 +302,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							}
 						}
 						
-						foreach ($PROCESSED["periods"] as $period_id=>$period) {
-							foreach ($period as $key=>$audience) {
-								$audience["course_id"] = $COURSE_ID;
-								//if(!$db->AutoExecute("course_audience",$PROCESSED["periods"][$period_id][(count($PROCESSED["periods"][$period_id])-1)],"INSERT")) {
-								if(!$db->AutoExecute("course_audience",$audience,"INSERT")) {
-									add_error("An error occurred while adding the student with id ".$member." as an audience member.");
+						if (is_array($PROCESSED["periods"]) && count($PROCESSED["periods"])) {
+							foreach ($PROCESSED["periods"] as $period_id=>$period) {
+								foreach ($period as $key=>$audience) {
+									$audience["course_id"] = $COURSE_ID;
+									//if(!$db->AutoExecute("course_audience",$PROCESSED["periods"][$period_id][(count($PROCESSED["periods"][$period_id])-1)],"INSERT")) {
+									if(!$db->AutoExecute("course_audience",$audience,"INSERT")) {
+										add_error("An error occurred while adding the student with id ".$member." as an audience member.");
+									}
 								}
 							}
 						}

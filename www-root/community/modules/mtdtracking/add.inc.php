@@ -22,6 +22,9 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 
 	if ($resident) {
 		$PROCESSED["resident_id"] = $resident["proxy_id"];
+		$PROCESSED["home_program_id"] = $resident["program_id"];
+		$PROCESSED["home_school_id"] = $resident["school_id"];
+		$PROCESSED["category_id"] = $resident["category_id"];
 	} else {
 		$ERROR++;
 		$ERRORSTR[] = "Resident not found.";

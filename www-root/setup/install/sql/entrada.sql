@@ -959,7 +959,9 @@ CREATE TABLE IF NOT EXISTS `assessments` (
   `show_learner` tinyint(1) NOT NULL DEFAULT '0',
   `release_date` bigint(64) NOT NULL DEFAULT '0',
   `release_until` bigint(64) NOT NULL DEFAULT '0',
-  PRIMARY KEY (`assessment_id`)
+  `order` smallint(6) NOT NULL DEFAULT 0,
+  PRIMARY KEY (`assessment_id`),
+  KEY `order` (`order`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `assessment_options` (
@@ -1044,6 +1046,20 @@ INSERT INTO `assessment_marking_schemes` (`id`,`name`,`handler`,`description`,`e
 (2, 'Percentage', 'Percentage', 'Enter a percentage in the student mark column.', 1),
 (3, 'Numeric', 'Numeric', 'Enter a numeric total in the student mark column.', 1),
 (4, 'Complete/Incomplete', 'IncompleteComplete', 'Enter C for Complete, or I for Incomplete, in the student mark column.', 1);
+
+CREATE TABLE IF NOT EXISTS `assessment_objectives` (
+  `aobjective_id` int(12) NOT NULL AUTO_INCREMENT,
+  `assessment_id` int(12) NOT NULL DEFAULT '0',
+  `objective_id` int(12) NOT NULL DEFAULT '0',
+  `importance` int(11) DEFAULT NULL,
+  `objective_details` text,
+  `objective_type` enum('curricular_objective','clinical_presentation') NOT NULL DEFAULT 'curricular_objective',
+  `updated_date` bigint(64) NOT NULL,
+  `updated_by` int(12) NOT NULL,
+  PRIMARY KEY (`aobjective_id`),
+  KEY `assessment_id` (`assessment_id`),
+  KEY `objective_id` (`objective_id`)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 ;
 
 CREATE TABLE IF NOT EXISTS `communities` (
   `community_id` int(12) NOT NULL AUTO_INCREMENT,

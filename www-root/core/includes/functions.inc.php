@@ -5502,6 +5502,36 @@ function communities_galleries_process_photo($original_file, $photo_id = 0) {
 }
 
 /**
+ * Function takes the original file that someone uploads in to the assignment
+ * module and moves it to the correct storage location.
+ *
+ * Note: It _will not_ overwrite existing files, because it shouldn't
+ * every file should be a unique ID a la version control.
+ *
+ * @param string $original_file
+ * @param int $csfversion_id
+ * @return bool
+ */
+function assignments_process_file($original_file, $afversion_id = 0) {
+	if((!@file_exists($original_file)) || (!@is_readable($original_file))) {
+		return false;
+	}
+
+	if(!$afversion_id = (int) $afversion_id) {
+		return false;
+	}
+
+	if(!@file_exists($new_file = FILE_STORAGE_PATH."/A".$afversion_id)) {
+		if(@move_uploaded_file($original_file, $new_file)) {
+			@chmod($new_file, 0644);
+			return true;
+		}
+	}
+
+	return false;
+}
+
+/**
  * Function takes the original file that someone uploads in the shares
  * module and moves it to the correct storage location.
  *

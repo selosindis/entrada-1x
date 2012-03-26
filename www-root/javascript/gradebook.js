@@ -30,6 +30,12 @@ jQuery(document).ready(function($) {
 			]
 		}));
 
+		$('table.gradebook.assignment').flexigrid($.extend({}, flexiopts, {
+			colModel: [
+
+			]
+		}));
+
 		$('table.gradebook').flexigrid($.extend({}, flexiopts, {
 			title: "Gradebook",
 			buttons : [
@@ -113,8 +119,14 @@ jQuery(document).ready(function($) {
 					var row = $(this).parent().parent().parent();
 					if(e.which == 38) { //going up!
 						dest = row.prev();
+						if($(dest).attr('class').indexOf('comment-row') !== -1){
+							dest = dest.prev();
+						}
 					} else {
 						dest = row.next();
+						if($(dest).attr('class').indexOf('comment-row') !== -1){
+							dest = dest.next();
+						}
 					}
 
 					if(dest) {

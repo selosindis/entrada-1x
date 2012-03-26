@@ -179,13 +179,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				echo "<h1>" . implode(": ", $curriculum_path) . " Gradebook </h1>";
 			}
 			
-			 if ($ENTRADA_ACL->amIAllowed("gradebook", "create", false)) { ?>
+			if ($ENTRADA_ACL->amIAllowed("gradebook", "create", false)) { ?>				
 				<div style="float: right">
 					<ul class="page-action">
 						<li><a id="gradebook_assessment_add" href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE . "/assessments/?" . replace_query(array("section" => "add", "step" => false)); ?>" class="strong-green">Add New Assessment</a></li>
 					</ul>
 				</div>
-				<div style="clear: both"><br/></div>
+				<h2>Assessments</h2>
+				<div style="clear: both"></div>
 			<?php
 			}
 			
@@ -378,6 +379,115 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				</div>
 				<?php
 			}
+			
+			
+			//Assignment
+			if ($ENTRADA_ACL->amIAllowed("gradebook", "create", false)) { ?>
+				<h1></h1>
+				<div style="float: right">
+					<ul class="page-action">
+						<li><a id="gradebook_assessment_add" href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE . "/assignments/?" . replace_query(array("section" => "add", "step" => false)); ?>" class="strong-green">Add New Assignment</a></li>
+					</ul>
+				</div>
+				<h2>Assignments</h2>				
+				<div style="clear: both"></div>
+			<?php
+			}
+			
+			$query =  "SELECT DISTINCT `assignments`.`course_id` FROM `assignments`
+					   WHERE `course_id` =". $db->qstr($COURSE_ID)."
+					   ORDER BY `course_id`";
+			$cohorts = $db->GetAll($query);
+			if($cohorts) {
+				if ($total_pages > 1) {
+					echo "<div id=\"pagination-links\">\n";
+					echo "Pages: ".$pagination->GetPageLinks();
+					echo "</div>\n";
+				}
+				if ($ENTRADA_ACL->amIAllowed("gradebook", "delete", false)) {
+					echo "<form action=\"".ENTRADA_URL . "/admin/gradebook/assignments?".replace_query(array("section" => "delete", "step"=>1))."\" method=\"post\">";
+				}
+				?>
+				
+				<table class="tableList" cellspacing="0" summary="List of Assignments" id="assignment_list">			
+					<tfoot>
+						<tr>
+							<td style="padding-top: 10px; border-bottom:0;"colspan="2">
+								<script type="text/javascript" charset="utf-8">
+
+									jQuery(document).ready(function(){
+										jQuery('.edit_grade').live('click',function(e){
+											var id = e.target.id.substring(5);
+											jQuery('#'+id).trigger('click');
+										});
+									});
+									
+									function exportSelected() {
+										var ids = [];
+										$$('#assessment_list .modified input:checked').each(function(checkbox) {
+											ids.push($F(checkbox));
+										});
+										if(ids.length > 0) {
+											window.location = '<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "io", "download" => "csv", "assessment_ids" => false)); ?>&assessment_ids='+ids.join(',');
+										} else {
+											alert("You must select some assessments to export.");
+										}
+										return false;
+									}
+								</script>
+								<input type="submit" class="button" value="Delete Selected" />
+								<input type="submit" class="button" value="Export Selected" onclick="exportSelected(); return false;"/>
+							</td>
+							<td colspan="2" style="padding-top: 10px; border-bottom: 0; "><a id="fullscreen-edit" class="button" style="float:right;" href="<?php echo ENTRADA_URL . "/admin/gradebook?" . replace_query(array("section" => "api-edit")); ?>"><div>Fullscreen</div></a></td>
+						</tr>
+						<tr>
+							<td style="border-bottom:0;"></td>
+						</tr>
+					</tfoot>
+					<tbody>
+					
+					<?php
+					if ($cohorts) {
+						foreach ($cohorts as $cohort) {						
+							$query =  "SELECT `assignments`.`course_id`, `assignments`.`assignment_id`, `assignments`.`assignment_title` FROM `assignments`
+									   WHERE `course_id` =". $db->qstr($COURSE_ID);
+							
+							$results = $db->GetAll($query);
+							if ($results) {
+								foreach ($results as $result) {
+									$url = ENTRADA_URL."/admin/gradebook/assignments?section=grade&amp;id=".$COURSE_ID."&amp;assignment_id=".$result["assignment_id"];
+									echo "<tr id=\"assignment-".$result["assignment_id"]."\">";
+									if ($ENTRADA_ACL->amIAllowed("gradebook", "delete", false)) {
+										echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"delete[]\" value=\"".$result["assignment_id"]."\" /></td>\n";
+									} else {
+										echo "	<td class=\"modified\" width=\"20\"><img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"19\" height=\"19\" alt=\"\" title=\"\" /></td>";
+									}
+									echo "<td colspan=\"3\"><a href=\"$url\">".$result["assignment_title"]."</a></td>";
+									//echo "<td colspan=\"2\"><a href=\"$url\">".$result["grade_weighting"]. "%</a></td>"; 
+									echo "</tr>";
+								}
+							}
+						}
+					}
+					?>
+					</tbody>
+				</table>
+				<div class="gradebook_edit" style="display: none;"></div>
+				<?php
+				if ($ENTRADA_ACL->amIAllowed("gradebook", "delete", false)) {
+					echo "</form>";
+				}
+			} else {
+				// No assignments in this course.
+				?>
+				<div class="display-notice">
+					<h3>No Assignments for <?php echo $course_details["course_name"]; ?></h3>
+					There are no assignments in the system for this course. You can create new ones by clicking the <strong>Add New Assignment</strong> link above.
+				</div>
+				<?php
+			}
+			
+			//end Assignment
 		} else {
 			$ERROR++;
 			$ERRORSTR[] = "In order to edit a course you must provide a valid course identifier. The provided ID does not exist in this system.";

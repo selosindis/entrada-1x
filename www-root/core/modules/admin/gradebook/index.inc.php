@@ -234,7 +234,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					AND a.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
 					ORDER BY %s LIMIT %s, %s";
 	} else {
-		$query	= "	SELECT a.`course_id`, a.`organisation_id`, a.`course_name`, a.`course_code`, a.`course_url`, a.`notifications`, c.`curriculum_type_name`, CONCAT_WS(', ', d.`lastname`, d.`firstname`) AS `fullname`
+		$query	= "	SELECT DISTINCT(a.`course_id`), a.`organisation_id`, a.`course_name`, a.`course_code`, a.`course_url`, a.`notifications`, c.`curriculum_type_name`, CONCAT_WS(', ', d.`lastname`, d.`firstname`) AS `fullname`
 					FROM `courses` AS a
 					LEFT JOIN `course_contacts` AS b
 					ON b.`course_id` = a.`course_id`

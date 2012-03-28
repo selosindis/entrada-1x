@@ -79,17 +79,12 @@ if ($mode == "graph") {
 	// Create the Pie Graph. 
 	$graph = new PieGraph(600,450);
 
-	//$theme_class="DefaultTheme";
-	//$graph->SetTheme(new $theme_class());
-
-	// Set A title for the plot
-	$graph->SetBox(true);
-
 	// Create
 	$p1 = new PiePlot($data);
 	$graph->Add($p1);
 
 	$p1->SetSize(0.35);
+	$p1->SetCenter(0.4,0.5);
 	$p1->SetSliceColors(array('#37557d','#476c9f','#5784bf','#7b9ece','#9eb7db','#bfcfe7'));
 	
 	$p1->SetLabels($labels);
@@ -449,7 +444,7 @@ function course_objectives_formatted($objectives, $parent_id, $top_level_id, $ed
 
 			if (count($output)) {
 				echo "<h1>Learning Event Types</h1>";
-				echo "<img src=\"".ENTRADA_URL."//cron/syllabus_gen.php?mode=graph&course_id=".$course_id."&start_date=".$start_date."&end_date=".$end_date."\" />";
+				echo "<img src=\"".ENTRADA_URL."/cron/syllabus_gen.php?mode=graph&course_id=".$course_id."&start_date=".$start_date."&end_date=".$end_date."\" />";
 				foreach ($output as $course_id => $result) {
 					$STATISTICS					= array();
 					$STATISTICS["labels"]		= array();

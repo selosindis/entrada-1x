@@ -266,7 +266,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 										if ($results) {
 											$PROCESSED["assessment_id"] = $results["assessment_id"];
 											$PROCESSED["option_id"] = $assessment_option["id"];
-											if (in_array($assessment_option["id"], $assessment_options_selected)) {
+											if (is_array($assessment_options_selected) && in_array($assessment_option["id"], $assessment_options_selected)) {
 												$PROCESSED["option_active"] = 1;
 											} else {
 												$PROCESSED["option_active"] = 0;

@@ -86,7 +86,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				}	
 				</style>
 				<div>
-					<h1 class="event-title"><?php echo $assessment["name"]; ?> (Class of <?php echo $assessment["cohort"]; ?>)</h1>
+					<h1 class="event-title"><?php echo $assessment["name"]; ?> (<?php echo groups_get_name($assessment["cohort"]); ?>)</h1>
 				</div>
 				<div style="float: left; width: 440px;">
 					<h2 style="border-bottom: none; margin-bottom: 3px; margin-top: 0;"><?php echo $assessment["type"]; ?> Assessment</h2>
@@ -129,7 +129,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						<div style="margin-bottom: 5px;">
 							<span class="content-small"><strong>Tip: </strong><?php echo $assessment["marking_scheme_description"]; ?></span>
 						</div>				
-						<table style="width: 438px" class="gradebook <?php echo ($assessment["marking_scheme_id"] == 3?'numeric':'single');?> <?php echo $editable; ?>">
+						<table style="width: 440px" class="gradebook single <?php echo $editable; ?>">
 							<tbody>
 								<?php
 								foreach ($students as $key => $student) {

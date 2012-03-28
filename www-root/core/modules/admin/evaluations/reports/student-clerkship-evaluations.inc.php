@@ -79,14 +79,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 				// Get All Regions?
 			}
 	
-			if(@is_array($_GET["teacher_ids"]) && ($_SESSION["details"]["group"] != "faculty" || array_search($_SESSION["details"]["role"], array("faculty", "lecturer")) === false)) {
+			if(@is_array($_GET["teacher_ids"]) && ($_SESSION["details"]["group"] != "faculty")) {
 				foreach($_GET["teacher_ids"] as $teacher_id) {
 					$teacher_id = (int) trim($teacher_id);
 					if($teacher_id) {
 						$TEACHER_IDS[] = $teacher_id;
 					}
 				}
-			} elseif ($_SESSION["details"]["group"] == "faculty" && array_search($_SESSION["details"]["role"], array("faculty", "lecturer")) !== false) {
+			} elseif ($_SESSION["details"]["group"] == "faculty") {
 				$TEACHER_IDS[] = $_SESSION["details"]["id"];
 			}
 			if((!@count($TEACHER_IDS)) || ($_GET["teacher_type"] == "all")) {
@@ -795,7 +795,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					echo "	<td colspan=\"2\">&nbsp;</td>\n";
 					echo "</tr>\n";
 	
-					if ($form_type == "teacher" && ($_SESSION["details"]["group"] != "faculty" || array_search($_SESSION["details"]["role"], array("faculty", "lecturer")) === false)) {
+					if ($form_type == "teacher" && ($_SESSION["details"]["group"] != "faculty")) {
 						echo "<tr>\n";
 						echo "	<td style=\"vertical-align: top\">\n";
 						echo "		<input type=\"radio\" id=\"teacher_type_all\" name=\"teacher_type\" value=\"all\" style=\"vertical-align: middle\" checked=\"checked\" onclick=\"document.getElementById('show_teachers').style.display='none'\" /> <label for=\"teacher_type_all\" class=\"form-nrequired\">Include all teachers with this report.</label><br />\n";
@@ -873,10 +873,27 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					if($results) {
 						echo "<select id=\"category_id\" name=\"category_id\" size=\"10\" style=\"width: 100%; height: 225px\">\n";
 						foreach($results as $result) {
-							if ($_SESSION["details"]["group"] != "faculty" || array_search($_SESSION["details"]["role"], array("faculty", "lecturer")) === false) {
-								echo "<option value=\"".$result["category_id"]."r\">".html_encode($result["category_name"])." Rotation Evaluations</option>\n";
+							
+							$query = "SELECT `item_id` FROM `".CLERKSHIP_DATABASE."`.`evaluations`
+										WHERE `category_id` IN (
+											SELECT a.`category_id` FROM `".CLERKSHIP_DATABASE."`.`categories` AS a
+											WHERE a.`category_parent` = ".$db->qstr($result["category_id"])."
+											UNION
+											SELECT a.`category_id` FROM `".CLERKSHIP_DATABASE."`.`categories` AS a
+											JOIN `".CLERKSHIP_DATABASE."`.`categories` AS b
+											ON a.`category_parent` = b.`category_id`
+											WHERE b.`category_parent` = ".$db->qstr($result["category_id"])."
+										)
+										AND (`item_title` LIKE '%Rotation Evaluation'
+										OR `item_title` LIKE '%Teacher Evaluation'
+										OR `item_title` LIKE '%Preceptor Evaluation')";
+							$found = $db->GetRow($query);
+							if ($found) {
+								if ($_SESSION["details"]["group"] != "faculty") {
+									echo "<option value=\"".$result["category_id"]."r\">".html_encode($result["category_name"])." Rotation Evaluations</option>\n";
+								}
+								echo "<option value=\"".$result["category_id"]."t\">".html_encode($result["category_name"])." Teacher Evaluations</option>\n";
 							}
-							echo "<option value=\"".$result["category_id"]."t\">".html_encode($result["category_name"])." Teacher Evaluations</option>\n";
 						}
 						echo "</select>\n";
 					}

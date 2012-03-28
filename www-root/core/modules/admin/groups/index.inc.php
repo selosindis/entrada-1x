@@ -171,6 +171,7 @@ if (!defined("IN_GROUPS")) {
 						FROM `groups` AS a
 						LEFT JOIN `group_members` b
 						ON b.`group_id` = a.`group_id`
+						AND b.`member_active` = 1
 						JOIN `group_organisations` AS c
 						ON c.`group_id` = a.`group_id`
 						WHERE a.`group_active` = '1'

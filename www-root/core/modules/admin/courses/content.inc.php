@@ -595,7 +595,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 										<div id="objectives_list">
 										<h3>Curriculum Objectives</h3>
 										<strong>The learner will be able to:</strong>
-										<?php echo event_objectives_in_list($course_objectives, $top_level_id,$top_level_id, true); ?>
+										<?php echo event_objectives_in_list($course_objectives, $top_level_id, $top_level_id, true, false, 1, true, true, "primary", false, $COURSE_ID); ?>
 										</div>
 									</td>
 								</tr>

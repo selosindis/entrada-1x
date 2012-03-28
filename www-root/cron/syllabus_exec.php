@@ -13,7 +13,7 @@
  *
  * $Id: syllabus_exec.php 1103 2010-04-05 15:20:37Z simpson $
 */
-ini_set("display_errros",1);
+
 @set_time_limit(0);
 @set_include_path(implode(PATH_SEPARATOR, array(
     dirname(__FILE__) . "/../core",
@@ -124,8 +124,8 @@ $classes = array (
 );
 
 if((is_array($APPLICATION_PATH)) && (isset($APPLICATION_PATH["htmldoc"])) && (@is_executable($APPLICATION_PATH["htmldoc"]))) {
-	$output_file	= ENTRADA_ABSOLUTE."/syllabi/class-of-%GRADYEAR%_term-%TERM%_%COURSECODE%.pdf";
-	$exec_command	= $APPLICATION_PATH["htmldoc"]." \
+	$output_file = ENTRADA_ABSOLUTE."/syllabi/class-of-%GRADYEAR%_term-%TERM%_%COURSECODE%.pdf";
+	$exec_command = $APPLICATION_PATH["htmldoc"]." \
 	--format pdf14 \
 	--charset ".DEFAULT_CHARSET." \
 	--size Letter \
@@ -149,15 +149,14 @@ if((is_array($APPLICATION_PATH)) && (isset($APPLICATION_PATH["htmldoc"])) && (@i
 	--book '".ENTRADA_URL."/cron/syllabus_gen.php?%PARAMS%' \
 	--outfile ".$output_file;
 	
-	//$current_date = strtotime(date("M jS, Y"));
-	$current_date = strtotime("Sept 1st, 2011");
+	$current_date = strtotime(date("M jS, Y"));
 	
 	foreach ($classes as $cohort_id => $cohort) {
 
 		foreach ($cohort["terms"] as $term_id => $term ) {
 			
 			if($current_date >= $term["start_date"] && $current_date <= $term["end_date"]) {
-				// fetch the active courses
+				// Fetch the active courses
 				$query = "	SELECT a.`course_id`, a.`course_code`
 							FROM `courses` AS a 
 							JOIN `curriculum_lu_types` AS b 
@@ -172,16 +171,13 @@ if((is_array($APPLICATION_PATH)) && (isset($APPLICATION_PATH["htmldoc"])) && (@i
 					$command	= str_replace("%PARAMS%", $params, str_replace(array("%GRADYEAR%", "%TERM%", "%COURSECODE%"), array($cohort["grad_year"], $term_id, strtolower($course_code)), $exec_command));
 					echo "<pre>";
 					echo ("Generated: ".$filename)."\n";
-					//echo ($command);
 					echo "</pre>";
 					@exec($command);
 					@chmod($filename, 0644);
 				}
-			
 			}
 		}
 	}
-	
 } else {
 	application_log("error", "Unable to locate the executable HTMLDoc application that is required to generate the syllabus'");
 }

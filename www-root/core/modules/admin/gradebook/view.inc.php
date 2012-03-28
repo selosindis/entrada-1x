@@ -373,9 +373,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				<?php
 			}
 			
-			
 			//Assignment
-			if ($ENTRADA_ACL->amIAllowed("gradebook", "create", false)) { ?>
+			if ($ENTRADA_ACL->amIAllowed("gradebook", "create", false)) {
+				?>
 				<h1></h1>
 				<div style="float: right">
 					<ul class="page-action">
@@ -384,7 +384,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				</div>
 				<h2>Assignments</h2>				
 				<div style="clear: both"></div>
-			<?php
+				<?php
 			}
 			
 			$query =  "SELECT DISTINCT `assignments`.`course_id` FROM `assignments`

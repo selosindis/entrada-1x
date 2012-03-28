@@ -82,7 +82,7 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 		 * @todo Add a setUserHashAuthentication() method to the authentication client and server so we can use the
 		 * web-service instead of querying the data directly to authenticate a private-hash.
 		 */
-		$query = "	SELECT a.`id`, a.`username`, a.`firstname`, a.`lastname`, a.`email`, b.`role`, b.`group`, a.`organisation_id`
+		$query = "SELECT a.`id`, a.`username`, a.`firstname`, a.`lastname`, a.`email`, a.`grad_year`, b.`role`, b.`group`, a.`organisation_id`, b.`access_expires`
 					FROM `".AUTH_DATABASE."`.`user_data` AS a
 					LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 					ON b.`user_id` = a.`id`
@@ -94,14 +94,17 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 					GROUP BY a.`id`";
 		$result = $db->GetRow($query);
 		if ($result) {
-			$user_proxy_id = $result["id"];
-			$user_username = $result["username"];
-			$user_firstname = $result["firstname"];
-			$user_lastname = $result["lastname"];
-			$user_email = $result["email"];
-			$user_role = $result["role"];
-			$user_group = $result["group"];
-			$user_organisation_id = $result["organisation_id"];
+			$_SESSION["details"]["id"] = $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"] = $user_proxy_id = $result["id"];
+			$_SESSION["details"]["username"] = $user_username = $result["username"];
+			$_SESSION["details"]["firstname"] = $user_firstname = $result["firstname"];
+			$_SESSION["details"]["lastname"] = $user_lastname = $result["lastname"];
+			$_SESSION["details"]["email"] = $user_email = $result["email"];
+			$_SESSION["details"]["role"] = $user_role = $result["role"];
+			$_SESSION["details"]["group"] = $user_group = $result["group"];
+			$_SESSION["details"]["organisation_id"] = $user_organisation_id = $result["organisation_id"];
+			$_SESSION["details"]["app_id"] = AUTH_APP_ID;
+			$_SESSION["details"]["grad_year"] = $result["grad_year"];
+			$_SESSION["details"]["expires"] = $result["access_expires"];
 		} else {
 			/**
 			 * If the query above fails, redirect them back here but without the
@@ -207,10 +210,10 @@ if ($user_proxy_id) {
 					WHERE a.`event_finish` >= ".$db->qstr(strtotime("00:00:00"))."
 					AND (a.`event_status` = 'published' OR a.`event_status` = 'approval')
 					AND b.`econtact_type` = 'student'
-					AND b.`etype_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+					AND b.`etype_id` = ".$db->qstr($user_proxy_id)."
 					ORDER BY a.`event_start` ASC";
 		$clerkship_schedule	= $db->GetRow($query);
-		if (isset($clerkship_schedule) && $clerkship_schedule && $clerkship_schedule["rotation_id"] < MAX_ROTATION) {
+		if (isset($clerkship_schedule) && $clerkship_schedule && $clerkship_schedule["rotation_id"] != MAX_ROTATION) {
 			$course_id = $clerkship_schedule["course_id"];
 			$course_ids = array();
 			$query 	= "SELECT `course_id` FROM `".CLERKSHIP_DATABASE."`.`global_lu_rotations` 
@@ -227,7 +230,7 @@ if ($user_proxy_id) {
 			}
 		}
 	}
-
+	
 	switch ($calendar_type) {
 		case "ics" :
 			add_statistic("calendar.api", "view", "type", "ics");

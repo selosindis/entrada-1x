@@ -41,8 +41,6 @@ $db->debug = (((isset($DEVELOPER_IPS) && is_array($DEVELOPER_IPS) && isset($_SER
 
 @ini_set("session.name", SESSION_NAME);
 @ini_set("session.gc_maxlifetime", SESSION_EXPIRES);
-@ini_set("session.gc_probability", 1);
-@ini_set("session.gc_divisor", 10);
 
 if ((defined("ADODB_SESSION")) && (defined("DATABASE_SESSIONS")) && (DATABASE_SESSIONS)) {
 	require_once("Entrada/adodb/session/adodb-session2.php");

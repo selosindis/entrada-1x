@@ -206,7 +206,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 													LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 													ON b.`user_id` = a.`id`
 													WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
-													AND b.`group` = 'faculty'
+													AND (b.`group` = 'faculty' OR 
+														(b.`group` = 'resident' AND b.`role` = 'lecturer')
+													)
 													AND a.`id` = ".$db->qstr($proxy_id);
 										$result = $db->GetRow($query);
 										if ($result) {

@@ -96,7 +96,7 @@ function check_script($buffer) {
 	}
 
 	if ($elements) {
-		$SCRIPT[] = "\n<script type=\"text/javascript\">\n".implode("\n",$elements)."</script>";
+		$SCRIPT[] = "\n<script defer=\"defer\" type=\"text/javascript\">\n".implode("\n",$elements)."</script>";
 	}
 
 	$output = "";
@@ -896,11 +896,11 @@ function get_account_data($type = "", $id = 0) {
 				$query = "SELECT CONCAT_WS(' ', `firstname`, `lastname`) AS `firstlast` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id`=".$db->qstr($id);
 				$type = "firstlast";
 			break;
-			case "grad_year" :
-				$query = "SELECT `grad_year` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id`=".$db->qstr($id);
-			break;
 			case "email" :
 				$query = "SELECT `email` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id`=".$db->qstr($id);
+			break;
+			case "grad_year" :
+				$query = "SELECT `grad_year` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id`=".$db->qstr($id);
 			break;
 			case "organisation_id" :
 				$query = "SELECT `organisation_id` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id`=".$db->qstr($id);
@@ -1626,6 +1626,7 @@ function fetch_event_topic_title($topic_id = 0) {
  */
 function fetch_first_cohort() {
 	global $db, $ENTRADA_USER;
+	
 	$query = "	SELECT a.`group_id` FROM `groups` AS a
 				JOIN `group_organisations` AS b
 				ON a.`group_id` = b.`group_id`
@@ -2200,7 +2201,7 @@ function permissions_fetch($identifier, $type = "event", $existing_allowed_ids =
 
 	switch($type) {
 		case "event" :
-			$query		= "	SELECT a.`event_id`, b.`proxy_id` AS `teacher`, c.`pcoord_id` AS `coordinator`, d.`proxy_id` AS `director`, e.`proxy_id` AS `ccoordinator`
+			$query		= "	SELECT a.`event_id`, b.`proxy_id` AS `teacher`, c.`pcoord_id` AS `coordinator`, d.`proxy_id` AS `director`, e.`proxy_id` AS `ccoordinator`, f.`proxy_id` AS `pcoordinator`
 							FROM `events` AS a
 							LEFT JOIN `event_contacts` AS b
 							ON b.`event_id` = a.`event_id`
@@ -2208,16 +2209,20 @@ function permissions_fetch($identifier, $type = "event", $existing_allowed_ids =
 							ON c.`course_id` = a.`course_id`
 							LEFT JOIN `course_contacts` AS d
 							ON d.`course_id` = c.`course_id`
-							AND `contact_type` = 'director'
+							AND d.`contact_type` = 'director'
 							LEFT JOIN `course_contacts` AS e
 							ON e.`course_id` = c.`course_id`
-							AND `contact_type` = 'ccoordinator'
+							AND e.`contact_type` = 'ccoordinator'
+							LEFT JOIN `course_contacts` AS f
+							ON f.`course_id` = c.`course_id`
+							AND f.`contact_type` = 'pcoordinator'
 							WHERE a.`event_id` = ".$db->qstr($identifier)."
 							AND c.`course_active` = '1'";
 			$results	= $db->GetAll($query);
 			if($results) {
 				foreach ($results as $result) {
 					$allowed_ids[] = $result["teacher"];
+					$allowed_ids[] = $result["pcoordinator"];
 					$allowed_ids[] = $result["coordinator"];
 					$allowed_ids[] = $result["ccoordinator"];
 					$allowed_ids[] = $result["director"];
@@ -2226,11 +2231,14 @@ function permissions_fetch($identifier, $type = "event", $existing_allowed_ids =
 			}
 		break;
 		case "course" :
-			$query		= "	SELECT a.`pcoord_id` AS `coordinator`, b.`proxy_id` AS `director`
+			$query		= "	SELECT a.`pcoord_id` AS `coordinator`, b.`proxy_id` AS `director`, c.`proxy_id` AS `pcoordinator`
 							FROM `courses` AS a
 							LEFT JOIN `course_contacts` AS b
 							ON b.`course_id` = a.`course_id`
 							AND b.`contact_type` = 'director'
+							LEFT JOIN `course_contacts` AS c
+							ON c.`course_id` = a.`course_id`
+							AND c.`contact_type` = 'pcoordinator'
 							WHERE a.`course_id` = ".$db->qstr($identifier)."
 							AND a.`course_active` = '1'";
 			$results	= $db->GetAll($query);
@@ -2238,6 +2246,7 @@ function permissions_fetch($identifier, $type = "event", $existing_allowed_ids =
 				foreach ($results as $result) {
 					$allowed_ids[] = $result["director"];
 					$allowed_ids[] = $result["coordinator"];
+					$allowed_ids[] = $result["pcoordinator"];
 				}
 			}
 		break;
@@ -3372,7 +3381,7 @@ function generate_calendar($fieldname, $display_name = "", $required = false, $c
 	}
 	$output .= "	<td style=\"vertical-align: top; padding-top: 4px\"><label id=\"".$fieldname."_text\" for=\"".$fieldname."\" class=\"".($required ? "form-required" : "form-nrequired")."\">".html_encode($display_name)."</label></td>\n";
 	$output .= "	<td style=\"vertical-align: top\" id=\"".$fieldname."_row\">\n";
-	$output .= "		<input type=\"text\" name=\"".$fieldname."_date\" id=\"".$fieldname."_date\" value=\"".$time_date."\" $readonly autocomplete=\"off\" ".(!$disabled ? "onfocus=\"showCalendar('', this, this, '', '".$fieldname."_date', 0, 20, 1)\"" : "")."style=\"width: 145px; vertical-align: middle\" />&nbsp;";
+	$output .= "		<input type=\"text\" name=\"".$fieldname."_date\" id=\"".$fieldname."_date\" value=\"".$time_date."\" $readonly autocomplete=\"off\" ".(!$disabled ? "onfocus=\"showCalendar('', this, this, '', '".$fieldname."_date', 0, 20, 1)\"" : "")."style=\"width: 170px; vertical-align: middle\" />&nbsp;";
 
 	if (!$disabled) {
 		$output .= "	<a href=\"javascript: showCalendar('', document.getElementById('".$fieldname."_date'), document.getElementById('".$fieldname."_date'), '', '".$fieldname."_date', 0, 20, 1)\" title=\"Show Calendar\" onclick=\"if (!document.getElementById('".$fieldname."').checked) { return false; }\"><img src=\"".ENTRADA_URL."/images/cal-calendar.gif\" width=\"23\" height=\"23\" alt=\"Show Calendar\" title=\"Show Calendar\" border=\"0\" style=\"vertical-align: middle\" /></a>";
@@ -4682,6 +4691,7 @@ function communities_module_details($module_id = 0, $requested_info = array()) {
  */
 function communities_module_access($community_id = 0, $module_id = 0, $action = "index") {
 	global $db;
+
 	if(($community_id = (int) $community_id) && ($module_id = (int) $module_id) && ($action = trim($action))) {
 		$query	= "SELECT * FROM `community_permissions` WHERE `community_id` = ".$db->qstr($community_id)." AND `module_id` = ".$db->qstr($module_id);
 		$result	= $db->GetRow($query);
@@ -4691,6 +4701,7 @@ function communities_module_access($community_id = 0, $module_id = 0, $action = 
 			return communities_module_access_generic($module_id, $action);
 		}
 	}
+
 	return false;
 }
 /**
@@ -4703,7 +4714,9 @@ function communities_module_access($community_id = 0, $module_id = 0, $action = 
  */
 function communities_module_access_generic($module_id = 0, $action = "index") {
 	global $db, $LOGGED_IN, $COMMUNITY_MEMBER, $COMMUNITY_ADMIN, $PROXY_ID, $RECORD_AUTHOR, $PAGE_OPTIONS;
+
 	$allow_to_load = false;
+
 	if(((bool) $LOGGED_IN) && ((bool) $COMMUNITY_MEMBER) && ((bool) $COMMUNITY_ADMIN)) {
 		$allow_to_load = true;
 	} else {
@@ -4724,6 +4737,7 @@ function communities_module_access_generic($module_id = 0, $action = "index") {
 			}
 		}
 	}
+
 	return $allow_to_load;
 }
 
@@ -4941,7 +4955,8 @@ function communities_fetch_pages($community_id = 0, $user_access = 0) {
 	
 		$query = "SELECT * FROM `community_pages`
 					WHERE `page_url` = ''
-					AND `community_id` = ".$db->qstr($community_id);
+					AND `community_id` = ".$db->qstr($community_id)."
+					ORDER BY `page_order` ASC";
 		$home = $db->GetRow($query);
 		$navigation[$home["cpage_id"]]	= array(
 					           "cpage_id" => $home["cpage_id"],
@@ -4950,12 +4965,20 @@ function communities_fetch_pages($community_id = 0, $user_access = 0) {
 					           "link_url" => "",
 					           "link_title" => $home["menu_title"],
 					           "link_selected" => ($home["page_url"] == $PAGE_URL ? true : false),
+					           "child_selected" => false,
 					           "link_new_window" => 0,
 					           "link_type" => $home["page_type"],
 					           "link_children" => array()
 							);
-		if (communities_page_has_children($home["cpage_id"], $access_query_condition[$user_access])) {
-			$navigation[0]["link_children"] = communities_fetch_child_pages($home["cpage_id"], $access_query_condition[$user_access]);
+		if (communities_page_has_children($home["cpage_id"], $access_query_condition[$user_access], $community_id)) {
+			$navigation[0]["link_children"] = communities_fetch_child_pages($home["cpage_id"], $access_query_condition[$user_access], $community_id);
+			if ($navigation[0]["link_children"]) {
+				foreach ($navigation[0]["link_children"] as $child) {
+					if ($child["link_selected"] || $child["child_selected"]) {
+						$navigation[0]["child_selected"] = true;
+					}
+				}
+			}
 		}
 
 		$full_query		= "SELECT `cpage_id`, `page_url`, `menu_title`, `page_order`, `page_type` FROM `community_pages` WHERE `community_id` = ".$db->qstr($community_id)." AND `page_url` != '' AND `page_active` = '1' ORDER BY `page_order` ASC";
@@ -5003,8 +5026,15 @@ function communities_fetch_pages($community_id = 0, $user_access = 0) {
 					} else {
 						$visible = false;
 					}
-					if (communities_page_has_children($result["cpage_id"], $access_query_condition[$user_access]) && $visible) {
-						$navigation[$result["cpage_id"]]["link_children"] = communities_fetch_child_pages($result["cpage_id"], $access_query_condition[$user_access]);
+					if (communities_page_has_children($result["cpage_id"], $access_query_condition[$user_access], $community_id) && $visible) {
+						$navigation[$result["cpage_id"]]["link_children"] = communities_fetch_child_pages($result["cpage_id"], $access_query_condition[$user_access], $community_id);
+						if ($navigation[$result["cpage_id"]]["link_children"]) {
+							foreach ($navigation[$result["cpage_id"]]["link_children"] as $child) {
+								if ($child["link_selected"] || $child["child_selected"]) {
+									$navigation[$result["cpage_id"]]["child_selected"] = true;
+								}
+							}
+						}
 					}
 					$i++;
 				}
@@ -5015,17 +5045,18 @@ function communities_fetch_pages($community_id = 0, $user_access = 0) {
 	return array("enabled" => $available, "navigation" => $navigation, "details" => $details, "exists" => $exists, "available_ids" => $available_ids);
 }
 
-function communities_page_has_children($cpage_id, $access_query_condition) {
+function communities_page_has_children($cpage_id, $access_query_condition, $community_id) {
 	global $db;
 	$query = "SELECT COUNT(`cpage_id`) FROM `community_pages`
 				WHERE `parent_id` = ".$db->qstr($cpage_id)."
+				AND `community_id` = ".$db->qstr($community_id)."
 				AND ".$access_query_condition;
 	$found = $db->GetOne($query);
 	return ($found ? true : false);
 }
 
 
-function communities_fetch_child_pages($cpage_id, $access_query_condition, $level = 1) {
+function communities_fetch_child_pages($cpage_id, $access_query_condition, $community_id, $level = 1) {
 	global $db, $PAGE_URL;
 	
 	if ($level > 99) {
@@ -5037,7 +5068,9 @@ function communities_fetch_child_pages($cpage_id, $access_query_condition, $leve
 	$query = "SELECT * FROM `community_pages`
 				WHERE `parent_id` = ".$db->qstr($cpage_id)."
 				AND ".$access_query_condition."
-				AND `page_active` = '1'";
+				AND `page_active` = '1'
+				AND `community_id` = ".$db->qstr($community_id)."
+				ORDER BY `page_order` ASC";
 	$children = $db->GetAll($query);
 	if ($children) {
 		foreach ($children as $child) {
@@ -5054,15 +5087,22 @@ function communities_fetch_child_pages($cpage_id, $access_query_condition, $leve
 							           "link_url" => ":".$child["page_url"],
 							           "link_title" => $child["menu_title"],
 							           "link_selected" => ($child["page_url"] == $PAGE_URL ? true : false),
+							           "child_selected" => false,
 							           "link_new_window" => ($child["new_window"] ? $child["new_window"] : 0),
 							           "link_type" => $child["page_type"],
+							           "page_visible" => $child["page_visible"],
 							           "link_children" => array()
 									);
-				$found = communities_page_has_children($child["cpage_id"], $access_query_condition);
+				$found = communities_page_has_children($child["cpage_id"], $access_query_condition, $community_id);
 				if ($found) {
-					$child_descendants = communities_fetch_child_pages($child["cpage_id"], $access_query_condition, ($level + 1));
+					$child_descendants = communities_fetch_child_pages($child["cpage_id"], $access_query_condition, $community_id, ($level + 1));
 					if ($child_descendants) {
 						$child_array["link_children"] = $child_descendants;
+						foreach ($child_descendants as $child) {
+							if ($child["link_selected"] || $child["child_selected"]) {
+								$child_array["child_selected"] = true;
+							}
+						}
 					}
 				}
 				$children_array[$child["cpage_id"]] = $child_array;
@@ -7836,7 +7876,6 @@ function clerkship_student_name($event_id = 0) {
  * @param int $proxy_id
  * @return array
  */
-
 function clerkship_get_rotation_overview($rotation_id, $proxy_id = 0) {
     global $db;
 
@@ -9125,6 +9164,21 @@ function course_objectives_in_list($objectives, $parent_id, $top_level_id, $edit
 				return;
 			}
 		} else {
+			/*
+			if (!empty($objectives["primary_ids"])) {
+				$active["primary"] = true;
+			} elseif ($display_importance == "primary" && $active["secondary"]) {
+				$display_importance = "secondary";
+			}
+			if (!empty($objectives["secondary_ids"])) {
+				$active["secondary"] = true;
+			} elseif ($display_importance == "secondary" && $active["tertiary"]) {
+				$display_importance = "tertiary";
+			}
+			if (!empty($objectives["tertiary_ids"])) {
+				$active["tertiary"] = true;
+			}
+			*/
 			if ($objectives["primary_ids"]) {
 				$active["primary"] = true;
 				$display_importance = "primary";
@@ -9147,6 +9201,7 @@ function course_objectives_in_list($objectives, $parent_id, $top_level_id, $edit
 			return;
 		}
 	}
+	
 	if (!$full_objective_list) {
 		$full_objective_list = events_fetch_objectives_structure($parent_id, $objectives["used_ids"], $org_id);
 	}
@@ -10427,7 +10482,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 	}	
 
 	$filter_clerkship_events = false;
-	if (($_SESSION["details"]["group"] == "student") && $ENTRADA_ACL->amIAllowed("clerkship", "read")) {
+	if (($user_group == "student") && $ENTRADA_ACL->amIAllowed("clerkship", "read")) {
 		$query = "	SELECT a.*, c.*
 					FROM `".CLERKSHIP_DATABASE."`.`events` AS a
 					LEFT JOIN `".CLERKSHIP_DATABASE."`.`event_contacts` AS b
@@ -10436,7 +10491,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 					ON c.`rotation_id` = a.`rotation_id`
 					WHERE (a.`event_status` = 'published' OR a.`event_status` = 'approval')
 					AND b.`econtact_type` = 'student'
-					AND b.`etype_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+					AND b.`etype_id` = ".$db->qstr($proxy_id)."
 					ORDER BY a.`event_start` ASC";
 		$clerkship_events = $db->GetAll($query);
 		if ($clerkship_events) {
@@ -10834,7 +10889,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 
 	$learning_events = $db->GetAll($query_events);
 	if ($learning_events) {
-		if ($_SESSION["details"]["group"] == "student") {
+		if ($user_group == "student") {
 			$event_ids = array();
 			foreach ($learning_events as $event) {
 				$event_ids[] = $event["event_id"];
@@ -10876,16 +10931,6 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 				$parent_events_array = array();
 				foreach ($parent_events as $parent_event) {
 					$parent_events_array[$parent_event["event_id"]] = $parent_event;
-				}
-				foreach ($learning_events as &$event) {
-					if (key_exists($event["parent_id"], $parent_events_array)) {
-						if ($parent_events_array[$event["parent_id"]]["event_title"]) {
-							$event["event_title"] = $parent_events_array[$event["parent_id"]]["event_title"]." - ".$event["event_title"];
-						}
-						if ($parent_events_array[$event["parent_id"]]["event_term"]) {
-							$event["event_term"] = $parent_events_array[$event["parent_id"]]["event_term"];
-						}
-					} 
 				}
 			}
 		}
@@ -11166,7 +11211,7 @@ function events_fetch_event_resources($event_id = 0, $options = array(), $exclud
 	return $output;
 }
 
-function event_objectives_in_list($objectives, $parent_id, $top_level_id, $edit_text = false, $parent_active = false, $importance = 1, $course = true, $top = true, $display_importance = "primary", $full_objective_list = false) {
+function event_objectives_in_list($objectives, $parent_id, $top_level_id, $edit_text = false, $parent_active = false, $importance = 1, $course = true, $top = true, $display_importance = "primary", $full_objective_list = false, $course_id = 0) {
 	global $edit_ajax, $ENTRADA_USER;
 	
 	if (!$full_objective_list) {
@@ -11305,7 +11350,7 @@ function event_objectives_in_list($objectives, $parent_id, $top_level_id, $edit_
 						} elseif ($edit_text) {
 							$edit_ajax[] = $objective_id;
 							$output .= "<div id=\"objective_table_".$objective_id."\">\n";
-							$output .= "	<label for=\"objective_checkbox_".$objective_id."\" class=\"heading\">".$objective["name"]."</label> ( <span id=\"edit_mode_".$objective_id."\" class=\"content-small\" style=\"cursor: pointer\">edit</span> )\n";
+							$output .= "	<label for=\"objective_checkbox_".$objective_id."\" class=\"heading\">".$objective["name"]."</label> ( <span id=\"edit_mode_".$objective_id."\" class=\"content-small\" style=\"cursor: pointer\">edit</span> )".(isset($objective["objective_details"]) && $objective["objective_details"] ? "<span style=\"margin-left: 10px;\">( <span id=\"revert_mode_".$objective_id."\" class=\"content-small\" onclick=\"new Ajax.Updater('objective_description_".$objective_id."', '".ENTRADA_RELATIVE."/api/objective-details.api.php', {parameters: { id: '".$objective_id."', cids: '".$course_id."', objective_details: '' }})\" style=\"cursor: pointer\">clear custom text</span> )</span>" : "")."\n";
 							$output .= "	<div class=\"content-small\" style=\"padding-left: 25px;\" id=\"objective_description_".$objective_id."\">".(isset($objective["objective_details"]) && $objective["objective_details"] ? $objective["objective_details"] : $objective["description"])."</div>\n";
 							$output .= "</div>\n";
 						} else {
@@ -11322,7 +11367,7 @@ function event_objectives_in_list($objectives, $parent_id, $top_level_id, $edit_
 						$output .= "</li>\n";
 	
 					} else {
-							$output .= event_objectives_in_list($objectives, $objective_id,$top_level_id, $edit_text, (($objective[$display_importance]) ? true : false), $importance, $course, false, $display_importance, $full_objective_list);
+							$output .= event_objectives_in_list($objectives, $objective_id,$top_level_id, $edit_text, (($objective[$display_importance]) ? true : false), $importance, $course, false, $display_importance, $full_objective_list, $course_id);
 					}
 				}
 			}
@@ -11350,7 +11395,6 @@ function events_flatten_objectives ($objectives) {
 }
 
 function events_fetch_objectives_structure($parent_id, $used_ids, $org_id = 0) {
-
 	global $db, $ENTRADA_USER;
 	
 	$org_id = ($org_id == 0 ? $ENTRADA_USER->getActiveOrganisation() : (int) $org_id );
@@ -11378,6 +11422,7 @@ function events_fetch_objectives_structure($parent_id, $used_ids, $org_id = 0) {
 			}
 		}
 	}
+
 	return $full_objective_list;
 }
 
@@ -12710,7 +12755,7 @@ function objectives_inlists_conf($identifier = 0, $indent = 0) {
 					ORDER BY a.`objective_order` ASC";
 	} else {
 		$query	= "	SELECT a.* FROM `global_lu_objectives` AS a
-					LEFT JOIN `objective_organisation` AS b
+					JOIN `objective_organisation` AS b
 					ON a.`objective_id` = b.`objective_id`
 					WHERE a.`objective_parent` = ".$db->qstr($identifier)." 
 					AND a.`objective_active` = '1' 
@@ -13249,7 +13294,7 @@ function is_department_head($user_id) {
  * @return array $obectives
  */
 function objectives_build_course_competencies_array() {
-	global $db, $ENTRADA_USER;
+	global $db, $translate, $ENTRADA_USER;
 	$courses_array = array("courses" => array(), "competencies" => array());
 	
 	$query = "	SELECT a.*, b.`curriculum_type_name` FROM `courses` AS a
@@ -13307,10 +13352,12 @@ function objectives_build_course_competencies_array() {
 		}
 		
 		
+		$objective_name = $translate->_("events_filter_controls");
+		$objective_name = $objective_name["co"]["global_lu_objectives_name"];
 		$query = "	SELECT a.`objective_id` FROM `global_lu_objectives` AS a	
 					LEFT JOIN `objective_organisation` AS b 
 					ON a.`objective_id` = b.`objective_id` 
-					WHERE a.`objective_name` = 'Curriculum Objectives' 
+					WHERE a.`objective_name` LIKE ".$db->qstr($objective_name)." 
 					AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation());
 		
 		$parent_obj = $db->GetOne($query);
@@ -13497,22 +13544,18 @@ class Latin1UTF8 {
  * @param unknown_type $output_filename
  */
 function generatePDF($html,$output_filename=null, $charset=DEFAULT_CHARSET) {
+	global $APPLICATION_PATH;
 	
 	$cv = new Latin1UTF8();
 	$html = $cv->mixed_to_latin1($html);
 	
 	//and just in case there's still anything left...
 	$html = preg_replace('/[^(\x20-\x7F)]*/','', $html);
-	
-	global $APPLICATION_PATH;
 	@set_time_limit(0);
 	if((is_array($APPLICATION_PATH)) && (isset($APPLICATION_PATH["htmldoc"])) && (@is_executable($APPLICATION_PATH["htmldoc"]))) {
 
 		//This used to have every option separated by a backslash and newline. In testing it was discovered that there was a magical limit of 4 backslashes -- beyond which it would barf.
-		$exec_command	= $APPLICATION_PATH["htmldoc"]." \
-		--format pdf14 --charset ".$charset." --size Letter --pagemode document --no-duplex --encryption --owner-password ".PDF_PASSWORD." --compression=6 --permissions print,modify \
-		--header ... --footer ... --headfootsize 0 --browserwidth 800 --top 1cm --bottom 1cm --left 2cm --right 2cm --embedfonts --bodyfont Times --headfootsize 8 \
-		--headfootfont Times --headingfont Times --firstpage p1 --quiet --book --color --no-toc --no-title --no-links --textfont Times - ";
+		$exec_command = $APPLICATION_PATH["htmldoc"]." --format pdf14 --charset ".$charset." --size Letter --pagemode document --no-duplex --encryption --owner-password ".PDF_PASSWORD." --compression=6 --permissions print,modify --header ... --footer ... --headfootsize 0 --browserwidth 800 --top 1cm --bottom 1cm --left 2cm --right 2cm --embedfonts --bodyfont Times --headfootsize 8 --headfootfont Times --headingfont Times --firstpage p1 --quiet --book --color --no-toc --no-title --no-links --textfont Times - ";
 		
 		if ($output_filename) {
 			@exec($exec_command);
@@ -13542,7 +13585,6 @@ function generatePDF($html,$output_filename=null, $charset=DEFAULT_CHARSET) {
 			$pdf_string = stream_get_contents($pipes[1]);
 			fclose($pipes[1]);
 			
-			//$err_string = stream_get_contents($pipes[2]);
 			fclose($pipes[2]); //just close we're not interested in the error info
 			
 			$return_val = proc_close($proc);
@@ -14089,10 +14131,12 @@ function gradebook_get_weighted_grades($course_id, $cohort, $proxy_id, $assessme
 	$weighted_grade = 0;
 	$weighted_total = 0;
 	$weighted_percent = 0;
-	$query = "	SELECT `assessments`.*,`assessment_marking_schemes`.`handler`
+	$query = "	SELECT `assessments`.*, `assessment_marking_schemes`.`handler`
 				FROM `assessments`
-				LEFT JOIN `assessment_marking_schemes` ON `assessment_marking_schemes`.`id` = `assessments`.`marking_scheme_id`
-				WHERE `assessments`.`course_id` = ".$db->qstr($course_id).
+				LEFT JOIN `assessment_marking_schemes`
+				ON `assessment_marking_schemes`.`id` = `assessments`.`marking_scheme_id`
+				WHERE `assessments`.`course_id` = ".$db->qstr($course_id)."
+				AND `assessments`.`cohort` = ".$db->qstr($cohort).
 				($assessment_id ? " AND `assessments`.`assessment_id` = ".$db->qstr($assessment_id) : "");
 	$assessments = $db->GetAll($query);
 	if($assessments) {
@@ -14762,431 +14806,7 @@ function groups_get_active_cohorts($organisation_id = 0) {
 	return false;
 }
 
-function generate_case() {
-	global $db, $ENTRADA_USER;
-	
-	$query = "SELECT * FROM `cases_lu_firstnames`
-				ORDER BY RAND()
-				LIMIT 0, 1";
-	$firstname = $db->GetRow($query);
-	
-	$gender = ($firstname["gender"] == "female" ? "f" : "m");
-	
-	$query = "SELECT * FROM `cases_lu_lastnames`
-				ORDER BY RAND()
-				LIMIT 0, 1";
-	$lastname = $db->GetRow($query);
-	
-	$name = $firstname["firstname"]." ".ucfirst(strtolower($lastname["lastname"]));
-	
-	$query = "SELECT * FROM `cases_lu_symptoms`
-				ORDER BY RAND()
-				LIMIT 0, 1";
-	$symptom = $db->GetRow($query);
-	if ($symptom) {
-		$query = "SELECT * FROM `cases_lu_ages`
-					ORDER BY RAND()
-					LIMIT 0, 1";
-		$age_range = $db->GetRow($query);
-		$age = rand(((int) $age_range["age_min"]), ((int) $age_range["age_max"]));
-		$age_units = $age_range["unit"];
-		if ($age_units == "month") {
-			$age_years = 0;
-		} else {
-			$age_years = $age;
-		}
-		
-		$query = "SELECT * FROM `cases_lu_relationships`
-					WHERE 
-					(
-						(`age_min` <= ".$db->qstr($age)."
-						AND (`age_max` >= ".$db->qstr($age)." OR `age_max` = 0)
-						AND `age_units` = ".$db->qstr($age_units).")
-					OR (`age_min` = 0 
-						AND `age_units` = 'year' 
-						AND ".$db->qstr($age_units)." != 'year')
-					OR (`age_min` = 0 
-						AND `age_units` = 'month' 
-						AND ".$db->qstr($age_units)." = 'week')
-					)
-					ORDER BY RAND()
-					LIMIT 0, 1";
-		$relationship = $db->GetRow($query);
-		
-		$query = "SELECT * FROM `cases_lu_occupations`
-					WHERE 
-					(
-						(`age_min` <= ".$db->qstr($age)."
-						AND (`age_max` >= ".$db->qstr($age)." OR `age_max` = 0)
-						AND `age_units` = ".$db->qstr($age_units).")
-					OR (`age_min` = 0 
-						AND `age_units` = 'year' 
-						AND ".$db->qstr($age_units)." != 'year')
-					OR (`age_min` = 0 
-						AND `age_units` = 'month' 
-						AND ".$db->qstr($age_units)." = 'week')
-					)
-					ORDER BY RAND()
-					LIMIT 0, 1";
-		$occupation = $db->GetRow($query);
-		if ($age_years >= 70) {
-			$occupation["occupation"] = "former ".$occupation["occupation"];
-		}
-		
-		$query = "SELECT * FROM `cases_lu_children`
-					WHERE 
-					(
-						(`age_min` <= ".$db->qstr($age)."
-						AND (`age_max` >= ".$db->qstr($age)." OR `age_max` = 0)
-						AND `age_units` = ".$db->qstr($age_units).")
-					OR (`age_min` = 0 
-						AND `age_units` = 'year' 
-						AND ".$db->qstr($age_units)." != 'year')
-					OR (`age_min` = 0 
-						AND `age_units` = 'month' 
-						AND ".$db->qstr($age_units)." = 'week')
-					)
-					ORDER BY RAND()
-					LIMIT 0, 1";
-		$children = $db->GetRow($query);
-		
-		$query = "SELECT * FROM `cases_lu_living_situations`
-					WHERE 
-					(
-						(`age_min` <= ".$db->qstr($age)."
-						AND (`age_max` >= ".$db->qstr($age)." OR `age_max` = 0)
-						AND `age_units` = ".$db->qstr($age_units).")
-					OR (`age_min` = 0 
-						AND `age_units` = 'year' 
-						AND ".$db->qstr($age_units)." != 'year')
-					OR (`age_min` = 0 
-						AND `age_units` = 'month' 
-						AND ".$db->qstr($age_units)." = 'week')
-					)
-					".($children["cchildren_id"] == 1 ? "AND `children` = 0" : "")."
-					".($relationship["crelationship_id"] == 9 || $relationship["crelationship_id"] == 11 ? "AND `partner` = 1" : "AND `partner` = 0")."
-					ORDER BY RAND()
-					LIMIT 0, 1";
-		$living_situation = $db->GetRow($query);
-		
-		$query = "SELECT a.* FROM `cases_lu_duration` AS a
-					JOIN `cases_symptom_duration` AS b
-					ON a.`cduration_id` = b.`cduration_id`
-					WHERE b.`csymptom_id` = ".$db->qstr($symptom["csymptom_id"])."
-					ORDER BY RAND()
-					LIMIT 0, 1";
-		$duration = $db->GetRow($query);
-		
-		$query = "SELECT a.* FROM `cases_lu_severity` AS a
-					JOIN `cases_symptom_severity` AS b
-					ON a.`cseverity_id` = b.`cseverity_id`
-					WHERE b.`csymptom_id` = ".$db->qstr($symptom["csymptom_id"])."
-					ORDER BY RAND()
-					LIMIT 0, 1";
-		$severity = $db->GetRow($query);
-		
-		$query = "SELECT a.* FROM `cases_lu_characteristics` AS a
-					JOIN `cases_symptom_characteristics` AS b
-					ON a.`ccharacteristic_id` = b.`ccharacteristic_id`
-					WHERE b.`csymptom_id` = ".$db->qstr($symptom["csymptom_id"])."
-					ORDER BY RAND()
-					LIMIT 0, 1";
-		$characteristic = $db->GetRow($query);
-		
-		$query = "SELECT * FROM `cases_lu_locations` AS a
-					JOIN `cases_symptom_locations` AS b
-					ON a.`clocation_id` = b.`clocation_id`
-					WHERE b.`csymptom_id` = ".$db->qstr($symptom["csymptom_id"])."
-					ORDER BY RAND()
-					LIMIT 0, 1";
-		$location = $db->GetRow($query);
-		
-		$query = "SELECT a.* FROM `cases_lu_onset` AS a
-					JOIN `cases_symptom_onsets` AS b
-					ON a.`conset_id` = b.`conset_id`
-					WHERE b.`csymptom_id` = ".$db->qstr($symptom["csymptom_id"])."
-					ORDER BY RAND()
-					LIMIT 0, 1";
-		$onset = $db->GetRow($query);
-		
-		$query = "SELECT a.* FROM `cases_lu_timing` AS a
-					JOIN `cases_symptom_timing` AS b
-					ON a.`ctiming_id` = b.`ctiming_id`
-					WHERE b.`csymptom_id` = ".$db->qstr($symptom["csymptom_id"])."
-					ORDER BY RAND()
-					LIMIT 0, 1";
-		$timing = $db->GetRow($query);
-		
-		$query = "SELECT a.* FROM `cases_lu_aggravation` AS a
-					JOIN `cases_symptom_aggravation` AS b
-					ON a.`caggravation_id` = b.`caggravation_id`
-					WHERE b.`csymptom_id` = ".$db->qstr($symptom["csymptom_id"])."
-					ORDER BY RAND()
-					LIMIT 0, 1";
-		$aggravation = $db->GetRow($query);
-		
-		$query = "SELECT a.* FROM `cases_lu_alleviation` AS a
-					JOIN `cases_symptom_alleviation` AS b
-					ON a.`calleviation_id` = b.`calleviation_id`
-					WHERE b.`csymptom_id` = ".$db->qstr($symptom["csymptom_id"])."
-					ORDER BY RAND()
-					LIMIT 0, 1";
-		$alleviation = $db->GetRow($query);
-		
-		$query = "SELECT a.* FROM `cases_lu_associated_symptoms` AS a
-					JOIN `cases_symptoms_associated_symptoms` AS b
-					ON a.`casymptom_id` = b.`casymptom_id`
-					WHERE b.`csymptom_id` = ".$db->qstr($symptom["csymptom_id"])."
-					ORDER BY RAND()
-					LIMIT 0, 1";
-		$associated_symptom = $db->GetRow($query);
-		
-		$query = "SELECT a.* FROM `cases_lu_prior_history` AS a
-					JOIN `cases_symptom_prior_history` AS b
-					ON a.`cphistory_id` = b.`cphistory_id`
-					WHERE b.`csymptom_id` = ".$db->qstr($symptom["csymptom_id"])."
-					ORDER BY RAND()
-					LIMIT 0, 1";
-		$prior_history = $db->GetRow($query);
-		
-		$case_text = $name." is a(n) ".$age." ".$age_units." old, ".$relationship["relationship"]." ".$occupation["occupation"].",".($age_years >= 13 ? " ".$children["parental_status"] : "")." who lives ".$living_situation["living_situation"].".\n".($gender == "f" ? "She" : "He")." presents with a ".$duration["duration"]." ".$duration["duration_units"]." history of ".(isset($severity["severity"]) && $severity["severity"] ? $severity["severity"] : "").(isset($characteristic["characteristic"]) && $characteristic["characteristic"] ? " ".$characteristic["characteristic"] : "")." ".$symptom["symptom"].(isset($location) && $location ? " in ".($gender == "f" ? "her" : "his")." ".$location["location"] : ",")." which first started ".$onset["onset"].".\nThe ".$symptom["symptom"]." ".(isset($timing) && $timing ? $timing["timing"] : "").(isset($aggravation) && $aggravation && $aggravation["aggravation"] != "nothing" ? (isset($timing) && $timing["timing"] ?" and" : "").(isset($timing) && substr_count($timing["timing"], "worse") >= 1 ? "" : " is worse")." ".$aggravation["aggravation"] : "").(isset($alleviation) && $alleviation && $alleviation["alleviation"] !== "nothing" ? ", ".$alleviation["alleviation"] : "")." and ".$associated_symptom["associated_symptom"].". \n".($gender == "f" ? "She" : "He")." has ".$prior_history["prior_history"].".";
-		$case_array = array(
-							"proxy_id" => $ENTRADA_USER->getID(), 
-							"case_text" => $case_text, 
-							"csymptom_id" => $symptom["csymptom_id"], 
-							"age" => $age, 
-							"age_units" => $age_units, 
-							"crelationship_id" => (isset($relationship["crelationship_id"]) && $relationship["crelationship_id"] ? $relationship["crelationship_id"] : 0), 
-							"coccupation_id" => (isset($occupation["coccupation_id"]) && $occupation["coccupation_id"] ? $occupation["coccupation_id"] : 0), 
-							"cchildren_id" => (isset($children["cchildren_id"]) && $children["cchildren_id"] ? $children["cchildren_id"] : 0), 
-							"clsituation_id" => (isset($living_situation["clsituation_id"]) && $living_situation["clsituation_id"] ? $living_situation["clsituation_id"] : 0), 
-							"cduration_id" => (isset($duration["cduration_id"]) && $duration["cduration_id"] ? $duration["cduration_id"] : 0), 
-							"cseverity_id" => (isset($severity["cseverity_id"]) && $severity["cseverity_id"] ? $severity["cseverity_id"] : 0), 
-							"ccharacteristic_id" => (isset($characteristic["ccharacteristic_id"]) && $characteristic["ccharacteristic_id"] ? $characteristic["ccharacteristic_id"] : 0), 
-							"clocation_id" => (isset($location["clocation_id"]) && $location["clocation_id"] ? $location["clocation_id"] : 0), 
-							"conset_id" => (isset($onset["conset_id"]) && $onset["conset_id"] ? $onset["conset_id"] : 0), 
-							"ctiming_id" => (isset($timing["ctiming_id"]) && $timing["ctiming_id"] ? $timing["ctiming_id"] : 0), 
-							"caggravation_id" => (isset($aggravation["caggravation_id"]) && $aggravation["caggravation_id"] ? $aggravation["caggravation_id"] : 0), 
-							"calleviation_id" => (isset($alleviation["calleviation_id"]) && $alleviation["calleviation_id"] ? $alleviation["calleviation_id"] : 0), 
-							"casymptom_id" => (isset($associated_symptom["casymptom_id"]) && $associated_symptom["casymptom_id"] ? $associated_symptom["casymptom_id"] : 0), 
-							"cphistory_id" => (isset($prior_history["cphistory_id"]) && $prior_history["cphistory_id"] ? $prior_history["cphistory_id"] : 0), 
-							"updated_date" => time()
-						);
-		$query = "UPDATE `cases` SET `active` = 0 AND `updated_date` = ".$db->qstr($case_array["updated_date"])." WHERE `proxy_id` = ".$db->qstr($ENTRADA_USER->getID());
-		if ($db->Execute($query)) {
-			if ($db->AutoExecute("cases", $case_array, "INSERT") && ($case_id = $db->Insert_Id())) {
-				$case_array["case_id"] = $case_id;
-				return $case_array;
-			}
-		}
-	}
-	return false;
-}
-
-function fetch_case($case_id = 0) {
-	global $db, $ENTRADA_USER;
-	
-	if ($case_id) {
-		$query = "SELECT * FROM `cases` WHERE `case_id` = ".$db->qstr($case_id)." AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getProxyId());
-		$case = $db->GetRow($query);
-		if ($case) {
-			$case["active"] = 1;
-			if ($db->Execute("UPDATE `cases` SET `active` = 0 WHERE `proxy_id` = ".$db->qstr($ENTRADA_USER->getProxyId()))) {
-				$db->Execute("UPDATE `cases` SET `active` = 1 WHERE `case_id` = ".$db->qstr($case["case_id"]));
-			}
-		}
-	} else {
-		$query = "SELECT * FROM `cases` WHERE `active` = '1' AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getProxyId());
-		$case = $db->GetRow($query);
-	}
-	
-	if ($case) {
-		return $case;
-	} else {
-		return false;
-	}
-}
-
-function fetch_cases_list() {
-	global $db, $ENTRADA_USER;
-	
-	$query = "SELECT * FROM `cases` WHERE `proxy_id` = ".$db->qstr($ENTRADA_USER->getProxyId())." ORDER BY `active` DESC, `case_id` ASC";
-	$cases = $db->GetAll($query);
-	
-	if ($cases) {
-		return $cases;
-	} else {
-		return false;
-	}
-}
-
 /**
- * Function used by community reports to output the HTML for both the filter
- * controls and current filter status (Showing Statistics That Include:) box.
- */
-function clerkship_output_filter_controls($module_type, $proxy_id) {
-	global $db, $ENTRADA_ACL, $MODULE;
-
-	/**
-	 * Determine whether or not this is being called from the admin section.
-	 */
-	if ($module_type == "admin") {
-		$module_type = "/admin";
-	} else {
-		$module_type = "";
-	}
-	?>
-	<table id="filterList" style="clear: both; width: 100%" cellspacing="0" cellpadding="0" border="0" summary="Entry Filters">
-		<tr>
-			<td style="width: 53%; vertical-align: top">
-				<form action="<?php echo ENTRADA_URL.$module_type."/clerkship/clerk?".$_SERVER["QUERY_STRING"]; ?>" method="get" id="filter_edit" name="filter_edit" style="position: relative;">
-				<input type="hidden" name="proxy_id" value="<?php echo $proxy_id;?>" />
-				<input type="hidden" name="action" value="filter_edit" />
-				<input type="hidden" id="filter_edit_type" name="filter_type" value="" />
-				<input type="hidden" id="multifilter" name="filter" value="" />
-				<label for="filter_select" class="content-subheading" style="vertical-align: middle">Apply Filter:</label>
-				<select id="filter_select" onchange="showMultiSelect();" style="width: 184px; vertical-align: middle">
-					<option>Select Filter</option>
-					<option value="objective">Presentation Filters</option>
-					<option value="procedure">Task Filters</option>
-					<option value="rotation_id">Rotation</option>
-					<option value="location_id">Setting</option>
-				</select>
-				<span id="filter_options_loading" style="display:none; vertical-align: middle"><img src="<?php echo ENTRADA_RELATIVE; ?>/images/indicator.gif" width="16" height="16" alt="Please Wait" title="" style="vertical-align: middle" /> Loading ... </span>
-				<span id="options_container"></span>
-				</form>
-				<script type="text/javascript">
-				var multiselect = [];
-				var id;
-				function showMultiSelect() {
-					$$('select_multiple_container').invoke('hide');
-					id = $F('filter_select');
-					if (multiselect[id]) {
-						multiselect[id].container.show();
-					} else {
-						new Ajax.Request('<?php echo ENTRADA_URL."/api/clerkship_filters.api.php";?>', {
-							parameters: {options_for: id},
-							method: "GET",
-							onLoading: function() {
-								$('filter_options_loading').show();
-							},
-							onSuccess: function(response) {
-								$('options_container').insert(response.responseText);
-								if ($(id+'_options')) {
-									$('filter_edit_type').value = id;
-									$(id+'_options').addClassName('multiselect-processed');
-
-									multiselect[id] = new Control.SelectMultiple('multifilter',id+'_options',{
-										checkboxSelector: 'table.select_multiple_table tr td input[type=checkbox]',
-											nameSelector: 'table.select_multiple_table tr td.select_multiple_name label',
-											filter: id+'_select_filter',
-											resize: id+'_scroll',
-											afterCheck: function(element) {
-												var tr = $(element.parentNode.parentNode);
-												tr.removeClassName('selected');
-												if (element.checked) {
-													tr.addClassName('selected');
-												}
-											}
-									});
-
-									$(id+'_cancel').observe('click',function(event){
-										this.container.hide();
-										$('filter_select').options.selectedIndex = 0;
-										$('filter_select').show();
-										return false;
-									}.bindAsEventListener(multiselect[id]));
-
-									$(id+'_close').observe('click',function(event){
-										this.container.hide();
-										$('filter_edit').submit();
-										return false;
-									}.bindAsEventListener(multiselect[id]));
-
-									multiselect[id].container.show();
-								}
-							},
-							onError: function(response) {
-								alert("There was an error retrieving the events filter requested. Please try again.")		
-							},
-							onComplete: function() {
-								$('filter_options_loading').hide();
-							}
-						});
-					}	
-					return false;
-				}
-				function setDateValue(field, date) {
-					timestamp = getMSFromDate(date);
-					if (field.value != timestamp) {
-						window.location = '<?php echo ENTRADA_URL.$module_type."/clerkship/clerk?".(($_SERVER["QUERY_STRING"] != "") ? replace_query(array("dstamp" => false))."&" : ""); ?>dstamp='+timestamp;
-					}
-					return;
-				}
-				</script>
-			</td>
-			<td style="width: 47%; vertical-align: top">
-				<?php
-				if ((is_array($_SESSION[APPLICATION_IDENTIFIER]["tracking"]["filters"])) && (count($_SESSION[APPLICATION_IDENTIFIER]["tracking"]["filters"]))) {
-					echo "<table class=\"inner-content-box\" id=\"filter-list\" cellspacing=\"0\" summary=\"Selected Filter List\">\n";
-					echo "<thead>\n";
-					echo "	<tr>\n";
-					echo "		<td class=\"inner-content-box-head\">Showing Entries That Include:</td>\n";
-					echo "	</tr>\n";
-					echo "</thead>\n";
-					echo "<tbody>\n";
-					echo "	<tr>\n";
-					echo "		<td class=\"inner-content-box-body\">";
-					echo "		<div id=\"filter-list-resize-handle\" style=\"margin:0px -6px -6px -7px;\">";
-					echo "		<div id=\"filter-list-resize\" style=\"height: 60px; overflow: auto;  padding: 0px 6px 6px 6px;\">\n";
-					foreach ($_SESSION[APPLICATION_IDENTIFIER]["tracking"]["filters"] as $filter_type => $filter_contents) {
-						if (is_array($filter_contents)) {
-							echo 	$filter_name = filter_name($filter_type);
-							echo "	<div style=\"margin: 2px 0px 10px 3px\">\n";
-							foreach ($filter_contents as $filter_key => $filter_value) {
-								echo "	<div id=\"".$filter_type."_".$filter_key."\">";
-								echo "		<a href=\"".ENTRADA_URL.$module_type."/clerkship/clerk?ids=".$proxy_id."&action=filter_remove&amp;filter=".$filter_type."_".$filter_key."\" title=\"Remove this filter\">";
-								echo "		<img src=\"".ENTRADA_URL."/images/checkbox-on.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" />";
-								switch ($filter_type) {
-									case "objective_id" :
-										echo fetch_objective_title($filter_value);
-									break;
-									case "procedure_id":
-										//echo Procedure name;
-									break;
-									case "rotation_id":
-										//echo rotation title;
-									break;
-									case "location_id":
-									default :
-										//echo location name;
-									break;
-								}
-								echo "		</a>";
-								echo "	</div>\n";
-							}
-							echo "	</div>\n";
-						}
-					}
-					echo "		</div>\n";
-					echo "		</div>\n";
-					echo "		</td>\n";
-					echo "	</tr>\n";
-					echo "</tbody>\n";
-					echo "</table>\n";
-					echo "<br />\n";
-					echo "<script type=\"text/javascript\">";
-					echo "	new ElementResizer($('filter-list-resize'), {handleElement: $('filter-list-resize-handle'), min: 40});";
-					echo "</script>";
-				}
-				?>
-			</td>
-		</tr>
-	</table>
-	<?php
-}
-
-/*
  * This function returns the curriculum level related to a course code
  *
  * @param int $organisation_id

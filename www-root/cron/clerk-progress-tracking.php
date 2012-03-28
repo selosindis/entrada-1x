@@ -22,6 +22,9 @@
  * Include the Entrada init code.
  */
 require_once("init.inc.php");
+
+ini_set("display_errors", 1);
+
 $excused = array(1799, 1767, 1725, 1785, 1749, 1801);
 $query 	= "SELECT * FROM `".CLERKSHIP_DATABASE."`.`global_lu_rotations` AS a
 		LEFT JOIN `courses` AS b
@@ -57,7 +60,7 @@ if ($rotations) {
 			$db->Execute($query);
 			$count = 0;
 			foreach ($results as $clerk) {
-				if (((int)$clerk["proxy_id"]) != 1788 && ((int)$clerk["proxy_id"]) != 1738 && ((int)$clerk["proxy_id"]) != 1760 && ((int)$clerk["proxy_id"]) != 1739 && ((int)$clerk["proxy_id"]) != 1543) { 
+				if (((int)$clerk["proxy_id"]) != 1788 && ((int)$clerk["proxy_id"]) != 1806 && ((int)$clerk["proxy_id"]) != 1738 && ((int)$clerk["proxy_id"]) != 1760 && ((int)$clerk["proxy_id"]) != 1739 && ((int)$clerk["proxy_id"]) != 1543) { 
 					if ($clerk["rotation_id"] && ($clerk["start"] > strtotime("February 14th, 2010") || ((array_search($clerk["rotation_id"], array("3", "9")) !== false))) && (!array_search(((int)$clerk["proxy_id"]), $excused) || $clerk["rotation_id"] != 3) && ($clerk["clerk_accepted"] !== 1 || $clerk["administrator_accepted"] !== 1)) {
 						if ($clerk["start"] < time()) {
 							if (time() >= ($clerk["finish"] + (ONE_WEEK * 6))) {
@@ -73,7 +76,11 @@ if ($rotations) {
 					}
 				}
 			}
+		} else {
+			echo $db->ErrorMsg();
 		}
 		clerkship_send_queued_notifications($rotation["rotation_id"], $rotation["rotation_title"], $rotation["pcoord_id"]);
 	}
+} else {
+	echo $db->ErrorMsg();
 }

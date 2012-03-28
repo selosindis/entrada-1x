@@ -88,7 +88,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								FROM `events` AS a
 								LEFT JOIN `courses` AS b
 								ON b.`course_id` = a.`course_id`
-								WHERE a.`event_id` = ".$db->qstr($event_id);
+								WHERE a.`event_id` = ".$db->qstr($event_id)."
+								AND b.`course_active` = '1'";
 					$result	= $db->GetRow($query);
 					if ($result) {
 						if($ENTRADA_ACL->amIAllowed(new EventResource($result["event_id"], $result["course_id"], $result["organisation_id"]), 'delete')) {
@@ -315,6 +316,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								LEFT JOIN `courses` AS d
 								ON d.`course_id` = a.`course_id`
 								WHERE a.`event_id` IN (".implode(", ", $EVENT_IDS).")
+								AND d.`course_active` = '1'
 								ORDER BY a.`event_start` ASC";
 				$results	= $db->GetAll($query);
 				if($results) {

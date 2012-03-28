@@ -140,7 +140,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 						FROM `group_members` a , `evaluation_evaluators` ev
 						WHERE ev.`evaluator_type` = 'cohort'
 						AND ev.`evaluator_value` = a.`group_id`
-						AND a.`member_active` = 'true'
+						AND a.`member_active` = '1'
 						AND ev.`evaluation_id` = ".$db->qstr($report["evaluation"])."
 					) t";
 		$evaluators	= $db->GetOne($query);
@@ -152,7 +152,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 						ON a.`group_id` = b.`group_id`
 						WHERE ev.`evaluator_type` = 'cohort'
 						AND ev.`evaluator_value` = a.`group_id`
-						AND a.`member_active` = 'true'
+						AND a.`member_active` = '1'
 						AND ev.`evaluation_id` = ".$db->qstr($report["evaluation"]);
 			$class	= $db->GetRow($query);	
 		}

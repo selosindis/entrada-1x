@@ -74,7 +74,7 @@ if($EVALUATION_ID) {
         if((isset($_GET["display"]) && $_GET["display"] == "complete_list") || !isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["display"])) {
            $view_individual_attempts = true;
            $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["display"] = true;
-        } elseif ((isset($_GET["attempts"]) && $_GET["display"] == "summary")) {
+        } elseif ((isset($_GET["display"]) && $_GET["display"] == "summary")) {
            $view_individual_attempts = false;
            $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["display"] = false;
         }
@@ -244,7 +244,7 @@ if($EVALUATION_ID) {
 	             * Get the total number of results using the generated queries above and calculate the total number
 	             * of pages that are available based on the results per page preferences.
 	             */	           
-	           $query = "SELECT a.*, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`lastname`, b.`firstname`, a.`updated_date` AS `ordered_date`, c.`progress_value`, c.`updated_date`, d.`target_value`, e.`target_shortname`, b.`id` AS `proxy_id`
+	           $query = "SELECT a.*, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`lastname`, b.`firstname`, a.`updated_date` AS `ordered_date`, c.`progress_value`, c.`updated_date`, d.`target_value`, e.`target_shortname`, b.`id` AS `proxy_id`, c.`etarget_id`
 	            			FROM `evaluation_progress` AS c
                 			JOIN `evaluation_evaluators` AS a
                 			ON a.`evaluation_id` = c.`evaluation_id`
@@ -262,11 +262,11 @@ if($EVALUATION_ID) {
                 			ON d.`target_id` = e.`target_id`
 	            			WHERE c.`evaluation_id` = ".$db->qstr($EVALUATION_ID)."
                 			AND c.`progress_value` = 'complete'
-	            			GROUP BY b.`id`
+	            			GROUP BY c.`eprogress_id`
 	            			
 	            			UNION
 	            			
-	            			SELECT a.*, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`lastname`, b.`firstname`, a.`updated_date` AS `ordered_date`, c.`progress_value`, c.`updated_date`, d.`target_value`, e.`target_shortname`, b.`id` AS `proxy_id`
+	            			SELECT a.*, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`lastname`, b.`firstname`, a.`updated_date` AS `ordered_date`, c.`progress_value`, c.`updated_date`, d.`target_value`, e.`target_shortname`, b.`id` AS `proxy_id`, c.`etarget_id`
 	            			FROM `evaluation_progress` AS c
                 			JOIN `evaluation_evaluators` AS a
                 			ON a.`evaluation_id` = c.`evaluation_id`
@@ -290,8 +290,8 @@ if($EVALUATION_ID) {
 	            			AND a.`evaluator_type` = 'cohort'
 	            			AND g.`group_type` = 'cohort'
                 			AND c.`progress_value` = 'complete'
-	            			GROUP BY gm.`proxy_id`
-	            			ORDER BY `lastname`, `firstname`, `ordered_date`";
+	            			GROUP BY c.`eprogress_id`
+	            			ORDER BY `etarget_id`, `lastname`, `firstname`, `ordered_date`";
 	            $evaluation_evaluators = $db->GetAll($query);
 	            
 	        	if ($evaluation_evaluators) {

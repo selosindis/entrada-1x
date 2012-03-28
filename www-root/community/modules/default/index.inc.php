@@ -26,7 +26,7 @@ $query	= "	SELECT *
 $result	= $db->GetRow($query);
 if ($result) {
 	if (isset($result["page_title"]) && trim($result["page_title"]) != "") {
-		//echo "<h1>".html_encode($result["page_title"])."</h1>\n";
+		echo "<h1>".html_encode($result["page_title"])."</h1>\n";
 	}
 	
 	if ($ERROR) {
@@ -129,7 +129,7 @@ if ($result) {
 						}
 			
 						$last_date = $announcement["release_date"];
-						$community_announcements .= "<h3  class=\"announcement-date\">".date("l F dS Y", $announcement["release_date"])."</h3>\n";
+						$community_announcements .= "<h3 class=\"announcement-date\">".date("l F dS Y", $announcement["release_date"])."</h3>\n";
 						$community_announcements .= "<ul class=\"announcements\">\n";
 					}
 					$community_announcements .= "<li".(!($key % 2) ? " class=\"odd-announcement\"" : "")."><a href=\"".COMMUNITY_RELATIVE.$COMMUNITY_URL.":".$announcement["page_url"]."?id=".$announcement["cannouncement_id"]."\">".html_encode(limit_chars($announcement["announcement_title"], (isset($events) && $events ? 46: 108)))."</a></li>\n";
@@ -160,15 +160,11 @@ if ($result) {
 
 				$community_events .= "</ul>\n";
 			}
-			
-
 		}
-		
 		
 		/**
 		 * Determine what and how to display the announcements information.
 		 */
-		
 		if ($community_announcements) {
 			$community_announcements_width = ($community_events ? "49" : "98");
 			echo "<div style=\"width: ". $community_announcements_width ."%; float: left; padding-right: 5px\">\n";
@@ -185,20 +181,6 @@ if ($result) {
 			echo $community_events;
 			echo "</div>\n";
 		}
-		
-		/**
-		 * Get the community title and description 
-		 */
-		/*
-		$query = "SELECT community_title, community_description FROM communities
-				  WHERE community_id= ".$db->qstr($COMMUNITY_ID);
-		$results = $db->GetRow($query);
-		if ($results) {
-			echo "<div class=\"welcome-message  clear\" >";
-			echo "<h1>".$results["community_title"]."</h1>";
-			echo "<p>".$results["community_description"]."</p>";
-			echo "</div>";
-		}*/	
 		
 		/**
 		 * If the events module is enabled, display the event details on this Dashboard.
@@ -220,13 +202,7 @@ if ($result) {
 							LIMIT 0, 15";
 			$results	= $db->CacheGetAll(CACHE_TIMEOUT, $query);
 			if($results) {
-				?>
-<div style="clear:both"></div>
-				<section>
-					<h2 class="history">Community History</h2>
-				<?php
-				$history_messages = "";
-				echo "<ul class=\"history-list\">";
+				$history_messages = "<ul class=\"history-list\">";
 				foreach($results as $key => $result) {
 					if ((int)$result["cpage_id"] && ($result["history_key"] != "community_history_activate_module")) {
 						$query = "SELECT `page_url` FROM `community_pages` WHERE `cpage_id` = ".$db->qstr($result["cpage_id"])." AND `community_id` = ".$db->qstr($result["community_id"]);
@@ -246,20 +222,19 @@ if ($result) {
 						$history_message = $result["history_message"];
 					}
 					
-					$content_search						= array("%SITE_COMMUNITY_URL%", "%SYS_PROFILE_URL%", "%PAGE_URL%", "%RECORD_ID%", "%RECORD_TITLE%", "%PARENT_ID%", "%PROXY_ID%");
-					$content_replace					= array(COMMUNITY_URL.$COMMUNITY_URL, ENTRADA_URL."/people", $page_url, $result["record_id"], $record_title, $parent_id, $result["proxy_id"]);
-					$history_message			= str_replace($content_search, $content_replace, $history_message);
-					$history_messages .= "<li"./*.(!($key % 2) ? " style=\"background-color: #F4F4F4\"" : "").*/">".strip_tags($history_message, "<a>")."</li>";
+					$content_search = array("%SITE_COMMUNITY_URL%", "%SYS_PROFILE_URL%", "%PAGE_URL%", "%RECORD_ID%", "%RECORD_TITLE%", "%PARENT_ID%", "%PROXY_ID%");
+					$content_replace = array(COMMUNITY_URL.$COMMUNITY_URL, ENTRADA_URL."/people", $page_url, $result["record_id"], $record_title, $parent_id, $result["proxy_id"]);
+					$history_message = str_replace($content_search, $content_replace, $history_message);
+					$history_messages .= "<li>".strip_tags($history_message, "<a>")."</li>";
 				}
 				$history_messages .= "</ul>";
 			}
 			if ($history_messages) {
 				?>
-					
-					<?php
-					echo $history_messages;
-					?>
-					
+				<div style="clear:both"></div>
+				<section>
+					<h2 class="history">Community History</h2>
+					<?php echo $history_messages; ?>
 				</section>
 				<?php
 			}

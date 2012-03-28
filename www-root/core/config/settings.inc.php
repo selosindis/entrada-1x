@@ -272,7 +272,7 @@ define("DEBUG_MODE", true);														// Some places have extra debug code to
 define("SHOW_LOAD_STATS", false);												// Do you want to see the time it takes to load each page?
 
 define("APPLICATION_NAME", "Entrada");											// The name of this application in your school (i.e. MedCentral, Osler, etc.)
-define("APPLICATION_VERSION", "1.3.0DEV");											// The current filesystem version of Entrada.
+define("APPLICATION_VERSION", "1.3.0");											// The current filesystem version of Entrada.
 define("APPLICATION_IDENTIFIER", "app-".AUTH_APP_ID);							// PHP does not allow session key's to be integers (sometimes), so we have to make it a string.
 
 $DEFAULT_META["title"] = "Entrada: An eLearning Ecosystem";
@@ -352,9 +352,12 @@ $PROFILE_NAME_PREFIX[] = "Ms.";
  * these blank and the proxy ability will not be used.
  */
 $PROXY_SUBNETS = array();
+$PROXY_SUBNETS["default"] = array("start" => "130.15.0.0", "end" => "130.15.255.255", "exceptions" => array());
 $PROXY_SUBNETS["library"] = array("start" => "130.15.0.0", "end" => "130.15.255.255", "exceptions" => array());
 
 $PROXY_URLS = array();
+$PROXY_URLS["default"]["active"] = "http://proxy.yourschool.ca/login?url=";
+$PROXY_URLS["default"]["inactive"] = "";
 $PROXY_URLS["library"]["active"] = "http://proxy.yourschool.ca/login?url=http://library.yourschool.ca";
 $PROXY_URLS["library"]["inactive"] = "http://library.yourschool.ca";
 
@@ -458,11 +461,12 @@ $MODULES = array();
 $MODULES["awards"] = array("title" => "Manage Awards", "resource" => "awards", "permission" => "update");
 $MODULES["clerkship"] = array("title" => "Manage Clerkship", "resource" => "clerkship", "permission" => "update");
 $MODULES["courses"] = array("title" => "Manage Courses", "resource"=> "coursecontent", "permission" => "update");
-$MODULES["evaluations"] = array("title" => "Manage Evaluations", "resource" => "evaluation", "permission" => "read");
+$MODULES["evaluations"] = array("title" => "Manage Evaluations", "resource" => "evaluation", "permission" => "update");
 $MODULES["communities"] = array("title" => "Manage Communities", "resource" => "communityadmin", "permission" => "read");
 $MODULES["groups"] = array("title" => "Manage Groups", "resource" => "group", "permission" => "update");
 $MODULES["events"] = array("title" => "Manage Events", "resource" => "eventcontent", "permission" => "update");
 $MODULES["gradebook"] = array("title" => "Manage Gradebook", "resource" => "gradebook", "permission" => "update");
+$MODULES["mspr"] = array("title" => "Manage MSPRs", "resource" => "mspr", "permission" => "create");
 $MODULES["tasks"] = array("title" => "Manage Tasks", "resource" => "task", "permission" => "create"); 
 $MODULES["notices"] = array("title" => "Manage Notices", "resource" => "notice", "permission" => "update");
 $MODULES["polls"] = array("title" => "Manage Polls", "resource" => "poll", "permission" => "update");
@@ -640,5 +644,4 @@ define("TASK_DEFAULT_REJECT_COMMENT", TASK_COMMENT_ALLOW);
 define("TASK_DEFAULT_FACULTY_SELECTION",TASK_FACULTY_SELECTION_ALLOW);
 
 define("PDF_PASSWORD","Mm7aeY");
-
 define("GRADEBOOK_DISPLAY_WEIGHTED_TOTAL", 0);

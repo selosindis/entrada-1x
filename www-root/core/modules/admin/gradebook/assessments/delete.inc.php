@@ -90,6 +90,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					if($db->Execute($query)) {
 						$db->AutoExecute ("assignments",array("assessment_id"=>0),"UPDATE","`assessment_id` IN (".implode(", ", $ASSESSMENT_IDS).")");
 						$ONLOAD[]	= "setTimeout('window.location=\\'".$INDEX_URL."\\'', 5000)";
+
 						if($total_removed = $db->Affected_Rows()) {
 							$query = "DELETE FROM `assessment_grades` WHERE `assessment_id` IN (".implode(", ", $ASSESSMENT_IDS).")";
 							if($db->Execute($query)) {							

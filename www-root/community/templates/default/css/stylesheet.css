@@ -157,7 +157,7 @@ font-weight:400;
 color:#036;
 }
 
-h2.history,.content-subheading {
+h2,h2.history,.content-subheading {
 font-family:"Century Gothic", Helvetica, Arial, sans-serif;
 font-size:16px;
 color:#036;
@@ -530,6 +530,7 @@ width:115px;
 height:22px;
 border:none;
 }
+
 input[type=submit].disabled, input.button.disabled {
 	background:#EEE url(../images/btn_bg_disabled.gif) no-repeat center center;
 	color:#CCC;

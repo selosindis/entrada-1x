@@ -456,7 +456,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 									</td>
 								</tr>
 								<tr>
-									<td><label for="description_id" class="">Description</label></td>
+									<td><label for="description_id" class="form-nrequired">Description</label></td>
 									<td>
 										<input type="text" id="organisation_desc" name="organisation_desc" value="<?php echo html_encode($PROCESSED["organisation_desc"]); ?>" style="width: 250px" />
 									</td>

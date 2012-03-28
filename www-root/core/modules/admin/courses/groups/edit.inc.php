@@ -98,8 +98,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 			} else {
 				$GROUP_ID = 0;
 			}
-			if (isset($_GET["ids"])) {
-				$_SESSION["gids"] = array(htmlentities($_GET["ids"]));
+			if (isset($_GET["gids"])) {
+				$_SESSION["gids"] = array(htmlentities($_GET["gids"]));
 			} elseif (isset($_POST["checked"])) {
 				$_SESSION["gids"] = $_POST["checked"];
 			} elseif((isset($_POST["group_id"])) && ((int) trim($_POST["group_id"]))) {
@@ -366,7 +366,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 																GROUP BY a.`id`
 																ORDER BY a.`lastname` ASC, a.`firstname` ASC";
 										}
-										
+
 										//Fetch list of categories
 										$query	= "SELECT `organisation_id`,`organisation_title` FROM `".AUTH_DATABASE."`.`organisations` ORDER BY `organisation_title` ASC";
 										$organisation_results	= $db->GetAll($query);

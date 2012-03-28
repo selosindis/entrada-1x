@@ -42,7 +42,7 @@ foreach($cohorts as $cohort) {
 				ORDER BY a.`event_start` ASC";
 	$results	= $db->GetAll($query);
 	if($results) {
-		$ical = new iCal("-//".html_encode($_SERVER["HTTP_HOST"])."//iCal".(($cohort["group_name"]) ? html_encode($cohort["group_name"]) : "")." Learning Events Calendar MIMEDIR//EN", 1, ENTRADA_ABSOLUTE."/calendars/", (($cohort) ? $cohort["group_id"] : "all_cohorts")); // (ProgrammID, Method (1 = Publish | 0 = Request), Download Directory)
+		$ical = new iCal("-//".html_encode($_SERVER["HTTP_HOST"])."//iCal".(($cohort["group_name"]) ? html_encode($cohort["group_name"]) : "")." Learning Events Calendar MIMEDIR//EN", 1, ENTRADA_ABSOLUTE."/calendars/", (($cohort) ? clean_input($cohort["group_name"], "numeric") : "all_cohorts")); // (ProgrammID, Method (1 = Publish | 0 = Request), Download Directory)
 		foreach($results as $result) {
 			$ical->addEvent(
 				array((($result["fullname"] != "") ? $result["fullname"] : ""), (($result["email"]) ? $result["email"] : "")), // Organizer

@@ -117,7 +117,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 				echo display_error();
 			}
 
-			$query	= "SELECT * FROM `notices` WHERE `notice_id` IN (".implode(", ", $NOTICE_IDS).") ORDER BY `display_until` ASC";
+			$query	= "SELECT * FROM `notices` WHERE `notice_id` IN (".implode(", ", $NOTICE_IDS).") ORDER BY `target` ASC, `display_until` ASC";
 			$results	= $db->GetAll($query);
 			if($results) {
 				echo display_notice(array("Please review the following notices to ensure that you wish to permanently delete them. This action cannot be undone."));

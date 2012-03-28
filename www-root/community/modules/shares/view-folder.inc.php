@@ -288,8 +288,8 @@ if ($RECORD_ID) {
 					</colgroup>
 					<thead>
 						<tr>
-							<td>&nbsp</td>
-							<td<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["cid_".$COMMUNITY_ID][$PAGE_URL]["sb"] == "title") ? " class=\"sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["cid_".$COMMUNITY_ID][$PAGE_URL]["so"])."\"" : ""); ?>><?php echo communities_order_link("title", "File Title"); ?></td>
+							<td>&nbsp;</td>
+							<td<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["cid_".$COMMUNITY_ID][$PAGE_URL]["sb"] == "title") ? " class=\"sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["cid_".$COMMUNITY_ID][$PAGE_URL]["so"])."\"" : ""); ?> style="border-left: none"><?php echo communities_order_link("title", "File Title"); ?></td>
 							<td<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["cid_".$COMMUNITY_ID][$PAGE_URL]["sb"] == "owner") ? " class=\"sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["cid_".$COMMUNITY_ID][$PAGE_URL]["so"])."\"" : ""); ?> style="border-left: none"><?php echo communities_order_link("owner", "Owner"); ?></td>
 							<td<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["cid_".$COMMUNITY_ID][$PAGE_URL]["sb"] == "date") ? " class=\"sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["cid_".$COMMUNITY_ID][$PAGE_URL]["so"])."\"" : ""); ?> style="border-left: none"><?php echo communities_order_link("date", "Last Updated"); ?></td>
 						</tr>
@@ -307,7 +307,7 @@ if ($RECORD_ID) {
 
 						echo "<tr".((!$accessible) ? " class=\"na\"" : "").">\n";
 						echo "  <td style=\"vertical-align: top\">";
-						echo "		<a href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-file&id=".$result["csfile_id"]."&download=latest\"><img src=\"".ENTRADA_URL."/community/templates/default/images/btn_save.gif\" alt=\"Download File\" title=\"Download File\"width=\"15\"/></a>";
+						echo "		<a href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-file&id=".$result["csfile_id"]."&download=latest\"><img src=\"".ENTRADA_URL."/community/templates/default/images/btn_save.gif\" alt=\"Download File\" title=\"Download File\"width=\"15\" border=\"0\" /></a>";
 						echo "	</td>";
 						echo "	<td style=\"vertical-align: top\">\n";
 						echo "		<img src=\"".ENTRADA_URL."/serve-icon.php?ext=".$ext."\" width=\"16\" height=\"16\" alt=\"".strtoupper($ext)." Document\" title=\"".strtoupper($ext)." Document\" style=\"vertical-align: middle; margin-right: 4px\" /> <a id=\"file-".(int) $result["csfile_id"]."-title\" href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-file&amp;id=".$result["csfile_id"]."\" style=\"font-weight: bold; vertical-align: middle\">".limit_chars(html_encode($result["file_title"]), 50, true)."</a>\n";

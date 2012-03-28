@@ -173,7 +173,7 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 			<p>The sections below require your input. The information you provide will appear on your Medical School Performance Report. All submisions are subject to dean approval.</p>
 			<ul>
 				<li>
-					Each section below provides a link to add new entires or edit in the case of single entires (Critical Enquiry, and Community-Based Project).  
+					Each section below provides a link to add new entires or edit in the case of single entires (Critical Enquiry, and Community Based Project).  
 				</li>
 				<li>
 					All entries have a background color corresponding to their status: 
@@ -186,17 +186,17 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 			</ul>
 		</div>
 		<div class="section" >
-			<h3 title="Critical Enquiry" class="collapsable collapsed">Critical Enquiry</h3>
+			<h3 title="Critical Enquiry" class="collapsable collapsed">Critical Enquiry Project</h3>
 			<div id="critical-enquiry">
 				<div id="add_critical_enquiry_link" style="float: right;">
 					<ul class="page-action">
-						<li><a id="add_critical_enquiry" href="<?php echo ENTRADA_URL; ?>/profile?section=mspr&id=<?php echo $PROXY_ID; ?>" class="strong-green">Add Critical Enquiry</a></li>
+						<li><a id="add_critical_enquiry" href="<?php echo ENTRADA_URL; ?>/profile?section=mspr&id=<?php echo $PROXY_ID; ?>" class="strong-green">Add Critical Enquiry Project</a></li>
 					</ul>
 				</div>
 				<div class="clear">&nbsp;</div>
 				
 				<div id="add-critical-enquiry-box" class="modal-confirmation" style="width: 40em; height: 30ex;">
-					<h1>Add Critical Enquiry</h1>
+					<h1>Add Critical Enquiry Project</h1>
 					<form method="post"">
 						<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
 						<input type="hidden" name="action" value="Add"></input>
@@ -240,7 +240,7 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 				</div>
 				
 				<div id="update-critical-enquiry-box" class="modal-confirmation" style="width: 40em; height: 30ex;">
-					<h1>Edit Critical Enquiry</h1>
+					<h1>Edit Critical Enquiry Project</h1>
 					<form method="post">
 						<table class="mspr_form">
 							<colgroup>
@@ -284,18 +284,18 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 			</div>
 		</div>
 		<div class="section" >
-			<h3 title="Community-Based Project" class="collapsable collapsed">Community-Based Project</h3>
+			<h3 title="Community-Based Project" class="collapsable collapsed">Community Based Project</h3>
 			<div id="community-based-project">
 				<div id="add_community_based_project_link" style="float: right;">
 					<ul class="page-action">
-						<li><a id="add_community_based_project" href="<?php echo ENTRADA_URL; ?>/profile?section=mspr&show=community_based_project_form&id=<?php echo $PROXY_ID; ?>" class="strong-green">Add Community-Based Project</a></li>
+						<li><a id="add_community_based_project" href="<?php echo ENTRADA_URL; ?>/profile?section=mspr&show=community_based_project_form&id=<?php echo $PROXY_ID; ?>" class="strong-green">Add Community Based Project</a></li>
 					</ul>
 				</div>
 				<div class="clear">&nbsp;</div>
 				
 			
 				<div id="add-community-based-project-box" class="modal-confirmation" style="width: 40em; height: 30ex;">
-					<h1>Add Community-Based Project</h1>
+					<h1>Add Community Based Project</h1>
 					<form method="post">
 						<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
 						<input type="hidden" name="action" value="Add"></input>
@@ -339,7 +339,7 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 				</div>
 				
 				<div id="update-community-based-project-box" class="modal-confirmation" style="width: 40em; height: 30ex;">
-					<h1>Edit Community-Based Project</h1>
+					<h1>Edit Community Based Project</h1>
 					<form method="post">
 						<table class="mspr_form">
 							<colgroup>
@@ -381,7 +381,7 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 				<div id="community_based_project"><?php echo display_supervised_project_profile($community_based_project); ?></div>
 			</div>
 		</div><div class="section" >
-			<h3 title="Research" class="collapsable collapsed">Research</h3>
+			<h3 title="Research" class="collapsable collapsed">Publications</h3>
 			<div id="research">
 				<div class="instructions">
 					<ul>
@@ -392,13 +392,13 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 				</div>
 				<div id="add_research_citation_link" style="float: right;">
 					<ul class="page-action">
-						<li><a id="add_research_citation" href="<?php echo ENTRADA_URL; ?>/profile?section=mspr&id=<?php echo $PROXY_ID; ?>" class="strong-green">Add Research Citation</a></li>
+						<li><a id="add_research_citation" href="<?php echo ENTRADA_URL; ?>/profile?section=mspr&id=<?php echo $PROXY_ID; ?>" class="strong-green">Add Publication Citation</a></li>
 					</ul>
 				</div>
 				<div class="clear">&nbsp;</div>
 				
 				<div id="update-research-box" class="modal-confirmation" style="width: 50em; height: 40ex;">
-					<h1>Edit Research Citation</h1>
+					<h1>Edit Publication Citation</h1>
 					<form method="post">
 						<table class="mspr_form">
 							<tbody>
@@ -421,7 +421,7 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 				</div>
 				
 				<div id="add-research-box" class="modal-confirmation" style="width: 50em; height: 40ex;">
-					<h1>Add Research Citation</h1>
+					<h1>Add Publication Citation</h1>
 					<form method="post">
 						<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
 						<input type="hidden" name="action" value="Add"></input>
@@ -569,7 +569,7 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 			<div id="contributions-to-medical-school">
 				<div class="instructions">
 					<ul>
-						<li>Extra-curricular learning activities are only approved if verified</li>
+						<li>Extra-curricular accomplishments are only approved if verified</li>
 						<li>Examples of contributions to medical school/student life include:
 							<ul>
 								<li>Participation in School of Medicine student government</li>
@@ -780,7 +780,7 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 		
 		
 		</div><div class="section" >
-			<h3 title="Extra-curricular Learning Activities" class="collapsable collapsed">Extra-curricular Learning Activities</h3>
+			<h3 title="Extra-curricular Accomplishments" class="collapsable collapsed">Extra-curricular Accomplishments</h3>
 			<div id="extra-curricular-learning-activities">
 			
 			<div class="subsection">
@@ -788,7 +788,7 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 				<div id="international-activities"><?php echo display_international_activities_profile($international_activities); ?></div>
 			</div>
 			<div class="subsection" >
-				<h4>Observerships</h4>
+				<h4>Learning Activities - Observerships</h4>
 				<div id="observerships"><?php echo display_observerships_profile($observerships); ?></div>
 			</div>
 			<div class="subsection" >
@@ -968,19 +968,19 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 	} else {
 	?>
 	<div class="section" >
-		<h3 title="Critical Enquiry" class="collapsable collapsed">Critical Enquiry</h3>
+		<h3 title="Critical Enquiry" class="collapsable collapsed">Critical Enquiry Project</h3>
 		<div id="critical-enquiry">
 			<div id="critical_enquiry"><?php echo display_supervised_project_profile($critical_enquiry, true); ?></div>
 		</div>
 	</div>
 	<div class="section" >
-		<h3 title="Community-Based Project" class="collapsable collapsed">Community-Based Project</h3>
+		<h3 title="Community-Based Project" class="collapsable collapsed">Community Based Project</h3>
 		<div id="community-based-project">
 			<div id="community_based_project"><?php echo display_supervised_project_profile($community_based_project, true); ?></div>
 		</div>
 	</div>
 	<div class="section" >
-		<h3 title="Research" class="collapsable collapsed">Research</h3>
+		<h3 title="Research" class="collapsable collapsed">Publications</h3>
 		<div id="research">
 			<div id="research_citations"><?php echo display_research_citations_profile($research_citations, true); ?></div>
 		</div>
@@ -1024,7 +1024,7 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 	</div>
 	
 	<div class="section" >
-		<h3 title="Extra-curricular Learning Activities" class="collapsable collapsed">Extra-curricular Learning Activities</h3>
+		<h3 title="Extra-curricular Accomplishments" class="collapsable collapsed">Extra-curricular Accomplishments</h3>
 		<div id="extra-curricular-learning-activities">
 		
 			<div class="subsection">
@@ -1032,7 +1032,7 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 				<div id="international-activities"><?php echo display_international_activities_profile($international_activities); ?></div>
 			</div>
 			<div class="subsection" >
-				<h4>Observerships</h4>
+				<h4>Learning Activities - Observerships</h4>
 				<div id="observerships"><?php echo display_observerships_profile($observerships); ?></div>
 			</div>
 			<div class="subsection" >

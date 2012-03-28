@@ -41,7 +41,9 @@ if (isset($_GET["sb"])) {
 
 	$_SERVER["QUERY_STRING"] = replace_query(array("sb" => false));
 } else {
-	$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] = "";
+	if (!isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"])) {
+		$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] = "title";
+	}
 }
 
 /**
@@ -61,7 +63,6 @@ if (isset($_GET["so"])) {
 /**
  * Provide the queries with the columns to order by.
  */
-
 switch ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) {
 	case "title" :
 		$sort_by = "`name` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]);
@@ -80,18 +81,18 @@ if ($COURSE_ID) {
 				FROM `courses` AS a
 				JOIN `assessments` AS b
 				ON a.`course_id` = b.`course_id`
-				LEFT JOIN `assessment_grades` AS c
+				AND b.`cohort` = ".$db->qstr($ENTRADA_USER->getCohort())."
+				JOIN `assessment_grades` AS c
 				ON b.`assessment_id` = c.`assessment_id`
 				AND c.`proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
 				JOIN `assessment_marking_schemes` AS d
 				ON b.`marking_scheme_id` = d.`id`
 				WHERE a.`course_id` = ".$db->qstr($COURSE_ID)."
-				AND (b.`release_date` != '0' AND b.`release_date` <= ".$db->qstr(time()).")
+				AND (b.`release_date` = '0' OR b.`release_date` <= ".$db->qstr(time()).")
 				AND (b.`release_until` = '0' OR b.`release_until` >= ".$db->qstr(time()).")
 				AND b.`show_learner` = '1'
 				ORDER BY ".$sort_by;
 	$results = $db->GetAll($query);
-
 	if ($results) {
 		?>
 		<h1><?php echo fetch_course_title($COURSE_ID); ?> Gradebook</h1>

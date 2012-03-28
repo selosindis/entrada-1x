@@ -15,7 +15,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 } elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	header("Location: ".ENTRADA_URL);
 	exit;
-} elseif(!$ENTRADA_ACL->isLoggedInAllowed('user', 'create',true) || $user_record["group"] != "student") {
+} elseif(!$ENTRADA_ACL->amIAllowed("user", "create", false) || $user_record["group"] != "student") {
 	header( "refresh:15;url=".ENTRADA_URL."/admin/users" );
 
 	add_error("Your account does not have the permissions required to use this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.");

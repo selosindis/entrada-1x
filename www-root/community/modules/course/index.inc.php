@@ -38,6 +38,7 @@ if ($result) {
 	echo 	$result["page_content"];
 	echo "</div>";
 }
+
 $query	= "	SELECT *
 			FROM `community_courses`
 			WHERE `community_id` = ".$db->qstr($COMMUNITY_ID);
@@ -69,9 +70,9 @@ if ($community_courses) {
 						AND c.`app_id` IN (".AUTH_APP_IDS_STRING.")
 						JOIN `courses` AS d
 						ON a.`course_id` = d.`course_id`
+						AND d.`course_active` = 1
 						WHERE a.`course_id` IN (".implode(", ", $course_ids).")
 						AND a.`contact_type` = 'director'
-						AND d.`course_active` = 1
 						GROUP BY b.`id`
 						ORDER BY `contact_order` ASC";
 			if ($results = $db->GetAll($query)) {
@@ -204,8 +205,11 @@ if ($community_courses) {
 			
 			$query = "	SELECT b.*, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, c.`account_active`, c.`access_starts`, c.`access_expires`, c.`last_login`, c.`role`, c.`group`
 						FROM `courses` AS a
+						LEFT JOIN `course_contacts` AS a1
+						ON a.`course_id` = a1.`course_id`
+						AND a1.`contact_type` = 'pcoordinator'
 						JOIN `".AUTH_DATABASE."`.`user_data` AS b
-						ON b.`id` = a.`pcoord_id`
+						ON (b.`id` = a.`pcoord_id` OR b.`id` = a1.`proxy_id`)
 						JOIN `".AUTH_DATABASE."`.`user_access` AS c
 						ON c.`user_id` = b.`id`
 						AND c.`app_id` IN (".AUTH_APP_IDS_STRING.")
@@ -340,7 +344,6 @@ if ($community_courses) {
 				}
 			}
 
-
 			$query = "	SELECT b.*, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, c.`account_active`, c.`access_starts`, c.`access_expires`, c.`last_login`, c.`role`, c.`group`
 						FROM `course_contacts` AS a
 						JOIN `".AUTH_DATABASE."`.`user_data` AS b
@@ -348,6 +351,9 @@ if ($community_courses) {
 						JOIN `".AUTH_DATABASE."`.`user_access` AS c
 						ON c.`user_id` = b.`id`
 						AND c.`app_id` IN (".AUTH_APP_IDS_STRING.")
+						JOIN `courses` AS d
+						ON a.`course_id` = d.`course_id`
+						AND d.`course_active` = 1
 						WHERE a.`course_id` IN (".implode(", ", $course_ids).")
 						AND a.`contact_type` = 'ccoordinator'
 						GROUP BY b.`id`
@@ -480,7 +486,6 @@ if ($community_courses) {
 				}
 			}
 			
-			
 		   /**
 			* If the history is enabled, display the course history on the home page.
 			*/
@@ -542,7 +547,6 @@ if ($community_courses) {
 					<?php
 				}
 			}					
-			
 		break;
 		case strpos($PAGE_URL, "course_calendar") !== false :
 			$HEAD[] = "<link href=\"".ENTRADA_URL."/javascript/calendar/css/xc2_default.css\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />";
@@ -588,7 +592,7 @@ if ($community_courses) {
 			 * Valid: date, teacher, title, phase
 			 */
 			if(isset($_GET["sb"])) {
-				if(in_array(trim($_GET["sb"]), array("date" , "teacher", "title", "phase"))) {
+				if(in_array(trim($_GET["sb"]), array("date", "teacher", "title"))) {
 					$_SESSION[APPLICATION_IDENTIFIER]["community_page"]["sb"]	= trim($_GET["sb"]);
 				}
 
@@ -782,7 +786,8 @@ if ($community_courses) {
 					$filters,
 					true,
 					(isset($_GET["pv"]) ? (int) trim($_GET["pv"]) : 1),
-					$_SESSION[APPLICATION_IDENTIFIER]["community_page"]["pp"]);
+					$_SESSION[APPLICATION_IDENTIFIER]["community_page"]["pp"],
+					$COMMUNITY_ID);
 			if($results["events"]) {
 				?>
 				<div class="tableListTop">
@@ -809,7 +814,6 @@ if ($community_courses) {
 				<colgroup>
 					<col class="modified" />
 					<col class="date" />
-					<col class="phase" />
 					<col class="teacher" />
 					<col class="title" />
 					<col class="attachment" />
@@ -818,7 +822,6 @@ if ($community_courses) {
 					<tr>
 						<td class="modified" id="colModified">&nbsp;</td>
 						<td class="date<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["community_page"]["sb"] == "date") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["community_page"]["so"]) : ""); ?>" id="colDate"><?php echo community_public_order_link("date", "Date &amp; Time", ENTRADA_URL."/community".$COMMUNITY_URL.":".$PAGE_URL); ?></td>
-						<td class="phase<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["community_page"]["sb"] == "phase") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["community_page"]["so"]) : ""); ?>" id="colPhase"><?php echo community_public_order_link("phase", "Phase", ENTRADA_URL."/community".$COMMUNITY_URL.":".$PAGE_URL); ?></td>
 						<td class="teacher<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["community_page"]["sb"] == "teacher") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["community_page"]["so"]) : ""); ?>" id="colTeacher"><?php echo community_public_order_link("teacher", "Teacher", ENTRADA_URL."/community".$COMMUNITY_URL.":".$PAGE_URL); ?></td>
 						<td class="title<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["community_page"]["sb"] == "title") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["community_page"]["so"]) : ""); ?>" id="colTitle"><?php echo community_public_order_link("title", "Event Title", ENTRADA_URL."/community".$COMMUNITY_URL.":".$PAGE_URL); ?></td>
 						<td class="attachment" id="colAttachment">&nbsp;</td>
@@ -837,7 +840,7 @@ if ($community_courses) {
 					foreach($results["events"] as $result) {
 						if(((!$result["release_date"]) || ($result["release_date"] <= time())) && ((!$result["release_until"]) || ($result["release_until"] >= time()))) {
 							$attachments	= attachment_check($result["event_id"]);
-							$url			= ENTRADA_URL."/events?rid=".$rid;
+							$url			= ENTRADA_URL."/events?rid=".$rid."&community=".$COMMUNITY_ID;
 							$is_modified	= false;
 
 							/**
@@ -877,7 +880,6 @@ if ($community_courses) {
 									}
 							echo "	</td>\n";
 							echo "	<td class=\"date\"><a href=\"".$url."\" title=\"Event Date\">".date(DEFAULT_DATE_FORMAT, $result["event_start"])."</a></td>\n";
-							echo "	<td class=\"phase\"><a href=\"".$url."\" title=\"Intended For Phase ".html_encode($result["event_phase"])."\">".html_encode($result["event_phase"])."</a></td>\n";
 							echo "	<td class=\"teacher\"><a href=\"".$url."\" title=\"Primary Teacher: ".html_encode($result["fullname"])."\">".html_encode($result["fullname"])."</a></td>\n";
 							echo "	<td class=\"title\"><a href=\"".$url."\" title=\"Event Title: ".html_encode($result["event_title"])."\">".html_encode($result["event_title"])."</a></td>\n";
 							echo "	<td class=\"attachment\">".(($attachments) ? "<img src=\"".ENTRADA_URL."/images/attachment.gif\" width=\"16\" height=\"16\" alt=\"Contains ".$attachments." attachment".(($attachments != 1) ? "s" : "")."\" title=\"Contains ".$attachments." attachment".(($attachments != 1) ? "s" : "")."\" />" : "<img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"16\" height=\"16\" alt=\"\" title=\"\" style=\"vertical-align: middle\" />")."</td>\n";
@@ -947,7 +949,6 @@ if ($community_courses) {
 			$sidebar_html  = "Sort columns:\n";
 			$sidebar_html .= "<ul class=\"menu\">\n";
 			$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER]["community_page"]["sb"]) == "date") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/community".$COMMUNITY_URL.":".$PAGE_URL."?".replace_query(array("sb" => "date"))."\" title=\"Sort by Date &amp; Time\">by date &amp; time</a></li>\n";
-			$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER]["community_page"]["sb"]) == "phase") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/community".$COMMUNITY_URL.":".$PAGE_URL."?".replace_query(array("sb" => "phase"))."\" title=\"Sort by Phase\">by phase</a></li>\n";
 			$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER]["community_page"]["sb"]) == "teacher") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/community".$COMMUNITY_URL.":".$PAGE_URL."?".replace_query(array("sb" => "teacher"))."\" title=\"Sort by Teacher\">by primary teacher</a></li>\n";
 			$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER]["community_page"]["sb"]) == "title") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/community".$COMMUNITY_URL.":".$PAGE_URL."?".replace_query(array("sb" => "title"))."\" title=\"Sort by Event Title\">by event title</a></li>\n";
 			$sidebar_html .= "</ul>\n";
@@ -974,7 +975,7 @@ if ($community_courses) {
 
 			new_sidebar_item("Learning Event Legend", $sidebar_html, "event-legend", "open");
 		break;
-		case (strpos($PAGE_URL, "objectives") !== false) :
+		case (preg_match("/objectives$/", $PAGE_URL) != 0) :
 			$results = $db->GetAll("SELECT `course_id` FROM `community_courses` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID));
 			$course_ids_str = "";
 			$clean_ids_str = "";

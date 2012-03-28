@@ -87,15 +87,14 @@ if (!defined("IN_MTDTRACKING")) {
 
 	$results = $db->GetAll($query);
 
-	header("Expires: 0"); // set expiration time
-// browser must download file from server instead of cache
+	header("Pragma: public");
+	header("Expires: 0");
 	header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
-// force download dialog
 	header("Content-Type: application/force-download");
 	header("Content-Type: application/octet-stream");
-	header("Content-Type: application/download");
-	header("Content-Type:  application/vnd.ms-excel");
-	header("Content-Disposition: attachment; filename=\"mtd_schedule.csv\"");
+	header("Content-Type: application/vnd.ms-excel");
+	header("Content-Disposition: attachment; filename=\"".date("Ymd")."-mtd_schedule.csv\"");
+	header("Content-Transfer-Encoding: binary");
 
 	echo "\"School_Code\",\"CPSO_No\",\"Student_No\",\"Program_Code\",\"First_Name\",\"Last_Name\",\"Category_Code\",\"Service_Code\",\"Location\",\"Start_Date\",\"End_Date\",\"Percent_Time\",\"Type\"\n";
 

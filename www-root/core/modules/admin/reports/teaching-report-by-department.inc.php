@@ -27,6 +27,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 
 			application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]." and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
 		} else {
+			
+			ini_set("max_execution_time", 120);
 			$BREADCRUMB[]	= array("url" => "", "title" => "Faculty Teaching Report By Department" );
 
 			$PROCESSED = array();
@@ -42,6 +44,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 						case "lecture" :
 						case "lab" :
 						case "exam" :
+						case "interview" :
 							// 2 HD's per session.
 							$number = round(($convert * 2), 2);
 						break;
@@ -51,6 +54,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 						case "symposium" :
 						case "clerkship_seminar" :
 						case "directed_learning" :
+						case "observership" :
 							// 1 HD's per session.
 							$number = $convert;
 						break;
@@ -151,8 +155,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 
 						if($result["staff_number"]) {
 							$query	= "	SELECT b.`department`, b.`division`
-										FROM `fadw`.`qfm_person_per_position` AS a
-										LEFT JOIN `fadw`.`qfm_positions` AS b
+										FROM `total_staffing`.`qfm_person_per_position` AS a
+										LEFT JOIN `total_staffing`.`qfm_positions` AS b
 										ON b.`position_id` = a.`position_id_key`
 										WHERE a.`staff_id` = ".$db->qstr(trim($result["staff_number"]))."
 										LIMIT 1";
@@ -188,17 +192,28 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 						$report_results["departments"][$department_id][$division_id]["people"][$i]["clerkship_seminar"]		= array("total_events" => 0, "total_minutes" => 0);
 						$report_results["departments"][$department_id][$division_id]["people"][$i]["events"]				= array("total_events" => 0, "total_minutes" => 0);
 
-						$query	= "	SELECT a.`event_id`, a.`event_title`, a.`course_id`, a.`event_duration`, `eventtype_id`
+						/*$query = "	SELECT a.`event_id`, a.`event_title`, a.`course_id`, c.`eventtype_id`, c.`duration` AS `segment_duration`
 									FROM `events` AS a
-									LEFT JOIN `event_contacts` AS b
+									JOIN `event_contacts` AS b
 									ON b.`event_id` = a.`event_id`
+									JOIN `event_eventtypes` AS c
+									ON c.`event_id` = a.`event_id`
 									WHERE b.`proxy_id` = ".$db->qstr($result["proxy_id"])."
-									AND (a.`event_start` BETWEEN ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_start"])." AND ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_finish"]).")";
-						if($int_use_cache) {
-							$sresults	= $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
-						} else {
-							$sresults	= $db->GetAll($query);
-						}
+									AND (a.`event_start` BETWEEN ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_start"])." AND ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_finish"]).")";*/
+						
+						$query = "	SELECT a.`event_id`, a.`event_title`, a.`course_id`, c.`eventtype_id`, c.`duration` AS `segment_duration`
+									FROM `events` AS a
+									JOIN `event_contacts` AS b
+									ON b.`event_id` = a.`event_id`
+									JOIN `event_eventtypes` AS c
+									ON c.`event_id` = a.`event_id`
+									JOIN `courses` AS d
+									ON d.`course_id` = a.`course_id`
+									WHERE b.`proxy_id` = ".$db->qstr($result["proxy_id"])."
+									AND (a.`event_start` BETWEEN ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_start"])." AND ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_finish"]).")
+									AND d.`organisation_id` = '1'";
+						
+						$sresults	= $db->GetAll($query);
 						if($sresults) {
 							$report_results["departments"][$department_id][$division_id]["people"][$i]["contributor"]	= true;
 
@@ -214,174 +229,241 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 									case "1" :
 										// Lecture
 										$report_results["departments"][$department_id][$division_id]["people"][$i]["lecture"]["total_events"]	+= 1;
-										$report_results["departments"][$department_id][$division_id]["people"][$i]["lecture"]["total_minutes"]	+= (int) $sresult["event_duration"];
+										$report_results["departments"][$department_id][$division_id]["people"][$i]["lecture"]["total_minutes"]		+= (int) $sresult["segment_duration"];
 
 										if($increment_total) {
-											$report_results["courses"]["lecture"]["total_events"]	+= 1;
-											$report_results["courses"]["lecture"]["total_minutes"]	+= (int) $sresult["event_duration"];
+											$report_results["courses"]["lecture"]["total_minutes"]	+= (int) $sresult["segment_duration"];
 											$report_results["departments"][$department_id][$division_id]["courses"]["lecture"]["total_events"]	+= 1;
-											$report_results["departments"][$department_id][$division_id]["courses"]["lecture"]["total_minutes"]	+= (int) $sresult["event_duration"];
+											$report_results["departments"][$department_id][$division_id]["courses"]["lecture"]["total_minutes"]	+= (int) $sresult["segment_duration"];
 										}
 
+										$report_results["courses"]["lecture"]["total_events"]		+= 1;
 										$report_results["courses"]["lecture"]["events_calculated"]	+= 1;
-										$report_results["courses"]["lecture"]["events_minutes"]	+= (int) $sresult["event_duration"];
+										$report_results["courses"]["lecture"]["events_minutes"]		+= (int) $sresult["segment_duration"];
 										$report_results["departments"][$department_id][$division_id]["courses"]["lecture"]["events_calculated"]	+= 1;
-										$report_results["departments"][$department_id][$division_id]["courses"]["lecture"]["events_minutes"]	+= (int) $sresult["event_duration"];
+										$report_results["departments"][$department_id][$division_id]["courses"]["lecture"]["events_minutes"]		+= (int) $sresult["segment_duration"];
 									break;
 									case "6" :
 										// Lab
 										$report_results["departments"][$department_id][$division_id]["people"][$i]["lab"]["total_events"]	+= 1;
-										$report_results["departments"][$department_id][$division_id]["people"][$i]["lab"]["total_minutes"]	+= (int) $sresult["event_duration"];
+										$report_results["departments"][$department_id][$division_id]["people"][$i]["lab"]["total_minutes"]		+= (int) $sresult["segment_duration"];
 
 										if($increment_total) {
-											$report_results["courses"]["lab"]["total_events"]	+= 1;
-											$report_results["courses"]["lab"]["total_minutes"]+= (int) $sresult["event_duration"];
+											$report_results["courses"]["lab"]["total_minutes"]	+= (int) $sresult["segment_duration"];
 											$report_results["departments"][$department_id][$division_id]["courses"]["lab"]["total_events"]	+= 1;
-											$report_results["departments"][$department_id][$division_id]["courses"]["lab"]["total_minutes"]+= (int) $sresult["event_duration"];
+											$report_results["departments"][$department_id][$division_id]["courses"]["lab"]["total_minutes"]	+= (int) $sresult["segment_duration"];
 										}
 
+										$report_results["courses"]["lab"]["total_events"]		+= 1;
 										$report_results["courses"]["lab"]["events_calculated"]		+= 1;
-										$report_results["courses"]["lab"]["events_minutes"]	+= (int) $sresult["event_duration"];
+										$report_results["courses"]["lab"]["events_minutes"]		+= (int) $sresult["segment_duration"];
 										$report_results["departments"][$department_id][$division_id]["courses"]["lab"]["events_calculated"]		+= 1;
-										$report_results["departments"][$department_id][$division_id]["courses"]["lab"]["events_minutes"]	+= (int) $sresult["event_duration"];
+										$report_results["departments"][$department_id][$division_id]["courses"]["lab"]["events_minutes"]		+= (int) $sresult["segment_duration"];
 									break;
 									case "8" :
 										// Small Group
 										$report_results["departments"][$department_id][$division_id]["people"][$i]["small_group"]["total_events"]		+= 1;
-										$report_results["departments"][$department_id][$division_id]["people"][$i]["small_group"]["total_minutes"]		+= (int) $sresult["event_duration"];
+										$report_results["departments"][$department_id][$division_id]["people"][$i]["small_group"]["total_minutes"]		+= (int) $sresult["segment_duration"];
 
 										if($increment_total) {
-											$report_results["courses"]["small_group"]["total_events"]		+= 1;
-											$report_results["courses"]["small_group"]["total_minutes"]	+= (int) $sresult["event_duration"];
+											$report_results["courses"]["small_group"]["total_minutes"]	+= (int) $sresult["segment_duration"];
 											$report_results["departments"][$department_id][$division_id]["courses"]["small_group"]["total_events"]		+= 1;
-											$report_results["departments"][$department_id][$division_id]["courses"]["small_group"]["total_minutes"]	+= (int) $sresult["event_duration"];
+											$report_results["departments"][$department_id][$division_id]["courses"]["small_group"]["total_minutes"]	+= (int) $sresult["segment_duration"];
 										}
 
+										$report_results["courses"]["small_group"]["total_events"]		+= 1;
 										$report_results["courses"]["small_group"]["events_calculated"]		+= 1;
-										$report_results["courses"]["small_group"]["events_minutes"]		+= (int) $sresult["event_duration"];
+										$report_results["courses"]["small_group"]["events_minutes"]		+= (int) $sresult["segment_duration"];
 										$report_results["departments"][$department_id][$division_id]["courses"]["small_group"]["events_calculated"]		+= 1;
-										$report_results["departments"][$department_id][$division_id]["courses"]["small_group"]["events_minutes"]		+= (int) $sresult["event_duration"];
+										$report_results["departments"][$department_id][$division_id]["courses"]["small_group"]["events_minutes"]		+= (int) $sresult["segment_duration"];
 									break;
 									case "11" :
 										// Patient Contact Session
 										$report_results["departments"][$department_id][$division_id]["people"][$i]["patient_contact"]["total_events"]		+= 1;
-										$report_results["departments"][$department_id][$division_id]["people"][$i]["patient_contact"]["total_minutes"]	+= (int) $sresult["event_duration"];
+										$report_results["departments"][$department_id][$division_id]["people"][$i]["patient_contact"]["total_minutes"]	+= (int) $sresult["segment_duration"];
 
 										if($increment_total) {
-											$report_results["courses"]["patient_contact"]["total_events"]		+= 1;
-											$report_results["courses"]["patient_contact"]["total_minutes"]	+= (int) $sresult["event_duration"];
+											$report_results["courses"]["patient_contact"]["total_minutes"]	+= (int) $sresult["segment_duration"];
 											$report_results["departments"][$department_id][$division_id]["courses"]["patient_contact"]["total_events"]	+= 1;
-											$report_results["departments"][$department_id][$division_id]["courses"]["patient_contact"]["total_minutes"]	+= (int) $sresult["event_duration"];
+											$report_results["departments"][$department_id][$division_id]["courses"]["patient_contact"]["total_minutes"]	+= (int) $sresult["segment_duration"];
 										}
 
+										$report_results["courses"]["patient_contact"]["total_events"]		+= 1;
 										$report_results["courses"]["patient_contact"]["events_calculated"]	+= 1;
-										$report_results["courses"]["patient_contact"]["events_minutes"]		+= (int) $sresult["event_duration"];
+										$report_results["courses"]["patient_contact"]["events_minutes"]		+= (int) $sresult["segment_duration"];
 										$report_results["departments"][$department_id][$division_id]["courses"]["patient_contact"]["events_calculated"]	+= 1;
-										$report_results["departments"][$department_id][$division_id]["courses"]["patient_contact"]["events_minutes"]		+= (int) $sresult["event_duration"];
+										$report_results["departments"][$department_id][$division_id]["courses"]["patient_contact"]["events_minutes"]		+= (int) $sresult["segment_duration"];
 									break;
 									case "13" :
 										// Symposium / Student Presentation
 										$report_results["departments"][$department_id][$division_id]["people"][$i]["symposium"]["total_events"]		+= 1;
-										$report_results["departments"][$department_id][$division_id]["people"][$i]["symposium"]["total_minutes"]	+= (int) $sresult["event_duration"];
+										$report_results["departments"][$department_id][$division_id]["people"][$i]["symposium"]["total_minutes"]	+= (int) $sresult["segment_duration"];
 
 										if($increment_total) {
-											$report_results["courses"]["symposium"]["total_events"]		+= 1;
-											$report_results["courses"]["symposium"]["total_minutes"]	+= (int) $sresult["event_duration"];
+											$report_results["courses"]["symposium"]["total_minutes"]	+= (int) $sresult["segment_duration"];
 											$report_results["departments"][$department_id][$division_id]["courses"]["symposium"]["total_events"]	+= 1;
-											$report_results["departments"][$department_id][$division_id]["courses"]["symposium"]["total_minutes"]	+= (int) $sresult["event_duration"];
+											$report_results["departments"][$department_id][$division_id]["courses"]["symposium"]["total_minutes"]	+= (int) $sresult["segment_duration"];
 										}
 
+										$report_results["courses"]["symposium"]["total_events"]		+= 1;
 										$report_results["courses"]["symposium"]["events_calculated"]	+= 1;
-										$report_results["courses"]["symposium"]["events_minutes"]		+= (int) $sresult["event_duration"];
+										$report_results["courses"]["symposium"]["events_minutes"]		+= (int) $sresult["segment_duration"];
 										$report_results["departments"][$department_id][$division_id]["courses"]["symposium"]["events_calculated"]	+= 1;
-										$report_results["departments"][$department_id][$division_id]["courses"]["symposium"]["events_minutes"]		+= (int) $sresult["event_duration"];
+										$report_results["departments"][$department_id][$division_id]["courses"]["symposium"]["events_minutes"]		+= (int) $sresult["segment_duration"];
 									break;
 									case "15" :
 										// Directed Independent Learning
 										$report_results["departments"][$department_id][$division_id]["people"][$i]["directed_learning"]["total_events"]		+= 1;
-										$report_results["departments"][$department_id][$division_id]["people"][$i]["directed_learning"]["total_minutes"]	+= (int) $sresult["event_duration"];
+										$report_results["departments"][$department_id][$division_id]["people"][$i]["directed_learning"]["total_minutes"]	+= (int) $sresult["segment_duration"];
 
 										if($increment_total) {
-											$report_results["courses"]["directed_learning"]["total_events"]		+= 1;
-											$report_results["courses"]["directed_learning"]["total_minutes"]	+= (int) $sresult["event_duration"];
+											$report_results["courses"]["directed_learning"]["total_minutes"]	+= (int) $sresult["segment_duration"];
 											$report_results["departments"][$department_id][$division_id]["courses"]["directed_learning"]["total_events"]	+= 1;
-											$report_results["departments"][$department_id][$division_id]["courses"]["directed_learning"]["total_minutes"]	+= (int) $sresult["event_duration"];
+											$report_results["departments"][$department_id][$division_id]["courses"]["directed_learning"]["total_minutes"]	+= (int) $sresult["segment_duration"];
 										}
 
+										$report_results["courses"]["directed_learning"]["total_events"]		+= 1;
 										$report_results["courses"]["directed_learning"]["events_calculated"]	+= 1;
-										$report_results["courses"]["directed_learning"]["events_minutes"]		+= (int) $sresult["event_duration"];
+										$report_results["courses"]["directed_learning"]["events_minutes"]		+= (int) $sresult["segment_duration"];
 										$report_results["departments"][$department_id][$division_id]["courses"]["directed_learning"]["events_calculated"]	+= 1;
-										$report_results["departments"][$department_id][$division_id]["courses"]["directed_learning"]["events_minutes"]		+= (int) $sresult["event_duration"];
+										$report_results["departments"][$department_id][$division_id]["courses"]["directed_learning"]["events_minutes"]		+= (int) $sresult["segment_duration"];
 									break;
 									case "18" :
 										// Review / Feedback Session
 										$report_results["departments"][$department_id][$division_id]["people"][$i]["review"]["total_events"]		+= 1;
-										$report_results["departments"][$department_id][$division_id]["people"][$i]["review"]["total_minutes"]	+= (int) $sresult["event_duration"];
+										$report_results["departments"][$department_id][$division_id]["people"][$i]["review"]["total_minutes"]	+= (int) $sresult["segment_duration"];
 
 										if($increment_total) {
-											$report_results["courses"]["review"]["total_events"]		+= 1;
-											$report_results["courses"]["review"]["total_minutes"]	+= (int) $sresult["event_duration"];
+											$report_results["courses"]["review"]["total_minutes"]	+= (int) $sresult["segment_duration"];
 											$report_results["departments"][$department_id][$division_id]["courses"]["review"]["total_events"]	+= 1;
-											$report_results["departments"][$department_id][$division_id]["courses"]["review"]["total_minutes"]	+= (int) $sresult["event_duration"];
+											$report_results["departments"][$department_id][$division_id]["courses"]["review"]["total_minutes"]	+= (int) $sresult["segment_duration"];
 										}
 
+										$report_results["courses"]["review"]["total_events"]		+= 1;
 										$report_results["courses"]["review"]["events_calculated"]	+= 1;
-										$report_results["courses"]["review"]["events_minutes"]		+= (int) $sresult["event_duration"];
+										$report_results["courses"]["review"]["events_minutes"]		+= (int) $sresult["segment_duration"];
 										$report_results["departments"][$department_id][$division_id]["courses"]["review"]["events_calculated"]	+= 1;
-										$report_results["departments"][$department_id][$division_id]["courses"]["review"]["events_minutes"]		+= (int) $sresult["event_duration"];
+										$report_results["departments"][$department_id][$division_id]["courses"]["review"]["events_minutes"]		+= (int) $sresult["segment_duration"];
 									break;
 									case "20" :
 										// Examination
 										$report_results["departments"][$department_id][$division_id]["people"][$i]["exam"]["total_events"]		+= 1;
-										$report_results["departments"][$department_id][$division_id]["people"][$i]["exam"]["total_minutes"]	+= (int) $sresult["event_duration"];
+										$report_results["departments"][$department_id][$division_id]["people"][$i]["exam"]["total_minutes"]	+= (int) $sresult["segment_duration"];
 
 										if($increment_total) {
-											$report_results["courses"]["exam"]["total_events"]		+= 1;
-											$report_results["courses"]["exam"]["total_minutes"]	+= (int) $sresult["event_duration"];
+											$report_results["courses"]["exam"]["total_minutes"]	+= (int) $sresult["segment_duration"];
 											$report_results["departments"][$department_id][$division_id]["courses"]["exam"]["total_events"]	+= 1;
-											$report_results["departments"][$department_id][$division_id]["courses"]["exam"]["total_minutes"]	+= (int) $sresult["event_duration"];
+											$report_results["departments"][$department_id][$division_id]["courses"]["exam"]["total_minutes"]	+= (int) $sresult["segment_duration"];
 										}
 
+										$report_results["courses"]["exam"]["total_events"]		+= 1;
 										$report_results["courses"]["exam"]["events_calculated"]	+= 1;
-										$report_results["courses"]["exam"]["events_minutes"]		+= (int) $sresult["event_duration"];
+										$report_results["courses"]["exam"]["events_minutes"]		+= (int) $sresult["segment_duration"];
 										$report_results["departments"][$department_id][$division_id]["courses"]["exam"]["events_calculated"]	+= 1;
-										$report_results["departments"][$department_id][$division_id]["courses"]["exam"]["events_minutes"]		+= (int) $sresult["event_duration"];
+										$report_results["departments"][$department_id][$division_id]["courses"]["exam"]["events_minutes"]		+= (int) $sresult["segment_duration"];
 									break;
 									case "23" :
 										// Clerkship Seminars
 										$report_results["departments"][$department_id][$division_id]["people"][$i]["clerkship_seminar"]["total_events"]		+= 1;
-										$report_results["departments"][$department_id][$division_id]["people"][$i]["clerkship_seminar"]["total_minutes"]	+= (int) $sresult["event_duration"];
+										$report_results["departments"][$department_id][$division_id]["people"][$i]["clerkship_seminar"]["total_minutes"]	+= (int) $sresult["segment_duration"];
 
 										if($increment_total) {
-											$report_results["courses"]["clerkship_seminar"]["total_events"]		+= 1;
-											$report_results["courses"]["clerkship_seminar"]["total_minutes"]	+= (int) $sresult["event_duration"];
+											$report_results["courses"]["clerkship_seminar"]["total_minutes"]	+= (int) $sresult["segment_duration"];
 											$report_results["departments"][$department_id][$division_id]["courses"]["clerkship_seminar"]["total_events"]	+= 1;
-											$report_results["departments"][$department_id][$division_id]["courses"]["clerkship_seminar"]["total_minutes"]	+= (int) $sresult["event_duration"];
+											$report_results["departments"][$department_id][$division_id]["courses"]["clerkship_seminar"]["total_minutes"]	+= (int) $sresult["segment_duration"];
 										}
 
+										$report_results["courses"]["clerkship_seminar"]["total_events"]		+= 1;
 										$report_results["courses"]["clerkship_seminar"]["events_calculated"]	+= 1;
-										$report_results["courses"]["clerkship_seminar"]["events_minutes"]		+= (int) $sresult["event_duration"];
+										$report_results["courses"]["clerkship_seminar"]["events_minutes"]		+= (int) $sresult["segment_duration"];
 										$report_results["departments"][$department_id][$division_id]["courses"]["clerkship_seminar"]["events_calculated"]	+= 1;
-										$report_results["departments"][$department_id][$division_id]["courses"]["clerkship_seminar"]["events_minutes"]		+= (int) $sresult["event_duration"];
+										$report_results["departments"][$department_id][$division_id]["courses"]["clerkship_seminar"]["events_minutes"]		+= (int) $sresult["segment_duration"];
 									break;
 									case "24" :
 									default :
 										$report_results["departments"][$department_id][$division_id]["people"][$i]["events"]["total_events"]	+= 1;
-										$report_results["departments"][$department_id][$division_id]["people"][$i]["events"]["total_minutes"]	+= (int) $sresult["event_duration"];
+										$report_results["departments"][$department_id][$division_id]["people"][$i]["events"]["total_minutes"]	+= (int) $sresult["segment_duration"];
 
 										if($increment_total) {
-											$report_results["courses"]["events"]["total_events"]	+= 1;
-											$report_results["courses"]["events"]["total_minutes"]+= (int) $sresult["event_duration"];
+											$report_results["courses"]["events"]["total_minutes"]+= (int) $sresult["segment_duration"];
 											$report_results["departments"][$department_id][$division_id]["courses"]["events"]["total_events"]	+= 1;
-											$report_results["departments"][$department_id][$division_id]["courses"]["events"]["total_minutes"]+= (int) $sresult["event_duration"];
+											$report_results["departments"][$department_id][$division_id]["courses"]["events"]["total_minutes"]+= (int) $sresult["segment_duration"];
 										}
 
+										$report_results["courses"]["events"]["total_events"]	+= 1;
 										$report_results["courses"]["events"]["events_calculated"]	+= 1;
-										$report_results["courses"]["events"]["events_minutes"]	+= (int) $sresult["event_duration"];
+										$report_results["courses"]["events"]["events_minutes"]	+= (int) $sresult["segment_duration"];
 										$report_results["departments"][$department_id][$division_id]["courses"]["events"]["events_calculated"]	+= 1;
-										$report_results["departments"][$department_id][$division_id]["courses"]["events"]["events_minutes"]	+= (int) $sresult["event_duration"];
+										$report_results["departments"][$department_id][$division_id]["courses"]["events"]["events_minutes"]	+= (int) $sresult["segment_duration"];
 									break;
 								}
+							}
+						}
+						$query = "SELECT * FROM `ar_internal_contributions`
+									WHERE `proxy_id` = ".$db->qstr($result["proxy_id"])."
+									AND `year_reported` BETWEEN 
+										".date("Y", $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_start"])." 
+											AND 
+										".date("Y", $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_finish"])."
+									AND `role_description` IN ('Interviewer', 'Reader')";
+						if($int_use_cache) {
+							$iresults	= $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
+						} else {
+							$iresults	= $db->GetAll($query);
+						}
+						if ($iresults) {
+							foreach ($iresults as $iresult) {
+								if ($iresult["role_description"] == "Interviewer") {
+									$sessions = ceil((($iresult["time_commitment"] / 9) * 2));
+								} else {
+									$sessions = round(($iresult["time_commitment"] / 4));
+								}
+								if (!$sessions) {
+									$sessions = 1;
+								}
+								$report_results["departments"][$department_id][$division_id]["people"][$i]["interview"]["total_events"]		+= $sessions;
+
+								if($increment_total) {
+									$report_results["courses"]["interview"]["total_events"]													+= $sessions;
+									$report_results["departments"][$department_id][$division_id]["courses"]["interview"]["total_events"]	+= $sessions;
+								}
+
+								$report_results["courses"]["interview"]["events_calculated"]												+= $sessions;
+								$report_results["departments"][$department_id][$division_id]["courses"]["interview"]["events_calculated"]	+= $sessions;
+							}
+						}
+						
+						$query = "SELECT * FROM `student_observerships`
+									WHERE `preceptor_proxy_id` = ".$db->qstr($result["proxy_id"])."
+									AND `start` BETWEEN 
+										".$db->qstr($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_start"])." 
+											AND 
+										".$db->qstr($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_finish"]);
+						if($int_use_cache) {
+							$oresults	= $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
+						} else {
+							$oresults	= $db->GetAll($query);
+						}
+						if ($oresults) {
+							foreach ($oresults as $oresult) {
+								if ($oresult["end"]) {
+									$time_period = $oresult["end"] - $oresult["start"];
+									$days = round(($time_period / 86400));
+									if (!$days) {
+										$days = 1;
+									}
+								} else {
+									$days = 1;
+								}
+								$report_results["departments"][$department_id][$division_id]["people"][$i]["observership"]["total_events"]		+= $days;
+
+								if($increment_total) {
+									$report_results["courses"]["observership"]["total_events"]													+= $days;
+									$report_results["departments"][$department_id][$division_id]["courses"]["observership"]["total_events"]		+= $days;
+								}
+
+								$report_results["courses"]["observership"]["events_calculated"]													+= $days;
+								$report_results["departments"][$department_id][$division_id]["courses"]["observership"]["events_calculated"]	+= $days;
 							}
 						}
 					}
@@ -445,6 +527,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 						$department_session_total_directed_learning		= 0;
 						$department_session_total_review				= 0;
 						$department_session_total_exam					= 0;
+						$department_session_total_interview				= 0;
+						$department_session_total_observership			= 0;
 						$department_session_total_clerkship_seminar		= 0;
 						$department_session_total_events				= 0;
 						$department_session_final_total					= 0;
@@ -463,35 +547,39 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 							<colgroup>
 								<col class="modified" />
 								<col class="general" />
-								<col class="report-hours" style="background-color: #F3F3F3" />
-								<col class="report-hours" />
-								<col class="report-hours" style="background-color: #F3F3F3" />
-								<col class="report-hours" />
-								<col class="report-hours" style="background-color: #F3F3F3" />
-								<col class="report-hours" />
-								<col class="report-hours" style="background-color: #F3F3F3" />
-								<col class="report-hours" />
-								<col class="report-hours" style="background-color: #F3F3F3" />
-								<col class="report-hours" />
-								<col class="report-hours" style="background-color: #F3F3F3" />
-								<col class="report-hours" />
+								<col class="report-hours-lg" style="background-color: #F3F3F3" />
+								<col class="report-hours-lg" />
+								<col class="report-hours-lg" style="background-color: #F3F3F3" />
+								<col class="report-hours-lg" />
+								<col class="report-hours-lg" style="background-color: #F3F3F3" />
+								<col class="report-hours-lg" />
+								<col class="report-hours-lg" style="background-color: #F3F3F3" />
+								<col class="report-hours-lg" />
+								<col class="report-hours-lg" style="background-color: #F3F3F3" />
+								<col class="report-hours-lg" />
+								<col class="report-hours-lg" style="background-color: #F3F3F3" />
+								<col class="report-hours-lg" />
+								<col class="report-hours-lg" style="background-color: #F3F3F3" />
+								<col class="report-hours-lg" />
 							</colgroup>
 							<thead>
 								<tr>
 									<td class="modified">&nbsp;</td>
 									<td class="general">&nbsp;</td>
-									<td class="report-hours">Lecture</td>
-									<td class="report-hours">Lab</td>
-									<td class="report-hours">Small Group</td>
-									<td class="report-hours">Patient Contact</td>
-									<td class="report-hours">Symposium</td>
-									<td class="report-hours">Ind. Learning</td>
-									<td class="report-hours">Review Session</td>
-									<td class="report-hours">Examination</td>
-									<td class="report-hours">Clerk Seminars</td>
-									<td class="report-hours">Other Events</td>
-									<td class="report-hours">Total Hours</td>
-									<td class="report-hours">Total Sessions</td>
+									<td class="report-hours-lg">Lecture</td>
+									<td class="report-hours-lg">Lab</td>
+									<td class="report-hours-lg">Small Group</td>
+									<td class="report-hours-lg">Patient Contact</td>
+									<td class="report-hours-lg">Symposium</td>
+									<td class="report-hours-lg">Ind. Learning</td>
+									<td class="report-hours-lg">Review Session</td>
+									<td class="report-hours-lg">Examination</td>
+									<td class="report-hours-lg">Interview</td>
+									<td class="report-hours-lg">Observership</td>
+									<td class="report-hours-lg">Clerk Seminars</td>
+									<td class="report-hours-lg">Other Events</td>
+									<td class="report-hours-lg">Total Hours</td>
+									<td class="report-hours-lg">Total Sessions</td>
 								</tr>
 							</thead>
 							<tbody>
@@ -518,12 +606,14 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 										$division_session_total_directed_learning	= 0;
 										$division_session_total_review				= 0;
 										$division_session_total_exam				= 0;
+										$division_session_total_interview			= 0;
+										$division_session_total_observership		= 0;
 										$division_session_total_clerkship_seminar	= 0;
 										$division_session_total_events				= 0;
 										$division_session_final_total				= 0;
 
 										echo "<tr>\n";
-										echo "	<td colspan=\"14\" style=\"padding-left: 2%\"><strong>".html_encode($division_name)."</strong></td>\n";
+										echo "	<td colspan=\"15\" style=\"padding-left: 2%\"><strong>".html_encode($division_name)."</strong></td>\n";
 										echo "</tr>\n";
 
 										if((is_array($division_entries["people"])) && (count($division_entries["people"]))) {
@@ -555,6 +645,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 												$session_directed_learning		= ((isset($result["directed_learning"]["total_events"])) ? $result["directed_learning"]["total_events"] : 0);
 												$session_review					= ((isset($result["review"]["total_events"])) ? $result["review"]["total_events"] : 0);
 												$session_exam					= ((isset($result["exam"]["total_events"])) ? $result["exam"]["total_events"] : 0);
+												$session_interview				= ((isset($result["interview"]["total_events"])) ? $result["interview"]["total_events"] : 0);
+												$session_observership			= ((isset($result["observership"]["total_events"])) ? $result["observership"]["total_events"] : 0);
 												$session_clerkship_seminar		= ((isset($result["clerkship_seminar"]["total_events"])) ? $result["clerkship_seminar"]["total_events"] : 0);
 												$session_events					= ((isset($result["events"]["total_events"])) ? $result["events"]["total_events"] : 0);
 
@@ -565,18 +657,20 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 													<tr <?php echo ((!$result["number"]) ? " class=\"np\"" : ""); ?>>
 														<td class="modified<?php echo ((!(bool) $result["contributor"]) ? " np" : ""); ?>"><?php echo ((!$result["number"]) ? "<img src=\"".ENTRADA_URL."/images/checkbox-no-number.gif\" width=\"14\" height=\"14\" alt=\"No Number\" title=\"No Number\" />" : "&nbsp;"); ?></td>
 														<td class="general<?php echo ((!(bool) $result["contributor"]) ? " np" : ""); ?>"><?php echo html_encode($result["fullname"]); ?></td>
-														<td class="report-hours<?php echo ((!(bool) $result["contributor"]) ? " np" : ""); ?>"><?php echo (($session_lecture) ? display_half_days($session_lecture, "lecture") : "&nbsp;"); ?></td>
-														<td class="report-hours<?php echo ((!(bool) $result["contributor"]) ? " np" : ""); ?>"><?php echo (($session_lab) ? display_half_days($session_lab, "lab") : "&nbsp;"); ?></td>
-														<td class="report-hours<?php echo ((!(bool) $result["contributor"]) ? " np" : ""); ?>"><?php echo (($session_small_group) ? display_half_days($session_small_group, "small_group") : "&nbsp;"); ?></td>
-														<td class="report-hours<?php echo ((!(bool) $result["contributor"]) ? " np" : ""); ?>"><?php echo (($session_patient_contact) ? display_half_days($session_patient_contact, "patient_contact") : "&nbsp;"); ?></td>
-														<td class="report-hours<?php echo ((!(bool) $result["contributor"]) ? " np" : ""); ?>"><?php echo (($session_symposium) ? display_half_days($session_symposium, "symposium") : "&nbsp;"); ?></td>
-														<td class="report-hours<?php echo ((!(bool) $result["contributor"]) ? " np" : ""); ?>"><?php echo (($session_directed_learning) ? display_half_days($session_directed_learning, "directed_learning") : "&nbsp;"); ?></td>
-														<td class="report-hours<?php echo ((!(bool) $result["contributor"]) ? " np" : ""); ?>"><?php echo (($session_review) ? display_half_days($session_review, "review") : "&nbsp;"); ?></td>
-														<td class="report-hours<?php echo ((!(bool) $result["contributor"]) ? " np" : ""); ?>"><?php echo (($session_exam) ? display_half_days($session_exam, "exam") : "&nbsp;"); ?></td>
-														<td class="report-hours<?php echo ((!(bool) $result["contributor"]) ? " np" : ""); ?>"><?php echo (($session_clerkship_seminar) ? display_half_days($session_clerkship_seminar, "clerkship_seminar") : "&nbsp;"); ?></td>
-														<td class="report-hours<?php echo ((!(bool) $result["contributor"]) ? " np" : ""); ?>"><?php echo (($session_events) ? display_half_days($session_events, "events") : "&nbsp;"); ?></td>
-														<td class="report-hours<?php echo ((!(bool) $result["contributor"]) ? " np" : ""); ?>"><?php echo (($duration_total) ? display_hours($duration_total) : "&nbsp;"); ?></td>
-														<td class="report-hours<?php echo ((!(bool) $result["contributor"]) ? " np" : ""); ?>"><?php echo (($session_total) ? $session_total : "&nbsp;"); ?></td>
+														<td class="report-hours-lg<?php echo ((!(bool) $result["contributor"]) ? " np" : ""); ?>"><?php echo (($session_lecture) ? display_half_days($session_lecture, "lecture") : "&nbsp;"); ?></td>
+														<td class="report-hours-lg<?php echo ((!(bool) $result["contributor"]) ? " np" : ""); ?>"><?php echo (($session_lab) ? display_half_days($session_lab, "lab") : "&nbsp;"); ?></td>
+														<td class="report-hours-lg<?php echo ((!(bool) $result["contributor"]) ? " np" : ""); ?>"><?php echo (($session_small_group) ? display_half_days($session_small_group, "small_group") : "&nbsp;"); ?></td>
+														<td class="report-hours-lg<?php echo ((!(bool) $result["contributor"]) ? " np" : ""); ?>"><?php echo (($session_patient_contact) ? display_half_days($session_patient_contact, "patient_contact") : "&nbsp;"); ?></td>
+														<td class="report-hours-lg<?php echo ((!(bool) $result["contributor"]) ? " np" : ""); ?>"><?php echo (($session_symposium) ? display_half_days($session_symposium, "symposium") : "&nbsp;"); ?></td>
+														<td class="report-hours-lg<?php echo ((!(bool) $result["contributor"]) ? " np" : ""); ?>"><?php echo (($session_directed_learning) ? display_half_days($session_directed_learning, "directed_learning") : "&nbsp;"); ?></td>
+														<td class="report-hours-lg<?php echo ((!(bool) $result["contributor"]) ? " np" : ""); ?>"><?php echo (($session_review) ? display_half_days($session_review, "review") : "&nbsp;"); ?></td>
+														<td class="report-hours-lg<?php echo ((!(bool) $result["contributor"]) ? " np" : ""); ?>"><?php echo (($session_exam) ? display_half_days($session_exam, "exam") : "&nbsp;"); ?></td>
+														<td class="report-hours-lg<?php echo ((!(bool) $result["contributor"]) ? " np" : ""); ?>"><?php echo (($session_interview) ? display_half_days($session_interview, "interview") : "&nbsp;"); ?></td>
+														<td class="report-hours-lg<?php echo ((!(bool) $result["contributor"]) ? " np" : ""); ?>"><?php echo (($session_observership) ? display_half_days($session_observership, "observership") : "&nbsp;"); ?></td>
+														<td class="report-hours-lg<?php echo ((!(bool) $result["contributor"]) ? " np" : ""); ?>"><?php echo (($session_clerkship_seminar) ? display_half_days($session_clerkship_seminar, "clerkship_seminar") : "&nbsp;"); ?></td>
+														<td class="report-hours-lg<?php echo ((!(bool) $result["contributor"]) ? " np" : ""); ?>"><?php echo (($session_events) ? display_half_days($session_events, "events") : "&nbsp;"); ?></td>
+														<td class="report-hours-lg<?php echo ((!(bool) $result["contributor"]) ? " np" : ""); ?>"><?php echo (($duration_total) ? display_hours($duration_total) : "&nbsp;"); ?></td>
+														<td class="report-hours-lg<?php echo ((!(bool) $result["contributor"]) ? " np" : ""); ?>"><?php echo (($session_total) ? $session_total : "&nbsp;"); ?></td>
 													</tr>
 													<?php
 													$i++;
@@ -603,6 +697,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 											$division_session_total_directed_learning	= ((isset($division_entries["courses"]["directed_learning"]["events_calculated"])) ? $division_entries["courses"]["directed_learning"]["events_calculated"] : 0);
 											$division_session_total_review				= ((isset($division_entries["courses"]["review"]["events_calculated"])) ? $division_entries["courses"]["review"]["events_calculated"] : 0);
 											$division_session_total_exam				= ((isset($division_entries["courses"]["exam"]["events_calculated"])) ? $division_entries["courses"]["exam"]["events_calculated"] : 0);
+											$division_session_total_interview			= ((isset($division_entries["courses"]["interview"]["events_calculated"])) ? $division_entries["courses"]["interview"]["events_calculated"] : 0);
+											$division_session_total_observership		= ((isset($division_entries["courses"]["observership"]["events_calculated"])) ? $division_entries["courses"]["observership"]["events_calculated"] : 0);
 											$division_session_total_clerkship_seminar	= ((isset($division_entries["courses"]["clerkship_seminar"]["events_calculated"])) ? $division_entries["courses"]["clerkship_seminar"]["events_calculated"] : 0);
 											$division_session_total_events				= ((isset($division_entries["courses"]["events"]["events_calculated"])) ? $division_entries["courses"]["events"]["events_calculated"] : 0);
 											
@@ -625,6 +721,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 											$department_session_total_directed_learning		+= $division_session_total_directed_learning;
 											$department_session_total_review				+= $division_session_total_review;
 											$department_session_total_exam					+= $division_session_total_exam;
+											$department_session_total_interview				+= $division_session_total_interview;
+											$department_session_total_observership			+= $division_session_total_observership;
 											$department_session_total_clerkship_seminar		+= $division_session_total_clerkship_seminar;
 											$department_session_total_events				+= $division_session_total_events;
 											
@@ -641,18 +739,20 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 												<tr class="modified" style="font-weight: normal">
 													<td class="modified">&nbsp;</td>
 													<td class="general"><?php echo html_encode($division_name); ?> Totals:</td>
-													<td class="report-hours"><?php echo (($division_session_total_lecture) ? display_half_days($division_session_total_lecture, "lecture") : "&nbsp;"); ?></td>
-													<td class="report-hours"><?php echo (($division_session_total_lab) ? display_half_days($division_session_total_lab, "lab") : "&nbsp;"); ?></td>
-													<td class="report-hours"><?php echo (($division_session_total_small_group) ? display_half_days($division_session_total_small_group, "small_group") : "&nbsp;"); ?></td>
-													<td class="report-hours"><?php echo (($division_session_total_patient_contact) ? display_half_days($division_session_total_patient_contact, "patient_contact") : "&nbsp;"); ?></td>
-													<td class="report-hours"><?php echo (($division_session_total_symposium) ? display_half_days($division_session_total_symposium, "symposium") : "&nbsp;"); ?></td>
-													<td class="report-hours"><?php echo (($division_session_total_directed_learning) ? display_half_days($division_session_total_directed_learning, "directed_learning") : "&nbsp;"); ?></td>
-													<td class="report-hours"><?php echo (($division_session_total_review) ? display_half_days($division_session_total_review, "review") : "&nbsp;"); ?></td>
-													<td class="report-hours"><?php echo (($division_session_total_exam) ? display_half_days($division_session_total_exam, "exam") : "&nbsp;"); ?></td>
-													<td class="report-hours"><?php echo (($division_session_total_clerkship_seminar) ? display_half_days($division_session_total_clerkship_seminar, "clerkship_seminar") : "&nbsp;"); ?></td>
-													<td class="report-hours"><?php echo (($division_session_total_events) ? display_half_days($division_session_total_events, "events") : "&nbsp;"); ?></td>
-													<td class="report-hours"><?php echo (($division_duration_final_total) ? display_hours($division_duration_final_total) : "&nbsp;"); ?></td>
-													<td class="report-hours"><?php echo (($division_session_final_total) ? $division_session_final_total : "&nbsp;"); ?></td>
+													<td class="report-hours-lg"><?php echo (($division_session_total_lecture) ? display_half_days($division_session_total_lecture, "lecture") : "&nbsp;"); ?></td>
+													<td class="report-hours-lg"><?php echo (($division_session_total_lab) ? display_half_days($division_session_total_lab, "lab") : "&nbsp;"); ?></td>
+													<td class="report-hours-lg"><?php echo (($division_session_total_small_group) ? display_half_days($division_session_total_small_group, "small_group") : "&nbsp;"); ?></td>
+													<td class="report-hours-lg"><?php echo (($division_session_total_patient_contact) ? display_half_days($division_session_total_patient_contact, "patient_contact") : "&nbsp;"); ?></td>
+													<td class="report-hours-lg"><?php echo (($division_session_total_symposium) ? display_half_days($division_session_total_symposium, "symposium") : "&nbsp;"); ?></td>
+													<td class="report-hours-lg"><?php echo (($division_session_total_directed_learning) ? display_half_days($division_session_total_directed_learning, "directed_learning") : "&nbsp;"); ?></td>
+													<td class="report-hours-lg"><?php echo (($division_session_total_review) ? display_half_days($division_session_total_review, "review") : "&nbsp;"); ?></td>
+													<td class="report-hours-lg"><?php echo (($division_session_total_exam) ? display_half_days($division_session_total_exam, "exam") : "&nbsp;"); ?></td>
+													<td class="report-hours-lg"><?php echo (($division_session_total_interview) ? display_half_days($division_session_total_interview, "interview") : "&nbsp;"); ?></td>
+													<td class="report-hours-lg"><?php echo (($division_session_total_observership) ? display_half_days($division_session_total_observership, "observership") : "&nbsp;"); ?></td>
+													<td class="report-hours-lg"><?php echo (($division_session_total_clerkship_seminar) ? display_half_days($division_session_total_clerkship_seminar, "clerkship_seminar") : "&nbsp;"); ?></td>
+													<td class="report-hours-lg"><?php echo (($division_session_total_events) ? display_half_days($division_session_total_events, "events") : "&nbsp;"); ?></td>
+													<td class="report-hours-lg"><?php echo (($division_duration_final_total) ? display_hours($division_duration_final_total) : "&nbsp;"); ?></td>
+													<td class="report-hours-lg"><?php echo (($division_session_final_total) ? $division_session_final_total : "&nbsp;"); ?></td>
 												</tr>
 											<?php
 											}
@@ -665,18 +765,20 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 									<tr class="na" style="font-weight: bold">
 										<td class="modified">&nbsp;</td>
 										<td class="general"><?php echo html_encode($department_name); ?> Totals:</td>
-										<td class="report-hours"><?php echo (($department_session_total_lecture) ? display_half_days($department_session_total_lecture, "lecture") : "&nbsp;"); ?></td>
-										<td class="report-hours"><?php echo (($department_session_total_lab) ? display_half_days($department_session_total_lab, "lab") : "&nbsp;"); ?></td>
-										<td class="report-hours"><?php echo (($department_session_total_small_group) ? display_half_days($department_session_total_small_group, "small_group") : "&nbsp;"); ?></td>
-										<td class="report-hours"><?php echo (($department_session_total_patient_contact) ? display_half_days($department_session_total_patient_contact, "patient_contact") : "&nbsp;"); ?></td>
-										<td class="report-hours"><?php echo (($department_session_total_symposium) ? display_half_days($department_session_total_symposium, "symposium") : "&nbsp;"); ?></td>
-										<td class="report-hours"><?php echo (($department_session_total_directed_learning) ? display_half_days($department_session_total_directed_learning, "directed_learning") : "&nbsp;"); ?></td>
-										<td class="report-hours"><?php echo (($department_session_total_review) ? display_half_days($department_session_total_review, "review") : "&nbsp;"); ?></td>
-										<td class="report-hours"><?php echo (($department_session_total_exam) ? display_half_days($department_session_total_exam, "exam") : "&nbsp;"); ?></td>
-										<td class="report-hours"><?php echo (($department_session_total_clerkship_seminar) ? display_half_days($department_session_total_clerkship_seminar, "clerkship_seminar") : "&nbsp;"); ?></td>
-										<td class="report-hours"><?php echo (($department_session_total_events) ? display_half_days($department_session_total_events, "events") : "&nbsp;"); ?></td>
-										<td class="report-hours"><?php echo (($department_duration_final_total) ? display_hours($department_duration_final_total) : "&nbsp;"); ?></td>
-										<td class="report-hours"><?php echo (($department_session_final_total) ? $department_session_final_total : "&nbsp;"); ?></td>
+										<td class="report-hours-lg"><?php echo (($department_session_total_lecture) ? display_half_days($department_session_total_lecture, "lecture") : "&nbsp;"); ?></td>
+										<td class="report-hours-lg"><?php echo (($department_session_total_lab) ? display_half_days($department_session_total_lab, "lab") : "&nbsp;"); ?></td>
+										<td class="report-hours-lg"><?php echo (($department_session_total_small_group) ? display_half_days($department_session_total_small_group, "small_group") : "&nbsp;"); ?></td>
+										<td class="report-hours-lg"><?php echo (($department_session_total_patient_contact) ? display_half_days($department_session_total_patient_contact, "patient_contact") : "&nbsp;"); ?></td>
+										<td class="report-hours-lg"><?php echo (($department_session_total_symposium) ? display_half_days($department_session_total_symposium, "symposium") : "&nbsp;"); ?></td>
+										<td class="report-hours-lg"><?php echo (($department_session_total_directed_learning) ? display_half_days($department_session_total_directed_learning, "directed_learning") : "&nbsp;"); ?></td>
+										<td class="report-hours-lg"><?php echo (($department_session_total_review) ? display_half_days($department_session_total_review, "review") : "&nbsp;"); ?></td>
+										<td class="report-hours-lg"><?php echo (($department_session_total_exam) ? display_half_days($department_session_total_exam, "exam") : "&nbsp;"); ?></td>
+										<td class="report-hours-lg"><?php echo (($department_session_total_interview) ? display_half_days($department_session_total_interview, "interview") : "&nbsp;"); ?></td>
+										<td class="report-hours-lg"><?php echo (($department_session_total_observership) ? display_half_days($department_session_total_observership, "observership") : "&nbsp;"); ?></td>
+										<td class="report-hours-lg"><?php echo (($department_session_total_clerkship_seminar) ? display_half_days($department_session_total_clerkship_seminar, "clerkship_seminar") : "&nbsp;"); ?></td>
+										<td class="report-hours-lg"><?php echo (($department_session_total_events) ? display_half_days($department_session_total_events, "events") : "&nbsp;"); ?></td>
+										<td class="report-hours-lg"><?php echo (($department_duration_final_total) ? display_hours($department_duration_final_total) : "&nbsp;"); ?></td>
+										<td class="report-hours-lg"><?php echo (($department_session_final_total) ? $department_session_final_total : "&nbsp;"); ?></td>
 									</tr>
 									<?php
 									$absolute_duration_total_lecture			+= $department_duration_total_lecture;
@@ -699,6 +801,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 									$absolute_session_total_directed_learning	+= $department_session_total_directed_learning;
 									$absolute_session_total_review				+= $department_session_total_review;
 									$absolute_session_total_exam				+= $department_session_total_exam;
+									$absolute_session_total_interview			+= $department_session_total_interview;
+									$absolute_session_total_observership		+= $department_session_total_observership;
 									$absolute_session_total_clerkship_seminar	+= $department_session_total_clerkship_seminar;
 									$absolute_session_total_events				+= $department_session_total_events;
 									$absolute_session_final_total				+= $department_session_final_total;
@@ -715,35 +819,39 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 					<colgroup>
 						<col class="modified" />
 						<col class="general" />
-						<col class="report-hours" style="background-color: #F3F3F3" />
-						<col class="report-hours" />
-						<col class="report-hours" style="background-color: #F3F3F3" />
-						<col class="report-hours" />
-						<col class="report-hours" style="background-color: #F3F3F3" />
-						<col class="report-hours" />
-						<col class="report-hours" style="background-color: #F3F3F3" />
-						<col class="report-hours" />
-						<col class="report-hours" style="background-color: #F3F3F3" />
-						<col class="report-hours" />
-						<col class="report-hours" style="background-color: #F3F3F3" />
-						<col class="report-hours" />
+						<col class="report-hours-lg" style="background-color: #F3F3F3" />
+						<col class="report-hours-lg" />
+						<col class="report-hours-lg" style="background-color: #F3F3F3" />
+						<col class="report-hours-lg" />
+						<col class="report-hours-lg" style="background-color: #F3F3F3" />
+						<col class="report-hours-lg" />
+						<col class="report-hours-lg" style="background-color: #F3F3F3" />
+						<col class="report-hours-lg" />
+						<col class="report-hours-lg" style="background-color: #F3F3F3" />
+						<col class="report-hours-lg" />
+						<col class="report-hours-lg" style="background-color: #F3F3F3" />
+						<col class="report-hours-lg" />
+						<col class="report-hours-lg" style="background-color: #F3F3F3" />
+						<col class="report-hours-lg" />
 					</colgroup>
 					<thead>
 						<tr>
 							<td class="modified">&nbsp;</td>
 							<td class="general">&nbsp;</td>
-							<td class="report-hours">Lecture</td>
-							<td class="report-hours">Lab</td>
-							<td class="report-hours">Small Group</td>
-							<td class="report-hours">Patient Contact</td>
-							<td class="report-hours">Symposium</td>
-							<td class="report-hours">Ind. Learning</td>
-							<td class="report-hours">Review Session</td>
-							<td class="report-hours">Examination</td>
-							<td class="report-hours">Clerk Seminars</td>
-							<td class="report-hours">Other Events</td>
-							<td class="report-hours">Total Hours</td>
-							<td class="report-hours">Total Sessions</td>
+							<td class="report-hours-lg">Lecture</td>
+							<td class="report-hours-lg">Lab</td>
+							<td class="report-hours-lg">Small Group</td>
+							<td class="report-hours-lg">Patient Contact</td>
+							<td class="report-hours-lg">Symposium</td>
+							<td class="report-hours-lg">Ind. Learning</td>
+							<td class="report-hours-lg">Review Session</td>
+							<td class="report-hours-lg">Examination</td>
+							<td class="report-hours-lg">Interview</td>
+							<td class="report-hours-lg">Observership</td>
+							<td class="report-hours-lg">Clerk Seminars</td>
+							<td class="report-hours-lg">Other Events</td>
+							<td class="report-hours-lg">Total Hours</td>
+							<td class="report-hours-lg">Total Sessions</td>
 						</tr>
 					</thead>
 					<tbody>
@@ -768,6 +876,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 							$session_total_directed_learning	= ((isset($report_results["courses"]["directed_learning"]["events_calculated"])) ? $report_results["courses"]["directed_learning"]["events_calculated"] : 0);
 							$session_total_review				= ((isset($report_results["courses"]["review"]["events_calculated"])) ? $report_results["courses"]["review"]["events_calculated"] : 0);
 							$session_total_exam					= ((isset($report_results["courses"]["exam"]["events_calculated"])) ? $report_results["courses"]["exam"]["events_calculated"] : 0);
+							$session_total_interview			= ((isset($report_results["courses"]["interview"]["events_calculated"])) ? $report_results["courses"]["interview"]["events_calculated"] : 0);
+							$session_total_observership			= ((isset($report_results["courses"]["observership"]["events_calculated"])) ? $report_results["courses"]["observership"]["events_calculated"] : 0);
 							$session_total_clerkship_seminar	= ((isset($report_results["courses"]["clerkship_seminar"]["events_calculated"])) ? $report_results["courses"]["clerkship_seminar"]["events_calculated"] : 0);
 							$session_total_events				= ((isset($report_results["courses"]["events"]["events_calculated"])) ? $report_results["courses"]["events"]["events_calculated"] : 0);
 
@@ -782,18 +892,20 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 								<tr style="background-color: #DEE6E3; font-weight: bold">
 									<td class="modified">&nbsp;</td>
 									<td class="general">Final Totals:</td>
-									<td class="report-hours"><?php echo (($session_total_lecture) ? display_half_days($session_total_lecture, "lecture") : "&nbsp;"); ?></td>
-									<td class="report-hours"><?php echo (($session_total_lab) ? display_half_days($session_total_lab, "lab") : "&nbsp;"); ?></td>
-									<td class="report-hours"><?php echo (($session_total_small_group) ? display_half_days($session_total_small_group, "small_group") : "&nbsp;"); ?></td>
-									<td class="report-hours"><?php echo (($session_total_patient_contact) ? display_half_days($session_total_patient_contact, "patient_contact") : "&nbsp;"); ?></td>
-									<td class="report-hours"><?php echo (($session_total_symposium) ? display_half_days($session_total_symposium, "symposium") : "&nbsp;"); ?></td>
-									<td class="report-hours"><?php echo (($session_total_directed_learning) ? display_half_days($session_total_directed_learning, "directed_learning") : "&nbsp;"); ?></td>
-									<td class="report-hours"><?php echo (($session_total_review) ? display_half_days($session_total_review, "review") : "&nbsp;"); ?></td>
-									<td class="report-hours"><?php echo (($session_total_exam) ? display_half_days($session_total_exam, "exam") : "&nbsp;"); ?></td>
-									<td class="report-hours"><?php echo (($session_total_clerkship_seminar) ? display_half_days($session_total_clerkship_seminar, "clerkship_seminar") : "&nbsp;"); ?></td>
-									<td class="report-hours"><?php echo (($session_total_events) ? display_half_days($session_total_events, "events") : "&nbsp;"); ?></td>
-									<td class="report-hours"><?php echo (($duration_final_total) ? display_hours($duration_final_total) : "&nbsp;"); ?></td>
-									<td class="report-hours"><?php echo (($session_final_total) ? $session_final_total : "&nbsp;"); ?></td>
+									<td class="report-hours-lg"><?php echo (($session_total_lecture) ? display_half_days($session_total_lecture, "lecture") : "&nbsp;"); ?></td>
+									<td class="report-hours-lg"><?php echo (($session_total_lab) ? display_half_days($session_total_lab, "lab") : "&nbsp;"); ?></td>
+									<td class="report-hours-lg"><?php echo (($session_total_small_group) ? display_half_days($session_total_small_group, "small_group") : "&nbsp;"); ?></td>
+									<td class="report-hours-lg"><?php echo (($session_total_patient_contact) ? display_half_days($session_total_patient_contact, "patient_contact") : "&nbsp;"); ?></td>
+									<td class="report-hours-lg"><?php echo (($session_total_symposium) ? display_half_days($session_total_symposium, "symposium") : "&nbsp;"); ?></td>
+									<td class="report-hours-lg"><?php echo (($session_total_directed_learning) ? display_half_days($session_total_directed_learning, "directed_learning") : "&nbsp;"); ?></td>
+									<td class="report-hours-lg"><?php echo (($session_total_review) ? display_half_days($session_total_review, "review") : "&nbsp;"); ?></td>
+									<td class="report-hours-lg"><?php echo (($session_total_exam) ? display_half_days($session_total_exam, "exam") : "&nbsp;"); ?></td>
+									<td class="report-hours-lg"><?php echo (($session_total_interview) ? display_half_days($session_total_interview, "interview") : "&nbsp;"); ?></td>
+									<td class="report-hours-lg"><?php echo (($session_total_observership) ? display_half_days($session_total_observership, "observership") : "&nbsp;"); ?></td>
+									<td class="report-hours-lg"><?php echo (($session_total_clerkship_seminar) ? display_half_days($session_total_clerkship_seminar, "clerkship_seminar") : "&nbsp;"); ?></td>
+									<td class="report-hours-lg"><?php echo (($session_total_events) ? display_half_days($session_total_events, "events") : "&nbsp;"); ?></td>
+									<td class="report-hours-lg"><?php echo (($duration_final_total) ? display_hours($duration_final_total) : "&nbsp;"); ?></td>
+									<td class="report-hours-lg"><?php echo (($session_final_total) ? $session_final_total : "&nbsp;"); ?></td>
 								</tr>
 							<?php
 							}

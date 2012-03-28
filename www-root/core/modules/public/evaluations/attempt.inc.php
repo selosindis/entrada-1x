@@ -316,17 +316,18 @@ if ($RECORD_ID) {
 									<?php
 									add_statistic("evaluation", "evaluation_view", "evaluation_id", $RECORD_ID);
 
-									$ajax_load_progress		= evaluation_load_progress($eprogress_id);
+									$ajax_load_progress = evaluation_load_progress($eprogress_id);
 									
 									$query = "	SELECT a.*, b.* FROM `evaluation_targets` AS a
 												JOIN `evaluations_lu_targets` AS b
 												ON a.`target_id` = b.`target_id`
-												LEFT JOIN `evaluation_progress` AS c
-												ON a.`etarget_id` = c.`etarget_id`
-												AND c.`proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
-												AND c.`evaluation_id` = a.`evaluation_id`
-												AND c.`progress_value` = 'complete'
-												WHERE a.`evaluation_id` = ".$db->qstr($RECORD_ID);
+												WHERE a.`evaluation_id` = ".$db->qstr($RECORD_ID)."
+												AND a.`etarget_id` NOT IN (
+													SELECT `etarget_id` FROM `evaluation_progress` 
+													WHERE `proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
+													AND `evaluation_id` = ".$db->qstr($RECORD_ID)."
+													AND `progress_value` = 'complete'
+												)";
 									$evaluation_targets = $db->GetAll($query);
 									if ($evaluation_targets) {
 										if (count($evaluation_targets) == 1) {

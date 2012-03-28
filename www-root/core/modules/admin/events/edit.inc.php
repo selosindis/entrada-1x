@@ -533,6 +533,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					case 1 :
 					default :
 						$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/elementresizer.js\"></script>\n";
+						$ONLOAD[] = "selectEventAudienceOption('".(isset($PROCESSED["event_audience_type"]) && $PROCESSED["event_audience_type"] ? $PROCESSED["event_audience_type"] : "custom")."')";
 						
 						$LASTUPDATED = $result["updated_date"];
 
@@ -800,8 +801,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 										</td>
 									</tr>
 								</tbody>
-								<tbody id="audience-options">
-
+								<tbody id="audience-options"<?php echo (($PROCESSED["event_audience_type"] == "course") ? " style=\"display: none\"" : ""); ?>>
 								<?php
 								if ($PROCESSED["course_id"]) {
 									require_once(ENTRADA_ABSOLUTE."/core/modules/admin/events/api-audience-options.inc.php");
@@ -867,6 +867,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								$$('select_multiple_container').invoke('hide');
 								audience_type = $F('audience_type');
 								course_id = $F('course_id');
+								var cohorts = $('event_audience_cohorts').value;
+								var course_groups = $('event_audience_course_groups').value;
+								var students = $('event_audience_students').value;
 				
 								if (multiselect[audience_type]) {
 									multiselect[audience_type].container.show();
@@ -876,10 +879,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 											evalScripts : true,
 											parameters: {
 												'options_for' : audience_type, 
-												'course_id' : course_id, 'event_id' : <?php echo $EVENT_ID; ?>,
-												'event_audience_cohorts' : $('event_audience_cohorts').value, 
-												'event_audience_course_groups' : $('event_audience_course_groups').value, 
-												'event_audience_students' : $('event_audience_students').value
+												'course_id' : course_id, 
+												'event_id' : '<?php echo $EVENT_ID; ?>',
+												'event_audience_cohorts' : cohorts, 
+												'event_audience_course_groups' : '<?php echo $course_groups; ?>', 
+												'event_audience_students' : students
 											},
 											method: 'post',
 											onLoading: function() {
@@ -1049,6 +1053,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				
 									if (currentLabel != selectedCourse) {
 										selectedCourse = currentLabel;
+										var cohorts = ($('event_audience_cohorts') ? $('event_audience_cohorts').getValue() : '');
+										var course_groups = ($('event_audience_course_groups') ? $('event_audience_course_groups').getValue() : '');
+										var students = ($('event_audience_students') ? $('event_audience_students').getValue() : '');
 				
 										$('audience-options').show();
 										$('audience-options').update('<tr><td colspan="2">&nbsp;</td><td><div class="content-small" style="vertical-align: middle"><img src="<?php echo ENTRADA_RELATIVE; ?>/images/indicator.gif" width="16" height="16" alt="Please Wait" title="" style="vertical-align: middle" /> Please wait while <strong>audience options</strong> are being loaded ... </div></td></tr>');
@@ -1058,9 +1065,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 											parameters : {
 												ajax : 1,
 												course_id : $F('course_id'),
-												event_audience_students: ($('event_audience_students') ? $('event_audience_students').getValue() : ''),
-												event_audience_course_groups: ($('event_audience_course_groups') ? $('event_audience_course_groups').getValue() : ''),
-												event_audience_cohort: ($('event_audience_cohort') ? $('event_audience_cohort').getValue() : '')
+												event_audience_students: students,
+												event_audience_course_groups: course_groups,
+												event_audience_cohorts: cohorts
 											},
 											onSuccess : function (response) {
 												if (response.responseText == "") {

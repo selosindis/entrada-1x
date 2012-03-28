@@ -393,7 +393,7 @@ class CourseOwnerAssertion implements Zend_Acl_Assert_Interface {
 	static function _checkCourseOwner($user_id, $course_id) {
 		//Logic taken from the old permissions_check() function.
 		global $db;
-		$query	=  "SELECT a.`pcoord_id` AS `coordinator`, b.`proxy_id` AS `director_id`, d.`proxy_id` AS `admin_id`
+		$query	=  "SELECT a.`pcoord_id` AS `coordinator`, b.`proxy_id` AS `director_id`, d.`proxy_id` AS `admin_id`, e.`proxy_id` AS `pcoordinator`
 					FROM `".DATABASE_NAME."`.`courses` AS a
 					LEFT JOIN `".DATABASE_NAME."`.`course_contacts` AS b
 					ON b.`course_id` = a.`course_id`
@@ -404,16 +404,20 @@ class CourseOwnerAssertion implements Zend_Acl_Assert_Interface {
 					ON d.`community_id` = c.`community_id`
 					AND d.`member_active` = '1'
 					AND d.`member_acl` = '1'
+					LEFT JOIN `".DATABASE_NAME."`.`course_contacts` AS e
+					ON e.`course_id` = a.`course_id`
+					AND e.`contact_type` = 'pcoordinator'
 					WHERE a.`course_id` = ".$db->qstr($course_id)."
 					AND (a.`pcoord_id` = ".$db->qstr($user_id)."
 						OR b.`proxy_id` = ".$db->qstr($user_id)."
 						OR d.`proxy_id` = ".$db->qstr($user_id)."
+						OR e.`proxy_id` = ".$db->qstr($user_id)."
 					)
 					AND a.`course_active` = '1'
 					LIMIT 0, 1";
 		$result = $db->GetRow($query);
 		if($result) {
-			foreach(array("director_id", "coordinator", "admin_id") as $owner) {
+			foreach(array("director_id", "coordinator", "admin_id", "pcoordinator") as $owner) {
 				if($result[$owner] == $user_id) {
 					return true;
 				}
@@ -895,7 +899,7 @@ class EventOwnerAssertion implements Zend_Acl_Assert_Interface {
 	static function _checkEventOwner($user_id, $event_id) {
 		global $db;
 
-		$query		= "	SELECT a.`event_id`, b.`proxy_id` AS `teacher`, c.`pcoord_id` AS `coordinator`, d.`proxy_id` AS `director_id`
+		$query		= "	SELECT a.`event_id`, b.`proxy_id` AS `teacher`, c.`pcoord_id` AS `coordinator`, d.`proxy_id` AS `director_id`, e.`proxy_id` AS `pcoordinator`
 						FROM `events` AS a
 						LEFT JOIN `event_contacts` AS b
 						ON b.`event_id` = a.`event_id`
@@ -904,12 +908,15 @@ class EventOwnerAssertion implements Zend_Acl_Assert_Interface {
 						LEFT JOIN `course_contacts` AS d
 						ON d.`course_id` = c.`course_id`
 						AND d.`contact_type` = 'director'
+						LEFT JOIN `course_contacts` AS e
+						ON e.`course_id` = c.`course_id`
+						AND e.`contact_type` = 'pcoordinator'
 						WHERE a.`event_id` = ".$db->qstr($event_id)."
 						AND c.`course_active` = '1'";
 		$results	= $db->GetAll($query);
 		if($results) {
 			foreach($results as $result) {
-				foreach(array("director_id", "coordinator", "teacher") as $owner) {
+				foreach(array("director_id", "coordinator", "teacher", "pcoordinator") as $owner) {
 					if($result[$owner] == $user_id) {
 						return true;
 					}
@@ -1270,7 +1277,7 @@ class ClerkshipLotteryAssertion implements Zend_Acl_Assert_Interface {
 			return false;
 		}
 
-		if((date("Y",strtotime("+2 Years")) == $GRAD_YEAR) && (time() >= CLERKSHIP_LOTTERY_START && time() <= CLERKSHIP_LOTTERY_FINISH)) {
+		if((date("Y",strtotime("+2 Years")) == $GRAD_YEAR) && ((time() >= CLERKSHIP_LOTTERY_START && time() <= CLERKSHIP_LOTTERY_FINISH) || time() >= CLERKSHIP_LOTTERY_RELEASE)) {
 			return true;
 		} else {
 			return false;

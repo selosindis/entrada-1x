@@ -68,14 +68,13 @@ if ($RECORD_ID) {
 							AND c.`quiz_active` = '1'";
 	}
 	$quiz_record = $db->GetRow($query);
-	echo $QUIZ_TYPE;
 	if ($quiz_record) {
 		$is_administrator = false;
 		if ($QUIZ_TYPE == "event") {
 			if ($ENTRADA_ACL->amIAllowed(new EventContentResource($quiz_record["event_id"], $quiz_record["course_id"], $quiz_record["organisation_id"]), "update")) {
 				$is_administrator	= true;
 			}
-		}else{			
+		} else {			
 			$query	= "SELECT * FROM `community_members` WHERE `community_id` = ".$db->qstr($quiz_record["community_id"])." AND `proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])." AND `member_active` = '1' AND `member_acl` = '1'";
 			$result	= $db->GetRow($query);
 			if ($result) {				

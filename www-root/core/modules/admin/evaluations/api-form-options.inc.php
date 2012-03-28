@@ -138,7 +138,9 @@ if (!defined("IN_EVALUATIONS")) {
 								LEFT JOIN `events` AS d
 								ON d.`event_id` = c.`event_id`
 								WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
-								AND b.`group` = 'faculty'
+								AND (b.`group` = 'faculty' OR 
+									(b.`group` = 'resident' AND b.`role` = 'lecturer')
+								)
 								AND d.`event_finish` >= ".$db->qstr(strtotime("-12 months"))."
 								GROUP BY a.`id`
 								ORDER BY a.`lastname` ASC, a.`firstname` ASC";

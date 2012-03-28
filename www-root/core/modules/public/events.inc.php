@@ -519,7 +519,7 @@ if (!defined("PARENT_INCLUDED")) {
  * @todo simpson This needs to be fixed as $event_audience_type is no longer for grad_year.
  */
 if ($event_audience_type == "cohort") {
-	$query = "	SELECT a.`event_id`, a.`event_title`, b.`audience_value` AS `event_grad_year`
+	$query = "	SELECT a.`event_id`, a.`event_title`, b.`audience_value` AS `event_cohort`
 				FROM `events` AS a
 				LEFT JOIN `event_audience` AS b
 				ON b.`event_id` = a.`event_id`
@@ -527,6 +527,7 @@ if ($event_audience_type == "cohort") {
 				ON a.`course_id` = c.`course_id`
 				AND c.`organisation_id` = ".$db->qstr($event_info["organisation_id"])."
 				WHERE (a.`event_start` BETWEEN ".$db->qstr($event_info["event_start"])." AND ".$db->qstr(($event_info["event_finish"] - 1)).")
+				AND c.`course_active` = '1'
 				AND a.`event_id` <> ".$db->qstr($event_info["event_id"])."
 				AND b.`audience_type` = 'cohort'
 				AND b.`audience_value` IN (".$associated_cohorts_string.")
@@ -1021,7 +1022,6 @@ if ($show_event_objectives || $show_clinical_presentations || $show_curriculum_o
 				true,
 				(isset($_GET["pv"]) ? (int) trim($_GET["pv"]) : 1),
 				$_SESSION[APPLICATION_IDENTIFIER]["events"]["pp"]);
-
 		/**
 		 * Output the filter HTML.
 		 */

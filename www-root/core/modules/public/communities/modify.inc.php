@@ -90,6 +90,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 					case 2 :
 						$PROCESSED["community_members"]	= "";
 						$PROCESSED["sub_communities"]	= 0;
+
 						/**
 						 * Required: Community Name / community_title
 						 */
@@ -153,6 +154,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 							$ERROR++;
 							$ERRORSTR[] = "You must specify the Access Permissions for this new community.";
 						}
+						
 						if (isset($_POST["template_selection"])) {
 							if ($template_selection = clean_input($_POST["template_selection"], array("trim", "int"))) {
 								$query = "SELECT * FROM `community_templates` WHERE `template_id` = ". $db->qstr($template_selection);
@@ -163,6 +165,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 								}
 							}		
 						}
+						
 						/**
 						 * Not Required: Sub-Communities / sub_communities
 						 */
@@ -322,6 +325,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 						$COMMUNITY_PARENT				= $community_details["community_parent"];
 						$community_groups				= array();
 						$community_communities			= array();
+
 						$query = "SELECT `module_id` FROM `community_modules` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `module_active` = '1'";
 						$results = $db->GetAll($query);
 						if ($results) {
@@ -329,12 +333,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 								$PROCESSED["community_modules"][] = (int) $result["module_id"];
 							}
 						}
+
 						$community_template = $PROCESSED["community_template"];
 						$query = "SELECT * FROM `community_templates` WHERE `template_name` =".$db->qstr($community_template);
 						$results = $db->GetRow($query);
 						if ($results) {
 							$template_selection = $results["template_id"];
 						}
+
 						if (($community_details["community_registration"] == 2) && ($community_details["community_members"])) {
 							$community_groups = @unserialize($community_details["community_members"]);
 						}
@@ -342,17 +348,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 						if (($community_details["community_registration"] == 3) && ($community_details["community_members"])) {
 							$community_communities = @unserialize($community_details["community_members"]);
 						}
-						break;
+					break;
 				}
 
 				// Display Content
 				switch ($STEP) {
 					case 3 :
-						$PROCESSED["community_registration"];
 						$community_url	= ENTRADA_URL."/community".$community_details["community_url"];
 
 						$PROCESSED["updated_date"]	= time();
 						$PROCESSED["updated_by"]	= $_SESSION["details"]["id"];
+
 						if ($db->AutoExecute("communities", $PROCESSED, "UPDATE", "`community_id` = ".$db->qstr($COMMUNITY_ID))) {
 							if ($MAILING_LISTS["active"] && array_key_exists("community_list_mode", $PROCESSED) && $PROCESSED["community_list_mode"] != $mailing_list->type) {
 								$mailing_list->mode_change($PROCESSED["community_list_mode"]);
@@ -597,6 +603,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 									</tr>
 									<?php
 								}
+
 								if ($PROCESSED["community_protected"] != $community_details["community_protected"]) {
 										?>
 									<tr>
@@ -606,6 +613,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 									</tr>
 									<?php
 								}
+
 								if ($PROCESSED["community_template"] != $community_details["community_template"]) {
 										?>
 									<tr>
@@ -828,7 +836,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 									</table>
 								</div>
 								<div class="tab-page">
-									<script type="text/javascript" charset="utf-8">
+									<script type="text/javascript">
 										jQuery(function() {
 											jQuery( ".large-view-1" ).click(function() {
 												jQuery(".default-large").dialog({ 

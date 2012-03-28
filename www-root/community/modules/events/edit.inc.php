@@ -199,6 +199,9 @@ if ($RECORD_ID) {
 						<td><input type="text" id="event_title" name="event_title" value="<?php echo ((isset($PROCESSED["event_title"])) ? html_encode($PROCESSED["event_title"]) : ""); ?>" maxlength="128" style="width: 96%; float: left;" /></td>
 					</tr>
 					<tr>
+						<td colspan="3">&nbsp;</td>
+					</tr>
+					<tr>
 						<td>&nbsp;</td>
 						<td><label for="event_location" class="form-nrequired">Event Location</label></td>
 						<td><input type="text" id="event_location" name="event_location" value="<?php echo ((isset($PROCESSED["event_location"])) ? html_encode($PROCESSED["event_location"]) : ""); ?>" maxlength="128" style="width: 170px" /> <span class="content-small">(<strong>e.g.</strong> Bracken Library, Room 102)</span></td>

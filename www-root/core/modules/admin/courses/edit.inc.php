@@ -319,7 +319,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								}
 							}
 							
-							$query = "DELETE FROM `course_contacts` WHERE `course_id`=".$db->qstr($COURSE_ID);
+							$query = "DELETE FROM `course_contacts` WHERE `course_id`=".$db->qstr($COURSE_ID)." AND `contact_type` != 'pcoordinator'";
 							if ($db->Execute($query)) {
 								if ((isset($_POST["associated_director"])) && ($associated_directors = explode(",", $_POST["associated_director"])) && (@is_array($associated_directors)) && (@count($associated_directors))) {
 									$community_member = false;
@@ -1043,7 +1043,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								<td colspan="2">&nbsp;</td>
 								<td style="padding-top: 5px;">
 									<div id="objectives_list">
-									<?php echo course_objectives_in_list($course_objectives,$top_level_id, $top_level_id, true, false, 1, false, true, "primary", true); ?>
+									<?php echo course_objectives_in_list($course_objectives,$top_level_id, $top_level_id, true, false, 1, false, true, "primary", true, false); ?>
 									</div>
 								</td>
 							</tr>

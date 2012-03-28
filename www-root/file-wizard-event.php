@@ -123,8 +123,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 					FROM `events` AS a
 					LEFT JOIN `courses` AS b
 					ON b.`course_id` = a.`course_id`
-					WHERE a.`event_id` = ".$db->qstr($EVENT_ID)."
-					AND b.`course_active` = '1'";
+					WHERE a.`event_id` = ".$db->qstr($EVENT_ID);
 		$result	= $db->GetRow($query);
 		if($result) {
 			$access_allowed = false;
@@ -605,7 +604,13 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 								 */
 
 								$PROCESSED["event_id"] = $EVENT_ID;
-
+/*
+								if (!isset($_POST["copyright_check"]) || !$_POST["copyright_check"]) {
+									$ERROR++;
+									$ERRORSTR[] = "q8";
+								}
+*/
+								
 								/**
 								 * Step 3 Error Checking
 								 */
@@ -828,6 +833,12 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 							case 1 :
 							default :
 								$ONLOAD[] = "initStep(".$JS_INITSTEP.")";
+/*
+
+								if ($JS_INITSTEP == 3) {
+									$ONLOAD[] = "allowSubmit(0)";
+								}
+*/
 
 								if((isset($_POST["timedrelease"])) && ($_POST["timedrelease"] == "yes")) {
 									$ONLOAD[] = "timedRelease('block')";
@@ -939,6 +950,15 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 													<textarea id="file_notes" name="file_notes" style="width: 350px; height: 75px"><?php echo ((isset($PROCESSED["file_notes"])) ? html_encode($PROCESSED["file_notes"]) : ""); ?></textarea>
 												</div>
 											</div>
+<!--
+											<div id="q8" class="wizard-question<?php echo ((in_array("q8", $ERRORSTR)) ? " display-error" : ""); ?>">
+												<div style="font-size: 14px">Before continuing, you <span style="font-style: oblique">must</span> confirm that you have permission to upload this file.</div>
+												<div style="padding-left: 65px; padding-right: 10px; padding-top: 10px">
+													<input type="checkbox" value="1" id="copyright_check" name="copyright_check" onclick="allowSubmit(this.checked)" />
+													<label for="file_notes" class="form-required">I assert that there are no copyright violations in the selected materials.</label>
+												</div>
+											</div>
+-->
 										</div>
 									</div>
 									<div id="footer">

@@ -661,7 +661,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 									echo "<strong>staff members</strong>";
 								break;
 								case "student" :
-									echo "<strong>students</strong>".(($target_role) ? " in the <strong>class of ".$target_role."</strong>" : "");
+									echo "<strong>students</strong>".(($target_role) ? " in the <strong>".groups_get_name($target_role)."</strong>" : "");
 								break;
 								case "all" :
 								default :

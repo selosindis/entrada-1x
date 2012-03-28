@@ -338,6 +338,7 @@ if ($COMMUNITY_URL) {
 				 */
 				$COMMUNITY_MODULES = communities_fetch_modules($COMMUNITY_ID);
 				$COMMUNITY_PAGES = communities_fetch_pages($COMMUNITY_ID, $USER_ACCESS);
+				
 				/**
 				 * Loading Prototype
 				 */
@@ -430,6 +431,7 @@ if ($COMMUNITY_URL) {
 					if (@file_exists(ENTRADA_ABSOLUTE."/community/templates/".$COMMUNITY_TEMPLATE."/includes/config.inc.php")) {
 						require_once(ENTRADA_ABSOLUTE."/community/templates/".$COMMUNITY_TEMPLATE."/includes/config.inc.php");
 					}
+
 					/**
 					 * Responsible for displaying the permission masks sidebar item
 					 * if they have more than their own permission set available.
@@ -452,7 +454,7 @@ if ($COMMUNITY_URL) {
 						$sidebar_html .= "	<li class=\"admin\"><a href=\"".ENTRADA_URL."/communities?section=modify&amp;community=".$COMMUNITY_ID."\" style=\"font-weight: bold\">Manage Community</a></li>\n";
 						$sidebar_html .= "	<li class=\"admin\"><a href=\"".ENTRADA_URL."/communities?section=members&amp;community=".$COMMUNITY_ID."\" style=\"font-weight: bold\">Manage Members</a></li>\n";
 						$sidebar_html .= "	<li class=\"admin\"><a href=\"".COMMUNITY_URL.$COMMUNITY_URL.":pages\" style=\"font-weight: bold\">Manage Pages</a></li>\n";
-						$sidebar_html .= "	<li class=\"admin\"><a href=\"".ENTRADA_URL."/communities/reports?community=".$COMMUNITY_ID."\" style=\"font-weight: bold\">View Community Reports</a></li>\n";
+						$sidebar_html .= "	<li class=\"admin\"><a href=\"".ENTRADA_URL."/communities/reports?community=".$COMMUNITY_ID."\" style=\"font-weight: bold\">Community Reports</a></li>\n";
 						$sidebar_html .= "</ul>\n";
 
 						new_sidebar_item("Admin Centre", $sidebar_html, "community-admin", "open");
@@ -611,6 +613,7 @@ if ($COMMUNITY_URL) {
 				
 				$member_name = html_encode($_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]);
 				$date_joined = "Joined: ".date("Y-m-d", $COMMUNITY_MEMBER_SINCE);
+				
 				$smarty->assign("template_relative", COMMUNITY_RELATIVE."/templates/".$COMMUNITY_TEMPLATE);
 				$smarty->assign("sys_community_relative", COMMUNITY_RELATIVE);
 				
@@ -632,14 +635,25 @@ if ($COMMUNITY_URL) {
 				$smarty->assign("site_total_admins", communities_count_members(1));
 
 				$smarty->assign("site_primary_navigation", $COMMUNITY_PAGES["navigation"]);
+				$show_tertiary_sideblock = false;
+				foreach ($COMMUNITY_PAGES["navigation"] as $top_level_page) {
+					if (count($top_level_page["link_children"]) > 0) {
+						foreach ($top_level_page["link_children"] as $child_page) {
+							if (($child_page["link_selected"] || $child_page["child_selected"]) && count($child_page["link_children"])) {
+								$show_tertiary_sideblock = true;
+							}
+						}
+					}
+				}
+				$smarty->assign("show_tertiary_sideblock", $show_tertiary_sideblock);
 				$smarty->assign("site_navigation_items_per_column", 4);
 				$smarty->assign("site_breadcrumb_trail", "%BREADCRUMB%");
+
 				if (($COMMUNITY_MODULE != "pages") && ($COMMUNITY_MODULE != "members") && ($SECTION == "index")) {
 					$query = "	SELECT `cpage_id`
 								FROM `community_pages`
 								WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)."
 								AND `page_url` = ".$db->qstr($PAGE_URL);
-	
 					$result = $db->GetRow($query);
 					if ($result) {
 						$smarty->assign("child_nav", communities_page_children_in_list($result["cpage_id"]));
@@ -647,6 +661,7 @@ if ($COMMUNITY_URL) {
 						$smarty->assign("child_nav", "");	
 					}
 				}
+
 				$smarty->assign("community_id", $COMMUNITY_ID);
 				$smarty->assign("page_title", "%TITLE%");
 				$smarty->assign("page_description", "%DESCRIPTION%");
@@ -661,17 +676,7 @@ if ($COMMUNITY_URL) {
 				$smarty->assign("user_is_admin", $COMMUNITY_ADMIN);
 				$smarty->assign("date_joined", $date_joined);
 				$smarty->assign("member_name", $member_name);
-				$show_tertiary_sideblock = false;
-				foreach ($COMMUNITY_PAGES["navigation"] as $key => $value) {
-					if (count($value["link_children"]) > 0) {
-						foreach($value["link_children"] as $key2 => $value2) {
-							if ($value2["link_selected"]) {
-								$show_tertiary_sideblock = true;
-							}
-						}
-					}
-				}
-				$smarty->assign("show_tertiary_sideblock", $show_tertiary_sideblock);
+				
 				$smarty->display("index.tpl");
 			}
 		} else {

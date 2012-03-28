@@ -1021,6 +1021,7 @@ if ($COMMUNITY_ID) {
 														 */
 															if (($community_details["community_members"] != "") && ($community_members = @unserialize($community_details["community_members"])) && (is_array($community_members)) && (count($community_members))) {
 																$role_group_combinations = array();
+																$student_cohort_ids_string = false;
 																foreach ($community_members as $member_group) {
 																	if ($member_group != "") {
 																		$tmp_build	= array();
@@ -1028,31 +1029,41 @@ if ($COMMUNITY_ID) {
 																		$pieces = explode("_", $member_group);
 
 																		if (isset($pieces[1]) && (isset($pieces[0]) && $pieces[0] == "student")) {
-																			$tmp_build["role"]	= "b.`role` = ".$db->qstr(clean_input($pieces[1], "alphanumeric"));
+																			if ($student_cohort_ids_string) {
+																				$student_cohort_ids_string .= ", ".$db->qstr(clean_input($pieces[1], "int"));
+																			} else {
+																				$student_cohort_ids_string = $db->qstr(clean_input($pieces[1], "int"));
+																			}
 																		}
 																		if (isset($pieces[0])) {
-																			$tmp_build["group"]	= "b.`group` = ".$db->qstr(clean_input($pieces[0], "alphanumeric"));
+																			if ($pieces[0] == "student") {
+																				$tmp_build["group"]	= "b.`group` = ".$db->qstr(clean_input($pieces[0], "alphanumeric"))." AND c.`group_id` = ".$db->qstr(clean_input($pieces[1], "int"));
+																			} else {
+																				$tmp_build["group"]	= "b.`group` = ".$db->qstr(clean_input($pieces[0], "alphanumeric"));
+																			}
 																		}
 
 																		$role_group_combinations[] = "(".implode(" AND ", $tmp_build).")";
 																	}
 																}
 																if (@count($role_group_combinations)) {
-																	$nmembers_query	= "
-																		SELECT a.`id` AS `proxy_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, a.`username`, a.`organisation_id`, b.`group`, b.`role`
-																		FROM `".AUTH_DATABASE."`.`user_data` AS a
-																		LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
-																		ON a.`id` = b.`user_id`
-																		WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
-																		AND b.`account_active` = 'true'
-																		AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
-																		AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
-																		AND (".implode(" OR ", $role_group_combinations).")
-																		GROUP BY a.`id`
-																		ORDER BY a.`lastname` ASC, a.`firstname` ASC";
+																	$nmembers_query	= "SELECT a.`id` AS `proxy_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, a.`username`, a.`organisation_id`, b.`group`, b.`role`
+																						FROM `".AUTH_DATABASE."`.`user_data` AS a
+																						LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+																						ON a.`id` = b.`user_id`
+																						".($student_cohort_ids_string ? "LEFT JOIN `group_members` AS c
+																						ON a.`id` = c.`proxy_id`
+																						AND c.`group_id` IN (".$student_cohort_ids_string.")" : "")."
+																						WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
+																						AND b.`account_active` = 'true'
+																						AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
+																						AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
+																						AND (".implode(" OR ", $role_group_combinations).")
+																						GROUP BY a.`id`
+																						ORDER BY a.`lastname` ASC, a.`firstname` ASC";
 																}
 															}
-															break;
+														break;
 														case 3 :	// Selected Community Registration
 															if (($community_details["community_members"] != "") && ($community_members = @unserialize($community_details["community_members"])) && (is_array($community_members)) && (count($community_members))) {
 																$tmp_community_member_list = array();

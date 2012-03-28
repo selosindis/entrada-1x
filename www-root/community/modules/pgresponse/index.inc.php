@@ -54,7 +54,7 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_PGRESPONSE"))) {
 
 	$total_faculty_response_rate = $db->GetOne($query);
 ?>
-	<h3>The following ITER and Faculty Evaluation Completion Rate data covers blocks 9 to 11 as of <?php echo date_format(date_create($max_gen_date), "F j, Y"); ?></h3>
+	<h3>The following ITER and Faculty Evaluation Completion Rate data covers blocks 1 and 2 as of <?php echo date_format(date_create($max_gen_date), "F j, Y"); ?></h3>
 	<br />
 <?php
 	$response_rate_result_flag = 0;//If true then the PGME Overall response rates will be shown too.

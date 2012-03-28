@@ -479,8 +479,10 @@ switch ($MODULE) {
 	case "login" :
 		require_once(ENTRADA_ABSOLUTE.DIRECTORY_SEPARATOR."default-pages".DIRECTORY_SEPARATOR."login.inc.php");
 	break;
-	default :/*
-		if ($_SESSION["details"]["group"] == "student" && $MODULE != "evaluations") {
+	default :
+		/*
+		$excused_proxy_ids = array();
+		if ($_SESSION["details"]["group"] == "student" && $MODULE != "evaluations" && !in_array($_SESSION["details"]["id"], $excused_proxy_ids)) {
 			$cohort = groups_get_cohort($_SESSION["details"]["id"]);
 			$query = "SELECT * FROM `evaluations` AS a
 						JOIN `evaluation_evaluators` AS b
@@ -513,8 +515,9 @@ switch ($MODULE) {
 					exit;
 				}
 			}
-			
 		}
+		*/
+		
 		/**
 		 * Initialize Entrada_Router so it can load the requested modules.
 		 */

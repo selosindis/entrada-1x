@@ -50,7 +50,8 @@ if ($results) {
 	foreach ($results as $result) {
 		if ($result["rotation_id"] && ($result["finish"] < time() || ((time() - $result["start"]) > (($result["finish"] - $result["start"]) * $result["percent_period_complete"] / 100)))) {
 			$query = "	SELECT * FROM `".CLERKSHIP_DATABASE."`.`logbook_mandatory_objectives`
-						WHERE `rotation_id` = ".$db->qstr($result["rotation_id"]);
+						WHERE `rotation_id` = ".$db->qstr($result["rotation_id"])."
+						AND `grad_year_min` <= ".$db->qstr(get_account_data("grad_year", $result["proxy_id"]));
 			$oresults = $db->GetAll($query);
 			if ($oresults) {
 				$total_required = 0;

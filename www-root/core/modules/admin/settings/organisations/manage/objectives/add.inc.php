@@ -122,7 +122,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 
 				if ($db->AutoExecute("global_lu_objectives", $PROCESSED, "INSERT")) {
 					if ($OBJECTIVE_ID = $db->Insert_Id()) {
-						//if($PROCESSED["objective_parent"] == 0){
+						if ($PROCESSED["objective_parent"] == 0) {
 							$params = array("objective_id"=>$OBJECTIVE_ID,"organisation_id"=>$ORGANISATION_ID);
 							if($db->AutoExecute("objective_organisation", $params, "INSERT")){
 								$url = ENTRADA_URL . "/admin/settings/organisations/manage/objectives?org=".$ORGANISATION_ID;
@@ -130,20 +130,27 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 								$SUCCESSSTR[] = "You have successfully added <strong>".html_encode($PROCESSED["objective_name"])."</strong> to the system.<br /><br />You will now be redirected to the objectives index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 								$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
 								application_log("success", "New Objective [".$OBJECTIVE_ID."] added to the system.");
-							}
-							else{
+							} else{
 								$ERROR++;
 								$ERRORSTR[] = "There was a problem associating this objective to your organisation. The system administrator was informed of this error; please try again later.";
 
 								application_log("error", "There was an error associating an objective with an organisation. Database said: ".$db->ErrorMsg());
 							}
-//						}else{
-//							$url = ENTRADA_URL . "/admin/settings/organisations/manage/objectives?org=".$ORGANISATION_ID;
-//							$SUCCESS++;
-//							$SUCCESSSTR[] = "You have successfully added <strong>".html_encode($PROCESSED["objective_name"])."</strong> to the system.<br /><br />You will now be redirected to the objectives index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-//							$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
-//							application_log("success", "New Objective [".$OBJECTIVE_ID."] added to the system.");
-//						}
+						} else {
+							$params = array("objective_id"=>$OBJECTIVE_ID,"organisation_id"=>$ORGANISATION_ID);
+							if($db->AutoExecute("objective_organisation", $params, "INSERT")) {
+								$url = ENTRADA_URL . "/admin/settings/organisations/manage/objectives?org=".$ORGANISATION_ID;
+								$SUCCESS++;
+								$SUCCESSSTR[] = "You have successfully added <strong>".html_encode($PROCESSED["objective_name"])."</strong> to the system.<br /><br />You will now be redirected to the objectives index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+								$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
+								application_log("success", "New Objective [".$OBJECTIVE_ID."] added to the system.");
+							} else{
+								$ERROR++;
+								$ERRORSTR[] = "There was a problem associating this objective to your organisation. The system administrator was informed of this error; please try again later.";
+
+								application_log("error", "There was an error associating an objective with an organisation. Database said: ".$db->ErrorMsg());
+							}
+						}
 					}
 				} else {
 					$ERROR++;
@@ -227,7 +234,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 				<tr>
 					<td colspan="2">
 						<?php 
-							add_notice("<strong>Note:</strong><br/>If this is a parent for Curriculum Objectives please label it 'Curriculum Objectives'.<br/>If this is a parent for Mandates Objectives (such as MCC Objectives) please label it 'Mandated Objectives'.");
+							$objective_name = $translate->_("events_filter_controls");
+							add_notice("<strong>Note:</strong><br/>If this is a parent for Curriculum Objectives please label it '".html_encode($objective_name["co"]["global_lu_objectives_name"])."'.<br/>If this is a parent for Mandates Objectives (such as MCC Objectives) please label it '".html_encode($objective_name["cp"]["global_lu_objectives_name"])."'.");
 							echo display_notice();
 						?>
 					</td>

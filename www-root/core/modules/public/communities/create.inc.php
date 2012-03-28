@@ -57,6 +57,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 	} elseif((isset($_POST["category_id"])) && ((int) trim($_POST["category_id"]))) {
 		$CATEGORY_ID	= (int) trim($_POST["category_id"]);
 	}
+
 	/**
 	 * Ensure the selected category is feasible or send them to the first step.
 	 */
@@ -149,9 +150,9 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 			$PROCESSED["category_id"]		= $CATEGORY_ID;
 			$PROCESSED["community_active"]	= 1;
 			$PROCESSED["community_members"]	= "";
+
 			$query	= "SELECT `category_status` FROM `communities_categories` WHERE `category_id` = ".$db->qstr($PROCESSED["category_id"])." AND `category_visible` = '1'";
 			$result	= $db->GetRow($query);
-			
 			if($result) {
 				if($result["category_status"] == 1) {
 					$PROCESSED["community_active"] = 0;
@@ -245,6 +246,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 				$ERROR++;
 				$ERRORSTR[] = "You must specify the Access Permissions for this new community.";
 			}
+			
 			if (isset($_POST["template_selection"])) {
 				if ($template_selection = clean_input($_POST["template_selection"], array("trim", "int"))) {
 					$template_query = "SELECT * FROM `community_templates` WHERE `template_id` = ". $db->qstr($template_selection);
@@ -254,6 +256,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 					}
 				}
 			}
+			
 			if(isset($_POST["community_registration"])) {
 				switch(clean_input($_POST["community_registration"], array("trim", "int"))) {
 					case 0 :
@@ -455,11 +458,11 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 		 */
 			$template_selection = 0;
 			continue;
-			break;
+		break;
 		case 1 :
 		default :
 			continue;
-			break;
+		break;
 	}
 
 	// Display Content
@@ -471,6 +474,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 			break;
 		case 2 :
 			$ONLOAD[] = "validateShortname('".html_encode($PROCESSED["community_shortname"])."')";
+
 			if((!isset($PROCESSED["community_registration"])) || (!(int) $PROCESSED["community_registration"])) {
 				$ONLOAD[] = "selectRegistrationOption('0')";
 			} else {
@@ -498,7 +502,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 				echo display_notice();
 			}
 			?>
-<script type="text/javascript" charset="utf-8">
+<script type="text/javascript">
 	jQuery(function() {
 		jQuery( ".large-view-1" ).click(function() {
 			jQuery(".default-large").dialog({ 
@@ -777,8 +781,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 			</td>
 		</tr>
 		<tr>
-			<td colspan="3">&nbsp;
-			</td>
+			<td colspan="3">&nbsp;</td>
 		</tr>
 		<?php /* <tr>
 			<td><?php echo help_create_button("Contact E-Mail Address", ""); ?></td>

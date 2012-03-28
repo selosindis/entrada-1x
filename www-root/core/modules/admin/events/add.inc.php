@@ -738,6 +738,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				$$('select_multiple_container').invoke('hide');
 				audience_type = $F('audience_type');
 				course_id = $F('course_id');
+				var cohorts = $('event_audience_cohorts').value;
+				var course_groups = $('event_audience_course_groups').value;
+				var students = $('event_audience_students').value;
 				if (multiselect[audience_type]) {
 					multiselect[audience_type].container.show();
 				} else {
@@ -747,9 +750,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							parameters: { 
 								'options_for' : audience_type, 
 								'course_id' : course_id, 
-								'event_audience_cohorts' : $('event_audience_cohorts').value, 
-								'event_audience_course_groups' : $('event_audience_course_groups').value, 
-								'event_audience_students' : $('event_audience_students').value
+								'event_audience_cohorts' : cohorts, 
+								'event_audience_course_groups' : course_groups, 
+								'event_audience_students' : students
 							},
 							method: 'post',
 							onLoading: function() {
@@ -866,6 +869,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 					if (currentLabel != selectedCourse) {
 						selectedCourse = currentLabel;
+						var cohorts = ($('event_audience_cohorts') ? $('event_audience_cohorts').getValue() : '');
+						var course_groups = ($('event_audience_course_groups') ? $('event_audience_course_groups').getValue() : '');
+						var students = ($('event_audience_students') ? $('event_audience_students').getValue() : '');
 
 						$('audience-options').show();
 						$('audience-options').update('<tr><td colspan="2">&nbsp;</td><td><div class="content-small" style="vertical-align: middle"><img src="<?php echo ENTRADA_RELATIVE; ?>/images/indicator.gif" width="16" height="16" alt="Please Wait" title="" style="vertical-align: middle" /> Please wait while <strong>audience options</strong> are being loaded ... </div></td></tr>');
@@ -875,9 +881,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							parameters : {
 								ajax : 1,
 								course_id : $F('course_id'),
-								event_audience_students: ($('event_audience_students') ? $('event_audience_students').getValue() : ''),
-								event_audience_course_groups: ($('event_audience_course_groups') ? $('event_audience_course_groups').getValue() : ''),
-								event_audience_cohort: ($('event_audience_cohort') ? $('event_audience_cohort').getValue() : '')
+								event_audience_students: students,
+								event_audience_course_groups: course_groups,
+								event_audience_cohort: cohorts
 							},
 							onSuccess : function (response) {
 								if (response.responseText == "") {

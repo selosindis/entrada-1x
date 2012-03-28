@@ -170,7 +170,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				$NOTICESTR[] = "No assessments could be found for this gradebook for this cohort [".groups_get_name($COHORT)."].";
 
 				echo display_notice();
-			
 			}
 
 		} else {

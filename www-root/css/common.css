@@ -373,7 +373,7 @@ div.display-map input[type=button]:active,div.display-map input[type=submit]:act
 background-position: 0 -20px;
 }
 
-button.disabled-button,input.disabled-button {
+input[type="button"][disabled], button.disabled-button,input.disabled-button {
 color:#999;
 }
 
@@ -1281,6 +1281,13 @@ border-left:none;
 table.tableList tr td.report-hours {
 overflow:hidden;
 width:90px;
+border-left:none;
+padding-left:5px;
+}
+
+table.tableList tr td.report-hours-lg {
+overflow:hidden;
+width:95px;
 border-left:none;
 padding-left:5px;
 }
@@ -3589,60 +3596,72 @@ background: url("../images/course-thumb.jpg");
 border-color: #CCC;
 }
 #learningmodule-template {
-	background: url("../images/education-thumb.jpg");
-	border-color: #ccc;
+background: url("../images/education-thumb.jpg");
+border-color: #ccc;
 }
 #default-template {
-	background: url("../images/default-thumb.jpg");
-	border-color: #ccc;
+background: url("../images/default-thumb.jpg");
+border-color: #ccc;
 }
 div.template-rdo {
-	background:#fff;
-	border-left: 1px solid #ccc;
-	border-top: 1px solid #ccc;
-	border-bottom: none;
-	border-right: none;
-	left:97px;
-	position:absolute;
-	top:44px;
+background:#fff;
+border-left: 1px solid #ccc;
+border-top: 1px solid #ccc;
+border-bottom: none;
+border-right: none;
+left:97px;
+position:absolute;
+top:44px;
 
 }
 div.large-view {
-	background:#fff;
-	border-right: 1px solid #ccc;
-	border-top: 1px solid #ccc;
-	border-bottom: none;
-	border-left: none;
-	left:0;
-	position:absolute;
-	top:44px;
-
+background:#fff;
+border-right: 1px solid #ccc;
+border-top: 1px solid #ccc;
+border-bottom: none;
+border-left: none;
+left:0;
+position:absolute;
+top:44px;
 }
+
 div.template-rdo input {
-	margin:7px 10px 5px 10px;
-}
-.selected {
-	border:3px solid #337B9F;
-}
-ul.community-themes li label {
-	display:block;
-	padding-top:55px;
-	text-indent:-9999em;
-}
-.ui-button {
-	outline:none;
-}
-.manage-user-depts {
-    position:relative;
-    top:auto;
-    left:auto;
+margin:7px 10px 5px 10px;
 }
 
-.handle {width:16px;height:16px;background-image:url(../images/arrow-resize.png);background-position:center center;background-repeat:no-repeat;display:block;}
-#saveorder {display:none;}
+.selected {
+border:3px solid #337B9F;
+}
+
+ul.community-themes li label {
+display:block;
+padding-top:55px;
+text-indent:-9999em;
+}
+
+.ui-button {
+outline:none;
+}
+
+.manage-user-depts {
+position:relative;
+top:auto;
+left:auto;
+}
+
+.handle {
+width:16px;
+height:16px;
+background: transparent url('../images/arrow-resize.png') no-repeat center;
+display:block;
+}
+
+#saveorder {
+display:none;
+}
 
 table.discussions thead tr td,table.permissions thead tr td,table.page-options thead tr td {
-background-image:url(../images/list-header.gif);
+background-image:url('../images/list-header.gif');
 height:20px;
 vertical-align:middle;
 border:1px solid #999;
@@ -3715,4 +3734,3 @@ padding:13px;
 table.galleries tbody tr td.small a,table.galleries tbody tr td.small a:hover,table.galleries tbody tr td.small,table.discussions tbody tr td.small a,table.discussions tbody tr td.small a:hover,table.discussions tbody tr td.small {
 	font-size:10px;
 }
-

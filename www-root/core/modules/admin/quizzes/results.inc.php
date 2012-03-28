@@ -226,9 +226,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 											FROM `".AUTH_DATABASE."`.`user_data` AS a
 											LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 											ON b.`user_id` = a.`id`
+											LEFT JOIN `group_members` AS c
+											ON b.`user_id` = c.`proxy_id`
 											WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
 											AND b.`group` = 'student'
-											".(($target_role) ? " AND b.`role` = ".$db->qstr($target_role) : "")."
+											".(($target_role) ? " AND c.`group_id` = ".$db->qstr($target_role) : "")."
 											ORDER BY b.`group` ASC, b.`role` ASC, `fullname` ASC";
 						$respondents	= $db->GetAll($query);
 					} else {
@@ -245,32 +247,31 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 											GROUP BY a.`proxy_id`
 											ORDER BY c.`group` ASC, c.`role` ASC, `fullname` ASC";
 						$respondents	= $db->GetAll($query);
+					}
 
-						
-						if ($QUIZ_TYPE == "community_page") {
-							$query			= "	SELECT a.`proxy_id`, b.`number`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, c.`group`
-												FROM `community_members` AS a
-												LEFT JOIN `quiz_progress` AS d
-												ON d.`proxy_id` = a.`proxy_id`
-												LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
-												ON b.`id` = a.`proxy_id`
-												LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS c
-												ON c.`user_id` = a.`proxy_id`,
-												`attached_quizzes` e
-												WHERE e.`aquiz_id` = ".$db->qstr($RECORD_ID)."
-												".((($target_group != "all") && ($target_group)) ? " AND c.`group` = ".$db->qstr($target_group) : "")."
-												".((($target_group != "all") && ($target_role)) ? " AND c.`role` = ".$db->qstr($target_role) : "")."
-												AND a.`community_id` = ".$db->qstr($quiz_record["community_id"]) . "
-												AND `member_active` = '1'
-												AND `member_acl` != '1'
-												AND d.`proxy_id` IS NULL
-												GROUP BY a.`proxy_id`
-												ORDER BY c.`group` ASC, c.`role` ASC, `fullname` ASC";
+					if ($QUIZ_TYPE == "community_page") {
+						$query			= "	SELECT a.`proxy_id`, b.`number`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, c.`group`
+											FROM `community_members` AS a
+											LEFT JOIN `quiz_progress` AS d
+											ON d.`proxy_id` = a.`proxy_id`
+											LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
+											ON b.`id` = a.`proxy_id`
+											LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS c
+											ON c.`user_id` = a.`proxy_id`,
+											`attached_quizzes` e
+											WHERE e.`aquiz_id` = ".$db->qstr($RECORD_ID)."
+											".((($target_group != "all") && ($target_group)) ? " AND c.`group` = ".$db->qstr($target_group) : "")."
+											".((($target_group != "all") && ($target_role)) ? " AND c.`role` = ".$db->qstr($target_role) : "")."
+											AND a.`community_id` = ".$db->qstr($quiz_record["community_id"]) . "
+											AND `member_active` = '1'
+											AND `member_acl` != '1'
+											AND d.`proxy_id` IS NULL
+											GROUP BY a.`proxy_id`
+											ORDER BY c.`group` ASC, c.`role` ASC, `fullname` ASC";
 
-							$members_with_no_attempts = $db->GetAll($query);
-						} else {
-							$members_with_no_attempts = "";
-						}
+						$members_with_no_attempts = $db->GetAll($query);
+					} else {
+						$members_with_no_attempts = "";
 					}
 
 					if ($respondents) {

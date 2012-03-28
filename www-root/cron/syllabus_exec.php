@@ -149,8 +149,8 @@ if((is_array($APPLICATION_PATH)) && (isset($APPLICATION_PATH["htmldoc"])) && (@i
 	--book '".ENTRADA_URL."/cron/syllabus_gen.php?%PARAMS%' \
 	--outfile ".$output_file;
 	
-	//$current_date = strtotime(date("M jS, Y"));
-	$current_date = strtotime("Sept 1st, 2011");
+	$current_date = strtotime(date("M jS, Y"));
+	//$current_date = strtotime("Sept 1st, 2011");
 	
 	foreach ($classes as $cohort_id => $cohort) {
 
@@ -172,7 +172,6 @@ if((is_array($APPLICATION_PATH)) && (isset($APPLICATION_PATH["htmldoc"])) && (@i
 					$command	= str_replace("%PARAMS%", $params, str_replace(array("%GRADYEAR%", "%TERM%", "%COURSECODE%"), array($cohort["grad_year"], $term_id, strtolower($course_code)), $exec_command));
 					echo "<pre>";
 					echo ("Generated: ".$filename)."\n";
-					//echo ($command);
 					echo "</pre>";
 					@exec($command);
 					@chmod($filename, 0644);

@@ -1,9 +1,10 @@
 <?php
 /**
- * Online Course Resources [Pre-Clerkship]
+ * Automated Syllabus Generator
  * @author Unit: Medical Education Technology Unit
  * @author Director: Dr. Benjamin Chen <bhc@post.queensu.ca>
  * @author Developer: Matt Simpson <simpson@post.queensu.ca>
+ * @author Developer: Ryan Warner <ryan.warner@queensu.ca>
  * @version 3.0
  * @copyright Copyright 2006 Queen's University, MEdTech Unit
  *
@@ -24,37 +25,55 @@
 
 require_once("init.inc.php");
 
+
+$mode =	clean_input($_GET["mode"], "nows");
+
+if ($mode == "graph") {
+	ob_clear_open_buffers();
+
+	require_once ('library/jpgraph/jpgraph.php');
+	require_once ('library/jpgraph/jpgraph_pie.php');
+
+	// Some data
+	//$data = array(40,60,21,33);
+	$data = (array) unserialize($_GET["data"]);
+	$labels = (array) unserialize($_GET["labels"]);
+	$formatted_labels = array();
+	
+	foreach ($labels as $label) {
+		$formatted_labels[] = $label."\n(%.1f%%)";
+	}
+
+	// Create the Pie Graph. 
+	$graph = new PieGraph(800,600);
+
+	$theme_class="DefaultTheme";
+	//$graph->SetTheme(new $theme_class());
+
+	// Set A title for the plot
+	$graph->SetBox(true);
+
+	// Create
+	$p1 = new PiePlot($data);
+	$graph->Add($p1);
+
+	$p1->SetSize(0.35);
+	$p1->SetColor('#000000');
+	$p1->ShowBorder(true, true);
+	$p1->SetSliceColors(array('#37557d','#476c9f','#5784bf','#7b9ece','#9eb7db','#bfcfe7'));
+	$p1->SetLabels($formatted_labels);
+	$p1->SetLabelPos(1);
+	// Enable and set policy for guide-lines. Make labels line up vertically
+	$p1->SetGuideLines(true,true);
+	$p1->SetGuideLinesAdjust(1.1);
+	//$p1->value->show();
+	$graph->Stroke();
+
+	
+	exit;
+}
+
 $courses = array (
-	/*"93" => array(
-		"included_pages" => array ("background", "course aims", "teaching strategies", "assessment strategies", "resources", "expectations of students", "expectations of faculty")
-	),
-	"101" => array(
-		"included_pages" => array ("background", "course aims", "teaching strategies", "assessment strategies", "resources", "expectations of students", "expectations of faculty")
-	),
-	"94" => array(
-		"included_pages" => array ("background", "course aims", "teaching strategies", "assessment strategies", "resources", "expectations of students", "expectations of faculty")
-	),
-	"92" => array(
-		"included_pages" => array ("background", "course aims", "teaching strategies", "assessment strategies", "resources", "expectations of students", "expectations of faculty")
-	),
-	"95" => array(
-		"included_pages" => array ("home", "course aims", "teaching strategies", "assessment strategies", "resources", "expectations of students", "expectations of faculty")
-	),
-	"109" => array(
-		"included_pages" => array ("course aims", "teaching strategies", "assessment strategies", "resources", "expectations of students", "expectations of faculty")
-	),
-	"257" => array(
-		"included_pages" => array ("home", "course aims", "teaching strategies", "assessment strategies", "resources", "expectations of students", "expectations of faculty")
-	),
-	"112" => array(
-		"included_pages" => array ("home", "course aims", "teaching strategies", "assessment strategies", "resources", "expectations of students", "expectations of faculty")
-	),
-	"122" => array(
-		"included_pages" => array ("home", "course aims", "teaching strategies", "assessment strategies", "resources", "expectations of students", "expectations of faculty")
-	),
-	"223" => array(
-		"included_pages" => array ("home", "course aims", "teaching strategies", "assessment strategies", "resources", "expectations of students", "expectations of faculty")
-	),*/
 	"default" => array(
 		"included_pages" => array ("background", "course aims", "teaching strategies", "assessment strategies", "resources", "expectations of students", "expectations of faculty")
 	),
@@ -207,11 +226,11 @@ function course_objectives_formatted($objectives, $parent_id, $top_level_id, $ed
 			
 			$course_details["pages"] = $db->GetAssoc($query);
 
-			echo "<h1>".$course_details["course_name"]." - ".$course_details["course_code"]."</h1>";
+			echo "<h1>Overview: ".$course_details["course_name"]." ... ".$course_details["course_code"]."</h1>";
 			
 			// Background Information
 			if (isset($course_details["pages"]["background"]["page_content"]) && !empty($course_details["pages"]["background"]["page_content"])) {
-				echo "<h3>".$course_details["pages"]["background"]["page_title"]."</h3>";
+				echo "<h3>".$course_details["course_code"]."/Term ".$term." - ".$course_details["pages"]["background"]["page_title"]."</h3>";
 				echo "<div>".$course_details["pages"]["background"]["page_content"]."</div>";
 			}
 			
@@ -226,7 +245,7 @@ function course_objectives_formatted($objectives, $parent_id, $top_level_id, $ed
 			$query = "	SELECT a.`contact_type`, a.`contact_order`, b.`prefix`, b.`firstname`, b.`lastname`, b.`email`, b.`telephone`, b.`fax`, b.`address`, b.`city`, b.`province`, b.`postcode`, b.`country`, b.`office_hours`
 						FROM medtech_central.`course_contacts` AS a 
 						JOIN medtech_auth.`user_data` AS b 
-						ON a.`contact_id` = b.`id`  
+						ON a.`proxy_id` = b.`id`  
 						WHERE a.`course_id` = ".$db->qstr($course_id)."
 						ORDER BY a.`contact_type` DESC, a.`contact_order` ASC";
 			$results = $db->GetAll($query);
@@ -243,17 +262,17 @@ function course_objectives_formatted($objectives, $parent_id, $top_level_id, $ed
 					echo (!empty($result["country"]) ? ", ".$result["country"] : "");
 					echo (!empty($result["address"]) ? "<br />\n" : "");
 					echo (!empty($result["postcode"]) ? $result["postcode"]."<br />" : "");
-					echo (!empty($result["office_hours"]) ? $result["office_hours"]."<br />" : "");
+					echo (!empty($result["office_hours"]) ? "Office Hours: ".$result["office_hours"]."<br />" : "");
 				}
 			}
 			
 			// Curricular Objectives
 			list($objectives, $top_level_id) = courses_fetch_objectives(1, array($course_id));
 			$objectives_formatted = course_objectives_formatted($objectives, $top_level_id,$top_level_id, false, false, 1, false, true, "primary", false, false, "1");
-			if (isset($objectives_formatted) && !empty($objectives_formatted)) {
+			
 				echo "<h1>Course Objectives:</h1>";
 				echo "<div id=\"objectives_list\">\n".$objectives_formatted."\n</div>\n";
-			}
+			
 			
 			// MCC Presentations
 			$query = "	SELECT b.*
@@ -269,9 +288,10 @@ function course_objectives_formatted($objectives, $parent_id, $top_level_id, $ed
 						GROUP BY b.`objective_id`
 						ORDER BY b.`objective_order`";
 			$results = $db->GetAll($query);
+			
+			echo "<h3>MCC Presentations</h3>";
+			
 			if ($results) {
-				
-				echo "<h1>MCC Presentations</h1>";
 				foreach ($results as $result) {
 					if ($result["objective_name"]) {
 						echo "&nbsp;&nbsp;".$result["objective_name"]."<br />\n";
@@ -280,17 +300,14 @@ function course_objectives_formatted($objectives, $parent_id, $top_level_id, $ed
 			}
 			
 			// Teaching Stratagies
-			if (isset($course_details["pages"]["teaching_strategies"]["page_content"]) && !empty($course_details["pages"]["teaching_strategies"]["page_content"])) {
-				echo "<h2>".$course_details["pages"]["teaching_strategies"]["page_title"]."</h2>";
-				echo "<div>".$course_details["pages"]["teaching_strategies"]["page_content"]."</div>";
-			}
+			echo "<h1>".$course_details["pages"]["teaching_strategies"]["page_title"]."</h1>";
+			echo "<div>".$course_details["pages"]["teaching_strategies"]["page_content"]."</div>";
+
 			
 			// Assessment Stratagies
-			
-			if (isset($course_details["pages"]["assessment_strategies"]["page_content"]) && !empty($course_details["pages"]["assessment_strategies"]["page_content"])) {
-				echo "<h2>".$course_details["pages"]["assessment_strategies"]["page_title"]."</h2>";
-				echo "<div>".strip_tags($course_details["pages"]["assessment_strategies"]["page_content"],"<strong><br><ul><ol><li><table><tr><td><p>")."</div>";
-			}
+			echo "<h1>".$course_details["pages"]["assessment_strategies"]["page_title"]."</h1>";
+			echo "<div>".strip_tags($course_details["pages"]["assessment_strategies"]["page_content"],"<strong><br><ul><ol><li><table><tr><td><p>")."</div>";
+
 			
 			// Gradebook
 			$query =  "SELECT `assessments`.`course_id`, `assessments`.`assessment_id`, `assessments`.`name`, `assessments`.`grade_weighting`, `assessments`.`order` FROM `assessments`
@@ -300,7 +317,8 @@ function course_objectives_formatted($objectives, $parent_id, $top_level_id, $ed
 			
 			$results = $db->GetArray($query);
 			if ($results) {
-				echo "<h1>Gradebook</h1>";
+				echo "<!-- NEW PAGE -->";
+				echo "<h2>Gradebook</h2>";
 				echo "<table>";
 				$query =  "SELECT `assessments`.`course_id`, SUM(`assessments`.`grade_weighting`) AS `grade_weighting` FROM `assessments`
 							WHERE `cohort` =". $db->qstr($cohort)." 
@@ -331,26 +349,18 @@ function course_objectives_formatted($objectives, $parent_id, $top_level_id, $ed
 			
 			
 			// Resources
-			if (isset($course_details["pages"]["resources"]["page_content"]) && !empty($course_details["pages"]["resources"]["page_content"])) {
-				echo "<h2>".$course_details["pages"]["resources"]["page_title"]."</h2>";
-				echo "<div>".strip_tags($course_details["pages"]["resources"]["page_content"],"<strong><br><ul><ol><li><table><tr><td><p>")."</div>";
-			}
-			
-			// Expectations of Students
-			if (isset($course_details["pages"]["expectations_of_students"]["page_content"]) && !empty($course_details["pages"]["expectations_of_students"]["page_content"])) {
-				echo "<h2>".$course_details["pages"]["expectations_of_students"]["page_title"]."</h2>";
-				echo "<div>".$course_details["pages"]["expectations_of_students"]["page_content"]."</div>";
-			}
-			
-			// Expectations of Faculty
-			if (isset($course_details["pages"]["expectations_of_faculty"]["page_content"]) && !empty($course_details["pages"]["expectations_of_faculty"]["page_content"])) {
-				echo "<h2>".$course_details["pages"]["expectations_of_faculty"]["page_title"]."</h2>";
-				echo "<div>".$course_details["pages"]["expectations_of_faculty"]["page_content"]."</div>";
-			}
-			
+			echo "<h1>".$course_details["pages"]["resources"]["page_title"]."</h1>";
+			echo "<div>".strip_tags($course_details["pages"]["resources"]["page_content"],"<strong><br><ul><ol><li><table><tr><td><p>")."</div>";
+
+			// Expectations
+			echo "<h1>Expectations</h1>";
+			echo "<h2>".$course_details["pages"]["expectations_of_students"]["page_title"]."</h2>";
+			echo "<div>".$course_details["pages"]["expectations_of_students"]["page_content"]."</div>";
+
+			echo "<h2>".$course_details["pages"]["expectations_of_faculty"]["page_title"]."</h2>";
+			echo "<div>".$course_details["pages"]["expectations_of_faculty"]["page_content"]."</div>";			
 			
 			// Event Types By Course Report Start
-			
 			$output		= array();
 			$appendix	= array();
 
@@ -405,6 +415,7 @@ function course_objectives_formatted($objectives, $parent_id, $top_level_id, $ed
 
 			if (count($output)) {
 				echo "<h1>Learning Event Types</h1>";
+				//echo "<img src=\"http://localhost/entrada/www-root/cron/syllabus_gen.php?mode=graph&data=".  serialize($STATISTICS["results"]) ."\" />";
 				foreach ($output as $course_id => $result) {
 					$STATISTICS					= array();
 					$STATISTICS["labels"]		= array();
@@ -427,6 +438,9 @@ function course_objectives_formatted($objectives, $parent_id, $top_level_id, $ed
 						$STATISTICS["legend"][$eventtype_id] = $eventtype_legend[$eventtype_id];
 						$STATISTICS["display"][$eventtype_id] = $event["events"];
 
+						$all_events[] = $event["events"];
+						$all_labels[] = $eventtype_legend[$eventtype_id];
+						
 						if ($result["total_events"] > 0) {
 							$percent_events = round((($event["events"] / $result["total_events"]) * 100));
 						} else {
@@ -446,6 +460,7 @@ function course_objectives_formatted($objectives, $parent_id, $top_level_id, $ed
 						echo "	<td class=\"report-hours large\" style=\"text-align: left\">".display_hours($event["duration"])." hrs (~ ".$percent_duration."%)</td>\n";
 						echo "</tr>\n";
 					}
+
 					?>
 					
 						<tr class="na">
@@ -457,6 +472,7 @@ function course_objectives_formatted($objectives, $parent_id, $top_level_id, $ed
 					
 					</table>
 					<?php
+					echo '<img src=\'http://localhost/entrada/www-root/cron/syllabus_gen.php?mode=graph&data='.  serialize($all_events) .'&labels='.serialize($all_labels).'\' />';
 				}
 			}
 			// Event Types by Course Report End
@@ -551,7 +567,7 @@ function course_objectives_formatted($objectives, $parent_id, $top_level_id, $ed
 							echo "<div>\n";
 							echo "<strong>".html_encode($event["event_title"])."</strong>";
 							echo (!empty($event["objectives"]) ? "<br />\nObjectives: ".implode(" - ", $objectives)."<br />" : "&nbsp;")."\n";
-							echo (!empty($event["event_description"]) ? "<div><br />".$event["event_description"]."</div>\n" : "" );
+							echo (!empty($event["event_description"]) ? "<div><br />".limit_chars(nl2br(strip_tags($event["event_description"]),"<br><ul><ol><li>"),376)."</div>\n" : "" );
 							echo "</div><br />";
 						}
 					}

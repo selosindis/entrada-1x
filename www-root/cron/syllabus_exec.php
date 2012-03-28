@@ -149,8 +149,8 @@ if((is_array($APPLICATION_PATH)) && (isset($APPLICATION_PATH["htmldoc"])) && (@i
 	--book '".ENTRADA_URL."/cron/syllabus_gen.php?%PARAMS%' \
 	--outfile ".$output_file;
 	
-	$current_date = strtotime(date("M jS, Y"));
-	//$current_date = strtotime("Sept 1st, 2011");
+	//$current_date = strtotime(date("M jS, Y"));
+	$current_date = strtotime("Sept 1st, 2011");
 	
 	foreach ($classes as $cohort_id => $cohort) {
 

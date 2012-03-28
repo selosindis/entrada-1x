@@ -25,29 +25,61 @@
 
 require_once("init.inc.php");
 
-
 $mode =	clean_input($_GET["mode"], "nows");
 
 if ($mode == "graph") {
 	ob_clear_open_buffers();
+	
+	$course_id	= (int) $_GET["course_id"];
+	$start_date = (int) $_GET["start_date"];
+	$end_date	= (int) $_GET["end_date"];
+	
+	$query = "	SELECT a.`eventtype_id`, a.`eventtype_title` FROM `events_lu_eventtypes` AS a 
+						LEFT JOIN `eventtype_organisation` AS b 
+						ON a.`eventtype_id` = b.`eventtype_id` 
+						WHERE b.`organisation_id` = '1'
+						AND a.`eventtype_active` = '1' 
+						ORDER BY a.`eventtype_order`
+				";
+	
+	$event_types = $db->GetAll($query);
+	
+	if ($event_types) {
+		foreach ($event_types as $event_type) {
+			
+			$query = "	SELECT COUNT(a.`event_id`) as `event_count`
+						FROM `events` AS a
+						LEFT JOIN `courses` AS b
+						ON b.`course_id` = a.`course_id`
+						LEFT JOIN `event_eventtypes` AS c
+						ON c.`event_id` = a.`event_id`
+						LEFT JOIN `events_lu_eventtypes` AS d
+						ON d.`eventtype_id` = c.`eventtype_id`
+						WHERE c.`eventtype_id` = ".$db->qstr($event_type["eventtype_id"])."
+						AND (a.`parent_id` IS NULL OR a.`parent_id` = 0)
+						AND (a.`event_start` BETWEEN ".$db->qstr($start_date)." AND ".$db->qstr($end_date).")
+						AND a.`course_id` = ".$db->qstr($course_id)."
+						ORDER BY d.`eventtype_order` ASC, b.`course_name` ASC, a.`event_start` ASC";
+			
+			$results = $db->GetRow($query);
+			if ($results["event_count"]) {
+				$course_events[$event_type["eventtype_title"]][] = $results["event_count"];
+			}
+		}
+	}
+	
+	foreach ($course_events as $event_title => $event_count) {
+		$data[] = $event_count[0];
+		$labels[] = $event_title."\n(%d%%)";
+	}
 
 	require_once ('library/jpgraph/jpgraph.php');
 	require_once ('library/jpgraph/jpgraph_pie.php');
 
-	// Some data
-	//$data = array(40,60,21,33);
-	$data = (array) unserialize($_GET["data"]);
-	$labels = (array) unserialize($_GET["labels"]);
-	$formatted_labels = array();
-	
-	foreach ($labels as $label) {
-		$formatted_labels[] = $label."\n(%.1f%%)";
-	}
-
 	// Create the Pie Graph. 
-	$graph = new PieGraph(800,600);
+	$graph = new PieGraph(600,450);
 
-	$theme_class="DefaultTheme";
+	//$theme_class="DefaultTheme";
 	//$graph->SetTheme(new $theme_class());
 
 	// Set A title for the plot
@@ -58,14 +90,16 @@ if ($mode == "graph") {
 	$graph->Add($p1);
 
 	$p1->SetSize(0.35);
-	$p1->SetColor('#000000');
-	$p1->ShowBorder(true, true);
 	$p1->SetSliceColors(array('#37557d','#476c9f','#5784bf','#7b9ece','#9eb7db','#bfcfe7'));
-	$p1->SetLabels($formatted_labels);
+	
+	$p1->SetLabels($labels);
 	$p1->SetLabelPos(1);
+	$p1->SetLabelType(PIE_VALUE_ADJPER);
+	
 	// Enable and set policy for guide-lines. Make labels line up vertically
 	$p1->SetGuideLines(true,true);
 	$p1->SetGuideLinesAdjust(1.1);
+	
 	//$p1->value->show();
 	$graph->Stroke();
 
@@ -395,8 +429,8 @@ function course_objectives_formatted($objectives, $parent_id, $top_level_id, $ed
 								".(isset($event_title_search) && $event_title_search ? "AND a.`event_title` LIKE ".$db->qstr("%".$event_title_search."%") : "")."
 								AND a.`course_id` = ".$db->qstr($course_id)."
 								ORDER BY d.`eventtype_order` ASC, b.`course_name` ASC, a.`event_start` ASC";
-					//echo $query;
 					$results = $db->GetAll($query);
+					
 					if ($results) {
 						$courses_included[$course_id] = $course_list[$course_id]["code"] . " - " . $course_list[$course_id]["name"];
 
@@ -415,7 +449,7 @@ function course_objectives_formatted($objectives, $parent_id, $top_level_id, $ed
 
 			if (count($output)) {
 				echo "<h1>Learning Event Types</h1>";
-				//echo "<img src=\"http://localhost/entrada/www-root/cron/syllabus_gen.php?mode=graph&data=".  serialize($STATISTICS["results"]) ."\" />";
+				echo "<img src=\"".ENTRADA_URL."//cron/syllabus_gen.php?mode=graph&course_id=".$course_id."&start_date=".$start_date."&end_date=".$end_date."\" />";
 				foreach ($output as $course_id => $result) {
 					$STATISTICS					= array();
 					$STATISTICS["labels"]		= array();
@@ -472,7 +506,6 @@ function course_objectives_formatted($objectives, $parent_id, $top_level_id, $ed
 					
 					</table>
 					<?php
-					echo '<img src=\'http://localhost/entrada/www-root/cron/syllabus_gen.php?mode=graph&data='.  serialize($all_events) .'&labels='.serialize($all_labels).'\' />';
 				}
 			}
 			// Event Types by Course Report End

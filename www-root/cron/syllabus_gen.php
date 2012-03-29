@@ -95,7 +95,6 @@ if ($mode == "graph") {
 	$p1->SetGuideLines(true,true);
 	$p1->SetGuideLinesAdjust(1.1);
 	
-	//$p1->value->show();
 	$graph->Stroke();
 
 	

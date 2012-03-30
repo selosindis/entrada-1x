@@ -120,7 +120,7 @@ return array (
     "public_dashboard_feeds" => array (
 		"global" => array (
 			array ("title" => "Entrada Announcement Feed", "url" => "http://www.entrada-project.org/news/feed", "removable" => false),
-			array ("title" => "Zend DevZone", "url" => "http://devzone.zend.com/tag/Zend_Framework_Management/format/rss2.0", "removable" => false),
+			array ("title" => "Zend DevZone", "url" => "http://feeds.feedburner.com/PHPDevZone", "removable" => false),
 			array ("title" => "Insider Medicine", "url" => "http://insidermedicine.ca/xml/Patient/insidermedicine_English.xml", "removable" => false),
 			array ("title" => "Google News Top Stories", "url" => "http://news.google.com/news?pz=1&cf=all&ned=ca&hl=en&topic=h&num=3&output=rss", "removable" => false)
 		),

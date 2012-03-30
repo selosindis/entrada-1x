@@ -271,8 +271,8 @@ function course_objectives_formatted($objectives, $parent_id, $top_level_id, $ed
 			// Course Contacts
 			
 			$query = "	SELECT a.`contact_type`, a.`contact_order`, b.`prefix`, b.`firstname`, b.`lastname`, b.`email`, b.`telephone`, b.`fax`, b.`address`, b.`city`, b.`province`, b.`postcode`, b.`country`, b.`office_hours`
-						FROM medtech_central.`course_contacts` AS a 
-						JOIN medtech_auth.`user_data` AS b 
+						FROM ".DATABASE_NAME.".`course_contacts` AS a 
+						JOIN ".AUTH_DATABASE.".`user_data` AS b 
 						ON a.`proxy_id` = b.`id`  
 						WHERE a.`course_id` = ".$db->qstr($course_id)."
 						ORDER BY a.`contact_type` DESC, a.`contact_order` ASC";

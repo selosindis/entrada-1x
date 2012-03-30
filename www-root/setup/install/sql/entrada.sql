@@ -1942,7 +1942,7 @@ CREATE TABLE IF NOT EXISTS `cron_community_notifications` (
   PRIMARY KEY  (`ccnotification_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-CREATE TABLE `curriculum_lu_types` (
+CREATE TABLE IF NOT EXISTS `curriculum_lu_types` (
   `curriculum_type_id` int(12) unsigned NOT NULL auto_increment,
   `parent_id` int(12) unsigned NOT NULL default '0',
   `curriculum_type_name` varchar(60) NOT NULL,

@@ -73,8 +73,8 @@ if ($mode == "graph") {
 		$labels[] = $event_title."\n(%d%%)";
 	}
 
-	require_once ('library/jpgraph/jpgraph.php');
-	require_once ('library/jpgraph/jpgraph_pie.php');
+	require_once ('library/Entrada/jpgraph/jpgraph.php');
+	require_once ('library/Entrada/jpgraph/jpgraph_pie.php');
 
 	// Create the Pie Graph. 
 	$graph = new PieGraph(600,450);

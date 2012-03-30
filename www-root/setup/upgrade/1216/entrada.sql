@@ -10,12 +10,12 @@ ALTER TABLE `group_members` ADD COLUMN `entrada_only` INT(1) DEFAULT 0 AFTER `me
 ALTER TABLE `courses` ADD COLUMN `sync_ldap` INT(1) NOT NULL DEFAULT 0 AFTER `permission`;
 
 CREATE TABLE IF NOT EXISTS `curriculum_type_organisation` (
-  `curriculum_type_id` int(11) NOT NULL,
-  `organisation_id` int(11) NOT NULL,
-  PRIMARY KEY (`curriculum_type_id`,`organisation_id`)
+  `curriculum_type_id` int(11) NOT NULL,
+  `organisation_id` int(11) NOT NULL,
+  PRIMARY KEY (`curriculum_type_id`,`organisation_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-CREATE TABLE `curriculum_periods` (
+CREATE TABLE IF NOT EXISTS `curriculum_periods` (
   `cperiod_id` int(11) NOT NULL AUTO_INCREMENT,
   `curriculum_type_id` int(11) NOT NULL,
   `start_date` bigint(64) NOT NULL,

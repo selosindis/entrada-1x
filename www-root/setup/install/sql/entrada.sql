@@ -1014,7 +1014,7 @@ INSERT INTO `assessments_lu_meta_options` (`title`) VALUES
 ('Multiple-choice, true/false, matching questions'),
 ('Problem-solving written exercises');
 
-CREATE TABLE `assessment_exceptions` (
+CREATE TABLE IF NOT EXISTS `assessment_exceptions` (
   `aexception_id` int(12) NOT NULL auto_increment,
   `assessment_id` int(12) NOT NULL,
   `proxy_id` int(12) NOT NULL,
@@ -2370,7 +2370,7 @@ CREATE TABLE IF NOT EXISTS `event_objectives` (
   KEY `objective_id` (`objective_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-CREATE TABLE `attached_quizzes` (
+CREATE TABLE IF NOT EXISTS `attached_quizzes` (
   `aquiz_id` int(12) NOT NULL AUTO_INCREMENT,
   `content_type` enum('event','community_page') NOT NULL DEFAULT 'event',
   `content_id` int(12) NOT NULL DEFAULT '0',
@@ -2400,7 +2400,7 @@ CREATE TABLE `attached_quizzes` (
   KEY `content_id_2` (`content_id`,`release_date`,`release_until`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-CREATE TABLE `quiz_progress` (
+CREATE TABLE IF NOT EXISTS `quiz_progress` (
   `qprogress_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
   `aquiz_id` int(12) unsigned NOT NULL,
   `content_type` enum('event','community_page') DEFAULT 'event',
@@ -2417,7 +2417,7 @@ CREATE TABLE `quiz_progress` (
   KEY `quiz_id` (`quiz_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-CREATE TABLE `quiz_progress_responses` (
+CREATE TABLE IF NOT EXISTS `quiz_progress_responses` (
   `qpresponse_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
   `qprogress_id` int(12) unsigned NOT NULL,
   `aquiz_id` int(12) unsigned NOT NULL,
@@ -4178,7 +4178,7 @@ CREATE TABLE IF NOT EXISTS `topic_organisation`(
 
 INSERT INTO `topic_organisation` SELECT `topic_id`,1 FROM `events_lu_topics`;
 
-CREATE TABLE `curriculum_lu_levels` (
+CREATE TABLE IF NOT EXISTS `curriculum_lu_levels` (
   `curriculum_level_id` int(11) unsigned NOT NULL auto_increment,
   `curriculum_level` varchar(100) NOT NULL default '',
   PRIMARY KEY  (`curriculum_level_id`)

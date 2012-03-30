@@ -74,3 +74,4 @@ CREATE TABLE IF NOT EXISTS `assignment_comments` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 UPDATE `settings` SET `value` = '1228' WHERE `shortname` = 'version_db';
+UPDATE `settings` SET `value` = '1.3.0' WHERE `shortname` = 'version_entrada';

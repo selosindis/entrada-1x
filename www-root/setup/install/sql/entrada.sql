@@ -1954,7 +1954,7 @@ CREATE TABLE `curriculum_lu_types` (
   `updated_by` int(12) unsigned NOT NULL,
   PRIMARY KEY  (`curriculum_type_id`),
   KEY `curriculum_type_order` (`curriculum_type_order`)
-) ENGINE=MyISAM DEFAULT CHARSET=ut8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `curriculum_lu_types` (`curriculum_type_id`, `parent_id`, `curriculum_type_name`, `curriculum_type_description`, `curriculum_type_order`, `curriculum_type_active`, `curriculum_level_id`, `updated_date`, `updated_by`) VALUES
 (1, 0, 'Term 1', NULL, 0, 1, NULL, 1250538588, 1),

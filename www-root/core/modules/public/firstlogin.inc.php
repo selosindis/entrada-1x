@@ -105,7 +105,7 @@ if(!defined("PARENT_INCLUDED")) {
 							<td colspan="2">
 								<h2>Privacy Level Setting</h2>
 								<div class="display-generic">
-									<?php echo APPLICATION_NAME; ?> contains a <strong>People Search</strong> tab, which acts a directory of people associated with the school. You can lookup people using a simple name search or by browsing through groups. Please tell us how much information you wish to reveal about yourself when other students, faculty, or staff associated with the school use People Search (i.e. after they log in).
+									<?php echo APPLICATION_NAME; ?> contains a <strong>People Search</strong> tab, which acts a directory of people associated with your institution. You can lookup people using a simple name search or by browsing through groups. Please tell us how much information you wish to reveal about yourself when other students, faculty, or staff associated with the school use People Search (i.e. after they log in).
 								</div>
 							</td>
 						</tr>

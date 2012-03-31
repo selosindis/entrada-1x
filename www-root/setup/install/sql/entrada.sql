@@ -959,7 +959,7 @@ CREATE TABLE IF NOT EXISTS `assessments` (
   `show_learner` tinyint(1) NOT NULL DEFAULT '0',
   `release_date` bigint(64) NOT NULL DEFAULT '0',
   `release_until` bigint(64) NOT NULL DEFAULT '0',
-  `order` smallint(6) NOT NULL DEFAULT 0,
+  `order` smallint(6) NOT NULL DEFAULT '0',
   PRIMARY KEY (`assessment_id`),
   KEY `order` (`order`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
@@ -1143,11 +1143,11 @@ CREATE TABLE IF NOT EXISTS `communities` (
   `community_url` text NOT NULL,
   `community_template` varchar(30) NOT NULL DEFAULT 'default',
   `community_theme` varchar(12) NOT NULL DEFAULT 'default',
-  `community_shortname` varchar(32) NOT NULL DEFAULT '',
-  `community_title` varchar(64) NOT NULL DEFAULT '',
+  `community_shortname` varchar(32) NOT NULL,
+  `community_title` varchar(64) NOT NULL,
   `community_description` text NOT NULL,
-  `community_keywords` varchar(255) NOT NULL DEFAULT '',
-  `community_email` varchar(128) NOT NULL DEFAULT '',
+  `community_keywords` varchar(255) NOT NULL,
+  `community_email` varchar(128) NOT NULL,
   `community_website` text NOT NULL,
   `community_protected` int(1) NOT NULL DEFAULT '1',
   `community_registration` int(1) NOT NULL DEFAULT '1',
@@ -1167,8 +1167,8 @@ CREATE TABLE IF NOT EXISTS `communities` (
   KEY `max_storage` (`storage_max`),
   KEY `storage_usage` (`storage_usage`),
   KEY `community_active` (`community_active`),
-  FULLTEXT KEY `community_url` (`community_url`),
   FULLTEXT KEY `community_title` (`community_title`,`community_description`,`community_keywords`)
+  FULLTEXT KEY `community_url` (`community_url`),
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `communities_template_permissions` (
@@ -1809,6 +1809,7 @@ CREATE TABLE IF NOT EXISTS `courses` (
   `course_url` text,
   `course_message` text NOT NULL,
   `permission` ENUM('open','closed') NOT NULL DEFAULT 'closed',
+  `sync_ldap` int(1) NOT NULL DEFAULT '0',
   `notifications` int(1) NOT NULL DEFAULT '1',
   `course_active` int(1) NOT NULL DEFAULT '1',
   PRIMARY KEY  (`course_id`),
@@ -2110,9 +2111,8 @@ CREATE TABLE IF NOT EXISTS `evaluation_targets` (
 CREATE TABLE IF NOT EXISTS `events` (
   `event_id` int(12) NOT NULL AUTO_INCREMENT,
   `parent_id` int(12) DEFAULT NULL,
-  `event_children` int(11) DEFAULT NULL,
+  `event_children` int(12) DEFAULT NULL,
   `recurring_id` int(12) DEFAULT '0',
-  `eventtype_id` int(12) DEFAULT '0',
   `region_id` int(12) DEFAULT '0',
   `course_id` int(12) NOT NULL DEFAULT '0',
   `event_phase` varchar(12) DEFAULT NULL,
@@ -3510,11 +3510,11 @@ CREATE TABLE IF NOT EXISTS `notice_audience`(
 	KEY `audience_id`(`notice_id`,`audience_type`,`audience_value`,`updated_date`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;	
 
-CREATE TABLE IF NOT EXISTS `objective_organisation`(
+CREATE TABLE IF NOT EXISTS `objective_organisation` (
   `objective_id` INT(12) NOT NULL, 
   `organisation_id` INT(12) NOT NULL, 
   PRIMARY KEY(`objective_id`,`organisation_id`)
-) ENGINE = MyISAM DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `objective_organisation` SELECT `objective_id`, 1 FROM `global_lu_objectives`;
 
@@ -4075,7 +4075,9 @@ INSERT INTO `mtd_type` (`id`, `type_code`, `type_description`) VALUES
 CREATE TABLE IF NOT EXISTS `eventtype_organisation`(
 `eventtype_id` INT(12) NOT NULL, 
 `organisation_id` INT(12) NOT NULL 
-) ENGINE = MyISAM DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+INSERT INTO `eventtype_organisation` SELECT `eventtype_id`, 1 FROM `events_lu_eventtypes`;
 
 CREATE TABLE IF NOT EXISTS `groups` (
   `group_id` int(11) NOT NULL AUTO_INCREMENT,
@@ -4084,7 +4086,7 @@ CREATE TABLE IF NOT EXISTS `groups` (
   `group_value` INT,
   `start_date` BIGINT(64) NOT NULL,
   `expire_date` BIGINT(64),
-  `group_active` tinyint(1) NOT NULL DEFAULT '1',
+  `group_active` int(1) NOT NULL DEFAULT '1',
   `updated_date` int(11) DEFAULT NULL,
   `updated_by` int(11) DEFAULT NULL,
   PRIMARY KEY (`group_id`)
@@ -4174,9 +4176,9 @@ CREATE TABLE IF NOT EXISTS `topic_organisation`(
   `topic_id` INT(12) NOT NULL, 
   `organisation_id` INT(12) NOT NULL,
   PRIMARY KEY(`topic_id`,`organisation_id`) 
-) ENGINE = MyISAM DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-INSERT INTO `topic_organisation` SELECT `topic_id`,1 FROM `events_lu_topics`;
+INSERT INTO `topic_organisation` SELECT `topic_id`, 1 FROM `events_lu_topics`;
 
 CREATE TABLE IF NOT EXISTS `curriculum_lu_levels` (
   `curriculum_level_id` int(11) unsigned NOT NULL auto_increment,

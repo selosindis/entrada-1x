@@ -47,7 +47,7 @@ if ($mode == "graph") {
 	if ($event_types) {
 		foreach ($event_types as $event_type) {
 			
-			$query = "	SELECT COUNT(a.`event_id`) as `event_count`
+			$query = "	SELECT SUM(a.`event_duration`) as `duration`
 						FROM `events` AS a
 						LEFT JOIN `courses` AS b
 						ON b.`course_id` = a.`course_id`
@@ -62,14 +62,14 @@ if ($mode == "graph") {
 						ORDER BY d.`eventtype_order` ASC, b.`course_name` ASC, a.`event_start` ASC";
 			
 			$results = $db->GetRow($query);
-			if ($results["event_count"]) {
-				$course_events[$event_type["eventtype_title"]][] = $results["event_count"];
+			if ($results["duration"]) {
+				$course_events[$event_type["eventtype_title"]][] = $results["duration"];
 			}
 		}
 	}
 	
-	foreach ($course_events as $event_title => $event_count) {
-		$data[] = $event_count[0];
+	foreach ($course_events as $event_title => $event_duration) {
+		$data[] = $event_duration[0];
 		$labels[] = $event_title."\n(%d%%)";
 	}
 
@@ -601,15 +601,7 @@ function course_objectives_formatted($objectives, $parent_id, $top_level_id, $ed
 				}
 			}
 			// Course Summary Report End
-			
-			
-			
 		?>
 			<br />
-	<?php	
-				/*}
-			}
-		}*/
-	?>
 </body>
 </html>

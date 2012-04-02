@@ -1,4 +1,4 @@
-ALTER TABLE `assessments` ADD `order` smallint(6) AFTER `release_until`, ADD KEY `order` (`order`);
+ALTER TABLE `assessments` ADD `order` smallint(6) NOT NULL DEFAULT '0' AFTER `release_until`, ADD KEY `order` (`order`);
 
 CREATE TABLE IF NOT EXISTS `assessment_objectives` (
   `aobjective_id` int(12) NOT NULL AUTO_INCREMENT,

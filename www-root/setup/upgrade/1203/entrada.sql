@@ -5,8 +5,6 @@ CREATE TABLE IF NOT EXISTS `eventtype_organisation`(
 
 INSERT INTO eventtype_organisation SELECT a.eventtype_id, b.organisation_id FROM events_lu_eventtypes AS a JOIN entrada_auth.organisations AS b ON 1=1;
 
-UPDATE `settings` SET `value` = '1203' WHERE `shortname` = 'version_db';
-
 CREATE TABLE IF NOT EXISTS `groups` (
   `group_id` int(12) NOT NULL AUTO_INCREMENT,
   `group_name` varchar(255) NOT NULL,
@@ -27,4 +25,6 @@ CREATE TABLE IF NOT EXISTS `group_members` (
   PRIMARY KEY (`gmember_id`),
   KEY `group_id` (`group_id`,`proxy_id`,`updated_date`,`updated_by`),
   KEY `member_active` (`member_active`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+
+UPDATE `settings` SET `value` = '1203' WHERE `shortname` = 'version_db';

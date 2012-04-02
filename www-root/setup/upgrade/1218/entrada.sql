@@ -1,5 +1,5 @@
 ALTER TABLE `course_audience` ADD COLUMN `cperiod_id` int(11) NOT NULL AFTER `audience_value`;
-ALTER TABLE `course_audience` DROP COLUMN `enrollment_start`;
+
 ALTER TABLE `groups` MODIFY `group_type` enum('course_list','cohort') NOT NULL DEFAULT 'course_list';
 
 ALTER TABLE `poll_questions` ADD COLUMN `poll_target_type` enum('group', 'grad_year', 'cohort') NOT NULL AFTER `poll_id`;

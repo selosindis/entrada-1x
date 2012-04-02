@@ -47,7 +47,7 @@ if ($mode == "graph") {
 	if ($event_types) {
 		foreach ($event_types as $event_type) {
 			
-			$query = "	SELECT COUNT(a.`event_id`) as `event_count`
+			$query = "	SELECT SUM(a.`event_duration`) as `duration`
 						FROM `events` AS a
 						LEFT JOIN `courses` AS b
 						ON b.`course_id` = a.`course_id`
@@ -62,14 +62,14 @@ if ($mode == "graph") {
 						ORDER BY d.`eventtype_order` ASC, b.`course_name` ASC, a.`event_start` ASC";
 			
 			$results = $db->GetRow($query);
-			if ($results["event_count"]) {
-				$course_events[$event_type["eventtype_title"]][] = $results["event_count"];
+			if ($results["duration"]) {
+				$course_events[$event_type["eventtype_title"]][] = $results["duration"];
 			}
 		}
 	}
 	
-	foreach ($course_events as $event_title => $event_count) {
-		$data[] = $event_count[0];
+	foreach ($course_events as $event_title => $event_duration) {
+		$data[] = $event_duration[0];
 		$labels[] = $event_title."\n(%d%%)";
 	}
 
@@ -288,7 +288,7 @@ function course_objectives_formatted($objectives, $parent_id, $top_level_id, $ed
 					echo (!empty($result["city"]) ? $result["city"] : "");
 					echo (!empty($result["province"]) ? ", ".$result["province"] : "");
 					echo (!empty($result["country"]) ? ", ".$result["country"] : "");
-					echo (!empty($result["address"]) ? "<br />\n" : "");
+					echo ("<br />");
 					echo (!empty($result["postcode"]) ? $result["postcode"]."<br />" : "");
 					echo (!empty($result["office_hours"]) ? "Office Hours: ".$result["office_hours"]."<br />" : "");
 				}
@@ -329,12 +329,12 @@ function course_objectives_formatted($objectives, $parent_id, $top_level_id, $ed
 			
 			// Teaching Stratagies
 			echo "<h1>".$course_details["pages"]["teaching_strategies"]["page_title"]."</h1>";
-			echo "<div>".$course_details["pages"]["teaching_strategies"]["page_content"]."</div>";
+			echo "<div>".strip_tags($course_details["pages"]["teaching_strategies"]["page_content"], "<strong><em><u><b><i><ul><ol><li><br><p>")."</div>";
 
 			
 			// Assessment Stratagies
 			echo "<h1>".$course_details["pages"]["assessment_strategies"]["page_title"]."</h1>";
-			echo "<div>".strip_tags($course_details["pages"]["assessment_strategies"]["page_content"],"<strong><br><ul><ol><li><table><tr><td><p>")."</div>";
+			echo "<div>".strip_tags($course_details["pages"]["assessment_strategies"]["page_content"],"<strong><em><u><b><i><ul><ol><li><br><p>")."</div>";
 
 			
 			// Gradebook
@@ -383,10 +383,10 @@ function course_objectives_formatted($objectives, $parent_id, $top_level_id, $ed
 			// Expectations
 			echo "<h1>Expectations</h1>";
 			echo "<h2>".$course_details["pages"]["expectations_of_students"]["page_title"]."</h2>";
-			echo "<div>".$course_details["pages"]["expectations_of_students"]["page_content"]."</div>";
+			echo "<div>".strip_tags($course_details["pages"]["expectations_of_students"]["page_content"], "<strong><em><u><b><i><ul><ol><li><br><p>")."</div>";
 
 			echo "<h2>".$course_details["pages"]["expectations_of_faculty"]["page_title"]."</h2>";
-			echo "<div>".$course_details["pages"]["expectations_of_faculty"]["page_content"]."</div>";			
+			echo "<div>".strip_tags($course_details["pages"]["expectations_of_faculty"]["page_content"], "<strong><em><u><b><i><ul><ol><li><br><p>")."</div>";			
 			
 			// Event Types By Course Report Start
 			$output		= array();
@@ -594,22 +594,14 @@ function course_objectives_formatted($objectives, $parent_id, $top_level_id, $ed
 							echo "<div>\n";
 							echo "<strong>".html_encode($event["event_title"])."</strong>";
 							echo (!empty($event["objectives"]) ? "<br />\nObjectives: ".implode(" - ", $objectives)."<br />" : "&nbsp;")."\n";
-							echo (!empty($event["event_description"]) ? "<div><br />".limit_chars(nl2br(strip_tags($event["event_description"]),"<br><ul><ol><li>"),376)."</div>\n" : "" );
+							echo (!empty($event["event_description"]) ? "<div><br />".limit_chars(nl2br(strip_tags($event["event_description"])),376)."</div>\n" : "" );
 							echo "</div><br />";
 						}
 					}
 				}
 			}
 			// Course Summary Report End
-			
-			
-			
 		?>
 			<br />
-	<?php	
-				/*}
-			}
-		}*/
-	?>
 </body>
 </html>

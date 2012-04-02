@@ -270,7 +270,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 				foreach ($result["events"] as $eventtype_id => $event) {
 					$STATISTICS["labels"][$eventtype_id] = $eventtype_legend[$eventtype_id];
 					$STATISTICS["legend"][$eventtype_id] = $eventtype_legend[$eventtype_id];
-					$STATISTICS["display"][$eventtype_id] = $event["events"];
+					$STATISTICS["display"][$eventtype_id] = $event["duration"] / 60;
 
 					if ($result["total_events"] > 0) {
 						$percent_events = round((($event["events"] / $result["total_events"]) * 100));

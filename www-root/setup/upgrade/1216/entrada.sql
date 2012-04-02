@@ -1,5 +1,5 @@
 ALTER TABLE `groups` MODIFY COLUMN `group_type` VARCHAR(20);
-ALTER TABLE `groups` ADD COLUMN `group_value` INT AFTER `group_type`;
+ALTER TABLE `groups` ADD COLUMN `group_value` INT(12) AFTER `group_type`;
 ALTER TABLE `groups` ADD COLUMN `start_date` BIGINT(64) AFTER `group_value`;
 ALTER TABLE `groups` ADD COLUMN `expire_date` BIGINT(64) AFTER `start_date`;
 

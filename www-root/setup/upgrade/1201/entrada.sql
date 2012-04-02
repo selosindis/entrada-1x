@@ -45,8 +45,11 @@ CREATE TABLE IF NOT EXISTS `mtd_schedule` (
   `type_code` varchar(1) NOT NULL,
   `updated_date` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00' ON UPDATE CURRENT_TIMESTAMP,
   `updated_by` int(12) NOT NULL,
+  `category_id` int(3) DEFAULT NULL,
+  `home_program_id` int(3) DEFAULT NULL,
+  `home_school_id` int(3) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `mtd_schools` (
   `id` int(11) NOT NULL ,

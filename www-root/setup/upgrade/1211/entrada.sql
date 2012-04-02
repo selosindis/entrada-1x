@@ -1,5 +1,5 @@
 ALTER TABLE `student_groups` RENAME TO `groups`;
-ALTER TABLE `groups` CHANGE COLUMN `sgroup_id` `group_id` int(11) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `groups` CHANGE COLUMN `sgroup_id` `group_id` int(12) NOT NULL AUTO_INCREMENT;
 
 ALTER TABLE `student_group_members` RENAME TO `group_members`;
 ALTER TABLE `group_members` CHANGE COLUMN `sgmember_id` `gmember_id` int(12) NOT NULL AUTO_INCREMENT;

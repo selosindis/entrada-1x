@@ -288,12 +288,7 @@ INSERT INTO `ar_lu_contribution_roles` (`id`, `contribution_role`) VALUES
 (14, 'Vice Chair'),
 (15, 'Vice President'),
 (16, 'Other (specify)'),
-(17, 'Site Leader on a Clinical Trial'),
-(18, 'Learned Society: President'),
-(19, 'Learned Society: Vice-President'),
-(20, 'Learned Society: Secretary'),
-(21, 'Learned Society: Treasurer'),
-(22, 'Learned Society: Board Member');
+(17, 'Site Leader on a Clinical Trial');
 
 CREATE TABLE IF NOT EXISTS `ar_lu_contribution_types` (
   `id` int(11) NOT NULL auto_increment,
@@ -315,7 +310,7 @@ INSERT INTO `ar_lu_contribution_types` (`id`, `contribution_type`) VALUES
 CREATE TABLE IF NOT EXISTS `ar_lu_degree_types` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `degree_type` varchar(50) NOT NULL DEFAULT '',
-  `visible` int(1) DEFAULT '1',
+  `visible` int(1) NOT NULL DEFAULT '1',
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
@@ -463,6 +458,11 @@ CREATE TABLE IF NOT EXISTS `ar_lu_pr_roles` (
   PRIMARY KEY  (`role_id`),
   KEY `role_description` (`role_description`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+INSERT INTO `ar_lu_pr_roles` (`role_id`, `role_description`) VALUES
+(1, 'First Author'),
+(2, 'Corresponding Author'),
+(3, 'Contributing Author');
 
 CREATE TABLE IF NOT EXISTS `ar_lu_prize_categories` (
   `id` int(11) NOT NULL auto_increment,
@@ -983,7 +983,7 @@ CREATE TABLE IF NOT EXISTS `assessments_lu_meta` (
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-INSERT INTO `assessments_lu_meta` (`organisation_id`, `type`, `title`) VALUES 
+INSERT INTO `assessments_lu_meta` (`organisation_id`, `type`, `title`) VALUES
 ('1', '1', 'Faculty, resident or preceptor rating'),
 ('1', '2', 'Final project'),
 ('1', '3', 'Final written examination'),
@@ -1167,8 +1167,8 @@ CREATE TABLE IF NOT EXISTS `communities` (
   KEY `max_storage` (`storage_max`),
   KEY `storage_usage` (`storage_usage`),
   KEY `community_active` (`community_active`),
-  FULLTEXT KEY `community_title` (`community_title`,`community_description`,`community_keywords`)
-  FULLTEXT KEY `community_url` (`community_url`),
+  FULLTEXT KEY `community_title` (`community_title`,`community_description`,`community_keywords`),
+  FULLTEXT KEY `community_url` (`community_url`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `communities_template_permissions` (
@@ -1186,10 +1186,10 @@ INSERT INTO `communities_template_permissions` (`ctpermission_id`, `permission_t
 (3,'category_id','5','course'),
 (4,'group','faculty,staff','committee'),
 (5,'category_id','12','committee'),
-(6,'group','faculty,staff','learningModule'),
-(7,'group','faculty,staff','virtualPatient'),
-(9,'category_id','','virtualPatient'),
-(8,'category_id','','learningModule');
+(6,'group','faculty,staff','learningmodule'),
+(7,'group','faculty,staff','virtualpatient'),
+(9,'category_id','','virtualpatient'),
+(8,'category_id','','learningmodule');
 
 CREATE TABLE IF NOT EXISTS `communities_categories` (
   `category_id` int(12) NOT NULL AUTO_INCREMENT,
@@ -1238,14 +1238,15 @@ CREATE TABLE IF NOT EXISTS `communities_modules` (
   FULLTEXT KEY `module_title` (`module_title`,`module_description`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-INSERT INTO `communities_modules` (`module_id`, `module_shortname`, `module_version`, `module_title`, `module_description`, `module_active`, `module_permissions`, `updated_date`, `updated_by`) VALUES
-(1, 'announcements', '1.0.0', 'Announcements', 'The Announcements module allows you to post Announcements to your community.', 1, 'a:4:{s:3:"add";i:1;s:6:"delete";i:1;s:4:"edit";i:1;s:5:"index";i:0;}', 1173116408, 1),
-(2, 'discussions', '1.0.0', 'Discussions', 'The Discussions module is a simple method you can use to host discussions.', 1, 'a:10:{s:9:"add-forum";i:1;s:8:"add-post";i:0;s:12:"delete-forum";i:1;s:11:"delete-post";i:0;s:10:"edit-forum";i:1;s:9:"edit-post";i:0;s:5:"index";i:0;s:10:"reply-post";i:0;s:10:"view-forum";i:0;s:9:"view-post";i:0;}', 1173116408, 1),
-(3, 'galleries', '1.0.0', 'Galleries', 'The Galleries module allows you to add photo galleries and images to your community.', 1, 'a:13:{s:11:"add-comment";i:0;s:11:"add-gallery";i:1;s:9:"add-photo";i:0;s:10:"move-photo";i:0;s:14:"delete-comment";i:0;s:14:"delete-gallery";i:1;s:12:"delete-photo";i:0;s:12:"edit-comment";i:0;s:12:"edit-gallery";i:1;s:10:"edit-photo";i:0;s:5:"index";i:0;s:12:"view-gallery";i:0;s:10:"view-photo";i:0;}', 1173116408, 1),
-(4, 'shares', '1.0.0', 'Document Sharing', 'The Document Sharing module gives you the ability to upload and share documents within your community.', 1, 'a:15:{s:11:"add-comment";i:0;s:10:"add-folder";i:1;s:8:"add-file";i:0;s:9:"move-file";i:0;s:12:"add-revision";i:0;s:14:"delete-comment";i:0;s:13:"delete-folder";i:1;s:11:"delete-file";i:0;s:15:"delete-revision";i:0;s:12:"edit-comment";i:0;s:11:"edit-folder";i:1;s:9:"edit-file";i:0;s:5:"index";i:0;s:11:"view-folder";i:0;s:9:"view-file";i:0;}', 1173116408, 1),
-(5, 'polls', '1.0.0', 'Polling', 'This module allows communities to create their own polls for everything from adhoc open community polling to individual community member votes.', 1, 'a:10:{s:8:"add-poll";i:1;s:12:"add-question";i:1;s:13:"edit-question";i:1;s:15:"delete-question";i:1;s:11:"delete-poll";i:1;s:9:"edit-poll";i:1;s:9:"view-poll";i:0;s:9:"vote-poll";i:0;s:5:"index";i:0;s:8:"my-votes";i:0;}', 1216256830, 1408),
-(6, 'events', '1.0.0', 'Events', 'The Events module allows you to post events to your community which will be accessible through iCalendar ics files or viewable in the community.', 1, 'a:4:{s:3:"add";i:1;s:6:"delete";i:1;s:4:"edit";i:1;s:5:"index";i:0;}', 1225209600, 3499),
-(7, 'quizzes', '1.0.0', 'Quizzes', 'This module allows communities to create their own quizzes for summative or formative evaluation.', 1, 'a:1:{s:5:\"index\";i:0;}', 1216256830, 3499);
+INSERT INTO `communities_modules` (`module_id`, `module_shortname`, `module_version`, `module_title`, `module_description`, `module_active`, `module_visible`, `module_permissions`, `updated_date`, `updated_by`) VALUES
+(1, 'announcements', '1.0.0', 'Announcements', 'The Announcements module allows you to post Announcements to your community.', 1, 1, 'a:4:{s:3:"add";i:1;s:6:"delete";i:1;s:4:"edit";i:1;s:5:"index";i:0;}', 1173116408, 1),
+(2, 'discussions', '1.0.0', 'Discussions', 'The Discussions module is a simple method you can use to host discussions.', 1, 1, 'a:10:{s:9:"add-forum";i:1;s:8:"add-post";i:0;s:12:"delete-forum";i:1;s:11:"delete-post";i:0;s:10:"edit-forum";i:1;s:9:"edit-post";i:0;s:5:"index";i:0;s:10:"reply-post";i:0;s:10:"view-forum";i:0;s:9:"view-post";i:0;}', 1173116408, 1),
+(3, 'galleries', '1.0.0', 'Galleries', 'The Galleries module allows you to add photo galleries and images to your community.', 1, 1, 'a:13:{s:11:"add-comment";i:0;s:11:"add-gallery";i:1;s:9:"add-photo";i:0;s:10:"move-photo";i:0;s:14:"delete-comment";i:0;s:14:"delete-gallery";i:1;s:12:"delete-photo";i:0;s:12:"edit-comment";i:0;s:12:"edit-gallery";i:1;s:10:"edit-photo";i:0;s:5:"index";i:0;s:12:"view-gallery";i:0;s:10:"view-photo";i:0;}', 1173116408, 1),
+(4, 'shares', '1.0.0', 'Document Sharing', 'The Document Sharing module gives you the ability to upload and share documents within your community.', 1, 1, 'a:15:{s:11:"add-comment";i:0;s:10:"add-folder";i:1;s:8:"add-file";i:0;s:9:"move-file";i:0;s:12:"add-revision";i:0;s:14:"delete-comment";i:0;s:13:"delete-folder";i:1;s:11:"delete-file";i:0;s:15:"delete-revision";i:0;s:12:"edit-comment";i:0;s:11:"edit-folder";i:1;s:9:"edit-file";i:0;s:5:"index";i:0;s:11:"view-folder";i:0;s:9:"view-file";i:0;}', 1173116408, 1),
+(5, 'polls', '1.0.0', 'Polling', 'This module allows communities to create their own polls for everything from adhoc open community polling to individual community member votes.', 1, 1, 'a:10:{s:8:"add-poll";i:1;s:12:"add-question";i:1;s:13:"edit-question";i:1;s:15:"delete-question";i:1;s:11:"delete-poll";i:1;s:9:"edit-poll";i:1;s:9:"view-poll";i:0;s:9:"vote-poll";i:0;s:5:"index";i:0;s:8:"my-votes";i:0;}', 1216256830, 1408),
+(6, 'events', '1.0.0', 'Events', 'The Events module allows you to post events to your community which will be accessible through iCalendar ics files or viewable in the community.', 1, 1, 'a:4:{s:3:"add";i:1;s:6:"delete";i:1;s:4:"edit";i:1;s:5:"index";i:0;}', 1225209600, 3499),
+(7, 'quizzes', '1.0.0', 'Quizzes', 'This module allows communities to create their own quizzes for summative or formative evaluation.', 1, 1, 'a:1:{s:5:\"index\";i:0;}', 1216256830, 3499),
+(8, 'mtdtracking', '1.0.0', 'MTD Tracking', 'The MTD Tracking module allows Program Assistants to enter the weekly schedule for each of their Residents.', 0, 0, 'a:2:{s:4:\"edit\";i:1;s:5:\"index\";i:0;}', 1216256830, 5440);
 
 CREATE TABLE IF NOT EXISTS `communities_most_active` (
   `cmactive_id` int(12) NOT NULL AUTO_INCREMENT,
@@ -1496,7 +1497,7 @@ CREATE TABLE IF NOT EXISTS `community_members` (
   `member_active` int(1) NOT NULL DEFAULT '1',
   `member_joined` bigint(64) NOT NULL DEFAULT '0',
   `member_acl` int(1) NOT NULL DEFAULT '0',
-  PRIMARY KEY  (`cmember_id`),
+  PRIMARY KEY (`cmember_id`),
   KEY `community_id` (`community_id`,`proxy_id`,`member_joined`,`member_acl`),
   KEY `member_active` (`member_active`),
   KEY `community_id_2` (`community_id`,`proxy_id`,`member_active`)
@@ -1790,8 +1791,8 @@ CREATE TABLE IF NOT EXISTS `community_templates` (
 INSERT INTO `community_templates` (`template_id`, `template_name`, `template_description`, `organisation_id`, `group`, `role`) VALUES
 (1,'default','',NULL,NULL,NULL),
 (2,'committee','',NULL,NULL,NULL),
-(3,'virtualPatient','',NULL,NULL,NULL),
-(4,'learningModule','',NULL,NULL,NULL),
+(3,'virtualpatient','',NULL,NULL,NULL),
+(4,'learningmodule','',NULL,NULL,NULL),
 (5,'course','',NULL,NULL,NULL);
 
 CREATE TABLE IF NOT EXISTS `courses` (
@@ -3499,25 +3500,24 @@ CREATE TABLE IF NOT EXISTS `notices` (
   KEY `organisation_id` (`organisation_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `notice_audience`(
-	`naudience_id` INT(11) NOT NULL AUTO_INCREMENT, 
-	`notice_id` INT(11) NOT NULL,
-	`audience_type` VARCHAR(20) NOT NULL,
-	`audience_value` INT(11) NOT NULL DEFAULT '0',
-	`updated_by` INT(11) NOT NULL DEFAULT '0',
-	`updated_date` bigint(64) NOT NULL DEFAULT '0',
-	PRIMARY KEY (`naudience_id`),
-	KEY `audience_id`(`notice_id`,`audience_type`,`audience_value`,`updated_date`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;	
+CREATE TABLE IF NOT EXISTS `notice_audience` (
+  `naudience_id` int(11) NOT NULL AUTO_INCREMENT,
+  `notice_id` int(11) NOT NULL,
+  `audience_type` varchar(20) NOT NULL,
+  `audience_value` int(11) NOT NULL DEFAULT '0',
+  `updated_by` int(11) NOT NULL DEFAULT '0',
+  `updated_date` bigint(64) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`naudience_id`),
+  KEY `audience_id` (`notice_id`,`audience_type`,`audience_value`,`updated_date`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `objective_organisation` (
-  `objective_id` INT(12) NOT NULL, 
-  `organisation_id` INT(12) NOT NULL, 
-  PRIMARY KEY(`objective_id`,`organisation_id`)
+  `objective_id` int(12) NOT NULL,
+  `organisation_id` int(12) NOT NULL,
+  PRIMARY KEY (`objective_id`,`organisation_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `objective_organisation` SELECT `objective_id`, 1 FROM `global_lu_objectives`;
-
 
 CREATE TABLE IF NOT EXISTS `permissions` (
   `permission_id` int(12) NOT NULL AUTO_INCREMENT,
@@ -4038,14 +4038,20 @@ CREATE TABLE IF NOT EXISTS `mtd_moh_service_codes` (
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8 ;
 
 CREATE TABLE IF NOT EXISTS `mtd_schedule` (
-  `id` int(11) NOT NULL ,
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `start_date` date NOT NULL,
   `end_date` date NOT NULL,
   `service_id` int(3) NOT NULL,
   `resident_id` int(11) NOT NULL,
-  `creator_id` int(11) NOT NULL,
+  `creator_id` int(12) NOT NULL,
+  `type_code` varchar(1) NOT NULL,
+  `updated_date` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00' ON UPDATE CURRENT_TIMESTAMP,
+  `updated_by` int(12) NOT NULL,
+  `category_id` int(3) DEFAULT NULL,
+  `home_program_id` int(3) DEFAULT NULL,
+  `home_school_id` int(3) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 ;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `mtd_schools` (
   `id` int(11) NOT NULL ,
@@ -4073,24 +4079,25 @@ INSERT INTO `mtd_type` (`id`, `type_code`, `type_description`) VALUES
 (2, 'O', 'out-patient');
 
 CREATE TABLE IF NOT EXISTS `eventtype_organisation`(
-`eventtype_id` INT(12) NOT NULL, 
-`organisation_id` INT(12) NOT NULL 
+`eventtype_id` INT(12) NOT NULL,
+`organisation_id` INT(12) NOT NULL
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `eventtype_organisation` SELECT `eventtype_id`, 1 FROM `events_lu_eventtypes`;
 
 CREATE TABLE IF NOT EXISTS `groups` (
-  `group_id` int(11) NOT NULL AUTO_INCREMENT,
-  `group_name` varchar(64) NOT NULL, 
+  `group_id` int(12) NOT NULL AUTO_INCREMENT,
+  `group_name` varchar(255) NOT NULL,
   `group_type` enum('course_list','cohort') NOT NULL DEFAULT 'course_list',
-  `group_value` INT,
-  `start_date` BIGINT(64) NOT NULL,
-  `expire_date` BIGINT(64),
+  `group_value` int(12) DEFAULT NULL,
+  `start_date` bigint(64) DEFAULT NULL,
+  `expire_date` bigint(64) DEFAULT NULL,
   `group_active` int(1) NOT NULL DEFAULT '1',
-  `updated_date` int(11) DEFAULT NULL,
-  `updated_by` int(11) DEFAULT NULL,
-  PRIMARY KEY (`group_id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+  `updated_date` bigint(64) NOT NULL,
+  `updated_by` int(12) NOT NULL,
+  PRIMARY KEY (`group_id`),
+  FULLTEXT KEY `group_title` (`group_name`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `group_members` (
   `gmember_id` int(12) NOT NULL AUTO_INCREMENT,
@@ -4173,9 +4180,9 @@ INSERT INTO `pg_blocks` (`id`, `block_name`, `start_date`, `end_date`, `year`) V
 (26, '13', '2012-06-05', '2012-06-30', '2011-2012');
 
 CREATE TABLE IF NOT EXISTS `topic_organisation`(
-  `topic_id` INT(12) NOT NULL, 
+  `topic_id` INT(12) NOT NULL,
   `organisation_id` INT(12) NOT NULL,
-  PRIMARY KEY(`topic_id`,`organisation_id`) 
+  PRIMARY KEY(`topic_id`,`organisation_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `topic_organisation` SELECT `topic_id`, 1 FROM `events_lu_topics`;

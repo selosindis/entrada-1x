@@ -431,7 +431,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						/**
 						* Fetch the Curriculum Objective details.
 						*/
-						list($curriculum_objectives_list,$top_level_id) = courses_fetch_objectives(1,array($COURSE_ID),-1, 1, false, false, 0, true);
+						list($curriculum_objectives_list,$top_level_id) = courses_fetch_objectives($ENTRADA_USER->getActiveOrganisation(),array($COURSE_ID),-1, 1, false, false, 0, true);
 				
 						$curriculum_objectives = array();
 

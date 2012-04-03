@@ -299,7 +299,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								</script>
 								<br/>
 								<p>Unentered grades: <?php echo (int) $unentered; ?></p>
-								<p>Mean grade: <?php echo number_format(($entered > 0 ? $sum / $entered : ""), 0); ?>%</p>
+								<p>Mean grade: <?php echo number_format(($entered > 0 ? $sum / $entered : 0), 0); ?>%</p>
 								<p>Median grade: <?php echo $grade_values[floor(count($grade_values) / 2)]; ?>%</p>
 								<?php
 							break;

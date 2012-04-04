@@ -8802,7 +8802,7 @@ function courses_fetch_courses($only_active_courses = true, $order_by_course_cod
 	
 	$output = array();
 	$query = "	SELECT * FROM `courses` 
-				WHERE `organisation_id` = '1' ";
+				WHERE `organisation_id` = " . $db->qstr($ENTRADA_USER->getActiveOrganisation());;
 	if($ENTRADA_USER->getGroup() == "student"){
 		$query .="AND (
 					`permission` = 'open' 

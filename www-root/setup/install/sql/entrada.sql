@@ -4099,6 +4099,11 @@ CREATE TABLE IF NOT EXISTS `groups` (
   FULLTEXT KEY `group_title` (`group_name`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
+INSERT INTO `groups` (`group_name`, `group_type`, `group_active`, `updated_date`, `updated_by`)	VALUES 
+(CONCAT('Class of ', YEAR(CURRENT_DATE())), 'cohort', 1, UNIX_TIMESTAMP(), 1),
+(CONCAT('Class of ', YEAR(CURRENT_DATE())+1), 'cohort', 1, UNIX_TIMESTAMP(), 1),
+(CONCAT('Class of ', YEAR(CURRENT_DATE())+2), 'cohort', 1, UNIX_TIMESTAMP(), 1);
+
 CREATE TABLE IF NOT EXISTS `group_members` (
   `gmember_id` int(12) NOT NULL AUTO_INCREMENT,
   `group_id` int(12) NOT NULL DEFAULT '0',

@@ -154,12 +154,27 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 				$PROCESSED["updated_by"] = $_SESSION["details"]["id"];
 
 				if (($db->AutoExecute(AUTH_DATABASE . ".organisations", $PROCESSED, "INSERT")) && ($organisation_id = $db->Insert_Id())) {
-					$SUCCESS++;
-					$SUCCESSSTR[] = "You have successfully added <strong>" . html_encode($PROCESSED["organisation_title"]) . "</strong> to the system.<br /><br />You will now be redirected to the organisations index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"" . ENTRADA_URL . "/admin/settings/organisations\" style=\"font-weight: bold\">click here</a> to continue.";
+					$query = "INSERT INTO `" . AUTH_DATABASE . "`.`acl_permissions` (`resource_type`,`resource_value`,`entity_type`,`entity_value`,`app_id`,`create`,`read`,`update`,`delete`,`assertion`)
+							  VALUES
+								('course', NULL, 'organisation', " . $db->qstr($organisation_id) . ", NULL, NULL, 1, NULL, NULL, 'ResourceOrganisation&NotGuest'),
+								('resourceorganisation'," . $db->qstr($organisation_id) . ", 'organisation', " . $db->qstr($organisation_id) . ", NULL, NULL, 1, NULL, NULL, 'NotGuest'),
+								('resourceorganisation'," . $db->qstr($organisation_id) . ", 'organisation:group:role', '" . $organisation_id . ":faculty:director', NULL, 1, NULL, NULL, NULL, NULL),
+								('resourceorganisation'," . $db->qstr($organisation_id) . ", 'organisation:group:role', '" . $organisation_id . ":faculty:admin', NULL, 1, NULL, NULL, NULL, NULL),
+								('resourceorganisation'," . $db->qstr($organisation_id) . ", 'organisation:group:role', '" . $organisation_id . ":staff:pcoordinator', NULL, 1, NULL, NULL, NULL, NULL),
+								('resourceorganisation'," . $db->qstr($organisation_id) . ", 'organisation:group:role', '" . $organisation_id . ":staff:admin', NULL, 1, 1, 1, 1, NULL)";
+					if ($db->Execute($query)) {
+						$SUCCESS++;
+						$SUCCESSSTR[] = "You have successfully added <strong>" . html_encode($PROCESSED["organisation_title"]) . "</strong> to the system.<br /><br />You will now be redirected to the organisations index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"" . ENTRADA_URL . "/admin/settings/organisations\" style=\"font-weight: bold\">click here</a> to continue.";
 
-					$ONLOAD[] = "setTimeout('window.location=\\'" . ENTRADA_URL . "/admin/settings/organisations/\\'', 5000)";
+						$ONLOAD[] = "setTimeout('window.location=\\'" . ENTRADA_URL . "/admin/settings/organisations/\\'', 5000)";
 
-					application_log("success", "New organisation [" . $organisation_id . "] added to the system.");
+						application_log("success", "New organisation [" . $organisation_id . "] added to the system.");
+					} else {
+						$ERROR++;
+						$ERRORSTR[] = "We were unable to add this organisation to the system at this time.<br /><br />The system administrator has been notified of this issue, please try again later.";
+
+						application_log("error", "Failed to insert acl permissions for this new organisation id ( " . $organisation_id . ") into the database. Database said: " . $db->ErrorMsg());
+					}
 				} else {
 					$ERROR++;
 					$ERRORSTR[] = "We were unable to add this organisation to the system at this time.<br /><br />The system administrator has been notified of this issue, please try again later.";

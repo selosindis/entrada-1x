@@ -264,6 +264,12 @@ if ($ACTION == "login") {
 			$_SESSION["permissions"] = permissions_load();
 
 			$auth->updateLastLogin();
+			
+			// If $ENTRADA_USER was previously initialized in init.inc.php before the 
+			// session was authorized it is set to false and needs to be re-initialized.
+			if ($ENTRADA_USER == false && $_SESSION["isAuthorized"] == true) {
+				$ENTRADA_USER = User::get($_SESSION["details"]["id"]);
+			}
 		}
 		
 		$query = "SELECT `email_updated`, `clinical`, `google_id`, `notifications` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($_SESSION["details"]["id"]);

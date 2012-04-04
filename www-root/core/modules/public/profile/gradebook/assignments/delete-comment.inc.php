@@ -17,7 +17,7 @@ if (!defined("IN_PUBLIC_ASSIGNMENTS")) {
 }
 $ASSIGNMENT_ID = false;
 if ($RECORD_ID) {
-	$query			= "	SELECT * FROM `assignment_comments` WHERE `acomment_id` = ".$db->qstr($RECORD_ID)." AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getProxyId());
+	$query			= "	SELECT a.*,b.`course_id` FROM `assignment_comments` AS a JOIN `assignments` AS b ON a.`assignment_id` = b.`assignment_id` WHERE a.`acomment_id` = ".$db->qstr($RECORD_ID)." AND a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getProxyId());
 			
 	$comment_record	= $db->GetRow($query);
 	if ($comment_record) {
@@ -34,14 +34,23 @@ if ($RECORD_ID) {
 			}
 		} else {
 			application_log("error", "The provided file comment id [".$RECORD_ID."] is already deactivated.");
-		}		
-		$query = "SELECT * FROM `assignment_files` WHERE `proxy_id` = ".$db->qstr($ENTRADA_USER->getProxyId())." AND `afile_id` = ".$db->qstr($comment_record["afile_id"]);
-		if ($db->GetRow($query)) {
-			header("Location: ".ENTRADA_URL."/profile/gradebook/assignments?section=view&id=".$ASSIGNMENT_ID);
+		}
+		
+		if (isset($_GET["returnto"]) && $return = clean_input($_GET["returnto"],array("trim","notags"))) {
+			switch($return){
+				case 'grade':
+					header("Location: ".ENTRADA_URL."/admin/gradebook/assignments?section=grade&id=".$comment_record["course_id"]."&assignment_id=".$ASSIGNMENT_ID);
+					break;
+			}
 		} else {
-			$query = "SELECT a.* FROM `assignment_files` AS a JOIN `assignment_contacts` AS b ON a.`assignment_id` = b.`assignment_id` WHERE b.`proxy_id` = ".$db->qstr($ENTRADA_USER->getProxyId())." AND a.`afile_id` = ".$db->qstr($comment_record["afile_id"]);
-			if ($file_record = $db->GetRow($query)) {
-				header("Location: ".ENTRADA_URL."/profile/gradebook/assignments?section=view&id=".$ASSIGNMENT_ID."&pid=".$file_record["proxy_id"]);
+			$query = "SELECT * FROM `assignment_files` WHERE `proxy_id` = ".$db->qstr($ENTRADA_USER->getProxyId())." AND `afile_id` = ".$db->qstr($comment_record["afile_id"]);
+			if ($db->GetRow($query)) {
+				header("Location: ".ENTRADA_URL."/profile/gradebook/assignments?section=view&id=".$ASSIGNMENT_ID);
+			} else {
+				$query = "SELECT a.* FROM `assignment_files` AS a JOIN `assignment_contacts` AS b ON a.`assignment_id` = b.`assignment_id` WHERE b.`proxy_id` = ".$db->qstr($ENTRADA_USER->getProxyId())." AND a.`afile_id` = ".$db->qstr($comment_record["afile_id"]);
+				if ($file_record = $db->GetRow($query)) {
+					header("Location: ".ENTRADA_URL."/profile/gradebook/assignments?section=view&id=".$ASSIGNMENT_ID."&pid=".$file_record["proxy_id"]);
+				}
 			}
 		}
 		exit;
@@ -51,9 +60,9 @@ if ($RECORD_ID) {
 } else {
 	application_log("error", "No file comment id was provided for deactivation.");
 }
-if($ASSIGNMENT_ID){
+if ($ASSIGNMENT_ID) {
 	header("Location: ".ENTRADA_URL."/profile/gradebook/assignments?section=view&amp;id=".$ASSIGNMENT_ID);
-}else{
+} else {
 	header("Location: ".ENTRADA_URL."/profile/gradebook/assignments");	
 }
 exit;

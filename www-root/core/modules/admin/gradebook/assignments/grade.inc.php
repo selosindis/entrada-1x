@@ -185,7 +185,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 									}
 									
 									if (isset($student["grade_value"])) {
-										$grade_value = format_retrieved_grade($student["grade_value"], $assignment);
+										$grade_value = format_retrieved_grade($student["grade_value"], $assessment);
 									} else {
 										$grade_value = "-";
 									}
@@ -236,7 +236,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 															LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS c
 															ON a.`proxy_id` = c.`id` 
 															WHERE b.`assignment_id` = ".$db->qstr($ASSIGNMENT_ID)." 
-															AND b.`proxy_id` = ".$db->qstr($student["proxy_id"]);
+															AND b.`proxy_id` = ".$db->qstr($student["proxy_id"])."
+															AND a.`comment_active` = '1'";
 												$comment_results = $db->GetAll($query);
 												if($comment_results){
 												?>
@@ -570,7 +571,25 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								}
 							  });
 						});
-
+						
+						jQuery('.delete').live('click',function(){
+							id = jQuery(this).attr('id').substring(7);
+							jQuery("#dialog-confirm").dialog({
+								resizable: false,
+								height:180,
+								modal: true,
+								buttons: {
+									'Delete': function() {
+										window.location = '<?php echo ENTRADA_URL."/profile/gradebook/assignments";?>?section=delete-comment&id='+id+'&returnto=grade';
+										return true;
+									},
+									Cancel: function() {
+										jQuery(this).dialog('close');
+									}
+								}
+								});
+						});						
+						
 						jQuery('.view_comments').live('click',function(e){
 							var id = e.target.id.substring(14);
 							jQuery('#comments_'+id).show();
@@ -597,6 +616,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						});	
 					});
 					</script>
+					<div id="dialog-confirm" title="Delete?" style="display: none">
+						<p><span class="ui-icon ui-icon-alert" style="float:left; margin:0 7px 20px 0;"></span>This item will be permanently deleted and cannot be recovered. Are you sure you want to delete it?</p>
+					</div>
 					<style>
 					#gradebook_stats{
 						width:265px;

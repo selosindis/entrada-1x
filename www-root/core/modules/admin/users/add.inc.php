@@ -486,23 +486,26 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 							}
 						}
 
-						
-						$query = "SELECT `group_id` FROM `groups` WHERE `group_name` = 'Class of ".$PROCESSED_ACCESS["role"]."' AND `group_type` = 'cohort' AND `group_active` = 1";
-						$group_id = $db->GetOne($query);
-						if($group_id){			
-							$gmember = array(
-								'group_id' => $group_id,
-								'proxy_id' => $PROXY_ID,
-								'start_date' => time(),
-								'finish_date' => 0,
-								'member_active' => 1,
-								'entrada_only' => 1,
-								'updated_date' => time(),
-								'updated_by' => $ENTRADA_USER->getProxyId()
-							);
-							
-							print_r($gmember);
-							$db->AutoExecute("group_members", $gmember, "INSERT");
+						/**
+						 * Add user to cohort if they're a student
+						 */
+						if ($PROCESSED_ACCESS["group"] == "student") {						
+							$query = "SELECT `group_id` FROM `groups` WHERE `group_name` = 'Class of ".$PROCESSED_ACCESS["role"]."' AND `group_type` = 'cohort' AND `group_active` = 1";
+							$group_id = $db->GetOne($query);
+							if($group_id){			
+								$gmember = array(
+									'group_id' => $group_id,
+									'proxy_id' => $PROCESSED_ACCESS["user_id"],
+									'start_date' => time(),
+									'finish_date' => 0,
+									'member_active' => 1,
+									'entrada_only' => 1,
+									'updated_date' => time(),
+									'updated_by' => $ENTRADA_USER->getProxyId()
+								);
+
+								$db->AutoExecute("group_members", $gmember, "INSERT");
+							}
 						}
 						
 						$url			= ENTRADA_URL."/admin/users";
@@ -531,7 +534,28 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 								if (($PROCESSED_ACCESS["group"] == "medtech") || ($PROCESSED_ACCESS["role"] == "admin")) {
 									application_log("error", "USER NOTICE: A new user (".$PROCESSED["firstname"]." ".$PROCESSED["lastname"].") was added to ".APPLICATION_NAME." as ".$PROCESSED_ACCESS["group"]." > ".$PROCESSED_ACCESS["role"].".");
 								}
+								
+								/**
+								 * Add user to cohort if they're a student
+								 */
+								if ($PROCESSED_ACCESS["group"] == "student") {
+									$query = "SELECT `group_id` FROM `groups` WHERE `group_name` = 'Class of ".$PROCESSED_ACCESS["role"]."' AND `group_type` = 'cohort' AND `group_active` = 1";
+									$group_id = $db->GetOne($query);
+									if($group_id){			
+										$gmember = array(
+											'group_id' => $group_id,
+											'proxy_id' => $PROCESSED_ACCESS["user_id"],
+											'start_date' => time(),
+											'finish_date' => 0,
+											'member_active' => 1,
+											'entrada_only' => 1,
+											'updated_date' => time(),
+											'updated_by' => $ENTRADA_USER->getProxyId()
+										);
 
+										$db->AutoExecute("group_members", $gmember, "INSERT");
+									}								
+								}
 								/**
 								 * Handle the inserting of user data into the user_departments table
 								 * if departmental information exists in the form.

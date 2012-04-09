@@ -1,4 +1,30 @@
 <?php
+/**
+ * Entrada [ http://www.entrada-project.org ]
+ *
+ * Entrada is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Entrada is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Entrada.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Processes all data requests from the mobile applications for iOS,
+ * Android and BlackBerry.
+ *
+ * @author Organisation: Queen's University
+ * @author Unit: School of Medicine
+ * @author Developer: Matt Simpson <matt.simpson@queensu.ca>
+ * @copyright Copyright 2010 Queen's University. All Rights Reserved.
+ *
+*/
+
 @set_include_path(implode(PATH_SEPARATOR, array(
     dirname(__FILE__) . "/../core",
     dirname(__FILE__) . "/../core/includes",
@@ -10,147 +36,127 @@
  * Include the Entrada init code.
  */
 require_once("init.inc.php");
+require_once("Entrada/authentication/authentication.class.php");
 
-if ((isset($_POST["method"])) && ($method = clean_input($_POST["method"], array("notags", "trim")))) {
+$isAuthenticated = false;
+$method = "login";
+$private_hash = "";
 
-	
-	switch($method) {
-		case "login" :
-			require_once("Entrada/xoft/xoft.class.php");
-			require_once("Entrada/authentication/authentication.class.php");
-			
-			
-			// $credentials = md5('simpson'.'apple123');
-			
-			// $query = "SELECT * FROM `user_data` WHERE MD5(CONCAT(`username`, `password`)) = $credentails";
-			
-			
-			$logged_in = false;
-			if ((!defined("AUTH_ALLOW_CAS")) || (!AUTH_ALLOW_CAS) || (!$CAS_AUTHENTICATED)) {
-				$username = clean_input($_POST["username"], "credentials");
-				$password = clean_input($_POST["password"], "trim");
+if (isset($_POST["method"]) && $tmp_input = clean_input($_POST["method"], "alphanumeric")) {
+	$method = $tmp_input;
+}
 
-				// Check for locked-out-edness before doing anything else
-				
+if (isset($_POST["username"]) && isset($_POST["password"])) {
+	$username = clean_input($_POST["username"], "credentials");
+	$password = clean_input($_POST["password"], "trim");
 
-				// Check for SESSION lockout also
-				
+	$auth = new AuthSystem((((defined("AUTH_DEVELOPMENT")) && (AUTH_DEVELOPMENT != "")) ? AUTH_DEVELOPMENT : AUTH_PRODUCTION));
+	$auth->setAppAuthentication(AUTH_APP_ID, AUTH_USERNAME, AUTH_PASSWORD);
+	$auth->setEncryption(AUTH_ENCRYPTION_METHOD);
+	$auth->setUserAuthentication($username, $password, AUTH_METHOD);
+	$result = $auth->Authenticate(
+		array(
+			"id",
+			"firstname",
+			"lastname",
+			"role",
+			"group",
+			"organisation_id"
+		)
+	);
+
+	if ($ERROR == 0 && $result["STATUS"] == "success") {
+
+		$GUEST_ERROR = false;
+
+		if ($result["GROUP"] == "guest") {
+			$query = "	SELECT COUNT(*) AS total
+						FROM `community_members`
+						WHERE `proxy_id` = ".$db->qstr($result["ID"])."
+						AND `member_active` = 1";
+			$community_result	= $db->GetRow($query);
+			if ((!$community_result) || ($community_result["total"] == 0)) {
+				/**
+					* This guest user doesn't belong to any communities, don't let them log in.
+					*/
+				$GUEST_ERROR = true;
 			}
+		}
 
-			// Only even try to authorized if not locked out
-			
-			$auth = new AuthSystem((((defined("AUTH_DEVELOPMENT")) && (AUTH_DEVELOPMENT != "")) ? AUTH_DEVELOPMENT : AUTH_PRODUCTION));
-			$auth->setAppAuthentication(AUTH_APP_ID, AUTH_USERNAME, AUTH_PASSWORD);
-			$auth->setEncryption(AUTH_ENCRYPTION_METHOD);
-			$auth->setUserAuthentication($username, $password, AUTH_METHOD);
-			$result = $auth->Authenticate(
-				array(
-					"id",
-					"firstname",
-					"lastname",
-					"role",
-					"group",
-					"organisation_id"
-				)
-			);
-			
+		if (($result["ACCESS_STARTS"]) && ($result["ACCESS_STARTS"] > time())) {
+			$ERROR++;
+			$ERRORSTR[] = "Your access to this system does not start until ".date("r", $result["ACCESS_STARTS"]);
 
-			if ($ERROR == 0 && $result["STATUS"] == "success") {
-				if (isset($USER_ACCESS_ID)) {
-					if (!$db->Execute("UPDATE `".AUTH_DATABASE."`.`user_access` SET `login_attempts` = NULL WHERE `id` = ".(int) $USER_ACCESS_ID." AND `app_id` = ".$db->qstr(AUTH_APP_ID))) {
-						application_log("error", "Unable to incrememnt the login attempt counter for user [".$username."]. Database said ".$db->ErrorMsg());
-					}
-				}
+			application_log("error", "User[".$username."] tried to access account prior to activation date.");
+		} elseif (($result["ACCESS_EXPIRES"]) && ($result["ACCESS_EXPIRES"] < time())) {
+			$ERROR++;
+			$ERRORSTR[] = "Your access to this system expired on ".date("r", $result["ACCESS_EXPIRES"]);
 
-				$GUEST_ERROR = false;
-				if ($result["GROUP"] == "guest") {
-					$query = "	SELECT COUNT(*) AS total
-								FROM `community_members`
-								WHERE `proxy_id` = ".$db->qstr($result["ID"])."
-								AND `member_active` = 1";
-					$community_result	= $db->GetRow($query);
-					if ((!$community_result) || ($community_result["total"] == 0)) {
-						// This guest user doesn't belong to any communities, don't let them log in.
-						$GUEST_ERROR = true;
-					}
-				}
+			application_log("error", "User[".$username."] tried to access account after expiration date.");
+		} elseif ($GUEST_ERROR) {
+			$ERROR++;
+			$ERRORSTR[] = "To log in using guest credentials you must be a member of at least one community.";
 
-				if (($result["ACCESS_STARTS"]) && ($result["ACCESS_STARTS"] > time())) {
-					$ERROR++;
-					$ERRORSTR[] = "Your access to this system does not start until ".date("r", $result["ACCESS_STARTS"]);
+			application_log("error", "Guest user[".$username."] tried to log in and isn't a member of any communities.");
+		} else {
+			application_log("access", "User[".$username."] successfully logged in.");
 
-					application_log("error", "User[".$username."] tried to access account prior to activation date.");
-				} elseif (($result["ACCESS_EXPIRES"]) && ($result["ACCESS_EXPIRES"] < time())) {
-					$ERROR++;
-					$ERRORSTR[] = "Your access to this system expired on ".date("r", $result["ACCESS_EXPIRES"]);
+			$user_details = array();
+			$user_details["authenticated"] = true;
+			$user_details["id"] = $result["ID"];
+			$user_details["firstname"] = $result["FIRSTNAME"];
+			$user_details["lastname"] = $result["LASTNAME"];
+			$user_details["role"] = $result["ROLE"];
+			$user_details["group"] = $result["GROUP"];
+			$user_details["organisation_id"] = $result["ORGANISATION_ID"];
 
-					application_log("error", "User[".$username."] tried to access account after expiration date.");
-				} elseif ($GUEST_ERROR) {
-					$ERROR++;
-					$ERRORSTR[] = "To log in using guest credentials you must be a member of at least one community.";
-					application_log("error", "Guest user[".$username."] tried to log in and isn't a member of any communities.");
-				} else {
-					if (function_exists("adodb_session_regenerate_id")) {
-						adodb_session_regenerate_id();
+			$_SESSION["details"] = array();
+			$_SESSION["isAuthorized"] = true;
+			$_SESSION["details"]["id"] = $result["ID"];
+			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dstamp"] = time();
+
+			echo json_encode($user_details);
+
+			/**
+				* Any custom session information that needs to be set on a per-group basis.
+				*/
+			switch ($_SESSION["details"]["group"]) {
+				case "student" :
+					if ((!isset($result["ROLE"])) || (!clean_input($result["ROLE"], "alphanumeric"))) {
+						$_SESSION["details"]["grad_year"] = fetch_first_year();
 					} else {
-						session_regenerate_id();
+						$_SESSION["details"]["grad_year"] = $result["ROLE"];
 					}
-
-					application_log("access", "User[".$username."] successfully logged in.");
-					
-					$logged_in = true;
-					$user_details = array();
-					$user_details["authenticated"] = $logged_in;
-					$user_details["id"] = $result["ID"];
-					$user_details["firstname"] = $result["FIRSTNAME"];
-					$user_details["lastname"] = $result["LASTNAME"];
-					$user_details["role"] = $result["ROLE"];
-					$user_details["group"] = $result["GROUP"];
-					$user_details["organisation_id"] = $result["ORGANISATION_ID"];
-					$_SESSION["details"] = array();
-					$_SESSION["isAuthorized"] = true;
-					$_SESSION["details"]["id"] = $result["ID"];
-					$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dstamp"] = time();
-					
-					echo json_encode($user_details);
+				break;
+				case "medtech" :
 					/**
-					 * Any custom session information that needs to be set on a per-group basis.
-					 */
-					switch ($_SESSION["details"]["group"]) {
-						case "student" :
-							if ((!isset($result["ROLE"])) || (!clean_input($result["ROLE"], "alphanumeric"))) {
-								$_SESSION["details"]["grad_year"] = fetch_first_year();
-							} else {
-								$_SESSION["details"]["grad_year"] = $result["ROLE"];
-							}
-						break;
-						case "medtech" :
-							/**
-							 * If you're in MEdTech, always assign a graduating year,
-							 * because we normally see more than normal users.
-							 */
-							$_SESSION["details"]["grad_year"] = fetch_first_year();
-						break;
-						case "staff" :
-						case "faculty" :
-						default :
-							continue;
-						break;
-					}
-
-					$_SESSION["permissions"] = permissions_load();
-
-					$auth->updateLastLogin();
-				}
-
-
+						* If you're in MEdTech, always assign a graduating year,
+						* because we normally see more than normal users.
+						*/
+					$_SESSION["details"]["grad_year"] = fetch_first_year();
+				break;
+				case "staff" :
+				case "faculty" :
+				default :
+					continue;
+				break;
 			}
-			unset($result, $username, $password);
-			//echo json_encode($method);
-			break;
-		
+		}
+	}
+
+	unset($result, $username, $password);
+} else {
+	/**
+ 	 * Authenticate the user via their provided private hash.
+	 */
+	if (isset($_POST["hash"]) && $tmp_input = clean_input($_POST["hash"], "alphanumeric")) {
+
+	}
+}
+
+if ($isAuthenticated) {
+	switch ($method) {
 		case "agenda" :
-			
 			if ((isset($_POST["authenticated"]))) {
 				$authenticated = $_POST["authenticated"];
 			}
@@ -184,14 +190,13 @@ if ((isset($_POST["method"])) && ($method = clean_input($_POST["method"], array(
 
 			$calendar_type = "json";
 
-
-
 			/**
-			 * Determine the type of calendar the user is requesting.
-			 */
+				* Determine the type of calendar the user is requesting.
+				*/
 			if (substr($request_filename, -4) == ".ics") {
 				$calendar_type = "ics";
 			}
+
 			if ($user_proxy_id) {
 				$event_start = strtotime("-12 months 00:00:00");
 				$event_finish = strtotime("+12 months 23:59:59");
@@ -227,13 +232,14 @@ if ((isset($_POST["method"])) && ($method = clean_input($_POST["method"], array(
 					if (isset($clerkship_schedule) && $clerkship_schedule && $clerkship_schedule["rotation_id"] < MAX_ROTATION) {
 						$course_id = $clerkship_schedule["course_id"];
 						$course_ids = array();
-						$query 	= "SELECT `course_id` FROM `".CLERKSHIP_DATABASE."`.`global_lu_rotations` 
-								WHERE `course_id` <> ".$db->qstr($course_id)." 
+						$query 	= "SELECT `course_id` FROM `".CLERKSHIP_DATABASE."`.`global_lu_rotations`
+								WHERE `course_id` <> ".$db->qstr($course_id)."
 								AND `course_id` <> 0";
 						$course_ids_array = $db->GetAll($query);
 						foreach ($course_ids_array as $id) {
 								$course_ids[] = $id;
 						}
+
 						foreach ($learning_events["events"] as $key => $event) {
 							if (array_search($event["course_id"], $course_ids) !== false) {
 								unset($learning_events["events"][$key]);
@@ -305,9 +311,9 @@ if ((isset($_POST["method"])) && ($method = clean_input($_POST["method"], array(
 											"end_date" => date("o-m-d G:i", $event["event_finish"]),
 											"text" => strip_tags($event["event_title"]),
 											"details" => $event["event_description"]. "<br /><b>Event Duration: </b>". $event["event_duration"] . " minutes <br /><b>Location: </b>". ($event["event_location"] == "" ? "To be announced" : $event["event_location"]) ."",
-											
+
 								);
-								
+
 							}
 						}
 
@@ -315,8 +321,8 @@ if ((isset($_POST["method"])) && ($method = clean_input($_POST["method"], array(
 					break;
 				}
 			}
-			break;
-		case "notices" :			
+		break;
+		case "notices" :
 			if ((isset($_POST["authenticated"]))) {
 				$authenticated = $_POST["authenticated"];
 			}
@@ -344,7 +350,7 @@ if ((isset($_POST["method"])) && ($method = clean_input($_POST["method"], array(
 			if ((isset($_POST["notice_id"])) && (trim($_POST["notice_id"]))) {
 				$notice_id = $_POST["notice_id"];
 			}
-			
+
 			switch ($group) {
 				case "alumni" :
 					$corrected_role = "students";
@@ -367,7 +373,7 @@ if ((isset($_POST["method"])) && ($method = clean_input($_POST["method"], array(
 					$corrected_role = "students";
 				break;
 			}
-			
+
 			$query = "	SELECT a.*, b.`statistic_id`, MAX(b.`timestamp`) AS `last_read`
 						FROM `notices` AS a
 						LEFT JOIN `statistics` AS b
@@ -376,37 +382,37 @@ if ((isset($_POST["method"])) && ($method = clean_input($_POST["method"], array(
 						AND b.`action` = 'read'
 						AND b.`action_field` = 'notice_id'
 						AND b.`action_value` = a.`notice_id`
-						LEFT JOIN `notice_audience` AS c 
-						ON a.`notice_id` = c.`notice_id` 
+						LEFT JOIN `notice_audience` AS c
+						ON a.`notice_id` = c.`notice_id`
 						WHERE (
 							c.`audience_type` = 'all:users'
 							".($corrected_role == "medtech" ? "OR c.`audience_type` LIKE '%all%' OR c.`audience_type` = 'cohorts'" : "OR c.`audience_type` = 'all:".$corrected_role."'")."
 							OR
 							((
-								c.`audience_type` = 'students' 
-								OR c.`audience_type` = 'faculty' 
-								OR c.`audience_type` = 'staff') 
+								c.`audience_type` = 'students'
+								OR c.`audience_type` = 'faculty'
+								OR c.`audience_type` = 'staff')
 								AND c.`audience_value` = ".$db->qstr($id)."
-							) 
+							)
 							OR ((
-								c.`audience_type` = 'cohorts' 
-								OR c.`audience_type` = 'course_list') 
+								c.`audience_type` = 'cohorts'
+								OR c.`audience_type` = 'course_list')
 								AND c.`audience_value` IN (
-									SELECT `group_id` 
-									FROM `group_members` 
+									SELECT `group_id`
+									FROM `group_members`
 									WHERE `proxy_id` = ".$db->qstr($id).")
 							)
-						) 
-						AND (a.`organisation_id` IS NULL 
-						OR a.`organisation_id` = ".$db->qstr($organisation_id).") 
-						AND (a.`display_from`='0' 
-						OR a.`display_from` <= '".time()."') 
-						AND (a.`display_until`='0' 
-						OR a.`display_until` >= '".time()."') 
+						)
+						AND (a.`organisation_id` IS NULL
+						OR a.`organisation_id` = ".$db->qstr($organisation_id).")
+						AND (a.`display_from`='0'
+						OR a.`display_from` <= '".time()."')
+						AND (a.`display_until`='0'
+						OR a.`display_until` >= '".time()."')
 						AND a.`organisation_id` = ".$db->qstr($organisation_id)."
 						GROUP BY a.`notice_id`
 						ORDER BY a.`updated_date` DESC, a.`display_until` ASC";
-			
+
 			$notices_to_display = array();
 			$results = $db->GetAll($query);
 			if ($results) {
@@ -432,10 +438,12 @@ if ((isset($_POST["method"])) && ($method = clean_input($_POST["method"], array(
 						add_statistic("notices", "read", "notice_id", $notice_id);
 						echo $rows;
 					break;
-						
+
 				}
 			}
 		break;
+		default :
+			continue;
+		break;
 	}
 }
-?>

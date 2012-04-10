@@ -59,18 +59,24 @@ document.observe("dom:loaded", function() {
 	}
 	
 	$('eventtype_ids').observe('change', function(event){
-		select = $('eventtype_ids');
-		option = select.options[select.selectedIndex];
-		li = new Element('li', {id: 'type_'+option.value, 'class': ''});
-		li.insert(option.text+"  ");
-		li.insert(new Element('a', {href: '#', 'class': 'remove'}).insert(new Element('img', {src: DELETE_IMAGE_URL})));
-		span = new Element('span', {'class': 'duration_segment_container'});
-		span.insert('Duration: ');
-		name = 'duration_segment[]';
-		span.insert(new Element('input', {'class': 'duration_segment', name: 'duration_segment[]', onchange: 'cleanupList();', 'value': 60}));
-		span.insert(' minutes');
-		li.insert(span);
-		$('duration_container').insert(li);
+		var select = $('eventtype_ids');
+		var option = select.options[select.selectedIndex];
+		var li = document.createElement('li');
+		jQuery(li).attr('id','type_'+option.value).attr('class','');
+		
+		var link = document.createElement('a');
+		jQuery(link).attr('href','javascript:void(0)').attr('class','remove');
+		var img = document.createElement('img');
+		jQuery(img).attr('src',DELETE_IMAGE_URL);
+		jQuery(link).html(img);
+		
+		var span = document.createElement('span');
+		jQuery(span).attr('class','duration_segment_container');
+		var input = document.createElement('input');
+		jQuery(input).attr('class','duration_segment').attr('name', 'duration_segment[]').attr('onchange', 'cleanupList();').attr('value', '60');	
+		jQuery(span).append('Duration: ', input, ' minutes');
+		jQuery(li).append(option.text+"  ", link, span);
+		jQuery('#duration_container').append(li);
 		cleanupList();
 		select.selectedIndex = 0;
 

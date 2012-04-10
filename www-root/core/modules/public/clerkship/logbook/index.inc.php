@@ -54,21 +54,30 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 	 * Valid: date, teacher, title, phase
 	 */
 	if(isset($_GET["sb"])) {
-		if(in_array(trim($_GET["sb"]), array("rotation" , "location", "site", "patient", "date"))) {
+		if(in_array(trim($_GET["sb"]), array("rotation" , "location", "site", "patient", "date", "age"))) {
 			if (trim($_GET["sb"]) == "rotation") {
+				$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["value"]	= "e.`rotation_title`";
 				$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]	= "e.`rotation_title`";
 			} elseif (trim($_GET["sb"]) == "location") {
+				$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["value"]	= "b.`location`";
 				$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]	= "b.`location`";
 			} elseif (trim($_GET["sb"]) == "site") {
+				$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["value"]	= "c.`site_name`";
 				$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]	= "c.`site_name`";
 			} elseif (trim($_GET["sb"]) == "patient") {
+				$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["value"]	= "a.`patient_info`";
 				$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]	= "a.`patient_info`";
 			} elseif (trim($_GET["sb"]) == "date") {
+				$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["value"]	= "a.`encounter_date`";
 				$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]	= "a.`encounter_date`";
+			} elseif (trim($_GET["sb"]) == "age") {
+				$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["value"]	= "f.`age`";
+				$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]	= "f.`agerange_id`";
 			}
 		}
 	} else {
 		if(!isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"])) {
+			$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["value"] = "e.`rotation_title`";
 			$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] = "e.`rotation_title`";
 		}
 		$_GET["sb"] = "rotation";
@@ -91,7 +100,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 		echo "<h2>For ".$rotation_name." Rotation</h2>";
 	}
 
-	$query = "	SELECT ".$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]." AS `sort_by`, a.`lentry_id`, e.`rotation_id`, a.`entry_active`
+	$query = "	SELECT ".$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["value"]." AS `sort_by`, a.`lentry_id`, e.`rotation_id`, a.`entry_active`
 				FROM `".CLERKSHIP_DATABASE."`.`logbook_entries` AS a 
 				LEFT JOIN `".CLERKSHIP_DATABASE."`.`logbook_lu_locations` AS b
 				ON a.`llocation_id` = b.`llocation_id`
@@ -177,6 +186,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 								<option value="location"<?php echo (isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) && $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "b.`location`" ? " selected=\"selected\"" : "")?>>Location</option>
 								<option value="site"<?php echo (isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) && $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "c.`site_name`" ? " selected=\"selected\"" : "")?>>Site</option>
 								<option value="patient"<?php echo (isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) && $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "a.`patient_info`" ? " selected=\"selected\"" : "")?>>Patient</option>
+								<option value="age"<?php echo (isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) && $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "f.`agerange_id`" ? " selected=\"selected\"" : "")?>>Patient Age</option>
 							</select>
 						</td>
 					</tr>

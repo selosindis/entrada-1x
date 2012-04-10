@@ -69,7 +69,11 @@ if ($RECORD_ID) {
 					/**
 					 * Check for valid permissions before checking if the file really exists.
 					 */
-					
+					if(isset($_GET["file_id"]) && $tmp_id = (int)$_GET["file_id"]){
+						$dfile_id = $tmp_id;
+					}else{
+						$dfile_id = 0;
+					}
 					$file_version = false;
 					if ((int) $DOWNLOAD) {
 						/**
@@ -79,7 +83,7 @@ if ($RECORD_ID) {
 								SELECT *
 								FROM `assignment_file_versions`
 								WHERE `assignment_id` = ".$db->qstr($RECORD_ID)."					
-								AND `proxy_id` = ".$db->qstr($USER_ID)."
+								AND `afile_id` = ".$db->qstr($dfile_id)."
 								AND `file_active` = '1'
 								AND `file_version` = ".$db->qstr((int) $DOWNLOAD);
 						$result	= $db->GetRow($query);
@@ -98,7 +102,7 @@ if ($RECORD_ID) {
 								SELECT *
 								FROM `assignment_file_versions`
 								WHERE `assignment_id` = ".$db->qstr($RECORD_ID)."
-								AND `proxy_id` = ".$db->qstr($USER_ID)."
+								AND `afile_id` = ".$db->qstr($dfile_id)."
 								AND `file_active` = '1'
 								ORDER BY `file_version` DESC
 								LIMIT 0, 1";
@@ -576,21 +580,22 @@ if ($RECORD_ID) {
 								<div id="dialog-confirm" title="Delete?" style="display: none">
 									<p><span class="ui-icon ui-icon-alert" style="float:left; margin:0 7px 20px 0;"></span>This item will be permanently deleted and cannot be recovered. Are you sure you want to delete it?</p>
 								</div>
-
-							<?php
+						<?php
 							if (($ADD_REVISION) || ($ADD_COMMENT) || ($MOVE_FILE)) {
 								?>
-								<ul class="page-action" style="margin-top:10px;">
+								<ul class="page-action">
+									<?php if (isset($iscontact) && $iscontact) { 
+										if ($teacher_file) {?>
+										<li><a href="<?php echo ENTRADA_URL."/admin/gradebook/assignments"; ?>?section=response-revision&id=<?php echo $RECORD_ID; ?>&fid=<?php echo $FILE_ID; ?>">Upload Response Revision</a></li>
+									<?php } else { 
+										?><li><a href="<?php echo ENTRADA_URL."/admin/gradebook/assignments"; ?>?section=submit-response&id=<?php echo $RECORD_ID; ?>&fid=<?php echo $FILE_ID; ?>">Hand Back Response</a></li><?php
+										} 
+									} elseif ($ADD_REVISION) {?>
+									<li><a href="<?php echo ENTRADA_URL."/profile/gradebook/assignments"; ?>?section=add-revision&id=<?php echo $RECORD_ID; ?>">Upload Revised File</a></li>										
+									<?php } ?>
 									<?php if ($ADD_COMMENT) : ?>
 									<li><a href="<?php echo ENTRADA_URL."/profile/gradebook/assignments"; ?>?section=add-comment&id=<?php echo $RECORD_ID; ?>&fid=<?php echo $FILE_ID; ?>">Add File Comment</a></li>
 									<?php endif; ?>
-									<?php if ($ADD_REVISION) : ?>
-									<li><a href="<?php echo ENTRADA_URL."/profile/gradebook/assignments"; ?>?section=add-revision&id=<?php echo $RECORD_ID; ?>">Upload Revised File</a></li>
-									<?php endif; ?>
-									<?php if ($MOVE_FILE) : ?>
-									<li><a href="javascript:fileMove(<?php echo $RECORD_ID; ?>)">Move File</a></li>
-									<?php endif; ?>
-									<li class="top"><a href="#top">Top Of Page</a></li>
 								</ul>
 								<?php
 							}

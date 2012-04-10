@@ -239,10 +239,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					} else {
 						$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] = "index";
 					}
-					
+
 					if (!$ERROR) {
 						
-						$PROCESSED["order"]			= $result["count"];
+						// fetch the number of assessments to set the order
+						$query = "	SELECT COUNT(`assessment_id`)
+									FROM `assessments`
+									WHERE `course_id` = ".$db->qstr($COURSE_ID);
+						$order = $db->GetOne($query);
+						
+						$PROCESSED["order"]			= $order;
 						$PROCESSED["updated_date"]	= time();
 						$PROCESSED["updated_by"]	= $_SESSION["details"]["id"];
 						$PROCESSED["course_id"]		= $COURSE_ID;
@@ -402,7 +408,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					/**
 					* Fetch the Curriculum Objective details.
 					*/
-					list($curriculum_objectives_list, $top_level_id) = courses_fetch_objectives(1, array($COURSE_ID), -1, 1, false, false, 0, true);
+					list($curriculum_objectives_list, $top_level_id) = courses_fetch_objectives($ENTRADA_USER->getActiveOrganisation(), array($COURSE_ID), -1, 1, false, false, 0, true);
 
 					$curriculum_objectives = array();
 

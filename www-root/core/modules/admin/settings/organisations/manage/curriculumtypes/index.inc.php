@@ -36,7 +36,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 } else {
 ?>
 	<h1>Manage Curriculum Types</h1>
-	<div style="float: right">
+	<div style="text-align: right">
 		<ul class="page-action">
 			<li><a href="<?php echo ENTRADA_URL; ?>/admin/settings/organisations/manage/curriculumtypes?section=add&amp;org=<?php echo $ORGANISATION_ID;?>" class="strong-green">Add New Curriculum Type</a></li>
 		</ul>

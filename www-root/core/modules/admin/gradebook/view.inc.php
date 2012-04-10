@@ -49,14 +49,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				
 				$query = "UPDATE `assessments` SET `order` = ".$db->qstr($order)." WHERE `course_id` = ".$db->qstr($COURSE_ID)." AND `assessment_id` = ".$db->qstr((int) $assessment_id);
 				if($db->Execute($query)) {
-					echo 1;
+					$error = false;
 					application_log("success", "Updated gradebook assessment [".$assessment_id."] to order [".$order."].");
 				} else {
-					echo 0;
+					$error = true;
 					application_log("error", "Failed to update assessment [".$assessment_id."] to order [".$order."]. Database said: ".$db->ErrorMsg());
 				}
 			}
 
+			echo ($error == false ? 1 : 0);
+			
 			exit;
 		}		
 		
@@ -240,6 +242,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 												});
 												reordering = true;
 												jQuery('#reorder').attr('value', 'Cancel Reorder');
+												jQuery('.display-success, .display-error').fadeOut(500,function(){
+													$(this).remove();
+												});
 											} else {
 												jQuery('#saveorder').hide();
 												jQuery('#assessment_list tbody tr td.modified .handle').remove();
@@ -274,7 +279,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 											jQuery.ajax({
 												data: ajaxParams,
 												url: ajaxURL,
-												type: 'POST'
+												type: 'POST',
+												success: function(data) {
+													if (data == 1) {
+														jQuery('#assessment_list').parent().append('<div class=\'display-success\'><ul><li>These assessment order have been reordered.</li></ul></div>');
+													} else {
+														jQuery('#assessment_list').parent().append('<div class=\'display-error\'><ul><li>An error occurred while reordering these assessments.</li></ul></div>');
+													}
+												}
 											});
 
 											reordering = false;
@@ -284,7 +296,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 											jQuery('#assessment_list tbody tr td.modified .delete').show();
 											jQuery('#reorder').attr('value', 'Reorder');
 											jQuery('#assessment_list tbody').sortable('destroy');
-											jQuery('#assessment_list').parent().append('<div class=\'display-success\'><ul><li>These assessment order have been reordered.</li></ul></div>');
 											jQuery('#delete, #export').show();
 										});										
 									});

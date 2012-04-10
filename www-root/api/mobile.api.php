@@ -39,14 +39,15 @@ require_once("init.inc.php");
 require_once("Entrada/authentication/authentication.class.php");
 
 $isAuthenticated = false;
+$user_details = array();
 $method = "login";
 $private_hash = "";
-
 if (isset($_POST["method"]) && $tmp_input = clean_input($_POST["method"], "alphanumeric")) {
 	$method = $tmp_input;
 }
 
 if (isset($_POST["username"]) && isset($_POST["password"])) {
+	
 	$username = clean_input($_POST["username"], "credentials");
 	$password = clean_input($_POST["password"], "trim");
 
@@ -66,7 +67,7 @@ if (isset($_POST["username"]) && isset($_POST["password"])) {
 	);
 
 	if ($ERROR == 0 && $result["STATUS"] == "success") {
-
+		
 		$GUEST_ERROR = false;
 
 		if ($result["GROUP"] == "guest") {
@@ -77,8 +78,8 @@ if (isset($_POST["username"]) && isset($_POST["password"])) {
 			$community_result	= $db->GetRow($query);
 			if ((!$community_result) || ($community_result["total"] == 0)) {
 				/**
-					* This guest user doesn't belong to any communities, don't let them log in.
-					*/
+				* This guest user doesn't belong to any communities, don't let them log in.
+				*/
 				$GUEST_ERROR = true;
 			}
 		}
@@ -100,8 +101,9 @@ if (isset($_POST["username"]) && isset($_POST["password"])) {
 			application_log("error", "Guest user[".$username."] tried to log in and isn't a member of any communities.");
 		} else {
 			application_log("access", "User[".$username."] successfully logged in.");
-
-			$user_details = array();
+			
+			$isAuthenticated  = true;
+			
 			$user_details["authenticated"] = true;
 			$user_details["id"] = $result["ID"];
 			$user_details["firstname"] = $result["FIRSTNAME"];
@@ -115,7 +117,7 @@ if (isset($_POST["username"]) && isset($_POST["password"])) {
 			$_SESSION["details"]["id"] = $result["ID"];
 			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dstamp"] = time();
 
-			echo json_encode($user_details);
+			//echo json_encode($user_details);
 
 			/**
 				* Any custom session information that needs to be set on a per-group basis.
@@ -150,43 +152,21 @@ if (isset($_POST["username"]) && isset($_POST["password"])) {
  	 * Authenticate the user via their provided private hash.
 	 */
 	if (isset($_POST["hash"]) && $tmp_input = clean_input($_POST["hash"], "alphanumeric")) {
-
+		$isAuthorized = true;
 	}
 }
 
 if ($isAuthenticated) {
+
+	$user_proxy_id = $user_details["id"];
+	$user_firstname = $user_details["firstname"];
+	$user_lastname = $user_details["lastname"];
+	$user_role = $user_details["role"];
+	$user_group = $user_details["group"];
+	$user_organisation_id = $user_details["organisation_id"];
+	
 	switch ($method) {
 		case "agenda" :
-			if ((isset($_POST["authenticated"]))) {
-				$authenticated = $_POST["authenticated"];
-			}
-			if ((isset($_POST["id"])) && ((int) trim($_POST["id"]))) {
-				$id = $_POST["id"];
-			}
-			if ((isset($_POST["organisation_id"])) && ((int) trim($_POST["organisation_id"]))) {
-				$organisation_id = $_POST["organisation_id"];
-			}
-			if ((isset($_POST["firstname"])) && (trim($_POST["firstname"]))) {
-				$firstname = $_POST["firstname"];
-			}
-			if ((isset($_POST["lastname"])) && (trim($_POST["lastname"]))) {
-				$lastname = $_POST["lastname"];
-			}
-			if ((isset($_POST["role"])) && (trim($_POST["role"]))) {
-				$role = $_POST["role"];
-			}
-			if ((isset($_POST["group"])) && (trim($_POST["group"]))) {
-				$group = $_POST["group"];
-			}
-
-			$user_proxy_id = $id;
-			$user_username = "";
-			$user_firstname = $firstname;
-			$user_lastname = $lastname;
-			$user_email = "";
-			$user_role = $role;
-			$user_group = $group;
-			$user_organisation_id = $organisation_id;
 
 			$calendar_type = "json";
 
@@ -200,7 +180,6 @@ if ($isAuthenticated) {
 			if ($user_proxy_id) {
 				$event_start = strtotime("-12 months 00:00:00");
 				$event_finish = strtotime("+12 months 23:59:59");
-
 				$learning_events = events_fetch_filtered_events(
 						$user_proxy_id,
 						$user_group,
@@ -215,7 +194,6 @@ if ($isAuthenticated) {
 						true,
 						1,
 						1750);
-
 				if ($ENTRADA_ACL->amIAllowed("clerkship", "read")) {
 					$query = "	SELECT c.*
 								FROM `".CLERKSHIP_DATABASE."`.`events` AS a
@@ -323,34 +301,8 @@ if ($isAuthenticated) {
 			}
 		break;
 		case "notices" :
-			if ((isset($_POST["authenticated"]))) {
-				$authenticated = $_POST["authenticated"];
-			}
-			if ((isset($_POST["id"])) && ((int) trim($_POST["id"]))) {
-				$id = $_POST["id"];
-			}
-			if ((isset($_POST["organisation_id"])) && ((int) trim($_POST["organisation_id"]))) {
-				$organisation_id = $_POST["organisation_id"];
-			}
-			if ((isset($_POST["firstname"])) && (trim($_POST["firstname"]))) {
-				$firstname = $_POST["firstname"];
-			}
-			if ((isset($_POST["lastname"])) && (trim($_POST["lastname"]))) {
-				$lastname = $_POST["lastname"];
-			}
-			if ((isset($_POST["role"])) && (trim($_POST["role"]))) {
-				$role = $_POST["role"];
-			}
-			if ((isset($_POST["group"])) && (trim($_POST["group"]))) {
-				$group = $_POST["group"];
-			}
-			if ((isset($_POST["sub_method"])) && (trim($_POST["sub_method"]))) {
-				$sub_method = $_POST["sub_method"];
-			}
-			if ((isset($_POST["notice_id"])) && (trim($_POST["notice_id"]))) {
-				$notice_id = $_POST["notice_id"];
-			}
-
+			
+			//exit;
 			switch ($group) {
 				case "alumni" :
 					$corrected_role = "students";
@@ -369,16 +321,16 @@ if ($isAuthenticated) {
 				break;
 				case "student" :
 				default :
-					$cohort = groups_get_cohort($id);
+					$cohort = groups_get_cohort($user_proxy_id);
 					$corrected_role = "students";
 				break;
 			}
-
+			
 			$query = "	SELECT a.*, b.`statistic_id`, MAX(b.`timestamp`) AS `last_read`
 						FROM `notices` AS a
 						LEFT JOIN `statistics` AS b
 						ON b.`module` = 'notices'
-						AND b.`proxy_id` = ".$db->qstr($id)."
+						AND b.`proxy_id` = ".$db->qstr($user_proxy_id)."
 						AND b.`action` = 'read'
 						AND b.`action_field` = 'notice_id'
 						AND b.`action_value` = a.`notice_id`
@@ -392,7 +344,7 @@ if ($isAuthenticated) {
 								c.`audience_type` = 'students'
 								OR c.`audience_type` = 'faculty'
 								OR c.`audience_type` = 'staff')
-								AND c.`audience_value` = ".$db->qstr($id)."
+								AND c.`audience_value` = ".$db->qstr($user_proxy_id)."
 							)
 							OR ((
 								c.`audience_type` = 'cohorts'
@@ -400,7 +352,7 @@ if ($isAuthenticated) {
 								AND c.`audience_value` IN (
 									SELECT `group_id`
 									FROM `group_members`
-									WHERE `proxy_id` = ".$db->qstr($id).")
+									WHERE `proxy_id` = ".$db->qstr($user_proxy_id).")
 							)
 						)
 						AND (a.`organisation_id` IS NULL
@@ -412,7 +364,8 @@ if ($isAuthenticated) {
 						AND a.`organisation_id` = ".$db->qstr($organisation_id)."
 						GROUP BY a.`notice_id`
 						ORDER BY a.`updated_date` DESC, a.`display_until` ASC";
-
+			echo $query;
+			exit;
 			$notices_to_display = array();
 			$results = $db->GetAll($query);
 			if ($results) {
@@ -424,7 +377,7 @@ if ($isAuthenticated) {
 							//$result["last_read"] = date(DEFAULT_DATE_FORMAT, $result["last_read"]);
 							$notices_to_display[] = $result;
 						}
-						echo json_encode($notices_to_display);
+						echo $notices_to_display;
 					break;
 					case "count_notices" :
 						foreach ($results as $result) {

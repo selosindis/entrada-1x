@@ -35,14 +35,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 } else {
 	$BREADCRUMB[] = array("url" => ENTRADA_URL . "/admin/settings/organisations?section=add", "title" => "Add Organisation");
 
-
 	switch ($STEP) {
 		case 2 :
 			if (isset($_POST["organisation_title"]) && ($tmp_input = clean_input($_POST["organisation_title"], array("trim", "notags")))) {
 				$PROCESSED["organisation_title"] = $tmp_input;
 			} else {
-				$ERROR++;
-				$ERRORSTR[] = "You must provide a name for this organisation.";
+				add_error("You must provide a name for this organisation.");
 			}
 
 			if ((isset($_POST["countries_id"])) && ($tmp_input = clean_input($_POST["countries_id"], "int"))) {
@@ -62,47 +60,40 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 								$PROCESSED["province_id"] = $tmp_input;
 								$PROCESSED["organisation_province"] = $result["abbreviation"];
 							} else {
-								$ERROR++;
-								$ERRORSTR[] = "The province / state you have selected does not appear to exist in our database. Please selected a valid province / state.";
+								add_error("The province / state you have selected does not appear to exist in our database. Please selected a valid province / state.");
 							}
 						} else {
 							$PROCESSED["organisation_province"] = $tmp_input;
 						}
 					} else {
-						$ERROR++;
-						$ERRORSTR[] = "The province / state you have selected does not appear to exist in our database. Please selected a valid province / state.";
+						add_error("The province / state you have selected does not appear to exist in our database. Please selected a valid province / state.");
 					}
 				} else {
-					$ERROR++;
-					$ERRORSTR[] = "The selected country does not exist in our countries database. Please select a valid country.";
+					add_error("The selected country does not exist in our countries database. Please select a valid country.");
 					application_log("error", "Unknown countries_id [" . $tmp_input . "] was selected. Database said: " . $db->ErrorMsg());
 				}
 			} else {
-				$ERROR++;
-				$ERRORSTR[] = "The selected country does not exist in our countries database. Please select a valid country.";
+				add_error("The selected country does not exist in our countries database. Please select a valid country.");
+
 				application_log("error", "Unknown countries_id [" . $tmp_input . "] was selected. Database said: " . $db->ErrorMsg());
 			}
-
 
 			if (isset($_POST["organisation_city"]) && ($tmp_input = clean_input($_POST["organisation_city"], array("trim", "notags")))) {
 				$PROCESSED["organisation_city"] = $tmp_input;
 			} else {
-				$ERROR++;
-				$ERRORSTR[] = "You must provide a city for this organisation.";
+				add_error("You must provide a city for this organisation.");
 			}
 
 			if (isset($_POST["organisation_postcode"]) && ($tmp_input = clean_input($_POST["organisation_postcode"], array("trim", "notags")))) {
 				$PROCESSED["organisation_postcode"] = $tmp_input;
 			} else {
-				$ERROR++;
-				$ERRORSTR[] = "You must provide a postal code for this organisation.";
+				add_error("You must provide a postal code for this organisation.");
 			}
 
 			if (isset($_POST["organisation_address1"]) && ($tmp_input = clean_input($_POST["organisation_address1"], array("trim", "notags")))) {
 				$PROCESSED["organisation_address1"] = $tmp_input;
 			} else {
-				$ERROR++;
-				$ERRORSTR[] = "You must provide an address for this organisation.";
+				add_error("You must provide an address for this organisation.");
 			}
 
 			if (isset($_POST["organisation_address2"]) && ($tmp_input = clean_input($_POST["organisation_address2"], array("trim", "notags")))) {
@@ -112,8 +103,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 			if (isset($_POST["organisation_telephone"]) && ($tmp_input = clean_input($_POST["organisation_telephone"], array("trim", "notags")))) {
 				$PROCESSED["organisation_telephone"] = $tmp_input;
 			} else {
-				$ERROR++;
-				$ERRORSTR[] = "You must provide a telephone number for this organisation.";
+				add_error("You must provide a telephone number for this organisation.");
 			}
 
 			if (isset($_POST["organisation_fax"]) && ($tmp_input = clean_input($_POST["organisation_fax"], array("trim", "notags")))) {
@@ -127,16 +117,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 			if (isset($_POST["organisation_url"]) && ($tmp_input = clean_input($_POST["organisation_url"], array("trim", "notags")))) {
 				$PROCESSED["organisation_url"] = $tmp_input;
 			} else {
-				$ERROR++;
-				$ERRORSTR[] = "You must provide a website for this organisation.";
+				$PROCESSED["organisation_url"] = "";
 			}
 
 			if (isset($_POST["organisation_desc"]) && ($tmp_input = clean_input($_POST["organisation_desc"], array("trim", "notags")))) {
 				$PROCESSED["organisation_desc"] = $tmp_input;
 			} else {
-				$ERROR++;
-				$ERRORSTR[] = "You must provide a description for this organisation.";
+				$PROCESSED["organisation_desc"] = "";
 			}
+
 			if (isset($_POST["template"]) && ($tmp_input = clean_input($_POST["template"], array("trim", "notags")))) {
 				$PROCESSED["template"] = $tmp_input;
 			} else {
@@ -144,8 +133,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 				if (DEFAULT_TEMPLATE) {
 					$PROCESSED["template"] = DEFAULT_TEMPLATE;
 				} else {
-					$ERROR++;
-					$ERRORSTR[] = "No template found.";
+					add_error("You must select an interface template.");
 				}
 			}
 
@@ -163,38 +151,32 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 								('resourceorganisation'," . $db->qstr($organisation_id) . ", 'organisation:group:role', '" . $organisation_id . ":staff:pcoordinator', NULL, 1, NULL, NULL, NULL, NULL),
 								('resourceorganisation'," . $db->qstr($organisation_id) . ", 'organisation:group:role', '" . $organisation_id . ":staff:admin', NULL, 1, 1, 1, 1, NULL)";
 					if ($db->Execute($query)) {
-						$SUCCESS++;
-						$SUCCESSSTR[] = "You have successfully added <strong>" . html_encode($PROCESSED["organisation_title"]) . "</strong> to the system.<br /><br />You will now be redirected to the organisations index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"" . ENTRADA_URL . "/admin/settings/organisations\" style=\"font-weight: bold\">click here</a> to continue.";
+						add_success("You have successfully added <strong>" . html_encode($PROCESSED["organisation_title"]) . "</strong> to the system.<br /><br />You will now be redirected to the organisations index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"" . ENTRADA_URL . "/admin/settings/organisations\" style=\"font-weight: bold\">click here</a> to continue.");
 
 						$ONLOAD[] = "setTimeout('window.location=\\'" . ENTRADA_URL . "/admin/settings/organisations/\\'', 5000)";
 
 						application_log("success", "New organisation [" . $organisation_id . "] added to the system.");
 					} else {
-						$ERROR++;
-						$ERRORSTR[] = "We were unable to add this organisation to the system at this time.<br /><br />The system administrator has been notified of this issue, please try again later.";
+						add_error("We were unable to add this organisation to the system at this time.<br /><br />The system administrator has been notified of this issue, please try again later.");
 
 						application_log("error", "Failed to insert acl permissions for this new organisation id ( " . $organisation_id . ") into the database. Database said: " . $db->ErrorMsg());
 					}
 				} else {
-					$ERROR++;
-					$ERRORSTR[] = "We were unable to add this organisation to the system at this time.<br /><br />The system administrator has been notified of this issue, please try again later.";
+					add_error("We were unable to add this organisation to the system at this time.<br /><br />The system administrator has been notified of this issue, please try again later.");
 
 					application_log("error", "Failed to insert a new organisation into the database. Database said: " . $db->ErrorMsg());
 				}
 			}
 
-
-
 			if ($ERROR) {
 				$STEP = 1;
 			}
-
-			break;
+		break;
 		case 1 :
 		default :
 			continue;
+		break;
 	}
-
 
 	switch ($STEP) {
 		case 2 :
@@ -216,166 +198,167 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 
 			$ONLOAD[] = "provStateFunction(\$F($('addOrganisationForm')['countries_id']))";
 
-			load_rte("advanced");
-			?>
-			<?php
 			if ($ERROR) {
 				echo display_error();
 			}
 			?>
-
-
-
-
 			<script type="text/javascript">
+			function provStateFunction(countries_id) {
+				var url='<?php echo webservice_url("province"); ?>';
+				url = url + '?countries_id=' + countries_id + '&prov_state=<?php echo rawurlencode((isset($_POST["prov_state"]) ? clean_input($_POST["prov_state"], array("notags", "trim")) : $PROCESSED["prov_state"])); ?>';
+				new Ajax.Updater($('prov_state_div'), url,
+				{
+					method:'get',
+					onComplete: function () {
+						generateAutocomplete();
 
+						if ($('prov_state').type == 'select-one') {
+							$('prov_state').observe('change', updateAptData);
 
-				function provStateFunction(countries_id) {
-					var url='<?php echo webservice_url("province"); ?>';
-					url = url + '?countries_id=' + countries_id + '&prov_state=<?php echo rawurlencode((isset($_POST["prov_state"]) ? clean_input($_POST["prov_state"], array("notags", "trim")) : $PROCESSED["prov_state"])); ?>';
-					new Ajax.Updater($('prov_state_div'), url,
-					{
-						method:'get',
-						onComplete: function () {
-							generateAutocomplete();
-										
-							if ($('prov_state').type == 'select-one') {
-								$('prov_state').observe('change', updateAptData);
+							$('prov_state_label').removeClassName('form-nrequired');
+							$('prov_state_label').addClassName('form-required');
+						} else {
+							$('prov_state').observe('blur', updateAptData);
 
-								$('prov_state_label').removeClassName('form-nrequired');
-								$('prov_state_label').addClassName('form-required');
-							} else {
-								$('prov_state').observe('blur', updateAptData);
-
-								$('prov_state_label').removeClassName('form-required');
-								$('prov_state_label').addClassName('form-nrequired');
-							}
+							$('prov_state_label').removeClassName('form-required');
+							$('prov_state_label').addClassName('form-nrequired');
 						}
+					}
+				});
+			}
+
+			function generateAutocomplete() {
+				if (updater != null) {
+					updater.url = '<?php echo ENTRADA_URL; ?>/api/cities-by-country.api.php?countries_id=' + $F('countries_id');
+				} else {
+					updater = new Ajax.Autocompleter('city', 'city_auto_complete', '<?php echo ENTRADA_URL; ?>/api/cities-by-country.api.php?countries_id=' + $F('countries_id'), {
+						frequency: 0.2,
+						minChars: 2,
+						afterUpdateElement : getRegionId
 					});
 				}
+			}
 
-				function generateAutocomplete() {
-					if (updater != null) {
-						updater.url = '<?php echo ENTRADA_URL; ?>/api/cities-by-country.api.php?countries_id=' + $F('countries_id');
+			function getRegionId(text, li) {
+				if (li.id) {
+					$('region_id').setValue(li.id);
+				}
+			}
+
+			function addPointToMap(lat, lng) {
+				if (googleMap && lat != '' && lng != '' && GBrowserIsCompatible()) {
+					point = new GLatLng(lat, lng);
+
+					addMarker(point, lat, lng);
+				}
+			}
+
+			function addAddressToMap(response) {
+				if (googleMap && GBrowserIsCompatible()) {
+					if (!response || response.Status.code != 200) {
+						//						alert("Sorry, we were unable to geocode that address");
 					} else {
-						updater = new Ajax.Autocompleter('city', 'city_auto_complete', '<?php echo ENTRADA_URL; ?>/api/cities-by-country.api.php?countries_id=' + $F('countries_id'), {
-							frequency: 0.2,
-							minChars: 2,
-							afterUpdateElement : getRegionId
-						});
+						place = response.Placemark[0];
+						point = new GLatLng(place.Point.coordinates[1], place.Point.coordinates[0]);
+
+						addMarker(point, place.Point.coordinates[1], place.Point.coordinates[0]);
 					}
 				}
+			}
 
-				function getRegionId(text, li) {
-					if (li.id) {
-						$('region_id').setValue(li.id);
+			function addMarker(point, lat, lng) {
+				if (googleMap && point && lat && lng) {
+					if (!$('mapContainer').visible()) {
+						$('mapContainer').show();
 					}
+
+					googleMap = new GMap2($('mapData'));
+					googleMap.setUIToDefault();
+					googleMap.setCenter(point, 15);
+					googleMap.clearOverlays();
+
+					var icon = new GIcon();
+					icon.image = '<?php echo ENTRADA_URL; ?>/images/icon-apartment.gif';
+					icon.shadow = '<?php echo ENTRADA_URL; ?>/images/icon-apartment-shadow.png';
+					icon.iconSize = new GSize(25, 34);
+					icon.shadowSize = new GSize(35, 34);
+					icon.iconAnchor = new GPoint(25, 34);
+					icon.infoWindowAnchor = new GPoint(15, 5);
+
+					var marker = new GMarker(point, icon);
+					googleMap.addOverlay(marker);
+
+					$('apartment_latitude').setValue(lat);
+					$('apartment_longitude').setValue(lng);
+				}
+			}
+
+			function updateAptData() {
+				var address = ($('apartment_address') ? $F('apartment_address') : false);
+				var country = ($F('countries_id') ? $('countries_id')[$('countries_id').selectedIndex].text : false);
+				var city = ($F('city') ? $F('city') : false);
+
+				if ($('prov_state').type == 'select-one' && ($F('prov_state') > 0)) {
+					var province = $('prov_state')[$F('prov_state')].text;
+				} else if ($('prov_state').type == 'text' && $F('prov_state') != '') {
+					var province = $F('prov_state');
+				} else {
+					var province = false;
 				}
 
-				function addPointToMap(lat, lng) {
-					if (googleMap && lat != '' && lng != '' && GBrowserIsCompatible()) {
-						point = new GLatLng(lat, lng);
+				if (googleMap && address && city && country && GBrowserIsCompatible()) {
+					var geocoder = new GClientGeocoder();
 
-						addMarker(point, lat, lng);
+					var search = [address, city];
+					if (province) {
+						search.push(province);
 					}
+					search.push(country);
+
+					searchFor = search.join(', ');
+
+					geocoder.getLocations(searchFor, addAddressToMap);
 				}
 
-				function addAddressToMap(response) {
-					if (googleMap && GBrowserIsCompatible()) {
-						if (!response || response.Status.code != 200) {
-							//						alert("Sorry, we were unable to geocode that address");
-						} else {
-							place = response.Placemark[0];
-							point = new GLatLng(place.Point.coordinates[1], place.Point.coordinates[0]);
-
-							addMarker(point, place.Point.coordinates[1], place.Point.coordinates[0]);
-						}
-					}
+				if ((address) && ($F('apartment_title') == '')) {
+					$('apartment_title').setValue(($F('apartment_number').length > 0 ? $F('apartment_number') + ' - ' : '') + address);
 				}
 
-				function addMarker(point, lat, lng) {
-					if (googleMap && point && lat && lng) {
-						if (!$('mapContainer').visible()) {
-							$('mapContainer').show();
-						}
-
-						googleMap = new GMap2($('mapData'));
-						googleMap.setUIToDefault();
-						googleMap.setCenter(point, 15);
-						googleMap.clearOverlays();
-
-						var icon = new GIcon();
-						icon.image = '<?php echo ENTRADA_URL; ?>/images/icon-apartment.gif';
-						icon.shadow = '<?php echo ENTRADA_URL; ?>/images/icon-apartment-shadow.png';
-						icon.iconSize = new GSize(25, 34);
-						icon.shadowSize = new GSize(35, 34);
-						icon.iconAnchor = new GPoint(25, 34);
-						icon.infoWindowAnchor = new GPoint(15, 5);
-
-						var marker = new GMarker(point, icon);
-						googleMap.addOverlay(marker);
-
-						$('apartment_latitude').setValue(lat);
-						$('apartment_longitude').setValue(lng);
-					}
-				}
-
-				function updateAptData() {
-					var address = ($('apartment_address') ? $F('apartment_address') : false);
-					var country = ($F('countries_id') ? $('countries_id')[$('countries_id').selectedIndex].text : false);
-					var city = ($F('city') ? $F('city') : false);
-
-					if ($('prov_state').type == 'select-one' && ($F('prov_state') > 0)) {
-						var province = $('prov_state')[$F('prov_state')].text;
-					} else if ($('prov_state').type == 'text' && $F('prov_state') != '') {
-						var province = $F('prov_state');
-					} else {
-						var province = false;
-					}
-
-					if (googleMap && address && city && country && GBrowserIsCompatible()) {
-						var geocoder = new GClientGeocoder();
-
-						var search = [address, city];
-						if (province) {
-							search.push(province);
-						}
-						search.push(country);
-									
-						searchFor = search.join(', ');
-
-						geocoder.getLocations(searchFor, addAddressToMap);
-					}
-
-					if ((address) && ($F('apartment_title') == '')) {
-						$('apartment_title').setValue(($F('apartment_number').length > 0 ? $F('apartment_number') + ' - ' : '') + address);
-					}
-
-					return false;
-				}
+				return false;
+			}
 			</script>
 
 			<h1>Add Organisation</h1>
-			<form id ="addOrganisationForm" action = "<?php echo ENTRADA_URL; ?>/admin/settings/organisations?section=add&amp;step=2" method = "post">
-				<table  cellspacing="0" border="0" cellpadding="2" summary="Add Organisation Form">
+			<form id="addOrganisationForm" action="<?php echo ENTRADA_URL; ?>/admin/settings/organisations?section=add&amp;step=2" method="post">
+				<table style="width: 100%" summary="Add Organisation Form">
 					<colgroup>
-						<col style="width: 24%" />
-						<col style="width: 76%" />
+						<col style="width: 25%" />
+						<col style="width: 75%" />
 					</colgroup>
 					<tfoot>
 						<tr>
 							<td colspan="2" style="padding-top: 25px;text-align: right;padding-right:45px;">
 								<input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/settings'" />
 								<input type="submit" class="button" value="Save" />
-							</td> 
+							</td>
 						</tr>
 					</tfoot>
 					<tbody>
 						<tr>
-							<td><label for="name_id" class="form-required">Name</label></td>
+							<td><label for="name_id" class="form-required">Organisation Name</label></td>
 							<td>
-								<input type="text" id="organisation_title" name="organisation_title" value="<?php echo html_encode($PROCESSED["organisation_title"]); ?>" style="width: 250px" />
+								<input type="text" id="organisation_title" name="organisation_title" value="<?php echo html_encode($PROCESSED["organisation_title"]); ?>" style="width: 350px" />
 							</td>
+						</tr>
+						<tr>
+							<td style="vertical-align: top"><label for="description_id" class="form-nrequired">Description</label></td>
+							<td>
+								<textarea class="expandable" id="organisation_desc" name="organisation_desc" style="width: 345px; height: 75px"><?php echo html_encode($PROCESSED["organisation_desc"]); ?></textarea>
+							</td>
+						</tr>
+
+						<tr>
+							<td colspan="2">&nbsp;</td>
 						</tr>
 
 						<tr>
@@ -405,87 +388,83 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 						<tr>
 							<td><label for="city_id" class="form-required">City</label></td>
 							<td>
-								<input type="text" id="organisation_city" name="organisation_city" size="100" style="width: 250px; vertical-align: middle" value="<?php echo html_encode($PROCESSED["organisation_city"]); ?>" />
+								<input type="text" id="organisation_city" name="organisation_city" size="100" style="width: 350px; vertical-align: middle" value="<?php echo html_encode($PROCESSED["organisation_city"]); ?>" />
 							</td>
-						</tr>			
+						</tr>
 						<tr>
 							<td><label for="postal_id" class="form-required">Postal Code</label></td>
 							<td>
-								<input type="text" id="organisation_postcode" name="organisation_postcode" value="<?php echo html_encode($PROCESSED["organisation_postcode"]); ?>" maxlength="16" style="width: 250px" />
+								<input type="text" id="organisation_postcode" name="organisation_postcode" value="<?php echo html_encode($PROCESSED["organisation_postcode"]); ?>" maxlength="16" style="width: 350px" />
 							</td>
 						</tr>
 						<tr>
 							<td><label for="address1_id" class="form-required">Address 1</label></td>
 							<td>
-								<input type="text" id="organisation_address1" name="organisation_address1" value="<?php echo html_encode($PROCESSED["organisation_address1"]); ?>" style="width: 250px" />
+								<input type="text" id="organisation_address1" name="organisation_address1" value="<?php echo html_encode($PROCESSED["organisation_address1"]); ?>" style="width: 350px" />
 							</td>
 						</tr>
 						<tr>
 							<td><label for="address2_id">Address 2</label></td>
 							<td>
-								<input type="text" id="organisation_address2" name="organisation_address2" value="<?php echo html_encode($PROCESSED["organisation_address2"]); ?>" style="width: 250px" />
+								<input type="text" id="organisation_address2" name="organisation_address2" value="<?php echo html_encode($PROCESSED["organisation_address2"]); ?>" style="width: 350px" />
 							</td>
 						</tr>
 						<tr>
 							<td><label for="telephone_id" class="form-required">Telephone</label></td>
 							<td>
-								<input type="text" id="organisation_telephone" name="organisation_telephone" value="<?php echo html_encode($PROCESSED["organisation_telephone"]); ?>" maxlength="32" style="width: 250px" />
+								<input type="text" id="organisation_telephone" name="organisation_telephone" value="<?php echo html_encode($PROCESSED["organisation_telephone"]); ?>" maxlength="32" style="width: 350px" />
 							</td>
 						</tr>
 						<tr>
 							<td><label for="fax_id">Fax</label></td>
 							<td>
-								<input type="text" id="organisation_fax" name="organisation_fax" value="<?php echo html_encode($PROCESSED["organisation_fax"]); ?>" maxlength="32" style="width: 250px" />
+								<input type="text" id="organisation_fax" name="organisation_fax" value="<?php echo html_encode($PROCESSED["organisation_fax"]); ?>" maxlength="32" style="width: 350px" />
 							</td>
 						</tr>
 						<tr>
 							<td><label for="email_id">E-Mail Address</label></td>
 							<td>
-								<input type="text" id="organisation_email" name="organisation_email" value="<?php echo html_encode($PROCESSED["organisation_email"]); ?>" style="width: 250px" />
+								<input type="text" id="organisation_email" name="organisation_email" value="<?php echo html_encode($PROCESSED["organisation_email"]); ?>" style="width: 350px" />
 							</td>
 						</tr>
 						<tr>
-							<td><label for="url_id" class="form-required">Website</label></td>
+							<td><label for="url_id" class="form-nrequired">Website</label></td>
 							<td>
-								<input type="text" id="organisation_url" name="organisation_url" value="<?php echo html_encode($PROCESSED["organisation_url"]); ?>" style="width: 250px" />
+								<input type="text" id="organisation_url" name="organisation_url" value="<?php echo html_encode($PROCESSED["organisation_url"]); ?>" style="width: 350px" />
 							</td>
 						</tr>
+
 						<tr>
-							<td><label for="description_id" class="form-required">Description</label></td>
-							<td>
-								<input type="text" id="organisation_desc" name="organisation_desc" value="<?php echo html_encode($PROCESSED["organisation_desc"]); ?>" style="width: 250px" />
-							</td>
+							<td colspan="2">&nbsp;</td>
 						</tr>
+
 						<tr>
-							<td><label for="template" class="form-required">Template</label></td>
+							<td><label for="template" class="form-required">Interface Template</label></td>
 							<td>
 								<?php
 								$templates = fetch_templates();
-								if (is_array($templates) && count($templates)) {
-								?>
-									<select id="template" name="template" style="width: 250px">
-									<?php foreach ($templates as $template) { ?>
-										<option value="<?php echo $template; ?>"
-											<?php echo (($PROCESSED["template"] == $template) ? "selected=selected" : ""); ?> >
-												<?php echo $template; ?>
-										</option>
-									<?php
-											}
+								if ($templates && is_array($templates) && !empty($templates)) {
 									?>
-										</select>
-								<?php
-										} else {
-											echo html_encode($PROCESSED["template"]) . " (not modifiable for this organisation)";
-										}
+									<select id="template" name="template" style="width: 256px">
+									<?php
+									foreach ($templates as $template) {
+										?>
+										<option value="<?php echo $template; ?>"<?php echo (($PROCESSED["template"] == $template) ? " selected=\"selected\"" : ""); ?>><?php echo $template; ?></option>
+										<?php
+									}
+									?>
+									</select>
+									<?php
+								} else {
+									echo html_encode($PROCESSED["template"]) . " (not modifiable for this organisation)";
+								}
 								?>
-									</td>
+							</td>
 						</tr>
 					</tbody>
 				</table>
 			</form>
-
-		<?php
+			<?php
 		break;
 	}
 }
-?>

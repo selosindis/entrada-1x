@@ -37,7 +37,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 
 
 	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings/organisations/manage/metadata?".replace_query(array("section" => "add"))."&amp;org=".$ORGANISATION_ID, "title" => "Add Meta Data");
-	
+
 	// Error Checking
 	switch ($STEP) {
 		case 2 :
@@ -58,7 +58,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 			} else {
 				$PROCESSED["description"] = '';
 			}
-			
+
 
 			if(isset($_POST["associated_parent"]) && $parent = clean_input($_POST["associated_parent"],"int")){
 				if($parent>0){
@@ -71,15 +71,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 							$entity_data = explode(":",$result["entity_value"]);
 							$PROCESSED["groups"][] = $entity_data[1];
 						}
-					
-					}					
-					
+
+					}
+
 				}
 			}
-			if(!isset($PROCESSED["parent_type_id"])){			
+			if(!isset($PROCESSED["parent_type_id"])){
 				if (isset($_POST["group_order"]) && strlen($_POST["group_order"])>0) {
 
-						$groups = explode(",", trim($_POST["group_order"]));					
+						$groups = explode(",", trim($_POST["group_order"]));
 						if ((is_array($groups)) && (count($groups))) {
 							foreach($groups as $order => $group_id) {
 								if ($group_id = clean_input($group_id, array("trim", "notags"))) {
@@ -94,17 +94,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 				}
 				else{
 					$ERROR++;
-					$ERRORSTR[] = "You must select at least one group to associate with the Meta Data and subtypes.";				
+					$ERRORSTR[] = "You must select at least one group to associate with the Meta Data and subtypes.";
 				}
 			}
 
-			
+
 			if (!$ERROR) {
 
 
 				if ($db->AutoExecute("meta_types", $PROCESSED, "INSERT")) {
 					if ($META_ID = $db->Insert_Id()) {
-						
+
 						if(isset($PROCESSED["groups"]) && is_array($PROCESSED["groups"])){
 							foreach($PROCESSED["groups"] as $group){
 								$params = array("meta_type_id"=>$META_ID,"entity_type"=>"organisation:group","entity_value"=>$ORGANISATION_ID.":".$group);
@@ -159,7 +159,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 			}
 		break;
 		case 1 :
-		default:	
+		default:
 			if ($ERROR) {
 				echo display_error();
 			}
@@ -179,7 +179,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 			$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/typelist-select.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 			$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/typelist-text.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 			$ONLOAD[] = "selectOrder(".(isset($PROCESSED["objective_parent"]) && $PROCESSED["objective_parent"] ? $PROCESSED["objective_parent"] : "0").")";
-						
+
 			?>
 			<form action="<?php echo ENTRADA_URL."/admin/settings/organisations/manage/metadata?".replace_query(array("action" => "add", "step" => 2))."&org=".$ORGANISATION_ID; ?>" method="post">
 			<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Adding Page">
@@ -196,11 +196,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 				<tr>
 					<td colspan="2" style="padding-top: 15px; text-align: right">
 						<input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/settings/organisations/manage/metadata?org=<?php echo $ORGANISATION_ID;?>'" />
-                        <input type="submit" class="button" value="<?php echo $translate->_("global_button_save"); ?>" />                           
+                        <input type="submit" class="button" value="<?php echo $translate->_("global_button_save"); ?>" />
 					</td>
 				</tr>
 			</tfoot>
-			<tbody>			
+			<tbody>
 				<tr>
 					<td><label for="metadata_title" class="form-required">Meta Data Name:</label></td>
 					<td><input type="text" id="metadata_title" name="metadata_title" value="<?php echo ((isset($PROCESSED["label"])) ? html_encode($PROCESSED["label"]) : ""); ?>" maxlength="60" style="width: 300px" /></td>
@@ -208,31 +208,31 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 				<tr>
 					<td><label for="metadata_desc" class="form-optional">Meta Data Description:</label></td>
 					<td><input type="text" id="metadata_desc" name="metadata_desc" value="<?php echo ((isset($PROCESSED["description"])) ? html_encode($PROCESSED["description"]) : ""); ?>" maxlength="60" style="width: 300px" /></td>
-				</tr>				
+				</tr>
 				<tr>
 					<td><label for="associated_parent" class="form-required"><?php echo $translate->translate("Parent"); ?></label></td>
 					<td><select id="associated_parent" name="associated_parent">
 							<option value="-1">-- No Parent --</option>
-					<?php 
-					$query = "	SELECT DISTINCT a.`meta_type_id`, a.`label` 
-								FROM `meta_types` AS a 
-								JOIN `meta_type_relations` AS b 
-								ON a.`meta_type_id` = b.`meta_type_id` 
+					<?php
+					$query = "	SELECT DISTINCT a.`meta_type_id`, a.`label`
+								FROM `meta_types` AS a
+								JOIN `meta_type_relations` AS b
+								ON a.`meta_type_id` = b.`meta_type_id`
 								AND b.`entity_value` LIKE '".$ORGANISATION_ID.":%' AND a.`parent_type_id` IS NULL";
 					$metadata_types = $db->GetAll($query);
 					foreach ($metadata_types as $type) {
 						echo "<option value=\"".$type["meta_type_id"]."\">".$type["label"]."</option>";
 					}
 					?>
-					</select>				
+					</select>
 					</td>
-				</tr>				
+				</tr>
 				<tr>
 					<td><label for="associated_group" class="form-required"><?php echo $translate->translate("Group"); ?></label></td>
 					<td><select id="associated_group" name="associated_group">
 							<option value="-1">-- Select a Group --</option>
 							<option value="0" disabled="disabled">-- Same as Parent --</option>
-					<?php 
+					<?php
 					$ONLOAD[] = "grouplist = new SelectTypeList('group','associated_group');";
 					foreach (array_keys($SYSTEM_GROUPS) as $group) {
 						echo build_option($group, ucwords($group));
@@ -242,16 +242,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 					<div id="group_notice" class="content-small" >Use the list above to add groups associated with this meta data. You must select at minimum one group to save.</div>
 					<ol id="group_container" class="sortableList" style="display: none;">
 						<?php
-						foreach($PROCESSED["groups"] as $group) {
-							echo "<li id=\"type_group_".$group."\" class=\"\">".ucwords($group)."
-								<a href=\"#\" onclick=\"$(this).up().remove(); cleanupList(); return false;\" class=\"remove\">
-									<img src=\"".ENTRADA_URL."/images/action-delete.gif\">
-								</a>
-							</li>";
+						if (isset($PROCESSED["groups"]) && is_array($PROCESSED["groups"]) && !empty($PROCESSED["groups"])) {
+							foreach($PROCESSED["groups"] as $group) {
+								echo "<li id=\"type_group_".$group."\" class=\"\">".ucwords($group)."
+									<a href=\"#\" onclick=\"$(this).up().remove(); cleanupList(); return false;\" class=\"remove\">
+										<img src=\"".ENTRADA_URL."/images/action-delete.gif\">
+									</a>
+								</li>";
+							}
 						}
 						?>
 					</ol>
-					<input id="group_order" name="group_order" style="display: none;"/>					
+					<input id="group_order" name="group_order" style="display: none;"/>
 
 					</td>
 				</tr>
@@ -263,16 +265,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 							$('associated_group').disabled=true;
 							$('group_container').innerHTML = '';
 							$('group_order').innerHTML = '';
-							
+
 						}
 						else{
 							$('associated_group').selectedIndex = 0;
 							$('associated_group').disabled=false;
 						}
 
-												
+
 					});
-									
+
 				</script>
 			</tbody>
 			</table>

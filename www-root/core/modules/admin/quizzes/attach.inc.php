@@ -50,13 +50,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 			if ($quiz_record && $ENTRADA_ACL->amIAllowed(new QuizResource($quiz_record["quiz_id"]), 'update')) {
 				$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/".$MODULE."?section=edit&id=".$RECORD_ID, "title" => limit_chars($quiz_record["quiz_title"], 32));
 				$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/".$MODULE."?section=attach&id=".$RECORD_ID, "title" => "Attach To Learning Event");
-	
+
 				/**
 				 * Used to store cleaned processed events ids this quiz will be
 				 * attached to.
 				 */
 				$PROCESSED["event_ids"]	= array();
-	
+
 				/**
 				 * Check to see if there is an event already being passed in the URL, if so we need to
 				 * go directly to step 2, as step 1 is simply choosing the event.
@@ -71,7 +71,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 					$STEP = 2;
 					$_POST["event_ids"] = array($tmp_input);
 				}
-	
+
 				/**
 				 * Required field "event_ids" / Learning Event
 				 * This processing applies to all steps.
@@ -96,7 +96,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						}
 					}
 				}
-	
+
 				$quiz_types_record = array();
 				$query		= "SELECT * FROM `quizzes_lu_quiztypes` WHERE `quiztype_active` = '1' ORDER BY `quiztype_order` ASC";
 				$results	= $db->Execute($query);
@@ -105,7 +105,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						$quiz_types_record[$result["quiztype_id"]] = array("quiztype_title" => $result["quiztype_title"], "quiztype_description" => $result["quiztype_description"], "quiztype_order" => $result["quiztype_order"]);
 					}
 				}
-	
+
 				$existing_event_relationship = array();
 				$query		= "SELECT `content_id` FROM `attached_quizzes` WHERE `quiz_id` = ".$db->qstr($RECORD_ID)." AND `content_type` = 'event'";
 				$results	= $db->GetAll($query);
@@ -114,7 +114,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						$existing_event_relationship[] = $result["content_id"];
 					}
 				}
-	
+
 				$default_event_start	= 0;
 				$default_event_finish	= 0;
 				$selected_learning_events = array();
@@ -124,26 +124,26 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 					if ($results) {
 						foreach ($results as $result) {
 							$selected_learning_events[$result["event_id"]] = array("event_title" => $result["event_title"], "event_start" => $result["event_start"], "event_finish" => $result["event_finish"], "event_duration" => $result["event_duration"]);
-	
+
 							if ((!$default_event_start) || ($result["event_start"] < $default_event_start)) {
 								$default_event_start = $result["event_start"];
 							}
-	
+
 							if ((!$default_event_finish) || ($result["event_finish"] > $default_event_finish)) {
 								$default_event_finish = $result["event_finish"];
 							}
 						}
 					}
 				}
-	
+
 				echo "<h1>Attach To Learning Event</h1>\n";
-				
+
 				// Error Checking
 				switch ($STEP) {
 					case 3 :
 						$PROCESSED["quiz_id"]	= $RECORD_ID;
 						$PROCESSED["accesses"]	= 0;
-	
+
 						/**
 						 * Ensure there are valid event_ids provided.
 						 */
@@ -151,7 +151,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 							$ERROR++;
 							$ERRORSTR[] = "To attach a quiz to a learning event, select a learning event you are involved with from the list below.";
 						}
-	
+
 						/**
 						 * Required field "quiz_title" / Attached Quiz Title.
 						 */
@@ -161,7 +161,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 							$ERROR++;
 							$ERRORSTR[] = "The <strong>Attached Quiz Title</strong> field is required.";
 						}
-	
+
 						/**
 						 * Non-Required field "quiz_notes" / Attached Quiz Instructions.
 						 */
@@ -170,7 +170,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						} else {
 							$PROCESSED["quiz_notes"] = "";
 						}
-	
+
 						/**
 						 * Non-required field "required" / Should completion of this quiz by the learner be considered optional or required?
 						 */
@@ -179,7 +179,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						} else {
 							$PROCESSED["required"] = 0;
 						}
-	
+
 						/**
 						 * Required field "quiztype_id" / When should learners be allowed to view the results of the quiz?
 						 */
@@ -189,7 +189,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 							$ERROR++;
 							$ERRORSTR[]	= "Please select a proper quiz type when asked what type of quiz this should be considered.";
 						}
-	
+
 						/**
 						 * Non-required field "quiz_timeout" / How much time (in minutes) can the learner spend completing this quiz?
 						 * 0 indicates unlimited
@@ -204,13 +204,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						} else {
 							$PROCESSED["quiz_timeout"] = 0;
 						}
-	
+
 						/**
 						 *
 						 * Non-required field "quiz_attempts" / How many attempts can a learner take at completing this quiz?
 						 * 0 indicates unlimited
 						 */
-	
+
 						if (isset($_POST["quiz_attempts"])) {
 							$tmp_input = clean_input($_POST["quiz_attempts"], "int");
 							if ((($tmp_input === 0) || ($tmp_input > 0)) && ($tmp_input <= 999)) {
@@ -221,7 +221,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						} else {
 							$PROCESSED["quiz_attempts"] = 0;
 						}
-	
+
 						/**
 						 * Required field "timeframe" / When should this quiz be taken in relation to the event?
 						 */
@@ -231,7 +231,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 							$ERROR++;
 							$ERRORSTR[] = "Please select a proper option when asked when the quiz should be taken in relation to the event.";
 						}
-						
+
 						/**
 						 * Non-required field "release_date" / Accessible Start (validated through validate_calendars function).
 						 * Non-required field "release_until" / Accessible Finish (validated through validate_calendars function).
@@ -254,50 +254,50 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 								$require_finish	= false;
 							break;
 						}
-	
+
 						$viewable_date = validate_calendars("accessible", $require_start, $require_finish);
 						if ((isset($viewable_date["start"])) && ((int) $viewable_date["start"])) {
 							$PROCESSED["release_date"] = (int) $viewable_date["start"];
 						} else {
 							$PROCESSED["release_date"] = 0;
 						}
-	
+
 						if ((isset($viewable_date["finish"])) && ((int) $viewable_date["finish"])) {
 							$PROCESSED["release_until"] = (int) $viewable_date["finish"];
 						} else {
 							$PROCESSED["release_until"] = 0;
 						}
-	
+
 						if (!$ERROR) {
 							$PROCESSED["updated_date"]	= time();
 							$PROCESSED["updated_by"]	= $_SESSION["details"]["id"];
-	
+
 							/**
 							 * Adding this quiz to each of the selected events.
 							 */
 							foreach ($PROCESSED["event_ids"] as $event_id) {
 								$PROCESSED["content_id"] = $event_id;
 								$PROCESSED["content_type"] = "event";
-	
+
 								if ($db->AutoExecute("attached_quizzes", $PROCESSED, "INSERT")) {
-	
+
 									$SUCCESS++;
 									$SUCCESSSTR[]	= "You have successfully attached <strong>".html_encode($quiz_record["quiz_title"])."</strong> as <strong>".html_encode($PROCESSED["quiz_title"])."</strong> to <strong>".html_encode($selected_learning_events[$PROCESSED["event_id"]]["event_title"])."</strong>.";
-	
+
 									application_log("success", "Quiz [".$RECORD_ID."] was successfully attached to Event [".$PROCESSED["event_id"]."].");
-	
+
 								} else {
 									$ERROR++;
 									$ERRORSTR[] = "There was a problem attaching this quiz to <strong>".html_encode($selected_learning_events[$PROCESSED["event_id"]]["event_title"])."</strong>. The system administrator was informed of this error; please try again later.";
-	
+
 									application_log("error", "There was an error attaching quiz [".$RECORD_ID."] to event [".$PROCESSED["event_id"]."]. Database said: ".$db->ErrorMsg());
 								}
 							}
-	
+
 							if ($SUCCESS) {
 								$url = ENTRADA_URL."/admin/".$MODULE."?section=edit&id=".$RECORD_ID;
 								$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
-								
+
 								$SUCCESSSTR[(count($SUCCESSSTR) - 1)] .= "<br /><br />You will now be redirected back to the quiz page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 							} elseif ($ERROR) {
 								$STEP = 2;
@@ -305,8 +305,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						} else {
 							$STEP = 2;
 						}
-	
-	
+
+
 					break;
 					case 2 :
 						/**
@@ -316,14 +316,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 							$ERROR++;
 							$ERRORSTR[] = "To attach a quiz to a learning event, select a learning event you are involved with from the list below.";
 						}
-						
+
 						/**
 						 * If the quiz title is not set, give it the default one.
 						 */
 						if (!isset($_POST["quiz_title"])) {
 							$PROCESSED["quiz_title"] = $quiz_record["quiz_title"];
 						}
-	
+
 						if ($ERROR) {
 							$STEP = 1;
 						}
@@ -333,18 +333,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						continue;
 					break;
 				}
-	
+
 				// Display Content
 				switch ($STEP) {
 					case 3 :
 						if ($SUCCESS) {
 							echo display_success();
 						}
-	
+
 						if ($NOTICE) {
 							echo display_notice();
 						}
-	
+
 						if ($ERROR) {
 							echo display_error();
 						}
@@ -355,7 +355,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						 */
 						load_rte();
 						$total_event_ids = count($PROCESSED["event_ids"]);
-	
+
 						?>
 						<h2 style="color: #CCCCCC">Step 1: Select Learning Events</h2>
 						<ul class="menu">
@@ -377,7 +377,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						if($ERROR) {
 							echo display_error();
 						}
-	
+
 						if($NOTICE) {
 							echo display_notice();
 						}
@@ -543,14 +543,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 								case 'pre' :
 									$('accessible_start').checked	= false;
 									$('accessible_finish').checked	= true;
-	
+
 									dateLock('accessible_start');
 									dateLock('accessible_finish');
-	
+
 									$('accessible_start_date').value	= '';
 									$('accessible_start_hour').value	= '00';
 									$('accessible_start_min').value		= '00';
-	
+
 									$('accessible_finish_date').value	= '<?php echo date("Y-m-d", $default_event_start); ?>';
 									$('accessible_finish_hour').value	= '<?php echo date("H", $default_event_start); ?>';
 									$('accessible_finish_min').value	= '<?php echo (int) date("i", $default_event_start); ?>';
@@ -558,14 +558,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 								case 'during' :
 									$('accessible_start').checked	= true;
 									$('accessible_finish').checked	= true;
-	
+
 									dateLock('accessible_start');
 									dateLock('accessible_finish');
-	
+
 									$('accessible_start_date').value	= '<?php echo date("Y-m-d", $default_event_start); ?>';
 									$('accessible_start_hour').value	= '<?php echo date("H", $default_event_start); ?>';
 									$('accessible_start_min').value		= '<?php echo (int) date("i", $default_event_start); ?>';
-	
+
 									$('accessible_finish_date').value	= '<?php echo date("Y-m-d", $default_event_finish); ?>';
 									$('accessible_finish_hour').value	= '<?php echo date("H", $default_event_finish); ?>';
 									$('accessible_finish_min').value	= '<?php echo (int) date("i", $default_event_finish); ?>';
@@ -573,14 +573,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 								case 'post' :
 									$('accessible_start').checked	= true;
 									$('accessible_finish').checked	= false;
-	
+
 									dateLock('accessible_start');
 									dateLock('accessible_finish');
-	
+
 									$('accessible_start_date').value	= '<?php echo date("Y-m-d", $default_event_finish); ?>';
 									$('accessible_start_hour').value	= '<?php echo date("H", $default_event_finish); ?>';
 									$('accessible_start_min').value		= '<?php echo (int) date("i", $default_event_finish); ?>';
-	
+
 									$('accessible_finish_date').value	= '';
 									$('accessible_finish_hour').value	= '00';
 									$('accessible_finish_min').value	= '00';
@@ -588,20 +588,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 								default :
 									$('accessible_start').checked	= false;
 									$('accessible_finish').checked	= false;
-	
+
 									dateLock('accessible_start');
 									dateLock('accessible_finish');
-	
+
 									$('accessible_start_date').value	= '';
 									$('accessible_start_hour').value	= '00';
 									$('accessible_start_min').value		= '00';
-	
+
 									$('accessible_finish_date').value	= '';
 									$('accessible_finish_hour').value	= '00';
 									$('accessible_finish_min').value	= '00';
 								break;
 							}
-							
+
 							updateTime('accessible_start');
 							updateTime('accessible_finish');
 						}
@@ -618,25 +618,25 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						if($ERROR) {
 							echo display_error();
 						}
-	
+
 						if($NOTICE) {
 							echo display_notice();
 						}
-	
+
 						/**
 						 * Update requested timestamp to display.
 						 * Valid: Unix timestamp
 						 */
 						if((isset($_GET["dlength"])) && ($dlength = (int) trim($_GET["dlength"])) && ($dlength >= 1) && ($dlength <= 4)) {
 							$_SESSION[APPLICATION_IDENTIFIER]["dashboard"]["dlength"] = $dlength;
-	
+
 							$_SERVER["QUERY_STRING"] = replace_query(array("dlength" => false));
 						} else {
 							if(!isset($_SESSION[APPLICATION_IDENTIFIER]["dashboard"]["dlength"])) {
 								$_SESSION[APPLICATION_IDENTIFIER]["dashboard"]["dlength"] = 2; // Defaults to this term.
 							}
 						}
-	
+
 						switch($_SESSION[APPLICATION_IDENTIFIER]["dashboard"]["dlength"]) {
 							case 1 :	// Last Term
 								if(date("n", time()) <= 6) {
@@ -736,12 +736,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 								foreach ($results as $result) {
 									$attachments	= attachment_check($result["event_id"]);
 									$url			= ENTRADA_URL."/admin/events?section=content&id=".$result["event_id"];
-	
+
 									$allow_attachment = true;
 	//								if (in_array($result["event_id"], $existing_event_relationship)){
 	//									$allow_attachment = false;
 	//								}
-	
+
 									echo "<tr id=\"event-".$result["event_id"]."\" class=\"event".((!$allow_attachment) ? " disabled" : "")."\">\n";
 									echo "	<td".((!$allow_attachment) ? " class=\"disabled\"" : "")."><input type=\"checkbox\" name=\"event_ids[]\" value=\"".$result["event_id"]."\"".((!$allow_attachment) ? " disabled=\"disabled\"" : "")." /></td>\n";
 									echo "	<td".((!$allow_attachment) ? " class=\"disabled\"" : "")."><a href=\"".$url."\">".date(DEFAULT_DATE_FORMAT, $result["event_start"])."</a></td>\n";
@@ -786,17 +786,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 			} else {
 				$ERROR++;
 				$ERRORSTR[] = "In order to attach this quiz to a learning event, you must provide a valid quiz identifier.";
-	
+
 				echo display_error();
-	
+
 				application_log("notice", "Failed to provide a valid quiz identifer [".$RECORD_ID."] when attempting to attach a quiz to a learning event.");
 			}
 		} else {
 			$ERROR++;
 			$ERRORSTR[] = "In order to attach this quiz to a learning event, you must provide a quiz identifier.";
-	
+
 			echo display_error();
-	
+
 			application_log("notice", "Failed to provide a quiz identifier to attach a quiz to a learning event.");
 		}
 	} else {
@@ -809,13 +809,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 			if ($quiz_record && $ENTRADA_ACL->amIAllowed(new QuizResource($quiz_record["quiz_id"]), 'update')) {
 				$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/".$MODULE."?section=edit&id=".$RECORD_ID, "title" => limit_chars($quiz_record["quiz_title"], 32));
 				$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/".$MODULE."?section=attach&id=".$RECORD_ID, "title" => "Attach To Community Page");
-	
+
 				/**
 				 * Used to store cleaned processed events ids this quiz will be
 				 * attached to.
 				 */
 				$PROCESSED["page_ids"]	= array();
-	
+
 				/**
 				 * Check to see if there is an page already being passed in the URL, if so we need to
 				 * go directly to step 2, as step 1 is simply choosing the event.
@@ -824,7 +824,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 					$STEP = 2;
 					$_POST["page_ids"] = array($tmp_input);
 				}
-	
+
 				/**
 				 * Required field "event_ids" / Community Page
 				 * This processing applies to all steps.
@@ -852,7 +852,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						}
 					}
 				}
-	
+
 				$quiz_types_record = array();
 				$query		= "SELECT * FROM `quizzes_lu_quiztypes` WHERE `quiztype_active` = '1' ORDER BY `quiztype_order` ASC";
 				$results	= $db->Execute($query);
@@ -861,7 +861,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						$quiz_types_record[$result["quiztype_id"]] = array("quiztype_title" => $result["quiztype_title"], "quiztype_description" => $result["quiztype_description"], "quiztype_order" => $result["quiztype_order"]);
 					}
 				}
-	
+
 				$existing_page_relationship = array();
 				$query		= "SELECT `content_id` FROM `attached_quizzes` WHERE `quiz_id` = ".$db->qstr($RECORD_ID)." AND `content_type` = 'community_page'";
 				$results	= $db->GetAll($query);
@@ -870,12 +870,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						$existing_page_relationship[] = $result["content_id"];
 					}
 				}
-	
+
 				$default_event_start	= 0;
 				$default_event_finish	= 0;
 				$selected_community_pages = array();
 				if (count($PROCESSED["page_ids"]) > 0) {
-					$query		= "	SELECT a.`cpage_id`, CONCAT('[', b.`community_title`, '] ', a.`page_title`) AS `page_title` 
+					$query		= "	SELECT a.`cpage_id`, CONCAT('[', b.`community_title`, '] ', a.`page_title`) AS `page_title`
 									FROM `community_pages` AS a
 									JOIN `communities` AS b
 									ON a.`community_id` = b.`community_id`
@@ -887,15 +887,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						}
 					}
 				}
-	
+
 				echo "<h1>Attach To Community Page</h1>\n";
-				
+
 				// Error Checking
 				switch ($STEP) {
 					case 3 :
 						$PROCESSED["quiz_id"]	= $RECORD_ID;
 						$PROCESSED["accesses"]	= 0;
-	
+
 						/**
 						 * Ensure there are valid event_ids provided.
 						 */
@@ -903,7 +903,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 							$ERROR++;
 							$ERRORSTR[] = "To attach a quiz to a community page, select a community page you are involved with from the list below.";
 						}
-	
+
 						/**
 						 * Required field "quiz_title" / Attached Quiz Title.
 						 */
@@ -913,7 +913,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 							$ERROR++;
 							$ERRORSTR[] = "The <strong>Attached Quiz Title</strong> field is required.";
 						}
-	
+
 						/**
 						 * Non-Required field "quiz_notes" / Attached Quiz Instructions.
 						 */
@@ -922,7 +922,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						} else {
 							$PROCESSED["quiz_notes"] = "";
 						}
-	
+
 						/**
 						 * Non-required field "required" / Should completion of this quiz by the learner be considered optional or required?
 						 */
@@ -931,7 +931,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						} else {
 							$PROCESSED["required"] = 0;
 						}
-	
+
 						/**
 						 * Required field "quiztype_id" / When should learners be allowed to view the results of the quiz?
 						 */
@@ -941,7 +941,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 							$ERROR++;
 							$ERRORSTR[]	= "Please select a proper quiz type when asked what type of quiz this should be considered.";
 						}
-	
+
 						/**
 						 * Non-required field "quiz_timeout" / How much time (in minutes) can the learner spend completing this quiz?
 						 * 0 indicates unlimited
@@ -956,13 +956,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						} else {
 							$PROCESSED["quiz_timeout"] = 0;
 						}
-	
+
 						/**
 						 *
 						 * Non-required field "quiz_attempts" / How many attempts can a learner take at completing this quiz?
 						 * 0 indicates unlimited
 						 */
-	
+
 						if (isset($_POST["quiz_attempts"])) {
 							$tmp_input = clean_input($_POST["quiz_attempts"], "int");
 							if ((($tmp_input === 0) || ($tmp_input > 0)) && ($tmp_input <= 999)) {
@@ -973,9 +973,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						} else {
 							$PROCESSED["quiz_attempts"] = 0;
 						}
-						
+
 						$PROCESSED["timeframe"] = "none";
-						
+
 						/**
 						 * Non-required field "release_date" / Accessible Start (validated through validate_calendars function).
 						 * Non-required field "release_until" / Accessible Finish (validated through validate_calendars function).
@@ -998,24 +998,24 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 								$require_finish	= false;
 							break;
 						}
-	
+
 						$viewable_date = validate_calendars("accessible", $require_start, $require_finish);
 						if ((isset($viewable_date["start"])) && ((int) $viewable_date["start"])) {
 							$PROCESSED["release_date"] = (int) $viewable_date["start"];
 						} else {
 							$PROCESSED["release_date"] = 0;
 						}
-	
+
 						if ((isset($viewable_date["finish"])) && ((int) $viewable_date["finish"])) {
 							$PROCESSED["release_until"] = (int) $viewable_date["finish"];
 						} else {
 							$PROCESSED["release_until"] = 0;
 						}
-	
+
 						if (!$ERROR) {
 							$PROCESSED["updated_date"]	= time();
 							$PROCESSED["updated_by"]	= $_SESSION["details"]["id"];
-	
+
 							/**
 							 * Adding this quiz to each of the selected events.
 							 */
@@ -1025,21 +1025,21 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 								if ($db->AutoExecute("attached_quizzes", $PROCESSED, "INSERT")) {
 									$SUCCESS++;
 									$SUCCESSSTR[]	= "You have successfully attached <strong>".html_encode($quiz_record["quiz_title"])."</strong> as <strong>".html_encode($PROCESSED["quiz_title"])."</strong> to <strong>".html_encode($selected_community_pages[$PROCESSED["cpage_id"]]["page_title"])."</strong>.";
-	
+
 									application_log("success", "Quiz [".$RECORD_ID."] was successfully attached to Community Page [".$PROCESSED["cpage_id"]."].");
-	
+
 								} else {
 									$ERROR++;
 									$ERRORSTR[] = "There was a problem attaching this quiz to <strong>".html_encode($selected_community_pages[$PROCESSED["cpage_id"]]["page_title"])."</strong>. The system administrator was informed of this error; please try again later.";
-	
+
 									application_log("error", "There was an error attaching quiz [".$RECORD_ID."] to community page [".$PROCESSED["cpage_id"]."]. Database said: ".$db->ErrorMsg());
 								}
 							}
-	
+
 							if ($SUCCESS) {
 								$url = ENTRADA_URL."/admin/".$MODULE."?section=edit&id=".$RECORD_ID;
 								$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
-								
+
 								$SUCCESSSTR[(count($SUCCESSSTR) - 1)] .= "<br /><br />You will now be redirected back to the quiz page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 							} elseif ($ERROR) {
 								$STEP = 2;
@@ -1047,8 +1047,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						} else {
 							$STEP = 2;
 						}
-	
-	
+
+
 					break;
 					case 2 :
 						/**
@@ -1058,14 +1058,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 							$ERROR++;
 							$ERRORSTR[] = "To attach a quiz to a community page, select a community page you are involved with from the list below.";
 						}
-						
+
 						/**
 						 * If the quiz title is not set, give it the default one.
 						 */
 						if (!isset($_POST["quiz_title"])) {
 							$PROCESSED["quiz_title"] = $quiz_record["quiz_title"];
 						}
-	
+
 						if ($ERROR) {
 							$STEP = 1;
 						}
@@ -1075,18 +1075,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						continue;
 					break;
 				}
-	
+
 				// Display Content
 				switch ($STEP) {
 					case 3 :
 						if ($SUCCESS) {
 							echo display_success();
 						}
-	
+
 						if ($NOTICE) {
 							echo display_notice();
 						}
-	
+
 						if ($ERROR) {
 							echo display_error();
 						}
@@ -1097,7 +1097,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						 */
 						load_rte();
 						$total_page_ids = count($PROCESSED["page_ids"]);
-	
+
 						?>
 						<h2 style="color: #CCCCCC">Step 1: Select Community Pages</h2>
 						<ul class="menu">
@@ -1119,7 +1119,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						if($ERROR) {
 							echo display_error();
 						}
-	
+
 						if($NOTICE) {
 							echo display_notice();
 						}
@@ -1267,20 +1267,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 								default :
 									$('accessible_start').checked	= false;
 									$('accessible_finish').checked	= false;
-	
+
 									dateLock('accessible_start');
 									dateLock('accessible_finish');
-	
+
 									$('accessible_start_date').value	= '';
 									$('accessible_start_hour').value	= '00';
 									$('accessible_start_min').value		= '00';
-	
+
 									$('accessible_finish_date').value	= '';
 									$('accessible_finish_hour').value	= '00';
 									$('accessible_finish_min').value	= '00';
 								break;
 							}
-							
+
 							updateTime('accessible_start');
 							updateTime('accessible_finish');
 						}
@@ -1289,33 +1289,34 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 					break;
 					case 1 :
 					default :
-						$NOTICE++;
-						$NOTICESTR[] = "Please begin by selecting one or more of your existing community pages to attach this quiz to.<br /><br />To select community pages simply check the box to the left of the page and click the &quot;Attach Selected&quot; button.";
 						?>
 						<h2>Step 1: Select Community Pages</h2>
+						<div class="display-generic">
+							Please select <strong>one or more</strong> of your <strong>existing community pages</strong> to attach this quiz to.
+						</div>
 						<?php
 						if($ERROR) {
 							echo display_error();
 						}
-	
+
 						if($NOTICE) {
 							echo display_notice();
 						}
-	
+
 						/**
 						 * Update requested timestamp to display.
 						 * Valid: Unix timestamp
 						 */
 						if((isset($_GET["dlength"])) && ($dlength = (int) trim($_GET["dlength"])) && ($dlength >= 1) && ($dlength <= 4)) {
 							$_SESSION[APPLICATION_IDENTIFIER]["dashboard"]["dlength"] = $dlength;
-	
+
 							$_SERVER["QUERY_STRING"] = replace_query(array("dlength" => false));
 						} else {
 							if(!isset($_SESSION[APPLICATION_IDENTIFIER]["dashboard"]["dlength"])) {
 								$_SESSION[APPLICATION_IDENTIFIER]["dashboard"]["dlength"] = 2; // Defaults to this term.
 							}
 						}
-	
+
 						switch($_SESSION[APPLICATION_IDENTIFIER]["dashboard"]["dlength"]) {
 							case 1 :	// Last Term
 								if(date("n", time()) <= 6) {
@@ -1353,23 +1354,22 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						?>
 						<div style="clear: both"></div>
 						<?php
-							$query		= "	SELECT b.*, bp.*, CONCAT('[', b.`community_title`, '] ', bp.`menu_title`) AS `page_title`, CONCAT_WS(', ', d.`lastname`, d.`firstname`) AS `fullname`
-											FROM `communities` AS b
-											JOIN `community_pages` AS bp
-											ON bp.`community_id` = b.`community_id`
-											JOIN `community_members` AS c
-											ON c.`community_id` = b.`community_id`
-											AND c.`proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
-											AND c.`member_acl` = '1'
-											JOIN `".AUTH_DATABASE."`.`user_data` AS d
-											ON d.`id` = c.`proxy_id`
-											WHERE b.`community_active` = '1'
-											AND bp.`page_active` = '1'
-											AND bp.`page_type` = 'quizzes'
-											ORDER BY b.`community_title` ASC";
-							$results = $db->Execute($query);
-							
-						if($results) {
+						$query		= "	SELECT b.*, bp.*, CONCAT('[', b.`community_title`, '] ', bp.`menu_title`) AS `page_title`, CONCAT_WS(', ', d.`lastname`, d.`firstname`) AS `fullname`
+										FROM `communities` AS b
+										JOIN `community_pages` AS bp
+										ON bp.`community_id` = b.`community_id`
+										JOIN `community_members` AS c
+										ON c.`community_id` = b.`community_id`
+										AND c.`proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
+										AND c.`member_acl` = '1'
+										JOIN `".AUTH_DATABASE."`.`user_data` AS d
+										ON d.`id` = c.`proxy_id`
+										WHERE b.`community_active` = '1'
+										AND bp.`page_active` = '1'
+										AND bp.`page_type` = 'quizzes'
+										ORDER BY b.`community_title` ASC";
+						$results = $db->GetAll($query);
+						if ($results) {
 							$total_pages_found = count($results);
 							?>
 							<form action="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=attach&amp;community=true&amp;id=<?php echo $RECORD_ID; ?>" method="post">
@@ -1400,8 +1400,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 							<tbody>
 								<?php
 								foreach ($results as $result) {
-									$url			= ENTRADA_URL."/community".$result["community_url"].":".$result["page_url"];
-	
+									$url = ENTRADA_URL."/community".$result["community_url"].":".$result["page_url"];
+
 									echo "<tr id=\"page-".$result["cpage_id"]."\" class=\"page\">\n";
 									echo "	<td><input type=\"checkbox\" name=\"page_ids[]\" value=\"".$result["cpage_id"]."\" /></td>\n";
 									echo "	<td><a href=\"".$url."\" title=\"Community Page Title: ".html_encode($result["page_title"])."\">".html_encode($result["page_title"])."</a></td>\n";
@@ -1414,8 +1414,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 							<?php
 						} else {
 							?>
-							<div class="display-generic" style="margin-top: 0px">
-								There is no record of any community pages in the system which you have administrative rights over. Please ensure you are set as an administrator in the community which you want to add the quiz to, and that there is an available page with the type 'Quizzes' in that community.
+							<div class="display-notice">
+								There is no record of any community pages in the system that you have administrative rights over.
+								<br /><br />
+								Please ensure that you a <strong>community administrator</strong> in the community that you want this quiz added to, and that there is a page in that community with a &quot;<strong>Page Type</strong>&quot; of &quot;<strong>Quizzes</strong>&quot;.
 							</div>
 							<?php
 						}
@@ -1424,17 +1426,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 			} else {
 				$ERROR++;
 				$ERRORSTR[] = "In order to attach this quiz to a community page, you must provide a valid quiz identifier.";
-	
+
 				echo display_error();
-	
+
 				application_log("notice", "Failed to provide a valid quiz identifer [".$RECORD_ID."] when attempting to attach a quiz to a community page.");
 			}
 		} else {
 			$ERROR++;
 			$ERRORSTR[] = "In order to attach this quiz to a community page, you must provide a quiz identifier.";
-	
+
 			echo display_error();
-	
+
 			application_log("notice", "Failed to provide a quiz identifier to attach a quiz to a community page.");
 		}
 	}

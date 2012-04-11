@@ -29,14 +29,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 		$user_record = $db->GetRow($query);
 		if ($user_record) {
 			$BREADCRUMB[] = array("url" => "", "title" => html_encode($user_record["firstname"]." ".$user_record["lastname"]));
-			
+
 			$PROCESSED_ACCESS = array();
 			$PROCESSED_DEPARTMENTS = array();
 			$department_names = array();
 
 			echo "<h1>Manage: <strong>".html_encode($user_record["firstname"]." ".$user_record["lastname"])."</strong></h1>\n";
 
-			
+
 			$PROCESSED = $user_record;
 
 			$query = "SELECT * FROM `".AUTH_DATABASE."`.`user_access` WHERE `user_id` = ".$db->qstr($PROXY_ID)." AND `app_id` = ".$db->qstr(AUTH_APP_ID);
@@ -55,7 +55,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 				}
 				sort($department_names);
 			}
-			
+
 			$gender = @file_get_contents(webservice_url("gender", $user_record["number"]));
 
 			$query = "SELECT * FROM `".AUTH_DATABASE."`.`organisations` WHERE `organisation_id` = ". $user_record["organisation_id"];
@@ -145,40 +145,55 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 									</td>
 									<td style="width: 100%; vertical-align: top; padding-left: 5px">
 										<table width="100%" cellspacing="0" cellpadding="1" border="0">
-											<tr>
-												<td style="width: 20%">Full Name:</td>
-												<td style="width: 80%"><?php echo $user_record["prefix"]." ".$user_record["firstname"]." ".$user_record["lastname"]; ?></td>
-											</tr>
-											<tr>
-												<td>Gender:</td>
-												<td><?php echo $gender;?></td>
-											</tr>
-											<tr>
-												<td>Student Number:</td>
-												<td><?php echo $user_record["number"]; ?></td>
-											</tr>
-											<tr>
-												<td>E-Mail Address:</td>
-												<td><a href="mailto:<?php echo $user_record["email"]; ?>"><?php echo $user_record["email"]; ?></a></td>
-											</tr>
-											<tr>
-												<td>Default Organisation:</td>
-												<td><?php echo $default_organisation["organisation_title"]; ?></td>
-											</tr>
-											<tr>
-												<td>Other Organisations:</td>
-												<td><?php
+											<colgroup>
+												<col style="width: 20%" />
+												<col style="width: 80%" />
+											</colgroup>
+											<tbody>
+												<tr>
+													<td>Full Name:</td>
+													<td><?php echo $user_record["prefix"]." ".$user_record["firstname"]." ".$user_record["lastname"]; ?></td>
+												</tr>
+												<tr>
+													<td>Gender:</td>
+													<td><?php echo $gender;?></td>
+												</tr>
+												<tr>
+													<td>Student Number:</td>
+													<td><?php echo $user_record["number"]; ?></td>
+												</tr>
+												<tr>
+													<td>E-Mail Address:</td>
+													<td><a href="mailto:<?php echo $user_record["email"]; ?>"><?php echo $user_record["email"]; ?></a></td>
+												</tr>
+												<tr>
+													<td colspan="2">&nbsp;</td>
+												</tr>
+												<tr>
+													<td style="vertical-align: top">Organisations:</td>
+													<td>
+														<?php
+														echo $default_organisation["organisation_title"];
+
 														$organisation_names_diff = array_diff($organisation_names, array($default_organisation["organisation_title"]));
 														if (count($organisation_names_diff) > 0) {
-															echo implode(", ", $organisation_names_diff);
+															echo "<br />".implode("<br />", $organisation_names_diff);
 														}
+														?>
+													</td>
+												</tr>
+
+												<?php
+												if (!empty($department_names)) {
 													?>
-												</td>
-											</tr>
-											<tr>
-												<td>Departments:</td>
-												<td><?php echo implode(", ", $department_names) ?></td>
-											</tr>
+													<tr>
+														<td>Departments:</td>
+														<td><?php echo implode(", ", $department_names) ?></td>
+													</tr>
+													<?php
+												}
+												?>
+											</tbody>
 										</table>
 									</td>
 								</tr>

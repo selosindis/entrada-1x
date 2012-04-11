@@ -158,8 +158,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 												data-grade-id="<?php echo $grade_id; ?>"
 												data-assessment-id="<?php echo $assessment["assessment_id"]; ?>"
 												data-proxy-id="<?php echo $student["proxy_id"] ?>"
+												style="float:left;"
 											><?php echo $grade_value; ?></span>
-											<span class="gradesuffix" <?php echo (($grade_value === "-") ? "style=\"display: none;\"" : "") ?>>
+											<span class="gradesuffix" <?php echo (($grade_value === "-") ? "style=\"display: none;\"" : "") ?> style="float:left;">
 												<?php echo assessment_suffix($assessment); ?>
 											</span>
 											<span class="gradesuffix" style="float:right;">
@@ -299,7 +300,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								</script>
 								<br/>
 								<p>Unentered grades: <?php echo (int) $unentered; ?></p>
-								<p>Mean grade: <?php echo number_format(($entered > 0 ? $sum / $entered : ""), 0); ?>%</p>
+								<p>Mean grade: <?php echo number_format(($entered > 0 ? $sum / $entered : 0), 0); ?>%</p>
 								<p>Median grade: <?php echo $grade_values[floor(count($grade_values) / 2)]; ?>%</p>
 								<?php
 							break;

@@ -52,7 +52,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 	 * Check if preferences need to be updated.
 	 */
 	preferences_update($MODULE, $PREFERENCES);
-	
+
 	/**
 	 * Fetch all of the events that apply to the current filter set.
 	 */
@@ -70,14 +70,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			true,
 			(isset($_GET["pv"]) ? (int) trim($_GET["pv"]) : 1),
 			$_SESSION[APPLICATION_IDENTIFIER]["events"]["pp"]);
-	
+
 	echo "<h1>".$MODULES[strtolower($MODULE)]["title"]."</h1>";
 
 	/**
 	 * Output the filter HTML.
 	 */
 	events_output_filter_controls("admin");
-	
+
 	if ($ENTRADA_ACL->amIAllowed("event", "create", false)) {
 		?>
 		<div style="float: right">
@@ -141,7 +141,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			<tfoot>
 				<tr>
 					<td></td>
-					<td style="padding-top: 10px" colspan="2">
+					<td style="padding-top: 10px" colspan="3">
 						<?php
 						if ($ENTRADA_ACL->amIAllowed("event", "delete", false)) {
 							?>
@@ -152,10 +152,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							?>
 							<input type="submit" class="button" value="Copy Selected"  onClick="document.frmSelect.action ='<?php echo ENTRADA_URL; ?>/admin/events?section=copy'" />
 							<?php
-						}						
+						}
 						?>
 					</td>
-					<td style="padding-top: 10px; text-align: right" colspan="3">
+					<td style="padding-top: 10px; text-align: right" colspan="2">
 						<?php
 						if ($ENTRADA_ACL->amIAllowed("event", "delete", false)) {
 							?>
@@ -171,7 +171,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			<?php
 
 			$count_modified = 0;
-			
+
 			foreach ($learning_events["events"] as $result) {
 				$url = "";
 				$accessible = true;

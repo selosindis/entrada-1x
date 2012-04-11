@@ -76,7 +76,7 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 			echo htmlspecialchars(json_encode(array('error'=>'Error occurred while submitting comment.')), ENT_NOQUOTES);
 			exit;						
 		} else {
-
+			$COMMENT_ID = $db->Insert_Id();
 			$query = "SELECT `username` AS `commenter_username`, CONCAT_WS(' ',`firstname`,`lastname`) AS `commenter_fullname` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($PROCESSED["proxy_id"]);
 			$result = $db->GetRow($query);
 			if ($result) {

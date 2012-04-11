@@ -297,7 +297,7 @@ function load_system_navigator() {
 			foreach ($results as $result) {
 				$community_ids[(int) $result["community_id"]] 	= array("url" => $result["community_url"], "title" => $result["community_title"]);
 			}
-			
+
 			$query = "	SELECT a.`cpage_id` FROM `community_pages` AS a
 						JOIN `communities` AS b
 						ON a.`community_id` = b.`community_id`
@@ -314,7 +314,7 @@ function load_system_navigator() {
 			foreach ($community_pages as $key => $page_id) {
 				$page_ids[] = $page_id;
 			}
-				
+
 			if(@count($community_ids)) {
 				$query		= "	SELECT a.*, b.`page_url`
 								FROM `community_announcements` as a
@@ -435,9 +435,9 @@ function navigator_tabs() {
 	$more_bold = "";
 
 	$output_html = "";
-	
+
 	$navigation = $translate->_("navigation_tabs");
-	
+
 	if (is_array($navigation) && !empty($navigation)) {
 		/**
 		 * Temporary fix until we figure out something better
@@ -486,7 +486,7 @@ function navigator_tabs() {
 			$css_classes = array();
 
 			$tab_children = "";
-			$has_children = false; 
+			$has_children = false;
 
 			/**
 			 * If this menu item has a resource attached check to see if the user
@@ -531,19 +531,19 @@ function navigator_tabs() {
 						 * This will make the childs' parent active as well.
 						 */
 						if (!in_array("current", $css_classes)) {
-							$css_classes[] = "current";						
+							$css_classes[] = "current";
 						}
 					}
 
 					$tab_children .= "<li".($child_active ? " class=\"current\"" : "").">";
-					$tab_children .= "	<a href=\"".((isset($child_item["url"])) ? $child_item["url"] : ENTRADA_RELATIVE."/".$child_shortname)."\"".((isset($child_item["target"])) ? " target=\"".$child_item["target"]."\"" : "")."\"><span>".$child_item["title"]."</span></a>";			
+					$tab_children .= "	<a href=\"".((isset($child_item["url"])) ? $child_item["url"] : ENTRADA_RELATIVE."/".$child_shortname)."\"".((isset($child_item["target"])) ? " target=\"".$child_item["target"]."\"" : "")."\"><span>".$child_item["title"]."</span></a>";
 					$tab_children .= "</li>";
 				}
 
 				$tab_children .= "	<li class=\"bottom\"><div></div></li>";
 				$tab_children .= "</ul>";
 				$tab_children .= "<!--[if lte IE 6.5]><iframe src=\"".ENTRADA_RELATIVE."/blank.html\"></iframe><![endif]-->";
-			}		
+			}
 
 			if ($MODULE == $shortname) {
 				$css_classes[] = "current";
@@ -598,18 +598,18 @@ function navigator_tabs() {
 			$output_html .= $tabs_admin;
 		}
 	}
-	
+
 	/**
 	 * Add Logout tab.
 	 */
 	$output_html .= "<li class=\"last staysput\"><a href=\"".ENTRADA_RELATIVE."/?action=logout\"><span>Logout</span></a></li>\n";
-	
+
 
 	/**
 	 * Replace the active module with the current css keyword.
 	 */
 	$output_html = str_replace("%".$MODULE."%", "current", $output_html);
-	
+
 	/**
 	 * Remove temporary placeholders.
 	 */
@@ -620,27 +620,27 @@ function navigator_tabs() {
 
 /**
  * This function adds sw
- * 
+ *
  * @global array $JQUERY
  * @param string $next
  * @param string $back
  * @param string $type
- * @return true 
+ * @return true
  */
 function navigator_swipe($direction = array(), $type = "click") {
 	global $JQUERY;
-	
+
 	if ($type != "js") {
 		$type = "click";
 	}
-	
+
 	/**
 	 * Load jSwipe to handle next and back on mobile devices.
 	 */
 	$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/jquery/jquery.touchSwipe.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
-	
+
 	$swipe = array();
-	
+
 	/**
 	 * Shortcuts.
 	 */
@@ -650,7 +650,7 @@ function navigator_swipe($direction = array(), $type = "click") {
 	if (isset($direction["back"]) && ($tmp_input = clean_input($direction["back"]))) {
 		$direction["right"] = $tmp_input;
 	}
-	
+
 	if (isset($direction["up"]) && ($tmp_input = clean_input($direction["up"]))) {
 		$swipe[] = "swipeUp: function() { ".(($type == "click") ? "window.location = '".$direction["up"]."'" : $direction["up"])." }";
 	}
@@ -663,11 +663,11 @@ function navigator_swipe($direction = array(), $type = "click") {
 	if (isset($direction["left"]) && ($tmp_input = clean_input($direction["left"]))) {
 		$swipe[] = "swipeLeft: function() { ".(($type == "click") ? "window.location = '".$direction["left"]."'" : $direction["left"])." }";
 	}
-	
+
 	if (!empty($swipe)) {
 		echo "<script type=\"text/javascript\">jQuery(document).ready(function() { jQuery('body').swipe({".implode(", ", $swipe)."}); });</script>";
 	}
-	
+
 	return true;
 }
 
@@ -702,7 +702,7 @@ function check_breadcrumb($buffer) {
 /**
  * Constants for new_sidebar_item
  * SIDEBAR_APPEND - places the new item at the end of the *current* list of sidebar items
- * SIDEBAR_PREPEND - places the new item at the beginning of the *current* list of items 
+ * SIDEBAR_PREPEND - places the new item at the beginning of the *current* list of items
  */
 if(!defined("SIDEBAR_APPEND")) {
 	define("SIDEBAR_APPEND", 0);
@@ -735,7 +735,7 @@ function new_sidebar_item($title = "", $html = "", $id = "", $state = "open", $p
 	$output .= "<span class=\"sidebar-head\">".html_encode($title)."</span>\n";
 	$output .= "<div class=\"sidebar-body\">".$html."</div>\n";
 	$output .= "</div><br />\n";*/
-	
+
 	$output  = "<table class=\"sidebar\" id=\"".html_encode($id)."\" cellspacing=\"0\" summary=\"".html_encode($title)."\">\n";
 	$output .= "<thead>\n";
 	$output .= "	<tr>\n";
@@ -758,7 +758,7 @@ function new_sidebar_item($title = "", $html = "", $id = "", $state = "open", $p
 		default:
 			array_push($SIDEBAR, $output);
 	}
-	
+
 	return true;
 }
 
@@ -937,93 +937,93 @@ function get_account_data($type = "", $id = 0) {
 
 /**
  * Fetches the page name for the given page data. Query depends on what type
- * of data the action field is representing. 
+ * of data the action field is representing.
  * @global object $db
  * @param type $page_data
- * @return string 
+ * @return string
  */
 function get_page_name($page_data){
 	global $db;
 	$raw_page_data = explode("-",$page_data);
 	$action_field = $raw_page_data[0]."_".$raw_page_data[1];
 	$action_value = $raw_page_data[2];
-	
+
 	unset($query);
 	switch ($action_field){
 		case 'cshare_id':
-				$query = "	SELECT `folder_title` AS `page` 
-							FROM `community_shares` 
+				$query = "	SELECT `folder_title` AS `page`
+							FROM `community_shares`
 							WHERE `cshare_id` = ".$db->qstr($action_value);
 			break;
 		case 'cscomment_id':
-				$query = "	SELECT b.`file_title` AS `page` 
-							FROM `community_share_comments` AS a 
-							LEFT JOIN `community_share_files` AS b 
-							ON a.`csfile_id` = b.`csfile_id` 
+				$query = "	SELECT b.`file_title` AS `page`
+							FROM `community_share_comments` AS a
+							LEFT JOIN `community_share_files` AS b
+							ON a.`csfile_id` = b.`csfile_id`
 							WHERE a.`cscomment_id` = ".$db->qstr($action_value);
 			break;
 		case 'csfile_id':
-				$query = "	SELECT b.`file_title` AS `page` 
+				$query = "	SELECT b.`file_title` AS `page`
 							FROM `community_share_files` A
 							WHERE a.`csfile_id` = ".$db->qstr($action_value);
 			break;
 		case 'csfversion_id':
-				$query = "	SELECT b.`file_title` AS `page` 
-							FROM `community_share_file_versions` AS a 
-							LEFT JOIN `community_share_files` AS b 
-							ON a.`csfile_id` = b.`csfile_id` 
+				$query = "	SELECT b.`file_title` AS `page`
+							FROM `community_share_file_versions` AS a
+							LEFT JOIN `community_share_files` AS b
+							ON a.`csfile_id` = b.`csfile_id`
 							WHERE a.`csfversion_id` = ".$db->qstr($action_value);
-			break;	
+			break;
 		case 'cannouncement_id':
-				$query = "	SELECT `announcement_title` AS `page` 
+				$query = "	SELECT `announcement_title` AS `page`
 							FROM `community_announcements`
 							WHERE `cannouncement_id` = ".$db->qstr($action_value);
 			break;
 		case 'cdiscussion_id':
-				$query = "	SELECT `forum_title` AS `page` 
+				$query = "	SELECT `forum_title` AS `page`
 							FROM `community_discussions`
 							WHERE `cdiscussion_id` = ".$db->qstr($action_value);
-			break;		
+			break;
 		case 'cdtopic_id':
-				$query = "	SELECT `topic_title` AS `page` 
+				$query = "	SELECT `topic_title` AS `page`
 							FROM `community_discussion_topics`
 							WHERE `cdtopic_id` = ".$db->qstr($action_value);
-			break;	
+			break;
 		case 'cevent_id':
-				$query = "	SELECT `event_title` AS `page` 
+				$query = "	SELECT `event_title` AS `page`
 							FROM `community_events`
 							WHERE `cevent_id` = ".$db->qstr($action_value);
-			break;				
+			break;
 		case 'cgallery_id':
-				$query = "	SELECT `gallery_title` AS `page` 
+				$query = "	SELECT `gallery_title` AS `page`
 							FROM `community_galleries`
 							WHERE `cgallery_id` = ".$db->qstr($action_value);
-			break;			
+			break;
 		case 'cgphoto_id':
-				$query = "	SELECT `photo_title` AS `page` 
+				$query = "	SELECT `photo_title` AS `page`
 							FROM `community_gallery_photos`
 							WHERE `cgphoto_id` = ".$db->qstr($action_value);
 			break;
 		case 'cgcomment_id':
-				$query = "	SELECT a.`gallery_title` AS `page` 
+				$query = "	SELECT a.`gallery_title` AS `page`
 							FROM `community_galleries` AS a
-							LEFT JOIN `community_gallery_comments` AS b 
+							LEFT JOIN `community_gallery_comments` AS b
 							ON a.`cgaller_id` = b.`cgallery_id`
 							WHERE `cgcomment_id` = ".$db->qstr($action_value);
 			break;
 		default:
 			break;
 	}
-	
 
-	
+
+
 
 	if ($query) {
 		$result = $db->GetOne($query);
 	} else {
 		$result = $action_field." ".$action_value;
 	}
-	
+
 	return $result;
 }
 
@@ -1215,13 +1215,13 @@ function community_public_order_link($field_id, $field_name, $url) {
  */
 function admin_order_link($field_id, $field_name, $submodule = null) {
 	global $MODULE;
-	
+
 	if (isset($submodule)) {
 		$module_url = $MODULE . "/" . $submodule;
 	} else {
 		$module_url = $MODULE;
 	}
-	
+
 	if (isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) && strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) == strtolower($field_id)) {
 		if (strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) == "desc") {
 			return "<a href=\"".ENTRADA_URL."/admin/".$module_url."?".replace_query(array("so" => "asc"))."\" title=\"Order by ".$field_name.", Sort Ascending\">".$field_name."</a>";
@@ -1330,7 +1330,7 @@ function startof($type, $timestamp = 0) {
 
 /**
  * This function returns the provided template file usith the method passed.
- * 
+ *
  * @param string $template_file
  * @param string $fetch_style
  * @example $template_html = fetch_template("globa/external");
@@ -1371,15 +1371,15 @@ function fetch_organisation_title($organisation_id = 0) {
 
 /**
  * This functio returns the full path of the course, including the name (i.e. Term 1 > Unit 3 > FooBar 101).
- * 
+ *
  * @param type $course_id
- * @return string 
+ * @return string
  */
 function fetch_course_path($course_id = 0) {
 	$output = "";
-	
+
 	$course_id = (int) $course_id;
-	
+
 	if ($course_id) {
 		$curriculum_path = curriculum_hierarchy($course_id);
 
@@ -1387,11 +1387,11 @@ function fetch_course_path($course_id = 0) {
 			$output = implode(" &gt; ", $curriculum_path);
 		}
 	}
-	
+
 	if (!$output) {
 		$output = "No Associated Course";
 	}
-	
+
 	return $output;
 }
 
@@ -1407,7 +1407,7 @@ function fetch_course_title($course_id = 0, $return_course_name = true, $return_
 	if (($course_id = (int) $course_id) && ($return_course_name || $return_course_code)) {
 		$output = array();
 		$query	= "	SELECT `course_name`, `course_code`
-					FROM `courses` 
+					FROM `courses`
 					WHERE `course_id` = ".$db->qstr($course_id);
 		$result	= $db->GetRow($query);
 		if ($result) {
@@ -1428,7 +1428,7 @@ function fetch_course_title($course_id = 0, $return_course_name = true, $return_
 
 function fetch_group_title($group_id = 0) {
 	global $db;
-	
+
 	if ($group_id = (int) $group_id) {
 		$query = "SELECT `group_name` FROM `groups` WHERE `group_id` = ".$db->qstr($group_id);
 		$result	= $db->GetRow($query);
@@ -1442,7 +1442,7 @@ function fetch_group_title($group_id = 0) {
 
 function fetch_term_title($curriculum_type_id = 0) {
 	global $db;
-	
+
 	if ($curriculum_type_id = (int) $curriculum_type_id) {
 		$query = "SELECT `curriculum_type_name` FROM `curriculum_lu_types` WHERE `curriculum_type_id` = ".$db->qstr($curriculum_type_id);
 		$result	= $db->GetRow($query);
@@ -1456,7 +1456,7 @@ function fetch_term_title($curriculum_type_id = 0) {
 
 function fetch_objective_title($objective_id = 0) {
 	global $db, $ENTRADA_USER;
-	
+
 	if ($objective_id = (int) $objective_id) {
 		$query = "SELECT a.`objective_name` FROM `global_lu_objectives` AS a
 					JOIN `objective_organisation` AS b
@@ -1488,15 +1488,15 @@ function fetch_eventtype_title($eventtype_id = 0) {
 
 function fetch_clinical_presentations($parent_id = 0, $presentations = array(), $course_id = 0, $presentation_ids = false, $org_id = 0) {
 	global $db, $ENTRADA_USER, $translate;
-	
+
 	$parent_id = (int) $parent_id;
 	$course_id = (int) $course_id;
 	$org_id = ($org_id == 0 ? $ENTRADA_USER->getActiveOrganisation() : (int) $org_id );
-	
+
 	if ($course_id) {
 		$presentation_ids = array();
-		
-		$query = "	SELECT `objective_id` 
+
+		$query = "	SELECT `objective_id`
 					FROM `course_objectives`
 					WHERE `course_id` = ".$db->qstr($course_id)."
 					AND `objective_type` = 'event'";
@@ -1507,7 +1507,7 @@ function fetch_clinical_presentations($parent_id = 0, $presentations = array(), 
 			}
 		}
 	}
-	
+
 	if ($parent_id) {
 		$query = "	SELECT a.*
 					FROM `global_lu_objectives` AS a
@@ -1519,7 +1519,7 @@ function fetch_clinical_presentations($parent_id = 0, $presentations = array(), 
 	} else {
 		$objective_name = $translate->_("events_filter_controls");
 		$objective_name = $objective_name["cp"]["global_lu_objectives_name"];
-				
+
 		$query = "	SELECT a.*
 					FROM `global_lu_objectives` AS a
 					JOIN `objective_organisation` AS b
@@ -1528,7 +1528,7 @@ function fetch_clinical_presentations($parent_id = 0, $presentations = array(), 
 					AND b.`organisation_id` = ".$db->qstr($org_id)."
 					AND a.`objective_name` = ".$db->qstr($objective_name);
 	}
-	
+
 	$results = $db->GetAll($query);
 	if ($results) {
 		foreach ($results as $result) {
@@ -1538,7 +1538,7 @@ function fetch_clinical_presentations($parent_id = 0, $presentations = array(), 
 			$presentations = fetch_clinical_presentations($result["objective_id"], $presentations, 0, (isset($presentation_ids) && $presentation_ids ? $presentation_ids : array()), $org_id);
 		}
 	}
-	
+
 	if (!$parent_id && is_array($presentation_ids)) {
 		foreach ($presentations as $key => $presentation) {
 			if (array_search($presentation["objective_id"], $presentation_ids) === false) {
@@ -1552,9 +1552,9 @@ function fetch_clinical_presentations($parent_id = 0, $presentations = array(), 
 
 function fetch_curriculum_objectives_children($parent_id = 0, &$objectives) {
 	global $db, $ENTRADA_USER, $translate;
-	
+
 	$parent_id = (int) $parent_id;
-	
+
 	if ($parent_id) {
 		$query = "	SELECT a.*
 					FROM `global_lu_objectives` AS a
@@ -1566,7 +1566,7 @@ function fetch_curriculum_objectives_children($parent_id = 0, &$objectives) {
 	} else {
 		$objective_name = $translate->_("events_filter_controls");
 		$objective_name = $objective_name["co"]["global_lu_objectives_name"];
-		
+
 		$query = "	SELECT a.*
 					FROM `global_lu_objectives` AS a
 					JOIN `objective_organisation` AS b
@@ -1575,26 +1575,26 @@ function fetch_curriculum_objectives_children($parent_id = 0, &$objectives) {
 					AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
 					AND a.`objective_name` = ".$db->qstr($objective_name);
 	}
-	
+
 	$results = $db->GetAll($query);
 	if ($results) {
 		foreach ($results as $result) {
 			$children = fetch_curriculum_objectives_children($result["objective_id"], $objectives);
-			
+
 			if (!$children) {
 				$objectives[] = $result;
 			}
 		}
-		
+
 		return true;
 	}
-	
+
 	return false;
 }
 
 function fetch_event_topics() {
 	global $db, $ENTRADA_USER;
-	
+
 	$query = "	SELECT a.`topic_id`, a.`topic_name`
 				FROM `events_lu_topics` AS a
 				JOIN `topic_organisation` AS b
@@ -1602,21 +1602,21 @@ function fetch_event_topics() {
 				WHERE b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
 				ORDER BY a.`topic_name` ASC";
 	$results = $db->GetAll($query);
-	
+
 	return $results;
 }
 
 function fetch_event_topic_title($topic_id = 0) {
 	global $db;
-	
+
 	$topic_id = (int) $topic_id;
-	
+
 	if ($topic_id) {
 		$query = "SELECT `topic_name` FROM `events_lu_topics` WHERE `topic_id` = ".$db->qstr($topic_id);
 
 		return $db->GetOne($query);
 	}
-	
+
 	return false;
 }
 
@@ -1626,7 +1626,7 @@ function fetch_event_topic_title($topic_id = 0) {
  */
 function fetch_first_cohort() {
 	global $db, $ENTRADA_USER;
-	
+
 	$query = "	SELECT a.`group_id` FROM `groups` AS a
 				JOIN `group_organisations` AS b
 				ON a.`group_id` = b.`group_id`
@@ -1634,7 +1634,7 @@ function fetch_first_cohort() {
 				AND a.`group_active` = '1'
 				AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
 				ORDER BY a.`group_id` DESC LIMIT 0, 1";
-	return $db->CacheGetOne(CACHE_TIMEOUT, $query);
+	return $db->GetOne($query);
 }
 
 /**
@@ -1752,11 +1752,11 @@ function fetch_department_children($department_id = 0) {
  */
 function fetch_countries() {
 	global $db;
-	
+
 	$query = "	SELECT *
 				FROM `".DATABASE_NAME."`.`global_lu_countries`
 				ORDER BY `country` ASC";
-	
+
 	if ($results = $db->GetAll($query)) {
 		return $results;
 	} else {
@@ -1811,11 +1811,11 @@ function filter_dir($item) {
  */
 function fetch_specific_country($countries_id) {
 	global $db;
-		
+
 	$query	= "	SELECT `country`
 				FROM `".DATABASE_NAME."`.`global_lu_countries`
 				WHERE `countries_id` =".$db->qstr($countries_id);
-	
+
 	if ($result = $db->GetRow($query)) {
 		return $result["country"];
 	} else {
@@ -1929,7 +1929,7 @@ function clerkship_categories_name($category_id = 0) {
 
 /**
  * Output any available Clerkship evaluations the learner may have to complete.
- * 
+ *
  * @global object $db
  */
 function clerkship_display_available_evaluations() {
@@ -2058,7 +2058,7 @@ function clerkship_fetch_specific_discipline($discipline_id) {
  */
 function clerkship_fetch_schools() {
 	global $db;
-		
+
 	$query		= "	SELECT *
 					FROM `global_lu_schools`
 					ORDER BY `school_title`";
@@ -2077,7 +2077,7 @@ function clerkship_fetch_schools() {
  */
 function clerkship_fetch_specific_school($schools_id) {
 	global $db;
-		
+
 	$query		= "	SELECT `school_title`
 					FROM `global_lu_schools`
 					WHERE `schools_id` =".$db->qstr($schools_id);
@@ -2393,7 +2393,7 @@ function application_log($type, $message) {
 	}
 	$page_url .= "://";
 	$page_url .= $_SERVER["SERVER_NAME"].$_SERVER["REQUEST_URI"];
-	
+
 	$search		= array("\t", "\r", "\n");
 	$log_entry	= date("r", time())."\t".str_replace($search, " ", $message)."\t".((isset($_SESSION["details"]["id"])) ? str_replace($search, " ", $_SESSION["details"]["id"]) : 0)."\t".((isset($page_url)) ? clean_input($page_url, array("nows")) : "")."\t".((isset($_SERVER["REMOTE_ADDR"])) ? str_replace($search, " ", $_SERVER["REMOTE_ADDR"]) : 0)."\t".((isset($_SERVER["HTTP_USER_AGENT"])) ? str_replace($search, " ", $_SERVER["HTTP_USER_AGENT"]) : false)."\n";
 
@@ -2433,13 +2433,13 @@ function application_log($type, $message) {
 }
 
 /**
- * uses debug_backtrace to get the file and line number of the caller of the function calling this. 
+ * uses debug_backtrace to get the file and line number of the caller of the function calling this.
  */
 function get_caller_string() {
 	$bt = debug_backtrace();
 	if (isset($bt[1]) && is_array($bt[1]) && isset($bt[1]['file']) && isset($bt[1]['line'])) {
-		return " file: " . $bt[1]['file'] . " line: " . $bt[1]['line']; 
-	} 
+		return " file: " . $bt[1]['file'] . " line: " . $bt[1]['line'];
+	}
 	return "";
 }
 
@@ -2464,16 +2464,16 @@ function system_log_data($type, $message) {
 function count_notice_reads($notice_id = 0) {
 	global $db;
 
-	if($notice_id = (int) $notice_id) {
+	if ($notice_id = (int) $notice_id) {
 		$query = "	SELECT COUNT(*) AS `total_reads`
 					FROM `statistics`
 					WHERE `module` = 'notices'
 					AND `action` = 'read'
 					AND `action_field` = 'notice_id'
 					AND `action_value` = ".$db->qstr($notice_id);
-		$result	= $db->CacheGetRow(LONG_CACHE_TIMEOUT, $query);
-		if($result) {
-			return $result["total_reads"];
+		$result	= $db->CacheGetRow(CACHE_TIMEOUT, $query);
+		if ($result) {
+			return (int) $result["total_reads"];
 		}
 	}
 
@@ -2904,7 +2904,7 @@ function curriculum_hierarchy($course_id = 0, $return_course_code = false) {
 		$output	= array();
 		$count	= 0;
 
-		$query	= "	SELECT * FROM `courses` 
+		$query	= "	SELECT * FROM `courses`
 					WHERE `course_id` = ".$db->qstr($course_id)."
 					AND `course_active` = '1'";
 		$result	= $db->GetRow($query);
@@ -2918,7 +2918,7 @@ function curriculum_hierarchy($course_id = 0, $return_course_code = false) {
 			if ($result) {
 				$output[] = $result["curriculum_type_name"];
 			}
-		
+
 			return array_reverse($output);
 		}
 	}
@@ -3377,7 +3377,7 @@ function generate_calendar($fieldname, $display_name = "", $required = false, $c
 	if ($optional) {
 		$output .= "	<td style=\"vertical-align: top\"><input type=\"checkbox\" name=\"".$fieldname."\" id=\"".$fieldname."\" value=\"1\"".(($time) ? " checked=\"checked\"" : "").(($required) ? " readonly=\"readonly\"" : "")." onclick=\"".(($required) ? "this.checked = true" : "dateLock('".$fieldname."')")."\" style=\"vertical-align: middle\" /></td>\n";
 	} else {
-		$output .= "	<td style=\"vertical-align: top\">&nbsp;</td>\n";		
+		$output .= "	<td style=\"vertical-align: top\">&nbsp;</td>\n";
 	}
 	$output .= "	<td style=\"vertical-align: top; padding-top: 4px\"><label id=\"".$fieldname."_text\" for=\"".$fieldname."\" class=\"".($required ? "form-required" : "form-nrequired")."\">".html_encode($display_name)."</label></td>\n";
 	$output .= "	<td style=\"vertical-align: top\" id=\"".$fieldname."_row\">\n";
@@ -4047,7 +4047,7 @@ function expired_session($expireref, $sesskey) {
 
 function display_weather($city_code = "", $options = array(), $weather_source = "weather.com") {
 	global $WEATHER_LOCATION_CODES;
-	
+
 	$output_html	= "";
 	$weather		= array();
 	$weather_codes	= array();
@@ -4931,7 +4931,7 @@ function communities_fetch_pages($community_id = 0, $user_access = 0) {
 		" `allow_troll_view` = 1 ",
 		" `allow_member_view` = 1 ",
 		" 1 ");
-		
+
 	$community_access = 1;
 	if ($user_access < 2) {
 		$community_access = (int) $db->GetOne("SELECT `community_registration` from `communities` WHERE `community_id` =".$db->qstr($community_id)." AND `community_protected` = '1'");
@@ -4946,13 +4946,13 @@ function communities_fetch_pages($community_id = 0, $user_access = 0) {
 			$module_enabled[$module_record["module_shortname"]] = (((int) $module_record["module_active"]) == 1 ? true : false);
 		}
 	}
-	
+
 	$module_enabled["default"] = true;
 	$module_enabled["url"] = true;
 	$module_enabled["course"] = true;
-	
+
 	if(($community_id = (int) $community_id) && ($community_access < 4 || $user_access > 1)) {
-	
+
 		$query = "SELECT * FROM `community_pages`
 					WHERE `page_url` = ''
 					AND `community_id` = ".$db->qstr($community_id)."
@@ -5011,7 +5011,7 @@ function communities_fetch_pages($community_id = 0, $user_access = 0) {
 						} else {
 							$new_window = false;
 						}
-						$navigation[$result["cpage_id"]]	= array(	
+						$navigation[$result["cpage_id"]]	= array(
 													"cpage_id" => $result["cpage_id"],
 													"link_order"	=> (int) $result["page_order"],
 													"link_parent"	=> 0,
@@ -5058,13 +5058,13 @@ function communities_page_has_children($cpage_id, $access_query_condition, $comm
 
 function communities_fetch_child_pages($cpage_id, $access_query_condition, $community_id, $level = 1) {
 	global $db, $PAGE_URL;
-	
+
 	if ($level > 99) {
 		return false;
 	}
-	
+
 	$children_array = array();
-	
+
 	$query = "SELECT * FROM `community_pages`
 				WHERE `parent_id` = ".$db->qstr($cpage_id)."
 				AND ".$access_query_condition."
@@ -5255,7 +5255,7 @@ function community_galleries_in_select($gallery_id = 0) {
 	if ($results) {
 		$cpage_id = 0;
 		$output = "<select id=\"gallery_id\" name=\"gallery_id\" style=\"width: 300px\">";
-		
+
 		foreach ($results as $key => $result) {
 			if ($cpage_id != $result["cpage_id"]) {
 				$cpage_id = $result["cpage_id"];
@@ -5738,7 +5738,7 @@ function clerkship_region_name($region_id = 0) {
  */
 function clerkship_rotations_access() {
 	global $db, $ENTRADA_ACL;
-	$query = "	SELECT a.`course_id`, a.`rotation_id`, b.`organisation_id` 
+	$query = "	SELECT a.`course_id`, a.`rotation_id`, b.`organisation_id`
 				FROM `".CLERKSHIP_DATABASE."`.`global_lu_rotations` AS a
 				LEFT JOIN `courses` AS b
 				ON a.`course_id` = b.`course_id`
@@ -5837,24 +5837,24 @@ function communities_pages_intable($identifier = 0, $indent = 0, $options = arra
 	if($indent > 99) {
 		die("Preventing infinite loop");
 	}
-	
+
 	$selected				= 0;
 	$selectable_children	= true;
-	
+
 	if(is_array($options)) {
 		if((isset($options["selected"])) && ($tmp_input = clean_input($options["selected"], array("nows", "int")))) {
 			$selected = $tmp_input;
 		}
-		
+
 		if(isset($options["selectable_children"])) {
 			$selectable_children = (bool) $options["selectable_children"];
 		}
 	}
-	
-	
+
+
 	$identifier	= (int) $identifier;
 	$output		= "";
-	
+
 	if(($identifier) && ($indent === 0)) {
 		$query	= "SELECT `cpage_id`, `page_url`, `menu_title`, `parent_id`, `page_visible`, `page_type` FROM `community_pages` WHERE `community_id` = ".$COMMUNITY_ID." AND `cpage_id` = ".$db->qstr((int) $identifier)." AND `page_url` != '0' AND `page_active` = '1' ORDER BY `page_order` ASC";
 	} else {
@@ -5875,11 +5875,11 @@ function communities_pages_intable($identifier = 0, $indent = 0, $options = arra
 				$output .= "	<td ".(((int) $result["page_visible"]) == 0 ? " class=\"hidden-page\"" : "")."style=\"padding-left: ".($indent * 25)."px; vertical-align: middle\"><img src=\"".ENTRADA_URL."/images/record-next-on.gif\" width=\"11\" height=\"11\" border=\"0\" alt=\"\" title=\"\" style=\"vertical-align: middle; margin-right: 5px\" /><a href=\"".COMMUNITY_URL.$COMMUNITY_URL.":pages?".replace_query(array("action" => "edit", "step" => 1, "page" => $result["cpage_id"]))."\"".(($result["parent_id"] == 0) ? " style=\"font-weight: bold\"" : "").">".html_encode($result["menu_title"])."</a></td>\n";
 				$output .= "</tr>\n";
 			}
-			
+
 			$output .= communities_pages_intable($result["cpage_id"], $indent + 1, $options);
 		}
 	}
-	
+
 	return $output;
 }
 
@@ -5938,7 +5938,7 @@ function communities_page_children_in_list($page_id = 0) {
 		$access_query_condition[0] = "AND a.`allow_public_view` = '1'";
 		$access_query_condition[1] = "AND a.`allow_troll_view` = '1'";
 		$access_query_condition[2] = "AND a.`allow_member_view` = '1'";
-	
+
 		if ($USER_ACCESS == 1 && ((int) $db->GetOne("SELECT `community_registration` from `communities` WHERE `community_id` =".$db->qstr($community_id)." AND `community_protected` = '0'"))) {
 			$USER_ACCESS = 0;
 		}
@@ -6229,7 +6229,7 @@ function communities_polls_latest($cpolls_id = 0) {
 		 */
 		$query	= "SELECT COUNT(*) AS `total_votes`
 		FROM `community_polls_results`, `community_polls_responses`
-		WHERE `community_polls_responses`.`cpolls_id` = ".$db->qstr($cpolls_id)." 
+		WHERE `community_polls_responses`.`cpolls_id` = ".$db->qstr($cpolls_id)."
 		AND `community_polls_responses`.`cpresponses_id` = `community_polls_results`.`cpresponses_id`";
 		$query	= "SELECT DISTINCT (CONCAT_WS(' ', a.`proxy_id`, a.`updated_date`)) AS `record`
 		FROM `community_polls_results` AS a
@@ -6477,7 +6477,7 @@ function process_user_photo($original_file, $photo_id = 0) {
 	if(!$photo_id = (int) $photo_id) {
 		return false;
 	}
-	
+
 	$new_file = STORAGE_USER_PHOTOS."/".$_SESSION["details"]["id"]."-upload";
 	$img_quality = 85;
 
@@ -6660,7 +6660,7 @@ function process_user_photo($original_file, $photo_id = 0) {
 					 */
 					@imagedestroy($original_img_resource);
 					@imagedestroy($new_img_resource);
-					
+
 					return true;
 				}
 			} else {
@@ -6758,7 +6758,7 @@ function google_create_id() {
 							if ($db->Execute($query)) {
 								if(@mail($_SESSION["details"]["email"], $subject, $message, "From: \"".$AGENT_CONTACTS["administrator"]["name"]."\" <".$AGENT_CONTACTS["administrator"]["email"].">\nReply-To: \"".$AGENT_CONTACTS["administrator"]["name"]."\" <".$AGENT_CONTACTS["administrator"]["email"].">")) {
 									$_SESSION["details"]["google_id"] = $google_id;
-									
+
 									application_log("success", "Successfully sent new Google account notice to ".$_SESSION["details"]["email"]);
 
 									return true;
@@ -6901,7 +6901,7 @@ function plotkit_statistics_values($values = array()) {
  */
 function post_notify($user_ids, $community, $type, $subject, $message, $url='', $release_time=0, $record_id=0, $author_id=0) {
 	global $db;
-	
+
 	if(($db->AutoExecute("community_notifications", array("release_time" => ($release_time?$release_time:time()), "community" => $community,
 		"type" => $type, "subject" => $subject, "body" => $message, "url" => $url, "record_id" => $record_id, "author_id" => $author_id), "INSERT")) && ($cnotification_id = $db->Insert_Id())) {
 		foreach($user_ids as $user_id) {
@@ -6961,7 +6961,7 @@ function delete_notifications($types) {
  */
 function community_notify($community_id, $record_id, $content_type, $url, $permission_id = 0, $release_time = 0) {
 	global $db;
-	
+
 	/**
 	 * Select the user permission level required to access the content which
 	 * is the basis of the notification. Administrators of the community will
@@ -7069,7 +7069,7 @@ function community_notify($community_id, $record_id, $content_type, $url, $permi
 			$permission_required = 1;
 			break;
 	}
-	
+
 	/**
 	 * Select which users will be sent a notification based on the
 	 * type of notification and the user's notification setting for
@@ -7082,12 +7082,12 @@ function community_notify($community_id, $record_id, $content_type, $url, $permi
 						LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
 						ON a.`proxy_id` = b.`id`
 						WHERE a.`proxy_id` NOT IN (
-													SELECT `proxy_id` FROM `community_notify_members` 
-													WHERE `community_id` = ".$db->qstr($community_id)." 
-													AND `record_id` = ".$db->qstr($permission_id)." 
-													AND `notify_type` = ".$db->qstr($content_type)." 
+													SELECT `proxy_id` FROM `community_notify_members`
+													WHERE `community_id` = ".$db->qstr($community_id)."
+													AND `record_id` = ".$db->qstr($permission_id)."
+													AND `notify_type` = ".$db->qstr($content_type)."
 													AND `notify_active` = '0'
-												) 
+												)
 						AND a.`community_id` = ".$db->qstr($community_id)."
 						AND b.`notifications` = '1'
 						AND a.`member_acl` >= ".$db->qstr($permission_required);
@@ -7106,11 +7106,11 @@ function community_notify($community_id, $record_id, $content_type, $url, $permi
 							AND b.`record_id` = ".$db->qstr($permission_id)."
 							LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS c
 							ON a.`proxy_id` = c.`id`
-							WHERE a.`proxy_id` IN ( 
+							WHERE a.`proxy_id` IN (
 													SELECT `proxy_id`
 													FROM `community_polls_access`
 													WHERE `cpolls_id` = ".$db->qstr($record_id)."
-												) 
+												)
 							AND b.`notify_active` != '0'
 							AND a.`community_id` = ".$db->qstr($community_id)."
 							AND c.`notifications` = '1'
@@ -7120,12 +7120,12 @@ function community_notify($community_id, $record_id, $content_type, $url, $permi
 							LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
 							ON a.`proxy_id` = b.`id`
 							WHERE a.`proxy_id` NOT IN (
-														SELECT `proxy_id` FROM `community_notify_members` 
-														WHERE `community_id` = ".$db->qstr($community_id)." 
-														AND `record_id` = ".$db->qstr($permission_id)." 
-														AND `notify_type` = ".$db->qstr($content_type)." 
+														SELECT `proxy_id` FROM `community_notify_members`
+														WHERE `community_id` = ".$db->qstr($community_id)."
+														AND `record_id` = ".$db->qstr($permission_id)."
+														AND `notify_type` = ".$db->qstr($content_type)."
 														AND `notify_active` = '0'
-													) 
+													)
 							AND a.`community_id` = ".$db->qstr($community_id)."
 							AND b.`notifications` = '1'
 							AND a.`member_acl` >= ".$db->qstr($permission_required);
@@ -7136,14 +7136,14 @@ function community_notify($community_id, $record_id, $content_type, $url, $permi
 			$query = "	SELECT `proxy_id` FROM `community_members` AS a
 						LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
 						ON a.`proxy_id` = b.`id`
-						WHERE a.`proxy_id` IN ( 
-												SELECT `proxy_id` FROM `community_notify_members` 
-												WHERE `community_id` = ".$db->qstr($community_id)." 
-												AND `record_id` = ".$db->qstr($community_id)." 
-												AND `notify_type` = 'members' 
+						WHERE a.`proxy_id` IN (
+												SELECT `proxy_id` FROM `community_notify_members`
+												WHERE `community_id` = ".$db->qstr($community_id)."
+												AND `record_id` = ".$db->qstr($community_id)."
+												AND `notify_type` = 'members'
 												AND `notify_active` = '1'
-											) 
-						AND a.`member_acl` = '1' 
+											)
+						AND a.`member_acl` = '1'
 						AND b.`notifications` = '1'
 						AND a.`community_id` = ".$db->qstr($community_id);
 			break;
@@ -7154,7 +7154,7 @@ function community_notify($community_id, $record_id, $content_type, $url, $permi
 						LEFT JOIN `community_notify_members` AS c
 						ON c.`community_id` = ".$db->qstr($community_id)."
 						AND c.`record_id` = ".$db->qstr($permission_id)."
-						AND c.`notify_type` = ".$db->qstr($content_type)." 
+						AND c.`notify_type` = ".$db->qstr($content_type)."
 						AND c.`proxy_id` = a.`proxy_id`
 						LEFT JOIN `community_notify_members` AS d
 						ON d.`community_id` = ".$db->qstr($community_id)."
@@ -7164,7 +7164,7 @@ function community_notify($community_id, $record_id, $content_type, $url, $permi
 						ON e.`cdiscussion_id` = d.`record_id`
 						AND e.`cdtopic_id` = ".$db->qstr($permission_id)."
 						WHERE (
-							d.`notify_active` = '1' 
+							d.`notify_active` = '1'
 							OR c.`notify_active` = '1'
 						)
 						AND a.`community_id` = ".$db->qstr($community_id)."
@@ -7177,9 +7177,9 @@ function community_notify($community_id, $record_id, $content_type, $url, $permi
 						LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
 						ON a.`proxy_id` = b.`id`
 						LEFT JOIN `community_notify_members` AS c
-						ON c.`community_id` = ".$db->qstr($community_id)." 
-						AND c.`record_id` = ".$db->qstr($permission_id)." 
-						AND c.`notify_type` = 'file-notify' 
+						ON c.`community_id` = ".$db->qstr($community_id)."
+						AND c.`record_id` = ".$db->qstr($permission_id)."
+						AND c.`notify_type` = 'file-notify'
 						AND c.`proxy_id` = b.`id`
 						WHERE c.`notify_active` = '1'
 						AND a.`community_id` = ".$db->qstr($community_id)."
@@ -7191,19 +7191,19 @@ function community_notify($community_id, $record_id, $content_type, $url, $permi
 						LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
 						ON a.`proxy_id` = b.`id`
 						WHERE a.`proxy_id` IN (
-												SELECT `proxy_id` FROM `community_notify_members` 
-												WHERE `community_id` = ".$db->qstr($community_id)." 
-												AND `record_id` = ".$db->qstr($permission_id)." 
-												AND `notify_type` = ".$db->qstr($content_type)." 
+												SELECT `proxy_id` FROM `community_notify_members`
+												WHERE `community_id` = ".$db->qstr($community_id)."
+												AND `record_id` = ".$db->qstr($permission_id)."
+												AND `notify_type` = ".$db->qstr($content_type)."
 												AND `notify_active` = '1'
-											) 
+											)
 						AND a.`community_id` = ".$db->qstr($community_id)."
 						AND b.`notifications` = '1'
 						AND a.`member_acl` >= ".$db->qstr($permission_required);
 			break;
 	}
 	$proxy_ids = $db->GetAll($query);
-	
+
 	if($proxy_ids && count($proxy_ids)) {
 		/**
 		 * Select which type of message should be sent - then generate the message
@@ -7211,7 +7211,7 @@ function community_notify($community_id, $record_id, $content_type, $url, $permi
 		 */
 		switch ($content_type) {
 			case "poll" :
-				$query	 = "SELECT a.`poll_title`, b.`community_title` 
+				$query	 = "SELECT a.`poll_title`, b.`community_title`
 							FROM `community_polls` AS a
 							LEFT JOIN `communities` AS b
 							ON a.`community_id` = b.`community_id`
@@ -7223,7 +7223,7 @@ function community_notify($community_id, $record_id, $content_type, $url, $permi
 				$subject = "New poll started";
 				break;
 			case "file" :
-				$query	 = "SELECT a.`file_title`, b.`community_title` 
+				$query	 = "SELECT a.`file_title`, b.`community_title`
 							FROM `community_share_files` AS a
 							LEFT JOIN `communities` AS b
 							ON a.`community_id` = b.`community_id`
@@ -7235,7 +7235,7 @@ function community_notify($community_id, $record_id, $content_type, $url, $permi
 				$subject = "New file added";
 				break;
 			case "file-revision" :
-				$query	 = "SELECT a.`file_title`, b.`community_title` 
+				$query	 = "SELECT a.`file_title`, b.`community_title`
 							FROM `community_share_files` AS a
 							LEFT JOIN `communities` AS b
 							ON a.`community_id` = b.`community_id`
@@ -7247,7 +7247,7 @@ function community_notify($community_id, $record_id, $content_type, $url, $permi
 				$subject = "New version of file added";
 				break;
 			case "file-comment" :
-				$query	 = "SELECT a.`file_title`, b.`community_title` 
+				$query	 = "SELECT a.`file_title`, b.`community_title`
 							FROM `community_share_files` AS a
 							LEFT JOIN `communities` AS b
 							ON a.`community_id` = b.`community_id`
@@ -7259,7 +7259,7 @@ function community_notify($community_id, $record_id, $content_type, $url, $permi
 				$subject = "New file comment added";
 				break;
 			case "photo" :
-				$query	 = "SELECT a.`photo_title`, b.`community_title` 
+				$query	 = "SELECT a.`photo_title`, b.`community_title`
 							FROM `community_gallery_photos` AS a
 							LEFT JOIN `communities` AS b
 							ON a.`community_id` = b.`community_id`
@@ -7271,7 +7271,7 @@ function community_notify($community_id, $record_id, $content_type, $url, $permi
 				$subject = "New photo added";
 				break;
 			case "photo-comment" :
-				$query	 = "SELECT a.`photo_title`, b.`community_title` 
+				$query	 = "SELECT a.`photo_title`, b.`community_title`
 							FROM `community_gallery_photos` AS a
 							LEFT JOIN `communities` AS b
 							ON a.`community_id` = b.`community_id`
@@ -7283,7 +7283,7 @@ function community_notify($community_id, $record_id, $content_type, $url, $permi
 				$subject = "New photo comment added";
 				break;
 			case "announcement" :
-				$query	 = "SELECT a.`announcement_title`, b.`community_title` 
+				$query	 = "SELECT a.`announcement_title`, b.`community_title`
 							FROM `community_announcements` AS a
 							LEFT JOIN `communities` AS b
 							ON a.`community_id` = b.`community_id`
@@ -7295,7 +7295,7 @@ function community_notify($community_id, $record_id, $content_type, $url, $permi
 				$subject = "New announcement added";
 				break;
 			case "event" :
-				$query	 = "SELECT a.`event_title`, b.`community_title` 
+				$query	 = "SELECT a.`event_title`, b.`community_title`
 							FROM `community_events` AS a
 							LEFT JOIN `communities` AS b
 							ON a.`community_id` = b.`community_id`
@@ -7307,7 +7307,7 @@ function community_notify($community_id, $record_id, $content_type, $url, $permi
 				$subject = "New event added";
 				break;
 			case "post" :
-				$query	 = "SELECT a.`topic_title`, b.`community_title` 
+				$query	 = "SELECT a.`topic_title`, b.`community_title`
 							FROM `community_discussion_topics` AS a
 							LEFT JOIN `communities` AS b
 							ON a.`community_id` = b.`community_id`
@@ -7319,7 +7319,7 @@ function community_notify($community_id, $record_id, $content_type, $url, $permi
 				$subject = "New discussion topic added";
 				break;
 			case "reply" :
-				$query	 = "SELECT a.`topic_title`, b.`community_title` 
+				$query	 = "SELECT a.`topic_title`, b.`community_title`
 							FROM `community_discussion_topics` AS a
 							LEFT JOIN `communities` AS b
 							ON a.`community_id` = b.`community_id`
@@ -7354,7 +7354,7 @@ function community_notify($community_id, $record_id, $content_type, $url, $permi
 	} else {
 		return false;
 	}
-	
+
 	return true;
 }
 
@@ -7595,7 +7595,7 @@ function lp_multiple_select_inline($id, $checkboxes, $options) {
 
 		$return .= '</div>';
 	}
-	
+
 
 	$return .= '<div id="'.$id.'_scroll" class="select_multiple_scroll" style="'.
 	(isset($options['height']) ? 'height: '.$options['height'].';' : '' ).'"><table cellspacing="0" cellpadding="0" class="select_multiple_table" width="100%">';
@@ -7772,10 +7772,10 @@ function quiz_count_questions($quiz_id = 0) {
 function clerkship_get_elective_location($event_id) {
 	global $db;
 
-	$query	= "	SELECT a.`geo_location`, a.`city`, b.`region_name` 
-				FROM `".CLERKSHIP_DATABASE."`.`electives` AS a 
+	$query	= "	SELECT a.`geo_location`, a.`city`, b.`region_name`
+				FROM `".CLERKSHIP_DATABASE."`.`electives` AS a
 				LEFT JOIN `".CLERKSHIP_DATABASE."`.`regions` AS b
-				ON a.`region_id` = b.`region_id` 
+				ON a.`region_id` = b.`region_id`
 				WHERE a.`event_id` = ".$db->qstr($event_id);
 	$result = $db->GetRow($query);
 	if ($result && $result["region_name"]) {
@@ -7843,7 +7843,7 @@ function clerkship_student_name($event_id = 0) {
 	if($event_id = (int) $event_id) {
 		$query	= "SELECT `firstname`, `lastname`, `role`, `user_data`.`id`
 		FROM `".CLERKSHIP_DATABASE."`.`event_contacts`, `".AUTH_DATABASE."`.`user_data`, `".AUTH_DATABASE."`.`user_access`
-		WHERE `event_id` = ".$db->qstr($event_id)." 
+		WHERE `event_id` = ".$db->qstr($event_id)."
 		AND `etype_id` = `".AUTH_DATABASE."`.`user_data`.`id`
 		AND `".AUTH_DATABASE."`.`user_data`.`id` = `".AUTH_DATABASE."`.`user_access`.`user_id`";
 
@@ -7888,10 +7888,10 @@ function clerkship_get_rotation_overview($rotation_id, $proxy_id = 0) {
     }
 
     // Count of entries entered in this rotation
-    $query  = "	SELECT COUNT(*) FROM `".CLERKSHIP_DATABASE."`.`logbook_entries` l 
-    			WHERE l.`proxy_id` = ".$db->qstr($proxy_id)." 
-    			AND l.`entry_active` = 1 
-    			AND	l.`rotation_id` IN 
+    $query  = "	SELECT COUNT(*) FROM `".CLERKSHIP_DATABASE."`.`logbook_entries` l
+    			WHERE l.`proxy_id` = ".$db->qstr($proxy_id)."
+    			AND l.`entry_active` = 1
+    			AND	l.`rotation_id` IN
     			(
     				SELECT e.`event_id` FROM `".CLERKSHIP_DATABASE."`.`events` as e
 					WHERE e.`rotation_id` = ".$db->qstr($rotation_id)."
@@ -7902,9 +7902,9 @@ function clerkship_get_rotation_overview($rotation_id, $proxy_id = 0) {
     $query  = "	SELECT COUNT(*) FROM `".CLERKSHIP_DATABASE."`.`logbook_entry_objectives` AS a
     			INNER JOIN `".CLERKSHIP_DATABASE."`.`logbook_entries` AS b
     			ON a.`lentry_id` = b.`lentry_id`
-			    WHERE b.`proxy_id` = ".$db->qstr($proxy_id)." 
-			    AND b.`entry_active` = 1 
-			    AND b.`rotation_id` IN 
+			    WHERE b.`proxy_id` = ".$db->qstr($proxy_id)."
+			    AND b.`entry_active` = 1
+			    AND b.`rotation_id` IN
 			    (
 			    	SELECT e.`event_id` FROM `".CLERKSHIP_DATABASE."`.`events` AS e
 					WHERE e.`rotation_id` = ".$db->qstr($rotation_id)."
@@ -7915,14 +7915,14 @@ function clerkship_get_rotation_overview($rotation_id, $proxy_id = 0) {
     $query  = "	SELECT  DISTINCT(a.`objective_id`) FROM `".CLERKSHIP_DATABASE."`.`logbook_entry_objectives` AS a
   				INNER JOIN `".CLERKSHIP_DATABASE."`.`logbook_entries` AS b
   				ON a.`lentry_id` = b.`lentry_id`
-	        	WHERE b.`proxy_id` = ".$db->qstr($proxy_id)." 
-	        	AND b.`entry_active` = 1 
-	        	AND b.`rotation_id` IN 
+	        	WHERE b.`proxy_id` = ".$db->qstr($proxy_id)."
+	        	AND b.`entry_active` = 1
+	        	AND b.`rotation_id` IN
 	        	(
 	        		SELECT e.`event_id` FROM `".CLERKSHIP_DATABASE."`.`events` AS e
 	        		WHERE e.`rotation_id` = ".$db->qstr($rotation_id)."
 	        	)
-				AND a.`objective_id` IN 
+				AND a.`objective_id` IN
 				(
 					SELECT `objective_id` FROM `".CLERKSHIP_DATABASE."`.`logbook_mandatory_objectives`
 					WHERE `rotation_id` = ".$db->qstr($rotation_id)."
@@ -7952,13 +7952,13 @@ function clerkship_get_rotation_overview($rotation_id, $proxy_id = 0) {
 				AND `grad_year_min` <= ".$db->qstr(get_account_data("grad_year", $proxy_id))."
 				AND (`grad_year_max` = 0 OR `grad_year_max` >= ".$db->qstr(get_account_data("grad_year", $proxy_id)).")";
     $all_mandatories = $db->GetOne($query);
- 
+
     $query  = "	SELECT COUNT(*) FROM `".CLERKSHIP_DATABASE."`.`logbook_entry_procedures` AS a
     			INNER JOIN `".CLERKSHIP_DATABASE."`.`logbook_entries` AS b
     			ON a.`lentry_id` = b.`lentry_id`
-				WHERE b.`proxy_id` = ".$db->qstr($proxy_id)." 
-				AND b.`entry_active` = 1 
-				AND b.`rotation_id` IN 
+				WHERE b.`proxy_id` = ".$db->qstr($proxy_id)."
+				AND b.`entry_active` = 1
+				AND b.`rotation_id` IN
 				(
 					SELECT e.`event_id` FROM `".CLERKSHIP_DATABASE."`.`events` AS e
 					WHERE e.`rotation_id` = ".$db->qstr($rotation_id)."
@@ -8028,21 +8028,21 @@ function clerkship_get_rotation_schedule ($rotation, $proxy_id = 0) {
 	    		(
 					SELECT FROM_UNIXTIME(b.`event_start`) AS s
 					FROM `".CLERKSHIP_DATABASE."`.`event_contacts` AS a
-					INNER JOIN `".CLERKSHIP_DATABASE."`.`events` AS b 
+					INNER JOIN `".CLERKSHIP_DATABASE."`.`events` AS b
 					ON a.`event_id` = b.`event_id`
-					WHERE a.`etype_id` = ".$db->qstr($proxy_id)." 
+					WHERE a.`etype_id` = ".$db->qstr($proxy_id)."
 					AND b.`rotation_id` = ".$db->qstr($rotation)."
-					ORDER BY b.`event_start` 
+					ORDER BY b.`event_start`
 					LIMIT 1
 				)  t1,
 	    		(
 	    			SELECT FROM_UNIXTIME(b.`event_finish`) AS f
 					FROM `".CLERKSHIP_DATABASE."`.`event_contacts` AS a
-					INNER JOIN `".CLERKSHIP_DATABASE."`.`events` AS b 
+					INNER JOIN `".CLERKSHIP_DATABASE."`.`events` AS b
 					ON a.`event_id` = b.`event_id`
-					WHERE a.`etype_id` = ".$db->qstr($proxy_id)." 
+					WHERE a.`etype_id` = ".$db->qstr($proxy_id)."
 					AND b.`rotation_id` = ".$db->qstr($rotation)."
-					ORDER BY b.`event_finish` DESC 
+					ORDER BY b.`event_finish` DESC
 					LIMIT 1
 				) t2";
 	$result = $db->GetRow($query);
@@ -8141,15 +8141,15 @@ function clerkship_progress_send_notice($rotation_period_index, $rotation, $cler
 
 /**
  * This function returns the numeric suffix in English for the provided number.
- * 
+ *
  * @param int $number
  * @return string
  */
-function numeric_suffix($number = 0) { 
-    $test_number = abs($number) % 10; 
+function numeric_suffix($number = 0) {
+    $test_number = abs($number) % 10;
     $ext = ((abs($number) %100 < 21 && abs($number) %100 > 4) ? 'th' : (($test_number < 4) ? ($test_number < 3) ? ($test_number < 2) ? ($test_number < 1) ? 'th' : 'st' : 'nd' : 'rd' : 'th'));
-    
-	return $number.$ext; 
+
+	return $number.$ext;
 }
 
 /**
@@ -8182,7 +8182,7 @@ function clerkship_notify_clerk($rotation_period_index, $clerk, $rotation, $obje
 				break;
 		}
 		$NOTIFICATION_MESSAGE		 	 = array();
-		
+
 		switch ($rotation_period_index) {
 			case CLERKSHIP_SIX_WEEKS_PAST :
 				$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".$ENTRADA_ACTIVE_TEMPLATE."/email/clerkship-deficiency-clerk-notification.txt");
@@ -8196,7 +8196,7 @@ function clerkship_notify_clerk($rotation_period_index, $clerk, $rotation, $obje
 				$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".$ENTRADA_ACTIVE_TEMPLATE."/email/clerkship-delinquency-clerk-notification.txt");
 				break;
 		}
-								
+
 		if ($rotation) {
 			$query 	= " SELECT `notified_date` FROM `".CLERKSHIP_DATABASE."`.`logbook_notification_history`
 					WHERE `clerk_id` = ".$db->qstr($clerk["proxy_id"])."
@@ -8206,9 +8206,9 @@ function clerkship_notify_clerk($rotation_period_index, $clerk, $rotation, $obje
 					LIMIT 0,1";
 			$last_notified = $db->GetOne($query);
 			if ($last_notified <= (strtotime("-1 week"))) {
-				
+
 				clerkship_add_queued_notification($rotation_period_index, $clerk, $rotation, $objective_progress);
-												
+
 				$search		= array(
 									"%CLERK_FULLNAME%",
 									"%ROTATION_TITLE%",
@@ -8234,7 +8234,7 @@ function clerkship_notify_clerk($rotation_period_index, $clerk, $rotation, $obje
 									$last_notified
 							);
 				$mail->setBodyText(clean_input(str_replace($search, $replace, $NOTIFICATION_MESSAGE["textbody"]), array("postclean")));
-				
+
 				if ($clerk["proxy_id"]) {
 					$NOTICE 	= Array(
 										"target" => "proxy_id:".$clerk["proxy_id"],
@@ -8257,7 +8257,7 @@ function clerkship_notify_clerk($rotation_period_index, $clerk, $rotation, $obje
 						application_log("error", "Unable to insert new notice into the system. Database said: ".$db->ErrorMsg());
 					}
 				}
-				
+
 				$mail->clearRecipients();
 				if (strlen($clerk["email"])) {
 					$mail->addTo($clerk["email"], $clerk["fullname"]);
@@ -8306,7 +8306,7 @@ function clerkship_notify_clerk($rotation_period_index, $clerk, $rotation, $obje
  */
 function clerkship_add_queued_notification($rotation_period_index, $clerk, $rotation, $objective_progress) {
 	global $db, $AGENT_CONTACTS;
-						
+
 	if ($rotation) {
 		$query 	= "SELECT `notified_date` FROM `".CLERKSHIP_DATABASE."`.`logbook_notification_history`
 				WHERE `clerk_id` = ".$db->qstr($clerk["proxy_id"])."
@@ -8315,15 +8315,15 @@ function clerkship_add_queued_notification($rotation_period_index, $clerk, $rota
 				ORDER BY `notified_date` DESC
 				LIMIT 1";
 		$last_notified = $db->GetOne($query);
-		
+
 		if ($last_notified <= (strtotime("-1 week"))) {
 			if ($clerk["proxy_id"]) {
 				$coordinator_notification = array(
-														"clerk_id" => $clerk["proxy_id"], 
-														"proxy_id" => $rotation["pcoord_id"], 
-														"rotation_id" => $clerk["rotation_id"], 
-														"timeframe" => $rotation_period_index, 
-														"updated_date" => time(), 
+														"clerk_id" => $clerk["proxy_id"],
+														"proxy_id" => $rotation["pcoord_id"],
+														"rotation_id" => $clerk["rotation_id"],
+														"timeframe" => $rotation_period_index,
+														"updated_date" => time(),
 														"notification_sent" => false
 												);
 				if (!$db->AutoExecute(CLERKSHIP_DATABASE.".clerkship_queued_notifications", $coordinator_notification, "INSERT")) {
@@ -8346,7 +8346,7 @@ function clerkship_send_queued_notifications($rotation_id, $rotation_title, $pro
 	$query 	= "SELECT * FROM `".CLERKSHIP_DATABASE."`.`clerkship_queued_notifications`
 			WHERE `rotation_id` = ".$db->qstr($rotation_id)."
 			AND `clerk_id` NOT IN (
-				SELECT `clerk_id` FROM `".CLERKSHIP_DATABASE."`.`logbook_notification_history` 
+				SELECT `clerk_id` FROM `".CLERKSHIP_DATABASE."`.`logbook_notification_history`
 				WHERE `notified_date` > ".$db->qstr(strtotime("-1 week"))."
 				AND `rotation_id` = ".$db->qstr($rotation_id)."
 				AND `proxy_id` = ".$db->qstr($proxy_id)."
@@ -8373,11 +8373,11 @@ function clerkship_send_queued_notifications($rotation_id, $rotation_title, $pro
 				$mail->clearSubject();
 				$mail->setFrom($AGENT_CONTACTS["agent-notifications"]["email"], APPLICATION_NAME.' Clerkship System');
 				$mail->setSubject("Clerkship Logbook Progress Notification");
-				
+
 				$NOTIFICATION_MESSAGE		 	 = array();
 				$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".$ENTRADA_ACTIVE_TEMPLATE."/email/clerkship-coordinator-notification.txt");
-								
-		
+
+
 				$search		= array(
 									"%ROTATION_TITLE%",
 									"%CLERK_LIST%",
@@ -8391,7 +8391,7 @@ function clerkship_send_queued_notifications($rotation_id, $rotation_title, $pro
 									ENTRADA_URL
 							);
 				$mail->setBodyText(clean_input(str_replace($search, $replace, $NOTIFICATION_MESSAGE["textbody"]), array("postclean")));
-				
+
 				if (strlen($email)) {
 					$mail->clearRecipients();
 					$mail->addTo($email, $fullname);
@@ -8441,7 +8441,7 @@ function clerkship_send_queued_notifications($rotation_id, $rotation_title, $pro
  */
 function clerkship_rotation_objectives_progress($proxy_id, $rotation_id) {
 	global $db;
-	
+
 	$query 	= "SELECT a.*, b.* FROM `".CLERKSHIP_DATABASE."`.`logbook_mandatory_objectives` AS a
 			JOIN `global_lu_objectives` AS b
 			ON a.`objective_id` = b.`objective_id`
@@ -8470,7 +8470,7 @@ function clerkship_rotation_objectives_progress($proxy_id, $rotation_id) {
 			$required_list[$objective["objective_id"]] = $objective["objective_name"];
 		}
 		if ($objective_string) {
-			$query 	= "SELECT COUNT(a.`objective_id`) as number_logged, a.`objective_id` 
+			$query 	= "SELECT COUNT(a.`objective_id`) as number_logged, a.`objective_id`
 						FROM `".CLERKSHIP_DATABASE."`.`logbook_entry_objectives` AS a
 						LEFT JOIN `".CLERKSHIP_DATABASE."`.`logbook_entries` AS b
 						ON a.`lentry_id` = b.`lentry_id`
@@ -8572,12 +8572,12 @@ function clerkship_deficiency_notifications($clerk_id, $rotation_id, $administra
 		$mail->setFrom($AGENT_CONTACTS["agent-notifications"]["email"], APPLICATION_NAME." Clerkship System");
 		$mail->setSubject("Clerkship Logbook Deficiency Notification");
 		$NOTIFICATION_MESSAGE	= array();
-						
+
 		$query	 				= "SELECT CONCAT_WS(' ', `firstname`, `lastname`) as `fullname`, `email`, `id`
 									FROM `".AUTH_DATABASE."`.`user_data`
 									WHERE `id` = ".$db->quote($clerk_id);
 		$clerk					= $db->GetRow($query);
-		
+
 		$query 					= "SELECT a.`rotation_title`, c.`email`, CONCAT_WS(' ', c.`firstname`, c.`lastname`) as `fullname`, c.`id` AS `proxy_id`
 									FROM `".CLERKSHIP_DATABASE."`.`global_lu_rotations` AS a
 									LEFT JOIN `courses` AS b
@@ -8587,9 +8587,9 @@ function clerkship_deficiency_notifications($clerk_id, $rotation_id, $administra
 									WHERE a.`rotation_id` = ".$db->quote($rotation_id)."
 									AND b.`course_active` = '1'";
 		$rotation				= $db->GetRow($query);
-		
+
 		if ($rotation) {
-												
+
 			$search	= array(
 								"%CLERK_FULLNAME%",
 								"%ROTATION_TITLE%",
@@ -8611,12 +8611,12 @@ function clerkship_deficiency_notifications($clerk_id, $rotation_id, $administra
 								ENTRADA_URL
 							);
 			if ($administrator) {
-				$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".$ENTRADA_ACTIVE_TEMPLATE."/email/clerk-deficiency-plan-admin-notification.txt");					
+				$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".$ENTRADA_ACTIVE_TEMPLATE."/email/clerk-deficiency-plan-admin-notification.txt");
 			} else {
 				$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".$ENTRADA_ACTIVE_TEMPLATE."/email/clerk-deficiency-plan-reviewed-".($completed ? "complete" : "incomplete")."-notification.txt");
 			}
 			$mail->setBodyText(clean_input(str_replace($search, $replace, $NOTIFICATION_MESSAGE["textbody"]), array("postclean")));
-			
+
 			if (($rotation["email"] && $administrator) || !$administrator) {
 				if ($administrator) {
 					$notice_message = "The clerk [%CLERK_FULLNAME%] has completed a plan to attain deficiencies for a rotation [%ROTATION_TITLE%] after the allotted time. Please review their <a href=\"%DEFICIENCY_PLAN_URL%\">Deficiency Plan</a> now to ensure it meets all requirements.";
@@ -8689,7 +8689,7 @@ function clerkship_deficiency_notifications($clerk_id, $rotation_id, $administra
 
 function courses_subnavigation($course_details) {
 	global $ENTRADA_ACL, $module_singular_name;
-	
+
 	echo "<div class=\"no-printing\">\n";
 	echo "	<div style=\"float: right\">\n";
 	if($ENTRADA_ACL->amIAllowed(new CourseResource($course_details["course_id"], $course_details["organisation_id"]), "update")) {
@@ -8711,9 +8711,9 @@ function courses_subnavigation($course_details) {
 
 function course_fetch_course_group($cgroup_id = 0) {
 	global $db;
-	
+
 	$cgroup_id = (int) $cgroup_id;
-	
+
 	if ($cgroup_id) {
 		$query = "	SELECT a.*, COUNT(b.`cgaudience_id`) AS `members`
 					FROM `course_groups` AS a
@@ -8726,24 +8726,24 @@ function course_fetch_course_group($cgroup_id = 0) {
 			return $result;
 		}
 	}
-	
+
 	return false;
 }
 
 function course_fetch_enrolled_course_groups($proxy_id = 0, $only_active_groups = false) {
 	global $db, $ENTRADA_USER;
-	
+
 	$proxy_id = (int) $proxy_id;
 	$only_active_groups = (bool) $only_active_groups;
-	
+
 	$cgroup_ids = array();
-	
+
 	if ($proxy_id) {
 		$query = "	SELECT a.`cgroup_id`
-					FROM `course_groups` AS a 
-					JOIN `course_group_audience` AS b 
+					FROM `course_groups` AS a
+					JOIN `course_group_audience` AS b
 					ON b.`cgroup_id` = a.`cgroup_id`
-					JOIN `courses` AS c 
+					JOIN `courses` AS c
 					ON c.`course_id` = a.`course_id`
 					WHERE b.`proxy_id` = ".$db->qstr($proxy_id)."
 					AND b.`active` = '1'
@@ -8756,7 +8756,7 @@ function course_fetch_enrolled_course_groups($proxy_id = 0, $only_active_groups 
 			}
 		}
 	}
-	
+
 	return $cgroup_ids;
 }
 
@@ -8783,12 +8783,12 @@ function courses_count_associated_events($course_id = 0) {
 
 function courses_fetch_courses($only_active_courses = true, $order_by_course_code = true, $curriculum_type_id = 0) {
 	global $db, $ENTRADA_ACL, $ENTRADA_USER;
-	
+
 	$only_active_courses = (bool) $only_active_courses;
 	$order_by_course_code = (bool) $order_by_course_code;
-	
+
 	$curriculum_type_ids = array();
-	
+
 	if (is_scalar($curriculum_type_id) && ($id = (int) trim($curriculum_type_id))) {
 		$curriculum_type_ids[] = $id;
 	} elseif (is_array($curriculum_type_id)) {
@@ -8799,36 +8799,36 @@ function courses_fetch_courses($only_active_courses = true, $order_by_course_cod
 			}
 		}
 	}
-	
+
 	$output = array();
-	$query = "	SELECT * FROM `courses` 
-				WHERE `organisation_id` = '1' ";
+	$query = "	SELECT * FROM `courses`
+				WHERE `organisation_id` = " . $db->qstr($ENTRADA_USER->getActiveOrganisation());;
 	if($ENTRADA_USER->getGroup() == "student"){
 		$query .="AND (
-					`permission` = 'open' 
+					`permission` = 'open'
 					OR `course_id` IN(
-						SELECT `course_id` 
-						FROM `course_audience` AS a 
-						JOIN `curriculum_periods` AS b 
-						ON a.`cperiod_id` = b.`cperiod_id` 
-						WHERE `audience_type` = 'proxy_id' 
-						AND `audience_value` = ".$ENTRADA_USER->getProxyId()." 
-						AND UNIX_TIMESTAMP() BETWEEN b.`start_date` AND b.`finish_date` 
+						SELECT `course_id`
+						FROM `course_audience` AS a
+						JOIN `curriculum_periods` AS b
+						ON a.`cperiod_id` = b.`cperiod_id`
+						WHERE `audience_type` = 'proxy_id'
+						AND `audience_value` = ".$ENTRADA_USER->getProxyId()."
+						AND UNIX_TIMESTAMP() BETWEEN b.`start_date` AND b.`finish_date`
 						AND b.`active` = '1'
-					) 
+					)
 					OR `course_id` IN (
-						SELECT a.`course_id` 
-						FROM `course_audience` AS a 
-						JOIN `groups` AS b 
-						ON a.`audience_type` = 'group_id' 
-						AND a.`audience_value` = b.`group_id` 
-						JOIN `group_members` AS c 
-						ON b.`group_id` = c.`group_id` 
-						JOIN `curriculum_periods` AS d 
-						ON a.`cperiod_id` = d.`cperiod_id` 
-						WHERE c.`proxy_id` = ".$ENTRADA_USER->getProxyId()." 
-						AND UNIX_TIMESTAMP() BETWEEN d.`start_date` AND d.`finish_date` 
-						AND d.`active` = '1' 
+						SELECT a.`course_id`
+						FROM `course_audience` AS a
+						JOIN `groups` AS b
+						ON a.`audience_type` = 'group_id'
+						AND a.`audience_value` = b.`group_id`
+						JOIN `group_members` AS c
+						ON b.`group_id` = c.`group_id`
+						JOIN `curriculum_periods` AS d
+						ON a.`cperiod_id` = d.`cperiod_id`
+						WHERE c.`proxy_id` = ".$ENTRADA_USER->getProxyId()."
+						AND UNIX_TIMESTAMP() BETWEEN d.`start_date` AND d.`finish_date`
+						AND d.`active` = '1'
 						AND c.`member_active` = '1'
 					)
 				)";
@@ -8839,17 +8839,17 @@ function courses_fetch_courses($only_active_courses = true, $order_by_course_cod
 	if (!empty($curriculum_type_ids)) {
 		$query .= "	AND `curriculum_type_id` IN (".implode(", ", $curriculum_type_ids).")";
 	}
-	
+
 	$query .= "	ORDER BY".($order_by_course_code ? " `course_code`," : "")." `course_name` ASC";
 	$results = $db->GetAll($query);
 	if ($results) {
-		foreach ($results as $result) {			
+		foreach ($results as $result) {
 				if ($ENTRADA_ACL->amIAllowed(new CourseResource($result["course_id"], $ENTRADA_USER->getOrganisationID()), "read")) {
 					$output[] = $result;
 				}
 		}
 	}
-	
+
 	return $output;
 }
 
@@ -8868,15 +8868,15 @@ function courses_fetch_courses($only_active_courses = true, $order_by_course_cod
  */
 function courses_fetch_objectives($org_id, $course_ids, $top_level_id = -1, $parent_id = 1, $objectives = false, $objective_ids = false, $event_id = 0, $fetch_all_text = false) {
 	global $db, $translate;
-	
+
 	if (!$objectives && is_array($course_ids)) {
-		$objectives = array(	
-							"used" => array(), 
-							"unused" => array(), 
-							"objectives" => array(), 
-							"used_ids" => array(), 
-							"primary_ids" => array(), 
-							"secondary_ids" => array(), 
+		$objectives = array(
+							"used" => array(),
+							"unused" => array(),
+							"objectives" => array(),
+							"used_ids" => array(),
+							"primary_ids" => array(),
+							"secondary_ids" => array(),
 							"tertiary_ids" => array());
 		$escaped_course_ids = "";
 		for ($i = 0; $i < (count($course_ids) - 1); $i++) {
@@ -8957,13 +8957,13 @@ function courses_fetch_objectives($org_id, $course_ids, $top_level_id = -1, $par
 			}
 		}
 	}
-	
+
 	if($top_level_id == -1){
 		$objective_name = $translate->_("events_filter_controls");
 		$objective_name = $objective_name["co"]["global_lu_objectives_name"];
-		$query	= "SELECT a.* FROM `global_lu_objectives` AS a 
-					INNER JOIN `objective_organisation` AS b 
-					ON a.`objective_id` = b.`objective_id` 
+		$query	= "SELECT a.* FROM `global_lu_objectives` AS a
+					INNER JOIN `objective_organisation` AS b
+					ON a.`objective_id` = b.`objective_id`
 					WHERE b.`organisation_id` = ".$db->qstr($org_id)."
 					AND `objective_active` = '1'
 					AND a.`objective_name` LIKE ".$db->qstr($objective_name)."
@@ -8976,13 +8976,13 @@ function courses_fetch_objectives($org_id, $course_ids, $top_level_id = -1, $par
 					AND a.`objective_active` = '1'
 					AND b.`organisation_id` = ".$db->qstr($org_id)."
 					ORDER BY a.`objective_order` ASC";
-	}	
+	}
 	$results	= $db->GetAll($query);
 	if($results) {
 		if($top_level_id == -1){
 			$top_level_id = $results[0]["objective_id"];
 			$parent_id = $top_level_id;
-			
+
 			$query	= "SELECT a.* FROM `global_lu_objectives` AS a
 						JOIN `objective_organisation` AS b
 						ON a.`objective_id` = b.`objective_id`
@@ -8990,8 +8990,8 @@ function courses_fetch_objectives($org_id, $course_ids, $top_level_id = -1, $par
 						AND b.`organisation_id` = ".$db->qstr($org_id)."
 						AND a.`objective_active` = '1'
 						ORDER BY a.`objective_order` ASC";
-		
-			
+
+
 			$results = $db->GetAll($query);
 		}
 		foreach($results as $result) {
@@ -9134,21 +9134,21 @@ function courses_fetch_objectives($org_id, $course_ids, $top_level_id = -1, $par
  * @param type $top
  * @param type $display_importance
  * @param type $hierarchical
- * @return string 
+ * @return string
  */
 function course_objectives_in_list($objectives, $parent_id, $top_level_id, $edit_importance = false, $parent_active = false, $importance = 1, $selected_only = false, $top = true, $display_importance = "primary", $hierarchical = false, $full_objective_list = false, $org_id = 0) {
 	global $ENTRADA_USER;
-	
+
 	$output = "";
 	$active = array("primary" => false, "secondary" => false, "tertiary" => false);
 	$org_id = ($org_id == 0 ? $ENTRADA_USER->getActiveOrganisation() : (int) $org_id );
-	
+
 	if ($top) {
 		if ($selected_only) {
 			foreach ($objectives["objectives"] as $objective_id => $objective) {
 				if (isset($objective["event_objective"]) && $objective["event_objective"]) {
 					if (!$active["primary"] && $objective["primary"]) {
-						$active["primary"] = true; 
+						$active["primary"] = true;
 					} elseif (!$active["secondary"] && $objective["secondary"]) {
 						$active["secondary"] = true;
 					} elseif (!$active["tertiary"] && $objective["tertiary"]) {
@@ -9187,13 +9187,13 @@ function course_objectives_in_list($objectives, $parent_id, $top_level_id, $edit
 				$active["secondary"] = true;
 				if (empty($objectives["primary_ids"])) {
 					$display_importance = "secondary";
-				} 
+				}
 			}
 			if ($objectives["tertiary_ids"]) {
 				$active["tertiary"] = true;
 				if (empty($objectives["primary_ids"]) && empty($objectives["secondary_ids"])) {
 					$display_importance = "tertiary";
-				} 
+				}
 			}
 		}
 		$objectives = $objectives["objectives"];
@@ -9201,12 +9201,12 @@ function course_objectives_in_list($objectives, $parent_id, $top_level_id, $edit
 			return;
 		}
 	}
-	
+
 	if (!$full_objective_list) {
 		$full_objective_list = events_fetch_objectives_structure($parent_id, $objectives["used_ids"], $org_id);
 	}
 	$flat_objective_list = events_flatten_objectives($full_objective_list);
-	
+
 	if ((is_array($objectives)) && (count($objectives))) {
 		if (((isset($objectives[$parent_id]) && count($objectives[$parent_id]["parent_ids"])) || $hierarchical) && (!isset($objectives[$parent_id]["parent_ids"]) || count($objectives[$parent_id]["parent_ids"]) < 3)) {
 			$output .= "\n<ul class=\"objective-list\" id=\"objective_".$parent_id."_list\"".(((count($objectives[$parent_id]["parent_ids"]) < 2 && !$hierarchical) || ($hierarchical && $parent_id == $top_level_id)) ? " style=\"padding-left: 0; margin-top: 0\"" : "").">\n";
@@ -9440,13 +9440,13 @@ function tracking_output_filter_controls($module_type = "") {
 								}
 							},
 							onError: function(response) {
-								alert("There was an error retrieving the events filter requested. Please try again.")		
+								alert("There was an error retrieving the events filter requested. Please try again.")
 							},
 							onComplete: function() {
 								$('filter_options_loading').hide();
 							}
 						});
-					}	
+					}
 					return false;
 				}
 				function setDateValue(field, date) {
@@ -9535,7 +9535,7 @@ function events_output_sidebar($module_type = "") {
 	} else {
 		$module_type = "";
 	}
-	
+
 	/**
 	 * Sidebar item that will provide another method for sorting, ordering, etc.
 	 */
@@ -9568,11 +9568,11 @@ function events_output_sidebar($module_type = "") {
 	new_sidebar_item("Sort Results", $sidebar_html, "sort-results", "open");
 
 	$sidebar_html  = "<ul class=\"menu none\">\n";
-	
+
 	if ($module_type == "/admin") {
 		$sidebar_html .= "<li><img src=\"".ENTRADA_RELATIVE."/images/legend-not-accessible.gif\" alt=\"\" /> <span>currently not accessible</span></li>\n";
 	}
-	
+
 	$sidebar_html .= "	<li><img src=\"".ENTRADA_RELATIVE."/images/legend-updated.gif\" alt=\"\" /> <span>recently updated</span></li>\n";
 	$sidebar_html .= "	<li><img src=\"".ENTRADA_RELATIVE."/images/legend-individual.gif\" alt=\"\" /> <span>individual learning event</span></li>\n";
 	$sidebar_html .= "</ul>\n";
@@ -9602,7 +9602,7 @@ function events_output_filter_controls($module_type = "") {
 	 */
 	$filter_controls = $translate->_("events_filter_controls");
 	?>
-	
+
 	<table id="filterList" style="clear: both; width: 100%" cellspacing="0" cellpadding="0" border="0" summary="Event Filters">
 		<tr>
 			<td style="width: 53%; vertical-align: top">
@@ -9677,16 +9677,16 @@ function events_output_filter_controls($module_type = "") {
 								}
 							},
 							onError: function(response) {
-								alert("There was an error retrieving the events filter requested. Please try again.")		
+								alert("There was an error retrieving the events filter requested. Please try again.")
 							},
 							onComplete: function() {
 								$('filter_options_loading').hide();
 							}
 						});
-					}	
+					}
 					return false;
 				}
-				
+
 				function setDateValue(field, date) {
 					timestamp = getMSFromDate(date);
 					if (field.value != timestamp) {
@@ -9776,7 +9776,7 @@ function events_output_filter_controls($module_type = "") {
  */
 function tracking_output_calendar_controls($module_type = "") {
 	global $dates, $COMMUNITY_ID;
-	
+
 	/**
 	 * Determine whether or not this is being called from the admin section.
 	 */
@@ -9843,7 +9843,7 @@ function tracking_output_calendar_controls($module_type = "") {
  */
 function events_output_calendar_controls($module_type = "") {
 	global $learning_events;
-	
+
 	/**
 	 * Determine whether or not this is being called from the admin section.
 	 */
@@ -9907,7 +9907,7 @@ function events_output_calendar_controls($module_type = "") {
 
 /**
  * Function used to create the default filter settings for Learning Events
- * 
+ *
  * @param int $proxy_id
  * @param string $group
  * @param string $role
@@ -9987,7 +9987,7 @@ function events_process_filters($action = "", $module_type = "") {
 		break;
 		case "filter_edit" :
 			if (isset($_GET["filter"])) {
-				
+
 				$filters = explode(",", clean_input($_GET["filter"], array("nows", "lower", "notags")));
 				if (isset($filters[1])) {
 					$pieces = explode("_", $filters[0]);
@@ -10060,7 +10060,7 @@ function events_process_filters($action = "", $module_type = "") {
 			if (!isset($_SESSION[APPLICATION_IDENTIFIER]["events"]["filter_defaults_set"])) {
 				$_SESSION[APPLICATION_IDENTIFIER]["events"]["filter_defaults_set"] = true;
 			}
-			
+
 			/**
 			 * First unset any previous filters if they exist.
 			 */
@@ -10230,74 +10230,74 @@ function tracking_process_filters($action = "", $module_type = "") {
 
 function get_page_for_statistic($action_field, $action_value){
 	global $db;
-	
+
 	$query = false;
-	
+
 	switch ($action_field) {
 		case 'cshare_id':
-			$query = "	SELECT `folder_title` AS `page` 
-						FROM `community_shares` 
+			$query = "	SELECT `folder_title` AS `page`
+						FROM `community_shares`
 						WHERE `cshare_id` = ".$db->qstr($action_value);
 			break;
 		case 'cscomment_id':
-			$query = "	SELECT b.`file_title` AS `page` 
-						FROM `community_share_comments` AS a 
-						LEFT JOIN `community_share_files` AS b 
-						ON a.`csfile_id` = b.`csfile_id` 
+			$query = "	SELECT b.`file_title` AS `page`
+						FROM `community_share_comments` AS a
+						LEFT JOIN `community_share_files` AS b
+						ON a.`csfile_id` = b.`csfile_id`
 						WHERE a.`cscomment_id` = ".$db->qstr($action_value);
 			break;
 		case 'csfile_id':
-			$query = "	SELECT `file_title` AS `page` 
-						FROM `community_share_files` 
+			$query = "	SELECT `file_title` AS `page`
+						FROM `community_share_files`
 						WHERE `csfile_id` = ".$db->qstr($action_value);
 			break;
 		case 'csfversion_id':
-			$query = "	SELECT b.`file_title` AS `page` 
-						FROM `community_share_file_versions` AS a 
-						LEFT JOIN `community_share_files` AS b 
-						ON a.`csfile_id` = b.`csfile_id` 
+			$query = "	SELECT b.`file_title` AS `page`
+						FROM `community_share_file_versions` AS a
+						LEFT JOIN `community_share_files` AS b
+						ON a.`csfile_id` = b.`csfile_id`
 						WHERE a.`csfversion_id` = ".$db->qstr($action_value);
-			break;	
+			break;
 		case 'cannouncement_id':
-			$query = "	SELECT `announcement_title` AS `page` 
+			$query = "	SELECT `announcement_title` AS `page`
 						FROM `community_announcements`
 						WHERE `cannouncement_id` = ".$db->qstr($action_value);
 			break;
 		case 'cdiscussion_id':
-			$query = "	SELECT `forum_title` AS `page` 
+			$query = "	SELECT `forum_title` AS `page`
 						FROM `community_discussions`
 						WHERE `cdiscussion_id` = ".$db->qstr($action_value);
-			break;		
+			break;
 		case 'cdtopic_id':
-			$query = "	SELECT `topic_title` AS `page` 
+			$query = "	SELECT `topic_title` AS `page`
 						FROM `community_discussion_topics`
 						WHERE `cdtopic_id` = ".$db->qstr($action_value);
-			break;	
+			break;
 		case 'cevent_id':
-			$query = "	SELECT `event_title` AS `page` 
+			$query = "	SELECT `event_title` AS `page`
 						FROM `community_events`
 						WHERE `cevent_id` = ".$db->qstr($action_value);
-			break;				
+			break;
 		case 'cgallery_id':
-			$query = "	SELECT `gallery_title` AS `page` 
+			$query = "	SELECT `gallery_title` AS `page`
 						FROM `community_galleries`
 						WHERE `cgallery_id` = ".$db->qstr($action_value);
-			break;			
+			break;
 		case 'cgphoto_id':
-			$query = "	SELECT `photo_title` AS `page` 
+			$query = "	SELECT `photo_title` AS `page`
 						FROM `community_gallery_photos`
 						WHERE `cgphoto_id` = ".$db->qstr($action_value);
 			break;
 		case 'cgcomment_id':
-			$query = "	SELECT a.`gallery_title` AS `page` 
+			$query = "	SELECT a.`gallery_title` AS `page`
 						FROM `community_galleries` AS a
-						LEFT JOIN `community_gallery_comments` AS b 
+						LEFT JOIN `community_gallery_comments` AS b
 						ON a.`cgaller_id` = b.`cgallery_id`
 						WHERE `cgcomment_id` = ".$db->qstr($action_value);
-			break;							
+			break;
 
 	}
-	
+
 	if ($query) {
 		$result = $db->GetOne($query);
 		 return $result;
@@ -10307,28 +10307,28 @@ function get_page_for_statistic($action_field, $action_value){
 
 function tracking_fetch_filtered_events($community_id,$filters = array(),$paginate = true, $page = 1){
 	global $db, $ENTRADA_ACL;
-	
+
 	$results_per_page = 25;
-	
+
 	$count = "	SELECT COUNT(*) AS `count`
-				FROM `statistics` AS a 
-				JOIN `".AUTH_DATABASE."`.`user_data` AS b 
-				ON a.`proxy_id` = b.`id` 
+				FROM `statistics` AS a
+				JOIN `".AUTH_DATABASE."`.`user_data` AS b
+				ON a.`proxy_id` = b.`id`
 				WHERE `module` LIKE('community:".$community_id.":%')";
-	
-	$query = "	SELECT CONCAT_WS(' ',b.`firstname`,b.`lastname`) AS `fullname`,b.`id` AS `user_id`, a.* 
-				FROM `statistics` AS a 
-				JOIN `".AUTH_DATABASE."`.`user_data` AS b 
-				ON a.`proxy_id` = b.`id` 
+
+	$query = "	SELECT CONCAT_WS(' ',b.`firstname`,b.`lastname`) AS `fullname`,b.`id` AS `user_id`, a.*
+				FROM `statistics` AS a
+				JOIN `".AUTH_DATABASE."`.`user_data` AS b
+				ON a.`proxy_id` = b.`id`
 				WHERE `module` LIKE('community:".$community_id.":%')";
-	$date_query = "	SELECT MIN(timestamp) AS 'start_date', MAX(timestamp) AS 'end_date' 
-					FROM `statistics` AS a 
-					JOIN `".AUTH_DATABASE."`.`user_data` AS b 
-					ON a.`proxy_id` = b.`id` 
+	$date_query = "	SELECT MIN(timestamp) AS 'start_date', MAX(timestamp) AS 'end_date'
+					FROM `statistics` AS a
+					JOIN `".AUTH_DATABASE."`.`user_data` AS b
+					ON a.`proxy_id` = b.`id`
 					WHERE `module` LIKE('community:".$community_id.":%')";
-	
+
 	$where = "";
-	
+
 	if (isset($filters) && !empty($filters)){
 		foreach ($filters as $type=>$filter){
 			if (is_array($filter) && !empty($filter)){
@@ -10337,7 +10337,7 @@ function tracking_fetch_filtered_events($community_id,$filters = array(),$pagina
 							$where .= " AND a.`proxy_id` IN (".implode(',',$filter).")";
 							break;
 						case 'module':
-							//converts each array element to lower case and then finds modules containing the value 
+							//converts each array element to lower case and then finds modules containing the value
 							$where .= " AND a.`module` REGEXP ".$db->qstr(implode('|',unserialize(strtolower(serialize($filter)))));
 							break;
 						case 'action':
@@ -10350,13 +10350,13 @@ function tracking_fetch_filtered_events($community_id,$filters = array(),$pagina
 							foreach($filter as $key=>$filter_instance){
 								$raw_filter = explode("-",$filter_instance);
 								$field = $raw_filter[0]."_id";
-								$value = $raw_filter[2];					
+								$value = $raw_filter[2];
 								$where .= ((!$first)?" OR":"")." (a.`action_field` = ".$db->qstr($field)." AND a.`action_value` = ".$db->qstr($value).")";
 								$first = false;
 							}
 							$where .=")";
 							break;
-						
+
 					}
 
 			}
@@ -10365,7 +10365,7 @@ function tracking_fetch_filtered_events($community_id,$filters = array(),$pagina
 	$count .= $where;
 	$query .= $where." ORDER BY a.`timestamp` DESC";
 	$date_query .= $where." ORDER BY a.`timestamp` DESC";
-	
+
 	$num_results = $db->GetOne($count);
 	if ($paginate) {
 		$num_pages = ceil($num_results/$results_per_page);
@@ -10374,38 +10374,38 @@ function tracking_fetch_filtered_events($community_id,$filters = array(),$pagina
 			$upper_limit = $results_per_page;
 		} else {
 			$lower_limit = 0;
-			$upper_limit = $results_per_page;		
+			$upper_limit = $results_per_page;
 		}
 		$limit = " LIMIT ".$lower_limit.",".$upper_limit;
 		$query .= $limit;
 		$date_query .= $limit;
-		
+
 	}
-	
+
 	$statistics = $db->GetAll($query);
 	$dates = $db->GetRow($date_query);
 	if ($statistics){
 		foreach ($statistics as $key=>$statistic){
 			$page = get_page_for_statistic($statistic["action_field"], $statistic["action_value"]);
-			
+
 			if ($page) {
 				$statistics[$key]['page'] = $page;
 			}
 		}
 	}
-	
+
 	return array($statistics,$dates,$num_pages);
 }
 
 /**
  * This function returns the database fields that are used by events_fetch_filtered_events() and
  * a few other functions.
- *  
+ *
  * @param string $sort_by
- * @return string 
+ * @return string
  */
 function events_fetch_sorting_query($sort_by = "", $sort_order = "ASC") {
-	
+
 	switch ($sort_by) {
 		case "teacher" :
 			$sort_by = "`fullname` ".strtoupper($sort_order).", `events`.`event_start` ASC";
@@ -10434,7 +10434,7 @@ function events_fetch_sorting_query($sort_by = "", $sort_order = "ASC") {
  */
 function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_role = "", $organisation_id = 0, $sort_by = "", $sort_order = "", $date_type = "", $timestamp_start = 0, $timestamp_finish = 0, $filters = array(), $pagination = true, $current_page = 1, $results_per_page = 15, $community_id = false) {
 	global $db, $ENTRADA_ACL, $ENTRADA_USER;
-	
+
 	$output = array(
 				"duration_start" => 0,
 				"duration_end" => 0,
@@ -10479,7 +10479,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 
 	if (!$results_per_page = (int) $results_per_page) {
 		$results_per_page = 15;
-	}	
+	}
 
 	$filter_clerkship_events = false;
 	if (($user_group == "student") && $ENTRADA_ACL->amIAllowed("clerkship", "read")) {
@@ -10500,7 +10500,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 			$clerkship_start = $clerkship_events[0]["event_start"];
 			$clerkship_finish = $clerkship_events[0]["event_finish"];
 			$time_periods = array();
-			
+
 			foreach ($clerkship_events as $clerkship_event) {
 				if ($clerkship_event["event_start"] < $clerkship_start) {
 					$clerkship_start = $clerkship_event["event_start"];
@@ -10508,7 +10508,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 				if ($clerkship_event["event_finish"] > $clerkship_finish) {
 					$clerkship_finish = $clerkship_event["event_finish"];
 				}
-				
+
 				$filter_clerkship_events = true;
 				if ($clerkship_event["course_id"] && $clerkship_event["rotation_id"] < MAX_ROTATION) {
 					if (array_search($clerkship_event["course_id"], $course_ids) === false) {
@@ -10530,17 +10530,17 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 			$time_periods[] = "OR (`events`.`event_finish` > ".$db->qstr($clerkship_finish).")";
 		}
 	}
-	
+
 	$sort_by = events_fetch_sorting_query($sort_by, $sort_order);
 
 	/**
 	 * This fetches the unix timestamps from the first and last second of the day, week, month, year, etc.
 	 */
 	$display_duration = fetch_timestamps($date_type, $timestamp_start, $timestamp_finish);
-	
+
 	$output["duration_start"] = $display_duration["start"];
 	$output["duration_end"] = $display_duration["end"];
-	
+
 	$query_count = "	SELECT COUNT(DISTINCT `events`.`event_id`) AS `total_rows`
 						FROM `events`";
 
@@ -10572,7 +10572,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 	 */
 	if (is_array($filters) && !empty($filters)) {
 		$build_query = array();
-		
+
 		$where_teacher = array();
 		$where_student_course_ids = array();	// Students' enrolled in courses only
 		$where_student_cohorts = array();		// Students' cohort events
@@ -10585,9 +10585,9 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 		$where_clinical_presentation = array();
 		$where_curriculum_objective = array();
 		$where_topic = array();
-		
+
 		$join_event_contacts = array();
-		
+
 		$contact_sql = "";
 		$objective_sql = "";
 		$topic_sql = "";
@@ -10613,7 +10613,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 							AND (`events`.`release_date` <= ".$db->qstr(time())." OR `events`.`release_date` = 0)
 							AND (`events`.`release_until` >= ".$db->qstr(time())." OR `events`.`release_until` = 0)
 							".(($display_duration) ? " AND `events`.`event_start` BETWEEN ".$db->qstr($display_duration["start"])." AND ".$db->qstr($display_duration["end"]) : "");
-		
+
 		$query_events .= "	LEFT JOIN `event_contacts` AS `primary_teacher`
 							ON `primary_teacher`.`event_id` = `events`.`event_id`
 							AND `primary_teacher`.`contact_order` = '0'
@@ -10655,7 +10655,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 									if ($course_ids) {
 										$where_student_course_ids = $course_ids;
 									}
-									
+
 									// Students' cohort events
 									$cohort = groups_get_cohort((int) $filter_value);
 									if ($cohort) {
@@ -10705,7 +10705,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 		if ($where_teacher) {
 			$build_query[] = "(`primary_teacher`.`proxy_id` IN (".implode(", ", $where_teacher).") OR `event_contacts`.`proxy_id` IN (".implode(", ", $where_teacher)."))";
 		}
-		
+
 		if ($where_student_course_ids || $where_student_cohorts || $where_student_proxy_ids || $where_student_cgroup_ids) {
 			$where_student = array();
 
@@ -10713,12 +10713,12 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 				$where_student_course_ids = array_unique($where_student_course_ids);
 				$where_student[] = "(`event_audience`.`audience_type` = 'course_id' AND `event_audience`.`audience_value` IN (".implode(", ", $where_student_course_ids)."))";
 			}
-			
+
 			if ($where_student_cohorts) {
 				$where_student_cohorts = array_unique($where_student_cohorts);
 				$where_student[] = "(`event_audience`.`audience_type` = 'cohort' AND `event_audience`.`audience_value` IN (".implode(", ", $where_student_cohorts)."))";
 			}
-			
+
 			if ($where_student_proxy_ids) {
 				$where_student_proxy_ids = array_unique($where_student_proxy_ids);
 				$where_student[] = "(`event_audience`.`audience_type` = 'proxy_id' AND `event_audience`.`audience_value` IN (".implode(", ", $where_student_proxy_ids)."))";
@@ -10728,18 +10728,18 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 				$where_student_cgroup_ids = array_unique($where_student_cgroup_ids);
 				$where_student[] = "(`event_audience`.`audience_type` = 'group_id' AND `event_audience`.`audience_value` IN (".implode(", ", $where_student_cgroup_ids)."))";
 			}
-			
+
 			$build_query[] = "(".implode(" OR ", $where_student).")";
 		}
 
 		if ($where_cohort) {
 			$build_query[] = "(`event_audience`.`audience_type` = 'cohort' AND `event_audience`.`audience_value` IN (".implode(", ", $where_cohort)."))";
 		}
-		
+
 		if ($where_course) {
 			$build_query[] = "(`events`.`course_id` IN (".implode(", ", $where_course)."))";
 		}
-		
+
 		if ($where_term) {
 			$build_query[] = "(`curriculum_lu_types`.`curriculum_type_id` IN (".implode(", ", $where_term)."))";
 		}
@@ -10747,15 +10747,15 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 		if ($where_eventtype) {
 			$build_query[] = "(`event_eventtypes`.`eventtype_id` IN (".implode(", ", $where_eventtype)."))";
 		}
-		
+
 		if ($where_clinical_presentation) {
 			$build_query[] = "(`event_objectives`.`objective_id` IN (".implode(", ", $where_clinical_presentation)."))";
 		}
-		
+
 		if ($where_curriculum_objective) {
 			$build_query[] = "(`event_objectives`.`objective_id` IN (".implode(", ", $where_curriculum_objective)."))";
 		}
-		
+
 		if ($where_topic) {
 			$build_query[] = "(`event_topics`.`topic_id` IN (".implode(", ", $where_topic)."))";
 		}
@@ -10786,10 +10786,10 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 
 	 	$query_count = str_replace("%OBJECTIVE_JOIN%", $objective_sql, $query_count);
 		$query_events = str_replace("%OBJECTIVE_JOIN%", $objective_sql, $query_events);
-		
+
 	 	$query_count = str_replace("%TOPIC_JOIN%", $topic_sql, $query_count);
 		$query_events = str_replace("%TOPIC_JOIN%", $topic_sql, $query_events);
-		
+
 		$query_events .= " GROUP BY `events`.`event_id`";
 	} else {
 		$query_count .= "	LEFT JOIN `courses`
@@ -10799,7 +10799,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 							AND (`events`.`release_date` <= ".$db->qstr(time())." OR `events`.`release_date` = 0)
 							AND (`events`.`release_until` >= ".$db->qstr(time())." OR `events`.`release_until` = 0)
 							".(($display_duration) ? " AND `events`.`event_start` BETWEEN ".$db->qstr($display_duration["start"])." AND ".$db->qstr($display_duration["end"]) : "");
-		
+
 		$query_events .= "	LEFT JOIN `event_contacts`
 							ON `event_contacts`.`event_id` = `events`.`event_id`
 							AND `event_contacts`.`contact_order` = '0'
@@ -10914,14 +10914,14 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 				}
 			}
 		}
-		
+
 		$parent_ids = array();
 		foreach ($learning_events as $temp_event) {
 			if ($temp_event["parent_id"]) {
 				$parent_ids[] = $temp_event["parent_id"];
 			}
 		}
-		
+
 		if (!empty($parent_ids)) {
 			$query = "	SELECT * FROM `events`
 						WHERE `event_id` IN (".implode(", ", $parent_ids).")
@@ -10942,18 +10942,18 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 
 /**
  * Returns all teachers, tutors, TAs, and auditors for the specified learning event.
- * 
+ *
  * @global object $db
  * @param int $event_id
- * @return array 
+ * @return array
  */
 function events_fetch_event_contacts($event_id = 0) {
 	global $db;
-	
+
 	$output = array();
-	
+
 	$event_id = (int) $event_id;
-	
+
 	if ($event_id) {
 		$query = "	SELECT a.`proxy_id`, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`email`, a.`contact_role`, a.`contact_order`
 					FROM `event_contacts` AS a
@@ -10968,31 +10968,31 @@ function events_fetch_event_contacts($event_id = 0) {
 			}
 		}
 	}
-	
+
 	return $output;
 }
 
 /**
  * Returns all audience members for the specified learning event.
- * 
+ *
  * @global object $db
  * @param int $event_id
- * @return array 
+ * @return array
  */
 function events_fetch_event_audience($event_id = 0) {
 	global $db;
 
 	$output = array();
-	
+
 	$event_id = (int) $event_id;
-	
+
 	if ($event_id) {
 		$query = "SELECT * FROM `event_audience` WHERE `event_id` = ".$db->qstr($event_id);
 		$results = $db->GetAll($query);
 		if ($results) {
 			// This puts them in the display order I want them in.
 			$output = array("course_id" => array(), "cohort" => array(), "group_id" => array(), "proxy_id" => array());
-			
+
 			foreach ($results as $result) {
 				$row = array (
 						"type" => $result["audience_type"],
@@ -11000,7 +11000,7 @@ function events_fetch_event_audience($event_id = 0) {
 						"title" => "",
 						"count" => 0
 				);
-				
+
 				switch ($result["audience_type"]) {
 					case "course_id" : // Course Audience
 						$row["link"] = ENTRADA_URL . "/courses?id=".$result["audience_value"];
@@ -11011,7 +11011,7 @@ function events_fetch_event_audience($event_id = 0) {
 					break;
 					case "group_id" : // Course Groups
 						$cgroup = course_fetch_course_group($result["audience_value"]);
-						
+
 						$row["title"] = $cgroup["group_name"];
 						$row["count"] = $cgroup["members"];
 					break;
@@ -11021,24 +11021,24 @@ function events_fetch_event_audience($event_id = 0) {
 					break;
 					default : // No longer supported, but include the value just in case.
 						$row["title"] = $result["audience_value"];
-						
+
 						application_log("notice", "audience_type [".$result["audience_type"]."] is no longer supported, but is used in event_id [".$event_id."].");
 					break;
 				}
-				
+
 				if ($row["title"]) {
 					$output[$result["audience_type"]][] = $row;
 				}
 			}
 		}
 	}
-	
+
 	return $output;
 }
 
 /**
  * This function returns arrays of the requested resources from a learning event.
- * 
+ *
  * @global object $db
  * @param int $event_id
  * @param array $options
@@ -11052,11 +11052,11 @@ function events_fetch_event_resources($event_id = 0, $options = array(), $exclud
 	$fetch_quizzes = false;
 	$fetch_discussions = false;
 	$fetch_types = false;
-	
+
 	$output = array();
 
 	$event_id = (int) $event_id;
-	
+
 	if ($event_id) {
 		if (is_scalar($options)) {
 			if (trim($options) != "") {
@@ -11069,7 +11069,7 @@ function events_fetch_event_resources($event_id = 0, $options = array(), $exclud
 		if (!count($options)) {
 			$options = array("all");
 		}
-		
+
 		if (is_scalar($exclude)) {
 			if (trim($exclude) != "") {
 				$exclude = array($exclude);
@@ -11105,7 +11105,7 @@ function events_fetch_event_resources($event_id = 0, $options = array(), $exclud
 		if (in_array("types", $options)) {
 			$fetch_types = true;
 		}
-		
+
 		if (in_array("files", $exclude)) {
 			$fetch_files = false;
 		}
@@ -11213,12 +11213,12 @@ function events_fetch_event_resources($event_id = 0, $options = array(), $exclud
 
 function event_objectives_in_list($objectives, $parent_id, $top_level_id, $edit_text = false, $parent_active = false, $importance = 1, $course = true, $top = true, $display_importance = "primary", $full_objective_list = false, $course_id = 0) {
 	global $edit_ajax, $ENTRADA_USER;
-	
+
 	if (!$full_objective_list) {
 		$full_objective_list = events_fetch_objectives_structure($parent_id, $objectives["used_ids"]);
 	}
 	$flat_objective_list = events_flatten_objectives($full_objective_list);
-	
+
 	$output = "";
 	$active = array("primary" => false, "secondary" => false, "tertiary" => false);
 	if ($top) {
@@ -11240,7 +11240,7 @@ function event_objectives_in_list($objectives, $parent_id, $top_level_id, $edit_
 	if (!is_array($edit_ajax)) {
 		$edit_ajax = array();
 	}
-	
+
 	/*if ((is_array($objectives)) && ($total = count($objectives))) {
 		$count	= 0;
 		if ($top) {
@@ -11258,13 +11258,13 @@ function event_objectives_in_list($objectives, $parent_id, $top_level_id, $edit_
 			if ($top) {
 				$output .= "<h2".($iterated ? " class=\"collapsed\"" : "")." title=\"".ucwords($display_importance)." Objectives\">".ucwords($display_importance)." Objectives</h2>\n";
 				$output .= "<div id=\"".($display_importance)."-objectives\">\n";
-			}		
+			}
 			foreach ($objectives as $objective_id => $objective) {
 				$count++;
-	
+
 					if (($objective["parent"] == $parent_id) && (($objective["objective_".$display_importance."_children"]) || ($objective[$display_importance]) || ($parent_active))) {
 						$importance = (($objective["primary"]) ? 1 : ($objective["secondary"] ? 2 : ($objective["tertiary"] ? 3 : $importance)));
-	
+
 						if (((($objective[$display_importance]) || ($parent_active)) && (count($objective["parent_ids"]) > 2))) {
 						$output .= "<li>\n";
 						if ($edit_text && !$course) {
@@ -11294,13 +11294,13 @@ function event_objectives_in_list($objectives, $parent_id, $top_level_id, $edit_
 							$output .= "</div>\n";
 						}
 						$output .= "</li>\n";
-	
+
 					} else {
 							$output .= event_objectives_in_list($objectives, $objective_id,$top_level_id, $edit_text, (($objective[$display_importance]) ? true : false), $importance, $course, false, $display_importance, $full_objective_list);
 					}
 				}
 			}
-			$iterated = true;		
+			$iterated = true;
 			if ($top) {
 				$output .= "</div>\n";
 			}
@@ -11309,8 +11309,8 @@ function event_objectives_in_list($objectives, $parent_id, $top_level_id, $edit_
 			$output .= "</ul>\n";
 		}
 	}*/
-	
-	
+
+
 	if ((is_array($objectives)) && ($total = count($objectives))) {
 		$count	= 0;
 		if ($top) {
@@ -11328,14 +11328,14 @@ function event_objectives_in_list($objectives, $parent_id, $top_level_id, $edit_
 			if ($top) {
 				$output .= "<h2".($iterated ? " class=\"collapsed\"" : "")." title=\"".ucwords($display_importance)." Objectives\">".ucwords($display_importance)." Objectives</h2>\n";
 				$output .= "<div id=\"".($display_importance)."-objectives\">\n";
-			}		
+			}
 			foreach ($flat_objective_list as $objective_id => $objective_activity) {
 				$objective = $objectives[$objective_id];
 				$count++;
-	
+
 					if (($objective["parent"] == $parent_id) && (($objective["objective_".$display_importance."_children"]) || ($objective[$display_importance]) || ($parent_active))) {
 						$importance = (($objective["primary"]) ? 1 : ($objective["secondary"] ? 2 : ($objective["tertiary"] ? 3 : $importance)));
-	
+
 						if (((($objective[$display_importance]) || ($parent_active)) && (count($objective["parent_ids"]) > 2))) {
 						$output .= "<li>\n";
 						if ($edit_text && !$course) {
@@ -11365,13 +11365,13 @@ function event_objectives_in_list($objectives, $parent_id, $top_level_id, $edit_
 							$output .= "</div>\n";
 						}
 						$output .= "</li>\n";
-	
+
 					} else {
 							$output .= event_objectives_in_list($objectives, $objective_id,$top_level_id, $edit_text, (($objective[$display_importance]) ? true : false), $importance, $course, false, $display_importance, $full_objective_list, $course_id);
 					}
 				}
 			}
-			$iterated = true;		
+			$iterated = true;
 			if ($top) {
 				$output .= "</div>\n";
 			}
@@ -11396,19 +11396,19 @@ function events_flatten_objectives ($objectives) {
 
 function events_fetch_objectives_structure($parent_id, $used_ids, $org_id = 0) {
 	global $db, $ENTRADA_USER;
-	
+
 	$org_id = ($org_id == 0 ? $ENTRADA_USER->getActiveOrganisation() : (int) $org_id );
-	
+
 	$full_objective_list = array();
-	
+
 	$query = "SELECT a.* FROM `global_lu_objectives` AS a
 				JOIN `objective_organisation` AS b
 				ON a.`objective_id` = b.`objective_id`
-				WHERE a.`objective_parent` = ".$db->qstr($parent_id)." 
+				WHERE a.`objective_parent` = ".$db->qstr($parent_id)."
 				AND b.`organisation_id` = ".$db->qstr($org_id)."
 				ORDER BY a.`objective_order` ASC";
 	$objective_children = $db->GetAll($query);
-	
+
 	if ($objective_children) {
 		foreach ($objective_children as $objective) {
 			$full_objective_list[$objective["objective_id"]] = array(
@@ -11427,7 +11427,7 @@ function events_fetch_objectives_structure($parent_id, $used_ids, $org_id = 0) {
 }
 
 function event_objectives_active($objectives) {
-	
+
 	foreach ($objectives as $objective) {
 		if ($objective["objective_active"]) {
 			return true;
@@ -11467,10 +11467,10 @@ function regionaled_apartment_notification($type, $to = array(), $keywords = arr
 
 	if (!is_array($to) || !isset($to["email"]) || !valid_address($to["email"]) || !isset($to["firstname"]) || !isset($to["lastname"])) {
 		application_log("error", "Attempting to send a regionaled_apartment_notification() how the recipient information was not complete.");
-		
+
 		return false;
 	}
-	
+
 	if (!in_array($type, array("delete", "confirmation", "rejected"))) {
 		application_log("error", "Encountered an unrecognized notification type [".$type."] when attempting to send a regionaled_apartment_notification().");
 
@@ -11613,7 +11613,7 @@ function regionaled_apartment_occupants($apartment_id = 0, $event_start = 0, $ev
 			return $results;
 		}
 	}
-	
+
 	return false;
 }
 
@@ -11698,7 +11698,7 @@ function course_objectives_multiple_select_table($checkboxes, $indent = 0, $i = 
 	if ($indent > 99) {
 		return false;
 	}
-	
+
 	foreach ($checkboxes as $checkbox) {
 		$is_category = false;
 
@@ -11715,7 +11715,7 @@ function course_objectives_multiple_select_table($checkboxes, $indent = 0, $i = 
 			$parent_id = $checkbox["value"];
 			$parent_checked = ($checkbox["checked"] == "checked=\"checked\"");
 		}
-		
+
 		$output .= "<tr class=\"".$class."\" id=\"row_".$checkbox["value"]."\">\n";
 		$output .= "	<td class=\"select_multiple_name indent_".$indent." description\">\n";
 		$output .= "		<label for=\"".$checkbox["value"]."\">".$checkbox["text"]."</label>\n";
@@ -11815,7 +11815,7 @@ function notify_regional_education($action, $event_id) {
 			 */
 			if($result["event_finish"] > time()) {
 				$whole_name	= get_account_data("firstlast", $result["etype_id"]);
-	
+
 				$query		= "	SELECT a.`inhabiting_start`, a.`inhabiting_finish`, b.`apartment_title`
 								FROM `".CLERKSHIP_DATABASE."`.`apartment_schedule` AS a
 								LEFT JOIN `".CLERKSHIP_DATABASE."`.`apartments` AS b
@@ -11824,7 +11824,7 @@ function notify_regional_education($action, $event_id) {
 				$apartments	= $db->GetAll($query);
 				if ($apartments) {
 					switch($action) {
-						case "deleted" : 
+						case "deleted" :
 							$message  = "Attention ".$AGENT_CONTACTS["agent-regionaled"]["name"].",\n\n";
 							$message .= $_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]." has removed an event from ".$whole_name."'s ";
 							$message .= "clerkship schedule, to which you had previously assigned housing. Due to the removal of this event from the system, ";
@@ -11937,7 +11937,7 @@ function notify_regional_education($action, $event_id) {
 						return true;
 					} else {
 						system_log_data("error", "Unable to send ".$action." notification to regional education. PHPMailer said: ".$mail->ErrorInfo);
-		
+
 						return false;
 					}
 				} else {
@@ -11974,9 +11974,9 @@ function getPublicationRoles() {
     $query = "SELECT *
 	FROM `global_lu_roles`
 	ORDER BY `role_description`";
-	
+
     $results = $db->GetAll($query);
-	
+
 	return $results;
 }
 
@@ -11991,9 +11991,9 @@ function getPublicationRoleSpecificFromID($roleID) {
     $query = "SELECT `role_description`
 	FROM `global_lu_roles`
 	WHERE `role_id` = '$roleID'";
-	
+
     $result = $db->GetRow($query);
-	
+
 	return $result["role_description"];
 }
 
@@ -12008,9 +12008,9 @@ function getPRPublicationRoles() {
     $query = "SELECT *
 	FROM `ar_lu_pr_roles`
 	ORDER BY `role_description`";
-	
+
     $results = $db->GetAll($query);
-	
+
 	return $results;
 }
 
@@ -12025,9 +12025,9 @@ function getPRPublicationRoleSpecificFromID($roleID) {
     $query = "SELECT `role_description`
 	FROM `ar_lu_pr_roles`
 	WHERE `role_id` = '$roleID'";
-	
+
     $result = $db->GetRow($query);
-	
+
 	return $result["role_description"];
 }
 
@@ -12042,9 +12042,9 @@ function getActivityTypes() {
     $query = "SELECT *
 	FROM `ar_lu_activity_types`
 	ORDER BY `activity_type` ASC";
-	
+
     $results = $db->GetAll($query);
-	
+
 	return $results;
 }
 
@@ -12059,9 +12059,9 @@ function getClinicalLoactions() {
     $query = "SELECT *
 	FROM `ar_lu_clinical_locations`
 	ORDER BY `clinical_location` ASC";
-	
+
     $results = $db->GetAll($query);
-	
+
 	return $results;
 }
 
@@ -12076,9 +12076,9 @@ function getConferencePaperTypes() {
     $query = "SELECT *
 	FROM `ar_lu_conference_paper_types`
 	ORDER BY `conference_paper_type` ASC";
-	
+
     $results = $db->GetAll($query);
-	
+
 	return $results;
 }
 
@@ -12093,9 +12093,9 @@ function getConsultLoactions() {
     $query = "SELECT *
 	FROM `ar_lu_consult_locations`
 	ORDER BY `consult_location` ASC";
-	
+
     $results = $db->GetAll($query);
-	
+
 	return $results;
 }
 
@@ -12110,9 +12110,9 @@ function getContributionTypes() {
     $query = "SELECT *
 	FROM `ar_lu_contribution_types`
 	ORDER BY `contribution_type` ASC";
-	
+
     $results = $db->GetAll($query);
-	
+
 	return $results;
 }
 
@@ -12127,9 +12127,9 @@ function getContributionRoles() {
     $query = "SELECT *
 	FROM `ar_lu_contribution_roles`
 	ORDER BY `contribution_role` ASC";
-	
+
     $results = $db->GetAll($query);
-	
+
 	return $results;
 }
 
@@ -12145,9 +12145,9 @@ function getDegreeTypes() {
 	FROM `ar_lu_degree_types`
 	WHERE `visible` = '1'
 	ORDER BY `degree_type` ASC";
-	
+
     $results = $db->GetAll($query);
-	
+
 	return $results;
 }
 
@@ -12162,9 +12162,9 @@ function getEducationLocations() {
     $query = "SELECT *
 	FROM `ar_lu_education_locations`
 	ORDER BY `education_location` ASC";
-	
+
     $results = $db->GetAll($query);
-	
+
 	return $results;
 }
 
@@ -12179,9 +12179,9 @@ function getPublicationGroups() {
     $query = "SELECT *
 	FROM `ar_lu_focus_groups`
 	ORDER BY `focus_group` ASC";
-	
+
     $results = $db->GetAll($query);
-	
+
 	return $results;
 }
 
@@ -12196,9 +12196,9 @@ function getPublicationHospitals() {
     $query = "SELECT *
 	FROM `ar_lu_hospital_location`
 	ORDER BY `hosp_desc` ASC";
-	
+
     $results = $db->GetAll($query);
-	
+
 	return $results;
 }
 
@@ -12213,9 +12213,9 @@ function getInnovationTypes() {
     $query = "SELECT *
 	FROM `ar_lu_innovation_types`
 	ORDER BY `innovation_type` ASC";
-	
+
     $results = $db->GetAll($query);
-	
+
 	return $results;
 }
 
@@ -12230,9 +12230,9 @@ function getMembershipRoles() {
     $query = "SELECT *
 	FROM `ar_lu_membership_roles`
 	ORDER BY `membership_role` ASC";
-	
+
     $results = $db->GetAll($query);
-	
+
 	return $results;
 }
 
@@ -12247,9 +12247,9 @@ function getOnCallLocations() {
     $query = "SELECT *
 	FROM `ar_lu_on_call_locations`
 	ORDER BY `on_call_location` ASC";
-	
+
     $results = $db->GetAll($query);
-	
+
 	return $results;
 }
 
@@ -12264,9 +12264,9 @@ function getOtherLocations() {
     $query = "SELECT *
 	FROM `ar_lu_other_locations`
 	ORDER BY `other_location` ASC";
-	
+
     $results = $db->GetAll($query);
-	
+
 	return $results;
 }
 
@@ -12281,9 +12281,9 @@ function getPatentTypes() {
     $query = "SELECT *
 	FROM `ar_lu_patent_types`
 	ORDER BY `patent_type` ASC";
-	
+
     $results = $db->GetAll($query);
-	
+
 	return $results;
 }
 
@@ -12298,9 +12298,9 @@ function getPrizeCategories() {
     $query = "SELECT *
 	FROM `ar_lu_prize_categories`
 	ORDER BY `prize_category` ASC";
-	
+
     $results = $db->GetAll($query);
-	
+
 	return $results;
 }
 
@@ -12315,9 +12315,9 @@ function getPrizeTypes() {
     $query = "SELECT *
 	FROM `ar_lu_prize_types`
 	ORDER BY `prize_type` ASC";
-	
+
     $results = $db->GetAll($query);
-	
+
 	return $results;
 }
 
@@ -12332,9 +12332,9 @@ function getProfileRoles() {
     $query = "SELECT *
 	FROM `ar_lu_profile_roles`
 	ORDER BY `profile_role` ASC";
-	
+
     $results = $db->GetAll($query);
-	
+
 	return $results;
 }
 
@@ -12349,9 +12349,9 @@ function getPulicationStatuses() {
     $query = "SELECT *
 	FROM `ar_lu_publication_statuses`
 	ORDER BY `publication_status` ASC";
-	
+
     $results = $db->GetAll($query);
-	
+
 	return $results;
 }
 
@@ -12362,13 +12362,13 @@ function getPulicationStatuses() {
  */
 function getPublicationTypesSpecific($type) {
     global $db;
-	
+
     if(is_array($type)) {
     	foreach($type as $typeDesc) {
     		if(isset($where)) {
     			$where .= " OR `type_description` = '".$typeDesc."'";
     		} else {
-    			$where = " `type_description` = '".$typeDesc."'";	
+    			$where = " `type_description` = '".$typeDesc."'";
     		}
     	}
     	$query = "SELECT *
@@ -12381,9 +12381,9 @@ function getPublicationTypesSpecific($type) {
 		WHERE `type_description` LIKE '$type%'
 		ORDER BY `type_description`";
     }
-	
+
     $results = $db->GetAll($query);
-	
+
 	return $results;
 }
 
@@ -12394,13 +12394,13 @@ function getPublicationTypesSpecific($type) {
  */
 function getPublicationTypesSpecificFromID($type_id) {
     global $db;
-	    
+
     $query = "SELECT `type_description`
 	FROM `ar_lu_publication_type`
 	WHERE `type_id`= '$type_id'";
-    
+
     $result = $db->GetRow($query);
-	
+
 	return $result["type_description"];
 }
 
@@ -12411,13 +12411,13 @@ function getPublicationTypesSpecificFromID($type_id) {
  */
 function getPublicationTypes() {
     global $db;
-	
+
     $query = "SELECT *
 	FROM `ar_lu_publication_type`
 	ORDER BY `type_description`";
 
     $results = $db->GetAll($query);
-	
+
 	return $results;
 }
 
@@ -12432,9 +12432,9 @@ function getResearchTypes() {
     $query = "SELECT *
 	FROM `ar_lu_research_types`
 	ORDER BY `research_type` ASC";
-	
+
     $results = $db->GetAll($query);
-	
+
 	return $results;
 }
 
@@ -12449,9 +12449,9 @@ function getScholarlyTypes() {
     $query = "SELECT *
 	FROM `ar_lu_scholarly_types`
 	ORDER BY `scholarly_type` ASC";
-	
+
     $results = $db->GetAll($query);
-	
+
 	return $results;
 }
 
@@ -12466,9 +12466,9 @@ function getSelfEducationTypes() {
     $query = "SELECT *
 	FROM `ar_lu_self_education_types`
 	ORDER BY `self_education_type` ASC";
-	
+
     $results = $db->GetAll($query);
-	
+
 	return $results;
 }
 
@@ -12483,9 +12483,9 @@ function getSupervisionTypes() {
     $query = "SELECT *
 	FROM `ar_lu_supervision_types`
 	ORDER BY `supervision_type` ASC";
-	
+
     $results = $db->GetAll($query);
-	
+
 	return $results;
 }
 
@@ -12500,9 +12500,9 @@ function getTraineeLevels() {
     $query = "SELECT *
 	FROM `ar_lu_trainee_levels`
 	ORDER BY `trainee_level` ASC";
-	
+
     $results = $db->GetAll($query);
-	
+
 	return $results;
 }
 
@@ -12517,9 +12517,9 @@ function getUndergraduateSupervisionCourses() {
     $query = "SELECT *
 	FROM `ar_lu_undergraduate_supervision_courses`
 	ORDER BY `undergarduate_supervision_course` ASC";
-	
+
     $results = $db->GetAll($query);
-	
+
 	return $results;
 }
 
@@ -12531,20 +12531,20 @@ function getUndergraduateSupervisionCourses() {
 function getDefaultEnrollment() {
     global $db;
 
-    $query = "	SELECT `t`.`eventtype_id`,`t`. `eventtype_title`,`t`. `eventtype_default_enrollment` 
+    $query = "	SELECT `t`.`eventtype_id`,`t`. `eventtype_title`,`t`. `eventtype_default_enrollment`
 				FROM `events_lu_eventtypes` AS `t`
 				LEFT JOIN  `eventtype_organisation` AS `e_o`
-				ON `t`.`eventtype_id` = `e_o`.`eventtype_id` 
-				LEFT JOIN  `entrada_auth`.`organisations` AS `o` 
-				ON `o`.`organisation_id` = `e_o`.`organisation_id` 
-				WHERE `t`.`eventtype_default_enrollment` IS NOT NULL 
-				AND `o`.`organisation_id` = ".$db->qstr($_SESSION["details"]["organisation_id"])." 
+				ON `t`.`eventtype_id` = `e_o`.`eventtype_id`
+				LEFT JOIN  `entrada_auth`.`organisations` AS `o`
+				ON `o`.`organisation_id` = `e_o`.`organisation_id`
+				WHERE `t`.`eventtype_default_enrollment` IS NOT NULL
+				AND `o`.`organisation_id` = ".$db->qstr($_SESSION["details"]["organisation_id"])."
 				ORDER BY `t`.`eventtype_default_enrollment` DESC";
-    
+
     $results = $db->GetAll($query);
-    
+
     $defaultEnrollmentArray = array();
-	
+
     foreach($results as $result) {
     	$defaultEnrollmentArray[$result["eventtype_id"]] = array("title" => $result["eventtype_title"], "default_enrollment" => $result["eventtype_default_enrollment"]);
     }
@@ -12562,20 +12562,20 @@ function getNumberFromProxy($proxy_id) {
 
     $query = "SELECT `number`
 	FROM `".AUTH_DATABASE."`.`user_data` WHERE `id`=". $db->qstr($proxy_id);
-    
+
     $result = $db->GetRow($query);
-    
+
 	return $result["number"];
 }
 
 function userMKDir($dir)
 {
-	// may just need to be chmoded		
+	// may just need to be chmoded
 	if(@is_dir($dir))
 	{
 		chmod($dir, 0777);
 	}
-	else 
+	else
 	{
 		$oldumask = @umask(0);
 		!@mkdir($dir, 0777);
@@ -12592,20 +12592,20 @@ function display_default_enrollment($reportMode = false) {
 	global $db;
 
 	$output_html = "";
-	
-	$query = "	SELECT `eventtype_title`, `eventtype_default_enrollment` FROM `events_lu_eventtypes` AS `e` 
-				LEFT JOIN `eventtype_organisation` AS `e_o` 
-				ON `e`.`eventtype_id` = `e_o`.`eventtype_id` 
-				LEFT JOIN `entrada_auth`.`organisations` as `o` 
-				ON `o`.`organisation_id` = `e_o`. `organisation_id` 
-				WHERE `e`.`eventtype_active` = '1'  
-				AND `o`.`organisation_id` = ".$db->qstr($_SESSION["details"]["organisation_id"])." 
-				ORDER BY `e`.`eventtype_default_enrollment`";	
-	
+
+	$query = "	SELECT `eventtype_title`, `eventtype_default_enrollment` FROM `events_lu_eventtypes` AS `e`
+				LEFT JOIN `eventtype_organisation` AS `e_o`
+				ON `e`.`eventtype_id` = `e_o`.`eventtype_id`
+				LEFT JOIN `entrada_auth`.`organisations` as `o`
+				ON `o`.`organisation_id` = `e_o`. `organisation_id`
+				WHERE `e`.`eventtype_active` = '1'
+				AND `o`.`organisation_id` = ".$db->qstr($_SESSION["details"]["organisation_id"])."
+				ORDER BY `e`.`eventtype_default_enrollment`";
+
 	if($results = $db->GetAll($query)) {
 		$previous = "";
 		$outputLine = array();
-		
+
 		$output_html .= "<div id=\"display-error-box\" class=\"display-generic\">\n";
 		$output_html .= "The following average enrollment numbers are implied";
 		if(!$reportMode) {
@@ -12617,10 +12617,10 @@ function display_default_enrollment($reportMode = false) {
 		foreach($results as $result) {
 			if($previous != "" && $previous != $result["eventtype_default_enrollment"]) {
 				$output = implode(", ", $outputLine);
-				
+
 				$output_html .= "	<li>".$previous. " - " .$output."</li>\n";
 				$outputLine = array();
-				
+
 				$outputLine[] = $result["eventtype_title"];
 			} else {
 				$outputLine[] = $result["eventtype_title"];
@@ -12628,7 +12628,7 @@ function display_default_enrollment($reportMode = false) {
 			$previous = $result["eventtype_default_enrollment"];
 		}
 		$output = implode(", ", $outputLine);
-				
+
 		$output_html .= "	<li>".$previous. " - " .$output."</li>\n";
 		$output_html .= "	</ul>\n";
 		$output_html .= "</div>\n";
@@ -12660,15 +12660,15 @@ function objectives_inlists($identifier = 0, $indent = 0) {
 		$query	= "SELECT * FROM `global_lu_objectives` AS a
 					LEFT JOIN `objective_organisation` AS b
 					ON a.`objective_id` = b.`objective_id`
-					WHERE a.`objective_parent` = '0' 
-					AND a.`objective_active` = '1' 
+					WHERE a.`objective_parent` = '0'
+					AND a.`objective_active` = '1'
 					AND b.`organisation_id` = ".$db->qstr($ORGANISATION_ID)."
 					ORDER BY a.`objective_order` ASC";
 	} else {
 		$query	= "SELECT a.* FROM `global_lu_objectives` AS a
 					JOIN `objective_organisation` AS b
 					ON a.`objective_id` = b.`objective_id`
-					WHERE a.`objective_parent` = ".$db->qstr($identifier)." 
+					WHERE a.`objective_parent` = ".$db->qstr($identifier)."
 					AND a.`objective_active` = '1'
 					AND b.`organisation_id` = ".$db->qstr($ORGANISATION_ID)."
 					ORDER BY a.`objective_order` ASC";
@@ -12679,8 +12679,8 @@ function objectives_inlists($identifier = 0, $indent = 0) {
 		function showObjectiveChildren(objective_id) {
 			if (!$(objective_id+'-children').visible()) {
 				$('objective-'+objective_id+'-arrow').src = '<?php echo ENTRADA_URL; ?>/images/arrow-asc.gif';
-				Effect.BlindDown(objective_id+'-children'); 
-			} else { 
+				Effect.BlindDown(objective_id+'-children');
+			} else {
 				$('objective-'+objective_id+'-arrow').src = '<?php echo ENTRADA_URL; ?>/images/arrow-right.gif';
 				Effect.BlindUp(objective_id+'-children');
 			}
@@ -12696,12 +12696,12 @@ function objectives_inlists($identifier = 0, $indent = 0) {
 			$output .= "<div class=\"objective-container\">";
 			$output .= "	<span class=\"delete\"><input type=\"checkbox\" id=\"delete_".$result["objective_id"]."\" name=\"delete[".$result["objective_id"]."][objective_id]\" value=\"".$result["objective_id"]."\"".(($selected == $result["objective_id"]) ? " checked=\"checked\"" : "")." onclick=\"$$('#".$result["objective_id"]."-children input[type=checkbox]').each(function(e){e.checked = $('delete_".$result["objective_id"]."').checked; if (e.checked) e.disable(); else e.enable();});\"/></span>\n";
 			$output .= "	<span class=\"next\">";
-			$query = "SELECT a.* FROM `global_lu_objectives` AS a 
+			$query = "SELECT a.* FROM `global_lu_objectives` AS a
 						JOIN `objective_organisation` AS b
 						ON a.`objective_id` = b.`objective_id`
-						WHERE a.`objective_parent` = ".$db->qstr($result["objective_id"])." 
+						WHERE a.`objective_parent` = ".$db->qstr($result["objective_id"])."
 						AND b.`organisation_id` = ".$db->qstr($ORGANISATION_ID)."
-						AND a.`objective_active` = '1' 
+						AND a.`objective_active` = '1'
 						ORDER BY a.`objective_order` ASC";
 			if ($db->GetAll($query)) {
 				$has_children = true;
@@ -12749,16 +12749,16 @@ function objectives_inlists_conf($identifier = 0, $indent = 0) {
 		$query	= "	SELECT * FROM `global_lu_objectives` AS a
 					LEFT JOIN `objective_organisation` AS b
 					ON a.`objective_id` = b.`objective_id`
-					WHERE a.`objective_parent` = '0' 
-					AND a.`objective_active` = '1' 
+					WHERE a.`objective_parent` = '0'
+					AND a.`objective_active` = '1'
 					AND b.`organisation_id` = ".$db->qstr($ORGANISATION_ID)."
 					ORDER BY a.`objective_order` ASC";
 	} else {
 		$query	= "	SELECT a.* FROM `global_lu_objectives` AS a
 					JOIN `objective_organisation` AS b
 					ON a.`objective_id` = b.`objective_id`
-					WHERE a.`objective_parent` = ".$db->qstr($identifier)." 
-					AND a.`objective_active` = '1' 
+					WHERE a.`objective_parent` = ".$db->qstr($identifier)."
+					AND a.`objective_active` = '1'
 					AND b.`organisation_id` = ".$db->qstr($ORGANISATION_ID)."
 					ORDER BY a.`objective_order` ASC";
 	}
@@ -12768,8 +12768,8 @@ function objectives_inlists_conf($identifier = 0, $indent = 0) {
 		function showObjectiveChildren(objective_id) {
 			if (!$(objective_id+'-children').visible()) {
 				$('objective-'+objective_id+'-arrow').src = '<?php echo ENTRADA_URL; ?>/images/arrow-asc.gif';
-				Effect.BlindDown(objective_id+'-children'); 
-			} else { 
+				Effect.BlindDown(objective_id+'-children');
+			} else {
 				$('objective-'+objective_id+'-arrow').src = '<?php echo ENTRADA_URL; ?>/images/arrow-right.gif';
 				Effect.BlindUp(objective_id+'-children');
 			}
@@ -12788,8 +12788,8 @@ function objectives_inlists_conf($identifier = 0, $indent = 0) {
 			$query = "SELECT a.* FROM `global_lu_objectives` AS a
 						JOIN `objective_organisation` AS b
 						ON a.`objective_id` = b.`objective_id`
-						WHERE a.`objective_parent` = ".$db->qstr($result["objective_id"])." 
-						AND a.`objective_active` = '1' 
+						WHERE a.`objective_parent` = ".$db->qstr($result["objective_id"])."
+						AND a.`objective_active` = '1'
 						AND b.`organisation_id` = ".$db->qstr($ORGANISATION_ID)."
 						ORDER BY a.`objective_order` ASC";
 			if ($db->GetAll($query)) {
@@ -12841,9 +12841,9 @@ function objectives_inselect($parent_id = 0, &$current_selected, $indent = 0, &$
 	$query	= "SELECT a.* FROM `global_lu_objectives` AS a
 				JOIN `objective_organisation` AS b
 				ON a.`objective_id` = b.`objective_id`
-				WHERE a.`objective_active` = '1' 
+				WHERE a.`objective_active` = '1'
 				AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
-				AND a.`objective_parent` = ".$db->qstr($parent_id)." 
+				AND a.`objective_parent` = ".$db->qstr($parent_id)."
 				ORDER BY a.`objective_id` ASC";
 	$results	= $db->GetAll($query);
 	if($results) {
@@ -12874,10 +12874,10 @@ function objectives_delete($objective_id = 0, $children_move_target = 0, $level 
 
 		return false;
 	}
-	
+
 	if($objective_id = (int) $objective_id) {
-		$query = "	UPDATE `global_lu_objectives` 
-					SET `objective_active` = '0' 
+		$query = "	UPDATE `global_lu_objectives`
+					SET `objective_active` = '0'
 					WHERE `objective_id` = ".$db->qstr($objective_id);
 		if(!$db->Execute($query)) {
 			application_log("error", "Unable to deactivate objective_id [".$objective_id."]. Database said: ".$db->ErrorMsg());
@@ -12890,7 +12890,7 @@ function objectives_delete($objective_id = 0, $children_move_target = 0, $level 
 		}
 		if($children_move_target === false) {
 			$query		= "	SELECT `objective_id` FROM `global_lu_objectives`
-							WHERE `objective_active` = '1' 
+							WHERE `objective_active` = '1'
 							AND `objective_parent` = ".$db->qstr($objective_id);
 			$results	= $db->GetAll($query);
 			if($results) {
@@ -12912,25 +12912,25 @@ function objectives_delete($objective_id = 0, $children_move_target = 0, $level 
 function objectives_delete_for_org($organisation_id=0,$objective_id = 0, $children_move_target = 0, $level = 0) {
 	global $db, $deleted_count;
 
-	
-	$query = "SELECT COUNT(*) FROM `objective_organisation` 
+
+	$query = "SELECT COUNT(*) FROM `objective_organisation`
 				WHERE `objective_id` = ".$db->qstr($objective_id);
-	
+
 	$result = (int)$db->GetOne($query);
 	$success = true;
-	
+
 	if($result == 1){
 		$success = objectives_delete($objective_id,$children_move_target,$level);
 	}
 
-	$query = "DELETE FROM `objective_organisation` 
+	$query = "DELETE FROM `objective_organisation`
 				WHERE `objective_id` = ".$db->qstr($objective_id)."
 				AND `organisation_id` = ".$db->qstr($organisation_id);
 	$result = $db->Execute($query);
 	if (!isset($result) || !$result) {
 		$success = false;
 	}
-	
+
 	return $success;
 }
 
@@ -12947,20 +12947,20 @@ function objectives_intable($ORGANISATION_ID, $identifier = 0, $indent = 0, $exc
 	if($indent > 99) {
 		die("Preventing infinite loop");
 	}
-	
+
 	$selected				= 0;
 	$selectable_children	= true;
-	
-	
+
+
 	$identifier	= (int) $identifier;
 	$output		= "";
-	
+
 	if(($identifier)) {
 		$query	= "SELECT * FROM `global_lu_objectives` AS a
 					JOIN `objective_organisation` AS b
 					ON a.`objective_id` = b.`objective_id`
-					WHERE a.`objective_id` = ".$db->qstr((int)$identifier)." 
-					AND a.`objective_active` = '1' 
+					WHERE a.`objective_id` = ".$db->qstr((int)$identifier)."
+					AND a.`objective_active` = '1'
 					AND b.`organisation_id` = ".$db->qstr($ORGANISATION_ID)."
 					ORDER BY a.`objective_order` ASC";
 	}
@@ -13017,7 +13017,7 @@ function objectives_intable($ORGANISATION_ID, $identifier = 0, $indent = 0, $exc
 
 		}
 	}
-	
+
 	return $output;
 }
 
@@ -13037,7 +13037,7 @@ function build_option($value, $label, $selected = false) {
 
 /**
  * routine to display standard status messages, Error, Notice, and Success
- * @param bool $fade true if the messages should fade out 
+ * @param bool $fade true if the messages should fade out
  */
 function display_status_messages($fade = false) {
 	echo "<div class=\"status_messages\">";
@@ -13059,7 +13059,7 @@ function display_status_messages($fade = false) {
 }
 
 /**
- * Returns formatted mspr data supporting getDetails(), at this time only Leaves of absence, formal remdiation, and disciplinary actions 
+ * Returns formatted mspr data supporting getDetails(), at this time only Leaves of absence, formal remdiation, and disciplinary actions
  */
 function display_mspr_details($data) {
 	ob_start();
@@ -13071,18 +13071,18 @@ function display_mspr_details($data) {
 		?>
 		<li class="entry">
 			<?php echo clean_input($datum->getDetails(), array("notags", "specialchars")) ?>
-		</li>	
-		<?php 
+		</li>
+		<?php
 		}
 	} else {
 		?>
 		<li>
 		None
-		</li>	
+		</li>
 		<?php
 	}
 	?>
-	</ul>	
+	</ul>
 	<?php
 	return ob_get_clean();
 }
@@ -13099,19 +13099,19 @@ function getMonthName($month_number) {
 		$months=array();
 		for($month_num = 1; $month_num <= 12; $month_num++) {
 			$time = mktime(0,0,0,$month_num,1);
-			$month_name= date("F", $time); 
+			$month_name= date("F", $time);
 			$months[$month_num] = $month_name;
 		}
 	}
 	//the -1 and +1 are to ensure the month num is from 1 to 12, not 0 to 11. The mod is done to  ensure the value is ithin bounds
 	$month_number = (($month_number - 1) % 12) + 1;
-	
+
 	$month_name = $months[$month_number];
 	return $month_name;
 }
 
 /**
- * Given two dates, this function will return a human-readable range  
+ * Given two dates, this function will return a human-readable range
  * @param array $start_date {"d" => day, "m" => month, "y" => year}
  * @param array $end_date {"d" => day, "m" => month, "y" => year}
  */
@@ -13120,12 +13120,12 @@ function formatDateRange($start_date, $end_date) {
 	$ds = $start_date["d"];
 	$ms = $start_date["m"];
 	$ys = $start_date["y"];
-	
+
 	$de = $end_date['d'];
 	$me = $end_date['m'];
 	$ye = $end_date['y'];
 
-	//first determine if the range should be 
+	//first determine if the range should be
 	//year - year, or month year - month year
 	//month month year or just year
 	if ($ye && $ye != $ys) {
@@ -13157,7 +13157,7 @@ function formatDateRange($start_date, $end_date) {
 			$period = $ys . " - " . $ye;
 			//no check for days because days without months would be meaningless.
 		}
-		
+
 	} else {
 		//there is either no end year, or the end year is the same as the start year (equivalent)
 		if ($ms || $me){
@@ -13166,7 +13166,7 @@ function formatDateRange($start_date, $end_date) {
 			} elseif(!$ms) {
 				$ms = $me;
 			}
-			
+
 			if ($me == $ms) {
 				$month_name = getMonthName($ms);
 				if ($ds || $de) {
@@ -13178,11 +13178,11 @@ function formatDateRange($start_date, $end_date) {
 				} else {
 					$period = $month_name . " " . $ys;
 				}
-			} else {	
-				//months are different.		
+			} else {
+				//months are different.
 				if ($de || $ds) {
-					//we already have a range 
-					
+					//we already have a range
+
 					//assume same start and end day if only one exists
 					if (!$de) {
 						$de = $ds;
@@ -13198,8 +13198,8 @@ function formatDateRange($start_date, $end_date) {
 				}
 				$period = $start . " - " . $end;
 			}
-			
-			
+
+
 		} else {
 			//single year entry
 			$period = $ys;
@@ -13215,8 +13215,8 @@ function formatDateRange($start_date, $end_date) {
  */
 function get_user_departments($user_id) {
 	global $db;
-	
-	$query = "	SELECT c.`department_title`, c.`department_id` 
+
+	$query = "	SELECT c.`department_title`, c.`department_id`
 				FROM `".AUTH_DATABASE."`.`user_departments` AS a
 				JOIN `".AUTH_DATABASE."`.`user_data` AS b
 				ON a.`user_id` = b.`id`
@@ -13224,9 +13224,9 @@ function get_user_departments($user_id) {
 				ON a.`dep_id` = c.`department_id`
 				AND b.`organisation_id` = c.`organisation_id`
 				WHERE a.`user_id` = ".$db->qstr($user_id);
-	
+
 	$results = $db->GetAll($query);
-	
+
 	return $results;
 }
 
@@ -13237,16 +13237,16 @@ function get_user_departments($user_id) {
  */
 function get_distinct_user_departments() {
 	global $db;
-	
-	$query = "	SELECT DISTINCT b.`department_title`, b.`department_id` 
+
+	$query = "	SELECT DISTINCT b.`department_title`, b.`department_id`
 				FROM `".AUTH_DATABASE."`.`user_departments` AS a
 				JOIN `".AUTH_DATABASE."`.`departments` AS b
 				ON a.`dep_id` = b.`department_id`
 				WHERE (b.`department_active` = '1' OR b.`department_active` = '3') AND b.`parent_id`='0'
 				ORDER BY b.`department_title`";
-	
+
 	$results = $db->GetAll($query);
-	
+
 	return $results;
 }
 
@@ -13257,13 +13257,13 @@ function get_distinct_user_departments() {
  */
 function get_users_in_department($dep_id) {
 	global $db;
-	
+
 	$query = "	SELECT `user_id`
 				FROM `".AUTH_DATABASE."`.`user_departments`
 				WHERE `dep_id` IN(".$dep_id.")";
-	
+
 	$results = $db->GetAll($query);
-	
+
 	return $results;
 }
 
@@ -13274,12 +13274,12 @@ function get_users_in_department($dep_id) {
  */
 function is_department_head($user_id) {
 	global $db;
-	
-	$query = "	SELECT `department_id` 
+
+	$query = "	SELECT `department_id`
 				FROM `".AUTH_DATABASE."`.`department_heads`
 				WHERE `user_id`=".$db->qstr($user_id);
-	
-	if($result = $db->GetRow($query)) {	
+
+	if($result = $db->GetRow($query)) {
 		return $result["department_id"];
 	} else {
 		return false;
@@ -13290,13 +13290,13 @@ function is_department_head($user_id) {
  * This function generates a 2 dimensional array of the competencies
  * and the courses which they are associated with, used for building
  * a table to display the aforementioned matrix.
- * 
+ *
  * @return array $obectives
  */
 function objectives_build_course_competencies_array() {
 	global $db, $translate, $ENTRADA_USER;
 	$courses_array = array("courses" => array(), "competencies" => array());
-	
+
 	$query = "	SELECT a.*, b.`curriculum_type_name` FROM `courses` AS a
 				LEFT JOIN `curriculum_lu_types` AS b
 				ON a.`curriculum_type_id` = b.`curriculum_type_id`
@@ -13333,7 +13333,7 @@ function objectives_build_course_competencies_array() {
 				$courses_array["courses"][$course_id] = $course;
 			}
 		}
-		
+
 		foreach ($courses_array["courses"] as $course_id => &$course) {
 			$course["new_term"] = ((isset($last_term_name) && $last_term_name && $last_term_name != $course["term_name"]) ? true : false);
 			if ($last_term_name != $course["term_name"]) {
@@ -13350,18 +13350,18 @@ function objectives_build_course_competencies_array() {
 		if ($term_course_id) {
 			$courses_array["courses"][$term_course_id]["total_in_term"] = $count;
 		}
-		
-		
+
+
 		$objective_name = $translate->_("events_filter_controls");
 		$objective_name = $objective_name["co"]["global_lu_objectives_name"];
-		$query = "	SELECT a.`objective_id` FROM `global_lu_objectives` AS a	
-					LEFT JOIN `objective_organisation` AS b 
-					ON a.`objective_id` = b.`objective_id` 
-					WHERE a.`objective_name` LIKE ".$db->qstr($objective_name)." 
+		$query = "	SELECT a.`objective_id` FROM `global_lu_objectives` AS a
+					LEFT JOIN `objective_organisation` AS b
+					ON a.`objective_id` = b.`objective_id`
+					WHERE a.`objective_name` LIKE ".$db->qstr($objective_name)."
 					AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation());
-		
+
 		$parent_obj = $db->GetOne($query);
-		
+
 		$query = "	SELECT a.* FROM `global_lu_objectives` AS a
 					JOIN `objective_organisation` AS b
 					ON a.`objective_id` = b.`objective_id`
@@ -13373,7 +13373,7 @@ function objectives_build_course_competencies_array() {
 		$competencies = $db->GetAll($query);
 		if ($competencies && count($competencies)) {
 			foreach ($competencies as $competency) {
-				$courses_array["competencies"][$competency["objective_id"]] = $competency["objective_name"]; 
+				$courses_array["competencies"][$competency["objective_id"]] = $competency["objective_name"];
 				$objective_ids_string = objectives_build_objective_descendants_id_string($competency["objective_id"], $db->qstr($competency["objective_id"]));
 				if ($objective_ids_string) {
 					foreach ($courses_array["courses"] as $course_id => &$course) {
@@ -13398,7 +13398,7 @@ function objectives_build_course_competencies_array() {
 /**
  * This function returns a string containing all of the objectives which
  * are descendants of the objective_id received.
- * 
+ *
  * @param $objective_id
  * @param $objective_ids_string
  * @return $objective_ids_string
@@ -13427,7 +13427,7 @@ function objectives_build_objective_descendants_id_string($objective_id = 0, $ob
 /**
  * This function returns a string containing all of the objectives which
  * are attached to the selected course.
- * 
+ *
  * @param $objective_id
  * @param $objective_ids_string
  * @return $objective_ids_string
@@ -13454,14 +13454,14 @@ function objectives_build_course_objectives_id_string($course_id = 0) {
 /**
  * This function returns a string containing all of the courses which
  * are attached to the selected competency.
- * 
+ *
  * @param $objective_id
  * @param $objective_ids_string
  * @return $objective_ids_string
  */
 function objectives_competency_courses($competency_id = 0) {
 	global $db, $ENTRADA_USER;
-	$query = "	SELECT a.*, MIN(b.`importance`) AS `importance` 
+	$query = "	SELECT a.*, MIN(b.`importance`) AS `importance`
 				FROM `courses` AS a
 				JOIN `course_objectives` AS b
 				ON a.`course_id` = b.`course_id`
@@ -13510,13 +13510,13 @@ function writeFile($filename, $contents) {
 	}
 	if(!fclose($res)) {
 		return false;
-	}		
+	}
 	return true;
 }
 
 
 class Latin1UTF8 {
-   
+
     private $latin1_to_utf8;
     private $utf8_to_latin1;
     public function __construct() {
@@ -13525,7 +13525,7 @@ class Latin1UTF8 {
             $this->utf8_to_latin1[utf8_encode(chr($i))] = chr($i);
         }
     }
-   
+
     public function mixed_to_latin1($text) {
         foreach( $this->utf8_to_latin1 as $key => $val ) {
             $text = str_replace($key, $val, $text);
@@ -13536,7 +13536,7 @@ class Latin1UTF8 {
     public function mixed_to_utf8($text) {
         return utf8_encode($this->mixed_to_latin1($text));
     }
-} 
+}
 
 /**
  * Generates a PDF file from the string of html provided. If a filename is supplied, it will be written to the file; otherwise it will be returned from the function
@@ -13545,10 +13545,10 @@ class Latin1UTF8 {
  */
 function generatePDF($html,$output_filename=null, $charset=DEFAULT_CHARSET) {
 	global $APPLICATION_PATH;
-	
+
 	$cv = new Latin1UTF8();
 	$html = $cv->mixed_to_latin1($html);
-	
+
 	//and just in case there's still anything left...
 	$html = preg_replace('/[^(\x20-\x7F)]*/','', $html);
 	@set_time_limit(0);
@@ -13556,39 +13556,39 @@ function generatePDF($html,$output_filename=null, $charset=DEFAULT_CHARSET) {
 
 		//This used to have every option separated by a backslash and newline. In testing it was discovered that there was a magical limit of 4 backslashes -- beyond which it would barf.
 		$exec_command = $APPLICATION_PATH["htmldoc"]." --format pdf14 --charset ".$charset." --size Letter --pagemode document --no-duplex --encryption --owner-password ".PDF_PASSWORD." --compression=6 --permissions print,modify --header ... --footer ... --headfootsize 0 --browserwidth 800 --top 1cm --bottom 1cm --left 2cm --right 2cm --embedfonts --bodyfont Times --headfootsize 8 --headfootfont Times --headingfont Times --firstpage p1 --quiet --book --color --no-toc --no-title --no-links --textfont Times - ";
-		
+
 		if ($output_filename) {
 			@exec($exec_command);
 			@exec("chmod 644 ".$output_filename);
 		} else {
 			/**
 			 * This section needs a little explanation.
-			 * 
+			 *
 			 * exec and shell_exec were not used because they cannot receive standard input.
 			 * proc_open allows the specification of pipes (or files) for standard input/output/error
 			 * hence the descriptorsepc array specifiying pipes for all three
 			 * and writing to pipe[0] for standard input
 			 * and reading the stream from pipe[1] for standard output.
 			 */
-			
+
 			$descriptorspec = array(
 			   0 => array("pipe", "r"),  // stdin is a pipe that the child will read from
 			   1 => array("pipe", "w"),  // stdout is a pipe that the child will write to
 			   2 => array("pipe", "w")   // stderr is a pipe that the child will write to
 			);
-			
+
 			$proc = proc_open($exec_command, $descriptorspec, $pipes);
-			
+
 			fwrite($pipes[0], $html);
 			fclose($pipes[0]);
 
 			$pdf_string = stream_get_contents($pipes[1]);
 			fclose($pipes[1]);
-			
+
 			fclose($pipes[2]); //just close we're not interested in the error info
-			
+
 			$return_val = proc_close($proc);
-			
+
 			return $pdf_string;
 		}
 	}
@@ -13669,9 +13669,9 @@ function getClinicalFromProxy($proxy_id) {
 
     $query = "SELECT `clinical`
 	FROM `".AUTH_DATABASE."`.`user_data` WHERE `id`=". $db->qstr($proxy_id);
-    
+
     $result = $db->GetRow($query);
-    
+
 	return $result["clinical"];
 }
 
@@ -13706,7 +13706,7 @@ function displayARYearReported($year_reported, $AR_CUR_YEAR, $AR_PAST_YEARS, $AR
 		</select>
 		<?php
 		}
-		
+
 	?>
 	</td>
 	<?php
@@ -13722,15 +13722,15 @@ function add_task_sidebar () {
 
 	$proxy_id = $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"];
 	$user = User::get($proxy_id);
-	
-	
+
+
 	$tasks_completions = TaskCompletions::getByRecipient($user, array('order_by'=>array(array('deadline', 'asc')), 'limit' => 5, 'where' => 'completed_date IS NULL'));
-	
+
 	foreach ($tasks_completions as $completion) {
 		$tasks[] = $completion->getTask();
 	}
 	if (isset($tasks) && $tasks) {
-		
+
 		$sidebar_html = "<ul>";
 		foreach ($tasks as $task) {
 			$sidebar_html .= "
@@ -13740,9 +13740,9 @@ function add_task_sidebar () {
 			</li>";
 		}
 		$sidebar_html .= "</ul>";
-		
-		$sidebar_html .= "<a class='see-all' href='".ENTRADA_URL."/tasks'>See all tasks</a>"; 
-		
+
+		$sidebar_html .= "<a class='see-all' href='".ENTRADA_URL."/tasks'>See all tasks</a>";
+
 		new_sidebar_item("Upcoming Tasks", $sidebar_html, "task-list", "open");
 	}
 }
@@ -13772,7 +13772,7 @@ function add_success($message) {
 }
 
 /**
- * Adds the supplied message to the type-specified collection of messages 
+ * Adds the supplied message to the type-specified collection of messages
  * @param string $type At this time, one of "success","error",or "notice"
  * @param string $message
  */
@@ -13785,7 +13785,7 @@ function add_message($type,$message) {
 }
 
 /**
- * Returns true if there are any messages of the specified type 
+ * Returns true if there are any messages of the specified type
  * @param string $type At this time, one of "success","error",or "notice"
  * @return bool
  */
@@ -13802,7 +13802,7 @@ function has_message($type) {
 }
 
 /**
- * Returns true if there are any error messages 
+ * Returns true if there are any error messages
  * @return bool
  */
 function has_error() {
@@ -13810,7 +13810,7 @@ function has_error() {
 }
 
 /**
- * Returns true if there are any notice messages 
+ * Returns true if there are any notice messages
  * @return bool
  */
 function has_notice() {
@@ -13818,7 +13818,7 @@ function has_notice() {
 }
 
 /**
- * Returns true if there are any success messages 
+ * Returns true if there are any success messages
  * @return bool
  */
 function has_success() {
@@ -13874,9 +13874,9 @@ function getMinMaxARYears() {
 
     $query = "SELECT MIN(year_reported) AS `start_year`, MAX(year_reported) AS `end_year`
 	FROM `ar_profile`";
-    
+
     $result = $db->GetRow($query);
-    
+
 	return $result;
 }
 
@@ -13886,17 +13886,17 @@ function get_redirect_message($url, $page_title, $message) {
 
 function success_redirect($url, $page_title, $success_message) {
 	add_success(get_redirect_message($url, $page_title, $success_message));
-	status_redirect($url);				
+	status_redirect($url);
 }
 
 function error_redirect($url, $page_title, $error_message) {
-	add_error(get_redirect_message($url, $page_title, $error_message));				
-	status_redirect($url);				
+	add_error(get_redirect_message($url, $page_title, $error_message));
+	status_redirect($url);
 }
 
 function notice_redirect($url, $page_title, $notice_message) {
-	add_notice(get_redirect_message($url, $page_title, $notice_message));				
-	status_redirect($url);				
+	add_notice(get_redirect_message($url, $page_title, $notice_message));
+	status_redirect($url);
 }
 
 function status_redirect($url) {
@@ -14154,12 +14154,12 @@ function gradebook_get_weighted_grades($course_id, $cohort, $proxy_id, $assessme
 			$query .= "LEFT JOIN `".DATABASE_NAME."`.`assessment_grades` AS g$key ON b.`id` = g$key.`proxy_id` AND g$key.`assessment_id` = ".$db->qstr($assessment["assessment_id"])."\n";
 			$query .= "LEFT JOIN `".DATABASE_NAME."`.`assessment_exceptions` AS h$key ON b.`id` = h$key.`proxy_id` AND h$key.`assessment_id` = ".$db->qstr($assessment["assessment_id"])."\n";
 		}
-		
+
 		$query .= 	" WHERE b.`id` = ".$db->qstr($proxy_id);
 		$query .=	" GROUP BY b.`id`";
-		
-		$student = $db->GetRow($query); 
-		
+
+		$student = $db->GetRow($query);
+
 		if ($student) {
 			foreach($assessments as $key2 => $assessment) {
 				if ($student["grade_".$key2."_weighting"] !== NULL) {
@@ -14185,8 +14185,8 @@ function gradebook_get_weighted_grades($course_id, $cohort, $proxy_id, $assessme
 
 /**
  * Substitutes variables of the form %VAR NAME% in the string, with variables from the array, keys in the form of var name, Var Name, etc.
- * 
- * @param string $str 
+ *
+ * @param string $str
  * @param array $arr
  * @return string
  */
@@ -14195,8 +14195,8 @@ function substitute_vars($str, array $arr) {
 	$n_arr = array();
 	foreach ($arr as $key=>$value) {
 		$n_arr["%".strtoupper($key)."%"] = $value;
-	} 
-	
+	}
+
 	return strtr($str,$n_arr);
 }
 
@@ -14234,7 +14234,7 @@ function validate_user_ids($value) {
 					AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")";
 		$results	= $db->GetCol($query);
 		if($results && (0 < count($results))) {
-			return $results; 
+			return $results;
 		}
 	}
 }
@@ -14246,7 +14246,7 @@ function validate_user_ids($value) {
  */
 function validate_course_id($value) {
 	$course_id = filter_var($value, FILTER_VALIDATE_INT, array('min_range' => 1));
-	
+
 	if (false === $course_id || !Course::get($course_id)) {
 		return;
 	} else {
@@ -14261,7 +14261,7 @@ function validate_course_id($value) {
  */
 function validate_organisation_id($value) {
 	$organisation_id = filter_var($value, FILTER_VALIDATE_INT, array('min_range' => 1));
-	
+
 	if (false === $organisation_id || !Organisation::get($organisation_id)) {
 		return;
 	} else {
@@ -14278,9 +14278,9 @@ function validate_organisation_id($value) {
 function or_bin($val_a, $val_b) {
 	return $val_a | $val_b;
 }
-			
+
 /**
- * Returns string after passing through the clean_input function for allowed_tags -- convenience method for callbacks. 
+ * Returns string after passing through the clean_input function for allowed_tags -- convenience method for callbacks.
  * @param string $value
  * @return string
  */
@@ -14298,34 +14298,34 @@ function display_person(User $user) {
 	$user_id = $user->getID();
 
 	$is_administrator = $ENTRADA_ACL->amIallowed('user', 'update');
-	
+
 	$prefix = $user->getPrefix();
 	$firstname = $user->getFirstname();
 	$lastname = $user->getLastname();
 	$fullname = $user->getName("%f %l");
-	
+
 	$departments = $user->getDepartments();
-	
+
 	if (0 < count($departments)) {
 		$dep_titles = array();
 		foreach ($departments as $department) {
-			$dep_titles[] = ucwords($department->getTitle()); 
+			$dep_titles[] = ucwords($department->getTitle());
 		}
 		$group_line = implode("<br />", $dep_titles);
 	} else {
 		$group = $user->getGroup();
 		$role = $user->getRole();
-		$group_line =  ucwords($group. " > " . (($group == "student") ? "Class of " : "") . $role); 
+		$group_line =  ucwords($group. " > " . (($group == "student") ? "Class of " : "") . $role);
 	}
-	
+
 	$privacy_level = $user->getPrivacyLevel();
-	
+
 	$organisation = $user->getOrganisation();
 	$org_name = ($organisation) ? $organisation->getTitle() : "" ;
-	
+
 	$email = ((1 < $privacy_level) || $is_administrator) ? $user->getEmail() : "";
 	$email_alt = $user->getAlternateEmail();
-	
+
 	if ((2 < $privacy_level) || $is_administrator) {
 		$show_address = true;
 		$city = $user->getCity();
@@ -14339,10 +14339,10 @@ function display_person(User $user) {
 		$postcode = $user->getPostalCode();
 		$office_hours = $user->getOfficeHours();
 	}
-	
+
 	$assistants = $user->getAssistants();
 	//there are 4 photo cases (at time of writing): no photos, official only, uploaded only, or both.
-	//privacy options also need to be considered here. 
+	//privacy options also need to be considered here.
 	ob_start();
 	?>
 	<div id="result-<?php echo $user_id; ?>" class="person-result">
@@ -14371,7 +14371,7 @@ function display_person(User $user) {
 				<span class="person-group"><?php echo html_encode($group_line); ?></span>
 				<span class="person-organisation"><?php echo html_encode($org_name); ?></span>
 				<div class="email-container">
-				<?php 
+				<?php
 					if ($email) {
 						echo display_person_email($email);
 						if($email_alt) {
@@ -14382,7 +14382,7 @@ function display_person(User $user) {
 				</div>
 			</div>
 			<div class="address">
-			<?php 
+			<?php
 				if ($show_address) {
 					if ($phone) {
 						?>
@@ -14411,7 +14411,7 @@ function display_person(User $user) {
 								echo "<br />";
 								echo html_encode($country_name);
 								if ($postcode) echo ", ".html_encode($postcode);
-								
+
 							?>
 							</span>
 						</div>
@@ -14425,7 +14425,7 @@ function display_person(User $user) {
 						</div>
 						<?php
 					}
-					
+
 				}
 			?>
 			</div>
@@ -14435,7 +14435,7 @@ function display_person(User $user) {
 					<?php
 					foreach ($assistants as $assistant) {
 						echo "<li>".display_person_email($assistant->getEmail(),$assistant->getName("%f %l"))."</li>";
-						
+
 					}
 					?>
 				</ul><?php } ?>
@@ -14444,7 +14444,7 @@ function display_person(User $user) {
 		<div></div>
 		<div class="clearfix">&nbsp;</div>
 	</div>
-	
+
 	<?php
 	return ob_get_clean();
 }
@@ -14500,10 +14500,10 @@ function generateMasks($organisation, $group, $role, $user) {
 	$masks["group:role"] = $group.":".$role;
 	$masks["user"] = $user;
 	$masks["organisation:user"] = $organisation .":".$user;
-	
+
 	//we want to filter out any entries that are empty, begin or terminate with a colon, or have two colons together
 	$pattern = "/^$|^:|:$|::/";
-	
+
 	$masks = preg_grep($pattern, $masks, PREG_GREP_INVERT);
 	return $masks;
 }
@@ -14525,11 +14525,11 @@ function generateAccessConditions($organisation, $group, $role, $proxy_id) {
 	$masks['`group`'] = $group;
 	$masks['`role`'] = $role;
 	$masks['a.`id`'] = $proxy_id;
-	
+
 	$masks = array_filter($masks);
-	
+
 	$mask_strs = array();
-	
+
 	foreach ($masks as $field=>$condition) {
 		$mask_strs[] = $field."=".$db->qstr($condition);
 	}
@@ -14563,9 +14563,9 @@ function validate_integer_field($input){
  */
 function groups_get_name($group_id = 0) {
 	global $db;
-	
+
 	$group_id = (int) $group_id;
-	
+
 	if ($group_id) {
 		$query = "SELECT `group_name` FROM `groups` WHERE `group_id` = ".$db->qstr($group_id);
 		$group_name = $db->GetOne($query);
@@ -14573,7 +14573,7 @@ function groups_get_name($group_id = 0) {
 			return $group_name;
 		}
 	}
-	
+
 	return false;
 }
 
@@ -14585,16 +14585,16 @@ function groups_get_name($group_id = 0) {
  */
 function groups_get_cohort($proxy_id = 0) {
 	global $db, $ENTRADA_USER;
-	
+
 	$proxy_id = (int) $proxy_id;
-	
+
 	if ($proxy_id) {
-		$query = "	SELECT a.* 
-					FROM `groups` AS a 
-					JOIN `group_members` AS b 
+		$query = "	SELECT a.*
+					FROM `groups` AS a
+					JOIN `group_members` AS b
 					ON b.`group_id` = a.`group_id`
-					JOIN `group_organisations` AS c 
-					ON c.`group_id` = a.`group_id` 
+					JOIN `group_organisations` AS c
+					ON c.`group_id` = a.`group_id`
 					WHERE b.`proxy_id` = ".$db->qstr($proxy_id)."
 					AND b.`member_active` = '1'
 					AND a.`group_type` = 'cohort'
@@ -14603,10 +14603,10 @@ function groups_get_cohort($proxy_id = 0) {
 		if ($cohort) {
 			return $cohort;
 		} else {
-			$query = "	SELECT a.* 
-						FROM `groups` AS a 
-						JOIN `group_organisations` AS b 
-						ON a.`group_id` = b.`group_id` 
+			$query = "	SELECT a.*
+						FROM `groups` AS a
+						JOIN `group_organisations` AS b
+						ON a.`group_id` = b.`group_id`
 						WHERE b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
 						AND a.`group_type` = 'cohort'
 						ORDER BY a.`group_id` DESC";
@@ -14616,7 +14616,7 @@ function groups_get_cohort($proxy_id = 0) {
 			}
 		}
 	}
-	
+
 	return false;
 }
 
@@ -14628,19 +14628,19 @@ function groups_get_cohort($proxy_id = 0) {
  */
 function groups_get_enrolled_course_ids($proxy_id = 0, $only_active_groups = false) {
 	global $db, $ENTRADA_USER;
-	
+
 	$proxy_id = (int) $proxy_id;
 	$only_active_groups = (bool) $only_active_groups;
-	
+
 	$course_ids = array();
-	
+
 	if ($proxy_id) {
 //		$query = "	SELECT a.`group_value`
-//					FROM `groups` AS a 
-//					JOIN `group_members` AS b 
+//					FROM `groups` AS a
+//					JOIN `group_members` AS b
 //					ON b.`group_id` = a.`group_id`
-//					JOIN `group_organisations` AS c 
-//					ON c.`group_id` = a.`group_id` 
+//					JOIN `group_organisations` AS c
+//					ON c.`group_id` = a.`group_id`
 //					WHERE b.`proxy_id` = ".$db->qstr($proxy_id)."
 //					AND (b.`start_date` = 0 OR b.`start_date` <= UNIX_TIMESTAMP())
 //					AND (b.`finish_date` = 0 OR b.`finish_date` >= UNIX_TIMESTAMP())
@@ -14648,38 +14648,38 @@ function groups_get_enrolled_course_ids($proxy_id = 0, $only_active_groups = fal
 //					AND a.`group_type` = 'course_list'
 //					".($only_active_groups ? " AND a.`group_active` = '1'" : "")."
 //					AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation());
-		
-		$query = "	SELECT a.course_id FROM courses AS a 
-					LEFT JOIN course_audience AS b 
-					ON a.course_id = b.course_id 
-					WHERE a.permission = 'open' 
+
+		$query = "	SELECT a.course_id FROM courses AS a
+					LEFT JOIN course_audience AS b
+					ON a.course_id = b.course_id
+					WHERE a.permission = 'open'
 					OR (
 						(
 							(
-								audience_type = 'group_id' 
+								audience_type = 'group_id'
 								AND audience_value IN(
-									SELECT a.group_id FROM `groups` AS a 
-									JOIN `group_members` AS b 
-									ON b.`group_id` = a.`group_id` 
-									JOIN `group_organisations` AS c 
-									ON c.`group_id` = a.`group_id` 
-									WHERE b.`proxy_id` = ".$db->qstr($proxy_id)." 
-									AND (b.`start_date` = 0 
-									OR b.`start_date` <= UNIX_TIMESTAMP()) 
-									AND (b.`finish_date` = 0 OR b.`finish_date` >= UNIX_TIMESTAMP()) 
-									AND b.`member_active` = '1' 
+									SELECT a.group_id FROM `groups` AS a
+									JOIN `group_members` AS b
+									ON b.`group_id` = a.`group_id`
+									JOIN `group_organisations` AS c
+									ON c.`group_id` = a.`group_id`
+									WHERE b.`proxy_id` = ".$db->qstr($proxy_id)."
+									AND (b.`start_date` = 0
+									OR b.`start_date` <= UNIX_TIMESTAMP())
+									AND (b.`finish_date` = 0 OR b.`finish_date` >= UNIX_TIMESTAMP())
+									AND b.`member_active` = '1'
 									AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
 								)
-							) 
+							)
 							OR (
-								audience_type='proxy_id' 
+								audience_type='proxy_id'
 								AND audience_value = ".$db->qstr($proxy_id)."
 							)
-						) 
+						)
 						AND audience_active = '1'
 					)";
-		
-		
+
+
 		$course_list = $db->CacheGetAll(CACHE_TIMEOUT, $query);
 		if ($course_list) {
 			foreach ($course_list as $course) {
@@ -14687,7 +14687,7 @@ function groups_get_enrolled_course_ids($proxy_id = 0, $only_active_groups = fal
 			}
 		}
 	}
-	
+
 	return $course_ids;
 }
 
@@ -14699,14 +14699,14 @@ function groups_get_enrolled_course_ids($proxy_id = 0, $only_active_groups = fal
  */
 function groups_get_all_cohorts($organisation_id = 0, $only_active_groups = false) {
 	global $db;
-	
+
 	$organisation_id = (int) $organisation_id;
-	
+
 	if ($organisation_id) {
-		$query = "	SELECT a.* 
-					FROM `groups` AS a 
-					JOIN `group_organisations` AS b 
-					ON a.`group_id` = b.`group_id` 
+		$query = "	SELECT a.*
+					FROM `groups` AS a
+					JOIN `group_organisations` AS b
+					ON a.`group_id` = b.`group_id`
 					WHERE b.`organisation_id` = ".$db->qstr($organisation_id)."
 					".($only_active_groups ? " AND a.`group_active` = '1'" : "")."
 					AND a.`group_type` = 'cohort'
@@ -14716,7 +14716,7 @@ function groups_get_all_cohorts($organisation_id = 0, $only_active_groups = fals
 			return $cohorts;
 		}
 	}
-	
+
 	return false;
 }
 
@@ -14728,14 +14728,14 @@ function groups_get_all_cohorts($organisation_id = 0, $only_active_groups = fals
  */
 function groups_get_all_course_lists($organisation_id = 0, $only_active_groups = false) {
 	global $db;
-	
+
 	$organisation_id = (int) $organisation_id;
-	
+
 	if ($organisation_id) {
-		$query = "	SELECT a.* 
-					FROM `groups` AS a 
-					JOIN `group_organisations` AS b 
-					ON a.`group_id` = b.`group_id` 
+		$query = "	SELECT a.*
+					FROM `groups` AS a
+					JOIN `group_organisations` AS b
+					ON a.`group_id` = b.`group_id`
 					WHERE b.`organisation_id` = ".$db->qstr($organisation_id)."
 					".($only_active_groups ? " AND a.`group_active` = '1'" : "")."
 					AND a.`group_type` = 'course_list'
@@ -14745,7 +14745,7 @@ function groups_get_all_course_lists($organisation_id = 0, $only_active_groups =
 			return $course_lists;
 		}
 	}
-	
+
 	return false;
 }
 
@@ -14757,14 +14757,14 @@ function groups_get_all_course_lists($organisation_id = 0, $only_active_groups =
  */
 function groups_get_all_groups($organisation_id = 0, $only_active_groups = false) {
 	global $db;
-	
+
 	$organisation_id = (int) $organisation_id;
-	
+
 	if ($organisation_id) {
-		$query = "	SELECT a.* 
-					FROM `groups` AS a 
-					JOIN `group_organisations` AS b 
-					ON a.`group_id` = b.`group_id` 
+		$query = "	SELECT a.*
+					FROM `groups` AS a
+					JOIN `group_organisations` AS b
+					ON a.`group_id` = b.`group_id`
 					WHERE b.`organisation_id` = ".$db->qstr($organisation_id)."
 					".($only_active_groups ? " AND a.`group_active` = '1'" : "")."
 					ORDER BY `group_name` DESC";
@@ -14773,7 +14773,7 @@ function groups_get_all_groups($organisation_id = 0, $only_active_groups = false
 			return $groups;
 		}
 	}
-	
+
 	return false;
 }
 
@@ -14785,14 +14785,14 @@ function groups_get_all_groups($organisation_id = 0, $only_active_groups = false
  */
 function groups_get_active_cohorts($organisation_id = 0) {
 	global $db;
-	
+
 	$organisation_id = (int) $organisation_id;
-	
+
 	if ($organisation_id) {
-		$query = "	SELECT a.* 
-					FROM `groups` AS a 
-					JOIN `group_organisations` AS b 
-					ON a.`group_id` = b.`group_id` 
+		$query = "	SELECT a.*
+					FROM `groups` AS a
+					JOIN `group_organisations` AS b
+					ON a.`group_id` = b.`group_id`
 					WHERE b.`organisation_id` = ".$db->qstr($organisation_id)."
 					AND a.`group_type` = 'cohort'
 					ORDER BY a.`group_id` DESC
@@ -14802,7 +14802,7 @@ function groups_get_active_cohorts($organisation_id = 0) {
 			return $cohorts;
 		}
 	}
-	
+
 	return false;
 }
 
@@ -14814,14 +14814,14 @@ function groups_get_active_cohorts($organisation_id = 0) {
  */
 function fetch_curriculum_level($course_code) {
 	global $db, $ENTRADA_USER;
-	
+
 	$query = "SELECT `curriculum_level` FROM `curriculum_lu_levels`, `courses`, `curriculum_lu_types`
-	WHERE `courses`.`course_code` = ".$db->qstr($course_code)." 
+	WHERE `courses`.`course_code` = ".$db->qstr($course_code)."
 	AND `courses`.`curriculum_type_id` = `curriculum_lu_types`.`curriculum_type_id`
 	AND `curriculum_lu_types`.`curriculum_level_id` = `curriculum_lu_levels`.`curriculum_level_id`";
-	
+
 	$curriculum_level = $db->GetROw($query);
-	
+
 	return $curriculum_level["curriculum_level"];
 }
 

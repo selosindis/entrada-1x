@@ -4,11 +4,11 @@ function toggle_list(element_id) {
 
 		$(element_id+'_state_btn').addClassName('button-red');
 		$(element_id+'_state_btn').value = 'Hide List';
-		
+
 		$(element_id+'_add_btn').appear({ duration: 0.3 });
 	} else {
 		new Effect.BlindUp($(element_id), { duration: 0.3 });
-		
+
 		$(element_id+'_state_btn').removeClassName('button-red');
 		$(element_id+'_state_btn').value = ('Show List');
 
@@ -20,7 +20,7 @@ function toggle_visibility_checkbox(obj, element_id, effect) {
 	if((!effect) || (effect != 'blind')) {
 		effect = 'fade';
 	}
-	
+
 	if($(element_id) != null) {
 		if(obj.checked == true) {
 			switch(effect) {
@@ -103,7 +103,7 @@ function updateTime(type) {
 	if(minute == '0') {
 		minute = '00';
 	}
-	
+
 	$(type+'_display').innerHTML = hour+':'+minute+' '+suffix;
 
 	return;
@@ -136,7 +136,7 @@ function upload() {
 	$('addbutton').disabled		= true;
 	$('addbutton').style.color	= '#666666';
 	$('status').innerHTML		= 'Please wait. Uploading data to server ...';
-	
+
 	document.forms[0].submit();
 }
 
@@ -161,123 +161,63 @@ function getSelectedButton(buttonGroup) {
 }
 
 function sendFeedback(url) {
-	if (url) {
-		url = url.substr(url.indexOf("('") + 2, url.length);
-		url = url.substr(0, url.indexOf("')"));
+	if(url) {
+		var windowW = 485;
+		var windowH = 585;
 
-		jQuery(function(){
-			var dialog = document.createElement("div");
-			jQuery(dialog).attr('id','feedback-modal').hide();
-			jQuery("#navigator-container").append(dialog);
-			jQuery.ajax({
-				url: url,
-				dataType: 'html',
-				async: true,
-				success: function(data) {
-					jQuery('#feedback-modal').html(data);
-				}
-			});
+		var windowX = (screen.width / 2) - (windowW / 2);
+		var windowY = (screen.height / 2) - (windowH / 2);
 
-			jQuery('#feedback-modal').dialog({
-				title: 'Automated Page Feedback',
-				modal: true,
-				resizable: false,
-				draggable: false,
-				width: 500,
-				height: 600,
-				beforeClose: function(event, ui) {
-					jQuery('#feedback-modal').remove();
-				}
-			});
-		});
+		feedbackWindow = window.open(url, 'feedbackWindow', 'width='+windowW+', height='+windowH+', scrollbars=yes');
+		feedbackWindow.blur();
+		window.focus();
+
+		feedbackWindow.resizeTo(windowW, windowH);
+		feedbackWindow.moveTo(windowX, windowY);
+
+		feedbackWindow.focus();
 	}
-	return false;
+	return;
 }
 
-/*
- *	need a click handler here for feedback link clicks
- */
-jQuery(function(){ 
-	jQuery("#page-feedback a").click(function(){
-		sendFeedback(jQuery(this).attr('href'))
-		return false;
-	});
-	jQuery("#page-clerkship a").click(function(){
-		sendClerkship(jQuery(this).attr('href'))
-		return false;
-	});
-	jQuery("#page-regional-accommodations a").click(function(){
-		sendAccommodation(jQuery(this).attr('href'))
-		return false;
-	});
-});
-
 function sendClerkship(url) {
-	if (url) {
-		url = url.substr(url.indexOf("('") + 2, url.length);
-		url = url.substr(0, url.indexOf("')"));
+	if(url) {
+		var windowW = 485;
+		var windowH = 585;
 
-		jQuery(function(){
-			var dialog = document.createElement("div");
-			jQuery(dialog).attr('id','clerkship-modal').hide();
-			jQuery("#navigator-container").append(dialog);
-			jQuery.ajax({
-				url: url,
-				dataType: 'html',
-				async: true,
-				success: function(data) {
-					jQuery('#clerkship-modal').html(data);
-				}
-			});
+		var windowX = (screen.width / 2) - (windowW / 2);
+		var windowY = (screen.height / 2) - (windowH / 2);
 
-			jQuery('#clerkship-modal').dialog({
-				title: 'Clerkship Schedule Corrections',
-				modal: true,
-				resizable: false,
-				draggable: false,
-				width: 500,
-				height: 600,
-				beforeClose: function(event, ui) {
-					jQuery('#clerkship-modal').remove();
-				}
-			});
-		});
+		clerkshipWindow = window.open(url, 'clerkshipWindow', 'width='+windowW+', height='+windowH+', scrollbars=yes');
+		clerkshipWindow.blur();
+		window.focus();
+
+		clerkshipWindow.resizeTo(windowW, windowH);
+		clerkshipWindow.moveTo(windowX, windowY);
+
+		clerkshipWindow.focus();
 	}
-	return false;
+	return;
 }
 
 function sendAccommodation(url) {
 	if(url) {
-		url = url.substr(url.indexOf("('") + 2, url.length);
-		url = url.substr(0, url.indexOf("')"));
+		var windowW = 485;
+		var windowH = 585;
 
-		jQuery(function(){
-			var dialog = document.createElement("div");
-			jQuery(dialog).attr('id','accommodation-modal').hide();
-			jQuery("#navigator-container").append(dialog);
-			jQuery.ajax({
-				url: url,
-				dataType: 'html',
-				async: true,
-				success: function(data) {
-					jQuery('#accommodation-modal').html(data);
-				}
-			});
+		var windowX = (screen.width / 2) - (windowW / 2);
+		var windowY = (screen.height / 2) - (windowH / 2);
 
-			jQuery('#accommodation-modal').dialog({
-				title: 'Accommodation Issue Reporting',
-				modal: true,
-				resizable: false,
-				draggable: false,
-				width: 500,
-				height: 600,
-				beforeClose: function(event, ui) {
-					jQuery('#accommodation-modal').remove();
-				}
-			});
-		});
+		accommodationWindow = window.open(url, 'accommodationWindow', 'width='+windowW+', height='+windowH+', scrollbars=yes');
+		accommodationWindow.blur();
+		window.focus();
+
+		accommodationWindow.resizeTo(windowW, windowH);
+		accommodationWindow.moveTo(windowX, windowY);
+
+		accommodationWindow.focus();
 	}
-	return false;
+	return;
 }
 
 function closeWindow() {
@@ -404,7 +344,7 @@ var ExpandableTextarea = Class.create({
 		this.setTextboxHeight(false);
 		this.animate = (typeof Scriptaculous == 'undefined') ? false : true;
 		this.textbox.element.setStyle({'overflow': 'hidden'});
-		
+
 		Event.observe(this.textbox.element, 'keyup', this.handleKeyUp.bind(this));
 		Event.observe(this.textbox.element, 'focus', this.setTextboxHeight.bind(this));
 	},
@@ -467,7 +407,7 @@ var CollapseHeadings = Class.create({
 			document.observe('CollapseHeadings:expand-all', this.expand.bind(this));
 		}
 	},
-	
+
 	toggle: function() {
 		if ($(this.child).visible()) {
 			this.collapse();
@@ -475,7 +415,7 @@ var CollapseHeadings = Class.create({
 			this.expand();
 		}
 	},
-	
+
 	collapse: function () {
 		if ($(this.child).visible()) {
 			this.el.removeClassName('expanded');
@@ -491,14 +431,14 @@ var CollapseHeadings = Class.create({
 
 			Effect.BlindDown(this.child, { duration: 0.3 })
 		} //else already expanded
-	}	
+	}
 });
 
 document.observe("dom:loaded", function() {
 	$$('textarea.expandable').each(function(el) {
 		new ExpandableTextarea(el);
 	});
-	
+
 	$$('h2','.collapsable').each(function (el) {
 		new CollapseHeadings(el);
 	});
@@ -706,9 +646,9 @@ function eraseCookie(name) {
 }
 
 /**
- * Allows specification of a select all check box and a defined group of slaves to it. clicking the master (select all) will select/de-select all slaves. clicking one of the slaves may check/uncheck the master depending on the state of th other checkboxes (all checked -> master checked, one or more unchecked -> master unchecked)  
+ * Allows specification of a select all check box and a defined group of slaves to it. clicking the master (select all) will select/de-select all slaves. clicking one of the slaves may check/uncheck the master depending on the state of th other checkboxes (all checked -> master checked, one or more unchecked -> master unchecked)
  * @param master element which acts as the "selecct all" checkbox
- * @param slaves css selector pattern, or nodelist/array of elements  
+ * @param slaves css selector pattern, or nodelist/array of elements
  */
 function CheckboxCheckAll(master,slaves) {
 	//if slaves is a string, then use it as a pattern and, if not, use the nodes
@@ -718,16 +658,16 @@ function CheckboxCheckAll(master,slaves) {
 			return $$(slaves);
 		} else return slaves;
 	}
-	
+
 	function getMaster() {
 		return $(master);
 	}
-	
+
 	function checkAll(event) {
 		var state = getMaster().checked;
 		getSlaves().reject(isDisabled).each(function (el) { el.checked=state; });
 	}
-	
+
 	function areAllChecked() {
 		return getSlaves().reject(isDisabled).pluck("checked").all();
 	}
@@ -741,7 +681,7 @@ function CheckboxCheckAll(master,slaves) {
 		getMaster().stopObserving('click',checkAll);
 		getSlaves().invoke("stopObserving","click",setCheckAll);
 	}
-	
+
 	this.enable = function() {
 		var slaves = getSlaves();
 		getMaster().observe('click',checkAll);
@@ -751,9 +691,9 @@ function CheckboxCheckAll(master,slaves) {
 }
 
 /**
- * Returns true if the passed element has a disabled property with a truthy value. false otherwise.  
+ * Returns true if the passed element has a disabled property with a truthy value. false otherwise.
  * @param element
- * @return boolean 
+ * @return boolean
  */
 function isDisabled(element) {
 	return (!!(element.disabled));
@@ -771,7 +711,5 @@ function hasConsole() {
  * passes arguments to console.log if it is available. otherwise does nothing.
  */
 function clog() {
-	if (hasConsole()) {
-		console.log.apply(this, arguments);
-	}
+	return false;
 }

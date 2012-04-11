@@ -230,6 +230,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						}
 
 						if (!$ERROR) {
+							$query = "	SELECT COUNT(`assessment_id`)
+									FROM `assessments`
+									WHERE `course_id` = ".$db->qstr($COURSE_ID);
+							$order = $db->GetOne($query);
+						
+							$PROCESSED["order"]			= $order;
 							$PROCESSED["updated_date"]	= time();
 							$PROCESSED["updated_by"]	= $_SESSION["details"]["id"];
 							$PROCESSED["course_id"]		= $COURSE_ID;

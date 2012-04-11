@@ -161,63 +161,123 @@ function getSelectedButton(buttonGroup) {
 }
 
 function sendFeedback(url) {
-	if(url) {
-		var windowW = 485;
-		var windowH = 585;
+	if (url) {
+		url = url.substr(url.indexOf("('") + 2, url.length);
+		url = url.substr(0, url.indexOf("')"));
 
-		var windowX = (screen.width / 2) - (windowW / 2);
-		var windowY = (screen.height / 2) - (windowH / 2);
+		jQuery(function(){
+			var dialog = document.createElement("div");
+			jQuery(dialog).attr('id','feedback-modal').hide();
+			jQuery("#navigator-container").append(dialog);
+			jQuery.ajax({
+				url: url,
+				dataType: 'html',
+				async: true,
+				success: function(data) {
+					jQuery('#feedback-modal').html(data);
+				}
+			});
 
-		feedbackWindow = window.open(url, 'feedbackWindow', 'width='+windowW+', height='+windowH+', scrollbars=yes');
-		feedbackWindow.blur();
-		window.focus();
-
-		feedbackWindow.resizeTo(windowW, windowH);
-		feedbackWindow.moveTo(windowX, windowY);
-
-		feedbackWindow.focus();
+			jQuery('#feedback-modal').dialog({
+				title: 'Automated Page Feedback',
+				modal: true,
+				resizable: false,
+				draggable: false,
+				width: 500,
+				height: 600,
+				beforeClose: function(event, ui) {
+					jQuery('#feedback-modal').remove();
+				}
+			});
+		});
 	}
-	return;
+	return false;
 }
 
+/*
+ *	need a click handler here for feedback link clicks
+ */
+jQuery(function(){ 
+	jQuery("#page-feedback a").click(function(){
+		sendFeedback(jQuery(this).attr('href'))
+		return false;
+	});
+	jQuery("#page-clerkship a").click(function(){
+		sendClerkship(jQuery(this).attr('href'))
+		return false;
+	});
+	jQuery("#page-regional-accommodations a").click(function(){
+		sendAccommodation(jQuery(this).attr('href'))
+		return false;
+	});
+});
+
 function sendClerkship(url) {
-	if(url) {
-		var windowW = 485;
-		var windowH = 585;
-	
-		var windowX = (screen.width / 2) - (windowW / 2);
-		var windowY = (screen.height / 2) - (windowH / 2);
-	
-		clerkshipWindow = window.open(url, 'clerkshipWindow', 'width='+windowW+', height='+windowH+', scrollbars=yes');
-		clerkshipWindow.blur();
-		window.focus();
-	
-		clerkshipWindow.resizeTo(windowW, windowH);
-		clerkshipWindow.moveTo(windowX, windowY);
-	
-		clerkshipWindow.focus();
+	if (url) {
+		url = url.substr(url.indexOf("('") + 2, url.length);
+		url = url.substr(0, url.indexOf("')"));
+
+		jQuery(function(){
+			var dialog = document.createElement("div");
+			jQuery(dialog).attr('id','clerkship-modal').hide();
+			jQuery("#navigator-container").append(dialog);
+			jQuery.ajax({
+				url: url,
+				dataType: 'html',
+				async: true,
+				success: function(data) {
+					jQuery('#clerkship-modal').html(data);
+				}
+			});
+
+			jQuery('#clerkship-modal').dialog({
+				title: 'Clerkship Schedule Corrections',
+				modal: true,
+				resizable: false,
+				draggable: false,
+				width: 500,
+				height: 600,
+				beforeClose: function(event, ui) {
+					jQuery('#clerkship-modal').remove();
+				}
+			});
+		});
 	}
-	return;
+	return false;
 }
 
 function sendAccommodation(url) {
 	if(url) {
-		var windowW = 485;
-		var windowH = 585;
-	
-		var windowX = (screen.width / 2) - (windowW / 2);
-		var windowY = (screen.height / 2) - (windowH / 2);
-	
-		accommodationWindow = window.open(url, 'accommodationWindow', 'width='+windowW+', height='+windowH+', scrollbars=yes');
-		accommodationWindow.blur();
-		window.focus();
-	
-		accommodationWindow.resizeTo(windowW, windowH);
-		accommodationWindow.moveTo(windowX, windowY);
-	
-		accommodationWindow.focus();
+		url = url.substr(url.indexOf("('") + 2, url.length);
+		url = url.substr(0, url.indexOf("')"));
+
+		jQuery(function(){
+			var dialog = document.createElement("div");
+			jQuery(dialog).attr('id','accommodation-modal').hide();
+			jQuery("#navigator-container").append(dialog);
+			jQuery.ajax({
+				url: url,
+				dataType: 'html',
+				async: true,
+				success: function(data) {
+					jQuery('#accommodation-modal').html(data);
+				}
+			});
+
+			jQuery('#accommodation-modal').dialog({
+				title: 'Accommodation Issue Reporting',
+				modal: true,
+				resizable: false,
+				draggable: false,
+				width: 500,
+				height: 600,
+				beforeClose: function(event, ui) {
+					jQuery('#accommodation-modal').remove();
+				}
+			});
+		});
 	}
-	return;
+	return false;
 }
 
 function closeWindow() {

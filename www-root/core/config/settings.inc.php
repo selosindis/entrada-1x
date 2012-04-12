@@ -107,13 +107,13 @@ define("AUTH_LOCKOUT_TIMEOUT", 900);											// The amount of time in seconds 
 
 define("AUTH_FORCE_SSL", false);												// If you want to force all login attempts to use SSL, set this to true, otherwise false.
 
-define("LDAP_HOST", "ldap3-prev.queensu.ca");									// The hostname of your LDAP server.
-define("LDAP_PEOPLE_BASE_DN", "ou=people,o=main,dc=queensu,dc=ca");					// The BaseDN of your LDAP server.
-define("LDAP_GROUPS_BASE_DN", "ou=groups,o=main,dc=queensu,dc=ca");					// The BaseDN of your LDAP server.
-define("LDAP_SEARCH_DN", "uid=meds_ops_medtech,ou=people,dc=queensu,dc=ca");    // The LDAP username that is used to search LDAP tree for the member attribute.
-define("LDAP_SEARCH_DN_PASS", "IaLu6wmiSSI4");									// The LDAP password for the SearchDN above. These fields are optional.
-define("LDAP_MEMBER_ATTR", "queensuCaUniUid");									// The member attribute used to identify the users unique LDAP ID.
-define("LDAP_USER_QUERY_FIELD", "queensuCaPKey");								// The attribute used to identify the users staff / student number. Only used if LDAP_LOCAL_USER_QUERY_FIELD is set to "number".
+define("LDAP_HOST", "ldap.yourschool.ca");										// The hostname of your LDAP server.
+define("LDAP_PEOPLE_BASE_DN", "ou=people,o=main,dc=yourschool,dc=ca");			// The BaseDN of your LDAP server.
+define("LDAP_GROUPS_BASE_DN", "ou=groups,o=main,dc=yourschool,dc=ca");			// The BaseDN of your LDAP server.
+define("LDAP_SEARCH_DN", "uid=readonly,ou=people,dc=yourschool,dc=ca");			// The LDAP username that is used to search LDAP tree for the member attribute.
+define("LDAP_SEARCH_DN_PASS", "");												// The LDAP password for the SearchDN above. These fields are optional.
+define("LDAP_MEMBER_ATTR", "UniUid");											// The member attribute used to identify the users unique LDAP ID.
+define("LDAP_USER_QUERY_FIELD", "UniCaPKey");									// The attribute used to identify the users staff / student number. Only used if LDAP_LOCAL_USER_QUERY_FIELD is set to "number".
 define("LDAP_LOCAL_USER_QUERY_FIELD", "number");								// username | number : This field allows you to specify which local user_data field is used to search for a valid username.
 
 define("AUTH_ALLOW_CAS", false);												// Whether or not you wish to allow CAS authorisation.
@@ -467,7 +467,7 @@ $MODULES["groups"] = array("title" => "Manage Groups", "resource" => "group", "p
 $MODULES["events"] = array("title" => "Manage Events", "resource" => "eventcontent", "permission" => "update");
 $MODULES["gradebook"] = array("title" => "Manage Gradebook", "resource" => "gradebook", "permission" => "update");
 $MODULES["mspr"] = array("title" => "Manage MSPRs", "resource" => "mspr", "permission" => "create");
-$MODULES["tasks"] = array("title" => "Manage Tasks", "resource" => "task", "permission" => "create"); 
+$MODULES["tasks"] = array("title" => "Manage Tasks", "resource" => "task", "permission" => "create");
 $MODULES["notices"] = array("title" => "Manage Notices", "resource" => "notice", "permission" => "update");
 $MODULES["polls"] = array("title" => "Manage Polls", "resource" => "poll", "permission" => "update");
 $MODULES["quizzes"] = array("title" => "Manage Quizzes", "resource" => "quiz", "permission" => "update");
@@ -576,7 +576,7 @@ $ENTRADA_CHARSETS["EUC-JP"] = array("description" => "Japanese.", "mysql_names" 
  * Define the current reporting year for use withing the Annual Reporting Module - If the current month is between January and April then the current reporting
  * year is last year otherwise it is this year. This is because the due date for annual reports are due in February and March and often times faculty complete
  * them after the due date.
- * 
+ *
  * Define other default "years" required by the Annual Reporting Module.
  */
 $AR_CUR_YEAR = (date("Y") - ((date("n") < 5) ? 1 : 0));
@@ -592,18 +592,18 @@ $AR_FUTURE_YEARS = $AR_CUR_YEAR + 10;
 define("INTERNAL_AWARD_AWARDING_BODY","Queen's University");
 define("CLERKSHIP_COMPLETED_CUTOFF", "October 26");
 
-define("MSPR_REJECTION_REASON_REQUIRED",true);	//defines whether a reason is required when rejecting a submission 
+define("MSPR_REJECTION_REASON_REQUIRED",true);	//defines whether a reason is required when rejecting a submission
 define("MSPR_REJECTION_SEND_EMAIL",true);	//defines whether an email should be send on rejection of a student submission to their mspr
 
 define("MSPR_CLERKSHIP_MERGE_NEAR", true); //defines whether or not clerkship rotation with the same title should be merged if they are near in time.
 define("MSPR_CLERKSHIP_MERGE_DISTANCE", "+1 week"); //defines how close together clerkship rotations with the SAME title need to be in order to be merged on the mspr display
 
 define("AUTO_APPROVE_ADMIN_MSPR_EDITS",true); //if true, the comment will be cleared, and the entry approved.
-define("AUTO_APPROVE_ADMIN_MSPR_SUBMISSIONS", true); //when adding to student submissions, admin contributions in these areas are automatically approved, if true. 
+define("AUTO_APPROVE_ADMIN_MSPR_SUBMISSIONS", true); //when adding to student submissions, admin contributions in these areas are automatically approved, if true.
 
 /**
  * Defines for Tasks Module
- * 
+ *
  */
 
 //Owners
@@ -612,9 +612,9 @@ define("TASK_OWNER_COURSE", "course");
 define("TASK_OWNER_EVENT", "event");
 
 //Audience
-define("TASK_RECIPIENT_USER", "user"); 
-define("TASK_RECIPIENT_CLASS", "cohort"); 
-define("TASK_RECIPIENT_ORGANISATION", "organisation"); 
+define("TASK_RECIPIENT_USER", "user");
+define("TASK_RECIPIENT_CLASS", "cohort");
+define("TASK_RECIPIENT_ORGANISATION", "organisation");
 
 
 define("TASK_VERIFICATION_NONE", "none");

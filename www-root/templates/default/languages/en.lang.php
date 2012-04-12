@@ -14,6 +14,99 @@
     
 return array (
 	/**
+	 * Core Navigation
+	 */
+	"navigation_tabs" => array (
+		"public" => array (
+			"dashboard" => array ("title" => "Dashboard"),
+			"communities" => array ("title" => "Communities"),
+			"courses" => array ("title" => "Courses"),
+			"events" => array ("title" => "Learning Events"),
+			"clerkship" => array ("title" => "Clerkship", "resource" => "clerkship", "permission" => "read"),
+			"search" => array ("title" => "Curriculum Search"),
+//			"curriculum" => array (
+//				"title" => "Curriculum",
+//				"children" => array (
+//					"curriculum/overview" => array (
+//						"title" => "Overview"
+//					),
+//					"curriculum/search" => array (
+//						"title" => "Search"
+//					),
+//					"curriculum/objectives" => array (
+//						"title" => "Objective Map"
+//					)
+//				)
+//			),
+			"people" => array ("title" => "People Search"),
+			"evaluations" => array ("title" => "My Evaluations"),
+			"tasks" => array ("title" => "My Tasks", "resource" => "tasktab", "permission" => "read"),
+			"annualreport" => array ("title" => "My Annual Report", "resource" => "annualreport", "permission" => "read"),
+			"profile" => array ("title" => "My Profile"),
+			"library" => array ("title" => "Library", "target" => "_blank"),
+			"help" => array ("title" => "Help")
+		),
+/*		@todo This is not currently used, unfortunately this exists in core/includes/settings.php in the $MODULES array.
+		We need to fix this in order to allow it to work from here. The use of the $MODULES array is silly,
+		and I believe this is something that should be handled by the ACL or is just plain unnecessary.
+
+		"admin" => array (
+			"awards" => array ("title" => "Manage Awards", "resource" => "awards", "permission" => "update"),
+			"clerkship" => array ("title" => "Manage Clerkship", "resource" => "clerkship", "permission" => "update"),
+			"courses" => array ("title" => "Manage Courses", "resource"=> "coursecontent", "permission" => "update"),
+			"evaluations" => array ("title" => "Manage Evaluations", "resource" => "evaluation", "permission" => "update"),
+			"communities" => array ("title" => "Manage Communities", "resource" => "community", "permission" => "update"),
+			"groups" => array ("title" => "Manage Groups", "resource" => "group", "permission" => "update"),
+			"events" => array ("title" => "Manage Events", "resource" => "eventcontent", "permission" => "update"),
+			"gradebook" => array ("title" => "Manage Gradebook", "resource" => "gradebook", "permission" => "update"),
+			"tasks" => array ("title" => "Manage Tasks", "resource" => "task", "permission" => "create"), 
+			"notices" => array ("title" => "Manage Notices", "resource" => "notice", "permission" => "update"),
+			"configuration" => array ("title" => "Manage Configuration", "resource" => "configuration", "permission" => "update"),
+			"objectives" => array ("title" => "Manage Objectives", "resource" => "objective", "permission" => "update"),
+			"observerships" => array ("title" => "Manage Observerships", "resource" => "observerships", "permission" => "update"),
+			"polls" => array ("title" => "Manage Polls", "resource" => "poll", "permission" => "update"),
+			"quizzes" => array ("title" => "Manage Quizzes", "resource" => "quiz", "permission" => "update"),
+			"users" => array ("title" => "Manage Users", "resource" => "user", "permission" => "update"),
+			"regionaled" => array ("title" => "Regional Education", "resource" => "regionaled", "permission" => "update"),
+			"reports" => array ("title" => "System Reports", "resource" => "reportindex", "permission" => "read"),
+			"annualreport" => array ("title" => "Annual Reports", "resource" => "annualreportadmin", "permission" => "read")			
+		)
+*/
+	),
+	
+	"events_filter_controls" => array (
+		"teacher" => array (
+			"label" => "Teacher Filters"
+		),
+		"student" => array (
+			"label" => "Student Filters"
+		),
+		"group" => array (
+			"label" => "Cohort Filters"
+		),
+		"course" => array (
+			"label" => "Course Filters"
+		),
+		"term" => array (
+			"label" => "Term Filters"
+		),
+		"eventtype" => array (
+			"label" => "Learning Event Type Filters"
+		),
+		"cp" => array (
+			"label" => "Clinical Presentation Filters",
+			"global_lu_objectives_name" => "MCC Objectives"
+		),
+		"co" => array (
+			"label" => "Curriculum Objective Filters",
+			"global_lu_objectives_name" => "Queen's Objectives"
+		),
+		"topic" => array (
+			"label" => "Hot Topic Filters"
+		)
+	),
+	
+	/**
 	 * Global terminology used across different Entrada modules.
 	 */
     "global_button_save" => "Save",
@@ -27,9 +120,9 @@ return array (
     "public_dashboard_feeds" => array (
 		"global" => array (
 			array ("title" => "Entrada Announcement Feed", "url" => "http://www.entrada-project.org/news/feed", "removable" => false),
-			array ("title" => "Zend DevZone", "url" => "http://devzone.zend.com/tag/Zend_Framework_Management/format/rss2.0", "removable" => false),
-			array ("title" => "Insider Medicine", "url" => "http://insidermedicine.ca/xml/Patient/insidermedicine_English.xml", "removable" => false),
-			array ("title" => "Google News Top Stories", "url" => "http://news.google.com/news?pz=1&cf=all&ned=ca&hl=en&topic=h&num=3&output=rss", "removable" => false)
+			array ("title" => "Zend DevZone", "url" => "http://feeds.feedburner.com/PHPDevZone", "removable" => true),
+			array ("title" => "Insider Medicine", "url" => "http://insidermedicine.ca/xml/Patient/insidermedicine_English.xml", "removable" => true),
+			array ("title" => "Google News Top Stories", "url" => "http://news.google.com/news?pz=1&cf=all&ned=ca&hl=en&topic=h&num=3&output=rss", "removable" => true)
 		),
 		"medtech" => array (
 			// array ("title" => "Admin Feed Example", "url" => "http://www.yourschool.ca/admin.rss", "removable" => false)
@@ -107,6 +200,10 @@ return array (
     "community_history_add_reply" => "Discussion post (<a href=\"%SITE_COMMUNITY_URL%:%PAGE_URL%?action=view-post&id=%PARENT_ID%#post-%RECORD_ID%\">%RECORD_TITLE%</a>) was replied to.",
     "community_history_add_event" => "A new event (<a href=\"%SITE_COMMUNITY_URL%:%PAGE_URL%?id=%RECORD_ID%\">%RECORD_TITLE%</a>) has been added.",
     "community_history_edit_event" => "Event (<a href=\"%SITE_COMMUNITY_URL%:%PAGE_URL%?id=%RECORD_ID%\">%RECORD_TITLE%</a>) has been updated.",
+	"community_history_add_event" => "A new event (<a href=\"%SITE_COMMUNITY_URL%:%PAGE_URL%?id=%RECORD_ID%\">%RECORD_TITLE%</a>) has been added.",
+    "community_history_edit_event" => "Event (<a href=\"%SITE_COMMUNITY_URL%:%PAGE_URL%?id=%RECORD_ID%\">%RECORD_TITLE%</a>) has been updated.",
+	"community_history_add_learning_event" => "A new learning event (<a href=\"%SITE_COMMUNITY_URL%:%PAGE_URL%?id=%RECORD_ID%\">%RECORD_TITLE%</a>) has been added.",
+    "community_history_edit_learning_event" => "Learning Event (<a href=\"%SITE_COMMUNITY_URL%:%PAGE_URL%?id=%RECORD_ID%\">%RECORD_TITLE%</a>) has been updated.",
     "community_history_add_photo_comment" => "New comment on (<a href=\"%SITE_COMMUNITY_URL%:%PAGE_URL%?action=view-photo&id=%PARENT_ID%\">%RECORD_TITLE%</a>) photo.",
     "community_history_add_gallery" => "A new photo gallery (<a href=\"%SITE_COMMUNITY_URL%:%PAGE_URL%?id=%RECORD_ID%\">%RECORD_TITLE%</a>) has been added.",
     "community_history_add_photo" => "A new photo (<a href=\"%SITE_COMMUNITY_URL%:%PAGE_URL%?action=view-photo&id=%RECORD_ID%\">%RECORD_TITLE%</a>) has been added.",
@@ -177,7 +274,7 @@ return array (
 	"task_field_associated_faculty" => "Associated Faculty", 
 	"task_field_description" => "Task Description",
 	"task_field_recipients_class" => "Entire Class Task",
-	"task_field_graduating_class" => "Graduating Year",
+	"task_field_cohort" => "Cohort",
 	"task_field_recipients_students" => "Individual Student Task",
 	"task_field_associated_students" => "Associated Students",
 	"task_field_recipients_organisation" => "Entire Organisation Task",
@@ -232,7 +329,7 @@ return array (
 	"task_time_required_invalid" => "Invalid <strong>Time Required</strong> entered. Time Required must be empty or a non-negative number of minutes.",
 	"task_time_required_too_long" => "Invalid <strong>Time Required</strong> entered. Time Required cannot be greater than %MAX_TIME_REQUIRED% minutes.",
 	"task_recipient_individual_empty" => "You have chosen <strong>Individual Task</strong> as <strong>Task Recipients</strong> type, but have not selected any individuals.",
-	"task_recipient_grad_year_missing" => "You have chosen <strong>Entire Clss Task</strong> as <strong Task Recipients</strong> type, but have not selected a valid <strong>Graduating Year</strong>.",
+	"task_recipient_cohort_missing" => "You have chosen <strong>Entire Clss Task</strong> as <strong Task Recipients</strong> type, but have not selected a valid <strong>Graduating Year</strong>.",
 	"task_no_faculty_and_faculty_verification" => "You have chosen <strong>Selected Faculty Verification</strong>, but have not designated any faculty in <strong>Associated Faculty</strong>.",
 	"task_organisation_permission_fail" => "You do not have permission to add a task for the selected organisation, please select a different one.",
 	"task_organisation_invalid" => "The <strong>Organisation</strong> you selected does not exist.",
@@ -241,7 +338,12 @@ return array (
 	"task_rejection_comment_policy_invalid" => "Invalid rejection comment policy provided. Please select one of the options from the list.", 
 	
 	/** notices **/
-	"task_title_too_long" => "The <strong>Task Title</strong> field has a maximum length of %MAX_LENGTH% characters. The title was truncated to accomodate this." //note, the field has the same restriction, so the user is unlikely to receive this message
+	"task_title_too_long" => "The <strong>Task Title</strong> field has a maximum length of %MAX_LENGTH% characters. The title was truncated to accomodate this.", //note, the field has the same restriction, so the user is unlikely to receive this message
+
+	/** courses **/
+	"course" => "Course",
+	"courses" => "Courses",
+	"evaluation_filtered_words" => "Dr. Doctor; Firstname Lastname"
 	
 	);
 ?>

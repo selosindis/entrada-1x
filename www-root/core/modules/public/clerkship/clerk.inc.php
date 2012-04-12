@@ -122,7 +122,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 					if ($apartment_available) {
 						$click_url	= ENTRADA_URL."/clerkship?section=details&id=".$result["event_id"];
 					} elseif ($ENTRADA_ACL->amIAllowed('electives', 'update')) {
-						$click_url 	= ADMIN_URL."/admin/clerkship/electives?section=edit&id=".$result["event_id"];
+						$click_url 	= ENTRADA_URL."/admin/clerkship/electives?section=edit&id=".$result["event_id"];
 					} elseif ($_SESSION["details"]["group"] == "student") {
 						$click_url 	= ENTRADA_URL."/clerkship/electives?section=edit&id=".$result["event_id"];
 					} else {
@@ -449,7 +449,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 			<?php
 			} else {
 				$NOTICE++;
-				$NOTICESTR[] = $student_name . " has no scheduled clerkship rotations / electives in the system at this time.  Click <a href = ".ADMIN_URL."/admin/clerkship/electives?section=add_core&ids=".$PROXY_ID." class=\"strong-green\">here</a> to add a new core rotation.";
+				$NOTICESTR[] = $student_name . " has no scheduled clerkship rotations / electives in the system at this time.  Click <a href = ".ENTRADA_URL."/admin/clerkship/electives?section=add_core&ids=".$PROXY_ID." class=\"strong-green\">here</a> to add a new core rotation.";
 	
 				echo display_notice();
 			}

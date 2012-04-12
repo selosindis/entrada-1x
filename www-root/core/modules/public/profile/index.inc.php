@@ -212,10 +212,19 @@ if (!defined("IN_PROFILE")) {
 					<tr>
 						<td colspan="2">&nbsp;</td>
 					</tr>
+					<?php if($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"] == "faculty") { ?>
+					<tr>
+						<td><label for="email" class="form-required"><strong>Primary E-Mail:</strong></label></td>
+						<td>	
+							<input type="text" id="email" name="email" value="<?php echo html_encode($result["email"]); ?>" style="width: 250px; vertical-align: middle" maxlength="128" />
+						</td>
+					</tr>
+					<?php } else { ?>
 					<tr>
 						<td><strong>Primary E-Mail:</strong></td>
 						<td><a href="mailto:<?php echo html_encode($result["email"]); ?>"><?php echo html_encode($result["email"]); ?></a></td>
 					</tr>
+					<?php } ?>
 					<tr>
 						<td><label for="email_alt"><strong>Secondary E-Mail:</strong></label></td>
 						<td>

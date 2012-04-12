@@ -68,6 +68,9 @@ if ($community_courses) {
 						JOIN `".AUTH_DATABASE."`.`user_access` AS c
 						ON c.`user_id` = b.`id`
 						AND c.`app_id` IN (".AUTH_APP_IDS_STRING.")
+						JOIN `courses` AS d
+						ON a.`course_id` = d.`course_id`
+						AND d.`course_active` = 1
 						WHERE a.`course_id` IN (".implode(", ", $course_ids).")
 						AND a.`contact_type` = 'director'
 						GROUP BY b.`id`
@@ -199,11 +202,14 @@ if ($community_courses) {
 					echo "</div>\n";
 				}
 			}
-
+			
 			$query = "	SELECT b.*, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, c.`account_active`, c.`access_starts`, c.`access_expires`, c.`last_login`, c.`role`, c.`group`
 						FROM `courses` AS a
+						LEFT JOIN `course_contacts` AS a1
+						ON a.`course_id` = a1.`course_id`
+						AND a1.`contact_type` = 'pcoordinator'
 						JOIN `".AUTH_DATABASE."`.`user_data` AS b
-						ON b.`id` = a.`pcoord_id`
+						ON (b.`id` = a.`pcoord_id` OR b.`id` = a1.`proxy_id`)
 						JOIN `".AUTH_DATABASE."`.`user_access` AS c
 						ON c.`user_id` = b.`id`
 						AND c.`app_id` IN (".AUTH_APP_IDS_STRING.")
@@ -338,7 +344,6 @@ if ($community_courses) {
 				}
 			}
 
-
 			$query = "	SELECT b.*, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, c.`account_active`, c.`access_starts`, c.`access_expires`, c.`last_login`, c.`role`, c.`group`
 						FROM `course_contacts` AS a
 						JOIN `".AUTH_DATABASE."`.`user_data` AS b
@@ -346,6 +351,9 @@ if ($community_courses) {
 						JOIN `".AUTH_DATABASE."`.`user_access` AS c
 						ON c.`user_id` = b.`id`
 						AND c.`app_id` IN (".AUTH_APP_IDS_STRING.")
+						JOIN `courses` AS d
+						ON a.`course_id` = d.`course_id`
+						AND d.`course_active` = 1
 						WHERE a.`course_id` IN (".implode(", ", $course_ids).")
 						AND a.`contact_type` = 'ccoordinator'
 						GROUP BY b.`id`
@@ -477,6 +485,68 @@ if ($community_courses) {
 					echo "</div>\n";
 				}
 			}
+			
+		   /**
+			* If the history is enabled, display the course history on the home page.
+			*/
+			$query			= "	SELECT * FROM `community_page_options`
+								WHERE `option_title` = 'show_history'
+								AND `community_id` = ".$db->qstr($COMMUNITY_ID)."
+								AND `option_value` = '1'";
+			$history_enabled	= $db->GetRow($query);
+			if ($history_enabled) {
+				/**
+				 * Fetch all community events and put the HTML output in a variable.
+				 */
+				$query		= "	SELECT *
+								FROM `community_history`
+								WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)."
+								AND `history_display` = '1'
+								ORDER BY `history_timestamp` DESC
+								LIMIT 0, 15";
+				$results	= $db->CacheGetAll(CACHE_TIMEOUT, $query);
+				if($results) {
+					$history_messages = "";
+					echo "<ul class=\"history\">";
+					foreach($results as $key => $result) {
+						if ((int)$result["cpage_id"] && ($result["history_key"] != "community_history_activate_module")) {
+							$query = "SELECT `page_url` FROM `community_pages` WHERE `cpage_id` = ".$db->qstr($result["cpage_id"])." AND `community_id` = ".$db->qstr($result["community_id"]);
+							$page_url = $db->GetOne($query);
+						} elseif ($result["history_key"] == "community_history_activate_module") {
+							$query = "SELECT a.`page_url` FROM `community_pages` as a JOIN `communities_modules` as b ON b.`module_shortname` = a.`page_type` WHERE b.`module_id` = ".$db->qstr($result["record_id"])." AND a.`community_id` = ".$db->qstr($result["community_id"])." AND a.`page_active` = '1'";
+							$page_url = $db->GetOne($query);
+						}
+					
+						if ($result["history_key"]) {
+							$history_message = $translate->_($result["history_key"]);
+							$record_title = "";
+							$parent_id = (int)$result["record_parent"];
+							community_history_record_title($result["history_key"], $result["record_id"], $result["cpage_id"], $result["community_id"], $result["proxy_id"]);
+
+						} else {
+							$history_message = $result["history_message"];
+						}
+					
+						$content_search						= array("%SITE_COMMUNITY_URL%", "%SYS_PROFILE_URL%", "%PAGE_URL%", "%RECORD_ID%", "%RECORD_TITLE%", "%PARENT_ID%", "%PROXY_ID%");
+						$content_replace					= array(COMMUNITY_URL.$COMMUNITY_URL, ENTRADA_URL."/people", $page_url, $result["record_id"], $record_title, $parent_id, $result["proxy_id"]);
+						$history_message			= str_replace($content_search, $content_replace, $history_message);
+						$history_messages .= "<li".(!($key % 2) ? " style=\"background-color: #F4F4F4\"" : "").">".strip_tags($history_message, "<a>")."</li>";
+					}
+					$history_messages .= "</ul>";
+				}
+				if ($history_messages) {
+				?>
+					<div style="position: relative; clear: both">
+						<div style="width: 100%">
+							<h2>Course History</h2>
+							<?php
+							echo $history_messages;
+							?>
+						</div>
+					</div>
+					<?php
+				}
+			}					
 		break;
 		case strpos($PAGE_URL, "course_calendar") !== false :
 			$HEAD[] = "<link href=\"".ENTRADA_URL."/javascript/calendar/css/xc2_default.css\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />";
@@ -522,7 +592,7 @@ if ($community_courses) {
 			 * Valid: date, teacher, title, phase
 			 */
 			if(isset($_GET["sb"])) {
-				if(in_array(trim($_GET["sb"]), array("date" , "teacher", "title", "phase"))) {
+				if(in_array(trim($_GET["sb"]), array("date", "teacher", "title"))) {
 					$_SESSION[APPLICATION_IDENTIFIER]["community_page"]["sb"]	= trim($_GET["sb"]);
 				}
 
@@ -716,7 +786,8 @@ if ($community_courses) {
 					$filters,
 					true,
 					(isset($_GET["pv"]) ? (int) trim($_GET["pv"]) : 1),
-					$_SESSION[APPLICATION_IDENTIFIER]["community_page"]["pp"]);
+					$_SESSION[APPLICATION_IDENTIFIER]["community_page"]["pp"],
+					$COMMUNITY_ID);
 			if($results["events"]) {
 				?>
 				<div class="tableListTop">
@@ -743,7 +814,6 @@ if ($community_courses) {
 				<colgroup>
 					<col class="modified" />
 					<col class="date" />
-					<col class="phase" />
 					<col class="teacher" />
 					<col class="title" />
 					<col class="attachment" />
@@ -752,7 +822,6 @@ if ($community_courses) {
 					<tr>
 						<td class="modified" id="colModified">&nbsp;</td>
 						<td class="date<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["community_page"]["sb"] == "date") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["community_page"]["so"]) : ""); ?>" id="colDate"><?php echo community_public_order_link("date", "Date &amp; Time", ENTRADA_URL."/community".$COMMUNITY_URL.":".$PAGE_URL); ?></td>
-						<td class="phase<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["community_page"]["sb"] == "phase") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["community_page"]["so"]) : ""); ?>" id="colPhase"><?php echo community_public_order_link("phase", "Phase", ENTRADA_URL."/community".$COMMUNITY_URL.":".$PAGE_URL); ?></td>
 						<td class="teacher<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["community_page"]["sb"] == "teacher") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["community_page"]["so"]) : ""); ?>" id="colTeacher"><?php echo community_public_order_link("teacher", "Teacher", ENTRADA_URL."/community".$COMMUNITY_URL.":".$PAGE_URL); ?></td>
 						<td class="title<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["community_page"]["sb"] == "title") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["community_page"]["so"]) : ""); ?>" id="colTitle"><?php echo community_public_order_link("title", "Event Title", ENTRADA_URL."/community".$COMMUNITY_URL.":".$PAGE_URL); ?></td>
 						<td class="attachment" id="colAttachment">&nbsp;</td>
@@ -763,7 +832,7 @@ if ($community_courses) {
 					$rid		= $limit_parameter;
 
 					$count_modified		= 0;
-					$count_grad_year	= 0;
+					$count_cohort		= 0;
 					$count_group		= 0;
 					$count_individual	= 0;
 
@@ -771,7 +840,7 @@ if ($community_courses) {
 					foreach($results["events"] as $result) {
 						if(((!$result["release_date"]) || ($result["release_date"] <= time())) && ((!$result["release_until"]) || ($result["release_until"] >= time()))) {
 							$attachments	= attachment_check($result["event_id"]);
-							$url			= ENTRADA_URL."/events?rid=".$rid;
+							$url			= ENTRADA_URL."/events?rid=".$rid."&community=".$COMMUNITY_ID;
 							$is_modified	= false;
 
 							/**
@@ -786,8 +855,8 @@ if ($community_courses) {
 							 * Increment the appropriate audience_type counter.
 							 */
 							switch($result["audience_type"]) {
-								case "grad_year" :
-									$count_grad_year++;
+								case "cohort" :
+									$count_cohort++;
 								break;
 								case "group_id" :
 									$count_group++;
@@ -811,7 +880,6 @@ if ($community_courses) {
 									}
 							echo "	</td>\n";
 							echo "	<td class=\"date\"><a href=\"".$url."\" title=\"Event Date\">".date(DEFAULT_DATE_FORMAT, $result["event_start"])."</a></td>\n";
-							echo "	<td class=\"phase\"><a href=\"".$url."\" title=\"Intended For Phase ".html_encode($result["event_phase"])."\">".html_encode($result["event_phase"])."</a></td>\n";
 							echo "	<td class=\"teacher\"><a href=\"".$url."\" title=\"Primary Teacher: ".html_encode($result["fullname"])."\">".html_encode($result["fullname"])."</a></td>\n";
 							echo "	<td class=\"title\"><a href=\"".$url."\" title=\"Event Title: ".html_encode($result["event_title"])."\">".html_encode($result["event_title"])."</a></td>\n";
 							echo "	<td class=\"attachment\">".(($attachments) ? "<img src=\"".ENTRADA_URL."/images/attachment.gif\" width=\"16\" height=\"16\" alt=\"Contains ".$attachments." attachment".(($attachments != 1) ? "s" : "")."\" title=\"Contains ".$attachments." attachment".(($attachments != 1) ? "s" : "")."\" />" : "<img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"16\" height=\"16\" alt=\"\" title=\"\" style=\"vertical-align: middle\" />")."</td>\n";
@@ -881,7 +949,6 @@ if ($community_courses) {
 			$sidebar_html  = "Sort columns:\n";
 			$sidebar_html .= "<ul class=\"menu\">\n";
 			$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER]["community_page"]["sb"]) == "date") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/community".$COMMUNITY_URL.":".$PAGE_URL."?".replace_query(array("sb" => "date"))."\" title=\"Sort by Date &amp; Time\">by date &amp; time</a></li>\n";
-			$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER]["community_page"]["sb"]) == "phase") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/community".$COMMUNITY_URL.":".$PAGE_URL."?".replace_query(array("sb" => "phase"))."\" title=\"Sort by Phase\">by phase</a></li>\n";
 			$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER]["community_page"]["sb"]) == "teacher") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/community".$COMMUNITY_URL.":".$PAGE_URL."?".replace_query(array("sb" => "teacher"))."\" title=\"Sort by Teacher\">by primary teacher</a></li>\n";
 			$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER]["community_page"]["sb"]) == "title") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/community".$COMMUNITY_URL.":".$PAGE_URL."?".replace_query(array("sb" => "title"))."\" title=\"Sort by Event Title\">by event title</a></li>\n";
 			$sidebar_html .= "</ul>\n";
@@ -908,7 +975,7 @@ if ($community_courses) {
 
 			new_sidebar_item("Learning Event Legend", $sidebar_html, "event-legend", "open");
 		break;
-		case (strpos($PAGE_URL, "objectives") !== false) :
+		case (preg_match("/objectives$/", $PAGE_URL) != 0) :
 			$results = $db->GetAll("SELECT `course_id` FROM `community_courses` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID));
 			$course_ids_str = "";
 			$clean_ids_str = "";
@@ -925,7 +992,7 @@ if ($community_courses) {
 			}
 
 			$show_objectives = false;
-			$objectives = courses_fetch_objectives($course_ids, 1, false);
+			list($objectives,$top_level_id) = courses_fetch_objectives($ENTRADA_USER->getActiveOrganisation(),$course_ids,-1, 1, false);
 
 			?>
 			<script type="text/javascript">
@@ -945,16 +1012,19 @@ if ($community_courses) {
     		</script>
 			<?php
 			echo "<strong>The learner will be able to:</strong>";
-			echo "<div id=\"objectives_list\">\n".course_objectives_in_list($objectives, 1, false, false, 1, false)."\n</div>\n";
+			echo "<div id=\"objectives_list\">\n".course_objectives_in_list($objectives, $top_level_id,$top_level_id, false, false, 1, false)."\n</div>\n";
 		break;
 		case (strpos($PAGE_URL, "mcc_presentations") !== false) :
 			$query = "	SELECT b.*
 						FROM `course_objectives` AS a
 						JOIN `global_lu_objectives` AS b
 						ON a.`objective_id` = b.`objective_id`
+						JOIN `objective_organisation` AS c
+						ON b.`objective_id` = c.`objective_id`
 						WHERE a.`objective_type` = 'event'
 						AND a.`course_id` IN (".implode(", ", $course_ids).")
 						AND b.`objective_active` = 1
+						AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
 						GROUP BY b.`objective_id`
 						ORDER BY b.`objective_order`";
 			$results = $db->GetAll($query);
@@ -967,6 +1037,49 @@ if ($community_courses) {
 				}
 				echo "</ul>\n";
 			}
+		break;
+		case (strpos($PAGE_URL,"course_assignments") !== false):
+			?>
+				<table class="tableList" cellspacing="0" summary="List of Assignments" id="assignment_list">			
+					<?php
+					$query =  "	SELECT a.*, b.`course_code` 
+								FROM `assignments` AS a
+								JOIN `courses` AS b
+								ON a.`course_id` = b.`course_id`
+								WHERE a.`course_id` IN (".implode(', ',$course_ids).")
+								AND a.`release_date` < ".$db->qstr(time())."
+								AND (a.`release_until` > ".$db->qstr(time())."
+									OR a.`release_until` = 0)";
+					$results = $db->GetAll($query);
+					if ($results) { ?>
+					<thead>
+						<tr>
+							<td width="20">&nbsp;</td>
+							<td colspan="3">Assignment Title</td>
+							<td colspan="2">Course Code</td>
+							<td colspan="2">Due Date</td>
+						</tr>
+					</thead>
+					<?php } ?>
+					<tbody>
+						<?php
+						if($results){
+							foreach ($results as $result) {
+								$url = ENTRADA_URL."/profile/gradebook/assignments?section=view&amp;id=".$result["assignment_id"];
+								echo "<tr id=\"assignment-".$result["assignment_id"]."\">";
+								echo "<td class=\"modified\" width=\"20\"><img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"19\" height=\"19\" alt=\"\" title=\"\" /></td>";
+								echo "<td colspan=\"3\"><a href=\"$url\">".$result["assignment_title"]."</a></td>";
+								echo "<td colspan=\"2\"><a href=\"$url\">".$result["course_code"]. "</a></td>"; 
+								echo "<td colspan=\"2\"><a href=\"$url\">".($result["due_date"] == 0?"No Due Date":date(DEFAULT_DATE_FORMAT,$result["due_date"])). "</a></td>"; 
+								echo "</tr>";
+							}
+						} else {
+							?> <tr><td><?php add_notice('No Assignments have been created for this course.'); echo display_notice(); ?></td></tr><?php
+						}
+					?>
+					</tbody>
+				</table>			
+				<?php
 		break;
 		default :
 		break;

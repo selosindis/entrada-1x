@@ -70,7 +70,7 @@ function build_post($post) {
 									$result["fullname"],
 									$result[$post["type"]."_title"],
 									$result["community_title"],
-									clean_input($result[$post["type"]."_description"],array("notags", "encode")),
+									clean_input($result[$post["type"]."_description"],array("notags")),
 									COMMUNITY_URL.$result["community_url"].":".$result["page_url"]."?id=".$post["record_id"],
 									COMMUNITY_URL.$result["community_url"].":".$result["page_url"],
 									APPLICATION_NAME,
@@ -257,7 +257,8 @@ function build_post($post) {
 
 	$NOTIFICATION_MESSAGE		 	 = array();
 
-	$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".DEFAULT_TEMPLATE."/email/".$post['body']);
+	global $ENTRADA_ACTIVE_TEMPLATE;
+	$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".$ENTRADA_ACTIVE_TEMPLATE."/email/".$post['body']);
 	$mail->setBodyText(clean_input(str_replace($search, $replace, $NOTIFICATION_MESSAGE["textbody"]), array("postclean")));
 }
 

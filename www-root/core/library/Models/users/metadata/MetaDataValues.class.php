@@ -86,8 +86,10 @@ class MetaDataValues extends Collection {
 		$values = array();
 		if ($results) {
 			foreach ($results as $result) {
+				//print_r($result);
 				//user caching
-				$tmp_user = User::fromArray($result);
+				//$tmp_user = User::fromArray($result);
+				//print_r($tmp_user);
 				$values[] = MetaDataValue::fromArray($result);
 			}
 		}

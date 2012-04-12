@@ -47,14 +47,14 @@
 			if ($('rotation_objective_id')) {
 				$('rotation_objective_id').selectedIndex = 0;
 			}
-			if ($('defficient_objective_id')) {
-				$('defficient_objective_id').selectedIndex = 0;
+			if ($('deficient_objective_id')) {
+				$('deficient_objective_id').selectedIndex = 0;
 			}
 			if ($('rotation-obj-item-'+objective_id)) {
 				$('rotation-obj-item-'+objective_id).hide();
 			}
-			if ($('defficient-obj-item-'+objective_id)) {
-				$('defficient-obj-item-'+objective_id).hide();
+			if ($('deficient-obj-item-'+objective_id)) {
+				$('deficient-obj-item-'+objective_id).hide();
 			}
 			$('all-obj-item-'+objective_id).hide();
 		}
@@ -85,14 +85,14 @@
 			if ($('rotation_procedure_id')) {
 				$('rotation_procedure_id').selectedIndex = 0;
 			}
-			if ($('defficient_procedure_id')) {
-				$('defficient_procedure_id').selectedIndex = 0;
+			if ($('deficient_procedure_id')) {
+				$('deficient_procedure_id').selectedIndex = 0;
 			}
 			if ($('rotation-proc-item-'+procedure_id)) {
 				$('rotation-proc-item-'+procedure_id).hide();
 			}
-			if ($('defficient-proc-item-'+procedure_id)) {
-				$('defficient-proc-item-'+procedure_id).hide();
+			if ($('deficient-proc-item-'+procedure_id)) {
+				$('deficient-proc-item-'+procedure_id).hide();
 			}
 			$('all-proc-item-'+procedure_id).hide();
 		}
@@ -115,8 +115,8 @@
 					if ($('rotation-obj-item-'+id)) {
 						$('rotation-obj-item-'+id).show();
 					}
-					if ($('defficient-obj-item-'+id)) {
-						$('defficient-obj-item-'+id).show();
+					if ($('deficient-obj-item-'+id)) {
+						$('deficient-obj-item-'+id).show();
 					}
 				}
 			}
@@ -164,36 +164,36 @@
 	
 	function showRotationObjectives() {
 		$('all_objective_id').hide();
-		$('defficient_objective_id').hide();
+		$('deficient_objective_id').hide();
 		$('rotation_objective_id').show();
 	}
 	
-	function showDefficientObjectives() {
+	function showDeficientObjectives() {
 		$('all_objective_id').hide();
 		$('rotation_objective_id').hide();
-		$('defficient_objective_id').show();
+		$('deficient_objective_id').show();
 	}
 	
 	function showAllObjectives() {
 		$('rotation_objective_id').hide();
-		$('defficient_objective_id').hide();
+		$('deficient_objective_id').hide();
 		$('all_objective_id').show();
 	}
 	
 	function showRotationProcedures() {
 		$('all_procedure_id').hide();
-		$('defficient_procedure_id').hide();
+		$('deficient_procedure_id').hide();
 		$('rotation_procedure_id').show();
 	}
 	
-	function showDefficientProcedures() {
+	function showDeficientProcedures() {
 		$('all_procedure_id').hide();
 		$('rotation_procedure_id').hide();
-		$('defficient_procedure_id').show();
+		$('deficient_procedure_id').show();
 	}
 	
 	function showAllProcedures() {
-		$('defficient_procedure_id').hide();
+		$('deficient_procedure_id').hide();
 		$('rotation_procedure_id').hide();
 		$('all_procedure_id').show();
 	}

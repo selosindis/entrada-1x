@@ -30,10 +30,12 @@
  */
 require_once "Zend/Loader/Autoloader.php";
 $loader = Zend_Loader_Autoloader::getInstance();
+//$loader->registerNamespace('Entrada_');
 
 require_once("config/settings.inc.php");
 
 require_once("Entrada/adodb/adodb.inc.php");
+
 require_once("functions.inc.php");
 
 require_once("dbconnection.inc.php");
@@ -44,7 +46,14 @@ require_once("Entrada/router/router.class.php");
 require_once("cache.inc.php");
 require_once("acl.inc.php");
 
-ini_set("filter.default_flags", FILTER_FLAG_NO_ENCODE_QUOTES);
+require_once("Models/users/User.class.php");
+if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
+	$ENTRADA_USER = User::get($_SESSION["details"]["id"]);
+} else {
+	$ENTRADA_USER = false;
+}
+
+@ini_set("filter.default_flags", FILTER_FLAG_NO_ENCODE_QUOTES);
 
 /**
  * If Entrada is in development mode and the user is not a developer send them to the
@@ -63,11 +72,36 @@ if ((defined("AUTH_ALLOW_CAS")) && (AUTH_ALLOW_CAS == true)) {
 	phpCAS::client(CAS_VERSION_2_0, AUTH_CAS_HOSTNAME, AUTH_CAS_PORT, AUTH_CAS_URI, false);
 }
 
+$ENTRADA_ACTIVE_TEMPLATE = "";
+
+if ($ENTRADA_USER) {
+	if (isset($_GET["organisation_id"])) {
+		$organisation = clean_input($_GET["organisation_id"], array("trim", "notags", "int"));
+		
+		$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"] = $organisation;
+		$ENTRADA_USER->setActiveOrganisation($organisation);
+	}
+
+ 	$query = "SELECT `template` FROM `" . AUTH_DATABASE . "`.`organisations` WHERE `organisation_id` = " . $db->qstr($ENTRADA_USER->getActiveOrganisation());
+	$ENTRADA_ACTIVE_TEMPLATE = $db->CacheGetOne(CACHE_TIMEOUT, $query);
+}
+
+if (!$ENTRADA_ACTIVE_TEMPLATE) {
+	$ENTRADA_ACTIVE_TEMPLATE = DEFAULT_TEMPLATE;
+}
+
+global $ENTRADA_ACTIVE_TEMPLATE;
+
+define("TEMPLATE_URL", ENTRADA_URL."/templates/".$ENTRADA_ACTIVE_TEMPLATE);
+define("TEMPLATE_ABSOLUTE", ENTRADA_ABSOLUTE."/templates/".$ENTRADA_ACTIVE_TEMPLATE);
+define("TEMPLATE_RELATIVE", ENTRADA_RELATIVE."/templates/".$ENTRADA_ACTIVE_TEMPLATE);
+
+
 /**
  * Setup Zend_Translate for language file support.
  */
 if ($ENTRADA_CACHE) Zend_Translate::setCache($ENTRADA_CACHE);
-$translate = new Zend_Translate("array", ENTRADA_ABSOLUTE."/templates/".DEFAULT_TEMPLATE."/languages/".DEFAULT_LANGUAGE.".lang.php", DEFAULT_LANGUAGE);
+$translate = new Zend_Translate("array", ENTRADA_ABSOLUTE."/templates/".$ENTRADA_ACTIVE_TEMPLATE."/languages/".DEFAULT_LANGUAGE.".lang.php", DEFAULT_LANGUAGE);
 
 $ADODB_CACHE_DIR = CACHE_DIRECTORY;
 $time_start = getmicrotime();

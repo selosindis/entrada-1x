@@ -49,14 +49,12 @@ if (!defined("PARENT_INCLUDED")) {
 
 	$is_administrator = $ENTRADA_ACL->amIallowed('user', 'update');
 	
-	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/people.js\"></script>";
-	
 	$BREADCRUMB[]	= array("url" => ENTRADA_URL."/people", "title" => "People Search");
 	
 	$PROCESSED		= array();
 	$PREFERENCES	= preferences_load($MODULE);
 
-	$ORGANISATION_ID = $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"];
+	$ORGANISATION_ID = $ENTRADA_USER->getActiveOrganisation();
 	$organisation_query = "SELECT * FROM `".AUTH_DATABASE."`.`organisations`";
 	$ORGANISATIONS = $db->GetAll($organisation_query);
 	$ORGANISATION_BY_ID = array();
@@ -157,7 +155,7 @@ if (!defined("PARENT_INCLUDED")) {
 					$ERRORSTR[] = "To browse a group, you must select a group from the group select list.";	
 				}
 				
-				if(isset($_GET["o"]) && ($organisation = clean_input($_GET["o"], array("trim", "int"))) && isset($ORGANISATIONS_BY_ID[$organisation])) {
+				if(($organisation = $ENTRADA_USER->getActiveOrganisation()) && isset($ORGANISATIONS_BY_ID[$organisation])) {
 					$PROCESSED["organisation"] = $organisation;
 					$search_query .= " in ".$ORGANISATIONS_BY_ID[$organisation]["organisation_title"];
 				} else {
@@ -165,30 +163,77 @@ if (!defined("PARENT_INCLUDED")) {
 					$ERRORSTR[] = "To browse a group, you must select a organisation from the organisation select list.";
 				}
 				
-				if (!$ERROR) {					
-					$query_search	= "	SELECT a.*, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, b.`account_active`, b.`access_starts`, b.`access_expires`, b.`last_login`, b.`role`, b.`group`
-										FROM `".AUTH_DATABASE."`.`user_data` AS a
-										LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
-										ON b.`user_id` = a.`id`
-										AND b.`app_id` IN (".AUTH_APP_IDS_STRING.")
-										WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
-										AND a.`organisation_id` = ".$db->qstr($PROCESSED["organisation"])."
-										AND b.`group` ".($PROCESSED["group"] == "staff" ? "IN ('staff', 'medtech')" : "= ".$db->qstr($PROCESSED["group"]))."
-										".(($PROCESSED["role"]) ? "AND b.`role` = ".$db->qstr($PROCESSED["role"]) : "")."
-										GROUP BY a.`id`
-										ORDER BY `fullname` ASC
-										LIMIT %s, %s";
-					$query_count	= "	SELECT a.*, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, b.`account_active`, b.`access_starts`, b.`access_expires`, b.`last_login`, b.`role`, b.`group`
-										FROM `".AUTH_DATABASE."`.`user_data` AS a
-										LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
-										ON b.`user_id` = a.`id`
-										AND b.`app_id` IN (".AUTH_APP_IDS_STRING.")
-										WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
-										AND a.`organisation_id` = ".$db->qstr($PROCESSED["organisation"])."
-										AND b.`group` ".($PROCESSED["group"] == "staff" ? "IN ('staff', 'medtech')" : "= ".$db->qstr($PROCESSED["group"]))."
-										".(($PROCESSED["role"]) ? "AND b.`role` = ".$db->qstr($PROCESSED["role"]) : "")."
-										GROUP BY a.`id`
-										ORDER BY `fullname` ASC";
+				if (!$ERROR) {
+					if ($PROCESSED["group"] != "student") {
+						$query_search	= "SELECT a.*, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, b.`account_active`, b.`access_starts`, b.`access_expires`, b.`last_login`, b.`role`, b.`group`
+											FROM `".AUTH_DATABASE."`.`user_data` AS a
+											LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+											ON b.`user_id` = a.`id`
+											LEFT JOIN `".AUTH_DATABASE."`.`user_organisations` AS c
+											ON c.`proxy_id` = a.`id`
+											AND b.`app_id` IN (".AUTH_APP_IDS_STRING.")
+											WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
+											AND c.`organisation_id` = ".$db->qstr($PROCESSED["organisation"])."
+											AND b.`group` ".($PROCESSED["group"] == "staff" ? "IN ('staff', 'medtech')" : "= ".$db->qstr($PROCESSED["group"]))."
+											".(($PROCESSED["role"]) ? "AND b.`role` = ".$db->qstr($PROCESSED["role"]) : "")."
+											GROUP BY a.`id`
+											ORDER BY `fullname` ASC
+											LIMIT %s, %s";
+						$query_count	= "SELECT a.*, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, b.`account_active`, b.`access_starts`, b.`access_expires`, b.`last_login`, b.`role`, b.`group`
+											FROM `".AUTH_DATABASE."`.`user_data` AS a
+											LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+											ON b.`user_id` = a.`id`
+											LEFT JOIN `".AUTH_DATABASE."`.`user_organisations` AS c
+											ON c.`proxy_id` = a.`id`
+											AND b.`app_id` IN (".AUTH_APP_IDS_STRING.")
+											WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
+											AND c.`organisation_id` = ".$db->qstr($PROCESSED["organisation"])."
+											AND b.`group` ".($PROCESSED["group"] == "staff" ? "IN ('staff', 'medtech')" : "= ".$db->qstr($PROCESSED["group"]))."
+											".(($PROCESSED["role"]) ? "AND b.`role` = ".$db->qstr($PROCESSED["role"]) : "")."
+											GROUP BY a.`id`
+											ORDER BY `fullname` ASC";
+					} else {
+						$search_query = groups_get_name($PROCESSED["role"])." in ".$ORGANISATIONS_BY_ID[$organisation]["organisation_title"];
+						$query_search	= "SELECT a.*, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, b.`account_active`, b.`access_starts`, b.`access_expires`, b.`last_login`, b.`role`, b.`group`
+											FROM `".AUTH_DATABASE."`.`user_data` AS a
+											LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+											ON b.`user_id` = a.`id`
+											LEFT JOIN `".AUTH_DATABASE."`.`user_organisations` AS c
+											ON c.`proxy_id` = a.`id`
+											AND b.`app_id` IN (".AUTH_APP_IDS_STRING.")
+											JOIN `group_members` AS d
+											ON a.`id` = d.`proxy_id`
+											AND d.`member_active` = 1
+											JOIN `groups` AS e
+											ON d.`group_id` = e.`group_id`
+											AND e.`group_active` = 1
+											WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
+											AND c.`organisation_id` = ".$db->qstr($PROCESSED["organisation"])."
+											AND b.`group` = ".$db->qstr($PROCESSED["group"])."
+											AND e.`group_id` = ".$db->qstr($PROCESSED["role"])."
+											GROUP BY a.`id`
+											ORDER BY `fullname` ASC
+											LIMIT %s, %s";
+						$query_count	= "SELECT a.*, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, b.`account_active`, b.`access_starts`, b.`access_expires`, b.`last_login`, b.`role`, b.`group`
+											FROM `".AUTH_DATABASE."`.`user_data` AS a
+											LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+											ON b.`user_id` = a.`id`
+											LEFT JOIN `".AUTH_DATABASE."`.`user_organisations` AS c
+											ON c.`proxy_id` = a.`id`
+											AND b.`app_id` IN (".AUTH_APP_IDS_STRING.")
+											JOIN `group_members` AS d
+											ON a.`id` = d.`proxy_id`
+											AND d.`member_active` = 1
+											JOIN `groups` AS e
+											ON d.`group_id` = e.`group_id`
+											AND e.`group_active` = 1
+											WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
+											AND c.`organisation_id` = ".$db->qstr($PROCESSED["organisation"])."
+											AND b.`group` = ".$db->qstr($PROCESSED["group"])."
+											AND e.`group_id` = ".$db->qstr($PROCESSED["role"])."
+											GROUP BY a.`id`
+											ORDER BY `fullname` ASC";
+					}
 				}
 			break;
 			case "browse-dept" :
@@ -266,28 +311,10 @@ if (!defined("PARENT_INCLUDED")) {
 			default :
 				$group_string			= "";
 				$role_string			= "";
-				$organisation_string	= "";
 				if ((isset($_REQUEST["q"])) && ($query = clean_input($_REQUEST["q"], array("trim", "notags")))) {
 					$search_query		= $query;
 					$plaintext_query	= $search_query;
 					$search_query_text	= html_encode($query);
-				}
-
-				
-				if (isset($_REQUEST["search_organisations"]) && ($search_organisations = explode(",", $_REQUEST["search_organisations"]))) {
-					foreach ($search_organisations as $org) {
-						if (isset($organisations_string) && ($org = clean_input($org, "credentials"))) {
-							$organisations_string .= ", ".$db->qstr($org);
-						} elseif (($org = clean_input($org, "credentials"))) {
-							$organisations_string = $db->qstr($org);
-						} else {
-							$search_organisations = array($ORGANISATION_ID);
-							$organisations_string = "'$ORGANISATION_ID'";
-						}
-					}
-				} else {
-					$search_organisations = array("$ORGANISATION_ID");
-					$organisations_string = "'$ORGANISATION_ID'";
 				}
 				
 				if (isset($_REQUEST["search_groups"]) && ($search_groups = explode(",", $_REQUEST["search_groups"]))) {
@@ -340,9 +367,11 @@ if (!defined("PARENT_INCLUDED")) {
 									FROM `".AUTH_DATABASE."`.`user_data` AS a
 									LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 									ON b.`user_id` = a.`id`
+									LEFT JOIN `".AUTH_DATABASE."`.`user_organisations` as c
+									ON c.`proxy_id` = a.`id`
 									AND b.`app_id` IN (".AUTH_APP_IDS_STRING.")
 									WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
-									AND a.`organisation_id` IN (" . $organisations_string . ")
+									AND c.`organisation_id` IN (" . $ENTRADA_USER->getActiveOrganisation() . ")
 									AND (b.`group` ".($group_string && $role_string ? "IN (".$group_string.")									
 									OR (b.`group` = 'student' 
 										AND b.`role` IN (".$role_string.")))" : ($role_string ? "= 'student' 
@@ -361,7 +390,7 @@ if (!defined("PARENT_INCLUDED")) {
 									ON b.`user_id` = a.`id`
 									AND b.`app_id` IN (".AUTH_APP_IDS_STRING.")
 									WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
-									AND a.`organisation_id` IN (" . $organisations_string . ")
+									AND a.`organisation_id` IN (" . $ORGANISATION_ID . ")
 									AND (b.`group` ".($group_string && $role_string ? "IN (".$group_string.")
 									OR (b.`group` = 'student' 
 										AND b.`role` IN (".$role_string.")))" : ($role_string ? "= 'student' 
@@ -374,7 +403,7 @@ if (!defined("PARENT_INCLUDED")) {
 									ORDER BY `fullname` ASC, FIELD(b.`app_id`, ".AUTH_APP_IDS_STRING.")";
 			break;
 		}
-		
+
 		$results	= $db->GetAll($query_count);
 		/**
 		 * Get the total number of results using the generated queries above and calculate the total number
@@ -432,12 +461,10 @@ if (!defined("PARENT_INCLUDED")) {
 	preferences_update($MODULE, $PREFERENCES);
 
 	$student_classes = array();
-	$cut_off_year = (fetch_first_year() - 3);
-	if (isset($SYSTEM_GROUPS["student"]) && !empty($SYSTEM_GROUPS["student"])) {
-		foreach ($SYSTEM_GROUPS["student"] as $class) {
-			if (clean_input($class, "numeric") >= $cut_off_year) {
-				$student_classes[$class] = "Class of ".$class;
-			}
+	$active_cohorts = groups_get_active_cohorts($ENTRADA_USER->getActiveOrganisation());
+	if (isset($active_cohorts) && !empty($active_cohorts)) {
+		foreach ($active_cohorts as $cohort) {
+			$student_classes[$cohort["group_id"]] = $cohort["group_name"];
 		}
 	}
 	
@@ -620,37 +647,6 @@ if (!defined("PARENT_INCLUDED")) {
 						</div>
 					</td>
 				</tr>
-				<tr>
-					<td>&nbsp;</td>
-					<td style="padding-top: 15px; vertical-align: top;"><label class="form-required">Organisations to search:</label></td>
-					<td style="padding-top: 15px;">
-						<div>
-							<table style="width: 350px; padding-left: 50px;">
-								<?php 
-								$search_arr = $search_organisations;
-								for($i = 0; $i < count($ORGANISATIONS)/2; $i++) : ?>
-								<tr>
-									<?php 
-									// For every two organisaions
-									for($j = 0; $j < 2; $j++): 
-										if(isset($ORGANISATIONS[2*$i+$j])):
-											$o = $ORGANISATIONS[2*$i+$j]; 
-											$o["id"] = $o["organisation_id"]; ?>
-											<td>
-												<input id="org_<?php echo $o["id"];?>" class="search_organisations" type="checkbox" <?php echo ((isset($search_arr) && (is_array($search_arr) && array_search($o['id'], $search_arr) !== false) || (!isset($search_arr) && $o['id'] == $ORGANISATION_ID)) ? "checked=\"checked\" " : ""); ?>value="<?php echo $o["id"]; ?>" onclick="addOrganisation()" />
-												<label class="content-small" for="org_<?php echo $o["id"];?>"><?php echo $o["organisation_title"];?></label>
-											</td>
-										<?php else: ?>
-											<td>&nbsp;</td>
-										<?php endif; ?>
-										
-									<?php endfor; ?>
-								</tr>
-								<?php endfor; ?>
-							</table>
-						</div>
-					</td>
-				</tr>
 			</tbody>
 			</table>
 			</form>
@@ -678,17 +674,6 @@ if (!defined("PARENT_INCLUDED")) {
 				</tr>
 			</tfoot>
 			<tbody>
-				<tr>
-					<td>&nbsp;</td>
-					<td><label for="group" class="form-required">Browse Organisation:</label></td>
-					<td>
-						<select id="organisations" name="o" style="width: 209px">
-							<?php foreach($ORGANISATIONS as $o) {
-								echo "<option value=\"".$o["organisation_id"]."\"".(isset($PROCESSED["organisation"]) && $o["organisation_id"] == $PROCESSED["organisation"] ? "selected=\"selected\"" : "").">".$o["organisation_title"]."</option>";
-							}?>
-						</select>
-					</td>
-				</tr>
 				<tr>
 					<td>&nbsp;</td>
 					<td><label for="group" class="form-required">Browse Group:</label></td>
@@ -919,7 +904,10 @@ if (!defined("PARENT_INCLUDED")) {
 						}
 					}
 				} else {
-					echo "			<div class=\"content-small\" style=\"margin-bottom: 15px\">".ucwords($result["group"])." > ".($result["group"] == "student" ? "Class of " : "").ucwords($result["role"]);
+					if ($result["group"] == "student") {
+						$cohort = groups_get_cohort($result["id"]);
+					}
+					echo "			<div class=\"content-small\" style=\"margin-bottom: 15px\">".ucwords($result["group"])." > ".($result["group"] == "student" ? $cohort["group_name"] : ucwords($result["role"]));
 				}
 				echo (isset($ORGANISATIONS_BY_ID[$result["organisation_id"]]) ? "<br/>".$ORGANISATIONS_BY_ID[$result["organisation_id"]]["organisation_title"] : "")."</div>\n";
 				if ($result["privacy_level"] > 1 || $is_administrator) {

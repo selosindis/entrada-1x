@@ -75,7 +75,7 @@ if (!defined("IN_EVALUATIONS")) {
 
 					$query = "	SELECT `course_id`, `organisation_id`, `course_code`, `course_name`
 								FROM `courses`
-								WHERE `organisation_id`=".$db->qstr($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"])."
+								WHERE `organisation_id`=".$ENTRADA_USER->getActiveOrganisation()."
 								AND `course_active` = '1'
 								ORDER BY `course_code` ASC, `course_name` ASC";
 					$results = $db->GetAll($query);
@@ -138,7 +138,9 @@ if (!defined("IN_EVALUATIONS")) {
 								LEFT JOIN `events` AS d
 								ON d.`event_id` = c.`event_id`
 								WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
-								AND b.`group` = 'faculty'
+								AND (b.`group` = 'faculty' OR 
+									(b.`group` = 'resident' AND b.`role` = 'lecturer')
+								)
 								AND d.`event_finish` >= ".$db->qstr(strtotime("-12 months"))."
 								GROUP BY a.`id`
 								ORDER BY a.`lastname` ASC, a.`firstname` ASC";
@@ -230,24 +232,22 @@ if (!defined("IN_EVALUATIONS")) {
 						</colgroup>
 						<tbody>
 							<tr>
-								<td style="vertical-align: top"><input type="radio" name="target_group_type" id="target_group_type_grad_year" value="grad_year" onclick="selectTargetGroupOption(this.value)" style="vertical-align: middle" /></td>
+								<td style="vertical-align: top"><input type="radio" name="target_group_type" id="target_group_type_cohort" value="cohort" onclick="selectTargetGroupOption(this.value)" style="vertical-align: middle" /></td>
 								<td style="padding-bottom: 15px">
-									<label for="target_group_type_grad_year" class="radio-group-title">Entire class must complete this evaluation</label>
+									<label for="target_group_type_cohort" class="radio-group-title">Entire class must complete this evaluation</label>
 									<div class="content-small">This evaluation must be completed by everyone in the selected class.</div>
 								</td>
 							</tr>
-							<tr class="target_group grad_year_audience">
+							<tr class="target_group cohort_audience">
 								<td></td>
 								<td style="vertical-align: middle" class="content-small">
-									<label for="grad_year" class="form-required">All students in</label>
-									<select id="grad_year" name="grad_year" style="width: 203px; vertical-align: middle">
+									<label for="cohort" class="form-required">All students in</label>
+									<select id="cohort" name="cohort" style="width: 203px; vertical-align: middle">
 										<?php
-										$cut_off_year = (fetch_first_year() - 3);
-										if (isset($SYSTEM_GROUPS["student"]) && !empty($SYSTEM_GROUPS["student"])) {
-											foreach ($SYSTEM_GROUPS["student"] as $class) {
-												if (clean_input($class, "numeric") >= $cut_off_year) {
-													echo "<option value=\"".$class."\"".((($PROCESSED["evaluation_evaluators"][0]["evaluator_type"] == "grad_year") && ($PROCESSED["evaluation_evaluators"][0]["evaluator_value"] == $class)) ? " selected=\"selected\"" : "").">Class of ".html_encode($class)."</option>\n";
-												}
+										$active_cohorts = groups_get_active_cohorts($ENTRADA_USER->getActiveOrganisation());
+										if (isset($active_cohorts) && !empty($active_cohorts)) {
+											foreach ($active_cohorts as $cohort) {
+												echo "<option value=\"".$cohort["group_id"]."\"".((($PROCESSED["evaluation_evaluators"][0]["evaluator_type"] == "cohort") && ($PROCESSED["evaluation_evaluators"][0]["evaluator_value"] == $cohort["group_id"])) ? " selected=\"selected\"" : "").">".html_encode($cohort["group_name"])."</option>\n";
 											}
 										}
 										?>
@@ -267,15 +267,13 @@ if (!defined("IN_EVALUATIONS")) {
 							<tr class="target_group percentage_audience">
 								<td>&nbsp;</td>
 								<td style="vertical-align: middle" class="content-small">
-									<input type="text" class="percentage" id="percentage_percent" name="percentage_percent" style="width: 30px; vertical-align: middle" maxlength="3" value="100" /> <label for="percentage_grad_year" class="form-required">of the</label>
-									<select id="percentage_grad_year" name="percentage_grad_year" style="width: 203px; vertical-align: middle">
+									<input type="text" class="percentage" id="percentage_percent" name="percentage_percent" style="width: 30px; vertical-align: middle" maxlength="3" value="100" /> <label for="percentage_cohort" class="form-required">of the</label>
+									<select id="percentage_cohort" name="percentage_cohort" style="width: 203px; vertical-align: middle">
 									<?php
-									$cut_off_year = (fetch_first_year() - 3);
-									if (isset($SYSTEM_GROUPS["student"]) && !empty($SYSTEM_GROUPS["student"])) {
-										foreach ($SYSTEM_GROUPS["student"] as $class) {
-											if (clean_input($class, "numeric") >= $cut_off_year) {
-												echo "<option value=\"".$class."\">Class of ".html_encode($class)."</option>\n";
-											}
+									$active_cohorts = groups_get_active_cohorts($ENTRADA_USER->getActiveOrganisation());
+									if (isset($active_cohorts) && !empty($active_cohorts)) {
+										foreach ($active_cohorts as $cohort) {
+											echo "<option value=\"".$cohort["group_id"]."\">".html_encode($cohort["group_name"])."</option>\n";
 										}
 									}
 									?>
@@ -322,7 +320,7 @@ if (!defined("IN_EVALUATIONS")) {
 						</tbody>
 					</table>
 					<script type="text/javascript" defer="defer">
-					selectTargetGroupOption('<?php echo (isset($PROCESSED["evaluation_evaluators"][0]["evaluator_type"]) ? $PROCESSED["evaluation_evaluators"][0]["evaluator_type"] : 'grad_year'); ?>');
+					selectTargetGroupOption('<?php echo (isset($PROCESSED["evaluation_evaluators"][0]["evaluator_type"]) ? $PROCESSED["evaluation_evaluators"][0]["evaluator_type"] : 'cohort'); ?>');
 					student_list = new AutoCompleteList({ type: 'student', url: '<?php echo ENTRADA_RELATIVE; ?>/api/personnel.api.php?type=student', remove_image: '<?php echo ENTRADA_RELATIVE; ?>/images/action-delete.gif' });
 					</script>
 				</td>

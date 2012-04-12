@@ -304,6 +304,9 @@ if ($RECORD_ID) {
 				echo display_notice();
 			}
 		}
+		
+		add_statistic("community:".$COMMUNITY_ID.":discussions", "forum_view", "cdiscussion_id", $RECORD_ID);
+		
 	} else {
 		application_log("error", "The provided discussion forum id was invalid [".$RECORD_ID."] (View Forum).");
 

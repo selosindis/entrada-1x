@@ -23,7 +23,7 @@ Welcome to the <?php echo APPLICATION_NAME; ?> Help section where you will find 
 <ul style="line-height: 150%; color: #666666; padding-left: 0px;">
 	<li style="padding-bottom: 10px; list-style-type:none;">
 		<img src="<?php echo ENTRADA_URL; ?>/images/icon-quicktime.gif" style="background-color: #333333" width="32" height="32" align="left" hspace="5" alt="Quicktime File" title="Quicktime File" />
-		<a href="http://meds.queensu.ca/courses/assets/help/ocr_login_screencast.mov" style="font-weight: bold" target="_blank">Screencast: Logging In to <?php echo APPLICATION_NAME; ?></a><br />
+		<a href="http://meds.queensu.ca/courses/assets/help/medtech-login.mov" style="font-weight: bold" target="_blank">Screencast: Logging In to <?php echo APPLICATION_NAME; ?></a><br />
 		Step by step instructions for logging in to <?php echo APPLICATION_NAME; ?>.
 	</li>
 	<li style="padding-bottom: 10px; list-style-type:none;">

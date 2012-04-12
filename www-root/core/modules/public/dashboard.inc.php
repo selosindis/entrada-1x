@@ -51,12 +51,12 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/calendar/script/xc2_inpage.js\"></script>";
 	$HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/calendar/script/xc2_timestamp.js\"></script>";
 
-	$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/jquery/jquery.min.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
-	$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/jquery/jquery-ui.min.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
+	//$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/jquery/jquery.min.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
+	//$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/jquery/jquery-ui.min.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
 	$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/jquery/jquery.weekcalendar.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
 	$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/jquery/jquery.qtip.min.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
-	$JQUERY[] = "<script type=\"text/javascript\">jQuery.noConflict();</script>";
-	$JQUERY[] = "<link href=\"".ENTRADA_RELATIVE."/css/jquery/jquery-ui.css?release=".html_encode(APPLICATION_VERSION)."\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />\n";
+	//$JQUERY[] = "<script type=\"text/javascript\">jQuery.noConflict();</script>";
+	//$JQUERY[] = "<link href=\"".ENTRADA_RELATIVE."/css/jquery/jquery-ui.css?release=".html_encode(APPLICATION_VERSION)."\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />\n";
 	$JQUERY[] = "<link href=\"".ENTRADA_RELATIVE."/css/jquery/jquery.weekcalendar.css?release=".html_encode(APPLICATION_VERSION)."\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />\n";
 
 	/**
@@ -128,32 +128,39 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 			$rss_feed_name = "alumni";
 			$notice_where_clause = "(a.`target` = 'all' OR a.`target` = 'alumni' OR a.`target` = ".$db->qstr("proxy_id:".((int) $_SESSION["details"]["id"])).")";
 			$poll_where_clause = "(a.`poll_target` = 'all' OR a.`poll_target` = 'alumni')";;
+			$corrected_role = "students";
 		break;
 		case "faculty" :
 			$rss_feed_name = "faculty";
 			$notice_where_clause = "(a.`target` = 'all' OR a.`target` = 'faculty' OR a.`target` = ".$db->qstr("proxy_id:".((int) $_SESSION["details"]["id"])).")";
 			$poll_where_clause = "(a.`poll_target` = 'all' OR a.`poll_target` = 'faculty')";;
+			$corrected_role = "faculty";
 		break;
 		case "medtech" :
 			$rss_feed_name = "medtech";
 			$notice_where_clause = "(a.`target` NOT LIKE 'proxy_id:%' OR a.`target` = ".$db->qstr("proxy_id:".((int) $_SESSION["details"]["id"])).")";
 			$poll_where_clause = "(a.`poll_target` = 'all' OR a.`poll_target` = 'staff')";;
+			$corrected_role = "medtech";
 		break;
 		case "resident" :
 			$rss_feed_name = "resident";
 			$notice_where_clause = "(a.`target` = 'all' OR a.`target` = 'resident' OR a.`target` = ".$db->qstr("proxy_id:".((int) $_SESSION["details"]["id"])).")";
 			$poll_where_clause = "(a.`poll_target` = 'all' OR a.`poll_target` = 'resident')";;
+			$corrected_role = "resident";
 		break;
 		case "staff" :
 			$rss_feed_name = "staff";
 			$notice_where_clause = "(a.`target` = 'all' OR a.`target` = 'staff' OR a.`target` = ".$db->qstr("proxy_id:".((int) $_SESSION["details"]["id"])).")";
 			$poll_where_clause = "(a.`poll_target` = 'all' OR a.`poll_target` = 'staff')";;
+			$corrected_role = "staff";
 		break;
 		case "student" :
 		default :
-			$rss_feed_name = clean_input($_SESSION["details"]["grad_year"], "alphanumeric");
-			$notice_where_clause = "(a.`target`='".clean_input($_SESSION["details"]["grad_year"], "alphanumeric")."' OR a.`target` = 'all' OR a.`target` = 'students' OR a.`target` = ".$db->qstr("proxy_id:".((int) $_SESSION["details"]["id"])).")";
-			$poll_where_clause = "(a.`poll_target`='".clean_input($_SESSION["details"]["grad_year"], "alphanumeric")."' OR a.`poll_target` = 'all' OR a.`poll_target` = 'students')";
+			$cohort = groups_get_cohort($_SESSION["details"]["id"]);
+			$rss_feed_name = clean_input((isset($_SESSION["details"]["grad_year"]) && $_SESSION["details"]["grad_year"] ? $_SESSION["details"]["grad_year"] : "default"), "alphanumeric");
+			$notice_where_clause = "(a.`target`='cohort:".clean_input($cohort["group_id"], "alphanumeric")."' OR a.`target` = 'all' OR a.`target` = 'students' OR a.`target` = ".$db->qstr("proxy_id:".((int) $_SESSION["details"]["id"])).")";
+			$poll_where_clause = "(a.`poll_target_type` = 'cohort' AND a.`poll_target`='".clean_input($cohort["group_id"], "alphanumeric")."' OR a.`poll_target` = 'all' OR a.`poll_target` = 'students')";
+			$corrected_role = "students";
 		break;
 	}
 	$notice_where_clause .= "AND (a.`organisation_id` IS NULL OR a.`organisation_id` = ".$_SESSION["details"]["organisation_id"].")";
@@ -206,12 +213,37 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 					AND b.`action` = 'read'
 					AND b.`action_field` = 'notice_id'
 					AND b.`action_value` = a.`notice_id`
-					WHERE ".(($notice_where_clause) ? $notice_where_clause." AND" : "")."
-					(a.`display_from`='0' OR a.`display_from` <= '".time()."')
-					AND (a.`display_until`='0' OR a.`display_until` >= '".time()."')
+					LEFT JOIN `notice_audience` AS c 
+					ON a.`notice_id` = c.`notice_id` 
+					WHERE (
+						c.`audience_type` = 'all:users'
+						".($corrected_role == "medtech" ? "OR c.`audience_type` LIKE '%all%' OR c.`audience_type` = 'cohorts'" : "OR c.`audience_type` = 'all:".$corrected_role."'")."
+						OR
+						((
+							c.`audience_type` = 'students' 
+							OR c.`audience_type` = 'faculty' 
+							OR c.`audience_type` = 'staff') 
+							AND c.`audience_value` = ".$db->qstr($_SESSION["details"]["id"])."
+						) 
+						OR ((
+							c.`audience_type` = 'cohorts' 
+							OR c.`audience_type` = 'course_list') 
+							AND c.`audience_value` IN (
+								SELECT `group_id` 
+								FROM `group_members` 
+								WHERE `proxy_id` = ".$db->qstr($_SESSION["details"]["id"]).")
+						)
+					) 
+					AND (a.`organisation_id` IS NULL 
+					OR a.`organisation_id` = ".$db->qstr($_SESSION["details"]["organisation_id"]).") 
+					AND (a.`display_from`='0' 
+					OR a.`display_from` <= '".time()."') 
+					AND (a.`display_until`='0' 
+					OR a.`display_until` >= '".time()."') 
 					AND a.`organisation_id` = ".$db->qstr($_SESSION["details"]["organisation_id"])."
 					GROUP BY a.`notice_id`
 					ORDER BY a.`updated_date` DESC, a.`display_until` ASC";
+		
 		$results = $db->GetAll($query);
 		if ($results) {
 			foreach ($results as $result) {
@@ -225,7 +257,7 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 		if (($notices_to_display) && ($total_notices = @count($notices_to_display))) {
 			?>
 			<div class="display-notice" style="color: #333333; max-height: 200px; overflow: auto">
-				<div style="float: right"><a href="<?php echo ENTRADA_URL; ?>/rss/<?php echo $_SESSION["details"]["username"]; ?>.rss" target="_blank" style="color: #666666; font-size: 10px; text-decoration: none">RSS feed available</a> <a href="<?php echo ENTRADA_URL; ?>/notices/<?php echo $rss_feed_name; ?>" target="_blank"><img src="<?php echo ENTRADA_URL; ?>/images/rss-enabled.gif" width="11" height="11" alt="RSS Icon" title="Notices are RSS enabled" border="0" /></a></div>
+				<div style="float: right"><a href="<?php echo ENTRADA_URL; ?>/rss/<?php echo $_SESSION["details"]["username"]; ?>.rss" target="_blank" style="color: #666666; font-size: 10px; text-decoration: none">RSS feed available</a> <a href="<?php echo ENTRADA_URL; ?>/rss/<?php echo $_SESSION["details"]["username"]; ?>.rss" target="_blank"><img src="<?php echo ENTRADA_URL; ?>/images/rss-enabled.gif" width="11" height="11" alt="RSS Icon" title="Notices are RSS enabled" border="0" /></a></div>
 				<h2>New <?php echo APPLICATION_NAME; ?> Notice<?php echo (($total_notices != 1) ? "s" : ""); ?></h2>
 				<form action="<?php echo ENTRADA_URL; ?>/dashboard?action=read" method="post">
 					<table style="width: 97%" cellspacing="2" cellpadding="2" border="0" summary="New Notice<?php echo (($total_notices != 1) ? "s" : ""); ?>">
@@ -265,18 +297,22 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 		case "student" :
 			$BREADCRUMB[] = array("url" => ENTRADA_URL, "title" => "Student Dashboard");
 
-			$HEAD[]	= "<link rel=\"alternate\" type=\"application/rss+xml\" title=\"Class of ".$_SESSION["details"]["grad_year"].", Notices\" href=\"".ENTRADA_URL."/notices/".$_SESSION["details"]["grad_year"]."\" />";
+			/**
+			 * How did this person not get assigned this already? Mak'em new.
+			 */
+			if (!isset($cohort) || !$cohort) {
+				$query = "SELECT * 
+						FROM `groups`
+						WHERE `group_id` = ".$db->qstr(fetch_first_cohort());
+				$cohort = $db->GetRow($query);
+			}
+			
+			$HEAD[]	= "<link rel=\"alternate\" type=\"application/rss+xml\" title=\"Notices\" href=\"".ENTRADA_URL."/notices/".$cohort["group_id"]."\" />";
 
 			if (!isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dstamp"])) {
 				$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dstamp"] = time();
 			}
 
-			/**
-			 * How did this person not get assigned this already? Mak'em new.
-			 */
-			if (!isset($_SESSION["details"]["grad_year"])) {
-				$_SESSION["details"]["grad_year"] = fetch_first_year();
-			}
 
 			$display_schedule_tabs	= false;
 
@@ -565,7 +601,7 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 						</table>
 					</td>
 					<td style="text-align: right; vertical-align: middle; white-space: nowrap">
-						<h1 style="margin: 8px 0">Class of <strong><?php echo $_SESSION["details"]["grad_year"]; ?></strong> Schedule</h1>
+						<h1 style="margin: 8px 0"><strong>My</strong> Schedule</h1>
 					</td>
 				</tr>
 				</table>
@@ -645,11 +681,11 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 					break;
 			}
 
-			$query		= "	SELECT a.*, CONCAT_WS(', ', c.`lastname`, c.`firstname`) AS `fullname`, MAX(d.`timestamp`) AS `last_visited`
+			$query		= "	SELECT a.*, e.`course_code`, CONCAT_WS(', ', c.`lastname`, c.`firstname`) AS `fullname`, MAX(d.`timestamp`) AS `last_visited`
 							FROM `events` AS a
-							LEFT JOIN `event_contacts` AS b
+							JOIN `event_contacts` AS b
 							ON b.`event_id` = a.`event_id`
-							LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS c
+							JOIN `".AUTH_DATABASE."`.`user_data` AS c
 							ON c.`id` = b.`proxy_id`
 							LEFT JOIN `statistics` AS d
 							ON d.`module` = 'events'
@@ -657,6 +693,8 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 							AND d.`action` = 'view'
 							AND d.`action_field` = 'event_id'
 							AND d.`action_value` = a.`event_id`
+							JOIN `courses` AS e
+							ON e.`course_id` = a.`course_id`
 							WHERE (a.`event_start` BETWEEN ".$db->qstr($DISPLAY_DURATION["start"])." AND ".$db->qstr($DISPLAY_DURATION["end"]).")
 							AND b.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
 							GROUP BY a.`event_id`
@@ -694,7 +732,7 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 						<colgroup>
 							<col class="modified" />
 							<col class="date" />
-							<col class="phase" />
+							<col class="course-code" />
 							<col class="title" />
 							<col class="attachment" />
 						</colgroup>
@@ -702,7 +740,7 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 							<tr>
 								<td class="modified" id="colModified">&nbsp;</td>
 								<td class="date sortedASC"><div class="noLink">Date &amp; Time</div></td>
-								<td class="phase">Phase</td>
+								<td class="course-code">Course</td>
 								<td class="title">Event Title</td>
 								<td class="attachment">&nbsp;</td>
 							</tr>
@@ -723,8 +761,8 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 
 									echo "<tr id=\"event-".$result["event_id"]."\" class=\"event\">\n";
 									echo "	<td class=\"modified\">".(($is_modified) ? "<img src=\"".ENTRADA_URL."/images/lecture-modified.gif\" width=\"15\" height=\"15\" alt=\"This event has been modified since your last visit on ".date(DEFAULT_DATE_FORMAT, $result["last_visited"]).".\" title=\"This event has been modified since your last visit on ".date(DEFAULT_DATE_FORMAT, $result["last_visited"]).".\" style=\"vertical-align: middle\" />" : "<img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"15\" height=\"15\" alt=\"\" title=\"\" style=\"vertical-align: middle\" />")."</td>\n";
-									echo "	<td class=\"date\"><a href=\"".$url."\" title=\"Event Date\">".date(DEFAULT_DATE_FORMAT, $result["event_start"])."</a></td>\n";
-									echo "	<td class=\"phase\"><a href=\"".$url."\" title=\"Intended For Phase ".html_encode($result["event_phase"])."\">".html_encode($result["event_phase"])."</a></td>\n";
+									echo "	<td class=\"date\"><a href=\"".$url."\">".date(DEFAULT_DATE_FORMAT, $result["event_start"])."</a></td>\n";
+									echo "	<td class=\"course-code\"><a href=\"".$url."\">".html_encode($result["course_code"])."</a></td>\n";
 									echo "	<td class=\"title\"><a href=\"".$url."\" title=\"Event Title: ".html_encode($result["event_title"])."\">".html_encode($result["event_title"])."</a></td>\n";
 									echo "	<td class=\"attachment\">".(($attachments) ? "<img src=\"".ENTRADA_URL."/images/attachment.gif\" width=\"16\" height=\"16\" alt=\"Contains ".$attachments." attachment".(($attachments != 1) ? "s" : "")."\" title=\"Contains ".$attachments." attachment".(($attachments != 1) ? "s" : "")."\" />" : "<img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"16\" height=\"16\" alt=\"\" title=\"\" style=\"vertical-align: middle\" />")."</td>\n";
 									echo "</tr>\n";

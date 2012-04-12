@@ -52,7 +52,8 @@ class ClerkshipCoreCompleted extends ClerkshipRotations {
 		global $db;
 		$user_id = $user->getID();
 		$completed_cutoff = strtotime(CLERKSHIP_COMPLETED_CUTOFF.", ".date("Y"));
-		$query		= "	SELECT a.`event_title`, a.`event_start`, a.`event_finish`, a.`category_id`, c.`category_name` as cat1, d.`category_name` as cat2, e.`category_name` as cat3
+
+		$query		= "	SELECT a.`event_title`, a.`event_start`, a.`event_finish`, a.`category_id`, c.`category_name` as cat1, c.`category_type` as `cat1_type`, d.`category_name` as cat2, d.`category_type` as `cat2_type`, e.`category_name` as cat3, e.`category_type` as `cat3_type`
 										FROM `".CLERKSHIP_DATABASE."`.`events` AS a
 										LEFT JOIN `".CLERKSHIP_DATABASE."`.`event_contacts` AS b
 										ON b.`event_id` = a.`event_id`
@@ -69,21 +70,28 @@ class ClerkshipCoreCompleted extends ClerkshipRotations {
 										AND b.`etype_id` = ".$db->qstr($user_id)."
 										AND a.`event_finish` < ".$db->qstr($completed_cutoff)." 
 										ORDER BY a.`event_start` ASC";
+										
 		$results	= $db->GetAll($query);
 		$rotations = array();
 		if($results) {
 			foreach($results as $result) {
 				
 				$title_parts = array();
-				$title_parts[] = str_replace(" and ", " & ", trim($result['cat3']));
-				$title_parts[] = str_replace(" and ", " & ", trim($result['cat2']));
-				$title_parts[] = str_replace(" and ", " & ", trim($result['cat1']));
-				
+				if ($result["cat3_type"] == 32) {
+					$title_parts[] = str_replace(" and ", " & ", trim($result['cat3']));
+				}
+				if (!substr_count($result['cat1'], "General Surgery")) {
+					if ($result["cat2_type"] == 32) {
+						$title_parts[] = str_replace(" and ", " & ", trim($result['cat2']));
+					}
+				}
+				if ($result["cat1_type"] == 32) {
+					$title_parts[] = str_replace(" and ", " & ", trim($result['cat1']));
+				}
 				$title_parts = array_unique($title_parts);
 				$title_parts = array_filter($title_parts);
 				
 				$title = implode(" / " ,$title_parts);
-				
 				$rotation = new ClerkshipRotation($user_id, $title, $result['event_start'], $result['event_finish'], true);
 				$rotations[] = $rotation;
 			}
@@ -101,7 +109,7 @@ class ClerkshipCorePending extends ClerkshipRotations {
 		$user_id = $user->getID();
 		$completed_cutoff = strtotime(CLERKSHIP_COMPLETED_CUTOFF.", ".date("Y"));
 
-		$query		= "	SELECT a.`event_title`, a.`event_start`, a.`event_finish`, a.`category_id`, c.`category_name` as cat1, d.`category_name` as cat2, e.`category_name` as cat3
+		$query		= "	SELECT a.`event_title`, a.`event_start`, a.`event_finish`, a.`category_id`, c.`category_name` as cat1, c.`category_type` as `cat1_type`, d.`category_name` as cat2, d.`category_type` as `cat2_type`, e.`category_name` as cat3, e.`category_type` as `cat3_type`
 										FROM `".CLERKSHIP_DATABASE."`.`events` AS a
 										LEFT JOIN `".CLERKSHIP_DATABASE."`.`event_contacts` AS b
 										ON b.`event_id` = a.`event_id`
@@ -124,9 +132,17 @@ class ClerkshipCorePending extends ClerkshipRotations {
 		if($results) {
 			foreach($results as $result) {
 				$title_parts = array();
-				$title_parts[] = str_replace(" and ", " & ", trim($result['cat3']));
-				$title_parts[] = str_replace(" and ", " & ", trim($result['cat2']));
-				$title_parts[] = str_replace(" and ", " & ", trim($result['cat1']));
+				if ($result["cat3_type"] == 32) {
+					$title_parts[] = str_replace(" and ", " & ", trim($result['cat3']));
+				}
+				if (!substr_count($result['cat1'], "General Surgery")) {
+					if ($result["cat2_type"] == 32) {
+						$title_parts[] = str_replace(" and ", " & ", trim($result['cat2']));
+					}
+				}
+				if ($result["cat1_type"] == 32) {
+					$title_parts[] = str_replace(" and ", " & ", trim($result['cat1']));
+				}
 				
 				$title_parts = array_unique($title_parts);
 				$title_parts = array_filter($title_parts);
@@ -149,6 +165,9 @@ class ClerkshipElectivesCompleted extends ClerkshipRotations {
 		global $db;
 		$user_id = $user->getID();
 		$completed_cutoff = strtotime(CLERKSHIP_COMPLETED_CUTOFF.", ".date("Y"));
+		if ($user_id == 1727) {
+			$completed_cutoff += (2 * ONE_WEEK);
+		}
 		$query		= "	SELECT a.`event_title`, a.`event_start`, a.`event_finish`, c.`preceptor_prefix`, c.`preceptor_first_name`, c.`preceptor_last_name`, c.`city`, c.`prov_state`, d.`category_name` AS `department_title`, c.`sub_discipline`, e.`discipline`, f.`school_title`
 										FROM `".CLERKSHIP_DATABASE."`.`events` AS a
 										LEFT JOIN `".CLERKSHIP_DATABASE."`.`event_contacts` AS b
@@ -187,12 +206,12 @@ class ClerkshipElectivesCompleted extends ClerkshipRotations {
 					$supervisor = "Dr. ".$supervisor;
 				}
 				$title_parts = array();
-				$title_parts[] = str_replace($ugly, "", $result["department_title"]);
-				if (trim($result["discipline"]) != "") {
-					$title_parts[] = str_replace($ugly, "", $result["discipline"]);
+				$title_parts[] = str_replace(" and ", " & ", str_replace($ugly, "", $result["department_title"]));
+				if (trim($result["discipline"]) != "" && (trim($title_parts[0]) != str_replace(" and ", " & ", str_replace($ugly, "", trim($result["discipline"]))))) {
+					$title_parts[] = str_replace(" and ", " & ", str_replace($ugly, "", $result["discipline"]));
 				}
 				if (trim($result['sub_discipline']) != "") {
-					$title_parts[] = str_replace($ugly, "", $result["sub_discipline"]);
+					$title_parts[] = str_replace(" and ", " & ", str_replace($ugly, "", $result["sub_discipline"]));
 				}
 				
 				$title = implode(" / ", $title_parts);

@@ -38,7 +38,7 @@ class TaskVerifiers extends Collection {
 		$verifiers = array();
 		if ($results) {
 			foreach ($results as $result) {
-				$verifier = User::fromArray($result);
+				$verifier = User::get($result["id"]);
 				if ($verifier) {
 					$verifiers[] = $verifier;
 				}
@@ -156,7 +156,7 @@ class TaskVerifiers extends Collection {
 		}
 		
 		$tasks = array();
-		$rs = $db->selectLimit("SELECT a.* from `task_verifiers` b left join `tasks` a on a.`task_id`=b.`task_id` where `verifier_id`=? ".$where.$order_by, $limit, $offset, array($verifier_id));
+		$rs = $db->selectLimit("SELECT a.* from `task_verifiers` b left join `tasks` a on a.`task_id`=b.`task_id` where `verifier_id`=? ".(isset($where) && $where ? $where : "").(isset($order_by) && $order_by ? $order_by : ""), $limit, $offset, array($verifier_id));
 		if ($rs) {
 			$results = $rs->getIterator();	
 			foreach ($results as $result) {
@@ -180,7 +180,7 @@ class TaskVerifiers extends Collection {
 	 * @param int $proxy_id 
 	 * @param int $task_id
 	 * @return boolean
-	 */	
+	 */
 	public static function isVerifier($proxy_id, $task_id) {
 		global $db;
 

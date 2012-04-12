@@ -154,7 +154,7 @@ switch($STEP) {
 
 					$SUCCESS++;
 					$SUCCESSSTR[]	= "You have successfully added a new photo gallery to the community.<br /><br />You will now be redirected to the index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-
+					add_statistic("community:".$COMMUNITY_ID.":galleries", "gallery_add", "cgallery_id", $GALLERY_ID);
 					communities_log_history($COMMUNITY_ID, $PAGE_ID, $GALLERY_ID, "community_history_add_gallery", 1);
 				}
 			}
@@ -219,7 +219,7 @@ switch($STEP) {
 				<td><input type="text" id="gallery_title" name="gallery_title" value="<?php echo ((isset($PROCESSED["gallery_title"])) ? html_encode($PROCESSED["gallery_title"]) : ""); ?>" maxlength="64" style="width: 95%" /></td>
 			</tr>
 			<tr>
-				<td colspan="2" style="vertical-align: top"><label for="gallery_description" class="form-nrequired">Gallery Description</label></td>
+				<td colspan="2" style="vertical-align: top !important"><label for="gallery_description" class="form-nrequired">Gallery Description</label></td>
 				<td style="vertical-align: top">
 					<textarea id="gallery_description" name="gallery_description" style="width: 95%; height: 60px" cols="50" rows="5"><?php echo ((isset($PROCESSED["gallery_description"])) ? html_encode($PROCESSED["gallery_description"]) : ""); ?></textarea>
 				</td>

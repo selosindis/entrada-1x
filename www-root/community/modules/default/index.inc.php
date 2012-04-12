@@ -120,7 +120,7 @@ if ($result) {
 								LIMIT 0, 10";
 			$announcements	= $db->GetAll($query);
 			if ($announcements) {
-				$community_announcements .= "<h1 style=\"font-size: 16px;\">Latest Announcements</h1>\n";
+				$community_announcements .= "<h1 class=\"announcement-title\">Latest Announcements</h1>\n";
 				$last_date = 0;
 				foreach ($announcements as $key => $announcement) {
 					if (($last_date < strtotime("00:00:00", $announcement["release_date"])) || ($last_date > strtotime("23:59:59", $announcement["release_date"]))) {
@@ -129,7 +129,7 @@ if ($result) {
 						}
 			
 						$last_date = $announcement["release_date"];
-						$community_announcements .= "<h3>".date("l F dS Y", $announcement["release_date"])."</h3>\n";
+						$community_announcements .= "<h3 class=\"announcement-date\">".date("l F dS Y", $announcement["release_date"])."</h3>\n";
 						$community_announcements .= "<ul class=\"announcements\">\n";
 					}
 					$community_announcements .= "<li".(!($key % 2) ? " class=\"odd-announcement\"" : "")."><a href=\"".COMMUNITY_RELATIVE.$COMMUNITY_URL.":".$announcement["page_url"]."?id=".$announcement["cannouncement_id"]."\">".html_encode(limit_chars($announcement["announcement_title"], (isset($events) && $events ? 46: 108)))."</a></li>\n";
@@ -142,7 +142,7 @@ if ($result) {
 		
 		if ($events_enabled) {
 			if ($events) {
-				$community_events .= "<h1 style=\"font-size: 16px;\">Upcoming Events</h1>\n";
+				$community_events .= "<h1 class=\"announcement-title\">Upcoming Events</h1>\n";
 				$last_date = 0;
 				
 				foreach ($events as $key => $event) {
@@ -152,7 +152,7 @@ if ($result) {
 						}
 			
 						$last_date = $event["event_start"];
-						$community_events .= "<h3>".date("l F dS Y", $event["event_start"])."</h3>\n";
+						$community_events .= "<h3 class=\"announcement-date\">".date("l F dS Y", $event["event_start"])."</h3>\n";
 						$community_events .= "<ul class=\"announcements\">\n";
 					}
 					$community_events .= "<li".(!($key % 2) ? " class=\"odd-announcement\"" : "")."><a href=\"".COMMUNITY_RELATIVE.$COMMUNITY_URL.":".$event["page_url"]."?id=".$event["cevent_id"]."\">".html_encode($event["event_title"])."</a></li>\n";
@@ -160,10 +160,7 @@ if ($result) {
 
 				$community_events .= "</ul>\n";
 			}
-			
-
 		}
-		
 		
 		/**
 		 * Determine what and how to display the announcements information.
@@ -205,8 +202,7 @@ if ($result) {
 							LIMIT 0, 15";
 			$results	= $db->CacheGetAll(CACHE_TIMEOUT, $query);
 			if($results) {
-				$history_messages = "";
-				echo "<ul class=\"history\">";
+				$history_messages = "<ul class=\"history-list\">";
 				foreach($results as $key => $result) {
 					if ((int)$result["cpage_id"] && ($result["history_key"] != "community_history_activate_module")) {
 						$query = "SELECT `page_url` FROM `community_pages` WHERE `cpage_id` = ".$db->qstr($result["cpage_id"])." AND `community_id` = ".$db->qstr($result["community_id"]);
@@ -226,23 +222,20 @@ if ($result) {
 						$history_message = $result["history_message"];
 					}
 					
-					$content_search						= array("%SITE_COMMUNITY_URL%", "%SYS_PROFILE_URL%", "%PAGE_URL%", "%RECORD_ID%", "%RECORD_TITLE%", "%PARENT_ID%", "%PROXY_ID%");
-					$content_replace					= array(COMMUNITY_URL.$COMMUNITY_URL, ENTRADA_URL."/people", $page_url, $result["record_id"], $record_title, $parent_id, $result["proxy_id"]);
-					$history_message			= str_replace($content_search, $content_replace, $history_message);
-					$history_messages .= "<li".(!($key % 2) ? " style=\"background-color: #F4F4F4\"" : "").">".strip_tags($history_message, "<a>")."</li>";
+					$content_search = array("%SITE_COMMUNITY_URL%", "%SYS_PROFILE_URL%", "%PAGE_URL%", "%RECORD_ID%", "%RECORD_TITLE%", "%PARENT_ID%", "%PROXY_ID%");
+					$content_replace = array(COMMUNITY_URL.$COMMUNITY_URL, ENTRADA_URL."/people", $page_url, $result["record_id"], $record_title, $parent_id, $result["proxy_id"]);
+					$history_message = str_replace($content_search, $content_replace, $history_message);
+					$history_messages .= "<li>".strip_tags($history_message, "<a>")."</li>";
 				}
 				$history_messages .= "</ul>";
 			}
 			if ($history_messages) {
 				?>
-				<div style="position: relative; clear: both">
-					<div style="width: 100%">
-						<h2>Community History</h2>
-						<?php
-						echo $history_messages;
-						?>
-					</div>
-				</div>
+				<div style="clear:both"></div>
+				<section>
+					<h2 class="history">Community History</h2>
+					<?php echo $history_messages; ?>
+				</section>
 				<?php
 			}
 		}

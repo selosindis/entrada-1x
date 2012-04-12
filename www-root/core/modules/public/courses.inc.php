@@ -35,18 +35,21 @@ if (!defined("PARENT_INCLUDED")) {
 
 define("IN_COURSES", true);
 
-$BREADCRUMB[] = array("url" => ENTRADA_URL."/".$MODULE, "title" => "Courses");
+$module_title = $translate->_("courses");
+$module_singular_name = $translate->_("course");
+
+$BREADCRUMB[] = array("url" => ENTRADA_URL."/".$MODULE, "title" => $module_title);
 
 if (($router) && ($router->initRoute())) {
 	$COURSE_ID			= 0;
-	$ORGANISATION_ID	= $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"];
-
+	//$ORGANISATION_ID	= $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"];
+	$ORGANISATION_ID = false;
 	if ((isset($_GET["id"])) && ((int) trim($_GET["id"]))) {
 		$COURSE_ID = (int) trim($_GET["id"]);
 	}
 
-	if ((isset($_GET["org"])) && ((int) trim($_GET["org"]))) {
-		$ORGANISATION_ID = (int) trim($_GET["org"]);
+	if ((isset($_GET["organisation_id"])) && ((int) trim($_GET["organisation_id"]))) {
+		$ORGANISATION_ID = (int) trim($_GET["organisation_id"]);
 	}
 
 	$module_file = $router->getRoute();

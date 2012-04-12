@@ -46,7 +46,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 	
 	<script type="text/javascript" defer="defer">
 	jQuery(document).ready(function() {
-		var jQuerydialog = jQuery('<div></div>')
+		jQuerydialog = jQuery('<div></div>')
 			.html('<span class="ui-icon ui-icon-circle-check" style="float:left; margin:0 7px 50px 0;"></span>You must select at least one record in order to delete.')
 			.dialog({
 				autoOpen: false,
@@ -58,7 +58,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 				}
 			});
 		
-		var jQueryError = jQuery('<div></div>')
+		jQueryError = jQuery('<div></div>')
 		.html('<span class="ui-icon ui-icon-locked" style="float:left; margin:0 7px 50px 0;"></span>Error: You cannot delete records from previous years. Contact support if you need one deleted.')
 		.dialog({
 			autoOpen: false,
@@ -75,7 +75,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 		});
 		
 		<?php $fields = "ar_research,research_id,principal_investigator,grant_title,amount_received,year_reported"; ?>
-		var research_grid = jQuery("#flex1").flexigrid
+		research_grid = jQuery("#flex1").flexigrid
 		(
 			{
 			url: '<?php echo ENTRADA_URL; ?>/api/ar_loadgrid.api.php?id=<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>&t=<?php echo $fields; ?>',
@@ -147,7 +147,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 							height:180,
 							modal: true,
 							buttons: {
-								'Delete all items': function() {
+								'Delete': function() {
 									var ids = "";
 				               		jQuery('.trSelected', grid).each(function() {  
 				               			var id = jQuery(this).attr('id');
@@ -184,7 +184,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 		}
 		
 		<?php $fields = "ar_peer_reviewed_papers,peer_reviewed_papers_id,source,title,author_list,year_reported"; ?>
-		var peer_reviewed_grid = jQuery("#flex2").flexigrid
+		peer_reviewed_grid = jQuery("#flex2").flexigrid
 		(
 			{
 			url: '<?php echo ENTRADA_URL; ?>/api/ar_loadgrid.api.php?id=<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>&t=<?php echo $fields; ?>',
@@ -246,7 +246,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 							height:180,
 							modal: true,
 							buttons: {
-								'Delete all items': function() {
+								'Delete': function() {
 									var ids = "";
 				               		jQuery('.trSelected', grid).each(function() {
 										var id = jQuery(this).attr('id');
@@ -279,7 +279,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 		    }          
 		}
 		<?php $fields = "ar_non_peer_reviewed_papers,non_peer_reviewed_papers_id,source,title,author_list,year_reported"; ?>
-		var non_peer_reviewed_grid = jQuery("#flex3").flexigrid
+		non_peer_reviewed_grid = jQuery("#flex3").flexigrid
 		(
 			{
 			url: '<?php echo ENTRADA_URL; ?>/api/ar_loadgrid.api.php?id=<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>&t=<?php echo $fields; ?>',
@@ -341,7 +341,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 							height:180,
 							modal: true,
 							buttons: {
-								'Delete all items': function() {
+								'Delete': function() {
 									var ids = "";
 				               		jQuery('.trSelected', grid).each(function() {
 										var id = jQuery(this).attr('id');
@@ -374,7 +374,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 		    }          
 		}
 		<?php $fields = "ar_book_chapter_mono,book_chapter_mono_id,source,title,author_list,year_reported"; ?>
-		var book_chapter_mono_grid = jQuery("#flex4").flexigrid
+		book_chapter_mono_grid = jQuery("#flex4").flexigrid
 		(
 			{
 			url: '<?php echo ENTRADA_URL; ?>/api/ar_loadgrid.api.php?id=<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>&t=<?php echo $fields; ?>',
@@ -436,7 +436,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 							height:180,
 							modal: true,
 							buttons: {
-								'Delete all items': function() {
+								'Delete': function() {
 									var ids = "";
 				               		jQuery('.trSelected', grid).each(function() {
 										var id = jQuery(this).attr('id');
@@ -469,7 +469,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 		    }          
 		}
 		<?php $fields = "ar_poster_reports,poster_reports_id,source,title,author_list,year_reported"; ?>
-		var poster_reports_grid = jQuery("#flex5").flexigrid
+		poster_reports_grid = jQuery("#flex5").flexigrid
 		(
 			{
 			url: '<?php echo ENTRADA_URL; ?>/api/ar_loadgrid.api.php?id=<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>&t=<?php echo $fields; ?>',
@@ -531,7 +531,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 							height:180,
 							modal: true,
 							buttons: {
-								'Delete all items': function() {
+								'Delete': function() {
 									var ids = "";
 				               		jQuery('.trSelected', grid).each(function() {
 										var id = jQuery(this).attr('id');
@@ -564,10 +564,10 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 		    }          
 		}
 		<?php $fields = "ar_conference_papers,conference_papers_id,institution,lectures_papers_list,location,year_reported"; ?>
-			var conference_papers_grid = jQuery("#flex6").flexigrid
+			conference_papers_grid = jQuery("#flex6").flexigrid
 			(
 				{
-				url: '<?php echo ENTRADA_URL; ?>/api/ar_loadgrid.api.php?id=<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>&t=<?php echo $fields; ?>',
+				url: '<?php echo ENTRADA_URL; ?>/api/ar_loadgrid_conference.api.php?id=<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>&t=<?php echo $fields; ?>',
 				dataType: 'json',
 				method: 'POST',
 				colModel : [
@@ -626,7 +626,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 								height:180,
 								modal: true,
 								buttons: {
-									'Delete all items': function() {
+									'Delete': function() {
 										var ids = "";
 					               		jQuery('.trSelected', grid).each(function() {
 											var id = jQuery(this).attr('id');
@@ -659,7 +659,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 			    }          
 			}
 		<?php $fields = "ar_scholarly_activity,scholarly_activity_id,scholarly_activity_type,description,location,year_reported"; ?>
-		var scholarly_grid = jQuery("#flex7").flexigrid
+		scholarly_grid = jQuery("#flex7").flexigrid
 		(
 			{
 			url: '<?php echo ENTRADA_URL; ?>/api/ar_loadgrid.api.php?id=<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>&t=<?php echo $fields; ?>',
@@ -731,7 +731,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 							height:180,
 							modal: true,
 							buttons: {
-								'Delete all items': function() {
+								'Delete': function() {
 									var ids = "";
 				               		jQuery('.trSelected', grid).each(function() {  
 				               			var id = jQuery(this).attr('id');
@@ -768,7 +768,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 		}
 		
 		<?php $fields = "ar_patent_activity,patent_activity_id,patent_activity_type,description,location,year_reported"; ?>
-		var patent_grid = jQuery("#flex8").flexigrid
+		patent_grid = jQuery("#flex8").flexigrid
 		(
 			{
 			url: '<?php echo ENTRADA_URL; ?>/api/ar_loadgrid.api.php?id=<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>&t=<?php echo $fields; ?>',
@@ -840,7 +840,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 							height:180,
 							modal: true,
 							buttons: {
-								'Delete all items': function() {
+								'Delete': function() {
 									var ids = "";
 				               		jQuery('.trSelected', grid).each(function() {  
 				               			var id = jQuery(this).attr('id');

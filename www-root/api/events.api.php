@@ -74,7 +74,7 @@ if (($event_id) && (isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAu
 			if($ENTRADA_ACL->amIAllowed(new EventResource($event_id, $event_info["course_id"], $event_info["organisation_id"]), "read")) {
 				add_statistic("events", "view", "event_id", $event_id);
 
-				$event_resources	= fetch_event_resources($event_id, "all");
+				$event_resources	= events_fetch_event_resources($event_id, "all");
 				$event_files		= (is_array($event_resources["files"]) ? count($event_resources["files"]) : 0);
 				$event_links		= (is_array($event_resources["links"]) ? count($event_resources["links"]) : 0);
 				$event_quizzes		= (is_array($event_resources["quizzes"]) ? count($event_resources["quizzes"]) : 0);

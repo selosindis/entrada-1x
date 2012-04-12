@@ -35,6 +35,7 @@ if ($RECORD_ID) {
 				if ($db->AutoExecute("community_gallery_comments", array("comment_active" => 0, "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "UPDATE", "`cgcomment_id` = ".$db->qstr($RECORD_ID)." AND `cgphoto_id` = ".$db->qstr($comment_record["cgphoto_id"])." AND `community_id` = ".$db->qstr($COMMUNITY_ID))) {
 					communities_deactivate_history($COMMUNITY_ID, $PAGE_ID, $RECORD_ID);
 					delete_notifications("gallery:photo_comment:$RECORD_ID");
+					add_statistic("community:".$COMMUNITY_ID.":galleries", "comment_delete", "cgcomment_id", $RECORD_ID);
 				} else {
 					application_log("error", "Failed to deactivate [".$RECORD_ID."] photo comment from community. Database said: ".$db->ErrorMsg());
 				}

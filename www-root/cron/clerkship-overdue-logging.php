@@ -22,6 +22,7 @@
  * Include the Entrada init code.
  */
 require_once("init.inc.php");
+global $ENTRADA_ACTIVE_TEMPLATE;
 
 $query		= "	SELECT a.*, b.`etype_id` as `proxy_id`, c.*, CONCAT_WS(' ', e.`firstname`, e.`lastname`) as `fullname`, MIN(a.`event_start`) as `start`, MAX(a.`event_finish`) AS `finish`
 				FROM `".CLERKSHIP_DATABASE."`.`events` AS a
@@ -49,7 +50,8 @@ if ($results) {
 	foreach ($results as $result) {
 		if ($result["rotation_id"] && ($result["finish"] < time() || ((time() - $result["start"]) > (($result["finish"] - $result["start"]) * $result["percent_period_complete"] / 100)))) {
 			$query = "	SELECT * FROM `".CLERKSHIP_DATABASE."`.`logbook_mandatory_objectives`
-						WHERE `rotation_id` = ".$db->qstr($result["rotation_id"]);
+						WHERE `rotation_id` = ".$db->qstr($result["rotation_id"])."
+						AND `grad_year_min` <= ".$db->qstr(get_account_data("grad_year", $result["proxy_id"]));
 			$oresults = $db->GetAll($query);
 			if ($oresults) {
 				$total_required = 0;
@@ -147,7 +149,7 @@ if ($results) {
 														ENTRADA_URL
 													);
 									
-									$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(WEBSITE_ABSOLUTE."/templates/".DEFAULT_TEMPLATE."/email/clerkship-deficiency-admin-notification.txt");
+									$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(WEBSITE_ABSOLUTE."/templates/".$ENTRADA_ACTIVE_TEMPLATE."/email/clerkship-deficiency-admin-notification.txt");
 									$mail->setBodyText(clean_input(str_replace($search, $replace, $NOTIFICATION_MESSAGE["textbody"]), array("postclean")));
 									
 									if ($rotation["pcoord_id"]) {
@@ -212,7 +214,7 @@ if ($results) {
 								$last_notified = $db->GetOne($query);
 								
 								if ($last_notified <= (strtotime("-1 week"))) {
-									$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(WEBSITE_ABSOLUTE."/templates/".DEFAULT_TEMPLATE."/email/clerkship-deficiency-clerk-notification.txt");
+									$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(WEBSITE_ABSOLUTE."/templates/".$ENTRADA_ACTIVE_TEMPLATE."/email/clerkship-deficiency-clerk-notification.txt");
 									
 									$search	= array(
 														"%ROTATION_TITLE%",

@@ -25,8 +25,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 	if ($PROXY_ID && $user_record) {
-							?>
-<h1 style="margin-top: 0px">Manage Incidents</h1>
+		?>
+				<h1 style="margin-top: 0px">Manage Incidents</h1>
 
 							<ul class="page-action">
 								<li><a href="<?php echo ENTRADA_URL."/admin/users/manage/incidents?section=add&id=".$PROXY_ID; ?>">Add New Incident</a></li>

@@ -135,6 +135,7 @@ if ($page_id) {
 					
 						$auth = new AuthSystem((((defined("AUTH_DEVELOPMENT")) && (AUTH_DEVELOPMENT != "")) ? AUTH_DEVELOPMENT : AUTH_PRODUCTION));
 						$auth->setAppAuthentication(AUTH_APP_ID, AUTH_USERNAME, AUTH_PASSWORD);
+						$auth->setEncryption(AUTH_ENCRYPTION_METHOD);
 					
 						$username = clean_input($_SERVER["PHP_AUTH_USER"], "credentials");
 						$password = clean_input($_SERVER["PHP_AUTH_PW"], "trim");
@@ -268,6 +269,7 @@ if ($page_id) {
 					
 						$auth = new AuthSystem((((defined("AUTH_DEVELOPMENT")) && (AUTH_DEVELOPMENT != "")) ? AUTH_DEVELOPMENT : AUTH_PRODUCTION));
 						$auth->setAppAuthentication(AUTH_APP_ID, AUTH_USERNAME, AUTH_PASSWORD);
+						$auth->setEncryption(AUTH_ENCRYPTION_METHOD);
 					
 						$username = clean_input($_SERVER["PHP_AUTH_USER"], "credentials");
 						$password = clean_input($_SERVER["PHP_AUTH_PW"], "trim");
@@ -477,6 +479,7 @@ if ($page_id) {
 						
 							$auth = new AuthSystem((((defined("AUTH_DEVELOPMENT")) && (AUTH_DEVELOPMENT != "")) ? AUTH_DEVELOPMENT : AUTH_PRODUCTION));
 							$auth->setAppAuthentication(AUTH_APP_ID, AUTH_USERNAME, AUTH_PASSWORD);
+							$auth->setEncryption(AUTH_ENCRYPTION_METHOD);
 						
 							$username = clean_input($_SERVER["PHP_AUTH_USER"], "credentials");
 							$password = clean_input($_SERVER["PHP_AUTH_PW"], "trim");
@@ -609,6 +612,7 @@ if ($page_id) {
 						
 							$auth = new AuthSystem((((defined("AUTH_DEVELOPMENT")) && (AUTH_DEVELOPMENT != "")) ? AUTH_DEVELOPMENT : AUTH_PRODUCTION));
 							$auth->setAppAuthentication(AUTH_APP_ID, AUTH_USERNAME, AUTH_PASSWORD);
+							$auth->setEncryption(AUTH_ENCRYPTION_METHOD);
 						
 							$username = clean_input($_SERVER["PHP_AUTH_USER"], "credentials");
 							$password = clean_input($_SERVER["PHP_AUTH_PW"], "trim");
@@ -751,6 +755,7 @@ if ($page_id) {
 			
 				$auth = new AuthSystem((((defined("AUTH_DEVELOPMENT")) && (AUTH_DEVELOPMENT != "")) ? AUTH_DEVELOPMENT : AUTH_PRODUCTION));
 				$auth->setAppAuthentication(AUTH_APP_ID, AUTH_USERNAME, AUTH_PASSWORD);
+				$auth->setEncryption(AUTH_ENCRYPTION_METHOD);
 			
 				$username = clean_input($_SERVER["PHP_AUTH_USER"], "credentials");
 				$password = clean_input($_SERVER["PHP_AUTH_PW"], "trim");
@@ -900,7 +905,8 @@ if ($page_id) {
 				 * Setup Zend_Translate for language file support.
 				 */
 				if ($ENTRADA_CACHE) Zend_Translate::setCache($ENTRADA_CACHE);
-				$translate = new Zend_Translate("array", ENTRADA_ABSOLUTE."/templates/".DEFAULT_TEMPLATE."/languages/".DEFAULT_LANGUAGE.".lang.php", DEFAULT_LANGUAGE);
+				global $ENTRADA_ACTIVE_TEMPLATE;
+				$translate = new Zend_Translate("array", ENTRADA_ABSOLUTE."/templates/".$ENTRADA_ACTIVE_TEMPLATE."/languages/".DEFAULT_LANGUAGE.".lang.php", DEFAULT_LANGUAGE);
 
 				foreach ($rss_output as $result) {
 					

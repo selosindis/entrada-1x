@@ -74,7 +74,7 @@ if($EVALUATION_ID) {
         if((isset($_GET["display"]) && $_GET["display"] == "complete_list") || !isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["display"])) {
            $view_individual_attempts = true;
            $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["display"] = true;
-        } elseif ((isset($_GET["attempts"]) && $_GET["display"] == "summary")) {
+        } elseif ((isset($_GET["display"]) && $_GET["display"] == "summary")) {
            $view_individual_attempts = false;
            $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["display"] = false;
         }
@@ -147,17 +147,22 @@ if($EVALUATION_ID) {
             if (!$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["display"]) {
 				$query = "	SELECT a.*, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`id` AS `proxy_id`
 	            			FROM `evaluation_evaluators` AS a
-                			LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS ba
-                			ON a.`evaluator_type` = 'grad_year'
-                			AND ba.`app_id` = ".$db->qstr(AUTH_APP_ID)."
-                			AND a.`evaluator_value` = ba.`role`
+                			JOIN `".AUTH_DATABASE."`.`user_access` AS ba
+                			ON ba.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+                			LEFT JOIN `groups` AS g
+                			ON g.`group_type` = 'cohort'
+                			AND a.`evaluator_type` = 'cohort'
+                			AND a.`evaluator_value` = g.`group_id`
+                			LEFT JOIN `group_members` AS gm
+                			ON g.`group_id` = gm.`group_id`
 	            			JOIN `".AUTH_DATABASE."`.`user_data` AS b
 	            			ON ((
 		            			a.`evaluator_type` = 'proxy_id'
 		            			AND a.`evaluator_value` = b.`id`
 							) OR (
-								ba.`user_id` = b.`id`
+								gm.`proxy_id` = b.`id`
 							))
+							AND ba.`user_id` = b.`id`
 	            			WHERE a.`evaluation_id` = ".$db->qstr($EVALUATION_ID);
 	            $evaluation_evaluators = $db->GetAll($query);
 	        	if ($evaluation_evaluators) {
@@ -238,31 +243,55 @@ if($EVALUATION_ID) {
 	            /**
 	             * Get the total number of results using the generated queries above and calculate the total number
 	             * of pages that are available based on the results per page preferences.
-	             */
-	            $query = "	SELECT a.*, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, c.`progress_value`, c.`updated_date`, d.`target_value`, e.`target_shortname`, b.`id` AS `proxy_id`
+	             */	           
+	           $query = "SELECT a.*, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`lastname`, b.`firstname`, a.`updated_date` AS `ordered_date`, c.`progress_value`, c.`updated_date`, d.`target_value`, e.`target_shortname`, b.`id` AS `proxy_id`, c.`etarget_id`
 	            			FROM `evaluation_progress` AS c
                 			JOIN `evaluation_evaluators` AS a
                 			ON a.`evaluation_id` = c.`evaluation_id`
-                			LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS ba
-                			ON a.`evaluator_type` = 'grad_year'
-                			AND ba.`app_id` = ".$db->qstr(AUTH_APP_ID)."
-                			AND a.`evaluator_value` = ba.`role`
 	            			JOIN `".AUTH_DATABASE."`.`user_data` AS b
-	            			ON ((
-		            			a.`evaluator_type` = 'proxy_id'
-		            			AND a.`evaluator_value` = b.`id`
-	                			AND c.`proxy_id` = a.`evaluator_value`
-							) OR (
-								ba.`user_id` = b.`id`
-	                			AND c.`proxy_id` = b.`id`
-							))
-                			AND `progress_value` = 'complete'
+	            			ON a.`evaluator_type` = 'proxy_id'
+	            			AND a.`evaluator_value` = b.`id`
+                			AND b.`id` = a.`evaluator_value`
+                			AND b.`id` = c.`proxy_id`
+                			JOIN `".AUTH_DATABASE."`.`user_access` AS ba
+                			ON ba.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+							AND ba.`user_id` = b.`id`
                 			LEFT JOIN `evaluation_targets` AS d
                 			ON d.`etarget_id` = c.`etarget_id`
                 			LEFT JOIN `evaluations_lu_targets` AS e
                 			ON d.`target_id` = e.`target_id`
 	            			WHERE c.`evaluation_id` = ".$db->qstr($EVALUATION_ID)."
-	            			ORDER BY b.`lastname`, b.`firstname`, a.`updated_date`";
+                			AND c.`progress_value` = 'complete'
+	            			GROUP BY c.`eprogress_id`
+	            			
+	            			UNION
+	            			
+	            			SELECT a.*, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`lastname`, b.`firstname`, a.`updated_date` AS `ordered_date`, c.`progress_value`, c.`updated_date`, d.`target_value`, e.`target_shortname`, b.`id` AS `proxy_id`, c.`etarget_id`
+	            			FROM `evaluation_progress` AS c
+                			JOIN `evaluation_evaluators` AS a
+                			ON a.`evaluation_id` = c.`evaluation_id`
+                			JOIN `groups` AS g
+                			ON a.`evaluator_value` = g.`group_id`
+                			JOIN `group_members` AS gm
+                			ON g.`group_id` = gm.`group_id`
+                			AND gm.`member_active` = 1
+                			AND gm.`proxy_id` = c.`proxy_id`
+	            			JOIN `".AUTH_DATABASE."`.`user_data` AS b
+	            			ON a.`evaluator_value` = g.`group_id`
+                			AND b.`id` = c.`proxy_id`
+                			JOIN `".AUTH_DATABASE."`.`user_access` AS ba
+                			ON ba.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+							AND ba.`user_id` = b.`id`
+                			LEFT JOIN `evaluation_targets` AS d
+                			ON d.`etarget_id` = c.`etarget_id`
+                			LEFT JOIN `evaluations_lu_targets` AS e
+                			ON d.`target_id` = e.`target_id`
+	            			WHERE c.`evaluation_id` = ".$db->qstr($EVALUATION_ID)."
+	            			AND a.`evaluator_type` = 'cohort'
+	            			AND g.`group_type` = 'cohort'
+                			AND c.`progress_value` = 'complete'
+	            			GROUP BY c.`eprogress_id`
+	            			ORDER BY `etarget_id`, `lastname`, `firstname`, `ordered_date`";
 	            $evaluation_evaluators = $db->GetAll($query);
 	            
 	        	if ($evaluation_evaluators) {
@@ -314,30 +343,54 @@ if($EVALUATION_ID) {
 	             * Get the total number of results using the generated queries above and calculate the total number
 	             * of pages that are available based on the results per page preferences.
 	             */
-	            $query = "	SELECT a.*, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, c.`progress_value`, c.`updated_date`, d.`target_value`, e.`target_shortname`, b.`id` AS `proxy_id`
+	           $query = "SELECT a.*, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`lastname`, b.`firstname`, a.`updated_date` AS `ordered_date`, c.`progress_value`, c.`updated_date`, d.`target_value`, e.`target_shortname`, b.`id` AS `proxy_id`
 	            			FROM `evaluation_progress` AS c
                 			JOIN `evaluation_evaluators` AS a
                 			ON a.`evaluation_id` = c.`evaluation_id`
-                			LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS ba
-                			ON a.`evaluator_type` = 'grad_year'
-                			AND ba.`app_id` = ".$db->qstr(AUTH_APP_ID)."
-                			AND a.`evaluator_value` = ba.`role`
 	            			JOIN `".AUTH_DATABASE."`.`user_data` AS b
-	            			ON ((
-		            			a.`evaluator_type` = 'proxy_id'
-		            			AND a.`evaluator_value` = b.`id`
-	                			AND c.`proxy_id` = a.`evaluator_value`
-							) OR (
-								ba.`user_id` = b.`id`
-	                			AND c.`proxy_id` = b.`id`
-							))
-                			AND `progress_value` = 'inprogress'
+	            			ON a.`evaluator_type` = 'proxy_id'
+	            			AND a.`evaluator_value` = b.`id`
+                			AND b.`id` = a.`evaluator_value`
+                			AND c.`proxy_id` = b.`id`
+                			JOIN `".AUTH_DATABASE."`.`user_access` AS ba
+                			ON ba.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+							AND ba.`user_id` = b.`id`
                 			LEFT JOIN `evaluation_targets` AS d
                 			ON d.`etarget_id` = c.`etarget_id`
                 			LEFT JOIN `evaluations_lu_targets` AS e
                 			ON d.`target_id` = e.`target_id`
 	            			WHERE c.`evaluation_id` = ".$db->qstr($EVALUATION_ID)."
-	            			ORDER BY b.`lastname`, b.`firstname`, a.`updated_date`";
+                			AND c.`progress_value` = 'inprogress'
+	            			GROUP BY b.`id`
+	            			
+	            			UNION
+	            			
+	            			SELECT a.*, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`lastname`, b.`firstname`, a.`updated_date` AS `ordered_date`, c.`progress_value`, c.`updated_date`, d.`target_value`, e.`target_shortname`, b.`id` AS `proxy_id`
+	            			FROM `evaluation_progress` AS c
+                			JOIN `evaluation_evaluators` AS a
+                			ON a.`evaluation_id` = c.`evaluation_id`
+                			JOIN `groups` AS g
+                			ON a.`evaluator_value` = g.`group_id`
+                			JOIN `group_members` AS gm
+                			ON g.`group_id` = gm.`group_id`
+                			AND gm.`member_active` = 1
+	            			JOIN `".AUTH_DATABASE."`.`user_data` AS b
+	            			ON a.`evaluator_value` = g.`group_id`
+                			AND b.`id` = gm.`proxy_id`
+                			AND c.`proxy_id` = b.`id`
+                			JOIN `".AUTH_DATABASE."`.`user_access` AS ba
+                			ON ba.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+							AND ba.`user_id` = b.`id`
+                			LEFT JOIN `evaluation_targets` AS d
+                			ON d.`etarget_id` = c.`etarget_id`
+                			LEFT JOIN `evaluations_lu_targets` AS e
+                			ON d.`target_id` = e.`target_id`
+	            			WHERE c.`evaluation_id` = ".$db->qstr($EVALUATION_ID)."
+	            			AND a.`evaluator_type` = 'cohort'
+	            			AND g.`group_type` = 'cohort'
+                			AND c.`progress_value` = 'inprogress'
+	            			GROUP BY gm.`proxy_id`
+	            			ORDER BY `lastname`, `firstname`, `ordered_date`";
 	            $evaluation_evaluators = $db->GetAll($query);
 	            
 	        	if ($evaluation_evaluators) {
@@ -389,14 +442,25 @@ if($EVALUATION_ID) {
 	             * Get the total number of results using the generated queries above and calculate the total number
 	             * of pages that are available based on the results per page preferences.
 	             */
-	            $query = "	SELECT a.*, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`id` AS `proxy_id`
+	          $query = "	SELECT a.*, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`id` AS `proxy_id`
 	            			FROM `evaluation_evaluators` AS a
                 			LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS ba
-                			ON a.`evaluator_type` = 'grad_year'
-                			AND ba.`app_id` = ".$db->qstr(AUTH_APP_ID)."
-                			AND a.`evaluator_value` = ba.`role`
+                			ON ba.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+                			JOIN `groups` AS g
+                			ON a.`evaluator_type` = 'cohort'
+                			AND a.`evaluator_value` = g.`group_id`
+                			JOIN `group_members` AS gm
+                			ON g.`group_id` = gm.`group_id`
+                			AND gm.`member_active`
 	            			JOIN `".AUTH_DATABASE."`.`user_data` AS b
 	            			ON ba.`user_id` = b.`id`
+	            			AND (
+	            					gm.`proxy_id` = b.`id`
+	            					OR (
+	            							b.`id` = a.`evaluator_value` 
+	            							AND a.`evaluator_type` = 'proxy_id'
+	            						)
+	            				)
 	            			WHERE a.`evaluation_id` = ".$db->qstr($EVALUATION_ID)."
 	            			ORDER BY b.`lastname`, b.`firstname`";
 	            $evaluation_evaluators = $db->GetAll($query);

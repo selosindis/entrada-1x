@@ -32,6 +32,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_PUBLIC_QUIZZES"))) {
 }
 
 if ($RECORD_ID) {
+	$query = "SELECT `content_type` FROM `quiz_progress` WHERE `qprogress_id` = ".$db->qstr($RECORD_ID);
+	$QUIZ_TYPE = $db->GetOne($query);
 	if ($QUIZ_TYPE == "event") {
 		$query			= "	SELECT a.`quiz_score`, a.`quiz_value`, a.`proxy_id`, b.*, d.`event_id`, d.`event_title` AS `content_title`, d.`event_start`, d.`event_finish`, d.`release_date` AS `event_release_date`, d.`release_until` AS `event_release_until`, d.`course_id`, e.`organisation_id`, f.`quiztype_code`
 							FROM `quiz_progress` AS a
@@ -71,6 +73,12 @@ if ($RECORD_ID) {
 		if ($QUIZ_TYPE == "event") {
 			if ($ENTRADA_ACL->amIAllowed(new EventContentResource($quiz_record["event_id"], $quiz_record["course_id"], $quiz_record["organisation_id"]), "update")) {
 				$is_administrator	= true;
+			}
+		} else {			
+			$query	= "SELECT * FROM `community_members` WHERE `community_id` = ".$db->qstr($quiz_record["community_id"])." AND `proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])." AND `member_active` = '1' AND `member_acl` = '1'";
+			$result	= $db->GetRow($query);
+			if ($result) {				
+				$is_administrator = true;
 			}
 		}
 

@@ -31,7 +31,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 		
 		$task_completions = TaskCompletions::getByTask($TASK_ID, array("order_by" => array(array("lastname","asc"), array("firstname", "asc") ) ));
 		
-		$user = User::get($PROXY_ID);
+		$ENTRADA_USER = User::get($PROXY_ID);
 		
 		$facsecpol = $task->getFacultySelectionPolicy();
 		$assocfac = $task->getAssociatedFaculty();
@@ -96,7 +96,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 				$recipients_to_complete = $_POST['complete_verify'];
 				if ($recipients_to_complete && is_array($recipients_to_complete)){
 					foreach ($recipients_to_complete as $recipient_id) {
-						$updates[$recipient_id]["verifier_id"] = $user->getID();
+						$updates[$recipient_id]["verifier_id"] = $ENTRADA_USER->getID();
 						$updates[$recipient_id]["verified_date"] = $cur_time;
 						$updates[$recipient_id]["completed_date"] = ($updates[$recipient_id]["completed_date"]) ? ($updates[$recipient_id]["completed_date"]) : $cur_time;
 						$updates[$recipient_id]["modified"] = 1;
@@ -144,8 +144,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 //															"email" => $recipient->getEmail()),
 //														array(
 //															"to_fullname" => $recipient->getFirstname(). " " . $recipient->getLastname(),
-//															"from_firstname" => $user->getFirstname(),
-//															"from_lastname" => $user->getLastname(),
+//															"from_firstname" => $ENTRADA_USER->getFirstname(),
+//															"from_lastname" => $ENTRADA_USER->getLastname(),
 //															"task_title" => $task->getTitle(),
 //															"application_name" => APPLICATION_NAME . " Task System"
 //															));
@@ -293,7 +293,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 					
 				});
 			</script>
-			<?
+			<?php
 		}
 	} else {
 		header( "refresh:15;url=".ENTRADA_URL."/admin/".$MODULE );

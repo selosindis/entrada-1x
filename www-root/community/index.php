@@ -122,6 +122,7 @@ if (!$LOGGED_IN && (isset($_GET["auth"]) && $_GET["auth"] == "true")) {
 	
 		$auth = new AuthSystem((((defined("AUTH_DEVELOPMENT")) && (AUTH_DEVELOPMENT != "")) ? AUTH_DEVELOPMENT : AUTH_PRODUCTION));	
 		$auth->setAppAuthentication(AUTH_APP_ID, AUTH_USERNAME, AUTH_PASSWORD);
+		$auth->setEncryption(AUTH_ENCRYPTION_METHOD);
 		$auth->setUserAuthentication($username, $password, AUTH_METHOD);
 		$result = $auth->Authenticate(array("id", "firstname", "lastname", "email", "role", "group", "username", "prefix". "telephone", "expires", "lastlogin", "privacy_level"));
 	
@@ -347,7 +348,7 @@ if ($COMMUNITY_URL) {
 				$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/windows/window.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 				$HEAD[] = "<link href=\"".ENTRADA_URL."/css/windows/default.css\" rel=\"stylesheet\" type=\"text/css\" />";
 				$HEAD[] = "<link href=\"".ENTRADA_URL."/css/windows/medtech.css\" rel=\"stylesheet\" type=\"text/css\" />";
-				
+
 				/**
 				 * Start another output buffer to collect the page contents.
 				 */
@@ -453,6 +454,7 @@ if ($COMMUNITY_URL) {
 						$sidebar_html .= "	<li class=\"admin\"><a href=\"".ENTRADA_URL."/communities?section=modify&amp;community=".$COMMUNITY_ID."\" style=\"font-weight: bold\">Manage Community</a></li>\n";
 						$sidebar_html .= "	<li class=\"admin\"><a href=\"".ENTRADA_URL."/communities?section=members&amp;community=".$COMMUNITY_ID."\" style=\"font-weight: bold\">Manage Members</a></li>\n";
 						$sidebar_html .= "	<li class=\"admin\"><a href=\"".COMMUNITY_URL.$COMMUNITY_URL.":pages\" style=\"font-weight: bold\">Manage Pages</a></li>\n";
+						$sidebar_html .= "	<li class=\"admin\"><a href=\"".ENTRADA_URL."/communities/reports?community=".$COMMUNITY_ID."\" style=\"font-weight: bold\">Community Reports</a></li>\n";
 						$sidebar_html .= "</ul>\n";
 
 						new_sidebar_item("Admin Centre", $sidebar_html, "community-admin", "open");
@@ -548,7 +550,7 @@ if ($COMMUNITY_URL) {
 							}
 							
 							$MODULE_TITLE	= (isset($COMMUNITY_PAGES["details"][$PAGE_URL]) ? $COMMUNITY_PAGES["details"][$PAGE_URL]["menu_title"] : "Pages");
-							
+
 							if ((@file_exists($module_file = COMMUNITY_ABSOLUTE.DIRECTORY_SEPARATOR."modules".DIRECTORY_SEPARATOR.$COMMUNITY_MODULE.".inc.php")) && (@is_readable($module_file))) {
 								require_once($module_file);
 							} else {
@@ -608,7 +610,10 @@ if ($COMMUNITY_URL) {
 				$PAGE_META["title"] = $community_details["community_title"];
 				$PAGE_META["description"] = trim(str_replace(array("\t", "\n", "\r"), " ", html_encode(strip_tags($community_details["community_description"]))));
 				$PAGE_META["keywords"] = trim(str_replace(array("\t", "\n", "\r"), " ", html_encode(strip_tags($community_details["community_keywords"]))));"";
-
+				
+				$member_name = html_encode($_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]);
+				$date_joined = "Joined: ".date("Y-m-d", $COMMUNITY_MEMBER_SINCE);
+				
 				$smarty->assign("template_relative", COMMUNITY_RELATIVE."/templates/".$COMMUNITY_TEMPLATE);
 				$smarty->assign("sys_community_relative", COMMUNITY_RELATIVE);
 				
@@ -618,7 +623,7 @@ if ($COMMUNITY_URL) {
 
 				$smarty->assign("site_template", $COMMUNITY_TEMPLATE);
 				$smarty->assign("site_theme", ((isset($community_details["community_theme"])) ? $community_details["community_theme"] : ""));
-
+				
 				$smarty->assign("site_default_charset", DEFAULT_CHARSET);
 
 				$smarty->assign("site_community_url", COMMUNITY_URL.$COMMUNITY_URL);
@@ -630,6 +635,17 @@ if ($COMMUNITY_URL) {
 				$smarty->assign("site_total_admins", communities_count_members(1));
 
 				$smarty->assign("site_primary_navigation", $COMMUNITY_PAGES["navigation"]);
+				$show_tertiary_sideblock = false;
+				foreach ($COMMUNITY_PAGES["navigation"] as $top_level_page) {
+					if (count($top_level_page["link_children"]) > 0) {
+						foreach ($top_level_page["link_children"] as $child_page) {
+							if (($child_page["link_selected"] || $child_page["child_selected"]) && count($child_page["link_children"])) {
+								$show_tertiary_sideblock = true;
+							}
+						}
+					}
+				}
+				$smarty->assign("show_tertiary_sideblock", $show_tertiary_sideblock);
 				$smarty->assign("site_navigation_items_per_column", 4);
 				$smarty->assign("site_breadcrumb_trail", "%BREADCRUMB%");
 
@@ -646,6 +662,7 @@ if ($COMMUNITY_URL) {
 					}
 				}
 
+				$smarty->assign("community_id", $COMMUNITY_ID);
 				$smarty->assign("page_title", "%TITLE%");
 				$smarty->assign("page_description", "%DESCRIPTION%");
 				$smarty->assign("page_keywords", "%KEYWORDS%");
@@ -654,8 +671,11 @@ if ($COMMUNITY_URL) {
 				$smarty->assign("page_content", $PAGE_CONTENT);
 				
 				$smarty->assign("user_is_anonymous", (($LOGGED_IN) ? false : true));
+				$smarty->assign("is_logged_in", $LOGGED_IN);
 				$smarty->assign("user_is_member", $COMMUNITY_MEMBER);
 				$smarty->assign("user_is_admin", $COMMUNITY_ADMIN);
+				$smarty->assign("date_joined", $date_joined);
+				$smarty->assign("member_name", $member_name);
 				
 				$smarty->display("index.tpl");
 			}

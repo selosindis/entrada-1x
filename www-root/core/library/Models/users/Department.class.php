@@ -14,8 +14,8 @@
  * 
  * Class to manage information related to a department such as dept. title, address, and structure in a hierarchy
  * @author Jonathan Fingland
- * 
-*/
+ *
+ */
 class Department {
 	private  $department_id,
 			 $organisation_id,
@@ -222,7 +222,7 @@ class Department {
 	public function getOrganisation() {
 		return Organisation::get($this->organisation_id);
 	}
-	
+
 	/**
 	 * Returns the parent Department, if any 
 	 * @return Department

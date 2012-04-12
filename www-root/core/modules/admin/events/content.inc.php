@@ -40,19 +40,19 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
+
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/eventtypes_list.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
-?>
-<script type="text/javascript" charset="utf-8">
-	var EVENT_LIST_STATIC_TOTAL_DURATION = true;
-</script>
-<?php
+	?>
+	<script type="text/javascript">
+		var EVENT_LIST_STATIC_TOTAL_DURATION = true;
+	</script>
+	<?php
 	if ($EVENT_ID) {
 		$query		= "	SELECT a.*, b.`organisation_id`
 						FROM `events` AS a
 						LEFT JOIN `courses` AS b
 						ON b.`course_id` = a.`course_id`
-						WHERE a.`event_id` = ".$db->qstr($EVENT_ID)."
-						AND b.`course_active` = '1'";
+						WHERE a.`event_id` = ".$db->qstr($EVENT_ID);
 		$event_info	= $db->GetRow($query);
 		if ($event_info) {
 			if (!$ENTRADA_ACL->amIAllowed(new EventContentResource($event_info["event_id"], $event_info["course_id"], $event_info["organisation_id"]), "update")) {
@@ -63,12 +63,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			} else {
 				$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/events?".replace_query(array("section" => "content", "id" => $EVENT_ID)), "title" => "Event Content");
 
-				$HEAD[]		= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/tabpane/tabpane.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
-				$HEAD[]		= "<link href=\"".ENTRADA_URL."/css/tabpane.css?release=".html_encode(APPLICATION_VERSION)."\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />\n";
-				$HEAD[]		= "<link href=\"".ENTRADA_URL."/css/tree.css?release=".html_encode(APPLICATION_VERSION)."\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />\n";
-				$HEAD[]		= "<style type=\"text/css\">.dynamic-tab-pane-control .tab-page {height:auto;}</style>\n";
-				$HEAD[]		= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/picklist.js\"></script>\n";
-				$HEAD[]		= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/scriptaculous/tree.js\"></script>\n";
+				$HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/picklist.js\"></script>\n";
 
 				/**
 				 * Load the rich text editor.
@@ -128,7 +123,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				$clinical_presentations_list = array();
 				$clinical_presentations = array();
 
-				$results = fetch_mcc_objectives(0, array(), $event_info["course_id"]);
+				$results = fetch_clinical_presentations(0, array(), $event_info["course_id"]);
 				if ($results) {
 					foreach ($results as $result) {
 						$clinical_presentations_list[$result["objective_id"]] = $result["objective_name"];
@@ -139,12 +134,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					if (((isset($_POST["clinical_presentations"])) && (is_array($_POST["clinical_presentations"])) && (count($_POST["clinical_presentations"])))) {
 						foreach ($_POST["clinical_presentations"] as $objective_id) {
 							if ($objective_id = clean_input($objective_id, array("trim", "int"))) {
-								$query	= "	SELECT a.`objective_id`
+								$query	= "SELECT a.`objective_id`
 											FROM `global_lu_objectives` AS a
 											JOIN `course_objectives` AS b
 											ON b.`course_id` = ".$event_info["course_id"]."
 											AND a.`objective_id` = b.`objective_id`
+											JOIN `objective_organisation` AS c
+											ON a.`objective_id` = c.`objective_id`
 											WHERE a.`objective_id` = ".$db->qstr($objective_id)."
+											AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
 											AND b.`objective_type` = 'event'
 											AND a.`objective_active` = '1'";
 								$result	= $db->GetRow($query);
@@ -176,7 +174,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				/**
 				 * Fetch the Curriculum Objective details.
 				 */
-				$curriculum_objectives_list = courses_fetch_objectives(array($event_info["course_id"]), 1, false, false, $EVENT_ID, true);
+				list($curriculum_objectives_list,$top_level_id) = courses_fetch_objectives($event_info["organisation_id"],array($event_info["course_id"]),-1, 1, false, false, $EVENT_ID, true);
+				
 				$curriculum_objectives = array();
 
 				if (isset($_POST["checked_objectives"]) && ($checked_objectives = $_POST["checked_objectives"]) && (is_array($checked_objectives))) {
@@ -207,7 +206,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				$event_eventtypes_list	= array();
 				$event_eventtypes		= array();
 
-				$query		= "SELECT * FROM `events_lu_eventtypes` WHERE `eventtype_active` = '1' ORDER BY `eventtype_order` ASC";
+				$query		= "	SELECT a.* FROM `events_lu_eventtypes` AS a 
+								LEFT JOIN `eventtype_organisation` AS c 
+								ON a.`eventtype_id` = c.`eventtype_id` 
+								LEFT JOIN `".AUTH_DATABASE."`.`organisations` AS b
+								ON b.`organisation_id` = c.`organisation_id` 
+								WHERE b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+								AND a.`eventtype_active` = '1' 
+								ORDER BY a.`eventtype_order`
+				";
+				
 				$results	= $db->GetAll($query);
 				if ($results) {
 					foreach ($results as $result) {
@@ -215,13 +223,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					}
 				}
 
-				$query		= "SELECT * FROM `event_eventtypes` WHERE `event_id` = ".$db->qstr($EVENT_ID)." ORDER BY `eeventtype_id` ASC";
+				$query		= "SELECT a.*, b.`eventtype_title` FROM `event_eventtypes` AS a LEFT JOIN `events_lu_eventtypes` AS b ON a.`eventtype_id` = b.`eventtype_id` WHERE a.`event_id` = ".$db->qstr($EVENT_ID)." ORDER BY `eeventtype_id` ASC";
 				$results	= $db->GetAll($query);
 				$initial_duration = 0;
 				if ($results) {
 					foreach ($results as $result) {
 						$initial_duration += $result["duration"];
-						$event_eventtypes[] = array($result["eventtype_id"], $result["duration"], $event_eventtypes_list[$result["eventtype_id"]]);
+						//$event_eventtypes[] = array($result["eventtype_id"], $result["duration"], $event_eventtypes_list[$result["eventtype_id"]]);
+						$event_eventtypes[] = $result;
 					}
 				}
 				?>
@@ -247,7 +256,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								$query	= "SELECT `eventtype_title` FROM `events_lu_eventtypes` WHERE `eventtype_id` = ".$db->qstr($eventtype_id);
 								$result	= $db->GetRow($query);
 								if ($result) {
-									$event_eventtypes[] = array($eventtype_id, $duration, $result["eventtype_title"]);
+									$event_eventtypes[] = array("eventtype_id"=>$eventtype_id, "duration"=>$duration, "eventtype_title"=>$result["eventtype_title"]);
 								}
 							}
 						}
@@ -255,13 +264,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						$event_duration	= 0;
 						$old_event_duration = 0;
 						foreach($event_eventtypes as $event_type) {
-							$event_duration += $event_type[1];
+							$event_duration += $event_type["duration"];
 						}
 						
 						foreach($old_event_eventtypes as $event_type) {
-							$old_event_duration += $event_type[1];
+							$old_event_duration += $event_type["duration"];
 						}
-
+						
 						if($old_event_duration != $event_duration) {
 							$ERROR++;
 							$ERRORSTR[] = "The modified <strong>Event Types</strong> duration specified is different than the exisitng one, please ensure the event's duration remains the same.";
@@ -307,8 +316,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								$event_duration	= 0;
 
 								foreach($event_eventtypes as $event_type) {
-									$event_finish += ($event_type[1] * 60);
-									$event_duration += $event_type[1];
+									$event_finish += ($event_type["duration"] * 60);
+									$event_duration += $event_type["duration"];
 								}
 					
 								/**
@@ -330,7 +339,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								$query = "DELETE FROM `event_eventtypes` WHERE `event_id` = ".$db->qstr($EVENT_ID);
 								if ($db->Execute($query)) {
 									foreach ($event_eventtypes as $event_type) {
-										if (!$db->AutoExecute("event_eventtypes", array("event_id" => $EVENT_ID, "eventtype_id" => $event_type[0], "duration" => $event_type[1]), "INSERT")) {
+										if (!$db->AutoExecute("event_eventtypes", array("event_id" => $EVENT_ID, "eventtype_id" => $event_type["eventtype_id"], "duration" => $event_type["duration"]), "INSERT")) {
 											$ERROR++;
 											$ERRORSTR[] = "There was an error while trying to save the selected <strong>Event Type</strong> for this event.<br /><br />The system administrator was informed of this error; please try again later.";
 
@@ -369,9 +378,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 									if ((isset($curriculum_objectives)) && (is_array($curriculum_objectives)) && (count($curriculum_objectives))) {
 										foreach ($curriculum_objectives as $objective_id => $objective_text) {
 											if ($objective_id = (int) $objective_id) {
-												$query	= "	SELECT * FROM `global_lu_objectives` 
-															WHERE `objective_id` = ".$db->qstr($objective_id)."
-															AND `objective_active` = '1'";
+												$query	= "SELECT a.* FROM `global_lu_objectives` AS a
+															JOIN `objective_organisation` AS b
+															ON a.`objective_id` = b.`objective_id`
+															WHERE a.`objective_id` = ".$db->qstr($objective_id)."
+															AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+															AND a.`objective_active` = '1'";
 												$result	= $db->GetRow($query);
 												if ($result) {
 													if (!$db->AutoExecute("event_objectives", array("event_id" => $EVENT_ID, "objective_details" => $objective_text, "objective_id" => $objective_id, "objective_type" => "course", "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT")) {
@@ -387,7 +399,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 										/**
 										 * Changes have been made so update the $curriculum_objectives_list variable.
 										 */
-										$curriculum_objectives_list = courses_fetch_objectives(array($event_info["course_id"]), 1, false, false, $EVENT_ID, true);
+										list($curriculum_objectives_list,$top_level_id) = courses_fetch_objectives($event_info["organisation_id"],array($event_info["course_id"]), -1, 1, false, false, $EVENT_ID, true);
 									}
 								}
 
@@ -426,12 +438,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								/**
 								 * Refresh the event_info array based on new details.
 								 */
-								$query		= "	SELECT a.*, b.`organisation_id`
-												FROM `events` AS a
-												LEFT JOIN `courses` AS b
-												ON b.`course_id` = a.`course_id`
-												WHERE a.`event_id` = ".$db->qstr($EVENT_ID)."
-												AND b.`course_active` = '1'";
+								$query = "	SELECT a.*, b.`organisation_id`
+											FROM `events` AS a
+											LEFT JOIN `courses` AS b
+											ON b.`course_id` = a.`course_id`
+											WHERE a.`event_id` = ".$db->qstr($EVENT_ID);
 								$event_info	= $db->GetRow($query);
 								if (!$event_info) {
 									application_log("error", "After updating the text content of event_id [".$EVENT_ID."] the select query failed.");
@@ -606,6 +617,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 						fileWizard.focus();
 					}
+						
 				}
 
 				function openLinkWizard(eid, lid, action) {
@@ -746,17 +758,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					echo "</div>\n";
 				}
 
-				echo "<div class=\"content-small\">";
-				if ($event_info["course_id"]) {
-					$curriculum_path = curriculum_hierarchy($event_info["course_id"]);
-
-					if ((is_array($curriculum_path)) && (count($curriculum_path))) {
-						echo implode(" &gt; ", $curriculum_path);
-					}
-				} else {
-					echo "No Associated Course";
-				}
-				echo "</div>\n";
+				echo "<div class=\"content-small\">".fetch_course_path($event_info["course_id"])."</div>\n";
 				echo "<h1 class=\"event-title\">".html_encode($event_info["event_title"])."</h1>\n";
 
 				if ($SUCCESS) {
@@ -838,7 +840,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								<td style="vertical-align: top">Associated Faculty</td>
 								<td>
 									<?php
-									$query		= "	SELECT a.`proxy_id`, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`email`
+									$query		= "	SELECT a.`proxy_id`, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, a.`contact_role`, b.`email`
 													FROM `event_contacts` AS a
 													LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
 													ON b.`id` = a.`proxy_id`
@@ -848,7 +850,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 									$results	= $db->GetAll($query);
 									if ($results) {
 										foreach ($results as $key => $result) {
-											echo "<a href=\"mailto:".html_encode($result["email"])."\">".html_encode($result["fullname"])."</a><br />\n";
+											echo "<a href=\"mailto:".html_encode($result["email"])."\">".html_encode($result["fullname"])."</a> - ".(($result["contact_role"] == "ta")?"Teacher's Assistant":html_encode(ucwords($result["contact_role"])))."<br />\n";
 										}
 									} else {
 										echo "To Be Announced";
@@ -877,12 +879,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                     echo "<ol id=\"duration_container\" class=\"sortableList\" style=\"display: none\">\n";
                                     if (is_array($event_eventtypes)) {
                                         foreach ($event_eventtypes as $eventtype) {
-                                            echo "<li id=\"type_".(int) $eventtype[0]."\" class=\"\">".html_encode($eventtype[2])."
+                                            echo "<li id=\"type_".(int) $eventtype["eventtype_id"]."\" class=\"\">".html_encode($eventtype["eventtype_title"])."
                                                 <a href=\"#\" onclick=\"$(this).up().remove(); cleanupList(); return false;\" class=\"remove\">
                                                     <img src=\"".ENTRADA_URL."/images/action-delete.gif\">
                                                 </a>
                                                 <span class=\"duration_segment_container\">
-                                                    Duration: <input class=\"duration_segment\" name=\"duration_segment[]\" onchange=\"cleanupList();\" value=\"".(int) $eventtype[1]."\"> minutes
+                                                    Duration: <input class=\"duration_segment\" name=\"duration_segment[]\" onchange=\"cleanupList();\" value=\"".(int) $eventtype["duration"]."\"> minutes
                                                 </span>
                                             </li>";
                                         }
@@ -917,14 +919,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							</tr>
 						</tfoot>
 						<tbody>
-							<tr>
-								<td>Phase / Term</td>
-								<td><?php echo strtoupper($event_info["event_phase"]); ?></td>
-							</tr>
-							<tr>
-								<td style="white-space: nowrap">Course</td>
-								<td style="white-space: nowrap"><?php echo (($event_info["course_id"]) ? "<a href=\"".ENTRADA_URL."/courses?id=".$event_info["course_id"]."\">".course_name($event_info["course_id"])."</a> " : "Not Yet Filed"); ?></td>
-							</tr>
 							<tr>
 								<td colspan="2">&nbsp;</td>
 							</tr>
@@ -1088,7 +1082,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								echo "	<td style=\"vertical-align: top\">\n";
 								echo "		<div id=\"course-objectives-section\">\n";
 								echo "			<strong>The learner will be able to:</strong>\n";
-								echo			event_objectives_in_list($curriculum_objectives_list, 1, true, false, 1, false);
+								echo			event_objectives_in_list($curriculum_objectives_list, $top_level_id,$top_level_id, true, false, 1, false);
 								echo "		</div>\n";
 								echo "	</td>\n";
 								echo "</tr>\n";
@@ -1099,8 +1093,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							<tr>
 								<td colspan="2">&nbsp;</td>
 							</tr>
-							<tr>
-								<td colspan="2">
+						</tbody>
+					</table>
 									<table style="width: 100%" cellspacing="0" summary="List of ED10">
 										<colgroup>
 											<col style="width: 55%" />
@@ -1108,6 +1102,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 											<col style="width: 15%" />
 											<col style="width: 15%" />
 										</colgroup>
+										<tfoot>
+											<tr>
+												<td colspan="4" style="text-align: right; padding-top: 5px"><input type="submit" value="Save" /></td>
+											</tr>
+										</tfoot>
 										<tr>
 											<td colspan="4">
 												<h2>Event Topics</h2>
@@ -1121,12 +1120,26 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 											<td><span style="font-weight: bold; color: #003366;">Time</span></td>
 										</tr>
 										<?php
-										$query			= "	SELECT a.`topic_id`, a.`topic_name`, b.`topic_coverage`, b.`topic_time`
+										/*$query			= "	SELECT a.`topic_id`, a.`topic_name`, b.`topic_coverage`, b.`topic_time`
 															FROM `events_lu_topics` AS a
 															LEFT JOIN `event_topics` AS b
 															ON a.`topic_id` = b.`topic_id`
 															AND b.`event_id` = ".$db->qstr($EVENT_ID)."
-															ORDER BY a.`topic_name` ASC";
+															ORDER BY a.`topic_name` ASC";*/
+										
+										$query			= "	SELECT a.`topic_id`,a.`topic_name`, e.`topic_coverage`,e.`topic_time` 
+															FROM `events_lu_topics` AS a 
+															LEFT JOIN `topic_organisation` AS b 
+															ON a.`topic_id` = b.`topic_id` 
+															LEFT JOIN `courses` AS c 
+															ON b.`organisation_id` = c.`organisation_id` 
+															LEFT JOIN `events` AS d 
+															ON c.`course_id` = d.`course_id` 
+															LEFT JOIN `event_topics` AS e 
+															ON d.`event_id` = e.`event_id` 
+															AND a.`topic_id` = e.`topic_id` 
+															WHERE d.`event_id` = ".$db->qstr($EVENT_ID);
+										
 										$topic_results	= $db->GetAll($query);
 										if ($topic_results) {
 											foreach ($topic_results as $topic_result) {
@@ -1157,12 +1170,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 												echo "	</td>\n";
 												echo "</tr>\n";
 											}
+											echo "<tr><td colspan=\"2\">&nbsp;</td></tr>";
+										}
+										else{
+											$NOTICE++;
+											$NOTICESTR[] = "There are no Hot Topics associated with this organisation.";
+											echo "<tr><td colspan=\"4\">".display_notice()."</td></tr>";
+												
+											
 										}
 										?>
 										</table>
-									</td></tr>
-						</tbody>
-	  </table>
 			</div>
 				</form>
 
@@ -1377,10 +1395,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						echo "<tbody>\n";
 						if ($results) {
 							foreach ($results as $result) {
+								$completed_attempts = $db->GetOne("SELECT COUNT(DISTINCT `proxy_id`) FROM `quiz_progress` WHERE `progress_value` = 'complete' AND `aquiz_id` = ".$db->qstr($result["aquiz_id"]));
 								echo "<tr>\n";
 								echo "	<td class=\"modified\" style=\"width: 50px; white-space: nowrap\">\n";
 								echo "		<input type=\"checkbox\" name=\"delete[]\" value=\"".$result["aquiz_id"]."\" style=\"vertical-align: middle\" />\n";
-								if ($result["accesses"] > 0) {
+								if ($completed_attempts > 0) {
 									echo "	<a href=\"".ENTRADA_URL."/admin/quizzes?section=results&amp;id=".$result["aquiz_id"]."\"><img src=\"".ENTRADA_URL."/images/view-stats.gif\" width=\"16\" height=\"16\" alt=\"View results of ".html_encode($result["quiz_title"])."\" title=\"View results of ".html_encode($result["quiz_title"])."\" style=\"vertical-align: middle\" border=\"0\" /></a>\n";
 								} else {
 									echo "	<img src=\"".ENTRADA_URL."/images/view-stats-disabled.gif\" width=\"16\" height=\"16\" alt=\"No completed quizzes at this time.\" title=\"No completed quizzes at this time.\" style=\"vertical-align: middle\" border=\"0\" />\n";
@@ -1392,7 +1411,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								echo "	</td>\n";
 								echo "	<td class=\"date-small\"><span class=\"content-date\">".(((int) $result["release_date"]) ? date(DEFAULT_DATE_FORMAT, $result["release_date"]) : "No Restrictions")."</span></td>\n";
 								echo "	<td class=\"date-small\"><span class=\"content-date\">".(((int) $result["release_until"]) ? date(DEFAULT_DATE_FORMAT, $result["release_until"]) : "No Restrictions")."</span></td>\n";
-								echo "	<td class=\"accesses\" style=\"text-align: center\">".$result["accesses"]."</td>\n";
+								echo "	<td class=\"accesses\" style=\"text-align: center\">".$completed_attempts."</td>\n";
 								echo "</tr>\n";
 							}
 						} else {

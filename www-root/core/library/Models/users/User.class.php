@@ -22,9 +22,9 @@
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
 */
-require_once("Models/utility/SimpleCache.class.php");
+
 require_once("Models/organisations/Organisation.class.php");
-require_once("Models/users/GraduatingClass.class.php");
+require_once("Models/users/Cohort.class.php");
 
 /**
  * User class with basic information and access to user related info
@@ -41,6 +41,7 @@ class User {
 			$lastname,
 			$number,
 			$grad_year,
+			$cohort,
 			$entry_year,
 			$password,
 			$organisation_id,
@@ -64,7 +65,10 @@ class User {
 			$privacy_level,
 			$notifications,
 			$office_hours,
-			$clinical;
+			$clinical,
+			$active_organisation,
+			$all_organisations;
+
 	
 	private $group, $role;
 
@@ -98,8 +102,16 @@ class User {
 	 * Returns the id of the user
 	 * @return int
 	 */
-	public function getID() {
+	public function getProxyId() {
 		return $this->id;
+	}
+
+	/**
+	 * Returns the id of the user
+	 * @return int
+	 */
+	public function getID() {
+		return $this->getProxyId();
 	}
 		
 	/**
@@ -119,12 +131,28 @@ class User {
 	}
 	
 	/**
-	 * Returns the entire class of the same grad year
-	 * @return GraduatingClass
+	 * Returns the cohort of the user, if available
+	 * @return int
 	 */
-	function getGraduatingClass() {
-		if ($this->grad_year) {
-			return GraduatingClass::get($this->grad_year);
+	function getCohort() {
+		return $this->cohort;
+	}
+	
+	/**
+	 * Sets the cohort of the user, if available
+	 * @param int $value : The cohort with which the given user is associated.
+	 */
+	public function setCohort($value) {
+		$this->cohort = $value;
+	}
+	
+	/**
+	 * Returns the entire class of the same cohort
+	 * @return Cohort
+	 */
+	function getFullCohort() {
+		if ($this->cohort) {
+			return Cohort::get($this->cohort);
 		}
 	}
 	
@@ -219,11 +247,13 @@ class User {
 	}
 	
 	/**
+	 * Not supported yet.
+	 * 
 	 * @return Organisation
 	 */
-	function getOrganisation() {
-		return Organisation::get($this->organisation_id);
-	}
+//	function getOrganisation() {
+//		return Organisation::get($this->organisation_id);
+//	}
 	
 	/**
 	 * Returns the ID of the organisation to which the user belongs
@@ -240,6 +270,53 @@ class User {
 	function getPhotos() {
 		return UserPhotos::get($this->getID());
 	}
+
+	/**
+	 * Returns the currently active organisation.
+	 * If not set then it returns the default org for this user found
+	 * in the user_data table.
+	 *
+	 * @return int
+	 */
+	function getActiveOrganisation() {
+		if ($this->active_organisation) {
+			return $this->active_organisation;
+		}
+		else if ($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"]) {
+			return $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"];
+		}
+		else {
+			return $this->organisation_id;
+		}
+	}
+
+	/**
+	 * Sets the active organisation.
+	 * 
+	 * @param <String> $value - the active, i.e., current org
+	 */
+	public function setActiveOrganisation($value){
+		$this->active_organisation = $value;
+	}
+
+	/**
+	 * Returns an array of all the organisation that this user
+	 * belongs to.
+	 *
+	 * @return array
+	 */
+	function getAllOrganisations() {
+		return $this->all_organisations;
+	}
+
+	/**
+	 * Sets the array of all orgs this user belongs to.
+	 *
+	 * @param <array> $value
+	 */
+	function setAllOrganisations($value) {
+		$this->all_organisations = $value;
+	}
 	
 	/**
 	 * 
@@ -247,16 +324,44 @@ class User {
 	 * @return User
 	 */
 	public static function get($proxy_id) {
-		$cache = SimpleCache::getCache();
-		$user = $cache->get("User",$proxy_id);
-		if (!$user) {
-			global $db;
-			$query = "SELECT a.*, b.`group`, b.`role` FROM `".AUTH_DATABASE."`.`user_data` a LEFT JOIN `".AUTH_DATABASE."`.`user_access` b on a.`id`=b.`user_id` and b.`app_id`=? WHERE a.`id` = ?";
-			$result = $db->getRow($query, array(AUTH_APP_ID,$proxy_id));
-			if ($result) {
-				$user = self::fromArray($result);  			
-			}		
-		} 
+		$user = new User();
+		global $db;
+		$query = "SELECT a.*, b.`group`, b.`role`
+					  FROM `" . AUTH_DATABASE . "`.`user_data` a
+					  LEFT JOIN `" . AUTH_DATABASE . "`.`user_access` b
+						  on a.`id`=b.`user_id` and b.`app_id`=?
+					  WHERE a.`id` = ?";
+		$result = $db->getRow($query, array(AUTH_APP_ID, $proxy_id));
+
+		if ($result) {
+			$user = self::fromArray($result, $user);
+		}
+		
+		$query = "SELECT a.`group_id` FROM `groups` AS a
+					JOIN `group_members` AS b
+					ON a.`group_id` = b.`group_id`
+					WHERE a.`group_type` = 'cohort'
+					AND b.`proxy_id` = ?";
+		$result = $db->getOne($query, array($proxy_id));
+		if ($result) {
+			$user->setCohort($result);
+		}
+
+		//get all of the users orgs
+		$query = "SELECT b.`organisation_id`, b.`organisation_title`
+					  FROM `" . AUTH_DATABASE . "`.`user_organisations` a
+					  JOIN `" . AUTH_DATABASE . "`.`organisations` b
+						  on a.`organisation_id` = b.`organisation_id`
+					  WHERE a.`proxy_id` = ?";
+		$results = $db->getAll($query, array($proxy_id));
+
+		//every user should have at least one org.
+		if ($results) {
+			foreach ($results as $result) {
+				$organisation_list[$result["organisation_id"]] = html_encode($result["organisation_title"]);
+			}
+			$user->setAllOrganisations($organisation_list);
+		}
 		return $user;
 	}
 	
@@ -265,14 +370,7 @@ class User {
 	 * @param array $arr
 	 * @return User
 	 */
-	public static function fromArray(array $arr, User $user = null) {
-		$cache = SimpleCache::getCache();
-		if (is_null($user)) {
-			$user = $cache->get("User", $arr['id']); //re-use a cached copy if we can. helps prevent inconsistent objects 
-			if (!$user) {
-				$user = new User();
-			}
-		}
+	public static function fromArray(array $arr, User $user) {
 		$user->id = $arr['id'];
 		$user->username = $arr['username'];
 		$user->firstname = $arr['firstname'];
@@ -302,11 +400,8 @@ class User {
 		$user->office_hours = $arr['office_hours'];
 		$user->clinical = $arr['clinical'];
 		$user->group = $arr['group'];
-		$user->role = $arr['role'];
-		
-		
-		//be sure to cache this whenever created.
-		$cache->set($user,"User",$user->id);
+		$user->role = $arr['role'];		
+
 		return $user;
 	}
 	
@@ -323,7 +418,7 @@ class User {
 	 */
 	public function getGroup() {
 		if (is_null($this->group) && !$this->getAccess()) {
-				return;
+			return;
 		}
 		return $this->group; 
 	}
@@ -334,7 +429,7 @@ class User {
 	 */
 	public function getRole() {
 		if (is_null($this->role) && !$this->getAccess()) {
-				return;
+			return;
 		}
 		return $this->role; 
 	}
@@ -345,13 +440,18 @@ class User {
 	 */
 	private function getAccess() {
 		global $db;
-		$query = "SELECT * FROM `".AUTH_DATABASE."`.`user_access` WHERE `user_id` = ? AND `account_active` = 'true'
-				  AND (`access_starts` = '0' OR `access_starts` < ?) AND (`access_expires` = '0' OR `access_expires` >=  ?)
-				  AND `app_id` = ?";
+		$query = "	SELECT *
+					FROM `".AUTH_DATABASE."`.`user_access`
+					WHERE `user_id` = ?
+					AND `account_active` = 'true'
+					AND (`access_starts` = '0' OR `access_starts` < ?)
+					AND (`access_expires` = '0' OR `access_expires` >= ?)
+					AND `app_id` = ?";
 		$result = $db->getRow($query, array($this->getID(), time(), time(), AUTH_APP_ID));
 		if ($result) {
-			$this->group = $result['group'];
-			$this->role = $result['role'];
+			$this->group = $result["group"];
+			$this->role = $result["role"];
+			
 			return true;
 		}			
 	}
@@ -476,4 +576,5 @@ class User {
 		}
 		return new Users($users);
 	}
+
 }

@@ -11,14 +11,8 @@
  *
 */
 ?>
-			</div>
-		</td>
-	</tr>
-</tbody>
-<tbody class="no-printing">
-	<tr>
-		<td style="width: 200px">&nbsp;</td>
-		<td style="width: 750px; padding-left: 5px; padding-top: 10px">
+		</div>
+		<div class="no-printing">
 			<span class="copyright">%LASTUPDATED%<?php echo COPYRIGHT_STRING; ?></span> <a href="<?php echo ENTRADA_URL; ?>/privacy_policy" class="copyright">Privacy Policy</a>.
 			<?php
 			$time_end	= getmicrotime();
@@ -26,20 +20,24 @@
 				echo "<br /><span class=\"copyright\">Rendered and loaded page in ".round(($time_end - $time_start), 4)." seconds.</span>\n";
 			}
 			?>
-		</td>
-	</tr>
-</tbody>
-</table>
-<?php if (((!defined("DEVELOPMENT_MODE")) || (!(bool) DEVELOPMENT_MODE)) && (defined("GOOGLE_ANALYTICS_CODE")) && (GOOGLE_ANALYTICS_CODE != "")) : ?>
+		</div>
+	</div>
+	<div class="clear"></div>
+</div>
+<?php
+if (((!defined("DEVELOPMENT_MODE")) || (!(bool) DEVELOPMENT_MODE)) && (defined("GOOGLE_ANALYTICS_CODE")) && (GOOGLE_ANALYTICS_CODE != "")) {
+	?>
 	<script type="text/javascript">
-		var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
-		document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+	var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+	document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
 	</script>
 	<script type="text/javascript">
-		var pageTracker = _gat._getTracker("<?php echo GOOGLE_ANALYTICS_CODE; ?>");
-		pageTracker._initData();
-		pageTracker._trackPageview();
+	var pageTracker = _gat._getTracker("<?php echo GOOGLE_ANALYTICS_CODE; ?>");
+	pageTracker._initData();
+	pageTracker._trackPageview();
 	</script>
-<?php endif; ?>
+	<?php
+}
+?>
 </body>
 </html>

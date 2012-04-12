@@ -31,7 +31,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 		header("Location: ".ENTRADA_URL);
 		exit;
 } else {
-	echo "<h1>Competencies by Course</h1>";
+	echo "<h1>Competencies by " . $module_singular_name . "</h1>";
 	$objectives = objectives_build_course_competencies_array();
 	
 	if (!empty($objectives["courses"]) && !empty($objectives["competencies"])) {
@@ -57,16 +57,14 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 		.objectives {
 			border-right: 1px solid #EBEBEB;
 		}
-		li {
-			margin-top: 10px;
-		}
 		</style>
 		<table class="tableList" cellspacing="0" summary="List of Objectives">
 			<tbody>
 				<tr style="height: 200px;">
 					<td class="modified">&nbsp;</td>
 					<td class="title" style="padding-bottom: 20px; border-right: none;"><h3>Courses</h3></td>
-					<td class="title" style="padding: 0 0 80px 50px;"><h3 class="vertical-text">Competencies</h3></td>
+					<td class="title" style="padding: 0 0 80px 50px;width:177px;"><h3 class="vertical-text">Competencies</h3></td>
+
 					<?php
 						foreach ($objectives["competencies"] as $competency_id => $competency) {
 							?>

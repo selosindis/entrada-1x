@@ -1,6 +1,6 @@
 <?php
 /**
- * $Id: rpc.php 1130 2010-04-20 17:10:49Z simpson $
+ * $Id: rpc.php 915 2008-09-03 08:45:28Z spocke $
  *
  * @package MCManager.includes
  * @author Moxiecode

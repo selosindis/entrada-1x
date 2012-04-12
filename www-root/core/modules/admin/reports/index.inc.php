@@ -62,6 +62,14 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 			<a href="<?php echo ENTRADA_URL; ?>/admin/reports?section=event-types-by-course">Learning Event Types by Course</a><br />
 			A detailed report containing a learning event type breakdown by Course.
 		</li>
+		<li>
+			<a href="<?php echo ENTRADA_URL; ?>/admin/reports?section=course-summary">Course Summary Report</a><br />
+			A report containing a summary of objectives, presentations, and hot topics for each learning event.
+		</li>
+		<li>
+			<a href="<?php echo ENTRADA_URL; ?>/admin/reports?section=curriculum-review">Curriculum Review Report</a><br />
+			A report containing a summary of objectives, and presentations for each event.
+		</li>
 	</ol>
 
 	<h2 style="color: #669900">Teaching Event Reports</h2>

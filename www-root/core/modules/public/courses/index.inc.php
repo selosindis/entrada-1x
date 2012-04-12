@@ -24,15 +24,14 @@
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
 */
-
 if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 	exit;
 } elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 		header("Location: ".ENTRADA_URL);
 		exit;
 } else {
-	
-	$BREADCRUMB[]	= array("url" => ENTRADA_URL."/".$MODULE, "title" => "View Courses");
+
+	$BREADCRUMB[]	= array("url" => ENTRADA_URL."/".$MODULE, "title" => "View " . $module_title);
 
 	/**
 	 * Check for groups which have access to the administrative side of this module
@@ -67,30 +66,22 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 	
 		new_sidebar_item("Display Style", $sidebar_html, "display-style", "open");
 	}
-
-	$COURSE_LIST	= array();
-
-	$query		= "	SELECT * FROM `courses` 
-					WHERE `organisation_id`=".$db->qstr($ORGANISATION_ID)." 
-					AND `course_active` = '1'
-					ORDER BY `course_name` ASC";
-	$results	= $db->GetAll($query);
-	if ($results) {
-		foreach ($results as $result) {
-			if ($ENTRADA_ACL->amIAllowed(new CourseResource($result["course_id"], $result["organisation_id"]), 'read')) {
-				$COURSE_LIST[$result["course_id"]] = html_encode($result["course_name"].(($result["course_code"]) ? ": ".$result["course_code"] : ""));
-			}
+	if(!$ORGANISATION_ID){
+		$query = "SELECT `organisation_id` FROM `courses` WHERE `course_id` = ".$db->qstr($COURSE_ID);
+		if($result = $db->GetOne($query)){
+			$ORGANISATION_ID = $result;
+			$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"] = $result;
 		}
+		else
+			$ORGANISATION_ID	= $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"];
 	}
+	
+	$COURSE_LIST = array();
 
-	$ORGANISATION_LIST	= array();
-	$query		= "SELECT `organisation_id`, `organisation_title` FROM `".AUTH_DATABASE."`.`organisations` ORDER BY `organisation_title` ASC";
-	$results	= $db->GetAll($query);
+	$results = courses_fetch_courses(true, false);
 	if ($results) {
 		foreach ($results as $result) {
-			if ($ENTRADA_ACL->amIAllowed("resourceorganisation".$result["organisation_id"], "read")) {
-				$ORGANISATION_LIST[$result["organisation_id"]] = html_encode($result["organisation_title"]);
-			}
+			$COURSE_LIST[$result["course_id"]] = html_encode($result["course_name"].(($result["course_code"]) ? ": ".$result["course_code"] : ""));
 		}
 	}
 
@@ -98,18 +89,19 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 	 * If we were going into the $COURSE_ID
 	 */
 	if ($COURSE_ID) {
-		$course_community = $db->GetOne("	SELECT b.`community_url` FROM `community_courses` AS a
-											JOIN `communities` AS b
-											ON a.`community_id` = b.`community_id`
-											WHERE a.`course_id` = ".$db->qstr($COURSE_ID));
+		$query = "	SELECT b.`community_url` FROM `community_courses` AS a
+					JOIN `communities` AS b
+					ON a.`community_id` = b.`community_id`
+					WHERE a.`course_id` = ".$db->qstr($COURSE_ID);
+		$course_community = $db->GetOne($query);
 		if ($course_community) {
 			header("Location: ".ENTRADA_URL."/community".$course_community);
 			exit;
 		}
 
-		$query			= "	SELECT * FROM `courses` 
-							WHERE `course_id`=".$db->qstr($COURSE_ID)."
-							AND `course_active` = '1'";
+		$query = "	SELECT * FROM `courses` 
+					WHERE `course_id` = ".$db->qstr($COURSE_ID)."
+					AND `course_active` = '1'";
 		$course_details	= ((USE_CACHE) ? $db->CacheGetRow(CACHE_TIMEOUT, $query) : $db->GetRow($query));
 		if (!$course_details) {
 			$ERROR++;
@@ -117,15 +109,15 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 
 			echo display_error();
 		} else {
-			if ($ENTRADA_ACL->amIAllowed(new CourseResource($COURSE_ID, $result['organisation_id']), 'read')) {
+			if ($ENTRADA_ACL->amIAllowed(new CourseResource($COURSE_ID, $ENTRADA_USER->getOrganisationID()), "read")) {
 				add_statistic($MODULE, "view", "course_id", $COURSE_ID);
 
-				$BREADCRUMB[]		= array("url" => ENTRADA_URL."/".$MODULE."?".replace_query(array("id" => $course_details["course_id"])), "title" => $course_details["course_name"].(($course_details["course_code"]) ? ": ".$course_details["course_code"] : ""));
+				$BREADCRUMB[] = array("url" => ENTRADA_URL."/".$MODULE."?".replace_query(array("id" => $course_details["course_id"])), "title" => $course_details["course_name"].(($course_details["course_code"]) ? ": ".$course_details["course_code"] : ""));
 
-				$OTHER_DIRECTORS	= array();
+				$OTHER_DIRECTORS = array();
 
-				$sub_query		= "SELECT `proxy_id` FROM `course_contacts` WHERE `course_contacts`.`course_id`=".$db->qstr($COURSE_ID)." AND `course_contacts`.`contact_type` = 'director' ORDER BY `contact_order` ASC";
-				$sub_results	= $db->GetAll($sub_query);
+				$sub_query = "SELECT `proxy_id` FROM `course_contacts` WHERE `course_contacts`.`course_id`=".$db->qstr($COURSE_ID)." AND `course_contacts`.`contact_type` = 'director' ORDER BY `contact_order` ASC";
+				$sub_results = $db->GetAll($sub_query);
 				if ($sub_results) {
 					foreach ($sub_results as $sub_result) {
 						$OTHER_DIRECTORS[] = $sub_result["proxy_id"];
@@ -147,9 +139,9 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				?>
 				<div class="no-printing" style="text-align: right">
 					<form>
-					<label for="course-quick-select" class="content-small">Course Quick Select:</label>
+					<label for="course-quick-select" class="content-small"><?php echo $module_singular_name; ?> Quick Select:</label>
 					<select id="course-quick-select" name="course-quick-select" style="width: 300px" onchange="window.location='<?php echo ENTRADA_URL; ?>/courses?id='+this.options[this.selectedIndex].value">
-					<option value="">-- Select a Course --</option>
+					<option value="">-- Select a <?php echo $module_singular_name; ?> --</option>
 					<?php
 					foreach ($COURSE_LIST as $key => $course_name) {
 						echo "<option value=\"".$key."\"".(($key == $COURSE_ID) ? " selected=\"selected\"" : "").">".$course_name."</option>\n";
@@ -168,7 +160,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				</div>
 
 				<a name="course-details-section"></a>
-				<h2 title="Course Details Section">Course Details</h2>
+				<h2 title="Course Details Section"><?php echo $module_singular_name; ?> Details</h2>
 				<div id="course-details-section">
 					<?php
 					echo "<table summary=\"Course Details\">\n";
@@ -189,7 +181,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					}
 
 					echo "		<tr>\n";
-					echo "			<td style=\"vertical-align: top\">Course Directors</td>\n";
+					echo "			<td style=\"vertical-align: top\">" . $module_singular_name . " Directors</td>\n";
 					echo "			<td>\n";
 										$squery = "	SELECT a.`proxy_id`, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`email`
 													FROM `course_contacts` AS a
@@ -259,7 +251,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						echo "	</tr>\n";
 						echo "	<tr>\n";
 						echo "		<td colspan=\"2\">\n";
-						echo "			<h3>Course Description</h3>\n";
+						echo "			<h3>" . $module_singular_name . " Description</h3>\n";
 						echo 			trim(strip_selected_tags($course_details["course_description"], array("font")));
 						echo "		</td>\n";
 						echo "	</tr>\n";
@@ -284,17 +276,18 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 
 				<?php
 				$show_objectives = false;
-				$objectives = courses_fetch_objectives(array($COURSE_ID));
+				list($objectives,$top_level_id) = courses_fetch_objectives($ORGANISATION_ID,array($COURSE_ID));
 				foreach ($objectives["objectives"] as $objective) {
 					if ((isset($objective["primary"]) && $objective["primary"]) || (isset($objective["secondary"]) && $objective["secondary"]) || (isset($objective["tertiary"]) && $objective["tertiary"])) {
 						$show_objectives = true;
 						break;
 					}
 				}
-
-				if ($show_objectives || clean_input($course_details["course_objectives"], array("notags", "nows"))) {
+				$query = "	SELECT COUNT(*) FROM course_objectives WHERE course_id = ".$db->qstr($COURSE_ID);
+				$result = $db->GetOne($query);
+				if ($result) {
 					echo "<a name=\"course-objectives-section\"></a>\n";
-					echo "<h2 title=\"Course Objectives Section\">Course Objectives</h2>\n";
+					echo "<h2 title=\"Course Objectives Section\">" . $module_singular_name . " Objectives</h2>\n";
 					echo "<div id=\"course-objectives-section\">\n";
 					echo "	<table summary=\"Course Objectives\">\n";
 					echo "		<colgroup>\n";
@@ -311,7 +304,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						echo "		</tr>\n";
 					}
 
-					if ($show_objectives) {
+					//if ($show_objectives) {
 						echo "		<tr>\n";
 						echo "			<td colspan=\"2\" style=\"text-align: justify;\" class=\"objectives\">\n";
 											?>
@@ -333,7 +326,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 											<?php
 						echo "				<h3>Curriculum Objectives</h3>";
 						echo "				<strong>The learner will be able to:</strong>";
-						echo "				<div id=\"objectives_list\">\n".course_objectives_in_list($objectives, 1)."\n</div>\n";
+						echo "				<div id=\"objectives_list\">\n".course_objectives_in_list($objectives, $top_level_id,$top_level_id)."\n</div>\n";
 						echo "			</td>\n";
 						echo "		</tr>\n";
 						echo "		<tr>\n";
@@ -343,6 +336,9 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 									FROM `course_objectives` AS a
 									JOIN `global_lu_objectives` AS b
 									ON a.`objective_id` = b.`objective_id`
+									JOIN `objective_organisation` AS c
+									ON b.`objective_id` = c.`objective_id`
+									AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
 									WHERE a.`objective_type` = 'event'
 									AND b.`objective_active` = '1'
 									AND a.`course_id` = ".$db->qstr($COURSE_ID)."
@@ -364,8 +360,9 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 										fadeDuration:	0.30
 									});";
 								if ($result["objective_name"]) {
-									echo "<li><a id=\"objective-".$result["objective_id"]."-details\" style=\"text-decoration: none;\" href=\"".ENTRADA_URL."/objectives?section=objective-details&api=true&oid=".$result["objective_id"]."&cid=".$COURSE_ID."\">".$result["objective_name"]."</a></li>\n";
+									echo "<li><a id=\"objective-".$result["objective_id"]."-details\" style=\"text-decoration: none;\" href=\"".ENTRADA_URL."/courses/objectives?section=objective-details&api=true&oid=".$result["objective_id"]."&cid=".$COURSE_ID."\">".$result["objective_name"]."</a></li>\n";
 								}
+							
 							}
 							$HEAD[] = "
 								});
@@ -376,7 +373,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						}
 						echo "			</td>\n";
 						echo "		</tr>\n";
-					}
+					//}
 					echo "		</tbody>";
 					echo "	</table>";
 					echo "</div>";
@@ -384,7 +381,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				?>
 
 				<a name="course-resources-section"></a>
-				<h2 title="Course Resources Section">Course Resources</h2>
+				<h2 title="Course Resources Section"><?php echo $module_singular_name; ?> Resources</h2>
 				<div id="course-resources-section">
 					<?php
 					$query = "	SELECT `course_files`.*, MAX(`statistics`.`timestamp`) AS `last_visited`
@@ -520,13 +517,13 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				 */
 				$sidebar_html  = "<ul class=\"menu\">\n";
 				if ($course_details_section) {
-					$sidebar_html .= "	<li class=\"link\"><a href=\"#course-details-section\" title=\"Course Details\">Course Details</a></li>\n";
+					$sidebar_html .= "	<li class=\"link\"><a href=\"#course-details-section\" title=\"Course Details\">" . $module_singular_name . " Details</a></li>\n";
 				}
 				if ($course_objectives_section) {
-					$sidebar_html .= "	<li class=\"link\"><a href=\"#course-objectives-section\" title=\"Course Objectives\">Course Objectives</a></li>\n";
+					$sidebar_html .= "	<li class=\"link\"><a href=\"#course-objectives-section\" title=\"Course Objectives\">" . $module_singular_name . " Objectives</a></li>\n";
 				}
 				if ($course_resources_section) {
-					$sidebar_html .= "	<li class=\"link\"><a href=\"#course-resources-section\" title=\"Course Resources\">Course Resources</a></li>\n";
+					$sidebar_html .= "	<li class=\"link\"><a href=\"#course-resources-section\" title=\"Course Resources\">" . $module_singular_name . " Resources</a></li>\n";
 				}
 				$sidebar_html .= "</ul>\n";
 
@@ -553,19 +550,9 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 		<div style="text-align: right">
 			<form>
 				<div>
-					<label for="organisation-quick-select" class="content-small">Organisation:</label>
-					<select id="organisation-quick-select" name="organisation-quick-select" style="width: 300px" onchange="window.location='<?php echo ENTRADA_URL; ?>/courses?org='+this.options[this.selectedIndex].value">
-					<?php
-					foreach ($ORGANISATION_LIST as $organisation_id => $organisation_name) {
-						echo "<option value=\"".$organisation_id."\" ".($organisation_id == $ORGANISATION_ID ? 'selected': '').">".$organisation_name."</option>\n";
-					}
-					?>
-					</select>
-				</div>
-				<div>
-					<label for="course-quick-select" class="content-small">Course Quick Select:</label>
+					<label for="course-quick-select" class="content-small"><?php echo $module_singular_name; ?> Quick Select:</label>
 					<select id="course-quick-select" name="course-quick-select" style="width: 300px" onchange="window.location='<?php echo ENTRADA_URL; ?>/courses?org=<?php echo $ORGANISATION_ID;?>&id='+this.options[this.selectedIndex].value">
-					<option value="">-- Select a Course --</option>
+					<option value="">-- Select a <?php echo $module_singular_name; ?> --</option>
 					<?php
 					foreach ($COURSE_LIST as $course_id => $course_name) {
 						echo "<option value=\"".$course_id."\">".$course_name."</option>\n";
@@ -580,15 +567,10 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 		$query	= "SELECT * FROM `curriculum_lu_types` WHERE `curriculum_type_active` = '1' ORDER BY `curriculum_type_order` ASC";
 		$terms	= $db->GetAll($query);
 		if ($terms) {
-			echo "<h2>Course Listing</h2>\n";
+			echo "<h2>". $module_singular_name . " Listing</h2>\n";
 			echo "<ol class=\"curriculum-layout\">\n";
 			foreach ($terms as $term) {
-				$query		= "	SELECT * FROM `courses` 
-								WHERE `curriculum_type_id` = ".$db->qstr($term["curriculum_type_id"])." 
-								AND `course_active` = '1'
-								AND `organisation_id` = ".$db->qstr($ORGANISATION_ID)." 
-								ORDER BY `course_code` ASC";
-				$courses	= $db->GetAll($query);
+				$courses = courses_fetch_courses(true, true, $term["curriculum_type_id"]);
 				if ($courses) {
 					echo "<li><h3>".html_encode($term["curriculum_type_name"])."</h3>\n";
 					echo "	<ul class=\"course-list\">\n";

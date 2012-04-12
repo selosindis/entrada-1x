@@ -72,9 +72,9 @@ define("ADODB_DIR", ENTRADA_ABSOLUTE."/core/library/Entrada/adodb");
 define("CLERKSHIP_DATABASE", $config->database->clerkship_database);			// The name of the database that stores the clerkship schedule information.
 define("CLERKSHIP_SITE_TYPE", 1);												// The value this application will use for site types in the clerkship logbook module. This will be removed/replaced by functional logic to decide which site type to use in the future - for now, leave this as 1.
 define("CLERKSHIP_EMAIL_NOTIFICATIONS", true);									// Whether email notifications will be sent out to the Program Coordinator of the Rotation's related course
-define("CLERKSHIP_LOTTERY_START", strtotime("March 1st, 2010"));
-define("CLERKSHIP_LOTTERY_FINISH", strtotime("March 14th, 2010"));
-define("CLERKSHIP_LOTTERY_MAX", 6);
+define("CLERKSHIP_LOTTERY_START", strtotime("March 1st, 2012"));
+define("CLERKSHIP_LOTTERY_FINISH", strtotime("March 14th, 2012"));
+define("CLERKSHIP_LOTTERY_MAX", 8);
 define("CLERKSHIP_FIRST_CLASS", 2011);
 define("ONE_WEEK", 604800);
 define("CLERKSHIP_SIX_WEEKS_PAST", 4);
@@ -94,7 +94,8 @@ $CLERKSHIP_FIELD_STATUS["cancelled"] = array("name" => "Cancelled", "visible" =>
 
 define("CURRICULAR_OBJECTIVES_PARENT_ID", 1);
 
-define("AUTH_PRODUCTION", ENTRADA_URL."/authentication/authenticate.php");
+define("AUTH_PRODUCTION", ENTRADA_URL."/authentication/authenticate.php");		// Full URL to your production Entrada authentication server.
+define("AUTH_ENCRYPTION_METHOD", "default");									// Encryption method the authentication client will use to decrypt information from authentication server. default = low security, but no requirements | blowfish = medium security, requires mCrypt | rijndael 256 = highest security, requires mcrypt.
 define("AUTH_APP_ID", "1");														// Application ID for the Authentication System.
 define("AUTH_APP_IDS_STRING", "1");												// Application ID's to query for users in.
 define("AUTH_USERNAME", $config->auth_username);								// Application username to connect to the Authentication System.
@@ -105,6 +106,15 @@ define("AUTH_MAX_LOGIN_ATTEMPTS", 5);											// The number of login attempts 
 define("AUTH_LOCKOUT_TIMEOUT", 900);											// The amount of time in seconds a locked out user is prevented from logging in
 
 define("AUTH_FORCE_SSL", false);												// If you want to force all login attempts to use SSL, set this to true, otherwise false.
+
+define("LDAP_HOST", "ldap.yourschool.ca");										// The hostname of your LDAP server.
+define("LDAP_PEOPLE_BASE_DN", "ou=people,o=main,dc=yourschool,dc=ca");			// The BaseDN of your LDAP server.
+define("LDAP_GROUPS_BASE_DN", "ou=groups,o=main,dc=yourschool,dc=ca");			// The BaseDN of your LDAP server.
+define("LDAP_SEARCH_DN", "uid=readonly,ou=people,dc=yourschool,dc=ca");			// The LDAP username that is used to search LDAP tree for the member attribute.
+define("LDAP_SEARCH_DN_PASS", "");												// The LDAP password for the SearchDN above. These fields are optional.
+define("LDAP_MEMBER_ATTR", "UniUid");											// The member attribute used to identify the users unique LDAP ID.
+define("LDAP_USER_QUERY_FIELD", "UniCaPKey");									// The attribute used to identify the users staff / student number. Only used if LDAP_LOCAL_USER_QUERY_FIELD is set to "number".
+define("LDAP_LOCAL_USER_QUERY_FIELD", "number");								// username | number : This field allows you to specify which local user_data field is used to search for a valid username.
 
 define("AUTH_ALLOW_CAS", false);												// Whether or not you wish to allow CAS authorisation.
 define("AUTH_CAS_HOSTNAME", "cas.schoolu.ca");									// Hostname of your CAS server.
@@ -226,9 +236,9 @@ GOOGLENOTIFICATION;
  * After you register, customize the URL below with your key.
  *
  */
-define("DEFAULT_WEATHER_FETCH", "http://xoap.weather.com/weather/local/%LOCATIONCODE%?cc=*&link=xoap&prod=xoap&unit=m&par=YOUR-PARTNER-ID&key=YOUR-API-KEY");
+define("DEFAULT_WEATHER_FETCH", "http://weather.yahooapis.com/forecastrss?u=c&w=%LOCATIONCODE%");
 
-$WEATHER_LOCATION_CODES = array("CAXX0225" => "Kingston, Ontario");				// These are the weather.com weather city / airport weather codes that are fetched and stored for use on the Dashboard.
+$WEATHER_LOCATION_CODES = array("4145" => "Kingston, Ontario");				// These are the weather.com weather city / airport weather codes that are fetched and stored for use on the Dashboard.
 
 define("LOG_DIRECTORY", $config->entrada_storage . "/logs");					// Full directory path to the logs directory without a trailing slash.
 
@@ -259,13 +269,13 @@ define("MSPR_STORAGE",$config->entrada_storage . "/msprs");					//Full directory
 define("SENDMAIL_PATH", "/usr/sbin/sendmail -t -i");							// Full path and parametres to sendmail.
 
 define("DEBUG_MODE", true);														// Some places have extra debug code to show sample output. Set this to true if you want to see it.
-define("SHOW_LOAD_STATS", true);												// Do you want to see the time it takes to load each page?
+define("SHOW_LOAD_STATS", false);												// Do you want to see the time it takes to load each page?
 
 define("APPLICATION_NAME", "Entrada");											// The name of this application in your school (i.e. MedCentral, Osler, etc.)
-define("APPLICATION_VERSION", "1.2.0.1");											// The current filesystem version of Entrada.
+define("APPLICATION_VERSION", "1.3.0");											// The current filesystem version of Entrada.
 define("APPLICATION_IDENTIFIER", "app-".AUTH_APP_ID);							// PHP does not allow session key's to be integers (sometimes), so we have to make it a string.
 
-$DEFAULT_META["title"] = "Entrada: An eLearning Community";
+$DEFAULT_META["title"] = "Entrada: An eLearning Ecosystem";
 $DEFAULT_META["keywords"] = "";
 $DEFAULT_META["description"] = "";
 
@@ -342,9 +352,12 @@ $PROFILE_NAME_PREFIX[] = "Ms.";
  * these blank and the proxy ability will not be used.
  */
 $PROXY_SUBNETS = array();
+$PROXY_SUBNETS["default"] = array("start" => "130.15.0.0", "end" => "130.15.255.255", "exceptions" => array());
 $PROXY_SUBNETS["library"] = array("start" => "130.15.0.0", "end" => "130.15.255.255", "exceptions" => array());
 
 $PROXY_URLS = array();
+$PROXY_URLS["default"]["active"] = "http://proxy.yourschool.ca/login?url=";
+$PROXY_URLS["default"]["inactive"] = "";
 $PROXY_URLS["library"]["active"] = "http://proxy.yourschool.ca/login?url=http://library.yourschool.ca";
 $PROXY_URLS["library"]["inactive"] = "http://library.yourschool.ca";
 
@@ -449,16 +462,19 @@ $MODULES["awards"] = array("title" => "Manage Awards", "resource" => "awards", "
 $MODULES["clerkship"] = array("title" => "Manage Clerkship", "resource" => "clerkship", "permission" => "update");
 $MODULES["courses"] = array("title" => "Manage Courses", "resource"=> "coursecontent", "permission" => "update");
 $MODULES["evaluations"] = array("title" => "Manage Evaluations", "resource" => "evaluation", "permission" => "update");
+$MODULES["communities"] = array("title" => "Manage Communities", "resource" => "communityadmin", "permission" => "read");
+$MODULES["groups"] = array("title" => "Manage Groups", "resource" => "group", "permission" => "update");
 $MODULES["events"] = array("title" => "Manage Events", "resource" => "eventcontent", "permission" => "update");
 $MODULES["gradebook"] = array("title" => "Manage Gradebook", "resource" => "gradebook", "permission" => "update");
-$MODULES["tasks"] = array("title" => "Manage Tasks", "resource" => "task", "permission" => "create"); 
+$MODULES["mspr"] = array("title" => "Manage MSPRs", "resource" => "mspr", "permission" => "create");
+$MODULES["tasks"] = array("title" => "Manage Tasks", "resource" => "task", "permission" => "create");
 $MODULES["notices"] = array("title" => "Manage Notices", "resource" => "notice", "permission" => "update");
-$MODULES["objectives"] = array("title" => "Manage Objectives", "resource" => "objective", "permission" => "update");
 $MODULES["polls"] = array("title" => "Manage Polls", "resource" => "poll", "permission" => "update");
 $MODULES["quizzes"] = array("title" => "Manage Quizzes", "resource" => "quiz", "permission" => "update");
 $MODULES["users"] = array("title" => "Manage Users", "resource" => "user", "permission" => "update");
 $MODULES["regionaled"] = array("title" => "Regional Education", "resource" => "regionaled", "permission" => "update");
 $MODULES["reports"] = array("title" => "System Reports", "resource" => "reportindex", "permission" => "read");
+$MODULES["settings"] = array("title" => "System Settings", "resource" => "configuration", "permission" => "update");
 $MODULES["annualreport"] = array("title" => "Annual Reports", "resource" => "annualreportadmin", "permission" => "read");
 
 /**
@@ -556,15 +572,11 @@ $ENTRADA_CHARSETS["BIG5-HKSCS"] = array("description" => "Big5 with Hong Kong ex
 $ENTRADA_CHARSETS["Shift_JIS"] = array("description" => "Japanese.", "mysql_names" => "sjis", "mysql_collate" => "sjis_japanese_ci");
 $ENTRADA_CHARSETS["EUC-JP"] = array("description" => "Japanese.", "mysql_names" => "ujis", "mysql_collate" => "ujis_japanese_ci");
 
-define("TEMPLATE_URL", ENTRADA_URL."/templates/".DEFAULT_TEMPLATE);
-define("TEMPLATE_ABSOLUTE", ENTRADA_ABSOLUTE."/templates/".DEFAULT_TEMPLATE);
-define("TEMPLATE_RELATIVE", ENTRADA_RELATIVE."/templates/".DEFAULT_TEMPLATE);
-
 /**
  * Define the current reporting year for use withing the Annual Reporting Module - If the current month is between January and April then the current reporting
  * year is last year otherwise it is this year. This is because the due date for annual reports are due in February and March and often times faculty complete
  * them after the due date.
- * 
+ *
  * Define other default "years" required by the Annual Reporting Module.
  */
 $AR_CUR_YEAR = (date("Y") - ((date("n") < 5) ? 1 : 0));
@@ -580,18 +592,18 @@ $AR_FUTURE_YEARS = $AR_CUR_YEAR + 10;
 define("INTERNAL_AWARD_AWARDING_BODY","Queen's University");
 define("CLERKSHIP_COMPLETED_CUTOFF", "October 26");
 
-define("MSPR_REJECTION_REASON_REQUIRED",true);	//defines whether a reason is required when rejecting a submission 
+define("MSPR_REJECTION_REASON_REQUIRED",true);	//defines whether a reason is required when rejecting a submission
 define("MSPR_REJECTION_SEND_EMAIL",true);	//defines whether an email should be send on rejection of a student submission to their mspr
 
 define("MSPR_CLERKSHIP_MERGE_NEAR", true); //defines whether or not clerkship rotation with the same title should be merged if they are near in time.
 define("MSPR_CLERKSHIP_MERGE_DISTANCE", "+1 week"); //defines how close together clerkship rotations with the SAME title need to be in order to be merged on the mspr display
 
 define("AUTO_APPROVE_ADMIN_MSPR_EDITS",true); //if true, the comment will be cleared, and the entry approved.
-define("AUTO_APPROVE_ADMIN_MSPR_SUBMISSIONS", true); //when adding to student submissions, admin contributions in these areas are automatically approved, if true. 
+define("AUTO_APPROVE_ADMIN_MSPR_SUBMISSIONS", true); //when adding to student submissions, admin contributions in these areas are automatically approved, if true.
 
 /**
  * Defines for Tasks Module
- * 
+ *
  */
 
 //Owners
@@ -600,9 +612,9 @@ define("TASK_OWNER_COURSE", "course");
 define("TASK_OWNER_EVENT", "event");
 
 //Audience
-define("TASK_RECIPIENT_USER", "user"); 
-define("TASK_RECIPIENT_CLASS", "grad_year"); 
-define("TASK_RECIPIENT_ORGANISATION", "organisation"); 
+define("TASK_RECIPIENT_USER", "user");
+define("TASK_RECIPIENT_CLASS", "cohort");
+define("TASK_RECIPIENT_ORGANISATION", "organisation");
 
 
 define("TASK_VERIFICATION_NONE", "none");
@@ -624,7 +636,7 @@ define("TASK_FACULTY_SELECTION_OFF", "off");
 
 
 //Defaults
-define("TASK_DEFAULT_RECIPIENT_TYPE",TASK_RECIPIENT_USER); //options are: user, grad_year, organisation
+define("TASK_DEFAULT_RECIPIENT_TYPE",TASK_RECIPIENT_USER); //options are: user, cohort, organisation
 define("TASK_DEFAULT_VERIFICATION_TYPE", TASK_VERIFICATION_NONE);
 define("TASK_DEFAULT_VERIFICATION_NOTIFICATION", TASK_VERIFICATION_NOTIFICATION_OFF);
 define("TASK_DEFAULT_COMPLETE_COMMENT", TASK_COMMENT_ALLOW);
@@ -632,5 +644,4 @@ define("TASK_DEFAULT_REJECT_COMMENT", TASK_COMMENT_ALLOW);
 define("TASK_DEFAULT_FACULTY_SELECTION",TASK_FACULTY_SELECTION_ALLOW);
 
 define("PDF_PASSWORD","Mm7aeY");
-
 define("GRADEBOOK_DISPLAY_WEIGHTED_TOTAL", 0);

@@ -20,6 +20,8 @@ class Entrada_ACL extends ACL_Factory {
 		"mom" => array (
 			"awards",
 			"community",
+			"communityadmin",
+			"configuration",
 			"course" => array (
 				"coursecontent",
 				"event" => array (
@@ -88,7 +90,8 @@ class Entrada_ACL extends ACL_Factory {
 				"tasktab"
 			),
 			"mydepartment",
-			"myowndepartment"
+			"myowndepartment",
+			"group"
 		)
 	);
 	/**
@@ -390,7 +393,7 @@ class CourseOwnerAssertion implements Zend_Acl_Assert_Interface {
 	static function _checkCourseOwner($user_id, $course_id) {
 		//Logic taken from the old permissions_check() function.
 		global $db;
-		$query	=  "SELECT a.`pcoord_id` AS `coordinator`, b.`proxy_id` AS `director_id`, d.`proxy_id` AS `admin_id`
+		$query	=  "SELECT a.`pcoord_id` AS `coordinator`, b.`proxy_id` AS `director_id`, d.`proxy_id` AS `admin_id`, e.`proxy_id` AS `pcoordinator`
 					FROM `".DATABASE_NAME."`.`courses` AS a
 					LEFT JOIN `".DATABASE_NAME."`.`course_contacts` AS b
 					ON b.`course_id` = a.`course_id`
@@ -401,16 +404,20 @@ class CourseOwnerAssertion implements Zend_Acl_Assert_Interface {
 					ON d.`community_id` = c.`community_id`
 					AND d.`member_active` = '1'
 					AND d.`member_acl` = '1'
+					LEFT JOIN `".DATABASE_NAME."`.`course_contacts` AS e
+					ON e.`course_id` = a.`course_id`
+					AND e.`contact_type` = 'pcoordinator'
 					WHERE a.`course_id` = ".$db->qstr($course_id)."
 					AND (a.`pcoord_id` = ".$db->qstr($user_id)."
 						OR b.`proxy_id` = ".$db->qstr($user_id)."
 						OR d.`proxy_id` = ".$db->qstr($user_id)."
+						OR e.`proxy_id` = ".$db->qstr($user_id)."
 					)
 					AND a.`course_active` = '1'
 					LIMIT 0, 1";
 		$result = $db->GetRow($query);
 		if($result) {
-			foreach(array("director_id", "coordinator", "admin_id") as $owner) {
+			foreach(array("director_id", "coordinator", "admin_id", "pcoordinator") as $owner) {
 				if($result[$owner] == $user_id) {
 					return true;
 				}
@@ -615,6 +622,43 @@ class TaskRecipientAssertion implements Zend_Acl_Assert_Interface {
 		$task = Task::get($task_id);
 		if ($task && $user) {
 			return 	$task->isRecipient($user);
+		} else {
+			return false;
+		}
+	}
+}
+
+class IsEvaluatedAssertion implements Zend_Acl_Assert_Interface {
+
+/**
+ * Asserts that the role references the director, coordinator, or secondary director of the course resource
+ *
+ * @param Zend_Acl $acl The ACL object isself (the one calling the assertion)
+ * @param Zend_Acl_Role_Interface $role The role being queried
+ * @param Zend_Acl_Resource_Interface $resource The resource being queried
+ * @param string $privilege The privilege being queried
+ * @return boolean
+ */
+	public function assert(Zend_Acl $acl, Zend_Acl_Role_Interface $role = null, Zend_Acl_Resource_Interface $resource = null, $privilege = null) {
+		global $db;
+		
+		//If asserting is off then return true right away
+		if((isset($resource->assert) && $resource->assert == false) || (isset($acl->_entrada_last_query) && isset($acl->_entrada_last_query->assert) && $acl->_entrada_last_query->assert == false)) {
+			return true;
+		}
+		$role_id = $role->getRoleId();
+		$user_id	= preg_replace('/[^0-9]+/', "", $role_id);
+
+		if($user_id == "") {
+			$role_id = $acl->_entrada_last_query_role->getRoleId();
+			$user_id	= preg_replace('/[^0-9]+/', "", $role_id);
+		}
+
+		$query = "SELECT * FROM `".CLERKSHIP_DATABASE."`.`eval_completed` WHERE `instructor_id` = ".$db->qstr($user_id);
+		$evaluated = $db->GetRow($query);
+		
+		if ($evaluated) {
+			return 	true;
 		} else {
 			return false;
 		}
@@ -855,7 +899,7 @@ class EventOwnerAssertion implements Zend_Acl_Assert_Interface {
 	static function _checkEventOwner($user_id, $event_id) {
 		global $db;
 
-		$query		= "	SELECT a.`event_id`, b.`proxy_id` AS `teacher`, c.`pcoord_id` AS `coordinator`, d.`proxy_id` AS `director_id`
+		$query		= "	SELECT a.`event_id`, b.`proxy_id` AS `teacher`, c.`pcoord_id` AS `coordinator`, d.`proxy_id` AS `director_id`, e.`proxy_id` AS `pcoordinator`
 						FROM `events` AS a
 						LEFT JOIN `event_contacts` AS b
 						ON b.`event_id` = a.`event_id`
@@ -864,12 +908,15 @@ class EventOwnerAssertion implements Zend_Acl_Assert_Interface {
 						LEFT JOIN `course_contacts` AS d
 						ON d.`course_id` = c.`course_id`
 						AND d.`contact_type` = 'director'
+						LEFT JOIN `course_contacts` AS e
+						ON e.`course_id` = c.`course_id`
+						AND e.`contact_type` = 'pcoordinator'
 						WHERE a.`event_id` = ".$db->qstr($event_id)."
 						AND c.`course_active` = '1'";
 		$results	= $db->GetAll($query);
 		if($results) {
 			foreach($results as $result) {
-				foreach(array("director_id", "coordinator", "teacher") as $owner) {
+				foreach(array("director_id", "coordinator", "teacher", "pcoordinator") as $owner) {
 					if($result[$owner] == $user_id) {
 						return true;
 					}
@@ -944,25 +991,25 @@ class ResourceOrganisationAssertion implements Zend_Acl_Assert_Interface {
 		if(isset($resource->organisation_id) && $acl->has("resourceorganisation".$resource->organisation_id)) {
 			return $acl->isAllowed($role, "resourceorganisation".$resource->organisation_id, $privilege);
 		} else {
-		//Otherwise, look at the object that the query was first made upon, which will have some information about it which hopefully can be used to figure out the organisation_id
-			if(isset($acl->_entrada_last_query)) {
+			//Otherwise, look at the object that the query was first made upon, which will have some information about it which hopefully can be used to figure out the organisation_id
+			if (isset($acl->_entrada_last_query)) {
 			//Use the organisation ID if provided
-				if(isset($acl->_entrada_last_query->organisation_id)) {
+				if (isset($acl->_entrada_last_query->organisation_id)) {
 					$organisation_id = $acl->_entrada_last_query->organisation_id;
 				} else {
 					global $db;
 					//Use the course ID if nessecary
-					if(isset($acl->_entrada_last_query->course_id) && $coourse_id != 0) {
-						$query	= "	SELECT `organisation_id` FROM `courses`
+					if (isset($acl->_entrada_last_query->course_id) && ($acl->_entrada_last_query->course_id != 0)) {
+						$query = "	SELECT `organisation_id` FROM `courses`
 									WHERE `course_id` = ".$db->qstr($acl->_entrada_last_query->course_id)."
 									AND `course_active` = '1'";
 						$result = $db->GetRow($query);
-						if($result) {
+						if ($result) {
 							$organisation_id = $result["organisation_id"];
 						}
-					} else if(isset($acl->_entrada_last_query->event_id)) {
+					} elseif (isset($acl->_entrada_last_query->event_id) && ($acl->_entrada_last_query->event_id != 0)) {
 						//Use the event ID if nessecary
-						$query	= "	SELECT a.`course_id`, b.`organisation_id` AS course_organisation_id, d.`audience_value` AS event_organisation_id
+						$query = "	SELECT a.`course_id`, b.`organisation_id` AS course_organisation_id, d.`audience_value` AS event_organisation_id
 									FROM `events` AS a
 									LEFT JOIN `courses` AS b
 									ON b.`course_id` = a.`course_id`
@@ -971,25 +1018,24 @@ class ResourceOrganisationAssertion implements Zend_Acl_Assert_Interface {
 									AND d.`audience_type` = 'organisation_id'
 									WHERE b.`course_active` = '1'
 									ORDER BY b.`organisation_id`";
-							$result = $db->GetRow($query);
-							if($result) {
-								if(isset($result["course_organisation_id"])) {
-									$organisation_id = $result["course_organisation_id"];
-								} else if (isset($result["event_organisation_id"])) {
-									$organisation_id = $result["event_organisation_id"];
-								}
+						$result = $db->GetRow($query);
+						if ($result) {
+							if (isset($result["course_organisation_id"])) {
+								$organisation_id = $result["course_organisation_id"];
+							} elseif (isset($result["event_organisation_id"])) {
+								$organisation_id = $result["event_organisation_id"];
 							}
 						}
+					}
 				}
 
-				if(isset($organisation_id) && $acl->has("resourceorganisation".$organisation_id)) {
+				if (isset($organisation_id) && $acl->has("resourceorganisation".$organisation_id)) {
 					//Return this role's ability to preform this privilege on this organisation.
 					return $acl->isAllowed($role, "resourceorganisation".$organisation_id, $privilege);
-				} elseif (!isset($organisation_id) || !$organisation_id) {
-					return true;
 				}
 			}
 		}
+		
 		return false;
 	}
 }
@@ -1231,7 +1277,7 @@ class ClerkshipLotteryAssertion implements Zend_Acl_Assert_Interface {
 			return false;
 		}
 
-		if((date("Y",strtotime("+2 Years")) == $GRAD_YEAR) && (time() >= CLERKSHIP_LOTTERY_START && time() <= CLERKSHIP_LOTTERY_FINISH)) {
+		if((date("Y",strtotime("+2 Years")) == $GRAD_YEAR) && ((time() >= CLERKSHIP_LOTTERY_START && time() <= CLERKSHIP_LOTTERY_FINISH) || time() >= CLERKSHIP_LOTTERY_RELEASE)) {
 			return true;
 		} else {
 			return false;
@@ -1611,6 +1657,29 @@ class NoticeResource extends EntradaAclResource {
 }
 
 /**
+ * Configuration Resource
+ *
+ * @author Organisation: Queen's University
+ * @author Unit: School of Medicine
+ * @author Developer: Matt Simpson <simpson@queensu.ca>
+ * @copyright Copyright 2010 Queen's University. All Rights Reserved.
+ */
+class ConfigurationResource extends EntradaAclResource {
+	var $organisation_id;
+
+	function __construct($organisation_id, $assert = null) {
+		$this->organisation_id = $organisation_id;
+		if(isset($assert)) {
+			$this->assert = $assert;
+		}
+	}
+
+	public function getResourceId() {
+		return "configuration";
+	}
+}
+
+/**
  * Smart event resource object for the EntradaACL.
  *
  * @author Organisation: Queen's University
@@ -1951,7 +2020,6 @@ class CommunityResource extends EntradaAclResource {
 	public function getResourceId() {
 		return "community".($this->specific ? $this->community_id : "");
 	}
-
 }
 
 class EntradaUser implements Zend_Acl_Role_Interface {

@@ -161,10 +161,6 @@ if ($RECORD_ID) {
 				} else {
 					$TOTAL_PAGES = (int) ($TOTAL_ROWS / $_SESSION[APPLICATION_IDENTIFIER]["cid_".$COMMUNITY_ID][$PAGE_URL]["pp"]) + 1;
 				}
-
-				if ($TOTAL_PAGES > 1) {
-					$pagination = new Pagination($PAGE_CURRENT, $_SESSION[APPLICATION_IDENTIFIER]["cid_".$COMMUNITY_ID][$PAGE_URL]["pp"], $TOTAL_ROWS, COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL, replace_query());
-				}
 			} else {
 				$TOTAL_ROWS		= 0;
 				$TOTAL_PAGES	= 1;
@@ -182,7 +178,9 @@ if ($RECORD_ID) {
 			} else {
 				$PAGE_CURRENT = 1;
 			}
-
+			if ($TOTAL_PAGES > 1) {
+				$pagination = new Pagination($PAGE_CURRENT, $_SESSION[APPLICATION_IDENTIFIER]["cid_".$COMMUNITY_ID][$PAGE_URL]["pp"], $TOTAL_ROWS, COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL, replace_query());
+			}
 			$PAGE_PREVIOUS	= (($PAGE_CURRENT > 1) ? ($PAGE_CURRENT - 1) : false);
 			$PAGE_NEXT		= (($PAGE_CURRENT < $TOTAL_PAGES) ? ($PAGE_CURRENT + 1) : false);
 
@@ -335,6 +333,7 @@ if ($RECORD_ID) {
 				?>
 			</div>
 			<?php
+			add_statistic("community:".$COMMUNITY_ID.":galleries", "gallery_view", "cgallery_id", $RECORD_ID);
 		} else {
 			if ($ERROR) {
 				echo display_error();

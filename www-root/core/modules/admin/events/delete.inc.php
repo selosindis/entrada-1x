@@ -48,15 +48,19 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 		case 2 :
 		case 1 :
 		default :
-			if((!isset($_POST["checked"])) || (!is_array($_POST["checked"])) || (!@count($_POST["checked"]))) {
+			if(((!isset($_POST["checked"])) || (!is_array($_POST["checked"])) || (!@count($_POST["checked"]))) && (!isset($_GET["id"]) || !$_GET["id"])) {
 				header("Location: ".ENTRADA_URL."/admin/events");
 				exit;
 			} else {
-				foreach($_POST["checked"] as $event_id) {
-					$event_id = (int) trim($event_id);
-					if($event_id) {
-						$EVENT_IDS[] = $event_id;
+				if ((isset($_POST["checked"])) && (is_array($_POST["checked"])) && (@count($_POST["checked"]))) {
+					foreach($_POST["checked"] as $event_id) {
+						$event_id = (int) trim($event_id);
+						if($event_id) {
+							$EVENT_IDS[] = $event_id;
+						}
 					}
+				} elseif (isset($_GET["id"]) && ($event_id = clean_input($_GET["id"], array("trim", "int")))) {
+					$EVENT_IDS[] = $event_id;
 				}
 
 				if(!@count($EVENT_IDS)) {
@@ -302,7 +306,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			} else {
 				$total_events	= count($EVENT_IDS);
 				
-				$query		= "	SELECT a.`event_id`, a.`event_title`, a.`event_start`, a.`event_phase`, a.`release_date`, a.`release_until`, a.`updated_date`, CONCAT_WS(', ', c.`lastname`, c.`firstname`) AS `fullname`, d.organisation_id
+				$query		= "	SELECT a.`event_id`, a.`event_title`, a.`event_start`, a.`event_phase`, a.`release_date`, a.`release_until`, a.`updated_date`, CONCAT_WS(', ', c.`lastname`, c.`firstname`) AS `fullname`, d.`course_id`, d.organisation_id
 								FROM `events` AS a
 								LEFT JOIN `event_contacts` AS b
 								ON b.`event_id` = a.`event_id`

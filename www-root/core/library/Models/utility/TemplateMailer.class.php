@@ -12,11 +12,11 @@
 
 require_once("Template.class.php");
 
-	/**
+/**
  * Class for simplifying the emailing of templates 
  * @author Jonathan Fingland
-	 * 
-	 */
+ *
+ */
 class TemplateMailer {
 	
 	/**

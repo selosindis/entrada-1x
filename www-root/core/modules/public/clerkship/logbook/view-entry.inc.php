@@ -191,13 +191,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 						<?php 
 						if (is_array($PROCESSED_OBJECTIVES) && count($PROCESSED_OBJECTIVES)) { 
 							foreach ($PROCESSED_OBJECTIVES as $objective_id) {
-								$query = "	SELECT * FROM `global_lu_objectives` 
-											WHERE `objective_id` = ".$db->qstr($objective_id["objective_id"])." 
-											AND `objective_active` = '1'
+								$query = "SELECT a.* FROM `global_lu_objectives` AS a
+											JOIN `objective_organisation` AS b
+											ON a.`objective_id` = b.`objective_id`
+											AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+											WHERE a.`objective_id` = ".$db->qstr($objective_id["objective_id"])." 
+											AND a.`objective_active` = '1'
 											AND 
 											(
-												`objective_parent` = '200' 
-												OR `objective_parent` IN 
+												a.`objective_parent` = '200' 
+												OR a.`objective_parent` IN 
 												(
 													SELECT `objective_id` FROM `global_lu_objectives` 
 													WHERE `objective_parent` = '200'

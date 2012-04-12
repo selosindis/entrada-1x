@@ -38,6 +38,9 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 					LEFT JOIN `course_objectives` AS b
 					ON a.`objective_id` = b.`objective_id`
 					AND b.`course_id` = ".$db->qstr($COURSE_ID) : "")."
+					JOIN `objective_organisation` AS c
+					ON a.`objective_id` = c.`objective_id`
+					AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
 					WHERE a.`objective_id` = ".$db->qstr($OBJECTIVE_ID)."
 					AND a.`objective_active` = 1";
 		$objective = $db->GetRow($query);
@@ -53,12 +56,16 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 			echo display_notice();
 		}
 	} elseif ((isset($OBJECTIVE_ID) && $OBJECTIVE_ID) && $API) {
+		
 		$query = "	SELECT a.*".(isset($COURSE_ID) && $COURSE_ID ? ", b.`objective_details`" : "")." 
 					FROM `global_lu_objectives` AS a
 					".(isset($COURSE_ID) && $COURSE_ID ? "
 					LEFT JOIN `course_objectives` AS b
 					ON a.`objective_id` = b.`objective_id`
 					AND b.`course_id` = ".$db->qstr($COURSE_ID) : "")."
+					JOIN `objective_organisation` AS c
+					ON a.`objective_id` = c.`objective_id`
+					AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
 					WHERE a.`objective_id` = ".$db->qstr($OBJECTIVE_ID)."
 					AND a.`objective_active` = 1";
 		$objective = $db->GetRow($query);

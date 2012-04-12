@@ -52,13 +52,13 @@ if(!defined("PARENT_INCLUDED")) {
 		$HEAD[] = "<link href=\"".ENTRADA_URL."/css/annualreport.css\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />\n";
 		$HEAD[] = "<link href=\"".ENTRADA_URL."/css/tabpane.css\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />\n";
 		$HEAD[] = "<link href=\"".ENTRADA_URL."/css/calendar.css\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />\n";
-		$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery.min.js\"></script>\n";
-		$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery-ui.min.js\"></script>\n";
-		$JQUERY[] = "<link href=\"".ENTRADA_URL."/css/jquery/jquery-ui.css\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />\n";
+		//$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery.min.js\"></script>\n";
+		//$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery-ui.min.js\"></script>\n";
+		//$JQUERY[] = "<link href=\"".ENTRADA_URL."/css/jquery/jquery-ui.css\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />\n";
 		
 		$JQUERY[] = "<link href=\"".ENTRADA_URL."/css/jquery/flexigrid.css\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />";
 		$JQUERY[] = "<script language=\"javascript\" type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/flexigrid.pack.js\"></script>\n";
-		$JQUERY[] = "<script type=\"text/javascript\">jQuery.noConflict();</script>";
+		//$JQUERY[] = "<script type=\"text/javascript\">jQuery.noConflict();</script>";
 		
 		/**
 		 * Add the Annual Report module secondary navigation.
@@ -107,6 +107,52 @@ if(!defined("PARENT_INCLUDED")) {
 		 * Check if preferences need to be updated on the server at this point.
 		 */
 		preferences_update($MODULE, $PREFERENCES);
+		
+		if($_SESSION["details"]["email_updated"] == false && $_SESSION["details"]["group"] == "faculty") {
+		?>
+		<script>
+		jQuery(document).ready(function() {
+			jQuery(function() {
+				// a workaround for a flaw in the demo system (http://dev.jqueryui.com/ticket/4375), ignore!
+				jQuery( "#dialog:ui-dialog" ).dialog( "destroy" );
+			
+				jQuery( "#dialog-modal" ).dialog({
+					height: 300,
+					width: 350,
+					modal: true,
+					buttons: {
+						'Verify': function() {
+							jQuery.ajax
+				            ({
+								type: "POST",
+								url: '<?php echo ENTRADA_URL; ?>/api/verify_email.api.php?email=verify', 
+								success: function(msg){
+								alert( "Your email has been verified. If you ever wish to change the email we have in the system for you, click on \"My Profile\".");
+							}
+							});
+							jQuery(this).dialog('close');
+						},
+						'Update': function() {
+							jQuery.ajax
+							({
+								type: "POST",
+								url: '<?php echo ENTRADA_URL; ?>/api/verify_email.api.php?email=update'
+							});
+							window.location='<?php echo ENTRADA_URL; ?>/profile';
+						}
+					}
+				});
+			});
+		});
+		</script>
+		
+		<div id="dialog-modal" title="Email Update Required" style="display: none">
+			<p>Your email has not been verified in awhile. Please click "Verify" to verify that we have the correct email on file: </p><?php echo $_SESSION["details"]["email"];?>
+			<p>Otherwise, click "Update" to head to your profile page to update your email.</p>
+		</div>
+		<?php
+	}
+		
 	} else {
 		$url = ENTRADA_URL."/".$MODULE;
 		application_log("error", "The Entrada_Router failed to load a request. The user was redirected to [".$url."].");

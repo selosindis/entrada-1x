@@ -29,7 +29,7 @@ require_once("InternalAward.class.php");
 
 /**
  * Model for retrieving and modifying awards list
- *  
+ * 
  * @author jonathan fingland
  */
 class InternalAwards extends Collection {
@@ -94,7 +94,9 @@ class InternalAwards extends Collection {
 				array_push(self::$awards, InternalAward::fromArray($result));
 			}
 			self::$initialized = true;
+
 		}
-		return new self(self::$awards);
+		return (self::$awards);
+		//return new self(self::$awards);
 	}
 }

@@ -43,6 +43,8 @@ if((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 
 				if($objective_details) {
 					$PROCESSED["objective_details"]	= $objective_details;
+				} else {
+					$PROCESSED["objective_details"] = "";
 				}
 				
 				$PROCESSED["updated_date"]			= time();

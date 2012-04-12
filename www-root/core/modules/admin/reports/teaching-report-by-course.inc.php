@@ -84,8 +84,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 			<tr>
 				<td colspan="3"><h2>Report Options</h2></td>
 			</tr>
-			<?php echo generate_calendars("reporting", "Reporting Date", true, true, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_start"], true, true, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_finish"]); 
-				echo generate_organisation_select();?>
+			<?php echo generate_calendars("reporting", "Reporting Date", true, true, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_start"], true, true, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_finish"]); ?>
 			<tr>
 				<td colspan="3" style="text-align: right; padding-top: 10px"><input type="submit" class="button" value="Create Report" /></td>
 			</tr>
@@ -104,11 +103,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 	$default_na_name		= "Unknown or N/A";
 	$report_results			= array();
 	
-	if(isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["organisation_id"]) && $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["organisation_id"] != -1) {
-		$organisation_where = "AND (`courses`.`organisation_id` = ".$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["organisation_id"].") ";
-	} else {
-		$organisation_where = "";
-	}
+	$organisation_where = "AND (`courses`.`organisation_id` = ".$ENTRADA_USER->getActiveOrganisation().") ";
 
 	$query = "	SELECT * FROM `courses` 
 				WHERE `course_active` = '1' 
@@ -147,6 +142,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 								LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
 								ON a.`proxy_id` = b.`id`
 								WHERE a.`event_id` = ".$db->qstr($event["event_id"])."
+								AND a.`contact_role` = 'teacher' 
 								ORDER BY `fullname` ASC";
 					if($int_use_cache) {
 						$sresults	= $db->CacheGetAll(LONG_CACHE_TIMEOUT, $squery);
@@ -175,10 +171,9 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 				ON a.`event_id` = b.`event_id`
 				WHERE a.`course_id` = '0'
 				AND (a.`event_start` BETWEEN ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_start"])." 
-				AND ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_finish"]).")";
-	if(isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["organisation_id"]) && $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["organisation_id"] != -1) {
-		$query .= " AND (b.`audience_type` = 'organisation' AND b.`audience_value` = ".$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["organisation_id"].")";
-	}
+				AND ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_finish"]).")
+				AND (b.`audience_type` = 'organisation' AND b.`audience_value` = ".$ENTRADA_USER->getActiveOrganisation().")";
+
 	
 	if($int_use_cache) {
 		$events	= $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
@@ -241,7 +236,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 			}
 						
 			if((int) $course_id) {
-				$course_name	= (($tmp_course_name = course_name($course_id)) ? $tmp_course_name : "Unknown Course Name");
+				$course_name	= (($tmp_course_name = fetch_course_title($course_id)) ? $tmp_course_name : "Unknown Course Name");
 			} else {
 				$course_name	= "Learning Events With No Assigned Course";
 			}
@@ -412,7 +407,15 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 							/**
 							 * Select all of the event types in the system.
 							 */
-							$query		= "SELECT * FROM `events_lu_eventtypes` WHERE `eventtype_active` = '1' ORDER BY `eventtype_order` ASC";
+							$query		= "	SELECT a.* FROM `events_lu_eventtypes` AS a 
+											LEFT JOIN `eventtype_organisation` AS c 
+											ON a.`eventtype_id` = c.`eventtype_id` 
+											LEFT JOIN `".AUTH_DATABASE."`.`organisations` AS b
+											ON b.`organisation_id` = c.`organisation_id` 
+											WHERE b.`organisation_id` = ".$ENTRADA_USER->getActiveOrganisation()."
+											AND a.`eventtype_active` = '1' 
+											ORDER BY a.`eventtype_order`
+								";
 							$results	= $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
 							if($results) {
 								foreach($results as $result) {
@@ -505,7 +508,15 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 							/**
 							 * Select all of the event types in the system.
 							 */
-							$query		= "SELECT * FROM `events_lu_eventtypes` WHERE `eventtype_active` = '1' ORDER BY `eventtype_order` ASC";
+							$query		= "	SELECT a.* FROM `events_lu_eventtypes` AS a 
+											LEFT JOIN `eventtype_organisation` AS c 
+											ON a.`eventtype_id` = c.`eventtype_id` 
+											LEFT JOIN `".AUTH_DATABASE."`.`organisations` AS b
+											ON b.`organisation_id` = c.`organisation_id` 
+											WHERE b.`organisation_id` = ".$ENTRADA_USER->getActiveOrganisation()."
+											AND a.`eventtype_active` = '1' 
+											ORDER BY a.`eventtype_order`
+								";
 							$results	= $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
 							if($results) {
 								foreach($results as $result) {
@@ -598,7 +609,15 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 							/**
 							 * Select all of the event types in the system.
 							 */
-							$query		= "SELECT * FROM `events_lu_eventtypes` WHERE `eventtype_active` = '1' ORDER BY `eventtype_order` ASC";
+							$query		= "	SELECT a.* FROM `events_lu_eventtypes` AS a 
+											LEFT JOIN `eventtype_organisation` AS c 
+											ON a.`eventtype_id` = c.`eventtype_id` 
+											LEFT JOIN `".AUTH_DATABASE."`.`organisations` AS b
+											ON b.`organisation_id` = c.`organisation_id` 
+											WHERE b.`organisation_id` = ".$ENTRADA_USER->getActiveOrganisation()."
+											AND a.`eventtype_active` = '1' 
+											ORDER BY a.`eventtype_order`
+								";
 							$results	= $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
 							if($results) {
 								foreach($results as $result) {

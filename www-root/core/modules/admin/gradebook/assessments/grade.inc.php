@@ -59,13 +59,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 		if ($course_details && $ENTRADA_ACL->amIAllowed(new GradebookResource($course_details["course_id"], $course_details["organisation_id"]), "read")) {
 			$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/gradebook/assessments?".replace_query(array("section" => "grade", "id" => $COURSE_ID, "step" => false)), "title" => "Grading Assessment");
 
-			$query = "	SELECT `assessments`.*,`assessment_marking_schemes`.`id` as `marking_scheme_id`, `assessment_marking_schemes`.`handler`
+			$query = "	SELECT `assessments`.*,`assessment_marking_schemes`.`id` as `marking_scheme_id`, `assessment_marking_schemes`.`handler`, `assessment_marking_schemes`.`description` as `marking_scheme_description`
 						FROM `assessments`
 						LEFT JOIN `assessment_marking_schemes` ON `assessment_marking_schemes`.`id` = `assessments`.`marking_scheme_id`
 						WHERE `assessments`.`assessment_id` = ".$db->qstr($ASSESSMENT_ID);
 			$assessment = $db->GetRow($query);
 			if ($assessment) {
-				$GRAD_YEAR = $assessment["grad_year"];
+				$COHORT = $assessment["cohort"];
 				
 				courses_subnavigation($course_details);
 
@@ -85,19 +85,24 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					width: 100%;
 				}	
 				</style>
-				<h1 class="event-title"><?php echo $assessment["name"]; ?> (Class of <?php echo $assessment["grad_year"]; ?>)</h1>
-				
-				<div style="float: right; text-align: right;">
+				<div>
+					<h1 class="event-title"><?php echo $assessment["name"]; ?> (<?php echo groups_get_name($assessment["cohort"]); ?>)</h1>
+				</div>
+				<div style="float: left; width: 440px;">
+					<h2 style="border-bottom: none; margin-bottom: 3px; margin-top: 0;"><?php echo $assessment["type"]; ?> Assessment</h2>
+					<p style="margin-top: 0;"><?php echo $assessment["description"]; ?></p>
+				</div>
+				<div style="float: right; text-align: right; width:300px;">
+					<h2 style="border-bottom: none; margin-top: 0;">Weighting <?php echo $assessment["grade_weighting"]."%"; ?></h2>
 					<ul class="page-action">
 						<li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE . "/assessments/?" . replace_query(array("section" => "edit", "step" => false)); ?>" class="strong-green">Edit Assessment</a></li>
 					</ul>
 				</div>
-				<div style="clear: both"><br /></div>
-			
+				<div style="clear: both;"></div>
 				<?php
 				$query = "	SELECT b.`id` AS `proxy_id`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, b.`number`, g.`grade_id` AS `grade_id`, g.`value` AS `grade_value`, h.`grade_weighting`
 							FROM `".AUTH_DATABASE."`.`user_data` AS b
-							LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS c
+							JOIN `".AUTH_DATABASE."`.`user_access` AS c
 							ON c.`user_id` = b.`id` 
 							AND c.`app_id`=".$db->qstr(AUTH_APP_ID)."
 							AND c.`account_active` = 'true'
@@ -109,8 +114,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							LEFT JOIN `assessment_exceptions` AS h
 							ON b.`id` = h.`proxy_id`
 							AND g.`assessment_id` = h.`assessment_id`
+							JOIN `group_members` AS i
+							ON b.`id` = i.`proxy_id`
 							WHERE c.`group` = 'student'
-							AND c.`role` = ".$db->qstr($GRAD_YEAR)."
+							AND i.`group_id` = ".$db->qstr($COHORT)."
+							AND i.`member_active` = '1' 
 							ORDER BY b.`lastname` ASC, b.`firstname` ASC";
 				$students = $db->GetAll($query);
 				$editable = $ENTRADA_ACL->amIAllowed(new GradebookResource($course_details["course_id"], $course_details["organisation_id"]), "update") ? "gradebook_editable" : "gradebook_not_editable";
@@ -118,6 +126,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					<span id="assessment_name" style="display: none;"><?php echo $assessment["name"]; ?></span>
 					<div id="gradebook_grades">
 						<h2>Grades</h2>
+						<div style="margin-bottom: 5px;">
+							<span class="content-small"><strong>Tip: </strong><?php echo $assessment["marking_scheme_description"]; ?></span>
+						</div>				
 						<table style="width: 440px" class="gradebook single <?php echo $editable; ?>">
 							<tbody>
 								<?php
@@ -143,22 +154,56 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 										<td><?php echo $student["fullname"]; ?></td>
 										<td><?php echo $student["number"]; ?></td>
 										<td>
-											<span class="grade"
+											<span class="grade" id="grade_<?php echo $assessment["assessment_id"]; ?>_<?php echo $student["proxy_id"] ?>"
 												data-grade-id="<?php echo $grade_id; ?>"
 												data-assessment-id="<?php echo $assessment["assessment_id"]; ?>"
 												data-proxy-id="<?php echo $student["proxy_id"] ?>"
+												style="float:left;"
 											><?php echo $grade_value; ?></span>
-											<span class="gradesuffix" <?php echo (($grade_value === "-") ? "style=\"display: none;\"" : "") ?>>
+											<span class="gradesuffix" <?php echo (($grade_value === "-") ? "style=\"display: none;\"" : "") ?> style="float:left;">
 												<?php echo assessment_suffix($assessment); ?>
 											</span>
+											<span class="gradesuffix" style="float:right;">
+												<img src="<?php echo ENTRADA_URL;?>/images/action-edit.gif" class="edit_grade" id ="edit_grade_<?php echo $assessment["assessment_id"]; ?>_<?php echo $student["proxy_id"] ?>" style="cursor:pointer;"/>
+											</span>
 										</td>
+										<?php
+										if ($assessment["marking_scheme_id"] == 3) {
+											?>
+										<td id="percentage_<?php echo $assessment["assessment_id"]; ?>_<?php echo $student["proxy_id"] ?>"><?php echo round($student["grade_value"],2);?>%</td>
+										<?php
+										}
+										?>
 									</tr>
 									<?php
 								}
 								?>
 							</tbody>
 						</table>
+						<br/>
+						<h2>Import Grades</h2>
+						<div id="display-notice-box" class="display-notice" style="width:408px;">
+							<ul>
+							<li><strong>Important Notes:</strong>
+								<br/>Format for the CSV should be [Student Number, Grade] with each entry on a separate line (without the brackets). 
+								<br/>Any grades entered will be overwritten if present in the CSV.</li>
+							</ul>
+						</div>
+						<form enctype="multipart/form-data" action="<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "csv-upload", "assessment_id" => $ASSESSMENT_ID)); ?>" method="POST">
+							<input type="file" name ="file"/><br/><br/>
+							<input type="submit" value ="Import CSV"/>
+						</form>
 					</div>
+					<script type="text/javascript">
+						jQuery(document).ready(function(){
+
+							jQuery('.edit_grade').click(function(e){
+								var id = e.target.id.substring(5);
+								jQuery('#'+id).trigger('click');
+							});
+						});
+
+					</script>
 					<div id="gradebook_stats">
 						<h2>Statistics</h2>
 						<div id="graph"></div>
@@ -255,7 +300,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								</script>
 								<br/>
 								<p>Unentered grades: <?php echo (int) $unentered; ?></p>
-								<p>Mean grade: <?php echo number_format(($entered > 0 ? $sum / $entered : ""), 0); ?>%</p>
+								<p>Mean grade: <?php echo number_format(($entered > 0 ? $sum / $entered : 0), 0); ?>%</p>
 								<p>Median grade: <?php echo $grade_values[floor(count($grade_values) / 2)]; ?>%</p>
 								<?php
 							break;
@@ -368,7 +413,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				<?php
 				else:
 				?>
-				<div class="display-notice">There are no students in the system for this assessment's Graduating Year <strong><?php echo $GRAD_YEAR; ?></strong>.</div>
+				<div class="display-notice">There are no students in the system for this assessment's Cohort: <strong><?php echo groups_get_name($COHORT); ?></strong>.</div>
 				<?php endif;
 			} else {
 				$ERROR++;

@@ -35,8 +35,8 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 								FROM `community_modules`
 								WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)."
 								AND `module_active` = '1'
-								ORDER BY `module_title` ASC
-							)";
+							)
+							ORDER BY `module_title` ASC";
 	$module_pagetypes	= $db->GetAll($query);
 
 	$PAGE_TYPES[]		= array("module_shortname" => "default", "module_title" => "Default Content");

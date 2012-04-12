@@ -40,25 +40,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 	
 	$HEAD[]		= "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/picklist.js\"></script>\n";
 	$ONLOAD[]	= "$('courses_list').style.display = 'none'";
-
-	$organisation_id_changed = false;
-	
-	/**
-	 * Fetch the organisation_id that has been selected.
-	 */
-	if (!isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["organisation_id"])) {
-		$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["organisation_id"] = -1;
-	} elseif ((isset($_GET["org_id"])) && ($tmp_input = clean_input($_GET["org_id"], "int"))) {
-		$organisation_id_changed = true;
-		$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["organisation_id"] = $tmp_input;
-	} else {
-		$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["organisation_id"] = (int) $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["organisation_id"];
-	}
 		
 	/**
 	 * Fetch all courses into an array that will be used.
 	 */
-	$query = "SELECT * FROM `courses`".(($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["organisation_id"] > 0) ? " WHERE `organisation_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["organisation_id"]) : "")." ORDER BY `course_code` ASC";
+	$query = "SELECT * FROM `courses`
+			  WHERE `organisation_id` = ".$ENTRADA_USER->getActiveOrganisation()."
+			  ORDER BY `course_code` ASC";
 	$courses = $db->GetAll($query);
 	if ($courses) {
 		foreach ($courses as $course) {
@@ -83,8 +71,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 		} else {
 			$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["course_ids"] = array_keys($course_list);
 		}
-	} elseif (($organisation_id_changed) || (!isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["course_ids"]))) {
-		$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["course_ids"] = array_keys($course_list);
 	}
 	
 	if (isset($_POST["event_title_search"]) && $_POST["event_title_search"]) {
@@ -123,35 +109,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 					<?php echo generate_calendars("reporting", "Reporting Date", true, true, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_start"], true, true, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_finish"]); ?>
 					<tr>
 						<td colspan="3">&nbsp;</td>
-					</tr>
-					<tr>
-						<td style="vertical-align: top;"><input id="organisation_checkbox" type="checkbox" disabled="disabled" checked="checked"></td>
-						<td style="vertical-align: top;"><label for="organisation_id" class="form-required">Organisation</label></td>
-						<td style="vertical-align: top;">
-							<select id="organisation_id" name="organisation_id" style="width: 177px" onchange="window.location = '<?php echo ENTRADA_RELATIVE; ?>/admin/reports?section=<?php echo $SECTION; ?>&org_id=' + $F('organisation_id')">
-							<?php
-							$query = "SELECT `organisation_id`, `organisation_title` FROM `".AUTH_DATABASE."`.`organisations`";
-							$results = $db->GetAll($query);
-							$all_organisations = false;
-							if ($results) {
-								$all_organisations = true;
-								foreach ($results as $result) {
-									if ($ENTRADA_ACL->amIAllowed("resourceorganisation".$result["organisation_id"], "read")) {
-										echo "<option value=\"".(int) $result["organisation_id"]."\"".(($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["organisation_id"] == $result["organisation_id"]) ? " selected=\"selected\"" : "").">".html_encode($result["organisation_title"])."</option>\n";
-									} else {
-										$all_organisations = false;
-									}
-								}
-							}
-
-							if ($all_organisations) {
-								?>
-								<option value="-1" <?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["organisation_id"] == -1) ? " selected=\"selected\"" : ""); ?>>All organisations</option>
-								<?php
-							}
-							?>
-							</select>
-						</td>
 					</tr>
 					<tr>
 						<td></td>
@@ -232,14 +189,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 		echo "<div class=\"content-small\" style=\"margin-bottom: 10px\">\n";
 		echo "	<strong>Date Range:</strong> ".date(DEFAULT_DATE_FORMAT, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_start"])." <strong>to</strong> ".date(DEFAULT_DATE_FORMAT, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_finish"]).".";
 		echo "</div>\n";
-
-		if ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["organisation_id"] != -1) {
-			$organisation_where = " AND (b.`organisation_id` = ".$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["organisation_id"].") ";
-		} else {
-			$organisation_where = "";
-		}
 		
-		$query = "SELECT * FROM `events_lu_eventtypes` ORDER BY `eventtype_order` ASC";
+		$query = "	SELECT a.* FROM `events_lu_eventtypes` AS a 
+					LEFT JOIN `eventtype_organisation` AS c 
+					ON a.`eventtype_id` = c.`eventtype_id` 
+					LEFT JOIN `".AUTH_DATABASE."`.`organisations` AS b
+					ON b.`organisation_id` = c.`organisation_id` 
+					WHERE b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+					AND a.`eventtype_active` = '1' 
+					ORDER BY a.`eventtype_order`
+			";
 		$event_types = $db->GetAll($query);
 		if ($event_types) {
 			foreach ($event_types as $event_type) {
@@ -255,10 +214,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 								LEFT JOIN `events_lu_eventtypes` AS d
 								ON d.`eventtype_id` = c.`eventtype_id`
 								WHERE c.`eventtype_id` = ".$db->qstr($event_type["eventtype_id"])."
+								AND (a.`parent_id` IS NULL OR a.`parent_id` = 0)
 								AND (a.`event_start` BETWEEN ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_start"])." AND ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_finish"]).")
 								".(isset($event_title_search) && $event_title_search ? "AND a.`event_title` LIKE ".$db->qstr("%".$event_title_search."%") : "")."
-								AND a.`course_id` = ".$db->qstr($course_id).
-								$organisation_where."
+								AND a.`course_id` = ".$db->qstr($course_id)."
 								ORDER BY d.`eventtype_order` ASC, b.`course_name` ASC, a.`event_start` ASC";
 					$results = $db->GetAll($query);
 					if ($results) {
@@ -311,7 +270,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 				foreach ($result["events"] as $eventtype_id => $event) {
 					$STATISTICS["labels"][$eventtype_id] = $eventtype_legend[$eventtype_id];
 					$STATISTICS["legend"][$eventtype_id] = $eventtype_legend[$eventtype_id];
-					$STATISTICS["display"][$eventtype_id] = $event["events"];
+					$STATISTICS["display"][$eventtype_id] = $event["duration"] / 60;
 
 					if ($result["total_events"] > 0) {
 						$percent_events = round((($event["events"] / $result["total_events"]) * 100));

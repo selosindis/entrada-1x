@@ -36,8 +36,8 @@ $NOTIFICATION_BLACKLIST = array();
 $NOTIFICATION_MESSAGE		 	 = array();
 $NOTIFICATION_MESSAGE["subject"] = "Teaching Reminder Notice: %EVENT_DATE%";
 
-$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".DEFAULT_TEMPLATE."/email/teaching-notification.txt");
-$NOTIFICATION_MESSAGE["htmlbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".DEFAULT_TEMPLATE."/email/teaching-notification.html");
+$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".$ENTRADA_ACTIVE_TEMPLATE."/email/teaching-notification.txt");
+$NOTIFICATION_MESSAGE["htmlbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".$ENTRADA_ACTIVE_TEMPLATE."/email/teaching-notification.html");
 
 $NOTIFICATION_REMINDERS = array();
 
@@ -118,7 +118,7 @@ function fetch_event_resources_text($event_id = 0) {
 			$output["html"] .= "</div>\n";
 			
 			$output["text"] .= "   *There are no resources available for download.*\n\n";
-			$output["text"] .= "   Please take a moment to upload any relavant documents at the following URL:\n";
+			$output["text"] .= "   Please take a moment to upload any relevant documents at the following URL:\n";
 			$output["text"] .= "   ".ENTRADA_URL."/admin/events?section=content&id=".$event_id."\n\n";
 		}
 	}
@@ -135,7 +135,7 @@ function fetch_event_resources_text($event_id = 0) {
  * @return bool
  */
 function notifications_send($timestamp_start = 0, $timestamp_end = 0, $notice = array()) {
-	global $db, $mail, $NOTIFICATION_MESSAGE, $NOTIFICATION_BLACKLIST, $AGENT_CONTACTS;
+	global $db, $mail, $NOTIFICATION_MESSAGE, $NOTIFICATION_BLACKLIST, $AGENT_CONTACTS, $ENTRADA_ACTIVE_TEMPLATE;
 
 	if ((!$timestamp_start = (int) $timestamp_start) || (!$timestamp_end = (int) $timestamp_end)) {
 		return false;
@@ -143,11 +143,11 @@ function notifications_send($timestamp_start = 0, $timestamp_end = 0, $notice = 
 
 	$query		= "	SELECT a.*
 					FROM `events` AS a
-					LEFT JOIN `courses` AS b
+					JOIN `courses` AS b
 					ON b.`course_id` = a.`course_id`
-					WHERE b.`course_id` IS NOT NULL
-					AND b.`course_active` = '1'
+					WHERE b.`course_active` = '1'
 					AND b.`notifications` = '1'
+					AND b.`organisation_id` = '1'
 					AND a.`event_start` BETWEEN ".$db->qstr($timestamp_start)." AND ".$db->qstr($timestamp_end);
 	$events	= $db->GetAll($query);
 	if ($events) {
@@ -171,10 +171,10 @@ function notifications_send($timestamp_start = 0, $timestamp_end = 0, $notice = 
 			
 			$query			= "	SELECT a.`proxy_id`, b.`firstname`, b.`lastname`, b.`email`
 								FROM `event_contacts` AS a
-								LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
+								JOIN `".AUTH_DATABASE."`.`user_data` AS b
 								ON b.`id` = a.`proxy_id`
 								WHERE a.`event_id` = ".$db->qstr($event["event_id"])."
-								AND b.`id` IS NOT NULL
+								AND a.`contact_role` = 'teacher'
 								AND b.`email` <> ''
 								ORDER BY a.`contact_order` ASC";
 			$event_contacts	= $db->GetAll($query);
@@ -198,12 +198,11 @@ function notifications_send($timestamp_start = 0, $timestamp_end = 0, $notice = 
 					
 					$query		= "	SELECT a.`assigned_to` AS `proxy_id`, b.`firstname`, b.`lastname`, b.`email`
 									FROM `permissions` AS a
-									LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
+									JOIN `".AUTH_DATABASE."`.`user_data` AS b
 									ON b.`id` = a.`assigned_to`
 									WHERE a.`assigned_by` = ".$db->qstr($event_contact["proxy_id"])."
 									AND a.`valid_from` <= ".$db->qstr(time())."
 									AND a.`valid_until` > ".$db->qstr(time())."
-									AND b.`id` IS NOT NULL
 									AND b.`email` <> ''";
 					$assistants	= $db->GetAll($query);
 					if ($assistants) {
@@ -248,7 +247,7 @@ function notifications_send($timestamp_start = 0, $timestamp_end = 0, $notice = 
 								((count($associated_faculty) > 0) ? "   - ".implode("\n   - ", $associated_faculty)."\n" : ""),
 								$event_resources["html"],
 								$event_resources["text"],
-								ENTRADA_URL."/templates/".DEFAULT_TEMPLATE."/images"
+								ENTRADA_URL."/templates/".$ENTRADA_ACTIVE_TEMPLATE."/images"
 							);
 				
 				$mail->Subject	= str_replace(array("%EVENT_DATE%", "%SUBJECT_SUFFIX%"), array(date("Y-m-d", $event["event_start"]), (($notice["subject_suffix"] != "") ? " ".$notice["subject_suffix"] : "")), $NOTIFICATION_MESSAGE["subject"]);

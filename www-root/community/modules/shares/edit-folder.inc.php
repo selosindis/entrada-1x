@@ -164,7 +164,8 @@ if ($RECORD_ID) {
 
 							$SUCCESS++;
 							$SUCCESSSTR[]	= "You have successfully updated the <strong>".html_encode($PROCESSED["folder_title"])."</strong> shared folder.<br /><br />You will now be redirected to the index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-
+							
+							add_statistic("community:".$COMMUNITY_ID.":shares", "folder_edit", "cshare_id", $RECORD_ID);
 							communities_log_history($COMMUNITY_ID, $PAGE_ID, $RECORD_ID, "community_history_edit_share", 1);
 						}
 
@@ -237,7 +238,7 @@ if ($RECORD_ID) {
 							<td><input type="text" id="folder_title" name="folder_title" value="<?php echo ((isset($PROCESSED["folder_title"])) ? html_encode($PROCESSED["folder_title"]) : ""); ?>" maxlength="64" style="width: 95%" /></td>
 						</tr>
 						<tr>
-							<td colspan="2" style="vertical-align: top"><label for="folder_description" class="form-nrequired">Folder Description</label></td>
+							<td colspan="2" style="vertical-align: top !important"><label for="folder_description" class="form-nrequired">Folder Description</label></td>
 							<td style="vertical-align: top">
 								<textarea id="folder_description" name="folder_description" style="width: 95%; height: 60px" cols="50" rows="5"><?php echo ((isset($PROCESSED["folder_description"])) ? html_encode($PROCESSED["folder_description"]) : ""); ?></textarea>
 							</td>

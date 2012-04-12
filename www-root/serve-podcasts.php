@@ -68,6 +68,7 @@ if(!isset($_SERVER["PHP_AUTH_USER"])) {
 
 	$auth = new AuthSystem((((defined("AUTH_DEVELOPMENT")) && (AUTH_DEVELOPMENT != "")) ? AUTH_DEVELOPMENT : AUTH_PRODUCTION));	
 	$auth->setAppAuthentication(AUTH_APP_ID, AUTH_USERNAME, AUTH_PASSWORD);
+	$auth->setEncryption(AUTH_ENCRYPTION_METHOD);
 	$auth->setUserAuthentication($username, $password, AUTH_METHOD);
 	$result = $auth->Authenticate(array("id", "firstname", "lastname", "email", "role", "group"));
 
@@ -86,6 +87,7 @@ if(!isset($_SERVER["PHP_AUTH_USER"])) {
 			$USER_EMAIL		= $result["EMAIL"];
 			$USER_ROLE		= $result["ROLE"];
 			$USER_GROUP		= $result["GROUP"];
+			$ENTRADA_USER = User::get($result["ID"]);
 		}
 	} else {
 		$ERROR++;
@@ -160,6 +162,7 @@ switch($ACTION) {
 		}
 	break;
 	case "feed" :
+	default :
 		switch($USER_GROUP) {
 			case "faculty" :
 			case "resident" :
@@ -203,7 +206,8 @@ switch($ACTION) {
 			break;
 			case "student" :
 			default :
-				$CHANNELS[] = "student:".$USER_ROLE;
+				$cohort_array = groups_get_cohort($USER_PROXY_ID);
+				$CHANNELS[] = "student:".$cohort_array["group_id"];
 			break;
 		}
 
@@ -220,7 +224,7 @@ switch($ACTION) {
 						}
 
 						$query	= "
-								SELECT a.*, b.`efile_id`, b.`file_type`, b.`file_size`, b.`file_name`, b.`file_title`, b.`file_notes`, c.`audience_value` AS `event_grad_year`
+								SELECT a.*, b.`efile_id`, b.`file_type`, b.`file_size`, b.`file_name`, b.`file_title`, b.`file_notes`, c.`audience_value` AS `event_cohort`
 								FROM `events` AS a
 								LEFT JOIN `event_files` AS b
 								ON b.`event_id` = a.`event_id`
@@ -231,7 +235,7 @@ switch($ACTION) {
 								AND b.`file_type` IN ('".implode("', '", $VALID_PODCASTS)."')
 								AND (b.`release_date` = '0' OR b.`release_date` <= ".$db->qstr(time()).")
 								AND (b.`release_until` = '0' OR b.`release_until` > ".$db->qstr(time()).")
-								AND c.`audience_type` = 'grad_year'
+								AND c.`audience_type` = 'cohort'
 								ORDER BY a.`event_start` DESC
 								LIMIT 0, 150";
 
@@ -247,12 +251,12 @@ switch($ACTION) {
 						}
 					break;
 					case "student" :
-						if((!isset($pieces[1])) || (!$grad_year = (int) $pieces[1])) {
-							$grad_year = 0;
+						if((!isset($pieces[1])) || (!$cohort = (int) $pieces[1])) {
+							$cohort = 0;
 						}
 
 						$query  	=	"
-									SELECT a.*, b.`efile_id`, b.`file_type`, b.`file_size`, b.`file_name`, b.`file_title`, b.`file_notes`, c.`audience_value` AS `event_grad_year`
+									SELECT a.*, b.`efile_id`, b.`file_type`, b.`file_size`, b.`file_name`, b.`file_title`, b.`file_notes`, c.`audience_value` AS `event_cohort`
 									FROM `events` AS a
 									LEFT JOIN `event_files` AS b
 									ON b.`event_id` = a.`event_id`
@@ -262,7 +266,7 @@ switch($ACTION) {
 									AND b.`file_type` IN ('".implode("', '", $VALID_PODCASTS)."')
 									AND (b.`release_date` = '0' OR b.`release_date` <= ".$db->qstr(time()).")
 									AND (b.`release_until` = '0' OR b.`release_until` > ".$db->qstr(time()).")
-									AND (c.`audience_type` = 'grad_year'".(((int) $grad_year) ? " AND c.`audience_value` = ".$db->qstr((int) $grad_year) : "").")
+									AND (c.`audience_type` = 'cohort'".(((int) $cohort) ? " AND c.`audience_value` = ".$db->qstr((int) $cohort) : "").")
 									ORDER BY a.`event_start` DESC
 									LIMIT 0, 150";
 						$results	= $db->GetAll($query);
@@ -303,7 +307,7 @@ switch($ACTION) {
 
 		$rss->podcast = new Podcast();
 		$rss->podcast->block			= "yes";
-		$rss->podcast->subtitle			= "Lastest podcasts from learning events in the School of Medicine at Queen's University.";
+		$rss->podcast->subtitle			= "Latest podcasts from learning events in the School of Medicine at Queen's University.";
 		$rss->podcast->author			= "School of Medicine, Queen's University";
 		$rss->podcast->owner_email		= "medtech@queensu.ca";
 		$rss->podcast->owner_name		= "School of Medicine, Queen's University";
@@ -342,7 +346,7 @@ switch($ACTION) {
 					}
 				}
 
-				$description  = "Course: ".(($result["course_id"]) ? "<a href=\"".ENTRADA_URL."/courses?id=".$result["course_id"]."\">".course_name($result["course_id"])."</a> ".(($result["course_num"]) ? "(".$result["course_num"].")" : "") : "Not Filed")."<br  />";
+				$description  = "Course: ".(($result["course_id"]) ? "<a href=\"".ENTRADA_URL."/courses?id=".$result["course_id"]."\">".fetch_course_title($result["course_id"])."</a> ".(($result["course_num"]) ? "(".$result["course_num"].")" : "") : "Not Filed")."<br  />";
 				$description .= "Associated Faculty:";
 				$description .= "<ol>";
 				if(count($primary_contact)) {
@@ -358,7 +362,7 @@ switch($ACTION) {
 				}
 				$description .= "</ol><br /><br />";
 
-				$description .= "Graduating Year: Class of ".$result["event_grad_year"]."<br />";
+				$description .= "Cohort: ".html_encode(groups_get_name($result["event_cohort"]))."<br />";
 				$description .= "Phase: ".strtoupper($result["event_phase"])."<br />";
 				$description .= "Event Date/Time: ".date(DEFAULT_DATE_FORMAT, $result["event_start"])."<br />";
 				$description .= "Event Duration: ".(($result["event_duration"]) ? $result["event_duration"]." minutes" : "Not provided")."<br />";
@@ -389,8 +393,5 @@ switch($ACTION) {
 		echo $rss->createFeed("PODCAST");
 
 		add_statistic("podcasts", "view", "proxy_id", $USER_PROXY_ID, $USER_PROXY_ID);
-	break;
-	default :
-		continue;
 	break;
 }

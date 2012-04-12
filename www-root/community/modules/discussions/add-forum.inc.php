@@ -155,6 +155,7 @@ switch($STEP) {
 					$SUCCESS++;
 					$SUCCESSSTR[]	= "You have successfully added a new discussion forum to the community.<br /><br />You will now be redirected to the index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 
+					add_statistic("community:".$COMMUNITY_ID.":discussions", "forum_add", "cdiscussion_id", $FORUM_ID);
 					communities_log_history($COMMUNITY_ID, $PAGE_ID, $FORUM_ID, "community_history_add_forum", 1);
 				}
 			}
@@ -219,7 +220,7 @@ switch($STEP) {
 				<td style="text-align: right"><input type="text" id="forum_title" name="forum_title" value="<?php echo ((isset($PROCESSED["forum_title"])) ? html_encode($PROCESSED["forum_title"]) : ""); ?>" maxlength="64" style="width: 95%" /></td>
 			</tr>
 			<tr>
-				<td colspan="2" style="vertical-align: top"><label for="forum_description" class="form-nrequired">Forum Description</label></td>
+				<td colspan="2" style="vertical-align: top !important"><label for="forum_description" class="form-nrequired">Forum Description</label></td>
 				<td style="text-align: right; vertical-align: top">
 					<textarea id="forum_description" name="forum_description" style="width: 95%; height: 60px" cols="50" rows="5"><?php echo ((isset($PROCESSED["forum_description"])) ? html_encode($PROCESSED["forum_description"]) : ""); ?></textarea>
 				</td>

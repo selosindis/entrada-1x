@@ -18,7 +18,7 @@ require_once("Models/users/Users.class.php");
 require_once("Models/users/Assistant.class.php");
 require_once("Models/users/UserPhoto.class.php");
 require_once("Models/users/UserPhotos.class.php");
-require_once("Models/users/GraduatingClass.class.php");
+require_once("Models/users/Cohort.class.php");
 require_once("Models/organisations/Organisation.class.php");
 require_once("Models/organisations/Organisations.class.php");
 require_once("Models/users/Department.class.php");
@@ -169,7 +169,7 @@ function validate_task_details_inputs() {
 		'rejection_comment_policy' => array('filter' => FILTER_CALLBACK, 'options' => 'validate_comment_policy'),
 		'task_verification_type' => array('filter' => FILTER_CALLBACK, 'options' => 'validate_verification_type'),
 		'task_verification_notification' => array('filter'=> FILTER_VALIDATE_INT, 'flags' => FILTER_REQUIRE_ARRAY, 'options'=>array('min_range' => 0)),
-		'associated_grad_years' => FILTER_SANITIZE_INT, //could be more aggressive here but there's no permissionissues or db integrity issue particularly
+		'associated_cohorts' => FILTER_SANITIZE_INT, //could be more aggressive here but there's no permissionissues or db integrity issue particularly
 		'associated_organisation_id' => array('filter' => FILTER_CALLBACK, 'options' => 'validate_organisation_id')
 	);
 	
@@ -224,8 +224,8 @@ function process_task_common_errors(array &$inputs) {
 			add_error($translate->translate("task_recipient_individual_empty"));
 		}
 	} elseif (TASK_RECIPIENT_CLASS === $inputs['task_recipient_type']) {
-		if (false === $inputs['associated_grad_years']) {
-			add_error($translate->translate("task_recipient_grad_year_missing"));
+		if (false === $inputs['associated_cohorts']) {
+			add_error($translate->translate("task_recipient_cohort_missing"));
 		}
 	} elseif (TASK_RECIPIENT_ORGANISATION === $inputs['task_recipient_type']) {
 		if (is_null($inputs["associated_organisation_id"])) {

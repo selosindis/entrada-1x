@@ -113,7 +113,8 @@ INSERT INTO `acl_permissions` (`resource_type`, `resource_value`, `entity_type`,
 ('myowndepartment', NULL, 'user', '1', NULL, 1, 1, 1, 1, NULL),
 ('annualreportadmin', NULL, 'group:role', 'medtech:admin', NULL, 1, 1, 1, 1, NULL),
 ('gradebook', NULL, 'group', 'student', NULL, NULL, 1, NULL, NULL, NULL),
-('metadata', NULL, 'group:role', 'staff:admin', 1, 1, 1, 1, 1, NULL);
+('metadata', NULL, 'group:role', 'staff:admin', 1, 1, 1, 1, 1, NULL),
+('evaluation', NULL, 'group', 'faculty', 1, 0, 1, 0, 0, 'IsEvaluated');
 
 CREATE TABLE IF NOT EXISTS `departments` (
   `department_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
@@ -206,6 +207,7 @@ CREATE TABLE IF NOT EXISTS `organisations` (
   `organisation_email` varchar(128) NOT NULL DEFAULT '',
   `organisation_url` text NOT NULL,
   `organisation_desc` text,
+  `template` varchar(32) NOT NULL DEFAULT 'default',
   PRIMARY KEY  (`organisation_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
@@ -308,6 +310,7 @@ CREATE TABLE IF NOT EXISTS `user_data` (
   `lastname` varchar(35) NOT NULL DEFAULT '',
   `email` varchar(255) NOT NULL DEFAULT '',
   `email_alt` varchar(255) NOT NULL DEFAULT '',
+  `email_updated` bigint(64) DEFAULT NULL,
   `google_id` varchar(128) DEFAULT NULL,
   `telephone` varchar(25) NOT NULL DEFAULT '',
   `fax` varchar(25) NOT NULL DEFAULT '',
@@ -396,3 +399,32 @@ CREATE TABLE IF NOT EXISTS `user_preferences` (
   PRIMARY KEY  (`preference_id`),
   KEY `app_id` (`app_id`,`proxy_id`,`module`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `user_data_resident` (
+  `proxy_id` int(12) NOT NULL,
+  `cmpa_no` int(11) NOT NULL,
+  `cpso_no` int(11) NOT NULL,
+  `school_id` int(11) NOT NULL,
+  `program_id` int(11) NOT NULL,
+  `student_no` int(11) NOT NULL,
+  `last_name` varchar(100) NOT NULL,
+  `first_name` varchar(100) NOT NULL,
+  `category_id` int(11) NOT NULL,
+  `assess_prog_img` varchar(1) NOT NULL,
+  `assess_prog_non_img` varchar(1) NOT NULL,
+  PRIMARY KEY (`proxy_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `user_organisations` (
+	`id` int(12) NOT NULL AUTO_INCREMENT, 
+	`organisation_id` int(3) NOT NULL, 
+	`proxy_id` int(12) NOT NULL, 
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+INSERT INTO `user_organisations` (`organisation_id`, `proxy_id`)
+SELECT '1', a.`id`
+FROM `user_data` AS a
+JOIN `user_access` AS b
+ON b.`user_id` = a.`id`
+WHERE b.`app_id` = '1';

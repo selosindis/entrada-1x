@@ -49,8 +49,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 		}
 	}
 
-	if ((isset($_GET["grad_year"])) && ($grad_year = clean_input($_GET["grad_year"], array("trim", "int")))) {
-		$GRAD_YEAR = $grad_year;
+	if ((isset($_GET["cohort"])) && ($cohort = clean_input($_GET["cohort"], array("trim", "int")))) {
+		$COHORT = $cohort;
 	}
 	
 	if ($COURSE_ID) {
@@ -69,22 +69,24 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				$query = "	SELECT `assessments`.*,`assessment_marking_schemes`.`id` as `marking_scheme_id`, `assessment_marking_schemes`.`handler`
 							FROM `assessments`
 							LEFT JOIN `assessment_marking_schemes` ON `assessment_marking_schemes`.`id` = `assessments`.`marking_scheme_id`
-							WHERE `assessments`.`grad_year` = ".$db->qstr($GRAD_YEAR);
+							WHERE `assessments`.`cohort` = ".$db->qstr($COHORT);
 			}
 			$assessments = $db->GetAll($query);
 			if ($assessments) {
 				// CSV Download
-				$years = array();
+				$groups = array();
 				$query = "SELECT b.`id` AS `proxy_id`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, b.`number`, c.`group`, c.`role`";
 
 				foreach ($assessments as $key => $assessment) {
-					$years[] = $assessment["grad_year"];
+					$groups[] = $assessment["cohort"];
 					$query .= ", assessment_$key.`grade_id` AS `".$key."_grade_id`, assessment_$key.`value` AS `".$key."_grade_value` ";
 				}
 				
 				$query .= "	FROM `".AUTH_DATABASE."`.`user_data` AS b
-							LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS c
+							JOIN `".AUTH_DATABASE."`.`user_access` AS c
 							ON c.`user_id` = b.`id` AND c.`app_id`=".$db->qstr(AUTH_APP_ID)."
+							JOIN `group_members` AS d
+							ON b.`id` = d.`proxy_id`
 							AND c.`account_active`='true'
 							AND (c.`access_starts`='0' OR c.`access_starts`<=".$db->qstr(time()).")
 							AND (c.`access_expires`='0' OR c.`access_expires`>=".$db->qstr(time()).") ";
@@ -92,10 +94,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					$query .= " LEFT JOIN `".DATABASE_NAME."`.`assessment_grades` AS assessment_$key ON b.`id` = assessment_$key.`proxy_id` AND assessment_$key.`assessment_id` = ".$db->qstr($assessment["assessment_id"])."\n";
 				}
 				
-				if (isset($GRAD_YEAR)) {
-					$query .= " WHERE c.`group` = 'student' AND c.`role` = ".$db->qstr($GRAD_YEAR);
+				if (isset($COHORT)) {
+					$query .= " WHERE c.`group` = 'student' AND d.`group_id` = ".$db->qstr($COHORT);
 				} else {					
-					$query .= " WHERE c.`group` = 'student' AND c.`role` IN (".implode(",", $years).")";
+					$query .= " WHERE c.`group` = 'student' AND d.`group_id` IN (".implode(",", $groups).")";
 				}
 				$students = $db->GetAll($query);
 				
@@ -136,8 +138,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 
 				ob_clear_open_buffers();
 				
-				if (isset($GRAD_YEAR)) {
-					$filename = date("Y-m-d")."_".useable_filename($course_details["course_code"]."_".$GRAD_YEAR."_gradebook").".csv\"";
+				if (isset($COHORT)) {
+					$filename = date("Y-m-d")."_".useable_filename($course_details["course_code"]."_".clean_input(groups_get_name($COHORT), array("trim", "file"))."_gradebook").".csv\"";
 				} else {
 					$filename = date("Y-m-d")."_".useable_filename($course_details["course_code"]."_gradebook").".csv\"";
 				}

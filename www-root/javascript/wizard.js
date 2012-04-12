@@ -1,6 +1,14 @@
 var wizardStep	= 1;
 var maxSteps	= 3;
 
+function allowSubmit(checked) {
+	if (checked) {
+		$('next-button').enable();
+	} else {
+		$('next-button').disable();
+	}
+}
+
 function parentReload() {
 	if (window.opener && !window.opener.closed) {
 		window.opener.location.href = window.opener.location.href;

@@ -89,25 +89,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 	 * Update requsted organisation filter
 	 * Valid: any integer really.
 	 */
-	if(isset($_GET["organisation_id"])) {
-		if($_GET["organisation_id"] == "all") {
-			$organisation_id = null;
-		} else if((int) trim($_GET["organisation_id"])) {
-				$organisation_id = (int) trim($_GET["organisation_id"]);
-				$organisation_where = "`organisation_id` = ".$organisation_id;
-			}
-
-		$_SERVER["QUERY_STRING"] = replace_query(array("organisation_id" => false));
-		$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["organisation_id"] = $organisation_id;
-	} else {
-		if (!isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["organisation_id"])) {
-			$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["organisation_id"] = $_SESSION["details"]["organisation_id"];
-			$organisation_id = $_SESSION["details"]["organisation_id"];
-		} else {
-			$organisation_id = $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["organisation_id"];
-		}
-		$organisation_where = "`organisation_id` = ".$organisation_id;
-	}
 
 	/**
 	 * Check if preferences need to be updated on the server at this point.
@@ -118,12 +99,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 	 * Provide the queries with the columns to order by.
 	 */
 	switch($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) {
+		case "type" :
+			$sort_by = "c.`curriculum_type_name`, a.`course_code`, a.`course_name` ASC";
+		break;
 		case "director" :
-			$SORT_BY	= "`fullname` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]).", `courses`.`course_name` ASC";
-			break;
+			$sort_by = "`fullname` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]).", a.`course_name` ASC";
+		break;
 		case "name" :
 		default :
-			$SORT_BY	= "`courses`.`course_name` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]);
+			$sort_by = "a.`course_code`, a.`course_name` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]);
 		break;
 	}
 
@@ -132,7 +116,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 	 * of pages that are available based on the results per page preferences.
 	 */
 	if ($ENTRADA_ACL->amIAllowed("course", "update", false)) {
-		$query	= "	SELECT COUNT(*) AS `total_rows` FROM `courses` WHERE `courses`.`course_active` = '1'".(isset($organisation_where) ? " AND `courses`.".$organisation_where : "");
+		$query	= "	SELECT COUNT(*) AS `total_rows`
+					FROM `courses` AS a
+					LEFT JOIN `curriculum_lu_types` AS b
+					on b.`curriculum_type_id` = a.`curriculum_type_id`
+					WHERE a.`course_active` = '1'
+					AND a.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation());
 	} else {
 		$query	= "	SELECT COUNT(*) AS `total_rows`
 					FROM `courses` AS a
@@ -145,156 +134,133 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					LEFT JOIN `community_members` AS d
 					ON d.`community_id` = c.`community_id`
 					AND d.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
-					WHERE 
-					(
+					LEFT JOIN `curriculum_lu_types` AS e
+					on e.`curriculum_type_id` = a.`curriculum_type_id`
+					WHERE (
 						a.`pcoord_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
 						OR b.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
 						OR d.`member_acl` = '1'
 					)
-					".(isset($organisation_where) ? " AND `a`.".$organisation_where : "")."
+					AND a.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
 					AND a.`course_active` = '1'";
 	}
 	$result = $db->GetRow($query);
 	if ($result) {
-		$TOTAL_ROWS	= $result["total_rows"];
+		$total_rows	= $result["total_rows"];
 
-		if ($TOTAL_ROWS <= $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) {
-			$TOTAL_PAGES = 1;
-		} elseif (($TOTAL_ROWS % $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) == 0) {
-			$TOTAL_PAGES = (int) ($TOTAL_ROWS / $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]);
+		if ($total_rows <= $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) {
+			$total_pages = 1;
+		} elseif (($total_rows % $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) == 0) {
+			$total_pages = (int) ($total_rows / $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]);
 		} else {
-			$TOTAL_PAGES = (int) ($TOTAL_ROWS / $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) + 1;
+			$total_pages = (int) ($total_rows / $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) + 1;
 		}
 	} else {
-		$TOTAL_ROWS		= 0;
-		$TOTAL_PAGES	= 1;
+		$total_rows = 0;
+		$total_pages = 1;
 	}
 
 	/**
 	 * Check if pv variable is set and see if it's a valid page, other wise page 1 it is.
 	 */
 	if (isset($_GET["pv"])) {
-		$PAGE_CURRENT = (int) trim($_GET["pv"]);
+		$page_current = (int) trim($_GET["pv"]);
 
-		if (($PAGE_CURRENT < 1) || ($PAGE_CURRENT > $TOTAL_PAGES)) {
-			$PAGE_CURRENT = 1;
+		if (($page_current < 1) || ($page_current > $total_pages)) {
+			$page_current = 1;
 		}
 	} else {
-		$PAGE_CURRENT = 1;
+		$page_current = 1;
 	}
 
-	$PAGE_PREVIOUS	= (($PAGE_CURRENT > 1) ? ($PAGE_CURRENT - 1) : false);
-	$PAGE_NEXT	= (($PAGE_CURRENT < $TOTAL_PAGES) ? ($PAGE_CURRENT + 1) : false);
+	$page_previous = (($page_current > 1) ? ($page_current - 1) : false);
+	$page_next = (($page_current < $total_pages) ? ($page_current + 1) : false);
 
-	echo "	<h1>Gradebooks</h1>";
-	
-
+	echo "<h1>Gradebooks</h1>";
 	?>
 	<table style="clear: both; width: 100%; margin-bottom: 10px" cellspacing="0" cellpadding="0" border="0">
-	<tr>
-		<td style="width: 100%; text-align: right">
-			<div style="white-space: nowrap">
-				<form action="<?php echo ENTRADA_URL."/admin/".$MODULE;?>" method="get" id="organisationSelector" style="vertical-align: middle">
-					<label for="organisation_id">Organisation filter:</label>
-					<select name="organisation_id" id="organisation_id" onchange="$('organisationSelector').submit();" style="display:inline;">
-							<?php
-							$query		= "SELECT `organisation_id`, `organisation_title` FROM `".AUTH_DATABASE."`.`organisations`";
-							$results	= $db->GetAll($query);
-							$all = true;
-							if($results) {
-								foreach($results as $result) {
-									if($ENTRADA_ACL->amIAllowed(new CourseResource(null, $result["organisation_id"]), "read")) {
-										echo "<option value=\"".(int) $result["organisation_id"]."\"".(isset($organisation_id) && $organisation_id == $result["organisation_id"] ? " selected=\"selected\"" : "").">".html_encode($result["organisation_title"])."</option>\n";
-									} else {
-										$all = false;
-									}
-								}
-							}
-							if($all) {
-								echo "<option value=\"all\" ".(isset($organisation_id) && $organisation_id == "all" ? "selected=\"selected\"" : "").">All organisations</option>";
-							}
-							?>
-					</select>
-				</form>
-					<?php
-					if ($TOTAL_PAGES > 1) {
-						echo "<form action=\"".ENTRADA_URL."/admin/".$MODULE."\" method=\"get\" id=\"pageSelector\" style=\"display:inline;\">\n";
-						echo "<span style=\"width: 20px; vertical-align: middle; margin-right: 3px; text-align: left\">\n";
-						if ($PAGE_PREVIOUS) {
-							echo "<a href=\"".ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("pv" => $PAGE_PREVIOUS))."\"><img src=\"".ENTRADA_URL."/images/record-previous-on.gif\" border=\"0\" width=\"11\" height=\"11\" alt=\"Back to page ".$PAGE_PREVIOUS.".\" title=\"Back to page ".$PAGE_PREVIOUS.".\" style=\"vertical-align: middle\" /></a>\n";
-						} else {
-							echo "<img src=\"".ENTRADA_URL."/images/record-previous-off.gif\" width=\"11\" height=\"11\" alt=\"\" title=\"\" style=\"vertical-align: middle\" />";
-						}
-						echo "</span>";
-						echo "<span style=\"vertical-align: middle\">\n";
-						echo "<select name=\"pv\" onchange=\"$('pageSelector').submit();\"".(($TOTAL_PAGES <= 1) ? " disabled=\"disabled\"" : "").">\n";
-						for($i = 1; $i <= $TOTAL_PAGES; $i++) {
-							echo "<option value=\"".$i."\"".(($i == $PAGE_CURRENT) ? " selected=\"selected\"" : "").">".(($i == $PAGE_CURRENT) ? " Viewing" : "Jump To")." Page ".$i."</option>\n";
-						}
-						echo "</select>\n";
-						echo "</span>\n";
-						echo "<span style=\"width: 20px; vertical-align: middle; margin-left: 3px; text-align: right\">\n";
-						if ($PAGE_CURRENT < $TOTAL_PAGES) {
-							echo "<a href=\"".ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("pv" => $PAGE_NEXT))."\"><img src=\"".ENTRADA_URL."/images/record-next-on.gif\" border=\"0\" width=\"11\" height=\"11\" alt=\"Forward to page ".$PAGE_NEXT.".\" title=\"Forward to page ".$PAGE_NEXT.".\" style=\"vertical-align: middle\" /></a>";
-						} else {
-							echo "<img src=\"".ENTRADA_URL."/images/record-next-off.gif\" width=\"11\" height=\"11\" alt=\"\" title=\"\" style=\"vertical-align: middle\" />";
-						}
-						echo "</span>\n";
+		<tr>
+			<td style="width: 100%; text-align: right">
+				<?php
+				echo "<div style=\"white-space: nowrap\">\n";
+				if ($total_pages > 1) {
+					echo "<form action=\"" . ENTRADA_URL . "/admin/" . $MODULE . "\" method=\"get\" id=\"pageSelector\" style=\"display:inline;\">\n";
+					echo "<span style=\"width: 20px; vertical-align: middle; margin-right: 3px; text-align: left\">\n";
+					if ($page_previous) {
+						echo "<a href=\"" . ENTRADA_URL . "/admin/" . $MODULE . "?" . replace_query(array("pv" => $page_previous)) . "\"><img src=\"" . ENTRADA_URL . "/images/record-previous-on.gif\" border=\"0\" width=\"11\" height=\"11\" alt=\"Back to page " . $page_previous . ".\" title=\"Back to page " . $page_previous . ".\" style=\"vertical-align: middle\" /></a>\n";
+					} else {
+						echo "<img src=\"" . ENTRADA_URL . "/images/record-previous-off.gif\" width=\"11\" height=\"11\" alt=\"\" title=\"\" style=\"vertical-align: middle\" />";
 					}
-					echo "</form>\n";
-					echo "</div>\n";
-					?>
-		</td>
-	</tr>
-</table>
+					echo "</span>";
+					echo "<span style=\"vertical-align: middle\">\n";
+					echo "<select name=\"pv\" onchange=\"$('pageSelector').submit();\"" . (($total_pages <= 1) ? " disabled=\"disabled\"" : "") . ">\n";
+					for ($i = 1; $i <= $total_pages; $i++) {
+						echo "<option value=\"" . $i . "\"" . (($i == $page_current) ? " selected=\"selected\"" : "") . ">" . (($i == $page_current) ? " Viewing" : "Jump To") . " Page " . $i . "</option>\n";
+					}
+					echo "</select>\n";
+					echo "</span>\n";
+					echo "<span style=\"width: 20px; vertical-align: middle; margin-left: 3px; text-align: right\">\n";
+					if ($page_current < $total_pages) {
+						echo "<a href=\"" . ENTRADA_URL . "/admin/" . $MODULE . "?" . replace_query(array("pv" => $page_next)) . "\"><img src=\"" . ENTRADA_URL . "/images/record-next-on.gif\" border=\"0\" width=\"11\" height=\"11\" alt=\"Forward to page " . $page_next . ".\" title=\"Forward to page " . $page_next . ".\" style=\"vertical-align: middle\" /></a>";
+					} else {
+						echo "<img src=\"" . ENTRADA_URL . "/images/record-next-off.gif\" width=\"11\" height=\"11\" alt=\"\" title=\"\" style=\"vertical-align: middle\" />";
+					}
+					echo "</span>\n";
+				}
+				echo "</form>\n";
+				echo "</div>\n";
+				?>
+			</td>
+		</tr>
+	</table>
 	<?php
 	/**
 	 * Provides the first parameter of MySQLs LIMIT statement by calculating which row to start results from.
 	 */
-	$limit_parameter = (int) (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"] * $PAGE_CURRENT) - $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]);
+	$limit_parameter = (int) (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"] * $page_current) - $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]);
 	
 	if ($ENTRADA_ACL->amIAllowed("course", "update", false)) {
-		$query	= "	SELECT `courses`.`course_id`,  `courses`.`organisation_id`, `courses`.`course_name`, `courses`.`course_code`, `courses`.`course_url`, `courses`.`notifications`, `curriculum_lu_types`.`curriculum_type_name`, CONCAT_WS(', ', `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname`) AS `fullname`
-					FROM `courses`
-					LEFT JOIN `curriculum_lu_types`
-					ON `curriculum_lu_types`.`curriculum_type_id` = `courses`.`curriculum_type_id`
-					LEFT JOIN `course_contacts`
-					ON `course_contacts`.`course_id` = `courses`.`course_id`
-					AND `course_contacts`.`contact_type` = 'director'
-					AND `course_contacts`.`contact_order` = 0
-					LEFT JOIN `".AUTH_DATABASE."`.`user_data`
-					ON `".AUTH_DATABASE."`.`user_data`.`id` = `course_contacts`.`proxy_id`
-					WHERE `courses`.`course_active` = '1'
-					".(isset($organisation_where) ? " AND `courses`.".$organisation_where : "")."
+		$query	= "	SELECT a.`course_id`, a.`organisation_id`, a.`course_name`, a.`course_code`, a.`course_url`, a.`notifications`, c.`curriculum_type_name`, CONCAT_WS(', ', d.`lastname`, d.`firstname`) AS `fullname`
+					FROM `courses` AS a
+					LEFT JOIN `course_contacts` AS b
+					ON b.`course_id` = a.`course_id`
+					AND b.`contact_type` = 'director'
+					AND b.`contact_order` = 0
+					LEFT JOIN `curriculum_lu_types` AS c
+					ON c.`curriculum_type_id` = a.`curriculum_type_id`
+					LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS d
+					ON d.`id` = b.`proxy_id`
+					WHERE a.`course_active` = '1'
+					AND a.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
 					ORDER BY %s LIMIT %s, %s";
 	} else {
-		$query	= "	SELECT `courses`.`course_id`, `courses`.`organisation_id`, `courses`.`course_name`, `courses`.`course_code`, `courses`.`course_url`, `courses`.`notifications`, `curriculum_lu_types`.`curriculum_type_name`, CONCAT_WS(', ', `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname`) AS `fullname`
-					FROM `courses`
-					LEFT JOIN `course_contacts`
-					ON `course_contacts`.`course_id` = `courses`.`course_id`
-					AND `course_contacts`.`contact_type` = 'director'
-					AND `course_contacts`.`contact_order` = 0
-					LEFT JOIN `curriculum_lu_types`
-					ON `curriculum_lu_types`.`curriculum_type_id` = `courses`.`curriculum_type_id`
-					LEFT JOIN `".AUTH_DATABASE."`.`user_data`
-					ON `".AUTH_DATABASE."`.`user_data`.`id` = `course_contacts`.`proxy_id`
-					LEFT JOIN `community_courses`
-					ON `community_courses`.`course_id` = `courses`.`course_id`
-					LEFT JOIN `community_members`
-					ON `community_members`.`community_id` = `community_courses`.`community_id`
-					AND `community_members`.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+		$query	= "	SELECT DISTINCT(a.`course_id`), a.`organisation_id`, a.`course_name`, a.`course_code`, a.`course_url`, a.`notifications`, c.`curriculum_type_name`, CONCAT_WS(', ', d.`lastname`, d.`firstname`) AS `fullname`
+					FROM `courses` AS a
+					LEFT JOIN `course_contacts` AS b
+					ON b.`course_id` = a.`course_id`
+					AND b.`contact_type` = 'director'
+					AND b.`contact_order` = 0
+					LEFT JOIN `curriculum_lu_types` AS c
+					ON c.`curriculum_type_id` = a.`curriculum_type_id`
+					LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS d
+					ON d.`id` = b.`proxy_id`
+					LEFT JOIN `community_courses` AS e
+					ON e.`course_id` = a.`course_id`
+					LEFT JOIN `community_members` AS f
+					ON f.`community_id` = e.`community_id`
+					AND f.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
 					WHERE 
 					(
-						`courses`.`pcoord_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
-						OR `course_contacts`.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
-						OR `community_members`.`member_acl` = '1'
+						a.`pcoord_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+						OR b.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+						OR f.`member_acl` = '1'
 					)
-					AND `courses`.`course_active` = '1'
-					".(isset($organisation_where) ? " AND `courses`.".$organisation_where : "")."
+					AND a.`course_active` = '1'
+					AND a.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
 					ORDER BY %s LIMIT %s, %s";
 	}
 
-	$query		= sprintf($query, $SORT_BY, $limit_parameter, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]);
+	$query		= sprintf($query, $sort_by, $limit_parameter, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]);
 	$results	= $db->GetAll($query);
 	if ($results) {
 	?> 

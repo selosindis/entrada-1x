@@ -35,6 +35,7 @@
  * Include the Entrada init code.
  */
 require_once("init.inc.php");
+
 ob_start("on_checkout");
 
 $PROCEED_TO = ((isset($_GET["url"])) ? clean_input($_GET["url"], "trim") : ((isset($_SERVER["REQUEST_URI"])) ? clean_input($_SERVER["REQUEST_URI"], "trim") : false));
@@ -89,7 +90,8 @@ if ($ACTION == "login") {
 							FROM `".AUTH_DATABASE."`.`user_access` as a
 							LEFT JOIN `".AUTH_DATABASE."`.`user_data` as b
 							ON b.`id` = a.`user_id`
-							WHERE b.`username` = ".$db->qstr($username);
+							WHERE b.`username` = ".$db->qstr($username)."
+							AND a.`app_id` = ".$db->qstr(AUTH_APP_ID);
 		$lockout_result = $db->GetRow($lockout_query);
 		if ($lockout_result) {
 			$USER_ACCESS_ID = $lockout_result["id"];
@@ -129,7 +131,7 @@ if ($ACTION == "login") {
 	if ($ERROR == 0) {
 		$auth = new AuthSystem((((defined("AUTH_DEVELOPMENT")) && (AUTH_DEVELOPMENT != "")) ? AUTH_DEVELOPMENT : AUTH_PRODUCTION));
 		$auth->setAppAuthentication(AUTH_APP_ID, AUTH_USERNAME, AUTH_PASSWORD);
-
+		$auth->setEncryption(AUTH_ENCRYPTION_METHOD);
 		$auth->setUserAuthentication($username, $password, AUTH_METHOD);
 		$result = $auth->Authenticate(
 			array(
@@ -152,9 +154,10 @@ if ($ACTION == "login") {
 			)
 		);
 	}
+
 	if ($ERROR == 0 && $result["STATUS"] == "success") {
 		if (isset($USER_ACCESS_ID)) {
-			if (!$db->Execute("UPDATE `".AUTH_DATABASE."`.`user_access` SET `login_attempts` = NULL WHERE `id` = ".$USER_ACCESS_ID)) {
+			if (!$db->Execute("UPDATE `".AUTH_DATABASE."`.`user_access` SET `login_attempts` = NULL WHERE `id` = ".(int) $USER_ACCESS_ID." AND `app_id` = ".$db->qstr(AUTH_APP_ID))) {
 				application_log("error", "Unable to incrememnt the login attempt counter for user [".$username."]. Database said ".$db->ErrorMsg());
 			}
 		}
@@ -261,9 +264,15 @@ if ($ACTION == "login") {
 			$_SESSION["permissions"] = permissions_load();
 
 			$auth->updateLastLogin();
+			
+			// If $ENTRADA_USER was previously initialized in init.inc.php before the 
+			// session was authorized it is set to false and needs to be re-initialized.
+			if ($ENTRADA_USER == false && $_SESSION["isAuthorized"] == true) {
+				$ENTRADA_USER = User::get($_SESSION["details"]["id"]);
+			}
 		}
 		
-		$query = "SELECT `clinical`, `google_id`, `notifications` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($_SESSION["details"]["id"]);
+		$query = "SELECT `email_updated`, `clinical`, `google_id`, `notifications` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($_SESSION["details"]["id"]);
 		$result	= $db->GetRow($query);
 		
 		if (($result) && ($result["google_id"])) {
@@ -274,12 +283,15 @@ if ($ACTION == "login") {
 		
 		if ($result) {
 			$_SESSION["details"]["notifications"] = $result["notifications"];
-		}
-
-		if ($result) {
 			$_SESSION["details"]["clinical_member"] = $result["clinical"];
+			
+			if(!isset($result["email_updated"]) || $result["email_updated"] == "" || (($result["email_updated"] - mktime()) / 86400 >= 365)) {
+				$_SESSION["details"]["email_updated"] = false;
+			} else {
+				$_SESSION["details"]["email_updated"] = true;
+			}
 		}
-
+		
 		if ((!(int) $_SESSION["details"]["privacy_level"]) || (((bool) $GOOGLE_APPS["active"]) && (in_array($_SESSION["details"]["group"], $GOOGLE_APPS["groups"])) && (!$_SESSION["details"]["google_id"]))) {
 			/**
 			 * They need to be re-directed to the firstlogin module.
@@ -430,7 +442,7 @@ if ((!isset($_SESSION["isAuthorized"])) || (!(bool) $_SESSION["isAuthorized"])) 
 			 */
 			header("Location: ".ENTRADA_URL."/community".$result["community_url"]);
 			exit;
-		} elseif (isset($_SESSION["isAuthorized"]) && $_SESION["isAuthorized"] == true) {
+		} elseif (isset($_SESSION["isAuthorized"]) && $_SESSION["isAuthorized"] == true) {
 			header("Location: ".ENTRADA_URL."/?action=logout");
 			exit;
 		}
@@ -461,7 +473,7 @@ if (($MODULE == "login") && (!isset($_SERVER["HTTPS"])) && ((!defined("AUTH_FORC
 
 define("PARENT_INCLUDED", true);
 
-require_once (ENTRADA_ABSOLUTE."/templates/".DEFAULT_TEMPLATE."/layouts/public/header.tpl.php");
+require_once (ENTRADA_ABSOLUTE."/templates/".$ENTRADA_ACTIVE_TEMPLATE."/layouts/public/header.tpl.php");
 
 switch ($MODULE) {
 	case "privacy_policy" :
@@ -474,6 +486,44 @@ switch ($MODULE) {
 		require_once(ENTRADA_ABSOLUTE.DIRECTORY_SEPARATOR."default-pages".DIRECTORY_SEPARATOR."login.inc.php");
 	break;
 	default :
+		/*
+		$excused_proxy_ids = array();
+		if ($_SESSION["details"]["group"] == "student" && $MODULE != "evaluations" && !in_array($_SESSION["details"]["id"], $excused_proxy_ids)) {
+			$cohort = groups_get_cohort($_SESSION["details"]["id"]);
+			$query = "SELECT * FROM `evaluations` AS a
+						JOIN `evaluation_evaluators` AS b
+						ON a.`evaluation_id` = b.`evaluation_id`
+						WHERE
+						(
+							(
+								b.`evaluator_type` = 'proxy_id'
+								AND b.`evaluator_value` = ".$db->qstr($_SESSION["details"]["id"])."
+							)
+							OR
+							(
+								b.`evaluator_type` = 'organisation_id'
+								AND b.`evaluator_value` = ".$db->qstr($_SESSION["details"]["organisation_id"])."
+							)".($_SESSION["details"]["group"] == "student" ? " OR (
+								b.`evaluator_type` = 'cohort'
+								AND b.`evaluator_value` = ".$db->qstr($cohort["group_id"])."
+							)" : "")."
+						)
+						AND a.`evaluation_finish` < ".$db->qstr(time())."
+						AND a.`evaluation_active` = 1
+						GROUP BY a.`evaluation_id`
+						ORDER BY a.`evaluation_finish` ASC";
+			
+			$evaluations = $db->GetAll($query);
+			foreach ($evaluations as $evaluation) {
+				$completed_attempts = evaluations_fetch_attempts($evaluation["evaluation_id"]);
+				if ($evaluation["min_submittable"] > $completed_attempts) {
+					header("Location: ".ENTRADA_URL."/evaluations?section=attempt&id=".$evaluation["evaluation_id"]);
+					exit;
+				}
+			}
+		}
+		*/
+		
 		/**
 		 * Initialize Entrada_Router so it can load the requested modules.
 		 */
@@ -514,7 +564,7 @@ switch ($MODULE) {
 	break;
 }
 
-require_once(ENTRADA_ABSOLUTE."/templates/".DEFAULT_TEMPLATE."/layouts/public/footer.tpl.php");
+require_once(ENTRADA_ABSOLUTE."/templates/".$ENTRADA_ACTIVE_TEMPLATE."/layouts/public/footer.tpl.php");
 
 /**
  * Add the Feedback Sidebar Window.
@@ -528,4 +578,22 @@ if ((isset($_SESSION["isAuthorized"])) && ($_SESSION["isAuthorized"])) {
 	$sidebar_html  = "<a href=\"javascript: sendFeedback('".ENTRADA_URL."/agent-feedback.php?enc=".feedback_enc()."')\"><img src=\"".ENTRADA_URL."/images/feedback.gif\" width=\"48\" height=\"48\" alt=\"Give Feedback\" border=\"0\" align=\"right\" hspace=\"3\" vspace=\"5\" /></a>";
 	$sidebar_html .= "Giving feedback is a very important part of application development. Please <a href=\"javascript: sendFeedback('".ENTRADA_URL."/agent-feedback.php?enc=".feedback_enc()."')\" style=\"font-size: 11px; font-weight: bold\">click here</a> to send us any feedback you may have about <u>this</u> page.<br /><br />\n";
 	new_sidebar_item("Feedback", $sidebar_html, "page-feedback", "open");
+
+	/**
+	 * Create the Organisation side bar.
+	 * If the org request attribute is set then change the current org id for this user.
+	 */
+	if ($ENTRADA_USER->getAllOrganisations() && count($ENTRADA_USER->getAllOrganisations()) > 1) {
+		$sidebar_html = "<ul class=\"menu none\">\n";
+		foreach ($ENTRADA_USER->getAllOrganisations() as $key => $organisation_title) {
+			if ($key == $ENTRADA_USER->getActiveOrganisation()) {
+				$sidebar_html .= "<li><a href=\"" . ENTRADA_URL . "/" . $MODULE . "/" . "?" . replace_query(array("organisation_id" => $key)) . "\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-on.gif\" alt=\"\" /> <span>" . html_encode($organisation_title) . "</span></a></li>\n";
+			} else {
+				$sidebar_html .= "<li><a href=\"" . ENTRADA_URL . "/" . $MODULE . "/" . "?" . replace_query(array("organisation_id" => $key)) . "\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-off.gif\" alt=\"\" /> <span>" . html_encode($organisation_title) . "</span></a></li>\n";
+			}
+		}
+		$sidebar_html .= "</ul>\n";
+
+		new_sidebar_item("Organisations", $sidebar_html, "org-switch", "open", SIDEBAR_PREPEND);
+	}
 }

@@ -206,7 +206,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 													LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 													ON b.`user_id` = a.`id`
 													WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
-													AND b.`group` = 'faculty'
+													AND (b.`group` = 'faculty' OR
+														(b.`group` = 'resident' AND b.`role` = 'lecturer')
+													)
 													AND a.`id` = ".$db->qstr($proxy_id);
 										$result = $db->GetRow($query);
 										if ($result) {
@@ -232,33 +234,35 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					/**
 					 * Processing for evaluation_evaluators table.
 					 */
-					if (isset($_POST["target_group_type"]) && in_array($_POST["target_group_type"], array("grad_year", "percentage", "proxy_id"))) {
+					if (isset($_POST["target_group_type"]) && in_array($_POST["target_group_type"], array("cohort", "percentage", "proxy_id"))) {
 						switch ($_POST["target_group_type"]) {
-							case "grad_year" :
-								if (isset($_POST["grad_year"]) && ($grad_year = clean_input($_POST["grad_year"], array("alphanumeric")))) {
-									$PROCESSED["evaluation_evaluators"][] = array("evaluator_type" => "grad_year", "evaluator_value" => $grad_year);
+							case "cohort" :
+								if (isset($_POST["cohort"]) && ($cohort = clean_input($_POST["cohort"], array("alphanumeric")))) {
+									$PROCESSED["evaluation_evaluators"][] = array("evaluator_type" => "cohort", "evaluator_value" => $cohort);
 								} else {
 									add_error("Please provide a valid class to complete this evaluation.");
 								}
 							break;
 							case "percentage" :
-								if (isset($_POST["percentage_grad_year"]) && ($grad_year = clean_input($_POST["percentage_grad_year"], array("alphanumeric")))) {
+								if (isset($_POST["percentage_cohort"]) && ($cohort = clean_input($_POST["percentage_cohort"], array("alphanumeric")))) {
 									$percentage = clean_input($_POST["percentage_percent"], "int");
 									if (($percentage >= 100) || ($percentage < 1)) {
 										$percentage = 100;
 
-										$PROCESSED["evaluation_evaluators"][] = array("evaluator_type" => "grad_year", "evaluator_value" => $grad_year);
+										$PROCESSED["evaluation_evaluators"][] = array("evaluator_type" => "cohort", "evaluator_value" => $cohort);
 									} else {
 										$query = "	SELECT a.`id` AS `proxy_id`
 													FROM `".AUTH_DATABASE."`.`user_data` AS a
-													LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+													JOIN `".AUTH_DATABASE."`.`user_access` AS b
 													ON b.`user_id` = a.`id`
+													JOIN `group_members` AS c
+													ON a.`id` = c.`proxy_id`
 													WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
 													AND b.`account_active` = 'true'
 													AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
 													AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
 													AND b.`group` = 'student'
-													AND b.`role` = ".$db->qstr($grad_year);
+													AND c.`group_id` = ".$db->qstr($cohort);
 										$results = $db->GetAll($query);
 										if ($results) {
 											$total_students = count($results);
@@ -327,7 +331,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					} else {
 						add_error("Please select an appropriate type of evaluator (i.e. entire class, percentage, etc).");
 					}
-					
+
 					if (!$ERROR) {
 						$PROCESSED["updated_date"] = time();
 						$PROCESSED["updated_by"] = $_SESSION["details"]["id"];
@@ -336,28 +340,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 						 * Insert the evaluation record into the evalutions table.
 						 */
 						if ($db->AutoExecute("evaluations", $PROCESSED, "UPDATE", "`evaluation_id` = ".$db->qstr($EVALUATION_ID))) {
-							/**
-							 * Insert the target records into the evaluation_targets table.
-							 */
-							if (!empty($PROCESSED["evaluation_targets"])) {
-								$db->Execute("DELETE FROM `evaluation_targets` WHERE `evaluation_id` = ".$db->qstr($EVALUATION_ID));
-								foreach ($PROCESSED["evaluation_targets"] as $target_value) {
-									$record = array(
-										"evaluation_id" => $EVALUATION_ID,
-										"target_id" => $evaluation_target_id,
-										"target_value" => $target_value,
-										"target_active" => 1,
-										"updated_date" => time(),
-										"updated_by" => $_SESSION["details"]["id"]
-									);
-
-									if (!$db->AutoExecute("evaluation_targets", $record, "INSERT") || (!$etarget_id = $db->Insert_Id())) {
-										add_error("Unable to attach an evaluation target to this evaluation. The system administrator has been notified of this error, please try again later.");
-										application_log("Unable to attach target_id [".$evaluation_target_id."] / target_value [".$target_value."] to evaluation_id [".$EVALUATION_ID."]. Database said: ".$db->ErrorMsg());
-									}
-								}
-							}
-
 							/**
 							 * Insert the target records into the evaluation_targets table.
 							 */

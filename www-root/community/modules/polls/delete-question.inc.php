@@ -26,6 +26,8 @@ if ($RECORD_ID) {
 		if (polls_module_access($RECORD_ID, "delete-question")) {
 			if (!$db->AutoExecute("community_polls_questions", array("question_active" => 0, "question_order" => 0, "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "UPDATE", "`cpquestion_id` = ".$db->qstr($RECORD_ID)." AND `cpage_id` = ".$db->qstr($PAGE_ID)." AND `cpolls_id` = ".$db->qstr($poll_id)." AND `community_id` = ".$db->qstr($COMMUNITY_ID))) {
 				application_log("error", "Failed to remove [".$RECORD_ID."] question from poll. Database said: ".$db->ErrorMsg());
+			}else{
+				add_statistic("community_polling", "question_delete", "cpquestion_id", $RECORD_ID);
 			}
 		}
 	} else {

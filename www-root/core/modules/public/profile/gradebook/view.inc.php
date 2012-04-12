@@ -65,11 +65,13 @@ if (isset($_GET["so"])) {
  */
 switch ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) {
 	case "title" :
-	default :
 		$sort_by = "`name` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]);
 	break;
 	case "type" :
 		$sort_by = "`type` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]);
+	break;
+	default :
+		$sort_by = "`order`";
 	break;
 }
 
@@ -79,18 +81,21 @@ if ($COURSE_ID) {
 				FROM `courses` AS a
 				JOIN `assessments` AS b
 				ON a.`course_id` = b.`course_id`
-				AND b.`grad_year` = ".$db->qstr($_SESSION["details"]["role"])."
-				LEFT JOIN `assessment_grades` AS c
+				AND b.`cohort` = ".$db->qstr($ENTRADA_USER->getCohort())."
+				JOIN `assessment_grades` AS c
 				ON b.`assessment_id` = c.`assessment_id`
 				AND c.`proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
 				JOIN `assessment_marking_schemes` AS d
 				ON b.`marking_scheme_id` = d.`id`
 				WHERE a.`course_id` = ".$db->qstr($COURSE_ID)."
+				AND (b.`release_date` = '0' OR b.`release_date` <= ".$db->qstr(time()).")
+				AND (b.`release_until` = '0' OR b.`release_until` >= ".$db->qstr(time()).")
+				AND b.`show_learner` = '1'
 				ORDER BY ".$sort_by;
 	$results = $db->GetAll($query);
 	if ($results) {
 		?>
-		<h1><?php echo course_name($COURSE_ID); ?> Gradebook</h1>
+		<h1><?php echo fetch_course_title($COURSE_ID); ?> Gradebook</h1>
 		<table class="tableList" cellspacing="0" summary="List of Assessments">
 			<colgroup>
 				<col class="modified" />

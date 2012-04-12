@@ -163,7 +163,7 @@ switch($STEP) {
 
 					$SUCCESS++;
 					$SUCCESSSTR[]	= "You have successfully added a new shared folder to the community.<br /><br />You will now be redirected to the index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-
+					add_statistic("community:".$COMMUNITY_ID.":shares", "folder_add", "cshare_id", $FOLDER_ID);
 					communities_log_history($COMMUNITY_ID, $PAGE_ID, $FOLDER_ID, "community_history_add_share", 1);
 				}
 			}
@@ -237,7 +237,7 @@ switch($STEP) {
 				<td><input type="text" id="folder_title" name="folder_title" value="<?php echo ((isset($PROCESSED["folder_title"])) ? html_encode($PROCESSED["folder_title"]) : ""); ?>" maxlength="64" style="width: 95%" /></td>
 			</tr>
 			<tr>
-				<td colspan="2" style="vertical-align: top"><label for="folder_description" class="form-nrequired">Folder Description</label></td>
+				<td colspan="2" style="vertical-align: top !important"><label for="folder_description" class="form-nrequired">Folder Description</label></td>
 				<td style="vertical-align: top">
 					<textarea id="folder_description" name="folder_description" style="width: 95%; height: 60px" cols="50" rows="5"><?php echo ((isset($PROCESSED["folder_description"])) ? html_encode($PROCESSED["folder_description"]) : ""); ?></textarea>
 				</td>

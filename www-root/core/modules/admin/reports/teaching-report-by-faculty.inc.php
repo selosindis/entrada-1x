@@ -53,8 +53,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 			<tr>
 				<td colspan="3"><h2>Reporting Dates</h2></td>
 			</tr>
-			<?php echo generate_calendars("reporting", "Reporting Date", true, true, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_start"], true, true, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_finish"]);
-				echo generate_organisation_select();?>
+			<?php echo generate_calendars("reporting", "Reporting Date", true, true, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_start"], true, true, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_finish"]); ?>
 			<tr>
 				<td colspan="3" style="text-align: right; padding-top: 10px"><input type="submit" class="button" value="Create Report" /></td>
 			</tr>
@@ -69,11 +68,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 
 	$report_results	= array();
 
-	if (isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["organisation_id"]) && $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["organisation_id"] != -1) {
-		$organisation_where = " AND (a.`organisation_id` = ".$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["organisation_id"].") ";
-	} else {
-		$organisation_where = "";
-	}
+	$organisation_where = " AND (a.`organisation_id` = ".$ENTRADA_USER->getActiveOrganisation().") ";
 
 	$query	= "	SELECT a.`id` AS `proxy_id`, a.`number` AS `staff_number`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, a.`email`
 				FROM `".AUTH_DATABASE."`.`user_data` AS a
@@ -97,6 +92,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 						LEFT JOIN `event_contacts` AS b
 						ON b.`event_id` = a.`event_id`
 						WHERE b.`proxy_id` = ".$db->qstr($result["proxy_id"])."
+						AND b.`contact_role` = 'teacher' 
 						AND (a.`event_start` BETWEEN ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_start"])." AND ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_finish"]).")";
 			if ($int_use_cache) {
 				$sresults	= $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);

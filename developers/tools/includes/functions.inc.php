@@ -118,11 +118,11 @@ function generate_hash($num_chars = 32) {
 /**
  * Function will return an the new release_date / release_until dates
  * for the new event_date based on the old_event data and old release details.
- * 
+ *
  * @param int $old_event_date
  * @param int $new_event_date
  * @param int $old_release_date
- * 
+ *
  * return int
  */
 function offset_validity($old_event_date, $new_event_date, $old_release_date) {
@@ -135,9 +135,9 @@ function offset_validity($old_event_date, $new_event_date, $old_release_date) {
 
 /**
  * Function generates a medium-strong password for the account.
- * 
+ *
  * @param int $length
- * 
+ *
  * @return string
  */
 function generate_password($length = 8) {
@@ -153,9 +153,9 @@ function generate_password($length = 8) {
 /**
  * This function returns the data from the events table for the provided
  * event_id.
- * 
+ *
  * @param int $event_id
- * 
+ *
  * @return array
  */
 function get_event_data($event_id = 0) {
@@ -180,9 +180,9 @@ function get_event_data($event_id = 0) {
 /**
  * This function takes an event_id and checks to see if it exists in the events
  * table.
- * 
+ *
  * @param int $event_id
- * 
+ *
  * @return bool
  */
 function validate_event_id($event_id = 0) {
@@ -202,9 +202,9 @@ function validate_event_id($event_id = 0) {
 
 /**
  * This function takes a proxy_id and returns basic information about this user.
- * 
+ *
  * @param int $proxy_id
- * 
+ *
  * @return array
  */
 function get_user_info($proxy_id = 0) {
@@ -223,19 +223,61 @@ function get_user_info($proxy_id = 0) {
 
 /**
  * This function attempts to get the course_id of a course based on the title.
- * 
+ *
  * @param string $course_name
- * 
+ *
  * @return int
  */
 function get_course_id($course_name = "") {
 	global $db;
 
 	if (trim($course_name) != "") {
-		$query = "SELECT `course_id` FROM `courses` WHERE `course_name` LIKE " . $db->qstr($course_name);
+		$query = "SELECT `course_id` FROM `courses` WHERE `course_name` LIKE " . $db->qstr($course_name) . " AND `course_active` = '1'";
 		$result = $db->GetRow($query);
 		if ($result) {
 			return $result["course_id"];
+		}
+	}
+
+	return 0;
+}
+
+/**
+ * This function attempts to get course information based on the provided course code.
+ *
+ * @param string $course_code
+ *
+ * @return array
+ */
+function fetch_course($course_code = "") {
+	global $db;
+
+	if ($course_code) {
+		$query = "SELECT * FROM `courses` WHERE `course_code` LIKE " . $db->qstr($course_code) . " AND `course_active` = '1'";
+		$result = $db->GetRow($query);
+		if ($result) {
+			return $result;
+		}
+	}
+
+	return false;
+}
+
+function fetch_cohort_group_id($organisation_id = 0, $cohort_name = "") {
+	global $db;
+
+	if ($organisation_id && $cohort_name) {
+	 	$query = "	SELECT a.`group_id`
+					FROM `groups` AS a
+					JOIN `group_organisations` AS b
+					ON b.`group_id` = a.`group_id`
+					AND b.`organisation_id` = ".$db->qstr($organisation_id)."
+					WHERE a.`group_name` LIKE ".$db->qstr($cohort_name)."
+					AND a.`group_type` = 'cohort'
+					AND a.`group_active` = '1'";
+		$result = $db->GetRow($query);
+		if ($result) {
+			return $result["group_id"];
 		}
 	}
 
@@ -266,21 +308,20 @@ function get_eventtype_id($eventtype_title = "") {
 /**
  * This function takes the given staff number and returns the users
  * proxy_id (entrada_auth.user_data.id).
- * 
- * @param int $staff_number
- * 
+ *
+ * @param int $number
+ *
  * @return int
  */
-function get_proxy_id($staff_number = 0) {
+function get_proxy_id($number = 0) {
 	global $db;
 
-	if ($staff_number = (int) $staff_number) {
-		$query = "
-				SELECT a.`id` AS `proxy_id`
-				FROM `" . AUTH_DATABASE . "`.`user_data` AS a
-				LEFT JOIN `" . AUTH_DATABASE . "`.`user_access` AS b
-				ON b.`user_id` = a.`id`
-				WHERE a.`number` = " . $db->qstr($staff_number);
+	$number = (int) $number;
+
+	if ($number) {
+		$query = "	SELECT `id` AS `proxy_id`
+					FROM `".AUTH_DATABASE."`.`user_data`
+					WHERE `number` = ".$db->qstr($number);
 		$result = $db->GetRow($query);
 		if ($result) {
 			return $result["proxy_id"];
@@ -468,6 +509,92 @@ function communities_module_activate($community_id = 0, $module_id = 0) {
 	}
 
 	return true;
+}
+
+/**
+ * Activates speficied module for the specified community
+ *
+ * @param int $community_id
+ * @param int $module_id
+ * @return bool
+ */
+function communities_module_activate_and_page_create($community_id = 0, $module_id = 0) {
+	global $db;
+
+	if(($community_id = (int) $community_id) && ($module_id = (int) $module_id)) {
+	/**
+	 * Check that the requested module is present and active.
+	 */
+		$query			= "SELECT * FROM `communities_modules` WHERE `module_id` = ".$db->qstr($module_id)." AND `module_active` = '1'";
+		$module_info	= $db->GetRow($query);
+		if($module_info) {
+			$query	= "SELECT * FROM `community_modules` WHERE `community_id` = ".$db->qstr($community_id)." AND `module_id` = ".$db->qstr($module_id);
+			$result	= $db->GetRow($query);
+			if($result) {
+			/**
+			 * If it is not already active, active it.
+			 */
+				if(!(int) $result["module_active"]) {
+					if(!$db->AutoExecute("community_modules", array("module_active" => 1), "UPDATE", "`community_id` = ".$db->qstr($community_id)." AND `module_id` = ".$db->qstr($module_id))) {
+						output_error("Unable to active module ".(int) $module_id." (updating existing record) for updated community id ".(int) $COMMUNITY_ID.". Database said: ".$db->ErrorMsg());
+						return false;
+					}
+				}
+			} else {
+				if(!$db->AutoExecute("community_modules", array("community_id" => $community_id, "module_id" => $module_id, "module_active" => 1), "INSERT")) {
+					output_error("Unable to active module ".(int) $module_id." (inserting new record) for updated community id ".(int) $COMMUNITY_ID.". Database said: ".$db->ErrorMsg());
+					return false;
+				}
+			}
+
+			$query	= "SELECT * FROM `community_pages` WHERE `community_id` = ".$db->qstr($community_id)." AND `page_active` = '1' AND `page_type` = ".$db->qstr($module_info["module_shortname"]);
+			$result	= $db->GetRow($query);
+			if(!$result) {
+				$query		= "SELECT (MAX(`page_order`) + 1) as `order` FROM `community_pages` WHERE `community_id` = ".$db->qstr($community_id)." AND `page_active` = '1' AND `parent_id` = '0' AND `page_url` != ''";
+				$result		= $db->GetRow($query);
+				if($result) {
+					$page_order = (int) $result["order"];
+				} else {
+					$page_order = 0;
+				}
+
+				if((!$db->AutoExecute("community_pages", array("community_id" => $community_id, "page_order" => $page_order, "page_type" => $module_info["module_shortname"], "menu_title" => $module_info["module_title"], "page_title" => $module_info["module_title"], "page_url" => $module_info["module_shortname"], "page_content" => "", "updated_date" => time(), "updated_by" => "MedTech"), "INSERT")) && ($cpage_id = $db->Insert_Id())) {
+					output_error("Unable to create page for module ".(int) $module_id." for new community id ".(int) $community_id.". Database said: ".$db->ErrorMsg());
+					return false;
+				}
+			}
+		} else {
+			output_error("Module_id [".$module_id."] requested activation in community_id [".$community_id."] but the module is either missing or inactive. Connected to a DB: " . $db->isConnected());
+			return false;
+		}
+	} else {
+		output_error("There was no community_id [".$community_id."] or module_id [".$module_id."] provided to active a module.");
+		return false;
+	}
+
+	return true;
+}
+
+function set_module_page_permissions($db, $community_id, $module_id, $allow_member_view, $allow_public_view, $allow_troll_view) {
+	$query = "SELECT * FROM " . DATABASE_NAME . ".`communities_modules` WHERE `module_id` = " . $db->qstr($module_id) . " AND `module_active` = '1'";
+	$module_info = $db->GetRow($query);
+	$module_shortname = "";
+
+	if ($module_info) {
+		$module_shortname = $module_info["module_shortname"];
+
+		if ($db->AutoExecute("" . DATABASE_NAME . ".`community_pages`",
+						array("allow_member_view" => 0, "allow_public_view" => 0, "allow_troll_view" => 0,
+							"updated_date" => time(), "updated_by" => 5440), "UPDATE",
+						"`community_id` = " . $db->qstr($community_id) . " AND page_type = " . $db->qstr($module_shortname))) {
+
+			output_success("Permission set to allow Admin access only.");
+		} else {
+			output_error("Failed to create the module page.");
+		}
+	} else {
+		output_error("Module does not exist.");
+	}
 }
 
 /**

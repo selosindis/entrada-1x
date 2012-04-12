@@ -52,7 +52,7 @@ if (!defined("PARENT_INCLUDED")) {
 	$SEARCH_CLASS				= 0;
 	$SEARCH_YEAR				= 0;
 	$SEARCH_DURATION			= array();
-	$SEARCH_ORGANISATION		= $_SESSION['details']['organisation_id'];
+	$SEARCH_ORGANISATION		= $ENTRADA_USER->getActiveOrganisation();
 	$RESULTS_PER_PAGE			= 10;
 
 	/**
@@ -107,20 +107,20 @@ if (!defined("PARENT_INCLUDED")) {
 								ON b.`event_id` = a.`event_id`
 								LEFT JOIN `courses` AS c
 								ON a.`course_id` = c.`course_id`
-								WHERE c.`course_active` = '1'
-								AND".(($SEARCH_CLASS) ? " b.`audience_type` = 'grad_year' AND b.`audience_value` = ".$db->qstr((int) $SEARCH_CLASS)." AND" : "").
+								WHERE (a.`parent_id` IS NULL OR a.`parent_id` = '0')
+								AND".(($SEARCH_CLASS) ? " b.`audience_type` = 'cohort' AND b.`audience_value` = ".$db->qstr((int) $SEARCH_CLASS)." AND" : "").
 								(($SEARCH_ORGANISATION) && $SEARCH_ORGANISATION != 'all' ? " c.`organisation_id` = ".$db->qstr((int) $SEARCH_ORGANISATION)." AND" : "").
 								(($SEARCH_YEAR) ? " (`event_start` BETWEEN ".$db->qstr($SEARCH_DURATION["start"])." AND ".$db->qstr($SEARCH_DURATION["end"]).") AND" : "")."
 								MATCH (`event_title`, `event_description`, `event_goals`, `event_objectives`, `event_message`) AGAINST (".$db->qstr(str_replace(array("%", " AND ", " NOT "), array("%%", " +", " -"), $SEARCH_QUERY))." IN BOOLEAN MODE)";
 
-			$query_search = "	SELECT a.*, b.`audience_type`, b.`audience_value` AS `event_grad_year`, MATCH (`event_title`, `event_description`, `event_goals`, `event_objectives`, `event_message`) AGAINST (".$db->qstr(str_replace(array("%", " AND ", " NOT "), array("%%", " +", " -"), $SEARCH_QUERY))." IN BOOLEAN MODE) AS `rank`
+			$query_search = "	SELECT a.*, b.`audience_type`, b.`audience_value` AS `event_cohort`, MATCH (`event_title`, `event_description`, `event_goals`, `event_objectives`, `event_message`) AGAINST (".$db->qstr(str_replace(array("%", " AND ", " NOT "), array("%%", " +", " -"), $SEARCH_QUERY))." IN BOOLEAN MODE) AS `rank`
 								FROM `events` AS a
 								LEFT JOIN `event_audience` AS b
 								ON b.`event_id` = a.`event_id`
 								LEFT JOIN `courses` AS c
 								ON a.`course_id` = c.`course_id`
-								WHERE c.`course_active` = '1'
-								AND".(($SEARCH_CLASS) ? " b.`audience_type` = 'grad_year' AND b.`audience_value` = ".$db->qstr((int) $SEARCH_CLASS)." AND" : "").
+								WHERE (a.`parent_id` IS NULL OR a.`parent_id` = '0')
+								AND".(($SEARCH_CLASS) ? " b.`audience_type` = 'cohort' AND b.`audience_value` = ".$db->qstr((int) $SEARCH_CLASS)." AND" : "").
 								(($SEARCH_ORGANISATION) && $SEARCH_ORGANISATION != 'all' ? " c.`organisation_id` = ".$db->qstr((int) $SEARCH_ORGANISATION)." AND" : "").
 								(($SEARCH_YEAR) ? " (`event_start` BETWEEN ".$db->qstr($SEARCH_DURATION["start"])." AND ".$db->qstr($SEARCH_DURATION["end"]).") AND" : "")."
 								MATCH (`event_title`, `event_description`, `event_goals`, `event_objectives`, `event_message`) AGAINST (".$db->qstr(str_replace(array("%", " AND ", " NOT "), array("%%", " +", " -"), $SEARCH_QUERY))." IN BOOLEAN MODE)
@@ -197,43 +197,15 @@ if (!defined("PARENT_INCLUDED")) {
 				</tr>
 				<tr>
 					<td>
-						<label for="o" style="font-weight: bold; margin-right: 5px; white-space: nowrap">Organisation:</label>
-					</td>
-					<td>
-						<select id="o" name="o" style="width: 250px">
-						<?php
-						$query		= "SELECT `organisation_id`, `organisation_title` FROM `".AUTH_DATABASE."`.`organisations`";
-						$results	= $db->GetAll($query);
-						$all = true;
-						if ($results) {
-							foreach ($results as $result) {
-								if ($ENTRADA_ACL->amIAllowed("resourceorganisation".$result["organisation_id"], "read")) {
-									echo "<option value=\"".(int) $result["organisation_id"]."\"".(isset($SEARCH_ORGANISATION) && $SEARCH_ORGANISATION == $result['organisation_id'] ? " selected=\"selected\"" : "").">".html_encode($result["organisation_title"])."</option>\n";
-								} else {
-									$all = false;
-								}
-							}
-						}
-						if ($all) {
-							echo '<option value="all" '.(isset($SEARCH_ORGANISATION) && $SEARCH_ORGANISATION == 'all' ? 'selected="selected"' : '').">All organisations</option>";
-						}
-						?>
-						</select>
-					</td>
-					<td>
-						&nbsp;
-					</td>
-				</tr>
-				<tr>
-					<td>
 						<label for="c" style="font-weight: bold; margin-right: 5px; white-space: nowrap">Graduating Class:</label>
 					</td>
 					<td>
 						<select id="c" name="c" style="width: 250px">
-							<option value="0"<?php echo ((!$SEARCH_CLASS) ? " selected=\"selected\"" : ""); ?>>-- All Classes --</option>
+							<option value="0"<?php echo ((!$SEARCH_CLASS) ? " selected=\"selected\"" : ""); ?>>-- All Cohorts --</option>
 								<?php
-								for($class = (date("Y", time()) - ((date("n", time()) < 7) ? 1 : 0)); $class <= (date("Y", time()) + 4); $class++) {
-									echo "<option value=\"".$class."\"".(($SEARCH_CLASS == $class) ? " selected=\"selected\"" : "").">Class of ".$class."</option>\n";
+								$cohorts = groups_get_all_cohorts($ENTRADA_USER->getActiveOrganisation());
+								foreach ($cohorts as $cohort) {
+									echo "<option value=\"".$cohort["group_id"]."\"".(($SEARCH_CLASS == $cohort["group_id"]) ? " selected=\"selected\"" : "").">".html_encode($cohort["group_name"])."</option>\n";
 								}
 								?>
 						</select>
@@ -274,19 +246,18 @@ if (!defined("PARENT_INCLUDED")) {
 				<script type="text/javascript">
 				var tl = new Array();
 				var gradYears = new Array();
+				var gradYearIds = new Array();
 				<?php
 				if ($SEARCH_CLASS) {
-					echo "gradYears[0] = '".$SEARCH_CLASS."';\n\n";
+					echo "gradYears[0] = '".preg_replace("/[^0-9]/", "", groups_get_name($SEARCH_CLASS))."';\n\n";
+					echo "gradYearIds[".preg_replace("/[^0-9]/", "", groups_get_name($SEARCH_CLASS))."] = '".$SEARCH_CLASS."';\n\n";
 				} else {
+					$cohorts_list = groups_get_active_cohorts($ENTRADA_USER->getActiveOrganisation());
 					$i = 0;
-					$cut_off_year = (fetch_first_year() - 3);
-					if (isset($SYSTEM_GROUPS["student"]) && !empty($SYSTEM_GROUPS["student"])) {
-						foreach ($SYSTEM_GROUPS["student"] as $key => $class) {
-							if (clean_input($class, "numeric") >= $cut_off_year) {
-								echo "gradYears[".$i."] = '".$class."';\n";
-								$i++;
-							}
-						}
+					foreach ($cohorts_list as $cohort) {
+						echo "gradYears[".$i."] = '".preg_replace("/[^0-9]/", "", $cohort["group_name"])."';\n";
+						echo "gradYearIds[".preg_replace("/[^0-9]/", "", $cohort["group_name"])."] = '".$cohort["group_id"]."';\n";
+						$i++;
 					}
 				}
 				?>
@@ -386,7 +357,7 @@ if (!defined("PARENT_INCLUDED")) {
 					];
 
 					tl[gradClass] = Timeline.create($('search-timeline-' + gradClass), bandInfos, Timeline.HORIZONTAL);
-					tl[gradClass].loadXML('<?php echo ENTRADA_RELATIVE; ?>/api/timeline.api.php?q=<?php echo rawurlencode($SEARCH_QUERY); ?>&c=' + gradClass, function(xml, url) {
+					tl[gradClass].loadXML('<?php echo ENTRADA_RELATIVE; ?>/api/timeline.api.php?q=<?php echo rawurlencode($SEARCH_QUERY); ?>&c=' + gradYearIds[gradClass], function(xml, url) {
 						eventSource.loadXML(xml, url);
 						if ($(gradClass + '-event-count') != null) {
 							$(gradClass + '-event-count').innerHTML += eventSource.getCount();
@@ -407,21 +378,16 @@ if (!defined("PARENT_INCLUDED")) {
 				<?php
 				if ($SEARCH_CLASS) {
 					echo "<div style=\"border: 1px #CCCCCC solid; margin-bottom: 1px\">\n";
-					echo "	<img src=\"".ENTRADA_URL."/images/dynamic/14/314/5/90/".rawurlencode("Class of ".$SEARCH_CLASS)."/jpg\" width=\"25\" height=\"325\" align=\"left\" alt=\"Class of ".html_encode($SEARCH_CLASS)."\" title=\"Class of ".html_encode($SEARCH_CLASS)."\" />\n";
-					echo "	<div id=\"search-timeline-".$SEARCH_CLASS."\" style=\"height: 325px\"></div>\n";
+					echo "	<img src=\"".ENTRADA_URL."/images/dynamic/14/314/5/90/".rawurlencode(groups_get_name($SEARCH_CLASS))."/jpg\" width=\"25\" height=\"325\" align=\"left\" alt=\"".html_encode(groups_get_name($SEARCH_CLASS))."\" title=\"".html_encode(groups_get_name($SEARCH_CLASS))."\" />\n";
+					echo "	<div id=\"search-timeline-".preg_replace("/[^0-9]/", "", groups_get_name($SEARCH_CLASS))."\" style=\"height: 325px\"></div>\n";
 					echo "</div>\n";
 				} else {
-
-					$cut_off_year = (fetch_first_year() - 3);
-					if (isset($SYSTEM_GROUPS["student"]) && !empty($SYSTEM_GROUPS["student"])) {
-						foreach ($SYSTEM_GROUPS["student"] as $class) {
-							if (clean_input($class, "numeric") >= $cut_off_year) {
-								echo "<div style=\"border: 1px #CCCCCC solid; margin-bottom: 1px\">\n";
-								echo "	<img src=\"".ENTRADA_URL."/images/dynamic/14/314/5/90/".rawurlencode("Class of ".$class)."/jpg\" width=\"25\" height=\"325\" align=\"left\" alt=\"Class of ".html_encode($class)."\" title=\"Class of ".html_encode($class)."\" />\n";
-								echo "	<div id=\"search-timeline-".$class."\" style=\"height: 325px\"></div>\n";
-								echo "</div>\n";
-							}
-						}
+					$cohorts_list = groups_get_active_cohorts($ENTRADA_USER->getActiveOrganisation());
+					foreach ($cohorts_list as $cohort) {
+						echo "<div style=\"border: 1px #CCCCCC solid; margin-bottom: 1px\">\n";
+						echo "	<img src=\"".ENTRADA_URL."/images/dynamic/14/314/5/90/".rawurlencode($cohort["group_name"])."/jpg\" width=\"25\" height=\"325\" align=\"left\" alt=\"".html_encode($cohort["group_name"])."\" title=\"".html_encode($cohort["group_name"])."\" />\n";
+						echo "	<div id=\"search-timeline-".preg_replace("/[^0-9]/", "", $cohort["group_name"])."\" style=\"height: 325px\"></div>\n";
+						echo "</div>\n";
 					}
 				}
 
@@ -479,7 +445,7 @@ if (!defined("PARENT_INCLUDED")) {
 						$description = search_description($result["event_objectives"]." ".$result["event_goals"]);
 
 						echo "<div id=\"result-".$result["event_id"]."\" style=\"width: 100%; margin-bottom: 10px; line-height: 16px;\">\n";
-						echo "	<a href=\"".ENTRADA_URL."/events?id=".$result["event_id"]."\" style=\"font-weight: bold\">".html_encode($result["event_title"])."</a> <span class=\"content-small\">Event on ".date(DEFAULT_DATE_FORMAT, $result["event_start"])."; ".(($result["audience_type"] == "grad_year") ? "Class of ".$result["event_grad_year"] : "Group Activity")."</span><br />\n";
+						echo "	<a href=\"".ENTRADA_URL."/events?id=".$result["event_id"]."\" style=\"font-weight: bold\">".html_encode($result["event_title"])."</a> <span class=\"content-small\">Event on ".date(DEFAULT_DATE_FORMAT, $result["event_start"])."; ".(($result["audience_type"] == "cohort") ? html_encode(groups_get_name($result["event_cohort"])) : "Group Activity")."</span><br />\n";
 						echo 	(($description) ? $description : "Description not available.")."\n";
 						echo "	<div style=\"white-space: nowrap; overflow: hidden\"><a href=\"".ENTRADA_URL."/events?id=".$result["event_id"]."\" style=\"color: green; font-size: 11px\" target=\"_blank\">".ENTRADA_URL."/events?id=".$result["event_id"]."</a></div>\n";
 						echo "</div>\n";

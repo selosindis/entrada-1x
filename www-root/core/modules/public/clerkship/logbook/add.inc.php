@@ -39,6 +39,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
+	$BREADCRUMB[]	= array("url" => ENTRADA_URL."/clerkship/logbook", "title" => "Manage Logbook");
 	$BREADCRUMB[]	= array("url" => ENTRADA_URL."/clerkship/logbook?section=add", "title" => "Adding Patient Encounter");
 
 	echo "<h1>Adding Patient Encounter</h1>\n";
@@ -167,11 +168,27 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 			}
 		}
 		
-		$encounter_date = validate_single_calendar("encounter", true);	
+		$encounter_date = validate_calendar("", "encounter", true);	
 		if ((isset($encounter_date)) && ((int) $encounter_date)) {
 			$PROCESSED["encounter_date"]	= (int) $encounter_date;
 		} else {
 			$PROCESSED["encounter_date"]	= 0;
+		}
+		if (isset($_POST["post_action"])) {
+			switch ($_POST["post_action"]) {
+				case "new" :
+					$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] = "new";
+				break;
+				case "index" :
+					$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] = "index";
+				break;
+				case "entries" :
+				default :
+					$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] = "entries";
+				break;
+			}
+		} else {
+			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] = "entries";
 		}
 		
 		if (!$ERROR && (!isset($_POST["allow_save"]) || $_POST["allow_save"])) {
@@ -182,18 +199,35 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 			if ($db->AutoExecute("`".CLERKSHIP_DATABASE."`.`logbook_entries`", $PROCESSED, "INSERT")) {
 				$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["chosen_institution"] = $PROCESSED["lsite_id"];
 				if (($ENTRY_ID = $db->Insert_Id())) {
-					foreach ($PROCESSED_OBJECTIVES as $objective) {
-						$objective["lentry_id"] = $ENTRY_ID;
-						$db->AutoExecute("`".CLERKSHIP_DATABASE."`.`logbook_entry_objectives`", $objective, "INSERT");
+					if (isset($PROCESSED_OBJECTIVES) && count($PROCESSED_OBJECTIVES)) {
+						foreach ($PROCESSED_OBJECTIVES as $objective) {
+							$objective["lentry_id"] = $ENTRY_ID;
+							$db->AutoExecute("`".CLERKSHIP_DATABASE."`.`logbook_entry_objectives`", $objective, "INSERT");
+						}
 					}
-					foreach ($PROCESSED_PROCEDURES as $procedure) {
-						$procedure["lentry_id"] = $ENTRY_ID;
-						$db->AutoExecute("`".CLERKSHIP_DATABASE."`.`logbook_entry_procedures`", $procedure, "INSERT");
+					if (isset($PROCESSED_PROCEDURES) && count($PROCESSED_PROCEDURES)) {
+						foreach ($PROCESSED_PROCEDURES as $procedure) {
+							$procedure["lentry_id"] = $ENTRY_ID;
+							$db->AutoExecute("`".CLERKSHIP_DATABASE."`.`logbook_entry_procedures`", $procedure, "INSERT");
+						}
 					}
-					
-					$url = ENTRADA_URL."/".$MODULE."/logbook";
+					switch ($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"]) {
+						case "new" :
+							$url = ENTRADA_URL."/".$MODULE."/logbook?section=add&event=".$PROCESSED["event_id"];
+							$msg	= "You will now be redirected to add another logbook entry in this rotation; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+						break;
+						case "index" :
+							$url = ENTRADA_URL."/".$MODULE;
+							$msg	= "You will now be redirected back to the clerkship index page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+						break;
+						case "entries" :
+						default :
+							$url = ENTRADA_URL."/".$MODULE."/logbook";
+							$msg	= "You will now be redirected to the list of all your current logbook entries; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+						break;
+					}
 					$SUCCESS++;
-					$SUCCESSSTR[]  	= "You have successfully added this <strong>Patient Encounter</strong> to the logbook.<br /><br />Please <a href=\"".$url."\">click here</a> to proceed to the Logged Encounters page or you will be automatically forwarded in 5 seconds.";
+					$SUCCESSSTR[]  	= "You have successfully added this <strong>Patient Encounter</strong> to the system.<br /><br />".$msg;
 					$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
 	
 					application_log("success", "New patient encounter [".$ENTRY_ID."] added to the system.");
@@ -240,28 +274,31 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 		break;
 		case 1 :
 		default :
-			$HEAD[] = "<link href=\"".ENTRADA_URL."/javascript/calendar/css/xc2_default.css\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />";
-			$HEAD[] = "<script language=\"javascript\" type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/calendar/config/xc2_default.js\"></script>\n";
-			$HEAD[] = "<script language=\"javascript\" type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/calendar/script/xc2_inpage.js\"></script>\n";
+			$NOTICE++;
+			$NOTICESTR[] = "If you encounter any issues while using the <strong>Clerkship Logbook</strong>, or have any suggestions to improve the process of adding encounters for you, please contact <a href=\"mailto: james.ellis@queensu.ca\">James Ellis</a> at the MEdTech Unit.";
+			echo display_notice();
 
-			require_once(ENTRADA_ABSOLUTE."/javascript/logbook.js.php");
-
+			$HEAD[] 		= "<link href=\"".ENTRADA_URL."/javascript/calendar/css/xc2_default.css\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />";
+			$HEAD[] 		= "<script language=\"javascript\" type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/calendar/config/xc2_default.js\"></script>\n";
+			$HEAD[] 		= "<script language=\"javascript\" type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/calendar/script/xc2_inpage.js\"></script>\n";
+			require_once(WEBSITE_ABSOLUTE."/javascript/logbook.js.php");			
 			if ($ERROR && (!isset($_POST["allow_save"]) || $_POST["allow_save"])) {
 				echo display_error();
 			}
 			?>
-			<div id="hoverbox" class="display-generic" style="display: none;">
-				This reflection should be a short entry explaining your experiences with the patient.
-				It should be no more than approximately 100 words, and you may use initials to refer to the patient,
-				but no complete data such as their name or record number.
-				<br/><br/>
-				For Example:
-				<div style="padding: 0 20px 10px 20px">
-					I spent the evening following Ms. J's labour and participated in her delivery. I was able to do
-					a cervical exam and now feel much more confident in my ability to do this task.  I found that
-					reviewing my Phase II E notes about normal delivery was very useful to reinforce this experience
+			<div id="hoverbox" style="display: none;">
+				<span class="content-small">
+					This reflection should be a short entry explaining your experiences with the patient. 
+					It should be no more than approximately 100 words, and you may use initials to refer to the patient, 
+					but no complete data such as their name or record number.
+					<br/><br/>
+					For example: 
+					<br/><br/>
+					I spent the evening following Ms. J's labour and participated in her delivery. I was able to do 
+					a cervical exam and now feel much more confident in my ability to do this task.  I found that 
+					reviewing my Phase II E notes about normal delivery was very useful to reinforce this experience 
 					and have also read the relevant chapter in the recommended text again following this L+D shift.
-				</div>
+				</span>
 			</div>
 			<form id="addEncounterForm" action="<?php echo ENTRADA_URL; ?>/clerkship/logbook?<?php echo replace_query(array("step" => 2)); ?>" method="post">
 			<input type="hidden" value="1" name="allow_save" id="allow_save" />
@@ -280,6 +317,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 								<input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/clerkship'" />
 							</td>
 							<td style="width: 75%; text-align: right; vertical-align: middle">
+								<span class="content-small">After saving:</span>
+								<select name="post_action" id="post_action" style="width: 200px; margin-right: 20px;">
+									<option value="entries"<?php echo (((!isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"])) || ($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "entries")) ? " selected=\"selected\"" : ""); ?>>View your logbook entries</option>
+									<option value="new"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "new") ? " selected=\"selected\"" : ""); ?>>Add another entry</option>
+									<option value="index"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "index") ? " selected=\"selected\"" : ""); ?>>Return to clerkship index</option>
+								</select>
 								<input type="submit" class="button" value="Submit" />
 							</td>
 						</tr>
@@ -302,13 +345,22 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 					<td><label for="rotation_id" class="form-required">Rotation</label></td>
 					<td>
 						<?php 
-						$query	= "SELECT a.* FROM `".CLERKSHIP_DATABASE."`.`events` AS a LEFT JOIN `".CLERKSHIP_DATABASE."`.`event_contacts` AS b ON a.`event_id` = b.`event_id` WHERE b.`etype_id` = ".$db->qstr($_SESSION["details"]["id"])." AND a.`event_id` = ".$db->qstr((isset($PROCESSED["event_id"]) && (int)$PROCESSED["event_id"] ? (int)$PROCESSED["event_id"] : 0));
+						$query	= "SELECT a.* FROM `".CLERKSHIP_DATABASE."`.`events` AS a 
+									LEFT JOIN `".CLERKSHIP_DATABASE."`.`event_contacts` AS b 
+									ON a.`event_id` = b.`event_id` 
+									WHERE b.`etype_id` = ".$db->qstr($_SESSION["details"]["id"])." 
+									AND a.`event_id` = ".$db->qstr(((int)$PROCESSED["event_id"]))." 
+									AND a.`event_type` = 'clinical'";
 						$found	= ($db->GetRow($query) ? true : false);
 						?>
 						<select id="rotation_id" name="rotation_id" style="width: 95%<?php echo ($found ? "; display: none" : ""); ?>" onchange="$('allow_save').value = '0';$('addEncounterForm').submit();">
 						<option value="0">-- Select Rotation --</option>
 						<?php
-						$query		= "SELECT a.* FROM `".CLERKSHIP_DATABASE."`.`events` AS a LEFT JOIN `".CLERKSHIP_DATABASE."`.`event_contacts` AS b ON a.`event_id` = b.`event_id` WHERE `etype_id` = ".$db->qstr($_SESSION["details"]["id"]);
+						$query		= "SELECT a.* FROM `".CLERKSHIP_DATABASE."`.`events` AS a 
+										LEFT JOIN `".CLERKSHIP_DATABASE."`.`event_contacts` AS b 
+										ON a.`event_id` = b.`event_id` 
+										WHERE b.`etype_id` = ".$db->qstr($_SESSION["details"]["id"])." 
+										AND a.`event_type` = 'clinical'";
 						$results	= $db->GetAll($query);
 						if ($results) {
 							foreach ($results as $result) {
@@ -336,7 +388,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 						<select id="institution_id" name="institution_id" style="width: 95%">
 						<option value="0">-- Select Institution --</option>
 						<?php
-						$query		= "SELECT * FROM `".CLERKSHIP_DATABASE."`.`logbook_lu_sites` WHERE `site_type` = ".$db->qstr(CLERKSHIP_SITE_TYPE);
+						$query		= "SELECT * FROM `".CLERKSHIP_DATABASE."`.`logbook_lu_sites` 
+										WHERE `site_type` = ".$db->qstr(CLERKSHIP_SITE_TYPE);
 						$results	= $db->GetAll($query);
 						if ($results) {
 							foreach ($results as $result) {
@@ -354,7 +407,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 						<select id="llocation_id" name="llocation_id" style="width: 95%">
 						<option value="0">-- Select Setting --</option>
 						<?php
-						$query	= "SELECT * FROM `".CLERKSHIP_DATABASE."`.`categories` WHERE `category_type` = ".$db->qstr($CLERKSHIP_CATEGORY_TYPE_ID)." AND `category_name` = ".$db->qstr("Class of ".$_SESSION["details"]["grad_year"]);
+						$query	= "SELECT * FROM `".CLERKSHIP_DATABASE."`.`categories` 
+									WHERE `category_type` = ".$db->qstr($CLERKSHIP_CATEGORY_TYPE_ID)." 
+									AND `category_name` = ".$db->qstr("Class of ".$_SESSION["details"]["grad_year"]);
 						$result	= $db->GetRow($query);
 						if ($result) {
 							$query		= "SELECT * FROM `".CLERKSHIP_DATABASE."`.`logbook_lu_locations`";
@@ -386,7 +441,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 						<select id="agerange" name="agerange" style="width: 257px">
 						<?php
 						if (((int)$_GET["event"]) || $PROCESSED["event_id"]) {
-							$query = "SELECT `category_type` FROM `".CLERKSHIP_DATABASE."`.`categories` AS a LEFT JOIN `".CLERKSHIP_DATABASE."`.`events` AS b ON a.`category_id` = b.`category_id` WHERE b.`event_id` = ".$db->qstr((((int)$_GET["event"]) ? ((int)$_GET["event"]) : $PROCESSED["event_id"]));
+							$query = "SELECT `category_type` FROM `".CLERKSHIP_DATABASE."`.`categories` AS a 
+										LEFT JOIN `".CLERKSHIP_DATABASE."`.`events` AS b 
+										ON a.`category_id` = b.`category_id` 
+										WHERE b.`event_id` = ".$db->qstr((((int)$_GET["event"]) ? ((int)$_GET["event"]) : $PROCESSED["event_id"]));
 							$category_type = $db->GetOne($query);
 							if ($category_type == "family medicine") {
 								$agerange_cat = "5";
@@ -396,7 +454,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 						} else {
 							$agerange_cat = "0";
 						}
-						$query		= "SELECT * FROM `".CLERKSHIP_DATABASE."`.`logbook_lu_agerange` WHERE `rotation_id` = ".$db->qstr($agerange_cat);
+						$query		= "SELECT * FROM `".CLERKSHIP_DATABASE."`.`logbook_lu_agerange` 
+										WHERE `rotation_id` = ".$db->qstr($agerange_cat);
 						$results	= $db->GetAll($query);
 						if ($results) {
 							echo "<option value=\"0\"".((!isset($PROCESSED["agerange_id"])) ? " selected=\"selected\"" : "").">-- Select Age Range --</option>\n";
@@ -448,8 +507,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 						</div>
 					</td>
 					<td>
-						<?php 
-						$query		= "	SELECT c.`rotation_id`, a.`rotation_id` as `event_rotation_id`
+						<?php 			
+						$query		= "SELECT c.`rotation_id`, a.`rotation_id` as `event_rotation_id` 
 										FROM `".CLERKSHIP_DATABASE."`.`events` AS a
 										JOIN `".CLERKSHIP_DATABASE."`.`event_contacts` AS b
 										ON b.`event_id` = a.`event_id`
@@ -477,23 +536,31 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 									}
 								}
 							}
-							$query = "	SELECT `objective_id`, MAX(`number_required`) AS `required`
+							$query = "SELECT `objective_id`, MAX(`number_required`) AS `required`
 										FROM `".CLERKSHIP_DATABASE."`.`logbook_mandatory_objectives`
 										WHERE `rotation_id` IN (".$past_rotations.")
 										GROUP BY `objective_id`";
 							$required_objectives = $db->GetAll($query);
 							if ($required_objectives) {
+								$query = "SELECT `lentry_id` FROM `".CLERKSHIP_DATABASE."`.`logbook_entries`
+											WHERE `entry_active` = '1' 
+											AND `proxy_id` = ".$db->qstr($_SESSION["details"]["id"]);
+								$entry_ids = $db->GetAll($query);
+							    $entry_ids_string = "";
+							    foreach ($entry_ids as $entry_id) {
+							    	if (!$entry_ids_string) {
+							    		$entry_ids_string = $db->qstr($entry_id["lentry_id"]);
+							    	} else {
+							    		$entry_ids_string .= ", ".$db->qstr($entry_id["lentry_id"]);
+							    	}
+							    }
 								foreach ($required_objectives as $required_objective) {
 									$query = "SELECT COUNT(`objective_id`) AS `recorded`
-											FROM `".CLERKSHIP_DATABASE."`.`logbook_entry_objectives`
-											WHERE `lentry_id` IN
-											(
-												SELECT `lentry_id` FROM `".CLERKSHIP_DATABASE."`.`logbook_entries`
-												WHERE `entry_active` = '1' 
-												AND `proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
-											)
-											AND `objective_id` = ".$db->qstr($required_objective["objective_id"])."
-											GROUP BY `objective_id`";
+												FROM `".CLERKSHIP_DATABASE."`.`logbook_entry_objectives`
+												WHERE `lentry_id` IN
+												(".$entry_ids_string.")
+												AND `objective_id` = ".$db->qstr($required_objective["objective_id"])."
+												GROUP BY `objective_id`";
 									$recorded = $db->GetOne($query);
 									
 									if ($recorded) {
@@ -513,24 +580,33 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 									}
 								}
 							}
-							$query = "	SELECT `lprocedure_id`, MAX(`number_required`) AS `required`
+							$query = "SELECT `lprocedure_id`, MAX(`number_required`) AS `required`
 										FROM `".CLERKSHIP_DATABASE."`.`logbook_preferred_procedures`
 										WHERE `rotation_id` IN (".$past_rotations.")
+										AND `grad_year_min` <= ".$db->qstr(get_account_data("grad_year", $_SESSION["details"]["id"]))."
 										GROUP BY `lprocedure_id`";
 							$required_procedures = $db->GetAll($query);
 							if ($required_procedures) {
+								$query = "SELECT `lentry_id` FROM `".CLERKSHIP_DATABASE."`.`logbook_entries`
+											WHERE `entry_active` = '1' 
+											AND `proxy_id` = ".$db->qstr($_SESSION["details"]["id"]);
+								$entry_ids = $db->GetAll($query);
+							    $entry_ids_string = "";
+							    foreach ($entry_ids as $entry_id) {
+							    	if (!$entry_ids_string) {
+							    		$entry_ids_string = $db->qstr($entry_id["lentry_id"]);
+							    	} else {
+							    		$entry_ids_string .= ", ".$db->qstr($entry_id["lentry_id"]);
+							    	}
+							    }
 								foreach ($required_procedures as $required_procedure) {
 									$procedures_required = $required_procedure["required"];
 									$query = "SELECT COUNT(`lprocedure_id`) AS `recorded`
-											FROM `".CLERKSHIP_DATABASE."`.`logbook_entry_procedures`
-											WHERE `lentry_id` IN
-											(
-												SELECT `lentry_id` FROM `".CLERKSHIP_DATABASE."`.`logbook_entries`
-												WHERE `entry_active` = '1' 
-												AND `proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
-											)
-											AND `lprocedure_id` = ".$db->qstr($required_procedure["lprocedure_id"])."
-											GROUP BY `lprocedure_id`";
+												FROM `".CLERKSHIP_DATABASE."`.`logbook_entry_procedures`
+												WHERE `lentry_id` IN
+												(".$entry_ids_string.")
+												AND `lprocedure_id` = ".$db->qstr($required_procedure["lprocedure_id"])."
+												GROUP BY `lprocedure_id`";
 									$recorded = $db->GetOne($query);
 									
 									if ($recorded) {
@@ -551,9 +627,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 								}
 							}
 						}
-						$query = "SELECT * FROM `".CLERKSHIP_DATABASE."`.`global_lu_rotations` WHERE `rotation_id` = (SELECT `rotation_id` FROM `".CLERKSHIP_DATABASE."`.`events` WHERE `event_id` = ".$db->qstr((isset($PROCESSED["event_id"]) && (int)$PROCESSED["event_id"] ? (int)$PROCESSED["event_id"] : 0)).")";
+						$query = "SELECT * FROM `".CLERKSHIP_DATABASE."`.`global_lu_rotations` 
+									WHERE `rotation_id` = (SELECT `rotation_id` 
+									FROM `".CLERKSHIP_DATABASE."`.`events` 
+									WHERE `event_id` = ".$db->qstr($PROCESSED["event_id"]).")";
 						$rotation = $db->GetRow($query);
-						
 						if ($rotation) {
 							$rotation_id = $rotation["rotation_id"];
 							?>
@@ -562,7 +640,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 							<?php
 							if (isset($objective_ids) && $objective_ids) {
 							?>
-								<input type="radio" name="objective_display_type" id="objective_display_type_defficient" onclick="showDefficientObjectives()" /> <label for="objective_display_type_defficient">Show only clinical presentations which are defficient from past rotations.</label>
+								<input type="radio" name="objective_display_type" id="objective_display_type_deficient" onclick="showDeficientObjectives()" /> <label for="objective_display_type_deficient">Show only clinical presentations which are deficient from past rotations.</label>
 							<?php
 							}
 							?>
@@ -571,31 +649,37 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 						} elseif (isset($objective_ids) && $objective_ids) {
 							?>
 							<input type="radio" name="objective_display_type" id="objective_display_type_all" onclick="showAllObjectives()" checked="checked" /> <label for="objective_display_type_all">Show all clinical presentations</label><br />
-							<input type="radio" name="objective_display_type" id="objective_display_type_defficient" onclick="showDefficientObjectives()" /> <label for="objective_display_type_defficient">Show only clinical presentations which are defficient from past rotations.</label>
+							<input type="radio" name="objective_display_type" id="objective_display_type_deficient" onclick="showdeficientObjectives()" /> <label for="objective_display_type_deficient">Show only clinical presentations which are deficient from past rotations.</label>
 							<br /><br />
 							<?php
 						}
 						echo "<select id=\"rotation_objective_id\" name=\"rotation_objective_id\" onchange=\"addObjective(this.value, 0)\" style=\"width: 95%;".(!$rotation ? " display: none;" : "")."\">\n";
 						echo "<option value=\"0\"".((!isset($PROCESSED["objective_id"])) ? " selected=\"selected\"" : "").">-- Select Clinical Presentation --</option>\n";
-						$query		= "	SELECT DISTINCT * FROM `global_lu_objectives` 
-										WHERE `objective_parent` = '200' 
-										AND `objective_active` = '1'
+						$query		= "SELECT DISTINCT a.* FROM `global_lu_objectives` AS a
+										JOIN `objective_organisation` AS b
+										ON a.`objective_id` = b.`objective_id`
+										WHERE a.`objective_parent` = '200' 
+										AND a.`objective_active` = '1'
 										AND 
 										(
-											`objective_id` IN 
+											a.`objective_id` IN 
 											(
 												SELECT `objective_id` FROM `".CLERKSHIP_DATABASE."`.`logbook_mandatory_objectives` 
 												WHERE `rotation_id` = ".$db->qstr($rotation_id)." 
 											)
 										)
-										ORDER BY `objective_name`";
+										AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+										ORDER BY a.`objective_name`";
 						$results	= $db->GetAll($query);
 						if ($results) {
 							foreach ($results as $result) {
 								echo "<option id=\"rotation-obj-item-".$result["objective_id"]."\" value=\"".(int) $result["objective_id"]."\">".html_encode($result["objective_name"])."</option>\n";
-								$query = "	SELECT * FROM `global_lu_objectives` 
-											WHERE `objective_parent` = ".$db->qstr($result["objective_id"])."
-											AND `objective_active` = '1'";
+								$query = "SELECT a.* FROM `global_lu_objectives` AS a
+											JOIN `objective_organisation` AS b
+											ON a.`objective_id` = b.`objective_id`
+											WHERE a.`objective_parent` = ".$db->qstr($result["objective_id"])."
+											AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+											AND a.`objective_active` = '1'";
 								$children = $db->GetAll($query);
 								if ($children) {
 									foreach ($children as $child) {
@@ -606,28 +690,34 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 						}
 						echo "</select>\n";
 						
-						echo "<select id=\"defficient_objective_id\" name=\"defficient_objective_id\" onchange=\"addObjective(this.value, 0)\" style=\"width: 95%; display: none;\">\n";
+						echo "<select id=\"deficient_objective_id\" name=\"deficient_objective_id\" onchange=\"addObjective(this.value, 0)\" style=\"width: 95%; display: none;\">\n";
 						echo "<option value=\"0\"".((!isset($PROCESSED["objective_id"])) ? " selected=\"selected\"" : "").">-- Select Clinical Presentation --</option>\n";
 						
-						$query		= "	SELECT DISTINCT * FROM `global_lu_objectives` 
-										WHERE `objective_parent` = '200' 
-										AND `objective_active` = '1'
+						$query		= "SELECT DISTINCT a.* FROM `global_lu_objectives` AS a
+										JOIN `objective_organisation` AS b
+										ON a.`objective_id` = b.`objective_id`
+										WHERE a.`objective_parent` = '200' 
+										AND a.`objective_active` = '1'
 										AND 
 										(
-											`objective_id` IN (".$objective_ids.")
+											a.`objective_id` IN (".$objective_ids.")
 										)
-										ORDER BY `objective_name`";
+										AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+										ORDER BY a.`objective_name`";
 						$results	= $db->GetAll($query);
 						if ($results) {
 							foreach ($results as $result) {
-								echo "<option id=\"defficient-obj-item-".$result["objective_id"]."\" value=\"".(int) $result["objective_id"]."\">".html_encode($result["objective_name"])."</option>\n";
-								$query = "	SELECT * FROM `global_lu_objectives` 
-											WHERE `objective_parent` = ".$db->qstr($result["objective_id"])."
-											AND `objective_active` = '1'";
+								echo "<option id=\"deficient-obj-item-".$result["objective_id"]."\" value=\"".(int) $result["objective_id"]."\">".html_encode($result["objective_name"])."</option>\n";
+								$query = "SELECT * FROM `global_lu_objectives` AS a
+											JOIN `objective_organisation` AS b
+											ON a.`objective_id` = b.`objective_id`
+											WHERE a.`objective_parent` = ".$db->qstr($result["objective_id"])."
+											AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+											AND a.`objective_active` = '1'";
 								$children = $db->GetAll($query);
 								if ($children) {
 									foreach ($children as $child) {
-										echo "<option id=\"defficient-obj-item-".$child["objective_id"]."\" value=\"".(int) $child["objective_id"]."\">".html_encode($child["objective_name"])."</option>\n";
+										echo "<option id=\"deficient-obj-item-".$child["objective_id"]."\" value=\"".(int) $child["objective_id"]."\">".html_encode($child["objective_name"])."</option>\n";
 									}
 								}
 							}
@@ -635,17 +725,23 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 						echo "</select>\n";
 						echo "<select id=\"all_objective_id\" name=\"all_objective_id\" onchange=\"addObjective(this.value, 0)\" style=\"width: 95%;".($rotation ? " display: none;" : "")."\">\n";
 						echo "<option value=\"0\"".((!isset($PROCESSED["objective_id"])) ? " selected=\"selected\"" : "").">-- Select Clinical Presentation --</option>\n";
-						$query		= "	SELECT * FROM `global_lu_objectives` 
-										WHERE `objective_parent` = '200' 
-										AND `objective_active` = '1'
-										ORDER BY `objective_name`";
+						$query		= "SELECT a.* FROM `global_lu_objectives` AS a
+										JOIN `objective_organisation` AS b
+										ON a.`objective_id` = b.`objective_id`
+										WHERE a.`objective_parent` = '200' 
+										AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+										AND a.`objective_active` = '1'
+										ORDER BY a.`objective_name`";
 						$results	= $db->GetAll($query);
 						if ($results) {
 							foreach ($results as $result) {
 								echo "<option id=\"all-obj-item-".$result["objective_id"]."\" value=\"".(int) $result["objective_id"]."\">".html_encode($result["objective_name"])."</option>\n";
-								$query = "	SELECT * FROM `global_lu_objectives` 
-											WHERE `objective_parent` = ".$db->qstr($result["objective_id"])."
-											AND `objective_active` = '1'";
+								$query = "SELECT a.* FROM `global_lu_objectives` AS a
+											JOIN `obective_organisation` AS b
+											ON a.`objective_id` = b.`objective_id`
+											WHERE a.`objective_parent` = ".$db->qstr($result["objective_id"])."
+											AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+											AND a.`objective_active` = '1'";
 								$children = $db->GetAll($query);
 								if ($children) {
 									foreach ($children as $child) {
@@ -673,15 +769,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 						</tfoot>
 						<tbody id="objective-list">
 						<?php 
-						if (isset($PROCESSED_OBJECTIVES) && is_array($PROCESSED_OBJECTIVES) && count($PROCESSED_OBJECTIVES)) { 
+						if (is_array($PROCESSED_OBJECTIVES) && count($PROCESSED_OBJECTIVES)) { 
 							foreach ($PROCESSED_OBJECTIVES as $objective_id) {
-								$query = "	SELECT * FROM `global_lu_objectives` 
-											WHERE `objective_id` = ".$db->qstr($objective_id["objective_id"])." 
-											AND `objective_active` = '1'
+								$query = "	SELECT a.* FROM `global_lu_objectives` AS a
+											JOIN `objective_organisation` AS b
+											WHERE a.`objective_id` = ".$db->qstr($objective_id["objective_id"])." 
+											AND a.`objective_active` = '1'
+											AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
 											AND 
 											(
-												`objective_parent` = '200' 
-												OR `objective_parent` IN 
+												a.`objective_parent` = '200' 
+												OR a.`objective_parent` IN 
 												(
 													SELECT `objective_id` FROM `global_lu_objectives` 
 													WHERE `objective_parent` = '200'
@@ -719,44 +817,42 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 						<td style="vertical-align: top;">
 							<input type="hidden" id="default_procedure_involvement" value="Assisted" />
 							<?php
-								if (isset($procedure_ids) && count(explode(",", $procedure_ids))) {
-									$query = "	SELECT DISTINCT a.* FROM `".CLERKSHIP_DATABASE."`.`logbook_lu_procedures` AS a
-												LEFT JOIN `".CLERKSHIP_DATABASE."`.`logbook_preferred_procedures` AS b
-												ON b.`lprocedure_id` = a.`lprocedure_id`
-												WHERE a.`lprocedure_id` IN (".$procedure_ids.")";
-									$defficient_procedures = $db->GetAll($query);
-								} else {
-									$defficient_procedures = false;
-								}
+								$query = "SELECT DISTINCT a.* FROM `".CLERKSHIP_DATABASE."`.`logbook_lu_procedures` AS a
+											LEFT JOIN `".CLERKSHIP_DATABASE."`.`logbook_preferred_procedures` AS b
+											ON b.`lprocedure_id` = a.`lprocedure_id`
+											WHERE a.`lprocedure_id` IN (".$procedure_ids.")
+											AND b.`grad_year_min` <= ".$db->qstr(get_account_data("grad_year", $_SESSION["details"]["id"]));
+								$deficient_procedures = $db->GetAll($query);
 								if ($rotation) {
-									$query = "	SELECT DISTINCT a.* FROM `".CLERKSHIP_DATABASE."`.`logbook_lu_procedures` AS a
+									$query = "SELECT DISTINCT a.* FROM `".CLERKSHIP_DATABASE."`.`logbook_lu_procedures` AS a
 												LEFT JOIN `".CLERKSHIP_DATABASE."`.`logbook_preferred_procedures` AS b
 												ON b.`lprocedure_id` = a.`lprocedure_id`
-												WHERE b.`rotation_id` = ".$db->qstr($rotation_id);
+												WHERE b.`rotation_id` = ".$db->qstr($rotation_id)."
+												AND b.`grad_year_min` <= ".$db->qstr(get_account_data("grad_year", $_SESSION["details"]["id"]));
 									$preferred_procedures = $db->GetAll($query);
 									if ($preferred_procedures) {
 										?>
 										<input type="radio" name="procedure_display_type" id="procedure_display_type_rotation" onclick="showRotationProcedures()" checked="checked" /> <label for="procedure_display_type_rotation">Show only clinical tasks for <span id="rotation_title_display" style="font-weight: bold"><?php echo $rotation["rotation_title"]; ?></span></label><br/>
 										<input type="radio" name="procedure_display_type" id="procedure_display_type_all" onclick="showAllProcedures()" /> <label for="procedure_display_type_all">Show all clinical tasks</label><br />
 										<?php
-										if ($defficient_procedures) {
+										if ($deficient_procedures) {
 										?>
-											<input type="radio" name="procedure_display_type" id="procedure_display_type_defficient" onclick="showDefficientProcedures()" /> <label for="procedure_display_type_defficient">Show only clinical tasks which are defficient from past rotations.</label>
+											<input type="radio" name="procedure_display_type" id="procedure_display_type_deficient" onclick="showDeficientProcedures()" /> <label for="procedure_display_type_deficient">Show only clinical tasks which are deficient from past rotations.</label>
 										<?php
 										}
 										?>
 										<br /><br />
 										<?php
-									} elseif ($defficient_procedures) {
+									} elseif ($deficient_procedures) {
 									?>
 										<input type="radio" name="procedure_display_type" id="procedure_display_type_all" onclick="showAllProcedures()" checked="checked" /> <label for="procedure_display_type_all">Show all clinical tasks</label><br />
-										<input type="radio" name="procedure_display_type" id="procedure_display_type_defficient" onclick="showDefficientProcedures()" /> <label for="procedure_display_type_defficient">Show only clinical tasks which are defficient from past rotations.</label>
+										<input type="radio" name="procedure_display_type" id="procedure_display_type_deficient" onclick="showDeficientProcedures()" /> <label for="procedure_display_type_deficient">Show only clinical tasks which are deficient from past rotations.</label>
 									<?php
 									}
-								} elseif ($defficient_procedures) {
+								} elseif ($deficient_procedures) {
 								?>
 									<input type="radio" name="procedure_display_type" id="procedure_display_type_all" onclick="showAllProcedures()" checked="checked" /> <label for="procedure_display_type_all">Show all clinical tasks</label><br />
-									<input type="radio" name="procedure_display_type" id="procedure_display_type_defficient" onclick="showDefficientProcedures()" /> <label for="procedure_display_type_defficient">Show only clinical tasks which are defficient from past rotations.</label>
+									<input type="radio" name="procedure_display_type" id="procedure_display_type_deficient" onclick="showDeficientProcedures()" /> <label for="procedure_display_type_deficient">Show only clinical tasks which are deficient from past rotations.</label>
 								<?php
 								}
 							echo "<select id=\"rotation_procedure_id\" name=\"rotation_procedure_id\" onchange=\"addProcedure(this.value, 0)\" style=\"width: 95%;".(!isset($preferred_procedures) || !$preferred_procedures ? " display: none;" : "")."\">\n";
@@ -767,15 +863,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 								}
 							}
 							echo "</select>\n";
-							echo "<select id=\"defficient_procedure_id\" name=\"defficient_procedure_id\" onchange=\"addProcedure(this.value, 0)\" style=\"width: 95%; display: none;\">\n";
+							echo "<select id=\"deficient_procedure_id\" name=\"deficient_procedure_id\" onchange=\"addProcedure(this.value, 0)\" style=\"width: 95%; display: none;\">\n";
 							echo "<option value=\"0\"".((!isset($PROCESSED["objective_id"])) ? " selected=\"selected\"" : "").">-- Select Clinical Tasks --</option>\n";
-							if ($defficient_procedures) {
-								foreach ($defficient_procedures as $result) {
-									echo "<option id=\"defficient-proc-item-".$result["lprocedure_id"]."\" value=\"".(int) $result["lprocedure_id"]."\">".html_encode($result["procedure"])."</option>\n";
+							if ($deficient_procedures) {
+								foreach ($deficient_procedures as $result) {
+									echo "<option id=\"deficient-proc-item-".$result["lprocedure_id"]."\" value=\"".(int) $result["lprocedure_id"]."\">".html_encode($result["procedure"])."</option>\n";
 								}
 							}
 							echo "</select>\n";
-							$query = "SELECT * FROM `".CLERKSHIP_DATABASE."`.`logbook_lu_procedures` ORDER BY `procedure`";
+							$query = "SELECT a.* FROM `".CLERKSHIP_DATABASE."`.`logbook_lu_procedures` AS a
+										LEFT JOIN `".CLERKSHIP_DATABASE."`.`logbook_preferred_procedures` AS b
+										ON b.`lprocedure_id` = a.`lprocedure_id`
+										WHERE b.`grad_year_min` <= ".$db->qstr(get_account_data("grad_year", $_SESSION["details"]["id"]))."
+										GROUP BY a.`lprocedure_id`
+										ORDER BY a.`procedure`";
 							$results = $db->GetAll($query);
 							echo "<select id=\"all_procedure_id\" style=\"width: 95%;".(isset($preferred_procedures) && $preferred_procedures ? " display: none;" : "")."\" name=\"all_procedure_id\" onchange=\"addProcedure(this.value, 0)\">\n";
 							echo "<option value=\"0\"".((!isset($PROCESSED["procedure_id"])) ? " selected=\"selected\"" : "").">-- Select Clinical Tasks --</option>\n";
@@ -804,7 +905,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 						</tfoot>
 						<tbody id="procedure-list">
 						<?php 
-						if (isset($PROCESSED_PROCEDURES) && is_array($PROCESSED_PROCEDURES) && count($PROCESSED_PROCEDURES)) { 
+						if (is_array($PROCESSED_PROCEDURES) && count($PROCESSED_PROCEDURES)) { 
 							foreach ($PROCESSED_PROCEDURES as $procedure_id) {
 								$procedure = $db->GetRow("SELECT * FROM `".CLERKSHIP_DATABASE."`.`logbook_lu_procedures` WHERE `lprocedure_id` = ".$db->qstr($procedure_id["lprocedure_id"])." ORDER BY `procedure`");
 								if ($procedure) {
@@ -818,10 +919,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 												<option value="1" <?php echo ($procedure_id["level"] == 1 || (!$procedure_id["level"]) ? "selected=\"selected\"" : ""); ?>>Observed</option>
 												<option value="2" <?php echo ($procedure_id["level"] == 2 ? "selected=\"selected\"" : ""); ?>>Performed with help</option>
 												<option value="3" <?php echo ($procedure_id["level"] == 3 ? "selected=\"selected\"" : ""); ?>>Performed independently</option>
-												<?php /*
-												<option value="1" <?php echo ($procedure_id["level"] == 1 ? "selected=\"selected\"" : ""); ?>>Performed with help</option>
-												<option value="2" <?php echo ($procedure_id["level"] == 2 ? "selected=\"selected\"" : ""); ?>>Performed independently</option>
-												*/ ?>
 											</select>
 										</td>
 									</tr>
@@ -838,26 +935,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 					<td colspan="3">&nbsp;</td>
 				</tr>
 				<tr>
-					<td>&nbsp;</td>
-					<td colspan="2"><label for="reflection" class="form-required">Reflection On Learning Experience</label> <a id="tooltip" href="#hoverbox"><img src="<?php echo ENTRADA_URL; ?>/images/btn_help.gif" alt="Help" style="border: 0; vertical-align: middle;" /></a></td>
-				</tr>
-				<tr>
-					<td>&nbsp;</td>
-					<td colspan="2">
-						<textarea id="reflection" name="reflection" class="expandable"  maxlength="300" style="width: 95%"><?php echo ((isset($PROCESSED["reflection"])) ? html_encode($PROCESSED["reflection"]) : ""); ?></textarea>
+					<td></td>
+					<td style="vertical-align: top"><label for="reflection" class="form-required">Reflection on learning experience </label><a id="tooltip" href="#hoverbox"><img style="border: none;" src="<?php echo ENTRADA_URL; ?>/images/btn_help.gif"/></a></td>
+					<td>
+						<textarea id="reflection" name="reflection" class="expandable" style="width: 95%"><?php echo ((isset($PROCESSED["reflection"])) ? html_encode($PROCESSED["reflection"]) : ""); ?></textarea>
 					</td>
 				</tr>
 				<tr>
 					<td colspan="3">&nbsp;</td>
 				</tr>
 				<tr>
-					<td>&nbsp;</td>
-					<td colspan="2"><label for="comments" class="form-nrequired">Additional Comments</label></td>
-				</tr>
-				<tr>
-					<td>&nbsp;</td>
-					<td colspan="2">
-						<textarea id="comments" name="comments" class="expandable"  maxlength="300" style="width: 95%"><?php echo ((isset($PROCESSED["comments"])) ? html_encode($PROCESSED["comments"]) : ""); ?></textarea>
+					<td></td>
+					<td style="vertical-align: top"><label for="comments" class="form-nrequired">Additional Comments </label></td>
+					<td>
+						<textarea id="comments" name="comments" class="expandable" style="width: 95%"><?php echo ((isset($PROCESSED["comments"])) ? html_encode($PROCESSED["comments"]) : ""); ?></textarea>
 					</td>
 				</tr>				
 			</tbody>

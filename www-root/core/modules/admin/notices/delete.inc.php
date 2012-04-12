@@ -85,6 +85,9 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 				$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/notices\\'', 5000)";
 
 				if($total_removed = $db->Affected_Rows()) {
+					$query = "DELETE FROM `notice_audience` WHERE `notice_id` IN (".implode(", ", $NOTICE_IDS).")";
+					$db->Execute($query);
+					
 					$SUCCESS++;
 					$SUCCESSSTR[]  = "You have successfully removed ".$total_removed." notice".(($total_removed != 1) ? "s" : "")." from the system.<br /><br />You will be automatically redirected to the event index in 5 seconds, or you can <a href=\"".ENTRADA_URL."/admin/notices\">click here</a> if you do not wish to wait.";
 
@@ -123,14 +126,12 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 				<table class="tableList" cellspacing="0" summary="List of Notices">
 				<colgroup>
 					<col class="modified" />
-					<col class="general" />
 					<col class="title" />
 					<col class="date" />
 				</colgroup>
 				<thead>
 					<tr>
 						<td class="modified">&nbsp;</td>
-						<td class="general sortedASC" style="font-size: 12px"><div class="noLink">Notice Targets</div></td>
 						<td class="title" style="font-size: 12px">Notice Summary</td>
 						<td class="date" style="font-size: 12px">Display Until</td>
 					</tr>
@@ -138,7 +139,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 				<tfoot>
 					<tr>
 						<td></td>
-						<td colspan="3" style="padding-top: 10px">
+						<td colspan="2" style="padding-top: 10px">
 							<input type="submit" class="button" value="Confirm Removal" />
 						</td>
 					</tr>
@@ -155,7 +156,6 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 
 						echo "<tr id=\"notice-".$result["notice_id"]."\" class=\"notice".(($expired) ? " na" : "")."\">\n";
 						echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"delete[]\" value=\"".$result["notice_id"]."\" checked=\"checked\" /></td>\n";
-						echo "	<td class=\"general\">".(($url) ? "<a href=\"".$url."\" title=\"Edit Notice: ".html_encode($result["notice_summary"])."\">" : "").((isset($NOTICE_TARGETS[$result["target"]])) ? str_replace("&nbsp;", "", $NOTICE_TARGETS[$result["target"]]) : $result["target"]).(($url) ? "</a>" : "")."</td>\n";
 						echo "	<td class=\"title\">".(($url) ? "<a href=\"".$url."\">" : "").html_encode($result["notice_summary"]).(($url) ? "</a>" : "")."</td>\n";
 						echo "	<td class=\"date\">".(($url) ? "<a href=\"".$url."\">" : "").date(DEFAULT_DATE_FORMAT, $result["display_until"]).(($url) ? "</a>" : "")."</td>\n";
 						echo "</tr>\n";

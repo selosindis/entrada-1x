@@ -37,7 +37,6 @@ $user_organisation_id = 0;
 
 $calendar_type = "json";
 $user_private_hash = "";
-$user_grad_year = fetch_first_year();
 
 /**
  * Check if the request has multiple parts to it indicating the URL contains a private_hash,
@@ -73,10 +72,6 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 	$user_role = $_SESSION["details"]["role"];
 	$user_group = $_SESSION["details"]["group"];
 	$user_organisation_id = $_SESSION["details"]["organisation_id"];
-
-	if (isset($_SESSION["details"]["grad_year"]) && (int) $_SESSION["details"]["grad_year"]) {
-		$user_grad_year = (int) $_SESSION["details"]["grad_year"];
-	}
 } else {
 	/**
 	 * If the are not already authenticated, check to see if they have provided
@@ -87,7 +82,7 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 		 * @todo Add a setUserHashAuthentication() method to the authentication client and server so we can use the
 		 * web-service instead of querying the data directly to authenticate a private-hash.
 		 */
-		$query = "	SELECT a.`id`, a.`username`, a.`firstname`, a.`lastname`, a.`email`, b.`role`, b.`group`, a.`organisation_id`
+		$query = "SELECT a.`id`, a.`username`, a.`firstname`, a.`lastname`, a.`email`, a.`grad_year`, b.`role`, b.`group`, a.`organisation_id`, b.`access_expires`
 					FROM `".AUTH_DATABASE."`.`user_data` AS a
 					LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 					ON b.`user_id` = a.`id`
@@ -99,18 +94,17 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 					GROUP BY a.`id`";
 		$result = $db->GetRow($query);
 		if ($result) {
-			$user_proxy_id = $result["id"];
-			$user_username = $result["username"];
-			$user_firstname = $result["firstname"];
-			$user_lastname = $result["lastname"];
-			$user_email = $result["email"];
-			$user_role = $result["role"];
-			$user_group = $result["group"];
-			$user_organisation_id = $result["organisation_id"];
-
-			if (($user_group == "student") && (int) $user_role) {
-				$user_grad_year = (int) $user_role;
-			}
+			$_SESSION["details"]["id"] = $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"] = $user_proxy_id = $result["id"];
+			$_SESSION["details"]["username"] = $user_username = $result["username"];
+			$_SESSION["details"]["firstname"] = $user_firstname = $result["firstname"];
+			$_SESSION["details"]["lastname"] = $user_lastname = $result["lastname"];
+			$_SESSION["details"]["email"] = $user_email = $result["email"];
+			$_SESSION["details"]["role"] = $user_role = $result["role"];
+			$_SESSION["details"]["group"] = $user_group = $result["group"];
+			$_SESSION["details"]["organisation_id"] = $user_organisation_id = $result["organisation_id"];
+			$_SESSION["details"]["app_id"] = AUTH_APP_ID;
+			$_SESSION["details"]["grad_year"] = $result["grad_year"];
+			$_SESSION["details"]["expires"] = $result["access_expires"];
 		} else {
 			/**
 			 * If the query above fails, redirect them back here but without the
@@ -134,6 +128,7 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 
 			$auth = new AuthSystem((((defined("AUTH_DEVELOPMENT")) && (AUTH_DEVELOPMENT != "")) ? AUTH_DEVELOPMENT : AUTH_PRODUCTION));
 			$auth->setAppAuthentication(AUTH_APP_ID, AUTH_USERNAME, AUTH_PASSWORD);
+			$auth->setEncryption(AUTH_ENCRYPTION_METHOD);
 			$auth->setUserAuthentication($username, $password, AUTH_METHOD);
 			$result = $auth->Authenticate(array("id", "username", "firstname", "lastname", "email", "role", "group", "organisation_id"));
 
@@ -148,9 +143,6 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 				$user_group = $result["GROUP"];
 				$user_organisation_id = $result["ORGANISATION_ID"];
 
-				if (($user_group == "student") && (int) $user_role) {
-					$user_grad_year = (int) $user_role;
-				}
 			} else {
 				$ERROR++;
 				application_log("access", $result["MESSAGE"]);
@@ -163,6 +155,23 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 			unset($username, $password);
 		}
 	}
+	
+	$ENTRADA_USER = User::get($user_proxy_id);
+	
+	$details = array();
+	$details["app_id"] = (int) AUTH_APP_ID;
+	$details["id"] = $user_proxy_id;
+	$details["username"] = $user_username;
+	$details["prefix"] = "";
+	$details["firstname"] = $user_firstname;
+	$details["lastname"] = $user_lastname;
+	$details["email"] = $user_email;
+	$details["telephone"] = "";
+	$details["role"] = $user_role;
+	$details["group"] = $user_group;
+	$details["organisation_id"] = $user_organisation_id;
+
+	$ENTRADA_ACL = new Entrada_Acl($details);
 }
 
 if ($user_proxy_id) {
@@ -190,7 +199,7 @@ if ($user_proxy_id) {
 			true,
 			1,
 			1750);
-
+	
 	if ($ENTRADA_ACL->amIAllowed("clerkship", "read")) {
 		$query = "	SELECT c.*
 					FROM `".CLERKSHIP_DATABASE."`.`events` AS a
@@ -201,10 +210,10 @@ if ($user_proxy_id) {
 					WHERE a.`event_finish` >= ".$db->qstr(strtotime("00:00:00"))."
 					AND (a.`event_status` = 'published' OR a.`event_status` = 'approval')
 					AND b.`econtact_type` = 'student'
-					AND b.`etype_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+					AND b.`etype_id` = ".$db->qstr($user_proxy_id)."
 					ORDER BY a.`event_start` ASC";
 		$clerkship_schedule	= $db->GetRow($query);
-		if (isset($clerkship_schedule) && $clerkship_schedule && $clerkship_schedule["rotation_id"] < MAX_ROTATION) {
+		if (isset($clerkship_schedule) && $clerkship_schedule && $clerkship_schedule["rotation_id"] != MAX_ROTATION) {
 			$course_id = $clerkship_schedule["course_id"];
 			$course_ids = array();
 			$query 	= "SELECT `course_id` FROM `".CLERKSHIP_DATABASE."`.`global_lu_rotations` 
@@ -221,7 +230,7 @@ if ($user_proxy_id) {
 			}
 		}
 	}
-
+	
 	switch ($calendar_type) {
 		case "ics" :
 			add_statistic("calendar.api", "view", "type", "ics");

@@ -27,13 +27,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MANAGE_USER_DATA"))) {
 require_once("Entrada/metadata/functions.inc.php");
 
 
-$user = User::get($PROXY_ID);
-$SCRIPT[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/meta_data_user.js\"></script>";
+$eUser = User::get($PROXY_ID);
+$SCRIPT[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/meta_data.js\"></script>";
 $ONLOAD[] = "api_url = \"".ENTRADA_URL."/admin/users/manage/metadata?section=api-metadata&id=".$PROXY_ID."\";page_init();";
 ?>
 <h1><?php echo $translate->translate("Manage User Meta Data"); ?></h1>
 <form id="meta_data_form" method="post">
-<?php echo editMetaDataTable_User($user); ?>
+<?php echo editMetaDataTable_User($eUser); ?>
 </form>
 <div id="errModal" class="modal-description">
 	<div id="errModal_content" class="status"></div>
@@ -44,6 +44,39 @@ $ONLOAD[] = "api_url = \"".ENTRADA_URL."/admin/users/manage/metadata?section=api
 <div id="loadingModal" class="modal-description">
 	<img src="<?php echo ENTRADA_URL; ?>/images/loading.gif" /> 
 </div>
+<script type="text/javascript">
+/**
+ * Sets up resources needed by the page
+ */
+function page_init() {
+	var errModal = new Control.Modal('errModal', {
+		overlayOpacity:	0.75,
+		closeOnClick:	'overlay',
+		className:		'modal-description',
+		fade:			true,
+		fadeDuration:	0.30
+	});
+	display_error = ErrorHandler(errModal);
+	
+	var loadingModal = new Control.Modal('loadingModal', {
+		overlayOpacity:	0.75,
+		closeOnClick:	false,
+		className:		'modal-description',
+		fade:			true,
+		fadeDuration:	0.30
+	});
+	
+	window.addRowReq = mkEvtReq(/^cat_head_(\d+)$/,addCategoryRow);
+	window.deleteRowReq = mkEvtReq(/^value_edit_(\d+)$/, deleteRow);
 
+
+	document.observe("click", clickHandler);
+	
+	document.observe('MetaData:onBeforeUpdate', function () {loadingModal.open();});
+	document.observe('MetaData:onAfterUpdate', function () {loadingModal.close();});
+	
+	table_init();
+}
+</script>
 <?php 
 }

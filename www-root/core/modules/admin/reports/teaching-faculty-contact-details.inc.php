@@ -40,9 +40,81 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]." and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 	$BREADCRUMB[]	= array("url" => "", "title" => "Teaching Faculty Contact Details");
+	
+	/**
+	 * Add PlotKit to the beginning of the $HEAD array.
+	 */
+	array_unshift($HEAD,
+		"<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/MochiKit/MochiKit.js\"></script>",
+		"<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/PlotKit/excanvas.js\"></script>",
+		"<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/PlotKit/Base.js\"></script>",
+		"<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/PlotKit/Layout.js\"></script>",
+		"<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/PlotKit/Canvas.js\"></script>",
+		"<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/PlotKit/SweetCanvas.js\"></script>"
+		);
+	
+	$HEAD[]		= "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/picklist.js\"></script>\n";
+	$ONLOAD[]	= "$('courses_list').style.display = 'none'";
+		
+	/**
+	 * Fetch all courses into an array that will be used.
+	 */
+	$query = "SELECT * FROM `courses`
+			  WHERE `organisation_id` = ".$ENTRADA_USER->getActiveOrganisation()."
+			  ORDER BY `course_code` ASC";
+	$courses = $db->GetAll($query);
+	if ($courses) {
+		foreach ($courses as $course) {
+			$course_list[$course["course_id"]] = array("code" => $course["course_code"], "name" => $course["course_name"]);
+		}
+	}
+
+	/**
+	 * Fetch selected course_ids.
+	 */
+	if ((isset($_POST["course_ids"])) && (is_array($_POST["course_ids"]))) {
+		$course_ids = array();
+		
+		foreach ($_POST["course_ids"] as $course_id) {
+			if ($course_id = (int) $course_id) {
+				$course_ids[] = $course_id;
+			}
+		}
+		
+		$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["course_ids"] = $course_ids;
+	}
+	
+	if (!isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["course_ids"])) {
+		$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["course_ids"] = array_keys($course_list);
+	}
+	
+	if (isset($_POST["minimum_events"]) && (int) $_POST["minimum_events"]) {
+		$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["minimum_events"] = clean_input($_POST["minimum_events"], "int");
+	}
+	
+	if (!isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["minimum_events"])) {
+		$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["minimum_events"] = 1;
+	}
 	?>
+	<style type="text/css">
+	h1 {
+		page-break-before:	always;
+		border-bottom:		2px #CCCCCC solid;
+		font-size:			24px;
+	}
+	
+	h2 {
+		font-weight:		normal;
+		border:				0px;
+		font-size:			18px;
+	}
+	
+	div.top-link {
+		float: right;
+	}
+	</style>	
 	<div class="no-printing">
-		<form action="<?php echo ENTRADA_URL; ?>/admin/reports?section=<?php echo $SECTION; ?>&step=2" method="post">
+		<form action="<?php echo ENTRADA_RELATIVE; ?>/admin/reports?section=<?php echo $SECTION; ?>&step=2" method="post" onsubmit="selIt()">
 			<table style="width: 100%" cellspacing="0" cellpadding="2" border="0">
 				<colgroup>
 					<col style="width: 3%" />
@@ -55,33 +127,68 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 					</tr>
 					<?php echo generate_calendars("reporting", "Reporting Date", true, true, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_start"], true, true, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_finish"]); ?>
 					<tr>
-						<td style="vertical-align: top;"><input id="organisation_checkbox" type="checkbox" disabled="disabled" checked="checked"></td>
-						<td style="vertical-align: top; padding-top: 4px;"><label for="organisation_id" class="form-required">Organisation</label></td>
+						<td colspan="3">&nbsp;</td>
+					</tr>
+					<tr>
+						<td></td>
+						<td style="vertical-align: top;"><label class="form-required">Courses Included</label></td>
 						<td style="vertical-align: top;">
-							<select id="organisation_id" name="organisation_id" style="width: 177px">
-								<?php
-								$query		= "SELECT `organisation_id`, `organisation_title` FROM `".AUTH_DATABASE."`.`organisations`";
-								$results	= $db->GetAll($query);
-								$all_organisations = false;
-								if($results) {
-									$all_organisations = true;
-									foreach($results as $result) {
-										if($ENTRADA_ACL->amIAllowed('resourceorganisation'.$result["organisation_id"], 'read')) {
-											echo "<option value=\"".(int) $result["organisation_id"]."\"".(((isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["organisation_id"])) && ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["organisation_id"] == $result["organisation_id"])) ? " selected=\"selected\"" : "").">".html_encode($result["organisation_title"])."</option>\n";
-										} else {
-											$all_organisations = false;
+							<?php
+							echo "<select class=\"multi-picklist\" id=\"PickList\" name=\"course_ids[]\" multiple=\"multiple\" size=\"5\" style=\"width: 100%; margin-bottom: 5px\">\n";
+									if ((is_array($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["course_ids"])) && (count($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["course_ids"]))) {
+										foreach ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["course_ids"] as $course_id) {
+											echo "<option value=\"".(int) $course_id."\">".html_encode($course_list[$course_id]["code"] . " - " . $course_list[$course_id]["name"])."</option>\n";
 										}
 									}
-								}
-								if($all_organisations) {
-									?>
-									<option value="-1" <?php echo (isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["organisation_id"]) && ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["organisation_id"] == -1) ? " selected=\"selected\"" : ""); ?>>All organisations</option>
-									<?php
-								}
-								?>
-							</select>
+							echo "</select>\n";
+							echo "<div style=\"float: left; display: inline\">\n";
+							echo "	<input type=\"button\" id=\"courses_list_state_btn\" class=\"button\" value=\"Show List\" onclick=\"toggle_list('courses_list')\" />\n";
+							echo "</div>\n";
+							echo "<div style=\"float: right; display: inline\">\n";
+							echo "	<input type=\"button\" id=\"courses_list_remove_btn\" class=\"button-remove\" onclick=\"delIt()\" value=\"Remove\" />\n";
+							echo "	<input type=\"button\" id=\"courses_list_add_btn\" class=\"button-add\" onclick=\"addIt()\" style=\"display: none\" value=\"Add\" />\n";
+							echo "</div>\n";
+							echo "<div id=\"courses_list\" style=\"clear: both; padding-top: 3px; display: none\">\n";
+							echo "	<h2>Courses List</h2>\n";
+							echo "	<select class=\"multi-picklist\" id=\"SelectList\" name=\"other_courses_list\" multiple=\"multiple\" size=\"15\" style=\"width: 100%\">\n";
+									if ((is_array($course_list)) && (count($course_list))) {
+										foreach ($course_list as $course_id => $course) {
+											if (!in_array($course_id, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["course_ids"])) {
+												echo "<option value=\"".(int) $course_id."\">".html_encode($course_list[$course_id]["code"] . " - " . $course_list[$course_id]["name"])."</option>\n";
+											}
+										}
+									}
+							echo "	</select>\n";
+							echo "	</div>\n";
+							echo "	<script type=\"text/javascript\">\n";
+							echo "	\$('PickList').observe('keypress', function(event) {\n";
+							echo "		if (event.keyCode == Event.KEY_DELETE) {\n";
+							echo "			delIt();\n";
+							echo "		}\n";
+							echo "	});\n";
+							echo "	\$('SelectList').observe('keypress', function(event) {\n";
+							echo "	    if (event.keyCode == Event.KEY_RETURN) {\n";
+							echo "			addIt();\n";
+							echo "		}\n";
+							echo "	});\n";
+							echo "	</script>\n";
+							?>
 						</td>
 					</tr>
+					<tr>
+						<td colspan="3">&nbsp;</td>
+					</tr>
+					<tr>
+						<td>&nbsp;</td>
+						<td style="vertical-align: top; padding-top: 6px"><label for="event_title_search" class="form-nrequired"><strong>Minimum </strong> Events</label></td>
+						<td style="vertical-align: top;">
+							<input type="text" value="<?php echo (int) $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["minimum_events"]; ?>" name="minimum_events" id="minimum_events" style="width: 30px" maxlength="3" />
+							<span class="content-small">
+								<strong>Example:</strong> If you specify <strong>4</strong>, you will only see teachers who have taught more than <strong>4</strong> sessions.
+							</span>
+						</td>
+					</tr>
+
 					<tr>
 						<td colspan="3" style="text-align: right; padding-top: 10px"><input type="submit" class="button" value="Create Report" /></td>
 					</tr>
@@ -90,12 +197,11 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 		</form>
 	</div>
 	<?php
-	if ($STEP == 2) {
-		$output		= array();
+	if ($STEP == 2 && !empty($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["course_ids"])) {
+		$output	= array();
 		$appendix	= array();
 		
-		$terms_included		= array("1" => "Term 1", "2" => "Term 2", "2A" => "Phase 2A", "2B" => "Phase 2B", "2C" => "Phase 2C", "2E" => "Phase 2E", "3" => "Phase 3");
-		
+		$courses_included	= array();
 		$eventtype_legend	= array();
 		
 		echo "<h1>Teaching Faculty Contact Details</h1>";
@@ -103,28 +209,25 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 		echo "	<strong>Date Range:</strong> ".date(DEFAULT_DATE_FORMAT, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_start"])." <strong>to</strong> ".date(DEFAULT_DATE_FORMAT, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_finish"]).".";
 		echo "</div>\n";
 
-		if(isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["organisation_id"]) && $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["organisation_id"] != -1) {
-			$organisation_where = " AND (b.`organisation_id` = ".$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["organisation_id"].") ";
-		} else {
-			$organisation_where = "";
-		}
+		$organisation_where = " AND (b.`organisation_id` = ".$ENTRADA_USER->getActiveOrganisation().") ";
 		
-		foreach ($terms_included as $term => $term_title) {
-			echo "<h2>".$term_title."</h2>";
+		foreach ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["course_ids"] as $course_id) {
+			echo "<h2>".$course_list[$course_id]["name"]."</h2>";
 			
-			$query		= "	SELECT d.`firstname`, d.`lastname`, d.`email`, COUNT(*) AS `total`
+			$query		= "	SELECT d.`firstname`, d.`lastname`, d.`email`, COUNT(*) AS `total`, ROUND(SUM((a.`event_finish` - a.`event_start`) / 3600)) as `total_hours`
 							FROM `events` AS a
-							LEFT JOIN `courses` AS b
+							JOIN `courses` AS b
 							ON b.`course_id` = a.`course_id`
-							LEFT JOIN `event_contacts` AS c
+							JOIN `event_contacts` AS c
 							ON a.`event_id` = c.`event_id`
-							LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS d
+							JOIN `".AUTH_DATABASE."`.`user_data` AS d
 							ON d.`id` = c.`proxy_id`
-							WHERE (a.`event_start` BETWEEN ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_start"])." AND ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_finish"]).")
+							WHERE a.`course_id` = ".$db->qstr($course_id)."
+							AND (a.`event_start` BETWEEN ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_start"])." AND ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_finish"]).")
+							AND c.`contact_role` = 'teacher' 
 							AND b.`course_active` = '1'
-							AND a.`event_phase` = ".$db->qstr($term).
-							$organisation_where."
 							GROUP BY c.`proxy_id`
+							HAVING COUNT(*) >= ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["minimum_events"])."
 							ORDER BY d.`lastname` ASC, d.`firstname` ASC";
 			$results	= $db->GetAll($query);
 			if ($results) {
@@ -135,23 +238,26 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 					<col class="general" />
 					<col class="title" />
 					<col class="general" />
+					<col class="general" />
 				</colgroup>
 				<thead>
 					<tr>
 						<td class="general" style="border-left: 1px #666 solid">Firstname</td>
 						<td class="general">Lastname</td>
 						<td class="title">E-Mail Address</td>
+						<td class="general">Event Hours</td>
 						<td class="general">Events Taught</td>
 					</tr>
 				</thead>
 				<tbody>
 				<?php
 				foreach ($results as $result) {
-					if ((bool) $result["email"]) {
+					if ($result["email"] != "") {
 						echo "<tr>\n";
 						echo "	<td class=\"general\">".$result["firstname"]."</td>\n";
 						echo "	<td class=\"general\">".$result["lastname"]."</td>\n";
 						echo "	<td class=\"title\">".$result["email"]."</td>\n";
+						echo "	<td class=\"general\">".$result["total_hours"]."</td>\n";
 						echo "	<td class=\"general\">".$result["total"]."</td>\n";
 						echo "</tr>\n";
 					}
@@ -161,9 +267,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 				</table>
 				<?php				
 			} else {
-				echo display_notice(array("There are no learning events in the system during the timeframe you have selected."));	
+				echo display_notice(array("There are no teachers who taught in these courses during the timeframe you have selected."));
 			}
 		}
 	}
 }
-?>

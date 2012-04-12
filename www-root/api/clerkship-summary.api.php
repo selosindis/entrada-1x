@@ -28,6 +28,7 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 	} else {
 		$PROXY_ID = 0;
 	}
+	$grad_year = get_account_data("grad_year", $PROXY_ID);
 	$query = "	SELECT DISTINCT(b.`rotation_id`), c.`rotation_title` FROM
 				`".CLERKSHIP_DATABASE."`.`event_contacts` AS a
 				LEFT JOIN `".CLERKSHIP_DATABASE."`.`events` AS b
@@ -72,25 +73,50 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 					    $objectives_required = 0;
 					    $objectives_recorded = 0;
 					    $procedures_recorded = 0;
+					    $grad_year = get_account_data("grad_year", $PROXY_ID);
 					    
-						$query = "	SELECT `objective_id`, MAX(`number_required`) AS `required`
+						$query = "	SELECT `objective_id`, `lmobjective_id`, MAX(`number_required`) AS `required`
 									FROM `".CLERKSHIP_DATABASE."`.`logbook_mandatory_objectives`
 									WHERE `rotation_id` = ".$db->qstr($rotation["rotation_id"])."
+									AND `grad_year_min` <= ".$db->qstr($grad_year)."
+									AND (`grad_year_max` = 0 OR `grad_year_max` >= ".$db->qstr($grad_year).")
 									GROUP BY `objective_id`";
 						$required_objectives = $db->GetAll($query);
 						if ($required_objectives) {
 							foreach ($required_objectives as $required_objective) {
 								$objectives_required += $required_objective["required"];
-								$query = "	SELECT COUNT(`objective_id`) AS `recorded`
-											FROM `".CLERKSHIP_DATABASE."`.`logbook_entry_objectives`
-											WHERE `lentry_id` IN
+								$llocation_ids_string = "";
+								if ($grad_year >= 2013) {
+									$query = "SELECT c.`llocation_id` FROM `".CLERKSHIP_DATABASE."`.`logbook_mandatory_objective_locations` AS a
+												JOIN `".CLERKSHIP_DATABASE."`.`logbook_location_types` AS b
+												ON a.`lltype_id` = b.`lltype_id`
+												JOIN `".CLERKSHIP_DATABASE."`.`logbook_lu_locations` AS c
+												ON b.`llocation_id` = c.`llocation_id`
+												WHERE a.`lmobjective_id` = ".$db->qstr($required_objective["lmobjective_id"]);
+									$valid_locations = $db->GetAll($query);
+									if ($valid_locations) {
+										foreach ($valid_locations as $location) {
+											if ($llocation_ids_string) {
+												$llocation_ids_string .= ", ".$db->qstr($location["llocation_id"]);
+											} else {
+												$llocation_ids_string = $db->qstr($location["llocation_id"]);
+											}
+										}
+									}
+								}
+								$query = "SELECT COUNT(`objective_id`) AS `recorded`
+											FROM `".CLERKSHIP_DATABASE."`.`logbook_entry_objectives` AS a
+											JOIN `".CLERKSHIP_DATABASE."`.`logbook_entries` AS b
+											ON a.`lentry_id` = b.`lentry_id`
+											WHERE a.`lentry_id` IN
 											(
 												SELECT `lentry_id` FROM `".CLERKSHIP_DATABASE."`.`logbook_entries`
 												WHERE `entry_active` = '1' 
 												AND `proxy_id` = ".$db->qstr($PROXY_ID)."
 											)
-											AND `objective_id` = ".$db->qstr($required_objective["objective_id"])."
-											GROUP BY `objective_id`";
+											AND a.`objective_id` = ".$db->qstr($required_objective["objective_id"])."
+											".($llocation_ids_string ? "AND b.`llocation_id` IN (".$llocation_ids_string.")" : "")."
+											GROUP BY a.`objective_id`";
 								$recorded = $db->GetOne($query);
 								
 								if ($recorded) {
@@ -98,14 +124,35 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 								}
 							}
 						}
-						$query = "	SELECT `lprocedure_id`, MAX(`number_required`) AS `required`
+						$query = "SELECT `lprocedure_id`, `lpprocedure_id`, MAX(`number_required`) AS `required`
 									FROM `".CLERKSHIP_DATABASE."`.`logbook_preferred_procedures`
 									WHERE `rotation_id` = ".$db->qstr($rotation["rotation_id"])."
+									AND `grad_year_min` <= ".$db->qstr(get_account_data("grad_year", $_SESSION["details"]["id"]))."
+									AND (`grad_year_max` = 0 OR `grad_year_max` >= ".$db->qstr(get_account_data("grad_year", $_SESSION["details"]["id"])).")
 									GROUP BY `lprocedure_id`";
 						$required_procedures = $db->GetAll($query);
 						if ($required_procedures) {
 							foreach ($required_procedures as $required_procedure) {
 								$procedures_required += $required_procedure["required"];
+								$llocation_ids_string = "";
+								if ($grad_year >= 2013) {
+									$query = "SELECT b.`llocation_id` FROM `".CLERKSHIP_DATABASE."`.`logbook_preferred_procedure_locations` AS a
+												JOIN `".CLERKSHIP_DATABASE."`.`logbook_location_types` AS b
+												ON a.`lltype_id` = b.`lltype_id
+												JOIN `".CLERKSHIP_DATABASE."`.`logbook_lu_locations` AS c
+												ON b.`llocation_id` = c.`llocation_id`
+												WHERE a.`lpprocedure_id` = ".$db->qstr($required_objective["lpprocedure_id"]);
+									$valid_locations = $db->GetAll($query);
+									if ($valid_locations) {
+										foreach ($valid_locations as $location) {
+											if ($llocation_ids_string) {
+												$llocation_ids_string .= ", ".$db->qstr($location["llocation_id"]);
+											} else {
+												$llocation_ids_string = $db->qstr($location["llocation_id"]);
+											}
+										}
+									}
+								}
 								$query = "SELECT COUNT(`lprocedure_id`) AS `recorded`
 										FROM `".CLERKSHIP_DATABASE."`.`logbook_entry_procedures`
 										WHERE `lentry_id` IN
@@ -115,6 +162,7 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 											AND `proxy_id` = ".$db->qstr($PROXY_ID)."
 										)
 										AND `lprocedure_id` = ".$db->qstr($required_procedure["lprocedure_id"])."
+										".($llocation_ids_string ? "AND a.`llocation_id` IN (".$llocation_ids_string.")" : "")."
 										GROUP BY `lprocedure_id`";
 								$recorded = $db->GetOne($query);
 								
@@ -123,7 +171,7 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 								}
 							}
 						}
-						$url = ENTRADA_URL."/clerkship/logbook?section=view&type=missing&core=".$rotation["rotation_id"]."&id=".$PROXY_ID;
+						$url = ENTRADA_URL."/clerkship/logbook?section=view&type=missing&core=".$rotation["rotation_id"].(!isset($STUDENT_VIEW) || !$STUDENT_VIEW ? "&id=".$PROXY_ID : "");
 						$summary_shown = true;
 						?>
 						<tr class="entry-log">

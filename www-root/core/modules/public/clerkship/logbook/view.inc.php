@@ -123,6 +123,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 							AND e.`objective_id` = a.`objective_id`
 							LEFT JOIN `global_lu_objectives` AS f
 							ON f.`objective_id` = a.`objective_id`
+							JOIN `objective_organisation` AS g
+							ON f.`objective_id` = g.`objective_id`
+							AND g.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
 							WHERE c.`rotation_id` = ".$db->qstr($rotation_id)."
 							AND b.`proxy_id` = ".$PROXY_ID."
 							AND f.`objective_active` = '1'
@@ -173,6 +176,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 							LEFT JOIN `".CLERKSHIP_DATABASE."`.`logbook_mandatory_objectives` AS f
 							ON e.`objective_id` = f.`objective_id`
 							AND f.`rotation_id` = ".$db->qstr($rotation_id)."
+							JOIN `objective_organisation` AS g
+							ON e.`objective_id` = g.`objective_id`
+							AND g.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
 							WHERE b.`proxy_id` = ".$PROXY_ID."
 							AND c.`rotation_id` != ".$db->qstr($rotation_id)."
 							AND e.`objective_active` = '1'
@@ -366,10 +372,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 					}
 				}
 				if (isset($objective_ids) && count(explode(",", $objective_ids))) {
-				    $query  = "	SELECT * FROM `".DATABASE_NAME."`.`global_lu_objectives`
-								WHERE `objective_id` IN	(".$objective_ids.")
-								AND `objective_active` = '1'
-								ORDER BY `objective_name`";
+				    $query  = "SELECT a.* FROM `".DATABASE_NAME."`.`global_lu_objectives` AS a
+								JOIN `objective_organisation` AS b
+								ON a.`objective_id` = b.`objective_id`
+								AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+								WHERE a.`objective_id` IN	(".$objective_ids.")
+								AND a.`objective_active` = '1'
+								ORDER BY a.`objective_name`";
 				    $results = $db->GetAll($query);
 				} else {
 					$results = false;

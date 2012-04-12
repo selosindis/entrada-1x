@@ -113,6 +113,7 @@ function add_profile_sidebar () {
 	if ($_SESSION["details"]["group"] == "student") {
 		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/profile?section=mspr\">My MSPR</a></li>\n";
 		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/profile/gradebook\">My Gradebooks</a></li>\n";
+		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/profile/gradebook/assignments\">My Assignments</a></li>\n";
 	}
 	
 	$sidebar_html .= "</ul>";
@@ -136,7 +137,21 @@ function profile_update_personal_info() {
 	} else {
 		$PROCESSED["office_hours"] = "";
 	}
-
+		
+	if($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"] == "faculty") {
+		if ((isset($_POST["email"])) && ($email = clean_input($_POST["email"], "trim", "lower"))) {
+			if (@valid_address($email)) {
+				$PROCESSED["email"] = $email;
+			} else {
+				$ERROR++;
+				$ERRORSTR[] = "The primary e-mail address you have provided is invalid. Please make sure that you provide a properly formatted e-mail address.";
+			}
+		} else { 
+			$ERROR++;
+			$ERRORSTR[] = "The primary e-mail address is a required field.";
+		}
+	}
+	
 	if ((isset($_POST["email_alt"])) && ($_POST["email_alt"] != "")) {
 		if (@valid_address(trim($_POST["email_alt"]))) {
 			$PROCESSED["email_alt"] = strtolower(trim($_POST["email_alt"]));
@@ -287,7 +302,7 @@ function profile_update_personal_info() {
 			}
 		}
 	}
-
+	
 	if ($_FILES["photo_file"]["error"] == 4 && isset($_POST["deactivate_photo"])) {
 		$PROCESSED_PHOTO_STATUS = array();
 		$PROCESSED_PHOTO_STATUS["photo_active"] = 0;
@@ -305,7 +320,7 @@ function profile_update_personal_info() {
 	}
 
 	//if (isset($_POST["tab"]) && $_POST["tab"] != "profile-photo" && $_POST["tab"] != "notifications") {
-		if (!$ERROR) {
+		if (!$ERROR) {			
 			if ($db->AutoExecute(AUTH_DATABASE.".user_data", $PROCESSED, "UPDATE", "`id` = ".$db->qstr($_SESSION["details"]["id"]))) {
 				$SUCCESS++;
 				$SUCCESSSTR[] = "Your account profile has been successfully updated.";

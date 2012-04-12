@@ -70,7 +70,7 @@ class Organisation {
 		return $this->organisation_title;
 	}
 	
-	//XXX should address info be formatted differently or remain atomic by address lines? 
+	//XXX should address info be formatted differently or remain atomic by address lines?
 	/**
 	 * Returns the first address line of the organisation
 	 * @return string

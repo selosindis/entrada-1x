@@ -27,28 +27,44 @@
  */
 require_once("init.inc.php");
 
-date_default_timezone_set(DEFAULT_TIMEZONE);
-
-session_start();
-
-$proxy_id 			= $_GET['id'];
-$args				= $_GET['t'];
-$rid				= $_GET["rid"];
-
-$args 	= explode(",", $args);
-$table	= $args[0];
-
-if(strpos($rid, "|") !== false) {
-	$ids 	= explode("|", $rid);
+if((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) { 
+	$proxy_id 			= $_GET['id'];
+	$args				= $_GET['t'];
+	$rid				= $_GET["rid"];
 	
-	for($i=0; $i<count($ids); $i++) {
+	$args 	= explode(",", $args);
+	$table	= $args[0];
+	
+	if(strpos($rid, "|") !== false) {
+		$ids 	= explode("|", $rid);
+		
+		for($i=0; $i<count($ids); $i++) {
+			$query = "SELECT *
+			FROM `".DATABASE_NAME."`.`".$table."` 
+			WHERE `proxy_id` = ".$db->qstr($proxy_id);
+			
+			if($results = $db->GetAll($query)) {	
+				$query = "DELETE FROM `".DATABASE_NAME."`.`".$table."` 
+				WHERE `proxy_id` = ".$db->qstr($proxy_id)." AND `".$args[1]."` = ".$db->qstr($ids[$i]);
+				
+				if(!$db->Execute($query)) {
+					echo $db->ErrorMsg();
+					exit;
+				}
+			} else {
+				echo '({"total":"0", "results":[]})';
+			}
+		}
+	} else {
+		$id 	= $rid;
+		
 		$query = "SELECT *
 		FROM `".DATABASE_NAME."`.`".$table."` 
 		WHERE `proxy_id` = ".$db->qstr($proxy_id);
 		
 		if($results = $db->GetAll($query)) {	
 			$query = "DELETE FROM `".DATABASE_NAME."`.`".$table."` 
-			WHERE `proxy_id` = ".$db->qstr($proxy_id)." AND `".$args[1]."` = ".$db->qstr($ids[$i]);
+			WHERE `proxy_id` = ".$db->qstr($proxy_id)." AND `".$args[1]."` = ".$db->qstr($rid);
 			
 			if(!$db->Execute($query)) {
 				echo $db->ErrorMsg();
@@ -59,22 +75,6 @@ if(strpos($rid, "|") !== false) {
 		}
 	}
 } else {
-	$id 	= $rid;
-	
-	$query = "SELECT *
-	FROM `".DATABASE_NAME."`.`".$table."` 
-	WHERE `proxy_id` = ".$db->qstr($proxy_id);
-	
-	if($results = $db->GetAll($query)) {	
-		$query = "DELETE FROM `".DATABASE_NAME."`.`".$table."` 
-		WHERE `proxy_id` = ".$db->qstr($proxy_id)." AND `".$args[1]."` = ".$db->qstr($rid);
-		
-		if(!$db->Execute($query)) {
-			echo $db->ErrorMsg();
-			exit;
-		}
-	} else {
-		echo '({"total":"0", "results":[]})';
-	}
+	application_log("error", "Delete Annual Report Record (ar_delete) API accessed without valid session_id.");
 }
 ?>

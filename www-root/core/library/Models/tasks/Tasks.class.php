@@ -108,7 +108,7 @@ class Tasks extends Collection {
 		
 		$user_id = $user->getID();
 		$org_id = $org->getID();
-		$grad_year = $user->getGradYear();
+		$cohort = $user->getCohort();
 		
 		global $db;
 		if (isset($options['dir'])){
@@ -142,7 +142,7 @@ class Tasks extends Collection {
 					where (b.`recipient_type`=? AND b.`recipient_id`=?) 
 					OR (b.`recipient_type`=? AND b.`recipient_id`=?) 
 					OR (b.`recipient_type`=? AND b.`recipient_id`=?)";
-		$rs = $db->selectLimit($query.$where.$order_by, $limit, $offset, array(TASK_RECIPIENT_USER,$user_id,TASK_RECIPIENT_CLASS,$grad_year,TASK_RECIPIENT_ORGANISATION,$org_id));
+		$rs = $db->selectLimit($query.$where.$order_by, $limit, $offset, array(TASK_RECIPIENT_USER,$user_id,TASK_RECIPIENT_CLASS,$cohort,TASK_RECIPIENT_ORGANISATION,$org_id));
 		if ($rs) {
 			$results = $rs->getIterator();	
 			foreach ($results as $result) {

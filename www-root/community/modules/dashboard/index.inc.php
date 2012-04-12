@@ -80,7 +80,7 @@ if ($result) {
 				}
 	
 				$last_date = $result["release_date"];
-				$community_announcements .= "<h3>".date("l F dS Y", $result["release_date"])."</h3>\n";
+				$community_announcements .= "<h3 class=\"announcement-date\">".date("l F dS Y", $result["release_date"])."</h3>\n";
 				$community_announcements .= "<ul class=\"announcements\">\n";
 			}
 			$community_announcements .= "<li".(!($key % 2) ? " class=\"odd-announcement\"" : "")."><a href=\"".COMMUNITY_RELATIVE.$COMMUNITY_URL.":".$result["page_url"]."?id=".$result["cannouncement_id"]."\">".html_encode($result["announcement_title"])."</a></li>\n";
@@ -147,7 +147,7 @@ if ($result) {
 				LIMIT 0, 10";
 	$results	= $db->GetAll($query);
 	if ($results) {
-		$community_events .= "<h1 style=\"font-size: 16px;\">Upcoming Events</h1>\n";
+		$community_events .= "<h1>Upcoming Events</h1>\n";
 		$last_date = 0;
 		foreach($results as $key => $result) {
 			if (($last_date < strtotime("00:00:00", $result["event_start"])) || ($last_date > strtotime("23:59:59", $result["event_start"]))) {
@@ -156,7 +156,7 @@ if ($result) {
 				}
 	
 				$last_date = $result["event_start"];
-				$community_events .= "<h3>".date("l F dS Y", $result["event_start"])."</h3>\n";
+				$community_events .= "<h3 class=\"announcement-date\">".date("l F dS Y", $result["event_start"])."</h3>\n";
 				$community_events .= "<ul class=\"announcements\">\n";
 			}
 			$community_events .= "<li".(!($key % 2) ? " class=\"odd-announcement\"" : "")."><a href=\"".COMMUNITY_RELATIVE.$COMMUNITY_URL.":".$result["page_url"]."?id=".$result["cevent_id"]."\">".html_encode($result["event_title"])."</a></li>\n";

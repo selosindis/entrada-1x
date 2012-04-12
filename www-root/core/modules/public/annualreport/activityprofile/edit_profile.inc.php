@@ -108,6 +108,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 					} else if($PROCESSED["consistent"] == "No") {
 							$ERROR++;
 							$ERRORSTR[] = "The Consistent? <strong>Comments</strong> field is required because you answered \"No\" to <strong>Consistent?</strong>.";
+					} else if($PROCESSED["consistent"] == "Yes" && ($consistent_comments == "" || !isset($_POST["consistent_comments"]))) {
+						$PROCESSED["consistent_comments"] = "";
 					}
 					/**
 					 * Required field "career_goals" / In Keeping?
@@ -117,7 +119,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 					} else {
 						$ERROR++;
 						$ERRORSTR[] = "The <strong>In Keeping?</strong> field is required.";
-					}			
+					} 
 					/**
 					 * Non-Required field "career_comments" / Career Comments.
 					 */
@@ -126,6 +128,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 					} else if($PROCESSED["career_goals"] == "No") {
 							$ERROR++;
 							$ERRORSTR[] = "The In Keeping? <strong>Comments</strong> field is required because you answered \"No\" to <strong>In Keeping?</strong>.";
+					} else if($PROCESSED["career_goals"] == "Yes" && ($career_comments == "" || !isset($_POST["career_comments"]))) {
+						$PROCESSED["career_comments"] = "";
 					}
 					/**
 					 * Non-Required field "comments" / Comments.

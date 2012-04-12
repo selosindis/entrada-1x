@@ -89,6 +89,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 	 * Update requsted organisation filter
 	 * Valid: any integer really.
 	 */
+	/*
 	if(isset($_GET['organisation_id'])) {
 		if($_GET['organisation_id'] == 'all') {
 			$organisation_id = null;
@@ -107,7 +108,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			$organisation_id = $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["organisation_id"];
 		}
 		$organisation_where = '`organisation_id` = '.$organisation_id;
-	}
+	}*/
 
 	/**
 	 * Check if preferences need to be updated on the server at this point.
@@ -133,6 +134,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 		break;
 	}
 
+	$organisation_where ="`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation());
+	
 	/**
 	 * Get the total number of results using the generated queries above and calculate the total number
 	 * of pages that are available based on the results per page preferences.
@@ -192,13 +195,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 	$PAGE_PREVIOUS	= (($PAGE_CURRENT > 1) ? ($PAGE_CURRENT - 1) : false);
 	$PAGE_NEXT	= (($PAGE_CURRENT < $TOTAL_PAGES) ? ($PAGE_CURRENT + 1) : false);
 
-	echo "<h1>".$MODULES[strtolower($MODULE)]['title']."</h1>\n";
+	echo "<h1>Manage " . $module_title . "</h1>\n";
 
 	if ($ENTRADA_ACL->amIAllowed('course', 'create', false)) {
 		?>
 		<div style="float: right">
 			<ul class="page-action">
-				<li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=add" class="strong-green">Add New Course</a></li>
+				<li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=add" class="strong-green">Add New <?php echo $module_singular_name; ?></a></li>
 			</ul>
 		</div>
 		<div style="clear: both"></div>
@@ -209,28 +212,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 	<tr>
 		<td style="width: 100%; text-align: right">
 			<div style="white-space: nowrap">
-				<form action="<?php echo ENTRADA_URL."/admin/".$MODULE;?>" method="get" id="organisationSelector" style="vertical-align: middle">
-					<label for="organisation_id">Organisation filter:</label>
-					<select name="organisation_id" id="organisation_id" onchange="$('organisationSelector').submit();" style="display:inline;">
-							<?php
-							$query		= "SELECT `organisation_id`, `organisation_title` FROM `".AUTH_DATABASE."`.`organisations`";
-							$results	= $db->GetAll($query);
-							$all = true;
-							if($results) {
-								foreach($results as $result) {
-							if($ENTRADA_ACL->amIAllowed(new CourseResource(null, $result["organisation_id"]), "read")) {
-										echo "<option value=\"".(int) $result["organisation_id"]."\"".(isset($organisation_id) && $organisation_id == $result["organisation_id"] ? " selected=\"selected\"" : "").">".html_encode($result["organisation_title"])."</option>\n";
-									} else {
-										$all = false;
-									}
-								}
-							}
-							if($all) {
-								echo "<option value=\"all\" ".(isset($organisation_id) && $organisation_id == "all" ? "selected=\"selected\"" : "").">All organisations</option>";
-							}
-							?>
-					</select>
-				</form>
 					<?php
 					if ($TOTAL_PAGES > 1) {
 						echo "<form action=\"".ENTRADA_URL."/admin/".$MODULE."\" method=\"get\" id=\"pageSelector\" style=\"display:inline;\">\n";
@@ -276,11 +257,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					LEFT JOIN `course_contacts`
 					ON `course_contacts`.`course_id` = `courses`.`course_id`
 					AND `course_contacts`.`contact_type` = 'director'
-					AND `course_contacts`.`contact_order` = 0
 					LEFT JOIN `".AUTH_DATABASE."`.`user_data`
 					ON `".AUTH_DATABASE."`.`user_data`.`id` = `course_contacts`.`proxy_id`
 					WHERE `courses`.`course_active` = '1'
 					".(isset($organisation_where) ? " AND `courses`.".$organisation_where : "")."
+					GROUP BY `courses`.`course_id`
 					ORDER BY %s LIMIT %s, %s";
 	} else {
 		$query	= "	SELECT `courses`.`course_id`, `courses`.`organisation_id`, `courses`.`course_name`, `courses`.`course_code`, `courses`.`course_url`, `courses`.`notifications`, `curriculum_lu_types`.`curriculum_type_name`, CONCAT_WS(', ', `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname`) AS `fullname`
@@ -288,7 +269,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					LEFT JOIN `course_contacts`
 					ON `course_contacts`.`course_id` = `courses`.`course_id`
 					AND `course_contacts`.`contact_type` = 'director'
-					AND `course_contacts`.`contact_order` = 0
 					LEFT JOIN `curriculum_lu_types`
 					ON `curriculum_lu_types`.`curriculum_type_id` = `courses`.`curriculum_type_id`
 					LEFT JOIN `".AUTH_DATABASE."`.`user_data`
@@ -306,6 +286,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					)
 					AND `courses`.`course_active` = '1'
 					".(isset($organisation_where) ? ' AND `courses`.'.$organisation_where : '')."
+					GROUP BY `courses`.`course_id`
 					ORDER BY %s LIMIT %s, %s";
 	}
 
@@ -328,8 +309,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			<tr>
 				<td class="modified">&nbsp;</td>
 				<td class="general<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "type") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("type", "Category"); ?></td>
-				<td class="title<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "name") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("name", "Course Name"); ?></td>
-				<td class="teacher<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "director") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("director", "Course Director"); ?></td>
+				<td class="title<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "name") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("name", $module_singular_name . " Name"); ?></td>
+				<td class="teacher<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "director") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("director", $module_singular_name . " Director"); ?></td>
 				<td class="notices<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "notices") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("notices", "Notices"); ?></td>
 				<td class="grades">&nbsp;</td>
 			</tr>
@@ -366,10 +347,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			echo "<tr id=\"course-".$result["course_id"]."\" class=\"course".((!$url) ? " np" : "")."\">\n";
 			echo "	<td class=\"modified\">".(($administrator) ? "<input type=\"checkbox\" name=\"delete[]\" value=\"".$result["course_id"]."\" />" : "<img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"19\" height=\"19\" alt=\"\" title=\"\" />")."</td>\n";
 			echo "	<td class=\"general".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Course Name: ".html_encode($result["course_name"])."\">" : "").html_encode($result["curriculum_type_name"]).(($url) ? "</a>" : "")."</td>\n";
-			echo "	<td class=\"title".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Course Name: ".html_encode($result["course_name"])."\">" : "").html_encode($result["course_name"].(($result["course_code"]) ? ": ".$result["course_code"] : "")).(($url) ? "</a>" : "")."</td>\n";
+			echo "	<td class=\"title".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."&amp;org_id=".$result["organisation_id"]."\" title=\"Course Name: ".html_encode($result["course_name"])."\">" : "").html_encode($result["course_name"].(($result["course_code"]) ? ": ".$result["course_code"] : "")).(($url) ? "</a>" : "")."</td>\n";
 			echo "	<td class=\"teacher".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Course Director: ".html_encode($result["fullname"])."\">" : "").html_encode($result["fullname"]).(($url) ? "</a>" : "")."</td>\n";
 			echo "	<td class=\"notices\">".(((int) $result["notifications"]) ? "Yes" : "<strong>No</strong>")."</td>\n";
-			echo "	<td class=\"grades\">".(($url) ? "<a href=\"".ENTRADA_URL."/admin/".$MODULE."?section=content&amp;id=".$result["course_id"]."\"><img src=\"".ENTRADA_URL."/images/event-contents.gif\" width=\"16\" height=\"16\" alt=\"Manage Course Content\" title=\"Manage Course Content\" border=\"0\" /></a>" : "<img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"16\" height=\"16\" alt=\"\" title=\"\" />");
+			echo "	<td class=\"grades\">".(($url) ? "<a href=\"".ENTRADA_URL."/admin/".$MODULE."?section=content&amp;id=".$result["course_id"]."\"><img src=\"".ENTRADA_URL."/images/event-contents.gif\" width=\"16\" height=\"16\" alt=\"Manage " . $module_singular_name . " Content\" title=\"Manage ". $module_singular_name . " Content\" border=\"0\" /></a>" : "<img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"16\" height=\"16\" alt=\"\" title=\"\" />");
 			if ($ENTRADA_ACL->amIAllowed(new GradebookResource($result["course_id"], $result["organisation_id"]), "read")) {
 				echo "&nbsp;<a href=\"".ENTRADA_URL."/admin/gradebook?section=view&amp;id=".$result["course_id"]."\"><img src=\"".ENTRADA_URL."/images/book_go.png\" width=\"16\" height=\"16\" alt=\"View Gradebook\" title=\"View Gradebook\" border=\"0\" /></a>";				
 			}
@@ -386,14 +367,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 	} else {
 		?>
 		<div class="display-notice">
-			<h3>No Available Courses</h3>
+			<h3>No Available <?php echo $module_title; ?></h3>
 
 			<?php if ($ENTRADA_ACL->amIAllowed('course', 'create', false)) : ?>
-			There are currently no courses available in the system.
+			There are currently no <?php echo strtolower($module_title); ?> available in the system.
 			<br /><br />
-			You should start by adding a new course by clicking the <strong>Add Course</strong> link above.
+			You should start by adding a new <?php echo strtolower($module_singular_name); ?> by clicking the <strong>Add <?php echo $module_title; ?></strong> link above.
 			<?php else : ?>
-			It appears that there are no courses that you are able access in the system.
+			It appears that there are no <?php echo strtolower($module_title); ?> that you are able access in the system.
 			<br /><br />
 			If you believe you are receiving this message in error, please contact an administrator.
 			<?php endif; ?>
@@ -406,8 +387,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 	 */
 	$sidebar_html  = "Sort columns:\n";
 	$sidebar_html .= "<ul class=\"menu\">\n";
-	$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) == "name") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("sb" => "name"))."\" title=\"Sort by Course Name\">by course name</a></li>\n";
-	$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) == "director") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("sb" => "director"))."\" title=\"Sort by Course Director\">by course director</a></li>\n";
+	$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) == "name") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("sb" => "name"))."\" title=\"Sort by ". $module_singular_name . " Name\">by course name</a></li>\n";
+	$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) == "director") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("sb" => "director"))."\" title=\"Sort by ". $module_singular_name . " Director\">by course director</a></li>\n";
 	$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) == "notices") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("sb" => "notices"))."\" title=\"Sort by Notices\">by notices</a></li>\n";
 	$sidebar_html .= "</ul>\n";
 	$sidebar_html .= "Order columns:\n";
@@ -425,4 +406,3 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 
 	new_sidebar_item("Sort Results", $sidebar_html, "sort-results", "open");
 }
-?>

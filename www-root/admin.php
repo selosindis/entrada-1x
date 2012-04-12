@@ -41,6 +41,15 @@ ob_start("on_checkout");
 $PATH_INFO = ((isset($_SERVER["PATH_INFO"])) ? clean_input($_SERVER["PATH_INFO"], array("url", "lowercase")) : "");
 $PATH_SEPARATED = explode("/", $PATH_INFO);
 
+/**
+ * This section of code sets the $SUBMODULE variable.
+ */
+if ((isset($PATH_SEPARATED[2])) && (trim($PATH_SEPARATED[2]) != "")) {
+	$SUBMODULE = $PATH_SEPARATED[2]; // This is sanitized when $PATH_SEPARATED is created.
+} else {
+	$SUBMODULE = false; // This is the default file that will be launched upon successful login.
+}
+
 if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	header("Location: ".ENTRADA_URL.((isset($_SERVER["REQUEST_URI"])) ? "?url=".rawurlencode(clean_input($_SERVER["REQUEST_URI"], array("nows", "url"))) : ""));
 	exit;
@@ -124,7 +133,7 @@ $router->setSection($SECTION);
 
 define("PARENT_INCLUDED", true);
 
-require_once (ENTRADA_ABSOLUTE."/templates/".DEFAULT_TEMPLATE."/layouts/admin/header.tpl.php");
+require_once (ENTRADA_ABSOLUTE."/templates/".$ENTRADA_ACTIVE_TEMPLATE."/layouts/admin/header.tpl.php");
 if (($router) && ($route = $router->initRoute($MODULE))) {
 	/**
 	 * Responsible for displaying the permission masks sidebar item
@@ -155,7 +164,7 @@ if (($router) && ($route = $router->initRoute($MODULE))) {
 	exit;
 }
 
-require_once (ENTRADA_ABSOLUTE."/templates/".DEFAULT_TEMPLATE."/layouts/admin/footer.tpl.php");
+require_once (ENTRADA_ABSOLUTE."/templates/".$ENTRADA_ACTIVE_TEMPLATE."/layouts/admin/footer.tpl.php");
 
 /**
  * Add the Feedback Sidebar Window.
@@ -171,4 +180,22 @@ if((isset($_SESSION["isAuthorized"])) && ($_SESSION["isAuthorized"])) {
 	$sidebar_html .= "Giving feedback is a very important part of application development. Please <a href=\"javascript: sendFeedback('".ENTRADA_URL."/agent-feedback.php?enc=".feedback_enc()."')\"><b>click here</b></a> to send us any feedback you may have about <u>this</u> page.<br /><br />\n";
 
 	new_sidebar_item("Page Feedback", $sidebar_html, "page-feedback", "open");
+
+	/**
+	 * Create the Organisation side bar.
+	 */
+
+	if ($ENTRADA_USER->getAllOrganisations() && count($ENTRADA_USER->getAllOrganisations()) > 1) {
+		$sidebar_html = "<ul class=\"menu none\">\n";
+		foreach ($ENTRADA_USER->getAllOrganisations() as $key => $organisation_title) {
+			if ($key == $ENTRADA_USER->getActiveOrganisation()) {
+				$sidebar_html .= "<li><a href=\"" . ENTRADA_URL . "/admin/" . $MODULE . "/" . "?" . replace_query(array("organisation_id" => $key)) . "\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-on.gif\" alt=\"\" /> <span>" . html_encode($organisation_title) . "</span></a></li>\n";
+			} else {
+				$sidebar_html .= "<li><a href=\"" . ENTRADA_URL . "/admin/" . $MODULE . "/" . "?" . replace_query(array("organisation_id" => $key)) . "\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-off.gif\" alt=\"\" /> <span>" . html_encode($organisation_title) . "</span></a></li>\n";
+			}
+		}
+		$sidebar_html .= "</ul>\n";
+
+		new_sidebar_item("Organisations", $sidebar_html, "org-switch", "open", SIDEBAR_PREPEND);
+	}
 }

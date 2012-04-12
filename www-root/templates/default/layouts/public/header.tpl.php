@@ -11,10 +11,10 @@
  *
 */
 ?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
-	<meta http-equiv="Content-Type" content="text/html; charset=<?php echo DEFAULT_CHARSET; ?>" />
+	<meta charset="<?php echo DEFAULT_CHARSET; ?>" />
 
 	<title>%TITLE%</title>
 
@@ -23,18 +23,19 @@
 
 	<meta name="robots" content="index, follow" />
 
-	<meta name="MSSmartTagsPreventParsing" content="true" />
-	<meta http-equiv="imagetoolbar" content="no" />
-
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	
 	<link href="<?php echo ENTRADA_RELATIVE; ?>/css/common.css?release=<?php echo html_encode(APPLICATION_VERSION); ?>" rel="stylesheet" type="text/css" media="all" />
 	<link href="<?php echo ENTRADA_RELATIVE; ?>/css/print.css?release=<?php echo html_encode(APPLICATION_VERSION); ?>" rel="stylesheet" type="text/css" media="print" />
 	<link href="<?php echo TEMPLATE_RELATIVE; ?>/css/common.css?release=<?php echo html_encode(APPLICATION_VERSION); ?>" rel="stylesheet" type="text/css" media="all" />
 
 	<link href="<?php echo TEMPLATE_RELATIVE; ?>/images/favicon.ico" rel="shortcut icon" type="image/x-icon" />
 	<link href="<?php echo ENTRADA_RELATIVE; ?>/w3c/p3p.xml" rel="P3Pv1" type="text/xml" />
-	<style type="text/css">
-	body { behavior: url(<?php echo ENTRADA_RELATIVE; ?>/css/fixes/csshoverfix.htc); }
-	</style>
+	
+	<link href="<?php echo ENTRADA_URL;?>/css/jquery/jquery-ui.css" rel="stylesheet" type="text/css" />	
+	<script type="text/javascript" src="<?php echo ENTRADA_RELATIVE; ?>/javascript/jquery/jquery.min.js?release=<?php echo html_encode(APPLICATION_VERSION); ?>"></script>
+	<script type="text/javascript" src="<?php echo ENTRADA_RELATIVE; ?>/javascript/jquery/jquery-ui.min.js?release=<?php echo html_encode(APPLICATION_VERSION); ?>"></script>	
+	<script type="text/javascript">jQuery.noConflict();</script>
 	%JQUERY%
 
 	<script type="text/javascript" src="<?php echo ENTRADA_RELATIVE; ?>/javascript/scriptaculous/prototype.js?release=<?php echo html_encode(APPLICATION_VERSION); ?>"></script>
@@ -44,7 +45,6 @@
 	<script type="text/javascript" src="<?php echo ENTRADA_RELATIVE; ?>/javascript/livepipe/selectmultiplemod.js?release=<?php echo html_encode(APPLICATION_VERSION); ?>"></script>
 	<script type="text/javascript" src="<?php echo ENTRADA_RELATIVE; ?>/javascript/common.js?release=<?php echo html_encode(APPLICATION_VERSION); ?>"></script>
 	<script type="text/javascript" src="<?php echo ENTRADA_RELATIVE; ?>/javascript/selectmenu.js?release=<?php echo html_encode(APPLICATION_VERSION); ?>"></script>
-
 	%HEAD%
 </head>
 <body>
@@ -57,21 +57,21 @@
 	</div>
 </div>
 
-<table style="width: 950px" cellspacing="0" cellpadding="0" border="0">
-<?php if ((isset($_SESSION["isAuthorized"])) && ($_SESSION["isAuthorized"])) : ?>
-	<tbody class="no-printing">
-		<tr>
-			<td style="width: 100%" colspan="2">
-					<?php echo navigator_tabs();?>
-			</td>
-		</tr>
-	</tbody>
-<?php endif; ?>
-<tbody>
-	<tr>
-		<td style="width: 20%; vertical-align: top; padding: 5px" class="no-printing">
+<div style="width: 950px">
+	<?php
+	if ((isset($_SESSION["isAuthorized"])) && ($_SESSION["isAuthorized"])) {
+		?>
+		<div class="no-printing">
+			<?php echo navigator_tabs();?>
+		</div>
+		<?php
+	}
+	?>
+	<div id="system-sidebar" class="no-printing">
+		<div>
 			%SIDEBAR%
-		</td>
-		<td style="width: 80%; vertical-align: top; padding: 5px">
-			<div style="width: 100%">
-				%BREADCRUMB%
+		</div>
+	</div>
+	<div id="system-content">
+		<div>
+			%BREADCRUMB%

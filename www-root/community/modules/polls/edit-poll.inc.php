@@ -305,7 +305,7 @@ if ($RECORD_ID) {
 	
 						$SUCCESS++;
 						$SUCCESSSTR[]	= "You have successfully updated a ".$terminology." to the community.<br /><br />You will now be redirected to the index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-	
+						add_statistic("community_polling", "poll_edit", "cpolls_id", $RECORD_ID);
 						communities_log_history($COMMUNITY_ID, $PAGE_ID, $RECORD_ID, "community_history_edit_poll", 0);
 					}
 		
@@ -395,7 +395,7 @@ if ($RECORD_ID) {
 						</td>
 					</tr>
 					<tr>
-						<td colspan="2" style="vertical-align: top"><label for="poll_description" class="form-nrequired">Description</label></td>
+						<td colspan="2" style="vertical-align: top !important"><label for="poll_description" class="form-nrequired">Description</label></td>
 						<td style="text-align: right; vertical-align: top">
 							<textarea id="poll_description" name="poll_description" style="width: 95%; height: 60px" cols="50" rows="5"><?php echo ((isset($PROCESSED["poll_description"])) ? html_encode($PROCESSED["poll_description"]) : ""); ?></textarea>
 						</td>

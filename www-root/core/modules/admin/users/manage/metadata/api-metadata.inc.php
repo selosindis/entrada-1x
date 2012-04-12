@@ -35,7 +35,7 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 					add_error("Invalid value id provided. Please try again.");
 				}
 				//then check each value array to ensure either delete=1 or the other values are valid
-				if(!has_error()) {
+				if (!has_error()) {
 					$updates = array();
 					$deletes = array();
 					foreach ($_POST['value'] as $key => $value) {
@@ -45,7 +45,7 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 						if (!$meta_value) {
 							add_error("Value not found.");
 							continue;
-						} elseif($meta_value->getUser() !== $user) {
+						} elseif($meta_value->getUser() != $user) {
 							add_error("Specified value does not belong to the specified user.");
 							continue;
 						}

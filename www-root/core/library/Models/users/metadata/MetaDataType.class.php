@@ -79,7 +79,7 @@ class MetaDataType {
 	 *              );
 	 * $type = MetaDataType::fromArray($arr);
 	 * </code>
-	 * 
+	 *  
 	 * @param array $arr 
 	 * @param MetaDataType $type If using a pre-existing object, this parameter will be the mutated object. If null, or not supplied, a new MetaDataType will be returned
 	 * @return MetaDataType

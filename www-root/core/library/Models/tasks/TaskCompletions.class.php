@@ -41,13 +41,32 @@ class TaskCompletions extends Collection {
 		
 		global $db;
 		$query = "	SELECT a.*, b.`task_id`, c.`verifier_id`, c.`verified_date`, a.`id` as `recipient_id`, c.`completed_date`, c.`faculty_id`, c.`completion_comment`, c.`rejection_comment`, c.`rejection_date`
-					from `".AUTH_DATABASE."`.`user_data` a
-					inner join `task_recipients` b on 
-					(b.`recipient_type`='grad_year' and a.`grad_year`=b.`recipient_id`) 
-					or (b.`recipient_type`='user' and a.`id` = b.`recipient_id`) 
-					or (b.`recipient_type`='organisation' and b.`recipient_id`=a.`organisation_id`) 
-					left join `task_completion` c on c.`task_id`=b.`task_id` and c.`recipient_id` = a.`id`
-					where b.`task_id`=?";
+					FROM `".AUTH_DATABASE."`.`user_data` AS a
+					LEFT JOIN `group_members` AS gm
+					ON a.`id` = gm.`proxy_id`
+					LEFT JOIN `groups` AS g
+					ON gm.`group_id` = g.`group_id`
+					AND g.`group_type` = 'cohort'
+					INNER JOIN `task_recipients` AS b 
+					ON 
+					(
+						b.`recipient_type` = 'cohort' 
+						AND g.`group_id` = b.`recipient_id`
+					) 
+					OR 
+					(
+						b.`recipient_type` = 'user' 
+						AND a.`id` = b.`recipient_id`
+					) 
+					OR 
+					(
+						b.`recipient_type` = 'organisation' 
+						AND b.`recipient_id` = a.`organisation_id`
+					) 
+					LEFT JOIN `task_completion` AS c 
+					ON c.`task_id` = b.`task_id` 
+					AND c.`recipient_id` = a.`id`
+					WHERE b.`task_id` = ?";
 		
 		$results = $db->SelectLimit($query,$limit, $offset, array($task_id));
 		
@@ -55,7 +74,7 @@ class TaskCompletions extends Collection {
 		if ($results) {
 			foreach ($results as $result) {
 				$completion = TaskCompletion::fromArray($result);
-				$recipient = User::fromArray($result); //and throw away. will be retrieved from cache when needed
+				$recipient = User::get($result["id"]); //and throw away. will be retrieved from cache when needed
 				$completions[] = $completion;
 			}
 		}
@@ -97,14 +116,14 @@ class TaskCompletions extends Collection {
 		$query = "	SELECT a.*, b.*,c.* from `task_completion` a
 					left join `tasks` b on b.`task_id`=a.`task_id`
 					inner join `".AUTH_DATABASE."`.`user_data` c on a.`recipient_id`=c.`id` 
-					where a.`verifier_id`=?".$where.$order_by;
+					where a.`verifier_id`=?".$where.(isset($order_by) && $order_by ? $order_by : "");
 		
 		$results = $db->SelectLimit($query,$limit, $offset, array($proxy_id));
 		$completions = array();
 		if ($results) {
 			foreach ($results as $result) {
 				$task = Task::fromArray($result);//for cache
-				$user = User::fromArray($result);//for cache
+				$user = User::get($result["id"]);//for cache
 				$completion = TaskCompletion::fromArray($result);
 				$completions[] = $completion;
 			}
@@ -142,7 +161,7 @@ class TaskCompletions extends Collection {
 		$verifiers = array();
 		if ($results) {
 			foreach ($results as $result) {
-				$verifier = User::fromArray($result);
+				$verifier = User::get($result["id"]);
 				if ($verifier) {
 					$verifiers[] = $verifier;
 				}
@@ -190,16 +209,36 @@ class TaskCompletions extends Collection {
 		$proxy_id = $recipient->getID();
 		
 		$query = "	SELECT a.id, d.*, c.`verifier_id`, c.`verified_date`, a.`id` as `recipient_id`, c.`completed_date`, c.`faculty_id`, c.`completion_comment`, c.`rejection_comment`, c.`rejection_date`
-					from `".AUTH_DATABASE."`.`user_data` a
-					inner join `task_recipients` b on 
-					(b.`recipient_type`='grad_year' and a.`grad_year`=b.`recipient_id`) 
-					or (b.`recipient_type`='user' and a.`id` = b.`recipient_id`) 
-					or (b.`recipient_type`='organisation' and b.`recipient_id`=a.`organisation_id`) 
-					left join `task_completion` c on c.`task_id`=b.`task_id` and c.`recipient_id` = a.`id`
-					left join `tasks` d on b.`task_id`=d.`task_id`
-					where a.id=?";
+					FROM `".AUTH_DATABASE."`.`user_data` AS a
+					LEFT JOIN `group_members` AS gm
+					ON a.`id` = gm.`proxy_id`
+					LEFT JOIN `groups` AS g
+					ON gm.`group_id` = g.`group_id`
+					AND g.`group_type` = 'cohort'
+					INNER JOIN `task_recipients` AS b 
+					ON 
+					(
+						b.`recipient_type` = 'cohort' 
+						AND g.`group_id` = b.`recipient_id`
+					) 
+					OR 
+					(
+						b.`recipient_type` = 'user' 
+						AND a.`id` = b.`recipient_id`
+					) 
+					OR 
+					(
+						b.`recipient_type` = 'organisation' 
+						AND b.`recipient_id` = a.`organisation_id`
+					) 
+					LEFT JOIN `task_completion` AS c 
+					ON c.`task_id` = b.`task_id` 
+					AND c.`recipient_id` = a.`id`
+					LEFT JOIN `tasks` AS d 
+					ON b.`task_id` = d.`task_id`
+					where a.id = ?";
 
-		$results = $db->SelectLimit($query.$where.$order_by, $limit, $offset,array($proxy_id));
+		$results = $db->SelectLimit($query.$where.(isset($order_by) && $order_by ? $order_by : ""), $limit, $offset, array($proxy_id));
 		
 		$completions = array();
 		if ($results) {

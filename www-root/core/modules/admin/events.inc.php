@@ -81,51 +81,14 @@ if(!defined("PARENT_INCLUDED")) {
 				break;
 			}
 
-			$sidebar_html  = "<ul class=\"menu\">\n";
-			$sidebar_html .= "	<li class=\"off\"><a href=\"".ENTRADA_URL."/events".(($EVENT_ID) ? "?".replace_query(array("id" => $EVENT_ID, "action" => false, "section" => false)) : "")."\">Student View</a></li>\n";
-			if($admin_wording) {
-				$sidebar_html .= "<li class=\"on\"><a href=\"".ENTRADA_URL."/admin/events".(($EVENT_ID) ? "?".replace_query(array("id" => $EVENT_ID, "action" => "edit")) : "")."\">".html_encode($admin_wording)."</a></li>\n";
+			$sidebar_html  = "<ul class=\"menu none\">\n";
+			$sidebar_html .= "	<li><a href=\"".ENTRADA_RELATIVE."/events".(($EVENT_ID) ? "?".replace_query(array("id" => $EVENT_ID, "action" => false, "section" => false)) : "")."\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-off.gif\" alt=\"\" /> <span>Student View</span></a></li>\n";
+			if ($admin_wording) {
+				$sidebar_html .= "<li><a href=\"".ENTRADA_RELATIVE."/admin/events".(($EVENT_ID) ? "?".replace_query(array("id" => $EVENT_ID, "action" => "manage")) : "")."\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-on.gif\" alt=\"\" /> <span>".html_encode($admin_wording)."</span></a></li>\n";
 			}
 			$sidebar_html .= "</ul>\n";
-
+			
 			new_sidebar_item("Display Style", $sidebar_html, "display-style", "open");
-		}
-
-		$organisation_list = array();
-		$query = "SELECT `organisation_id`, `organisation_title` FROM `".AUTH_DATABASE."`.`organisations` ORDER BY `organisation_title` ASC";
-		$results = $db->GetAll($query);
-		if ($results) {
-			foreach ($results as $result) {
-				if ($ENTRADA_ACL->amIAllowed("resourceorganisation".$result["organisation_id"], "read")) {
-					$organisation_list[$result["organisation_id"]] = html_encode($result["organisation_title"]);
-				}
-			}
-		}
-		
-		if (isset($_GET["org"]) && ($organisation = ((int) $_GET["org"])) && array_key_exists($organisation, $organisation_list)) {
-			$ORGANISATION_ID = $organisation;
-			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["organisation_id"] = $ORGANISATION_ID;
-		} else {
-			if (isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["organisation_id"]) && $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["organisation_id"]) {
-				$ORGANISATION_ID = $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["organisation_id"];
-			} else {
-				$ORGANISATION_ID = $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"];
-				$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["organisation_id"] = $ORGANISATION_ID;
-			}
-		}
-		
-		if ($organisation_list && count($organisation_list) > 1) {
-			$sidebar_html = "<ul class=\"menu\">\n";
-			foreach ($organisation_list as $key => $organisation_title) {
-				if ($key == $ORGANISATION_ID) {
-					$sidebar_html .= "<li class=\"on\"><a href=\"".ENTRADA_URL."/admin/events?".replace_query(array("org" => $key))."\">".html_encode($organisation_title)."</a></li>\n";
-				} else {
-					$sidebar_html .= "<li class=\"off\"><a href=\"".ENTRADA_URL."/admin/events?".replace_query(array("org" => $key))."\">".html_encode($organisation_title)."</a></li>\n";
-				}
-			}
-			$sidebar_html .= "</ul>\n";
-	
-			new_sidebar_item("Organisations", $sidebar_html, "display-style", "open");
 		}
 		
 		$module_file = $router->getRoute();

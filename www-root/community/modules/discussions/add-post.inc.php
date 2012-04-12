@@ -103,7 +103,7 @@ if ($RECORD_ID) {
 
 								$SUCCESS++;
 								$SUCCESSSTR[]	= "You have successfully created a new discussion post.<br /><br />You will now be redirected to this thread; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-
+								add_statistic("community:".$COMMUNITY_ID.":discussions", "post_add", "cdtopic_id", $TOPIC_ID);
 								communities_log_history($COMMUNITY_ID, $PAGE_ID, $TOPIC_ID, "community_history_add_post", 1, $RECORD_ID);
 							}
 						}

@@ -82,7 +82,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MSPR_ADMIN"))) {
 				<tbody>
 					<?php 
 					foreach($att_reqs as $mspr) {
-							$status = "attention-required";
+						$status = "attention-required";
+						$user = $mspr->getUser();
+						$user_id = $user->getID();
 					?>
 					<tr class="<?php echo $status; ?>">
 						<td>

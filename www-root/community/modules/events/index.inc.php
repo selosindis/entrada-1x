@@ -259,7 +259,6 @@ function setDateValue(field, date) {
 					AND a.`event_active` = '1'
 					AND a.`cpage_id` = ".$db->qstr($PAGE_ID)."
 					AND a.`cevent_id` = ".$db->qstr($RECORD_ID);
-		
 		$result	= $db->GetRow($query);
 		if ($result) {
 			$allow_to_load = true;
@@ -327,6 +326,7 @@ function setDateValue(field, date) {
 				echo "<br/>\n";
 				echo "<h3>Description:</h3> ".strip_tags($result["event_description"], $ALLOWED_HTML_TAGS);
 				echo "</div>";
+				add_statistic("community_events", "view", "cevent_id", $result["cevent_id"]);
 			}
 		} else {
 			$ERROR++;
@@ -354,7 +354,6 @@ function setDateValue(field, date) {
 			}
 		}
 
-
 		$query		= "	SELECT a.*, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`username`
 						FROM `community_events` AS a
 						LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
@@ -372,13 +371,14 @@ function setDateValue(field, date) {
 		if ($results) {
 			$last_date 		= 0;
 			$total_events	= @count($results);
-		
+			
 			echo "<table class=\"calendar\" style=\"width: 99%\">\n";
 			echo "<colgroup>\n";
 			echo "	<col style=\"width: 30%\" />\n";
-			echo "	<col style=\"width: 70%\" />\n";
+			echo "	<col style=\"width: 70%\" />\n"; 
 			echo "</colgroup>\n";
 			echo "<tbody>\n";
+			
 			foreach ($results as $key => $result) {
 				if (($last_date < strtotime("00:00:00", $result["event_start"])) || ($last_date > strtotime("23:59:59", $result["event_start"]))) {
 					$last_date = $result["event_start"];
@@ -409,10 +409,12 @@ function setDateValue(field, date) {
 			}
 			echo "</tbody>\n";
 			echo "</table>\n";
+			
+			add_statistic("community:".$COMMUNITY_ID.":events", "view", "community_id", $COMMUNITY_ID);
 		} else {
 			$NOTICE++;
 			$NOTICESTR[] = "<strong>No Events Available</strong><br />There are no calendar events on this page that take place from <strong>".date(DEFAULT_DATE_FORMAT, $display_duration["start"])."</strong> until <strong>".date(DEFAULT_DATE_FORMAT, $display_duration["end"])."</strong>.<br /><br />You may want to view a different ".$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["dtype"]." or check back later.";
-		
+
 			echo display_notice();
 		}
 	}

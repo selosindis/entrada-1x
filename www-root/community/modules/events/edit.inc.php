@@ -130,6 +130,7 @@ if ($RECORD_ID) {
 							$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
 							$SUCCESSSTR[]	= "You have successfully updated this event.<br /><br />You will now be redirected to the index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 						}
+						add_statistic("community:".$COMMUNITY_ID.":events", "edit", "cevent_id", $RECORD_ID);
 						communities_log_history($COMMUNITY_ID, $PAGE_ID, $RECORD_ID, "community_history_edit_event", 1);
 					}
 
@@ -216,7 +217,7 @@ if ($RECORD_ID) {
 					</tr>
 					<tr>
 						<td>&nbsp;</td>
-						<td colspan="2"><label for="event_description" class="form-required">Event Body</label></td>
+						<td colspan="2"><label for="event_description" class="form-nrequired">Event Details / Description</label></td>
 					</tr>
 					<tr>
 						<td>&nbsp;</td>

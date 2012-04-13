@@ -103,7 +103,10 @@ return array (
 		),
 		"topic" => array (
 			"label" => "Hot Topic Filters"
-		)
+		),
+		"department" => array (
+			"label" => "Department Filters"
+		),
 	),
 	
 	/**

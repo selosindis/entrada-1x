@@ -1008,6 +1008,7 @@ if ($show_event_objectives || $show_clinical_presentations || $show_curriculum_o
 		/**
 		 * Fetch all of the events that apply to the current filter set.
 		 */
+		
 		$learning_events = events_fetch_filtered_events(
 				$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"],
 				$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"],

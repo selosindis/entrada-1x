@@ -290,6 +290,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								case "new" :
 									$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] = "new";
 								break;
+								case "copy" :
+									$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] = "copy";
+								break;
 								case "index" :
 								default :
 									$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] = "index";
@@ -421,6 +424,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 									case "new" :
 										$url	= ENTRADA_URL."/admin/events?section=add";
 										$msg	= "You will now be redirected to add a new event; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+									break;
+									case "copy" :
+										$url	= ENTRADA_URL."/admin/events?section=add";
+										$msg	= "You will now be redirected to add a copy of the last event; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+										$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["copy"] = $PROCESSED;
 									break;
 									case "index" :
 									default :
@@ -644,6 +652,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 														<select id="post_action" name="post_action">
 															<option value="content"<?php echo (((!isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"])) || ($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "content")) ? " selected=\"selected\"" : ""); ?>>Add content to event</option>
 															<option value="new"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "new") ? " selected=\"selected\"" : ""); ?>>Add another event</option>
+															<option value="copy"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "copy") ? " selected=\"selected\"" : ""); ?>>Add a copy of this event</option>
 															<option value="index"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "index") ? " selected=\"selected\"" : ""); ?>>Return to event list</option>
 														</select>
 														<input type="submit" class="button" value="Save" />

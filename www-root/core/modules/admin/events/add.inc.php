@@ -271,6 +271,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					case "new" :
 						$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] = "new";
 					break;
+					case "copy" :
+						$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] = "copy";
+					break;
 					case "index" :
 					default :
 						$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] = "index";
@@ -388,6 +391,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							case "new" :
 								$url	= ENTRADA_URL."/admin/events?section=add";
 								$msg	= "You will now be redirected to add another new event; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+							break;
+							case "copy" :
+								$url	= ENTRADA_URL."/admin/events?section=add";
+								$msg	= "You will now be redirected to add a copy of the last event; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+								$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["copy"] = $PROCESSED;
 							break;
 							case "index" :
 							default :
@@ -537,6 +545,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					}
 				}
 			}
+			
+			if ($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "copy") { 
+				$PROCESSED = $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["copy"]; 
+			} else {
+				if (isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["copy"])) { 
+					unset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["copy"]); 
+				}
+			}
 			?>
 			<form action="<?php echo ENTRADA_URL; ?>/admin/events?section=add&amp;step=2" method="post" id="addEventForm">
 				<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Adding Event">
@@ -558,6 +574,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 											<select id="post_action" name="post_action">
 												<option value="content"<?php echo (((!isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"])) || ($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "content")) ? " selected=\"selected\"" : ""); ?>>Add content to event</option>
 												<option value="new"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "new") ? " selected=\"selected\"" : ""); ?>>Add another event</option>
+												<option value="copy"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "copy") ? " selected=\"selected\"" : ""); ?>>Add a copy of this event</option>
 												<option value="index"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "index") ? " selected=\"selected\"" : ""); ?>>Return to event list</option>
 											</select>
 											<input type="submit" class="button" value="Save" />
@@ -617,7 +634,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							<td style="vertical-align: top"><label for="event_title" class="form-required">Event Title</label></td>
 							<td>
 								<div id="course_id_path" class="content-small"><?php echo (isset($PROCESSED["course_id"]) && $PROCESSED["course_id"] ? fetch_course_path($PROCESSED["course_id"]) : ""); ?></div>
-								<input type="text" id="event_title" name="event_title" value="<?php echo (isset($PROCESSED["event_title"]) && $PROCESSED["event_title"] ? html_encode($PROCESSED["event_title"]) : ""); ?>" maxlength="255" style="width: 95%; font-size: 150%; padding: 3px" />
+								<input type="text" id="event_title" name="event_title" value="<?php echo ((isset($PROCESSED["event_title"]) && $PROCESSED["event_title"]) ? html_encode($PROCESSED["event_title"]) : ""); ?>" maxlength="255" style="width: 95%; font-size: 150%; padding: 3px" />
 							</td>
 						</tr>
 						<tr>

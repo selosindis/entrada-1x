@@ -488,6 +488,18 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 			if (strpos($_SERVER["HTTP_USER_AGENT"], "MSIE 6.") !== false) {
 				echo display_error(array("Unfortunately you are using <strong>Internet Explorer 6.0</strong> as your web-browser to view this site and we are unable to display a dashboard calendar that is compatible with this browser.<br /><br />To view your learning events, please click the <a href=\"".ENTRADA_RELATIVE."/events\" style=\"font-weight: bold\">Learning Events</a> tab at the top."));
 			} else {
+				// If saturday or sunday add 48 or 24 hours to the current time so the calendar displays the correct week, otherwise use the current time.
+				switch (date("N", time())) {
+					case '6' :
+						$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["caltime"] = time() + (86400 * 2);
+					break;
+					case '7' :
+						$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["caltime"] = time() + 86400;
+					break;
+					default :
+						$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["caltime"] = time();
+					break;
+				}
 				?>
 				<script type="text/javascript">
 				var year = new Date().getFullYear();
@@ -496,7 +508,7 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 
 				jQuery(document).ready(function() {
 					jQuery('#dashboardCalendar').weekCalendar({
-						date : new Date(<?php echo ((($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dstamp"]) ? $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dstamp"] : time()) * 1000); ?>),
+						date : new Date(<?php echo ((($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["caltime"]) ? $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["caltime"] : time()) * 1000); ?>),
 						dateFormat : 'M d, Y',
 						height: function($calendar) {
 							return 600;

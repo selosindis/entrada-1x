@@ -669,7 +669,61 @@ if ($show_event_objectives || $show_clinical_presentations || $show_curriculum_o
 		echo "</div>\n";
 	}
 	echo "</div>\n";
-}
+} 
+
+$query			= "	SELECT a.`topic_id`,a.`topic_name`, e.`topic_coverage`, e.`topic_time`
+					FROM `events_lu_topics` AS a 
+					LEFT JOIN `topic_organisation` AS b 
+					ON a.`topic_id` = b.`topic_id` 
+					LEFT JOIN `courses` AS c 
+					ON b.`organisation_id` = c.`organisation_id` 
+					LEFT JOIN `events` AS d 
+					ON c.`course_id` = d.`course_id` 
+					JOIN `event_topics` AS e 
+					ON d.`event_id` = e.`event_id` 
+					AND a.`topic_id` = e.`topic_id` 
+					WHERE d.`event_id` = ".$db->qstr($EVENT_ID);
+
+$topic_results	= $db->GetAll($query);
+
+if ($topic_results) { ?>
+
+	<table style="width: 100%" cellspacing="0">
+		<colgroup>
+			<col style="width: 70%" />
+			<col style="width: 10%" />
+			<col style="width: 10%" />
+			<col style="width: 10%" />
+		</colgroup>
+		<tr>
+			<td colspan="4">
+				<h2>Event Topics</h2>
+				<div class="content-small" style="padding-bottom: 10px">These topics will be covered in this learning event.</div>
+			</td>
+		</tr>
+		<tr>
+			<td><span style="font-weight: bold; color: #003366;">Hot Topic</span></td>
+			<td><span style="font-weight: bold; color: #003366;">Major</span></td>
+			<td><span style="font-weight: bold; color: #003366;">Minor</span></td>
+			<td><span style="font-weight: bold; color: #003366;">Time</span></td>
+		</tr>
+		<?php
+			foreach ($topic_results as $topic_result) {
+				echo "<tr>\n";
+				echo "	<td>".html_encode($topic_result["topic_name"])."</td>\n";
+				echo "	<td>".(($topic_result["topic_coverage"] == "major") ? "<img src=\"".ENTRADA_URL."/images/question-correct.gif"."\" />" : "" )."</td>\n";
+				echo "	<td>".(($topic_result["topic_coverage"] == "minor") ? "<img src=\"".ENTRADA_URL."/images/question-correct.gif"."\" />": "" )."</td>\n";
+				echo "	<td>".$topic_result["topic_time"]."</td>\n";
+				echo "</tr>\n";
+			}
+			echo "<tr><td colspan=\"2\">&nbsp;</td></tr>";
+		?>
+	</table>
+
+				<?php 
+	
+} 
+
 					echo "<a name=\"event-resources-section\"></a>";
 					echo "<h2 title=\"Event Resources Section\">Event Resources</h2>\n";
 					echo "<div id=\"event-resources-section\">\n";

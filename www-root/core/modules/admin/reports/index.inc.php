@@ -111,6 +111,14 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 			A detailed report showing the usage statistics about all included podcasts.
 		</li>
 	</ol>
+	
+	<h2 style="color: #669900">Assessment Reports</h2>
+	<ol class="system-reports">
+		<li>
+			<a href="<?php echo ENTRADA_URL; ?>/admin/reports?section=assessments">Assessment Summary Report</a><br />
+			A detailed report containing an assessment breakdown by Course.
+		</li>
+	</ol>
 	<?php
 }
 ?>

@@ -116,7 +116,11 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 	<ol class="system-reports">
 		<li>
 			<a href="<?php echo ENTRADA_URL; ?>/admin/reports?section=assessments">Assessment Summary Report</a><br />
-			A detailed report containing an assessment breakdown by Course.
+			A detailed report containing an assessment breakdown by course.
+		</li>
+		<li>
+			<a href="<?php echo ENTRADA_URL; ?>/admin/reports?section=assessment-objectives">Assessment Objective Summary</a><br />
+			A report showing the curricular objectives and MCC presentations by course.
 		</li>
 	</ol>
 	<?php

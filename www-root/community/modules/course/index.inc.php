@@ -58,7 +58,7 @@ if ($community_courses) {
 	foreach ($course_events as $course_event) {
 		$event_ids[] = $db->qstr($course_event["event_id"]);
 	}
-
+	
 	switch ($PAGE_URL) {
 		case "" :
 			$query = "	SELECT b.*, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, c.`account_active`, c.`access_starts`, c.`access_expires`, c.`last_login`, c.`role`, c.`group`
@@ -1080,6 +1080,63 @@ if ($community_courses) {
 					</tbody>
 				</table>			
 				<?php
+		break;
+		case (strpos($PAGE_URL,"assessment_strategies") !== false):
+			
+			if ($ENTRADA_USER->getGroup() == 'student') {
+				$student_sql = "AND a.`cohort` = ".$db->qstr($ENTRADA_USER->getCohort());
+			} else {
+				$student_sql = "";
+			}
+				
+			$query =  "	SELECT a.`cohort`, c.`group_name`, a.`assessment_id`, a.`name`, a.`type`, a.`grade_weighting`, b.`title` AS `characteristic`
+						FROM `assessments` AS a
+						JOIN `assessments_lu_meta` AS b
+						ON a.`characteristic_id` = b.`id`
+						JOIN `groups` AS c
+						ON a.`cohort` = c.`group_id`
+						WHERE `course_id` IN (".implode("', '", $course_ids).")".
+						$student_sql."
+						ORDER BY a.`cohort` DESC, a.`type`";
+
+			$assessments = $db->GetAll($query);
+			
+			if ($assessments) {
+				echo "<h1>Assessments</h1>";
+				
+				foreach ($assessments as $assessment) {
+					$output[$assessment["cohort"]]["assessments"][$assessment["assessment_id"]]["name"] = $assessment["name"];
+					$output[$assessment["cohort"]]["assessments"][$assessment["assessment_id"]]["type"] = $assessment["type"];
+					$output[$assessment["cohort"]]["assessments"][$assessment["assessment_id"]]["characteristic"] = $assessment["characteristic"];
+					$output[$assessment["cohort"]]["assessments"][$assessment["assessment_id"]]["grade_weighting"] = $assessment["grade_weighting"];
+					$output[$assessment["cohort"]]["group_name"] = $assessment["group_name"];
+				}
+				foreach ($output as $course) {
+					echo "<h2>".$course["group_name"]."</h1>";
+					echo "<table width=\"100%\">\n";
+					echo "\t<thead>\n";
+					echo "\t\t<tr>\n";
+					echo "\t\t\t<th width=\"40%\" style=\"text-align:left;\">Assessment Title</th>\n";
+					echo "\t\t\t<th width=\"20%\" style=\"text-align:left;\">Type</th>\n";
+					echo "\t\t\t<th width=\"25%\" style=\"text-align:left;\">Characteristic</th>\n";
+					echo "\t\t\t<th width=\"15%\" style=\"text-align:left;\">Grade Weight</th>\n";
+					echo "\t\t</tr>\n";
+					echo "\t</thead>\n";
+					echo "\t<tbody>\n";
+					foreach ($course["assessments"] as $assessment) {
+						echo "\t<tr>\n";
+						echo "\t\t<td><a href=\"#".$assessment["assessment_id"]."\">".$assessment["name"]."</a></td>\n";
+						echo "\t\t<td>".$assessment["type"]."</td>\n";
+						echo "\t\t<td>".$assessment["characteristic"]."</td>\n";
+						echo "\t\t<td>".$assessment["grade_weighting"]."</td>\n";
+						echo "\t</tr>\n";
+					}
+					echo "\t<tbody>\n";
+					echo "</table>\n";
+				}
+				
+			}
+			
 		break;
 		default :
 		break;

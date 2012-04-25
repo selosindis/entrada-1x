@@ -251,7 +251,7 @@ if ($COMMUNITY_URL) {
 			$default_course_pages = array(	"teaching_strategies",
 											"prerequisites",
 											"course_aims",
-											"assessment_strategies",
+											//"assessment_strategies",
 											"assessment_strategies/course_integration",
 											"resources",
 											"expectations_of_students",

@@ -1125,7 +1125,7 @@ if ($community_courses) {
 					echo "\t<tbody>\n";
 					foreach ($course["assessments"] as $assessment) {
 						echo "\t<tr>\n";
-						echo "\t\t<td><a href=\"#".$assessment["assessment_id"]."\">".$assessment["name"]."</a></td>\n";
+						echo "\t\t<td>".$assessment["name"]."</td>\n";
 						echo "\t\t<td>".$assessment["type"]."</td>\n";
 						echo "\t\t<td>".$assessment["characteristic"]."</td>\n";
 						echo "\t\t<td>".$assessment["grade_weighting"]."</td>\n";

@@ -118,6 +118,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						$ERROR++;
 						$ERRORSTR[] = "You must supply a <strong>Grade Weighting</strong> for this assessment.";
 					}
+
+					if((isset($_POST["grade_threshold"])) && ($_POST["grade_threshold"] !== NULL)) {
+						$PROCESSED["grade_threshold"] = clean_input($_POST["grade_threshold"], "float");
+					} else {
+						$ERROR++;
+						$ERRORSTR[] = "You must supply a <strong>Grade Threshold</strong> for this assessment.";
+					}
+					
 					if((isset($_POST["description"])) && ($description = clean_input($_POST["description"], array("notags", "trim")))) {
 						$PROCESSED["description"] = $description;
 					} else {
@@ -508,6 +516,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 									<td>
 										<input type="text" id="grade_weighting" name="grade_weighting" value="<?php echo (int) html_encode($PROCESSED["grade_weighting"]); ?>" maxlength="5" style="width: 40px" autocomplete="off" />
 										<span class="content-small"><strong>Tip:</strong> The percentage or numeric value of the final grade this assessment is worth.</span>
+									</td>
+								</tr>
+								<tr>
+									<td></td>
+									<td><label for="grade_threshold" class="form-nrequired">Assessment Threshold (%)</label></td>
+									<td>
+										<input type="text" id="grade_threshold" name="grade_threshold" value="<?php echo (float) html_encode($PROCESSED["grade_threshold"]); ?>" maxlength="5" style="width: 40px" autocomplete="off" />
+										<span class="content-small"><strong>Tip:</strong> If a student receives a grade below the threshold the coordinator / director are notified.</span>
 									</td>
 								</tr>
 							</tbody>

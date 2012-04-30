@@ -12,7 +12,7 @@
  * @author Unit: Faculty of Medicine
  * @author Developer: Brandon Thorn <brandon.thorn@queensu.ca>
  * @copyright Copyright 2011 Queen's Univerity. All Rights Reserved.
- *
+ * if they're doing a clerkship rotation in a location that the regional education manages (oshawa)
  */
 @set_time_limit(0);
 @set_include_path(implode(PATH_SEPARATOR, array(

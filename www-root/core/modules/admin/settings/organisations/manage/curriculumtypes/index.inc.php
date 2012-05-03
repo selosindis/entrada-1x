@@ -40,7 +40,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 		<ul class="page-action">
 			<li><a href="<?php echo ENTRADA_URL; ?>/admin/settings/organisations/manage/curriculumtypes?section=add&amp;org=<?php echo $ORGANISATION_ID;?>" class="strong-green">Add New Curriculum Type</a></li>
 		</ul>
-	</div>
+	</div><br/>
 	<?php
 
 	/*
@@ -53,9 +53,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 				ON a.`curriculum_type_id` = b.`curriculum_type_id` 
 				WHERE b.`organisation_id` = ".$db->qstr($ORGANISATION_ID)." 
 				ORDER BY a.`curriculum_type_name` ASC";
-
-
-
 
 	$results = $db->GetAll($query);
 

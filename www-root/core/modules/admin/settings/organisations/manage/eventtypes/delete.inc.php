@@ -38,14 +38,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 ?>
 <h1>Delete Event Types</h1>
 <?php
-	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings/organisations/manage/eventtypes?section=delete&amp;org=".$ORGANISATION['organisation_id'], "title" => "Delete Eventtypes");
+	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings/organisations/manage/eventtypes?section=delete&amp;org=".$ORGANISATION['organisation_id'], "title" => "Delete Event Types");
 
 	if (isset($_POST["remove_ids"]) && is_array($_POST["remove_ids"]) && !empty($_POST["remove_ids"])) {
 		foreach ($_POST["remove_ids"] as $id){
 			$PROCESSED["remove_ids"][] = (int) $id;
 		}
 	}
-	
 	
 	if ($PROCESSED["remove_ids"]) {
 		switch($STEP){

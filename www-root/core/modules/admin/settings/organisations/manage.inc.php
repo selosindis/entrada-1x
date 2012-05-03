@@ -53,7 +53,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 
 					$sidebar_html  = "<ul class=\"menu\">";
 					$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/organisations/manage/curriculumtypes?org=".$ORGANISATION_ID."\">Manage Curriculum Types</a></li>\n";					
-					$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/organisations/manage/eventtypes?org=".$ORGANISATION_ID."\">Manage Eventtypes</a></li>\n";
+					$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/organisations/manage/eventtypes?org=".$ORGANISATION_ID."\">Manage Event Types</a></li>\n";
 					$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/organisations/manage/hottopics?org=".$ORGANISATION_ID."\">Manage Hot Topics</a></li>\n";
 					$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/organisations/manage/metadata?org=".$ORGANISATION_ID."\">Manage Meta Data</a></li>\n";
 					$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/organisations/manage/objectives?org=".$ORGANISATION_ID."\">Manage Objectives</a></li>\n";					

@@ -272,7 +272,7 @@ if ($COMMUNITY_URL) {
 				}
 			}
 
-			if (((int) $community_details["community_protected"]) && (!$LOGGED_IN)) {
+			if (($PAGE_PROTECTED) && (!$LOGGED_IN)) {
 				/**
 				 * This is a protected community and user is not currently authenticated.
 				 * Send the user to the login page, and provide the url variable so they return here when finished.

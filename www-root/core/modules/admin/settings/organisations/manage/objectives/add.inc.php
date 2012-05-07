@@ -235,7 +235,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 					<td colspan="2">
 						<?php 
 							$objective_name = $translate->_("events_filter_controls");
-							add_notice("<strong>Note:</strong><br/>If this is a parent for Curriculum Objectives please label it '".html_encode($objective_name["co"]["global_lu_objectives_name"])."'.<br/>If this is a parent for Mandates Objectives (such as MCC Objectives) please label it '".html_encode($objective_name["cp"]["global_lu_objectives_name"])."'.");
+							add_notice("<strong>Note:</strong><br/>If this is a parent for Curriculum Objectives please label it '".html_encode($objective_name["co"]["global_lu_objectives_name"])."'.<br/>If this is a parent for Mandates Objectives (such as MCC Presentations) please label it '".html_encode($objective_name["cp"]["global_lu_objectives_name"])."'.");
 							echo display_notice();
 						?>
 					</td>

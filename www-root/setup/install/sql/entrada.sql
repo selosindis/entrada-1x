@@ -2855,7 +2855,7 @@ CREATE TABLE IF NOT EXISTS `global_lu_objectives` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `global_lu_objectives` (`objective_id`, `objective_name`, `objective_description`, `objective_code`, `objective_parent`, `objective_order`, `objective_active`, `updated_date`, `updated_by`) VALUES
-(1, 'Queen''s Objectives', '', NULL, 0, 0, 1, 0, 0),
+(1, 'Curriculum Objectives', '', NULL, 0, 0, 1, 0, 0),
 (2, 'Medical Expert', '', NULL, 1, 0, 1, 0, 0),
 (3, 'Professionalism', '', NULL, 1, 0, 1, 0, 0),
 (4, 'Scholar', '', NULL, 1, 0, 1, 0, 0),
@@ -3130,7 +3130,7 @@ INSERT INTO `global_lu_objectives` (`objective_id`, `objective_name`, `objective
 (306, 'Preop Assess - anesthesiology', NULL, NULL, 200, 116, 1, 1261414735, 3499),
 (307, 'Preop Assess - surgery', NULL, NULL, 200, 117, 1, 1261414735, 3499),
 (308, 'Pain - spinal', NULL, NULL, 200, 118, 1, 1261414735, 3499),
-(309, 'MCC Objectives', NULL, NULL, 0, 0, 1, 1265296358, 3499),
+(309, 'MCC Presentations', NULL, NULL, 0, 0, 1, 1265296358, 3499),
 (310, 'Abdominal Distension', 'Abdominal distention is common and may indicate the presence of serious intra-abdominal or systemic disease.', '1-E', 309, 1, 1, 1271174177, 3499),
 (311, 'Abdominal Mass', 'If hernias are excluded, most other abdominal masses represent a significant underlying disease that requires complete investigation.', '2-E', 309, 2, 1, 1271174177, 3499),
 (312, 'Adrenal Mass', 'Adrenal masses are at times found incidentally after CT, MRI, or ultrasound examination done for unrelated reasons.  The incidence is about 3.5 % (almost 10 % of autopsies).', '2-1-E', 311, 1, 1, 1271174178, 3499),

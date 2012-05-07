@@ -22,9 +22,10 @@ class Observership implements Editable {
 	private $location;
 	private $preceptor_firstname;
 	private $preceptor_lastname;
+	private $preceptor_prefix;
 	private $preceptor_proxy_id;
 	
-	function __construct($id, $student_id, $title, $site, $location, $preceptor_proxy_id, $preceptor_firstname, $preceptor_lastname, $start, $end) {
+	function __construct($id, $student_id, $title, $site, $location, $preceptor_proxy_id, $preceptor_firstname, $preceptor_lastname, $start, $end, $preceptor_prefix) {
 		$this->id = $id;
 		$this->student_id = $student_id;
 		$this->title = $title;
@@ -34,11 +35,12 @@ class Observership implements Editable {
 		$this->end = $end;
 		$this->preceptor_firstname = $preceptor_firstname;
 		$this->preceptor_lastname = $preceptor_lastname;
+		$this->preceptor_prefix = $preceptor_prefix;
 		$this->preceptor_proxy_id = $preceptor_proxy_id;
 	}
 	
 	public static function fromArray(array $arr) {
-		return new Observership($arr['id'], $arr['student_id'], $arr['title'], $arr['site'], $arr['location'], $arr['preceptor_proxy_id'], $arr['preceptor_firstname'], $arr['preceptor_lastname'], $arr['start'], $arr['end']);
+		return new Observership($arr['id'], $arr['student_id'], $arr['title'], $arr['site'], $arr['location'], $arr['preceptor_proxy_id'], $arr['preceptor_firstname'], $arr['preceptor_lastname'], $arr['start'], $arr['end'], $arr['preceptor_prefix']);
 	}
 	
 	public function getID() {
@@ -84,6 +86,17 @@ class Observership implements Editable {
 			}
 		} else {
 			return $this->preceptor_lastname;
+		}
+	}
+	
+	public function getPreceptorPrefix() {
+		if ($this->preceptor_proxy_id) {
+			$preceptor = $this->getPreceptor();
+			if ($preceptor) {
+				return $preceptor->getPrefix();
+			}
+		} else {
+			return $this->preceptor_prefix;
 		}
 	}
 	
@@ -158,9 +171,9 @@ class Observership implements Editable {
 	public static function create(array $input_arr) {
 		extract($input_arr);
 		global $db;
-		$query = "insert into `student_observerships` (`student_id`, `title`,`site`,`location`,`preceptor_proxy_id`,`preceptor_firstname`, `preceptor_lastname`, `start`, `end`) value (?,?,?,?,?,?,?,?,?)";
-		if(!$db->Execute($query, array($user_id, $title, $site, $location, $preceptor_proxy_id, $preceptor_firstname, $preceptor_lastname, $start, $end))) {
-			add_error("Failed to create new Observership.");
+		$query = "insert into `student_observerships` (`student_id`, `title`,`site`,`location`,`preceptor_proxy_id`,`preceptor_firstname`, `preceptor_lastname`, `start`, `end`, `preceptor_prefix`) value (?,?,?,?,?,?,?,?,?,?)";
+		if(!$db->Execute($query, array($user_id, $title, $site, $location, $preceptor_proxy_id, $preceptor_firstname, $preceptor_lastname, $start, $end, $preceptor_prefix))) {
+			add_error("Failed to create new Observership.".$db->ErrorMsg());
 			application_log("error", "Unable to update a student_observerships record. Database said: ".$db->ErrorMsg());
 		} else {
 			add_success("Successfully added new Observership.");
@@ -183,8 +196,8 @@ class Observership implements Editable {
 	public function update(array $input_arr) {
 		extract($input_arr);
 		global $db;
-		$query = "update `student_observerships` set `title`=?, `site`=?,`location`=?,`preceptor_proxy_id`=?,`preceptor_firstname`=?, `preceptor_lastname`=?, `start`=?, `end`=? where `id`=?";
-		if(!$db->Execute($query, array($title, $site, $location, $preceptor_proxy_id, $preceptor_firstname, $preceptor_lastname, $start, $end, $this->id))) {
+		$query = "update `student_observerships` set `title`=?, `site`=?,`location`=?,`preceptor_proxy_id`=?,`preceptor_firstname`=?, `preceptor_lastname`=?, `start`=?, `end`=?, `preceptor_prefix`=? where `id`=?";
+		if(!$db->Execute($query, array($title, $site, $location, $preceptor_proxy_id, $preceptor_firstname, $preceptor_lastname, $start, $end, $preceptor_prefix, $this->id))) {
 			add_error("Failed to update Observership.");
 			application_log("error", "Unable to update a student_observerships record. Database said: ".$db->ErrorMsg());
 		} else {

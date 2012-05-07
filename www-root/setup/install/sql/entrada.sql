@@ -3825,6 +3825,7 @@ CREATE TABLE IF NOT EXISTS `student_observerships` (
   `preceptor_firstname` varchar(256) default NULL,
   `preceptor_lastname` varchar(256) default NULL,
   `preceptor_proxy_id` int(12) unsigned default NULL,
+  `preceptor_prefix` varchar(4) default NULL,
   PRIMARY KEY  (`id`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 

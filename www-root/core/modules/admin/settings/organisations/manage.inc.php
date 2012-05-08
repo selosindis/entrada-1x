@@ -57,6 +57,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 					$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/organisations/manage/hottopics?org=".$ORGANISATION_ID."\">Manage Hot Topics</a></li>\n";
 					$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/organisations/manage/metadata?org=".$ORGANISATION_ID."\">Manage Meta Data</a></li>\n";
 					$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/organisations/manage/objectives?org=".$ORGANISATION_ID."\">Manage Objectives</a></li>\n";					
+					$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/organisations/manage/medbiqinstructional?org=".$ORGANISATION_ID."\">Manage Medbiq Instructional Methods</a></li>\n";					
+					$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/organisations/manage/medbiqassessment?org=".$ORGANISATION_ID."\">Manage Medbiq Assessment Methods</a></li>\n";					
 					$sidebar_html .= "</ul>";
 					new_sidebar_item("Organisation Management", $sidebar_html, "config-org-nav", "open");
 

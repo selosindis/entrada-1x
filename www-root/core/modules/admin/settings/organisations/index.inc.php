@@ -42,7 +42,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 			<ul class="page-action">
 				<li><a href="<?php echo ENTRADA_URL; ?>/admin/settings/organisations?section=add" class="strong-green">Add New Organisation</a></li>
 			</ul>
-		</div>	
+		</div><br/>
 	<?php
 		}
 
@@ -99,5 +99,4 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 		add_notice("You don't appear to have access to change any organisations. If you feel you are seeing this in error, please contact your system administrator.");
 		echo display_notice();
 	}
-
 }

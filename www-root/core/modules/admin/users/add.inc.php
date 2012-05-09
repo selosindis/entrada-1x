@@ -1273,7 +1273,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 										    echo "</td></tr>";
 										} else {
 											//case where there are no departments
-											echo "<tr><td><br/></td></tr>";
+											echo "<tr><td><br /></td></tr>";
 										}
 											?>
 								</table></td>

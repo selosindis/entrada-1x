@@ -180,17 +180,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								?>
 							</tbody>
 						</table>
-						<br/>
+						<br />
 						<h2>Import Grades</h2>
 						<div id="display-notice-box" class="display-notice" style="width:408px;">
 							<ul>
 							<li><strong>Important Notes:</strong>
-								<br/>Format for the CSV should be [Student Number, Grade] with each entry on a separate line (without the brackets). 
-								<br/>Any grades entered will be overwritten if present in the CSV.</li>
+								<br />Format for the CSV should be [Student Number, Grade] with each entry on a separate line (without the brackets). 
+								<br />Any grades entered will be overwritten if present in the CSV.</li>
 							</ul>
 						</div>
 						<form enctype="multipart/form-data" action="<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "csv-upload", "assessment_id" => $ASSESSMENT_ID)); ?>" method="POST">
-							<input type="file" name ="file"/><br/><br/>
+							<input type="file" name ="file"/><br /><br />
 							<input type="submit" value ="Import CSV"/>
 						</form>
 					</div>
@@ -242,7 +242,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 										[data]
 									);
 								</script>
-								<br/>
+								<br />
 								<p>Unentered grades: <?php echo (int) $unentered; ?></p>
 								<?php
 							break;
@@ -298,7 +298,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 										[data]
 									);
 								</script>
-								<br/>
+								<br />
 								<p>Unentered grades: <?php echo (int) $unentered; ?></p>
 								<p>Mean grade: <?php echo number_format(($entered > 0 ? $sum / $entered : 0), 0); ?>%</p>
 								<p>Median grade: <?php echo $grade_values[floor(count($grade_values) / 2)]; ?>%</p>

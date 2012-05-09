@@ -41,7 +41,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 		$PROCESSED["eventtype_id"] = $type;
 	}
 	
-	
 	// Error Checking
 	switch ($STEP) {
 		case 2 :

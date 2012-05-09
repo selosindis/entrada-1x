@@ -909,7 +909,7 @@ if (!defined("PARENT_INCLUDED")) {
 					}
 					echo "			<div class=\"content-small\" style=\"margin-bottom: 15px\">".ucwords($result["group"])." > ".($result["group"] == "student" ? $cohort["group_name"] : ucwords($result["role"]));
 				}
-				echo (isset($ORGANISATIONS_BY_ID[$result["organisation_id"]]) ? "<br/>".$ORGANISATIONS_BY_ID[$result["organisation_id"]]["organisation_title"] : "")."</div>\n";
+				echo (isset($ORGANISATIONS_BY_ID[$result["organisation_id"]]) ? "<br />".$ORGANISATIONS_BY_ID[$result["organisation_id"]]["organisation_title"] : "")."</div>\n";
 				if ($result["privacy_level"] > 1 || $is_administrator) {
 					echo "			<a href=\"mailto:".html_encode($result["email"])."\" style=\"font-size: 10px;\">".html_encode($result["email"])."</a><br />\n";
 					

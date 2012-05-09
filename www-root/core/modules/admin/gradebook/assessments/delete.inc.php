@@ -50,7 +50,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 			if ((is_array($curriculum_path)) && (count($curriculum_path))) {
 				echo "<h1>" . implode(": ", $curriculum_path) . " Gradebook </h1>";
 			}
-			echo "<br/>";
+			echo "<br />";
 			$ASSESSMENT_IDS	= array();
 			$INDEX_URL = ENTRADA_URL."/admin/gradebook?".replace_query(array("section" => "view", "step" => false));
 			// Error Checking

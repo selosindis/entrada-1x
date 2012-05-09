@@ -1135,7 +1135,19 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 										?>
 										</select>
 									</td>
-								</tr>	
+								</tr>
+								<tr>
+									<td><label class="form-nrequired" for="preceptor_prefix">Non-Faculty Preceptor Prefix:</label></td>
+									<td>
+										<select style="width: 55px; vertical-align: middle; margin-right: 5px" name="preceptor_prefix" id="prefix">
+											<option selected="selected" value=""></option>
+											<option value="Dr.">Dr.</option>
+											<option value="Mr.">Mr.</option>
+											<option value="Mrs.">Mrs.</option>
+											<option value="Ms.">Ms.</option>
+										</select>
+									</td>
+								</tr>
 								<tr>
 									<td><label class="form-nrequired" for="preceptor_firstname">Non-Faculty Preceptor First Name:</label></td>
 									<td><input name="preceptor_firstname"></input><span class="content-small"> <strong>Example:</strong> <?php echo $user->getFirstname(); ?></span></td>
@@ -1206,8 +1218,20 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 									</td>
 								</tr>	
 								<tr>
+									<td><label class="form-nrequired" for="preceptor_prefix">Non-Faculty Preceptor Prefix:</label></td>
+									<td>
+										<select style="width: 55px; vertical-align: middle; margin-right: 5px" name="preceptor_prefix" id="prefix">
+											<option selected="selected" value=""></option>
+											<option value="Dr.">Dr.</option>
+											<option value="Mr.">Mr.</option>
+											<option value="Mrs.">Mrs.</option>
+											<option value="Ms.">Ms.</option>
+										</select>
+									</td>
+								</tr>
+								<tr>
 									<td><label class="form-nrequired" for="preceptor_firstname">Non-Faculty Preceptor First Name:</label></td>
-									<td><input name="preceptor_firstname"></input><span class="content-small"> <strong>Example:</strong> <?php echo $user->getFirstname(); ?></span></td>
+									<td><input name="preceptor_firstname"></input><span class="content-small"> <strong>Example:</strong> <?php echo $user->getPrefix()." ".$user->getFirstname(); ?></span></td>
 								</tr>	
 								<tr>
 									<td><label class="form-nrequired" for="preceptor_lastname">Non-Faculty Preceptor Last Name:</label></td>

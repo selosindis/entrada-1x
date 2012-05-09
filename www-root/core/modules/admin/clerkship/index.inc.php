@@ -386,7 +386,7 @@ if (!defined("IN_CLERKSHIP")) {
 						<tr>
 						</table>
 						</form>
-						<br/><br/>
+						<br /><br />
 					</div>
 						<?php
 					break;

@@ -95,11 +95,11 @@ return array (
 		),
 		"cp" => array (
 			"label" => "Clinical Presentation Filters",
-			"global_lu_objectives_name" => "MCC Objectives"
+			"global_lu_objectives_name" => "MCC Presentations"
 		),
 		"co" => array (
 			"label" => "Curriculum Objective Filters",
-			"global_lu_objectives_name" => "Queen's Objectives"
+			"global_lu_objectives_name" => "Curriculum Objectives"
 		),
 		"topic" => array (
 			"label" => "Hot Topic Filters"

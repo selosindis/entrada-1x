@@ -58,7 +58,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 						$query = "DELETE FROM `meta_type_relations` WHERE `meta_type_id` = ".$db->qstr($id);
 						if($db->Execute($query)){
 							$SUCCESS++;
-							$SUCCESSSTR[] = "Successfully removed Meta Data Type [".$id."] from your organisation.<br/>";
+							$SUCCESSSTR[] = "Successfully removed Meta Data Type [".$id."] from your organisation.<br />";
 						}
 					}
 				}
@@ -123,7 +123,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 							?>
 						</tbody>
 					</table>
-					<br/>
+					<br />
 					<input type="button" value="Confirm Delete" class="button" id="delete_button"/>
 					<script type="text/javascript">
 						jQuery('#delete_button').click(function(){

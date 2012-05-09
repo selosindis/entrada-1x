@@ -91,7 +91,7 @@ if (isset($MAILING_LISTS) && is_array($MAILING_LISTS) && $MAILING_LISTS["active"
 								$list = new MailingList($community_id);
 							}
 
-							echo "Activate: ".$member["email"]." -> ".$community_id."<br/>";
+							echo "Activate: ".$member["email"]." -> ".$community_id."<br />";
 							try {
 							$list->activate_member($member["proxy_id"], ((int)$member["list_administrator"]));
 							} catch (Exception $e) {
@@ -130,7 +130,7 @@ if (isset($MAILING_LISTS) && is_array($MAILING_LISTS) && $MAILING_LISTS["active"
 								$list = new MailingList($community_id);
 							}
 
-							echo "Promote: ".$member["email"]." -> ".$community_id."<br/>";
+							echo "Promote: ".$member["email"]." -> ".$community_id."<br />";
 							try {
 							$list->edit_member($member["proxy_id"], true);
 							} catch (Exception $e) {
@@ -170,7 +170,7 @@ if (isset($MAILING_LISTS) && is_array($MAILING_LISTS) && $MAILING_LISTS["active"
 								$list = new MailingList($community_id);
 							}
 
-							echo "Demote: ".$member["email"]." -> ".$community_id."<br/>";
+							echo "Demote: ".$member["email"]." -> ".$community_id."<br />";
 
 							try {
 							$list->edit_member($member["proxy_id"], false);

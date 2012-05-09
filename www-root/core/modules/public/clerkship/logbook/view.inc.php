@@ -542,7 +542,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 						You have logged <?php echo $objectives_recorded; ?> of the <?php echo $objectives_required; ?> required <strong>Clinical Presentations</strong> and <?php echo $procedures_recorded; ?> of the <?php echo $procedures_required; ?> required <strong>Clinical Tasks</strong> for this rotation. 
 					<?php } ?>
 				</div>
-				<br/>
+				<br />
 				<?php
 				echo "<h2 title=\"Rotation Comments Section\">Discussions &amp; Comments</h2>\n";
 				echo "<div id=\"rotation-comments-section\">\n";

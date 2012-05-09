@@ -64,7 +64,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 					}
 					if ($db->Execute($query)) {
 						$SUCCESS++;
-						$SUCCESSSTR[] = "Successfully removed Curriculum Type [".$id."] from your organisation.<br/>";
+						$SUCCESSSTR[] = "Successfully removed Curriculum Type [".$id."] from your organisation.<br />";
 					}
 					if ($num_uses == 1) {
 						$query = "	UPDATE `curriculum_lu_types` 
@@ -80,7 +80,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 							$db->Execute($query);
 
 							$SUCCESS++;
-							$SUCCESSSTR[] = "Successfully removed Curriculum Type [".$id."] from your the system.<br/>You will now be redirected to the Curriculum Type index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/settings/organisations/manage/curriculumtypes/?org=".$ORGANISATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
+							$SUCCESSSTR[] = "Successfully removed Curriculum Type [".$id."] from your the system.<br />You will now be redirected to the Curriculum Type index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/settings/organisations/manage/curriculumtypes/?org=".$ORGANISATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
 						}
 						else{
 							$ERROR++;
@@ -136,7 +136,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 							<?php } ?>
 						</tbody>
 					</table>
-					<br/>
+					<br />
 					<input type="submit" value="Confirm Delete" class="button"/>
 				</form>
 		<?php

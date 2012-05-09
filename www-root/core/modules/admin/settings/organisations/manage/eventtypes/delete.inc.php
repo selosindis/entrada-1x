@@ -38,14 +38,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 ?>
 <h1>Delete Event Types</h1>
 <?php
-	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings/organisations/manage/eventtypes?section=delete&amp;org=".$ORGANISATION['organisation_id'], "title" => "Delete Eventtypes");
+	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings/organisations/manage/eventtypes?section=delete&amp;org=".$ORGANISATION['organisation_id'], "title" => "Delete Event Types");
 
 	if (isset($_POST["remove_ids"]) && is_array($_POST["remove_ids"]) && !empty($_POST["remove_ids"])) {
 		foreach ($_POST["remove_ids"] as $id){
 			$PROCESSED["remove_ids"][] = (int) $id;
 		}
 	}
-	
 	
 	if ($PROCESSED["remove_ids"]) {
 		switch($STEP){
@@ -61,17 +60,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 						$query .= " AND	`organisation_id` = ".$db->qstr($ORGANISATION_ID);
 					if($db->Execute($query)){
 						$SUCCESS++;
-						$SUCCESSSTR[] = "Successfully removed Event Type [".$id."] from your organisation.<br/>";
+						$SUCCESSSTR[] = "Successfully removed Event Type [".$id."] from your organisation.<br />";
 					}
 					if($num_uses > 1){
 						$NOTICE++;
-						$NOTICESTR[] = "This Event Type still exists in the system because other Organisations were using it.<br/>You will now be redirected to the Event Type index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/settings/organisations/manage/eventtypes/?org=".$ORGANISATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
+						$NOTICESTR[] = "This Event Type still exists in the system because other Organisations were using it.<br />You will now be redirected to the Event Type index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/settings/organisations/manage/eventtypes/?org=".$ORGANISATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
 					}
 					else{
 						$query = "UPDATE `events_lu_eventtypes` SET	`eventtype_active`=0 WHERE `eventtype_id` = ".$db->qstr($id);
 						if($db->Execute($query)){
 							$SUCCESS++;
-							$SUCCESSSTR[] = "Successfully removed Event Type [".$id."] from your the system.<br/>You will now be redirected to the Event Type index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/settings/organisations/manage/eventtypes/?org=".$ORGANISATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
+							$SUCCESSSTR[] = "Successfully removed Event Type [".$id."] from your the system.<br />You will now be redirected to the Event Type index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/settings/organisations/manage/eventtypes/?org=".$ORGANISATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
 						}
 						else{
 							$ERROR++;
@@ -123,7 +122,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 							<?php } ?>
 						</tbody>
 					</table>
-					<br/>
+					<br />
 					<input type="submit" value="Confirm Delete" class="button"/>
 				</form>
 				<?php

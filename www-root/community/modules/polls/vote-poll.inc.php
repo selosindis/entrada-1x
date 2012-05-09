@@ -189,7 +189,7 @@ if ($RECORD_ID) {
 							if (($questions = $db->GetAll($query))) {
 								$count = 1;
 								foreach ($questions as $question) {
-									echo "	<h2>".$count.". ".html_encode($question["poll_question"])."</h2>".($question["maximum_responses"] > 1 ? "<div class=\"content-small\" style=\"width: 100%; text-align: right; margin-right: 10px;\">".($question["maximum_responses"] == $question["minimum_responses"] ? "Choose ".$question["minimum_responses"]." responses." : "Choose between ".$question["minimum_responses"]." and ".$question["maximum_responses"]." responses.")."</div>" : "<br/>");
+									echo "	<h2>".$count.". ".html_encode($question["poll_question"])."</h2>".($question["maximum_responses"] > 1 ? "<div class=\"content-small\" style=\"width: 100%; text-align: right; margin-right: 10px;\">".($question["maximum_responses"] == $question["minimum_responses"] ? "Choose ".$question["minimum_responses"]." responses." : "Choose between ".$question["minimum_responses"]." and ".$question["maximum_responses"]." responses.")."</div>" : "<br />");
 									$count++;
 		    						$query 		= "SELECT * FROM `community_polls_responses` WHERE `cpolls_id` = ".$db->qstr($RECORD_ID)." AND `cpquestion_id` = ".$question["cpquestion_id"]." ORDER BY `response_index` ASC";
 		    						$results 	= $db->GetAll($query);

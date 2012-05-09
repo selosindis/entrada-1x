@@ -501,7 +501,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 		    </form>
 		</div>
 		<div <?php echo (isset($PROCESSED["comments"]) && $PROCESSED["comments"] ? "class=\"print-only\"" : "style=\"display: none;\""); ?>>
-		    <br/>
+		    <br />
 		    <h2>Comments/Notes:</h2>
 		    <div>
 			<?php echo html_encode($PROCESSED["comments"]); ?>

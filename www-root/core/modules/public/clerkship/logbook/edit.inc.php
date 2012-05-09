@@ -251,9 +251,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 							This reflection should be a short entry explaining your experiences with the patient. 
 							It should be no more than approximately 100 words, and you may use initials to refer to the patient, 
 							but no complete data such as their name or record number.
-							<br/><br/>
+							<br /><br />
 							For example: 
-							<br/><br/>
+							<br /><br />
 							I spent the evening following Ms. J's labour and participated in her delivery. I was able to do 
 							a cervical exam and now feel much more confident in my ability to do this task.  I found that 
 							reviewing my Phase II E notes about normal delivery was very useful to reinforce this experience 
@@ -440,7 +440,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 							<td style="vertical-align: top">
 								<div style="position: relative; text-align: left;">
 									<label for="objective_id" class="form-required">Clinical Presentations</label>
-									<br/><br/>
+									<br /><br />
 									<span style="display: none;" id="objective-loading" class="content-small">Loading... <img src="<?php echo ENTRADA_URL; ?>/images/indicator.gif" style="vertical-align: middle;" /></span>
 								</div>
 							</td>
@@ -663,7 +663,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 							<td style="vertical-align: top;">
 								<div style="position: relative; text-align: left;">
 									<label for="procedure_id" class="form-required">Clinical Tasks</label>
-									<br/><br/>
+									<br /><br />
 									<span style="display: none;" id="procedure-loading" class="content-small">Loading... <img src="<?php echo ENTRADA_URL; ?>/images/indicator.gif" style="vertical-align: middle;" /></span>
 								</div>
 							</td>
@@ -685,7 +685,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 											$preferred_procedures = $db->GetAll($query);
 											if ($preferred_procedures) {
 												?>
-												<input type="radio" name="procedure_display_type" id="procedure_display_type_rotation" onclick="showRotationProcedures()" checked="checked" /> <label for="procedure_display_type_rotation">Show only clinical tasks for <span id="rotation_title_display" style="font-weight: bold"><?php echo $rotation["rotation_title"]; ?></span></label><br/>
+												<input type="radio" name="procedure_display_type" id="procedure_display_type_rotation" onclick="showRotationProcedures()" checked="checked" /> <label for="procedure_display_type_rotation">Show only clinical tasks for <span id="rotation_title_display" style="font-weight: bold"><?php echo $rotation["rotation_title"]; ?></span></label><br />
 												<input type="radio" name="procedure_display_type" id="procedure_display_type_all" onclick="showAllProcedures()" /> <label for="procedure_display_type_all">Show all clinical tasks</label><br />
 												<?php
 												if ($deficient_procedures) {

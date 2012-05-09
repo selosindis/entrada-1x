@@ -35,12 +35,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
 	?>
-	<h1>Manage Eventtypes</h1>
+	<h1>Manage Event Types</h1>
 	<div style="float: right">
 		<ul class="page-action">
-			<li><a href="<?php echo ENTRADA_URL; ?>/admin/settings/organisations/manage/eventtypes?section=add&amp;org=<?php echo $ORGANISATION_ID;?>" class="strong-green">Add New Eventtype</a></li>
+			<li><a href="<?php echo ENTRADA_URL; ?>/admin/settings/organisations/manage/eventtypes?section=add&amp;org=<?php echo $ORGANISATION_ID;?>" class="strong-green">Add New Event Type</a></li>
 		</ul>
-	</div>
+	</div><br />
 	<?php
 
 	/*
@@ -54,10 +54,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 				WHERE b.`organisation_id` = ".$db->qstr($ORGANISATION_ID)." 
 				AND a.`eventtype_active` = 1 
 				ORDER BY a.`eventtype_title` ASC";
-
-
-
-
+	
 	$results = $db->GetAll($query);
 
 	if($results){
@@ -83,7 +80,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 			?>
 		</tbody>
 	</table>
-	<br/>
+	<br />
 	<input type="submit" class="button" value="Delete Selected" />
 	</form>
 	<?php
@@ -92,7 +89,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 	else{
 		$NOTICE++;
 		$NOTICESTR[] = "There are currently no Event Types assigned to this Organisation";
-		echo "<br/>".display_notice();
+		echo "<br />".display_notice();
 
 	}
 

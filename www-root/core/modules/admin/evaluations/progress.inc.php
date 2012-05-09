@@ -237,7 +237,7 @@ if($EVALUATION_ID) {
             } else {
             	
             	?>
-            	<br/>
+            	<br />
             	<h2 style="margin-top: 0px">Complete Attempts</h2>
             	<?php
 	            /**
@@ -336,7 +336,7 @@ if($EVALUATION_ID) {
 	                    echo display_notice(array("No evaluators have completed this evaluation at this time."));
 	            }
             	?>
-            	<br/>
+            	<br />
             	<h2 style="margin-top: 0px">Incomplete Attempts</h2>
             	<?php
 	            /**
@@ -435,7 +435,7 @@ if($EVALUATION_ID) {
 	                    echo display_notice(array("No evaluators have a current attempt in progress for this evaluation."));
 	            }
 	            ?>
-            	<br/>
+            	<br />
             	<h2 style="margin-top: 0px">Evaluators With No Attempts</h2>
             	<?php
 	            /**

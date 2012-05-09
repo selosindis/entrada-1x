@@ -8386,7 +8386,7 @@ function clerkship_send_queued_notifications($rotation_id, $rotation_title, $pro
 								);
 				$replace	= array(
 									$rotation_title,
-									implode("<br/>\n", $clerks),
+									implode("<br />\n", $clerks),
 									APPLICATION_NAME,
 									ENTRADA_URL
 							);
@@ -8706,7 +8706,7 @@ function courses_subnavigation($course_details) {
 	}
 	echo "	</div>\n";
 	echo "</div>\n";
-	echo "<br/>";
+	echo "<br />";
 }
 
 function course_fetch_course_group($cgroup_id = 0) {
@@ -9244,7 +9244,7 @@ function course_objectives_in_list($objectives, $parent_id, $top_level_id, $edit
 							$output .= "	<div>".(isset($objective["objective_details"]) && $objective["objective_details"] ? $objective["objective_details"] : $objective["description"]);
 						}
 						if (isset($objective["event_objective_details"]) && $objective["event_objective_details"]) {
-							$output .= "		<br/><br/><em>".$objective["event_objective_details"]."</em>";
+							$output .= "		<br /><br /><em>".$objective["event_objective_details"]."</em>";
 						}
 						$output .= "	</div>";
 						$output .= "</li>";
@@ -11345,7 +11345,7 @@ function event_objectives_in_list($objectives, $parent_id, $top_level_id, $edit_
 							$output .= "<div style=\"padding-left: 25px;\">\n";
 							$output .=		$objective["description"]."\n";
 							if (isset($objective["objective_details"]) && $objective["objective_details"]) {
-								$output .= "<br/><br/>\n";
+								$output .= "<br /><br />\n";
 								$output .= "<em>".$objective["objective_details"]."</em>";
 							}
 							$output .= "</div>\n";
@@ -12981,10 +12981,10 @@ function objectives_intable($ORGANISATION_ID, $identifier = 0, $indent = 0, $exc
 			$output .= "		<div style=\"padding-left: 30px\">";
 			$output .= "			<input type=\"radio\" name=\"delete[".((int)$identifier)."][move]\" id=\"delete_".((int)$identifier)."_children\" value=\"0\" onclick=\"$('move-".((int)$identifier)."-children').hide();\" checked=\"checked\"/>";
 			$output .= "			<label for=\"delete_".((int)$identifier)."_children\" class=\"form-nrequired\"><strong>Deactivate</strong> all children</label>";
-			$output .= "			<br/>";
+			$output .= "			<br />";
 			$output .= "			<input type=\"radio\" name=\"delete[".((int)$identifier)."][move]\" id=\"move_".((int)$identifier)."_children\" value=\"1\" onclick=\"$('move-".((int)$identifier)."-children').show();\" />";
 			$output .= "			<label for=\"move_".((int)$identifier)."_children\" class=\"form-nrequired\"><strong>Move</strong> all children</label>";
-			$output .= "			<br/><br/>";
+			$output .= "			<br /><br />";
 			$output .= "		</div>";
 			$output .= "		</td>";
 			$output .= "	</tr>";
@@ -14389,10 +14389,10 @@ function display_person(User $user) {
 					if ($address && $city) {
 						?>
 						<div>
-							<span class="address-label">Address:</span><br/>
+							<span class="address-label">Address:</span><br />
 							<span class="address-value">
 							<?php
-								echo html_encode($address)."<br/>".html_encode($city);
+								echo html_encode($address)."<br />".html_encode($city);
 								if ($prov_name) echo ", ".html_encode($prov_name);
 								echo "<br />";
 								echo html_encode($country_name);

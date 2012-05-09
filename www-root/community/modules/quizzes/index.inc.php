@@ -56,7 +56,7 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 			</ul>
 		</div>
 		<div class="clear"></div>
-		<br/><br/>
+		<br /><br />
 		<?php
 	}
 	/**

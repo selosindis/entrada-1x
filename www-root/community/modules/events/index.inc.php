@@ -320,10 +320,10 @@ function setDateValue(field, date) {
 				echo 	((communities_module_access($COMMUNITY_ID, $MODULE_ID, "edit")) ? " (<a class=\"action\" href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=edit&amp;id=".$result["cevent_id"]."\">edit</a>)" : "");
 				echo 	((communities_module_access($COMMUNITY_ID, $MODULE_ID, "delete")) ? " (<a class=\"action\" href=\"javascript:eventDelete('".$result["cevent_id"]."')\">delete</a>)" : "");
 				echo "</div>\n";
-				echo "<br/>\n";
+				echo "<br />\n";
 				echo (isset($result["event_location"]) && trim($result["event_location"]) != "" ? "<span style=\"font-weight: bold;\">Location: </span>".$result["event_location"]."<br /><br />" : "");
 				echo "<span style=\"font-weight: bold;\">From: </span>".date(DEFAULT_DATE_FORMAT, $result["event_start"])."<br /><span style=\"font-weight: bold;\">To: </span>".date(DEFAULT_DATE_FORMAT, $result["event_finish"])."\n";
-				echo "<br/>\n";
+				echo "<br />\n";
 				echo "<h3>Description:</h3> ".strip_tags($result["event_description"], $ALLOWED_HTML_TAGS);
 				echo "</div>";
 				add_statistic("community_events", "view", "cevent_id", $result["cevent_id"]);
@@ -395,7 +395,7 @@ function setDateValue(field, date) {
 						echo date("H:i", $result["event_start"])." - ".date("H:i", $result["event_finish"]);
 					}
 					if (isset($result["event_location"]) && trim($result["event_location"]) != "") {
-						echo "\n<br/><br/>Location: ".$result["event_location"];
+						echo "\n<br /><br />Location: ".$result["event_location"];
 					}
 				$RECORD_AUTHOR = $result["proxy_id"];
 				echo "	</td>\n";

@@ -931,7 +931,7 @@ switch($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_
 		    }
 		}
 		?>
-		<br/><br/>
+		<br /><br />
 		<h1>Student Search</h1>
 		<br />
 		<form action="<?php echo ENTRADA_URL; ?>/clerkship?section=results" method="post">

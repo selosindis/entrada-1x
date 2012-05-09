@@ -742,7 +742,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 		}
 		echo "</form></div>";
 		?>
-		<br/><br/>
+		<br /><br />
 
 		
 		<ul class="history" style="margin-left:-40px;">

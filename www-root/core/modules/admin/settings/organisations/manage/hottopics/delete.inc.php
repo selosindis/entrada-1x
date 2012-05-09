@@ -59,17 +59,17 @@ if ($PROCESSED["remove_ids"]) {
 				$query .= " AND	`organisation_id` = ".$db->qstr($ORGANISATION_ID);
 			if($db->Execute($query)){
 				$SUCCESS++;
-				$SUCCESSSTR[] = "Successfully removed Hot Topic [".$id."] from your organisation.<br/>";
+				$SUCCESSSTR[] = "Successfully removed Hot Topic [".$id."] from your organisation.<br />";
 			}
 			if($num_uses > 1){
 				$NOTICE++;
-				$NOTICESTR[] = "This Hot Topic still exists in the system because other Organisations were using it.<br/>You will now be redirected to the Hot Topics index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/settings/organisations/manage/hottopics/?org=".$ORGANISATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
+				$NOTICESTR[] = "This Hot Topic still exists in the system because other Organisations were using it.<br />You will now be redirected to the Hot Topics index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/settings/organisations/manage/hottopics/?org=".$ORGANISATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
 			}
 			else{
 				$query = "UPDATE `events_lu_topics` SET	`topic_active`=0 WHERE `topic_id` = ".$db->qstr($id);
 				if($db->Execute($query)){
 					$SUCCESS++;
-					$SUCCESSSTR[] = "Successfully removed Hot Topic [".$id."] from your the system.<br/>You will now be redirected to the Hot Topics index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/settings/organisations/manage/hottopics/?org=".$ORGANISATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
+					$SUCCESSSTR[] = "Successfully removed Hot Topic [".$id."] from your the system.<br />You will now be redirected to the Hot Topics index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/settings/organisations/manage/hottopics/?org=".$ORGANISATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
 				}
 				else{
 					$ERROR++;
@@ -119,7 +119,7 @@ if ($PROCESSED["remove_ids"]) {
 							<?php } ?>
 						</tbody>
 					</table>
-					<br/>
+					<br />
 					<input type="submit" value="Confirm Delete" class="button"/>
 				</form>
 				<?php			

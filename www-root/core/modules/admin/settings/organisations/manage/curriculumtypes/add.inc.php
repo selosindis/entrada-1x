@@ -192,7 +192,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 							<ul class="page-action">
 								<li><a class="strong-green" id="add_period" style="cursor:pointer;">Add Curriculum Period</a></li>
 							</ul>
-						</div><br/>
+						</div><br />
 						<div id="curriculum_periods_table">
 							<table class="tableList" cellspacing="0" cellpadding="1" border="0" summary="List of Organisations">
 								<colgroup>

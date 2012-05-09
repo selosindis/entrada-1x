@@ -1004,7 +1004,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 										'related_event_ids_clean' : $F('related_event_ids_clean')
 									},
 									onLoading: function (transport) {
-										$('related_events_list').innerHTML = '<br/><br/><span class="content-small" style="align: center;">Loading... <img src="<?php echo ENTRADA_URL; ?>/images/indicator.gif" style="vertical-align: middle;" /></span>';
+										$('related_events_list').innerHTML = '<br /><br /><span class="content-small" style="align: center;">Loading... <img src="<?php echo ENTRADA_URL; ?>/images/indicator.gif" style="vertical-align: middle;" /></span>';
 									},
 									onComplete: function (transport) {
 										generateEventAutocomplete();
@@ -1024,7 +1024,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 										'related_event_ids_clean' : $F('related_event_ids_clean')
 									},
 									onLoading: function (transport) {
-										$('related_events_list').innerHTML = '<br/><br/><span class="content-small" style="align: center;">Loading... <img src="<?php echo ENTRADA_URL; ?>/images/indicator.gif" style="vertical-align: middle;" /></span>';
+										$('related_events_list').innerHTML = '<br /><br /><span class="content-small" style="align: center;">Loading... <img src="<?php echo ENTRADA_URL; ?>/images/indicator.gif" style="vertical-align: middle;" /></span>';
 									},
 									onComplete: function (transport) {
 										generateEventAutocomplete();

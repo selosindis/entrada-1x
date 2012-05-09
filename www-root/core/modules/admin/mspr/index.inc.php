@@ -363,7 +363,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MSPR_ADMIN"))) {
 				<form method="get">
 					<input type="hidden" name="mode" value="year" />
 					Choose Class to manage: 
-					<br /><br/>
+					<br /><br />
 					<div style="margin-left:2em;">
 						<select name="year">
 						<?php 
@@ -376,7 +376,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MSPR_ADMIN"))) {
 							echo build_option($year, $year, $year == $cur_year);	
 						}
 						?>
-						</select><br/><br/>
+						</select><br /><br />
 						<input type="submit"  value="Go"></input>
 					</div>
 				</form>

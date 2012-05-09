@@ -1114,7 +1114,7 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 													echo "<a href=\"".ENTRADA_URL."/admin/courses?section=edit&id=".$course_ids[0]."\"><img src=\"".ENTRADA_URL."/images/event-details.gif\" width=\"16\" height=\"16\" alt=\"Edit course details\" title=\"Edit course details\" border=\"0\" style=\"vertical-align: middle; margin-bottom: 2px;\" /></a> <a href=\"".ENTRADA_URL."/admin/courses?section=edit&id=".$course_ids[0]."\" style=\"font-size: 10px; margin-right: 8px\">Edit course details</a>\n";
 													echo "	</div>\n";
 													echo "</div>\n";
-													echo "<br/>";
+													echo "<br />";
 												}
 												echo "<ul class=\"objectives\">\n";
 												foreach ($results as $result) {

@@ -302,7 +302,7 @@ if ($RECORD_ID) {
 							echo "	<a href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-photo&amp;id=".$result["cgphoto_id"]."\">".communities_galleries_fetch_thumbnail($result["cgphoto_id"])."</a>";
 							echo "	<div class=\"content-small\">\n";
 							echo "	<strong id=\"photo-".$result["cgphoto_id"]."-title\">".html_encode(limit_chars($result["photo_title"], 26))."</strong>";
-							echo "	<br/>";
+							echo "	<br />";
 							echo ((galleries_photo_module_access($result["cgphoto_id"], "edit-photo")) ? " (<a class=\"action\" href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=edit-photo&amp;id=".$result["cgphoto_id"]."\">edit</a>)" : "");
 							echo ((galleries_photo_module_access($result["cgphoto_id"], "delete-photo")) ? " (<a class=\"action\" href=\"javascript:photoDelete('".$result["cgphoto_id"]."')\">delete</a>)" : "");
 							if ($community_galleries_select != "") {

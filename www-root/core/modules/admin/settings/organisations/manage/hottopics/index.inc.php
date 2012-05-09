@@ -82,7 +82,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 			?>
 		</tbody>
 	</table>
-	<br/>
+	<br />
 	<input type="submit" class="button" value="Delete Selected" />
 	</form>
 	<?php
@@ -91,7 +91,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 	else{
 		$NOTICE++;
 		$NOTICESTR[] = "There are currently no Hot Topics assigned to this Organisation";
-		echo "<br/>".display_notice();
+		echo "<br />".display_notice();
 
 	}
 

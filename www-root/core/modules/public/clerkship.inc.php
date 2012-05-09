@@ -284,7 +284,7 @@ if(!defined("PARENT_INCLUDED")) {
 			$sidebar_html 			.= "</ul>\n";
 			$sidebar_html .= "	<a href=\"".ENTRADA_URL."/clerkship/logbook?section=add&event=".$clerkship_schedule[0]["event_id"]."\">Log encounter</a>\n";
 			if((int)$clinical_encounters["entries"] > 0) {
-				$sidebar_html .= "	<br/><br/><a href=\"".ENTRADA_URL."/clerkship/logbook?sb=rotation&rotation=".$rotation."\">View ".($clinical_encounters["entries"]==1?"entry":"entries - $clinical_encounters[entries]")."</a>\n";
+				$sidebar_html .= "	<br /><br /><a href=\"".ENTRADA_URL."/clerkship/logbook?sb=rotation&rotation=".$rotation."\">View ".($clinical_encounters["entries"]==1?"entry":"entries - $clinical_encounters[entries]")."</a>\n";
 			}
 			if ($rotation) {
 				$sidebar_html .= "<div style=\"margin-top: 10px\">\n";

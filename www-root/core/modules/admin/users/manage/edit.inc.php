@@ -820,7 +820,7 @@ jQuery(document).ready(function() {
 												echo "		</div>\n";
 												?>
 											</div>
-											<br/><input style="margin-bottom: 15px" type="checkbox" id="photo_active" name="photo_active" value="1" <?php echo ($uploaded_photo["photo_active"] == 1 ? " checked=\"true\"" : "") ?> /> <?php echo ( $uploaded_photo["photo_active"] == 1  ? "<span class=\"content-small\">Uncheck this to deactivate the uploaded photo for this user.</span>" : "<span class=\"content-small\">Check this to activate the uploaded photo of this user.</span>" ); ?>
+											<br /><input style="margin-bottom: 15px" type="checkbox" id="photo_active" name="photo_active" value="1" <?php echo ($uploaded_photo["photo_active"] == 1 ? " checked=\"true\"" : "") ?> /> <?php echo ( $uploaded_photo["photo_active"] == 1  ? "<span class=\"content-small\">Uncheck this to deactivate the uploaded photo for this user.</span>" : "<span class=\"content-small\">Check this to activate the uploaded photo of this user.</span>" ); ?>
 										</td>
 									</tr>
 									<?php
@@ -1032,7 +1032,7 @@ jQuery(document).ready(function() {
 										    echo "</td></tr>";
 										} else {
 											//case where there are no departments
-											echo "<tr><td><br/></td></tr>";
+											echo "<tr><td><br /></td></tr>";
 										}
 											?>
 								</table></td>

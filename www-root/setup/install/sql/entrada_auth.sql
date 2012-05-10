@@ -208,11 +208,17 @@ CREATE TABLE IF NOT EXISTS `organisations` (
   `organisation_url` text NOT NULL,
   `organisation_desc` text,
   `template` varchar(32) NOT NULL DEFAULT 'default',
-  PRIMARY KEY  (`organisation_id`)
+  `aamc_institution_id` varchar(32) DEFAULT NULL,
+  `aamc_institution_name` varchar(255) DEFAULT NULL,
+  `aamc_program_id` varchar(32) DEFAULT NULL,
+  `aamc_program_name` varchar(255) DEFAULT NULL,
+  `organisation_active` tinyint(1) NOT NULL DEFAULT '1',
+  PRIMARY KEY (`organisation_id`),
+  KEY `organisation_active` (`organisation_active`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-INSERT INTO `organisations` (`organisation_id`, `organisation_title`, `organisation_address1`, `organisation_address2`, `organisation_city`, `organisation_province`, `organisation_country`, `organisation_postcode`, `organisation_telephone`, `organisation_fax`, `organisation_email`, `organisation_url`, `organisation_desc`) VALUES
-(1, 'Your University', 'University Avenue', '', 'Kingston', 'ON', 'CA', 'K7L3N6', '613-533-2000', '', '', 'http://www.yourschool.ca', NULL);
+INSERT INTO `organisations` (`organisation_id`, `organisation_title`, `organisation_address1`, `organisation_address2`, `organisation_city`, `organisation_province`, `organisation_country`, `organisation_postcode`, `organisation_telephone`, `organisation_fax`, `organisation_email`, `organisation_url`, `organisation_desc`, `organisation_active`) VALUES
+(1, 'Your University', 'University Avenue', '', 'Kingston', 'ON', 'CA', 'K7L3N6', '613-533-2000', '', '', 'http://www.yourschool.ca', NULL, 1);
 
 CREATE TABLE IF NOT EXISTS `password_reset` (
   `id` int(12) unsigned NOT NULL AUTO_INCREMENT,
@@ -416,9 +422,9 @@ CREATE TABLE IF NOT EXISTS `user_data_resident` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `user_organisations` (
-	`id` int(12) NOT NULL AUTO_INCREMENT, 
-	`organisation_id` int(3) NOT NULL, 
-	`proxy_id` int(12) NOT NULL, 
+	`id` int(12) NOT NULL AUTO_INCREMENT,
+	`organisation_id` int(3) NOT NULL,
+	`proxy_id` int(12) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 

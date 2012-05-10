@@ -43,6 +43,7 @@ if (!defined("PARENT_INCLUDED")) {
 	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/".$MODULE, "title" => $MODULES[strtolower($MODULE)]["title"]);
 
 	if (($router) && ($router->initRoute())) {
+
 		$PREFERENCES = preferences_load($MODULE);
 		$ORGANISATION_LIST = array();
 

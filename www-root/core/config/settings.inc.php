@@ -69,6 +69,8 @@ define("DATABASE_PASS", $config->database->password);							// The password for 
 
 define("ADODB_DIR", ENTRADA_ABSOLUTE."/core/library/Entrada/adodb");
 
+define("ACADEMIC_YEAR_START_DATE", "September 1");								// The start month and day of your academic year.
+
 define("CLERKSHIP_DATABASE", $config->database->clerkship_database);			// The name of the database that stores the clerkship schedule information.
 define("CLERKSHIP_SITE_TYPE", 1);												// The value this application will use for site types in the clerkship logbook module. This will be removed/replaced by functional logic to decide which site type to use in the future - for now, leave this as 1.
 define("CLERKSHIP_EMAIL_NOTIFICATIONS", true);									// Whether email notifications will be sent out to the Program Coordinator of the Rotation's related course

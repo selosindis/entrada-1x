@@ -2233,6 +2233,15 @@ CREATE TABLE IF NOT EXISTS `events_lu_objectives` (
   KEY `objective_order` (`objective_order`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
+CREATE TABLE `events_lu_resources` (
+  `resource_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `resource` varchar(250) NOT NULL DEFAULT '',
+  `description` text,
+  `updated_date` bigint(64) NOT NULL,
+  `updated_by` int(11) NOT NULL,
+  PRIMARY KEY (`resource_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 CREATE TABLE IF NOT EXISTS `events_recurring` (
   `recurring_id` int(12) NOT NULL AUTO_INCREMENT,
   `recurring_date` bigint(64) NOT NULL,
@@ -2290,6 +2299,15 @@ CREATE TABLE IF NOT EXISTS `event_discussions` (
   KEY `parent_id` (`parent_id`),
   FULLTEXT KEY `discussion_title` (`discussion_title`,`discussion_comment`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE `event_resources` (
+  `event_resources_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `fk_resource_id` int(11) NOT NULL,
+  `fk_event_id` int(11) NOT NULL,
+  `updated_date` bigint(64) NOT NULL,
+  `updated_by` int(11) NOT NULL,
+  PRIMARY KEY (`event_resources_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `event_topics` (
   `etopic_id` int(12) NOT NULL AUTO_INCREMENT,
@@ -3648,6 +3666,25 @@ CREATE TABLE IF NOT EXISTS `quiz_question_responses` (
   KEY `response_is_html` (`response_is_html`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
+CREATE TABLE IF NOT EXISTS `reports_aamc_ci` (
+  `raci_id` int(12) NOT NULL AUTO_INCREMENT,
+  `organisation_id` int(12) NOT NULL,
+  `report_title` varchar(255) NOT NULL,
+  `report_date` bigint(64) NOT NULL DEFAULT '0',
+  `report_start` bigint(64) NOT NULL DEFAULT '0',
+  `report_finish` bigint(64) NOT NULL DEFAULT '0',
+  `report_langauge` varchar(12) NOT NULL DEFAULT 'en-us',
+  `report_description` text NOT NULL,
+  `report_supporting_link` text NOT NULL,
+  `report_active` tinyint(1) NOT NULL DEFAULT '1',
+  `report_status` enum('draft','published') NOT NULL DEFAULT 'draft',
+  `updated_date` bigint(64) NOT NULL DEFAULT '0',
+  `updated_by` int(12) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`raci_id`),
+  KEY `report_date` (`report_date`),
+  KEY `report_active` (`organisation_id`,`report_active`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 CREATE TABLE IF NOT EXISTS `settings` (
   `shortname` varchar(64) NOT NULL,
   `value` text NOT NULL,
@@ -4204,11 +4241,38 @@ CREATE TABLE IF NOT EXISTS `curriculum_lu_levels` (
   `curriculum_level_id` int(11) unsigned NOT NULL auto_increment,
   `curriculum_level` varchar(100) NOT NULL default '',
   PRIMARY KEY  (`curriculum_level_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=3 DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `curriculum_lu_levels` (`curriculum_level_id`, `curriculum_level`) VALUES
 (1, 'Undergraduate'),
 (2, 'Postgraduate');
+
+CREATE TABLE `map_assessments_meta` (
+  `map_assessments_meta_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `fk_assessment_method_id` int(11) NOT NULL,
+  `fk_assessments_meta_id` int(11) NOT NULL,
+  `updated_date` bigint(64) NOT NULL,
+  `updated_by` int(11) NOT NULL,
+  PRIMARY KEY (`map_assessments_meta_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE `map_event_resources` (
+  `map_event_resources_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `fk_medbiq_resource_id` int(11) DEFAULT NULL,
+  `fk_resource_id` int(11) NOT NULL,
+  `updated_date` bigint(64) NOT NULL,
+  `updated_by` int(11) NOT NULL,
+  PRIMARY KEY (`map_event_resources_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE `map_events_eventtypes` (
+  `map_events_eventtypes_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `fk_instructional_method_id` int(11) NOT NULL,
+  `fk_eventtype_id` int(11) NOT NULL,
+  `updated_date` bigint(64) NOT NULL,
+  `updated_by` int(11) NOT NULL,
+  PRIMARY KEY (`map_events_eventtypes_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE `medbiq_assessment_methods` (
   `assessment_method_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
@@ -4313,48 +4377,3 @@ INSERT INTO `medbiq_resources` (`resource_id`, `resource`, `resource_description
 (18,'Virtual Patient','An interactive computer simulation of real-life clinical scenarios for the purpose of medical training, education, or assessment (Smothers, Azan, & Ellaway, 2010)',1,0,0),
 (19,'Virtual/Computerized Laboratory','A practical learning environment in which technology- and computer-based simulations allow learners to engage in computer-assisted instruction while being able to ask and answer questions and also engage in discussion of content (Cooke, Irby, & O\'Brien, 2010a); also, to learn through experience by performing medical tasks, especially high-risk ones, in a safe environment (Uniformed Services University, 2011)',1,0,0),
 (20,'Wet Laboratory','Facilities outfitted with specialized equipment* and bench space or adjustable, flexible desktop space for working with solutions or biological materials (\"C.1 Wet Laboratories,\" 2006; Stanford University School of Medicine, 2007;\rWBDG Staff, 2010) *Often includes sinks, chemical fume hoods, biosafety cabinets, and piped services such as deionized or RO water, lab cold and hot water, lab waste/vents, carbon dioxide, vacuum, compressed air, eyewash, safety showers, natural gas, telephone, LAN, and power (\"C.1 Wet Laboratories,\" 2006)',1,0,0);
-	
-CREATE TABLE `map_assessments_meta` (
-  `map_assessments_meta_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-  `fk_assessment_method_id` int(11) NOT NULL,
-  `fk_assessments_meta_id` int(11) NOT NULL,
-  `updated_date` bigint(64) NOT NULL,
-  `updated_by` int(11) NOT NULL,
-  PRIMARY KEY (`map_assessments_meta_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-CREATE TABLE `map_event_resources` (
-  `map_event_resources_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-  `fk_medbiq_resource_id` int(11) DEFAULT NULL,
-  `fk_resource_id` int(11) NOT NULL,
-  `updated_date` bigint(64) NOT NULL,
-  `updated_by` int(11) NOT NULL,
-  PRIMARY KEY (`map_event_resources_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-CREATE TABLE `map_events_eventtypes` (
-  `map_events_eventtypes_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-  `fk_instructional_method_id` int(11) NOT NULL,
-  `fk_eventtype_id` int(11) NOT NULL,
-  `updated_date` bigint(64) NOT NULL,
-  `updated_by` int(11) NOT NULL,
-  PRIMARY KEY (`map_events_eventtypes_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-CREATE TABLE `event_resources` (
-  `event_resources_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-  `fk_resource_id` int(11) NOT NULL,
-  `fk_event_id` int(11) NOT NULL,
-  `updated_date` bigint(64) NOT NULL,
-  `updated_by` int(11) NOT NULL,
-  PRIMARY KEY (`event_resources_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-CREATE TABLE `events_lu_resources` (
-  `resource_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-  `resource` varchar(250) NOT NULL DEFAULT '',
-  `description` text,
-  `updated_date` bigint(64) NOT NULL,
-  `updated_by` int(11) NOT NULL,
-  PRIMARY KEY (`resource_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;

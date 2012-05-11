@@ -1289,6 +1289,9 @@ function filter_name($filter_key) {
 		case "topic" :
 			return "Hot Topics Involved";
 		break;
+		case "department" :
+			return "Departments Involved";
+		break;
 		default :
 			return false;
 		break;
@@ -10786,28 +10789,21 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 			$topic_sql = "	LEFT JOIN `event_topics`
 							ON `event_topics`.`event_id` = `events`.`event_id`";
 		}
-		
+
 		if ($where_department) {
 			$event_ids = "";
-			
+
 			// fetch the user_id of members in the selected departments
-			$department_members_query = "	SELECT `a`.`id` 
-											FROM `".AUTH_DATABASE."`.`user_data` AS `a` 
+			$department_members_query = "	SELECT `a`.`id`
+											FROM `".AUTH_DATABASE."`.`user_data` AS `a`
 											JOIN `".AUTH_DATABASE."`.`user_departments` AS `b`
 											ON `a`.`id` = `b`.`user_id`
-											JOIN `".AUTH_DATABASE."`.`departments` AS `c` 
-											ON `b`.`dep_id` = `c`.`department_id` 
-											JOIN `".AUTH_DATABASE."`.`user_access` AS `d` 
-											ON `a`.`id` = `d`.`user_id` 
-											WHERE `b`.`dep_id` IN (".implode(',',$where_department).") 
-											AND `c`.`department_active` = '1' 
-											AND `d`.`account_active` = 'true'
+											JOIN `".AUTH_DATABASE."`.`departments` AS `c`
+											ON `b`.`dep_id` = `c`.`department_id`
+											WHERE `b`.`dep_id` IN (".implode(',', $where_department).")
 											GROUP BY `a`.`id`";
-					
 			$department_members = $db->GetAll($department_members_query);
-			
 			if ($department_members) {
-				
 				foreach ($department_members as $member) {
 					$members_list[] = $member["id"];
 				}
@@ -10817,22 +10813,20 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 												FROM `events` AS `a`
 												JOIN `event_contacts` AS `b`
 												ON `a`.`event_id` = `b`.`event_id`
-												WHERE `b`.`proxy_id` IN (".implode(',',$members_list).")
+												WHERE `b`.`proxy_id` IN (".implode(',', $members_list).")
 												AND `a`.`event_start` > ".$db->qstr($display_duration["start"])."
 												AND `a`.`event_finish` < ".$db->qstr($display_duration["end"])."
-												AND `b`.`contact_order` = '0'
-												AND `b`.`contact_role` = 'teacher'
 												GROUP BY `a`.`event_id`";
-
 				$department_events = $db->GetAll($department_events_query);
-
-				foreach ($department_events as $event) {
-					$event_list[] = $event["event_id"];
+				if ($department_events) {
+					foreach ($department_events as $event) {
+						$event_list[] = $event["event_id"];
+					}
 				}
-				
-				$event_ids = (!empty($event_list)) ? implode(", ",$event_list) : '';
+
+				$event_ids = (!empty($event_list)) ? implode(", ", $event_list) : '';
 			}
-			
+
 			$query_count .= " AND `events`.`event_id` IN (".$event_ids.")";
 			$query_events .= " AND `events`.`event_id` IN (".$event_ids.")";
 		}
@@ -10940,7 +10934,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["community_page"][$community_id]["previous_query"]["total_rows"] = $output["total_rows"];
 		}
 	}
-	
+
 	$query_events = sprintf($query_events, $sort_by, $limit_parameter, $results_per_page);
 
 	$learning_events = $db->GetAll($query_events);

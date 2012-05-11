@@ -37,6 +37,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 
 	switch ($STEP) {
 		case 2 :
+			$PROCESSED["organisation_active"] = 1;
+
 			if (isset($_POST["organisation_title"]) && ($tmp_input = clean_input($_POST["organisation_title"], array("trim", "notags")))) {
 				$PROCESSED["organisation_title"] = $tmp_input;
 			} else {
@@ -135,6 +137,30 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 				} else {
 					add_error("You must select an interface template.");
 				}
+			}
+
+			if (isset($_POST["aamc_institution_id"]) && ($tmp_input = clean_input($_POST["aamc_institution_id"], array("trim", "notags")))) {
+				$PROCESSED["aamc_institution_id"] = $tmp_input;
+			} else {
+				$PROCESSED["aamc_institution_id"] = NULL;
+			}
+
+			if (isset($_POST["aamc_institution_name"]) && ($tmp_input = clean_input($_POST["aamc_institution_name"], array("trim", "notags")))) {
+				$PROCESSED["aamc_institution_name"] = $tmp_input;
+			} else {
+				$PROCESSED["aamc_institution_name"] = NULL;
+			}
+
+			if (isset($_POST["aamc_program_id"]) && ($tmp_input = clean_input($_POST["aamc_program_id"], array("trim", "notags")))) {
+				$PROCESSED["aamc_program_id"] = $tmp_input;
+			} else {
+				$PROCESSED["aamc_program_id"] = NULL;
+			}
+
+			if (isset($_POST["aamc_program_name"]) && ($tmp_input = clean_input($_POST["aamc_program_name"], array("trim", "notags")))) {
+				$PROCESSED["aamc_program_name"] = $tmp_input;
+			} else {
+				$PROCESSED["aamc_program_name"] = NULL;
 			}
 
 			if (!$ERROR) {
@@ -461,6 +487,45 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 								?>
 							</td>
 						</tr>
+
+						<tr>
+							<td colspan="2">&nbsp;</td>
+						</tr>
+
+						<tr>
+							<td><label for="aamc_institution_id" class="form-nrequired">AAMC Institution ID</label></td>
+							<td>
+								<input type="text" id="aamc_institution_id" name="aamc_institution_id" value="<?php echo html_encode($PROCESSED["aamc_institution_id"]); ?>" style="width: 350px" />
+							</td>
+						</tr>
+						<tr>
+							<td><label for="aamc_institution_name" class="form-nrequired">AAMC Institution Name</label></td>
+							<td>
+								<input type="text" id="aamc_institution_name" name="aamc_institution_name" value="<?php echo html_encode($PROCESSED["aamc_institution_name"]); ?>" style="width: 350px" />
+							</td>
+						</tr>
+
+						<tr>
+							<td colspan="2">&nbsp;</td>
+						</tr>
+
+						<tr>
+							<td><label for="aamc_program_id" class="form-nrequired">AAMC Program ID</label></td>
+							<td>
+								<input type="text" id="aamc_program_id" name="aamc_program_id" value="<?php echo html_encode($PROCESSED["aamc_program_id"]); ?>" style="width: 350px" />
+							</td>
+						</tr>
+						<tr>
+							<td><label for="aamc_program_name" class="form-nrequired">AAMC Program Name</label></td>
+							<td>
+								<input type="text" id="aamc_program_name" name="aamc_program_name" value="<?php echo html_encode($PROCESSED["aamc_program_name"]); ?>" style="width: 350px" />
+							</td>
+						</tr>
+
+						<tr>
+							<td colspan="2">&nbsp;</td>
+						</tr>
+
 					</tbody>
 				</table>
 			</form>

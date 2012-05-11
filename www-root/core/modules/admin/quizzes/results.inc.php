@@ -551,7 +551,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 										echo "<tr>\n";
 										echo "	<td>&nbsp;</td>\n";
 										echo "	<td><img src=\"".ENTRADA_URL."/images/question-".((($response["response_correct"] == 1)) ? "correct" : "incorrect").".gif\" width=\"16\" height=\"16\" /></td>";
-										echo "	<td>".clean_input($response["response_text"], (($response["response_is_html"] == 1) ? "allowedtags" : "encode"))."</td>";
+										echo "	<td>".clean_input($response["response_text"], (($response["response_is_html"] == 1) ? "trim" : "encode"))."</td>";
 										echo "	<td>\n";
 										echo "		<div id=\"response-".$qqresponse_id."\" class=\"stats-container".(($response["response_correct"] == 1) ? " correct" : "")."\"></div>\n";
 										echo "		<script type=\"text/javascript\">\n";

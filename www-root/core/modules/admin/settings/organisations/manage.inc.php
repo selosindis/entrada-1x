@@ -36,11 +36,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 } else {
 	if (($router) && ($router->initRoute())) {
 		$PREFERENCES = preferences_load($MODULE);
-		
+
 		if (isset($_GET["org"]) && ($org = clean_input($_GET["org"], array("notags", "trim")))) {
 				$ORGANISATION_ID = $org;
 		}
-		
+
 		if($ORGANISATION_ID){
 			$query = "SELECT * FROM `" . AUTH_DATABASE . "`.`organisations` WHERE `organisation_id` = " . $db->qstr($ORGANISATION_ID);
 			$ORGANISATION = $db->GetRow($query);
@@ -52,13 +52,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 					$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings/organisations/manage?org=".$ORGANISATION['organisation_id'], "title" => $ORGANISATION["organisation_title"]);
 
 					$sidebar_html  = "<ul class=\"menu\">";
-					$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/organisations/manage/curriculumtypes?org=".$ORGANISATION_ID."\">Manage Curriculum Types</a></li>\n";					
+					$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/organisations/manage/curriculumtypes?org=".$ORGANISATION_ID."\">Manage Curriculum Types</a></li>\n";
 					$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/organisations/manage/eventtypes?org=".$ORGANISATION_ID."\">Manage Event Types</a></li>\n";
 					$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/organisations/manage/hottopics?org=".$ORGANISATION_ID."\">Manage Hot Topics</a></li>\n";
 					$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/organisations/manage/metadata?org=".$ORGANISATION_ID."\">Manage Meta Data</a></li>\n";
-					$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/organisations/manage/objectives?org=".$ORGANISATION_ID."\">Manage Objectives</a></li>\n";					
-					$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/organisations/manage/medbiqinstructional?org=".$ORGANISATION_ID."\">Manage Medbiq Instructional Methods</a></li>\n";					
-					$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/organisations/manage/medbiqassessment?org=".$ORGANISATION_ID."\">Manage Medbiq Assessment Methods</a></li>\n";					
+					$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/organisations/manage/objectives?org=".$ORGANISATION_ID."\">Manage Objectives</a></li>\n";
+					$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/organisations/manage/medbiqinstructional?org=".$ORGANISATION_ID."\">Medbiq Instructional Methods</a></li>\n";
+					$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/organisations/manage/medbiqassessment?org=".$ORGANISATION_ID."\">Medbiq Assessment Methods</a></li>\n";
 					$sidebar_html .= "</ul>";
 					new_sidebar_item("Organisation Management", $sidebar_html, "config-org-nav", "open");
 
@@ -82,10 +82,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 			$ERRORSTR[] = "No organisation was selected. Please select an organisation and try again. In five seconds you will now be returned to the organisation screen, or, click <a href = \"".$url."\">here</a> to continue.";
 			echo display_error();
 			$ONLOAD[]	= "setTimeout('window.location=\\'".$url."\\'', 5000)";
-			
+
 		}
-		
-		
+
+
 
 
 		/**

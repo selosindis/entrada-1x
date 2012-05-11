@@ -24,7 +24,7 @@ if (isset($_POST["notice_id"]) && $tmp_input = clean_input($_POST["notice_id"], 
 	$notice_id = $tmp_input;
 }
 
-if (isset($_POST["username"]) && isset($_POST["password"])) {
+if (isset($_POST["username"]) && isset($_POST["password"]) && !empty($_POST["password"])) {
 	require_once("Entrada/authentication/authentication.class.php");
 	$username = clean_input($_POST["username"], "credentials");
 	$password = clean_input($_POST["password"], "trim");
@@ -41,7 +41,8 @@ if (isset($_POST["username"]) && isset($_POST["password"])) {
 			"lastname",
 			"role",
 			"group",
-			"organisation_id"
+			"organisation_id",
+			"private_hash"
 		)
 	);
 
@@ -81,7 +82,6 @@ if (isset($_POST["username"]) && isset($_POST["password"])) {
 		} else {
 
 			application_log("access", "User[".$username."] successfully logged in.");
-			
 			$isAuthenticated  = true;
 			$user_details["authenticated"] = true;
 			$user_details["id"] = $result["ID"];
@@ -90,10 +90,38 @@ if (isset($_POST["username"]) && isset($_POST["password"])) {
 			$user_details["role"] = $result["ROLE"];
 			$user_details["group"] = $result["GROUP"];
 			$user_details["organisation_id"] = $result["ORGANISATION_ID"];
+			$user_details["private_hash"] = $result["PRIVATE_HASH"];
 		}
 	}
 
 	unset($result, $username, $password);
+} else {
+	/**
+ 	 * Authenticate the user via their provided private hash.
+	 */
+	if (isset($_POST["hash"]) && $tmp_input = clean_input($_POST["hash"], "alphanumeric")) {
+		$query = "SELECT a.`id`, a.`username`, a.`firstname`, a.`lastname`, a.`email`, a.`grad_year`, b.`role`, b.`group`, a.`organisation_id`, b.`access_expires`
+					FROM `".AUTH_DATABASE."`.`user_data` AS a
+					LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+					ON b.`user_id` = a.`id`
+					WHERE b.`private_hash` = ".$db->qstr($tmp_input)."
+					AND b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+					AND b.`account_active` = 'true'
+					AND (b.`access_starts`='0' OR b.`access_starts` <= ".$db->qstr(time()).")
+					AND (b.`access_expires`='0' OR b.`access_expires` >= ".$db->qstr(time()).")
+					GROUP BY a.`id`";
+		$result = $db->GetRow($query);
+		if ($result) {
+			$isAuthenticated = true;
+			$user_details["id"] = $result["id"];
+			$user_details["firstname"] = $result["firstname"];
+			$user_details["lastname"] = $result["lastname"];
+			$user_details["role"] = $result["role"];
+			$user_details["group"] = $result["group"];
+			$user_details["organisation_id"] = $result["organisation_id"];
+		}
+	}
+
 }
 if ($isAuthenticated) {
 	
@@ -101,6 +129,9 @@ if ($isAuthenticated) {
 	$ENTRADA_ACL = new Entrada_Acl($user_details);
 	
 	switch ($method) {
+		case "fetchHash" :
+			echo $user_details["private_hash"];
+			break;
 		case "agenda":
 			$user_proxy_id = $user_details["id"];
 			$user_role = $user_details["role"];
@@ -145,8 +176,8 @@ if ($isAuthenticated) {
 								"start_date"	=> date("o-m-d G:i", $event["event_start"]),
 								"end_date" => date("o-m-d G:i", $event["event_finish"]),
 								"text" => strip_tags($event["event_title"]),
-								"details" => $event["event_description"]. "<br /><b>Event Duration: </b>". $event["event_duration"] . " minutes <br /><b>Location: </b>". ($event["event_location"] == "" ? "To be announced" : $event["event_location"]) ."",
-
+								"details" => $event["event_description"]. "<br /><b>Event Duration: </b>". $event["event_duration"] . " minutes <br /><b>Location: </b>". ($event["event_location"] == "" ? "To be announced" : $event["event_location"]) ."<br /><a href='http://localhost/entrada/www-root/events?id=".$event["event_id"]."' data-role='button' class='back' rel='external' target='_blank'>Review Learning Event</a>",
+								
 					);
 
 				}

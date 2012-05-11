@@ -48,7 +48,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 			padding:		0px 15px 15px 0px;
 			margin-left:	5px;
 		}
-		
+
 		ol.system-reports li a {
 			font-size:		13px;
 			font-weight:	bold;
@@ -111,7 +111,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 			A detailed report showing the usage statistics about all included podcasts.
 		</li>
 	</ol>
-	
+
 	<h2 style="color: #669900">Assessment Reports</h2>
 	<ol class="system-reports">
 		<li>
@@ -121,6 +121,14 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 		<li>
 			<a href="<?php echo ENTRADA_URL; ?>/admin/reports?section=assessment-objectives">Assessment Objective Summary</a><br />
 			A report showing the curricular objectives and MCC presentations by course.
+		</li>
+	</ol>
+
+	<h2 style="color: #669900">External Reporting</h2>
+	<ol class="system-reports">
+		<li>
+			<a href="<?php echo ENTRADA_URL; ?>/admin/reports/aamc">AAMC Curriculum Inventory Reporting</a><br />
+			Management of the AAMC Curriculum Inventory report that can be sent yearly to the AAMC for use in their Curriculum Inventory Portal.
 		</li>
 	</ol>
 	<?php

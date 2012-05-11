@@ -69,6 +69,8 @@ define("DATABASE_PASS", $config->database->password);							// The password for 
 
 define("ADODB_DIR", ENTRADA_ABSOLUTE."/core/library/Entrada/adodb");
 
+define("ACADEMIC_YEAR_START_DATE", "September 1");								// The start month and day of your academic year.
+
 define("CLERKSHIP_DATABASE", $config->database->clerkship_database);			// The name of the database that stores the clerkship schedule information.
 define("CLERKSHIP_SITE_TYPE", 1);												// The value this application will use for site types in the clerkship logbook module. This will be removed/replaced by functional logic to decide which site type to use in the future - for now, leave this as 1.
 define("CLERKSHIP_EMAIL_NOTIFICATIONS", true);									// Whether email notifications will be sent out to the Program Coordinator of the Rotation's related course
@@ -273,7 +275,7 @@ define("DEBUG_MODE", true);														// Some places have extra debug code to
 define("SHOW_LOAD_STATS", false);												// Do you want to see the time it takes to load each page?
 
 define("APPLICATION_NAME", "Entrada");											// The name of this application in your school (i.e. MedCentral, Osler, etc.)
-define("APPLICATION_VERSION", "1.3.0");											// The current filesystem version of Entrada.
+define("APPLICATION_VERSION", "1.4.0DEV");										// The current filesystem version of Entrada.
 define("APPLICATION_IDENTIFIER", "app-".AUTH_APP_ID);							// PHP does not allow session key's to be integers (sometimes), so we have to make it a string.
 
 $DEFAULT_META["title"] = "Entrada: An eLearning Ecosystem";

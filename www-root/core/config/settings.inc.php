@@ -81,6 +81,7 @@ define("CLERKSHIP_SIX_WEEKS_PAST", 4);
 define("CLERKSHIP_ROTATION_ENDED", 3);
 define("CLERKSHIP_ONE_WEEK_PRIOR", 2);
 define("CLERKSHIP_ROTATION_PERIOD", 1);
+define("CLERKSHIP_TOP_CATEGORY_ID", 49);
 $CLERKSHIP_REQUIRED_WEEKS = 14;
 $CLERKSHIP_CATEGORY_TYPE_ID = 13;
 $CLERKSHIP_EVALUATION_FORM = "http://url_of_your_schools_precptor_evaluation_of_clerk_form.pdf";

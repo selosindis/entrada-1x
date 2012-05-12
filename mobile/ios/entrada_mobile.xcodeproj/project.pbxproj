@@ -34,6 +34,10 @@
 		165158FA14D2FF6D00E80313 /* PhoneGap.plist in Resources */ = {isa = PBXBuildFile; fileRef = 165158F914D2FF6D00E80313 /* PhoneGap.plist */; };
 		165158FE14D2FF6D00E80313 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 165158FD14D2FF6D00E80313 /* AppDelegate.m */; };
 		1651590714D2FFFE00E80313 /* www in Resources */ = {isa = PBXBuildFile; fileRef = 1651590614D2FFFE00E80313 /* www */; };
+		16F0BAE8155C5E5B00C9C906 /* Default-Landscape~ipad.png in Resources */ = {isa = PBXBuildFile; fileRef = 16F0BAE7155C5E5B00C9C906 /* Default-Landscape~ipad.png */; };
+		16F0BAEB155C671100C9C906 /* Default.png in Resources */ = {isa = PBXBuildFile; fileRef = 16F0BAEA155C671100C9C906 /* Default.png */; };
+		16F0BAED155C681B00C9C906 /* Default@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 16F0BAEC155C681B00C9C906 /* Default@2x.png */; };
+		16F0BAEF155C729100C9C906 /* Default-Portrait~ipad.png in Resources */ = {isa = PBXBuildFile; fileRef = 16F0BAEE155C729100C9C906 /* Default-Portrait~ipad.png */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -69,6 +73,10 @@
 		165158FD14D2FF6D00E80313 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = AppDelegate.m; path = Classes/AppDelegate.m; sourceTree = "<group>"; };
 		1651590014D2FF6D00E80313 /* README */ = {isa = PBXFileReference; lastKnownFileType = text; name = README; path = Plugins/README; sourceTree = "<group>"; };
 		1651590614D2FFFE00E80313 /* www */ = {isa = PBXFileReference; lastKnownFileType = folder; path = www; sourceTree = "<group>"; };
+		16F0BAE7155C5E5B00C9C906 /* Default-Landscape~ipad.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-Landscape~ipad.png"; sourceTree = "<group>"; };
+		16F0BAEA155C671100C9C906 /* Default.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Default.png; sourceTree = "<group>"; };
+		16F0BAEC155C681B00C9C906 /* Default@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default@2x.png"; sourceTree = "<group>"; };
+		16F0BAEE155C729100C9C906 /* Default-Portrait~ipad.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-Portrait~ipad.png"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -106,6 +114,10 @@
 		165158AB14D2FF6C00E80313 = {
 			isa = PBXGroup;
 			children = (
+				16F0BAEE155C729100C9C906 /* Default-Portrait~ipad.png */,
+				16F0BAEC155C681B00C9C906 /* Default@2x.png */,
+				16F0BAEA155C671100C9C906 /* Default.png */,
+				16F0BAE7155C5E5B00C9C906 /* Default-Landscape~ipad.png */,
 				1651590614D2FFFE00E80313 /* www */,
 				165158D714D2FF6C00E80313 /* entrada_mobile */,
 				165158BC14D2FF6C00E80313 /* Frameworks */,
@@ -294,6 +306,10 @@
 				165158F814D2FF6D00E80313 /* Capture.bundle in Resources */,
 				165158FA14D2FF6D00E80313 /* PhoneGap.plist in Resources */,
 				1651590714D2FFFE00E80313 /* www in Resources */,
+				16F0BAE8155C5E5B00C9C906 /* Default-Landscape~ipad.png in Resources */,
+				16F0BAEB155C671100C9C906 /* Default.png in Resources */,
+				16F0BAED155C681B00C9C906 /* Default@2x.png in Resources */,
+				16F0BAEF155C729100C9C906 /* Default-Portrait~ipad.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

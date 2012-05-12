@@ -1184,12 +1184,12 @@ CREATE TABLE IF NOT EXISTS `communities_template_permissions` (
 
 INSERT INTO `communities_template_permissions` (`ctpermission_id`, `permission_type`, `permission_value`, `template`) VALUES
 (1,'','','default'),
-(2,'group','faculty,staff','course'),
+(2,'group','faculty,staff,medtech','course'),
 (3,'category_id','5','course'),
-(4,'group','faculty,staff','committee'),
+(4,'group','faculty,staff,medtech','committee'),
 (5,'category_id','12','committee'),
-(6,'group','faculty,staff','learningmodule'),
-(7,'group','faculty,staff','virtualpatient'),
+(6,'group','faculty,staff,medtech','learningmodule'),
+(7,'group','faculty,staff,medtech','virtualpatient'),
 (9,'category_id','','virtualpatient'),
 (8,'category_id','','learningmodule');
 

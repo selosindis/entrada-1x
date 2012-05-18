@@ -24,7 +24,7 @@ if (isset($_POST["notice_id"]) && $tmp_input = clean_input($_POST["notice_id"], 
 	$notice_id = $tmp_input;
 }
 
-if (isset($_POST["username"]) && isset($_POST["password"]) && !empty($_POST["password"])) {
+if (isset($_POST["username"]) && isset($_POST["password"]) && !empty($_POST["username"]) && !empty($_POST["password"])) {
 	require_once("Entrada/authentication/authentication.class.php");
 	$username = clean_input($_POST["username"], "credentials");
 	$password = clean_input($_POST["password"], "trim");
@@ -101,15 +101,15 @@ if (isset($_POST["username"]) && isset($_POST["password"]) && !empty($_POST["pas
 	 */
 	if (isset($_POST["hash"]) && $tmp_input = clean_input($_POST["hash"], "alphanumeric")) {
 		$query = "SELECT a.`id`, a.`username`, a.`firstname`, a.`lastname`, a.`email`, a.`grad_year`, b.`role`, b.`group`, a.`organisation_id`, b.`access_expires`
-					FROM `".AUTH_DATABASE."`.`user_data` AS a
-					LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
-					ON b.`user_id` = a.`id`
-					WHERE b.`private_hash` = ".$db->qstr($tmp_input)."
-					AND b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
-					AND b.`account_active` = 'true'
-					AND (b.`access_starts`='0' OR b.`access_starts` <= ".$db->qstr(time()).")
-					AND (b.`access_expires`='0' OR b.`access_expires` >= ".$db->qstr(time()).")
-					GROUP BY a.`id`";
+				FROM `".AUTH_DATABASE."`.`user_data` AS a
+				LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+				ON b.`user_id` = a.`id`
+				WHERE b.`private_hash` = ".$db->qstr($tmp_input)."
+				AND b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+				AND b.`account_active` = 'true'
+				AND (b.`access_starts`='0' OR b.`access_starts` <= ".$db->qstr(time()).")
+				AND (b.`access_expires`='0' OR b.`access_expires` >= ".$db->qstr(time()).")
+				GROUP BY a.`id`";
 		$result = $db->GetRow($query);
 		if ($result) {
 			$isAuthenticated = true;
@@ -255,6 +255,28 @@ if ($isAuthenticated) {
 			if ($results) {
 				$rows = 0;
 				switch ($sub_method) {
+					//case "fetchnotices" :
+						/*$output = "";
+						foreach ($results as $result) {
+							$date = date(DEFAULT_DATE_FORMAT, $result["updated_date"]);
+							if ((!$result["statistic_id"]) || ($result["last_read"] <= $result["updated_date"])) {
+								//$output .= "<li data-theme='d' data-role='button' id=".$result['notice_id']." class='ui-btn notice_button'><a href='#notice_page' data-transition='slide'>".$date."</a><br />";
+								
+								$output .= "<div data-role=\"collapsible\" data-theme=\"b\" data-content-theme=\"b\" id=\"notice-container".$result["notice_id"]."\" class=\"new-notice-container\">";
+								$output .=	   "<h3 id='date".$result["notice_id"]."'>".$date."</h3>";
+								$output .=     "<a href='#' id='".$result["notice_id"]."' style=\"width:190px;\" data-role='button' data-icon='delete' class='mark_read'>Mark as Read</a>";
+								$output .=     "<p id='summary".$result["notice_id"]."'>".$result["notice_summary"]."</p>";
+								$output .= "</div>";
+								
+								//$output .=	"</li>";
+							}
+							
+							//$result["last_read"] = date(DEFAULT_DATE_FORMAT, $result["last_read"]);
+							$notices_to_display[] = $result;
+						}
+						echo json_encode($notices_to_display);
+						//echo $output;
+					break;*/
 					case "fetchnotices" :
 						foreach ($results as $result) {
 							$result["default_date"][] = date(DEFAULT_DATE_FORMAT, $result["updated_date"]);
@@ -273,7 +295,6 @@ if ($isAuthenticated) {
 					break;
 					case "markread" :
 						add_statistic("notices", "read", "notice_id", $notice_id, $user_proxy_id);
-						echo "here";
 					break;
 
 				}

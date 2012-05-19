@@ -176,7 +176,7 @@ if ($isAuthenticated) {
 								"start_date"	=> date("o-m-d G:i", $event["event_start"]),
 								"end_date" => date("o-m-d G:i", $event["event_finish"]),
 								"text" => strip_tags($event["event_title"]),
-								"details" => $event["event_description"]. "<br /><b>Event Duration: </b>". $event["event_duration"] . " minutes <br /><b>Location: </b>". ($event["event_location"] == "" ? "To be announced" : $event["event_location"]) ."<br /><a href='http://localhost/entrada/www-root/events?id=".$event["event_id"]."' data-role='button' class='back' rel='external' target='_blank'>Review Learning Event</a>",
+								"details" => $event["event_description"]. "<br /><b>Event Duration: </b>". $event["event_duration"] . " minutes <br /><b>Location: </b>". ($event["event_location"] == "" ? "To be announced" : $event["event_location"]) ."<br /><a href='https://meds.queensu.ca/central/events?id=".$event["event_id"]."' data-role='button' class='back' rel='external' target='_blank'>Review Learning Event</a>",
 								
 					);
 

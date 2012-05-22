@@ -38,10 +38,12 @@
 		16F0BAEB155C671100C9C906 /* Default.png in Resources */ = {isa = PBXBuildFile; fileRef = 16F0BAEA155C671100C9C906 /* Default.png */; };
 		16F0BAED155C681B00C9C906 /* Default@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 16F0BAEC155C681B00C9C906 /* Default@2x.png */; };
 		16F0BAEF155C729100C9C906 /* Default-Portrait~ipad.png in Resources */ = {isa = PBXBuildFile; fileRef = 16F0BAEE155C729100C9C906 /* Default-Portrait~ipad.png */; };
+		16F0BAF1156336E600C9C906 /* icon-72.png in Resources */ = {isa = PBXBuildFile; fileRef = 16F0BAF0156336E600C9C906 /* icon-72.png */; };
+		16F0BAF31563378400C9C906 /* icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 16F0BAF21563378400C9C906 /* icon.png */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		165158B914D2FF6C00E80313 /* entrada_mobile.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = entrada_mobile.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		165158B914D2FF6C00E80313 /* Entrada.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Entrada.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		165158BD14D2FF6C00E80313 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		165158BF14D2FF6C00E80313 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		165158C114D2FF6C00E80313 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
@@ -77,6 +79,8 @@
 		16F0BAEA155C671100C9C906 /* Default.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Default.png; sourceTree = "<group>"; };
 		16F0BAEC155C681B00C9C906 /* Default@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default@2x.png"; sourceTree = "<group>"; };
 		16F0BAEE155C729100C9C906 /* Default-Portrait~ipad.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-Portrait~ipad.png"; sourceTree = "<group>"; };
+		16F0BAF0156336E600C9C906 /* icon-72.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "icon-72.png"; sourceTree = "<group>"; };
+		16F0BAF21563378400C9C906 /* icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = icon.png; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -114,6 +118,8 @@
 		165158AB14D2FF6C00E80313 = {
 			isa = PBXGroup;
 			children = (
+				16F0BAF21563378400C9C906 /* icon.png */,
+				16F0BAF0156336E600C9C906 /* icon-72.png */,
 				16F0BAEE155C729100C9C906 /* Default-Portrait~ipad.png */,
 				16F0BAEC155C681B00C9C906 /* Default@2x.png */,
 				16F0BAEA155C671100C9C906 /* Default.png */,
@@ -128,7 +134,7 @@
 		165158BA14D2FF6C00E80313 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				165158B914D2FF6C00E80313 /* entrada_mobile.app */,
+				165158B914D2FF6C00E80313 /* Entrada.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -244,9 +250,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		165158B814D2FF6C00E80313 /* entrada_mobile */ = {
+		165158B814D2FF6C00E80313 /* Entrada */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 1651590314D2FF6D00E80313 /* Build configuration list for PBXNativeTarget "entrada_mobile" */;
+			buildConfigurationList = 1651590314D2FF6D00E80313 /* Build configuration list for PBXNativeTarget "Entrada" */;
 			buildPhases = (
 				165158B214D2FF6C00E80313 /* Sources */,
 				165158B314D2FF6C00E80313 /* Frameworks */,
@@ -259,9 +265,9 @@
 			);
 			dependencies = (
 			);
-			name = entrada_mobile;
+			name = Entrada;
 			productName = entrada_mobile;
-			productReference = 165158B914D2FF6C00E80313 /* entrada_mobile.app */;
+			productReference = 165158B914D2FF6C00E80313 /* Entrada.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -285,7 +291,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				165158B814D2FF6C00E80313 /* entrada_mobile */,
+				165158B814D2FF6C00E80313 /* Entrada */,
 			);
 		};
 /* End PBXProject section */
@@ -310,6 +316,8 @@
 				16F0BAEB155C671100C9C906 /* Default.png in Resources */,
 				16F0BAED155C681B00C9C906 /* Default@2x.png in Resources */,
 				16F0BAEF155C729100C9C906 /* Default-Portrait~ipad.png in Resources */,
+				16F0BAF1156336E600C9C906 /* icon-72.png in Resources */,
+				16F0BAF31563378400C9C906 /* icon.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -489,7 +497,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		1651590314D2FF6D00E80313 /* Build configuration list for PBXNativeTarget "entrada_mobile" */ = {
+		1651590314D2FF6D00E80313 /* Build configuration list for PBXNativeTarget "Entrada" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				1651590414D2FF6D00E80313 /* Debug */,

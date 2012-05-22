@@ -14,8 +14,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "165158B814D2FF6C00E80313"
-               BuildableName = "entrada_mobile.app"
-               BlueprintName = "entrada_mobile"
+               BuildableName = "Entrada.app"
+               BlueprintName = "Entrada"
                ReferencedContainer = "container:entrada_mobile.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -32,8 +32,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "165158B814D2FF6C00E80313"
-            BuildableName = "entrada_mobile.app"
-            BlueprintName = "entrada_mobile"
+            BuildableName = "Entrada.app"
+            BlueprintName = "Entrada"
             ReferencedContainer = "container:entrada_mobile.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -50,8 +50,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "165158B814D2FF6C00E80313"
-            BuildableName = "entrada_mobile.app"
-            BlueprintName = "entrada_mobile"
+            BuildableName = "Entrada.app"
+            BlueprintName = "Entrada"
             ReferencedContainer = "container:entrada_mobile.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -68,8 +68,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "165158B814D2FF6C00E80313"
-            BuildableName = "entrada_mobile.app"
-            BlueprintName = "entrada_mobile"
+            BuildableName = "Entrada.app"
+            BlueprintName = "Entrada"
             ReferencedContainer = "container:entrada_mobile.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

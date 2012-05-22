@@ -1,7 +1,7 @@
 package com.phonegap.entrada3;
 
 import android.os.Bundle;
-import com.phonegap.*;
+import org.apache.cordova.*;
 
 public class Entrada3Activity extends DroidGap {
     /** Called when the activity is first created. */

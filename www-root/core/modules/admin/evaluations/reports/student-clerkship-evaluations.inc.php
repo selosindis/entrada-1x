@@ -728,6 +728,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 											echo "<select id=\"cat-".$result["item_id"]."\" name=\"category_ids[".$result["item_id"]."]\" style=\"width: 300px\">\n";
 											echo "<option value=\"".$result["category_id"]."\">-- All Displayed Categories --</option>\n";
 											echo $cat_output;
+											echo "<option value=\"0\">No Categories For This Stream</option>\n";
 											echo "</select>\n";
 										}
 									} else {

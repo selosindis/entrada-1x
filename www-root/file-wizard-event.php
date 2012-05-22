@@ -424,6 +424,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 											</div>
 										</div>
 										<?php
+										history_log($EVENT_ID, "updated $PROCESSED[file_title] file.");
 									break;
 									case 1 :
 									default :
@@ -829,6 +830,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 									</div>
 								</div>
 								<?php
+								history_log($EVENT_ID, "added $PROCESSED[file_title] file.");
 							break;
 							case 1 :
 							default :

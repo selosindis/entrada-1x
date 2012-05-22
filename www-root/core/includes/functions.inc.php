@@ -14858,3 +14858,58 @@ function categories_inarray($parent_id, $indent = 0) {
 
 	return ((@count($sub_category_ids) > 0) ? true : false);
 }
+
+/**
+ * This function handles adding update records of event_history changes.
+ *
+ * @param int $event
+ * @param string $message
+ * @param int $proxy_id
+ * @param bigint $updated_date
+ * @return null
+ */
+function history_log($event, $message, $updater=0, $time=0) {
+	global $db;
+	if (!$updater) { // Ignore noting updates if made by the sole author. 
+	 $result = $db->GetOne("SELECT count(*) FROM `event_history` WHERE `event_id` = ".$db->qstr($event));
+	 if (!$result) {
+	  $result = $db->GetOne("SELECT `updated_by` FROM `events` WHERE `event_id` = ".$db->qstr($event));
+	  if ($result==$_SESSION["details"]["id"]) {
+	   return ;
+	  }
+	 }
+	}
+	if (!$db->AutoExecute("event_history", array("event_id" => $event, "proxy_id" => ($updater ? $updater : $_SESSION["details"]["id"]), "history_message" => $message, "history_timestamp" => ($time ? $time : time())), "INSERT")) {
+		$ERROR++;
+		$ERRORSTR[] = "There was an error while trying to save the selected <strong>Event content update</strong> for this event.<br /><br />The system administrator was informed of this error; please try again later.";
+
+		application_log("error", "Unable to insert a new event_history record while updating this event. Database said: ".$db->ErrorMsg());
+	}
+}
+
+/**
+ * This function returns if event message has changed.
+ *
+ * @param int $event_id
+ * @param strint event field
+ * @return boolean
+ */
+function event_text_change($event, $field) {
+	global $db;
+	$ret = false;
+	if (isset($_POST["$field"])) {
+	 $message_length = strlen($_POST["$field"]);
+	 $result = $db->GetOne("SELECT `$field` FROM `events` WHERE `event_id` = ".$db->qstr($event));
+	 if ($result) {
+	  $result_length = strlen($result);
+	  if ($message_length!=$result_length) {
+	   $ret = true;
+	  } elseif ($result_length) {
+	   $ret = strcmp($result,$_POST["$field"]);
+	  }
+	 } else {
+	  $ret = $message_length;
+	 }
+	}
+	return $ret;
+}

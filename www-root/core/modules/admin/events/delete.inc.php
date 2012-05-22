@@ -253,6 +253,20 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								}
 
 								/**
+								 * Remove all records from event_history table.
+								 */
+								$query		= "SELECT * FROM `event_history` WHERE `event_id` = ".$db->qstr($event_id);
+								$results	= $db->GetAll($query);
+								if($results) {
+									foreach($results as $result) {
+										$removed[$event_id]["history"][] = $result["history_message"];
+									}
+
+									$query = "DELETE FROM `event_history` WHERE `event_id` = ".$db->qstr($event_id);
+									$db->Execute($query);
+								}
+
+								/**
 								 * Remove event_id record from events table.
 								 */
 								$query		= "SELECT * FROM `events` WHERE `event_id` = ".$db->qstr($event_id);

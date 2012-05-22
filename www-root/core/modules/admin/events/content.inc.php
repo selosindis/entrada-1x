@@ -72,6 +72,28 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 				$LASTUPDATED = $event_info["updated_date"];
 
+				/**
+				 * Fetch event content history
+				 */
+				$query = "	SELECT a.`history_message` AS message, a.`history_timestamp` AS timestamp, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`
+							FROM `event_history` AS a
+							LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
+							ON a.`proxy_id` = b.`id`
+							WHERE a.`event_id`  = ".$db->qstr($EVENT_ID)."
+							ORDER BY `history_timestamp` DESC, `history_message` ASC";
+				$history = $db->GetAll($query);
+				
+				if (!$history && ($event_info["updated_by"]<>$_SESSION["details"]["id"])/*add a time limit here to start recording the sole author's updates*/) {
+					$query = "	SELECT CONCAT_WS(' ', `firstname`, `lastname`) AS `fullname`,
+								$LASTUPDATED AS timestamp, 'created this learning event.' AS message
+								FROM `".AUTH_DATABASE."`.`user_data`
+								WHERE `id`  = ".$db->qstr($event_info["updated_by"]);
+					$history = $db->GetAll($query);
+					if(count($_POST)) {		// An update so add the create record for this event
+						history_log($EVENT_ID, $history[0]["message"], $event_info["updated_by"], $LASTUPDATED);
+					}
+				}
+
 				if (($event_info["release_date"]) && ($event_info["release_date"] > time())) {
 					$NOTICE++;
 					$NOTICESTR[] = "This event is not yet visible to students due to Time Release Options set by an administrator. The release date is set to ".date("r", $event_info["release_date"]);
@@ -154,6 +176,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					} else {
 						$clinical_presentations = array();
 					}
+					history_log($EVENT_ID, "updated clinical presentations.");
 				} else {
 					$query = "	SELECT a.`objective_id`
 								FROM `event_objectives` AS a
@@ -190,6 +213,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							$curriculum_objectives[$objective_id] = $objective_text;
 						}
 					}
+					history_log($EVENT_ID, "updated clinical objectives.");
 				}
 
 				$query = "SELECT `objective_id` FROM `event_objectives` WHERE `event_id` = ".$db->qstr($EVENT_ID)." AND `objective_type` = 'course'";
@@ -285,9 +309,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					switch ($_POST["type"]) {
 						case "content" :
 							if(!$ERROR) {
+								$history_texts = " [";
 								/**
 								 * Event Description
 								 */
+								if (event_text_change($EVENT_ID,"event_description")) {
+									$history_texts .= "event description";
+								}
 								if ((isset($_POST["event_description"])) && (clean_input($_POST["event_description"], array("notags", "nows")))) {
 									$event_description = clean_input($_POST["event_description"], array("allowedtags"));
 								} else {
@@ -297,6 +325,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								/**
 								 * Free-Text Objectives
 								 */
+								if (event_text_change($EVENT_ID,"event_objectives")) {
+									if (strlen($history_texts)>2) {
+										$history_texts .= ":";
+									}
+									$history_texts .= "event objectives";
+								}
 								if ((isset($_POST["event_objectives"])) && (clean_input($_POST["event_objectives"], array("notags", "nows")))) {
 									$event_objectives = clean_input($_POST["event_objectives"], array("allowedtags"));
 								} else {
@@ -306,6 +340,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								/**
 								 * Teacher's Message
 								 */
+								if (event_text_change($EVENT_ID,"event_message")) {
+									if (strlen($history_texts)>2) {
+										$history_texts .= ":";
+									}
+									$history_texts .= "teacher's message";
+								}
 								if ((isset($_POST["event_message"])) && (clean_input($_POST["event_message"], array("notags", "nows")))) {
 									$event_message = clean_input($_POST["event_message"], array("allowedtags"));
 								} else {
@@ -328,6 +368,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 									$SUCCESSSTR[] = "You have successfully updated the event details for this learning event.";
 
 									application_log("success", "Updated learning event content.");
+
 								} else {
 									application_log("error", "Failed to update learning event content. Database said: ".$db->ErrorMsg());
 								}
@@ -447,6 +488,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								if (!$event_info) {
 									application_log("error", "After updating the text content of event_id [".$EVENT_ID."] the select query failed.");
 								}
+								history_log($EVENT_ID, "updated event content".(strlen($history_texts)>2?" $history_texts].":"."));
 							}
 						break;
 						case "files" :
@@ -495,6 +537,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 											}
 										}
 									}
+									history_log($EVENT_ID, "deleted ". count($FILE_IDS) ." resource files".($FILE_IDS>1?"s":""));
 								}
 							}
 						break;
@@ -537,6 +580,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 											}
 										}
 									}
+									history_log($EVENT_ID, "deleted ". count($LINK_IDS) ." resource files".($LINK_IDS>1?"s":""));
 								}
 							}
 						break;
@@ -579,6 +623,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 											}
 										}
 									}
+									history_log($EVENT_ID, "deleted ". count($QUIZ_IDS) ." ".($QUIZ_IDS>1?"zes":""));
 								}
 							}
 						break;
@@ -1437,6 +1482,36 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				});
 				</script>
 				<?php
+				/**
+				 * View event content history if applicable
+				 */
+				if ($history) {
+					if (count($_POST)) {
+						$query = "	SELECT a.`history_message` AS message, a.`history_timestamp` AS timestamp, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`
+									FROM `event_history` AS a
+									LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
+									ON a.`proxy_id` = b.`id`
+									WHERE a.`event_id`  = ".$db->qstr($EVENT_ID)."
+									ORDER BY `history_timestamp` DESC, `history_message` ASC";
+						$history = $db->GetAll($query);
+					}
+					echo "<table class=\"tableList\"><tr><td /></tr></table>";
+					echo "<div style=\"float: left; margin-top: 5px\">";
+					echo "	<h3>Update history</h3>";
+					echo "</div><br>\n";
+					echo "<div class=\"display-generic\" style=\"white-space: normal\">\n";
+					$previous_day = 0;
+					foreach($history as $result) {
+						$current_day = mktime(0, 0, 0, date("m",$result["timestamp"])  , date("d",$result["timestamp"]), date("Y",$result["timestamp"]));
+						if ($current_day!=$previous_day) {
+							$previous_day = $current_day;
+							echo date("F j, Y",$current_day)."<br>\n";
+						}
+						echo date("* g:ia ",$result["timestamp"])."$result[fullname] $result[message]<br>\n";
+					}
+					echo "</div>\n";
+				}
+
 				/**
 				 * Sidebar item that will provide the links to the different sections within this page.
 				 */

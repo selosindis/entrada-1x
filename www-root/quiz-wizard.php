@@ -506,6 +506,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 													</div>
 												</div>
 												<?php
+												history_log($RECORD_ID, "updated $PROCESSED[quiz_title] event quiz.");
 											} else {
 												$ERROR++;
 												$ERRORSTR[] = "There was a problem updating <strong>".html_encode($PROCESSED["quiz_title"])."</strong> under this event. The system administrator was informed of this error; please try again later.";
@@ -1023,6 +1024,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 											</div>
 										</div>
 										<?php
+										history_log($RECORD_ID, "attached $PROCESSED[quiz_title] event quiz.");
 									} else {
 										$ERROR++;
 										$ERRORSTR[] = "There was a problem attaching <strong>".html_encode($PROCESSED["quiz_title"])."</strong> to this event. The system administrator was informed of this error; please try again later.";
@@ -1705,6 +1707,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 													</div>
 												</div>
 												<?php
+												history_log($RECORD_ID, "updated $PROCESSED[quiz_title] community quiz.");
 											} else {
 												$ERROR++;
 												$ERRORSTR[] = "There was a problem updating <strong>".html_encode($PROCESSED["quiz_title"])."</strong> under this event. The system administrator was informed of this error; please try again later.";
@@ -2222,6 +2225,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 											</div>
 										</div>
 										<?php
+										history_log($RECORD_ID, "attached $PROCESSED[quiz_title] community quiz.");
 									} else {
 										$ERROR++;
 										$ERRORSTR[] = "There was a problem attaching <strong>".html_encode($PROCESSED["quiz_title"])."</strong> to this event. The system administrator was informed of this error; please try again later.";

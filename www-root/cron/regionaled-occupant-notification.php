@@ -54,7 +54,7 @@ $query = "	SELECT c.`username`,
 			LEFT JOIN `".CLERKSHIP_DATABASE."`.`regions` as d 
 			ON a.`region_id` = d.`region_id` 
 			WHERE b.`occupant_title` = '' 
-			AND DATEDIFF(FROM_UNIXTIME(b.`inhabiting_start`), FROM_UNIXTIME('1331870400')) = 31";
+			AND DATEDIFF(FROM_UNIXTIME(b.`inhabiting_start`), FROM_UNIXTIME('".time()."')) = 30";
 $occupants = $db->GetAll($query);
 
 if ($occupants) {

@@ -67,7 +67,9 @@ class User {
 			$office_hours,
 			$clinical,
 			$active_organisation,
-			$all_organisations;
+			$all_organisations,
+			$organisation_group_role,
+			$active_group_role;
 
 	
 	private $group, $role;
@@ -317,7 +319,29 @@ class User {
 	function setAllOrganisations($value) {
 		$this->all_organisations = $value;
 	}
-	
+
+
+	function setOrganisationGroupRole($value) {
+		$this->organisation_group_role = $value;
+	}
+
+
+	function getOrganisationGroupRole() {
+		return $this->organisation_group_role;
+	}
+
+	function setActiveGroupRole($value) {
+		$this->active_group_role = $value;		
+	}
+
+	function getActiveGroupRole() {
+		if ($this->active_group_role) {
+			return $this->active_group_role;
+		} else {
+			return $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["ua_id"];
+		}
+	}
+
 	/**
 	 * 
 	 * @param int proxy_id
@@ -351,17 +375,37 @@ class User {
 		$query = "SELECT b.`organisation_id`, b.`organisation_title`
 					  FROM `" . AUTH_DATABASE . "`.`user_organisations` a
 					  JOIN `" . AUTH_DATABASE . "`.`organisations` b
-						  on a.`organisation_id` = b.`organisation_id`
+					  ON a.`organisation_id` = b.`organisation_id`
 					  WHERE a.`proxy_id` = ?";
 		$results = $db->getAll($query, array($proxy_id));
 
 		//every user should have at least one org.
 		if ($results) {
+			$organisation_list = array();
 			foreach ($results as $result) {
 				$organisation_list[$result["organisation_id"]] = html_encode($result["organisation_title"]);
 			}
 			$user->setAllOrganisations($organisation_list);
 		}
+
+		//get all of the users groups and roles for each organisation
+		$query = "SELECT b.`organisation_id`, b.`organisation_title`, a.`group`, a.`role`, a.`id`
+					  FROM `" . AUTH_DATABASE . "`.`user_access` a
+					  JOIN `" . AUTH_DATABASE . "`.`organisations` b
+					  ON a.`organisation_id` = b.`organisation_id`
+					  WHERE a.`user_id` = ?
+					  ORDER BY a.`id` ASC";
+
+		$results = $db->getAll($query, array($proxy_id));
+
+		if ($results) {
+			$org_group_role = array();
+			foreach ($results as $result) {
+				$org_group_role[$result["organisation_id"]][html_encode($result["group"])] = array(html_encode($result["role"]), $result["id"]);
+			}
+			$user->setOrganisationGroupRole($org_group_role);			
+		}
+
 		return $user;
 	}
 	

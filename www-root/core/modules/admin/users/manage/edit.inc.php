@@ -99,44 +99,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 							$ERRORSTR[] = "The password field must be between 6 and 24 characters.";
 						}
 					}
-
-					/**
-					 * Required field "group" / Account Type (Group).
-					 * Required field "role" / Account Type (Role).
-					 */
-					if ((isset($_POST["group"])) && (isset($SYSTEM_GROUPS[$group = clean_input($_POST["group"], "credentials")]))) {
-						$PROCESSED_ACCESS["group"] = $group;
-
-						if ((isset($_POST["role"])) && (@in_array($role = clean_input($_POST["role"], "credentials"), $SYSTEM_GROUPS[$PROCESSED_ACCESS["group"]]))) {
-							$PROCESSED_ACCESS["role"] = $role;
-						} else {
-							$ERROR++;
-							$ERRORSTR[] = "You must provide a valid	Account Type &gt; Role which this persons account will live under.";
-						}
-						if ($PROCESSED_ACCESS["group"] == "student") {
-							if (isset($_POST["entry_year"]) && isset($_POST["grad_year"])) {
-								$entry_year = clean_input($_POST["entry_year"],"int");
-								$grad_year = clean_input($_POST["grad_year"],"int");
-								$sanity_start = 1995;
-								$sanity_end = fetch_first_year();
-								if ($grad_year <= $sanity_end && $grad_year >= $sanity_start) {
-									$PROCESSED["grad_year"] = $grad_year;
-								} else {
-									$ERROR++;
-									$ERRORSTR[] = "You must provide a valid graduation year";
-								}			
-								if ($entry_year <= $sanity_end && $entry_year >= $sanity_start) {
-									$PROCESSED["entry_year"] = $entry_year;
-								} else {
-									$ERROR++;
-									$ERRORSTR[] = "You must provide a valid program entry year";
-								}
-							}
-						} 
-					} else {
-						$ERROR++;
-						$ERRORSTR[] = "You must provide a valid	Account Type &gt; Group which this persons account will live under.";
-					}
 					
 					/*
 					 * Non-Required field "clinical" / Clinical.
@@ -368,45 +330,105 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 						$ERRORSTR[] = "At least one <strong>Organisation</strong> is required.";
 					}
 
+					/**
+					 * Required field "group" / Account Type (Group).
+					 * Required field "role" / Account Type (Role).
+					 */
+					$query = "SELECT `organisation_id`, `organisation_title` FROM `" . AUTH_DATABASE . "`.`organisations`";
+					$results = $db->GetAll($query);
+					if ($results) {
+						foreach ($results as $result) {
+								if ((isset($_POST["organisations-groups-roles" . $result["organisation_id"]]))
+										&& ($organisations_groups_roles = $_POST["organisations-groups-roles" . $result["organisation_id"]])
+										&& is_array($organisations_groups_roles)) {
+									foreach($organisations_groups_roles as $ogr) {
+										$row = explode("-", $ogr);
+										$PROCESSED_ACCESS["org_id"][] = $row[0];
+										$PROCESSED_ACCESS["group_id"][] = $row[1];
+										$PROCESSED_ACCESS["role_id"][] = $row[2];
+									}
+								}
+						}
+						if (!$PROCESSED_ACCESS["org_id"]) {
+							$ERROR++;
+							$ERRORSTR[] = "You must provide at least one valid group and role per organisation for this account.";
+						}
+					}
+
 					if (!$ERROR && $ENTRADA_ACL->amIAllowed(new UserResource(null, $PROCESSED["organisation_id"]), "update")) {
 						$PROCESSED["email_updated"] = time();
-						if ($db->AutoExecute(AUTH_DATABASE.".user_data", $PROCESSED, "UPDATE", "id = ".$db->qstr($PROXY_ID))) {
-							//Delete the existing user_organisation entries in order to add what is current
-							$query = "DELETE FROM `".AUTH_DATABASE."`.`user_organisations` WHERE `proxy_id` = ".$db->qstr($PROXY_ID);
+						if ($db->AutoExecute(AUTH_DATABASE.".user_data", $PROCESSED, "UPDATE", "id = ".$db->qstr($PROXY_ID))) {							
+
+							$query = "DELETE FROM `".AUTH_DATABASE."`.`user_organisations`
+									  WHERE `proxy_id` = ".$db->qstr($PROXY_ID);
+							if (!$db->Execute($query)) {
+								$ERROR++;
+								$ERRORSTR[] = "Failed to remove your old departments";
+								application_log("error", "Unable to remove all of the user's (" . $PROXY_ID . ") departments. Database said: ".$db->ErrorMsg());
+							}
+
+							//Add the user's organisations to the user_organisation table.
+							foreach ($organisation_ids as $org_id) {
+								$row = array();
+								$row["organisation_id"] = $org_id;
+								$row["proxy_id"] = $PROXY_ID;
+								if (!$db->AutoExecute(AUTH_DATABASE.".user_organisations", $row, "INSERT")) {
+									$ERROR++;
+									$ERRORSTR[] = "Unable to add all of this user's organisations to the database. The MEdTech Unit has been informed of this error, please try again later.";
+
+									application_log("error", "Unable to add all of the user's (" . $PROCESSED_ACCESS["user_id"] . ") departments. Database said: ".$db->ErrorMsg());
+								}
+							}
+							
+
+							$query = "SELECT * FROM " . AUTH_DATABASE . ".`user_access`
+									  WHERE `user_id` = " . $db->qstr($PROXY_ID) . "
+									  AND `app_id` = " . $db->qstr(AUTH_APP_ID);
+
+							$results = $db->GetAll($query);
+							if ($results) {								
+								foreach($results as $result) {
+									$private_hashes[$result["app_id"]][$result["organisation_id"]][$result["group"]][$result["role"]] = $result["private_hash"];
+								}
+							}
+
+							$query = "DELETE FROM `".AUTH_DATABASE."`.`user_access` 
+									  WHERE `user_id` = ".$db->qstr($PROXY_ID) . "
+									  AND `app_id` = " . $db->qstr(AUTH_APP_ID);
 							if ($db->Execute($query)) {
-								//Add the user's organisations to the user_organisation table.
-								foreach ($organisation_ids as $org_id) {
-										$row = array();
-										$row["organisation_id"] = $org_id;
-										$row["proxy_id"] = $PROXY_ID;
-										if (!$db->AutoExecute(AUTH_DATABASE.".user_organisations", $row, "INSERT")) {
-											$ERROR++;
-											$ERRORSTR[] = "Unable to add all of this user's organisations to the database. The MEdTech Unit has been informed of this error, please try again later.";
+								if (is_array($PROCESSED_ACCESS["org_id"])){
+									$index = 0;
+									application_log("notice", "Size of the org-group-role array: " . sizeof($PROCESSED_ACCESS["org_id"]));
+									foreach ($PROCESSED_ACCESS["org_id"] as $org_id) {
 
-											application_log("error", "Unable to add all of the user's (" . $PROCESSED_ACCESS["user_id"] . ") Database said: ".$db->ErrorMsg());
+										$PROCESSED_ACCESS["user_id"] = $PROXY_ID;
+										$PROCESSED_ACCESS["app_id"] = AUTH_APP_ID;
+										$PROCESSED_ACCESS["organisation_id"] = $org_id;
+
+										$query = "SELECT g.`group_name`, r.`role_name`
+												  FROM `" . AUTH_DATABASE . "`.`groups` g, `" . AUTH_DATABASE . "`.`roles` r,
+													   `" . AUTH_DATABASE . "`.`groups_has_organisations` gho, `" . AUTH_DATABASE . "`.`organisations` o
+												  WHERE gho.`groups_id` = " . $PROCESSED_ACCESS["group_id"][$index] . " AND g.`id` = " . $PROCESSED_ACCESS["group_id"][$index] . " AND
+												  r.`id` = " . $PROCESSED_ACCESS["role_id"][$index] . " AND o.`organisation_id` = " . $org_id;
+										$group_role = $db->GetRow($query);
+										$PROCESSED_ACCESS["group"] = strtolower($group_role["group_name"]);
+										$PROCESSED_ACCESS["role"] = strtolower($group_role["role_name"]);
+
+										$result = $private_hashes[AUTH_APP_ID][$org_id][$PROCESSED_ACCESS["group"]][$PROCESSED_ACCESS["role"]];
+
+										if ($result) {
+											$PROCESSED_ACCESS["private_hash"] = $result;											
+										} else {
+											$PROCESSED_ACCESS["private_hash"] = generate_hash(32);
 										}
+
+										if (!$db->AutoExecute(AUTH_DATABASE.".user_access", $PROCESSED_ACCESS, "INSERT")) {
+											application_log("error", "Unable to insert proxy_id [".$PROCESSED_ACCESS["user_id"]."] into the user_access table. Database said: ".$db->ErrorMsg());
+										}
+										$index++;
 									}
-							} else {
-								$ERROR++;
-								$ERRORSTR[] = "Unable to delete this user's organisations. The MEdTech Unit has been informed of this error, please try again later.";
-
-								application_log("error", "Unable to delete this user's organisations (" . $PROCESSED_ACCESS["user_id"] . ") Database said: ".$db->ErrorMsg());
-							}
-							/**
-							 * Send notice if any administrator account is updated.
-							 */
-							if (($PROCESSED_ACCESS["group"] == "medtech") || ($PROCESSED_ACCESS["role"] == "admin")) {
-								application_log("error", "USER NOTICE: Existing user (".$PROCESSED["firstname"]." ".$PROCESSED["lastname"].") was changed in ".APPLICATION_NAME.": ".$PROCESSED_ACCESS["group"]." > ".$PROCESSED_ACCESS["role"].".");
-							}
-
-							/**
-							 * This section of code handles updating the user_access table.
-							 */
-							if (!$db->AutoExecute(AUTH_DATABASE.".user_access", $PROCESSED_ACCESS, "UPDATE", "user_id = ".$db->qstr($PROXY_ID)." AND app_id = ".$db->qstr(AUTH_APP_ID))) {
-								$ERROR++;
-								$ERRORSTR[] = "We were unable to properly update your <strong>Account Options</strong> settings. The system administrator has been informed of this error, please try again later.";
-
-								application_log("error", "Unable to update data in the user_access table. Database said: ".$db->ErrorMsg());
+									application_log("notice", "Index end size: " . $index);
+								}
 							}
 
 							if (is_array($PROCESSED_PHOTO)) {
@@ -415,9 +437,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 							 */
 								if (!$db->AutoExecute(AUTH_DATABASE.".user_photos", $PROCESSED_PHOTO, "UPDATE", "proxy_id = ".$db->qstr($PROXY_ID)." AND photo_type = '1'")) {
 									$ERROR++;
-									$ERRORSTR[] = "We were unable to properly update your <strong>Account Options</strong> settings. The system administrator has been informed of this error, please try again later.";
+									$ERRORSTR[] = "We were unable to properly update your <strong>User Photos</strong> settings. The system administrator has been informed of this error, please try again later.";
 
-									application_log("error", "Unable to update data in the user_access table. Database said: ".$db->ErrorMsg());
+									application_log("error", "Unable to update data in the user_photos table. Database said: ".$db->ErrorMsg());
 								}
 							}
 
@@ -433,14 +455,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 							if ($results) {
 								foreach ($results as $result) {
 									if ((isset($_POST["in_departments" . $result["organisation_id"]]))) {
-										$in_departments = explode(',', $_POST['in_departments'. $result["organisation_id"]]);
+										$in_departments = $_POST['in_departments'. $result["organisation_id"]];										
 										foreach ($in_departments as $department_id) {
 											if ($department_id = (int) $department_id) {
-												$query = "SELECT * FROM `" . AUTH_DATABASE . "`.`user_departments` WHERE `user_id` = " . $db->qstr($PROCESSED_ACCESS["user_id"]) . " AND `dep_id` = " . $db->qstr($department_id);
-												$result = $db->GetRow($query);
-												if (!$result) {
 													$PROCESSED_DEPARTMENTS[] = $department_id;
-												}
 											}
 										}
 									}
@@ -542,6 +560,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 					if (!in_array($user_record["organisation_id"], $organisation_ids)) {
 						$organisation_ids[] = $user_record["organisation_id"];
 					}
+
+					$query = "SELECT LOWER(ua.`organisation_id`) as `organisation_id`, lower(ua.`group`) as `group`, lower(ua.`role`) as `role`
+							  FROM `" . AUTH_DATABASE . "`.`user_access` ua
+							  WHERE ua.`user_id` = " . $PROXY_ID;
+					$my_orgs_groups_roles = $db->GetAll($query);
 				break;
 			}
 			// Display Page.
@@ -552,11 +575,45 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 					}
 
 					if ($SUCCESS) {
+						$query = "SELECT *
+								  FROM `" . AUTH_DATABASE . "`.`user_access` a
+								  WHERE a.`user_id` = " . $db->qstr($_SESSION["details"]["id"]) . "
+								  AND a.`organisation_id` = " . $db->qstr($_SESSION["tmp"]["current_org"]) . "
+								  AND a.`group` = " . $db->qstr($_SESSION["tmp"]["current_group"]) . "
+								  AND a.`role` = " . $db->qstr($_SESSION["tmp"]["current_role"]);
+						
+						$result = $db->getRow($query);
+						if ($result) {
+							$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["ua_id"] = $result["id"];
+							$ENTRADA_USER->setActiveGroupRole($result["id"]);
+							$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"] = $ENTRADA_USER->getProxyId() . "-" . $result["id"];
+							$_SESSION["permissions"] = load_org_group_role($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"], $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["ua_id"]);
+						} 
+
+						unset($ENTRADA_ACL);
+						$ENTRADA_ACL = new Entrada_Acl($_SESSION["details"]);
+						$ENTRADA_CACHE->remove("acl_".$_SESSION["details"]["id"]);
+						$ENTRADA_CACHE->save($ENTRADA_ACL, "acl_".$_SESSION["details"]["id"]);
 						echo display_success();
 					}
 				break;
 				case 1 :
 				default :
+					$query = "SELECT *
+							  FROM `" . AUTH_DATABASE . "`.`user_access` a
+							  WHERE a.`user_id` = " . $db->qstr($_SESSION["details"]["id"]) . "
+							  AND a.`id` = " . $db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["ua_id"]);
+					$result = $db->getRow($query);
+					if ($result) {
+						$current_org = $result["organisation_id"];
+						$current_group = $result["group"];
+						$current_role = $result["role"];
+					}
+					$_SESSION["tmp"]["current_org"] = $current_org;
+					$_SESSION["tmp"]["current_group"] = $current_group;
+					$_SESSION["tmp"]["current_role"] = $current_role;
+
+
 					$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/tabpane/tabpane.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
 					$HEAD[] = "<link href=\"".ENTRADA_URL."/css/tabpane.css?release=".html_encode(APPLICATION_VERSION)."\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />\n";
 					$HEAD[] = "<style type=\"text/css\"> .dynamic-tab-pane-control .tab-page {height:auto;}</style>\n";
@@ -581,7 +638,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 					}
 					$HEAD[$i] .= "</script>\n";
 
-					$ONLOAD[] = "initListGroup('account_type', document.getElementById('group'), document.getElementById('role'))";
 					$ONLOAD[] = "setMaxLength()";
 
 					$DEPARTMENT_LIST = array();
@@ -644,11 +700,12 @@ jQuery(document).ready(function() {
 						jQuery('label[for="rdb' + checkbox_val + '"]').html("");
 						jQuery('label[for="rdb' + new_default_org + '"]').addClass("content-small");
 						jQuery('label[for="rdb' + new_default_org + '"]').html("&nbsp;default");
-						jQuery('#dept_' + checkbox_val + '_link').hide();
-						jQuery('#in_departments' + checkbox_val).val("");
-						jQuery('#in_departments_list' + checkbox_val + ' .associated_list').html("");
-						jQuery('.select_multiple_table input:checkbox').removeAttr('checked');
-						jQuery('.select_multiple_table tr').removeClass('selected');
+						jQuery('#group_role_callback' + checkbox_val).html("");
+						jQuery('#organisations-groups-roles' + checkbox_val).multiselect('uncheckAll');
+						jQuery('#department_callback' + checkbox_val).html("");
+						jQuery('#in_departments' + checkbox_val).multiselect('uncheckAll');
+						jQuery('#organisations-groups-roles' + checkbox_val).multiselect('disable');
+						jQuery('#in_departments' + checkbox_val).multiselect('disable');
 					} else if (jQuery(this).attr('checked')) {
 						var checkbox_val = jQuery(this).val();
 						//var radio_val = jQuery('input[name=default_organisation_id]:checked').val();
@@ -658,28 +715,39 @@ jQuery(document).ready(function() {
 							jQuery('label[for="rdb' + checkbox_val + '"]').addClass("content-small");
 							jQuery('label[for="rdb' + checkbox_val + '"]').html("&nbsp;default");
 						}
-						if(!jQuery('#departments_' + checkbox_val + '_options').is(":visible")) {
-							jQuery('#dept_' + checkbox_val + '_link').show();
-						} else {
-							jQuery('#dept_' + checkbox_val + '_link').hide();
-						}
+						jQuery('#organisations-groups-roles' + checkbox_val).multiselect('enable');
+						jQuery('#in_departments' + checkbox_val).multiselect('enable');
 					}
 				});
+			});
+			jQuery(window).load(function(){
 				jQuery('input[name="organisation_ids[]"]').each(function(index, Element){
 					var org_id = jQuery(this).val();
 					if (!jQuery(this).attr('checked')) {
 						jQuery('input[name=default_organisation_id][value=' + org_id + ']').attr("disabled", true);
-						if (jQuery('#departments_' + org_id + '_options').length) {
-							jQuery('#departments_' + org_id + '_options').hide();
-							jQuery('#dept_' + org_id + '_link').hide();
-						}
+						jQuery('#organisations-groups-roles' + org_id).multiselect('disable');
+						jQuery('#in_departments' + org_id).multiselect('disable');
 					} else {
-						if (jQuery('#departments_' + org_id + '_options').length) {
-							jQuery('#departments_' + org_id + '_options').hide();
-							jQuery('#dept_' + org_id + '_link').show();
-						}
+						jQuery('#organisations-groups-roles' + org_id).multiselect('enable');
+						jQuery('#in_departments' + org_id).multiselect('enable');
 					}
-				})
+				});
+				jQuery("select[id^=organisations-groups-roles]").each(function(index, Element){					
+					jQuery(this).multiselect("getChecked").each(function(index, Element){
+						var org_group_role = Element.value.split('-');
+						var group_role = Element.title.split('-');
+						var list_item_id = Element.value;
+						jQuery("#group_role_callback" + org_group_role[0]).append("<li id=\"" + list_item_id + "\">Group: <strong>" + group_role[0] + "</strong> <br /> Role: <strong>" + group_role[1] + "</strong></li><br />");
+					});
+				});
+				jQuery("select[id^=in_departments]").each(function(index, Element){
+					var org_id = Element.id.split('in_departments')[1];
+					jQuery(this).multiselect("getChecked").each(function(index, Element){
+						var dept_id = Element.value;
+						var dept_name = Element.title;
+						jQuery("#in_departments_callback" + org_id).append("<li id=\"" + org_id + "-" + dept_id + "\">" + dept_name);
+					});
+				});
 			});
 </script>
 					<h1 style="margin-top: 0px">Edit Profile Details</h1>
@@ -733,53 +801,6 @@ jQuery(document).ready(function() {
 									</td>
 								</tr>
 								<tr>
-									<td colspan="3">&nbsp;</td>
-								</tr>
-								<tr>
-									<td>&nbsp;</td>
-									<td style="vertical-align: top"><label for="group" class="form-required">Account Type</label></td>
-									<td>
-										<select id="group" name="group" style="width: 209px"></select> <span class="content-small"><strong>Account Group</strong></span><br />
-										<select id="role" name="role" style="width: 209px; margin-top: 5px"></select> <span class="content-small"><strong>Account Role</strong></span>
-									</td>
-								</tr>
-								<tr style="<?php echo $PROCESSED_ACCESS["group"]=="student" ? "" : "display:none;"; ?>" id="entry_year_data">
-									<td>&nbsp;</td>
-									<td style="padding-top: 15px"><label for="group" class="form-required">Year of Program Entry</label></td>
-									<td style="padding-top: 15px">
-										<select id="entry_year" name="entry_year" style="width: 209px">
-										<?php
-											$selected_year = (isset($PROCESSED["entry_year"])) ? $PROCESSED["entry_year"] : (date("Y", time()) - ((date("m", time()) < 7) ?  1 : 0));
-											for($i = fetch_first_year(); $i >= 1995; $i--) {
-												$selected = $selected_year == $i;
-												echo build_option($i, $i, $selected);
-											} 
-										?>
-										</select>
-									</td>
-								</tr>
-								<tr style="<?php echo $PROCESSED_ACCESS["group"]=="student" ? "" : "display:none;"; ?>" id="grad_year_data">
-									<td>&nbsp;</td>
-									<td><label for="group" class="form-required">Expected Graduation Year</label></td>
-									<td>
-										<select id="grad_year" name="grad_year" style="width: 209px; margin-top: 5px">
-										<?php
-										for($i = fetch_first_year(); $i >= 1995; $i--) {
-											$selected = (isset($PROCESSED["grad_year"]) && $PROCESSED["grad_year"] == $i);
-											echo build_option($i, $i, $selected);
-										} 
-										?>
-										</select>
-									</td>
-								</tr>
-								<tr style="<?php echo $PROCESSED_ACCESS["group"]=="faculty" ? "" : "display:none;" ?>" id="clinical_area">
-									<td colspan="2">&nbsp;</td>
-									<td style="padding-top: 15px">
-										<input type="checkbox" id="clinical" name="clinical" value="1"<?php echo (((empty($PROCESSED)) || ((isset($PROCESSED["clinical"])) && ((int) $PROCESSED["clinical"]))) ? " checked=\"checked\"" : ""); ?> style="vertical-align: middle;" />
-										<label for="clinical" class="form-nrequired">This user is a <strong>clinical</strong> faculty member.</label>
-									</td>
-								</tr>
-								<tr>
 									<td colspan="3">
 										<h2>Account Options</h2>
 									</td>
@@ -820,7 +841,7 @@ jQuery(document).ready(function() {
 												echo "		</div>\n";
 												?>
 											</div>
-											<br /><input style="margin-bottom: 15px" type="checkbox" id="photo_active" name="photo_active" value="1" <?php echo ($uploaded_photo["photo_active"] == 1 ? " checked=\"true\"" : "") ?> /> <?php echo ( $uploaded_photo["photo_active"] == 1  ? "<span class=\"content-small\">Uncheck this to deactivate the uploaded photo for this user.</span>" : "<span class=\"content-small\">Check this to activate the uploaded photo of this user.</span>" ); ?>
+											<br/><input style="margin-bottom: 15px" type="checkbox" id="photo_active" name="photo_active" value="1" <?php echo ($uploaded_photo["photo_active"] == 1 ? " checked=\"true\"" : "") ?> /> <?php echo ( $uploaded_photo["photo_active"] == 1  ? "<span class=\"content-small\">Uncheck this to deactivate the uploaded photo for this user.</span>" : "<span class=\"content-small\">Check this to activate the uploaded photo of this user.</span>" ); ?>
 										</td>
 									</tr>
 									<?php
@@ -962,12 +983,14 @@ jQuery(document).ready(function() {
 								<tr>
 									<td colspan="3">
 										<h2>Organisational and Departmental Options</h2>
+										<div id="delete_response"></div>
 									</td>
-								</tr>
+								</tr>						
 								<?php								
 								$query		= "SELECT `organisation_id`, `organisation_title` FROM `".AUTH_DATABASE."`.`organisations`";
 								$results	= $db->GetAll($query);
-								if ($results && $ENTRADA_ACL->amIAllowed(new CourseResource(null, $result['organisation_id']), 'create')) {
+
+								if ($results) {
 									foreach($results as $result) {
 										if ($ENTRADA_ACL->amIAllowed(new CourseResource(null, $result['organisation_id']), 'create')) { ?>
 								<tr>
@@ -997,45 +1020,79 @@ jQuery(document).ready(function() {
 													(($PROCESSED["organisation_id"] == $result["organisation_id"]) ? " checked=\"checked\" />"
 												    . "<label class=\"content-small\" for=\"rdb" . (int) $result["organisation_id"] ."\">&nbsp;default</label>" : "/><label for=\"rdb" . (int) $result["organisation_id"] ."\"></label>");
 										}
-										echo "</td></tr>";
+										echo "</td></tr>"; ?>
 
-										if (isset($DEPARTMENT_LIST[$result["organisation_id"]]) && is_array($DEPARTMENT_LIST[$result["organisation_id"]]) && !empty($DEPARTMENT_LIST[$result["organisation_id"]])) {
-											echo "<tr><td id=\"dept_" . $result["organisation_id"] . "_cell\">";
-											?>
-											<a id="dept_<?php echo $result["organisation_id"] . "_link"; ?>" class="dept_link" href="#">Pick Departments</a>
-											<input class="multi-picklist" id="<?php echo "in_departments" . $result["organisation_id"] ?>" name="<?php echo "in_departments" . $result["organisation_id"] ?>" style="display: none;">
-											<div id=<?php echo "in_departments_list" . $result["organisation_id"]; ?>></div>
+										<tr>
+											<td style="padding-top:10px">
+											<label for="<?php echo "organisations-groups-roles" . $result["organisation_id"]; ?>"><strong>Group and Role Options</strong></label><br />
+											<select id="<?php echo "organisations-groups-roles" . $result["organisation_id"]; ?>" name="<?php echo "organisations-groups-roles" . $result["organisation_id"] . "[]"; ?>" multiple="multiple" style="width:300px">
 										<?php
-											$departments = array();
+														$query = "SELECT g.id as gid, r.id as rid, group_name, role_name
+																  FROM `".AUTH_DATABASE."`.groups g, `".AUTH_DATABASE."`.roles r,
+																	  `".AUTH_DATABASE."`.organisations o, `".AUTH_DATABASE."`.groups_has_organisations gho
+																  WHERE g.id = r.groups_id
+																  AND o.`organisation_id` = gho.`organisation_id`
+																  AND gho.`groups_id` = g.`id`
+																  AND o.`organisation_id` = " . $result["organisation_id"] . "
+																  ORDER BY `group_name`";														
+														$groups_roles = $db->GetAll($query);
+															if ($groups_roles && !empty($groups_roles)) {
+																foreach($groups_roles as $gr) {
+																	$search_array = array("organisation_id" => $result["organisation_id"], "group" => strtolower($gr["group_name"]), "role" => strtolower($gr["role_name"]));
+																	if ($my_orgs_groups_roles && !empty($my_orgs_groups_roles)) {
+																	foreach($my_orgs_groups_roles as $my_ogr) {
+																		$selected = false;
+																		$diff_array = array_diff_assoc($search_array, $my_ogr);
+																		if (empty ($diff_array)) {
+																			$selected = true;
+																			application_log("notice", "proxy id: " . $PROXY_ID . ". my ogr: " . $my_ogr["organisation_id"] . " " . $my_ogr["group"] . " " . $my_ogr["role"]);
+																			application_log("notice", "proxy id: " . $PROXY_ID . ". search: " . $search_array[0] . " " . $search_array[1] . " " . $search_array[2]);
+																			echo build_option($result["organisation_id"] . "-" . $gr["gid"] . "-" . $gr["rid"], $gr["group_name"] . "-" . $gr["role_name"], $selected);
+																			break;
+																		}
+																}
+															}
+																if (!$selected) {
+																	echo build_option($result["organisation_id"] . "-" . $gr["gid"] . "-" . $gr["rid"], $gr["group_name"] . "-" . $gr["role_name"], false);
+																}
+															}
+														}
+											 ?>
+											</select>
+											</td>
+											<td colspan="2" style="padding-top:10px"><h3>Selected groups and roles:</h3><ul id="<?php echo "group_role_callback" . $result["organisation_id"]?>" title="Selected groups and roles"></ul>
+										</tr>
 
-											foreach($DEPARTMENT_LIST as $organisation_id => $dlist) {
-												foreach($dlist as $d) {
+										<?php if (isset($DEPARTMENT_LIST[$result["organisation_id"]]) && is_array($DEPARTMENT_LIST[$result["organisation_id"]]) && !empty($DEPARTMENT_LIST[$result["organisation_id"]])) { ?>
 
-													if (in_array($d['department_id'], $PROCESSED_DEPARTMENTS)) {
-														$checked = 'checked="checked"';
-													} else {
-														$checked = '';
-													}
+										<tr>
+											<td style="padding-top:10px">
+											<label for="<?php echo "in_departments" . $result["organisation_id"]; ?>"><strong>Department Options</strong></label><br />
+											<select id="<?php echo "in_departments" . $result["organisation_id"]; ?>" name="<?php echo "in_departments" . $result["organisation_id"] . "[]"; ?>" multiple="multiple" style="width:300px">
+										<?php
 
-													if (isset($organisation_categories[$organisation_id])) {
-														$departments[$organisation_id][] = array('text' => $d['department_title'], 'value' => $d['department_id'], 'checked' => $checked);
-													}
-												}
-											}
-											foreach($departments as $organisation_id => $dlist) {
-												if ($organisation_id == $result["organisation_id"]) {
-													echo '<div id="departments_'.$organisation_id.'_options_container">';
-													echo lp_multiple_select_popup('departments_'.$organisation_id, $dlist, array('title'=>'Departments List:', 'class'=>  array ('department_multi', 'manage-user-depts'), 'submit_text'=>'Done', 'cancel'=>false, 'submit'=>true));
-													echo '</div>';
-												}
-											}
-										    echo "</td></tr>";
+														foreach($DEPARTMENT_LIST as $organisation_id => $dlist) {
+															foreach($dlist as $d){
+																if (in_array($d["department_id"], $PROCESSED_DEPARTMENTS)) {
+																	$selected = true;
+																} else {
+																	$selected = false;
+																}
+																echo build_option($d["department_id"], $d["department_title"], $selected);
+															}
+														}
+											 ?>
+											</select>
+											</td>
+											<td colspan="2" style="padding-top:10px"><h3>Selected departments:</h3><ul id="<?php echo "in_departments_callback" . $result["organisation_id"]?>" title="Selected departments"></ul>
+										</tr>
+									<?php	    echo "</td></tr>";
 										} else {
 											//case where there are no departments
-											echo "<tr><td><br /></td></tr>";
+											echo "<tr><td><br/></td></tr>";
 										}
 											?>
-								</table></td>
+								</table><hr /></td>
 						</tr>
 							<?php		}	//end if
 									} //end for
@@ -1167,26 +1224,72 @@ jQuery(document).ready(function() {
 											$('in_departments_list').update(ul);
 										}
 
-										document.observe("dom:loaded",function() {
-											var grad_year = $('grad_year_data');
-											var entry_year = $('entry_year_data');
-											var clinical = $('clinical_area');
-											$('group').observe("change",function() {
-												console.log($F('group'));
-												if ($F('group') == "student") {
-													grad_year.show();
-													entry_year.show();
-													clinical.hide();
+										jQuery(document).ready(function() {
+										//initialize the org-group-role multiselect
+										jQuery("select[id^=organisations-groups-roles]").multiselect({
+										   height: 250,
+										   click: function(event, ui){
+											   var org_group_role = ui.value.split('-');
+											   var group_role = ui.text.split('-');
+											   var list_item_id = ui.value;
+											   if(ui.checked == true) {
+											      jQuery("#group_role_callback" + org_group_role[0]).append("<li id=\"" + list_item_id + "\">Group: <strong>" + group_role[0] + "</strong> <br /> Role: <strong>" + group_role[1] + "</strong></li><br />");
+											   } else {
+												  jQuery("#" + list_item_id).remove();
+											   }
+										   }
+										});
+
+										jQuery("select[id^=in_departments]").multiselect({
+										   height: 250,
+										   click: function(event, ui){;
+											   var list_item_id = "dept" + ui.value;
+											   var org_id = jQuery(this).attr("id").replace(/[^0-9]+/ig,"");
+											   if(ui.checked == true) {
+											      jQuery("#in_departments_callback" + org_id).append("<li id=\"" + list_item_id + "\">" + ui.text + "</strong></li><br />");
+											   } else {
+												  jQuery("#" + list_item_id).remove();
+											   }
+										   }
+										});
+
+
+										var grad_year, entry_year, clinical;
+										grad_year = jQuery('#grad_year_data');
+										entry_year = jQuery('#entry_year_data');
+										clinical = jQuery('#clinical_area');
+
+										var group = jQuery('#group').val();
+										if (group == "student") {
+											grad_year.show();
+											entry_year.show();
+											clinical.hide();
+										} else {
+											grad_year.hide();
+											entry_year.hide();
+											if(group == "faculty") {
+												clinical.show();
+											} else {
+												clinical.hide();
+											}
+										}
+
+										jQuery('select[id^=group]').change(function() {
+											var group = jQuery(this).val();
+											if (group == "student") {
+												grad_year.show();
+												entry_year.show();
+												clinical.hide();
+											} else {
+												grad_year.hide();
+												entry_year.hide();
+												if(group == "faculty") {
+													clinical.show();
 												} else {
-													grad_year.hide();
-													entry_year.hide();
-													if($F('group') == "faculty") {
-														clinical.show();
-													} else {
-														clinical.hide();
-													}
+													clinical.hide();
 												}
-											});
+											}
+										});
 										});
 										</script>
 					<?php

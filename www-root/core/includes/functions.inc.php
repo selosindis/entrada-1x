@@ -1289,9 +1289,6 @@ function filter_name($filter_key) {
 		case "topic" :
 			return "Hot Topics Involved";
 		break;
-		case "department" :
-			return "Departments Involved";
-		break;
 		default :
 			return false;
 		break;
@@ -2150,6 +2147,36 @@ function permissions_load() {
 }
 
 /**
+ * This function look at the user_access table for a particular entry (i.e. id) and user 
+ * in order to load the associated permissions into an array that can be set in the Session.
+ * Modelled after the load_permissions function.
+ *
+ * @return array
+ */
+function load_org_group_role($assumed_proxy_id, $ua_id) {
+	global $db;
+	$permissions	= array();
+	$pieces = explode("-", $assumed_proxy_id);
+	$proxy_id = $pieces[0];	
+	$query = "	SELECT b.`id` AS `proxy_id`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, b.`firstname`, b.`lastname`, c.`organisation_id`, c.`role`, c.`group`, c.`access_starts`, c.`access_expires`
+				FROM `".AUTH_DATABASE."`.`user_data` AS b
+				JOIN `".AUTH_DATABASE."`.`user_access` AS c
+				ON c.`user_id` = b.`id` AND c.`app_id`=".$db->qstr(AUTH_APP_ID)."
+				AND c.`account_active`='true'
+				AND (c.`access_starts`='0' OR c.`access_starts`<=".$db->qstr(time()).")
+				AND (c.`access_expires`='0' OR c.`access_expires`>=".$db->qstr(time()).")
+				WHERE c.`id` = " . $db->qstr($ua_id) . "
+				AND b.`id` = $db->qstr($proxy_id)";
+	
+	$result = $db->GetRow($query);
+	if($result) {
+		$permissions[$assumed_proxy_id] = array("group" => $result["group"], "role" => $result["role"], "organisation_id"=>$result['organisation_id'],  "starts" => $result["access_starts"], "expires" => $result["access_expires"], "fullname" => $result["fullname"], "firstname" => $result["firstname"], "lastname" => $result["lastname"]);
+	}
+	return $permissions;
+}
+
+
+/**
  * medtech / staff wants in.
  * Page requires medtech / admin.
  *
@@ -2279,8 +2306,8 @@ function permissions_fetch($identifier, $type = "event", $existing_allowed_ids =
  * @return true
  */
 function permissions_mask() {
-	global $db;
-
+	global $db, $ENTRADA_USER;
+	
 	if(isset($_GET["mask"])) {
 		if(trim($_GET["mask"]) == "close") {
 			unset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]);
@@ -2311,7 +2338,9 @@ function permissions_mask() {
 	}
 
 	if(($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"] != $_SESSION["details"]["id"]) && ($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["expires"] <= time())) {
-		unset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]);
+		if ($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"] != $_SESSION["details"]["id"] . "-" . $ENTRADA_USER->getActiveGroupRole()) {
+			unset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]);
+		}
 	}
 
 	if(!isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])) {
@@ -8389,7 +8418,7 @@ function clerkship_send_queued_notifications($rotation_id, $rotation_title, $pro
 								);
 				$replace	= array(
 									$rotation_title,
-									implode("<br />\n", $clerks),
+									implode("<br/>\n", $clerks),
 									APPLICATION_NAME,
 									ENTRADA_URL
 							);
@@ -8709,7 +8738,7 @@ function courses_subnavigation($course_details) {
 	}
 	echo "	</div>\n";
 	echo "</div>\n";
-	echo "<br />";
+	echo "<br/>";
 }
 
 function course_fetch_course_group($cgroup_id = 0) {
@@ -9247,7 +9276,7 @@ function course_objectives_in_list($objectives, $parent_id, $top_level_id, $edit
 							$output .= "	<div>".(isset($objective["objective_details"]) && $objective["objective_details"] ? $objective["objective_details"] : $objective["description"]);
 						}
 						if (isset($objective["event_objective_details"]) && $objective["event_objective_details"]) {
-							$output .= "		<br /><br /><em>".$objective["event_objective_details"]."</em>";
+							$output .= "		<br/><br/><em>".$objective["event_objective_details"]."</em>";
 						}
 						$output .= "	</div>";
 						$output .= "</li>";
@@ -9744,9 +9773,6 @@ function events_output_filter_controls($module_type = "") {
 									break;
 									case "topic":
 										echo fetch_event_topic_title($filter_value);
-									break;
-									case "department":
-										echo fetch_department_title($filter_value);
 									break;
 									default :
 										echo strtoupper($filter_value);
@@ -10591,7 +10617,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 		$where_clinical_presentation = array();
 		$where_curriculum_objective = array();
 		$where_topic = array();
-		$where_department = array();
+
 		$join_event_contacts = array();
 
 		$contact_sql = "";
@@ -10699,9 +10725,6 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 							case "topic" :
 								$where_topic[] = (int) $filter_value;
 							break;
-							case "department" :
-								$where_department[] = (int) $filter_value;
-							break;
 							default :
 								continue;
 							break;
@@ -10788,47 +10811,6 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 		if ($where_topic) {
 			$topic_sql = "	LEFT JOIN `event_topics`
 							ON `event_topics`.`event_id` = `events`.`event_id`";
-		}
-
-		if ($where_department) {
-			$event_ids = "";
-
-			// fetch the user_id of members in the selected departments
-			$department_members_query = "	SELECT `a`.`id`
-											FROM `".AUTH_DATABASE."`.`user_data` AS `a`
-											JOIN `".AUTH_DATABASE."`.`user_departments` AS `b`
-											ON `a`.`id` = `b`.`user_id`
-											JOIN `".AUTH_DATABASE."`.`departments` AS `c`
-											ON `b`.`dep_id` = `c`.`department_id`
-											WHERE `b`.`dep_id` IN (".implode(',', $where_department).")
-											GROUP BY `a`.`id`";
-			$department_members = $db->GetAll($department_members_query);
-			if ($department_members) {
-				foreach ($department_members as $member) {
-					$members_list[] = $member["id"];
-				}
-
-				// fetch the event_id the members are assigned to
-				$department_events_query = "	SELECT `a`.`event_id`
-												FROM `events` AS `a`
-												JOIN `event_contacts` AS `b`
-												ON `a`.`event_id` = `b`.`event_id`
-												WHERE `b`.`proxy_id` IN (".implode(',', $members_list).")
-												AND `a`.`event_start` > ".$db->qstr($display_duration["start"])."
-												AND `a`.`event_finish` < ".$db->qstr($display_duration["end"])."
-												GROUP BY `a`.`event_id`";
-				$department_events = $db->GetAll($department_events_query);
-				if ($department_events) {
-					foreach ($department_events as $event) {
-						$event_list[] = $event["event_id"];
-					}
-				}
-
-				$event_ids = (!empty($event_list)) ? implode(", ", $event_list) : '';
-			}
-
-			$query_count .= " AND `events`.`event_id` IN (".$event_ids.")";
-			$query_events .= " AND `events`.`event_id` IN (".$event_ids.")";
 		}
 
 	 	$query_count = str_replace("%CONTACT_JOIN%", $contact_sql, $query_count);
@@ -11291,6 +11273,76 @@ function event_objectives_in_list($objectives, $parent_id, $top_level_id, $edit_
 		$edit_ajax = array();
 	}
 
+	/*if ((is_array($objectives)) && ($total = count($objectives))) {
+		$count	= 0;
+		if ($top) {
+			$output	= "\n<ul class=\"objective-list\" id=\"objective_".$parent_id."_list\"".($parent_id == $top_level_id ? " style=\"padding-left: 0; margin-top: 0\"" : "").">\n";
+		}
+		$iterated = false;
+		do {
+			if ($iterated) {
+				if ($display_importance == "primary" && $active["secondary"]) {
+					$display_importance = "secondary";
+				} elseif ((($display_importance == "secondary" || $display_importance == "primary") && $active["tertiary"])) {
+					$display_importance = "tertiary";
+				}
+			}
+			if ($top) {
+				$output .= "<h2".($iterated ? " class=\"collapsed\"" : "")." title=\"".ucwords($display_importance)." Objectives\">".ucwords($display_importance)." Objectives</h2>\n";
+				$output .= "<div id=\"".($display_importance)."-objectives\">\n";
+			}
+			foreach ($objectives as $objective_id => $objective) {
+				$count++;
+
+					if (($objective["parent"] == $parent_id) && (($objective["objective_".$display_importance."_children"]) || ($objective[$display_importance]) || ($parent_active))) {
+						$importance = (($objective["primary"]) ? 1 : ($objective["secondary"] ? 2 : ($objective["tertiary"] ? 3 : $importance)));
+
+						if (((($objective[$display_importance]) || ($parent_active)) && (count($objective["parent_ids"]) > 2))) {
+						$output .= "<li>\n";
+						if ($edit_text && !$course) {
+							$output .= "<div id=\"objective_table_".$objective_id."\" class=\"content-small\" style=\"color: #000\">\n";
+							$output .= "	<input type=\"checkbox\" name=\"checked_objectives[".$objective_id."]\" id=\"objective_checkbox_".$objective_id."\"".($course ? " disabled=\"true\" checked=\"checked\"" : " onclick=\"if (this.checked) { $('objective_table_".$objective_id."_details').show(); $('objective_text_".$objective_id."').focus(); } else { $('objective_table_".$objective_id."_details').hide(); }\"".($objective["event_objective"] ? " checked=\"checked\"" : ""))." style=\"float: left;\" value=\"1\" />\n";
+							$output .= "	<div style=\"padding-left: 25px;\"><label for=\"objective_checkbox_".$objective_id."\">".$objective["description"]." <a class=\"external content-small\" href=\"".ENTRADA_RELATIVE."/courses/objectives?section=objective-details&amp;oid=".$objective_id."\">".$objective["name"]."</a></label></div>\n";
+							$output .= "</div>\n";
+							$output .= "<div id=\"objective_table_".$objective_id."_details\" style=\"padding-left: 25px; margin-top: 5px".($objective["event_objective"] ? "" : "; display: none")."\">\n";
+							$output .= "	<label for=\"c_objective_".$objective_id."\" class=\"content-small\" id=\"objective_".$objective_id."_append\" style=\"vertical-align: middle;\">Provide your sessional free-text objective below as it relates to this curricular objective.</label>\n";
+							$output .= "	<textarea name=\"objective_text[".$objective_id."]\" id=\"objective_text_".$objective_id."\" class=\"expandable\">".(isset($objective["event_objective_details"]) ? html_encode($objective["event_objective_details"]) : "")."</textarea>";
+							$output .= "</div>\n";
+						} elseif ($edit_text) {
+							$edit_ajax[] = $objective_id;
+							$output .= "<div id=\"objective_table_".$objective_id."\">\n";
+							$output .= "	<label for=\"objective_checkbox_".$objective_id."\" class=\"heading\">".$objective["name"]."</label> ( <span id=\"edit_mode_".$objective_id."\" class=\"content-small\" style=\"cursor: pointer\">edit</span> )\n";
+							$output .= "	<div class=\"content-small\" style=\"padding-left: 25px;\" id=\"objective_description_".$objective_id."\">".(isset($objective["objective_details"]) && $objective["objective_details"] ? $objective["objective_details"] : $objective["description"])."</div>\n";
+							$output .= "</div>\n";
+						} else {
+							$output .= "<input type=\"checkbox\" id=\"objective_checkbox_".$objective_id."\ name=\"course_objectives[".$objective_id."]\"".(isset($objective["event_objective"]) && $objective["event_objective"] ? " checked=\"checked\"" : "")." onclick=\"if (this.checked) { this.parentNode.addClassName('".($importance == 2 ? "secondary" : ($importance == 3 ? "tertiary" : "primary"))."'); } else { this.parentNode.removeClassName('".($importance == 2 ? "secondary" : ($importance == 3 ? "tertiary" : "primary"))."'); }\" style=\"float: left;\" value=\"1\" />\n";
+							$output .= "<label for=\"objective_checkbox_".$objective_id."\" class=\"heading\">".$objective["name"]."</label>\n";
+							$output .= "<div style=\"padding-left: 25px;\">\n";
+							$output .=		$objective["description"]."\n";
+							if (isset($objective["objective_details"]) && $objective["objective_details"]) {
+								$output .= "<br/><br/>\n";
+								$output .= "<em>".$objective["objective_details"]."</em>";
+							}
+							$output .= "</div>\n";
+						}
+						$output .= "</li>\n";
+
+					} else {
+							$output .= event_objectives_in_list($objectives, $objective_id,$top_level_id, $edit_text, (($objective[$display_importance]) ? true : false), $importance, $course, false, $display_importance, $full_objective_list);
+					}
+				}
+			}
+			$iterated = true;
+			if ($top) {
+				$output .= "</div>\n";
+			}
+		} while ((($display_importance != "tertiary") && ($display_importance != "secondary" || $active["tertiary"]) && ($display_importance != "primary" || $active["secondary"] || $active["tertiary"])) && $top);
+		if ($top) {
+			$output .= "</ul>\n";
+		}
+	}*/
+
+
 	if ((is_array($objectives)) && ($total = count($objectives))) {
 		$count	= 0;
 		if ($top) {
@@ -11306,7 +11358,7 @@ function event_objectives_in_list($objectives, $parent_id, $top_level_id, $edit_
 				}
 			}
 			if ($top) {
-				$output .= "<h2 title=\"".ucwords($display_importance)." Objectives\">".ucwords($display_importance)." Objectives</h2>\n";
+				$output .= "<h2".($iterated ? " class=\"collapsed\"" : "")." title=\"".ucwords($display_importance)." Objectives\">".ucwords($display_importance)." Objectives</h2>\n";
 				$output .= "<div id=\"".($display_importance)."-objectives\">\n";
 			}
 			foreach ($flat_objective_list as $objective_id => $objective_activity) {
@@ -11339,7 +11391,7 @@ function event_objectives_in_list($objectives, $parent_id, $top_level_id, $edit_
 							$output .= "<div style=\"padding-left: 25px;\">\n";
 							$output .=		$objective["description"]."\n";
 							if (isset($objective["objective_details"]) && $objective["objective_details"]) {
-								$output .= "<br /><br />\n";
+								$output .= "<br/><br/>\n";
 								$output .= "<em>".$objective["objective_details"]."</em>";
 							}
 							$output .= "</div>\n";
@@ -12975,10 +13027,10 @@ function objectives_intable($ORGANISATION_ID, $identifier = 0, $indent = 0, $exc
 			$output .= "		<div style=\"padding-left: 30px\">";
 			$output .= "			<input type=\"radio\" name=\"delete[".((int)$identifier)."][move]\" id=\"delete_".((int)$identifier)."_children\" value=\"0\" onclick=\"$('move-".((int)$identifier)."-children').hide();\" checked=\"checked\"/>";
 			$output .= "			<label for=\"delete_".((int)$identifier)."_children\" class=\"form-nrequired\"><strong>Deactivate</strong> all children</label>";
-			$output .= "			<br />";
+			$output .= "			<br/>";
 			$output .= "			<input type=\"radio\" name=\"delete[".((int)$identifier)."][move]\" id=\"move_".((int)$identifier)."_children\" value=\"1\" onclick=\"$('move-".((int)$identifier)."-children').show();\" />";
 			$output .= "			<label for=\"move_".((int)$identifier)."_children\" class=\"form-nrequired\"><strong>Move</strong> all children</label>";
-			$output .= "			<br /><br />";
+			$output .= "			<br/><br/>";
 			$output .= "		</div>";
 			$output .= "		</td>";
 			$output .= "	</tr>";
@@ -14383,10 +14435,10 @@ function display_person(User $user) {
 					if ($address && $city) {
 						?>
 						<div>
-							<span class="address-label">Address:</span><br />
+							<span class="address-label">Address:</span><br/>
 							<span class="address-value">
 							<?php
-								echo html_encode($address)."<br />".html_encode($city);
+								echo html_encode($address)."<br/>".html_encode($city);
 								if ($prov_name) echo ", ".html_encode($prov_name);
 								echo "<br />";
 								echo html_encode($country_name);

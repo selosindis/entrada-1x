@@ -144,7 +144,9 @@ if (($router) && ($route = $router->initRoute($MODULE))) {
 		$sidebar_html .= "<label for=\"permission-mask\">Available permission masks:</label>";
 		$sidebar_html .= "<select id=\"permission-mask\" name=\"mask\" style=\"width: 160px\" onchange=\"window.location='".ENTRADA_URL."/admin/".$MODULE."/?".html_decode(replace_query(array("mask" => "'+this.options[this.selectedIndex].value")))."\">\n";
 		foreach($_SESSION["permissions"] as $proxy_id => $result) {
-			$sidebar_html .= "<option value=\"".(($proxy_id == $_SESSION["details"]["id"]) ? "close" : $result["permission_id"])."\"".(($proxy_id == $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]) ? " selected=\"selected\"" : "").">".html_encode($result["fullname"])."</option>\n";
+			if (is_int($proxy_id)) {
+				$sidebar_html .= "<option value=\"".(($proxy_id == $_SESSION["details"]["id"]) ? "close" : $result["permission_id"])."\"".(($proxy_id == $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]) ? " selected=\"selected\"" : "").">".html_encode($result["fullname"])."</option>\n";
+			}
 		}
 		$sidebar_html .= "</select>\n";
 		$sidebar_html .= "</form>\n";
@@ -185,17 +187,26 @@ if((isset($_SESSION["isAuthorized"])) && ($_SESSION["isAuthorized"])) {
 	 * Create the Organisation side bar.
 	 */
 
-	if ($ENTRADA_USER->getAllOrganisations() && count($ENTRADA_USER->getAllOrganisations()) > 1) {
+	if (($ENTRADA_USER->getAllOrganisations() && count($ENTRADA_USER->getAllOrganisations()) > 1) || ($ENTRADA_USER->getOrganisationGroupRole() && max(array_map('count', $ENTRADA_USER->getOrganisationGroupRole())) > 1)) {
+		$org_group_role = $ENTRADA_USER->getOrganisationGroupRole();
 		$sidebar_html = "<ul class=\"menu none\">\n";
 		foreach ($ENTRADA_USER->getAllOrganisations() as $key => $organisation_title) {
 			if ($key == $ENTRADA_USER->getActiveOrganisation()) {
-				$sidebar_html .= "<li><a href=\"" . ENTRADA_URL . "/admin/" . $MODULE . "/" . "?" . replace_query(array("organisation_id" => $key)) . "\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-on.gif\" alt=\"\" /> <span>" . html_encode($organisation_title) . "</span></a></li>\n";
+				$sidebar_html .= "<li><a href=\"" . ENTRADA_URL . "/admin/" . $MODULE . "/" . "?organisation_id=" . $key . "\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-on.gif\" alt=\"\" /> <span>" . html_encode($organisation_title) . "</span></a></li>\n";
+				if ($org_group_role && !empty($org_group_role)) {
+					foreach($org_group_role[$key] as $group => $role) {
+						if ($role[1] == $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["ua_id"]) {
+							$sidebar_html .= "<li style=\"padding-left: 15px;\"><a href=\"" . ENTRADA_URL . "/admin/" . $MODULE . "/" . "?" . replace_query(array("organisation_id" => $key, "ua_id" => $role[1])) . "\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-on.gif\" alt=\"\" /> <span>" . html_encode(ucfirst($group) . " - " . ucfirst($role[0])) . "</span></a></li>\n";
+						} else {
+							$sidebar_html .= "<li style=\"padding-left: 15px;\"><a href=\"" . ENTRADA_URL . "/admin/" . $MODULE . "/" . "?" . replace_query(array("organisation_id" => $key, "ua_id" => $role[1])) . "\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-off.gif\" alt=\"\" /> <span>" . html_encode(ucfirst($group) . " - " . ucfirst($role[0])) . "</span></a></li>\n";
+						}
+					}
+				}
 			} else {
-				$sidebar_html .= "<li><a href=\"" . ENTRADA_URL . "/admin/" . $MODULE . "/" . "?" . replace_query(array("organisation_id" => $key)) . "\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-off.gif\" alt=\"\" /> <span>" . html_encode($organisation_title) . "</span></a></li>\n";
+				$sidebar_html .= "<li><a href=\"" . ENTRADA_URL . "/admin/" . $MODULE . "/" . "?organisation_id=" . $key . "\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-off.gif\" alt=\"\" /> <span>" . html_encode($organisation_title) . "</span></a></li>\n";
 			}
 		}
 		$sidebar_html .= "</ul>\n";
-
 		new_sidebar_item("Organisations", $sidebar_html, "org-switch", "open", SIDEBAR_PREPEND);
 	}
 }

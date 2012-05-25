@@ -124,6 +124,29 @@ class Entrada_ACL extends ACL_Factory {
 				$permissions[$result["proxy_id"]] = array("permission_id" => $result["permission_id"], "group" => $result["group"], "role" => $result["role"], "group_id" => $result["group_id"], "role_id" => $result["role_id"], "organisation" => $result["organisation"], "organisation_id" => $result["organisation_id"], "starts" => $result["valid_from"], "expires" => $result["valid_until"], "fullname" => $result["fullname"], "firstname" => $result["firstname"], "lastname" => $result["lastname"]);
 			}
 		}
+		//Add all user_access records to the $permissions tree by organisation.
+		$query = "SELECT b.`id` AS `proxy_id`, c.`id` as ua_id, e.`organisation_id`, e.`organisation_title`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, b.`firstname`, b.`lastname`, c.`role`, c.`group`
+				FROM `".AUTH_DATABASE."`.`user_data` AS b
+				JOIN `".AUTH_DATABASE."`.`user_access` AS c
+				ON c.`user_id` = b.`id` 
+				AND b.`id` = " . $userdetails["id"] . "
+				AND c.`app_id`=".$db->qstr(AUTH_APP_ID)."
+				AND c.`account_active`='true'
+				AND (c.`access_starts`='0' OR c.`access_starts`<=".$db->qstr(time()).")
+				AND (c.`access_expires`='0' OR c.`access_expires`>=".$db->qstr(time()).")				
+				JOIN `".AUTH_DATABASE."`.`organisations` AS e
+				ON e.`organisation_id` = c.`organisation_id`
+				ORDER BY c.`group` ASC";
+		
+		$results = $db->GetAll($query);
+
+		if ($results) {
+			foreach ($results as $result) {
+				$new_proxy_id = $result["proxy_id"] . "-" . $result["ua_id"];
+				$permissions[$new_proxy_id] = array("permission_id" => $result["permission_id"], "group" => $result["group"], "role" => $result["role"], "group_id" => $result["group_id"], "role_id" => $result["role_id"], "organisation" => $result["organisation"], "organisation_id" => $result["organisation_id"], "starts" => $result["valid_from"], "expires" => $result["valid_until"], "fullname" => $result["fullname"], "firstname" => $result["firstname"], "lastname" => $result["lastname"]);
+			}
+		}
+		
 		//Also add the user's own details, as the user can mask as itself.
 		$permissions[$userdetails["id"]] = $userdetails;
 
@@ -143,7 +166,7 @@ class Entrada_ACL extends ACL_Factory {
 			$cur_proxy_id			= $proxy_id;
 			$cur_role				= $permission_mask["role"];
 			$cur_group				= $permission_mask["group"];
-			$cur_organisation		= (array_key_exists("organisation", $permission_mask) ? $permission_mask["organisation"] : NULL);
+			$cur_organisation		= (array_key_exists("organisation_title", $permission_mask) ? $permission_mask["organisation_title"] : NULL);
 			$cur_organisation_id	= $permission_mask["organisation_id"];
 
 			if(!$acl->hasRole("organisation".$cur_organisation_id)) {
@@ -308,6 +331,7 @@ class Entrada_ACL extends ACL_Factory {
 		foreach ($query as $part) {
 			$complete_query .= $part;
 		}
+
 		return $db->GetAll($complete_query);
 	}
 }

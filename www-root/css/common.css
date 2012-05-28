@@ -1139,7 +1139,7 @@ border-left:none;
 border-right:none;
 }
 
-table.tableList thead tr td.sortedASC,table.tableList thead tr td.sortedDESC {
+table.tableList thead tr td.sortedASC,table.tableList thead tr td.sortedDESC,table.tableList thead tr td.sorting_asc,table.tableList thead tr td.sorting_desc {
 background-image:url(../images/list-header-dark.gif);
 }
 
@@ -2705,11 +2705,11 @@ table.quizResults tbody tr td.left,thead td.severity {
 text-align:left;
 }
 
-table.tableList thead tr td.sortedASC .noLink,table.tableList thead tr td.sortedASC a {
+table.tableList thead tr td.sortedASC .noLink,table.tableList thead tr td.sortedASC a,table.tableList thead tr td.sorting_asc .noLink {
 background:transparent url(../images/sort_asc.gif) top right no-repeat;
 }
 
-table.tableList thead tr td.sortedDESC a,table.tableList thead tr td.sortedDESC .noLink {
+table.tableList thead tr td.sortedDESC a,table.tableList thead tr td.sortedDESC .noLink,table.tableList thead tr td.sorting_desc .noLink {
 background:transparent url(../images/sort_desc.gif) top right no-repeat;
 }
 
@@ -3733,4 +3733,34 @@ padding:13px;
 
 table.galleries tbody tr td.small a,table.galleries tbody tr td.small a:hover,table.galleries tbody tr td.small,table.discussions tbody tr td.small a,table.discussions tbody tr td.small a:hover,table.discussions tbody tr td.small {
 	font-size:10px;
+}
+
+.dataTables_length, .dataTables_paginate {
+	float: right;
+}
+
+.membersTableList {
+	margin-top: 10px;
+	margin-bottom: 10px;
+}
+
+.dataTables_info {
+	position: absolute;
+}
+
+.dataTables_wrapper {
+	padding-bottom: 20px;
+}
+
+a.paginate_button {
+	background-color: #DDDDDD;
+    cursor: pointer;
+}
+
+a.paginate_button, a.paginate_active {
+	border: 1px solid #AAAAAA;
+    border-radius: 5px 5px 5px 5px;
+    color: #333333 !important;
+    margin: 0 3px;
+    padding: 2px 5px;
 }

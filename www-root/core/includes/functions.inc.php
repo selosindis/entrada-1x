@@ -14870,15 +14870,6 @@ function categories_inarray($parent_id, $indent = 0) {
  */
 function history_log($event, $message, $updater=0, $time=0) {
 	global $db;
-	if (!$updater) { // Ignore noting updates if made by the sole author. 
-	 $result = $db->GetOne("SELECT count(*) FROM `event_history` WHERE `event_id` = ".$db->qstr($event));
-	 if (!$result) {
-	  $result = $db->GetOne("SELECT `updated_by` FROM `events` WHERE `event_id` = ".$db->qstr($event));
-	  if ($result==$_SESSION["details"]["id"]) {
-	   return ;
-	  }
-	 }
-	}
 	if (!$db->AutoExecute("event_history", array("event_id" => $event, "proxy_id" => ($updater ? $updater : $_SESSION["details"]["id"]), "history_message" => $message, "history_timestamp" => ($time ? $time : time())), "INSERT")) {
 		$ERROR++;
 		$ERRORSTR[] = "There was an error while trying to save the selected <strong>Event content update</strong> for this event.<br /><br />The system administrator was informed of this error; please try again later.";

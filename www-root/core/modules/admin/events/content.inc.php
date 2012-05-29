@@ -83,7 +83,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							ORDER BY `history_timestamp` DESC, `history_message` ASC";
 				$history = $db->GetAll($query);
 				
-				if (!$history && ($event_info["updated_by"]<>$_SESSION["details"]["id"])/*add a time limit here to start recording the sole author's updates*/) {
+				if (!$history) {
 					$query = "	SELECT CONCAT_WS(' ', `firstname`, `lastname`) AS `fullname`,
 								$LASTUPDATED AS timestamp, 'created this learning event.' AS message
 								FROM `".AUTH_DATABASE."`.`user_data`

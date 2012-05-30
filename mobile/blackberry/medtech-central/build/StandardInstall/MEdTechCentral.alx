@@ -1,0 +1,11 @@
+<loader version="1.0" >
+<application id="MEdTechCentral">
+<name>MEdTech Central</name>
+<description>MEdTech Central</description>
+<version>2.0.0.0</version>
+<fileset Java="1.45">
+<directory></directory>
+<files>MEdTechCentral.cod</files>
+</fileset>
+</application>
+</loader>

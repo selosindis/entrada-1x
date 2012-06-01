@@ -1,13 +1,11 @@
 <?php
 /**
- * Online Course Resources [Pre-Clerkship]
+ * Learning Events Schedule live-edit API
  * @author Unit: Medical Education Technology Unit
- * @author Director: Dr. Benjamin Chen <bhc@post.queensu.ca>
- * @author Developer: Matt Simpson <simpson@post.queensu.ca>
- * @version 3.0
- * @copyright Copyright 2006 Queen's University, MEdTech Unit
+ * @author Director: Ryan Warner <ryan.warner@queensu.ca>
+ * @copyright Copyright 2012 Queen's University, MEdTech Unit
  * 
- * $Id: timeline.api.php 1103 2010-04-05 15:20:37Z simpson $
+ * $Id: learning-events-schedule.api.php 2012-05-30 15:20:37Z rw65 $
 */
 
 @set_include_path(implode(PATH_SEPARATOR, array(

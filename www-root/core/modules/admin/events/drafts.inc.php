@@ -21,7 +21,7 @@
  * @author Organisation: Univeristy of Calgary
  * @author Unit: Faculty of Medicine
  * @author Developer: Ryan Warner <ryan.warner@queensu.ca>
- * @copyright Copyright 2010 University of Calgary. All Rights Reserved.
+ * @copyright Copyright 2012 University of Calgary. All Rights Reserved.
  *
 */
 
@@ -31,7 +31,7 @@ if (!defined("IN_EVENTS")) {
 	header("Location: ".ENTRADA_URL);
 	exit;
 } else {
-	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/events/drafts", "title" => "Learning Event Schedule");
+	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/events/drafts", "title" => "Learning Event Draft Schedule");
 
 	if (($router) && ($router->initRoute())) {
 		$module_file = $router->getRoute();

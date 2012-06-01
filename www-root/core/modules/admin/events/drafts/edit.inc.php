@@ -15,7 +15,7 @@
  * @author Organisation: Queen's University
  * @author Unit: School of Medicine
  * @author Developer: Ryan Warner <ryan.warner@queensu.ca>
- * @copyright Copyright 2010 Queen's University. All Rights Reserved.
+ * @copyright Copyright 2012 Queen's University. All Rights Reserved.
  *
 */
 
@@ -32,7 +32,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
 } else { 
-	
+	$BREADCRUMB[]	= array("url" => "", "title" => "Edit Draft Schedule");
 	$draft_id = (int) $_GET["draft_id"];
 	
 	/**
@@ -157,7 +157,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 	$creators = $db->GetAssoc($query);
 
 	if (!array_key_exists($ENTRADA_USER->getID(), $creators)) {
-		add_notice("You are not approved to work on this draft schedule.");
+		add_notice("Your account is not approved to work on this draft schedule.<br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.");
 		echo display_notice();
 	} else {
 		$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/elementresizer.js\"></script>\n";
@@ -223,7 +223,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						<td style="vertical-align: top">
 							<input type="text" id="author_name" name="fullname" size="30" autocomplete="off" style="width: 203px" />
 							<?php
-							$ONLOAD[] = "author_list = new AutoCompleteList({ type: 'author', url: '". ENTRADA_RELATIVE ."/api/personnel.api.php?type=facultyorstaff', remove_image: '". ENTRADA_RELATIVE ."/images/action-delete.gif'})";
+							$ONLOAD[] = "author_list = new AutoCompleteList({ type: 'author', url: '". ENTRADA_RELATIVE ."/api/personnel.api.php?type=coordinator', remove_image: '". ENTRADA_RELATIVE ."/images/action-delete.gif'})";
 							?>
 							<div class="autocomplete" id="author_name_auto_complete"></div>
 							<input type="hidden" id="associated_author" name="associated_proxy_ids" value="" />
@@ -371,7 +371,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 		</script>
 		<style type="text/css">
 			#draftEvents_length {padding:5px 4px 0 0;}
-			#draftEvents_filter {-moz-border-radius:10px 10px 0px 0px; border: 1px solid #9D9D9D;border-bottom:none;background-color:#FAFAFA;font-size: 0.9em;padding:3px;}
+			#draftEvents_filter {-moz-border-radius:10px 10px 0px 0px;-webkit-border-top-left-radius: 10px;-webkit-border-top-right-radius: 10px;border-radius: 10px 10px 0px 0px; border: 1px solid #9D9D9D;border-bottom:none;background-color:#FAFAFA;font-size: 0.9em;padding:3px;}
 			#draftEvents_paginate a {margin:2px 5px;}
 		</style>
 		<div style="clear:both;"></div>

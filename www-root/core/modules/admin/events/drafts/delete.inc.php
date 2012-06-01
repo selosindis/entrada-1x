@@ -17,8 +17,8 @@
  *
  * @author Organisation: Queen's University
  * @author Unit: School of Medicine
- * @author Developer: James Ellis <james.ellis@queensu.ca>
- * @copyright Copyright 2010 Queen's University. All Rights Reserved.
+ * @author Developer: Ryan Warner <ryan.warner@queensu.ca>
+ * @copyright Copyright 2012 Queen's University. All Rights Reserved.
  *
 */
 
@@ -79,7 +79,12 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 	switch($STEP) {
 		case 2 :
 			$removed = array();
-			$query = "SELECT `draft_id`, `name` AS `draft_title` FROM `drafts` WHERE `draft_id` IN (".implode(', ', $DRAFT_IDS).")";
+			$query = "	SELECT a.`draft_id`, a.`name` AS a.`draft_title` 
+						FROM `drafts` AS a
+						JOIN `draft_creators` AS b
+						ON a.`draft_id` = b.`draft_id`
+						WHERE a.`draft_id` IN (".implode(', ', $DRAFT_IDS).")
+						AND b.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]);
 			$drafts = $db->GetAssoc($query);
 			foreach($DRAFT_IDS as $draft_id) {
 				$allow_removal = false;
@@ -152,16 +157,36 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				
 				$total_events	= count($DRAFT_IDS);
 				
-				$query		= "	SELECT *
-								FROM `drafts`
-								WHERE `draft_id` IN ('".implode("', '", $DRAFT_IDS)."')";
+				$query		= "	SELECT a.*
+								FROM `drafts` AS a
+								JOIN `draft_creators` AS b
+								ON a.`draft_id` = b.`draft_id`
+								WHERE a.`draft_id` IN ('".implode("', '", $DRAFT_IDS)."')
+								AND b.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]);
 				$results	= $db->GetAll($query);
 								
 				if($results) {
 					echo display_notice(array("Please review the following draft".(($total_events > 1) ? "s" : "")." to ensure that you wish to <strong>permanently delete</strong> ".(($total_events != 1) ? "them" : "it").".<br /><br />This will also remove any attached draft events and this action cannot be undone."));
+					$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/jquery/jquery.dataTables.min.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
 					?>
+					<style type="text/css">
+						#draft-list_length {padding:5px 4px 0 0;}
+						#draft-list_filter {-moz-border-radius:10px 10px 0px 0px; border: 1px solid #9D9D9D;border-bottom:none;background-color:#FAFAFA;font-size: 0.9em;padding:3px;}
+						#draft-list_paginate a {margin:2px 5px;}
+					</style>
+					<script type="text/javascript">
+						jQuery(function(){
+							jQuery(".noLink").live("click", function(){
+								return false;
+							});
+
+							jQuery('#draft-list').dataTable({
+								"aaSorting": [[ 1, "asc" ]]
+							});
+						});
+					</script>
 					<form action="<?php echo ENTRADA_URL; ?>/admin/events/drafts?section=delete&amp;step=2" method="post">
-					<table class="tableList" widht="100%" cellspacing="0" summary="List of Events">
+					<table class="tableList" id="draft-list" widht="100%" cellspacing="0" summary="List of Events">
 					<colgroup>
 						<col class="modified" />
 						<col class="date" />
@@ -171,52 +196,36 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					<thead>
 						<tr>
 							<td class="modified" style="font-size: 12px">&nbsp;</td>
-							<td class="date sortedASC" style="font-size: 12px"><div class="noLink">Creation Date &amp; Time</div></td>
-							<td class="title" style="font-size: 12px">Draft Title</td>
-							<td class="description" style="font-size: 12px">Description</td>
+							<td class="date" style="font-size: 12px"><a href="#" class="noLink">Creation Date &amp; Time</a></td>
+							<td class="title" style="font-size: 12px"><a href="#" class="noLink">Draft Title</a></td>
+							<td class="description" style="font-size: 12px"><a href="#" class="noLink">Description</a></td>
 						</tr>
 					</thead>
-					<tfoot>
-						<tr>
-							<td></td>
-							<td colspan="3" style="padding-top: 10px">
-								<input type="submit" class="button" value="Confirm Removal" />
-							</td>
-						</tr>
-					</tfoot>
 					<tbody>
 						<?php
 						foreach($results as $result) {
-							$url			= "";
-							$accessible		= true;
-							$administrator	= true; // NEEDS TO BE FIXED
+							$url 	= ENTRADA_URL."/admin/events/drafts?section=edit&amp;draft_id=".$result["draft_id"];
 
-							/*if($ENTRADA_ACL->amIAllowed(new EventResource($result["event_id"], $result["course_id"], $result["organisation_id"]), 'delete')) {
-								$administrator = true;
-							} else {
-								if((($result["release_date"]) && ($result["release_date"] > time())) || (($result["release_until"]) && ($result["release_until"] < time()))) {
-									$accessible = false;
-								}
-							}*/
-			
-							if($administrator) {
-								$url 	= ENTRADA_URL."/admin/events/drafts?section=edit&amp;draft_id=".$result["draft_id"];
-								
-								echo "<tr id=\"draft-".$result["draft_id"]."\" class=\"event".((!$url) ? " np" : ((!$accessible) ? " na" : ""))."\">\n";
-								echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"checked[]\" value=\"".$result["draft_id"]."\" checked=\"checked\" /></td>\n";
-								echo "	<td class=\"date".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Draft Creation Date\">" : "").date(DEFAULT_DATE_FORMAT, $result["created"]).(($url) ? "</a>" : "")."</td>\n";
-								echo "	<td class=\"title".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Draft Title: ".html_encode($result["name"])."\">" : "").html_encode($result["name"]).(($url) ? "</a>" : "")."</td>\n";
-								echo "	<td class=\"description".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Draft Description: ".html_encode($result["description"])."\">" : "").html_encode($result["description"]).(($url) ? "</a>" : "")."</td>\n";
-								echo "</tr>\n";
-							}
+							echo "<tr id=\"draft-".$result["draft_id"]."\" class=\"event\">\n";
+							echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"checked[]\" value=\"".$result["draft_id"]."\" checked=\"checked\" /></td>\n";
+							echo "	<td class=\"date".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Draft Creation Date\">" : "").date(DEFAULT_DATE_FORMAT, $result["created"]).(($url) ? "</a>" : "")."</td>\n";
+							echo "	<td class=\"title".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Draft Title: ".html_encode($result["name"])."\">" : "").html_encode($result["name"]).(($url) ? "</a>" : "")."</td>\n";
+							echo "	<td class=\"description".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Draft Description: ".html_encode($result["description"])."\">" : "").html_encode($result["description"]).(($url) ? "</a>" : "")."</td>\n";
+							echo "</tr>\n";
 						}
 						?>
 					</tbody>
 					</table>
+					<table width="100%" style="padding-top: 10px">
+						<tr>
+							<td><input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/events/drafts/';" /></td>
+							<td align="right"><input type="submit" class="button" value="Confirm Removal" /></td>
+						</tr>
+					</table>
 					</form>
 					<?php
 				} else {
-					application_log("error", "The confirmation of removal query returned no results... curious Database said: ".$db->ErrorMsg());
+					application_log("error", "User could not delete drafts, DB said: ".$db->ErrorMsg());
 					header("Location: ".ENTRADA_URL."/admin/events/drafts");
 					exit;	
 				}

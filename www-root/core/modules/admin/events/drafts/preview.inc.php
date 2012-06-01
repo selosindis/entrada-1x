@@ -24,7 +24,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 } else if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 		header("Location: ".ENTRADA_URL);
 		exit;
-} else if (!$ENTRADA_ACL->amIAllowed('eventcontent', 'update', false)) {
+} else if (!$ENTRADA_ACL->amIAllowed('event', 'add', false)) {
 	$ERROR++;
 	$ERRORSTR[]	= "Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
 
@@ -32,7 +32,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
 } else { 
-	
+	$BREADCRUMB[]	= array("url" => "", "title" => "Draft Schedule Preview");
 	$draft_id = (int) $_GET["draft_id"];
 	
 	if (isset($_GET["mode"]) && $_GET["mode"] == "calendar-data") {

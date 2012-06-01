@@ -58,9 +58,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			$draft_info = $db->GetAssoc($query);
 			
 			if (!empty($draft_info) && array_key_exists($draft_id, $draft_info)) {
-				switch ($draft_info["draft_id"]["status"]) {
+				switch ($draft_info[$draft_id]) {
 					case "approved" :
-						add_error("The specified draft has been approved for importation. To add a new event the draft must be re-opened.");
+						add_error("The specified draft has been approved for importation. To add a new event the draft must be <a href=\"".ENTRADA_URL."/admin/events/drafts?section=status&action=reopen&draft_id=".$draft_id."\">reopened</a>.");
 					case "open" :
 					default :
 						$tables['events']		= 'draft_events';
@@ -336,8 +336,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				}
 
 				$PROCESSED["eventtype_id"] = $PROCESSED["event_types"][0][0];
-				
-				var_dump($PROCESSED);
 				
 				if ($db->AutoExecute($tables["events"], $PROCESSED, "INSERT")) {
 					if ($EVENT_ID = $db->Insert_Id()) {

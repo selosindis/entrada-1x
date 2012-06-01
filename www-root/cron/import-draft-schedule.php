@@ -48,13 +48,11 @@ if ($drafts) {
 						if (!$db->Execute($query)) { 
 							$error++;
 							application_log("error", "Error deleting draft event [devent_id - ".$event["devent_id"]."] on draft schedule import. DB said: ".$db->ErrorMsg());
-							echo $db->ErrorMsg();
 						}
 						$event_id = $db->Insert_ID();
 					} else {
 						$error++;
 						application_log("error", "Error inserting event [".$event_id."] on draft schedule import. DB said: ".$db->ErrorMsg());
-						echo $db->ErrorMsg();
 					}
 				} else {
 					// if the event has been edited in the draft it will have an event_id, so it will need to be updated.
@@ -64,13 +62,11 @@ if ($drafts) {
 						if (!$db->Execute($query)) { 
 							$error++;
 							application_log("error", "Error deleting draft event [devent_id - ".$event["devent_id"]."] on draft schedule import. DB said: ".$db->ErrorMsg());
-							echo $db->ErrorMsg();
 						}
 						$event_id = $event["event_id"];
 					} else {
 						$error++;
 						application_log("error", "Error updating event [".$event["event_id"]."] on draft schedule import. DB said: ".$db->ErrorMsg());
-						echo $db->ErrorMsg();
 					}
 				}
 				
@@ -91,12 +87,10 @@ if ($drafts) {
 								if (!$db->Execute($query)) { 
 									$error++;
 									application_log("error", "Error deleting draft eventtype [deventtype_id - ".$eventtype["deventtype_id"]."] on draft schedule import. DB said: ".$db->ErrorMsg());
-									echo $db->ErrorMsg();
 								}
 							} else {
 								$error++;
 								application_log("error", "Error inserting event_eventtype [".$event_id."] on draft schedule import. DB said: ".$db->ErrorMsg());
-								echo $db->ErrorMsg();
 							}
 						}
 					}
@@ -122,19 +116,16 @@ if ($drafts) {
 								if (!$db->Execute($query)) { 
 									$error++;
 									application_log("error", "Error deleting draft event contact [dcontact_id - ".$contact["dcontact_id"]."] on draft schedule import. DB said: ".$db->ErrorMsg());
-									echo $db->ErrorMsg();
 								}
 							} else {
 								$error++;
 								application_log("error", "Error inserting event_contact [".$event_id."] on draft schedule import. DB said: ".$db->ErrorMsg());
-								echo $db->ErrorMsg();
 							}
 						}
 					}
 				} else {
 					$error++;
 					application_log("error", "Error deleting event_contacts for [".$event_id."] on draft schedule import. DB said: ".$db->ErrorMsg());
-					echo $db->ErrorMsg();
 				}
 				
 				// remove the event_contacts associated with the event
@@ -154,19 +145,16 @@ if ($drafts) {
 								if (!$db->Execute($query)) { 
 									$error++;
 									application_log("error", "Error deleting draft event audience [daudience_id - ".$audience["dcontact_id"]."] on draft schedule import. DB said: ".$db->ErrorMsg());
-									echo $db->ErrorMsg();
 								}
 							} else {
 								$error++;
 								application_log("error", "Error inserting event_audience [".$event_id."] on draft schedule import. DB said: ".$db->ErrorMsg());
-								echo $db->ErrorMsg();
 							}
 						}
 					}
 				} else {
 					$error++;
 					application_log("error", "Error deleting event audience for [".$event_id."] on draft schedule import. DB said: ".$db->ErrorMsg());
-					echo $db->ErrorMsg();
 				}
 				
 				if (!$error) {
@@ -182,17 +170,14 @@ if ($drafts) {
 				$query = "DELETE FROM `drafts` WHERE `draft_id` = ".$db->qstr($draft["draft_id"]);
 				if ($db->Execute($query)) {
 					// draft successfully imported and draft deleted from drafts tables
-					application_log("success", "Successfully imported draft [draft_id-".$draft["draft_id"]."]");
-					echo "success: updated ".$count." records";
+					application_log("success", "Successfully imported draft [draft_id-".$draft["draft_id"]."]. ".$count." records imported.");
 				} else {
 					// something went wrong
-					application_log("error", "Failed to import draft [draft_id-".$draft["draft_id"]."]".$db->ErrorMsg());
-					echo "failed: ".$db->ErrorMsg();
+					application_log("error", "Failed to import draft [draft_id-".$draft["draft_id"]."], DB said: ".$db->ErrorMsg());
 				}
 			} else { 
 				// failed to delete draft_creators entries
-				application_log("error", "Failed to import draft [draft_id-".$draft["draft_id"]."]".$db->ErrorMsg());
-				echo "failed: ".$db->ErrorMsg();
+				application_log("error", "Failed to import draft [draft_id-".$draft["draft_id"]."], DB said: ".$db->ErrorMsg());
 			}
 		}
 	}

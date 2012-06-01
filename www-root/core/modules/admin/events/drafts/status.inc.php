@@ -18,7 +18,7 @@
  * @author Organisation: Queen's University
  * @author Unit: School of Medicine
  * @author Developer: Ryan Warner <ryan.warner@queensu.ca>
- * @copyright Copyright 2010 Queen's University. All Rights Reserved.
+ * @copyright Copyright 2012 Queen's University. All Rights Reserved.
  *
 */
 
@@ -37,10 +37,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
-	$BREADCRUMB[]	= array("url" => "", "title" => "Delete Drafts");
-
-	echo "<h1>Delete Drafts</h1>";
-
+	
 	$DRAFT_IDS = array();
 
 	$action = clean_input($_GET["action"], array("trim", "nohtml"));
@@ -54,6 +51,10 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			$status = "approved";
 		break;
 	}
+	
+	$BREADCRUMB[]	= array("url" => "", "title" => ucwords($action)." Drafts");
+
+	echo "<h1>".ucwords($action)." Drafts</h1>";
 	
 	// Error Checking
 	switch($STEP) {
@@ -103,8 +104,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					if ($db->Execute($query)) {
 						$approved[$draft_id]["name"] = $drafts[$draft_id];
 					}
-
 				}
+				
 			}
 
 			$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/events/drafts\\'', 5000)";
@@ -142,16 +143,36 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				
 				$total_events	= count($DRAFT_IDS);
 				
-				$query		= "	SELECT *
-								FROM `drafts`
-								WHERE `draft_id` IN ('".implode("', '", $DRAFT_IDS)."')";
+				$query		= "	SELECT a.*
+								FROM `drafts` AS a
+								JOIN `draft_creators` AS b
+								ON a.`draft_id` = b.`draft_id`
+								WHERE a.`draft_id` IN ('".implode("', '", $DRAFT_IDS)."')
+								AND b.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]);
 				$results	= $db->GetAll($query);
-								
+				
 				if($results) {
 					echo display_notice(array("Please review the following draft".(($total_events > 1) ? "s" : "")." to ensure that you wish to <strong>".$status."</strong> ".(($total_events > 1) ? "them" : "it").".<br /><br />Approving a draft will schedule it to be imported into the system.<br />Re-opening a draft will remove it from the importation schedule and allow it to be modified."));
+					$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/jquery/jquery.dataTables.min.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
 					?>
+					<style type="text/css">
+						#draft-list_length {padding:5px 4px 0 0;}
+						#draft-list_filter {-moz-border-radius:10px 10px 0px 0px; border: 1px solid #9D9D9D;border-bottom:none;background-color:#FAFAFA;font-size: 0.9em;padding:3px;}
+						#draft-list_paginate a {margin:2px 5px;}
+					</style>
+					<script type="text/javascript">
+						jQuery(function(){
+							jQuery(".noLink").live("click", function(){
+								return false;
+							});
+
+							jQuery('#draft-list').dataTable({
+								"aaSorting": [[ 1, "asc" ]]
+							});
+						});
+					</script>
 					<form action="<?php echo ENTRADA_URL; ?>/admin/events/drafts?section=status&step=2&action=<?= $action; ?>" method="post">
-					<table class="tableList" widht="100%" cellspacing="0" summary="List of Events">
+					<table class="tableList" id="draft-list" widht="100%" cellspacing="0" summary="List of Events">
 					<colgroup>
 						<col class="modified" />
 						<col class="date" />
@@ -161,50 +182,33 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					<thead>
 						<tr>
 							<td class="modified" style="font-size: 12px">&nbsp;</td>
-							<td class="date sortedASC" style="font-size: 12px"><div class="noLink">Creation Date &amp; Time</div></td>
-							<td class="title" style="font-size: 12px">Draft Title</td>
-							<td class="description" style="font-size: 12px">Description</td>
+							<td class="date" style="font-size: 12px"><a href="#" class="noLink">Creation Date &amp; Time</a></div></td>
+							<td class="title" style="font-size: 12px"><a href="#" class="noLink">Draft Title</a></td>
+							<td class="description" style="font-size: 12px"><a href="#" class="noLink">Description</a></td>
 						</tr>
 					</thead>
-					<tfoot>
-						<tr>
-							<td></td>
-							<td colspan="3" style="padding-top: 10px">
-								<input type="submit" class="button" value="Confirm" />
-							</td>
-						</tr>
-					</tfoot>
 					<tbody>
 						<?php
 						foreach($results as $result) {
-							$url			= "";
-							$accessible		= true;
-							$administrator	= true; // NEEDS TO BE FIXED
+							$url 	= ENTRADA_URL."/admin/events?section=edit&amp;id=".$result["event_id"];
 
-							/*if($ENTRADA_ACL->amIAllowed(new EventResource($result["event_id"], $result["course_id"], $result["organisation_id"]), 'delete')) {
-								$administrator = true;
-							} else {
-								if((($result["release_date"]) && ($result["release_date"] > time())) || (($result["release_until"]) && ($result["release_until"] < time()))) {
-									$accessible = false;
-								}
-							}*/
-							if ($result["status"] == $status) {
-								add_notice(html_encode($result["name"]));
-							} else {
-								if($administrator) {
-									$url 	= ENTRADA_URL."/admin/events?section=edit&amp;id=".$result["event_id"];
-
-									echo "<tr id=\"draft-".$result["draft_id"]."\" class=\"event".((!$url) ? " np" : ((!$accessible) ? " na" : ""))."\">\n";
-									echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"checked[]\" value=\"".$result["draft_id"]."\" checked=\"checked\" /></td>\n";
-									echo "	<td class=\"date".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Draft Creation Date\">" : "").date(DEFAULT_DATE_FORMAT, $result["created"]).(($url) ? "</a>" : "")."</td>\n";
-									echo "	<td class=\"title".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Draft Title: ".html_encode($result["name"])."\">" : "").html_encode($result["name"]).(($url) ? "</a>" : "")."</td>\n";
-									echo "	<td class=\"description".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Draft Description: ".html_encode($result["description"])."\">" : "").html_encode($result["description"]).(($url) ? "</a>" : "")."</td>\n";
-									echo "</tr>\n";
-								}
-							}
+							echo "<tr id=\"draft-".$result["draft_id"]."\" class=\"event".((!$url) ? " np" : ((!$accessible) ? " na" : ""))."\">\n";
+							echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"checked[]\" value=\"".$result["draft_id"]."\" checked=\"checked\" /></td>\n";
+							echo "	<td class=\"date".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Draft Creation Date\">" : "").date(DEFAULT_DATE_FORMAT, $result["created"]).(($url) ? "</a>" : "")."</td>\n";
+							echo "	<td class=\"title".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Draft Title: ".html_encode($result["name"])."\">" : "").html_encode($result["name"]).(($url) ? "</a>" : "")."</td>\n";
+							echo "	<td class=\"description".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Draft Description: ".html_encode($result["description"])."\">" : "").html_encode($result["description"]).(($url) ? "</a>" : "")."</td>\n";
+							echo "</tr>\n";
 						}
 						?>
 					</tbody>
+					</table>
+					<table width="100%">
+						<tfoot>
+							<tr>
+								<td><input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/events/drafts/';" /></td>
+								<td align="right" style="padding-top: 10px"><input type="submit" class="button" value="Confirm" /></td>
+							</tr>
+						</tfoot>
 					</table>
 					</form>
 					<?php

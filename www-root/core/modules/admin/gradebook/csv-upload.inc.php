@@ -82,6 +82,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 										//$db->AutoExecute("assessment_grades",$PROCESSED,"INSERT");
 										$query = "SELECT * FROM `assessment_grades` WHERE `assessment_id` = ".$db->qstr($ASSESSMENT_ID)." AND `proxy_id` = ".$db->qstr($member["proxy_id"]);
 										$grade = $db->GetRow($query);
+										
+										if ($PROCESSED["value"] < $assessment["grade_threshold"]) {
+											$PROCESSED["threshold_notified"] = 0;
+										}
+										
 										if ($grade) {
 											$db->AutoExecute("assessment_grades",$PROCESSED,"UPDATE","`grade_id`=".$db->qstr($grade["grade_id"]));
 										} else {

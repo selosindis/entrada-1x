@@ -480,7 +480,7 @@ INSERT INTO `roles` (`role_name`, `groups_id`) VALUES
 
 CREATE  TABLE IF NOT EXISTS `groups_has_organisations` (
   `groups_id` INT NOT NULL ,
-  `organisations_organisation_id` INT(12) UNSIGNED NOT NULL ,
+  `organisation_id` INT(12) UNSIGNED NOT NULL ,
   PRIMARY KEY (`groups_id`, `organisations_organisation_id`) )
 ENGINE = MyISAM DEFAULT CHARSET=utf8;
 

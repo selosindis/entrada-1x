@@ -3705,7 +3705,7 @@ CREATE TABLE IF NOT EXISTS `settings` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `settings` (`shortname`, `value`) VALUES
-('version_db', '1228 '),
+('version_db', '1309 '),
 ('version_entrada', '1.3.0');
 
 CREATE TABLE IF NOT EXISTS `statistics` (
@@ -4390,3 +4390,26 @@ INSERT INTO `medbiq_resources` (`resource_id`, `resource`, `resource_description
 (18,'Virtual Patient','An interactive computer simulation of real-life clinical scenarios for the purpose of medical training, education, or assessment (Smothers, Azan, & Ellaway, 2010)',1,0,0),
 (19,'Virtual/Computerized Laboratory','A practical learning environment in which technology- and computer-based simulations allow learners to engage in computer-assisted instruction while being able to ask and answer questions and also engage in discussion of content (Cooke, Irby, & O\'Brien, 2010a); also, to learn through experience by performing medical tasks, especially high-risk ones, in a safe environment (Uniformed Services University, 2011)',1,0,0),
 (20,'Wet Laboratory','Facilities outfitted with specialized equipment* and bench space or adjustable, flexible desktop space for working with solutions or biological materials (\"C.1 Wet Laboratories,\" 2006; Stanford University School of Medicine, 2007;\rWBDG Staff, 2010) *Often includes sinks, chemical fume hoods, biosafety cabinets, and piped services such as deionized or RO water, lab cold and hot water, lab waste/vents, carbon dioxide, vacuum, compressed air, eyewash, safety showers, natural gas, telephone, LAN, and power (\"C.1 Wet Laboratories,\" 2006)',1,0,0);
+
+CREATE TABLE IF NOT EXISTS `notification_users` (
+  `nuser_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `proxy_id` int(11) NOT NULL,
+  `content_type` varchar(32) NOT NULL DEFAULT '',
+  `record_id` int(11) NOT NULL,
+  `record_proxy_id` int(11) DEFAULT NULL,
+  `notify_active` tinyint(1) NOT NULL DEFAULT '0',
+  `digest_mode` tinyint(1) NOT NULL DEFAULT '0',
+  `next_notification_date` int(64) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`nuser_id`)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `notifications` (
+  `notification_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `nuser_id` int(11) NOT NULL,
+  `notification_body` text NOT NULL,
+  `proxy_id` int(11) NOT NULL,
+  `digest` tinyint(1) NOT NULL DEFAULT '0',
+  `sent` tinyint(1) NOT NULL DEFAULT '0',
+  `sent_date` bigint(64) DEFAULT '0',
+  PRIMARY KEY (`notification_id`)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8;

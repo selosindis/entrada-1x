@@ -71,6 +71,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 					$PROCESSED["updated_date"] = time();
 					
 					if ($db->AutoExecute(CLERKSHIP_DATABASE.".logbook_rotation_comments", $PROCESSED, "INSERT")) {
+						$lrcomment_id = $db->Insert_Id();
+						require_once("Models/notifications/NotificationUser.class.php");
+						$notification_user = NotificationUser::get($_SESSION["details"]["id"], "logbook_rotation", $rotation_id, $PROXY_ID);
+						if (!$notification_user) {
+							$notification_user = NotificationUser::add($_SESSION["details"]["id"], "logbook_rotation", $rotation_id, $PROXY_ID);
+						}
+						NotificationUser::addAllNotifications("logbook_rotation", $rotation_id, $PROXY_ID, $_SESSION["details"]["id"], $lrcomment_id);
 						$SUCCESS++;
 						$SUCCESSSTR[] = "You have succesfully added a comment to this rotation".($student ? "" : " for ".get_account_data("firstlast", $PROXY_ID)).".";
 					} else {
@@ -363,7 +370,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 							}
 							$objectives_recorded += ($recorded <= $required_objective["required"] ? $recorded : $required_objective["required"]);
 						} else {
-							if ($objective_ids) {
+							if (isset($objective_ids) && $objective_ids) {
 								$objective_ids .= ",".$db->qstr($required_objective["objective_id"]);
 							} else {
 								$objective_ids = $db->qstr($required_objective["objective_id"]);
@@ -493,6 +500,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 				    <br />
 				    <?php
 			    }
+			    
 			    // Patient follow ups
 			    $query  = "	SELECT `count`, `patient_info` FROM
 					(SELECT count(`patient_info`) as `count`, `patient_info`
@@ -533,18 +541,116 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 			    <br />
 			    <?php
 			    }
+				if ($rotation_id == 12) {
+					$query = "SELECT c.*, COUNT(a.`objective_id`) AS `number_logged` FROM `".CLERKSHIP_DATABASE."`.`logbook_entry_mcc_presentations` AS a
+								JOIN `".CLERKSHIP_DATABASE."`.`logbook_entries` AS b
+								ON a.`lentry_id` = b.`lentry_id`
+								JOIN `global_lu_objectives` AS c
+								ON a.`objective_id` = c.`objective_id`
+								WHERE b.`proxy_id` = ".$db->qstr($PROXY_ID)."
+								GROUP BY a.`objective_id`";
+					$mcc_presentations = $db->GetAll($query);
+					if ($mcc_presentations) {
+						?>
+						<br />
+						<table class="tableList" cellspacing="0" summary="MCC Presentations">
+						    <colgroup>
+							<col style="width: 3%;"/>
+							<col style="width: 82%;"/>
+							<col style="width: 15%;"/>
+						    </colgroup>
+						    <thead>
+							<tr>
+							    <td colspan="2">MCC Presentations</td>
+							    <td style="border-left: none;">Number Logged</td>
+							</tr>
+						    </thead>
+						    <tbody>
+						<?php
+							foreach ($mcc_presentations as $mcc_presentation) {
+							    echo "<tr>";
+							    echo "<td>&nbsp;</td>";
+							    echo "<td class=\"phase\">".limit_chars(html_decode($mcc_presentation["objective_name"]), 55, true, false)."</td>";
+							    echo "<td>".$mcc_presentation["number_logged"]."</td>";
+							    echo "</tr>";
+							}
+						    ?>
+							</tbody>
+						</table>
+					    <br />
+					    <?php
+					}
+					?>
+					<h3>Summary</h3>
+					<div style="width: 80%;">
+						<?php if (isset($_GET["id"]) && $_GET["id"]) { ?>
+							<?php echo $fullname; ?> has logged <?php echo count($mcc_presentations); ?> of the 12 required <strong>MCC Presentations</strong> for this rotation. 
+						<?php } else { ?>
+							You have logged <?php echo count($mcc_presentations); ?> of the 12 required <strong>Clinical Presentations</strong> for this rotation. 
+						<?php } ?>
+					</div>
+					<br />
+					<?php
+				} else {
 				?>
-				<h3>Summary</h3>
-				<div style="width: 80%;">
-					<?php if (isset($_GET["id"]) && $_GET["id"]) { ?>
-						<?php echo $fullname; ?> has logged <?php echo $objectives_recorded; ?> of the <?php echo $objectives_required; ?> required <strong>Clinical Presentations</strong> and <?php echo $procedures_recorded; ?> of the <?php echo $procedures_required; ?> required <strong>Clinical Tasks</strong> for this rotation. 
-					<?php } else { ?>
-						You have logged <?php echo $objectives_recorded; ?> of the <?php echo $objectives_required; ?> required <strong>Clinical Presentations</strong> and <?php echo $procedures_recorded; ?> of the <?php echo $procedures_required; ?> required <strong>Clinical Tasks</strong> for this rotation. 
-					<?php } ?>
-				</div>
-				<br />
+					<h3>Summary</h3>
+					<div style="width: 80%;">
+						<?php if (isset($_GET["id"]) && $_GET["id"]) { ?>
+							<?php echo $fullname; ?> has logged <?php echo $objectives_recorded; ?> of the <?php echo $objectives_required; ?> required <strong>Clinical Presentations</strong> and <?php echo $procedures_recorded; ?> of the <?php echo $procedures_required; ?> required <strong>Clinical Tasks</strong> for this rotation. 
+						<?php } else { ?>
+							You have logged <?php echo $objectives_recorded; ?> of the <?php echo $objectives_required; ?> required <strong>MCC Presentations</strong> and <?php echo $procedures_recorded; ?> of the <?php echo $procedures_required; ?> required <strong>Clinical Tasks</strong> for this rotation. 
+						<?php } ?>
+					</div>
+					<br />
 				<?php
+				}
 				echo "<h2 title=\"Rotation Comments Section\">Discussions &amp; Comments</h2>\n";
+				?>
+				<div id="notifications-toggle" style="display: inline; padding-top: 4px; width: 100%; text-align: right;"></div>
+				<br /><br />
+				<script type="text/javascript">
+				function promptNotifications(enabled) {
+					Dialog.confirm('Do you really wish to '+ (enabled == 1 ? "stop" : "begin") +' receiving notifications when new comments are made on this rotation?',
+						{
+							id:				'requestDialog',
+							width:			350,
+							height:			75,
+							title:			'Notification Confirmation',
+							className:		'medtech',
+							okLabel:		'Yes',
+							cancelLabel:	'No',
+							closable:		'true',
+							buttonClass:	'button small',
+							destroyOnClose:	true,
+							ok:				function(win) {
+												new Window(	{
+																id:				'resultDialog',
+																width:			350,
+																height:			75,
+																title:			'Notification Result',
+																className:		'medtech',
+																okLabel:		'close',
+																buttonClass:	'button small',
+																resizable:		false,
+																draggable:		false,
+																minimizable:	false,
+																maximizable:	false,
+																recenterAuto:	true,
+																destroyOnClose:	true,
+																url:			'<?php echo ENTRADA_URL."/api/notifications.api.php?record_id=".$rotation_id."&record_proxy_id=".$PROXY_ID; ?>&content_type=logbook_rotation&action=edit&active='+(enabled == 1 ? '0' : '1'),
+																onClose:			function () {
+																					new Ajax.Updater('notifications-toggle', '<?php echo ENTRADA_URL."/api/notifications.api.php?record_id=".$rotation_id."&record_proxy_id=".$PROXY_ID; ?>&content_type=logbook_rotation&action=view');
+																				}
+															}
+												).showCenter();
+												return true;
+											}
+						}
+					);
+				}
+				</script>
+				<?php
+				$ONLOAD[] = "new Ajax.Updater('notifications-toggle', '".ENTRADA_URL."/api/notifications.api.php?record_id=".$rotation_id."&record_proxy_id=".$PROXY_ID."&content_type=logbook_rotation&action=view')";
 				echo "<div id=\"rotation-comments-section\">\n";
 	
 				$query = "	SELECT * FROM `".CLERKSHIP_DATABASE."`.`logbook_rotation_comments`

@@ -8,7 +8,7 @@
 		<link rel="stylesheet" href="lib/codebase/dhtmlxscheduler_mobile.css" type="text/css" media="screen"/>  
 		<link rel="stylesheet" href="lib/jquery/jquery.mobile-1.1.0.min.css" />
 		<script type="text/javascript" src="lib/jquery/jquery-1.6.4.min.js"></script>
-		<script type="text/javascript" charset="utf-8" src="phonegap.js"></script>
+		<script type="text/javascript" charset="utf-8" src="cordova-1.7.0.js"></script>
 		<script type="text/javascript" src="lib/jquery/jquery-ui.min.js"></script>
 		<script type="text/javascript" src="lib/jquery/jquery.mobile-1.1.0.js"></script>
 		<script src="lib/codebase/dhtmlxscheduler_mobile.js" type="text/javascript" charset="utf-8"></script>
@@ -22,6 +22,7 @@
 		}
 
 		function onDeviceReady () {
+			window.url = $("#url").val();
 			$("#require-password").bind ("change", function () {
 				$("#password").show();
 				$("#password-label").show();
@@ -42,14 +43,10 @@
 				}
 			});
 			
-			window.localStorage.setItem("url", "meds.queensu.ca/central");
 			window.localStorage.setItem("logout", "");
 			/**
 			 * check to see if there are settings in local storage, if there is then set each value of the settings form
 			 */
-			if (window.localStorage.getItem("url")) {
-				$("#url").val(window.localStorage.getItem("url"));
-			}
 			
 			if (window.localStorage.getItem("username")) {
 				$("#username").val(window.localStorage.getItem("username"));
@@ -73,7 +70,7 @@
 			/**
 			 * if any settings are not in local storage then send the user to the settings page where they must supply missing information
 			 */
-			if (!window.localStorage.getItem("url") || !window.localStorage.getItem("username") || !window.localStorage.getItem("password-settings")) {
+			if (!window.localStorage.getItem("username") || !window.localStorage.getItem("password-settings")) {
 				$(".close").hide();
 				dhx.Touch.disable();
 				$.mobile.changePage("#settings", { 
@@ -102,7 +99,7 @@
 				if (settings == 1) {
 					var method = "fetchHash";
 					$.ajax({
-						url:'https://' + window.localStorage.getItem("url") + '/api/mobile.api.php',
+						url:'http://' + window.url + '/api/mobile.api.php',
 						type: 'post',
 						data: ({method:method, username:window.username, password:window.password}),
 						dataType: 'text',
@@ -110,6 +107,10 @@
 							window.localStorage.setItem("private_hash", data);
 						}, error: function (event, request, settings, exception) {
 							navigator.notification.alert("Error fetching private hash");
+							$(".close").hide();
+							$.mobile.changePage("#settings", { 
+								transition: "flip"
+							});
 						} 
 
 					});
@@ -117,9 +118,6 @@
 					window.localStorage.setItem("private_hash", "");
 				}
 				set_methods();
-				if (window.localStorage.getItem("logout") == "logout") {
-					scheduler_update();
-				}
 			});
 
 			function set_methods() {
@@ -150,14 +148,7 @@
 				});
 
 				load_scheduler();
-				fetch_notices();
 				count_notices(true);
-
-				$("#logout").bind("tap", function () {
-					$(".close").hide();
-					$$("scheduler").clearAll();
-					window.localStorage.setItem("logout", "logout");
-				});
 
 				$(".agenda").bind("tap", function () {
 					$(".agenda").addClass("ui-btn-active");
@@ -177,12 +168,24 @@
 				$(".back").bind("tap", function () {
 					$(".notices").addClass("ui-btn-active");
 				});
+				$(".settings").bind("tap", function () {
+					dhx.Touch.disable();
+				});
+				
+				$("#logout").bind("tap", function () {
+					window.localStorage.clear();
+					$(".close").hide();
+				});
+				
+				$(".close").bind("tap", function () {
+					dhx.Touch.enable();
+				});
 			}
 
 			function load_scheduler() {
 				var method = "agenda";
 					$.ajax({
-					url:'https://' + window.localStorage.getItem("url") + '/api/mobile.api.php',
+					url:'http://' + window.url + '/api/mobile.api.php',
 					type: 'post',
 					dataType: 'text',
 					data: ({method:method, username:window.username, password:window.password, hash:window.localStorage.getItem("private_hash")}),
@@ -190,16 +193,16 @@
 						if ($.isEmptyObject(data)) {
 							navigator.notification.alert("Failed to authenticate");
 						} else {
+							$(".close").show();
 							$.mobile.changePage("#agenda", { 
 								transition: "flip"
 							});
 							scheduler.config.readonly = true;
 							scheduler.config.header_date = "%M %j, %Y";
-							scheduler.config.item_date = "%l %F %j, %Y";
 							scheduler.config.hour_date = "%h:%i%a";
 							scheduler.config.scale_hour = "%h";
 							dhx.ready(function(){
-								dhx.Touch.disable();
+								dhx.Touch.enable();
 								dhx.ui({
 									view: "scheduler",
 									container: "content",
@@ -234,7 +237,11 @@
 							}
 						}
 					}, error: function (event, request, settings, exception) {
-						navigator.notification.alert("Error Calling: " + settings.url + "<br />HTTP Code: " + request.status + exception + event.Behavior);
+						navigator.notification.alert("An error occurred while loading the agenda" );
+						$(".close").hide();
+						$.mobile.changePage("#settings", { 
+							transition: "flip"
+						});
 					} 
 				});
 			}
@@ -242,14 +249,18 @@
 			function fetch_notices () {
 				var method = "notices";
 				$.ajax({
-					url:'https://' + window.localStorage.getItem("url") + '/api/mobile.api.php',
+					url:'http://' + window.url + '/api/mobile.api.php',
 					type: 'post',
 					data: ({method:method, sub_method:"fetchnotices", username:window.username, password:window.password, hash:window.localStorage.getItem("private_hash")}),
 					dataType: 'json',
 					success:function (data) {
 						list_notices (data);
 					}, error: function (event, request, settings, exception) {
-						navigator.notification.alert("Error Calling: " + settings.url + "<br />HTTP Code: " + request.status + exception + event.Behavior);
+						navigator.notification.alert("An error occurred while fetching notices");
+						$(".close").hide();
+						$.mobile.changePage("#settings", { 
+							transition: "flip"
+						});
 					} 
 
 				});
@@ -276,7 +287,7 @@
 								var sub_method = "mark_read";
 								var id = val.notice_id;
 								$.ajax({
-									url:'https://' + window.localStorage.getItem("url") + '/api/mobile.api.php',
+									url:'http://' + window.url + '/api/mobile.api.php',
 									type: 'post',
 									data: ({method : method, sub_method: sub_method, username: window.username, password:window.password, notice_id: id, hash:window.localStorage.getItem("private_hash")}),
 									dataType: 'text',
@@ -308,7 +319,7 @@
 			function scheduler_update () {
 				var method = "agenda";
 				$.ajax({
-					url:'https://' + window.url + '/api/mobile.api.php',
+					url:'http://' + window.url + '/api/mobile.api.php',
 					type: 'post',
 					data: ({method:method, username:window.username, password:window.password, hash:window.localStorage.getItem("private_hash")}),
 					success:function(data){
@@ -322,18 +333,23 @@
 						if($$("scheduler").$$("buttons").getValue() == "month") {
 							$$("scheduler").$$("calendarView").render();
 						}
-					}
+					},
+					error: function (event, request, settings, exception) {
+						navigator.notification.alert("An error occurred while updating the agenda");
+						$(".close").hide();
+						$.mobile.changePage("#settings", { 
+							transition: "flip"
+						});
+					} 
 				});
-				$("#result").ajaxError(function(event, request, settings, exception) {
-					$("#result").html("Error Calling: " + settings.url + "<br />HTTP Code: " + request.status + exception + event.Behavior);
-				});
+
 			}
 
 			function count_notices (timeout) {
 				var method = "notices";
 				var sub_method = "count_notices";
 				$.ajax({
-					url:'https://' + window.localStorage.getItem("url") + '/api/mobile.api.php',
+					url:'http://' + window.url + '/api/mobile.api.php',
 					type: 'post',
 					data: ({method : method, sub_method: sub_method, username:window.username, password:window.password, hash:window.localStorage.getItem("private_hash")}),
 					dataType: 'text',
@@ -360,10 +376,14 @@
 							fetch_notices();
 						}
 						window.previous_data = data;
-					}
-				});
-				$("#result").ajaxError(function(event, request, settings, exception) {
-					$("#result").html("Error Calling: " + settings.url + "<br />HTTP Code: " + request.status + exception + event.Behavior);
+					},
+					error: function (event, request, settings, exception) {
+						navigator.notification.alert("An error occurred while checking for new notices");
+						$(".close").hide();
+						$.mobile.changePage("#settings", { 
+							transition: "flip"
+						});
+					} 
 				});
 			}
 		}
@@ -461,7 +481,7 @@
                 <h1>My Settings</h1>
                 <div data-role="fieldcontain">
                     <label for="url">MEdTech:</label>
-                    <input type="text" name="url" id="url" value="" />
+                    <input type="text" name="url" id="url" value="meds.queensu.ca/central" />
                 </div>
                 <div data-role="fieldcontain">
                     <label for="username" id="username-label">Username:</label>

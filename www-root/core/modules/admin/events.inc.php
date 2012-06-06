@@ -100,5 +100,11 @@ if(!defined("PARENT_INCLUDED")) {
 		 * Check if preferences need to be updated on the server at this point.
 		 */
 		preferences_update($MODULE, $PREFERENCES);
+		
+		$sidebar_html  = "<ul class=\"menu none\">\n";
+		$sidebar_html .= "<li><a href=\"".ENTRADA_RELATIVE."/admin/events/drafts\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-on.gif\" alt=\"\" /> <span>Draft Schedules</span></a></li>\n";
+		$sidebar_html .= "</ul>\n";
+		
+		new_sidebar_item("Event Options", $sidebar_html, "display-style", "open");
 	}
 }

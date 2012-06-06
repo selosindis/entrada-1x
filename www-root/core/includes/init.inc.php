@@ -75,11 +75,50 @@ if ((defined("AUTH_ALLOW_CAS")) && (AUTH_ALLOW_CAS == true)) {
 $ENTRADA_ACTIVE_TEMPLATE = "";
 
 if ($ENTRADA_USER) {
+
+	if (!$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["ua_id"]) {
+		$query = "SELECT a.`group`, a.`role`, a.`id`
+						  FROM `" . AUTH_DATABASE . "`.`user_access` a
+						  WHERE a.`user_id` = " . $db->qstr($ENTRADA_USER->getProxyId()) . "
+						  AND a.`organisation_id` = " . $db->qstr($ENTRADA_USER->getActiveOrganisation()) . "
+						  ORDER BY a.`id` ASC";
+		$result = $db->getRow($query);
+		if ($result) {
+			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["ua_id"] = $result["id"];
+			$ENTRADA_USER->setActiveGroupRole($result["id"]);
+			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"] = $ENTRADA_USER->getProxyId() . "-" . $result["id"];
+			$_SESSION["permissions"] = load_org_group_role($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"], $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["ua_id"]);
+		}
+	}
+
 	if (isset($_GET["organisation_id"])) {
 		$organisation = clean_input($_GET["organisation_id"], array("trim", "notags", "int"));
 		
 		$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"] = $organisation;
+		$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]["organisation_id"] = $organisation;
 		$ENTRADA_USER->setActiveOrganisation($organisation);
+
+		$query = "SELECT a.`group`, a.`role`, a.`id`
+					  FROM `" . AUTH_DATABASE . "`.`user_access` a
+					  WHERE a.`user_id` = " . $ENTRADA_USER->getProxyId() . "
+					  AND a.`organisation_id` = " . $db->qstr($organisation) . "
+					  ORDER BY a.`id` ASC";
+
+		$result = $db->getRow($query);
+		if ($result) {
+			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"] = $ENTRADA_USER->getProxyId() . "-" . $result["id"];
+			$ENTRADA_USER->setActiveGroupRole($result["id"]);
+			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["ua_id"] = $result["id"];
+			$_SESSION["permissions"] = load_org_group_role($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"], $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["ua_id"]);
+		}
+	}
+
+	if (isset($_GET["ua_id"])) {
+		$ua_id = clean_input($_GET["ua_id"], array("trim", "notags", "int"));
+		$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["ua_id"] = $ua_id;
+		$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"] = $ENTRADA_USER->getProxyId() . "-" . $ua_id;
+		$ENTRADA_USER->setActiveGroupRole($ua_id);
+		$_SESSION["permissions"] = load_org_group_role($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"], $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["ua_id"]);
 	}
 
  	$query = "SELECT `template` FROM `" . AUTH_DATABASE . "`.`organisations` WHERE `organisation_id` = " . $db->qstr($ENTRADA_USER->getActiveOrganisation());

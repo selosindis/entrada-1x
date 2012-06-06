@@ -204,7 +204,16 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 			$mode = "INSERT";
 			$where = false;
 		}
+		
+		$query = "SELECT `grade_threshold`
+				  FROM `assessments`
+				  WHERE `assessment_id` = ".$db->qstr($ASSESSMENT_ID);
+		$result = $db->GetRow($query);
 
+		if ($result && $GRADE_VALUE < $result["grade_threshold"]) {
+			$grade["threshold_notified"] = "0";
+		}
+		
 		if($db->AutoExecute("assessment_grades", $grade, $mode, $where)) {
 			if ($mode == "UPDATE") {
 				application_log("success", "Successfully updated grade for assessment_id [".$ASSESSMENT_ID."] for proxy_id [".$PROXY_ID."].");

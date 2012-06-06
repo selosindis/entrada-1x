@@ -74,9 +74,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 						if (defined("NOTIFICATIONS_ACTIVE") && NOTIFICATIONS_ACTIVE) {
 							$lrcomment_id = $db->Insert_Id();
 							require_once("Models/notifications/NotificationUser.class.php");
-							$notification_user = NotificationUser::get($_SESSION["details"]["id"], "logbook_rotation", $rotation_id, $PROXY_ID);
+							$notification_user = NotificationUser::get($PROXY_ID, "logbook_rotation", $rotation_id, $PROXY_ID);
 							if (!$notification_user) {
-								$notification_user = NotificationUser::add($_SESSION["details"]["id"], "logbook_rotation", $rotation_id, $PROXY_ID);
+								$notification_user = NotificationUser::add($PROXY_ID, "logbook_rotation", $rotation_id, $PROXY_ID);
 							}
 							NotificationUser::addAllNotifications("logbook_rotation", $rotation_id, $PROXY_ID, $_SESSION["details"]["id"], $lrcomment_id);
 						}

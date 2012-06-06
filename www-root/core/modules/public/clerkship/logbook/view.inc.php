@@ -71,13 +71,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 					$PROCESSED["updated_date"] = time();
 					
 					if ($db->AutoExecute(CLERKSHIP_DATABASE.".logbook_rotation_comments", $PROCESSED, "INSERT")) {
-						$lrcomment_id = $db->Insert_Id();
-						require_once("Models/notifications/NotificationUser.class.php");
-						$notification_user = NotificationUser::get($_SESSION["details"]["id"], "logbook_rotation", $rotation_id, $PROXY_ID);
-						if (!$notification_user) {
-							$notification_user = NotificationUser::add($_SESSION["details"]["id"], "logbook_rotation", $rotation_id, $PROXY_ID);
+						if (defined("NOTIFICATIONS_ACTIVE") && NOTIFICATIONS_ACTIVE) {
+							$lrcomment_id = $db->Insert_Id();
+							require_once("Models/notifications/NotificationUser.class.php");
+							$notification_user = NotificationUser::get($_SESSION["details"]["id"], "logbook_rotation", $rotation_id, $PROXY_ID);
+							if (!$notification_user) {
+								$notification_user = NotificationUser::add($_SESSION["details"]["id"], "logbook_rotation", $rotation_id, $PROXY_ID);
+							}
+							NotificationUser::addAllNotifications("logbook_rotation", $rotation_id, $PROXY_ID, $_SESSION["details"]["id"], $lrcomment_id);
 						}
-						NotificationUser::addAllNotifications("logbook_rotation", $rotation_id, $PROXY_ID, $_SESSION["details"]["id"], $lrcomment_id);
 						$SUCCESS++;
 						$SUCCESSSTR[] = "You have succesfully added a comment to this rotation".($student ? "" : " for ".get_account_data("firstlast", $PROXY_ID)).".";
 					} else {
@@ -605,52 +607,55 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 				<?php
 				}
 				echo "<h2 title=\"Rotation Comments Section\">Discussions &amp; Comments</h2>\n";
-				?>
-				<div id="notifications-toggle" style="display: inline; padding-top: 4px; width: 100%; text-align: right;"></div>
-				<br /><br />
-				<script type="text/javascript">
-				function promptNotifications(enabled) {
-					Dialog.confirm('Do you really wish to '+ (enabled == 1 ? "stop" : "begin") +' receiving notifications when new comments are made on this rotation?',
-						{
-							id:				'requestDialog',
-							width:			350,
-							height:			75,
-							title:			'Notification Confirmation',
-							className:		'medtech',
-							okLabel:		'Yes',
-							cancelLabel:	'No',
-							closable:		'true',
-							buttonClass:	'button small',
-							destroyOnClose:	true,
-							ok:				function(win) {
-												new Window(	{
-																id:				'resultDialog',
-																width:			350,
-																height:			75,
-																title:			'Notification Result',
-																className:		'medtech',
-																okLabel:		'close',
-																buttonClass:	'button small',
-																resizable:		false,
-																draggable:		false,
-																minimizable:	false,
-																maximizable:	false,
-																recenterAuto:	true,
-																destroyOnClose:	true,
-																url:			'<?php echo ENTRADA_URL."/api/notifications.api.php?record_id=".$rotation_id."&record_proxy_id=".$PROXY_ID; ?>&content_type=logbook_rotation&action=edit&active='+(enabled == 1 ? '0' : '1'),
-																onClose:			function () {
-																					new Ajax.Updater('notifications-toggle', '<?php echo ENTRADA_URL."/api/notifications.api.php?record_id=".$rotation_id."&record_proxy_id=".$PROXY_ID; ?>&content_type=logbook_rotation&action=view');
-																				}
-															}
-												).showCenter();
-												return true;
-											}
-						}
-					);
+				
+				if (defined("NOTIFICATIONS_ACTIVE") && NOTIFICATIONS_ACTIVE) {
+					?>
+					<div id="notifications-toggle" style="display: inline; padding-top: 4px; width: 100%; text-align: right;"></div>
+					<br /><br />
+					<script type="text/javascript">
+					function promptNotifications(enabled) {
+						Dialog.confirm('Do you really wish to '+ (enabled == 1 ? "stop" : "begin") +' receiving notifications when new comments are made on this rotation?',
+							{
+								id:				'requestDialog',
+								width:			350,
+								height:			75,
+								title:			'Notification Confirmation',
+								className:		'medtech',
+								okLabel:		'Yes',
+								cancelLabel:	'No',
+								closable:		'true',
+								buttonClass:	'button small',
+								destroyOnClose:	true,
+								ok:				function(win) {
+													new Window(	{
+																	id:				'resultDialog',
+																	width:			350,
+																	height:			75,
+																	title:			'Notification Result',
+																	className:		'medtech',
+																	okLabel:		'close',
+																	buttonClass:	'button small',
+																	resizable:		false,
+																	draggable:		false,
+																	minimizable:	false,
+																	maximizable:	false,
+																	recenterAuto:	true,
+																	destroyOnClose:	true,
+																	url:			'<?php echo ENTRADA_URL."/api/notifications.api.php?record_id=".$rotation_id."&record_proxy_id=".$PROXY_ID; ?>&content_type=logbook_rotation&action=edit&active='+(enabled == 1 ? '0' : '1'),
+																	onClose:			function () {
+																						new Ajax.Updater('notifications-toggle', '<?php echo ENTRADA_URL."/api/notifications.api.php?record_id=".$rotation_id."&record_proxy_id=".$PROXY_ID; ?>&content_type=logbook_rotation&action=view');
+																					}
+																}
+													).showCenter();
+													return true;
+												}
+							}
+						);
+					}
+					</script>
+					<?php
+					$ONLOAD[] = "new Ajax.Updater('notifications-toggle', '".ENTRADA_URL."/api/notifications.api.php?record_id=".$rotation_id."&record_proxy_id=".$PROXY_ID."&content_type=logbook_rotation&action=view')";
 				}
-				</script>
-				<?php
-				$ONLOAD[] = "new Ajax.Updater('notifications-toggle', '".ENTRADA_URL."/api/notifications.api.php?record_id=".$rotation_id."&record_proxy_id=".$PROXY_ID."&content_type=logbook_rotation&action=view')";
 				echo "<div id=\"rotation-comments-section\">\n";
 	
 				$query = "	SELECT * FROM `".CLERKSHIP_DATABASE."`.`logbook_rotation_comments`

@@ -52,6 +52,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 					$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings/organisations/manage?org=".$ORGANISATION['organisation_id'], "title" => $ORGANISATION["organisation_title"]);
 
 					$sidebar_html  = "<ul class=\"menu\">";
+					$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/organisations/manage/departments?org=".$ORGANISATION_ID."\">Manage Departments</a></li>\n";
 					$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/organisations/manage/curriculumtypes?org=".$ORGANISATION_ID."\">Manage Curriculum Types</a></li>\n";
 					$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/organisations/manage/eventtypes?org=".$ORGANISATION_ID."\">Manage Event Types</a></li>\n";
 					$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/organisations/manage/hottopics?org=".$ORGANISATION_ID."\">Manage Hot Topics</a></li>\n";

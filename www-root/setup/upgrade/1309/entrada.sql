@@ -22,3 +22,4 @@ CREATE TABLE IF NOT EXISTS `notifications` (
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 
 UPDATE `settings` SET `value` = '1309' WHERE `shortname` = 'version_db';
+

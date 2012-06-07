@@ -76,18 +76,18 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							WHERE a.`course_id` = ".$db->qstr($COURSE_ID);
 				$result = $db->getRow($query);
 				if ($result) {
-					$query = "SELECT b.`course_id` FROM `course_contacts` AS a
+					$query = "SELECT b.`course_id`, b.`organisation_id` FROM `course_contacts` AS a
 								JOIN `courses` AS b
 								ON a.`course_id` = b.`course_id`
 								WHERE a.`proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
 								AND b.`course_active` = 1
 								GROUP BY b.`course_id`
 								UNION
-								SELECT `course_id` FROM `courses`
+								SELECT `course_id`, `organisation_id` FROM `courses`
 								WHERE `pcoord_id` = ".$db->qstr($_SESSION["details"]["id"])."
 								AND `course_active` = 1";
 					$admin_course_ids = $db->GetAll($query);
-					if (!isset($admin_course_ids) || !$admin_course_ids || count($admin_course_ids) > 1 || $admin_course_ids[0]["course_id"] != $COURSE_ID) {
+					if (!isset($admin_course_ids) || !$admin_course_ids || count($admin_course_ids) > 1 || $admin_course_ids[0]["course_id"] != $COURSE_ID || ($ENTRADA_ACL->amIAllowed(new CourseResource($admin_course_ids[0]["course_id"], $admin_course_ids[0]["organisation_id"]), 'update'))) {
 						header("Location: ".ENTRADA_URL."/community".$result["community_url"].":pages");
 						exit;
 					}

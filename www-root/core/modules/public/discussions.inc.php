@@ -85,6 +85,9 @@ if(!defined("PARENT_INCLUDED")) {
 
 						if(!$db->AutoExecute("event_discussions", $PROCESSED, "INSERT")) {
 							application_log("error", "Unable to add discussion comment to event id [".$EVENT_ID."]");
+						} elseif ($EDISCUSSION_ID = $db->Insert_Id() && defined("NOTIFICATIONS_ACTIVE") && NOTIFICATIONS_ACTIVE) {
+							require_once("Models/notifications/NotificationUser.class.php");
+							NotificationUser::addAllNotifications("event_discussion", $EVENT_ID, 0, $_SESSION["details"]["id"], $EDISCUSSION_ID);
 						}
 					}
 				}

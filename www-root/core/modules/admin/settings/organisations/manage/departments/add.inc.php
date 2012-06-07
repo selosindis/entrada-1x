@@ -144,7 +144,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 				$result = $db->GetRow($query);
 				if ($result) {
 					$PROCESSED["country_id"] = $tmp_input;
-					$PROCESSED["department_country"] = $result["country"];
 				} else {
 					$ERROR++;
 					$ERRORSTR[] = "The selected country does not exist in our countries database. Please select a valid country.";
@@ -161,8 +160,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 			 */
 			if ((isset($_POST["prov_state"])) && ($tmp_input = clean_input($_POST["prov_state"], array("trim", "notags")))) {
 				$PROCESSED["province_id"] = 0;
-				$PROCESSED["department_province"] = "";
-
+				
 				if (ctype_digit($tmp_input) && ($tmp_input = (int) $tmp_input)) {
 					if ($PROCESSED["country_id"]) {
 						$query = "SELECT * FROM `global_lu_provinces` WHERE `province_id` = " . $db->qstr($tmp_input) . " AND `country_id` = " . $db->qstr($PROCESSED["country_id"]);
@@ -171,26 +169,22 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 							$ERROR++;
 							$ERRORSTR[] = "The province / state you have selected does not appear to exist in our database. Please selected a valid province / state.";
 						} else {
-							$PROCESSED["department_province"] = $result["province"];
+							$PROCESSED["province_id"] = $tmp_input;
 						}
+					} else {
+						$ERROR++;
+						$ERRORSTR[] = "Please select a country and then a province/state.";
 					}
-
-					$PROCESSED["province_id"] = $tmp_input;
 				} else {
-					$PROCESSED["department_province"] = $tmp_input;
-				}
-
-				$PROCESSED["prov_state"] = ($PROCESSED["province_id"] ? $PROCESSED["province_id"] : ($PROCESSED["department_province"] ? $PROCESSED["department_province"] : "prov_state_error"));
-
-				if ($PROCESSED == "prov_state_error") {
 					$ERROR++;
-					$ERRORSTR[] = "You must select a province or state.";
+					$ERRORSTR[] = "Province or state format error.";
 				}
-
+			} else {
+				$ERROR++;
+				$ERRORSTR[] = "You must select a province or state.";
 			}
 
 			if (!$ERROR) {
-				//ToDO: add updated_date and updated_by to department table
 				$PROCESSED["updated_date"] = time();
 				$PROCESSED["updated_by"] = $_SESSION["details"]["id"];
 				$PROCESSED["department_active"] = 1;
@@ -247,9 +241,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 			if ($ERROR) {
 				echo display_error();
 			}
-
-			$ONLOAD[] = "selectObjective(" . (isset($PROCESSED["objective_parent"]) && $PROCESSED["objective_parent"] ? $PROCESSED["objective_parent"] : "0") . ")";
-			$ONLOAD[] = "selectOrder(" . (isset($PROCESSED["objective_parent"]) && $PROCESSED["objective_parent"] ? $PROCESSED["objective_parent"] : "0") . ")";
+		
 			$ONLOAD[] = "provStateFunction()";
 ?>
 			<form action="<?php echo ENTRADA_URL . "/admin/settings/organisations/manage/departments" . "?" . replace_query(array("action" => "add", "step" => 2)) . "&org=" . $ORGANISATION_ID; ?>" id="department_add_form" method="post">

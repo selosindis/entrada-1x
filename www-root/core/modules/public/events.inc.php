@@ -966,7 +966,54 @@ if ($topic_results) { ?>
 					echo "<a name=\"event-comments-section\"></a>\n";
 					echo "<h2 title=\"Event Comments Section\">Discussions &amp; Comments</h2>\n";
 					echo "<div id=\"event-comments-section\" class=\"section-holder\">\n";
-
+					if (defined("NOTIFICATIONS_ACTIVE") && NOTIFICATIONS_ACTIVE) {
+						?>
+						<div id="notifications-toggle" style="display: inline; padding-top: 4px; width: 100%; text-align: right;"></div>
+						<br /><br />
+						<script type="text/javascript">
+						function promptNotifications(enabled) {
+							Dialog.confirm('Do you really wish to '+ (enabled == 1 ? "stop" : "begin") +' receiving notifications when new comments are made on this event?',
+								{
+									id:				'requestDialog',
+									width:			350,
+									height:			75,
+									title:			'Notification Confirmation',
+									className:		'medtech',
+									okLabel:		'Yes',
+									cancelLabel:	'No',
+									closable:		'true',
+									buttonClass:	'button small',
+									destroyOnClose:	true,
+									ok:				function(win) {
+														new Window(	{
+																		id:				'resultDialog',
+																		width:			350,
+																		height:			75,
+																		title:			'Notification Result',
+																		className:		'medtech',
+																		okLabel:		'close',
+																		buttonClass:	'button small',
+																		resizable:		false,
+																		draggable:		false,
+																		minimizable:	false,
+																		maximizable:	false,
+																		recenterAuto:	true,
+																		destroyOnClose:	true,
+																		url:			'<?php echo ENTRADA_URL."/api/notifications.api.php?record_id=".$EVENT_ID; ?>&content_type=event_discussion&action=edit&active='+(enabled == 1 ? '0' : '1'),
+																		onClose:			function () {
+																							new Ajax.Updater('notifications-toggle', '<?php echo ENTRADA_URL."/api/notifications.api.php?record_id=".$EVENT_ID; ?>&content_type=event_discussion&action=view');
+																						}
+																	}
+														).showCenter();
+														return true;
+													}
+								}
+							);
+						}
+						</script>
+						<?php
+						$ONLOAD[] = "new Ajax.Updater('notifications-toggle', '".ENTRADA_URL."/api/notifications.api.php?record_id=".$EVENT_ID."&content_type=event_discussion&action=view')";
+					}
 					$editable	= false;
 					$edit_ajax	= array();
 					if ($event_discussions) {

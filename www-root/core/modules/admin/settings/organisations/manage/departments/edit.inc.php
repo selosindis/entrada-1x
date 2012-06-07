@@ -37,7 +37,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 } else {
 
 	$BREADCRUMB[] = array("url" => ENTRADA_URL . "/admin/settings/organisations/manage/departments?" . replace_query(array("section" => "add")) . "&amp;org=" . $ORGANISATION_ID, "title" => "Edit");
-	//$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery.min.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 
 	if ((isset($_GET["department_id"])) && ($department_id = clean_input($_GET["department_id"], array("notags", "trim")))) {
 		$PROCESSED["department_id"] = $department_id;
@@ -56,7 +55,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 				$ERRORSTR[] = "The <strong>Department Name</strong> is a required field.";
 			}
 
-			if (isset($_POST["department_type"]) && $_POST["department_type"] && ($entity_id = clean_input($_POST["department_type"], array("notags", "int", "trim")))) {
+			if (isset($_POST["entity_id"]) && ($entity_id = clean_input($_POST["entity_id"], array("notags", "int", "trim")))) {
 				$PROCESSED["entity_id"] = $entity_id;
 			} else {
 				$ERROR++;
@@ -66,7 +65,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 			/**
 			 * Non-required field "telephone" / Telephone Number.
 			 */
-			if ((isset($_POST["telephone"])) && ($telephone = clean_input($_POST["telephone"], "trim")) && (strlen($telephone) >= 10) && (strlen($telephone) <= 25)) {
+			if ((isset($_POST["telephone"])) && ($telephone = clean_input($_POST["telephone"], "trim"))) {
 				$PROCESSED["department_telephone"] = $telephone;
 			} else {
 				$PROCESSED["department_telephone"] = "";
@@ -75,7 +74,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 			/**
 			 * Non-required field "fax" / Fax Number.
 			 */
-			if ((isset($_POST["fax"])) && ($fax = clean_input($_POST["fax"], "trim")) && (strlen($fax) >= 10) && (strlen($fax) <= 25)) {
+			if ((isset($_POST["fax"])) && ($fax = clean_input($_POST["fax"], "trim"))) {
 				$PROCESSED["department_fax"] = $fax;
 			} else {
 				$PROCESSED["department_fax"] = "";
@@ -148,7 +147,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 				$result = $db->GetRow($query);
 				if ($result) {
 					$PROCESSED["country_id"] = $tmp_input;
-					$PROCESSED["department_country"] = $result["country"];
 				} else {
 					$ERROR++;
 					$ERRORSTR[] = "The selected country does not exist in our countries database. Please select a valid country.";
@@ -165,7 +163,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 			 */
 			if ((isset($_POST["prov_state"])) && ($tmp_input = clean_input($_POST["prov_state"], array("trim", "notags")))) {
 				$PROCESSED["province_id"] = 0;
-				$PROCESSED["department_province"] = "";
 
 				if (ctype_digit($tmp_input) && ($tmp_input = (int) $tmp_input)) {
 					if ($PROCESSED["country_id"]) {
@@ -175,33 +172,31 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 							$ERROR++;
 							$ERRORSTR[] = "The province / state you have selected does not appear to exist in our database. Please selected a valid province / state.";
 						} else {
-							$PROCESSED["department_province"] = $result["province"];
+							$PROCESSED["province_id"] = $tmp_input;
 						}
+					} else {
+						$ERROR++;
+						$ERRORSTR[] = "Please select a country and then a province/state.";
 					}
-
-					$PROCESSED["province_id"] = $tmp_input;
 				} else {
-					$PROCESSED["department_province"] = $tmp_input;
-				}
-
-				$PROCESSED["prov_state"] = ($PROCESSED["province_id"] ? $PROCESSED["province_id"] : ($PROCESSED["department_province"] ? $PROCESSED["department_province"] : "prov_state_error"));
-
-				if ($PROCESSED == "prov_state_error") {
 					$ERROR++;
-					$ERRORSTR[] = "You must select a province or state.";
-				}
+					$ERRORSTR[] = "Province or state format error.";
+				}				
+			} else {
+				$ERROR++;
+				$ERRORSTR[] = "You must select a province or state.";
 			}
 
 			if (!$ERROR) {
 				$PROCESSED["updated_date"] = time();
 				$PROCESSED["updated_by"] = $_SESSION["details"]["id"];
 
-				if ($db->AutoExecute("departments", $PROCESSED, "UPDATE", "`department_id`=" . $db->qstr($PROCESSED["department_id"]))) {
+				if ($db->AutoExecute( "`" . AUTH_DATABASE . "`.`departments`", $PROCESSED, "UPDATE", "`department_id`=" . $db->qstr($PROCESSED["department_id"]))) {
 					$url = ENTRADA_URL . "/admin/settings/organisations/manage/departments?org=" . $ORGANISATION_ID;
 					$SUCCESS++;
 					$SUCCESSSTR[] = "You have successfully updated <strong>" . html_encode($PROCESSED["department_title"]) . "</strong> to the system.<br /><br />You will now be redirected to the Departments index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"" . $url . "\" style=\"font-weight: bold\">click here</a> to continue.";
 					$ONLOAD[] = "setTimeout('window.location=\\'" . $url . "\\'', 5000)";
-					application_log("success", "New Hot Topic [" . $TOPIC_ID . "] added to the system.");
+					application_log("success", "Department [" . $TOPIC_ID . "] was changed in the system.");
 				} else {
 					$ERROR++;
 					$ERRORSTR[] = "There was a problem updating this Department into the system. The system administrator was informed of this error; please try again later.";
@@ -221,12 +216,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 			$result = $db->GetRow($query);
 			if ($result) {
 				$PROCESSED["department_title"] = $result["department_title"];
-				$PROCESSED["department_type"] = $result["entity_id"];
+				$PROCESSED["entity_id"] = $result["entity_id"];
 				$PROCESSED["department_address1"] = $result["department_address1"];
 				$PROCESSED["department_address2"] = $result["department_address2"];
 				$PROCESSED["department_city"] = $result["department_city"];
-				$PROCESSED["department_country"] = $result["department_country"];
-				$PROCESSED["department_province"] = $result["department_province"];
+				$PROCESSED["country_id"] = $result["country_id"];
+				$PROCESSED["province_id"] = $result["province_id"];				
+				$PROCESSED["prov_state"] = $result["province_id"];
 				$PROCESSED["department_postcode"] = $result["department_postcode"];
 				$PROCESSED["department_telephone"] = $result["department_telephone"];
 				$PROCESSED["department_fax"] = $result["department_fax"];
@@ -257,11 +253,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 			if ($ERROR) {
 				echo display_error();
 			}
-
-			$ONLOAD[] = "selectObjective(" . (isset($PROCESSED["objective_parent"]) && $PROCESSED["objective_parent"] ? $PROCESSED["objective_parent"] : "0") . ")";
-			$ONLOAD[] = "selectOrder(" . (isset($PROCESSED["objective_parent"]) && $PROCESSED["objective_parent"] ? $PROCESSED["objective_parent"] : "0") . ")";
+			$ONLOAD[] = "provStateFunction('".$PROCESSED["country_id"]."', '".$PROCESSED["province_id"]."')";
 ?>
-			<form action="<?php echo ENTRADA_URL . "/admin/settings/organisations/manage/departments" . "?" . replace_query(array("action" => "add", "step" => 2)) . "&org=" . $ORGANISATION_ID; ?>" id ="department_edit_form" method="post">
+			<form action="<?php echo ENTRADA_URL . "/admin/settings/organisations/manage/departments" . "?" . replace_query(array("step" => 2)) . "&org=" . $ORGANISATION_ID; ?>" id ="department_edit_form" method="post">
 				<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Adding Page">
 					<colgroup>
 						<col style="width: 30%" />
@@ -286,8 +280,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 							<td><input type="text" id="department_title" name="department_title" value="<?php echo ((isset($PROCESSED["department_title"])) ? html_encode($PROCESSED["department_title"]) : ""); ?>" maxlength="60" style="width: 300px" /></td>
 						</tr>
 						<tr>
-							<td><label for="department_type" class="form-required">Department Type:</label></td>
-							<td><select type="text" id="department_type" name="department_type" style="width: 250px">
+							<td><label for="entity_id" class="form-required">Department Type:</label></td>
+							<td><select type="text" id="entity_id" name="entity_id" style="width: 250px">
 									<option value="0">Choose a Deparmental Type</option>
 						<?php
 						$query = "	SELECT a.* FROM " . AUTH_DATABASE . ". `entity_type` AS a
@@ -297,7 +291,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 
 						if ($results) {
 							foreach ($results as $result) {
-								if ($result["entity_id"] == $PROCESSED["department_type"]) {
+								if ($result["entity_id"] == $PROCESSED["entity_id"]) {
 									$selected = "selected=\"selected\"";
 								} else {
 									$selected = "";
@@ -340,7 +334,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 							echo "<select id=\"country_id\" name=\"country_id\" style=\"width: 256px\" onchange=\"provStateFunction();\">\n";
 							echo "<option value=\"0\">-- Select Country --</option>\n";
 							foreach ($countries as $country) {
-								echo "<option value=\"" . (int) $country["countries_id"] . "\"" . (((!isset($PROCESSED["department_country"]) && ($country["countries_id"] == DEFAULT_COUNTRY_ID)) || ($PROCESSED["department_country"] == $country["country"])) ? " selected=\"selected\"" : "") . ">" . html_encode($country["country"]) . "</option>\n";
+								echo "<option value=\"" . (int) $country["countries_id"] . "\"" . (((!isset($PROCESSED["country_id"]) && ($country["countries_id"] == DEFAULT_COUNTRY_ID)) || ($PROCESSED["country_id"] == $country["countries_id"])) ? " selected=\"selected\"" : "") . ">" . html_encode($country["country"]) . "</option>\n";
 							}
 							echo "</select>\n";
 						} else {
@@ -407,7 +401,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 			if (province_id != undefined) {
 				url_province_id = province_id;
 			} else if ($('province_id')) {
-				url_province_id = $('province_id').getValue();
+				url_province_id = <?php echo $PROCESSED["province_id"]; ?>;
 			}
 
 			var url = '<?php echo webservice_url("province"); ?>?countries_id=' + url_country_id + '&prov_state=' + url_province_id;
@@ -432,8 +426,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 				}
 			});
 		}
-
-		provStateFunction();
 	</script>
 <?php
 						break;

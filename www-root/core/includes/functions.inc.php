@@ -2246,8 +2246,7 @@ function permissions_fetch($identifier, $type = "event", $existing_allowed_ids =
 							LEFT JOIN `course_contacts` AS f
 							ON f.`course_id` = c.`course_id`
 							AND f.`contact_type` = 'pcoordinator'
-							WHERE a.`event_id` = ".$db->qstr($identifier)."
-							AND c.`course_active` = '1'";
+							WHERE a.`event_id` = ".$db->qstr($identifier);
 			$results	= $db->GetAll($query);
 			if($results) {
 				foreach ($results as $result) {
@@ -5773,8 +5772,7 @@ function clerkship_rotations_access() {
 	$query = "	SELECT a.`course_id`, a.`rotation_id`, b.`organisation_id`
 				FROM `".CLERKSHIP_DATABASE."`.`global_lu_rotations` AS a
 				LEFT JOIN `courses` AS b
-				ON a.`course_id` = b.`course_id`
-				WHERE b.`course_active` = '1'";
+				ON a.`course_id` = b.`course_id`";
 	$courses = $db->GetAll($query);
 	$rotation_ids = array();
 	if (is_array($courses) && count($courses)) {
@@ -8616,8 +8614,7 @@ function clerkship_deficiency_notifications($clerk_id, $rotation_id, $administra
 									ON a.`course_id` = b.`course_id`
 									LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS c
 									ON c.`id` = ".($administrator ? "(SELECT `proxy_id` FROM `course_contacts` WHERE `course_id` = b.`course_id` AND `contact_type` = 'director' ORDER BY `contact_order` ASC LIMIT 0, 1)" : $db->qstr($clerk_id))."
-									WHERE a.`rotation_id` = ".$db->quote($rotation_id)."
-									AND b.`course_active` = '1'";
+									WHERE a.`rotation_id` = ".$db->quote($rotation_id);
 		$rotation				= $db->GetRow($query);
 
 		if ($rotation) {

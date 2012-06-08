@@ -367,12 +367,34 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						return false;
 					}
 				});
+				
+				jQuery(".import-csv").live("click", function(){
+					jQuery("#import-csv").dialog({
+						title: "Import CSV",
+						resizable: false,
+						draggable: false,
+						modal: true,
+						width: 300,
+						buttons: [
+							{
+								text: "Import",
+								click: function() { jQuery("#csv-form").trigger("submit"); }
+							},
+							{
+								text: "Cancel",
+								click: function() { jQuery(this).dialog("close"); }
+							}
+						]
+					});
+					return false;
+				});
 			});
 		</script>
 		<style type="text/css">
 			#draftEvents_length {padding:5px 4px 0 0;}
 			#draftEvents_filter {-moz-border-radius:10px 10px 0px 0px;-webkit-border-top-left-radius: 10px;-webkit-border-top-right-radius: 10px;border-radius: 10px 10px 0px 0px; border: 1px solid #9D9D9D;border-bottom:none;background-color:#FAFAFA;font-size: 0.9em;padding:3px;}
 			#draftEvents_paginate a {margin:2px 5px;}
+			#import-csv {display:none;}
 		</style>
 		<div style="clear:both;"></div>
 		<h2>Learning Events in Draft</h2>
@@ -382,6 +404,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			?>
 			<div style="float: right">
 				<ul class="page-action">
+					<li><a href="#" class="import-csv">Import CSV</a></li>
 					<li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=add&mode=draft&draft_id=<?= $draft_id; ?>" class="strong-green">Add New Event</a></li>
 				</ul>
 			</div>
@@ -389,6 +412,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			<?php
 		}
 		?>
+		<div id="import-csv">
+			<form id="csv-form" action="<?php echo ENTRADA_URL; ?>/admin/events/drafts?section=csv-import&draft_id=<?= $draft_id; ?>" enctype="multipart/form-data" method="POST">
+				<input type="hidden" name="draft_id" value="<?= $draft_id; ?>" />
+				<input type="file" name="csv_file" /> 
+			</form>
+		</div>
 		<form name="frmSelect" action="<?php echo ENTRADA_URL; ?>/admin/events?section=delete&mode=draft&draft_id=<?= $draft_id; ?>" method="post">
 			<table class="tableList" id="draftEvents" cellspacing="0" cellpadding="1" summary="List of Events" style="margin-bottom:5px;">
 				<colgroup>

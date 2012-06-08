@@ -312,6 +312,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					case "copy" :
 						$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] = "copy";
 					break;
+					case "draft" :
+						$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] = "draft";
+					break;
 					case "index" :
 					default :
 						$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] = "index";
@@ -645,7 +648,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 										</td>
 										<td style="width: 75%; text-align: right; vertical-align: middle">
 											<?php if ($is_draft) { 
-												$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "draft";
+												echo "<input type=\"hidden\" name=\"post_action\" id=\"post_action\" value=\"draft\" />";
 											} else { ?>
 											<span class="content-small">After saving:</span>
 											<select id="post_action" name="post_action">

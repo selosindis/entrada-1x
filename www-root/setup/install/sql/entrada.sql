@@ -4521,3 +4521,10 @@ CREATE TABLE IF NOT EXISTS `notifications` (
   `sent_date` bigint(64) DEFAULT '0',
   PRIMARY KEY (`notification_id`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `curriculum_level_organisation` (
+  `cl_org_id` INT(12) NOT NULL AUTO_INCREMENT,
+  `org_id` INT(12) NOT NULL,
+  `curriculum_level_id` INT(11) NOT NULL,
+  PRIMARY KEY (`cl_org_id`)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8;

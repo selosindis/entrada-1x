@@ -39,11 +39,11 @@ function grade_below_threshold_notice($assessment_list) {
 		$mail->setFrom($AGENT_CONTACTS["agent-notifications"]["email"], APPLICATION_NAME.' Gradebook System');
 		$mail->setSubject("Grade Below Threshold Notification");
 
-		$message = "This notification is being sent to inform you that students scored below the assessment threshold.\n\n";
-		$message .= "Course:\t\t\t\t".$assessment["course_name"]." - ".$assessment["course_code"]."\n";
-		$message .= "Assessment:\t\t\t".$assessment["assessment_name"]."\n";
+		$message = "<pre>This notification is being sent to inform you that students scored below the assessment threshold.\n\n";
+		$message .= "Course:\t\t\t".$assessment["course_name"]." - ".$assessment["course_code"]."\n";
+		$message .= "Assessment:\t\t<a href=\"".ENTRADA_URL."/admin/gradebook/assessments?section=grade&id=".$assessment["course_id"]."&assessment_id=".$assessment_id."\">".$assessment["assessment_name"]."</a>\n";
 		$message .= "Assessment ID:\t\t".$assessment_id."\n";
-		$message .= "Grade Threshold:\t\t".$assessment["threshold"]."%\n\n";
+		$message .= "Grade Threshold:\t".$assessment["threshold"]."%\n\n";
 		$message .= "The following students scored below the assessment threshold:\n";
 		$message .= "-------------------------------------------------------------\n\n";
 
@@ -52,12 +52,12 @@ function grade_below_threshold_notice($assessment_list) {
 						SET `threshold_notified` = '1'
 						WHERE `grade_id` = ".$db->qstr($student["grade_id"]);
 			$result = $db->Execute($query);
-			$message .= "Student:\t\t\t".$student["student_name"]." - [".$student["student_email"]."] \n";
+			$message .= "Student:\t\t".$student["student_name"]." - [".$student["student_email"]."] \n";
 			$message .= "Student Number:\t\t".$student["student_number"]."\n";
 			$message .= "Grade Recieved:\t\t".$student["assessment_grade"]."%\n\n";
 		}
-		
-		$mail->setBodyText($message);
+		$message .= "</pre>";
+		$mail->setBodyHtml($message);
 		$query = "	SELECT a.`contact_type`, a.`contact_order`, b.`prefix`, b.`firstname`, b.`lastname`, b.`email`, a.`proxy_id`
 			FROM ".DATABASE_NAME.".`course_contacts` AS a 
 			JOIN ".AUTH_DATABASE.".`user_data` AS b 

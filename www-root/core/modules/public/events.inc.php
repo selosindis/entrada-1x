@@ -874,6 +874,8 @@ if ($topic_results) { ?>
 
 							if (((!(int) $quiz_record["release_date"]) || ($quiz_record["release_date"] <= time())) && ((!(int) $quiz_record["release_until"]) || ($quiz_record["release_until"] >= time())) && (!$exceeded_attempts)) {
 								$allow_attempt = true;
+							} elseif (isset($quiz_record["require_attendance"]) && events_fetch_event_attendance_for_user($EVENT_ID,$ENTRADA_USER->getProxyId())) {
+								$allow_attempt = true;
 							} else {
 								$allow_attempt = false;
 							}
@@ -894,7 +896,7 @@ if ($topic_results) { ?>
 								echo "This quiz was only available until <strong>".date(DEFAULT_DATE_FORMAT, $quiz_record["release_until"])."</strong>. Please contact a teacher for assistance if required.<br /><br />";
 							}
 
-							echo quiz_generate_description($quiz_record["required"], $quiz_record["quiztype_code"], $quiz_record["quiz_timeout"], $total_questions, $quiz_record["quiz_attempts"], $quiz_record["timeframe"]);
+							echo quiz_generate_description($quiz_record["required"], $quiz_record["quiztype_code"], $quiz_record["quiz_timeout"], $total_questions, $quiz_record["quiz_attempts"], $quiz_record["timeframe"], $quiz_record["require_attendance"]);
 							echo "			</div>\n";
 
 							if ($progress_record) {

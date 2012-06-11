@@ -84,11 +84,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				$PROCESSED["event_types"] = array();
 
 				if (!$is_draft) {
-					echo "<div class=\"no-printing\">\n";
-					echo "	<div style=\"float: right; margin-top: 8px\">\n";
-					echo "		<a href=\"".ENTRADA_URL."/admin/events?".replace_query(array("section" => "content", "id" => $EVENT_ID))."\"><img src=\"".ENTRADA_URL."/images/event-contents.gif\" width=\"16\" height=\"16\" alt=\"Manage event content\" title=\"Manage event content\" border=\"0\" style=\"vertical-align: middle\" /></a> <a href=\"".ENTRADA_URL."/admin/events?".replace_query(array("section" => "content", "id" => $EVENT_ID, "step" => false))."\" style=\"font-size: 10px; margin-right: 8px\">Manage event content</a>\n";
-					echo "	</div>\n";
-					echo "</div>\n";
+					events_subnavigation($event_info,'edit');
 				} else { 
 					$EVENT_ID = $event_info["event_id"];
 				}
@@ -462,7 +458,24 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 										default :
 											add_error("There was no audience information provided, so this event is without an audience.");
 										break;
-									}									
+									}		
+									/**
+									 * Remove attendance records for anyone who is no longer a valid audience member of the course.
+									 */
+									$audience = events_fetch_event_audience_attendance($EVENT_ID);									
+									if ($audience) {
+										$valid_audience = array();
+										foreach ($audience as $learner){
+											$valid_audience[] = $learner["id"];
+										}										
+										$query = "DELETE FROM `event_attendance` WHERE `event_id` = ".$db->qstr($EVENT_ID)." AND `proxy_id` NOT IN (".implode(",",$valid_audiance).")";
+												
+										$db->Execute($query);										
+									} else {
+										$query = "DELETE FROM `event_attendance` WHERE `event_id` = ".$db->qstr($EVENT_ID);
+										$db->Execute($query);
+									}
+									
 								} else {
 									application_log("error", "Unable to delete audience details from event_audience table during an edit. Database said: ".$db->ErrorMsg());
 								}

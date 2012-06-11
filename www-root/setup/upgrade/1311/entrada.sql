@@ -1,13 +1,9 @@
-CREATE TABLE IF NOT EXISTS `event_attendance` (
-  `eattendance_id` int(11) NOT NULL AUTO_INCREMENT,
-  `event_id` int(11) NOT NULL,
-  `proxy_id` int(11) NOT NULL,
-  `updated_date` bigint(64) NOT NULL,
-  `updated_by` int(11) NOT NULL,
-  PRIMARY KEY (`eattendance_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
-ALTER TABLE `attached_quizzes` ADD COLUMN `require_attendance` INT NOT NULL DEFAULT '0' AFTER `required`;
+CREATE TABLE IF NOT EXISTS `curriculum_level_organisation` (
+  `cl_org_id` INT(12) NOT NULL AUTO_INCREMENT,
+  `org_id` INT(12) NOT NULL,
+  `curriculum_level_id` INT(11) NOT NULL,
+  PRIMARY KEY (`cl_org_id`)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 
 
 UPDATE `settings` SET `value` = '1311' WHERE `shortname` = 'version_db';

@@ -412,7 +412,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 													}
 													if (!$db->AutoExecute($tables["audience"], $audience_data, "INSERT")) {
 														$ERROR++;
-														$ERRORSTR[] = "There was an error while trying to attach the selected <strong>Cohort</strong> to this event.<br /><br />The system administrator was informed of this error; please try again later.";
+														$ERRORSTR[] = "There was an error while trying to attach the selected <strong>Cohort</strong> to this event.<br /><br />The system administrator was informed of this error; please try again later.".$db->ErrorMsg();
 
 														application_log("error", "Unable to insert a new event_audience, cohort record while adding a new event. Database said: ".$db->ErrorMsg());
 													}
@@ -888,6 +888,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								}
 								?>
 								</tbody>
+								<?php if (!is_draft) { ?>
 								<tbody>
 									<tr>
 										<td>&nbsp;</td>
@@ -930,6 +931,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 										</td>
 									</tr>
 								</tbody>
+								<?php } ?>
 								<tbody>
 									<tr>
 										<td colspan="3"><h2>Time Release Options</h2></td>

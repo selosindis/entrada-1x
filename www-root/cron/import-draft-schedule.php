@@ -27,12 +27,14 @@
 require_once("init.inc.php");
 
 // Fetch approved drafts
-$query = "	SELECT `draft_id`
+$query = "	SELECT *
 			FROM `drafts`
 			WHERE `status` = 'approved'";
 $drafts = $db->GetAll($query);
 if ($drafts) {
 	foreach ($drafts as $draft) {
+		$msg[$draft["draft_id"]][] = "Imported draft: \"".$draft["draf_title"]."\" on ".date("Y-m-d H:i", time());
+		$notification_events = "";
 		// fetch the draft events
 		$query = "	SELECT *
 					FROM `draft_events`
@@ -70,6 +72,8 @@ if ($drafts) {
 					}
 				}
 				
+				$notification_events .= $event["event_title"]." at ".date("Y-m-d H:i", $event["event_start"])."\n";
+				
 				// remove the eventtypes associated with the event
 				$query = "	DELETE FROM `event_eventtypes`
 							WHERE `event_id` = ".$db->qstr($event["event_id"]);
@@ -104,8 +108,10 @@ if ($drafts) {
 							WHERE `event_id` = ".$db->qstr($event["event_id"]);
 				if ($db->Execute($query)) {
 					// add the eventtypes associated with the draft event
-					$query = "	SELECT *
-								FROM `draft_contacts`
+					$query = "	SELECT a.*, CONCAT(b.`first_name`, b.`last_name`) AS `fullname`, b.`email`
+								FROM `draft_contacts` AS a
+								JOIN `".AUTH_DATABASE."`.`users` AS b
+								ON a.`proxy_id` = b.`id`
 								WHERE `devent_id` = ".$db->qstr($event["devent_id"]);
 					$eventcontacts = $db->GetAll($query);
 					if ($eventcontacts) {
@@ -116,6 +122,9 @@ if ($drafts) {
 								if (!$db->Execute($query)) { 
 									$error++;
 									application_log("error", "Error deleting draft event contact [dcontact_id - ".$contact["dcontact_id"]."] on draft schedule import. DB said: ".$db->ErrorMsg());
+								} else {
+									$msg[$draft["draft_id"]]["contacts"][$contact["proxy_id"]][] = $contact["email"];
+									$msg[$draft["draft_id"]]["contacts"][$contact["proxy_id"]][] = $contact["fullname"];
 								}
 							} else {
 								$error++;
@@ -159,11 +168,39 @@ if ($drafts) {
 				
 				if (!$error) {
 					$count++;
+					$msg[$draft["draft_id"]][] = $event["event_title"]." - ".date("Y-m-d H:i",$event["event_start"]);
 				}
 			}
 		}
 		
 		if (!$error) {
+			// notify the draft creators that their draft has been imported
+			$message = "This email is to notify you that the draft learning event schedule \"".$draft["name"]."\" was successfully imported on ".date("Y-m-d H:i", time()).".\n\n";
+			$message .= "The following learning events were imported into the system:\n";
+			$message .= "------------------------------------------------------------\n\n";
+			$message .= $notification_events;
+			echo "<pre>".$message."</pre>";
+			$query = "	SELECT a.`proxy_id`, CONCAT(b.`firstname`, ' ', b.`lastname`) AS `name`, b.`email`
+						FROM `draft_creators` AS a
+						JOIN `".AUTH_DATABASE."`.`user_data` AS b
+						ON a.`proxy_id` = b.`id`
+						WHERE `draft_id` = ".$db->qstr($draft["draft_id"]);
+			if ($results = $db->GetAll($query)) {
+				$mail = new Zend_Mail();
+				$mail->addHeader("X-Section", "Learning Events Notification System", true);
+				$mail->setFrom($AGENT_CONTACTS["administrator"]["email"], $AGENT_CONTACTS["administrator"]["name"]);
+				$mail->clearSubject();
+				$mail->setSubject("Draft Learning Event Schedule Imported");
+				$mail->setBodyText($message);
+				$mail->clearRecipients();
+				
+				foreach ($results as $result) {
+					$mail->addTo($result["email"], $result["name"]);
+				}
+				
+				$mail->send();
+			}
+			
 			// delete the draft creators
 			$query = "DELETE FROM `draft_creators` WHERE `draft_id` = ".$db->qstr($draft["draft_id"]);
 			if ($db->Execute($query)) {

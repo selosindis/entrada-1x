@@ -61,6 +61,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 			}
 
 			/**
+			 * Required field "curriculum_level_id" / Curriculum Level
+			 */
+			if (isset($_POST["curriculum_level_id"]) && ($c_level_id = clean_input($_POST["curriculum_level_id"], array("notags", "trim", "int")))) {
+				$PROCESSED["curriculum_level_id"] = $c_level_id;
+			} else {
+				$ERROR++;
+				$ERRORSTR[] = "The <strong>Curriculum Level</strong> is a required field.";
+			}
+
+			/**
 			 * Optional field Period Start Date
 			 */
 			if (isset($_POST["curriculum_start_date"]) && count($_POST["curriculum_start_date"])) {
@@ -122,6 +132,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 			}
 		break;
 		case 1 :
+			
 		default :
 
 		break;
@@ -143,6 +154,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 			}
 		break;
 		case 1 :
+			
 		default:	
 			if ($ERROR) {
 				echo display_error();
@@ -150,7 +162,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 
 			$ONLOAD[] = "selectObjective(".(isset($PROCESSED["objective_parent"]) && $PROCESSED["objective_parent"] ? $PROCESSED["objective_parent"] : "0").")";
 			$ONLOAD[] = "selectOrder(".(isset($PROCESSED["objective_parent"]) && $PROCESSED["objective_parent"] ? $PROCESSED["objective_parent"] : "0").")";
-						
+
+			if (isset($_GET["org"]) && ($org_id = clean_input($_GET["org"], array("notags", "trim", "int")))) {
+				$PROCESSED["org_id"] = $org_id;
+			} else {
+				$PROCESSED["org_id"] = 0;
+			}
+
 			?>
 			<form action="<?php echo ENTRADA_URL."/admin/settings/organisations/manage/curriculumtypes"."?".replace_query(array("action" => "add", "step" => 2))."&org=".$ORGANISATION_ID; ?>" id="curriculum_form" method="post">
 			<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Adding Page">
@@ -180,6 +198,36 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 					<td style="vertical-align: top;"><label for="curriculum_type_description" class="form-nrequired">Curriculum Type Description: </label></td>
 					<td>
 						<textarea id="curriculum_type_description" name="curriculum_type_description" style="width: 98%; height: 50px" rows="20" cols="70"><?php echo ((isset($PROCESSED["curriculum_type_description"])) ? html_encode($PROCESSED["curriculum_type_description"]) : ""); ?></textarea>
+					</td>
+				</tr>
+				<tr>
+					<td style="vertical-align: top;"><label for="curriculum_level" class="form-nrequired">Curriculum Level: </label></td>
+					<td>
+						<select id="curriculum_level_id" name="curriculum_level_id" style="width: 250px">
+						<?php
+						$query = "	SELECT a.*
+									FROM `" . DATABASE_NAME . "`.`curriculum_lu_levels`  AS a,
+									`" . DATABASE_NAME . "`.`curriculum_level_organisation`  AS b
+									WHERE a.`curriculum_level_id` = b.`curriculum_level_id`
+									AND b.`org_id` = " . $PROCESSED["org_id"] . "
+								    ORDER BY a.`curriculum_level` ASC";						
+						$results = $db->GetAll($query);
+
+						if ($results) { ?>
+							<option value="0">Choose a Curriculum Level</option>
+						<?php
+							foreach ($results as $result) {
+						?>
+								<option value="<?php echo $result["curriculum_level_id"] ?>">
+							<?php echo $result["curriculum_level"] ?>
+							</option>
+						<?php
+							}
+						} else { ?>
+							<option value="0">No Curriculum Levels Exist for this Organisation</option>
+						<?php }
+						?>
+					</select>						
 					</td>
 				</tr>
 				<tr>

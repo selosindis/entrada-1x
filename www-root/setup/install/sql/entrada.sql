@@ -2145,6 +2145,15 @@ CREATE TABLE IF NOT EXISTS `events` (
   FULLTEXT KEY `event_title` (`event_title`,`event_description`,`event_goals`,`event_objectives`,`event_message`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
+CREATE TABLE IF NOT EXISTS `event_attendance` (
+  `eattendance_id` int(11) NOT NULL AUTO_INCREMENT,
+  `event_id` int(11) NOT NULL,
+  `proxy_id` int(11) NOT NULL,
+  `updated_date` bigint(64) NOT NULL,
+  `updated_by` int(11) NOT NULL,
+  PRIMARY KEY (`eattendance_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
 CREATE TABLE IF NOT EXISTS `events_lu_topics` (
   `topic_id` int(12) NOT NULL AUTO_INCREMENT,
   `topic_name` varchar(60) NOT NULL,
@@ -2409,6 +2418,7 @@ CREATE TABLE IF NOT EXISTS `attached_quizzes` (
   `content_type` enum('event','community_page') NOT NULL DEFAULT 'event',
   `content_id` int(12) NOT NULL DEFAULT '0',
   `required` int(1) NOT NULL DEFAULT '0',
+  `require_attendance` INT NOT NULL DEFAULT '0',
   `timeframe` varchar(64) NOT NULL,
   `quiz_id` int(12) NOT NULL DEFAULT '0',
   `quiz_title` varchar(128) NOT NULL,
@@ -2510,14 +2520,39 @@ INSERT INTO `filetypes` (`id`, `ext`, `mime`, `english`, `image`) VALUES
 (14, 'txt', 'text/plain', 'Plain Text File', 0x47494638396110001000d50000513d32d8d1cdc5c5c5afaea86c7879dededef0f0f0694e468799bbafb6c0888173aaa8a5f7f7f99db4decccccc474837828282945147e6e6e6999999d0a183b2b2b2e2d7d08d423a575349989685ffffffbdbdbdd6d6d6504c2ea5b5d15e443bb4b0a07b7b7b5e39308f8578d4d7dcdae1e4474a424f4231d6d6ceadadade3d6ce00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000021f9040514001a002c0000000010001000000691408da6e010188f488650c3590a194a0dc36058720c28c9c620585c22a04255c82998cd8391e860428d99857219a3f89c3a8e3747e2e0ec1f190026046e56447d051e09080d0d247a7c051b657d1c026286667e1b95027986971c95a20e5ba0a205461b1b15157a1c1b4802132110154e1c01010ea5ab137c4e4c16142571bc0b4dc1572a121271021bc14206717ed6d241003b),
 (15, 'rtf', 'text/richtext', 'Rich Text File', 0x47494638396110001000d50000513d32d8d1cdc5c5c5afaea86c7879dededef0f0f0694e468799bbafb6c0888173aaa8a5f7f7f99db4decccccc474837828282945147e6e6e6999999d0a183b2b2b2e2d7d08d423a575349989685ffffffbdbdbdd6d6d6504c2ea5b5d15e443bb4b0a07b7b7b5e39308f8578d4d7dcdae1e4474a424f4231d6d6ceadadade3d6ce00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000021f9040514001a002c0000000010001000000691408da6e010188f488650c3590a194a0dc36058720c28c9c620585c22a04255c82998cd8391e860428d99857219a3f89c3a8e3747e2e0ec1f190026046e56447d051e09080d0d247a7c051b657d1c026286667e1b95027986971c95a20e5ba0a205461b1b15157a1c1b4802132110154e1c01010ea5ab137c4e4c16142571bc0b4dc1572a121271021bc14206717ed6d241003b);
 
-CREATE TABLE IF NOT EXISTS `drafts` (
-  `draft_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-  `status` text,
-  `name` text,
-  `description` text,
-  `created` int(11) DEFAULT NULL,
-  `preserve_elements` binary(4) DEFAULT NULL,
-  PRIMARY KEY (`draft_id`)
+CREATE TABLE IF NOT EXISTS `draft_audience` (
+  `daudience_id` int(12) NOT NULL AUTO_INCREMENT,
+  `eaudience_id` int(12) NOT NULL,
+  `devent_id` int(12) NOT NULL DEFAULT '0',
+  `event_id` int(12) NOT NULL DEFAULT '0',
+  `audience_type` enum('proxy_id','grad_year','cohort','organisation_id','group_id','course_id') NOT NULL,
+  `audience_value` varchar(16) NOT NULL,
+  `updated_date` bigint(64) NOT NULL DEFAULT '0',
+  `updated_by` int(12) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`daudience_id`),
+  KEY `eaudience_id` (`eaudience_id`),
+  KEY `event_id` (`event_id`),
+  KEY `target_value` (`audience_value`),
+  KEY `target_type` (`audience_type`),
+  KEY `event_id_2` (`event_id`,`audience_type`,`audience_value`),
+  KEY `audience_type` (`audience_type`,`audience_value`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+
+CREATE TABLE IF NOT EXISTS `draft_contacts` (
+  `dcontact_id` int(12) NOT NULL AUTO_INCREMENT,
+  `econtact_id` int(12) DEFAULT NULL,
+  `devent_id` int(12) NOT NULL DEFAULT '0',
+  `event_id` int(12) NOT NULL DEFAULT '0',
+  `proxy_id` int(12) NOT NULL DEFAULT '0',
+  `contact_role` enum('teacher','tutor','ta','auditor') NOT NULL,
+  `contact_order` int(6) NOT NULL DEFAULT '0',
+  `updated_date` bigint(64) NOT NULL DEFAULT '0',
+  `updated_by` int(12) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`dcontact_id`),
+  KEY `econtact_id` (`econtact_id`),
+  KEY `contact_order` (`contact_order`),
+  KEY `event_id` (`event_id`),
+  KEY `proxy_id` (`proxy_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 CREATE TABLE IF NOT EXISTS `draft_creators` (
@@ -2570,52 +2605,28 @@ CREATE TABLE IF NOT EXISTS `draft_events` (
   FULLTEXT KEY `event_title` (`event_title`,`event_description`,`event_goals`,`event_objectives`,`event_message`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
-CREATE TABLE `draft_audience` (
-  `daudience_id` int(12) NOT NULL AUTO_INCREMENT,
-  `eaudience_id` int(12) NOT NULL,
-  `devent_id` int(12) NOT NULL DEFAULT '0',
-  `event_id` int(12) NOT NULL DEFAULT '0',
-  `audience_type` enum('proxy_id','grad_year','cohort','organisation_id','group_id','course_id') NOT NULL,
-  `audience_value` varchar(16) NOT NULL,
-  `updated_date` bigint(64) NOT NULL DEFAULT '0',
-  `updated_by` int(12) NOT NULL DEFAULT '0',
-  PRIMARY KEY (`daudience_id`),
-  KEY `eaudience_id` (`eaudience_id`),
-  KEY `event_id` (`event_id`),
-  KEY `target_value` (`audience_value`),
-  KEY `target_type` (`audience_type`),
-  KEY `event_id_2` (`event_id`,`audience_type`,`audience_value`),
-  KEY `audience_type` (`audience_type`,`audience_value`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
-
-CREATE TABLE IF NOT EXISTS `draft_contacts` (
-  `dcontact_id` int(12) NOT NULL AUTO_INCREMENT,
-  `econtact_id` int(12) DEFAULT NULL,
-  `devent_id` int(12) NOT NULL DEFAULT '0',
-  `event_id` int(12) NOT NULL DEFAULT '0',
-  `proxy_id` int(12) NOT NULL DEFAULT '0',
-  `contact_role` enum('teacher','tutor','ta','auditor') NOT NULL,
-  `contact_order` int(6) NOT NULL DEFAULT '0',
-  `updated_date` bigint(64) NOT NULL DEFAULT '0',
-  `updated_by` int(12) NOT NULL DEFAULT '0',
-  PRIMARY KEY (`dcontact_id`),
-  KEY `econtact_id` (`econtact_id`),
-  KEY `contact_order` (`contact_order`),
-  KEY `event_id` (`event_id`),
-  KEY `proxy_id` (`proxy_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
-
 CREATE TABLE IF NOT EXISTS `draft_eventtypes` (
   `deventtype_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
   `eeventtype_id` int(12) DEFAULT NULL,
   `devent_id` int(12) NOT NULL,
-  `event_id` int(12) NOT NULL,
+  `event_id` int(12) DEFAULT NULL,
   `eventtype_id` int(12) NOT NULL,
   `duration` int(12) NOT NULL,
+  `order` int(12) NOT NULL DEFAULT '0',
   PRIMARY KEY (`deventtype_id`),
   KEY `eeventtype_id` (`eeventtype_id`),
   KEY `event_id` (`devent_id`),
   KEY `eventtype_id` (`eventtype_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+
+CREATE TABLE IF NOT EXISTS `drafts` (
+  `draft_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `status` text,
+  `name` text,
+  `description` text,
+  `created` int(11) DEFAULT NULL,
+  `preserve_elements` binary(4) DEFAULT NULL,
+  PRIMARY KEY (`draft_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 CREATE TABLE IF NOT EXISTS `global_lu_countries` (
@@ -4520,4 +4531,11 @@ CREATE TABLE IF NOT EXISTS `notifications` (
   `sent` tinyint(1) NOT NULL DEFAULT '0',
   `sent_date` bigint(64) DEFAULT '0',
   PRIMARY KEY (`notification_id`)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `curriculum_level_organisation` (
+  `cl_org_id` INT(12) NOT NULL AUTO_INCREMENT,
+  `org_id` INT(12) NOT NULL,
+  `curriculum_level_id` INT(11) NOT NULL,
+  PRIMARY KEY (`cl_org_id`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;

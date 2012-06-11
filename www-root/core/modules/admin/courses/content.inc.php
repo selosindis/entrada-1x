@@ -395,7 +395,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				}
 				require_once(ENTRADA_ABSOLUTE."/javascript/courses.js.php");
 
-				courses_subnavigation($course_details);
+				courses_subnavigation($course_details,"content");
 
 				echo "<h1>".html_encode($course_details["course_name"])."</h1>\n";
 

@@ -96,62 +96,7 @@ if(isset($GROUP_ID)) {
 		if($group_details) {
 			if($ENTRADA_ACL->amIAllowed('course', 'update')) {
 				//Groups  exists and is editable by the current users
-				$nmembers_results		= false;
-				$nmembers_query	= "	SELECT a.`id` AS `proxy_id`, CONCAT_WS(' ', a.`firstname`, a.`lastname`) AS `fullname`, a.`lastname`, a.`firstname`, a.`username`, a.`organisation_id`, b.`group`, b.`role`
-									FROM `".AUTH_DATABASE."`.`user_data` AS a
-									LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
-									ON a.`id` = b.`user_id`
-									JOIN `course_audience` AS c
-									ON c.`course_id` = ".$db->qstr($COURSE_ID)."
-									AND c.`audience_type` = 'proxy_id'
-									AND a.`id` = c.`audience_value`
-									JOIN `curriculum_periods` AS d
-									ON c.`cperiod_id` = d.`cperiod_id`
-									WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
-									AND b.`account_active` = 'true'
-									AND b.`group` = 'student'
-									AND c.`audience_active` = 1
-									AND d.`start_date` <= ".$db->qstr(time())."
-									AND d.`finish_date` >= ".$db->qstr(time())."
-									AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
-									AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
-									AND a.`organisation_id` = ".$db->qstr($ORGANISATION_ID)."
-									AND b.`group` = ".$db->qstr($GROUP)."
-									".($ROLE != 'all' ? "AND b.`role` = ".$db->qstr($ROLE) : "")."
-									
-									UNION
-									
-									SELECT a.`id` AS `proxy_id`, CONCAT_WS(' ', a.`firstname`, a.`lastname`) AS `fullname`, a.`lastname`, a.`firstname`, a.`username`, a.`organisation_id`, b.`group`, b.`role`
-									FROM `".AUTH_DATABASE."`.`user_data` AS a
-									JOIN `".AUTH_DATABASE."`.`user_access` AS b
-									ON a.`id` = b.`user_id`
-									JOIN `course_audience` AS c
-									ON c.`course_id` = ".$db->qstr($COURSE_ID)."
-									AND c.`audience_type` = 'group_id'
-									JOIN `groups` AS d
-									ON c.`audience_value` = d.`group_id`
-									JOIN `group_members` AS e
-									ON d.`group_id` = e.`group_id`
-									AND e.`proxy_id` = a.`id`
-									JOIN `curriculum_periods` AS f
-									ON c.`cperiod_id` = f.`cperiod_id`
-									WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
-									AND b.`account_active` = 'true'
-									AND b.`group` = 'student'
-									AND c.`audience_active` = 1
-									AND f.`start_date` <= ".$db->qstr(time())."
-									AND f.`finish_date` >= ".$db->qstr(time())."
-									AND d.`group_active` = 1
-									AND (d.`start_date` <= ".$db->qstr(time())." OR d.`start_date` = 0)
-									AND (d.`expire_date` >= ".$db->qstr(time())." OR d.`expire_date` = 0 OR d.`expire_date` IS NULL)
-									AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
-									AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
-									AND a.`organisation_id` = ".$db->qstr($ORGANISATION_ID)."
-									AND b.`group` = ".$db->qstr($GROUP)."
-									".($ROLE != 'all' ? "AND b.`role` = ".$db->qstr($ROLE) : "")."
-									
-									GROUP BY a.`id`
-									ORDER BY `lastname` ASC, `firstname` ASC";
+				$nmembers_results		= false;				
 
 				//Fetch list of current members
 				$current_member_list	= array();
@@ -165,41 +110,42 @@ if(isset($GROUP_ID)) {
 					}
 				}
 				
-				if($nmembers_query != "") {
-					$nmembers_results = $db->GetAll($nmembers_query);
-					if($nmembers_results) {
-						$members = array(array('text' => "$GROUP > $ROLE", 'value'=>$GROUP.$ROLE, 'options'=>array(), 'disabled'=>false, 'category'=>'true'));
-						foreach($nmembers_results as $member) {
-							if(in_array($member['proxy_id'], $current_member_list)) {
-								$registered = true;
-							} else {
-								$registered = false;
-							}
-							$members[0]['options'][] = array('text' => $member['fullname'].($registered ? ' (already a member)' : ''), 'value' => $member['proxy_id'], 'disabled' => $registered, "checked" => (isset($previously_added_ids) && in_array(((int)$member["proxy_id"]), $previously_added_ids) ? "checked=\"checked\"" : ""));
+
+				//$nmembers_results = $db->GetAll($nmembers_query);
+				$role = ($ROLE != 'all' ?$ROLE:false);
+				$nmembers_results = course_fetch_course_audience($COURSE_ID,$ORGANISATION_ID,$GROUP,$role);
+				if($nmembers_results) {
+					$members = array(array('text' => "$GROUP > $ROLE", 'value'=>$GROUP.$ROLE, 'options'=>array(), 'disabled'=>false, 'category'=>'true'));
+					foreach($nmembers_results as $member) {
+						if(in_array($member['proxy_id'], $current_member_list)) {
+							$registered = true;
+						} else {
+							$registered = false;				
+						}
+						$members[0]['options'][] = array('text' => $member['fullname'].($registered ? ' (already a member)' : ''), 'value' => $member['proxy_id'], 'disabled' => $registered, "checked" => (isset($previously_added_ids) && in_array(((int)$member["proxy_id"]), $previously_added_ids) ? "checked=\"checked\"" : ""));
 //							$members[0]['options'][] = array('text' => $member['fullname'], 'value' => $member['proxy_id'], 'disabled' => false, 'checked' => ($registered ? "checked=\"checked\"" : ""));	
-						}
-						
-						foreach($members[0]['options'] as $key => $member) {
-							if(isset($member['options']) && is_array($member['options']) && !empty($member['options'])) {
-								//Alphabetize members
-								sort($members[0]['options'][$key]['options']);
-							}
-						}
-						echo '<table cellspacing="0" cellpadding="0" class="select_multiple_table" width="100%">';
-						echo lp_multiple_select_table($members, 0, 0, true);
-						echo '</table>';
-					} else {
-						echo "No One Available [1]";
 					}
+					foreach($members[0]['options'] as $key => $member) {
+						if(isset($member['options']) && is_array($member['options']) && !empty($member['options'])) {
+							//Alphabetize members
+							sort($members[0]['options'][$key]['options']);
+						}
+					}
+					echo '<table cellspacing="0" cellpadding="0" class="select_multiple_table" width="100%">';
+					echo lp_multiple_select_table($members, 0, 0, true);
+					echo '</table>';
+					
 				} else {
-					echo "No One Available [2]";
-				}
+					add_notice("No course members could be found matching your request.");
+					echo display_notice();
+				}				
 			} else {
-				echo "Permissions error!";
+				add_error("You are not authorized to access this content.");
+				echo display_error();
 			}
 		} else {
-//			echo "Malformed request!";
-			echo "<h2>Group is inactive!</h2>";
+			add_error("This is an inactive group.");
+			echo display_error();
 		}
 	}
 }

@@ -295,7 +295,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 	if ($results) {
 		if ($ENTRADA_ACL->amIAllowed('course', 'delete', false)) : ?>
 		<form action="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=delete" method="post">
-		<?php endif; ?>
+		<?php endif; ?>			
 		<table class="tableList" cellspacing="0" summary="List of Courses">
 		<colgroup>
 			<col class="modified" />
@@ -303,7 +303,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			<col class="title" />
 			<col class="teacher" />
 			<col class="notices" />
-			<col class="grades" />
+			<col class="actions" />
 		</colgroup>
 		<thead>
 			<tr>
@@ -312,7 +312,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				<td class="title<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "name") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("name", $module_singular_name . " Name"); ?></td>
 				<td class="teacher<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "director") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("director", $module_singular_name . " Director"); ?></td>
 				<td class="notices<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "notices") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("notices", "Notices"); ?></td>
-				<td class="grades">&nbsp;</td>
+                <td class="actions">&nbsp;</td>
 			</tr>
 		</thead>
 		<?php if ($ENTRADA_ACL->amIAllowed('course', 'delete', false)) : ?>
@@ -331,7 +331,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			header("Location: ".ENTRADA_URL."/admin/".$MODULE."?section=content&id=".$results[0]["course_id"]);
 			exit;
 		}
-
+		
+		/**
+		 * Used to appropriately set the width for the last column
+		 */
+		$second_icon = 0;
+		$third_icon = 0;
 		foreach ($results as $result) {
 			$url			= "";
 			$administrator	= false;
@@ -350,16 +355,27 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			echo "	<td class=\"title".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."&amp;org_id=".$result["organisation_id"]."\" title=\"Course Name: ".html_encode($result["course_name"])."\">" : "").html_encode($result["course_name"].(($result["course_code"]) ? ": ".$result["course_code"] : "")).(($url) ? "</a>" : "")."</td>\n";
 			echo "	<td class=\"teacher".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Course Director: ".html_encode($result["fullname"])."\">" : "").html_encode($result["fullname"]).(($url) ? "</a>" : "")."</td>\n";
 			echo "	<td class=\"notices\">".(((int) $result["notifications"]) ? "Yes" : "<strong>No</strong>")."</td>\n";
-			echo "	<td class=\"grades\">".(($url) ? "<a href=\"".ENTRADA_URL."/admin/".$MODULE."?section=content&amp;id=".$result["course_id"]."\"><img src=\"".ENTRADA_URL."/images/event-contents.gif\" width=\"16\" height=\"16\" alt=\"Manage " . $module_singular_name . " Content\" title=\"Manage ". $module_singular_name . " Content\" border=\"0\" /></a>" : "<img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"16\" height=\"16\" alt=\"\" title=\"\" />");
+			echo "	<td class=\"actions\">".(($url) ? "<a href=\"".ENTRADA_URL."/admin/".$MODULE."?section=content&amp;id=".$result["course_id"]."\"><img src=\"".ENTRADA_URL."/images/event-contents.gif\" width=\"16\" height=\"16\" alt=\"Manage " . $module_singular_name . " Content\" title=\"Manage ". $module_singular_name . " Content\" border=\"0\" /></a>" : "<img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"16\" height=\"16\" alt=\"\" title=\"\" />");
 			if ($ENTRADA_ACL->amIAllowed(new GradebookResource($result["course_id"], $result["organisation_id"]), "read")) {
+				$second_icon = 1;				
 				echo "&nbsp;<a href=\"".ENTRADA_URL."/admin/gradebook?section=view&amp;id=".$result["course_id"]."\"><img src=\"".ENTRADA_URL."/images/book_go.png\" width=\"16\" height=\"16\" alt=\"View Gradebook\" title=\"View Gradebook\" border=\"0\" /></a>";				
 			}
+			if ($ENTRADA_ACL->amIAllowed(new CourseResource($result["course_id"], $result["organisation_id"]), "update", false)) {
+				$third_icon = 1;
+				echo "&nbsp;<a href=\"".ENTRADA_URL."/admin/courses/groups?id=".$result["course_id"]."\"><img src=\"".ENTRADA_URL."/images/list-community.gif\" width=\"16\" height=\"16\" alt=\"Manage Course Groups\" title=\"Manage Course Groups\" border=\"0\" /></a>";				
+			}
+			
 			echo "	</td>\n";
 			echo "</tr>\n";
 		}
 		?>
 		</tbody>
 		</table>
+		<style type="text/css">
+			.actions{
+				width:<?php echo ($second_icon*20)+($third_icon*20)+20;?>px;
+			}
+		</style>			
 		<?php if ($ENTRADA_ACL->amIAllowed('course', 'delete', false)) : ?>
 		</form>
 		<?php

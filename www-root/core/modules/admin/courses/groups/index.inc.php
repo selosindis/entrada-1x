@@ -110,7 +110,11 @@ if (!defined("IN_COURSE_GROUPS")) {
 	 * Check if preferences need to be updated on the server at this point.
 	 */
 	preferences_update($MODULE, $PREFERENCES);
-
+	$query = "	SELECT * FROM `courses` 
+				WHERE `course_id` = ".$db->qstr($COURSE_ID)."
+				AND `course_active` = '1'";
+	$course_details	= $db->GetRow($query);
+	courses_subnavigation($course_details,"groups");
 	?>
 	<h1>Manage <?php echo $module_singular_name; ?> Groups</h1>
 		<div style="float: right">
@@ -247,7 +251,8 @@ if (!defined("IN_COURSE_GROUPS")) {
 	<div class="tab-pane" id="user-tabs">
 		<div class="tab-page">
 			<h2 class="tab">Group Search</h2>
-			<form action="<?php echo ENTRADA_URL; ?>/admin/courses/groups?id=<?php echo $COURSE_ID; ?>" method="get">
+			<form action="<?php echo ENTRADA_URL; ?>/admin/courses/groups" method="get">
+			<input type="hidden" name="id" value="<?php echo $COURSE_ID;?>"/>	
 			<input type="hidden" name="type" value="search" />
 			<table style="width: 100%" cellspacing="1" cellpadding="1" border="0" summary="Search for Groups">
 			<colgroup>
@@ -325,14 +330,14 @@ if (!defined("IN_COURSE_GROUPS")) {
 				<col class="modified" />
 				<col class="community_title" />
 				<col class="date" />
-				<col class="attachment" />
+				<col class="actions" />
 			</colgroup>
 			<thead>
 				<tr>
 					<td class="modified">&nbsp;</td>
 					<td class="community_title<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE."-".$SUBMODULE]["sb"] == "group_name") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE."-".$SUBMODULE]["so"]) : ""); ?>"><?php echo admin_order_link("group_name", "Group Name", $SUBMODULE); ?></td>
 					<td class="date<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE."-".$SUBMODULE]["sb"] == "members") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE."-".$SUBMODULE]["so"]) : ""); ?>"><?php echo admin_order_link("members", "Number of members", $SUBMODULE); ?></td>
-					<td class="attachment">&nbsp;</td>
+					<td class="actions">&nbsp;</td>
 				</tr>
 			</thead>
 			<?php if ($ENTRADA_ACL->amIAllowed("group", "delete", false) or $ENTRADA_ACL->amIAllowed("group", "update", false)) : ?>
@@ -344,14 +349,14 @@ if (!defined("IN_COURSE_GROUPS")) {
 						if ($ENTRADA_ACL->amIAllowed("group", "delete", false)) {
 							$colspan--;
 							?>
-							<td style="padding-top: 10px"><input type="submit" class="button" value="Delete Selected"  onClick="$('frmSelect').action ='<?php echo ENTRADA_URL; ?>/admin/courses/groups?section=manage&id=<?php echo $COURSE_ID; ?>'" /></td>
+							<td style="padding-top: 10px"><input type="submit" class="button" value="Delete Selected"  onClick="$('frmSelect').action ='<?php echo ENTRADA_URL; ?>/admin/courses/groups?section=edit&action=delete&id=<?php echo $COURSE_ID; ?>'" /></td>
 							<?php
 						}
 						if ($ENTRADA_ACL->amIAllowed("group", "update", false)) {
 							$colspan--;
 							?>
 							<td style="padding-top: 10px">
-								<input type="submit" class="button" value="Edit Selected" onClick="$('frmSelect').action ='<?php echo ENTRADA_URL; ?>/admin/courses/groups?section=edit&id=<?php echo $COURSE_ID; ?>'" />
+								<input type="submit" class="button" value="Manage Selected" onClick="$('frmSelect').action ='<?php echo ENTRADA_URL; ?>/admin/courses/groups?section=manage&id=<?php echo $COURSE_ID; ?>'" />
 							</td>
 							<?php
 						}
@@ -363,14 +368,17 @@ if (!defined("IN_COURSE_GROUPS")) {
 			<tbody>
 			<?php
 			foreach ($scheduler_groups["groups"] as $result) {
-				$url = ENTRADA_URL."/admin/courses/groups?section=edit&id=".$COURSE_ID."&ids=".$result["cgroup_id"];
-
+				$url = ENTRADA_URL."/admin/courses/groups?section=manage&id=".$COURSE_ID."&ids=".$result["cgroup_id"];
 
 				echo "<tr id=\"group-".$result["cgroup_id"]."\" class=\"group".((!$result["active"]) ? " na" : ((!$result["active"]) ? " np" : ""))."\">\n";
 				echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"checked[]\" value=\"".$result["cgroup_id"]."\" /></td>\n";
 				echo "	<td class=\"community_title\"><a href=\"".$url."\">".html_encode($result["group_name"])."</a></td>\n";
 				echo "	<td class=\"date\"><a href=\"".$url."\">".$result["members"]."</a></td>\n";
-				echo "	<td class=\"attachment\"><a href=\"".ENTRADA_URL."/admin/courses/groups?section=edit&id=".$COURSE_ID."&ids=".$result["cgroup_id"]."\"><img src=\"".ENTRADA_URL."/images/action-edit.gif\" width=\"16\" height=\"16\" alt=\"Manage Group\" title=\"Manage Group\" border=\"0\" /></a></td>\n";
+				echo "	<td class=\"actions\">\n";
+				echo "		<a href=\"".ENTRADA_URL."/admin/courses/groups?section=manage&id=".$COURSE_ID."&ids=".$result["cgroup_id"]."\"><img src=\"".ENTRADA_URL."/images/list-community.gif\" width=\"16\" height=\"16\" alt=\"Manage Group\" title=\"Manage Group\" border=\"0\" /></a>\n";
+				echo "		<a href=\"".ENTRADA_URL."/admin/courses/groups?section=edit&action=rename&id=".$COURSE_ID."&gid=".$result["cgroup_id"]."\"><img src=\"".ENTRADA_URL."/images/action-edit.gif\" width=\"16\" height=\"16\" alt=\"Manage Group\" title=\"Edit Group\" border=\"0\" /></a>\n";
+				echo "	</td>\n";
+
 				echo "</tr>\n";
 			}
 			?>
@@ -378,6 +386,11 @@ if (!defined("IN_COURSE_GROUPS")) {
 		</table>
 		<?php if ($ENTRADA_ACL->amIAllowed("group", "delete", false)) : ?>
 		</form>
+		<style type="text/css">
+			.actions{
+				width:40px;
+			}
+		</style>		
 		<?php
 		endif;
 	} else {

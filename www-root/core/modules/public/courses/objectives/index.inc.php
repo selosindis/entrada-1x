@@ -72,7 +72,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 					<?php
 						foreach ($objectives["competencies"] as $competency_id => $competency) {
 							?>
-							<td class="title middle bottom" <?= ($is_ie) ? "style=\"white-space:normal!important;\"" : "" ; ?>><div class="vertical-text" <?= ($is_ie) ? "style=\"white-space:normal!important;height:200px;\"" : "" ; ?>><a href="<?= ENTRADA_URL; ?>/courses/objectives?section=competency-courses&id=<?= $competency_id; ?>" style="text-decoration: none;<?= ($is_ie) ? "height:200px;display:block;\"" : "\"" ; ?>><?= $competency ?></a></div></td>
+							<td class="title middle bottom" <?= ($is_ie) ? "style=\"white-space:normal!important;\"" : "" ; ?>><div class="vertical-text" <?= ($is_ie) ? "style=\"white-space:normal!important;height:200px;\"" : "" ; ?>><a href="<?= ENTRADA_URL; ?>/courses/objectives?section=competency-courses&id=<?= $competency_id; ?>" style="text-decoration: none;<?= ($is_ie) ? "height:200px;display:block;\"" : "" ; ?>"><?= $competency ?></a></div></td>
 							<?php
 						}
 					?>

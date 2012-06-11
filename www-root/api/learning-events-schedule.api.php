@@ -61,16 +61,16 @@ if((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 									SET `event_start` = ".$db->qstr(strtotime($PROCESSED["data"]))."
 									WHERE `devent_id` = ".$db->qstr($PROCESSED["devent_id"]);
 						if ($db->Execute($query)) {
-							echo "<a href=\"".ENTRADA_URL."/admin/events?section=edit&mode=draft&id=".$PROCESSED["devent_id"]."\">".date("H:i", strtotime($PROCESSED["data"]))."</a>";
+							echo "<a href=\"".ENTRADA_URL."/admin/events?section=edit&mode=draft&id=".$PROCESSED["devent_id"]."\" class=\"time\">".date("H:i", strtotime($PROCESSED["data"]))."</a>";
 						} else {
 							application_log("error", "An error ocurred when updating the draft_events table when updating event [devent_id: ".$PROCESSED["devent_id"]."]. Database said: ".$db->ErrorMsg());
 						}
 					} else {
-						echo "<a href=\"".ENTRADA_URL."/admin/events?section=edit&mode=draft&id=".$PROCESSED["devent_id"]."\"  rel=\"".date("H:i", $old_timestamp["event_start"])."\">".date("H:i", $old_timestamp["event_start"])."</a>";
+						echo "<a href=\"".ENTRADA_URL."/admin/events?section=edit&mode=draft&id=".$PROCESSED["devent_id"]."\" class=\"time\" rel=\"".date("H:i", $old_timestamp["event_start"])."\">".date("H:i", $old_timestamp["event_start"])."</a>";
 					}
 				} else { 
 					echo "<script type=\"text/javascript\">alert('24 hour format required');</script>";
-					echo "<a href=\"".ENTRADA_URL."/admin/events?section=edit&mode=draft&id=".$PROCESSED["devent_id"]."\"  rel=\"".date("H:i", $old_timestamp["event_start"])."\">".date("H:i", $old_timestamp["event_start"])."</a>";
+					echo "<a href=\"".ENTRADA_URL."/admin/events?section=edit&mode=draft&id=".$PROCESSED["devent_id"]."\" class=\"time\" rel=\"".date("H:i", $old_timestamp["event_start"])."\">".date("H:i", $old_timestamp["event_start"])."</a>";
 				}
 			break;
 			case "title" :

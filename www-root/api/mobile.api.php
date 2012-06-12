@@ -279,8 +279,9 @@ if ($isAuthenticated) {
 					break;*/
 					case "fetchnotices" :
 						foreach ($results as $result) {
-							$result["default_date"][] = date(DEFAULT_DATE_FORMAT, $result["updated_date"]);
+							//$result["default_date"][] = date(DEFAULT_DATE_FORMAT, $result["updated_date"]);
 							//$result["last_read"] = date(DEFAULT_DATE_FORMAT, $result["last_read"]);
+							$result["updated_date"] = date(DEFAULT_DATE_FORMAT, $result["updated_date"]);
 							$notices_to_display[] = $result;
 						}
 						echo json_encode($notices_to_display);

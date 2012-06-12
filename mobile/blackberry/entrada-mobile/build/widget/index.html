@@ -1,0 +1,512 @@
+ <!DOCTYPE html>
+<html>
+	<head>
+		<title>Entrada Mobile</title>
+		<meta name="viewport" content="width=height=device-height, device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no;" />
+		<meta charset="utf-8">
+        <link rel="stylesheet" href="jquery.mobile.structure-1.1.0.min.css" />
+		<link rel="stylesheet" href="dhtmlxscheduler_mobile.css" type="text/css" media="screen"/>  
+		<link rel="stylesheet" href="jquery.mobile-1.1.0.min.css" />
+		<link rel="stylesheet" href="jquery.mobile.theme-1.1.0.min.css" />
+		<script type="text/javascript" src="jquery-1.6.4.min.js"></script>
+		<script type="text/javascript" src="jquery-ui.min.js"></script>
+		<script type="text/javascript" src="dhtmlxscheduler_mobile.js" charset="utf-8"></script>
+		<script type="text/javascript" src="jquery.mobile-1.1.0.js"></script>
+		<script type="text/javascript" charset="utf-8" src="json2.js"></script>
+		<script type="text/javascript" charset="utf-8" src="cordova-1.7.0.js"></script>
+		<script type="text/javascript">
+		var username = "";
+		var password = "";
+		var previous_data = 0;
+		var url = "";
+		function onBodyLoad(){
+			document.addEventListener("deviceready", onDeviceReady, false);
+		}
+
+		function onDeviceReady () {
+			dhx.env.mobile = true;
+			dhx.env.touch = true;
+			window.url = $("#url").val();
+			$("#require-password").bind ("change", function () {
+				$("#password").show();
+				$("#password-label").show();
+				$("#username").show();
+				$("#username-label").show();
+			});
+			
+			$("#save-password").bind ("change", function () {
+				if ($("#password").val() == "" || $("#username").val() == "") {
+					$("#require-password").attr("checked","checked");
+					navigator.notification.alert("You must supply your login credentials in order to remain logged in.");
+				} else{
+					$("#password").hide();
+					$("#password-label").hide();
+					$("#username").hide();
+					$("#username-label").hide();
+					
+				}
+			});
+			
+			window.localStorage.setItem("logout", "");
+			/**
+			 * check to see if there are settings in local storage, if there is then set each value of the settings form
+			 */
+			
+			if (window.localStorage.getItem("username")) {
+				$("#username").val(window.localStorage.getItem("username"));
+			}
+			
+			if (window.localStorage.getItem("password-settings")) {
+				var settings = window.localStorage.getItem("password-settings");
+				if (settings == 1) {
+					$("#save-password").prop("checked", true);
+					set_methods();
+				} else {
+					$("#require-password").prop("checked", true);
+					$(".close").hide();
+					dhx.Touch.disable();
+					$.mobile.changePage("#settings", { 
+						transition: "flip"
+					});
+				}
+			}
+			
+			/**
+			 * if any settings are not in local storage then send the user to the settings page where they must supply missing information
+			 */
+			if (!window.localStorage.getItem("username") || !window.localStorage.getItem("password-settings")) {
+				$(".close").hide();
+				dhx.Touch.disable();
+				$.mobile.changePage("#settings", { 
+					transition: "flip"
+				});
+			}
+			
+			$("#save-settings").bind("tap", function () {
+				/**
+				 * store url, username and password to be used in later api calls
+				 */
+				window.url = $("#url").val();
+				window.username = $("#username").val();
+				window.password = $("#password").val();
+				
+				
+				/**
+				 * save the values of the settings form into internal storage
+				 */
+				window.localStorage.setItem("password-settings", $("input[name=login-option]:radio:checked").val());
+				window.localStorage.setItem("url", window.url);
+				window.localStorage.setItem("username", window.username);
+				
+				
+				var settings = window.localStorage.getItem("password-settings");
+				if (settings == 1) {
+					var method = "fetchHash";
+					$.ajax({
+						url:'http://' + window.url + '/api/mobile.api.php',
+						type: 'post',
+						data: ({method:method, username:window.username, password:window.password}),
+						dataType: 'text',
+						success:function (data) {
+							window.localStorage.setItem("private_hash", data);
+						}, error: function (event, request, settings, exception) {
+							navigator.notification.alert("Error fetching private hash");
+							$(".close").hide();
+							$.mobile.changePage("#settings", { 
+								transition: "flip"
+							});
+						} 
+
+					});
+				} else if (settings == 0) {
+					window.localStorage.setItem("private_hash", "");
+				}
+				set_methods();
+			});
+
+			function set_methods() {
+				$("#agenda").bind("swipeleft", function () {
+					$(".notices").addClass("ui-btn-active");
+					$(".agenda").removeClass("ui-btn-active");
+					$.mobile.changePage("#events", { transition: "slide" });
+					dhx.Touch.disable();
+				});
+
+				$("#events").bind("swiperight", function () {
+					$(".agenda").addClass("ui-btn-active");
+					$(".notices").removeClass("ui-btn-active");
+					$.mobile.changePage("#agenda", { transition: "slide", reverse: true });
+					dhx.Touch.enable();
+				});
+
+				$("#old_notice_page_content").bind("swiperight", function () {
+					$(".notices").addClass("ui-btn-active");
+					$.mobile.changePage("#events", { transition: "slide", reverse: true });
+					dhx.Touch.disable();
+				});
+
+				$("#notice_page_content").bind("swiperight", function () {
+					$(".notices").addClass("ui-btn-active");
+					$.mobile.changePage("#events", { transition: "slide", reverse: true });
+					dhx.Touch.disable();
+				});
+
+				load_scheduler();
+				fetch_notices();
+				count_notices(true);
+
+				$(".agenda").bind("tap", function () {
+					$(".agenda").addClass("ui-btn-active");
+					$(".notices").removeClass("ui-btn-active");
+					dhx.Touch.enable();
+				});
+
+				$(".notices").bind("tap", function () {
+					$(".agenda").removeClass("ui-btn-active");
+					$(".agenda").attr("data-direction", "reverse");
+					$(".notices").addClass("ui-btn-active");
+					dhx.Touch.disable();
+					count_notices(false);
+					fetch_notices();
+				});
+
+				$(".back").bind("tap", function () {
+					$(".notices").addClass("ui-btn-active");
+				});
+				$(".settings").bind("tap", function () {
+					dhx.Touch.disable();
+				});
+				
+				$("#logout").bind("tap", function () {
+					window.localStorage.clear();
+					$(".close").hide();
+				});
+				
+				$(".close").bind("tap", function () {
+					dhx.Touch.enable();
+				});
+			}
+
+			function load_scheduler() {
+				var method = "agenda";
+					$.ajax({
+					url:'http://' + window.url + '/api/mobile.api.php',
+					type: 'post',
+					dataType: 'text',
+					data: ({method:method, username:window.username, password:window.password, hash:window.localStorage.getItem("private_hash")}),
+					success:function(data){
+						if ($.isEmptyObject(data)) {
+							navigator.notification.alert("Failed to authenticate");
+						} else {
+							$(".close").show();
+							$.mobile.changePage("#agenda", { 
+								transition: "flip"
+							});
+							scheduler.config.readonly = true;
+							scheduler.config.header_date = "%M %j, %Y";
+							scheduler.config.hour_date = "%h:%i%a";
+							scheduler.config.scale_hour = "%h";
+							dhx.ready(function(){
+								dhx.Touch.enable();
+								dhx.ui({
+									view: "scheduler",
+									container: "content",
+									id: "scheduler"
+								});
+
+								$$("scheduler").parse(data);
+								$$("scheduler").$$("dayList").scrollTo(0,31*8);
+								$$("scheduler").$$("buttons").setValue("day");
+								$$("scheduler").$$("day").show();
+								scheduler_size();
+							});
+
+							$(window).bind("resize", function () {
+								scheduler_size();
+							});
+							function scheduler_size() {
+								var width = $("html").width();
+								var height = $("html").height() - 95;
+								$("#content").css("height", height);
+								$$("scheduler").define("width", width);
+								$$("scheduler").define("height", height);
+								$$("scheduler").resize();
+								$(".dhx_dayevents_scale_event").css("width", width - 45);
+								$(".dhx_dayevents_scale_event").children("div").each(function () {
+									$(this).css("width", width - 44);
+								});
+
+								if ($$("scheduler").$$("buttons").getValue() =="day") {
+									$$("scheduler").$$("dayList").render();
+								}
+							}
+						}
+					}, error: function (event, request, settings, exception) {
+						navigator.notification.alert("An error occurred while loading the agenda" );
+						$(".close").hide();
+						$.mobile.changePage("#settings", { 
+							transition: "flip"
+						});
+					} 
+				});
+			}
+
+			function fetch_notices () {
+				var method = "notices";
+				$.ajax({
+					url:'http://' + window.url + '/api/mobile.api.php',
+					type: 'post',
+					data: ({method:method, sub_method:"fetchnotices", username:window.username, password:window.password, hash:window.localStorage.getItem("private_hash")}),
+					dataType: 'json',
+					success:function (data) {
+						list_notices (data);
+					}, error: function (event, request, settings, exception) {
+						navigator.notification.alert("An error occurred while fetching notices");
+						$(".close").hide();
+						$.mobile.changePage("#settings", { 
+							transition: "flip"
+						});
+					} 
+
+				});
+			}
+
+			function list_notices (data) {
+				$("#old_notice_list").hide();
+				var list = $("#notice_list");
+				var old_list = $("#old_notice_list");
+				list.html("");
+				list.append("<li data-role='list-divider' role='heading' class='ui-li ui-li-divider ui-btn ui-bar-b ui-corner-top ui-btn-up-undefined'>Newest Notices</li>");
+				old_list.html("");
+				old_list.append("<li data-role='list-divider' role='heading' class='ui-li ui-li-divider ui-btn ui-bar-c ui-corner-top ui-btn-up-undefined'>Previously Read Notices</li>");
+				$.each(data, function (key, val) {
+					if (val.last_read <= val.updated_date) {
+						list.append("<li data-theme='d' data-role='button' id='"+ val.notice_id +"' class='ui-btn notice_button'><a href='#notice_page' data-transition='slide'>"+ val.default_date +"</a></li>");
+						$("#"+ val.notice_id +"").bind("tap", function () {
+							var notice_details_list = $("#notice_details_list");
+							notice_details_list.html("");
+							notice_details_list.append("<li data-role='list-divider' role='heading' class='ui-li ui-li-divider ui-btn ui-bar-b ui-corner-top ui-btn-up-undefined'>" + val.default_date + "</li>");
+							notice_details_list.append("<li data-theme='d' class='notice_summary'>" + val.notice_summary + "</li>");
+							$(".mark_read").bind("tap", function() {
+								var method = "notices";
+								var sub_method = "mark_read";
+								var id = val.notice_id;
+								$.ajax({
+									url:'http://' + window.url + '/api/mobile.api.php',
+									type: 'post',
+									data: ({method : method, sub_method: sub_method, username: window.username, password:window.password, notice_id: id, hash:window.localStorage.getItem("private_hash")}),
+									dataType: 'text',
+									success: function(data) {
+										count_notices(false);
+									}	
+								});
+								count_notices(false);
+								$(".mark_read").unbind("tap");
+							});
+							notice_details_list.listview("destroy").listview();
+						});
+					} else {
+						$("#old_notice_list").show();
+						old_list.append("<li data-theme='d' data-role='button' id='"+ val.notice_id +"' class='ui-btn notice_button'><a href='#old_notice_page' data-transition='slide'>"+ val.default_date +"</a></li>");
+						$("#"+ val.notice_id +"").bind("tap", function () {
+							var old_notice_details_list = $("#old_notice_details_list");
+							old_notice_details_list.html("");
+							old_notice_details_list.append("<li data-role='list-divider' role='heading' class='ui-li ui-li-divider ui-btn ui-bar-b ui-corner-top ui-btn-up-undefined'>" + val.default_date + "</li>");
+							old_notice_details_list.append("<li data-theme='d' class='notice_summary'>" + val.notice_summary + "</li>");
+							old_notice_details_list.listview("destroy").listview();
+						});
+					}
+				});
+				old_list.listview("destroy").listview();
+				list.listview("destroy").listview();
+			}
+
+			function scheduler_update () {
+				var method = "agenda";
+				$.ajax({
+					url:'http://' + window.url + '/api/mobile.api.php',
+					type: 'post',
+					data: ({method:method, username:window.username, password:window.password, hash:window.localStorage.getItem("private_hash")}),
+					success:function(data){
+						$$("scheduler").clearAll()
+						$$("scheduler").parse(data);
+
+						if($$("scheduler").$$("buttons").getValue()=="day"){ 
+							$$("scheduler").$$("dayList").render();
+						}
+
+						if($$("scheduler").$$("buttons").getValue() == "month") {
+							$$("scheduler").$$("calendarView").render();
+						}
+					},
+					error: function (event, request, settings, exception) {
+						navigator.notification.alert("An error occurred while updating the agenda");
+						$(".close").hide();
+						$.mobile.changePage("#settings", { 
+							transition: "flip"
+						});
+					} 
+				});
+
+			}
+
+			function count_notices (timeout) {
+				var method = "notices";
+				var sub_method = "count_notices";
+				$.ajax({
+					url:'http://' + window.url + '/api/mobile.api.php',
+					type: 'post',
+					data: ({method : method, sub_method: sub_method, username:window.username, password:window.password, hash:window.localStorage.getItem("private_hash")}),
+					dataType: 'text',
+					complete: function() {
+						if (timeout) {
+							setTimeout(function () {
+								count_notices(true);
+							}, 30000);
+						} else {
+						}
+					},
+					success: function(data) {
+						if (data > 0) {
+							$("#notice_list").show();
+							if (data != window.previous_data) {
+								$(".notice a").addClass("ui-li-has-count");
+								fetch_notices();
+							} else {
+							}
+						} else if (data == 0) {
+							$("#notice_list").hide();
+							$(".count").remove();
+							$(".notices").removeClass("ui-btn-up-e");
+							fetch_notices();
+						}
+						window.previous_data = data;
+					},
+					error: function (event, request, settings, exception) {
+						navigator.notification.alert("An error occurred while checking for new notices");
+						$(".close").hide();
+						$.mobile.changePage("#settings", { 
+							transition: "flip"
+						});
+					} 
+				});
+			}
+		}
+		</script>
+    </head>
+    <body onload ="onBodyLoad();" class="body" style="background:#CCC;">
+		<div data-role="page" id="agenda" data-theme="b" data-transition="slide">
+		    <div data-role="header" class="header" data-id="persistent"  data-position="fixed">
+		        <h1>Entrada</h1>
+                <a href="#settings" data-role="button" data-icon="gear" class="ui-btn-right settings" data-transition="flip">Settings</a>
+                <div data-role="navbar">
+                    <ul>
+                        <li><a href="#agenda" data-role="button" data-icon="home" data-iconpos="top" class="ui-btn-active agenda" data-transition="slide">My Agenda</a></li>
+                        <li class="notice"><a href="#events" data-role="button" data-icon="info" data-iconpos="top" class="notices" data-transition="slide">My Notices</a></li>
+                        <!--<li><a href="#gradebook" data-role="button" data-icon="check" data-iconpos="top" class="gradebook">My Gradebook</a></li>-->
+                    </ul>
+                </div>
+		    </div>
+            <div data-role="content" id="content" style="margin:0; padding:0; height:927;"> 
+			</div>
+			
+		</div>		
+		
+        
+        <div data-role="page" id="events" data-theme="b">
+            <div data-role="header" class="header" data-id="persistent" data-position="fixed">
+                <h1>Entrada</h1>
+                <a href="#settings" data-role="button" data-icon="gear" class="ui-btn-right settings" data-transition="flip">Settings</a>
+                <div data-role="navbar">
+                    <ul>
+                        <li><a href="#agenda" data-role="button" data-icon="home" data-iconpos="top" class="agenda" data-transition="slide">My Agenda</a></li>
+                        <li class="notice"><a href="#events" data-role="button" data-icon="info" data-iconpos="top" class="ui-btn-active notices" data-transition="slide">My Notices</a></li>
+                        <!--<li><a href="#gradebook" data-role="button" data-icon="check" data-iconpos="top" class="gradebook">My Gradebook</a></li>-->
+                    </ul>
+                </div>
+            </div>
+            
+            <div data-role="content" id="notice_content">
+				<ul id="notice_list" data-role="listview" data-inset="true">
+				</ul>
+				<ul id="old_notice_list" data-role="listview" data-inset="true">
+				</ul>
+            </div>
+        </div>
+        
+        <div data-role="page" id="notice_page" data-theme="b" data-transition="slide">
+            <div data-role="header" data-id="persistent" data-position="fixed">
+                <h1>Entrada</h1>
+                <a href="#settings" data-role="button" data-icon="gear" class="ui-btn-right settings" data-transition="flip">Settings</a>
+                <div data-role="navbar">
+                    <ul>
+                        <li><a href="#agenda" data-role="button" data-icon="home" data-iconpos="top" class="agenda" data-transition="slide">My Agenda</a></li>
+                        <li class="notice"><a href="#events" data-role="button" data-icon="info" data-iconpos="top" class="ui-btn-active notices" data-transition="slide">My Notices</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div data-role="content" data-theme="c" id="notice_page_content">
+				<div data-role="controlgroup" data-type="horizontal">
+					<a href="#events" data-role="button" data-icon="delete" class="mark_read" data-transition="slide" data-direction="reverse">Mark as Read</a>
+				</div>
+				<ul id="notice_details_list" data-role="listview" data-inset="true">
+				</ul>
+            </div>
+        </div>
+		
+		<div data-role="page" id="old_notice_page" data-theme="b" data-transition="slide">
+            <div data-role="header" data-id="persistent" data-position="fixed">
+                <h1>Entrada</h1>
+                <a href="#settings" data-role="button" data-icon="gear" class="ui-btn-right settings" data-transition="flip">Settings</a>
+                <div data-role="navbar">
+                    <ul>
+                        <li><a href="#agenda" data-role="button" data-icon="home" data-iconpos="top" class="agenda" data-transition="slide">My Agenda</a></li>
+                        <li class="notice"><a href="#events" data-role="button" data-icon="info" data-iconpos="top" class="ui-btn-active notices" data-transition="slide">My Notices</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div data-role="content" data-theme="c" id="old_notice_page_content">
+				<div data-role="controlgroup" data-type="horizontal">
+					<a href="#events" data-role="button" data-icon="arrow-l" class="back" data-transition="slide" data-direction="reverse">Back</a>
+				</div>
+				<ul id="old_notice_details_list" data-role="listview" data-inset="true">
+				</ul>
+            </div>
+        </div>
+        
+        <div data-role="page" id="settings" data-theme="b">
+            <div data-role="header">
+                <h1>Entrada Settings</h1>
+                <a href="#agenda" data-role="button" data-icon="delete" class="ui-btn-right ui-btn-active close" data-transition="flip">Close</a>
+            </div>
+            
+            <div data-role="content">	
+                <h1>My Settings</h1>
+                <div data-role="fieldcontain">
+                    <label for="url">Entrada URL:</label>
+                    <input type="text" name="url" id="url" value="" />
+                </div>
+                <div data-role="fieldcontain">
+                    <label for="username" id="username-label">Username:</label>
+                    <input type="text" name="username" id="username" value="" />
+                </div>
+                <div data-role="fieldcontain">
+                    <label for="password" id="password-label"">Password:</label>
+                    <input type="password" name="password" id="password" value="" />
+                </div>
+                <fieldset data-role="controlgroup">
+                    <legend>Auto-login options:</legend>
+                    <input type="radio" name="login-option" id="save-password" value="1" />
+                    <label for="save-password">Keep me logged in, and remember my password.</label>
+                    
+                    <input type="radio" name="login-option" id="require-password" value="0" checked="checked" />
+                    <label for="require-password">Require me to enter my password each launch.</label>
+                </fieldset>
+				<input type="button" id="save-settings" value="Save Settings" />
+				<input type="button" id="logout" value="Log Out" />
+            </div>
+        </div>
+    </body>
+</html>

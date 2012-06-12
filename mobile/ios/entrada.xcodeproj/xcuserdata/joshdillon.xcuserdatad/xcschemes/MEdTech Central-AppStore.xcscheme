@@ -15,7 +15,7 @@
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "16F8A5D4156813CC0028B42A"
                BuildableName = "MEdTech Central.app"
-               BlueprintName = "MEdTech Central"
+               BlueprintName = "Entrada"
                ReferencedContainer = "container:entrada.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -33,7 +33,7 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "16F8A5D4156813CC0028B42A"
             BuildableName = "MEdTech Central.app"
-            BlueprintName = "MEdTech Central"
+            BlueprintName = "Entrada"
             ReferencedContainer = "container:entrada.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -51,7 +51,7 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "16F8A5D4156813CC0028B42A"
             BuildableName = "MEdTech Central.app"
-            BlueprintName = "MEdTech Central"
+            BlueprintName = "Entrada"
             ReferencedContainer = "container:entrada.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -69,7 +69,7 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "16F8A5D4156813CC0028B42A"
             BuildableName = "MEdTech Central.app"
-            BlueprintName = "MEdTech Central"
+            BlueprintName = "Entrada"
             ReferencedContainer = "container:entrada.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

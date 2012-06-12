@@ -1289,6 +1289,9 @@ function filter_name($filter_key) {
 		case "topic" :
 			return "Hot Topics Involved";
 		break;
+		case "department" :
+			return "Departments Involved";
+		break;
 		default :
 			return false;
 		break;
@@ -7399,7 +7402,7 @@ function quiz_generate_description($required = 0, $quiztype_code = "delayed", $q
 	$string_4 = (((int) $quiz_attempts) ? $quiz_attempts." attempt".(($quiz_attempts != 1) ? "s" : "") : "unlimited attempts");
 	$string_5 = $quiz_questions." question".(($quiz_questions != 1) ? "s" : "");
 	$string_6 = (($quiztype_code == "delayed") ? "only after the quiz expires" : "immediately after completion");
-	$string_7 = (isset($attendance) && $attendance)?"<br/><br/> This quiz requires your attendance. You will not be able to access it if you have not been marked present.":""; 
+	$string_7 = (isset($attendance) && $attendance)?"<br /><br /> This quiz requires your attendance. You will not be able to access it if you have not been marked present.":"";
 	return sprintf($output, $string_1, $string_2, $string_3, $string_4, $string_5, $string_6, $string_7);
 }
 
@@ -8416,7 +8419,7 @@ function clerkship_send_queued_notifications($rotation_id, $rotation_title, $pro
 								);
 				$replace	= array(
 									$rotation_title,
-									implode("<br/>\n", $clerks),
+									implode("<br />\n", $clerks),
 									APPLICATION_NAME,
 									ENTRADA_URL
 							);
@@ -8743,6 +8746,7 @@ function courses_subnavigation($course_details, $tab="details") {
 	echo "	</ul>\n";
 	
 	echo "</div>\n";
+	echo "<br />";
 }
 
 function course_fetch_course_group($cgroup_id = 0) {
@@ -9270,7 +9274,7 @@ function course_objectives_in_list($objectives, $parent_id, $top_level_id, $edit
 							$output .= "	<div>".(isset($objective["objective_details"]) && $objective["objective_details"] ? $objective["objective_details"] : $objective["description"]);
 						}
 						if (isset($objective["event_objective_details"]) && $objective["event_objective_details"]) {
-							$output .= "		<br/><br/><em>".$objective["event_objective_details"]."</em>";
+							$output .= "		<br /><br /><em>".$objective["event_objective_details"]."</em>";
 						}
 						$output .= "	</div>";
 						$output .= "</li>";
@@ -9862,6 +9866,10 @@ function events_output_filter_controls($module_type = "") {
 									case "topic":
 										echo fetch_event_topic_title($filter_value);
 									break;
+									case "department":
+										echo fetch_department_title($filter_value);
+									break;
+
 									default :
 										echo strtoupper($filter_value);
 									break;
@@ -10705,6 +10713,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 		$where_clinical_presentation = array();
 		$where_curriculum_objective = array();
 		$where_topic = array();
+		$where_department = array();
 
 		$join_event_contacts = array();
 
@@ -10813,6 +10822,9 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 							case "topic" :
 								$where_topic[] = (int) $filter_value;
 							break;
+							case "department" :
+								$where_department[] = (int) $filter_value;
+							break;
 							default :
 								continue;
 							break;
@@ -10899,6 +10911,47 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 		if ($where_topic) {
 			$topic_sql = "	LEFT JOIN `event_topics`
 							ON `event_topics`.`event_id` = `events`.`event_id`";
+		}
+
+		if ($where_department) {
+			$event_ids = "";
+
+			// fetch the user_id of members in the selected departments
+			$department_members_query = "	SELECT `a`.`id`
+											FROM `".AUTH_DATABASE."`.`user_data` AS `a`
+											JOIN `".AUTH_DATABASE."`.`user_departments` AS `b`
+											ON `a`.`id` = `b`.`user_id`
+											JOIN `".AUTH_DATABASE."`.`departments` AS `c`
+											ON `b`.`dep_id` = `c`.`department_id`
+											WHERE `b`.`dep_id` IN (".implode(',', $where_department).")
+											GROUP BY `a`.`id`";
+			$department_members = $db->GetAll($department_members_query);
+			if ($department_members) {
+				foreach ($department_members as $member) {
+					$members_list[] = $member["id"];
+				}
+
+				// fetch the event_id the members are assigned to
+				$department_events_query = "	SELECT `a`.`event_id`
+												FROM `events` AS `a`
+												JOIN `event_contacts` AS `b`
+												ON `a`.`event_id` = `b`.`event_id`
+												WHERE `b`.`proxy_id` IN (".implode(',', $members_list).")
+												AND `a`.`event_start` > ".$db->qstr($display_duration["start"])."
+												AND `a`.`event_finish` < ".$db->qstr($display_duration["end"])."
+												GROUP BY `a`.`event_id`";
+				$department_events = $db->GetAll($department_events_query);
+				if ($department_events) {
+					foreach ($department_events as $event) {
+						$event_list[] = $event["event_id"];
+					}
+				}
+
+				$event_ids = (!empty($event_list)) ? implode(", ", $event_list) : '';
+			}
+
+			$query_count .= " AND `events`.`event_id` IN (".$event_ids.")";
+			$query_events .= " AND `events`.`event_id` IN (".$event_ids.")";
 		}
 
 	 	$query_count = str_replace("%CONTACT_JOIN%", $contact_sql, $query_count);
@@ -11579,7 +11632,7 @@ function event_objectives_in_list($objectives, $parent_id, $top_level_id, $edit_
 							$output .= "<div style=\"padding-left: 25px;\">\n";
 							$output .=		$objective["description"]."\n";
 							if (isset($objective["objective_details"]) && $objective["objective_details"]) {
-								$output .= "<br/><br/>\n";
+								$output .= "<br /><br />\n";
 								$output .= "<em>".$objective["objective_details"]."</em>";
 							}
 							$output .= "</div>\n";
@@ -11650,7 +11703,7 @@ function event_objectives_in_list($objectives, $parent_id, $top_level_id, $edit_
 							$output .= "<div style=\"padding-left: 25px;\">\n";
 							$output .=		$objective["description"]."\n";
 							if (isset($objective["objective_details"]) && $objective["objective_details"]) {
-								$output .= "<br/><br/>\n";
+								$output .= "<br /><br />\n";
 								$output .= "<em>".$objective["objective_details"]."</em>";
 							}
 							$output .= "</div>\n";
@@ -13286,10 +13339,10 @@ function objectives_intable($ORGANISATION_ID, $identifier = 0, $indent = 0, $exc
 			$output .= "		<div style=\"padding-left: 30px\">";
 			$output .= "			<input type=\"radio\" name=\"delete[".((int)$identifier)."][move]\" id=\"delete_".((int)$identifier)."_children\" value=\"0\" onclick=\"$('move-".((int)$identifier)."-children').hide();\" checked=\"checked\"/>";
 			$output .= "			<label for=\"delete_".((int)$identifier)."_children\" class=\"form-nrequired\"><strong>Deactivate</strong> all children</label>";
-			$output .= "			<br/>";
+			$output .= "			<br />";
 			$output .= "			<input type=\"radio\" name=\"delete[".((int)$identifier)."][move]\" id=\"move_".((int)$identifier)."_children\" value=\"1\" onclick=\"$('move-".((int)$identifier)."-children').show();\" />";
 			$output .= "			<label for=\"move_".((int)$identifier)."_children\" class=\"form-nrequired\"><strong>Move</strong> all children</label>";
-			$output .= "			<br/><br/>";
+			$output .= "			<br /><br />";
 			$output .= "		</div>";
 			$output .= "		</td>";
 			$output .= "	</tr>";
@@ -14694,10 +14747,10 @@ function display_person(User $user) {
 					if ($address && $city) {
 						?>
 						<div>
-							<span class="address-label">Address:</span><br/>
+							<span class="address-label">Address:</span><br />
 							<span class="address-value">
 							<?php
-								echo html_encode($address)."<br/>".html_encode($city);
+								echo html_encode($address)."<br />".html_encode($city);
 								if ($prov_name) echo ", ".html_encode($prov_name);
 								echo "<br />";
 								echo html_encode($country_name);
@@ -15181,6 +15234,15 @@ function categories_inarray($parent_id, $indent = 0) {
  */
 function history_log($event, $message, $updater=0, $time=0) {
 	global $db;
+	if (!$updater) { // Ignore noting updates if made by the sole author.
+	 $result = $db->GetOne("SELECT count(*) FROM `event_history` WHERE `event_id` = ".$db->qstr($event));
+	 if (!$result) {
+	  $result = $db->GetOne("SELECT `updated_by` FROM `events` WHERE `event_id` = ".$db->qstr($event));
+	  if ($result==$_SESSION["details"]["id"]) {
+	   return ;
+	  }
+	 }
+	}
 	if (!$db->AutoExecute("event_history", array("event_id" => $event, "proxy_id" => ($updater ? $updater : $_SESSION["details"]["id"]), "history_message" => $message, "history_timestamp" => ($time ? $time : time())), "INSERT")) {
 		$ERROR++;
 		$ERRORSTR[] = "There was an error while trying to save the selected <strong>Event content update</strong> for this event.<br /><br />The system administrator was informed of this error; please try again later.";
@@ -15200,18 +15262,18 @@ function event_text_change($event, $field) {
 	global $db;
 	$ret = false;
 	if (isset($_POST["$field"])) {
-	 $message_length = strlen($_POST["$field"]);
-	 $result = $db->GetOne("SELECT `$field` FROM `events` WHERE `event_id` = ".$db->qstr($event));
-	 if ($result) {
-	  $result_length = strlen($result);
-	  if ($message_length!=$result_length) {
-	   $ret = true;
-	  } elseif ($result_length) {
-	   $ret = strcmp($result,$_POST["$field"]);
-	  }
-	 } else {
-	  $ret = $message_length;
-	 }
+		$message_length = strlen($_POST["$field"]);
+		$result = $db->GetOne("SELECT `$field` FROM `events` WHERE `event_id` = " . $db->qstr($event));
+		if ($result) {
+			$result_length = strlen($result);
+			if ($message_length != $result_length) {
+				$ret = true;
+			} elseif ($result_length) {
+				$ret = strcmp($result, $_POST["$field"]);
+			}
+		} else {
+			$ret = $message_length;
+		}
 	}
 	return $ret;
 }

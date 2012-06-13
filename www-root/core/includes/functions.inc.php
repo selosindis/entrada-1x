@@ -3869,19 +3869,24 @@ function load_rte($buttons = array(), $plugins = array(), $other_options = array
 			case "communityadvanced" :
 			case "advanced" :
 				$buttons[1]	= array ("fullscreen", "styleprops", "|", "formatselect", "fontselect", "fontsizeselect", "|", "bold", "italic", "underline", "forecolor", "backcolor", "|", "justifyleft", "justifycenter", "justifyright", "justifyfull");
-				$buttons[2]	= array ("replace", "pasteword", "pastetext", "|", "undo", "redo", "|", "tablecontrols", "|", "insertlayer", "moveforward", "movebackward", "absolute", "|", "visualaid");
-				$buttons[3]	= array ("ltr", "rtl", "|", "outdent", "indent", "|", "bullist", "numlist", "|", "link", "unlink", "anchor", "image", "media", "|", "sub", "sup", "|", "charmap", "insertdate", "inserttime", "nonbreaking", "|", "cleanup", "code", "removeformat");
+				$buttons[2]	= array ("ltr", "rtl", "|", "undo", "redo", "|", "tablecontrols", "|", "insertlayer", "moveforward", "movebackward", "absolute", "|", "visualaid");
+				$buttons[3]	= array ("spellchecker", "pasteword", "pastetext", "|", "outdent", "indent", "|", "bullist", "numlist", "|", "link", "unlink", "anchor", "image", "media", "|", "sub", "sup", "charmap", "|", "cleanup", "removeformat", "code");
 			break;
 			case "communitybasic" :
 				$buttons[1]	= array("fullscreen", "styleprops", "|", "formatselect", "fontselect", "fontsizeselect", "|", "bold", "italic", "underline", "forecolor", "backcolor", "|", "justifyleft", "justifycenter", "justifyright", "justifyfull");
-				$buttons[2]	= array("replace", "pasteword", "pastetext", "ltr", "rtl", "|", "outdent", "indent", "|", "bullist", "numlist", "|", "link", "unlink", "anchor", "image", "media", "|", "sub", "sup", "|", "charmap", "insertdate", "inserttime", "nonbreaking", "|", "cleanup", "code", "removeformat");
+				$buttons[2]	= array("spellchecker", "pasteword", "pastetext", "ltr", "rtl", "|", "outdent", "indent", "|", "bullist", "numlist", "|", "link", "unlink", "anchor", "image", "media", "|", "sub", "sup", "charmap", "|", "cleanup", "removeformat", "code");
 			break;
 			case "community" :
-				$buttons[1] = array("bold", "italic", "underline", "strikethrough", "|", "link", "unlink", "anchor", "image", "media", "|", "numlist", "bullist", "|", "outdent", "indent", "blockquote", "|", "undo", "redo", "|", "pasteword", "cleanup", "removeformat", "code");
+				$buttons[1] = array("bold", "italic", "underline", "strikethrough", "|", "link", "unlink", "anchor", "image", "media", "|", "numlist", "bullist", "|", "outdent", "indent", "blockquote", "|", "undo", "redo", "|", "spellchecker", "pasteword", "cleanup", "removeformat", "code");
+			break;
+			case "minimal" :
+				$buttons[1] = array("link", "separator", "undo", "redo", "spellchecker", "pasteword", "cleanup", "code");
+				$buttons[2] = array();
+				$buttons[3] = array();
 			break;
 			case "basic" :
 			default :
-				$buttons[1] = array("bold", "italic", "underline", "strikethrough", "|", "link", "|", "numlist", "bullist", "|", "outdent", "indent", "blockquote", "|", "undo", "redo", "|", "pasteword", "cleanup", "removeformat", "code", "save");
+				$buttons[1] = array("bold", "italic", "underline", "strikethrough", "|", "link", "|", "numlist", "bullist", "|", "outdent", "indent", "blockquote", "|", "undo", "redo", "|", "spellchecker", "pasteword", "cleanup", "removeformat", "code");
 				$buttons[2] = array();
 				$buttons[3] = array();
 			break;
@@ -3897,14 +3902,14 @@ function load_rte($buttons = array(), $plugins = array(), $other_options = array
 			case "advanced" :
 			case "communityadvanced" :
 			case "communitybasic" :
-				$plugins = array("preview", "inlinepopups", "style", "layer", "table", "advimage", "advlink", "media", "insertdatetime", "contextmenu", "paste", "directionality", "fullscreen", "noneditable", "visualchars", "nonbreaking", "xhtmlxtras", "tabfocus");
+				$plugins = array("preview", "inlinepopups", "style", "layer", "table", "advimage", "advlink", "media", "contextmenu", "paste", "directionality", "fullscreen", "noneditable", "visualchars", "xhtmlxtras", "tabfocus", "spellchecker");
 			break;
 			case "community" :
-				$plugins = array("autosave", "contextmenu", "advimage", "advlink", "media", "paste", "inlinepopups", "tabfocus");
+				$plugins = array("autosave", "contextmenu", "advimage", "advlink", "media", "paste", "inlinepopups", "tabfocus", "spellchecker");
 			break;
 			case "basic" :
 			default :
-				$plugins = array("autosave", "save", "contextmenu", "paste", "inlinepopups", "tabfocus");
+				$plugins = array("autosave", "save", "contextmenu", "paste", "inlinepopups", "tabfocus", "spellchecker");
 			break;
 		}
 	}

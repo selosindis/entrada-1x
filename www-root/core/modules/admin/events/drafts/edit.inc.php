@@ -32,6 +32,30 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
 } else { 
+	
+	if (isset($_GET["mode"]) && $temp = (clean_input($_GET["mode"], array("trim", "striptags")))) {
+		ob_clear_open_buffers();
+		switch ($temp) {
+			case "csv-example" :
+				
+				$csv_content  = "Event ID,Term,Course Code,Course Name,Date,Start Time,Event Type Durations,Event Types,Event Title,Location,Audience (Cohorts),Audience (Students),Teacher Numbers\n";
+				$csv_content .= ",Clerkship,CLERKSHIP,Clerkship,12-06-05,13:30,60,Other,CaRMS Presentation,New Medical Building,Class of 2013,,\n";
+				$csv_content .= ",Clerkship,,Clerkship: Family Medicine,12-06-06,0:00,60,Review / Feedback Session,Title,,,6109994; 6110117; 6141374; 6110289; 6141436; 6111491; 5291303; 5277000; 4905480; 6111858,\n";
+				$csv_content .= "1113,Clerkship,MEDS446,Clerkship: Family Medicine,12-06-07,10:30,120,Review / Feedback Session,FM Clerkship Interviews Block 3,Teleconference,,6109994; 6110117; 6141374; 6110289; 6141436; 6111491; 5291303; 5277000; 4905480; 6111858,7404733\n";
+				
+				header('Pragma: public');
+				header('Content-type: text/csv');
+				header('Content-Disposition: attachment; filename="draft-schedule-example.csv"');
+				
+				echo $csv_content;				
+				
+			break;
+			default :
+			continue;
+		}
+		exit;
+	}
+	
 	$BREADCRUMB[]	= array("url" => "", "title" => "Edit Draft Schedule");
 	$draft_id = (int) $_GET["draft_id"];
 	
@@ -414,6 +438,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 		?>
 		<div id="import-csv">
 			<form id="csv-form" action="<?php echo ENTRADA_URL; ?>/admin/events/drafts?section=csv-import&draft_id=<?= $draft_id; ?>" enctype="multipart/form-data" method="POST">
+				<p><a href="<?php echo ENTRADA_URL; ?>/admin/events/drafts?section=edit&mode=csv-example">Click here to download example CSV</a>.</p>
 				<input type="hidden" name="draft_id" value="<?= $draft_id; ?>" />
 				<input type="file" name="csv_file" /> 
 			</form>

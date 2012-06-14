@@ -102,7 +102,7 @@ if (!defined("IN_COURSE_GROUPS")) {
 										<label for="group_audience_type_custom" class="radio-group-title">A Custom Course Audience</label>
 										<div class="content-small">Use a custom audience to populate the course groups.</div>
 
-										<div id="group_audience_type_custom_options" style="<?php echo ($PROCESSED["group_audience_type"] != "custom" ? "display: none; " : ""); ?>position: relative; margin-top: 10px;">
+										<div id="group_audience_type_custom_options" style="<?php echo ($PROCESSED["group_audience_type"] != "custom" && $course_list? "display: none; " : ""); ?>position: relative; margin-top: 10px;">
 											<select id="audience_type" onchange="showMultiSelect();" style="width: 275px;">
 												<option value="">-- Select an audience type --</option>
 												<?php

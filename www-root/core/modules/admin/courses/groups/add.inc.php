@@ -452,7 +452,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 					
 					<tr class="group_members populated_members">
 						<td></td>
-						<td><label class="form-required">Populate based on:</label></td>
+						<td><label class="form-required">Populate based on</label></td>
 						<td>
 							<div style="display: inline-block; width: 180px;">
 								<input type="radio" onchange="toggleGroupTextbox()" name="group_populate" id="group_populate_group_number" value="group_number" <?php echo (!isset($group_populate) || ($group_populate == "group_number") ? " checked=\"checked\"" : ""); ?> />

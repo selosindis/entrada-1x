@@ -1070,13 +1070,15 @@ jQuery(document).ready(function() {
 										<?php
 
 														foreach($DEPARTMENT_LIST as $organisation_id => $dlist) {
-															foreach($dlist as $d){
-																if (in_array($d["department_id"], $PROCESSED_DEPARTMENTS)) {
-																	$selected = true;
-																} else {
-																	$selected = false;
+															if ($result["organisation_id"] == $organisation_id){
+																foreach($dlist as $d){
+																	if (in_array($d["department_id"], $PROCESSED_DEPARTMENTS)) {
+																		$selected = true;
+																	} else {
+																		$selected = false;
+																	}
+																	echo build_option($d["department_id"], $d["department_title"], $selected);
 																}
-																echo build_option($d["department_id"], $d["department_title"], $selected);
 															}
 														}
 											 ?>

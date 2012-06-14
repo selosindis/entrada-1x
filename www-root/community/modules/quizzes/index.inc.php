@@ -16,32 +16,55 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 } elseif (!$COMMUNITY_LOAD) {
 	exit;
 }
+$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/elementresizer.js\"></script>";
+$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/wizard.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+$HEAD[] = "<link href=\"".ENTRADA_URL."/css/wizard.css?release=".html_encode(APPLICATION_VERSION)."\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />";
+$HEAD[] = "<link href=\"".ENTRADA_RELATIVE."/javascript/calendar/css/xc2_default.css?release=".html_encode(APPLICATION_VERSION)."\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />";
+$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/livepipe/livepipe.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/livepipe/window.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/calendar/config/xc2_default.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/calendar/script/xc2_inpage.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 ?>
+<iframe id="upload-frame" name="upload-frame" onload="frameLoad()" style="display: none;"></iframe>
+<a id="false-link" href="#placeholder"></a>
+<div id="placeholder" style="display: none"></div>
 <div id="module-header">
 </div>
 <script type="text/javascript">
-	function openQuizWizard(eid, qid, action) {
-		if (!action) {
-			action = 'add';
-		}
-
-		if (!eid) {
-			return;
+	var ajax_url = '';
+	var modalDialog;
+	document.observe('dom:loaded', function() {
+		modalDialog = new Control.Modal($('false-link'), {
+			position:		'center',
+			overlayOpacity:	0.75,
+			closeOnClick:	'overlay',
+			className:		'modal',
+			fade:			true,
+			fadeDuration:	0.30,
+			beforeOpen: function(request) {
+				eval($('scripts-on-open').innerHTML);
+			},
+			afterClose: function() {
+				if (uploaded == true) {
+						window.location = '<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL.replace_query(); ?>';
+				}
+			}
+		});
+	});
+	
+	function openDialog (url) {
+		if (url && url != ajax_url) {
+			ajax_url = url;
+			new Ajax.Request(ajax_url, {
+				method: 'get',
+				onComplete: function(transport) {
+					modalDialog.container.update(transport.responseText);
+					modalDialog.open();
+				}
+			});
 		} else {
-			var windowW = 485;
-			var windowH = 585;
-
-			var windowX = (screen.width / 2) - (windowW / 2);
-			var windowY = (screen.height / 2) - (windowH / 2);
-
-			quizWizard = window.open('<?php echo ENTRADA_URL; ?>/quiz-wizard.php?type=community_page&action=' + action + '&id=' + eid + ((qid) ? '&qid=' + qid : ''), 'quizWizard', 'width='+windowW+', height='+windowH+', scrollbars=no, resizable=yes');
-			quizWizard.blur();
-			window.focus();
-
-			quizWizard.resizeTo(windowW, windowH);
-			quizWizard.moveTo(windowX, windowY);
-
-			quizWizard.focus();
+			$('scripts-on-open').update();
+			modalDialog.open();
 		}
 	}
 </script>
@@ -52,7 +75,7 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 		<div style="float: right; margin-bottom: 5px">
 			<ul class="page-action">
 				<li><a href="<?php echo ENTRADA_URL; ?>/admin/quizzes?section=add">Create New Quiz</a></li>
-				<li><a href="javascript: openQuizWizard('<?php echo $PAGE_ID; ?>', 0, 'add')">Attach Existing Quiz</a></li>
+				<li><a href="#site-header" onclick="openDialog('<?php echo ENTRADA_URL; ?>/api/quiz-wizard.api.php?type=community_page&action=add&id=<?php echo $PAGE_ID; ?>')">Attach Existing Quiz</a></li>
 			</ul>
 		</div>
 		<div class="clear"></div>

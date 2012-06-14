@@ -288,56 +288,50 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				$LASTUPDATED		= $course_details["updated_date"];
 
 				$OTHER_DIRECTORS	= array();
-													
-				?>
+					
+				$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/elementresizer.js\"></script>";
+				$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/wizard.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+				$HEAD[] = "<link href=\"".ENTRADA_URL."/css/wizard.css?release=".html_encode(APPLICATION_VERSION)."\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />";
+				?>								
+
+				<iframe id="upload-frame" name="upload-frame" onload="frameLoad()" style="display: none;"></iframe>
+				<a id="false-link" href="#placeholder"></a>
+				<div id="placeholder" style="display: none"></div>
 				<script type="text/javascript">
-				function openFileWizard(cid, fid, action) {
-					if(!action) {
-						action = 'add';
-					}
+				var ajax_url = '';
+				var modalDialog;
+				document.observe('dom:loaded', function() {
+					modalDialog = new Control.Modal($('false-link'), {
+						position:		'center',
+						overlayOpacity:	0.75,
+						closeOnClick:	'overlay',
+						className:		'modal',
+						fade:			true,
+						fadeDuration:	0.30,
+						beforeOpen: function(request) {
+							eval($('scripts-on-open').innerHTML);
+						},
+						afterClose: function() {
+							if (uploaded == true) {
+									window.location = '<?php echo ENTRADA_URL."/admin/courses?".replace_query(); ?>';
+							}
+						}
+					});
+				});
 				
-					if(!cid) {
-						return;
+				function openDialog (url) {
+					if (url && url != ajax_url) {
+						ajax_url = url;
+						new Ajax.Request(ajax_url, {
+							method: 'get',
+							onComplete: function(transport) {
+								modalDialog.container.update(transport.responseText);
+								modalDialog.open();
+							}
+						});
 					} else {
-						var windowW = 485;
-						var windowH = 585;
-				
-						var windowX = (screen.width / 2) - (windowW / 2);
-						var windowY = (screen.height / 2) - (windowH / 2);
-				
-						fileWizard = window.open('<?php echo ENTRADA_URL; ?>/file-wizard-course.php?action=' + action + '&id=' + cid + ((fid) ? '&fid=' + fid : ''), 'fileWizard', 'width='+windowW+', height='+windowH+', scrollbars=no, resizable=yes');
-						fileWizard.blur();
-						window.focus();
-				
-						fileWizard.resizeTo(windowW, windowH);
-						fileWizard.moveTo(windowX, windowY);
-				
-						fileWizard.focus();
-					}
-				}
-				
-				function openLinkWizard(cid, lid, action){
-					if(!action) {
-						action = 'add';
-					}
-				
-					if(!cid) {
-						return;
-					} else {
-						var windowW = 485;
-						var windowH = 585;
-				
-						var windowX = (screen.width / 2) - (windowW / 2);
-						var windowY = (screen.height / 2) - (windowH / 2);
-				
-						linkWizard = window.open('<?php echo ENTRADA_URL; ?>/link-wizard-course.php?action=' + action + '&id=' + cid + ((lid) ? '&lid=' + lid : ''), 'linkWizard', 'width='+windowW+', height='+windowH+', scrollbars=no, resizable=yes');
-						linkWizard.blur();
-						window.focus();
-				
-						linkWizard.resizeTo(windowW, windowH);
-						linkWizard.moveTo(windowX, windowY);
-				
-						linkWizard.focus();
+						$('scripts-on-open').update();
+						modalDialog.open();
 					}
 				}
 
@@ -397,7 +391,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 
 				courses_subnavigation($course_details);
 
-				echo "<h1>".html_encode($course_details["course_name"])."</h1>\n";
+				echo "<h1 id=\"page-top\">".html_encode($course_details["course_name"])."</h1>\n";
 
 				if($SUCCESS) {
 					echo display_success();
@@ -635,7 +629,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						</div>
 						<div style="float: right; margin-bottom: 5px">
 							<ul class="page-action">
-								<li><a href="javascript: openFileWizard('<?php echo $COURSE_ID; ?>', 0, 'add')">Add A File</a></li>
+								<li><a href="#page-top" onclick="openDialog('<?php echo ENTRADA_URL; ?>/api/file-wizard-course.api.php?action=add&id=<?php echo $COURSE_ID; ?>')">Add A File</a></li>
 							</ul>
 						</div>
 						<div class="clear"></div>
@@ -686,7 +680,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								echo "	<td class=\"file-category\">".((isset($RESOURCE_CATEGORIES["course"][$result["file_category"]])) ? html_encode($RESOURCE_CATEGORIES["course"][$result["file_category"]]) : "Unknown Category")."</td>\n";
 								echo "	<td class=\"title\">\n";
 								echo "		<img src=\"".ENTRADA_URL."/serve-icon.php?ext=".$ext."\" width=\"16\" height=\"16\" alt=\"".strtoupper($ext)." Document\" title=\"".strtoupper($ext)." Document\" style=\"vertical-align: middle\" />";
-								echo "		<a href=\"javascript: openFileWizard('".$COURSE_ID."', '".$result["id"]."', 'edit')\" title=\"Click to edit ".html_encode($result["file_title"])."\" style=\"font-weight: bold\">".html_encode($result["file_title"])."</a>";
+								echo "		<a href=\"#page-top\" onclick=\"openDialog('".ENTRADA_URL."/api/file-wizard-course.api.php?action=edit&id=".$COURSE_ID."&fid=".$result["id"]."')\" title=\"Click to edit ".html_encode($result["file_title"])."\" style=\"font-weight: bold\">".html_encode($result["file_title"])."</a>";
 								echo "	</td>\n";
 								echo "	<td class=\"date-small\"><span class=\"content-date\">".(((int) $result["valid_from"]) ? date(DEFAULT_DATE_FORMAT, $result["valid_from"]) : "No Restrictions")."</span></td>\n";
 								echo "	<td class=\"date-small\"><span class=\"content-date\">".(((int) $result["valid_until"]) ? date(DEFAULT_DATE_FORMAT, $result["valid_until"]) : "No Restrictions")."</span></td>\n";
@@ -712,7 +706,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						</div>
 						<div style="float: right; margin-bottom: 5px">
 							<ul class="page-action">
-								<li><a href="javascript: openLinkWizard('<?php echo $COURSE_ID; ?>', 0, 'add')">Add A Link</a></li>
+								<li><a href="#page-top" onclick="openDialog('<?php echo ENTRADA_URL; ?>/api/link-wizard-course.api.php?action=add&id=<?php echo $COURSE_ID; ?>')">Add A Link</a></li>
 							</ul>
 						</div>
 						<div class="clear"></div>
@@ -755,7 +749,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								echo "		<a href=\"".ENTRADA_URL."/link-course.php?id=".$result["id"]."\" target=\"_blank\"><img src=\"".ENTRADA_URL."/images/url-visit.gif\" width=\"16\" height=\"16\" alt=\"Visit ".html_encode($result["link"])."\" title=\"Visit ".html_encode($result["link"])."\" style=\"vertical-align: middle\" border=\"0\" /></a>\n";
 								echo "	</td>\n";
 								echo "	<td class=\"title\" style=\"white-space: normal; overflow: visible\">\n";
-								echo "		<a href=\"javascript: openLinkWizard('".$COURSE_ID."', '".$result["id"]."', 'edit')\" title=\"Click to edit ".html_encode($result["link"])."\" style=\"font-weight: bold\">".(($result["link_title"] != "") ? html_encode($result["link_title"]) : $result["link"])."</a>\n";
+								echo "		<a href=\"#page-top\" onclick=\"openDialog('".ENTRADA_URL."/api/link-wizard-course.api.php?action=edit&id=".$COURSE_ID."&lid=".$result["id"]."')\" title=\"Click to edit ".html_encode($result["link"])."\" style=\"font-weight: bold\">".(($result["link_title"] != "") ? html_encode($result["link_title"]) : $result["link"])."</a>\n";
 								echo "	</td>\n";
 								echo "	<td class=\"date-small\"><span class=\"content-date\">".(((int) $result["valid_from"]) ? date(DEFAULT_DATE_FORMAT, $result["valid_from"]) : "No Restrictions")."</span></td>\n";
 								echo "	<td class=\"date-small\"><span class=\"content-date\">".(((int) $result["valid_until"]) ? date(DEFAULT_DATE_FORMAT, $result["valid_until"]) : "No Restrictions")."</span></td>\n";

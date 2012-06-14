@@ -286,29 +286,50 @@ if (!defined("PARENT_INCLUDED")) {
 
 // @todo simpson This needs to be fixed.
 					if (($_SESSION["details"]["allow_podcasting"]) && ($event_audience_type == "cohort") && (in_array($_SESSION["details"]["allow_podcasting"], $associated_cohorts))) {
-						$sidebar_html = "To upload a podcast: <a href=\"javascript:openPodcastWizard('".$EVENT_ID."')\">click here</a>";
+						$sidebar_html = "To upload a podcast: <a href=\"#page-top\" onclick=\"openDialog('".ENTRADA_URL."/api/file-wizard-podcast.api.php?id=".$EVENT_ID."')\">click here</a>";
 						new_sidebar_item("Upload A Podcast", $sidebar_html, "podcast_uploading", "open", "2.0");
 						
-						?>
+						$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/elementresizer.js\"></script>";
+						$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/wizard.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+						$HEAD[] = "<link href=\"".ENTRADA_URL."/css/wizard.css?release=".html_encode(APPLICATION_VERSION)."\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />";
+						$HEAD[] = "<link href=\"".ENTRADA_RELATIVE."/javascript/calendar/css/xc2_default.css?release=".html_encode(APPLICATION_VERSION)."\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />";
+						$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/calendar/config/xc2_default.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+						$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/calendar/script/xc2_inpage.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+						?>								
+		
+						<iframe id="upload-frame" name="upload-frame" onload="frameLoad()" style="display: none;"></iframe>
+						<a id="false-link" href="#placeholder"></a>
+						<div id="placeholder" style="display: none"></div>
 						<script type="text/javascript">
-						function openPodcastWizard(id) {
-							if (!id) {
-								return;
+						var ajax_url = '';
+						var modalDialog;
+						document.observe('dom:loaded', function() {
+							modalDialog = new Control.Modal($('false-link'), {
+								position:		'center',
+								overlayOpacity:	0.75,
+								closeOnClick:	'overlay',
+								className:		'modal',
+								fade:			true,
+								fadeDuration:	0.30,
+								beforeOpen: function(request) {
+									eval($('scripts-on-open').innerHTML);
+								}
+							});
+						});
+						
+						function openDialog (url) {
+							if (url && url != ajax_url) {
+								ajax_url = url;
+								new Ajax.Request(ajax_url, {
+									method: 'get',
+									onComplete: function(transport) {
+										modalDialog.container.update(transport.responseText);
+										modalDialog.open();
+									}
+								});
 							} else {
-								var windowW = 485;
-								var windowH = 585;
-
-								var windowX = (screen.width / 2) - (windowW / 2);
-								var windowY = (screen.height / 2) - (windowH / 2);
-
-								fileWizard = window.open('<?php echo ENTRADA_RELATIVE ?>/file-wizard-podcast.php?id=' + id, 'podcastWizard', 'width='+windowW+', height='+windowH+', scrollbars=no, resizable=yes');
-								fileWizard.blur();
-								window.focus();
-
-								fileWizard.resizeTo(windowW, windowH);
-								fileWizard.moveTo(windowX, windowY);
-
-								fileWizard.focus();
+								$('scripts-on-open').update();
+								modalDialog.open();
 							}
 						}
 						</script>
@@ -358,7 +379,7 @@ if (!defined("PARENT_INCLUDED")) {
 					echo "</div>\n";
 
 					echo "<div class=\"content-small\">".fetch_course_path($event_info["course_id"])."</div>\n";
-					echo "<h1 class=\"event-title\">".html_encode($event_info["event_title"])."</h1>\n";
+					echo "<h1 id=\"page-top\" class=\"event-title\">".html_encode($event_info["event_title"])."</h1>\n";
 					
 					echo "<div id=\"event-sidebar\">\n";
 					?>

@@ -33,6 +33,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 	$BREADCRUMB[]	= array("url" => "", "title" => "Create New Draft Schedule");
+	
 	switch ($STEP) {
 		case 2 :
 			// error checking / sanitization
@@ -45,12 +46,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			if (isset($_POST["draft_description"]) && !empty($_POST["draft_description"])) {
 				$PROCESSED["draft_description"] = clean_input($_POST["draft_description"], array("nohtml"));
 			}
-			if (isset($_POST["course_ids"]) && !empty($_POST["course_ids"])) {
+			if (isset($_POST["course_ids"])) {
 				foreach ($_POST["course_ids"] as $course_id) {
 					$PROCESSED["course_ids"][] = (int) $course_id;
 				}
-			} else {
-				add_error("No courses selected.");
 			}
 			
 			if (isset($_POST["draft_start_date"]) && !empty($_POST["draft_start_date"])) {
@@ -86,83 +85,84 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							VALUES (".$db->qstr($draft_id).", ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]).")";
 				$result = $db->Execute($query);
 				
-				foreach ($PROCESSED["course_ids"] as $course_id) {
-					// copy the events into the drafts table
-					$query = "	SELECT *
-								FROM `events` AS a
-								WHERE a.`course_id` = ".$db->qstr($course_id)."
-								AND a.`event_start` >= ".$db->qstr($PROCESSED["draft_start_date"])."
-								AND a.`event_finish` <= ".$db->qstr($PROCESSED["draft_finish_date"]); 
-					$events = $db->GetAll($query);
-					
-					$date_diff = (int) ($PROCESSED["new_start_day"] - $events[0]["event_start"]);
-					
-					foreach ($events as $event) {
-						$event["draft_id"] = $draft_id;
-						
-						// adds the offset time to the event year and week, preserves the day of the week
-						$event["event_start"]  = strtotime((date("o", $event["event_start"] + $date_diff))."-W".date("W", $event["event_start"] + $date_diff)."-".date("w", $event["event_start"])." ".date("H:i",$event["event_start"]));
-						$event["event_finish"] = strtotime((date("o", $event["event_finish"] + $date_diff))."-W".date("W", $event["event_finish"] + $date_diff)."-".date("w", $event["event_finish"])." ".date("H:i",$event["event_finish"]));
-						
-						
-						if (!$db->AutoExecute("draft_events", $event, 'INSERT')) {
-							add_error("An error occured, an administrator has been notified. Please try again later.");
-							application_log("error", "An error occured when inserting an event into a draft event schedule. DB said: ".$db->ErrorMsg());
-						} else {
-							$devent_id = $db->Insert_ID();
-						}
-						
-						// copy the audience for the event
-						$query = "	SELECT * 
-									FROM `event_audience`
-									WHERE `event_id` = ".$db->qstr($event["event_id"]);
-						$audiences = $db->GetAll($query);
-						if ($audiences) {
-							foreach ($audiences as $audience) {
-								$audience["devent_id"] = $devent_id;
-								if (!$db->AutoExecute("draft_audience", $audience, 'INSERT')) {
-									add_error("An error occured, an administrator has been notified. Please try again later.");
-									application_log("error", "An error occured when inserting a draft event audience into a draft event schedule. DB said: ".$db->ErrorMsg());
+				if ($PROCESSED["course_ids"]) {
+					foreach ($PROCESSED["course_ids"] as $course_id) {
+						// copy the events into the drafts table
+						$query = "	SELECT *
+									FROM `events` AS a
+									WHERE a.`course_id` = ".$db->qstr($course_id)."
+									AND a.`event_start` >= ".$db->qstr($PROCESSED["draft_start_date"])."
+									AND a.`event_finish` <= ".$db->qstr($PROCESSED["draft_finish_date"]); 
+						$events = $db->GetAll($query);
+
+						$date_diff = (int) ($PROCESSED["new_start_day"] - $events[0]["event_start"]);
+
+						foreach ($events as $event) {
+							$event["draft_id"] = $draft_id;
+
+							// adds the offset time to the event year and week, preserves the day of the week
+							$event["event_start"]  = strtotime((date("o", $event["event_start"] + $date_diff))."-W".date("W", $event["event_start"] + $date_diff)."-".date("w", $event["event_start"])." ".date("H:i",$event["event_start"]));
+							$event["event_finish"] = strtotime((date("o", $event["event_finish"] + $date_diff))."-W".date("W", $event["event_finish"] + $date_diff)."-".date("w", $event["event_finish"])." ".date("H:i",$event["event_finish"]));
+
+
+							if (!$db->AutoExecute("draft_events", $event, 'INSERT')) {
+								add_error("An error occured, an administrator has been notified. Please try again later.");
+								application_log("error", "An error occured when inserting an event into a draft event schedule. DB said: ".$db->ErrorMsg());
+							} else {
+								$devent_id = $db->Insert_ID();
+							}
+
+							// copy the audience for the event
+							$query = "	SELECT * 
+										FROM `event_audience`
+										WHERE `event_id` = ".$db->qstr($event["event_id"]);
+							$audiences = $db->GetAll($query);
+							if ($audiences) {
+								foreach ($audiences as $audience) {
+									$audience["devent_id"] = $devent_id;
+									if (!$db->AutoExecute("draft_audience", $audience, 'INSERT')) {
+										add_error("An error occured, an administrator has been notified. Please try again later.");
+										application_log("error", "An error occured when inserting a draft event audience into a draft event schedule. DB said: ".$db->ErrorMsg());
+									}
+								}
+							}
+
+							// copy the contacts for the event
+							$query = "	SELECT * 
+										FROM `event_contacts`
+										WHERE `event_id` = ".$db->qstr($event["event_id"]);
+							$contacts = $db->GetAll($query);
+							if ($contacts) {
+								foreach ($contacts as $contact) {
+									$contact["devent_id"] = $devent_id;
+									if (!$db->AutoExecute("draft_contacts", $contact, 'INSERT')) {
+										add_error("An error occured, an administrator has been notified. Please try again later.");
+										application_log("error", "An error occured when inserting a draft event contact into a draft event schedule. DB said: ".$db->ErrorMsg());
+									}
+								}
+							}
+
+							// copy the eventtypes for the event
+							$query = "	SELECT * 
+										FROM `event_eventtypes`
+										WHERE `event_id` = ".$db->qstr($event["event_id"]);
+							$eventtypes = $db->GetAll($query);
+							if ($eventtypes) {
+								foreach ($eventtypes as $eventtype) {
+									$eventtype["devent_id"] = $devent_id;
+									if (!$db->AutoExecute("draft_eventtypes", $eventtype, 'INSERT')) {
+										add_error("An error occured, an administrator has been notified. Please try again later.");
+										application_log("error", "An error occured when inserting a draft eventtype into a draft event schedule. DB said: ".$db->ErrorMsg());
+									}
 								}
 							}
 						}
-						
-						// copy the contacts for the event
-						$query = "	SELECT * 
-									FROM `event_contacts`
-									WHERE `event_id` = ".$db->qstr($event["event_id"]);
-						$contacts = $db->GetAll($query);
-						if ($contacts) {
-							foreach ($contacts as $contact) {
-								$contact["devent_id"] = $devent_id;
-								if (!$db->AutoExecute("draft_contacts", $contact, 'INSERT')) {
-									add_error("An error occured, an administrator has been notified. Please try again later.");
-									application_log("error", "An error occured when inserting a draft event contact into a draft event schedule. DB said: ".$db->ErrorMsg());
-								}
-							}
-						}
-						
-						// copy the eventtypes for the event
-						$query = "	SELECT * 
-									FROM `event_eventtypes`
-									WHERE `event_id` = ".$db->qstr($event["event_id"]);
-						$eventtypes = $db->GetAll($query);
-						if ($eventtypes) {
-							foreach ($eventtypes as $eventtype) {
-								$eventtype["devent_id"] = $devent_id;
-								if (!$db->AutoExecute("draft_eventtypes", $eventtype, 'INSERT')) {
-									add_error("An error occured, an administrator has been notified. Please try again later.");
-									application_log("error", "An error occured when inserting a draft eventtype into a draft event schedule. DB said: ".$db->ErrorMsg());
-								}
-							}
-						}
+
+
 					}
-					
-					
 				}
-				
 				if (!$ERROR) {
-					add_success("This draft was successfully created, you will be redirected in 5 seconds. If you are not redirected please <a href=\"".ENTRADA_URL."/admin/events/drafts?section=edit&amp;draft=".$draft_id."\">Click Here</a>.");
+					add_success("This draft was successfully created, you will be redirected in 5 seconds. If you are not redirected please <a href=\"".ENTRADA_URL."/admin/events/drafts?section=edit&amp;draft_id=".$draft_id."\">Click Here</a>.");
 					display_success();
 					$ONLOAD[] = "setTimeout('window.location=\\'".ENTRADA_URL."/admin/events/drafts?section=edit&draft_id=".$draft_id."\\'', 5000)";
 				} else {
@@ -272,7 +272,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							</tr>
 							<tr>
 								<td></td>
-								<td style="vertical-align: top;"><label class="form-required">Courses Included</label></td>
+								<td style="vertical-align: top;"><label class="form-nrequired">Courses Included</label></td>
 								<td style="vertical-align: top;">
 									<?php
 									echo "<select class=\"multi-picklist\" id=\"PickList\" name=\"course_ids[]\" multiple=\"multiple\" size=\"5\" style=\"width: 100%; margin-bottom: 5px\">\n";

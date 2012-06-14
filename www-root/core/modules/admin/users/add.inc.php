@@ -553,8 +553,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 							$index = 0;
 							foreach ($PROCESSED_ACCESS["org_id"] as $org_id) {								
 								$query = "SELECT g.`group_name`, r.`role_name`
-										  FROM `" . AUTH_DATABASE . "`.`groups` g, `" . AUTH_DATABASE . "`.`roles` r, 
-											   `" . AUTH_DATABASE . "`.`groups_has_organisations` gho, `" . AUTH_DATABASE . "`.`organisations` o
+										  FROM `" . AUTH_DATABASE . "`.`system_groups` g, `" . AUTH_DATABASE . "`.`system_roles` r,
+											   `" . AUTH_DATABASE . "`.`system_group_organisation` gho, `" . AUTH_DATABASE . "`.`organisations` o
 										  WHERE gho.`groups_id` = " . $PROCESSED_ACCESS["group_id"][$index] . " AND g.`id` = " . $PROCESSED_ACCESS["group_id"][$index] . " AND
 										  r.`id` = " . $PROCESSED_ACCESS["role_id"][$index] . " AND o.`organisation_id` = " . $org_id;								
 								$group_role = $db->GetRow($query);
@@ -1198,17 +1198,19 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 											<select id="<?php echo "organisations-groups-roles" . $result["organisation_id"]; ?>" name="<?php echo "organisations-groups-roles" . $result["organisation_id"] . "[]"; ?>" multiple="multiple" style="width:300px">
 										<?php
 														$query = "SELECT g.id as gid, r.id as rid, group_name, role_name
-																  FROM `".AUTH_DATABASE."`.groups g, `".AUTH_DATABASE."`.roles r,
-																	  `".AUTH_DATABASE."`.organisations o, `".AUTH_DATABASE."`.groups_has_organisations gho
+																  FROM `".AUTH_DATABASE."`.`system_groups` g, `".AUTH_DATABASE."`.`system_roles` r,
+																	  `".AUTH_DATABASE."`.organisations o, `".AUTH_DATABASE."`.`system_group_organisation` gho
 																  WHERE g.id = r.groups_id
 																  AND o.`organisation_id` = gho.`organisation_id`
 																  AND gho.`groups_id` = g.`id`
 																  AND o.`organisation_id` = " . $result["organisation_id"] . "
-																  ORDER BY `group_name`";
-														$groups_roles = $db->GetAll($query);														
-														foreach($groups_roles as $gr) {
-															echo build_option($result["organisation_id"] . "-" . $gr["gid"] . "-" . $gr["rid"], $gr["group_name"] . "-" . $gr["role_name"], $selected);
-														}														
+																  ORDER BY `group_name`, `role_name`";
+														$groups_roles = $db->GetAll($query);
+														if ($groups_roles) {
+															foreach($groups_roles as $gr) {
+																echo build_option($result["organisation_id"] . "-" . $gr["gid"] . "-" . $gr["rid"], ucfirst($gr["group_name"]) . "-" . ucfirst($gr["role_name"]), $selected);
+															}
+														}
 											 ?>
 											</select>
 											</td>
@@ -1371,7 +1373,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 											   var group_role = ui.text.split('-');
 											   var list_item_id = ui.value; 
 											   if(ui.checked == true) {
-											      jQuery("#group_role_callback" + org_group_role[0]).append("<li id=\"" + list_item_id + "\">Group: <strong>" + group_role[0] + "</strong> <br /> Role: <strong>" + group_role[1] + "</strong></li><br />");
+											      jQuery("#group_role_callback" + org_group_role[0]).append("<li id=\"" + list_item_id + "\">Group: <strong>" + capitalizeFirstLetter(group_role[0]) + "</strong> <br /> Role: <strong>" + capitalizeFirstLetter(group_role[1]) + "</strong></li><br />");
 											   } else {
 												  jQuery("#" + list_item_id).remove();
 											   }

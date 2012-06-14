@@ -764,13 +764,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				}
 				</script>
 				<?php
-				if ($ENTRADA_ACL->amIAllowed(new EventResource($event_info["event_id"], $event_info["course_id"], $event_info["organisation_id"]), 'update')) {
-					echo "<div class=\"no-printing\">\n";
-					echo "	<div style=\"float: right; margin-top: 8px\">\n";
-					echo "		<a href=\"".ENTRADA_URL."/admin/events?".replace_query(array("section" => "edit", "id" => $event_info["event_id"]))."\"><img src=\"".ENTRADA_URL."/images/event-details.gif\" width=\"16\" height=\"16\" alt=\"Edit event details\" title=\"Edit event details\" border=\"0\" style=\"vertical-align: middle\" /></a> <a href=\"".ENTRADA_URL."/admin/events?".replace_query(array("section" => "edit", "id" => $event_info["event_id"]))."\" style=\"font-size: 10px; margin-right: 8px\">Edit event details</a>\n";
-					echo "	</div>\n";
-					echo "</div>\n";
-				}
+				events_subnavigation($event_info,'content');											
+
 
 				echo "<div class=\"content-small\">".fetch_course_path($event_info["course_id"])."</div>\n";
 				echo "<h1 id=\"page-top\" class=\"event-title\">".html_encode($event_info["event_title"])."</h1>\n";
@@ -1196,7 +1191,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 										?>
 										</table>
 			</div>
-				</form>
+				</form>				
+				<div id="event-resources-section">
 
 				<a name="event-resources-section"></a>
 				<h2 title="Event Resources Section">Event Resources</h2>

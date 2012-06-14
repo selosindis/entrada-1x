@@ -178,7 +178,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 			
 			$limit_parameter = (int) (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"] * $page_current) - $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]);
 						
-			courses_subnavigation($course_details);
+            courses_subnavigation($course_details,"gradebook");
 			
 			$curriculum_path = curriculum_hierarchy($COURSE_ID);
 			if ((is_array($curriculum_path)) && (count($curriculum_path))) {

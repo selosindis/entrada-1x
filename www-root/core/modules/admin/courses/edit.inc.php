@@ -46,8 +46,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 
 			$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "edit", "id" => $COURSE_ID, "step" => false)), "title" => "Editing " . $module_singular_name);
 
-			echo "<h1>Editing " . $module_singular_name  . "</h1>\n";
-
 			/** 
 			* Fetch the Clinical Presentation details.
 			*/
@@ -94,10 +92,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					}
 				}
 			}			
-			
-			
-			
-			courses_subnavigation($course_details);
+						
+			courses_subnavigation($course_details,"details");
+			echo "<h1>Editing " . $module_singular_name  . "</h1>\n";
 
 			$PROCESSED["permission"] = $course_details["permission"];
 			$PROCESSED["sync_ldap"] = $course_details["sync_ldap"];

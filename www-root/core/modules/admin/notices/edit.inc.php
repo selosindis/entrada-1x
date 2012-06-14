@@ -233,15 +233,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 						$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/elementresizer.js\"></script>\n";
 						$ONLOAD[] = "updateAudienceOptions()";
 
-						$buttons	= array();
-						$buttons[1] = array("link", "separator", "undo", "redo", "pasteword", "cleanup", "save");
-						$buttons[2] = array();
-						$buttons[3] = array();
-
 						/**
 						 * Load the rich text editor.
 						 */
-						load_rte($buttons);
+						load_rte("minimal");
 
 						if ($ERROR) {
 							echo display_error();

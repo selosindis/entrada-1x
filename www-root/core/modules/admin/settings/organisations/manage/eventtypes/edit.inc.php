@@ -65,19 +65,63 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 			
 			if (!$ERROR) {
 				
+				// Check to see if the eventtype_id is used in more than one organisation
+				$query = "	SELECT `organisation_id`, `eventtype_id`
+							FROM `eventtype_organisation` WHERE `eventtype_id` = ".$db->qstr($PROCESSED["eventtype_id"]);
+				$results = $db->GetAssoc($query);
+
+				if (count($results) > 1) {
+					// if the eventtype_id is used in multiple organisations we are going to create a new entry and remove the old one
+					$action = "INSERT";
+					$where = FALSE;
+					
+					// we need a list of event_ids that are associated with this eventtype_id
+					$query = "	SELECT b.`event_id`, c.`eventtype_id`
+								FROM `courses` AS a
+								LEFT JOIN `events` AS b
+								ON a.`course_id` = b.`course_id`
+								LEFT JOIN `event_eventtypes` AS c
+								ON b.`event_id` = c.`event_id`
+								WHERE a.`organisation_id` = ".$db->qstr($ORGANISATION_ID)."
+								AND c.`eventtype_id` = ".$db->qstr($PROCESSED["eventtype_id"]);
+					$events_list = $db->GetAssoc($query);
+				} else {
+					// if the eventtype_id is not in multiple organisations update it as normal
+					$action = "UPDATE";
+					$where = "`eventtype_id` = ".$db->qstr($PROCESSED["eventtype_id"]);
+				}
+				
 				$params = array("eventtype_title" => $PROCESSED["eventtype_title"],"eventtype_description"=>$PROCESSED["eventtype_description"], "updated_date"=>time(),"updated_by"=>$_SESSION["details"]["id"]);
 				
-				if ($db->AutoExecute("`events_lu_eventtypes`", $params, "UPDATE","`eventtype_id`=".$db->qstr($PROCESSED["eventtype_id"]))) {
-
-							$url = ENTRADA_URL . "/admin/settings/organisations/manage/eventtypes?org=".$ORGANISATION_ID;
-							$SUCCESS++;
-							$SUCCESSSTR[] = "You have successfully added <strong>".html_encode($PROCESSED["eventtype_title"])."</strong> to the system.<br /><br />You will now be redirected to the Event Types index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-							$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
-							application_log("success", "New Event Type [".$PROCESSED["eventtype_id"]."] added to the system.");
-
+				if ($db->AutoExecute("`events_lu_eventtypes`", $params, $action, $where)) {
+					
+					if ($action == "INSERT") {
+						// if creating a new eventtype we will need to delete the old one, then update all of the previously fetched events to the new one.
+						$eventtype_id = $db->Insert_ID();
+						
+						$query = "	DELETE FROM `eventtype_organisation`
+									WHERE `eventtype_id` = ".$db->qstr($PROCESSED["eventtype_id"])."
+									AND `organisation_id` = ".$db->qstr($ORGANISATION_ID);
+						$db->Execute($query);
+						
+						$query = "	INSERT INTO `eventtype_organisation` (`eventtype_id`, `organisation_id`)
+									VALUES (".$db->qstr($eventtype_id).", ".$db->qstr($ORGANISATION_ID).")";
+						$db->Execute($query);
+						
+						$query = "	UPDATE `event_eventtypes`
+									SET `eventtype_id` = ".$db->qstr($eventtype_id)."
+									WHERE `event_id` IN ('".implode("', '", array_keys($events_list))."')";
+						$db->Execute($query);
+					}
+					
+					$url = ENTRADA_URL . "/admin/settings/organisations/manage/eventtypes?org=".$ORGANISATION_ID;
+					$SUCCESS++;
+					$SUCCESSSTR[] = "You have successfully added <strong>".html_encode($PROCESSED["eventtype_title"])."</strong> to the system.<br /><br />You will now be redirected to the Event Types index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+					$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
+					application_log("success", "New Event Type [".$PROCESSED["eventtype_id"]."] added to the system.");
 				} else {
 					$ERROR++;
-					$ERRORSTR[] = "There was a problem inserting this objective into the system. The system administrator was informed of this error; please try again later.";
+					$ERRORSTR[] = "There was a problem inserting this objective into the system. The system administrator was informed of this error; please try again later.".$db->ErrorMsg();
 
 					application_log("error", "There was an error inserting an objective. Database said: ".$db->ErrorMsg());
 				}

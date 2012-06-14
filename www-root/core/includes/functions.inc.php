@@ -1289,6 +1289,9 @@ function filter_name($filter_key) {
 		case "topic" :
 			return "Hot Topics Involved";
 		break;
+		case "department" :
+			return "Departments Involved";
+		break;
 		default :
 			return false;
 		break;
@@ -2147,7 +2150,7 @@ function permissions_load() {
 }
 
 /**
- * This function look at the user_access table for a particular entry (i.e. id) and user 
+ * This function look at the user_access table for a particular entry (i.e. id) and user
  * in order to load the associated permissions into an array that can be set in the Session.
  * Modelled after the load_permissions function.
  *
@@ -2157,7 +2160,7 @@ function load_org_group_role($assumed_proxy_id, $ua_id) {
 	global $db;
 	$permissions	= array();
 	$pieces = explode("-", $assumed_proxy_id);
-	$proxy_id = $pieces[0];	
+	$proxy_id = $pieces[0];
 	$query = "	SELECT b.`id` AS `proxy_id`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, b.`firstname`, b.`lastname`, c.`organisation_id`, c.`role`, c.`group`, c.`access_starts`, c.`access_expires`
 				FROM `".AUTH_DATABASE."`.`user_data` AS b
 				JOIN `".AUTH_DATABASE."`.`user_access` AS c
@@ -2167,7 +2170,7 @@ function load_org_group_role($assumed_proxy_id, $ua_id) {
 				AND (c.`access_expires`='0' OR c.`access_expires`>=".$db->qstr(time()).")
 				WHERE c.`id` = " . $db->qstr($ua_id) . "
 				AND b.`id` = $db->qstr($proxy_id)";
-	
+
 	$result = $db->GetRow($query);
 	if($result) {
 		$permissions[$assumed_proxy_id] = array("group" => $result["group"], "role" => $result["role"], "organisation_id"=>$result['organisation_id'],  "starts" => $result["access_starts"], "expires" => $result["access_expires"], "fullname" => $result["fullname"], "firstname" => $result["firstname"], "lastname" => $result["lastname"]);
@@ -2306,7 +2309,7 @@ function permissions_fetch($identifier, $type = "event", $existing_allowed_ids =
  */
 function permissions_mask() {
 	global $db, $ENTRADA_USER;
-	
+
 	if(isset($_GET["mask"])) {
 		if(trim($_GET["mask"]) == "close") {
 			unset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]);
@@ -3866,19 +3869,24 @@ function load_rte($buttons = array(), $plugins = array(), $other_options = array
 			case "communityadvanced" :
 			case "advanced" :
 				$buttons[1]	= array ("fullscreen", "styleprops", "|", "formatselect", "fontselect", "fontsizeselect", "|", "bold", "italic", "underline", "forecolor", "backcolor", "|", "justifyleft", "justifycenter", "justifyright", "justifyfull");
-				$buttons[2]	= array ("replace", "pasteword", "pastetext", "|", "undo", "redo", "|", "tablecontrols", "|", "insertlayer", "moveforward", "movebackward", "absolute", "|", "visualaid");
-				$buttons[3]	= array ("ltr", "rtl", "|", "outdent", "indent", "|", "bullist", "numlist", "|", "link", "unlink", "anchor", "image", "media", "|", "sub", "sup", "|", "charmap", "insertdate", "inserttime", "nonbreaking", "|", "cleanup", "code", "removeformat");
+				$buttons[2]	= array ("ltr", "rtl", "|", "undo", "redo", "|", "tablecontrols", "|", "insertlayer", "moveforward", "movebackward", "absolute", "|", "visualaid");
+				$buttons[3]	= array ("spellchecker", "pasteword", "pastetext", "|", "outdent", "indent", "|", "bullist", "numlist", "|", "link", "unlink", "anchor", "image", "media", "|", "sub", "sup", "charmap", "|", "cleanup", "removeformat", "code");
 			break;
 			case "communitybasic" :
 				$buttons[1]	= array("fullscreen", "styleprops", "|", "formatselect", "fontselect", "fontsizeselect", "|", "bold", "italic", "underline", "forecolor", "backcolor", "|", "justifyleft", "justifycenter", "justifyright", "justifyfull");
-				$buttons[2]	= array("replace", "pasteword", "pastetext", "ltr", "rtl", "|", "outdent", "indent", "|", "bullist", "numlist", "|", "link", "unlink", "anchor", "image", "media", "|", "sub", "sup", "|", "charmap", "insertdate", "inserttime", "nonbreaking", "|", "cleanup", "code", "removeformat");
+				$buttons[2]	= array("spellchecker", "pasteword", "pastetext", "ltr", "rtl", "|", "outdent", "indent", "|", "bullist", "numlist", "|", "link", "unlink", "anchor", "image", "media", "|", "sub", "sup", "charmap", "|", "cleanup", "removeformat", "code");
 			break;
 			case "community" :
-				$buttons[1] = array("bold", "italic", "underline", "strikethrough", "|", "link", "unlink", "anchor", "image", "media", "|", "numlist", "bullist", "|", "outdent", "indent", "blockquote", "|", "undo", "redo", "|", "pasteword", "cleanup", "removeformat", "code");
+				$buttons[1] = array("bold", "italic", "underline", "strikethrough", "|", "link", "unlink", "anchor", "image", "media", "|", "numlist", "bullist", "|", "outdent", "indent", "blockquote", "|", "undo", "redo", "|", "spellchecker", "pasteword", "cleanup", "removeformat", "code");
+			break;
+			case "minimal" :
+				$buttons[1] = array("link", "separator", "undo", "redo", "spellchecker", "pasteword", "cleanup", "code");
+				$buttons[2] = array();
+				$buttons[3] = array();
 			break;
 			case "basic" :
 			default :
-				$buttons[1] = array("bold", "italic", "underline", "strikethrough", "|", "link", "|", "numlist", "bullist", "|", "outdent", "indent", "blockquote", "|", "undo", "redo", "|", "pasteword", "cleanup", "removeformat", "code", "save");
+				$buttons[1] = array("bold", "italic", "underline", "strikethrough", "|", "link", "|", "numlist", "bullist", "|", "outdent", "indent", "blockquote", "|", "undo", "redo", "|", "spellchecker", "pasteword", "cleanup", "removeformat", "code");
 				$buttons[2] = array();
 				$buttons[3] = array();
 			break;
@@ -3894,14 +3902,14 @@ function load_rte($buttons = array(), $plugins = array(), $other_options = array
 			case "advanced" :
 			case "communityadvanced" :
 			case "communitybasic" :
-				$plugins = array("preview", "inlinepopups", "style", "layer", "table", "advimage", "advlink", "media", "insertdatetime", "contextmenu", "paste", "directionality", "fullscreen", "noneditable", "visualchars", "nonbreaking", "xhtmlxtras", "tabfocus");
+				$plugins = array("preview", "inlinepopups", "style", "layer", "table", "advimage", "advlink", "media", "contextmenu", "paste", "directionality", "fullscreen", "noneditable", "visualchars", "xhtmlxtras", "tabfocus", "spellchecker");
 			break;
 			case "community" :
-				$plugins = array("autosave", "contextmenu", "advimage", "advlink", "media", "paste", "inlinepopups", "tabfocus");
+				$plugins = array("autosave", "contextmenu", "advimage", "advlink", "media", "paste", "inlinepopups", "tabfocus", "spellchecker");
 			break;
 			case "basic" :
 			default :
-				$plugins = array("autosave", "save", "contextmenu", "paste", "inlinepopups", "tabfocus");
+				$plugins = array("autosave", "save", "contextmenu", "paste", "inlinepopups", "tabfocus", "spellchecker");
 			break;
 		}
 	}
@@ -7399,7 +7407,7 @@ function quiz_generate_description($required = 0, $quiztype_code = "delayed", $q
 	$string_4 = (((int) $quiz_attempts) ? $quiz_attempts." attempt".(($quiz_attempts != 1) ? "s" : "") : "unlimited attempts");
 	$string_5 = $quiz_questions." question".(($quiz_questions != 1) ? "s" : "");
 	$string_6 = (($quiztype_code == "delayed") ? "only after the quiz expires" : "immediately after completion");
-	$string_7 = (isset($attendance) && $attendance)?"<br/><br/> This quiz requires your attendance. You will not be able to access it if you have not been marked present.":""; 
+	$string_7 = (isset($attendance) && $attendance)?"<br /><br /> This quiz requires your attendance. You will not be able to access it if you have not been marked present.":"";
 	return sprintf($output, $string_1, $string_2, $string_3, $string_4, $string_5, $string_6, $string_7);
 }
 
@@ -8416,7 +8424,7 @@ function clerkship_send_queued_notifications($rotation_id, $rotation_title, $pro
 								);
 				$replace	= array(
 									$rotation_title,
-									implode("<br/>\n", $clerks),
+									implode("<br />\n", $clerks),
 									APPLICATION_NAME,
 									ENTRADA_URL
 							);
@@ -8718,7 +8726,7 @@ function clerkship_deficiency_notifications($clerk_id, $rotation_id, $administra
 
 function courses_subnavigation($course_details, $tab="details") {
 	global $ENTRADA_ACL, $module_singular_name;
-	
+
 	if (!isset($module_singular_name)) {
 		$module_singular_name = "Course";
 	}
@@ -8739,10 +8747,11 @@ function courses_subnavigation($course_details, $tab="details") {
 	}
 	if($ENTRADA_ACL->amIAllowed(new CourseResource($course_details["course_id"], $course_details["organisation_id"]), "update")) {
 		echo "<li".($tab=="enrolment"?" class=\"active\"":"")."><a href=\"".ENTRADA_RELATIVE."/admin/courses/enrolment?".replace_query(array("section"=>false,"assessment_id" => false, "id" => $course_details["course_id"], "step" => false))."\" style=\"font-size: 10px; margin-right: 8px\">Edit " . $module_singular_name . " Enrolment</a></li>\n";
-	}	
+	}
 	echo "	</ul>\n";
-	
+
 	echo "</div>\n";
+	echo "<br />";
 }
 
 function course_fetch_course_group($cgroup_id = 0) {
@@ -8837,8 +8846,8 @@ function courses_fetch_courses($only_active_courses = true, $order_by_course_cod
 	}
 
 	$output = array();
-	$query = "	SELECT DISTINCT(a.`course_id`), a.`course_name`, a.`course_code`, a.`course_active`, a.`organisation_id` 
-				FROM `courses` AS a";				
+	$query = "	SELECT DISTINCT(a.`course_id`), a.`course_name`, a.`course_code`, a.`course_active`, a.`organisation_id`
+				FROM `courses` AS a";
 	if ($ENTRADA_USER->getGroup() == "student") {
 	$query .= "	LEFT JOIN `course_audience` AS b
 				ON a.`course_id` = b.`course_id`
@@ -8849,7 +8858,7 @@ function courses_fetch_courses($only_active_courses = true, $order_by_course_cod
 				ON d.`group_id` = c.`group_id`";
 	}
 	$query .= " WHERE `organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation());
-	
+
 	if ($ENTRADA_USER->getGroup() == "student") {
 		$query .="	AND (
 						d.`proxy_id` = ".$db->qstr($ENTRADA_USER->getProxyId())."
@@ -9246,49 +9255,57 @@ function course_objectives_in_list($objectives, $parent_id, $top_level_id, $edit
 					$display_importance = "tertiary";
 				}
 			}
-			if ($top) {
-				$output .= "<h2".($iterated && !$hierarchical ? " class=\"collapsed\"" : "")." title=\"".ucwords($display_importance)." Objectives\">".ucwords($display_importance)." Objectives</h2>\n";
-				$output .= "<div id=\"".($display_importance)."-objectives\">\n";
-			}
-			foreach ($flat_objective_list as $objective_id => $objective_active) {
-				$objective = $objectives[$objective_id];
-				if (($objective["parent"] == $parent_id) && (($objective["objective_".$display_importance."_children"]) || ((isset($objective[$display_importance]) && $objective[$display_importance]) || ($parent_active && count($objective["parent_ids"]) > 2) && !$selected_only) || ($selected_only && isset($objective["event_objective"]) && $objective["event_objective"] && (isset($objective[$display_importance]) && $objective[$display_importance])))) {
-					$importance = ((isset($objective["primary"]) && $objective["primary"]) ? 1 : ((isset($objective["secondary"]) && $objective["secondary"]) ? 2 : ((isset($objective["tertiary"]) && $objective["tertiary"]) ? 3 : $importance)));
-					if ((count($objective["parent_ids"]) > 1) || $hierarchical) {
-						$output .= "<li".((($parent_active) || (isset($objective[$display_importance]) && $objective[$display_importance])) && (count($objective["parent_ids"]) > 2) ? " class=\"".($importance == 1 ? "primary" : ($importance == 2 ? "secondary" : "tertiary"))."\"" : "")." id=\"objective_".$objective_id."_row\">\n";
-						if (($edit_importance) && (isset($objective[$display_importance]) && $objective[$display_importance])) {
-							$output .= "<select onchange=\"javascript: moveObjective('".$objective_id."', this.value);\" style=\"float: right; margin: 5px\">\n";
-							$output .= "	<option value=\"primary\"".(($objective["primary"]) ? " selected=\"selected\"" : "").">Primary</option>\n";
-							$output .= "	<option value=\"secondary\"".(($objective["secondary"]) ? " selected=\"selected\"" : "").">Secondary</option>\n";
-							$output .= "	<option value=\"tertiary\"".(($objective["tertiary"]) ? " selected=\"selected\"" : "").">Tertiary</option>\n";
-							$output .= "</select>";
+
+			if ($flat_objective_list && is_array($flat_objective_list)) {
+				if ($top) {
+					$output .= "<h2".($iterated && !$hierarchical ? " class=\"collapsed\"" : "")." title=\"".ucwords($display_importance)." Objectives\">".ucwords($display_importance)." Objectives</h2>\n";
+					$output .= "<div id=\"".($display_importance)."-objectives\">\n";
+				}
+
+				foreach ($flat_objective_list as $objective_id => $objective_active) {
+					$objective = $objectives[$objective_id];
+					if (($objective["parent"] == $parent_id) && (($objective["objective_".$display_importance."_children"]) || ((isset($objective[$display_importance]) && $objective[$display_importance]) || ($parent_active && count($objective["parent_ids"]) > 2) && !$selected_only) || ($selected_only && isset($objective["event_objective"]) && $objective["event_objective"] && (isset($objective[$display_importance]) && $objective[$display_importance])))) {
+						$importance = ((isset($objective["primary"]) && $objective["primary"]) ? 1 : ((isset($objective["secondary"]) && $objective["secondary"]) ? 2 : ((isset($objective["tertiary"]) && $objective["tertiary"]) ? 3 : $importance)));
+						if ((count($objective["parent_ids"]) > 1) || $hierarchical) {
+							$output .= "<li".((($parent_active) || (isset($objective[$display_importance]) && $objective[$display_importance])) && (count($objective["parent_ids"]) > 2) ? " class=\"".($importance == 1 ? "primary" : ($importance == 2 ? "secondary" : "tertiary"))."\"" : "")." id=\"objective_".$objective_id."_row\">\n";
+							if (($edit_importance) && (isset($objective[$display_importance]) && $objective[$display_importance])) {
+								$output .= "<select onchange=\"javascript: moveObjective('".$objective_id."', this.value);\" style=\"float: right; margin: 5px\">\n";
+								$output .= "	<option value=\"primary\"".(($objective["primary"]) ? " selected=\"selected\"" : "").">Primary</option>\n";
+								$output .= "	<option value=\"secondary\"".(($objective["secondary"]) ? " selected=\"selected\"" : "").">Secondary</option>\n";
+								$output .= "	<option value=\"tertiary\"".(($objective["tertiary"]) ? " selected=\"selected\"" : "").">Tertiary</option>\n";
+								$output .= "</select>";
+							}
+							if (count($objective["parent_ids"]) == 3) {
+								$output .= "	<div>".(isset($objective["objective_details"]) && $objective["objective_details"] ? $objective["objective_details"] : $objective["description"])." <a class=\"external content-small\" href=\"".ENTRADA_RELATIVE."/courses/objectives?section=objective-details&amp;oid=".$objective_id."\">".$objective["name"]."</a>";
+							} else {
+								$output .= "	<h3 id=\"objective_".$objective_id."\">".$objective["name"]."</h3>\n";
+								$output .= "	<div>".(isset($objective["objective_details"]) && $objective["objective_details"] ? $objective["objective_details"] : $objective["description"]);
+							}
+							if (isset($objective["event_objective_details"]) && $objective["event_objective_details"]) {
+								$output .= "		<br /><br /><em>".$objective["event_objective_details"]."</em>";
+							}
+							$output .= "	</div>";
+							$output .= "</li>";
 						}
-						if (count($objective["parent_ids"]) == 3) {
-							$output .= "	<div>".(isset($objective["objective_details"]) && $objective["objective_details"] ? $objective["objective_details"] : $objective["description"])." <a class=\"external content-small\" href=\"".ENTRADA_RELATIVE."/courses/objectives?section=objective-details&amp;oid=".$objective_id."\">".$objective["name"]."</a>";
-						} else {
-							$output .= "	<h3 id=\"objective_".$objective_id."\">".$objective["name"]."</h3>\n";
-							$output .= "	<div>".(isset($objective["objective_details"]) && $objective["objective_details"] ? $objective["objective_details"] : $objective["description"]);
-						}
-						if (isset($objective["event_objective_details"]) && $objective["event_objective_details"]) {
-							$output .= "		<br/><br/><em>".$objective["event_objective_details"]."</em>";
-						}
-						$output .= "	</div>";
-						$output .= "</li>";
+					}
+					if ($objective["parent"] == $parent_id) {
+						$output .= course_objectives_in_list($objectives, $objective_id,$top_level_id, $edit_importance, ((isset($objective[$display_importance]) && $objective[$display_importance]) ? true : false), $importance, $selected_only, false, $display_importance, $hierarchical, $full_objective_list);
 					}
 				}
-				if ($objective["parent"] == $parent_id) {
-					$output .= course_objectives_in_list($objectives, $objective_id,$top_level_id, $edit_importance, ((isset($objective[$display_importance]) && $objective[$display_importance]) ? true : false), $importance, $selected_only, false, $display_importance, $hierarchical, $full_objective_list);
+
+				if ($top) {
+					$output .= "</div>\n";
 				}
 			}
+
 			$iterated = true;
-			if ($top) {
-				$output .= "</div>\n";
-			}
 		} while ((($display_importance != "tertiary") && ($display_importance != "secondary" || $active["tertiary"]) && ($display_importance != "primary" || $active["secondary"] || $active["tertiary"])) && $top);
+		
 		if (((isset($objectives[$parent_id]) && count($objectives[$parent_id]["parent_ids"]) > 1) || $hierarchical) && (!isset($objectives[$parent_id]["parent_ids"]) || count($objectives[$parent_id]["parent_ids"]) < 3)) {
 			$output .= "</ul>";
 		}
 	}
+
 	return $output;
 }
 
@@ -9303,33 +9320,34 @@ function events_subnavigation($event_info,$tab='content'){
 	echo "		<li".($tab=='attendance'?' class="active"':'')."><a href=\"".ENTRADA_URL."/admin/events?".replace_query(array("section" => "attendance", "id" => $event_info["event_id"],"step"=>false))."\" style=\"font-size: 10px; margin-right: 8px\">Manage Event Attendance</a></li>";				
 	echo "	</ul>";				
 	echo "</div>\n";			
+
 }
 
 
 /**
- * Returns all audience members for the specified course. 
- * 
+ * Returns all audience members for the specified course.
+ *
  * @global object $db
  * @param int $course_id
- * @return array 
+ * @return array
  */
 function course_fetch_course_audience($course_id = 0, $organisation_id = false,$group = false, $role = false) {
-	global $db;	
+	global $db;
 	$course_id = (int) $course_id;
 	if ($course_id) {
 		$query = "SELECT a.* FROM `course_audience` a
 					LEFT JOIN `curriculum_periods` b
-					ON a.`cperiod_id` = b.`cperiod_id`					
+					ON a.`cperiod_id` = b.`cperiod_id`
 					WHERE a.`course_id` = ".$db->qstr($course_id)."
 					AND (
 						(
-						a.`cperiod_id` != 0 
-						AND b.`start_date` < ".$db->qstr(time())." 
+						a.`cperiod_id` != 0
+						AND b.`start_date` < ".$db->qstr(time())."
 						AND b.`finish_date` > ".$db->qstr(time())."
 						)
 						OR
 						(
-						a.`enroll_start` < ".$db->qstr(time())." 
+						a.`enroll_start` < ".$db->qstr(time())."
 						AND (a.`enroll_finish` > ".$db->qstr(time())." OR a.`enroll_finish` = 0)
 						)
 					)";
@@ -9337,42 +9355,42 @@ function course_fetch_course_audience($course_id = 0, $organisation_id = false,$
 		if ($results) {
 			$course_audience = array();
 			foreach ($results as $result) {
-				switch ($result["audience_type"]) {					
+				switch ($result["audience_type"]) {
 					case "cohort" :	// Cohorts
 					case "group_id" : // Course Groups
 						$query = "	SELECT u.*,u.`id` AS proxy_id, CONCAT_WS(', ',u.`lastname`,u.`firstname`) AS fullname FROM
 									`group_members` a
 									JOIN `".AUTH_DATABASE."`.`user_data` u
-									ON a.`proxy_id` = u.`id`									
+									ON a.`proxy_id` = u.`id`
 									AND a.`group_id` = ".$db->qstr($result["audience_value"])."
 									JOIN `".AUTH_DATABASE."`.`user_access` ua
 									ON u.`id` = ua.`user_id`".($group?" AND ua.`group` = ".$db->qstr($group):"").($role?" AND ua.`role` = ".$db->qstr($role):"")."
 									AND ua.`app_id` IN (".AUTH_APP_IDS_STRING.")".($organisation_id?
 									"WHERE u.`organisation_id` = ".$db->qstr($organisation_id):"");
-						
+
 						$group_audience = $db->getAll($query);
 						if ($group_audience) {
 							$course_audience = array_merge($course_audience,$group_audience);
-						}						
+						}
 					break;
 					case "proxy_id" : // Learners
 						$query = "	SELECT u.*,u.`id` AS proxy_id, CONCAT_WS(', ',u.`lastname`,u.`firstname`) AS fullname FROM
-									`".AUTH_DATABASE."`.`user_data` u	
+									`".AUTH_DATABASE."`.`user_data` u
 									JOIN `".AUTH_DATABASE."`.`user_access` ua
-									ON u.`id` = ua.`user_id`".($group?" AND ua.`group` = ".$db->qstr($group):"").($role?" AND ua.`role` = ".$db->qstr($role):"")."										
+									ON u.`id` = ua.`user_id`".($group?" AND ua.`group` = ".$db->qstr($group):"").($role?" AND ua.`role` = ".$db->qstr($role):"")."
 									WHERE u.`id` = ".$db->qstr($result["audience_value"])."
 									AND ua.`app_id` IN (".AUTH_APP_IDS_STRING.")".($organisation_id?
 									" AND u.`organisation_id` = ".$db->qstr($organisation_id):"");
 						$user_audience = $db->getAll($query);
 						if ($user_audience) {
 							$course_audience = array_merge($course_audience,$user_audience);
-						}	
+						}
 					break;
 					default : // No longer supported, but include the value just in case.
 						application_log("notice", "audience_type [".$result["audience_type"]."] is no longer supported, but is used in event_id [".$event_id."].");
 					break;
 				}
-				
+
 
 			}
 			$course_audience = array_unique($course_audience,SORT_REGULAR);
@@ -9862,6 +9880,10 @@ function events_output_filter_controls($module_type = "") {
 									case "topic":
 										echo fetch_event_topic_title($filter_value);
 									break;
+									case "department":
+										echo fetch_department_title($filter_value);
+									break;
+
 									default :
 										echo strtoupper($filter_value);
 									break;
@@ -10705,6 +10727,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 		$where_clinical_presentation = array();
 		$where_curriculum_objective = array();
 		$where_topic = array();
+		$where_department = array();
 
 		$join_event_contacts = array();
 
@@ -10813,6 +10836,9 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 							case "topic" :
 								$where_topic[] = (int) $filter_value;
 							break;
+							case "department" :
+								$where_department[] = (int) $filter_value;
+							break;
 							default :
 								continue;
 							break;
@@ -10899,6 +10925,47 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 		if ($where_topic) {
 			$topic_sql = "	LEFT JOIN `event_topics`
 							ON `event_topics`.`event_id` = `events`.`event_id`";
+		}
+
+		if ($where_department) {
+			$event_ids = "";
+
+			// fetch the user_id of members in the selected departments
+			$department_members_query = "	SELECT `a`.`id`
+											FROM `".AUTH_DATABASE."`.`user_data` AS `a`
+											JOIN `".AUTH_DATABASE."`.`user_departments` AS `b`
+											ON `a`.`id` = `b`.`user_id`
+											JOIN `".AUTH_DATABASE."`.`departments` AS `c`
+											ON `b`.`dep_id` = `c`.`department_id`
+											WHERE `b`.`dep_id` IN (".implode(',', $where_department).")
+											GROUP BY `a`.`id`";
+			$department_members = $db->GetAll($department_members_query);
+			if ($department_members) {
+				foreach ($department_members as $member) {
+					$members_list[] = $member["id"];
+				}
+
+				// fetch the event_id the members are assigned to
+				$department_events_query = "	SELECT `a`.`event_id`
+												FROM `events` AS `a`
+												JOIN `event_contacts` AS `b`
+												ON `a`.`event_id` = `b`.`event_id`
+												WHERE `b`.`proxy_id` IN (".implode(',', $members_list).")
+												AND `a`.`event_start` > ".$db->qstr($display_duration["start"])."
+												AND `a`.`event_finish` < ".$db->qstr($display_duration["end"])."
+												GROUP BY `a`.`event_id`";
+				$department_events = $db->GetAll($department_events_query);
+				if ($department_events) {
+					foreach ($department_events as $event) {
+						$event_list[] = $event["event_id"];
+					}
+				}
+
+				$event_ids = (!empty($event_list)) ? implode(", ", $event_list) : '';
+			}
+
+			$query_count .= " AND `events`.`event_id` IN (".$event_ids.")";
+			$query_events .= " AND `events`.`event_id` IN (".$event_ids.")";
 		}
 
 	 	$query_count = str_replace("%CONTACT_JOIN%", $contact_sql, $query_count);
@@ -11157,10 +11224,10 @@ function events_fetch_event_audience($event_id = 0) {
 }
 /**
  * Returns true if user is a member of the event audience, false if they are not
- * 
+ *
  * @global object $db
  * @param int $event_id
- * @return array 
+ * @return array
  */
 function events_fetch_event_attendance_for_user($event_id = 0, $user_id = false) {
 	if($event_id && $user_id){
@@ -11172,13 +11239,13 @@ function events_fetch_event_attendance_for_user($event_id = 0, $user_id = false)
 
 /**
  * Returns true if user is a member of the event audience, false if they are not
- * 
+ *
  * @global object $db
  * @param int $event_id
- * @return array 
+ * @return array
  */
 function events_fetch_event_audience_for_user($event_id = 0, $user_id = false) {
-	global $db;	
+	global $db;
 	$user_id = (int) $user_id;
 	$event_id = (int) $event_id;
 	if ($event_id && $user_id) {
@@ -11208,40 +11275,53 @@ function events_fetch_event_audience_for_user($event_id = 0, $user_id = false) {
 							return true;
 						}
 					break;
-					case "cohort" :	// Cohorts
 					case "group_id" : // Course Groups
+						$query = "	SELECT u.*, d.`eattendance_id` AS `has_attendance` FROM
+									`course_group_audience` a
+									JOIN `".AUTH_DATABASE."`.`user_data` u
+									ON a.`proxy_id` = u.`id`									
+									AND a.`cgroup_id` = ".$db->qstr($result["audience_value"])."
+									LEFT JOIN `event_attendance` d
+									ON u.`id` = d.`proxy_id`
+									AND d.`event_id` = ".$db->qstr($event_id);
+						$group_audience = $db->getAll($query);
+						if ($group_audience) {
+							$event_audience = array_merge($event_audience,$group_audience);
+						}												
+						break;					
+					case "cohort" :	// Cohorts					
 						$query = "	SELECT u.*, d.`eattendance_id` AS `has_attendance` FROM
 									`group_members` a
 									JOIN `".AUTH_DATABASE."`.`user_data` u
-									ON a.`proxy_id` = u.`id`									
+									ON a.`proxy_id` = u.`id`
 									AND a.`group_id` = ".$db->qstr($result["audience_value"])."
 									LEFT JOIN `event_attendance` d
-									ON u.`id` = d.`proxy_id`									
+									ON u.`id` = d.`proxy_id`
 									AND d.`event_id` = ".$db->qstr($event_id)."
 									WHERE u.`id` = ".$db->qstr($user_id);
 						$group_audience = $db->getAll($query);
 						if ($group_audience) {
 							return true;
-						}						
+						}
 					break;
 					case "proxy_id" : // Learners
 						$query = "	SELECT u.*, d.`eattendance_id` AS `has_attendance` FROM
 									`".AUTH_DATABASE."`.`user_data` u
 									LEFT JOIN `event_attendance` d
 									ON u.`id` = d.`proxy_id`
-									AND d.`event_id` = ".$db->qstr($event_id)."										
+									AND d.`event_id` = ".$db->qstr($event_id)."
 									WHERE u.`id` = ".$db->qstr($result["audience_value"])."
 									AND u.`id` = ".$db->qstr($user_id);
 						$user_audience = $db->getAll($query);
 						if ($user_audience) {
 							return true;
-						}	
+						}
 					break;
 					default : // No longer supported, but include the value just in case.
 						application_log("notice", "audience_type [".$result["audience_type"]."] is no longer supported, but is used in event_id [".$event_id."].");
 					break;
 				}
-				
+
 
 			}
 		}
@@ -11249,14 +11329,14 @@ function events_fetch_event_audience_for_user($event_id = 0, $user_id = false) {
 	return false;
 }
 /**
- * Returns all audience members [users, not just group names as may be the case in the function above] for the specified learning event. Also grabs their attendance. 
- * 
+ * Returns all audience members [users, not just group names as may be the case in the function above] for the specified learning event. Also grabs their attendance.
+ *
  * @global object $db
  * @param int $event_id
- * @return array 
+ * @return array
  */
 function events_fetch_event_audience_attendance($event_id = 0) {
-	global $db;	
+	global $db;
 	$event_id = (int) $event_id;
 	if ($event_id) {
 		$query = "SELECT * FROM `event_audience` WHERE `event_id` = ".$db->qstr($event_id);
@@ -11265,9 +11345,9 @@ function events_fetch_event_audience_attendance($event_id = 0) {
 			$event_audience = array();
 			foreach ($results as $result) {
 
-				
+
 				switch ($result["audience_type"]) {
-					case "course_id" : // Course Audience						
+					case "course_id" : // Course Audience
 						$course_audience = course_fetch_course_audience($result["audience_value"]);
 						if ($course_audience) {
 							$event_audience = array_merge($event_audience,$course_audience);
@@ -11291,7 +11371,7 @@ function events_fetch_event_audience_attendance($event_id = 0) {
 						$query = "	SELECT u.*, d.`eattendance_id` AS `has_attendance` FROM
 									`group_members` a
 									JOIN `".AUTH_DATABASE."`.`user_data` u
-									ON a.`proxy_id` = u.`id`									
+									ON a.`proxy_id` = u.`id`
 									AND a.`group_id` = ".$db->qstr($result["audience_value"])."
 									LEFT JOIN `event_attendance` d
 									ON u.`id` = d.`proxy_id`
@@ -11299,25 +11379,25 @@ function events_fetch_event_audience_attendance($event_id = 0) {
 						$group_audience = $db->getAll($query);
 						if ($group_audience) {
 							$event_audience = array_merge($event_audience,$group_audience);
-						}						
+						}
 					break;
 					case "proxy_id" : // Learners
 						$query = "	SELECT u.*, d.`eattendance_id` AS `has_attendance` FROM
 									`".AUTH_DATABASE."`.`user_data` u
 									LEFT JOIN `event_attendance` d
 									ON u.`id` = d.`proxy_id`
-									AND d.`event_id` = ".$db->qstr($event_id)."										
+									AND d.`event_id` = ".$db->qstr($event_id)."
 									WHERE u.`id` = ".$db->qstr($result["audience_value"]);
 						$user_audience = $db->getAll($query);
 						if ($user_audience) {
 							$event_audience = array_merge($event_audience,$user_audience);
-						}	
+						}
 					break;
 					default : // No longer supported, but include the value just in case.
 						application_log("notice", "audience_type [".$result["audience_type"]."] is no longer supported, but is used in event_id [".$event_id."].");
 					break;
 				}
-				
+
 
 			}
 			$event_audience = array_unique($event_audience,SORT_REGULAR);
@@ -11331,7 +11411,7 @@ function events_fetch_event_audience_attendance($event_id = 0) {
  * used by usort to sort audience by last name
  * @param type $a
  * @param type $b
- * @return type 
+ * @return type
  */
 function audience_sort($a,$b){
 	 if ($a["lastname"] == $b["lastname"]) {
@@ -11592,7 +11672,7 @@ function event_objectives_in_list($objectives, $parent_id, $top_level_id, $edit_
 							$output .= "<div style=\"padding-left: 25px;\">\n";
 							$output .=		$objective["description"]."\n";
 							if (isset($objective["objective_details"]) && $objective["objective_details"]) {
-								$output .= "<br/><br/>\n";
+								$output .= "<br /><br />\n";
 								$output .= "<em>".$objective["objective_details"]."</em>";
 							}
 							$output .= "</div>\n";
@@ -11663,7 +11743,7 @@ function event_objectives_in_list($objectives, $parent_id, $top_level_id, $edit_
 							$output .= "<div style=\"padding-left: 25px;\">\n";
 							$output .=		$objective["description"]."\n";
 							if (isset($objective["objective_details"]) && $objective["objective_details"]) {
-								$output .= "<br/><br/>\n";
+								$output .= "<br /><br />\n";
 								$output .= "<em>".$objective["objective_details"]."</em>";
 							}
 							$output .= "</div>\n";
@@ -13299,10 +13379,10 @@ function objectives_intable($ORGANISATION_ID, $identifier = 0, $indent = 0, $exc
 			$output .= "		<div style=\"padding-left: 30px\">";
 			$output .= "			<input type=\"radio\" name=\"delete[".((int)$identifier)."][move]\" id=\"delete_".((int)$identifier)."_children\" value=\"0\" onclick=\"$('move-".((int)$identifier)."-children').hide();\" checked=\"checked\"/>";
 			$output .= "			<label for=\"delete_".((int)$identifier)."_children\" class=\"form-nrequired\"><strong>Deactivate</strong> all children</label>";
-			$output .= "			<br/>";
+			$output .= "			<br />";
 			$output .= "			<input type=\"radio\" name=\"delete[".((int)$identifier)."][move]\" id=\"move_".((int)$identifier)."_children\" value=\"1\" onclick=\"$('move-".((int)$identifier)."-children').show();\" />";
 			$output .= "			<label for=\"move_".((int)$identifier)."_children\" class=\"form-nrequired\"><strong>Move</strong> all children</label>";
-			$output .= "			<br/><br/>";
+			$output .= "			<br /><br />";
 			$output .= "		</div>";
 			$output .= "		</td>";
 			$output .= "	</tr>";
@@ -14707,10 +14787,10 @@ function display_person(User $user) {
 					if ($address && $city) {
 						?>
 						<div>
-							<span class="address-label">Address:</span><br/>
+							<span class="address-label">Address:</span><br />
 							<span class="address-value">
 							<?php
-								echo html_encode($address)."<br/>".html_encode($city);
+								echo html_encode($address)."<br />".html_encode($city);
 								if ($prov_name) echo ", ".html_encode($prov_name);
 								echo "<br />";
 								echo html_encode($country_name);
@@ -15194,6 +15274,15 @@ function categories_inarray($parent_id, $indent = 0) {
  */
 function history_log($event, $message, $updater=0, $time=0) {
 	global $db;
+	if (!$updater) { // Ignore noting updates if made by the sole author.
+	 $result = $db->GetOne("SELECT count(*) FROM `event_history` WHERE `event_id` = ".$db->qstr($event));
+	 if (!$result) {
+	  $result = $db->GetOne("SELECT `updated_by` FROM `events` WHERE `event_id` = ".$db->qstr($event));
+	  if ($result==$_SESSION["details"]["id"]) {
+	   return ;
+	  }
+	 }
+	}
 	if (!$db->AutoExecute("event_history", array("event_id" => $event, "proxy_id" => ($updater ? $updater : $_SESSION["details"]["id"]), "history_message" => $message, "history_timestamp" => ($time ? $time : time())), "INSERT")) {
 		$ERROR++;
 		$ERRORSTR[] = "There was an error while trying to save the selected <strong>Event content update</strong> for this event.<br /><br />The system administrator was informed of this error; please try again later.";
@@ -15213,18 +15302,18 @@ function event_text_change($event, $field) {
 	global $db;
 	$ret = false;
 	if (isset($_POST["$field"])) {
-	 $message_length = strlen($_POST["$field"]);
-	 $result = $db->GetOne("SELECT `$field` FROM `events` WHERE `event_id` = ".$db->qstr($event));
-	 if ($result) {
-	  $result_length = strlen($result);
-	  if ($message_length!=$result_length) {
-	   $ret = true;
-	  } elseif ($result_length) {
-	   $ret = strcmp($result,$_POST["$field"]);
-	  }
-	 } else {
-	  $ret = $message_length;
-	 }
+		$message_length = strlen($_POST["$field"]);
+		$result = $db->GetOne("SELECT `$field` FROM `events` WHERE `event_id` = " . $db->qstr($event));
+		if ($result) {
+			$result_length = strlen($result);
+			if ($message_length != $result_length) {
+				$ret = true;
+			} elseif ($result_length) {
+				$ret = strcmp($result, $_POST["$field"]);
+			}
+		} else {
+			$ret = $message_length;
+		}
 	}
 	return $ret;
 }

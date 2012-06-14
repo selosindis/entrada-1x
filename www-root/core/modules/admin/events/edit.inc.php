@@ -467,12 +467,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 										$valid_audience = array();
 										foreach ($audience as $learner){
 											$valid_audience[] = $learner["id"];
+
 										}
 
 										if (!empty($valid_audience)) {
 											$query = "DELETE FROM `event_attendance` WHERE `event_id` = ".$db->qstr($EVENT_ID)." AND `proxy_id` NOT IN (".implode(",", $valid_audience).")";
 											$db->Execute($query);
 										}
+
 									} else {
 										$query = "DELETE FROM `event_attendance` WHERE `event_id` = ".$db->qstr($EVENT_ID);
 										$db->Execute($query);

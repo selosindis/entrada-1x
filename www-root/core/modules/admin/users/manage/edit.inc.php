@@ -406,8 +406,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 										$PROCESSED_ACCESS["organisation_id"] = $org_id;
 
 										$query = "SELECT g.`group_name`, r.`role_name`
-												  FROM `" . AUTH_DATABASE . "`.`groups` g, `" . AUTH_DATABASE . "`.`roles` r,
-													   `" . AUTH_DATABASE . "`.`groups_has_organisations` gho, `" . AUTH_DATABASE . "`.`organisations` o
+												  FROM `" . AUTH_DATABASE . "`.`system_groups` g, `" . AUTH_DATABASE . "`.`system_roles` r,
+													   `" . AUTH_DATABASE . "`.`system_group_organisation` gho, `" . AUTH_DATABASE . "`.`organisations` o
 												  WHERE gho.`groups_id` = " . $PROCESSED_ACCESS["group_id"][$index] . " AND g.`id` = " . $PROCESSED_ACCESS["group_id"][$index] . " AND
 												  r.`id` = " . $PROCESSED_ACCESS["role_id"][$index] . " AND o.`organisation_id` = " . $org_id;
 										$group_role = $db->GetRow($query);
@@ -737,7 +737,7 @@ jQuery(document).ready(function() {
 						var org_group_role = Element.value.split('-');
 						var group_role = Element.title.split('-');
 						var list_item_id = Element.value;
-						jQuery("#group_role_callback" + org_group_role[0]).append("<li id=\"" + list_item_id + "\">Group: <strong>" + group_role[0] + "</strong> <br /> Role: <strong>" + group_role[1] + "</strong></li><br />");
+						jQuery("#group_role_callback" + org_group_role[0]).append("<li id=\"" + list_item_id + "\">Group: <strong>" + capitalizeFirstLetter(group_role[0]) + "</strong> <br /> Role: <strong>" + capitalizeFirstLetter(group_role[1]) + "</strong></li><br />");
 					});
 				});
 				jQuery("select[id^=in_departments]").each(function(index, Element){
@@ -1028,8 +1028,8 @@ jQuery(document).ready(function() {
 											<select id="<?php echo "organisations-groups-roles" . $result["organisation_id"]; ?>" name="<?php echo "organisations-groups-roles" . $result["organisation_id"] . "[]"; ?>" multiple="multiple" style="width:300px">
 										<?php
 														$query = "SELECT g.id as gid, r.id as rid, group_name, role_name
-																  FROM `".AUTH_DATABASE."`.groups g, `".AUTH_DATABASE."`.roles r,
-																	  `".AUTH_DATABASE."`.organisations o, `".AUTH_DATABASE."`.groups_has_organisations gho
+																  FROM `".AUTH_DATABASE."`.`system_groups` g, `".AUTH_DATABASE."`.`system_roles` r,
+																	  `".AUTH_DATABASE."`.organisations o, `".AUTH_DATABASE."`.`system_group_organisation` gho
 																  WHERE g.id = r.groups_id
 																  AND o.`organisation_id` = gho.`organisation_id`
 																  AND gho.`groups_id` = g.`id`
@@ -1045,15 +1045,13 @@ jQuery(document).ready(function() {
 																		$diff_array = array_diff_assoc($search_array, $my_ogr);
 																		if (empty ($diff_array)) {
 																			$selected = true;
-																			application_log("notice", "proxy id: " . $PROXY_ID . ". my ogr: " . $my_ogr["organisation_id"] . " " . $my_ogr["group"] . " " . $my_ogr["role"]);
-																			application_log("notice", "proxy id: " . $PROXY_ID . ". search: " . $search_array[0] . " " . $search_array[1] . " " . $search_array[2]);
-																			echo build_option($result["organisation_id"] . "-" . $gr["gid"] . "-" . $gr["rid"], $gr["group_name"] . "-" . $gr["role_name"], $selected);
+																			echo build_option($result["organisation_id"] . "-" . $gr["gid"] . "-" . $gr["rid"], ucfirst($gr["group_name"]) . "-" . ucfirst($gr["role_name"]), $selected);
 																			break;
 																		}
 																}
 															}
 																if (!$selected) {
-																	echo build_option($result["organisation_id"] . "-" . $gr["gid"] . "-" . $gr["rid"], $gr["group_name"] . "-" . $gr["role_name"], false);
+																	echo build_option($result["organisation_id"] . "-" . $gr["gid"] . "-" . $gr["rid"], ucfirst($gr["group_name"]) . "-" . ucfirst($gr["role_name"]), false);
 																}
 															}
 														}
@@ -1072,13 +1070,15 @@ jQuery(document).ready(function() {
 										<?php
 
 														foreach($DEPARTMENT_LIST as $organisation_id => $dlist) {
-															foreach($dlist as $d){
-																if (in_array($d["department_id"], $PROCESSED_DEPARTMENTS)) {
-																	$selected = true;
-																} else {
-																	$selected = false;
+															if ($result["organisation_id"] == $organisation_id){
+																foreach($dlist as $d){
+																	if (in_array($d["department_id"], $PROCESSED_DEPARTMENTS)) {
+																		$selected = true;
+																	} else {
+																		$selected = false;
+																	}
+																	echo build_option($d["department_id"], $d["department_title"], $selected);
 																}
-																echo build_option($d["department_id"], $d["department_title"], $selected);
 															}
 														}
 											 ?>

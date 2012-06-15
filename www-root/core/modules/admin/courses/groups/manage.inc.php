@@ -451,6 +451,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 			});
 			$('group_members_list').update(table);
 			ids[index] = $F('group_members').split(',').compact();
+			$('group_members').value = ids.flatten().join(',');
 		}
 
 		$('group_members_select_filter').observe('keypress', function(event){

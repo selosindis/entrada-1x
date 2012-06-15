@@ -481,23 +481,6 @@ $MODULES["reports"] = array("title" => "System Reports", "resource" => "reportin
 $MODULES["settings"] = array("title" => "System Settings", "resource" => "configuration", "permission" => "update");
 $MODULES["annualreport"] = array("title" => "Annual Reports", "resource" => "annualreportadmin", "permission" => "read");
 
-/**
- * System groups define which system groups & role combinations are allowed to
- * access this system. Note the student and alumni groups have many roles.
- */
-$SYSTEM_GROUPS = array();
-for($i = (date("Y") + (date("m") < 7 ? 3 : 4)); $i >= 2004; $i--) {
-	$SYSTEM_GROUPS["student"][] = $i;
-}
-for($i = (date("Y") + (date("m") < 7 ? 3 : 4)); $i >= 1997; $i--) {
-	$SYSTEM_GROUPS["alumni"][] = $i;
-}
-$SYSTEM_GROUPS["faculty"] = array("faculty", "lecturer", "director", "admin");
-$SYSTEM_GROUPS["resident"] = array("resident", "lecturer");
-$SYSTEM_GROUPS["staff"] = array("staff", "admin", "pcoordinator");
-$SYSTEM_GROUPS["medtech"] = array("staff", "admin");
-$SYSTEM_GROUPS["guest"] = array("communityinvite");
-
 /*	Registered Groups, Roles and Start Files for Administrative modules.
 	Example usage:
 	$ADMINISTRATION[GROUP][ROLE] = array(

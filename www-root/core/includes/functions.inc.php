@@ -3869,19 +3869,24 @@ function load_rte($buttons = array(), $plugins = array(), $other_options = array
 			case "communityadvanced" :
 			case "advanced" :
 				$buttons[1]	= array ("fullscreen", "styleprops", "|", "formatselect", "fontselect", "fontsizeselect", "|", "bold", "italic", "underline", "forecolor", "backcolor", "|", "justifyleft", "justifycenter", "justifyright", "justifyfull");
-				$buttons[2]	= array ("replace", "pasteword", "pastetext", "|", "undo", "redo", "|", "tablecontrols", "|", "insertlayer", "moveforward", "movebackward", "absolute", "|", "visualaid");
-				$buttons[3]	= array ("ltr", "rtl", "|", "outdent", "indent", "|", "bullist", "numlist", "|", "link", "unlink", "anchor", "image", "media", "|", "sub", "sup", "|", "charmap", "insertdate", "inserttime", "nonbreaking", "|", "cleanup", "code", "removeformat");
+				$buttons[2]	= array ("ltr", "rtl", "|", "undo", "redo", "|", "tablecontrols", "|", "insertlayer", "moveforward", "movebackward", "absolute", "|", "visualaid");
+				$buttons[3]	= array ("spellchecker", "pasteword", "pastetext", "|", "outdent", "indent", "|", "bullist", "numlist", "|", "link", "unlink", "anchor", "image", "media", "|", "sub", "sup", "charmap", "|", "cleanup", "removeformat", "code");
 			break;
 			case "communitybasic" :
 				$buttons[1]	= array("fullscreen", "styleprops", "|", "formatselect", "fontselect", "fontsizeselect", "|", "bold", "italic", "underline", "forecolor", "backcolor", "|", "justifyleft", "justifycenter", "justifyright", "justifyfull");
-				$buttons[2]	= array("replace", "pasteword", "pastetext", "ltr", "rtl", "|", "outdent", "indent", "|", "bullist", "numlist", "|", "link", "unlink", "anchor", "image", "media", "|", "sub", "sup", "|", "charmap", "insertdate", "inserttime", "nonbreaking", "|", "cleanup", "code", "removeformat");
+				$buttons[2]	= array("spellchecker", "pasteword", "pastetext", "ltr", "rtl", "|", "outdent", "indent", "|", "bullist", "numlist", "|", "link", "unlink", "anchor", "image", "media", "|", "sub", "sup", "charmap", "|", "cleanup", "removeformat", "code");
 			break;
 			case "community" :
-				$buttons[1] = array("bold", "italic", "underline", "strikethrough", "|", "link", "unlink", "anchor", "image", "media", "|", "numlist", "bullist", "|", "outdent", "indent", "blockquote", "|", "undo", "redo", "|", "pasteword", "cleanup", "removeformat", "code");
+				$buttons[1] = array("bold", "italic", "underline", "strikethrough", "|", "link", "unlink", "anchor", "image", "media", "|", "numlist", "bullist", "|", "outdent", "indent", "blockquote", "|", "undo", "redo", "|", "spellchecker", "pasteword", "cleanup", "removeformat", "code");
+			break;
+			case "minimal" :
+				$buttons[1] = array("link", "separator", "undo", "redo", "spellchecker", "pasteword", "cleanup", "code");
+				$buttons[2] = array();
+				$buttons[3] = array();
 			break;
 			case "basic" :
 			default :
-				$buttons[1] = array("bold", "italic", "underline", "strikethrough", "|", "link", "|", "numlist", "bullist", "|", "outdent", "indent", "blockquote", "|", "undo", "redo", "|", "pasteword", "cleanup", "removeformat", "code", "save");
+				$buttons[1] = array("bold", "italic", "underline", "strikethrough", "|", "link", "|", "numlist", "bullist", "|", "outdent", "indent", "blockquote", "|", "undo", "redo", "|", "spellchecker", "pasteword", "cleanup", "removeformat", "code");
 				$buttons[2] = array();
 				$buttons[3] = array();
 			break;
@@ -3897,14 +3902,14 @@ function load_rte($buttons = array(), $plugins = array(), $other_options = array
 			case "advanced" :
 			case "communityadvanced" :
 			case "communitybasic" :
-				$plugins = array("preview", "inlinepopups", "style", "layer", "table", "advimage", "advlink", "media", "insertdatetime", "contextmenu", "paste", "directionality", "fullscreen", "noneditable", "visualchars", "nonbreaking", "xhtmlxtras", "tabfocus");
+				$plugins = array("preview", "inlinepopups", "style", "layer", "table", "advimage", "advlink", "media", "contextmenu", "paste", "directionality", "fullscreen", "noneditable", "visualchars", "xhtmlxtras", "tabfocus", "spellchecker");
 			break;
 			case "community" :
-				$plugins = array("autosave", "contextmenu", "advimage", "advlink", "media", "paste", "inlinepopups", "tabfocus");
+				$plugins = array("autosave", "contextmenu", "advimage", "advlink", "media", "paste", "inlinepopups", "tabfocus", "spellchecker");
 			break;
 			case "basic" :
 			default :
-				$plugins = array("autosave", "save", "contextmenu", "paste", "inlinepopups", "tabfocus");
+				$plugins = array("autosave", "save", "contextmenu", "paste", "inlinepopups", "tabfocus", "spellchecker");
 			break;
 		}
 	}
@@ -9295,7 +9300,7 @@ function course_objectives_in_list($objectives, $parent_id, $top_level_id, $edit
 
 			$iterated = true;
 		} while ((($display_importance != "tertiary") && ($display_importance != "secondary" || $active["tertiary"]) && ($display_importance != "primary" || $active["secondary"] || $active["tertiary"])) && $top);
-
+		
 		if (((isset($objectives[$parent_id]) && count($objectives[$parent_id]["parent_ids"]) > 1) || $hierarchical) && (!isset($objectives[$parent_id]["parent_ids"]) || count($objectives[$parent_id]["parent_ids"]) < 3)) {
 			$output .= "</ul>";
 		}
@@ -9312,9 +9317,10 @@ function events_subnavigation($event_info,$tab='content'){
 		echo "		<li".($tab=='edit'?' class="active"':'')."><a href=\"".ENTRADA_URL."/admin/events?".replace_query(array("section" => "edit", "id" => $event_info['event_id'], "step" => false))."\" style=\"font-size: 10px; margin-right: 8px\">Manage Event Details</a></li>";
 	}
 	echo "		<li".($tab=='content'?' class="active"':'')."><a href=\"".ENTRADA_URL."/admin/events?".replace_query(array("section" => "content", "id" => $event_info['event_id'], "step" => false))."\" style=\"font-size: 10px; margin-right: 8px\">Manage Event Content</a></li>";
-	echo "		<li".($tab=='attendance'?' class="active"':'')."><a href=\"".ENTRADA_URL."/admin/events?".replace_query(array("section" => "attendance", "id" => $event_info["event_id"]))."\" style=\"font-size: 10px; margin-right: 8px\">Manage Event Attendance</a></li>";
-	echo "	</ul>";
-	echo "</div>\n";
+	echo "		<li".($tab=='attendance'?' class="active"':'')."><a href=\"".ENTRADA_URL."/admin/events?".replace_query(array("section" => "attendance", "id" => $event_info["event_id"],"step"=>false))."\" style=\"font-size: 10px; margin-right: 8px\">Manage Event Attendance</a></li>";				
+	echo "	</ul>";				
+	echo "</div>\n";			
+
 }
 
 
@@ -11269,8 +11275,21 @@ function events_fetch_event_audience_for_user($event_id = 0, $user_id = false) {
 							return true;
 						}
 					break;
-					case "cohort" :	// Cohorts
 					case "group_id" : // Course Groups
+						$query = "	SELECT u.*, d.`eattendance_id` AS `has_attendance` FROM
+									`course_group_audience` a
+									JOIN `".AUTH_DATABASE."`.`user_data` u
+									ON a.`proxy_id` = u.`id`									
+									AND a.`cgroup_id` = ".$db->qstr($result["audience_value"])."
+									LEFT JOIN `event_attendance` d
+									ON u.`id` = d.`proxy_id`
+									AND d.`event_id` = ".$db->qstr($event_id);
+						$group_audience = $db->getAll($query);
+						if ($group_audience) {
+							$event_audience = array_merge($event_audience,$group_audience);
+						}												
+						break;					
+					case "cohort" :	// Cohorts					
 						$query = "	SELECT u.*, d.`eattendance_id` AS `has_attendance` FROM
 									`group_members` a
 									JOIN `".AUTH_DATABASE."`.`user_data` u
@@ -11334,8 +11353,21 @@ function events_fetch_event_audience_attendance($event_id = 0) {
 							$event_audience = array_merge($event_audience,$course_audience);
 						}
 					break;
-					case "cohort" :	// Cohorts
 					case "group_id" : // Course Groups
+						$query = "	SELECT u.*, d.`eattendance_id` AS `has_attendance` FROM
+									`course_group_audience` a
+									JOIN `".AUTH_DATABASE."`.`user_data` u
+									ON a.`proxy_id` = u.`id`									
+									AND a.`cgroup_id` = ".$db->qstr($result["audience_value"])."
+									LEFT JOIN `event_attendance` d
+									ON u.`id` = d.`proxy_id`
+									AND d.`event_id` = ".$db->qstr($event_id);
+						$group_audience = $db->getAll($query);
+						if ($group_audience) {
+							$event_audience = array_merge($event_audience,$group_audience);
+						}												
+						break;
+					case "cohort" :	// Cohorts
 						$query = "	SELECT u.*, d.`eattendance_id` AS `has_attendance` FROM
 									`group_members` a
 									JOIN `".AUTH_DATABASE."`.`user_data` u

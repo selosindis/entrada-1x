@@ -76,6 +76,33 @@ $ENTRADA_ACTIVE_TEMPLATE = "";
 
 if ($ENTRADA_USER) {
 
+	/**
+	 * System groups define which system groups & role combinations are allowed to
+	 * access this system. Note the student and alumni groups have many roles.
+	 */
+	$query = "SELECT a.*
+			  FROM `" . AUTH_DATABASE . "`.`system_groups` a,
+			  `" . AUTH_DATABASE . "`.`system_group_organisation` c
+			  WHERE a.`id` = c.`groups_id`			  
+			  AND c.`organisation_id` = " . $db->qstr($ENTRADA_USER->getActiveOrganisation()) . "
+			  ORDER BY a.`group_name` ASC";
+	$results = $db->getAll($query);
+	if ($results) {
+		foreach($results as $result) {
+			$SYSTEM_GROUPS[$result["group_name"]] = array();
+			$query = "SELECT a.*
+			  FROM `" . AUTH_DATABASE . "`.`system_roles` a
+			  WHERE a.`groups_id` = " . $result["id"] . "
+			  ORDER BY a.`role_name` ASC";
+			$roles = $db->getAll($query);
+			if ($roles) {
+				foreach($roles as $role) {
+					$SYSTEM_GROUPS[$result["group_name"]][] = $role["role_name"];
+				}
+			}
+		}
+	}
+
 	if (!$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["ua_id"]) {
 		$query = "SELECT a.`group`, a.`role`, a.`id`
 						  FROM `" . AUTH_DATABASE . "`.`user_access` a

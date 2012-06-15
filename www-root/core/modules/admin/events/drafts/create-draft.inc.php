@@ -323,21 +323,21 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								<td style="vertical-align: top"><input type="checkbox" style="vertical-align: middle" onclick="this.checked = true" readonly="readonly" checked="checked" value="1" id="draft_start" name="draft_start"></td>
 								<td style="vertical-align: top; padding-top: 4px"><label class="form-required" for="days_offset" id="days_offset_text">Draft Start</label></td>
 								<td style="vertical-align: top">
-									<input style="width: 170px; vertical-align: middle;" type="text" name="draft_start_date" id="draft_start_date" value="<?= date("Y-m-d", strtotime("September 1st, ".(date("o") - 1))); ?>">&nbsp;&nbsp;<a href="#" class="showcal"><img width="23" height="23" border="0" style="vertical-align: middle" title="Show Calendar" alt="Show Calendar" src="<?= ENTRADA_URL; ?>/images/cal-calendar.gif"></a>
+									<input style="width: 170px; vertical-align: middle;" type="text" name="draft_start_date" id="draft_start_date" value="<?php echo date("Y-m-d", strtotime("September 1st, ".(date("o") - 1))); ?>">&nbsp;&nbsp;<a href="#" class="showcal"><img width="23" height="23" border="0" style="vertical-align: middle" title="Show Calendar" alt="Show Calendar" src="<?php echo ENTRADA_URL; ?>/images/cal-calendar.gif"></a>
 								</td>
 							</tr>
 							<tr>
 								<td style="vertical-align: top"><input type="checkbox" style="vertical-align: middle" onclick="this.checked = true" readonly="readonly" checked="checked" value="1" id="draft_start" name="draft_start"></td>
 								<td style="vertical-align: top; padding-top: 4px"><label class="form-required" for="days_offset" id="days_offset_text">Draft Finish</label></td>
 								<td style="vertical-align: top">
-									<input style="width: 170px; vertical-align: middle;" type="text" name="draft_finish_date" id="draft_finish_date" value="<?= date("Y-m-d", time()); ?>">&nbsp;&nbsp;<a href="#" class="showcal"><img width="23" height="23" border="0" style="vertical-align: middle" title="Show Calendar" alt="Show Calendar" src="<?= ENTRADA_URL; ?>/images/cal-calendar.gif"></a>
+									<input style="width: 170px; vertical-align: middle;" type="text" name="draft_finish_date" id="draft_finish_date" value="<?php echo date("Y-m-d", time()); ?>">&nbsp;&nbsp;<a href="#" class="showcal"><img width="23" height="23" border="0" style="vertical-align: middle" title="Show Calendar" alt="Show Calendar" src="<?php echo ENTRADA_URL; ?>/images/cal-calendar.gif"></a>
 								</td>
 							</tr>
 							<tr>
 								<td style="vertical-align: top"></td>
 								<td style="vertical-align: top; padding-top: 4px"><label class="form-nrequired" for="days_offset" id="days_offset_text">New Week</label></td>
 								<td style="vertical-align: top">
-									<input style="width: 170px; vertical-align: middle;" type="text" name="new_start_day" id="new_start_day" value=""/>&nbsp;&nbsp;<a href="#" class="showcal"><img width="23" height="23" border="0" style="vertical-align: middle" title="Show Calendar" alt="Show Calendar" src="<?= ENTRADA_URL; ?>/images/cal-calendar.gif"></a>&nbsp;&nbsp;<span class="content-small"><strong>NOTE:</strong> If an offset is not set the draft will default to 1 year.</span>
+									<input style="width: 170px; vertical-align: middle;" type="text" name="new_start_day" id="new_start_day" value=""/>&nbsp;&nbsp;<a href="#" class="showcal"><img width="23" height="23" border="0" style="vertical-align: middle" title="Show Calendar" alt="Show Calendar" src="<?php echo ENTRADA_URL; ?>/images/cal-calendar.gif"></a>&nbsp;&nbsp;<span class="content-small"><strong>NOTE:</strong> If an offset is not set the draft will default to 1 year.</span>
 								</td>
 							</tr>
 							<tr>

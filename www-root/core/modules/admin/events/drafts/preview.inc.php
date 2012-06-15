@@ -116,12 +116,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			},
 			eventClick : function(calEvent, $event) {
 				console.log(calEvent.id);
-				window.location = "<?= ENTRADA_RELATIVE; ?>/admin/events?section=edit&mode=draft&id="+calEvent.id;
+				window.location = "<?php echo ENTRADA_RELATIVE; ?>/admin/events?section=edit&mode=draft&id="+calEvent.id;
 			},
 			externalDates : function (calendar) {
 				jQuery('#currentDateInfo').html(calendar.find('.wc-day-1').html() + ' - ' + calendar.find('.wc-day-5').html());
 			},
-			data : '<?php echo ENTRADA_RELATIVE; ?>/admin/events/drafts/preview?mode=calendar-data&draft_id=<?= $draft_id; ?>'
+			data : '<?php echo ENTRADA_RELATIVE; ?>/admin/events/drafts/preview?mode=calendar-data&draft_id=<?php echo $draft_id; ?>'
 		});
 	});
 

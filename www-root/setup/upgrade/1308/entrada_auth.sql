@@ -1,4 +1,4 @@
-ALTER TABLE `user_access` ADD COLUMN organisation_id INT(12);
+ALTER TABLE `user_access` ADD COLUMN `organisation_id` INT(12) unsigned NOT NULL DEFAULT '0' AFTER `app_id`;
 
 CREATE TABLE IF NOT EXISTS `system_groups` (
   `id` INT NOT NULL AUTO_INCREMENT ,

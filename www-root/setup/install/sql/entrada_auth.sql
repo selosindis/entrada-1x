@@ -281,6 +281,7 @@ CREATE TABLE IF NOT EXISTS `user_access` (
   `id` int(12) unsigned NOT NULL AUTO_INCREMENT,
   `user_id` int(12) unsigned NOT NULL DEFAULT '0',
   `app_id` int(12) unsigned NOT NULL DEFAULT '0',
+  `organisation_id` INT(12) unsigned NOT NULL DEFAULT '0',
   `account_active` enum('true','false') NOT NULL DEFAULT 'true',
   `access_starts` bigint(64) NOT NULL DEFAULT '0',
   `access_expires` bigint(64) NOT NULL DEFAULT '0',
@@ -438,8 +439,6 @@ FROM `user_data` AS a
 JOIN `user_access` AS b
 ON b.`user_id` = a.`id`
 WHERE b.`app_id` = '1';
-
-ALTER TABLE `user_access` ADD COLUMN organisation_id;
 
 CREATE TABLE IF NOT EXISTS `system_groups` (
   `id` INT NOT NULL AUTO_INCREMENT ,

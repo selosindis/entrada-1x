@@ -190,15 +190,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								</tr>
 							</thead>
 							<tbody>
-								<?php	if($audience){
-											foreach($audience as $learner){?>
+								<?php	if ($audience) {
+											foreach ($audience as $learner) {?>
 								<tr>
 									<td><input type="checkbox" class="attendance-check" value="<?php echo $learner["id"];?>" id="learner-<?php echo $learner["id"];?>"<?php echo $learner["has_attendance"]?' checked="checked"':'';?>/></td>
 									<td><?php echo $learner["lastname"];?></td>
 									<td><?php echo $learner["firstname"];?></td>
 								</tr>
-									<?php	}
-										}?>
+									<?php	} 										
+									}else { ?>
+								<tr>
+									<td colspan="3"><?php echo display_notice(array("There is no audience associated with this event."));?></td>
+								</tr>										
+							<?php	}
+										?>
 							</tbody>
 						</table>
 					

@@ -430,7 +430,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			<div style="float: right">
 				<ul class="page-action">
 					<li><a href="#" class="import-csv">Import CSV</a></li>
-					<li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=add&mode=draft&draft_id=<?= $draft_id; ?>" class="strong-green">Add New Event</a></li>
+					<li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=add&mode=draft&draft_id=<?php echo $draft_id; ?>" class="strong-green">Add New Event</a></li>
 				</ul>
 			</div>
 			<div style="clear: both"></div>
@@ -438,13 +438,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 		}
 		?>
 		<div id="import-csv">
-			<form id="csv-form" action="<?php echo ENTRADA_URL; ?>/admin/events/drafts?section=csv-import&draft_id=<?= $draft_id; ?>" enctype="multipart/form-data" method="POST">
+			<form id="csv-form" action="<?php echo ENTRADA_URL; ?>/admin/events/drafts?section=csv-import&draft_id=<?php echo $draft_id; ?>" enctype="multipart/form-data" method="POST">
 				<p><a href="<?php echo ENTRADA_URL; ?>/admin/events/drafts?section=edit&mode=csv-example">Click here to download example CSV</a>.</p>
-				<input type="hidden" name="draft_id" value="<?= $draft_id; ?>" />
+				<input type="hidden" name="draft_id" value="<?php echo $draft_id; ?>" />
 				<input type="file" name="csv_file" /> 
 			</form>
 		</div>
-		<form name="frmSelect" action="<?php echo ENTRADA_URL; ?>/admin/events?section=delete&mode=draft&draft_id=<?= $draft_id; ?>" method="post">
+		<form name="frmSelect" action="<?php echo ENTRADA_URL; ?>/admin/events?section=delete&mode=draft&draft_id=<?php echo $draft_id; ?>" method="post">
 			<table class="tableList" id="draftEvents" cellspacing="0" cellpadding="1" summary="List of Events" style="margin-bottom:5px;">
 				<colgroup>
 					<col class="modified" />

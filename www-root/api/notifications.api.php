@@ -25,32 +25,36 @@ require_once("init.inc.php");
 if (isset($_GET["nuser_id"]) && ($nuser_id = clean_input($_GET["nuser_id"], array("int")))) {
 	require_once("Models/notifications/NotificationUser.class.php");
 	$notification_user = NotificationUser::getByID($nuser_id);
-	if (isset($_GET["action"]) && $_GET["action"] == "view") {
-		echo "<span style=\"cursor: pointer;\" onclick=\"promptNotifications(".($notification_user->getNotifyActive() ? "'1'" : "'0'").", ".$nuser_id.", '".$notification_user->getContentTypeName()."')\"><img src=\"".ENTRADA_URL."/images/btn-".($notification_user->getNotifyActive() ? "approve.gif\" alt=\"Active\" />" : "unapprove.gif\" alt=\"Disabled\" />")."</span>";
-	} elseif (isset($_GET["action"]) && $_GET["action"] == "edit") {
-		if (isset($_GET["active"]) && $_GET["active"]) {
-			$notify_active = 1;
-		} else {
-			$notify_active = 0;
+	if ($notification_user->getProxyID() == $ENTRADA_USER->getID()) {
+		if (isset($_GET["action"]) && $_GET["action"] == "view") {
+			echo "<span style=\"cursor: pointer;\" onclick=\"promptNotifications(".($notification_user->getNotifyActive() ? "'1'" : "'0'").", ".$nuser_id.", '".$notification_user->getContentTypeName()."')\"><img src=\"".ENTRADA_URL."/images/btn-".($notification_user->getNotifyActive() ? "approve.gif\" alt=\"Active\" />" : "unapprove.gif\" alt=\"Disabled\" />")."</span>";
+		} elseif (isset($_GET["action"]) && $_GET["action"] == "edit") {
+			if (isset($_GET["active"]) && $_GET["active"]) {
+				$notify_active = 1;
+			} else {
+				$notify_active = 0;
+			}
+			if ($notification_user->setNotifyActive($notify_active)) {
+				echo ($notify_active == 1 ? "Activation" : "Deactivation")." of notifications for this ".$notification_user->getContentTypeName()." successful.";
+			} else {
+				echo "There was an issue while trying to ".($notify_active ? "activate" : "deactivate")." notifications for this ".$notification_user->getContentTypeName().".";
+			}
+		} elseif (isset($_GET["action"]) && $_GET["action"] == "view-digest") {
+			echo "<span style=\"cursor: pointer;\" onclick=\"promptNotificationsDigest(".($notification_user->getDigestMode() ? "'0'" : "'1'").", ".$nuser_id.", '".$notification_user->getContentTypeName()."')\"><img src=\"".ENTRADA_URL."/images/btn-".($notification_user->getDigestMode() ? "approve.gif\" alt=\"Active\" />" : "unapprove.gif\" alt=\"Disabled\" />")."</span>";
+		} elseif (isset($_GET["action"]) && $_GET["action"] = "edit-digest") {
+			if (isset($_GET["active"]) && $_GET["active"]) {
+				$digest_active = 1;
+			} else {
+				$digest_active = 0;
+			}
+			if ($notification_user->setDigestMode($digest_active)) {
+				echo ($digest_active == 1 ? "Enabling" : "Disabling")." of digest mode for this ".$notification_user->getContentTypeName()." successful.";
+			} else {
+				echo "There was an issue while trying to ".($notify_active ? "enable" : "disable")." digest mode for this ".$notification_user->getContentTypeName().".";
+			}
 		}
-		if ($notification_user->setNotifyActive($notify_active)) {
-			echo ($notify_active == 1 ? "Activation" : "Deactivation")." of notifications for this ".$notification_user->getContentTypeName()." successful.";
-		} else {
-			echo "There was an issue while trying to ".($notify_active ? "activate" : "deactivate")." notifications for this ".$notification_user->getContentTypeName().".";
-		}
-	} elseif (isset($_GET["action"]) && $_GET["action"] == "view-digest") {
-		echo "<span style=\"cursor: pointer;\" onclick=\"promptNotificationsDigest(".($notification_user->getDigestMode() ? "'1'" : "'0'").", ".$nuser_id.")\"><img src=\"".ENTRADA_URL."/images/btn-".($notification_user->getDigestMode() ? "approve.gif\" alt=\"Active\" />" : "unapprove.gif\" alt=\"Disabled\" />")."</span>";
-	} elseif (isset($_GET["action"]) && $_GET["action"] = "edit-digest") {
-		if (isset($_GET["active"]) && $_GET["active"]) {
-			$digest_active = 1;
-		} else {
-			$digest_active = 0;
-		}
-		if ($notification_user->setDigestMode($digest_active)) {
-			echo ($digest_active == 1 ? "Enabling" : "Disabling")." of digest mode for this ".$notification_user->getContentTypeName()." successful.";
-		} else {
-			echo "There was an issue while trying to ".($notify_active ? "enable" : "disable")." digest mode for this ".$notification_user->getContentTypeName().".";
-		}
+	} else {
+		echo "There was an issue while trying to fetch the notification and digest status for this content.";
 	}
 } elseif (isset($_GET["community_id"]) && ($community_id = clean_input($_GET["community_id"], array("int")))) {
 	if (isset($_GET["action"]) && $_GET["action"] == "view") {
@@ -101,7 +105,9 @@ if (isset($_GET["nuser_id"]) && ($nuser_id = clean_input($_GET["nuser_id"], arra
 			$content_type = "default";
 		}
 		$notification_user = NotificationUser::get($_SESSION["details"]["id"], $content_type, $record_id, $record_proxy_id);
-		echo "<span style=\"cursor: pointer;\" onclick=\"promptNotifications(".($notification_user && $notification_user->getNotifyActive() ? "'1'" : "'0'").")\"><img src=\"".ENTRADA_URL."/images/email-".($notification_user && $notification_user->getNotifyActive() ? "off.gif\" /> Unsubscribe to E-Mail Notifications" : "on.gif\" /> Subscribe to E-Mail Notifications")."</span>";
+		if (!$notification_user || $notification_user->getProxyID() == $ENTRADA_USER->getID()) {
+			echo "<span style=\"cursor: pointer;\" onclick=\"promptNotifications(".($notification_user && $notification_user->getNotifyActive() ? "'1'" : "'0'").")\"><img src=\"".ENTRADA_URL."/images/email-".($notification_user && $notification_user->getNotifyActive() ? "off.gif\" /> Unsubscribe to E-Mail Notifications" : "on.gif\" /> Subscribe to E-Mail Notifications")."</span>";
+		}
 	} elseif (isset($_GET["action"]) && $_GET["action"] == "edit") {
 		if (isset($_GET["active"]) && $_GET["active"]) {
 			$notify_active = 1;
@@ -124,7 +130,7 @@ if (isset($_GET["nuser_id"]) && ($nuser_id = clean_input($_GET["nuser_id"], arra
 			$content_type = "default";
 		}
 		$notification_user = NotificationUser::get($_SESSION["details"]["id"], $content_type, $record_id, $record_proxy_id);
-		if ($notification_user && $notification_user->getProxyID() == $_SESSION["details"]["id"]) {
+		if ($notification_user && $notification_user->getProxyID() == $ENTRADA_USER->getID()) {
 			if ($notification_user->getNotifyActive() != $notify_active) {
 				if ($notification_user->setNotifyActive($notify_active)) {
 					echo ($notify_active == 1 ? "Activation" : "Deactivation")." of notifications for this ".$notification_user->getContentTypeName()." successful.";

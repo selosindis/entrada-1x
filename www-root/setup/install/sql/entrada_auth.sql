@@ -281,6 +281,7 @@ CREATE TABLE IF NOT EXISTS `user_access` (
   `id` int(12) unsigned NOT NULL AUTO_INCREMENT,
   `user_id` int(12) unsigned NOT NULL DEFAULT '0',
   `app_id` int(12) unsigned NOT NULL DEFAULT '0',
+  `organisation_id` INT(12) unsigned NOT NULL DEFAULT '0',
   `account_active` enum('true','false') NOT NULL DEFAULT 'true',
   `access_starts` bigint(64) NOT NULL DEFAULT '0',
   `access_expires` bigint(64) NOT NULL DEFAULT '0',
@@ -439,8 +440,6 @@ JOIN `user_access` AS b
 ON b.`user_id` = a.`id`
 WHERE b.`app_id` = '1';
 
-ALTER TABLE `user_access` ADD COLUMN organisation_id;
-
 CREATE TABLE IF NOT EXISTS `system_groups` (
   `id` INT NOT NULL AUTO_INCREMENT ,
   `group_name` VARCHAR(45) NOT NULL ,
@@ -511,7 +510,7 @@ INSERT INTO `system_roles` (`role_name`, `groups_id`) VALUES
 CREATE  TABLE IF NOT EXISTS `system_group_organisation` (
   `groups_id` INT NOT NULL ,
   `organisation_id` INT(12) UNSIGNED NOT NULL ,
-  PRIMARY KEY (`groups_id`, `organisations_organisation_id`) )
+  PRIMARY KEY (`groups_id`, `organisation_id`) )
 ENGINE = MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `system_group_organisation` (`organisation_id`, `groups_id`)

@@ -171,7 +171,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							});
 						});
 					</script>
-					<form action="<?php echo ENTRADA_URL; ?>/admin/events/drafts?section=status&step=2&action=<?= $action; ?>" method="post">
+					<form action="<?php echo ENTRADA_URL; ?>/admin/events/drafts?section=status&step=2&action=<?php echo $action; ?>" method="post">
 					<table class="tableList" id="draft-list" widht="100%" cellspacing="0" summary="List of Events">
 					<colgroup>
 						<col class="modified" />

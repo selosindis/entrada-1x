@@ -631,7 +631,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				}
 			}
 			?>
-			<form action="<?php echo ENTRADA_URL; ?>/admin/events?section=add&amp;step=2<?= ($is_draft == "true") ? "&mode=draft&draft_id=".$draft_id : ""; ?>" method="post" id="addEventForm">
+			<form action="<?php echo ENTRADA_URL; ?>/admin/events?section=add&amp;step=2<?php echo ($is_draft == "true") ? "&mode=draft&draft_id=".$draft_id : ""; ?>" method="post" id="addEventForm">
 				<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Adding Event">
 					<colgroup>
 						<col style="width: 3%" />

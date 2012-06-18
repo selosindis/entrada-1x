@@ -98,6 +98,12 @@ if (!defined("IN_PROFILE")) {
 				$HEAD[] = "<script type=\"text/javascript\">jQuery(document).ready(function() { promptNotifications(0, ".$RECORD_ID.", '".$notification_user->getContentTypeName()."'); });</script>";
 			}
 		}
+		if (isset($_GET["action"]) && ($_GET["action"] == "digest-mode")) {
+			if (isset($_GET["id"]) && ($RECORD_ID = (int)$_GET["id"])) {
+				$notification_user = NotificationUser::getByID($RECORD_ID);
+				$HEAD[] = "<script type=\"text/javascript\">jQuery(document).ready(function() { promptNotificationsDigest(1, ".$RECORD_ID.", '".$notification_user->getContentTypeName()."'); });</script>";
+			}
+		}
 		?>
 		<div id="notifications-toggle" style="display: inline; padding-top: 4px; width: 100%; text-align: right;"></div>
 		<script type="text/javascript">
@@ -142,7 +148,7 @@ if (!defined("IN_PROFILE")) {
 		}
 		
 		function promptNotificationsDigest(enabled, nuser_id, content_type) {
-			Dialog.confirm('Do you really wish to '+ (enabled == 1 ? "stop" : "begin") +' receiving notifications once per day at most when new comments or changes are made on this '+content_type+'?',
+			Dialog.confirm('Do you really wish to '+ (enabled == 1 ? "begin" : "stop") +' receiving notifications once per day at most when new comments or changes are made on this '+content_type+'?',
 				{
 					id:				'requestDigestDialog',
 					width:			350,
@@ -169,7 +175,7 @@ if (!defined("IN_PROFILE")) {
 														maximizable:	false,
 														recenterAuto:	true,
 														destroyOnClose:	true,
-														url:			'<?php echo ENTRADA_URL; ?>/api/notifications.api.php?nuser_id='+nuser_id+'&action=edit-digest&active='+(enabled == 1 ? '0' : '1'),
+														url:			'<?php echo ENTRADA_URL; ?>/api/notifications.api.php?nuser_id='+nuser_id+'&action=edit-digest&active='+enabled,
 														onClose:			function () {
 																			new Ajax.Updater('notification_user_'+nuser_id+'_digest_mode', '<?php echo ENTRADA_URL; ?>/api/notifications.api.php?nuser_id='+nuser_id+'&action=view-digest');
 																		}
@@ -202,7 +208,7 @@ if (!defined("IN_PROFILE")) {
 					echo "	<td class=\"modified\">&nbsp;</td>\n";
 					echo "	<td class=\"title\"><a href=\"".$url."\">".html_encode($notification_user->getContentTitle())."</a></td>\n";
 					echo "	<td class=\"date\">".ucwords($notification_user->getContentTypeName())."</td>\n";
-					echo "	<td class=\"date-smallest\" id=\"notification_user_".$nuser_id."_digest_mode\">".($notification_user->getContentType() != "logbook_rotation" ? "<span style=\"cursor: pointer;\" onclick=\"promptNotificationsDigest(".($notification_user->getDigestMode() ? "'1'" : "'0'").", ".$nuser_id.", '".$notification_user->getContentTypeName()."')\"><img src=\"".ENTRADA_URL."/images/btn-".($notification_user->getDigestMode() ? "approve.gif\" alt=\"Active\" />" : "unapprove.gif\" alt=\"Disabled\" />")."</span>" : "<span alt=\"N/A\">N/A</span>")."</td>\n";
+					echo "	<td class=\"date-smallest\" id=\"notification_user_".$nuser_id."_digest_mode\">".($notification_user->getContentType() != "logbook_rotation" ? "<span style=\"cursor: pointer;\" onclick=\"promptNotificationsDigest(".($notification_user->getDigestMode() ? "'0'" : "'1'").", ".$nuser_id.", '".$notification_user->getContentTypeName()."')\"><img src=\"".ENTRADA_URL."/images/btn-".($notification_user->getDigestMode() ? "approve.gif\" alt=\"Active\" />" : "unapprove.gif\" alt=\"Disabled\" />")."</span>" : "<span alt=\"N/A\">N/A</span>")."</td>\n";
 					echo "	<td class=\"date-smallest\" id=\"notification_user_".$nuser_id."_active\"><span style=\"cursor: pointer;\" onclick=\"promptNotifications(".($notification_user->getNotifyActive() ? "'0'" : "'1'").", ".$nuser_id.", '".$notification_user->getContentTypeName()."')\"><img src=\"".ENTRADA_URL."/images/btn-".($notification_user->getNotifyActive() ? "approve.gif\" alt=\"Active\" />" : "unapprove.gif\" alt=\"Disabled\" />")."</span>"."</td>\n";
 					echo "</tr>\n";
 				}

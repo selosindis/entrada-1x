@@ -638,80 +638,49 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					width: 90%;
 				}
 				</style>
+				<?php
+				$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/elementresizer.js\"></script>";
+				$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/wizard.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+				$HEAD[] = "<link href=\"".ENTRADA_URL."/css/wizard.css?release=".html_encode(APPLICATION_VERSION)."\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />";
+				?>
+				<iframe id="upload-frame" name="upload-frame" onload="frameLoad()" style="display: none;"></iframe>
+				<a id="false-link" href="#placeholder"></a>
+				<div id="placeholder" style="display: none"></div>
 				<script type="text/javascript">
-				function openFileWizard(eid, fid, action) {
-					if (!action) {
-						action = 'add';
-					}
-
-					if (!eid) {
-						return;
+				var ajax_url = '';
+				var modalDialog;
+				document.observe('dom:loaded', function() {
+					modalDialog = new Control.Modal($('false-link'), {
+						position:		'center',
+						overlayOpacity:	0.75,
+						closeOnClick:	'overlay',
+						className:		'modal',
+						fade:			true,
+						fadeDuration:	0.30,
+						beforeOpen: function(request) {
+							eval($('scripts-on-open').innerHTML);
+						},
+						afterClose: function() {
+							if (uploaded == true) {
+									window.location = '<?php echo ENTRADA_URL."/admin/events?".replace_query(); ?>';
+							}
+						}
+					});
+				});
+				
+				function openDialog (url) {
+					if (url && url != ajax_url) {
+						ajax_url = url;
+						new Ajax.Request(ajax_url, {
+							method: 'get',
+							onComplete: function(transport) {
+								modalDialog.container.update(transport.responseText);
+								modalDialog.open();
+							}
+						});
 					} else {
-						var windowW = 485;
-						var windowH = 585;
-
-						var windowX = (screen.width / 2) - (windowW / 2);
-						var windowY = (screen.height / 2) - (windowH / 2);
-
-						fileWizard = window.open('<?php echo ENTRADA_URL; ?>/file-wizard-event.php?action=' + action + '&id=' + eid + ((fid) ? '&fid=' + fid : ''), 'fileWizard', 'width='+windowW+', height='+windowH+', scrollbars=no, resizable=yes');
-						fileWizard.blur();
-						window.focus();
-
-						fileWizard.resizeTo(windowW, windowH);
-						fileWizard.moveTo(windowX, windowY);
-
-						fileWizard.focus();
-					}
-						
-				}
-
-				function openLinkWizard(eid, lid, action) {
-					if (!action) {
-						action = 'add';
-					}
-
-					if (!eid) {
-						return;
-					} else {
-						var windowW = 485;
-						var windowH = 585;
-
-						var windowX = (screen.width / 2) - (windowW / 2);
-						var windowY = (screen.height / 2) - (windowH / 2);
-
-						linkWizard = window.open('<?php echo ENTRADA_URL; ?>/link-wizard-event.php?action=' + action + '&id=' + eid + ((lid) ? '&lid=' + lid : ''), 'linkWizard', 'width='+windowW+', height='+windowH+', scrollbars=no, resizable=yes');
-						linkWizard.blur();
-						window.focus();
-
-						linkWizard.resizeTo(windowW, windowH);
-						linkWizard.moveTo(windowX, windowY);
-
-						linkWizard.focus();
-					}
-				}
-
-				function openQuizWizard(eid, qid, action) {
-					if (!action) {
-						action = 'add';
-					}
-
-					if (!eid) {
-						return;
-					} else {
-						var windowW = 485;
-						var windowH = 585;
-
-						var windowX = (screen.width / 2) - (windowW / 2);
-						var windowY = (screen.height / 2) - (windowH / 2);
-
-						quizWizard = window.open('<?php echo ENTRADA_URL; ?>/quiz-wizard.php?type=event&action=' + action + '&id=' + eid + ((qid) ? '&qid=' + qid : ''), 'quizWizard', 'width='+windowW+', height='+windowH+', scrollbars=no, resizable=yes');
-						quizWizard.blur();
-						window.focus();
-
-						quizWizard.resizeTo(windowW, windowH);
-						quizWizard.moveTo(windowX, windowY);
-
-						quizWizard.focus();
+						$('scripts-on-open').update();
+						modalDialog.open();
 					}
 				}
 
@@ -799,7 +768,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 
 				echo "<div class=\"content-small\">".fetch_course_path($event_info["course_id"])."</div>\n";
-				echo "<h1 class=\"event-title\">".html_encode($event_info["event_title"])."</h1>\n";
+				echo "<h1 id=\"page-top\" class=\"event-title\">".html_encode($event_info["event_title"])."</h1>\n";
 
 				if ($SUCCESS) {
 					fade_element("out", "display-success-box");
@@ -1234,7 +1203,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						</div>
 						<div style="float: right; margin-bottom: 5px">
 							<ul class="page-action">
-								<li><a href="javascript: openFileWizard('<?php echo $EVENT_ID; ?>', 0, 'add')">Add A File</a></li>
+								<li><a href="#page-top" onclick="openDialog('<?php echo ENTRADA_URL; ?>/api/file-wizard-event.api.php?action=add&id=<?php echo $EVENT_ID; ?>')">Add A File</a></li>
 							</ul>
 						</div>
 						<div class="clear"></div>
@@ -1288,7 +1257,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								echo "	<td class=\"file-category\">".((isset($RESOURCE_CATEGORIES["event"][$result["file_category"]])) ? html_encode($RESOURCE_CATEGORIES["event"][$result["file_category"]]) : "Unknown Category")."</td>\n";
 								echo "	<td class=\"title\">\n";
 								echo "		<img src=\"".ENTRADA_URL."/serve-icon.php?ext=".$ext."\" width=\"16\" height=\"16\" alt=\"".strtoupper($ext)." Document\" title=\"".strtoupper($ext)." Document\" style=\"vertical-align: middle\" />";
-								echo "		<a href=\"javascript: openFileWizard('".$EVENT_ID."', '".$result["efile_id"]."', 'edit')\" title=\"Click to edit ".html_encode($result["file_title"])."\" style=\"font-weight: bold\">".html_encode($result["file_title"])."</a>";
+								echo "		<a href=\"#page-top\" id=\"edit-file\" onclick=\"openDialog('".ENTRADA_URL."/api/file-wizard-event.api.php?action=edit&id=".$EVENT_ID."&fid=".$result["efile_id"]."')\" title=\"Click to edit ".html_encode($result["file_title"])."\" style=\"font-weight: bold\">".html_encode($result["file_title"])."</a>";
 								echo "	</td>\n";
 								echo "	<td class=\"date-small\"><span class=\"content-date\">".(((int) $result["release_date"]) ? date(DEFAULT_DATE_FORMAT, $result["release_date"]) : "No Restrictions")."</span></td>\n";
 								echo "	<td class=\"date-small\"><span class=\"content-date\">".(((int) $result["release_until"]) ? date(DEFAULT_DATE_FORMAT, $result["release_until"]) : "No Restrictions")."</span></td>\n";
@@ -1316,7 +1285,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						</div>
 						<div style="float: right; margin-bottom: 5px">
 							<ul class="page-action">
-								<li><a href="javascript: openLinkWizard('<?php echo $EVENT_ID; ?>', 0, 'add')">Add A Link</a></li>
+								<li><a href="#page-top" onclick="openDialog('<?php echo ENTRADA_URL; ?>/api/link-wizard-event.api.php?action=add&id=<?php echo $EVENT_ID; ?>')">Add A Link</a></li>
 							</ul>
 						</div>
 						<div class="clear"></div>
@@ -1362,7 +1331,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								echo "		<a href=\"".ENTRADA_URL."/link-event.php?id=".$result["elink_id"]."\" target=\"_blank\"><img src=\"".ENTRADA_URL."/images/url-visit.gif\" width=\"16\" height=\"16\" alt=\"Visit ".html_encode($result["link"])."\" title=\"Visit ".html_encode($result["link"])."\" style=\"vertical-align: middle\" border=\"0\" /></a>\n";
 								echo "	</td>\n";
 								echo "	<td class=\"title\" style=\"white-space: normal; overflow: visible\">\n";
-								echo "		<a href=\"javascript: openLinkWizard('".$EVENT_ID."', '".$result["elink_id"]."', 'edit')\" title=\"Click to edit ".html_encode($result["link"])."\" style=\"font-weight: bold\">".(($result["link_title"] != "") ? html_encode($result["link_title"]) : $result["link"])."</a>\n";
+								echo "		<a href=\"#page-top\" onclick=\"openDialog('".ENTRADA_URL."/api/link-wizard-event.api.php?action=edit&id=".$EVENT_ID."&lid=".$result["elink_id"]."')\" title=\"Click to edit ".html_encode($result["link"])."\" style=\"font-weight: bold\">".(($result["link_title"] != "") ? html_encode($result["link_title"]) : $result["link"])."</a>\n";
 								echo "	</td>\n";
 								echo "	<td class=\"date-small\"><span class=\"content-date\">".(((int) $result["release_date"]) ? date(DEFAULT_DATE_FORMAT, $result["release_date"]) : "No Restrictions")."</span></td>\n";
 								echo "	<td class=\"date-small\"><span class=\"content-date\">".(((int) $result["release_until"]) ? date(DEFAULT_DATE_FORMAT, $result["release_until"]) : "No Restrictions")."</span></td>\n";
@@ -1391,7 +1360,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						<div style="float: right; margin-bottom: 5px">
 							<ul class="page-action">
 								<li><a href="<?php echo ENTRADA_URL; ?>/admin/quizzes?section=add">Create New Quiz</a></li>
-								<li><a href="javascript: openQuizWizard('<?php echo $EVENT_ID; ?>', 0, 'add')">Attach Existing Quiz</a></li>
+								<li><a href="#page-top" onclick="openDialog('<?php echo ENTRADA_URL; ?>/api/quiz-wizard.api.php?action=add&id=<?php echo $EVENT_ID; ?>')">Attach Existing Quiz</a></li>
 							</ul>
 						</div>
 						<div class="clear"></div>
@@ -1448,7 +1417,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								echo "	</td>\n";
 								echo "	<td class=\"file-category\">".html_encode($result["quiztype_title"])."</td>\n";
 								echo "	<td class=\"title\" style=\"white-space: normal; overflow: visible\">\n";
-								echo "		<a href=\"javascript: openQuizWizard('".$EVENT_ID."', '".$result["aquiz_id"]."', 'edit')\" title=\"Click to edit ".html_encode($result["quiz_title"])."\" style=\"font-weight: bold\">".html_encode($result["quiz_title"])."</a>\n";
+								echo "		<a href=\"#page-top\" onclick=\"openDialog('".ENTRADA_URL."/api/quiz-wizard.api.php?action=edit&id=".$EVENT_ID."&qid=".$result["aquiz_id"]."')\" title=\"Click to edit ".html_encode($result["quiz_title"])."\" style=\"font-weight: bold\">".html_encode($result["quiz_title"])."</a>\n";
 								echo "	</td>\n";
 								echo "	<td class=\"date-small\"><span class=\"content-date\">".(((int) $result["release_date"]) ? date(DEFAULT_DATE_FORMAT, $result["release_date"]) : "No Restrictions")."</span></td>\n";
 								echo "	<td class=\"date-small\"><span class=\"content-date\">".(((int) $result["release_until"]) ? date(DEFAULT_DATE_FORMAT, $result["release_until"]) : "No Restrictions")."</span></td>\n";

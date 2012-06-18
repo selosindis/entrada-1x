@@ -758,6 +758,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 						LEFT JOIN `".AUTH_DATABASE."`.`entity_type` AS b
 						ON a.`entity_id` = b.`entity_id`
 						ORDER BY a.`department_title`";
+
 			$results = $db->GetAll($query);
 			if ($results) {
 				foreach($results as $key => $result) {
@@ -1226,8 +1227,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 										<?php
 
 														foreach($DEPARTMENT_LIST as $organisation_id => $dlist) {
-															foreach($dlist as $d){
-																echo build_option($d["department_id"], $d["department_title"], $selected);
+															if ($result["organisation_id"] == $organisation_id){
+																foreach($dlist as $d){
+																	echo build_option($d["department_id"], $d["department_title"], $selected);
+																}
 															}
 														}
 											 ?>

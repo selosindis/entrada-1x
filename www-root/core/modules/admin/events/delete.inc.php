@@ -381,7 +381,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				if($results) {
 					echo display_notice(array("Please review the following event".(($total_events != 1) ? "s" : "")." to ensure that you wish to <strong>permanently delete</strong> ".(($total_events != 1) ? "them" : "it").".<br /><br />This will also remove any attached resources, contacts, etc. and this action cannot be undone."));
 					?>
-					<form action="<?php echo ENTRADA_URL; ?>/admin/events?section=delete&amp;step=2<?= (($is_draft) ? "&mode=draft&draft_id=".$draft_id : "" ); ?>" method="post">
+					<form action="<?php echo ENTRADA_URL; ?>/admin/events?section=delete&amp;step=2<?php echo (($is_draft) ? "&mode=draft&draft_id=".$draft_id : "" ); ?>" method="post">
 					<table class="tableList" cellspacing="0" summary="List of Events" width="100%">
 					<colgroup>
 						<col class="modified" />
@@ -389,7 +389,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						<col class="phase" />
 						<col class="teacher" />
 						<col class="title" />
-						<?= ((!$is_draft) ? "<col class=\"attachment\" />" : ""); ?>
+						<?php echo ((!$is_draft) ? "<col class=\"attachment\" />" : ""); ?>
 					</colgroup>
 					<thead>
 						<tr>
@@ -398,7 +398,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							<td class="phase" style="font-size: 12px">Phase</td>
 							<td class="teacher" style="font-size: 12px">Teacher</td>
 							<td class="title" style="font-size: 12px">Event Title</td>
-							<?= ((!$is_draft) ? "<td class=\"attachment\" style=\"font-size: 12px\">&nbsp;</td>" : ""); ?>
+							<?php echo ((!$is_draft) ? "<td class=\"attachment\" style=\"font-size: 12px\">&nbsp;</td>" : ""); ?>
 						</tr>
 					</thead>
 					<tfoot>

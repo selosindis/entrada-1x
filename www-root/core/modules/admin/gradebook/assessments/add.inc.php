@@ -466,7 +466,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								</tr>
 								<tr>
 									<td><input type="radio" name="associated_audience" id="course_list" value ="<?php echo $course_list["group_id"];?>" checked="checked"/></td>
-									<td><label for="cohort" class="form-required">Course List</label></td>
+									<td><label for="course_list" class="form-required">Course List</label></td>
 									<td>
 										<span class="radio-group-title">All Learners in the <?php echo $course_details["course_code"];?> Course List Group</span>
 										<div class="content-small">This assessment is intended for all learners that are members of the <?php echo $course_details["course_code"];?> Course List.</div>

@@ -25,6 +25,8 @@
  *
 */
 
+ini_set('auto_detect_line_endings', true);
+
 class CsvImporter {
 	
 	private $errors, $success, $draft_id, $updater;
@@ -241,8 +243,8 @@ class CsvImporter {
 				$where = "";
 			}
 			
-			$query =	$mode." `draft_events` (`draft_id`, `event_id`, `course_id`, `event_title`, `event_start`, `event_finish`, `event_duration`, `eventtype_id`) 
-						VALUES (".$this->draft_id.", ".$db->qstr($row["event_id"]).", ".$db->qstr($row["course_id"]).", ".$db->qstr($row["event_title"]).", ".$db->qstr($row["event_start"]).", ".$db->qstr($row["event_start"] + ($row["total_duration"] * 60)).", ".$db->qstr($row["total_duration"]).", ".$db->qstr($row["eventtypes"][0]["eventtype"]).")".
+			$query =	$mode." `draft_events` (`draft_id`, `event_id`, `course_id`, `event_title`, `event_start`, `event_finish`, `event_duration`) 
+						VALUES (".$this->draft_id.", ".$db->qstr($row["event_id"]).", ".$db->qstr($row["course_id"]).", ".$db->qstr($row["event_title"]).", ".$db->qstr($row["event_start"]).", ".$db->qstr($row["event_start"] + ($row["total_duration"] * 60)).", ".$db->qstr($row["total_duration"]).")".
 						$where;
 			$result = $db->Execute($query);
 			

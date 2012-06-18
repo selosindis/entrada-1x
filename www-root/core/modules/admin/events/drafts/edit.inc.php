@@ -38,10 +38,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 		switch ($temp) {
 			case "csv-example" :
 				
-				$csv_content  = "Event ID,Term,Course Code,Course Name,Date,Start Time,Event Type Durations,Event Types,Event Title,Location,Audience (Cohorts),Audience (Students),Teacher Numbers\n";
-				$csv_content .= ",Clerkship,CLERKSHIP,Clerkship,12-06-05,13:30,60,Other,CaRMS Presentation,New Medical Building,Class of 2013,,\n";
-				$csv_content .= ",Clerkship,,Clerkship: Family Medicine,12-06-06,0:00,60,Review / Feedback Session,Title,,,6109994; 6110117; 6141374; 6110289; 6141436; 6111491; 5291303; 5277000; 4905480; 6111858,\n";
-				$csv_content .= "1113,Clerkship,MEDS446,Clerkship: Family Medicine,12-06-07,10:30,120,Review / Feedback Session,FM Clerkship Interviews Block 3,Teleconference,,6109994; 6110117; 6141374; 6110289; 6141436; 6111491; 5291303; 5277000; 4905480; 6111858,7404733\n";
+				$csv_content  = "Original Event,Parent Event,Term,Course Code,Course Name,Date,Start Time,Total Duration,Event Type Durations,Event Types,Event Title,Location,Audience (Cohorts),Audience (Students),Teacher Numbers,Teacher Names"."\n";
+				$csv_content .= "22589,0,Clerkship,MEDS443,Clerkship: Obstetrics and Gynecology,12-04-02,7:30,60,60,Clerkship Seminars,The Abnormal Pap/Cervical Cancer,Kidd 7,Class of 2012,,7390885,Julie Francis"."\n";
+				$csv_content .= "22518,0,Clerkship,MEDS453,Clerkship: Perioperative/Acute Care,12-04-02,8:00,240,240,Other,\"Anesthesia Simulator Session (Datoo, Bharath, Harvey, Wong, Glicksman)\",New Med Bldg Sim Lab 3 Rm 234E,,5588583; 5948964; 5948982; 3598651; 5000040,3489488,Robert Tanzola"."\n";
+				$csv_content .= "21928,0,Term 4,MEDS245,Clinical Foundations: Neurology and Ophthalmology,12-04-02,8:30,60,60,Directed Independent Learning,Neurology Theme of the Week: Multiple Sclerosis,132A,Class of 2014,,7110265; 7315777,Donald Brunet; Heather E. Murray"."\n";
+
 				
 				header('Pragma: public');
 				header('Content-type: text/csv');

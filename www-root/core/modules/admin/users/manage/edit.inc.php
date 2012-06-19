@@ -346,6 +346,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 										$PROCESSED_ACCESS["org_id"][] = $row[0];
 										$PROCESSED_ACCESS["group_id"][] = $row[1];
 										$PROCESSED_ACCESS["role_id"][] = $row[2];
+										$query = "SELECT a.`group_name`, b.`role_name` FROM `".AUTH_DATABASE."`.`system_groups` AS a
+													JOIN `".AUTH_DATABASE."`.`system_roles` AS b
+													WHERE a.`id` = ".$db->qstr($row[1])."
+													AND b.`id` = ".$db->qstr($row[2]);
+										$group_role = $db->GetRow($query);
+										if (($group_role && $group_role["group_name"] == "student" && ($grad_year = clean_input($group_role["role_name"], "int"))) ||
+												($group_role && $group_role["group_name"] == "alumni" && !isset($PROCESSED["grad_year"]) && ($grad_year = clean_input($group_role["role_name"], "int")))) {
+											$PROCESSED["grad_year"] = $grad_year;
+										}
 									}
 								}
 						}

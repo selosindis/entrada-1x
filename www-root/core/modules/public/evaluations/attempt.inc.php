@@ -324,7 +324,7 @@ if ($RECORD_ID) {
 												WHERE a.`evaluation_id` = ".$db->qstr($RECORD_ID)."
 												AND a.`etarget_id` NOT IN (
 													SELECT `etarget_id` FROM `evaluation_progress` 
-													WHERE `proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
+													WHERE `proxy_id` = ".$db->qstr($ENTRADA_USER->getId())."
 													AND `evaluation_id` = ".$db->qstr($RECORD_ID)."
 													AND `progress_value` = 'complete'
 												)";

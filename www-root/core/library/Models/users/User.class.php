@@ -36,6 +36,7 @@ require_once("Models/users/Cohort.class.php");
  */
 class User {
 	private $id,
+			$active_id,
 			$username,
 			$firstname,
 			$lastname,
@@ -72,7 +73,7 @@ class User {
 			$active_group_role;
 
 	
-	private $group, $role;
+	private $access_id, $group, $role;
 
 	/**
 	 * lookup array for formatting user information
@@ -112,8 +113,56 @@ class User {
 	 * Returns the id of the user
 	 * @return int
 	 */
-	public function getID() {
-		return $this->getProxyId();
+	public function getId() {
+		return $this->id;
+	}
+
+	/**
+	 * Returns the access_id of the user
+	 * @return int
+	 */
+	public function getAccessId() {
+		return $this->access_id;
+	}
+
+	/**
+	 * Sets the access_id of the user
+	 * @return int
+	 */
+	public function setAccessId($value) {
+		if ($this->setActiveId($value)) {
+			$this->access_id = $value;
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	/**
+	 * Returns the active proxy_id of the user
+	 * @return int
+	 */
+	public function getActiveId() {
+		return $this->active_id;
+	}
+
+	/**
+	 * Sets the active proxy_id of the user
+	 * @return int
+	 */
+	public function setActiveId($value) {
+		global $db;
+		
+		$query = "SELECT `user_id` FROM `".AUTH_DATABASE."`.`user_access`
+					WHERE `id` = ".$db->qstr($value);
+		$active_id = $db->GetOne($query);
+		if ($active_id) {
+			$this->active_id = $active_id;
+			return $this->active_id;
+		} else {
+			return false;
+		}
+		
 	}
 		
 	/**

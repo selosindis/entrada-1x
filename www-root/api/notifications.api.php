@@ -25,7 +25,7 @@ require_once("init.inc.php");
 if (isset($_GET["nuser_id"]) && ($nuser_id = clean_input($_GET["nuser_id"], array("int")))) {
 	require_once("Models/notifications/NotificationUser.class.php");
 	$notification_user = NotificationUser::getByID($nuser_id);
-	if ($notification_user->getProxyID() == $ENTRADA_USER->getID()) {
+	if ($notification_user->getProxyID() == $ENTRADA_USER->getId()) {
 		if (isset($_GET["action"]) && $_GET["action"] == "view") {
 			echo "<span style=\"cursor: pointer;\" onclick=\"promptNotifications(".($notification_user->getNotifyActive() ? "'1'" : "'0'").", ".$nuser_id.", '".$notification_user->getContentTypeName()."')\"><img src=\"".ENTRADA_URL."/images/btn-".($notification_user->getNotifyActive() ? "approve.gif\" alt=\"Active\" />" : "unapprove.gif\" alt=\"Disabled\" />")."</span>";
 		} elseif (isset($_GET["action"]) && $_GET["action"] == "edit") {
@@ -105,7 +105,7 @@ if (isset($_GET["nuser_id"]) && ($nuser_id = clean_input($_GET["nuser_id"], arra
 			$content_type = "default";
 		}
 		$notification_user = NotificationUser::get($_SESSION["details"]["id"], $content_type, $record_id, $record_proxy_id);
-		if (!$notification_user || $notification_user->getProxyID() == $ENTRADA_USER->getID()) {
+		if (!$notification_user || $notification_user->getProxyID() == $ENTRADA_USER->getId()) {
 			echo "<span style=\"cursor: pointer;\" onclick=\"promptNotifications(".($notification_user && $notification_user->getNotifyActive() ? "'1'" : "'0'").")\"><img src=\"".ENTRADA_URL."/images/email-".($notification_user && $notification_user->getNotifyActive() ? "off.gif\" /> Unsubscribe to E-Mail Notifications" : "on.gif\" /> Subscribe to E-Mail Notifications")."</span>";
 		}
 	} elseif (isset($_GET["action"]) && $_GET["action"] == "edit") {
@@ -130,7 +130,7 @@ if (isset($_GET["nuser_id"]) && ($nuser_id = clean_input($_GET["nuser_id"], arra
 			$content_type = "default";
 		}
 		$notification_user = NotificationUser::get($_SESSION["details"]["id"], $content_type, $record_id, $record_proxy_id);
-		if ($notification_user && $notification_user->getProxyID() == $ENTRADA_USER->getID()) {
+		if ($notification_user && $notification_user->getProxyID() == $ENTRADA_USER->getId()) {
 			if ($notification_user->getNotifyActive() != $notify_active) {
 				if ($notification_user->setNotifyActive($notify_active)) {
 					echo ($notify_active == 1 ? "Activation" : "Deactivation")." of notifications for this ".$notification_user->getContentTypeName()." successful.";

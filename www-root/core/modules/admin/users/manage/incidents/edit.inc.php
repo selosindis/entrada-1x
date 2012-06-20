@@ -101,7 +101,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 							
 							$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
 							
-							application_log("success", "Proxy ID [".$_SESSION["details"]["id"]."] successfully updated the incident id [".$incident_id."].");
+							application_log("success", "Proxy ID [".$ENTRADA_USER->getId()."] successfully updated the incident id [".$incident_id."].");
 						} else {
 							$ERROR++;
 							$ERRORSTR[] = "Unable to update this user incident at this time. The MEdTech Unit has been informed of this error, please try again later.";

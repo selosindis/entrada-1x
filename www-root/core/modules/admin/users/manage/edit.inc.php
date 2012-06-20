@@ -319,7 +319,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 							} else {
 								$ERROR++;
 								$ERRORSTR[] = "You do not have permission to add a user within the selected organisation. This error has been logged and will be investigated.";
-								application_log("Proxy id [" . $_SESSION['details']['proxy_id'] . "] tried to create a user within an organisation [" . $organisation_id . "] they didn't have permissions on. ");
+								application_log("Proxy id [" . $ENTRADA_USER->getId() . "] tried to create a user within an organisation [" . $organisation_id . "] they didn't have permissions on. ");
 							}
 						} else {
 							$ERROR++;
@@ -528,7 +528,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 
 							header( "refresh:5;url=".$url );
 				
-							application_log("success", "Proxy ID [".$_SESSION["details"]["id"]."] successfully updated the proxy id [".$PROXY_ID."] user profile.");
+							application_log("success", "Proxy ID [".$ENTRADA_USER->getId()."] successfully updated the proxy id [".$PROXY_ID."] user profile.");
 						} else {
 							$ERROR++;
 							$ERRORSTR[] = "Unable to update this user account at this time. The system administrator has been informed of this error, please try again later.";
@@ -586,7 +586,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 					if ($SUCCESS) {
 						$query = "SELECT *
 								  FROM `" . AUTH_DATABASE . "`.`user_access` a
-								  WHERE a.`user_id` = " . $db->qstr($_SESSION["details"]["id"]) . "
+								  WHERE a.`user_id` = " . $db->qstr($ENTRADA_USER->getId()) . "
 								  AND a.`organisation_id` = " . $db->qstr($_SESSION["tmp"]["current_org"]) . "
 								  AND a.`group` = " . $db->qstr($_SESSION["tmp"]["current_group"]) . "
 								  AND a.`role` = " . $db->qstr($_SESSION["tmp"]["current_role"]);
@@ -601,8 +601,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 
 						unset($ENTRADA_ACL);
 						$ENTRADA_ACL = new Entrada_Acl($_SESSION["details"]);
-						$ENTRADA_CACHE->remove("acl_".$_SESSION["details"]["id"]);
-						$ENTRADA_CACHE->save($ENTRADA_ACL, "acl_".$_SESSION["details"]["id"]);
+						$ENTRADA_CACHE->remove("acl_".$ENTRADA_USER->getId());
+						$ENTRADA_CACHE->save($ENTRADA_ACL, "acl_".$ENTRADA_USER->getId());
 						echo display_success();
 					}
 				break;
@@ -610,7 +610,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 				default :
 					$query = "SELECT *
 							  FROM `" . AUTH_DATABASE . "`.`user_access` a
-							  WHERE a.`user_id` = " . $db->qstr($_SESSION["details"]["id"]) . "
+							  WHERE a.`user_id` = " . $db->qstr($ENTRADA_USER->getId()) . "
 							  AND a.`id` = " . $db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["ua_id"]);
 					$result = $db->getRow($query);
 					if ($result) {

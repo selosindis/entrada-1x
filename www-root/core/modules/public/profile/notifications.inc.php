@@ -26,7 +26,7 @@ if (!defined("IN_PROFILE")) {
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
 
-	$PROXY_ID					= $_SESSION["details"]["id"];
+	$PROXY_ID					= $ENTRADA_USER->getId();
 	
 	$BREADCRUMB[]	= array("url" => ENTRADA_URL."/profile?section=notifications", "title" => "Community Notifications");
 
@@ -36,7 +36,7 @@ if (!defined("IN_PROFILE")) {
 		$sidebar_html  = "The following individual".((($total_permissions - 1) != 1) ? "s have" : " has")." given you access to their ".APPLICATION_NAME." permission levels:";
 		$sidebar_html .= "<ul class=\"menu\">\n";
 		foreach ($_SESSION["permissions"] as $proxy_id => $result) {
-			if ($proxy_id != $_SESSION["details"]["id"]) {
+			if ($proxy_id != $ENTRADA_USER->getId()) {
 				$sidebar_html .= "<li class=\"checkmark\"><strong>".html_encode($result["fullname"])."</strong><br /><span class=\"content-small\">Exp: ".(($result["expires"]) ? date("D M d/y", $result["expires"]) : "Unknown")."</span></li>\n";
 			}
 		}
@@ -67,7 +67,7 @@ if (!defined("IN_PROFILE")) {
 	}
 	require_once("Models/notifications/NotificationUser.class.php");
 	echo "<h1>Your ".APPLICATION_NAME." Notifications</h1>";
-	$query = "SELECT `nuser_id` FROM `notification_users` WHERE `proxy_id` = ".$db->qstr($_SESSION["details"]["id"]);
+	$query = "SELECT `nuser_id` FROM `notification_users` WHERE `proxy_id` = ".$db->qstr($ENTRADA_USER->getId());
 	$notification_user_ids = $db->GetAll($query);
 	if ($notification_user_ids) {
 		$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery.dataTables.min.js\"></script>";
@@ -227,7 +227,7 @@ if (!defined("IN_PROFILE")) {
 		?>
 		<h1>Community Notifications</h1>
 		<?php
-		$query	= "SELECT * FROM `".AUTH_DATABASE."`.`user_data` WHERE `".AUTH_DATABASE."`.`user_data`.`id`=".$db->qstr($_SESSION["details"]["id"]);
+		$query	= "SELECT * FROM `".AUTH_DATABASE."`.`user_data` WHERE `".AUTH_DATABASE."`.`user_data`.`id`=".$db->qstr($ENTRADA_USER->getId());
 		$result	= $db->GetRow($query);
 		if ($result) {
 			?>

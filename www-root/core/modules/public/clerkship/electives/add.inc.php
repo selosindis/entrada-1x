@@ -115,7 +115,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 				FROM `".CLERKSHIP_DATABASE."`.`events`, `".CLERKSHIP_DATABASE."`.`electives`, `".CLERKSHIP_DATABASE."`.`event_contacts`
 				WHERE `".CLERKSHIP_DATABASE."`.`events`.`event_id` = `".CLERKSHIP_DATABASE."`.`electives`.`event_id`
 				AND `".CLERKSHIP_DATABASE."`.`events`.`event_id` = `".CLERKSHIP_DATABASE."`.`event_contacts`.`event_id`
-				AND `".CLERKSHIP_DATABASE."`.`event_contacts`.`etype_id` = ".$db->qstr($_SESSION["details"]["id"])." 
+				AND `".CLERKSHIP_DATABASE."`.`event_contacts`.`etype_id` = ".$db->qstr($ENTRADA_USER->getId())." 
 				AND `".CLERKSHIP_DATABASE."`.`events`.`event_type` = \"elective\"
 				AND `".CLERKSHIP_DATABASE."`.`events`.`event_status` != \"trash\"
 				AND ((".$db->qstr($start_stamp)." > `".CLERKSHIP_DATABASE."`.`events`.`event_start` 
@@ -138,7 +138,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 						$ERRORSTR[] = "This elective conflicts with the following electives:<br />".$dateError;
 					}
 				} else {
-					$weekTotals = clerkship_get_elective_weeks($_SESSION["details"]["id"]);
+					$weekTotals = clerkship_get_elective_weeks($ENTRADA_USER->getId());
 					$totalWeeks = $weekTotals["approval"] + $weekTotals["approved"];
 					
 					if ($totalWeeks + clean_input($_POST["event_finish_name"], array("int")) > $CLERKSHIP_REQUIRED_WEEKS) {
@@ -312,7 +312,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 			
 			if (!$ERROR) {
 				$PROCESSED["updated_date"]			= time();
-				$PROCESSED["updated_by"]			= $_SESSION["details"]["id"];
+				$PROCESSED["updated_by"]			= $ENTRADA_USER->getId();
 				
 				$EVENT["category_id"]				= $PROCESSED["category_id"];
 				$query = "	SELECT `region_id` FROM `".CLERKSHIP_DATABASE."`.`regions`
@@ -356,7 +356,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 						
 						$CONTACTS["event_id"]				= $EVENT_ID;
 						$CONTACTS["econtact_type"]			= "student";
-						$CONTACTS["etype_id"]				= $_SESSION["details"]["id"];
+						$CONTACTS["etype_id"]				= $ENTRADA_USER->getId();
 						
 						if ($db->AutoExecute(CLERKSHIP_DATABASE.".event_contacts", $CONTACTS, "INSERT")) {
 							

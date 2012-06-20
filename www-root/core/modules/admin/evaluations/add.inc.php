@@ -320,7 +320,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 			if (!$ERROR) {
 				$PROCESSED["evaluation_active"] = 1;
 				$PROCESSED["updated_date"] = time();
-				$PROCESSED["updated_by"] = $_SESSION["details"]["id"];
+				$PROCESSED["updated_by"] = $ENTRADA_USER->getId();
 
 				/**
 				 * Insert the evaluation record into the evalutions table.
@@ -337,7 +337,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 								"target_value" => $target_value,
 								"target_active" => 1,
 								"updated_date" => time(),
-								"updated_by" => $_SESSION["details"]["id"]
+								"updated_by" => $ENTRADA_USER->getId()
 							);
 
 							if (!$db->AutoExecute("evaluation_targets", $record, "INSERT") || (!$etarget_id = $db->Insert_Id())) {
@@ -357,7 +357,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 								"evaluator_type" => $result["evaluator_type"],
 								"evaluator_value" => $result["evaluator_value"],
 								"updated_date" => time(),
-								"updated_by" => $_SESSION["details"]["id"]
+								"updated_by" => $ENTRADA_USER->getId()
 							);
 
 							if (!$db->AutoExecute("evaluation_evaluators", $record, "INSERT") || (!$eevaluator_id = $db->Insert_Id())) {

@@ -165,7 +165,7 @@ if ($COMMUNITY_ID) {
 									$PROCESSED["province"]			= "";
 									$PROCESSED["postcode"]			= "";
 									$PROCESSED["country"]			= "";
-									$PROCESSED["notes"]				= "Guest created by proxy id ".$_SESSION["details"]["id"];
+									$PROCESSED["notes"]				= "Guest created by proxy id ".$ENTRADA_USER->getId();
 
 									if (($db->AutoExecute(AUTH_DATABASE.".user_data", $PROCESSED, "INSERT")) && ($PROCESSED_ACCESS["user_id"] = $db->Insert_Id())) {
 										$GUEST_PROXY_ID = $PROCESSED_ACCESS["user_id"];
@@ -204,7 +204,7 @@ if ($COMMUNITY_ID) {
 										$PROCESSED_ACCESS["role"]				= "communityinvite";
 										$PROCESSED_ACCESS["group"]				= "guest";
 										$PROCESSED_ACCESS["extras"]				= "";
-										$PROCESSED_ACCESS["notes"]				= "Guest created by proxy id ".$_SESSION["details"]["id"];
+										$PROCESSED_ACCESS["notes"]				= "Guest created by proxy id ".$ENTRADA_USER->getId();
 
 										if ($db->AutoExecute(AUTH_DATABASE.".user_access", $PROCESSED_ACCESS, "INSERT")) {
 											$GUEST_ACCESS = true;
@@ -951,7 +951,7 @@ if ($COMMUNITY_ID) {
 							} else {
 								echo display_notice(array("Your community has no administrators at this time; the MEdTech Unit has been informed of this error, please try again later."));
 
-								application_log("error", "Someone [".$_SESSION["details"]["id"]."] accessed the Manage Members page in a community [".$COMMUNITY_ID."] with no administrators present.");
+								application_log("error", "Someone [".$ENTRADA_USER->getId()."] accessed the Manage Members page in a community [".$COMMUNITY_ID."] with no administrators present.");
 							}
 							?>
 	</div>

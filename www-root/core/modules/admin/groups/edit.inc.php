@@ -52,7 +52,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 				$added_proxy_ids[] = (int) $proxy_id;
 			}
 			$PROCESSED["updated_date"]	= time();
-			$PROCESSED["updated_by"] = $_SESSION["details"]["id"];
+			$PROCESSED["updated_by"] = $ENTRADA_USER->getId();
 
 			$count = $added = 0;
 			foreach($proxy_ids as $proxy_id) {

@@ -356,7 +356,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 			if(!$ERROR) {
 				$PROCESSED["community_opened"]	= time();
 				$PROCESSED["updated_date"]		= time();
-				$PROCESSED["updated_by"]		= $_SESSION["details"]["id"];
+				$PROCESSED["updated_by"]		= $ENTRADA_USER->getId();
 
 				if(($db->AutoExecute("communities", $PROCESSED, "INSERT")) && ($community_id = $db->Insert_Id())) {
 					if($db->AutoExecute("community_members", array("community_id" => $community_id, "proxy_id" => $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"], "member_active" => 1, "member_joined" => time(), "member_acl" => 1), "INSERT")) {

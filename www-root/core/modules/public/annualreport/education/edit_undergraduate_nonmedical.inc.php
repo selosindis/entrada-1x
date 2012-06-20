@@ -317,7 +317,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 					
 					if(!$ERROR) {
 						$PROCESSED["updated_date"]	= time();
-						$PROCESSED["updated_by"]	= $_SESSION["details"]["id"];
+						$PROCESSED["updated_by"]	= $ENTRADA_USER->getId();
 						$PROCESSED["proxy_id"]		= $_SESSION[APPLICATION_IDENTIFIER]['tmp']['proxy_id'];
 						
 						if($db->AutoExecute("ar_undergraduate_nonmedical_teaching", $PROCESSED, "UPDATE", "`undergraduate_nonmedical_teaching_id`=".$db->qstr($UNDERGRADUATE_NONMEDICAL_TEACHING_ID))) {

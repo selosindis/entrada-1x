@@ -113,7 +113,7 @@ if ($RECORD_ID) {
 							$PROCESSED["proxy_id"]		= $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"];
 							$PROCESSED["file_active"]	= 1;
 							$PROCESSED["updated_date"]	= time();
-							$PROCESSED["updated_by"]	= $_SESSION["details"]["id"];
+							$PROCESSED["updated_by"]	= $ENTRADA_USER->getId();
 
 							if ($db->AutoExecute("community_share_file_versions", $PROCESSED, "INSERT")) {
 								if ($VERSION_ID = $db->Insert_Id()) {
@@ -253,7 +253,7 @@ if ($RECORD_ID) {
 
 			echo display_notice();
 
-			application_log("error", "The file record id [".$RECORD_ID."] is deactivated; however, ".$_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]." [".$_SESSION["details"]["id"]."] has tried to add a revision.");
+			application_log("error", "The file record id [".$RECORD_ID."] is deactivated; however, ".$_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]." [".$ENTRADA_USER->getId()."] has tried to add a revision.");
 		}
 	} else {
 		$ERROR++;

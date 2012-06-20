@@ -176,7 +176,7 @@ if(!defined("PARENT_INCLUDED")) {
 		/**
 		 * Process local page actions.
 		 */
-		$elective_weeks		= clerkship_get_elective_weeks($_SESSION["details"]["id"]);
+		$elective_weeks		= clerkship_get_elective_weeks($ENTRADA_USER->getId());
 		$remaining_weeks	= ((int) $CLERKSHIP_REQUIRED_WEEKS - (int) $elective_weeks["approved"]);
 
 		$sidebar_html  = "<ul class=\"menu\">\n";
@@ -250,7 +250,7 @@ if(!defined("PARENT_INCLUDED")) {
 										JOIN `".CLERKSHIP_DATABASE."`.`logbook_entries` AS b
 										ON a.`lentry_id` = b.`lentry_id`
 										AND b.`entry_active` = '1'
-										AND b.`proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
+										AND b.`proxy_id` = ".$db->qstr($ENTRADA_USER->getId())."
 										WHERE a.`objective_id` = ".$db->qstr($required_objective["objective_id"])."
 										GROUP BY a.`objective_id`";
 						$recorded = $db->GetOne($query);

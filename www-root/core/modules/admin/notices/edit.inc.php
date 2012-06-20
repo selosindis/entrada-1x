@@ -173,7 +173,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 
 						if (!$ERROR) {
 							$PROCESSED["updated_date"] = time();
-							$PROCESSED["updated_by"] = $_SESSION["details"]["id"];
+							$PROCESSED["updated_by"] = $ENTRADA_USER->getId();
 
 							if ($db->AutoExecute("notices", $PROCESSED, "UPDATE", "notice_id=".$db->qstr($NOTICE_ID))) {
 								application_log("success", "Successfully updated notice ID [".$NOTICE_ID."]");

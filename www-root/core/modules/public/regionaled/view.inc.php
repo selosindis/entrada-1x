@@ -67,7 +67,7 @@ if (!defined("PARENT_INCLUDED")) {
 				/**
 				 * Check the owner of this event to ensure it's the correct proxy_id.
 				 */
-				if ($APARTMENT_INFO["proxy_id"] == $_SESSION["details"]["id"]) {
+				if ($APARTMENT_INFO["proxy_id"] == $ENTRADA_USER->getId()) {
 					if ((int) $APARTMENT_INFO["event_id"] && ($APARTMENT_INFO["occupant_type"] == "undergrad")) {
 						$query = "	SELECT a.*, b.`etype_id` AS `proxy_id`, c.`rotation_title`
 									FROM `".CLERKSHIP_DATABASE."`.`events` AS a
@@ -92,7 +92,7 @@ if (!defined("PARENT_INCLUDED")) {
 						require_once($module_file);
 					}
 				} else {
-					application_log("error", "Proxy_id [".$_SESSION["details"]["id"]."] attempted to view aschedule_id [".$ASCHEDULE_ID."] which did not belong to them.");
+					application_log("error", "Proxy_id [".$ENTRADA_USER->getId()."] attempted to view aschedule_id [".$ASCHEDULE_ID."] which did not belong to them.");
 
 					header("Location: ".ENTRADA_URL."/regionaled");
 					exit;
@@ -103,7 +103,7 @@ if (!defined("PARENT_INCLUDED")) {
 
 				echo display_notice();
 
-				application_log("notice", "Proxy_id [".$_SESSION["details"]["id"]."] attempted to view aschedule_id [".$ASCHEDULE_ID."] which does not exist in the database.");
+				application_log("notice", "Proxy_id [".$ENTRADA_USER->getId()."] attempted to view aschedule_id [".$ASCHEDULE_ID."] which does not exist in the database.");
 			}
 		} else {
 			application_log("notice", "Someone attempted to view an apartment schedule without providing an aschedule_id.");

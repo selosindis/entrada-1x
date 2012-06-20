@@ -64,7 +64,7 @@ if (substr($request_filename, -4) == ".ics") {
  * Check if the user is already authenticated.
  */
 if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
-	$user_proxy_id = $_SESSION["details"]["id"];
+	$user_proxy_id = $ENTRADA_USER->getId();
 	$user_username = $_SESSION["details"]["username"];
 	$user_firstname = $_SESSION["details"]["firstname"];
 	$user_lastname = $_SESSION["details"]["lastname"];

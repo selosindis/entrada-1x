@@ -150,7 +150,7 @@ if (!$LOGGED_IN && (isset($_GET["auth"]) && $_GET["auth"] == "true")) {
 							JOIN `".AUTH_DATABASE."`.`user_access` AS b
 							ON a.`id` = b.`user_id`
 							AND b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
-							WHERE a.`id` = ".$db->qstr($_SESSION["details"]["id"]);
+							WHERE a.`id` = ".$db->qstr($ENTRADA_USER->getId());
 				$userinfo = $db->GetRow($query);
 				if ($userinfo) {
 					$_SESSION["details"]["username"] = $userinfo["username"];
@@ -441,7 +441,7 @@ if ($COMMUNITY_URL) {
 						$sidebar_html .= "<label for=\"permission-mask\">Available permission masks:</label><br />";
 						$sidebar_html .= "<select id=\"permission-mask\" name=\"mask\" style=\"width: 160px\" onchange=\"window.location='".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?".str_replace("&#039;", "'", replace_query(array("mask" => "'+this.options[this.selectedIndex].value")))."\">\n";
 						foreach ($_SESSION["permissions"] as $proxy_id => $result) {
-							$sidebar_html .= "<option value=\"".(($proxy_id == $_SESSION["details"]["id"]) ? "close" : $result["permission_id"])."\"".(($proxy_id == $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]) ? " selected=\"selected\"" : "").">".html_encode($result["fullname"])."</option>\n";
+							$sidebar_html .= "<option value=\"".(($proxy_id == $ENTRADA_USER->getId()) ? "close" : $result["permission_id"])."\"".(($proxy_id == $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]) ? " selected=\"selected\"" : "").">".html_encode($result["fullname"])."</option>\n";
 						}
 						$sidebar_html .= "</select>\n";
 						$sidebar_html .= "</form>\n";

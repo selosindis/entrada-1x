@@ -196,7 +196,7 @@ if ($RECORD_ID && $FILE_ID) {
 
 			echo display_notice();
 
-			application_log("error", "The file record id [".$RECORD_ID."] is deactivated; however, ".$_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]." [".$_SESSION["details"]["id"]."] has tried to comment on it.");
+			application_log("error", "The file record id [".$RECORD_ID."] is deactivated; however, ".$_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]." [".$ENTRADA_USER->getId()."] has tried to comment on it.");
 		}
 	} else {
 		$ERROR++;

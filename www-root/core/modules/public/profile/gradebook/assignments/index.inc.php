@@ -80,7 +80,7 @@ switch ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) {
 		$sort_by = "`assessments` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]);
 	break;
 }
-$cohort = groups_get_cohort($_SESSION["details"]["id"]);
+$cohort = groups_get_cohort($ENTRADA_USER->getId());
 $query = "	SELECT a.*, COUNT(b.`assessment_id`) AS `assessments` 
 			FROM `courses` AS a
 			JOIN `assessments` AS b

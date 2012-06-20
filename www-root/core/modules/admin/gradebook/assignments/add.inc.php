@@ -237,7 +237,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						
 							$PROCESSED["order"]			= $order;
 							$PROCESSED["updated_date"]	= time();
-							$PROCESSED["updated_by"]	= $_SESSION["details"]["id"];
+							$PROCESSED["updated_by"]	= $ENTRADA_USER->getId();
 							$PROCESSED["course_id"]		= $COURSE_ID;
 
 							if ($db->AutoExecute("assessments", $PROCESSED, "INSERT")) {		
@@ -336,7 +336,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					if(!$ERROR){
 						
 						$PROCESSED["updated_date"]	= time();
-						$PROCESSED["updated_by"]	= $_SESSION["details"]["id"];
+						$PROCESSED["updated_by"]	= $ENTRADA_USER->getId();
 						$PROCESSED["course_id"]		= $COURSE_ID;
 						$PROCESSED["assignment_active"] = 1;
 

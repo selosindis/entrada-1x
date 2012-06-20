@@ -449,7 +449,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 							} else {
 								$ERROR++;
 								$ERRORSTR[] = "You do not have permission to add a user within the selected organisation. This error has been logged and will be investigated.";
-								application_log("Proxy id [" . $_SESSION['details']['proxy_id'] . "] tried to create a user within an organisation [" . $organisation_id . "] they didn't have permissions on. ");
+								application_log("Proxy id [" . $ENTRADA_USER->getId() . "] tried to create a user within an organisation [" . $organisation_id . "] they didn't have permissions on. ");
 							}
 						} else {
 							$ERROR++;

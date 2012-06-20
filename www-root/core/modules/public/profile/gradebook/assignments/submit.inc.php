@@ -116,7 +116,7 @@ if ($RECORD_ID) {
 						$PROCESSED["proxy_id"]		= $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"];
 						$PROCESSED["file_active"]	= 1;
 						$PROCESSED["updated_date"]	= time();
-						$PROCESSED["updated_by"]	= $_SESSION["details"]["id"];
+						$PROCESSED["updated_by"]	= $ENTRADA_USER->getId();
 
 
 						if ($db->AutoExecute("assignment_files", $PROCESSED, "INSERT")) {

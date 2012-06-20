@@ -45,7 +45,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 		$sidebar_html  = "The following individual".((($total_permissions - 1) != 1) ? "s have" : " has")." given you access to their ".APPLICATION_NAME." permission levels:";
 		$sidebar_html .= "<ul class=\"menu\">\n";
 		foreach ($_SESSION["permissions"] as $proxy_id => $result) {
-			if ($proxy_id != $_SESSION["details"]["id"]) {
+			if ($proxy_id != $ENTRADA_USER->getId()) {
 				$sidebar_html .= "<li class=\"checkmark\"><strong>".html_encode($result["fullname"])."</strong><br /><span class=\"content-small\">Exp: ".(($result["expires"]) ? date("D M d/y", $result["expires"]) : "Unknown")."</span></li>\n";
 			}
 		}

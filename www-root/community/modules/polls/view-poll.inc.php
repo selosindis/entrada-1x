@@ -97,7 +97,7 @@ if ($RECORD_ID) {
 							if (!$ERROR) {
 								$PROCESSED["proxy_id"]				= $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"];
 								$PROCESSED["updated_date"]			= time();
-								$PROCESSED["updated_by"]			= $_SESSION["details"]["id"];
+								$PROCESSED["updated_by"]			= $ENTRADA_USER->getId();
 								
 								// Use $databaseResponses when inserting into community_polls_responses
 								if ($db->AutoExecute("community_polls_results", $PROCESSED, "INSERT"))

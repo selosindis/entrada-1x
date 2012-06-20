@@ -77,7 +77,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 				$PROCESSED["form_parent"] = 0;
 				$PROCESSED["form_active"] = 1;
 				$PROCESSED["updated_date"] = time();
-				$PROCESSED["updated_by"] = $_SESSION["details"]["id"];
+				$PROCESSED["updated_by"] = $ENTRADA_USER->getId();
 
 				if ($db->AutoExecute("evaluation_forms", $PROCESSED, "INSERT") && ($eform_id = $db->Insert_Id())) {
 					application_log("success", "New evaluation form [".$eform_id."] was added to the system.");

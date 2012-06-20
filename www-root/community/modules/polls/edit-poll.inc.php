@@ -250,7 +250,7 @@ if ($RECORD_ID) {
 					$PROCESSED["poll_order"]			= 0;
 //					$PROCESSED["poll_notifications"]	= 0;
 					$PROCESSED["updated_date"]			= time();
-					$PROCESSED["updated_by"]			= $_SESSION["details"]["id"];
+					$PROCESSED["updated_by"]			= $ENTRADA_USER->getId();
 					
 					// Use $databaseResponses when inserting into community_polls_responses
 					if ($db->AutoExecute("community_polls", $PROCESSED, "UPDATE", "`community_id` = ".$db->qstr($COMMUNITY_ID)." AND `cpage_id` = ".$db->qstr($PAGE_ID)." AND `cpolls_id` = ".$db->qstr($RECORD_ID))) 
@@ -281,7 +281,7 @@ if ($RECORD_ID) {
 						if ($specificMembers && isset($CLEANED_MEMBERS_ARRAY) && count($CLEANED_MEMBERS_ARRAY)) {
 							$MEMBERS["cpolls_id"] 				= $RECORD_ID;
 							$MEMBERS["updated_date"]			= time();
-							$MEMBERS["updated_by"]				= $_SESSION["details"]["id"];
+							$MEMBERS["updated_by"]				= $ENTRADA_USER->getId();
 							
 							foreach($CLEANED_MEMBERS_ARRAY as $memberKey => $memberValue) {
 								$SUCCESS = FALSE;

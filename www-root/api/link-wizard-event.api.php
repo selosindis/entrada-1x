@@ -198,7 +198,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										}
 
 										$PROCESSED["updated_date"]	= time();
-										$PROCESSED["updated_by"]	= $_SESSION["details"]["id"];
+										$PROCESSED["updated_by"]	= $ENTRADA_USER->getId();
 
 										if(!$ERROR) {
 											if($db->AutoExecute("event_links", $PROCESSED, "UPDATE", "elink_id = ".$db->qstr($ELINK_ID)." AND event_id = ".$db->qstr($EVENT_ID))) {
@@ -477,7 +477,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 									}
 
 									$PROCESSED["updated_date"]	= time();
-									$PROCESSED["updated_by"]	= $_SESSION["details"]["id"];
+									$PROCESSED["updated_by"]	= $ENTRADA_USER->getId();
 
 									if(!$ERROR) {
 										$query	= "SELECT * FROM `event_links` WHERE `event_id` = ".$db->qstr($EVENT_ID)." AND `link` = ".$db->qstr($PROCESSED["link"]);

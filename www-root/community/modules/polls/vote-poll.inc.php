@@ -102,7 +102,7 @@ if ($RECORD_ID) {
 							if (!$ERROR) {
 								$PROCESSED["proxy_id"]				= $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"];
 								$PROCESSED["updated_date"]			= time();
-								$PROCESSED["updated_by"]			= $_SESSION["details"]["id"];
+								$PROCESSED["updated_by"]			= $ENTRADA_USER->getId();
 								
 								$query = "SELECT SUM(`minimum_responses`) AS `min`, SUM(`maximum_responses`) AS `max` FROM `community_polls_questions` WHERE `cpolls_id` = ".$db->qstr($RECORD_ID)." AND `question_active` = '1'";
 
@@ -244,7 +244,7 @@ if ($RECORD_ID) {
 	
 			echo display_notice();
 	
-			application_log("error", "The poll record id [".$RECORD_ID."] is deactivated; however, ".$_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]." [".$_SESSION["details"]["id"]."] has tried to vote in it.");
+			application_log("error", "The poll record id [".$RECORD_ID."] is deactivated; however, ".$_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]." [".$ENTRADA_USER->getId()."] has tried to vote in it.");
 		}
 	} else {
 		$ERROR++;

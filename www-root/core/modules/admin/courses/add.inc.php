@@ -82,7 +82,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				$PROCESSED["organisation_id"] = $ENTRADA_USER->getActiveOrganisation();
 			} else {
 				add_error("You do not have permission to add a course for this organisation. This error has been logged and will be investigated.");
-				application_log("error", "Proxy id [".$_SESSION['details']['proxy_id']."] tried to create a course within an organisation [".$ENTRADA_USER->getActiveOrganisation()."] they didn't have permissions on. ");
+				application_log("error", "Proxy id [".$ENTRADA_USER->getId()."] tried to create a course within an organisation [".$ENTRADA_USER->getActiveOrganisation()."] they didn't have permissions on. ");
 			}
 			
 			/**
@@ -242,7 +242,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			
 			if (!has_error()) {
 				$PROCESSED["updated_date"] = time();
-				$PROCESSED["updated_by"] = $_SESSION["details"]["id"];
+				$PROCESSED["updated_by"] = $ENTRADA_USER->getId();
 				
 				if ($db->AutoExecute("courses", $PROCESSED, "INSERT")) {
 					if ($COURSE_ID = $db->Insert_Id()) {
@@ -251,7 +251,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						 */
 						if ((is_array($clinical_presentations)) && (count($clinical_presentations))) {
 							foreach ($clinical_presentations as $objective_id => $presentation_name) {
-								if (!$db->AutoExecute("course_objectives", array("course_id" => $COURSE_ID, "objective_id" => $objective_id, "objective_type" => "event", "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT")) {
+								if (!$db->AutoExecute("course_objectives", array("course_id" => $COURSE_ID, "objective_id" => $objective_id, "objective_type" => "event", "updated_date" => time(), "updated_by" => $ENTRADA_USER->getId()), "INSERT")) {
 									add_error("There was an error when trying to insert a &quot;clinical presentation&quot; into the system. System administrators have been informed of this error; please try again later.");
 
 									application_log("error", "Unable to insert a new clinical presentation to the database when adding a new event. Database said: ".$db->ErrorMsg());
@@ -288,17 +288,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 
 						if (is_array($PRIMARY_OBJECTIVES) && count($PRIMARY_OBJECTIVES)) {
 							foreach($PRIMARY_OBJECTIVES as $objective_id) {
-								$db->Execute("INSERT INTO `course_objectives` SET `course_id` = ".$db->qstr($COURSE_ID).", `objective_id` = ".$db->qstr($objective_id).", `updated_date` = ".$db->qstr(time()).", `updated_by` = ".$db->qstr($_SESSION["details"]["id"]).", `importance` = '1'");
+								$db->Execute("INSERT INTO `course_objectives` SET `course_id` = ".$db->qstr($COURSE_ID).", `objective_id` = ".$db->qstr($objective_id).", `updated_date` = ".$db->qstr(time()).", `updated_by` = ".$db->qstr($ENTRADA_USER->getId()).", `importance` = '1'");
 							}
 						}
 						if (is_array($SECONDARY_OBJECTIVES) && count($SECONDARY_OBJECTIVES)) {
 							foreach($SECONDARY_OBJECTIVES as $objective_id) {
-								$db->Execute("INSERT INTO `course_objectives` SET `course_id` = ".$db->qstr($COURSE_ID).", `objective_id` = ".$db->qstr($objective_id).", `updated_date` = ".$db->qstr(time()).", `updated_by` = ".$db->qstr($_SESSION["details"]["id"]).", `importance` = '2'");
+								$db->Execute("INSERT INTO `course_objectives` SET `course_id` = ".$db->qstr($COURSE_ID).", `objective_id` = ".$db->qstr($objective_id).", `updated_date` = ".$db->qstr(time()).", `updated_by` = ".$db->qstr($ENTRADA_USER->getId()).", `importance` = '2'");
 							}
 						}
 						if (is_array($TERTIARY_OBJECTIVES) && count($TERTIARY_OBJECTIVES)) {
 							foreach($TERTIARY_OBJECTIVES as $objective_id) {
-								$db->Execute("INSERT INTO `course_objectives` SET `course_id` = ".$db->qstr($COURSE_ID).", `objective_id` = ".$db->qstr($objective_id).", `updated_date` = ".$db->qstr(time()).", `updated_by` = ".$db->qstr($_SESSION["details"]["id"]).", `importance` = '3'");
+								$db->Execute("INSERT INTO `course_objectives` SET `course_id` = ".$db->qstr($COURSE_ID).", `objective_id` = ".$db->qstr($objective_id).", `updated_date` = ".$db->qstr(time()).", `updated_by` = ".$db->qstr($ENTRADA_USER->getId()).", `importance` = '3'");
 							}
 						}
 						

@@ -273,7 +273,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 								$ERROR++;
 								$ERRORSTR[] = "You do not have permission to create this quiz question. The system administrator was informed of this error; please try again later.";
 
-								application_log("error", "There was an error inserting a quiz question to quiz_id [".$RECORD_ID."] because the user [".$_SESSION["details"]["id"]."] didn't have permission to create a quiz question.");
+								application_log("error", "There was an error inserting a quiz question to quiz_id [".$RECORD_ID."] because the user [".$ENTRADA_USER->getId()."] didn't have permission to create a quiz question.");
 							}
 						}
 

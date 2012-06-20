@@ -34,9 +34,9 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	if ($_GET["event_id"] && $event_id = clean_input($_GET["event_id"], "int")) {
 		$query = "DELETE FROM `events` WHERE `event_id` = ".$db->qstr($event_id)." AND `event_title` = 'Placeholder Event'";
 		if ($db->Execute($query)) {
-			application_log("success", "User [".$_SESSION["details"]["id"]."] successfully removed a placeholder event [".$event_id."] when leaving the event manage page.");
+			application_log("success", "User [".$ENTRADA_USER->getId()."] successfully removed a placeholder event [".$event_id."] when leaving the event manage page.");
 		} else {
-			application_log("error", "User [".$_SESSION["details"]["id"]."] was unable to remove a placeholder event [".$event_id."] when leaving the event manage page. Database said: ".$db->ErrorMsg());
+			application_log("error", "User [".$ENTRADA_USER->getId()."] was unable to remove a placeholder event [".$event_id."] when leaving the event manage page. Database said: ".$db->ErrorMsg());
 		}
 	}
 }

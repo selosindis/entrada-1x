@@ -133,7 +133,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 
 					if (!$ERROR) {
 						$PROCESSED["updated_date"] = time();
-						$PROCESSED["updated_by"] = $_SESSION["details"]["id"];
+						$PROCESSED["updated_by"] = $ENTRADA_USER->getId();
 						
 						if ($db->AutoExecute("global_lu_objectives", $PROCESSED, "UPDATE", "`objective_id` = ".$db->qstr($OBJECTIVE_ID))) {
 							$url = ENTRADA_URL . "/admin/settings/organisations/manage/objectives?org=".$ORGANISATION_ID;

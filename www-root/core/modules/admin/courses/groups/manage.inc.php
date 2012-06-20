@@ -48,7 +48,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 
 			$proxy_ids = explode(',', $_POST["group_members"]);
 			$PROCESSED["updated_date"]	= time();
-			$PROCESSED["updated_by"] = $_SESSION["details"]["id"];
+			$PROCESSED["updated_by"] = $ENTRADA_USER->getId();
 
 
 				$count = $added = 0;

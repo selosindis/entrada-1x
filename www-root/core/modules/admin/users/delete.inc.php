@@ -87,7 +87,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 							$SUCCESS++;
 							$SUCCESSSTR[] = "Successfully removed ".html_encode($result["fullname"])."'s access from this application.";
 
-							application_log("success", "Proxy ID [".$_SESSION["details"]["id"]."] removed [".$result["fullname"]."] from user_access table for app_id [".AUTH_APP_ID."].");
+							application_log("success", "Proxy ID [".$ENTRADA_USER->getId()."] removed [".$result["fullname"]."] from user_access table for app_id [".AUTH_APP_ID."].");
 						} else {
 							$ERROR++;
 							$ERRORSTR[] = "Unable to remove ".html_encode($result["fullname"])."'s access from this application at this time.";
@@ -104,7 +104,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 					$ERROR++;
 					$ERRORSTR[] = "Unable to remove <strong>".html_encode($proxy_id)."</strong> access from this application at this time.";
 
-					application_log("error", "Proxy ID [".$_SESSION["details"]["id"]."] tried to remove proxy_id [".$proxy_id."], but the database query failed. Database said: ".$db->ErrorMsg());
+					application_log("error", "Proxy ID [".$ENTRADA_USER->getId()."] tried to remove proxy_id [".$proxy_id."], but the database query failed. Database said: ".$db->ErrorMsg());
 				}
 			}
 

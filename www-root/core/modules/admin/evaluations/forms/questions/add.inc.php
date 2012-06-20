@@ -222,7 +222,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					} else {
 						add_error("You do not have permission to create this evaluation form question. The system administrator was informed of this error; please try again later.");
 
-						application_log("error", "There was an error inserting an evaluation form question to eform_id [".$FORM_ID."] because the user [".$_SESSION["details"]["id"]."] didn't have permission to create a form question.");
+						application_log("error", "There was an error inserting an evaluation form question to eform_id [".$FORM_ID."] because the user [".$ENTRADA_USER->getId()."] didn't have permission to create a form question.");
 					}
 				}
 

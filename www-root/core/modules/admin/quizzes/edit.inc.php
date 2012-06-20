@@ -136,7 +136,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 
 					if (!$ERROR) {
 						$PROCESSED["updated_date"] = time();
-						$PROCESSED["updated_by"] = $_SESSION["details"]["id"];
+						$PROCESSED["updated_by"] = $ENTRADA_USER->getId();
 
 						if ($db->AutoExecute("quizzes", $PROCESSED, "UPDATE", "`quiz_id` = ".$db->qstr($RECORD_ID))) {
 							/**
@@ -150,7 +150,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 							 */
 							if ((is_array($PROCESSED["associated_proxy_ids"])) && !empty($PROCESSED["associated_proxy_ids"])) {
 								foreach ($PROCESSED["associated_proxy_ids"] as $proxy_id) {
-									if (!$db->AutoExecute("quiz_contacts", array("quiz_id" => $RECORD_ID, "proxy_id" => $proxy_id, "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT")) {
+									if (!$db->AutoExecute("quiz_contacts", array("quiz_id" => $RECORD_ID, "proxy_id" => $proxy_id, "updated_date" => time(), "updated_by" => $ENTRADA_USER->getId()), "INSERT")) {
 										$ERROR++;
 										$ERRORSTR[] = "There was an error while trying to attach a <strong>Quiz Author</strong> to this quiz.<br /><br />The system administrator was informed of this error; please try again later.";
 

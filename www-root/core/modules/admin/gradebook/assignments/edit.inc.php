@@ -237,7 +237,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 
 								if (!$ERROR) {
 									$PROCESSED["updated_date"] = time();
-									$PROCESSED["updated_by"] = $_SESSION["details"]["id"];
+									$PROCESSED["updated_by"] = $ENTRADA_USER->getId();
 									$PROCESSED["course_id"] = $COURSE_ID;
 
 									if ($db->AutoExecute("assessments", $PROCESSED, "UPDATE", "`assessment_id` = " . $db->qstr($assessment_details["assessment_id"]))) {
@@ -330,7 +330,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							if(!$ERROR){
 
 								$PROCESSED["updated_date"]	= time();
-								$PROCESSED["updated_by"]	= $_SESSION["details"]["id"];
+								$PROCESSED["updated_by"]	= $ENTRADA_USER->getId();
 								$PROCESSED["course_id"]		= $COURSE_ID;
 
 								if ($db->AutoExecute("assignments", $PROCESSED, "UPDATE","`assignment_id` = ".$db->qstr($ASSIGNMENT_ID))) {

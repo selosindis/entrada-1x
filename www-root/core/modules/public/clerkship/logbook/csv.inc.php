@@ -44,13 +44,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 	
 	if (isset($_GET["id"]) && ((int)$_GET["id"])) {
 		$PROXY_ID = $_GET["id"];
-		if ($_SESSION["details"]["id"] != $PROXY_ID) {
+		if ($ENTRADA_USER->getId() != $PROXY_ID) {
 			$student = false;
 		} else {
 			$student = true;
 		}
 	} else {
-		$PROXY_ID = $_SESSION["details"]["id"];
+		$PROXY_ID = $ENTRADA_USER->getId();
 		$student = true;
 	}
 	/**

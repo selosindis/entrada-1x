@@ -327,7 +327,7 @@ define("COMMUNITY_NOTIFY_LIMIT", 100);											// Per batch email mailout limi
 define("COMMUNITY_MAIL_LIST_MEMBERS_LIMIT", 100);								// Per batch google requests limit
 
 define("COMMUNITY_NOTIFICATIONS_ACTIVE", false);
-define("NOTIFICATIONS_ACTIVE", false);
+define("NOTIFICATIONS_ACTIVE", true);
 
 /**
  * Array containing valid Podcast mime types as required by Apple.

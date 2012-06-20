@@ -182,7 +182,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										}
 
 										$PROCESSED["updated_date"]	= time();
-										$PROCESSED["updated_by"]	= $_SESSION["details"]["id"];
+										$PROCESSED["updated_by"]	= $ENTRADA_USER->getId();
 
 										if(!$ERROR) {
 											if($db->AutoExecute("course_links", $PROCESSED, "UPDATE", "id = ".$db->qstr($LINK_ID)." AND course_id = ".$db->qstr($IDENTIFIER))) {
@@ -457,7 +457,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 									}
 
 									$PROCESSED["updated_date"]	= time();
-									$PROCESSED["updated_by"]	= $_SESSION["details"]["id"];
+									$PROCESSED["updated_by"]	= $ENTRADA_USER->getId();
 
 									if(!$ERROR) {
 										$query	= "SELECT * FROM `course_links` WHERE `course_id` = ".$db->qstr($IDENTIFIER)." AND `link` = ".$db->qstr($PROCESSED["link"]);

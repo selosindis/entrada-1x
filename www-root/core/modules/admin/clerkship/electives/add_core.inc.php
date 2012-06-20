@@ -136,7 +136,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 
 				if (!$ERROR) {
 					$PROCESSED["modified_last"]	= time();
-					$PROCESSED["modified_by"] = $_SESSION["details"]["id"];
+					$PROCESSED["modified_by"] = $ENTRADA_USER->getId();
 
 					switch ($_POST["add_type"]) {
 						case "single" :	// Adds all selected users to a single event.

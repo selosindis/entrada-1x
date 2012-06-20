@@ -344,7 +344,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 					LEFT JOIN `".CLERKSHIP_DATABASE."`.`regions` AS c
 					ON c.`region_id` = a.`region_id`
 					WHERE b.`econtact_type` = 'student'
-					AND b.`etype_id` = ".$db->qstr($_SESSION["details"]["id"])."
+					AND b.`etype_id` = ".$db->qstr($ENTRADA_USER->getId())."
 					AND a.`event_type` = 'elective'
 					".$where."
 					ORDER BY a.`event_start` ASC";
@@ -391,7 +391,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 				}
 	
 				if((bool) $result["manage_apartments"]) {
-					$aschedule_id = regionaled_apartment_check($result["event_id"], $_SESSION["details"]["id"]);
+					$aschedule_id = regionaled_apartment_check($result["event_id"], $ENTRADA_USER->getId());
 					$apartment_available = (($aschedule_id) ? true : false);
 				} else {
 					$apartment_available = false;

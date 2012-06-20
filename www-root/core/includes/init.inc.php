@@ -23,7 +23,6 @@
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
 */
-
 /**
  * Register the Zend autoloader so we use any part of Zend Framework without
  * the need to require the specific Zend Framework files.
@@ -44,7 +43,6 @@ require_once("Entrada/pagination/pagination.class.php");
 require_once("Entrada/router/router.class.php");
 
 require_once("cache.inc.php");
-require_once("acl.inc.php");
 
 require_once("Models/users/User.class.php");
 if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
@@ -52,6 +50,8 @@ if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
 } else {
 	$ENTRADA_USER = false;
 }
+
+require_once("acl.inc.php");
 
 @ini_set("filter.default_flags", FILTER_FLAG_NO_ENCODE_QUOTES);
 
@@ -203,7 +203,7 @@ $STEP = 1;
 $PROCESSED = array();
 
 if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
-	$PROXY_ID = $_SESSION["details"]["id"];
+	$PROXY_ID = $ENTRADA_USER->getId();
 	$GROUP = $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"];
 	$ROLE = $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"];
 } else {

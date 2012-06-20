@@ -227,7 +227,7 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 			
 			if (!$ERROR) {
 				$PROCESSED["updated_date"] = time();
-				$PROCESSED["updated_by"] = $_SESSION["details"]["id"];
+				$PROCESSED["updated_by"] = $ENTRADA_USER->getId();
 				$PROCESSED["parent_id"] = $parent_id;
 				if ($ENTRADA_ACL->amIAllowed(new EventResource($event_info["event_id"], $event_info["course_id"], $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"]), 'update')) {
 					$PROCESSED["event_finish"] = $PROCESSED["event_start"];
@@ -270,7 +270,7 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 						if ($db->Execute($query)) {
 							if (count($PROCESSED["associated_course_ids"])) {
 								if ($PROCESSED["associated_course_ids"]) {
-									if (!$db->AutoExecute("event_audience", array("event_id" => $event_id, "audience_type" => "course_id", "audience_value" => (int) $course_id, "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT")) {
+									if (!$db->AutoExecute("event_audience", array("event_id" => $event_id, "audience_type" => "course_id", "audience_value" => (int) $course_id, "updated_date" => time(), "updated_by" => $ENTRADA_USER->getId()), "INSERT")) {
 										$ERROR++;
 										$ERRORSTR[] = "There was an error while trying to attach the selected <strong>Course List</strong> to this event.<br /><br />The system administrator was informed of this error; please try again later.";
 		
@@ -280,7 +280,7 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 							}
 							if (count($PROCESSED["associated_group_ids"])) {
 								foreach($PROCESSED["associated_group_ids"] as $group_id) {
-									if (!$db->AutoExecute("event_audience", array("event_id" => $event_id, "audience_type" => "group_id", "audience_value" => (int) $group_id, "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT")) {
+									if (!$db->AutoExecute("event_audience", array("event_id" => $event_id, "audience_type" => "group_id", "audience_value" => (int) $group_id, "updated_date" => time(), "updated_by" => $ENTRADA_USER->getId()), "INSERT")) {
 										$ERROR++;
 										$ERRORSTR[] = "There was an error while trying to attach the selected <strong>Group</strong> to this event.<br /><br />The system administrator was informed of this error; please try again later.";
 		
@@ -290,7 +290,7 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 							}
 							if (isset($PROCESSED["associated_proxy_ids"]) && count($PROCESSED["associated_proxy_ids"])) {
 								foreach($PROCESSED["associated_proxy_ids"] as $proxy_id) {
-									if (!$db->AutoExecute("event_audience", array("event_id" => $event_id, "audience_type" => "proxy_id", "audience_value" => (int) $proxy_id, "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT")) {
+									if (!$db->AutoExecute("event_audience", array("event_id" => $event_id, "audience_type" => "proxy_id", "audience_value" => (int) $proxy_id, "updated_date" => time(), "updated_by" => $ENTRADA_USER->getId()), "INSERT")) {
 										$ERROR++;
 										$ERRORSTR[] = "There was an error while trying to attach the selected <strong>Proxy ID</strong> to this event.<br /><br />The system administrator was informed of this error; please try again later.";
 		
@@ -313,7 +313,7 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 						if ($db->Execute($query)) {
 							if (isset($PROCESSED["associated_faculty"]) && (is_array($PROCESSED["associated_faculty"])) && (count($PROCESSED["associated_faculty"]))) {
 								foreach($PROCESSED["associated_faculty"] as $contact_order => $proxy_id) {
-									if (!$db->AutoExecute("event_contacts", array("event_id" => $event_id, "proxy_id" => $proxy_id, "contact_order" => (int) $contact_order, "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT")) {
+									if (!$db->AutoExecute("event_contacts", array("event_id" => $event_id, "proxy_id" => $proxy_id, "contact_order" => (int) $contact_order, "updated_date" => time(), "updated_by" => $ENTRADA_USER->getId()), "INSERT")) {
 										$ERROR++;
 										$ERRORSTR[] = "There was an error while trying to attach an <strong>Associated Faculty</strong> to this event.<br /><br />The system administrator was informed of this error; please try again later.";
 		

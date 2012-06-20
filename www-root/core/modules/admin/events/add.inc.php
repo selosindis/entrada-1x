@@ -329,7 +329,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					$PROCESSED["draft_id"] = $draft_id;
 				}
 				$PROCESSED["updated_date"]	= time();
-				$PROCESSED["updated_by"]	= $_SESSION["details"]["id"];
+				$PROCESSED["updated_by"]	= $ENTRADA_USER->getId();
 
 				$PROCESSED["event_finish"] = $PROCESSED["event_start"];
 				$PROCESSED["event_duration"] = 0;
@@ -364,7 +364,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						 */
 						if ((is_array($PROCESSED["associated_faculty"])) && (count($PROCESSED["associated_faculty"]))) {
 							foreach($PROCESSED["associated_faculty"] as $contact_order => $proxy_id) {
-								$contact_details =  array("event_id" => $EVENT_ID, "proxy_id" => $proxy_id, "contact_role"=>$PROCESSED["contact_role"][$contact_order],"contact_order" => (int) $contact_order, "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]);
+								$contact_details =  array("event_id" => $EVENT_ID, "proxy_id" => $proxy_id, "contact_role"=>$PROCESSED["contact_role"][$contact_order],"contact_order" => (int) $contact_order, "updated_date" => time(), "updated_by" => $ENTRADA_USER->getId());
 								if ($is_draft) { 
 									$contact_details["devent_id"] =  $devent_id;
 								}
@@ -383,7 +383,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								 */
 								if (count($PROCESSED["associated_course_ids"])) {
 									foreach($PROCESSED["associated_course_ids"] as $course_id) {
-										$audience_details = array("event_id" => $EVENT_ID, "audience_type" => "course_id", "audience_value" => (int) $course_id, "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]);
+										$audience_details = array("event_id" => $EVENT_ID, "audience_type" => "course_id", "audience_value" => (int) $course_id, "updated_date" => time(), "updated_by" => $ENTRADA_USER->getId());
 										if ($is_draft) { 
 											$audience_details["devent_id"] =  $devent_id;
 										}
@@ -401,7 +401,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								 */
 								if (count($PROCESSED["associated_cohort_ids"])) {
 									foreach($PROCESSED["associated_cohort_ids"] as $group_id) {
-										$audience_details = array("event_id" => $EVENT_ID, "audience_type" => "cohort", "audience_value" => (int) $group_id, "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]);
+										$audience_details = array("event_id" => $EVENT_ID, "audience_type" => "cohort", "audience_value" => (int) $group_id, "updated_date" => time(), "updated_by" => $ENTRADA_USER->getId());
 										if ($is_draft) { 
 											$audience_details["devent_id"] = $devent_id; 
 										}
@@ -419,7 +419,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								 */
 								if (count($PROCESSED["associated_cgroup_ids"])) {
 									foreach($PROCESSED["associated_cgroup_ids"] as $cgroup_id) {
-										$audience_details = array("event_id" => $EVENT_ID, "audience_type" => "group_id", "audience_value" => (int) $cgroup_id, "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]);
+										$audience_details = array("event_id" => $EVENT_ID, "audience_type" => "group_id", "audience_value" => (int) $cgroup_id, "updated_date" => time(), "updated_by" => $ENTRADA_USER->getId());
 										if ($is_draft) { 
 											$audience_details["devent_id"] = $devent_id;
 										}
@@ -437,7 +437,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								 */
 								if (count($PROCESSED["associated_proxy_ids"])) {
 									foreach($PROCESSED["associated_proxy_ids"] as $proxy_id) {
-										$audience_details = array("event_id" => $EVENT_ID, "audience_type" => "proxy_id", "audience_value" => (int) $proxy_id, "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]);
+										$audience_details = array("event_id" => $EVENT_ID, "audience_type" => "proxy_id", "audience_value" => (int) $proxy_id, "updated_date" => time(), "updated_by" => $ENTRADA_USER->getId());
 										if ($is_draft) { 
 											$audience_details["devent_id"] = $devent_id;
 										}

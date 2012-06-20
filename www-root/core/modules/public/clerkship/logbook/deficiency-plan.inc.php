@@ -84,7 +84,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 			application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
 		}
 	} else {
-		$PROXY_ID = $_SESSION["details"]["id"];
+		$PROXY_ID = $ENTRADA_USER->getId();
 		$administrator = false;
 	}
 	
@@ -287,7 +287,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 						<col style="width: 77%" />
 					</colgroup>
 					<tfoot>
-					<?php if (!isset($PROCESSED["clerk_accepted"]) || !$PROCESSED["clerk_accepted"] || $PROXY_ID != $_SESSION["details"]["id"]) { ?>
+					<?php if (!isset($PROCESSED["clerk_accepted"]) || !$PROCESSED["clerk_accepted"] || $PROXY_ID != $ENTRADA_USER->getId()) { ?>
 						<tr>
 							<td colspan="3" style="padding-top: 25px">
 								<table style="width: 100%" cellspacing="0" cellpadding="0" border="0">
@@ -482,7 +482,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 							?>
 						</tr>
 						<?php 
-						if ($PROXY_ID != $_SESSION["details"]["id"]) { 
+						if ($PROXY_ID != $ENTRADA_USER->getId()) { 
 							?>
 							<tr>
 								<td colspan="3">&nbsp;</td>

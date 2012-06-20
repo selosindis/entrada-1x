@@ -26,7 +26,7 @@ if (!defined("IN_PROFILE")) {
 }  else {
 	require_once(dirname(__FILE__)."/includes/functions.inc.php");
 	
-	$PROXY_ID	= $_SESSION["details"]["id"];
+	$PROXY_ID	= $ENTRADA_USER->getId();
 	$user = User::get($PROXY_ID);
 	$PAGE_META["title"]			= "MSPR";
 	$PAGE_META["description"]	= "";
@@ -45,7 +45,7 @@ if (!defined("IN_PROFILE")) {
 		$sidebar_html  = "The following individual".((($total_permissions - 1) != 1) ? "s have" : " has")." given you access to their ".APPLICATION_NAME." permission levels:";
 		$sidebar_html .= "<ul class=\"menu\">\n";
 		foreach ($_SESSION["permissions"] as $proxy_id => $result) {
-			if ($proxy_id != $_SESSION["details"]["id"]) {
+			if ($proxy_id != $ENTRADA_USER->getId()) {
 				$sidebar_html .= "<li class=\"checkmark\"><strong>".html_encode($result["fullname"])."</strong><br /><span class=\"content-small\">Exp: ".(($result["expires"]) ? date("D M d/y", $result["expires"]) : "Unknown")."</span></li>\n";
 			}
 		}

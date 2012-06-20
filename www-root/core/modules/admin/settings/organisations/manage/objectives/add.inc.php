@@ -118,7 +118,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 			
 			if (!$ERROR) {
 				$PROCESSED["updated_date"] = time();
-				$PROCESSED["updated_by"] = $_SESSION["details"]["id"];
+				$PROCESSED["updated_by"] = $ENTRADA_USER->getId();
 
 				if ($db->AutoExecute("global_lu_objectives", $PROCESSED, "INSERT")) {
 					if ($OBJECTIVE_ID = $db->Insert_Id()) {

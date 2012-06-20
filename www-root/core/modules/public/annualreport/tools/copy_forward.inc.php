@@ -163,7 +163,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 							$result["year_reported"] = $PROCESSED["copy_to"];
 							$result["report_completed"] = "no";
 							$result["updated_date"]	= time();
-							$result["updated_by"] = $_SESSION["details"]["id"];
+							$result["updated_by"] = $ENTRADA_USER->getId();
 							$result["proxy_id"]	= $_SESSION[APPLICATION_IDENTIFIER]['tmp']['proxy_id'];
 							
 							// Remove the ID from the array so that the insert can happen as if it were a new record.
@@ -229,7 +229,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			
 			echo "Once you are finished reviewing this audit report click <a href=\"".$url."\">here</a> to return to the Tools page";
 			echo "</div>";
-			application_log("success", "User ID: ".$_SESSION["details"]["id"]." - Copied forward from ". $PROCESSED["copy_from"] ." to ". $PROCESSED["copy_to"] .".");
+			application_log("success", "User ID: ".$ENTRADA_USER->getId()." - Copied forward from ". $PROCESSED["copy_from"] ." to ". $PROCESSED["copy_to"] .".");
 		} else {
 			if($ERROR) {
 				echo display_error();

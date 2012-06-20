@@ -132,7 +132,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 		if ($quiz_record) {
 			$community_access_query = "	SELECT * FROM `community_members`
 										WHERE `community_id` = ".$db->qstr($quiz_record["community_id"])."
-										AND `proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
+										AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getId())."
 										AND `member_active` = '1'
 										AND `member_acl` = '1'";
 			if ($QUIZ_TYPE == "event" && !$ENTRADA_ACL->amIAllowed(new EventContentResource($quiz_record["content_id"], $quiz_record["course_id"], $quiz_record["organisation_id"]), "update")) {

@@ -353,7 +353,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 					
 					if (!$ERROR) {
 						$PROCESSED["updated_date"]			= time();
-						$PROCESSED["updated_by"]			= $_SESSION["details"]["id"];
+						$PROCESSED["updated_by"]			= $ENTRADA_USER->getId();
 						
 						$EVENT["category_id"]				= $PROCESSED["category_id"];
 						$query = "	SELECT `region_id` FROM `".CLERKSHIP_DATABASE."`.`regions`
@@ -1332,7 +1332,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 							if(!$ERROR) {
 								$PROCESSED["rotation_id"] = $db->GetOne("SELECT `rotation_id` FROM `".CLERKSHIP_DATABASE."`.`categories` WHERE `category_id` = ".$db->qstr($PROCESSED["category_id"]));
 								$PROCESSED["modified_last"]	= time();
-								$PROCESSED["modified_by"]	= $_SESSION["details"]["id"];
+								$PROCESSED["modified_by"]	= $ENTRADA_USER->getId();
 								if(!$db->AutoExecute("`".CLERKSHIP_DATABASE."`.`events`", $PROCESSED, "UPDATE", "`event_id` = ".$db->qstr($EVENT_ID))) {
 									$ERROR++;
 									$ERRORSTR[]	= "Failed to update this event in the database. Please contact a system administrator if this problem persists.";

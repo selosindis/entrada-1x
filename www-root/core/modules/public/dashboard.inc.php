@@ -34,7 +34,7 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 
 	echo display_error();
 
-	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
+	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 	$DISPLAY_DURATION		= array();
 	$notice_where_clause	= "";
@@ -292,7 +292,7 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 		}
 	}
 
-	switch ($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]) {
+	switch ($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]) {
 		case "medtech" :
 		case "student" :
 			$BREADCRUMB[] = array("url" => ENTRADA_URL, "title" => "Student Dashboard");
@@ -642,7 +642,7 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 		break;
 		case "resident" :
 		case "faculty" :
-			$BREADCRUMB[] = array("url" => ENTRADA_URL, "title" => ucwords($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"])." Dashboard");
+			$BREADCRUMB[] = array("url" => ENTRADA_URL, "title" => ucwords($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"])." Dashboard");
 
 			/**
 			 * Update requested timestamp to display.

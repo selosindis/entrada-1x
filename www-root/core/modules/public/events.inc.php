@@ -34,7 +34,7 @@ if (!defined("PARENT_INCLUDED")) {
 
 	echo display_error();
 
-	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
+	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
 	$USE_QUERY = false;
 	$EVENT_ID = 0;
@@ -126,7 +126,7 @@ if (!defined("PARENT_INCLUDED")) {
 	 * and add the appropriate toggle sidebar item.
 	 */
 	if ($ENTRADA_ACL->amIAllowed("eventcontent", "update", false)) {
-		switch ($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]) {
+		switch ($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]) {
 			case "admin" :
 				$admin_wording = "Administrator View";
 				$admin_url = ENTRADA_RELATIVE."/admin/events".(($EVENT_ID) ? "?".replace_query(array("section" => "edit", "id" => $EVENT_ID)) : "");
@@ -169,7 +169,7 @@ if (!defined("PARENT_INCLUDED")) {
 		if (isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["organisation_id"]) && $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["organisation_id"]) {
 			$ORGANISATION_ID = $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["organisation_id"];
 		} else {
-			$ORGANISATION_ID = $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"];
+			$ORGANISATION_ID = $_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["organisation_id"];
 			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["organisation_id"] = $ORGANISATION_ID;
 		}
 	}
@@ -1135,8 +1135,8 @@ if ($topic_results) { ?>
 		
 		$learning_events = events_fetch_filtered_events(
 				$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"],
-				$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"],
-				$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"],
+				$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"],
+				$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"],
 				$ENTRADA_USER->getActiveOrganisation(),
 				$_SESSION[APPLICATION_IDENTIFIER]["events"]["sb"],
 				$_SESSION[APPLICATION_IDENTIFIER]["events"]["so"],

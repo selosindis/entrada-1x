@@ -23,7 +23,7 @@ if (!defined("IN_PROFILE")) {
 
 	echo display_error();
 
-	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
+	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
 
 	$PAGE_META["title"]			= "My Profile";
@@ -212,7 +212,7 @@ if (!defined("IN_PROFILE")) {
 					<tr>
 						<td colspan="2">&nbsp;</td>
 					</tr>
-					<?php if($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"] == "faculty") { ?>
+					<?php if($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"] == "faculty") { ?>
 					<tr>
 						<td><label for="email" class="form-required"><strong>Primary E-Mail:</strong></label></td>
 						<td>	

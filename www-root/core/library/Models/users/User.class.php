@@ -315,8 +315,8 @@ class User {
 		if ($this->active_organisation) {
 			return $this->active_organisation;
 		}
-		else if ($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"]) {
-			return $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"];
+		else if ($_SESSION["permissions"][$this->getAccessId()]["organisation_id"]) {
+			return $_SESSION["permissions"][$this->getAccessId()]["organisation_id"];
 		}
 		else {
 			return $this->organisation_id;

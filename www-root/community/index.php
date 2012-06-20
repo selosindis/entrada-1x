@@ -377,7 +377,7 @@ if ($COMMUNITY_URL) {
 								$ALLOW_MEMBERSHIP = false;
 
 								if (($community_details["community_members"] != "") && ($community_members = @unserialize($community_details["community_members"])) && (is_array($community_members)) && (count($community_members))) {
-									if (in_array($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"], $community_members)) {
+									if (in_array($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"], $community_members)) {
 										$ALLOW_MEMBERSHIP = true;
 									} else {
 										foreach ($community_members as $member_group) {
@@ -385,9 +385,9 @@ if ($COMMUNITY_URL) {
 												$pieces = explode("_", $member_group);
 			
 												if ((isset($pieces[0])) && ($group = trim($pieces[0]))) {
-													if ($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"] == $group) {
+													if ($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"] == $group) {
 														if ((isset($pieces[1])) && ($role = trim($pieces[1]))) {
-															if ($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"] == $role) {
+															if ($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"] == $role) {
 																$ALLOW_MEMBERSHIP = true;
 																break;
 															}

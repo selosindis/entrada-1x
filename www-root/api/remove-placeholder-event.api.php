@@ -25,10 +25,10 @@
 require_once("init.inc.php");
 
 if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
-	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."], and the ability to remove a placeholder event.");
+	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."], and the ability to remove a placeholder event.");
 	exit;
 } elseif (!$ENTRADA_ACL->amIAllowed('event', 'create', false)) {
-	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."], and the ability to remove a placeholder event.");
+	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."], and the ability to remove a placeholder event.");
 	exit;
 } else {
 	if ($_GET["event_id"] && $event_id = clean_input($_GET["event_id"], "int")) {

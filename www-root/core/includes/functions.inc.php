@@ -2186,7 +2186,8 @@ function load_org_group_role($proxy_id, $ua_id) {
  * @example permissions_check(array("medtech" => "*", "faculty => array("faculty", "admin"), "staff" => "admin"));
  */
 function permissions_check($requirements = array()) {
-	if((is_array($requirements)) && (count($requirements)) && (is_array($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]))) {
+	global $ENTRADA_USER;
+	if((is_array($requirements)) && (count($requirements)) && (is_array($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]))) {
 		foreach ($requirements as $group => $roles) {
 			if($group == "*") {
 				if($roles == "*") {
@@ -2196,12 +2197,12 @@ function permissions_check($requirements = array()) {
 						$roles = array($roles);
 					}
 
-					if(@in_array($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"], $roles)) {
+					if(@in_array($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"], $roles)) {
 						return true;
 					}
 				}
 			} else {
-				if($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"] == $group) {
+				if($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"] == $group) {
 					if($roles == "*") {
 						return true;
 					} else {
@@ -2209,7 +2210,7 @@ function permissions_check($requirements = array()) {
 							$roles = array($roles);
 						}
 
-						if(@in_array($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"], $roles)) {
+						if(@in_array($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"], $roles)) {
 							return true;
 						}
 					}
@@ -3065,13 +3066,13 @@ function last_updated($type = "event", $event_id = 0) {
  * @return <type> array
  */
 function dashboard_fetch_feeds($default = false) {
-	global $translate;
+	global $translate, $ENTRADA_USER;
 
 	if (!$default && isset($_SESSION[APPLICATION_IDENTIFIER]["dashboard"]["feeds"]) && is_array($_SESSION[APPLICATION_IDENTIFIER]["dashboard"]["feeds"])) {
 		return $_SESSION[APPLICATION_IDENTIFIER]["dashboard"]["feeds"];
 	} else {
 		$feeds = $translate->_("public_dashboard_feeds");
-		$group = $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"];
+		$group = $_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"];
 
 		if (is_array($feeds[$group])) {
 			$feeds = array_merge($feeds["global"], $feeds[$group]);
@@ -3090,10 +3091,10 @@ function dashboard_fetch_feeds($default = false) {
  * @return <type> array
  */
 function dashboard_fetch_links() {
-	global $translate;
+	global $translate, $ENTRADA_USER;
 
 	$links = $translate->_("public_dashboard_links");
-	$group = $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"];
+	$group = $_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"];
 
 	if (is_array($links[$group])) {
 		return array_merge($links["global"], $links[$group]);
@@ -10102,6 +10103,7 @@ function events_filters_defaults($proxy_id = 0, $group = "", $role = "") {
  * Function used by public events and admin events index to process the provided filter settings.
  */
 function events_process_filters($action = "", $module_type = "") {
+	global $ENTRADA_USER;
 	/**
 	 * Determine whether or not this is being called from the admin section.
 	 */
@@ -10127,7 +10129,7 @@ function events_process_filters($action = "", $module_type = "") {
 						/**
 						 * Check to see if this is a student attempting to view the calendar of another student.
 						 */
-						if (($filter_key != "student") || ($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"] != "student") || ($filter_value == $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])) {
+						if (($filter_key != "student") || ($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"] != "student") || ($filter_value == $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])) {
 							$_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"][$filter_key][] = $filter_value;
 
 							ksort($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]);
@@ -10149,7 +10151,7 @@ function events_process_filters($action = "", $module_type = "") {
 					foreach ($filters as $filter) {
 						$pieces = explode("_", $filter);
 						$filter_value = $pieces[1];
-						if (($filter_key != "student") || ($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"] != "student") || ($filter_value == $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])) {
+						if (($filter_key != "student") || ($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"] != "student") || ($filter_value == $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])) {
 							$_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"][$filter_key][] = $filter_value;
 							ksort($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]);
 						}
@@ -10160,7 +10162,7 @@ function events_process_filters($action = "", $module_type = "") {
 					$filter_value = $pieces[1];
 					if ($filter_value && $filter_key) {
 						//This is an actual filter, cool dude. Erase everything else since we only got one and add this one if its not a student looking at another student
-						if (($filter_key != "student") || ($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"] != "student") || ($filter_value == $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])) {
+						if (($filter_key != "student") || ($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"] != "student") || ($filter_value == $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])) {
 							unset($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"][$filter_key]);
 							$_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"][$filter_key][] = $filter_value;
 							ksort($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]);
@@ -10222,8 +10224,8 @@ function events_process_filters($action = "", $module_type = "") {
 
 			$_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"] = events_filters_defaults(
 				$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"],
-				$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"],
-				$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]
+				$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"],
+				$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]
 			);
 
 			$_SERVER["QUERY_STRING"] = replace_query(array("action" => false, "filter" => false));
@@ -10246,7 +10248,7 @@ function events_process_filters($action = "", $module_type = "") {
  * Function used by community tracking to process the provided filter settings.
  */
 function tracking_process_filters($action = "", $module_type = "") {
-	global $COMMUNITY_ID;
+	global $COMMUNITY_ID, $ENTRADA_USER;
 	/**
 	 * Determine whether or not this is being called from the admin section.
 	 */
@@ -10272,7 +10274,7 @@ function tracking_process_filters($action = "", $module_type = "") {
 						/**
 						 * Check to see if this is a student attempting to view the calendar of another student.
 						 */
-						if (($filter_key != "student") || ($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"] != "student") || ($filter_value == $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])) {
+						if (($filter_key != "student") || ($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"] != "student") || ($filter_value == $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])) {
 							$_SESSION[APPLICATION_IDENTIFIER]["tracking"]["filters"][$filter_key][] = $filter_value;
 
 							ksort($_SESSION[APPLICATION_IDENTIFIER]["tracking"]["filters"]);
@@ -10294,7 +10296,7 @@ function tracking_process_filters($action = "", $module_type = "") {
 					foreach ($filters as $filter) {
 						$pieces = explode("_", $filter);
 						$filter_value = $pieces[1];
-						if (($filter_key != "student") || ($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"] != "student") || ($filter_value == $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])) {
+						if (($filter_key != "student") || ($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"] != "student") || ($filter_value == $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])) {
 							$_SESSION[APPLICATION_IDENTIFIER]["tracking"]["filters"][$filter_key][] = $filter_value;
 							ksort($_SESSION[APPLICATION_IDENTIFIER]["tracking"]["filters"]);
 						}
@@ -10305,7 +10307,7 @@ function tracking_process_filters($action = "", $module_type = "") {
 					$filter_value = $pieces[1];
 					if ($filter_value && $filter_key) {
 						//This is an actual filter, cool dude. Erase everything else since we only got one and add this one if its not a student looking at another student
-						if (($filter_key != "student") || ($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"] != "student") || ($filter_value == $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])) {
+						if (($filter_key != "student") || ($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"] != "student") || ($filter_value == $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])) {
 							unset($_SESSION[APPLICATION_IDENTIFIER]["tracking"]["filters"][$filter_key]);
 							$_SESSION[APPLICATION_IDENTIFIER]["tracking"]["filters"][$filter_key][] = $filter_value;
 							ksort($_SESSION[APPLICATION_IDENTIFIER]["tracking"]["filters"]);

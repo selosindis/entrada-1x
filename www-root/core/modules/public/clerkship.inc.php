@@ -41,7 +41,7 @@ if(!defined("PARENT_INCLUDED")) {
 
 	echo display_error();
 
-	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
+	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
 	define("IN_CLERKSHIP", true);
  
@@ -172,7 +172,7 @@ if(!defined("PARENT_INCLUDED")) {
 		new_sidebar_item("View Schedule", $sidebar_html, "search", "open");
 	}
 	
-	if ($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"] == "student") {
+	if ($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"] == "student") {
 		/**
 		 * Process local page actions.
 		 */

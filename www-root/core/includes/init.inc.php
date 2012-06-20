@@ -118,7 +118,7 @@ if ($ENTRADA_USER) {
 	if (isset($_GET["organisation_id"])) {
 		$organisation = clean_input($_GET["organisation_id"], array("trim", "notags", "int"));
 		
-		$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"] = $organisation;
+		$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["organisation_id"] = $organisation;
 		$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]["organisation_id"] = $organisation;
 		$ENTRADA_USER->setActiveOrganisation($organisation);
 

@@ -34,7 +34,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 
 require_once("Entrada/calendar/calendar.class.php");
 
-switch($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]) {
+switch($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]) {
 	case "student" :
 		switch($ACTION) {
 			case "remove" :

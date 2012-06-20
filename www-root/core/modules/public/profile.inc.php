@@ -138,7 +138,7 @@ function profile_update_personal_info() {
 		$PROCESSED["office_hours"] = "";
 	}
 		
-	if($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"] == "faculty") {
+	if($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"] == "faculty") {
 		if ((isset($_POST["email"])) && ($email = clean_input($_POST["email"], "trim", "lower"))) {
 			if (@valid_address($email)) {
 				$PROCESSED["email"] = $email;

@@ -37,7 +37,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 
 	echo display_error();
 
-	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
+	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
 
 	if ($MAILING_LISTS["active"]) {
@@ -122,10 +122,10 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 				$ERRORSTR[] = "The parent community that you have chosen is not currently activated; therefore a sub-communit cannot be created at this time.<br /><br />If you would like to create a community here, please contact a community administrator who will need to re-activate the community in their community profile.";
 				$COMMUNITY_PARENT = 0;
 			} elseif($result["community_members"] != "") {
-				if((is_array($community_members = @unserialize($result["community_members"]))) && (isset($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]))) {
-					if(!in_array($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"], $community_members)) {
+				if((is_array($community_members = @unserialize($result["community_members"]))) && (isset($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]))) {
+					if(!in_array($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"], $community_members)) {
 						$ERROR++;
-						$ERRORSTR[] = "The parent community that you have chosen only allows certain MEdTech groups (".html_encode(implode(", ", $community_members)).") to become members, and your group is ".html_encode($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]).".<br /><br />If you would like to create a community here, please contact a community administrator who will need to adjust the groups requirements option in their community profile.";
+						$ERRORSTR[] = "The parent community that you have chosen only allows certain MEdTech groups (".html_encode(implode(", ", $community_members)).") to become members, and your group is ".html_encode($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]).".<br /><br />If you would like to create a community here, please contact a community administrator who will need to adjust the groups requirements option in their community profile.";
 						$COMMUNITY_PARENT = 0;
 					}
 				}

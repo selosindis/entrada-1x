@@ -29,7 +29,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 	exit;
 }
 
-switch($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]) {
+switch($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]) {
 	case "student" :
 		if(isset($NOTIFICATION_ID) && ((int) $NOTIFICATION_ID)) {
 			$query		= "	SELECT a.*, b.`region_id`, b.`event_title`, b.`event_desc`, b.`event_start`, b.`event_finish`, c.`form_id`, d.`form_type`, d.`form_title`, d.`form_desc`

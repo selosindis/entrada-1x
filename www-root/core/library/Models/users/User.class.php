@@ -367,11 +367,7 @@ class User {
 	}
 
 	function getAccessId() {
-		if ($this->access_id) {
-			return $this->access_id;
-		} else {
-			return $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["ua_id"];
-		}
+		return $this->access_id;
 	}
 
 	/**
@@ -433,6 +429,10 @@ class User {
 		if ($results) {
 			$org_group_role = array();
 			foreach ($results as $result) {
+				if ((!isset($user->access_id) || !$user->access_id) && $result["organisation_id"] == $user->getOrganisationId()) {
+					$user->setActiveOrganisation($result["organisation_id"]);
+					$user->setAccessId($result["id"]);
+				}
 				$org_group_role[$result["organisation_id"]][html_encode($result["group"])] = array(html_encode($result["role"]), $result["id"]);
 			}
 			$user->setOrganisationGroupRole($org_group_role);

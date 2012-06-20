@@ -103,7 +103,7 @@ if ($ENTRADA_USER) {
 		}
 	}
 
-	if (!$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["ua_id"]) {
+	if (!$ENTRADA_USER->getAccessId()) {
 		$query = "SELECT a.`group`, a.`role`, a.`id`
 						  FROM `" . AUTH_DATABASE . "`.`user_access` a
 						  WHERE a.`user_id` = " . $db->qstr($ENTRADA_USER->getId()) . "
@@ -111,9 +111,8 @@ if ($ENTRADA_USER) {
 						  ORDER BY a.`id` ASC";
 		$result = $db->getRow($query);
 		if ($result) {
-			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["ua_id"] = $result["id"];
 			$ENTRADA_USER->setAccessId($result["id"]);		
-			$_SESSION["permissions"] = load_org_group_role($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"], $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["ua_id"]);
+			$_SESSION["permissions"] = load_org_group_role($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"], $ENTRADA_USER->getAccessId());
 		}
 	}
 
@@ -133,21 +132,14 @@ if ($ENTRADA_USER) {
 		$result = $db->getRow($query);
 		if ($result) {
 			$ENTRADA_USER->setAccessId($result["id"]);
-			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["ua_id"] = $result["id"];
-			$_SESSION["permissions"] = load_org_group_role($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"], $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["ua_id"]);
+			$_SESSION["permissions"] = load_org_group_role($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"], $ENTRADA_USER->getAccessId());
 		}
 	}
 
 	if (isset($_GET["ua_id"])) {
 		$ua_id = clean_input($_GET["ua_id"], array("trim", "notags", "int"));
-		$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["ua_id"] = $ua_id;
 		$ENTRADA_USER->setAccessId($ua_id);
-		$_SESSION["permissions"] = load_org_group_role($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"], $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["ua_id"]);
-	}
-	
-	// Updates which access_id being used by the $ENTRADA_USER object if the current ID is different from the default.
-	if ($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["ua_id"] && $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["ua_id"] != $ENTRADA_USER->getAccessId()) {
-		$ENTRADA_USER->setAccessId($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["ua_id"]);
+		$_SESSION["permissions"] = load_org_group_role($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"], $ENTRADA_USER->getAccessId());
 	}
 
  	$query = "SELECT `template` FROM `" . AUTH_DATABASE . "`.`organisations` WHERE `organisation_id` = " . $db->qstr($ENTRADA_USER->getActiveOrganisation());

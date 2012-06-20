@@ -593,10 +593,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 						
 						$result = $db->getRow($query);
 						if ($result) {
-							$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["ua_id"] = $result["id"];
 							$ENTRADA_USER->setAccessId($result["id"]);
 							$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"] = $ENTRADA_USER->getId() . "-" . $result["id"];
-							$_SESSION["permissions"] = load_org_group_role($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"], $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["ua_id"]);
+							$_SESSION["permissions"] = load_org_group_role($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"], $ENTRADA_USER->getAccessId());
 						} 
 
 						unset($ENTRADA_ACL);
@@ -611,7 +610,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 					$query = "SELECT *
 							  FROM `" . AUTH_DATABASE . "`.`user_access` a
 							  WHERE a.`user_id` = " . $db->qstr($ENTRADA_USER->getId()) . "
-							  AND a.`id` = " . $db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["ua_id"]);
+							  AND a.`id` = " . $db->qstr($ENTRADA_USER->getAccessId());
 					$result = $db->getRow($query);
 					if ($result) {
 						$current_org = $result["organisation_id"];

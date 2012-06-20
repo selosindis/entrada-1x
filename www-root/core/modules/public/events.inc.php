@@ -615,7 +615,7 @@ foreach ($temp_objectives as $objective_id => $objective) {
 	$curriculum_objectives["objectives"][$objective_id]["objective_tertiary_children"] = 0;
 }
 foreach ($curriculum_objectives["objectives"] as $objective_id => $objective) {
-	if ($objective["event_objective"]) {
+	if (isset($objective["event_objective"]) && $objective["event_objective"]) {
 		foreach ($objective["parent_ids"] as $parent_id) {
 			if ($objective["primary"] || $objective["secondary"] || $objective["tertiary"] || $curriculum_objectives["objectives"][$parent_id]["primary"] || $curriculum_objectives["objectives"][$parent_id]["secondary"] || $curriculum_objectives["objectives"][$parent_id]["tertiary"]) {
 				$curriculum_objectives["objectives"][$parent_id]["objective_".($objective["primary"] || ($curriculum_objectives["objectives"][$parent_id]["primary"] && !$objective["secondary"] && !$objective["tertiary"]) ? "primary" : ($objective["secondary"] || ($curriculum_objectives["objectives"][$parent_id]["secondary"] && !$objective["primary"] && !$objective["tertiary"]) ? "secondary" : "tertiary"))."_children"]++;
@@ -632,12 +632,12 @@ foreach ($curriculum_objectives["objectives"] as $objective_id => $objective) {
 	}
 }
 foreach ($temp_objectives as $objective_id => $objective) {
-	if (!$objective["event_objective"]) {
-		if ($objective["primary"] && !$curriculum_objectives["objectives"][$objective_id]["objective_primary_children"]) {
+	if (!isset($objective["event_objective"]) || !$objective["event_objective"]) {
+		if (isset($objective["primary"]) && $objective["primary"] && !$curriculum_objectives["objectives"][$objective_id]["objective_primary_children"]) {
 			$curriculum_objectives["objectives"][$objective_id]["primary"] = false;
-		} elseif ($objective["secondary"] && !$curriculum_objectives["objectives"][$objective_id]["objective_secondary_children"]) {
+		} elseif (isset($objective["secondary"]) && $objective["secondary"] && !$curriculum_objectives["objectives"][$objective_id]["objective_secondary_children"]) {
 			$curriculum_objectives["objectives"][$objective_id]["secondary"] = false;
-		} elseif ($objective["tertiary"] && !$curriculum_objectives["objectives"][$objective_id]["objective_tertiary_children"]) {
+		} elseif (isset($objective["tertiary"]) && $objective["tertiary"] && !$curriculum_objectives["objectives"][$objective_id]["objective_tertiary_children"]) {
 			$curriculum_objectives["objectives"][$objective_id]["tertiary"] = false;
 		}
 	}

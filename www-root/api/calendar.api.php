@@ -94,6 +94,11 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 					GROUP BY a.`id`";
 		$result = $db->GetRow($query);
 		if ($result) {
+			// If $ENTRADA_USER was previously initialized in init.inc.php before the 
+			// session was authorized it is set to false and needs to be re-initialized.
+			if ($ENTRADA_USER == false) {
+				$ENTRADA_USER = User::get($result["id"]);
+			}
 			$_SESSION["details"]["id"] = $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"] = $user_proxy_id = $result["id"];
 			$_SESSION["details"]["username"] = $user_username = $result["username"];
 			$_SESSION["details"]["firstname"] = $user_firstname = $result["firstname"];

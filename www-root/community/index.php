@@ -135,6 +135,11 @@ if (!$LOGGED_IN && (isset($_GET["auth"]) && $_GET["auth"] == "true")) {
 				$ERROR++;
 				application_log("error", "User[".$username."] tried to access account after expiration date.");
 			} else {
+				// If $ENTRADA_USER was previously initialized in init.inc.php before the 
+				// session was authorized it is set to false and needs to be re-initialized.
+				if ($ENTRADA_USER == false) {
+					$ENTRADA_USER = User::get($result["ID"]);
+				}
 				$_SESSION["isAuthorized"] = true;
 				$_SESSION["details"]["app_id"] = AUTH_APP_ID;
 				$_SESSION["details"]["id"] = $result["ID"];

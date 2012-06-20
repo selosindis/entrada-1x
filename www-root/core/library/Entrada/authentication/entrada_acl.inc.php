@@ -222,7 +222,8 @@ class Entrada_ACL extends ACL_Factory {
 	 * @return <type>
 	 */
 	function amIAllowed($resource, $action, $assert = true) {
-		$user = new EntradaUser("user".$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["ua_id"]);
+		global $ENTRADA_USER;
+		$user = new EntradaUser("user".$ENTRADA_USER->getAccessId());
 		$user->details = $_SESSION["details"];
 		return $this->isAllowed($user, $resource, $action, $assert);
 	}

@@ -198,6 +198,13 @@ if ($ACTION == "login") {
 
 			application_log("access", "User[".$username."] successfully logged in.");
 
+			
+			// If $ENTRADA_USER was previously initialized in init.inc.php before the 
+			// session was authorized it is set to false and needs to be re-initialized.
+			if ($ENTRADA_USER == false) {
+				$ENTRADA_USER = User::get($result["ID"]);
+			}
+			
 			$_SESSION["isAuthorized"] = true;
 			$_SESSION["details"] = array();
 			$_SESSION["details"]["app_id"] = (int) AUTH_APP_ID;
@@ -218,11 +225,11 @@ if ($ACTION == "login") {
 			$_SESSION["details"]["allow_podcasting"] = false;
 
 			if ((isset($ENTRADA_CACHE)) && (!AUTH_DEVELOPMENT_MODE)) {
-				if (!($ENTRADA_CACHE->test("acl_".$_SESSION["details"]["id"]))) {
+				if (!($ENTRADA_CACHE->test("acl_".$ENTRADA_USER->getId()))) {
 					$ENTRADA_ACL = new Entrada_Acl($_SESSION["details"]);
-					$ENTRADA_CACHE->save($ENTRADA_ACL, "acl_".$_SESSION["details"]["id"]);
+					$ENTRADA_CACHE->save($ENTRADA_ACL, "acl_".$ENTRADA_USER->getId());
 				} else {
-					$ENTRADA_ACL = $ENTRADA_CACHE->load("acl_".$_SESSION["details"]["id"]);
+					$ENTRADA_ACL = $ENTRADA_CACHE->load("acl_".$ENTRADA_USER->getId());
 				}
 			} else {
 				$ENTRADA_ACL = new Entrada_Acl($_SESSION["details"]);
@@ -264,12 +271,6 @@ if ($ACTION == "login") {
 			$_SESSION["permissions"] = permissions_load();
 
 			$auth->updateLastLogin();
-			
-			// If $ENTRADA_USER was previously initialized in init.inc.php before the 
-			// session was authorized it is set to false and needs to be re-initialized.
-			if ($ENTRADA_USER == false && $_SESSION["isAuthorized"] == true) {
-				$ENTRADA_USER = User::get($_SESSION["details"]["id"]);
-			}
 		}
 		
 		$query = "SELECT `email_updated`, `clinical`, `google_id`, `notifications` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($ENTRADA_USER->getId());
@@ -593,7 +594,7 @@ if ((isset($_SESSION["isAuthorized"])) && ($_SESSION["isAuthorized"])) {
 				$sidebar_html .= "<li><a href=\"" . ENTRADA_URL . "/" . $MODULE . "/" . "?organisation_id=" . $key . "\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-on.gif\" alt=\"\" /> <span>" . html_encode($organisation_title) . "</span></a></li>\n";
 				if ($org_group_role && !empty($org_group_role)) {
 					foreach($org_group_role[$key] as $group => $role) {						
-						if ($role[1] == $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["ua_id"]) {
+						if ($role[1] == $ENTRADA_USER->getAccessId()) {
 							$sidebar_html .= "<li style=\"padding-left: 15px;\"><a href=\"" . ENTRADA_URL . "/" . $MODULE . "/" . "?" . replace_query(array("organisation_id" => $key, "ua_id" => $role[1])) . "\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-on.gif\" alt=\"\" /> <span>" . html_encode(ucfirst($group) . " - " . ucfirst($role[0])) . "</span></a></li>\n";
 						} else {
 							$sidebar_html .= "<li style=\"padding-left: 15px;\"><a href=\"" . ENTRADA_URL . "/" . $MODULE . "/" . "?" . replace_query(array("organisation_id" => $key, "ua_id" => $role[1])) . "\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-off.gif\" alt=\"\" /> <span>" . html_encode(ucfirst($group) . " - " . ucfirst($role[0])) . "</span></a></li>\n";						}

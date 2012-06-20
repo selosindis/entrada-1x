@@ -33,7 +33,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 		$_SESSION["prizes_expand_grid"] = "prizes_grid";
 	}
 	?>
-	<h1>Section <?php echo ($_SESSION["details"]["clinical_member"] ? "VI" : "V"); ?> - Prizes, Honours and Awards</h1>
+	<h1>Section <?php echo ($ENTRADA_USER->getClinical() ? "VI" : "V"); ?> - Prizes, Honours and Awards</h1>
 	
 	<table id="flex1" style="display:none"></table>
 	

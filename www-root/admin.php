@@ -81,7 +81,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	 * This function updates the users_online table.
 	 */
 	users_online();
-	$proxy_id = $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"];
+	$proxy_id = $ENTRADA_USER->getActiveId();
 	if(($proxy_id != $ENTRADA_USER->getId()) && ($_SESSION["permissions"][$proxy_id]["expires"] <= time())) {
 		unset($proxy_id);
 	}

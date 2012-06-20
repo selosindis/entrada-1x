@@ -125,7 +125,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 							$ERRORSTR[] = "The <strong>Prov / State</strong> field is required.";
 						}
 					}
-					if($_SESSION["details"]["clinical_member"]) {
+					if($ENTRADA_USER->getClinical()) {
 						/**
 						 * Required field "role" / Role.
 						 */
@@ -286,7 +286,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 					$ONLOAD[]					= "setMaxLength();";
 					?>
 					Describe the nature and number of days for each of the following activities involving the application of professional effort and expertise on behalf of organizations or communities external to the University:<br /><br />
-					<?php if($_SESSION["details"]["clinical_member"]) { ?>
+					<?php if($ENTRADA_USER->getClinical()) { ?>
 					<font size="1">(i)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Activity, either alone or in combination with other activities, exceeds 20% of the time required by the Member's full-time academic duties.<br /> 
 					(ii)&nbsp;&nbsp;&nbsp;&nbsp;Any activity, for which prior permission described in the Collective Agreement Section 19.4.2, has been granted.<br />
 					(iii)&nbsp;&nbsp;&nbsp;Teaching at another university or institution<br />
@@ -369,7 +369,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 					}
 					?>
 					<?php
-					if($_SESSION["details"]["clinical_member"]) {
+					if($ENTRADA_USER->getClinical()) {
 					?>
 					<tr>
 						<td></td>

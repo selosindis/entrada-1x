@@ -2318,8 +2318,30 @@ function permissions_mask() {
 				if($result["assigned_to"] == $ENTRADA_USER->getId()) {
 					if($result["valid_from"] <= time()) {
 						if($result["valid_until"] >= time()) {
-							$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"] = (int) trim($result["assigned_by"]);
-							$_SESSION["details"]["clinical_member"] = getClinicalFromProxy($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]);
+							$query = "SELECT `id` FROM `".AUTH_DATABASE."`.`user_access`
+										WHERE `user_id` = ".$db->qstr($result["assigned_by"])."
+										AND `app_id` = ".$db->qstr(AUTH_APP_ID)."
+										AND `account_active` = 'true'
+										AND (`access_starts` = '0' OR `access_starts` <= ".$db->qstr(time()).")
+										AND (`access_expires` = '0' OR `access_expires` >= ".$db->qstr(time()).")
+										AND `organisation_id` = ".$ENTRADA_USER->getActiveOrganisation();
+							$access_id = $db->getOne($query);
+							if ($access_id) {
+								$ENTRADA_USER->setAccessId($access_id);
+								$ENTRADA_USER->setClinical(getClinicalFromProxy($ENTRADA_USER->getActiveId()));
+							} else {
+								$query = "SELECT `id` FROM `".AUTH_DATABASE."`.`user_access`
+											WHERE `user_id` = ".$db->qstr($result["assigned_by"])."
+											AND `app_id` = ".$db->qstr(AUTH_APP_ID)."
+											AND `account_active` = 'true'
+											AND (`access_starts` = '0' OR `access_starts` <= ".$db->qstr(time()).")
+											AND (`access_expires` = '0' OR `access_expires` >= ".$db->qstr(time()).")";
+								$access_id = $db->getOne($query);
+								if ($access_id) {
+									$ENTRADA_USER->setAccessId($access_id);
+									$ENTRADA_USER->setClinical(getClinicalFromProxy($ENTRADA_USER->getActiveId()));
+								}
+							}
 						} else {
 							application_log("notice", $_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]." [".$ENTRADA_USER->getId()."] tried to masquerade as proxy id [".$result["assigned_by"]."], but their permission to this account has expired.");
 						}
@@ -2335,14 +2357,6 @@ function permissions_mask() {
 		}
 
 		$_SERVER["QUERY_STRING"] = replace_query(array("mask" => false));
-	}
-
-	if(($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"] != $ENTRADA_USER->getId()) && ($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["expires"] <= time())) {
-		unset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]);
-	}
-
-	if(!isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])) {
-		$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"] = $ENTRADA_USER->getId();
 	}
 
 	return true;

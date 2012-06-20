@@ -98,7 +98,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 				$ERROR++;
 				$ERRORSTR[] = "The <strong>Prov / State</strong> field is required.";
 			}
-			if($_SESSION["details"]["clinical_member"]) {
+			if($ENTRADA_USER->getClinical()) {
 				/**
 				 * Required field "role" / Role.
 				 */
@@ -334,7 +334,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 				</td>
 			</tr>
 			<?php
-			if($_SESSION["details"]["clinical_member"]) {
+			if($ENTRADA_USER->getClinical()) {
 			?>
 			<tr>
 				<td></td>

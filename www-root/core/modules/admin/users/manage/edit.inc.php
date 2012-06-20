@@ -594,7 +594,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 						$result = $db->getRow($query);
 						if ($result) {
 							$ENTRADA_USER->setAccessId($result["id"]);
-							$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"] = $ENTRADA_USER->getId() . "-" . $result["id"];
 							$_SESSION["permissions"] = load_org_group_role($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"], $ENTRADA_USER->getAccessId());
 						} 
 

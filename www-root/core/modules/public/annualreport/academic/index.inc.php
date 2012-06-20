@@ -33,7 +33,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 		$_SESSION["academic_expand_grid"] = "internal_grid";
 	}
 	?>
-	<h1>Section <?php echo ($_SESSION["details"]["clinical_member"] ? "IV" : "III"); ?> - Service</h1>
+	<h1>Section <?php echo ($ENTRADA_USER->getClinical() ? "IV" : "III"); ?> - Service</h1>
 	
 	<table id="flex1" style="display:none"></table>
 	<table id="flex2" style="display:none"></table>

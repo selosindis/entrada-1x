@@ -1481,7 +1481,7 @@ else
 	$endDate = $REPORT_YEAR;
 
 	$table = "ar_peer_reviewed_papers";
-	if($_SESSION["details"]["clinical_member"] && $REPORT_YEAR > '2010') {
+	if($ENTRADA_USER->getClinical() && $REPORT_YEAR > '2010') {
 		$roleTable = "ar_lu_pr_roles";
 	} else {
 		$roleTable = "global_lu_roles";

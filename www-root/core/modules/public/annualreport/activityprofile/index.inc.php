@@ -33,7 +33,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 		$_SESSION["profile_expand_grid"] = "profile_grid";
 	}
 	?>
-	<h1>Section <?php echo ($_SESSION["details"]["clinical_member"] ? "VII" : "VI"); ?> - Activity Profile</h1>
+	<h1>Section <?php echo ($ENTRADA_USER->getClinical() ? "VII" : "VI"); ?> - Activity Profile</h1>
 	
 	<table id="flex1" style="display:none"></table>
 	

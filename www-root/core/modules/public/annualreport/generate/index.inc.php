@@ -33,13 +33,13 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 		$_SESSION["reports_expand_grid"] = "reports_grid";
 	}
 	
-	if($_SESSION["details"]["clinical_member"] == 0) {
+	if($ENTRADA_USER->getClinical() == 0) {
 		$clinical_member = "NO";
 	} else {
 		$clinical_member = "YES";
 	}
 	?>
-	<h1>Section <?php echo ($_SESSION["details"]["clinical_member"] ? "VIII" : "VII"); ?> - Annual Report Generator</h1>
+	<h1>Section <?php echo ($ENTRADA_USER->getClinical() ? "VIII" : "VII"); ?> - Annual Report Generator</h1>
 	
 	<table id="flex1" style="display:none"></table>
 	

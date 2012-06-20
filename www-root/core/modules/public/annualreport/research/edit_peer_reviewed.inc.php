@@ -460,7 +460,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 						<td><select name="role_id" id="role_id" style="vertical-align: middle; width: 35%">
 						<option value = ""></option>
 						<?php
-							if($_SESSION["details"]["clinical_member"] && $PROCESSED["year_reported"] > '2010') {
+							if($ENTRADA_USER->getClinical() && $PROCESSED["year_reported"] > '2010') {
 								$roles = getPRPublicationRoles();
 							} else {
 								$roles = getPublicationRoles();
@@ -516,7 +516,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 						?>
 						</td>
 					</tr>
-					<?php if($_SESSION["details"]["clinical_member"]) { ?>
+					<?php if($ENTRADA_USER->getClinical()) { ?>
 					<tr>
 						<td colspan="3">&nbsp;</td>
 					</tr>

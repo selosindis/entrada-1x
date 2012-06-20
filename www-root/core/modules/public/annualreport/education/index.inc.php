@@ -879,7 +879,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 		}
 		
 		<?php 
-		if($_SESSION["details"]["clinical_member"]) {
+		if($ENTRADA_USER->getClinical()) {
 			$fields = "ar_clinical_education,clinical_education_id,level,description,location,year_reported";?>
 			clinical_education_grid = jQuery("#flex7").flexigrid
 			(
@@ -1126,7 +1126,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			usepager: true,
 			showToggleBtn: false,
 			collapseTable: <?php echo ($_SESSION["education_expand_grid"] == "innovation_grid" ? "false" : "true"); ?>,
-			title: '<?php echo (!$_SESSION["details"]["clinical_member"] ? "I. " : "G. "); ?>Innovation in Education',
+			title: '<?php echo (!$ENTRADA_USER->getClinical() ? "I. " : "G. "); ?>Innovation in Education',
 			useRp: true,
 			rp: 15,
 			showTableToggleBtn: true,
@@ -1235,7 +1235,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			usepager: true,
 			showToggleBtn: false,
 			collapseTable: <?php echo ($_SESSION["education_expand_grid"] == "other_grid" ? "false" : "true"); ?>,
-			title: '<?php echo (!$_SESSION["details"]["clinical_member"] ? "J. " : "H. "); ?>Other Education',
+			title: '<?php echo (!$ENTRADA_USER->getClinical() ? "J. " : "H. "); ?>Other Education',
 			useRp: true,
 			rp: 15,
 			showTableToggleBtn: true,

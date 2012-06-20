@@ -229,7 +229,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 							$ERRORSTR[] = "The <strong>Seminar Hours</strong> field is required.";
 						}
 					}
-					if($_SESSION["details"]["clinical_member"]) {
+					if($ENTRADA_USER->getClinical()) {
 						/**
 						 * Required field "coord_enrollment" / Coordinator Enrollment.
 						 */
@@ -454,7 +454,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 							<td style="vertical-align: top"><label for="sem_hours" class="form-required">Seminar Hours</label></td>
 							<td><input type="text" id="sem_hours" name="sem_hours" value="<?php echo ((isset($graduateTeachingResult["sem_hours"])) ? html_encode($graduateTeachingResult["sem_hours"]) : html_encode($PROCESSED["sem_hours"])); ?>" maxlength="255" style="width: 40px" /></td>
 						</tr>
-						<?php if($_SESSION["details"]["clinical_member"]) { ?>
+						<?php if($ENTRADA_USER->getClinical()) { ?>
 						<tr>
 							<td></td>
 							<td style="vertical-align: top"><label for="coord_enrollment" class="form-required">Coordinator Enrollment</label></td>

@@ -33,7 +33,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 		$_SESSION["self_expand_grid"] = "self_education_grid";
 	}
 	?>
-	<h1>Section <?php echo ($_SESSION["details"]["clinical_member"] ? "V" : "IV"); ?> - Self Education / Faculty Development</h1>
+	<h1>Section <?php echo ($ENTRADA_USER->getClinical() ? "V" : "IV"); ?> - Self Education / Faculty Development</h1>
 	
 	<table id="flex1" style="display:none"></table>
 	

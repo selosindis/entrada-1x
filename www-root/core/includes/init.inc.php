@@ -75,7 +75,6 @@ if ((defined("AUTH_ALLOW_CAS")) && (AUTH_ALLOW_CAS == true)) {
 $ENTRADA_ACTIVE_TEMPLATE = "";
 
 if ($ENTRADA_USER) {
-	$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"] = $ENTRADA_USER->getActiveId();
 	/**
 	 * System groups define which system groups & role combinations are allowed to
 	 * access this system. Note the student and alumni groups have many roles.
@@ -193,8 +192,8 @@ $PROCESSED = array();
 
 if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
 	$PROXY_ID = $ENTRADA_USER->getId();
-	$GROUP = $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"];
-	$ROLE = $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"];
+	$GROUP = $_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"];
+	$ROLE = $_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"];
 } else {
 	$PROXY_ID = 0;
 	$GROUP = "";

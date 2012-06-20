@@ -54,7 +54,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			switch($STEP) {
 				case 2 :
 					$ENDERROR = false;
-					if($_SESSION["details"]["clinical_member"]) {
+					if($ENTRADA_USER->getClinical()) {
 						/**
 						 * Required field "status" / Status
 						 */
@@ -83,7 +83,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 						$ERROR++;
 						$ERRORSTR[] = "The <b>Type</b> field is required.";
 					}
-					if($_SESSION["details"]["clinical_member"]) {
+					if($ENTRADA_USER->getClinical()) {
 						/**
 						 * Required field "category" / Category
 						 */
@@ -347,7 +347,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 						<td colspan="3"><h2>Details</h2></td>
 					</tr>
 					<?php
-						if($_SESSION["details"]["clinical_member"]) {
+						if($ENTRADA_USER->getClinical()) {
 					?>
 					<tr>
 						<td></td>
@@ -404,7 +404,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 						<td colspan="3">&nbsp;</td>
 					</tr>
 					<?php
-						if($_SESSION["details"]["clinical_member"]) {
+						if($ENTRADA_USER->getClinical()) {
 					?>
 					<tr>
 						<td></td>

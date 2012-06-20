@@ -350,6 +350,24 @@ class User {
 	function setAllOrganisations($value) {
 		$this->all_organisations = $value;
 	}
+	
+	/**
+	 * Returns the int/boolean of the user's "clinical" status.
+	 *
+	 * @return int
+	 */
+	function getClinical() {
+		return $this->clinical;
+	}
+
+	/**
+	 * Sets the int/boolean for the user's "clinical" status.
+	 *
+	 * @param int $value
+	 */
+	function setClinical($value) {
+		$this->clinical = $value;
+	}
 
 
 	function setOrganisationGroupRole($value) {

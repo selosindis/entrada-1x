@@ -274,7 +274,7 @@ if ($ACTION == "login") {
 			$auth->updateLastLogin();
 		}
 		
-		$query = "SELECT `email_updated`, `clinical`, `google_id`, `notifications` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($ENTRADA_USER->getId());
+		$query = "SELECT `email_updated`, `google_id`, `notifications` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($ENTRADA_USER->getId());
 		$result	= $db->GetRow($query);
 		
 		if (($result) && ($result["google_id"])) {
@@ -285,8 +285,6 @@ if ($ACTION == "login") {
 		
 		if ($result) {
 			$_SESSION["details"]["notifications"] = $result["notifications"];
-			$_SESSION["details"]["clinical_member"] = $result["clinical"];
-			
 			if(!isset($result["email_updated"]) || $result["email_updated"] == "" || (($result["email_updated"] - mktime()) / 86400 >= 365)) {
 				$_SESSION["details"]["email_updated"] = false;
 			} else {

@@ -61,7 +61,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 		}
 	}
 	
-	if(!$_SESSION["details"]["clinical_member"]) {
+	if(!$ENTRADA_USER->getClinical()) {
 		// Error Checking
 		switch($STEP) {
 		case 2 :

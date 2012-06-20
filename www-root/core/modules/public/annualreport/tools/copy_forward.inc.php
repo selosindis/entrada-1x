@@ -91,7 +91,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 						"ar_prizes|Prizes",
 						"ar_profile|Activity Profile");
 	
-	if($_SESSION["details"]["clinical_member"]) {
+	if($ENTRADA_USER->getClinical()) {
 		$tablesToUse = $arrayOfClinicalTables;
 	} else {
 		$tablesToUse = $arrayOfTables;

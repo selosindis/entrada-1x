@@ -119,7 +119,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 				$ERRORSTR[] = "The <strong>Hours Committed</strong> field is required.";
 			}
 			
-			if($_SESSION["details"]["clinical_member"]) {
+			if($ENTRADA_USER->getClinical()) {
 				/**
 				 * Required field "start_month" / Start			 
 				 */
@@ -354,7 +354,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 				<input type="radio" id="commitment_type_variable" name="commitment_type" value="variable"<?php echo (($PROCESSED["commitment_type"] == "variable") ? " checked=\"checked\"" : ""); ?> onclick="setUnsetResults(this)" /> Variable</td>
 			</tr>
 			<?php
-			if($_SESSION["details"]["clinical_member"]) {
+			if($ENTRADA_USER->getClinical()) {
 			?>
 			<tr>
 				<td></td>

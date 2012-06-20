@@ -67,7 +67,7 @@ if(!defined("PARENT_INCLUDED")) {
 		$sidebar_html .= "<li class=\"link\"><a href=\"".ENTRADA_URL."/annualreport/education\" title=\"Education\">Education</a></li>\n";
 		$sidebar_html .= "<li class=\"link\"><a href=\"".ENTRADA_URL."/annualreport/research\" title=\"Scholarship, Research and Other Creative Activity\">Scholarship, Research and Other Creative Activity</a></li>\n";
 		// Only include this link for clinical members
-		if($_SESSION["details"]["clinical_member"]) {
+		if($ENTRADA_USER->getClinical()) {
 			$sidebar_html .= "<li class=\"link\"><a href=\"".ENTRADA_URL."/annualreport/clinical\" title=\"Clinical\">Clinical</a></li>\n";
 		}
 		$sidebar_html .= "<li class=\"link\"><a href=\"".ENTRADA_URL."/annualreport/academic\" title=\"Service\">Service</a></li>\n";

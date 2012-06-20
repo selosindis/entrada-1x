@@ -120,7 +120,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 						$ERRORSTR[] = "The <strong>Hours Committed</strong> field is required.";
 					}
 					
-					if($_SESSION["details"]["clinical_member"]) {
+					if($ENTRADA_USER->getClinical()) {
 						/**
 						 * Required field "start_month" / Start			 
 						 */
@@ -363,7 +363,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 					</tr>
 					
 					<?php
-					if($_SESSION["details"]["clinical_member"]) {
+					if($ENTRADA_USER->getClinical()) {
 					?>
 					<tr>
 						<td></td>

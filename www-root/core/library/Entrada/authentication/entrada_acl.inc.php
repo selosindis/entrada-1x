@@ -142,8 +142,7 @@ class Entrada_ACL extends ACL_Factory {
 
 		if ($results) {
 			foreach ($results as $result) {
-				$new_proxy_id = $result["proxy_id"] . "-" . $result["ua_id"];
-				$permissions[$new_proxy_id] = array("group" => $result["group"], "role" => $result["role"], "organisation_id" => $result["organisation_id"], "fullname" => $result["fullname"], "firstname" => $result["firstname"], "lastname" => $result["lastname"]);
+				$permissions[$result["ua_id"]] = array("group" => $result["group"], "role" => $result["role"], "organisation_id" => $result["organisation_id"], "fullname" => $result["fullname"], "firstname" => $result["firstname"], "lastname" => $result["lastname"]);
 			}
 		}
 		
@@ -223,7 +222,7 @@ class Entrada_ACL extends ACL_Factory {
 	 * @return <type>
 	 */
 	function amIAllowed($resource, $action, $assert = true) {
-		$user = new EntradaUser("user".$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]);
+		$user = new EntradaUser("user".$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["ua_id"]);
 		$user->details = $_SESSION["details"];
 		return $this->isAllowed($user, $resource, $action, $assert);
 	}

@@ -23,7 +23,7 @@ $HEAD[] = "<script type=\"text/javascript\" src=\"".COMMUNITY_URL."/javascript/s
 echo "<h1>Submit Assignment</h1>\n";
 
 if ($RECORD_ID) {
-	$query			= "SELECT * FROM `assignments_files` WHERE `assignment_id` = ".$db->qstr($RECORD_ID)." AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getProxyId())." AND `file_active` = '1'";
+	$query			= "SELECT * FROM `assignments_files` WHERE `assignment_id` = ".$db->qstr($RECORD_ID)." AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getId())." AND `file_active` = '1'";
 	if ($submission	= $db->GetRow($query)) {
 		header("Location: ".ENTRADA_URL."/profile/gradebook/assignments?section=view&id=".$RECORD_ID);
 	}
@@ -39,7 +39,7 @@ if ($RECORD_ID) {
 						JOIN `group_members` AS c 
 						ON b.`group_id` = c.`group_id` 
 						WHERE a.`assessment_id` = ".$db->qstr($folder_record["assessment_id"])."
-						AND c.`proxy_id` = ".$db->qstr($ENTRADA_USER->getProxyId());
+						AND c.`proxy_id` = ".$db->qstr($ENTRADA_USER->getId());
 			$permitted = $db->GetRow($query);
 		}
 		if ($permitted) {

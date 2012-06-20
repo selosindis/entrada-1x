@@ -19,7 +19,7 @@ if (!$RECORD_ID) {
 	}
 }
 
-$query = "SELECT * FROM `assignment_contacts` WHERE `assignment_id` = ".$db->qstr($RECORD_ID)." AND `proxy_id` = ".$ENTRADA_USER->getProxyId();
+$query = "SELECT * FROM `assignment_contacts` WHERE `assignment_id` = ".$db->qstr($RECORD_ID)." AND `proxy_id` = ".$ENTRADA_USER->getId();
 if ($iscontact = $db->GetRow($query)) {
 	$USER_ID = $tmp;
 } else {

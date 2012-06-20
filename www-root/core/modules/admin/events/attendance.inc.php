@@ -101,7 +101,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 															"event_id"=>$EVENT_ID,
 															"proxy_id"=>$proxy_id,
 															"updated_date"=>time(),
-															"updated_by"=>$ENTRADA_USER->getProxyId()
+															"updated_by"=>$ENTRADA_USER->getId()
 															);
 								if ($db->AutoExecute("event_attendance",$attendance_record,"INSERT")) {
 									echo htmlspecialchars(json_encode(array('success'=>'Successfully added attendance.','proxy_id'=>$proxy_id)), ENT_NOQUOTES);

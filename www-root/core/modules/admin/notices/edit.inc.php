@@ -183,7 +183,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 
 								if (isset($PROCESSED["associated_audience"]) && count($PROCESSED["associated_audience"])) {
 									foreach($PROCESSED["associated_audience"] as $audience_member){
-										$audience_member["updated_by"] = $ENTRADA_USER->getProxyId();
+										$audience_member["updated_by"] = $ENTRADA_USER->getId();
 										$audience_member["updated_date"] = time();
 										$audience_member["notice_id"] = $NOTICE_ID;
 										if ($db->AutoExecute("notice_audience", $audience_member, "INSERT")) {

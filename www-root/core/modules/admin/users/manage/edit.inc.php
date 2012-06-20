@@ -513,7 +513,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 										'member_active' => 1,
 										'entrada_only' => 1,
 										'updated_date' => time(),
-										'updated_by' => $ENTRADA_USER->getProxyId()
+										'updated_by' => $ENTRADA_USER->getId()
 									);
 									$db->AutoExecute("group_members", $gmember, "INSERT");
 								}
@@ -594,8 +594,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 						$result = $db->getRow($query);
 						if ($result) {
 							$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["ua_id"] = $result["id"];
-							$ENTRADA_USER->setActiveGroupRole($result["id"]);
-							$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"] = $ENTRADA_USER->getProxyId() . "-" . $result["id"];
+							$ENTRADA_USER->setAccessId($result["id"]);
+							$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"] = $ENTRADA_USER->getId() . "-" . $result["id"];
 							$_SESSION["permissions"] = load_org_group_role($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"], $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["ua_id"]);
 						} 
 

@@ -516,7 +516,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 									'member_active' => 1,
 									'entrada_only' => 1,
 									'updated_date' => time(),
-									'updated_by' => $ENTRADA_USER->getProxyId()
+									'updated_by' => $ENTRADA_USER->getId()
 								);
 
 								$db->AutoExecute("group_members", $gmember, "INSERT");
@@ -593,7 +593,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 												'member_active' => 1,
 												'entrada_only' => 1,
 												'updated_date' => time(),
-												'updated_by' => $ENTRADA_USER->getProxyId()
+												'updated_by' => $ENTRADA_USER->getId()
 											);
 
 											$db->AutoExecute("group_members", $gmember, "INSERT");

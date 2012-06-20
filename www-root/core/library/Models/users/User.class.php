@@ -69,8 +69,7 @@ class User {
 			$clinical,
 			$active_organisation,
 			$all_organisations,
-			$organisation_group_role,
-			$active_group_role;
+			$organisation_group_role;
 
 	
 	private $access_id, $group, $role;
@@ -118,32 +117,18 @@ class User {
 	}
 
 	/**
-	 * Returns the access_id of the user
-	 * @return int
-	 */
-	public function getAccessId() {
-		return $this->access_id;
-	}
-
-	/**
-	 * Sets the access_id of the user
-	 * @return int
-	 */
-	public function setAccessId($value) {
-		if ($this->setActiveId($value)) {
-			$this->access_id = $value;
-			return true;
-		} else {
-			return false;
-		}
-	}
-
-	/**
 	 * Returns the active proxy_id of the user
 	 * @return int
 	 */
 	public function getActiveId() {
-		return $this->active_id;
+		if ($this->active_id) {
+			return $this->active_id;
+		} elseif ($this->access_id) {
+			setActiveId($this->access_id);
+			return $this->active_id;
+		} else {
+			return $this->id;
+		}
 	}
 
 	/**
@@ -158,9 +143,6 @@ class User {
 		$active_id = $db->GetOne($query);
 		if ($active_id) {
 			$this->active_id = $active_id;
-			return $this->active_id;
-		} else {
-			return false;
 		}
 		
 	}
@@ -379,13 +361,14 @@ class User {
 		return $this->organisation_group_role;
 	}
 
-	function setActiveGroupRole($value) {
-		$this->active_group_role = $value;		
+	function setAccessId($value) {
+		$this->access_id = $value;
+		$this->setActiveId($value);
 	}
 
-	function getActiveGroupRole() {
-		if ($this->active_group_role) {
-			return $this->active_group_role;
+	function getAccessId() {
+		if ($this->access_id) {
+			return $this->access_id;
 		} else {
 			return $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["ua_id"];
 		}
@@ -452,7 +435,7 @@ class User {
 			foreach ($results as $result) {
 				$org_group_role[$result["organisation_id"]][html_encode($result["group"])] = array(html_encode($result["role"]), $result["id"]);
 			}
-			$user->setOrganisationGroupRole($org_group_role);			
+			$user->setOrganisationGroupRole($org_group_role);
 		}
 
 		return $user;
@@ -465,6 +448,7 @@ class User {
 	 */
 	public static function fromArray(array $arr, User $user) {
 		$user->id = $arr['id'];
+		$user->active_id = $arr['id'];
 		$user->username = $arr['username'];
 		$user->firstname = $arr['firstname'];
 		$user->lastname = $arr['lastname'];
@@ -493,7 +477,7 @@ class User {
 		$user->office_hours = $arr['office_hours'];
 		$user->clinical = $arr['clinical'];
 		$user->group = $arr['group'];
-		$user->role = $arr['role'];		
+		$user->role = $arr['role'];
 
 		return $user;
 	}

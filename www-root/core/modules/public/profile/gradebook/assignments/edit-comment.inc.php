@@ -44,11 +44,11 @@ if ($RECORD_ID && $ASSIGNMENT_ID) {
 	$comment_record	= $db->GetRow($query);
 	if ($comment_record) {
 		if ((int) $comment_record["comment_active"]) {
-			if ($comment_record["proxy_id"] === $ENTRADA_USER->getProxyId()) {
-				if ($comment_record["file_owner"] === $ENTRADA_USER->getProxyId()) {
+			if ($comment_record["proxy_id"] === $ENTRADA_USER->getId()) {
+				if ($comment_record["file_owner"] === $ENTRADA_USER->getId()) {
 					$owner = true;
 				} else {
-					$query = "SELECT * FROM `assignment_contacts` WHERE `assignment_id` = ".$db->qstr($ASSIGNMENT_ID)." AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getProxyId());
+					$query = "SELECT * FROM `assignment_contacts` WHERE `assignment_id` = ".$db->qstr($ASSIGNMENT_ID)." AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getId());
 					$assignment_contact = $db->GetRow($query);
 				}
 				if (isset($assignment_contact) && $assignment_contact) {

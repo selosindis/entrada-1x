@@ -2340,7 +2340,7 @@ function permissions_mask() {
 	}
 
 	if(($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"] != $_SESSION["details"]["id"]) && ($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["expires"] <= time())) {
-		if ($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"] != $_SESSION["details"]["id"] . "-" . $ENTRADA_USER->getActiveGroupRole()) {
+		if ($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"] != $_SESSION["details"]["id"] . "-" . $ENTRADA_USER->getAccessId()) {
 			unset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]);
 		}
 	}
@@ -8861,10 +8861,10 @@ function courses_fetch_courses($only_active_courses = true, $order_by_course_cod
 
 	if ($ENTRADA_USER->getGroup() == "student") {
 		$query .="	AND (
-						d.`proxy_id` = ".$db->qstr($ENTRADA_USER->getProxyId())."
+						d.`proxy_id` = ".$db->qstr($ENTRADA_USER->getId())."
 						OR a.`permission` = 'open'
 						OR (
-							b.`audience_type` = 'proxy_id' AND b.`audience_value` = ".$db->qstr($ENTRADA_USER->getProxyId())."
+							b.`audience_type` = 'proxy_id' AND b.`audience_value` = ".$db->qstr($ENTRADA_USER->getId())."
 						)
 					)";
 	}

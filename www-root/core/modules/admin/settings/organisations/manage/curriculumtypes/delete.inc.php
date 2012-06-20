@@ -70,7 +70,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 						$query = "	UPDATE `curriculum_lu_types` 
 									SET	`curriculum_type_active`=0,
 									`updated_date`=".$db->qstr(time()).",
-									`updated_by`=".$db->qstr($ENTRADA_USER->getProxyId())." 
+									`updated_by`=".$db->qstr($ENTRADA_USER->getId())." 
 									WHERE `curriculum_type_id` = ".$db->qstr($id);
 						if ($db->Execute($query)) {
 

@@ -128,7 +128,7 @@ if (true) {
 							ON f.`cohort` = g.`group_id`
 							JOIN `group_members` AS m
 							ON g.`group_id` = m.`group_id`
-							AND m.`proxy_id` = ".$db->qstr($ENTRADA_USER->getProxyId())."
+							AND m.`proxy_id` = ".$db->qstr($ENTRADA_USER->getId())."
 							LEFT JOIN `assessment_grades` AS h 
 							ON m.`proxy_id` = h.`proxy_id`
 							AND h.`assessment_id` = e.`assessment_id`

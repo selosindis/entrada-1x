@@ -56,7 +56,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 					$query = "	UPDATE `" . AUTH_DATABASE . "`.`departments`
 									SET	`department_active`=0,
 									`updated_date`=" . $db->qstr(time()) . ",
-									`updated_by`=" . $db->qstr($ENTRADA_USER->getProxyId()) . "
+									`updated_by`=" . $db->qstr($ENTRADA_USER->getId()) . "
 									WHERE `department_id` = " . $db->qstr($id);
 					if ($db->Execute($query)) {
 						$SUCCESS++;

@@ -126,6 +126,7 @@ if (isset($_POST["username"]) && isset($_POST["password"]) && !empty($_POST["use
 if ($isAuthenticated) {
 	
 	$ENTRADA_USER = User::get($user_details["id"]);
+	$user_details["access_id"] = $ENTRADA_USER->getAccessId();
 	$ENTRADA_ACL = new Entrada_Acl($user_details);
 	
 	switch ($method) {

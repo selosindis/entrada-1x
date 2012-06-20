@@ -143,6 +143,7 @@ if (!$LOGGED_IN && (isset($_GET["auth"]) && $_GET["auth"] == "true")) {
 				$_SESSION["isAuthorized"] = true;
 				$_SESSION["details"]["app_id"] = AUTH_APP_ID;
 				$_SESSION["details"]["id"] = $result["ID"];
+				$_SESSION["details"]["access_id"] = $ENTRADA_USER->getAccessId();
 				$_SESSION["details"]["firstname"] = $result["FIRSTNAME"];
 				$_SESSION["details"]["lastname"] = $result["LASTNAME"];
 				$_SESSION["details"]["email"] = $result["EMAIL"];

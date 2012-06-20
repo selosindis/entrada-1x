@@ -100,6 +100,7 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 				$ENTRADA_USER = User::get($result["id"]);
 			}
 			$_SESSION["details"]["id"] = $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"] = $user_proxy_id = $result["id"];
+			$_SESSION["details"]["access_id"] = $ENTRADA_USER->getAccessId();
 			$_SESSION["details"]["username"] = $user_username = $result["username"];
 			$_SESSION["details"]["firstname"] = $user_firstname = $result["firstname"];
 			$_SESSION["details"]["lastname"] = $user_lastname = $result["lastname"];
@@ -166,6 +167,7 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 	$details = array();
 	$details["app_id"] = (int) AUTH_APP_ID;
 	$details["id"] = $user_proxy_id;
+	$details["access_id"] = $ENTRADA_USER->getAccessId();
 	$details["username"] = $user_username;
 	$details["prefix"] = "";
 	$details["firstname"] = $user_firstname;

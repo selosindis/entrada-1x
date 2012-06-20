@@ -2128,8 +2128,8 @@ function preferences_load($module) {
 function permissions_load() {
 	global $db, $ENTRADA_USER;
 	$permissions	= array();
-	$permissions[$ENTRADA_USER->getId()] = array("permission_id" => 0, "group" => $_SESSION["details"]["group"], "role" => $_SESSION["details"]["role"], "organisation_id"=>$_SESSION["details"]["organisation_id"], "starts" => $_SESSION["details"]["access_starts"], "expires" => $_SESSION["details"]["access_expires"], "fullname" => ($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]), "firstname" => $_SESSION["details"]["firstname"], "lastname" => $_SESSION["details"]["lastname"]);
-	$query = "	SELECT a.*, b.`id` AS `proxy_id`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, b.`firstname`, b.`lastname`, b.`organisation_id`, c.`role`, c.`group`
+	$permissions[$ENTRADA_USER->getAccessId()] = array("permission_id" => 0, "group" => $_SESSION["details"]["group"], "role" => $_SESSION["details"]["role"], "organisation_id"=>$_SESSION["details"]["organisation_id"], "starts" => $_SESSION["details"]["access_starts"], "expires" => $_SESSION["details"]["access_expires"], "fullname" => ($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]), "firstname" => $_SESSION["details"]["firstname"], "lastname" => $_SESSION["details"]["lastname"]);
+	$query = "	SELECT a.*, b.`id` AS `proxy_id`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, b.`firstname`, b.`lastname`, b.`organisation_id`, c.`role`, c.`group`, c.`id` AS `access_id`
 				FROM `permissions` AS a
 				LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
 				ON b.`id` = a.`assigned_by`
@@ -2143,7 +2143,7 @@ function permissions_load() {
 	$results = $db->GetAll($query);
 	if($results) {
 		foreach ($results as $result) {
-			$permissions[$result["proxy_id"]] = array("permission_id" => $result["permission_id"], "group" => $result["group"], "role" => $result["role"], "organisation_id"=>$result['organisation_id'],  "starts" => $result["valid_from"], "expires" => $result["valid_until"], "fullname" => $result["fullname"], "firstname" => $result["firstname"], "lastname" => $result["lastname"]);
+			$permissions[$result["access_id"]] = array("permission_id" => $result["permission_id"], "group" => $result["group"], "role" => $result["role"], "organisation_id"=>$result['organisation_id'],  "starts" => $result["valid_from"], "expires" => $result["valid_until"], "fullname" => $result["fullname"], "firstname" => $result["firstname"], "lastname" => $result["lastname"]);
 		}
 	}
 	return $permissions;
@@ -2171,7 +2171,7 @@ function load_org_group_role($proxy_id, $ua_id) {
 
 	$result = $db->GetRow($query);
 	if($result) {
-		$permissions[$proxy_id] = array("group" => $result["group"], "role" => $result["role"], "organisation_id"=>$result['organisation_id'],  "starts" => $result["access_starts"], "expires" => $result["access_expires"], "fullname" => $result["fullname"], "firstname" => $result["firstname"], "lastname" => $result["lastname"]);
+		$permissions[$ua_id] = array("group" => $result["group"], "role" => $result["role"], "organisation_id"=>$result['organisation_id'],  "starts" => $result["access_starts"], "expires" => $result["access_expires"], "fullname" => $result["fullname"], "firstname" => $result["firstname"], "lastname" => $result["lastname"]);
 	}
 	return $permissions;
 }

@@ -105,7 +105,7 @@ class Entrada_ACL extends ACL_Factory {
 
 		$this->default_ptable	= "`".AUTH_DATABASE."`.`acl_permissions`";
 		//Fetch all the different users this current user could masquerade as.
-		$query		= "SELECT a.*, b.`id` AS `proxy_id`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, b.`firstname`, b.`lastname`, b.`organisation_id`, c.`role`, c.`group`
+		$query		= "SELECT a.*, b.`id` AS `proxy_id`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, b.`firstname`, b.`lastname`, b.`organisation_id`, c.`role`, c.`group`, c.`id` AS `access_id`
 				FROM `permissions` AS a
 				LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
 				ON b.`id` = a.`assigned_by`
@@ -121,7 +121,7 @@ class Entrada_ACL extends ACL_Factory {
 		//For all the possible permission masks, add the details of this mask to one large array, $permissions. Permissions here mean permission to masquerade as another user.
 		if($results) {
 			foreach($results as $result) {
-				$permissions[$result["proxy_id"]] = array("permission_id" => $result["permission_id"], "group" => $result["group"], "role" => $result["role"], "group_id" => $result["group_id"], "role_id" => $result["role_id"], "organisation" => $result["organisation"], "organisation_id" => $result["organisation_id"], "starts" => $result["valid_from"], "expires" => $result["valid_until"], "fullname" => $result["fullname"], "firstname" => $result["firstname"], "lastname" => $result["lastname"]);
+				$permissions[$result["access_id"]] = array("permission_id" => $result["permission_id"], "group" => $result["group"], "role" => $result["role"], "group_id" => $result["group_id"], "role_id" => $result["role_id"], "organisation" => $result["organisation"], "organisation_id" => $result["organisation_id"], "starts" => $result["valid_from"], "expires" => $result["valid_until"], "fullname" => $result["fullname"], "firstname" => $result["firstname"], "lastname" => $result["lastname"]);
 			}
 		}
 		//Add all user_access records to the $permissions tree by organisation.
@@ -147,7 +147,7 @@ class Entrada_ACL extends ACL_Factory {
 		}
 		
 		//Also add the user's own details, as the user can mask as itself.
-		$permissions[$userdetails["id"]] = $userdetails;
+		$permissions[$userdetails["access_id"]] = $userdetails;
 
 		//Next, fetch all the role-resource permissions related to all these users.
 		$this->rr_permissions = $this->_fetchPermissions($permissions);

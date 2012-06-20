@@ -2156,11 +2156,9 @@ function permissions_load() {
  *
  * @return array
  */
-function load_org_group_role($assumed_proxy_id, $ua_id) {
+function load_org_group_role($proxy_id, $ua_id) {
 	global $db;
 	$permissions	= array();
-	$pieces = explode("-", $assumed_proxy_id);
-	$proxy_id = $pieces[0];
 	$query = "	SELECT b.`id` AS `proxy_id`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, b.`firstname`, b.`lastname`, c.`organisation_id`, c.`role`, c.`group`, c.`access_starts`, c.`access_expires`
 				FROM `".AUTH_DATABASE."`.`user_data` AS b
 				JOIN `".AUTH_DATABASE."`.`user_access` AS c
@@ -2173,7 +2171,7 @@ function load_org_group_role($assumed_proxy_id, $ua_id) {
 
 	$result = $db->GetRow($query);
 	if($result) {
-		$permissions[$assumed_proxy_id] = array("group" => $result["group"], "role" => $result["role"], "organisation_id"=>$result['organisation_id'],  "starts" => $result["access_starts"], "expires" => $result["access_expires"], "fullname" => $result["fullname"], "firstname" => $result["firstname"], "lastname" => $result["lastname"]);
+		$permissions[$proxy_id] = array("group" => $result["group"], "role" => $result["role"], "organisation_id"=>$result['organisation_id'],  "starts" => $result["access_starts"], "expires" => $result["access_expires"], "fullname" => $result["fullname"], "firstname" => $result["firstname"], "lastname" => $result["lastname"]);
 	}
 	return $permissions;
 }
@@ -2340,9 +2338,7 @@ function permissions_mask() {
 	}
 
 	if(($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"] != $_SESSION["details"]["id"]) && ($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["expires"] <= time())) {
-		if ($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"] != $_SESSION["details"]["id"] . "-" . $ENTRADA_USER->getActiveGroupRole()) {
-			unset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]);
-		}
+		unset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]);			
 	}
 
 	if(!isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])) {

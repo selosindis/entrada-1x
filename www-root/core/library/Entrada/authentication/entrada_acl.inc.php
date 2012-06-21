@@ -121,7 +121,7 @@ class Entrada_ACL extends ACL_Factory {
 		//For all the possible permission masks, add the details of this mask to one large array, $permissions. Permissions here mean permission to masquerade as another user.
 		if($results) {
 			foreach($results as $result) {
-				$permissions[$result["access_id"]] = array("permission_id" => $result["permission_id"], "group" => $result["group"], "role" => $result["role"], "group_id" => $result["group_id"], "role_id" => $result["role_id"], "organisation" => $result["organisation"], "organisation_id" => $result["organisation_id"], "starts" => $result["valid_from"], "expires" => $result["valid_until"], "fullname" => $result["fullname"], "firstname" => $result["firstname"], "lastname" => $result["lastname"]);
+				$permissions[$result["access_id"]] = array("id" => $result["proxy_id"], "access_id" => $result["access_id"], "permission_id" => $result["permission_id"], "group" => $result["group"], "role" => $result["role"], "organisation_id" => $result["organisation_id"], "starts" => $result["valid_from"], "expires" => $result["valid_until"], "fullname" => $result["fullname"], "firstname" => $result["firstname"], "lastname" => $result["lastname"]);
 			}
 		}
 		//Add all user_access records to the $permissions tree by organisation.
@@ -145,15 +145,38 @@ class Entrada_ACL extends ACL_Factory {
 				$permissions[$result["ua_id"]] = array("group" => $result["group"], "role" => $result["role"], "organisation_id" => $result["organisation_id"], "fullname" => $result["fullname"], "firstname" => $result["firstname"], "lastname" => $result["lastname"]);
 			}
 		}
-		
 		//Also add the user's own details, as the user can mask as itself.
 		$permissions[$userdetails["access_id"]] = $userdetails;
-
 		//Next, fetch all the role-resource permissions related to all these users.
 		$this->rr_permissions = $this->_fetchPermissions($permissions);
-
+		/**
+		 * Next, "Clean" the permissions. This should create a permissions record for each active user_access record associated with 
+		 * the user id passed in from the acl_permissions table. This may need to change so the permissions table simply uses an
+		 * access_id in the future for more granular permissions granting, but in the mean-time, this will ensure each access record for
+		 * the user will be granted the same custom access from a user `entity_type` record.
+		**/
+		$clean_permissions = array();
+		foreach ($this->rr_permissions as $permissions_record) {
+			if ($permissions_record["entity_type"] != "user") {
+				$clean_permissions[] = $permissions_record;
+			} else {
+				$query = "SELECT `id` FROM `".AUTH_DATABASE."`.`user_access`
+							WHERE `user_id` = ".$db->qstr($permissions_record["entity_value"])."
+							AND `app_id` = ".$db->qstr(AUTH_APP_ID)."
+							AND `account_active` = 'true'
+							AND (`access_starts` = '0' OR `access_starts` <= ".$db->qstr(time()).")
+							AND (`access_expires` = '0' OR `access_expires` >= ".$db->qstr(time()).")";
+				$access_ids = $db->getAll($query);
+				if ($access_ids) {
+					foreach ($access_ids as $access_id) {
+						$permissions_record["entity_value"] = $access_id["id"];
+						$clean_permissions[] = $permissions_record;
+					}
+				}
+			}
+		}
 		//This adds all the resources referenced by the permissions to the ACL.
-		$acl = $this->_build($permissions, $this->rr_permissions);
+		$acl = $this->_build($permissions, $clean_permissions);
 
 		//Add generic roles
 		foreach(array("organisation", "group", "role", "user") as $entity_type) {
@@ -185,9 +208,8 @@ class Entrada_ACL extends ACL_Factory {
 		}
 		//Instantiate ACL_Factory to facilitate application of rules
 		$this->acl = new ACL_Factory($acl);
-
 		//Create the final ACL
-		$this->acl->create_acl($this->rr_permissions);
+		$this->acl->create_acl($clean_permissions);
 	}
 
 	/**

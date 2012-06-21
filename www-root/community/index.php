@@ -446,8 +446,8 @@ if ($COMMUNITY_URL) {
 						$sidebar_html  = "<form id=\"masquerade-form\" action=\"".COMMUNITY_URL.$COMMUNITY_URL."\" method=\"get\">\n";
 						$sidebar_html .= "<label for=\"permission-mask\">Available permission masks:</label><br />";
 						$sidebar_html .= "<select id=\"permission-mask\" name=\"mask\" style=\"width: 160px\" onchange=\"window.location='".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?".str_replace("&#039;", "'", replace_query(array("mask" => "'+this.options[this.selectedIndex].value")))."\">\n";
-						foreach ($_SESSION["permissions"] as $proxy_id => $result) {
-							$sidebar_html .= "<option value=\"".(($proxy_id == $ENTRADA_USER->getID()) ? "close" : $result["permission_id"])."\"".(($proxy_id == $ENTRADA_USER->getActiveId()) ? " selected=\"selected\"" : "").">".html_encode($result["fullname"])."</option>\n";
+						foreach ($_SESSION["permissions"] as $access_id => $result) {
+							$sidebar_html .= "<option value=\"".(($access_id == $ENTRADA_USER->getDefaultAccessId()) ? "close" : $result["permission_id"])."\"".(($access_id == $ENTRADA_USER->getAccessId()) ? " selected=\"selected\"" : "").">".html_encode($result["fullname"])."</option>\n";
 						}
 						$sidebar_html .= "</select>\n";
 						$sidebar_html .= "</form>\n";

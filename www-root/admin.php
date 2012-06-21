@@ -82,7 +82,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	 */
 	users_online();
 	$proxy_id = $ENTRADA_USER->getActiveId();
-	if(($proxy_id != $ENTRADA_USER->getID()) && ($_SESSION["permissions"][$proxy_id]["expires"] <= time())) {
+	if(($proxy_id != $ENTRADA_USER->getID()) && ($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["expires"] <= time())) {
 		unset($proxy_id);
 	}
 
@@ -143,9 +143,15 @@ if (($router) && ($route = $router->initRoute($MODULE))) {
 		$sidebar_html  = "<form id=\"masquerade-form\" action=\"".ENTRADA_URL."/admin/\" method=\"get\">\n";
 		$sidebar_html .= "<label for=\"permission-mask\">Available permission masks:</label>";
 		$sidebar_html .= "<select id=\"permission-mask\" name=\"mask\" style=\"width: 160px\" onchange=\"window.location='".ENTRADA_URL."/admin/".$MODULE."/?".html_decode(replace_query(array("mask" => "'+this.options[this.selectedIndex].value")))."\">\n";
-		foreach($_SESSION["permissions"] as $proxy_id => $result) {
-			if (is_int($proxy_id)) {
-				$sidebar_html .= "<option value=\"".(($proxy_id == $ENTRADA_USER->getID()) ? "close" : $result["permission_id"])."\"".(($proxy_id == $ENTRADA_USER->getActiveId()) ? " selected=\"selected\"" : "").">".html_encode($result["fullname"])."</option>\n";
+		$display_masks = false;
+		$added_users = array();
+		foreach($_SESSION["permissions"] as $access_id => $result) {
+			if (is_int($access_id) && ((isset($result["mask"]) && $result["mask"]) || $access_id == $ENTRADA_USER->getDefaultAccessId()) && array_search($result["id"], $added_users) === false) {
+				if (isset($result["mask"]) && $result["mask"]) {
+					$display_masks = true;
+				}
+				$added_users[] = $result["id"];
+				$sidebar_html .= "<option value=\"".(($access_id == $ENTRADA_USER->getDefaultAccessId()) ? "close" : $result["permission_id"])."\"".(($result["id"] == $ENTRADA_USER->getActiveId()) ? " selected=\"selected\"" : "").">".html_encode($result["fullname"])."</option>\n";
 			}
 		}
 		$sidebar_html .= "</select>\n";
@@ -194,11 +200,11 @@ if((isset($_SESSION["isAuthorized"])) && ($_SESSION["isAuthorized"])) {
 			if ($key == $ENTRADA_USER->getActiveOrganisation()) {
 				$sidebar_html .= "<li><a href=\"" . ENTRADA_URL . "/admin/" . $MODULE . "/" . "?organisation_id=" . $key . "\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-on.gif\" alt=\"\" /> <span>" . html_encode($organisation_title) . "</span></a></li>\n";
 				if ($org_group_role && !empty($org_group_role)) {
-					foreach($org_group_role[$key] as $group => $role) {
-						if ($role[1] == $ENTRADA_USER->getAccessId()) {
-							$sidebar_html .= "<li style=\"padding-left: 15px;\"><a href=\"" . ENTRADA_URL . "/admin/" . $MODULE . "/" . "?" . replace_query(array("organisation_id" => $key, "ua_id" => $role[1])) . "\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-on.gif\" alt=\"\" /> <span>" . html_encode(ucfirst($group) . " - " . ucfirst($role[0])) . "</span></a></li>\n";
+					foreach($org_group_role[$key] as $group_role) {
+						if ($group_role["access_id"] == $ENTRADA_USER->getAccessId()) {
+							$sidebar_html .= "<li style=\"padding-left: 15px;\"><a href=\"" . ENTRADA_URL . "/admin/" . $MODULE . "/" . "?" . replace_query(array("organisation_id" => $key, "ua_id" => $group_role["access_id"])) . "\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-on.gif\" alt=\"\" /> <span>" . html_encode(ucfirst($group_role["group"]) . " - " . ucfirst($group_role["role"])) . "</span></a></li>\n";
 						} else {
-							$sidebar_html .= "<li style=\"padding-left: 15px;\"><a href=\"" . ENTRADA_URL . "/admin/" . $MODULE . "/" . "?" . replace_query(array("organisation_id" => $key, "ua_id" => $role[1])) . "\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-off.gif\" alt=\"\" /> <span>" . html_encode(ucfirst($group) . " - " . ucfirst($role[0])) . "</span></a></li>\n";
+							$sidebar_html .= "<li style=\"padding-left: 15px;\"><a href=\"" . ENTRADA_URL . "/admin/" . $MODULE . "/" . "?" . replace_query(array("organisation_id" => $key, "ua_id" => $group_role["access_id"])) . "\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-off.gif\" alt=\"\" /> <span>" . html_encode(ucfirst($group_role["group"]) . " - " . ucfirst($group_role["role"])) . "</span></a></li>\n";
 						}
 					}
 				}

@@ -102,7 +102,7 @@ if ($ENTRADA_USER) {
 		}
 	}
 
-	if (!$ENTRADA_USER->getAccessId()) {
+	if (!isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["access_id"]) || !$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["access_id"]) {
 		$query = "SELECT a.`group`, a.`role`, a.`id`
 						  FROM `" . AUTH_DATABASE . "`.`user_access` a
 						  WHERE a.`user_id` = " . $db->qstr($ENTRADA_USER->getID()) . "
@@ -111,8 +111,11 @@ if ($ENTRADA_USER) {
 		$result = $db->getRow($query);
 		if ($result) {
 			$ENTRADA_USER->setAccessId($result["id"]);		
-			$_SESSION["permissions"] = load_org_group_role($ENTRADA_USER->getActiveId(), $ENTRADA_USER->getAccessId());
+			$_SESSION["permissions"] = permissions_load();
 		}
+	} else {
+		$ENTRADA_USER->setAccessId($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["access_id"]);
+		$_SESSION["permissions"] = permissions_load();
 	}
 
 	if (isset($_GET["organisation_id"])) {
@@ -130,14 +133,14 @@ if ($ENTRADA_USER) {
 		$result = $db->getRow($query);
 		if ($result) {
 			$ENTRADA_USER->setAccessId($result["id"]);
-			$_SESSION["permissions"] = load_org_group_role($ENTRADA_USER->getActiveId(), $ENTRADA_USER->getAccessId());
+			$_SESSION["permissions"] = permissions_load();
 		}
 	}
 
 	if (isset($_GET["ua_id"])) {
 		$ua_id = clean_input($_GET["ua_id"], array("trim", "notags", "int"));
 		$ENTRADA_USER->setAccessId($ua_id);
-		$_SESSION["permissions"] = load_org_group_role($ENTRADA_USER->getActiveId(), $ENTRADA_USER->getAccessId());
+		$_SESSION["permissions"] = permissions_load();
 	}
 
  	$query = "SELECT `template` FROM `" . AUTH_DATABASE . "`.`organisations` WHERE `organisation_id` = " . $db->qstr($ENTRADA_USER->getActiveOrganisation());

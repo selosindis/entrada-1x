@@ -2128,7 +2128,22 @@ function preferences_load($module) {
 function permissions_load() {
 	global $db, $ENTRADA_USER;
 	$permissions	= array();
-	$permissions[$ENTRADA_USER->getAccessId()] = array("permission_id" => 0, "group" => $_SESSION["details"]["group"], "role" => $_SESSION["details"]["role"], "organisation_id"=>$_SESSION["details"]["organisation_id"], "starts" => $_SESSION["details"]["access_starts"], "expires" => $_SESSION["details"]["access_expires"], "fullname" => ($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]), "firstname" => $_SESSION["details"]["firstname"], "lastname" => $_SESSION["details"]["lastname"]);
+	$query = "	SELECT a.`id` AS `proxy_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, a.`firstname`, a.`lastname`, a.`organisation_id`, b.`role`, b.`group`, b.`id` AS `access_id`
+				FROM `".AUTH_DATABASE."`.`user_data` AS a
+				RIGHT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+				ON b.`user_id` = a.`id` 
+				AND b.`app_id`=".$db->qstr(AUTH_APP_ID)."
+				AND b.`account_active`='true'
+				AND (b.`access_starts`='0' OR b.`access_starts`<=".$db->qstr(time()).")
+				AND (b.`access_expires`='0' OR b.`access_expires`>=".$db->qstr(time()).")
+				WHERE a.`id` = ".$db->qstr($ENTRADA_USER->getID())."
+				ORDER BY b.`id` ASC";
+	$results = $db->GetAll($query);
+	if($results) {
+		foreach ($results as $result) {
+			$permissions[$result["access_id"]] = array("id" => $result["proxy_id"], "access_id" => $result["access_id"], "group" => $result["group"], "role" => $result["role"], "organisation_id"=>$result["organisation_id"], "fullname" => $result["fullname"], "firstname" => $result["firstname"], "lastname" => $result["lastname"]);
+		}
+	}
 	$query = "	SELECT a.*, b.`id` AS `proxy_id`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, b.`firstname`, b.`lastname`, b.`organisation_id`, c.`role`, c.`group`, c.`id` AS `access_id`
 				FROM `permissions` AS a
 				LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
@@ -2143,7 +2158,7 @@ function permissions_load() {
 	$results = $db->GetAll($query);
 	if($results) {
 		foreach ($results as $result) {
-			$permissions[$result["access_id"]] = array("permission_id" => $result["permission_id"], "group" => $result["group"], "role" => $result["role"], "organisation_id"=>$result['organisation_id'],  "starts" => $result["valid_from"], "expires" => $result["valid_until"], "fullname" => $result["fullname"], "firstname" => $result["firstname"], "lastname" => $result["lastname"]);
+			$permissions[$result["access_id"]] = array("id" => $result["proxy_id"], "access_id" => $result["access_id"], "permission_id" => $result["permission_id"], "group" => $result["group"], "role" => $result["role"], "organisation_id"=>$result['organisation_id'],  "starts" => $result["valid_from"], "expires" => $result["valid_until"], "fullname" => $result["fullname"], "firstname" => $result["firstname"], "lastname" => $result["lastname"], "mask" => true);
 		}
 	}
 	return $permissions;
@@ -2167,7 +2182,7 @@ function load_org_group_role($proxy_id, $ua_id) {
 				AND (c.`access_starts`='0' OR c.`access_starts`<=".$db->qstr(time()).")
 				AND (c.`access_expires`='0' OR c.`access_expires`>=".$db->qstr(time()).")
 				WHERE c.`id` = " . $db->qstr($ua_id) . "
-				AND b.`id` = $db->qstr($proxy_id)";
+				AND b.`id` = ".$db->qstr($proxy_id);
 
 	$result = $db->GetRow($query);
 	if($result) {
@@ -2311,7 +2326,8 @@ function permissions_mask() {
 
 	if(isset($_GET["mask"])) {
 		if(trim($_GET["mask"]) == "close") {
-			$ENTRADA_USER->setAccessId();
+			$ENTRADA_USER->setAccessId($ENTRADA_USER->getDefaultAccessId());
+			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["access_id"] = $ENTRADA_USER->getAccessId();
 		} elseif((int) trim($_GET["mask"])) {
 			$query	= "SELECT * FROM `permissions` WHERE `permission_id` = ".$db->qstr((int) trim($_GET["mask"]));
 			$result	= $db->GetRow($query);
@@ -2329,6 +2345,7 @@ function permissions_mask() {
 							$access_id = $db->getOne($query);
 							if ($access_id) {
 								$ENTRADA_USER->setAccessId($access_id);
+								$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["access_id"] = $access_id;
 								$ENTRADA_USER->setClinical(getClinicalFromProxy($ENTRADA_USER->getActiveId()));
 							} else {
 								$query = "SELECT `id` FROM `".AUTH_DATABASE."`.`user_access`
@@ -2340,6 +2357,7 @@ function permissions_mask() {
 								$access_id = $db->getOne($query);
 								if ($access_id) {
 									$ENTRADA_USER->setAccessId($access_id);
+									$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["access_id"] = $access_id;
 									$ENTRADA_USER->setClinical(getClinicalFromProxy($ENTRADA_USER->getActiveId()));
 								}
 							}

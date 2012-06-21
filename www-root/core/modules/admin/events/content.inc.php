@@ -1095,8 +1095,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								echo "		</div>\n";
 								echo "	</td>\n";
 								echo "</tr>\n";
-
-								new_sidebar_item("Objective Importance", $sidebar_html, "objective-legend", "open");
 							}
 							?>
 							<tr>

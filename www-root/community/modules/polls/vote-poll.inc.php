@@ -43,13 +43,13 @@ if ($RECORD_ID) {
 			else if (($COMMUNITY_MEMBER && (int)$poll_record['allow_member_vote'] == 1)
 			|| (!(int) $community_details["community_protected"] && (int)$poll_record['allow_public_vote'] == 1)
 			|| (!(int) $community_details["community_registration"] && (int)$poll_record['allow_troll_vote'] == 1)) {
-				if ((count($specificMembers) == 0) || (is_array($specificMembers) && in_array($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"], $specificMembers)))
+				if ((count($specificMembers) == 0) || (is_array($specificMembers) && in_array($ENTRADA_USER->getActiveId(), $specificMembers)))
 				{
 					$allow_main_load = true;
 				}
 			}
 			if ($allow_main_load) {				
-				$vote_record = communities_polls_votes_cast_by_member($RECORD_ID, $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]);
+				$vote_record = communities_polls_votes_cast_by_member($RECORD_ID, $ENTRADA_USER->getActiveId());
 				
 				if (((int)$poll_record["allow_multiple"] == 0 && (!isset($vote_record["votes"]) || (int)$vote_record["votes"] == 0))
 				|| ((int)$poll_record["allow_multiple"] == 1 && (!isset($vote_record["votes"]) || ($poll_record["number_of_votes"] == 0 || (int)$vote_record["votes"] < (int)$poll_record["number_of_votes"]))))
@@ -100,7 +100,7 @@ if ($RECORD_ID) {
 							}
 							
 							if (!$ERROR) {
-								$PROCESSED["proxy_id"]				= $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"];
+								$PROCESSED["proxy_id"]				= $ENTRADA_USER->getActiveId();
 								$PROCESSED["updated_date"]			= time();
 								$PROCESSED["updated_by"]			= $ENTRADA_USER->getID();
 								

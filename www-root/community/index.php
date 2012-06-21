@@ -306,7 +306,7 @@ if ($COMMUNITY_URL) {
 					 * This function updates the users_online table.
 					 */
 					users_online();
-					$query	= "SELECT * FROM `community_members` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])." AND `member_active` = '1'";
+					$query	= "SELECT * FROM `community_members` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())." AND `member_active` = '1'";
 					$result	= $db->GetRow($query);
 					if ($result) {
 						$COMMUNITY_MEMBER = true;
@@ -406,7 +406,7 @@ if ($COMMUNITY_URL) {
 								$ALLOW_MEMBERSHIP = false;
 			
 								if (($community_details["community_members"] != "") && ($community_members = @unserialize($community_details["community_members"])) && (is_array($community_members)) && (count($community_members))) {
-									$query	= "SELECT * FROM `community_members` WHERE `proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])." AND `member_active` = '1' AND `community_id` IN ('".implode("', '", $community_members)."')";
+									$query	= "SELECT * FROM `community_members` WHERE `proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())." AND `member_active` = '1' AND `community_id` IN ('".implode("', '", $community_members)."')";
 									$result	= $db->GetRow($query);
 									if ($result) {
 										$ALLOW_MEMBERSHIP = true;
@@ -447,7 +447,7 @@ if ($COMMUNITY_URL) {
 						$sidebar_html .= "<label for=\"permission-mask\">Available permission masks:</label><br />";
 						$sidebar_html .= "<select id=\"permission-mask\" name=\"mask\" style=\"width: 160px\" onchange=\"window.location='".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?".str_replace("&#039;", "'", replace_query(array("mask" => "'+this.options[this.selectedIndex].value")))."\">\n";
 						foreach ($_SESSION["permissions"] as $proxy_id => $result) {
-							$sidebar_html .= "<option value=\"".(($proxy_id == $ENTRADA_USER->getID()) ? "close" : $result["permission_id"])."\"".(($proxy_id == $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]) ? " selected=\"selected\"" : "").">".html_encode($result["fullname"])."</option>\n";
+							$sidebar_html .= "<option value=\"".(($proxy_id == $ENTRADA_USER->getID()) ? "close" : $result["permission_id"])."\"".(($proxy_id == $ENTRADA_USER->getActiveId()) ? " selected=\"selected\"" : "").">".html_encode($result["fullname"])."</option>\n";
 						}
 						$sidebar_html .= "</select>\n";
 						$sidebar_html .= "</form>\n";

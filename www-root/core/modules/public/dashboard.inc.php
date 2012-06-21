@@ -79,7 +79,7 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 					FROM `community_members` AS a
 					LEFT JOIN `communities` AS b
 					ON b.`community_id` = a.`community_id`
-					WHERE a.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+					WHERE a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
 					AND a.`member_active` = '1'
 					AND b.`community_active` = '1'
 					AND b.`community_template` <> 'course'
@@ -325,14 +325,14 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 							ON c.`region_id` = a.`region_id`
 							LEFT JOIN `".CLERKSHIP_DATABASE."`.`apartment_schedule` AS d
 							ON d.`event_id` = a.`event_id`
-							AND d.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+							AND d.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
 							AND d.`aschedule_status` = 'published'
 							LEFT JOIN `".CLERKSHIP_DATABASE."`.`global_lu_rotations` AS e
 							ON e.`rotation_id` = a.`rotation_id`
 							WHERE a.`event_finish` >= ".$db->qstr(strtotime("00:00:00"))."
 							AND (a.`event_status` = 'published' OR a.`event_status` = 'approval')
 							AND b.`econtact_type` = 'student'
-							AND b.`etype_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+							AND b.`etype_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
 							ORDER BY a.`event_start` ASC";
 				$clerkship_schedule	= $db->GetAll($query);
 				if ($clerkship_schedule) {
@@ -701,14 +701,14 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 							ON c.`id` = b.`proxy_id`
 							LEFT JOIN `statistics` AS d
 							ON d.`module` = 'events'
-							AND d.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+							AND d.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
 							AND d.`action` = 'view'
 							AND d.`action_field` = 'event_id'
 							AND d.`action_value` = a.`event_id`
 							JOIN `courses` AS e
 							ON e.`course_id` = a.`course_id`
 							WHERE (a.`event_start` BETWEEN ".$db->qstr($DISPLAY_DURATION["start"])." AND ".$db->qstr($DISPLAY_DURATION["end"]).")
-							AND b.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+							AND b.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
 							GROUP BY a.`event_id`
 							ORDER BY a.`event_start` ASC";
 			$results	= $db->GetAll($query);

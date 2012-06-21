@@ -123,7 +123,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 				echo display_success();
 
-				application_log("success", "User [".$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]."] approved draft ids: ".implode(", ", $DRAFT_IDS));
+				application_log("success", "User [".$ENTRADA_USER->getActiveId()."] approved draft ids: ".implode(", ", $DRAFT_IDS));
 			} else {
 				$ERROR++;
 				$ERRORSTR[] = "Unable to remove the requested drafts from the system.<br /><br />The system administrator has been informed of this issue and will address it shortly; please try again later.";
@@ -148,7 +148,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								JOIN `draft_creators` AS b
 								ON a.`draft_id` = b.`draft_id`
 								WHERE a.`draft_id` IN ('".implode("', '", $DRAFT_IDS)."')
-								AND b.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]);
+								AND b.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId());
 				$results	= $db->GetAll($query);
 				
 				if($results) {

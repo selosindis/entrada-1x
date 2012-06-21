@@ -43,7 +43,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 	echo "<h1>Import Draft Learning Events from CSV</h1>";
 	
 	if ($result["status"] == "open") {
-		$csv_importer = new CsvImporter($draft_id, $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]);
+		$csv_importer = new CsvImporter($draft_id, $ENTRADA_USER->getActiveId());
 		$csv_importer->importCsv($_FILES["csv_file"]);
 
 		if ($errors = $csv_importer->getErrors()) {

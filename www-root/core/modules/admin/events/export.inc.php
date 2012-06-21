@@ -76,7 +76,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 	 * Fetch all of the events that apply to the current filter set.
 	 */
 	$learning_events = events_fetch_filtered_events(
-			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"],
+			$ENTRADA_USER->getActiveId(),
 			$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"],
 			$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"],
 			$ENTRADA_USER->getActiveOrganisation(),

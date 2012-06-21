@@ -359,7 +359,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 				$PROCESSED["updated_by"]		= $ENTRADA_USER->getID();
 
 				if(($db->AutoExecute("communities", $PROCESSED, "INSERT")) && ($community_id = $db->Insert_Id())) {
-					if($db->AutoExecute("community_members", array("community_id" => $community_id, "proxy_id" => $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"], "member_active" => 1, "member_joined" => time(), "member_acl" => 1), "INSERT")) {
+					if($db->AutoExecute("community_members", array("community_id" => $community_id, "proxy_id" => $ENTRADA_USER->getActiveId(), "member_active" => 1, "member_joined" => time(), "member_acl" => 1), "INSERT")) {
 
 						foreach($community_modules as $module_id) {
 							if(!communities_module_activate($community_id, $module_id)) {
@@ -371,7 +371,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 						}
 
 						$query = "INSERT INTO `community_pages` (`community_id`, `parent_id`, `page_order`, `page_type`, `menu_title`, `page_title`, `page_url`, `page_content`, `allow_member_view`, `allow_troll_view`, `allow_public_view`, `updated_date`, `updated_by`) VALUES
-								(".$db->qstr($community_id).", '0', '0', 'default', 'Home', 'Home', '', '', '1', '1', '1', ".$db->qstr(time()).", ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]).")";
+								(".$db->qstr($community_id).", '0', '0', 'default', 'Home', 'Home', '', '', '1', '1', '1', ".$db->qstr(time()).", ".$db->qstr($ENTRADA_USER->getActiveId()).")";
 						if (!$db->Execute($query)) {
 							$ERROR++;
 							$ERRORSTR[] = "Your community was successfully created; however, a home page could not be creared for the community.<br /><br />The system administrator has been informed of this problem, and they will resolve it shortly.";
@@ -435,7 +435,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 						$ERROR++;
 						$ERRORSTR[] = "Your community was successfully created; however, administrative permissions for your account could not be set to the new community.<br /><br />The system administrator has been informed of this problem, and they will resolve it shortly.";
 
-						application_log("error", "Community was created, but admin permissions for proxy id ".$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]." could not be set. Database said: ".$db->ErrorMsg());
+						application_log("error", "Community was created, but admin permissions for proxy id ".$ENTRADA_USER->getActiveId()." could not be set. Database said: ".$db->ErrorMsg());
 					}
 				} else {
 					$ERROR++;

@@ -542,7 +542,7 @@ switch ($MODULE) {
 				$sidebar_html .= "<select id=\"permission-mask\" name=\"mask\" style=\"width: 160px\" onchange=\"window.location='".ENTRADA_URL."/".$MODULE."/?".str_replace("&#039;", "'", replace_query(array("mask" => "'+this.options[this.selectedIndex].value")))."\">\n";
 				foreach ($_SESSION["permissions"] as $proxy_id => $result) {
 					if (is_int($proxy_id)) {
-						$sidebar_html .= "<option value=\"".(($proxy_id == $ENTRADA_USER->getID()) ? "close" : $result["permission_id"])."\"".(($proxy_id == $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]) ? " selected=\"selected\"" : "").">".html_encode($result["fullname"]) . "</option>\n";
+						$sidebar_html .= "<option value=\"".(($proxy_id == $ENTRADA_USER->getID()) ? "close" : $result["permission_id"])."\"".(($proxy_id == $ENTRADA_USER->getActiveId()) ? " selected=\"selected\"" : "").">".html_encode($result["fullname"]) . "</option>\n";
 					}
 				}
 				$sidebar_html .= "</select>\n";

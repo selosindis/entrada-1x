@@ -791,7 +791,7 @@ if ($COMMUNITY_ID) {
 									echo "<tr>\n";
 									echo "	<td><input type=\"checkbox\" name=\"member_proxy_ids[]\" value=\"".(int) $result["proxy_id"]."\" /></td>\n";
 									echo "	<td>".date(DEFAULT_DATE_FORMAT, $result["member_joined"])."</td>\n";
-									echo "	<td><a href=\"".ENTRADA_URL."/people?profile=".html_encode($result["username"])."\"".(($result["proxy_id"] == $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]) ? " style=\"font-weight: bold" : "")."\">".html_encode($result["firstname"]." ".$result["lastname"])."</a></td>\n";
+									echo "	<td><a href=\"".ENTRADA_URL."/people?profile=".html_encode($result["username"])."\"".(($result["proxy_id"] == $ENTRADA_USER->getActiveId()) ? " style=\"font-weight: bold" : "")."\">".html_encode($result["firstname"]." ".$result["lastname"])."</a></td>\n";
 									echo "	<td>".($result["group"] == "guest" ? "Guest" : "Member" )."</td>\n";
 									echo "	<td class=\"list-status\"><img src=\"images/".(($MAILING_LISTS["active"]) && $mail_list->users[($result["proxy_id"])]["member_active"] ? "list-status-online.gif\" alt=\"Enabled\"" : "list-status-offline.gif\" alt=\"Disabled\"")." /></td>\n";
 									echo "</tr>\n";
@@ -937,9 +937,9 @@ if ($COMMUNITY_ID) {
 											<?php
 											foreach ($results as $result) {
 												echo "<tr>\n";
-												echo "	<td><input type=\"checkbox\" name=\"admin_proxy_ids[]\" value=\"".(int) $result["proxy_id"]."\"".(($result["proxy_id"] == $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]) ? " onclick=\"this.checked = false\" disabled=\"disabled\"" : "")." /></td>\n";
+												echo "	<td><input type=\"checkbox\" name=\"admin_proxy_ids[]\" value=\"".(int) $result["proxy_id"]."\"".(($result["proxy_id"] == $ENTRADA_USER->getActiveId()) ? " onclick=\"this.checked = false\" disabled=\"disabled\"" : "")." /></td>\n";
 												echo "	<td>".date(DEFAULT_DATE_FORMAT, $result["member_joined"])."</td>\n";
-												echo "	<td><a href=\"".ENTRADA_URL."/people?profile=".html_encode($result["username"])."\"".(($result["proxy_id"] == $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]) ? " style=\"font-weight: bold" : "")."\">".html_encode($result["firstname"]." ".$result["lastname"])."</a></td>\n";
+												echo "	<td><a href=\"".ENTRADA_URL."/people?profile=".html_encode($result["username"])."\"".(($result["proxy_id"] == $ENTRADA_USER->getActiveId()) ? " style=\"font-weight: bold" : "")."\">".html_encode($result["firstname"]." ".$result["lastname"])."</a></td>\n";
 												echo "	<td class=\"list-status\"><img src=\"images/".(($MAILING_LISTS["active"]) && $mail_list->users[($result["proxy_id"])]["member_active"] ? "list-status-online.gif\" alt=\"Active\"" : "list-status-offline.gif\" alt=\"Disabled\"")." /></td>\n";
 												echo "</tr>\n";
 											}

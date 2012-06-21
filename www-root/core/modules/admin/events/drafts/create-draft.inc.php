@@ -88,7 +88,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				
 				// grant the active user permission to work on the draft
 				$query = "	INSERT INTO `draft_creators` (`draft_id`, `proxy_id`) 
-							VALUES (".$db->qstr($draft_id).", ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]).")";
+							VALUES (".$db->qstr($draft_id).", ".$db->qstr($ENTRADA_USER->getActiveId()).")";
 				$result = $db->Execute($query);
 				
 				if ($PROCESSED["course_ids"]) {

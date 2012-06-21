@@ -311,7 +311,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			
 			$query = "SELECT *
 			FROM `".$table."` 
-			WHERE `proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])." 
+			WHERE `proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())." 
 			AND `type_id` = '$typeID'".$dateWhere;
 			
 			if($results = $db->GetAll($query)) {

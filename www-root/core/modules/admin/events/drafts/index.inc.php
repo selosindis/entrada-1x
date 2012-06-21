@@ -62,7 +62,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 	// fetch the list of draft ids for the user
 	$query = "	SELECT `draft_id`
 				FROM `draft_creators`
-				WHERE `proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]);
+				WHERE `proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId());
 	$my_drafts = $db->GetArray($query);
 	if (!empty($my_drafts)) {
 		

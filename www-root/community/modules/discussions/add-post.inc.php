@@ -88,7 +88,7 @@ if ($RECORD_ID) {
 						$PROCESSED["cdtopic_parent"]	= 0;
 						$PROCESSED["cdiscussion_id"]	= $RECORD_ID;
 						$PROCESSED["community_id"]		= $COMMUNITY_ID;
-						$PROCESSED["proxy_id"]			= $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"];
+						$PROCESSED["proxy_id"]			= $ENTRADA_USER->getActiveId();
 						$PROCESSED["topic_active"]		= 1;
 						$PROCESSED["updated_date"]		= time();
 						$PROCESSED["updated_by"]		= $ENTRADA_USER->getID();

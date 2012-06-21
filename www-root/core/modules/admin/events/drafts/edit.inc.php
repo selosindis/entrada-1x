@@ -102,8 +102,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			/**
 			* The current draft author must be in the draft author list.
 			*/
-			if (!in_array($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"], $PROCESSED["associated_proxy_ids"])) {
-				array_unshift($PROCESSED["associated_proxy_ids"], $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]);
+			if (!in_array($ENTRADA_USER->getActiveId(), $PROCESSED["associated_proxy_ids"])) {
+				array_unshift($PROCESSED["associated_proxy_ids"], $ENTRADA_USER->getActiveId());
 
 				$NOTICE++;
 				$NOTICESTR[] = "You cannot remove yourself as a <strong>Draft Author</strong>.";

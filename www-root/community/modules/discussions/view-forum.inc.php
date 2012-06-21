@@ -104,7 +104,7 @@ if ($RECORD_ID) {
 					AND `community_id` = ".$db->qstr($COMMUNITY_ID)."
 					AND `topic_active` = '1'
 					AND `cdtopic_parent` = '0'
-					".((!$COMMUNITY_ADMIN) ? " AND ((`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]).") OR (`release_date` = '0' OR `release_date` <= ".$db->qstr(time()).") AND (`release_until` = '0' OR `release_until` > ".$db->qstr(time())."))" : "");
+					".((!$COMMUNITY_ADMIN) ? " AND ((`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId()).") OR (`release_date` = '0' OR `release_date` <= ".$db->qstr(time()).") AND (`release_until` = '0' OR `release_until` > ".$db->qstr(time())."))" : "");
 			$result	= $db->GetRow($query);
 			if ($result) {
 				$total_rows	= $result["total_rows"];
@@ -232,7 +232,7 @@ if ($RECORD_ID) {
 								AND a.`topic_active` = '1'
 								AND (b.`topic_active` IS NULL OR b.`topic_active` = '1')
 								AND a.`cdtopic_parent` = '0'
-								".((!$COMMUNITY_ADMIN) ? " AND ((a.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]).") OR (a.`release_date` = '0' OR a.`release_date` <= ".$db->qstr(time()).") AND (a.`release_until` = '0' OR a.`release_until` > ".$db->qstr(time())."))" : "")."
+								".((!$COMMUNITY_ADMIN) ? " AND ((a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId()).") OR (a.`release_date` = '0' OR a.`release_date` <= ".$db->qstr(time()).") AND (a.`release_until` = '0' OR a.`release_until` > ".$db->qstr(time())."))" : "")."
 								GROUP BY a.`cdtopic_id`
 								ORDER BY %s, b.`updated_date` DESC
 								LIMIT %s, %s";

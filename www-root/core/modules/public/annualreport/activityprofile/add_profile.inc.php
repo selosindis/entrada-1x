@@ -48,7 +48,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 	
 	echo "<h1>Add Activity Profile</h1>";
 	
-	$departments = get_user_departments($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]);
+	$departments = get_user_departments($ENTRADA_USER->getActiveId());
 	foreach($departments as $department) {
 		if($parent = fetch_department_parent($department["department_id"])) {
 			$department["department_title"] = fetch_department_title($parent);

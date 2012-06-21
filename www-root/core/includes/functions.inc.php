@@ -257,7 +257,7 @@ function load_system_navigator() {
 					FROM `community_members` AS a
 					LEFT JOIN `communities` AS b
 					ON b.`community_id` = a.`community_id`
-					WHERE a.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+					WHERE a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
 					AND a.`member_active` = '1'
 					AND b.`community_active` = '1'
 					AND b.`community_template` <> 'course'
@@ -287,7 +287,7 @@ function load_system_navigator() {
 						FROM `community_members` AS a
 						LEFT JOIN `communities` AS b
 						ON a.`community_id` = b.`community_id`
-						WHERE a.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+						WHERE a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
 						AND a.`member_active` = '1'";
 		$results	= $db->CacheGetAll(CACHE_TIMEOUT, $query);
 		if($results) {
@@ -303,7 +303,7 @@ function load_system_navigator() {
 						ON a.`community_id` = b.`community_id`
 						JOIN `community_members` AS c
 						ON b.`community_id` = c.`community_id`
-						AND c.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+						AND c.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
 						AND c.`member_active` = '1'
 						WHERE (a.`allow_member_view` = '1')
 						OR (c.`member_acl` = '1')";
@@ -1936,7 +1936,7 @@ function clerkship_categories_name($category_id = 0) {
  * @global object $db
  */
 function clerkship_display_available_evaluations() {
-	global $db;
+	global $db, $ENTRADA_USER;
 
 	/**
 	 * Display Clerkship Evaluation Information to Student.
@@ -1949,7 +1949,7 @@ function clerkship_display_available_evaluations() {
 				ON c.`item_id` = a.`item_id`
 				LEFT JOIN `".CLERKSHIP_DATABASE."`.`eval_forms` AS d
 				ON d.`form_id` = c.`form_id`
-				WHERE a.`user_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+				WHERE a.`user_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
 				AND a.`item_maxinstances` > '0'
 				AND (
 					a.`notification_status` <> 'complete'
@@ -8042,7 +8042,7 @@ function clerkship_get_rotation($rotation_id, $proxy_id = 0) {
 					WHERE a.`event_finish` >= ".$db->qstr(strtotime("00:00:00", time()))."
 					AND (a.`event_status` = 'published' OR a.`event_status` = 'approval')
 					AND b.`econtact_type` = 'student'
-					AND b.`etype_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+					AND b.`etype_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
 					ORDER BY a.`event_start` ASC";
 		if ($clerkship_schedule	= $db->GetAll($query)) {
 			$rotation_id =  (isset($clerkship_schedule["rotation_id"]) && $clerkship_schedule["rotation_id"]) ? $clerkship_schedule["rotation_id"] : (MAX_ROTATION - 1); // Select Overview / Elective if not a mandatory rotation
@@ -10129,7 +10129,7 @@ function events_process_filters($action = "", $module_type = "") {
 						/**
 						 * Check to see if this is a student attempting to view the calendar of another student.
 						 */
-						if (($filter_key != "student") || ($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"] != "student") || ($filter_value == $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])) {
+						if (($filter_key != "student") || ($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"] != "student") || ($filter_value == $ENTRADA_USER->getActiveId())) {
 							$_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"][$filter_key][] = $filter_value;
 
 							ksort($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]);
@@ -10151,7 +10151,7 @@ function events_process_filters($action = "", $module_type = "") {
 					foreach ($filters as $filter) {
 						$pieces = explode("_", $filter);
 						$filter_value = $pieces[1];
-						if (($filter_key != "student") || ($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"] != "student") || ($filter_value == $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])) {
+						if (($filter_key != "student") || ($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"] != "student") || ($filter_value == $ENTRADA_USER->getActiveId())) {
 							$_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"][$filter_key][] = $filter_value;
 							ksort($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]);
 						}
@@ -10162,7 +10162,7 @@ function events_process_filters($action = "", $module_type = "") {
 					$filter_value = $pieces[1];
 					if ($filter_value && $filter_key) {
 						//This is an actual filter, cool dude. Erase everything else since we only got one and add this one if its not a student looking at another student
-						if (($filter_key != "student") || ($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"] != "student") || ($filter_value == $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])) {
+						if (($filter_key != "student") || ($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"] != "student") || ($filter_value == $ENTRADA_USER->getActiveId())) {
 							unset($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"][$filter_key]);
 							$_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"][$filter_key][] = $filter_value;
 							ksort($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]);
@@ -10223,7 +10223,7 @@ function events_process_filters($action = "", $module_type = "") {
 			}
 
 			$_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"] = events_filters_defaults(
-				$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"],
+				$ENTRADA_USER->getActiveId(),
 				$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"],
 				$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]
 			);
@@ -10274,7 +10274,7 @@ function tracking_process_filters($action = "", $module_type = "") {
 						/**
 						 * Check to see if this is a student attempting to view the calendar of another student.
 						 */
-						if (($filter_key != "student") || ($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"] != "student") || ($filter_value == $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])) {
+						if (($filter_key != "student") || ($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"] != "student") || ($filter_value == $ENTRADA_USER->getActiveId())) {
 							$_SESSION[APPLICATION_IDENTIFIER]["tracking"]["filters"][$filter_key][] = $filter_value;
 
 							ksort($_SESSION[APPLICATION_IDENTIFIER]["tracking"]["filters"]);
@@ -10296,7 +10296,7 @@ function tracking_process_filters($action = "", $module_type = "") {
 					foreach ($filters as $filter) {
 						$pieces = explode("_", $filter);
 						$filter_value = $pieces[1];
-						if (($filter_key != "student") || ($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"] != "student") || ($filter_value == $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])) {
+						if (($filter_key != "student") || ($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"] != "student") || ($filter_value == $ENTRADA_USER->getActiveId())) {
 							$_SESSION[APPLICATION_IDENTIFIER]["tracking"]["filters"][$filter_key][] = $filter_value;
 							ksort($_SESSION[APPLICATION_IDENTIFIER]["tracking"]["filters"]);
 						}
@@ -10307,7 +10307,7 @@ function tracking_process_filters($action = "", $module_type = "") {
 					$filter_value = $pieces[1];
 					if ($filter_value && $filter_key) {
 						//This is an actual filter, cool dude. Erase everything else since we only got one and add this one if its not a student looking at another student
-						if (($filter_key != "student") || ($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"] != "student") || ($filter_value == $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])) {
+						if (($filter_key != "student") || ($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"] != "student") || ($filter_value == $ENTRADA_USER->getActiveId())) {
 							unset($_SESSION[APPLICATION_IDENTIFIER]["tracking"]["filters"][$filter_key]);
 							$_SESSION[APPLICATION_IDENTIFIER]["tracking"]["filters"][$filter_key][] = $filter_value;
 							ksort($_SESSION[APPLICATION_IDENTIFIER]["tracking"]["filters"]);
@@ -11441,7 +11441,7 @@ function audience_sort($a,$b){
  * @return array
  */
 function events_fetch_event_resources($event_id = 0, $options = array(), $exclude = array()) {
-	global $db;
+	global $db, $ENTRADA_USER;
 
 	$fetch_files = false;
 	$fetch_links = false;
@@ -11530,7 +11530,7 @@ function events_fetch_event_resources($event_id = 0, $options = array(), $exclud
 						FROM `event_files` AS a
 						LEFT JOIN `statistics` AS b
 						ON b.`module` = 'events'
-						AND b.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+						AND b.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
 						AND b.`action` = 'file_download'
 						AND b.`action_field` = 'file_id'
 						AND b.`action_value` = a.`efile_id`
@@ -11548,7 +11548,7 @@ function events_fetch_event_resources($event_id = 0, $options = array(), $exclud
 						FROM `event_links` AS a
 						LEFT JOIN `statistics` AS b
 						ON b.`module` = 'events'
-						AND b.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+						AND b.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
 						AND b.`action` = 'link_access'
 						AND b.`action_field` = 'link_id'
 						AND b.`action_value` = a.`elink_id`
@@ -11569,7 +11569,7 @@ function events_fetch_event_resources($event_id = 0, $options = array(), $exclud
 						ON b.`quiztype_id` = a.`quiztype_id`
 						LEFT JOIN `statistics` AS c
 						ON c.`module` = 'events'
-						AND c.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+						AND c.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
 						AND c.`action` = 'quiz_complete'
 						AND c.`action_field` = 'aquiz_id'
 						AND c.`action_value` = a.`aquiz_id`
@@ -14114,9 +14114,9 @@ function displayARYearReported($year_reported, $AR_CUR_YEAR, $AR_PAST_YEARS, $AR
 function add_task_sidebar () {
 	require_once("Models/users/User.class.php");
 	require_once("Models/tasks/TaskCompletions.class.php");
-	global $ENTRADA_ACL;
+	global $ENTRADA_ACL, $ENTRADA_USER;
 
-	$proxy_id = $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"];
+	$proxy_id = $ENTRADA_USER->getActiveId();
 	$user = User::get($proxy_id);
 
 

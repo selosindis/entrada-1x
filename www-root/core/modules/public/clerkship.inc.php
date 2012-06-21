@@ -208,7 +208,7 @@ if(!defined("PARENT_INCLUDED")) {
 								WHERE a.`event_finish` >= ".$db->qstr(strtotime("00:00:00", time()))."
 								AND (a.`event_status` = 'published' OR a.`event_status` = 'approval')
 								AND b.`econtact_type` = 'student'
-								AND b.`etype_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+								AND b.`etype_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
 								ORDER BY a.`event_start` ASC";
 		
 		$clerkship_schedule	= $db->GetAll($query);
@@ -221,7 +221,7 @@ if(!defined("PARENT_INCLUDED")) {
 										WHERE a.`event_finish` <= ".$db->qstr(strtotime("00:00:00", time()))."
 										AND (a.`event_status` = 'published' OR a.`event_status` = 'approval')
 										AND b.`econtact_type` = 'student'
-										AND b.`etype_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+										AND b.`etype_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
 										ORDER BY a.`event_start` ASC";
 		$clerkship_past_schedule	= $db->GetAll($query);
 		

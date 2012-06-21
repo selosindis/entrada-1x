@@ -42,10 +42,10 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 	// Attempt to get the departmentID from the department heads table as most of the time this file will
 	// be accessed by department heads, however, there are also department reps that may access this file
 	// therefore a fall back needs to be added to grab their department.
-	$departmentID = is_department_head($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]);
+	$departmentID = is_department_head($ENTRADA_USER->getActiveId());
 	
 	if(!$departmentID || $departmentID == 0) {
-		$departmentID = get_user_departments($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]);
+		$departmentID = get_user_departments($ENTRADA_USER->getActiveId());
 		
 		$departmentID = $departmentID[0]["department_id"];
 	}

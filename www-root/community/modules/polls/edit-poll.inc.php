@@ -245,7 +245,7 @@ if ($RECORD_ID) {
 		
 				if (!$ERROR) {
 					$PROCESSED["community_id"]			= $COMMUNITY_ID;
-					$PROCESSED["proxy_id"]				= $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"];
+					$PROCESSED["proxy_id"]				= $ENTRADA_USER->getActiveId();
 					$PROCESSED["poll_active"]			= 1;
 					$PROCESSED["poll_order"]			= 0;
 //					$PROCESSED["poll_notifications"]	= 0;

@@ -1161,11 +1161,11 @@ class CommunityMemberAssertion extends CommunityAssertion {
 	 * @return boolean
 	 */
 	static function _checkCommunity($user_id, $community_id) {
-		global $db;
+		global $db, $ENTRADA_USER;
 		$query	= "
 				SELECT `proxy_id` FROM `community_members`
 				WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)."
-				AND `proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]);
+				AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId());
 		$result	= $db->GetRow($query);
 		if($result) {
 		//Query had a row
@@ -2065,12 +2065,12 @@ class EntradaUser implements Zend_Acl_Role_Interface {
  */
 class DepartmentHeadAssertion implements Zend_Acl_Assert_Interface {
 	public function assert(Zend_Acl $acl, Zend_Acl_Role_Interface $role = null, Zend_Acl_Resource_Interface $resource = null, $privilege = null) {
-		global $db;
+		global $db, $ENTRADA_USER;
 
 		// This was done so that the correct proxy_id was being used as $role->details["id"] was not using the "masked" id.
 		// I'm sure there is a way to get this ID without using the SESSION but I needed to get this into production ASAP.
 		// I will fix this as soon as I find out how to access the masked ID without going through the session.
-		if (!(is_department_head($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]))) {
+		if (!(is_department_head($ENTRADA_USER->getActiveId()))) {
 			return false;
 		} else {
 			return true;

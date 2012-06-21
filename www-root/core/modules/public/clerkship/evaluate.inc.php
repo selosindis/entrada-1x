@@ -41,7 +41,7 @@ switch($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]) {
 							LEFT JOIN `".CLERKSHIP_DATABASE."`.`eval_forms` AS d
 							ON d.`form_id` = c.`form_id`
 							WHERE a.`notification_id` = ".$db->qstr($NOTIFICATION_ID)."
-							AND a.`user_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+							AND a.`user_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
 							AND a.`item_maxinstances` > '0'
 							AND (
 								a.`notification_status` <> 'complete'
@@ -185,7 +185,7 @@ switch($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]) {
 												LEFT JOIN `".CLERKSHIP_DATABASE."`.`notifications` AS b
 												ON b.`notification_id` = a.`notification_id`
 												WHERE a.`instructor_id` = ".$db->qstr($PROCESSED["instructor_id"])."
-												AND b.`user_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]);
+												AND b.`user_id` = ".$db->qstr($ENTRADA_USER->getActiveId());
 										$result	= $db->GetRow($query);
 										if($result) {
 											$ERROR++;
@@ -250,7 +250,7 @@ switch($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]) {
 										$PROCESSED["notification_status"] = "complete";
 									}
 									
-									if(!$db->AutoExecute(CLERKSHIP_DATABASE.".notifications", $PROCESSED, "UPDATE", "`user_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])." AND `notification_id` = ".$db->qstr($NOTIFICATION_ID))) {
+									if(!$db->AutoExecute(CLERKSHIP_DATABASE.".notifications", $PROCESSED, "UPDATE", "`user_id` = ".$db->qstr($ENTRADA_USER->getActiveId())." AND `notification_id` = ".$db->qstr($NOTIFICATION_ID))) {
 										application_log("error", "Unable to update the status of a notification. Database said: ".$db->ErrorMsg());
 									}
 								}

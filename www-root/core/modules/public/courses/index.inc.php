@@ -388,7 +388,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								FROM `course_files`
 								LEFT JOIN `statistics`
 								ON `statistics`.`module`=".$db->qstr($MODULE)."
-								AND `statistics`.`proxy_id`=".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+								AND `statistics`.`proxy_id`=".$db->qstr($ENTRADA_USER->getActiveId())."
 								AND `statistics`.`action`='file_download'
 								AND `statistics`.`action_field`='file_id'
 								AND `statistics`.`action_value`=`course_files`.`id`

@@ -694,7 +694,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 										LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS c
 										ON c.`id` = b.`proxy_id`
 										WHERE (a.`event_start` BETWEEN ".$db->qstr($display_duration["start"])." AND ".$db->qstr($display_duration["end"]).")
-										AND b.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+										AND b.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
 										ORDER BY a.`event_start` ASC";
 						$results	= $db->GetAll($query);
 						if($results) {

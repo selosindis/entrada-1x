@@ -127,18 +127,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					FROM `courses` AS a
 					LEFT JOIN `course_contacts` AS b
 					ON b.`course_id` = a.`course_id`
-					AND b.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+					AND b.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
 					AND b.`contact_type` = 'director'
 					LEFT JOIN `community_courses` AS c
 					ON c.`course_id` = a.`course_id`
 					LEFT JOIN `community_members` AS d
 					ON d.`community_id` = c.`community_id`
-					AND d.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+					AND d.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
 					LEFT JOIN `curriculum_lu_types` AS e
 					on e.`curriculum_type_id` = a.`curriculum_type_id`
 					WHERE (
-						a.`pcoord_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
-						OR b.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+						a.`pcoord_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
+						OR b.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
 						OR d.`member_acl` = '1'
 					)
 					AND a.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
@@ -248,11 +248,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					ON e.`course_id` = a.`course_id`
 					LEFT JOIN `community_members` AS f
 					ON f.`community_id` = e.`community_id`
-					AND f.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+					AND f.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
 					WHERE 
 					(
-						a.`pcoord_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
-						OR b.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+						a.`pcoord_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
+						OR b.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
 						OR f.`member_acl` = '1'
 					)
 					AND a.`course_active` = '1'
@@ -293,7 +293,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 			$administrator	= false;
 
 			if ($ENTRADA_ACL->amIAllowed(new GradebookResource($result["course_id"], $result["organisation_id"]), "update")) {
-				$allowed_ids	= array($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]);
+				$allowed_ids	= array($ENTRADA_USER->getActiveId());
 				$administrator	= true;
 				$url			= ENTRADA_URL."/admin/gradebook/?section=view&amp;id=".$result["course_id"];
 			}

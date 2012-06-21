@@ -58,7 +58,7 @@ if($COMMUNITY_ID) {
 		$query	= "
 				SELECT * FROM `community_members`
 				WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)."
-				AND `proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]);
+				AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId());
 		$result	= $db->GetRow($query);
 		if($result) {
 			if($result["member_active"] == 1) {
@@ -124,7 +124,7 @@ if($COMMUNITY_ID) {
 					$ALLOW_MEMBERSHIP = false;
 
 					if(($community_details["community_members"] != "") && ($community_members = @unserialize($community_details["community_members"])) && (is_array($community_members)) && (count($community_members))) {
-						$query	= "SELECT * FROM `community_members` WHERE `proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])." AND `member_active` = '1' AND `community_id` IN ('".implode("', '", $community_members)."')";
+						$query	= "SELECT * FROM `community_members` WHERE `proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())." AND `member_active` = '1' AND `community_id` IN ('".implode("', '", $community_members)."')";
 						$result	= $db->GetRow($query);
 						if($result) {
 							$ALLOW_MEMBERSHIP = true;
@@ -177,7 +177,7 @@ if($COMMUNITY_ID) {
 				switch($STEP) {
 					case 2 :
 						$PROCESSED["community_id"]	= $COMMUNITY_ID;
-						$PROCESSED["proxy_id"]		= $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"];
+						$PROCESSED["proxy_id"]		= $ENTRADA_USER->getActiveId();
 						$PROCESSED["member_active"]	= 1;
 						$PROCESSED["member_joined"]	= time();
 						$PROCESSED["member_acl"]	= 0;
@@ -204,7 +204,7 @@ if($COMMUNITY_ID) {
 							$ERROR++;
 							$ERRORSTR[]	= "<strong>Failed to join ".html_encode($community_details["community_title"]).".</strong><br /><br />We were unable to register you in this community. The MEdTech Unit has been informed of this error, please try again later.";
 
-							application_log("error", "Unable to register ".$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]." in community id ".$COMMUNITY_ID.". Database said: ".$db->ErrorMsg());
+							application_log("error", "Unable to register ".$ENTRADA_USER->getActiveId()." in community id ".$COMMUNITY_ID.". Database said: ".$db->ErrorMsg());
 						}
 					break;
 					default :
@@ -218,7 +218,7 @@ if($COMMUNITY_ID) {
 						if($SUCCESS) {
 							echo display_success();
 							if (COMMUNITY_NOTIFICATIONS_ACTIVE) {
-								community_notify($COMMUNITY_ID, $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"], "join", ENTRADA_URL."/people?id=".$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"], $COMMUNITY_ID);
+								community_notify($COMMUNITY_ID, $ENTRADA_USER->getActiveId(), "join", ENTRADA_URL."/people?id=".$ENTRADA_USER->getActiveId(), $COMMUNITY_ID);
 							}
 						}
 						if($ERROR) {

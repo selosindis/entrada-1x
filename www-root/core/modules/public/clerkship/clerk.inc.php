@@ -113,7 +113,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 					}
 		
 					if ((bool) $result["manage_apartments"]) {
-						$apartment_id			= regionaled_apartment_check($result["event_id"], $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]);
+						$apartment_id			= regionaled_apartment_check($result["event_id"], $ENTRADA_USER->getActiveId());
 						$apartment_available	= (($apartment_id) ? true : false);
 					} else {
 						$apartment_available	= false;

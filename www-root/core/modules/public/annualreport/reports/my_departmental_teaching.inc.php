@@ -46,10 +46,10 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 		$PROCESSED["department_id"] = $_POST['department_id'];
 		
 		//$PROCESSED["department_id"]
-		$PROCESSED["department_id"] = is_department_head($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]);
+		$PROCESSED["department_id"] = is_department_head($ENTRADA_USER->getActiveId());
 	
 		if(!$PROCESSED["department_id"] || $PROCESSED["department_id"] == 0) {
-			$PROCESSED["department_id"] = get_user_departments($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]);
+			$PROCESSED["department_id"] = get_user_departments($ENTRADA_USER->getActiveId());
 			
 			$PROCESSED["department_id"] = $PROCESSED["department_id"][0]["department_id"];
 		}

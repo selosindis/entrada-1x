@@ -773,7 +773,7 @@ if ($community_courses) {
 			}
 			
 			$results = events_fetch_filtered_events(
-					$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"],
+					$ENTRADA_USER->getActiveId(),
 					$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"],
 					$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"],
 					$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["organisation_id"],

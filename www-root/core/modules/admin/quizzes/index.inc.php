@@ -119,7 +119,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 				FROM `quizzes` AS a
 				LEFT JOIN `quiz_contacts` AS b
 				ON a.`quiz_id` = b.`quiz_id`
-				WHERE b.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]);
+				WHERE b.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId());
 	$result = $db->GetRow($query);
 	if ($result) {
 		$total_rows	= $result["total_rows"];
@@ -197,7 +197,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 				LEFT JOIN `quiz_questions` AS c
 				ON a.`quiz_id` = c.`quiz_id`
 				AND c.`question_active` = '1'
-				WHERE b.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+				WHERE b.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
 				GROUP BY a.`quiz_id`
 				ORDER BY %s LIMIT %s, %s";
 

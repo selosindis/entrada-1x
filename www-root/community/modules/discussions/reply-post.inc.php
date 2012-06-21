@@ -89,7 +89,7 @@ if ($RECORD_ID) {
 						$PROCESSED["cdtopic_parent"]	= $RECORD_ID;
 						$PROCESSED["cdiscussion_id"]	= $topic_record["cdiscussion_id"];
 						$PROCESSED["community_id"]		= $COMMUNITY_ID;
-						$PROCESSED["proxy_id"]			= $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"];
+						$PROCESSED["proxy_id"]			= $ENTRADA_USER->getActiveId();
 						$PROCESSED["topic_title"]		= "";
 						$PROCESSED["topic_active"]		= 1;
 						$PROCESSED["release_date"]		= time();

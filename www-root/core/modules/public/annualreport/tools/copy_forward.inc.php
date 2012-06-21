@@ -137,14 +137,14 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 				
 				$getRecordsToCopy = "	SELECT * 
 										FROM `".$table."`
-										WHERE `proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+										WHERE `proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
 										AND `year_reported` = ".$db->qstr($PROCESSED["copy_from"]);
 				
 				// If they are attempting to copy their activity profile ensure they do not already have record for the year they are copying to
 				if($table == "ar_profile") {
 					$doubleCheckProfile = "	SELECT * 
 										FROM `".$table."`
-										WHERE `proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+										WHERE `proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
 										AND `year_reported` = ".$db->qstr($PROCESSED["copy_to"]);
 					
 					if($checkResult = $db->GetRow($doubleCheckProfile)) {

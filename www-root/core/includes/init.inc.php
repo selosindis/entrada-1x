@@ -111,7 +111,7 @@ if ($ENTRADA_USER) {
 		$result = $db->getRow($query);
 		if ($result) {
 			$ENTRADA_USER->setAccessId($result["id"]);		
-			$_SESSION["permissions"] = load_org_group_role($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"], $ENTRADA_USER->getAccessId());
+			$_SESSION["permissions"] = load_org_group_role($ENTRADA_USER->getActiveId(), $ENTRADA_USER->getAccessId());
 		}
 	}
 
@@ -119,7 +119,6 @@ if ($ENTRADA_USER) {
 		$organisation = clean_input($_GET["organisation_id"], array("trim", "notags", "int"));
 		
 		$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["organisation_id"] = $organisation;
-		$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]["organisation_id"] = $organisation;
 		$ENTRADA_USER->setActiveOrganisation($organisation);
 
 		$query = "SELECT a.`group`, a.`role`, a.`id`
@@ -131,14 +130,14 @@ if ($ENTRADA_USER) {
 		$result = $db->getRow($query);
 		if ($result) {
 			$ENTRADA_USER->setAccessId($result["id"]);
-			$_SESSION["permissions"] = load_org_group_role($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"], $ENTRADA_USER->getAccessId());
+			$_SESSION["permissions"] = load_org_group_role($ENTRADA_USER->getActiveId(), $ENTRADA_USER->getAccessId());
 		}
 	}
 
 	if (isset($_GET["ua_id"])) {
 		$ua_id = clean_input($_GET["ua_id"], array("trim", "notags", "int"));
 		$ENTRADA_USER->setAccessId($ua_id);
-		$_SESSION["permissions"] = load_org_group_role($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"], $ENTRADA_USER->getAccessId());
+		$_SESSION["permissions"] = load_org_group_role($ENTRADA_USER->getActiveId(), $ENTRADA_USER->getAccessId());
 	}
 
  	$query = "SELECT `template` FROM `" . AUTH_DATABASE . "`.`organisations` WHERE `organisation_id` = " . $db->qstr($ENTRADA_USER->getActiveOrganisation());

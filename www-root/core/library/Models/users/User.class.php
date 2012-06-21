@@ -72,7 +72,7 @@ class User {
 			$organisation_group_role;
 
 	
-	private $access_id, $group, $role;
+	private $default_access_id, $access_id, $group, $role;
 
 	/**
 	 * lookup array for formatting user information
@@ -292,7 +292,7 @@ class User {
 	 * Returns the ID of the organisation to which the user belongs
 	 * @return int
 	 */
-	function getOrganisationID() {
+	function getOrganisationId() {
 		return $this->organisation_id;
 	}
 	
@@ -380,6 +380,19 @@ class User {
 	}
 
 	function setAccessId($value) {
+		if ((!isset($this->default_access_id) || !$this->default_access_id) && isset($value) && $value) {
+			$this->default_access_id = $value;
+		} elseif ((!isset($value) || !$value) && isset($this->default_access_id) && $this->default_access_id) {
+			$value = $this->default_access_id;
+		} elseif ((!isset($value) || !$value) && (!isset($this->default_access_id) || !$this->default_access_id)) {
+			$query = "SELECT `id` FROM `".AUTH_DATABASE."`.`user_access`
+						WHERE `user_id` = ".$db->qstr($this->getId())."
+						AND `app_id` = ".$db->qstr(AUTH_APP_ID)."
+						AND `account_active` = 'true'
+						AND (`access_starts` = '0' OR `access_starts` <= ".$db->qstr(time()).")
+						AND (`access_expires` = '0' OR `access_expires` >= ".$db->qstr(time()).")
+						AND `organisation_id` = ".$db->qstr(($this->getActiveOrganisation() ? $this->getActiveOrganisation() : $this->getOrganisationID()));
+		}
 		$this->access_id = $value;
 		$this->setActiveId($value);
 	}
@@ -542,7 +555,7 @@ class User {
 					AND (`access_starts` = '0' OR `access_starts` < ?)
 					AND (`access_expires` = '0' OR `access_expires` >= ?)
 					AND `app_id` = ?";
-		$result = $db->getRow($query, array($this->getID(), time(), time(), AUTH_APP_ID));
+		$result = $db->getRow($query, array($this->getId(), time(), time(), AUTH_APP_ID));
 		if ($result) {
 			$this->group = $result["group"];
 			$this->role = $result["role"];
@@ -661,7 +674,7 @@ class User {
 								ORDER BY `valid_until` ASC";
 		
 		$time = time();
-		$results = $db->getAll($query, array($this->getID(), $time, $time));
+		$results = $db->getAll($query, array($this->getId(), $time, $time));
 		$users = array();
 		if ($results) {
 			foreach ($results as $result) {

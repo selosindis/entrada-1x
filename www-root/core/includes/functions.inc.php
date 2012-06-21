@@ -2311,7 +2311,7 @@ function permissions_mask() {
 
 	if(isset($_GET["mask"])) {
 		if(trim($_GET["mask"]) == "close") {
-			unset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]);
+			$ENTRADA_USER->setAccessId();
 		} elseif((int) trim($_GET["mask"])) {
 			$query	= "SELECT * FROM `permissions` WHERE `permission_id` = ".$db->qstr((int) trim($_GET["mask"]));
 			$result	= $db->GetRow($query);
@@ -2325,7 +2325,7 @@ function permissions_mask() {
 										AND `account_active` = 'true'
 										AND (`access_starts` = '0' OR `access_starts` <= ".$db->qstr(time()).")
 										AND (`access_expires` = '0' OR `access_expires` >= ".$db->qstr(time()).")
-										AND `organisation_id` = ".$ENTRADA_USER->getActiveOrganisation();
+										AND `organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation());
 							$access_id = $db->getOne($query);
 							if ($access_id) {
 								$ENTRADA_USER->setAccessId($access_id);
@@ -8890,7 +8890,7 @@ function courses_fetch_courses($only_active_courses = true, $order_by_course_cod
 	$results = $db->GetAll($query);
 	if ($results) {
 		foreach ($results as $result) {
-				if ($ENTRADA_ACL->amIAllowed(new CourseResource($result["course_id"], $ENTRADA_USER->getOrganisationID()), "read")) {
+				if ($ENTRADA_ACL->amIAllowed(new CourseResource($result["course_id"], $ENTRADA_USER->getOrganisationId()), "read")) {
 					$output[] = $result;
 				}
 		}

@@ -25,7 +25,7 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 				$org_id = $user->getOrganisationId();
 				$group = $user->getGroup();
 				$role = $user->getRole();
-				$proxy_id = $user->getId();
+				$proxy_id = $user->getID();
 				
 				$caching = MetaDataValues::get($org_id, $group, $role,$proxy_id);
 				

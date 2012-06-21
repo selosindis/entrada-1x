@@ -351,7 +351,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 			
 			if (!$ERROR) {
 				$PROCESSED["updated_date"]			= time();
-				$PROCESSED["updated_by"]			= $ENTRADA_USER->getId();
+				$PROCESSED["updated_by"]			= $ENTRADA_USER->getID();
 				
 				$EVENT["category_id"]				= $PROCESSED["category_id"];
 				$query = "	SELECT `region_id` FROM `".CLERKSHIP_DATABASE."`.`regions`

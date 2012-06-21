@@ -57,13 +57,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 				$PROCESSED["quiz_description"]	= $quiz_record["quiz_description"];
 				$PROCESSED["quiz_active"]		= 1;
 				$PROCESSED["updated_date"]		= time();
-				$PROCESSED["updated_by"]		= $ENTRADA_USER->getId();
+				$PROCESSED["updated_by"]		= $ENTRADA_USER->getID();
 
 				if($ENTRADA_ACL->amIAllowed('quiz', 'create')) {
 					if ($db->AutoExecute("quizzes", $PROCESSED, "INSERT")) {
 						if ($new_quiz_id = $db->Insert_Id()) {
 							$query = "	INSERT INTO `quiz_contacts`
-										SELECT NULL, '".$new_quiz_id."', `proxy_id`, '".time()."', ".$db->qstr($ENTRADA_USER->getId())."
+										SELECT NULL, '".$new_quiz_id."', `proxy_id`, '".time()."', ".$db->qstr($ENTRADA_USER->getID())."
 										FROM `quiz_contacts`
 										WHERE `quiz_id` = ".$db->qstr($RECORD_ID);
 							if (($db->Execute($query)) && ($db->Affected_Rows() > 0)) {

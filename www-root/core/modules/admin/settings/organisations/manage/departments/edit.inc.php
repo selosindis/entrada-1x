@@ -189,7 +189,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 
 			if (!$ERROR) {
 				$PROCESSED["updated_date"] = time();
-				$PROCESSED["updated_by"] = $ENTRADA_USER->getId();
+				$PROCESSED["updated_by"] = $ENTRADA_USER->getID();
 
 				if ($db->AutoExecute( "`" . AUTH_DATABASE . "`.`departments`", $PROCESSED, "UPDATE", "`department_id`=" . $db->qstr($PROCESSED["department_id"]))) {
 					$url = ENTRADA_URL . "/admin/settings/organisations/manage/departments?org=" . $ORGANISATION_ID;

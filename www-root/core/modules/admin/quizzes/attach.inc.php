@@ -270,7 +270,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 
 						if (!$ERROR) {
 							$PROCESSED["updated_date"]	= time();
-							$PROCESSED["updated_by"]	= $ENTRADA_USER->getId();
+							$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
 
 							/**
 							 * Adding this quiz to each of the selected events.
@@ -839,7 +839,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 											ON b.`community_id` = a.`community_id`
 											JOIN `community_members` AS c
 											ON c.`community_id` = a.`community_id`
-											AND c.`proxy_id` = ".$db->qstr($ENTRADA_USER->getId())."
+											AND c.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
 											AND c.`member_acl` = '1'
 											WHERE b.`cpage_id` = ".$db->qstr($tmp_input)."
 											AND a.`community_active` = '1'
@@ -1014,7 +1014,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 
 						if (!$ERROR) {
 							$PROCESSED["updated_date"]	= time();
-							$PROCESSED["updated_by"]	= $ENTRADA_USER->getId();
+							$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
 
 							/**
 							 * Adding this quiz to each of the selected events.
@@ -1360,7 +1360,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 										ON bp.`community_id` = b.`community_id`
 										JOIN `community_members` AS c
 										ON c.`community_id` = b.`community_id`
-										AND c.`proxy_id` = ".$db->qstr($ENTRADA_USER->getId())."
+										AND c.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
 										AND c.`member_acl` = '1'
 										JOIN `".AUTH_DATABASE."`.`user_data` AS d
 										ON d.`id` = c.`proxy_id`

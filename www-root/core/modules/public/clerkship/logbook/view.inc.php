@@ -52,7 +52,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
     	$PROXY_ID = $_GET["id"];
     	$student = false;
     } else {
-    	$PROXY_ID = $ENTRADA_USER->getId();
+    	$PROXY_ID = $ENTRADA_USER->getID();
     	$student = true;
     }
     
@@ -66,7 +66,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 				if (isset($_POST["discussion_comment"]) && ($new_comments = clean_input($_POST["discussion_comment"], array("trim", "notags")))) {
 					$PROCESSED["comments"] = $new_comments;
 					$PROCESSED["clerk_id"] = $PROXY_ID;
-					$PROCESSED["proxy_id"] = $ENTRADA_USER->getId();
+					$PROCESSED["proxy_id"] = $ENTRADA_USER->getID();
 					$PROCESSED["rotation_id"] = $rotation_id;
 					$PROCESSED["updated_date"] = time();
 					
@@ -78,7 +78,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 							if (!$notification_user) {
 								$notification_user = NotificationUser::add($PROXY_ID, "logbook_rotation", $rotation_id, $PROXY_ID);
 							}
-							NotificationUser::addAllNotifications("logbook_rotation", $rotation_id, $PROXY_ID, $ENTRADA_USER->getId(), $lrcomment_id);
+							NotificationUser::addAllNotifications("logbook_rotation", $rotation_id, $PROXY_ID, $ENTRADA_USER->getID(), $lrcomment_id);
 						}
 						$SUCCESS++;
 						$SUCCESSSTR[] = "You have succesfully added a comment to this rotation".($student ? "" : " for ".get_account_data("firstlast", $PROXY_ID)).".";

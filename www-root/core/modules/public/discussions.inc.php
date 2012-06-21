@@ -75,19 +75,19 @@ if(!defined("PARENT_INCLUDED")) {
 					$result	= $db->GetRow($query);
 					if($result) {
 						$PROCESSED["event_id"]				= $EVENT_ID;
-						$PROCESSED["proxy_id"]				= $ENTRADA_USER->getId();
+						$PROCESSED["proxy_id"]				= $ENTRADA_USER->getID();
 						$PROCESSED["parent_id"]				= 0;
 						$PROCESSED["discussion_title"]		= "RE: ".$result["event_title"];
 						$PROCESSED["discussion_comment"]	= $DISCUSSION_COMMENT;
 						$PROCESSED["discussion_active"]		= 1;
 						$PROCESSED["updated_date"]			= time();
-						$PROCESSED["updated_by"]			= $ENTRADA_USER->getId();
+						$PROCESSED["updated_by"]			= $ENTRADA_USER->getID();
 
 						if(!$db->AutoExecute("event_discussions", $PROCESSED, "INSERT")) {
 							application_log("error", "Unable to add discussion comment to event id [".$EVENT_ID."]");
 						} elseif (($EDISCUSSION_ID = $db->Insert_Id()) && defined("NOTIFICATIONS_ACTIVE") && NOTIFICATIONS_ACTIVE) {
 							require_once("Models/notifications/NotificationUser.class.php");
-							NotificationUser::addAllNotifications("event_discussion", $EVENT_ID, 0, $ENTRADA_USER->getId(), $EDISCUSSION_ID);
+							NotificationUser::addAllNotifications("event_discussion", $EVENT_ID, 0, $ENTRADA_USER->getID(), $EDISCUSSION_ID);
 						}
 					}
 				}

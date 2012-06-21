@@ -885,7 +885,7 @@ if ($topic_results) { ?>
 							$query				= "	SELECT *
 											FROM `quiz_progress`
 											WHERE `aquiz_id` = ".$db->qstr($quiz_record["aquiz_id"])."
-											AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getId());
+											AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID());
 							$progress_record	= $db->GetAll($query);
 							if ($progress_record) {
 								$quiz_attempts = count($progress_record);
@@ -895,7 +895,7 @@ if ($topic_results) { ?>
 
 							if (((!(int) $quiz_record["release_date"]) || ($quiz_record["release_date"] <= time())) && ((!(int) $quiz_record["release_until"]) || ($quiz_record["release_until"] >= time())) && (!$exceeded_attempts)) {
 								$allow_attempt = true;
-							} elseif (isset($quiz_record["require_attendance"]) && events_fetch_event_attendance_for_user($EVENT_ID,$ENTRADA_USER->getId())) {
+							} elseif (isset($quiz_record["require_attendance"]) && events_fetch_event_attendance_for_user($EVENT_ID,$ENTRADA_USER->getID())) {
 								$allow_attempt = true;
 							} else {
 								$allow_attempt = false;
@@ -936,7 +936,7 @@ if ($topic_results) { ?>
 											"quiz_score" => "0",
 											"quiz_value" => "0",
 											"updated_date" => time(),
-											"updated_by" => $ENTRADA_USER->getId()
+											"updated_by" => $ENTRADA_USER->getID()
 										);
 										if (!$db->AutoExecute("quiz_progress", $quiz_progress_array, "UPDATE", "qprogress_id = ".$db->qstr($entry["qprogress_id"]))) {
 											application_log("error", "Unable to update the qprogress_id [".$qprogress_id."] to expired. Database said: ".$db->ErrorMsg());
@@ -1042,7 +1042,7 @@ if ($topic_results) { ?>
 					if ($event_discussions) {
 						$i = 0;
 						foreach ($event_discussions as $result) {
-							if ($result["proxy_id"] == $ENTRADA_USER->getId()) {
+							if ($result["proxy_id"] == $ENTRADA_USER->getID()) {
 								$editable		= true;
 								$edit_ajax[]	= $result["ediscussion_id"];
 							} else {

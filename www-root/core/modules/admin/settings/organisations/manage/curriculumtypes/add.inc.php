@@ -83,7 +83,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 			
 			if (!$ERROR) {
 				$PROCESSED["updated_date"] = time();
-				$PROCESSED["updated_by"] = $ENTRADA_USER->getId();
+				$PROCESSED["updated_by"] = $ENTRADA_USER->getID();
 				$PROCESSED["curriculum_type_active"] = 1;
 				$PROCESSED["curriculum_type_order"] = 1;
 				

@@ -25,7 +25,7 @@ if (!$DOWNLOAD) {
 	}
 }
 
-$query = "SELECT * FROM `assignment_contacts` WHERE `assignment_id` = ".$db->qstr($RECORD_ID)." AND `proxy_id` = ".$ENTRADA_USER->getId();
+$query = "SELECT * FROM `assignment_contacts` WHERE `assignment_id` = ".$db->qstr($RECORD_ID)." AND `proxy_id` = ".$ENTRADA_USER->getID();
 $iscontact = $db->GetRow($query);
 
 if ($RECORD_ID) {
@@ -36,7 +36,7 @@ if ($RECORD_ID) {
 	
 	if (isset($_GET["pid"]) && $tmp = clean_input($_GET["pid"], "int")) {
 		/** @todo this needs to make sure the user is a teacher for the course if this way is used, otherwise students could add another student's proxy*/
-		$query = "SELECT * FROM `assignment_contacts` WHERE `assignment_id` = ".$db->qstr($RECORD_ID)." AND `proxy_id` = ".$ENTRADA_USER->getId();
+		$query = "SELECT * FROM `assignment_contacts` WHERE `assignment_id` = ".$db->qstr($RECORD_ID)." AND `proxy_id` = ".$ENTRADA_USER->getID();
 		if ($iscontact) {
 			$USER_ID = $tmp;
 		} else {
@@ -46,7 +46,7 @@ if ($RECORD_ID) {
 	} elseif($iscontact) {
 		header("Location: ".ENTRADA_URL."/admin/gradebook/assignments?section=grade&id=".$assignment["course_id"]."&assignment_id=".$RECORD_ID);
 	} else {
-		$USER_ID = $ENTRADA_USER->getId();
+		$USER_ID = $ENTRADA_USER->getID();
 	}	
 	
 	if ($USER_ID) {
@@ -387,7 +387,7 @@ if ($RECORD_ID) {
 								echo "				<a href=\"".ENTRADA_URL."/profile/gradebook/assignments?section=view&amp;id=".$RECORD_ID."&amp;".(isset($iscontact) && $iscontact?"pid=".$USER_ID."&amp;":"")."file_id=".$file_record["afile_id"]."&amp;download=latest\"".(((int) $file_record["access_method"]) ? " target=\"_blank\"" : "").">".(((int) $file_record["access_method"]) ? " View" : "Download")." Latest (v".$results[0]["file_version"].")</a>\n";
 								echo "				<div class=\"content-small\">\n";
 								echo "					Filename: <span id=\"file-version-".$results[0]["csfversion_id"]."-title\">".html_encode($results[0]["file_filename"])." (v".$results[0]["file_version"].")</span> ".readable_size($results[0]["file_filesize"]);
-								if ($total_releases > 1 && $results[0]["proxy_id"] == $ENTRADA_USER->getId()) {
+								if ($total_releases > 1 && $results[0]["proxy_id"] == $ENTRADA_USER->getID()) {
 									echo 				"(<a class=\"action delete-version\" id=\"delete_".$results[0]["afversion_id"]."\" href=\"javascript:void(0)')\" style=\"font-size: 10px; font-weight: normal\">delete</a>)";
 								}
 								echo "					<br />\n";
@@ -407,7 +407,7 @@ if ($RECORD_ID) {
 										if ((int) $progress > 0) { // Because I don't want to display the first file again.
 											echo "		<li>\n";
 											echo "			<a href=\"".ENTRADA_URL."/profile/gradebook/assignments?section=view&amp;id=".$RECORD_ID."&amp;".(isset($iscontact) && $iscontact?"pid=".$USER_ID."&amp;":"")."download=".$result["file_version"]."\" style=\"vertical-align: middle\"".(((int) $file_record["access_method"]) ? " target=\"_blank\"" : "")."><span id=\"file-version-".$result["afversion_id"]."-title\">".html_encode($result["file_filename"])." (v".$result["file_version"].")</span></a> <span class=\"content-small\" style=\"vertical-align: middle\">".readable_size($result["file_filesize"])."</span>\n";
-											if($result["proxy_id"] == $ENTRADA_USER->getId()){
+											if($result["proxy_id"] == $ENTRADA_USER->getID()){
 												echo "			(<a class=\"action delete-version\" id=\"delete_".$result["afversion_id"]."\" href=\"javascript:void(0)\">delete</a>)";
 											}
 											echo "			<div class=\"content-small\">\n";
@@ -459,7 +459,7 @@ if ($RECORD_ID) {
 								echo "				<a href=\"".ENTRADA_URL."/profile/gradebook/assignments?section=view&amp;id=".$RECORD_ID."&amp;".(isset($iscontact) && $iscontact?"pid=".$USER_ID."&amp;":"")."file_id=".$TEACHER_FILE_RECORD."&amp;download=latest\"".(((int) $file_record["access_method"]) ? " target=\"_blank\"" : "").">".(((int) $file_record["access_method"]) ? " View" : "Download")." Latest (v".$results[0]["file_version"].")</a>\n";
 								echo "				<div class=\"content-small\">\n";
 								echo "					Filename: <span id=\"file-version-".$results[0]["afversion_id"]."-title\">".html_encode($results[0]["file_filename"])." (v".$results[0]["file_version"].")</span> ".readable_size($results[0]["file_filesize"]);
-								if ($results[0]["proxy_id"] == $ENTRADA_USER->getId()) {
+								if ($results[0]["proxy_id"] == $ENTRADA_USER->getID()) {
 									echo 				"(<a class=\"action delete-version\" href=\"javascript:void(0)\" id=\"delete_".$results[0]["afversion_id"]."\" style=\"font-size: 10px; font-weight: normal\">delete</a>)";
 								}
 								echo "					<br />\n";
@@ -479,7 +479,7 @@ if ($RECORD_ID) {
 										if ((int) $progress > 0) { // Because I don't want to display the first file again.
 											echo "		<li>\n";
 											echo "			<a href=\"".ENTRADA_URL."/profile/gradebook/assignments?section=view&amp;id=".$RECORD_ID."&amp;".(isset($iscontact) && $iscontact?"pid=".$USER_ID."&amp;":"")."download=".$result["file_version"]."\" style=\"vertical-align: middle\"".(((int) $file_record["access_method"]) ? " target=\"_blank\"" : "")."><span id=\"file-version-".$result["afversion_id"]."-title\">".html_encode($result["file_filename"])." (v".$result["file_version"].")</span></a> <span class=\"content-small\" style=\"vertical-align: middle\">".readable_size($result["file_filesize"])."</span>\n";
-											if($result["proxy_id"] == $ENTRADA_USER->getId()){
+											if($result["proxy_id"] == $ENTRADA_USER->getID()){
 												echo "			(<a class=\"action delete-version\" id=\"delete_".$result["afversion_id"]."\" href=\"javascript:void(0)\">delete</a>)";
 											}
 											echo "			<div class=\"content-small\">\n";
@@ -548,8 +548,8 @@ if ($RECORD_ID) {
 											</div>
 											<div style="float: right">
 											<?php
-											echo (($result["proxy_id"] == $ENTRADA_USER->getId()) ? " (<a class=\"action\" href=\"".ENTRADA_URL."/profile/gradebook/assignments?section=edit-comment&amp;id=".$RECORD_ID."&amp;cid=".$result["acomment_id"]."\">edit</a>)" : "");
-											echo (($result["proxy_id"] == $ENTRADA_USER->getId()) ? " (<a class= \"action delete\" id=\"delete_".$result["acomment_id"]."\" href=\"javascript:void(0)\">delete</a>)":"");
+											echo (($result["proxy_id"] == $ENTRADA_USER->getID()) ? " (<a class=\"action\" href=\"".ENTRADA_URL."/profile/gradebook/assignments?section=edit-comment&amp;id=".$RECORD_ID."&amp;cid=".$result["acomment_id"]."\">edit</a>)" : "");
+											echo (($result["proxy_id"] == $ENTRADA_USER->getID()) ? " (<a class= \"action delete\" id=\"delete_".$result["acomment_id"]."\" href=\"javascript:void(0)\">delete</a>)":"");
 											?>
 											</div>
 										</td>

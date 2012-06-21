@@ -71,7 +71,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MEDBIQINSTRUCTIONAL"))) {
 			
 			if (!$ERROR) {
 				$PROCESSED["updated_date"] = time();
-				$PROCESSED["updated_by"] = $ENTRADA_USER->getId();
+				$PROCESSED["updated_by"] = $ENTRADA_USER->getID();
 
 				if ($db->AutoExecute("medbiq_instructional_methods", $PROCESSED, "INSERT")) {
 					if(isset($SEMI_PROCESSED)) {
@@ -79,7 +79,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MEDBIQINSTRUCTIONAL"))) {
 						$MAPPED_PROCESSED = array();
 						$MAPPED_PROCESSED["fk_instructional_method_id"] = $db->Insert_Id();
 						$MAPPED_PROCESSED["updated_date"] = time();
-						$MAPPED_PROCESSED["updated_by"] = $ENTRADA_USER->getId();
+						$MAPPED_PROCESSED["updated_by"] = $ENTRADA_USER->getID();
 						
 						foreach($SEMI_PROCESSED["fk_eventtype_id"] as $fk_eventtype_id) {
 							$MAPPED_PROCESSED["fk_eventtype_id"] = $fk_eventtype_id;

@@ -83,7 +83,7 @@ if ($RECORD_ID) {
 							$PROCESSED["comment_active"]	= 1;
 							$PROCESSED["release_date"]		= time();
 							$PROCESSED["updated_date"]		= time();
-							$PROCESSED["updated_by"]		= $ENTRADA_USER->getId();
+							$PROCESSED["updated_by"]		= $ENTRADA_USER->getID();
 
 							if ($db->AutoExecute("community_share_comments", $PROCESSED, "INSERT")) {
 								if ($COMMENT_ID = $db->Insert_Id()) {
@@ -188,7 +188,7 @@ if ($RECORD_ID) {
 
 			echo display_notice();
 
-			application_log("error", "The file record id [".$RECORD_ID."] is deactivated; however, ".$_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]." [".$ENTRADA_USER->getId()."] has tried to comment on it.");
+			application_log("error", "The file record id [".$RECORD_ID."] is deactivated; however, ".$_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]." [".$ENTRADA_USER->getID()."] has tried to comment on it.");
 		}
 	} else {
 		$ERROR++;

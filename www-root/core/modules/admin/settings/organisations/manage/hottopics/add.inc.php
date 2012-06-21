@@ -62,7 +62,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 			
 			if (!$ERROR) {
 				$PROCESSED["updated_date"] = time();
-				$PROCESSED["updated_by"] = $ENTRADA_USER->getId();
+				$PROCESSED["updated_by"] = $ENTRADA_USER->getID();
 				$PROCESSED["topic_type"] = "other";
 				if ($db->AutoExecute("events_lu_topics", $PROCESSED, "INSERT")) {
 					if ($TOPIC_ID = $db->Insert_Id()) {

@@ -32,7 +32,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_PUBLIC_EVALUATIONS"))) {
 }
 
 if ($RECORD_ID) {
-	$cohort = groups_get_cohort($ENTRADA_USER->getId());
+	$cohort = groups_get_cohort($ENTRADA_USER->getID());
 	
 	$query			= "	SELECT a.*, c.`eprogress_id`, e.`target_title`, c.`etarget_id`
 						FROM `evaluations` AS a
@@ -41,7 +41,7 @@ if ($RECORD_ID) {
 						LEFT JOIN `evaluation_progress` AS c
 						ON a.`evaluation_id` = c.`evaluation_id`
 						AND c.`progress_value` = 'inprogress'
-						AND c.`proxy_id` = ".$db->qstr($ENTRADA_USER->getId())."
+						AND c.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
 						LEFT JOIN `evaluation_responses` AS cr
 						ON c.`eprogress_id` = cr.`eprogress_id`
 						LEFT JOIN `evaluation_targets` AS d
@@ -53,7 +53,7 @@ if ($RECORD_ID) {
 						(
 							(
 								b.`evaluator_type` = 'proxy_id'
-								AND b.`evaluator_value` = ".$db->qstr($ENTRADA_USER->getId())."
+								AND b.`evaluator_value` = ".$db->qstr($ENTRADA_USER->getID())."
 							)
 							OR
 							(
@@ -72,7 +72,7 @@ if ($RECORD_ID) {
 		$PROCESSED = $evaluation_record;
 		$query = "	SELECT COUNT(`eprogress_id`) FROM `evaluation_progress`
 					WHERE `evaluation_id` = ".$db->qstr($evaluation_record["evaluation_id"])."
-					AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getId())."
+					AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
 					AND `progress_value` = 'complete'";
 		$completed_attempts = $db->GetOne($query);
 			
@@ -145,7 +145,7 @@ if ($RECORD_ID) {
 													JOIN `evaluations` AS b
 													ON a.`evaluation_id` = b.`evaluation_id`
 													WHERE a.`evaluation_id` = ".$db->qstr($RECORD_ID)."
-													AND a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getId())."
+													AND a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
 													AND a.`progress_value` = 'inprogress'
 													ORDER BY a.`updated_date` ASC";
 							$progress_record	= $db->GetRow($query);
@@ -211,7 +211,7 @@ if ($RECORD_ID) {
 																	"evaluation_id" => $evaluation_record["evaluation_id"],
 																	"etarget_id" => ($PROCESSED["etarget_id"] ? $PROCESSED["etarget_id"] : 0),
 																	"updated_date" => time(),
-																	"updated_by" => $ENTRADA_USER->getId()
+																	"updated_by" => $ENTRADA_USER->getID()
 																);
 
 										if ($db->AutoExecute("evaluation_progress", $evaluation_progress_array, "UPDATE", "eprogress_id = ".$db->qstr($eprogress_id))) {
@@ -220,7 +220,7 @@ if ($RECORD_ID) {
 											 */
 											add_statistic("evaluations", "evaluation_complete", "evaluation_id", $RECORD_ID);
 
-											application_log("success", "Proxy_id [".$ENTRADA_USER->getId()."] has completed evaluation_id [".$RECORD_ID."].");
+											application_log("success", "Proxy_id [".$ENTRADA_USER->getID()."] has completed evaluation_id [".$RECORD_ID."].");
 											
 											$url = ENTRADA_URL."/evaluations";
 
@@ -283,7 +283,7 @@ if ($RECORD_ID) {
 								$query				= "	SELECT *
 														FROM `evaluation_progress`
 														WHERE `evaluation_id` = ".$db->qstr($RECORD_ID)."
-														AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getId())."
+														AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
 														AND `progress_value` = 'inprogress'
 														ORDER BY `updated_date` ASC";
 								$progress_record	= $db->GetRow($query);
@@ -294,11 +294,11 @@ if ($RECORD_ID) {
 									$evaluation_start_time	= time();
 									$evaluation_progress_array	= array (
 																"evaluation_id" => $RECORD_ID,
-																"proxy_id" => $ENTRADA_USER->getId(),
+																"proxy_id" => $ENTRADA_USER->getID(),
 																"progress_value" => "inprogress",
 																"etarget_id" => ($PROCESSED["etarget_id"] ? $PROCESSED["etarget_id"] : 0),
 																"updated_date" => $evaluation_start_time,
-																"updated_by" => $ENTRADA_USER->getId()
+																"updated_by" => $ENTRADA_USER->getID()
 															);
 									if ($db->AutoExecute("evaluation_progress", $evaluation_progress_array, "INSERT"))  {
 										$eprogress_id = $db->Insert_Id();
@@ -324,7 +324,7 @@ if ($RECORD_ID) {
 												WHERE a.`evaluation_id` = ".$db->qstr($RECORD_ID)."
 												AND a.`etarget_id` NOT IN (
 													SELECT `etarget_id` FROM `evaluation_progress` 
-													WHERE `proxy_id` = ".$db->qstr($ENTRADA_USER->getId())."
+													WHERE `proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
 													AND `evaluation_id` = ".$db->qstr($RECORD_ID)."
 													AND `progress_value` = 'complete'
 												)";

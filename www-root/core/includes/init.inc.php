@@ -105,7 +105,7 @@ if ($ENTRADA_USER) {
 	if (!$ENTRADA_USER->getAccessId()) {
 		$query = "SELECT a.`group`, a.`role`, a.`id`
 						  FROM `" . AUTH_DATABASE . "`.`user_access` a
-						  WHERE a.`user_id` = " . $db->qstr($ENTRADA_USER->getId()) . "
+						  WHERE a.`user_id` = " . $db->qstr($ENTRADA_USER->getID()) . "
 						  AND a.`organisation_id` = " . $db->qstr($ENTRADA_USER->getActiveOrganisation()) . "
 						  ORDER BY a.`id` ASC";
 		$result = $db->getRow($query);
@@ -124,7 +124,7 @@ if ($ENTRADA_USER) {
 
 		$query = "SELECT a.`group`, a.`role`, a.`id`
 					  FROM `" . AUTH_DATABASE . "`.`user_access` a
-					  WHERE a.`user_id` = " . $ENTRADA_USER->getId() . "
+					  WHERE a.`user_id` = " . $ENTRADA_USER->getID() . "
 					  AND a.`organisation_id` = " . $db->qstr($organisation) . "
 					  ORDER BY a.`id` ASC";
 
@@ -191,7 +191,7 @@ $STEP = 1;
 $PROCESSED = array();
 
 if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
-	$PROXY_ID = $ENTRADA_USER->getId();
+	$PROXY_ID = $ENTRADA_USER->getID();
 	$GROUP = $_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"];
 	$ROLE = $_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"];
 } else {

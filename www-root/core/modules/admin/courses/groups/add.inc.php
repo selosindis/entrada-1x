@@ -65,7 +65,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 			 *  CSV file format "group_name, first_name, last_name, status, entrada_id"
 			 */
 			$PROCESSED["updated_date"]	= time();
-			$PROCESSED["updated_by"]	= $ENTRADA_USER->getId();
+			$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
 			
 			/**
 			 * Required field "prefix" / Group Name.

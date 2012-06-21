@@ -129,7 +129,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_AAMC_CI"))) {
 
 			if (!$ERROR) {
 				$PROCESSED["updated_date"] = time();
-				$PROCESSED["updated_by"] = $ENTRADA_USER->getId();
+				$PROCESSED["updated_by"] = $ENTRADA_USER->getID();
 
 				if ($db->AutoExecute("reports_aamc_ci", $PROCESSED, "UPDATE", "raci_id=".$db->qstr($REPORT_ID))) {
 					$url = ENTRADA_URL . "/admin/reports/aamc/manage?id=".$REPORT_ID;

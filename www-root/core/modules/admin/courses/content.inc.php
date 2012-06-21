@@ -79,12 +79,12 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					$query = "SELECT b.`course_id`, b.`organisation_id` FROM `course_contacts` AS a
 								JOIN `courses` AS b
 								ON a.`course_id` = b.`course_id`
-								WHERE a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getId())."
+								WHERE a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
 								AND b.`course_active` = 1
 								GROUP BY b.`course_id`
 								UNION
 								SELECT `course_id`, `organisation_id` FROM `courses`
-								WHERE `pcoord_id` = ".$db->qstr($ENTRADA_USER->getId())."
+								WHERE `pcoord_id` = ".$db->qstr($ENTRADA_USER->getID())."
 								AND `course_active` = 1";
 					$admin_course_ids = $db->GetAll($query);
 					if (!isset($admin_course_ids) || !$admin_course_ids || count($admin_course_ids) > 1 || $admin_course_ids[0]["course_id"] != $COURSE_ID || ($ENTRADA_ACL->amIAllowed(new CourseResource($admin_course_ids[0]["course_id"], $admin_course_ids[0]["organisation_id"]), 'update'))) {
@@ -102,7 +102,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					switch($_POST["type"]) {
 						case "text" :
 							$PROCESSED["updated_date"]	= time();
-							$PROCESSED["updated_by"]	= $ENTRADA_USER->getId();
+							$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
 							
 							/**
 							 * Not-Required: course_url | External Website Url
@@ -170,9 +170,9 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								foreach ($PROCESSED_OBJECTIVES as $objective_id => $objective) {
 									$objective_found = $db->GetOne("SELECT `objective_id` FROM `course_objectives` WHERE `objective_id` = ".$db->qstr($objective_id)." AND `course_id` = ".$db->qstr($COURSE_ID));
 									if ($objective_found) {
-										$db->AutoExecute("course_objectives", array("objective_details" => $objective, "updated_date" => time(), "updated_by" => $ENTRADA_USER->getId()), "UPDATE", "`objective_id` = ".$db->qstr($objective_id)." AND `course_id` = ".$db->qstr($COURSE_ID));
+										$db->AutoExecute("course_objectives", array("objective_details" => $objective, "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID()), "UPDATE", "`objective_id` = ".$db->qstr($objective_id)." AND `course_id` = ".$db->qstr($COURSE_ID));
 									} else {
-										$db->AutoExecute("course_objectives", array("course_id" => $COURSE_ID, "objective_id" => $objective_id, "objective_details" => $objective, "importance" => 0, "updated_date" => time(), "updated_by" => $ENTRADA_USER->getId()), "INSERT");
+										$db->AutoExecute("course_objectives", array("course_id" => $COURSE_ID, "objective_id" => $objective_id, "objective_details" => $objective, "importance" => 0, "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID()), "INSERT");
 									}
 
 								}

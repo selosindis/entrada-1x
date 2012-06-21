@@ -181,7 +181,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				WHERE a.`draft_id` = ".$db->qstr($draft_id);
 	$creators = $db->GetAssoc($query);
 
-	if (!array_key_exists($ENTRADA_USER->getId(), $creators)) {
+	if (!array_key_exists($ENTRADA_USER->getID(), $creators)) {
 		add_notice("Your account is not approved to work on this draft schedule.<br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.");
 		echo display_notice();
 	} else {

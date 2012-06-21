@@ -165,7 +165,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 
 			if (!$ERROR) {
 				$PROCESSED["updated_last"] = time();
-				$PROCESSED["updated_by"] = $ENTRADA_USER->getId();
+				$PROCESSED["updated_by"] = $ENTRADA_USER->getID();
 
 				if ($db->AutoExecute(AUTH_DATABASE . ".organisations", $PROCESSED, "UPDATE", "`organisation_id`=" . $db->qstr($ORGANISATION_ID))) {
 					add_success("You have successfully added <strong>" . html_encode($PROCESSED["organisation_title"]) . "</strong> to the system.<br /><br />You will now be redirected to the organisations index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"" . ENTRADA_URL . "/admin/settings/organisations/manage?org=" . $ORGANISATION_ID . "\" style=\"font-weight: bold\">click here</a> to continue.");

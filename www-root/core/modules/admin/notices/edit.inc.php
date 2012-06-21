@@ -173,7 +173,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 
 						if (!$ERROR) {
 							$PROCESSED["updated_date"] = time();
-							$PROCESSED["updated_by"] = $ENTRADA_USER->getId();
+							$PROCESSED["updated_by"] = $ENTRADA_USER->getID();
 
 							if ($db->AutoExecute("notices", $PROCESSED, "UPDATE", "notice_id=".$db->qstr($NOTICE_ID))) {
 								application_log("success", "Successfully updated notice ID [".$NOTICE_ID."]");
@@ -183,7 +183,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 
 								if (isset($PROCESSED["associated_audience"]) && count($PROCESSED["associated_audience"])) {
 									foreach($PROCESSED["associated_audience"] as $audience_member){
-										$audience_member["updated_by"] = $ENTRADA_USER->getId();
+										$audience_member["updated_by"] = $ENTRADA_USER->getID();
 										$audience_member["updated_date"] = time();
 										$audience_member["notice_id"] = $NOTICE_ID;
 										if ($db->AutoExecute("notice_audience", $audience_member, "INSERT")) {

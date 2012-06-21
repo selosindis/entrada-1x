@@ -57,7 +57,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
 				}
 				if (isset($added_proxy_ids) && !empty($added_proxy_ids)) {
 					$PROCESSED["updated_date"]	= time();
-					$PROCESSED["updated_by"] = $ENTRADA_USER->getId();
+					$PROCESSED["updated_by"] = $ENTRADA_USER->getID();
 					$PROCESSED["group_id"] = $GROUP_ID;
 					$PROCESSED["start_date"] = time();
 					$PROCESSED["finish_date"] = 0;

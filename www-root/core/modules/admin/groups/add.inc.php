@@ -107,7 +107,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 				$proxy_id = (int) $proxy_id;
 			}
 			$PROCESSED["updated_date"]	= time();
-			$PROCESSED["updated_by"] = $ENTRADA_USER->getId();
+			$PROCESSED["updated_by"] = $ENTRADA_USER->getID();
 			
 			if (!$ERROR) {
 				$result = $db->GetRow("SELECT `group_id` FROM `groups` WHERE `group_name` = ".$db->qstr($PROCESSED["group_name"]));

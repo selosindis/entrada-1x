@@ -91,7 +91,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 					$where = "`eventtype_id` = ".$db->qstr($PROCESSED["eventtype_id"]);
 				}
 				
-				$params = array("eventtype_title" => $PROCESSED["eventtype_title"],"eventtype_description"=>$PROCESSED["eventtype_description"], "updated_date"=>time(),"updated_by"=>$ENTRADA_USER->getId());
+				$params = array("eventtype_title" => $PROCESSED["eventtype_title"],"eventtype_description"=>$PROCESSED["eventtype_description"], "updated_date"=>time(),"updated_by"=>$ENTRADA_USER->getID());
 				
 				if ($db->AutoExecute("`events_lu_eventtypes`", $params, $action, $where)) {
 					

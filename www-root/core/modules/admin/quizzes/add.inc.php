@@ -90,7 +90,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 
 			if (!$ERROR) {
 				$PROCESSED["updated_date"]	= time();
-				$PROCESSED["updated_by"]	= $ENTRADA_USER->getId();
+				$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
 
 				if ($db->AutoExecute("quizzes", $PROCESSED, "INSERT")) {
 					if ($quiz_id = $db->Insert_Id()) {
@@ -100,7 +100,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						 */
 						if ((is_array($PROCESSED["associated_proxy_ids"])) && (count($PROCESSED["associated_proxy_ids"]))) {						
 							foreach ($PROCESSED["associated_proxy_ids"] as $proxy_id) {
-								if (!$db->AutoExecute("quiz_contacts", array("quiz_id" => $quiz_id, "proxy_id" => $proxy_id, "updated_date" => time(), "updated_by" => $ENTRADA_USER->getId()), "INSERT")) {
+								if (!$db->AutoExecute("quiz_contacts", array("quiz_id" => $quiz_id, "proxy_id" => $proxy_id, "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID()), "INSERT")) {
 									$ERROR++;
 									$ERRORSTR[] = "There was an error while trying to attach a <strong>Quiz Author</strong> to this quiz.<br /><br />The system administrator was informed of this error; please try again later.";
 

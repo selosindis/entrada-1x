@@ -106,7 +106,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_POLLS"))) {
 
 						if(!$ERROR) {
 							$PROCESSED["updated_date"]	= time();
-							$PROCESSED["updated_by"]		= $ENTRADA_USER->getId();
+							$PROCESSED["updated_by"]		= $ENTRADA_USER->getID();
 
 							if($db->AutoExecute("poll_questions", $PROCESSED, "UPDATE", "poll_id=".$db->qstr($POLL_ID))) {
 								$query = "DELETE FROM `poll_answers` WHERE `poll_id`=".$db->qstr($POLL_ID);

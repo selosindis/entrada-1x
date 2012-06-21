@@ -74,7 +74,7 @@ switch($STEP) {
 			$PROCESSED["community_id"]	= $COMMUNITY_ID;
 			$PROCESSED["proxy_id"]		= $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"];
 			$PROCESSED["updated_date"]	= time();
-			$PROCESSED["updated_by"]	= $ENTRADA_USER->getId();
+			$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
 			$PROCESSED["cpage_id"]		= $PAGE_ID;
 
 			if (!$COMMUNITY_ADMIN) {

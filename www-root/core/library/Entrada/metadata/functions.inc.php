@@ -168,7 +168,7 @@ function getTypes_User(User $user) {
 	$org_id = $user->getOrganisationId();
 	$group = $user->getGroup();
 	$role = $user->getRole();
-	$proxy_id = $user->getId();
+	$proxy_id = $user->getID();
 	
 	return MetaDataTypes::get($org_id, $group, $role, $proxy_id);
 }
@@ -177,7 +177,7 @@ function getUserCategoryValues(User $eUser, MetaDataType $category) {
 	$org_id = $eUser->getOrganisationId();
 	$group = $eUser->getGroup();
 	$role = $eUser->getRole();
-	$proxy_id = $eUser->getId();
+	$proxy_id = $eUser->getID();
 
 	return MetaDataValues::get($org_id, $group, $role,$proxy_id, $category, true, array("order by"=>array(array("meta_value_id", "desc"))));
 }
@@ -252,8 +252,8 @@ function editMetaDataTable_Category($organisation_id=null, $group=null, $role=nu
 		$label = html_encode($user->getFullname());
 		
 	?>
-	<tbody id="user_<?php echo $user->getId(); ?>">
-		<tr class="user_head" id="user_head_<?php echo $user->getId(); ?>">
+	<tbody id="user_<?php echo $user->getID(); ?>">
+		<tr class="user_head" id="user_head_<?php echo $user->getID(); ?>">
 			<td></td>
 			<th colspan="2"><?php echo $label; ?></th>
 			<td class="control" colspan="3"><ul class="page-action"><li class="last"><a href="#" class="add_btn" id="add_btn_<?php echo $category_id; ?>">Add record for <?php echo $label; ?></a></li></ul></td>

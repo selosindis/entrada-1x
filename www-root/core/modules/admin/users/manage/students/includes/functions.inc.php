@@ -155,7 +155,7 @@ class MSPRAdminController {
 									if (MSPR_REJECTION_SEND_EMAIL) {
 										$sub_info = get_submission_information($entity);
 										$reason_type = ((!$comment) ?  "noreason" : "reason");
-										$active_user = User::get($ENTRADA_USER->getId());
+										$active_user = User::get($ENTRADA_USER->getID());
 										if ($active_user && $type) {
 				
 											submission_rejection_notification(	$reason_type,

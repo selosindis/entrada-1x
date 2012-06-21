@@ -103,7 +103,7 @@ if($COMMUNITY_ID) {
 						$guest_notice = '';
 						if($_SESSION['details']['group'] == 'guest') {
 							 $query = "	SELECT COUNT(*) as total FROM `community_members`
-										WHERE `community_members`.`proxy_id` = ".$db->qstr($ENTRADA_USER->getId())." 
+										WHERE `community_members`.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())." 
 										AND `community_members`.`member_active` = 1 
 										ORDER BY `community_members`.`member_joined`";
 							$result = $db->GetRow($query);

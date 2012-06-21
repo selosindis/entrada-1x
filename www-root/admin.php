@@ -82,12 +82,12 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	 */
 	users_online();
 	$proxy_id = $ENTRADA_USER->getActiveId();
-	if(($proxy_id != $ENTRADA_USER->getId()) && ($_SESSION["permissions"][$proxy_id]["expires"] <= time())) {
+	if(($proxy_id != $ENTRADA_USER->getID()) && ($_SESSION["permissions"][$proxy_id]["expires"] <= time())) {
 		unset($proxy_id);
 	}
 
 	if(!isset($proxy_id)) {
-		$proxy_id = $ENTRADA_USER->getId();
+		$proxy_id = $ENTRADA_USER->getID();
 	}
 
 	/**
@@ -145,7 +145,7 @@ if (($router) && ($route = $router->initRoute($MODULE))) {
 		$sidebar_html .= "<select id=\"permission-mask\" name=\"mask\" style=\"width: 160px\" onchange=\"window.location='".ENTRADA_URL."/admin/".$MODULE."/?".html_decode(replace_query(array("mask" => "'+this.options[this.selectedIndex].value")))."\">\n";
 		foreach($_SESSION["permissions"] as $proxy_id => $result) {
 			if (is_int($proxy_id)) {
-				$sidebar_html .= "<option value=\"".(($proxy_id == $ENTRADA_USER->getId()) ? "close" : $result["permission_id"])."\"".(($proxy_id == $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]) ? " selected=\"selected\"" : "").">".html_encode($result["fullname"])."</option>\n";
+				$sidebar_html .= "<option value=\"".(($proxy_id == $ENTRADA_USER->getID()) ? "close" : $result["permission_id"])."\"".(($proxy_id == $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]) ? " selected=\"selected\"" : "").">".html_encode($result["fullname"])."</option>\n";
 			}
 		}
 		$sidebar_html .= "</select>\n";

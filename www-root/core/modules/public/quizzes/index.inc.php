@@ -50,7 +50,7 @@ $query		= "	SELECT a.`quiz_score`, a.`quiz_value`, a.`updated_date` AS `quiz_com
 				AND c.`event_id` = a.`content_id`
 				LEFT JOIN `quizzes_lu_quiztypes` AS d
 				ON d.`quiztype_id` = b.`quiztype_id`
-				WHERE a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getId())."
+				WHERE a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
 				AND a.`progress_value` = 'complete'
 				ORDER BY c.`course_id` ASC, c.`event_id` ASC, d.`quiztype_title` ASC, b.`quiz_title` ASC";
 $results	= $db->GetAll($query);

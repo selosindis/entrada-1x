@@ -265,7 +265,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										}
 
 										$PROCESSED["updated_date"]	= time();
-										$PROCESSED["updated_by"]	= $ENTRADA_USER->getId();
+										$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
 
 										if(!$ERROR) {
 											if((isset($_POST["update_file"])) && ($_POST["update_file"] == "yes")) {
@@ -702,7 +702,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 								}
 
 								$PROCESSED["updated_date"]		= time();
-								$PROCESSED["updated_by"]		= $ENTRADA_USER->getId();
+								$PROCESSED["updated_by"]		= $ENTRADA_USER->getID();
 
 								if(!$ERROR) {
 									$query	= "

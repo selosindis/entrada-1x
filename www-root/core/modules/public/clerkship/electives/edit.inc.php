@@ -168,7 +168,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 						WHERE `".CLERKSHIP_DATABASE."`.`events`.`event_id` != ".$db->qstr($EVENT_ID)." 
 						AND `".CLERKSHIP_DATABASE."`.`events`.`event_id` = `".CLERKSHIP_DATABASE."`.`electives`.`event_id`
 						AND `".CLERKSHIP_DATABASE."`.`events`.`event_id` = `".CLERKSHIP_DATABASE."`.`event_contacts`.`event_id`
-						AND `".CLERKSHIP_DATABASE."`.`event_contacts`.`etype_id` = ".$db->qstr($ENTRADA_USER->getId())." 
+						AND `".CLERKSHIP_DATABASE."`.`event_contacts`.`etype_id` = ".$db->qstr($ENTRADA_USER->getID())." 
 						AND `".CLERKSHIP_DATABASE."`.`events`.`event_type` = \"elective\"
 						AND `".CLERKSHIP_DATABASE."`.`events`.`event_status` != \"trash\"
 						AND ((".$db->qstr($start_stamp)." > `".CLERKSHIP_DATABASE."`.`events`.`event_start` 
@@ -191,7 +191,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 								$ERRORSTR[] = "This elective conflicts with the following electives:<br />".$dateError;
 							}
 						} else {
-							$weekTotals = clerkship_get_elective_weeks($ENTRADA_USER->getId(), $EVENT_ID);
+							$weekTotals = clerkship_get_elective_weeks($ENTRADA_USER->getID(), $EVENT_ID);
 							$totalWeeks = $weekTotals["approval"] + $weekTotals["approved"];
 							
 							if ($totalWeeks + clean_input($_POST["event_finish_name"], array("int")) > $CLERKSHIP_REQUIRED_WEEKS) {
@@ -366,7 +366,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 					
 					if (!$ERROR) {
 						$PROCESSED["updated_date"]			= time();
-						$PROCESSED["updated_by"]			= $ENTRADA_USER->getId();
+						$PROCESSED["updated_by"]			= $ENTRADA_USER->getID();
 						
 						$EVENT["category_id"]				= $PROCESSED["category_id"];
 						$query = "	SELECT `region_id` FROM `".CLERKSHIP_DATABASE."`.`regions`

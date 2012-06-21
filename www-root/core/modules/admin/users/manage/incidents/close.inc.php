@@ -55,7 +55,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 			
 			$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
 
-			application_log("success", "Proxy ID [".$ENTRADA_USER->getId()."] successfully closed incidents for the user [".$incident_record["proxy_id"]."].");
+			application_log("success", "Proxy ID [".$ENTRADA_USER->getID()."] successfully closed incidents for the user [".$incident_record["proxy_id"]."].");
 		}
 
 		if ($ERROR) {

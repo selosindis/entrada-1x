@@ -63,15 +63,15 @@ if (!defined("IN_REGIONALED_VIEW")) {
 	if (!$APARTMENT_INFO["confirmed"]) {
 		switch ($ACTION) {
 			case "accept" :
-				if ($db->AutoExecute(CLERKSHIP_DATABASE.".apartment_schedule", array("confirmed" => 1), "UPDATE", "`aschedule_id` = ".$db->qstr($ASCHEDULE_ID)." AND `apartment_id` = ".$db->qstr($APARTMENT_INFO["apartment_id"])." AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getId()))) {
+				if ($db->AutoExecute(CLERKSHIP_DATABASE.".apartment_schedule", array("confirmed" => 1), "UPDATE", "`aschedule_id` = ".$db->qstr($ASCHEDULE_ID)." AND `apartment_id` = ".$db->qstr($APARTMENT_INFO["apartment_id"])." AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID()))) {
 					$SUCCESS++;
 					$SUCCESSSTR[] = "You have successfully confirmed your accommodation in this apartment from ".date(DEFAULT_DATE_FORMAT, $APARTMENT_INFO["inhabiting_start"])." until ".date(DEFAULT_DATE_FORMAT, $APARTMENT_INFO["inhabiting_finish"]).".";
 
 					$APARTMENT_INFO["confirmed"] = 1;
 					
-					application_log("success", "Proxy_id [".$ENTRADA_USER->getId()."] successfully confirmed their accommodation in aschedule_id [".$ASCHEDULE_ID."].");
+					application_log("success", "Proxy_id [".$ENTRADA_USER->getID()."] successfully confirmed their accommodation in aschedule_id [".$ASCHEDULE_ID."].");
 				} else {
-					application_log("error", "Unable to set confirmed 1 for aschedule_id [".$ASCHEDULE_ID."] after proxy_id [".$ENTRADA_USER->getId()."] confirmed the accommodation. Database said: ".$db->ErrorMsg());
+					application_log("error", "Unable to set confirmed 1 for aschedule_id [".$ASCHEDULE_ID."] after proxy_id [".$ENTRADA_USER->getID()."] confirmed the accommodation. Database said: ".$db->ErrorMsg());
 
 					$ERROR++;
 					$ERRORSTR[] = "We were unable to confirm your apartment accommodation at this time. The system administrator was notified of the issue, please try again in a few moments.";
@@ -89,14 +89,14 @@ if (!defined("IN_REGIONALED_VIEW")) {
 					}
 
 					if (!$ERROR) {
-						$query = "DELETE FROM `".CLERKSHIP_DATABASE."`.`apartment_schedule` WHERE `aschedule_id` = ".$db->qstr($ASCHEDULE_ID)." AND `apartment_id` = ".$db->qstr($APARTMENT_INFO["apartment_id"])." AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getId());
+						$query = "DELETE FROM `".CLERKSHIP_DATABASE."`.`apartment_schedule` WHERE `aschedule_id` = ".$db->qstr($ASCHEDULE_ID)." AND `apartment_id` = ".$db->qstr($APARTMENT_INFO["apartment_id"])." AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID());
 						if ($db->Execute($query) && ($db->Affected_Rows() == 1)) {
 							if ($EVENT_INFO && $EVENT_INFO["event_id"]) {
 								/**
 								 * Reset the requires_apartment flag so this person is put back on the Regional Education dashboard.
 								 */
 								if (!$db->AutoExecute(CLERKSHIP_DATABASE.".events", array("requires_apartment" => 1), "UPDATE", "event_id=".$db->qstr($EVENT_INFO["event_id"]))) {
-									application_log("error", "Unable to set requires_apartment to 1 for event_id [".$EVENT_INFO["event_id"]."] after proxy_id [".$ENTRADA_USER->getId()."] rejeceted aschedule_id [".$ASCHEDULE_ID."]. Database said: ".$db->ErrorMsg());
+									application_log("error", "Unable to set requires_apartment to 1 for event_id [".$EVENT_INFO["event_id"]."] after proxy_id [".$ENTRADA_USER->getID()."] rejeceted aschedule_id [".$ASCHEDULE_ID."]. Database said: ".$db->ErrorMsg());
 								}
 							}
 

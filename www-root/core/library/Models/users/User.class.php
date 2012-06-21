@@ -112,7 +112,7 @@ class User {
 	 * Returns the id of the user
 	 * @return int
 	 */
-	public function getId() {
+	public function getID() {
 		return $this->id;
 	}
 
@@ -386,7 +386,7 @@ class User {
 			$value = $this->default_access_id;
 		} elseif ((!isset($value) || !$value) && (!isset($this->default_access_id) || !$this->default_access_id)) {
 			$query = "SELECT `id` FROM `".AUTH_DATABASE."`.`user_access`
-						WHERE `user_id` = ".$db->qstr($this->getId())."
+						WHERE `user_id` = ".$db->qstr($this->getID())."
 						AND `app_id` = ".$db->qstr(AUTH_APP_ID)."
 						AND `account_active` = 'true'
 						AND (`access_starts` = '0' OR `access_starts` <= ".$db->qstr(time()).")
@@ -555,7 +555,7 @@ class User {
 					AND (`access_starts` = '0' OR `access_starts` < ?)
 					AND (`access_expires` = '0' OR `access_expires` >= ?)
 					AND `app_id` = ?";
-		$result = $db->getRow($query, array($this->getId(), time(), time(), AUTH_APP_ID));
+		$result = $db->getRow($query, array($this->getID(), time(), time(), AUTH_APP_ID));
 		if ($result) {
 			$this->group = $result["group"];
 			$this->role = $result["role"];
@@ -674,7 +674,7 @@ class User {
 								ORDER BY `valid_until` ASC";
 		
 		$time = time();
-		$results = $db->getAll($query, array($this->getId(), $time, $time));
+		$results = $db->getAll($query, array($this->getID(), $time, $time));
 		$users = array();
 		if ($results) {
 			foreach ($results as $result) {

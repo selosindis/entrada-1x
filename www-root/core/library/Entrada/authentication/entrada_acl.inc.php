@@ -229,7 +229,7 @@ class Entrada_ACL extends ACL_Factory {
 	}
 
 	/**
-	 * Asks the ACL if the currently logged in user role $ENTRADA_USER->getId() is allowed to preform the $action on the $resource. Asserts by default.
+	 * Asks the ACL if the currently logged in user role $ENTRADA_USER->getID() is allowed to preform the $action on the $resource. Asserts by default.
 	 *
 	 * @param string|Zend_Acl_Resource_Interface $resource
 	 * @param <type> $action
@@ -237,7 +237,7 @@ class Entrada_ACL extends ACL_Factory {
 	 * @return <type>
 	 */
 	function isLoggedInAllowed($resource, $action, $assert = true) {
-		$user = new EntradaUser("user".$ENTRADA_USER->getId());
+		$user = new EntradaUser("user".$ENTRADA_USER->getID());
 		$user->details = $_SESSION["details"];
 		return $this->isAllowed($user, $resource, $action, $assert);
 	}

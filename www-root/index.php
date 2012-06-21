@@ -226,11 +226,11 @@ if ($ACTION == "login") {
 			$_SESSION["details"]["allow_podcasting"] = false;
 
 			if ((isset($ENTRADA_CACHE)) && (!AUTH_DEVELOPMENT_MODE)) {
-				if (!($ENTRADA_CACHE->test("acl_".$ENTRADA_USER->getId()))) {
+				if (!($ENTRADA_CACHE->test("acl_".$ENTRADA_USER->getID()))) {
 					$ENTRADA_ACL = new Entrada_Acl($_SESSION["details"]);
-					$ENTRADA_CACHE->save($ENTRADA_ACL, "acl_".$ENTRADA_USER->getId());
+					$ENTRADA_CACHE->save($ENTRADA_ACL, "acl_".$ENTRADA_USER->getID());
 				} else {
-					$ENTRADA_ACL = $ENTRADA_CACHE->load("acl_".$ENTRADA_USER->getId());
+					$ENTRADA_ACL = $ENTRADA_CACHE->load("acl_".$ENTRADA_USER->getID());
 				}
 			} else {
 				$ENTRADA_ACL = new Entrada_Acl($_SESSION["details"]);
@@ -274,7 +274,7 @@ if ($ACTION == "login") {
 			$auth->updateLastLogin();
 		}
 		
-		$query = "SELECT `email_updated`, `google_id`, `notifications` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($ENTRADA_USER->getId());
+		$query = "SELECT `email_updated`, `google_id`, `notifications` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($ENTRADA_USER->getID());
 		$result	= $db->GetRow($query);
 		
 		if (($result) && ($result["google_id"])) {
@@ -432,7 +432,7 @@ if ((!isset($_SESSION["isAuthorized"])) || (!(bool) $_SESSION["isAuthorized"])) 
 					FROM `community_members`AS a
 					LEFT JOIN `communities` AS b
 					ON a.`community_id` = b.`community_id`
-					WHERE a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getId())."
+					WHERE a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
 					AND a.`member_active` = 1
 					ORDER BY a.`member_joined`";
 		$result	= $db->GetRow($query);
@@ -488,8 +488,8 @@ switch ($MODULE) {
 	default :
 		/*
 		$excused_proxy_ids = array();
-		if ($_SESSION["details"]["group"] == "student" && $MODULE != "evaluations" && !in_array($ENTRADA_USER->getId(), $excused_proxy_ids)) {
-			$cohort = groups_get_cohort($ENTRADA_USER->getId());
+		if ($_SESSION["details"]["group"] == "student" && $MODULE != "evaluations" && !in_array($ENTRADA_USER->getID(), $excused_proxy_ids)) {
+			$cohort = groups_get_cohort($ENTRADA_USER->getID());
 			$query = "SELECT * FROM `evaluations` AS a
 						JOIN `evaluation_evaluators` AS b
 						ON a.`evaluation_id` = b.`evaluation_id`
@@ -497,7 +497,7 @@ switch ($MODULE) {
 						(
 							(
 								b.`evaluator_type` = 'proxy_id'
-								AND b.`evaluator_value` = ".$db->qstr($ENTRADA_USER->getId())."
+								AND b.`evaluator_value` = ".$db->qstr($ENTRADA_USER->getID())."
 							)
 							OR
 							(
@@ -542,7 +542,7 @@ switch ($MODULE) {
 				$sidebar_html .= "<select id=\"permission-mask\" name=\"mask\" style=\"width: 160px\" onchange=\"window.location='".ENTRADA_URL."/".$MODULE."/?".str_replace("&#039;", "'", replace_query(array("mask" => "'+this.options[this.selectedIndex].value")))."\">\n";
 				foreach ($_SESSION["permissions"] as $proxy_id => $result) {
 					if (is_int($proxy_id)) {
-						$sidebar_html .= "<option value=\"".(($proxy_id == $ENTRADA_USER->getId()) ? "close" : $result["permission_id"])."\"".(($proxy_id == $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]) ? " selected=\"selected\"" : "").">".html_encode($result["fullname"]) . "</option>\n";
+						$sidebar_html .= "<option value=\"".(($proxy_id == $ENTRADA_USER->getID()) ? "close" : $result["permission_id"])."\"".(($proxy_id == $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]) ? " selected=\"selected\"" : "").">".html_encode($result["fullname"]) . "</option>\n";
 					}
 				}
 				$sidebar_html .= "</select>\n";

@@ -80,7 +80,7 @@ switch ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) {
 		$sort_by = "`assessments` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]);
 	break;
 }
-$cohort = groups_get_cohort($ENTRADA_USER->getId());
+$cohort = groups_get_cohort($ENTRADA_USER->getID());
 $query = "	SELECT a.*, COUNT(b.`assessment_id`) AS `assessments` 
 			FROM `courses` AS a
 			JOIN `assessments` AS b
@@ -128,7 +128,7 @@ if (true) {
 							ON f.`cohort` = g.`group_id`
 							JOIN `group_members` AS m
 							ON g.`group_id` = m.`group_id`
-							AND m.`proxy_id` = ".$db->qstr($ENTRADA_USER->getId())."
+							AND m.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
 							LEFT JOIN `assessment_grades` AS h 
 							ON m.`proxy_id` = h.`proxy_id`
 							AND h.`assessment_id` = e.`assessment_id`

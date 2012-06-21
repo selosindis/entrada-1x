@@ -57,7 +57,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
     	$PROXY_ID = $_GET["id"];
 	$STUDENT = false;
     } else {
-    	$PROXY_ID = $ENTRADA_USER->getId();
+    	$PROXY_ID = $ENTRADA_USER->getID();
 	$STUDENT = true;
     }
 

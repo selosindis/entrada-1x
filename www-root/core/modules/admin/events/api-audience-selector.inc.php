@@ -207,7 +207,7 @@ if (!defined("IN_EVENTS")) {
 							AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
 							AND b.`group` = 'student'
 							AND a.`grad_year` >= ".$db->qstr((fetch_first_year() - 4)).
-							(($ENTRADA_USER->getGroup() == "student") ? " AND a.`id` = ".$db->qstr($ENTRADA_USER->getId()) : "")."
+							(($ENTRADA_USER->getGroup() == "student") ? " AND a.`id` = ".$db->qstr($ENTRADA_USER->getID()) : "")."
 							GROUP BY a.`id`
 							ORDER BY a.`grad_year` DESC, a.`lastname` ASC, a.`firstname` ASC";
 				$student_results = $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);

@@ -60,7 +60,7 @@ if ($QUIZ_TYPE == "community_page" && $_SESSION["details"]["group"] != "student"
 									JOIN `community_pages` AS b
 									ON a.`community_id` = b.`community_id`
 									WHERE b.`cpage_id` = ".$db->qstr($cpage_id)."
-									AND a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getId())."
+									AND a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
 									AND a.`member_active` = '1'
 									AND a.`member_acl` = '1'";
 		$access = ($db->GetRow($community_access_query) ? true : false);

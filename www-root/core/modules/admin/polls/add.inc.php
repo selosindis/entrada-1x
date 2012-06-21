@@ -101,7 +101,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_POLLS"))) {
 
 			if(!$ERROR) {
 				$PROCESSED["updated_date"]	= time();
-				$PROCESSED["updated_by"]		= $ENTRADA_USER->getId();
+				$PROCESSED["updated_by"]		= $ENTRADA_USER->getID();
 
 				if($db->AutoExecute("poll_questions", $PROCESSED, "INSERT")) {
 					if($POLL_ID = $db->Insert_Id()) {

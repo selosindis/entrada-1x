@@ -55,7 +55,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 				$PROCESSED["form_description"] = $form_record["form_description"];
 				$PROCESSED["form_active"] = 1;
 				$PROCESSED["updated_date"] = time();
-				$PROCESSED["updated_by"] = $ENTRADA_USER->getId();
+				$PROCESSED["updated_by"] = $ENTRADA_USER->getID();
 
 				if ($db->AutoExecute("evaluation_forms", $PROCESSED, "INSERT") && ($new_eform_id = $db->Insert_Id())) {
 					$query = "	SELECT *

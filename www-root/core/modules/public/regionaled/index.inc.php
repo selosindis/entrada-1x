@@ -64,7 +64,7 @@ if (!defined("PARENT_INCLUDED")) {
 				LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS e
 				ON e.`user_id` = d.`id`
 				AND e.`app_id` = ".$db->qstr(AUTH_APP_ID)."
-				WHERE a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getId())."
+				WHERE a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
 				ORDER BY a.`confirmed` ASC, a.`inhabiting_start` ASC";
 	$results = $db->GetAll($query);
 	if ($results) {

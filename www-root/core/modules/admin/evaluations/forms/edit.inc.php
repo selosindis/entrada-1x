@@ -84,7 +84,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 
 					if (!$ERROR) {
 						$PROCESSED["updated_date"] = time();
-						$PROCESSED["updated_by"] = $ENTRADA_USER->getId();
+						$PROCESSED["updated_by"] = $ENTRADA_USER->getID();
 
 						if ($db->AutoExecute("evaluation_forms", $PROCESSED, "UPDATE", "`eform_id` = ".$db->qstr($FORM_ID))) {
 							$SUCCESS++;

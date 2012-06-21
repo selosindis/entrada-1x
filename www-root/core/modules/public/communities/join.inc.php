@@ -117,7 +117,7 @@ if($COMMUNITY_ID) {
 						$ERROR++;
 						$ERRORSTR[] = "Your account (".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]." &rarr; ".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"].") does not meet the group requirements setup by the community administrators.";
 						$display_admin_list = true;
-						application_log("notice", "User id ".$ENTRADA_USER->getId()." was not have the proper group requirements to join community id ".$COMMUNITY_ID);
+						application_log("notice", "User id ".$ENTRADA_USER->getID()." was not have the proper group requirements to join community id ".$COMMUNITY_ID);
 					}
 				break;
 				case 3 :	// Selected Community Registration
@@ -135,7 +135,7 @@ if($COMMUNITY_ID) {
 						$ERROR++;
 						$ERRORSTR[] = "Your account does not meet the community membership requirements setup by the community administrators.";
 						$display_admin_list = true;
-						application_log("notice", "User id ".$ENTRADA_USER->getId()." was not have the proper community membership requirements to join community id ".$COMMUNITY_ID);
+						application_log("notice", "User id ".$ENTRADA_USER->getID()." was not have the proper community membership requirements to join community id ".$COMMUNITY_ID);
 					}
 				break;
 				case 4 :	// Private Community

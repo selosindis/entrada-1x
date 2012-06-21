@@ -495,7 +495,7 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 								 * updated_date
 								 */
 								$PROCESSED["updated_date"]	= time();
-								$PROCESSED["updated_by"]	= $ENTRADA_USER->getId();
+								$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
 								
 								if ($db->AutoExecute("community_pages", $PROCESSED, "UPDATE", "cpage_id = ".$PAGE_ID)) {
 									if ($home_page) {
@@ -650,14 +650,14 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 													foreach ($PROCESSED_OBJECTIVES as $objective_id => $objective) {
 														$objective_found = $db->GetOne("SELECT `objective_id` FROM `course_objectives` WHERE `objective_id` = ".$db->qstr($objective_id)." AND `course_id` = ".$db->qstr($course_id));
 														if ($objective_found) {
-															$db->AutoExecute("course_objectives", array("objective_details" => $objective, "updated_date" => time(), "updated_by" => $ENTRADA_USER->getId()), "UPDATE", "`objective_id` = ".$db->qstr($objective_id)." AND `course_id` = ".$db->qstr($course_id));
+															$db->AutoExecute("course_objectives", array("objective_details" => $objective, "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID()), "UPDATE", "`objective_id` = ".$db->qstr($objective_id)." AND `course_id` = ".$db->qstr($course_id));
 														} else {
-															$db->AutoExecute("course_objectives", array("course_id" => $course_id, "objective_id" => $objective_id, "objective_details" => $objective, "importance" => 0, "updated_date" => time(), "updated_by" => $ENTRADA_USER->getId()), "INSERT");
+															$db->AutoExecute("course_objectives", array("course_id" => $course_id, "objective_id" => $objective_id, "objective_details" => $objective, "importance" => 0, "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID()), "INSERT");
 														}
 													}
 													foreach ($course_objectives["used_ids"] as $objective_id) {
 														if (!array_key_exists($objective_id, $PROCESSED_OBJECTIVES)) {
-															$db->AutoExecute("course_objectives", array("objective_details" => "", "updated_date" => time(), "updated_by" => $ENTRADA_USER->getId()), "UPDATE", "`objective_id` = ".$db->qstr($objective_id)." AND `course_id` = ".$db->qstr($course_id));
+															$db->AutoExecute("course_objectives", array("objective_details" => "", "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID()), "UPDATE", "`objective_id` = ".$db->qstr($objective_id)." AND `course_id` = ".$db->qstr($course_id));
 														}
 													}
 												}

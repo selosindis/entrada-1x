@@ -25,7 +25,7 @@ require_once("init.inc.php");
 if (isset($_GET["nuser_id"]) && ($nuser_id = clean_input($_GET["nuser_id"], array("int")))) {
 	require_once("Models/notifications/NotificationUser.class.php");
 	$notification_user = NotificationUser::getByID($nuser_id);
-	if ($notification_user->getProxyID() == $ENTRADA_USER->getId()) {
+	if ($notification_user->getProxyID() == $ENTRADA_USER->getID()) {
 		if (isset($_GET["action"]) && $_GET["action"] == "view") {
 			echo "<span style=\"cursor: pointer;\" onclick=\"promptNotifications(".($notification_user->getNotifyActive() ? "'1'" : "'0'").", ".$nuser_id.", '".$notification_user->getContentTypeName()."')\"><img src=\"".ENTRADA_URL."/images/btn-".($notification_user->getNotifyActive() ? "approve.gif\" alt=\"Active\" />" : "unapprove.gif\" alt=\"Disabled\" />")."</span>";
 		} elseif (isset($_GET["action"]) && $_GET["action"] == "edit") {
@@ -60,7 +60,7 @@ if (isset($_GET["nuser_id"]) && ($nuser_id = clean_input($_GET["nuser_id"], arra
 	if (isset($_GET["action"]) && $_GET["action"] == "view") {
 		if ((isset($_GET["type"]) && ($notify_type = clean_input($_GET["type"], array("string", "nows"))))
 			&& (isset($_GET["id"]) && ($record_id = clean_input($_GET["id"], array("int"))))) {
-			$active = $db->GetOne("SELECT `notify_active` FROM `community_notify_members` WHERE `proxy_id` = ".$db->qstr($ENTRADA_USER->getId())." AND `community_id` = ".$db->qstr($community_id)." AND `record_id` = ".$db->qstr($record_id)." AND `notify_type` = ".$db->qstr($notify_type));
+			$active = $db->GetOne("SELECT `notify_active` FROM `community_notify_members` WHERE `proxy_id` = ".$db->qstr($ENTRADA_USER->getID())." AND `community_id` = ".$db->qstr($community_id)." AND `record_id` = ".$db->qstr($record_id)." AND `notify_type` = ".$db->qstr($notify_type));
 			if ($active == null && ($notify_type == "announcements" || $notify_type == "events")) {
 				$active = true;
 			}
@@ -75,15 +75,15 @@ if (isset($_GET["nuser_id"]) && ($nuser_id = clean_input($_GET["nuser_id"], arra
 			} else {
 				$notify_active = 0;
 			}
-			$current_notify = $db->GetOne("SELECT `proxy_id` FROM `community_notify_members` WHERE `proxy_id` = ".$db->qstr($ENTRADA_USER->getId())." AND `community_id` = ".$db->qstr($community_id)." AND `record_id` = ".$db->qstr($record_id)." AND `notify_type` = ".$db->qstr($notify_type));
+			$current_notify = $db->GetOne("SELECT `proxy_id` FROM `community_notify_members` WHERE `proxy_id` = ".$db->qstr($ENTRADA_USER->getID())." AND `community_id` = ".$db->qstr($community_id)." AND `record_id` = ".$db->qstr($record_id)." AND `notify_type` = ".$db->qstr($notify_type));
 			if ($current_notify) {
-				if ($db->Execute("UPDATE `community_notify_members` SET `notify_active` = ".$db->qstr($notify_active)." WHERE `proxy_id` = ".$db->qstr($ENTRADA_USER->getId())." AND `community_id` = ".$db->qstr($community_id)." AND `record_id` = ".$db->qstr($record_id)." AND `notify_type` = ".$db->qstr($notify_type))) {
+				if ($db->Execute("UPDATE `community_notify_members` SET `notify_active` = ".$db->qstr($notify_active)." WHERE `proxy_id` = ".$db->qstr($ENTRADA_USER->getID())." AND `community_id` = ".$db->qstr($community_id)." AND `record_id` = ".$db->qstr($record_id)." AND `notify_type` = ".$db->qstr($notify_type))) {
 					echo ($notify_active == 1 ? "Activation" : "Deactivation")." of notifications for this resource successful.";
 				} else {
 					echo "There was an issue while trying to ".($notify_active ? "activate" : "deactivate")." notifications for this resource.";
 				}
 			} else {
-				if ($db->Execute("INSERT INTO `community_notify_members` (`notify_active`, `proxy_id`, `community_id`, `record_id`, `notify_type`) VALUES (".$db->qstr($notify_active).", ".$db->qstr($ENTRADA_USER->getId()).", ".$db->qstr($community_id).", ".$db->qstr($record_id).", ".$db->qstr($notify_type).")")) {
+				if ($db->Execute("INSERT INTO `community_notify_members` (`notify_active`, `proxy_id`, `community_id`, `record_id`, `notify_type`) VALUES (".$db->qstr($notify_active).", ".$db->qstr($ENTRADA_USER->getID()).", ".$db->qstr($community_id).", ".$db->qstr($record_id).", ".$db->qstr($notify_type).")")) {
 					echo ($notify_active == 1 ? "Activation" : "Deactivation")." of notifications for this resource successful.";
 				} else {
 					echo "There was an issue while trying to ".($notify_active ? "activate" : "deactivate")." notifications for this resource.";
@@ -104,8 +104,8 @@ if (isset($_GET["nuser_id"]) && ($nuser_id = clean_input($_GET["nuser_id"], arra
 		} else {
 			$content_type = "default";
 		}
-		$notification_user = NotificationUser::get($ENTRADA_USER->getId(), $content_type, $record_id, $record_proxy_id);
-		if (!$notification_user || $notification_user->getProxyID() == $ENTRADA_USER->getId()) {
+		$notification_user = NotificationUser::get($ENTRADA_USER->getID(), $content_type, $record_id, $record_proxy_id);
+		if (!$notification_user || $notification_user->getProxyID() == $ENTRADA_USER->getID()) {
 			echo "<span style=\"cursor: pointer;\" onclick=\"promptNotifications(".($notification_user && $notification_user->getNotifyActive() ? "'1'" : "'0'").")\"><img src=\"".ENTRADA_URL."/images/email-".($notification_user && $notification_user->getNotifyActive() ? "off.gif\" /> Unsubscribe to E-Mail Notifications" : "on.gif\" /> Subscribe to E-Mail Notifications")."</span>";
 		}
 	} elseif (isset($_GET["action"]) && $_GET["action"] == "edit") {
@@ -129,8 +129,8 @@ if (isset($_GET["nuser_id"]) && ($nuser_id = clean_input($_GET["nuser_id"], arra
 		} else {
 			$content_type = "default";
 		}
-		$notification_user = NotificationUser::get($ENTRADA_USER->getId(), $content_type, $record_id, $record_proxy_id);
-		if ($notification_user && $notification_user->getProxyID() == $ENTRADA_USER->getId()) {
+		$notification_user = NotificationUser::get($ENTRADA_USER->getID(), $content_type, $record_id, $record_proxy_id);
+		if ($notification_user && $notification_user->getProxyID() == $ENTRADA_USER->getID()) {
 			if ($notification_user->getNotifyActive() != $notify_active) {
 				if ($notification_user->setNotifyActive($notify_active)) {
 					echo ($notify_active == 1 ? "Activation" : "Deactivation")." of notifications for this ".$notification_user->getContentTypeName()." successful.";
@@ -147,7 +147,7 @@ if (isset($_GET["nuser_id"]) && ($nuser_id = clean_input($_GET["nuser_id"], arra
 				echo "Notifications for this ".$notification_user->getContentTypeName()." are already ".($notify_active ? "activated" : "deactivated")." and digest mode is already ".($digest_mode ? "activated" : "deactivated").", no changes were made.";
 			}
 		} else {
-			$notification_user = NotificationUser::add($ENTRADA_USER->getId(), $content_type, $record_id, $record_proxy_id, $notify_active, $digest_mode);
+			$notification_user = NotificationUser::add($ENTRADA_USER->getID(), $content_type, $record_id, $record_proxy_id, $notify_active, $digest_mode);
 			if ($notification_user) {
 				echo ($notify_active == 1 ? "Activation" : "Deactivation")." of notifications for this ".$notification_user->getContentTypeName()." successful.";
 			} else {

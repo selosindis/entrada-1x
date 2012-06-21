@@ -93,7 +93,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 					$where = "`topic_id` = ".$db->qstr($PROCESSED["topic_id"]);
 				}
 				
-				$params = array("topic_name" => $PROCESSED["topic_name"],"topic_description"=>$PROCESSED["topic_description"], "updated_date"=>time(),"updated_by"=>$ENTRADA_USER->getId());
+				$params = array("topic_name" => $PROCESSED["topic_name"],"topic_description"=>$PROCESSED["topic_description"], "updated_date"=>time(),"updated_by"=>$ENTRADA_USER->getID());
 				
 				if ($db->AutoExecute("`events_lu_topics`", $params, $action, $where)) {
 					

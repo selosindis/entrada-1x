@@ -278,7 +278,7 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 							 * visible
 							 * updated
 							 */
-							$PROCESSED["updated_by"]	= $ENTRADA_USER->getId();
+							$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
 							$PROCESSED["updated_date"]	= time();
 							$PROCESSED["community_id"]	= $COMMUNITY_ID;
 							

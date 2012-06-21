@@ -382,7 +382,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 											$PROCESSED["content_type"]	= "event";
 											$PROCESSED["content_id"]	= $RECORD_ID;
 											$PROCESSED["updated_date"]	= time();
-											$PROCESSED["updated_by"]	= $ENTRADA_USER->getId();
+											$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
 	
 											if ($db->AutoExecute("attached_quizzes", $PROCESSED, "UPDATE", "aquiz_id = ".$db->qstr($AQUIZ_ID))) {
 												$modal_onload[] = "parentReload()";
@@ -918,7 +918,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 									$PROCESSED["content_id"]	= $RECORD_ID;
 									$PROCESSED["accesses"]		= 0;
 									$PROCESSED["updated_date"]	= time();
-									$PROCESSED["updated_by"]	= $ENTRADA_USER->getId();
+									$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
 	
 									if ($db->AutoExecute("attached_quizzes", $PROCESSED, "INSERT")) {
 										$modal_onload[] = "parentReload()";
@@ -1669,7 +1669,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 											$PROCESSED["content_type"]	= "community_page";
 											$PROCESSED["content_id"]	= $RECORD_ID;
 											$PROCESSED["updated_date"]	= time();
-											$PROCESSED["updated_by"]	= $ENTRADA_USER->getId();
+											$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
 	
 											if ($db->AutoExecute("attached_quizzes", $PROCESSED, "UPDATE", "aquiz_id = ".$db->qstr($AQUIZ_ID))) {
 												$modal_onload[] = "parentReload()";
@@ -2173,7 +2173,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 									$PROCESSED["content_id"]	= $RECORD_ID;
 									$PROCESSED["accesses"]		= 0;
 									$PROCESSED["updated_date"]	= time();
-									$PROCESSED["updated_by"]	= $ENTRADA_USER->getId();
+									$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
 	
 									if ($db->AutoExecute("attached_quizzes", $PROCESSED, "INSERT")) {
 										$modal_onload[] = "parentReload()";

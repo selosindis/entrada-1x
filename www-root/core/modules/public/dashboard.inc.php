@@ -126,39 +126,39 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 	switch ($_SESSION["details"]["group"]) {
 		case "alumni" :
 			$rss_feed_name = "alumni";
-			$notice_where_clause = "(a.`target` = 'all' OR a.`target` = 'alumni' OR a.`target` = ".$db->qstr("proxy_id:".((int) $ENTRADA_USER->getId())).")";
+			$notice_where_clause = "(a.`target` = 'all' OR a.`target` = 'alumni' OR a.`target` = ".$db->qstr("proxy_id:".((int) $ENTRADA_USER->getID())).")";
 			$poll_where_clause = "(a.`poll_target` = 'all' OR a.`poll_target` = 'alumni')";;
 			$corrected_role = "students";
 		break;
 		case "faculty" :
 			$rss_feed_name = "faculty";
-			$notice_where_clause = "(a.`target` = 'all' OR a.`target` = 'faculty' OR a.`target` = ".$db->qstr("proxy_id:".((int) $ENTRADA_USER->getId())).")";
+			$notice_where_clause = "(a.`target` = 'all' OR a.`target` = 'faculty' OR a.`target` = ".$db->qstr("proxy_id:".((int) $ENTRADA_USER->getID())).")";
 			$poll_where_clause = "(a.`poll_target` = 'all' OR a.`poll_target` = 'faculty')";;
 			$corrected_role = "faculty";
 		break;
 		case "medtech" :
 			$rss_feed_name = "medtech";
-			$notice_where_clause = "(a.`target` NOT LIKE 'proxy_id:%' OR a.`target` = ".$db->qstr("proxy_id:".((int) $ENTRADA_USER->getId())).")";
+			$notice_where_clause = "(a.`target` NOT LIKE 'proxy_id:%' OR a.`target` = ".$db->qstr("proxy_id:".((int) $ENTRADA_USER->getID())).")";
 			$poll_where_clause = "(a.`poll_target` = 'all' OR a.`poll_target` = 'staff')";;
 			$corrected_role = "medtech";
 		break;
 		case "resident" :
 			$rss_feed_name = "resident";
-			$notice_where_clause = "(a.`target` = 'all' OR a.`target` = 'resident' OR a.`target` = ".$db->qstr("proxy_id:".((int) $ENTRADA_USER->getId())).")";
+			$notice_where_clause = "(a.`target` = 'all' OR a.`target` = 'resident' OR a.`target` = ".$db->qstr("proxy_id:".((int) $ENTRADA_USER->getID())).")";
 			$poll_where_clause = "(a.`poll_target` = 'all' OR a.`poll_target` = 'resident')";;
 			$corrected_role = "resident";
 		break;
 		case "staff" :
 			$rss_feed_name = "staff";
-			$notice_where_clause = "(a.`target` = 'all' OR a.`target` = 'staff' OR a.`target` = ".$db->qstr("proxy_id:".((int) $ENTRADA_USER->getId())).")";
+			$notice_where_clause = "(a.`target` = 'all' OR a.`target` = 'staff' OR a.`target` = ".$db->qstr("proxy_id:".((int) $ENTRADA_USER->getID())).")";
 			$poll_where_clause = "(a.`poll_target` = 'all' OR a.`poll_target` = 'staff')";;
 			$corrected_role = "staff";
 		break;
 		case "student" :
 		default :
-			$cohort = groups_get_cohort($ENTRADA_USER->getId());
+			$cohort = groups_get_cohort($ENTRADA_USER->getID());
 			$rss_feed_name = clean_input((isset($_SESSION["details"]["grad_year"]) && $_SESSION["details"]["grad_year"] ? $_SESSION["details"]["grad_year"] : "default"), "alphanumeric");
-			$notice_where_clause = "(a.`target`='cohort:".clean_input($cohort["group_id"], "alphanumeric")."' OR a.`target` = 'all' OR a.`target` = 'students' OR a.`target` = ".$db->qstr("proxy_id:".((int) $ENTRADA_USER->getId())).")";
+			$notice_where_clause = "(a.`target`='cohort:".clean_input($cohort["group_id"], "alphanumeric")."' OR a.`target` = 'all' OR a.`target` = 'students' OR a.`target` = ".$db->qstr("proxy_id:".((int) $ENTRADA_USER->getID())).")";
 			$poll_where_clause = "(a.`poll_target_type` = 'cohort' AND a.`poll_target`='".clean_input($cohort["group_id"], "alphanumeric")."' OR a.`poll_target` = 'all' OR a.`poll_target` = 'students')";
 			$corrected_role = "students";
 		break;
@@ -170,7 +170,7 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 					FROM `poll_questions` AS a
 					LEFT JOIN `poll_results` AS b
 					ON b.`poll_id` = a.`poll_id`
-					AND b.`proxy_id` = ".$db->qstr($ENTRADA_USER->getId())."
+					AND b.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
 					WHERE b.`result_id` IS NULL
 					AND (`poll_from` = '0' OR `poll_from` <= '".time()."')
 					AND (`poll_until` = '0' OR `poll_until` >= '".time()."')
@@ -209,7 +209,7 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 					FROM `notices` AS a
 					LEFT JOIN `statistics` AS b
 					ON b.`module` = 'notices'
-					AND b.`proxy_id` = ".$db->qstr($ENTRADA_USER->getId())."
+					AND b.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
 					AND b.`action` = 'read'
 					AND b.`action_field` = 'notice_id'
 					AND b.`action_value` = a.`notice_id`
@@ -223,7 +223,7 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 							c.`audience_type` = 'students' 
 							OR c.`audience_type` = 'faculty' 
 							OR c.`audience_type` = 'staff') 
-							AND c.`audience_value` = ".$db->qstr($ENTRADA_USER->getId())."
+							AND c.`audience_value` = ".$db->qstr($ENTRADA_USER->getID())."
 						) 
 						OR ((
 							c.`audience_type` = 'cohorts' 
@@ -231,7 +231,7 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 							AND c.`audience_value` IN (
 								SELECT `group_id` 
 								FROM `group_members` 
-								WHERE `proxy_id` = ".$db->qstr($ENTRADA_USER->getId()).")
+								WHERE `proxy_id` = ".$db->qstr($ENTRADA_USER->getID()).")
 						)
 					) 
 					AND (a.`organisation_id` IS NULL 

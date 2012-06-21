@@ -81,7 +81,7 @@ if ($RECORD_ID) {
 									LEFT JOIN `evaluation_forms` AS c
 									ON b.`eform_id` = c.`eform_id`
 									WHERE a.`evaluation_id` = ".$db->qstr($RECORD_ID)."
-									AND a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getId())."
+									AND a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
 									AND a.`progress_value` = 'complete'
 									ORDER BY a.`updated_date` ASC";
 			$completed_record	= $db->GetAll($query);
@@ -104,14 +104,14 @@ if ($RECORD_ID) {
 										LEFT JOIN `evaluation_forms` AS c
 										ON b.`eform_id` = c.`eform_id`
 										WHERE a.`evaluation_id` = ".$db->qstr($RECORD_ID)."
-										AND a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getId())."
+										AND a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
 										AND a.`progress_value` = 'inprogress'
 										ORDER BY a.`updated_date` ASC";
 				$progress_record	= $db->GetRow($query);
 				if ($progress_record) {
 					$evaluation_progress_array	= array (
 												"updated_date" => time(),
-												"updated_by" => $ENTRADA_USER->getId()
+												"updated_by" => $ENTRADA_USER->getID()
 											);
 
 					if ($db->AutoExecute("evaluation_progress", $evaluation_progress_array, "UPDATE", "`eprogress_id` = ".$db->qstr($progress_record["eprogress_id"]))) {

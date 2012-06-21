@@ -115,7 +115,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!(bool) $_SESSION["isAuthorized"])) {
 						$PROCESSED["release_until"]	= 0;
 						$PROCESSED["accesses"]		= 0;
 						$PROCESSED["updated_date"]	= time();
-						$PROCESSED["updated_by"]	= $ENTRADA_USER->getId();
+						$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
 
 						/**
 						 * Step 3 Error Checking

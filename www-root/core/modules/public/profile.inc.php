@@ -276,12 +276,12 @@ function profile_update_personal_info() {
 		}
 
 		if (!$ERROR) {
-			$PROCESSED_PHOTO["proxy_id"]			= $ENTRADA_USER->getId();
+			$PROCESSED_PHOTO["proxy_id"]			= $ENTRADA_USER->getID();
 			$PROCESSED_PHOTO["photo_active"]		= 1;
 			$PROCESSED_PHOTO["photo_type"]			= 1;
 			$PROCESSED_PHOTO["updated_date"]		= time();
 
-			if ($photo_id = $db->GetOne("SELECT `photo_id` FROM `".AUTH_DATABASE."`.`user_photos` WHERE `proxy_id` = ".$db->qstr($ENTRADA_USER->getId())." AND `photo_type` = 1")) {
+			if ($photo_id = $db->GetOne("SELECT `photo_id` FROM `".AUTH_DATABASE."`.`user_photos` WHERE `proxy_id` = ".$db->qstr($ENTRADA_USER->getID())." AND `photo_type` = 1")) {
 				if ($db->AutoExecute(AUTH_DATABASE.".user_photos", $PROCESSED_PHOTO, "UPDATE", "photo_id = ".$photo_id)) {
 					if ($photo_id) {
 						if (process_user_photo($_FILES["photo_file"]["tmp_name"], $photo_id)) {
@@ -314,14 +314,14 @@ function profile_update_personal_info() {
 		$NOTICESTR[] = "You cannot deactivate a newly uploaded photo, please try again without uploading a new photo.";
 	}
 
-	if (isset($PROCESSED_PHOTO_STATUS) && !$db->AutoExecute(AUTH_DATABASE.".user_photos", $PROCESSED_PHOTO_STATUS, "UPDATE", "proxy_id=".$db->qstr($ENTRADA_USER->getId())." AND photo_type = 1")) {
+	if (isset($PROCESSED_PHOTO_STATUS) && !$db->AutoExecute(AUTH_DATABASE.".user_photos", $PROCESSED_PHOTO_STATUS, "UPDATE", "proxy_id=".$db->qstr($ENTRADA_USER->getID())." AND photo_type = 1")) {
 		$ERROR++;
 		$ERRORSTR[] = "There was an issue trying to deactivate your current photo.";
 	}
 
 	//if (isset($_POST["tab"]) && $_POST["tab"] != "profile-photo" && $_POST["tab"] != "notifications") {
 		if (!$ERROR) {			
-			if ($db->AutoExecute(AUTH_DATABASE.".user_data", $PROCESSED, "UPDATE", "`id` = ".$db->qstr($ENTRADA_USER->getId()))) {
+			if ($db->AutoExecute(AUTH_DATABASE.".user_data", $PROCESSED, "UPDATE", "`id` = ".$db->qstr($ENTRADA_USER->getID()))) {
 				$SUCCESS++;
 				$SUCCESSSTR[] = "Your account profile has been successfully updated.";
 
@@ -349,7 +349,7 @@ function profile_update_privacy() {
 		if ($privacy_level > MAX_PRIVACY_LEVEL) {
 			$privacy_level = MAX_PRIVACY_LEVEL;
 		}
-		if ($db->AutoExecute(AUTH_DATABASE.".user_data", array("privacy_level" => $privacy_level), "UPDATE", "`id` = ".$db->qstr($ENTRADA_USER->getId()))) {
+		if ($db->AutoExecute(AUTH_DATABASE.".user_data", array("privacy_level" => $privacy_level), "UPDATE", "`id` = ".$db->qstr($ENTRADA_USER->getID()))) {
 			if ((isset($_POST["redirect"])) && (trim($_POST["redirect"]) != "")) {
 				header("Location: ".((isset($_SERVER["HTTPS"])) ? "https" : "http")."://".$_SERVER["HTTP_HOST"].clean_input(rawurldecode($_POST["redirect"]), array("nows", "url")));
 				exit;
@@ -384,7 +384,7 @@ function profile_update_google_privacy() {
 					$SUCCESSSTR[] = "<strong>Your new ".$GOOGLE_APPS["domain"]."</strong> account has been created!</strong><br /><br />An e-mail will be sent to ".$_SESSION["details"]["email"]." shortly, containing further instructions regarding account activation.";
 				}
 			} else {
-				$db->Execute("UPDATE `".AUTH_DATABASE."`.`user_data` SET `google_id` = 'opt-out' WHERE `id` = ".$db->qstr($ENTRADA_USER->getId()));
+				$db->Execute("UPDATE `".AUTH_DATABASE."`.`user_data` SET `google_id` = 'opt-out' WHERE `id` = ".$db->qstr($ENTRADA_USER->getID()));
 			}
 		}
 	}
@@ -398,7 +398,7 @@ function profile_update_google_privacy() {
 		if ($privacy_level > MAX_PRIVACY_LEVEL) {
 			$privacy_level = MAX_PRIVACY_LEVEL;
 		}
-		if (!$db->AutoExecute(AUTH_DATABASE.".user_data", array("privacy_level" => $privacy_level), "UPDATE", "`id` = ".$db->qstr($ENTRADA_USER->getId()))){
+		if (!$db->AutoExecute(AUTH_DATABASE.".user_data", array("privacy_level" => $privacy_level), "UPDATE", "`id` = ".$db->qstr($ENTRADA_USER->getID()))){
 			$ERROR++;
 			$ERRORSTR[] = "We were unfortunately unable to update your privacy settings at this time. The system administrator has been informed of the error, please try again later.";
 
@@ -439,7 +439,7 @@ function profile_update_google() {
 					}
 				}
 			} else {
-				$db->Execute("UPDATE `".AUTH_DATABASE."`.`user_data` SET `google_id` = 'opt-out' WHERE `id` = ".$db->qstr($ENTRADA_USER->getId()));
+				$db->Execute("UPDATE `".AUTH_DATABASE."`.`user_data` SET `google_id` = 'opt-out' WHERE `id` = ".$db->qstr($ENTRADA_USER->getID()));
 			}
 		}
 	}
@@ -479,7 +479,7 @@ function profile_add_assistant() {
 			}
 
 			if ((isset($_POST["assistant_id"])) && ($proxy_id = (int) trim($_POST["assistant_id"]))) {
-				if ($proxy_id != $ENTRADA_USER->getId()) {
+				if ($proxy_id != $ENTRADA_USER->getID()) {
 					$query	= "
 						SELECT a.`id` AS `proxy_id`, CONCAT_WS(' ', a.`firstname`, a.`lastname`) AS `fullname`
 						FROM `".AUTH_DATABASE."`.`user_data` AS a
@@ -489,7 +489,7 @@ function profile_add_assistant() {
 
 					$result	= $db->GetRow($query);
 					if ($result) {
-						$PROCESSED["assigned_by"]	= $ENTRADA_USER->getId();
+						$PROCESSED["assigned_by"]	= $ENTRADA_USER->getID();
 						$PROCESSED["assigned_to"]	= $result["proxy_id"];
 						$fullname					= $result["fullname"];
 
@@ -549,17 +549,17 @@ function profile_remove_assistant () {
 			foreach ($_POST["remove"] as $assigned_to => $permission_id) {
 				$permission_id = (int) trim($permission_id);
 				if ($permission_id) {
-					if ($db->Execute("DELETE FROM `permissions` WHERE `permission_id`=".$db->qstr($permission_id)." AND `assigned_by`=".$db->qstr($ENTRADA_USER->getId()))) {
+					if ($db->Execute("DELETE FROM `permissions` WHERE `permission_id`=".$db->qstr($permission_id)." AND `assigned_by`=".$db->qstr($ENTRADA_USER->getID()))) {
 
 						$SUCCESS++;
 						$SUCCESSSTR[] = "You have successfully removed ".get_account_data("fullname", (int) $assigned_to)." from to accessing your permission levels.";
 
-						application_log("success", "Removed assigned_to [".$assigned_to."] permissions from proxy_id [".$ENTRADA_USER->getId()."] account.");
+						application_log("success", "Removed assigned_to [".$assigned_to."] permissions from proxy_id [".$ENTRADA_USER->getID()."] account.");
 					} else {
 						$ERROR++;
 						$ERRORSTR[] = "Unable to remove ".get_account_data("fullname", (int) $assigned_to)." from to accessing your permission levels. The system administrator has been informed of this error; however, if this is urgent, please contact us be telephone at: 613-533-6000 x74918.";
 
-						application_log("error", "Failed to remove assigned_to [".$assigned_to."] permissions from proxy_id [".$ENTRADA_USER->getId()."] account. Database said: ".$db->ErrorMsg());
+						application_log("error", "Failed to remove assigned_to [".$assigned_to."] permissions from proxy_id [".$ENTRADA_USER->getID()."] account. Database said: ".$db->ErrorMsg());
 					}
 				}
 			}
@@ -599,15 +599,15 @@ function profile_update_notifications() {
 			$notify_members = array();
 		}
 		
-		$user_notifications = $db->GetOne("SELECT `notifications` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($ENTRADA_USER->getId()));
+		$user_notifications = $db->GetOne("SELECT `notifications` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($ENTRADA_USER->getID()));
 		if (((int)$user_notifications) != 1) {
-			if (!$db->Execute("UPDATE `".AUTH_DATABASE."`.`user_data` SET `notifications` = '1' WHERE `id` = ".$db->qstr($ENTRADA_USER->getId()))) {
+			if (!$db->Execute("UPDATE `".AUTH_DATABASE."`.`user_data` SET `notifications` = '1' WHERE `id` = ".$db->qstr($ENTRADA_USER->getID()))) {
 				$ERROR++;
-				application_log("error", "Notification settings for the Proxy ID [".$ENTRADA_USER->getId()."] could not be activated. Database said: ".$db->ErrorMsg());
+				application_log("error", "Notification settings for the Proxy ID [".$ENTRADA_USER->getID()."] could not be activated. Database said: ".$db->ErrorMsg());
 			}
 		}
 		
-		$query = "SELECT `community_id` FROM `community_members` WHERE `proxy_id` = ".$db->qstr($ENTRADA_USER->getId())." AND `member_active` = '1'";
+		$query = "SELECT `community_id` FROM `community_members` WHERE `proxy_id` = ".$db->qstr($ENTRADA_USER->getID())." AND `member_active` = '1'";
 		$communities = $db->GetAll($query);
 		if ($communities) {
 			foreach ($communities as $community) {
@@ -618,17 +618,17 @@ function profile_update_notifications() {
 			}
 		}
 		if ($PROCESSED_NOTIFICATIONS && is_array($PROCESSED_NOTIFICATIONS)) {
-			if ($db->Execute("DELETE FROM `community_notify_members` WHERE `proxy_id` = ".$db->qstr($ENTRADA_USER->getId())." AND `notify_type` IN ('announcement', 'event', 'poll', 'members')")) {
+			if ($db->Execute("DELETE FROM `community_notify_members` WHERE `proxy_id` = ".$db->qstr($ENTRADA_USER->getID())." AND `notify_type` IN ('announcement', 'event', 'poll', 'members')")) {
 				foreach ($PROCESSED_NOTIFICATIONS as $community_id => $notify) {
 					if (!$ERROR) {
 						if (!$db->Execute("	INSERT INTO `community_notify_members` 
 											(`proxy_id`, `community_id`, `record_id`, `notify_type`, `notify_active`) VALUES 
-											(".$db->qstr($ENTRADA_USER->getId()).", ".$db->qstr($community_id).", ".$db->qstr($community_id).", 'announcement', ".$notify["announcements"]."),
-											(".$db->qstr($ENTRADA_USER->getId()).", ".$db->qstr($community_id).", ".$db->qstr($community_id).", 'event', ".$notify["events"]."),
-											(".$db->qstr($ENTRADA_USER->getId()).", ".$db->qstr($community_id).", ".$db->qstr($community_id).", 'members', ".$notify["members"]."),
-											(".$db->qstr($ENTRADA_USER->getId()).", ".$db->qstr($community_id).", ".$db->qstr($community_id).", 'poll', ".$notify["polls"].")")) {
+											(".$db->qstr($ENTRADA_USER->getID()).", ".$db->qstr($community_id).", ".$db->qstr($community_id).", 'announcement', ".$notify["announcements"]."),
+											(".$db->qstr($ENTRADA_USER->getID()).", ".$db->qstr($community_id).", ".$db->qstr($community_id).", 'event', ".$notify["events"]."),
+											(".$db->qstr($ENTRADA_USER->getID()).", ".$db->qstr($community_id).", ".$db->qstr($community_id).", 'members', ".$notify["members"]."),
+											(".$db->qstr($ENTRADA_USER->getID()).", ".$db->qstr($community_id).", ".$db->qstr($community_id).", 'poll', ".$notify["polls"].")")) {
 							$ERROR++;
-							application_log("error", "Community notifications settings for proxy ID [".$ENTRADA_USER->getId()."] could not be updated. Database said: ".$db->ErrorMsg());
+							application_log("error", "Community notifications settings for proxy ID [".$ENTRADA_USER->getID()."] could not be updated. Database said: ".$db->ErrorMsg());
 						}
 					}
 				}
@@ -638,18 +638,18 @@ function profile_update_notifications() {
 				}
 			} else {
 				$ERROR++;
-				application_log("error", "Community notifications settings for proxy ID [".$ENTRADA_USER->getId()."] could not be deleted. Database said: ".$db->ErrorMsg());
+				application_log("error", "Community notifications settings for proxy ID [".$ENTRADA_USER->getID()."] could not be deleted. Database said: ".$db->ErrorMsg());
 			}
 		}
 		if ($ERROR) {
 			$ERRORSTR[] = "There was an issue while attempting to set your notification settings. The system administrator has been informed of the problem, please try again later.";	
 		}
 	} else {
-		$user_notifications = $db->GetOne("SELECT `notifications` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($ENTRADA_USER->getId()));
+		$user_notifications = $db->GetOne("SELECT `notifications` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($ENTRADA_USER->getID()));
 		if (((int)$user_notifications) != 0) {
-			if (!$db->Execute("UPDATE `".AUTH_DATABASE."`.`user_data` SET `notifications` = '0' WHERE `id` = ".$db->qstr($ENTRADA_USER->getId()))) {
+			if (!$db->Execute("UPDATE `".AUTH_DATABASE."`.`user_data` SET `notifications` = '0' WHERE `id` = ".$db->qstr($ENTRADA_USER->getID()))) {
 				$ERROR++;
-				application_log("error", "Notification settings for the Proxy ID [".$ENTRADA_USER->getId()."] could not be deactivated. Database said: ".$db->ErrorMsg());
+				application_log("error", "Notification settings for the Proxy ID [".$ENTRADA_USER->getID()."] could not be deactivated. Database said: ".$db->ErrorMsg());
 			}
 		}
 	}

@@ -299,7 +299,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 
 			if(!$ERROR) {
 				$PROCESSED["updated_date"]	= time();
-				$PROCESSED["updated_by"]	= $ENTRADA_USER->getId();
+				$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
 				$PROCESSED["proxy_id"]		= $_SESSION[APPLICATION_IDENTIFIER]['tmp']['proxy_id'];
 				
 				if($db->AutoExecute(DATABASE_NAME.".ar_graduate_teaching", $PROCESSED, "INSERT")) {

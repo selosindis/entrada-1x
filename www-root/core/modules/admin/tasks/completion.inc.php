@@ -96,7 +96,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 				$recipients_to_complete = $_POST['complete_verify'];
 				if ($recipients_to_complete && is_array($recipients_to_complete)){
 					foreach ($recipients_to_complete as $recipient_id) {
-						$updates[$recipient_id]["verifier_id"] = $ENTRADA_USER->getId();
+						$updates[$recipient_id]["verifier_id"] = $ENTRADA_USER->getID();
 						$updates[$recipient_id]["verified_date"] = $cur_time;
 						$updates[$recipient_id]["completed_date"] = ($updates[$recipient_id]["completed_date"]) ? ($updates[$recipient_id]["completed_date"]) : $cur_time;
 						$updates[$recipient_id]["modified"] = 1;

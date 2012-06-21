@@ -83,7 +83,7 @@ if ($RECORD_ID) {
 				$PROCESSED["community_id"]			= $COMMUNITY_ID;
 				$PROCESSED["proxy_id"]				= $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"];
 				$PROCESSED["updated_date"]			= time();
-				$PROCESSED["updated_by"]			= $ENTRADA_USER->getId();
+				$PROCESSED["updated_by"]			= $ENTRADA_USER->getID();
 				$PROCESSED["cpage_id"]				= $PAGE_ID;
 				$PROCESSED["cpquestion_id"]			= $RECORD_ID;
 				
@@ -102,7 +102,7 @@ if ($RECORD_ID) {
 						$RESPONSES["response"] 				= $respValue;
 						$RESPONSES["response_index"] 		= $respKey + 1;
 						$RESPONSES["updated_date"]			= time();
-						$RESPONSES["updated_by"]			= $ENTRADA_USER->getId();
+						$RESPONSES["updated_by"]			= $ENTRADA_USER->getID();
 						if ($db->AutoExecute("community_polls_responses", $RESPONSES, "INSERT")) {
 							$SUCCESS = TRUE;
 						}

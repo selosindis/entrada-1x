@@ -93,7 +93,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 	switch($STEP) {
 		case 2 :
 			$copied = array();
-			$USER_ID = $ENTRADA_USER->getId();
+			$USER_ID = $ENTRADA_USER->getID();
 
 			foreach ($EVENT_IDS as $event) {
 				$event_id = (int) $event[0];

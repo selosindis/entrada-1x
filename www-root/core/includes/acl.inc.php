@@ -29,12 +29,12 @@ require_once("Entrada/authentication/entrada_acl.inc.php");
 
 if (isset($_SESSION["isAuthorized"]) && $_SESSION["isAuthorized"] && isset($_SESSION["details"])) {
 	if (isset($ENTRADA_CACHE)) {
-		if (!($ENTRADA_CACHE->test("acl_".$ENTRADA_USER->getId()))) {
+		if (!($ENTRADA_CACHE->test("acl_".$ENTRADA_USER->getID()))) {
 			//Cache Miss, construct the ACL
 			$ENTRADA_ACL = new Entrada_Acl($_SESSION["details"]);
-			$ENTRADA_CACHE->save($ENTRADA_ACL, "acl_".$ENTRADA_USER->getId());
+			$ENTRADA_CACHE->save($ENTRADA_ACL, "acl_".$ENTRADA_USER->getID());
 		} else {
-			$ENTRADA_ACL = $ENTRADA_CACHE->load("acl_".$ENTRADA_USER->getId());
+			$ENTRADA_ACL = $ENTRADA_CACHE->load("acl_".$ENTRADA_USER->getID());
 		}
 	} else {
 		$ENTRADA_ACL = new Entrada_Acl($_SESSION["details"]);

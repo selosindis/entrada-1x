@@ -66,7 +66,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 	}
 
 	$PROCESSED = $db->GetRow("SELECT * FROM `".CLERKSHIP_DATABASE."`.`logbook_entry_checklist`
-				    WHERE `proxy_id` = ".$db->qstr($ENTRADA_USER->getId())." AND `rotation_id` = ".$db->qstr($rotation_id));
+				    WHERE `proxy_id` = ".$db->qstr($ENTRADA_USER->getID())." AND `rotation_id` = ".$db->qstr($rotation_id));
 
 	if (!$PROCESSED) {
 	    $PROCESSED["rotation_id"] = $rotation_id;
@@ -83,16 +83,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 	}
 	$PROCESSED["checklist"] = $checklist;
 		
-	$PROCESSED["proxy_id"] = $ENTRADA_USER->getId();
+	$PROCESSED["proxy_id"] = $ENTRADA_USER->getID();
 	$PROCESSED["updated_date"] = time();
 
 	$query	= "SELECT * FROM `".CLERKSHIP_DATABASE."`.`logbook_entry_checklist`
-				    WHERE `proxy_id` = ".$db->qstr($ENTRADA_USER->getId())." AND `rotation_id` = ".$db->qstr($rotation_id);
+				    WHERE `proxy_id` = ".$db->qstr($ENTRADA_USER->getID())." AND `rotation_id` = ".$db->qstr($rotation_id);
 	$result	= $db->GetRow($query);
 
 	if($result) {
 	    if ($db->AutoExecute("`".CLERKSHIP_DATABASE."`.`logbook_entry_checklist`", $PROCESSED, "UPDATE",
-		    "`proxy_id` = ".$db->qstr($ENTRADA_USER->getId())." AND `rotation_id` = ".$db->qstr($rotation_id) )) {
+		    "`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())." AND `rotation_id` = ".$db->qstr($rotation_id) )) {
 		$url = ENTRADA_URL."/".$MODULE;
 		$SUCCESS++;
 		$SUCCESSSTR[]  	= "You have successfully updated the <strong>Evaluation checklist</strong> for logbook.<br /><br />Please <a href=\"".$url."\">click here</a> to proceed to the index page or you will be automatically forwarded in 3 seconds.";

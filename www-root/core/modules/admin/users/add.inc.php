@@ -449,7 +449,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 							} else {
 								$ERROR++;
 								$ERRORSTR[] = "You do not have permission to add a user within the selected organisation. This error has been logged and will be investigated.";
-								application_log("Proxy id [" . $ENTRADA_USER->getId() . "] tried to create a user within an organisation [" . $organisation_id . "] they didn't have permissions on. ");
+								application_log("Proxy id [" . $ENTRADA_USER->getID() . "] tried to create a user within an organisation [" . $organisation_id . "] they didn't have permissions on. ");
 							}
 						} else {
 							$ERROR++;
@@ -516,7 +516,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 									'member_active' => 1,
 									'entrada_only' => 1,
 									'updated_date' => time(),
-									'updated_by' => $ENTRADA_USER->getId()
+									'updated_by' => $ENTRADA_USER->getID()
 								);
 
 								$db->AutoExecute("group_members", $gmember, "INSERT");
@@ -593,7 +593,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 												'member_active' => 1,
 												'entrada_only' => 1,
 												'updated_date' => time(),
-												'updated_by' => $ENTRADA_USER->getId()
+												'updated_by' => $ENTRADA_USER->getID()
 											);
 
 											$db->AutoExecute("group_members", $gmember, "INSERT");

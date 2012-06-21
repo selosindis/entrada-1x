@@ -160,9 +160,9 @@ class Entrada_ACL extends ACL_Factory {
 			$acl->addRole(new Zend_Acl_Role($entity_type));
 		}
 
-		foreach($permissions as $proxy_id => $permission_mask) {
+		foreach($permissions as $access_id => $permission_mask) {
 		//Initialize variables for use throughout creation
-			$cur_proxy_id			= $proxy_id;
+			$cur_access_id			= $access_id;
 			$cur_role				= $permission_mask["role"];
 			$cur_group				= $permission_mask["group"];
 			$cur_organisation		= (array_key_exists("organisation_title", $permission_mask) ? $permission_mask["organisation_title"] : NULL);
@@ -180,7 +180,7 @@ class Entrada_ACL extends ACL_Factory {
 				$acl->addRole(new Zend_Acl_Role("role".$cur_role), array("role", "group".$cur_group));
 			}
 
-			$user_role	= new Zend_Acl_Role("user".$cur_proxy_id);
+			$user_role	= new Zend_Acl_Role("user".$cur_access_id);
 			$acl->addRole($user_role, array("role".$cur_role, "user"));
 		}
 		//Instantiate ACL_Factory to facilitate application of rules
@@ -237,7 +237,8 @@ class Entrada_ACL extends ACL_Factory {
 	 * @return <type>
 	 */
 	function isLoggedInAllowed($resource, $action, $assert = true) {
-		$user = new EntradaUser("user".$ENTRADA_USER->getID());
+		global $ENTRADA_USER;
+		$user = new EntradaUser("user".$ENTRADA_USER->getAccessId());
 		$user->details = $_SESSION["details"];
 		return $this->isAllowed($user, $resource, $action, $assert);
 	}
@@ -305,12 +306,16 @@ class Entrada_ACL extends ACL_Factory {
 		$table = $this->default_ptable;
 		$query[] = "SELECT * FROM $table WHERE \n";
 		$count = 0;
-		foreach($permission_masks as $proxy_id => $permission_mask) {
+		foreach($permission_masks as $access_id => $permission_mask) {
 		//Initialize variables for use throughout creation
-			$cur_proxy_id			= $proxy_id;
+			$cur_access_id			= $access_id;
 			$cur_role           	= $permission_mask["role"];
 			$cur_group  			= $permission_mask["group"];
 			$cur_organisation_id    = $permission_mask["organisation_id"];
+			
+			$access_query = "SELECT `user_id` FROM `".AUTH_DATABASE."`.`user_access`
+						WHERE `id` = ".$db->qstr($cur_access_id);
+			$cur_proxy_id = $db->GetOne($access_query);
 
 			$query[] = ($count && $count > 0 ? "OR " : "(")."($table.`entity_value` = '".$cur_proxy_id."' AND $table.`entity_type` = 'user') OR
 								($table.`entity_value` = '".$cur_role."' AND $table.`entity_type` = 'role') OR
@@ -375,6 +380,7 @@ class CourseOwnerAssertion implements Zend_Acl_Assert_Interface {
  * @return boolean
  */
 	public function assert(Zend_Acl $acl, Zend_Acl_Role_Interface $role = null, Zend_Acl_Resource_Interface $resource = null, $privilege = null) {
+		global $db;
 		//If asserting is off then return true right away
 		if((isset($resource->assert) && $resource->assert == false) || (isset($acl->_entrada_last_query) && isset($acl->_entrada_last_query->assert) && $acl->_entrada_last_query->assert == false)) {
 			return true;
@@ -398,11 +404,19 @@ class CourseOwnerAssertion implements Zend_Acl_Assert_Interface {
 		}
 
 		$role_id = $role->getRoleId();
-		$user_id	= preg_replace('/[^0-9]+/', "", $role_id);
+		$access_id	= preg_replace('/[^0-9]+/', "", $role_id);
+		
+		$query = "SELECT `user_id` FROM `".AUTH_DATABASE."`.`user_access`
+					WHERE `id` = ".$db->qstr($access_id);
+		$user_id = $db->GetOne($query);
 
-		if($user_id == "") {
+		if(!isset($user_id) || !$user_id) {
 			$role_id = $acl->_entrada_last_query_role->getRoleId();
-			$user_id	= preg_replace('/[^0-9]+/', "", $role_id);
+			$access_id	= preg_replace('/[^0-9]+/', "", $role_id);
+			
+			$query = "SELECT `user_id` FROM `".AUTH_DATABASE."`.`user_access`
+						WHERE `id` = ".$db->qstr($access_id);
+			$user_id = $db->GetOne($query);
 		}
 		return $this->_checkCourseOwner($user_id, $course_id);
 	}
@@ -466,6 +480,7 @@ class CourseOwnerAssertion implements Zend_Acl_Assert_Interface {
 class CourseEnrollmentAssertion implements Zend_Acl_Assert_Interface {
 
 	public function assert(Zend_Acl $acl, Zend_Acl_Role_Interface $role = null, Zend_Acl_Resource_Interface $resource = null, $privilege = null) {
+		global $db;
 		//If asserting is off then return true right away
 		if((isset($resource->assert) && $resource->assert == false) || (isset($acl->_entrada_last_query) && isset($acl->_entrada_last_query->assert) && $acl->_entrada_last_query->assert == false)) {
 			return true;
@@ -489,11 +504,19 @@ class CourseEnrollmentAssertion implements Zend_Acl_Assert_Interface {
 		}
 
 		$role_id = $role->getRoleId();
-		$user_id = preg_replace("/[^0-9]+/", "", $role_id);
+		$access_id	= preg_replace('/[^0-9]+/', "", $role_id);
+		
+		$query = "SELECT `user_id` FROM `".AUTH_DATABASE."`.`user_access`
+					WHERE `id` = ".$db->qstr($access_id);
+		$user_id = $db->GetOne($query);
 
-		if ($user_id == "") {
+		if (!isset($user_id) || !$user_id) {
 			$role_id = $acl->_entrada_last_query_role->getRoleId();
-			$user_id = preg_replace("/[^0-9]+/", "", $role_id);
+			$access_id	= preg_replace('/[^0-9]+/', "", $role_id);
+			
+			$query = "SELECT `user_id` FROM `".AUTH_DATABASE."`.`userr_access`
+						WHERE `id` = ".$db->qstr($access_id);
+			$user_id = $db->GetOne($query);
 		}
 
 		return $this->_checkCourseEnrollment($user_id, $course_id);
@@ -554,6 +577,7 @@ class TaskOwnerAssertion implements Zend_Acl_Assert_Interface {
  * @return boolean
  */
 	public function assert(Zend_Acl $acl, Zend_Acl_Role_Interface $role = null, Zend_Acl_Resource_Interface $resource = null, $privilege = null) {
+		global $db;
 		//If asserting is off then return true right away
 		if((isset($resource->assert) && $resource->assert == false) || (isset($acl->_entrada_last_query) && isset($acl->_entrada_last_query->assert) && $acl->_entrada_last_query->assert == false)) {
 			return true;
@@ -576,11 +600,19 @@ class TaskOwnerAssertion implements Zend_Acl_Assert_Interface {
 		}
 
 		$role_id = $role->getRoleId();
-		$user_id	= preg_replace('/[^0-9]+/', "", $role_id);
+		$access_id	= preg_replace('/[^0-9]+/', "", $role_id);
+		
+		$query = "SELECT `user_id` FROM `".AUTH_DATABASE."`.`user_access`
+					WHERE `id` = ".$db->qstr($access_id);
+		$user_id = $db->GetOne($query);
 
-		if($user_id == "") {
+		if(!isset($user_id) || !$user_id) {
 			$role_id = $acl->_entrada_last_query_role->getRoleId();
-			$user_id	= preg_replace('/[^0-9]+/', "", $role_id);
+			$access_id	= preg_replace('/[^0-9]+/', "", $role_id);
+			
+			$query = "SELECT `user_id` FROM `".AUTH_DATABASE."`.`user_access`
+						WHERE `id` = ".$db->qstr($access_id);
+			$user_id = $db->GetOne($query);
 		}
 
 		require_once("Entrada/tasks/functions.inc.php");
@@ -609,6 +641,7 @@ class TaskRecipientAssertion implements Zend_Acl_Assert_Interface {
  * @return boolean
  */
 	public function assert(Zend_Acl $acl, Zend_Acl_Role_Interface $role = null, Zend_Acl_Resource_Interface $resource = null, $privilege = null) {
+		global $db;
 		
 		//If asserting is off then return true right away
 		if((isset($resource->assert) && $resource->assert == false) || (isset($acl->_entrada_last_query) && isset($acl->_entrada_last_query->assert) && $acl->_entrada_last_query->assert == false)) {
@@ -632,11 +665,19 @@ class TaskRecipientAssertion implements Zend_Acl_Assert_Interface {
 		}
 
 		$role_id = $role->getRoleId();
-		$user_id	= preg_replace('/[^0-9]+/', "", $role_id);
+		$access_id	= preg_replace('/[^0-9]+/', "", $role_id);
+		
+		$query = "SELECT `user_id` FROM `".AUTH_DATABASE."`.`user_access`
+					WHERE `id` = ".$db->qstr($access_id);
+		$user_id = $db->GetOne($query);
 
-		if($user_id == "") {
+		if(!isset($user_id) || !$user_id) {
 			$role_id = $acl->_entrada_last_query_role->getRoleId();
-			$user_id	= preg_replace('/[^0-9]+/', "", $role_id);
+			$access_id	= preg_replace('/[^0-9]+/', "", $role_id);
+			
+			$query = "SELECT `user_id` FROM `".AUTH_DATABASE."`.`user_access`
+						WHERE `id` = ".$db->qstr($access_id);
+			$user_id = $db->GetOne($query);
 		}
 
 		require_once("Entrada/tasks/functions.inc.php");
@@ -671,11 +712,19 @@ class IsEvaluatedAssertion implements Zend_Acl_Assert_Interface {
 			return true;
 		}
 		$role_id = $role->getRoleId();
-		$user_id	= preg_replace('/[^0-9]+/', "", $role_id);
+		$access_id	= preg_replace('/[^0-9]+/', "", $role_id);
+		
+		$query = "SELECT `user_id` FROM `".AUTH_DATABASE."`.`user_access`
+					WHERE `id` = ".$db->qstr($access_id);
+		$user_id = $db->GetOne($query);
 
-		if($user_id == "") {
+		if(!isset($user_id) || !$user_id) {
 			$role_id = $acl->_entrada_last_query_role->getRoleId();
-			$user_id	= preg_replace('/[^0-9]+/', "", $role_id);
+			$access_id	= preg_replace('/[^0-9]+/', "", $role_id);
+			
+			$query = "SELECT `user_id` FROM `".AUTH_DATABASE."`.`user_access`
+						WHERE `id` = ".$db->qstr($access_id);
+			$user_id = $db->GetOne($query);
 		}
 
 		$query = "SELECT * FROM `".CLERKSHIP_DATABASE."`.`eval_completed` WHERE `instructor_id` = ".$db->qstr($user_id);
@@ -701,6 +750,7 @@ class TaskVerifierAssertion implements Zend_Acl_Assert_Interface {
  * @return boolean
  */
 	public function assert(Zend_Acl $acl, Zend_Acl_Role_Interface $role = null, Zend_Acl_Resource_Interface $resource = null, $privilege = null) {
+		global $db;
 		//If asserting is off then return true right away
 		if((isset($resource->assert) && $resource->assert == false) || (isset($acl->_entrada_last_query) && isset($acl->_entrada_last_query->assert) && $acl->_entrada_last_query->assert == false)) {
 			return true;
@@ -722,12 +772,20 @@ class TaskVerifierAssertion implements Zend_Acl_Assert_Interface {
 
 		if (!$verifier_id) {
 			$role_id = $role->getRoleId();
-			$verifier_id	= preg_replace('/[^0-9]+/', "", $role_id);
+			$access_id	= preg_replace('/[^0-9]+/', "", $role_id);
+			
+			$query = "SELECT `user_id` FROM `".AUTH_DATABASE."`.`user_access`
+						WHERE `id` = ".$db->qstr($access_id);
+			$verifier_id = $db->GetOne($query);
 		}
 
 		if($verifier_id == "") {
 			$role_id = $acl->_entrada_last_query_role->getRoleId();
-			$verifier_id	= preg_replace('/[^0-9]+/', "", $role_id);
+			$access_id	= preg_replace('/[^0-9]+/', "", $role_id);
+			
+			$query = "SELECT `user_id` FROM `".AUTH_DATABASE."`.`user_access`
+						WHERE `id` = ".$db->qstr($access_id);
+			$verifier_id = $db->GetOne($query);
 		}
 
 		require_once("Models/users/User.class.php");
@@ -760,20 +818,29 @@ class ShowTaskTabAssertion implements Zend_Acl_Assert_Interface {
  * @return boolean
  */
 	public function assert(Zend_Acl $acl, Zend_Acl_Role_Interface $role = null, Zend_Acl_Resource_Interface $resource = null, $privilege = null) {
+		global $db;
 		//If asserting is off then return true right away
 		if((isset($resource->assert) && $resource->assert == false) || (isset($acl->_entrada_last_query) && isset($acl->_entrada_last_query->assert) && $acl->_entrada_last_query->assert == false)) {
 			return true;
 		}
 
 		$role_id = $role->getRoleId();
-		$user_id	= preg_replace('/[^0-9]+/', "", $role_id);
+		$access_id	= preg_replace('/[^0-9]+/', "", $role_id);
+		
+		$query = "SELECT `user_id` FROM `".AUTH_DATABASE."`.`user_access`
+					WHERE `id` = ".$db->qstr($access_id);
+		$user_id = $db->GetOne($query);
 
-		if($user_id == "") {
+		if(!isset($user_id) || !$user_id) {
 			$role_id = $acl->_entrada_last_query_role->getRoleId();
-			$user_id	= preg_replace('/[^0-9]+/', "", $role_id);
+			$access_id	= preg_replace('/[^0-9]+/', "", $role_id);
+			
+			$query = "SELECT `user_id` FROM `".AUTH_DATABASE."`.`user_access`
+						WHERE `id` = ".$db->qstr($access_id);
+			$user_id = $db->GetOne($query);
 		}
 
-		if (!$user_id) {
+		if (!isset($user_id) || !$user_id) {
 			return false;
 		}
 
@@ -826,6 +893,7 @@ class GradebookOwnerAssertion extends CourseOwnerAssertion {
  * @return boolean
  */
 	public function assert(Zend_Acl $acl, Zend_Acl_Role_Interface $role = null, Zend_Acl_Resource_Interface $resource = null, $privilege = null) {
+		global $db;
 		//If asserting is off then return true right away
 		if((isset($resource->assert) && $resource->assert == false) || (isset($acl->_entrada_last_query) && isset($acl->_entrada_last_query->assert) && $acl->_entrada_last_query->assert == false)) {
 			return true;
@@ -849,11 +917,19 @@ class GradebookOwnerAssertion extends CourseOwnerAssertion {
 		}
 
 		$role_id = $role->getRoleId();
-		$user_id	= preg_replace('/[^0-9]+/', "", $role_id);
+		$access_id	= preg_replace('/[^0-9]+/', "", $role_id);
+		
+		$query = "SELECT `user_id` FROM `".AUTH_DATABASE."`.`user_access`
+					WHERE `id` = ".$db->qstr($access_id);
+		$user_id = $db->GetOne($query);
 
-		if($user_id == "") {
+		if(!isset($user_id) || !$user_id) {
 			$role_id = $acl->_entrada_last_query_role->getRoleId();
-			$user_id = preg_replace('/[^0-9]+/', "", $role_id);
+			$access_id	= preg_replace('/[^0-9]+/', "", $role_id);
+			
+			$query = "SELECT `user_id` FROM `".AUTH_DATABASE."`.`user_access`
+						WHERE `id` = ".$db->qstr($access_id);
+			$user_id = $db->GetOne($query);
 		}
 		// Inherited from course owner assertion
 		return $this->_checkCourseOwner($user_id, $course_id);
@@ -880,6 +956,7 @@ class EventOwnerAssertion implements Zend_Acl_Assert_Interface {
  * @return boolean
  */
 	public function assert(Zend_Acl $acl, Zend_Acl_Role_Interface $role = null, Zend_Acl_Resource_Interface $resource = null, $privilege = null) {
+		global $db;
 		if((isset($resource->assert) && $resource->assert == false) || (isset($acl->_entrada_last_query) && isset($acl->_entrada_last_query->assert) && $acl->_entrada_last_query->assert == false)) {
 			return true;
 		}
@@ -903,11 +980,19 @@ class EventOwnerAssertion implements Zend_Acl_Assert_Interface {
 		}
 
 		$role_id = $role->getRoleId();
-		$user_id	= preg_replace('/[^0-9]+/', "", $role_id);
+		$access_id	= preg_replace('/[^0-9]+/', "", $role_id);
+		
+		$query = "SELECT `user_id` FROM `".AUTH_DATABASE."`.`user_access`
+					WHERE `id` = ".$db->qstr($access_id);
+		$user_id = $db->GetOne($query);
 
-		if($user_id == "") {
+		if(!isset($user_id) || !$user_id) {
 			$role_id = $acl->_entrada_last_query_role->getRoleId();
-			$user_id	= preg_replace('/[^0-9]+/', "", $role_id);
+			$access_id	= preg_replace('/[^0-9]+/', "", $role_id);
+			
+			$query = "SELECT `user_id` FROM `".AUTH_DATABASE."`.`user_access`
+						WHERE `id` = ".$db->qstr($access_id);
+			$user_id = $db->GetOne($query);
 		}
 
 		return $this->_checkEventOwner($user_id, $event_id);
@@ -1083,6 +1168,7 @@ abstract class CommunityAssertion implements Zend_Acl_Assert_Interface {
 	 * @return boolean
 	 */
 	public function assert(Zend_Acl $acl, Zend_Acl_Role_Interface $role = null, Zend_Acl_Resource_Interface $resource = null, $privilege = null) {
+		global $db;
 	//Return true right away if asserting is off.
 		if((isset($resource->assert) && $resource->assert == false) || (isset($acl->_entrada_last_query) && isset($acl->_entrada_last_query->assert) && $acl->_entrada_last_query->assert == false)) {
 			return true;
@@ -1097,11 +1183,19 @@ abstract class CommunityAssertion implements Zend_Acl_Assert_Interface {
 		}
 		if(isset($community_id)) {
 			$role_id = $role->getRoleId();
-			$user_id	= preg_replace('/[^0-9]+/', "", $role_id);
+			$access_id	= preg_replace('/[^0-9]+/', "", $role_id);
+			
+			$query = "SELECT `user_id` FROM `".AUTH_DATABASE."`.`user_access`
+						WHERE `id` = ".$db->qstr($access_id);
+			$user_id = $db->GetOne($query);
 
-			if($user_id == "") {
+			if(!isset($user_id) || !$user_id) {
 				$role_id = $acl->_entrada_last_query_role->getRoleId();
-				$user_id	= preg_replace('/[^0-9]+/', "", $role_id);
+				$access_id	= preg_replace('/[^0-9]+/', "", $role_id);
+				
+				$query = "SELECT `user_id` FROM `".AUTH_DATABASE."`.`user_access`
+							WHERE `id` = ".$db->qstr($access_id);
+				$user_id = $db->GetOne($query);
 			}
 
 			return $this->_checkCommunity($user_id, $community_id);
@@ -1182,6 +1276,7 @@ class CommunityMemberAssertion extends CommunityAssertion {
  */
 class NotGuestAssertion implements Zend_Acl_Assert_Interface {
 	public function assert(Zend_Acl $acl, Zend_Acl_Role_Interface $role = null, Zend_Acl_Resource_Interface $resource = null, $privilege = null) {
+		global $db;
 		$role = $acl->_entrada_last_query_role;
 		if(isset($role->details) && isset($role->details["group"])) {
 			$GROUP = $role->details["group"];
@@ -1190,7 +1285,11 @@ class NotGuestAssertion implements Zend_Acl_Assert_Interface {
  * @todo This needs to be fixed, or perhaps this would never even happen? The user_data table doesn't contain group or role fields, that's in user_access.
  */
 			$role_id = $role->getRoleId();
-			$user_id = preg_replace('/[^0-9]+/', "", $role_id);
+			$access_id	= preg_replace('/[^0-9]+/', "", $role_id);
+			
+			$query = "SELECT `user_id` FROM `".AUTH_DATABASE."`.`user_access`
+						WHERE `id` = ".$db->qstr($access_id);
+			$user_id = $db->GetOne($query);
 			$query = "SELECT `group`, `role` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($user_id);
 			$result = $db->GetRow($query);
 			if($result) {
@@ -1218,6 +1317,7 @@ class NotGuestAssertion implements Zend_Acl_Assert_Interface {
  */
 class NotStudentAssertion implements Zend_Acl_Assert_Interface {
 	public function assert(Zend_Acl $acl, Zend_Acl_Role_Interface $role = null, Zend_Acl_Resource_Interface $resource = null, $privilege = null) {
+		global $db;
 		$role = $acl->_entrada_last_query_role;
 		if(isset($role->details) && isset($role->details["group"])) {
 			$GROUP = $role->details["group"];
@@ -1226,7 +1326,11 @@ class NotStudentAssertion implements Zend_Acl_Assert_Interface {
  * @todo This needs to be fixed, or perhaps this would never even happen? The user_data table doesn't contain group or role fields, that's in user_access.
  */
 			$role_id = $role->getRoleId();
-			$user_id = preg_replace('/[^0-9]+/', "", $role_id);
+			$access_id	= preg_replace('/[^0-9]+/', "", $role_id);
+			
+			$query = "SELECT `user_id` FROM `".AUTH_DATABASE."`.`user_access`
+						WHERE `id` = ".$db->qstr($access_id);
+			$user_id = $db->GetOne($query);
 			$query = "SELECT `group`, `role` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($user_id);
 			$result = $db->GetRow($query);
 			if($result) {
@@ -1388,6 +1492,7 @@ class HasAccommodationsAssertion implements Zend_Acl_Assert_Interface {
 
 class QuizOwnerAssertion implements Zend_Acl_Assert_Interface {
 	public function assert(Zend_Acl $acl, Zend_Acl_Role_Interface $role = null, Zend_Acl_Resource_Interface $resource = null, $privilege = null) {
+		global $db;
 
 		//If asserting is off then return true right away
 		if((isset($resource->assert) && $resource->assert == false) || (isset($acl->_entrada_last_query) && isset($acl->_entrada_last_query->assert) && $acl->_entrada_last_query->assert == false)) {
@@ -1412,11 +1517,19 @@ class QuizOwnerAssertion implements Zend_Acl_Assert_Interface {
 		}
 
 		$role_id = $role->getRoleId();
-		$user_id	= preg_replace('/[^0-9]+/', "", $role_id);
+		$access_id	= preg_replace('/[^0-9]+/', "", $role_id);
+		
+		$query = "SELECT `user_id` FROM `".AUTH_DATABASE."`.`user_access`
+					WHERE `id` = ".$db->qstr($access_id);
+		$user_id = $db->GetOne($query);
 
-		if($user_id == "") {
+		if(!isset($user_id) || !$user_id) {
 			$role_id = $acl->_entrada_last_query_role->getRoleId();
-			$user_id	= preg_replace('/[^0-9]+/', "", $role_id);
+			$access_id	= preg_replace('/[^0-9]+/', "", $role_id);
+			
+			$query = "SELECT `user_id` FROM `".AUTH_DATABASE."`.`user_access`
+						WHERE `id` = ".$db->qstr($access_id);
+			$user_id = $db->GetOne($query);
 		}
 
 		return $this->_checkQuizOwner($user_id, $quiz_id);

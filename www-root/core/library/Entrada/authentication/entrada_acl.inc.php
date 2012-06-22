@@ -145,8 +145,7 @@ class Entrada_ACL extends ACL_Factory {
 				$permissions[$result["ua_id"]] = array("group" => $result["group"], "role" => $result["role"], "organisation_id" => $result["organisation_id"], "fullname" => $result["fullname"], "firstname" => $result["firstname"], "lastname" => $result["lastname"]);
 			}
 		}
-		//Also add the user's own details, as the user can mask as itself.
-		$permissions[$userdetails["access_id"]] = $userdetails;
+		
 		//Next, fetch all the role-resource permissions related to all these users.
 		$this->rr_permissions = $this->_fetchPermissions($permissions);
 		/**

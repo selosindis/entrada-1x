@@ -110,7 +110,8 @@ if ($ENTRADA_USER) {
 						  ORDER BY a.`id` ASC";
 		$result = $db->getRow($query);
 		if ($result) {
-			$ENTRADA_USER->setAccessId($result["id"]);		
+			$ENTRADA_USER->setAccessId($result["id"]);
+			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["access_id"] = $ENTRADA_USER->getAccessId();
 			$_SESSION["permissions"] = permissions_load();
 		}
 	} else {
@@ -133,6 +134,7 @@ if ($ENTRADA_USER) {
 		$result = $db->getRow($query);
 		if ($result) {
 			$ENTRADA_USER->setAccessId($result["id"]);
+			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["access_id"] = $ENTRADA_USER->getAccessId();
 			$_SESSION["permissions"] = permissions_load();
 		}
 	}
@@ -140,6 +142,7 @@ if ($ENTRADA_USER) {
 	if (isset($_GET["ua_id"])) {
 		$ua_id = clean_input($_GET["ua_id"], array("trim", "notags", "int"));
 		$ENTRADA_USER->setAccessId($ua_id);
+		$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["access_id"] = $ENTRADA_USER->getAccessId();
 		$_SESSION["permissions"] = permissions_load();
 	}
 

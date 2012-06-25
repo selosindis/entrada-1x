@@ -121,21 +121,27 @@ if ($ENTRADA_USER) {
 
 	if (isset($_GET["organisation_id"])) {
 		$organisation = clean_input($_GET["organisation_id"], array("trim", "notags", "int"));
-		
-		$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["organisation_id"] = $organisation;
-		$ENTRADA_USER->setActiveOrganisation($organisation);
-
-		$query = "SELECT a.`group`, a.`role`, a.`id`
-					  FROM `" . AUTH_DATABASE . "`.`user_access` a
-					  WHERE a.`user_id` = " . $ENTRADA_USER->getID() . "
-					  AND a.`organisation_id` = " . $db->qstr($organisation) . "
-					  ORDER BY a.`id` ASC";
-
-		$result = $db->getRow($query);
-		if ($result) {
-			$ENTRADA_USER->setAccessId($result["id"]);
-			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["access_id"] = $ENTRADA_USER->getAccessId();
-			$_SESSION["permissions"] = permissions_load();
+		$allow_organisation_change = false;
+		foreach ($_SESSION["permissions"] as $permission) {
+			if ($permission["organisation_id"] == $organisation) {
+				$allow_organisation_change = true;
+			}
+		}
+		if ($allow_organisation_change) {
+			$ENTRADA_USER->setActiveOrganisation($organisation);
+	
+			$query = "SELECT a.`group`, a.`role`, a.`id`
+						  FROM `" . AUTH_DATABASE . "`.`user_access` a
+						  WHERE a.`user_id` = " . $ENTRADA_USER->getActiveId() . "
+						  AND a.`organisation_id` = " . $db->qstr($organisation) . "
+						  ORDER BY a.`id` ASC";
+	
+			$result = $db->getRow($query);
+			if ($result) {
+				$ENTRADA_USER->setAccessId($result["id"]);
+				$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["access_id"] = $ENTRADA_USER->getAccessId();
+				$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["organisation_id"] = $organisation;
+			}
 		}
 	}
 

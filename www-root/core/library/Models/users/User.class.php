@@ -529,7 +529,10 @@ class User {
 			$org_group_role = array();
 			foreach ($results as $result) {
 				if ((!isset($user->default_access_id) || !$user->default_access_id) && $result["organisation_id"] == $user->getOrganisationId()) {
-					$user->setActiveOrganisation($result["organisation_id"]);
+					if (!isset($_SESSION["permissions"][$user->getAccessId()]["organisation_id"]) || !$_SESSION["permissions"][$user->getAccessId()]["organisation_id"]) {
+						$_SESSION["permissions"][$user->getAccessId()]["organisation_id"] = $result["organisation_id"];
+						$user->setActiveOrganisation($result["organisation_id"]);
+					}
 					$user->setDefaultAccessId($result["id"]);
 				}
 				$org_group_role[$result["organisation_id"]][html_encode($result["group"])] = array(html_encode($result["role"]), $result["id"]);

@@ -2128,7 +2128,7 @@ function preferences_load($module) {
 function permissions_load() {
 	global $db, $ENTRADA_USER;
 	$permissions	= array();
-	$query = "	SELECT a.`id` AS `proxy_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, a.`firstname`, a.`lastname`, a.`organisation_id`, b.`role`, b.`group`, b.`id` AS `access_id`
+	$query = "	SELECT a.`id` AS `proxy_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, a.`firstname`, a.`lastname`, b.`organisation_id`, b.`role`, b.`group`, b.`id` AS `access_id`
 				FROM `".AUTH_DATABASE."`.`user_data` AS a
 				RIGHT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 				ON b.`user_id` = a.`id` 
@@ -2144,7 +2144,7 @@ function permissions_load() {
 			$permissions[$result["access_id"]] = array("id" => $result["proxy_id"], "access_id" => $result["access_id"], "group" => $result["group"], "role" => $result["role"], "organisation_id"=>$result["organisation_id"], "fullname" => $result["fullname"], "firstname" => $result["firstname"], "lastname" => $result["lastname"]);
 		}
 	}
-	$query = "	SELECT a.*, b.`id` AS `proxy_id`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, b.`firstname`, b.`lastname`, b.`organisation_id`, c.`role`, c.`group`, c.`id` AS `access_id`
+	$query = "	SELECT a.*, b.`id` AS `proxy_id`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, b.`firstname`, b.`lastname`, c.`organisation_id`, c.`role`, c.`group`, c.`id` AS `access_id`
 				FROM `permissions` AS a
 				LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
 				ON b.`id` = a.`assigned_by`

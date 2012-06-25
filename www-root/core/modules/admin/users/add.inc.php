@@ -546,19 +546,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 						$PROCESSED["password"] = md5($PROCESSED["password"]);
 						$PROCESSED["email_updated"] = time();
 						if (($db->AutoExecute(AUTH_DATABASE.".user_data", $PROCESSED, "INSERT")) && ($PROCESSED_ACCESS["user_id"] = $db->Insert_Id())) {
-
-							//Add the user's organisations to the user_organisation table.
-							foreach ($organisation_ids as $org_id) {
-								$row = array();
-								$row["organisation_id"] = $org_id;
-								$row["proxy_id"] = $PROCESSED_ACCESS["user_id"];
-								if (!$db->AutoExecute(AUTH_DATABASE.".user_organisations", $row, "INSERT")) {
-									$ERROR++;
-									$ERRORSTR[] = "Unable to add all of this user's organisations to the database. The MEdTech Unit has been informed of this error, please try again later.";
-
-									application_log("error", "Unable to add all of the user's (" . $PROCESSED_ACCESS["user_id"] . ") Database said: ".$db->ErrorMsg());
-								}
-							}
 							$index = 0;
 							foreach ($PROCESSED_ACCESS["org_id"] as $org_id) {								
 								$query = "SELECT g.`group_name`, r.`role_name`

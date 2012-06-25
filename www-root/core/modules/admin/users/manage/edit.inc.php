@@ -367,29 +367,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 					if (!$ERROR && $ENTRADA_ACL->amIAllowed(new UserResource(null, $PROCESSED["organisation_id"]), "update")) {
 						$PROCESSED["email_updated"] = time();
 						if ($db->AutoExecute(AUTH_DATABASE.".user_data", $PROCESSED, "UPDATE", "id = ".$db->qstr($PROXY_ID))) {							
-
-							$query = "DELETE FROM `".AUTH_DATABASE."`.`user_organisations`
-									  WHERE `proxy_id` = ".$db->qstr($PROXY_ID);
-							if (!$db->Execute($query)) {
-								$ERROR++;
-								$ERRORSTR[] = "Failed to remove your old departments";
-								application_log("error", "Unable to remove all of the user's (" . $PROXY_ID . ") departments. Database said: ".$db->ErrorMsg());
-							}
-
-							//Add the user's organisations to the user_organisation table.
-							foreach ($organisation_ids as $org_id) {
-								$row = array();
-								$row["organisation_id"] = $org_id;
-								$row["proxy_id"] = $PROXY_ID;
-								if (!$db->AutoExecute(AUTH_DATABASE.".user_organisations", $row, "INSERT")) {
-									$ERROR++;
-									$ERRORSTR[] = "Unable to add all of this user's organisations to the database. The MEdTech Unit has been informed of this error, please try again later.";
-
-									application_log("error", "Unable to add all of the user's (" . $PROCESSED_ACCESS["user_id"] . ") departments. Database said: ".$db->ErrorMsg());
-								}
-							}
-							
-
 							$query = "SELECT * FROM " . AUTH_DATABASE . ".`user_access`
 									  WHERE `user_id` = " . $db->qstr($PROXY_ID) . "
 									  AND `app_id` = " . $db->qstr(AUTH_APP_ID);
@@ -560,7 +537,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 
 					//Initialize Organisation ID array for initial page display
 					$organisation_ids = array();
-					$query = "SELECT * FROM `".AUTH_DATABASE."`.`user_organisations` WHERE `proxy_id` = ".$db->qstr($PROXY_ID);
+					$query = "SELECT `organisation_id` FROM `".AUTH_DATABASE."`.`user_access` WHERE `user_id` = ".$db->qstr($PROXY_ID);
 					$results = $db->GetAll($query);
 					foreach ($results as $result) {
 						$organisation_ids[] = $result["organisation_id"];

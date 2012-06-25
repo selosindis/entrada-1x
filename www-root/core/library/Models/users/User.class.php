@@ -399,10 +399,10 @@ class User {
 		
 		//get all of the users orgs
 		$query = "SELECT b.`organisation_id`, b.`organisation_title`
-					  FROM `" . AUTH_DATABASE . "`.`user_organisations` a
+					  FROM `" . AUTH_DATABASE . "`.`user_access` a
 					  JOIN `" . AUTH_DATABASE . "`.`organisations` b
 					  ON a.`organisation_id` = b.`organisation_id`
-					  WHERE a.`proxy_id` = ?";
+					  WHERE a.`user_id` = ?";
 		$results = $db->getAll($query, array($this->getActiveId()));
 
 		//every user should have at least one org.
@@ -495,10 +495,10 @@ class User {
 
 		//get all of the users orgs
 		$query = "SELECT b.`organisation_id`, b.`organisation_title`
-					  FROM `" . AUTH_DATABASE . "`.`user_organisations` a
+					  FROM `" . AUTH_DATABASE . "`.`user_access` a
 					  JOIN `" . AUTH_DATABASE . "`.`organisations` b
 					  ON a.`organisation_id` = b.`organisation_id`
-					  WHERE a.`proxy_id` = ?";
+					  WHERE a.`user_id` = ?";
 		$results = $db->getAll($query, array($proxy_id));
 
 		//every user should have at least one org.

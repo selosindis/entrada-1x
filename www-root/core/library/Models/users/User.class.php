@@ -466,20 +466,32 @@ class User {
 		}
 		
 		if (isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["access_id"]) && $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["access_id"]) {
-			$query = "SELECT b.`id` FROM `permissions` AS a
-						JOIN `".AUTH_DATABASE."`.`user_access` AS b
-						ON a.`assigned_by` = b.`user_id`
-						WHERE b.`id` = ?
-						AND b.`account_active` = 'true'
-						AND (b.`access_starts` = '0' OR b.`access_starts` < ?)
-						AND (b.`access_expires` = '0' OR b.`access_expires` >= ?)
-						AND b.`app_id` = ?
-						AND a.`assigned_to` = ? 
-						AND a.`valid_from` <= ?
-						AND a.`valid_until` >= ?";
-			$available = $db->getRow($query, array($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["access_id"], time(), time(), AUTH_APP_ID, $user->getID(), time(), time()));
+			$query = "SELECT `id` FROM `".AUTH_DATABASE."`.`user_access`
+						WHERE `id` = ?
+						AND `account_active` = 'true'
+						AND (`access_starts` = '0' OR `access_starts` < ?)
+						AND (`access_expires` = '0' OR `access_expires` >= ?)
+						AND `app_id` = ?
+						AND `user_id` = ?";
+			$available = $db->getRow($query, array($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["access_id"], time(), time(), AUTH_APP_ID, $user->getID()));
 			if ($available) {
 				$user->setAccessId($available["id"]);
+			} else {
+				$query = "SELECT b.`id` FROM `permissions` AS a
+							JOIN `".AUTH_DATABASE."`.`user_access` AS b
+							ON a.`assigned_by` = b.`user_id`
+							WHERE b.`id` = ?
+							AND b.`account_active` = 'true'
+							AND (b.`access_starts` = '0' OR b.`access_starts` < ?)
+							AND (b.`access_expires` = '0' OR b.`access_expires` >= ?)
+							AND b.`app_id` = ?
+							AND a.`assigned_to` = ? 
+							AND a.`valid_from` <= ?
+							AND a.`valid_until` >= ?";
+				$mask_available = $db->getRow($query, array($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["access_id"], time(), time(), AUTH_APP_ID, $user->getID(), time(), time()));
+				if ($mask_available) {
+					$user->setAccessId($available["id"]);
+				}
 			}
 		}
 		

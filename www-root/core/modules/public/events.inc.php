@@ -1210,7 +1210,7 @@ if ($topic_results) { ?>
 							/**
 							 * Determine if this event has been modified since their last visit.
 							 */
-							if (((int) $result["last_visited"]) && ((int) $result["last_visited"] < (int) $result["updated_date"])) {
+							if (isset($result["last_visited"]) && ((int) $result["last_visited"]) && ((int) $result["last_visited"] < (int) $result["updated_date"])) {
 								$is_modified = true;
 								$count_modified++;
 							}

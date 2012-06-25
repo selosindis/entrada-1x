@@ -156,8 +156,9 @@ if (($router) && ($route = $router->initRoute($MODULE))) {
 		}
 		$sidebar_html .= "</select>\n";
 		$sidebar_html .= "</form>\n";
-
-		new_sidebar_item("Permission Masks", $sidebar_html, "permission-masks", "open");
+		if ($display_masks) {
+			new_sidebar_item("Permission Masks", $sidebar_html, "permission-masks", "open");
+		}
 	}
 
 	$module_file = $router->getRoute();

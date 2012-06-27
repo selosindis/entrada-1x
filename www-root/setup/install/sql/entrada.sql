@@ -2592,7 +2592,6 @@ CREATE TABLE IF NOT EXISTS `draft_events` (
   KEY `event_id` (`event_id`),
   KEY `course_id` (`course_id`),
   KEY `region_id` (`region_id`),
-  KEY `eventtype_id` (`eventtype_id`),
   KEY `recurring_id` (`recurring_id`),
   KEY `release_date` (`release_date`,`release_until`),
   KEY `event_start` (`event_start`,`event_duration`),
